@@ -1,0 +1,100 @@
+<html>
+<body style="padding:20px;font-family:arial;">
+
+<div style="width:500px;">
+
+<h2>Summary Page Help</h2>
+<p>
+This page show summary data for two sequence projects, and the alignment between them. 
+<p>
+<table border=1 rules=all cellpadding=5 cellspacing=0>
+	<tr>
+		<td colspan=2 align=left>
+			<b>Genome and Annotation Statistics<b>
+		</td>
+	</tr>
+	<tr>
+		<td align=left valign=top># Seqs</td>
+		<td>Total number of sequences loaded for the project</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>Total Kb</td>
+		<td>Total kilobases of the loaded sequences</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>#genes</td>
+		<td>Number of annotated genes</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>%genes</td>
+		<td>Percent of sequence covered by annotated genes (including introns)</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>Max Kb, Min Kb</td>
+		<td>Size of largest and smallest sequences</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>Size range columns</td>
+		<td>Number of sequences in these size ranges</td>
+	</tr>
+	<tr>
+		<td colspan=2 align=left>
+			<b>Anchor Statistics<b>
+		</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>#Anchors</td>
+		<td>Total number of anchors loaded between the two projects (same for each project)</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>%InBlocks</td>
+		<td>Percentage of anchors in synteny blocks (same for each project)</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>%Annotated</td>
+		<td>Percentage of anchors intersecting a gene annotation on the project</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>%Coverage</td>
+		<td>Percent of total project sequence length covered by anchor alignment regions</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>Size range columns</td>
+		<td>Number of anchors having alignment lengths in the given ranges (can be slightly different between projects)</td>
+	</tr>
+	<tr>
+		<td colspan=2 align=left>
+			<b>Block Statistics<b>
+		</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>#Blocks</td>
+		<td>Total number of synteny blocks found between the two projects (same for each project)</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>%Coverage</td>
+		<td>Percent of total project sequence length covered by synteny blocks</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>%DoubleCov</td>
+		<td>Percent of total project sequence length covered by two or more synteny blocks (i.e., mapping to 
+				a putative duplication in the other genome)</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>Inverted</td>
+		<td>Number of blocks which are inverted (note, blocks may contain local regions of opposite orientation)</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>%GenesHit</td>
+		<td>Percentage of genes located in synteny block regions which have syntenic hits ("gene retention")</td>
+	</tr>
+	<tr>
+		<td align=left valign=top>Size range columns</td>
+		<td>Number of blocks whose total coverage region on the project is in the given range</td>
+	</tr>
+</table>
+
+
+</div>
+</body>
+</html>

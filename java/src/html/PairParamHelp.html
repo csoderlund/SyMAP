@@ -1,0 +1,181 @@
+<html>
+<body style="padding:20px;font-family:arial;">
+<h2>Alignment & Synteny Parameters</h2>
+
+<div style="width:500px">
+These parameters apply to the alignment, anchor filtering/loading, 
+and synteny computation for a pair of projects. 
+<p>
+If you want to re-use parameters from a previous pair, first close
+the Parameters window, then select the project
+pair in the "Available Syntenies" table, and then re-open
+the Parameters window and use the "Load Previous" button. 
+</div>
+<p>
+<table border='1' cellpadding='5' rules=all >
+<tr>
+	<td align="left">
+		<b>Parameter</b>
+	</td>
+	<td align="left" >
+		<b>Description</b>
+	</td>
+	<td align="left" >
+		<b>Stage</b>
+	</td>
+	<td align="left">
+		<b>Default Value</b>
+	</td>
+</tr>
+<tr>
+	<td align="left" valign="top">
+		Top N
+	</td>
+	<td align="left"  valign="top" width="350" >
+		Retain the top N hits for every sequence region (as 
+		well as all hits with score at least 80% of the Nth). 
+	</td>
+	<td align="left"  valign="top" >
+		Anchor Load
+	</td>	
+	<td align="left"  valign="top" >
+		2
+	</td>
+</tr>
+<tr>
+	<td align="left" valign="top">
+		Min Dots
+	</td>
+	<td align="left"  valign="top" width="350" >
+		Minimum number of anchors required to define
+		a synteny block.
+	</td>
+	<td align="left"  valign="top" >
+		Synteny
+	</td>
+	<td align="left"  valign="top" >
+		7
+	</td>
+</tr>
+<tr>
+	<td align="left" valign="top">
+		Merge Blocks
+	</td>
+	<td align="left"  valign="top" width="350" >
+		Merge overlapping (or nearby) synteny blocks into larger
+		blocks. 
+	</td>
+	<td align="left"  valign="top" >
+		Synteny
+	</td>	
+	<td align="left"  valign="top" >
+		Off
+	</td>
+</tr>
+<!--tr>
+	<td align="left" valign="top">
+		Do Synteny
+	</td>
+	<td align="left"  valign="top" width="350" >
+		Carry out the synteny block computation.
+	</td>
+	<td align="left"  valign="top" >
+		Synteny
+	</td>	
+	<td align="left"  valign="top" >
+		On
+	</td>
+</tr-->
+<tr>
+	<td align="left" valign="top">
+		No Overlapping Blocks
+	</td>
+	<td align="left"  valign="top" width="350" >
+		If two synteny blocks overlap on a chromosome, keep only
+		the larger one.
+	</td>
+	<td align="left"  valign="top" >
+		Synteny
+	</td>	
+	<td align="left"  valign="top" >
+		Off
+	</td>
+</tr>
+<tr>
+	<td align="left" valign="top">
+		NUCmer Only
+	</td>
+	<td align="left"  valign="top" width="350" >
+		User NUCmer for all alignments.*
+	</td>
+	<td align="left"  valign="top" >
+		Align
+	</td>
+	<td align="left"  valign="top" >
+		Off
+	</td>
+</tr>
+<tr>
+	<td align="left" valign="top">
+		PROmer Only
+	</td>
+	<td align="left"  valign="top" width="350" >
+		User PROmer for all alignments.*
+	</td>
+	<td align="left"  valign="top" >
+		Align
+	</td>
+	<td align="left"  valign="top" >
+		Off
+	</td>
+</tr>
+<tr>
+	<td align="left" valign="top">
+		BLAT Args
+	</td>
+	<td align="left"  valign="top" width="350" >
+		Arguments for BLAT (FPC alignments only)
+	</td>
+	<td align="left"  valign="top" >
+		Align
+	</td>
+	<td align="left"  valign="top" width="250" >
+		-minScore=30 -minIdentity=70 -tileSize=10 -qMask=lower -maxIntron=10000
+	</td>
+</tr>
+<tr>
+	<td align="left" valign="top">
+		NUCmer Args
+	</td>
+	<td align="left"  valign="top" width="350" >
+		Arguments for NUCmer
+	</td>
+	<td align="left"  valign="top" >
+		Align
+	</td>
+	<td align="left"  valign="top" width="250" >
+		&nbsp;
+	</td>
+</tr>
+<tr>
+	<td align="left" valign="top">
+		PROmer Args
+	</td>
+	<td align="left"  valign="top" width="350" >
+		Arguments for PROmer
+	</td>
+	<td align="left"  valign="top" >
+		Align
+	</td>
+	<td align="left"  valign="top" width="250" >
+		&nbsp;
+	</td>
+</tr>
+</table>
+<p>
+<div style="width:500px">
+* Note that, by default, PROmer is used for alignments between different
+projects, while NUCmer is used for self alignments.
+</div>
+</body>
+</html>

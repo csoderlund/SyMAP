@@ -1,0 +1,1178 @@
+<html>
+<head>
+	<title>SyMAP 4.2 Guide</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<style>
+a.wt {color:inherit;}
+table {font-size:100%}
+tr {font-size:100%}
+td {font-size:100%}
+tt {font-size:13px}
+pre {font-size:13px}
+a {font-size:100%}
+.hang {text-indent:-20px; margin-left:20px;}
+	</style>
+</head>
+<body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
+<!--#include virtual="/common/uaheader.html" -->
+
+<a name=top></a>	
+	
+<table align="center" style="border: 1px solid #999999" cellspacing="0" cellpadding="0">
+	  	<tr>
+	  		<td>
+		  		<table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
+		    		<tr>
+    	  				<td height="60" width="161" align="left" valign="bottom">
+       						<img alt="" title="" src="./img/agcol_logo.png">
+       					</td>
+		    			<td height="60" width="428" align="left" valign="bottom" 
+							style="padding:0px 0px 10px 30px" size=5>
+							<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
+				    		<b>SyMAP 4.2 System Guide</b>
+							</font>
+		    			</td>
+		    			<td height="60" width="161" align="center" valign="bottom">&nbsp;
+        				</td>
+		    		</tr>
+		    		<tr>
+		    			<td height="21" colspan="3" align="left" valign="top">
+			    			<table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
+			    				<tr>
+			    					<td align="left" bgcolor="#666666">
+<span style="font-size:75%;color:white">
+<a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
+<a href=index.html class="wt">SyMAP Home</a> |
+System Guide |
+<a href=UserGuide.html class="wt">User Guide</a> |
+<a href=Tour.html class="wt">Tour</a> |
+<a href=TroubleShoot.html class="wt">Troubleshooting </a>
+</span>
+									</td>
+								</tr>
+							</table>
+			    		</td>
+			    	</tr>
+	        	    <tr>
+    	    		    <td colspan="3" valign="top" align="left" 
+								style='padding:20px 15px 0px 15px;font-size:85%'>
+								
+<h4>Contents</h4>
+<table border=0 cellspacing=3 cellpadding=2 style="font-size:95%">
+<tr>
+<td align=left valign=top>
+	<table cellspacing=2 cellpadding=2>
+	<tr><td align=left valign=top>01.</td><td align=left valign=top> <a href=#overview>Overview</a></td></tr>
+	<tr><td align=left valign=top>02.</td><td align=left valign=top> <a href=#pubs>Publications</a></td></tr>
+	<tr><td align=left valign=top>03. </td><td align=left valign=top><a href=#start>Getting Started</a></td></tr>
+	<tr><td align=left valign=top>04.</td><td align=left valign=top> <a href=#machine>System Requirements</a></td></tr>
+	</table>
+</td>
+<td align=left valign=top>
+	<table cellspacing=2 cellpadding=2>
+	<tr><td align=left valign=top>05.</td><td align=left valign=top> <a href=#installation>Installation</a></td></tr>
+	<tr><td align=left valign=top>06.</td><td align=left valign=top> <a href=#demo>Running the demo</a></td></tr>
+	<tr><td align=left valign=top>07. </td><td align=left valign=top><a href=#create>Creating a New Project</a></td></tr>
+	<tr><td align=left valign=top>08.</td><td align=left valign=top> <a href=#seqprep>Preparing the Sequences</a></td></tr>
+	</table>
+</td>
+<td align=left valign=top>
+	<table cellspacing=2 cellpadding=2>
+	<tr><td align=left valign=top>09.</td><td align=left valign=top><a href=#annot>Annotation Files</a></td></tr>
+	<tr><td align=left valign=top>10.</td><td align=left valign=top> <a href=#fpc>Working with FPC Files</a></td></tr>
+	<tr><td align=left valign=top>11. </td><td align=left valign=top><a href=#mysql>SyMAP and MySQL</a></td></tr>
+	<tr><td align=left valign=top>12.</td><td align=left valign=top> <a href=#time>Runtime and Memory</a></td></tr>
+	</table>
+</td>
+<td align=left valign=top>
+	<table cellspacing=2 cellpadding=2>
+	<tr><td align=left valign=top>13.</td><td align=left valign=top><a href=#web>Web Display</a></td></tr>
+	<tr><td align=left valign=top>14.</td><td align=left valign=top> <a href=#params>Database Parameters</a></td></tr>
+	<tr><td align=left valign=top>15. </td><td align=left valign=top><a href=#self>Self Alignments</a></td></tr>
+	<tr><td align=left valign=top>16.</td><td align=left valign=top><a href=#alg>How SyMAP Works</a></td></tr>
+	<tr><td align=left valign=top>17.</td><td align=left valign=top> <a href=#refs>References</a></td></tr>	</table>
+</td>
+
+</tr>
+</table>
+For build 120 (1/10/18), a new script with <a href="ncbi" target="_blank">documentation</a> has been provided to aid in using NCBI genome sequences
+and annotations with SyMAP; this script was used to create the <a href="http://www.agcol.arizona.edu/symapdb" target="_blank">2018 SyMAPdb v2</a>.
+<a name="overview">
+<h4>Overview</h4>
+SyMAP is a system for computing, displaying, and analyzing syntenic alignments between 
+<font color=purple><b>medium-to-high divergent eukaryotic genomes</b></font>. It does <b>not</b> work well
+for very similar genomes or bacterial genomes.
+<p>Its features include the following (for a pictorial introduction, see the 
+<a href="tour.html">Tour</a>): 
+<p>
+<table>
+	<tr>
+		<td align='left' valign='top'>
+<table cellpadding=7 style="font-style:italic;">
+	<tr>
+		<td>
+			GUI manager to run synteny computations and view results.
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Multiple display modes (dot plot, circular, side-by-side, closeup, 3D).
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Draft sequence ordering by synteny, i.e. 
+<font color=purple><b>align a draft genome to a fully sequence (not draft-to-draft</b></font>).
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Construction of cross-species gene families.
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Complete annotation-based queries.
+		</td>
+	</tr>
+	<tr>
+		<td>
+			All displays accessible through the web.
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Can align FPC maps to sequenced genomes.
+		</td>
+	</tr>
+
+</table>
+		</td>
+		<td align='left' valign='middle'>
+			<table cellspacing=1 cellpadding=0 border=1>
+				<tr>
+					<td>
+						<a href="img/3d.png"><img src="img/3d.png" width=100 height=100></a>
+					</td>
+					<td>
+						<a href="img/2d.png"><img src="img/2d.png" width=100 height=100></a>
+					</td>
+					<td>
+						<a href="img/circmap.png"><img src="img/circmap.png" width=100 height=100></a>
+					</td>
+
+				</tr>
+				<tr>
+					<td>
+						<a href="img/dotplot.png"><img src="img/dotplot.png" width=100 height=100></a>
+					</td>
+					<td>
+						<a href="img/mgr.png"><img src="img/mgr.png" width=100 height=100></a>
+					</td>
+					<td>
+						<a href="img/querysetup.png"><img src="img/querysetup.png" width=100 height=100></a>
+					</td>
+
+				</tr>
+			</table>
+		</td> 
+	</tr>
+</table>
+<p>
+
+<a name="pubs">
+<h4>Publications</h4>
+
+The back-end processing of SyMAP, including the synteny block 
+and anchor filtering algorithms, is described in the following 
+two publications. A sketch of the algorithms is also provided <a href="#alg">here</a>.
+<pre>
+        C. Soderlund,  W. Nelson, A. Shoemaker and A. Paterson (2006)
+        SyMAP: A System for Discovering and Viewing Syntenic Regions of FPC maps 
+        Genome Research 16:1159-1168.
+</pre>
+<p>
+<pre>
+        C. Soderlund, M. Bomhoff, and W. Nelson (2011) 
+        SyMAP: A turnkey synteny system with application to plant genomes.
+        Nucleic Acids Research 39(10):e68.
+</pre>
+
+SyMAP is freely distributed software, however
+<b><i>if you use SyMAP results in published research, you must cite one
+or both of these articles. </i></b>
+
+
+<p>
+<a name=start>
+<h4>Getting Started</h4>
+
+Follow the steps below to get started with SyMAP.
+If you are working with FPC files, see
+also <a href="#fpc">here</a>; for problems, see 
+<a href="TroubleShoot.html">troubleshooting</a>. Note that
+each SyMAP application window has a separate Help
+button providing further details on the use of its functions. 
+<p>
+
+<table cellpadding=7 >
+	<tr>
+		<td align='left' valign='top' >
+			1. 
+		</td>		
+		<td align='left' valign='top' >
+			Use a Linux or Mac machine.  
+		</td>
+		<td align='left' valign='top' style="font-style:italic">
+			It needs to have Java v1.6 or later, and sufficient processing power.
+			See <a href="#machine">system requirements</a>. 
+		</td>
+	</tr>
+	<tr>
+		<td align='left' valign='top'>
+			2.  
+		</td>
+		<td align='left' valign='top'>
+			Prepare sequences and annotation.  
+		</td>
+		<td align='left' valign='top' style="font-style:italic">
+			Sequences can be in one or many files and can be masked or unmasked.
+			See <a href="#seqprep">preparing the sequences</a>.
+			Annotation format is gff3; see <a href="#annot">annotation files</a>.
+		</td>
+	</tr>
+	
+	<tr>
+		<td align='left' valign='top'>
+			3.  
+		</td>
+		<td align='left' valign='top'>
+			Download SyMAP. 
+		</td>
+		<td align='left' valign='top' style="font-style:italic">
+			Installation is a simple unzip. See
+			<a href="#installation">installation</a>.
+		</td>
+	</tr>
+	<tr>
+		<td align='left' valign='top'>
+			4.
+		</td>
+		<td align='left' valign='top'>
+			Run the demo.
+		</td>
+		<td align='left' valign='top' style="font-style:italic">
+			Highly recommended. See
+			<a href="#demo">running the demo.</a>
+		</td>
+	</tr>
+	<tr>
+		<td align='left' valign='top'>
+			5. 
+		</td>
+		<td align='left' valign='top'>
+			Set up MySQL.
+		</td>
+		<td align='left' valign='top' style="font-style:italic">
+			SyMAP can run on its own but we recommend 
+			that you use a separate MySQL installation, which can be
+			on any machine. See <a href="#mysql">SyMAP and MySQL</a>.
+		</td>
+	</tr>
+
+	<tr>
+		<td align='left' valign='top'>
+			6. 
+		</td>
+		<td align='left' valign='top'>
+			Import your files.
+		</td>
+		<td align='left' valign='top' style="font-style:italic">
+			The SyMAP interface makes this easy; see
+			<a href="#create">creating a new project</a>.
+		</td>
+	</tr>
+	<tr>
+		<td align='left' valign='top'>
+			7. 
+		</td>
+		<td align='left' valign='top'>
+			Compute alignments and synteny.
+		</td>
+		<td align='left' valign='top' style="font-style:italic">
+			This also easy through the SyMAP interface. See
+			<a href="#time">runtime and memory</a>.
+		</td>
+	</tr>
+	<tr>
+		<td align='left' valign='top'>
+			8. 
+		</td>
+		<td align='left' valign='top'>
+			View results.
+		</td>
+		<td align='left' valign='top' style="font-style:italic">
+			These functions are located on the SyMAP interface. Detailed
+			description of the user interface is in the <a href="UserGuide.html">User Guide</a>.
+		</td>
+	</tr>
+	<tr>
+		<td align='left' valign='top'>
+			9. 
+		</td>
+		<td align='left' valign='top'>
+			Share through the web.
+		</td>
+		<td align='left' valign='top' style="font-style:italic">
+			A web install script is provided; 
+			see <a href="#web">web display</a>.
+		</td>
+	</tr>
+<table>
+
+<a name="machine">
+<h4>System Requirements</h4>
+
+SyMAP runs primarily on Intel systems with Linux or Mac OSX (tested on OSX 10.6.8 and 10.8.3). 
+Windows is supported <i>for viewing and querying only</i>.
+<p>
+For performing large alignments (e.g. 1Gb genomes or more) it is essential
+to have multiple CPUs, a 64-bit computer, and at least 5Gb of RAM
+for each CPU that you intend to use. (Note that you can set the
+number of CPUs for SyMAP to use). 
+<p>
+For viewing alignments, CPU and memory needs are typically negligible, unless
+you are performing queries on more than 4-5 genomes at once. 
+
+<a name="installation">
+<h4>Installation</h4>
+
+Installation simply consists of unzipping the download package, using
+the command
+<pre>     &#62 tar -xzvf symap_42.tar.gz</pre>
+This can be done anywhere and creates a directory called <tt>symap_42</tt>. You can
+move this directory later if desired.
+<p>
+To run SyMAP, change into the <tt>symap_42</tt> directory and run the command
+<pre>     &#62 ./symap </pre>
+
+<p>
+<a name="demo">
+<h4>Running the Demo</h4>
+
+If you have not used SyMAP before, it is essential to run the demos. 
+You can run them immediately after unzipping the package;
+it is not necessary to install MySQL (on Linux only) because a Java-controlled version of the database
+is included in the package. 
+<p>
+<table>
+	<tr>
+		<td align="left" valign="top">
+			<table cellspacing=10>
+				<tr>
+					<td align="left" valign="top">
+Change into the <tt>symap_42</tt> directory. 
+<ol>
+<li>If you have mySQL on your machine, then edit <tt>symap.config</tt> and enter database 
+and host information (see <a href=#mysql>SyMAP and MySQL</a>). 
+<br><br>
+<li>If you have Java 3D on your machine, 
+<br>then enter <tt>./symap </tt> 
+<br>else enter <tt>./symap -no3d</tt>
+
+<p>Many lines of text will print to the console, as SyMAP launches the
+supplied MySQL database. When this is done,
+the Project Manager window opens, shown at right.
+</ol>
+					</td>
+					<td align="left" valign="middle">
+						<table width=100%>
+							<tr>
+								<td align=center style="font-size:110%">
+									<i>(Click Images for larger version)</i>
+								</td>
+							</tr>
+						</table>
+<p>
+<a href="img/projman1.png"><img src="img/projman1.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td align="left" valign="top">
+There are four demo projects listed on the left. Check "Demo-Seq" and "Demo-Seq2".
+A link "Load All Projects" will be displayed in the top of the right panel; select it to 
+load the projects, which will take several minutes; when done, the Manager will look as
+shown in the image.
+<p>
+In the "Available Syntenies" table, click the cell for the 
+"Demo_Seq2" row and the "Demo_Seq" column. If you have two CPUs
+available, set the "CPUs" setting to "2". Then click the
+ "Selected Pair" button to start the alignment. 
+					</td>
+					<td align="left" valign="middle">
+<a href="img/projman4.png"><img src="img/projman4.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td align="left" valign="top">
+
+<p>
+The alignment will take about 30 minutes (15 with two CPUs). 
+<p>
+When done, the table will have a checkbox, signifying that 
+the synteny is available for viewing. Click the cell
+again which will enable the viewing buttons, e.g "Dot Plot".  
+					</td>
+					<td align="left" valign="middle">
+<a href="img/projman5.png"><img src="img/projman5.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td align="left" valign="top">
+Click "Dot Plot" and you will see the dot plot shown
+here. By clicking and/or selecting regions you can
+zoom into certain regions and bring up detailed views
+of the alignments. The Help button (question mark) 
+provides full information on the functions.
+					</td>
+					<td align="left" valign="middle">
+<a href="img/demo_dotplot.png"><img src="img/demo_dotplot.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td align="left" valign="top">
+Return to the Manager, and click the "Chromosome Explorer"
+button. This brings up the Explorer, shown at right. 
+<br><font color=green>(If this does not work, restart with <tt>symap -no3d</tt>; the 3D view on the right
+will not be available).</font>
+<p>
+Here you can pick different
+sets of chromosomes, using the small icons at left, and see them in different views.
+At first you only see the reference chromosome, which is initially chr3 from Demo-Seq
+(the reference has a red box around its number). 
+<p>
+Click on the icons for Demo-Seq2 chr1 and chr3, to see the 3D view at right.
+The ribbons represent synteny blocks (green for inverted). 
+					</td>
+					<td align="left" valign="middle">
+<a href="img/demo3d.png"><img src="img/demo3d.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td align="left" valign="top">
+Click the "Circle" button to see a Circos-style<sup>3</sup> display
+of the same chromosomes: 
+					</td>
+					<td align="left" valign="middle">
+<a href="img/democirc.png"><img src="img/democirc.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td align="left" valign="top">
+Click the 2D button to see a side-by-side view of
+ the same chromosomes. Note that the reference is in the middle. 
+Brown lines show the individual anchors (see 
+<a href="#alg">how symap works</a>).
+					</td>
+					<td align="left" valign="middle">
+<a href="img/demo2d.png"><img src="img/demo2d.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td align="left" valign="top">
+Selecting a region on one of the sequence tracks using the
+mouse zooms to that region.
+<p>
+Now the annotation icons (blue) for individual genes can be seen
+in the center of each sequence track. 
+<p>
+If you zoom in even closer, then you can click the "Sequence Filter"
+button and the top of a sequence track (or right click in the sequence), 
+and check "Show Descriptions
+for Annotations", and you will see the annotation text 
+for each gene. 
+					</td>
+					<td align="left" valign="middle">
+<a href="img/demo2dzoom.png"><img src="img/demo2dzoom.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td align="left" valign="top">
+Returning to the Manager, click the "SyMAP Queries" button. This brings up 
+the SyMAP Query window in Overview mode. Click the "Query Setup" option
+on the left-hand side and you will see the Query Setup window:
+<p>
+The query does two basic things:
+<br>
+A. Locate syntenic regions based on annotation
+<br>
+B. Create putative gene families across the 
+species by grouping the genes (or regions) which
+are connected by anchors. 
+<p>
+					</td>
+					<td align="left" valign="middle">
+<a href="img/demoquery.png"><img src="img/demoquery.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td align="left" valign="top">
+Enter "glycosyl" for the "Annotation String Search" and press "Do Search".
+<p>
+55 results are returned. Click the "PgFSize" column header to sort by
+this column, giving the table at right:
+<p>
+Each row is an anchor connecting two of the chromosomes. 
+At the top of the table are 7 anchors grouped into a putative
+family (PgeneF=25 in the image, but it may
+be numbered differently when you run it). 
+<p>
+The rows with a non-empty "BlockNum" 
+are anchors involved in synteny blocks. You could restrict the query
+to only these anchors, if desired. Synteny anchors are more likely
+to represent a true ancestral relationship; however, synteny blocks
+can not always be detected in sparser regions. 
+<p>
+If you query with more than two species, you can ask interesting
+questions such as "show me the glycosyl-related gene families which
+are present in species A and B but not in species C".  
+					</td>
+					<td align="left" valign="middle">
+<a href="img/demoqueryres.png"><img src="img/demoqueryres.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td colspan=2 >
+<a name="draft">
+<i>The remainder of the demo relates to draft sequence, i.e. unanchored
+shotgun sequence. If you aren't working with draft sequence,
+you can skip to <a href="#create">Creating a New Project</a>.</i>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td align="left" valign="top">
+Return to the Manager and load the Demo-Draft project, following
+the same steps used to load the previous two projects. 
+<p>
+On the Summary List, under the Demo-Draft listing, you will see
+the parameter "Order Against: demo_seq". With this setting,
+the Demo-Draft contigs will be ordered using synteny to
+Demo-Seq, as soon as that alignment is run.  
+					</td>
+					<td align="left" valign="middle">
+<a href="img/demodraft1.png"><img src="img/demodraft1.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td align="left" valign="top">
+Use the "Selected Pair" button to align Demo-Draft and Demo-Seq, 
+as before. The alignment will take about 20 minutes.
+<p>
+When done, open the dot plot for this pair and you will
+see that the draft contigs have been ordered and oriented
+to agree with the Demo-Seq. (For real projects the agreement will
+not be so good!)
+					</td>
+					<td align="left" valign="middle">
+<a href="img/demodraft2.png"><img src="img/demodraft2.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td align="left" valign="top">
+The ordering on Demo-Draft is in the database only; it does
+not change the sequence files on disk. 
+<p>
+However, SyMAP does write out ordered "pseudomolecule" files
+created from the draft contigs. These are put in the form
+of a new SyMAP project which can be loaded and aligned. You
+will see this new project in the Projects panel, as shown
+at right.
+<p>
+A text file showing the ordering information is also written to
+the Demo_Draft project directory, which you can find under the 
+<tt>data/pseudo</tt> subdirectory of the symap directory. 
+					</td>
+					<td align="center" valign="middle">
+<a href="img/demodraft3.png"><img src="img/demodraft3.png" width=250 border=1></a>
+					</td>
+				</tr>
+
+				<tr>
+					<td align="left" valign="top" colspan=2 >
+
+This is the end of the demo. 
+<br>
+At this point you will probably want to proceed by reading the next 
+section to learn how to create your own project in SyMAP.
+
+					</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>
+
+
+
+<a name="create">
+<h4>Creating a New Project</h4>
+If mySQL is installed, edit symap.config as described in <a href=#mysql>SyMAP and MySQL</a>.
+
+<p>
+To create a new project, start symap (i.e. <tt>./symap</tt> and press the "Add Project" button
+at the lower left. Enter the name and type of the project. The Help
+button on the dialog provides further information.
+<p>
+<table>
+<tr><td>
+After saving the new project, it appears in the Projects list on the left, but
+it is still an empty shell. Check its box and it will appear in the Summary
+section (right hand side) where you will then click the "Parameters" link
+to open the Parameters window shown in the image on the lower left.
+<p>
+On the Parameters window you will add the filenames for the sequences and annotations for the project,
+as well as setting other parameters if desired. The Help button on this window
+provides the necessary details. 
+<p>
+After setting parameters, the project is ready to be loaded and aligned using
+the same steps as in the demos. The parameter windows on the lower right is for the
+alignment, though the defaults are usually sufficient.
+<p>&nbsp;
+<td width="50%">
+<a href="img/projman4.png"><img src="img/projman4.png" width=400 border=1></a>
+
+<tr>
+<td><a href="img/parameters1.png"><img src="img/parameters1.png" width=400 border=1></a>
+<td valign="top"><a href="img/parameters2.png"><img src="img/parameters2.png"  width=300 border=1></a>
+</table>
+<p>
+<a name="seqprep">
+<h4>Preparing the Sequences</h4>
+The first decision with whole-genome sequence is whether or not to apply
+repeat masking. Masking reduces alignment time and false-positive hits, 
+but also runs a risk of concealing true hits due to inaccurate masking.
+Masking also requires considerable time. 
+<p>
+Masking is not really necessary unless the genome is highly repetitive
+<i>and</i> those repeats are shared with other genomes being aligned. 
+(Repeats cause particular trouble for self-alignments,
+see <a href="#self">self-alignments in SyMAP</a>).
+<p>
+Another masking option which is available if you have gene
+annotation is to mask out everything but the annotated genes. You
+can enable the "mask_genes" option on the Parameters window
+for your project (turn it on <i>before</i> doing
+the alignments).
+<p>
+Note that sequence files should be in FASTA format and the name of a sequence
+is the string immediately following the "&gt;", e.g. 
+<pre>
+>chr3  oryza sativa
+GAATTCGAATTTGGGTAATGCTAATCAATACAGGTCAAAATCTATGTATTGAGTGGAATATACTGCAAAGTAATTACCTT
+CTTCCAAAGGAAAGCATTCCTTCTCTCTTGTGGGACTAGCAGATGATCTCGCAGCCAAGACGTGACCACCCAAGGCTCAC
+...
+</pre>
+Here the sequence name is "chr3", and the sequence follows. The additional information
+"oryza sativa" is ignored.
+<p>
+<b><font color=red>Three things are important in naming sequences for SyMAP</font></b>:
+<table cellpadding=4 style="margin-left:10px;margin-top:5px;" >
+	<tr>
+		<td align='left' valign='top' >
+			A. 
+		</td>		
+		<td align='left' valign='top' >
+			<u>Sequence names can contain only letters, numbers, and underscores. </u>
+		</td>
+	</tr>
+	<tr>
+		<td align='left' valign='top' >
+			B. 
+		</td>		
+		<td align='left' valign='top' >
+			<u>The sequence names must <i>exactly</i> match those 
+			used in the annotation files (first column), or the
+			annotations will not be loaded. </u> 
+		</td>
+	</tr>
+	<tr>
+		<td align='left' valign='top' >
+			C. 
+		</td>		
+		<td align='left' valign='top' >
+			Use a consistent prefix such as "chr" for all sequences, followed
+			by a short number; set 'grp_prefix' in the parameters window to the prefix.
+			If there is not a consistent prefix, you may leave the 'grp_prefix' blank; 
+			beware, this can have unintended results, so should be avoided if possible.
+		</td>
+	</tr>
+	
+</table>
+<a name="draft">
+<b><i>Draft sequence</i></b>: A draft sequence can be compared to a complete genome (see demo for an example). 
+If the draft sequence is in too many sequence pieces, then (1) it takes a long time for the Mummer comparisons, (2)
+the display is very cluttered, and (3) the blocks display does not work right. Limit the number of sequence pieces
+by setting the 'min_size' in the paramters window to only load the largest 150 sequences; 
+there is a script called "scripts/lenFasta.pl" which
+will print out all the lengths; set the min_size to the 150th length. However, even 150 are a lot of blocks to view
+so you might want to start with the largest 50 and go from there.
+
+<p>
+<a name="annot">
+<h4>Annotation Files</h4>
+
+Annotation files should be in 
+<a href="http://www.sequenceontology.org/gff3.shtml">gff3 format</a>. 
+The first column (seqid) must exactly match the sequence names in
+the fasta files. The third column (type) determines how SyMAP
+uses the entry. Types "gene","exon","CDS","centromere", and "gap"
+are recognized (other entries are ignored). "CDS" and "exon" are
+treated equivalently in SyMAP. 
+<p>
+The last column (attributes) contains "tag=value" pairs describing
+the annotation. You can set which attributes to use, or use all
+those occurring more than a certain number of times (open the 
+Parameters window for the project, look for parameter "annot_keywords"). 
+<p>
+<i><b>Important:</b> Only the annotation on "gene" entries is shown in the
+displays or used for searching. For entries "exon", "CDS", "gap", and "centromere",
+only the coordinates from the gff file are used; the annotation text is not read.   
+</i>
+<p><i><b>NCBI files:</b></i>A Java script (<tt>scripts/ConvertNCBI.class</tt>) has been provided that converts NCBI genome fasta files and gff annotation files
+into the format that works best with SyMAP. See the <a href=ncbi>documentation</a> for instructions. This script was used to build 
+<a href="http://www.agcol.arizona.edu/symapdb" target="_blank">2018 SyMAPdb</a>.
+<p>
+<a name="fpc">
+<h4>Working with FPC Files</h4>
+
+SyMAP can also align genomes represented by an FPC physical
+map, by first aligning the BACs using BAC-end sequences or marker
+sequences. If you plan to work with FPC alignments, the first
+step is to run the provided demo "Demo-FPC". Align it to "Demo-Seq2"
+using the same steps as described <a href="#demo">above</a>, and 
+explore the various displays. 
+<p>
+Creating an FPC project is the same as for a 
+<a href="#create">sequence project</a> except that you choose
+the type "fpc", and then the Project Parameters window
+has some different paramaters. The Parameters window is where
+you will enter the FPC file, and your fasta files of marker
+and BAC-end sequences.
+<p>
+Note that the BAC-end sequence names must be exactly the clone
+names used in FPC, with extension "r" or "f" labeling the 
+strand. In other words if the FPC map has a clone
+"a0435B26" then the BES for that clone can be named
+"a0435B26f" or "a0435B26r".
+<p>
+The BES and marker alignments in an FPC project are performed using 
+BLAT<sup>1</sup>, in contrast
+to MUMmer<sup>2</sup> for sequence projects. The running time is typically
+several times longer than that of MUMmer (described <a href="#time">here</a>), but
+the memory usage is much lower.  
+
+<a name="mysql">
+<h4>SyMAP and MySQL</h4>
+
+SyMAP stores all data in a MySQL server. The package comes with a 
+version of MySQL that is suitable for the demo or a small project, but
+not for large projects or for web display. For any substantial
+work we recommend using a standalone MySQL installation.
+<font color='red'>Note, if you are using MacOSX 10.7+,</font> 
+the pre-packaged version of MySQL does not work, and cannot be
+upgraded since the Java/MySQL module is no longer supported. You will
+need to install MySQL.
+<p>
+The MySQL installation does not need to be on the machine where
+you will do the computations or view the results, as long as
+it is on an accessible network. Once the server is ready, fill out
+the database parameters in the "symap.config" file in the 
+main SyMAP directory, as described <a href="#params">here</a>. 
+<p>
+ Note that it is a good idea to have separate 
+admin and client usernames, where the client has read-only 
+access. If you set up the web displays, they will use 
+the client username. The "admin" user needs to have sufficient
+permissions to create a new database.
+<p>
+Note that the default settings of MySQL are poorly suited for large-scale
+data storage. You will want to adjust the parameters 
+<tt>innodb_buffer_pool_size,innodb_flush_log_at_trx_commit</tt> as described
+<a href="TroubleShoot.html#msqslow">here</a>.
+<p>
+<i>MySQL on the Mac:</i><br>
+Download and install the "MySQL Community Server" from
+<a href="http://dev.mysql.com/downloads/mysql/">http://dev.mysql.com/downloads/mysql/</a>.
+Also install the Preferences Panel, and use that to start the server.
+In symap.config, use
+<pre>
+db_name             = symap
+db_server           = localhost
+db_adminuser        = root
+db_adminpasswd      = 
+db_clientuser       = root
+db_clientpasswd     = 
+</pre>
+For large projects you will want to adjust the parameters as described 
+<a href="TroubleShoot.html#msqslow">here</a>.
+<a name="time">
+<h4>Runtime and Memory</h4>
+
+The largest component of SyMAP execution time is in running
+MUMmer<sup>2</sup> (or BLAT<sup>1</sup>). The typical runtime is one CPU-hour per
+target sequence (or group of chromosomes, since SyMAP
+will group shorter sequences together for efficiency). 
+<p>
+For example, to align maize (10 chromosomes, 2Gb) to
+rice (12 chromosomes, 370Mb) required 1 hour, 3 minutes using 8 CPUs
+with 2.3Ghz speed. SyMAP grouped the shorter rice chromosomes
+into 8 groups and each processor handled one. 
+<p>
+The memory usage of MUMmer is typically 5G per CPU, however it can
+be as high as 10G for very long or repetitive chromosomes. 
+
+<a name="web">
+<h4>Web Display</h4>
+SyMAP's Java-based architecture makes it easy to share results
+ over the web by following the following two steps:
+<ol>
+<li>Use the symapApplet.jar from Build 119 (12/28/17) or later.
+<li>Sign symapApplet.jar; e.g. this can be done by purchasing a code-signing certificate such as from Digicert, or your
+university may have a InCommon account.
+<li>All you have to do is create a single html file with the
+following project-browser tag (edited for your parameters):
+</ol>
+<pre>
+&lt;applet  archive='symapApplet.jar'
+    code='symap.SyMAPBrowserApplet'
+    name='SyMAP'
+    codebase='http://URL_TO_JAR_FILE_DIRECTORY'
+    width='100%'
+    height='100%'&gt; 
+    &lt;param name='database' value='jdbc:mysql://DATABASE_HOST_ADDRESS/DATABASE_NAME'&gt;
+    &lt;param name='username' value=''&gt; &lt;!-- should be a READ-ONLY user!! --&gt;
+    &lt;param name='password' value=''&gt;
+    &lt;param name='title' value='SyMAP Project Browser'&gt;
+    &lt;param name='description' value='this description will show on the applet'&gt;
+    &lt;param name='projects' value='maize, soy'&gt;
+&lt;/applet&gt;
+</pre>
+The last three parameters are options and allow you to customize the information on the applet. The 'projects' parameter allows you to 
+specify what projects to show, e.g. if the database has maize, soy and rice, the above 'projects'
+would limit it to showing only maize and soy. 
+<p>
+You can also create custom pages showing dotplots, circle plots, and other displays using 
+individual applet tags, following these examples:
+<div style="border:1px solid black;width:800px;height:300px;overflow:scroll">
+<table border=true rules=all cellpadding=5>
+	<tr>
+		<td><b>Display&nbsp;Type</b></td><td><b>Example</b></td><td><b>Code</b></td>
+	</tr>
+	<tr>
+		<td valign=top align=left>Block&nbsp;View<p>(two species)</td>
+		<td valign=top align=left><img src="img/blocks1-demo.png" width=200></td>
+		<td valign=top>
+<pre>
+ &lt;applet code='blockview.BlockApplet'
+        name='SyMAP'
+        codebase='http://URL_TO_JAR_FILE_DIRECTORY'
+        archive='symapApplet.jar' &gt;
+        &lt;param name='database' value='jdbc:mysql://DATABASE_HOST_ADDRESS/DATABASE_NAME'&gt;
+        &lt;param name='username' value=''&gt;
+        &lt;param name='password' value=''&gt;
+        &lt;param name='project1' value='grape'&gt;
+        &lt;param name='project2' value='poplar'&gt;
+        &lt;alt='The Java Applet is loading, please be patient'&gt;
+        &lt;/applet&gt;
+</pre>
+		</td>
+	</tr>
+	<tr>
+		<td valign=top align=left>Circle&nbsp;View<p>(multi-species)</td>
+		<td valign=top align=left><img src="img/circmap-demo.png" width=200></td>
+		<td valign=top>
+<pre>
+ &lt;applet code='circview.CircApplet'
+        name='SyMAP'
+        codebase='http://URL_TO_JAR_FILE_DIRECTORY'
+        archive='symapApplet.jar' &gt;
+        &lt;param name='database' value='jdbc:mysql://DATABASE_HOST_ADDRESS/DATABASE_NAME'&gt;
+        &lt;param name='username' value=''&gt;
+        &lt;param name='password' value=''&gt;
+        &lt;param name='project1' value='grape'&gt;
+        &lt;param name='project2' value='poplar'&gt;
+        &lt;param name='project3' value='soy'&gt;
+        &lt;alt='The Java Applet is loading, please be patient'&gt;
+        &lt;/applet&gt;
+</pre>
+		</td>
+	</tr>
+	<tr>
+		<td valign=top align=left>Chromosome Explorer<p>(multi-species)</td>
+		<td valign=top align=left><img src="img/democirc.png" width=200></td>
+		<td valign=top>
+<pre>
+ &lt;applet code='symapCE.SyMAPAppletExp'
+        name='SyMAP'
+        codebase='http://URL_TO_JAR_FILE_DIRECTORY'
+        archive='symapApplet.jar' &gt;
+        &lt;param name='database' value='jdbc:mysql://DATABASE_HOST_ADDRESS/DATABASE_NAME'&gt;
+        &lt;param name='username' value=''&gt;
+        &lt;param name='password' value=''&gt;
+        &lt;param name='project1' value='grape'&gt;
+        &lt;param name='project2' value='poplar'&gt;
+        &lt;param name='project3' value='soy'&gt;
+        &lt;alt='The Java Applet is loading, please be patient'&gt;
+        &lt;/applet&gt;
+</pre>
+		</td>
+	</tr>
+	<tr>
+		<td valign=top align=left>Dot Plot<p>(multi-species)</td>
+		<td valign=top align=left><img src="img/demo_dotplot.png" width=200></td>
+		<td valign=top>
+<pre>
+ &lt;applet code='dotplot.DPApplet'
+        name='SyMAP'
+        codebase='http://URL_TO_JAR_FILE_DIRECTORY'
+        archive='symapApplet.jar' &gt;
+        &lt;param name='database' value='jdbc:mysql://DATABASE_HOST_ADDRESS/DATABASE_NAME'&gt;
+        &lt;param name='username' value=''&gt;
+        &lt;param name='password' value=''&gt;
+        &lt;param name='project1' value='grape'&gt;
+        &lt;param name='project2' value='poplar'&gt;
+        &lt;param name='project3' value='soy'&gt;
+        &lt;alt='The Java Applet is loading, please be patient'&gt;
+        &lt;/applet&gt;
+</pre>
+		</td>
+	</tr>
+	<tr>
+		<td valign=top align=left>Query Interface<p>(multi-species)</td>
+		<td valign=top align=left><img src="img/query_query.png" width=200></td>
+		<td valign=top>
+<pre>
+ &lt;applet code='symapQuery.SyMAPQueryApplet'
+        name='SyMAP'
+        codebase='http://URL_TO_JAR_FILE_DIRECTORY'
+        archive='symapApplet.jar' &gt;
+        &lt;param name='database' value='jdbc:mysql://DATABASE_HOST_ADDRESS/DATABASE_NAME'&gt;
+        &lt;param name='username' value=''&gt;
+        &lt;param name='password' value=''&gt;
+        &lt;param name='project1' value='grape'&gt;
+        &lt;param name='project2' value='poplar'&gt;
+        &lt;param name='project3' value='soy'&gt;
+        &lt;alt='The Java Applet is loading, please be patient'&gt;
+        &lt;/applet&gt;
+</pre>
+		</td>
+	</tr>
+	<tr>
+		<td valign=top align=left>Alignment Summary<p>(two species)</td>
+		<td valign=top align=left><img src="img/summary.png" width=200></td>
+		<td valign=top>
+<pre>
+ &lt;applet code='symap.projectmanager.common.SummaryApplet'
+        name='SyMAP'
+        codebase='http://URL_TO_JAR_FILE_DIRECTORY'
+        archive='symapApplet.jar' &gt;
+        &lt;param name='database' value='jdbc:mysql://DATABASE_HOST_ADDRESS/DATABASE_NAME'&gt;
+        &lt;param name='username' value=''&gt;
+        &lt;param name='password' value=''&gt;
+        &lt;param name='project1' value='grape'&gt;
+        &lt;param name='project2' value='poplar'&gt;
+        &lt;alt='The Java Applet is loading, please be patient'&gt;
+        &lt;/applet&gt;
+</pre>
+		</td>
+	</tr>
+</table>
+</div>
+<p>
+If one of the projects is an FPC project, indicate that with a parameter tag
+with type number corresponding to the project name tag:
+<pre>
+&lt;param name='type1' value='fpc'&gt;
+</pre>
+
+
+<p>
+<a name="params">
+<h4>Database Parameters</h4>
+Parameters for accessing the MySQL database
+should be set in the "symap.config" file in the main symap directory, as follows:
+<p>
+<table width=650 rules=all cellpadding=4 border=1 align=center>
+	<tr>
+		<td colspan=2 align=center >
+		<i>Database Parameters</i>
+		</td>
+	</tr>
+	<tr>
+		<td align="left" valign="top" >db_name</td>
+		<td>
+			Name of the MySQL database. SyMAP will create it, if it does not exist yet.
+			If it does exist, it should either already be a SyMAP database, or it should be empty.
+		</td>
+	</tr>
+	<tr>
+		<td align="left" valign="top" >db_server</td>
+		<td>
+			The machine hosting the MySQL database, e.g. "myserver.myschool.edu".
+		</td>
+	</tr>
+	<tr>
+		<td align="left" valign="top" >db_adminuser</td>
+		<td>
+			MySQL username of a user with sufficient privileges to create a database. Needed for
+			creating and updating alignments.
+		</td>
+	</tr>
+	<tr>
+		<td align="left" valign="top" >db_adminpasswd</td>
+		<td>
+			Password of the admin user.	
+		</td>
+	</tr>
+	<tr>
+		<td align="left" valign="top" >db_clientuser</td>
+		<td>
+			MySQL username of a user with read-only access.  Used in the web displays, if installed, or
+			if symap is launched with the "-r" parameter.
+		</td>
+	</tr>
+	<tr>
+		<td align="left" valign="top" >db_clientpasswd</td>
+		<td>
+			Password of the client user.
+		</td>
+	</tr>
+</table>
+
+<p>
+<a name="self">
+<h4>Self Alignments and SyMAP</h4>
+
+Because of its reliance on MUMmer, SyMAP has to follow a slightly different
+procedure in carrying out a self-alignment. MUMmer ordinarily 
+seeds its alignments with unique matches, which eliminates the possibility
+of off-diagonal seeds in the alignment of a chromosome to itself. To overcome
+this problem, SyMAP v4.2 runs the individual chromosome self-alignments using
+the MUMmer parameter -maxmatch, which removes the uniqueness requirement at
+the cost of greatly increased noise. The extra noise is then filtered to
+a large extent  by the default SyMAP filters, but the diagonal squares of
+the dot plot will still have more noise visible than the off-diagonal.
+
+<p>Self alignments take <i>considerable</i> more time, e.g. on a Mac laptop with 4 threads, demo_seq against demo_seq2 took 12min,
+whereas demo_seq against itself took 1hr45min.
+
+<a name="alg">
+<h4>How SyMAP Works</h4>
+
+This section provides a brief overview of the SyMAP processing steps; for
+more, see the SyMAP published papers<sup>4,5</sup>. The processing
+has four phases:
+<div style="padding:10px 0px 0px 20px;">
+<i>Alignment:</i> <br>
+The sequences are written to disk<sup>*</sup>, with gene-masking
+if desired. In the alignment, one species is "query" and the other is 
+"target". If one project is FPC, that is the query; if both are sequence,
+the query is the one with alphabetically the first name. The query sequences
+are written into one large file, while smaller target sequences are grouped
+into larger fasta files of size up to 70Mb, for more efficient processing
+in MUMmer. 
+<p>
+<i>Anchor Clustering:</i><br>
+The raw anchor set consists of the hits found by MUMmer or BLAT.
+These are first clustered into gene, or putative-gene hits. This is
+done by clustering the hit regions on each sequence, and then defining new "gene"
+hits which connect these regions. For example if three separate 
+exons hit between two genes, they will be clustered into one "gene"
+hit having a combined score equal to the sum of the raw hit scores.
+Clustering is by gene if the hits overlap annotation, otherwise, it uses
+a max separation 1kb, creating "putative gene" regions.
+<p>
+<i>Anchor Filtering:</i><br>
+The clustered "gene anchors" are now filtered using a version of 
+reciprocal-best filtering which is adapted for retaining duplications and
+gene families. For each pair of genes (or putative genes) which is 
+connected by a clustered anchor, the retained anchors must be among
+ the top two anchors by score on both sides (top-2 allows for one
+ancestral whole-genome duplication). An anchor will also be retained if its
+score is at least 80% of that of the 2nd-best anchor on each side (this
+allows for retention of gene family anchors). These filter parameters
+may be adjusted through the Alignment & Synteny Parameters window. 
+<p>
+<i>Synteny Block Detection:</i><br>
+After the clustered anchors are loaded into the database,  the synteny
+synteny block algorithm runs. This algorithm looks for approximately-collinear
+sequences of anchors, subject to several parameters including A) Number
+of anchors; B) Collinearity of the anchors; C) Amount of "noise" in the 
+surrounding region (to help reject false-positive chains). Criterion A can
+be adjusted in the Alignment & Synteny Parameters window.
+<p>
+<sup>*</sup> Note that the sequences are re-written from the database to the
+disk for three reasons:A)To allow re-grouping for efficiency; B) To ensure elimination
+of invalid characters; C) To mask non-gene regions, if desired. This also ensures that
+sequences names will match those in the database, and prevents problems caused by
+moving the source sequences on disk.
+</div>
+
+<a name="refs">
+<h4>References</h4>
+
+
+<sup>1</sup>
+Kent, J. (2002) BLAT--the BLAST-like alignment tool, Genome Research 12:656-64. 
+
+<p>
+<sup>2</sup>
+Kurtz, S., Phillippy, A., Delcher, A.L., Smoot, M., Shumway, M., Antonescu, C., Salzberg, S.L. 
+(2004) Versatile and open software for comparing large genomes, Genome Biology, 5:R12 
+
+<p>
+<sup>3</sup>
+Krzywinski, M., J. Schein, I. Birol, J. Connors, R. Gascoyne, D. Horsman, S. Jones, M. Marra (2009)
+Circos: An information aesthetic for comparative genomics. Genome Research doi:10.1101/gr.092759.109.
+<p>
+<sup>4</sup>
+Soderlund, C., Nelson, W., Shoemaker, A., and Paterson, A.(2006)
+SyMAP: A system for discovering and viewing syntenic regions of FPC maps.
+Genome Res. 16:1159-1168. 
+<p>
+<sup>5</sup>
+Soderlund, C., Bomhoff, M., and Nelson, W. (2011)
+SyMAP: A turnkey synteny system with application to multiple large duplicated plant sequenced genomes.
+Nucleic Acids Res V39, issue 10, e68.
+
+
+
+					    </td>
+				    </tr>
+			    </table>	
+          	    <table width="100%" border="0" align="center" cellpadding=2 cellspacing=0 style="margin-top:40px">
+            	    <tr>
+              		    <td bgcolor="#DDDDDD" align="center">
+               		    <font face="Verdana, Arial, Helvetica, sans-serif" size="2">Email
+               		    Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></font>
+					    </td>
+            	    </tr>
+              </table>
+		    </td>
+	    </tr>
+	</table>
+</BODY>
+</HTML>

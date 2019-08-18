@@ -1,0 +1,511 @@
+<HTML>
+<HEAD>
+	<TITLE>SyMAP 4.2 Troubleshooting</TITLE>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<style>
+		a.wt {color:inherit;}
+		table {font-size:100%}
+		tr {font-size:100%}
+		td {font-size:100%}
+		tt {font-size:13px}
+		a {font-size:100%}
+		li {padding-top:2px;}
+	</style>
+</head>
+<body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
+<!--#include virtual="/common/uaheader.html" -->
+
+	<a name=top></a>
+	<table align="center" width=750 style="border: 1px solid #999999" cellspacing="0" cellpadding="0">
+	  <tr>
+	  <td>
+		  <table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
+		    <tr>
+    	  <td height="60" width="161" align="left" valign="bottom">
+       		<img alt="" title="" src="img/agcol_logo.png">
+       	</td>
+		    <td height="60" width="428" align="left" valign="bottom"
+				style="padding:0px 0px 10px 30px">
+			    <font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
+				    <b>SyMAP 4.2 Troubleshooting</b>
+			    </font> 
+		    </td>
+		    <td height="60" width="161" align="center" valign="bottom">&nbsp;
+        </td>
+		    </tr>
+
+		    <tr>
+		    <td height="21" colspan="3" align="left">
+			    <table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
+			    <tr>
+			    <td align="left" bgcolor="#666666">
+<span style="font-size:75%;color:white">
+<a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
+<a href=index.html class="wt">SyMAP Home</a> |
+<a href=SystemGuide.html class="wt">System Guide</a> |
+<a href=UserGuide.html class="wt">User Guide</a> |
+<a href=Tour.html class="wt">Tour</a> |
+Troubleshooting 
+</span>
+          </table>
+			    </td>
+			    </tr>
+
+          <tr>
+    	    <td colspan="3" valign="top" align="left" style='padding:15px;font-size:85%;width:750px;'>
+
+
+
+<a name="top"></a>
+<br>
+This guide is intended to aid in the installation and configuration of SyMAP.<br>
+<i>Please send questions and suggestions to symap@agcol.arizona.edu.</i><br>
+
+<h3>Problems</h3>
+<ul>
+	<li><a href="#freetype">Circle view (web version) won't display, error "No font drivers..."<a>
+	<li><a href="#msqslow">Slow to load sequence and annotation</a>
+	<li><a href="#mac3d">Chromosome Explorer won't run on Macintosh</a>
+    <li><a href="#not_enough_memory">Not enough memory</a></li>
+    <li><a href="#database_error">Database connect errors</a> ("Unable to connect","Error running SQL Command",...)</li>
+	<li><a href="#chrome">Unable to view Java applets on MacOS</a></li>
+	<li><a href="#fire">Unable to view Java applets using Firefox</a></li>
+	<li><a href="#applet">Unable to view Java applets over the Web</a></li>
+    <li><a href="#perl_compilation">Perl error on Web Install: "Can't locate ..."</a></li>
+    <li><a href="#proj_unknown">"No projects found"</a></li>
+    <li><a href="#mysql_norun">"The built-in MySQL server cannot run..."</a></li>
+    <li><a href="#status">"Status window disappeared"</a>
+    <li><a href="#noanch">"No anchors loaded"</a>
+   <li><a href="#bes">BES not loaded</a>
+ 	<li><a href="#innodb">The database does not support Innodb tables</a>
+	<li><a href="#mumbuild">Did you compile MUMmer yourself?</a></li>
+	<li><a href="#mum64">MUMmer/PROmer can't handle large sequences</a>
+	<li><a href="#root">Please read "Security" section of the manual to find out how to run mysqld as root</a>
+    <li><a href="#3derr">"The 3D display will not show"</a>
+ 	<li><a href="#glib">/lib64/libc.so.6: version `GLIBC_2.7' not found </a>
+	<li><a href="#msqcase"> Can't create table  (errno: 121)</a>
+</ul>
+<br>
+<hr>
+
+<a name="freetype">
+<h3>Circle view (web version) won't display, error "No font drivers..."</h3>
+
+The website version of the circle view, created by circmap.cgi, needs the unix library 
+freetype-devel. The full error message shown in the web browser is
+<br>
+"No font drivers enabled that can support this file, rebuild Imager with any 
+of ft2 (FreeType 2.x), tt (FreeType 1.x) to use this font file 
+at circmap.cgi line 162."
+<p>
+To resolve this, first install freetype-devel using 
+<pre>yum install freetype-devel</pre>
+Then, the perl Imager module must be installed or reinstalled using
+<pre>cpan -f -i Imager</pre>
+
+After this, circmap.cgi should work. 
+
+<a name="msqslow">
+<h3>Slow to load sequence and annotation</h3>
+
+Two MySQL settings are especially important for SyMAP performance (and generally for InnoDB table
+performance). You can set these in the MySQL configuration file "my.cnf" and restart MySQL. 
+Note that my.cnf is located at /etc/my.cnf, on both Linux and Mac.
+<p>
+<table width=600 cellspacing=3 cellpadding=2 border=1 rules=all>
+	<tr>
+		<td align=left valign=top><tt>innodb_buffer_pool_size</td>
+		<td>
+The default is too low for most purposes. You should set this to around 1Gb if possible (note that 
+the units are bytes). 
+		</td>
+	</tr>
+	<tr>
+		<td align=left valign=top><tt>innodb_flush_log_at_trx_commit=0</td>
+		<td>
+The default setting is 1, which results in very slow uploading of data.
+		</td>
+	</tr>
+</table>
+
+<p>
+<a name="mac3d">
+<h3>Chromosome Explorer won't run on Macintosh</h3>
+Typically this means there is a conflict with 3D Java libraries already on the Mac system.
+Note, the libraries supplied by Apple are out of date and not necessary to the system. 
+<p>
+Before trying to fix the libraries the first thing to try is to run it without 3D:
+<pre><tt>./symap -no3d</tt></pre>
+<p>
+Now if you want to use the 3D views, you need to remove the Mac libraries.
+They are in /System/Library/Java/Extensions. Just make a "3D" directory and move 
+them all in there, where the system can't find them. Move all the ones 
+called "j3d", plus "vecmath", and try symap again. 
+
+<a name="not_enough_memory"></a>
+<h3>Not Enough Memory</h3>
+This problem can occur when running from a web page (see <b>(1)</b> below) or
+as a standalone application (see <b>(2)</b> below).
+<p>
+<u><b>(1) Adjusting Web Applet Memory Use</b></u><br>
+When running SyMAP from a web page (i.e., as an applet):
+The default Java applet memory limit is very low, and memory may run out
+for large displays or for the 2D Base View.  Increase the Java memory limit for your system using 
+the instructions below:
+<p>
+On Windows:
+<ol>
+<li>From the <b>Start</b> menu button, select <b>Settings</b>, then <b>Control Panel</b> to open the Control Panel.
+Or right click on the Java icon <img border=1 src="img/javaIcon.jpg"> in the lower right of the task bar.
+<li>Double click the Java icon to open the <b>Java Control Panel</b>.
+<li>Select the <b>Java</b> tab.
+<li>Click the <b>View</b> button under <b>Java Applet Runtime Settings</b>.
+<li>For each row, click the <b>Java Runtime Parameters</b> column and type <b>-Xmx512m</b> and press enter.
+<li>Click the <b>OK</b> button to close the Control Panel.
+<li>Restart your browser.
+</ol>
+On Mac:
+<ol>
+<li>In the Finder, select <b>Go</b> then select <b>Applications</b>.
+<li>In the new window select <b>Utilities</b>, then double-click <b>Java Preferences</b> to open the <b>Java Control Panel</b>.
+<li>Select the top-most Java version in the list under <b>Java Applet Plugin</b> and click <b>Options</b>.
+<li>Under <b>Java Runtime Parameters</b> enter <b>-Xmx512m</b>.
+<li>Click the <b>OK</b> button and close the Control Panel.
+<li>Restart your browser.
+</ol>
+On Unix:
+<ol>
+<li>First locate the Java plugin file, under your home directory in either 
+	<tt>~/.mozilla/plugins</tt> or <tt>~/.mozilla/firefox/plugins</tt>
+<li>Use <tt>ls -l</tt> to find where the plugin is linked from. This is the Java install directory. 
+<li>Change to ths install directory and execute <b>bin/ControlPanel</b> to open the <b>Java Control Panel</b>.
+<li>Select the <b>Java</b> tab.
+<li>Click the <b>View</b> button under <b>Java Applet Runtime Settings</b>.
+<li>For each row, click the <b>Java Runtime Parameters</b> column and enter <b>-Xmx512m</b>.
+<li>Click the <b>OK</b> button to close the Control Panel.
+<li>Restart your browser.
+</ol>
+
+<p>
+<u><b>(2) Adjusting Standalone Memory Use</b></u><br>
+When running SyMAP as a standlone application:
+For very large projects, or queries involving multiple
+genomes (e.g., 5 or more), the Project Manager may run out of memory.
+To fix this problem, run symap with the -m parameter to increase the maximum
+memory used from the default 2048 MB to 4096 MB.:
+<pre><b>     &#62 ./symap -m 4096</b></pre>
+You will also need to be using a 64-bit processor. 
+It should not be necessary to go any higher than this.
+
+<p>
+
+<a href="#top">Return to top</a><br>
+<hr>
+
+
+
+<a name="database_error">
+<h3>Database connect errors</h3>
+Error messages mentioning the database or SQL probably mean that the database connection
+could not be established or was lost. A message at startup means SyMAP was not able
+to connect to the database using the provided information in symap.config; see below for 
+steps to debug this. 
+<p>
+After startup, if the program is left idle for some time then its
+database connection will close and it will show a complicated-looking error on 
+next usage. In this case the solution is to restart the program.
+<p>
+Following are some things to check for connection problems on SyMAP startup:
+
+<h4>Check the database privileges</h4>
+The database users specified in symap.config may not have necessary access to the database.
+If you are running the standalone version, then the relevant user is 'db_adminuser' (unless
+you are running a read-only session using 'symap -r' parameter). If you are running
+through the web applet, then is is 'db_clientuser'. In either case the user needs
+to have database access privileges <i>from the machine where you are working</i>. Note that MySQL
+privileges are granted specifically to certain users on certain machines. You can test 
+the user access by using the MySQL command line client <tt>mysql</tt>, if it is installed
+on your machine, or by looking at the privilege table using an administration interface
+such as PHPMyAdmin. The <tt>mysqlaccess</tt> tool is also useful, if it is installed
+on your machine. 
+
+
+
+<h4>Check the MySQL configuration</h4>
+
+The MySQL configuration file (/etc/my.cnf) should <b>not</b> contain any
+of the following lines that prevent remote access to the database.
+<tt><pre>     bind_address=127.0.0.1
+     skip_networking 
+</pre></tt>
+
+<h4>Make sure the port is visible</h4>
+If the database is on a different computer, test that its port 3306 is visible
+from your computer:
+ <tt>
+<pre>     telnet &lt;server address&gt; 3306
+</pre>
+</tt>
+If it doesn't make a connection then either the server isn't running, or 
+it is set to run on a non-standard port, or the
+port is blocked by a firewall. Contact a system administrator. (Note, 
+to get out of telnet type "<tt>^]</tt>".)
+
+<hr>
+<a name="perl_compilation"></a>
+<h3>Perl error on Web Install: "Can't locate ..."</h3>
+The SyMAP web displays need some non-standard Perl modules.  
+If any of these modules are missing, the install script will fail:
+<font face="Courier">
+<pre>
+     Can't locate Data/Page.pm in @INC (...)
+     Can't locate DBI.pm in @INC (...)
+     Can't locate GD.pm in @INC (...)
+	 Can't location Imager in @INC (...)
+</pre>
+</font>
+
+To install these modules on your server, execute the following commands (you
+will need admin privileges):
+<tt>
+<pre>
+     &#62 cpan Data::Page
+     &#62 cpan DBI
+     &#62 cpan GD
+	 &#62 cpan Imager
+</pre>
+</tt>
+Note:  CPAN is the <a href="http://www.cpan.org">Comprehensive Perl Archive Network</a>.
+<p>
+<a href="#top">Return to top</a><br>
+<hr>
+
+<a name="chrome">
+<h3>Unable to view Java applets on MacOS</h3>
+A. Safari is currently not supported; please try Firefox or Google Chrome.
+<p>
+B. 
+Support for Java within MacOS seems to be problematic. However, as of 8/2012, if
+you have Mac OSX 10.6.8, and have installed all updates, it should work 
+through either Firefox or Chrome. On Firefox, it is also possible that Java is dis
+abled
+by the browser. You can check this in "tools->add-ons". 
+
+<a name="fire">
+<h3>Unable to view Java applets using Firefox</h3>
+
+It is also possible that Java is disabled
+by the browser. You can check this in "tools->add-ons". 
+
+<a name="applet">
+<h3>Unable to view Java applets over the Web</h3>
+First, make sure you have Java 1.6 (or later) installed and that its plugin is enabled. On MacOSX, this is done
+through the Preferences manager which is in Applications/Utilities. On Windows, it is a Java icon on the Control Panel. 
+On Unix, the plugin must be installed into a subdirectory of .mozilla in your home directory, 
+<p>
+If it still doesn't work (after restarting computer), then check the platform and browser-specific 
+troubleshooting sections as follows:
+<ul>
+	<li><a href="#chrome">Unable to view Java applets on MacOS</a></li>
+	<li><a href="#fire">Unable to view Java applets using Firefox</a></li>
+</ul>
+
+<a name="proj_unknown">
+<h3>"No projects found" on the web display</h3>
+If there are no projects to select in the main projects web page (projects.cgi),
+then either the demo was not run, or the demo projects were not properly loaded into the database. Re-run the 
+<a href="SystemGuide.html#running_the_demo">demo</a> and try again.
+<p>
+<a href="#top">Return to top</a><br>
+<hr>
+
+<a name="mysql_norun">
+<h3>"The built-in MySQL server cannot run..."</h3>
+SyMAP comes with a MySQL server built in, but it does not run right if there is another
+MySQL server already running on the computer. There are two solutions: either stop the 
+other server temporarily, or edit the parameters file to point SyMAP at that server (or
+another server) so it doesn't use the built-in MySQL. 
+<p>
+<a href="#top">Return to top</a><br>
+<hr>
+
+<a name="status">
+<h3>"Status window disappeared"</h3>
+Occassionally the status window disappears when running an alignment. 
+Clicking the top of the project manager sometimes
+brings it back. Otherwise, just check the output to the terminal,
+which tells you when it is done. You may
+have to restart the project manager to see the results.
+<p>
+<a href="#top">Return to top</a><br>
+<hr>
+
+<a name="noanch">
+<h3>"No anchors loaded"</h3>
+This message indicates that SyMAP could not parse the MUMmer or BLAT output files
+to load the anchors. 
+<p>
+The most likely reason is that MUMmer or BLAT failed to run.
+Usually this is because the platform (linux 32/64 bit, or mac)
+was not detected properly. First try re-starting symap using
+the '-32, -64, -linux, -mac' parameters to specify your platform 
+(run 'symap -h' for list of parameters). 
+<p>
+The next likely cause is trying to run a whole-chromosome MUMmer alignment on a 32-bit
+machine. MUMmer usually uses more than 2Gb per thread, which is not
+possible on a 32-bit machine. If you suspect this is the problem, try running
+on a 64-bit machine. If you compiled MUMmer yourself, check 
+<a href="#mum64">here</a>.
+<p>
+If that does not resolve the problem, The next step is to look in symap.log for 
+more detailed error messages. Then, you should look at the MUMmer log
+files (extension .mum.log) in the appropriate anchors directory
+<tt>
+<pre>
+data/pseudo_pseudo/&lt;proj1_to_proj2&gt;/anchors/pseudo_pseudo
+</pre>
+</tt>
+These contain the messages printed by MUMmer, and should show why it failed to run.  
+<p>
+<a href="#top">Return to top</a><br>
+<hr>
+
+<a name="bes">
+<h3>BES not loaded, or BES hits not loading</h3>
+Generally, this is caused by a name formatting error. Make sure the BES
+names are formatted as clone names with extension "r" or "f". The clone
+names should <i>exactly match</i> those in FPC, and there should be no other prefix or suffix. 
+Do not use ".r" or ".f".  
+<p>
+<a href="#top">Return to top</a><br>
+<hr>
+
+
+
+<a name="innodb">
+<h3>InnoDB tables not supported</h3>
+This can happen in a couple of ways ways. Look in the mysql log for clues.  
+<li> MySQL started with the "skip-innodb" flag. Solution is to remove this. 
+<li> InnoDB log file problems. This can happen if you change the log file size, without
+deleting the log file. Solution: shut down mysql, remove the innodb log file, and restart mysql. 
+<li> prior to v3.5, this message would also be shown if InnoDB was set as the default engine, however
+this has been fixed in v3.5.
+
+
+<a name="mumbuild">
+<h3>Did you compile MUMmer yourself?</h3>
+If so you may not have built a correct 64-bit version, in which 
+case it will fail to process large sequences. See the next section. 
+
+
+<a name="mum64">
+<h3>MUMmer/PROmer can't handle large sequences</h3>
+If the alignment doesn't produce results and you see errors indicating
+that promer cannot produce the .aaqry file, then the mummer binary may
+not be 64-bit. You can tell for sure by looking at the output lines like
+<pre>
+# (maximum reference length is 536870908)
+# (maximum query length is 4294967295)
+</pre>
+If you see small numbers like this, it is not 64-bit. For 64-bit, the numbers
+are extremely large, much larger than any possible genome.
+To build a 64-bit mummer, you must set  
+<pre>
+#define SIXTYFOURBITS 
+</pre>
+in 
+src/kurtz/libbasedir/types.h (and, of course,
+compile on a 64-bit machine). We fixed this problem in the 3.4 version of SyMAP, 
+for lintel64, but if you're building for a different platform you'll have
+to make this fix. 
+
+
+
+<a name="root">
+<h3>Please read "Security" section of the manual to find out how to run mysqld as root!</h3>
+You are launching SyMAP as the unix root user, which is blocked by MySQL 
+as a security hazard. Solution is simply to use a regular non-root user account.  
+
+<hr>
+
+<a name="3derr">
+<h3>The 3D display will not show</h3>
+It is possible that your computer doesn't support 3D Java graphics. In this case, when
+you try to open the Chromosome Explorer, it will fail and you'll see a message to
+the console starting something like
+<tt><pre>Canvas 3D: null graphics configuration</pre></tt>
+Solution is to run in 2D mode, 
+<tt><pre>./symap -no3d</pre></tt> 
+
+<p>
+
+<a name="glib">
+<h3>/lib64/libc.so.6: version `GLIBC_2.7' not found </h3>
+
+If this occurs while you are doing an alignment, it
+ means that some libraries on your system are not compatible with those
+required by the version of MUMmer which is included with SyMAP. To solve this
+you will need to obtain the MUMmer source code distribution and compile
+it on your own system, which is not hard to do (however, 
+<a href="#mum64">note this important detail</a>). Then, copy the binary named
+"mummer" to the appropriate ext/mummer/&lt;platform&gt; directory and re-run SyMAP. 
+
+<p>
+
+<a name="msqcase">
+<h3> Can't create table  (errno: 121)</h3>
+
+This can occur if you try to create a SyMAP database whose name differs only by
+case from an existing database, e.g. "symapTest" when "symaptest" already exists. 
+
+<p>
+
+<a href="#top">Return to top</a><br>
+<hr>
+
+</div>
+</table>
+
+<br>
+
+
+
+<!--a name="error1">
+<h3>"Error occurred(1)" during alignment</h3>
+This can occur if SyMAP mis-identifies a 32-bit platform as 64-bit or vice-versa. In this
+case, it will launch the wrong version of MUMmer resulting in this error.  
+You can 
+<p>
+<a href="#top">Return to top</a><br-->
+
+
+</div>
+</table>
+  <table width="100%" border="0" align="center">
+    <tr>
+      <td bgcolor="#DDDDDD" align="center">
+       <font face="Verdana, Arial, Helvetica, sans-serif" size="2">Email
+       Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></font></td>
+
+    </tr>
+  </table>
+<br>
+
+
+
+
+<p>&nbsp;</p>
+		</td>
+	</tr>
+
+</table>
+</BODY>
+</HTML>
+
+
+
+
+
+
+
+

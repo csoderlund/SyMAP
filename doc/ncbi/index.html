@@ -1,0 +1,288 @@
+<html>
+<head>
+	<title>NCBI to SyMAP</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<style>
+a.wt {color:inherit;}
+table {font-size:100%}
+tr {font-size:100%}
+td {font-size:100%}
+tt {font-size:13px}
+pre {font-size:13px}
+a {font-size:100%}
+.hang {text-indent:-20px; margin-left:20px;}
+	</style>
+</head>
+<body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
+<!--#include virtual="/common/uaheader.html" -->
+
+<a name=top></a>	
+	
+<table align="center" style="border: 1px solid #999999" cellspacing="0" cellpadding="0">  	
+	<tr>
+	  	<td>
+		  	<table width="850" border="0" align="center" cellpadding="0" cellspacing="0">
+		    	<tr>
+    	  			<td height="60" width="161" align="left" valign="bottom">
+       						<img alt="" title="" src="../img/agcol_logo.png">
+       				</td>
+		    		<td height="60" width="428" align="left" valign="bottom" 
+							style="padding:0px 0px 10px 30px" size=5>
+							<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
+				    		<b>NCBI genome to SyMAP</b>
+							</font>
+		    		</td>
+		    		<td height="60" width="161" align="center" valign="bottom">&nbsp;
+        			</td>
+		    	</tr>
+		    	<tr>
+		    		<td height="21" colspan="3" align="left" valign="top">
+			    		<table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
+			    			<tr>
+			    				<td align="left" bgcolor="#666666">
+<span style="font-size:75%;color:white">
+<a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
+<a href=../index.html class="wt">SyMAP Home</a> |
+<a href=../SystemGuide.html class="wt">System Guide</a> |
+<a href=../UserGuide.html class="wt">User Guide</a> |
+<a href=../Tour.html class="wt">Tour</a> |
+<a href=../TroubleShoot.html class="wt">Troubleshooting </a>
+</span>
+								</td>
+							</tr>
+						</table>
+			    	</td>
+			    </tr>
+	        	<tr>
+    	    		<td colspan="3" valign="top" align="left" 
+								style='padding:20px 15px 0px 15px;font-size:85%'>
+								
+<h4>Contents</h4>
+<table border=0 cellspacing=3 cellpadding=2 style="font-size:95%">
+<tr>
+<td align=left valign=top>
+	<table cellspacing=2 cellpadding=2>
+	<tr><td align=left valign=top>01.</td><td align=left valign=top> <a href=#dl>Download</a></td></tr>
+	<tr><td align=left valign=top>02.</td><td align=left valign=top> <a href=#cv>Convert files</a></td></tr>
+	<tr><td align=left valign=top>03. </td><td align=left valign=top><a href=#what>What the ConvertNCBI script does</a></td></tr>	
+	</table>
+</td>
+<td align=left valign=top>
+	<table cellspacing=2 cellpadding=2>
+	<tr><td align=left valign=top>04.</td><td align=left valign=top> <a href=#load>Load files into SyMAP</a></td></tr>
+	<tr><td align=left valign=top>05.</td><td align=left valign=top> <a href=#scaf>Scaffolds</a></td></tr>
+	<tr><td align=left valign=top>06.</td><td align=left valign=top> <a href=#edit>Editing the script</a></td></tr>
+	</table>
+</td>					
+</table>
+The <tt>ConvertNCBI</tt> script was updated 1/16/18; either get new release package or email symap at agcol.arizona.edu for a copy of it.
+<a name=dl>
+<h2>Download</h2>
+
+<ol>
+<li>Go to <a href="https://www.ncbi.nlm.nih.gov" target="_blank">NCBI</a>.
+<li>Select "Genome" from the pull-down at the top.
+<li>Enter you genome name followed by "Search".
+You should see a page similar to the one below.
+<li>Download the FASTA and GFF file. 
+The GFF file must have the "product=" keyword in the attribute column for the mRNA type line. 
+Two approaches:
+<ol type="i">
+<li>Use the <font color=darkblue><b>genome</b></font> link beside the "Download sequences in FASTA format for genome,..." 
+<br>Use the <font color=darkblue><b>GFF</b></font> link beside the "Download genome annotation in GFF...". 
+<li>Or use the <font color=darkblue><b>RefSeq</b></font> link in the "Download sequence and annotation from
+RefSeq..." and download the files with the "fna.gz" and "gff.gz" suffixes.
+</ol>
+Usually the first approach has the correct format, but if it does not, try the second.
+</ol>
+
+<a href="img/NCBI-genome.png"><img src="img/NCBI-genome.png" width=500 border=1></a>
+
+<a name=cv>
+<h2>Convert files</h2>
+<ol>
+<li>Go to the <tt>symap_42/data/pseudo</tt> directory.
+<li>Make a subdirectory for each of your projects and move the FASTA and GFF files
+into their respective directory. Leave the "fna.gz" and "gff.gz" suffixes on the files.
+<li>Type the following at the command line to copy the <tt>ConvertNCBI</tt> script to the <tt>pseudo</tt> directory: 
+<pre>cp ../../scripts/ConvertNCBI.class .</pre>
+
+<li>For each project, execute 
+<pre>java ConvertNCBI {project directory name}</pre>
+
+</ol>
+For example, I did the above steps for Rice. From my 
+<tt>symap_42/data/pseudo</tt> directory, executed:
+<pre>
+java ConvertNCBI rice
+</pre>
+This results in the following contents: 
+<pre>
+data/pseudo/
+   rice/
+      GCF_001433935.1_IRGSP-1.0_genomic.fna.gz
+      GCF_001433935.1_IRGSP-1.0_genomic.gff.gz
+      annotation/
+         gene.gff
+         exon.gff
+      sequence/
+         genomic.fna
+</pre>
+The output gives useful details of the annotation (e.g. see rice <a href=rice.html>details</a>); if the details do not appear right, you may need to <a href=#edit>edit</a> the
+script for your genomes.
+<p>
+<i>ConvertNCBI optional flags</i>: The flags were updated as of 1/16/18; get new package or email symap at agcol.arizona.edu
+for a copy of the new script.
+<table border=1 cellpadding=5>
+<tr><td><b>Flag</b><td><b>Description</b><td><b>Details</b><td><b>Default</b>
+<tr><td>-v<td>Verbose<td>Print out header lines of skipped sequences<td>No print
+<tr><td>-s<td>Include Scaffolds in output<td>See section <a href=#scaf>Scaffolds</a><td>No scaffolds
+<tr><td>-l<td>Use linkage groups<td>Search 'linkage' instead of 'chromosome'<td>Use chromosomes
+<tr><td>-r<td>Use only RefSeq records<td>-r and -g can be used together<td>Use all sources*
+<tr><td>-g<td>Use only Gonome records<td>-r and -g can be used together<td>Use all sources*
+</table>
+*If neither -r or -g is used, then all sources are used.
+
+<a name=what>
+<h2>What the ConvertNCBI script does</h2>
+The following occurs in the <tt>data/pseudo/{project directory name}</tt> where "project directory name"
+is the argument supplied to <tt>ConvertNCBI</tt>:
+<ol>
+<li>Reads the file ending in '.fna.gz' (or '.fna') and writes a new file called <tt>sequence/genomic.fna</tt> with the following changes:
+<ol>
+<li>Sequences must have the word "chromosome" in their ">" header line in order to be copied.
+<li>The header line is replaced with ">ChrN" where N is 1,2... (Note, this assumes that the chromosomes
+are in order in the file as it does not read the chromosome number from the header line).
+</ol>
+For example,
+<pre>
+>NC_029256.1 Oryza sativa Japonica Group cultivar Nipponbare chromosome 1, IRGSP-1.0
+</pre>
+is replaced with:
+<pre>
+>Chr1  NC_029256.1
+</pre>
+<li>Reads the file ending in 'gff.gz' (or .gff) and writes two new files called <tt>annotation/gene.gff</tt> and 
+<tt>annotation/exon.gff</tt>, as follows:
+<ol>
+<li>Only lines with the 'source' (2nd column) equal to 'Gnomon' are read.
+<li>Only lines with the 'type' (3rd column) equal 'gene', 'mRNA', and 'exon' are read.
+
+<li>The gene line is written to the <tt>gene.gff</tt> file with the following two changes:
+<ol type="i">
+<li>The first column 'seqid' is replace with the 'ChrN' value assigned when reading the '.fna' file.
+<li>The last column 'attributes' keeps the "ID=" and "Name=" fields but replaces the rest of the 
+content with the "product=" values from its mRNA lines. 
+<ol type='a'>
+<li>If there are multiple mRNA lines for a gene where the values are different, they are concatenated together.
+<li>If there are multiple mRNA lines for a gene where
+the only difference is the variant, then only the variant difference is show, e.g.
+<pre>
+product=monocopper oxidase-like protein SKU5%2C transcript variant X2, X1, X3
+</pre>
+</ol>
+</ol>
+<li>The exon line is written to the <tt>exon.gff</tt> file with the first column 'seqid' is replace 
+with the 'ChrN' value assigned when reading the '.fna' file.
+</ol>
+</ol>
+
+<a name=load>
+<h2>Load files into SyMAP</h2>
+ 
+<table border=0>
+<tr><td>
+When you start up SyMAP, you will see your projects listed on the left of the panel. Check the projects
+you want to load, which will cause them to be shown on the right of the symap window. Click the 
+"parameter" link, 
+which will bring up a panel as shown below. 
+<td>
+<a href="img/summary.png"><img src="img/summary.png" width=500 border=1></a>
+</table>
+Change the following:
+<ol>
+<li>Select the "Add Directory" beside <tt>anno_files</tt>, then select the directory <tt>annotation</tt>.
+<li>Select the "Add Directory" beside <tt>sequence_files</tt>, then select the directory <tt>sequence</tt>.
+<li>You may want to change the following (view the "Help" to see explanations):
+<ul><li>category (default 'Unknown') 
+<li>display_name (default is the directory name)
+<li>description (default blank)
+</ul>
+<li>Set the parameters for all the projects you want to compare, then select "Load All Projects".
+Once loaded, you can run the synteny algorithm be selecting "All Pairs". If you want to compute self-synteny,
+you have to do that individually with the "Selected Pair" button.
+</ol>
+<p>
+<a name=param>
+<a href="img/parameters.png"><img src="img/parameters.png" width=500 border=1></a>
+
+<a name=scaf>
+<h2>Scaffolds</h2>
+By default, the <tt>ConvertNCBI</tt> script creates the <tt>genomic.fna</tt> file with only the chromosomes.
+However, you can have it also include the scaffolds by using the "-s" flag, e.g. 
+<pre>
+java ConvertNCBI rice -s
+</pre>
+Beware, there can be many tiny scaffolds. If they all align, it causes the display to be very cluttered.
+Hence, it is best to just align the largest ones (e.g. the longest 50); merge them if possible, then try
+the smaller ones. You should set the following parameters:
+<ol>
+<li>leave <tt>grp_prefix</tt> set to 'Chr' as then they will be shown with their number only, and scaffolds will
+be prefixed with 's'.
+<li><tt>min_size</tt> should be set to only load the largest scaffolds. To determine the value to use, run the
+<tt>lenFasta.pl</tt> script, e.g. from the <tt>pseudo</tt> directory and using maize as an example:
+<pre>
+cp ../../scripts/lenFasta.pl .
+perl lenFasta.pl maize/sequence/genomic.fna
+</pre>
+</ol>
+Maize has 265 sequences where only 10 are chromosomes and the rest are scaffolds. The script outputs all their
+sorted lengths followed by the following table:
+<br>
+<a href="img/lenFasta.png"><img src="img/lenFasta.png" border=1></a>
+<br>
+To align the top 30 sequences, this says to set <tt>min_size</tt> to 215635.
+
+<a name=edit>
+<h2>Editing the script</h2>
+This script was used to build the 2018 syntenies from
+the NCBI genome and annotation files, which can be viewed at 
+<a href="http://www.agcol.arizona.edu/symap" target="_blank">symapdb2</a>.
+<p>However, you may want the make changes such as what attributes are included. Therefore, the <tt>ConvertNCBI.java</tt>
+code is supplied in the <tt>scripts</tt> directory. It is very simply written, it does not use external libraries
+and only common programming techniques found in all programming languages. 
+<p>Once you make your changes, execute:
+<pre>
+javac ConvertNCBI.java
+</pre>
+You will need to have JDK installed to use the 'javac' command.
+<p>When building the syntenies, I found the following two differences:
+<ol>
+<li>Grape had both:
+<pre>
+>NC_012007.3 Vitis vinifera cultivar PN40024 chromosome 1, 12X, whole genome shotgun sequence
+>NW_003724154.1 Vitis vinifera cultivar PN40024 chromosome 1 unlocalized genomic scaffold,
+</pre>
+Hence, searching for 'chromosome' was not sufficient since that word was contains on scaffold header lines; this was not the case for the other
+downloaded genomes.
+<li>Poplar used the word 'linkage' in the header lines instead of 'chromosome'. 
+</ol>
+Hence, there is not complete standardization, which is why you may need to edit the script for your genomes.
+
+				</td>
+			</tr>
+		</table>
+			    	
+        <table width="100%" border="0" align="center" cellpadding=2 cellspacing=0 style="margin-top:40px">
+            <tr>
+              <td bgcolor="#DDDDDD" align="center">
+               		    <font face="Verdana, Arial, Helvetica, sans-serif" size="2">Email
+               		    Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></font>
+				</td>
+            </tr>
+        </table>
+	</td>
+	</tr>
+</table>
+</BODY>
+</HTML>

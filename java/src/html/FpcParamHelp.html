@@ -1,0 +1,56 @@
+<html>
+<body style="padding:20px;font-family:arial;">
+
+<div style="width:500px;">
+
+<h2>FPC Project Parameters</h2>
+<p>
+This page provides all the setup parameters for an FPC project, as follows:.
+<p>
+<b>fpc_file</b>
+<p>
+Browse to the FPC file you wish to load.
+<p>
+
+<b>bes_files</b>
+<p>
+Select one or more fasta files containing BAC-end sequences for the FPC clones. 
+Note that the BES must be named <i>exactly</i> like the FPC clones, plus suffixes
+".r" and ".f" showing the strand.  BES which can't be matched to a clone
+will be ignored. 
+<p>
+<b>marker_files</b>
+<p>
+Select one or more fasta files containing marker sequences. The marker names
+must match exactly with the names of markers in the FPC project. 
+<p>
+<b>grp_prefix</b>
+<p>
+ If provided,
+this allows SyMAP to remove the prefix from your group/chromosome names, and 
+use the remaining part as a shorter display name (e.g., "5" instead of "chr5").  
+<p>
+<b>grp_order</b>
+<p>
+If you have a mixture of numeric and alphabetic anchoring group names, you can simply list them
+here in the desired order. This overrides <tt>grp_sort</tt>.  
+<p>
+<b>cbsize</b>
+<p>
+The approximate size of a CB (consensus band) unit, in basepairs. This is used to draw
+the FPC contigs to scale against other sequences.
+<p>
+<b>description</b>
+<p>
+Description of the project. Currently, this is only shown in the Project Manager Summary 
+section.
+<p>
+<b>category</b>
+<p>
+Category label for the project, currently only used in the 
+Summary list of the Project Manager window.
+
+
+</div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<html>
+<body style="padding:20px;font-family:arial;">
+
+<div style="width:500px;">
+
+<h2>SyMAP Queries</h2>
+<p>
+This page allows you to query many aspects of the alignment and synteny 
+between species, in order to transfer information between species,
+improve annotations, and understand the expansion and contraction
+of gene families. 
+<p> 
+The query occurs in three stages, corresponding to the section numbers
+on the Query Page. Each stage has its own filters. 
+
+<h3>1. Filter hits</h3>
+
+The first stage is to retrieve hits (anchors) from the database, based on 
+filters such as chromosome and annotation string. Note that each anchor
+connects two species and hence represents a <i>pair</i> of putatively-related
+regions on the two species. Filters are as follows:
+
+<div style="width:485px;margin-top:10px; margin-left:15px;">
+<b>Annotation String Search</b>
+<p>
+Enter annotation search terms. Hits will be returned which overlap a matching annotation
+on either side. 
+<p>
+<b>Chromsome/location filters</b>
+<p>
+Each selected species has a row in which you can select to search either all
+its sequences, or a particular sequence or basepair region.
+<p>
+<b>Only synteny hits</b>
+<p>
+Return only hits which are part of a syntenic block. This
+helps to screen false positive hits, but can also conceal true hits that are not
+part of a detectable syntenic block. (Note that SyMAP hits are already filtered
+during loading using a reciprocal-top-2 filter.)
+<p>
+<b>Only hits in a collinear gene pair</b>
+<p>
+Return only hits which are part of a pair of aligning genes having no intervening
+non-aligning genes. This relates to the RunSize column, which is one of the optional
+columns of the Query Result table. RunSize shows the size of collinear chain which 
+a hit is contained in, hence this checkbox is equivalent to RunSize at least 2. 
+Note that a collinear chain is not the same as a SyMAP synteny block, because blocks
+require at least 7 anchors, and are allowed to have intervening genes which do not align.
+<p>
+<b>Show orphan genes</b>
+<p>
+If checked, then the results will show all genes which <i>do not</i> overlap any of the hits
+matching the search criteria (i.e, the hits which would be shown in the table if this
+checkbox were not checked). Note that the genes must also meet the search criteria,
+e.g. matching the annotation query string and the chromosome location requirements. 
+
+</div>
+
+<p>
+
+<h3>2. Filter putative gene families (PgeneFs)</h3>
+
+Using the hits that pass the Stage 1 filters, SyMAP constructs putative gene families (PgeneFs) 
+spanning the selected species. This is done by grouping hits which overlap on at 
+least one genome. <i>Note, if you have more than 6 species selected, this stage can take
+an hour or more.</i>
+<p>
+Each PgeneF is given a number, which is shown in the Query Results table (column name "PgeneF"). 
+The size of the PgeneF is also shown (column "PgFSize"). 
+<p>
+Filters at this stage apply to the PgeneF as a whole:
+
+<div style="width:485px;margin-top:10px; margin-left:15px;">
+<b>Include/Exclude</b>
+<p>
+These filters permit searching for gene families shared by one group of species but not
+present in another. 
+<p>
+If a species is checked to include, then the PgeneF will only be retained if it includes
+at least one hit which hits that species. 
+<p>
+If a species is checked to exclude, then the PgeneF will be discarded if any of its
+hits are to that species. 
+<p>
+<b>No annotation to included species</b>
+<p>
+Find PgeneFs which are not yet annotated. A PgeneF will be discarded if it is annotated on any of
+the species which are checked in the <b>Include</b> line.
+<p>
+<b>Complete linkage of included species</b>
+<p>
+Require the PgeneF to be fully linked, i.e. for each pair of species A and B in the group,
+there must be a hit linking A to B.  
+</div>
+
+<p>
+
+<h3>3. Filter displayed hits</h3>
+
+The query returns hits between all pairs of the selected species; however, you may
+only be interested in seeing those which hit certain species. To achieve this,
+select those species in the <b>Include</b> row of Filter Stage 2, and also check
+the box below, <b>Show only hits to the included species</b>. Only those hits will be shown,
+although the PgeneF numbers will reflect groupings created using all hits. 
+
+</div>
+</body>
+</html>
