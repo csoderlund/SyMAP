@@ -1,6 +1,6 @@
-Download SyMAP package: www.agcol.arizona.edu/software/symap
+Download SyMAP package: www.agcol.arizona.edu/software/symap or [from this site](https://github.com/csoderlund/SyMAP/releases).
 
-**Documentation**: /doc and www.agcol.arizona.edu/software/symap
+**Documentation**: www.agcol.arizona.edu/software/symap. It is also available in the /doc directory for local viewing.
 
 **Reference**:  
 C. Soderlund, M. Bomhoff, and W. Nelson (2011) SyMAP v3.4: a turnkey synteny system with application to plant genomes. Nucleic Acids Research 39(10):e68C. [Link](https://academic.oup.com/nar/article/39/10/e68/1310457).  
