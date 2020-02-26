@@ -1,0 +1,133 @@
+#!/usr/bin/env perl
+
+# symap read-only
+# Does not require the Java 3D libraries. Everything runs except the 3d display.
+
+# Read command line parameters to set memory and CPU limits.
+my $maxmem="2048m";
+print ">>>> SyMAP with query and view without 3D <<<<\n";
+
+my $allArgs = join(" ",@ARGV);
+
+if ($allArgs =~ /-h/)
+{
+	usage();
+    exit(0);
+}
+
+if ($allArgs =~ /-m\s*(\d+)m?/)
+{
+	$maxmem = $1."m";
+    print "\nusing memory $maxmem\n\n";
+}
+
+
+my $uname = `uname`;
+
+my $platform = "";
+my $word;
+if ($allArgs =~ /-linux/i)
+{
+	$platform = "linux";
+    $word = getWordSize();
+}
+elsif ($allArgs =~ /-mac/i)
+{
+	$platform = "mac";
+}
+elsif ($uname =~ /darwin/i)
+{
+	$platform = "mac";
+    $word = "64"; # setting not used
+}
+elsif ($uname =~ /linux/i)
+{
+	$platform = "linux";
+    $word = getWordSize();
+}
+else
+{
+	print "Unable to determine platform; call with either '-linux' or '-mac'\n";
+    exit(0); 	
+}
+
+my $libpath="";
+if ($platform eq "linux")
+{
+	if ($word eq "64")
+    {
+   		$libpath="-Djava.library.path=java/lib/amd64/";
+  	}
+    else
+    {
+		$libpath="-Djava.library.path=java/lib/i386/";
+   	}
+}
+else 
+{
+	$libpath=" -Djava.library.path=java/lib/osx -Dj3d.reng=jogl ";
+}
+
+my $jar = "symap.jar";
+my $main ="symapCE.ProjectManagerFrame";
+my $cmd = "java -Xmx$maxmem $libpath ";
+$cmd .= " -classpath java/jar/$jar:java/jar/mysql-connector-java-5.0.8-bin.jar:java/jar/mysql-connector-mxj-gpl-5-0-9.jar:java/jar/mysql-connector-mxj-gpl-5-0-9-db-files.jar:java/jar/biojava.jar:java/jar/aspectjrt.jar:java/jar/freehep-graphicsio-2.1.1.jar:java/jar/freehep-graphicsio-svg-2.1.1.jar:java/jar/freehep-graphics2d-2.1.1.jar:java/jar/freehep-util-2.0.2.jar:java/jar/freehep-io-2.0.2.jar:java/jar/freehep-xml-2.1.1.jar:java/jar/freehep-export-2.1.1.jar:java/jar/freehep-swing-2.0.3.jar:java/jar/freehep-graphicsio-ps-2.1.1.jar:java/jar/freehep-graphicsio-pdf-2.1.1.jar";
+
+# Get rid of args not used by app, and format the -p with no space
+$allArgs =~ s/-32//;
+$allArgs =~ s/-64//;
+$allArgs =~ s/-m\S+//i;
+$allArgs =~ s/-mac//i;
+$allArgs =~ s/-linux//i;
+
+if ($allArgs =~ /-p\s+\d+/)
+{
+	$allArgs =~ s/(-p)\s+(\d+)/$1$2/;
+}
+if ($allArgs !~ /-r/) { $allArgs .= " -r";}
+$cmd .= " $main $allArgs";
+system($cmd);
+
+
+#############################################
+
+# note two tabs after each option
+sub usage
+{
+	print <<END;
+
+	Usage:  ./symap [options]
+    
+	-h		: print usage
+	-c string	: filename of config file (to use instead of symap.config)
+	-32		: 32-bit mode
+	-64		: 64-bit mode
+	-mN		: set max memory to N megabytes
+	-linux 		: linux platform
+	-mac		: mac platform
+    
+END
+
+}
+
+#############################################
+
+# should only be called for platform linux
+sub getWordSize
+{
+	if ($allArgs =~ /-32/)
+    {
+    	return "32";
+    }
+    elsif ($allArgs =~ /-64/)
+    {
+    	return "64";
+    }
+    my $uname = `uname -i`; # illegal option on mac
+    if ($uname =~ /i386/)
+    {
+    	return "32";
+    }
+    return "64";
+    
+}

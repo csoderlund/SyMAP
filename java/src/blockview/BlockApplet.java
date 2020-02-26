@@ -3,14 +3,11 @@ package blockview;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Vector;
-import java.awt.BorderLayout;
 import java.awt.Container;
 
 import javax.swing.JApplet;
 import javax.swing.SwingUtilities;
 
-import dotplot.Data;
-import symap.frame.HelpBar;
 import symap.pool.DatabaseUser;
 import symap.SyMAP;
 import symap.SyMAPConstants;
@@ -31,11 +28,9 @@ public class BlockApplet extends JApplet
 		{
 			SyMAP.printVersion();
 				
-			// mdb added 4/8/08
 			if (!SyMAP.checkJavaSupported(this))
 				return;
 	
-			// Get parameters - mdb rewritten 12/16/09 #205
 			final Vector<String> projects = new Vector<String>();
 			for (int i = 1;  i <= SyMAP.MAX_PROJECTS;  i++) {
 				String projName = getParameter("PROJECT" + i);
@@ -91,8 +86,6 @@ public class BlockApplet extends JApplet
 		});
 	}
 
-	
-	
 	private DatabaseReader getDatabaseReader() {
 		return DatabaseUser.getDatabaseReader(SyMAPConstants.DB_CONNECTION_SYMAP_APPLET,
 			getParameter(DATABASE_URL),

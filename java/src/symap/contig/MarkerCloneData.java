@@ -22,7 +22,7 @@ public class MarkerCloneData extends MarkerData {
 			this.cloneNames = new String[cloneNames.size()];
 			Iterator<String> iter = cloneNames.iterator();
 			for (int i = 0; i < this.cloneNames.length; i++)
-				this.cloneNames[i] = (iter.next());//.intern(); // mdb removed intern() 2/2/10 - can cause memory leaks in this case
+				this.cloneNames[i] = (iter.next());
 		}
 	}
 

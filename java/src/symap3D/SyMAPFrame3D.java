@@ -103,18 +103,8 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 		this.mapper = mapper;
 		
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		
-		// Override default rendering error listener to prevent exit on error.
-/*		if (SyMAP3D.checkJava3DPreferred()) { // method not supported in Java3D 1.3.1 needed for Mac
-			SimpleUniverse.addRenderingErrorListener(new RenderingErrorListener() {
-	        	public void errorOccurred(RenderingError e) {
-	        		e.printVerbose();
-	        	}
-	        });
-		}	*/	
 	}
 	
-	// mdb added 1/28/10
 	public void dispose() { // override
 		setVisible(false); // necessary?
 		if (universe != null) universe.cleanup();
@@ -225,7 +215,6 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 	
 	private void create3DNavigationControlBar() {
 		navControlBar = new MutexButtonPanel("Navigation: ");
-		//navControlBar.setBorder(BorderFactory.createEtchedBorder());
 		
 		JButton b;
 		b = navControlBar.addButton("Rotate", "/images/rotate.gif");
@@ -428,7 +417,6 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
         projPanel.setVisible(true);
         splitPane.setLeftComponent(projPanel);
        
-        //int maxHeight = 0;
 		Project[] projects = mapper.getProjects();
 		
 		// First figure out which groups have synteny in this set
@@ -449,18 +437,10 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 			CollapsiblePanel cp = new CollapsiblePanel(p.getDisplayName(), null, false);
 			cp.add(pd);
 			cp.expand();
-			//maxHeight += cp.getMaximumSize().getHeight() + 15;
+			
 			cp.setVisible(true);
 			projPanel.add(cp);
 		}
-		
-//		JScrollPane scroller = new JScrollPane( projPanel, 
-//				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
-//				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-//		scroller.setBorder(null);
-//		scroller.getVerticalScrollBar().setUnitIncrement(5);
-//		scroller.setMaximumSize(new Dimension(500, maxHeight));
-//		scroller.setAlignmentX(Component.LEFT_ALIGNMENT);
 
 		// Create instructions panel
         LinkLabel helpLink = new LinkLabel("Click for online help");
@@ -512,8 +492,6 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 			System.err.println("No tracks to display!");
 			return;
 		}
-		
-		//setVisible(true); // mdb removed 12/31/09 #208
 	}
 	
 	private void regenerateDotplotView() {
@@ -553,7 +531,7 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 			
 			DrawingPanel dp = symap2D.getDrawingPanel();
 			
-			// WMN start the 2D over when they go back and forth
+			// start the 2D over when they go back and forth
 			if (true || isFirst2DView) { 
 				// Get selected tracks
 				TrackCom ref = ((Mapper3D)mapper).getReferenceTrack();
@@ -620,7 +598,7 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 			isFirst2DView = false;
 			return true;
 		}
-		catch (OutOfMemoryError e) { // mdb added 1/29/10
+		catch (OutOfMemoryError e) { 
 			symap2D = null;
 			Utilities.showOutOfMemoryMessage();
 		}

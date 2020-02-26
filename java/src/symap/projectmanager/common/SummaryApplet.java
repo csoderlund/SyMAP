@@ -32,11 +32,9 @@ public class SummaryApplet extends JApplet
 		{
 			SyMAP.printVersion();
 				
-			// mdb added 4/8/08
 			if (!SyMAP.checkJavaSupported(this))
 				return;
 	
-			// Get parameters - mdb rewritten 12/16/09 #205
 			final Vector<String> projects = new Vector<String>();
 			for (int i = 1;  i <= SyMAP.MAX_PROJECTS;  i++) {
 				String projName = getParameter("PROJECT" + i);
@@ -51,7 +49,7 @@ public class SummaryApplet extends JApplet
 			String projName1 = projects.get(0);
 			String projName2 = projects.get(1); 
 			
-			HelpBar helpBar = new HelpBar(-1, 17, true, false, false); // mdb added 7/6/09
+			HelpBar helpBar = new HelpBar(-1, 17, true, false, false); 
 			
 			DatabaseReader db = getDatabaseReader();
 			ResultSet rs;
@@ -93,14 +91,12 @@ public class SummaryApplet extends JApplet
 		});
 	}
 
-	
-	
 	private DatabaseReader getDatabaseReader() {
 		return DatabaseUser.getDatabaseReader(SyMAPConstants.DB_CONNECTION_SYMAP_APPLET,
 			getParameter(DATABASE_URL),
 			getParameter(USERNAME),
 			getParameter(PASSWORD),
 			Utilities.getHost(this));
-}
+	}
 
 }

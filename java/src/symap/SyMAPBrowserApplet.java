@@ -58,14 +58,14 @@ public class SyMAPBrowserApplet extends JApplet implements MouseMotionListener
 	private static final String PASSWORD      = "password";
 	private static final String PROJECTS      = "projects";
 	private static final String TITLEPROP     = "title";
-	private static final String DESCRIPTION	= "description"; // CAS 12/26/17
+	private static final String DESCRIPTION	= "description"; // CAS42 12/26/17
 	
 	DatabaseReader db;
 	
 	Vector<String> projList = new Vector<String>();
 	TreeMap<String,JCheckBox> name2chk = new TreeMap<String,JCheckBox>();
 	TreeMap<String,Integer>   name2idx = new TreeMap<String,Integer>();
-	TreeSet<String> pairs = new TreeSet<String>(); // CAS 12/26/17 keep processed pairs
+	TreeSet<String> pairs = new TreeSet<String>(); // CAS42 12/26/17 keep processed pairs
 	TreeSet<String> fpcs = new TreeSet<String>();
 	
 	JButton expBtn, circBtn, dotBtn, sumBtn, blkBtn, qryBtn;
@@ -114,7 +114,7 @@ public class SyMAPBrowserApplet extends JApplet implements MouseMotionListener
 			String title = getParameter(TITLEPROP);
 			if (title == null) title = TITLE;
 			
-			String desc = getParameter(DESCRIPTION); // CAS 12/26/17
+			String desc = getParameter(DESCRIPTION); // CAS42 12/26/17
 			if (desc==null) desc="";
 			
 			String strPairs = "Computed synteny: " + pairs.size();
@@ -209,7 +209,7 @@ public class SyMAPBrowserApplet extends JApplet implements MouseMotionListener
 	        helpPanel.add(onlineLink);
 	        helpPanel.add(Box.createVerticalGlue());
 
-	        String text = desc + "\n\n" + strPairs + "\n\n" + CITATION; // CAS 12/26/17
+	        String text = desc + "\n\n" + strPairs + "\n\n" + CITATION; // CAS42 12/26/17
 			JTextArea txtCite = new JTextArea(text, 10, 60);	// 2,60		
 			txtCite.setLineWrap(true);
 			txtCite.setWrapStyleWord(true);
@@ -613,7 +613,7 @@ public class SyMAPBrowserApplet extends JApplet implements MouseMotionListener
 		JFrame topFrame = new JFrame();
 		topFrame.setPreferredSize(new Dimension(900,800));
 		topFrame.setMinimumSize(new Dimension(900,800));
-		topFrame.add(controls, BorderLayout.NORTH); // CAS 1/10/18
+		topFrame.add(controls, BorderLayout.NORTH); // CAS42 1/10/18
 		topFrame.add(plot.getScrollPane(), BorderLayout.CENTER);
 		topFrame.add(helpBar, 			 BorderLayout.SOUTH); 
 		topFrame.toFront();

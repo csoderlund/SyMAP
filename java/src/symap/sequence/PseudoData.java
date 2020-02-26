@@ -67,12 +67,10 @@ public class PseudoData {
 		
 		// Sort the annotations by type (ascending order) so that exons are
 		// drawn on top of genes.
-		// mdb added 5/30/07
 		Collections.sort(annotations,
 			new Comparator<Annotation>() {
 				public int compare(Annotation a1, Annotation a2) { 
-					//return -1*a1.getType().compareTo(a2.getType()); // mdb removed 3/31/08 #156
-					return (a1.getType() - a2.getType()); 			  // mdb added   3/31/08 #156
+					return (a1.getType() - a2.getType()); 			  
 				}
 			}
 		);

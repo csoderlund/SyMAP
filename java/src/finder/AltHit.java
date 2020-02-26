@@ -135,7 +135,6 @@ public class AltHit extends Hit implements Cloneable {
 		return hit.getType();
 	}
 	
-	// mdb added 12/17/07
 	public int getLength() {
 		return 0; // fixme
 	}
@@ -155,54 +154,6 @@ public class AltHit extends Hit implements Cloneable {
 	public void setAltBlock(int altNum, boolean block) {
 		hit.setAltBlock(altNum, block);
 	}
-
-	/*
-	public static double pearson(List path, AltHit[] hits) {
-	int i;
-	BigInteger x, y;
-	BigInteger xx_sum = BigInteger.ZERO, x_sum = BigInteger.ZERO, yy_sum = BigInteger.ZERO, y_sum = BigInteger.ZERO, xy_sum = BigInteger.ZERO;
-	Iterator iter;
-
-	for (iter = path.iterator(); iter.hasNext(); ) {
-	    i = ((Integer)iter.next()).intValue();
-	    x = BigInteger.valueOf(hits[i].altX);
-	    y = BigInteger.valueOf(hits[i].altY);
-
-	    x_sum = x_sum.add(x);
-	    y_sum = y_sum.add(y);
-
-	    xx_sum = xx_sum.add(x.multiply(x));
-	    yy_sum = yy_sum.add(y.multiply(y));
-
-	    xy_sum = xy_sum.add(x.multiply(y));
-	}
-
-	return figurePearson(path.size(),x_sum,y_sum,xx_sum,yy_sum,xy_sum);
-	}
-
-	public static double pearson(List hits) {
-	AltHit h;
-	BigInteger x, y;
-	BigInteger xx_sum = BigInteger.ZERO, x_sum = BigInteger.ZERO, yy_sum = BigInteger.ZERO, y_sum = BigInteger.ZERO, xy_sum = BigInteger.ZERO;
-	Iterator iter;
-
-	for (iter = hits.iterator(); iter.hasNext(); ) {
-	    h = (AltHit)iter.next();
-	    x = BigInteger.valueOf(h.altX);
-	    y = BigInteger.valueOf(h.altY);
-
-	    x_sum = x_sum.add(x);
-	    y_sum = y_sum.add(y);
-
-	    xx_sum = xx_sum.add(x.multiply(x));
-	    yy_sum = yy_sum.add(y.multiply(y));
-
-	    xy_sum = xy_sum.add(x.multiply(y));
-	}
-
-	return figurePearson(hits.size(),x_sum,y_sum,xx_sum,yy_sum,xy_sum);
-	}
-	 */
 
 	public static AltHit[] getAltHitsCopy(Hit[] hits, double xFactor,
 			double yFactor, boolean filtered) {

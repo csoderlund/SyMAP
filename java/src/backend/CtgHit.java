@@ -87,8 +87,6 @@ public class CtgHit
 
 		pool.singleInsert("ctghits", vals);
 		
-		//mIdx = pool.lastID(); // mdb removed 7/1/09
-		// mdb added 7/1/09
 		String st = "SELECT idx FROM ctghits WHERE pair_idx=" + mPairIdx +
 						" AND ctg1_idx=" + mCtgIdx1 +
 						" AND grp2_idx=" + mGrpIdx2 +

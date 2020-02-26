@@ -12,8 +12,6 @@ import java.sql.SQLException;
  *
  * There is only one database reader for every name, url, user, password, and driver and
  * only one connnection for that database reader.
- *
- * @author Austin Shoemaker
  */
 public class DatabaseReader {
 	private static Map<DatabaseReader,WeakReference<Connection>> databaseReaders = new HashMap<DatabaseReader,WeakReference<Connection>>();

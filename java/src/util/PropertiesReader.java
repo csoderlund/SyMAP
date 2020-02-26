@@ -13,13 +13,9 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-
 /**
  * Class <code>PropertiesReader</code> handles getting values from properties
  * files
- * 
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
- * @see Properties
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class PropertiesReader extends Properties {
@@ -257,9 +253,6 @@ public class PropertiesReader extends Properties {
 	 * @return a <code>boolean</code> value
 	 */
 	public boolean getBoolean(String key) {
-		//return Boolean.valueOf(getString(key)).booleanValue(); // mdb removed 5/12/09
-		
-		// mdb added 5/12/09
 		String value = getProperty(key);
 		if (value != null && (value.equals("1") || value.toLowerCase().equals("true")))
 			return true;

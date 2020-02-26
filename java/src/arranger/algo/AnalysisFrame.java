@@ -17,8 +17,7 @@ public class AnalysisFrame extends Frame implements MouseListener {
 		initForm();
 		showAnalysis(gr);
 		setVisible(true);
-		//show(); // mdb removed 7/2/07 #118
-		setVisible(true); // mdb added 7/2/07 #118
+		setVisible(true); 
 		this.pack();
 		this.setSize(500, 500);
 	}
@@ -223,9 +222,6 @@ public class AnalysisFrame extends Frame implements MouseListener {
 			g.drawString("Oriented", x+20, y);
 		}
 			
-			
-		
-		
 		private void drawVertex(Graphics g, int position, int index, Color color, Font font) {
 			int x = x_location(position) - m_radius;
 			int y = y_location(position) - m_radius;

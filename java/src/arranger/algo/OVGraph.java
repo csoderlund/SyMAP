@@ -10,8 +10,6 @@ public class OVGraph {
 	private int[] m_CR;
 	private int m_hurdles_num;
 
-	//private Permutation original_permutation; // mdb removed 6/29/07 #118
-
 	// constructor
 	public OVGraph(Permutation permutation) throws Exception {
 		m_permutation = permutation;
@@ -49,16 +47,6 @@ public class OVGraph {
 		int[] range = m_permutation.getPositions(even, odd);
 		return range[1];
 	}
-
-	// Get the neighbour (by black edge)
-// mdb removed 6/29/07 #118
-//	private int getBlackNeighbour(int index) throws Exception { 
-//		int position = getPosition(index);
-//		if((position % 2) == 0)
-//			return getIndex(position + 1);
-//		else
-//			return getIndex(position - 1);
-//	}
 
 	// Check if a vertex (BP graph edge) is oriented
 	public boolean isOriented(int vertex_index) throws Exception {
@@ -168,13 +156,6 @@ public class OVGraph {
 			return (right_target < right_source);
 	}
 
-	/* This method gets the id of a vertex in the overlap graph (corresponds
-       to an edge in the breakpoints graph which corresponds to 2 numbers in 
-       the permutation), locate the edges of the reversal and commit the reversal.
-       TBD */
-	//  public boolean safeReversal(int id) {
-	//      return true;
-	//  }
 
 	private List getEdges(int vertex_index) throws Exception {
 		int left = getLeftEndpoint(vertex_index);
@@ -408,7 +389,7 @@ public class OVGraph {
 		if(CR.length == 0)
 			throw new Exception("CR is empty");
 		// An arry for counting the blocks of each component in CR
-		//int value; // mdb removed 6/29/07 #118
+		
 		int comp_index;
 		int previous_index = CR_components_indexes[CR.length-1]; // last index
 		// Scan CR
@@ -487,13 +468,8 @@ public class OVGraph {
 		return (findSimpleHurdle(hurdilities) == -1);
 	}
 
-
-
-
-
 	/* ******************* CLEARING THE HURDLES METHODS ***************** */
 	/* One public method and a million private */
-
 
 	/* Find a set of reversals to clear the hurdles from the graph */
 	public Reversal[] clearHurdles() throws Exception {
@@ -529,8 +505,7 @@ public class OVGraph {
 			makeComponents();
 		if(this.m_all_components_oriented)
 			return new Reversal[0];
-		//int count = 0; // mdb removed 6/29/07 #118
-
+		
 		boolean[] hurdilities = getHurdlesList(m_components);
 
 		// k for 2k hurdles, k+1 for 2k+1 hurdles
@@ -545,16 +520,10 @@ public class OVGraph {
 		return reversals;
 	}
 
-// mdb removed 6/29/07 #118	
-//	private int getComponentIndexByIndex(int index) { return this.m_components_indexes[index]; }
-//	private int getComponentIndexByPosition(int position) throws Exception { 
-//		return this.m_components_indexes[getIndex(position)]; 
-//	}
-
 	// The result is a boolean array with true in the indexes of the hurdles
 	private boolean[] getHurdlesList(C_component[] components) {
 		boolean[] hurdilities = new boolean[components.length]; // initialized to false
-		//int next_index = 0; // mdb removed 6/29/07 #118
+		
 		// Check which components are  hurdles
 		for(int i=0; i<components.length; i++)
 			hurdilities[i] = components[i].isHurdle();
@@ -940,13 +909,6 @@ public class OVGraph {
 		// target[result[i]] = source[i]
 		return result;
 	}
-
-
-
-
-
-
-
 
 
 	// Find the unoriented vertices of the graph from left to right

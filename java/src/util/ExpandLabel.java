@@ -3,24 +3,17 @@ package util;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.FontMetrics;
-import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
-import java.applet.Applet;
-
 import javax.swing.JLabel;
-
-import symap.frame.SyMAPFrame;
 
 /**
  * Class <code>LinkLabel</code> is a JLabel with its text underlined and a 
  * transparent background that changes foreground color when the mouse 
  * enters and exits.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see JLabel
  * @see MouseListener
  */
@@ -30,7 +23,7 @@ public class ExpandLabel extends JLabel implements MouseListener {
 	
 	private Color defaultColor;
     private Color hoverColor;
-    private String url; // mdb added 7/21/09
+    private String url; 
     private TextBox tBox = null;
 
     /**
@@ -54,14 +47,11 @@ public class ExpandLabel extends JLabel implements MouseListener {
 		addMouseListener(this);
     }
     
-    // mdb added 7/17/09
+    
     public ExpandLabel(String text, TextBox tbox) {
-    	this(text, Color.blue, Color.red, tbox);
+    		this(text, Color.blue, Color.red, tbox);
     }
     
-
-
-
     /**
      * Method <code>setColor</code> sets the color to be used when the mouse 
      * is not over the label.
@@ -90,7 +80,7 @@ public class ExpandLabel extends JLabel implements MouseListener {
      */
     public void paint(Graphics g) {
 		super.paint(g);
-		Rectangle r = getBounds();//g.getClipBounds(); // mdb changed 5/27/09 - fix scrolling bug
+		Rectangle r = getBounds();
 		g.drawLine(0, r.height - this.getFontMetrics(this.getFont()).getDescent() + 1,
 			   this.getFontMetrics(this.getFont()).stringWidth(this.getText()),  
 			   r.height - this.getFontMetrics(this.getFont()).getDescent() + 1);
@@ -128,7 +118,6 @@ public class ExpandLabel extends JLabel implements MouseListener {
     }
 
     public void mouseClicked(MouseEvent e) { 
-    	// mdb added 7/21/09 #166 - for TextBox URL support
 		tBox.growShrink();
     }
     

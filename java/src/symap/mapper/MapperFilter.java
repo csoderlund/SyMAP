@@ -25,8 +25,6 @@ import symap.contig.Contig;
 
 /**
  * The Mapper filter dialog implementation.
- * 
- * @author Austin Shoemaker
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class MapperFilter extends Filter {
@@ -69,16 +67,15 @@ public class MapperFilter extends Filter {
 	private JSlider fpEvalueSlider  = new JSlider(JSlider.HORIZONTAL, 0, 200, 0); 
 
 	private JRadioButton blockHitRadio	= new JRadioButton("Show Only Synteny Hits");
-	private JRadioButton containedGeneHitRadio = new JRadioButton("Show Only Hits to Genes"); 	// mdb added 3/7/07 #101
-	//private JRadioButton overlapGeneHitRadio = new JRadioButton("Show Only Gene Hits that Extend Gene >100"); // mdb added 3/7/07 #101 // mdb removed 4/9/08 #158
-	private JRadioButton nonGeneHitRadio	= new JRadioButton("Show Only Non-Gene Hits"); 		// mdb added 3/7/07 #101
+	private JRadioButton containedGeneHitRadio = new JRadioButton("Show Only Hits to Genes"); 	
+	
+	private JRadioButton nonGeneHitRadio	= new JRadioButton("Show Only Non-Gene Hits"); 	
 	private JRadioButton nonrepetitiveHitRadio = new JRadioButton("Show Only Nonrepetitive Hits");
 	private JRadioButton allHitRadio    = new JRadioButton("Show All Hits");
 
-	// mdb added 3/13/07 #104
 	private JRadioButtonMenuItem blockHitPopupRadio	= new JRadioButtonMenuItem("Show Only Synteny Hits");
 	private JRadioButtonMenuItem containedGeneHitPopupRadio = new JRadioButtonMenuItem("Show Only Hits to Genes");
-	//private JRadioButtonMenuItem overlapGeneHitPopupRadio = new JRadioButtonMenuItem("Show Only Gene Hits that Extend Gene >100"); // mdb removed 4/9/08 #158
+	
 	private JRadioButtonMenuItem nonGeneHitPopupRadio	= new JRadioButtonMenuItem("Show Only Non-Gene Hits");
 	private JRadioButtonMenuItem nonrepetitiveHitPopupRadio = new JRadioButtonMenuItem("Show Only Nonrepetitive Hits");
 	private JRadioButtonMenuItem allHitPopupRadio    = new JRadioButtonMenuItem("Show All Hits");
@@ -98,9 +95,9 @@ public class MapperFilter extends Filter {
 
 		ButtonGroup buttonGroup = new ButtonGroup();
 		buttonGroup.add(blockHitRadio);
-		buttonGroup.add(containedGeneHitRadio); // mdb added 3/7/07 #101
-		//buttonGroup.add(overlapGeneHitRadio); // mdb added 3/7/07 #101 // mdb removed 4/9/08 #158
-		buttonGroup.add(nonGeneHitRadio); 		// mdb added 3/7/07 #101
+		buttonGroup.add(containedGeneHitRadio); 
+		
+		buttonGroup.add(nonGeneHitRadio); 		
 		buttonGroup.add(nonrepetitiveHitRadio);
 		buttonGroup.add(allHitRadio);
 
@@ -122,9 +119,9 @@ public class MapperFilter extends Filter {
 			}
 		};
 		blockHitRadio.addActionListener(rbl);
-		containedGeneHitRadio.addActionListener(rbl); // mdb added 3/7/07 #101
-		//overlapGeneHitRadio.addActionListener(rbl); // mdb added 3/7/07 #101 // mdb removed 4/9/08 #158
-		nonGeneHitRadio.addActionListener(rbl); 	  // mdb added 3/7/07 #101
+		containedGeneHitRadio.addActionListener(rbl); 
+		
+		nonGeneHitRadio.addActionListener(rbl); 	  
 		nonrepetitiveHitRadio.addActionListener(rbl);
 		allHitRadio.addActionListener(rbl);
 
@@ -140,15 +137,10 @@ public class MapperFilter extends Filter {
 		fpEvalueSlider.addChangeListener(this);
 		colorByStrandBox.addChangeListener(this);
 		
-		// mdb added 3/13/07 #104 -- BEGIN
-		//popupTitle.setLabel("Hit Options:"); // mdb removed 7/2/07 #118
-		popupTitle.setText("Hit Options:"); // mdb added 7/2/07 #118
-		//SyMAP.enableHelpOnButton(showNavigationHelp,"hitcontrols"); // mdb removed 4/30/09 #162
-		//SyMAP.enableHelpOnButton(showTrackHelp,""); 
-		//popup.remove(showTrackHelp); // mdb removed 12/11/09 #162
+		popupTitle.setText("Hit Options:"); 
 		popup.add(blockHitPopupRadio); 
 		popup.add(containedGeneHitPopupRadio); 
-		//popup.add(overlapGeneHitPopupRadio); // mdb removed 4/9/08 #158 
+		
 		popup.add(nonGeneHitPopupRadio); 
 		if (SHOW_NONREPETITIVE)
 			popup.add(nonrepetitiveHitPopupRadio); 
@@ -156,39 +148,30 @@ public class MapperFilter extends Filter {
 		ActionListener prbl = new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				if (mapper != null) {				
-					//javax.swing.SwingUtilities.invokeLater(new Runnable() {
-						//public void run() {
-							setCursor(SyMAPConstants.WAIT_CURSOR);
-							if (event.getSource() == blockHitPopupRadio)
-								blockHitRadio.setSelected(blockHitPopupRadio.isSelected());
-							else if (event.getSource() == containedGeneHitPopupRadio)
-								containedGeneHitRadio.setSelected(containedGeneHitPopupRadio.isSelected());
-// mdb removed 4/9/08 #158							
-//							else if (event.getSource() == overlapGeneHitPopupRadio)
-//								overlapGeneHitRadio.setSelected(overlapGeneHitPopupRadio.isSelected());
-							else if (event.getSource() == nonGeneHitPopupRadio)
-								nonGeneHitRadio.setSelected(nonGeneHitPopupRadio.isSelected());
-							else if (event.getSource() == nonrepetitiveHitPopupRadio)
-								nonrepetitiveHitRadio.setSelected(nonrepetitiveHitPopupRadio.isSelected());
-							else if (event.getSource() == allHitPopupRadio)
-								allHitRadio.setSelected(allHitPopupRadio.isSelected());		
-							if (hitfilter.set(getHitFilter())) {
-								mapper.clearTrackBuild();
-								if (drawingPanel != null) drawingPanel.smake();
-							}
-							setCursor(SyMAPConstants.DEFAULT_CURSOR);
-						//}
-					//});
+					setCursor(SyMAPConstants.WAIT_CURSOR);
+					if (event.getSource() == blockHitPopupRadio)
+						blockHitRadio.setSelected(blockHitPopupRadio.isSelected());
+					else if (event.getSource() == containedGeneHitPopupRadio)
+						containedGeneHitRadio.setSelected(containedGeneHitPopupRadio.isSelected());
+					else if (event.getSource() == nonGeneHitPopupRadio)
+						nonGeneHitRadio.setSelected(nonGeneHitPopupRadio.isSelected());
+					else if (event.getSource() == nonrepetitiveHitPopupRadio)
+						nonrepetitiveHitRadio.setSelected(nonrepetitiveHitPopupRadio.isSelected());
+					else if (event.getSource() == allHitPopupRadio)
+						allHitRadio.setSelected(allHitPopupRadio.isSelected());		
+					if (hitfilter.set(getHitFilter())) {
+						mapper.clearTrackBuild();
+						if (drawingPanel != null) drawingPanel.smake();
+					}
+					setCursor(SyMAPConstants.DEFAULT_CURSOR);
 				}
 			}
 		};
 		blockHitPopupRadio.addActionListener(prbl);
 		containedGeneHitPopupRadio.addActionListener(prbl);
-		//overlapGeneHitPopupRadio.addActionListener(prbl); // mdb removed 4/9/08 #158
 		nonGeneHitPopupRadio.addActionListener(prbl);
 		nonrepetitiveHitPopupRadio.addActionListener(prbl);
 		allHitPopupRadio.addActionListener(prbl);
-		// mdb added 3/13/07 #104 -- END
 	}
 
 	public void show() {
@@ -211,7 +194,7 @@ public class MapperFilter extends Filter {
 			constraints.ipadx = 5;
 			constraints.ipady = 8;
 
-			if (mapType != Mapper.PSEUDO2PSEUDO) { // mdb added if 7/16/07 #121
+			if (mapType != Mapper.PSEUDO2PSEUDO) { 
 			addToGrid(contentPane, gridbag, constraints, markerLabel, 1);
 			addToGrid(contentPane, gridbag, constraints, new JLabel(), 1);
 			addToGrid(contentPane, gridbag, constraints, mrkHideBox, GridBagConstraints.REMAINDER);
@@ -265,9 +248,8 @@ public class MapperFilter extends Filter {
 			addToGrid(contentPane, gridbag, constraints, new JSeparator(), GridBagConstraints.REMAINDER);
 
 			addToGrid(contentPane, gridbag, constraints, blockHitRadio, GridBagConstraints.REMAINDER);
-			addToGrid(contentPane, gridbag, constraints, containedGeneHitRadio, GridBagConstraints.REMAINDER);	// mdb added 3/7/07 #101
-			//addToGrid(contentPane, gridbag, constraints, overlapGeneHitRadio, GridBagConstraints.REMAINDER);	// mdb added 3/7/07 #101 // mdb removed 4/9/08 #158
-			addToGrid(contentPane, gridbag, constraints, nonGeneHitRadio, GridBagConstraints.REMAINDER); 		// mdb added 3/7/07 #101
+			addToGrid(contentPane, gridbag, constraints, containedGeneHitRadio, GridBagConstraints.REMAINDER);	
+			addToGrid(contentPane, gridbag, constraints, nonGeneHitRadio, GridBagConstraints.REMAINDER); 		
 			if (SHOW_NONREPETITIVE)
 				addToGrid(contentPane, gridbag, constraints, nonrepetitiveHitRadio, GridBagConstraints.REMAINDER);
 			addToGrid(contentPane, gridbag, constraints, allHitRadio, GridBagConstraints.REMAINDER);
@@ -328,11 +310,11 @@ public class MapperFilter extends Filter {
 		}
 	}
 	
-	public void popupMenuWillBecomeVisible(PopupMenuEvent event) { // mdb added 3/13/07 #104
+	public void popupMenuWillBecomeVisible(PopupMenuEvent event) { 
 		// Initialize radio item values based on filter values	
 		blockHitPopupRadio.setSelected(hitfilter.getBlock());
 		containedGeneHitPopupRadio.setSelected(hitfilter.getGeneContained());
-		//overlapGeneHitPopupRadio.setSelected(hitfilter.getGeneOverlap()); // mdb removed 4/9/08 #158	
+		
 		nonGeneHitPopupRadio.setSelected(hitfilter.getNonGene());
 		nonrepetitiveHitPopupRadio.setSelected(hitfilter.getNonRepetitive());
 		allHitPopupRadio.setSelected(
@@ -348,16 +330,11 @@ public class MapperFilter extends Filter {
 			blockHitRadio.setSelected(true);
 			stateChanged(new ChangeEvent(blockHitRadio));
 		}
-		else if (filter.getGeneContained() && !containedGeneHitRadio.isSelected()) { // mdb added 3/7/07 #101
+		else if (filter.getGeneContained() && !containedGeneHitRadio.isSelected()) { 
 			containedGeneHitRadio.setSelected(true);
 			stateChanged(new ChangeEvent(containedGeneHitRadio));
 		}	
-// mdb removed 4/9/08 #158		
-//		else if (filter.getGeneOverlap() && !overlapGeneHitRadio.isSelected()) { // mdb added 3/7/07 #101
-//			overlapGeneHitRadio.setSelected(true);
-//			stateChanged(new ChangeEvent(overlapGeneHitRadio));
-//		}
-		else if (filter.getNonGene() && !nonGeneHitRadio.isSelected()) { // mdb added 3/7/07 #101
+		else if (filter.getNonGene() && !nonGeneHitRadio.isSelected()) { 
 			nonGeneHitRadio.setSelected(true);
 			stateChanged(new ChangeEvent(nonGeneHitRadio));
 		}
@@ -366,9 +343,9 @@ public class MapperFilter extends Filter {
 			stateChanged(new ChangeEvent(nonrepetitiveHitRadio));
 		}
 		else if (!filter.getBlock() 		&& 
-				 !filter.getGeneContained() && // mdb added 3/7/07 #101
-				 !filter.getGeneOverlap() 	&& // mdb added 3/7/07 #101
-				 !filter.getNonGene() 		&& // mdb added 3/7/07 #101
+				 !filter.getGeneContained() && 
+				 !filter.getGeneOverlap() 	&& 
+				 !filter.getNonGene() 		&& 
 				 !filter.getNonRepetitive() && 
 				 !allHitRadio.isSelected()) 
 		{ 
@@ -408,9 +385,9 @@ public class MapperFilter extends Filter {
 		hf.setMrkEvalue(getEvalue(mrkEvalueSlider.getValue()));
 		hf.setBlock(blockHitRadio.isSelected());
 		hf.setNonRepetitive(nonrepetitiveHitRadio.isSelected());
-		hf.setGeneContained(containedGeneHitRadio.isSelected());// mdb added 3/7/07 #101
-		//hf.setGeneOverlap(overlapGeneHitRadio.isSelected()); 	// mdb added 3/7/07 #101 // mdb removed 4/9/08 #158
-		hf.setNonGene(nonGeneHitRadio.isSelected()); 			// mdb added 3/7/07 #101
+		hf.setGeneContained(containedGeneHitRadio.isSelected());
+		
+		hf.setNonGene(nonGeneHitRadio.isSelected()); 			
 		hf.setShowJoinDot(joinDotBox.isSelected());
 		hf.setOnlySharedHits(onlySharedBox.isSelected());
 

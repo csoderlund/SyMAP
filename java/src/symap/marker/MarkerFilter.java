@@ -39,14 +39,12 @@ public abstract class MarkerFilter extends Filter {
 
 	private JCheckBox flippedBox;
 	
-	// mdb added 3/14/07 #104 -- BEGIN
 	private JCheckBoxMenuItem flippedPopupBox;
 	private JCheckBoxMenuItem showOnlySharedMarkersPopupBox;
 	private JRadioButtonMenuItem showNoMarkerNamesPopupRadio;
 	private JRadioButtonMenuItem showOnlyMarkersWithHitsPopupRadio;
 	private JRadioButtonMenuItem showOnlyMarkersWithCurrentHitsPopupRadio;
 	private JRadioButtonMenuItem showMarkerNamesPopupRadio;
-	// mdb added 3/14/07 #104 -- END
 
 	private MarkerTrack track;
 
@@ -96,8 +94,7 @@ public abstract class MarkerFilter extends Filter {
 		flippedBox = new JCheckBox("Flip");
 		flippedBox.setSelected(MarkerTrack.DEFAULT_FLIPPED);
 		flippedBox.addChangeListener(this);
-
-		// mdb added 3/14/07 #104 -- BEGIN		
+	
 		flippedPopupBox = new JCheckBoxMenuItem("Flip");
 		showOnlySharedMarkersPopupBox = new JCheckBoxMenuItem("Hide Non-Shared Markers");
 		showNoMarkerNamesPopupRadio = new JRadioButtonMenuItem("Show No Marker Names");
@@ -139,7 +136,6 @@ public abstract class MarkerFilter extends Filter {
 		showOnlyMarkersWithHitsPopupRadio.addActionListener(pmnl);
 		showOnlyMarkersWithCurrentHitsPopupRadio.addActionListener(pmnl);
 		showMarkerNamesPopupRadio.addActionListener(pmnl);
-		// mdb added 3/14/07 #104 -- END
 	}
 
 	private int getMarkerNameShow() {
@@ -153,7 +149,6 @@ public abstract class MarkerFilter extends Filter {
 			return showOnlySharedMarkersBox.isSelected() ? MarkerList.SHARED_NAMES : MarkerList.ALL_NAMES;
 		if (showOnlyMarkersWithCurrentHitsRadio.getModel() == m)
 			return showOnlySharedMarkersBox.isSelected() ? MarkerList.SHARED_NAMES_WITH_CURRENT_HITS : MarkerList.NAMES_WITH_CURRENT_HITS;
-		// showOnlyMarkersWithHitsRadio.getModel() == m
 		return showOnlySharedMarkersBox.isSelected() ? MarkerList.SHARED_NAMES_WITH_HITS : MarkerList.NAMES_WITH_HITS;
 	}
 
@@ -198,7 +193,6 @@ public abstract class MarkerFilter extends Filter {
 		return flippedBox;
 	}
 	
-	// mdb moved out of show() 3/15/07 #104
 	private void setupShow() {
 		noChange = true;
 
@@ -212,7 +206,7 @@ public abstract class MarkerFilter extends Filter {
 		markerNameText.setText(markerFilter);
 
 		showOnlySharedMarkersBox.setVisible(drawingPanel.getNumMaps() > 1 || drawingPanel.getMapType(track) == Mapper.FPC2FPC);
-		showOnlySharedMarkersPopupBox.setVisible(drawingPanel.getNumMaps() > 1 || drawingPanel.getMapType(track) == Mapper.FPC2FPC); // mdb added 3/15/07
+		showOnlySharedMarkersPopupBox.setVisible(drawingPanel.getNumMaps() > 1 || drawingPanel.getMapType(track) == Mapper.FPC2FPC); 
 		
 		flipped = track.flipped;
 		flippedBox.setSelected(flipped);
@@ -286,7 +280,6 @@ public abstract class MarkerFilter extends Filter {
 		}
 	}
 	
-	// mdb added 3/14/07 #104
 	public void popupMenuWillBecomeVisible(PopupMenuEvent event) {
 		setupShow();
 		flippedPopupBox.setState(flippedBox.isSelected());

@@ -168,7 +168,7 @@ public abstract class Hit extends Coordinate2D
 	public abstract double getEvalue();
 	public abstract double getPctid();
 	public abstract int getType();
-	public abstract int getLength(); // mdb added 12/17/07 #149
+	public abstract int getLength(); 
 	public abstract boolean isRepetitive();
 	public abstract boolean isBlock();
 	public abstract boolean isBlock(int altNum);

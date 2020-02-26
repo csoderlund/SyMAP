@@ -6,10 +6,10 @@ public class DPHit extends Hit implements Cloneable {
 	private final int type;
 	private final boolean repetitive;
 	private final boolean block[] = new boolean[DotPlot.TOT_RUNS];
-	private final int length; // mdb added 12/17/07 #149
+	private final int length; 
 
 	public DPHit(int posX, int posY, double evalue, double pctid, int type, 
-			boolean repetitive,	boolean block, int length) // mdb added length 12/17/07 #149
+			boolean repetitive,	boolean block, int length) 
 	{
 		x = posX;
 		y = posY;
@@ -19,7 +19,7 @@ public class DPHit extends Hit implements Cloneable {
 		this.repetitive = repetitive;
 		this.block[0] = block;
 		for (int i = 1; i < this.block.length; i++) this.block[i] = false;
-		this.length = length; // mdb added 12/17/07 #149
+		this.length = length; 
 	}
 
 	public Object clone() { return super.clone(); }
@@ -29,7 +29,7 @@ public class DPHit extends Hit implements Cloneable {
 	public double getEvalue() { return evalue; }
 	public double getPctid() { return pctid; }
 	public int getType() { return type; }
-	public int getLength() { return length; } // mdb added 12/17/07 #149
+	public int getLength() { return length; } 
 	public boolean isRepetitive() { return repetitive; }
 	public boolean isBlock() { return block[0]; }
 	public boolean isBlock(int altNum) { return block[altNum]; }

@@ -19,7 +19,7 @@ public class CloneData {
 
 	public CloneData(String name, long cb1, long cb2, byte bes1, byte bes2,
 			byte bes1Filter, byte bes2Filter, int[] remarks) {
-		this.name = name;//.intern(); // mdb removed intern() 2/2/10 - can cause memory leaks in this case
+		this.name = name;
 		this.cb = new long[] { cb1, cb2 };
 		this.bes = new byte[] { (byte) (bes1 | bes1Filter),
 				(byte) (bes2 | bes2Filter) };

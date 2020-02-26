@@ -11,39 +11,17 @@ import symap.pool.DatabaseUser;
 import util.DatabaseReader;
 import util.Utilities;
 import symap.drawingpanel.DrawingPanel;
-import symap.mapper.HitFilter;
 
 /**
  * Class <code>SyMAPApplet</code> creates a new SyMAP on init() and provides
  * an API for calls from javascript.
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see JApplet
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class SyMAPApplet extends JApplet {
 	private static final boolean METHOD_TRACE = false;
 	
-// mdb removed 1/29/09 #159 simplify properties
-//	public static final String APPLET_PROPS = "/properties/applet.properties";
-//	public static final String
-//	BLOCK_TYPE, SEQUENCE_TYPE, CONTIG_TYPE, SHOW_NAME, PROJECT_NAME, TYPE_NAME, CONTENT_NAME,
-//	DATABASE_URL, USERNAME, PASSWORD;
-//	static {
-//		PropertiesReader props = new PropertiesReader(SyMAPApplet.class.getResource(APPLET_PROPS));
-//		BLOCK_TYPE    = props.getString("blockType");
-//		SEQUENCE_TYPE = props.getString("sequenceType");
-//		CONTIG_TYPE   = props.getString("contigType");
-//		SHOW_NAME     = props.getString("showName");
-//		PROJECT_NAME  = props.getString("projectName");
-//		TYPE_NAME     = props.getString("typeName");
-//		CONTENT_NAME  = props.getString("contentName");
-//		DATABASE_URL  = props.getString("databaseURL");
-//		USERNAME      = props.getString("username");
-//		PASSWORD      = props.getString("password");
-//	}
-	
-	// mdb added 1/29/09 #159 simplify properties
 	public static final String BLOCK_TYPE    = "block";
 	public static final String SEQUENCE_TYPE = "sequence";
 	public static final String CONTIG_TYPE   = "contig";
@@ -72,10 +50,8 @@ public class SyMAPApplet extends JApplet {
 	 * default values (parameters have precedence), and acquires the SyMAPFrame.
 	 */
 	public void init() {
-		if (METHOD_TRACE) System.out.println("Entered SyMAPApplet.init()");
-
 		SyMAP.printVersion();
-		// mdb added 4/8/08
+		
 		if (!SyMAP.checkJavaSupported(frame)) {
 			show = false;
 			return;
@@ -86,7 +62,7 @@ public class SyMAPApplet extends JApplet {
 			symap.mapper.HitFilter.setFilteredDefault(Boolean.valueOf(param).booleanValue());
 		} catch (Exception e) { e.printStackTrace(); }
 		
-		// mdb added 2/1/10 - provide interface to enable annotation descriptions
+		// provide interface to enable annotation descriptions
 		param = getParameter("annot");
 		if (param != null) try { 
 			symap.sequence.Sequence.setDefaultShowAnnotation(Boolean.valueOf(param).booleanValue());
@@ -100,7 +76,7 @@ public class SyMAPApplet extends JApplet {
 			symapObj = null;
 			try {
 				symapObj = new SyMAP(this,getDatabaseReader(), null);
-				symapObj.clear(); // clear caches, mdb added 5/18/07 #117
+				symapObj.clear(); 
 				frame = symapObj.getFrame();
 				Utilities.setHelpParentFrame(frame);
 				
@@ -173,10 +149,8 @@ public class SyMAPApplet extends JApplet {
 			frame.dispose();
 		}
 		frame = null;
-		//if (symap != null && symap.getDatabaseReader() != null) symap.getDatabaseReader().close(); 
-		//SyMAP.setHelpVisible(false); // mdb removed 4/30/09 #162
-		//SyMAP.clearHelpHandler();
-		symapObj.clear(); // mdb added 1/25/10
+		
+		symapObj.clear(); 
 		symapObj = null;
 		super.destroy();
 
@@ -205,7 +179,7 @@ public class SyMAPApplet extends JApplet {
 				}
 			}
 			else
-				System.err.println("SyMAPApplet.setTrackEnds: applet not ready"); // mdb added 2/21/07 #107
+				System.err.println("SyMAPApplet.setTrackEnds: applet not ready"); 
 			if (METHOD_TRACE) System.out.println("Exiting SyMAPApplet.setTrackEnds(int,double,double)");
 			return success;
 		}
@@ -236,10 +210,10 @@ public class SyMAPApplet extends JApplet {
 			if (project >= 0) 
 				setTrackByProjectNumber(position,project,type,content);
 			else
-				System.err.println("SyMAPApplet.setTrack: unknown project '" + projectName + "'"); // mdb added 2/21/07 #107
+				System.err.println("SyMAPApplet.setTrack: unknown project '" + projectName + "'"); 
 		}
 		else
-			System.err.println("SyMAPApplet.setTrack: applet not ready"); // mdb added 2/21/07 #107
+			System.err.println("SyMAPApplet.setTrack: applet not ready"); 
 	}
 
 	/**
@@ -266,40 +240,31 @@ public class SyMAPApplet extends JApplet {
 	public void setTrackByProjectNumber(int position, int project, String type, String content) {
 		if (METHOD_TRACE) System.out.println("Entering SyMAPApplet.setTrackByProjectNumber() position=" + position + " project=" + project + " type=" + type + " content=" + content);
 		if (type == null || content == null || position < 1) {
-			System.err.println("SyMAPApplet.setTrackByProjectNumber: null params"); // mdb added 2/21/07 #107
+			System.err.println("SyMAPApplet.setTrackByProjectNumber: null params"); 
 			return;
 		}
 		type = type.intern();
 		if (type == null || (type != CONTIG_TYPE && type != BLOCK_TYPE && type != SEQUENCE_TYPE)) {
-			System.err.println("SyMAPApplet.setTrackByProjectNumber: bad type"); // mdb added 2/21/07 #107
+			System.err.println("SyMAPApplet.setTrackByProjectNumber: bad type"); 
 			return;
 		}
 		synchronized (lock) {
 			if (frame != null) {
-				Color bgColor = SyMAP.projectColors[(position-1) % (SyMAP.projectColors.length)]; // mdb added 7/21/09
+				Color bgColor = SyMAP.projectColors[(position-1) % (SyMAP.projectColors.length)]; 
 				if (type == BLOCK_TYPE) {
-					//content = content.replace('d',','); // for parsing contig list // mdb removed 2/3/09
 					frame.getDrawingPanel().setBlockTrack(position,project,content,bgColor);
 				}
 				else if (type == CONTIG_TYPE) {
 					frame.getDrawingPanel().setContigTrack(position,project,Integer.parseInt(content));
 				}
 				else { // type == SEQUENCE_TYPE
-					int gid = 0;
-					//try {								// mdb removed 8/29/07 #120
-					//	gid = Integer.parseInt(content);// mdb removed 8/29/07 #120
-					//} catch (Exception e) { }			// mdb removed 8/29/07 #120
-					//if (gid <= 0)						// mdb removed 8/29/07 #120
-					gid = frame.getDrawingPanel().getPools().getPseudoPool().getGroupID(content,project);
-					//if (gid < 0) // try again			// mdb removed 8/29/07 #120
-					//	gid = frame.getDrawingPanel().getPools().getPseudoPool().getGroupID(content,project); // mdb removed 8/29/07 #120
+					int gid = frame.getDrawingPanel().getPools().getPseudoPool().getGroupID(content,project);
 					if (gid <= 0) System.err.println("SyMAPApplet.setTrackByProjectNumber: unable to acquire the group id for "+content);
 					else frame.getDrawingPanel().setSequenceTrack(position,project,gid,bgColor);
 				}
 			}
 			else
-				System.err.println("SyMAPAppletsetTrackByProjectNumber: applet not ready"); // mdb added 2/21/07 #107
-			//if (!success) System.err.println("SyMAPApplet#setTrack("+position+","+project+",\""+type+"\",\""+content+"\") failed");
+				System.err.println("SyMAPAppletsetTrackByProjectNumber: applet not ready"); 
 		}
 		if (METHOD_TRACE) System.out.println("Exiting SyMAPApplet.setTrack(int,int,String,String)");
 	}
@@ -313,7 +278,7 @@ public class SyMAPApplet extends JApplet {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				if (frame != null) frame.show();
-				else System.err.println("SyMAPApplet.showFrame: applet not ready"); // mdb added 2/21/07 #107
+				else System.err.println("SyMAPApplet.showFrame: applet not ready"); 
 			}
 		});
 		show = true;
@@ -329,7 +294,7 @@ public class SyMAPApplet extends JApplet {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				if (frame != null) frame.hide();
-				else System.err.println("SyMAPApplet.hideFrame: applet not ready"); // mdb added 2/21/07 #107
+				else System.err.println("SyMAPApplet.hideFrame: applet not ready"); 
 			}
 		});
 		show = false;
@@ -347,11 +312,11 @@ public class SyMAPApplet extends JApplet {
 		if (METHOD_TRACE) System.out.println("Entering SyMAPApplet.setMaps(int)");
 		synchronized (lock) {
 			if (frame != null) {
-				System.out.println("Clearing the history."); 	// mdb added 3/31/08 #155
-				symapObj.getHistory().clear(); 					// mdb added 3/31/08 #155
+				System.out.println("Clearing the history."); 	
+				symapObj.getHistory().clear(); 					
 				frame.getDrawingPanel().setMaps(numberOfMaps);
 			}
-			else System.err.println("SyMAPApplet.setMaps: applet not ready"); // mdb added 2/21/07 #107
+			else System.err.println("SyMAPApplet.setMaps: applet not ready"); 
 		}
 		if (METHOD_TRACE) System.out.println("Exiting SyMAPApplet.setMaps(int)");
 	}
@@ -361,11 +326,11 @@ public class SyMAPApplet extends JApplet {
 		if (listOfRemarkIDs != null && listOfRemarkIDs.length() > 0) {
 			synchronized (lock) {
 				if (frame != null) frame.getDrawingPanel().setHighlightedClones(Utilities.getIntArray(listOfRemarkIDs));
-				else System.err.println("SyMAPApplet.setHighlightedClones: applet not ready"); // mdb added 2/21/07 #107
+				else System.err.println("SyMAPApplet.setHighlightedClones: applet not ready"); 
 			}
 		}
 		else 
-			System.err.println("SyMAPApplet.setHighlightClones: bad params"); // mdb added 2/21/07 #107
+			System.err.println("SyMAPApplet.setHighlightClones: bad params"); 
 		if (METHOD_TRACE) System.out.println("Exiting SyMAPApplet.setHighlightClones(String)");
 	}
 

@@ -11,8 +11,6 @@ import javax.swing.Icon;
 /**
  * Class <code>Arrow</code> is an icon that just draws an arrow pointing downward (i.e. like a 'v')
  * or in the direction specified.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Icon
  */
 public class Arrow implements Icon {

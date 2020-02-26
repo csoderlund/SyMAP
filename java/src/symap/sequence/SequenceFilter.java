@@ -11,16 +11,16 @@ import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem; // mdb added 3/12/07 #104
+import javax.swing.JCheckBoxMenuItem; 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JMenuItem; // mdb added 3/23/07 #104
+import javax.swing.JMenuItem; 
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.PopupMenuEvent; // mdb added 3/13/07 #104
+import javax.swing.event.PopupMenuEvent; 
 
 import number.GenomicsNumber;
 import symap.drawingpanel.DrawingPanel;
@@ -29,8 +29,6 @@ import util.Utilities;
 
 /**
  * The filter dialog for the Sequence view.
- * 
- * @author Austin Shoemaker
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class SequenceFilter extends Filter {	
@@ -51,17 +49,17 @@ public class SequenceFilter extends Filter {
 	private JCheckBox frameCheck, geneCheck;
 	private JCheckBox gapCheck, centromereCheck;
 	private JCheckBox rulerCheck, annotCheck;
-	private JCheckBox scoreLineCheck, scoreValueCheck; 	// mdb added 2/22/07 #100
-	private JCheckBox ribbonCheck; 						// mdb added 8/7/07 #126
-	private JCheckBox flippedCheck; 					// mdb added 7/23/07 #132
+	private JCheckBox scoreLineCheck, scoreValueCheck; 	
+	private JCheckBox ribbonCheck; 						
+	private JCheckBox flippedCheck; 					
 	
-	private JCheckBoxMenuItem flippedPopupCheck; 						// mdb added 7/23/07 #132
-	private JCheckBoxMenuItem framePopupCheck, genePopupCheck; 			// mdb added 3/12/07 #104
-	private JCheckBoxMenuItem gapPopupCheck, centromerePopupCheck; 		// mdb added 3/12/07 #104
-	private JCheckBoxMenuItem rulerPopupCheck, annotPopupCheck; 		// mdb added 3/12/07 #104
-	private JCheckBoxMenuItem scoreLinePopupCheck, scoreValuePopupCheck;// mdb added 3/12/07 #104
-	private JCheckBoxMenuItem ribbonPopupCheck; 						// mdb added 8/7/07 #126
-	private JMenuItem fullSequencePopupItem; 							// mdb added 3/12/07 #104
+	private JCheckBoxMenuItem flippedPopupCheck; 						
+	private JCheckBoxMenuItem framePopupCheck, genePopupCheck; 			
+	private JCheckBoxMenuItem gapPopupCheck, centromerePopupCheck; 		
+	private JCheckBoxMenuItem rulerPopupCheck, annotPopupCheck; 		
+	private JCheckBoxMenuItem scoreLinePopupCheck, scoreValuePopupCheck;
+	private JCheckBoxMenuItem ribbonPopupCheck; 						
+	private JMenuItem fullSequencePopupItem; 							
 
 	private JButton fullButton;
 
@@ -70,9 +68,9 @@ public class SequenceFilter extends Filter {
 	private String startStr, endStr;
 	private int startInd, endInd;
 	private boolean frame, gene, gap, centromere, ruler, annot, geneFull;
-	private boolean flipped; 				// mdb added 7/23/07 #132
-	private boolean scoreLine, scoreValue; 	// mdb added 2/22/07 #100
-	private boolean ribbon; 				// mdb added 8/7/07 #126
+	private boolean flipped; 				
+	private boolean scoreLine, scoreValue; 	
+	private boolean ribbon; 				
 	private boolean noChange = false;
 
 	public SequenceFilter(Frame owner, DrawingPanel dp, AbstractButton helpButton, Sequence sequence) {
@@ -105,8 +103,8 @@ public class SequenceFilter extends Filter {
 		startInd = startCombo.getSelectedIndex();
 		endInd = startInd;
 		
-		flippedCheck = new JCheckBox("Flip"); 				// mdb added 7/23/07 #132
-		flippedCheck.setSelected(Sequence.DEFAULT_FLIPPED); // mdb added 7/23/07 #132
+		flippedCheck = new JCheckBox("Flip"); 				
+		flippedCheck.setSelected(Sequence.DEFAULT_FLIPPED); 
 		
 		frameCheck = new JCheckBox("Show Framework Markers");
 		geneCheck = new JCheckBox("Show Genes");
@@ -122,14 +120,14 @@ public class SequenceFilter extends Filter {
 		rulerCheck.setSelected(Sequence.DEFAULT_SHOW_RULER);
 		annotCheck.setSelected(Sequence.DEFAULT_SHOW_ANNOT  && annotCheck.isEnabled()); 
 		
-		scoreLineCheck = new JCheckBox("Show Hit Score Bar");			// mdb added 2/22/07 #100
-		scoreLineCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_LINE);	// mdb added 2/22/07 #100
+		scoreLineCheck = new JCheckBox("Show Hit Score Bar");			
+		scoreLineCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_LINE);	
 
-		scoreValueCheck = new JCheckBox("Show Hit Score Value");		// mdb added 3/14/07 #100
-		scoreValueCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_VALUE);	// mdb added 3/14/07 #100
+		scoreValueCheck = new JCheckBox("Show Hit Score Value");		
+		scoreValueCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_VALUE);	
 		
-		ribbonCheck = new JCheckBox("Show Hit Length");			// mdb added 8/7/07 #126
-		ribbonCheck.setSelected(Sequence.DEFAULT_SHOW_RIBBON);	// mdb added 8/7/07 #126
+		ribbonCheck = new JCheckBox("Show Hit Length");			
+		ribbonCheck.setSelected(Sequence.DEFAULT_SHOW_RIBBON);	
 		
 		geneFullRadio = new JRadioButton("Length");
 		geneMidRadio = new  JRadioButton("Midpoint");
@@ -138,7 +136,6 @@ public class SequenceFilter extends Filter {
 		geneBG.add(geneMidRadio);
 
 		JPanel geneRadioPanel = new JPanel();
-		//geneRadioPanel.setBorder(LineBorder.createBlackLineBorder());
 		geneRadioPanel.add(new JLabel("By:"));
 		geneRadioPanel.add(geneFullRadio);
 		geneRadioPanel.add(geneMidRadio);
@@ -166,7 +163,7 @@ public class SequenceFilter extends Filter {
 		addToGrid(contentPane, gridbag, constraints, endLabel, 1);
 		addToGrid(contentPane, gridbag, constraints, endText, 1);
 		addToGrid(contentPane, gridbag, constraints, endCombo, 1);
-		addToGrid(contentPane, gridbag, constraints, flippedCheck, GridBagConstraints.REMAINDER); // mdb added 7/23/07 #132
+		addToGrid(contentPane, gridbag, constraints, flippedCheck, GridBagConstraints.REMAINDER); 
 		
 		addToGrid(contentPane, gridbag, constraints, new JSeparator(), GridBagConstraints.REMAINDER);
 		addToGrid(contentPane, gridbag, constraints, geneCheck, 2);
@@ -180,9 +177,9 @@ public class SequenceFilter extends Filter {
 		addToGrid(contentPane, gridbag, constraints, new JSeparator(), GridBagConstraints.REMAINDER);
 		addToGrid(contentPane, gridbag, constraints, annotCheck, GridBagConstraints.REMAINDER);
 		addToGrid(contentPane, gridbag, constraints, rulerCheck, GridBagConstraints.REMAINDER);
-		addToGrid(contentPane, gridbag, constraints, ribbonCheck, GridBagConstraints.REMAINDER);     // mdb added 8/7/07 #126
-		addToGrid(contentPane, gridbag, constraints, scoreLineCheck, GridBagConstraints.REMAINDER);  // mdb added 2/22/07 #100
-		addToGrid(contentPane, gridbag, constraints, scoreValueCheck, GridBagConstraints.REMAINDER); // mdb added 3/14/07 #100
+		addToGrid(contentPane, gridbag, constraints, ribbonCheck, GridBagConstraints.REMAINDER);     
+		addToGrid(contentPane, gridbag, constraints, scoreLineCheck, GridBagConstraints.REMAINDER);  
+		addToGrid(contentPane, gridbag, constraints, scoreValueCheck, GridBagConstraints.REMAINDER); 
 
 		addToGrid(contentPane, gridbag, constraints, buttonPanel, GridBagConstraints.REMAINDER);
 
@@ -191,27 +188,23 @@ public class SequenceFilter extends Filter {
 		
 		geneFullRadio.addChangeListener(this);
 		geneMidRadio.addChangeListener(this);
-		flippedCheck.addChangeListener(this);		// mdb added 7/23/07 #132
+		flippedCheck.addChangeListener(this);		
 		frameCheck.addChangeListener(this);
 		geneCheck.addChangeListener(this);
-		ribbonCheck.addChangeListener(this);		// mdb added 8/7/07 #126
+		ribbonCheck.addChangeListener(this);		
 		gapCheck.addChangeListener(this);
 		centromereCheck.addChangeListener(this);
 		rulerCheck.addChangeListener(this);
 		annotCheck.addChangeListener(this);
-		scoreLineCheck.addChangeListener(this);		// mdb added 2/22/07 #100
-		scoreValueCheck.addChangeListener(this);	// mdb added 3/14/07 #100
+		scoreLineCheck.addChangeListener(this);		
+		scoreValueCheck.addChangeListener(this);	
 		
-		// mdb added 3/12/07 #104 -- BEGIN		
-		//popupTitle.setLabel("Sequence Options:"); // mdb removed 7/2/07 #118
-		popupTitle.setText("Sequence Options:"); // mdb added 7/2/07 #118
-		//SyMAP.enableHelpOnButton(showNavigationHelp,"sequencecontrols"); // mdb removed 4/30/09 #162
-		//SyMAP.enableHelpOnButton(showTrackHelp,"sequencetrack"); // mdb removed 4/30/09 #162
-		flippedPopupCheck = new JCheckBoxMenuItem("Flip"); // mdb added 7/23/07 #132
+		popupTitle.setText("Sequence Options:"); 
+		flippedPopupCheck = new JCheckBoxMenuItem("Flip"); 
 		fullSequencePopupItem = new JMenuItem("Show Full Sequence");
 		framePopupCheck = new JCheckBoxMenuItem("Show Framework Markers"); 
 		genePopupCheck = new JCheckBoxMenuItem("Show Genes"); 
-		ribbonPopupCheck = new JCheckBoxMenuItem("Show Hit Length"); // mdb added 8/7/07 #126
+		ribbonPopupCheck = new JCheckBoxMenuItem("Show Hit Length"); 
 		gapPopupCheck = new JCheckBoxMenuItem("Show Gaps"); 
 		centromerePopupCheck = new JCheckBoxMenuItem("Show Centromere"); 
 		rulerPopupCheck = new JCheckBoxMenuItem("Show Ruler"); 
@@ -219,18 +212,18 @@ public class SequenceFilter extends Filter {
 		scoreLinePopupCheck = new JCheckBoxMenuItem("Show Hit Score Bar"); 		
 		scoreValuePopupCheck = new JCheckBoxMenuItem("Show Hit Score Value"); 	
 		popup.add(fullSequencePopupItem);
-		popup.add(flippedPopupCheck); // mdb added 7/23/07 #132
+		popup.add(flippedPopupCheck); 
 		popup.add(framePopupCheck); 
 		popup.add(genePopupCheck);
 		popup.add(gapPopupCheck); 
 		popup.add(centromerePopupCheck); 
 		popup.add(annotPopupCheck);
 		popup.add(rulerPopupCheck);
-		popup.add(ribbonPopupCheck); // mdb added 8/7/07 #126
+		popup.add(ribbonPopupCheck); 
 		popup.add(scoreLinePopupCheck);
 		popup.add(scoreValuePopupCheck);
 		fullSequencePopupItem.addActionListener(this);
-		flippedPopupCheck.addActionListener(this); // mdb added 8/2/07 #132
+		flippedPopupCheck.addActionListener(this); 
 		framePopupCheck.addActionListener(this);
 		genePopupCheck.addActionListener(this);
 		gapPopupCheck.addActionListener(this);
@@ -239,8 +232,7 @@ public class SequenceFilter extends Filter {
 		annotPopupCheck.addActionListener(this);
 		scoreLinePopupCheck.addActionListener(this);
 		scoreValuePopupCheck.addActionListener(this);
-		ribbonPopupCheck.addActionListener(this); // mdb added 8/7/07 #126
-		// mdb added 3/12/07 #104 -- END
+		ribbonPopupCheck.addActionListener(this); 
 	}
 
 	public String getHelpID() {
@@ -267,7 +259,6 @@ public class SequenceFilter extends Filter {
 		if (!isShowing()) {
 			noChange = true;
 			
-			// mdb added 12/7/09 #204 - disable annotation option if no corresponding annotations
 			int[] annotTypeCounts = sequence.getAnnotationTypeCounts(); 
 			if (annotTypeCounts[Annotation.FRAMEWORK_INT] == 0)
 				frameCheck.setEnabled(false);
@@ -307,20 +298,20 @@ public class SequenceFilter extends Filter {
 			annot = sequence.showAnnot;
 			annotCheck.setSelected(annot && annotCheck.isEnabled());
 			
-			scoreLine = sequence.showScoreLine;		// mdb added 2/22/07 #100
-			scoreLineCheck.setSelected(scoreLine);	// mdb added 2/22/07 #100
+			scoreLine = sequence.showScoreLine;		
+			scoreLineCheck.setSelected(scoreLine);	
 			
-			scoreValue = sequence.showScoreValue;	// mdb added 3/14/07 #100
-			scoreValueCheck.setSelected(scoreValue);// mdb added 3/14/07 #100
+			scoreValue = sequence.showScoreValue;	
+			scoreValueCheck.setSelected(scoreValue);
 			
-			ribbon = sequence.showRibbon;			// mdb added 8/7/07 #126
-			ribbonCheck.setSelected(ribbon);		// mdb added 8/7/07 #126
+			ribbon = sequence.showRibbon;			
+			ribbonCheck.setSelected(ribbon);		
 
 			geneFullRadio.setEnabled(geneCheck.isSelected());
 			geneMidRadio.setEnabled(geneCheck.isSelected());
 			
-			flipped = sequence.isFlipped(); // mdb added 7/23/07 #132
-			flippedCheck.setSelected(flipped); // mdb added 8/7/07 #132
+			flipped = sequence.isFlipped(); 
+			flippedCheck.setSelected(flipped); 
 
 			noChange = false;
 		}
@@ -335,10 +326,10 @@ public class SequenceFilter extends Filter {
 			centromereCheck.setSelected(Sequence.DEFAULT_SHOW_CENTROMERE && centromereCheck.isEnabled());
 			rulerCheck.setSelected(Sequence.DEFAULT_SHOW_RULER);
 			annotCheck.setSelected(Sequence.DEFAULT_SHOW_ANNOT && annotCheck.isEnabled());
-			scoreLineCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_LINE); 	// mdb added 2/22/07 #100
-			scoreValueCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_VALUE); // mdb added 3/14/07 #100
-			ribbonCheck.setSelected(Sequence.DEFAULT_SHOW_RIBBON); 			// mdb added 8/7/07 #126
-			flippedCheck.setSelected(Sequence.DEFAULT_FLIPPED); 			// mdb added 7/23/07 #132
+			scoreLineCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_LINE); 	
+			scoreValueCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_VALUE); 
+			ribbonCheck.setSelected(Sequence.DEFAULT_SHOW_RIBBON); 			
+			flippedCheck.setSelected(Sequence.DEFAULT_FLIPPED); 			
 
 			geneFullRadio.setSelected(Sequence.DEFAULT_SHOW_GENE_FULL);
 
@@ -347,7 +338,6 @@ public class SequenceFilter extends Filter {
 			startText.setText(new Double(0).toString());
 			endText.setText(new Double(sequence.getValue(sequence.getTrackSize(),endCombo.getSelectedItem().toString())).toString());
 		
-			// mdb added 3/12/07 #104 -- BEGIN
 			framePopupCheck.setState(Sequence.DEFAULT_SHOW_FRAME && framePopupCheck.isEnabled());
 			genePopupCheck.setState(Sequence.DEFAULT_SHOW_GENE && genePopupCheck.isEnabled());
 			gapPopupCheck.setState(Sequence.DEFAULT_SHOW_GAP && gapPopupCheck.isEnabled());
@@ -356,10 +346,9 @@ public class SequenceFilter extends Filter {
 			annotPopupCheck.setState(Sequence.DEFAULT_SHOW_ANNOT && annotPopupCheck.isEnabled());
 			scoreLinePopupCheck.setState(Sequence.DEFAULT_SHOW_SCORE_LINE);
 			scoreValuePopupCheck.setState(Sequence.DEFAULT_SHOW_SCORE_VALUE);
-			// mdb added 3/12/07 #104 -- END
 			
-			flippedPopupCheck.setState(Sequence.DEFAULT_FLIPPED); // mdb added 8/7/07 #132
-			ribbonPopupCheck.setState(Sequence.DEFAULT_SHOW_RIBBON); // mdb added 8/7/07 #126
+			flippedPopupCheck.setState(Sequence.DEFAULT_FLIPPED); 
+			ribbonPopupCheck.setState(Sequence.DEFAULT_SHOW_RIBBON); 
 		}
 	}
 
@@ -401,22 +390,21 @@ public class SequenceFilter extends Filter {
 				changed = sequence.showRuler(rulerCheck.isSelected());
 			else if (event.getSource() == annotCheck)
 				changed = sequence.showAnnotation(annotCheck.isSelected());
-			else if (event.getSource() == scoreLineCheck)						// mdb added 2/22/07 #100
-				changed = sequence.showScoreLine(scoreLineCheck.isSelected());	// mdb added 2/22/07 #100
-			else if (event.getSource() == scoreValueCheck)						// mdb added 3/14/07 #100
-				changed = sequence.showScoreValue(scoreValueCheck.isSelected());// mdb added 3/14/07 #100
-			else if (event.getSource() == ribbonCheck)							// mdb added 8/7/07 #126
-				changed = sequence.showRibbon(ribbonCheck.isSelected());		// mdb added 8/7/07 #126
+			else if (event.getSource() == scoreLineCheck)						
+				changed = sequence.showScoreLine(scoreLineCheck.isSelected());	
+			else if (event.getSource() == scoreValueCheck)						
+				changed = sequence.showScoreValue(scoreValueCheck.isSelected());
+			else if (event.getSource() == ribbonCheck)							
+				changed = sequence.showRibbon(ribbonCheck.isSelected());		
 			else if (event.getSource() == geneFullRadio || event.getSource() == geneMidRadio)
 				changed = sequence.showFullGene(geneFullRadio.isSelected());
-			else if (event.getSource() == flippedCheck) 			// mdb added 7/23/07 #132
-				changed = sequence.flip(flippedCheck.isSelected()); // mdb added 7/23/07 #132
+			else if (event.getSource() == flippedCheck) 			
+				changed = sequence.flip(flippedCheck.isSelected()); 
 			
 			if (changed) drawingPanel.smake();
 		}
 	}
 	
-	// mdb added 3/13/07 #104
 	public void actionPerformed(ActionEvent event) { // only called for popup menu events
 		if (sequence != null) {
 			boolean changed = false;	
@@ -426,7 +414,7 @@ public class SequenceFilter extends Filter {
 				try { okAction(); } catch (Exception e) { }
 				changed = true;
 			}
-			else if (event.getSource() == flippedPopupCheck) { // mdb added 7/23/07 #132
+			else if (event.getSource() == flippedPopupCheck) { 
 				flipped = flippedPopupCheck.getState();
 				changed = sequence.flip(flipped);
 			}
@@ -462,7 +450,7 @@ public class SequenceFilter extends Filter {
 				scoreValue = scoreValuePopupCheck.getState();
 				changed = sequence.showScoreValue(scoreValue);
 			}
-			else if (event.getSource() == ribbonPopupCheck) { // mdb added 8/7/07 #126
+			else if (event.getSource() == ribbonPopupCheck) { 
 				ribbon = ribbonPopupCheck.getState();
 				changed = sequence.showRibbon(ribbon);
 			}
@@ -475,9 +463,7 @@ public class SequenceFilter extends Filter {
 		super.actionPerformed(event);
 	}
 	
-	// mdb added 3/13/07 #104
 	public void popupMenuWillBecomeVisible(PopupMenuEvent event) { 
-		// mdb added 12/7/09 #204 - disable annotation option if no corresponding annotations
 		int[] annotTypeCounts = sequence.getAnnotationTypeCounts();
 		if (annotTypeCounts[Annotation.FRAMEWORK_INT] == 0)
 			framePopupCheck.setEnabled(false);
@@ -499,8 +485,8 @@ public class SequenceFilter extends Filter {
 		ruler = sequence.showRuler;
 		scoreLine = sequence.showScoreLine;
 		scoreValue = sequence.showScoreValue;
-		flipped = sequence.isFlipped();	// mdb added 8/2/07 #132
-		ribbon = sequence.showRibbon;	// mdb added 8/7/07 #126
+		flipped = sequence.isFlipped();	
+		ribbon = sequence.showRibbon;	
 		
 		framePopupCheck.setState(frame);
 		genePopupCheck.setState(gene);
@@ -510,8 +496,8 @@ public class SequenceFilter extends Filter {
 		rulerPopupCheck.setState(ruler);
 		scoreLinePopupCheck.setState(scoreLine); 
 		scoreValuePopupCheck.setState(scoreValue); 
-		ribbonPopupCheck.setState(ribbon); 	 // mdb added 8/7/07 #126
-		flippedPopupCheck.setState(flipped); // mdb added 8/2/07 #132
+		ribbonPopupCheck.setState(ribbon); 	 
+		flippedPopupCheck.setState(flipped); 
 	}
 	
 	protected boolean okAction() throws Exception {
@@ -538,7 +524,7 @@ public class SequenceFilter extends Filter {
 			}
 		}
 		
-		if (flipped != flippedCheck.isSelected()) { // mdb added 7/23/07 #132
+		if (flipped != flippedCheck.isSelected()) { 
 			flipped = !flipped;
 			changed = true;
 		}
@@ -570,17 +556,17 @@ public class SequenceFilter extends Filter {
 			annot = !annot;
 			changed = true;
 		}
-		if (scoreLine != scoreLineCheck.isSelected()) {	// mdb added 2/22/07 #100
-			scoreLine = !scoreLine;						// mdb added 2/22/07 #100
-			changed = true;								// mdb added 2/22/07 #100
+		if (scoreLine != scoreLineCheck.isSelected()) {	
+			scoreLine = !scoreLine;						
+			changed = true;								
 		}
-		if (scoreValue != scoreValueCheck.isSelected()) {	// mdb added 3/14/07 #100
-			scoreValue = !scoreValue;						// mdb added 3/14/07 #100
-			changed = true;									// mdb added 3/14/07 #100
+		if (scoreValue != scoreValueCheck.isSelected()) {	
+			scoreValue = !scoreValue;						
+			changed = true;									
 		}
-		if (ribbon != ribbonCheck.isSelected()) {	// mdb added 8/7/07 #126
-			ribbon = !ribbon;						// mdb added 8/7/07 #126
-			changed = true;							// mdb added 8/7/07 #126
+		if (ribbon != ribbonCheck.isSelected()) {	
+			ribbon = !ribbon;						
+			changed = true;							
 		}
 		
 		String unit;
@@ -655,14 +641,14 @@ public class SequenceFilter extends Filter {
 		centromereCheck.setSelected(centromere);
 		rulerCheck.setSelected(ruler);
 		annotCheck.setSelected(annot);
-		scoreLineCheck.setSelected(scoreLine); // mdb added 2/22/07 #100
-		scoreValueCheck.setSelected(scoreValue); // mdb added 3/14/07 #100
-		ribbonCheck.setSelected(ribbon); // mdb added 8/7/07 #126
+		scoreLineCheck.setSelected(scoreLine); 
+		scoreValueCheck.setSelected(scoreValue); 
+		ribbonCheck.setSelected(ribbon); 
 		startText.setText(startStr);
 		startCombo.setSelectedIndex(startInd);
 		endText.setText(endStr);
 		endCombo.setSelectedIndex(endInd);
-		flippedCheck.setSelected(flipped); // mdb added 7/23/07 #132
+		flippedCheck.setSelected(flipped); 
 	}
 
 	private void setFullSequence() {

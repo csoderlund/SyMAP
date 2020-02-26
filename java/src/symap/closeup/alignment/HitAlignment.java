@@ -13,15 +13,15 @@ import symap.closeup.components.CloseUpComponent;
 import util.Arrow;
 import util.ArrowLine;
 
-public class HitAlignment implements Comparable<HitAlignment> { // mdb removed abstract 7/25/07 #121
+public class HitAlignment implements Comparable<HitAlignment> { 
 	private HitData hd;
 	private String projDispName;
 	private int content;
 	private String strand;
-	private String queryName; // mdb added 1/9/09 for pseudo-pseudo closeup
+	private String queryName; 
 	private int qStart, qEnd, tStart, tEnd, fullTargetWidth;
-	private /*TargetSequence*/AbstractSequence target; 	// mdb re-classed 7/26/07 #134
-	private /*QuerySequence*/AbstractSequence query; 	// mdb re-classed 7/26/07 #134
+	private AbstractSequence target; 	
+	private AbstractSequence query; 	
 	private double[] misses;
 	private double[] inserts;
 	private double[] deletes;
@@ -31,14 +31,13 @@ public class HitAlignment implements Comparable<HitAlignment> { // mdb removed a
 	private int layer;
 
 	public HitAlignment(HitData hd, String projDispName, 
-			int content, // mdb renamed from "contig" 12/31/08 
+			int content, 
 			String strand, 
-			String queryName, // mdb added 1/9/09 for pseudo-pseudo closeup
-			/*TargetSequence*/AbstractSequence target, // mdb re-classed 7/26/07 #134
-			/*QuerySequence*/AbstractSequence query,   // mdb re-classed 7/26/07 #134
+			String queryName, 
+			AbstractSequence target, 
+			AbstractSequence query,   
 			int queryStart, int queryEnd, 
 			int targetStart, int targetEnd, int fullTargetWidth) 
-			//int uniqueId) // mdb removed 1/7/09
 	{
 		this.hd = hd;
 		this.projDispName = projDispName;
@@ -50,7 +49,6 @@ public class HitAlignment implements Comparable<HitAlignment> { // mdb removed a
 		this.tStart = targetStart;
 		this.tEnd = targetEnd;
 		this.fullTargetWidth = fullTargetWidth;
-		//this.uniqueId = uniqueId; // mdb removed 1/7/09
 		this.target = target;
 		this.query = query;
 		this.layer = 1;
@@ -77,7 +75,7 @@ public class HitAlignment implements Comparable<HitAlignment> { // mdb removed a
 	
 	public String toString() {
 		String title = (projDispName != null ? projDispName+" " : "")+(content > 0 ? "Contig "+content+" " : "")+hd;
-		return title // 1jun10 CAS commented out
+		return title // CAS42 commented out
 				//+ "\nE-value:  "+ getEvalue()
 				//+ "\nIdentity: "+ ((int)Math.round(getPctid()))+"%"
 				//+ "\nStrand:   "+ strand
@@ -100,8 +98,7 @@ public class HitAlignment implements Comparable<HitAlignment> { // mdb removed a
 		}
 		bounds.y = y;
 		bounds.x = x;
-		//bounds.width = getWidth(bpPerPixel);
-		bounds.width = hitWidth() / bpPerPixel; // ASD Changed to be just the hit itself
+		bounds.width = hitWidth() / bpPerPixel; 
 		hitLine.setBounds(bounds, CloseUpComponent.LINE_HEIGHT, CloseUpComponent.ARROW_DIMENSION,
 				pointLeft() ? ArrowLine.LEFT_ARROW : ArrowLine.RIGHT_ARROW);
 	}
@@ -130,7 +127,7 @@ public class HitAlignment implements Comparable<HitAlignment> { // mdb removed a
 	public void paintName(Graphics2D g2, FontMetrics fm, Color fontColor, 
 			double vertSpace, double bpPerPixel) 
 	{
-		String n = queryName;//hd.getName(); // mdb changed 1/9/09 for pseudo-pseudo closeup
+		String n = queryName;
 		double w = fullTargetWidth/bpPerPixel; 
 		double x = bounds.x + (w - fm.stringWidth(n)) / 2.0;
 		double y = bounds.y - vertSpace;
@@ -143,7 +140,7 @@ public class HitAlignment implements Comparable<HitAlignment> { // mdb removed a
 		if (!selected) 
 			g2.setPaint(lineColor());
 		else
-			g2.setPaint(/*Color.gray*/lineColor().brighter());	// mdb changed 6/26/09
+			g2.setPaint(/*Color.gray*/lineColor().brighter());	
 		g2.draw(hitLine);
 		g2.fill(hitLine);
 		
@@ -158,7 +155,7 @@ public class HitAlignment implements Comparable<HitAlignment> { // mdb removed a
 		
 		if (!selected) 
 			g2.setPaint(CloseUpComponent.missColor.darker());
-		else // mdb added 6/26/09
+		else 
 			g2.setPaint(CloseUpComponent.missColor);
 		for (int i = 0; i < misses.length; i++) {
 			line.x1 = line.x2 = misses[i] * hbWidth + hbX;
@@ -183,10 +180,8 @@ public class HitAlignment implements Comparable<HitAlignment> { // mdb removed a
 		}
 	}
 
-	//protected abstract Color lineColor(); // mdb removed 7/25/07 #121
-    protected Color lineColor() { // mdb added 7/25/07 #121
-    	return CloseUpComponent.markerColor;
-    	//return CloseUpComponent.besColor;
+    protected Color lineColor() { 
+    		return CloseUpComponent.markerColor;
     }
 
 	public Dimension getSize(FontMetrics fm) { return new Dimension(query.getWidth(fm),fm.getHeight()*13); }

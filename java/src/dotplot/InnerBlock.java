@@ -4,8 +4,6 @@ import java.awt.Shape;
 
 /**
  * Interface <code>InnerBlock</code> for an inner block (synteny block).
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Shape
  */
 public interface InnerBlock extends Shape {

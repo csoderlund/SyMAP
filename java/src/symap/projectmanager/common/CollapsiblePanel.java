@@ -101,7 +101,6 @@ public class CollapsiblePanel extends JPanel {
 		setMaximumSize(null);
 	}
 	
-	// mdb added 8/20/09 - workaround for sizing problem when hasSeparator=false
 	public void doClick() {
 		expandButton.doClick();
 	}

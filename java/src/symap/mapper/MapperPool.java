@@ -22,14 +22,9 @@ import symap.marker.MarkerTrack;
 
 /**
  * The pool of Mapper hits.
- * 
  * The pool utilizes a ListCache.
- * 
- * @author Austin Shoemaker
  */
 public class MapperPool extends DatabaseUser implements SyMAPConstants {
-	//private static final boolean TIME_TRACE = false;
-	
 	private static final String C1_INSERT = "C1_INSERT";
 	private static final String C2_INSERT = "C2_INSERT";
 	private static final String C1_RVALUE = "c1.number";
@@ -52,7 +47,7 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 	private static final String PSEUDO_MRKHITS_QUERY =
 		"SELECT h.idx,h.marker,mf.filter_code,pf.filter_code,mb.hit_idx,"+
 		"       h.evalue,h.pctid,h.start2,h.end2,h.strand,"+
-		"		h.query_seq,h.target_seq,h.gene_overlap "+ // mdb added query_seq/target_seq 8/22/07 #126 
+		"		h.query_seq,h.target_seq,h.gene_overlap "+ 
 		"FROM contigs AS c "+
 		"INNER JOIN mrk_ctg        AS mc ON (mc.ctg_idx=c.idx) "+
 		"INNER JOIN markers        AS m  ON (m.idx=mc.mrk_idx) "+
@@ -69,7 +64,7 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 	private static final String PSEUDO_BESHITS_QUERY = 
 		"SELECT h.idx,h.clone,h.bes_type,bf.filter_code,pf.filter_code,b.ctghit_idx,"+
 		"       h.evalue,h.pctid,h.start2,h.end2,cl.cb1,cl.cb2,cl.bes1,cl.bes2,h.strand,"+
-		"		h.query_seq,h.target_seq,h.gene_overlap "+ // mdb added query_seq/target_seq 8/22/07 #126 
+		"		h.query_seq,h.target_seq,h.gene_overlap "+ 
 		"FROM contigs AS co "+
 		"INNER JOIN clones AS cl ON cl.ctg_idx=co.idx "+
 		"INNER JOIN bes_hits AS h  ON (h.proj1_idx=? AND h.proj2_idx=? AND h.grp2_idx=? AND h.clone=cl.name) "+
@@ -79,11 +74,11 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 		"                                            (h.start2+h.end2)>>1 >= pf.start AND (h.start2+h.end2)>>1 <= pf.end) "+
 		"WHERE co.proj_idx=? AND co.number=?";
 
-	// mdb added PSEUDO_HITS_QUERY 7/11/07 #121
+	
 	private static final String PSEUDO_HITS_QUERY = 
 		"SELECT h.idx,h.evalue,h.pctid,h.start1,h.end1,h.start2,h.end2,h.strand,bh.block_idx," +
-		"h.gene_overlap," + // mdb added 2/19/08 #150
-		"h.query_seq,h.target_seq " + // mdb added 4/17/09 #126
+		"h.gene_overlap," + 
+		"h.query_seq,h.target_seq " + 
 		"FROM pseudo_hits AS h "+
 		"LEFT JOIN pseudo_block_hits AS bh ON (bh.hit_idx=h.idx) "+
 		"WHERE h.grp1_idx=? AND h.grp2_idx=?";
@@ -123,8 +118,7 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 	private static final String FP_HITS_QUERY =
 		"SELECT c1.number,c2.number,cl1.name,cl2.name,(cl1.cb1+cl1.cb2)>>1 AS pos1,(cl2.cb1+cl2.cb2)>>1 AS pos2,"+
 		"       h.score,f1.filter,f2.filter,b.ctghit_idx "+
-		//"FROM "+CONTIGS_TABLE+" AS c1,"+CLONES_TABLE+" AS cl1,"+FP_HITS_TABLE+" AS h,"+CONTIGS_TABLE+" AS c2,"+CLONES_TABLE+" AS cl2 "+ // mdb removed 3/27/07 #110
-		"FROM contigs AS c1 JOIN clones AS cl1 JOIN fp_hits AS h JOIN contigs AS c2 JOIN clones AS cl2 "+ // mdb added 3/27/07 #110
+		"FROM contigs AS c1 JOIN clones AS cl1 JOIN fp_hits AS h JOIN contigs AS c2 JOIN clones AS cl2 "+ 
 		"LEFT  JOIN fp_block_hits AS b ON (b.hit_idx=h.idx) "+
 		"LEFT JOIN fp_filter AS f1 ON (f1.clone1_idx=cl1.idx AND f1.proj2_idx=?) "+
 		"LEFT JOIN fp_filter AS f2 ON (f2.clone1_idx=cl2.idx AND f2.proj2_idx=?) "+
@@ -134,17 +128,17 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 
 	private ProjectProperties projectProperties;
 	private ListCache fpcPseudoCache, repetitiveMarkerFilterCache, fpcFpcCache;
-	private ListCache pseudoPseudoCache; // mdb added 7/23/07 #121
+	private ListCache pseudoPseudoCache; 
 
 	public MapperPool(DatabaseReader dr, ProjectProperties pp, 
 			ListCache fpcPseudoCache, ListCache repetitiveMarkerFilterCache, 
-			ListCache fpcFpcCache, ListCache pseudoPseudoCache) { // mdb added pseudoPseudoCache 7/23/07 #121 
+			ListCache fpcFpcCache, ListCache pseudoPseudoCache) {  
 		super(dr);
 		this.projectProperties = pp;
 		this.fpcPseudoCache = fpcPseudoCache;
 		this.repetitiveMarkerFilterCache = repetitiveMarkerFilterCache;
 		this.fpcFpcCache = fpcFpcCache;
-		this.pseudoPseudoCache = pseudoPseudoCache; // mdb added 7/23/07 #121
+		this.pseudoPseudoCache = pseudoPseudoCache; 
 	}
 
 	public synchronized void close() {
@@ -156,10 +150,9 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 		if (fpcPseudoCache != null) 			 fpcPseudoCache.clear();
 		if (repetitiveMarkerFilterCache != null) repetitiveMarkerFilterCache.clear();
 		if (fpcFpcCache != null) 				 fpcFpcCache.clear();
-		if (pseudoPseudoCache != null) 			 pseudoPseudoCache.clear(); // mdb added 7/23/07 #121
+		if (pseudoPseudoCache != null) 			 pseudoPseudoCache.clear(); 
 	}
 	
-	// mdb added 4/2/09 #160
 	public boolean hasPair(Track t1, Track t2) {
 		return projectProperties.hasProjectPair(t1.getProject(),t2.getProject());
 	}
@@ -177,25 +170,13 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 
 		if (mapinfo.getMapperType() != newMapInfo.getMapperType()) hits.clear();
 
-		/* mdb removed 7/23/07 #121
-		if (newMapInfo.getMapperType() == Mapper.FPC2PSEUDO) {
-			//repetitiveMarkerFilterCache.clear();
-			fpcFpcCache.clear();
-		}
-		else {
-			fpcPseudoCache.clear();
-		}*/
-		
-		// mdb clear all caches, added 7/23/07 #121
 		if (fpcFpcCache != null) 	   fpcFpcCache.clear();
 		if (fpcPseudoCache != null)    fpcPseudoCache.clear();
 		if (pseudoPseudoCache != null) pseudoPseudoCache.clear();
 		
-		hits.clear(); // mdb tempfix added to prevent hit accumulation on pseudo-pseudo 8/17/07 #121
+		hits.clear(); // prevent hit accumulation on pseudo-pseudo 
 		
-		// mdb added pseudo-to-pseudo case 7/11/07 #121
 		if (t1 instanceof Sequence && t2 instanceof Sequence) { // PSEUDO to PSEUDO
-			// mdb added 4/1/09 #160 - fix pseudo-pseudo query/target ordering problem
 			if (hasPair(t1,t2))
 				setPseudoPseudoData(mapper,(Sequence)t1,(Sequence)t2,hits,mapinfo,newMapInfo);
 			else // swap projects
@@ -216,73 +197,22 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 		return true;
 	}
 
-	// mdb added 7/11/07 #121
 	private void setPseudoPseudoData(Mapper mapper, Sequence st1, Sequence st2, 
 			List hits, MapInfo mi, MapInfo nmi) throws SQLException 
 	{
-		//long start = System.currentTimeMillis();
 		int i;
 		PseudoPseudoData data/*, tempData*/;
-//		PseudoPseudoHits h;
 		int stProject1, stProject2;
 		int group1, group2;	
 		boolean reorder = false;
 		
-		// Reorder projects to match order in database so that grp1_idx/grp2_idx
-		// and start1/end1/start2/end2 fields are correct.
+		stProject1 = st1.getProject();
+		stProject2 = st2.getProject();
+		group1 = st1.getGroup();
+		group2 = st2.getGroup();
 
-// mdb removed 4/1/09 #160 - fix pseudo-pseudo query/target ordering
-//		if ((st1.getPosition() % 2) == 0) {	// is even?		
-//			reorder = true;
-//			stProject1 = st2.getProject();
-//			stProject2 = st1.getProject();
-//			group1 = st2.getGroup();
-//			group2 = st1.getGroup();	
-//		}
-//		else {
-//			reorder = false;
-			stProject1 = st1.getProject();
-			stProject2 = st2.getProject();
-			group1 = st1.getGroup();
-			group2 = st2.getGroup();
-//		}
-		if (SyMAP.DEBUG) System.out.println("pos1="+st1.getPosition()+" pos2="+st2.getPosition()/*+" Reorder projects = "+reorder*/);
-		
-// FIXME: finish this pseudo-pseudo hit caching code
-//		List neededDataList = PseudoPseudoData.getPseudoPseudoData(stProject1,stProject2,group1,group2);
-//		hits.retainAll(neededDataList);
-//		ListIterator iter = neededDataList.listIterator();
-//		while (iter.hasNext()) {
-//			tempData = (PseudoPseudoData)iter.next();
-//			i = hits.indexOf(tempData);
-//			if (i >= 0) {
-//				h = (PseudoPseudoHits)hits.get(i);
-//				h.set(mt,st);
-//				if (h.hasHitContent(nmi.getHitContent())) iter.remove();
-//				else if (pseudoPseudoCache != null) {
-//					data = (PseudoPseudoData)pseudoPseudoCache.get(tempData);
-//					if (data != null) {
-//						if (!h.setHits(data)) data.setHitData(h);
-//						if (h.hasHitContent(nmi.getHitContent())) iter.remove();
-//						else iter.set(data);
-//					}
-//				}
-//			}
-//			else if (pseudoPseudoCache != null) {
-//				data = (PseudoPseudoData)pseudoPseudoCache.get(tempData);
-//				if (data != null) {
-//					if (data.hasHitContent(nmi.getHitContent())) {
-//						iter.remove();
-//						hits.add(new PseudoPseudoHits(mapper,mt,st,data));
-//					}
-//					else iter.set(data);
-//				}
-//			}
-//		}
-//
-//		if (!neededDataList.isEmpty()) {
+
 			ProjectPair pp = projectProperties.getProjectPair(stProject1,stProject2);
-//			RepetitiveMarkerFilterData rmfd = getRepetitiveMarkerFilterData(pp);
 
 			if (SyMAP.DEBUG) System.out.println("Looking for the Hits for Pseudos: p1="+stProject1+" p2="+stProject2+" pair="+pp.getPair()+" g1="+group1+" g2="+group2);
 			List<HitData> hitList = new LinkedList<HitData>();
@@ -291,92 +221,45 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 			String query;
 			try {
 				statement = createStatement();
-				//for (iter = neededDataList.listIterator(); iter.hasNext(); ) {
-					//data = (PseudoPseudoData)iter.next();
+				
 					data = new PseudoPseudoData(stProject1,group1,stProject2,
 							group2,nmi.getHitContent(),hitList,reorder);
 				
 					query = PSEUDO_HITS_QUERY;
-					//query = setInt(query,pp.getPair());
+					
 					query = setInt(query,group1);	
 					query = setInt(query,group2);
 					
-					//long cStart = System.currentTimeMillis();
+					
 					rs = statement.executeQuery(query);
-					//if (TIME_TRACE) System.out.println("MapperPool: pseudo hits query time = "+(System.currentTimeMillis()-cStart)+" ms");
-
+				
 					int start1, end1, start2, end2;
 					
 					while (rs.next()) {
-// mdb removed 4/1/09 #160						
-//						if (reorder) {
-//							start1 = rs.getInt(6);
-//							end1   = rs.getInt(7);
-//							start2 = rs.getInt(4);
-//							end2   = rs.getInt(5);
-//						}
-//						else {
-							start1 = rs.getInt(4);
-							end1   = rs.getInt(5);
-							start2 = rs.getInt(6);
-							end2   = rs.getInt(7);
-//						}
-							HitData temp = 							PseudoPseudoData.getHitData(
-									rs.getLong(1),		/* long id 		*/
-									null,				/* String name 	*/
-									rs.getString(8),	/* String strand*/
-									0,					/* int repetitive*/
-									rs.getInt(9),		/* int block	*/
-									rs.getDouble(2),	/* double evalue*/
-									rs.getDouble(3),	/* double pctid	*/
-									start1,				/* int start1	*/
-									end1,				/* int end1		*/
-									start2,				/* int start2	*/
-									end2,				/* int end2		*/
-									rs.getInt(10),		/* int overlap  */ 		// mdb added 2/19/08 #150
-									rs.getString(11),	/* String query_seq */	// mdb added 4/17/09 #126
-									rs.getString(12));	/* String target_seq */	// mdb added 4/17/09 #126
+						start1 = rs.getInt(4);
+						end1   = rs.getInt(5);
+						start2 = rs.getInt(6);
+						end2   = rs.getInt(7);
 
-							
+						HitData temp = 							PseudoPseudoData.getHitData(
+								rs.getLong(1),		/* long id 		*/
+								null,				/* String name 	*/
+								rs.getString(8),	/* String strand*/
+								0,					/* int repetitive*/
+								rs.getInt(9),		/* int block	*/
+								rs.getDouble(2),	/* double evalue*/
+								rs.getDouble(3),	/* double pctid	*/
+								start1,				/* int start1	*/
+								end1,				/* int end1		*/
+								start2,				/* int start2	*/
+								end2,				/* int end2		*/
+								rs.getInt(10),		/* int overlap  */ 		
+								rs.getString(11),	/* String query_seq */	
+								rs.getString(12));	/* String target_seq */	
+			
 						hitList.add(temp);
 					}
 					closeResultSet(rs);
-
-					if (SyMAP.DEBUG) System.out.println("MapperPool.setPseudoPseudoData hitList.size="+hitList.size());
-
-// mdb removed 8/4/09 - unused					
-//					// mdb added 2/1/08 --------------------------------- BEGIN
-//					java.util.Collections.sort(hitList, 
-//							new Comparator() {
-//								public int compare(Object o1, Object o2) {
-//									return (int)(((HitData)o1).getStart1() - ((HitData)o2).getStart1());
-//								}
-//					});
-//					HitData lastHit = null;
-//					for (HitData hit : hitList) {
-//						if (lastHit != null) {
-//							int diff = hit.getStart1() - lastHit.getEnd1();
-//							hit.setPrevDist1(diff);
-//							lastHit.setNextDist1(diff);
-//						}
-//						lastHit = hit;
-//					}
-//					java.util.Collections.sort(hitList, 
-//							new Comparator() {
-//								public int compare(Object o1, Object o2) {
-//									return (int)(((HitData)o1).getStart2() - ((HitData)o2).getStart2());
-//								}
-//					});
-//					lastHit = null;
-//					for (HitData hit : hitList) {
-//						if (lastHit != null) {
-//							int diff = hit.getStart2() - lastHit.getEnd2();
-//							hit.setPrevDist2(diff);
-//							lastHit.setNextDist2(diff);
-//						}
-//						lastHit = hit;
-//					}
-//					// mdb added 2/1/08 ----------------------------------- END
 					
 					data.addHitData(nmi.getHitContent(),hitList);
 					
@@ -386,14 +269,12 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 					
 					hitList.clear();
 					if (pseudoPseudoCache != null) pseudoPseudoCache.add(data);
-				//}
+			
 				closeStatement(statement);
 			} catch (SQLException e) {
 				close();
 				throw e;
 			}
-//		}
-		//if (TIME_TRACE) System.out.println("MapperPool: setPseudoPseudoData() time = "+(System.currentTimeMillis()-start)+" ms");
 	}
 
 	private void setFPCPseudoData(Mapper mapper, MarkerTrack mt, Sequence st, List hits, MapInfo mi, MapInfo nmi) throws SQLException {
@@ -440,7 +321,6 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 			ProjectPair pp = projectProperties.getProjectPair(mtProject,stProject);
 			RepetitiveMarkerFilterData rmfd = getRepetitiveMarkerFilterData(pp);
 
-			if (SyMAP.DEBUG) System.out.println("Looking for the Hits for Contigs: "+neededDataList);
 			List mrkHitList = new LinkedList();
 			List besHitList = new LinkedList();
 			Statement statement;
@@ -459,8 +339,7 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 					query = setInt(query,group);
 					query = setInt(query,group);
 					query = setInt(query,mtProject);
-					//query = setInt(query,data.getContig()); // mdb removed 7/25/07 #134
-					query = setInt(query,data.getContent1()); // mdb added 7/25/07 #134
+					query = setInt(query,data.getContent1()); 
 
 					rs = statement.executeQuery(query);
 					while (rs.next()) {
@@ -476,8 +355,8 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 										rs.getDouble(7), 			/* double pctid	*/
 										rs.getInt(8),				/* int start2	*/
 										rs.getInt(9),				/* int end2		*/
-										rs.getString(11),			/* String query_seq  - mdb added 8/22/07 #126 */
-										rs.getString(12),			/* String query_seq  - mdb added 8/22/07 #126 */
+										rs.getString(11),			/* String query_seq  */
+										rs.getString(12),			/* String query_seq  */
 										rs.getInt(13)
 										)
 									);
@@ -492,8 +371,7 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 					query = setInt(query,mtProject);
 					query = setInt(query,group);
 					query = setInt(query,mtProject);
-					//query = setInt(query,data.getContig()); // mdb removed 7/25/07 #134
-					query = setInt(query,data.getContent1()); // mdb added 7/25/07 #134
+					query = setInt(query,data.getContent1()); 
 
 					rs = statement.executeQuery(query);
 					while (rs.next()) {
@@ -513,8 +391,8 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 										rs.getInt(12),					/* int cb2		*/
 										getBESValue(rs.getString(13)),	/* byte bes1	*/
 										getBESValue(rs.getString(14)),	/* byte bes2	*/
-										rs.getString(16),				/* String query_seq  - mdb added 8/22/07 #126 */
-										rs.getString(17),				/* String target_seq - mdb added 8/22/07 #126 */
+										rs.getString(16),				/* String query_seq   */
+										rs.getString(17),				/* String target_seq  */
 										rs.getInt(18)));
 					}
 					closeResultSet(rs);
@@ -666,8 +544,8 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 					}
 					else data = null;
 				}
-				//if (data != null && c2 == data.getContig2() && c1 == data.getContig1()) // mdb removed 7/25/07 #134
-				if (data != null && c2 == data.getContent2() && c1 == data.getContent1()) // mdb added 7/25/07 #134
+				
+				if (data != null && c2 == data.getContent2() && c1 == data.getContent1()) 
 					fpHits.add(FPCFPCData.getFPHitData(rs.getString(3),rs.getString(4),rs.getInt(5),rs.getInt(6),
 							rs.getDouble(7),rs.getInt(8)+rs.getInt(9),rs.getInt(10)));
 			}
@@ -713,10 +591,8 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 		iter = dataList.iterator();
 		for (int i = 0; i < contigs1.length; i++) {
 			data = (FPCFPCData)iter.next();
-			//contigs1[i] = data.getContig1(); // mdb removed 7/25/07 #134
-			//contigs2[i] = data.getContig2(); // mdb removed 7/25/07 #134
-			contigs1[i] = data.getContent1(); // mdb added 7/25/07 #134
-			contigs2[i] = data.getContent2(); // mdb added 7/25/07 #134
+			contigs1[i] = data.getContent1(); 
+			contigs2[i] = data.getContent2(); 
 		}
 
 		try {
@@ -748,9 +624,9 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 					}
 					else data = null;
 				}
-				//if (data != null && c2 == data.getContig2() && c1 == data.getContig1()) // mdb removed 7/25/07 #134
-				if (data != null && c2 == data.getContent2() && c1 == data.getContent1()) // mdb added 7/25/07 #134
-					markers.add(rs.getString(3));//.intern()); // mdb removed intern() 2/2/10 - can cause memory leaks in this case
+				
+				if (data != null && c2 == data.getContent2() && c1 == data.getContent1()) 
+					markers.add(rs.getString(3));
 			}
 			if (data != null) {
 				data.setSharedMarkerBlockHits(markers);

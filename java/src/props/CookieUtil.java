@@ -11,13 +11,12 @@ import netscape.javascript.JSObject;
  * Class <code>CookieUtil</code> is a class that can be used to create, access,
  * and delete cookies via an applet on a web page.
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 public class CookieUtil {
 	private static final boolean DEBUG = false;
 	private static final String CHARSET = "ISO-8859-1";
 	
-	private boolean bExceptionReported = false; // mdb added 12/11/08
+	private boolean bExceptionReported = false; 
 
 	private JSObject host;
 
@@ -31,7 +30,6 @@ public class CookieUtil {
 			host = JSObject.getWindow(applet);
 		} catch (Exception e) {
 			System.err.println("Exception getting window object!");
-			//e.printStackTrace(); // mdb removed 3/1/07
 		}
 	}
 
@@ -106,8 +104,8 @@ public class CookieUtil {
 		} catch (Exception e) {
 			if (!bExceptionReported)
 				System.err.println("Exception trying to set cookie value! (suppressing further notifications)");
-			bExceptionReported = true; // mdb added 12/11/08
-			//e.printStackTrace(); // mdb removed 3/1/07
+			bExceptionReported = true; 
+			
 		}
 	}
 
@@ -122,8 +120,8 @@ public class CookieUtil {
 		catch (Exception e) {
 			if (!bExceptionReported)
 				System.err.println("Exception trying to get cookie value!  (suppressing further notifications)");
-			bExceptionReported = true; // mdb added 12/11/08
-			//e.printStackTrace(); // mdb removed 3/1/07
+			bExceptionReported = true; 
+			
 		}
 		if (DEBUG) System.out.println("CookieUtil::getCookie() => ["+cookie+"]");
 		return cookie;

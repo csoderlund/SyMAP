@@ -24,7 +24,6 @@ import symap.SyMAP;
  * A Clone is one of the lines in the contig track view including the circles (<code>Circle</code>)
  * on the ends if any and all the associated data.
  * 
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see FilteredComponent
  * @see SyMAPConstants
  */
@@ -238,8 +237,6 @@ public class Clone extends FilteredComponent implements SyMAPConstants {
 	}
 
 	public int getMinDistanceBetweenHitsShowing() {
-		//boolean rFound = false; // mdb removed 6/29/07 #118
-		//boolean fFound = false; // mdb removed 6/29/07 #118
 		Hit hit;
 		int ind;
 		int rf[][] = {new int[hits.size()],new int[hits.size()]};
@@ -651,10 +648,6 @@ public class Clone extends FilteredComponent implements SyMAPConstants {
 		private double x,y;
 
 		private StaticPoint2D() { }
-
-//		private StaticPoint2D(double x, double y) { // mdb removed 6/29/07 #118
-//			setLoc(x,y);
-//		}
 
 		public double getX() { return x; }
 		public double getY() { return y; }

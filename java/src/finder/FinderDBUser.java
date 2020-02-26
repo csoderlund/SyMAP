@@ -22,15 +22,13 @@ import symap.mapper.MapperPool;
 public class FinderDBUser extends DotPlotDBUser {
 	public static final boolean STORE_BLOCKS = false;
 
-	//public static final String DB_PROPS_FILE = "/properties/wdb.props"; // mdb removed 4/9/08
-	public static final String DB_PROPS_FILE = "/properties/database.properties"; // mdb added 4/9/08
+	public static final String DB_PROPS_FILE = "/properties/database.properties"; 
 
 	private static final String GET_FPC_GENOME_LENGTH = /* pid */
 		"SELECT SUM(size) FROM contigs WHERE proj_idx=?";
 
 	private static final String GET_PSEUDO_GENOME_LENGTH = /* pid */
-		//"SELECT SUM(p.length) FROM "+GROUPS_TABLE+" AS g, "+PSEUDOS_TABLE+" AS p WHERE g.proj_idx=? AND g.idx=p.grp_idx"; // mdb removed 5/16/07 #110
-		"SELECT SUM(p.length) FROM groups AS g JOIN pseudos AS p WHERE g.proj_idx=? AND g.idx=p.grp_idx"; // mdb added 5/16/07 #110
+		"SELECT SUM(p.length) FROM groups AS g JOIN pseudos AS p WHERE g.proj_idx=? AND g.idx=p.grp_idx"; 
 	private static final String GET_FPC_NUM_FP_HITS = /* p2,p1,p2,p1 */
 		"SELECT COUNT(*) "+
 		"FROM fp_hits AS fh "+
@@ -40,27 +38,23 @@ public class FinderDBUser extends DotPlotDBUser {
 
 	private static final String GET_FPC_NUM_MRK_HITS = /* p1, p2, min_mrk_clones_hit, min_mrk_clones_hit */
 		"SELECT m1.idx, m2.idx "+
-		//"FROM   "+MARKERS_TABLE+" AS m1, "+MARKERS_TABLE+" AS m2, "+MRK_CTG_TABLE+" AS mc1, "+MRK_CTG_TABLE+" AS mc2 "+ // mdb removed 5/16/07 #110
-		"FROM   markers AS m1 JOIN markers AS m2 JOIN mrk_ctg AS mc1 JOIN mrk_ctg AS mc2 "+ // mdb added 5/16/07 #110
+		"FROM   markers AS m1 JOIN markers AS m2 JOIN mrk_ctg AS mc1 JOIN mrk_ctg AS mc2 "+ 
 		"WHERE  m1.proj_idx=? AND m2.proj_idx=? AND m1.name=m2.name AND m1.idx=mc1.mrk_idx AND mc1.nhits >= ? AND "+
 		"       m2.idx=mc2.mrk_idx AND mc2.nhits >= ? AND mc1.ctg_idx != mc2.ctg_idx ";
 
 	private static final String GET_FPC_NUM_CTGS =
-		//"SELECT m.idx FROM "+MARKERS_TABLE+" AS m, "+MRK_CTG_TABLE+" AS mc WHERE m.proj_idx=? AND "+ // mdb removed 5/16/07 #110
-		"SELECT m.idx FROM markers AS m JOIN mrk_ctg AS mc WHERE m.proj_idx=? AND "+ // mdb added 5/16/07 #110
+		"SELECT m.idx FROM markers AS m JOIN mrk_ctg AS mc WHERE m.proj_idx=? AND "+ 
 		"       (SELECT COUNT(*) FROM mrk_ctg AS mc WHERE mc.mrk_idx=m.idx) > ? "+
 		"ORDER BY m.idx";
 
 	private static final String GET_PSEUDO_NUM_BES_HITS = /* p1,p2,p1 */
 		"SELECT COUNT(*) "+
-		//"FROM "+BES_HITS_TABLE+" AS b, "+CLONES_TABLE+" as c "+ // mdb removed 5/16/07 #110
-		"FROM bes_hits AS b JOIN clones as c "+ // mdb added 5/16/07 #110
+		"FROM bes_hits AS b JOIN clones as c "+ 
 		"WHERE b.proj1_idx=? AND b.proj2_idx=? AND c.proj_idx=? AND c.name=b.clone AND c.ctg_idx > 0 ";
 
 	private static final String GET_PSEUDO_NUM_MRK_HITS = /* p1,p2,p1,min_mrk_clones_hit */
 		"SELECT COUNT(*) "+
-		//"FROM "+MRK_HITS_TABLE+" AS h, "+GROUPS_TABLE+" AS g, "+MARKERS_TABLE+" AS m, "+MRK_CTG_TABLE+" AS mc "+ // mdb removed 5/16/07 #110
-		"FROM mrk_hits AS h JOIN groups AS g JOIN markers AS m JOIN mrk_ctg AS mc "+ // mdb added 5/16/07 #110
+		"FROM mrk_hits AS h JOIN groups AS g JOIN markers AS m JOIN mrk_ctg AS mc "+ 
 		"WHERE h.proj1_idx=? AND g.proj_idx=? AND h.grp2_idx=g.idx AND "+
 		"      m.proj_idx=? AND m.name=h.marker AND mc.mrk_idx=m.idx AND mc.nhits >= ?";
 
@@ -107,13 +101,11 @@ public class FinderDBUser extends DotPlotDBUser {
 		") ENGINE = InnoDB";
 
 	private static final String GET_RUN_ID_QUERY =
-		//"SELECT rid FROM "+ALT_BLOCKS_RUNS_TABLE+" as a, "+PROJECT_PAIRS_TABLE+" as p "+ // mdb removed 5/16/07 #110
-		"SELECT rid FROM alt_blocks_runs as a JOIN pairs as p "+ // mdb added 5/16/07 #110
+		"SELECT rid FROM alt_blocks_runs as a JOIN pairs as p "+ 
 		"WHERE a.rname=? AND a.rnum=? AND p.proj1_idx=? AND p.proj2_idx=? AND a.pair_idx=p.idx";
 
 	private static final String GET_MAX_RUN_QUERY =
-		//"SELECT MAX(rnum) FROM "+ALT_BLOCKS_RUNS_TABLE+" as a, "+PROJECT_PAIRS_TABLE+" as p "+ // mdb removed 5/16/07 #110
-		"SELECT MAX(rnum) FROM alt_blocks_runs as a JOIN pairs as p "+ // mdb added 5/16/07 #110
+		"SELECT MAX(rnum) FROM alt_blocks_runs as a JOIN pairs as p "+ 
 		"WHERE a.rname=? AND p.proj1_idx=? AND p.proj2_idx=? AND a.pair_idx=p.idx";
 
 	private static final String INSERT_RUN_ID_QUERY =
@@ -121,13 +113,11 @@ public class FinderDBUser extends DotPlotDBUser {
 		" (SELECT idx FROM pairs AS p WHERE p.proj1_idx=? AND p.proj2_idx=?))";
 
 	private static final String GET_RUN_NAMES_QUERY =
-		//"SELECT DISTINCT rname FROM "+ALT_BLOCKS_RUNS_TABLE+" as a, "+PROJECT_PAIRS_TABLE+" as p "+ // mdb removed 5/16/07 #110
-		"SELECT DISTINCT rname FROM alt_blocks_runs as a JOIN pairs as p "+ // mdb added 5/16/07 #110
+		"SELECT DISTINCT rname FROM alt_blocks_runs as a JOIN pairs as p "+ 
 		"WHERE p.proj1_idx=? AND p.proj2_idx=? AND p.idx=a.pair_idx";
 
 	private static final String GET_RUN_NUMBERS_QUERY =
-		//"SELECT rnum FROM "+ALT_BLOCKS_RUNS_TABLE+" as a, "+PROJECT_PAIRS_TABLE+" as p "+ // mdb removed 5/16/07 #110
-		"SELECT rnum FROM alt_blocks_runs as a JOIN pairs as p "+ // mdb added 5/16/07 #110
+		"SELECT rnum FROM alt_blocks_runs as a JOIN pairs as p "+ 
 		"WHERE a.rname=? AND p.proj1_idx=? AND p.proj2_idx=? AND a.pair_idx=p.idx ORDER BY rnum";
 
 	private static final String GET_RUN_COMMENT_QUERY =
@@ -390,10 +380,7 @@ public class FinderDBUser extends DotPlotDBUser {
 
 	public void removeRun(int rid) throws SQLException {
 		Statement stat = createStatement();
-		/*
-	  stat.addBatch("DELETE FROM "+ALT_BLOCKS_TABLE+"      WHERE rid="+rid);
-	  stat.addBatch("DELETE FROM "+ALT_RUNS_PROPS_TABLE+"  WHERE rid="+rid);
-		 */
+
 		stat.addBatch("DELETE FROM alt_blocks_runs WHERE rid="+rid);
 		stat.executeBatch();
 		closeStatement(stat);

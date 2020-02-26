@@ -44,8 +44,6 @@ public class FPCContig
 			"','" +  mPos + "','" + mSize + "','" + mCCB + "','" + mRmk +  "')"; 
 		pool.executeUpdate(st);
 		
-		//mIdx = pool.lastID(); // mdb removed 7/1/09
-		// mdb added 7/1/09
 		st = "SELECT idx FROM contigs WHERE proj_idx=" + mProjIdx + " AND number=" + mNum + " AND grp_idx=" + mGrpIdx;
 		mIdx = pool.getIdx(st);
 	}

@@ -80,7 +80,7 @@ public class MarkerList implements SyMAPConstants {
 	public void setCondFilters(List<Object> filters) {
 		condFilters.clear();
 		condFilters.addAll(filters);
-		condFilters.trimToSize(); // mdb added 2/3/10
+		condFilters.trimToSize(); 
 	}
 
 	/**
@@ -98,22 +98,12 @@ public class MarkerList implements SyMAPConstants {
 		}
 	}
 
-	/*
-      public void addAll(Collection markers) {
-      list.addAll(markers);
-      }
-
-      public void removeAll(Collection markers) {
-      list.removeAll(markers);
-      }
-	 */
-
 	/**
 	 * Method <code>clear</code> clears the list of markers.
 	 *
 	 */
 	public void clear() {
-		list.removeAllElements();//.clear(); // mdb changed 2/3/10
+		list.removeAllElements();
 	}
 
 	/**
@@ -149,7 +139,7 @@ public class MarkerList implements SyMAPConstants {
 		return line;
 	}
 	
-	public int getNumVisibleMarkers() { // mdb added 3/29/07 #112
+	public int getNumVisibleMarkers() { 
 		int count = 0;
 		
 		for (Marker marker : list)
@@ -158,7 +148,7 @@ public class MarkerList implements SyMAPConstants {
 		return count;
 	}
 	
-	public int getNumMarkers() { // mdb added 3/29/07 #112
+	public int getNumMarkers() { 
 		return list.size();
 	}
 
@@ -457,7 +447,7 @@ public class MarkerList implements SyMAPConstants {
 	 */
 	public void paintComponent(Graphics2D g2) {
 		if (showNames != NO_NAMES) {
-			if (getNumVisibleMarkers() > 0) { // mdb added "if" 3/30/07 #112
+			if (getNumVisibleMarkers() > 0) { 
 				for (Marker marker : list)
 					marker.paintComponent(g2);
 				g2.setPaint(Marker.getMarkerLineColor());

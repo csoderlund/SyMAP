@@ -64,14 +64,6 @@ public class SubBlock extends ABlock implements InnerBlock {
 	}
 
 	public Hit[] getHits(boolean includeRepetitive, boolean onlyBlock) {
-// mdb unused 2/20/08
-//		Hit h;
-//		List rhits = new ArrayList(hits.size());
-//		for (Iterator iter = hits.iterator(); iter.hasNext(); ) {
-//		    h = (Hit)iter.next();
-//		    if ((!onlyBlock || h.isBlock()) && (includeRepetitive || h.isRepetitive()))
-//			rhits.add(h);
-//		}
 		return (Hit[])hits.toArray(new Hit[0]);
     }
 }

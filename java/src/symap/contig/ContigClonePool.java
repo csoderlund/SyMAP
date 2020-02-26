@@ -21,8 +21,6 @@ import util.ListCache;
 
 /**
  * Handles the cache of data for the Contig Track.
- * 
- * @author Austin Shoemaker
  */
 public class ContigClonePool extends DatabaseUser {	
 	protected static final String CONTIGS_QUERY = 
@@ -217,7 +215,7 @@ public class ContigClonePool extends DatabaseUser {
 				pname = null;
 				m2cList = null;
 				while (rs.next()) {
-					name = rs.getString(1);//.intern(); // mdb removed intern() 2/2/10 - can cause memory leaks in this case
+					name = rs.getString(1);
 					if (pname == null || !pname.equals(name)) {
 						m2cList = new LinkedList();
 						marker2CloneMap.put(name, m2cList);

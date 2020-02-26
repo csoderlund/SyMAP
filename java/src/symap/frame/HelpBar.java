@@ -52,37 +52,6 @@ public class HelpBar extends JPanel
 	private static final int STATUS_TIME_CHECK = 500;
 	private static final int STATUS_WIDTH = 200;
 
-// mdb removed 1/28/09 #159 simplify properties	
-//	private static int height;
-//	private static Font helpFont;
-//	public static Color helpColor;
-//	public static Color helpBackgroundColor;
-//	private static Font statusFont;
-//	public static Color statusColor;
-//	public static Color statusBackgroundColor;
-//	public static Color busyColor;
-//	public static Color blinkColor;
-//	public static Color pausedColor;
-//	public static Color interactiveColor;
-//	public static Color circleBackgroundColor;
-//	static {
-//		PropertiesReader props = new PropertiesReader(SyMAP.HELPBAR_PROPS);
-//		height = (int)props.getDouble("height");
-//		helpFont = props.getFont("helpFont");
-//		helpColor = props.getColor("helpColor");
-//		helpBackgroundColor = props.getColor("helpBackgroundColor");
-//		statusFont = props.getFont("statusFont");
-//		statusColor = props.getColor("statusColor");
-//		statusBackgroundColor = props.getColor("statusBackgroundColor");
-//		busyColor = props.getColor("busyColor");
-//		blinkColor = props.getColor("blinkColor");
-//		pausedColor = props.getColor("pausedColor");
-//		interactiveColor = props.getColor("interactiveColor");
-//		circleBackgroundColor = props.getColor("circleBackgroundColor");
-//	}
-	
-	// mdb added 1/28/09 #159 simplify properties
-	//private static final int height = 17; // mdb removed 2/13/09
 	private static final Font helpFont = new Font("Ariel", 0, 14);
 	private static final Color helpColor = Color.black;
 	private static final Color helpBackgroundColor = Color.white;
@@ -95,8 +64,7 @@ public class HelpBar extends JPanel
 	private static final Color interactiveColor = Color.green;
 	private static final Color circleBackgroundColor = Color.white;
 	
-	//private JLabel helpLabel = null; // mdb removed 2/13/09
-	private JTextArea helpLabel = null; // mdb added 2/19/09 for 3D
+	private JTextArea helpLabel = null; 
 	private Object currentHelp = null;
 	private JLabel statusLabel = null;
 	private CircleStatus circleStatus = null;
@@ -120,9 +88,7 @@ public class HelpBar extends JPanel
 		setPreferredSize(new Dimension(width,height));
 
 		if (hasHelpText) {
-			//helpLabel = new HelpBarLabel(); // mdb removed 2/13/09 for 3D	
-			
-			// mdb added 2/13/09 for 3D
+			// for 3D
 			helpLabel = new JTextArea();
 			helpLabel.setBorder( BorderFactory.createEmptyBorder(0, 5, 0, 5) );
 			helpLabel.setLineWrap(true);
@@ -207,17 +173,16 @@ public class HelpBar extends JPanel
 		if (circleStatus != null) circleStatus.setPaused(paused,comp);
 	}
 
-	public void addHelpListener(Component comp) { // mdb changed from JComponent to Component 2/16/09
+	public void addHelpListener(Component comp) { 
 		synchronized (comps) {
 			comps.put(comp,comp);
 
 			comp.addMouseListener(this);
-			//comp.removeMouseListener(this); // mdb removed 7/6/09 - strange mistake
-			comp.addMouseMotionListener(this); // mdb added 7/6/09
+			comp.addMouseMotionListener(this); 
 		}
 	}
 
-	public void addHelpListener(Component comp, HelpListener listener) { // mdb changed from JComponent to Component 2/16/09
+	public void addHelpListener(Component comp, HelpListener listener) { 
 		synchronized (comps) {
 			comps.put(comp,listener);
 
@@ -226,7 +191,7 @@ public class HelpBar extends JPanel
 		}
 	}
 
-	public void removeHelpListener(Component comp) { // mdb changed from JComponent to Component 2/16/09
+	public void removeHelpListener(Component comp) { 
 		synchronized (comps) {
 			comps.remove(comp);
 
@@ -307,12 +272,10 @@ public class HelpBar extends JPanel
 	}
 
 	public void setHelp(String help, Object obj) {
-		if (help == null || help.equals("")) { // mdb added empty string 3/28/07
-			//help = ""; // mdb removed 3/28/07
-			help = "Move the mouse over an object for further info."; // mdb added 3/28/07
+		if (help == null || help.equals("")) { 
+			help = "Move the mouse over an object for further info."; 
 		}
 		else {
-			// mdb added 6/9/09
 			if (getSize().height < 50)
 				help = help.replaceAll("\n", " ");
 		}

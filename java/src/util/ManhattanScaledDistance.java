@@ -5,8 +5,6 @@ package util;
  * Manhattan Scaled Distance function implementation.
  *
  * |x2 - x1|/s1 + |y2 - y1|/s2 
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Distance2D
  */
 public class ManhattanScaledDistance extends ScaledDistance2D {

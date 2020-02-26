@@ -9,7 +9,6 @@ import java.util.Map;
  * based on the holder of the number.
  *
  * @see GenomicsNumberHolder
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 public class GenomicsNumber {
 	public static final int DEFAULT_FRACTION_DIGITS = 2;
@@ -140,7 +139,6 @@ public class GenomicsNumber {
 		return new Long(number).toString()+" "+CB;
 	}
 	
-	// mdb added 8/9/07 #139
 	public String toString(int bpPerCb) { 
 		return new Long(number).toString()+" "+CB+" = "+getFormatted(bpPerCb,number,1);
 	}
@@ -178,19 +176,6 @@ public class GenomicsNumber {
 		return r;
 	}
 
-	/**
-	 * Method <code>getFormatted</code> gets the formatted string in units using the default number format.
-	 *
-	 * @param units a <code>String</code> value
-	 * @param bpPerCb an <code>int</code> value
-	 * @param cb a <code>double</code> value
-	 * @param bpPerPixel a <code>double</code> value
-	 * @return a <code>String</code> value
-	 */
-// mdb unused 8/10/07
-//	public static String getFormatted(String units, int bpPerCb, double cb, double bpPerPixel) {
-//		return getFormatted(units,bpPerCb,cb,bpPerPixel,nf);
-//	}
 
 	/**
 	 * Method <code>getFormatted</code> gets the formatted string in units

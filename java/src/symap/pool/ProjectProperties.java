@@ -10,7 +10,6 @@ import util.DatabaseReader;
 import symap.mapper.Mapper;
 
 public class ProjectProperties extends DatabaseUser {
-	// mdb rewritten 1/7/09 - removed max_mrk_ctgs_hit and min_mrk_clones_hit
 	private static final String PROJECT_PAIR_QUERY = 
 		"SELECT idx,proj1_idx,proj2_idx FROM pairs";
 
@@ -119,10 +118,9 @@ public class ProjectProperties extends DatabaseUser {
 	}
 
 	public int getMapType(int p1ID, int p2ID) {
-		//return isFPCPseudo(p1ID,p2ID) ? Mapper.FPC2PSEUDO : Mapper.FPC2FPC; // mdb removed 7/11/07 #121
-		if (isPseudo(p1ID) && isPseudo(p2ID)) return Mapper.PSEUDO2PSEUDO; // mdb added 7/11/07 #121
-		if (isPseudo(p1ID) || isPseudo(p2ID)) return Mapper.FPC2PSEUDO; // mdb added 7/11/07 #121
-		return Mapper.FPC2FPC; // mdb added 7/11/07 #121
+		if (isPseudo(p1ID) && isPseudo(p2ID)) return Mapper.PSEUDO2PSEUDO; 
+		if (isPseudo(p1ID) || isPseudo(p2ID)) return Mapper.FPC2PSEUDO; 
+		return Mapper.FPC2FPC; 
 	}
 
 	public boolean isFPCPseudo(int p1ID, int p2ID) {
@@ -185,7 +183,6 @@ public class ProjectProperties extends DatabaseUser {
 		return ProjectPair.hasProjectPair(projectPairs,p1,p2);
 	}
 	
-	// mdb added 12/30/09 #206
 	public boolean isSwapped(int pX, int pY) {
 		ProjectPair pair = getProjectPair(pX, pY);
 		return (pair == null || pX == pair.getP1());
@@ -207,7 +204,7 @@ public class ProjectProperties extends DatabaseUser {
 		protected ProjectObj(int id, String name, String type) {
 			this.id = id;
 			if (name == null) this.name = "";
-			else this.name = name;//.intern(); // mdb removed intern() 2/2/10 - can cause memory leaks in this case
+			else this.name = name;
 			this.type = type.intern();
 		}
 

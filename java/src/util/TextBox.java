@@ -7,14 +7,11 @@ import java.awt.Graphics2D;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-
 import java.util.Vector;
 
 import util.LinkLabel;
 
-// mdb added 7/15/09 #166 - a URL-savvy graphical text box
+// a URL-savvy graphical text box
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class TextBox extends JComponent  {
 	private static final Color bgColor = Color.yellow;
@@ -32,7 +29,6 @@ public class TextBox extends JComponent  {
 		this(text.split("\n"), font, x, y, wrapLen, truncLen);
 	}
 
-	// WMN 1/12/12 modified to wrap and trucate, with considerable duplicated code
 	private TextBox(String[] text, Font font, int x, int y,int wrapLen, int truncLen) {
 		int width = 0;
 		int tx = INSET;

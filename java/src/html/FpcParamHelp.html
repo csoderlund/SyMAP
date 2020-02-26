@@ -9,26 +9,32 @@ This page provides all the setup parameters for an FPC project, as follows:.
 <p>
 <b>fpc_file</b>
 <p>
-Browse to the FPC file you wish to load.
+Browse to the FPC file you wish to load. 
+Default: data/fpc/&lt;project-name&gt; (if no file or directory is 
+entered, SyMAP will look in the default directory for the file ending
+with ".fpc").
 <p>
 
 <b>bes_files</b>
 <p>
 Select one or more fasta files containing BAC-end sequences for the FPC clones. 
 Note that the BES must be named <i>exactly</i> like the FPC clones, plus suffixes
-".r" and ".f" showing the strand.  BES which can't be matched to a clone
-will be ignored. 
+".r" and ".f" showing the strand.  BES that cannot be matched to a clone
+will be ignored. Default: data/fpc/&lt;project-name&gt;/bes (if no file or directory is 
+entered, SyMAP will look in the default directory).
 <p>
 <b>marker_files</b>
 <p>
 Select one or more fasta files containing marker sequences. The marker names
 must match exactly with the names of markers in the FPC project. 
+Default: data/fpc/&lt;project-name&gt;/mrk (if no file or directory is 
+entered, SyMAP will look in the default directory).
 <p>
 <b>grp_prefix</b>
 <p>
  If provided,
 this allows SyMAP to remove the prefix from your group/chromosome names, and 
-use the remaining part as a shorter display name (e.g., "5" instead of "chr5").  
+use the remaining part as a shorter display name (e.g. "5" instead of "chr5").  
 <p>
 <b>grp_order</b>
 <p>

@@ -8,7 +8,6 @@ import symap.sequence.Sequence;
 import util.PropertiesReader;
 
 public class CloseUp {
-//	private static final boolean ONLY_BLASTS; // mdb unused 7/8/09
 	public static final int MAX_CLOSEUP_BP;
 	public static final int MIN_CLOSEUP_BP;
 
@@ -16,7 +15,6 @@ public class CloseUp {
 		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/closeup.properties"));
 		MIN_CLOSEUP_BP         = props.getInt("minCloseupBP");
 		MAX_CLOSEUP_BP         = props.getInt("maxCloseupBP");
-//		ONLY_BLASTS            = props.getBoolean("onlyBlasts"); // mdb unused 7/8/09
 	}
 
 	private DrawingPanel dp;
@@ -41,14 +39,9 @@ public class CloseUp {
 	 */
 	public int showCloseUp(Sequence seq, int start, int end) {
 		HitDialogInterface ad = null;
-// mdb removed 1/7/09 - don't need blast dialog anymore		
-//		if (ONLY_BLASTS || end - start < MIN_CLOSEUP_BP) {
-//			ad = getBlastDialog(seq,start,end);
-//		}
-//		else {
-			if (end - start > MAX_CLOSEUP_BP) end = start + MAX_CLOSEUP_BP;
-			ad = getCloseUpDialog(seq,start,end);
-//		}
+
+		if (end - start > MAX_CLOSEUP_BP) end = start + MAX_CLOSEUP_BP;
+		ad = getCloseUpDialog(seq,start,end);
 		if (ad != null && cdh != null) cdh.addListener(ad);
 		return ad == null ? -1 : ad.showIfHits();
 	}
@@ -74,29 +67,6 @@ public class CloseUp {
 		if (dp != null) dp.setFrameEnabled(true);
 		return dialog;
 	}
-
-// mdb unused 1/9/09	
-//	protected BlastDialog getBlastDialog(Sequence seq, int start, int end) {
-//		if (dp != null) dp.setFrameEnabled(false);
-//		BlastDialog dialog = null;
-//		try {
-//			dialog = new BlastDialog(this,seq,start,end);
-//		}
-//		catch (SQLException e) {
-//			System.err.println("First attempt at creating BlastDialog Failed:");
-//			e.printStackTrace();
-//			try {
-//				dialog = new BlastDialog(this,seq,start,end);
-//			}
-//			catch (SQLException e2) {
-//				System.err.println("Second attempt at creating BlastDialog Failed:");
-//				e2.printStackTrace();	
-//				System.err.println("Giving up on creating BlastDialog.");
-//			}
-//		}
-//		if (dp != null) dp.setFrameEnabled(true);
-//		return dialog;
-//	}
 
 	public DrawingPanel getDrawingPanel() {
 		return dp;

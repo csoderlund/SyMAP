@@ -8,7 +8,6 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-import java.awt.event.KeyEvent;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
 import java.awt.geom.Point2D;
@@ -31,63 +30,53 @@ import util.Utilities;
 
 /**
  * The Sequence track for a pseudo molecule. 
- * 
- * @author Austin Shoemaker
  */
 public class Sequence extends Track {	
-//	private static final boolean TIME_TRACE = false;
-	
+
 	private static final double OFFSET_SPACE = 7;
 	private static final double OFFSET_SMALL = 1;
 	
-	private static final int MIN_BP_FOR_ANNOT_DESC = 500; // mdb added 7/16/09 #166
+	private static final int MIN_BP_FOR_ANNOT_DESC = 500; 
 
-	public static final boolean DEFAULT_FLIPPED 		= false; // mdb added 7/23/07 #132
+	public static final boolean DEFAULT_FLIPPED 		= false; 
 	public static final boolean DEFAULT_SHOW_RULER      = true;
-	public static final boolean DEFAULT_SHOW_GENE       = true;  // mdb changed 2/15/08
+	public static final boolean DEFAULT_SHOW_GENE       = true;  
 	public static final boolean DEFAULT_SHOW_FRAME      = true;
-	public static /*final*/ boolean DEFAULT_SHOW_ANNOT  = false; // mdb removed "final" 2/1/10
-	public static final boolean DEFAULT_SHOW_SCORE_LINE	= true;  // mdb added 2/22/07 #100
-	public static final boolean DEFAULT_SHOW_SCORE_VALUE= false; // mdb added 3/14/07 #100
-	public static final boolean DEFAULT_SHOW_RIBBON		= true;	 // mdb added 8/7/07 #126
+	public static /*final*/ boolean DEFAULT_SHOW_ANNOT  = false; 
+	public static final boolean DEFAULT_SHOW_SCORE_LINE	= true;  
+	public static final boolean DEFAULT_SHOW_SCORE_VALUE= false; 
+	public static final boolean DEFAULT_SHOW_RIBBON		= true;	 
 	public static final boolean DEFAULT_SHOW_GAP        = true;
 	public static final boolean DEFAULT_SHOW_CENTROMERE = true;
-	public static final boolean DEFAULT_SHOW_GENE_FULL  = true;  // mdb changed to true 3/5/07 #102
-// mdb removed 3/31/08 #156
-//	static {
-//		Annotation.setDefaultDraw(Annotation.GENE, DEFAULT_SHOW_GENE_FULL ? Annotation.RECT : Annotation.TICK );
-//	}
+	public static final boolean DEFAULT_SHOW_GENE_FULL  = true;  
 
 	public static Color unitColor;
-//	public static Color bgcolor; 		// mdb removed 6/9/09 - moved to Track
-	public static Color bgColor1; // mdb added 6/9/09
-	public static Color bgColor2; // mdb added 6/9/09
+	public static Color bgColor1; 
+	public static Color bgColor2; 
 	
-	private static final Color border = Color.black; // mdb changed 7/17/09 - simplify properties
+	private static final Color border = Color.black; 
 	private static Color footerColor;
-	//private static final Color closeupDragColor = new Color(255,255,255,120); // mdb removed 6/9/09
-	//private static final Color closeupDragBorderColor = Color.black; 			// mdb removed 6/9/09
 	private static Font footerFont;
 	private static Font unitFont;
-	private static final Point2D defaultSequenceOffset = new Point2D.Double(20,40); // mdb changed 7/16/09 - simplify properties
-	private static final Point2D titleOffset = new Point2D.Double(1,3); // mdb changed 7/17/09 - simplify properties
-	private static int mouseWheelScrollFactor;	// mdb added 2/28/08
-	private static int mouseWheelZoomFactor; 	// mdb added 2/28/08
+	private static final Point2D defaultSequenceOffset = new Point2D.Double(20,40); 
+	private static final Point2D titleOffset = new Point2D.Double(1,3); 
+	private static int mouseWheelScrollFactor;	
+	private static int mouseWheelZoomFactor; 	
 	private static final double DEFAULT_WIDTH;
 	private static final double SPACE_BETWEEN_RULES;
 	private static final double RULER_LINE_LENGTH;
 	private static final double MIN_DEFAULT_BP_PER_PIXEL;
 	private static final double MAX_DEFAULT_BP_PER_PIXEL;
-	private static final double PADDING = 100; // mdb changed 7/16/09 - simplify properties
+	private static final double PADDING = 100; 
 	private static final double ANNOT_WIDTH;
-	private static final String HOVER_MESSAGE = "Right-click for menu."; // mdb changed 7/17/09 - simplify properties
+	private static final String HOVER_MESSAGE = "Right-click for menu."; 
 	static {
 		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/sequence.properties"));
-		//defaultSequenceOffset      = props.getPoint("sequenceOffset"); // mdb removed 7/16/09 - simplify properties
+	
 		unitColor                  = props.getColor("unitColor");
 		bgColor1            		 = props.getColor("bgColor1");
 		bgColor2            		 = props.getColor("bgColor2");
-		//border                     = props.getColor("border"); 		// mdb removed 7/17/09 - simplify properties
+	
 		footerColor                = props.getColor("footerColor");
 		footerFont                 = props.getFont("footerFont");
 		unitFont                   = props.getFont("unitFont");
@@ -96,31 +85,26 @@ public class Sequence extends Track {
 		RULER_LINE_LENGTH          = props.getDouble("rulerLineLength");
 		MIN_DEFAULT_BP_PER_PIXEL   = props.getDouble("minDefaultBpPerPixel");
 		MAX_DEFAULT_BP_PER_PIXEL   = props.getDouble("maxDefaultBpPerPixel");
-		//titleOffset                = props.getPoint("titleOffset"); 	// mdb removed 7/17/09 - simplify properties
-		//PADDING                    = props.getDouble("padding"); 		// mdb removed 7/16/09 - simplify properties
+
 		ANNOT_WIDTH                = props.getDouble("annotWidth");
-		//closeupDragColor           = props.getColor("closeupDragColor"); 		// mdb removed 6/9/09
-		//closeupDragBorderColor     = props.getColor("closeupDragBorderColor");// mdb removed 6/9/09
-		//HOVER_MESSAGE              = props.getString("hoverMessage");			// mdb removed 7/17/09 - simplify properties
-		mouseWheelScrollFactor	   = props.getInt("mouseWheelScrollFactor"); 	// mdb added 2/28/08
-		mouseWheelZoomFactor	   = props.getInt("mouseWheelZoomFactor"); 		// mdb added 2/28/08
+		
+		mouseWheelScrollFactor	   = props.getInt("mouseWheelScrollFactor"); 	
+		mouseWheelZoomFactor	   = props.getInt("mouseWheelZoomFactor"); 		
 	}
 
 	protected int group;
 	protected boolean showRuler, showGene, showFrame, showAnnot;
-	protected boolean showScoreLine, showScoreValue; // mdb added 2/22/07 #100
+	protected boolean showScoreLine, showScoreValue; 
 	protected boolean showGap, showCentromere;
 	protected boolean showFullGene;
-	protected boolean showRibbon; // mdb added 8/7/07 #126
+	protected boolean showRibbon; 
 	protected String name;
 	private PseudoPool pool;
 	private List<Rule> ruleList;
 	private Vector<Annotation> annotations;
 	private TextLayout headerLayout, footerLayout;
 	private Point2D.Float headerPoint, footerPoint;
-	//private Rectangle dragRect; 	// mdb removed 6/25/09 - redundant with Track
-	//private Point dragPoint;		// mdb removed 6/25/09 - redundant with Track
-
+	
 	public Sequence(DrawingPanel dp, TrackHolder holder) {
 		this(dp,holder,dp.getPools().getPseudoPool());
 	}
@@ -132,12 +116,6 @@ public class Sequence extends Track {
 		annotations = new Vector<Annotation>(50,1000);
 		headerPoint = new Point2D.Float();
 		footerPoint = new Point2D.Float();
-
-// mdb removed 6/25/09 - redundant with Track
-//		dragRect = new Rectangle(0, 0, NO_VALUE, NO_VALUE);
-//		dragPoint = new Point();
-		
-		//bgColor = defaultBgColor; // mdb added 6/9/09
 
 		group   = NO_VALUE;
 		project = NO_VALUE;
@@ -158,13 +136,13 @@ public class Sequence extends Track {
 		showGene       = DEFAULT_SHOW_GENE;
 		showFrame      = DEFAULT_SHOW_FRAME;
 		showAnnot      = DEFAULT_SHOW_ANNOT;
-		showScoreLine  = DEFAULT_SHOW_SCORE_LINE;   // mdb added 2/22/07 #100
-		showScoreValue = DEFAULT_SHOW_SCORE_VALUE; 	// mdb added 3/14/07 #100
-		showRibbon     = DEFAULT_SHOW_RIBBON; 		// mdb added 8/7/07 #126
+		showScoreLine  = DEFAULT_SHOW_SCORE_LINE;   
+		showScoreValue = DEFAULT_SHOW_SCORE_VALUE; 	
+		showRibbon     = DEFAULT_SHOW_RIBBON; 		
 		showGap        = DEFAULT_SHOW_GAP;
 		showCentromere = DEFAULT_SHOW_CENTROMERE;
 		showFullGene   = DEFAULT_SHOW_GENE_FULL;
-		flipped = false; // mdb added 2/10/10
+		flipped = false; 
 	}
 
 	public void setup(TrackData td) {
@@ -194,16 +172,14 @@ public class Sequence extends Track {
 		headerPoint.setLocation(0,0);
 		footerPoint.setLocation(0,0);
 		
-// mdb removed 6/25/09 - redundant with Track		
-//		dragRect.setRect(0,0,NO_VALUE,NO_VALUE);
-//		dragPoint.setLocation(0,0);
+		dragPoint.setLocation(0,0);
 		
 		super.clear();
 	}
 
 	public void clearData() {
 		ruleList.clear();
-		annotations.removeAllElements();//clear(); // mdb changed 2/3/10
+		annotations.removeAllElements();
 	}
 
 	/** 
@@ -232,7 +208,6 @@ public class Sequence extends Track {
 		return PADDING;
 	}
 	
-	// mdb added 2/1/10
 	public static void setDefaultShowAnnotation(boolean b) {
 		DEFAULT_SHOW_ANNOT = b;
 	}
@@ -307,12 +282,12 @@ public class Sequence extends Track {
 		return false;
 	}
 	public boolean getShowAnnot() { return showAnnot;}
-	// mdb added 3/8/07 #101
+	
 	public Vector<Annotation> getAnnotations() {
 		return annotations;
 	}
 	
-	// mdb added 1/7/09 for pseudo-pseudo closeup
+	
 	public Vector<Annotation> getAnnotations(int type, int start, int end) {
 		Vector<Annotation> out = new Vector<Annotation>();
 		
@@ -325,7 +300,7 @@ public class Sequence extends Track {
 		return out;
 	}
 
-	// mdb added 12/7/09 #204
+	
 	public int[] getAnnotationTypeCounts() {
 		int[] counts = new int[Annotation.numTypes];
 		
@@ -342,7 +317,7 @@ public class Sequence extends Track {
 	 * @param show a <code>boolean</code> value
 	 * @return a <code>boolean</code> value of true on a change
 	 */
-	public boolean showScoreLine(boolean show) { // mdb added 2/22/07 #100
+	public boolean showScoreLine(boolean show) { 
 		if (showScoreLine != show) {
 			showScoreLine = show;
 			clearTrackBuild();
@@ -351,7 +326,7 @@ public class Sequence extends Track {
 		return false;
 	}
 	
-	public boolean getShowScoreLine() { // mdb added 2/22/07 #100
+	public boolean getShowScoreLine() { 
 		return showScoreLine;
 	}
 	
@@ -362,7 +337,7 @@ public class Sequence extends Track {
 	 * @param show a <code>boolean</code> value
 	 * @return a <code>boolean</code> value of true on a change
 	 */
-	public boolean showScoreValue(boolean show) { // mdb added 3/14/07 #100
+	public boolean showScoreValue(boolean show) { 
 		if (showScoreValue != show) {
 			showScoreValue = show;
 			clearTrackBuild();
@@ -371,7 +346,7 @@ public class Sequence extends Track {
 		return false;
 	}
 	
-	public boolean getShowScoreValue() { // mdb added 3/14/07 #100
+	public boolean getShowScoreValue() { 
 		return showScoreValue;
 	}
 	
@@ -382,7 +357,7 @@ public class Sequence extends Track {
 	 * @param show a <code>boolean</code> value
 	 * @return a <code>boolean</code> value of true on a change
 	 */
-	public boolean showRibbon(boolean show) { // mdb added 8/7/07 #126
+	public boolean showRibbon(boolean show) { 
 		if (showRibbon != show) {
 			showRibbon = show;
 			clearTrackBuild();
@@ -391,7 +366,7 @@ public class Sequence extends Track {
 		return false;
 	}
 	
-	public boolean getShowRibbon() { // mdb added 8/7/07 #126
+	public boolean getShowRibbon() { 
 		return showRibbon;
 	}
 
@@ -443,7 +418,6 @@ public class Sequence extends Track {
 		return false;
 	}
 	
-	// mdb added 7/23/07
 	public boolean flip(boolean flip) {
 		if (flipped != flip) {
 			flipped = flip;
@@ -483,8 +457,6 @@ public class Sequence extends Track {
 		
 		if (annotations.size() == 0) showAnnot = false;
 		
-		//long cStart = System.currentTimeMillis();
-		
 		if (width == NO_VALUE) width = DEFAULT_WIDTH;
 
 		setFullBpPerPixel();
@@ -501,9 +473,7 @@ public class Sequence extends Track {
 							Math.abs(end.getValue()-start.getValue()),height));
 
 		if (!validSize()) {
-			//if (drawingPanel != null) drawingPanel.displayWarning("Unable to size sequence view as requested."); // mdb removed 5/25/07 #119
-			//Utilities.showWarningMessage("Unable to size sequence view as requested."); 	// mdb added 5/25/07 #119 // mdb removed 7/2/07
-			System.err.println("Unable to size sequence view as requested."); 				// mdb added 7/2/07
+			System.err.println("Unable to size sequence view as requested."); 				
 			adjustSize();
 		}
 
@@ -530,14 +500,14 @@ public class Sequence extends Track {
 			h = rect.y + rect.height;
 			double bpSep = SPACE_BETWEEN_RULES * bpPerPixel;
 			double cb;
-			//for (y = rect.y + SPACE_BETWEEN_RULES; y < h; y += SPACE_BETWEEN_RULES) { // mdb removed 8/21/07 #143
-			for (y = rect.y; y < h + SPACE_BETWEEN_RULES; y += SPACE_BETWEEN_RULES) {	// mdb added 8/21/07 #143
-				if (y < h && y > h - SPACE_BETWEEN_RULES) continue; // mdb added 8/21/07 #143
-				if (y > h) y = h; // mdb added 8/21/07 #143
+			
+			for (y = rect.y; y < h + SPACE_BETWEEN_RULES; y += SPACE_BETWEEN_RULES) {	
+				if (y < h && y > h - SPACE_BETWEEN_RULES) continue; 
+				if (y > h) y = h; 
 				Rule r = new Rule(unitColor, unitFont);
 				r.setLine(x1, y, x2, y);
-				//cb = GenomicsNumber.getCbPerPixel(bpPerCb,bpPerPixel,y-rect.y) + start.getValue(); // mdb removed 7/23/07 #132
-				cb = GenomicsNumber.getCbPerPixel(bpPerCb,bpPerPixel,(flipped ? h-y : y-rect.y)) + start.getValue(); // mdb added 7/23/07 #132
+				
+				cb = GenomicsNumber.getCbPerPixel(bpPerCb,bpPerPixel,(flipped ? h-y : y-rect.y)) + start.getValue(); 
 				layout = new TextLayout(GenomicsNumber.getFormatted(bpSep,bpPerCb,cb,bpPerPixel), unitFont, frc);
 				bounds = layout.getBounds();
 				ty = y + (bounds.getHeight() / 2.0);
@@ -557,9 +527,9 @@ public class Sequence extends Track {
 		}
 
 		/* 
-		 * Setup the annotations - mdb rewritten 3/31/08 #154
+		 * Setup the annotations - 
 		 */
-		getHolder().removeAll(); // mdb added 7/15/09 #166 - remove TextBoxes
+		getHolder().removeAll(); 
 		Rectangle2D.Double centRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
 		for (Annotation annot : annotations) {	
 			if (((annot.isGene() || annot.isExon()) && !showGene)
@@ -575,10 +545,10 @@ public class Sequence extends Track {
 			
 			if (annot.isGene()) {
 				width = ANNOT_WIDTH;
-				if (showFullGene) width /= 4; // mdb added 3/8/07 #102
+				if (showFullGene) width /= 4; 
 			}
 			else if (annot.isExon()
-					|| annot.isSyGene()) // mdb added condition 7/31/09 #167
+					|| annot.isSyGene()) 
 				width = ANNOT_WIDTH;
 			
 			annot.setRectangle(
@@ -590,21 +560,13 @@ public class Sequence extends Track {
 					flipped);
 			
 			if (showAnnot && annot.isVisible()) { // Setup description
-				//Rule r = null; // mdb added 7/15/09 #166
 				x1 = (orient == RIGHT_ORIENT ? rect.x + rect.width + RULER_LINE_LENGTH + 2 : rect.x);
 				x2 = (orient == RIGHT_ORIENT ? x1 + RULER_LINE_LENGTH : x1 - RULER_LINE_LENGTH);
 				if (annot.hasShortDescription() 
-						&& getBpPerPixel() < MIN_BP_FOR_ANNOT_DESC) // mdb added condition 7/16/09 #166 - only show annot desc if zoomed-in
+						&& getBpPerPixel() < MIN_BP_FOR_ANNOT_DESC) 
 				{ 
-// mdb removed 7/15/09 #166
-//					r = new Rule(annot.getColor(),unitFont); 
-//					r.setLine(x1,annot.getY(),x2,annot.getY());
-//					layout = new TextLayout(annot.getShortDescription(),unitFont,frc);
-//					bounds = layout.getBounds();
-					
-					ty = annot.getY1();// annot.getY() + (bounds.getHeight() / 2.0); // mdb changed 7/15/09 #166
+					ty = annot.getY1();
 						
-					// mdb added 7/15/09 #166 - add annotation description TextBox
 					TextBox tb = new TextBox(annot.getVectorDescription(),unitFont,(int)x1,(int)ty,40,200);
 					getHolder().add(tb);
 					bounds = tb.getBounds();
@@ -620,16 +582,11 @@ public class Sequence extends Track {
 						tx = x2-OFFSET_SMALL-bounds.getWidth()-bounds.getX();
 						totalRect.x = Math.min(totalRect.x, tx);
 					}
-					//r.setText(layout, tx, ty); // mdb removed 7/15/09 #166
 				}
-				//annot.setRule(r); // mdb removed 7/15/09 #166
 			}
-			// mdb removed 7/15/09 #166
-			//else
-			//	annot.setRule(null);
 		} // end for(all annotations)
 		
-		// mdb added 12/9/09 #166 - show instructions for annotation descriptions when zoomed out
+		// show instructions for annotation descriptions when zoomed out
 		if (showAnnot && getBpPerPixel() >= MIN_BP_FOR_ANNOT_DESC) { 
 			x1 = (orient == RIGHT_ORIENT ? rect.x + rect.width + RULER_LINE_LENGTH + 2 : rect.x);
 			x2 = (orient == RIGHT_ORIENT ? x1 + RULER_LINE_LENGTH : x1 - RULER_LINE_LENGTH);
@@ -657,11 +614,9 @@ public class Sequence extends Track {
 		/*
 		 * Set header and footer
 		 */
-		//headerLayout = new TextLayout(start.getFormatted(), footerFont, frc);	// mdb removed 8/21/07 #143
-		//bounds = headerLayout.getBounds();									// mdb removed 8/21/07 #143
-		bounds = new Rectangle2D.Double(0, 0, 0, 0); 							// mdb added 8/21/07 #143
+		bounds = new Rectangle2D.Double(0, 0, 0, 0); 							
 		x = (rect.x + (rect.width / 2.0)) - (bounds.getX() + (bounds.getWidth() / 2.0));
-		if (flipped) // mdb added flipped 8/6/07 #132
+		if (flipped) 
 			y = rect.y + rect.height + OFFSET_SPACE + bounds.getHeight();
 		else
 			y = rect.y - OFFSET_SPACE;
@@ -671,11 +626,10 @@ public class Sequence extends Track {
 		totalRect.x = Math.min(totalRect.x, x);
 		totalRect.y = Math.min(totalRect.y, y - bounds.getHeight());
 
-		//footerLayout = new TextLayout(end.getFormatted()+" of "+size.getFormatted(), footerFont, frc); // mdb removed 8/21/07 #143
-		footerLayout = new TextLayout(new GenomicsNumber(this,end.getValue()-start.getValue()+1).getFormatted()+" of "+size.getFormatted(), footerFont, frc); // mdb added 8/21/07 #143
+		footerLayout = new TextLayout(new GenomicsNumber(this,end.getValue()-start.getValue()+1).getFormatted()+" of "+size.getFormatted(), footerFont, frc); 
 		bounds = footerLayout.getBounds();
 		x = (rect.x + (rect.width / 2.0)) - (bounds.getX() + (bounds.getWidth() / 2.0));
-		if (flipped) // mdb added flipped 8/6/07 #132
+		if (flipped) 
 			y = rect.y - OFFSET_SPACE;
 		else
 			y = rect.y + rect.height + OFFSET_SPACE + bounds.getHeight();
@@ -707,37 +661,29 @@ public class Sequence extends Track {
 
 		setTitle();
 		setBuild();
-		//if (TIME_TRACE) System.out.println("Sequence: build time = "+(System.currentTimeMillis()-cStart)+" ms");
 		
 		return true;
 	}
 	
 	public Point2D getPoint(long bpPos, int orient) {
-		//if (bpPos < start.getValue() || bpPos > end.getValue()) return null; // mdb removed 8/7/07 #126
-		if (bpPos < start.getValue()) bpPos = start.getValue(); // mdb added 8/7/07 #126
-		if (bpPos > end.getValue())   bpPos = end.getValue(); 	// mdb added 8/7/07 #126
-		double x = (orient == LEFT_ORIENT ? rect.x+rect.width : rect.x);						    // mdb added 8/6/07 #132
-		double y = rect.y + GenomicsNumber.getPixelValue(bpPerCb,bpPos-start.getValue(),bpPerPixel);// mdb added 8/6/07 #132
-		if (flipped) y = rect.y + rect.y + rect.height - y;	// mdb added 8/6/07 #132
-		//return new Point2D.Double(orient == LEFT_ORIENT ? rect.x+rect.width : rect.x,  	// mdb removed 8/6/07 #132
-		//rect.y + GenomicsNumber.getPixelValue(bpPerCb,bpPos-start.getValue(),bpPerPixel));// mdb removed 8/6/07 #132
-		return new Point2D.Double(x, y); // mdb added 8/6/07 #132
+		if (bpPos < start.getValue()) bpPos = start.getValue(); 
+		if (bpPos > end.getValue())   bpPos = end.getValue(); 	
+		double x = (orient == LEFT_ORIENT ? rect.x+rect.width : rect.x);			
+		double y = rect.y + GenomicsNumber.getPixelValue(bpPerCb,bpPos-start.getValue(),bpPerPixel);
+		if (flipped) y = rect.y + rect.y + rect.height - y;	
+		return new Point2D.Double(x, y); 
 	}
 	
-	// mdb added 2/23/07 #102
 	public double getX() { return rect.getX(); }
 	
-	// mdb added 2/23/07 #102
 	public double getWidth() { return rect.getWidth(); }
 	
 	public void paintComponent(Graphics g) {
-		//long cStart = System.currentTimeMillis();
 		
 		if (hasBuilt()) {
 			Graphics2D g2 = (Graphics2D) g;
 
 			g2.setPaint((position % 2 == 0 ? bgColor1 : bgColor2)); 
-			//g2.setPaint(bgColor); 
 			g2.fill(rect);
 			g2.setPaint(border);
 			g2.draw(rect);
@@ -758,45 +704,13 @@ public class Sequence extends Track {
 				headerLayout.draw(g2, headerPoint.x, headerPoint.y);
 			if (footerLayout != null)
 				footerLayout.draw(g2, footerPoint.x, footerPoint.y);
-
-// mdb removed 6/25/09 - redundant with Track			
-//			if (!isCleared(dragRect)) {
-//				g2.setPaint(closeupDragColor);
-//				g2.fill(dragRect);
-//				g2.setPaint(closeupDragBorderColor);
-//				g2.draw(dragRect);
-//			}
 		}
 
 		super.paintComponent(g); // must be done at the end
-		
-		//if (TIME_TRACE) System.out.println("Sequence: paint time = "+(System.currentTimeMillis()-cStart)+" ms");
 	}
 
 	public void mousePressed(MouseEvent e) {
 		super.mousePressed(e);
-
-// mdb removed 6/25/09 - redundant with Track		
-//		Point point = e.getPoint();
-//		//Cursor c = getCursor();
-//		if (drawingPanel.getMouseFunction().equals("Close-up")
-//				/*c == null || c.getType() == Cursor.DEFAULT_CURSOR 
-//				&& rect.contains(point.getX(),point.getY())*/)
-//		{
-//			if (isCleared(dragRect)) {
-//				dragPoint.setLocation(point);
-//				if (dragPoint.getX() < rect.x)
-//					dragPoint.setLocation(rect.x, dragPoint.getY());
-//				else if (dragPoint.getX() > rect.x + rect.width)
-//					dragPoint.setLocation(rect.x + rect.width, dragPoint.getY());
-//				if (dragPoint.getY() < rect.y)
-//					dragPoint.setLocation(dragPoint.getX(), rect.y);
-//				else if (dragPoint.getY() > rect.y + rect.height)
-//					dragPoint.setLocation(dragPoint.getX(), rect.y + rect.height);
-//				dragRect.setLocation(dragPoint);
-//				dragRect.setSize(0, 0);
-//			}
-//		}
 	}
 
 	public void mouseReleased(MouseEvent e) {
@@ -808,7 +722,6 @@ public class Sequence extends Track {
 			int start = getBP( dragRect.getY() );
 			int end = getBP( dragRect.getY() + dragRect.getHeight() );
 			
-			// mdb added 8/31/09 - adjust coords based on flip
 			if (flipped) {
 				int temp = start;
 				start = (int)getEnd() - end + (int)getStart();
@@ -819,16 +732,8 @@ public class Sequence extends Track {
 		}
 		
 		super.mouseReleased(e);
-		
-// mdb removed 6/25/09 - redundant with Track		
-//		if (!isCleared(dragRect)) {
-//			clear(dragRect);
-//			repaint();
-//		}
-//		clear(dragPoint);
 	}
 	
-	// mdb added 3/2/07 #106
 	private void scrollRange(int notches, long viewSize) {
 		long curViewSize = getEnd() - getStart() + 1;
 		if (curViewSize < getTrackSize()) {
@@ -853,7 +758,6 @@ public class Sequence extends Track {
 		}
 	}
 	
-	// mdb added 2/28/08 #124
 	private void zoomRange(int notches, double focus, long length) {
 		double r1 = (focus / rect.height) / mouseWheelZoomFactor;
 		double r2 = ((rect.height - focus) / rect.height) / mouseWheelZoomFactor;
@@ -876,39 +780,29 @@ public class Sequence extends Track {
 		}
 	}
 	
-	public void mouseWheelMoved(MouseWheelEvent e) { // mdb added 3/1/07 #106
+	public void mouseWheelMoved(MouseWheelEvent e) { 
 		int notches = e.getWheelRotation();
 		long viewSize = getEnd() - getStart() + 1;
 		
-		if (e.isControlDown()) // Zoom - mdb added 2/28/08 #124
+		if (e.isControlDown()) // Zoom 
 			zoomRange(notches, e.getPoint().getY() - rect.y + 1, viewSize);
 		else
 			scrollRange(notches, viewSize);
 	}
 	
-	public void mouseWheelMoved(MouseWheelEvent e, long viewSize) { // mdb added 2/29/08 #124
+	public void mouseWheelMoved(MouseWheelEvent e, long viewSize) { 
 		int notches = e.getWheelRotation();
 		
-		if (e.isControlDown()) // Zoom - mdb added 2/28/08 #124
+		if (e.isControlDown()) // Zoom - 
 			zoomRange(notches, e.getPoint().getY() - rect.y + 1, viewSize);
 		else
 			scrollRange(notches, viewSize);
-	}
-	
-	public void keyPressed(KeyEvent e) { // mdb added 3/2/07 #106
-		// mdb: this code is incomplete/non-working
-		int c = e.getKeyCode();
-		
-		switch (c) {
-		//case KeyEvent.VK_PAGE_UP	: scrollRange(-1);	break;
-		//case KeyEvent.VK_PAGE_DOWN	: scrollRange(1); 	break;
-		}
 	}
 
 	public void mouseDragged(MouseEvent e) {	
 		super.mouseDragged(e);
 		
-		if (drawingPanel.isMouseFunctionCloseup() && getCursor().getType() != Cursor.S_RESIZE_CURSOR) // mdb changed 6/25/09
+		if (drawingPanel.isMouseFunctionCloseup() && getCursor().getType() != Cursor.S_RESIZE_CURSOR) 
 		{
 			Point point = e.getPoint();
 			int happened = 0;
@@ -975,7 +869,6 @@ public class Sequence extends Track {
 				}
 			}
 		}
-		//else if (!isCleared(dragRect)) clear(dragRect); // mdb removed 6/25/09
 	}
 
 	/**
@@ -994,7 +887,7 @@ public class Sequence extends Track {
 			}
 		}
 
-		return "Sequence Track (" + getTitle() + "):  " + HOVER_MESSAGE; // mdb changed 3/30/07 #112
+		return "Sequence Track (" + getTitle() + "):  " + HOVER_MESSAGE; 
 	}
 
 	public String getTitle() {
@@ -1002,9 +895,8 @@ public class Sequence extends Track {
 	}
 
 	protected Point2D getTitlePoint(Rectangle2D titleBounds) {	
-		Rectangle2D headerBounds = (flipped ? footerLayout.getBounds() : /*headerLayout.getBounds()*/new Rectangle2D.Double(0, 0, 0, 0)); // mdb added flipped 8/6/07 #132 // mdb removed header 8/21/07 #143
-		Point2D headerP = (flipped ? footerPoint : headerPoint); // mdb added flipped 8/6/07 #132 // mdb removed header 8/21/07 #143
-		
+		Rectangle2D headerBounds = (flipped ? footerLayout.getBounds() : /*headerLayout.getBounds()*/new Rectangle2D.Double(0, 0, 0, 0)); 
+		Point2D headerP = (flipped ? footerPoint : headerPoint); 
 		Point2D point = new Point2D.Double((rect.getWidth() / 2.0 + rect.x) - (titleBounds.getWidth() / 2.0 + titleBounds.getX()),
 				headerP.getY() - headerBounds.getHeight() - titleOffset.getY());
 
@@ -1024,7 +916,6 @@ public class Sequence extends Track {
 				p.getY() <= (rect.y+rect.height) + MOUSE_PADDING);
 	}
 	
-	// mdb added 7/9/09
 	public boolean isFlipped() { return flipped; }
 
 	private void openCloseup(int start, int end) {
@@ -1034,11 +925,11 @@ public class Sequence extends Track {
 		try {
 			int hits = drawingPanel.getCloseUp().showCloseUp(this, start, end);
 			if (hits == 0)
-				Utilities.showWarningMessage("No hits found in region."); // mdb changed 5/25/07 #119
+				Utilities.showWarningMessage("No hits found in region."); 
 			else if (hits < 0)
-				Utilities.showWarningMessage("Error showing close up view."); // mdb changed 5/25/07 #119
+				Utilities.showWarningMessage("Error showing close up view."); 
 		}
-		catch (OutOfMemoryError e) { // mdb added 8/31/09
+		catch (OutOfMemoryError e) { 
 			Utilities.showOutOfMemoryMessage();
 			drawingPanel.smake(); // redraw after user clicks "ok"
 		}

@@ -22,9 +22,11 @@ import com.mysql.management.driverlaunched.ServerLauncherSocketFactory;
 
 import symap.SyMAP;
 import symap.SyMAPConstants;
+import symap.projectmanager.common.ProjectManagerFrameCommon;
 import util.DatabaseReader;
 import util.PropertiesReader;
 import util.Utilities;
+import util.ErrorReport;
 
 /**
  * Class <code>DatabaseUser</code> holds the constants for the database 
@@ -32,13 +34,9 @@ import util.Utilities;
  * that can be used be children for accessing the database. Also handles
  * the connection object for the class so a new connection is only created
  * when needed.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
- * @see SyMAP
- * @see SyMAPConstants
  */
 public abstract class DatabaseUser implements SyMAPConstants {
-	private static final int QUERY_TIMEOUT;// = 10; // mdb changed 5/8/07 #113
+	private static final int QUERY_TIMEOUT;
 
 	private static final String DATABASE_URL_PROP = "database";
 	private static final String DATABASE_USER_PROP = "databaseUser";
@@ -54,7 +52,7 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		DEFAULT_DATABASE_USER = props.getString(DATABASE_USER_PROP);
 		DEFAULT_DATABASE_PASSWORD = props.getString(DATABASE_PASSWORD_PROP);
 		DATABASE_DRIVER = props.getString(DATABASE_DRIVER_PROP);
-		QUERY_TIMEOUT = props.getInt("queryTimeout"); // mdb added 5/8/07 #113
+		QUERY_TIMEOUT = props.getInt("queryTimeout"); 
 	}
 
 	private DatabaseReader dr;
@@ -210,12 +208,10 @@ public abstract class DatabaseUser implements SyMAPConstants {
 	 */
 	public static DatabaseReader getDatabaseReader(String appName, String url,
 			String user, String password, String altHost) {
+		
 		url = getURL(url, altHost);
-
-		if (user == null)
-			user = DEFAULT_DATABASE_USER;
-		if (password == null)
-			password = "";
+		if (user == null)		user = DEFAULT_DATABASE_USER;
+		if (password == null)	password = "";
 		
 		DatabaseReader d = null;
 		
@@ -226,16 +222,15 @@ public abstract class DatabaseUser implements SyMAPConstants {
 			password.equals("DB_CLIENT_PASSWD"))
 		{
 			Utilities.showErrorMessage("One or more of the database parameters "+
-									   "aren't set.\nSee the installation "+
+									   "are not set.\nSee the installation "+
 									   "instructions for how to set the parameters.");
 			Utilities.exit(-1);
 		}
 		else {
 			try {
-				d = DatabaseReader.getInstance(appName, url, user, password,
-						DATABASE_DRIVER);
+				d = DatabaseReader.getInstance(appName, url, user, password, DATABASE_DRIVER);
 			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
+				ErrorReport.print(e,"open database");
 			}
 		}	
 		return d;
@@ -259,7 +254,7 @@ public abstract class DatabaseUser implements SyMAPConstants {
 					if (url == null)
 						url = Utilities.getURI(DEFAULT_DATABASE_URL[0], altHost);
 				} catch (URISyntaxException e) {
-					e.printStackTrace();
+					ErrorReport.print(e,"get URL");
 				}
 		}
 		return url;
@@ -285,26 +280,22 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		try {
 			d = DatabaseReader.getInstance(appName, url, user, password, driver);
 		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			ErrorReport.print(e,"open database");
 		}
 		return d;
 	}
 
 	public static byte getBESValue(String str) {
 		if (str != null) {
-			if (str.equals(R_VALUE_STR))
-				return R_VALUE;
-			if (str.equals(F_VALUE_STR))
-				return F_VALUE;
+			if (str.equals(R_VALUE_STR))	return R_VALUE;
+			if (str.equals(F_VALUE_STR))	return F_VALUE;
 		}
 		return NORF_VALUE;
 	}
 
 	public static String getBESValueStr(byte bes) {
-		if (bes == R_VALUE)
-			return R_VALUE_STR;
-		if (bes == F_VALUE)
-			return F_VALUE_STR;
+		if (bes == R_VALUE)	return R_VALUE_STR;
+		if (bes == F_VALUE)	return F_VALUE_STR;
 		return NORF_VALUE_STR;
 	}
 	
@@ -371,7 +362,7 @@ public abstract class DatabaseUser implements SyMAPConstants {
 	}
 	
 	public static boolean createDatabase(String hostname, String dbname, 
-			String username, String password, String sqlFilename) 
+			String username, String password) 
 	{
 		if (!checkHost(hostname,username,password))
 		{
@@ -384,44 +375,74 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		try {
 			// Try to connect to database
 			conn = DriverManager.getConnection(
-					dburl,
-					username, 
-					password);
+					dburl,username,  password);
 			if (!dbHasTables(conn))
 			{
-				DatabaseUser.loadSQLFile(conn, sqlFilename);
+				DatabaseUser.loadSQLFile(conn, sqlFile);
 			}
+			checkVariables(conn);
 			conn.close();
 		}
 		catch (SQLException e) { // Database not found
 			try {
-				// Create database
 				System.out.println("Creating database '" + dbname + "' (" + dburl + ").");
-	        	conn = DriverManager.getConnection(
-	        			hosturl,
-	        			username, 
-	        			password);
-	        	Statement stmt = conn.createStatement();
-	        	stmt.executeUpdate("CREATE DATABASE " + dbname);
-	        	stmt.close();
-	        	conn.close();
-	        	
-	        	// Reconnect to new database and load SQL file
+		       
+	        		if (!Utilities.fileExists(sqlFile)) { // CAS50x TODO make sql file internal
+	        			System.err.println("Fatal error: Cannot create database");
+	        			System.err.println("   Missing file " + sqlFile);
+	        			System.exit(-1);
+	        		}
 				conn = DriverManager.getConnection(
-						dburl, 
-						username, 
-						password);
-	        	DatabaseUser.loadSQLFile(conn, sqlFilename);
-	        	conn.close();
+		        			hosturl, username, password);
+		        	Statement stmt = conn.createStatement();
+		        	stmt.executeUpdate("CREATE DATABASE " + dbname);
+		        	stmt.close();
+		        	conn.close();
+		        	
+		        	// Reconnect to new database and load SQL file
+				conn = DriverManager.getConnection(
+							dburl, username, password);
+		        	DatabaseUser.loadSQLFile(conn, sqlFile);
+		        	checkVariables(conn);
+		        	conn.close();
 			}
 			catch (SQLException e2) {
-				e2.printStackTrace();
-				System.err.println("Error creating database '" + dbname + "'.");
+				ErrorReport.print(e,"Error creating database '" + dbname + "'.");
 				success = false;
 			}
 		}
-
 		return success;
+	}
+	private static void checkVariables(Connection con) { // CAS501
+		try
+        {
+			if (!ProjectManagerFrameCommon.printStats) return;
+			if (ProjectManagerFrameCommon.inReadOnlyMode) return;
+			
+			Statement st = con.createStatement();
+    			ResultSet rs = st.executeQuery("show variables like 'max_allowed_packet'");
+    			if (rs.next()) {
+    				long packet = rs.getLong(2);
+    				
+    				if (packet<=1048576 || ProjectManagerFrameCommon.printStats) 
+    					System.err.println("max_allowed_packet=" + packet + "; see www.agcol.arizona.edu/symap/doc/TroubleShooting.html");
+    			}
+    			rs = st.executeQuery("show variables like 'innodb_buffer_pool_size'");
+    			if (rs.next()) {
+    				long packet = rs.getLong(2);
+    				
+    				if (packet<=1048576 || ProjectManagerFrameCommon.printStats) 
+    					System.err.println("innodb_buffer_pool_size=" + packet + "; see www.agcol.arizona.edu/symap/doc/TroubleShooting.html");
+    			}
+    			rs = st.executeQuery("show variables like 'innodb_flush_log_at_trx_commit'");
+    			if (rs.next()) {
+    				int b = rs.getInt(2);
+    				
+    				if (b==1 || ProjectManagerFrameCommon.printStats) 
+    					System.err.println("innodb_flush_log_at_trx_commit=" + b + "; see www.agcol.arizona.edu/symap/doc/TroubleShooting.html");
+    			}
+        }
+        catch (Exception e) {ErrorReport.print(e, "Getting system variables");	}
 	}
 	public static boolean dbHasTables(Connection conn) 
 	{
@@ -433,34 +454,34 @@ public abstract class DatabaseUser implements SyMAPConstants {
 			has = rs.first();
 			stmt.close();
 		}
-		catch (Exception e)
-		{}
+		catch (Exception e) {}
 		
 		return has;
 	}
 
 	public static boolean loadSQLFile(Connection conn, String sqlFilename)
     {
-    	// Run jPAVE_DBInstall sql script
-    	try {
-    		BufferedReader reader = new BufferedReader(new FileReader(sqlFilename));
-    		Vector<String> statements = new Vector<String>();
-    		String line;
-    		String statement = "";
-    		while ((line = reader.readLine()) != null) {
-    			line = line.trim();
-    			if (!line.startsWith("--")) statement += line + " ";
-    			if (line.endsWith(";")) {
-    				if (!statement.equals("")) statements.add(statement);
-    				statement = "";
-    			}
-    		}
-    		reader.close();
-    		return execute(conn, statements);
-    	}
-    	catch (Exception e) {
-    		return false;
-    	}
+	    	try {
+	    		System.out.println("Schema " + sqlFilename);
+	    		BufferedReader reader = new BufferedReader(new FileReader(sqlFilename));
+	    		Vector<String> statements = new Vector<String>();
+	    		String line, state = "";
+	    		int cnt=0;
+	    		while ((line = reader.readLine()) != null) {
+	    			line = line.trim();
+	    			if (!line.startsWith("--")) state += line + " ";
+	    			if (line.endsWith(";")) {
+	    				if (!state.equals("")) statements.add(state);
+	    				state = "";
+	    			}
+	    			cnt++;
+	    		}
+	    		reader.close();
+	    		System.out.println("Read " + cnt + " lines ");
+	    		return execute(conn, statements);
+	    	}
+	    	catch (Exception e) {ErrorReport.die(e, "Cannot create database");}
+	    	return false;
     }
     
     // Based on http://dev.mysql.com/doc/refman/5.1/en/connector-j-usagenotes-troubleshooting.html#qandaitem-21-4-5-3-1-4
@@ -501,7 +522,7 @@ public abstract class DatabaseUser implements SyMAPConstants {
                     break;
             }
         } while (retryCount > 0);
-        System.out.println(strQuery); // CAS 1/6/18
+        System.out.println(strQuery); // CAS42 1/6/18
         throw savedException; // too many retries, pass error up the stack
     }
     
@@ -533,8 +554,8 @@ public abstract class DatabaseUser implements SyMAPConstants {
             }
             catch (Exception e)
             {
-            		System.out.println(strSQL); // CAS 1/6/18
-            		e.printStackTrace();
+            		System.out.println(strSQL); // CAS42 1/6/18
+    				ErrorReport.print(e, "SQL request");
             }
             finally {
 	            	try {
@@ -573,20 +594,19 @@ public abstract class DatabaseUser implements SyMAPConstants {
         Statement stmt = null;
 
         for (String statement : sqlStatements) {
-        	if (statement.trim().equals("")) continue;
-        try {
-            stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-            stmt.execute ( statement, Statement.NO_GENERATED_KEYS );
-        }
-        catch ( SQLException err ) {
-	        	System.err.println(statement);
-	        	err.printStackTrace();
-	        	return false;
-        }
-        finally {
-	        	if ( stmt != null )
-	        		stmt.close();
+        		if (statement.trim().equals("")) continue;
+	        try {
+	            stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+	            stmt.execute ( statement, Statement.NO_GENERATED_KEYS );
 	        }
+	        catch ( SQLException err ) {
+		        	System.err.println(statement);
+		        	ErrorReport.print(err, "SQL execute");
+		        	return false;
+	        }
+	        finally {
+		        	if ( stmt != null ) stmt.close();
+		    }
         }
 	    	return true;
 	}

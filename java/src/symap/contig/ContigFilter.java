@@ -19,8 +19,6 @@ import number.GenomicsNumber;
 
 /**
  * The filter window for a contig view.
- * 
- * @author Austin Shoemaker
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ContigFilter extends MarkerFilter {	
@@ -40,9 +38,9 @@ public class ContigFilter extends MarkerFilter {
 	private JComboBox cloneRemarksCombo;
 	private JList cloneRemarksList;
 	
-	private JCheckBoxMenuItem showCloneNamesPopupBox; 				// mdb added 3/15/07 #104
-	private JCheckBoxMenuItem showOnly2BESHitClonesPopupBox; 		// mdb added 3/15/07 #104
-	private JCheckBoxMenuItem showOnly2BESCurrentHitClonesPopupBox; // mdb added 3/15/07 #104
+	private JCheckBoxMenuItem showCloneNamesPopupBox; 				
+	private JCheckBoxMenuItem showOnly2BESHitClonesPopupBox; 		
+	private JCheckBoxMenuItem showOnly2BESCurrentHitClonesPopupBox; 
 
 	private Contig contig;
 	private String cloneFilter;
@@ -174,11 +172,7 @@ public class ContigFilter extends MarkerFilter {
 		pack();
 		setResizable(false);
 		
-		// mdb added 3/15/07 #104 -- BEGIN
-		//popupTitle.setLabel("Contig Options:"); // mdb removed 7/2/07 #118
-		popupTitle.setText("Contig Options:"); // mdb added 7/2/07 #118
-		//SyMAP.enableHelpOnButton(showNavigationHelp,"contigcontrols"); // mdb removed 4/30/09 #162
-		//SyMAP.enableHelpOnButton(showTrackHelp,"contigtrack"); // mdb removed 4/30/09 #162
+		popupTitle.setText("Contig Options:"); 
 		showCloneNamesPopupBox = new JCheckBoxMenuItem("Show Clone Names");
 		showOnly2BESHitClonesPopupBox = new JCheckBoxMenuItem("Show Only Clones With BES Paired Hits");
 		showOnly2BESCurrentHitClonesPopupBox = new JCheckBoxMenuItem("Show Only Clones With Visible BES Paired Hits");
@@ -209,7 +203,7 @@ public class ContigFilter extends MarkerFilter {
 		showCloneNamesPopupBox.addActionListener(pmnl);
 		showOnly2BESHitClonesPopupBox.addActionListener(pmnl);
 		showOnly2BESCurrentHitClonesPopupBox.addActionListener(pmnl);
-//		 mdb added 3/15/07 #104 -- END
+
 	}
 
 	public String getHelpID() {
@@ -232,7 +226,7 @@ public class ContigFilter extends MarkerFilter {
 		super.setDefault();
 	}
 
-	// mdb moved out of show() 3/15/07 #104
+	
 	private void setupShow() {
 		noChange = true;
 
@@ -461,7 +455,7 @@ public class ContigFilter extends MarkerFilter {
 		}
 	}
 	
-	// mdb added 3/15/07 #104
+	
 	public void popupMenuWillBecomeVisible(PopupMenuEvent event) {
 		setupShow();		
 		showCloneNamesPopupBox.setState(showCloneNames);

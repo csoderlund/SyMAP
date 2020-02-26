@@ -1,0 +1,218 @@
+<html>
+<head>
+	<title>Ensembl to SyMAP</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<style>
+a.wt {color:inherit;}
+table {font-size:100%}
+tr {font-size:100%}
+td {font-size:100%}
+tt {font-size:13px}
+pre {font-size:13px}
+a {font-size:100%}
+.hang {text-indent:-20px; margin-left:20px;}
+	</style>
+</head>
+<body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
+<!--#include virtual="/common/uaheader.html" -->
+
+<a name=top></a>	
+	
+
+<table width="850" border="0" align="center" cellpadding="0" cellspacing="0">
+	<tr>
+    	<td height="60" width="161" align="left" valign="bottom">
+       						<img alt="" title="" src="../img/agcol_logo.png">
+       	</td>
+		<td height="60" width="428" align="left" valign="bottom" 
+							style="padding:0px 0px 10px 30px" size=5>
+				<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
+				<b>Ensembl genome to SyMAP</b>
+				</font>
+		</td>
+		<td height="60" width="161" align="center" valign="bottom">&nbsp;
+        </td>
+	</tr>
+	<tr>
+		<td height="21" colspan="3" align="left" valign="top">
+			    <table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
+			    <tr>
+			    <td align="left" bgcolor="#666666">
+				<span style="font-size:75%;color:white">
+				<a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
+				<a href=../index.html class="wt">SyMAP Home</a> |
+				<a href=../SystemGuide.html class="wt">System Guide</a> |
+				<a href=../UserGuide.html class="wt">User Guide</a> |
+				<a href=../Tour.html class="wt">Tour</a> |
+				<a href=../TroubleShoot.html class="wt">Troubleshooting </a> |
+				<a href=index.html class="wt">Convert</a> 
+				</span>
+				</td>
+				</tr>
+				</table>
+		</td>
+	</tr>
+	<tr>
+    	<td colspan="3" valign="top" align="left" 
+			style='padding:20px 15px 0px 15px;font-size:85%'>
+
+<h2>Overview</h2>	
+Ensembl supplies FASTA formated files for genome sequence and GFF formated files for the annotation
+The following provides a simple scheme to produce the correctly formated files for SyMAP.	
+<p>								
+<b>Contents</b>
+	<table border=0 cellspacing=3 cellpadding=2 style="font-size:95%">
+		<tr>
+		<td align=left valign=top>
+			<table cellspacing=2 cellpadding=2>
+			<tr><td align=left valign=top></td><td align=left valign=top> <a href=#dl>Download</a></td></tr>
+			<tr><td align=left valign=top></td><td align=left valign=top> <a href=#cv>Convert files</a></td></tr>
+			<tr><td align=left valign=top></td><td align=left valign=top> <a href=#load>Load files into SyMAP</a></td></tr>	
+			</table>
+		</td>
+		<td align=left valign=top>
+			<table cellspacing=2 cellpadding=2>
+			<tr><td align=left valign=top>&nbsp;&nbsp;&nbsp;
+			</td><td align=left valign=top><a href=#what>What the ConvertEnsembl script does</a></td></tr>
+			<tr><td align=left valign=top>&nbsp;&nbsp;&nbsp;
+			</td><td align=left valign=top> <a href=#edit>Editing the script</a></td></tr>
+			</table>
+		</td>					
+	</table>
+
+
+<a name=dl>
+<h2>Download</h2>
+
+<ol>
+<li>Go to <a href="https://www.ensembl.org/info/about/species.html" target="_blank">Ensembl</a>, which shows all species
+for which Ensembl has a genome. For plants and fungi, see <a href=http://plants.ensembl.org>EnsemblPlant<a>
+and <a href=http://fungi.ensembl.org>EnsemblFungi<a>.
+<li>Select your species.
+<li>Select "Download DNA sequence (FASTA)". This takes you to a FTP site. 
+It is recommended that you download the "*.dna_sm.toplevel.fa.gz", as it
+is the soft masked chromosome sequences.
+<li>Select the "GFF3" from the "Download genes, cDNAs, ncRNA, proteins - FASTA - GFF3" line. This takes
+you to an FTP site. Download the *.chr.gff3.gz file.
+</ol>
+
+<a href="img/ENS-genome.png"><img src="img/ENS-genome.png" width=800 border=1></a>
+
+<a name=cv>
+<h2>Convert files</h2>
+<ol>
+<li>Go to the <tt>symap_5/data/seq</tt> directory.
+<li>Make a subdirectory for your species and move the FASTA and GFF files
+into the directory. Leave the "fa.gz" and "gff3.gz" suffixes on the files.
+<li>Type the following at the command line to copy the <tt>ConvertEnsembl</tt> script to the <tt>pseudo</tt> directory: 
+<pre>cp ../../scripts/ConvertEnsembl.class .</pre>
+
+<li>Execute 
+<pre>java ConvertEnsembl &lt;species&gt;</pre>
+
+</ol>
+<h3>Example</h3>
+In <tt>symap_5/data/seq</tt> directory, I made a subdirectory called "rice" and 
+moved the rice .fna.gz and gff3.gz files into it, then executed:
+<pre>
+cp ../../scripts/ConvertEnsembl.class .
+java ConvertEnsembl rice
+</pre>
+This results in the following contents: 
+<pre>
+data/seq/rice/
+      Oryza_sativa.IRGSP-1.0.45.chr.gff3.gz
+      Oryza_sativa.IRGSP-1.0.dna_rm.toplevel.fa.gz
+      annotation/
+         gene.gff
+         exon.gff
+      sequence/
+         genomic.fna
+</pre>
+
+<p>
+<i>ConvertEnsembl optional flags</i>:
+<table border=1 cellpadding=5>
+<tr><td><b>Flag</b><td><b>Description</b><td><b>Details</b><td><b>Default</b>
+<tr><td>-v<td>Verbose<td>Print out header lines of skipped sequences<td>No print
+</table>
+
+<a name=load>
+<h2>Load files into SyMAP</h2>
+The above scenerio puts the files in the default SyMAP directories. 
+When you start up SyMAP, you will see your projects listed on the left of the panel. Check the projects
+you want to load, which will cause them to be shown on the right of the symap window. The
+default parameters for the converted Ensembl projects will probably be sufficient.
+Select "Load All Projects".
+Once loaded, you can run the synteny algorithm be selecting "All Pairs". If you want to compute self-synteny,
+you have to do that individually with the "Selected Pair" button.
+
+
+<a name=what>
+<h2>What the ConvertEnsembl script does</h2>
+The following occurs in the <tt>data/seq/&lt;project directory name&gt;</tt> where "project directory name"
+is the argument supplied to <tt>ConvertEnsembl</tt>:
+
+<ol>
+<li>Reads the file ending in '.fa.gz' and writes a new file called <tt>sequence/genomic.fna</tt> with the following changes:
+	<ol>
+	<li>Only sequences with word "chromosome" in their ">" header line and a number after the 
+	">" will be copied to the genomics.fa file.
+	<li>The header line is replaced with ">ChrN" where N is 1,2...
+	</ol>
+
+<li>Reads the file ending in 'gff3.gz' and writes two new files called <tt>annotation/gene.gff</tt> and 
+<tt>annotation/exon.gff</tt>, as follows:
+	<ol>
+	<li>Only lines with the 'type' (3rd column) equal 'gene' and 'exon' are read.
+	<li>The gene line is written to the <tt>gene.gff</tt> file with the following changes:
+		<ol type="i">
+		<li>The first column N is replace with the 'ChrN'.
+		<li>The last column 'attributes' only keeps the "ID=" and "description=" fields. 
+
+The "description=" keyword is shortened to "desc=".
+If the description field contains "Source:...", it
+is removed.
+		</ol>
+	</ol>
+<li>The exon line is written to the <tt>exon.gff</tt> file with the first column N is replace 
+with the 'ChrN'.
+</ol>
+
+
+<a name=edit>
+<h2>Editing the script</h2>
+<p>The <tt>ConvertEnsembl.java</tt>
+code is supplied in the <tt>scripts</tt> directory. It is very simply written, it does not use external libraries
+and only common programming techniques found in all programming languages. 
+<p>Once you make your changes, execute:
+<pre>
+javac ConvertEnsembl.java
+</pre>
+You will need to have JDK installed to use the 'javac' command.
+<p>
+
+<b>Some reasons for editing:</b> 
+<ol>
+<li>This script has been tested on files from 8 different plant genomes. However,
+there can be variations that may not be accounted for. 
+<li>You may prefer to keep more gene attributes then the script provides.
+<li>You may want to replace the "Chr" with some other prefix.
+</ol>
+
+
+</td>
+</tr>
+</table>
+			    	
+<table width="100%" border="0" align="center" cellpadding=2 cellspacing=0 style="margin-top:40px">
+            <tr>
+              <td bgcolor="#DDDDDD" align="center">
+               		    <font face="Verdana, Arial, Helvetica, sans-serif" size="2">Email
+               		    Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></font>
+				</td>
+            </tr>
+</table>
+
+</BODY>
+</HTML>

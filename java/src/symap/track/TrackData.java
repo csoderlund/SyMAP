@@ -4,8 +4,6 @@ import java.awt.Point;
 
 /**
  * The data for the Track (i.e. project name, display name, orientation, etc...)
- * 
- * @author Austin Shoemaker
  */
 public abstract class TrackData {
 	private Class trackClass;

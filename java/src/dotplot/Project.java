@@ -112,19 +112,12 @@ public class Project {
 		return groups == null ? 0 : groups.length;
 	}
 	
-	// mdb added 1/14/10 #203
 	public int getNumVisibleGroups() {
 		int count = 0;
 		for (Group g : groups)
 			if (g.isVisible()) count++;
 		return count;
 	}
-
-// mdb removed 12/15/09 #203		
-//	public long getMaxGroup() {
-//		if (groups == null || groups.length == 0) return 0;
-//		return groups[groups.length-1].getOffset()+groups[groups.length-1].getSize();
-//	}
 
 	public int getID() { return id; }
 	public String getGrpPrefix() { return grpPrefix; }
@@ -133,7 +126,7 @@ public class Project {
 	public String getName() { return name; }
 	public boolean isPseudo() { return isPseudo; }
 	public boolean isFPC() { return !isPseudo; }
-	public String toString() { return displayName; /*new Integer(id).toString();*/ } // mdb changed 2/1/10 #210
+	public String toString() { return displayName; /*new Integer(id).toString();*/ } 
 
 	public boolean equals(Object obj) {
 		return obj instanceof Project && ((Project)obj).id == id;
@@ -146,7 +139,6 @@ public class Project {
 			Project pY = projects[i];
 			for (Group gX : projects[0].groups) {
 				for (Group gY : pY.groups) {
-					// mdb rewritten 1/15/10 #207 - reuse existing tiles
 					Tile t = Tile.getTile(tiles, gX, gY);
 					if (t == null)
 						t = new Tile(gX, gY);

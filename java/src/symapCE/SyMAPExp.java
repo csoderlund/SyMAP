@@ -16,7 +16,6 @@ import symap.projectmanager.common.Project;
 import symap.projectmanager.common.SyMAPFrameCommon;
 import symap.projectmanager.common.TrackCom;
 import symap.projectmanager.common.Mapper;
-//import com.sun.j3d.utils.universe.SimpleUniverse;
 
 
 //Mimicking structure of SyMAP 2D with this class
@@ -77,7 +76,6 @@ public class SyMAPExp implements Observer {
 		try {
 			Vector<Block> blocks = loadAllBlocks(tracks);
 			
-			//mapper.setFrame(frame); // mdb removed 2/1/10
 			mapper.setProjects(projects.toArray(new Project[0]));
 			mapper.setTracks(tracks.toArray(new TrackCom[0]));
 			mapper.setBlocks(blocks.toArray(new Block[0]));
@@ -131,7 +129,7 @@ public class SyMAPExp implements Observer {
      UpdatePool pool = new UpdatePool(databaseReader);
      String qry = "SELECT idx,name FROM groups " +
      				"WHERE proj_idx=" + p.getID() +
-     				" AND sort_order > 0 " + // mdb added 1/19/10 #207 - make consistent with full dotplot for FPC projects
+     				" AND sort_order > 0 " + // make consistent with full dotplot for FPC projects
      				"ORDER BY sort_order";
      ResultSet rs = pool.executeQuery(qry);
      while( rs.next() ) {
@@ -139,7 +137,6 @@ public class SyMAPExp implements Observer {
      	String strGroupName = rs.getString("name");
      	
     		projTracks.add(new TrackCom(p, strGroupName, nGroupIdx));
-    		//System.out.println("found group: " + p.getName() + " " + strGroupName + " idx=" + nGroupIdx);
      }
      rs.close();
      
@@ -156,7 +153,6 @@ public class SyMAPExp implements Observer {
 		        						"WHERE (grp_idx="+t.getGroupIdx()+")");
 		        while( rs.next() ) {
 		        	t.setSizeBP( rs.getLong("length") );
-		        	//System.out.println("found pseudo: " + p.getName() + " " + t.getSizeBP());
 		        }
      	}
 	        // FPC
@@ -178,7 +174,6 @@ public class SyMAPExp implements Observer {
 		        	
 				t.setBpPerUnit( cbsize ); // save for loading blocks
 		        t.setSizeBP((ccb + size) * cbsize);
-		        //System.out.println("found fpc: " + project + " " + t.groupIdx + " " + t.sizeBP);
      	}
      	
          rs.close();
@@ -219,22 +214,22 @@ public class SyMAPExp implements Observer {
 		// Load contig numbers
 		UpdatePool pool = new UpdatePool(databaseReader);
 		String strQ = "SELECT idx,number FROM contigs";
-		//System.out.println("loadAllBlocks: "+strQ);
-     ResultSet rs = pool.executeQuery(strQ);
-     while( rs.next() )
-     	contigIdxToNum.put(rs.getString("idx"), rs.getString("number"));
-     rs.close();
+	
+		ResultSet rs = pool.executeQuery(strQ);
+		while( rs.next() )
+			contigIdxToNum.put(rs.getString("idx"), rs.getString("number"));
+		rs.close();
      
-     // See if we have the corr field
-   	boolean haveCorr = true;
-     try
-     {
-     	pool.executeQuery("select corr from blocks limit 1");	
-     }
-     catch (Exception e)
-     {
-			haveCorr = false;
-     }
+		// See if we have the corr field
+		boolean haveCorr = true;
+	     try
+	     {
+	     	pool.executeQuery("select corr from blocks limit 1");	
+	     }
+	     catch (Exception e)
+	     {
+				haveCorr = false;
+	     }
      
      String corrStr = (haveCorr ? ",corr " : "");
 		
@@ -242,10 +237,9 @@ public class SyMAPExp implements Observer {
      String strGroupList = "(" + getGroupList(tracks) + ")";
      strQ = "SELECT idx,grp1_idx,grp2_idx,start1,end1,start2,end2,ctgs1,ctgs2" + corrStr + " FROM blocks " + 
 					"WHERE (grp1_idx IN "+strGroupList+" AND grp2_idx IN "+strGroupList+")";
-     //System.out.println("loadBlocks: "+strQ);
+     
      rs = pool.executeQuery(strQ);
      while( rs.next() ) {
-     	//int blockNum = rs.getInt("blockNum");
      	int blockIdx = rs.getInt("idx");
      	int grp1_idx = rs.getInt("grp1_idx");
      	int grp2_idx = rs.getInt("grp2_idx");
@@ -276,17 +270,13 @@ public class SyMAPExp implements Observer {
      			t1.getGroupIdx(), t2.getGroupIdx(), 
      			start1, end1, start2, end2, ctgs1, ctgs2, corr);
      	if (!blocks.contains(b)) {
-     		//System.out.println("found block: blockIdx="+blockIdx+" proj1="+t1.getFullName()+" proj2="+t2.getFullName()+" start1="+start1+" end1="+end1+" start2="+start2+" end2="+end2+" ctgs1="+ctgs1+" ctgs2="+ctgs2);
      		blocks.add(b);
      	}
      }
      rs.close();
      
-     System.out.println("Loaded " + blocks.size() + " blocks");
+     // CAS501 System.out.println("Loaded " + blocks.size() + " blocks");
      return blocks;
 	}
-	
-	
-
 }
 

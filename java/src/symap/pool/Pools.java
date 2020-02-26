@@ -13,16 +13,14 @@ import util.PropertiesReader;
 import softref.SoftListCache;
 
 public class Pools {
-	protected static final boolean DO_CACHING; // mdb added 1/28/10 #209
-
+	protected static final boolean DO_CACHING; 
 	protected static final int MAX_CONTIG_POOL, MIN_CONTIG_POOL;
 	protected static final int MAX_CONTIG_CLONE_POOL, MIN_CONTIG_CLONE_POOL;
 	protected static final int MAX_PSEUDO_POOL, MIN_PSEUDO_POOL;
 	protected static final int MAX_FPCPSEUDO_POOL, MIN_FPCPSEUDO_POOL;
 	protected static final int MAX_SHAREDMARKERFILTER_POOL, MIN_SHAREDMARKERFILTER_POOL;
 	protected static final int MAX_FPCFPC_POOL, MIN_FPCFPC_POOL;
-	protected static final int MAX_PSEUDOPSEUDO_POOL, MIN_PSEUDOPSEUDO_POOL; // mdb added 7/23/07 #121
-
+	protected static final int MAX_PSEUDOPSEUDO_POOL, MIN_PSEUDOPSEUDO_POOL; 
 	protected static final int MAX_BES_SEQUENCE_POOL, MIN_BES_SEQUENCE_POOL;
 	protected static final int MAX_MRK_SEQUENCE_POOL, MIN_MRK_SEQUENCE_POOL;
 	protected static final int MAX_GENE_POOL, MIN_GENE_POOL;
@@ -34,7 +32,7 @@ public class Pools {
 
 	static {
 		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/pool.properties"));
-		DO_CACHING					= props.getBoolean("do_caching"); // mdb added 1/28/10 #209
+		DO_CACHING					= props.getBoolean("do_caching"); 
 		MAX_CONTIG_POOL             = props.getInt("maxContigPoolSize");
 		MIN_CONTIG_POOL             = props.getInt("minContigPoolSize");
 		MAX_CONTIG_CLONE_POOL       = props.getInt("maxContigClonePoolSize");
@@ -47,8 +45,8 @@ public class Pools {
 		MIN_SHAREDMARKERFILTER_POOL = props.getInt("minSharedMarkerFilterPoolSize");
 		MAX_FPCFPC_POOL             = props.getInt("maxFPCFPCPoolSize");
 		MIN_FPCFPC_POOL             = props.getInt("minFPCFPCPoolSize");
-		MAX_PSEUDOPSEUDO_POOL       = props.getInt("maxPseudoPseudoPoolSize"); // mdb added 7/23/07 #121
-		MIN_PSEUDOPSEUDO_POOL       = props.getInt("minPseudoPseudoPoolSize"); // mdb added 7/23/07 #121
+		MAX_PSEUDOPSEUDO_POOL       = props.getInt("maxPseudoPseudoPoolSize"); 
+		MIN_PSEUDOPSEUDO_POOL       = props.getInt("minPseudoPseudoPoolSize"); 
 
 		MAX_MRK_MESSAGE_POOL        = props.getInt("maxMrkMessagePoolSize");
 		MIN_MRK_MESSAGE_POOL        = props.getInt("minMrkMessagePoolSize");
@@ -86,20 +84,16 @@ public class Pools {
 					new SoftListCache(MIN_FPCPSEUDO_POOL,MAX_FPCPSEUDO_POOL),
 					new SoftListCache(MIN_SHAREDMARKERFILTER_POOL,MAX_SHAREDMARKERFILTER_POOL),
 					new SoftListCache(MIN_FPCFPC_POOL,MAX_FPCFPC_POOL),
-					new SoftListCache(MIN_PSEUDOPSEUDO_POOL,MAX_PSEUDOPSEUDO_POOL)); // mdb added pseudo-pseudo 7/23/07 #121
-			sequencePool        = new SequencePool(dr,pp/*,
-					new SoftListCache(MIN_BES_SEQUENCE_POOL,MAX_BES_SEQUENCE_POOL),
-					new SoftListCache(MIN_MRK_SEQUENCE_POOL,MAX_MRK_SEQUENCE_POOL),
-					new SoftListCache(MIN_GENE_POOL,MAX_GENE_POOL)*/);
+					new SoftListCache(MIN_PSEUDOPSEUDO_POOL,MAX_PSEUDOPSEUDO_POOL)); 
+			sequencePool        = new SequencePool(dr,pp);
 			hoverMessagePool    = new HoverMessagePool(dr,pp,
 					new SoftListCache(MIN_MRK_MESSAGE_POOL,MAX_MRK_MESSAGE_POOL),
 					new SoftListCache(MIN_BES_MESSAGE_POOL,MAX_BES_MESSAGE_POOL));
 		}
-		else { // mdb added 1/28/10 #209 - disable caching
-			//BlockContigCache bcc = new BlockContigCache(0,0,0,0);
-			contigPool           = new ContigPool(dr,pp,null);//bcc);
-			contigClonePool      = new ContigClonePool(dr,null,null);//bcc,new SoftListCache(0,0));
-			pseudoPool           = new PseudoPool(dr,null);//new SoftListCache(0,0));
+		else { 
+			contigPool           = new ContigPool(dr,pp,null);
+			contigClonePool      = new ContigClonePool(dr,null,null);
+			pseudoPool           = new PseudoPool(dr,null);
 			mapperPool           = new MapperPool(dr,pp,
 										null,//new SoftListCache(0,0),
 										null,//new SoftListCache(0,0),
@@ -112,25 +106,14 @@ public class Pools {
 		}
 	}
 
-// mdb unused 1/28/10	
-//	protected Pools(ProjectProperties pp, ContigPool cp, ContigClonePool bp, PseudoPool sp, MapperPool mp, SequencePool ap) {
-//		this.pp = pp;
-//		this.contigPool = cp;
-//		this.contigClonePool = bp;
-//		this.pseudoPool = sp;
-//		this.mapperPool = mp;
-//		this.sequencePool = ap;
-//	}
-
 	public void clearPools() {
-		//System.out.println("Clearing the pools.");
 		contigPool.clear();
 		contigClonePool.clear();
 		pseudoPool.clear();
 		mapperPool.clear();
 		sequencePool.clear();
 		hoverMessagePool.clear();
-		try { pp.reset(); } // mdb added 3/31/08 #157
+		try { pp.reset(); } 
 		catch (Exception e) { }
 	}
 

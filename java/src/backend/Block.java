@@ -143,8 +143,6 @@ public class Block
 		vals.add("0"); // end gene fraction entries
 		pool.singleInsert("blocks", vals);
 		
-		//mIdx = pool.lastID(); // mdb removed 7/1/09
-		// mdb added 7/1/09
 		String st = "SELECT idx FROM blocks WHERE pair_idx=" + mPairIdx +
 						" AND blocknum=" + mNum +
 						" AND proj1_idx=" + mProj1.getIdx() +

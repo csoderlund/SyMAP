@@ -76,8 +76,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 	protected JSplitPane splitPane;
 	
 	protected HelpBar helpBar;
-//	private Canvas3D canvas3D;
-//	private SimpleUniverse universe;
+
 	protected Mapper mapper;
 	protected SyMAP symap2D = null;
 	protected DotPlotFrame dotplot = null;
@@ -104,7 +103,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		Rectangle screenRect = Utilities.getScreenBounds(applet,this);
 		screenWidth  = Math.min(1200, screenRect.width);
 		screenHeight = Math.min(900, screenRect.height);
-		setSize(screenWidth, screenHeight); // mdb removed 12/31/09 #208
+		setSize(screenWidth, screenHeight); 
 		
 		// Using a card layout to switch views fixes the Windows CONTEXT_CREATION_ERROR problem
 		cardPanel = new JPanel();
@@ -128,11 +127,10 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		this(applet, dbReader);
 		this.mapper = mapper;
 	}
-	// mdb added 1/28/10
+
 	public void dispose() { // override
 		setVisible(false); // necessary?
-//		if (universe != null) universe.cleanup();
-//		universe = null;
+
 		if (symap2D != null) symap2D.clear();
 		symap2D = null;
 		dotplot = null;
@@ -157,7 +155,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		viewControlBar = new MutexButtonPanel("Views:", 5);
 		viewControlBar.setAlignmentX(Component.LEFT_ALIGNMENT);
 		viewControlBar.setBorder(BorderFactory.createCompoundBorder(
-				//BorderFactory.createLineBorder(Color.LIGHT_GRAY),
 				BorderFactory.createEtchedBorder(),
 				BorderFactory.createEmptyBorder(5, 5, 5, 5)));
 		
@@ -227,9 +224,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		public void actionPerformed(ActionEvent e) {
 			if (mapper.hasChanged()) {
 				// Repaint project panels
-				//updateShownGroups();
 				controlPanel.repaint();
-				//cf.cp.revalidate();
 				// Regenerate main display
 				isFirst2DView = true;
 				isFirstDotplotView = true;
@@ -240,7 +235,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 				{
 					regenerateCircleView();
 				}
-				//cardPanel.repaint();
 			}
 		}
 	};
@@ -276,14 +270,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			
 			projPanel.add(cp);
 		}
-		
-//		JScrollPane scroller = new JScrollPane( projPanel, 
-//				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
-//				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-//		scroller.setBorder(null);
-//		scroller.getVerticalScrollBar().setUnitIncrement(5);
-//		scroller.setMaximumSize(new Dimension(500, maxHeight));
-//		scroller.setAlignmentX(Component.LEFT_ALIGNMENT);
 
 		// Create instructions panel
         LinkLabel helpLink = new LinkLabel("Click for online help");
@@ -335,8 +321,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			System.err.println("No tracks to display!");
 			return;
 		}
-		
-		//setVisible(true); // mdb removed 12/31/09 #208
 	}
 	
 	private void regenerateCircleView()
@@ -358,15 +342,9 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		}
 		
 		CircFrame circframe = new CircFrame(applet,dbReader,pidxList,shownGroups,helpBar);
-		//cardPanel.removeAll();
 		cardPanel.add(circframe.getContentPane(), Integer.toString(VIEW_CIRC)); // ok to add more than once
 		
 		setView(VIEW_CIRC);
-		//circframe.cp.getScrollPane().revalidate();
-		//circframe.getContentPane().repaint();
-		//circframe.repaint();
-		//cardPanel.invalidate();
-		//cardPanel.repaint();
 	}
 	private void regenerateDotplotView() {
 		// Get selected projects/groups
@@ -405,7 +383,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			
 			DrawingPanel dp = symap2D.getDrawingPanel();
 			
-			// WMN start the 2D over when they go back and forth
+			// start the 2D over when they go back and forth
 			if (true/*|| isFirst2DView*/) { 
 				// Get selected tracks
 				TrackCom ref = mapper.getReferenceTrack();
@@ -431,15 +409,12 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 				for (int i = 0;  i < selectedTracks.length;  i++) {
 					TrackCom t = selectedTracks[i];
 					
-					//System.out.println("position " + position + " " + t.getFullName());
-					
 					// Add track
 					if (t.isPseudo())
 						dp.setSequenceTrack( position++, t.getProjIdx(), t.getGroupIdx(), t.getColor() );
 					else {
 						String contigs = Mapper.getContigListForBlocks(
 								mapper.getBlocksForTracks( t.getGroupIdx(), ref.getGroupIdx() ));
-						//System.out.println("contigs: "+contigs);
 						dp.setBlockTrack( position++, t.getProjIdx(), "Chr " + t.getGroupName(), contigs, t.getColor() );
 					}
 					
@@ -455,7 +430,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 							if (i+1 < selectedTracks.length)
 								contigs += Mapper.getContigListForBlocks(
 										mapper.getBlocksForTracks( ref.getGroupIdx(), selectedTracks[i+1].getGroupIdx() ));
-							//System.out.println("contigs: "+contigs);
 							dp.setBlockTrack( position++, ref.getProjIdx(), "Chr " + ref.getGroupName(), contigs, ref.getColor() );
 						}
 					}
@@ -472,7 +446,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			isFirst2DView = false;
 			return true;
 		}
-		catch (OutOfMemoryError e) { // mdb added 1/29/10
+		catch (OutOfMemoryError e) { 
 			symap2D = null;
 			Utilities.showOutOfMemoryMessage();
 		}
@@ -485,14 +459,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 	
 	private class MutexButtonPanel extends JPanel implements ActionListener {
 		private GridBagConstraints constraints;
-		
-//		public MutexButtonPanel() {
-//			this(null, 0);
-//		}
-//		
-//		public MutexButtonPanel(String title) {
-//			this(title, 0);
-//		}
 		
 		public MutexButtonPanel(String title, int pad) {
 			GridBagLayout layout = new GridBagLayout();
@@ -511,24 +477,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			add(label);
 			label.setMinimumSize(label.getPreferredSize());
 		}
-		
-////		public JButton addButton(String strText, String strIconPath) {
-////			return addButton(strText, strIconPath, null);
-////		}
-//		
-//		public JButton addButton(String strText, String strIconPath, ActionListener l) {
-//			JButton button = new JButton();
-//			button.setToolTipText(strText);
-//			if (strIconPath != null)
-//				button.setIcon( ImageViewer.getImageIcon(strIconPath) );
-//			else
-//				button.setText(strText);
-//			
-//			if (l != null) button.addActionListener(l);
-//			addButton(button);
-//			
-//			return button;
-//		}
 		
 		public void addButton(JButton button) {
 			button.setMargin(new Insets(0, 0, 0, 0));
@@ -607,10 +555,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		public MySplitPane(int newOrientation) {
 			super(newOrientation);
 		}
-		
-//		public void setDividerVisible(boolean visible) {
-//			((BasicSplitPaneUI)getUI()).getDivider().setVisible(visible);
-//		}
 	}
 
 	public String getHelpText(MouseEvent e) {
@@ -629,9 +573,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		JPanel pnl = new JPanel();
 		pnl.setLayout( new BoxLayout(pnl, BoxLayout.LINE_AXIS) );
 		pnl.setAlignmentX(LEFT_ALIGNMENT);
-		//pnl.setBackground();
 		JButton btn = new JButton("Download Blocks");
-		//btn.setBackground(Color.white);
 		btn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				downloadBlocks();
@@ -688,7 +630,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 					" join projects as p1 on p1.idx=b.proj1_idx join projects as p2 on p2.idx=b.proj2_idx " +
 					" where p1.idx in (" + projStr + ") and p2.idx in (" + projStr + ") and p1.type='pseudo' and p2.type='pseudo' " +
 					" order by p1.name asc, p2.name asc, g1.idx asc, g2.idx asc, b.blocknum asc";
-					//System.err.println(query);
+					
 					ResultSet rs = dbReader.getConnection().createStatement().executeQuery(query);
 					int n = 0;
 					while (rs.next())
@@ -701,7 +643,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 						n++;
 					}
 					out.close();
-					System.err.println("Wrote " + n + " blocks");
+					// CAS501 System.err.println("Wrote " + n + " blocks");
 				}
 				
 

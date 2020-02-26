@@ -155,11 +155,6 @@ public class Tile implements DotPlotConstants {
 	public boolean isSomeLoaded()   { return loadObject.isLoaded(SOME_LOADED); }
 	public boolean isLoaded() { return loadObject.isLoaded(FULLY_LOADED); }
 	public boolean isLoaded(int loadLevel) { return loadObject.isLoaded(loadLevel); }
-	
-// mdb removed 6/29/07 #118
-//	private void clearLoaded() {
-//		loadObject.clearLoaded();
-//	}
 
 	public static Tile getTile(Tile[] tiles, Group grpX, Group grpY) {
 		if (tiles != null)

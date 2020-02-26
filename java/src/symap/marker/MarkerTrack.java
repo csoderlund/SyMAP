@@ -22,7 +22,6 @@ import symap.pool.HoverMessagePool;
  * flipping is the resposiblility of the implementing class (other than for
  * setting the variable to false on instantiation).
  * 
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Track
  */
 public abstract class MarkerTrack extends Track {	
@@ -154,7 +153,7 @@ public abstract class MarkerTrack extends Track {
 				markerList.getNumVisibleMarkers()+" of "
 				+markerList.getNumMarkers()+" markers shown.  "
 				+"Right-click for menu." 
-				: m.getHoverMessage(event.getPoint()); // mdb changed 3/30/07 #112
+				: m.getHoverMessage(event.getPoint()); 
 	}
 
 	public String getMarkerHoverMessage(String name) {

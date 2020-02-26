@@ -132,8 +132,6 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		scroller.getViewport().setBackground(FAR_BACKGROUND);
 		scroller.getVerticalScrollBar().setUnitIncrement(10); 
 		
-		//showSelf = true; //(allProj.size() == 1);
-		
 		hb.addHelpListener(this); 
 		addMouseListener(this);
 		addMouseMotionListener(this);
@@ -144,7 +142,6 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		}
 		try
 		{
-			
 			int nColors = 0;
 			for (Project p : allProj)
 			{
@@ -157,30 +154,14 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			}
 
 			loadBlocks();
-			
-
-			
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
 			return;
 		}		
-		//scroller = new JScrollPane(this);
-		//scroller.setBorder(new EmptyBorder(0,0,0,0));
-
 	}
-/*	public void initDims(int w, int h)
-	{
-		width = w; height = h;
-	    scrollW = w;
-	    scrollH = h - cbHeight - hbHeight;
-	    rOuter = (Math.min(scrollW, scrollH) - 120)/2;
-	    cX = scrollW/2;
-	    cY = scrollH/2;
-		setPreferredSize(new Dimension(w,h));
-		cX0 = cX; cY0 = cY;
-	}*/
+
 	public void createStructs()
 	{
 		allProj = new Vector<Project>();
@@ -442,11 +423,9 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		void setArc(int a1, int a2, int cidx)
 		{
 			double arc = a2 - a1; 
-			//System.out.println(name + " arc:" + a1 + "," + a2);
 			double totalSize = totalSizeShown();
 			double a = a1;
 			int cnt = 0;
-			//float roundoff = 0; 
 			int nShown = 0;
 			for (Group g : grps)
 			{
@@ -459,12 +438,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 				cumulativeSize += g.size;
 				cnt++;
 				double grpEndPos = (arc*cumulativeSize*((double)scaleFactor))/totalSize;
-				//roundoff += (((float)arc*(float)g.size*(float)scaleFactor)/((float)totalSize) - garc);
-				//if (roundoff >= 1)
-				//{
-				//	garc++;
-				//	roundoff -= 1.0;
-				//}
+				
 				long b;
 				if (cnt < nShown)
 				{
@@ -476,7 +450,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 				}
 				g.a1 = (int)a;
 				g.a2 = (int)b;
-				//System.out.println(name + "/" + g.name + ":" + g.a1 + "," + g.a2);
+				
 				g.cidx = cidx;
 				cidx++;
 				a = b;
@@ -489,9 +463,6 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	}	
 	void getUniqueColors(int amount) 
 	{
-		int max = (0xE0 << 16) + (0xE0 << 8)  + 0xE0;
-		//int step =  ((int)Math.floor(Math.PI*max))/(amount);
-		int step =  0xF0F0F0;
 	    mColors = new Vector<Integer>();
 	    
 	    mColors.add(colorInt(255,0,0));
@@ -596,35 +567,6 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	    mColors.add(colorInt(40,76,111));
 	    mColors.add(colorInt(80,34,231));
 	    mColors.add(colorInt(193,81,118));
-/*	    This is the function that made the color list
-	    Random rand = new Random();
-	    rand.setSeed(314);
-		for (; mColors.size() <= 100 ;  )
-		{
-			int c = rand.nextInt(max);
-			int R = (c >> 16) & 0xFF;
-			int G = (c >> 8) & 0xFF;
-			int B = c & 0xFF;
-			if (Math.abs(R-G) <= 0x30 && Math.abs(R-B) <= 0x30 && Math.abs(B-G) <= 0x30)
-			{
-				continue; // too gray
-			}
-			boolean tooClose = false;
-			for (int j = 0; j < mColors.size(); j++)
-			{
-				int c1 = mColors.get(j);
-				int R1 = c1 >> 16; int G1 = c1 >> 8; int B1 = c1 & 0xFF;
-				if ( Math.abs(R - R1) <= 0x30 && Math.abs(G - G1) <= 0x30 && Math.abs(B - B1) <= 0x30)
-				{
-					tooClose = true;
-					break;
-				}
-				if (tooClose) continue;
-			}
-			System.out.println("mColors.add(colorInt(" + R + "," + G + "," + B + "));");
-			mColors.add(c);
-		}
-*/
 	}
 	int circX(int cX, int R, double arc)
 	{
@@ -637,8 +579,8 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	public  AbstractButton createButton(String path, String tip, ActionListener listener, boolean checkbox) 
 	{
 		AbstractButton button;
-		//Icon icon = ImageViewer.getIcon(data.getApplet(),ControlPanel.class.getResource(name)); // mdb removed 3/2/09
-		Icon icon = ImageViewer.getImageIcon(path); // mdb added 3/2/09
+		
+		Icon icon = ImageViewer.getImageIcon(path); 
 		if (icon != null) {
 		    if (checkbox)
 		    	button = new JCheckBox(icon);
@@ -662,17 +604,11 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		
 		return button;
 	}
-
 		
 	void zoom (double f)
 	{
 		zoom *= f;
-		//rOuter *= f;
-	    
-	    //updateDims();
-	    //updateCircSize();
-	    makeRepaint();
-	   // cp.repaint();	   
+	    makeRepaint();  
 	}
 	void rotate(int da)
 	{
@@ -697,40 +633,16 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
         cY = rOuter + 50;
         if (cX < cX0 && cY < cY0)
         {
-        	cX = cX0; 
-        	cY = cY0;
+        		cX = cX0; 
+        		cY = cY0;
         }
 	}
 
 	public void makeRepaint()
 	{
 		repaint();
-		//revalidate();
-		//scroller.revalidate();
-		//scroller.getViewport().revalidate();
-		
 	}
-/*	public Dimension getPreferredScrollableViewportSize()
-	{
-		return new Dimension(900,900);
-	}
-	public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) 
-	{
-		return 1;
-	}
-	public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) 
-	{
-		return 1;
-	}	
-	public boolean getScrollableTracksViewportHeight() 
-	{
-		return false;
-	}
-	public boolean getScrollableTracksViewportWidth() 
-	{
-		return false;
-	}
-	*/	
+
 	public boolean colorFirstPriority(int idx1, int idx2)
 	{
 		// returns true if first project has color priority, i.e., its
@@ -854,16 +766,10 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 				
 		Dimension d = new Dimension( (int)(scroller.getWidth() * zoom), 
                 (int)(scroller.getHeight() * zoom) );
-		//System.out.println("XXX " + d.width + "," + d.height + "," + zoom);
 		dim.width =  (int)((d.width - MARGIN)); // so the scroll doesn't show at zoom=1
 		dim.height = (int)((d.height - MARGIN));
 
-		//setPreferredSize(dim);
 		
-		//revalidate();
-		//scroller.getViewport().revalidate();
-
-	    
 	    int maxNameW = 0;
 	    if (!bRotateText)
 	    {
@@ -887,35 +793,24 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
         	cX0 = cX;
         	cY0 = cY;
         }
-        if (cX < cX0 && cY < cY0)
-        {
-        	//cX = cX0; 
-        	//cY = cY0;
-        }
-        
         
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
-        //boolean doScale = toScale;
-        int totalSize = 0; 
+        
         double totalSizeShown = 0;
         int nEmpty = 0;
         
         for (Project p : allProj)
         {
-        	totalSize += p.totalSize();
-        }
-        for (Project p : allProj)
-        {
-        	double shown =  p.totalSizeShown();
-        	totalSizeShown += shown;
-        	if (shown == 0) nEmpty++;
+	        	double shown =  p.totalSizeShown();
+	        	totalSizeShown += shown;
+	        	if (shown == 0) nEmpty++;
         }        
         if (totalSizeShown == 0)
         {
-        	System.out.println("Nothing shown!");
-        	return;
+	        	System.out.println("Nothing shown!");
+	        	return;
         }
         int projEmptyArc = 20;
         int curArc = 0;
@@ -932,42 +827,41 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
                 		(int)circX(cX,rOuter,curArc), (int)circY(cY,rOuter,curArc));
                 g.drawLine((int)circX(cX,rInner+1,curArc + projArc - 1), (int)circY(cY,rInner+1,curArc + projArc - 1), 
                 		(int)circX(cX,rOuter,curArc + projArc - 1), (int)circY(cY,rOuter,curArc + projArc - 1));
-
             }
             if (toScale)
             {
-            	if (p.totalSizeShown() == 0)
-            	{
-            		projArc = projEmptyArc;
-            	}
-            	else
-            	{
-            		double shown = p.totalSizeShown();
-            		projArc = (int) Math.floor(((360.0 - ((double)(nEmpty*projEmptyArc)))*shown)/totalSizeShown);
-            	}
+	            	if (p.totalSizeShown() == 0)
+	            	{
+	            		projArc = projEmptyArc;
+	            	}
+	            	else
+	            	{
+	            		double shown = p.totalSizeShown();
+	            		projArc = (int) Math.floor(((360.0 - ((double)(nEmpty*projEmptyArc)))*shown)/totalSizeShown);
+	            	}
             }
             
             // This calculation is for the rotated text.
         	int nextArc = curArc + projArc;
         	int midArc = (curArc + nextArc)/2;
         	g.setColor(Color.black);
-            FontMetrics fm = g.getFontMetrics();
-            int unrotW = (int)(fm.getStringBounds(p.name,g).getWidth()/2);		
-            int stringH = (int)(fm.getStringBounds(p.name,g).getHeight());
-            int stringArc = midArc; 
-            int stringArcW = 0;
-            if (unrotW > 0 && unrotW < 200) // exclude pathological values
-            {
-            	stringArcW = (int)((180/Math.PI)*Math.atan(((double)unrotW/(double)(rLabel))));
-            }
+        FontMetrics fm = g.getFontMetrics();
+        int unrotW = (int)(fm.getStringBounds(p.name,g).getWidth()/2);		
+        int stringH = (int)(fm.getStringBounds(p.name,g).getHeight());
+        int stringArc = midArc; 
+        int stringArcW = 0;
+        if (unrotW > 0 && unrotW < 200) // exclude pathological values
+        {
+        	stringArcW = (int)((180/Math.PI)*Math.atan(((double)unrotW/(double)(rLabel))));
+        }
         	int stringX = (int)circX(cX,rLabel,stringArc + arc0 + stringArcW);
         	int stringY = (int)circY(cY,rLabel,stringArc + arc0 + stringArcW);
-			Font f = g.getFont();
+		Font f = g.getFont();
 
-			double rotAngle = 90 - midArc - arc0;
-			// Put the angle within 0-360 range for tests that don't work mod 360
-			while (rotAngle > 360) {rotAngle -= 360;} 
-			while (rotAngle < 0) {rotAngle += 360;}
+		double rotAngle = 90 - midArc - arc0;
+		// Put the angle within 0-360 range for tests that don't work mod 360
+		while (rotAngle > 360) {rotAngle -= 360;} 
+		while (rotAngle < 0) {rotAngle += 360;}
 
         	p.labelR1 = rLabel - stringH;
         	p.labelR2 = rLabel + stringH;
@@ -1008,7 +902,6 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
             	stringY += yOff;
             	
         		g.drawString(str,stringX,stringY);
-
         	}
 			
         	
@@ -1045,11 +938,10 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
         			while (vArc > 360) {vArc -= 360;}
         			while (vArc < 0) {vArc += 360;}
 
-    				
-  	                String str = gr.name;
-	                fm = g.getFontMetrics();
-	                double grW = fm.getStringBounds(str,g).getWidth();		
-    				
+                String str = gr.name;
+                fm = g.getFontMetrics();
+                double grW = fm.getStringBounds(str,g).getWidth();		
+				
     				int pX = (int)circX(cX,rOuter+10,aMid);
     				int pY = (int)circY(cY,rOuter+10,aMid);
     				
@@ -1058,8 +950,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 
     				pY += yOff;
     				
-	       			g.drawString(str, pX, pY);   
- 
+	       		g.drawString(str, pX, pY);   
     			}
         	}
         	curColor += p.grps.size();
@@ -1113,31 +1004,23 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	        		int a2 = gr1.arcLoc(b.e1);
 	        		int a3 = gr2.arcLoc(b.s2);
 	        		int a4 = gr2.arcLoc(b.e2);
-	        		//System.out.println(gr1.name + ":" + gr2.name + ":" + b.s1 + "," + b.e1 + "," + b.s2 + "," + b.e2);      		
-	        		
 	        		
 	        		GeneralPath gp = new GeneralPath();
-	        		int aMid1 = (a2 + a3)/2;
-	        		int aMid2 = (a4 + a1)/2;
-	        		int rCont = rBlock/5;
+	        		
 	        		gp.moveTo(circX(cX,rBlock,a1 + arc0),circY(cY,rBlock,a1 + arc0));
 	        		
 	        		Arc2D arc1 = new Arc2D.Double(cX - rBlock, cY - rBlock, 2*rBlock, 2*rBlock, a1 + arc0, a2 - a1, Arc2D.OPEN);
 	        		gp.append(arc1, true);
 	        		
-	        		//gp.quadTo(circX(cX,rCont,aMid1 + arc0), circY(cY,rCont,aMid1 + arc0),circX(cX,rBlock,a3 + arc0),circY(cY,rBlock,a3 + arc0));
 	        		gp.quadTo(circX(cX,0,a2 + arc0), circY(cY,0,a2 + arc0),circX(cX,rBlock,a3 + arc0),circY(cY,rBlock,a3 + arc0));
 
 	        		Arc2D arc2 = new Arc2D.Double(cX - rBlock, cY - rBlock, 2*rBlock, 2*rBlock, a3 + arc0, a4 - a3, Arc2D.OPEN);
 	        		gp.append(arc2, true);
 	        		
-	        		//gp.quadTo(circX(cX,rCont,aMid2 + arc0), circY(cY,rCont,aMid2 + arc0),circX(cX,rBlock,a1 + arc0),circY(cY,rBlock,a1 + arc0));
 	        		gp.quadTo(circX(cX,0,a4 + arc0), circY(cY,0,a4 + arc0),circX(cX,rBlock,a1 + arc0),circY(cY,rBlock,a1 + arc0));
 	       		
 	        		gp.closePath();
 	        		g2.fill(gp);
-	        		
-
         		}
         	}
         }
@@ -1169,25 +1052,19 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	        		int a2 = gr1.arcLoc(b.e1);
 	        		int a3 = gr2.arcLoc(b.s2);
 	        		int a4 = gr2.arcLoc(b.e2);
-	        		//System.out.println(gr1.name + ":" + gr2.name + ":" + b.s1 + "," + b.e1 + "," + b.s2 + "," + b.e2);      		
-	        		
-	        		
+	        	
 	        		GeneralPath gp = new GeneralPath();
-	        		int aMid1 = (a2 + a3)/2;
-	        		int aMid2 = (a4 + a1)/2;
-	        		int rCont = rBlock/5;
+	        		
 	        		gp.moveTo(circX(cX,rBlock,a1 + arc0),circY(cY,rBlock,a1 + arc0));
 	        		
 	        		Arc2D arc1 = new Arc2D.Double(cX - rBlock, cY - rBlock, 2*rBlock, 2*rBlock, a1 + arc0, a2 - a1, Arc2D.OPEN);
 	        		gp.append(arc1, true);
 	        		
-	        		//gp.quadTo(circX(cX,rCont,aMid1 + arc0), circY(cY,rCont,aMid1 + arc0),circX(cX,rBlock,a3 + arc0),circY(cY,rBlock,a3 + arc0));
 	        		gp.quadTo(circX(cX,0,a2 + arc0), circY(cY,0,a2 + arc0),circX(cX,rBlock,a3 + arc0),circY(cY,rBlock,a3 + arc0));
 
 	        		Arc2D arc2 = new Arc2D.Double(cX - rBlock, cY - rBlock, 2*rBlock, 2*rBlock, a3 + arc0, a4 - a3, Arc2D.OPEN);
 	        		gp.append(arc2, true);
 	        		
-	        		//gp.quadTo(circX(cX,rCont,aMid2 + arc0), circY(cY,rCont,aMid2 + arc0),circX(cX,rBlock,a1 + arc0),circY(cY,rBlock,a1 + arc0));
 	        		gp.quadTo(circX(cX,0,a4 + arc0), circY(cY,0,a4 + arc0),circX(cX,rBlock,a1 + arc0),circY(cY,rBlock,a1 + arc0));
 	       		
 	        		gp.closePath();

@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.Arrays;
 
-public /*abstract*/ class AbstractSequence { // mdb removed "abstract" 7/26/07 #134
+public /*abstract*/ class AbstractSequence { 
 	public static final byte DASH = '-';
 
 	public static final char PLUS       = '+';
@@ -19,7 +19,6 @@ public /*abstract*/ class AbstractSequence { // mdb removed "abstract" 7/26/07 #
 	private byte[] seq;
 	private int realLength;
 	private char strand;
-	//private String saveStr;// ASD added to handle new TextArea String // mdb removed 12/18/08
 
 	public AbstractSequence(String seq, char strand) {
 		this.seq = (seq == null ? new byte[0] : seq.toUpperCase().getBytes());
@@ -35,7 +34,6 @@ public /*abstract*/ class AbstractSequence { // mdb removed "abstract" 7/26/07 #
 		return new String(seq);
 	}
 	
-	// mdb added 12/18/08
 	public char charAt(int i) {
 		return (char)seq[i];
 	}
@@ -56,22 +54,16 @@ public /*abstract*/ class AbstractSequence { // mdb removed "abstract" 7/26/07 #
 		g.drawBytes(seq,0,seq.length,x,y);
 	}
 
-// mdb removed 12/18/08	
-//	// ASD added to handle new TextArea String
-//	public String bpStr () {
-//		return saveStr;
-//	}
-
 	public int getWidth(FontMetrics fm) {
 		return fm.bytesWidth(seq,0,seq.length);
 	}
 
-	public static void drawLines(/*QuerySequence*/AbstractSequence query, /*TargetSequence*/AbstractSequence target, Graphics g, int x, int y) { // mdb re-classed args 7/26/07 #134
+	public static void drawLines(AbstractSequence query, AbstractSequence target, Graphics g, int x, int y) { 
 		char lines[] = getLines(query,target);
 		g.drawChars(lines,0,lines.length,x,y);
 	}
 
-	public static String toString(/*QuerySequence*/AbstractSequence q, int queryStart, /*TargetSequence*/AbstractSequence t, int targetStart) { // mdb re-classed args 7/26/07 #134
+	public static String toString(AbstractSequence q, int queryStart, AbstractSequence t, int targetStart) { 
 		AbstractSequence query = (AbstractSequence)q;
 		AbstractSequence target = (AbstractSequence)t;
 		int padSpace = new Integer(targetStart+target.seq.length).toString().length()+1;
@@ -126,11 +118,11 @@ public /*abstract*/ class AbstractSequence { // mdb removed "abstract" 7/26/07 #
 		return r;
 	}
 
-	public static char[] getLines(/*QuerySequence*/AbstractSequence s1, /*TargetSequence*/AbstractSequence s2) { // mdb re-classed args 7/26/07 #134
+	public static char[] getLines(/*QuerySequence*/AbstractSequence s1, /*TargetSequence*/AbstractSequence s2) { 
 		return getLines(s1,s2,0,((AbstractSequence)s1).seq.length);
 	}
 
-	public static char[] getLines(/*QuerySequence*/AbstractSequence s1, /*TargetSequence*/AbstractSequence s2, int startIndex, int endIndex) { // mdb re-classed args 7/26/07 #134
+	public static char[] getLines(/*QuerySequence*/AbstractSequence s1, /*TargetSequence*/AbstractSequence s2, int startIndex, int endIndex) { 
 		char ret[] = new char[endIndex-startIndex];
 		final char SPACE = ' ';
 		final char LINE  = '|';
@@ -141,7 +133,7 @@ public /*abstract*/ class AbstractSequence { // mdb removed "abstract" 7/26/07 #
 		return ret;
 	}
 
-	public static double[] getQueryMisses(/*QuerySequence*/AbstractSequence query, /*TargetSequence*/AbstractSequence target) { // mdb re-classed args 7/26/07 #134
+	public static double[] getQueryMisses(/*QuerySequence*/AbstractSequence query, /*TargetSequence*/AbstractSequence target) { 
 		AbstractSequence qs = (AbstractSequence)query;
 		AbstractSequence ts = (AbstractSequence)target;
 
@@ -169,7 +161,7 @@ public /*abstract*/ class AbstractSequence { // mdb removed "abstract" 7/26/07 #
 	}
 
 
-	public static double[] getQueryInserts(/*QuerySequence*/AbstractSequence query, /*TargetSequence*/AbstractSequence target) { // mdb re-classed args 7/26/07
+	public static double[] getQueryInserts(AbstractSequence query, AbstractSequence target) { 
 		AbstractSequence qs = (AbstractSequence)query;
 		AbstractSequence ts = (AbstractSequence)target;
 
@@ -196,7 +188,7 @@ public /*abstract*/ class AbstractSequence { // mdb removed "abstract" 7/26/07 #
 		return ret;
 	}
 
-	public static double[] getQueryDeletes(/*QuerySequence*/AbstractSequence query, /*TargetSequence*/AbstractSequence target) { // mdb re-classed args 7/26/07 #134
+	public static double[] getQueryDeletes(AbstractSequence query, AbstractSequence target) { 
 		AbstractSequence qs = (AbstractSequence)query;
 		AbstractSequence ts = (AbstractSequence)target;
 

@@ -1,9 +1,4 @@
-/**
- *
- * First draft by marti@email.arizona.edu. 
- * Rewritten by Austin Shoemaker.
- *
- */
+
 package dotplot;
 
 import java.awt.Color;
@@ -34,7 +29,7 @@ import symap.frame.HelpBar;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Plot extends JPanel implements Observer, DotPlotConstants,
-											HelpListener // mdb added 7/6/09
+											HelpListener 
 {
 	private static final boolean DEBUG = false;
 	
@@ -203,10 +198,6 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 				}
 
 				if (r != null /*&& !viewIntersects(r)*/) {
-					// if r isn't in the view, try to center on r
-					//p = new Point(r.x+(r.width>>1),r.y+(r.height>>1));
-					//p = toFull(p);
-
 					scrollRectToVisible(r);
 				}
 			}
@@ -228,13 +219,11 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 		
 		Group[] xGroups = data.getVisibleGroups(X);
 		Group[] yGroups = data.getVisibleGroupsY(xGroups);
-//		Group.setScaleFactors(xGroups);
-//		Group.setScaleFactors(data.getVisibleGroupsY(xGroups));
 
 		Group.setOffsets(xGroups);
 		Group.setOffsets(yGroups);
 
-		int plotStartX = MARGIN; //(data.isZoomed() ? MARGIN : Math.max(MARGIN,maxYGrpName)); 
+		int plotStartX = MARGIN; 
 		
 		//draw base
 		g.setColor(BACKGROUND);
@@ -253,7 +242,7 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 					MARGIN / 2, MARGIN + dim.height, 
 					VERTICAL);
 		}
-		else { // mdb added 12/16/09 #205 #207
+		else { 
 			long offset = 0;
 			for (int i = 1;  i < data.getNumProjects();  i++) {
 				Project p = data.getProject(i);
@@ -362,14 +351,9 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 		for (Group grp : yGroups) {
 			int y1 = MARGIN + (int)(grp.getOffset() * yPixelPerBP );
 			int y2 = y1 + (int)((int)(grp.getSize() * grp.getScaleFactor())*yPixelPerBP) ;
-			//if (sumYGrpName > 800 || maxYGrpName > 40)
-			//{
+			
 				drawCentered(g, grp.getName(), MARGIN/2, y1, plotStartX, y2, HORIZONTAL);
-			//}
-			//else
-			//{
-			//	drawCentered(g, grp.getName(), MARGIN/2 + 25, y1, plotStartX, y2, VERTICAL);
-			//}
+			
 			if (grp != yGroups[yGroups.length-1]) g.drawLine(plotStartX, y2, dim.width + plotStartX, y2);
 		}
 	
@@ -390,10 +374,6 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 							int rwidth  = (int)((int)((ib.getEnd(X) - ib.getStart(X))) * xPixelPerBP * gX.getScaleFactor());
 							int rheight  = (int)((int)((ib.getEnd(Y) - ib.getStart(Y))) * yPixelPerBP * gY.getScaleFactor());
 							
-							//int rx      = (int)((x + ib.getStart(X)) * xPixelPerBP * gX.getScaleFactor());
-							//int ry      = (int)((y + ib.getStart(Y)) * yPixelPerBP * gY.getScaleFactor());
-							//int rwidth  = (int)((x + ib.getEnd(X)) * xPixelPerBP * gX.getScaleFactor()) - rx;
-							//int rheight = (int)((y + ib.getEnd(Y)) * yPixelPerBP * gY.getScaleFactor()) - ry;
 							g.setColor(getBlockColor(data,tile,0,(ABlock)ib,fd));
 							g.drawRect(rx+plotStartX, ry+MARGIN, rwidth, rheight);
 						}
@@ -560,15 +540,13 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 
 		//draw hits
 		int dotsize = dotSize();
-		double aspect = (double)getHeight()/(double)getWidth(); // mdb added 2/29/08 #149
+		double aspect = (double)getHeight()/(double)getWidth(); 
 		for (int i = hits.length-1; i >= 0; --i) {
 			if (hits[i] != null && ((!fd.isShowBlockHits() || hits[i].isBlock()) && !hits[i].isRepetitive()) || fd.isShowAllHits()) {
 				int t = hits[i].getType();
 				if (fd.getHide(t) || hits[i].getPctid() < fd.getPctid(t) || hits[i].getEvalue() > fd.getEvalue(t)) continue;
 				g.setColor(getHitColor(t,hits[i],fd));
 				
-				
-				// mdb added 2/29/08 #149 - draw hit as line or polygon -- BEGIN
 				int s = hits[i].getLength() / 2;
 				int x1 = (int)((hits[i].getCoord(X) - s)*xPixelPerBP)+MARGIN;
 				int y1 = (int)((hits[i].getCoord(Y) - Math.abs(s))*yPixelPerBP)+MARGIN;
@@ -576,7 +554,7 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 				int y2 = (int)((hits[i].getCoord(Y) + Math.abs(s))*yPixelPerBP)+MARGIN;
 				if (dotsize <= 1)
 					g.drawLine(x1,y1,x2,y2);
-				else { // mdb: works as intended, but could be improved // FIXME: moved into drawHit() like drawAll()
+				else { 
 					// Scale dot size
 					int[] x = new int[4];
 					int[] y = new int[4];
@@ -601,13 +579,13 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 					
 					g.fillPolygon(x, y, 4);
 				}
-				// mdb added 2/29/08 #149 - draw hit as line or polygon -- END
+				
 			}
 		}
 	}
 
 	private void drawCentered(Graphics g, String s, int x1, int y1, int x2, int y2, boolean orientation) {
-		if (s == null || s.length() <= 0) return; // mdb added 7/25/07
+		if (s == null || s.length() <= 0) return; 
 		
 		g.setFont(PROJ_FONT);
 		FontMetrics fm = g.getFontMetrics();
@@ -649,9 +627,9 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 				long bpY = (long)((y-MARGIN)/yPixelPerBP);
 
 				if (data.isZoomed()) {
-					Utilities.setCursorBusy(Plot.this, true);  // mdb added 1/14/09
+					Utilities.setCursorBusy(Plot.this, true);  
 					data.selectBlock(bpX, bpY);
-					Utilities.setCursorBusy(Plot.this, false); // mdb added 1/14/09
+					Utilities.setCursorBusy(Plot.this, false); 
 				}
 				else if (x >= MARGIN
 							&& x <= MARGIN+dim.width 

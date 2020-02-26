@@ -15,12 +15,9 @@ import java.util.List;
 public class Ruler {
 	private static final double TICK_TEXT_OFFSET = 5;
 
-	//public static final int HORIZONTAL = 0;
-	//public static final int VERTICAL   = 1;
-
 	private Dimension2D rDim, lDim, tDim;
 	private double tickSpace;
-	//private int orientation;
+
 	private double lineThickness;
 	private int start, end;
 	private boolean tickText;
@@ -28,8 +25,6 @@ public class Ruler {
 	private ArrowLine arrowLine = new ArrowLine();
 	private Rectangle2D.Double bounds = new Rectangle2D.Double();
 	private double[] points = new double[0];
-
-	//public Ruler() { }
 
 	public Ruler(Dimension2D lArrowDim, Dimension2D rArrowDim, Dimension2D tickDim,
 			boolean showTickText, double tickSpace, double lineThickness) { //, int orientation) {
@@ -118,7 +113,7 @@ public class Ruler {
 		bounds.width = Math.abs(start-end)/unitsPerPixel;
 		bounds.height = getHeight(Math.max(start,end),tickFontMetrics);
 		
-		// mdb added 12/29/08 - ensure minimum size
+		
 		if (bounds.width < 300)
 			bounds.width = 300;
 
@@ -137,16 +132,6 @@ public class Ruler {
 		return bounds;
 	}
 
-	//public Dimension2D getLeftArrowDimension() {  return lDim; }
-	//public Dimension2D getRightArrowDimension() { return rDim; }
-	//public Dimension2D getTickDimension2D() {     return tDim; }
-	//public boolean showTickText() {               return tickText; }
-	//public double getTickSpace() {                return tickSpace; }
-	//public double getLineThickness() {            return lineThickness; }
-	//public int getOrientation() {                 return orientation; }
-	//public int getStart() {                       return start; }
-	//public int getEnd() {                         return end; }
-
 	protected void setRuler(int start, int end, Dimension2D lDim, Dimension2D rDim, Dimension2D tDim,
 			boolean tickText, double tickSpace, double lineThickness) { //, int orientation) {
 		this.start = start;
@@ -157,18 +142,7 @@ public class Ruler {
 		this.tickText = tickText;
 		this.tickSpace = tickSpace;
 		this.lineThickness = lineThickness;
-		//this.orientation = orientation;
 	}
-
-	//protected void setLeftArrowDimension(Dimension2D dim) 	{ lDim = dim; }
-	//protected void setRightArrowDimension(Dimension2D dim) 	{ rDim = dim; }
-	//protected void setTickDimension(Dimension2D dim) 		{ tDim = dim; }
-	//protected void setTickText(boolean show) 				{ tickText = show; }
-	//protected void setTickSpace(double space) 				{ tickSpace = space; }
-	//protected void setOrientation(int orient) { orientation = orient;
-	//protected void setLineThickness(double thickness) { lineThickness = thickness; }
-	//protected void setStart(int s) 	{ start = s; }
-	//protected void setEnd(int e) 	{ end = e; }
 
 	private double getHeight(int maxNumber, FontMetrics fm) {
 		double maxLineHeight = getLineHeight();

@@ -3,13 +3,12 @@
 <h2>Alignment & Synteny Parameters</h2>
 
 <div style="width:500px">
-These parameters apply to the alignment, anchor filtering/loading, 
-and synteny computation for a pair of projects. 
+These parameters apply to the alignment, anchor processing, 
+and synteny computation (AAS) for a pair of projects. The rules for saving
+and using parameters are a bit complex, as described in the last section;
+typically, the defaults will work fine.
 <p>
-If you want to re-use parameters from a previous pair, first close
-the Parameters window, then select the project
-pair in the "Available Syntenies" table, and then re-open
-the Parameters window and use the "Load Previous" button. 
+The arguments for BLAT and MUMmer are <b>NOT</b> checked for correctness.
 </div>
 <p>
 <table border='1' cellpadding='5' rules=all >
@@ -171,11 +170,57 @@ the Parameters window and use the "Load Previous" button.
 		&nbsp;
 	</td>
 </tr>
+<tr>
+	<td align="left" valign="top">
+		Self Args
+	</td>
+	<td align="left"  valign="top" width="350" >
+		When aligning a chromosome to itself**
+	</td>
+	<td align="left"  valign="top" >
+		Align
+	</td>
+	<td align="left"  valign="top" width="250" >
+		&nbsp;
+	</td>
+</tr>
 </table>
 <p>
 <div style="width:500px">
-* Note that, by default, PROmer is used for alignments between different
+* By default, PROmer is used for alignments between different
 projects, while NUCmer is used for self alignments.
+<br>** When self-alignment is performed, standard arguments are used
+when comparing different chromosomes. However, additional arguments may be desired 
+when a chromosome sequence is run against itself, e.g. --nosimplify or --maxmatch,
+though the latter can take a very long time.
+
+<h3>Rules for saving parameters</h3>
+Setting parameters:
+<ul>
+<li><i>Selected Pair Parameters</i>: If a project pair is selected from the matrix, then the parameters changed
+followed by "Save", the parameters will be saved to the database. 
+<li><i>Global Pair Parameters</i>: If no project pair is selected in the matrix, 
+then the parameters are changed followed by "Save", these parameters will be
+applied to all project pairs that DO NOT have previously saved parameters, or
+with the "Globals" button. Global parameters are only restained for the session.
+<li>Otherwise, default parameters will be used.
+</ul> 
+Storage of parameters:
+<ul>
+<li>To see the project pair parameters, select the pair followed by "Parameter",
+which will show:
+<ol>
+<li>If parameters are stored in the database for the pair, they will be shown.
+<li>If no parameters are stored in the database for the pair, the Global parameters
+will be shown. 
+</ol>
+<li>A "Remove project from database", "Reload project"
+or "Clear pair" clears the pair parameters from the database.
+<li>If the parameters are changed after AAS is run, and AAS is not re-run, then
+the parameters in the database will NOT correctly reflect what was used for the Pair's
+AAS computation. 
+</ul>
+
 </div>
 </body>
 </html>

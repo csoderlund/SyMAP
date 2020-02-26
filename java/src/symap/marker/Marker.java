@@ -23,7 +23,6 @@ import symap.track.Track;
  * A Marker object contains the markers text and lines (short segment and long segment)
  * and all of the coorisponding data.
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see FilteredComponent
  * @see SyMAPConstants
  */

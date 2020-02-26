@@ -6,7 +6,6 @@ import java.util.Comparator;
 /**
  * Class <code>HitData</code> holds the data of a hit.
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 public abstract class HitData {	
 	private static final boolean DEBUG = false;
@@ -75,9 +74,9 @@ public abstract class HitData {
 		this(id,name,strand,repetitive,block,evalue,pctid,start2,end2,"","", overlap);
 		this.start1 = start1;
 		this.end1 = end1;
-		this.overlap = overlap;		// mdb added overlap 2/19/08 #150
-		this.query_seq = query_seq; // mdb added 4/17/09 #126 - draw hit ribbon
-		this.target_seq = target_seq;// mdb added 4/17/09 #126 - draw hit ribbon
+		this.overlap = overlap;		
+		this.query_seq = query_seq; 
+		this.target_seq = target_seq;
 	}
 
 	public String toString() 	{ return name; }
@@ -130,14 +129,6 @@ public abstract class HitData {
 		return (obj instanceof HitData && ((HitData)obj).id == id);
 	}
 
-// mdb unused 12/4/09	
-//	public static Comparator<HitData> getIDComparator() {
-//		return new Comparator<HitData>() {
-//			public int compare(HitData hd1, HitData hd2) {
-//				return (int)(hd1.id - hd2.id);
-//			}		
-//		};
-//	}
 
 	public static Comparator<HitData> getPseudoPositionComparator() {
 		return new Comparator<HitData>() {

@@ -47,7 +47,7 @@ public class DotPlotFrame extends JFrame {
 		
 		if (projIDs != null) {
 			data.initialize(projIDs, xGroupIDs, yGroupIDs);
-			controls.setProjects( data.getProjects() ); // mdb added 2/1/10 #210
+			controls.setProjects( data.getProjects() ); 
 		}
 		
 		if (projIDs == null || !hasReferenceSelector)

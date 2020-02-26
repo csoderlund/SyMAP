@@ -5,7 +5,6 @@ public class Exon implements Comparable<Exon> {
 	private int end;
 
 	public Exon(int start, int end) {
-		// mdb added 12/15/08
 		if (start > end) {
 			int temp = start;
 			start = end;

@@ -87,7 +87,7 @@ public class SyMAPQueryApplet extends JApplet {
 			e.printStackTrace();
 		}
 	}
-	// mdb added 12/31/09 #208
+	
 	public void fit() { // called from javascript
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
@@ -100,10 +100,6 @@ public class SyMAPQueryApplet extends JApplet {
 		if (symapQ != null) {
 			symapQ.build();
 			
-			// mdb added 12/31/09 #208
-			//setContentPane(symapQ.getContentPane());
-			
-			//validate(); // needed to make visible
 			symapQ.toFront();
 			symapQ.setVisible(true);
 		}

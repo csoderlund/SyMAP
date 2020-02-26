@@ -6,7 +6,6 @@ import java.util.Comparator;
  * Class <code>MarkerDataPositionComparator</code> is a MarkerData comparator
  * that orders by position.
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Comparator
  */
 public class MarkerDataPositionComparator implements Comparator<MarkerData> {

@@ -6,14 +6,12 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
 
-//public class FPCFPCData extends AbstractFPCFPCHits { // mdb removed 7/25/07 #134
-public class FPCFPCData extends AbstractHitData { // mdb added 7/25/07 #134
+public class FPCFPCData extends AbstractHitData { 
 	private FPHitData fphd[];
 	private String markerBlockHits[];
 
 	public FPCFPCData(int p1, int c1, int p2, int c2) {
-		//super(p1,c1,p2,c2); // mdb removed 7/25/07 #134
-		super(p1,c1,p2,c2,Mapper.FPC2FPC,false); // mdb added 7/25/07 #134
+		super(p1,c1,p2,c2,Mapper.FPC2FPC,false); 
 		fphd = null;
 		markerBlockHits = null;
 	}
@@ -56,7 +54,7 @@ public class FPCFPCData extends AbstractHitData { // mdb added 7/25/07 #134
 			markerBlockHits = new String[blockHitMarkers.size()];
 			Iterator<String> iter = blockHitMarkers.iterator();
 			for (int i = 0; i < markerBlockHits.length; i++)
-				markerBlockHits[i] = (iter.next());//.intern(); // mdb removed intern() 2/2/10 - can cause memory leaks in this case
+				markerBlockHits[i] = (iter.next());
 			Arrays.sort(markerBlockHits);
 		}
 		else markerBlockHits = new String[0];
@@ -93,14 +91,9 @@ public class FPCFPCData extends AbstractHitData { // mdb added 7/25/07 #134
 		private byte repetitive;
 		private byte block;
 
-		//private FPHitData(String clone1, String clone2) {
-			//    this.clone1 = clone1.intern();
-		//    this.clone2 = clone2.intern();
-		//}
-
 		public FPHitData(String clone1, String clone2, int pos1, int pos2, double score, boolean repetitive, boolean block) {
-			this.clone1 = clone1;//.intern(); // mdb removed intern() 2/2/10 - can cause memory leaks in this case
-			this.clone2 = clone2;//.intern(); // mdb removed intern() 2/2/10 - can cause memory leaks in this case
+			this.clone1 = clone1;
+			this.clone2 = clone2;
 			this.pos1 = pos1;
 			this.pos2 = pos2;
 			this.score = score;

@@ -6,8 +6,6 @@ import java.util.Vector;
 /**
  * Class <code>History</code> stores a history list
  * with a current pointer.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 public class History {
 

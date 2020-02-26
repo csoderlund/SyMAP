@@ -4,7 +4,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileNotFoundException;
 
 // Yet another fasta parse class....
@@ -26,7 +25,7 @@ public class FASTAParse
 		mpEmpty = Pattern.compile("\\s*");	
 		mpSpace = Pattern.compile("\\s+");	
 		
-		mBR = new BufferedReader( new FileReader(mFile));
+		mBR = Utils.openGZIP(f.getAbsolutePath()); // CAS500
 	}
 	
 	public boolean nextSeq(FASTASequence seq) throws Exception

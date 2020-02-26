@@ -4,8 +4,6 @@ import javax.swing.AbstractButton;
 
 /**
  * Interface for objects holding the filter button
- * 
- * @author Austin Shoemaker
  */
 public interface Filtered {
     

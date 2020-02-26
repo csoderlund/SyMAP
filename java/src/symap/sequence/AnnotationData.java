@@ -2,16 +2,13 @@ package symap.sequence;
 
 /**
  * Class <code>AnnotationData</code> holds that data needed to recreate an Annotation
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Annotation
  */
 public class AnnotationData {	
 	private String name;
 	private String type;
-	private /*long*/int start, end; // mdb changed 1/8/09 - changed type to int to match database
-	//private String text; // mdb removed 1/8/09
-	private String strand; // mdb added 1/8/09 for pseudo-pseudo closeup
+	private /*long*/int start, end; 
+	private String strand; 
 
 	/**
 	 * Creates a new <code>AnnotationData</code> instance.
@@ -28,8 +25,7 @@ public class AnnotationData {
 		this.type = type.intern();
 		this.start = start;
 		this.end = end;
-		//this.text = text; 			// mdb removed 1/8/09
-		this.strand = strand.intern(); 	// mdb added 1/8/09
+		this.strand = strand.intern(); 	
 	}
 
 	/**

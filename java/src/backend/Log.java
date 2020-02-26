@@ -1,10 +1,13 @@
 package backend;
 
+/********************************************
+ * used by backend.ProgSpec.doAlignment() only writes to file
+ */
 import java.io.FileWriter;
 import java.io.IOException;
 
+import util.ErrorReport;
 import util.Logger;
-
 
 public class Log implements Logger
 {
@@ -29,20 +32,19 @@ public class Log implements Logger
 				logFile.flush();
 			}
 			catch(Exception e) {
-				e.printStackTrace();
+				ErrorReport.print(e, "Cannot write to log file");
 			}		
 		}
 	}
 	public void msgToFile(String s)
 	{
-		
 		if (logFile != null) {
 			try {
 				logFile.write(s + "\n");		
 				logFile.flush();
 			}
 			catch(Exception e) {
-				e.printStackTrace();
+				ErrorReport.print(e, "Cannot write to log file");
 			}		
 		}
 	}	

@@ -18,15 +18,15 @@ import symap.contig.Clone;
 import symap.contig.Contig;
 import symap.block.Block;
 
-//public class FPCFPCHits extends AbstractFPCFPCHits implements Hits, SyMAPConstants { // mdb removed 7/10/09 #134
-public class FPCFPCHits extends AbstractHitData implements Hits, SyMAPConstants { // mdb added 7/10/09 #134
+
+public class FPCFPCHits extends AbstractHitData implements Hits, SyMAPConstants { 
 	private Mapper mapper;
 	private MarkerTrack mt1, mt2;
 	private FPHit[] fpHits;
 	private SharedMarkerHit[] mrkHits;
 
 	public FPCFPCHits(int p1, int c1, int p2, int c2) {
-		super(p1,c1,p2,c2,Mapper.FPC2FPC,false); // mdb changed 7/10/09 #134
+		super(p1,c1,p2,c2,Mapper.FPC2FPC,false); 
 		fpHits = null;
 		mrkHits = null;
 	}
@@ -189,7 +189,7 @@ public class FPCFPCHits extends AbstractHitData implements Hits, SyMAPConstants 
 				mrkHits[i].mouseMoved(e);
 	}
 	
-	public void mouseExited(MouseEvent e) { } // mdb added 3/1/07 #100
+	public void mouseExited(MouseEvent e) { } 
 
 	class FPHit implements Hit {
 		private FPCFPCData.FPHitData data;

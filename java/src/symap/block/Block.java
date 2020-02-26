@@ -34,14 +34,11 @@ import util.Utilities;
 
 /**
  * The Block view track.
- * 
- * @author Austin Shoemaker
  */
 public class Block extends MarkerTrack {
 	private static final double SMALL_OFFSET = 4;
 
 	public static final int MAX_BLOCKS_ALLOWED;
-	//public static Vector bgcolors; // mdb removed 6/25/09 - moved to Track
 	private static Color border;
 	private static Color footerColor;
 	private static Font footerFont;
@@ -60,7 +57,6 @@ public class Block extends MarkerTrack {
 	private static Point2D titleOffset;
 	static {
 		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/block.properties"));
-		//bgcolors = props.getColors("bgcolors"); // mdb removed 6/25/09
 		border = props.getColor("border");
 		footerColor = props.getColor("footerColor");
 		footerFont = props.getFont("footerFont");
@@ -113,7 +109,7 @@ public class Block extends MarkerTrack {
 		}
 	}
 	
-	// mdb added 7/13/09 - fix for 3D to show FPC chr in 2D view
+	// fix for 3D to show FPC chr in 2D view
 	public void setBlock(String block) {
 		this.block = block;
 	}
@@ -212,7 +208,7 @@ public class Block extends MarkerTrack {
 
 	public void clearData() {
 		super.clearData();
-		innerBlockList.removeAllElements();//.clear(); // mdb changed 2/3/10
+		innerBlockList.removeAllElements();
 	}
 
 	/**
@@ -341,14 +337,12 @@ public class Block extends MarkerTrack {
 		}
 
 		if (preSize != contigList.size()) {
-			//if (drawingPanel != null) drawingPanel.displayWarning("Not all contigs were able to be shown in the view."); // mdb removed 5/25/07 #119
-			Utilities.showWarningMessage("Not all contigs were able to be shown in the view."); // mdb added 5/25/07 #119
+			
+			Utilities.showWarningMessage("Not all contigs were able to be shown in the view."); 
 			contigSetText = getContigs(contigList);
 		}
 
 		setInit();
-
-		//if (SyMAP.DEBUG) System.out.println("Block::init() returning after initialization");
 
 		return true;
 	}
@@ -357,13 +351,10 @@ public class Block extends MarkerTrack {
 		if (hasBuilt()) return true;
 		if (!hasInit()) return false;
 
-		//if (SyMAP.DEBUG) System.out.println("In Block build");
-
 		if (width == NO_VALUE) width = defaultWidth;
 
 		long sum;
 		double recty, precty, m2cSpace, pixelDif, rectheight;
-		//int i;
 		FontRenderContext frc = getFontRenderContext();
 		Rectangle2D fb, mRect;
 
@@ -392,9 +383,8 @@ public class Block extends MarkerTrack {
 		}
 
 		if (!validSize() && drawingPanel != null) {
-			//if (drawingPanel != null) drawingPanel.displayWarning("Unable to size block view as requested."); // mdb removed 5/25/07 #119
-			//Utilities.showWarningMessage("Unable to size block view as requested."); // mdb added 5/25/07 #119 // mdb removed 6/21/07
-			System.err.println("Unable to size block view as requested."); // mdb added 6/21/07
+			
+			System.err.println("Unable to size block view as requested."); 
 			adjustSize();
 		}
 
@@ -645,25 +635,22 @@ public class Block extends MarkerTrack {
 	 */
 	public String getHelpText(MouseEvent event) {
 		Point point = event.getPoint();
-		String pretext = "Block Track (" + getTitle() + "):  "; // mdb added 3/30/07 #112
+		String pretext = "Block Track (" + getTitle() + "):  "; 
 		if (rect.contains(point)) {
-			// mdb added 3/19/07 #105 - BEGIN
 			for (InnerBlock ib : innerBlockList) {
 				if (ib.contains(point) && ib.getGroupList() != null)
 					return pretext
 						+(ib.getGroupList().equals("") ? "" :
-								"Contig "+ib.getContig()+" hits "+ib.getGroupList()+".  ") // mdb:  need to fix this for FPC-to-FPC
-						+ "Left-click for detailed view, right-click for menu."; // mdb changed 3/30/07 #112
+								"Contig "+ib.getContig()+" hits "+ib.getGroupList()+".  ") 
+						+ "Left-click for detailed view, right-click for menu."; 
 			}
-			// mdb added 3/19/07 #105 - END
 			return "Left-click on a contig to view it in detail, right-click for menu.";
 		}
 		else if (markerList.contains(point)) {
-			return pretext+super.getHelpText(event); // mdb changed 3/30/07 #112
+			return pretext+super.getHelpText(event); 
 		}
 		else {
-			//return "Shift+Drag to move, Control+Drag to select blocks, or Drag the bottom of the block to resize."; // mdb removed 3/27/07 #112
-			return pretext+ "Right-click for menu."; // mdb added 3/30/07 #112
+			return pretext+ "Right-click for menu."; 
 		}
 	}
 
@@ -679,8 +666,6 @@ public class Block extends MarkerTrack {
 		
 		Point p = e.getPoint();
 		if (rect.contains(p)) {
-			//Cursor c = getCursor();
-			//if (c != null && c.getType() == Cursor.HAND_CURSOR) { // mdb removed 6/22/09 for mouse function selector
 				for (InnerBlock ib : innerBlockList) {
 					if (ib.isVisible() && ib.contains(p)) {
 						setCursor(null);
@@ -688,7 +673,6 @@ public class Block extends MarkerTrack {
 						break;
 					}
 				}
-			//}
 		}
 		else {
 			Marker marker = markerList.getMarker(p);
@@ -698,33 +682,8 @@ public class Block extends MarkerTrack {
 	}
 
 
-	/**
-	 * If the cursor is null, the hand cursor, or the default cursor: If the
-	 * cursor is over a block it is changed to the hand If the cursor is not
-	 * over the blocks it is checked if it is over the markers and each marker
-	 * is checked to see if it is being hovered over, if so, it's hit is
-	 * highlighted.
-	 * 
-	 * @param e		a <code>MouseEvent</code> value
-	 */
 	public void mouseMoved(MouseEvent e) {
 		super.mouseMoved(e);
-// mdb removed 6/25/09		
-//		Cursor cursor = getCursor();
-//		if (cursor == null 
-//			|| cursor.getType() == Cursor.HAND_CURSOR 
-//			|| cursor.getType() == Cursor.DEFAULT_CURSOR) 
-//		{
-//			Point p = e.getPoint();
-//			if (rect.contains(p))
-//				setCursor(HAND_CURSOR);
-//			else {
-//				setCursor(null);
-//				Marker marker = markerList.setHover(p);
-//				if (drawingPanel != null && marker != null)
-//					drawingPanel.setHoveredMarker(marker,marker.isHover());
-//			}
-//		}
 	}
 
 	/**
@@ -815,7 +774,7 @@ public class Block extends MarkerTrack {
 		private Color color;
 		private Rectangle2D.Double rect;
 		private boolean show;
-		private String groupList; // mdb added 3/19/07 #105
+		private String groupList; 
 
 		public InnerBlock(int contig, GenomicsNumber size, String groupList) {
 			this.contig = contig;
@@ -824,7 +783,7 @@ public class Block extends MarkerTrack {
 			rect = new Rectangle2D.Double();
 			markers = new Vector<Marker>();
 			show = true;
-			this.groupList = groupList; // mdb added 3/19/07 #105
+			this.groupList = groupList; 
 		}
 
 		public boolean isInsideOf(double pixel) {
@@ -884,7 +843,7 @@ public class Block extends MarkerTrack {
 			return contig;
 		}
 				
-		public String getGroupList() { // mdb added 3/19/07 #105
+		public String getGroupList() { 
 			return groupList;
 		}
 

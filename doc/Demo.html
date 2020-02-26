@@ -1,0 +1,250 @@
+<html>
+<head>
+	<title>SyMAP Demo</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<style>
+a.wt {color:inherit;}
+table {font-size:100%}
+tr {font-size:100%}
+td {font-size:100%}
+tt {font-size:13px}
+pre {font-size:13px}
+a {font-size:100%}
+.hang {text-indent:-20px; margin-left:20px;}
+	</style>
+</head>
+<body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
+<!--#include virtual="/common/uaheader.html" -->
+
+<a name=top></a>	
+	
+<table align="center" style="border: 1px solid #999999" cellspacing="0" cellpadding="0">
+<tr>
+	<td>
+	<table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
+	<tr>
+    	<td height="60" width="161" align="left" valign="bottom">
+       		<img alt="" title="" src="./img/agcol_logo.png">
+    	</td>
+		<td height="60" width="428" align="left" valign="bottom" style="padding:0px 0px 10px 30px" size=5>
+			<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
+				<b>SyMAP Demo Query</b>
+			</font>
+		</td>
+		<td height="60" width="161" align="center" valign="bottom">&nbsp;
+    	</td>
+	</tr>
+	<tr>
+		<td height="21" colspan="3" align="left" valign="top">
+		<table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
+		<tr>
+		<td align="left" bgcolor="#666666">
+		<span style="font-size:75%;color:white">
+			<a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
+			<a href=../index.html class="wt">SyMAP Home</a> |
+			<a href=SystemGuide.html class="wt">System Guide</a> |
+			<a href=UserGuide.html class="wt">User Guide</a> |
+			<a href=Tour.html class="wt">Tour</a> |
+			<a href=TroubleShoot.html class="wt">Troubleshooting </a>
+		</span>
+		</td>
+	</tr>
+	</table>
+	</td>
+</tr>
+<tr>
+    <td colspan="3" valign="top" align="left" style='padding:20px 15px 0px 15px;font-size:85%'>
+
+<h2>Querying the Demo</h4>
+<h5>Contents:</h5>
+<ul>
+<li><a href=#reg>Demo-seq to Demo-seq2</a>
+<li><a href=#3d>3D view</a>
+<li><a href=#draft>Demo-draft to Demo-seq2</a>
+</ul>
+
+<a nam=#reg>
+<h3>SyMAP Demo-seq to Demo-seq2</h3>
+<table>
+<tr>
+	<td align="left" valign="top">
+	This document shows the different views for the Demo-seq to Demo-seq2 su	
+When synteny has been computed for the demo, the table will have a checkbox, signifying that 
+the synteny is available for viewing. Click the cell
+again which will enable the viewing buttons, e.g "Dot Plot".  
+	</td>
+	<td align="left" valign="middle">
+<a href="img/projman5.png"><img src="img/projman5.png" width=400 border=1></a>
+	</td>
+</tr>
+
+<tr><td colspan=2 height=40>&nbsp;</td></tr>
+<tr>
+	<td align="left" valign="top">
+Click "Dot Plot" and you will see the dot plot shown
+here. By clicking and/or selecting regions you can
+zoom into certain regions and bring up detailed views
+of the alignments. The Help button (question mark) 
+provides full information on the functions.
+	</td>
+	<td align="left" valign="middle">
+<a href="img/demo_dotplot.png"><img src="img/demo_dotplot.png" width=400 border=1></a>
+	</td>
+</tr>
+<tr><td colspan=2 height=40>&nbsp;</td></tr>
+
+
+<tr>
+	<td align="left" valign="top">
+Return to the Manager, and click the "Chromosome Explorer"
+button. This brings up the Explorer, shown at right. 
+<p>
+Here you can pick different
+sets of chromosomes, using the small icons at left, and see them in different views.
+At first you only see the reference chromosome, which is initially chr3 from Demo-Seq
+(the reference has a red box around its number). 
+<p>
+Click on the icons for Demo-Seq2 chr1 and chr3, to see the Circos-style<sup>3</sup> view 
+shown on the right.
+The ribbons represent synteny blocks. 
+	</td>
+	<td align="left" valign="middle">
+<a href="img/democirc.png"><img src="img/democirc.png" width=400 border=1></a>
+	</td>
+</tr>
+<tr><td colspan=2 height=40>&nbsp;</td></tr>
+
+
+
+				<tr>
+					<td align="left" valign="top">
+Click the 2D button to see a side-by-side view of
+ the same chromosomes. Note that the reference is in the middle. 
+Brown lines show the individual anchors.
+					</td>
+					<td align="left" valign="middle">
+<a href="img/demo2d.png"><img src="img/demo2d.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				
+				<tr>
+					<td align="left" valign="top">
+Selecting a region on one of the sequence tracks using the
+mouse zooms to that region.
+<p>
+Now the annotation icons (blue) for individual genes can be seen
+in the center of each sequence track. 
+<p>
+If you zoom in even closer, then you can click the "Sequence Filter"
+button and the top of a sequence track (or right click in the sequence), 
+and check "Show Descriptions
+for Annotations", and you will see the annotation text 
+for each gene. 
+					</td>
+					<td align="left" valign="middle">
+<a href="img/demo2dzoom.png"><img src="img/demo2dzoom.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				
+				<tr>
+					<td align="left" valign="top">
+Returning to the Manager, click the "SyMAP Queries" button. This brings up 
+the SyMAP Query window in Overview mode. Click the "Query Setup" option
+on the left-hand side and you will see the Query Setup window:
+<p>
+The query does two basic things:
+<br>
+A. Locate syntenic regions based on annotation
+<br>
+B. Create putative gene families across the 
+species by grouping the genes (or regions) which
+are connected by anchors. 
+<p>
+Enter "glycosyl" for the "Annotation String Search" and press "Do Search".
+					</td>
+					<td align="left" valign="middle">
+<a href="img/demoquery.png"><img src="img/demoquery.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+				<tr>
+					<td align="left" valign="top">
+
+<p>
+55 results are returned. Click the "PgFSize" column header to sort by
+this column, giving the table at right:
+<p>
+Each row is an anchor connecting two of the chromosomes. 
+At the top of the table are 7 anchors grouped into a putative
+family (PgeneF=25 in the image, but it may
+be numbered differently when you run it). 
+<p>
+The rows with a non-empty "BlockNum" 
+are anchors involved in synteny blocks. You could restrict the query
+to only these anchors, if desired. Synteny anchors are more likely
+to represent a true ancestral relationship; however, synteny blocks
+can not always be detected in sparser regions. 
+<p>
+If you query with more than two species, you can ask interesting
+questions such as "show me the glycosyl-related gene families which
+are present in species A and B but not in species C".  
+					</td>
+					<td align="left" valign="middle">
+<a href="img/demoqueryres.png"><img src="img/demoqueryres.png" width=400 border=1></a>
+					</td>
+				</tr>
+				<tr><td colspan=2 height=40>&nbsp;</td></tr>
+	
+</table>
+
+<a name="3d"></a>	
+<h3>3D view </h3>
+If you have the Java 3D libraries installed, then you can run "symap3D" instead of
+	"symap". 
+<table>		
+	<tr>
+	<td align="left" valign="top">
+	When the "Chromosome Explorer" is shown, 
+click on the icons for Demo-Seq2 chr1 and chr3. The 3D view will be the
+default view as shown on the right. 
+The ribbons represent synteny blocks (green for inverted). 
+<p>
+Everything runs without the 3D libraries except for this display.
+	</td>
+	<td align="left" valign="middle">
+<a href="img/demo3d.png"><img src="img/demo3d.png" width=400 border=1></a>
+	</td>
+	</tr>
+</table>
+
+<a name="draft">
+<h3>Demo-draft to Demo-seq</h3>
+<table>
+<tr> <td align="left" valign="top">
+The demo_draft scaffold were created from the demo_seq chromosomes.
+After running the demo-draft against the demo-seq,
+view the dot plot; the ordering is exact since demo_draft was derived
+from demo_seq. 
+	</td>
+	<td align="left" valign="middle">
+<a href="img/demodraft2.png"><img src="img/demodraft2.png" width=400 border=1></a>
+	</td>
+</tr>		
+</table>	
+<p><a href=#top>Go to top</a>
+			    
+          	    <table width="100%" border="0" align="center" cellpadding=2 cellspacing=0 style="margin-top:40px">
+            	    <tr>
+              		    <td bgcolor="#DDDDDD" align="center">
+               		    <font face="Verdana, Arial, Helvetica, sans-serif" size="2">Email
+               		    Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></font>
+					    </td>
+            	    </tr>
+              </table>
+		    </td>
+	    </tr>
+	</table>
+</BODY>
+</HTML>

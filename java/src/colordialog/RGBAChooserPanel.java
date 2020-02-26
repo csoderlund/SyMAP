@@ -27,7 +27,6 @@ import javax.swing.event.ChangeListener;
  * Class <code>RGBAChooserPanel</code> is based of of the DefaultRGBChooserPanel with
  * an added slider and spinner for the alpha value (optional).
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see AbstractColorChooserPanel
  * @see ChangeListener
  */

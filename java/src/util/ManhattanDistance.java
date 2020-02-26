@@ -4,8 +4,6 @@ package util;
  * Class <code>ManhattanDistance</code> function implementation.
  *
  * |x2 - x1| + |y2 - y1|
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Distance2D
  */
 public class ManhattanDistance extends Distance2D {

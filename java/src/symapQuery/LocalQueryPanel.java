@@ -24,48 +24,6 @@ import backend.Utils;
 
 public class LocalQueryPanel extends JPanel {
 	private static final long serialVersionUID = 2804096298674364175L;
-	
-	private static final String [] HELP_COL = {
-		"General","","",
-		"","","","","","","","","",
-		"1. Annotation String search:", 
-		"2. Include/Exclude",
-		"3. Only synteny hits",
-		"4. Show only hits to","  included species", 
-		"5. Show orhpan genes","",
-		"6. Show only hits in a ","   collinear gene pair",
-		"7. Show only groups having","   no annotation to","   included species",
-		"8. Require complete interlinking","   of included species",
-	};
-	
-	private static final String [] HELP_VAL = {
-		"The query returns hits (anchors) between genomes.",
-		"The hits are grouped into cross-species groups  ",
-		"based on sequence overlap.",
-		"Filters 1,3,6 filter the hits before grouping.",
-		"Filter 4 filters hits after grouping, i.e. groups",
-		"are built, but not all their hits are shown.",
-		"Filters 2,7,8 filter groups as a whole, i.e. no",
-		"hits in the group are shown if group does not pass.",
-		"Filter 5 causes single-species annotations to be shown",
-		"in addition to hits.",
-		"",
-		"Filters:",
-		"Only use hits annotated with the given keyword",
-		"Only show groups that include/do not include this species",
-		"Only use hits which are in synteny blocks",
-		"Only show hits involving at least one of the included",
-		"   species (note that groups are formed before this filter)",
-		"Show annotations which do not overlap a hit in the result",
-		"   list. Keyword filter is applied to annotations" ,
-		"Only use hits which are part of a collinear set of ",
-		"   two or more homologous genes",
-		"Only show groups for which no hit has an annotation",
-		"   to an included species",
-		"",
-		"Only show groups for which all included species pairs are",
-		"   linked by hits",
-	};
 
 	public LocalQueryPanel(SyMAPQueryFrame parentFrame) {
 		theParentFrame = parentFrame;
@@ -114,7 +72,6 @@ public class LocalQueryPanel extends JPanel {
 		//Species selection
 		int numSpecies = speciesPanel.getNumSpecies();
 		if(numSpecies > 0) {
-//			retVal = combineBool(retVal, getRefGroupQuery(), true);
 			retVal = combineBool(retVal, getAnnoLocalFilter(), true);
 			if (isNonself()) retVal = combineBool(retVal, " PH.proj1_idx != PH.proj2_idx ", true);
 			retVal = combineBool(retVal, getPairGroupQuery(), true);
@@ -127,7 +84,6 @@ public class LocalQueryPanel extends JPanel {
 		//Species selection
 		int numSpecies = speciesPanel.getNumSpecies();
 		if(numSpecies > 0) {
-//			retVal = combineBool(retVal, getRefGroupQuery(), true);
 			retVal = combineBool(retVal, getAnnoLocalFilter(), true);
 			retVal = combineBool(retVal, getAnnotGroupQueryAll(), true);
 		}
@@ -139,9 +95,6 @@ public class LocalQueryPanel extends JPanel {
 		//Species selection
 		int numSpecies = speciesPanel.getNumSpecies();
 		if(numSpecies > 0) {
-//			temp = getRefGroupQuerySummary();
-//			if(temp.length() > 0)
-//				retVal += "[" + temp + "]";
 			temp = getAnnoLocalFilterSummary();
 			if(temp.length() > 0)
 				retVal += "[" + temp + "]";
@@ -160,7 +113,7 @@ public class LocalQueryPanel extends JPanel {
 	public boolean isUnannot() { return chkUnannot.isSelected(); }
 	public boolean isOnlyIncluded() { return chkIncludeOnly.isSelected(); }
 	public boolean isOrphan() { return chkOrphan.isSelected(); }
-	public boolean isNonself() { return true; } //chkNonself.isSelected(); }
+	public boolean isNonself() { return true; } 
 	
 	private String getAnnoLocalFilter() {
 		return getAnnotationNameFilter();
@@ -181,47 +134,12 @@ public class LocalQueryPanel extends JPanel {
 		if(text.length() == 0) return "";
 		return "Annotation contains: " + text;
 	}
-	
-//	private String getRefGroupQuery() {
-		//If searching all, no reference in the query
-//		if(btnAnnoAll.isSelected()) return "";
-//		int index =speciesPanel.getChromosomeIndex(speciesPanel.getReferenceIndex());
 		
-//		if(index < 0)
-//		{
-//			int idx = speciesPanel.getSpeciesIndex(speciesPanel.getReferenceIndex());
-//			return " (PH.proj1_idx = " + idx + " OR PH.proj2_idx = " + idx + ") ";
-//		}
-//		return " (PH.grp1_idx = " + index + " OR PH.grp2_idx = " + index + ") ";
-//	}
-/*	private String getRefGroupQuery2() {
-		//If searching all, no reference in the query
-		if(btnAnnoAll.isSelected()) return "";
-		int index =speciesPanel.getChromosomeIndex(speciesPanel.getReferenceIndex());
-		
-		if(index < 0)
-			return "G.proj_idx = " + speciesPanel.getSpeciesIndex(speciesPanel.getReferenceIndex());
-		return "G.idx = " + index;
-	}	*/
-//	private String getRefGroupQuerySummary() {
-//		String retVal = "Reference: ";
-//		if(btnAnnoAll.isSelected()) return "";
-//		String theChrom = speciesPanel.getChromosome(speciesPanel.getReferenceIndex());
-//		String theSpecies = speciesPanel.getSpecies(speciesPanel.getReferenceIndex());
-//		
-//		retVal += "Species: " + theSpecies;
-//		if(theChrom.length() > 0)
-//			retVal += ", Chr: " + theChrom;
-//		return retVal;
-//	}
-	
 	private String getPairGroupQuery() {
 		return getPairGroupQueryAll();
 	}
 	
 	private String getPairGroupQuerySummary() {
-//		if(btnAnnoRef.isSelected())
-//			return getPairGroupQueryRefSummary();
 		return getPairGroupQueryAllSummary();
 	}
 	// If changed, must change getAnnotGroupQueryAll()!!!
@@ -232,8 +150,6 @@ public class LocalQueryPanel extends JPanel {
 		Vector<String> speciesIn = new Vector<String>();
 		Vector<String> grpIn = new Vector<String>();
 		Vector<String> locList = new Vector<String>();
-//		Vector<String> locList2 = new Vector<String>();
-//		Vector<String> clauses = new Vector<String>();
 		
 		for(int x=0; x<numSpecies; x++) {
 			int index = speciesPanel.getChromosomeIndex(x);
@@ -317,8 +233,6 @@ public class LocalQueryPanel extends JPanel {
 		Vector<String> speciesIn = new Vector<String>();
 		Vector<String> grpIn = new Vector<String>();
 		Vector<String> locList = new Vector<String>();
-//		Vector<String> locList2 = new Vector<String>();
-//		Vector<String> clauses = new Vector<String>();
 		
 		for(int x=0; x<numSpecies; x++) {
 			int index = speciesPanel.getChromosomeIndex(x);
@@ -395,22 +309,6 @@ public class LocalQueryPanel extends JPanel {
 		}		
 		return retVal;
 
-	}
-	
-	private String getPairGroupQueryRefSummary() {
-		int numSpecies = speciesPanel.getNumSpecies();
-
-		String retVal = "Paired with ";
-		//If by reference, only need to search all other species
-		for(int x=1; x<numSpecies; x++) {
-			String species = speciesPanel.getSpecies(x);
-			String chroms = speciesPanel.getChromosome(x);
-			if(!chroms.equals("All"))
-				retVal += "(Species: " + species + ", Chr: " + chroms + ")";
-			else
-				retVal += "(Species: " + species + ")";
-		}		
-		return retVal;
 	}
 
 	private static String combineBool(String left, String right, boolean isAND) {
@@ -559,7 +457,6 @@ public class LocalQueryPanel extends JPanel {
 	}
 	
 	private JPanel createButtonPanel(int width) {
-		int totalWidth = 0;
 		JPanel retVal = new JPanel();
 		retVal.setLayout(new BoxLayout(retVal, BoxLayout.LINE_AXIS));
 		retVal.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -593,18 +490,14 @@ public class LocalQueryPanel extends JPanel {
 		btnExecute.setAlignmentX(Component.CENTER_ALIGNMENT);
 		btnExecute.setBackground(Color.WHITE);
 		retVal.add(btnExecute);
-		totalWidth += btnExecute.getPreferredSize().width;
 		
 		btnHelp = new JButton("Help");
 		btnHelp.setAlignmentX(Component.RIGHT_ALIGNMENT);
 		btnHelp.setBackground(UserPrompt.PROMPT);
-		totalWidth += btnHelp.getPreferredSize().width;
 		retVal.add(Box.createHorizontalStrut(30));
 		btnHelp.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-//				UserPrompt.displayInfo("Query Help", HELP_TEXT);
 				Utilities.showHTMLPage(null, "SyMAP Query Help", "/html/QueryHelp.html");
-				//UserPrompt.displayInfo(theParentFrame, "Query Help", HELP_COL, HELP_VAL, true);
 			}
 		});
 		retVal.add(btnHelp);
@@ -623,7 +516,7 @@ public class LocalQueryPanel extends JPanel {
 		annoPanel.setLayout(new BoxLayout(annoPanel, BoxLayout.LINE_AXIS));
 		annoPanel.setBackground(Color.WHITE);
 
-		annoPanel.add(new JLabel("Annotation String Search"));
+		annoPanel.add(new JLabel("Annotation Description")); // CAS501 change text
 		annoPanel.add(Box.createHorizontalStrut(10));
 		txtAnnotation = new JTextField(30);
 		annoPanel.add(txtAnnotation);

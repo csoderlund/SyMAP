@@ -24,9 +24,9 @@ public class HitFilter {
 
 	public static boolean DEFAULT_NONREPETITIVE    = false;
 	public static boolean DEFAULT_BLOCK            = true;
-	public static boolean DEFAULT_GENE_CONTAINED   = false; // mdb added 3/7/07 #101
-	public static boolean DEFAULT_GENE_OVERLAP     = false; // mdb added 3/7/07 #101
-	public static boolean DEFAULT_NON_GENE		   = false; // mdb added 3/7/07 #101
+	public static boolean DEFAULT_GENE_CONTAINED   = false; 
+	public static boolean DEFAULT_GENE_OVERLAP     = false; 
+	public static boolean DEFAULT_NON_GENE		   = false; 
 
 	public static final boolean DEFAULT_HIDE_FP          = false;
 	public static final boolean DEFAULT_HIDE_MRK         = false;
@@ -101,9 +101,9 @@ public class HitFilter {
 		hideMrk       = DEFAULT_HIDE_MRK;
 		hideBes       = DEFAULT_HIDE_BES;
 		block         = DEFAULT_BLOCK;
-		geneContained = DEFAULT_GENE_CONTAINED; // mdb added 3/7/07 #101
-		geneOverlap   = DEFAULT_GENE_OVERLAP; 	// mdb added 3/7/07 #101
-		nonGene		  = DEFAULT_NON_GENE; 		// mdb added 3/7/07 #101
+		geneContained = DEFAULT_GENE_CONTAINED; 
+		geneOverlap   = DEFAULT_GENE_OVERLAP; 	
+		nonGene		  = DEFAULT_NON_GENE; 		
 		nonrepetitive = DEFAULT_NONREPETITIVE;
 		showJoinDot   = DEFAULT_SHOW_JOIN_DOT;
 		onlyShared    = DEFAULT_SHOW_ONLY_SHARED;
@@ -126,9 +126,9 @@ public class HitFilter {
 		if (setMrkHide(hf.hideMrk,false))             changed = true;
 		if (setBesHide(hf.hideBes,false))             changed = true;
 		if (setBlock(hf.block,false))                 changed = true;
-		if (setGeneContained(hf.geneContained,false)) changed = true; // mdb added 3/7/07 #101
-		if (setGeneOverlap(hf.geneOverlap,false))	  changed = true; // mdb added 3/7/07 #101
-		if (setNonGene(hf.nonGene,false))			  changed = true; // mdb added 3/7/07 #101
+		if (setGeneContained(hf.geneContained,false)) changed = true; 
+		if (setGeneOverlap(hf.geneOverlap,false))	  changed = true; 
+		if (setNonGene(hf.nonGene,false))			  changed = true; 
 		if (setNonRepetitive(hf.nonrepetitive,false)) changed = true;
 		if (setShowJoinDot(hf.showJoinDot,false))     changed = true;
 		if (setOnlySharedHits(hf.onlyShared,false))   changed = true;
@@ -148,9 +148,9 @@ public class HitFilter {
 		if (setMrkHide(fd.getHide(FilterData.MRK),false))             changed = true;
 		if (setBesHide(fd.getHide(FilterData.BES),false))             changed = true;
 		if (setBlock(fd.isShowBlockHits(),false))                     changed = true;
-		if (setGeneContained(fd.isShowContainedGeneHits(),false))	  changed = true; // mdb added 3/7/07 #101
-		if (setGeneOverlap(fd.isShowOverlapGeneHits(),false))	  	  changed = true; // mdb added 3/7/07 #101
-		if (setNonGene(fd.isShowNonGeneHits(),false))				  changed = true; // mdb added 3/7/07 #101
+		if (setGeneContained(fd.isShowContainedGeneHits(),false))	  changed = true; 
+		if (setGeneOverlap(fd.isShowOverlapGeneHits(),false))	  	  changed = true; 
+		if (setNonGene(fd.isShowNonGeneHits(),false))				  changed = true; 
 		if (setNonRepetitive(fd.isShowNonRepetitiveHits(),false))     changed = true;
 		if (setFpEvalue(fd.getEvalue(FilterData.FP),false))           changed = true;
 		if (setFpHide(fd.getHide(FilterData.FP),false))               changed = true;
@@ -450,7 +450,7 @@ public class HitFilter {
 		return false;
 	}
 	
-	private boolean setGeneContained(boolean filter, boolean update) { // mdb added 3/7/07 #101
+	private boolean setGeneContained(boolean filter, boolean update) { 
 		if (filter != geneContained) {
 			geneContained = filter;
 			if (update) updateListeners();
@@ -459,7 +459,7 @@ public class HitFilter {
 		return false;
 	}	
 
-	private boolean setGeneOverlap(boolean filter, boolean update) { // mdb added 3/7/07 #101
+	private boolean setGeneOverlap(boolean filter, boolean update) { 
 		if (filter != geneOverlap) {
 			geneOverlap = filter;
 			if (update) updateListeners();
@@ -468,7 +468,7 @@ public class HitFilter {
 		return false;
 	}	
 	
-	private boolean setNonGene(boolean filter, boolean update) { // mdb added 3/7/07 #101
+	private boolean setNonGene(boolean filter, boolean update) { 
 		if (filter != nonGene) {
 			nonGene = filter;
 			if (update) updateListeners();
@@ -499,16 +499,16 @@ public class HitFilter {
 		if (filtered) {
 			DEFAULT_NONREPETITIVE    = false;
 			DEFAULT_BLOCK            = true;
-			DEFAULT_GENE_CONTAINED	 = false; // mdb added 3/7/07 #101
-			DEFAULT_GENE_OVERLAP	 = false; // mdb added 3/7/07 #101
-			DEFAULT_NON_GENE	 	 = false; // mdb added 3/7/07 #101
+			DEFAULT_GENE_CONTAINED	 = false; 
+			DEFAULT_GENE_OVERLAP	 = false; 
+			DEFAULT_NON_GENE	 	 = false; 
 		}
 		else {
 			DEFAULT_NONREPETITIVE    = true;
 			DEFAULT_BLOCK            = false;
-			DEFAULT_GENE_CONTAINED	 = false; // mdb added 3/7/07 #101
-			DEFAULT_GENE_OVERLAP	 = false; // mdb added 3/7/07 #101
-			DEFAULT_NON_GENE	 	 = false; // mdb added 3/7/07 #101
+			DEFAULT_GENE_CONTAINED	 = false; 
+			DEFAULT_GENE_OVERLAP	 = false; 
+			DEFAULT_NON_GENE	 	 = false; 
 		}
 	}
 

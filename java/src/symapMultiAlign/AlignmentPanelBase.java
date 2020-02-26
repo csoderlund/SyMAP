@@ -85,7 +85,7 @@ public class AlignmentPanelBase extends JPanel
 		nDrawMode = mode;
 		clearPanels();
 	}
-	public void setCtgDisplay(boolean b) { // CAS 20aug10
+	public void setCtgDisplay(boolean b) { 
 		bCtgDisplay = b;
 	}
 	

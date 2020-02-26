@@ -26,7 +26,6 @@ public class GR_applet extends Applet implements MouseListener, KeyListener, Ite
 	final static int LOG_LINE = 8;
 	final static int CLEAR_LINE = 9;
 
-//	final static int MAX_PERMUTATION_SPACE = 8;
 	final static int MAX_REPORTS = 100;
 	
 	// General stages (for all modes)
@@ -98,12 +97,7 @@ public class GR_applet extends Applet implements MouseListener, KeyListener, Ite
 	 */
 	public void init() {
 		initForm();
-		//      usePageParams();
 	}
-
-	//  private final String labelParam = "label";
-	//private final String backgroundParam = "background"; // mdb removed 6/29/07 #118
-	//private final String foregroundParam = "foreground"; // mdb removed 6/29/07 #118
 
 	/*
 	 * Intializes values for the applet and its components
@@ -304,13 +298,6 @@ public class GR_applet extends Applet implements MouseListener, KeyListener, Ite
 	void showOriginalPermutation(Permutation permutation, LabeledTextArea text) {
 		text.setText(permutation.origToString());
 	}
-	
-
-	//  void showPermutation(Permutation permutation, LabeledTextArea text, int start_mark, int end_mark)   {
-	//      showPermutation(permutation, text);
-	//      int start_pos = permutation.getSpaceSize(0, start_mark);
-	//      int end_pos = permutation.getSpaceSize(0, end_mark);
-	//  }
 
 	Permutation getPermutation(LabeledTextArea text, int size) throws Exception {
 		return new Permutation(size, text.getText());
@@ -335,10 +322,6 @@ public class GR_applet extends Applet implements MouseListener, KeyListener, Ite
 			return to;
 		} catch(NumberFormatException e) { throw new NumberFormatException("Invalid to parameter"); }
 	}
-										   
-
-				
-	
 
 	void handleException(Exception e) {
 		System.out.println(e.getMessage());
@@ -346,9 +329,6 @@ public class GR_applet extends Applet implements MouseListener, KeyListener, Ite
 		new ExceptionDialog("Exception", true, e);
 		this.clearAll();
 	}
-	
-	
-	
 	
 	public void keyPressed(KeyEvent e) {}
 	public void keyReleased(KeyEvent e) {}
@@ -455,16 +435,8 @@ public class GR_applet extends Applet implements MouseListener, KeyListener, Ite
 		setComponents(stage);
 	}
 
-	
-	
 	private void log(String message) { logTxt.append(message + "\n"); }
 	private void instruction(String message) { this.instructionLbl.setText(message); }
-	
-	
-	
-	
-	
-	
 	
 	/* **************** UNINTERESTING COMPONENTS STAFF ************** */
 		
@@ -575,38 +547,38 @@ public class GR_applet extends Applet implements MouseListener, KeyListener, Ite
 		cons.gridwidth = width;
 		cons.weightx = weight_x;
 		
-		cons.anchor = /*cons*/GridBagConstraints.WEST; 			// mdb changed 6/29/07 #118
-		if(fill) cons.fill = /*cons*/GridBagConstraints.BOTH; 	// mdb changed 6/29/07 #118
-		else cons.fill = /*cons*/GridBagConstraints.NONE; 		// mdb changed 6/29/07 #118
+		cons.anchor = /*cons*/GridBagConstraints.WEST; 			
+		if(fill) cons.fill = /*cons*/GridBagConstraints.BOTH; 	
+		else cons.fill = /*cons*/GridBagConstraints.NONE; 		
 		container.add(component);
 		layout.setConstraints(component, cons);
 	}
 
 	private void arrangeComponents() {
-		/*this*/GR_applet.constrain(this, m_layout, instructionPnl, FIRST_COLUMN, INSTRUCTION_LINE, COLUMNS_NUMBER, 1, 1, true); // mdb changed 6/29/07 #118
+		/*this*/GR_applet.constrain(this, m_layout, instructionPnl, FIRST_COLUMN, INSTRUCTION_LINE, COLUMNS_NUMBER, 1, 1, true); 
 		instructionPnl.add(instructionLbl);
 
-		/*this*/GR_applet.constrain(this, m_layout, initPnl, FIRST_COLUMN, INITIALIZATION_LINE, COLUMNS_NUMBER, 1, 1, true); // mdb changed 6/29/07 #118
+		/*this*/GR_applet.constrain(this, m_layout, initPnl, FIRST_COLUMN, INITIALIZATION_LINE, COLUMNS_NUMBER, 1, 1, true); 
 		initPnl.add(modeChc);
 		initPnl.add(permutationChc);
 		
-		/*this*/GR_applet.constrain(this, m_layout, parametersPnl, FIRST_COLUMN, PARAMETERS_LINE, COLUMNS_NUMBER, 1, 1, true); // mdb changed 6/29/07 #118
+		/*this*/GR_applet.constrain(this, m_layout, parametersPnl, FIRST_COLUMN, PARAMETERS_LINE, COLUMNS_NUMBER, 1, 1, true); 
 		parametersPnl.add(sizeTxt);
 		parametersPnl.add(reversalsNumTxt);
 		parametersPnl.add(instancesNumberTxt);
 		
-		/*this*/GR_applet.constrain(this, m_layout, originalPnl, FIRST_COLUMN, ORIGINAL_PERMUTATION_LINE, 5, 1, 1, true); // mdb changed 6/29/07 #118
+		/*this*/GR_applet.constrain(this, m_layout, originalPnl, FIRST_COLUMN, ORIGINAL_PERMUTATION_LINE, 5, 1, 1, true); 
 		originalPnl.add(origPermutationTxt);
 		originalPnl.add(submitBtn);
 		
-		/*this*/GR_applet.constrain(this, m_layout, previousPnl, FIRST_COLUMN, PREVIOUS_PERMUTATION_LINE, 8, 1, 2, true); // mdb changed 6/29/07 #118
+		/*this*/GR_applet.constrain(this, m_layout, previousPnl, FIRST_COLUMN, PREVIOUS_PERMUTATION_LINE, 8, 1, 2, true); 
 		previousPnl.add(this.previousPermutationTxt);
 		previousPnl.add(this.lastReversalTxt);
 		
-		/*this*/GR_applet.constrain(this, m_layout, currentPnl, FIRST_COLUMN, CURRENT_PERMUTATION_LINE, COLUMNS_NUMBER, 1, 1, true); // mdb changed 6/29/07 #118
+		/*this*/GR_applet.constrain(this, m_layout, currentPnl, FIRST_COLUMN, CURRENT_PERMUTATION_LINE, COLUMNS_NUMBER, 1, 1, true); 
 		currentPnl.add(currentPermutationTxt);
 		
-		/*this*/GR_applet.constrain(this, m_layout, buttonsPnl, FIRST_COLUMN, BUTTONS_LINE, COLUMNS_NUMBER, 1, 1, true); // mdb changed 6/29/07 #118
+		/*this*/GR_applet.constrain(this, m_layout, buttonsPnl, FIRST_COLUMN, BUTTONS_LINE, COLUMNS_NUMBER, 1, 1, true); 
 		// Fill the panel components
 		buttonsPnl.add(nextBtn);
 		buttonsPnl.add(runBtn);
@@ -616,10 +588,10 @@ public class GR_applet extends Applet implements MouseListener, KeyListener, Ite
 		buttonsPnl.add(toChc);
 		buttonsPnl.add(new Label(""));
 		
-		/*this*/GR_applet.constrain(this, m_layout, logPnl, FIRST_COLUMN + 1, LOG_LINE, COLUMNS_NUMBER, 1, 1, true); // mdb changed 6/29/07 #118
+		/*this*/GR_applet.constrain(this, m_layout, logPnl, FIRST_COLUMN + 1, LOG_LINE, COLUMNS_NUMBER, 1, 1, true); 
 		logPnl.add(logTxt);
 
-		/*this*/GR_applet.constrain(this, m_layout, clearPnl, FIRST_COLUMN + 1, CLEAR_LINE, COLUMNS_NUMBER, 1, 1, true); // mdb changed 6/29/07 #118
+		/*this*/GR_applet.constrain(this, m_layout, clearPnl, FIRST_COLUMN + 1, CLEAR_LINE, COLUMNS_NUMBER, 1, 1, true); 
 		clearPnl.add(clearBtn);
 	}
 	
@@ -711,7 +683,6 @@ public class GR_applet extends Applet implements MouseListener, KeyListener, Ite
 	
 	class ExceptionDialog extends Dialog implements MouseListener {
 		Button closeBtn = new Button("Close");
-		//MultiLineLabel messageLbl;  // mdb 2/14/07
 
 		ExceptionDialog(String title, boolean modal, Exception exception) {
 			super(new Frame(), title, true);
@@ -720,9 +691,7 @@ public class GR_applet extends Applet implements MouseListener, KeyListener, Ite
 			f.setVisible(true);
 			
 			setLayout(new BorderLayout(15, 15));			
-			//String message = getMessage(exception); // mdb removed 6/29/07 #118
-			//messageLbl = new MultiLineLabel(message, 20, 20); // mdb 2/14/07
-			//add("Center", messageLbl);			            // mdb 2/14/07
+			
 			Panel buttonPnl = new Panel(new FlowLayout(FlowLayout.CENTER, 15, 15));
 			buttonPnl.add(this.closeBtn);
 			closeBtn.addMouseListener(this);
@@ -745,17 +714,6 @@ public class GR_applet extends Applet implements MouseListener, KeyListener, Ite
 				f.dispose();				
 			} 
 		}
-
-// mdb removed 6/29/07 #118
-//		private String getMessage(Exception exception) {
-//			String message = exception.getMessage();
-//			if((message == null) || message.equalsIgnoreCase("")) message = new String("No message");
-//			return new String(
-//							  "An exception was thrown\n" + 
-//							  "The exception type is " + exception.getClass().getName() + "\n" +
-//							  "The exception message is " + message + "\n" +
-//							  "Clearing permutation information");
-//		}
 	}
 }
 

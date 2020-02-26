@@ -175,17 +175,13 @@ public class CloseUpComponent extends JComponent {
 		if (ga == null || ha == null)
 			return;
 
-// mdb removed 12/29/08 for pseudo-pseudo closeup - incorrectly drawing dotted line to end of window		
-//		double bpPerPixel = getBpPerPixel();
-//		if (bpPerPixel <= 0)
-//			return;
-		double bpPerPixel = 1; // mdb added 12/29/08 for pseudo-pseudo closeup
+		double bpPerPixel = 1; 
 
 		Graphics2D g2 = (Graphics2D) g;
 		ruler.paint(g2, rulerColor, rulerFontColor, rulerFont);
 		FontMetrics fm = getFontMetrics(hitFont);
 
-		Vector<Long> uniqueClones = new Vector<Long>(); // ASD: kludge for printing the name and dotted line only once
+		Vector<Long> uniqueClones = new Vector<Long>(); 
 		for (int i = 0; i < ha.length; ++i) {
 			long id = ha[i].getID();
 			if (!uniqueClones.contains(id)) {
@@ -205,16 +201,6 @@ public class CloseUpComponent extends JComponent {
 		for (int i = 0; i < ga.length; ++i) 
 			ga[i].paint(g2, fm, geneFontColor, FONT_SPACE);
 	}
-
-// mdb removed 12/29/08 for pseudo-pseudo closeup	
-//	private double getBpPerPixel() {
-//		if (ha == null || ga == null)
-//			return 0;
-//		double pixels = getWidth() - 2 * HORIZONTAL_BORDER;
-//		if (pixels <= 0)
-//			return 0;
-//		return getLength() / pixels;
-//	}
 
 	public void setPreferredSize(Dimension d) {
 		setPreferredSize(d.width);
@@ -285,7 +271,6 @@ public class CloseUpComponent extends JComponent {
 		return ((numLayers + 1) * layerHeight) + y;
 	}
 
-	// mdb rewritten 1/6/09 for pseudo-pseudo closeup
 	private int makeHitLayers() {
 		if (ha == null || ha.length == 0 || ga == null)
 			return 0;
@@ -346,7 +331,6 @@ public class CloseUpComponent extends JComponent {
 		return (double) getFontMetrics(font).getHeight() + FONT_SPACE;
 	}
 
-	// ASD added helper class (defines a structure) for change to single layer 5/14/2006
 	private class Layer {
 		private int start, end;
 

@@ -7,7 +7,6 @@ import java.awt.image.BufferedImage;
 import java.awt.event.MouseEvent;
 
 import java.util.Enumeration;
-import java.util.Vector;
 
 import javax.media.j3d.Appearance;
 import javax.media.j3d.Background;
@@ -82,73 +81,7 @@ public class Mapper3D extends Mapper {
 		super();
 	}
 	
-// mdb removed 2/1/10	
-//	public void setFrame(SyMAPFrame3D frame) {
-//		this.frame = frame;
-//	}
-	
-/*	public void setTracks(Track[] tracks) {
-		this.tracks = tracks;
-		reference = tracks[0];
-		
-		for (Track t : tracks)
-			maxBpPerUnit = Math.max(maxBpPerUnit, t.getSizeBP());
-	}
-	
-	public Track[] getTracks(int nProjID) {
-		Vector<Track> out = new Vector<Track>();
-		
-		for (Track t : (Track[])tracks)
-			if (t.getProjIdx() == nProjID)
-				out.add(t);
-		
-		return out.toArray(new Track[0]);
-	}
-*/	
-	/*
-	public Track getReferenceTrack() { return (Track)reference; }
-	public boolean isReference(Track t) { return t == reference; }
-	public int getNumTracks() { return tracks.length; }
-	
-	public int getNumVisibleTracks() { // excluding the reference track
-		int n = 0;
-		for (Track t : (Track[])tracks)
-			if (t.isVisible() && t != reference) n++;
-		return n;
-	}
-	
-	public int getNumVisibleTracks(int nProjID) {
-		int n = 0;
-		for (Track t : (Track[])tracks)
-			if (t.isVisible() && t.getProjIdx() == nProjID) n++;
-		return n;
-	}
-	
-	public Track[] getVisibleTracks() { // excluding the reference track
-		Vector<Track> visible = new Vector<Track>();
-		for (Track t : (Track[])tracks)
-			if (t.isVisible() && t != reference) visible.add(t);
-		return visible.toArray(new Track[0]);
-	}
-	
-	public Track[] getVisibleTracks(int nProjID) {
-		Vector<Track> visible = new Vector<Track>();
-		for (Track t : (Track[])tracks)
-			if (t.isVisible() && t.getProjIdx() == nProjID) visible.add(t);
-		return visible.toArray(new Track[0]);
-	}
-	
-	public void hideVisibleTracks() { // excluding the reference
-		for (Track t : (Track[])tracks)
-			if (t != reference) t.setVisible(false);
-		bChanged = true;
-	}
-	
-	public void setTrackVisible(Track t, boolean visible) {
-		t.setVisible(visible);
-		bChanged = true;
-	}
-*/	
+
 	public void yRotateScene(int nDegrees) { // rotate scene around y-axis
 		Transform3D t = new Transform3D();
 		objRotate.getTransform(t);
@@ -321,7 +254,7 @@ public class Mapper3D extends Mapper {
 				
 				numVisibleTracks--;
 			}
-			//System.out.println(t.getFullName());
+			
 			t.setShape3D( 
 				createCylinder3D(
 					t.getFullName(), 
@@ -333,15 +266,11 @@ public class Mapper3D extends Mapper {
 					t, 
 					false));
 		}
-		//objRotate.addChild(createLabel3D("foobar", 0f, 0f,0f,Color.red , false));
+		
 	    mouseRotate.setTransformGroup(objRotate);
 		objShapesBG.addChild(objRotate);
 		objRoot.addChild(objShapesBG);
 		
-// mdb removed 6/24/09 - pickClosest() not supported on Java3D 1.3.1 required for Mac.
-//      pickObj = new SelectBehavior(su.getCanvas(), objRoot, new BoundingSphere());
-//      pickObj.setEnable(nPickFunction != PICK_DO_NOTHING);
-//		objRotate.addChild(pickObj); 
 
 		setNavigationFunction(getNavigationFunction()); // for subsequent calls
 		
@@ -439,12 +368,10 @@ public class Mapper3D extends Mapper {
 	    }
 		
 	    public void processStimulus(Enumeration criteria){
-	    	//System.out.println("processStimulus " + this.getParent().toString());
 	    	super.processStimulus(criteria);
 	    }
 	    
 	    public void updateScene(int xpos, int ypos) {
-	    	//System.out.println("updateScene x="+xpos+" y="+ypos);
 	    	PickInfo pickResult = null; 
 	    	Shape3D pickShape = null;
 	     
@@ -463,14 +390,8 @@ public class Mapper3D extends Mapper {
 			        		t.setVisible(false);
 			        		bChanged = true;
 	    				}
-	
-// mdb removed 2/1/10	    				
-//		                EventQueue.invokeLater(new Runnable() {
-//		        			public void run() {
-//		        				frame.repaint();
-//		        			}
-//		        		});
-		                notifyObservers(); // mdb added 2/1/10
+
+		             notifyObservers(); 
 	    			}
 	    		}
 	    	}
@@ -531,12 +452,12 @@ public class Mapper3D extends Mapper {
 	    	int dx, dy;
 	    	
 	    	processMouseEvent(evt);
-	    	buttonPress = true; // mdb added 1/27/09
+	    	buttonPress = true; 
 	    	if (((buttonPress)&&((flags & MANUAL_WAKEUP) == 0)) ||
 	    	    ((wakeUp)&&((flags & MANUAL_WAKEUP) != 0))){
 	    	    id = evt.getID();
 	    	    if ((id == MouseEvent.MOUSE_DRAGGED) &&
-	    		!evt.isAltDown() && !evt.isMetaDown()) { // <-- mdb: this is where the mouse button is checked
+	    		!evt.isAltDown() && !evt.isMetaDown()) { // <-- this is where the mouse button is checked
 	    		
 		    		x = evt.getX();
 		    		y = evt.getY();
@@ -560,9 +481,6 @@ public class Mapper3D extends Mapper {
 		    		    
 		    		    transformGroup.setTransform(currXform);
 		    		    transformChanged( currXform );
-//		    		    if (callback!=null)
-//		    		    	callback.transformChanged( MouseBehaviorCallback.TRANSLATE,
-//		    						   currXform );
 		    		}
 		    		else {
 		    		    reset = false;
@@ -623,7 +541,7 @@ public class Mapper3D extends Mapper {
 	    	int dx, dy;
 
 	    	processMouseEvent(evt);
-	    	buttonPress = true; // mdb added 1/27/09
+	    	buttonPress = true; 
 	    	if (((buttonPress)&&((flags & MANUAL_WAKEUP) == 0)) ||
 	    	    ((wakeUp)&&((flags & MANUAL_WAKEUP) != 0))) {
 	    	    id = evt.getID();
@@ -666,9 +584,6 @@ public class Mapper3D extends Mapper {
 		    		    // Update xform
 		    		    transformGroup.setTransform(currXform);
 		    		    transformChanged( currXform );
-//		    		    if (callback!=null)
-//		    			callback.transformChanged( MouseBehaviorCallback.ROTATE,
-//		    						   currXform );
 		    		}
 		    		else {
 		    		    reset = false;
@@ -733,7 +648,7 @@ public class Mapper3D extends Mapper {
 
 	    void doProcess(MouseEvent evt) {
 			processMouseEvent(evt);
-			buttonPress = true; // mdb added 6/9/09
+			buttonPress = true; 
 			if (((buttonPress)&&((flags & MANUAL_WAKEUP) == 0)) ||
 			    ((wakeUp)&&((flags & MANUAL_WAKEUP) != 0)))
 			{
@@ -762,9 +677,6 @@ public class Mapper3D extends Mapper {
 					    transformGroup.setTransform(currXform);
 					    
 					    transformChanged( currXform );
-					    
-//					    if (callback!=null)
-//					    	callback.transformChanged( MouseBehaviorCallback.ZOOM, currXform );
 					}
 					else {
 					    reset = false;

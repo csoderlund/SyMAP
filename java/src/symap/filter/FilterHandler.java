@@ -3,7 +3,7 @@ package symap.filter;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent; // mdb added 3/12/07 #104
+import java.awt.event.MouseEvent; 
 
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
@@ -31,11 +31,7 @@ public class FilterHandler implements Filtered, ActionListener {
 		button.setMargin(new Insets(2,4,2,4));
 		this.drawingPanel = dp;
 		this.helpBar = bar;
-// mdb removed 4/30/09 #162
-//		if (SyMAP.isHelp()) {
-//			helpButton = new JButton("Help");
-//			SyMAP.enableHelpOnButton(helpButton,null);
-//		}
+
 		button.addActionListener(this);
 	}
 
@@ -46,7 +42,6 @@ public class FilterHandler implements Filtered, ActionListener {
 		filter = null;
 		if (obj != null) {
 			filter = createFilter(obj);
-			//SyMAP.setHelpID(helpButton,filter.getHelpID()); // mdb removed 4/30/09 #162
 			button.setText(filter.getTitle());
 		}
 	}

@@ -9,9 +9,9 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;	// mdb added 2/28/08 #153
-import java.awt.event.MouseListener; 	// mdb added 3/1/07 #100
-import java.awt.event.MouseWheelListener; 	// mdb added 2/28/08 #153
+import java.awt.event.MouseWheelEvent;	
+import java.awt.event.MouseListener; 	
+import java.awt.event.MouseWheelListener; 	
 import javax.swing.JComponent;
 import javax.swing.AbstractButton;
 import symap.filter.Filtered;
@@ -20,10 +20,9 @@ import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.drawingpanel.DrawingPanel;
 import symap.track.*;
-import symap.mapper.PseudoPseudoData.PseudoHitData;
 import symap.sequence.Sequence;
-import symap.frame.HelpBar; 		// mdb added 3/21/07 #104
-import symap.frame.HelpListener; 	// mdb added 3/21/07 #104
+import symap.frame.HelpBar; 		
+import symap.frame.HelpListener; 	
 import symapQuery.ListDataPanel;
 import util.PropertiesReader;
 import util.ClearList;
@@ -31,24 +30,20 @@ import util.ClearList;
 /**
  * The Mapper that holds two tracks (overlaying them when drawn) and all of the
  * hits.
- * 
- * @author Austin Shoemaker
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Mapper 
 	extends JComponent 
 	implements Filtered, HitFilter.HitFilterListener, SyMAPConstants, 
 		MouseMotionListener,
-		MouseListener, 		// mdb added 3/1/07 #100
-		MouseWheelListener, // mdb added 2/28/08 #153
-		HelpListener 		// mdb added 3/21/07 #104
+		MouseListener, 		
+		MouseWheelListener, 
+		HelpListener 		
 {
-	//private static final boolean TIME_TRACE = false;
-
 	// Constants used for signifying the type of map.
 	public static final int FPC2PSEUDO 	  = 1;
 	public static final int FPC2FPC 	  = 2;
-	public static final int PSEUDO2PSEUDO = 3; // mdb added 7/11/07 #121
+	public static final int PSEUDO2PSEUDO = 3; 
 	
 	public static Color cloneLineColor;
 	public static Color cloneLineHighlightColor;
@@ -61,10 +56,10 @@ public class Mapper
 	public static Color negOrientLineColor;
 	public static Color posOrientLineColor;
 	public static double markerJoinDotRadius;
-	public static Color pseudoLineColor; 			// mdb added 7/12/07 #121
-	public static Color pseudoLineHighlightColor;	// mdb added 7/12/07 #121
-	public static Color hitRibbonBackgroundColor;	// mdb added 8/22/07 #126
-	public static int 	hitRibbonWidth; 			// mdb added 8/29/07 #126
+	public static Color pseudoLineColor; 			
+	public static Color pseudoLineHighlightColor;	
+	public static Color hitRibbonBackgroundColor;	
+	public static int 	hitRibbonWidth; 			
 	static {
 		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/mapper.properties"));
 		cloneLineColor = props.getColor("cloneLineColor");
@@ -78,13 +73,13 @@ public class Mapper
 		markerLineHighlightColor = props.getColor("markerLineHighlightColor");
 		posOrientLineColor = props.getColor("posOrientLineColor");
 		negOrientLineColor = props.getColor("negOrientLineColor");
-		pseudoLineColor = props.getColor("pseudoLineColor"); // mdb added 7/12/07 #121
-		pseudoLineHighlightColor = props.getColor("pseudoLineHighlightColor"); // mdb added 7/12/07 #121
-		hitRibbonBackgroundColor = props.getColor("hitRibbonBackgroundColor"); // mdb added 8/22/07 #126
-		hitRibbonWidth = props.getInt("hitRibbonWidth"); // mdb added 8/29/07 #126
+		pseudoLineColor = props.getColor("pseudoLineColor"); 
+		pseudoLineHighlightColor = props.getColor("pseudoLineHighlightColor"); 
+		hitRibbonBackgroundColor = props.getColor("hitRibbonBackgroundColor"); 
+		hitRibbonWidth = props.getInt("hitRibbonWidth"); 
 	}
 
-	private DrawingPanel drawingPanel; // mdb added 3/1/07
+	private DrawingPanel drawingPanel; 
 	private TrackHolder trackHolders[];
 	private FilterHandler fh;
 	private ListDataPanel theParentPanel;
@@ -93,16 +88,16 @@ public class Mapper
 	private HitFilter hitfilter;
 	private MapInfo mapinfo;
 	private volatile boolean initing;
-	private String helpText; // mdb added 1/31/08 
+	private String helpText; 
 
 	public Mapper(DrawingPanel drawingPanel, 
 			TrackHolder th1, TrackHolder th2,
 			FilterHandler fh, MapperPool pool, 
-			HelpBar hb, ListDataPanel listPanel) // mdb added 3/21/07 #104
+			HelpBar hb, ListDataPanel listPanel) 
 	{
 		super();
 		this.pool = pool;
-		this.drawingPanel = drawingPanel; // mdb added 3/1/07 #100
+		this.drawingPanel = drawingPanel; 
 		this.fh = fh;
 		initing = true;
 		hitfilter = new HitFilter(this);
@@ -115,12 +110,12 @@ public class Mapper
 
 		setOpaque(false);
 		setVisible(false);
-		addMouseListener(this); 		// mdb added 3/1/07 #100
-		addMouseWheelListener(this);	// mdb added 2/28/08 #153
+		addMouseListener(this); 		
+		addMouseWheelListener(this);	
 		addMouseMotionListener(this);
 		hits = new ClearList(10, 50);
 		
-		if (hb != null) hb.addHelpListener(this,this); // mdb added 3/21/07 #104
+		if (hb != null) hb.addHelpListener(this,this); 
 	}
 	
 	public long getSelectedSeq1Start() {
@@ -148,8 +143,8 @@ public class Mapper
 	}
 
 	public void clearData() {
-		hits = new ClearList(10, 50);//clear();	// mdb changed 2/3/10
-		mapinfo = new MapInfo();//.clear();		// mdb changed 2/3/10
+		hits = new ClearList(10, 50);
+		mapinfo = new MapInfo();
 	}
 
 	public void update(HitFilter hf) { // HitFilterListener interface
@@ -193,14 +188,13 @@ public class Mapper
 	 * @param event a <code>MouseEvent</code> value
 	 * @return a <code>String</code> value
 	 */
-	public String getHelpText(MouseEvent e) { // mdb added 3/21/07 #104
+	public String getHelpText(MouseEvent e) { 
 		if (helpText == null)
 			return "Hits:  Right-click for menu.";
 		else
-			return helpText; // mdb added 1/31/08
+			return helpText; 
 	}
 	
-	// mdb added 1/31/08
 	public void setHelpText(String text) {
 		if (text == null)
 			helpText = "Hits:  Right-click for menu.";
@@ -222,13 +216,13 @@ public class Mapper
 	public int getMapType() {
 		Track t1 = trackHolders[0].getTrack(), t2 = trackHolders[1].getTrack();
 		if (t1 instanceof Sequence && t2 instanceof Sequence)
-			return PSEUDO2PSEUDO; // mdb added 7/11/07 #121
+			return PSEUDO2PSEUDO; 
 		if (t1 == null || t2 == null || t1 instanceof Sequence || t2 instanceof Sequence)
 			return FPC2PSEUDO;
 		return FPC2FPC;
 	}
 
-	public DrawingPanel getDrawingPanel() { // mdb added 3/1/07 #100
+	public DrawingPanel getDrawingPanel() { 
 		return drawingPanel;
 	}
 
@@ -292,7 +286,6 @@ public class Mapper
 	}
 
 	private boolean myInit(HitFilter hf) {
-		//long cStart = System.currentTimeMillis();
 		
 		Track t1 = trackHolders[0].getTrack();
 		Track t2 = trackHolders[1].getTrack();
@@ -327,8 +320,6 @@ public class Mapper
 		}
 
 		initing = false;
-		if (SyMAP.DEBUG) System.out.println("Leaving Mapper Init - changed = " + change);
-		//if (TIME_TRACE) System.out.println("Mapper: myInit() time = "+(System.currentTimeMillis()-cStart)+" ms");
 		
 		return true;
 	}
@@ -371,7 +362,6 @@ public class Mapper
 		return retHits;
 	}
 
-	// mdb added 4/23/09 #161
 	public int[] getMinMax(Track src, int start, int end) {
 		int[] minMax = new int[] { Integer.MAX_VALUE, Integer.MIN_VALUE };
 		
@@ -386,15 +376,13 @@ public class Mapper
 		return minMax;
 	}
 	
-	// mdb added 4/2/09 #160
 	public boolean isSwapped(Track src) {
 		Track t1 = getTrack1(); // left
 		Track t2 = getTrack2(); // right
 		return (t1 == src && !pool.hasPair(t2, t1)) || (t2 == src && !pool.hasPair(t1, t2))
-				|| (isSelf() && src == t1); // mdb added condition 12/11/09 - fix self-alignment closeup
+				|| (isSelf() && src == t1); 
 	}
 	
-	// mdb added 9/8/09
 	public boolean isSelf() {
 		Track t1 = getTrack1(); // left
 		Track t2 = getTrack2(); // right
@@ -413,16 +401,12 @@ public class Mapper
 	}
 	
 	public void paintComponent(Graphics g) {
-		//long cStart = System.currentTimeMillis();
-		//super.paintComponent(g); // mdb removed 7/16/09 - not necessary
 		
 		Graphics2D g2 = (Graphics2D) g;
 		if (!initing) {
 			for (AbstractHitData h : hits)
 				((Hits) h).paintComponent(g2);
 		}
-		
-		//if (TIME_TRACE) System.out.println("Mapper: paint time = "+(System.currentTimeMillis()-cStart)+" ms");
 	}
 
 	public void mouseMoved(MouseEvent e) {
@@ -432,11 +416,9 @@ public class Mapper
 	
 	public void mouseDragged(MouseEvent e) { }
 	
-	// mdb added 3/1/07 #100
 	public void mouseClicked(MouseEvent e) { }
 	public void mouseEntered(MouseEvent e) { }
 	
-	// mdb added 3/1/07 #100
 	public void mouseExited(MouseEvent e) {
 		if (!initing)
 			for (Iterator iter = hits.iterator(); 
@@ -444,17 +426,13 @@ public class Mapper
 				((Hits) iter.next()).mouseExited(e));
 	}
 	
-	// mdb added 3/1/07 #100
 	public void mousePressed(MouseEvent e) {
-		// mdb added 3/13/07 #104
 		if (e.isPopupTrigger()) 
 			fh.showPopup(e);
 	} 
 	
-	// mdb added 3/1/07 #100
 	public void mouseReleased(MouseEvent e) { }
 	
-	// mdb added 2/28/08 #153
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		long length = trackHolders[0].getTrack().getTrackSize();
 		for (int i = 0;  i < trackHolders.length;  i++)

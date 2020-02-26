@@ -44,7 +44,7 @@ public class Loader extends StateObject implements DotPlotConstants {
     private List<Integer> altNumKeepers;
     private List<FoundBlock> foundBlocks;
     
-    private boolean aborted = false; // mdb added 8/31/09
+    private boolean aborted = false; 
 
     private Loader() {
 		readers         = new ArrayList<DatabaseReader>();
@@ -66,24 +66,13 @@ public class Loader extends StateObject implements DotPlotConstants {
 
     public Loader(DotPlotDBUser db, int type) {
 		this();
-		//if (type < 0 || type > 1) throw new IllegalArgumentException("Type must be "+APPLICATION+" or "+APPLET); // mdb removed 1/29/10
-		type = APPLET; // mdb added 1/29/10 - application mode is for legacy functionality
+		type = APPLET; 
 		this.db    = db;
 		this.numD  = DOWNLOADERS[type];
 		this.numDC = D_CONNECTIONS[type];
 		this.numF  = FINDERS[type];
 		this.numFC = F_CONNECTIONS[type];
     }
-
-// mdb unused 1/29/10    
-//    public Loader(DotPlotDBUser db, int numDownloaders, int numDConnections, int numFinders, int numFConnections) {
-//		this();
-//		this.db    = db;
-//		this.numD  = numDownloaders;
-//		this.numDC = numDConnections;
-//		this.numF  = numFinders;
-//		this.numFC = numFConnections;
-//    }
 
     public void keepAltNum(int altNum) {
 		if (!altNumKeepers.contains(new Integer(altNum)))
@@ -387,7 +376,7 @@ public class Loader extends StateObject implements DotPlotConstants {
 		if (message != null) System.err.println("SQL Error: "+message);
     }
 
-    // mdb added 8/31/09 - handle out of memory error
+  
     private synchronized void abort() { 
     	if (!aborted) {
 	    	kill();
@@ -439,7 +428,7 @@ public class Loader extends StateObject implements DotPlotConstants {
 				} 
 				catch (SQLException e) { if (!isDead()) sqlError(e, null); }
 				catch (NullPointerException n) { if (!isDead()) n.printStackTrace(); }
-				catch (OutOfMemoryError e) { abort(); } // mdb added 8/31/09
+				catch (OutOfMemoryError e) { abort(); } 
 				connections.put(dbUser);
 		    }
 		    downloaderDone(this);
@@ -523,7 +512,6 @@ public class Loader extends StateObject implements DotPlotConstants {
 		private TileHolder getTileHolder(ProjectProperties pp, 
 				Project[] projects, Tile tile, ScoreBounds sb, boolean filtered) 
 		{
-			// mdb added 12/16/09 #205 - kludge
 			Project[] projPair = new Project[2];
 			for (Project p : projects) {
 				if (tile.getProjID(X) == p.getID())

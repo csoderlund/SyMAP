@@ -51,15 +51,7 @@ public class DotPlot extends SizedJFrame {
 	public ControlPanel getDPControlPanel() {
 		return controls;
 	}
-	/** CAS 12/26/17 dead code
-	public boolean setProjects() {
-		ProjectProperties props = data.getSyMAP().getDrawingPanel().getPools().getProjectProperties();
-		NamedProjectPair pair = getProjectPair(props);
-		if (pair != null)
-			setProjects(pair.getP2Name(),pair.getP1Name());
-		return pair != null;
-	}
-	**/
+	
 	public static NamedProjectPair getProjectPair(ProjectProperties props) {
 		NamedProjectPair[] pairs = props.getNamedProjectPairs();
 		if (pairs == null || pairs.length == 0) {
@@ -83,25 +75,4 @@ public class DotPlot extends SizedJFrame {
 		cp.add(controls, BorderLayout.NORTH);
 		cp.add(plot.getScrollPane(),BorderLayout.CENTER);
 	}
-	/** CAS 12/26/17 dead code
-	public void setProjects(String xProject, String yProject) {
-		x = xProject;
-		y = yProject;
-
-		Container cp = getContentPane();
-		cp.removeAll();
-
-		cp.setLayout(new BorderLayout());
-		cp.add(controls, BorderLayout.NORTH);
-		cp.add(plot.getScrollPane(),BorderLayout.CENTER);
-
-		new Thread(new Runnable() {
-			public void run() {				
-				data.initialize(x,y);
-				repaint();
-			}
-		}).start();
-	}
-	**/
-
 }

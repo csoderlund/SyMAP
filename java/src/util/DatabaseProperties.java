@@ -10,8 +10,7 @@ import java.util.Properties;
 /**
  * Class <code>DatabaseProperties</code> can load properties from a database for
  * quick access.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
+ 
  * @see Properties
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
@@ -114,8 +113,8 @@ public class DatabaseProperties extends Properties {
 	 * @exception SQLException if an error occurs
 	 */
 	public void store(DatabaseReader dr, String table, String[] idColumns, String nameColumn, String valueColumn) throws SQLException {
-		java.util.Enumeration enumNames = propertyNames(); // mdb changed 3/23/07 #109
-		if (!enumNames.hasMoreElements()) return ; // mdb changed 3/23/07 #109
+		java.util.Enumeration enumNames = propertyNames(); 
+		if (!enumNames.hasMoreElements()) return ; 
 
 		if (nameColumn == null) nameColumn   = DEFAULT_NAME_COLUMN;
 		if (valueColumn == null) valueColumn = DEFAULT_VALUE_COLUMN;
@@ -142,8 +141,8 @@ public class DatabaseProperties extends Properties {
 			con = dr.getConnection();
 			stat = con.prepareStatement(query);
 
-			while (enumNames.hasMoreElements()) { // mdb changed 3/23/07 #109
-				String key = (String)enumNames.nextElement(); // mdb changed 3/23/07 #109
+			while (enumNames.hasMoreElements()) { 
+				String key = (String)enumNames.nextElement(); 
 				String[] vals = key.split(SEPARATOR);
 				for (int i = 0; i < vals.length-1; i++) {
 					try {

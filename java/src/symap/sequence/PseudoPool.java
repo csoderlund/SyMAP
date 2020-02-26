@@ -12,37 +12,20 @@ import util.ListCache;
 
 /**
  * The PseudoPool handles the cache of data for the Sequence Track.
- * 
- * @author Austin Shoemaker
  */
 public class PseudoPool extends DatabaseUser {	
-//	private static final boolean TIME_TRACE = false;
-	
-// mdb removed 8/29/07 #120
-//	protected static final String ID_QUERY = 
-//		"SELECT g.idx "+
-//		"FROM "+GROUPS_TABLE+" AS g,"+PROJECT_PROPS_TABLE+" AS p "+
-//		"WHERE g.proj_idx=? AND p.proj_idx=? AND p.name='"+GRP_PREFIX_PROP+"' AND "+
-//		"      (g.name=? OR CONCAT(p.value,g.name)=? OR CONCAT(p.value,'0',g.name)=?)";
 
 	protected static final String SIZE_QUERY = 
 		"SELECT (SELECT length FROM pseudos WHERE grp_idx=?) as size, "+
 		"       (SELECT name FROM groups WHERE idx=?) as name; ";
 
 	protected static final String ANNOT_QUERY =
-		// mdb 3/8/07 #102: added "ORDER BY" to force exons be drawn before genes
-		"SELECT name,type,start,end,strand FROM pseudo_annot WHERE grp_idx=? ORDER BY type DESC"; // mdb removed "text" column 4/8/08 #156 // mdb added strand 1/8/09
-		//" AND "+ // mdb removed 3/8/07 #102
-		//"       (type='"+Annotation.GENE+"' OR type='"+Annotation.FRAMEWORK+"' OR "+ // mdb removed 3/8/07 #102
-		//"        type='"+Annotation.GAP+"' OR type='"+Annotation.CENTROMERE+"')"; // mdb removed 3/8/07 #102
-
+		"SELECT name,type,start,end,strand FROM pseudo_annot WHERE grp_idx=? ORDER BY type DESC"; 
 	private ListCache pseudoCache;
-	//private Map idMap; // mdb unused 8/29/07
 
 	public PseudoPool(DatabaseReader dr, ListCache cache) { 
 		super(dr);
 		pseudoCache = cache;
-		//idMap = new HashMap(); // mdb unused 8/29/07
 	}
 
 	public synchronized void close() {
@@ -52,7 +35,6 @@ public class PseudoPool extends DatabaseUser {
 	public synchronized void clear() {
 		super.close();
 		if (pseudoCache != null) pseudoCache.clear();
-		//idMap.clear(); // mdb unused 8/29/07
 	}
 
 	/**
@@ -90,9 +72,7 @@ public class PseudoPool extends DatabaseUser {
 				if (!rs.wasNull()) {
 					data.setName(rs.getString(2));
 					closeResultSet(rs);
-					//long cStart = System.currentTimeMillis();
 					rs = statement.executeQuery(setInt(ANNOT_QUERY,group));
-					//if (TIME_TRACE) System.out.println("PseudoPool: annotation query time = "+(System.currentTimeMillis()-cStart)+" ms");
 					while (rs.next()) {
 						if (rs.getString(2).equals("hit")) continue;
 						AnnotationData annot = new AnnotationData(
@@ -101,10 +81,9 @@ public class PseudoPool extends DatabaseUser {
 								rs.getInt(3),		/* int start		*/
 								rs.getInt(4),		/* int end			*/
 								rs.getString(5));	/* String strand	*/
-						//if (!ad.contains(annot)) // mdb test 12/19/08 - too slow, need to enforce uniqueness at DB level
+						
 						ad.add(annot);
 					}
-					//if (TIME_TRACE) System.out.println("PseudoPool: annotation query+build time = "+(System.currentTimeMillis()-cStart)+" ms");
 				}
 				else
 					System.err.println("No information in db found for Sequence with group id "+group);
@@ -143,19 +122,14 @@ public class PseudoPool extends DatabaseUser {
 	 * @return an <code>int</code> value of the group id, 0 if not found, or -1 on error
 	 */
 	public int getGroupID(String group, int project) {
-		//Integer iObj = (Integer)idMap.get(group);	// mdb removed 8/29/07 #120
-		//if (iObj != null) return iObj.intValue();	// mdb removed 8/29/07 #120
-
 		int id = 0;
 		Statement stat = null;
 		ResultSet rs = null;
 		try {
 			stat = createStatement();
-			//String query = setString(setString(setString(setInt(setInt(ID_QUERY,project),project),group),group),group); // mdb removed 8/29/07 #120
-			String query = setInt(setString("SELECT idx FROM groups WHERE (name=? AND proj_idx=?)",group),project);	// mdb added 8/29/07 #120
+			String query = setInt(setString("SELECT idx FROM groups WHERE (name=? AND proj_idx=?)",group),project);	
 			rs = stat.executeQuery(query);
 			if (rs.next()) id = rs.getInt(1);
-			//idMap.put(group,new Integer(id));	// mdb removed 8/29/07 #120
 		}
 		catch (SQLException e) {
 			id = -1;

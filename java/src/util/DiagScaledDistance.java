@@ -5,8 +5,6 @@ package util;
  * Distance function implementation that favors the diagonal as found in ADHoRe.
  *
  * 2 * max(|y2 - y1|/sY,|x2 - x1|/sX) - min(|y2 - y1|/sY,|x2 - x1|/sX)
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Distance2D
  */
 public class DiagScaledDistance extends ScaledDistance2D {

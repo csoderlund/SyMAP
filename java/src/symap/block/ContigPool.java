@@ -23,8 +23,6 @@ import util.ListCache;
 
 /**
  * The ContigPool handles the cache for the Block track.
- * 
- * @author Austin Shoemaker
  * @see ListCache
  */
 public class ContigPool extends DatabaseUser {	
@@ -32,58 +30,23 @@ public class ContigPool extends DatabaseUser {
 		"SELECT idx,size FROM contigs "+
 		"WHERE proj_idx=? AND number=?";
 	
-	// mdb added query 3/19/07 #105
 	protected static final String MULT_CTGHITS_QUERY = 
 		"SELECT DISTINCT g.name from "+
     	"pairs AS p INNER JOIN "+
     	"ctghits AS ch ON (p.proj1_idx=? AND p.proj2_idx=? AND ch.pair_idx=p.idx) INNER JOIN "+
     	"contigs AS c ON (c.idx=ch.ctg1_idx) INNER JOIN "+
     	"groups AS g ON (g.idx=ch.grp2_idx) "+
-    	"WHERE c.number=?";// AND ch.grp2_idx!=?";
+    	"WHERE c.number=?";
 
 	protected static final String MARKER_QUERY =
 		"SELECT m.name,m.type,mc.pos "+
 		"FROM markers as m, mrk_ctg as mc "+
 		"WHERE m.proj_idx=? AND mc.ctg_idx=? AND m.idx=mc.mrk_idx ORDER BY mc.pos; ";
 
-	//protected static final String BLOCKS_QUERY = 
-	//"SELECT c.number "+
-	//"FROM "+GROUPS_TABLE+" AS g1,"+BLOCKS_TABLE+" AS b,"+GROUPS_TABLE+" AS g2, "+CONTIGS_TABLE+" AS c "+
-	//"WHERE g1.proj_idx=? AND g1.name=? AND g1.idx=b.grp1_idx AND b.blocknum=? AND b.proj2_idx=? AND b.grp2_idx=g2.idx AND g2.name=?"+
-	//"      AND c.proj_idx=? AND c.grp_idx=g?.idx AND FIND_IN_SET(c.idx,b.ctgs?)>0 "+
-	//"ORDER BY FIND_IN_SET(c.idx,b.ctgs?) ";
-
-	// ASD modified to handle a bug June 2, 2006
+	
 	protected static String makeBlocksQuery(ProjectPair pair, int project, int otherProject, String g1, String g2, int bn) {
 		boolean isProj1 = pair.getP1() == project;
-		/*
-	boolean isGroup1 = !g1.equals("0");
-	boolean isGroup2 = !g2.equals("0");
-
-	StringBuffer query = new StringBuffer("SELECT c.number FROM ");
-	if (isGroup1) query.append(GROUPS_TABLE).append(" AS g1,");
-	query.append(BLOCKS_TABLE).append(" AS b,");
-	if (isGroup2) query.append(GROUPS_TABLE).append(" AS g2,");
-	query.append(CONTIGS_TABLE).append(" AS c WHERE ");
-	if (isGroup1) 
-	    query.append("g1.proj_idx=").append(pair.getP1()).append(" AND g1.name='").append(g1).append("' AND g1.idx=b.grp1_idx ");
-	else          
-	   query.append("b.proj1_idx=").append(pair.getP1()).append(" AND b.grp1_idx=0 ");
-	query.append(" AND b.blocknum=").append(bn).append(" AND b.proj2_idx=").append(pair.getP2()).append(" AND ");
-	if (isGroup2) query.append(" b.grp2_idx=g2.idx AND g2.name='").append(g2).append("' ");
-	else          query.append(" b.grp2_idx=0 ");
-	query.append(" AND c.proj_idx=").append(project).append(" AND ");
-	if (isProj1) {
-	    if (!isGroup1) query.append(" c.grp_idx=0 ");
-	    else           query.append(" c.grp_idx=g1.idx ");
-	}
-	else {
-	    if (!isGroup2) query.append(" c.grp_idx=0 ");
-	    else           query.append(" c.grp_idx=g2.idx ");
-	}
-	query.append(" AND FIND_IN_SET(c.idx,b.ctgs").append(isProj1 ? "1" : "2").append(")>0 ");
-	query.append("ORDER BY FIND_IN_SET(c.idx,b.ctgs").append(isProj1 ? "1" : "2").append(") ");
-		 */
+		
 		StringBuffer query = new StringBuffer("SELECT c.number FROM ");
 		query.append("groups").append(" AS g1,");
 		query.append("blocks").append(" AS b,");
@@ -136,10 +99,6 @@ public class ContigPool extends DatabaseUser {
 			Statement stat = null;
 			ResultSet rs = null;
 			try {
-				//ProjectPair pair = pp.getProjectPair(project,otherProject);
-				//String projectNumber = pair.getP1() == project ? "1" : "2";
-				//query = setString(setInt(setInt(setString(setInt(BLOCKS_QUERY,pair.getP1()),g1),bn),pair.getP2()),g2);
-				//query = setConstant(setConstant(setConstant(setInt(query,project),projectNumber),projectNumber),projectNumber);
 				query = makeBlocksQuery(pp.getProjectPair(project,otherProject),project,otherProject,g1,g2,bn);
 				stat = createStatement();
 				rs = stat.executeQuery(query);
@@ -158,8 +117,6 @@ public class ContigPool extends DatabaseUser {
 			}
 			blocks.put(new BlockObj(project,otherProject,block),contigs);
 		}
-		if (SyMAP.DEBUG) System.out.println("Block: "+block+" has contigs: "+contigs+" ON Query: "+query);
-
 		return contigs;
 	}
 
@@ -218,8 +175,6 @@ public class ContigPool extends DatabaseUser {
 		cachedBlocks = null;
 
 		if (!neededBlocks.isEmpty()) {
-			if (SyMAP.DEBUG) System.out.println("Looking for block data in data base for " + neededBlocks);
-
 			PreparedStatement statement = null;
 			ResultSet rs = null;
 			LinkedList<ContigData> tempBlockDataList = new LinkedList<ContigData>();
@@ -233,8 +188,7 @@ public class ContigPool extends DatabaseUser {
 					statement.setInt(1,project);
 					statement.setInt(2,contig);
 					rs = statement.executeQuery();
-					if (rs.next()) {		
-						// mdb added 3/19/07 #105 -- BEGIN	
+					if (rs.next()) {			
 						PreparedStatement s = prepareStatement(MULT_CTGHITS_QUERY);
 						ResultSet r;
 						String groupList = "";
@@ -244,7 +198,6 @@ public class ContigPool extends DatabaseUser {
 						r = s.executeQuery();	
 						while (r.next()) 
 							groupList += ""+r.getString(1)+(r.isLast() ? "" : ", ");
-						// mdb added 3/19/07 #105 -- END
 						
 						ContigData data = new ContigData(project,contig,project2,rs.getInt(1),rs.getLong(2),new String(groupList));
 						tempBlockDataList.add(data);

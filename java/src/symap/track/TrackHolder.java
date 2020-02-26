@@ -56,8 +56,8 @@ public class TrackHolder extends JComponent implements Filtered {
 			removeAll();
 			removeMouseListener(track);
 			removeMouseMotionListener(track);
-			removeMouseWheelListener(track); 	// mdb added 3/1/07 #106
-			removeKeyListener(track); 			// mdb added 3/2/07 #106
+			removeMouseWheelListener(track); 	
+			removeKeyListener(track); 			
 			if (hb != null) hb.removeHelpListener(this);	    
 			track.clear();
 		}
@@ -67,8 +67,8 @@ public class TrackHolder extends JComponent implements Filtered {
 			track.setHeld();
 			addMouseListener(track);
 			addMouseMotionListener(track);
-			addMouseWheelListener(track); 	// mdb added 3/1/07 #106
-			addKeyListener(track); 			// mdb added 3/2/07 #106
+			addMouseWheelListener(track); 	
+			addKeyListener(track); 			
 			if (hb != null) hb.addHelpListener(this,track);
 			track.setOrientation(orientation);
 		}
@@ -131,7 +131,7 @@ public class TrackHolder extends JComponent implements Filtered {
 		if (track != null) track.paintComponent(g);
 	}
 	
-	// mdb added 3/12/07 #104
+	
 	public void showPopupFilter(MouseEvent e) {
 		fh.showPopup(e);
 	}

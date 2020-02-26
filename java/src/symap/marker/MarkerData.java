@@ -9,7 +9,7 @@ public class MarkerData {
     private long   pos;
     
     public MarkerData(String name, String type, long pos) {
-	this.name = name;//.intern(); // mdb removed intern() 2/2/10 - can cause memory leaks in this case
+	this.name = name;
 	this.type = type.intern();
 	this.pos = pos;	
     }

@@ -18,7 +18,6 @@ import javax.swing.Icon;
  * in paintIcon are used as the origin of the graphics object.  So to use the location
  * set in setLocation(), paintIcon should be called with x=0 and y=0.
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Icon
  */
 public class SouthResize implements Icon {

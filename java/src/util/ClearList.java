@@ -13,8 +13,6 @@ import java.util.Collection;
  * by an inserted object.
  *
  * Like the Vector class, ClearList is synchronized.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ClearList extends Vector {

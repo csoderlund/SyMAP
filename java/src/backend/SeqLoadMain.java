@@ -1,7 +1,11 @@
 package backend;
 
+/*****************************************
+ * Load chromosome/draft/LG sequences to SyMAP database.
+ * Also fix bad chars if any
+ */
+
 import java.io.File;
-import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.util.Properties;
@@ -15,44 +19,35 @@ import java.sql.ResultSet;
 import symap.pool.DatabaseUser;
 import util.Cancelled;
 import util.ErrorCount;
+import util.ErrorReport;
 import util.Logger;
 import util.Utilities;
 import blockview.BlockViewFrame;
 
-// Load pseudomolecule sequences to SyMAP database.
-
-// Also fix bad chars if any
-
 public class SeqLoadMain 
 {
 	static int projIdx = 0;
-	private static final int CHUNK_SIZE = 1000000; // don't change this or client breaks!!
-	private static final int MAX_GRPS = BlockViewFrame.MAX_GRPS; // CAS 12/6/17 - for message
-	private static final int MAX_COLORS = BlockViewFrame.maxColors; // CAS 12/6/17 - for message
+	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE;
+	private static final int MAX_GRPS = BlockViewFrame.MAX_GRPS; // CAS42 12/6/17 - for message
+	private static final int MAX_COLORS = BlockViewFrame.maxColors; // CAS42 12/6/17 - for message
 	
 	public static boolean run(UpdatePool pool, Logger log, String projName) throws Exception 
 	{
-		try
-		{
+		try {
 			long startTime = System.currentTimeMillis();
-			
 			log.msg("");
 			log.msg("Loading sequences for " + projName);
 			
 			pool.updateSchemaTo40();
 			
-			String projDir = "data/pseudo/" + projName;
-			
 			// Load project params file and set defaults for unspecified fields
-			SyProps props = new SyProps(log, new File(projDir + "/params"));
-			if (props.getProperty("display_name") == null)
-				props.setProperty("display_name", projName);
-			if (props.getProperty("name") == null)
-				props.setProperty("name", projName);
-			if (props.getProperty("category") == null)
-				props.setProperty("category", "Uncategorized");			
-			if (props.getProperty("description") == null)
-				props.setProperty("description", "");
+			String projDir = Constants.seqDataDir + projName;
+			SyProps props = new SyProps(log, new File(projDir +  Constants.paramsFile));
+			
+			if (props.getProperty("display_name") == null) 	props.setProperty("display_name", projName);
+			if (props.getProperty("name") == null) 			props.setProperty("name", projName);
+			if (props.getProperty("category") == null) 		props.setProperty("category", "Uncategorized");			
+			if (props.getProperty("description") == null) 	props.setProperty("description", "");
 	
 			// Remove existing project and create new one
 			projIdx = pool.getProjIdx(projName, ProjType.pseudo);
@@ -66,43 +61,45 @@ public class SeqLoadMain
 			}
 			
 			pool.createProject(projName, ProjType.pseudo);
+			
 			projIdx = pool.getProjIdx(projName, ProjType.pseudo);
 			props.uploadProjProps(pool, projIdx, 
 					new String[] { "name","display_name", "description", 
-									"category", "grp_prefix", "grp_sort", "grp_type","order_against",
-									"replace_bad_char","min_display_size_bp","mask_all_but_genes","min_size","sequence_files",
-									"anno_files"});
+				"category", "grp_prefix", "grp_sort", "grp_type","order_against",
+				"replace_bad_char","min_display_size_bp","mask_all_but_genes",
+				"min_size","sequence_files", "anno_files"});
 	
 			Vector<File> seqFiles = new Vector<File>();
 			
-			// note we still need this dir even if sequences are not in it
-			String seqDir = projDir + "/sequence/pseudo";
-			Utils.checkCreateDir(new File(projDir + "/sequence"));
-			Utils.checkCreateDir(new File(seqDir));
-			
 			if (!props.containsKey("sequence_files")) props.setProperty("sequence_files", "");
+			
 			if (props.getProperty("sequence_files").equals(""))
 			{
-				// Get list of FASTA sequence files
+				String seqDir = projDir + Constants.seqSeqDataDir; // created with Add Project
+				log.msg("sequence_files not specified - use " + seqDir);
 				
-				log.msg("sequence_files not specified - looking in " + seqDir);
+				if (!Utilities.pathExists(seqDir)) {
+					log.msg("Error: sequence files not found in " + seqDir);
+					return false;
+				}			
+				
 				File sdf = new File(seqDir);
 				if (sdf.exists() && sdf.isDirectory())
 				{
 					for (File f2 : sdf.listFiles())
-					{
 						seqFiles.add(f2);
-					}
 				}
 				else {
-					log.msg("*** Can't find sequence directory " + seqDir);
+					log.msg("*** Cannot find sequence directory " + seqDir);
 					ErrorCount.inc();
 					return false;
 				}
 			}
 			else
 			{
-				String[] fileList = props.getProperty("sequence_files").split(",");
+				String userFiles = props.getProperty("sequence_files");
+				String[] fileList = userFiles.split(",");
+				log.msg("User specified sequence files - " + userFiles);
 				for (String filstr : fileList)
 				{
 					if (filstr == null) continue;
@@ -110,14 +107,12 @@ public class SeqLoadMain
 					File f = new File(filstr);
 					if (!f.exists())
 					{
-						log.msg("*** Can't find sequence file " + filstr);
+						log.msg("*** Cannot find sequence file " + filstr);
 					}
 					else if (f.isDirectory())
 					{
 						for (File f2 : f.listFiles())
-						{
 							seqFiles.add(f2);
-						}
 					}
 					else
 					{
@@ -125,17 +120,21 @@ public class SeqLoadMain
 					}
 				}
 			}
+			if (seqFiles.size()==0) { // CAS500
+				log.msg("*** No sequence files!!");
+				Utilities.showWarningMessage("No sequence files were found");
+				return false;
+			}
+			
 			log.msg("Checking sequence files....");
 			
-			// Scan and upload the sequences
-	
+	// Scan and upload the sequences
 			String prefix = props.getProperty("grp_prefix");
 			Vector<String> grpList = new Vector<String>();
-			int nSeqs = 0, nFile = 0;
+			int nSeqs = 0, seqIgnore=0, cntFile=0;
 			long totalSize = 0;
 			int minSize = Integer.parseInt(props.getProperty("min_size"));
-			log.msg("+++ Sequences at least " + minSize + " bp will be loaded");
-			log.msg("    To change this, set the 'min_size' project parameter.");
+			log.msg("+++ Sequences < " + minSize + "bp will be ignored ('min_size' project parameter).");
 	
 			TreeSet<String> grpNamesSeen = new TreeSet<String>();
 			TreeSet<String> grpFullNamesSeen = new TreeSet<String>();
@@ -143,10 +142,12 @@ public class SeqLoadMain
 			{
 				int nBadCharLines = 0, fileIgnore = 0;
 				long fileSize = 0;
-				if (!f.isFile()) continue; // CAS 1/2/18 was one big if
+				if (!f.isFile()) continue; // CAS42 1/2/18 was one big if
 				
+				cntFile++;
 				log.msg("Reading " + f.getName());
-				BufferedReader fh = new BufferedReader( new FileReader(f));
+				BufferedReader fh = Utils.openGZIP(f.getAbsolutePath()); // CAS500
+	
 				int n = 0;
 				StringBuffer curSeq = new StringBuffer();
 				String grpName = null;
@@ -172,14 +173,13 @@ public class SeqLoadMain
 									nSeqs++; n++;
 									totalSize += curSeq.length();
 									fileSize += curSeq.length();
-									nFile++;
 								}
 								else
 								{
 									System.out.println("+++ Duplicate sequence name: " + grpFullName + " (" + grpName + ") skipping...");
 								}
 							}
-							else fileIgnore++; 
+							else {seqIgnore++; fileIgnore++;} 
 						}
 						grpName = null;
 						curSeq.setLength(0);
@@ -187,7 +187,7 @@ public class SeqLoadMain
 						if (!prefix.equals("") && !line.startsWith(">" + prefix))
 						{
 							log.msg("*** Invalid sequence name " + line);
-							log.msg("    Name should start with the prefix " + prefix);
+							log.msg("    Name should start with the prefix " + prefix + " (see Parameter Help).");
 							log.msg("    To change this, set the 'grp_prefix' project parameter to the proper value, or leave it blank.");
 							ErrorCount.inc();
 							return false;
@@ -222,49 +222,46 @@ public class SeqLoadMain
 						nSeqs++; n++;
 						totalSize += curSeq.length();
 						fileSize += curSeq.length();
-						nFile++;
 					}
-					else fileIgnore++;
+					else {seqIgnore++; fileIgnore++;}
 				}
+				log.msg(String.format("%10d sequences   %10d bases   %4d Ignored",
+						n, fileSize, fileIgnore));
 				
-				log.msg("   " + f.getName() + ": " + n + " sequences, " + fileSize + " bases loaded");
-				if (fileIgnore>0)
-					log.msg("   "  + fileIgnore + " sequences ignored (too small)");		
 				
-				if (n >= MAX_GRPS)
-				{
+				if (n >= MAX_GRPS){
 					log.msg("*** More than " + MAX_GRPS + " sequences loaded");
 					log.msg("    Block view will not work right with this many sequences");
 					log.msg("    Use script/lenFasta.pl to determine 'min_size' to use to reduce number of loaded sequences");
 					ErrorCount.inc();
 				}
 				if (n >= MAX_COLORS)
-				{
 					log.msg("+++ There are " + MAX_COLORS + " distinct colors for blocks -- there will be duplicates");
-				}
 				
 				if (nBadCharLines > 0)
-				{
 					log.msg("+++ " + nBadCharLines + " lines contained characters other than AGCT; these will be replaced by N");
-				}
+			
 				Utils.setProjProp(projIdx,"badCharLines","" + nBadCharLines,pool);	
 			} // end loop through files
 			
-			if (nFile>1)
-				log.msg("Total: " + nSeqs + " sequences, " + totalSize + " bases loaded ");
-			if (nSeqs >= 2500)
-			{
-				log.msg("+++ More than 2500 sequences loaded!");
-				log.msg("    It is recommended to reload with a higher min_size setting, before proceeding");
-				ErrorCount.inc();
-			}
 			if (nSeqs == 0) 
 			{
 				log.msg("*** No sequences were loaded!!");
 				Utilities.showWarningMessage("No sequences were loaded! Check for problems with the sequence files and re-load.");
 				return false;
 			}
-			updateSortOrder(grpList,pool,props,log);
+			if (cntFile>1) {
+				log.msg("Total:");
+				log.msg(String.format("%10d sequences   %10d bases   %4d Ignored",
+						nSeqs, totalSize, seqIgnore));
+			}
+			if (nSeqs >= 2500)
+			{
+				log.msg("+++ More than 2500 sequences loaded!");
+				log.msg("    It is recommended to reload with a higher min_size setting, before proceeding");
+				ErrorCount.inc();
+			}
+						updateSortOrder(grpList,pool,props,log);
 					
 			log.msg("Done:  " + Utilities.getDurationString(System.currentTimeMillis()-startTime) + "\n");
 		}
@@ -277,8 +274,7 @@ public class SeqLoadMain
 		}
 		return true;
 	}
-	// The prefix must be present. 
-	// WMN 7/12: if no prefix, just use the given name.
+	// The prefix must be present. if no prefix, just use the given name.
 	// Note, expects the starting ">" as well
 	static String parseGrpName(String in, String prefix)
 	{
@@ -397,6 +393,7 @@ public class SeqLoadMain
 
 	public static void main(String[] args) 
 	{	
+		if (Constants.TRACE) System.out.println(">>>>> XYZ SeqLoadMain");
 		if (args.length < 1) {
 			System.out.println("Usage: ..."); 
 			return;
@@ -415,9 +412,8 @@ public class SeqLoadMain
 			DatabaseUser.shutdown();
 		}
 		catch (Exception e) {
-			e.printStackTrace();
 			DatabaseUser.shutdown();
-			System.exit(-1);
+			ErrorReport.die(e, "Load seq");
 		}
 	}
 }

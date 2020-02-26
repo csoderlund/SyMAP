@@ -25,8 +25,7 @@ import finder.FBlock;
 import symap.pool.ProjectProperties;
 
 public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyMAPConstants {
-	//public static final String DB_PROPS_FILE = "/properties/rdb.props"; // mdb removed 4/9/08
-	public static final String DB_PROPS_FILE = "/properties/database.properties"; // mdb added 4/9/08
+	public static final String DB_PROPS_FILE = "/properties/database.properties"; 
 
 	private static final String REPETITIVE_MRK_FILTER_QUERY = MapperPool.REPETITIVE_MRK_FILTER_QUERY;
 	private static final String RMFQ_SINGLE_PROJECT         = MapperPool.RMFQ_SINGLE_PROJECT;
@@ -49,11 +48,6 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 		this.mapperPool = mp;
 	}
 
-// mdb unused 2/2/10	
-//	public DotPlotDBUser() {
-//		this(getDatabaseReader(SyMAPConstants.DB_CONNECTION_DOTPLOT,null,null,null,null));
-//	}
-
 	public DotPlotDBUser(Applet applet) {
 		this(applet,null);
 	}
@@ -71,7 +65,7 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 				applet != null ? applet.getParameter(SyMAPApplet.DATABASE_URL) : null,
 				applet != null ? applet.getParameter(SyMAPApplet.USERNAME)     : null,
 				applet != null ? applet.getParameter(SyMAPApplet.PASSWORD)     : null,
-				/*applet != null ? Utilities.getHost(applet)                     :*/ null)); // mdb removed alt host 4/9/08
+				/*applet != null ? Utilities.getHost(applet)                   :*/ null)); 
 	}
 
 	public void setMapperPool(MapperPool mp) {
@@ -144,16 +138,14 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 	}
 
 	public void setIBlocks(Tile tile,
-			Project[] projects, // mdb added 1/20/10 #205
-			boolean swapped) 	// mdb added 12/18/09 #206
+			Project[] projects, 
+			boolean swapped) 	
 	throws SQLException 
 	{
 		try {
-			// mdb added 12/18/09 #206 - swap projects to match database
 			Group gX = (swapped ? tile.getGroup(Y) : tile.getGroup(X));
 			Group gY = (swapped ? tile.getGroup(X) : tile.getGroup(Y));
 			
-			// mdb added 1/20/10 #205
 			Project pX = (swapped ? projects[Y] : projects[X]);
 			Project pY = (swapped ? projects[X] : projects[Y]);
 			
@@ -169,7 +161,6 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 				int start1 = rs.getInt(5);
 				int end1   = rs.getInt(6);
 				
-				// mdb added 1/20/10 #205
 				if (pX.isFPC()) {
 					start2 *= pX.getScale();
 					end2   *= pX.getScale();
@@ -181,11 +172,11 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 					
 				tile.addIBlock(
 						rs.getInt(1), 				/* int number */
-						swapped ? start1 : start2, 	/* int sX */ // mdb added swap 12/18/09 #206
-						swapped ? end1 : end2,		/* int eX */ // mdb added swap 12/18/09 #206
+						swapped ? start1 : start2, 	/* int sX */ 
+						swapped ? end1 : end2,		/* int eX */ 
 						Utilities.getIntArray(rs.getString(4)), /* int[] ctgX */
-						swapped ? start2 : start1, 	/* int sY */ // mdb added swap 12/18/09 #206
-						swapped ? end2 : end1, 		/* int eY */ // mdb added swap 12/18/09 #206
+						swapped ? start2 : start1, 	/* int sY */ 
+						swapped ? end2 : end1, 		/* int eY */
 						Utilities.getIntArray(rs.getString(7))); /* int[] ctgY */
 			}
 			closeResultSet(rs);
@@ -199,7 +190,7 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 
 	public void setHits(Project[] projects, ProjectPair pair, Tile tile, 
 			boolean filtered, ScoreBounds sb,
-			boolean swapped) // mdb added 12/18/09 #206
+			boolean swapped) 
 	throws SQLException 
 	{
 		if (tile.isLoaded(filtered ? Tile.SOME_LOADED : Tile.FULLY_LOADED)) return ;
@@ -212,7 +203,6 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 			ResultSet rs;
 			String qry;
 			
-			// mdb added 12/18/09 #206 - swap projects to match database
 			if (swapped) {
 				pX = projects[Y];
 				pY = projects[X];
@@ -220,7 +210,6 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 				gY = tile.getGroup(X);
 			}
 			
-			// mdb added pseudo-to-pseudo 7/10/07 #121
 			if (pX.isPseudo() && pY.isPseudo()) { // PSEUDO to PSEUDO //////////
 				qry =
 					"SELECT (h.start2+h.end2)>>1 as posX,(h.start1+h.end1)>>1 as posY,h.evalue,h.pctid,b.block_idx,(h.end2-h.start2) as length,h.strand "+
@@ -230,7 +219,6 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 					"       AND h.grp1_idx="+gY.getID()+" AND h.grp2_idx="+gX.getID()+")";
 				rs = stat.executeQuery(qry);
 				while (rs.next()) {
-					// mdb added 8/18/09 - fix rendering of reversed hits for #149
 					int length = rs.getInt(6);
 					String strand = rs.getString(7);
 					if (strand.equals("+/-") || strand.equals("-/+"))
@@ -239,14 +227,14 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 					int posY = rs.getInt(2);
 					
 					Hit hit = new DPHit(
-									swapped ? posY : posX,	/* int posX */ // mdb added swap 12/18/09 #206
-									swapped ? posX : posY,	/* int posY */ // mdb added swap 12/18/09 #206
+									swapped ? posY : posX,	/* int posX */ 
+									swapped ? posX : posY,	/* int posY */ 
 									rs.getDouble(3),		/* double evalue */
 									rs.getDouble(4),		/* double pctid	*/
 									BES,					/* int type	*/
 									false,					/* boolean repetitive */
 									rs.getLong(5)!=0,		/* boolean block */
-									length);				/* int length */ // mdb added length 12/17/09 #149
+									length);				/* int length */ 
 					hits.add(hit);
 					if (sb != null) sb.condSetBounds(hit);
 				}
@@ -304,11 +292,11 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 											rs.getInt(4),		
 											rs.getString(5),	
 											rs.getString(6),	
-											rs.getString(7))*pY.getScale(); // mdb added scale factor 1/20/10 #205
+											rs.getString(7))*pY.getScale(); 
 						
 						Hit hit = new DPHit(
-										swapped ? posY : posX,			/* int posX */ // mdb added swap 12/18/09 #206
-										swapped ? posX : posY,			/* int posY */ // mdb added swap 12/18/09 #206
+										swapped ? posY : posX,			/* int posX */ 
+										swapped ? posX : posY,			/* int posY */ 
 										rs.getDouble(8),				/* double evalue */
 										rs.getDouble(9),				/* double pctid	*/
 										BES,							/* int type	*/
@@ -321,18 +309,18 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 				}
 				else {
 					while (rs.next()) {
-						int posX = gX.getContigPosition(rs.getInt(1))+rs.getInt(3)*pX.getScale();// mdb added scale factor 1/20/10 #205
-						int posY = gY.getContigPosition(rs.getInt(2))+rs.getInt(4)*pY.getScale();// mdb added scale factor 1/20/10 #205
+						int posX = gX.getContigPosition(rs.getInt(1))+rs.getInt(3)*pX.getScale();
+						int posY = gY.getContigPosition(rs.getInt(2))+rs.getInt(4)*pY.getScale();
 						
 						Hit hit = new DPHit(
-										swapped ? posY : posX,		/* int posX */ // mdb added swap 12/18/09 #206
-										swapped ? posX : posY,		/* int posY */ // mdb added swap 12/18/09 #206
+										swapped ? posY : posX,		/* int posX */ 
+										swapped ? posX : posY,		/* int posY */ 
 										rs.getDouble(5),			/* double evalue */
 										ANY_PCTID,					/* double pctid	*/
 										FP,							/* int type	*/
 										rs.getInt(6)+rs.getInt(7)>0,/* boolean repetitive */
 										rs.getBoolean(8), 			/* boolean block */
-										0); // mdb FIXME - added 12/17/07 #149
+										0); 
 						hits.add(hit);
 						if (sb != null) sb.condSetBounds(hit);
 					}
@@ -383,17 +371,17 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 						rhit = ((rs.getInt(6)+rs.getInt(7)) > 0) || rmfd.isRepetitive(rs.getString(9)) && !bhit;
 						if (!filtered || !rhit || bhit) {
 							int posX = rs.getInt(1);
-							int posY = gY.getContigPosition(rs.getInt(2))+rs.getInt(3)*pY.getScale(); // mdb added scale factor 1/20/10 #205
+							int posY = gY.getContigPosition(rs.getInt(2))+rs.getInt(3)*pY.getScale(); 
 								
 							Hit hit = new DPHit(
-									swapped ? posY : posX,	/* int posX */ // mdb added swap 12/18/09 #206
-									swapped ? posX : posY,	/* int posY */ // mdb added swap 12/18/09 #206
+									swapped ? posY : posX,	/* int posX */ 
+									swapped ? posX : posY,	/* int posY */ 
 									rs.getDouble(4),		/* double evalue */
 									rs.getDouble(5),		/* double pctid */
 									MRK,					/* int type	*/
 									rhit,					/* boolean repetitive */
 									bhit,					/* boolean block */
-									0); // mdb FIXME - added 12/17/07 #149
+									0); 
 							hits.add(hit);
 							if (sb != null) sb.condSetBounds(hit);
 						}
@@ -405,18 +393,18 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 						bhit = rs.getBoolean(5);
 						rhit = (rmfd == null ? false : rmfd.isRepetitive(rs.getString(6)) && !bhit);
 						if (!filtered || !rhit || bhit) {
-							int posX = gX.getContigPosition(rs.getInt(1))+rs.getInt(2)*pX.getScale(); // mdb added scale factor 1/20/10 #205
-							int posY = gY.getContigPosition(rs.getInt(3))+rs.getInt(4)*pY.getScale(); // mdb added scale factor 1/20/10 #205
+							int posX = gX.getContigPosition(rs.getInt(1))+rs.getInt(2)*pX.getScale(); 
+							int posY = gY.getContigPosition(rs.getInt(3))+rs.getInt(4)*pY.getScale(); 
 								
 							Hit hit = new DPHit(
-									swapped ? posY : posX, /* int posX */ // mdb added swap 12/18/09 #206
-									swapped ? posX : posY, /* int posY */ // mdb added swap 12/18/09 #206
+									swapped ? posY : posX, /* int posX */ 
+									swapped ? posX : posY, /* int posY */ 
 									NO_EVALUE,	/* double evalue */
 									NO_PCTID,	/* double pctid */
 									MRK,		/* int type	*/
 									rhit,		/* boolean repetitive */
 									bhit,		/* boolean block */
-									0); // mdb FIXME - added 12/17/07 #149
+									0); 
 							hits.add(hit);
 						}
 					}
@@ -448,8 +436,8 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 	}
 
 	public void setProjects(Project[] projects, 
-			int[] xGroups, int[] yGroups, 	// mdb added 1/14/09 #207
-			ProjectProperties pp) 			// mdb added 12/30/09 #206
+			int[] xGroups, int[] yGroups, 	
+			ProjectProperties pp) 			
 	throws SQLException {
 		try {
 			ProjectHolder th = new ProjectHolder(projects);
@@ -459,9 +447,7 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 			else
 				projectCache.add(th);
 				
-			// mdb moved out of else above 1/15/10 #207
 			setGroups(projects, xGroups, yGroups, pp);
-			//printProjects(projects);
 			setContigs(projects, xGroups, yGroups);
 		}
 		catch (SQLException e) {
@@ -479,7 +465,7 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 	}
 
 	public RepetitiveMarkerFilterData getRepetitiveMarkerFilterData(ProjectPair pp) throws SQLException {
-		if (pp == null) return null; // mdb added 7/23/07
+		if (pp == null) return null; 
 			
 		RepetitiveMarkerFilterData rmfd = null;
 
@@ -520,8 +506,8 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 	}
 	
 	private void setGroups(Project[] projects, 
-			int[] xGroupIDs, int[] yGroupIDs, 	// mdb added 1/14/10 #207
-			ProjectProperties pp) 				// mdb added 12/30/09 #206
+			int[] xGroupIDs, int[] yGroupIDs, 	
+			ProjectProperties pp) 				
 	throws SQLException {
 		Vector<Group> list = new Vector<Group>();
 		Statement stat = createStatement();
@@ -530,7 +516,6 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 		String groupList = null;
 		
 		for (Project p : projects) {
-			// mdb added 1/14/10 #207
 			if (xGroupIDs != null && yGroupIDs != null) {
 				groupList = "(";
 				if (p == projects[0])
@@ -545,7 +530,7 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 					"SELECT g.idx,g.sort_order,g.name,p.length " +
 					"FROM groups AS g JOIN pseudos AS p ON (p.grp_idx=g.idx) " +
 					"WHERE g.proj_idx=" + p.getID() +
-					(groupList == null ? "" : " AND g.idx IN " + groupList) + // mdb added 1/14/10 #207
+					(groupList == null ? "" : " AND g.idx IN " + groupList) + 
 					" AND g.sort_order > 0 " +
 					"ORDER BY g.sort_order";
 			else // FPC
@@ -553,12 +538,11 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 					"SELECT g.idx,g.sort_order,g.name,SUM(c.size) " +
 					"FROM contigs AS c JOIN groups AS g ON (c.grp_idx=g.idx) " +
 					"WHERE c.proj_idx=" + p.getID() +
-					(groupList == null ? "" : " AND g.idx IN " + groupList) + // mdb added 1/14/10 #207
+					(groupList == null ? "" : " AND g.idx IN " + groupList) + 
 					" AND g.sort_order > 0 " +
 					"GROUP BY g.idx ORDER BY g.sort_order";
 			rs = stat.executeQuery(qry);
 			while (rs.next()) {
-				// mdb rewritten 1/15/10 #207 - reuse existing groups
 				int idx = rs.getInt(1);
 				Group g = p.getGroupByID(idx);
 				if (g == null)
@@ -574,12 +558,11 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 			closeResultSet(rs);
 		}
 		
-		// mdb added 1/14/10 #207
 		if (xGroupIDs != null && yGroupIDs != null)
 			groupList = "(" + Utilities.getCommaSepString(xGroupIDs) + ", " +
 							Utilities.getCommaSepString(yGroupIDs) + ")";
 		
-		// mdb added 12/14/09 #203 - identify groups with no blocks
+		
 		Project pX = projects[X];
 		for (int i = 0;  i < projects.length;  i++) { // start at 0 (project X) to include self-alignments
 			Project pY = projects[i];
@@ -590,7 +573,7 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 				  "JOIN groups AS g ON (g.idx=b.grp1_idx) " +
 			      "WHERE (b.proj1_idx=" + (swapped ? pX.getID() : pY.getID()) +
 			      " AND b.proj2_idx=" + (swapped ? pY.getID() : pX.getID()) + 
-			      (groupList == null ? "" : " AND g.idx IN " + groupList) + // mdb added 1/14/10 #207
+			      (groupList == null ? "" : " AND g.idx IN " + groupList) + 
 			      " AND g.sort_order > 0) " +
 			      "GROUP BY b.grp1_idx,b.grp2_idx";
 			rs = stat.executeQuery(qry);
@@ -611,12 +594,12 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 	}
 
 	private void setContigs(Project[] projects, 
-			int[] xGroupIDs, int[] yGroupIDs) // mdb added 1/14/10 #207
+			int[] xGroupIDs, int[] yGroupIDs) 
 	throws SQLException {
 		Statement stat = createStatement();
 		for (Project p : projects) {
 			if (p.isFPC() && p.getNumGroups() > 0) { // FPC project
-				// mdb added 1/14/10 #207
+				
 				String groupList = null;
 				if (xGroupIDs != null && yGroupIDs != null) {
 					groupList = "(";
@@ -632,7 +615,7 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 					"FROM groups AS g " +
 					"JOIN contigs AS c ON (g.idx=c.grp_idx) "+
 					"WHERE g.proj_idx=" + p.getID() +
-					(groupList == null ? "" : " AND g.idx IN " + groupList) + // mdb added 1/14/10 #207
+					(groupList == null ? "" : " AND g.idx IN " + groupList) + 
 					" AND g.sort_order > 0 "+
 					"ORDER BY c.number";
 				ResultSet rs = stat.executeQuery(qry);
@@ -641,8 +624,8 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 							rs.getInt(1),
 							rs.getInt(2),
 							rs.getInt(3),
-							rs.getInt(4) * p.getScale(), // mdb added scale factor 1/20/10 #205
-							rs.getInt(5) * p.getScale());// mdb added scale factor 1/20/10 #205
+							rs.getInt(4) * p.getScale(), 
+							rs.getInt(5) * p.getScale());
 				closeResultSet(rs);
 			}
 		}

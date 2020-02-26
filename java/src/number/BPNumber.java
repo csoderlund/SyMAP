@@ -3,7 +3,6 @@ package number;
 /**
  * Class <code>BPNumber</code> should be used for efficiency for GenomicsNumber's in which a CB value is not applicable.
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see GenomicsNumber
  */
 public class BPNumber extends GenomicsNumber {

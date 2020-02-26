@@ -6,8 +6,6 @@ package util;
  * Euclidean distance with each axis scaled.
  *
  * Sqrt[ ((x2-x1)/sX)^2 + ((y2-y1)/sY)^2 ]
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Distance2D
  */
 public class ScaledDistance2D extends Distance2D {

@@ -3,7 +3,16 @@ package symap;
 import java.awt.Cursor;
 
 public interface SyMAPConstants {
-     public static final int NO_VALUE = Integer.MIN_VALUE;
+	
+	public static final String sqlFile = "scripts/symap.sql";
+	
+	// Hit Types
+    public static final String MRK_TYPE = "mrk";
+    public static final String BES_TYPE = "bes";
+    public static final String FINGERPRINT_TYPE = "clone";
+    public static final String SEQ_TYPE = "seq";
+    
+    public static final int NO_VALUE = Integer.MIN_VALUE;
 
     public static final int LEFT_ORIENT   = -1;
     public static final int CENTER_ORIENT = 0;
@@ -31,14 +40,8 @@ public interface SyMAPConstants {
     public static final Cursor S_RESIZE_CURSOR  = Cursor.getPredefinedCursor(Cursor.S_RESIZE_CURSOR);
     public static final Cursor MOVE_CURSOR      = Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR);
     public static final Cursor CROSSHAIR_CURSOR = Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR);
-
-    // Hit Types
-    public static final String MRK_TYPE = "mrk";
-    public static final String BES_TYPE = "bes";
-    public static final String FINGERPRINT_TYPE = "clone";
-    public static final String SEQ_TYPE = "seq";
     
-	// mdb added 1/29/10 - all possible concurrent connections
+	// All possible concurrent connections
 	public static final String DB_CONNECTION_BACKEND = "Backend";
 	public static final String DB_CONNECTION_PROJMAN = "Project Manager";
 	public static final String DB_CONNECTION_SYMAP_APPLET = "SyMAP Applet";

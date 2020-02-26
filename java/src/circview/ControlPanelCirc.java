@@ -10,20 +10,12 @@ import java.awt.event.MouseEvent;
 
 import java.applet.Applet;
 
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
-
 import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JSeparator;
-import javax.swing.JSlider;
 import javax.swing.JComboBox;
-import javax.swing.DefaultBoundedRangeModel;
-
-import java.util.Observer;
-import java.util.Observable;
 
 import symap.SyMAP;
 import symap.frame.HelpBar;
@@ -51,10 +43,10 @@ public class ControlPanelCirc extends JPanel implements HelpListener
 		minusButton      = (JButton)  Utilities.createButton(null,"/images/minus.gif","Shrink: Decrease the scale.",hb,buttonListener,false);
 		plusButton       = (JButton)  Utilities.createButton(null,"/images/plus.gif","Grow: Increase the scale.",hb,buttonListener,false);
 		rotateButton       = (JButton)  Utilities.createButton(null,"/images/rotate.gif","Rotate the image.",hb,buttonListener,false);
-		scaleCheckbox = (JCheckBox)  Utilities.createButton(null,"Scale to genome size","Scale to genome and chromosome sizes in bp",hb,buttonListener,true); // mdb added 7/8/09 #164
-		selfCheckbox = (JCheckBox)  Utilities.createButton(null,"Self-align","Show self-alignment synteny blocks",hb,buttonListener,true); // mdb added 7/8/09 #164
+		scaleCheckbox = (JCheckBox)  Utilities.createButton(null,"Scale to genome size","Scale to genome and chromosome sizes in bp",hb,buttonListener,true); 
+		selfCheckbox = (JCheckBox)  Utilities.createButton(null,"Self-align","Show self-alignment synteny blocks",hb,buttonListener,true); 
 		selfCheckbox.setSelected(true);
-		rotCheckbox = (JCheckBox)  Utilities.createButton(null,"Rotated text","Draw with labels rotated",hb,buttonListener,true); // mdb added 7/8/09 #164
+		rotCheckbox = (JCheckBox)  Utilities.createButton(null,"Rotated text","Draw with labels rotated",hb,buttonListener,true); 
 		rotCheckbox.setSelected(false);
 
 		String[] invOptions = {"Show all blocks","Show inverted blocks","Show non-inverted blocks","Two-color scheme"};
@@ -63,11 +55,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener
 		invChooser.addActionListener(buttonListener);
 		invChooser.setName("Select how to show inverted and non-inverted synteny blocks");
 		hb.addHelpListener(invChooser,this);
-		//Component[] comps = invChooser.getComponents();
-		//for(int i = 0; i < comps.length; i++)
-		//{			
-		//	hb.addHelpListener(comps[i],this);
-		//}
+		
 
 		saveButton = (JButton) Utilities.createButton(this,"/images/print.gif","Save image" ,hb,buttonListener,false);
 		helpButton = (JButton) Utilities.createButton(this,"/images/help.gif","Help: Online documentation." ,hb,null,false);
@@ -149,11 +137,9 @@ public class ControlPanelCirc extends JPanel implements HelpListener
 		if (sep > 0) addToGrid(gbl,gbc,new JLabel(),1,0);
 		if (sep > 1) {
 		    addToGrid(gbl,gbc,new JSeparator(JSeparator.VERTICAL),1,0);
-		    //addToGrid(gbl,gbc,new JLabel(),1,0); // mdb removed 5/20/09
 		}
     }
     
-    // mdb added 7/6/09
 	public String getHelpText(MouseEvent event) { 
 		Component comp = (Component)event.getSource();
 		return comp.getName();

@@ -47,8 +47,7 @@ public class Filter extends JDialog implements DotPlotConstants {
 		new HighlightCheckBoxListener(highlightBlockHitsModel, highlightSubChainsModel);
 
 	private Data data;
-	//private boolean type; 			  // mdb removed 12/3/09 #202
-	private boolean isPseudoX, isPseudoY; // mdb added 12/3/09 #202
+	private boolean isPseudoX, isPseudoY; 
 	private FilterData myFilterData;
 
 	private JSlider[] evalueSliders = new JSlider[NUM_HIT_TYPES];
@@ -58,10 +57,10 @@ public class Filter extends JDialog implements DotPlotConstants {
 	private JCheckBox[] hideBoxes = new JCheckBox[NUM_HIT_TYPES];
 	private JPanel buttonPanel;
 	private JButton cancelButton, defaultButton, okButton;
-	//private JButton helpButton; // mdb removed 5/20/09
+	
 	private JRadioButton showBlockHitsBtn, showNonRepetitiveHitsBtn, showAllHitsBtn;
 	private JCheckBox showBlocksBox, showContigsBox, highlightBox, highlightSubChains;
-	private JCheckBox showEmptyBox; // mdb added 12/3/09 #203
+	private JCheckBox showEmptyBox; 
 
 	public static void showFilter(Data d) {
 		SBObserver.show(d.getScoreBounds(),new Filter(d));
@@ -74,8 +73,7 @@ public class Filter extends JDialog implements DotPlotConstants {
 	private Filter(Data d) {
 		data = d;
 		
-		// mdb added 12/3/09 #202
-		isPseudoX/*type*/ = data.getProject(X).isPseudo();
+		isPseudoX = data.getProject(X).isPseudo();
 		isPseudoY = data.getProject(Y).isPseudo();
 
 		FilterListener listener = new FilterListener();
@@ -102,16 +100,12 @@ public class Filter extends JDialog implements DotPlotConstants {
 		defaultButton = createButton("Defaults", "Reset to defaults and close");
 		defaultButton.addActionListener(listener);
 
-		//helpButton = new JButton("Help"); // mdb removed 5/20/09
-		//data.enableHelpOnButton(helpButton,"dpfilter"); // mdb removed 4/30/09 #162
-
 		buttonPanel = new JPanel(new BorderLayout());
 		buttonPanel.add(new JSeparator(), "North");
 		JPanel jpanel = new JPanel();
 		jpanel.add(okButton);
 		jpanel.add(cancelButton);
 		jpanel.add(defaultButton);
-		//jpanel.add(helpButton); // mdb removed 5/20/09
 		buttonPanel.add(jpanel, "Center");
 
 		highlightBox = new JCheckBox("Highlight Block Hits");
@@ -143,7 +137,6 @@ public class Filter extends JDialog implements DotPlotConstants {
 		showContigsBox = new JCheckBox("Show Contigs (Region Only)");
 		showContigsBox.addItemListener(listener);
 		
-		// mdb added 12/3/09 #203
 		showEmptyBox = new JCheckBox("Show Empty Regions");
 		showEmptyBox.addItemListener(listener);
 
@@ -181,8 +174,8 @@ public class Filter extends JDialog implements DotPlotConstants {
 				addToGrid(cp,gbl,gbc,pctidLabels[BES],GridBagConstraints.REMAINDER);
 			}
 		}
-		else if (isPseudoX) { // PSEUDO to PSEUDO - mdb added 12/3/09 #202
-			addToGrid(cp,gbl,gbc,new JLabel("Pseudo Hits"),1);
+		else if (isPseudoX) { // PSEUDO to PSEUDO 
+			addToGrid(cp,gbl,gbc,new JLabel("Seq Hits"),1); // CAS501 Pseudo->Seq
 			addToGrid(cp,gbl,gbc,new JLabel(),GridBagConstraints.REMAINDER);
 			addToGrid(cp,gbl,gbc,new JLabel("% Identity:"),1);
 			addToGrid(cp,gbl,gbc,pctidSliders[BES],1);
@@ -201,10 +194,10 @@ public class Filter extends JDialog implements DotPlotConstants {
 		if (DotPlot.RUN_SUBCHAIN_FINDER)
 			addToGrid(cp,gbl,gbc,highlightSubChains,GridBagConstraints.REMAINDER);
 
-		if (!isPseudoY) // FPC - mdb added condition 12/3/09 #202
+		if (!isPseudoY) // FPC - 
 			addToGrid(cp,gbl,gbc,showContigsBox,GridBagConstraints.REMAINDER);
 		addToGrid(cp,gbl,gbc,showBlocksBox,GridBagConstraints.REMAINDER);
-		addToGrid(cp,gbl,gbc,showEmptyBox,GridBagConstraints.REMAINDER); // mdb added 12/3/09 #203
+		addToGrid(cp,gbl,gbc,showEmptyBox,GridBagConstraints.REMAINDER); 
 		addToGrid(cp,gbl,gbc,buttonPanel,GridBagConstraints.REMAINDER);
 
 		init();
@@ -244,7 +237,7 @@ public class Filter extends JDialog implements DotPlotConstants {
 		highlightBox.setSelected(myFilterData.isHighlightBlockHits());
 		showBlocksBox.setSelected(myFilterData.isShowBlocks());
 		showContigsBox.setSelected(myFilterData.isShowContigs());
-		showEmptyBox.setSelected(myFilterData.isShowEmpty()); // mdb added 12/3/09 #203
+		showEmptyBox.setSelected(myFilterData.isShowEmpty()); 
 		if (myFilterData.isShowAllHits())        showAllHitsBtn.setSelected(true);
 		else if (myFilterData.isShowBlockHits()) showBlockHitsBtn.setSelected(true);
 		else	                                 showNonRepetitiveHitsBtn.setSelected(true);
@@ -288,8 +281,7 @@ public class Filter extends JDialog implements DotPlotConstants {
 			int i = observers.indexOf(o);
 			if (i >= 0) {
 				o = observers.get(i);
-				//o.filter.hide(); // mdb removed 6/29/07 #118
-				o.filter.setVisible(false); // mdb added 6/29/07 #118
+				o.filter.setVisible(false); 
 				o.filter.dispose();
 				observers.remove(i);
 			}
@@ -304,8 +296,7 @@ public class Filter extends JDialog implements DotPlotConstants {
 						|| o.filter.isPseudoX != filter.isPseudoX 
 						|| o.filter.isPseudoY != filter.isPseudoY) 
 				{
-					//o.filter.hide(); // mdb removed 6/29/07 #118
-					o.filter.setVisible(false); // mdb added 6/29/07 #118
+					o.filter.setVisible(false); 
 					o.filter.dispose();
 					o.filter = filter;
 				}
@@ -315,8 +306,7 @@ public class Filter extends JDialog implements DotPlotConstants {
 				o.sb.addObserver(o);
 				o.filter.setMinMaxValues(o.sb);
 			}
-			//o.filter.show(); // mdb removed 7/2/07 #118
-			o.filter.setVisible(true); // mdb added 7/2/07 #118
+			o.filter.setVisible(true); 
 		}
 
 		public void update(Observable o, Object arg) {
@@ -337,16 +327,14 @@ public class Filter extends JDialog implements DotPlotConstants {
 
 		public void actionPerformed(ActionEvent e) {
 			Object src = e.getSource();
-			if      (src == okButton) /*hide();*/setVisible(false); // mdb changed 6/29/07 #118
+			if      (src == okButton) setVisible(false); 
 			else if (src == cancelButton) {
 				data.getFilterData().set(myFilterData);
-				//hide(); // mdb removed 6/29/07 #118
-				setVisible(false); // mdb added 6/29/07 #118
+				setVisible(false); 
 			}
 			else if (src == defaultButton) {
 				data.getFilterData().setDefaults();
-				//hide(); // mdb removed 6/29/07 #118
-				setVisible(false); // mdb added 6/29/07 #118
+				setVisible(false); 
 			}
 		}
 
@@ -383,7 +371,7 @@ public class Filter extends JDialog implements DotPlotConstants {
 				fd.setShowBlocks(evt.getStateChange() == ItemEvent.SELECTED);
 			else if (src == showContigsBox)
 				fd.setShowContigs(evt.getStateChange() == ItemEvent.SELECTED);
-			else if (src == showEmptyBox) // mdb added 12/3/09 #203
+			else if (src == showEmptyBox) 
 				fd.setShowEmpty(evt.getStateChange() == ItemEvent.SELECTED);
 		}
 	}

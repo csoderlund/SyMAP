@@ -60,7 +60,7 @@ public class CloneRemarks {
 
 		public CloneRemark(int id, String remark) {
 			this.id = id;
-			this.remark = remark;//(remark == null) ? null : remark.intern(); // mdb removed intern() 2/2/10 - can cause memory leaks in this case
+			this.remark = remark;
 		}
 
 		public int getID() {

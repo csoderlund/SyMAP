@@ -3,8 +3,6 @@ package util;
 /**
  * Interface <code>DistanceFunction</code> provides an interface
  * for implementing distance functions.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Coordinate
  */
 public interface DistanceFunction {

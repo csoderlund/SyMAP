@@ -36,7 +36,7 @@ public class OverviewPanel extends JPanel {
 			if(temp.isFPC())
 				overView += "FPC";
 			else if(temp.isPseudo())
-				overView += "Pseudo";
+				overView += "Seq"; // CAS501 Pseudo->Seq
 			else
 				overView += "Draft";
 			overView += "</TD></TR>";

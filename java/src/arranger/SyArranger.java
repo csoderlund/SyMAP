@@ -213,7 +213,6 @@ public class SyArranger extends Arranger implements DotPlotConstants {
 
 		private int startInd, startValue;
 		private int endInd,   endValue;
-		//private boolean orientation; // mdb removed 6/29/07 #118
 
 		public BPRange(int needed) {
 			this.needed = needed;
@@ -295,7 +294,6 @@ public class SyArranger extends Arranger implements DotPlotConstants {
 
 		public boolean complete(Hit[] hits) {
 			if (isComplete()) {
-				//orientation = endValue > startValue;//getPearsonOrientation(hits); // mdb removed 6/29/07 #118
 				return true;
 			}
 			return false;
@@ -341,11 +339,6 @@ public class SyArranger extends Arranger implements DotPlotConstants {
 			return false;
 		}
 
-// mdb removed 6/29/07 #118
-//		private boolean getPearsonOrientation(Hit[] hits) {
-//			return Hit.pearson(getIndxs(),hits) >= 0;
-//		}
-
 		private int diff(int ind, int value) {
 			if (startInd < ind)
 				return Math.max(ind - endInd,Math.abs(value - endValue));
@@ -371,14 +364,5 @@ public class SyArranger extends Arranger implements DotPlotConstants {
 		public boolean isComplete() {
 			return indxs.size() >= needed; /*endInd - startInd + 1 >= needed;*/
 		}
-
-// mdb removed 6/29/07 #118
-//		private static List getIntList(int sInd, int eInd) {
-//			List list = new ArrayList(eInd - sInd + 1);
-//			for (int i = sInd; i <= eInd; i++)
-//				list.add(new Integer(i));
-//			return list;
-//		}
 	}
-
 }

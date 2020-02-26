@@ -19,8 +19,6 @@ import symap.frame.SyMAPFrame;
  * Class <code>LinkLabel</code> is a JLabel with its text underlined and a 
  * transparent background that changes foreground color when the mouse 
  * enters and exits.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see JLabel
  * @see MouseListener
  */
@@ -30,7 +28,7 @@ public class LinkLabel extends JLabel implements MouseListener {
 	
 	private Color defaultColor;
     private Color hoverColor;
-    private String url; // mdb added 7/21/09
+    private String url; 
 
     /**
      * Creates a new <code>LinkLabel</code> instance with the given text and colors.
@@ -52,18 +50,15 @@ public class LinkLabel extends JLabel implements MouseListener {
 		addMouseListener(this);
     }
     
-    // mdb added 7/17/09
     public LinkLabel(String text) {
     	this(text, Color.blue.darker().darker(), Color.blue);
     }
     
-    // mdb added 7/21/09
     public LinkLabel(String text, Color color, Color hoverColor, String url) {
     	this(text, color, hoverColor);
     	this.url = url;
     }
     
-    // mdb added 9/3/09
     public LinkLabel(String text, String url) {
     	this(text, Color.blue.darker().darker(), Color.blue, url);
     }
@@ -96,7 +91,7 @@ public class LinkLabel extends JLabel implements MouseListener {
      */
     public void paint(Graphics g) {
 		super.paint(g);
-		Rectangle r = getBounds();//g.getClipBounds(); // mdb changed 5/27/09 - fix scrolling bug
+		Rectangle r = getBounds();
 		g.drawLine(0, r.height - this.getFontMetrics(this.getFont()).getDescent() + 1,
 			   this.getFontMetrics(this.getFont()).stringWidth(this.getText()),  
 			   r.height - this.getFontMetrics(this.getFont()).getDescent() + 1);
@@ -134,7 +129,7 @@ public class LinkLabel extends JLabel implements MouseListener {
     }
 
     public void mouseClicked(MouseEvent e) { 
-    	// mdb added 7/21/09 #166 - for TextBox URL support
+    
     	if (url != null) {
 	    	Applet applet = null;
 	    	for (Frame f : Frame.getFrames()) { // get applet if exists

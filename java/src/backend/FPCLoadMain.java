@@ -7,9 +7,9 @@ import java.util.Vector;
 
 import symap.pool.DatabaseUser;
 import util.ErrorCount;
+import util.ErrorReport;
 import util.Logger;
 import util.Utilities;
-import backend.Project;
 
 /*
  *  Parse FPC file and load data into database
@@ -22,17 +22,29 @@ public class FPCLoadMain
 		
 		log.msg("Loading FPC project " + projName);
 		
+		// If fpc not in /data/fpc, then a "save" params would have created this directory
+		String projDir = Constants.fpcDataDir + projName; // data/fpc/<p> has params
+		File sdf = new File(projDir);
+		if (!sdf.exists() || !sdf.isDirectory()) {
+			log.msg("Cannot find fpc directory " + projDir);
+			ErrorCount.inc();
+			return false;
+		}
+		
 		// Load properties for FPC project
-		String projDir = "data/fpc/" + projName;
-		SyProps props = new SyProps(log, new File(projDir + "/params"));
+		File fh = new File(projDir + Constants.paramsFile);
+		if (!fh.exists() || !fh.isFile()) {
+			log.msg("Cannot find fpc file " + projDir + Constants.paramsFile);
+			ErrorCount.inc();
+			return false;
+		}
+		SyProps props = new SyProps(log, fh);
 		if (props.getProperty("display_name") == null)
 			props.setProperty("display_name", projName);
 		if (props.getProperty("name") == null)
 			props.setProperty("name", projName);
 		if (props.getProperty("category") == null)
-			props.setProperty("category", "Uncategorized");
-//		if (props.getProperty("group") != null && !props.getProperty("group").equals(""))
-//			props.setProperty("category", props.getProperty("group"));		
+			props.setProperty("category", "Uncategorized");		
 		if (props.getProperty("description") == null)
 			props.setProperty("description", "");
 		
@@ -42,7 +54,7 @@ public class FPCLoadMain
 			pool.deleteProject(projIdx);
 		
 		if (pool.projectExists(projName)) {
-			System.out.println("A PSEUDO project with the same exists, please remove it first\n" +
+			System.out.println("A Sequence project with the same exists, please remove it first\n" +
 					"or select a different name for this project.");
 			return false;
 		}
@@ -58,17 +70,10 @@ public class FPCLoadMain
 		File fpcFile = null;
 		if (!props.containsKey("fpc_file") || props.getProperty("fpc_file").trim().equals(""))
 		{
-			File sdf = new File(projDir);
-			File[] seqFiles = null;
-			if (sdf.exists() && sdf.isDirectory())
-				seqFiles = sdf.listFiles(new ExtensionFilter(".fpc"));
-			else {
-				log.msg("Can't find fpc directory " + projDir);
-				ErrorCount.inc();
-				return false;
-			}
+			File[] seqFiles = sdf.listFiles(new ExtensionFilter(".fpc"));
+			
 			if (seqFiles.length == 0) {
-				log.msg("Can't find fpc file in  directory " + projDir);
+				log.msg("Cannot find fpc file in  directory " + projDir);
 				ErrorCount.inc();
 				return false;
 			}
@@ -85,20 +90,18 @@ public class FPCLoadMain
 			{
 				fpcFile = new File(props.getProperty("fpc_file"));
 			}
-
 		}
 		if (fpcFile == null || !fpcFile.isFile())
 		{
-			log.msg("Can't find fpc file ");
+			log.msg("Cannot find fpc file ");
 			return false;
 		}
 		String prefix = props.getProperty("grp_prefix");
 		
 		Vector<File> besFiles = new Vector<File>();
 		Vector<File> mrkFiles = new Vector<File>();
-		addFiles(props,"bes_files",besFiles, log);
-		addFiles(props,"marker_files",mrkFiles, log);
-		
+		addFiles(props, "bes_files", besFiles, log);
+		addFiles(props, "marker_files", mrkFiles, log);
 		
 		// Set up the sort order of the groups based on param file setting
 		GroupSorter gs = null;
@@ -111,12 +114,12 @@ public class FPCLoadMain
 		else
 			gs = new GroupSorter(GrpSortType.Alpha);
 		
-		String seqdir = projDir + "/sequence";
 		int maxctgs = Integer.parseInt(props.getProperty("max_mrk_ctgs_hit"));
 		FPCData mFPC;
 		try
 		{
-			mFPC = new FPCData(pool, log, fpcFile, projIdx, prefix, gs, seqdir,maxctgs,besFiles, mrkFiles);
+			mFPC = new FPCData(pool, log, fpcFile, projIdx, prefix, gs, 
+					projDir, maxctgs, besFiles, mrkFiles);
 		}
 		catch (Exception e)
 		{
@@ -130,7 +133,7 @@ public class FPCLoadMain
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			ErrorReport.print(e, "Loading FPC file");
 			log.msg("Failed to load the FPC file");
 			ErrorCount.inc();
 			return false;			
@@ -144,7 +147,6 @@ public class FPCLoadMain
 		if (!props.containsKey(key)) return;
 		
 		String[] fileList = props.getProperty(key).split(",");
-		int i = 0;
 		for (String filstr : fileList)
 		{
 			if (filstr == null) continue;
@@ -152,20 +154,18 @@ public class FPCLoadMain
 			File f = new File(filstr);
 			if (!f.exists())
 			{
-				log.msg("Can't find sequence file " + filstr);
+				log.msg("Cannot find sequence file " + filstr);
 			}
 			else if (f.isDirectory())
 			{
 				for (File f2 : f.listFiles())
 				{
 					files.add(f2);
-					i++;
 				}
 			}
 			else
 			{
 				files.add(f);
-				i++;
 			}
 		}
 	}

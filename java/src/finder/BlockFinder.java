@@ -19,7 +19,6 @@ import util.State;
  * <code>numberOfParams()</code>, and <code>getParam(int i)</code> should be overrided.  The super method should
  * also be invoked as BlockFinder has it's own configurable paramater, <code>debug</code>.
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see ParamHolder
  * @see DotPlotConstants
  */
@@ -41,22 +40,22 @@ public abstract class BlockFinder extends ParamHolder implements DotPlotConstant
      * @param props a <code>PropertiesReader</code> value of properties file specific to the algorithms for setting default values.
      */
     protected BlockFinder(ProjectProperties pp, FinderDBUser db, Tile block, int rid, PropertiesReader props) {
-	super(props);
-	this.pp = pp;
-	this.db = db;
-	this.block = block;
-	this.rid = rid;
-	stop = false;
-	setDefaultParams();
+		super(props);
+		this.pp = pp;
+		this.db = db;
+		this.block = block;
+		this.rid = rid;
+		stop = false;
+		setDefaultParams();
     }
 
     public void stateChanged(ChangeEvent evt) {
-	int s = ((State)evt.getSource()).state();
-	if (s == State.STOPPING || s == State.STOPPED) stop();
+    		int s = ((State)evt.getSource()).state();
+    		if (s == State.STOPPING || s == State.STOPPED) stop();
     }
 
     public void stop() {
-	stop = true;
+    	stop = true;
     }
 
     public boolean isStop() {

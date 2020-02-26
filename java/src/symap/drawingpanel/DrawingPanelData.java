@@ -7,8 +7,6 @@ import symap.track.TrackHolder;
 
 /**
  * Holds all of the data to draw the map(s) of the drawing panel.
- * 
- * @author Austin Shoemaker
  */
 public class DrawingPanelData {
 	private MapperData[] mapperData;

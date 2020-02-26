@@ -29,7 +29,7 @@ a {font-size:100%}
 		    		<td height="60" width="428" align="left" valign="bottom" 
 							style="padding:0px 0px 10px 30px" size=5>
 							<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
-				    		<b>NCBI genome to SyMAP</b>
+				    		<b>NCBI to SyMAP</b>
 							</font>
 		    		</td>
 		    		<td height="60" width="161" align="center" valign="bottom">&nbsp;
@@ -46,7 +46,8 @@ a {font-size:100%}
 <a href=../SystemGuide.html class="wt">System Guide</a> |
 <a href=../UserGuide.html class="wt">User Guide</a> |
 <a href=../Tour.html class="wt">Tour</a> |
-<a href=../TroubleShoot.html class="wt">Troubleshooting </a>
+<a href=../TroubleShoot.html class="wt">Troubleshooting </a> |
+<a href=index.html class="wt">Convert</a> 
 </span>
 								</td>
 							</tr>
@@ -56,32 +57,40 @@ a {font-size:100%}
 	        	<tr>
     	    		<td colspan="3" valign="top" align="left" 
 								style='padding:20px 15px 0px 15px;font-size:85%'>
-								
-<h4>Contents</h4>
+	
+<h2>Overview</h2>
+This document corresponds to the ConvertNCBI release with SyMAP v5.0.2 (date 24-Feb-2020).
+<p>	
+NCBI supplies FASTA formated files for genome sequence and GFF3 formated files for the annotation, 
+where FASTA and GFF3 files are the input to SyMAP. 
+However, using them directly can cause problems. 
+The following provides a simple scheme to produce only the files necessary.	
+<p>								
+<b>Contents</b>							
+
 <table border=0 cellspacing=3 cellpadding=2 style="font-size:95%">
 <tr>
 <td align=left valign=top>
 	<table cellspacing=2 cellpadding=2>
-	<tr><td align=left valign=top>01.</td><td align=left valign=top> <a href=#dl>Download</a></td></tr>
-	<tr><td align=left valign=top>02.</td><td align=left valign=top> <a href=#cv>Convert files</a></td></tr>
-	<tr><td align=left valign=top>03. </td><td align=left valign=top><a href=#what>What the ConvertNCBI script does</a></td></tr>	
+	<tr><td align=left valign=top>1.</td><td align=left valign=top> <a href=#dl>Download</a></td></tr>
+	<tr><td align=left valign=top>2.</td><td align=left valign=top> <a href=#cv>Convert files</a></td></tr>
+	<tr><td align=left valign=top>3.</td><td align=left valign=top> <a href=#load>Load files into SyMAP</a></td></tr>	
 	</table>
 </td>
 <td align=left valign=top>
 	<table cellspacing=2 cellpadding=2>
-	<tr><td align=left valign=top>04.</td><td align=left valign=top> <a href=#load>Load files into SyMAP</a></td></tr>
-	<tr><td align=left valign=top>05.</td><td align=left valign=top> <a href=#scaf>Scaffolds</a></td></tr>
-	<tr><td align=left valign=top>06.</td><td align=left valign=top> <a href=#edit>Editing the script</a></td></tr>
+	<tr><td align=left valign=top>&nbsp;&nbsp;&nbsp;4. </td><td align=left valign=top><a href=#what>What the ConvertNCBI script does</a></td></tr>
+	<tr><td align=left valign=top>&nbsp;&nbsp;&nbsp;5.</td><td align=left valign=top> <a href=#scaf>Scaffolds</a></td></tr>
+	<tr><td align=left valign=top>&nbsp;&nbsp;&nbsp;6.</td><td align=left valign=top> <a href=#edit>Editing the script</a></td></tr>
 	</table>
 </td>					
 </table>
-The <tt>ConvertNCBI</tt> script was updated 1/16/18; either get new release package or email symap at agcol.arizona.edu for a copy of it.
-<a name=dl>
+
 <h2>Download</h2>
 
 <ol>
 <li>Go to <a href="https://www.ncbi.nlm.nih.gov" target="_blank">NCBI</a>.
-<li>Select "Genome" from the pull-down at the top.
+<li>Select "Genome" from the pull-down at the top, as shown in Fig 1.
 <li>Enter you genome name followed by "Search".
 You should see a page similar to the one below.
 <li>Download the FASTA and GFF file. 
@@ -93,33 +102,42 @@ Two approaches:
 <li>Or use the <font color=darkblue><b>RefSeq</b></font> link in the "Download sequence and annotation from
 RefSeq..." and download the files with the "fna.gz" and "gff.gz" suffixes.
 </ol>
-Usually the first approach has the correct format, but if it does not, try the second.
+Usually the first approach has the correct format , but if it does not, try the second. A correct format for
+input to ConvertNCBI has: (1) The 'product' keyword should be in
+the mRNA attribute line, not the CDS, (2) The source is typically 'Gnomon'.
 </ol>
 
 <a href="img/NCBI-genome.png"><img src="img/NCBI-genome.png" width=500 border=1></a>
-
+<br><b>Fig 1. </b> An example of the genome on the NCBI site.
 <a name=cv>
 <h2>Convert files</h2>
 <ol>
-<li>Go to the <tt>symap_42/data/pseudo</tt> directory.
-<li>Make a subdirectory for each of your projects and move the FASTA and GFF files
-into their respective directory. Leave the "fna.gz" and "gff.gz" suffixes on the files.
-<li>Type the following at the command line to copy the <tt>ConvertNCBI</tt> script to the <tt>pseudo</tt> directory: 
-<pre>cp ../../scripts/ConvertNCBI.class .</pre>
+<li>Go to the <tt>symap_5/data/seq</tt> directory.
+<li>Make a subdirectory for your species and move the FASTA and GFF files
+into the directory. Leave the "fna.gz" and "gff.gz" suffixes on the files.
+<li>Type the following at the command line to copy the <tt>ConvertNCBI</tt> script to the <tt>seq</tt> directory: 
+<pre>cp ../../scripts/ConvertNCBI*.class .</pre>
 
-<li>For each project, execute 
-<pre>java ConvertNCBI {project directory name}</pre>
-
+<li>Execute 
+<pre>java ConvertNCBI &lt;species&gt;</pre>
 </ol>
-For example, I did the above steps for Rice. From my 
-<tt>symap_42/data/pseudo</tt> directory, executed:
+
+<h3>Example</h3>
+In <tt>symap_5/data/seq</tt> directory, I made a subdirectory called "rice" and 
+moved the .fna.gz and gff.gz files into it:
 <pre>
+data/seq/rice/
+      GCF_001433935.1_IRGSP-1.0_genomic.fna.gz
+      GCF_001433935.1_IRGSP-1.0_genomic.gff.gz
+</pre>
+From the <tt>symap_5/data/seq</tt> directory, I executed:
+<pre>
+cp ../../scripts/ConvertNCBI*.class .
 java ConvertNCBI rice
 </pre>
 This results in the following contents: 
 <pre>
-data/pseudo/
-   rice/
+data/seq/rice/
       GCF_001433935.1_IRGSP-1.0_genomic.fna.gz
       GCF_001433935.1_IRGSP-1.0_genomic.gff.gz
       annotation/
@@ -128,26 +146,39 @@ data/pseudo/
       sequence/
          genomic.fna
 </pre>
-The output gives useful details of the annotation (e.g. see rice <a href=rice.html>details</a>); if the details do not appear right, you may need to <a href=#edit>edit</a> the
+The output gives useful details of the annotation (e.g. see rice <a href=rice.html target="_blank">details</a>);
+if the details do not appear right, you may need to <a href=#edit>edit</a> the
 script for your genomes.
 <p>
-<i>ConvertNCBI optional flags</i>: The flags were updated as of 1/16/18; get new package or email symap at agcol.arizona.edu
-for a copy of the new script.
+<i>ConvertNCBI optional flags</i>:
 <table border=1 cellpadding=5>
 <tr><td><b>Flag</b><td><b>Description</b><td><b>Details</b><td><b>Default</b>
+<tr><td>-m<td>Hard-mask<td>NCBI genome sequences are soft-masked, which is changed to hard masked<td>Leave as soft-mask
 <tr><td>-v<td>Verbose<td>Print out header lines of skipped sequences<td>No print
 <tr><td>-s<td>Include Scaffolds in output<td>See section <a href=#scaf>Scaffolds</a><td>No scaffolds
 <tr><td>-l<td>Use linkage groups<td>Search 'linkage' instead of 'chromosome'<td>Use chromosomes
 <tr><td>-r<td>Use only RefSeq records<td>-r and -g can be used together<td>Use all sources*
-<tr><td>-g<td>Use only Gonome records<td>-r and -g can be used together<td>Use all sources*
+<tr><td>-g<td>Use only Gnomon records<td>-r and -g can be used together<td>Use all sources*
 </table>
 *If neither -r or -g is used, then all sources are used.
 
+<a name=load>
+<h2>Load files into SyMAP</h2>
+The above scenerio puts the files in the default SyMAP directories. 
+When you start up SyMAP, you will see your projects listed on the left of the panel. Check the projects
+you want to load, which will cause them to be shown on the right of the symap window. The
+default parameters for the converted Ensembl projects will probably be sufficient.
+Select "Load All Projects".
+Once loaded, you can run the synteny algorithm be selecting "All Pairs". If you want to compute self-synteny,
+you have to do that individually with the "Selected Pair" button.
+
+
 <a name=what>
 <h2>What the ConvertNCBI script does</h2>
-The following occurs in the <tt>data/pseudo/{project directory name}</tt> where "project directory name"
+The following occurs in the <tt>data/seq/&lt;project directory name&gt;</tt> where "project directory name"
 is the argument supplied to <tt>ConvertNCBI</tt>:
-<ol>
+
+<ul>
 <li>Reads the file ending in '.fna.gz' (or '.fna') and writes a new file called <tt>sequence/genomic.fna</tt> with the following changes:
 <ol>
 <li>Sequences must have the word "chromosome" in their ">" header line in order to be copied.
@@ -162,17 +193,26 @@ is replaced with:
 <pre>
 >Chr1  NC_029256.1
 </pre>
+
+
 <li>Reads the file ending in 'gff.gz' (or .gff) and writes two new files called <tt>annotation/gene.gff</tt> and 
 <tt>annotation/exon.gff</tt>, as follows:
-<ol>
-<li>Only lines with the 'source' (2nd column) equal to 'Gnomon' are read.
-<li>Only lines with the 'type' (3rd column) equal 'gene', 'mRNA', and 'exon' are read.
 
+<ul>
+<li><tt>gene.gff</tt>:
+
+<ol>
+<li>Only lines with type 'gene' and attribute 'gene-biotype=protein-coding' are processed.
+<li>Only lines with type 'mRNA' and have an accepted gene parent line are processed.
+<li>Only lines with type 'exon' and have an accepted mRNA parent line, where the mRNA is the first
+for the gene parent, are processed.
 <li>The gene line is written to the <tt>gene.gff</tt> file with the following two changes:
 <ol type="i">
 <li>The first column 'seqid' is replace with the 'ChrN' value assigned when reading the '.fna' file.
-<li>The last column 'attributes' keeps the "ID=" and "Name=" fields but replaces the rest of the 
-content with the "product=" values from its mRNA lines. 
+<li>The last column 'attributes' contain "ID=gene-&lt;id&gt;", "ID=rna-&lt;id&gt;" 
+and the "product=" values from its mRNA lines. The gene attribute "Name=" is included if it is not a
+substring of the gene-ID. 
+<li>The product value is created as follows:
 <ol type='a'>
 <li>If there are multiple mRNA lines for a gene where the values are different, they are concatenated together.
 <li>If there are multiple mRNA lines for a gene where
@@ -182,39 +222,19 @@ product=monocopper oxidase-like protein SKU5%2C transcript variant X2, X1, X3
 </pre>
 </ol>
 </ol>
-<li>The exon line is written to the <tt>exon.gff</tt> file with the first column 'seqid' is replace 
-with the 'ChrN' value assigned when reading the '.fna' file.
-</ol>
 </ol>
 
-<a name=load>
-<h2>Load files into SyMAP</h2>
- 
-<table border=0>
-<tr><td>
-When you start up SyMAP, you will see your projects listed on the left of the panel. Check the projects
-you want to load, which will cause them to be shown on the right of the symap window. Click the 
-"parameter" link, 
-which will bring up a panel as shown below. 
-<td>
-<a href="img/summary.png"><img src="img/summary.png" width=500 border=1></a>
-</table>
-Change the following:
+<li><tt>exon.gff</tt>
 <ol>
-<li>Select the "Add Directory" beside <tt>anno_files</tt>, then select the directory <tt>annotation</tt>.
-<li>Select the "Add Directory" beside <tt>sequence_files</tt>, then select the directory <tt>sequence</tt>.
-<li>You may want to change the following (view the "Help" to see explanations):
-<ul><li>category (default 'Unknown') 
-<li>display_name (default is the directory name)
-<li>description (default blank)
-</ul>
-<li>Set the parameters for all the projects you want to compare, then select "Load All Projects".
-Once loaded, you can run the synteny algorithm be selecting "All Pairs". If you want to compute self-synteny,
-you have to do that individually with the "Selected Pair" button.
+<li>The exon line is written to the <tt>exon.gff</tt> file with the first column 'seqid' is replace 
+with the 'ChrN' value assigned when reading the '.fna' file.
+<li>The ID and gene attributes are the only two keywords used in the attributes column. 
+These are not used by SyMAP but are useful for verification.
 </ol>
-<p>
-<a name=param>
-<a href="img/parameters.png"><img src="img/parameters.png" width=500 border=1></a>
+</ul>
+
+</ul>
+
 
 <a name=scaf>
 <h2>Scaffolds</h2>
@@ -223,31 +243,36 @@ However, you can have it also include the scaffolds by using the "-s" flag, e.g.
 <pre>
 java ConvertNCBI rice -s
 </pre>
-Beware, there can be many tiny scaffolds. If they all align, it causes the display to be very cluttered.
+This will include all chromosomes (prefix 'c') and scaffolds (prefix 's') in the <tt>genomic.fna</tt> file.
+Beware, there can be many tiny scaffolds. If they all aligned in SyMAP, it causes the display to be very cluttered.
 Hence, it is best to just align the largest ones (e.g. the longest 50); merge them if possible, then try
-the smaller ones. You should set the following parameters:
+the smaller ones. You should set the following SyMAP project parameters:
 <ol>
-<li>leave <tt>grp_prefix</tt> set to 'Chr' as then they will be shown with their number only, and scaffolds will
-be prefixed with 's'.
+<li>Set <tt>grp_prefix</tt> to blank.
 <li><tt>min_size</tt> should be set to only load the largest scaffolds. To determine the value to use, run the
-<tt>lenFasta.pl</tt> script, e.g. from the <tt>pseudo</tt> directory and using maize as an example:
+<tt>lenFasta.pl</tt> script, 
+e.g. from the <tt>seq</tt> directory and using rice as an example:
 <pre>
 cp ../../scripts/lenFasta.pl .
-perl lenFasta.pl maize/sequence/genomic.fna
+perl lenFasta.pl rice/sequence/genomic.fna
 </pre>
+<li>Use SyMAP v5.0.2.
 </ol>
-Maize has 265 sequences where only 10 are chromosomes and the rest are scaffolds. The script outputs all their
+As of 20-Feb-20 (GCF_001433935.1_IRGSP-1.0_genomic.fna), 
+rice has 58 sequences where 12 are chromosomes, 43 are scaffolds
+and 3 are other. The script outputs all their
 sorted lengths followed by the following table:
 <br>
 <a href="img/lenFasta.png"><img src="img/lenFasta.png" border=1></a>
 <br>
-To align the top 30 sequences, this says to set <tt>min_size</tt> to 215635.
+To align the top 30 sequences (12 chromosomes, 18 of the largest scaffolds), 
+this says to set <tt>min_size</tt> to 12792.
 
 <a name=edit>
 <h2>Editing the script</h2>
-This script was used to build the 2018 syntenies from
+This script was used to build the 2020 syntenies from
 the NCBI genome and annotation files, which can be viewed at 
-<a href="http://www.agcol.arizona.edu/symap" target="_blank">symapdb2</a>.
+<a href="http://www.agcol.arizona.edu/symapdb" target="_blank">symapdb3</a>.
 <p>However, you may want the make changes such as what attributes are included. Therefore, the <tt>ConvertNCBI.java</tt>
 code is supplied in the <tt>scripts</tt> directory. It is very simply written, it does not use external libraries
 and only common programming techniques found in all programming languages. 
@@ -256,18 +281,10 @@ and only common programming techniques found in all programming languages.
 javac ConvertNCBI.java
 </pre>
 You will need to have JDK installed to use the 'javac' command.
-<p>When building the syntenies, I found the following two differences:
-<ol>
-<li>Grape had both:
-<pre>
->NC_012007.3 Vitis vinifera cultivar PN40024 chromosome 1, 12X, whole genome shotgun sequence
->NW_003724154.1 Vitis vinifera cultivar PN40024 chromosome 1 unlocalized genomic scaffold,
-</pre>
-Hence, searching for 'chromosome' was not sufficient since that word was contains on scaffold header lines; this was not the case for the other
-downloaded genomes.
-<li>Poplar used the word 'linkage' in the header lines instead of 'chromosome'. 
-</ol>
-Hence, there is not complete standardization, which is why you may need to edit the script for your genomes.
+<p>When building the 2018 SyMAPdb2, I found a few inconsistencies, but now there appears to be
+better standardization. The only problem I found is that sometimes it was necessary to use the
+RefSeq link, as noted at the top.
+
 
 				</td>
 			</tr>

@@ -16,8 +16,6 @@ import symap.marker.MarkerTrack;
 
 /**
  * The filter window for the block track
- * 
- * @author Austin Shoemaker
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class BlockFilter extends MarkerFilter {
@@ -25,8 +23,6 @@ public class BlockFilter extends MarkerFilter {
 
 	private Block block;
 	private String contigSet;
-
-	//private boolean noChange = false;  // mdb removed 6/29/07 #118
 
 	public BlockFilter(Frame owner, DrawingPanel dp, AbstractButton helpButton, Block block) {
 		super(owner,dp,"Block Filter",helpButton,(MarkerTrack)block);
@@ -64,12 +60,7 @@ public class BlockFilter extends MarkerFilter {
 		pack();
 		setResizable(false);
 		
-		//popupTitle.setLabel("Block Options:"); // mdb added 3/21/07 #104 // mdb removed 7/2/07 #118
-		popupTitle.setText("Block Options:"); // mdb added 7/2/07 #118
-		
-		// mdb removed 4/30/09 #162
-		//SyMAP.enableHelpOnButton(showNavigationHelp,"blockcontrols"); // mdb added 3/21/07 #104
-		//SyMAP.enableHelpOnButton(showTrackHelp,"blocktrack"); // mdb added 3/28/07 #104
+		popupTitle.setText("Block Options:"); 
 	}
 
 	public String getHelpID() {
@@ -86,10 +77,8 @@ public class BlockFilter extends MarkerFilter {
 	public void show() {
 		if (block != null) {
 			if (!isShowing()) {
-				//noChange = true; // mdb removed 6/29/07 #118
 				contigSetText.setText(block.contigSetText);
 				contigSet = contigSetText.getText();
-				//noChange = false; // mdb removed 6/29/07 #118
 			}
 			super.show();
 		}

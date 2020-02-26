@@ -12,7 +12,6 @@ import number.GenomicsNumber;
 /**
  * Holds the data for an individual contig in block view.
  * 
- * @author Austin Shoemaker
  */
 public class ContigData {
 	private int id;
@@ -20,7 +19,7 @@ public class ContigData {
 	private int contig;
 	private long size;
 	private MarkerData[] markers;
-	private String groupList; // mdb added 3/19/07 #105
+	private String groupList; 
 
 	public ContigData(int project, int contig, int project2) {
 		this.project = project;
@@ -29,7 +28,7 @@ public class ContigData {
 		id = -1;
 		size = 0;
 		markers = new MarkerData[0];
-		groupList = null; // mdb added 3/19/07 #105
+		groupList = null; 
 	}
 
 	public String toString() {
@@ -37,12 +36,12 @@ public class ContigData {
 	}
 
 	public ContigData(int project, int contig, int project2, int id, long size, 
-			String groupList) // mdb added groupList 3/19/07 #105
+			String groupList) 
 	{
 		this(project,contig,project2);
 		this.id = id;
 		this.size = size;
-		this.groupList = groupList; // mdb added 3/19/07 #105
+		this.groupList = groupList; 
 	}
 
 	public int getProject() { return project; }
@@ -71,7 +70,7 @@ public class ContigData {
 	}
 
 	public Block.InnerBlock getInnerBlock(Block block) {
-		return block.new InnerBlock(contig,new GenomicsNumber(block,size),groupList); // mdb added groupList 3/19/07 #105
+		return block.new InnerBlock(contig,new GenomicsNumber(block,size),groupList); 
 	}
 
 	public void setMarkers(Block block, Block.InnerBlock ib) {

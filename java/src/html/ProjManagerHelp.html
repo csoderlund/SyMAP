@@ -79,7 +79,20 @@ use some of the function buttons, which apply to all the cells.
 	<td align="left"  valign="top" width="550" >
 		The alignment (MUMmer or BLAT) has been performed but the anchors have not been
 		loaded and the synteny computation has not been run. This status occurs if
-		a pair is completed but then annotations are re-loaded for one of the projects. 
+		a pair is completed but then annotations are re-loaded for one of the projects,
+		or if the MUMmer files have been added by the user (see website "System Guide" for details).
+	</td>
+</tr>
+
+<tr>
+	<td align="left" valign="top">
+		?
+	</td>
+	<td align="left"  valign="top" width="550" >
+		SyMAP puts an empty file with the name 'all.done' in the /align directory to indicate
+		all alignments successfully completed. If this file is not present, the alignment
+		may not have completed. In this case, any alignments will be completed and the 
+		synteny run.
 	</td>
 </tr>
 <tr>
@@ -93,7 +106,8 @@ use some of the function buttons, which apply to all the cells.
 </table>
 <p>
 <b> CPUs parameter:</b> Enter the maximum number of CPUs you wish to use for an alignment. SyMAP will use 
-up to that number (but may use fewer, depending on the number of sequences being aligned).
+up to that number (but may use fewer, depending on the number of sequences being aligned). Alternatively,
+the number of CPUs may be entered as a command line argument (-p N) or entered in the symap.config file.
 <p>
 <b>Function Buttons:</b>
 <br>

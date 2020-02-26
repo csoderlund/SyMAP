@@ -6,18 +6,20 @@ import java.util.Collection;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.Iterator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.io.BufferedWriter;
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Comparator;
-import java.sql.Statement;
-import java.sql.ResultSet;
+import java.util.zip.GZIPInputStream;
+
+import util.ErrorReport;
+import util.ProgressDialog;
+import util.Logger;
+import util.Utilities;
 
 public class Utils 
 {
@@ -26,20 +28,126 @@ public class Utils
 	static TreeMap<String,Vector<Integer>> mHistLevels;
 	static TreeMap<String,TreeMap<Integer,Integer>> mHist;
 	
+	public static void prtNumMsg(ProgressDialog prog, int num, String msg) {
+		prog.appendText(String.format("%9d %s           ", num, msg));
+	}
+	public static void prtNumMsg(Logger log, int num, String msg) {
+		log.msg(String.format("%9d %s         ", num, msg));
+	}
+	public static void prtNumMsg(Logger log, long num, String msg) {
+		log.msg(String.format("%9d %s          ", num, msg));
+	}
+	public static void prtNumMsg(int num, String msg) {
+		System.out.format("%9d %s              \n", num, msg);
+	}
+	public static void prtNumMsgNZ(int num, String msg) {
+		if (num>0) System.out.format("%9d %s              \n", num, msg);
+	}
+	public static void timeMsg(Logger log, long startTime, String msg) {
+		log.msg(msg + " done:  " 
+				+ Utilities.getDurationString(System.currentTimeMillis()-startTime) 
+				+ "                    \n");		
+	}
+	public static void die(String msg) {
+		System.err.println("Fatal error: " + msg);
+	}
+	public static String fileFromPath(String path) {
+		int i = path.lastIndexOf("/");
+		if (i<=0) return path;
+		return path.substring(i);
+	}
+	public static BufferedReader openGZIP(String file) {
+		try {
+			File f = new File (file);
+			if (!file.endsWith(".gz")) {
+				if (f.exists())
+	    				return new BufferedReader ( new FileReader (f));
+			}
+			if (file.endsWith(".gz")) {
+				FileInputStream fin = new FileInputStream(file);
+				GZIPInputStream gzis = new GZIPInputStream(fin);
+				InputStreamReader xover = new InputStreamReader(gzis);
+				return new BufferedReader(xover);
+			}
+		}
+		catch (Exception e) {
+	    		ErrorReport.print("Cannot open file " + file); 
+	    }
+		return null;
+	}
+	/********************************************************
+	 * DONE 
+	 */
+	public static boolean checkDoneFile(String dir) 
+	{
+		File d = new File(dir);
+		if (!d.exists() || d.isFile()) return false;
+		
+		File f = new File(d,"all.done");
+		if (Constants.TRACE) System.out.println(" XYZ all.done " + dir + " " + d.exists());
+		if (f.exists()) return true;
+		
+		return false;
+	}
+	public static int checkDoneMaybe(String dir, boolean isFPC) 
+	{
+		File d = new File(dir);
+		if (!d.exists() || d.isFile()) return 0;
+		
+		int numFiles=0;
+		for (File x : d.listFiles())
+		{
+			if (!x.isFile()) continue;
+			if (x.isHidden()) continue;
+			
+			String path = x.getName();
+			String name = path.substring(path.lastIndexOf("/")+1, path.length());
+			if (name.endsWith(Constants.doneSuffix)) continue;
+			if (name.endsWith(".log")) continue; // pre v5
+			
+			if (isFPC) {
+				if (name.endsWith(Constants.blatSuffix)) 
+					numFiles++;
+			}
+			else {
+				if (name.endsWith(Constants.mumSuffix)) 
+					numFiles++;	
+			}			
+		}
+		return numFiles;
+	}
+	public static void writeDoneFile(String dir) 
+	{
+		try {
+			File f = new File(dir);
+			File d = new File(f,"all.done");
+			d.createNewFile();
+		}
+		catch (Exception e) {ErrorReport.print(e, "Cannot write done file to " + dir);}
+	}
+	public static void deleteDoneFile(String dir) 
+	{
+		try {
+			File f = new File(dir);
+			File d = new File(f,"all.done");
+			if (d.exists()) d.delete();
+		}
+		catch (Exception e) {ErrorReport.print(e, "Cannot write done file to " + dir);}
+	}
+	/*****************************************************
+	 * Hists stats
+	 */
 	static void initStats()
 	{
 		mStats = new TreeMap<String,Float>();	
 		mKeyOrder= new Vector<String>();
-		//mHistLevels = new TreeMap<String,Vector<Integer>>();
 		mHist = new TreeMap<String,TreeMap<Integer,Integer>>();
 	}
 	static void initHist(String key, Integer... levels)
 	{
-		//mHistLevels.put(key,new Vector<Integer>());
 		mHist.put(key, new TreeMap<Integer,Integer>());
 		for (Integer i : levels)
 		{
-			//mHistLevels.get(key).add(i);	
 			mHist.get(key).put(i,0);
 		}
 		mHist.get(key).put(Integer.MAX_VALUE,0);
@@ -88,18 +196,17 @@ public class Utils
 			}
 		}
 	}
-	static void initStat(String key)
-	{
-		mStats.put(key, 0.0F);	
-		mKeyOrder.add(key);
-	}
+	/************************************************
+	 * Keyword stats
+	 */
 	static void incStat(String key, float inc)
 	{
 		if (mStats != null)
 		{
 			if (!mStats.containsKey(key))
 			{
-				initStat(key);	
+				mStats.put(key, 0.0F);	
+				mKeyOrder.add(key);
 			}
 			mStats.put(key, inc + mStats.get(key));
 		}
@@ -140,7 +247,8 @@ public class Utils
 			db.executeUpdate("replace into pair_props (pair_idx,proj1_idx,proj2_idx,name,value) values(" + pair_idx + 
 					"," + pidx1 + "," + pidx2 + ",'" + key + "','" + val + "')");			
 		}
-	}	
+	}
+	/**********************************************************/
 	static int[] strArrayToInt(String[] sa)
 	{
 		int[] ia = new int[sa.length];
@@ -211,12 +319,7 @@ public class Utils
 		int gap = Math.max(s1,s2) - Math.min(e1,e2);
 		return (gap <= max_gap);
 	}
-	// purpose - but a debug breakpoint here and use in debug if statements
-	static void noop()
-	{
-		System.out.println("");
-		return;
-	}	
+	
 	// Returns the amount of the overlap (negative for gap)
 	static int intervalsOverlap(int s1,int e1, int s2, int e2)
 	{
@@ -246,24 +349,7 @@ public class Utils
 	    }
         return buffer;	
 	} 
-	public static void clearDir(File d)
-	{
-		if (d.isDirectory())
-		{
-			//Log.msg("clear directory " + d.getAbsolutePath());
-
-			for (File f : d.listFiles())
-			{
-				if (f.isDirectory() && !f.getName().equals(".") && !f.getName().equals("..")) 
-				{
-					clearDir(f);
-				}
-				f.delete();
-			}
-		}
-		//WN why needed?? checkCreateDir(d);
-	}
-	
+	/*****************************************************/
 	static String getProjProp(int projIdx, String name, UpdatePool conn) throws SQLException
 	{
 		String value = null;
@@ -293,49 +379,14 @@ public class Utils
 		
 		return idx;
 	}
-/*	static String getProjectName(int idx, Statement s)
-	{
-		String ret = "";
-		try
-		{
-			ResultSet r = s.executeQuery("select name from projects where idx=" + idx);
-			if (r.first()) ret = r.getString("name");
-		}
-		catch (Exception e ){System.out.println("Failed to load project name!!");}
-		return ret;
-	}*/
-	static void concatFile(File from, File to) throws Exception
-	{
-		BufferedWriter bw = new BufferedWriter(new FileWriter(to, true));
-		BufferedReader br = new BufferedReader(new FileReader(from));
-		while (br.ready())
-		{
-			bw.write(br.readLine());
-			bw.newLine();
-		}
-		bw.flush();
-		bw.close();
-		br.close();
-	}	
 
 	
-	static String getFirstLine(File f) throws IOException
-	{
-		BufferedReader fh = new BufferedReader(new FileReader(f));
-		String firstLine = null;
-		if (fh != null) {
-			firstLine = fh.readLine();
-			fh.close();
-		}
-		return firstLine;
-	}
-	
-	static boolean yesNo(String question)
+	public static boolean yesNo(String question)
 	{
 		BufferedReader inLine = new BufferedReader(new InputStreamReader(
 				System.in));
 
-		System.err.print(question + " (y/n)? "); // CAS SOP no newline; easy to miss otherwise
+		System.err.print(question + " (y/n)? "); // CAS42 SOP no newline; easy to miss otherwise
 		try
 		{
 			String resp = inLine.readLine();
@@ -346,7 +397,7 @@ public class Utils
 			else
 			{
 				System.err.println("Sorry, could not understand the response, please try again:");
-				System.err.print(question + " (y/n)? "); // CAS SOP no newline; easy to miss otherwise
+				System.err.print(question + " (y/n)? "); // CAS42 SOP no newline; easy to miss otherwise
 				resp = inLine.readLine();
 				if (resp.equals("y"))
 					return true;
@@ -359,23 +410,12 @@ public class Utils
 					// Have to just exit since returning "n" won't necessarily cause an exit
 					return false;
 				}
-			
 			}
 
-		} catch (Exception e)
-		{
-			return false;
-		}
-
-		//unreachable return false;
+		} catch (Exception e){return false;}
 	}
-	public static boolean checkDoneFile(String dir) 
-	{
-		File f = new File(dir);
-		File d = new File(f,"all.done");
-		return d.exists();
-	}	
-	static void fastaPrint(BufferedWriter fh, String name, char[] str) throws IOException
+	
+	public static void fastaPrint(BufferedWriter fh, String name, char[] str) throws IOException
 	{
 		final int FASTA_LINE_LEN = 80;
 		
@@ -393,15 +433,10 @@ public class Utils
 		fh.flush();
 	}
 	
-	static String ucFirst(String in)
+	public static String getParamsName()
 	{
-		if (in.length() <= 1) return in.toUpperCase();
-		return in.substring(0, 1).toUpperCase() + in.substring(1);
-	}
-	static String getParamsName()
-	{
-		String s1 = "symap.config";
-		String s2 = "params";
+		String s1 = Constants.cfgFile;
+		String s2 = Constants.paramsFile;
 		File f = new File(s1);
 		if (f.isFile())
 		{
@@ -418,7 +453,7 @@ public class Utils
 	// Sort the Comparable array, and apply the same sorting to the Object array,
 	// so they stay parallel.
 	// The purpose of cmp is to sort nulls to one end.
-	static void HeapDoubleSort(Comparable[] a, Object[] aa, ObjCmp cmp){
+	public static void HeapDoubleSort(Comparable[] a, Object[] aa, ObjCmp cmp){
         int i,f,s;
         for(i=1;i<a.length;i++){
             Comparable e = a[i];
@@ -476,25 +511,8 @@ public class Utils
 			else return a.compareTo(b);
 		}
 	}
-	public static void checkCreateDir(File dir)
-		{
-			if (dir.exists() && !dir.isDirectory())
-			{
-				System.out.println("Please remove file " + dir.getAbsolutePath()
-						+ " as SyMAP needs to create a directory at this path");
-				System.exit(0);
-			}
-			if (!dir.exists())
-			{
-				dir.mkdir(); 
-				if (!dir.exists())
-				{
-					System.out.println("Unable to create directory " + dir.getAbsolutePath());
-					System.exit(0);
-				}
-			}
-		}
-	static String reverseComplement(String in)
+	
+	public static String reverseComplement(String in)
 	{
 		in = (new StringBuffer(in)).reverse().toString().toUpperCase();
 		in = in.replace('A', 't');
@@ -505,8 +523,6 @@ public class Utils
 	}
 	public static void updateGeneFractions(UpdatePool db) throws Exception
 	{
-		TreeMap<String,Integer> projlist = new TreeMap<String,Integer>();
-	
 		db.executeUpdate("update blocks set ngene1 = (select count(*) from pseudo_annot as pa " +
 		"where pa.grp_idx=grp1_idx  and (greatest(pa.start,start1) < least(pa.end,end1)) and pa.type='gene')");
 		db.executeUpdate("update blocks set ngene2 = (select count(*) from pseudo_annot as pa " +

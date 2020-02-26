@@ -25,16 +25,14 @@ import util.Utilities;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class CloseUpDialog extends JDialog implements HitDialogInterface, CloseUpListener,
-														HelpListener // mdb added 7/8/09
+														HelpListener 
 {
-	//private static final boolean METHOD_TRACE = false; 
-
 	private SequencePool sp;
 	private CloseUpComponent view;
 	private JScrollPane blastScroll, viewScroll;
 	private BlastComponent blast;
-	private HitAlignment selectedHa; // ASD added
-	private HelpBar helpBar; // mdb added 7/8/09
+	private HitAlignment selectedHa; 
+	private HelpBar helpBar; 
 
 	public CloseUpDialog(CloseUp closeup) {
 		super(closeup.getDrawingPanel().getFrame(),false);
@@ -52,13 +50,6 @@ public class CloseUpDialog extends JDialog implements HitDialogInterface, CloseU
 		setTitle(seq.getProjectDisplayName()+" "+seq.getName()+" "+view.getStart()+"-"+view.getEnd());
 	}
 
-// mdb unused 12/11/08
-//	public CloseUpDialog(Frame owner, SequencePool sp) {
-//		super(owner,false);
-//		this.sp = sp;
-//		initView();
-//	}
-
 	public void resetColors() {
 		blast.setBackground(BlastComponent.backgroundColor);
 		blastScroll.getViewport().setBackground(BlastComponent.backgroundColor);
@@ -67,12 +58,6 @@ public class CloseUpDialog extends JDialog implements HitDialogInterface, CloseU
 		viewScroll.getViewport().setBackground(CloseUpComponent.backgroundColor);
 		view.repaint();
 	}
-
-// mdb unused 7/24/07
-//	public CloseUpDialog(Frame owner, SequencePool sp, List fpcPseudoData, int start, int end) throws SQLException {
-//		this(owner,sp);
-//		setView(fpcPseudoData,start,end);
-//	}
 
 	public int getNumberOfHits() {
 		if (view == null) {
@@ -88,7 +73,6 @@ public class CloseUpDialog extends JDialog implements HitDialogInterface, CloseU
 		return h;
 	}
 	
-	// mdb added 1/8/09 for pseudo-pseudo closeup - replaces SequencePool.getGeneAlignments()
 	private GeneAlignment[] getGeneAlignments(Sequence s, int start, int end) {
 		Vector<Annotation> annotations = s.getAnnotations(Annotation.GENE_INT, start, end);
 		Vector<GeneAlignment> alignments = new Vector<GeneAlignment>();
@@ -111,7 +95,7 @@ public class CloseUpDialog extends JDialog implements HitDialogInterface, CloseU
 		return alignments.toArray(new GeneAlignment[0]);
 	}
 
-	public void setView(Sequence src, List<AbstractHitData> hitList, int start, int end) // mdb added "src" arg 1/7/09
+	public void setView(Sequence src, List<AbstractHitData> hitList, int start, int end) 
 	throws SQLException 
 	{
 		HitAlignment[] ha = null;
@@ -128,7 +112,7 @@ public class CloseUpDialog extends JDialog implements HitDialogInterface, CloseU
 				max_x = Math.max(max_x, h.getEnd());
 			}
 			
-			ga = getGeneAlignments(src, min_x, max_x);//sp.getGeneAlignments(group,start,end); // mdb changed 1/8/09 for pseudo-pseudo closeup
+			ga = getGeneAlignments(src, min_x, max_x);
 			
 			// Expand the reduced region to show full gene		
 			for (GeneAlignment g : ga) {
@@ -168,7 +152,6 @@ public class CloseUpDialog extends JDialog implements HitDialogInterface, CloseU
 		view = new CloseUpComponent();
 		blast = new BlastComponent();
 		
-		// mdb added 7/8/09
 		helpBar = new HelpBar(-1, 17, true, false, false);
 		helpBar.addHelpListener(view,this);
 		helpBar.addHelpListener(blast,this);
@@ -184,10 +167,9 @@ public class CloseUpDialog extends JDialog implements HitDialogInterface, CloseU
 		cp.setLayout(new BorderLayout());
 		cp.add(viewScroll,BorderLayout.NORTH);
 		cp.add(blastScroll,BorderLayout.CENTER);
-		cp.add(helpBar, BorderLayout.SOUTH); // mdb added 7/8/09
+		cp.add(helpBar, BorderLayout.SOUTH); 
 	}
 	
-	// mdb added 7/8/09
 	public String getHelpText(MouseEvent e) {
 		if (e.getSource() == view)
 			return "Click on a hit to select it and view the base alignment.";

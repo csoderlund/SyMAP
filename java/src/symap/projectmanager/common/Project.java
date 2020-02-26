@@ -1,30 +1,35 @@
 package symap.projectmanager.common;
 
+/****************************************************
+ * There are TWO Project.java, the other one is in symap.projectmanager.common
+ */
 import java.awt.Color;
 import java.io.File;
 import java.util.Vector;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import util.ErrorCount;
+import backend.Constants;
+import util.ErrorReport;
 import util.ProgressDialog;
 import util.PropertiesReader;
 import backend.UpdatePool;
 
 public class Project {
-	private int nIdx;		// unique database index
 	public String strDBName;
-	private String strType;
-	private String strDisplayName;
-	private String strDescription;
-	private String strCategory;
+	public String chrLabel = ""; 
+	public int numAnnot = 0;
+	public long length=0;
+	
+	private int nIdx;		// unique database index
+	private String strType, strDisplayName, strDescription, strCategory;
 	private int numGroups;
 	private boolean unOrdered = false;
 	private Color color;
-	String orderAgainst = "";
-	String chrLabel = "Chromosome";
-	public Vector<Integer> grpIdxList;
-	public int numAnnot = 0;
+	
+	private String orderAgainst = "";
+	private Vector<Integer> grpIdxList;
+	private String masked=null;   // CAS500 put on Summary
 	
 	private short nStatus = STATUS_IN_DB; // bitmap - maybe bitmap not necessary?
 	public static final short STATUS_ON_DISK = 0x0001; // project exists in file hierarchy
@@ -34,8 +39,10 @@ public class Project {
 		this.nIdx = nIdx;
 		this.strDBName = strName;
 		this.strType = strType;
+		// CAS500 The type is from the directory name under /data, which is 'seq'
+		// The type in the db is 'pseudo'.
+		if (strType.equals(Constants.seqType)) this.strType=Constants.dbSeqType;
 		strCategory = "Uncategorized";
-
 	}
 	
 	public Project(int nIdx, String strName, String strType, String strDisplayName) { 
@@ -53,8 +60,10 @@ public class Project {
 	public void setDisplayName(String s) { strDisplayName = s; }
 	
 	public String getType() { return strType; }
-	public boolean isPseudo() { return strType.equals("pseudo"); }
-	public boolean isFPC() { return strType.equals("fpc"); }
+	public boolean isPseudo() { 
+		return (strType.equals(Constants.seqType) || strType.equals(Constants.dbSeqType)); 
+	}
+	public boolean isFPC() { return strType.equals(Constants.fpcType); }
 	
 	public short getStatus() { return nStatus; }
 	public void setStatus(short n) { nStatus = n; }
@@ -78,7 +87,7 @@ public class Project {
 	
 	public void getPropsFromDisk(File dir)
 	{
-		File pfile = new File(dir,"params");
+		File pfile = new File(dir,Constants.paramsFile);
 		if (pfile.isFile())
 		{
 			PropertiesReader props = new PropertiesReader( pfile);
@@ -97,19 +106,25 @@ public class Project {
 			if (props.getProperty("grp_type") != null && !props.getProperty("grp_type").equals(""))
 			{
 				chrLabel = props.getProperty("grp_type");	
-			}		
+			}
+			if (props.getProperty("description") != null && !props.getProperty("description").equals(""))
+			{
+				strDescription = props.getProperty("description"); // CAS500 wasn't be read	
+			}	
 		}
 	}
 	public void updateParameters(UpdatePool db, ProgressDialog progress) 
 	{
 		try
 		{
-			String dir = "data/" + (isPseudo() ? "pseudo/" : "fpc/") + strDBName ;
+			String dir = isPseudo() ? Constants.seqDataDir : Constants.fpcDataDir;
+			dir += strDBName;
+			
 			if (progress != null)
 			{
 				progress.msg("Read params file from " + dir + "\n");	
 			}
-			File pfile = new File(dir,"params");
+			File pfile = new File(dir,Constants.paramsFile);
 			if (pfile.isFile())
 			{
 				PropertiesReader props = new PropertiesReader( pfile);
@@ -135,29 +150,24 @@ public class Project {
 					for (String kw : kws)
 					{
 						kw = kw.trim();
-			        	db.executeUpdate("insert into annot_key (proj_idx,keyname,count) values (" + 
+			        		db.executeUpdate("insert into annot_key (proj_idx,keyname,count) values (" + 
 			        			nIdx + ",'" + kw + "',0)");
-						
 					}
 				}
 				if (progress != null) progress.msg("\nloaded " + n + " properties");
-				System.out.println("Loaded " + n + " properties for " + strDBName);
+				if (Constants.TRACE)
+					System.out.println("Loaded " + n + " properties for " + strDBName);
 			}
 			else
 			{
-				System.out.println("Can't open params file in " + dir);	
+				System.out.println("Cannot open params file in " + dir);	
 				if (progress != null)
 				{
-					progress.msg("Can't open params file in " + dir);	
+					progress.msg("Cannot open params file in " + dir);	
 				}
-				
 			}
 		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			System.out.println("\n\nWarning: failed to update parameters!!\n\n");
-		}
+		catch (Exception e){ErrorReport.print(e, "Failed to update parameters");}
 	}
 	
 	public boolean equals(Object o) {
@@ -175,9 +185,42 @@ public class Project {
 		ResultSet rs = db.executeQuery("select idx from groups where proj_idx=" + nIdx);
 		while (rs.next())
 		{
-			grpIdxList.add(rs.getInt("idx"));
+			grpIdxList.add(rs.getInt(1));
 		}
 	}
 	public String toString() { return strDBName; }
-
+	
+	/************************************************************
+	 * CAS500 - needs to be on Summary whether masked is set
+	 */
+	public boolean isMask(UpdatePool db)  {
+		try {
+			if (masked!=null) {
+				if (masked.equals("yes")) return true;
+				else return false;
+			}
+			
+			String value="0";
+			String st = "SELECT value FROM proj_props " +
+					"WHERE proj_idx='" + nIdx + "' AND name='mask_all_but_genes'";
+			ResultSet rs = db.executeQuery(st);
+			if (rs.next())
+				value = rs.getString(1);
+			rs.close();
+			
+			if (value != null && value.equals("1")) {
+				masked="yes";
+				return true;
+			}
+			else {
+				masked = "no";
+				return false;
+			}
+		}
+		catch (Exception e) {ErrorReport.print(e,"Determine mask status for " + strDBName);}
+		return false;
+	}
+	public void print() {
+		if (Constants.TRACE) System.out.format("XYZ %2d %10s %5s status=%d\n", nIdx, strDBName, strType, nStatus);
+	}
 }

@@ -21,7 +21,7 @@ public interface DotPlotConstants {
     public static int BLOCK_HITS = 0;
     public static int NON_REPETITIVE_HITS = 1;
     public static int ALL_HITS = 2;
-    public static int CONTAINED_GENE_HITS = 3; // mdb added 3/7/07
-    public static int OVERLAP_GENE_HITS = 4; // mdb added 3/7/07
-    public static int NON_GENE_HITS = 5; // mdb added 3/7/07
+    public static int CONTAINED_GENE_HITS = 3; 
+    public static int OVERLAP_GENE_HITS = 4; 
+    public static int NON_GENE_HITS = 5; 
 }

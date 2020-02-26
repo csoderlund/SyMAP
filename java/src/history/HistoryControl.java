@@ -15,7 +15,6 @@ import javax.swing.AbstractButton;
  * HistoryControl does not set the clear button given, if any, enabled or disabled.  It simply
  * calls history.clear() when it's been clicked and updates the other buttons (if any).
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see ActionListener
  * @see History
  * @see HistoryListener
@@ -176,10 +175,6 @@ public class HistoryControl implements ActionListener {
 	 *
 	 * @param obj an <code>Object</code> value
 	 */
-// mdb unused 8/21/07
-//	public void add(Object obj) {
-//		add(obj,false);
-//	}
 
 	/**
 	 * Method <code>add</code> adds an object to the history setting

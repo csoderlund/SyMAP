@@ -29,11 +29,10 @@ public class DPApplet extends JApplet implements DotPlotConstants {
 
 		SyMAP.printVersion();
 			
-		// mdb added 4/8/08
 		if (!SyMAP.checkJavaSupported(this))
 			return;
 
-		// Get parameters - mdb rewritten 12/16/09 #205
+		// Get parameters 
 		final Vector<String> projects = new Vector<String>();
 		String projName = getParameter("xSpecies"); // legacy interface
 		if (projName != null) {
@@ -55,7 +54,7 @@ public class DPApplet extends JApplet implements DotPlotConstants {
 		}
 		System.out.println("Projects: "+projects.toString());
 		
-		HelpBar helpBar = new HelpBar(-1, 17, true, false, false); // mdb added 7/6/09
+		HelpBar helpBar = new HelpBar(-1, 17, true, false, false); 
 		
 		// Start data download
 		data = new Data(this);
@@ -65,15 +64,11 @@ public class DPApplet extends JApplet implements DotPlotConstants {
 		new Thread(new Runnable() {
 			public void run() {
 				data.initialize( projects.toArray(new String[0]) );
-				controls.setProjects( data.getProjects() ); // mdb added 2/1/10 #210
+				controls.setProjects( data.getProjects() ); 
 				repaint();
 			}
 		}).start();
 
-		//Container cp = getContentPane();
-		//cp.add(controls, 			 BorderLayout.NORTH);
-		//cp.add(plot.getScrollPane(), BorderLayout.CENTER);
-		//cp.add(helpBar, 			 BorderLayout.SOUTH); // mdb added 7/6/09
 		
 		JFrame topFrame = new JFrame();
 		topFrame.setPreferredSize(new Dimension(800,600));
@@ -81,7 +76,7 @@ public class DPApplet extends JApplet implements DotPlotConstants {
 		Container cp = topFrame.getContentPane();
 		cp.add(controls, 			 BorderLayout.NORTH);
 		cp.add(plot.getScrollPane(), BorderLayout.CENTER);
-		cp.add(helpBar, 			 BorderLayout.SOUTH); // mdb added 7/6/09
+		cp.add(helpBar, 			 BorderLayout.SOUTH); 
 		topFrame.toFront();
 		topFrame.show();
 		
@@ -95,20 +90,8 @@ public class DPApplet extends JApplet implements DotPlotConstants {
 			}
 		});
 	}
-
-//	public void stop() {
-//		SyMAP.setHelpVisible(false);
-//		//SyMAP.clearHelpHandler();
-//		data.kill();
-//		data = null;
-//		plot = null;
-//		controls = null;
-//		super.stop();
-//	}
 	
 	public void destroy() {
-		//SyMAP.setHelpVisible(false); // mdb removed 4/30/09 #162
-		//SyMAP.clearHelpHandler();
 		if (data != null) data.kill();
 		data = null;
 		plot = null;

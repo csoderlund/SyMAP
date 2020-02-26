@@ -1,6 +1,5 @@
 package dotplot;
 
-// CAS 1/10/18 no functional change, just removed the excessive commented out code
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Component;

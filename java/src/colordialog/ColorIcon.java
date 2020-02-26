@@ -9,7 +9,6 @@ import javax.swing.Icon;
 /**
  * Class <code>ColorIcon</code> consists of a rectangular color with a possible icon displayed over that color.
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Icon
  */
 public class ColorIcon implements Icon {

@@ -13,7 +13,7 @@ public class FilterData extends Observable implements DotPlotConstants {
 	private boolean hide[]        = new boolean[NUM_HIT_TYPES];
 	private boolean showBlocks    = true;
 	private boolean showContigs   = true;
-	private boolean showEmpty     = true; // mdb added 12/2/09 #203 - hide groups with no blocks
+	private boolean showEmpty     = true; // hide groups with no blocks
 	private int showHits = DEFAULT_HITS;
 
 	private boolean[] highlight    = new boolean[DotPlot.TOT_RUNS];
@@ -147,7 +147,6 @@ public class FilterData extends Observable implements DotPlotConstants {
 	public boolean isShowAllHits() { return showHits == ALL_HITS; }
 	public int getShowHits() { return showHits; }
 	
-	// mdb added 3/7/07
 	public boolean isShowContainedGeneHits() { return showHits == CONTAINED_GENE_HITS; } 
 	public boolean isShowOverlapGeneHits() { return showHits == OVERLAP_GENE_HITS; }
 	public boolean isShowNonGeneHits() { return showHits == NON_GENE_HITS; } 	
@@ -264,8 +263,7 @@ public class FilterData extends Observable implements DotPlotConstants {
 			update();
 		}
 	}
-	
-	// mdb added 12/3/09 #203
+
 	public void setShowEmpty(boolean showEmpty) {
 		if (this.showEmpty != showEmpty) {
 			this.showEmpty = showEmpty;

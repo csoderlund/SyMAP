@@ -8,18 +8,7 @@ import symap.closeup.alignment.HitAlignment;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class BlastComponent extends JTextArea {
-// mdb removed 1/29/09 #159 simplify properties	
-//	public static Color backgroundColor;
-//	public static Color sequenceColor;
-//	public static Font sequenceFont;
-//	static {
-//		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/blast.properties"));
-//		backgroundColor   = props.getColor("backgroundColor");
-//		sequenceColor     = props.getColor("sequenceColor");
-//		sequenceFont      = props.getFont("sequenceFont");
-//	}
-	
-	// mdb added 1/29/09 #159 simplify properties
+
 	public static final Color backgroundColor = Color.white;
 	public static final Color sequenceColor = Color.black;
 	public static Font sequenceFont = null;
@@ -32,7 +21,6 @@ public class BlastComponent extends JTextArea {
 		if (sequenceFont == null)
 		{
 			sequenceFont = new Font(Font.MONOSPACED,0,16);
-			//System.err.println("Font: " + sequenceFont.getFontName());
 		}
 		setFont(sequenceFont);
 		setBackground(backgroundColor);

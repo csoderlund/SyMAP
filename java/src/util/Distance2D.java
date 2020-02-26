@@ -9,8 +9,6 @@ package util;
  * distanceSquared is provided for convenience and may only be applicable for euclidean distance
  * and it's not quaranteed that integerDistance(int difX, int difY) and doubleDistance(int difX, int difY) will
  * be applicable for sub-classes.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see DistanceFunction
  */
 public class Distance2D implements DistanceFunction {
@@ -20,8 +18,7 @@ public class Distance2D implements DistanceFunction {
     public Distance2D() { }
 
     public Distance2D(double sx, double sy) {
-		// TODO Auto-generated constructor stub
-    	// ASD just added to get rid of error messages
+    	// added to get rid of error messages
 	}
 
 	public String toString() {

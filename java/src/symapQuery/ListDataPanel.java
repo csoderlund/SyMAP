@@ -51,6 +51,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 import dotplot.FilterData;
+import util.ErrorReport;
 import util.Utilities;
 
 import symap.SyMAP;
@@ -71,26 +72,6 @@ public class ListDataPanel extends JPanel {
 	private static final int ANNO_PANEL_WIDTH = 900;
 	private static final int MARGIN_WIDTH = 80;
 	
-	private static final String [] HELP_COL = {
-		"Clear selection:",
-		"Margin:",
-		"Select Columns:",
-		"Result table:",
-		" ",
-		" ",
-		" "
-	};
-	
-	private static final String [] HELP_VAL = { 
-		"Clears the active selection in the table",
-		"Adds to the range of the selected hit in the alignment view",
-		"Displays selection of available columns (Location/Annotation)",
-		"Change column order by dragging column to selected location",
-		"Click the column headers to sort",
-		"Example: if you want to see ordered start positions by group,",
-		"   click 'Start' then 'Chr'"
-	};
-
 	public String [] getSummary() { 
 		String [] retVal = new String[2];
 		
@@ -111,7 +92,6 @@ public class ListDataPanel extends JPanel {
 		if(queryMode == QUERY_MODE_LOCAL) {
 			strSubQuery = theParentFrame.getLocalSubQuery();
 			strAnnotSubQuery = theParentFrame.getLocalAnnotSubQuery();
-			//strSubQuery += " ORDER BY hit_idx";
 			theQuerySummary = theParentFrame.getLocalSubQuerySummary();
 			theName = resultName;
 			
@@ -138,9 +118,6 @@ public class ListDataPanel extends JPanel {
 			}
 		};
 		
-//		setColumnSelections();
-//		showTable();
-		//Makes the table appear
 		if(isVisible()) {
 			setVisible(false);
 			setVisible(true);
@@ -186,12 +163,6 @@ public class ListDataPanel extends JPanel {
 			if(chkGeneralFields[x].isSelected())
 				retVal.add(chkGeneralFields[x].getText());
 		}
-//		retVal.add("Row");
-//		retVal.add("HGroup");
-//		retVal.add("HGrpSize");
-//		retVal.add("HitIdx");
-//		retVal.add("BlockNum");
-//		retVal.add("RunSize");
 		for(int x=0; x<getNumAnnoCheckBoxes(); x++) {
 			if(getAnnoCheckBoxAt(x).isSelected()) {
 				retVal.add(annoColumns[x]);
@@ -205,15 +176,7 @@ public class ListDataPanel extends JPanel {
 					retVal.add(species[x]+"\n"+chkSpeciesFields[x][y].getText());
 				}
 			}
-/*			String name = species[x]+"\n#PGF"; 
-			System.out.println(name);
-			retVal.add(name);*/
 		}
-		
-//		for (int x = 0; x < species.length; x++)
-//		{
-//			retVal.add(species[x]+"\n#PGF");			
-//		}
 		
 		return retVal.toArray(new String[retVal.size()]);
 	}
@@ -345,62 +308,62 @@ public class ListDataPanel extends JPanel {
         Statement stmt;
         
        	// We need the included group indices to know which annotations to load.
-    	TreeMap<Integer,TreeSet<Integer>> grpIdxList = new TreeMap<Integer,TreeSet<Integer>>();
-    	if (theParentFrame.lQueryPanel.isOrphan())
-    	{
-	    	SpeciesSelectPanel sp = theParentFrame.lQueryPanel.speciesPanel;
-	    
-	    	String[] chrs = sp.theChromosomeIndicies;
-	    	for (int i = 0; i < chrs.length; i++)
+	    	TreeMap<Integer,TreeSet<Integer>> grpIdxList = new TreeMap<Integer,TreeSet<Integer>>();
+	    	if (theParentFrame.lQueryPanel.isOrphan())
 	    	{
-	    		int projIdx = sp.getSpeciesIndex(i);
-	    		int grpIdx = sp.getChromosomeIndex(i);
-	    		grpIdxList.put(projIdx, new TreeSet<Integer>());
-	    		if (grpIdx != -1)
-	    		{
-	    			grpIdxList.get(projIdx).add(grpIdx);
-	    		}
-	    		else
-	    		{
-	    			for (String chr : chrs[i].split(","))
-	    			{
-	    				grpIdxList.get(projIdx).add(Integer.parseInt(chr));
-	    			}
-	    		}
+		    	SpeciesSelectPanel sp = theParentFrame.lQueryPanel.speciesPanel;
+		    
+		    	String[] chrs = sp.theChromosomeIndicies;
+		    	for (int i = 0; i < chrs.length; i++)
+		    	{
+		    		int projIdx = sp.getSpeciesIndex(i);
+		    		int grpIdx = sp.getChromosomeIndex(i);
+		    		grpIdxList.put(projIdx, new TreeSet<Integer>());
+		    		if (grpIdx != -1)
+		    		{
+		    			grpIdxList.get(projIdx).add(grpIdx);
+		    		}
+		    		else
+		    		{
+		    			for (String chr : chrs[i].split(","))
+		    			{
+		    				grpIdxList.get(projIdx).add(Integer.parseInt(chr));
+		    			}
+		    		}
+		    	}
 	    	}
-    	}
         try {
-        	conn = theParentFrame.getDatabase().getConnection();
-        	stmt = conn.createStatement();
-        	addBlockScores(stmt);
-        	//stmt.setFetchSize(1000);
-
-        	String strQuery = "";
-        	if(nQueryMode == QUERY_MODE_LOCAL) {
-        		//Make sure needed fields are loaded
-        		strQuery = theFields.getLocalFilterQuery(strSubQuery,strAnnotSubQuery, theParentFrame.isSynteny(),
-        					theParentFrame.isCollinear(), grpIdxList);
-        	}
-        	if(loadStatus.getText().equals("Cancelled")) return null; 
-        	loadStatus.setText("Getting data");
-        	try
-        	{
-        		BufferedWriter w = new BufferedWriter(new FileWriter("/tmp/symap_query.txt"));
-        		w.write(strQuery);
-        		w.close();
-        	} catch(Exception e){};
-        	try
-        	{
-        		return stmt.executeQuery(strQuery);
-        	}
-        	catch(Exception e)
-        	{
-        		e.printStackTrace();
-        		return null;
-        	}
+	        	conn = theParentFrame.getDatabase().getConnection();
+	        	stmt = conn.createStatement();
+	        	addBlockScores(stmt);
+	        	//stmt.setFetchSize(1000);
+	
+	        	String strQuery = "";
+	        	if(nQueryMode == QUERY_MODE_LOCAL) {
+	        		//Make sure needed fields are loaded
+	        		strQuery = theFields.getLocalFilterQuery(strSubQuery,strAnnotSubQuery, theParentFrame.isSynteny(),
+	        					theParentFrame.isCollinear(), grpIdxList);
+	        	}
+	        	if(loadStatus.getText().equals("Cancelled")) return null; 
+	        	loadStatus.setText("Getting data");
+	        	try
+	        	{
+	        		BufferedWriter w = new BufferedWriter(new FileWriter("/tmp/symap_query.txt"));
+	        		w.write(strQuery);
+	        		w.close();
+	        	} catch(Exception e){};
+	        	try
+	        	{
+	        		return stmt.executeQuery(strQuery);
+	        	}
+	        	catch(Exception e)
+	        	{
+	        		ErrorReport.print(e, "Load Data");
+	        		return null;
+	        	}
         } catch(Exception e) {
-        	
-        	return null;
+        		ErrorReport.print(e, "Load Data");
+        		return null;
         }
 	}
 	private void addBlockScores(Statement s)
@@ -416,7 +379,7 @@ public class ListDataPanel extends JPanel {
 		}
 		catch(Exception e)
 		{
-			System.out.println("Unable to verify blocks table");
+			ErrorReport.print(e, "Unable to verify blocks table");
 		}
 	}
 	
@@ -429,13 +392,9 @@ public class ListDataPanel extends JPanel {
 		fieldSelectPanel = createFieldSelectPanel();
 		annoSelectPanel = createAnnotationSelectPanel();
 		
-    	columnPanel = new JPanel();
-    	columnPanel.setLayout(new BoxLayout(columnPanel, BoxLayout.PAGE_AXIS));
-    	
-    	columnPanel.setVisible(false);
-//		generalFieldSelectPanel.setVisible(false);
-//		fieldSelectPanel.setVisible(false);
-//		annoSelectPanel.setVisible(false);
+		columnPanel = new JPanel();
+    		columnPanel.setLayout(new BoxLayout(columnPanel, BoxLayout.PAGE_AXIS));
+    		columnPanel.setVisible(false);
 		
 		showColumnSelect = new JButton("Select Columns");
 		showColumnSelect.setBackground(Color.WHITE);
@@ -446,7 +405,7 @@ public class ListDataPanel extends JPanel {
 					columnPanel.setVisible(false);
 				}
 				else {
-					showColumnSelect.setText("Hide");
+					showColumnSelect.setText("Hide Columns");
 					columnPanel.setVisible(true);
 				}
 				showTable();
@@ -514,7 +473,7 @@ public class ListDataPanel extends JPanel {
         theTable.getSelectionModel().addListSelectionListener(selListener);
 		theTable.addSingleClickListener(sngClick);
         theTable.addDoubleClickListener(dblClick);
-//    	theTable.getTableHeader().setBackground(Color.WHITE);
+
         MultiLineHeaderRenderer renderer = new MultiLineHeaderRenderer();
         Enumeration<TableColumn> en = theTable.getColumnModel().getColumns();
         while (en.hasMoreElements()) {
@@ -523,8 +482,8 @@ public class ListDataPanel extends JPanel {
     }
     
     public void sortMasterColumn(String columnName) {
-    	int index = theTableData.getColumnHeaderIndex(columnName);
-    	theTableData.sortByColumn(index, !theTableData.isAscending(index));
+    		int index = theTableData.getColumnHeaderIndex(columnName);
+    		theTableData.sortByColumn(index, !theTableData.isAscending(index));
     }
     
     private void showProgress() {
@@ -616,221 +575,221 @@ public class ListDataPanel extends JPanel {
     }
     
     public boolean [] getColumnSelections() {
-    	int numCols = chkGeneralFields.length + (chkSpeciesFields.length * chkSpeciesFields[0].length);
-    	for(int x=0; x<chkAnno.size(); x++) {
-    		numCols += chkAnno.get(x).size();
-    	}
-    	
-    	boolean [] retVal = new boolean[numCols];
-    	int targetPos = 0;
-    	for(int x=0; x<chkGeneralFields.length; x++) {
-    		retVal[targetPos] = chkGeneralFields[x].isSelected();
-    		targetPos++;
-    	}
-    	
-    	for(int x=0; x<chkSpeciesFields.length; x++) {
-    		for(int y=0; y<chkSpeciesFields[x].length; y++) {
-    			retVal[targetPos] = chkSpeciesFields[x][y].isSelected();
-    			targetPos++;
-    		}
-    	}
-    	
-    	for(int x=0; x<chkAnno.size(); x++) {
-    		for(int y=0; y<chkAnno.get(x).size(); y++) {
-    			retVal[targetPos] = chkAnno.get(x).get(y).isSelected();
-    			targetPos++;
-    		}
-    	}
-    	return retVal;
+	    	int numCols = chkGeneralFields.length + (chkSpeciesFields.length * chkSpeciesFields[0].length);
+	    	for(int x=0; x<chkAnno.size(); x++) {
+	    		numCols += chkAnno.get(x).size();
+	    	}
+	    	
+	    	boolean [] retVal = new boolean[numCols];
+	    	int targetPos = 0;
+	    	for(int x=0; x<chkGeneralFields.length; x++) {
+	    		retVal[targetPos] = chkGeneralFields[x].isSelected();
+	    		targetPos++;
+	    	}
+	    	
+	    	for(int x=0; x<chkSpeciesFields.length; x++) {
+	    		for(int y=0; y<chkSpeciesFields[x].length; y++) {
+	    			retVal[targetPos] = chkSpeciesFields[x][y].isSelected();
+	    			targetPos++;
+	    		}
+	    	}
+	    	
+	    	for(int x=0; x<chkAnno.size(); x++) {
+	    		for(int y=0; y<chkAnno.get(x).size(); y++) {
+	    			retVal[targetPos] = chkAnno.get(x).get(y).isSelected();
+	    			targetPos++;
+	    		}
+	    	}
+	    	return retVal;
     }
     
     public void setColumnSelections() {
-    	if(theOldSelections == null)
-    		return; 
-    	
-    	int targetPos = 0;
-    	for(int x=0; x<chkGeneralFields.length; x++) {
-    		chkGeneralFields[x].setSelected(theOldSelections[targetPos]);
-    		targetPos++;
-    	}
-    	
-    	for(int x=0; x<chkSpeciesFields.length; x++) {
-    		for(int y=0; y<chkSpeciesFields[x].length; y++) {
-    			chkSpeciesFields[x][y].setSelected(theOldSelections[targetPos]);
-    			targetPos++;
-    		}
-    	}
-    	
-    	for(int x=0; x<chkAnno.size(); x++) {
-    		for(int y=0; y<chkAnno.get(x).size(); y++) {
-    			chkAnno.get(x).get(y).setSelected(theOldSelections[targetPos]);
-    			targetPos++;
-    		}
-    	}
-    	
-    	theOldSelections = null;
-    	setTable();
+	    	if(theOldSelections == null)
+	    		return; 
+	    	
+	    	int targetPos = 0;
+	    	for(int x=0; x<chkGeneralFields.length; x++) {
+	    		chkGeneralFields[x].setSelected(theOldSelections[targetPos]);
+	    		targetPos++;
+	    	}
+	    	
+	    	for(int x=0; x<chkSpeciesFields.length; x++) {
+	    		for(int y=0; y<chkSpeciesFields[x].length; y++) {
+	    			chkSpeciesFields[x][y].setSelected(theOldSelections[targetPos]);
+	    			targetPos++;
+	    		}
+	    	}
+	    	
+	    	for(int x=0; x<chkAnno.size(); x++) {
+	    		for(int y=0; y<chkAnno.get(x).size(); y++) {
+	    			chkAnno.get(x).get(y).setSelected(theOldSelections[targetPos]);
+	    			targetPos++;
+	    		}
+	    	}
+	    	
+	    	theOldSelections = null;
+	    	setTable();
     }
     
     private JPanel createGeneralSelectPanel() {
-    	JPanel retVal = new JPanel();
-    	retVal.setLayout(new BoxLayout(retVal, BoxLayout.PAGE_AXIS));
-    	retVal.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	retVal.setBackground(Color.WHITE);
-    
-    	JPanel genRow = new JPanel();
-    	genRow.setLayout(new BoxLayout(genRow, BoxLayout.LINE_AXIS));
-    	genRow.setBackground(Color.WHITE);
-    	genRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-    	String [] genCols = FieldData.getGeneralColumns();
-    	Boolean [] genColDef = FieldData.getGeneralColumnDef();
-    	chkGeneralFields = new JCheckBox[genCols.length];
-    	for(int x=0; x<chkGeneralFields.length; x++) {
-    		chkGeneralFields[x] = new JCheckBox(genCols[x]);
-    		chkGeneralFields[x].setAlignmentX(Component.LEFT_ALIGNMENT);
-    		chkGeneralFields[x].setBackground(Color.WHITE);
-    		chkGeneralFields[x].addActionListener(colSelectChange);
-    		chkGeneralFields[x].setSelected(genColDef[x]);
-    		
-    		genRow.add(chkGeneralFields[x]);
-    		genRow.add(Box.createHorizontalStrut(5));
-    	}
-    	
-    	retVal.add(genRow);
-    	
-    	retVal.setBorder(BorderFactory.createTitledBorder("General"));
-    	retVal.setMaximumSize(retVal.getPreferredSize());
-
-    	return retVal;
+	    	JPanel retVal = new JPanel();
+	    	retVal.setLayout(new BoxLayout(retVal, BoxLayout.PAGE_AXIS));
+	    	retVal.setAlignmentX(Component.LEFT_ALIGNMENT);
+	    	retVal.setBackground(Color.WHITE);
+	    
+	    	JPanel genRow = new JPanel();
+	    	genRow.setLayout(new BoxLayout(genRow, BoxLayout.LINE_AXIS));
+	    	genRow.setBackground(Color.WHITE);
+	    	genRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+	
+	    	String [] genCols = FieldData.getGeneralColumns();
+	    	Boolean [] genColDef = FieldData.getGeneralColumnDef();
+	    	chkGeneralFields = new JCheckBox[genCols.length];
+	    	for(int x=0; x<chkGeneralFields.length; x++) {
+	    		chkGeneralFields[x] = new JCheckBox(genCols[x]);
+	    		chkGeneralFields[x].setAlignmentX(Component.LEFT_ALIGNMENT);
+	    		chkGeneralFields[x].setBackground(Color.WHITE);
+	    		chkGeneralFields[x].addActionListener(colSelectChange);
+	    		chkGeneralFields[x].setSelected(genColDef[x]);
+	    		
+	    		genRow.add(chkGeneralFields[x]);
+	    		genRow.add(Box.createHorizontalStrut(5));
+	    	}
+	    	
+	    	retVal.add(genRow);
+	    	
+	    	retVal.setBorder(BorderFactory.createTitledBorder("General"));
+	    	retVal.setMaximumSize(retVal.getPreferredSize());
+	
+	    	return retVal;
     }
     
     private JPanel createFieldSelectPanel() {
-    	JPanel retVal = new JPanel();
-    	retVal.setLayout(new BoxLayout(retVal, BoxLayout.PAGE_AXIS));
-    	retVal.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	retVal.setBackground(Color.WHITE);
-        	
-    	String [] species = theParentFrame.getDisplayNames();
-    
-    	chkSpeciesFields = new JCheckBox[species.length][4];
-    	for(int x=0; x<species.length; x++) {
-    		JPanel row = new JPanel();
-        	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-        	row.setAlignmentX(Component.LEFT_ALIGNMENT);
-        	row.setBackground(Color.WHITE);
-    		
-        	JLabel tmpLabel = new JLabel(species[x]);
-        	if(ANNO_COLUMN_WIDTH - tmpLabel.getPreferredSize().width > 0)
-        		row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH - tmpLabel.getPreferredSize().width));
-    		
-    		row.add(new JLabel(species[x]));
-    		row.add(Box.createHorizontalStrut(10));
-    		chkSpeciesFields[x][0] = new JCheckBox("Chr");
-    		chkSpeciesFields[x][0].setSelected(true);
-    		chkSpeciesFields[x][1] = new JCheckBox("Start");
-    		chkSpeciesFields[x][1].setSelected(false);
-    		chkSpeciesFields[x][2] = new JCheckBox("End");
-    		chkSpeciesFields[x][2].setSelected(false);
-    		chkSpeciesFields[x][3] = new JCheckBox("#RGN");
-    		chkSpeciesFields[x][3].setSelected(false);
-        	
-        	for(int y=0; y<chkSpeciesFields[x].length; y++) {
-        		chkSpeciesFields[x][y].setAlignmentX(Component.LEFT_ALIGNMENT);
-        		chkSpeciesFields[x][y].setBackground(Color.WHITE);
-        		chkSpeciesFields[x][y].addActionListener(colSelectChange);
-        		row.add(chkSpeciesFields[x][y]);
-        		if(ANNO_COLUMN_WIDTH - chkSpeciesFields[x][y].getPreferredSize().width > 0)
-        			row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH - chkSpeciesFields[x][y].getPreferredSize().width));
-
-        	}
-        	retVal.add(row);
-        	if(x < species.length - 1)
-        		retVal.add(new JSeparator());
-    	}
-    	
-    	retVal.setBorder(BorderFactory.createTitledBorder("Location"));
-    	retVal.setMaximumSize(retVal.getPreferredSize());
-
-    	return retVal;
+	    	JPanel retVal = new JPanel();
+	    	retVal.setLayout(new BoxLayout(retVal, BoxLayout.PAGE_AXIS));
+	    	retVal.setAlignmentX(Component.LEFT_ALIGNMENT);
+	    	retVal.setBackground(Color.WHITE);
+	        	
+	    	String [] species = theParentFrame.getDisplayNames();
+	    
+	    	chkSpeciesFields = new JCheckBox[species.length][4];
+	    	for(int x=0; x<species.length; x++) {
+	    		JPanel row = new JPanel();
+	        	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
+	        	row.setAlignmentX(Component.LEFT_ALIGNMENT);
+	        	row.setBackground(Color.WHITE);
+	    		
+	        	JLabel tmpLabel = new JLabel(species[x]);
+	        	if(ANNO_COLUMN_WIDTH - tmpLabel.getPreferredSize().width > 0)
+	        		row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH - tmpLabel.getPreferredSize().width));
+	    		
+	    		row.add(new JLabel(species[x]));
+	    		row.add(Box.createHorizontalStrut(10));
+	    		chkSpeciesFields[x][0] = new JCheckBox("Chr");
+	    		chkSpeciesFields[x][0].setSelected(true);
+	    		chkSpeciesFields[x][1] = new JCheckBox("Start");
+	    		chkSpeciesFields[x][1].setSelected(false);
+	    		chkSpeciesFields[x][2] = new JCheckBox("End");
+	    		chkSpeciesFields[x][2].setSelected(false);
+	    		chkSpeciesFields[x][3] = new JCheckBox("#RGN");
+	    		chkSpeciesFields[x][3].setSelected(false);
+	        	
+	        	for(int y=0; y<chkSpeciesFields[x].length; y++) {
+	        		chkSpeciesFields[x][y].setAlignmentX(Component.LEFT_ALIGNMENT);
+	        		chkSpeciesFields[x][y].setBackground(Color.WHITE);
+	        		chkSpeciesFields[x][y].addActionListener(colSelectChange);
+	        		row.add(chkSpeciesFields[x][y]);
+	        		if(ANNO_COLUMN_WIDTH - chkSpeciesFields[x][y].getPreferredSize().width > 0)
+	        			row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH - chkSpeciesFields[x][y].getPreferredSize().width));
+	
+	        	}
+	        	retVal.add(row);
+	        	if(x < species.length - 1)
+	        		retVal.add(new JSeparator());
+	    	}
+	    	
+	    	retVal.setBorder(BorderFactory.createTitledBorder("Location"));
+	    	retVal.setMaximumSize(retVal.getPreferredSize());
+	
+	    	return retVal;
     }
     private JPanel createAnnotationSelectPanel() {
-    	JPanel retVal = new JPanel();
-    	retVal.setLayout(new BoxLayout(retVal, BoxLayout.LINE_AXIS));
-    	retVal.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	retVal.setBackground(Color.WHITE);
-
-    	chkAnno = new Vector<Vector<JCheckBox>> ();
-    	int [] speciesIDs = theAnnotations.getSpeciesIDList();
-    	for(int x=0; x<speciesIDs.length; x++) {
-    		Vector<JCheckBox> temp = new Vector<JCheckBox> ();
-    		for(int y=0; y<theAnnotations.getNumberAnnosForSpecies(speciesIDs[x]); y++){
-    			String annotName = theAnnotations.getAnnoIDforSpeciesAt(speciesIDs[x], y);
-    			JCheckBox chkTemp = new JCheckBox(annotName);
-    			chkTemp.setBackground(Color.WHITE);
-    			chkTemp.addActionListener(colSelectChange);
-    			if (annotName.equalsIgnoreCase("description"))
-    			{
-    				chkTemp.setSelected(true);
-    			}
-    			temp.add(chkTemp);
-    		}
-    		chkAnno.add(temp);
-    	}
-    	
-    	JPanel colPanel = new JPanel();
-    	colPanel.setLayout(new BoxLayout(colPanel, BoxLayout.PAGE_AXIS));
-    	colPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	colPanel.setBackground(Color.WHITE);
-    	
-    	Iterator<Vector<JCheckBox>> spIter = chkAnno.iterator();
-    	int pos = 0;
-    	while(spIter.hasNext()) {
-        	JPanel row = new JPanel();
-        	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-        	row.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-        	row.setBackground(Color.WHITE);
-        	
-        	int curWidth = ANNO_COLUMN_WIDTH;
-        	JLabel tmpLabel = new JLabel(theAnnotations.getSpeciesNameByID(speciesIDs[pos]));
-        	if(ANNO_COLUMN_WIDTH - tmpLabel.getPreferredSize().width > 0)
-        		row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH - tmpLabel.getPreferredSize().width));
-        	row.add(tmpLabel);
-        	row.add(Box.createHorizontalStrut(10));
-        	Iterator<JCheckBox> annoIter = spIter.next().iterator();
-        	while(annoIter.hasNext()) {
-        		JCheckBox chkTemp = annoIter.next();
-        		
-        		if(curWidth + ANNO_COLUMN_WIDTH > ANNO_PANEL_WIDTH) {
-        			colPanel.add(row);
-        	    	row = new JPanel();
-        	    	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-        	    	row.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-        	    	row.setBackground(Color.WHITE);
-        	    	
-        	    	row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH + 10));
-        	    	curWidth = ANNO_COLUMN_WIDTH + 10;
-        		}
-        		row.add(chkTemp);
-        		curWidth += ANNO_COLUMN_WIDTH;
-        		if(ANNO_COLUMN_WIDTH - chkTemp.getPreferredSize().width > 0)
-        			row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH - chkTemp.getPreferredSize().width));
-        	}
-        	colPanel.add(row);
-        	if(spIter.hasNext())
-        		colPanel.add(new JSeparator());
-        	pos++;
-    	}
-    	
-    	retVal.add(colPanel);
-    	
-    	retVal.setBorder(BorderFactory.createTitledBorder("Annotation Columns"));
-    	retVal.setMaximumSize(retVal.getPreferredSize());
-    	return retVal;
+	    	JPanel retVal = new JPanel();
+	    	retVal.setLayout(new BoxLayout(retVal, BoxLayout.LINE_AXIS));
+	    	retVal.setAlignmentX(Component.LEFT_ALIGNMENT);
+	    	retVal.setBackground(Color.WHITE);
+	
+	    	chkAnno = new Vector<Vector<JCheckBox>> ();
+	    	int [] speciesIDs = theAnnotations.getSpeciesIDList();
+	    	for(int x=0; x<speciesIDs.length; x++) {
+	    		Vector<JCheckBox> temp = new Vector<JCheckBox> ();
+	    		for(int y=0; y<theAnnotations.getNumberAnnosForSpecies(speciesIDs[x]); y++){
+	    			String annotName = theAnnotations.getAnnoIDforSpeciesAt(speciesIDs[x], y);
+	    			JCheckBox chkTemp = new JCheckBox(annotName);
+	    			chkTemp.setBackground(Color.WHITE);
+	    			chkTemp.addActionListener(colSelectChange);
+	    			if (annotName.equalsIgnoreCase("description"))
+	    			{
+	    				chkTemp.setSelected(true);
+	    			}
+	    			temp.add(chkTemp);
+	    		}
+	    		chkAnno.add(temp);
+	    	}
+	    	
+	    	JPanel colPanel = new JPanel();
+	    	colPanel.setLayout(new BoxLayout(colPanel, BoxLayout.PAGE_AXIS));
+	    	colPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+	    	colPanel.setBackground(Color.WHITE);
+	    	
+	    	Iterator<Vector<JCheckBox>> spIter = chkAnno.iterator();
+	    	int pos = 0;
+	    	while(spIter.hasNext()) {
+	        	JPanel row = new JPanel();
+	        	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
+	        	row.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+	        	row.setBackground(Color.WHITE);
+	        	
+	        	int curWidth = ANNO_COLUMN_WIDTH;
+	        	JLabel tmpLabel = new JLabel(theAnnotations.getSpeciesNameByID(speciesIDs[pos]));
+	        	if(ANNO_COLUMN_WIDTH - tmpLabel.getPreferredSize().width > 0)
+	        		row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH - tmpLabel.getPreferredSize().width));
+	        	row.add(tmpLabel);
+	        	row.add(Box.createHorizontalStrut(10));
+	        	Iterator<JCheckBox> annoIter = spIter.next().iterator();
+	        	while(annoIter.hasNext()) {
+	        		JCheckBox chkTemp = annoIter.next();
+	        		
+	        		if(curWidth + ANNO_COLUMN_WIDTH > ANNO_PANEL_WIDTH) {
+	        			colPanel.add(row);
+	        	    	row = new JPanel();
+	        	    	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
+	        	    	row.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+	        	    	row.setBackground(Color.WHITE);
+	        	    	
+	        	    	row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH + 10));
+	        	    	curWidth = ANNO_COLUMN_WIDTH + 10;
+	        		}
+	        		row.add(chkTemp);
+	        		curWidth += ANNO_COLUMN_WIDTH;
+	        		if(ANNO_COLUMN_WIDTH - chkTemp.getPreferredSize().width > 0)
+	        			row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH - chkTemp.getPreferredSize().width));
+	        	}
+	        	colPanel.add(row);
+	        	if(spIter.hasNext())
+	        		colPanel.add(new JSeparator());
+	        	pos++;
+	    	}
+	    	
+	    	retVal.add(colPanel);
+	    	
+	    	retVal.setBorder(BorderFactory.createTitledBorder("Annotation Columns"));
+	    	retVal.setMaximumSize(retVal.getPreferredSize());
+	    	return retVal;
     }
     
     private void validateTable() {
-    	validate();
+    		validate();
     }
     
     private JPanel createTableButtonPanel() {
@@ -893,12 +852,12 @@ public class ListDataPanel extends JPanel {
 								SyMAP symap = new SyMAP(theParentFrame.getApplet(), theParentFrame.getDatabase(), getInstance());
 							
 								symap.getDrawingPanel().setMaps(1);
-								symap.getHistory().clear(); // clear history - mdb added 10/12/09
+								symap.getHistory().clear(); 
 		
 								FilterData fd2 = new FilterData();
 								fd2.setShowHits(FilterData.ALL_HITS); 
 								symap.getDrawingPanel().setHitFilter(1,fd2);
-								Sequence.setDefaultShowAnnotation(true); // mdb added 2/1/10
+								Sequence.setDefaultShowAnnotation(true); 
 		
 								// PSEUDO to PSEUDO
 								symap.getDrawingPanel().setSequenceTrack(1,p2Idx,grp2Idx,Color.CYAN);
@@ -1145,7 +1104,6 @@ public class ListDataPanel extends JPanel {
 		btnHelp.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				Utilities.showHTMLPage(null, "Query Results Help", "/html/QueryResultHelp.html");
-				//UserPrompt.displayInfo(theParentFrame, "Results Table Help", HELP_COL, HELP_VAL, false);
 			}
 		});
 		topRow.add(Box.createHorizontalStrut(15));
@@ -1164,80 +1122,80 @@ public class ListDataPanel extends JPanel {
     }
     
     public long getSelectedSeq1Start() {
-    	if(theTable.getSelectedRow() >= 0)
-    		return (Integer) theTableData.getValueAt(theTable.getSelectedRow(), theTableData.getColumnHeaderIndex("Start 1"));
-    	return -1;
+    		if(theTable.getSelectedRow() >= 0)
+    			return (Integer) theTableData.getValueAt(theTable.getSelectedRow(), theTableData.getColumnHeaderIndex("Start 1"));
+    		return -1;
     }
         
     public long getSelectedSeq2Start() {
-    	if(theTable.getSelectedRow() >= 0)
-    		return (Integer) theTableData.getValueAt(theTable.getSelectedRow(), theTableData.getColumnHeaderIndex("Start 2"));
-    	return -1;
+	    	if(theTable.getSelectedRow() >= 0)
+	    		return (Integer) theTableData.getValueAt(theTable.getSelectedRow(), theTableData.getColumnHeaderIndex("Start 2"));
+	    	return -1;
     }
         
     public long getSelectedSeq1End() {
-    	if(theTable.getSelectedRow() >= 0)
-    		return (Integer) theTableData.getValueAt(theTable.getSelectedRow(), theTableData.getColumnHeaderIndex("End 1"));
-    	return -1;
+	    	if(theTable.getSelectedRow() >= 0)
+	    		return (Integer) theTableData.getValueAt(theTable.getSelectedRow(), theTableData.getColumnHeaderIndex("End 1"));
+	    	return -1;
     }
         
     public long getSelectedSeq2End() {
-    	if(theTable.getSelectedRow() >= 0)
-    		return (Integer) theTableData.getValueAt(theTable.getSelectedRow(), theTableData.getColumnHeaderIndex("End 2"));
-    	return -1;
+	    	if(theTable.getSelectedRow() >= 0)
+	    		return (Integer) theTableData.getValueAt(theTable.getSelectedRow(), theTableData.getColumnHeaderIndex("End 2"));
+	    	return -1;
     }
         
     private JPanel createTableStatusPanel() {
-    	JPanel thePanel = new JPanel();
-    	thePanel.setLayout(new BoxLayout(thePanel, BoxLayout.LINE_AXIS));
-    	thePanel.setBackground(Color.WHITE);
-
-    	tableType = new JTextField(20);
-    	tableType.setBackground(Color.WHITE);
-    	tableType.setBorder(BorderFactory.createEmptyBorder());
-    	tableType.setEditable(false);
-    	tableType.setMaximumSize(tableType.getPreferredSize());
-    	tableType.setAlignmentX(LEFT_ALIGNMENT);
-
-    	rowCount = new JTextField(30);
-    	rowCount.setBackground(Color.WHITE);
-    	rowCount.setBorder(BorderFactory.createEmptyBorder());
-    	rowCount.setEditable(false);
-    	rowCount.setMaximumSize(rowCount.getPreferredSize());
-    	rowCount.setAlignmentX(LEFT_ALIGNMENT);
-    	thePanel.add(tableType);
-    	thePanel.add(rowCount);
-    	thePanel.setMaximumSize(thePanel.getPreferredSize());
+	    	JPanel thePanel = new JPanel();
+	    	thePanel.setLayout(new BoxLayout(thePanel, BoxLayout.LINE_AXIS));
+	    	thePanel.setBackground(Color.WHITE);
+	
+	    	tableType = new JTextField(20);
+	    	tableType.setBackground(Color.WHITE);
+	    	tableType.setBorder(BorderFactory.createEmptyBorder());
+	    	tableType.setEditable(false);
+	    	tableType.setMaximumSize(tableType.getPreferredSize());
+	    	tableType.setAlignmentX(LEFT_ALIGNMENT);
+	
+	    	rowCount = new JTextField(30);
+	    	rowCount.setBackground(Color.WHITE);
+	    	rowCount.setBorder(BorderFactory.createEmptyBorder());
+	    	rowCount.setEditable(false);
+	    	rowCount.setMaximumSize(rowCount.getPreferredSize());
+	    	rowCount.setAlignmentX(LEFT_ALIGNMENT);
+	    	thePanel.add(tableType);
+	    	thePanel.add(rowCount);
+	    	thePanel.setMaximumSize(thePanel.getPreferredSize());
     	
-    	return thePanel;
+	    	return thePanel;
     }
     
     private void updateTableStatus(String status) {
-    	if(nViewMode == VIEW_MODE_LOCAL)
-    		tableType.setText("Local View");
-    	rowCount.setText(status);
+	    	if(nViewMode == VIEW_MODE_LOCAL)
+	    		tableType.setText("Local View");
+	    	rowCount.setText(status);
     }
     
     private JCheckBox getAnnoCheckBoxAt(int pos) {
-    	Iterator<Vector<JCheckBox>> spIter = chkAnno.iterator();
-    	while(spIter.hasNext()) {
-    		Vector<JCheckBox> temp = spIter.next();
-    		if(temp.size() <= pos) {
-    			pos -= temp.size();
-    		}
-    		else
-    			return temp.get(pos);
-    	}
-    	return null;
+	    	Iterator<Vector<JCheckBox>> spIter = chkAnno.iterator();
+	    	while(spIter.hasNext()) {
+	    		Vector<JCheckBox> temp = spIter.next();
+	    		if(temp.size() <= pos) {
+	    			pos -= temp.size();
+	    		}
+	    		else
+	    			return temp.get(pos);
+	    	}
+	    	return null;
     }
     
     private int getNumAnnoCheckBoxes() {
-    	int total = 0;
-    	Iterator<Vector<JCheckBox>> spIter = chkAnno.iterator();
-    	while(spIter.hasNext()) {
-    		total += spIter.next().size();
-    	}
-    	return total;
+	    	int total = 0;
+	    	Iterator<Vector<JCheckBox>> spIter = chkAnno.iterator();
+	    	while(spIter.hasNext()) {
+	    		total += spIter.next().size();
+	    	}
+	    	return total;
     }
 
     private void writeReloadFile(String delim, int [] selRows) {
@@ -1425,7 +1383,7 @@ public class ListDataPanel extends JPanel {
 					int n = Utilities.ctrGet(theTableData.proj2regions,pname); 
 					int h = Utilities.ctrGet(theTableData.proj2hits,pname); 
 					int a = Utilities.ctrGet(theTableData.proj2annot,pname); 			
-					int o = Utilities.ctrGet(theTableData.proj2orphs,pname);
+					
 					int nchr = nChroms.get(pname.toLowerCase());
 					statsPanel.add(Box.createVerticalStrut(2));
 					String label = String.format("%-13s hits: %-7d distinct regions: %-7d annotated: %-7d chrs: %-6d", pname, h, n, a,nchr);
@@ -1476,26 +1434,26 @@ public class ListDataPanel extends JPanel {
     private static int nTableID = 0;
     
     public void setPanelEnabled(boolean enable) {
-    	theTable.setEnabled(enable);
-    	rowCount.setEnabled(enable);
-    	tableType.setEnabled(enable);
-    	txtMargin.setEnabled(enable);
-    	btnShowAlign.setEnabled(enable);
-    	btnSaveCSV.setEnabled(enable);
-    	btnSaveReload.setEnabled(enable);
-    	btnUnSelectAll.setEnabled(enable);
-    	btnSaveFasta.setEnabled(enable);
-    	btnMuscleAlign.setEnabled(enable);
-    	showColumnSelect.setEnabled(enable);
-    	btnHelp.setEnabled(enable);
-    	
-    	for(int x=0; x<chkGeneralFields.length; x++)
-    		chkGeneralFields[x].setEnabled(enable);
-    		
-    	for(int x=0; x<chkSpeciesFields.length; x++) {
-    		for(int y=0; y<chkSpeciesFields[x].length; y++)
-    			chkSpeciesFields[x][y].setEnabled(enable);
-    	}
+	    	theTable.setEnabled(enable);
+	    	rowCount.setEnabled(enable);
+	    	tableType.setEnabled(enable);
+	    	txtMargin.setEnabled(enable);
+	    	btnShowAlign.setEnabled(enable);
+	    	btnSaveCSV.setEnabled(enable);
+	    	btnSaveReload.setEnabled(enable);
+	    	btnUnSelectAll.setEnabled(enable);
+	    	btnSaveFasta.setEnabled(enable);
+	    	btnMuscleAlign.setEnabled(enable);
+	    	showColumnSelect.setEnabled(enable);
+	    	btnHelp.setEnabled(enable);
+	    	
+	    	for(int x=0; x<chkGeneralFields.length; x++)
+	    		chkGeneralFields[x].setEnabled(enable);
+	    		
+	    	for(int x=0; x<chkSpeciesFields.length; x++) {
+	    		for(int y=0; y<chkSpeciesFields[x].length; y++)
+	    			chkSpeciesFields[x][y].setEnabled(enable);
+	    	}
     }
 
     private SortTable theTable = null;
@@ -1531,7 +1489,6 @@ public class ListDataPanel extends JPanel {
     private ActionListener colSelectChange = null;
     private boolean [] theOldSelections = null; 
     
-//	private JPanel buttonPanel = null;
 	private JPanel tableButtonPanel = null;
 	private JPanel tableStatusPanel = null;
 	private JPanel generalFieldSelectPanel = null;

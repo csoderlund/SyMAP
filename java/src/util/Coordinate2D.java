@@ -6,8 +6,6 @@ import java.util.Comparator;
  * Class <code>Coordinate2D</code> abstract class for a point in 2 dimensional 
  * space in which dimension 0 is the x dimension and dimension 1 is the y 
  * dimension.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Coordinate
  */
 public abstract class Coordinate2D implements Coordinate, Comparable<Coordinate2D> {

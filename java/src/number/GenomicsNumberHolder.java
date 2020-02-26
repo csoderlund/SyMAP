@@ -8,7 +8,6 @@ package number;
  * based of the return values of these methods.
  *
  * @see GenomicsNumber
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 public interface GenomicsNumberHolder {
 

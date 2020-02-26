@@ -25,7 +25,6 @@ import javax.swing.JButton;
 import javax.swing.text.DefaultCaret;
 
 import java.io.FileWriter;
-import java.io.FileDescriptor;
 import util.ErrorCount;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
@@ -45,11 +44,16 @@ public class ProgressDialog extends JDialog implements Logger {
 	private FileWriter logFileW = null;
 	
 	public ProgressDialog(final Frame owner, String strTitle, String strMessage, 
-			boolean isDeterminate, boolean hasConsole, FileWriter logW) 
+			boolean isDeterminate, 
+			boolean hasConsole, // CAS500 always T now and always has logW
+			FileWriter logW) 
 	{
 		super(owner, strTitle, true);
 		Cancelled.init();
 		logFileW = logW;
+		
+		msgToFile("\n>>>> " + ErrorReport.getDate() + " <<<<\n");
+		
 		//setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // interferes with cancel() somehow
 		
 		// Label
@@ -183,9 +187,7 @@ public class ProgressDialog extends JDialog implements Logger {
 		else {
 			text = text.substring(0, pos) + search + newText;
 			textArea.setText(text);
-	
-		}
-		
+		}	
 	}
 	
 	public void finish() {
@@ -246,6 +248,10 @@ public class ProgressDialog extends JDialog implements Logger {
 			catch (Exception e) { }
 		setCursor( Cursor.getDefaultCursor() );
 		dispose(); // Close this dialog
+		
+		if (logFileW != null) // CAS500
+			try {logFileW.close();}
+			catch (Exception e) {ErrorReport.print("Cannot close file");} // CAS500
 	}	
 	public void setCancelled()
 	{
@@ -259,7 +265,6 @@ public class ProgressDialog extends JDialog implements Logger {
 		while (userThread != null && userThread.isAlive())
 		{
 			try{Thread.sleep(100);} catch(Exception e){}
-
 		}
 	}
 	

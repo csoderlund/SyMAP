@@ -31,34 +31,20 @@ import util.Utilities;
  * 
  * Handles the actions of those buttons through the arguments passed into 
  * the constructor.
- * 
- * @author Austin Shoemaker
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ControlPanel extends JPanel implements SyMAPConstants,
-	HelpListener // mdb added 3/30/07 #112
-{
-//	private static final double DDOWN_FACTOR = .5;								// mdb removed 1/29/09
-	private static final double DOWN_FACTOR = 4.0/5.0;	//1.0 / Math.sqrt(2);	// mdb changed 2/18/09
-	private static final double UP_FACTOR = 6.0/5.0; 	//Math.sqrt(2); 		// mdb changed 2/18/09
-//	private static final double DUP_FACTOR = 2; 								// mdb removed 1/29/09
+	HelpListener 
+{								
+	private static final double DOWN_FACTOR = 4.0/5.0;	
+	private static final double UP_FACTOR = 6.0/5.0; 	
 
-// mdb removed 1/29/08 #159 simplify properties	
-//	public static final boolean CHANGECOLORS, ZOOMCONTROL, HISTORYCONTROL, PRINTCONTROL, EXITCONTROL;
-//	static {
-//		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/controlpanel.properties"));
-//		CHANGECOLORS   = props.getBoolean("changecolors");
-//		ZOOMCONTROL    = props.getBoolean("zoomcontrol");
-//		HISTORYCONTROL = props.getBoolean("historycontrol");
-//		PRINTCONTROL   = props.getBoolean("printcontrol");
-//		EXITCONTROL    = props.getBoolean("exitcontrol");
-//	}
 
 	private JButton scaleButton;
-	//private JButton dDownButton, dUpButton; 	// mdb removed 1/29/09
+	
 	private JButton upButton, downButton;
 	private JButton showImageButton, editColorsButton;
-	//private JButton exitButton; 				// mdb removed 5/20/09
+	
 	private DrawingPanel dp;
 	private HistoryControl hc;
 	private ImageViewer imageViewer;
@@ -88,22 +74,15 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		this.cdh = cdh;
 		this.imageViewer = iv;
 
-		//PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/controlpanel.properties")); // mdb removed 1/29/09 #159
-
 		JButton homeButton       = (JButton) Utilities.createButton(this,"/images/home.gif","Home: Go back in history to the first view",bar,null,false);
-		//JButton resetButton      = createButton("/images/reset.gif","Reset: Set all of the tracks to their original settings",bar,false); // mdb removed 2/18/09
-		//JButton doubleBackButton = createButton("/images/doubleback.gif","Back: Go back in history to last track change",bar,false); // mdb removed 5/20/09
 		JButton backButton       = (JButton) Utilities.createButton(this,"/images/back.gif","Back: Go back in history",bar,null,false);
 		JButton forwardButton    = (JButton) Utilities.createButton(this,"/images/forward.gif","Forward: Go forward in history",bar,null,false);
 
-		//exitButton = createButton("/images/exit.gif","Close: Close this window",bar,true); // mdb removed 5/20/09
-
+		
 		if (hc != null) hc.setButtons(homeButton,null/*resetButton*/,null/*doubleBackButton*/,backButton,forwardButton,null/*exitButton*/);
 
-		//dDownButton      = createButton("/images/minusminus.gif","Decrease the scale greatly",bar,true); // mdb removed 1/29/09
 		downButton       = (JButton) Utilities.createButton(this,"/images/minus.gif","Shrink the alignment region",bar,buttonListener,false);
 		upButton         = (JButton) Utilities.createButton(this,"/images/plus.gif","Grow the alignment region",bar,buttonListener,false);
-		//dUpButton        = createButton("/images/plusplus.gif","Increase the scale greatly",bar,true); // mdb removed 1/29/09
 		scaleButton      = (JButton) Utilities.createButton(this,"/images/scale.gif","Scale: Draw all of the tracks to BP scale",bar,buttonListener,false);
 		showImageButton  = (JButton) Utilities.createButton(this,"/images/print.gif",
 				"Save: Save as image." + Utilities.getBrowserPopupMessage(applet),
@@ -112,13 +91,6 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		
 		JButton helpButton = null;
 		
-// mdb removed 4/30/09 #162	
-//		if (SyMAP.isHelp() && hasHelpButton) {
-//			helpButton = createButton("/images/help.gif","Help: Online documentation",bar,false);
-//			SyMAP.enableHelpOnButton(helpButton,null);
-//		}
-		
-		// mdb added 5/1/09 #162
 		helpButton = (JButton) Utilities.createButton(this,"/images/help.gif",
 				"Help: Online documentation." + Utilities.getBrowserPopupMessage(applet),
 				bar,null,false);
@@ -140,76 +112,49 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 
 		if (hc != null /*&& HISTORYCONTROL*/) {
 			addToGrid(this, gridbag, constraints, homeButton, 1);
-			//addToGrid(this, gridbag, constraints, resetButton, 1); // mdb removed 2/18/09	
-
+			
 			addToGrid(this, gridbag, constraints, new JLabel(), 1);
 			addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
-			//addToGrid(this, gridbag, constraints, new JLabel(), 1); 		// mdb removed 2/18/09
-
-			//addToGrid(this, gridbag, constraints, doubleBackButton, 1); 	// mdb removed 5/20/09
+			
 			addToGrid(this, gridbag, constraints, backButton, 1);
 			addToGrid(this, gridbag, constraints, forwardButton, 1);
 
 			addToGrid(this, gridbag, constraints, new JLabel(), 1);
 			addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
-			//addToGrid(this, gridbag, constraints, new JLabel(), 1); 	// mdb removed 2/18/09
 		}
 
-		//if (ZOOMCONTROL) {
-			//addToGrid(this, gridbag, constraints, dDownButton, 1); 	// mdb removed 1/29/09
-			addToGrid(this, gridbag, constraints, downButton, 1);
-			addToGrid(this, gridbag, constraints, upButton, 1);
-			//addToGrid(this, gridbag, constraints, dUpButton, 1); 		// mdb removed 1/29/09
-			//addToGrid(this, gridbag, constraints, new JLabel(), 1); 	// mdb removed 1/29/09
-			//addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1); // mdb removed 1/29/09
-			//addToGrid(this, gridbag, constraints, new JLabel(), 1); 	// mdb removed 1/29/09
-
-			addToGrid(this, gridbag, constraints, scaleButton, 1);
-
-			addToGrid(this, gridbag, constraints, new JLabel(), 1);
-			addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
-			//addToGrid(this, gridbag, constraints, new JLabel(), 1); 	// mdb removed 2/18/09
-		//}
+		
+		addToGrid(this, gridbag, constraints, downButton, 1);
+		addToGrid(this, gridbag, constraints, upButton, 1);		
+		addToGrid(this, gridbag, constraints, scaleButton, 1);
+		addToGrid(this, gridbag, constraints, new JLabel(), 1);
+		addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
 			
-		// mdb added 4/21/09 #161
 		addToGrid(this, gridbag, constraints, new JLabel("Mouse:"), 1);
 		addToGrid(this, gridbag, constraints, createMouseFunctionSelector(bar), 1);
 		addToGrid(this, gridbag, constraints, new JLabel(), 1);
 		addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
 		
-		//if (PRINTCONTROL) 
+		
 		addToGrid(this, gridbag, constraints, showImageButton, 1);
 
 		if (cdh != null /*&& CHANGECOLORS*/) addToGrid(this,gridbag,constraints,editColorsButton,1);
 		if (helpButton != null) addToGrid(this,gridbag,constraints, helpButton,1);
-		
-		// mdb removed 5/20/09
-//		if (/*EXITCONTROL*/hasExitButton) 
-//			addToGrid(this,gridbag,constraints,exitButton,GridBagConstraints.REMAINDER);
 	}
 	
 	private ActionListener buttonListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			final Object source = e.getSource();
 			if (source == scaleButton)           dp.drawToScale();
-			//else if (source == dDownButton)    dp.changeZoomFactor(DDOWN_FACTOR); // mdb removed 1/29/09	
+	
 			else if (source == downButton)       dp.changeAlignRegion(0.5);
 			else if (source == upButton)         dp.changeAlignRegion(2.0);
-			//else if (source == dUpButton)      dp.changeZoomFactor(DUP_FACTOR); // mdb removed 1/29/09	
+
 			else if (source == editColorsButton) cdh.show();
 			else if (source == showImageButton)  imageViewer.showImage(dp);
-//mdb removed 5/20/09
-//			else if (source == exitButton) {
-//				//dp.getFrame().hide(); // mdb removed 6/29/07 #118
-//				dp.getFrame().setVisible(false); // mdb added 6/29/07 #118
-//			}
 		}
 	};
 
-// mdb unused 2/18/09	
-//	public HistoryControl getHistoryControl() {
-//		return hc;
-//	}
 
 	/**
 	 * Enables/disables all of the buttons on the panel except for the help button.
@@ -221,10 +166,8 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		showImageButton.setEnabled(enable);
 		editColorsButton.setEnabled(enable);
 
-		//dDownButton.setEnabled(enable); 	// mdb removed 1/29/09
 		downButton.setEnabled(enable);
 		upButton.setEnabled(enable);
-		//dUpButton.setEnabled(enable); 	// mdb removed 1/29/09
 		if (hc != null) hc.setEnabled(enable);
 	}
 
@@ -236,13 +179,11 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		cp.add(comp);
 	}
 	
-	// mdb added 3/30/07 #112
 	public String getHelpText(MouseEvent event) { 
 		Component comp = (Component)event.getSource();
 		return comp.getName();
 	}
 	
-	// mdb added 4/21/09 #161 - add mouse function buttons to Control Panel
 	public static final String MOUSE_FUNCTION_CLOSEUP 		= "Base View";
 	public static final String MOUSE_FUNCTION_ZOOM_SINGLE 	= "Zoom";
 	public static final String MOUSE_FUNCTION_ZOOM_ALL 		= "Zoom All";
@@ -252,7 +193,6 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 				MOUSE_FUNCTION_CLOSEUP,
 				MOUSE_FUNCTION_ZOOM_SINGLE,
 				MOUSE_FUNCTION_ZOOM_ALL
-				//"Move" // mdb removed 6/24/09
 		} );
 		
 		comboMouseFunctions.addActionListener(new ActionListener() {

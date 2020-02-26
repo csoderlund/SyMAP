@@ -75,7 +75,6 @@ import util.PropertiesReader;
  * <br>
  * Tabs can be ordered by giving the variable name tab#, where # starts at 1, with the value of the tab name (i.e. tab1=Title on Tab).
  *<br><br>
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see JDialog
  * @see ActionListener
  * @see ColorDialogHandler
@@ -88,7 +87,6 @@ public class ColorDialog extends JDialog implements ActionListener {
 	private static final String VAR_SEP = ":";
 
 	protected PersistentProps persistentProps = null;
-	//protected HelpHandler helpHandler = null; // mdb removed 4/30/09 #162
 	protected PropertiesReader props = null;
 
 	private JTabbedPane tabbedPane;
@@ -104,23 +102,21 @@ public class ColorDialog extends JDialog implements ActionListener {
 	 */
 	public ColorDialog(PropertiesReader props, 
 			PersistentProps cookie) 
-			//HelpHandler help) // mdb removed 4/30/09 #162 
 	{
 		super();
 
 		setModal(true);
-		setTitle(/*props.getString("title")*/"SyMAP Color Editor"); // mdb changed 1/29/09 #159
+		setTitle("SyMAP Color Editor"); 
 
 		this.props = props;
 
-		// mdb changed 1/29/09 #159
 		if (cookie != null /*&& props.getString("cookie") != null*/) 
 			persistentProps = cookie.copy("SyMapColors"/*props.getString("cookie")*/);
 
-		int columns = 3;//props.getInt("columns"); // mdb changed 1/29/09 #159
-		Dimension iconDim = new Dimension(35,20);//props.getDimension("iconDim"); // mdb changed 1/29/09 #159
+		int columns = 3;
+		Dimension iconDim = new Dimension(35,20);
 
-		String basePackage = "symap";//props.getString("basePackage"); // mdb changed 1/29/09 #159
+		String basePackage = "symap";
 
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);
 
@@ -201,13 +197,6 @@ public class ColorDialog extends JDialog implements ActionListener {
 		buttonPanel.add(cancelButton);
 		buttonPanel.add(defaultButton);
 
-// mdb removed 4/30/09 #162
-//		if (help != null) {
-//			JButton helpButton = new JButton("Help");
-//			help.enableHelpOnButton(helpButton,props.getString("help"));
-//			buttonPanel.add(helpButton);
-//		}
-
 		getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(tabbedPane,BorderLayout.CENTER);
 		getContentPane().add(buttonPanel,BorderLayout.SOUTH);
@@ -269,13 +258,11 @@ public class ColorDialog extends JDialog implements ActionListener {
 		if (e.getSource() == okButton) {
 			okAction();
 			setCookie();
-			//analyzer.hide(); // mdb removed 6/29/07 #118
-			setVisible(false); // mdb added 6/29/07 #118
+			setVisible(false); 
 		}
 		else if (e.getSource() == cancelButton) {
 			cancelAction();
-			//analyzer.hide(); // mdb removed 6/29/07 #118
-			setVisible(false); // mdb added 6/29/07 #118
+			setVisible(false); 
 		}
 		else if (e.getSource() == defaultButton) {
 			defaultAction();

@@ -6,7 +6,6 @@ import java.awt.Frame;
  * Inteface <code>DrawingPanelListener</code> can be used to receive
  * communication from a DrawingPanel instance.
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see DrawingPanel#setListener(DrawingPanelListener)
  */
 public interface DrawingPanelListener {

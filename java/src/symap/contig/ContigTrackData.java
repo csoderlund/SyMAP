@@ -7,8 +7,6 @@ import symap.track.Track;
 
 /**
  * The data of a Contig (i.e. Contig number). 
- * 
- * @author Austin Shoemaker
  */
 public class ContigTrackData extends MarkerTrackData {
 	private int contig;
@@ -42,7 +40,7 @@ public class ContigTrackData extends MarkerTrackData {
 		contig.contig             = this.contig;
 		contig.fromBlockList.clear();
 		contig.fromBlockList.addAll(fromBlockList);
-		contig.fromBlockList.trimToSize(); // mdb added 2/3/10
+		contig.fromBlockList.trimToSize(); 
 		contig.showCloneNames     = showCloneNames;
 		contig.showBothBESFilter  = showBothBESFilter;
 		contig.baseWidth          = baseWidth;
@@ -51,7 +49,7 @@ public class ContigTrackData extends MarkerTrackData {
 		contig.selectedRemarkIDs  = selectedRemarkIDs;
 		contig.cloneRemarkShow    = cloneRemarkShow;
 		contig.cloneCondFilters.clear();
-		contig.cloneCondFilters.trimToSize(); // mdb added 2/3/10
+		contig.cloneCondFilters.trimToSize(); 
 		if (showBothBESFilter != Contig.NO_BOTH_BES_FILTER) contig.cloneCondFilters.add(showBothBESFilter);
 		if (selectedRemarkIDs != null && selectedRemarkIDs.length > 0 && cloneRemarkShow == Contig.CLONE_SHOW) 
 			contig.cloneCondFilters.add(Clone.CLONE_REMARK_COND_FILTERED);

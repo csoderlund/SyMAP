@@ -128,7 +128,7 @@ public class MultipleAlignmentPanel extends AlignmentPanelBase {
 	//---------------------------------AlignmentPanelBase Over-rides-------------------------------------//
 	
 	protected boolean getIsStop ( String seq, int nPos ) // 
-	{   // CAS 17aug10 - they get changed to upper case in safeGetBaseAt
+	{   
 
 		if (isDNA) return false;
 		
@@ -138,7 +138,7 @@ public class MultipleAlignmentPanel extends AlignmentPanelBase {
 	}
 	
 	protected boolean getIsNAt ( String seq, int nPos ) // ambiguous
-	{   // CAS 17aug10 - they get changed to upper case in safeGetBaseAt
+	{  
 		char x = 'X';
 		if (isDNA) x = 'N';
 		

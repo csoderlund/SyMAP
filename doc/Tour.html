@@ -20,7 +20,7 @@ a {font-size:100%}
 		h3 {margin-top:10px;}
 </style>
 </head>
-
+<a name=top></a>	
 <body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
 <!--#include virtual="/common/uaheader.html" -->
 
@@ -42,7 +42,7 @@ a {font-size:100%}
 		    <td height="60" width="428" align="left" valign="bottom"
 				style="padding:0px 0px 10px 30px">
 			    <font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
-				    <b>SyMAP 4.2 Tour</b>
+				    <b>SyMAP Tour</b>
 			    </font> 
 		    </td>
 		    <td height="60" width="161" align="center" valign="bottom">&nbsp;
@@ -56,7 +56,7 @@ a {font-size:100%}
 			    <td align="left" bgcolor="#666666">
 <span style="font-size:75%;color:white">
 <a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
-<a href=index.html class="wt">SyMAP Home</a> |
+<a href=../index.html class="wt">SyMAP Home</a> |
 <a href=SystemGuide.html class="wt">System Guide</a> |
 <a href=UserGuide.html class="wt">User Guide</a> |
 Tour |
@@ -84,143 +84,225 @@ Tour |
 	<tr>
 		<td align='left' >
 
-Following is a quick tour of the many displays and features available through SyMAP.
+Following is a quick tour of the many displays and queries available through SyMAP.
 
 <p>
 <h3>Contents</h2>
 <table >
 	<tr>
-		<td valign="top" align="left" >
-High-level browsing:
-<li style="margin-top:5px;"><a href="#exp">Explorer</a></li>
+
+<td valign="top" align="left" style="padding-left:20px;">
+Management:
+<li style="margin-top:5px;"><a href="#mgr">Project Manager</a></li>
+<li style="margin-top:5px;"><a href="#exp">Chromosome Explorer</a></li>
+
+
+<td valign="top" align="left" style="padding-left:20px;">
+High-level views:
+<li style="margin-top:3px;"><a href="#circ">Circle</a></li>
 <li style="margin-top:3px;"><a href="#dp">Dot Plot</a></li>
-<li style="margin-top:3px;"><a href="#circ">Dynamic Circular View</a></li>
-<li style="margin-top:3px;"><a href="#3d">3D View</a></li> 	
-<li style="margin-top:3px;"><a href="#blk">Block View</a></li> 	
-<li style="margin-top:3px;"><a href="#svg">3-Species Figure</a></li> 	
-		</td>
-		<td valign="top" align="left" style="padding-left:20px;">
+<li style="margin-top:3px;"><a href="#blk">Block</a></li> 
+<li style="margin-top:3px;"><a href="#3d">3D View</a></li> 		
+	
+
+<td valign="top" align="left" style="padding-left:20px;">
 Detailed views:
-<li style="margin-top:5px;"><a href="#2d">Side-by-side View</a></li>
-<li style="margin-top:3px;"><a href="#2dc">Closeup</a></li>
+<li style="margin-top:3px;"><a href="#2d3">2D - 3 Chr</a></li> 
+<li style="margin-top:3px;"><a href="#2d2">2D - 2 Chr</a></li> 
+<li style="margin-top:3px;"><a href="#2dc">2D Closeup</a></li>
 <li style="margin-top:3px;"><a href="#base">Base View</a></li>
-		</td>
-		<td valign="top" align="left" style="padding-left:20px;">
+</td>
+
+<td valign="top" align="left" style="padding-left:20px;">
 Analysis:
 <li style="margin-top:5px;"><a href="#query">Query Setup</a></li>
 <li style="margin-top:3px;"><a href="#qres">Query Result</a></li>
 <li style="margin-top:3px;"><a href="#tab">Gene Families</a></li>
 <li style="margin-top:3px;"><a href="#ma">Multiple Alignment</a></li>
-		</td>	
-		<td valign="top" align="left" style="padding-left:20px;">
-Management:
-<li style="margin-top:5px;"><a href="#mgr">Project Manager</a></li>
-		</td>	
-	</tr>
+</td>	
+		
+</tr>
 </table>
 <p>
 
-<a name="exp"></a>
+<a name="mgr"></a>
+<table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
+<tr><td align=left><h3>Project Manager</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
 
+After the synteny database has been build 
+(see <a href=SystemGuide.html>System Guide</a>), the synteny can be viewed
+from the manager. All projects in the database will be listed on the left panel.
+<p>
+<table>
+<tr><td valign=top>
+Selecting projects on the left panel shows them on the right panel. A check mark in the
+<b>Available Syntenies</b> matrix indicates pairs that have computed synteny that can be viewed.
+
+<p>By selecting a cell with synteny, 
+the "Display for Selected Pair:" buttons are activated, which 
+display synteny views for the <i><b>two-genome</b></i>. 
+
+<p>The "Display for All 
+Projects" provides <i><b>multi-genome</b></i> synteny views for all projects in the
+matrix.
+<td><a href="img/main.png"><img border=1 src="img/main.png" width=550></a>
+</table>
+
+
+<p>
+<a name="exp"></a>
 <table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
 <tr><td align=left><h3>Chromosome Explorer</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
 </table>
 
-The Chromosome Explorer allows you to select multiple chromosomes from different species and 
-view their alignment using several views: 3D (shown here); <a href="#dp">dot-plot</a>; <a href="#circ">circular</a>;
-and <a href="2d">side-by-side</a>. 
+The Chromosome Explorer provides <i>multi-chromosome</i> for <i>multi-genome</i>.
 <p>
-Chromosomes, and a reference chromosome, are selected through the lefthand panel, and the desired alignment view is shown to the right. 
-Below is an example showing three chromosomes from Maize, Rice, and Sorghum against Maize chromosome 9.
+<table><tr><td  valign=top>
+
+Multiple chromosomes can be selected
+from different species on the left-hand panel. 
+<p>The default display is the Circle view shown. 
+From here, one can select Dot Plot, 2D or 3D (if available).
+
+<p>For <a href=#circ>Circle</a>,
+<a href=#dp>Dot Plot</a> and <a href=#3D>3D</a>,  
+multiple chromosomes can be selected and viewed (as shown below).
+<p>For <a href=#2d>2D</a>, 
+it is best to only have two or three chromosomes selected (as
+shown below).
+
+<td><a href="img/explorer.png"><img border=1 src="img/explorer.png" width=550 class="imgbreaks"></a>
+</table>
 <p>
-<a name="3d"></a>
-The 3D view, shown here, is available in the standalone Java application (not over the web). It shows a 
-three-dimensional display of the syntenic regions ("synteny blocks") for 
-selected chromosomes against the reference chromosome. Inverted blocks are shown in green.
-<p>
-<img border='1' src='img/3d.png' width=550>
-<p>
+
+<a name="circ"></a>
+<table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
+<tr><td align=left><h3>Circle View</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+The Circle view is available for <i>two-genome</i> and <i>multi-chromosome</i>.
+<p>The left
+image shows all chromosomes for maize and rice.
+The right image shows one maize chromosome (3),
+two sorghum chromosomes (3, 8) and two rice chromosomes (1, 5). 
+
+<table><tr>
+<td  valign=top><a href="img/circle-two-genome.png">
+	<img src='img/circle-two-genome.png' border='1' width=350></a>
+<td  valign=top><a href="img/circle-multi-chr.png">
+	<img src='img/circle-multi-chr.png' border='1' width=400></a>
+</table>
 
 <a name="dp"></a>
 
 <table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
 <tr><td align=left><h3>Dot Plot</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
 </table>
+The Dot Plot view is available for <i>two-genome</i> and <i>multi-chromosome</i>.
+<p>The left
+image shows all chromosomes for maize and rice.
+The right image shows one maize chromosome (3, reference),
+two sorghum chromosomes (3, 8) and two rice chromosome (1, 5). 
+Synteny blocks are outlined in blue, and one can click to zoom further and
+arrive at a more detailed <a href="#2d">2D display</a>. 
 
-The multi-species dot plot shows the selected chromosomes aligned against the reference (top axis). Here
-Maize chromosomes 6 and 8, and Sorghum chromosomes 3 and 9, are aligned against Rice chromosome 1, clearly showing
-the pattern of duplications. Synteny blocks are outlined in blue, and one can click to zoom further and
-arrive at a more detailed <a href="#2d">side-by-side display</a>. 
-<p>
-<img border='1' src='img/dp.png' width=550>
-<p>
-
-<a name="circ"></a>
-
-<table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
-<tr><td align=left><h3>Circular View</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+<table><tr>
+<td  valign=top><a href="img/dot-two-genome.png">
+	<img src='img/dot-two-genome.png' border='1' width=400></a>
+<td  valign=top><a href="img/dot-multi-chr.png">
+	<img src='img/dot-multi-chr.png' border='1' width=350></a>
 </table>
 
-The Dynamic Circular display shows a circular view of the synteny blocks between
-selected chromosomes. (The method of selecting chromosomes is the same as for the 3D view.) 
-Below is an example for Rice against Sorghum.<p>
-This is the initial display when launching the Java Explorer through the web. (The web
-displays also include a static version of the circular display which shows all chromosomes
-for a single pair of species.) 
-<p>
-<img src='img/Circle.png' border='1' width=550>
-<p>
 
 <a name="blk"></a>
-
 <table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
 <tr><td align=left><h3>Block View</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
 </table>
 
-The Block View shows a chromosome-level view of the
-synteny blocks for one organism aligned against the chromosomes of another organism.
-It is available both through the web and in the standalone Java application.
-Below is an example for Sorghum against Rice.
+The Block View is a <i>two-genome</i> view.
+<p>The synteny blocks are colored by chromosome  (see color key at top).
 <p>
-<img src='img/blocks1.png' border='1' width=550>
-<p>
-
-The synteny blocks are colored by chromosome  (see color key at top) and 
-clicking on a chromosome track leads to the single-chromosome view shown below:
-<p>
-<img src='img/blocks2.png' border='1' width=550>
-<p>  
-This view shows the individual synteny blocks in more detail; clicking on a block
-leads to the <a href="#2d">side-by-side display</a>.
+<table>
+<tr>
+<td><a href="img/block.png"><img src="img/block.png"  border=1 width=500></a>
+<td  valign=top>
+Clicking a chromosome pops up a window of the chromosome as shown below. Clicking
+a block pops up a <a href="#2d">2D display</a>.
+<p><a href="img/block2.png"><img src="img/block2.png"  border=1 width=200></a>
+</table>
 <p>
 
-<a name="2d"></a>
-
+<a name="3d"></a>
 <table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
-<tr><td align=left><h3>Side-By-Side View</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+<tr><td align=left><h3>3D View</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
 </table>
 
-The Side-by-side view shows regions of two chromosomes aligned as below. This view allows access to full
-details of the alignment, including each individual anchor and annotation. 
+<table>
+<tr><td  valign=top>The 3D is a <i>multi-chromosome</i> view. 
+<p>The 3D view is not available from the web or on systems that do not have the 3D
+Java libraries installed.
+<td><a href="img/3D-chr.png">
+	<img src="img/3D-chr.png" border=1 width=550 class="imgbreaks"></a>
+</table>
 <p>
-<img src='img/java1.png' border=1 >
+
+<a name="2d3"></a>
+<table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
+<tr><td align=left><h3>2D 3-Chr</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+
+<table>
+<tr>
+<td  valign=top>
+This is a <i>three-chromosome</i> view.
+<p>The dark blue down the center of the chromosomes are annotated genes.
+The brown lines between chromosomes are hits, where only hits that are part
+of a synteny block are shown here.
+<td><a href="img/2d-multi-chr.png"><img src='img/2d-multi-chr.png' border=1 width=550></a>
+</table>
+
+<a name="2d2"></a>
+<table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
+<tr><td align=left><h3>2D 2-Chr</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+
+
+<table>
+<td  valign=top>
+This is a <i>two-chromosome</i> view.
+
+<p>The Maize Chr3 and Rice Chr1 were displayed, then zoomed into the top part (i.e.
+the top 7.97 Mb from the above image). It was then 
+flipped (note that it is inverted in the above image), resulting the view on the right.
+<td><a href="img/2d-2chr.png"><img src='img/2d-2chr.png' border=1 width=550></a>
+</table>
 <p>
-Each individual anchor point (a.k.a. "hit", generated by MUMmer or BLAT) 
-is shown as a brown line between chromosomes. Zooming in further one
-can see the exon-level annotation, with yellow description box,  
-and the detailed anchors connecting these genes. 
-<p>
+
 
 <a name="2dc"></a>
+<table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
+<tr><td align=left><h3>2D Closeup</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
 
-<img src='img/java2.png'  border=1 width=550>
+<table>
+<td  valign=top>
+
+Zooming in further and turning on the annotation results in the view on the
+right.
+<td><a href="img/2d-closeup.png"><img src='img/2d-closeup.png'  border=1 width=550></a>
+</table>
 <p>
-It is possible to zoom in even further and see a basepair-level view
-of the region, with Needleman-Wunsch alignments generated on the fly:
-<p>
+
 <a name="base"></a>
-<img src='img/baseview.png' border=1> 
+<table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
+<tr><td align=left><h3>Base View</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
 
+<table>
+<tr><td  valign=top>It is possible to zoom in even further and see a basepair-level view
+of the region, with Needleman-Wunsch alignments generated on the fly.
+<td><a href="img/baseview.png"><img src='img/baseview.png' border=1 width=550> 
+</table>
 <p>
 
 <a name="query"></a>
@@ -229,12 +311,12 @@ of the region, with Needleman-Wunsch alignments generated on the fly:
 <tr><td align=left><h3>Query Interface</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
 </table>
 
-SyMAP v4.2 includes powerful search features to help make the most of synteny information. 
+SyMAP includes powerful search features to help make the most of synteny information. 
 Aligned regions across the selected species are automatically grouped into "putative gene
 families". The filters allow you to locate the families of interest based on annotation, 
 level of synteny, and presence or absence in different lineages. 
 <p>
-<img src="img/querysetup.png" border=1 width=550>
+<a href="img/query_query.png"><img src="img/query_query.png" border=1 width=550></a>
 
 <a name="qres"></a>
 <table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
@@ -245,7 +327,7 @@ The query results table has full flexibility in column selection, column orderin
 and save/reload of searches. For example if you find an interesting family that is
 not annotated, you can easily save all the relevant sequences as a fasta file for further study.  
 <p>
-<img src="img/queryres1.png" border=1 width=550>
+<a href="img/queryres1.png"><img src="img/queryres1.png" border=1 width=550></a>
 
 <a name="tab"></a>
 <table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
@@ -255,9 +337,10 @@ The hits are grouped into gene families.
 <br>The PgeneF number is a unique number assigned to the gene family.
 <br>The PgFSize number is how many unique instances are in the family.
 <br>The #RGN tells how many times the gene occurs for the species. 
-<br>Example: For PgeneF=1 of PgFSize=2, Medicago #RGN=1 and its two Start coordinates are about the same, whereas Soybean #RGN=2 and its Start coordinates are on different chromosomes.
+<br>Example: For PgeneF=20 of PgFSize=6, Rice #RGN=2 and its two set of Start coordinates 
+are very different, whereas Maize #RGN=1 and its Start coordinates are all about the same.
 <p>
-<img src="img/querytab1.png" border=1 width=550>
+<a href="img/querytab1.png"><img src="img/querytab1.png" border=1 width=550></a>
 
 <a name="ma"></a>
 <table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
@@ -267,21 +350,8 @@ Another unique option is to send the selected sequences directly to Muscle for m
 alignment, to reveal the patterns in the sequence alignments between the species. 
 SyMAP parses and displays the MUSCLE (Edgar 2004 NAR:32) results:
 <p>
-<img src="img/multalign.png" border=1 width=550>
+<a href="img/multalign.png"><img src="img/multalign.png" border=1 width=550></a>
 <p>
-
-<a name="mgr"></a>
-<table width="95%" cellspacing=0 cellpadding=0 class='lgbreak'>
-<tr><td align=left><h3>Project Manager</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
-<p>
-A full-featured manager enables the creation, alignment, update, and viewing of any number
-of species projects with only a single external configuration file giving database information:
-<p>
-<img src="img/mgr.png" border=1 width=550>
-<p>
-
-
 
 </td>
 </tr>

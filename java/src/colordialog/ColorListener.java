@@ -2,8 +2,6 @@ package colordialog;
 
 /**
  * Interface <code>ColorListener</code> can be used by the color dialog to nofify objects when a change occurs.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 public interface ColorListener {
 

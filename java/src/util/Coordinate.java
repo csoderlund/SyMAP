@@ -3,8 +3,6 @@ package util;
 /**
  * Interface <code>Coordinate</code> provides an interface for storing a point
  * on an n-dimensional space with integer coordinate values.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 public interface Coordinate {
 

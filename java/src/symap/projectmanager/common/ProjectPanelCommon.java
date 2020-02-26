@@ -163,11 +163,9 @@ public class ProjectPanelCommon extends JComponent
 				if (xClick >= x && xClick <= x+WIDTH 
 						&& yClick >= y && yClick <= y+chrHeight+6) 
 				{ // Rectangle clicked: add/remove track
-					//if (!(mapper.getReferenceTrack().isFPC() && t.isFPC())) { // mdb added condition 1/21/10 #207 - don't allow FPC to FPC selections
-						mapper.setTrackVisible(t, !t.isVisible());
-						bChanged = true;
-						break;
-						//}
+					mapper.setTrackVisible(t, !t.isVisible());
+					bChanged = true;
+					break;
 				}
 				else if (xClick >= x && xClick <= x+WIDTH 
 						&& yClick >= y-19 && yClick < y) 

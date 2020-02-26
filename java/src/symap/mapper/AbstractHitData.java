@@ -8,27 +8,26 @@ import java.util.LinkedList;
 /**
  * Class <code>AbstractHitData</code>
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 public abstract class AbstractHitData {
 	private int hitContent;
 	private int project1, project2; // project IDs
-	private int group1, group2; // content IDs: contig or chromosome // mdb added 7/25/07 #134
-	private int mapType; // mdb added 7/25/07 #134
-	private boolean swap; // mdb added 12/30/08 for pseudo-pseudo closeup - indicates whether hit coords are swapped
+	private int group1, group2; // content IDs: contig or chromosome 
+	private int mapType; 
+	private boolean swap; 
 	protected boolean bHighlight;
 	
 	public AbstractHitData(int project1, int content1, int project2, 
-			int content2, int mapType, // mdb added content1/content2/mapType 7/25/07 #134
-			boolean swap) // mdb added swap 12/30/08
+			int content2, int mapType, 
+			boolean swap) 
 	{
 		this.project1 = project1;
 		this.project2 = project2;
-		this.group1 = content1; // mdb added 7/25/07 #134
-		this.group2 = content2; // mdb added 7/25/07 #134
-		this.mapType  = mapType;// mdb added 7/25/07 #134
+		this.group1 = content1; 
+		this.group2 = content2; 
+		this.mapType  = mapType;
 		this.hitContent = MapInfo.NOT_SET;
-		this.swap = swap; // mdb added 12/30/08 for pseudo-pseudo closeup
+		this.swap = swap; 
 		this.bHighlight = false; 
 	}
 
@@ -49,7 +48,7 @@ public abstract class AbstractHitData {
 		if (obj instanceof AbstractHitData) {
 			AbstractHitData d = (AbstractHitData)obj;
 			return d.project1 == project1 && d.project2 == project2
-				&& d.group1 == group1 && d.group2 == group2; // mdb added 7/25/07 #134
+				&& d.group1 == group1 && d.group2 == group2; 
 		}
 		return false;
 	}
@@ -64,7 +63,6 @@ public abstract class AbstractHitData {
 	public int getProject2() { return project2; }
 	public boolean isHighlight() { return bHighlight; }
 	
-	// mdb added 7/25/07 #134
 	public int getContent1() { return group1; }
 	public int getContent2() { return group2; }
 	public int getContig() { return group1; }
@@ -74,14 +72,12 @@ public abstract class AbstractHitData {
 	public int getGroup1() { return group1; }
 	public int getGroup2() { return group2; }
 	
-	// mdb added 12/11/08 - empty here, to be defined by inheritor (for pseudo-pseudo closeup)
+	// empty here, to be defined by inheritor (for pseudo-pseudo closeup)
 	public void getHitsInRange(List<AbstractHitData> hits, int start, int end, boolean swap) { }
 	public HitData[] getHitData() { return null; }
 	
-	// mdb added 4/23/09 #161
 	public void getMinMax(int[] minMax, int start, int end, boolean swap) { }
 	
-	// mdb added 12/31/08 for pseudo-pseudo closeup
 	public int getMapType() { return mapType; }
 	public boolean isSwapped() { return swap; }
 	

@@ -6,8 +6,6 @@ import java.awt.Graphics;
 
 /**
  * Class <code>CircleObj</code> is a circle that also holds it's desired colors
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Circle
  */
 public class CircleObj extends Circle {

@@ -19,7 +19,6 @@ import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.Stack;
 import javax.swing.JComponent;
 import number.BPNumber;
 import number.GenomicsNumber;
@@ -31,8 +30,6 @@ import symap.drawingpanel.DrawingPanel;
 
 /**
  * Class <code>Track</code> contains the base track information.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		SyMAPConstants, KeyListener,
@@ -43,28 +40,12 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 
 	protected static final double MOUSE_PADDING = 2;
 
-// mdb removed 1/28/09 #159 simplify properties	
-//	private static Color titleColor;
-//	private static Color dragColor;
-//	private static Color dragBorder;
-//	private static Font titleFont;
-//	static {
-//		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/track.properties"));
-//		MAX_PIXEL_HEIGHT = props.getInt("maxPixelHeight");
-//		MAX_PIXEL_WIDTH  = props.getInt("maxPixelWidth");
-//		titleColor = props.getColor("titleColor");
-//		titleFont = props.getFont("titleFont");
-//		dragColor = props.getColor("dragColor");
-//		dragBorder = props.getColor("dragBorder");
-//	}
-	
-	// mdb added 1/28/09 #159 simplify properties
 	private static final Color titleColor = Color.black;
 	private static final Color dragColor = new Color(255,255,255,120);
 	private static final Color dragBorder = Color.black;
 	private static final Font titleFont = new Font("Ariel", 1, 14);
 
-	protected Color bgColor = new Color(247,233,213); // mdb added 6/9/09
+	protected Color bgColor = new Color(247,233,213); 
 	
 	private double startResizeBpPerPixel;
 	private Point startMoveOffset, adjustMoveOffset;
@@ -75,7 +56,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	private Point2D.Float titlePoint;
 	private Point2D defaultTrackOffset;
 	private String projectName, projectType, displayName;
-	private String otherProjectType; // mdb added 4/10/08
+	private String otherProjectType; 
 
 	protected int project, otherProject;
 	protected int orient;
@@ -93,9 +74,9 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	protected Rectangle2D.Double rect;
 	protected boolean firstBuild = true;
 	
-	protected boolean flipped; // mdb added 8/6/07 #132
+	protected boolean flipped; 
 	
-	protected int position; // mdb added 3/18/08 - mapper position
+	protected int position; 
 
 	protected TrackHolder holder;
 	protected DrawingPanel drawingPanel;
@@ -125,8 +106,8 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		this.minDefaultBpPerPixel = minBpPerPixel;
 		this.maxDefaultBpPerPixel = maxBpPerPixel;
 		this.defaultTrackOffset = defaultTrackOffset;
-		if (holder.getTrack() != null) this.bgColor = holder.getTrack().bgColor; // mdb added 7/16/09 - maintain color when "back to block view" selected
-		if (holder.getTrack() != null) this.position = holder.getTrack().position; // mdb added 7/16/09 - maintain position when "back to block view" selected
+		if (holder.getTrack() != null) this.bgColor = holder.getTrack().bgColor; // maintain color when "back to block view" selected
+		if (holder.getTrack() != null) this.position = holder.getTrack().position; // maintain position when "back to block view" selected
 	}
 
 	public TrackHolder getHolder() {
@@ -146,7 +127,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			displayName = pp.getDisplayName(project);
 			projectName = pp.getName(project);
 			projectType = pp.getType(project);
-			otherProjectType = pp.getType(otherProject); // mdb added 4/10/08
+			otherProjectType = pp.getType(otherProject);
 			bpPerCb     = pp.getIntProperty(project,"cbsize",1);
 
 			if (bpPerCb == 1) {
@@ -272,12 +253,10 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		return otherProject;
 	}
 	
-	// mdb added 4/10/08
 	public String getProjectType() {
 		return projectType;
 	}
 	
-	// mdb added 4/10/08
 	public String getOtherProjectType() {
 		return otherProjectType;
 	}
@@ -285,11 +264,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	public String getProjectName() {
 		return projectName;
 	}
-
-	// mdb unused 7/6/07
-	//public String getProjectType() {
-	//	return projectType;
-	//}
 
 	public String getProjectDisplayName() {
 		return displayName;
@@ -635,7 +609,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	public void paintComponent(Graphics g) {
 		Graphics2D g2 = (Graphics2D)g;
 
-		// mdb added 1/28/09 - highlight reference track title in red
 		if (position % 2 == 0)
 			g2.setPaint(Color.red);
 		else
@@ -761,9 +734,9 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			dif = end.getPixelValue() - start.getPixelValue();
 		}	    
 		if (dif > MAX_PIXEL_HEIGHT) {
-			if (height == NO_VALUE) height = getAvailPixels();//height = MAX_PIXEL_HEIGHT; // mdb changed 8/27/09 for 3D
-			/*else*/ bpPerPixel = (end.getBPValue()-start.getBPValue())/height; // mdb removed else 8/27/09 for 3D
-			System.out.println("Adjusting track size");
+			if (height == NO_VALUE) height = getAvailPixels();
+			bpPerPixel = (end.getBPValue()-start.getBPValue())/height; 
+			// CAS501 System.out.println("Adjusting track size");
 		}
 	}
 
@@ -789,17 +762,15 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	}
 
 	protected Cursor getCursor() {
-		/*if (holder != null)*/ return /*holder*/drawingPanel.getCursor(); // mdb changed 6/24/09
-		//else return null; // mdb removed 6/24/09
+		return /*holder*/drawingPanel.getCursor(); 
+		
 	}
 
 	protected void setCursor(Cursor c) {
-		//if (holder != null) { // mdb removed 6/24/09
-			if (c == null)
-				/*holder*/drawingPanel.setCursor(SyMAPConstants.DEFAULT_CURSOR); // mdb changed 6/24/09
-			else
-				/*holder*/drawingPanel.setCursor(c); // mdb changed 6/24/09
-		//}
+		if (c == null)
+			/*holder*/drawingPanel.setCursor(SyMAPConstants.DEFAULT_CURSOR); 
+		else
+			/*holder*/drawingPanel.setCursor(c); 
 	}
 
 	protected void repaint() {
@@ -823,17 +794,15 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	protected abstract Point2D getTitlePoint(Rectangle2D titleBounds);
 	protected abstract boolean isSouthResizePoint(Point p);
 	
-	// mdb added 3/18/08
 	public void setPosition(int position) { this.position = position; }
 	public int getPosition() { return position; }
 	
-	// mdb added 6/9/09
 	public void setBackground(Color c) {
 		if (c != null)
 			bgColor = c;
 	}
 	
-	public void mouseDragged(MouseEvent e) { // mdb partially rewritten 6/26/09
+	public void mouseDragged(MouseEvent e) { 
 		Cursor cursor = getCursor();
 		if (cursor != null && cursor.getType() == Cursor.WAIT_CURSOR)
 			return;
@@ -848,28 +817,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 				if (build()) layout();
 			}
 		} 
-// mdb removed move feature 6/26/09		
-//		else if (cursor.getType() == Cursor.MOVE_CURSOR) {
-//			if (isCleared(startMoveOffset)) {
-//				dragPoint.setLocation(p);
-//				startMoveOffset.setLocation(moveOffset);
-//				adjustMoveOffset.setLocation(moveOffset);
-//			}
-//			else {
-//				Point op = new Point(moveOffset);
-//
-//				moveOffset.x = p.x - dragPoint.x + adjustMoveOffset.x;
-//				if (moveOffset.x < 0) moveOffset.x = 0;
-//				moveOffset.y = p.y - dragPoint.y + adjustMoveOffset.y;
-//				if (moveOffset.y < 0) moveOffset.y = 0;
-//
-//				/* Adjust for the track moving */
-//				adjustMoveOffset.x += (moveOffset.x-op.x);
-//				adjustMoveOffset.y += (moveOffset.y-op.y);
-//
-//				layout();
-//			}
-//		}
+
 		else if (drawingPanel.isMouseFunctionZoomSingle()
 				|| drawingPanel.isMouseFunctionZoomAll()
 				|| drawingPanel.isMouseFunctionCloseup())
@@ -921,25 +869,17 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		repaint();
 	}
 
-	public void mousePressed(MouseEvent e) { // mdb partially rewritten 6/26/09
+	public void mousePressed(MouseEvent e) { 
 		Cursor cursor = getCursor();
 		Point point = e.getPoint();
 		
-		if (e.isPopupTrigger()) { // mdb added 3/12/07 #104
+		if (e.isPopupTrigger()) { 
 			holder.showPopupFilter(e);
 		}
 		else if (cursor.getType() == Cursor.S_RESIZE_CURSOR) { // Resize
 			
 		}
-// mdb removed move feature 6/26/09		
-//		else if (cursor.getType() == Cursor.MOVE_CURSOR) { // Move
-//			//setCursor(MOVE_CURSOR);
-//			if (isCleared(startMoveOffset)) {
-//				dragPoint.setLocation(point);
-//				startMoveOffset.setLocation(moveOffset);
-//				adjustMoveOffset.setLocation(moveOffset);
-//			}
-//		}
+
 		else { //(e.isControlDown()) { // Zoom
 			setCursor(CROSSHAIR_CURSOR);
 			if (isCleared(dragRect)) {
@@ -965,19 +905,13 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			
 			if (e.isControlDown()) 							// Zoom
 				setCursor(CROSSHAIR_CURSOR);
-// mdb removed move feature 6/26/09					
-//			else if (rect.contains(p) && e.isShiftDown())	// Move
-//				setCursor(MOVE_CURSOR);
 			else if (isSouthResizePoint(p)) 				// Resize
 				setCursor(S_RESIZE_CURSOR);
 			else {
-				// mdb added 6/24/09
 				if (drawingPanel.isMouseFunctionCloseup()
 						|| drawingPanel.isMouseFunctionZoomSingle()
 						|| drawingPanel.isMouseFunctionZoomAll())
 					setCursor(CROSSHAIR_CURSOR);
-//				else if (drawingPanel.getMouseFunction().equals("Move"))
-//					setCursor(MOVE_CURSOR);
 				else {
 					setCursor(null);
 					clearMouseSettings();
@@ -989,7 +923,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	public void mouseReleased(MouseEvent e) {
 		boolean needUpdate = false;
 		
-		if (e.isPopupTrigger()) { // mdb added 3/12/07 #104
+		if (e.isPopupTrigger()) { 
 			holder.showPopupFilter(e);
 		}
 		else {
@@ -1001,7 +935,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 					long newStart = getBP(dragRect.y);
 					long newEnd   = getBP(dragRect.y+dragRect.height);
 					if (newEnd != newStart) {
-						if (flipped) { // mdb added 8/6/07 #132
+						if (flipped) { 
 							long temp = newStart;
 							newStart = end.getBPValue() - newEnd + start.getBPValue();
 							newEnd = end.getBPValue() - temp + start.getBPValue();
@@ -1009,7 +943,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 						setEndBP(newEnd, true);
 						setStartBP(newStart, true);
 						
-						// mdb added 4/23/09 #161
 						if (drawingPanel.isMouseFunctionZoomAll())
 							drawingPanel.zoomAllTracks(this, (int)newStart, (int)newEnd);
 						
@@ -1062,20 +995,20 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	}
 
 	public void mouseClicked(MouseEvent e) { }
-	public void mouseEntered(MouseEvent e) { // mdb added 3/2/07 #106
+	public void mouseEntered(MouseEvent e) { 
 		holder.requestFocusInWindow();
 	}
 	
 	public void mouseExited(MouseEvent e) { 
-		//drawingPanel.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)); // mdb added 6/24/09
+		
 	}
 	
-	public void mouseWheelMoved(MouseWheelEvent e) { } // mdb added 3/1/07 #106
-	public void mouseWheelMoved(MouseWheelEvent e, long viewSize) { } // mdb added 2/29/08 #124
+	public void mouseWheelMoved(MouseWheelEvent e) { } 
+	public void mouseWheelMoved(MouseWheelEvent e, long viewSize) { } 
 
-    public void keyTyped(KeyEvent e) { } // mdb added 3/2/07 #106
-    public void keyPressed(KeyEvent e) { } // mdb added 3/2/07 #106
-    public void keyReleased(KeyEvent e) { } // mdb added 3/2/07 #106
+    public void keyTyped(KeyEvent e) { } 
+    public void keyPressed(KeyEvent e) { } 
+    public void keyReleased(KeyEvent e) { } 
 	
 	protected static String convertToRegex(String str) {
 		if (str == null) str = new String();

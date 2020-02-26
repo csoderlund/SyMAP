@@ -12,8 +12,6 @@ import java.util.regex.Matcher;
 import symap.SyMAPConstants;
 import symap.pool.DatabaseUser;
 import util.DatabaseReader;
-import util.Utilities;
-import backend.Project;
 
 public class UpdatePool extends DatabaseUser
 {
@@ -37,22 +35,6 @@ public class UpdatePool extends DatabaseUser
 		this( getDatabaseReader(SyMAPConstants.DB_CONNECTION_BACKEND, dbstr, user, pass, null) );
 	}
 	
-//	// WMN not thread safe!! 
-//	// (And doesn't work with pools which we shouldn't be using anyway. )
-//	public Integer lastID() throws SQLException
-//	{
-//		int id = -1;
-//		
-//		String st = "SELECT last_insert_id() AS id";
-//		ResultSet rs = executeQuery(st);
-//		if (rs.next())
-//			id = rs.getInt("id");
-//		else
-//			throw(new SQLException("Couldn't get last ID"));
-//			
-//		rs.close();
-//		return id;
-//	}
 	public int getMaxID(String table, String field) throws Exception
 	{
 		String sql = "select max(" + field + ") as maxidx from " + table;
@@ -101,7 +83,7 @@ public class UpdatePool extends DatabaseUser
 		
 		String stmt = mBulkStmt.get(key);
 		stmt += " VALUES\n" + Utils.join(mBulkData.get(key), ",\n");
-		//System.out.println("bulkInsert: " + stmt);
+		
 		executeUpdate(stmt);
 		mBulkData.get(key).clear();
 	}

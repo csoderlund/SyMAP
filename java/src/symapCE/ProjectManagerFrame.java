@@ -12,7 +12,7 @@ import util.Utilities;
 
 public class ProjectManagerFrame extends ProjectManagerFrameCommon
 {
-	
+	private static final long serialVersionUID = 1L;
 	ProjectManagerFrame()
 	{
 		super();
@@ -30,19 +30,41 @@ public class ProjectManagerFrame extends ProjectManagerFrameCommon
 			return;
 		
 		if (args.length > 0) {
-			if (Utilities.hasCommandLineOption(args, "-r"))
+			if (Utilities.hasCommandLineOption(args, "-r")) {
+				System.out.println("Read only mode");
 				inReadOnlyMode = true;
-
-
+			}
+			if (Utilities.hasCommandLineOption(args, "-s")) {// not shown in -h help
+				System.out.println("Print Stats");
+				printStats = true;
+			}
+			if (Utilities.hasCommandLineOption(args, "-a")) {// not shown in -h help
+				System.out.println("Align largest project to smallest");
+				lgProj1st = true;
+			}
+			if (Utilities.hasCommandLineOption(args, "-p")) { // 
+				String x = Utilities.getCommandLineOption(args, "-p"); //CAS500
+				try {
+					maxCPUs = Integer.parseInt(x);
+					System.out.println("Max CPUs " + maxCPUs);
+				}
+				catch (Exception e){ System.err.println(x + " is not an integer. Ignoring.");}
+			}
+			if (Utilities.hasCommandLineOption(args, "-c")) {// CAS501
+				MAIN_PARAMS = Utilities.getCommandLineOption(args, "-c");
+				System.out.println("Configuration file " + MAIN_PARAMS);
+			}
+			
+			// not displayed from here; displayed from perl script symapNo3D
 			if (Utilities.hasCommandLineOption(args, "-h"))
 			{
 				System.out.println("Usage: symap [optional arguments]");
+				System.out.println("-p N (integer): use N CPUs");
+				System.out.println("-c filename (string): use filename as configuration file instead of symap.config");
 				System.out.println("-r : viewing-only mode (no project updates)");
-				System.out.println("-p N : use N cpus");
 				System.out.println("-h : show help");
 				System.exit(0);
 			}
-			
 		}
 		
 		ProjectManagerFrame frame = new ProjectManagerFrame();
@@ -57,7 +79,7 @@ public class ProjectManagerFrame extends ProjectManagerFrameCommon
 				symapExp.addProject( p.getDBName(), p.getType() );
 			symapExp.build();
 			symapExp.getFrame().build();
-			symapExp.getFrame().setVisible(true); // mdb added 12/31/09 #208
+			symapExp.getFrame().setVisible(true); 
 		}
 		catch (Exception err) {
 			err.printStackTrace();

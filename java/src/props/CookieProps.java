@@ -10,7 +10,6 @@ import java.util.TimeZone;
  * Class <code>CookieProps</code> is a wrapper for a CookieUtil the stores all the
  * needed information for setting and deleting a specific cookie.
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see CookieUtil
  * @see PersistentProps
  */
@@ -31,12 +30,12 @@ public class CookieProps implements PersistentProps {
      * @param name a <code>String</code> value
      */
     public CookieProps(CookieUtil util, String path, String domain, Date expires, boolean secure, String name) {
-	this.util = util;
-	this.path = path;
-	this.domain = domain;
-	this.expires = expires;
-	this.secure = secure;
-	this.name = name;
+		this.util = util;
+		this.path = path;
+		this.domain = domain;
+		this.expires = expires;
+		this.secure = secure;
+		this.name = name;
     }
 
     /**
@@ -50,7 +49,7 @@ public class CookieProps implements PersistentProps {
      * @param name a <code>String</code> value
      */
     public CookieProps(Applet applet, String path, String domain, Date expires, boolean secure, String name) {
-	this(new CookieUtil(applet),path,domain,expires,secure,name);
+    		this(new CookieUtil(applet),path,domain,expires,secure,name);
     }
 
     /**
@@ -61,7 +60,7 @@ public class CookieProps implements PersistentProps {
      * @return a <code>CookieProps</code> value
      */
     public PersistentProps copy(String name) {
-	return new CookieProps(util,path,domain,expires,secure,name);
+    		return new CookieProps(util,path,domain,expires,secure,name);
     }
 
     /**
@@ -72,13 +71,13 @@ public class CookieProps implements PersistentProps {
      * @return a <code>boolean</code> value
      */
     public boolean equals(Object obj) {
-	if (obj instanceof CookieProps) {
-	    CookieProps ch = (CookieProps)obj;
-	    return ((path == null && ch.path == null) || (path != null && path.equals(ch.path))) &&
-		((domain == null && ch.domain == null) || (domain != null && domain.equals(ch.domain))) &&
-		((name == null && ch.name == null) || (name != null && name.equals(ch.name)));
-	}
-	return false;
+		if (obj instanceof CookieProps) {
+		    CookieProps ch = (CookieProps)obj;
+		    return ((path == null && ch.path == null) || (path != null && path.equals(ch.path))) &&
+			((domain == null && ch.domain == null) || (domain != null && domain.equals(ch.domain))) &&
+			((name == null && ch.name == null) || (name != null && name.equals(ch.name)));
+		}
+		return false;
     }
 
     /**
@@ -87,7 +86,7 @@ public class CookieProps implements PersistentProps {
      * @return a <code>String</code> value
      */
     public String getPath() {
-	return path;
+    		return path;
     }
 
     /**
@@ -96,7 +95,7 @@ public class CookieProps implements PersistentProps {
      * @param path a <code>String</code> value of path or null
      */
     public void setPath(String path) {
-	this.path = path;
+    		this.path = path;
     }
 
     /**
@@ -105,7 +104,7 @@ public class CookieProps implements PersistentProps {
      * @return a <code>String</code> value
      */
     public String getDomain() {
-	return domain;
+    		return domain;
     }
 
     /**
@@ -114,7 +113,7 @@ public class CookieProps implements PersistentProps {
      * @param domain a <code>String</code> value of domain or null
      */
     public void setDomain(String domain) {
-	this.domain = domain;
+    		this.domain = domain;
     }
 
     /**
@@ -123,7 +122,7 @@ public class CookieProps implements PersistentProps {
      * @return a <code>boolean</code> value
      */
     public boolean getSecure() {
-	return secure;
+    		return secure;
     }
 
     /**
@@ -132,7 +131,7 @@ public class CookieProps implements PersistentProps {
      * @param secure a <code>boolean</code> value
      */
     public void setSecure(boolean secure) {
-	this.secure = secure;
+    		this.secure = secure;
     }
 
     /**
@@ -141,7 +140,7 @@ public class CookieProps implements PersistentProps {
      * @return a <code>Date</code> value
      */
     public Date getExpires() {
-	return expires;
+    		return expires;
     }
 
     /**
@@ -159,7 +158,7 @@ public class CookieProps implements PersistentProps {
      * @return a <code>String</code> value
      */
     public String getName() {
-	return name;
+    		return name;
     }
 
     /**
@@ -168,7 +167,7 @@ public class CookieProps implements PersistentProps {
      * @param name a <code>String</code> value
      */
     public void setName(String name) {
-	this.name = name;
+    		this.name = name;
     }
 
     /**
@@ -177,7 +176,7 @@ public class CookieProps implements PersistentProps {
      * @return a <code>String</code> decoded value of the cookie.
      */
     public String getProp() {
-	return util.getCookie(name);
+    		return util.getCookie(name);
     }
 
     /**
@@ -186,7 +185,7 @@ public class CookieProps implements PersistentProps {
      * @param value a <code>String</code> value
      */
     public void setProp(String value) {
-	util.setCookie(name,value,expires,path,domain,secure);
+    		util.setCookie(name,value,expires,path,domain,secure);
     }
 
     /**
@@ -194,7 +193,7 @@ public class CookieProps implements PersistentProps {
      *
      */
     public void deleteProp() {
-	util.deleteCookie(name,path,domain);
+    		util.deleteCookie(name,path,domain);
     }
 
     /**
@@ -205,8 +204,8 @@ public class CookieProps implements PersistentProps {
      * @return a <code>Date</code> value
      */
     public static Date getDaysFromNow(int days) {
-	GregorianCalendar gc = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
-	gc.add(Calendar.DAY_OF_YEAR,days);
-	return gc.getTime();
+		GregorianCalendar gc = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+		gc.add(Calendar.DAY_OF_YEAR,days);
+		return gc.getTime();
     }
 }

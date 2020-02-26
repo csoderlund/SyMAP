@@ -92,8 +92,6 @@ public abstract class ABlock implements Shape, DotPlotConstants, Comparable<ABlo
 	}
 
 	public boolean contains(double x, double y) {
-		//int eX = rect.x+rect.width; // mdb removed 6/29/07 #118
-		//int eY = rect.y+rect.height; // mdb removed 6/29/07 #118
 		return x >= rect.x && x <= (rect.x+rect.width) && y >= rect.y && y <= (rect.y+rect.height);
 	}
 

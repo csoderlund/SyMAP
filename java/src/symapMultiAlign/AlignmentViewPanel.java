@@ -253,9 +253,11 @@ public class AlignmentViewPanel extends JPanel {
 				mainPanel.add(theMultiPanel);
 
 				mainPanel.add(Box.createVerticalStrut(40));
+				/* CAS502 its wrong - gaps and mismatches are obvious
 				LegendPanel lPanel = new LegendPanel();
 				lPanel.setIsPair(true);
 				mainPanel.add(lPanel);
+				*/
 			} else {
 				mainPanel.add(new JLabel("No Sequences"));
 			}

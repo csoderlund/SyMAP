@@ -16,11 +16,9 @@ import symap.sequence.Annotation;
 import symap.sequence.Sequence;
 import symap.SyMAPConstants;
 
-//public class FPCPseudoHits extends AbstractFPCPseudoHits implements Hits, SyMAPConstants { // mdb removed 7/25/07 #134
-public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstants { // mdb added 7/25/07 #134
-	//private static final boolean METHOD_TRACE = false; // mdb added 2/27/07
+public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstants { 
 	
-	private static final int MOUSE_PADDING = 3; // mdb added 3/1/07 #100
+	private static final int MOUSE_PADDING = 3; 
 	
 	private Mapper mapper;
 	private MarkerTrack mt;
@@ -137,7 +135,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 	 * @param end an <code>int</code> value
 	 */
 	 public void getHitsInRange(List<AbstractHitData> hits, int start, int end, 
-			 boolean swap) // mdb added swap 12/19/08 - for pseudo-pseudo, unused here
+			 boolean swap) 
 	 {
 		 List<AbstractHitData> mh = new LinkedList<AbstractHitData>();
 		 List<AbstractHitData> bh = new LinkedList<AbstractHitData>();
@@ -230,8 +228,8 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 		 public void set() {
 			 mh.set(this,mt,data.getName(),getContig());
 			 
-			 geneContained = isGeneContained(); // mdb added 3/9/07 #101
-			 geneOverlap = isGeneOverlap(); 	// mdb added 3/9/07 #101
+			 geneContained = isGeneContained(); 
+			 geneOverlap = isGeneOverlap(); 	
 		 }
 
 		 public boolean isBlockHit() {
@@ -239,9 +237,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 		 }
 		 
 		 public boolean isGeneContained() { 
-
-			 
-			 return (data.getOverlap() > 0); // WN we don't make this distinction anymore
+			 return (data.getOverlap() > 0); 
 		 }
 		 
 		 public boolean isGeneOverlap() { 
@@ -259,9 +255,9 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 					|| hitfilter.getMrkPctid() > data.getPctid()
 					|| mh.isFiltered(mt, hitfilter.getOnlyShared())
 					|| isSequenceFiltered(data.getStart2(), data.getEnd2())
-			 		|| (hitfilter.getGeneContained() && !geneContained) // mdb added 3/9/07 #101
-			 		|| (hitfilter.getGeneOverlap() && !geneOverlap) // mdb added 3/9/07 #101
-			 		|| (hitfilter.getNonGene() && (geneOverlap || geneContained)); // mdb added 3/9/07 #101
+			 		|| (hitfilter.getGeneContained() && !geneContained) 
+			 		|| (hitfilter.getGeneOverlap() && !geneOverlap) 
+			 		|| (hitfilter.getNonGene() && (geneOverlap || geneContained)); 
 		}
 
 		public boolean isHighlighted() {
@@ -273,7 +269,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 					&& isSequenceVisible(data.getStart2(), data.getEnd2());
 		}
 
-		 private boolean lineContains(Line2D.Double line, Point p) { // mdb added 3/1/07 #100
+		 private boolean lineContains(Line2D.Double line, Point p) { 
 			 double lx1 = line.getX1();
 			 double lx2 = line.getX2();
 			 double ly1 = line.getY1();
@@ -285,15 +281,15 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 return (delta >= -MOUSE_PADDING && delta <= MOUSE_PADDING);
 		 }
 		 
-		 public boolean isHover(Point point) { // mdb added 3/1/07 #100
+		 public boolean isHover(Point point) { 
 			 return isVisible() && lineContains(hitLine, point);
 		 }
 		 
-		 protected boolean setHover(Point point) { // mdb added 3/1/07 #100
+		 protected boolean setHover(Point point) { 
 			return setHover(isHover(point));
 		 }
 
-		 protected boolean setHover(boolean hover) { // mdb added 3/1/07 #100
+		 protected boolean setHover(boolean hover) { 
 			if (hover != this.hover) {
 				this.hover = hover;
 				return true;
@@ -308,7 +304,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			}
 		}
 		
-		 private Color getCColor() { // mdb added 3/1/07 #100
+		 private Color getCColor() { 
 			 if (mh.isHighlighted() || isHighlighted())
 				 return Mapper.markerLineHighlightColor;
 			 if (mapper.getHitFilter().getColorByStrand()) 
@@ -316,7 +312,6 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 return Mapper.markerLineColor;
 		 }
 		 
-		 // mdb added 8/22/07 #126
 		 private void drawHitRibbon(Graphics2D g2, Point2D pStart, Point2D pEnd, int orient) {
 			 String target_seq = data.getTargetSeq();
 			 Rectangle2D.Double rect = new Rectangle2D.Double();
@@ -351,14 +346,13 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 				 Point2D mp = mh.getCPoint(mt,mtOrient,mtLocation,showJoinDot);
 				 mh.paintComponent(g2,mt,mtLocation,sp,showJoinDot,mapper.getHitFilter().getColorByStrand(),data.getOrientation());
 				 if (mp != null) {
-					 //g2.setPaint(mh.getCColor(mapper.getHitFilter().getColorByStrand(),data.getOrientation())); // mdb removed 3/1/07 #100
-					 g2.setPaint(getCColor()); // mdb added 3/1/07 #100
-					 hitLine.setLine(sp,mp); // mdb added 3/1/07 #100
+					 g2.setPaint(getCColor()); 
+					 hitLine.setLine(sp,mp); 
 					 g2.draw(hitLine);
 				 }
 				 		
 				 double lineLength = 0;
-				 if (st.getShowScoreLine()) { // mdb added 2/28/07 #100
+				 if (st.getShowScoreLine()) { 
 					 double pctid = data.getPctid();
 					 double minPctid = Math.min(mapper.getHitFilter().getMinBesPctid(),
 			 									mapper.getHitFilter().getMinMrkPctid());			 
@@ -366,10 +360,10 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 					 
 					 lineLength = 30.0*(pctid-minPctid+1)/(100-minPctid+1);		
 					 if (mp != null && mp.getX() > x) lineLength = 0 - lineLength;
-					 g2.setPaint(getCColor()/*mh.getCColor(mapper.getHitFilter().getColorByStrand(),data.getOrientation())*/); // mdb changed 3/1/07 #100
+					 g2.setPaint(getCColor()); 
 					 g2.draw(new Line2D.Double(x,y,x+lineLength,y));
 				 }
-				 if (st.getShowRibbon()) { // mdb added 8/7/07 #126
+				 if (st.getShowRibbon()) { 
 					 if (lineLength == 0) lineLength = 30;
 					 Point2D rp1 = st.getPoint(data.getStart2(), stOrient);
 					 rp1.setLocation(sp.getX()+lineLength,rp1.getY());
@@ -378,7 +372,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 					 if (Math.abs(rp2.getY()-rp1.getY()) > 3) // only draw if it will be visible
 						 drawHitRibbon(g2, rp1, rp2, stOrient);
 				 }
-				 if (st.getShowScoreValue() || isHighlighted()) { // mdb added 3/14/07 #100
+				 if (st.getShowScoreValue() || isHighlighted()) { 
 					 double pctid = data.getPctid();
 					 double textX;
 					 textX = sp.getX();
@@ -449,11 +443,11 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 
 		 public void set() {
 			 bh.set(this,mt,data.getName(),getContig());
-			 geneContained = isGeneContained(); // mdb added 3/9/07 #101
-			 geneOverlap = isGeneOverlap(); 	// mdb added 3/9/07 #101
+			 geneContained = isGeneContained(); 
+			 geneOverlap = isGeneOverlap(); 	
 		 }
 		 
-		 public boolean isGeneContained() { // mdb added 3/8/07 #101
+		 public boolean isGeneContained() { 
 			 for (Annotation annot : st.getAnnotations()) {
 				 if (annot.isGene() && 
 					 data.getStart2() >= annot.getStart() &&
@@ -466,12 +460,11 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 return false;
 		 }
 		 
-		 public boolean isGeneOverlap() { // mdb added 3/8/07 #101
+		 public boolean isGeneOverlap() { 
 			 long h1 = data.getStart2();
 			 long h2 = data.getEnd2();
 			 
 			 for (Annotation annot : st.getAnnotations()) {
-				 // mdb: this compare could be made more efficient:
 				 if (annot.isGene() && 
 					 // Is hit start inside gene?
 					 ((h1 >= annot.getStart() && h1 <= annot.getEnd()) ||
@@ -500,9 +493,9 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 		|| (hitfilter.getNonRepetitive() && data.isRepetitiveHit() && !data.isBlockHit()) 
 			 		|| bh.isFiltered(mt,hitfilter,getContig())
 			 		|| isSequenceFiltered(data.getStart2(),data.getEnd2()) 
-			 		|| (hitfilter.getGeneContained() && !geneContained) // mdb added 3/9/07 #101
-			 		|| (hitfilter.getGeneOverlap() && !geneOverlap) // mdb added 3/9/07 #101
-			 		|| (hitfilter.getNonGene() && (geneOverlap || geneContained)); // mdb added 3/9/07 #101
+			 		|| (hitfilter.getGeneContained() && !geneContained) 
+			 		|| (hitfilter.getGeneOverlap() && !geneOverlap) 
+			 		|| (hitfilter.getNonGene() && (geneOverlap || geneContained)); 
 		 }
 
 		 public boolean isHighlighted() {
@@ -513,7 +506,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 return bh.isVisible(mt,getContig()) && isSequenceVisible(data.getStart2(),data.getEnd2());
 		 }
 
-		 private boolean lineContains(Line2D.Double line, Point p) { // mdb added 3/1/07 #100
+		 private boolean lineContains(Line2D.Double line, Point p) { 
 			 double lx1 = line.getX1();
 			 double lx2 = line.getX2();
 			 double ly1 = line.getY1();
@@ -525,15 +518,15 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 return (delta >= -MOUSE_PADDING && delta <= MOUSE_PADDING);
 		 }
 		 
-		 public boolean isHover(Point point) { // mdb added 3/1/07 #100
+		 public boolean isHover(Point point) { 
 			 return isVisible() && lineContains(hitLine, point);
 		 }
 		 
-		 protected boolean setHover(Point point) { // mdb added 3/1/07 #100
+		 protected boolean setHover(Point point) { 
 			return setHover(isHover(point));
 		 }
 
-		 protected boolean setHover(boolean hover) { // mdb added 3/1/07 #100
+		 protected boolean setHover(boolean hover) { 
 			if (hover != this.hover) {
 				this.hover = hover;
 				return true;
@@ -541,7 +534,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			return false;
 		 }
 		 
-		 private Color getCColor() { // mdb added 3/1/07 #100
+		 private Color getCColor() { 
 			 if (bh.isHighlighted() || isHighlighted())
 				 return Mapper.besLineHighlightColor;
 			 if (mapper.getHitFilter().getColorByStrand()) 
@@ -549,7 +542,6 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 return Mapper.besLineColor;
 		 }
 		 
-		 // mdb added 8/22/07 #126
 		 private void drawHitRibbon(Graphics2D g2, Point2D pStart, Point2D pEnd, int orient) {
 			 String target_seq = data.getTargetSeq();
 			 Rectangle2D.Double rect = new Rectangle2D.Double();
@@ -582,26 +574,25 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 if (isVisible() && !isFiltered()) {
 				 Point2D sp = getSequenceCPoint(data.getStart2(),data.getEnd2(),stOrient,stLocation);
 				 Point2D bp = bh.getCPoint(mt,mtOrient,mtLocation,getContig(),data.getPos(),data.getBES());
-				 //g2.setPaint(bh.getCColor(mapper.getHitFilter().getColorByStrand(),data.getOrientation())); // mdb removed 3/1/07 #100
-				 g2.setPaint(getCColor()); 						// mdb added 3/1/07 #100
-				 hitLine.setLine(sp,bp); 						// mdb added 3/1/07 #100
-				 g2.draw(hitLine/*new Line2D.Double(sp,bp)*/); 	// mdb changed 3/1/07 #100				 
+				 g2.setPaint(getCColor()); 						
+				 hitLine.setLine(sp,bp); 						
+				 g2.draw(hitLine); 					 
 				 		
 				 int lineLength = 0;
-				 if (st.getShowScoreLine()) { // mdb added 2/28/07 #100
+				 if (st.getShowScoreLine()) { 
 					 int pctid = (int)data.getPctid();
 					 int minPctid = (int)Math.min(mapper.getHitFilter().getMinBesPctid(),
 							 					mapper.getHitFilter().getMinMrkPctid());		 
 					 
 					 g2.setPaint(getCColor());
 					 lineLength = 30*(pctid-minPctid+1)/(100-minPctid+1);
-					 if (lineLength > 1) { // mdb added 4/1/09 - don't bother drawing if too small
+					 if (lineLength > 1) { 
 						 int x=(int)sp.getX(), y=(int)sp.getY();
 						 if (bp.getX() > x) lineLength = 0 - lineLength;
-						 g2.drawLine(x,y,x+lineLength,y);//g2.draw(new Line2D.Double(x,y,x+lineLength,y)); // mdb changed 4/1/09 - drawLine() is faster than draw()
+						 g2.drawLine(x,y,x+lineLength,y);
 					 }
 				 }
-				 if (st.getShowRibbon()) { // mdb added 8/7/07 #126
+				 if (st.getShowRibbon()) { 
 					 if (lineLength == 0) lineLength = 30;
 					 Point2D rp1 = st.getPoint(data.getStart2(), stOrient);
 					 Point2D rp2 = st.getPoint(data.getEnd2(), stOrient);
@@ -611,7 +602,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 						 drawHitRibbon(g2, rp1, rp2, stOrient);
 					 }
 				 }
-				 if (st.getShowScoreValue() || isHighlighted()) { // mdb added 3/14/07 #100
+				 if (st.getShowScoreValue() || isHighlighted()) { 
 					 double pctid = data.getPctid();
 					 double textX;
 					 textX = sp.getX();
@@ -627,7 +618,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 bh.clear(this);
 		 }
 
-		 public void mouseMoved(MouseEvent e) { // mdb added 3/1/07 #100
+		 public void mouseMoved(MouseEvent e) { 
 			 if (setHover(e.getPoint()))
 				 mapper.getDrawingPanel().repaint();
 		 }

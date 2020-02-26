@@ -20,8 +20,6 @@ import javax.swing.Icon;
  * and an immutable center point that can be acquired without any heap allocation.
  *
  * Location is set either through the corripsonding constructor or setLocation()
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Shape
  * @see Icon
  * @see Cloneable

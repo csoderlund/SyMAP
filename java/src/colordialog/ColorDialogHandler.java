@@ -11,8 +11,6 @@ import props.PersistentProps;
 
 /**
  * Class <code>ColorDialogHandler</code> handles the showing and setting of colors of a color dialog box.  
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see ColorDialog
  */
 public class ColorDialogHandler {
@@ -20,7 +18,6 @@ public class ColorDialogHandler {
 	private Vector<WeakReference<ColorListener>> listeners;
 
 	private PersistentProps cookie;
-	//private HelpHandler help; // mdb removed 4/30/09 #162
 	private PropertiesReader props;
 
 	private ColorDialog dialog = null;
@@ -34,12 +31,10 @@ public class ColorDialogHandler {
 	 * @see ColorDialog
 	 */
 	public ColorDialogHandler(PersistentProps cookie, 
-			//HelpHandler help, // mdb removed 4/30/09 #162
 			PropertiesReader props) 
 	{
 		listeners = new Vector<WeakReference<ColorListener>>();
 		this.cookie = cookie;
-		//this.help = help; // mdb removed 4/30/09 #162
 		this.props = props;
 	}
 
@@ -63,8 +58,7 @@ public class ColorDialogHandler {
 	 */
 	public void setColors() {
 		if (dialog != null) {
-			//dialog.hide(); // mdb removed 6/29/07 #118
-			dialog.setVisible(false); // mdb added 6/29/07 #118
+			dialog.setVisible(false); 
 			dialog.defaultAction();
 			dialog.okAction();
 		}

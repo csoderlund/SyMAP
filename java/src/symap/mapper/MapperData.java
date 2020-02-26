@@ -3,8 +3,6 @@ package symap.mapper;
 /**
  * Class <code>MapperData</code> holds the data of a mapper which can be
  * used to recreate the same state of a Mapper.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 public class MapperData {
 

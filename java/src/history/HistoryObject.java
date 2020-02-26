@@ -3,8 +3,6 @@ package history;
 /**
  * Class <code>HistoryObject</code> is only used by the History class
  * as a way to store the reset points with the objects.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 class HistoryObject {
 

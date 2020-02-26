@@ -15,11 +15,8 @@ import util.MapCache;
  * 
  * The SoftMapCache is synchronized.
  * 
- * @author Austin Shoemaker
  */
 public class SoftMapCache implements MapCache, SoftCollection {
-    //private static final boolean DEBUG = false;
-	
     private final Map<Object,Object> map;
    
     private final Vector<HardEntry> hardVector;

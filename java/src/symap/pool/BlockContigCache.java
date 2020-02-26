@@ -15,7 +15,6 @@ import symap.contig.ContigCloneData;
  * was asked for.  This issue only becomes important when the argument is a ContigCloneData object in which case a ContigData
  * object may be returned if no ContigCloneData object exists in the cache.
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see ListCache
  */
 public class BlockContigCache implements ListCache {

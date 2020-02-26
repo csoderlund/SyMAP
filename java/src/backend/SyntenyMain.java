@@ -1,5 +1,8 @@
 package backend;
 
+/**************************************************
+ * CAS500 1/2020 change all MySQl Gets to digits.
+ */
 import java.io.File;
 import java.io.FileWriter;
 import java.sql.ResultSet;
@@ -13,54 +16,32 @@ import java.util.Collections;
 import java.util.TreeSet;
 import java.util.HashSet;
 
-import javax.swing.JOptionPane;
-
 import backend.Block; 
+import symap.projectmanager.common.ProjectManagerFrameCommon;
 import util.ErrorCount;
 import util.Logger;
 import util.Utilities;
 
 public class SyntenyMain 
 {
-	private static final boolean DEBUG = false;
-	
 	private Logger mLog;
 	private UpdatePool pool;	
-	private Project mProj1;
-	private Project mProj2;
+	private Project mProj1, mProj2;
 	private SyProps mProps;
 	private int mPairIdx;
-	private String mPairDir;
+	private String resultDir;
 	
-	private int checkCtgIdx1 = 0;
-	private int checkGrpIdx1 = 0;
-	private int checkGrpIdx2 = 0;
+	//private int checkCtgIdx1 = 0, checkGrpIdx1 = 0, checkGrpIdx2 = 0;
 	private boolean mSelf = false;
 
-	private int mMaxgap1;
-	private int mMaxgap2;
-	private int mMingap1;
-	private int mMingap2;
+	private int mMaxgap1, mMaxgap2, mMingap1, mMingap2;
 	
-	private float mAvg1A;
-	private float mAvg2A;
+	private float mAvg1A, mAvg2A;
 	
-	private int mMindots; 
-	private int mMindots_keepbest; 
-	private int mMindotsA; 
-	private int mMindotsB; 
-	private int mMindotsC; 
-	private int mMindotsD; 
+	private int mMindots,  mMindots_keepbest, mMindotsA, mMindotsB, mMindotsC, mMindotsD; 
 
-	private float mCorr1A; 
-	private float mCorr1B; 
-	private float mCorr1C; 
-	private float mCorr1D; 
-
-	private float mCorr2A; 
-	private float mCorr2B; 
-	private float mCorr2C; 
-	private float mCorr2D; 
+	private float mCorr1A, mCorr1B, mCorr1C, mCorr1D; 
+	private float mCorr2A, mCorr2B, mCorr2C, mCorr2D; 
 	
 	private TreeMap<Integer,Integer> mClonesFixed2Score;
 	private TreeMap<Integer,Integer> mClonesSinglesFixed2Score;
@@ -73,7 +54,7 @@ public class SyntenyMain
 	
 	boolean bInterrupt = false;
 
-	private static final int CHUNK_SIZE = 1000000; // don't change this or client breaks!! And it appears in several places.
+	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE;
 
 	public SyntenyMain(UpdatePool pool, Logger log, Properties props, SyProps pairProps) {
 		this.pool = pool;
@@ -93,8 +74,8 @@ public class SyntenyMain
 
 		startTime = System.currentTimeMillis();
 		
-		mLog.msg("\nFinding synteny for " + proj1Name + " and " + proj2Name);
-		mProps.printNonDefaulted(mLog);
+		mLog.msg("Finding synteny for " + proj1Name + " and " + proj2Name);
+		//mProps.printNonDefaulted(mLog);
 
 		mBlksByCase = new TreeMap<BCase,Integer>();
 		mBest = new TreeMap<Integer,Block>();
@@ -103,16 +84,10 @@ public class SyntenyMain
 			mBlksByCase.put(bt,0);
 		
 		ProjType type = pool.getProjType(proj1Name);
-		
-		String pairName = proj1Name + "_to_" + proj2Name;
-		if (type == ProjType.pseudo)
-			mPairDir = "data/pseudo_pseudo/" + pairName;
-		else
-			mPairDir = "data/fpc_pseudo/" + pairName;			
-
-		if (!(new File(mPairDir)).exists()) 
+		resultDir = Constants.getNameResultsDir(proj1Name, (type==ProjType.fpc), proj2Name);	
+		if (!(new File(resultDir)).exists()) 
 		{
-			mLog.msg("Can't find pair directory " + mPairDir);
+			mLog.msg("Cannot find pair directory " + resultDir);
 			ErrorCount.inc();
 			return false;
 		}
@@ -127,7 +102,7 @@ public class SyntenyMain
 		mPairIdx = Utils.getPairIdx(mProj1.getIdx(), mProj2.getIdx(), pool);
 		if (mPairIdx == 0)
 		{
-			mLog.msg("Can't find project pair in database for " + mProj1.getName() + "," + mProj2.getName());
+			mLog.msg("Cannot find project pair in database for " + mProj1.getName() + "," + mProj2.getName());
 			ErrorCount.inc();
 			return false;
 		}
@@ -135,26 +110,15 @@ public class SyntenyMain
 		pool.executeUpdate("delete from blocks where pair_idx='" + mPairIdx + "'");
 		pool.executeUpdate("delete from ctghits where pair_idx='" + mPairIdx + "'");
 
-		if (mProj1.isFPC())
-		{
-			if (!mProps.getProperty("checkctg1").equals("0"))
-			{
-				// TODO checkCtgIdx1 = mProj1.getCtgIdx(Integer.parseInt(mProps.getProperty("checkctg1")));
-			}
-		}
-
-		if (!mProps.getProperty("checkgrp1").equals("0"))
-			checkGrpIdx1 = mProj1.getGrpIdx(mProps.getProperty("checkgrp1"));
-
-		if (!mProps.getProperty("checkgrp2").equals("0"))
-			checkGrpIdx2 = mProj2.getGrpIdx(mProps.getProperty("checkgrp2"));
+		// CAS500 removed checkgrp1 property checks and assignments to checkgrp1/2
 		
 		setGapProperties();
 		clearBlocks();
 		
 		if (mProj1.isFPC()) {
 			if (mProps.getBoolean("do_bes_fixing")) {
-				mLog.msg("BES end adjustment will be performed (set do_bes_fixing=0 to disable)");
+				// CAS500 this is not documented, it is automatically done.
+				// mLog.msg("BES end adjustment will be performed (set do_bes_fixing=0 to disable)");
 				mClonesFixed2Score = new TreeMap<Integer,Integer>();
 				mClonesSinglesFixed2Score = new TreeMap<Integer,Integer>();
 				mClonesToSwap = new TreeSet<Integer>();
@@ -162,96 +126,85 @@ public class SyntenyMain
 		}
 		
 		int nGrpGrp = mProj1.getGroups().size() * mProj2.getGroups().size();
-		int nGrpGrpStart = nGrpGrp;
-		int msgInt = Math.max(1, nGrpGrpStart/10);
-		mLog.msg(nGrpGrp + " grp/grp pairs to analyze");
-		// Do the grp/grp syntenies, unless we are looking at a particular fpc contig
-		if (checkCtgIdx1 == 0) {
-			for (Group grp1 : mProj1.getGroups()) {
-				if (checkGrpIdx1 > 0 && checkGrpIdx1 != grp1.getIdx()) continue;
-				
-				for (Group grp2 : mProj2.getGroups()) {
-					if (checkGrpIdx2 > 0 && checkGrpIdx2 != grp2.getIdx()) continue;
-				
-					if (mProj1.isPseudo()) 
+		Utils.prtNumMsg(mLog, nGrpGrp, "group-x-group pairs to analyze");
+		
+		for (Group grp1 : mProj1.getGroups()) {
+			for (Group grp2 : mProj2.getGroups()) {
+				if (mProj1.isSeq()) 
+				{
+					if (!mSelf)
 					{
-						if (!mSelf)
-						{
-							doPseudoGrpGrpSynteny(grp1,grp2);
-							if (bInterrupt) return false;
-						}
-						else if (grp1.getIdx() <= grp2.getIdx())
-						{
-							doPseudoGrpGrpSynteny(grp1,grp2);
-							if (bInterrupt) return false;
-						}
+						doSeqGrpGrpSynteny(grp1,grp2);
+						if (bInterrupt) return false;
 					}
-					else
-						doFPCGrpGrpSynteny(grp1,grp2);					
-					nGrpGrp--;
-				
-					if (nGrpGrp % msgInt == 0)
+					else if (grp1.getIdx() <= grp2.getIdx())
 					{
-						System.out.print(nGrpGrp + " pairs remaining...\r"); // CAS 1/1/8 was mLog
+						doSeqGrpGrpSynteny(grp1,grp2);
+						if (bInterrupt) return false;
 					}
 				}
+				else
+					doFPCGrpGrpSynteny(grp1,grp2);	
+				
+				nGrpGrp--;
+				System.out.print(nGrpGrp + " pairs remaining...\r"); // CAS42 1/1/8 was mLog
 			}
 		}
-		if (mProj1.isPseudo() && mProj2.isPseudo() && mProj1.idx != mProj2.idx)
+		
+		if (mProj1.isSeq() && mProj2.isSeq() && mProj1.idx != mProj2.idx)
 		{
 			setGeneRunCounts();
 		}
 		if (bInterrupt) return false;
+		
 		if (mSelf)
 		{
 			symmetrizeBlocks();	
 		}
 		
-		// Now do the ctg/grp syntenies, unless we are looking at a particular group
-		if (checkGrpIdx1 == 0) {
-			if (mProj1.isFPC()) {
-				for (FPCContig ctg : mProj1.getFPCData().mCtgs.get(mProj1.getUnanchoredGrpIdx())) {
-					if (checkCtgIdx1 > 0 && checkCtgIdx1 != ctg.mIdx) continue;
-					
-					for (Group grp2 : mProj2.getGroups()) {
-						if (checkGrpIdx2 > 0 && checkGrpIdx2 != grp2.getIdx()) continue;
-					
-						doCtgGrpSynteny(ctg,grp2);
-						if (bInterrupt) return false;
-					}
+		// Now do the ctg/grp syntenies
+		if (mProj1.isFPC()) {
+			for (FPCContig ctg : mProj1.getFPCData().mCtgs.get(mProj1.getUnanchoredGrpIdx())) {	
+				for (Group grp2 : mProj2.getGroups()) {		
+					doCtgGrpSynteny(ctg,grp2);
+					if (bInterrupt) return false;
 				}
 			}
 		}
-
+		
 		if (mProj1.isFPC())
 		{
 			uploadBest();
 			unanchoredBlocks();
 			if (bInterrupt) return false;
-			mLog.msg(mClonesToSwap.size() + " BES to swap");
+			
+			Utils.prtNumMsg(mLog, mClonesToSwap.size(), "BES to swap");
 			doCloneSwaps();
 		}
 		
-		if (mProj1.isPseudo() && mProps.getProperty("no_overlapping_blocks").equals("1"))
+		if (mProj1.isSeq() && mProps.getProperty("no_overlapping_blocks").equals("1"))
 		{
 			mLog.msg("Removing overlapping blocks");
 			TreeMap<Integer,Vector<Block>> seenBlocks = new TreeMap<Integer,Vector<Block>>();
 			Vector<Integer> deleteList = new Vector<Integer>();
 			// Method - sort by score descending, and drop the blocks which overlap a previous block.
-			ResultSet rs = pool.executeQuery("select idx,start1,end1,start2,end2,grp1_idx,grp2_idx," + 
-					"blocknum, count(*) as score from blocks join pseudo_block_hits on pseudo_block_hits.block_idx=blocks.idx " + 
-					" where pair_idx=" + mPairIdx + " group by pseudo_block_hits.block_idx order by score desc");
+			ResultSet rs = pool.executeQuery("select idx,start1,end1,start2,end2," +
+					" grp1_idx,grp2_idx, blocknum, count(*) as score " +
+					" from blocks " +
+					" join pseudo_block_hits on pseudo_block_hits.block_idx=blocks.idx " + 
+					" where pair_idx=" + mPairIdx + " group by pseudo_block_hits.block_idx " +
+					" order by score desc");
 			while (rs.next())
 			{
 				if (bInterrupt) return false;
-				int idx = rs.getInt("idx");
-				int s1 = rs.getInt("start1");
-				int e1 = rs.getInt("end1");
-				int s2 = rs.getInt("start2");
-				int e2 = rs.getInt("end2");
-				int gidx1 = rs.getInt("grp1_idx");
-				int gidx2 = rs.getInt("grp2_idx");
-				int bnum = rs.getInt("blocknum");
+				int idx = rs.getInt(1);
+				int s1 = rs.getInt(2);
+				int e1 = rs.getInt(3);
+				int s2 = rs.getInt(4);
+				int e2 = rs.getInt(5);
+				int gidx1 = rs.getInt(6);
+				int gidx2 = rs.getInt(7);
+				int bnum = rs.getInt(8);
 
 				Block newb = new Block(s1, e1, s2, e2, gidx1, gidx2,mPairIdx, mProj1, mProj2, bnum, "");
 				boolean delete = false;
@@ -295,15 +248,14 @@ public class SyntenyMain
 			int nDel = deleteList.size();
 			if (nDel > 0)
 			{
-				mLog.msg(nDel + " blocks to delete");
+				Utils.prtNumMsg(mLog, nDel, "blocks to delete");
 				for (int bidx : deleteList)
 				{
 					pool.executeUpdate("delete from blocks where idx=" + bidx);	
 				}
 			}
-
 		}
-		if (mProj1.isPseudo())
+		if (mProj1.isSeq())
 		{
 			for (HitType bt : HitType.values())
 			{
@@ -319,7 +271,7 @@ public class SyntenyMain
 				}
 			}	
 		
-			if ( mProps.getProperty("print_stats").equals("1"))
+			if ( mProps.getProperty("print_stats").equals("1")) 
 			{			
 				Utils.dumpHist();
 				Utils.dumpStats();
@@ -327,6 +279,11 @@ public class SyntenyMain
 			Utils.uploadStats(pool, mPairIdx, mProj1.idx, mProj2.idx);
 		}
 		if (bInterrupt) return false;
+		
+		if (ProjectManagerFrameCommon.printStats) {// CAS500
+			//Utils.dumpHist();
+			Utils.dumpStats();
+		}
 		if (mProj1.orderedAgainst())
 		{
 			String orderBy = pool.getProjProp(mProj1.idx, "order_against");
@@ -343,9 +300,9 @@ public class SyntenyMain
 				orderGroups(true);	
 			}	
 		}		
-		dumpData();
+		writeResultsToFile();
 		
-		mLog.msg("Done:  " + Utilities.getDurationString(System.currentTimeMillis()-startTime) + "\n");
+		Utils.timeMsg(mLog, startTime, "Synteny");
 		
 		return true;
 	}
@@ -358,7 +315,7 @@ public class SyntenyMain
 	{
 		int nHits = 0;
 		
-		if (mProj1.isPseudo())
+		if (mProj1.isSeq())
 		{
 			String st = "select count(*) as nhits from pseudo_hits where proj1_idx='" + mProj1.getIdx() + "'" + 
 									" and proj2_idx='" + mProj2.getIdx() + "'";
@@ -366,7 +323,7 @@ public class SyntenyMain
 			if (rs.next())
 				nHits = rs.getInt("nhits");
 			rs.close();
-			mLog.msg("Total hits: " + nHits );
+			Utils.prtNumMsg(mLog, nHits, "Total hits");
 		}
 		else
 		{
@@ -391,7 +348,9 @@ public class SyntenyMain
 			rs.close();
 			
 			nHits = nBesHits + nMrkHits;
-			mLog.msg("Total hits: " + nHits + " ; " + nBesHits + " BES, " + nMrkHits + " Marker (counting multiple ctgs)");
+			Utils.prtNumMsg(mLog, nHits, "Total hits");
+			Utils.prtNumMsg(mLog, nBesHits, "BES hits");
+			Utils.prtNumMsg(mLog, nMrkHits, "Marker hits (counting multiple contigs)");
 		}
 		
 		if (nHits == 0)
@@ -417,7 +376,7 @@ public class SyntenyMain
 		mProps.setProperty("avg2_A", String.valueOf(mAvg2A));
 	}
 	
-	private void doPseudoGrpGrpSynteny(Group grp1, Group grp2) throws Exception
+	private void doSeqGrpGrpSynteny(Group grp1, Group grp2) throws Exception
 	{
 		Vector<SyHit> hits = new Vector<SyHit>();
 		
@@ -437,14 +396,17 @@ public class SyntenyMain
 		ResultSet rs = pool.executeQuery(st);
 		while (rs.next())
 		{
-			int start2 = rs.getInt("start2");
-			int end2 = rs.getInt("end2");
-			int start1 = rs.getInt("start1");
-			int end1 = rs.getInt("end1");
+			int id = rs.getInt(1);
+			int start1 = rs.getInt(2);
+			int end1 = rs.getInt(3);
 
+			int start2 = rs.getInt(4);
+			int end2 = rs.getInt(5);
+			int pctid = rs.getInt(6);
+			int gene = rs.getInt(7);
+			
 			int pos1 = (start1 + end1)/2;
 			int pos2 = (start2 + end2)/2;
-			int gene = rs.getInt("gene_overlap");
 			
 			// Ignore diagonal hits for self-alignments
 			// This doesn't really work though because tandem gene families create many near-diagonal hits. 
@@ -452,24 +414,17 @@ public class SyntenyMain
 			{
 				if (pos1 >= pos2) continue; // we will find only upper triangle blocks, and reflect them later.
 				if (Utils.intervalsOverlap(start1, end1, start2, end2, 0))
-				{
 					continue;
-				}
 			}	
-			hits.add(new SyHit(pos1,pos2,rs.getInt("idx"),SyHitType.Pseudo,rs.getInt("pctid"),gene));
+			hits.add(new SyHit(pos1,pos2,id,SyHitType.Pseudo,pctid,gene));
+			
 			Utils.incStat("SyntenyHitsTotal", 1);
 			if (gene == 0)
-			{
 				Utils.incStat("RawSyHits" + HitType.NonGene.toString(), 1);
-			}
 			else if (gene == 1)
-			{
 				Utils.incStat("RawSyHits" + HitType.GeneNonGene.toString(), 1);
-			}
 			if (gene == 2)
-			{
 				Utils.incStat("RawSyHits" + HitType.GeneGene.toString(), 1);
-			}			
 		}
 		rs.close();
 		
@@ -480,8 +435,10 @@ public class SyntenyMain
 		{
 			blocks = removeDiagonalBlocks(blocks);
 		}
+		
 		blocks = mergeBlocks(blocks);
-		setBlockGrps(blocks,grp1.getIdx(),grp2.getIdx());
+		setBlockGrps(blocks, grp1.getIdx(), grp2.getIdx());
+		
 		int num = 1;			
 		for (Block b : blocks)
 		{
@@ -775,7 +732,6 @@ public class SyntenyMain
 	private void cullChains(int gap1,int gap2, Vector<SyHit> hits, Vector<Block> blocks)
 	{
 		Block blk = new Block(mPairIdx,mProj1,mProj2);
-		if (DEBUG) mLog.msg("GAP1:" + gap1 + " GAP2:" + gap2 + " CULL");
 		while(longestChain(gap1,gap2,mMindots_keepbest,hits,blk))
 		{
 			if (goodBlock(blk, hits))
@@ -867,9 +823,9 @@ public class SyntenyMain
 		
 		if (N <= 2) return 0;
 
-		double xav 		= 0;
+		double xav 	= 0;
 		double xxav 	= 0;
-		double yav 		= 0;
+		double yav 	= 0;
 		double yyav 	= 0;
 		double xyav 	= 0;
 		
@@ -976,8 +932,8 @@ public class SyntenyMain
 				else
 				{
 					h1.mDPScore 	= 1;
-					h1.mPrevI 		= -1;
-					h1.mNDots 		= 1;
+					h1.mPrevI 	= -1;
+					h1.mNDots 	= 1;
 				}
 			}
 		}
@@ -1019,7 +975,7 @@ public class SyntenyMain
 	{
 		mMindots = mProps.getInt("mindots");
 		mMindots_keepbest = mProps.getInt("mindots_keepbest");
-		mMingap1 = (mProj1.isPseudo() ? 
+		mMingap1 = (mProj1.isSeq() ? 
 							mProps.getInt("mingap1") :
 							mProps.getInt("mingap1_cb"));
 		mMingap2 = mProps.getInt("mingap2");
@@ -1077,20 +1033,15 @@ public class SyntenyMain
 				b.doUpload(pool);	
 			}
 			
-			if (mProj1.isPseudo())
+			if (mProj1.isSeq())
 			{
-				if (b.mHits.size() == 0)
-				{
-					//mLog.msg("empty block!!");	
-				}
 				uploadPseudoBlockHits(b);
 			}
 		}
-		if (mProj1.isPseudo())
+		if (mProj1.isSeq())
 		{
 			Utils.updateGeneFractions(pool, mPairIdx);
 		}
-
 	}
 	
 	private void clearBlocks() throws SQLException
@@ -1130,7 +1081,6 @@ public class SyntenyMain
 			pool.bulkInsertAdd("pseudo_block_hits", vlist);
 			
 			Utils.incStat("BlockHits" + h.mBT.toString(), 1);
-
 		}
 		pool.finishBulkInserts();
 	}
@@ -1240,8 +1190,8 @@ public class SyntenyMain
 		ResultSet rs = pool.executeQuery(st);
 		while (rs.next())
 		{
-			ctgHits.add(new CtgHit(rs.getInt("ctg1_idx"), rs.getInt("start2"), 
-							rs.getInt("end2"),rs.getInt("score"), rs.getInt("csize")) );
+			ctgHits.add(new CtgHit(rs.getInt(2), rs.getInt(3), 
+							rs.getInt(4),rs.getInt(5), rs.getInt(6)) );
 		}
 		rs.close();
 		
@@ -1303,7 +1253,6 @@ public class SyntenyMain
 				st = "update ctghits set block_num='" + String.valueOf(bnum) + "' where idx='" + String.valueOf(ctgHitIdx) + "'";
 				pool.executeUpdate(st);
 			}
-			
 			bnum++;
 		}
 	}
@@ -1325,7 +1274,7 @@ public class SyntenyMain
             		" AND ctghits.grp2_idx = groups.idx";
 		ResultSet rs = pool.executeQuery(st);
 		while (rs.next())
-			ctgIdxUsed.add(rs.getInt("ctg1_idx"));
+			ctgIdxUsed.add(rs.getInt(1));
 		rs.close();
 		
 		for (int ctgIdx : mBest.keySet())
@@ -1500,7 +1449,6 @@ public class SyntenyMain
 		int diff1_alt = Math.abs(h.mPos1_alt - check.mPos1);
 		
 		return (diff1 < diff1_alt);
-
 	}
 	
 	private void doCloneSwaps() throws SQLException
@@ -1511,8 +1459,8 @@ public class SyntenyMain
 			ResultSet rs = pool.executeQuery(st);
 			if (rs.next()) 
 			{
-				String bes1 = rs.getString("bes1");
-				String bes2 = rs.getString("bes2");
+				String bes1 = rs.getString(1);
+				String bes2 = rs.getString(2);
 				rs.close();
 				
 				st = "UPDATE clones SET bes1 = '" + bes2 + "', bes2='" + bes1 + "' WHERE idx='" + cidx + "'";
@@ -1527,13 +1475,14 @@ public class SyntenyMain
 		ResultSet rs = pool.executeQuery("select idx from blocks where pair_idx=" + mPairIdx + " and grp1_idx != grp2_idx ");
 		while (rs.next())
 		{
-			idxlist.add(rs.getInt("idx"));
+			idxlist.add(rs.getInt(1));
 		}
 		rs.close();
 		for (int idx : idxlist)
 		{
 			pool.executeUpdate("insert into blocks (select 0,pair_idx,blocknum,proj2_idx,grp2_idx,start2,end2,ctgs2,proj1_idx,grp1_idx,start1,end1,ctgs1," +
 					"level,contained,comment,corr,score,0,0,0,0 from blocks where idx=" + idx + ")");
+			
 			rs = pool.executeQuery("select max(idx) as maxidx from blocks");
 			rs.first();
 			int newIdx = rs.getInt("maxidx");
@@ -1545,7 +1494,7 @@ public class SyntenyMain
 		rs = pool.executeQuery("select idx from groups where proj_idx=" + mProj1.idx);
 		while (rs.next())
 		{
-			grps.add(rs.getInt("idx"));
+			grps.add(rs.getInt(1));
 		}
 		for (int gidx : grps)
 		{
@@ -1553,7 +1502,7 @@ public class SyntenyMain
 			int maxBlkNum = 0;
 			rs = pool.executeQuery("select max(blocknum) as bnum from blocks where grp1_idx=" + gidx + " and grp1_idx=grp2_idx");
 			rs.first();
-			maxBlkNum = rs.getInt("bnum");
+			maxBlkNum = rs.getInt(1);
 			int newMaxBlkNum = 2*maxBlkNum + 1;
 			
 			// For each old block, make a new block with reflected coordinates, and blocknum computed as in the query
@@ -1569,7 +1518,7 @@ public class SyntenyMain
 
 		}
 	}
-	private void dumpData() throws Exception
+	private void writeResultsToFile() throws Exception
 	{
 		ResultSet rs = null;
 		
@@ -1578,81 +1527,90 @@ public class SyntenyMain
 		if (idField1 == null) idField1="ID";
 		if (idField2 == null) idField2="ID";
 		
-		File resDir = new File(mPairDir,"results");
+		File resDir = new File(resultDir,Constants.finalDir);
 		if (!resDir.exists())
 		{
 			resDir.mkdir();	
 		}
-		File blockFile = new File(resDir,"blocks");
+		File blockFile = new File(resDir,Constants.blockFile);
 		if (blockFile.exists())
 		{
 			blockFile.delete();	
 		}
-		File anchFile = new File(resDir,"anchors");
+		File anchFile = new File(resDir,Constants.anchorFile);
 		if (anchFile.exists())
 		{
 			anchFile.delete();	
-		}	
+		}
+		
 		FileWriter fw = new FileWriter(blockFile);
 		fw.write("grp1\tgrp2\tblock\tstart1\tend1\tstart2\tend2\t#hits\t#gene1\t#gene2\t%gene1\t%gene2\n");
-		rs = pool.executeQuery("select blocknum, grp1.name as gname1,grp2.name as gname2, " +
-			"start1,end1,start2,end2,score,ngene1,ngene2,genef1,genef2 from blocks join groups as grp1 on grp1.idx=blocks.grp1_idx " + 
-			" join groups as grp2 on grp2.idx=blocks.grp2_idx where blocks.pair_idx=" + mPairIdx + 
+		
+		rs = pool.executeQuery("select blocknum, grp1.name, grp2.name, " +
+			" start1,end1,start2,end2,score,ngene1,ngene2,genef1,genef2 " +
+			" from blocks " +
+			" join groups as grp1 on grp1.idx=blocks.grp1_idx " + 
+			" join groups as grp2 on grp2.idx=blocks.grp2_idx " +
+			" where blocks.pair_idx=" + mPairIdx + 
 			" order by grp1.sort_order asc,grp2.sort_order asc,blocknum asc");
 		while (rs.next())
 		{
-			int bidx = rs.getInt("blocknum");
-			String grp1 = rs.getString("gname1");	
-			String grp2 = rs.getString("gname2");	
-			int s1 = rs.getInt("start1");
-			int e1 = rs.getInt("end1");
-			int s2 = rs.getInt("start2");
-			int e2 = rs.getInt("end2");
-			int nhits = rs.getInt("score");
-			int ng1 = rs.getInt("ngene1");
-			int ng2 = rs.getInt("ngene2");
-			float gf1 = rs.getFloat("genef1");
-			float gf2 = rs.getFloat("genef2");
-			gf1 = ((float)((int)(1000*gf1)))/10;
-			gf2 = ((float)((int)(1000*gf2)))/10;
+			int bidx = rs.getInt(1);
+			String grp1 = rs.getString(2);	
+			String grp2 = rs.getString(3);	
+			int s1 = rs.getInt(4);
+			int e1 = rs.getInt(5);
+			int s2 = rs.getInt(6);
+			int e2 = rs.getInt(7);
+			int nhits = rs.getInt(8);
+			int ngene1 = rs.getInt(9);
+			int ngene2 = rs.getInt(10);
+			float genef1 = rs.getFloat(11);
+			float genef2 = rs.getFloat(12);
+			genef1 = ((float)((int)(1000*genef1)))/10;
+			genef2 = ((float)((int)(1000*genef2)))/10;
 			fw.write(grp1 + "\t" + grp2 + "\t" + bidx + "\t" + s1 + "\t" + e1 + "\t" + s2 + "\t" + e2 + "\t" +
-					nhits + "\t" + ng1 + "\t" + ng2 + "\t" + gf1 + "\t" + gf2 + "\n");
+					nhits + "\t" + ngene1 + "\t" + ngene2 + "\t" + genef1 + "\t" + genef2 + "\n");
 		}
 		fw.flush();
 		fw.close();
-
+		mLog.msg("Wrote " + blockFile);
+		
+		
 		fw = new FileWriter(anchFile);
 		fw.write("block\tstart1\tend1\tstart2\tend2\tannot1\tannot2\n");
-		rs = pool.executeQuery("select blocknum, grp1.name as gname1,grp2.name as gname2, " +
-			"ph.start1,ph.end1,ph.start2,ph.end2,a1.name,a2.name from blocks join groups as grp1 on grp1.idx=blocks.grp1_idx " + 
-			" join groups as grp2 on grp2.idx=blocks.grp2_idx " +
-			" join pseudo_block_hits as pbh on pbh.block_idx=blocks.idx " +
-			" join pseudo_hits as ph on ph.idx=pbh.hit_idx " + 
-			" left join pseudo_annot as a1 on a1.idx=ph.annot1_idx " +
-			" left join pseudo_annot as a2 on a2.idx=ph.annot2_idx " +
+		rs = pool.executeQuery("select blocknum, grp1.name, grp2.name, " +
+			" ph.start1, ph.end1, ph.start2, ph.end2, a1.name, a2.name " +
+			" from blocks " +
+			" join groups            as grp1 on grp1.idx=blocks.grp1_idx " + 
+			" join groups            as grp2 on grp2.idx=blocks.grp2_idx " +
+			" join pseudo_block_hits as pbh  on pbh.block_idx=blocks.idx " +
+			" join pseudo_hits       as ph   on ph.idx=pbh.hit_idx " + 
+			" left join pseudo_annot as a1   on a1.idx=ph.annot1_idx " +
+			" left join pseudo_annot as a2   on a2.idx=ph.annot2_idx " +
 			" where blocks.pair_idx=" + mPairIdx + 
 			" order by grp1.sort_order asc,grp2.sort_order asc,blocknum asc, ph.start1 asc");
 		while (rs.next())
 		{
-			int bidx = rs.getInt("blocknum");
-			String grp1 = rs.getString("gname1");	
-			String grp2 = rs.getString("gname2");	
-			int s1 = rs.getInt("start1");
-			int e1 = rs.getInt("end1");
-			int s2 = rs.getInt("start2");
-			int e2 = rs.getInt("end2");
-			String a1 = rs.getString("a1.name");	
-			String a2 = rs.getString("a2.name");
+			int bidx = rs.getInt(1);
+			String grp1 = rs.getString(2);	
+			String grp2 = rs.getString(3);	
+			int s1 = rs.getInt(4);
+			int e1 = rs.getInt(5);
+			int s2 = rs.getInt(6);
+			int e2 = rs.getInt(7);
+			String a1 = rs.getString(8);	
+			String a2 = rs.getString(9);
 			
 			a1 = parseAnnotID(a1,idField1);
 			a2 = parseAnnotID(a2,idField2);
 			
 			fw.write(grp1 + "." + grp2 + "." + bidx + "\t" + s1 + "\t" + e1 + "\t" + s2 + "\t" + e2 +
 							"\t" + a1 + "\t" + a2 + "\n");
-
 		}
 		fw.flush();
 		fw.close();
+		mLog.msg("Wrote " + anchFile);
 	}
 	private String parseAnnotID(String in, String fieldName)
 	{
@@ -1679,10 +1637,10 @@ public class SyntenyMain
 	// Hence, we have to reverse the groups we get from the blocks. 
 	private void orderGroups(boolean switchProjects) throws Exception
 	{
-		Project pOrder = (switchProjects ? mProj2 : mProj1);
+		Project pOrder =  (switchProjects ? mProj2 : mProj1);
 		Project pTarget = (switchProjects ? mProj1 : mProj2);
 	
-		File ordFile = new File("data/pseudo/" + pOrder.name + "/anchoring.csv");
+		File ordFile = new File(Constants.seqDataDir + pOrder.name + Constants.anchorCSVFile);
 		if (ordFile.exists()) ordFile.delete();
 		FileWriter ordFileW = new FileWriter(ordFile);
 		
@@ -1690,11 +1648,12 @@ public class SyntenyMain
 
 		ResultSet rs;
 		TreeSet<Integer> alreadyFlipped = new TreeSet<Integer>();
-		rs = pool.executeQuery("select idx,flipped from groups where proj_idx=" + pOrder.idx);
+		rs = pool.executeQuery("select idx,flipped from groups " +
+				" where proj_idx=" + pOrder.idx);
 		while (rs.next())
 		{
-			int idx = rs.getInt("idx");
-			boolean flipped = rs.getBoolean("flipped");
+			int idx = rs.getInt(1);
+			boolean flipped = rs.getBoolean(2);
 			if (flipped) alreadyFlipped.add(idx);
 		}
 		pool.executeUpdate("update groups set flipped=0,sort_order=idx where proj_idx=" + pOrder.idx);
@@ -1710,13 +1669,19 @@ public class SyntenyMain
 		TreeSet<Integer> grp1flip = new TreeSet<Integer>();
 		TreeMap<Integer,Vector<Integer>> grpMaps = new TreeMap<Integer,Vector<Integer>>();
 		Vector<Integer> grp2Order = new Vector<Integer>();
-		rs = pool.executeQuery("select idx from groups where proj_idx=" + pTarget.getIdx() + " order by sort_order asc");
+		rs = pool.executeQuery("select idx from groups " +
+						" where proj_idx=" + pTarget.getIdx() + 
+						" order by sort_order asc");
 		while (rs.next())
 		{
-			grp2Order.add(rs.getInt("idx"));
+			grp2Order.add(rs.getInt(1));
 		}
+		mLog.msg(grp2Order.size() + " groups to order ");
+		
 		// note avg(corr) is necessary because of the grouping, and the grouping is because we don't store the # of hits in the blocks table
-		rs = pool.executeQuery("select grp1_idx, grp2_idx, grp2.fullname, grp1.fullname, count(*) as score, start1, start2,avg(corr) as corr, " + 
+		rs = pool.executeQuery("select grp1_idx, grp2_idx, " +
+				"grp2.fullname, grp1.fullname, count(*) as score, " +
+				"start1, start2, avg(corr) as corr, " + 
 					" ps1.length as len1, ps2.length as len2  from blocks " + 
 					" join pseudo_block_hits on pseudo_block_hits.block_idx=blocks.idx " +
 					" join groups as grp2 on grp2.idx=grp2_idx " +
@@ -1737,8 +1702,7 @@ public class SyntenyMain
 			String grp1Name = (switchProjects ? rs.getString("grp2.fullname") : rs.getString("grp1.fullname"));
 			if (grp1Seen.contains(grp1Idx))
 			{
-				// If we've seen this group before then we've already got its best block
-				continue;	
+				continue; // if seen this group before then already got its best block	
 			}
 			if (!grpMaps.containsKey(grp2Idx))
 			{
@@ -1754,6 +1718,7 @@ public class SyntenyMain
 			if (corr < 0) grp1flip.add(grp1Idx);
 		}
 		rs.close();
+		
 		// It seems like there should be an easier way to do this...
 		int curOrd = 1;
 		TreeMap<Integer,Integer> grp2ord = new TreeMap<Integer,Integer>();
@@ -1777,7 +1742,7 @@ public class SyntenyMain
 			}
 		}
 		
-		String ordPfx = Utils.getProjProp(pOrder.idx, "grp_prefix", pool);
+		String ordPfx =  Utils.getProjProp(pOrder.idx,  "grp_prefix", pool);
 		String targPfx = Utils.getProjProp(pTarget.idx, "grp_prefix", pool);
 
 		// assign the ones that didn't align anywhere
@@ -1785,7 +1750,7 @@ public class SyntenyMain
 		rs = pool.executeQuery("select idx from groups where proj_idx=" + pOrder.idx);
 		while (rs.next())
 		{
-			int idx = rs.getInt("idx");
+			int idx = rs.getInt(1);
 			allGrpIdx.add(idx);
 			if (!grp2ord.containsKey(idx))
 			{
@@ -1814,6 +1779,7 @@ public class SyntenyMain
 
 		}
 		ordFileW.close();
+		
 		// Now, update the newly flipped/unflipped groups and the anchors and synteny blocks containing them
 		mLog.msg("Updating flipped contigs and anchors....");
 		for (int idx : allGrpIdx)
@@ -1861,73 +1827,56 @@ public class SyntenyMain
 				pool.executeUpdate("update blocks as b, pseudos as p  " +
 						" set b.start2=p.length-b.end2, b.end2=p.length-b.start2, b.corr=-b.corr " +
 						"where b.grp2_idx=" + idx + " and p.grp_idx=" + idx );
-
 			}
-			
 		}
 		// Lastly, print out the two ordered projects
 		mLog.msg("Creating anchored project from " + pOrder.getName());
 		mLog.msg("Wrote " + ordFile.getAbsolutePath());
 	
-		String groupedName0 = pOrder.getName() + "_anchored";	
-		String groupedName = groupedName0;
-		
-		groupedName = groupedName0; 
-		File groupedDir = new File("data/pseudo/" + groupedName);
+		String groupedName = pOrder.getName() + Constants.anchorSuffix;	
+		String groupFileName = Constants.seqDataDir + groupedName;
+	
+		File groupedDir = new File(groupFileName);
 		if (groupedDir.exists())
 		{
+			/** CAS500 pops up at end, and can get lost on Mac and hang execution
 			int ret = JOptionPane.showConfirmDialog(null, "Anchored project " + groupedName + " was already created and " +
 					" will be overwritten; Continue? ","Confirm",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE);	
-			if (ret == JOptionPane.YES_OPTION)
-			{
-				;
-			}
-			else 
-			{
-				return;	
-			}
-			Utils.clearDir(groupedDir);
+			if (ret == JOptionPane.NO_OPTION) return;
+			**/
+			mLog.msg("Delete previous " + groupFileName);
+			Utilities.clearAllDir(groupedDir);
 			groupedDir.delete();
-
 		}	
-		groupedDir.mkdir();
+		mLog.msg("Create " + groupFileName);
+		Utilities.checkCreateDir(groupFileName, "SM anchored");
 		
-		File groupedSeq = new File(groupedDir,"sequence"); groupedSeq.mkdir();
-		File groupedPs = new File(groupedSeq,"pseudo"); groupedPs.mkdir();
-		File groupedAndir = new File(groupedDir,"annotation"); groupedAndir.mkdir();
+		File groupedSeqDir =Utilities.checkCreateDir(groupedDir + Constants.seqSeqDataDir, "SM anchored seq ");
+		File groupedAndir = Utilities.checkCreateDir(groupedDir + Constants.seqAnnoDataDir, "SM anchored anno ");
 		
-		File groupedFasta = new File(groupedPs,groupedName + ".fasta");
+		File groupedFasta = Utilities.checkCreateFile(groupedSeqDir, groupedName + Constants.faFile, "SM fasta file");
+		File groupedGFF =   Utilities.checkCreateFile(groupedAndir, groupedName + ".gff", "SM gff");
+		File grpParam =     Utilities.checkCreateFile(groupedDir, Constants.paramsFile, "SM params");
 
-		File groupedGFF = new File(groupedAndir,groupedName + ".gff");
-		
-		File grpParam = new File(groupedDir,"params");
-
-		String separator = "NNNNNNNNNN" + "NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +
-						"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN";
-		
-		
-		FileWriter grpFastaW = new FileWriter(groupedFasta);
-		
-		FileWriter grpParamW = new FileWriter(grpParam);
-		
+		FileWriter grpFastaW = 	new FileWriter(groupedFasta);
+		FileWriter grpParamW = 	new FileWriter(grpParam);
 		FileWriter groupedGFFW = new FileWriter(groupedGFF);
 		
+		String separator = "NNNNNNNNNN" + "NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +
+				"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN";
+
 		Vector<String> grpOrder = new Vector<String>();
 		rs = pool.executeQuery("select groups.fullname, groups.idx, groups.flipped, pseudo_seq2.seq from groups join pseudo_seq2 " +  
 				" on pseudo_seq2.grp_idx=groups.idx where groups.proj_idx=" + pOrder.idx + 
 				" order by groups.sort_order asc, pseudo_seq2.chunk asc");
-		int curGrpIdx = -1;
-		String curNewGrp = "";
-		String curNewGrpName = "";
-		String curGrpName = "";
-		String prevGrpName = "";
-		int groupedPos = 0;
+		int curGrpIdx = -1, groupedPos = 0, count=0;
+		String curNewGrp = "", curNewGrpName = "", curGrpName = "", prevGrpName = "";
 		boolean unanchStarted = false;
 		while (rs.next())
 		{
-			String name = rs.getString("fullname");
-			int grpIdx = rs.getInt("idx");
-			String seq = rs.getString("seq");
+			String name = rs.getString(1);
+			int grpIdx = rs.getInt(2);
+			String seq = rs.getString(4);
 			
 			if (grpIdx != curGrpIdx)
 			{
@@ -1978,11 +1927,13 @@ public class SyntenyMain
 			{
 				int end = Math.min(i+50,seq.length()-1);
 				String line = seq.substring(i, end);
-				//ordFastaW.write(line); ordFastaW.write("\n");
 				grpFastaW.write(line); grpFastaW.write("\n");
 			}
 			groupedPos += seq.length();
+			count++;
+			if (count%1000==0) System.out.print("Processed " + count + "...\r");
 		}
+		mLog.msg("Wrote " + groupedFasta);
 		grpFastaW.close();
 		groupedGFFW.close();
 		String dispName;
@@ -1991,8 +1942,6 @@ public class SyntenyMain
 		grpParamW.write("category = " + pOrder.category + "\ndisplay_name=" + dispName + "\n");
 		grpParamW.write("grp_prefix=" + pTarget.grpPrefix + "\n");
 		grpParamW.close();
-
-		mLog.msg("Created anchored project " + groupedName);
 	}
 	
 	private void setGeneRunCounts() throws Exception
@@ -2011,19 +1960,24 @@ public class SyntenyMain
 		// ones which overlap
 		pool.executeUpdate("update pseudo_annot, groups set pseudo_annot.genenum=0 where pseudo_annot.grp_idx=groups.idx and groups.proj_idx=" + mProj1.idx);
 		pool.executeUpdate("update pseudo_annot, groups set pseudo_annot.genenum=0 where pseudo_annot.grp_idx=groups.idx and groups.proj_idx=" + mProj2.idx);
+		
 		for (Project p : new Project[]{mProj1, mProj2})
 		{
+			int totalGeneUpdate=0;
 			for (Group g : p.getGroups())
 			{
 				int genenum = 0;
-				PreparedStatement ps = pool.prepareStatement("update pseudo_annot set genenum=? where idx=?");
-				ResultSet rs = pool.executeQuery("select idx,start,end from pseudo_annot where grp_idx=" + g.idx + " and type='gene' order by start asc");
+				PreparedStatement ps = pool.prepareStatement(
+						"update pseudo_annot set genenum=? where idx=?");
+				ResultSet rs = pool.executeQuery(
+					"select idx,start,end from pseudo_annot where grp_idx=" + g.idx + 
+					" and type='gene' order by start asc");
 				int sprev=-1, eprev=-1;
 				while (rs.next())
 				{
-					int idx = rs.getInt("idx");
-					int s = rs.getInt("start");
-					int e = rs.getInt("end");
+					int idx = rs.getInt(1);
+					int s = rs.getInt(2);
+					int e = rs.getInt(3);
 					
 					if (sprev == -1 || !Utils.intervalsOverlap(sprev, eprev, s, e, 0))
 					{
@@ -2035,10 +1989,15 @@ public class SyntenyMain
 					sprev=s; eprev=e;
 				}
 				ps.executeBatch();
+				totalGeneUpdate+=genenum;
+				System.out.print("Group " + g.getName() + " " + genenum + " anchors\r");
 			}
+			Utils.prtNumMsg(mLog, totalGeneUpdate, "Gene update for " + p.name);
 		}
-		int num2go = mProj1.getGroups().size()*mProj2.getGroups().size();
-		System.out.println(num2go + " to pairs analyze");
+		int num2go = mProj1.getGroups().size() * mProj2.getGroups().size();
+		mLog.msg("Process " + num2go + " group by group");
+		int count=0;
+		
 		// Now get the hits with genes ordered on one side and just count the ordered runs on the other side
 		for (Group g1 : mProj1.getGroups())
 		{
@@ -2065,10 +2024,10 @@ public class SyntenyMain
 				TreeMap<Integer,TreeMap<Integer,Integer>> gn2hidxR = new TreeMap<Integer,TreeMap<Integer,Integer>>();
 				while (rs.next())
 				{
-					int hidx = rs.getInt("idx");
-					int gnum = rs.getInt("genenum");
-					int grp = rs.getInt("grp_idx");
-					String str = rs.getString("strand");
+					int hidx = rs.getInt(1);
+					int gnum = rs.getInt(2);
+					int grp = rs.getInt(3);
+					String str = rs.getString(4);
 					boolean inv = (str.contains("+") && str.contains("-"));
 					if (inv && grp == g2.idx)
 					{
@@ -2080,15 +2039,12 @@ public class SyntenyMain
 					{
 						hidx2gn1.put(hidx, new Vector<Integer>());
 						hidx2gn2.put(hidx, new Vector<Integer>());
-						hidx2inv.put(hidx, inv);			}
+						hidx2inv.put(hidx, inv);			
+					}
 					if (grp == g1.idx)
-					{
 						hidx2gn1.get(hidx).add(gnum);
-					}
 					else
-					{
 						hidx2gn2.get(hidx).add(gnum);
-					}
 				}
 	
 				for (int hidx : hidx2gn1.keySet())
@@ -2122,7 +2078,6 @@ public class SyntenyMain
 							sparse.get(gn1).put(gn2, hidx);
 						}
 					}
-					
 				}
 				//System.out.println("Sparse matrix traverse...");
 				// Connect the dots in the sparse matrices.
@@ -2188,13 +2143,11 @@ public class SyntenyMain
 								// Also, two or more hits can span the same adjacent genes on both genomes.
 								// We have to avoid creating a self-link or link cycle.
 								if (hidx1 != hidx2) 
-								{
-									if (!alreadyLinked.contains(hidx1) ) // Don't create a backlink FROM hit1 if 
-																		// something already links TO hit1
+								{										// Don't create a backlink FROM hit1 if 
+									if (!alreadyLinked.contains(hidx1) ) // something already links TO hit1		
 									{
 										backLinks.put(hidx1,hidx2);
 										alreadyLinked.add(hidx2);
-								
 									}
 								}
 							}
@@ -2243,25 +2196,25 @@ public class SyntenyMain
 							}							
 						}
 					}
-
 				} // end of forward/reverse loop
-				PreparedStatement ps = pool.prepareStatement("update pseudo_hits set runsize=? where idx=?");
+				PreparedStatement ps = pool.prepareStatement(
+						"update pseudo_hits set runsize=? where idx=?");
 				for (int hidx : hitScores.keySet())
 				{
 					int score = hitScores.get(hidx);
 					ps.setInt(1, score);
 					ps.setInt(2,hidx);
 					ps.addBatch();
+					count++;
 				}
 				ps.executeBatch();
 				
 				num2go--;
-				if (num2go % 200 == 0)
-				{
-					System.out.println(num2go + "");
-				}
+				if (num2go>0) // CAS500 22nov19
+					System.out.print("Left to process: " + num2go + "\r");
 			}
 		}
+		Utils.prtNumMsg(mLog, count, " updates");
 	}
 	/*
 	 *  CLASSES

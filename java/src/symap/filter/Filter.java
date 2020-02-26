@@ -8,9 +8,9 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent; // mdb added 3/12/07 #104
-import java.awt.event.WindowFocusListener; // mdb added 3/28/07 
-import java.awt.event.WindowEvent; // mdb added 3/28/07 
+import java.awt.event.MouseEvent; 
+import java.awt.event.WindowFocusListener; 
+import java.awt.event.WindowEvent; 
 
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
@@ -20,9 +20,9 @@ import javax.swing.JSeparator;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener; // mdb added 3/13/07 #104
-import javax.swing.JPopupMenu; 				// mdb added 3/12/07 #104
-import javax.swing.JMenuItem; 				// mdb added 3/20/07 #104
+import javax.swing.event.PopupMenuListener; 
+import javax.swing.JPopupMenu; 				
+import javax.swing.JMenuItem; 				
 
 import symap.SyMAP;
 import symap.SyMAPConstants;
@@ -32,37 +32,18 @@ import util.Utilities;
 
 /**
  * The abstract class for the filter dialogs.
- * 
- * @author Austin Shoemaker
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public abstract class Filter extends JDialog implements ActionListener,
 		ChangeListener, SyMAPConstants,
-		PopupMenuListener // mdb added 3/13/07 #104
+		PopupMenuListener 
 {
-// mdb removed 1/29/09 #159 simplify properties
-//	public static final String CONTIG_FILTER_ID, BLOCK_FILTER_ID, SEQUENCE_FILTER_ID, MAPPER_FILTER_ID;
-//	public static final String CONTIG_FILTER_TITLE, BLOCK_FILTER_TITLE, SEQUENCE_FILTER_TITLE, MAPPER_FILTER_TITLE;
-//	static {
-//		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/filter.properties"));
-//
-//		CONTIG_FILTER_ID   = props.getString("contigFilterID");
-//		BLOCK_FILTER_ID    = props.getString("blockfilterID");
-//		SEQUENCE_FILTER_ID = props.getString("sequenceFilterID");
-//		MAPPER_FILTER_ID   = props.getString("mapperFilterID");
-//
-//		CONTIG_FILTER_TITLE   = props.getString("contigFilterTitle");
-//		BLOCK_FILTER_TITLE    = props.getString("blockfilterTitle");
-//		SEQUENCE_FILTER_TITLE = props.getString("sequenceFilterTitle");
-//		MAPPER_FILTER_TITLE   = props.getString("mapperFilterTitle");
-//	}
-
 	private JButton okButton, cancelButton, defaultButton;
 	protected DrawingPanel drawingPanel;
 	protected JPanel buttonPanel;
 	protected HelpBar helpBar;
-	protected JPopupMenu popup; // mdb added 3/12/07 #104
-	protected JMenuItem popupTitle, showNavigationHelp, showTrackHelp; // mdb added 3/20/07 #104
+	protected JPopupMenu popup; 
+	protected JMenuItem popupTitle, showNavigationHelp, showTrackHelp; 
 	
 
 	protected Filter(Frame owner, DrawingPanel dp, String title, AbstractButton helpButton) {
@@ -86,22 +67,14 @@ public abstract class Filter extends JDialog implements ActionListener,
 		if (helpButton != null) innerPanel.add(helpButton);
 		buttonPanel.add(innerPanel,BorderLayout.CENTER);
 		
-		// mdb added 3/12/07 #104 -- BEGIN
 		popup = new JPopupMenu(); 
 		popup.addPopupMenuListener(this); 
 		popupTitle = new JMenuItem();
 		popupTitle.setEnabled(false);
 		popup.add(popupTitle);
 		popup.addSeparator();
-// mdb removed 12/11/09 #162
-//		showNavigationHelp = new JMenuItem("?  Show Navigation Help");
-//		popup.add(showNavigationHelp);
-//		showTrackHelp = new JMenuItem("?  Show Track Help");
-//		popup.add(showTrackHelp);
-//		popup.addSeparator();
-		// mdb added 3/12/07 #104 -- END
 		
-		addWindowFocusListener(new WindowFocusListener() { // mdb added 3/28/07 #112
+		addWindowFocusListener(new WindowFocusListener() { 
 			public void windowGainedFocus(WindowEvent e) { }
 			public void windowLostFocus(WindowEvent e) { 
 				// Force filter dialog to be "always on top".  Note that toString() 
@@ -150,13 +123,13 @@ public abstract class Filter extends JDialog implements ActionListener,
 		if (helpBar != null) helpBar.setPaused(false,this);
 	}	
 	
-	public void showPopup(MouseEvent e) { // mdb added 3/12/07 #104
+	public void showPopup(MouseEvent e) { 
 		popup.show(e.getComponent(), e.getX(), e.getY());
 	}	
 		
-	public void popupMenuCanceled(PopupMenuEvent event) { } // mdb added 3/13/07 #104
-	public void popupMenuWillBecomeVisible(PopupMenuEvent event) { } // mdb added 3/13/07 #104
-	public void popupMenuWillBecomeInvisible(PopupMenuEvent event) { } // mdb added 3/13/07 #104
+	public void popupMenuCanceled(PopupMenuEvent event) { } 
+	public void popupMenuWillBecomeVisible(PopupMenuEvent event) { } 
+	public void popupMenuWillBecomeInvisible(PopupMenuEvent event) { } 
 
 	/**
 	 * Method <code>hide</code> hides the dialog setting the help bar to not be paused on this object.
@@ -184,7 +157,6 @@ public abstract class Filter extends JDialog implements ActionListener,
 		if (event.getSource() == okButton) { 
 			if (drawingPanel != null) drawingPanel.setFrameEnabled(false);
 			super.hide();
-			//javax.swing.SwingUtilities.invokeLater(new RunOk());
 			new Thread(new RunOk()).start();
 		}
 		else if (event.getSource() == defaultButton) setDefault();
@@ -207,18 +179,15 @@ public abstract class Filter extends JDialog implements ActionListener,
 			if (drawingPanel != null) {
 				try {
 					if (okAction()) {
-						//if (SyMAP.DEBUG) System.out.println("\t---- Calling setUpdateHistory in Filter ----");
 						drawingPanel.setUpdateHistory();
 					}
 					if (!drawingPanel.smake()) superShow();
 					else hide();
 				} catch (Exception e) {
-					//drawingPanel.displayError(e.getMessage()); 	// mdb removed 5/25/07 #119
-					Utilities.showErrorMessage(e.getMessage(), -1);	// mdb added 5/25/07 #119
-					
+					Utilities.showErrorMessage(e.getMessage(), -1);		
 					superShow();
 				}
-				//drawingPanel.setFrameEnabled(true);
+				
 			}
 		}
 	}

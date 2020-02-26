@@ -3,14 +3,11 @@ package circview;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Vector;
-import java.awt.BorderLayout;
-import java.awt.Container;
 import java.awt.Dimension;
 
 import javax.swing.JApplet;
 import javax.swing.SwingUtilities;
 
-import dotplot.Data;
 import symap.frame.HelpBar;
 import symap.pool.DatabaseUser;
 import symap.SyMAP;
@@ -32,11 +29,10 @@ public class CircApplet extends JApplet
 		{
 			SyMAP.printVersion();
 				
-			// mdb added 4/8/08
 			if (!SyMAP.checkJavaSupported(this))
 				return;
 	
-			// Get parameters - mdb rewritten 12/16/09 #205
+			// Get parameters 
 			final Vector<String> projects = new Vector<String>();
 			for (int i = 1;  i <= SyMAP.MAX_PROJECTS;  i++) {
 				String projName = getParameter("PROJECT" + i);
@@ -44,7 +40,7 @@ public class CircApplet extends JApplet
 					projects.add(projName);
 			}
 			
-			HelpBar helpBar = new HelpBar(-1, 17, true, false, false); // mdb added 7/6/09
+			HelpBar helpBar = new HelpBar(-1, 17, true, false, false); 
 			
 			DatabaseReader db = getDatabaseReader();
 			ResultSet rs;
@@ -61,7 +57,6 @@ public class CircApplet extends JApplet
 				i++;
 			}
 			
-			
 			CircFrame frame = new CircFrame(null,db,pIdxList,null,helpBar);
 			frame.setPreferredSize( new Dimension(900, 1000) );
 			frame.setMinimumSize( new Dimension(900, 1000) );
@@ -72,8 +67,6 @@ public class CircApplet extends JApplet
 				}
 			}).start();
 	
-			//Container cp = getContentPane();
-			//cp.add(frame.getContentPane() ,			 BorderLayout.NORTH);
 			frame.toFront();
 			frame.setVisible(true);
 			
@@ -93,14 +86,12 @@ public class CircApplet extends JApplet
 		});
 	}
 
-	
-	
 	private DatabaseReader getDatabaseReader() {
 		return DatabaseUser.getDatabaseReader(SyMAPConstants.DB_CONNECTION_SYMAP_APPLET,
 			getParameter(DATABASE_URL),
 			getParameter(USERNAME),
 			getParameter(PASSWORD),
 			Utilities.getHost(this));
-}
+	}
 
 }

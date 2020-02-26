@@ -4,8 +4,6 @@ import dotplot.*;
 
 /**
  * Class <code>DPArrangerResults</code> will set the sub-chain run for the block when results are added.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 public class DPArrangerResults extends ArrangerResults {
 

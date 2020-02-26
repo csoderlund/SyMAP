@@ -13,8 +13,6 @@ public class Mapper extends Observable {
 	// prevent spaces from jaggy effect.
 	public static final float JAGGY_FUDGE = 0.95f;
 	
-	//private SyMAPFrame3D frame; // mdb removed 2/1/10
-	
 	protected Project[] projects;	
 	public TrackCom[] tracks;
 	protected Block[] blocks;
@@ -24,7 +22,6 @@ public class Mapper extends Observable {
 	
 	public static final int PICK_DO_NOTHING = 0;
 	public static final int PICK_DELETE     = 1;
-//	private int nPickFunction = PICK_DO_NOTHING;
 	
 	public static final int NAVIGATION_NONE      = 0;
 	public static final int NAVIGATION_ROTATE    = 1;
@@ -37,11 +34,6 @@ public class Mapper extends Observable {
 	public Mapper() { 
 		reference = null;
 	}
-	
-// mdb removed 2/1/10	
-//	public void setFrame(SyMAPFrame3D frame) {
-//		this.frame = frame;
-//	}
 	
 	public void setProjects(Project[] projects) {
 		this.projects = projects;
@@ -197,7 +189,4 @@ public class Mapper extends Observable {
 	public boolean hasChanged() { return bChanged; }
 	
 	public int getNavigationFunction() { return nNavigationFunction; }
-	
-
-
 }

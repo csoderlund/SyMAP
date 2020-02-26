@@ -9,8 +9,6 @@ import java.awt.geom.Point2D;
 
 /**
  * Represents an individual rule which is a line followed by text. 
- * 
- * @author Austin Shoemaker
  */
 public class Rule {
 	private Color unitColor;

@@ -7,8 +7,7 @@ import java.util.Iterator;
 
 import symap.SyMAPConstants;
 
-//public class FPCPseudoData extends AbstractFPCPseudoHits implements SyMAPConstants { // mdb removed 7/25/07 #134
-public class FPCPseudoData extends AbstractHitData implements SyMAPConstants { // mdb added 7/25/07 #134
+public class FPCPseudoData extends AbstractHitData implements SyMAPConstants { 
 	private PseudoMarkerData[] mhd;
 	private PseudoBESData[]    bhd;
 
@@ -101,14 +100,6 @@ public class FPCPseudoData extends AbstractHitData implements SyMAPConstants { /
 				end2, query_seq, target_seq, gene_olap);
 	}
 
-/*	public PseudoMarkerData getMarkerData(long id, String name, String strand,
-			int repetitive, long block, double evalue, double pctid,
-			int start2, int end2, String query_seq, String target_seq)  
-	{
-		return new PseudoMarkerData(id, name, strand, repetitive != 0,
-				(block > 0), evalue, pctid, start2, end2, query_seq, target_seq); 
-	}
-*/
 	public PseudoBESData getBESData(long id, String name, byte bes,
 			String strand, int repetitive, int block, double evalue,
 			double pctid, int start2, int end2, int cb1, int cb2, byte bes1,
@@ -144,7 +135,7 @@ public class FPCPseudoData extends AbstractHitData implements SyMAPConstants { /
 		public PseudoBESData(long id, String name, int pos, byte bes,
 				String strand, boolean repetitive, boolean block,
 				double evalue, double pctid, int start2, int end2,
-				String query_seq, String target_seq, int gene_olap) // mdb added query_seq/target_seq 8/22/07 #126
+				String query_seq, String target_seq, int gene_olap) 
 		{
 			super(id, name, strand, repetitive, block, evalue, pctid, start2, end2, query_seq, target_seq, gene_olap);
 			this.pos = pos;

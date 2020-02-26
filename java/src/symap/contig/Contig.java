@@ -35,8 +35,6 @@ import symap.pool.HoverMessagePool;
 
 /**
  * The Contig track object class.
- * 
- * @author Austin Shoemaker
  */
 public class Contig extends MarkerTrack {
 	public static final String NO_BOTH_BES_FILTER = "-1";
@@ -54,8 +52,7 @@ public class Contig extends MarkerTrack {
 
 	public static Color resizeColor;
 	private static Dimension resizeSize;
-	//private static Color sdCloneColor;
-	//private static Color repeatBesColor;
+
 	private static double verticalSpace;
 	private static double minHorizontalSpace;
 	private static double markerToContigSpace;
@@ -76,21 +73,13 @@ public class Contig extends MarkerTrack {
 		Point2D p = props.getPoint("resizeSize");
 		resizeSize = new Dimension((int)p.getX(),(int)p.getY());
 		defaultContigOffset = props.getPoint("contigOffset");
-		//sdCloneColor = props.getColor("sdCloneColor");
-		//repeatBesColor = props.getColor("repeatBesColor");
+		
 		verticalSpace = props.getDouble("verticalSpace");
 		minHorizontalSpace = props.getDouble("minHorizontalSpace");
 		markerToContigSpace = props.getDouble("markerToContigSpace");
 		minDefaultBpPerPixel = props.getDouble("minDefaultBpPerPixel");
 		maxDefaultBpPerPixel = props.getDouble("maxDefaultBpPerPixel");
 		padding = props.getDouble("padding");
-
-// mdb removed 6/25/09 - simplify properties		
-//		toBlockLinkColor = props.getColor("toBlockLinkColor");
-//		toBlockLinkHoverColor = props.getColor("toBlockLinkHoverColor");
-//		toBlockLinkFont = props.getFont("toBlockLinkFont");
-//		toBlockLinkText = props.getString("toBlockLinkText");
-//		toBlockLinkOffset = props.getPoint("toBlockLinkOffset");
 
 		titleOffset = props.getPoint("titleOffset");
 	}
@@ -257,7 +246,7 @@ public class Contig extends MarkerTrack {
 
 	public void clearData() {
 		super.clearData();
-		cloneList.removeAllElements();//.clear(); // mdb changed 2/3/10
+		cloneList.removeAllElements();
 	}
 
 	public String toString() {
@@ -567,9 +556,7 @@ public class Contig extends MarkerTrack {
 			adjustBpPerPixel(GenomicsNumber.getBpPerPixel(bpPerCb,Math.abs(end.getValue()-start.getValue()),height));
 
 		if (!validSize()) {
-			//if (drawingPanel != null) drawingPanel.displayWarning("Unable to size contig view as requested."); // mdb removed 5/25/07 #119
-			//Utilities.showWarningMessage("Unable to size contig view as requested."); // mdb added 5/25/07 #119 // mdb removed 7/2/07
-			System.err.println("Unable to size contig view as requested."); // mdb added 7/2/07
+			System.err.println("Unable to size contig view as requested."); 
 			adjustSize();
 		}
 
@@ -776,7 +763,7 @@ public class Contig extends MarkerTrack {
 		return success;
 	}
 	
-	public int getNumOfClones() { // mdb added 3/30/07 #112
+	public int getNumOfClones() { 
 		int count = 0;
 		
 		for (Clone clone : cloneList) 
@@ -795,25 +782,25 @@ public class Contig extends MarkerTrack {
 	 */
 	public String getHelpText(MouseEvent event) {
 		Point point = event.getPoint();
-		String pretext = "Contig Track ("+getTitle()+"):  "; // mdb added 3/30/07 #112
+		String pretext = "Contig Track ("+getTitle()+"):  "; 
 
 		for (Clone clone : cloneList) {
 			if (clone.isHover())
-				return pretext+clone.getHoverMessage(point); // mdb changed 3/30/07 #112
+				return pretext+clone.getHoverMessage(point); 
 		}
 
 		// clone isn't being hovered	
 		if (rect.contains(point)) {
-			return pretext+getNumOfClones()+" of "+cloneList.size()+" clones shown.  Hover over clone to highlight hits.  Right-click for menu."; // mdb changed 3/30/07 #112
+			return pretext+getNumOfClones()+" of "+cloneList.size()+" clones shown.  Hover over clone to highlight hits.  Right-click for menu."; 
 		}
 		else if (markerList.contains(point)) {
-			return pretext+super.getHelpText(event); // mdb changed 3/30/07 #112
+			return pretext+super.getHelpText(event); 
 		}
 		else if (isSouthResizePoint(point)) {
-			return pretext+"Drag to resize the contig."; // mdb changed 3/30/07 #112
+			return pretext+"Drag to resize the contig."; 
 		}
 		else {
-			//return "Shift+Drag to move, Control+Drag to select a region."; // mdb removed 3/29/07 #112
+			
 			return pretext+getNumOfClones()+" of "+cloneList.size()+" clones shown.  Right-click for menu.";
 		}
 	}

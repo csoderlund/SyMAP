@@ -46,8 +46,6 @@ public class GroupInt
 			+ sort_order + "',0)"; 
 		pool.executeUpdate(st);
 		
-		//mGrpIdx = pool.lastID(); // mdb removed 7/1/09
-		// mdb added 7/1/09
 		st = "SELECT idx FROM groups WHERE proj_idx=" + projIdx + " AND name='" + grpName + "'";
 		grpIdx = pool.getIdx(st);
 	}

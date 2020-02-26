@@ -21,7 +21,6 @@ public class GeneAlignment implements Comparable<GeneAlignment> {
 	private boolean forward;
 
 	public GeneAlignment(String name, int start, int end, boolean forward) {
-		// mdb added 12/11/09 #166 - remove URLs and semicolons
 		if (name != null)
 			name = name.replaceAll("=http://\\S+;", "   ").replaceAll(";", "   ");
 		
@@ -71,12 +70,11 @@ public class GeneAlignment implements Comparable<GeneAlignment> {
 	public Rectangle2D getBounds() { return bounds; }
 
 	public void paint(Graphics2D g2, FontMetrics fm, Color fontColor, double vertFontSpace) {
-		if (!paint(g2)) return; // ASD modified: if nothing painted, don't paint name
+		if (!paint(g2)) return; // if nothing painted, don't paint name
 		if (name != null && name.length() > 0) paintName(g2,fm,fontColor,vertFontSpace);
 	}
 
 	public void paintName(Graphics2D g2, FontMetrics fm, Color fontColor, double vertSpace) {
-		// mdb added 8/27/09 - constrain really long gene descriptions
 		String s = name;
 		if (name.length() > 100)
 			s = name.substring(0,100) + "...";

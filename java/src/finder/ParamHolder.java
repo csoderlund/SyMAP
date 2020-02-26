@@ -7,8 +7,6 @@ import util.PropertiesReader;
  *
  * All of the non final methods may need to be overrided for new params, also calling the super
  * method since ParamHolder takes care of the debug parameter.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  */
 public abstract class ParamHolder {
     private static final boolean DEFAULT_DEBUG = false;
@@ -24,9 +22,9 @@ public abstract class ParamHolder {
      * @param props a <code>PropertiesReader</code> value
      */
     protected ParamHolder(PropertiesReader props) {
-	this.props = props;
-	debug  = DEFAULT_DEBUG;
-	params = null;
+    		this.props = props;
+    		debug  = DEFAULT_DEBUG;
+    		params = null;
     }
 
     /**
@@ -38,11 +36,11 @@ public abstract class ParamHolder {
      *
      */
     public void setDefaultParams() {
-	try {
-	    debug = (props == null ? DEFAULT_DEBUG : props.getBoolean("debug"));
-	} catch (Exception e) {
-	    debug = false;
-	}
+		try {
+		    debug = (props == null ? DEFAULT_DEBUG : props.getBoolean("debug"));
+		} catch (Exception e) {
+		    debug = false;
+		}
     }
 
     /**
@@ -58,13 +56,13 @@ public abstract class ParamHolder {
      * @return a <code>boolean</code> value
      */
     public boolean setParam(FinderParam param, Object value) {
-	if (param.isValid(value)) {
-	    try {
-		if (param.getName().equals("debug")) debug = ((Boolean)value).booleanValue();
-		return true;
-	    } catch (Exception e) { e.printStackTrace(); }
-	}
-	return false;
+    		if (param.isValid(value)) {
+    			try {
+    				if (param.getName().equals("debug")) debug = ((Boolean)value).booleanValue();
+    				return true;
+    			} catch (Exception e) { e.printStackTrace(); }
+    		}
+    		return false;
     }
 
     /**
@@ -78,7 +76,7 @@ public abstract class ParamHolder {
      * @return an <code>int</code> value
      */
     protected int numberOfParams() {
-	return 1;
+    		return 1;
     }
 
     /**
@@ -103,12 +101,12 @@ public abstract class ParamHolder {
      * @return a <code>FinderParam[]</code> value
      */
     public final FinderParam[] getParams() {
-	if (params == null) {
-	    params = new FinderParam[numberOfParams()];
-	    for (int i = 0; i < params.length; i++)
-		params[i] = getParam(i);
-	}
-	return params;
+		if (params == null) {
+		    params = new FinderParam[numberOfParams()];
+		    for (int i = 0; i < params.length; i++)
+			params[i] = getParam(i);
+		}
+		return params;
     }
 
     /**
@@ -119,10 +117,10 @@ public abstract class ParamHolder {
      * @param values an <code>Object[]</code> value
      */
     public final void setParams(FinderParam[] params, Object[] values) {
-	if (params != null && values != null && params.length == values.length) {
-	    for (int i = 0; i < params.length; i++)
-		setParam(params[i],values[i]);
-	}
+		if (params != null && values != null && params.length == values.length) {
+		    for (int i = 0; i < params.length; i++)
+			setParam(params[i],values[i]);
+		}
     }
 
     /**
@@ -131,7 +129,7 @@ public abstract class ParamHolder {
      * @param values an <code>Object[]</code> value
      */
     public final void setParams(Object[] values) {
-	setParams(getParams(),values);
+    		setParams(getParams(),values);
     }
 
 
@@ -143,7 +141,7 @@ public abstract class ParamHolder {
      * @param message a <code>String</code> value
      */
     protected void printDebug(String message) {
-	if (debug)
-	    System.out.println("DEBUG: "+message);
+    		if (debug)
+    			System.out.println("DEBUG: "+message);
     }
 }

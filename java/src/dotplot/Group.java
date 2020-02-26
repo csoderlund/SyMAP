@@ -15,8 +15,8 @@ public class Group implements Comparable<Group> {
 	private float scaleFactor = 1;
 	private List<Contig> contigs = new LinkedList<Contig>();
 	private int projID;
-	private HashMap<Group,Boolean> hasBlocks;	// mdb added 12/14/09 #203
-	private boolean isVisible = true;  			// mdb added 12/21/09 #207
+	private HashMap<Group,Boolean> hasBlocks;	
+	private boolean isVisible = true;  			
 
 	public Group(int id, int sortOrder, String name, int size, int projID) {
 		this.id = id;
@@ -24,7 +24,7 @@ public class Group implements Comparable<Group> {
 		this.name = name == null ? "" : name;
 		this.size = size;
 		this.projID = projID;
-		hasBlocks = new HashMap<Group,Boolean>(); // mdb added 12/14/09 #203
+		hasBlocks = new HashMap<Group,Boolean>(); 
 	}
 
 	public int getProjID() {
@@ -121,7 +121,6 @@ public class Group implements Comparable<Group> {
 	}
 	public static void setOffsets(Group[] groups) {
 		if (groups != null && groups.length > 0) {
-			//Arrays.sort(groups); // mdb removed 12/31/09 #205
 			groups[0].offset = 0;
 			for (int i = 1; i < groups.length; i++)
 			{
@@ -130,7 +129,6 @@ public class Group implements Comparable<Group> {
 		}
 	}
 	
-	// mdb added 12/14/09 #203
 	public void setHasBlocks(Group g) { 
 		if (!hasBlocks.containsKey(g)) hasBlocks.put(g,true); 
 	}
@@ -143,7 +141,6 @@ public class Group implements Comparable<Group> {
 		return false;
 	}
 	
-	// mdb added 12/21/09 #207
 	public void setVisible(boolean b) { isVisible = b; }
 	public boolean isVisible() { return isVisible; }
 }

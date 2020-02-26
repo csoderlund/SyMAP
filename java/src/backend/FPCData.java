@@ -2,7 +2,6 @@ package backend;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,32 +25,29 @@ import util.Logger;
 
 public class FPCData 
 {
-	int mProjIdx = 0;
-	TreeMap<String,Integer> mClone2Ctg;
-	Pattern mBESPat;
-	UpdatePool mConn;
-	String mName;
-	int mCBSize = 1200;
-	TreeMap<Integer, Vector<FPCContig>> mCtgs;
-	Project mProj;
-	int pidx;
-	String mGrpPrefix;
-	String mSeqDir;
-	Vector<FPCContig> mCtgList;
-	TreeMap<Integer, Vector<FPCClone>> mCtg2Clones;
-	TreeMap<String,GroupInt> mGrpName2GrpObj;
-	GroupSorter mGS;
-	TreeMap<String,Integer> mCloneRemCounts; // also reused to store the DB index of the remarks
-	TreeMap<String,TreeSet<RF>> mClone2BES;
-	TreeMap<String,Integer> mCloneName2Idx;
-	Vector<Marker> mMarkers;
-	TreeMap<String,String> mClone2Mrk;
-	TreeMap<String,Integer> mMrk2Idx;
-	TreeMap<String,TreeSet<Integer>> mMrk2Ctg;
-	Vector<File> besFiles = null;
-	Vector<File> mrkFiles = null;
-	int mMaxCtgs;
-	Logger mLog;
+	public TreeMap<Integer, Vector<FPCContig>> mCtgs;
+	
+	private int mProjIdx = 0;
+	private Pattern mBESPat;
+	private UpdatePool mConn;
+	private int mCBSize = 1200, mMaxCtgs;
+	private Project mProj;
+	private String mGrpPrefix, mSeqDir;
+	private Vector<FPCContig> mCtgList;
+	private TreeMap<Integer, Vector<FPCClone>> mCtg2Clones;
+	private TreeMap<String,GroupInt> mGrpName2GrpObj;
+	private GroupSorter mGS;
+	private TreeMap<String,Integer> mCloneRemCounts; // also reused to store the DB index of the remarks
+	private TreeMap<String,TreeSet<RF>> mClone2BES;
+	private TreeMap<String,Integer> mCloneName2Idx;
+	private Vector<Marker> mMarkers;
+	
+	private TreeMap<String,Integer> mMrk2Idx;
+	private TreeMap<String,TreeSet<Integer>> mMrk2Ctg;
+	private Vector<File> besFiles = null;
+	private Vector<File> mrkFiles = null;
+	
+	private Logger mLog;
 	
 	// Constructor when called by anchors/synteny scripts
 	public FPCData(UpdatePool pool, Logger log, int projIdx, String name, Project proj) throws SQLException
@@ -60,9 +56,9 @@ public class FPCData
 		mConn = pool;
 		mProjIdx = projIdx;
 		mProj = proj;
-		mName = name;
+	
 		mBESPat = Pattern.compile("(\\S+)(r|f)",Pattern.CASE_INSENSITIVE);
-		mClone2Ctg = new TreeMap<String,Integer>();
+		
 		try
 		{
 			mCBSize = Integer.parseInt(Utils.getProjProp(mProjIdx,"cbsize",mConn));
@@ -87,7 +83,7 @@ public class FPCData
 		mGrpName2GrpObj = new TreeMap<String,GroupInt>();
 		mCloneRemCounts = new TreeMap<String,Integer>();
 		mMarkers = new Vector<Marker>();
-		mClone2Mrk = new TreeMap<String,String>();
+	
 		mMrk2Idx = new TreeMap<String,Integer>();
 		mCloneName2Idx = new TreeMap<String,Integer>();
 		mMrk2Ctg = new TreeMap<String,TreeSet<Integer>>();
@@ -152,7 +148,7 @@ public class FPCData
 			totalCtgs++;
 		}
 		rs.close();
-		mLog.msg(mProj.getName() + ":" + totalCtgs + " contigs, " + anchoredCtgs + " anchored");
+		mLog.msg(mProj.getName() + ": " + totalCtgs + " contigs, " + anchoredCtgs + " anchored");
 	}	
 	
 	private FPCContig ctgObjFromRS(ResultSet rs, Group grp) throws SQLException
@@ -165,18 +161,6 @@ public class FPCData
 						grp,
 						mProj
 		);
-	}
-	
-	public int getTotalCBSize() throws SQLException
-	{
-		int size = 0;
-		String stmtStr = "SELECT sum(size) as tsize FROM contigs WHERE proj_idx ='" + mProjIdx + "' and number > 0";
-		ResultSet rs = mConn.executeQuery(stmtStr);
-		if (rs.next())
-			size = rs.getInt("tsize");
-		rs.close();
-		
-		return size;		
 	}
 	
 	public void setBlockContigs(Block blk)
@@ -215,7 +199,7 @@ public class FPCData
 		Matcher mCHRRMK = pCHRRMK.matcher("");
 		Matcher mUSRRMK = pUSRRMK.matcher("");
 		
-		BufferedReader fh = new BufferedReader( new FileReader(f));
+		BufferedReader fh = Utils.openGZIP(f.getAbsolutePath()); // CAS500
 		while (fh.ready())
 		{
 			String line = fh.readLine();
@@ -395,16 +379,21 @@ public class FPCData
 		uploadCloneRemarks();
 		if (Cancelled.isCancelled()) return;
 		setCtgRemarkCounts();	
+		
 		loadBES();
 		if (Cancelled.isCancelled()) return;
+		
 		loadClones();
 		if (Cancelled.isCancelled()) return;
 		getCloneIdxList();
+		
 		loadMarkers();
 		if (Cancelled.isCancelled()) return;
+		
 		getMarkerIdxList();
 		loadMarkerLocations();
 		if (Cancelled.isCancelled()) return;
+		
 		loadMrkSeq();
 		if (Cancelled.isCancelled()) return;
 	}
@@ -465,8 +454,8 @@ public class FPCData
 				nctgloc++;
 			}
 		}
-		mLog.msg(nloc + " marker/clone associations loaded");
-		mLog.msg(nctgloc + " marker/contig positions loaded");
+		Utils.prtNumMsg(mLog, nloc, "marker/clone associations loaded");
+		Utils.prtNumMsg(mLog, nctgloc, "marker/contig positions loaded");
 		mConn.finishBulkInserts();
 	}
 	
@@ -582,10 +571,11 @@ public class FPCData
 	
 	private void loadBES() throws Exception
 	{
-		String besdir = mSeqDir + "/bes";
-		File bdf = new File(besdir);
 		if (besFiles == null || besFiles.size() == 0)
 		{
+			String besdir = mSeqDir + Constants.fpcBesDataDir;
+			File bdf = new File(besdir);
+			
 			if (bdf.exists() && bdf.isDirectory())
 			{
 				for (File f : bdf.listFiles())
@@ -613,6 +603,7 @@ public class FPCData
 		vals.add(2,"");
 		vals.add(3,"");
 		vals.add(4,"0");
+		long totalLen=0;
 		for (File f : besFiles)
 		{
 			if (Cancelled.isCancelled()) break;
@@ -621,7 +612,7 @@ public class FPCData
 			FASTAParse fp = new FASTAParse(f);
 			FASTASequence seq = new FASTASequence();
 			int nSeqs = 0;
-			mLog.msg("Load BES file:" + f.getName());
+			mLog.msg("Load BES file: " + f.getName());
 			while (fp.nextSeq(seq))
 			{
 				if (Cancelled.isCancelled()) break;
@@ -650,25 +641,29 @@ public class FPCData
 					vals.set(2,(besObj.mRF == RF.F ? "f" : "r")); // make sure sanitized!
 					vals.set(3,seq.seq);
 					mConn.bulkInsertAdd("bes_seq", vals);
+					totalLen += seq.seq.length();
 				}
 				nSeqs++;
 				if (nSeqs % 5000 == 0) 
-					System.out.print(nSeqs + " BES\r"); // CAS 1/5/18
+					System.out.print(nSeqs + " BES\r"); // CAS42 1/5/18
 			
 				seq.clear();
 			}
-			mLog.msg(f.getName() + " has " + nSeqs + " sequences");
+			Utils.prtNumMsg(mLog, nSeqs, "Sequences");
+			Utils.prtNumMsg(mLog, totalLen, "Total length");
 		}
 		if (nDups > 0)
 			throw(new Exception(nDups + " duplicated BES found; cannot continue"));
+		addProj_prop(mProjIdx, "bes_len", ""+totalLen); // CAS500 for Popup summary statistics
 	}
 	
 	private void loadMrkSeq() throws Exception
-	{
-		String dir = mSeqDir + "/mrk";
-		File df = new File(dir);
+	{	
 		if (mrkFiles == null || mrkFiles.size() == 0)
 		{
+			String dir = mSeqDir + Constants.fpcMrkDataDir;
+			File df = new File(dir);
+			
 			if (df.exists() && df.isDirectory())
 			{
 				for (File f : df.listFiles())
@@ -688,6 +683,7 @@ public class FPCData
 		}
 		TreeSet<String> mrkSet =  new TreeSet<String>();
 		int nDups = 0;
+		long totalLen=0;
 		Vector<String> vals = new Vector<String>();
 		vals.add(0,String.valueOf(mProjIdx));
 		vals.add(1,"");
@@ -698,7 +694,7 @@ public class FPCData
 			FASTAParse fp = new FASTAParse(f);
 			FASTASequence seq = new FASTASequence();
 			int nSeqs = 0;
-			mLog.msg("Load marker file:" + f.getName());
+			mLog.msg("Load marker file: " + f.getName());
 			while (fp.nextSeq(seq))
 			{
 				if (!mConn.isSQLSafe(seq.name))
@@ -716,14 +712,14 @@ public class FPCData
 					vals.set(2,seq.seq);
 					if (seq.seq.length() > 20000)
 					{
-						mLog.msg("Long marker sequence: " + seq.name + " " + seq.seq.length());
+						mLog.msg("   Long marker sequence: " + seq.name + " " + seq.seq.length());
 						mConn.singleInsert("mrk_seq", vals);
 					}
 					else
 					{
 						mConn.bulkInsertAdd("mrk_seq", vals);
 					}
-
+					totalLen += seq.seq.length();
 				}
 				nSeqs++;
 				if (nSeqs % 5000 == 0) 
@@ -731,10 +727,12 @@ public class FPCData
 			
 				seq.clear();
 			}
-			mLog.msg(f.getName() + " has " + nSeqs + " sequences");
+			Utils.prtNumMsg(mLog, nSeqs, "Sequences");
+			Utils.prtNumMsg(mLog, totalLen, "Total length");
 		}
 		if (nDups > 0)
 			throw(new Exception(nDups + " duplicated markers found; cannot continue"));
+		addProj_prop(mProjIdx, "mrk_len", ""+totalLen); // CAS500 for Popup summary statistics
 	}	
 	
 	private void setCtgRemarkCounts() throws Exception
@@ -817,6 +815,17 @@ public class FPCData
 		}		
 	}	
 	
+	/**********************************************************
+	 *  CAS500 Jan2020 needed to store the total length of BES and MRK somewhere.
+		New keys: bes_len and mrk_len.
+		Keys used in SumFrame.java to create Summary
+	    all proj_props for proj_idx are removed when project removed from DB
+	 */
+	private void addProj_prop(int id, String key, String value) throws SQLException {
+		String st = "INSERT INTO proj_props set " +
+					"proj_idx=" + id + ",name='" + key + "' ,value= '" + value + "'";
+		mConn.executeUpdate(st);
+	}
 	class CtgSort  implements Comparator<FPCContig>
 	{
 		public int compare(FPCContig c1, FPCContig c2)

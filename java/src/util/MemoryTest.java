@@ -7,8 +7,6 @@ import java.util.TimerTask;
 
 /**
  * Class <code>MemoryTest</code> can be used to print out the memory usage every so often.
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see TimerTask
  */
 public class MemoryTest extends TimerTask {
@@ -23,10 +21,10 @@ public class MemoryTest extends TimerTask {
      * @param out a <code>PrintStream</code> value of ouput PrintStream to print the usage to
      */
     public synchronized static void run(int timeBetweenTests, PrintStream out) {
-	if (timer == null) {
-	    timer = new Timer(true);
-	    timer.schedule(new MemoryTest(out), new Date(), timeBetweenTests);
-	}
+		if (timer == null) {
+		    timer = new Timer(true);
+		    timer.schedule(new MemoryTest(out), new Date(), timeBetweenTests);
+		}
     }
 
     /**
@@ -34,17 +32,17 @@ public class MemoryTest extends TimerTask {
      *
      */
     public synchronized static void stop() {
-	if (timer != null) {
-	    timer.cancel();
-	    timer = null;
-	}
+		if (timer != null) {
+		    timer.cancel();
+		    timer = null;
+		}
     }
 
     private PrintStream out;
 
     private MemoryTest(PrintStream out) {
-	super();
-	this.out = out;
+    		super();
+    		this.out = out;
     }
     
     /**
@@ -52,9 +50,8 @@ public class MemoryTest extends TimerTask {
      * the given PrintStream in the form: "<free>\t<total>\t<free/total>"
      */
     public void run() {
-	long free = Runtime.getRuntime().freeMemory();
-	long total = Runtime.getRuntime().totalMemory();
-	//double usage = free / (double) total;
-	out.println(free + "\t" + total + "\t" + (free / (double) total));
+		long free = Runtime.getRuntime().freeMemory();
+		long total = Runtime.getRuntime().totalMemory();
+		out.println(free + "\t" + total + "\t" + (free / (double) total));
     }
 }

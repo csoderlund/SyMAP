@@ -25,19 +25,19 @@ import symapQuery.ListDataPanel;
  *
  * The properties file (/properties/symap.properties) needs to 
  * be properly set along with all of the corresponding .properties files.
- *
  */
 public class SyMAP {
-	public static final String VERSION = "v4.2";
-	public static final String BUILD = "120";
-	public static final String BASE_HELP_URL = "http://www.agcol.arizona.edu/software/symap/v4.2/"; 
-	public static final String USER_GUIDE_URL = BASE_HELP_URL + "UserGuide.html"; 
+	public static final String VERSION = "v5.0.2";
+	public static final String DATE = " (24-Feb-20)";
+	// CAS500 change v4.2 to doc
+	public static final String BASE_HELP_URL =    "http://www.agcol.arizona.edu/software/symap/doc/"; 
+	public static final String USER_GUIDE_URL =    BASE_HELP_URL + "UserGuide.html"; 
 	public static final String TROUBLE_GUIDE_URL = BASE_HELP_URL + "TroubleShoot.html";
 	
 	public static final int MAX_PROJECTS = 100; // for parsing applet params
 	
 	private static final int REQUIRED_JAVA_MAJOR_VERSION = 1; 
-	private static final int REQUIRED_JAVA_MINOR_VERSION = 6; 
+	private static final int REQUIRED_JAVA_MINOR_VERSION = 7; // CAS500
 	
 	private static final Color purple = new Color(204, 128, 255); 
 	public static final Color[] projectColors = { Color.cyan, Color.green, purple, Color.yellow, Color.orange }; // should match SyMAP3D.projectColors
@@ -87,7 +87,7 @@ public class SyMAP {
 					url = new URL(urlBase + "/image_creator.cgi"); 
 				}
 				else
-				{ // CAS 1/1/18 was www.symapdb.org which no longer exists - but dead code anyway
+				{ // CAS42 1/1/18 was www.symapdb.org which no longer exists - but dead code anyway
 					url = new URL("http://www.agcol.arizona.edu/symap/cgi-bin/image_creator.cgi"); 					
 				}
 			} 
@@ -118,7 +118,7 @@ public class SyMAP {
 			p = PoolManager.getInstance().getPools(dr);
 		} catch (SQLException e) {
 			e.printStackTrace();
-			if (showDatabaseErrorMessage(e.getMessage())) p = PoolManager.getInstance().getPools(dr); // mdb changed 4/12/07 #107
+			if (showDatabaseErrorMessage(e.getMessage())) p = PoolManager.getInstance().getPools(dr); 
 			else throw e;
 		}
 
@@ -177,13 +177,13 @@ public class SyMAP {
 	}
 
 	public static void printVersion() {
-		System.out.println("\nSyMAP Version " + VERSION + " Build " + BUILD);
+		System.out.println("\nSyMAP Version " + VERSION + DATE);
 		System.out.println("Java Version " + getInstalledJavaVersionStr() + 
 				", mem: " + (Runtime.getRuntime().maxMemory() / (1024*1024)) + "M");
 	}
 	
 	public static boolean checkJavaSupported(Component frame) {	
-		/** CAS 10/16/17 - did not work for Java SE 9 **/
+		/** CAS42 10/16/17 - did not work for Java SE 9 **/
 		String version = getInstalledJavaVersionStr();
 		if (version != null) {
 			String[] subs = version.split("\\.");

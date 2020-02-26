@@ -8,7 +8,6 @@ import symap.track.Track;
 /**
  * Holds the data for a block (i.e. the contig list and the default contig list)
  * 
- * @author Austin Shoemaker
  */
 public class BlockTrackData extends MarkerTrackData {
 	private String block;

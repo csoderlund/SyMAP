@@ -13,19 +13,13 @@ public class Statistics {
 	int m_permutation_size;
 	
 	public Statistics() {
-		//int m_instances_number = 0; 				// mdb removed 6/29/07 #118
-		//int m_summed_breakpoints_number = 0; 		// mdb removed 6/29/07 #118
-		//int m_summed_cycles_number = 0; 			// mdb removed 6/29/07 #118
-		//int m_summed_hurdles_number = 0; 			// mdb removed 6/29/07 #118
-		//int m_summed_super_hurdles_number = 0; 	// mdb removed 6/29/07 #118
-		//int m_summed_fortress = 0;			 	// mdb removed 6/29/07 #118
-		//int m_summed_reversal_distance = 0; 		// mdb removed 6/29/07 #118
+		
 	}
 	
 	public String getGraphStatistics(OVGraph graph) throws Exception {
 		m_permutation_size = graph.getPermutationSize();
 		m_instances_number++;
-		//int index = m_instances_number; // mdb removed 6/29/07 #118
+		
 		int breakpoints_number = graph.getBreakpointsNumber();
 		int cycles_number = graph.getCyclesNumber();
 		int hurdles_number = graph.getHurdlesNumber();

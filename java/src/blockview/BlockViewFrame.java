@@ -14,12 +14,12 @@ import java.util.TreeMap;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import javax.swing.event.*;
-// CAS 12/27/17 Seq-FPC has crashes from multiple problem. 
+// CAS42 12/27/17 Seq-FPC has crashes from multiple problem. 
 // They are fixed, but Seq-FPC reverse leaves a blank page of blocks
 public class BlockViewFrame extends JFrame
 {
 	private static final long serialVersionUID = 1L;
-	public static final int MAX_GRPS =  150; // CAS 12/6/17 - if #seqs>MAX_GRPS, blocks does not work right
+	public static final int MAX_GRPS =  150; // CAS42 12/6/17 - if #seqs>MAX_GRPS, blocks does not work right
 	public static final int maxColors = 100;
 	
 	int mRefIdx, mIdx2;
@@ -187,7 +187,7 @@ public class BlockViewFrame extends JFrame
 				revLabel.addMouseListener(reverseClick);
 				pane.add(revLabel,c1);
 			}
-			else { // CAS 12/6/17 - there was NO message if this happened
+			else { // CAS42 12/6/17 - there was NO message if this happened
 				System.out.println("Warning: one of the genomes has >" + MAX_GRPS + " sequences");
 				System.out.println("   this causes the 'reverse' option to not work on the block view");
 				System.out.println("   use scripts/lenFasta.pl to find cutoff length for min_size.");
@@ -196,7 +196,7 @@ public class BlockViewFrame extends JFrame
 			c1.gridx++;
 			pane.add(new JLabel("      "),c1);
 			
-			Icon icon = ImageViewer.getImageIcon("/images/print.gif"); // mdb added 3/2/09
+			Icon icon = ImageViewer.getImageIcon("/images/print.gif"); 
 			saveBtn =  new JButton(icon);
 			saveBtn.setBackground(Color.white);
 			saveBtn.setBorder(null);
@@ -296,7 +296,7 @@ public class BlockViewFrame extends JFrame
 			}
 		}
 		bpPerPx = maxSize/blockMaxHeight;
-		if (bpPerPx<=0) bpPerPx=1; // CAS 12/27/17 - crashing on divide by 0 below 
+		if (bpPerPx<=0) bpPerPx=1; // CAS42 12/27/17 - crashing on divide by 0 below 
 		
 		// get the blocks in decreasing order of size.
 		// as we add each one to the list we assign it an index which is just its order in the list. 
@@ -331,7 +331,7 @@ public class BlockViewFrame extends JFrame
 		{
 			Block b = mBlocks.get(i);
 			TreeMap<Integer,Vector<Block>> thisLayout = mLayout.get(b.mGrpRef);
-			if (thisLayout==null) continue; // CAS 12.27.17
+			if (thisLayout==null) continue; // CAS42 12.27.17
 			
 			// find the first level where this block can fit
 			int L;
@@ -429,7 +429,7 @@ public class BlockViewFrame extends JFrame
 	
 	void blockMouseMoved(MouseEvent m)
 	{
-		if (mBlockRects.size()==0) return; // CAS 12/27/17
+		if (mBlockRects.size()==0) return; // CAS42 12/27/17
 		for (int i = 0; i < mRefOrder.size(); i++)
 		{
 			Rectangle blockRect = mBlockRects.get(i);
@@ -580,7 +580,7 @@ public class BlockViewFrame extends JFrame
 				f.setMinimumSize( new Dimension(25, 25) );
 				f.setVisible(true);
 				f.setBackground(new Color(mColors.get(j))); 
-				j++;  // CAS 12/6/17 - let it cycle through colors, will have dups, but better than black
+				j++;  // CAS42 12/6/17 - let it cycle through colors, will have dups, but better than black
 				if (j>=mColors.size()) j=0;
 				pane.add(f);
 				JLabel l = new JLabel(mGrp2Names.get(idx) + " ");
@@ -659,8 +659,6 @@ public class BlockViewFrame extends JFrame
 	    {
 	        super.paintComponent(g); //paint background
 	        blockFrame.paintBlocks(g);
-	        //g.setColor(Color.black);
-	        //g.drawRect(0, 0, 100, 100);
 	    }
 	    public void mouseClicked(MouseEvent m)
 	    {

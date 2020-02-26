@@ -39,29 +39,13 @@ import util.Utilities;
 
 /**
  * The DrawingPanel is the area that the maps are drawn onto.
- * 
- * @author Austin Shoemaker
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class DrawingPanel extends JPanel 
 	implements ColorListener, HistoryListener, SyMAPConstants
 { 
 	private static final boolean METHOD_TRACE = false;
-	
-// mdb removed 1/28/09 #159 simplify properties	
-//	public static Color backgroundColor;
-//	public static final boolean SCROLLED;
-//	public static final boolean FILTERED;
-//	public static final int MAX_TRACKS;
-//	static {
-//		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/drawingpanel.properties"));
-//		backgroundColor = props.getColor("backgroundColor");
-//		SCROLLED   = props.getBoolean("scrolled");
-//		FILTERED   = props.getBoolean("filtered");
-//		MAX_TRACKS = Math.max(props.getInt("maxTracks"),100/*2*/); // mdb changed maximum on 12/2/08 for 3D
-//	}
-	
-	// mdb added 1/28/09 #159 simplify properties	
+		
 	public static Color backgroundColor = Color.white;
 	public static final int MAX_TRACKS = 100;
 
@@ -85,8 +69,7 @@ public class DrawingPanel extends JPanel
 
 	private int numMaps = 1;
 	
-	private String mouseFunction = null; // mdb added 4/21/09 #161
-	
+	private String mouseFunction = null; 	
 	/**
 	 * Creates a new <code>DrawingPanel</code> instance.
 	 *
@@ -103,25 +86,19 @@ public class DrawingPanel extends JPanel
 
 		// Create new pools
 
-		//if (FILTERED) {
-			buttonPanel = new JPanel(null);
-			buttonPanel.setOpaque(false);
-		//}
+		buttonPanel = new JPanel(null);
+		buttonPanel.setOpaque(false);
 
-		//if (SCROLLED) {
-			scrollPane = new JScrollPane(this);
-			scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED/*HORIZONTAL_SCROLLBAR_ALWAYS*/); // mdb changed 1/28/09
-			scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED/*VERTICAL_SCROLLBAR_ALWAYS*/); // mdb changed 1/28/09
-			scrollPane.getVerticalScrollBar().setUnitIncrement(50);
-			scrollPane.getHorizontalScrollBar().setUnitIncrement(50);
-			scrollPane.getViewport().setBackground(backgroundColor);
+		scrollPane = new JScrollPane(this);
+		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); 
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED); 
+		scrollPane.getVerticalScrollBar().setUnitIncrement(50);
+		scrollPane.getHorizontalScrollBar().setUnitIncrement(50);
+		scrollPane.getViewport().setBackground(backgroundColor);
 
-			//if (FILTERED) {
-				scrollPane.setColumnHeaderView(buttonPanel);
-				scrollPane.getColumnHeader().setBackground(backgroundColor);
-			//}
-		//}
-				
+		scrollPane.setColumnHeaderView(buttonPanel);
+		scrollPane.getColumnHeader().setBackground(backgroundColor);
+			
 		trackHolders = new TrackHolder[MAX_TRACKS];
 		for (int i = 0; i < trackHolders.length; i++) {
 			trackHolders[i] = new TrackHolder(this,bar);
@@ -133,7 +110,7 @@ public class DrawingPanel extends JPanel
 		for (int i = 0; i < mappers.length; i++) {
 			mappers[i] = new Mapper(this,trackHolders[i],trackHolders[i+1],
 					new FilterHandler(this,bar),pools.getMapperPool(),
-					bar, listPanel); // mdb added bar 3/21/07 #105
+					bar, listPanel); 
 			add(mappers[i]);
 			mappers[i].setLocation(0,0);
 		}
@@ -141,7 +118,6 @@ public class DrawingPanel extends JPanel
 		setLayout(new TrackLayout(trackHolders,mappers,buttonPanel)); 
 	}
 	
-	// mdb added 7/21/09 #165 - override paint to draw hit bars on top of sequences
 	public void paint(Graphics g) {
 		super.paint(g);
 		
@@ -158,16 +134,6 @@ public class DrawingPanel extends JPanel
 		else return null;
 	}
 
-// mdb replaced with util.Utilities.showErrorMessage() 5/25/07 #119
-//	public void displayError(String message) {
-//		if (drawingPanelListener != null) drawingPanelListener.displayError(message);
-//	}
-
-// mdb replaced with util.Utilities.showWarningMessage() 5/25/07 #119
-//	public void displayWarning(String message) {
-//		if (drawingPanelListener != null) drawingPanelListener.displayWarning(message);
-//	}
-
 	public void setFrameEnabled(boolean enabled) {
 		if (drawingPanelListener != null) drawingPanelListener.setFrameEnabled(enabled);
 	}
@@ -177,26 +143,17 @@ public class DrawingPanel extends JPanel
 	}
 
 	public JComponent getView() {
-		//if (SCROLLED) 
-			return scrollPane;
-		//return this;
+		return scrollPane;
 	}
-
-// mdb unused 6/26/09	
-//	public void setScrollPaneSize(Dimension d) {
-//		//if (SCROLLED) 
-//			scrollPane.setPreferredSize(d);
-//	}
 
 	public void resetColors() {
 		setBackground(backgroundColor);	
-		//if (SCROLLED) {
-			scrollPane.getViewport().setBackground(backgroundColor);
-			//if (FILTERED) 
-				scrollPane.getColumnHeader().setBackground(backgroundColor);
-		//}
-		//else if (FILTERED) 
-			buttonPanel.setBackground(backgroundColor);
+		
+		scrollPane.getViewport().setBackground(backgroundColor);
+			
+		scrollPane.getColumnHeader().setBackground(backgroundColor);
+		 
+		buttonPanel.setBackground(backgroundColor);
 		clearTrackBuild();
 		amake();
 	}
@@ -249,9 +206,7 @@ public class DrawingPanel extends JPanel
 	 * @return an <code>int</code> value
 	 */
 	public int getViewHeight() {
-		//if (SCROLLED) 
-			return scrollPane.getViewport().getHeight();
-		//return getHeight();
+		return scrollPane.getViewport().getHeight();
 	}
 
 	public String toString() {
@@ -269,10 +224,9 @@ public class DrawingPanel extends JPanel
 			if (trackHolders[i].getTrack() != null)
 				trackHolders[i].getTrack().resetData();
 		}
-		//smake(); // mdb removed 8/27/09 for 3D
 	}
 	
-	// mdb added 2/3/10 - clear caches/data but don't re-init tracks
+	// clear caches/data but don't re-init tracks
 	public void clearData() {
 		pools.clearPools();
 		try {
@@ -317,7 +271,6 @@ public class DrawingPanel extends JPanel
 	public boolean setTrackEnds(int pos, double startBP, double endBP) throws IllegalArgumentException {
 		Track track = trackHolders[pos-1].getTrack();
 		if (track != null) {
-			//if (!track.hasInit()) track.init();
 			track.setStartBP((long)Math.round(startBP),true);
 			track.setEndBP((long)Math.round(endBP),true);
 			firstView = false;
@@ -352,7 +305,6 @@ public class DrawingPanel extends JPanel
 		return opposite == null ? NO_VALUE : opposite.getProject();
 	}
 	
-	// mdb added 4/23/09 #161
 	public int[] getMinMax(Track src, Track dest, int start, int end) {
 		int[] minMax = null;
 		
@@ -366,7 +318,6 @@ public class DrawingPanel extends JPanel
 		return minMax;
 	}
 	
-	// mdb added 4/23/09 #161
 	private Track getOpposingTrack(Track src, int orientation) {
 		for (int i = 0; i < numMaps; i++) {
 			Track t1 = mappers[i].getTrack1(); // left
@@ -379,7 +330,6 @@ public class DrawingPanel extends JPanel
 		return null;
 	}
 
-	// mdb added 4/23/09 #161
 	private void zoomTracks(Track src, int start, int end, int orientation ) {
 		Track t = getOpposingTrack(src, orientation);
 		int[] minMax = getMinMax(src, t, start, end);
@@ -393,13 +343,12 @@ public class DrawingPanel extends JPanel
 		}
 	}
 	
-	// mdb added 4/23/09 #161
 	public void zoomAllTracks(Track src, int start, int end) {
 		zoomTracks(src, start, end, LEFT_ORIENT);
 		zoomTracks(src, start, end, RIGHT_ORIENT);
 	}
 	
-	// mdb added 4/21/09 #161 - "zoom all tracks" mouse function
+	// "zoom all tracks" mouse function
 	public void setMouseFunction(String s) { mouseFunction = s; }
 	public String getMouseFunction() { return (mouseFunction == null ? "" : mouseFunction); }
 	public boolean isMouseFunctionCloseup() { return ControlPanel.MOUSE_FUNCTION_CLOSEUP.equals(mouseFunction); }
@@ -415,7 +364,7 @@ public class DrawingPanel extends JPanel
 		if ( !(track instanceof Sequence) ) track = new Sequence(this,holder);
 		((Sequence)track).setup(project,group,getOpposingTrackProject(position-1));
 		
-		track.setBackground(color); // mdb added 12/3/08 for 3D
+		track.setBackground(color); 
 		
 		return initTrack(track,position);
 	}
@@ -431,7 +380,7 @@ public class DrawingPanel extends JPanel
 		return initTrack(track,position);
 	}
 	
-	// mdb added 7/13/09 for 3D - show FPC in 2D view
+	// for 3D - show FPC in 2D view
 	public boolean setBlockTrack(int position, int project, String contigs, Color color) 
 	throws IllegalArgumentException 
 	{
@@ -449,14 +398,14 @@ public class DrawingPanel extends JPanel
 		if ( !(track instanceof Block) ) track = new Block(this,holder);
 		((Block)track).setup(project,contigs,getOpposingTrackProject(position-1),null);
 		
-		track.setBackground(color); // mdb added 6/25/09 for 3D
-		if (group != null) ((Block)track).setBlock(group); // mdb added 7/13/09 for 3D
+		track.setBackground(color); // for 3D
+		if (group != null) ((Block)track).setBlock(group); // for 3D
 
 		return initTrack(track,position);
 	}
 
 	private boolean initTrack(Track track, int position) {
-		track.setPosition(position); // mdb added 3/18/08
+		track.setPosition(position); 
 		setTrack(track, position);
 		setFirstView();
 		setResetIndex();
@@ -505,23 +454,18 @@ public class DrawingPanel extends JPanel
 					}
 				} catch (IllegalArgumentException iae) {
 					System.out.println(iae.getMessage());
-					//displayError(iae.getMessage()); 						// mdb removed 5/25/07 #119
-					Utilities.showErrorMessage(iae.getMessage(), -1); 		// mdb added 5/25/07 #119
+					Utilities.showErrorMessage(iae.getMessage(), -1); 		
 				} catch (IllegalStateException ise) {
 					System.out.println(ise.getMessage());
-					//displayError(ise.getMessage()); 						// mdb removed 5/25/07 #119
-					Utilities.showErrorMessage(ise.getMessage(), -1); 		// mdb added 5/25/07 #119
+					Utilities.showErrorMessage(ise.getMessage(), -1); 		
 				} catch (Exception exc) {
-					//System.out.println("Exception: " + exc); 				// mdb removed 5/25/07
 					exc.printStackTrace();
-					//displayError("Internal Error: Unable to make map"); 	// mdb removed 5/25/07 #119
-					System.err.println("Unable to make map");//Utilities.showErrorMessage("Unable to make map", -1); 	// mdb added 5/25/07 #119 // mdb changed 2/8/10
+					System.err.println("Unable to make map");
 				} catch (OutOfMemoryError me) {
 					System.out.println("Caught OutOfMemoryError in SyMAP::update() - "+me);
 					System.out.println("     Cause: "+me.getCause());
 					me.printStackTrace();
-					//displayError("SyMAP is out of memory. Please restart your browser."); 				// mdb removed 5/25/07 #119
-					Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1); // mdb added 5/25/07 #119
+					Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1); 
 					drawingPanelListener.setFrameEnabled(false);
 					throw me;
 				}
@@ -599,7 +543,7 @@ public class DrawingPanel extends JPanel
 			if (trackHolders[i].getTrack() != null) {
 				track = trackHolders[i].getTrack();
 				if (track instanceof Sequence)
-					bpPerPixel = Math.max(bpPerPixel,track.getBpPerPixel()); // mdb changed 7/20/09 - scale to largest
+					bpPerPixel = Math.max(bpPerPixel,track.getBpPerPixel()); 
 			}
 		}
 		if (bpPerPixel == 0 && track != null) bpPerPixel = track.getBpPerPixel();
@@ -672,24 +616,17 @@ public class DrawingPanel extends JPanel
 			firstView = false;
 			good = true;
 		} catch (IllegalArgumentException iae) {
-			//System.out.println(iae.getMessage()); 			// mdb removed 5/25/07 #119
-			//displayError(iae.getMessage()); 					// mdb removed 5/25/07 #119
-			Utilities.showErrorMessage(iae.getMessage(), -1); 	// mdb added 5/25/07 #119
+			Utilities.showErrorMessage(iae.getMessage(), -1); 	
 		} catch (IllegalStateException ise) {
-			//System.out.println(ise.getMessage()); 			// mdb removed 5/25/07 #119
-			//displayError(ise.getMessage()); 					// mdb removed 5/25/07 #119
-			Utilities.showErrorMessage(ise.getMessage(), -1); 	// mdb added 5/25/07 #119
+			Utilities.showErrorMessage(ise.getMessage(), -1); 	
 		} catch (Exception exc) {
-			//System.out.println("Exception: " + exc); 			// mdb removed 5/25/07
 			exc.printStackTrace();
-			//displayError("Internal Error: Unable to make map"); // mdb removed 5/25/07 #119
-			Utilities.showErrorMessage("Unable to make map", -1); // mdb added 5/25/07 #119
+			Utilities.showErrorMessage("Unable to make map", -1); 
 		} catch (OutOfMemoryError me) {
 			System.out.println("Caught OutOfMemoryError in SyMAP::setMaps() - "+me);
 			System.out.println("     Cause: "+me.getCause());
 			me.printStackTrace();
-			//displayError("SyMAP is out of memory. Please restart your browser."); 				// mdb removed 5/25/07 #119
-			Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1); // mdb added 5/25/07 #119
+			Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1); 
 			drawingPanelListener.setFrameEnabled(false);
 			throw me;
 		}
@@ -697,17 +634,14 @@ public class DrawingPanel extends JPanel
 	}
 
 	public void amake() { // asynchronous call to make()
-		//System.out.println("DrawingPanel.amake");
 		new Thread(new MapMaker()).start();
 	}
 
 	public boolean smake() { // synchronizes private calls to make()
-		//System.out.println("DrawingPanel.smake");
 		return make();
 	}
 
 	private synchronized boolean make() {
-		//System.out.println("DrawingPanel.make BEGIN");
 		boolean status = false;
 		if (tracksSet()) {
 			setFrameEnabled(false);
@@ -720,23 +654,18 @@ public class DrawingPanel extends JPanel
 				status = true;
 			} catch (IllegalArgumentException iae) {
 				System.out.println(iae.getMessage());
-				//displayError(iae.getMessage()); 					// mdb removed 5/25/07 #119
-				Utilities.showErrorMessage(iae.getMessage(), -1); 	// mdb added 5/25/07 #119
+				Utilities.showErrorMessage(iae.getMessage(), -1); 	
 			} catch (IllegalStateException ise) {
 				System.out.println(ise.getMessage());
-				//displayError(ise.getMessage()); 					// mdb removed 5/25/07 #119
-				Utilities.showErrorMessage(ise.getMessage(), -1); 	// mdb added 5/25/07 #119
+				Utilities.showErrorMessage(ise.getMessage(), -1); 	
 			} catch (Exception exc) {
-				//System.out.println("Exception: " + exc); 			// mdb removed 5/25/07
 				exc.printStackTrace();
-				//displayError("Internal Error: Unable to make map"); // mdb removed 5/25/07 #119
-				Utilities.showErrorMessage("Unable to make map", -1); // mdb added 5/25/07 #119
+				Utilities.showErrorMessage("Unable to make map", -1); 
 			} catch (OutOfMemoryError me) {
 				System.out.println("Caught OutOfMemoryError in SyMAP::make() - "+me);
 				System.out.println("     Cause: "+me.getCause());
 				me.printStackTrace();
-				//displayError("SyMAP is out of memory. Please restart your browser."); 				// mdb removed 5/25/07 #119
-				Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1); // mdb added 5/25/07 #119
+				Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1);
 				drawingPanelListener.setFrameEnabled(false);
 				throw me;
 			}
@@ -824,23 +753,17 @@ public class DrawingPanel extends JPanel
 		repaint();
 	}
 
-	private void initAll() { //throws IllegalStateException {
+	private void initAll() { 
 		int i;
 		for (i = 0; i <= numMaps; i++) {
 			if (trackHolders[i].getTrack() == null) 
-				//throw new IllegalStateException("Track at Position "+(i+1)+" is not set.");
-				//displayWarning("Track at position "+(i+1)+" is not set."); 			 // mdb removed 5/25/07 #119
-				Utilities.showWarningMessage("Track at position "+(i+1)+" is not set."); // mdb added 5/25/07 #119
+				Utilities.showWarningMessage("Track at position "+(i+1)+" is not set."); 
 			if (!trackHolders[i].getTrack().hasInit()) 
-				//throw new IllegalStateException("Track at Position "+(i+1)+" is unable to initialize.");
-				//displayWarning("Track at Position "+(i+1)+" is unable to initialize."); 			  // mdb removed 5/25/07 #119
-				Utilities.showWarningMessage("Track at Position "+(i+1)+" is unable to initialize."); // mdb added 5/25/07 #119
+				Utilities.showWarningMessage("Track at Position "+(i+1)+" is unable to initialize."); 
 		}
 		for (i = 0; i < numMaps; i++)
 			if (!mappers[i].init()) 
-				//throw new IllegalStateException("The "+(i+1)+" map is unable to initialize.");
-				//displayWarning("The "+(i+1)+" map is unable to initialize."); 			// mdb removed 5/25/07 #119
-				Utilities.showWarningMessage("The "+(i+1)+" map is unable to initialize."); // mdb added 5/25/07 #119
+				Utilities.showWarningMessage("The "+(i+1)+" map is unable to initialize."); 
 	}
 
 	private void firstViewBuild() {
@@ -946,11 +869,6 @@ public class DrawingPanel extends JPanel
 	}
 
 	public void setVisible(boolean visible) {
-		//if (!visible) setCursor(WAIT_CURSOR); // mdb removed 7/16/09 - not needed
-		//else if (getCursor() == WAIT_CURSOR) setCursor(null); // mdb removed 7/16/09 - not needed
-
-		//super.setVisible(visible); // mdb removed below 7/16/09 - moved below, fixes redrawing problem
-
 		int i;
 		for (i = 0; i < numMaps; i++) {
 			mappers[i].setVisible(visible);
@@ -960,7 +878,7 @@ public class DrawingPanel extends JPanel
 
 		if (visible) doLayout();
 		
-		super.setVisible(visible); // mdb added 7/16/09 - moved from above
+		super.setVisible(visible); 
 
 		getView().repaint();
 	}

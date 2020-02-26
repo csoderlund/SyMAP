@@ -6,8 +6,6 @@ package util;
  *
  * |x2 - x1| + |y2 - y1| + ||x2 - x1| - |y2 - y1||
  * -----------------------------------------------
- *                    2
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see Distance2D
  */
 public class HaasDiagDistance extends Distance2D {

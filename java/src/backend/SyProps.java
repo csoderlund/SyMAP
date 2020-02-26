@@ -1,30 +1,45 @@
 package backend;
 
+/*******************************************
+ * Params parameters for both project and synteny
+ */
 import java.util.Enumeration;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.PrintWriter;
 
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.HashMap;
+
+import util.ErrorReport;
 import util.Logger;
 import util.PropertiesReader;
+import util.Utilities;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class SyProps extends PropertiesReader
-{
-	//Added MW - used to get defaults only
+{	
+	// copied from PairPropertyFrame; only want to print/save what can be changed in this interface
+	private final String [] SYMBOLS = { 
+		"mindots", "topn", "merge_blocks", 
+		"do_synteny", "do_clustering", "no_overlapping_blocks", 
+		"blat_args", "nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only" };
+			
 	public SyProps() {
 		setDefaults();
 	}
-	
+	// For Loads: Loads the data/fpc/<p>/params file and data/seq/<p>/params
+	//    params are written from the Project Parameter window.
+	//    Called from FPCLoadMain and SeqLoadMain
 	public SyProps(Logger log, File file)
 	{
+		System.out.println("Read " + file);
 		setDefaults();
 		try {
 			load(new FileInputStream(file));
 			fixProps();
-			//printProps(log);
 		}
 		catch (java.io.FileNotFoundException e) {
 			if (log != null)
@@ -35,24 +50,24 @@ public class SyProps extends PropertiesReader
 				log.msg(file.getAbsolutePath() + " read error");
 		}
 	}
-	// WMN added to allow properties from main params file as well
+	// Load: added to allow properties from main params file as well
+	// called from AnnotLoadMain
 	public SyProps(Logger log, File file, Properties defprops)
 	{
+		System.out.println("Read " + file);
 		setDefaults();
+		
 		Enumeration keys = defprops.propertyNames();
 		while (keys.hasMoreElements())
 		{
 			String key = keys.nextElement().toString();
 			String val = defprops.getProperty(key);
-			if (containsKey(key))
-			{
+			if (containsKey(key)) 
 				setProperty(key, val.trim());				
-			}
 		}
 		try {
 			load(new FileInputStream(file));
 			fixProps();
-			//printProps(log);
 		}
 		catch (java.io.FileNotFoundException e) {
 			if (log != null)
@@ -63,20 +78,22 @@ public class SyProps extends PropertiesReader
 				log.msg(file.getAbsolutePath() + " read error");
 		}
 	}
+	// The only properties that appear changable are those in the 
+	// Parameter interfaces. Lots of DEAD stuff here.
 	private void setDefaults()
 	{
-		//
 		// *********NOTE*********** 
 		// if properties are added, they also have to be added to 
 		// upload lists (look for uploadPairProps,uploadProjProps)
+		// PairPropertiesFrame
 		//
-		
 		/**********************************************************
 		 * Alignment parameters
 		 **********************************************************/
 		setProperty("blat_args",			"-minScore=30 -minIdentity=70 -tileSize=10 -qMask=lower -maxIntron=10000"); 		
 		setProperty("nucmer_args",			""); 		
-		setProperty("promer_args",			""); 		
+		setProperty("promer_args",			""); 
+		setProperty("self_args",             ""); // CAS501 removed --maxmatch in AlignMain
 		setProperty("nucmer_only",          "0");	
 		setProperty("promer_only",          "0");	
 
@@ -85,26 +102,25 @@ public class SyProps extends PropertiesReader
 		 **********************************************************/
 		setProperty("topn_and", 			"1");
 		setProperty("topn", 				"2"); 		
-		setProperty("topn_maxwindow", 		"100000");
-		setProperty("annot_in1",			""); 		// annotation types to include for proj 1
-		setProperty("annot_in2",			""); 		// annotation types to include for proj 2
-		setProperty("annot_out1",			""); 		// annotation types to exclude for proj 1
-		setProperty("annot_out2",			""); 		// annotation types to exclude for proj 2
-		setProperty("annot_mark1",			"gene"); 	// mdb added 7/29/09 #167 - annotation types to mark for proj 1
-		setProperty("annot_mark2",			"gene"); 	// mdb added 7/29/09 #167 - annotation types to mark for proj 2
+		setProperty("topn_maxwindow", 	"100000");
+		setProperty("annot_in1",			""); 		// obsolete annotation types to include for proj 1
+		setProperty("annot_in2",			""); 		// obsolete annotation types to include for proj 2
+		setProperty("annot_out1",		""); 		// obsolete annotation types to exclude for proj 1
+		setProperty("annot_out2",		""); 		// obsolete annotation types to exclude for proj 2
+		setProperty("annot_mark1",		"gene"); 	// obsolete gene is assumed for everything
+		setProperty("annot_mark2",		"gene"); 	// obsolete 
 		setProperty("annot_bin",			"30000"); 	// bp size of annotation bin
-		setProperty("hit_bin",				"10000"); 	// # hits per hit bin
-//		setProperty("genes_only",			"0"); 		// mdb removed 5/13/09
+		setProperty("hit_bin",			"10000"); 	// # hits per hit bin
 		setProperty("use_genemask",	"0"); 		// use to enable gene-to-gene alignment, must reload project after setting
-		setProperty("gene_pad",				"1000");	// bp pad before start and after end for gene extraction
-		setProperty("do_clustering",        "1");		// mdb added 7/28/09 #167
-		setProperty("max_cluster_gap",          "1000"); 	// mdb added 8/11/09 #167
-		setProperty("max_cluster_size",          "50000");	// mdb added 8/11/09 #167
-		setProperty("print_stats",          "0");	
-		setProperty("keep_gene_gene",          "0");	
-		setProperty("keep_gene",          "0");	
-		setProperty("only_gene_gene",          "0");	
-		setProperty("only_gene",          "0");	
+		setProperty("gene_pad",			"1000");	// bp pad before start and after end for gene extraction
+		setProperty("do_clustering",     "1");		
+		setProperty("max_cluster_gap",   "1000"); 	
+		setProperty("max_cluster_size",  "50000");	
+		setProperty("print_stats",       "0");	
+		setProperty("keep_gene_gene",    "0");	
+		setProperty("keep_gene",         "0");	
+		setProperty("only_gene_gene",    "0");	
+		setProperty("only_gene",         "0");	
 		
 		/**********************************************************
 		 * Synteny algorithm parameters
@@ -122,19 +138,6 @@ public class SyProps extends PropertiesReader
 		setProperty("mingap1_cb",	"10");		// minimum gap param considered in binary search
 		setProperty("mingap2", 		"1000");	//      "		"			"
 		setProperty("search_factor",".5");		// binary search factor
-	
-		// min dots, in-block correlations, and full-rectangle correlations
-		// for the 4 successive block tests
-		
-// mdb removed 9/4/09 - hardcoding these params in SyntenyMain, they weren't getting recalculated when mindots changed
-//		int mindotsA = mindots;
-//		int mindotsB = mindots;
-//		int mindotsC = 3*mindots/2;
-//		int mindotsD = 2*mindots;
-//		setProperty("mindots_A", Integer.toString(mindotsA));	
-//		setProperty("mindots_B", Integer.toString(mindotsB));	
-//		setProperty("mindots_C", Integer.toString(mindotsC));	
-//		setProperty("mindots_D", Integer.toString(mindotsD));	
 	
 		setProperty("corr1_A", ".8");	
 		setProperty("corr1_B", ".98");	
@@ -166,7 +169,7 @@ public class SyProps extends PropertiesReader
 		setProperty("maxjoin_cb", 	"1000000");
 		setProperty("maxjoin_bp", 	"1000000000");
 		
-		setProperty("do_synteny", "1"); // mdb added 5/12/09
+		setProperty("do_synteny", "1"); 
 	
 		/**********************************************************
 		 * FPC project parameters
@@ -212,58 +215,137 @@ public class SyProps extends PropertiesReader
 		}
 	}
 	
-	public void printProps(Logger log) 
-	{
-		Enumeration keys = propertyNames();
-		log.msg("Parameters:");
-		while (keys.hasMoreElements())
-		{
-			String key = keys.nextElement().toString();
-			String value = getProperty(key);
-			if (value != null && value.length() > 0)
-				log.msg("   " + key + ":" + value);
-		}
-		log.msg("");
-	}
-	
+	// FPCLoadMain and SeqLoadMain
 	public void uploadProjProps(UpdatePool pool, int pidx, String[] keys) throws SQLException
 	{
-		for (String key : keys)
-			uploadProjProps(pool, pidx, key);
+		for (String key : keys) {
+			String val = getProperty(key);
+			String st = "INSERT INTO proj_props VALUES('" + pidx + "','" + key + "','" + val + "')";
+			pool.executeUpdate(st);
+		}
 	}
 	
-	public void uploadProjProps(UpdatePool pool, int pidx, String key) throws SQLException
-	{
-		String val = getProperty(key);
-		String st = "INSERT INTO proj_props VALUES('" + pidx + "','" + key + "','" + val + "')";
-		pool.executeUpdate(st);
+	/*****************************************************
+	 * Pair property methods (CAS501 added for 5.0.1)
+	 */
+	public void copyProps(SyProps p) {
+		Enumeration em = p.keys();
+		while (em.hasMoreElements()) {
+			String key = (String)em.nextElement();
+			for (String x : SYMBOLS) {
+				if (x.equals(key)) {
+					String def = p.getProperty(key);
+					setProperty(key, def);
+					break;
+				}
+			}
+		}
 	}
 	
-	public void uploadPairProps(UpdatePool pool, int pidx1, int pidx2, int pair_idx, String[] keys) throws SQLException
-	{
-		for (String key : keys)
-			uploadPairProps(pool, pidx1, pidx2, pair_idx, key);
+	public void printNonDefault(Logger log, String title) {
+		HashMap <String, String> chgVal = getNonDef();
+		
+		if (chgVal.size()==0) {
+			if (log!=null) log.msg(title + ": use default parameters");
+			else System.out.println(title + ": use default parameters");	
+		}
+		else {
+			if (log==null) {
+				System.out.println(title + " parameters: ");
+				for (String key : chgVal.keySet()) 
+					System.out.format("   %s=%s\n", key, chgVal.get(key));
+			}
+			else {
+				log.msg(title + " parameters: ");
+				for (String key : chgVal.keySet()) 
+					log.msg(String.format("  %s=%s", key, chgVal.get(key)));
+			}	
+		}
 	}
-	
-	public void uploadPairProps(UpdatePool pool, int pidx1, int pidx2, int pair_idx, String key) throws SQLException
-	{
-		String val = getProperty(key);
-		String st = "INSERT INTO pair_props VALUES ('" + pair_idx + "','" + pidx1 + "','" + pidx2 + "','" + key + "','" + val + "')";
-		pool.executeUpdate(st);
+	// For anything different from defaults, print to terminal, print to file, save to db
+	public void saveNonDefaulted(Logger log, String dir, int idx1, int idx2, int pairIdx, String n1, String n2, UpdatePool pool) {
+		HashMap <String, String> chgVal = getNonDef();
+		
+		String title = "Pair " + n1 + "," + n2;
+		if (chgVal.size()==0) {
+			if (log!=null) log.msg(title + ": use default parameters");
+			else System.out.println(title + ": use default parameters");	
+		}
+		else {
+			if (log==null) {
+				System.out.println(title + " parameters: ");
+				for (String key : chgVal.keySet()) 
+					System.out.format("   %s=%s\n", key, chgVal.get(key));
+			}
+			else {
+				log.msg(title + " parameters: ");
+				for (String key : chgVal.keySet()) 
+					log.msg(String.format("  %s=%s", key, chgVal.get(key)));
+			}	
+		}
+		writeFile(dir, chgVal); // write empty file if chgVal.size()==0
+		uploadPairProps(pool, idx1, idx2, pairIdx, chgVal); // Delete existing if chgVal.size()==0
 	}
-	public void printNonDefaulted(Logger log)
-	{
+	private HashMap <String, String> getNonDef() {
+		HashMap <String, String> chgVal = new HashMap <String, String> ();
 		SyProps defProps = new SyProps();
 		Enumeration em = defProps.keys();
-		while (em.hasMoreElements())
-		{
+		while (em.hasMoreElements()) {
 			String key = (String)em.nextElement();
-			String def = defProps.getProperty(key);
-			String cur = getProperty(key);
-			if (!cur.equals(def))
-			{
-				log.msg("Parameter:" + key + "=" + cur);
+			for (String x : SYMBOLS) {
+				if (x.equals(key)) {
+					String def = defProps.getProperty(key);
+					String cur = getProperty(key);
+					if (!cur.equals(def)) {
+						chgVal.put(key, cur);
+					}
+					break;
+				}
 			}
-		}		
+		}
+		return chgVal;
 	}
+	private void uploadPairProps(UpdatePool pool, int pidx1, int pidx2, int pairIdx, 
+			HashMap <String, String> chgVal)
+	{
+		try {
+			String st = "DELETE FROM pair_props WHERE pair_idx=" + pairIdx;
+			pool.executeUpdate(st);
+			
+			for (String key : chgVal.keySet()) {
+				String val = chgVal.get(key);
+				st = "INSERT INTO pair_props VALUES ('" + 
+						pairIdx + "','" + pidx1 + "','" + pidx2 + "','" + key + "','" + val + "')";
+				pool.executeUpdate(st);
+			}
+		}
+		catch (Exception e) {ErrorReport.print(e, "Cannot save pair parameters");}
+	}
+	/**************************************************
+	 * Writes the param file, though this is never read. Parameters are stored in database.
+	 */
+	private void writeFile(String dir, HashMap <String, String> chgVal) {
+		Utilities.checkCreateDir(dir, "PP write params file"); 
+		
+		File pfile = new File(dir,Constants.paramsFile);
+		if (!pfile.exists())
+			System.out.println("Create parameter file " + dir + Constants.paramsFile);
+		try {
+			PrintWriter out = new PrintWriter(pfile);
+			out.println("#");
+			out.println("# Pairs parameter file ");
+			out.println("# Created " + ErrorReport.getDate());
+			out.println("# Note: changes MUST be made in SyMAP parameter window");
+			
+			if (chgVal.size()==0) {
+				out.println("# No parameters set - use defaults");
+			}
+			else {
+				for (String key : chgVal.keySet()) 
+					out.format("%s=%s\n", key, chgVal.get(key));
+			}
+			out.close();
+		} catch(Exception e) {ErrorReport.print(e, "Creating params file");}
+	}
+	
 }

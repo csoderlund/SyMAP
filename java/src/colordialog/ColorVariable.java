@@ -71,8 +71,7 @@ public class ColorVariable implements ActionListener {
 			cc.setChooserPanels(new AbstractColorChooserPanel[] { new SwatchChooserPanel(alphaEnabled), 
 					new RGBAChooserPanel(alphaEnabled) } );
 			dialog = JColorChooser.createDialog(button,label.getText(),true,cc,this,null);
-			//dialog.show(); // mdb removed 7/2/07 #118
-			dialog.setVisible(true); // mdb added 7/2/07 #118
+			dialog.setVisible(true); 
 		}
 		else { // ok button on color chooser
 			setIconColor(cc.getColor());

@@ -180,7 +180,6 @@ public class MapInfo {
 		else if (t2 instanceof Contig)      t2Type = CONTIG_TYPE;
 		else                                t2Type = BLOCK_TYPE;
 
-		 // mdb added pseudo-to-pseudo 7/11/07 #121
 		if (t1Type == SEQUENCE_TYPE && t2Type == SEQUENCE_TYPE) { // PSEUDO to PSEUDO
 			Sequence st1 = (Sequence)t1;
 			Sequence st2 = (Sequence)t2;
@@ -216,10 +215,9 @@ public class MapInfo {
 	}
 
 	public int getMapperType() {
-		//return t1Type == SEQUENCE_TYPE || t2Type == SEQUENCE_TYPE ? Mapper.FPC2PSEUDO : Mapper.FPC2FPC; // mdb removed 7/11/07 #121
-		if (t1Type == SEQUENCE_TYPE && t2Type == SEQUENCE_TYPE) return Mapper.PSEUDO2PSEUDO; // mdb added 7/11/07 #121
-		if (t1Type == SEQUENCE_TYPE || t2Type == SEQUENCE_TYPE) return Mapper.FPC2PSEUDO; // mdb added 7/11/07 #121
-		return Mapper.FPC2FPC; // mdb added 7/11/07 #121
+		if (t1Type == SEQUENCE_TYPE && t2Type == SEQUENCE_TYPE) return Mapper.PSEUDO2PSEUDO; 
+		if (t1Type == SEQUENCE_TYPE || t2Type == SEQUENCE_TYPE) return Mapper.FPC2PSEUDO; 
+		return Mapper.FPC2FPC; 
 	}
 
 	public int getGroup() {

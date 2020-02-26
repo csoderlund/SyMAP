@@ -11,14 +11,15 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
-import util.Utilities;
+import util.ErrorReport;
+import backend.Constants;
 
 public class MultiAlignmentData {
 	//Constants for alignment
 	private final static String DEFAULT_SOURCE_FILE_NAME = "SourceAlignments.fasta";
 	private final static String DEFAULT_TARGET_FILE_NAME = "TargetAlignments.fasta";
 	private final static String DEFAULT_TARGET_DIRECTORY = "muscle";
-	private final static String MUSCLE_DIR = "ext/muscle";
+	private final static String MUSCLE_DIR = Constants.extDir + "muscle";
 	private final static int SEQUENCE_LINE_LENGTH = 80;
 	
 	public MultiAlignmentData(String name) {
@@ -38,22 +39,7 @@ public class MultiAlignmentData {
 	
 	public void alignSequences() {
 		try {
-			String path  = MUSCLE_DIR;
-			if (Utilities.isLinux()) 
-			{
-				if(Utilities.is64Bit())
-					path += "/lintel64/";
-				else
-					path += "/lintel/";
-			}
-			else if (Utilities.isMac())
-			{
-				path += "/mac/";
-			}
-			else
-				path += "/lintel/";
-
-			path += "muscle";
+			String path  = MUSCLE_DIR + Constants.getPlatformPath() + DEFAULT_TARGET_DIRECTORY;
 			
 			writeFASTA(DEFAULT_SOURCE_FILE_NAME);
 			Process pr = Runtime.getRuntime().exec(path + " -in " + DEFAULT_SOURCE_FILE_NAME + " -out " + DEFAULT_TARGET_FILE_NAME);
@@ -62,7 +48,7 @@ public class MultiAlignmentData {
 			deleteFile(DEFAULT_SOURCE_FILE_NAME);
 			deleteFile(DEFAULT_TARGET_FILE_NAME);
 		} catch(Exception e) {
-			e.printStackTrace();
+			ErrorReport.print(e, "Align sequences with muscle");
 		}
 	}
 	
@@ -103,7 +89,7 @@ public class MultiAlignmentData {
 			
 			out.close();
 		} catch(Exception e) {
-			e.printStackTrace();
+			ErrorReport.print(e, "Write FASTA file");
 		}
 	}
 	
@@ -114,7 +100,7 @@ public class MultiAlignmentData {
 				System.out.println("Muscle Alignment failed");
 			}
 		} catch(Exception e) {
-			e.printStackTrace();
+			ErrorReport.print(e, "Delete file " + fileName);
 		}
 	}
 	
@@ -151,7 +137,7 @@ public class MultiAlignmentData {
 			
 			in.close();			
 		} catch(Exception e) {
-			e.printStackTrace();
+			ErrorReport.print(e, "Read file " + name);
 		}
 	}
 	
@@ -356,5 +342,4 @@ public class MultiAlignmentData {
 	static public final char AMINO_Glx = 'Z';
 	static public final char AMINO_Asx = 'B';
 	static public final char AMINO_Amiguous = 'X';
-
 }

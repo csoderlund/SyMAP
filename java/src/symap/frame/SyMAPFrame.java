@@ -25,19 +25,6 @@ import util.SizedJFrame;
 public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener, 
 														AppletHolder 
 {	
-// mdb removed 1/28/09 #159 simplify properties	
-//	public static final boolean HAS_CONTROL_PANEL, HAS_HELPBAR;
-//	public static final String FRAME_TITLE;
-//	public static final String DISPLAY_SIZE_COOKIE, DISPLAY_POSITION_COOKIE;
-//	static {
-//		PropertiesReader props  = new PropertiesReader(SyMAP.FRAME_PROPS);
-//		HAS_CONTROL_PANEL       = props.getBoolean("controlpanel");
-//		HAS_HELPBAR             = props.getBoolean("helpbar");
-//		FRAME_TITLE             = props.getString("frameTitle");
-//		DISPLAY_SIZE_COOKIE     = props.getString("displaySizeCookie");
-//		DISPLAY_POSITION_COOKIE = props.getString("displayPositionCookie");
-//	}
-	// mdb added 1/28/09 #159
 	private static final String DISPLAY_SIZE_COOKIE = "SyMAPDisplaySize";
 	private static final String DISPLAY_POSITION_COOKIE = "SyMAPDispayPosition";
 
@@ -47,7 +34,7 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener,
 	private HelpBar hb;
 
 	public SyMAPFrame(Applet applet, ControlPanel cp, DrawingPanel dp, HelpBar hb, 
-			boolean showHelpBar, // mdb added 2/13/09 for 3D
+			boolean showHelpBar, // for 3D
 			PersistentProps persistentProps) {
 		super(/*FRAME_TITLE*/"SyMAP "+SyMAP.VERSION);
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -110,13 +97,12 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener,
 	 * @param enable a <code>boolean</code> value
 	 */
 	public void setFrameEnabled(boolean enable) {
-		//System.out.println("SyMAPFrame.setFrameEnabled: " + enable);
 		if (enable) {
-			dp.getParent().setCursor(SyMAPConstants.DEFAULT_CURSOR); // mdb added "dp.getParent()" 9/2/09 - fixes busy cursor for closeup in 3D viewer
+			dp.getParent().setCursor(SyMAPConstants.DEFAULT_CURSOR); 
 			if (hb != null) hb.setBusy(false, this);
 		}
 		else {
-			dp.getParent().setCursor(SyMAPConstants.WAIT_CURSOR); // mdb added "dp.getParent()" 9/2/09 - fixes busy cursor for closeup in 3D viewer
+			dp.getParent().setCursor(SyMAPConstants.WAIT_CURSOR); 
 			if (hb != null) hb.setBusy(true, this);
 		}
 		if (cp != null) cp.setPanelEnabled(enable);
@@ -143,11 +129,6 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener,
 	public DrawingPanel getDrawingPanel() {
 		return dp;
 	}
-
-// mdb unused 2/13/09
-//	public HelpBar getHelpBar() {
-//		return hb;
-//	}
 
 	public void keyPressed(KeyEvent e) {
 		if (e.isAltDown() && e.isControlDown() && e.getKeyCode() == KeyEvent.VK_C && dp != null)

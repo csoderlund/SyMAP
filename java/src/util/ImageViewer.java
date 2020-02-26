@@ -34,20 +34,12 @@ public class ImageViewer {
      *
      * @param comp a <code>Component</code> value of the component to be made into an image
      * @return an <code>URL</code> value of the URL of the new image or null if there was any problems or the image was not saved.
-     * CAS 1/5/18 This quite working with Java V9
+     * CAS42 1/5/18 This quite working with Java V9
+     * CAS500 changed to catch error in case it does work with some non 1.n versions
      */
     public static void showImage(Component comp) {
 		try
-		{
-			String version = System.getProperty("java.version");
-			String[] subs = version.split("\\.");
-			if (!subs[0].equals("1")) {
-				JOptionPane.showMessageDialog(null, 
-						"The installed Java version is " + version + 
-						"\nThis feature only works with Java v1.n", 
-						"Version incompatiablity", JOptionPane.PLAIN_MESSAGE);
-				return;
-			}
+		{	
 	        ExportDialog export = new ExportDialog();
             export.addExportFileType(new PDFExportFileType());
             export.addExportFileType(new EPSExportFileType());
@@ -57,7 +49,21 @@ public class ImageViewer {
 	        export.showExportDialog( comp, "Export view as ...", comp, "export" );
 		    System.err.println("Image save complete");
 		}
-		catch(Exception e){e.printStackTrace();}
+		catch(Exception e){
+			String version = System.getProperty("java.version");
+			String[] subs = version.split("\\.");
+			
+			if (!subs[0].equals("1")) {
+				String m = "The installed Java version is " + version + 
+						"\nThis feature only works with Java v1.n";
+				System.err.println(m);
+				System.err.println("Try using the Linux/Mac screen capture");
+				JOptionPane.showMessageDialog(null, m, 
+					"Version incompatiablity", JOptionPane.PLAIN_MESSAGE);
+				return;
+			}
+			ErrorReport.print(e,"Image viewer failed - it does not work with all Java versions");
+		}
     }
  
     /**

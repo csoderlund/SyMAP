@@ -32,7 +32,6 @@ import javax.swing.event.ChangeListener;
  * Class <code>SwatchChooserPanel</code> is based off of the DefaultSwatchChooserPanel with
  * an added slider and spinner for Alpha values (optional).
  *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
  * @see AbstractColorChooserPanel
  * @see ChangeListener
  * @see MouseListener

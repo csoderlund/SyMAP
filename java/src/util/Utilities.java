@@ -25,6 +25,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
+
 import java.awt.Frame;
 
 import java.util.Arrays;
@@ -45,7 +46,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -54,23 +54,21 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.TreeMap;
-import java.util.Map;
 import java.util.HashMap;
 
 import symap.SyMAP;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
-
+import backend.Constants;
 
 /**
  * Class <code>Utilities</code> class for doing some miscelaneous things that 
  * may be useful to others. Requires plugin.jar
- *
- * @author "Austin Shoemaker" <austin@genome.arizona.edu>
+ * 
+ * Make directory and files - used by most classes
  */
 public class Utilities {
-
+	private static boolean TRACE = Constants.TRACE;
 	private static Map<String, Integer> rs2col = null;
 	private static Date mTimeStart = null;
 	private static Class resClass = null; // store this so help pages can be loaded from anywhere
@@ -119,8 +117,7 @@ public class Utilities {
 				b.width  = ((Number)host.eval("screen.availWidth")).intValue();
 			} 
 			catch (Exception e) {
-				//System.err.println("Exception occurred getting screen dimensions from JavaScript!"); // mdb removed 12/29/08
-				//e.printStackTrace(); // mdb removed 3/1/07 
+				
 			}
 		}
 		return b;
@@ -187,7 +184,6 @@ public class Utilities {
 		window.validate();
 	}
 	
-	// mdb added 8/28/09
 	public static void setCursorBusy(Component c, boolean busy) {
 		if (busy)
 			c.setCursor( Cursor.getPredefinedCursor( Cursor.WAIT_CURSOR ) );
@@ -223,7 +219,7 @@ public class Utilities {
 		return null;
 	}
 	
-	// mdb added 7/28/09 - adjust rectangle coordinates for negative width or height
+	// adjust rectangle coordinates for negative width or height
 	public static void fixRect(Rectangle2D rect) {
 		if (rect.getWidth() < 0)
 			rect.setRect(
@@ -433,22 +429,12 @@ public class Utilities {
 
 				if (a < b) {
 					for (; a <= b; a++) {
-						// mdb removed 2/17/09
-						//if (!ints.add(new Integer(a)))
-						//	throw new IllegalArgumentException("Duplicate ints not allowed");
-						
-						// mdb added 2/17/09 - prevent duplicates
 						if (!ints.contains(new Integer(a)))
 							ints.add(new Integer(a));
 					}
 				}
 				else {
 					for (; a >= b; a--) {
-						// mdb removed 2/17/09
-						//if (!ints.add(new Integer(a)))
-						//	throw new IllegalArgumentException("Duplicate ints not allowed");
-						
-						// mdb added 2/17/09 - prevent duplicates
 						if (!ints.contains(new Integer(a)))
 							ints.add(new Integer(a));
 					}
@@ -674,7 +660,7 @@ public class Utilities {
 		return new Integer(n).toString();
 	}
 
-	// ASD added to handle reverse complement of sequences for database changes
+	// handle reverse complement of sequences for database changes
 	public static String revComplement(String seq) {
 		if (seq == null)
 			return null;
@@ -707,30 +693,25 @@ public class Utilities {
 		return retStr.toString();
 	}
 	
-	// mdb added 8/25/09
 	public static String reverseString(String s) {
 		return new StringBuffer(s).reverse().toString();
 	}
 
-	// mdb added 5/25/07 #119
 	public static void showWarningMessage(String msg) {
 		System.out.println(msg);
 		JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
 	}
 	
-	// mdb added 5/25/07 #119
 	public static void showErrorMessage(String msg) {
 		System.err.println(msg);
 		JOptionPane.showMessageDialog(null, msg, "Error", JOptionPane.ERROR_MESSAGE);
 	}
 	
-	// mdb added 5/25/07 #119
 	public static void showErrorMessage(String msg, int exitStatus) {
 		showErrorMessage(msg);
 		exit(exitStatus);
 	}
 	
-	// mdb added 9/3/09
 	public static void showOutOfMemoryMessage(Component parent) {
 		System.err.println("Not enough memory.");
 		JOptionPane optionPane = new JOptionPane("Not enough memory.", JOptionPane.ERROR_MESSAGE);
@@ -749,13 +730,11 @@ public class Utilities {
 	}
 	public static void showOutOfMemoryMessage() { showOutOfMemoryMessage(null); }
 	
-	// mdb added 5/25/07 #119
 	public static void exit(int status) {
 		System.out.println("Exiting SyMAP");
 		System.exit(status);
 	}
 	
-	// mdb added 1/8/09
 	public static boolean isOverlapping(int start1, int end1, int start2, int end2) {
 		if (   (start1 >= start2 && start1 <= end2) 
 			|| (end1   >= start2 && end1   <= end2)
@@ -768,7 +747,6 @@ public class Utilities {
 		return false;
 	}
 	
-	// mdb added 1/8/09
 	public static boolean isContained(int start1, int end1, int start2, int end2) {
 		if (   (start1 >= start2 && start1 <= end2) 
 			&& (end1   >= start2 && end1   <= end2))
@@ -779,19 +757,31 @@ public class Utilities {
 		return false;
 	}
 	
-	// mdb added 4/29/09
 	public static boolean isStringEmpty(String s) {
 		return (s == null || s.length() == 0);
 	}
 	
-	// mdb added 3/24/09
 	public static void deleteFile ( String strPath )
 	{
 		File theFile = new File ( strPath );
 		theFile.delete();
 	}
-	
-	// mdb added 4/28/09
+
+	public static void clearAllDir(File d)
+	{
+		if (d.isDirectory())
+		{
+			for (File f : d.listFiles())
+			{
+				if (f.isDirectory() && !f.getName().equals(".") && !f.getName().equals("..")) 
+				{
+					clearAllDir(f);
+				}
+				f.delete();
+			}
+		}
+		if (TRACE) System.out.println("XYZ clear all directory " + d);
+	}
 	public static void clearDir(String dir)
 	{
 		File d = new File(dir);
@@ -802,113 +792,160 @@ public class Utilities {
 				if (f.isFile())
 					f.delete();
 		}
+		if (TRACE) System.out.println("XYZ clear directory " + dir);
 	}
 	
-    // mdb added 3/24/09
     public static boolean fileExists(String filepath)
     {
-    	if (filepath == null) return false;
-    	File f = new File(filepath);
-    	return f.isFile() && f.exists();
+	    	if (filepath == null) return false;
+	    	File f = new File(filepath);
+	    	return f.exists() && f.isFile();
     }
-    
-    // mdb added 3/24/09
+    public static boolean dirExists(String filepath)
+    {
+	    	if (filepath == null) return false;
+	    	File f = new File(filepath);
+	    	return f.exists() && f.isDirectory();
+    }
     public static boolean pathExists(String path)
     {
-    	if (path == null) return false;
-    	File f = new File(path);
-    	return f.exists();
+    		if (path == null) return false;
+    		File f = new File(path);
+    		return f.exists();
     }
-    
-    // mdb added 3/24/09
-	public static void checkCreateDir(String dir)
+    public static int dirNumFiles(File d)
 	{
-		File f = new File(dir);
-		if (!f.exists())
-			f.mkdir();
+		int numFiles = 0;
+		for (File f : d.listFiles())
+		{
+			if (f.isFile() && !f.isHidden()) numFiles++;	
+		}
+		return numFiles;
+	}
+    public static File checkCreateDir(File path, String dir, String trace)
+	{
+		try {
+			File f = new File(path, dir);
+			if (f.exists() && f.isFile()) {
+				System.out.println("Please remove file " + f.getName()
+						+ " as SyMAP needs to create a directory at this path");
+				System.exit(0);
+			}
+			if (!f.exists()) {
+				f.mkdir();
+				if (TRACE) System.out.println(trace + ": XYZ mkdir: " + path.getName() + " " + dir);
+			}
+			return f;
+		}
+		catch (Exception e) {
+			ErrorReport.print(e, "Create dir " + path.getName() + " " + dir);
+			return null;
+		}
+	}
+    
+	public static File checkCreateDir(String dir, String trace)
+	{
+		try {
+			File f = new File(dir);
+			if (f.exists() && f.isFile()) {
+				System.out.println("Please remove file " + f.getName()
+						+ " as SyMAP needs to create a directory at this path");
+				System.exit(0);
+			}
+			
+			if (!f.exists()) {
+				f.mkdir();
+				if (TRACE) System.out.println(trace + ": XYZ mkdir: " + dir);
+			}
+	
+			return f;
+		}
+		catch (Exception e) {
+			ErrorReport.print(e, "Create dir " + dir);
+			return null;
+		}
 	}
 	
-	// mdb added 3/24/09
-	public static void checkCreateFile(String path)
+	public static void checkCreateFile(String path, String trace)
 	{
 		File f = new File(path);
-		if (!f.exists()) {
-			try {
-				f.createNewFile();
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
+		if (f.exists()) {
+			if (TRACE) System.out.println(trace + ": XYZ delete existing file: " + path);
+			f.delete();
+		}
+		try {
+			f.createNewFile();
+			if (TRACE) System.out.println(trace + ": XYZ create file: " + path);
+		}
+		catch (Exception e) {
+			ErrorReport.print(e, "Create file " + path);
 		}
 	}
 	
-	// mdb added 4/27/09
-	public static void checkCreateFile(String path, String contents)
+	public static File checkCreateFile(File path, String name, String trace)
 	{
-		if (contents == null || contents.length() == 0) {
-			checkCreateFile(path);
+		File f = new File(path, name);
+		if (f.exists()) {
+			if (TRACE) System.out.println(trace + ": XYZ delete existing file: " + f.getName());
+			f.delete();
 		}
-		else {
-			File f = new File(path);
-			if (!f.exists()) {
-				try {
-					FileWriter fw = new FileWriter(f);
-					fw.write(contents, 0, contents.length());
-					fw.close();
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
+		try {
+			f.createNewFile();
+			if (TRACE) System.out.println(trace + ": XYZ create file: " + f.getName());
+			return f;
 		}
+		catch (Exception e) {
+			ErrorReport.print(e, "Create file " + path.getName() + " " + name);
+			return null;
+		}	
 	}
 	
-    // mdb added 4/6/09
+	public static String fileOnly(String path) {
+		return path.substring(path.lastIndexOf("/")+1, path.length());
+	}
     public static String getDurationString(long duration) { // milliseconds
-    	duration /= 1000;
-    	long min = duration / 60; 
-    	long sec = duration % 60; 
-    	long hr = min / 60;
-    	min = min % 60; 
-    	long day = hr / 24;
-    	hr = hr % 24;
-    	
-    	return (day > 0 ? day+" days " : "")
-    			+ (hr > 0 ? hr+" hr " : "")
-    			+ (min > 0 ? min+" min " : "") 
-    			+ sec + " sec";
+	    	duration /= 1000;
+	    	long min = duration / 60; 
+	    	long sec = duration % 60; 
+	    	long hr = min / 60;
+	    	min = min % 60; 
+	    	long day = hr / 24;
+	    	hr = hr % 24;
+	    	
+	    	return (day > 0 ? day+" days " : "")
+	    			+ (hr > 0 ? hr+" hr " : "")
+	    			+ (min > 0 ? min+" min " : "") 
+	    			+ sec + " sec";
     }
     
-    // mdb added 4/9/09
+   
     public static void sleep(int milliseconds) {
-    	try{ Thread.sleep(milliseconds); }
-    	catch (InterruptedException e) { }
+    		try{ Thread.sleep(milliseconds); }
+    		catch (InterruptedException e) { }
     }
     
-    // mdb added 4/20/09
     public static String pad(String s, int width)
     {
-    	width -= s.length();
-    	while (width-- > 0) s += " ";
-    	return s;
+    		width -= s.length();
+    		while (width-- > 0) s += " ";
+    		return s;
     }
     
     public static boolean tryOpenURL ( Applet theApplet, String theLink ) {
-    	if (theLink == null)
-    		return false;
-    	
-    	URL url = null;
-    	try {
-    		url = new URL(theLink);
-    	}
-    	catch (MalformedURLException e) {
-    		System.out.println("Malformed URL: " + theLink);
-    		return false;
-    	}
-    	return tryOpenURL(theApplet, url);
+	    	if (theLink == null)
+	    		return false;
+	    	
+	    	URL url = null;
+	    	try {
+	    		url = new URL(theLink);
+	    	}
+	    	catch (MalformedURLException e) {
+	    		System.out.println("Malformed URL: " + theLink);
+	    		return false;
+	    	}
+	    	return tryOpenURL(theApplet, url);
     }
     
-    // mdb added 4/27/09 - copied from jPAVE
 	public static boolean tryOpenURL ( Applet theApplet, URL theLink )
     {
     	// Show document with applet if we have one
@@ -919,73 +956,66 @@ public class Utilities {
 		}
 		
 		// Brian says: Otherwise unless we become a web start application
-    	// we are stuck with the below.  Copied this from: 
+    		// we are stuck with the below.  Copied this from: 
 		// http://www.centerkey.com/java/browser/
-    	try 
-    	{ 
-    		if (isMac()) 
-    		{ 
-    			Class<?> fileMgr = Class.forName("com.apple.eio.FileManager"); 
-    			Method openURL = fileMgr.getDeclaredMethod("openURL", new Class[] {String.class}); 
-    			openURL.invoke(null, new Object[] { theLink.toString() }); 
-    			return true;
-    		} 
-    		else if (isWindows()) 
-    		{
-    			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + theLink); 
-    			return true;
-    		}
-    		else 
-    		{ 
-    			//assume Unix or Linux 
-    			String[] browsers = { "firefox", "opera", "konqueror", "epiphany", "mozilla", "netscape" }; 
-    			String browser = null; 
-    			for (int count = 0; count < browsers.length && browser == null; count++) 
-    				if (Runtime.getRuntime().exec( new String[] {"which", browsers[count]}).waitFor() == 0) 
-    					browser = browsers[count]; 
-    			if (browser == null) 
-    				return false;
-    			else 
-    			{
-    				Runtime.getRuntime().exec(new String[] {browser, theLink.toString()});
-    				return true;
-    			}
-    		}
-    	}
-    	catch (Exception e) 
-    	{ 	
-    		e.printStackTrace();
-    	}
-    	
+	    	try 
+	    	{ 
+	    		if (isMac()) 
+	    		{ 
+	    			Class<?> fileMgr = Class.forName("com.apple.eio.FileManager"); 
+	    			Method openURL = fileMgr.getDeclaredMethod("openURL", new Class[] {String.class}); 
+	    			openURL.invoke(null, new Object[] { theLink.toString() }); 
+	    			return true;
+	    		} 
+	    		else if (isWindows()) 
+	    		{
+	    			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + theLink); 
+	    			return true;
+	    		}
+	    		else 
+	    		{ 
+	    			//assume Unix or Linux 
+	    			String[] browsers = { "firefox", "opera", "konqueror", "epiphany", "mozilla", "netscape" }; 
+	    			String browser = null; 
+	    			for (int count = 0; count < browsers.length && browser == null; count++) 
+	    				if (Runtime.getRuntime().exec( new String[] {"which", browsers[count]}).waitFor() == 0) 
+	    					browser = browsers[count]; 
+	    			if (browser == null) 
+	    				return false;
+	    			else 
+	    			{
+	    				Runtime.getRuntime().exec(new String[] {browser, theLink.toString()});
+	    				return true;
+	    			}
+	    		}
+	    	}
+	    	catch (Exception e) 
+	    	{ 	
+	    		e.printStackTrace();
+	    	}
 		return false;
     }
 	
-	// mdb added 5/11/09
 	public static boolean isLinux() {
 		return System.getProperty("os.name").toLowerCase().contains("linux");
 	}
 	
-	// mdb added 5/11/09
 	public static boolean isWindows() {
 		return System.getProperty("os.name").toLowerCase().contains("windows");
 	}
 	
-	// mdb added 5/11/09
 	public static boolean isMac() {
 		return System.getProperty("os.name").toLowerCase().contains("mac");
 	}
 	
-	// mdb added 7/23/09
 	public static boolean is64Bit() {
 		return System.getProperty("os.arch").toLowerCase().contains("64");
 	}
 	
-	// mdb moved here from dotplot.ControlPanel 7/8/09 - shared by symap.frame.ControlPanel
-	// mdb rewritten 1/29/09 #159 to not use properties
     public static AbstractButton createButton(HelpListener parent, String path, String tip, HelpBar bar, ActionListener listener, boolean checkbox) {
 		AbstractButton button;
-		//Icon icon = ImageViewer.getIcon(data.getApplet(),ControlPanel.class.getResource(name)); // mdb removed 3/2/09
-		Icon icon = ImageViewer.getImageIcon(path); // mdb added 3/2/09
+		
+		Icon icon = ImageViewer.getImageIcon(path); 
 		if (icon != null) {
 		    if (checkbox)
 		    	button = new JCheckBox(icon);
@@ -1005,14 +1035,12 @@ public class Utilities {
 
 		button.setToolTipText(tip);
 		
-		// mdb added 7/6/09
 		button.setName(tip); 
 		if (bar != null) bar.addHelpListener(button,parent);
 		
 		return button;
     }
     
-	// mdb added 7/29/09
 	public static boolean hasCommandLineOption(String[] args, String name)
 	{
 		for (int i = 0;  i < args.length;  i++)
@@ -1040,7 +1068,6 @@ public class Utilities {
 		return null;
 	}
 	
-	// mdb added 2/9/10
 	public static String getBrowserPopupMessage(Applet applet) {
 		return (applet != null ? "\nMake sure popup windows are enabled in your web browser settings." : "" );
 	}
@@ -1050,19 +1077,18 @@ public class Utilities {
 		boolean running = false;
 		try 
 		{
-        	String line;
-        	Process p = Runtime.getRuntime().exec("ps -ef");
-        	BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        	while ((line = input.readLine()) != null) 
-        	{
-        		//System.out.println(line);
-            	if (line.contains(processName))
-            	{
-            		running = true;	
-            		break;
-            	}
-        	}
-        	input.close();
+	        	String line;
+	        	Process p = Runtime.getRuntime().exec("ps -ef");
+	        	BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	        	while ((line = input.readLine()) != null) 
+	        	{
+	            	if (line.contains(processName))
+	            	{
+	            		running = true;	
+	            		break;
+	            	}
+	        	}
+	        	input.close();
 	    } 
 		catch (Exception err) 
 		{
@@ -1092,11 +1118,11 @@ public class Utilities {
 	}
     public static int ctrGet(Map<String,Integer> ctr, String key)
     {
-    	return (ctr.containsKey(key) ? ctr.get(key) : 0);
+    		return (ctr.containsKey(key) ? ctr.get(key) : 0);
     }
     public static void init_rs2col()
     {
-    	rs2col = new HashMap<String,Integer>();
+    		rs2col = new HashMap<String,Integer>();
     }
     // 
     // Store and retrieve ResultSet column mappings, since the native implementations are so slow.

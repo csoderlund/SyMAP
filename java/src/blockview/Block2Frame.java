@@ -11,7 +11,6 @@ import util.ImageViewer;
 
 import java.util.Vector;
 import java.util.TreeMap;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 
 import javax.swing.event.*;
@@ -21,6 +20,7 @@ import backend.*;
 
 public class Block2Frame extends JFrame
 {
+	private static final long serialVersionUID = 1L;
 	int blockMaxHeight = 900;
 	int bpPerPx;
 	final int chromWidth = 15;
@@ -70,12 +70,10 @@ public class Block2Frame extends JFrame
 			ResultSet rs;
 			Statement s = mDB.getConnection().createStatement();
 	
-			//rs = s.executeQuery("select value from proj_props where name='grp_sort' and proj_idx=" + mRefIdx);
 			rs = s.executeQuery("select count(*) as ngrps from groups where proj_idx=" + mRefIdx);
 			rs.first();
 			unorderedRef = (rs.getInt("ngrps") > 75);
 
-			//rs = s.executeQuery("select value from proj_props where name='grp_sort' and proj_idx=" + mIdx2);
 			rs = s.executeQuery("select count(*) as ngrps from groups where proj_idx=" + mIdx2);
 			rs.first();
 			unordered2 = (rs.getInt("ngrps") > 75);
@@ -132,7 +130,6 @@ public class Block2Frame extends JFrame
 					mGrp2Names.put(unGrp2,"0");
 					mColors.add(0, 0);
 				}
-
 			}
 
 			rs = s.executeQuery("select name,idx from groups where proj_idx=" + mIdx2 + " and name != '0' order by sort_order asc");
@@ -181,7 +178,7 @@ public class Block2Frame extends JFrame
 			c1.gridx++;
 			pane.add(new JLabel("      "),c1);
 			
-			Icon icon = ImageViewer.getImageIcon("/images/print.gif"); // mdb added 3/2/09
+			Icon icon = ImageViewer.getImageIcon("/images/print.gif"); 
 			saveBtn =  new JButton(icon);
 			saveBtn.setBackground(Color.white);
 			saveBtn.setBorder(null);
@@ -637,11 +634,9 @@ public class Block2Frame extends JFrame
 				return;
 			}
 		}
-
 	}			
 	void showDetailView(Block b)
 	{
-		//Utilities.setCursorBusy(this, true);
 		try {
 			SyMAP symap = new SyMAP(null, mDB, null);
 			if (!isFpc)
@@ -663,7 +658,6 @@ public class Block2Frame extends JFrame
 			err.printStackTrace();
 		}
 		finally {
-			//Utilities.setCursorBusy(this, false);
 		}
 	}
 	class BlockPanel extends JPanel implements MouseInputListener
@@ -674,7 +668,6 @@ public class Block2Frame extends JFrame
 		{
 			super();
 			setBackground(Color.white);
-			//setPreferredSize(new Dimension(200,200));
 			blockFrame = _blockFrame;
 			addMouseListener(this);
 			addMouseMotionListener(this);
@@ -691,8 +684,6 @@ public class Block2Frame extends JFrame
 	        	e.printStackTrace();
 	        	return;
 	        }
-	        //g.setColor(Color.black);
-	        //g.drawRect(0, 0, 100, 100);
 	    }
 	    public void mouseClicked(MouseEvent m)
 	    {

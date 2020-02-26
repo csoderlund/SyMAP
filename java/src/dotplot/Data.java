@@ -187,17 +187,11 @@ public class Data extends Observable implements DotPlotConstants {
 	public SyMAP getSyMAP() { return symap; }
 	public boolean isCentering() { return isCentering; }
 	public boolean canPaint() { return canPaint; }
-
-	/** CAS 12/26/17 dead code
-	public void initialize(String pXName, String pYName) {
-		initialize(projProps.getID(pXName),projProps.getID(pYName));
-	}
-	**/
 	
 	// Called from dotplot.DPAppplet.init and SyMAPBrowserApplet
 	public void initialize(String[] projNames) {
 		int [] projIDs;
-		if (projNames.length==1) {//CAS 12/26/17 was just getting one name when expecting it to duplicated on self
+		if (projNames.length==1) {//CAS42 12/26/17 was just getting one name when expecting it to duplicated on self
 			projIDs = new int[2];
 			projIDs[0]=projIDs[1]=projProps.getID(projNames[0]);
 		}
@@ -208,13 +202,6 @@ public class Data extends Observable implements DotPlotConstants {
 		}
 		initialize(projIDs, null, null);
 	}
-	
-	/** CAS 12/26/17 dead code
-	// mdb added 12/16/09 #205 for backward compatibility
-	public void initialize(int pX, int pY) {
-		initialize(new int[] { pX, pY }, null, null);
-	}
-	**/
 	
 	public void initialize(int[] projIDs, int[] xGroupIDs, int[] yGroupIDs) {
 		try {
@@ -330,11 +317,9 @@ public class Data extends Observable implements DotPlotConstants {
 	}
 
 	private void zoomArea(double x1, double y1, double x2, double y2) {
-		System.out.println("zoom("+(int)x1+","+(int)y1+","+(int)x2+","+(int)y2+")");
-
 		symap.getDrawingPanel().setMaps(1);
 		symap.getDrawingPanel().setHitFilter(1,fd);
-		symap.getHistory().clear(); // clear history - mdb added 10/12/09
+		symap.getHistory().clear(); 
 
 		Project pX = projects[X];
 		Project pY = getCurrentProj();
@@ -353,13 +338,9 @@ public class Data extends Observable implements DotPlotConstants {
 		else {
 			if (pX.isPseudo() && pY.isPseudo()) { // PSEUDO to PSEUDO
 				symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),Integer.parseInt(track[Y]),Color.CYAN);
-				System.out.println("SequenceTrack 1: " + pY.getID() + "  Track: " + Integer.parseInt(track[Y]));
 				symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),Integer.parseInt(track[X]),Color.GREEN);
-				System.out.println("SequenceTrack 2: " + pX.getID() + "  Track: " + Integer.parseInt(track[X]));
 				symap.getDrawingPanel().setTrackEnds(1,y1,y2);
-				System.out.println("Track Ends 1: (" + y1 + "," + y2 + ")");
 				symap.getDrawingPanel().setTrackEnds(2,x1,x2);
-				System.out.println("Track Ends 2: (" + x1 + "," + x2 + ")");
 			}
 			else if (pX.isPseudo() && pY.isFPC()) { // FPC to PSEUDO
 				symap.getDrawingPanel().setBlockTrack(1,pY.getID(),track[Y],Color.CYAN);
@@ -567,7 +548,7 @@ public class Data extends Observable implements DotPlotConstants {
 
 	public FilterData getFilterData() { return fd; }
 	public ScoreBounds getScoreBounds() { return sb; }
-	// CAS 12/26/17 - does not work on self dot-plots in applet, because projects[1] is not defined
+	// CAS42 12/26/17 - does not work on self dot-plots in applet, because projects[1] is not defined
 	public Project getProject(int axis) { return projects[axis]; }
 	public int getNumProjects() { return projects.length; } 
 	public Project[] getProjects() { return projects; }

@@ -106,7 +106,7 @@ public class Converters
     	d = d.setScale(numDec, RoundingMode.HALF_UP);   
     	return d.toString();
     }
-    // mdb added 4/4/08 - maybe could be simplified
+   
     static public String decimalString (double d, int numSigFigs )
     {
     	if (d == 0) return "0.0";
