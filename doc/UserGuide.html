@@ -72,7 +72,7 @@ User Guide |
 <p>
 Document updated 26-Jan-20. This guide is for the Seq-to-Seq (sequence) synteny user interface.
 Note, the term <i>pseudo</i>
-and <i>sequence</i> are used interchangably. 
+and <i>sequence</i> are used interchangeably. 
 <ol> 
 <li>Most of the contents also apply to the FPC-to-Seq view (unless stated
 otherwise). Specific information is provided in <a href=UserGuideFPC.html target="_blank">FPC specific</a>.
@@ -248,7 +248,7 @@ selecting <u>reverse</u>.
 <table>
 <tr>
 <td><a href="img/block.png"><img src="img/block.png"  border=1 width=500></a>
-<td>Clicking a chromosome pops up a window of the chromsome as shown below. Clicking
+<td>Clicking a chromosome pops up a window of the chromosome as shown below. Clicking
 a block pops up a 2D view.
 <p><a href="img/block2.png"><img src="img/block2.png"  border=1 width=170></a>
 
@@ -566,16 +566,24 @@ at the top of the region, pulling down the mouse and releasing in order to view 
 <table>
 <tr><td>
 The black lines with heavier blue bars interspersed down the center indicate exon/intron
-predictions. A solid black line would indicate the absense of introns in the annotation.
+predictions. A solid black line would indicate the absence of introns in the annotation.
 <p>The alternating brown/gray lines indicate anchor clusters. The solid brown lines indicate
 a single anchor (or multiple anchors very close together), while the gray lines are spaces with no alignment.
 <p>The ruler on the right side of the sequence rectangle 
 shows the relative BP position along the sequence. 
 <p>Additional information about each
-annotation may be seen by choosing "Show Description for Annotation" from the Sequence Filter.
+annotation may be seen by choosing "Show Annotation Description" from the Sequence Filter.
 
 <td><center><a href="img/2d-closeup.png">
 	<img src="img/2d-closeup.png" border=1 width=500></a></center>
+
+<tr><td>Right clicking everywhere but in a yellow annotation box provides
+a pop-up menu with most of the items found on the Sequence Filter. Right
+clicking on a yellow box results in a popup, as shown on the right; this
+is useful for copying all or part of the description, and when the box
+is partially hidden.
+<td><left><a href="img/2d-desc.png">
+	<img src="img/2d-desc.png" border=1 width=250></a></left>
 </table>
 
 <p>
@@ -591,12 +599,13 @@ corresponding text boxes.
 The units of the values entered can be selected from the accompanying drop down menus 
 (BP, KB, MB, GB).
 <p>
+<b>Full Sequence</b> Sets the start and end positions of
+the sequence display to encompass the whole chromosome.
+<p>
 <table>
 <tr><td>
 
-<p>
-<b>Full Sequence</b> Sets the start and end positions of
-the sequence display to encompass the whole chromosome.
+
 <p>
 <b>Flip</b> Reverses the orientation of the sequence track.
 <p>
@@ -604,9 +613,10 @@ the sequence display to encompass the whole chromosome.
 Enables/disables the display of gene/exon annotations 
  along the sequence.  
 <p>
-<b>Show Framework Markers</b> Typically genetic markers or radiation hybrid markers.
-This option enables/disables the display of framework markers (drawn as solid green 
-rectangles) along the sequence.
+<b>Show Annotation Descriptions</b> Enables/disables the display of the annotation descriptions along the 
+right side of sequence. NOTE: this only works if you are zoomed in close enough that they can clearly
+be displayed.
+
 <p>
 <b>Show Gaps</b> Enables/disables the display of sequence gaps (drawn as solid red 
 rectangles) along the sequence.
@@ -614,15 +624,16 @@ rectangles) along the sequence.
 <b>Show Centromere</b> Enables/disables the display of the centromere (drawn as a cyan "X") on 
 the sequence.
 <p>
+<b>Show Framework Markers</b> Typically genetic markers or radiation hybrid markers.
+This option enables/disables the display of framework markers (drawn as solid green 
+rectangles) along the sequence.
+<p>
 
 <td>
 <a href="img/sequencefilter.png">
 	<img src="img/sequencefilter.png" width=300></a>
 </table>
-<p>
-<b>Show Description for Annotations</b> Enables/disables the display of the annotation descriptions along the 
-right side of sequence. NOTE: this only works if you are zoomed in close enough that they can clearly
-be displayed.
+
 <p>
 <b>Show Ruler</b> Enables/disables the display of the sequence ruler along the right side 
 of the sequence.

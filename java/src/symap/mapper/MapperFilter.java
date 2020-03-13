@@ -73,12 +73,12 @@ public class MapperFilter extends Filter {
 	private JRadioButton nonrepetitiveHitRadio = new JRadioButton("Show Only Nonrepetitive Hits");
 	private JRadioButton allHitRadio    = new JRadioButton("Show All Hits");
 
-	private JRadioButtonMenuItem blockHitPopupRadio	= new JRadioButtonMenuItem("Show Only Synteny Hits");
-	private JRadioButtonMenuItem containedGeneHitPopupRadio = new JRadioButtonMenuItem("Show Only Hits to Genes");
-	
-	private JRadioButtonMenuItem nonGeneHitPopupRadio	= new JRadioButtonMenuItem("Show Only Non-Gene Hits");
-	private JRadioButtonMenuItem nonrepetitiveHitPopupRadio = new JRadioButtonMenuItem("Show Only Nonrepetitive Hits");
-	private JRadioButtonMenuItem allHitPopupRadio    = new JRadioButtonMenuItem("Show All Hits");
+	// CAS503 remove Show for popup
+	private JRadioButtonMenuItem blockHitPopupRadio	= new JRadioButtonMenuItem("Only Synteny Hits");
+	private JRadioButtonMenuItem containedGeneHitPopupRadio = new JRadioButtonMenuItem("Only Hits to Genes");
+	private JRadioButtonMenuItem nonGeneHitPopupRadio	= new JRadioButtonMenuItem("Only Non-Gene Hits");
+	private JRadioButtonMenuItem nonrepetitiveHitPopupRadio = new JRadioButtonMenuItem("Only Nonrepetitive Hits");
+	private JRadioButtonMenuItem allHitPopupRadio    = new JRadioButtonMenuItem("All Hits");
 	
 	private Mapper mapper;
 	private HitFilter hitfilter;
@@ -137,7 +137,7 @@ public class MapperFilter extends Filter {
 		fpEvalueSlider.addChangeListener(this);
 		colorByStrandBox.addChangeListener(this);
 		
-		popupTitle.setText("Hit Options:"); 
+		popupTitle.setText("Hit Show Options:"); // CAS503 
 		popup.add(blockHitPopupRadio); 
 		popup.add(containedGeneHitPopupRadio); 
 		

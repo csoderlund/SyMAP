@@ -1,5 +1,9 @@
 package symapQuery;
 
+/******************************************************
+ * For LocalQueryPanel
+ * Creates Species Chrom: From To for Step 1
+ */
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -14,15 +18,13 @@ import java.util.Vector;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
 import symap.projectmanager.common.Project;
+import util.ErrorReport;
 
 public class SpeciesSelectPanel extends JPanel {
 	private static final long serialVersionUID = -6558974015998509926L;
@@ -39,17 +41,14 @@ public class SpeciesSelectPanel extends JPanel {
 		refreshPanels();
 	}
 	
-	public int getNumSpecies() {
-		return speciesPanels.size();
-	}
-	
-	public int getSpeciesIndex(int panel) {
-		return theSpeciesIndicies[panel];
-	}
-	
-	public String getSpecies(int panel) {
-		return speciesPanels.get(panel).getSpeciesName();
-	}
+	public int getNumSpecies() 				{return speciesPanels.size();}
+	public int getSpeciesIndex(int panel) 	{return theSpeciesIdx[panel];}
+	public String getSpecies(int panel) 		{return speciesPanels.get(panel).getSpeciesName();}
+	public String getChromosome(int panel) 	{return speciesPanels.get(panel).getSelectedChromosome();}
+	public String getChromosomeStart(int panel) 	{return speciesPanels.get(panel).getStartRange();}
+	public String getChromosomeStop(int panel) 	{return speciesPanels.get(panel).getStopRange();}
+	public String getStartStr(int panel) 	{return speciesPanels.get(panel).getStartStr();}
+	public String getStopStr(int panel) 	{return speciesPanels.get(panel).getStopStr();}
 	
 	public int getChromosomeIndex(int panel) {
 		String species = speciesPanels.get(panel).getSpeciesName();
@@ -59,21 +58,9 @@ public class SpeciesSelectPanel extends JPanel {
 		if(chrom.equals("All")) {
 			return -1;
 		} else {
-			int chIndex = findIndexOf(chrom, theChromosomes[index].split(","));
-			return Integer.parseInt(theChromosomeIndicies[index].split(",")[chIndex]);
+			int chIndex = findIndexOf(chrom, theChrNum[index].split(","));
+			return Integer.parseInt(theChrIdx[index].split(",")[chIndex]);
 		}
-	}
-	
-	public String getChromosome(int panel) {
-		return speciesPanels.get(panel).getSelectedChromosome();
-	}
-	
-	public String getChromosomeStart(int panel) {
-		return speciesPanels.get(panel).getStartRange();
-	}
-	
-	public String getChromosomeStop(int panel) {
-		return speciesPanels.get(panel).getStopRange();
 	}
 	
 	private static int findIndexOf(String val, String [] values) {
@@ -83,15 +70,9 @@ public class SpeciesSelectPanel extends JPanel {
 		return -1;
 	}
 	
-	
 	private void createInitialPanels() {
 		for(int x=0; x<theSpecies.length; x++) {
-			lblInclude = new JLabel("Include");
-			lblInclude.setAlignmentX(Component.CENTER_ALIGNMENT);
-			lblExclude = new JLabel("Exclude");
-			lblExclude.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-			SpeciesSelect temp = new SpeciesSelect(this, lblInclude.getPreferredSize().width);
+			SpeciesSelect temp = new SpeciesSelect(this);
 			temp.setSpecies(theSpecies[x]);
 			temp.setGroup(theGroups[x]);
 			temp.setChromosomes(getChromosomeListForSpecies(temp.getSpeciesName()));
@@ -102,7 +83,7 @@ public class SpeciesSelectPanel extends JPanel {
 	private String [] getChromosomeListForSpecies(String species) {
 		for(int x=0; x<theSpecies.length; x++) {
 			if(species.equals(theSpecies[x])) {
-				return theChromosomes[x].split(",");
+				return theChrNum[x].split(",");
 			}
 		}
 		return null;
@@ -124,15 +105,11 @@ public class SpeciesSelectPanel extends JPanel {
 		includePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		includePanel.setBackground(Color.WHITE);
 		
-//		includePanel.add(lblInclude);
-		
 		JPanel excludePanel = new JPanel();
 		excludePanel.setLayout(new BoxLayout(excludePanel, BoxLayout.LINE_AXIS));
 		excludePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		excludePanel.setBackground(Color.WHITE);
-		
-//		excludePanel.add(lblExclude);
-		
+			
 		Dimension dim = includePanel.getPreferredSize();
 		dim.width = REFERENCE_SELECT_WIDTH;
 		includePanel.setMinimumSize(dim);
@@ -172,7 +149,6 @@ public class SpeciesSelectPanel extends JPanel {
 		}
 		Collections.sort(sortedGroups);
 		
-
 		for(int x=0; x<sortedGroups.size(); x++) {
 			String groupName = sortedGroups.get(x);
 			boolean firstOne = true;
@@ -214,17 +190,17 @@ public class SpeciesSelectPanel extends JPanel {
 			
 			theSpecies = new String[theProjects.size()];
 			theGroups = new String[theProjects.size()];
-			theSpeciesIndicies = new int[theProjects.size()];
-			theChromosomes = new String[theProjects.size()];
-			theChromosomeIndicies = new String[theProjects.size()];
+			theSpeciesIdx = new int[theProjects.size()];
+			theChrNum = new String[theProjects.size()];
+			theChrIdx = new String[theProjects.size()];
 			
 			for(int x=0; x<theSpecies.length; x++) {
 				Project temp = iter.next();
 				theSpecies[x] = temp.getDisplayName();
-				theSpeciesIndicies[x] = temp.getID();
+				theSpeciesIdx[x] = temp.getID();
 				theGroups[x] = temp.getCategory();
-				theChromosomes[x] = "";
-				theChromosomeIndicies[x] = "";
+				theChrNum[x] = "";
+				theChrIdx[x] = "";
 				
 				String strQ = "SELECT groups.name, groups.idx FROM groups ";
 				strQ += "JOIN projects ON groups.proj_idx = projects.idx ";
@@ -233,50 +209,39 @@ public class SpeciesSelectPanel extends JPanel {
 				
 				ResultSet rset = stmt.executeQuery(strQ);
 				if(rset.next()) {
-					theChromosomes[x] = rset.getString("groups.name");
-					theChromosomeIndicies[x] = rset.getString("groups.idx");
+					theChrNum[x] = rset.getString("groups.name");
+					theChrIdx[x] = rset.getString("groups.idx");
 					while(rset.next()) {
-						theChromosomes[x] += "," + rset.getString("groups.name");
-						theChromosomeIndicies[x] += "," + rset.getString("groups.idx");
+						theChrNum[x] += "," + rset.getString("groups.name");
+						theChrIdx[x] += "," + rset.getString("groups.idx");
 					}
 				}
 			}
 			stmt.close();
 			conn.close();
 		} 
-		catch(Exception e) {
-			e.printStackTrace();
-		}
+		catch(Exception e) {ErrorReport.print(e, "Species panel");}
 	}
-	
-//	private Vector<SpeciesSelect> orderByGroup(Vector<SpeciesSelect> species) {
-////		Vector<Vector<SpeciesSelect>> groups = new Vector<Vector<SpeciesSelect>> ();
-//		Vector<String>
-//	}
 	
 	private SyMAPQueryFrame theParentFrame = null;
 	private Vector<SpeciesSelect> speciesPanels = null;
 	
 	private String [] theSpecies = null;
 	private String [] theGroups = null;
-	private int [] theSpeciesIndicies = null;
-	private String [] theChromosomes = null;
-	public String [] theChromosomeIndicies = null;
-	
-	private JLabel lblInclude = null;
-	private JLabel lblExclude = null;
+	private int [] theSpeciesIdx = null;
+	private String [] theChrNum = null;
+	public String [] theChrIdx = null;
 	
 	private class SpeciesSelect extends JPanel {
 		private static final long serialVersionUID = 2963964322257904265L;
 
-		public SpeciesSelect(SpeciesSelectPanel parent, int checkBoxWidth) {
+		public SpeciesSelect(SpeciesSelectPanel parent) {
 			theParent = parent;
-			nCheckBoxWidth = checkBoxWidth;
 			controlPanel = new JPanel();
 						
 			lblSpecies = new JLabel("");
 			lblSpecies.setBackground(Color.WHITE);
-			lblChrom = new JLabel("Chrom: ");
+			lblChrom = new JLabel("Chr: ");
 			cmbChroms = new JComboBox();
 			cmbChroms.setBackground(Color.WHITE);
 			cmbChroms.addActionListener(new ActionListener() {
@@ -290,18 +255,12 @@ public class SpeciesSelectPanel extends JPanel {
 				}
 			});
 	
-			lblStart = new JLabel("From");
-			lblStart.setBackground(Color.WHITE);
-			lblStart.setEnabled(false);
-			txtStart = new JTextField(10);
-			txtStart.setBackground(Color.WHITE);
-			txtStart.setEnabled(false);
-			lblStop = new JLabel("To");
-			lblStop.setBackground(Color.WHITE);
-			lblStop.setEnabled(false);
-			txtStop = new JTextField(10);
-			txtStop.setBackground(Color.WHITE);
-			txtStop.setEnabled(false);
+			lblStart = new JLabel("From");lblStart.setBackground(Color.WHITE);lblStart.setEnabled(false);
+			txtStart = new JTextField(10);txtStart.setBackground(Color.WHITE);txtStart.setEnabled(false);
+			
+			lblStop =  new JLabel("To");  lblStop.setBackground(Color.WHITE);lblStop.setEnabled(false);
+			txtStop =  new JTextField(10);txtStop.setBackground(Color.WHITE);txtStop.setEnabled(false);
+			
 			cmbScale = new JComboBox();
 			cmbScale.setBackground(Color.WHITE);
 			cmbScale.addItem("bp");
@@ -325,7 +284,6 @@ public class SpeciesSelectPanel extends JPanel {
 			setAlignmentX(Component.LEFT_ALIGNMENT);
 			setBackground(Color.WHITE);
 			
-
 			controlPanel.add(lblSpecies);
 			
 			Dimension d = lblSpecies.getPreferredSize();
@@ -347,11 +305,7 @@ public class SpeciesSelectPanel extends JPanel {
 			theParent.refreshPanels();
 		}
 				
-		public String getSpeciesName() {
-			return lblSpecies.getText();
-		}
-		
-		public String getStartRange() {
+		private String getStartRange() {
 			try {
 				long temp = Long.parseLong(txtStart.getText());
 				if(temp < 0) return "";
@@ -362,7 +316,7 @@ public class SpeciesSelectPanel extends JPanel {
 			}
 		}
 		
-		public String getStopRange() {
+		private String getStopRange() {
 			try {
 				long temp = Long.parseLong(txtStop.getText());
 				if(temp <= 0) return "";
@@ -371,25 +325,36 @@ public class SpeciesSelectPanel extends JPanel {
 				return "";
 			}
 		}
-		
 		private String getScaleDigits() {
 			if(cmbScale.getSelectedIndex() == 1) return "000";
 			if(cmbScale.getSelectedIndex() == 2) return "000000";
 			return "";
 		}
 		
-		public String getSelectedChromosome() {
-			return (String)cmbChroms.getSelectedItem();
+		// for filter summary string
+		private String getStartStr() {
+			String num = txtStart.getText().trim();
+			if (num.equals("")) return num;
+			if(cmbScale.getSelectedIndex() == 1) return num + "kb";
+			if(cmbScale.getSelectedIndex() == 2) return num + "mb";
+			return num + "bp";
+		}
+		private String getStopStr() {
+			String num = txtStop.getText().trim();
+			if (num.equals("")) return num;
+			if(cmbScale.getSelectedIndex() == 1) return num + "kb";
+			if(cmbScale.getSelectedIndex() == 2) return num + "mb";
+			return num + "bp";
 		}
 		
-		public void setSpecies(String species) {
-			lblSpecies.setText(species);
-		}
 		
-		public String getGroup() { return strGroup; }
-		public void setGroup(String group) { strGroup = group; }
+		private String getSpeciesName() {return lblSpecies.getText();}
+		private String getSelectedChromosome() {return (String)cmbChroms.getSelectedItem();}
+		private void setSpecies(String species) {lblSpecies.setText(species);}
+		private String getGroup() { return strGroup; }
+		private void setGroup(String group) { strGroup = group; }
 		
-		public void setChromosomes(String [] names) {
+		private void setChromosomes(String [] names) {
 			//Need to disable any listeners while we populate
 			ActionListener [] listeners = (ActionListener [])cmbChroms.getListeners(ActionListener.class);
 			if(listeners != null && listeners.length > 0)
@@ -408,19 +373,14 @@ public class SpeciesSelectPanel extends JPanel {
 			cmbChroms.setSelectedIndex(0);
 		}
 		
-		public void adjustSize() {
-			setMaximumSize(getPreferredSize());
-		}
-		
-		public void setChromSize(Dimension d) {
+		private void setChromSize(Dimension d) {
 			cmbChroms.setPreferredSize(d);
 			cmbChroms.setMaximumSize(d);
 			cmbChroms.setMinimumSize(d);
 		}
 		
-		public Dimension getChromSize() { return cmbChroms.getPreferredSize(); }
+		private Dimension getChromSize() { return cmbChroms.getPreferredSize(); }
 		
-		private int nCheckBoxWidth = -1;
 		private JLabel lblSpecies = null;
 		private JComboBox cmbChroms = null;
 		private JTextField txtStart = null;

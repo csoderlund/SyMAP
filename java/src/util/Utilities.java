@@ -1149,6 +1149,22 @@ public class Utilities {
 	{
 		mTimeStart = new Date();
 	}
+	public static void timerEndNotZero() {
+		Date now = new Date();
+		Long elapsed = now.getTime() - mTimeStart.getTime();
+		elapsed /= 1000;
+		if (elapsed<=2) return;
+		
+		if (elapsed < 300)
+		{
+			System.out.println("Finished in " + elapsed + " seconds");
+		}
+		else
+		{
+			elapsed /= 60;
+			System.out.println("Finished in " + elapsed + " minutes");
+		}
+	}
 	public static void timerEnd()
 	{
 		Date now = new Date();

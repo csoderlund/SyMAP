@@ -11,6 +11,9 @@ import java.util.Date;
 
 public class ErrorReport {
 	static final String strFileName = "error.log";
+	static boolean isApplet=false;
+	
+	public static void isApplet() { isApplet=true; }; // CAS503
 	
 	public static void print(Throwable e, String debugInfo) {
 		reportError(e, "Error: " + debugInfo, false);
@@ -29,6 +32,13 @@ public class ErrorReport {
 	public static void reportError(Throwable e, String debugInfo, boolean replaceContents) {
 		System.err.println(debugInfo);
 		
+		if (isApplet) { // CAS503
+			System.err.println(e);
+			return;
+		}
+		else {
+			System.err.println(e.getMessage());
+		}
 		PrintWriter pWriter = null;
 		try {
 			if(replaceContents) {

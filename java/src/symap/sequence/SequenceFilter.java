@@ -74,6 +74,7 @@ public class SequenceFilter extends Filter {
 	private boolean noChange = false;
 
 	public SequenceFilter(Frame owner, DrawingPanel dp, AbstractButton helpButton, Sequence sequence) {
+	/** Menu **/
 		super(owner,dp,"Sequence Filter",helpButton);
 		this.sequence = sequence;
 
@@ -111,7 +112,7 @@ public class SequenceFilter extends Filter {
 		gapCheck = new JCheckBox("Show Gaps");
 		centromereCheck = new JCheckBox("Show Centromere");
 		rulerCheck = new JCheckBox("Show Ruler");
-		annotCheck = new JCheckBox("Show Description for Annotations");
+		annotCheck = new JCheckBox("Show Annotation Descriptions");
 
 		frameCheck.setSelected(Sequence.DEFAULT_SHOW_FRAME && frameCheck.isEnabled());
 		geneCheck.setSelected(Sequence.DEFAULT_SHOW_GENE && geneCheck.isEnabled());
@@ -170,12 +171,14 @@ public class SequenceFilter extends Filter {
 		constraints.fill = GridBagConstraints.NONE;
 		addToGrid(contentPane, gridbag, constraints, geneRadioPanel, GridBagConstraints.REMAINDER);
 		constraints.fill = GridBagConstraints.HORIZONTAL;
-		addToGrid(contentPane, gridbag, constraints, frameCheck, GridBagConstraints.REMAINDER);
+		addToGrid(contentPane, gridbag, constraints, annotCheck, GridBagConstraints.REMAINDER); // CAS503 move
+		
 		addToGrid(contentPane, gridbag, constraints, gapCheck, GridBagConstraints.REMAINDER);
 		addToGrid(contentPane, gridbag, constraints, centromereCheck, GridBagConstraints.REMAINDER);
+		addToGrid(contentPane, gridbag, constraints, frameCheck, GridBagConstraints.REMAINDER);
 
 		addToGrid(contentPane, gridbag, constraints, new JSeparator(), GridBagConstraints.REMAINDER);
-		addToGrid(contentPane, gridbag, constraints, annotCheck, GridBagConstraints.REMAINDER);
+		
 		addToGrid(contentPane, gridbag, constraints, rulerCheck, GridBagConstraints.REMAINDER);
 		addToGrid(contentPane, gridbag, constraints, ribbonCheck, GridBagConstraints.REMAINDER);     
 		addToGrid(contentPane, gridbag, constraints, scoreLineCheck, GridBagConstraints.REMAINDER);  
@@ -199,29 +202,36 @@ public class SequenceFilter extends Filter {
 		scoreLineCheck.addChangeListener(this);		
 		scoreValueCheck.addChangeListener(this);	
 		
-		popupTitle.setText("Sequence Options:"); 
-		flippedPopupCheck = new JCheckBoxMenuItem("Flip"); 
-		fullSequencePopupItem = new JMenuItem("Show Full Sequence");
-		framePopupCheck = new JCheckBoxMenuItem("Show Framework Markers"); 
-		genePopupCheck = new JCheckBoxMenuItem("Show Genes"); 
-		ribbonPopupCheck = new JCheckBoxMenuItem("Show Hit Length"); 
-		gapPopupCheck = new JCheckBoxMenuItem("Show Gaps"); 
-		centromerePopupCheck = new JCheckBoxMenuItem("Show Centromere"); 
-		rulerPopupCheck = new JCheckBoxMenuItem("Show Ruler"); 
-		annotPopupCheck = new JCheckBoxMenuItem("Show Annotation Descriptions");
-		scoreLinePopupCheck = new JCheckBoxMenuItem("Show Hit Score Bar"); 		
-		scoreValuePopupCheck = new JCheckBoxMenuItem("Show Hit Score Value"); 	
-		popup.add(fullSequencePopupItem);
+		/** Popup **/
+		fullSequencePopupItem = new JMenuItem("Full Sequence");
+		flippedPopupCheck = new JCheckBoxMenuItem("Flip Sequence"); 
+		annotPopupCheck = new JCheckBoxMenuItem("Annotation Descriptions"); 
+		framePopupCheck = new JCheckBoxMenuItem("Framework Markers"); 
+		genePopupCheck = new JCheckBoxMenuItem("Genes"); 
+		ribbonPopupCheck = new JCheckBoxMenuItem("Hit Length"); 
+		gapPopupCheck = new JCheckBoxMenuItem("Gaps"); 
+		centromerePopupCheck = new JCheckBoxMenuItem("Centromere"); 
+		rulerPopupCheck = new JCheckBoxMenuItem("Ruler"); 
+		scoreLinePopupCheck = new JCheckBoxMenuItem("Hit Score Bar"); 		
+		scoreValuePopupCheck = new JCheckBoxMenuItem("Hit Score Value"); 	
+	
+	/** Sequence show options **/
+		popupTitle.setText("Sequence Show Options:"); 
 		popup.add(flippedPopupCheck); 
-		popup.add(framePopupCheck); 
-		popup.add(genePopupCheck);
+		
+		popup.add(annotPopupCheck); // CAS503 move after genes
+		popup.add(genePopupCheck); 
+			
 		popup.add(gapPopupCheck); 
 		popup.add(centromerePopupCheck); 
-		popup.add(annotPopupCheck);
+		popup.add(framePopupCheck); 
+		
 		popup.add(rulerPopupCheck);
 		popup.add(ribbonPopupCheck); 
 		popup.add(scoreLinePopupCheck);
 		popup.add(scoreValuePopupCheck);
+		popup.add(fullSequencePopupItem);
+		
 		fullSequencePopupItem.addActionListener(this);
 		flippedPopupCheck.addActionListener(this); 
 		framePopupCheck.addActionListener(this);
@@ -241,9 +251,6 @@ public class SequenceFilter extends Filter {
 
 	/**
 	 * Method <code>canShow</code> returns true if the Sequence has been initialized.
-	 *
-	 * @return a <code>boolean</code> value
-	 * @see Sequence#hasInit()
 	 */
 	public boolean canShow() {
 		if (sequence == null) return false;
@@ -253,24 +260,18 @@ public class SequenceFilter extends Filter {
 	/**
 	 * Sets up the sequence dialog based on the current sequence track information before showing then
 	 * shows (<code>super.show()</code>).
-	 * 
 	 */
 	public void show() {
 		if (!isShowing()) {
 			noChange = true;
 			
 			int[] annotTypeCounts = sequence.getAnnotationTypeCounts(); 
-			if (annotTypeCounts[Annotation.FRAMEWORK_INT] == 0)
-				frameCheck.setEnabled(false);
+			if (annotTypeCounts[Annotation.FRAMEWORK_INT] == 0) frameCheck.setEnabled(false);
 			if (annotTypeCounts[Annotation.GENE_INT] == 0 
-					&& annotTypeCounts[Annotation.EXON_INT] == 0) 
-				geneCheck.setEnabled(false);
-			if (annotTypeCounts[Annotation.GAP_INT] == 0) 
-				gapCheck.setEnabled(false);
-			if (annotTypeCounts[Annotation.CENTROMERE_INT] == 0) 
-				centromereCheck.setEnabled(false);
-			if (annotTypeCounts[Annotation.GENE_INT] == 0)
-				annotCheck.setEnabled(false);
+					&& annotTypeCounts[Annotation.EXON_INT] == 0) geneCheck.setEnabled(false);
+			if (annotTypeCounts[Annotation.GAP_INT] == 0) 		gapCheck.setEnabled(false);
+			if (annotTypeCounts[Annotation.CENTROMERE_INT] == 0) centromereCheck.setEnabled(false);
+			if (annotTypeCounts[Annotation.GENE_INT] == 0)		annotCheck.setEnabled(false);
 
 			setStart();
 			setEnd();
@@ -462,20 +463,15 @@ public class SequenceFilter extends Filter {
 		}
 		super.actionPerformed(event);
 	}
-	
+	// 
 	public void popupMenuWillBecomeVisible(PopupMenuEvent event) { 
 		int[] annotTypeCounts = sequence.getAnnotationTypeCounts();
-		if (annotTypeCounts[Annotation.FRAMEWORK_INT] == 0)
-			framePopupCheck.setEnabled(false);
+		if (annotTypeCounts[Annotation.FRAMEWORK_INT] == 0) 		framePopupCheck.setEnabled(false);
 		if (annotTypeCounts[Annotation.GENE_INT] == 0 
-				&& annotTypeCounts[Annotation.EXON_INT] == 0) 
-			genePopupCheck.setEnabled(false);
-		if (annotTypeCounts[Annotation.GAP_INT] == 0) 
-			gapPopupCheck.setEnabled(false);
-		if (annotTypeCounts[Annotation.CENTROMERE_INT] == 0) 
-			centromerePopupCheck.setEnabled(false);
-		if (annotTypeCounts[Annotation.GENE_INT] == 0) 
-			annotPopupCheck.setEnabled(false);
+				&& annotTypeCounts[Annotation.EXON_INT] == 0) 	genePopupCheck.setEnabled(false);
+		if (annotTypeCounts[Annotation.GAP_INT] == 0) 			gapPopupCheck.setEnabled(false);
+		if (annotTypeCounts[Annotation.CENTROMERE_INT] == 0) 	centromerePopupCheck.setEnabled(false);
+		if (annotTypeCounts[Annotation.GENE_INT] == 0) 			annotPopupCheck.setEnabled(false);
 		
 		frame = sequence.showFrame && framePopupCheck.isEnabled();
 		gene = sequence.showGene && genePopupCheck.isEnabled();

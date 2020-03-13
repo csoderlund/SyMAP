@@ -10,10 +10,11 @@ import java.util.Vector;
 
 import symap.SyMAP;
 import util.PropertiesReader;
+import util.TextBox;
 
 /**
  * Class <code>Annotation</code> is used for storing and painting an
- * annotation to the screeen.
+ * annotation graphics to the screen.
  * 
  * An annotation consists of a name, type, start, end, and text value. An
  * annotations also has a long description and a short description which are set
@@ -65,7 +66,7 @@ public class Annotation {
 	public static Color gapColor;
 	public static Color centromereColor;
 	public static Color exonColor;   
-	public static Color sygeneColor = Color.yellow; 
+	public static Color sygeneColor = Color.yellow; // CAS503 sygene obsolete?
 	
 	private static final float crossWidth; // the width of the line in the cross
 	static {
@@ -84,24 +85,14 @@ public class Annotation {
 	private int start, end;						
 	private String description;			
 	private Rectangle2D.Double rect;
-	private boolean strand;				
+	private boolean strand;	
+	private TextBox descBox=null; // CAS503
 
 	/**
 	 * Creates a new <code>Annotation</code> instance setting the description
 	 * values, color, and draw method based on type.
-	 * 
-	 * @param name			a <code>String</code> value
-	 * @param annot_type
-	 *            a <code>String</code> value of the type, can be one of the
-	 *            defined ones, or a different one
-	 * @param start			an <code>long</code> value in bp
-	 * @param end			an <code>long</code> value in bp
-	 * @param text
-	 *            a <code>String</code> value of database description of the
-	 *            Annotation
 	 */
 	public Annotation(String name, String annot_type, /*long*/int start, /*long*/int end, String strand) {
-		// this.name = name;
 		this.type = getType(annot_type);
 		this.start = start;
 		this.end = end;
@@ -114,7 +105,6 @@ public class Annotation {
 	/**
 	 * Method <code>clear</code> clears the rectangle coordinates so that the
 	 * annotation will not be painted and sets the associated rule to null.
-	 * 
 	 */
 	public void clear() {
 		rect.setRect(0, 0, 0, 0);
@@ -123,22 +113,10 @@ public class Annotation {
 	/**
 	 * Method <code>setRectangle</code> sets up the rectangle based on the
 	 * values given adjusting the rectangle as needed.
-	 * 
-	 * @param boundry
-	 *            a <code>Rectagle2D</code> value of the overall rectangle
-	 *            that this Annotation must stay inside
-	 * @param startBP
-	 *            a <code>long</code> value of the start base pair of the
-	 *            overall rectangle that this annotation is in
-	 * @param bpPerPixel
-	 *            a <code>double</code> value of the base pair per pixel used
-	 * @param width
-	 *            a <code>double</code> value of the desired width of the
-	 *            annotation in pixels
 	 */
 	public void setRectangle(
 			Rectangle2D boundry, 
-			long startBP,
+			long startBP,		
 			long endBP, 
 			double bpPerPixel, 
 			double width, 
@@ -204,8 +182,6 @@ public class Annotation {
 	/**
 	 * Method <code>isVisible</code> returns true if after calling
 	 * setRectangle, the rectangle has a width and a height greater than zero.
-	 * 
-	 * @return a <code>boolean</code> value
 	 */
 	public boolean isVisible() {
 		return rect.getWidth() > 0 && rect.getHeight() > 0;
@@ -213,11 +189,6 @@ public class Annotation {
 	
 	/**
 	 * Offset the whole Annotation if it's visible.
-	 * 
-	 * @param x
-	 *            amount to subtract from the x coordinates
-	 * @param y
-	 *            amount to subtract from the y coordinates
 	 */
 	public void setOffset(double x, double y) {
 		if (isVisible()) {
@@ -226,34 +197,22 @@ public class Annotation {
 		}
 	}
 
-
 	/**
 	 * Method <code>getColor</code> returns this annotations associated color.
-	 * 
-	 * @return a <code>Color</code> value
 	 */
-	public Color getColor() {
+	private Color getColor() {
 		
-		if (type == EXON_INT)	
-			return exonColor;	
-		if (type == GENE_INT)
-			return geneColor;
-		if (type == SYGENE_INT) 
-			return sygeneColor; 
-		if (type == GAP_INT)
-			return gapColor;
-		if (type == FRAMEWORK_INT)
-			return frameColor;
-		if (type == CENTROMERE_INT)
-			return centromereColor;
+		if (type == EXON_INT)		return exonColor;	
+		if (type == GENE_INT)		return geneColor;
+		if (type == SYGENE_INT) 		return sygeneColor; 
+		if (type == GAP_INT)			return gapColor;
+		if (type == FRAMEWORK_INT)	return frameColor;
+		if (type == CENTROMERE_INT)	return centromereColor;
 
 		return Color.black; 
 	}
 
-
-	public int getType() {
-		return type;
-	}
+	public int getType() {return type;}
 
 	public boolean isGene() 	  { return type == GENE_INT; }
 	public boolean isFramework()  { return type == FRAMEWORK_INT; }
@@ -262,46 +221,30 @@ public class Annotation {
 	public boolean isExon() 	  { return type == EXON_INT; }   
 	public boolean isSyGene() 	  { return type == SYGENE_INT; } 
 
-
-
-	public /*long*/int getStart() {
-		return start;
-	}
-	
-	public /*long*/int getEnd() {
-		return end;
-	}
+	public /*long*/int getStart() {return start;}
+	public /*long*/int getEnd() {return end;}
 	
 	// for pseudo-pseudo closeup
-	public boolean getStrand() {
-		return strand;
-	}
+	public boolean getStrand() {return strand;}
 	
 	/**
 	 * Method <code>contains</code> determines if the rectangle of this
 	 * annotation contains the point p.
-	 * 
-	 * @param p
-	 *            a <code>Point</code> value of the point
-	 * @return a <code>boolean</code> value of true if the rectangle contains
-	 *         p, and false otherwise.
 	 */
 	public boolean contains(Point p) {
 		return rect.contains(p.getX(), p.getY());
 	}
 
-
 	/**
 	 * Method <code>getShortDescription</code> returns the long description
 	 * set during the creation of the object by type or by a call to
 	 * setShortDescription(String).
-	 * 
-	 * @return a <code>String</code> value
 	 */
 	public String getShortDescription() {
 		return description;
 	}
 	
+	// Display in box beside genes when Show Annotation Description
 	public Vector<String> getVectorDescription() {
 		Vector<String> out = new Vector<String>();
 		out.add("Location=" + start + ":" + end + "   Length=" + (end-start+1));
@@ -311,10 +254,8 @@ public class Annotation {
 
 	/**
 	 * Method <code>getLongDescription</code> returns the long description set
-	 * during the creation of the object by type or by a call to
-	 * setLongDescription(String).
-	 * 
-	 * @return a <code>String</code> value
+	 * during the creation of the object by type or by a call to setLongDescription(String). 
+	 * Shown in info text box when mouse over object
 	 */
 	public String getLongDescription() {
 		String longDes;
@@ -322,8 +263,10 @@ public class Annotation {
 			longDes = "Gap: " + (new Long(start).toString()) + "-" + (new Long(end).toString());
 		else if (type == CENTROMERE_INT)
 			longDes = "Centromere: " + (new Long(start).toString()) + "-" + (new Long(end).toString());
-		else if (type == GENE_INT) 
-			longDes = "Gene: " + description;
+		else if (type == GENE_INT) {
+			String x = description.replaceAll(";", "\n"); // CAS503 
+			longDes = "Gene: " + x;
+		}
 		else if (type == EXON_INT) 
 			longDes = "Exon: " + (new Long(start).toString()) + "-" + (new Long(end).toString());
 		else if (type == FRAMEWORK_INT) 
@@ -337,8 +280,6 @@ public class Annotation {
 	/**
 	 * Method <code>hasShortDescription</code> returns true if the long
 	 * description is not null and not an empty string.
-	 * 
-	 * @return a <code>boolean</code> value
 	 */
 	public boolean hasShortDescription() {
 		return description != null && description.length() > 0;
@@ -347,10 +288,6 @@ public class Annotation {
 	/**
 	 * Method <code>paintComponent</code> paints this annotation to the
 	 * graphics object g2.
-	 * 
-	 * @param g2
-	 *            a <code>Graphics2D</code> value of the graphics object to
-	 *            paint to
 	 */
 	public void paintComponent(Graphics2D g2) {
 		if (type >= numTypes)
@@ -372,20 +309,16 @@ public class Annotation {
 		else { // TICK or RECT
 			// Only draw full rectangle if it is large enough to see.
 			if (rect.height >= 2) { 
-
 				g2.fillRect((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
 			}
 			else // Else draw as line 
-				
 				g2.drawLine((int)rect.x, (int)rect.y, (int)rect.x + (int)rect.width, (int)rect.y); 
 		}
 	}
 	
 	/**
 	 * Method <code>toString</code> returns the string representation of this
-	 * object.
-	 * 
-	 * @return a <code>String</code> value
+	 * object
 	 */
 	public String toString() {
 		return "[Annotation: {Rect: " + rect + "}]";
@@ -398,5 +331,22 @@ public class Annotation {
 			types.add(type);
 		}
 		return i;
+	}
+	
+	/*******************************************
+	 * CAS503 added so can display popup of description
+	 */
+	public void setTextBox(TextBox tb) {descBox = tb;}
+	public boolean boxContains(Point p) {
+		if (descBox==null) return false;
+		
+		return descBox.containsP(p);
+	}
+	public boolean popupDesc(Point p) {
+		if (descBox!=null && descBox.containsP(p)) {
+			descBox.popupDesc();
+			return true;
+		}	
+		return false;
 	}
 }

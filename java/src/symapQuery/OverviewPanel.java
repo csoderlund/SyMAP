@@ -1,5 +1,8 @@
 package symapQuery;
 
+/******************************************************
+ * The Overview panel on the right side of the query frame
+ */
 import java.util.Iterator;
 
 import javax.swing.BorderFactory;
@@ -43,10 +46,12 @@ public class OverviewPanel extends JPanel {
 		}
 		overView += "</TABLE>";
 		
-		overView += "<P>";
-		overView += "<P>Select <B>Query Setup</B> to initiate a search.</P>";
-		overView += "<P><B>Results</B> shows the searches which have been performed in this session.</P></FONT>";
-		overView += "</div>";
+		overView += "<P>"; // CAS503 reword
+		overView += "<P><b>Instructions:</b>";
+		overView += "<P>Select <B>Query Setup</B> to set filters on annotation and pairwise hit properties.</P>";
+		overView += "<P>Select <B>Results</B> to view the list of query results, and to remove results.</P>";
+		overView += "<br>The query results are listed under the <b>Results</b> tab, and can be viewed by selecting one.</P>";
+		overView += "</FONT></div>";
 		mainPanel.setText(overView);
 	}
 

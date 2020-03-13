@@ -58,33 +58,38 @@ Troubleshooting
 <i>Please send questions and suggestions to symap@agcol.arizona.edu.</i><br>
 <p>
 <ul>
-<li>General standalone problems
+<li>General
 <ul>
 <li><a href="#not_enough_memory1">Not enough memory with standalone</a></li>
+</ul>
+
+<li>MySQL
+<ul>
 <li><a href="#database_error">Database connect errors</a> ("Unable to connect","Error running SQL Command",...)</li>
+<li><a href="#mariadb">MariaDB cannot connect</a>
+<li><a href="#msqslow">Slow to load sequence and annotation</a>
 <li><a href="#slow">Slow queries</a>
 </ul>
 
 <li>Build problems
 <ul>
-<li>MySQL and startup
+<li>Database
 <ul>
-<li><a href="#innodb">The database does not support Innodb tables</a>
-<li><a href="#mysql_norun">"The built-in MySQL server cannot run..."</a></li>
+<li><a href="#innodb">The MySQL database does not support Innodb tables</a>
+<li><a href="#mysql_norun">The built-in MySQL server cannot run...</a></li>
 <li><a href="#root">Please read "Security" section of the manual to find out how to run mysqld as root</a> 
 <li><a href="#msqcase"> Can't create table  (errno: 121)</a>
-<li><a href="#glib">/lib64/libc.so.6: version `GLIBC_2.7' not found </a>
 </ul>
 
-<li><a href="#msqslow">Slow to load sequence and annotation</a>
-<li><a href="#status">"Status window disappeared"</a>
-
+<li>Alignment
+<ul>
+<li><a href="#status">Status window disappeared</a>
+<li><a href="#glib">/lib64/libc.so.6: version `GLIBC_2.7' not found </a>
 <li><a href="#mumFail">MUMmer failed</a></li>
-<li><a href="#mum64">MUMmer/PROmer can't handle large sequences</a>
-	
-<li><a href="#noanch">"No anchors loaded"</a>
+<li><a href="#mum64">MUMmer/PROmer can't handle large sequences</a>	
+<li><a href="#noanch">No anchors loaded</a>
 <li><a href="#bes">BES not loaded</a>
-
+</ul>
 </ul>
 
 <li>Web problems
@@ -96,7 +101,7 @@ Troubleshooting
 </ul>
 
 <hr>
-
+<h2>General</h2>
 <a name="#not_enough_memory1">
 <h3>Not enough memory with standalone</h3>
 When running SyMAP as a standalone application:
@@ -116,111 +121,65 @@ You will also need to be using a 64-bit processor.
 
 <!---------------------------------------------------------!>
 <hr>
+<h2>MySQL</h2>
 <a name="database_error">
 <h3>Database connect errors</h3>
 Error messages mentioning the database or SQL probably mean that the database connection
 could not be established or was lost. A message at startup means SyMAP was not able
-to connect to the database using the provided information in symap.config; see below for 
+to connect to the database using the provided information in <tt>symap.config</tt>; see below for 
 steps to debug this. 
 <p>
 After startup, if the program is left idle for some time then its
 database connection will close and it will show a complicated-looking error on 
 next usage. In this case the solution is to restart the program.
 <p>
+
 Following are some things to check for connection problems on SyMAP startup:
 
-<h4>Check the database privileges</h4>
+<p><u>Check the database privileges</u>:
 The database users specified in symap.config may not have necessary access to the database.
 If you are running the standalone version, then the relevant user is 'db_adminuser' (unless
-you are running a read-only session using 'symap -r' parameter). If you are running
+you are running a read-only session using <tt>viewSymap</tt>). If you are running
 through the web applet, then is is 'db_clientuser'. In either case the user needs
-to have database access privileges <i>from the machine where you are working</i>. Note that MySQL
+to have database access privileges <i>from the machine where you are working</i>. 
+Note that MySQL
 privileges are granted specifically to certain users on certain machines. You can test 
 the user access by using the MySQL command line client <tt>mysql</tt>, if it is installed
 on your machine, or by looking at the privilege table using an administration interface
 such as PHPMyAdmin. The <tt>mysqlaccess</tt> tool is also useful, if it is installed
 on your machine. 
 
-<h4>Check the MySQL configuration</h4>
-
+<p><u>Check the MySQL configuration</u>:
 The MySQL configuration file (/etc/my.cnf) should <b>not</b> contain any
 of the following lines that prevent remote access to the database.
 <tt><pre>     bind_address=127.0.0.1
      skip_networking 
 </pre></tt>
 
-<h4>Make sure the port is visible</h4>
+<p><u>Make sure the port is visible</u>:
 If the database is on a different computer, test that its port 3306 is visible
 from your computer:
- <tt>
 <pre>     telnet &lt;server address&gt; 3306
 </pre>
-</tt>
+
 If it doesn't make a connection then either the server isn't running, or 
 it is set to run on a non-standard port, or the
 port is blocked by a firewall. Contact a system administrator. (Note, 
 to get out of telnet type "<tt>^]</tt>".)
 
-<p><a href="#top">Return to top</a><br>
-<hr>
-<a name="slow">
-<h3>Slow queries</h3>
-<table width=600 cellspacing=3 cellpadding=2 border=1 rules=all>
-	<tr>
-		<td align=left valign=top><tt>max_allowed_packet</td>
-		<td>
-This should be at least 500M if possible (the units are bytes). 
-		</td>
-	</tr>	
-</table>
-<p>
-To check the value, start mysql and type:
-<pre>show variables like "max_allowed_packet"; </pre>
-To change this variable, then type:
-<pre>set global max_allowed_packet=1073741824;</pre>
-
-<!--------------------------------------------------------!>
-<hr>
-<h3>Build problems</h3>
-
-<h4>MySQL and startup</h4>
-
-<a name="innodb">
-<h5>The database does not support Innodb tables</h5>
-This can happen in a couple of ways ways. Look in the mysql log for clues.  
-<li> MySQL started with the "skip-innodb" flag. Solution is to remove this. 
-<li> InnoDB log file problems. This can happen if you change the log file size, without
-deleting the log file. Solution: shut down mysql, remove the innodb log file, and restart mysql. 
-
-<a name="mysql_norun">
-<h5>"The built-in MySQL server cannot run..."</h5>
-SyMAP comes with a MySQL server built in, but it does not run right if there is another
-MySQL server already running on the computer. There are two solutions: either stop the 
-other server temporarily, or edit the parameters file to point SyMAP at that server (or
-another server) so it doesn't use the built-in MySQL. 
-
-<a name="root">
-<h5>Please read "Security" section of the manual to find out how to run mysqld as root</h5> 
-You are launching SyMAP as the unix root user, which is blocked by MySQL 
-as a security hazard. Solution is simply to use a regular non-root user account.  
-
-<a name="msqcase">
-<h5>Can't create table  (errno: 121)</h5>
-This can occur if you try to create a SyMAP database whose name differs only by
-case from an existing database, e.g. "symapTest" when "symaptest" already exists. 
-
-
-<a name="glib">
-<h5>/lib64/libc.so.6: version `GLIBC_2.7' not found </h5>
-If this occurs while you are doing an alignment, it
- means that some libraries on your system are not compatible with those
-required by the version of MUMmer which is included with SyMAP. To solve this
-you will need to obtain the MUMmer source code distribution and compile
-it on your own system, which is not hard to do (however, 
-<a href="#mum64">note this important detail</a>). Then, copy the binary named
-"mummer" to the appropriate ext/mummer/&lt;platform&gt; directory and re-run SyMAP. 
-
-<p><a href="#top">Return to top</a><br>
+<a name="mariadb">
+<h4>MariaDB cannot connect </h4>
+If you are using MariaDB (post version 10.4.12) and get the error:
+<pre>
+Unable to connect to the mysql database on localhost; are username and password correct?
+</pre>
+Try adding the following lines to the <tt>/etc/my.cnf</tt>:
+<pre>
+[mysqld]
+character-set-server=utf8mb4
+</pre>
+And restart MariaDB with <tt>systemctl restart mariadb</tt>. 
+<p>Thanks to Lori for this solution! 
 
 <a name="msqslow">
 <h3>Slow to load sequence and annotation</h3>
@@ -253,29 +212,92 @@ show variables like "innodb_flush_log_at_trx_commit";
 To change the variables, then type:
 <pre>
 set global innodb_buffer_pool_size=1073741824;
-set global innodb_flush_log_at_trx_commit=1;
+set global innodb_flush_log_at_trx_commit=0;
 </pre>
 Different machines and MySQL installations can produce different results with these variables.
 If the SyMAP demo-seq to demo-seq2 load and synteny computations seem slow, 
 try different combinations of these two variables to see what performs the fastest inserts.
 
+
+<a name="slow">
+<h3>Slow queries</h3>
+<table width=600 cellspacing=3 cellpadding=2 border=1 rules=all>
+	<tr>
+		<td align=left valign=top><tt>max_allowed_packet</td>
+		<td>
+This should be at least 500M if possible (the units are bytes). 
+		</td>
+	</tr>	
+</table>
+<p>
+To check the value, start mysql and type:
+<pre>show variables like "max_allowed_packet"; </pre>
+To change this variable, then type:
+<pre>set global max_allowed_packet=1073741824;</pre>
+<p><a href="#top">Return to top</a><br>
+
+<!--------------------------------------------------------!>
+<hr>
+<h2>Build problems</h2>
+
+<h3>Database</h3>
+Note that the demo_seq should load
+in less than a minutes, if its longer, check the variables stated in <a href=#msqslow>slow to load</a>.
+
+<a name="innodb">
+<h5>The database does not support Innodb tables</h5>
+This can happen in a couple of ways ways. Look in the mysql log for clues.  
+<li> MySQL started with the "skip-innodb" flag. Solution is to remove this. 
+<li> InnoDB log file problems. This can happen if you change the log file size, without
+deleting the log file. Solution: shut down mysql, remove the innodb log file, and restart mysql. 
+
+<a name="mysql_norun">
+<h5>"The built-in MySQL server cannot run..."</h5>
+SyMAP comes with a MySQL server built in, but it does not run right if there is another
+MySQL server already running on the computer. There are two solutions: either stop the 
+other server temporarily, or edit the parameters file to point SyMAP at that server (or
+another server) so it doesn't use the built-in MySQL. 
+
+<a name="root">
+<h5>Please read "Security" section of the manual to find out how to run mysqld as root</h5> 
+You are launching SyMAP as the unix root user, which is blocked by MySQL 
+as a security hazard. Solution is simply to use a regular non-root user account.  
+
+<a name="msqcase">
+<h5>Can't create table  (errno: 121)</h5>
+This can occur if you try to create a SyMAP database whose name differs only by
+case from an existing database, e.g. "symapTest" when "symaptest" already exists. 
+
+<p><a href="#top">Return to top</a><br>
+
+<h3>Alignment</h3>
+
 <a name="status">
-<h3>"Status window disappeared"</h3>
+<h4>Status window disappeared</h4>
 Occasionally the status window disappears when running an alignment. 
 Clicking the top of the project manager sometimes
 brings it back. Otherwise, just check the output to the terminal,
 which tells you when it is done. You may
 have to restart the project manager to see the results.
 
+<a name="glib">
+<h4>/lib64/libc.so.6: version `GLIBC_2.7' not found </h4>
+If this occurs while you are doing an alignment, it
+ means that some libraries on your system are not compatible with those
+required by the version of MUMmer which is included with SyMAP. To solve this
+you will need to obtain the MUMmer source code distribution and compile
+it on your own system, which is not hard to do (however, 
+<a href="#mum64">note this important detail</a>). Then, copy the binary named
+"mummer" to the appropriate ext/mummer/&lt;platform&gt; directory and re-run SyMAP. 
+
 <a name="mumFail">
-<h3>MUMmer failed</h3>
+<h4>MUMmer failed</h4>
 Try using a hard-masked genome sequence. Ensembl supplies both soft-masked and
 hard-masked genome sequences. NCBI supplies soft-masked sequences, where the
-ConvertNCBI script can convert the file to hard-mask.
-
+supplied ConvertNCBI script (scripts/ConvertNCBI) can convert the file to hard-mask.
 
 <a name="mum64">
-<h3>MUMmer/PROmer cannot handle large sequences</h3>
+<h4>MUMmer/PROmer cannot handle large sequences</h4>
 If the alignment doesn't produce results and you see errors indicating
 that PROmer cannot produce the .aaqry file, then the mummer binary may
 not be 64-bit. You can tell for sure by looking at the output lines like
@@ -295,9 +317,8 @@ compile on a 64-bit machine). We fixed this problem in the 3.4 version of SyMAP,
 for lintel64, but if you're building for a different platform you'll have
 to make this fix. 
 
-
 <a name="noanch">
-<h3>"No anchors loaded"</h3>
+<h4>No anchors loaded</h4>
 This message indicates that SyMAP could not parse the MUMmer or BLAT output files
 to load the anchors. 
 <p>
@@ -326,7 +347,7 @@ These contain the messages printed by MUMmer, and should show why it failed to r
 <p>
 
 <a name="bes">
-<h3>BES not loaded, or BES hits not loading</h3>
+<h4>BES not loaded, or BES hits not loading</h4>
 Generally, this is caused by a name formatting error. Make sure the BES
 names are formatted as clone names with extension "r" or "f". The clone
 names should <i>exactly match</i> those in FPC, and there should be no other prefix or suffix. 
@@ -335,7 +356,7 @@ Do not use ".r" or ".f".
 <p><a href="#top">Return to top</a><br>
 <hr>
 <!--------------------------------------------------------!>
-<h3>Web problems</h3>
+<h2>Web problems</h2>
 <a name="web">
 <h4>Unable to view Java applets</h4>
 

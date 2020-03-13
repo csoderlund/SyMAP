@@ -132,7 +132,7 @@ public class ResultSummaryPanel extends JPanel {
 		btnLoadQuery.setBackground(Color.WHITE);
 		btnLoadQuery.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				theParentFrame.addResult(new ListDataPanel(theParentFrame, ListDataPanel.VIEW_MODE_LOCAL));
+				theParentFrame.addResult(new ListDataPanel(theParentFrame));
 			}
 		});
 		
@@ -155,8 +155,7 @@ public class ResultSummaryPanel extends JPanel {
 		
 		JLabel headerLine = new JLabel("List Queries");
 		headerLine.setAlignmentX(LEFT_ALIGNMENT);
-		JTextArea instructions = new JTextArea(	"Remove All Queries also removes them from the left panel\n" +
-													"Except for description, the remaining columns no longer function");
+		JTextArea instructions = new JTextArea("Removing a query also removes it from the left panel");
 				
 		instructions.setEditable(false);
 		instructions.setBackground(getBackground());
@@ -205,7 +204,5 @@ public class ResultSummaryPanel extends JPanel {
             return colNames[col];
         }
 	}
-
-
 }
 

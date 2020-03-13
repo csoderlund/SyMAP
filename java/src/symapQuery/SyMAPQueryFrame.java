@@ -1,5 +1,8 @@
 package symapQuery;
 
+/**************************************************
+ * The main query frame
+ */
 import java.applet.Applet;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -8,12 +11,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.Vector;
 
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -23,13 +24,14 @@ import backend.UpdatePool;
 import util.DatabaseReader;
 import util.Utilities;
 
+import util.ErrorReport;
 import symap.pool.PoolManager;
 import symap.pool.Pools;
 import symap.projectmanager.common.Project;
 import symapMultiAlign.AlignmentViewPanel;
 
 public class SyMAPQueryFrame extends JFrame {
-	private static final String [] MENU_ITEMS = { "Overview", "Query Setup", "Results" };
+	private static final String [] MENU_ITEMS = { "> Instructions", "> Query Setup", "> Results" }; 
 	public static final String [] LOCAL_RESULT_COLUMNS = { "Query", "Filters" };
 	
 	public SyMAPQueryFrame(DatabaseReader dr, boolean is3D) {
@@ -41,6 +43,8 @@ public class SyMAPQueryFrame extends JFrame {
 		theApplet = applet;
 		theReader = dr;
 		bIs3D = is3D;
+		
+		ErrorReport.isApplet(); // CAS503
 		
 		theProjects = new Vector<Project> ();		
 		
@@ -70,41 +74,24 @@ public class SyMAPQueryFrame extends JFrame {
 						
 					addResultPanel(parentCopy, newTab, tabName, summary);
 				} catch (Exception e) {
-					e.printStackTrace();
+					ErrorReport.print(e, "Align sequence");
 				}
 			}
 		});
 		thread.setPriority(Thread.MIN_PRIORITY);
 		thread.start();
-
 	}
 
-
-	
-	public String [] getDBNames() {
-		String [] retVal = new String[theProjects.size()];
-		
-		for(int x=0; x<retVal.length; x++) {
-			retVal[x] = theProjects.get(x).getDBName();
-		}
-		
-		return retVal;
-	}
-	
 	public String [] getDisplayNames() {
 		String [] retVal = new String[theProjects.size()];
 		
 		for(int x=0; x<retVal.length; x++) {
 			retVal[x] = theProjects.get(x).getDisplayName();
 		}
-		
 		return retVal;
 	}
 	
-	public boolean is3D() { return bIs3D; }
-	
 	public void addProject(Project project) {
-		//TODO for now, do not allow FPC projects
 		if(!project.getType().equals("fpc"))
 			theProjects.add(project);
 	}
@@ -124,40 +111,37 @@ public class SyMAPQueryFrame extends JFrame {
 				return true;
 			}
 		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+		catch (Exception e) {ErrorReport.print(e, "Add project");}
 
 		return false;
 	}
 	
 	private Project loadProject(String strProjName, String strTypeName) throws SQLException
 	{
-     int nProjIdx = -1;
-     String strDisplayName = null;
-
-     UpdatePool pool = new UpdatePool(theReader);
-     ResultSet rs = pool.executeQuery("SELECT p.idx, pp.value " +
-     		"FROM projects AS p " +
-     		"JOIN proj_props AS pp ON (p.idx=pp.proj_idx) " +
-     		"WHERE pp.name='display_name' " +
-     		"AND p.name='"+strProjName+"' AND p.type='"+strTypeName+"'");
-     
-     if ( rs.next() ) {
-     	nProjIdx = rs.getInt("p.idx");
-     	strDisplayName = rs.getString("pp.value");
-     }
-
-     rs.close();
-     
-     if (nProjIdx < 0) {
-     	System.err.println("Couldn't find project '"+strProjName+"' in database.");
-     	return null;
-     }
-     
-     Project p = new Project(nProjIdx, strProjName, strTypeName, strDisplayName);
-     p.loadGroups(pool);
-     return p;
+	     int nProjIdx = -1;
+	     String strDisplayName = null;
+	
+	     UpdatePool pool = new UpdatePool(theReader);
+	     ResultSet rs = pool.executeQuery("SELECT p.idx, pp.value " +
+	     		"FROM projects AS p " +
+	     		"JOIN proj_props AS pp ON (p.idx=pp.proj_idx) " +
+	     		"WHERE pp.name='display_name' " +
+	     		"AND p.name='"+strProjName+"' AND p.type='"+strTypeName+"'");
+	     
+	     if ( rs.next() ) {
+	     	nProjIdx = rs.getInt("p.idx");
+	     	strDisplayName = rs.getString("pp.value");
+	     }
+	     rs.close();
+	     
+	     if (nProjIdx < 0) {
+	     	System.err.println("Couldn't find project '"+strProjName+"' in database.");
+	     	return null;
+	     }
+	     
+	     Project p = new Project(nProjIdx, strProjName, strTypeName, strDisplayName);
+	     p.loadGroups(pool);
+	     return p;
 	}
 
 	public void build() {
@@ -184,7 +168,7 @@ public class SyMAPQueryFrame extends JFrame {
 	public Applet getApplet() { return theApplet; }
 	public Vector<Project> getProjects() { return theProjects; }
 	
-	
+	// Query result
 	public void addResult(ListDataPanel newPanel) {
 		if(newPanel.isValidData()) {
 			resultsPanel.addResult(newPanel.getSummary());
@@ -194,7 +178,7 @@ public class SyMAPQueryFrame extends JFrame {
 			updateView();
 		}
 	}
-	
+	// Muscle alignment
 	public void addResultPanel(JPanel parentPanel, JPanel newPanel, String name, String summary) {
 		String [] row = new String[2];
 		row[0] = name;
@@ -206,8 +190,6 @@ public class SyMAPQueryFrame extends JFrame {
 		mainPanel.add(newPanel);
 		updateView();
 	}
-	
-
 	
 	public boolean updateResultCount(ListDataPanel panel) {
 		int numResults = panel.getNumResults();
@@ -263,7 +245,7 @@ public class SyMAPQueryFrame extends JFrame {
 						oldSelections = ((ListDataPanel)results.get(x)).getColumnSelections();
 					}
 				}
-				addResult(new ListDataPanel(getThis(), getNextResultLabel(), ListDataPanel.VIEW_MODE_LOCAL, ListDataPanel.QUERY_MODE_LOCAL, oldSelections));
+				addResult(new ListDataPanel(getThis(), getNextResultLabel(), oldSelections));
 			}
 		});
 		
@@ -286,15 +268,15 @@ public class SyMAPQueryFrame extends JFrame {
 		
 		int selection = menuPanel.getCurrentSelection();
 		switch(selection) {
-		case 0: overviewPanel.setVisible(true);
+			case 0: overviewPanel.setVisible(true);
 			break;
-		case 1: localQueryPane.setVisible(true);
+			case 1: localQueryPane.setVisible(true);
 			break;
-		case 2: resultsPanel.setVisible(true);
+			case 2: resultsPanel.setVisible(true);
 			break;
-		default:
-			selection -= MENU_ITEMS.length;
-			results.get(selection).setVisible(true);
+			default:
+				selection -= MENU_ITEMS.length;
+				results.get(selection).setVisible(true);
 		}
 	}
 	
@@ -305,9 +287,8 @@ public class SyMAPQueryFrame extends JFrame {
 			
 			return p.getSequencePool().loadPseudoSeq(start + ":" + stop, groupIdx);
 		} catch (SQLException e) {
-			e.printStackTrace();
+			ErrorReport.print(e, "Get sequence");
 		}
-		
 		return "";
 	}
 	

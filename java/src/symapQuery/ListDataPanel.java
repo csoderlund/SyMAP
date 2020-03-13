@@ -1,5 +1,7 @@
 package symapQuery;
-
+/**************************************************
+ * Perform query and display results in table
+ */
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -52,6 +54,7 @@ import javax.swing.table.TableColumnModel;
 
 import dotplot.FilterData;
 import util.ErrorReport;
+import util.UserPrompt;
 import util.Utilities;
 
 import symap.SyMAP;
@@ -59,14 +62,15 @@ import symap.projectmanager.common.Project;
 import symap.sequence.Sequence;
 
 public class ListDataPanel extends JPanel {
+	private static final boolean TEST_PRT_FILE=false;
+	
 	public static final String MENU_LABEL = "List Results";
 
 	private static final long serialVersionUID = -3827610586702639105L;
 	
-	private static final boolean SHOW_ALL_COLUMNS = false;
-	
-	public static final int VIEW_MODE_LOCAL = 0;
-	public static final int QUERY_MODE_LOCAL = 0;
+	// private static final boolean SHOW_ALL_COLUMNS = false; CAS503 only sate
+	// public static final int VIEW_MODE_LOCAL = 0; CAS503 the only state
+	// public static final int QUERY_MODE_LOCAL = 0; CAS503 ditto
 
 	private static final int ANNO_COLUMN_WIDTH = 100;
 	private static final int ANNO_PANEL_WIDTH = 900;
@@ -80,35 +84,31 @@ public class ListDataPanel extends JPanel {
 		
 		return retVal;
 	}
-	public ListDataPanel(SyMAPQueryFrame parentFrame, String resultName, int queryMode, int viewMode, boolean [] selections) {
+	public ListDataPanel(SyMAPQueryFrame parentFrame, String resultName,  boolean [] selections) {
 		theParentFrame = parentFrame;
-		nViewMode = viewMode;
 		if(selections != null) {
 			theOldSelections = new boolean[selections.length];
 			for(int x=0; x<selections.length; x++)
 				theOldSelections[x] = selections[x];
 		}
 		
-		if(queryMode == QUERY_MODE_LOCAL) {
-			strSubQuery = theParentFrame.getLocalSubQuery();
-			strAnnotSubQuery = theParentFrame.getLocalAnnotSubQuery();
-			theQuerySummary = theParentFrame.getLocalSubQuerySummary();
-			theName = resultName;
-			
-			colSelectChange = new ActionListener() {
-				public void actionPerformed(ActionEvent arg0) {
-					setTable();
-			        showTable();
-				}
-			};
-		}
-		initialize(queryMode);
+		strSubQuery = theParentFrame.getLocalSubQuery();
+		strAnnotSubQuery = theParentFrame.getLocalAnnotSubQuery();
+		theQuerySummary = theParentFrame.getLocalSubQuerySummary();
+		theName = resultName;
+		
+		colSelectChange = new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				setTable();
+		        showTable();
+			}
+		};
+
+		initialize();
 	}
 	
-	public ListDataPanel(SyMAPQueryFrame parentFrame, int viewMode) {
+	public ListDataPanel(SyMAPQueryFrame parentFrame) {
 		theParentFrame = parentFrame;
-		nViewMode = viewMode;
-		
 		bValidList = readReloadFile(",");
 
 		colSelectChange = new ActionListener() {
@@ -129,12 +129,8 @@ public class ListDataPanel extends JPanel {
 			theTable.removeListeners();
 		}
 		
-		if(SHOW_ALL_COLUMNS)
-			theTable = new SortTable(theTableData);
-		else {
-			String [] columns = TableData.orderColumns(theTable, getSelectedColumns());
-			theTable = new SortTable(TableData.createModel(columns, theTableData, getInstance()));
-		}
+		String [] columns = TableData.orderColumns(theTable, getSelectedColumns());
+		theTable = new SortTable(TableData.createModel(columns, theTableData, getInstance()));
 		
         theTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         theTable.autofitColumns();
@@ -158,7 +154,6 @@ public class ListDataPanel extends JPanel {
 		Vector<String> retVal = new Vector<String> ();
 		String [] annoColumns = theAnnotations.getColumns();
 		
-		//TODO need to go through
 		for(int x=0; x<chkGeneralFields.length; x++) {
 			if(chkGeneralFields[x].isSelected())
 				retVal.add(chkGeneralFields[x].getText());
@@ -177,13 +172,13 @@ public class ListDataPanel extends JPanel {
 				}
 			}
 		}
-		
 		return retVal.toArray(new String[retVal.size()]);
 	}
 	
 	public String getName() { return theName; }
 	public String getQuerySummary() { return theQuerySummary; }
 
+	// get keywords of project annotations to display as columns
 	private void setProjectAnnotations() {
 		Vector<Project> projs = theParentFrame.getProjects();
 		Iterator<Project> iter = projs.iterator();
@@ -212,14 +207,12 @@ public class ListDataPanel extends JPanel {
 				theAnnotations.addAnnoIDForSpecies(projIDX, rset.getString("annot_key.keyname"));
 			}
 			for(int x=0; x<theAnnotations.getNumSpecies(); x++) {
-				theAnnotations.addAnnoIDByPosition(x, "All_Anno");
+				theAnnotations.addAnnoIDByPosition(x, Q.All_Anno);
 			}
 			rset.close();
 			stmt.close();
 			conn.close();
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
+		} catch(Exception e) {ErrorReport.print(e, "set project annotations");}
 	}
 	
 	private String getProjectDisplayName(int index) {
@@ -249,7 +242,7 @@ public class ListDataPanel extends JPanel {
 						setVisible(true);
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					ErrorReport.print(e, "Show table");
 				}
 			}
 		});
@@ -258,10 +251,9 @@ public class ListDataPanel extends JPanel {
 	}
 	
 	//Common initialization for all constructors
-	private void initialize(int queryMode) {
+	private void initialize() {
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        nQueryMode = queryMode;
-        
+       
         setProjectAnnotations();
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         setAlignmentY(LEFT_ALIGNMENT);
@@ -279,13 +271,13 @@ public class ListDataPanel extends JPanel {
 					}
 					setColumnSelections();
 					showTable();
-					//Makes the table appear
-					if(isVisible()) {
+					
+					if(isVisible()) { //Makes the table appear
 						setVisible(false);
 						setVisible(true);
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					ErrorReport.print(e, "Show initial table");
 				}
 			}
 		});
@@ -301,9 +293,9 @@ public class ListDataPanel extends JPanel {
 	}
 	
 	private ResultSet loadData() {
-        FieldData theFields = FieldData.getLocalFields(theAnnotations.getColumns(),theParentFrame.getDisplayNames());
-
-        
+        FieldData theFields = 
+        		FieldData.getLocalFields(theAnnotations.getColumns(),theParentFrame.getDisplayNames());
+ 
         Connection conn;
         Statement stmt;
         
@@ -313,20 +305,18 @@ public class ListDataPanel extends JPanel {
 	    	{
 		    	SpeciesSelectPanel sp = theParentFrame.lQueryPanel.speciesPanel;
 		    
-		    	String[] chrs = sp.theChromosomeIndicies;
+		    	String[] chrs = sp.theChrIdx;
 		    	for (int i = 0; i < chrs.length; i++)
 		    	{
 		    		int projIdx = sp.getSpeciesIndex(i);
 		    		int grpIdx = sp.getChromosomeIndex(i);
 		    		grpIdxList.put(projIdx, new TreeSet<Integer>());
-		    		if (grpIdx != -1)
-		    		{
+		    		if (grpIdx != -1) {
 		    			grpIdxList.get(projIdx).add(grpIdx);
 		    		}
 		    		else
 		    		{
-		    			for (String chr : chrs[i].split(","))
-		    			{
+		    			for (String chr : chrs[i].split(",")) {
 		    				grpIdxList.get(projIdx).add(Integer.parseInt(chr));
 		    			}
 		    		}
@@ -336,22 +326,26 @@ public class ListDataPanel extends JPanel {
 	        	conn = theParentFrame.getDatabase().getConnection();
 	        	stmt = conn.createStatement();
 	        	addBlockScores(stmt);
-	        	//stmt.setFetchSize(1000);
-	
-	        	String strQuery = "";
-	        	if(nQueryMode == QUERY_MODE_LOCAL) {
-	        		//Make sure needed fields are loaded
-	        		strQuery = theFields.getLocalFilterQuery(strSubQuery,strAnnotSubQuery, theParentFrame.isSynteny(),
-	        					theParentFrame.isCollinear(), grpIdxList);
-	        	}
+	        	
+	        	//The subqueries are built in LocalQueryPanel, 
+	        	//  then FieldData adds joins, then it is executed here
+	        	String	strQuery = theFields.getLocalFilterQuery(
+	        			strSubQuery, strAnnotSubQuery, theParentFrame.isSynteny(),
+	        			theParentFrame.isCollinear(), grpIdxList);
+	        	
 	        	if(loadStatus.getText().equals("Cancelled")) return null; 
-	        	loadStatus.setText("Getting data");
-	        	try
-	        	{
-	        		BufferedWriter w = new BufferedWriter(new FileWriter("/tmp/symap_query.txt"));
-	        		w.write(strQuery);
-	        		w.close();
-	        	} catch(Exception e){};
+	        	loadStatus.setText("Performing database search....");
+	        	
+	        	if (TEST_PRT_FILE) { 	// CAS503 add flag as this file just for testing
+		        	try
+		        	{
+		        		BufferedWriter w = new BufferedWriter(new FileWriter("/tmp/symap_query.txt"));
+		        		w.write(">subQuery: " + strSubQuery + "\n\n");
+		        		w.write(">annoQuery: " + strAnnotSubQuery+ "\n\n");
+		        		w.write(">fullQuery: " +strQuery+ "\n\n");
+		        		w.close();
+		        	} catch(Exception e){};
+	        	}
 	        	try
 	        	{
 	        		return stmt.executeQuery(strQuery);
@@ -384,7 +378,8 @@ public class ListDataPanel extends JPanel {
 	}
 	
     private void buildTable(ResultSet rs, BufferedReader in) {
-        FieldData theFields = FieldData.getLocalFields(theAnnotations.getColumns(), theParentFrame.getDisplayNames());
+        FieldData theFields = 
+        		FieldData.getLocalFields(theAnnotations.getColumns(), theParentFrame.getDisplayNames());
         
 		tableButtonPanel = createTableButtonPanel();
 		tableStatusPanel = createTableStatusPanel();
@@ -412,7 +407,6 @@ public class ListDataPanel extends JPanel {
 			}
 		});
 		
-		//TODO
 		btnShowStats = new JButton("Hide Stats");
 		btnShowStats.setBackground(Color.WHITE);
 		btnShowStats.addActionListener(new ActionListener() {
@@ -428,17 +422,15 @@ public class ListDataPanel extends JPanel {
 			}
 		});
 
+		// TODO add something...
         dblClick = new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				
+			public void actionPerformed(ActionEvent e) {	
 			}
 		};
-		
 		sngClick = new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 			}
 		};
-		
 		selListener = new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent arg0) {
 			}
@@ -446,22 +438,19 @@ public class ListDataPanel extends JPanel {
 
         theTableData = new TableData("hitList" + (nTableID++) + ".dat", this);
         theTableData.setColumnHeaders(theFields.getDisplayFields(), theFields.getDisplayTypes());
-        if(rs != null) {
-        	theTableData.addRowsWithProgress(rs, theFields, loadStatus);//, theFilterSettings);
+        if(rs != null) { // from query
+        		theTableData.addRowsWithProgress(rs, theFields, loadStatus);
             fillStatsPanel(true);
         }
-        else {
-        	theTableData.addRowsWithProgress(in, theFields, loadStatus, theParentFrame.getDisplayNames());
+        else { // read from file
+        		theTableData.addRowsWithProgress(in, theFields, loadStatus, theParentFrame.getDisplayNames());
             fillStatsPanel(false);
         }
         	
         theTableData.addSpeciesFields(theParentFrame.getDisplayNames());
         theTableData.finalize();
 
-		if(SHOW_ALL_COLUMNS)
-			theTable = new SortTable(theTableData);
-		else
-			theTable = new SortTable(TableData.createModel(getSelectedColumns(), theTableData, this));
+		theTable = new SortTable(TableData.createModel(getSelectedColumns(), theTableData, this));
         theTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         theTable.autofitColumns();
         	
@@ -469,7 +458,6 @@ public class ListDataPanel extends JPanel {
         header.setToolTips(theFields.getDBFieldDescriptions());
         theTable.setTableHeader(header);
 
-        
         theTable.getSelectionModel().addListSelectionListener(selListener);
 		theTable.addSingleClickListener(sngClick);
         theTable.addDoubleClickListener(dblClick);
@@ -487,17 +475,17 @@ public class ListDataPanel extends JPanel {
     }
     
     private void showProgress() {
-    	removeAll();
-    	repaint();
-    	setBackground(Color.WHITE);
-    	loadStatus = new JTextField(40);
-    	loadStatus.setBackground(Color.WHITE);
-    	loadStatus.setMaximumSize(loadStatus.getPreferredSize());
-    	loadStatus.setEditable(false);
-    	loadStatus.setBorder(BorderFactory.createEmptyBorder());
-    	JButton btnStop = new JButton("Stop");
-    	btnStop.setBackground(Color.WHITE);
-    	btnStop.addActionListener(new ActionListener() {
+	    	removeAll();
+	    	repaint();
+	    	setBackground(Color.WHITE);
+	    	loadStatus = new JTextField(40);
+	    	loadStatus.setBackground(Color.WHITE);
+	    	loadStatus.setMaximumSize(loadStatus.getPreferredSize());
+	    	loadStatus.setEditable(false);
+	    	loadStatus.setBorder(BorderFactory.createEmptyBorder());
+	    	JButton btnStop = new JButton("Stop");
+	    	btnStop.setBackground(Color.WHITE);
+	    	btnStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if(buildThread != null)
 					loadStatus.setText("Cancelled");
@@ -509,98 +497,99 @@ public class ListDataPanel extends JPanel {
     }
     
     private void showTable() {
-    	removeAll();
-    	repaint();
-    	loadStatus = null;
-    	sPane = new JScrollPane();
-    	sPane.setViewportView(theTable);
-    	theTable.getTableHeader().setBackground(Color.WHITE);
-    	sPane.setColumnHeaderView(theTable.getTableHeader());
-    	
-    	sPane.getViewport().setBackground(Color.WHITE);
-    	sPane.getHorizontalScrollBar().setBackground(Color.WHITE);
-    	sPane.getVerticalScrollBar().setBackground(Color.WHITE);
-    	sPane.getHorizontalScrollBar().setForeground(Color.WHITE);
-    	sPane.getVerticalScrollBar().setForeground(Color.WHITE);
-    	
-    	if (statsPanel == null) statsPanel = new JPanel();
-    	
-    	JPanel innerPanel = new JPanel();
-    	innerPanel.setLayout(new BoxLayout(innerPanel, BoxLayout.PAGE_AXIS));
-    	innerPanel.setBackground(Color.WHITE);
-    	innerPanel.add(generalFieldSelectPanel);
-    	innerPanel.add(Box.createVerticalStrut(10));
-    	innerPanel.add(fieldSelectPanel);
-    	innerPanel.add(Box.createVerticalStrut(10));
-    	innerPanel.add(annoSelectPanel);
-    	
-    	JScrollPane colPane = new JScrollPane(innerPanel);
-    	columnPanel.removeAll();
-    	columnPanel.setLayout(new BoxLayout(columnPanel, BoxLayout.PAGE_AXIS));
-    	columnPanel.add(colPane);
-    	
-    	add(tableButtonPanel);
-    	add(Box.createVerticalStrut(10));
-    	add(tableStatusPanel);
-    	add(sPane);
-    	add(Box.createVerticalStrut(10));
-    	add(statsPanel);
-    	add(Box.createVerticalStrut(10));
-    	add(columnPanel);
-    	add(Box.createVerticalStrut(10));
-    	
-    	JPanel tempPanel = new JPanel();
-    	tempPanel.setLayout(new BoxLayout(tempPanel, BoxLayout.LINE_AXIS));
-    	tempPanel.setBackground(Color.WHITE);
-    	tempPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	
-    	tempPanel.add(showColumnSelect);
-    	tempPanel.add(Box.createHorizontalStrut(20));
-    	tempPanel.add(btnShowStats);
-    	//So the resized button doesn't get clipped
-    	tempPanel.add(Box.createHorizontalStrut(20));
-    	tempPanel.setMaximumSize(tempPanel.getPreferredSize());
-    	add(tempPanel);
-    	
-    	if(theTable != null)
-    		if(theTable.getRowCount() > 0)
-    			updateTableStatus(theName + " : " + theTable.getRowCount() + " rows");
-    		else
-    			updateTableStatus(theName + " : No results");
-
-    	invalidate();
-    	validateTable();
-    	
-    	theParentFrame.updateResultCount(this);
+	    	removeAll();
+	    	repaint();
+	    	loadStatus = null;
+	    	sPane = new JScrollPane();
+	    	sPane.setViewportView(theTable);
+	    	theTable.getTableHeader().setBackground(Color.WHITE);
+	    	sPane.setColumnHeaderView(theTable.getTableHeader());
+	    	
+	    	sPane.getViewport().setBackground(Color.WHITE);
+	    	sPane.getHorizontalScrollBar().setBackground(Color.WHITE);
+	    	sPane.getVerticalScrollBar().setBackground(Color.WHITE);
+	    	sPane.getHorizontalScrollBar().setForeground(Color.WHITE);
+	    	sPane.getVerticalScrollBar().setForeground(Color.WHITE);
+	    	
+	    	if (statsPanel == null) statsPanel = new JPanel();
+	    	
+	    	JPanel innerPanel = new JPanel();
+	    	innerPanel.setLayout(new BoxLayout(innerPanel, BoxLayout.PAGE_AXIS));
+	    	innerPanel.setBackground(Color.WHITE);
+	    	innerPanel.add(generalFieldSelectPanel);
+	    	innerPanel.add(Box.createVerticalStrut(10));
+	    	innerPanel.add(fieldSelectPanel);
+	    	innerPanel.add(Box.createVerticalStrut(10));
+	    	innerPanel.add(annoSelectPanel);
+	    	
+	    	JScrollPane colPane = new JScrollPane(innerPanel);
+	    	columnPanel.removeAll();
+	    	columnPanel.setLayout(new BoxLayout(columnPanel, BoxLayout.PAGE_AXIS));
+	    	columnPanel.add(colPane);
+	    	
+	    	add(tableButtonPanel);
+	    	add(Box.createVerticalStrut(10));
+	    	add(tableStatusPanel);
+	    	add(sPane);
+	    	add(Box.createVerticalStrut(10));
+	    	add(statsPanel);
+	    	add(Box.createVerticalStrut(10));
+	    	add(columnPanel);
+	    	add(Box.createVerticalStrut(10));
+	    	
+	    	JPanel tempPanel = new JPanel();
+	    	tempPanel.setLayout(new BoxLayout(tempPanel, BoxLayout.LINE_AXIS));
+	    	tempPanel.setBackground(Color.WHITE);
+	    	tempPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+	    	
+	    	tempPanel.add(showColumnSelect);
+	    	tempPanel.add(Box.createHorizontalStrut(20));
+	    	tempPanel.add(btnShowStats);
+	    	//So the resized button doesn't get clipped
+	    	tempPanel.add(Box.createHorizontalStrut(20));
+	    	tempPanel.setMaximumSize(tempPanel.getPreferredSize());
+	    	add(tempPanel);
+	    	
+	    	if(theTable != null)
+	    		if(theTable.getRowCount() > 0)
+	    			updateTableStatus(theName + ": " + theTable.getRowCount() + " rows   Filter: "  + theQuerySummary);
+	    		else
+	    			updateTableStatus(theName + ": No results   Filter: " + theQuerySummary);
+	
+	    	invalidate();
+	    	validateTable();
+	    	
+	    	theParentFrame.updateResultCount(this);
     }
     
     public boolean [] getColumnSelections() {
-	    	int numCols = chkGeneralFields.length + (chkSpeciesFields.length * chkSpeciesFields[0].length);
-	    	for(int x=0; x<chkAnno.size(); x++) {
-	    		numCols += chkAnno.get(x).size();
-	    	}
-	    	
-	    	boolean [] retVal = new boolean[numCols];
-	    	int targetPos = 0;
-	    	for(int x=0; x<chkGeneralFields.length; x++) {
-	    		retVal[targetPos] = chkGeneralFields[x].isSelected();
-	    		targetPos++;
-	    	}
-	    	
-	    	for(int x=0; x<chkSpeciesFields.length; x++) {
-	    		for(int y=0; y<chkSpeciesFields[x].length; y++) {
-	    			retVal[targetPos] = chkSpeciesFields[x][y].isSelected();
-	    			targetPos++;
-	    		}
-	    	}
-	    	
-	    	for(int x=0; x<chkAnno.size(); x++) {
-	    		for(int y=0; y<chkAnno.get(x).size(); y++) {
-	    			retVal[targetPos] = chkAnno.get(x).get(y).isSelected();
-	    			targetPos++;
-	    		}
-	    	}
-	    	return retVal;
+    		try {
+		    	int numCols = chkGeneralFields.length + (chkSpeciesFields.length * chkSpeciesFields[0].length);
+		    	for(int x=0; x<chkAnno.size(); x++) {
+		    		numCols += chkAnno.get(x).size();
+		    	}
+		    	
+		    	boolean [] retVal = new boolean[numCols];
+		    	int targetPos = 0;
+		    	for(int x=0; x<chkGeneralFields.length; x++) {
+		    		retVal[targetPos] = chkGeneralFields[x].isSelected();
+		    		targetPos++;
+		    	}   	
+		    	for(int x=0; x<chkSpeciesFields.length; x++) {
+		    		for(int y=0; y<chkSpeciesFields[x].length; y++) {
+		    			retVal[targetPos] = chkSpeciesFields[x][y].isSelected();
+		    			targetPos++;
+		    		}
+		    	}	    	
+		    	for(int x=0; x<chkAnno.size(); x++) {
+		    		for(int y=0; y<chkAnno.get(x).size(); y++) {
+		    			retVal[targetPos] = chkAnno.get(x).get(y).isSelected();
+		    			targetPos++;
+		    		}
+		    	}
+		    	return retVal;
+    		}
+    		catch (Exception e) {ErrorReport.print(e, "Getting columns"); return null;}
     }
     
     public void setColumnSelections() {
@@ -611,22 +600,19 @@ public class ListDataPanel extends JPanel {
 	    	for(int x=0; x<chkGeneralFields.length; x++) {
 	    		chkGeneralFields[x].setSelected(theOldSelections[targetPos]);
 	    		targetPos++;
-	    	}
-	    	
-	    	for(int x=0; x<chkSpeciesFields.length; x++) {
+	    	}    	
+	  	for(int x=0; x<chkSpeciesFields.length; x++) {
 	    		for(int y=0; y<chkSpeciesFields[x].length; y++) {
 	    			chkSpeciesFields[x][y].setSelected(theOldSelections[targetPos]);
 	    			targetPos++;
 	    		}
 	    	}
-	    	
 	    	for(int x=0; x<chkAnno.size(); x++) {
 	    		for(int y=0; y<chkAnno.get(x).size(); y++) {
 	    			chkAnno.get(x).get(y).setSelected(theOldSelections[targetPos]);
 	    			targetPos++;
 	    		}
 	    	}
-	    	
 	    	theOldSelections = null;
 	    	setTable();
     }
@@ -655,7 +641,6 @@ public class ListDataPanel extends JPanel {
 	    		genRow.add(chkGeneralFields[x]);
 	    		genRow.add(Box.createHorizontalStrut(5));
 	    	}
-	    	
 	    	retVal.add(genRow);
 	    	
 	    	retVal.setBorder(BorderFactory.createTitledBorder("General"));
@@ -685,14 +670,10 @@ public class ListDataPanel extends JPanel {
 	    		
 	    		row.add(new JLabel(species[x]));
 	    		row.add(Box.createHorizontalStrut(10));
-	    		chkSpeciesFields[x][0] = new JCheckBox("Chr");
-	    		chkSpeciesFields[x][0].setSelected(true);
-	    		chkSpeciesFields[x][1] = new JCheckBox("Start");
-	    		chkSpeciesFields[x][1].setSelected(false);
-	    		chkSpeciesFields[x][2] = new JCheckBox("End");
-	    		chkSpeciesFields[x][2].setSelected(false);
-	    		chkSpeciesFields[x][3] = new JCheckBox("#RGN");
-	    		chkSpeciesFields[x][3].setSelected(false);
+	    		chkSpeciesFields[x][0] = new JCheckBox("Chr");   chkSpeciesFields[x][0].setSelected(true);
+	    		chkSpeciesFields[x][1] = new JCheckBox("Start"); chkSpeciesFields[x][1].setSelected(false);
+	    		chkSpeciesFields[x][2] = new JCheckBox("End");   chkSpeciesFields[x][2].setSelected(false);
+	    		chkSpeciesFields[x][3] = new JCheckBox("#RGN");  chkSpeciesFields[x][3].setSelected(false);
 	        	
 	        	for(int y=0; y<chkSpeciesFields[x].length; y++) {
 	        		chkSpeciesFields[x][y].setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -701,14 +682,13 @@ public class ListDataPanel extends JPanel {
 	        		row.add(chkSpeciesFields[x][y]);
 	        		if(ANNO_COLUMN_WIDTH - chkSpeciesFields[x][y].getPreferredSize().width > 0)
 	        			row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH - chkSpeciesFields[x][y].getPreferredSize().width));
-	
 	        	}
 	        	retVal.add(row);
 	        	if(x < species.length - 1)
 	        		retVal.add(new JSeparator());
 	    	}
-	    	
-	    	retVal.setBorder(BorderFactory.createTitledBorder("Location"));
+	    	String loc = (theParentFrame.lQueryPanel.isOrphan()) ? "Gene Loc" : "Hit Loc"; // CAS503
+	    	retVal.setBorder(BorderFactory.createTitledBorder(loc));
 	    	retVal.setMaximumSize(retVal.getPreferredSize());
 	
 	    	return retVal;
@@ -728,7 +708,10 @@ public class ListDataPanel extends JPanel {
 	    			JCheckBox chkTemp = new JCheckBox(annotName);
 	    			chkTemp.setBackground(Color.WHITE);
 	    			chkTemp.addActionListener(colSelectChange);
-	    			if (annotName.equalsIgnoreCase("description"))
+	    			
+	    			// initial view includes these
+	    			String lc = annotName.toLowerCase();
+	    			if (lc.equals("description") || lc.equals("product") || lc.equals("note"))		
 	    			{
 	    				chkTemp.setSelected(true);
 	    			}
@@ -793,22 +776,22 @@ public class ListDataPanel extends JPanel {
     }
     
     private JPanel createTableButtonPanel() {
-    	JPanel buttonPanel = new JPanel();
-    	buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.PAGE_AXIS));
-    	buttonPanel.setBackground(Color.WHITE);
-    	buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	
-    	JPanel topRow = new JPanel();
-    	topRow.setLayout(new BoxLayout(topRow, BoxLayout.LINE_AXIS));
-    	topRow.setBackground(Color.WHITE);
-    	topRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	
-    	JPanel botRow = new JPanel();
-    	botRow.setLayout(new BoxLayout(botRow, BoxLayout.LINE_AXIS));
-    	botRow.setBackground(Color.WHITE);
-    	botRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	
-    	topRow.add(new JLabel("For selected hits with "));
+	    	JPanel buttonPanel = new JPanel();
+	    	buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.PAGE_AXIS));
+	    	buttonPanel.setBackground(Color.WHITE);
+	    	buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+	    	
+	    	JPanel topRow = new JPanel();
+	    	topRow.setLayout(new BoxLayout(topRow, BoxLayout.LINE_AXIS));
+	    	topRow.setBackground(Color.WHITE);
+	    	topRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+	    	
+	    	JPanel botRow = new JPanel();
+	    	botRow.setLayout(new BoxLayout(botRow, BoxLayout.LINE_AXIS));
+	    	botRow.setBackground(Color.WHITE);
+	    	botRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+	    	
+	    	topRow.add(new JLabel("For selected hits with "));
         txtMargin = new JTextField(5);
         txtMargin.setText("50");
         Dimension d = txtMargin.getPreferredSize();
@@ -823,60 +806,58 @@ public class ListDataPanel extends JPanel {
         btnShowAlign.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try{
-					if(nQueryMode == QUERY_MODE_LOCAL) {
-						double padding = Double.parseDouble(txtMargin.getText()) * 1000;
+					double padding = Double.parseDouble(txtMargin.getText()) * 1000;
 
-						boolean reset = false;
-						if(theTable.getSelectedRowCount() == 0) {
-							reset = true;
-							theTable.selectAll();
-						}
-						
-						int [] selRows = theTable.getSelectedRows();
-						for(int x=0; x<selRows.length; x++) {
-							int selRow = selRows[x];
-							if(theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Start 2")) != null) {
-	 							double track1Start = (Integer)theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Start 1"));
-								track1Start = Math.max(0, track1Start - padding);
-								double track2Start = (Integer)theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Start 2"));
-								track2Start = Math.max(0, track2Start - padding);
-								double track1End = (Integer)(theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("End 1"))) + padding;
-								double track2End = (Integer)(theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("End 2"))) + padding;
-		
-								int p1Idx = (Integer)theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Proj 1 idx"));
-								int p2Idx = (Integer)theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Proj 2 idx"));
-		
-								int grp1Idx = (Integer)theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Group 1 idx"));
-								int grp2Idx = (Integer)theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Group 2 idx"));
-		
-								SyMAP symap = new SyMAP(theParentFrame.getApplet(), theParentFrame.getDatabase(), getInstance());
-							
-								symap.getDrawingPanel().setMaps(1);
-								symap.getHistory().clear(); 
-		
-								FilterData fd2 = new FilterData();
-								fd2.setShowHits(FilterData.ALL_HITS); 
-								symap.getDrawingPanel().setHitFilter(1,fd2);
-								Sequence.setDefaultShowAnnotation(true); 
-		
-								// PSEUDO to PSEUDO
-								symap.getDrawingPanel().setSequenceTrack(1,p2Idx,grp2Idx,Color.CYAN);
-								symap.getDrawingPanel().setSequenceTrack(2,p1Idx,grp1Idx,Color.GREEN);
-								symap.getDrawingPanel().setTrackEnds(1,track2Start,track2End);
-								symap.getDrawingPanel().setTrackEnds(2,track1Start,track1End);
-								symap.getFrame().show();
-								Sequence.setDefaultShowAnnotation(false);
-							}
-							else {
-								System.out.println("Unable to show synteny for orphan");
-							}
-						}
-						
-						if(reset)
-							theTable.getSelectionModel().clearSelection();
+					boolean reset = false;
+					if(theTable.getSelectedRowCount() == 0) {
+						reset = true;
+						theTable.selectAll();
 					}
+					
+					int [] selRows = theTable.getSelectedRows();
+					for(int x=0; x<selRows.length; x++) {
+						int selRow = selRows[x];
+						if(theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Start 2")) != null) {
+ 							double track1Start = (Integer)theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Start 1"));
+							track1Start = Math.max(0, track1Start - padding);
+							double track2Start = (Integer)theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Start 2"));
+							track2Start = Math.max(0, track2Start - padding);
+							double track1End = (Integer)(theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("End 1"))) + padding;
+							double track2End = (Integer)(theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("End 2"))) + padding;
+	
+							int p1Idx = (Integer)theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Proj 1 idx"));
+							int p2Idx = (Integer)theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Proj 2 idx"));
+	
+							int grp1Idx = (Integer)theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Group 1 idx"));
+							int grp2Idx = (Integer)theTableData.getValueAt(selRow, theTableData.getColumnHeaderIndex("Group 2 idx"));
+	
+							SyMAP symap = new SyMAP(theParentFrame.getApplet(), theParentFrame.getDatabase(), getInstance());
+						
+							symap.getDrawingPanel().setMaps(1);
+							symap.getHistory().clear(); 
+	
+							FilterData fd2 = new FilterData();
+							fd2.setShowHits(FilterData.ALL_HITS); 
+							symap.getDrawingPanel().setHitFilter(1,fd2);
+							Sequence.setDefaultShowAnnotation(true); 
+	
+							// PSEUDO to PSEUDO
+							symap.getDrawingPanel().setSequenceTrack(1,p2Idx,grp2Idx,Color.CYAN);
+							symap.getDrawingPanel().setSequenceTrack(2,p1Idx,grp1Idx,Color.GREEN);
+							symap.getDrawingPanel().setTrackEnds(1,track2Start,track2End);
+							symap.getDrawingPanel().setTrackEnds(2,track1Start,track1End);
+							symap.getFrame().show();
+							Sequence.setDefaultShowAnnotation(false);
+						}
+						else {
+							System.out.println("Unable to show synteny for orphan");
+						}
+					}
+					
+					if(reset)
+						theTable.getSelectionModel().clearSelection();
 				} catch(Exception e) {
-					e.printStackTrace();
+					ErrorReport.print(e, "Create table");
 				}
 			}
 		}); 
@@ -925,16 +906,16 @@ public class ListDataPanel extends JPanel {
         btnMuscleAlign.setAlignmentX(Component.LEFT_ALIGNMENT);
         btnMuscleAlign.setBackground(Color.WHITE);
         btnMuscleAlign.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent arg0) {
-        		boolean doAlign = true;
+        		public void actionPerformed(ActionEvent arg0) {
+        			boolean doAlign = true;
         		
-        		if(theTable.getSelectedRowCount() == 0 && theTable.getRowCount() > 10) {
-        			if(JOptionPane.showConfirmDialog(getInstance(), "Align all " + theTable.getRowCount() +  " sequence pairs?", "Align Sequences", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.NO_OPTION) {
-        				doAlign = false;
-        			}
-        		}
+	        		if(theTable.getSelectedRowCount() == 0 && theTable.getRowCount() > 10) {
+	        			if(JOptionPane.showConfirmDialog(getInstance(), "Align all " + theTable.getRowCount() +  " sequence pairs?", "Align Sequences", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.NO_OPTION) {
+	        				doAlign = false;
+	        			}
+	        		}
         		
-        		if(doAlign) {
+	        		if(doAlign) {
         				Thread inThread = new Thread(new Runnable() {
         					public void run() {
         						try {
@@ -996,7 +977,6 @@ public class ListDataPanel extends JPanel {
         		}
 		});  
 
-        
         btnSaveFasta = new JButton("Save as Fasta");
         btnSaveFasta.setAlignmentX(Component.LEFT_ALIGNMENT);
         btnSaveFasta.setBackground(Color.WHITE);
@@ -1077,11 +1057,8 @@ public class ListDataPanel extends JPanel {
 							inThread.start();
 						}
 					}
-
 				}
-				catch(Exception e) {
-					e.printStackTrace();
-				}
+				catch(Exception e) {ErrorReport.print(e, "Save as fasta");}
 			}
 		});  
        
@@ -1150,20 +1127,23 @@ public class ListDataPanel extends JPanel {
 	    	thePanel.setLayout(new BoxLayout(thePanel, BoxLayout.LINE_AXIS));
 	    	thePanel.setBackground(Color.WHITE);
 	
+	    	/** CAS503 said Local View
 	    	tableType = new JTextField(20);
 	    	tableType.setBackground(Color.WHITE);
 	    	tableType.setBorder(BorderFactory.createEmptyBorder());
 	    	tableType.setEditable(false);
 	    	tableType.setMaximumSize(tableType.getPreferredSize());
 	    	tableType.setAlignmentX(LEFT_ALIGNMENT);
-	
-	    	rowCount = new JTextField(30);
+	    	thePanel.add(tableType);
+		**/
+	    	
+	    	rowCount = new JTextField(400);
 	    	rowCount.setBackground(Color.WHITE);
 	    	rowCount.setBorder(BorderFactory.createEmptyBorder());
 	    	rowCount.setEditable(false);
 	    	rowCount.setMaximumSize(rowCount.getPreferredSize());
 	    	rowCount.setAlignmentX(LEFT_ALIGNMENT);
-	    	thePanel.add(tableType);
+	    
 	    	thePanel.add(rowCount);
 	    	thePanel.setMaximumSize(thePanel.getPreferredSize());
     	
@@ -1171,8 +1151,7 @@ public class ListDataPanel extends JPanel {
     }
     
     private void updateTableStatus(String status) {
-	    	if(nViewMode == VIEW_MODE_LOCAL)
-	    		tableType.setText("Local View");
+	    	// CAS503 if(nViewMode == VIEW_MODE_LOCAL) tableType.setText("Local View");
 	    	rowCount.setText(status);
     }
     
@@ -1240,9 +1219,7 @@ public class ListDataPanel extends JPanel {
 					System.out.println((selRows.length * 2) + " sequences saved to " + saveFileName);
 				}
 			}
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
+		} catch(Exception e) {ErrorReport.print(e, "Write file");}
     }
     
     private boolean readReloadFile(String delim) {
@@ -1264,7 +1241,7 @@ public class ListDataPanel extends JPanel {
 					JOptionPane.showMessageDialog(this, "Not a valid saved query", "Error", JOptionPane.PLAIN_MESSAGE);
 					return false; 
 				}
-				theName = theParentFrame.getNextResultLabel();//line.substring("#Name: ".length());
+				theName = theParentFrame.getNextResultLabel();
 				
 				//Validate loaded projects
 				String [] fileNames = line.substring("#Species: ".length()).split(",");
@@ -1297,9 +1274,7 @@ public class ListDataPanel extends JPanel {
 				return false;
 			}
     	}
-    	catch(Exception e) {
-    		e.printStackTrace();
-    	}
+    	catch(Exception e) {ErrorReport.print(e, "Read file");}
     	return true;
     }
     
@@ -1310,51 +1285,48 @@ public class ListDataPanel extends JPanel {
     		if(!temp.exists())
     			temp.mkdir();
     		
-			JFileChooser chooser = new JFileChooser(saveDir);
-			if(chooser.showSaveDialog(theParentFrame) == JFileChooser.APPROVE_OPTION) {
-				if(chooser.getSelectedFile() != null) {
-					String saveFileName = chooser.getSelectedFile().getAbsolutePath();
-					if(!saveFileName.endsWith(".csv"))
-						saveFileName += ".csv";
-					
-					PrintWriter out = new PrintWriter(new FileWriter(new File(saveFileName)));
-					for(int x=0; x<theTable.getColumnCount()-1; x++) {
-						out.print(cleanString(theTable.getColumnName(x)) + delim);
+		JFileChooser chooser = new JFileChooser(saveDir);
+		if(chooser.showSaveDialog(theParentFrame) == JFileChooser.APPROVE_OPTION) {
+			if(chooser.getSelectedFile() != null) {
+				String saveFileName = chooser.getSelectedFile().getAbsolutePath();
+				if(!saveFileName.endsWith(".csv"))
+					saveFileName += ".csv";
+				
+				PrintWriter out = new PrintWriter(new FileWriter(new File(saveFileName)));
+				for(int x=0; x<theTable.getColumnCount()-1; x++) {
+					out.print(cleanString(theTable.getColumnName(x)) + delim);
+				}
+				out.println(cleanString(theTable.getColumnName(theTable.getColumnCount()-1)));
+				
+				for(int x=0; x<selRows.length; x++) {
+					for(int y=0; y<theTable.getColumnCount()-1; y++) {
+						out.print(cleanString(theTable.getValueAt(selRows[x], y)) + delim);
 					}
-					out.println(cleanString(theTable.getColumnName(theTable.getColumnCount()-1)));
-					
-					for(int x=0; x<selRows.length; x++) {
-						for(int y=0; y<theTable.getColumnCount()-1; y++) {
-							out.print(cleanString(theTable.getValueAt(selRows[x], y)) + delim);
-						}
-						out.println(cleanString(theTable.getValueAt(selRows[x], theTable.getColumnCount()-1)));
-						out.flush();
-					}
+					out.println(cleanString(theTable.getValueAt(selRows[x], theTable.getColumnCount()-1)));
+					out.flush();
 				}
 			}
-		} catch(Exception e) {
-			e.printStackTrace();
 		}
+	} catch(Exception e) {ErrorReport.print(e, "Write delim file");}
     }
     
     private static String cleanString(Object obj) {
-    	if(obj != null) {
-    		String val = obj.toString();
-    		val = val.replaceAll("[\'\"]", "");
-    		val = val.replaceAll("\\n", " ");
-    		return "'" + val + "'";
-    	}
-    	else {
-    		return "''";
-    	}
+	    	if(obj != null) {
+	    		String val = obj.toString();
+	    		val = val.replaceAll("[\'\"]", "");
+	    		val = val.replaceAll("\\n", " ");
+	    		return "'" + val + "'";
+	    	}
+	    	else {
+	    		return "''";
+	    	}
     }
     private void fillStatsPanel(boolean haveData)
     {
-    	if (statsPanel == null) statsPanel = new JPanel();
+    		if (statsPanel == null) statsPanel = new JPanel();
 		statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.PAGE_AXIS));
 		statsPanel.setBackground(Color.WHITE);
 		if(haveData) {
-			
 			HashSet<String> noAnnots = new HashSet<String>();
 			for (Project p : theParentFrame.theProjects)
 			{
@@ -1364,16 +1336,16 @@ public class ListDataPanel extends JPanel {
 				}
 			}
 			 
-	    	SpeciesSelectPanel sp = theParentFrame.lQueryPanel.speciesPanel;
+			SpeciesSelectPanel sp = theParentFrame.lQueryPanel.speciesPanel;
 		    TreeMap<String,Integer> nChroms = new TreeMap<String,Integer>();
 		    
-	    	String[] chrs = sp.theChromosomeIndicies;
-	    	for (int i = 0; i < chrs.length; i++)
-	    	{
-	    		String projName = sp.getSpecies(i);
-	    		int nchrs = chrs[i].split(",").length;
-	    		nChroms.put(projName.toLowerCase(), nchrs);
-	    	}
+		    	String[] chrs = sp.theChrIdx;
+		    	for (int i = 0; i < chrs.length; i++)
+		    	{
+		    		String projName = sp.getSpecies(i);
+		    		int nchrs = chrs[i].split(",").length;
+		    		nChroms.put(projName.toLowerCase(), nchrs);
+		    	}
 			statsPanel.add(new JLabel("Statistics"));
 	
 			if (!theParentFrame.lQueryPanel.isOrphan())
@@ -1386,7 +1358,7 @@ public class ListDataPanel extends JPanel {
 					
 					int nchr = nChroms.get(pname.toLowerCase());
 					statsPanel.add(Box.createVerticalStrut(2));
-					String label = String.format("%-13s hits: %-7d distinct regions: %-7d annotated: %-7d chrs: %-6d", pname, h, n, a,nchr);
+					String label = String.format("%-13s Hits: %-7d Distinct regions: %-7d Annotated: %-7d Chr: %-6d", pname, h, n, a,nchr);
 					JLabel theLabel = new JLabel(label);
 					theLabel.setFont(new Font("Monospaced", Font.PLAIN, 12));
 					statsPanel.add(theLabel);
@@ -1408,7 +1380,7 @@ public class ListDataPanel extends JPanel {
 					int o = Utilities.ctrGet(theTableData.proj2orphs,pname);
 					int nchr = nChroms.get(pname.toLowerCase());
 					statsPanel.add(Box.createVerticalStrut(2));
-					String label = String.format("%-13s  orphans: %-7d chrs: %-6d",pname, o,nchr);
+					String label = String.format("%-13s  Orphans: %-7d Chr: %-6d",pname, o,nchr);
 					JLabel theLabel = new JLabel(label);
 					theLabel.setFont(new Font("Monospaced", Font.PLAIN, 12));
 					statsPanel.add(theLabel);
@@ -1426,17 +1398,13 @@ public class ListDataPanel extends JPanel {
 		}
     }
 
-    public void setCacheFilename(String POGName) { strCacheFileName = POGName; }
-    public String getCacheFilename() { return strCacheFileName; }
-    public void setStatsPanel(JPanel panel){statsPanel = panel;}
-    
     public boolean isValidData() { return bValidList; }
     private static int nTableID = 0;
     
     public void setPanelEnabled(boolean enable) {
 	    	theTable.setEnabled(enable);
 	    	rowCount.setEnabled(enable);
-	    	tableType.setEnabled(enable);
+	    	//tableType.setEnabled(enable);
 	    	txtMargin.setEnabled(enable);
 	    	btnShowAlign.setEnabled(enable);
 	    	btnSaveCSV.setEnabled(enable);
@@ -1459,9 +1427,9 @@ public class ListDataPanel extends JPanel {
     private SortTable theTable = null;
     private TableData theTableData = null;
     private JScrollPane sPane = null;
-    private int nQueryMode = QUERY_MODE_LOCAL;
+    //private int nQueryMode = QUERY_MODE_LOCAL; CAS503
     private JTextField rowCount = null;
-    private JTextField tableType = null;
+    //private JTextField tableType = null;
     private JTextField loadStatus = null;
     private JTextField txtMargin = null;
     private JButton btnShowAlign = null;
@@ -1475,11 +1443,10 @@ public class ListDataPanel extends JPanel {
     private ListSelectionListener selListener = null;
     private String strSubQuery = "";
     private String strAnnotSubQuery = "";
-    private int nViewMode = VIEW_MODE_LOCAL;
+    // private int nViewMode = VIEW_MODE_LOCAL; CAS503
 	private String theName = "";
 	private String theQuerySummary = "";
     private Thread buildThread = null;
-    private String strCacheFileName = null;
     public SyMAPQueryFrame theParentFrame = null;
     private Vector<Vector<JCheckBox>> chkAnno = null;
     private JCheckBox [][] chkSpeciesFields = null;
@@ -1504,181 +1471,170 @@ public class ListDataPanel extends JPanel {
 	private boolean bValidList = true;
     
     private class AnnoData {
-    	public AnnoData() {
-    		theAnnos = new Vector<AnnoID> ();
-    	}
-    	
-    	public void addSpecies(int speciesID) {
-    		if((getSpeciesPosition(speciesID)) < 0) {
-    			theAnnos.add(new AnnoID(getProjectDisplayName(speciesID), speciesID));
-    			Collections.sort(theAnnos);
-    		}
-    	}
-    	
-    	public int getNumberAnnosForSpecies(int speciesID) {
-    		int pos = getSpeciesPosition(speciesID);
-    		
-    		if(pos < 0) return -1;
-    		
-    		return theAnnos.get(pos).getNumAnnoIDs();
-    	}
-    	
-    	public void addAnnoIDForSpecies(int speciesID, String annoID) {
-    		addSpecies(speciesID);
-    		int pos = getSpeciesPosition(speciesID);
-    		theAnnos.get(pos).addAnnoID(annoID);
-    	}
-    	
-    	public void addAnnoIDByPosition(int species, String annoID) {
-    		theAnnos.get(species).addAnnoID(annoID);
-    	}
-    	
-    	public String getAnnoIDforSpeciesAt(int speciesID, int annoPos) {
-    		int pos = getSpeciesPosition(speciesID);
-    		return theAnnos.get(pos).getAnnoAt(annoPos);
-    	}
-    	
-    	public int getNumSpecies() {
-    		return theAnnos.size();
-    	}
-    	
-    	public int [] getSpeciesIDList() {
-    		int [] retVal = new int[theAnnos.size()];
-    		
-    		Iterator<AnnoID> iter = theAnnos.iterator();
-    		int x = 0;
-    		while(iter.hasNext()) {
-    			retVal[x] = iter.next().getSpeciesID();
-    			x++;
-    		}
-    		return retVal;
-    	}
-    	
-    	public String getSpeciesNameByID(int speciesID) {
-    		int pos = getSpeciesPosition(speciesID);
-    		if(pos < 0) return null;
-    		return theAnnos.get(pos).getSpeciesName();
-    	}
-    	
-    	public String [] getColumns() {
-    		Vector<String> retVal = new Vector<String> ();
-    		
-    		Iterator<AnnoID> speciesIter = theAnnos.iterator();
-    		while(speciesIter.hasNext()) {
-    			AnnoID temp = speciesIter.next();
-    			String species = temp.getSpeciesName();
-    			for(int x=0; x<temp.getNumAnnoIDs(); x++) {
-    				retVal.add(species+"\n"+temp.getAnnoAt(x));
-    			}
-    		}
-    		
-    		return retVal.toArray(new String[retVal.size()]);
-    	}
-    	
-    	private int getSpeciesPosition(int speciesID) {
-    		int pos = 0;
-    		Iterator<AnnoID> iter = theAnnos.iterator();
-    		boolean found = false;
-    		while(iter.hasNext() && !found) {
-    			AnnoID temp = iter.next();
-    			if(temp.getSpeciesID() == speciesID)
-    				found = true;
-    			else
-    				pos++;
-    		}
-    		if(!found)
-    			return -1;
-    		return pos;
-    	}
-    	
-    	private Vector<AnnoID> theAnnos = null;
-    	private class AnnoID implements Comparable<AnnoID> {
-    		public AnnoID(String speciesName, int speciesID) {
-    			theIDs = new Vector<String> ();
-    			theSpeciesName = speciesName;
-    			theSpeciesID = speciesID;
-    		}
-    		
-    		public void addAnnoID(String annoID) {
-    			theIDs.add(annoID);
-    		}
-    		
-    		public int getNumAnnoIDs() { return theIDs.size(); }
-    		public String getAnnoAt(int pos) { return theIDs.get(pos); }
-    		
-    		public String getSpeciesName() { return theSpeciesName; }
-    		public int getSpeciesID() { return theSpeciesID; }
-    		
-    		private String theSpeciesName = "";
-    		private int theSpeciesID = -1; 
-    		private Vector<String> theIDs = null;
-		
+	    	public AnnoData() {
+	    		theAnnos = new Vector<AnnoID> ();
+	    	}
+	    	public void addSpecies(int speciesID) {
+	    		if((getSpeciesPosition(speciesID)) < 0) {
+	    			theAnnos.add(new AnnoID(getProjectDisplayName(speciesID), speciesID));
+	    			Collections.sort(theAnnos);
+	    		}
+	    	}
+	    	public int getNumberAnnosForSpecies(int speciesID) {
+	    		int pos = getSpeciesPosition(speciesID);
+	    		
+	    		if(pos < 0) return -1;
+	    		
+	    		return theAnnos.get(pos).getNumAnnoIDs();
+	    	}
+	    	public void addAnnoIDForSpecies(int speciesID, String annoID) {
+	    		addSpecies(speciesID);
+	    		int pos = getSpeciesPosition(speciesID);
+	    		theAnnos.get(pos).addAnnoID(annoID);
+	    	}
+	    	public void addAnnoIDByPosition(int species, String annoID) {
+	    		theAnnos.get(species).addAnnoID(annoID);
+	    	}
+	    	public String getAnnoIDforSpeciesAt(int speciesID, int annoPos) {
+	    		int pos = getSpeciesPosition(speciesID);
+	    		return theAnnos.get(pos).getAnnoAt(annoPos);
+	    	}
+	    	public int getNumSpecies() {
+	    		return theAnnos.size();
+	    	}
+	    	public int [] getSpeciesIDList() {
+	    		int [] retVal = new int[theAnnos.size()];
+	    		
+	    		Iterator<AnnoID> iter = theAnnos.iterator();
+	    		int x = 0;
+	    		while(iter.hasNext()) {
+	    			retVal[x] = iter.next().getSpeciesID();
+	    			x++;
+	    		}
+	    		return retVal;
+	    	}
+	    	public String getSpeciesNameByID(int speciesID) {
+	    		int pos = getSpeciesPosition(speciesID);
+	    		if(pos < 0) return null;
+	    		return theAnnos.get(pos).getSpeciesName();
+	    	}
+	    	public String [] getColumns() {
+	    		Vector<String> retVal = new Vector<String> ();
+	    		
+	    		Iterator<AnnoID> speciesIter = theAnnos.iterator();
+	    		while(speciesIter.hasNext()) {
+	    			AnnoID temp = speciesIter.next();
+	    			String species = temp.getSpeciesName();
+	    			for(int x=0; x<temp.getNumAnnoIDs(); x++) {
+	    				retVal.add(species+"\n"+temp.getAnnoAt(x));
+	    			}
+	    		}
+	    		return retVal.toArray(new String[retVal.size()]);
+	    	}
+	    	
+	    	private int getSpeciesPosition(int speciesID) {
+	    		int pos = 0;
+	    		Iterator<AnnoID> iter = theAnnos.iterator();
+	    		boolean found = false;
+	    		while(iter.hasNext() && !found) {
+	    			AnnoID temp = iter.next();
+	    			if(temp.getSpeciesID() == speciesID)
+	    				found = true;
+	    			else
+	    				pos++;
+	    		}
+	    		if(!found)
+	    			return -1;
+	    		return pos;
+	    	}
+	    	
+	    	private Vector<AnnoID> theAnnos = null;
+	    	private class AnnoID implements Comparable<AnnoID> {
+	    		public AnnoID(String speciesName, int speciesID) {
+	    			theIDs = new Vector<String> ();
+	    			theSpeciesName = speciesName;
+	    			theSpeciesID = speciesID;
+	    		}
+	    		
+	    		public void addAnnoID(String annoID) {
+	    			theIDs.add(annoID);
+	    		}
+	    		
+	    		public int getNumAnnoIDs() { return theIDs.size(); }
+	    		public String getAnnoAt(int pos) { return theIDs.get(pos); }
+	    		
+	    		public String getSpeciesName() { return theSpeciesName; }
+	    		public int getSpeciesID() { return theSpeciesID; }
+	    		
+	    		private String theSpeciesName = "";
+	    		private int theSpeciesID = -1; 
+	    		private Vector<String> theIDs = null;
+			
 			public int compareTo(AnnoID arg0) {
 				return theSpeciesName.compareTo(arg0.theSpeciesName);
 			}
-    	}
+	    	}
     }
     
     private class ColumnHeaderToolTip extends JTableHeader {
 		private static final long serialVersionUID = -2417422687456468175L;
 		private String [] toolTips = null;
-    	public ColumnHeaderToolTip(TableColumnModel model) {
-    		super(model);
-    		addMouseListener(new MouseAdapter() {
-            	public void mouseClicked(MouseEvent evt) 
-            	{ 
-            		SortTable table = (SortTable)((JTableHeader)evt.getSource()).getTable(); 
-            		TableColumnModel colModel = table.getColumnModel(); 
-            		int vColIndex = colModel.getColumnIndexAtX(evt.getX()); 
-            		int mColIndex = table.convertColumnIndexToModel(vColIndex);
-                			            		
-            		table.sortAtColumn(mColIndex);
-                }   
-    		});
-    	}
+	    	public ColumnHeaderToolTip(TableColumnModel model) {
+	    		super(model);
+	    		addMouseListener(new MouseAdapter() {
+	            	public void mouseClicked(MouseEvent evt) 
+	            	{ 
+	            		SortTable table = (SortTable)((JTableHeader)evt.getSource()).getTable(); 
+	            		TableColumnModel colModel = table.getColumnModel(); 
+	            		int vColIndex = colModel.getColumnIndexAtX(evt.getX()); 
+	            		int mColIndex = table.convertColumnIndexToModel(vColIndex);
+	                			            		
+	            		table.sortAtColumn(mColIndex);
+	                }   
+	    		});
+	    	}
     	
-    	public void setToolTips(String [] labels) {
-    		toolTips = labels;
-    	}
+	    	public void setToolTips(String [] labels) {
+	    		toolTips = labels;
+	    	}
 
-    	public String getToolTipText(MouseEvent e) {
-    		int column = columnAtPoint(e.getPoint());
-    		if(toolTips != null && toolTips.length > column && column >= 0)
-    			return toolTips[column];
-    		else
-    			return super.getToolTipText();
-    	}
+	    	public String getToolTipText(MouseEvent e) {
+	    		int column = columnAtPoint(e.getPoint());
+	    		if(toolTips != null && toolTips.length > column && column >= 0)
+	    			return toolTips[column];
+	    		else
+	    			return super.getToolTipText();
+	    	}
     }
     
-    public class MultiLineHeaderRenderer extends JList implements TableCellRenderer {
+    private class MultiLineHeaderRenderer extends JList implements TableCellRenderer {
 		private static final long serialVersionUID = 3118619652018757230L;
 
 		public MultiLineHeaderRenderer() {
-    	    setOpaque(true);
-    	    setBorder(BorderFactory.createLineBorder(Color.BLACK));
-    	    setBackground(Color.WHITE);
-    	    ListCellRenderer renderer = getCellRenderer();
-    	    ((JLabel)renderer).setHorizontalAlignment(JLabel.CENTER);
-    	    setCellRenderer(renderer);
-    	  }
+	    	    setOpaque(true);
+	    	    setBorder(BorderFactory.createLineBorder(Color.BLACK));
+	    	    setBackground(Color.WHITE);
+	    	    ListCellRenderer renderer = getCellRenderer();
+	    	    ((JLabel)renderer).setHorizontalAlignment(JLabel.CENTER);
+	    	    setCellRenderer(renderer);
+	    	  }
     	 
-    	  public Component getTableCellRendererComponent(JTable table, Object value,
-    	                   boolean isSelected, boolean hasFocus, int row, int column) {
-    	    setFont(table.getFont());
-    	    String str = (value == null) ? "" : value.toString();
-    	    BufferedReader br = new BufferedReader(new StringReader(str));
-    	    String line;
-    	    Vector<String> v = new Vector<String>();
-    	    try {
-    	      while ((line = br.readLine()) != null) {
-    	        v.addElement(line);
-    	      }
-    	    } catch (IOException ex) {
-    	      ex.printStackTrace();
-    	    }
-    	    setListData(v);
-    	    return this;
-    	  }
+	    	  public Component getTableCellRendererComponent(JTable table, Object value,
+	    	                   boolean isSelected, boolean hasFocus, int row, int column) {
+	    	    setFont(table.getFont());
+	    	    String str = (value == null) ? "" : value.toString();
+	    	    BufferedReader br = new BufferedReader(new StringReader(str));
+	    	    String line;
+	    	    Vector<String> v = new Vector<String>();
+	    	    try {
+	    	      while ((line = br.readLine()) != null) {
+	    	        v.addElement(line);
+	    	      }
+	    	    } catch (IOException ex) {
+	    	       ErrorReport.print(ex, "Render table");
+	    	    }
+	    	    setListData(v);
+	    	    return this;
+	    	  }
     	}
-
 }

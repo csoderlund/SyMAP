@@ -46,6 +46,7 @@ import symapQuery.SyMAPQueryFrame;
 import symap.SyMAP;
 import symap.SyMAPConstants;
 import util.DatabaseReader;
+import util.ErrorReport;
 import util.LinkLabel;
 import util.Utilities;
 
@@ -108,6 +109,8 @@ public class SyMAPBrowserApplet extends JApplet implements MouseMotionListener
 			SyMAP.printVersion();
 			if (!SyMAP.checkJavaSupported(this)) return;
 
+			ErrorReport.isApplet(); // CAS503
+			
 		// Read parameters and set globals and strings
 			if (!getProjectsFromDB()) return;
 			

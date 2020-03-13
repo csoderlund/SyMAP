@@ -31,6 +31,8 @@ applet:
 class_dirs:
 	rm -rf classes_symap/* classes_symap3D/* 
 	rm -rf classes_symapApplet/* classes_symap3DApplet/*
+	mkdir classes
+	mkdir jar
 	# standalone, no 3D
 	mkdir -p classes_symap
 	cp -R classes_ext/both/* classes_symap
@@ -45,12 +47,7 @@ class_dirs:
 	cp -R classes_ext/both/* classes_symapApplet
 	cp -R classes_ext/freehep/* classes_symapApplet
 	cp -R classes_ext/applet/* classes_symapApplet
-	# 3D applet
-	mkdir -p classes_symap3DApplet
-	cp -R classes_ext/both/* classes_symap3DApplet
-	cp -R classes_ext/freehep/* classes_symap3DApplet
-	cp -R classes_ext/applet/* classes_symap3DApplet
-	cp -R classes_ext/3d/* classes_symap3DApplet
+	
 	
 clean_classes:
 	rm -fr classes/* 

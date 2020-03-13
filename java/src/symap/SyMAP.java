@@ -27,8 +27,8 @@ import symapQuery.ListDataPanel;
  * be properly set along with all of the corresponding .properties files.
  */
 public class SyMAP {
-	public static final String VERSION = "v5.0.2";
-	public static final String DATE = " (24-Feb-20)";
+	public static final String VERSION = "v5.0.3";
+	public static final String DATE = " (11-Mar-20)";
 	// CAS500 change v4.2 to doc
 	public static final String BASE_HELP_URL =    "http://www.agcol.arizona.edu/software/symap/doc/"; 
 	public static final String USER_GUIDE_URL =    BASE_HELP_URL + "UserGuide.html"; 

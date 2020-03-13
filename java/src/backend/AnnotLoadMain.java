@@ -313,12 +313,15 @@ public class AnnotLoadMain
 					keywords.put(key, 1 + keywords.get(key));
 				}
 			}
+			
 			if (bHasKey) {
 				if (parsedAttr.endsWith(";")) 
 					parsedAttr = parsedAttr.substring(0, parsedAttr.length()-1);
 			}
 			else parsedAttr = attr;
 				
+			if (parsedAttr.equals("") && type.equals("gene")) parsedAttr="[no description]"; // CAS503
+			
 			// Load annotation into database
 			ps.setInt(1,grpIdx);
 			ps.setString(2,type);

@@ -8,10 +8,13 @@
 This page allows you to query many aspects of the alignment and synteny 
 between species, in order to transfer information between species,
 improve annotations, and understand the expansion and contraction
-of gene families. 
+of gene families.
 <p> 
 The query occurs in three stages, corresponding to the section numbers
-on the Query Page. Each stage has its own filters. 
+on the Query Page. Each stage has its own filters.  
+Note: these queries can take a long time, hence,
+you have the option of saving a query and reloading via the <b>Results</b>
+page.
 
 <h3>1. Filter hits</h3>
 
@@ -23,10 +26,15 @@ regions on the two species. Filters are as follows:
 <div style="width:485px;margin-top:10px; margin-left:15px;">
 <b>Annotation Description</b>
 <p>
-Enter the value for any of the keywords in the annotation string
-(e.g. if there is an ID (gene name) and product keyword, they both will be searched). 
+Enter the value for any of the keywords in the annotation string,
+e.g. if there is an ID (gene name) and product keyword, they both will be searched. 
 Hits will be returned which overlap a matching annotation
-on either pair of the synteny. <i>Genes will ONLY be shown if they are part of a hit</i>.
+on either pair of the synteny. 
+
+<p><i>Genes will ONLY be shown if they are part of a hit. However, if <b>Only Orphan Genes</b>
+is selected, then they will only be shown if they are NOT part of a hit</i>.
+Hence, if your looking for a particular gene, enter the gene name and search; if
+there are no results, select "Show Orphan Genes" and search again.
 <p>
 <b>Chromsome/location filters</b>
 <p>
@@ -35,27 +43,27 @@ its sequences, or a particular sequence or basepair region.
 <p>
 <b>Only synteny hits</b>
 <p>
-Return only hits which are part of a syntenic block. This
+Only hits which are part of a syntenic block. This
 helps to screen false positive hits, but can also conceal true hits that are not
 part of a detectable syntenic block. (Note that SyMAP hits are already filtered
 during loading using a reciprocal-top-2 filter.)
 <p>
 <b>Only hits in a collinear gene pair</b>
 <p>
-Return only hits which are part of a pair of aligning genes having no intervening
+Only hits which are part of a pair of aligning genes having no intervening
 non-aligning genes. This relates to the RunSize column, which is one of the optional
 columns of the Query Result table. RunSize shows the size of collinear chain which 
 a hit is contained in, hence this checkbox is equivalent to RunSize at least 2. 
 Note that a collinear chain is not the same as a SyMAP synteny block, because blocks
 require at least 7 anchors, and are allowed to have intervening genes which do not align.
 <p>
-<b>Show orphan genes</b>
+<b>Only orphan genes</b>
 <p>
-If checked, then the results will show all genes which <i>do not</i> overlap any of the hits
-matching the search criteria (i.e, the hits which would be shown in the table if this
-checkbox were not checked). Note that the genes must also meet the search criteria,
+Genes that do not a have a hit and meet the search criteria,
 e.g. matching the annotation query string and the chromosome location requirements. 
-
+It will also use the "Include" species if set.
+Orphan genes will have no values for the Hitidx and BlockNum columns. The Location
+columns have the value of the start/end of the genes instead of the hit locations. 
 </div>
 
 <p>
@@ -84,12 +92,12 @@ at least one hit which hits that species.
 If a species is checked to exclude, then the PgeneF will be discarded if any of its
 hits are to that species. 
 <p>
-<b>No annotation to included species</b>
+<b>No annotation of hits for the included species</b>
 <p>
 Find PgeneFs which are not yet annotated. A PgeneF will be discarded if it is annotated on any of
 the species which are checked in the <b>Include</b> line.
 <p>
-<b>Complete linkage of included species</b>
+<b>Complete linkage for the included species</b>
 <p>
 Require the PgeneF to be fully linked, i.e. for each pair of species A and B in the group,
 there must be a hit linking A to B.  
@@ -98,11 +106,13 @@ there must be a hit linking A to B.
 <p>
 
 <h3>3. Filter displayed hits</h3>
-
+<div style="width:485px;margin-top:10px; margin-left:15px;">
+<b>Show only hits to the included species</b>
+<p>
 The query returns hits between all pairs of the selected species; however, you may
 only be interested in seeing those which hit certain species. To achieve this,
-select those species in the <b>Include</b> row of Filter Stage 2, and also check
-the box below, <b>Show only hits to the included species</b>. Only those hits will be shown,
+select those species in the <b>Include</b> row of Filter Stage 2 along with this option. 
+Only those hits will be shown,
 although the PgeneF numbers will reflect groupings created using all hits. 
 
 </div>

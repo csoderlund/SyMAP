@@ -1,4 +1,4 @@
-package symapQuery;
+package util;
 
 import java.awt.Color;
 import java.awt.Component;

@@ -422,8 +422,12 @@ the Project Manager window opens, shown on the right.
 					<td align="left" valign="top">
 There are four demo projects listed on the left. Check "Demo-Seq" and "Demo-Seq2".
 A link "Load All Projects" will be displayed in the top of the right panel; select it to 
-load the projects, which will take several minutes; when done, the Manager will look as
-shown in the image.
+load the projects, which will take several minutes. 
+<p>If loading the "Demo-Seq" takes
+<i>more than a few minutes</i>, you may need to adjust the MySQL parameters, see
+<a href=TroubleShoot.html#msqslow>TroubleShoot</a>.  
+<p>When done, the Manager will look as
+shown in the image on the right.
 <p>
 In the "Available Syntenies" table, click the cell for the 
 "Demo_Seq2" row and the "Demo_Seq" column.  Then click the
@@ -537,7 +541,10 @@ This is the end of the demo.
 <a name="mysql">
 <h4>MySQL and parameters</h4>
 
-SyMAP stores all data in a MySQL database. 
+SyMAP stores all data in a MySQL database. It also works with 
+<u>MariaDB</u>, though if you have a recent version and it will not connect, 
+see <a href="TroubleShoot.html#mariadb" target="_blank">trouble shooting</a>.
+
 <p><i>Pre-packaged MySQL for Linux</i>: The package comes with a 
 version of MySQL that is suitable for the demo or a small project in order
 to try the demo. However, install MySQL for any further work. 
@@ -554,7 +561,7 @@ access. If you set up the web displays, they will use
 the client username. The "admin" user needs to have sufficient
 permissions to create a new database.
 <p>
-Note that the default settings of MySQL are poorly suited for large-scale
+<font color=red>Important Note</font>: The default settings of MySQL are poorly suited for large-scale
 data storage. You will want to adjust the parameters 
 <tt>innodb_buffer_pool_size</tt> and <tt>innodb_flush_log_at_trx_commit</tt> as described in
 <a href="TroubleShoot.html#msqslow" target="_blank">trouble shooting</a>.
@@ -731,15 +738,20 @@ for sequence self-alignments.
 
 <h4>Preparing the Sequences</h4>
 The first decision with whole-genome sequence is whether or not to apply
-repeat masking. Masking reduces alignment time and false-positive hits, 
+repeat masking. 
+<ul>
+<li>Masking reduces alignment time and false-positive hits, 
 but also runs a risk of concealing true hits due to inaccurate masking.
-Masking also requires considerable time unless you obtain masked sequences
-from NCBI or Ensembl. 
-<p>
+<li>Masking requires considerable time unless you obtain masked sequences
+from NCBI or Ensembl. NCBI provides soft-masked sequences where the 
+<tt>scripts/ConvertNCBI</tt> script will convert it to hard-masked, and Ensembl
+provides both soft and hard-masked sequences (see <a href="./convert">Convert</a>). 
+<li>
 Masking is not really necessary unless the genome is highly repetitive
 <i>and</i> those repeats are shared with other genomes being aligned. 
 (Repeats cause particular trouble for self-alignments,
 see <a href="#self">self-alignments in SyMAP</a>).
+</ul>
 <p>
 Another masking option which is available if you have gene
 annotation is to mask out everything but the annotated genes. You

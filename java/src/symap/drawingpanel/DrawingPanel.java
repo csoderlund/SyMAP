@@ -35,6 +35,7 @@ import symap.closeup.CloseUp;
 import symap.mapper.HitFilter;
 import symapQuery.ListDataPanel;
 import dotplot.FilterData;
+import util.ErrorReport;
 import util.Utilities;
 
 /**
@@ -72,10 +73,6 @@ public class DrawingPanel extends JPanel
 	private String mouseFunction = null; 	
 	/**
 	 * Creates a new <code>DrawingPanel</code> instance.
-	 *
-	 * @param pools a <code>Pools</code> value
-	 * @param hc a <code>HistoryControl</code> value
-	 * @param bar a <code>HelpBar</code> value
 	 */
 	public DrawingPanel(ListDataPanel listPanel, Pools pools, HistoryControl hc, HelpBar bar) {
 		super();
@@ -167,9 +164,6 @@ public class DrawingPanel extends JPanel
 	/**
 	 * Method <code>getMapType</code> returns the first map in which
 	 * mapMember is a member and returns the Map type.
-	 *
-	 * @param mapMember a <code>Track</code> value
-	 * @return an <code>int</code> value
 	 */
 	public int getMapType(Track mapMember) {
 		for (int i = 0; i < numMaps; i++)
@@ -184,8 +178,6 @@ public class DrawingPanel extends JPanel
 	 * visible).  This information is all of the filter information and any 
 	 * information needed to acquire the data from the database not the actual 
 	 * data.
-	 * 
-	 * @return the DrawingPanelData
 	 */
 	public DrawingPanelData getData() {
 		return new DrawingPanelData(mappers,trackHolders,numMaps);
@@ -202,8 +194,6 @@ public class DrawingPanel extends JPanel
 	/**
 	 * Method <code>getViewHeight</code> returns the actual height
 	 * of the viewable area.
-	 *
-	 * @return an <code>int</code> value
 	 */
 	public int getViewHeight() {
 		return scrollPane.getViewport().getHeight();
@@ -260,13 +250,6 @@ public class DrawingPanel extends JPanel
 	 * 
 	 * The ends of the map are locked till the next build if the track at pos 
 	 * is a Sequence.
-	 * 
-	 * @param pos
-	 * @param startBP
-	 * @param endBP
-	 * @return true on success
-	 * @throws IllegalArgumentException
-	 * @throws TrackException
 	 */
 	public boolean setTrackEnds(int pos, double startBP, double endBP) throws IllegalArgumentException {
 		Track track = trackHolders[pos-1].getTrack();
@@ -425,10 +408,7 @@ public class DrawingPanel extends JPanel
 	 * place with a contig list of (Collection)arg.
 	 *
 	 * Finally the reset index is set, the history is updated, and the view is 
-	 * updated.
-	 *
-	 * @param track a <code>Track</code> value
-	 * @param arg an <code>Object</code> value
+	 * updated
 	 */
 	public void update(final Track track, final Object arg) {
 		setFrameEnabled(false);
@@ -436,7 +416,8 @@ public class DrawingPanel extends JPanel
 		new Thread(new Runnable() {
 			public void run() {
 				try {
-					if (track instanceof Block) {
+					if (track instanceof Block) { // when FPC contig is selected
+						System.out.println("draw block ");
 						Contig c = new Contig(dp,track.getHolder());
 						c.setup(track.getProject(),
 								((Integer)arg).intValue(),
@@ -444,7 +425,8 @@ public class DrawingPanel extends JPanel
 								(BlockTrackData)track.getData());
 						c.setFromBlockList(((Block)track).getContigList());
 						replaceTrack(track, c);
-					} else if (track instanceof Contig) {
+					} else if (track instanceof Contig) { // obsolete?
+						System.out.println("draw contig ");
 						Block block = new Block(dp,track.getHolder());
 						block.setup(track.getProject(),
 								Block.getContigs((Collection)arg),
@@ -459,12 +441,10 @@ public class DrawingPanel extends JPanel
 					System.out.println(ise.getMessage());
 					Utilities.showErrorMessage(ise.getMessage(), -1); 		
 				} catch (Exception exc) {
-					exc.printStackTrace();
-					System.err.println("Unable to make map");
+					ErrorReport.print(exc, "Unable to make map");
 				} catch (OutOfMemoryError me) {
-					System.out.println("Caught OutOfMemoryError in SyMAP::update() - "+me);
-					System.out.println("     Cause: "+me.getCause());
-					me.printStackTrace();
+					System.out.println("Out of memory: "+me.getCause());
+					ErrorReport.print(me, "Out of memory");
 					Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1); 
 					drawingPanelListener.setFrameEnabled(false);
 					throw me;
@@ -493,8 +473,6 @@ public class DrawingPanel extends JPanel
 		smake();
 		return success;
 	}
-	
-	
 	
 	public boolean changeAlignRegion(double factor) {
 		setUpdateHistory();

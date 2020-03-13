@@ -1,5 +1,8 @@
 package symap.frame;
 
+/******************************************************************
+ * Help Box on left side of Chromosome explorer
+ */
 import java.awt.Component;
 import java.awt.Color;
 import java.awt.Dimension;

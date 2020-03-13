@@ -1,5 +1,9 @@
 package symapQuery;
 
+/***************************************************************
+ * The Filter panel. 
+ * Note - the Local prefix has no meaning.
+ */
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
@@ -15,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import symap.projectmanager.common.Project;
+import util.UserPrompt;
 import util.Utilities;
 
 import java.util.Collections;
@@ -65,64 +70,68 @@ public class LocalQueryPanel extends JPanel {
 		add(pnlStepThree);
 		add(Box.createVerticalStrut(5));
 	}
-	
-	public String getSubQuery() {
-		String retVal = "";
 
-		//Species selection
-		int numSpecies = speciesPanel.getNumSpecies();
-		if(numSpecies > 0) {
-			retVal = combineBool(retVal, getAnnoLocalFilter(), true);
-			if (isNonself()) retVal = combineBool(retVal, " PH.proj1_idx != PH.proj2_idx ", true);
-			retVal = combineBool(retVal, getPairGroupQuery(), true);
-		}
-		return retVal; 
-	}
-	public String getAnnotSubQuery() {
-		String retVal = "";
-
-		//Species selection
-		int numSpecies = speciesPanel.getNumSpecies();
-		if(numSpecies > 0) {
-			retVal = combineBool(retVal, getAnnoLocalFilter(), true);
-			retVal = combineBool(retVal, getAnnotGroupQueryAll(), true);
-		}
-		return retVal; 
-	}	
-	public String getSubQuerySummary() { 
-		String retVal = "", temp = "";
-		
-		//Species selection
-		int numSpecies = speciesPanel.getNumSpecies();
-		if(numSpecies > 0) {
-			temp = getAnnoLocalFilterSummary();
-			if(temp.length() > 0)
-				retVal += "[" + temp + "]";
-			temp = getPairGroupQuerySummary();
-			if(temp.length() > 0)
-				retVal += "[" + temp + "]";
-			if(isSynteny())
-				retVal += "[Only synteny hits]";
-		}
-		return retVal; 
-	}
-	
+	public void addExecuteListener(ActionListener l) { btnExecute.addActionListener(l);}
 	public boolean isSynteny() { return chkSynteny.isSelected(); }
 	public boolean isCollinear() { return chkCollinear.isSelected(); }
 	public boolean isClique() { return chkClique.isSelected(); }
 	public boolean isUnannot() { return chkUnannot.isSelected(); }
 	public boolean isOnlyIncluded() { return chkIncludeOnly.isSelected(); }
 	public boolean isOrphan() { return chkOrphan.isSelected(); }
-	public boolean isNonself() { return true; } 
+	public boolean isInclude(int species) { return incSpecies[species].isSelected(); }
+	public boolean isExclude(int species) {return exSpecies[species].isSelected();}
 	
-	private String getAnnoLocalFilter() {
-		return getAnnotationNameFilter();
+	/****************************************************
+	 * Build query - following three are called by ListDataPanel
+	 */
+	public String getSubQuery() {
+		String retVal = "";
+
+		int numSpecies = speciesPanel.getNumSpecies(); //Species selection
+		if(numSpecies > 0) {
+			retVal = combineBool(retVal, getAnnotationNameFilter(), true);
+			retVal = combineBool(retVal, " PH.proj1_idx != PH.proj2_idx ", true);
+			retVal = combineBool(retVal, getPairGroupQueryAll(), true);
+		}
+		return retVal; 
 	}
+	public String getAnnotSubQuery() {
+		String retVal = "";
+
+		int numSpecies = speciesPanel.getNumSpecies(); //Species selection
+		if(numSpecies > 0) {
+			retVal = combineBool(retVal, getAnnotationNameFilter(), true);
+			retVal = combineBool(retVal, getAnnotGroupQueryAll(), true);
+		}
+		return retVal; 
+	}	
+	// CAS503 made this a complete list of filters
+	public String getSubQuerySummary() { 
+		int numSpecies = speciesPanel.getNumSpecies();
+		if(numSpecies ==0) return "No species"; // not possible?
+		
+		String retVal = getAnnotationNameFilterSummary();
+		retVal = join(retVal, getSpeciesLocFilterSummary(), ";  ");
+		
+		if(isSynteny())		retVal = join(retVal, "Only synteny hits", ";  ");
+		if(isCollinear())	retVal = join(retVal, "Only colliner hits", ";  ");
+		
+		// XXX only include this if Only included, Only orphans, or whatever else uses it.
+		retVal = join(retVal, getIncExcFilterSummary(), ";  ");
+		
+		if(isOrphan())		retVal = join(retVal, "Only orphans", ";  ");
+		if(isUnannot())		retVal = join(retVal, "Not annotated", ";  ");
+		if(isClique())		retVal = join(retVal, "Linkage", ";  ");
+		if(isOnlyIncluded())	retVal = join(retVal, "Only included", ";  ");
 	
-	private String getAnnoLocalFilterSummary() {
-		return getAnnotationNameFilterSummary();
+		return retVal; 
 	}
-	
+	private String join (String s1, String s2, String delim) {
+		if (!s1.equals("") && !s2.equals("")) return s1 + delim + s2;
+		else if (!s1.equals("")) return s1;
+		else if (!s2.equals("")) return s2;
+		else return "";
+	}
 	private String getAnnotationNameFilter() {
 		String text = txtAnnotation.getText();
 		if(text.length() == 0) return "";
@@ -132,15 +141,39 @@ public class LocalQueryPanel extends JPanel {
 	private String getAnnotationNameFilterSummary() {
 		String text = txtAnnotation.getText();
 		if(text.length() == 0) return "";
-		return "Annotation contains: " + text;
+		return text;
 	}
 		
-	private String getPairGroupQuery() {
-		return getPairGroupQueryAll();
+	private String getSpeciesLocFilterSummary() {
+		int numSpecies = speciesPanel.getNumSpecies();
+
+		String retVal = ""; // CAS503 added info and remove some wordiness, i.e. do not need to list species unless location
+
+		for(int x=0; x<numSpecies; x++) {
+			String species = speciesPanel.getSpecies(x);
+			String chroms =  speciesPanel.getChromosome(x);
+			String start = speciesPanel.getStartStr(x);
+			String end = speciesPanel.getStopStr(x);
+			if(!chroms.equals("All")) {
+				String loc = " Chr " + chroms;
+				if (!start.equals("") && !end.equals("")) loc += " Range " + start + "-" + end; 
+				else if (!start.equals("")) loc += " Start " + start; 
+				else if (!end.equals(""))   loc += " Range 1-" + end;
+				retVal = join(retVal, species + loc , ", ");
+			}
+		}		
+		return retVal;
 	}
-	
-	private String getPairGroupQuerySummary() {
-		return getPairGroupQueryAllSummary();
+
+	private String getIncExcFilterSummary() {
+		String inc="", exc="";
+		for (int i=0; i<speciesName.length; i++) {
+			if (isInclude(i)) inc = join(inc, speciesName[i],  ",");
+			if (isExclude(i)) exc = join(exc, speciesName[i],  ",");
+		}
+		if (!inc.equals("")) inc = "In (" + inc + ")";
+		if (!exc.equals("")) exc = "Ex (" + exc + ")";
+		return join(inc, exc, ", ");
 	}
 	// If changed, must change getAnnotGroupQueryAll()!!!
 	private String getPairGroupQueryAll() {
@@ -294,34 +327,16 @@ public class LocalQueryPanel extends JPanel {
 		return retVal;
 	}
 		
-	private String getPairGroupQueryAllSummary() {
-		int numSpecies = speciesPanel.getNumSpecies();
-
-		String retVal = "Paired with ";
-		//If by reference, only need to search all other species
-		for(int x=0; x<numSpecies; x++) {
-			String species = speciesPanel.getSpecies(x);
-			String chroms = speciesPanel.getChromosome(x);
-			if(!chroms.equals("All"))
-				retVal += "(Species: " + species + ", Chr: " + chroms + ")";
-			else
-				retVal += "(Species: " + species + ")";
-		}		
-		return retVal;
-
-	}
-
+	
 	private static String combineBool(String left, String right, boolean isAND) {
 		if(left.length() == 0) return right;
 		if(right.length() == 0) return left;
 		if(isAND) return left + " AND " + right;
 		return left + " OR " + right;
 	}
-	
-	public void addExecuteListener(ActionListener l) {
-		btnExecute.addActionListener(l);
-	}
-	
+	/********************************************************************
+	 * Filter panels
+	 */
 	private JPanel createFilterPanel() {
 		JPanel retVal = new JPanel();
 		retVal.setLayout(new BoxLayout(retVal, BoxLayout.PAGE_AXIS));
@@ -336,10 +351,30 @@ public class LocalQueryPanel extends JPanel {
 		chkCollinear.setAlignmentX(Component.LEFT_ALIGNMENT);
 		chkCollinear.setBackground(Color.WHITE);
 
-		chkOrphan = new JCheckBox("Show orphan genes");		
+		chkOrphan = new JCheckBox("Only orphan genes (See Help)");	// CAS503 was Show orphan genes	
 		chkOrphan.setAlignmentX(Component.LEFT_ALIGNMENT);
 		chkOrphan.setBackground(Color.WHITE);
-
+		chkOrphan.addActionListener(new ActionListener() { // CAS503 disabled others if orphans checked
+			public void actionPerformed(ActionEvent e) {
+				boolean b= chkOrphan.isSelected();
+				if (b) { // unselect any selected
+					chkSynteny.setSelected(false);
+					chkCollinear.setSelected(false);
+					chkUnannot.setSelected(false);
+					chkClique.setSelected(false);
+					chkCollinear.setSelected(false);
+					chkIncludeOnly.setSelected(false);
+				}
+				b = !b;
+				chkSynteny.setEnabled(b);
+				chkCollinear.setEnabled(b);
+				chkUnannot.setEnabled(b);
+				chkClique.setEnabled(b);
+				chkCollinear.setEnabled(b);
+				chkIncludeOnly.setEnabled(b);
+			}
+		});
+			
 		retVal.add(chkSynteny);
 		retVal.add(chkCollinear);
 		retVal.add(chkOrphan);
@@ -355,14 +390,16 @@ public class LocalQueryPanel extends JPanel {
 
 		Vector<Project> theProjects = theParentFrame.getProjects();
 		
+		speciesName = new String [theProjects.size()];
 		incSpecies = new JCheckBox[theProjects.size()];
 		for(int x=0; x<incSpecies.length; x++) {
-			incSpecies[x] = new JCheckBox(theProjects.get(x).getDisplayName());
+			speciesName[x] = theProjects.get(x).getDisplayName();
+			incSpecies[x] = new JCheckBox(speciesName[x]);
 			incSpecies[x].setBackground(Color.WHITE);
 		}
 		exSpecies = new JCheckBox[theProjects.size()];
 		for(int x=0; x<exSpecies.length; x++) {
-			exSpecies[x] = new JCheckBox(theProjects.get(x).getDisplayName());
+			exSpecies[x] = new JCheckBox(speciesName[x]);
 			exSpecies[x].setBackground(Color.WHITE);
 		}		
 		
@@ -418,8 +455,8 @@ public class LocalQueryPanel extends JPanel {
 			retVal.add(tempRow);
 		}
 		
-		chkUnannot = new JCheckBox("No annotation to included species");		
-		chkClique = new JCheckBox("Complete linkage of included species");		
+		chkUnannot = new JCheckBox("No annotation of hits for the included species");	// CAS503 added 'for hit'
+		chkClique = new JCheckBox("Complete linkage for the included species");		
 		chkUnannot.setAlignmentX(Component.LEFT_ALIGNMENT);
 		chkUnannot.setBackground(Color.WHITE);
 		chkClique.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -448,21 +485,13 @@ public class LocalQueryPanel extends JPanel {
 		return retVal;
 	}
 
-	public boolean isInclude(int species) {
-		return incSpecies[species].isSelected();
-	}
-	
-	public boolean isExclude(int species) {
-		return exSpecies[species].isSelected();
-	}
-	
 	private JPanel createButtonPanel(int width) {
 		JPanel retVal = new JPanel();
 		retVal.setLayout(new BoxLayout(retVal, BoxLayout.LINE_AXIS));
 		retVal.setAlignmentX(Component.LEFT_ALIGNMENT);
 		retVal.setBackground(Color.WHITE);
 		
-		JButton btnExpand = new JButton("Expand All");
+		JButton btnExpand = new JButton("Expand");
 		btnExpand.setBackground(Color.white);
 		btnExpand.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -471,8 +500,7 @@ public class LocalQueryPanel extends JPanel {
 				pnlStepThree.expand();
 			}
 		});
-		
-		JButton btnCollapse = new JButton("Collapse All");
+		JButton btnCollapse = new JButton("Collapse");
 		btnCollapse.setBackground(Color.white);
 		btnCollapse.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -483,18 +511,20 @@ public class LocalQueryPanel extends JPanel {
 		});
 
 		retVal.add(btnExpand);
-		retVal.add(Box.createHorizontalStrut(5));
+		retVal.add(Box.createHorizontalStrut(3));
 		retVal.add(btnCollapse);
-		retVal.add(Box.createHorizontalStrut(30));
-		btnExecute = new JButton("Do Search");
+		retVal.add(Box.createHorizontalStrut(70));
+		
+		btnExecute = new JButton("Search");
 		btnExecute.setAlignmentX(Component.CENTER_ALIGNMENT);
 		btnExecute.setBackground(Color.WHITE);
 		retVal.add(btnExecute);
-		
+		retVal.add(Box.createHorizontalStrut(70));
+
 		btnHelp = new JButton("Help");
 		btnHelp.setAlignmentX(Component.RIGHT_ALIGNMENT);
 		btnHelp.setBackground(UserPrompt.PROMPT);
-		retVal.add(Box.createHorizontalStrut(30));
+		
 		btnHelp.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				Utilities.showHTMLPage(null, "SyMAP Query Help", "/html/QueryHelp.html");
@@ -534,18 +564,16 @@ public class LocalQueryPanel extends JPanel {
 	}
 	
 	private SyMAPQueryFrame theParentFrame = null;
-	//Search type controls
-	private JTextField txtAnnotation = null;
-	//Species 
-	public SpeciesSelectPanel speciesPanel = null;	
-	//Species Include/Exclude
-	private JCheckBox [] incSpecies = null;
-	private JCheckBox [] exSpecies = null;
-	
 	private CollapsiblePanel pnlStepOne = null, pnlStepTwo = null, pnlStepThree = null;
-	//Other
+	
+	private JTextField txtAnnotation = null; 
+	
+	public SpeciesSelectPanel speciesPanel = null;	
+	private JCheckBox [] incSpecies = null, exSpecies = null;
+	private String [] speciesName = null;
+	
 	private JCheckBox chkSynteny = null, chkIncludeOnly = null, chkOrphan = null,
 			chkCollinear = null, chkUnannot = null, chkClique = null;
-	private JButton btnExecute = null;
-	private JButton btnHelp = null;
+	
+	private JButton btnExecute = null, btnHelp = null;
 }

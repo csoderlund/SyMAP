@@ -27,12 +27,13 @@ import util.PropertiesReader;
 import util.Rule;
 import util.TextBox;
 import util.Utilities;
+import util.ErrorReport;
 
 /**
  * The Sequence track for a pseudo molecule. 
  */
 public class Sequence extends Track {	
-
+	private static final boolean TEST=true;
 	private static final double OFFSET_SPACE = 7;
 	private static final double OFFSET_SMALL = 1;
 	
@@ -163,7 +164,6 @@ public class Sequence extends Track {
 
 	/**
 	 * Clears the internal lists and calls super.clear()
-	 *
 	 * @see Track#clear()
 	 */
 	public void clear() {
@@ -182,19 +182,9 @@ public class Sequence extends Track {
 		annotations.removeAllElements();
 	}
 
-	/** 
-	 * @see java.lang.Object#toString()
-	 */
-	public String toString() {
-		return "[Sequence "+getProjectName()+" "+getGroup()+"]";
-	}
+	public String toString() {return "[Sequence "+getProjectName()+" "+getGroup()+"]";}
 
-	/**
-	 * @return The sequence group if it has not been set.
-	 */
-	public int getGroup() {
-		return group;
-	}
+	public int getGroup() {return group;}
 
 	public String getName() {
 		return drawingPanel.getPools().getProjectProperties().getProperty(getProject(),"grp_prefix") +
@@ -212,13 +202,6 @@ public class Sequence extends Track {
 		DEFAULT_SHOW_ANNOT = b;
 	}
 
-	/**
-	 * Set whether the ruler should be showen or hidden.
-	 * Sets the track to be built on the next make if changed.
-	 * 
-	 * @param show true to show the rule.
-	 * @return a <code>boolean</code> value of true on a change
-	 */
 	public boolean showRuler(boolean show) {
 		if (showRuler != show) {
 			showRuler = show;
@@ -228,13 +211,6 @@ public class Sequence extends Track {
 		return false;
 	}
 
-	/**
-	 * Method <code>showGap</code> sets whether to show or hide the gap marker.
-	 * If return true, Sequence requires a rebuild.
-	 *
-	 * @param show a <code>boolean</code> value of true to show, false to hide
-	 * @return a <code>boolean</code> value of true when show did not equal to the current settings
-	 */
 	public boolean showGap(boolean show) {
 		if (showGap != show) {
 			showGap = show;
@@ -244,13 +220,6 @@ public class Sequence extends Track {
 		return false;
 	}
 
-	/**
-	 * Method <code>showCentromere</code> sets whether to show or hide the centromere marker.
-	 * If return true, Sequence requires a rebuild.
-	 *
-	 * @param show a <code>boolean</code> value of true to show, false to hide
-	 * @return a <code>boolean</code> value of true when show did not equal to the current settings
-	 */
 	public boolean showCentromere(boolean show) {
 		if (showCentromere != show) {
 			showCentromere = show;
@@ -260,13 +229,6 @@ public class Sequence extends Track {
 		return false;
 	}
 
-	/**
-	 * Method <code>showAnnotation</code> sets whether to show or hide the
-	 * annotation ruler. Sets the track to be built on the next make if changed.
-	 *
-	 * @param show a <code>boolean</code> value
-	 * @return a <code>boolean</code> value of true on a change
-	 */
 	public boolean showAnnotation(boolean show) {
 		if (annotations.size() == 0)
 		{
@@ -283,10 +245,7 @@ public class Sequence extends Track {
 	}
 	public boolean getShowAnnot() { return showAnnot;}
 	
-	public Vector<Annotation> getAnnotations() {
-		return annotations;
-	}
-	
+	public Vector<Annotation> getAnnotations() {return annotations;}
 	
 	public Vector<Annotation> getAnnotations(int type, int start, int end) {
 		Vector<Annotation> out = new Vector<Annotation>();
@@ -295,12 +254,10 @@ public class Sequence extends Track {
 			if ((type == -1 || a.getType() == type) 
 					&& Utilities.isOverlapping(start, end, a.getStart(), a.getEnd()))
 				out.add(a);
-		}
-		
+		}	
 		return out;
 	}
 
-	
 	public int[] getAnnotationTypeCounts() {
 		int[] counts = new int[Annotation.numTypes];
 		
@@ -309,14 +266,6 @@ public class Sequence extends Track {
 		
 		return counts;
 	}
-	
-	/**
-	 * Method <code>showScoreLine</code> sets whether to show or hide the
-	 * hit score lines. Sets the track to be built on the next make if changed.
-	 *
-	 * @param show a <code>boolean</code> value
-	 * @return a <code>boolean</code> value of true on a change
-	 */
 	public boolean showScoreLine(boolean show) { 
 		if (showScoreLine != show) {
 			showScoreLine = show;
@@ -326,17 +275,8 @@ public class Sequence extends Track {
 		return false;
 	}
 	
-	public boolean getShowScoreLine() { 
-		return showScoreLine;
-	}
+	public boolean getShowScoreLine() { return showScoreLine;}
 	
-	/**
-	 * Method <code>showScoreValue</code> sets whether to show or hide the
-	 * hit score value labels. Sets the track to be built on the next make if changed.
-	 *
-	 * @param show a <code>boolean</code> value
-	 * @return a <code>boolean</code> value of true on a change
-	 */
 	public boolean showScoreValue(boolean show) { 
 		if (showScoreValue != show) {
 			showScoreValue = show;
@@ -350,14 +290,7 @@ public class Sequence extends Track {
 		return showScoreValue;
 	}
 	
-	/**
-	 * Method <code>showRibbon</code> sets whether to show or hide the
-	 * hit ribbons. Sets the track to be built on the next make if changed.
-	 *
-	 * @param show a <code>boolean</code> value
-	 * @return a <code>boolean</code> value of true on a change
-	 */
-	public boolean showRibbon(boolean show) { 
+	public boolean showRibbon(boolean show) { // hit ribbon
 		if (showRibbon != show) {
 			showRibbon = show;
 			clearTrackBuild();
@@ -370,13 +303,6 @@ public class Sequence extends Track {
 		return showRibbon;
 	}
 
-	/**
-	 * Method <code>showFrame</code> sets whether to show or hide the
-	 * framework markers. Sets the track to be built on the next make if changed.
-	 *
-	 * @param show a <code>boolean</code> value
-	 * @return a <code>boolean</code> value of true on a change
-	 */
 	public boolean showFrame(boolean show) {
 		if (showFrame != show) {
 			showFrame = show;
@@ -386,13 +312,6 @@ public class Sequence extends Track {
 		return false;
 	}
 
-	/**
-	 * Method <code>showGene</code> sets whether to show or hide the
-	 * gene annotations. Sets the track to be built on the next make if changed.
-	 *
-	 * @param show a <code>boolean</code> value
-	 * @return a <code>boolean</code> value of true on a change
-	 */
 	public boolean showGene(boolean show) {
 		if (showGene != show) {
 			showGene = show;
@@ -402,13 +321,6 @@ public class Sequence extends Track {
 		return false;
 	}
 
-	/**
-	 * Method <code>showFullGene</code> sets whether a gene should be shown full (start to end) (true), or
-	 * just as a mark at the mid point (false).
-	 *
-	 * @param show a <code>boolean</code> value
-	 * @return a <code>boolean</code> value
-	 */
 	public boolean showFullGene(boolean show) {
 		if (showFullGene != show) {
 			showFullGene = show;
@@ -435,8 +347,7 @@ public class Sequence extends Track {
 			name = pool.setSequence(this, size, annotations);	
 			if (annotations.size() == 0) showAnnot = false;
 		} catch (SQLException s1) {
-			s1.printStackTrace();
-			System.err.println("Initializing Sequence failed.");
+			ErrorReport.print(s1, "Initializing Sequence failed.");
 			pool.close();
 			return false;
 		}
@@ -531,6 +442,7 @@ public class Sequence extends Track {
 		 */
 		getHolder().removeAll(); 
 		Rectangle2D.Double centRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
+		
 		for (Annotation annot : annotations) {	
 			if (((annot.isGene() || annot.isExon()) && !showGene)
 				|| (annot.isGap() && !showGap)
@@ -547,17 +459,12 @@ public class Sequence extends Track {
 				width = ANNOT_WIDTH;
 				if (showFullGene) width /= 4; 
 			}
-			else if (annot.isExon()
-					|| annot.isSyGene()) 
+			else if (annot.isExon() || annot.isSyGene()) 
 				width = ANNOT_WIDTH;
 			
-			annot.setRectangle(
-					centRect,
-					start.getBPValue(),
-					end.getBPValue(),
-					bpPerPixel,
-					width,
-					flipped);
+			annot.setRectangle(centRect,
+					start.getBPValue(), end.getBPValue(),
+					bpPerPixel, width, flipped);
 			
 			if (showAnnot && annot.isVisible()) { // Setup description
 				x1 = (orient == RIGHT_ORIENT ? rect.x + rect.width + RULER_LINE_LENGTH + 2 : rect.x);
@@ -566,8 +473,10 @@ public class Sequence extends Track {
 						&& getBpPerPixel() < MIN_BP_FOR_ANNOT_DESC) 
 				{ 
 					ty = annot.getY1();
-						
+					
+					// Creates annotation description textbox (see TextBox.java)
 					TextBox tb = new TextBox(annot.getVectorDescription(),unitFont,(int)x1,(int)ty,40,200);
+					if (TEST) annot.setTextBox(tb); // CAS503
 					getHolder().add(tb);
 					bounds = tb.getBounds();
 					
@@ -710,6 +619,14 @@ public class Sequence extends Track {
 	}
 
 	public void mousePressed(MouseEvent e) {
+		// XXX CAS503 add popUp description
+		if (TEST && e.isPopupTrigger()  && showAnnot) {
+			Point p = e.getPoint();
+			for (Annotation annot : annotations) { 
+				if (annot.popupDesc(p)) 
+					return;
+			}
+		}
 		super.mousePressed(e);
 	}
 
@@ -798,7 +715,7 @@ public class Sequence extends Track {
 		else
 			scrollRange(notches, viewSize);
 	}
-
+	
 	public void mouseDragged(MouseEvent e) {	
 		super.mouseDragged(e);
 		
@@ -874,19 +791,23 @@ public class Sequence extends Track {
 	/**
 	 * Method <code>getHelpText</code> returns the desired text for when the mouse is
 	 * over a certain point.
-	 *
-	 * @param event a <code>MouseEvent</code> value
-	 * @return a <code>String</code> value
 	 */
 	public String getHelpText(MouseEvent event) {
 		Point p = event.getPoint();
-		if (rect.contains(p)) {
+		if (rect.contains(p)) { // within blue rectangle of track
 			for (Annotation annot : annotations) {
 				if (annot.contains(p))
 					return annot.getLongDescription();
 			}
 		}
-
+		else {					// not within blue rectangle of track
+			if (TEST) {
+				for (Annotation annot : annotations) { 
+					if (annot.boxContains(p)) // XXX CAS503 add
+						return "Right click for popup of description";
+				}
+			}
+		}
 		return "Sequence Track (" + getTitle() + "):  " + HOVER_MESSAGE; 
 	}
 

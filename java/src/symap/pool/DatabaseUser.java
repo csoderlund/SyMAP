@@ -340,17 +340,15 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		if (!hostname.equals(""))
 		{
 			try {
-				// Try to connect to database
 				conn = DriverManager.getConnection(
 						DatabaseUser.getDatabaseURL(hostname, ""),
-						username, 
-						password);
+						username, password);
 				success = hasInnodb(conn);
 				conn.close();
 			}
-			catch(Exception e)
-			{
+			catch(Exception e) { 
 				System.err.println("Unable to connect to the mysql database on " + hostname	+ "; are username and password correct?");		
+				ErrorReport.print(e, "Cannot connect to mysql");
 				success = false;
 			}
 		}
@@ -374,11 +372,11 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		String hosturl = DatabaseUser.getDatabaseURL(hostname, "");
 		try {
 			// Try to connect to database
-			conn = DriverManager.getConnection(
-					dburl,username,  password);
+			conn = DriverManager.getConnection(dburl,username,  password);
 			if (!dbHasTables(conn))
 			{
 				DatabaseUser.loadSQLFile(conn, sqlFile);
+				// new Schema(conn);
 			}
 			checkVariables(conn);
 			conn.close();
@@ -400,8 +398,7 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		        	conn.close();
 		        	
 		        	// Reconnect to new database and load SQL file
-				conn = DriverManager.getConnection(
-							dburl, username, password);
+				conn = DriverManager.getConnection(dburl, username, password);
 		        	DatabaseUser.loadSQLFile(conn, sqlFile);
 		        	checkVariables(conn);
 		        	conn.close();

@@ -18,9 +18,9 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.sql.*;
 
-import symapQuery.UserPrompt;
 import util.DatabaseReader;
 import util.ErrorReport;
+import util.UserPrompt;
 import util.Utilities;
 
 import java.util.TreeSet;
