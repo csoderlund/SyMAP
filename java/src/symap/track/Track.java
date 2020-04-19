@@ -27,6 +27,7 @@ import symap.SyMAPConstants;
 import symap.frame.HelpListener;
 import symap.pool.ProjectProperties;
 import symap.drawingpanel.DrawingPanel;
+import util.ErrorReport;
 
 /**
  * Class <code>Track</code> contains the base track information.
@@ -205,8 +206,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	/**
 	 * Method <code>getMoveOffset</code> returns the move offset for the track to
 	 * be used by the holder/layout manager.
-	 *
-	 * @return a <code>Point</code> value
 	 */
 	public Point getMoveOffset() {
 		return moveOffset;
@@ -215,8 +214,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	/**
 	 * Method <code>getGraphics</code> returns the holders graphics object if 
 	 * a holder exists, null otherwise.
-	 *
-	 * @return a <code>Graphics</code> value
 	 * @see javax.swing.JComponent#getGraphics()
 	 */
 	public Graphics getGraphics() {
@@ -227,8 +224,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	/**
 	 * Method <code>getLocation</code> returns the location of the holder
 	 * or a point at location 0,0 if holder is not set.
-	 *
-	 * @return a <code>Point</code> value
 	 */
 	public Point getLocation() {
 		if (holder != null) return holder.getLocation();
@@ -238,8 +233,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	/**
 	 * Method <code>getMidX</code> returns the viewable middle 
 	 * as determined by the track.
-	 *
-	 * @return an <code>double</code> value
 	 */
 	public double getMidX() {
 		return rect.getX()+(rect.getWidth()/2.0);
@@ -268,22 +261,12 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	public String getProjectDisplayName() {
 		return displayName;
 	}
-
-	/**
-	 * Method <code>getBpPerPixel</code>
-	 *
-	 * @return a <code>double</code> value of the bp/pixel of this track
-	 */
 	public double getBpPerPixel() {
 		return bpPerPixel;
 	}
-	
-
 	public int getBpPerCb() {
 		return bpPerCb;
 	}
-
-
 	public boolean changeZoomFactor(double factor) {
 		if (factor > 0) {
 			setBpPerPixel( getBpPerPixel() * ( 1.0 / factor ) );
@@ -327,11 +310,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	{
 		long s = getStart();
 		long e = getEnd();
-		if (s > 1 || e < getTrackSize())
-		{
-			return false;
-		}
-		
+		if (s > 1 || e < getTrackSize()) return false;	
 		return true;
 	}
 	/**
@@ -539,9 +518,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	/**
 	 * Method <code>isInRange</code> returns true if the value given
 	 * is between the start and end values inclusively.
-	 *
-	 * @param num a <code>long</code> value
-	 * @return a <code>boolean</code> value
 	 */
 	public boolean isInRange(long num) {
 		return num >= start.getValue() && num <= end.getValue();
@@ -550,8 +526,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	/**
 	 * Method <code>getStart</code> returns the CB (BP if CB not applicable) 
 	 * value of the start of the Track.
-	 *
-	 * @return a <code>long</code> value
 	 */
 	public long getStart() {
 		return start.getValue();
@@ -560,8 +534,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	/**
 	 * Method <code>getEnd</code> returns the CB (BP if CB not applicable) 
 	 * value of the end of the Track.
-	 *
-	 * @return a <code>long</code> value
 	 */
 	public long getEnd() {
 		return end.getValue();
@@ -570,8 +542,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	/**
 	 * Method <code>getTrackSize</code> returns the CB (BP if CB not applicable) 
 	 * value of the size of the Track.
-	 *
-	 * @return a <code>long</code> value
 	 */
 	public long getTrackSize() {
 		return size.getValue();
@@ -654,7 +624,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		firstBuild = true;
 		hasInit = false;
 		clearAllBuild();
-		//if (holder != null) holder.clearMapperInit();
 	}
 
 	protected void setInit() {
@@ -684,8 +653,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	}
 
 	protected void layout() {
-		//if (drawingPanel != null) drawingPanel.validate();
-
 		if (holder != null && holder.getParent() instanceof JComponent) {
 			((JComponent)holder.getParent()).doLayout();
 			((JComponent)holder.getParent()).repaint();
@@ -694,8 +661,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			drawingPanel.doLayout();
 			drawingPanel.repaint();
 		}
-
-		//if (holder != null) ((JComponent)holder.getParent()).revalidate();
 	}
 
 	protected void adjustBpPerPixel(double bp) {
@@ -818,9 +783,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			}
 		} 
 
-		else if (drawingPanel.isMouseFunctionZoomSingle()
-				|| drawingPanel.isMouseFunctionZoomAll()
-				|| drawingPanel.isMouseFunctionCloseup())
+		else if (drawingPanel.isMouseFunction())
 		{ 
 			if (isCleared(dragRect)) {
 				dragPoint.setLocation(p);
@@ -908,9 +871,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			else if (isSouthResizePoint(p)) 				// Resize
 				setCursor(S_RESIZE_CURSOR);
 			else {
-				if (drawingPanel.isMouseFunctionCloseup()
-						|| drawingPanel.isMouseFunctionZoomSingle()
-						|| drawingPanel.isMouseFunctionZoomAll())
+				if (drawingPanel.isMouseFunction())
 					setCursor(CROSSHAIR_CURSOR);
 				else {
 					setCursor(null);
@@ -927,9 +888,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			holder.showPopupFilter(e);
 		}
 		else {
-			if (!isCleared(dragRect) 
-					&& (drawingPanel.isMouseFunctionZoomSingle() 
-							|| drawingPanel.isMouseFunctionZoomAll())) 
+			if (!isCleared(dragRect) && drawingPanel.isMouseFunctionZoom()) 
 			{
 				try {
 					long newStart = getBP(dragRect.y);
@@ -952,10 +911,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 							notifyObserver();
 						}
 					}
-				} catch (Exception exc) {
-					System.out.println("Exception resizing track!");
-					exc.printStackTrace();
-				}
+				} catch (Exception ex) {ErrorReport.print(ex, "Exception resizing track!");}
 			}
 	
 			if (needUpdate 
@@ -981,27 +937,20 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	protected boolean isCleared(Point p) {
 		return p.x == NO_VALUE && p.y == NO_VALUE;
 	}
-
 	protected boolean isCleared(Rectangle r) {
 		return r.x == 0 && r.y == 0 && r.width == NO_VALUE && r.height == NO_VALUE;
 	}
-
 	protected void clear(Point p) {
 		p.setLocation(NO_VALUE,NO_VALUE);
 	}
-
 	protected void clear(Rectangle r) {
 		r.setRect(0,0,NO_VALUE,NO_VALUE);
 	}
-
 	public void mouseClicked(MouseEvent e) { }
 	public void mouseEntered(MouseEvent e) { 
 		holder.requestFocusInWindow();
 	}
-	
-	public void mouseExited(MouseEvent e) { 
-		
-	}
+	public void mouseExited(MouseEvent e) { 	}
 	
 	public void mouseWheelMoved(MouseWheelEvent e) { } 
 	public void mouseWheelMoved(MouseWheelEvent e, long viewSize) { } 

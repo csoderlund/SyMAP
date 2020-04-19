@@ -8,6 +8,7 @@ import number.GenomicsNumber;
 import symap.SyMAP;
 import symap.pool.DatabaseUser;
 import util.DatabaseReader;
+import util.ErrorReport;
 import util.ListCache;
 
 /**
@@ -21,6 +22,7 @@ public class PseudoPool extends DatabaseUser {
 
 	protected static final String ANNOT_QUERY =
 		"SELECT name,type,start,end,strand FROM pseudo_annot WHERE grp_idx=? ORDER BY type DESC"; 
+	
 	private ListCache pseudoCache;
 
 	public PseudoPool(DatabaseReader dr, ListCache cache) { 
@@ -51,7 +53,7 @@ public class PseudoPool extends DatabaseUser {
 	 */
 	public synchronized String setSequence(Sequence sequence, GenomicsNumber size, Vector<Annotation> annotations) throws SQLException {
 		int project = sequence.getProject();
-		int group = sequence.getGroup();
+		int group =   sequence.getGroup();
 		PseudoData data = null;
 		if (pseudoCache != null)
 			data = (PseudoData)(pseudoCache.get(new PseudoData(project,group)));
@@ -116,10 +118,9 @@ public class PseudoPool extends DatabaseUser {
 	/**
 	 * Method <code>getGroupID</code> returns the group id for the group name.
 	 *
-	 * @param group a <code>String</code> value of group name or group name 
-	 * with prefix, or prefix+0+group.
-	 * @param project an <code>int</code> value of the project id
-	 * @return an <code>int</code> value of the group id, 0 if not found, or -1 on error
+	 * @param group value of group name or group name with prefix, or prefix+0+group.
+	 * @param project an int value of the project id
+	 * @return an int value of the group id, 0 if not found, or -1 on error
 	 */
 	public int getGroupID(String group, int project) {
 		int id = 0;
@@ -127,7 +128,8 @@ public class PseudoPool extends DatabaseUser {
 		ResultSet rs = null;
 		try {
 			stat = createStatement();
-			String query = setInt(setString("SELECT idx FROM groups WHERE (name=? AND proj_idx=?)",group),project);	
+			String query = setInt(
+					setString("SELECT idx FROM groups WHERE (name=? AND proj_idx=?)",group),project);	
 			rs = stat.executeQuery(query);
 			if (rs.next()) id = rs.getInt(1);
 		}

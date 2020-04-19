@@ -1,5 +1,9 @@
 package symapQuery;
 
+/**********************************************
+ * Table of results
+ * CAS504 remove Reload Query
+ */
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -7,13 +11,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+
 import javax.swing.JLabel;
+
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -110,7 +117,7 @@ public class ResultSummaryPanel extends JPanel {
 		thePanel.setLayout(new BoxLayout(thePanel, BoxLayout.LINE_AXIS));
 		thePanel.setBackground(Color.WHITE);
 		
-		btnRemoveSelQueries = new JButton("Remove Selected Queries");
+		btnRemoveSelQueries = new JButton("Remove Selected Query");
 		btnRemoveSelQueries.setEnabled(false);
 		btnRemoveSelQueries.setBackground(Color.WHITE);
 		btnRemoveSelQueries.addActionListener(new ActionListener() {
@@ -128,19 +135,11 @@ public class ResultSummaryPanel extends JPanel {
 			}
 		});
 		
-		btnLoadQuery = new JButton("Load Saved Query");
-		btnLoadQuery.setBackground(Color.WHITE);
-		btnLoadQuery.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				theParentFrame.addResult(new ListDataPanel(theParentFrame));
-			}
-		});
 		
 		thePanel.add(btnRemoveSelQueries);
 		thePanel.add(Box.createHorizontalStrut(20));
 		thePanel.add(btnRemoveAllQueries);
 		thePanel.add(Box.createHorizontalStrut(20));
-		thePanel.add(btnLoadQuery);
 		
 		thePanel.setMaximumSize(thePanel.getPreferredSize());
 		thePanel.setAlignmentX(LEFT_ALIGNMENT);
@@ -175,7 +174,7 @@ public class ResultSummaryPanel extends JPanel {
 
 	private JButton btnRemoveSelQueries = null;
 	private JButton btnRemoveAllQueries = null;
-	private JButton btnLoadQuery = null;
+	//private JButton btnLoadQuery = null; CAS504 taken out for this release
 	
     private JTable theTable = null;
 	private JScrollPane scroll = null;

@@ -1,29 +1,22 @@
 package util;
 
+/******************************************************
+ * Draws the annotation description box
+ * They stay the same width regular of expand/shrink, instead turns on scroll bar
+ */
+
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.Point;
-
-import javax.swing.BorderFactory;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-
 import java.util.Vector;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
 
 import util.LinkLabel;
 
-/******************************************************
- * Draws the annotation description box
- * They stay the same width regular of expand/shrink, instead turns on scroll bar
- */
 // a URL-savvy graphical text box
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class TextBox extends JComponent  {
@@ -157,31 +150,12 @@ public class TextBox extends JComponent  {
 	}
 	// CAS503 - add the following code to allow a popup of the description
 	// this was added so that it can be copied, and because sometimes the box gets half hidden
-	public boolean containsP(Point p) {return rect.contains(p);}
+	public boolean containsP(Point p) {
+		return rect.contains(p);
+	}
 	public void popupDesc() {
 		String msg = "";
 		for (String x : descText) msg += x + "\n";
-		displayInfoMonoSpace(this, "Description", msg, false);
-	}
-	//isModal=true means that everything is frozen until the window is closed
-	private void displayInfoMonoSpace(Component parentFrame, String title, 
-			String theMessage, boolean isModal) {
-		JOptionPane pane = new JOptionPane();
-		
-		JTextArea messageArea = new JTextArea(theMessage);
-
-		JScrollPane sPane = new JScrollPane(messageArea); 
-		messageArea.setFont(new Font("monospaced", Font.BOLD, 12));
-		messageArea.setEditable(false);
-		messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		
-		pane.setMessage(sPane);
-		pane.setMessageType(JOptionPane.PLAIN_MESSAGE);
-
-		JDialog helpDiag = pane.createDialog(parentFrame, title);
-		helpDiag.setModal(isModal);
-		helpDiag.setResizable(true);
-		
-		helpDiag.setVisible(true);		
+		Utilities.displayInfoMonoSpace(this, "Description", msg, false); //  CAS504 moved
 	}
 }

@@ -651,30 +651,28 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.PAGE_AXIS));
 			textPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 			
-			// CAS500 re-ordered and add Length and Mask
+			// CAS500 re-ordered and add Length and Mask; CAS504 add notLoadedInfo
+			// line 1
 			String label1 = "Project: " + p.getDBName(); // CAS500 was Database Name
 			
 			boolean isFPC = p.getType().equals(Constants.fpcType);
-			if (isFPC)
-				label1 += "    FPC Map";
+			if (isFPC) label1 += "    FPC Map";
 				
 			String o = p.getOrderAgainst();
-			if (o != null && o.length() > 0)
-				label1 += "    Order against: " + o;
+			if (o != null && o.length() > 0) label1 += "    Order against: " + o;
 			
-			UpdatePool pool = new UpdatePool(dbReader);
-			if (p.isMask(pool)) 
-				label1 += "    Mask all but genes";
-			
+			if (p.getIsMasked()) label1 += "    Mask all but genes";
 			textPanel.add(new JLabel(label1)); 
 			
-			// general
+			// line 2
 			String d = p.getDescription();
-			if(d != null && d.length()>0)
+			if(d != null && d.length()>0) 
 				textPanel.add(new JLabel("Description: " + d));
 			
-			if(p.getStatus() == Project.STATUS_ON_DISK) { // in database
-				textPanel.add(new JLabel("Use the Parameters link to change default file location and parameters."));	
+			// rest of lines
+			if(p.getStatus() == Project.STATUS_ON_DISK) { 
+				String x = p.notLoadedInfo(); 
+				textPanel.add(new JLabel(x));	
 			} 
 			else {
 				String chrLbl = (p.chrLabel.endsWith("s")) ? 
@@ -705,7 +703,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				btnLoadOrRemove.addMouseListener( doLoad );
 
 				btnReloadParams = new ProjectLinkLabel("Parameters", p, Color.blue);
-				btnReloadParams.addMouseListener( doSetParamsNotLoaded );
+				btnReloadParams.addMouseListener( doSetParamsNotLoaded ); 
 			}
 			else { // CAS42 1/1/18 was just "Remove" which is unclear
 				btnLoadOrRemove = new ProjectLinkLabel("Remove project from database", p, Color.blue);
@@ -1264,19 +1262,28 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	private MouseListener doReloadParams = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
 			Project theProject = ((ProjectLinkLabel)e.getSource()).getProject();
-			PropertyFrame propFrame = new PropertyFrame(getRef(), theProject.isPseudo(), theProject.getDisplayName(), theProject.getDBName(), dbReader, true);
+			PropertyFrame propFrame = new PropertyFrame(
+				getRef(), theProject.isPseudo(), theProject.getDisplayName(), 
+				theProject.getDBName(), dbReader, true);
 			propFrame.setVisible(true);
+			
 			if(!propFrame.isDisarded())
 			{			
 				theProject.updateParameters(new UpdatePool(dbReader),null);
 			}
-			refreshMenu();		}
+			
+			refreshMenu();		
+		}
 	};
 	private MouseListener doSetParamsNotLoaded = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
 			Project theProject = ((ProjectLinkLabel)e.getSource()).getProject();
-			PropertyFrame propFrame = new PropertyFrame(getRef(), theProject.isPseudo(), theProject.getDisplayName(), theProject.getDBName(), dbReader, false);
+			PropertyFrame propFrame = new PropertyFrame(
+				getRef(), theProject.isPseudo(), theProject.getDisplayName(), 
+				theProject.getDBName(), dbReader, false);
 			propFrame.setVisible(true);
+			
+			refreshMenu(); // CAS504
 		}		
 	};
 
@@ -1722,7 +1729,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			if (pairIdx==0) {
 				if (globalPairProps==null) globalPairProps = new SyProps(); // should not happen
 				props.copyProps(globalPairProps);
-				return props; // XXX 
+				return props; 
 			}
 			
 			UpdatePool db = new UpdatePool(dbReader);
@@ -2262,7 +2269,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			}
 		});
 		
-		tempPnl.add(btnAddProject);
+		if (!inReadOnlyMode) tempPnl.add(btnAddProject);
 		
 		panel.add(tempPnl);
 		
@@ -2512,7 +2519,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	{
 		Vector<Project> projects = new Vector<Project>();
 		
-		// Load projects
+		// Get loaded projects
 		UpdatePool pool = new UpdatePool(dbReader);
         ResultSet rs = pool.executeQuery("SELECT idx, name, type FROM projects");
         while ( rs.next() ) {
@@ -2523,22 +2530,28 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
         }
         rs.close();
         
-        // Load project properties
+        // Load project properties from DB
         for (Project p : projects) {
-	        	HashMap<String,String> projProps = loadProjectProps(pool, p.getID());
+	        	HashMap<String,String> projProps = loadProjectProps(pool, p.getID()); 
+	        	
 	        	p.setDisplayName(projProps.get("display_name"));
 	        	p.setDescription(projProps.get("description"));
 	        	p.setCategory(projProps.get("category"));
-	        	boolean unord = projProps.containsKey("grp_sort") && projProps.get("grp_sort").equals("unordered");
-	        	p.setUnordered(unord);
            	p.setOrderAgainst(projProps.get("order_against"));
-           	if (projProps.containsKey("grp_type") && !projProps.get("grp_type").equals("")) p.setChrLabel(projProps.get("grp_type"));
+           	
+           	if (projProps.containsKey("grp_type") && 
+           			!projProps.get("grp_type").equals("")) 
+           				p.setChrLabel(projProps.get("grp_type"));
+           	
+           	// CAS504 add isMasked
+           	boolean isMasked =  (projProps.containsKey("mask_all_but_genes") && 
+           						 projProps.get("mask_all_but_genes").equals("1"));
+           	p.setIsMasked(isMasked);
         }
         
         // Load count of groups for each project
         for (Project p : projects) {
-	        rs = pool.executeQuery("SELECT count(*) " +
-	        		"FROM groups AS p " +
+	        rs = pool.executeQuery("SELECT count(*) FROM groups AS p " +
 	        		"WHERE proj_idx=" + p.getID());
 	        
 	        rs.next();
@@ -2564,12 +2577,32 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
         
         return projects;
 	}
+	private void loadProjectsFromDisk(Vector<Project> projects, String strDataPath, String dirName) {
+		File root = new File(strDataPath + dirName); // dirName is same as strType p
+	
+		if (root == null || !root.isDirectory()) {
+			System.err.println("Missing directory " + root.getName());
+			return;
+		}
+		for (File f : root.listFiles()) {
+			if (f.isDirectory() && !f.getName().startsWith(".")) {
+				Project newProj = new Project(-1, f.getName(), dirName, f.getName() );
+				newProj.setStatus( Project.STATUS_ON_DISK );
+				
+				if (!projects.contains(newProj)) 
+				{
+					newProj.getPropsFromDisk(f);
+					projects.add( newProj );	
+				}
+			}
+		}
+	}
 	
 	private void sortProjects(Vector<Project> projects) {
 		Collections.sort( projects, new Comparator<Project>() {
-	    	public int compare(Project p1, Project p2) {
-	    		return p1.getDBName().compareTo( p2.getDBName() );
-	    	}
+		    	public int compare(Project p1, Project p2) {
+		    		return p1.getDBName().compareTo( p2.getDBName() );
+		    	}
 	    });
 	}
 	
@@ -2626,27 +2659,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		}
     }
 	
-	private void loadProjectsFromDisk(Vector<Project> projects, String strDataPath, String dirName) {
-		File root = new File(strDataPath + dirName); // dirName is same as strType p
-	
-		if (root == null || !root.isDirectory()) {
-			System.err.println("Missing directory " + root.getName());
-			return;
-		}
-		for (File f : root.listFiles()) {
-			if (f.isDirectory() && !f.getName().startsWith(".")) {
-				Project newProj = new Project(-1, f.getName(), dirName, f.getName() );
-				newProj.setStatus( Project.STATUS_ON_DISK );
-				
-				if (!projects.contains(newProj))
-				{
-					newProj.getPropsFromDisk(f);
-					projects.add( newProj );						
-				}
-			}
-		}
-	}
-	
 	private class AddProjectPanel extends JDialog {
 		public AddProjectPanel(ActionListener addListener) {
 			//Used for Java 1.5... 1.6 uses setModalityType(type)
@@ -2675,7 +2687,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			cmbType.addItem("Select type...");
 			cmbType.addItem("sequence");
 			cmbType.addItem("fpc");
-			cmbType.setSelectedIndex(0);
+			cmbType.setSelectedIndex(1);
 			cmbType.setMaximumSize(cmbType.getPreferredSize());
 			cmbType.setMinimumSize(cmbType.getPreferredSize());
 			cmbType.addActionListener(new ActionListener() {
@@ -2767,7 +2779,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		
 		public void reset() { 
 			txtName.setText("");
-			cmbType.setSelectedIndex(0);
+			cmbType.setSelectedIndex(1); // CAS504 make sequence the default
 			btnAdd.setEnabled(false);
 		}
 		

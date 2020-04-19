@@ -79,8 +79,8 @@ public class HitAlignment implements Comparable<HitAlignment> {
 				//+ "\nE-value:  "+ getEvalue()
 				//+ "\nIdentity: "+ ((int)Math.round(getPctid()))+"%"
 				//+ "\nStrand:   "+ strand
-				+ "\nQuery:    "+ qStart+"-"+qEnd
-				+ "\nTarget:   "+ tStart+"-"+tEnd
+				+ "\nQuery:    "+ String.format("%,d - %,d (%d)", qStart, qEnd, (qEnd-qStart+1))  // CAS504 format
+				+ "\nTarget:   "+ String.format("%,d - %,d (%d)", tStart, tEnd, (tEnd-tStart+1))
 				+ "\n\n" 		+ query.toString()
 				+ "\n" 			+ alignStr(query, target)
 				+ "\n" 			+ target.toString() + " \n"; 

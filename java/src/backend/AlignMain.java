@@ -85,7 +85,7 @@ public class AlignMain
 		
 		if (error) return false; // error occurred in constructor
 			
-		pool.updateSchemaTo40();
+		//pool.updateSchemaTo40();
 		
 		if (alignExists()) return true; // must have all.done and at least one .mum file
 		

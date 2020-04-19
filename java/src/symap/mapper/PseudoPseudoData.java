@@ -87,7 +87,7 @@ public class PseudoPseudoData extends AbstractHitData implements SyMAPConstants 
 		public String toString() { // CAS501 Pseudo->Seq
 			return "Seq Hit Data "
 				+ (getName() != null ? getName()+" " : "")
-				+ getID(); 
+				+ ("#"+getID()); // CAS504 added # 
 		}
 	}
 }

@@ -99,14 +99,13 @@ sub usage
 {
 	print <<END;
 
-	Usage:  ./symap [options]
+	Usage:  ./viewSymap3D [options]
 	-c string	: filename of config file (to use instead of symap.config)
 	-32		: 32-bit mode
 	-64		: 64-bit mode
 	-mN		: set max memory to N megabytes
 	-linux 		: linux platform
-	-mac		: mac platform
-    
+	-mac		: mac platform    
 END
 
 }

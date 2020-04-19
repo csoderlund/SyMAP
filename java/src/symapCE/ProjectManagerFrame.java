@@ -7,6 +7,7 @@ import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.projectmanager.common.Project;
 import symap.projectmanager.common.ProjectManagerFrameCommon;
+import symapQuery.Q;
 import util.DatabaseReader;
 import util.Utilities;
 
@@ -37,6 +38,10 @@ public class ProjectManagerFrame extends ProjectManagerFrameCommon
 			if (Utilities.hasCommandLineOption(args, "-s")) {// not shown in -h help
 				System.out.println("Print Stats");
 				printStats = true;
+			}
+			if (Utilities.hasCommandLineOption(args, "-d")) {
+				System.out.println("Extra output for SyMAP Query");
+				Q.TEST_TRACE = true;
 			}
 			if (Utilities.hasCommandLineOption(args, "-a")) {// not shown in -h help
 				System.out.println("Align largest project to smallest");

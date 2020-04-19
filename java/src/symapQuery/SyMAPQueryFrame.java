@@ -44,8 +44,6 @@ public class SyMAPQueryFrame extends JFrame {
 		theReader = dr;
 		bIs3D = is3D;
 		
-		ErrorReport.isApplet(); // CAS503
-		
 		theProjects = new Vector<Project> ();		
 		
 		Rectangle screenRect = Utilities.getScreenBounds(applet,this);
@@ -54,11 +52,11 @@ public class SyMAPQueryFrame extends JFrame {
 		setSize(screenWidth, screenHeight);	
 	}
 	
-	public void addAlignmentTab(ListDataPanel parent, String [] names, String [] sequences) {
+	public void addAlignmentTab(TableDataPanel parent, String [] names, String [] sequences) {
 		String label = names.length + " sequences";
 		
 		final SyMAPQueryFrame theFrame = this;
-		final ListDataPanel parentCopy = parent;
+		final TableDataPanel parentCopy = parent;
 		final String [] theNames = names;
 		final String [] theSequences = sequences;
 		final String thePOGName = label;
@@ -70,7 +68,7 @@ public class SyMAPQueryFrame extends JFrame {
 					
 					AlignmentViewPanel newTab = new AlignmentViewPanel(theFrame, theNames, theSequences, filename);
 					String tabName;
-					tabName = "Muscle " + (++nMultiAlignmentCounter) + ": " + thePOGName;
+					tabName = "Align " + (++nMultiAlignmentCounter) + ": " + thePOGName;
 						
 					addResultPanel(parentCopy, newTab, tabName, summary);
 				} catch (Exception e) {
@@ -169,7 +167,7 @@ public class SyMAPQueryFrame extends JFrame {
 	public Vector<Project> getProjects() { return theProjects; }
 	
 	// Query result
-	public void addResult(ListDataPanel newPanel) {
+	public void addResult(TableDataPanel newPanel) {
 		if(newPanel.isValidData()) {
 			resultsPanel.addResult(newPanel.getSummary());
 			results.add(newPanel);
@@ -191,7 +189,7 @@ public class SyMAPQueryFrame extends JFrame {
 		updateView();
 	}
 	
-	public boolean updateResultCount(ListDataPanel panel) {
+	public boolean updateResultCount(TableDataPanel panel) {
 		int numResults = panel.getNumResults();
 		
 		if(numResults == 0)
@@ -207,14 +205,6 @@ public class SyMAPQueryFrame extends JFrame {
 		menuPanel.removeResult(result);
 		updateView();
 	}
-	
-	public String getLocalSubQuery() { return lQueryPanel.getSubQuery(); }
-	public String getLocalAnnotSubQuery() { return lQueryPanel.getAnnotSubQuery(); }
-	public String getLocalSubQuerySummary() { return lQueryPanel.getSubQuerySummary(); }
-	public boolean isSynteny() { return lQueryPanel.isSynteny(); }
-	public boolean isCollinear() { return lQueryPanel.isCollinear(); }
-	public boolean isUnannot() { return lQueryPanel.isUnannot(); }
-	public boolean isClique() { return lQueryPanel.isClique(); }
 	
 	private void buildMenuPanel() {
 		menuPanel = new MenuPanel(MENU_ITEMS, 0, new ActionListener() {
@@ -233,24 +223,24 @@ public class SyMAPQueryFrame extends JFrame {
 		results = new Vector<JPanel> ();
 		
 		overviewPanel = new OverviewPanel(this);
-		lQueryPanel = new LocalQueryPanel(this);
+		queryPanel = new QueryPanel(this);
 		resultsPanel = new ResultSummaryPanel(this, LOCAL_RESULT_COLUMNS);
 		
-		lQueryPanel.addExecuteListener(new ActionListener() {
+		queryPanel.addExecuteListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				boolean [] oldSelections = null;
 
 				for(int x=results.size()-1; x>=0 && oldSelections == null; x--) {
-					if(results.get(x) instanceof ListDataPanel) {
-						oldSelections = ((ListDataPanel)results.get(x)).getColumnSelections();
+					if(results.get(x) instanceof TableDataPanel) {
+						oldSelections = ((TableDataPanel)results.get(x)).getColumnSelections();
 					}
 				}
-				addResult(new ListDataPanel(getThis(), getNextResultLabel(), oldSelections));
+				addResult(new TableDataPanel(getThis(), getNextResultLabel(), oldSelections));
 			}
 		});
 		
 		mainPanel.add(overviewPanel);
-		localQueryPane = new JScrollPane(lQueryPanel);
+		localQueryPane = new JScrollPane(queryPanel);
 		mainPanel.add(localQueryPane);
 		mainPanel.add(resultsPanel);
 		
@@ -283,8 +273,7 @@ public class SyMAPQueryFrame extends JFrame {
 	public String getSequence(int start, int stop, int groupIdx) {
 		Pools p = null;
 		try {
-			p = PoolManager.getInstance().getPools(theReader);
-			
+			p = PoolManager.getInstance().getPools(theReader);	
 			return p.getSequencePool().loadPseudoSeq(start + ":" + stop, groupIdx);
 		} catch (SQLException e) {
 			ErrorReport.print(e, "Get sequence");
@@ -298,25 +287,27 @@ public class SyMAPQueryFrame extends JFrame {
 	}
 	
 	public SyMAPQueryFrame getThis() { return this; }
+	public QueryPanel getQueryPanel() {return queryPanel;}
 		
 	private Applet theApplet = null;
 	private DatabaseReader theReader = null;
-	public Vector<Project> theProjects = null;
+	private Vector<Project> theProjects = null;
 	
 	private int screenWidth, screenHeight;
 	private JSplitPane splitPane = null;
 	private JPanel mainPanel = null;
 	private MenuPanel menuPanel = null;
 	private OverviewPanel overviewPanel = null;
-	public LocalQueryPanel lQueryPanel = null;
-	public JScrollPane localQueryPane = null;
+	
+	private JScrollPane localQueryPane = null;
 	private ResultSummaryPanel resultsPanel = null;
 	
 	private Vector<JPanel> results = null;
 	private boolean bIs3D = false;
+	
+	private QueryPanel queryPanel = null;
+	
 	private static int resultCounter = 0; 
 	private static int nMultiAlignmentCounter = 0;
-	public boolean loadingData = false;
-
 	private static final long serialVersionUID = 9349836385271744L;
 }

@@ -18,7 +18,7 @@ import symap.drawingpanel.DrawingPanel;
 import history.History;
 import history.HistoryControl;
 import symap.closeup.CloseUp;
-import symapQuery.ListDataPanel;
+import symapQuery.TableDataPanel;
 
 /**
  * Class <code>SyMAP</code> is used to acquire and configure the desired objects.
@@ -27,8 +27,8 @@ import symapQuery.ListDataPanel;
  * be properly set along with all of the corresponding .properties files.
  */
 public class SyMAP {
-	public static final String VERSION = "v5.0.3";
-	public static final String DATE = " (11-Mar-20)";
+	public static final String VERSION = "v5.0.4";
+	public static final String DATE = " (18-Apr-20)";
 	// CAS500 change v4.2 to doc
 	public static final String BASE_HELP_URL =    "http://www.agcol.arizona.edu/software/symap/doc/"; 
 	public static final String USER_GUIDE_URL =    BASE_HELP_URL + "UserGuide.html"; 
@@ -52,7 +52,7 @@ public class SyMAP {
 	}
 	
 	public static final Date COOKIE_EXPIRES = CookieProps.getDaysFromNow(365);
-	public static final String PERSISTENT_PROPS_FILE = ".symap_saved_props";
+	public static final String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // CAS doesn't change
 	public static final int HISTORY_SIZE = 10;
 
 	private static final String PP_HEADER = "SyMAP Saved Properties. Do not modify.";
@@ -69,11 +69,11 @@ public class SyMAP {
 	private PersistentProps    persistentProps;
 	private CloseUp            closeup;
 
-	public SyMAP(Applet applet, DatabaseReader dr, ListDataPanel theTablePanel) throws SQLException {
+	public SyMAP(Applet applet, DatabaseReader dr, TableDataPanel theTablePanel) throws SQLException {
 		this(applet, dr, null, theTablePanel);
 	}
 
-	public SyMAP(Applet applet, DatabaseReader dr, HelpBar hb, ListDataPanel theTablePanel)
+	public SyMAP(Applet applet, DatabaseReader dr, HelpBar hb, TableDataPanel theTablePanel)
 	throws SQLException 
 	{
 		this.databaseReader = dr;
@@ -162,10 +162,6 @@ public class SyMAP {
 
 	public History getHistory() {
 		return history;
-	}
-
-	public PersistentProps getPersistentProps() {
-		return persistentProps;
 	}
 
 	public ImageViewer getImageViewer() {

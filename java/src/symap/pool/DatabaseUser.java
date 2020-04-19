@@ -363,20 +363,20 @@ public abstract class DatabaseUser implements SyMAPConstants {
 			String username, String password) 
 	{
 		if (!checkHost(hostname,username,password))
-		{
 			return false;	
-		}
+		
+		 /***** CAS504 stopped using scripts/symap.sql and added Schema.java ***/
 		Connection conn;
 		boolean success = true;
 		String dburl = DatabaseUser.getDatabaseURL(hostname, dbname);
 		String hosturl = DatabaseUser.getDatabaseURL(hostname, "");
-		try {
-			// Try to connect to database
+		try { 
 			conn = DriverManager.getConnection(dburl,username,  password);
-			if (!dbHasTables(conn))
+			if (!dbHasTables(conn)) // database exists without schema loaded
 			{
-				DatabaseUser.loadSQLFile(conn, sqlFile);
-				// new Schema(conn);
+				System.out.println("Load schema '" + dbname + "' (" + dburl + ").");
+				//DatabaseUser.loadSQLFile(conn, sqlFile);
+				new Schema(conn);
 			}
 			checkVariables(conn);
 			conn.close();
@@ -384,14 +384,23 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		catch (SQLException e) { // Database not found
 			try {
 				System.out.println("Creating database '" + dbname + "' (" + dburl + ").");
-		       
-	        		if (!Utilities.fileExists(sqlFile)) { // CAS50x TODO make sql file internal
+				conn = DriverManager.getConnection(hosturl, username, password);
+				
+				Statement stmt = conn.createStatement();
+	        		stmt.executeUpdate("CREATE DATABASE " + dbname);
+	        		stmt.close();
+	        		conn.close();
+	        		
+	        		conn = DriverManager.getConnection(dburl, username, password);
+				new Schema(conn);
+				conn.close();
+		        /***** 
+	        		if (!Utilities.fileExists(sqlFile)) { 
 	        			System.err.println("Fatal error: Cannot create database");
 	        			System.err.println("   Missing file " + sqlFile);
 	        			System.exit(-1);
 	        		}
-				conn = DriverManager.getConnection(
-		        			hosturl, username, password);
+				conn = DriverManager.getConnection(hosturl, username, password);
 		        	Statement stmt = conn.createStatement();
 		        	stmt.executeUpdate("CREATE DATABASE " + dbname);
 		        	stmt.close();
@@ -402,6 +411,7 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		        	DatabaseUser.loadSQLFile(conn, sqlFile);
 		        	checkVariables(conn);
 		        	conn.close();
+		        	***/
 			}
 			catch (SQLException e2) {
 				ErrorReport.print(e,"Error creating database '" + dbname + "'.");

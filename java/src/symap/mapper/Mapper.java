@@ -23,7 +23,7 @@ import symap.track.*;
 import symap.sequence.Sequence;
 import symap.frame.HelpBar; 		
 import symap.frame.HelpListener; 	
-import symapQuery.ListDataPanel;
+import symapQuery.TableDataPanel;
 import util.PropertiesReader;
 import util.ClearList;
 
@@ -82,7 +82,7 @@ public class Mapper
 	private DrawingPanel drawingPanel; 
 	private TrackHolder trackHolders[];
 	private FilterHandler fh;
-	private ListDataPanel theParentPanel;
+	private TableDataPanel theParentPanel;
 	private List<AbstractHitData> hits;
 	private MapperPool pool;
 	private HitFilter hitfilter;
@@ -93,7 +93,7 @@ public class Mapper
 	public Mapper(DrawingPanel drawingPanel, 
 			TrackHolder th1, TrackHolder th2,
 			FilterHandler fh, MapperPool pool, 
-			HelpBar hb, ListDataPanel listPanel) 
+			HelpBar hb, TableDataPanel listPanel) 
 	{
 		super();
 		this.pool = pool;

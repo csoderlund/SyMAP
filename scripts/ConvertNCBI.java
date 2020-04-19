@@ -1,22 +1,19 @@
 
 /*************************************************************
  * ConvertNCBI: NCBI genome files formatted for SyMAP
- * See www.agcol.arizona.edu/software/symap/v4.2/ncbi
+ * See www.agcol.arizona.edu/software/symap/doc/covert
  * 
  * Written by CAS 1/16/18; 
  *         update 2/20/20 add hard-masked option; check parent and allow genes, mRNA and exons to be in any order
+ *   	   update 3/21/20 add gap file
  *         
- * Note: I am no expert on Genbank GFF format, so I cannot guarantee this is 100% correct mapping.
- * There seriously lacks regularity in this format! Find the gff file that had the product attribute for mRNA.
- * 
+ * Note: I am no expert on NCBI GFF format, so I cannot guarantee this is 100% correct mapping.
  * I used this for the www.agcol.arizona.edu/symapdb 2020 synteny. 
- * There were variation in the files that had to be accounted for. For example,
- * Poplar: -l use 'linkage' instead of 'chromosome'
- * Wine grape: if 'chromosome' with 'scaffold' on line, ignore
  * 
  * Your sequences/annotations may have other variations.
  * Hence, you may want to edit this to customize it for your needs -- its simply written so easy to modify.
  */
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,6 +40,7 @@ public class ConvertNCBI {
 	private String chrPrefix="Chr";
 	private String scafPrefix="s";
 	private String cPrefix="c";
+	private int gapLen=30000;     // Print to gap.gff if #N's is greater than this
 	
 	// keywords 
 	private final String geneType = "gene";
@@ -70,6 +68,7 @@ public class ConvertNCBI {
 	private String seqFile =   "/genomic.fna";
 	private String geneFile = "/gene.gff";
 	private String exonFile = "/exon.gff";
+	private String gapFile = "/gap.gff";
 	
 	// Other global variables
 	private TreeMap <String, String> gb2chr = new TreeMap <String, String> ();
@@ -85,7 +84,7 @@ public class ConvertNCBI {
 	private TreeMap <String, Integer> srcCnt = new TreeMap <String, Integer> ();
 	private int cntDupProduct=0, cntXProduct=0, cntUniqueProduct=0, cntMultUniqueProduct=0;
 	private int cntGene=0, cntGeneChr=0, cntGeneScaf=0, cntGeneNotOnSeq=0;
-	private int nScaf=0, nChr=0, nOther=0;
+	private int nScaf=0, nChr=0, nOther=0, nGap=0;
 	private long chrLen=0, scafLen=0, otherLen=0;
 	private String exLine="";
 	
@@ -118,11 +117,15 @@ public class ConvertNCBI {
 	 * * Fasta file example:
 	 * >NC_016131.2 Brachypodium distachyon strain Bd21 chromosome 1, Brachypodium_distachyon_v2.0, whole genome shotgun sequence
 	 * >NW_014576703.1 Brachypodium distachyon strain Bd21 unplaced genomic scaffold, Brachypodium_distachyon_v2.0 super_11, whole genome shotgun sequence *
+	 * NOTE: NCBI files are soft-masked. The gaps are computed on this, 
+	 *       even if its then hard-masked, which makes gaps and repeats appear the same
 	 */
 	private void rwFasta() {
 		try {
 			BufferedReader fhIn = openGZIP(fastaFile);
 			PrintWriter fhOut = new PrintWriter(new FileOutputStream(seqDir + seqFile, false)); 
+			PrintWriter ghOut = new PrintWriter(new FileOutputStream(annoDir + gapFile, false)); 
+			
 			String line="";
 			int len=0, cntMask=0;
 			char [] base = {'A', 'C', 'G', 'T', 'N', 'a', 'c', 'g', 't', 'n'};
@@ -133,10 +136,10 @@ public class ConvertNCBI {
 				
 			String name="", seqPrefix="";
 			boolean bPrt=false, isChr=false, isScaf=false;
+			int baseLoc=0, gapStart=0, gapCnt=1;
 			
 			while ((line = fhIn.readLine()) != null) {
-	    			if (line.startsWith(">")) {
-	    				
+	    			if (line.startsWith(">")) { // chromosome
 	    				if (len>0) {
 	    					printTrace(isChr, isScaf, len, seqPrefix);
 	    					len=0;
@@ -154,6 +157,7 @@ public class ConvertNCBI {
 		    				bPrt=true;
 		    				gb2chr.put(name, seqPrefix);
 	    					fhOut.println(">" + seqPrefix + "  " + name);
+	    					gapStart=1; gapCnt=0; baseLoc=0;
 	    				}
 	    				else if (isScaf) {
 	    					nScaf++;
@@ -177,6 +181,20 @@ public class ConvertNCBI {
 	    				char [] bases = aline.toCharArray();
 	    				for (int i =0 ; i<bases.length; i++) {
 	    					char b = bases[i];
+	    					baseLoc++;
+	    					if (b=='N') { // at least for O.sativa, there are no 'n' in soft-masked
+	    						if (gapStart==0) gapStart = baseLoc;
+	    						else gapCnt++;
+	    					}
+	    					else if (gapStart>0) {
+	    						if (gapCnt>gapLen) {
+	    							nGap++;
+	    							String x = createGap(seqPrefix, gapStart, gapCnt);
+	    							ghOut.println(x);
+	    						}
+	    						gapStart=0; gapCnt=1;
+	    					}
+	    					
 	    					if (cntBase.containsKey(b)) {
 	    						cntBase.put(b, cntBase.get(b)+1);
 	    						if (b=='a' || b=='c' || b=='t' || b=='g') {
@@ -194,7 +212,7 @@ public class ConvertNCBI {
 	    			}
 	    		}
 			if (len>0) printTrace(isChr, isScaf, len, seqPrefix);
-    			fhIn.close(); fhOut.close(); 
+    			fhIn.close(); fhOut.close(); ghOut.close();
     			
     			prt("Finish writing " + seqFile + "                 ");
     			 
@@ -209,6 +227,7 @@ public class ConvertNCBI {
     			else
     				prt(String.format("Soft masked: %,d lower case", cntMask));
     			cntBase.clear();
+    			prt(String.format("Gaps >= %d: %d", gapLen, nGap));
 		}
 		catch (Exception e) {die(e, "rwFasta");}
 	}
@@ -687,5 +706,10 @@ public class ConvertNCBI {
 		private String getChr() { return chr;}
 		
 		private String chr="", line="", products="";
+	}
+	//chr3    consensus       gap     4845507 4895508 .       +       .       Name    "chr03_0"
+	private String createGap(String chr, int start, int len) {
+		String id = "Gap_" + nGap + "_" + len;
+		return chr + "\tsymap\tgap\t" + start + "\t" + (start+len) + "\t.\t+\t.\tID=\"" + id + "\"";
 	}
 }

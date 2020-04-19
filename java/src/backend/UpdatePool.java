@@ -110,6 +110,7 @@ public class UpdatePool extends DatabaseUser
 			"target_seq,gene_overlap)";
 		bulkSetup("mrk",stmt);
 
+		// AnchorsMain.uploadHit
 		stmt = "insert into pseudo_hits (pair_idx,proj1_idx,proj2_idx," +
 			"grp1_idx,grp2_idx,evalue,pctid,score,strand,start1,end1,start2,end2,query_seq," +
 			"target_seq,gene_overlap,countpct,cvgpct,annot1_idx,annot2_idx)";
@@ -235,6 +236,7 @@ public class UpdatePool extends DatabaseUser
 		rs.close();
 		return ret;
 	}
+	/***** CAS504
 	public void updateSchemaTo40() throws Exception
 	{
 		updateSchemaTo35();
@@ -262,18 +264,5 @@ public class UpdatePool extends DatabaseUser
 			Utils.updateGeneFractions(this);
 		}
 	}
-	public void updateSchemaTo35() throws Exception
-	{
-		ResultSet rs = executeQuery("show tables like 'annot_key'");
-		if (!rs.first())
-		{
-			executeUpdate("CREATE Table annot_key ( " +
-				" idx 				INTEGER AUTO_INCREMENT PRIMARY KEY,	 " +
-				" proj_idx			INTEGER NOT NULL, " +
-				" keyname				TEXT, " +
-				" count				BIGINT DEFAULT 0, " +
-				" FOREIGN KEY (proj_idx) REFERENCES projects (idx) ON DELETE CASCADE " +
-				" ) ENGINE = InnoDB; ");
-		}
-	}
+	**/
 }

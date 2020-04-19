@@ -247,11 +247,17 @@ public class Annotation {
 	// Display in box beside genes when Show Annotation Description
 	public Vector<String> getVectorDescription() {
 		Vector<String> out = new Vector<String>();
-		out.add("Location=" + start + ":" + end + "   Length=" + (end-start+1));
+		out.add(getLocLong());
 		for (String token : description.split(";")) out.add( token.trim() ); // CAS501 added trim
 		return out;
 	}
-
+	
+	private String getLoc() { // CAS504 - only used for Gene Hoover because have description too.
+		return String.format("Start=%,d  Len=%,d", start, (end-start+1));
+	}
+	private String getLocLong() { // CAS504
+		return String.format("Coords=%,d - %,d  Len=%,d", start, end, (end-start+1));
+	}
 	/**
 	 * Method <code>getLongDescription</code> returns the long description set
 	 * during the creation of the object by type or by a call to setLongDescription(String). 
@@ -259,20 +265,21 @@ public class Annotation {
 	 */
 	public String getLongDescription() {
 		String longDes;
+		
 		if (type == GAP_INT)
-			longDes = "Gap: " + (new Long(start).toString()) + "-" + (new Long(end).toString());
+			longDes = "Gap\n" + getLocLong(); // CAS504 add getLoc
 		else if (type == CENTROMERE_INT)
-			longDes = "Centromere: " + (new Long(start).toString()) + "-" + (new Long(end).toString());
+			longDes = "Centromere\n" + getLocLong();
 		else if (type == GENE_INT) {
 			String x = description.replaceAll(";", "\n"); // CAS503 
-			longDes = "Gene: " + x;
+			longDes = "Gene " + getLoc() + "\n" + x;
 		}
 		else if (type == EXON_INT) 
-			longDes = "Exon: " + (new Long(start).toString()) + "-" + (new Long(end).toString());
+			longDes = "Exon\n" + getLocLong();
 		else if (type == FRAMEWORK_INT) 
-			longDes = "Framework Marker: " + description;
+			longDes = "Framework Marker\n" + description;
 		else
-			longDes = "Name: " + description;
+			longDes = "Name " + description;
 		
 		return longDes;
 	}

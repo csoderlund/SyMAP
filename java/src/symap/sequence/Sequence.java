@@ -19,10 +19,12 @@ import java.util.Vector;
 import number.GenomicsNumber;
 import symap.SyMAP;
 import symap.closeup.CloseUp;
+import symap.closeup.SequencePool; // CAS504 has extraction of sequence
 import symap.track.Track;
 import symap.track.TrackData;
 import symap.track.TrackHolder;
 import symap.drawingpanel.DrawingPanel;
+
 import util.PropertiesReader;
 import util.Rule;
 import util.TextBox;
@@ -100,19 +102,22 @@ public class Sequence extends Track {
 	protected boolean showFullGene;
 	protected boolean showRibbon; 
 	protected String name;
-	private PseudoPool pool;
+	
+	private PseudoPool psePool;
+	private SequencePool seqPool;
 	private List<Rule> ruleList;
 	private Vector<Annotation> annotations;
 	private TextLayout headerLayout, footerLayout;
 	private Point2D.Float headerPoint, footerPoint;
 	
 	public Sequence(DrawingPanel dp, TrackHolder holder) {
-		this(dp,holder,dp.getPools().getPseudoPool());
+		this(dp, holder, dp.getPools().getPseudoPool(), dp.getPools().getSequencePool());
 	}
 
-	public Sequence(DrawingPanel dp, TrackHolder holder, PseudoPool pool) {
+	private Sequence(DrawingPanel dp, TrackHolder holder, PseudoPool psePool, SequencePool seqPool) {
 		super(dp, holder, MIN_DEFAULT_BP_PER_PIXEL, MAX_DEFAULT_BP_PER_PIXEL, defaultSequenceOffset);
-		this.pool = pool;
+		this.psePool = psePool;
+		this.seqPool = seqPool; // CAS504 added for sequence popup
 		ruleList = new Vector<Rule>(15,2);
 		annotations = new Vector<Annotation>(50,1000);
 		headerPoint = new Point2D.Float();
@@ -148,10 +153,10 @@ public class Sequence extends Track {
 
 	public void setup(TrackData td) {
 		SequenceTrackData sd = (SequenceTrackData)td;
-		if (td.getProject() != project 
-			|| sd.getGroup() != group 
-			|| td.getOtherProject() != otherProject)
+		if (td.getProject() != project 	|| sd.getGroup() != group 
+										|| td.getOtherProject() != otherProject)
 			reset(td.getProject(),td.getOtherProject());
+		
 		sd.setTrack(this);
 		firstBuild = false;
 		init();
@@ -230,13 +235,11 @@ public class Sequence extends Track {
 	}
 
 	public boolean showAnnotation(boolean show) {
-		if (annotations.size() == 0)
-		{
+		if (annotations.size() == 0) {
 			showAnnot = false;
 			return false;
 		}
-		if (showAnnot != show) 
-		{
+		if (showAnnot != show)  {
 			showAnnot = show;
 			clearTrackBuild();
 			return true;
@@ -344,11 +347,11 @@ public class Sequence extends Track {
 		if (project < 1 || group < 1 || otherProject < 1) return false;
 
 		try {
-			name = pool.setSequence(this, size, annotations);	
+			name = psePool.setSequence(this, size, annotations);	
 			if (annotations.size() == 0) showAnnot = false;
 		} catch (SQLException s1) {
 			ErrorReport.print(s1, "Initializing Sequence failed.");
-			pool.close();
+			psePool.close();
 			return false;
 		}
 		
@@ -619,7 +622,7 @@ public class Sequence extends Track {
 	}
 
 	public void mousePressed(MouseEvent e) {
-		// XXX CAS503 add popUp description
+		// CAS503 add popUp description
 		if (TEST && e.isPopupTrigger()  && showAnnot) {
 			Point p = e.getPoint();
 			for (Annotation annot : annotations) { 
@@ -630,9 +633,9 @@ public class Sequence extends Track {
 		super.mousePressed(e);
 	}
 
-	public void mouseReleased(MouseEvent e) {
+	public void mouseReleased(MouseEvent e) { 
 		Point p = e.getPoint();
-		if (drawingPanel.isMouseFunctionCloseup() 
+		if (drawingPanel.isMouseFunctionPop() 
 				&& dragRect.getHeight() > 0 
 				&& rect.contains(p.getX(), p.getY()))
 		{
@@ -645,7 +648,8 @@ public class Sequence extends Track {
 				end = (int)getEnd() - temp + (int)getStart();
 			}
 			
-			openCloseup(start, end);
+			if (drawingPanel.isMouseFunctionCloseup()) openCloseup(start, end);
+			else popupSequence(start, end); 
 		}
 		
 		super.mouseReleased(e);
@@ -776,7 +780,7 @@ public class Sequence extends Track {
 							dragPoint.y = dragRect.height+dragRect.y;
 					}
 				}
-				else { //if (happened == 2)
+				else { 
 					if (dragRect.height * bpPerPixel > CloseUp.MAX_CLOSEUP_BP) {
 						dragRect.y += dragRect.height - mh;
 						dragRect.height = mh;
@@ -803,7 +807,7 @@ public class Sequence extends Track {
 		else {					// not within blue rectangle of track
 			if (TEST) {
 				for (Annotation annot : annotations) { 
-					if (annot.boxContains(p)) // XXX CAS503 add
+					if (annot.boxContains(p)) // CAS503 add
 						return "Right click for popup of description";
 				}
 			}
@@ -839,14 +843,15 @@ public class Sequence extends Track {
 	
 	public boolean isFlipped() { return flipped; }
 
+	/* Show Alignment */
 	private void openCloseup(int start, int end) {
 		if (drawingPanel == null || drawingPanel.getCloseUp() == null)
 			return;
 
-		try {
+		try {// The CloseUp panel created at startup and reused.
 			int hits = drawingPanel.getCloseUp().showCloseUp(this, start, end);
 			if (hits == 0)
-				Utilities.showWarningMessage("No hits found in region."); 
+				Utilities.showWarningMessage("No hits found in region.\nCannot align without hits."); 
 			else if (hits < 0)
 				Utilities.showWarningMessage("Error showing close up view."); 
 		}
@@ -854,5 +859,31 @@ public class Sequence extends Track {
 			Utilities.showOutOfMemoryMessage();
 			drawingPanel.smake(); // redraw after user clicks "ok"
 		}
+	}
+	/* XXX CAS504  Show Sequence */
+	private void popupSequence(int start, int end) {
+		try {
+			if (end-start > 1000000) {
+				String x = "Regions is greater than 1Mbp (" + (end-start+1) + ")";
+				if (!Utilities.showContinue("Show Sequence", x)) return;
+			}
+			String projName = getProjectName();
+			int grpid = getGroup();
+			String coords = start + ":" + end;
+			String title = String.format("%s %,d-%,d  Len=%,d", projName, start, end, (end-start+1));
+			 
+			String seq = seqPool.loadPseudoSeq(coords, grpid);
+			StringBuffer bf = new StringBuffer ();
+			int len = seq.length(), x=0, inc=120;
+			while ((x+inc)<len) {
+				bf.append(seq.substring(x, x+inc) + "\n");
+				x+=inc;
+			}
+			if (x<len) bf.append(seq.substring(x, len) + "\n");
+			String msg = bf.toString();
+			
+			Utilities.displayInfoMonoSpace(null /*Component*/, title, msg, false /*!isModal*/);
+		}
+		catch (Exception e) {ErrorReport.print(e, "Error showing popup of sequence");}
 	}
 }

@@ -71,7 +71,7 @@ public class AnchorsMain
 			
 			Utils.initStats();
 
-			pool.updateSchemaTo40();
+			//pool.updateSchemaTo40();
 
 			ProjType pType = pool.getProjType(proj1Name);
 			isSelf = (proj1Name.equals(proj2Name) && pType == ProjType.pseudo); 
@@ -166,8 +166,6 @@ public class AnchorsMain
 			Utils.prtNumMsg(log, nBothIn, "Total hits to load");
 			Utils.incStat("TopNFinalKeep", nBothIn);		
 						
-			checkUpdateHitsTable(); // add columns annot1_idx to pseudo_hits
-	
 			int numLoaded = 0;
 			for (Hit hit : hits) {
 				if (hit.status == HitStatus.In) {
@@ -929,8 +927,7 @@ public class AnchorsMain
 		if (p1.isFPC())
 		{
 			Group g2 = p2.getGrpByIdx(hit.target.grpIdx);
-			if (g2 != null && g2.testHitForAnnotOverlap(hit.target))
-													geneOlap = 1; 
+			if (g2 != null && g2.testHitForAnnotOverlap(hit.target)) geneOlap = 1; 
 		}
 		else
 		{
@@ -1007,7 +1004,7 @@ public class AnchorsMain
 				throw(new Exception("Unknown file type!!"));
 		}
 	}
-	
+	/*** CAS504 don't need
 	private void checkUpdateHitsTable() throws Exception
 	{
 		ResultSet rs = pool.executeQuery("show columns from pseudo_hits where field='annot1_idx'");
@@ -1017,6 +1014,7 @@ public class AnchorsMain
 			pool.executeUpdate("alter table pseudo_hits add annot2_idx integer default 0");	
 		}
 	}
+	**/
 	/** CAS501 moved to ProjectManagerFrameCommon so can save parameters 
 	private void renewPairIdx(Project p1, Project p2) throws SQLException
 	{

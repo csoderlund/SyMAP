@@ -38,7 +38,7 @@ public class SeqLoadMain
 			log.msg("");
 			log.msg("Loading sequences for " + projName);
 			
-			pool.updateSchemaTo40();
+			//pool.updateSchemaTo40();
 			
 			// Load project params file and set defaults for unspecified fields
 			String projDir = Constants.seqDataDir + projName;

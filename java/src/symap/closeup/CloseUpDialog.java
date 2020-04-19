@@ -47,7 +47,10 @@ public class CloseUpDialog extends JDialog implements HitDialogInterface, CloseU
 		List<AbstractHitData> hitList = dp.getHitsInRange(seq,start,end);
 		
 		setView(seq,hitList,start,end);
-		setTitle(seq.getProjectDisplayName()+" "+seq.getName()+" "+view.getStart()+"-"+view.getEnd());
+		String x = String.format("Target: %s  %s  %,d - %,d  (%,d)", 
+				seq.getProjectDisplayName(), seq.getName(),
+				view.getStart(), view.getEnd(), (view.getEnd()-view.getStart()+1)); // CAS504 
+		setTitle(x);
 	}
 
 	public void resetColors() {

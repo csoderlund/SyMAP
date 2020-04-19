@@ -1,7 +1,9 @@
 package util;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Font;
 import java.awt.Window;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
@@ -16,6 +18,7 @@ import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
 
 import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.JButton;
@@ -25,6 +28,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 import java.awt.Frame;
 
@@ -69,8 +73,8 @@ import backend.Constants;
  */
 public class Utilities {
 	private static boolean TRACE = Constants.TRACE;
+	public static final Color HELP_PROMPT = new Color(0xEEFFEE); // CAS504 moved from dead file - for Help
 	private static Map<String, Integer> rs2col = null;
-	private static Date mTimeStart = null;
 	private static Class resClass = null; // store this so help pages can be loaded from anywhere
 	private static Frame helpParentFrame = null; 
 	
@@ -697,38 +701,6 @@ public class Utilities {
 		return new StringBuffer(s).reverse().toString();
 	}
 
-	public static void showWarningMessage(String msg) {
-		System.out.println(msg);
-		JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
-	}
-	
-	public static void showErrorMessage(String msg) {
-		System.err.println(msg);
-		JOptionPane.showMessageDialog(null, msg, "Error", JOptionPane.ERROR_MESSAGE);
-	}
-	
-	public static void showErrorMessage(String msg, int exitStatus) {
-		showErrorMessage(msg);
-		exit(exitStatus);
-	}
-	
-	public static void showOutOfMemoryMessage(Component parent) {
-		System.err.println("Not enough memory.");
-		JOptionPane optionPane = new JOptionPane("Not enough memory.", JOptionPane.ERROR_MESSAGE);
-		
-		LinkLabel label = new LinkLabel("Click to open the Troubleshooting Guide.", 
-				SyMAP.TROUBLE_GUIDE_URL + "#not_enough_memory");
-		label.setAlignmentX(Component.CENTER_ALIGNMENT);
-		optionPane.add(new JLabel(" "), 1);
-		optionPane.add(label, 2);
-		optionPane.add(new JLabel(" "), 3);
-		
-		JDialog dialog = optionPane.createDialog(parent, "Error");
-		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		dialog.setVisible(true);
-		optionPane.getValue(); // Wait on user input
-	}
-	public static void showOutOfMemoryMessage() { showOutOfMemoryMessage(null); }
 	
 	public static void exit(int status) {
 		System.out.println("Exiting SyMAP");
@@ -1145,40 +1117,49 @@ public class Utilities {
     	}
     	return rs2col.get(key);
     }
-	public static void timerStart()
-	{
-		mTimeStart = new Date();
-	}
-	public static void timerEndNotZero() {
+   
+	public static void timerStr(String msg, Date timeStart) {
 		Date now = new Date();
-		Long elapsed = now.getTime() - mTimeStart.getTime();
+		Long elapsed = now.getTime() - timeStart.getTime();
 		elapsed /= 1000;
-		if (elapsed<=2) return;
+		String x = String.format("%-8s  ", msg);
+		if (elapsed <= 60)
+		{
+			System.out.println(x + elapsed + "s");
+		}
+		else
+		{
+			elapsed /= 60;
+			long sec = elapsed%60;
+			System.out.println(x + elapsed + "m:" + sec + "s");
+		}
+	}
+	
+	static public long getNanoTime () {
+ 		return System.nanoTime(); 
+	}
+	static public void printElapsedNanoTime(String msg, long startTime) {
+		long et = System.nanoTime()-startTime;
+		long sec = et /1000000000;
+		timerStr2(msg, sec);
+	}
+	
+	static public void timerStr2(String msg, long et) {
+		String x = String.format("%-8s  ", msg);
+	
+		long day = 	et/86400; //24*3600
+		long time =  et%86400;
+		long hr =  time/3600;
 		
-		if (elapsed < 300)
-		{
-			System.out.println("Finished in " + elapsed + " seconds");
-		}
-		else
-		{
-			elapsed /= 60;
-			System.out.println("Finished in " + elapsed + " minutes");
-		}
-	}
-	public static void timerEnd()
-	{
-		Date now = new Date();
-		Long elapsed = now.getTime() - mTimeStart.getTime();
-		elapsed /= 1000;
-		if (elapsed < 300)
-		{
-			System.out.println("Finished in " + elapsed + " seconds");
-		}
-		else
-		{
-			elapsed /= 60;
-			System.out.println("Finished in " + elapsed + " minutes");
-		}
+		time %= 3600;
+		long min = time/60;
+		long sec = time%60;
+		
+		String str = " ";
+		if (day > 0) str += day + "d:";
+		if (hr > 0 ) str += hr + "h:";
+		str += min + "m:" + sec + "s";
+		System.out.println(x + str);
 	}
 	public static boolean tableHasColumn(String table, String column, Statement s) throws SQLException
 	{
@@ -1197,6 +1178,82 @@ public class Utilities {
 	{
 		helpParentFrame = f;
 	}
+	
+	/**************************************************************
+	 * Popups
+	 */
+	// CAS504 add
+	// isModal=true means that everything is frozen until the window is closed
+	public static void displayInfoMonoSpace(Component parentFrame, String title, 
+			String theMessage, boolean isModal) {
+		JOptionPane pane = new JOptionPane();
+		
+		JTextArea messageArea = new JTextArea(theMessage);
+
+		JScrollPane sPane = new JScrollPane(messageArea); 
+		messageArea.setFont(new Font("monospaced", Font.BOLD, 12));
+		messageArea.setEditable(false);
+		messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		
+		pane.setMessage(sPane);
+		pane.setMessageType(JOptionPane.PLAIN_MESSAGE);
+
+		JDialog helpDiag = pane.createDialog(parentFrame, title);
+		helpDiag.setModal(isModal);
+		helpDiag.setResizable(true);
+		
+		helpDiag.setVisible(true);		
+	}
+	static public boolean showContinue (String title, String msg) {
+		String [] options = {"Continue", "Cancel"};
+		int ret = JOptionPane.showOptionDialog(null, 
+				msg + "\nContinue?",
+				title, JOptionPane.YES_NO_OPTION, 
+				JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+		if (ret == JOptionPane.NO_OPTION) return false;
+		return true;
+	}
+	static public boolean showContinue (Component c,String title, String msg) {
+		String [] options = {"Continue", "Cancel"};
+		int ret = JOptionPane.showOptionDialog(c, 
+				msg + "\nContinue?",
+				title, JOptionPane.YES_NO_OPTION, 
+				JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+		if (ret == JOptionPane.NO_OPTION) return false;
+		return true;
+	}
+	public static void showWarningMessage(String msg) {
+		System.out.println(msg);
+		JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
+	}
+	
+	public static void showErrorMessage(String msg) {
+		System.err.println(msg);
+		JOptionPane.showMessageDialog(null, msg, "Error", JOptionPane.ERROR_MESSAGE);
+	}
+	
+	public static void showErrorMessage(String msg, int exitStatus) {
+		showErrorMessage(msg);
+		exit(exitStatus);
+	}
+	
+	public static void showOutOfMemoryMessage(Component parent) {
+		System.err.println("Not enough memory.");
+		JOptionPane optionPane = new JOptionPane("Not enough memory.", JOptionPane.ERROR_MESSAGE);
+		
+		LinkLabel label = new LinkLabel("Click to open the Troubleshooting Guide.", 
+				SyMAP.TROUBLE_GUIDE_URL + "#not_enough_memory");
+		label.setAlignmentX(Component.CENTER_ALIGNMENT);
+		optionPane.add(new JLabel(" "), 1);
+		optionPane.add(label, 2);
+		optionPane.add(new JLabel(" "), 3);
+		
+		JDialog dialog = optionPane.createDialog(parent, "Error");
+		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		dialog.setVisible(true);
+		optionPane.getValue(); // Wait on user input
+	}
+	public static void showOutOfMemoryMessage() { showOutOfMemoryMessage(null); }
 	public static void showHTMLPage(JDialog parent, String title, String resource)
 	{
 		if (resClass == null)
@@ -1222,15 +1279,9 @@ public class Utilities {
 				ci = str.read();
 			}
 		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-		}
+		catch(Exception e){ErrorReport.print(e, "Show HTML page");}
 		
-		//String imgsrc =   resClass.getResource("/html/test.png").toString();
 		String html = sb.toString();
-		
-		//html = html.replace("IMG1", imgsrc);
 		
 		JEditorPane jep = new JEditorPane();
 		jep.setContentType("text/html");

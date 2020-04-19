@@ -11,6 +11,7 @@ import javax.swing.*;
 
 import java.sql.SQLException;
 
+import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.marker.MarkerList;
 import symap.frame.ControlPanel;
@@ -33,7 +34,7 @@ import symap.block.BlockTrackData;
 import symap.sequence.Sequence;
 import symap.closeup.CloseUp;
 import symap.mapper.HitFilter;
-import symapQuery.ListDataPanel;
+import symapQuery.TableDataPanel;
 import dotplot.FilterData;
 import util.ErrorReport;
 import util.Utilities;
@@ -54,7 +55,6 @@ public class DrawingPanel extends JPanel
 	private TrackHolder[] trackHolders;
 	private HistoryControl historyControl;
 	private DrawingPanelListener drawingPanelListener;
-	private ListDataPanel theParentPanel = null;
 	
 	private CloseUp closeup;
 
@@ -71,17 +71,13 @@ public class DrawingPanel extends JPanel
 	private int numMaps = 1;
 	
 	private String mouseFunction = null; 	
-	/**
-	 * Creates a new <code>DrawingPanel</code> instance.
-	 */
-	public DrawingPanel(ListDataPanel listPanel, Pools pools, HistoryControl hc, HelpBar bar) {
+	
+	public DrawingPanel(TableDataPanel listPanel /*notused*/, 
+			Pools pools, HistoryControl hc, HelpBar bar) {
 		super();
 		setBackground(backgroundColor);
 		this.pools = pools;
 		historyControl = hc;
-		theParentPanel = listPanel;
-
-		// Create new pools
 
 		buttonPanel = new JPanel(null);
 		buttonPanel.setOpaque(false);
@@ -191,11 +187,7 @@ public class DrawingPanel extends JPanel
 		return closeup;
 	}
 
-	/**
-	 * Method <code>getViewHeight</code> returns the actual height
-	 * of the viewable area.
-	 */
-	public int getViewHeight() {
+	public int getViewHeight() { // height of viewable area
 		return scrollPane.getViewport().getHeight();
 	}
 
@@ -334,6 +326,25 @@ public class DrawingPanel extends JPanel
 	// "zoom all tracks" mouse function
 	public void setMouseFunction(String s) { mouseFunction = s; }
 	public String getMouseFunction() { return (mouseFunction == null ? "" : mouseFunction); }
+	public boolean isMouseFunction() { // CAS504
+		return 
+			   ControlPanel.MOUSE_FUNCTION_ZOOM_ALL.equals(mouseFunction) ||
+			   ControlPanel.MOUSE_FUNCTION_ZOOM_SINGLE.equals(mouseFunction) ||
+			   ControlPanel.MOUSE_FUNCTION_CLOSEUP.equals(mouseFunction) ||
+			   ControlPanel.MOUSE_FUNCTION_SEQ.equals(mouseFunction)
+			   ;
+	}
+	public boolean isMouseFunctionZoom() {// CAS504
+		return 
+				   ControlPanel.MOUSE_FUNCTION_ZOOM_ALL.equals(mouseFunction) ||
+				   ControlPanel.MOUSE_FUNCTION_ZOOM_SINGLE.equals(mouseFunction);
+	}
+	public boolean isMouseFunctionPop() {// CAS504
+		return 
+				   ControlPanel.MOUSE_FUNCTION_CLOSEUP.equals(mouseFunction) ||
+				   ControlPanel.MOUSE_FUNCTION_SEQ.equals(mouseFunction);
+	}
+	public boolean isMouseFunctionSeq() { return ControlPanel.MOUSE_FUNCTION_SEQ.equals(mouseFunction); }
 	public boolean isMouseFunctionCloseup() { return ControlPanel.MOUSE_FUNCTION_CLOSEUP.equals(mouseFunction); }
 	public boolean isMouseFunctionZoomSingle() { return ControlPanel.MOUSE_FUNCTION_ZOOM_SINGLE.equals(mouseFunction); }
 	public boolean isMouseFunctionZoomAll() { return ControlPanel.MOUSE_FUNCTION_ZOOM_ALL.equals(mouseFunction); }
@@ -345,6 +356,7 @@ public class DrawingPanel extends JPanel
 		Track track = holder.getTrack();
 
 		if ( !(track instanceof Sequence) ) track = new Sequence(this,holder);
+		
 		((Sequence)track).setup(project,group,getOpposingTrackProject(position-1));
 		
 		track.setBackground(color); 
@@ -417,21 +429,21 @@ public class DrawingPanel extends JPanel
 			public void run() {
 				try {
 					if (track instanceof Block) { // when FPC contig is selected
-						System.out.println("draw block ");
+						if (SyMAP.DEBUG) System.out.println("draw block ");
+						
 						Contig c = new Contig(dp,track.getHolder());
-						c.setup(track.getProject(),
-								((Integer)arg).intValue(),
-								track.getOtherProject(),
-								(BlockTrackData)track.getData());
+						c.setup(track.getProject(), ((Integer)arg).intValue(),
+								track.getOtherProject(), (BlockTrackData)track.getData());
 						c.setFromBlockList(((Block)track).getContigList());
+						
 						replaceTrack(track, c);
 					} else if (track instanceof Contig) { // obsolete?
-						System.out.println("draw contig ");
+						if (SyMAP.DEBUG) System.out.println("draw contig ");
+						
 						Block block = new Block(dp,track.getHolder());
-						block.setup(track.getProject(),
-								Block.getContigs((Collection)arg),
-								track.getOtherProject(),
-								(ContigTrackData)track.getData());
+						block.setup(track.getProject(), Block.getContigs((Collection)arg),
+								track.getOtherProject(), (ContigTrackData)track.getData());
+						
 						replaceTrack(track, block);
 					}
 				} catch (IllegalArgumentException iae) {
@@ -503,7 +515,6 @@ public class DrawingPanel extends JPanel
 			}
 		}
 	
-		
 		smake();
 		return true;
 	}
@@ -598,12 +609,12 @@ public class DrawingPanel extends JPanel
 		} catch (IllegalStateException ise) {
 			Utilities.showErrorMessage(ise.getMessage(), -1); 	
 		} catch (Exception exc) {
-			exc.printStackTrace();
+			ErrorReport.print(exc, "Unable to make map");
 			Utilities.showErrorMessage("Unable to make map", -1); 
 		} catch (OutOfMemoryError me) {
 			System.out.println("Caught OutOfMemoryError in SyMAP::setMaps() - "+me);
 			System.out.println("     Cause: "+me.getCause());
-			me.printStackTrace();
+			ErrorReport.print(me, "out of memory");
 			Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1); 
 			drawingPanelListener.setFrameEnabled(false);
 			throw me;
@@ -649,7 +660,6 @@ public class DrawingPanel extends JPanel
 			}
 		}
 		
-		//System.out.println("DrawingPanel.make END");
 		return status;
 	}
 
@@ -687,9 +697,6 @@ public class DrawingPanel extends JPanel
 	 * Method <code>setClickedMarker</code> sets all the markers that are equal to <code>marker</code> to
 	 * be click highlighted if clicked is true and not clicked highlighted if clicked is false.  All other markers
 	 * are set to not be click highlighted.
-	 *
-	 * @param marker a <code>Marker</code> value
-	 * @param clicked a <code>boolean</code> value
 	 */
 	public void setClickedMarker(Marker marker, boolean clicked) {
 		MarkerList list;
@@ -711,9 +718,6 @@ public class DrawingPanel extends JPanel
 	 * Method <code>setHoveredMarker</code> sets all the markers that are equal to <code>marker</code> to
 	 * be hovered if hovered is true and not hovered if hovered is false.  All other markers
 	 * are set to not be hovered.
-	 *
-	 * @param marker a <code>Marker</code> value
-	 * @param hovered a <code>boolean</code> value
 	 */
 	public void setHoveredMarker(Marker marker, boolean hovered) {
 		MarkerList list;	

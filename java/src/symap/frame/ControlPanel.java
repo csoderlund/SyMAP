@@ -21,6 +21,7 @@ import colordialog.ColorDialogHandler;
 import history.HistoryControl;
 import symap.SyMAP;
 import symap.SyMAPConstants;
+import symap.closeup.CloseUp;
 import symap.drawingpanel.DrawingPanel;
 import util.ImageViewer;
 import util.Utilities;
@@ -36,10 +37,6 @@ import util.Utilities;
 public class ControlPanel extends JPanel implements SyMAPConstants,
 	HelpListener 
 {								
-	private static final double DOWN_FACTOR = 4.0/5.0;	
-	private static final double UP_FACTOR = 6.0/5.0; 	
-
-
 	private JButton scaleButton;
 	
 	private JButton upButton, downButton;
@@ -78,7 +75,6 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		JButton backButton       = (JButton) Utilities.createButton(this,"/images/back.gif","Back: Go back in history",bar,null,false);
 		JButton forwardButton    = (JButton) Utilities.createButton(this,"/images/forward.gif","Forward: Go forward in history",bar,null,false);
 
-		
 		if (hc != null) hc.setButtons(homeButton,null/*resetButton*/,null/*doubleBackButton*/,backButton,forwardButton,null/*exitButton*/);
 
 		downButton       = (JButton) Utilities.createButton(this,"/images/minus.gif","Shrink the alignment region",bar,buttonListener,false);
@@ -110,7 +106,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		constraints.ipadx = 5;
 		constraints.ipady = 8;
 
-		if (hc != null /*&& HISTORYCONTROL*/) {
+		if (hc != null) {
 			addToGrid(this, gridbag, constraints, homeButton, 1);
 			
 			addToGrid(this, gridbag, constraints, new JLabel(), 1);
@@ -130,7 +126,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		addToGrid(this, gridbag, constraints, new JLabel(), 1);
 		addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
 			
-		addToGrid(this, gridbag, constraints, new JLabel("Mouse:"), 1);
+		addToGrid(this, gridbag, constraints, new JLabel("Selected:"), 1);
 		addToGrid(this, gridbag, constraints, createMouseFunctionSelector(bar), 1);
 		addToGrid(this, gridbag, constraints, new JLabel(), 1);
 		addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
@@ -138,7 +134,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		
 		addToGrid(this, gridbag, constraints, showImageButton, 1);
 
-		if (cdh != null /*&& CHANGECOLORS*/) addToGrid(this,gridbag,constraints,editColorsButton,1);
+		if (cdh != null) addToGrid(this,gridbag,constraints,editColorsButton,1);
 		if (helpButton != null) addToGrid(this,gridbag,constraints, helpButton,1);
 	}
 	
@@ -183,16 +179,17 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		Component comp = (Component)event.getSource();
 		return comp.getName();
 	}
-	
-	public static final String MOUSE_FUNCTION_CLOSEUP 		= "Base View";
-	public static final String MOUSE_FUNCTION_ZOOM_SINGLE 	= "Zoom";
-	public static final String MOUSE_FUNCTION_ZOOM_ALL 		= "Zoom All";
+	public static final String MOUSE_FUNCTION_SEQ 			= "Show Sequence";
+	public static final String MOUSE_FUNCTION_CLOSEUP 		= "Align (Max " + CloseUp.MAX_CLOSEUP_BP + "bp)";
+	public static final String MOUSE_FUNCTION_ZOOM_SINGLE 	= "Zoom Selected Track";
+	public static final String MOUSE_FUNCTION_ZOOM_ALL 		= "Zoom All Tracks";
 	private Component createMouseFunctionSelector(HelpBar bar) {
 		JComboBox comboMouseFunctions = new JComboBox(
-			new String[] {
-				MOUSE_FUNCTION_CLOSEUP,
+			new String[] { // CAS504 change order and add _SEQ
+				MOUSE_FUNCTION_ZOOM_ALL,
 				MOUSE_FUNCTION_ZOOM_SINGLE,
-				MOUSE_FUNCTION_ZOOM_ALL
+				MOUSE_FUNCTION_CLOSEUP,
+				MOUSE_FUNCTION_SEQ
 		} );
 		
 		comboMouseFunctions.addActionListener(new ActionListener() {
@@ -203,7 +200,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 			}
 		});
 		
-		comboMouseFunctions.setSelectedIndex(2); // default to "zoom all"
+		comboMouseFunctions.setSelectedIndex(0); // default to "zoom all"
 		comboMouseFunctions.setName("Set the function of the left mouse button (click+drag)."); // set help text
 		if (bar != null) bar.addHelpListener(comboMouseFunctions,this);
 		

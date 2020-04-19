@@ -20,7 +20,6 @@ import java.sql.*;
 
 import util.DatabaseReader;
 import util.ErrorReport;
-import util.UserPrompt;
 import util.Utilities;
 
 import java.util.TreeSet;
@@ -157,7 +156,7 @@ public class SumFrame extends JFrame
 			btnHelp = new JButton("Help");
 			btnHelp.setBackground(Color.WHITE);
 			btnHelp.setAlignmentX(Component.RIGHT_ALIGNMENT);
-			btnHelp.setBackground(UserPrompt.PROMPT);
+			btnHelp.setBackground(Utilities.HELP_PROMPT);
 			btnHelp.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
 					Utilities.showHTMLPage(null, "Summary Help", "/html/SummaryHelp.html");
@@ -200,7 +199,7 @@ public class SumFrame extends JFrame
 			
 			if (isFPC) createAnchorFPC();
 			else       createAnchorSeq();
-			panel.add(new JLabel("Anchor Statistics"));
+			panel.add(new JLabel("Anchor (Hit) Statistics"));
 			panel.add(Box.createVerticalStrut(5));
 			panel.add(hTblPane);
 			panel.add(Box.createVerticalStrut(10));
@@ -301,7 +300,7 @@ public class SumFrame extends JFrame
 			int pctAnnot1 = Math.round((100*glen1)/(1000*lenKb1)); // note we want a %, and lens are in kb
 			int pctAnnot2 = Math.round((100*glen2)/(1000*lenKb2));
 			
-			String[] cnames1 = {"Species","#Seqs","Total Kb","#genes","%genes","Max Kb","Min Kb","<100kb","100kb-1Mb","1Mb-10Mb",">10Mb"};
+			String[] cnames1 = {"Species","#Seqs","Total Kb","#Genes","%Genes","Max Kb","Min Kb","<100kb","100kb-1Mb","1Mb-10Mb",">10Mb"};
 			if (pidx1!=pidx2) {
 				Object data1[][] = { 
 					{pName1,ngrp1,lenKb1,ngenes1,pctAnnot1+"%",maxlen1,minlen1,c11,c21,c31,c41},

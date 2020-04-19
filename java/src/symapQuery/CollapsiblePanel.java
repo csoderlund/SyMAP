@@ -50,7 +50,7 @@ public class CollapsiblePanel extends JPanel {
 		thePanel.setBorder ( BorderFactory.createEmptyBorder(5, 20, 10, 20) );
 		thePanel.setAlignmentX(LEFT_ALIGNMENT);
 		thePanel.setBackground(Color.WHITE);
-		thePanel.add(new JSeparator());
+		//thePanel.add(new JSeparator()); CAS504
 		super.add( showHideButton );
 		if (labelDescription != null) super.add( labelDescription );
 		super.add( thePanel );

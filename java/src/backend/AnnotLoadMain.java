@@ -46,7 +46,7 @@ public class AnnotLoadMain
 		
 		log.msg("Loading annotation for " + projName);
 
-		pool.updateSchemaTo40();
+		//pool.updateSchemaTo40();
 
 		// Initialize local data
 		typeCounts = new TreeMap<String,Integer>();

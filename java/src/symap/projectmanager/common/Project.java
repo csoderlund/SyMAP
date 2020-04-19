@@ -24,12 +24,17 @@ public class Project {
 	private int nIdx;		// unique database index
 	private String strType, strDisplayName, strDescription, strCategory;
 	private int numGroups;
-	private boolean unOrdered = false;
 	private Color color;
 	
-	private String orderAgainst = "";
 	private Vector<Integer> grpIdxList;
-	private String masked=null;   // CAS500 put on Summary
+	
+	private String orderAgainst = "";
+	private boolean isMasked=false;   	// CAS500 put on Summary
+	
+	// CAS504 Not loaded, put on summary
+	private String annotKeywords=""; 	
+	private boolean isDefaultFiles=true;
+	private String min_size="100000";
 	
 	private short nStatus = STATUS_IN_DB; // bitmap - maybe bitmap not necessary?
 	public static final short STATUS_ON_DISK = 0x0001; // project exists in file hierarchy
@@ -70,8 +75,9 @@ public class Project {
 	
 	public String getDescription() { return strDescription; }
 	public void setDescription(String s) { strDescription = s; }
-	public String getOrderAgainst() { return orderAgainst; }
-	public void setOrderAgainst(String s) { orderAgainst = s; }
+	
+	public String chrLabel() { return chrLabel;}
+	public void setChrLabel(String lbl) {chrLabel = lbl;}
 	
 	public String getCategory() { return strCategory; }
 	public void setCategory(String s) { strCategory = s; }
@@ -79,15 +85,17 @@ public class Project {
 	public int getNumGroups() { return numGroups; }
 	public void setNumGroups(int n) { numGroups = n; } 
 	
-	public boolean isUnordered() { return unOrdered;}
-	public void setUnordered(boolean unord) { unOrdered=false;}
-			
-	public String chrLabel() { return chrLabel;}
-	public void setChrLabel(String lbl) {chrLabel = lbl;}
+	public String getOrderAgainst() { return orderAgainst; }
+	public void setOrderAgainst(String s) { orderAgainst = s; }
 	
+	public boolean getIsMasked()  { return isMasked;} // CAS504
+	public void setIsMasked(boolean m) {isMasked=m;}
+	
+	// if not loaded, parameters read from disk here (Read again in PropertyFrame)
+	// if loaded, read from database in ProjectManagerFrameCommone
 	public void getPropsFromDisk(File dir)
 	{
-		File pfile = new File(dir,Constants.paramsFile);
+		File pfile = new File(dir,Constants.paramsFile); 
 		if (pfile.isFile())
 		{
 			PropertiesReader props = new PropertiesReader( pfile);
@@ -109,9 +117,41 @@ public class Project {
 			}
 			if (props.getProperty("description") != null && !props.getProperty("description").equals(""))
 			{
-				strDescription = props.getProperty("description"); // CAS500 wasn't be read	
-			}	
+				strDescription = props.getProperty("description"); // CAS500 wasn't read	
+			}
+			// CAS504 added following to put on Summary for Unloaded
+			if (props.getProperty("mask_all_but_genes") != null && !props.getProperty("mask_all_but_genes").equals(""))
+			{
+				String d = props.getProperty("mask_all_but_genes");
+				isMasked = (d.equals("1")); 	
+			}
+			if (props.getProperty("annot_keywords") != null && !props.getProperty("annot_keywords").equals(""))
+			{
+				annotKeywords = props.getProperty("annot_keywords"); 	
+			}
+			if (props.getProperty("min_size") != null && !props.getProperty("min_size").equals(""))
+			{
+				min_size = props.getProperty("min_size"); 	
+			}
+			
+			if (props.getProperty("sequence_files") != null && !props.getProperty("sequence_files").equals(""))
+			{
+				isDefaultFiles=false;	
+			}
+			if (props.getProperty("anno_files") != null && !props.getProperty("anno_files").equals(""))
+			{
+				isDefaultFiles=false;	
+			}
 		}
+	}
+	public String notLoadedInfo() {
+		String msg="Parameters: ";
+		if (isDefaultFiles) msg += "Default file locations; ";
+		else msg += "User file locations; ";
+		if (annotKeywords.equals("")) msg += "All anno keywords; ";
+		else msg += "Keywords " + annotKeywords + "; ";
+		msg += " Min size " + min_size;
+		return msg;
 	}
 	public void updateParameters(UpdatePool db, ProgressDialog progress) 
 	{
@@ -190,36 +230,6 @@ public class Project {
 	}
 	public String toString() { return strDBName; }
 	
-	/************************************************************
-	 * CAS500 - needs to be on Summary whether masked is set
-	 */
-	public boolean isMask(UpdatePool db)  {
-		try {
-			if (masked!=null) {
-				if (masked.equals("yes")) return true;
-				else return false;
-			}
-			
-			String value="0";
-			String st = "SELECT value FROM proj_props " +
-					"WHERE proj_idx='" + nIdx + "' AND name='mask_all_but_genes'";
-			ResultSet rs = db.executeQuery(st);
-			if (rs.next())
-				value = rs.getString(1);
-			rs.close();
-			
-			if (value != null && value.equals("1")) {
-				masked="yes";
-				return true;
-			}
-			else {
-				masked = "no";
-				return false;
-			}
-		}
-		catch (Exception e) {ErrorReport.print(e,"Determine mask status for " + strDBName);}
-		return false;
-	}
 	public void print() {
 		if (Constants.TRACE) System.out.format("XYZ %2d %10s %5s status=%d\n", nIdx, strDBName, strType, nStatus);
 	}

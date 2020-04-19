@@ -64,6 +64,45 @@ Neither the Applet or 3D view have been tested since the release of SyMAP v5.0.0
 I currently do not have access to either. However, to the best of my knowledge,
 nothing has changed that should cause either of these options problems.
 
+<h3>Release: v5.0.4 (18Apr20)</h3>
+<ol>
+<li>SyMAP Query has had major changes:
+<ol>
+<li>It is faster, e.g. finding the hits in synteny blocks for 5 plant genomes did take 9m:32s
+and now takes 0m:09s.
+<li>The query page has changed to allow more versatile queries. 
+<li>The PgeneF is only computed if the "Compute PgeneF" option is checked; otherwise, there
+is no changes to this function or options.
+<li>Some of many minor changes:
+<ul>
+<li>Selecting a chromosome for a species (or multiples) now only shows hits that involve the
+selected chromosomes.
+<li>The #RGN column has been removed and a new "Has Gene" column has been added. Note, all species
+with a gene overlapping the hit should have 'annotation', but this makes it easier to see in a glance.
+Plus, if some genes do not have an ID or some other keyword, it can be confusing looking at the
+annotation.
+<li>The "Save for Reload" and "Reload Results" have been removed, as it is so much faster, this
+does not seem necessary anymore.
+<li>Both the Overview and Table Summary have small changes. 
+</ul>
+</ol>
+<li>scripts/ConvertNCBI has been updated to also create a gap file.
+<li>scripts/symap.sql has been removed and the schema has been incorporated into the Java code.
+<li>SyMAP Summary: Displays major parameters for projects that are not loaded.
+<li>Chromosome Explorer 2D View: The mouse over provides location information in the "Instruction" box,
+plus:
+<ul>
+<li>The following functions can be applied to the selected region of a sequence track:
+"Zoom All Tracks", "Zoom Selected Tracks", "Align (Max 30000)", "Show Sequence", where the
+first three are not new, but the labels changed for clarity. 
+<li>The last one, "Show Sequence", has
+been added as there was no way to see the underlying sequence; it is simply a popup of the
+selected sequence. 
+<li>The "Align" view has been slightly changed to add comma's in large numbers and the length of the sequence.
+</ul>
+<li>The symapApplet.jar was not working in recent releases, which has been fixed.
+</ol>
+
 <h3>Release: v5.0.3 (11mar20)</h3>
 <ol>
 <li><i>Chromosome Explorer 2D view</i>. The "Annotation Description" can be right-click to view

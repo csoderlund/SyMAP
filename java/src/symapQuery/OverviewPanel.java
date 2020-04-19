@@ -29,20 +29,19 @@ public class OverviewPanel extends JPanel {
 	}
 	
 	private void buildOverview() {
-		String overView = "<FONT FACE='arial'><H2>Selected projects: </H2><p>";
-		overView += "<div style='width:500px;'>\n";
-		overView += "<TABLE><TR><TH ALIGN=LEFT>Project Name</TH><TH ALIGN=LEFT>Type</TH></TR>";
+		String overView = "<FONT FACE='arial'><H2>Welcome to SyMAP Query</H2><p>";
+		overView += "<div style='width:500px;'>\n"; // CAS504 change table entries
+		overView += "<TABLE >" +
+				"<TR><TH ALIGN=LEFT>Project</TH><TH>&nbsp;&nbsp;&nbsp;&nbsp;</TH>" +
+					"<TH ALIGN=LEFT>Category</TH><TH>&nbsp;&nbsp;&nbsp;&nbsp;</TH>" +
+					"<TH ALIGN=LEFT>Description</TH></TR>";
 		Iterator<Project> iter = theParentFrame.getProjects().iterator();
 		while(iter.hasNext()) {
 			Project temp = iter.next();
-			overView += "<TR><TD>" + temp.getDisplayName() + "</TD><TD>";
-			if(temp.isFPC())
-				overView += "FPC";
-			else if(temp.isPseudo())
-				overView += "Seq"; // CAS501 Pseudo->Seq
-			else
-				overView += "Draft";
-			overView += "</TD></TR>";
+			overView += "<TR><TD>" + temp.getDisplayName() + "</TD><TD>&nbsp;</TD>";
+			overView += "<TD>" + temp.getCategory() + "</TD><TD>&nbsp;</TD>";
+			overView += "<TD>" + temp.getDescription() + "</TD>";
+			overView += "</TR>";
 		}
 		overView += "</TABLE>";
 		

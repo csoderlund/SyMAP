@@ -24,6 +24,8 @@ import symap.track.Track;
 import util.Utilities;
 
 public class SequencePool extends DatabaseUser {
+	final int CHUNK_SZ = backend.Constants.CHUNK_SIZE; // CAS504 was hardcoded below
+	
 	// Note that target_seq and query_seq refer to indices of sequence 
 	// segments not the sequences themselves.
 	private static final String MRK_ALIGNMENT_QUERY = 
@@ -37,10 +39,6 @@ public class SequencePool extends DatabaseUser {
 		+ "FROM bes_hits AS h " 
 		+ "JOIN bes_seq AS s "
 		+ "WHERE h.idx=? AND h.proj1_idx=s.proj_idx AND h.clone=s.clone AND h.bes_type=s.type";
-	
-	private static final String PSEUDO_SEQ_QUERY = 
-		"SELECT SUBSTRING(seq FROM ? FOR ?) AS p_seq "
-		+ "FROM pseudo_seq AS s " + "WHERE s.grp_idx=?";
 	
 	private static final String PSEUDO_ALIGNMENT_QUERY = 
 		"SELECT h.strand,h.start1,h.end1,h.query_seq,h.target_seq,null,h.grp2_idx,h.grp1_idx "
@@ -355,16 +353,17 @@ public class SequencePool extends DatabaseUser {
 		return hqr;
 	}
 
-	public String loadPseudoSeq(String indices, long id)
-	throws SQLException {
-		Statement stat = null;
+	// String is start:end; id is grpID
+	public String loadPseudoSeq(String indices, long id) throws SQLException 
+	{		
+		Statement stat = createStatement();
 		ResultSet rs = null;
 		String pseudoSeq = "";
+		
 		// Java and BLAT are zero based but mysql is 1 based, add one
 		int start = extractStart(indices) + 1;
 		int end = extractEnd(indices) + 1;
-		if (start == -1 || end == -1)
-			return "";
+		if (start == -1 || end == -1) return "";
 		
 		if (start > end) {
 			int temp = start;
@@ -372,57 +371,45 @@ public class SequencePool extends DatabaseUser {
 			end = temp;
 		}
 		
-		String query = setLong(PSEUDO_SEQ_QUERY, start);
-		query = setLong(query, end - start + 1);
-		query = setLong(query, id);
-		
 		try {
-			stat = createStatement();
-			rs = stat.executeQuery(query);
-			if (rs.next()) 
-				pseudoSeq = rs.getString(1);
-		} catch (SQLException e) { 
-			final int CHUNK_SZ = 1000000;
-			try {
-				long count = end - start + 1;
-				long chunk = start / CHUNK_SZ;
-				String seq;
-				String query2;
+			long count = end - start + 1;
+			long chunk = start / CHUNK_SZ;
+			String seq;
+			String query2;
+			
+			start = start % CHUNK_SZ;
+			end = end % CHUNK_SZ;
+			while (count > 0) {
+				query2 = setLong(PSEUDO_SEQ_QUERY2, start); // Insert start position
+				query2 = setLong(query2, count); // Insert length - indices are inclusive according to Will so add 1
+				query2 = setLong(query2, id); // Insert id into the query	
+				query2 = setLong(query2, chunk);
 				
-				start = start % CHUNK_SZ;
-				end = end % CHUNK_SZ;
-				while (count > 0) {
-					query2 = setLong(PSEUDO_SEQ_QUERY2, start); // Insert start position
-					query2 = setLong(query2, count); // Insert length - indices are inclusive according to Will so add 1
-					query2 = setLong(query2, id); // Insert id into the query	
-					query2 = setLong(query2, chunk);
-					
-					rs = stat.executeQuery(query2);
-					if (rs.next()) {
-						seq = rs.getString(1);
-						pseudoSeq += seq;
-						count -= seq.length(); // account for start offset
-						end   -= seq.length();
-						start = 1;
-						chunk++;
-					}
-					else break;
+				rs = stat.executeQuery(query2);
+				if (rs.next()) {
+					seq = rs.getString(1);
+					pseudoSeq += seq;
+					count -= seq.length(); // account for start offset
+					end   -= seq.length();
+					start = 1;
+					chunk++;
 				}
+				else break;
 			}
-			catch (SQLException e2) {
-				System.err.println("SQL exception acquiring pseudo data.");
-				System.err.println("Message: " + e.getMessage());
-				throw e2;
-			}
-		} 
+		}
+		catch (SQLException e) {
+			System.err.println("SQL exception acquiring pseudo data.");
+			System.err.println("Message: " + e.getMessage());
+			throw e;
+		}
 		finally {
 			closeStatement(stat);
 			closeResultSet(rs);
 			if (rs == null) close();
 		}
 
-		if (pseudoSeq == null) {
-			System.err.println("Pseudo sequence not found for query = " + query);
+		if (pseudoSeq.equals("")) {
+			System.err.println("Pseudo sequence not found for " + indices);
 			return "";
 		}
 		return pseudoSeq;

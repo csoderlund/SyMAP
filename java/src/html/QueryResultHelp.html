@@ -1,53 +1,47 @@
 <html>
 <body style="padding:20px;font-family:arial;">
 
-<div style="width:500px;">
 <i>If you are looking for query result column definitions, scroll down.</i>
-<h2>SyMAP Query Results</h2>
+<h1>SyMAP Query Results</h1>
 <p>
-This page shows the table of hits (anchors) resulting from the query. Each hit connects
-two species and you can see the respective chromosomes and start/end locations of 
-the hits, as well as gene annotations overlapped by the hits. (If the query
+This page shows the table of hits (anchors) resulting from the query, where each hit connects
+two species. (If the query
 was for orphan genes, then each row represents one gene and shows data
-only for one genome).
-<p>
-Note that entries in the table may be selected. To select more than one
-entry, use "ctrl-click". 
-<p>
-<h3>Button functions</h3>
+only for one genome). 
+<h2>Button functions</h2>
 
-<div style="width:485px;margin-top:10px; margin-left:15px;">
-<b>Show Synteny</b>
-<p>
-Brings up a SyMAP 2-track view for each selected entry, so the hits
-can be seen in their full chromosomal context. The hits are initially padded to each side
+<u>For selected:</u> As detailed for the following two:
+
+<p><b>Align sequences</b>
+<br>Select one or more rows: All sequences (two per row) are written out and a multiple alignment is created
+using MUSCLE (Edgar 2004 NAR:32) and shown in the main panel. 
+
+<p>NOTE: This is especially
+useful to view the similarity of putative gene families (PgeneF), 
+as follows: check "Compute PgeneF" and "Run Query", show the 
+PgeneF and PgFsize columns, sort on PgeneF, then select the rows for PgeneF to
+align.
+
+<p><b>Show Synteny</b>
+<br>Select one row: Brings up a SyMAP 2-track view for the selected entry. The hits are initially padded to each side
 by the margin amount indicated (default 50kb), but you can easily zoom further out in the 2-track views.  
-<p>
-<b>Save CSV</b>
-<p>
-Saves the selected hits using the selected set of columns to a CSV format suitable for import into Excel.
-<p>
-<b>Save for Reload</b>
-<p>
-Saves the selected hits in a CSV format which can be reloaded back into SyMAP 
-later (click "Results" on the lefthand pane,
-and use the "Load Saved Query" button). The saved table includes <i>all</i> possible columns, not just
-those currently selected for display. 
-<p>
-<b>Save as Fasta</b>
-<p>
-Sequences from the selected hits are written to a Fasta file. Both sides of each hit
-are written, using the start/end coordinates shown in the table.
-<p>
-<b>Align sequences</b>
-<p>
-Sequences for the selected hits are written out and a multiple alignment is created
-using MUSCLE (Edgar 2004 NAR:32). 
-</div>
 
-<p>
 
-<h3>Results Table</h3>
+<p><u>For table (or selected):</u> One or more rows can be selected for the following two exports,
+or if no rows are selected, the table is exported.
+
+<p><b>Export CSV</b>
+<br>Exports the rows
+using the selected set of columns to a CSV format suitable for import into Excel.
+
+<p><b>Export Fasta</b>
+<br>
+Export the sequences from the selected hits in Fasta format. Both sides of each hit
+are written, using the start/end coordinates shown in the table. 
+<br>NOTE: this is a very slow function and takes minutes if many rows are selected.
+
+
+<h2>Results Table</h2>
 
 The table shows the hits (or orphan genes) resulting from the query. Each row is a single
 hit or orphan gene. Note that the table contains columns for <i>all</i> of the selected
@@ -58,116 +52,103 @@ You can sort the columns by clicking on them, and rearrange them by dragging the
 boxes. You can add/remove columns using the "Select Columns" button at the bottom. Following
 are the meanings of the columns:
 <p>
-<table border='1' cellpadding='5' rules=all >
+<table cellpadding=3>
 <tr>
-	<td align="center" colspan=2>
+	<td colspan=3>
 		<i>General</i>
 	</td>
 
 </tr>
 <tr>
-	<td align="left" valign="top">
-		<b>Row</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Row number within the table
-	</td>
+	<td valign="top"><b>Row</b></td>
+	<td>&nbsp;</td>
+	<td>Row number within the table</td>
 </tr>
 <tr>
-	<td align="left" valign="top">
-		<b>PgeneF</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		PgeneF number. All hits in a given PgeneF have the same number. Note that 
+	<td valign="top"><b>PgeneF</b></td>
+	<td>&nbsp;</td>
+	<td>
+		If <b>Compute PgeneF</b>: PgeneF number. All hits in a given PgeneF have the same number. Note that 
 		the number is generated during the search and won't necessarily be the same
 		in a different search.
 	</td>
 </tr>
 <tr>
-	<td align="left" valign="top">
-		<b>PgFSize</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Size of the PgeneF which contains this hit.
-	</td>
-</tr>
-<tr>
-	<td align="left" valign="top">
-		<b>HitIdx</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Database index of the hit. This is used in the "Save for Reload" function.
+	<td valign="top"><b>PgFSize</b></td>
+	<td>&nbsp;</td>
+	<td>
+		If <b>Compute PgeneF</b>: Size of the PgeneF which contains this hit.
 	</td>
 </tr>
 <tr>
-	<td align="left" valign="top">
-		<b>BlockNum</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Synteny block containing this hit (if any). The format is <chr1>.<chr2>.N, where
-		runs from one to the number of blocks between those two chromosomes.
+	<td valign="top"><b>HitIdx</b></td>
+	<td>&nbsp;</td>
+	<td>
+		Database index of the hit. This is shown on the "Chromosome Explorer" when
+		the mouse is over the hit line. 
 	</td>
 </tr>
 <tr>
-	<td align="left" valign="top">
-		<b>BlockScore</b>
+	<td valign="top"><b>Block</b></td>
+	<td>&nbsp;</td>
+	<td>
+		Synteny block containing this hit (if any). The format is C1.C2.N, where
+		C1 and C2 are the chromosome numbers and N is the block number for the two chromosomes.
 	</td>
-	<td align="left"  valign="top" width="450" >
+</tr>
+<tr>
+	<td valign="top" nowrap><b>Block Score</b></td>
+	<td>&nbsp;</td>
+	<td>
 		The number of anchors which comprise the synteny block.
 	</td>
 </tr>
 <tr>
-	<td align="left" valign="top">
-		<b>RunSize</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		If the hit is contained in an uninterrupted collinear sequence of shared
-		genes, RunSize shows the length of these sequence. If you have chosen
-		the option "Only hits in a collinear gene pair", then RunSize will be two
-		or greater for all returned hits.
+	<td valign="top"><b>RunSize</b></td>
+	<td>&nbsp;</td>
+	<td>
+		If the hit is contained in an uninterrupted collinear set of shared
+		genes, RunSize shows the length of the set. This column is used for the
+		"Collinear gene" query.
 	</td>
 </tr>
 <tr>
-	<td align="center" colspan=2>
+	<td colspan=3>
 		<i>Location: one row for each species</i>
 	</td>
 </tr>
 <tr>
-	<td align="left" valign="top">
-		<b>Chr</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
+	<td valign="top"><b>Chr</b></td>
+	<td>&nbsp;</td>
+	<td>
 		Chromosome (or draft sequence number) where the hit is aligned
 	</td>
 </tr>
 <tr>
-	<td align="left" valign="top">
-		<b>Start/End</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Start/end of the hit region (note that hits are clustered during anchor loading, so hit regions
+	<td valign="top" nowrap><b>Start/End</b></td>
+	<td>&nbsp;</td>
+	<td>
+		Start/end of the hit region.
+		<br>NOTE1: Hits are clustered during anchor loading, so hit regions
 		are not necessarily single MUMmer alignments).
+		<br>NOTE2: If the table contains orphan genes, then the coordinates are the gene coordinates.
 	</td>
 </tr>
 <tr>
-	<td align="left" valign="top">
-		<b>#RGN</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Shows the number of distinct regions on this species which are included in the 
-		PgeneF containing this hit. For example, if a gene from Species A expanded by 
-		tandem duplication to 5 genes on Species B, then the PgeneF will have PgFSize=5,
-		and #RGN will be one for Species A and 5 for species B.
+	<td valign="top"><b>Gene#</b></td>
+	<td>&nbsp;</td>
+	<td>For each species, the genes are numbered, where the number is specific to the query results. A gene may have multiple hits, and
+	a hit may overlap multiple genes. 
 	</td>
 </tr>
 <tr>
-	<td align="center" colspan=2>
+	<td colspan=3>
 		<i>Annotation: one row for each species</i>
 	</td>
 </tr>
 <tr>
-	<td align="left" colspan=2>
-	The key/value pairs from the annotation gff attributes sections are shown here 
+	<td colspan=3>
+	The keywords for the annotations of each species are listed.
 	They can be different for each species, e.g. one may have "ID" while another uses "Name" for the 
 	gene names. "All_anno" shows all of the attributes joined together.  
 	</td>
@@ -175,32 +156,14 @@ are the meanings of the columns:
 </table>
 
 <h3>Statistics</h3>
-This section shows overall statistics for the query results, for each species. 
-The meaning of the terms is as follows: 
-<div style="width:485px;margin-top:10px; margin-left:15px;">
-<b>Hits</b>
-<p>
-Number of hits involving that species.
-<p>
-<b>Distinct regions</b>
-<p>
-Number of distinct regions covered on that species (see the definition of the "#RGN" column above). 
-<p>
-<b>Annotated</b>
-<p>
-Out of the number of distinct regions, how many have annotation.
-<p>
-<b>Orphans</b>
-<p>
-Number of orphan genes returned for this species.
-<p>
-<b>Chr</b>
-<p>
-Number of chromosomes (or draft sequences) this species has, for reference.
+This section shows overall statistics for the query results. Most of the
+statistics are self-explanatory except the following:
+<p><b>Annotated</b> and <b>Genes</b>: The first is the number of hits that 
+overlap one or more genes, where a gene can have multiple hits. 
+The second is the number of Genes with at least one hit.
+<p><b>Regions</b>: This statistic
+is only shown if <b>Compute PgeneF</b> was checked, and it is
+the number of distinct regions covered on that species.  
 
-
-</div>
-
-</div>
 </body>
 </html>

@@ -6,6 +6,7 @@ import javax.swing.SwingUtilities;
 import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.pool.DatabaseUser;
+import util.ErrorReport;
 import util.Utilities;
 import util.DatabaseReader;
 
@@ -22,6 +23,7 @@ public class SyMAPQueryApplet extends JApplet {
 		SyMAP.printVersion();
 		String osVer = SyMAP.getOSType();
 		System.out.println("OS " + osVer);
+		ErrorReport.isApplet(); // CAS504
 		
 		try {
 	        // Connect to database

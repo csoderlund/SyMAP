@@ -61,7 +61,8 @@ public class PropertyFrame extends JDialog {
 	public static String lastFPCDir=null, lastSeqDir=null; // CAS500
 	
 	public PropertyFrame(Frame parentFrame, boolean isPseudo, 
-			String displayName, String dbName, DatabaseReader dbReader, boolean isLoadedProject) {
+			String displayName, String dbName, DatabaseReader dbReader, 
+			boolean isLoadedProject) {
 		super(parentFrame, displayName + " parameters");
 		
 		theDisplayName = displayName;
@@ -99,8 +100,7 @@ public class PropertyFrame extends JDialog {
 		if (isPseudo) checkSeq();
 		else checkFPC();
 		
-		//Record initial values to see if they change
-		setBuffer();
+		setInitValues();//Record initial values to see if they change
 		
 		setSize(INITIAL_HEIGHT, INITIAL_WIDTH);
 		setMinimumSize(new Dimension(INITIAL_HEIGHT, INITIAL_WIDTH));
@@ -138,7 +138,7 @@ public class PropertyFrame extends JDialog {
 			theFields[4] = new PropertyComponent("min_display_size_bp", "0", 1, false, false);	
 		
 			theFields[5] = new PropertyComponent("grp_prefix", "Chr", 1, false, false);
-			theFields[6] = new PropertyComponent("min_size", "100000", 1, true, false);
+			theFields[6] = new PropertyComponent("min_size", "100000", 1, true, false); // Hardcoded in Projects too
 			// CAS42 1/4/17 this is in the Help, but not here
 			//theFields[4] = new PropertyComponent("grp_sort", PSEUDO_GRP_SORT, 0, true, false);
 			
@@ -248,7 +248,7 @@ public class PropertyFrame extends JDialog {
 		File pfile = new File(dir, Constants.paramsFile);
 		if (pfile.isFile())
 		{
-			System.out.println("Get params from " + dir + "/" + Constants.paramsFile);
+			System.out.println("Get params from " + dir +  Constants.paramsFile);
 			PropertiesReader props = new PropertiesReader( pfile);
 			for (Object obj : props.keySet()) {
 				String pname = obj.toString().trim();
@@ -387,7 +387,7 @@ public class PropertyFrame extends JDialog {
 		return false;
 	}
 	
-	private void setBuffer() {
+	private void setInitValues() {
 		valueBuffer = new String[theFields.length];
 		
 		for(int x=0; x<valueBuffer.length; x++)

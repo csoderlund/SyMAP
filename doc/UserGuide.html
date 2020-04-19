@@ -88,23 +88,23 @@ The Dot Plot and Circle displays are available from various places.
 <li>A. Main Display
 <li>B. Display for Selected Pair (Two-Genome Views):
 	<ul>
-	<li><a href="#dotplot_display">Dot Plot (1)</a> <!- # ref in code -!>
+	<li><a href="#dotplot_display">Dot Plot (Two genome) #1</a> <!- # ref in code -!>
 		<ul>
 		<li><a href="#dotplot_control">Dotplot Control Panel
 		<li><a href="#dotplot_filter">Dotplot Filters
 	</ul>
 
 	<li><a href="#block">Block Display</a>
-	<li><a href="#circle">Circle Display (1)</a>
+	<li><a href="#circle">Circle Display (Two genome) #1</a>
 	<li><a href="#sum">Summary</a>
 	</ul>
 
 <li>C. Display for All Projects (Multi-Genome Views):
 	<ul>
-	<li><a href="#explorer">Chromosome Explorer</a> (Multi-Chromosome views)
+	<li><a href="#explorer">Chromosome Explorer</a> (Multi-chromosome views)
 		<ul>
-		<li><a href="#alignment_display_circ">Circle Display (2)</a>
-		<li><a href="#dot2">Dot Plot (2)</a>
+		<li><a href="#alignment_display_circ">Circle Display (Multi-chromosome) #2</a>
+		<li><a href="#dot2">Dot Plot (Multi-chromsome) #2</a>
 		<li><a href="#alignment_display_3d">3D Display (if available)</a> <!- # ref in code -!>
 		<li><a href="#alignment_display_2d">2D Display</a> <!- # ref in code -!>
 			<ul>
@@ -119,7 +119,7 @@ The Dot Plot and Circle displays are available from various places.
 			
 			</ul>
 		</ul>
-	<li><a href="#dot3">Dot Plot (3)</a>
+	<li><a href="#dot3">Dot Plot (Multi-genome) #3</a>
 	<li><a href="#annotsearch">SyMAP Queries </a>(Seq-to-Seq only)
 	</ul>
 <li><a href="#caveat">Self-synteny Displays</a>
@@ -477,15 +477,18 @@ The Scale button
 (base pairs per pixel) as the reference sequence track in the view.
 <p>
 <a name="mouse_function_selector"></a>
-<b>Mouse Function Selector</b> 
+<b>Selected region</b> 
 This drop-down selector assigns a function to the mouse's left button
 click and drag actions:
-<ul>
-<li>Base View - open the base alignment view for the selected region (see <a href=#base>Base View</a>.</li>
-<li>Zoom - zoom to the selected region.</li>
-<li>Zoom All - zoom the track to the selected region and all other tracks with hits in the region.</li>
-</ul>
-<b>Colors</b> Opens a menu for customizing colors.
+<table border=1 cellspacing=3 cellpadding=3 rules="rows, cols" style="font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
+<tr><td nowrap>Zoom All Tracks<td>Zoom the track to the selected region and all other tracks with hits in the region.</li>
+<tr><td nowrap>Zoom Selected Track<td>Zoom to the selected region on the selected track; all other tracks do not change.</li>
+<tr><td nowrap>Align (Max 30000)<td>Open the base alignment view for the selected region (see <a href=#base>Base View</a>).
+No more than 30000 bases can be selected.</li>
+<tr><td nowrap>Show Sequence<td>The selected sequence will be shown in a popup. This has limited utility, but is the
+only way to the underlying sequence of a region than may or may not have hit.
+</table>
+<p><b>Colors</b> Opens a menu for customizing colors.
 <p>
 <b>Additional navigation:</b>
 <table border=1 cellspacing=3 rules="rows, cols" style="font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
@@ -718,12 +721,14 @@ discussed in <a href=#dotplot_display>Dot Plot (Two Genome)</a>. The dot plot in
 shows three genomes.
 <p><a href="img/wg-dp.png"><img border=1 src="img/wg-dp.png" width=600></a>
 <!--------------------------------------------------------------------!>
+
 <a name=annotsearch></a>
 <table width="95%" cellspacing=0 cellpadding=0 class="lgbreak">
 <tr><td align=left>
-<h3>SyMAP Queries</h3></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+<h2>SyMAP Queries</h2></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
 </table>
-The query interface only works for multi-genome seq-to-seq synteny.
+The query interface only works for multi-genome Seq-to-Seq synteny 
+(i.e does not work for self-synteny or FPC-to-Seq).
 This interface has two basic
 functions:
 <br>
@@ -753,57 +758,42 @@ The Overview window (above) lists the projects which were selected for querying.
 <p>
 <a href="img/query_query.png"><img src="img/query_query.png" width=550 border=1></a>
 <p>
-Here you set up the query and then press "Do Search" to execute it. <p> 
-The query occurs in three stages, corresponding to the section numbers
-on the Query Page. Each stage has its own filters, as follows:
+Here you set up the query and then press "Run Search" to execute it. <p> 
+The query occurs in two stages, corresponding to the section numbers
+on the Query Page. The second start, PgeneF, only runs if the "Compute PgeneF" is checked.
 
-<h4>1. Filter hits</h4>
+<h3>1. Filter hits</h3>
 
 The first stage is to retrieve hits (anchors) from the database, based on 
 filters such as chromosome and annotation string. Note that each anchor
 connects two species and hence represents a <i>pair</i> of putatively-related
-regions on the two species. Filters are as follows:
+regions on the two species. The filters are described in the <b>Help</b> in the upper corner.
 
-<div style="width:485px;margin-top:10px; margin-left:15px;">
-<b>Annotation Description</b>
-<p>
-Enter a search string that may be found in any value for any annotation keyword 
+
+
+<p><b>Annotation Description</b>
+<br>
+Enter a search string for any annotation keyword 
 (e.g. the gene name or description). Hits will be returned which overlap a matching annotation
 on either side. 
-<p>
-<b>Chromosome/location filters</b>
-<p>
-Each selected species has a row in which you can select to search either all
-its sequences, or a particular sequence or basepair region.
-<p>
-<b>Only synteny hits</b>
-<p>
-Return only hits which are part of a syntenic block. This
-helps to screen false positive hits, but can also conceal true hits that are not
-part of a detectable syntenic block. (Note that SyMAP hits are already filtered
-during loading using a reciprocal-top-2 filter.)
-<p>
-<b>Only hits in a collinear gene pair</b>
-<p>
-Return only hits which are part of a pair of aligning genes having no intervening
-non-aligning genes. This relates to the RunSize column, which is one of the optional
-columns of the Query Result table. RunSize shows the size of collinear chain which 
-a hit is contained in, hence this checkbox is equivalent to RunSize at least 2. 
-Note that a collinear chain is not the same as a SyMAP synteny block, because blocks
-require at least 7 anchors, and are allowed to have intervening genes which do not align.
-<p>
-<b>Show orphan genes</b>
-<p>
-If checked, then the results will show all genes which <i>do not</i> overlap any of the hits
-matching the search criteria (i.e, the hits which would be shown in the table if this
-checkbox were not checked). Note that the genes must also meet the search criteria,
-e.g. matching the annotation query string and the chromosome location requirements. 
+<p>When looking for a particular gene, say "gene-LOC9268236", enter this into the text box
+and "Run Query". If there are no results, select "Only orphan genes" and run it again.
 
-</div>
+<p><b>Collinear genes N&gt;= N</b>
+<br>
+Return only hits which are part of a pair of N aligning genes having no intervening
+non-aligning genes. There is a column called "RunSize" that provides the number
+of adjacent aligning genes. Note that this is not the same as synteny blocks, which
+allows intervening non-aligning genes.
 
-<p>
+<p><b>Show orphan genes</b>
+<br>
+If checked, this shows all orphan genes for the project selected (or all projects). 
+That is, it shows genes that have no overlapping hits to ANY other project for which
+it has been compared. 
 
-<h4>2. Filter putative gene families (PgeneFs)</h4>
+
+<h3>2. Filter putative gene families (PgeneFs)</h3>
 
 Using the hits that pass the Stage 1 filters, SyMAP constructs putative gene families (PgeneFs) 
 spanning the selected species. This is done by grouping hits whose hit regions overlap on 
@@ -813,48 +803,14 @@ an hour or more.</i>
 Each PgeneF is given a number, which is shown in the Query Results table (column name "PgeneF"). 
 The size of the PgeneF is also shown (column "PgFSize"). 
 <p>
-Filters at this stage apply to the PgeneF as a whole:
+The filters are described in the Query <b>Help</b> page.
 
-<div style="width:485px;margin-top:10px; margin-left:15px;">
-<b>Include/Exclude</b>
-<p>
-These filters permit searching for gene families shared by one group of species but not
-present in another. 
-<p>
-If a species is checked to include, then the PgeneF will only be retained if it includes
-at least one hit which hits that species. 
-<p>
-If a species is checked to exclude, then the PgeneF will be discarded if any of its
-hits are to that species. 
-<p>
-<b>No annotation to included species</b>
-<p>
-Find PgeneFs which are not yet annotated. A PgeneF will be discarded if it is annotated on any of
-the species which are checked in the <b>Include</b> line.
-<p>
-<b>Complete linkage of included species</b>
-<p>
-Require the PgeneF to be fully linked, i.e. for each pair of species A and B in the group,
-there must be a hit linking A to B.  
-</div>
-
-<p>
-
-<h4>3. Filter displayed hits</h4>
-
-The query returns hits between all pairs of the selected species; however, you may
-only be interested in seeing those which hit certain species. To achieve this,
-select those species in the <b>Include</b> row of Filter Stage 2, and also check
-the box below, <b>Show only hits to the included species</b>. Only those hits will be shown,
-although the PgeneF numbers will reflect groupings created using all hits. 
-
-<p>
-<h4>SyMAP Query Result Table</h4>
+<h3>SyMAP Query Result Table</h3>
 <p>
 When the query is complete, the Query Results page opens showing the table of results:
 <p>
 
-<a href="img/query_results.png"><img src="img/query_results.png" width=550 border=1></a>
+<a href="img/queryres1.png"><img src="img/queryres1.png" width=550 border=1></a>
 
 <p>
 The table contains all the hits (anchors) resulting from the query. Each hit connects
@@ -862,205 +818,38 @@ two species and you can see the respective chromosomes and start/end locations o
 the hits, as well as gene annotations overlapped by the hits. 
 <p>
 Note that the table contains columns for <i>all</i> of the selected
-species, but each hit only connects two species, and the other species columns are empty.
+species (see snapshot below), but each hit only connects two species, and the other species columns are empty.
 If the query specified orphan genes, then each row represents one gene and shows data only
 for one species.
 <p>
-The entries in the table may be selected; to select more than one
-entry, use "ctrl-click". You can sort the columns by clicking on the column name, 
+The columns can be sorted by clicking on the column name, 
 and rearrange them by dragging the header boxes. 
 
 <h4>Button functions</h4>
 
 <div style="width:485px;margin-top:10px; margin-left:15px;">
-<b>Show Synteny</b>
+<b>Align sequences</b>:
+Sequences of the selected hit are written out and a multiple alignment is created
+using MUSCLE (Edgar 2004 NAR:32).
 <p>
-Brings up a SyMAP 2-track view for each selected entry, so the hits
-can be seen in their full chromosomal context. The hits are initially padded to each side
+<b>Show Synteny</b> :
+Brings up a SyMAP 2-track view for each selected entry, so the hit
+can be seen in their full chromosomal context. The hit is initially padded to each side
 by the margin amount indicated (default 50kb), but you can easily zoom further out in the 2-track views.  
 <p>
-<b>Save CSV</b>
+<b>Export CSV</b>:
+Saves the selected hits (or entire table) using the selected set of columns to a CSV format suitable for import into Excel.
 <p>
-Saves the selected hits using the selected set of columns to a CSV format suitable for import into Excel.
 <p>
-<b>Save for Reload</b>
-<p>
-Saves the selected hits in a CSV format which can be reloaded back into SyMAP 
-later (click "Results" on the lefthand pane,
-and use the "Load Saved Query" button). The saved table includes <i>all</i> possible columns, not just
-those currently selected for display. 
-<p>
-<b>Save as Fasta</b>
-<p>
-Sequences from the selected hits are written to a Fasta file. Both sides of each hit
+<b>Save as Fasta</b>: Sequences from the selected hits (or entire table) are written to a Fasta file. Both sides of each hit
 are written, using the start/end coordinates shown in the table.
 <p>
-<b>Align sequences</b>
-<p>
-Sequences for the selected hits are written out and a multiple alignment is created
-using MUSCLE (Edgar 2004 NAR:32). If no selection is made then the whole table is used. <i>Note that
-alignments of more than 10 sequences can take considerable time.</i>
+
 </div>
 
-<h4>Results Table Columns</h4>
+<h3>Results Table Columns</h3>
 You can add/remove columns using the "Select Columns" button at the bottom. This
-opens up a column-selection section, shown here:
-<p>
-<a href="img/query_results_column.png">
-	<img src="img/query_results_column.png" width=550 border=1></a>
-<p>
- Following
-are the meanings of the columns:
-<p>
-<table border='1' cellpadding='5' rules=all>
-<tr>
-	<td align="center" colspan=2>
-		<i>General</i>
-	</td>
-
-</tr>
-<tr>
-	<td align="left" valign="top">
-		<b>Row</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Row number within the table
-	</td>
-</tr>
-<tr>
-	<td align="left" valign="top">
-		<b>PgeneF</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		PgeneF number. All hits in a given PgeneF have the same number. Note that 
-		the number is generated during the search and won't necessarily be the same
-		in a different search.
-	</td>
-</tr>
-<tr>
-	<td align="left" valign="top">
-		<b>PgFSize</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Size of the PgeneF which contains this hit.
-	</td>
-</tr>
-<tr>
-	<td align="left" valign="top">
-		<b>HitIdx</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Database index of the hit. This is used in the "Save for Reload" function.
-	</td>
-</tr>
-<tr>
-	<td align="left" valign="top">
-		<b>BlockNum</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Synteny block containing this hit (if any). The format is <chr1>.<chr2>.N, where
-		runs from one to the number of blocks between those two chromosomes.
-	</td>
-</tr>
-<tr>
-	<td align="left" valign="top">
-		<b>BlockScore</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		The number of anchors which comprise the synteny block.
-	</td>
-</tr>
-<tr>
-	<td align="left" valign="top">
-		<b>RunSize</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		If the hit is contained in an uninterrupted collinear sequence of shared
-		genes, RunSize shows the length of these sequence. If you have chosen
-		the option "Only hits in a collinear gene pair", then RunSize will be two
-		or greater for all returned hits.
-	</td>
-</tr>
-<tr>
-	<td align="left" valign="top">
-		<b>HitIdx</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Database index of the hit. This is used in the "Save for Reload" function.
-	</td>
-</tr>
-<tr>
-	<td align="center" colspan=2>
-		<i>Location: one row for each species</i>
-	</td>
-</tr>
-<tr>
-	<td align="left" valign="top">
-		<b>Chr</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Chromosome (or draft sequence number) where the hit is aligned
-	</td>
-</tr>
-<tr>
-	<td align="left" valign="top">
-		<b>Start/End</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Start/end of the hit region (note that hits are clustered during anchor loading, so hit regions
-		are not necessarily single MUMmer alignments).
-	</td>
-</tr>
-<tr>
-	<td align="left" valign="top">
-		<b>#RGN</b>
-	</td>
-	<td align="left"  valign="top" width="450" >
-		Shows the number of distinct regions on this species which are included in the 
-		PgeneF containing this hit. For example, if a gene from Species A expanded by 
-		tandem duplication to 5 genes on Species B, then the PgeneF will have PgFSize=5,
-		and #RGN will be one for Species A and 5 for species B.
-	</td>
-</tr>
-<tr>
-	<td align="center" colspan=2>
-		<i>Annotation: one row for each species</i>
-	</td>
-</tr>
-<tr>
-	<td align="left" colspan=2>
-	The key/value pairs from the annotation gff attributes sections are shown here 
-	They can be different for each species, e.g. one may have "ID" while another uses "Name" for the 
-	gene names. "All_anno" shows all of the attributes joined together.  
-	</td>
-</tr>
-</table>
-
-<h4>Statistics</h4>
-This section shows overall statistics for the query results, for each species. 
-The meaning of the terms is as follows: 
-<div style="width:485px;margin-top:10px; margin-left:15px;">
-<b>hits</b>
-<p>
-Number of hits involving that species.
-<p>
-<b>distinct regions</b>
-<p>
-Number of distinct regions covered on that species (see the definition of the "#PGF" column above). 
-<p>
-<b>annotated</b>
-<p>
-Out of the number of distinct regions, how many have annotation.
-<p>
-<b>orphans</b>
-<p>
-Number of orphan genes returned for this species.
-<p>
-<b>chrs</b>
-<p>
-Number of chromosomes (or draft sequences) this species has, for reference.
-</div>
-
+opens up a column-selection section. The columns are explain the the <b>Help</b> button on the table.
 
 <a name=caveat></a>
 <table width="95%" cellspacing=0 cellpadding=0 class="lgbreak">
