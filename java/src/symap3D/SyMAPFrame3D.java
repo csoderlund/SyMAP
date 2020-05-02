@@ -11,7 +11,6 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -23,7 +22,6 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
@@ -34,8 +32,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 import javax.media.j3d.Canvas3D;
-import javax.media.j3d.RenderingErrorListener;
-import javax.media.j3d.RenderingError;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -60,6 +56,7 @@ import symap.projectmanager.common.CollapsiblePanel;
 import symap.projectmanager.common.SyMAPFrameCommon;
 import symap.projectmanager.common.TrackCom;
 import util.DatabaseReader;
+import util.ErrorReport;
 import util.ImageViewer;
 import util.LinkLabel;
 import util.Utilities;
@@ -71,30 +68,14 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 	private int VIEW_2D = 2;
 	private int VIEW_DP = 3;
 	private int VIEW_CIRC = 4;
-//	
+
 	private MutexButtonPanel navControlBar;
 	private MutexButtonPanel viewControlBar;
-//	private JSlider sldRotate = null;
 	private JButton btnShowCirc;
-//	private JPanel controlPanel;
-//	private JPanel cardPanel;
-//	private JSplitPane splitPane;
-//	
-//	private HelpBar helpBar;
+
 	private Canvas3D canvas3D;
 	private SimpleUniverse universe;
-//	private Mapper3D mapper;
-//	private SyMAP symap2D = null;
-//	private DotPlotFrame dotplot = null;
-//	private Applet applet;
-//	private DatabaseReader dbReader;
-//	
-//	private boolean hasInit = false;
-//	private boolean isFirst2DView = true;
-//	private boolean isFirstDotplotView = true;
-//	private int selectedView = 1;
-//	private int screenWidth, screenHeight;
-//	
+
 	private static GraphicsConfiguration preferredGraphicsConfig = SimpleUniverse.getPreferredConfiguration();
 	
 	public SyMAPFrame3D(Applet applet, DatabaseReader dbReader, Mapper3D mapper) {
@@ -118,6 +99,7 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 	}
 	
 	private void create3DViewPanel() {
+		try {
 		if (sldRotate != null)
 			helpBar.removeHelpListener(sldRotate);
 		
@@ -134,9 +116,9 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
         
         create3DNavigationControlBar();
         
-    	canvas3D = new Canvas3D(preferredGraphicsConfig);
-    	canvas3D.setMinimumSize(new Dimension(300, 300));
-    	helpBar.addHelpListener(canvas3D,this);
+    		canvas3D = new Canvas3D(preferredGraphicsConfig);
+    		canvas3D.setMinimumSize(new Dimension(300, 300));
+    		helpBar.addHelpListener(canvas3D,this);
 
         universe = new SimpleUniverse(canvas3D);
         universe.getViewingPlatform().setNominalViewingTransform();
@@ -151,6 +133,8 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
         
         cardPanel.add(viewPanel3D, Integer.toString(VIEW_3D));
         setView(VIEW_3D);
+		}
+		catch (Exception e) {ErrorReport.print(e, "Create 3D explorer");}
 	}
 	private void regenerateCircleView()
 	{	
@@ -308,7 +292,6 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 		viewControlBar = new MutexButtonPanel("Views:", 5);
 		viewControlBar.setAlignmentX(Component.LEFT_ALIGNMENT);
 		viewControlBar.setBorder(BorderFactory.createCompoundBorder(
-				//BorderFactory.createLineBorder(Color.LIGHT_GRAY),
 				BorderFactory.createEtchedBorder(),
 				BorderFactory.createEmptyBorder(5, 5, 5, 5)));
 		
@@ -557,8 +540,6 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 				for (int i = 0;  i < selectedTracks.length;  i++) {
 					TrackCom t = selectedTracks[i];
 					
-					//System.out.println("position " + position + " " + t.getFullName());
-					
 					// Add track
 					if (t.isPseudo())
 						dp.setSequenceTrack( position++, t.getProjIdx(), t.getGroupIdx(), t.getColor() );
@@ -603,7 +584,7 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 			Utilities.showOutOfMemoryMessage();
 		}
 		catch (Exception err) {
-			err.printStackTrace();
+			ErrorReport.print(err, "Regenerate 2d");
 		}
 		
 		return false;

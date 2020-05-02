@@ -98,14 +98,7 @@ sub usage
 
 	Usage:  ./viewSymap [options]
     
-	-h		: print usage
-	-c string	: filename of config file (to use instead of symap.config)
-	-32		: 32-bit mode
-	-64		: 64-bit mode
-	-mN		: set max memory to N megabytes
-	-linux 		: linux platform
-	-mac		: mac platform
-	-d		: see extra output for symap query
+    	Use 'symap -h' for options
     
 END
 

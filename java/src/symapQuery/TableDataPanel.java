@@ -20,7 +20,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.HashMap;
@@ -67,6 +66,7 @@ public class TableDataPanel extends JPanel {
 		
 		theQueryPanel = 		theParentFrame.getQueryPanel();
 		strHitQuery = 		theQueryPanel.makeHitWhere();
+		
 		strOrphanQuery = 	theQueryPanel.makeOrphanWhere();
 		theQuerySummary = 	theQueryPanel.makeSummary();
 		isOrphan = theQueryPanel.isOrphan();
@@ -901,17 +901,17 @@ public class TableDataPanel extends JPanel {
 
 					RowData rd = new RowData ();
 					for(int x=0; x<selRows.length; x++) {
-						if (!rd.load(x)) return;
+						if (!rd.load(selRows[x])) return; // CAS505 was incorrectly x
 							
-						String name = rd.spName[0] + " Chr " + rd.chrNum[0] 
-								+ " Start " + rd.start[0] + " End " + rd.end[0];
+						String name = String.format("%-10s  Chr %2s  Start %,10d  End %,10d",
+								rd.spName[0], rd.chrNum[0], rd.start[0], rd.end[0]);
 						if(!theNames.contains(name)) {
 							theNames.add(name);
 							theSequences.add(theParentFrame.getSequence(rd.start[0], rd.end[0], rd.chrIdx[0]));
 						}
 									
-						name = rd.spName[1] + " Chr " + rd.chrNum[1] 
-								+ " Start " + rd.start[1] + " End " + rd.end[1];
+						name = String.format("%-10s  Chr %2s  Start %,10d  End %,10d",
+								rd.spName[1], rd.chrNum[1], rd.start[1], rd.end[1]);
 						if(!theNames.contains(name)) {
 							theNames.add(name);
 							theSequences.add(theParentFrame.getSequence(rd.start[1], rd.end[1], rd.chrIdx[1]));
@@ -1088,16 +1088,18 @@ public class TableDataPanel extends JPanel {
 	 */
 	private void loadProjAnnoKeywords() {
 		Vector<Project> projs = theParentFrame.getProjects();
-		Iterator<Project> iter = projs.iterator();
 		
-		String projList = "" + iter.next().getID();
-		while(iter.hasNext())
-			projList += "," + iter.next().getID();
+		String projList = "";
+		for (Project p : projs) { // CAS505 add hasGenes
+			if (p.hasGenes()) 
+				projList += projList.equals("") ? (""+p.getID()) : (","+p.getID());
+		}
 		
 		try {
 			Connection conn = theParentFrame.getDatabase().getConnection();
 			Statement stmt = conn.createStatement();
 			
+			// TODO check for occurance of genes in annotations
 			theAnnoKeys = new AnnoData();
 			
 			String query = 	"SELECT proj_idx, keyname FROM annot_key WHERE  proj_idx";
@@ -1353,55 +1355,55 @@ public class TableDataPanel extends JPanel {
     		
     		public boolean load(int row) {
     			try {
-    			HashMap <String, Object> headVal = theTableData.getRowData(row); // colName, value
-    			HashMap <String, Integer> sp2x = new HashMap <String, Integer> ();
-    			int x=0;
-    			
-    			for (String head : headVal.keySet()) {
-    				String [] tok = head.split(Q.delim); // speciesName\nChr or Start or End
-    				
-    				Object o = headVal.get(head);
-    				
-    				String sVal="";
-    				int iVal=0;
-    				if (o instanceof String) {
-    					String str = (String) o;
-    					if (str.equals("") || str.equals("-")) continue; // the blanks species
-    				}
-    				if (tok[1].equals(Q.chrCol)) {
-    					if (o instanceof Integer) sVal = String.valueOf(o);
-    					else sVal = (String) o;
-    				}
-    				else if (o instanceof Integer) {
-    					iVal = (Integer) o;
-    				}
-    				else {
-    					System.out.println("Symap error: Row Data " + head + " " + o + " is not type string or integer");
-    					return false;
-    				}
-    				
-    				int i0or1=0;						// only two none blank
-    				if (sp2x.containsKey(tok[0])) 
-    					i0or1 = sp2x.get(tok[0]);
-    				else {
-    					sp2x.put(tok[0], x);
-    					spName[x] = tok[0];
-    					i0or1 = x;
-    					x++;
-    					if (x>2) break; // should not happen
-    				}
-    				if (tok[1].equals(Q.chrCol)) 		chrNum[i0or1] = sVal;
-    				else if (tok[1].equals(Q.startCol))  start[i0or1] = iVal;
-    				else if (tok[1].equals(Q.endCol)) 	end[i0or1] = iVal;
-    			}
-    			SpeciesSelectPanel spPanel = theQueryPanel.getSpeciesPanel();
-    			
-    			for (x=0; x<2; x++) {
-    				spIdx[x] =  spPanel.getSpIdxFromSpName(spName[x]);
-    				chrIdx[x] = spPanel.getChrIdxFromChrNumSpIdx(chrNum[x], spIdx[x]);
-    			}
-    			return true;
-    		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return false;}
+	    			HashMap <String, Object> headVal = theTableData.getRowData(row); // colName, value
+	    			HashMap <String, Integer> sp2x = new HashMap <String, Integer> ();
+	    			int x=0;
+	    			
+	    			for (String head : headVal.keySet()) {
+	    				String [] tok = head.split(Q.delim); // speciesName\nChr or Start or End
+	    				
+	    				Object o = headVal.get(head);
+	    				
+	    				String sVal="";
+	    				int iVal=0;
+	    				if (o instanceof String) {
+	    					String str = (String) o;
+	    					if (str.equals("") || str.equals("-")) continue; // the blanks species
+	    				}
+	    				if (tok[1].equals(Q.chrCol)) {
+	    					if (o instanceof Integer) sVal = String.valueOf(o);
+	    					else sVal = (String) o;
+	    				}
+	    				else if (o instanceof Integer) {
+	    					iVal = (Integer) o;
+	    				}
+	    				else {
+	    					System.out.println("Symap error: Row Data " + head + " " + o + " is not type string or integer");
+	    					return false;
+	    				}
+	    				
+	    				int i0or1=0;						// only two none blank
+	    				if (sp2x.containsKey(tok[0])) 
+	    					i0or1 = sp2x.get(tok[0]);
+	    				else {
+	    					sp2x.put(tok[0], x);
+	    					spName[x] = tok[0];
+	    					i0or1 = x;
+	    					x++;
+	    					if (x>2) break; // should not happen
+	    				}
+	    				if (tok[1].equals(Q.chrCol)) 		chrNum[i0or1] = sVal;
+	    				else if (tok[1].equals(Q.startCol))  start[i0or1] = iVal;
+	    				else if (tok[1].equals(Q.endCol)) 	end[i0or1] = iVal;
+	    			}
+	    			SpeciesSelectPanel spPanel = theQueryPanel.getSpeciesPanel();
+	    			
+	    			for (x=0; x<2; x++) {
+	    				spIdx[x] =  spPanel.getSpIdxFromSpName(spName[x]);
+	    				chrIdx[x] = spPanel.getChrIdxFromChrNumSpIdx(chrNum[x], spIdx[x]);
+	    			}
+	    			return true;
+	    		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return false;}
     		}
     		String [] spName = {"",""};
     		int [] spIdx = {0,0};

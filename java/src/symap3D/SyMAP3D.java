@@ -19,6 +19,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
 import backend.UpdatePool;
 import symap.projectmanager.common.Block;
 import util.DatabaseReader;
+import util.ErrorReport;
 
 // Mimicking structure of SyMAP 2D with this class
 public class SyMAP3D implements Observer {
@@ -55,7 +56,10 @@ public class SyMAP3D implements Observer {
 		
 		mapper = new Mapper3D();
 		
-		frame = new SyMAPFrame3D(applet, databaseReader, (Mapper3D)mapper);
+		try {
+			frame = new SyMAPFrame3D(applet, databaseReader, (Mapper3D)mapper);
+		}
+		catch (Exception e) {ErrorReport.print(e, "3D explore - may not have 3D library");}
 	}
 	
 	public void update(Observable o, Object arg) {

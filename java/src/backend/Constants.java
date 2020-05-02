@@ -5,9 +5,15 @@ import util.Utilities;
 public class Constants {
 ////////////////////////////////////////////////////////
 // CAS500 v5 moved hard-coded constants for build to here
-public static final boolean TRACE = false;
 
-public static final String cfgFile =    "symap.config";
+/**********************************************
+ * Command line arguments
+ */
+public static boolean TRACE =     false;
+public static boolean NEW_ORDER = true;
+public static boolean PRT_STATS=  false; 
+
+/*************************************************************/
 
 // getPlatformPath() gets subdirectory under /ext
 // ProgSpec.java doAlignments() gets next subdirectory, with mummer and blat stuff hardcoded
@@ -62,10 +68,6 @@ public static final String faFile =         ".fa";
 //under runDir/<p1>_to_<p2>/tmp/<px>/ file names <p>_bes,<p>_mrk,<p>_ff or <p>_f1...
 //files in <p1> are aligned with files in <p2>. 
 public static final String tmpRunDir = 		 "/tmp/"; 
-
-// anchor draft
-public static final String anchorSuffix 	=  "_anchored";
-public static final String anchorCSVFile	=  "/anchoring.csv";
 
 /*************************************************************************/
 	// default data directory

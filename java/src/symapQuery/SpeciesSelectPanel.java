@@ -28,6 +28,7 @@ import javax.swing.JTextField;
 
 import symap.projectmanager.common.Project;
 import util.ErrorReport;
+import util.Utilities;
 
 public class SpeciesSelectPanel extends JPanel {
 	private static final long serialVersionUID = -6558974015998509926L;
@@ -268,8 +269,13 @@ public class SpeciesSelectPanel extends JPanel {
 			if (rs!=null) rs.close();
 			stmt.close();
 			conn.close();
-			if (!idList.contains(",")) 	pairWhere = "PH.pair_idx=" + idList + " ";
-			else 						pairWhere = "PH.pair_idx IN (" + idList + ") ";
+		
+			if (idList.equals("")) 		{
+				pairWhere="";
+				Utilities.showErrorMessage("No synteny pairs. Attempts to Run Query will fail.");
+			}
+			else if (!idList.contains(",")) 	pairWhere = "PH.pair_idx=" + idList + " ";
+			else 							pairWhere = "PH.pair_idx IN (" + idList + ") ";
 		} 
 		catch(Exception e) {ErrorReport.print(e, "Species panel");}
 	}

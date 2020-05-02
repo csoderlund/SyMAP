@@ -1,5 +1,8 @@
 package blockview;
 
+/********************************************
+ * Block view for a single selected chromosome
+ */
 import javax.swing.*;
 
 import java.awt.*;
@@ -7,6 +10,7 @@ import java.awt.event.*;
 import java.sql.*;
 
 import util.DatabaseReader;
+import util.ErrorReport;
 import util.ImageViewer;
 
 import java.util.Vector;
@@ -63,7 +67,7 @@ public class Block2Frame extends JFrame
 		getUniqueColors(100);
 		init();
 	}
-	void init()
+	private void init()
 	{
 		try
 		{
@@ -89,8 +93,7 @@ public class Block2Frame extends JFrame
 			isFpc = rs.getString("type").equals("fpc"); 
 			
 			rs = s.executeQuery("select idx from groups where name='0' and proj_idx=" + mIdx2);
-			if (rs.first())
-			{
+			if (rs.first()) {
 				unGrp2 = rs.getInt("idx");
 			}
 
@@ -98,11 +101,9 @@ public class Block2Frame extends JFrame
 			rs.first();
 			grpPfx = rs.getString("value");
 
-
 			rs = s.executeQuery("select name,length from groups join pseudos on pseudos.grp_idx=groups.idx " +
 					" where groups.idx=" + mGrpIdx);
-			if (!rs.first())
-			{
+			if (!rs.first()) {
 				System.out.println("Unable to find reference group " + mGrpIdx);
 				return;
 			}
@@ -200,25 +201,20 @@ public class Block2Frame extends JFrame
 			blockPanel.setMinimumSize(new Dimension(width,chrmHt + 60));
 			blockPanel.setVisible(true);
 			topPane.add(blockPanel,c);
-
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+			ErrorReport.print(e, "Init for Block 2 Frame");
 			return;
 		}
 	}
-	void paintBlocks(Graphics g) throws Exception
+	private void paintBlocks(Graphics g) throws Exception
 	{
 		Statement s = mDB.getConnection().createStatement();
-		boolean bStoreRects = mBlockRects.isEmpty();
 		g.setFont(new Font("Verdana",0,14));
 		int y0 = 40;
 		int x = layerWidth/2;
-		int nLayers = mLayout.size();
-		int width = nLayers*layerWidth + chromWidth;
 		int chromHeight = mRefSize/bpPerPx;
-		
 		int chromXLeft, chromXRight;
 		
 		int L;
@@ -281,8 +277,7 @@ public class Block2Frame extends JFrame
 				if (!savedRects)
 				{
 					b.blockRect = new Rectangle(x,y1,chromWidth2,ht);
-				}
-				
+				}		
 			}
 			x += layerWidth;
 		}
@@ -318,14 +313,13 @@ public class Block2Frame extends JFrame
 				if (!savedRects)
 				{
 					b.blockRect = new Rectangle(x,y1,chromWidth2,ht);
-				}
-				
+				}				
 			} 
 			x += layerWidth;
 		}	
 		savedRects = true;
 	}	
-	void addCtgs(Block b, Graphics g, int x, int y, int w, int h, Statement s) throws Exception
+	private void addCtgs(Block b, Graphics g, int x, int y, int w, int h, Statement s) throws Exception
 	{
 		String[] ctgs = b.ctgs.split(",");
 		if (b.ctgSizes == null)
@@ -365,8 +359,7 @@ public class Block2Frame extends JFrame
 				if (b.mGrp2 == unGrp2)
 				{
 					g.setColor(Color.black);
-				}
-				
+				}			
 			}
 			else
 			{
@@ -391,9 +384,8 @@ public class Block2Frame extends JFrame
 				g.drawLine(x, y, x + w, y);
 			}
 		}
-		
 	}
-	void layoutBlocks() throws Exception
+	private void layoutBlocks() throws Exception
 	{
 		ResultSet rs;
 		Statement s = mDB.getConnection().createStatement();
@@ -414,7 +406,7 @@ public class Block2Frame extends JFrame
 		}
 		else
 		{
-			rs = s.executeQuery("select idx,grp2_idx as grp2, start1 as start,end1 as end,blocknum,ctgs2 as ctgs, " +
+			rs = s.executeQuery("select idx, grp2_idx as grp2, start1 as start,end1 as end,blocknum,ctgs2 as ctgs, " +
 					" start2 as s2, end2 as e2 from blocks where pair_idx=" + mPairIdx + 
 			" and grp1_idx=" + mGrpIdx + " order by (end1 - start1) desc");		
 		}
@@ -516,17 +508,15 @@ public class Block2Frame extends JFrame
 				break;
 			}
 		}
-		
 	}	
-	int colorInt(int R, int G, int B)
+	private int colorInt(int R, int G, int B)
 	{
 		return (R<<16) + (G<<8) + B;
 	}
 	
-	void getUniqueColors(int amount) 
+	private void getUniqueColors(int amount) 
 	{
 		int max = (0xE0 << 16) + (0xE0 << 8)  + 0xE0;
-		//int step =  ((int)Math.floor(Math.PI*max))/(amount);
 		int step =  (15*max)/(4*amount);
 	    mColors = new Vector<Integer>();
 	    
@@ -570,13 +560,13 @@ public class Block2Frame extends JFrame
 			mColors.add(c);
 		}
 	}	
-	int countBlockHits(int idx, Statement s) throws Exception
+	private int countBlockHits(int idx, Statement s) throws Exception
 	{
 		ResultSet rs = s.executeQuery("select count(*) as count from pseudo_block_hits where block_idx=" + idx);
 		rs.first();
 		return rs.getInt("count");
 	}
-	class Block
+	private class Block
 	{
 		int mS; int mE; /// on the reference, stored in *pixels*, so that the "overlaps"
 						// test can use a pixel gap
@@ -609,7 +599,7 @@ public class Block2Frame extends JFrame
 			return (Math.max(b.mS, mS) <= Math.min(b.mE,mE) + 30); // should match value in BlockViewFrame
 		}
 	}	
-	void blockMouseMoved(MouseEvent m)
+	private void blockMouseMoved(MouseEvent m)
 	{
 		for (Block b : mBlocks)
 		{
@@ -624,7 +614,7 @@ public class Block2Frame extends JFrame
 		setCursor(c);
 		
 	}		
-	void blockMouseClicked(MouseEvent m)
+	private void blockMouseClicked(MouseEvent m)
 	{
 		for (Block b : mBlocks)
 		{
@@ -635,7 +625,7 @@ public class Block2Frame extends JFrame
 			}
 		}
 	}			
-	void showDetailView(Block b)
+	private void showDetailView(Block b)
 	{
 		try {
 			SyMAP symap = new SyMAP(null, mDB, null);
@@ -655,13 +645,13 @@ public class Block2Frame extends JFrame
 			symap.getFrame().show();
 		}
 		catch (Exception err) {
-			err.printStackTrace();
+			ErrorReport.print(err, "Show Detail View");
 		}
-		finally {
-		}
+		finally {}
 	}
-	class BlockPanel extends JPanel implements MouseInputListener
+	private class BlockPanel extends JPanel implements MouseInputListener
 	{
+		private static final long serialVersionUID = 1L;
 		Block2Frame blockFrame;
 		
 		public BlockPanel(Block2Frame _blockFrame) 
@@ -675,41 +665,29 @@ public class Block2Frame extends JFrame
 	    public void paintComponent(Graphics g) 
 	    {
 	        super.paintComponent(g); //paint background
-	        try
-	        {
-	        	blockFrame.paintBlocks(g);
+	        try {
+	        		blockFrame.paintBlocks(g);
 	        }
-	        catch(Exception e)
-	        {
-	        	e.printStackTrace();
-	        	return;
+	        catch(Exception e) {
+	        		ErrorReport.print(e, "Draw blocks");
+	        		return;
 	        }
 	    }
-	    public void mouseClicked(MouseEvent m)
-	    {
-	    	blockFrame.blockMouseClicked(m);
+	    public void mouseClicked(MouseEvent m){
+	    		blockFrame.blockMouseClicked(m);
 	    }
-	    public void mousePressed(MouseEvent m)
-	    {
-	    	
+	    public void mousePressed(MouseEvent m){
 	    }	    
-	    public void mouseEntered(MouseEvent m)
-	    {
+	    public void mouseEntered(MouseEvent m){
 	    }	    
-	    public void mouseReleased(MouseEvent m)
-	    {
-	    	
+	    public void mouseReleased(MouseEvent m){
 	    }	    
-	    public void mouseExited(MouseEvent m)
-	    {
+	    public void mouseExited(MouseEvent m){
 	    }	
-	    public void mouseDragged(MouseEvent m)
-	    {
-	    	
+	    public void mouseDragged(MouseEvent m){
 	    }	  
-	    public void mouseMoved(MouseEvent m)
-	    {
-	    	blockFrame.blockMouseMoved(m);
+	    public void mouseMoved(MouseEvent m) {
+	    		blockFrame.blockMouseMoved(m);
 	    }	  	    
 	}		
 }

@@ -58,17 +58,18 @@ a {font-size:100%}
 <h2>Querying the Demo</h4>
 <h5>Contents:</h5>
 <ul>
-<li><a href=#reg>Demo-seq to Demo-seq2</a>
+<li><a href=#reg>Demo-Seq to Demo-Seq2</a>
 <li><a href=#3d>3D view</a>
-<li><a href=#draft>Demo-draft to Demo-seq2</a>
+<li><a href=#self>Self-synteny of Demo-Seq</a>
+<li><a href=#draft>Demo-draft to Demo-Seq2</a>
 </ul>
 
 <a nam=#reg>
-<h3>SyMAP Demo-seq to Demo-seq2</h3>
+<h3>SyMAP Demo-Seq to Demo-Seq2</h3>
 <table>
 <tr>
 	<td align="left" valign="top">
-	This document shows the different views for the Demo-seq to Demo-seq2 su	
+	This document shows the different views for the Demo-Seq to Demo-Seq2 alignment.	
 When synteny has been computed for the demo, the table will have a checkbox, signifying that 
 the synteny is available for viewing. Click the cell
 again which will enable the viewing buttons, e.g "Dot Plot".  
@@ -219,19 +220,55 @@ Everything runs without the 3D libraries except for this display.
 	</tr>
 </table>
 
-<a name="draft">
-<h3>Demo-draft to Demo-seq</h3>
+<a name="self">
+<h3>Self-synteny of Demo-Seq</h3>
 <table>
 <tr> <td align="left" valign="top">
-The demo_draft scaffold were created from the demo_seq chromosomes.
-After running the demo-draft against the demo-seq,
-view the dot plot; the ordering is exact since demo_draft was derived
-from demo_seq. 
+Demo-Seq has been run against itself, resulting in the Dot Plot shown on the right.
+There are a few off-diagonal blocks, which indicate some repetitive-ness.
+
+<td align="left" valign="middle">
+<a href="img/demoself.png"><img src="img/demoself.png" width=400 border=1></a>
+	</td>
+</tr>
+</table>
+
+<a name="draft">
+<h3>Demo-Draft to Demo-Seq2</h3>
+<table>
+<tr> <td align="left" valign="top">
+The Demo-draft was run against the Demo-Seq2 with its "order_against" parameter set to Demo_Seq2.
+The resulting dot plot is shown on the right. Note that the 43 contigs
+are ordered, but still fragmented.
 	</td>
 	<td align="left" valign="middle">
 <a href="img/demodraft2.png"><img src="img/demodraft2.png" width=400 border=1></a>
 	</td>
-</tr>		
+</tr>
+<tr><td>&nbsp;</td></tr>
+<tr> <td align="left" valign="top">
+When the ordering algorithm is run, it also creates a new project called "Demo-Draft_ordered",
+where the 43 contigs are written into three chromosomes; the first two correspond
+to chr1 and chr3 of Demo_Seq2, and chr0 contains the contigs that do not align. The Demo-Draft_ordered
+and Demo_Seq2 were aligned, resulting in the
+the dot plot will appear as shown on the right. 
+	</td>
+	<td align="left" valign="middle">
+<a href="img/demodraftOrd.png"><img src="img/demodraftOrd.png" width=400 border=1></a>
+	</td>
+</tr>
+<tr><td>&nbsp;</td></tr>
+	
+<tr> <td align="left" valign="top">
+The Demo_Draft was created from the Demo_Seq, with sequence reversal and some other changes. 
+In the snapshot on the right, the blocks of the Demo_Seq-to-Demo_Seq2 is shown next to
+the blocks of Demo_Draft_ordered-to-Demo_Seq2 is shown on the right. 
+<p>Note that they major blocks are the same, as they should be.
+	</td>
+	<td align="left" valign="middle">
+<a href="img/demoDraftBlock.png"><img src="img/demoDraftBlock.png" width=300 border=1></a>
+	</td>
+</tr>	
 </table>	
 <p><a href=#top>Go to top</a>
 			    

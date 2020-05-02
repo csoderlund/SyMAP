@@ -69,6 +69,9 @@ in the <a href=#dir>Directory structure</a> and some of the displays.
 <li><a href=#installation>Installation</a>
 <li><a href=#demo>Running the demo</a>
 <ul>
+<li><a href=#draft>Ordering the demo draft</a>
+</ul>
+<ul>
 <li><a href=Demo.html target="_blank">Querying the demo</a>
 </ul>
 </ul>
@@ -81,7 +84,7 @@ in the <a href=#dir>Directory structure</a> and some of the displays.
 <ul>
 <li><a href=#seqprep>Preparing the Sequences</a> 
 <li><a href=#annot>Annotation files</a> - convert from NCBI or Ensembl
-<li><a href=#draft>Draft sequence</a>
+<li><a href=#draft2>Draft sequence</a>
 <li><a href=#self>Self alignments</a>
 <li><a href=#dir>Directory structure</a>
 <li><a href=#mum>Running MUMmer from the command line</a>
@@ -466,7 +469,7 @@ the other interfaces, see <a href="Demo.html" target="_blank">Demo Query</a>.
 </table>						
 				
 <a name="draft">
-<h5>Draft genome</h5>
+<h5>Ordering the demo draft</h5>
 
 The remainder of the demo relates to draft sequence, i.e. unanchored
 shotgun sequence. If you are not working with draft sequence,
@@ -481,9 +484,9 @@ Load the Demo-Draft project, following
 the same steps used to load the previous two projects. 
 
 <p>Under the Demo-Draft listing, you will see
-the parameter "Order against: demo_seq". With this setting,
+the parameter "Order against: demo_seq2". With this setting,
 the Demo-Draft contigs will be ordered using synteny to
-Demo-Seq, as soon as that alignment is run.  
+Demo-Seq2.  
 		</td>
 		<td align="left" valign="middle">
 <a href="img/demodraft1.png"><img src="img/demodraft1.png" width=400 border=1></a>
@@ -492,12 +495,11 @@ Demo-Seq, as soon as that alignment is run.
 	<tr><td colspan=2 height=40>&nbsp;</td></tr>
 	<tr>
 		<td align="left" valign="top">
-Use the "Selected Pair" button to align Demo-Draft and Demo-Seq, 
-as before. The alignment will take about 20 minutes.
-<p>
+Run the Alignment & Synteny, where the alignment will take about 20 minutes.
 When done, open the Summary for the pair, as shown on the right; <i>there
 may be slight difference in the number of anchors because the results are
 slightly different when run when different numbers of CPUs.</i>
+
 The dot plot is shown in <a href="Demo.html#draft" target="_blank">Demo-draft</a>.
 		</td>
 		<td align="left" valign="middle">
@@ -507,19 +509,41 @@ The dot plot is shown in <a href="Demo.html#draft" target="_blank">Demo-draft</a
 	<tr><td colspan=2 height=40>&nbsp;</td></tr>
 		<tr>
 			<td align="left" valign="top">
-The ordering on Demo-Draft is in the database only; SyMAP does
-not change the sequence files on disk, however, 
-it writes out ordered sequence files
-created from the draft contigs. These are put in the form
-of a new SyMAP project which can be loaded and aligned. You
-will see this new project in the Projects panel, as shown
-at right.
+The ordering algorithm changes the order of the contigs in the database, but does
+not change the sequence files on disk. However, it writes the following files:
+<p>1. <i>File of ordered contigs:</i> It writes the order of the contigs along with
+whether they should be flipped to a file
+called <tt>/data/seq/Demo_seq2/ordering.csv</tt>.
+
 			</td>
 			<td align="center" valign="middle">
-<a href="img/demodraft3.png"><img src="img/demodraft3.png" width=250 border=1></a>
+<a href="img/demodraft3.png"><img src="img/demodraft3.png" width=400 border=1></a>
 			</td>
 		</tr>
 </table>
+<br>2. <i>Fasta files of ordered sequences: </i>
+It creates sequence files from the ordered contigs that are flipped when appropriate,
+which are put into a new project
+with the suffix "_ordered", as shown on the right. The chromosome names correspond
+to the order-against project (e.g. Demo_seq2), and the third chromosome is 'chr0'
+which contains all draft sequences that were not placed.
+Running the Alignment&Synteny
+between the "_ordered" project and Demo_seq2 will provide a more coherent display
+(see <a href="Demo.html#draft" target="_blank">Demo-draft</a>). 
+<p>Note: Old ordering algorithm vs v5.0.5:
+<ul>
+<li>The ordering algorithm was re-written because in some cases
+the old algorithm put most of the contig sequence into 'chrUNK' (unknown), and it would
+reverse sequence in the database, which would cause incorrect results if run again.
+<li>The old algorithm will show
+the draft contigs flipped if approproiate (e.g. in Dot Plot), whereas the new one does
+not; however, the new one mirrors what is in the sequence file.
+<li>The old
+algorithm can still be run but using 'symap -o', and it will put the results
+in the file <tt>anchored.csv</tt> and fasta files in a new
+project directory with the suffix '<tt>_anchored</tt>'. Though once done, the data
+needs to be reloaded if ordering is to be run again.
+</ul>
 
 <p><b>Further demos:</b>
 <ol>
@@ -835,11 +859,16 @@ into the format that works best with SyMAP.
 See the <a href="convert/ensembl.html" target="_blank">documentation</a> for instructions.
 
 
-<a name="draft">
+<a name="draft2">
 <h4>Draft sequence</h4> 
-A draft sequence can be compared to a complete genome (see demo for an example). 
-If the draft sequence is in too many sequence pieces, then (1) it takes a long time for the Mummer comparisons, (2)
-the display is very cluttered, and (3) the blocks display does not work right. Limit the number of sequence pieces
+
+If you are ordering the draft sequence against a closely related genome, see <a href=#draft>demo draft</a> on how to proceed. 
+
+<p>If you are not ordering the draft sequence,
+and if the draft sequence is in too many sequence pieces, 
+then (1) it takes a long time for the Mummer comparisons, (2)
+the display is very cluttered, and 
+(3) the blocks display does not work right. Limit the number of sequence pieces
 by setting the 'min_size' in the paramaters window to only load the largest 150 sequences; 
 there is a script called "scripts/lenFasta.pl" which
 will print out all the lengths; set the min_size to the 150th length. However, even 150 are a lot of blocks to view

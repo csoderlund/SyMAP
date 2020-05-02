@@ -35,7 +35,7 @@ import util.ErrorReport;
  * The Sequence track for a pseudo molecule. 
  */
 public class Sequence extends Track {	
-	private static final boolean TEST=true;
+	private static final boolean TEST_POPUP_ANNO=true;
 	private static final double OFFSET_SPACE = 7;
 	private static final double OFFSET_SMALL = 1;
 	
@@ -479,7 +479,7 @@ public class Sequence extends Track {
 					
 					// Creates annotation description textbox (see TextBox.java)
 					TextBox tb = new TextBox(annot.getVectorDescription(),unitFont,(int)x1,(int)ty,40,200);
-					if (TEST) annot.setTextBox(tb); // CAS503
+					if (TEST_POPUP_ANNO) annot.setTextBox(tb); // CAS503
 					getHolder().add(tb);
 					bounds = tb.getBounds();
 					
@@ -623,7 +623,7 @@ public class Sequence extends Track {
 
 	public void mousePressed(MouseEvent e) {
 		// CAS503 add popUp description
-		if (TEST && e.isPopupTrigger()  && showAnnot) {
+		if (TEST_POPUP_ANNO && e.isPopupTrigger()  && showAnnot) {
 			Point p = e.getPoint();
 			for (Annotation annot : annotations) { 
 				if (annot.popupDesc(p)) 
@@ -805,7 +805,7 @@ public class Sequence extends Track {
 			}
 		}
 		else {					// not within blue rectangle of track
-			if (TEST) {
+			if (TEST_POPUP_ANNO) {
 				for (Annotation annot : annotations) { 
 					if (annot.boxContains(p)) // CAS503 add
 						return "Right click for popup of description";

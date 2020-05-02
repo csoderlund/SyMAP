@@ -17,6 +17,7 @@ import symap.mapper.PseudoPseudoData;
 import symap.mapper.AbstractHitData;
 import symap.pool.ProjectProperties;
 import util.DatabaseReader;
+import util.ErrorReport;
 import util.PairwiseAligner;
 import symap.closeup.alignment.HitAlignment;
 import symap.closeup.alignment.AbstractSequence;
@@ -24,7 +25,7 @@ import symap.track.Track;
 import util.Utilities;
 
 public class SequencePool extends DatabaseUser {
-	final int CHUNK_SZ = backend.Constants.CHUNK_SIZE; // CAS504 was hardcoded below
+	final int CHUNK_SZ = backend.Constants.CHUNK_SIZE; // CAS504 was hardcoded below; 1000000
 	
 	// Note that target_seq and query_seq refer to indices of sequence 
 	// segments not the sequences themselves.
@@ -370,12 +371,12 @@ public class SequencePool extends DatabaseUser {
 			start = end;
 			end = temp;
 		}
+		String query2="";
+		long count = end - start + 1;
+		long chunk = start / CHUNK_SZ;
 		
 		try {
-			long count = end - start + 1;
-			long chunk = start / CHUNK_SZ;
 			String seq;
-			String query2;
 			
 			start = start % CHUNK_SZ;
 			end = end % CHUNK_SZ;
@@ -398,7 +399,7 @@ public class SequencePool extends DatabaseUser {
 			}
 		}
 		catch (SQLException e) {
-			System.err.println("SQL exception acquiring pseudo data.");
+			System.err.println("SQL exception acquiring sequence data.");
 			System.err.println("Message: " + e.getMessage());
 			throw e;
 		}
@@ -408,8 +409,12 @@ public class SequencePool extends DatabaseUser {
 			if (rs == null) close();
 		}
 
-		if (pseudoSeq.equals("")) {
-			System.err.println("Pseudo sequence not found for " + indices);
+		if (pseudoSeq.equals("")) { // CAS5xx check was for null, so no error produced
+			// this happens if the wrong alignment files are loaded
+			String msg="Could not read sequence for " + indices;
+			String info = query2 + "\nCount=" + count + 
+					"\nChunk=" + chunk + " (" + CHUNK_SZ + ")" + "\nSeq=" + pseudoSeq;
+			ErrorReport.print(msg, info);
 			return "";
 		}
 		return pseudoSeq;

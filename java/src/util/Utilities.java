@@ -54,7 +54,6 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
-import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -1068,26 +1067,7 @@ public class Utilities {
 
 		return running;
 	}
-	public static void updateSchemaTo35(DatabaseReader db)
-	{
-		try
-		{
-			Connection c = db.getConnection();
-			Statement s = c.createStatement();
-			ResultSet r = s.executeQuery("show columns from groups like 'flipped'");
-			if (!r.first())
-			{
-				System.out.println("Updating database to v4.0");
-				s.executeUpdate("alter table groups add flipped boolean default 0");
-			}
-			r.close();
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			System.exit(0);
-		}
-	}
+	
     public static int ctrGet(Map<String,Integer> ctr, String key)
     {
     		return (ctr.containsKey(key) ? ctr.get(key) : 0);

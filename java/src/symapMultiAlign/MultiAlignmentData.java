@@ -1,5 +1,8 @@
 package symapMultiAlign;
 
+/***********************************
+ * SyMAP Query - align selected set using muscle
+ */
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -11,26 +14,28 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
+import javax.swing.JTextField;
+
+import symapQuery.Q;
 import util.ErrorReport;
 import backend.Constants;
 
 public class MultiAlignmentData {
-	//Constants for alignment
 	private final static String DEFAULT_SOURCE_FILE_NAME = "SourceAlignments.fasta";
 	private final static String DEFAULT_TARGET_FILE_NAME = "TargetAlignments.fasta";
 	private final static String DEFAULT_TARGET_DIRECTORY = "muscle";
 	private final static String MUSCLE_DIR = Constants.extDir + "muscle";
 	private final static int SEQUENCE_LINE_LENGTH = 80;
+	private JTextField progressField; // CAS505
 	
-	public MultiAlignmentData(String name) {
+	public MultiAlignmentData(String name, JTextField progressField) {
 		sequenceNames = new Vector<String> ();
 		sequences = new Vector<String> ();
 		strAlignmentName = name;
+		this.progressField = progressField;
 	}
 	
 	public boolean hasFilename() { return strAlignmentName != null; }
-	public void setFilename(String filename) { strAlignmentName = filename; }
-	public String getFilename() { return strAlignmentName; }
 	
 	public void addSequence(String name, String AASequence) {
 		sequenceNames.add(name);
@@ -41,12 +46,22 @@ public class MultiAlignmentData {
 		try {
 			String path  = MUSCLE_DIR + Constants.getPlatformPath() + DEFAULT_TARGET_DIRECTORY;
 			
+			progressField.setText("Writing sequences to file");
 			writeFASTA(DEFAULT_SOURCE_FILE_NAME);
-			Process pr = Runtime.getRuntime().exec(path + " -in " + DEFAULT_SOURCE_FILE_NAME + " -out " + DEFAULT_TARGET_FILE_NAME);
+			
+			progressField.setText("Running MUSCLE");
+			String cmd = path + " -in " + DEFAULT_SOURCE_FILE_NAME + " -out " + DEFAULT_TARGET_FILE_NAME;
+			if (Q.TEST_TRACE) System.out.println(cmd);
+			
+			Process pr = Runtime.getRuntime().exec(cmd);
 			pr.waitFor();
-			readFASTA(DEFAULT_TARGET_FILE_NAME, true, true);
-			deleteFile(DEFAULT_SOURCE_FILE_NAME);
-			deleteFile(DEFAULT_TARGET_FILE_NAME);
+			
+			progressField.setText("Reading results");
+			if (readFASTA(DEFAULT_TARGET_FILE_NAME, true, true)) { // CAS505 check for success
+				deleteFile(DEFAULT_SOURCE_FILE_NAME);
+				deleteFile(DEFAULT_TARGET_FILE_NAME);
+			}
+			progressField.setText("Displaying results");
 		} catch(Exception e) {
 			ErrorReport.print(e, "Align sequences with muscle");
 		}
@@ -61,18 +76,10 @@ public class MultiAlignmentData {
 		System.out.println(targetDirectory + filename + " written");
 	}
 	
-	public boolean readMuscleCache() {
-		String strSource = DEFAULT_TARGET_DIRECTORY + "/" + strAlignmentName;
-		File source = new File(strSource);
-		if(!source.exists())
-			return false;
-		readFASTA(strSource, true, false);
-		return true;
-	}
-	
-	private void writeFASTA(String name) {
+	private void writeFASTA(String fname) {
 		try {
-			PrintWriter out = new PrintWriter(new FileWriter(name));
+			if (Q.TEST_TRACE) System.out.println("Write sequences to " + fname);
+			PrintWriter out = new PrintWriter(new FileWriter(fname));
 			
 			Iterator<String> nameIter = sequenceNames.iterator();
 			Iterator<String> seqIter = sequences.iterator();
@@ -86,10 +93,9 @@ public class MultiAlignmentData {
 				}
 				out.println(theSequence.substring(position));
 			}
-			
 			out.close();
 		} catch(Exception e) {
-			ErrorReport.print(e, "Write FASTA file");
+			ErrorReport.print(e, "Write FASTA file " + fname);
 		}
 	}
 	
@@ -104,9 +110,9 @@ public class MultiAlignmentData {
 		}
 	}
 	
-	private void readFASTA(String name, boolean replaceSequences, boolean createConsensus) {
+	private boolean readFASTA(String fname, boolean replaceSequences, boolean createConsensus) {
 		try {
-			BufferedReader in = new BufferedReader(new FileReader(name));
+			BufferedReader in = new BufferedReader(new FileReader(fname));
 			
 			if(replaceSequences) {
 				sequenceNames.clear();
@@ -132,12 +138,14 @@ public class MultiAlignmentData {
 			}
 			
 			//If wanted, create consensus at position 0
-			if(createConsensus)
+			if (createConsensus)
 				setConsensus();
 			
-			in.close();			
+			in.close();	
+			return true;
+			
 		} catch(Exception e) {
-			ErrorReport.print(e, "Read file " + name);
+			ErrorReport.print(e, "No MUSCLE results " + fname); return false;
 		}
 	}
 	

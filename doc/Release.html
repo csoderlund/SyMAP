@@ -64,6 +64,39 @@ Neither the Applet or 3D view have been tested since the release of SyMAP v5.0.0
 I currently do not have access to either. However, to the best of my knowledge,
 nothing has changed that should cause either of these options problems.
 
+<h3>Release: v5.0.5 (2May20)</h3>
+
+<ol>
+<li>Ordering algorithm: The main change is a rewrite of the ordering algorithm, which orders draft contigs
+against a completed sequence closely related genome. The previous algorithm sometimes
+would put many of the placed contigs incorrectly into 'chrUNK', though the
+ordering in the <tt>anchored.csv</tt> file was correct. 
+
+<li>SyMAP Manager:
+<ul>
+<li>Show #genes and #gaps in summary
+<li>Add Project: On Linux, the "Add" button would stay disabled, this has been fixed.
+</ul>
+	
+<li>Chromosome Explorer: Mouse over a hit and the block number will be shown along with the other information.
+
+<li>SyMAP Query: 
+The "Align Sequence" display now show locations in text box under alignment.
+The v5.0.4 introduced a bug where the row selections display were not right, which
+is fixed.
+
+<li>Small changes:
+<ul>
+<li>Running 'symap -v' will check the MySQL variables needed to run at a reasonable speed,
+and will output to terminal any variables that need changing.
+<li>Block View: When viewing the blocks using VNC, the chromosome that the
+	blocks were aligned to was not visible, which has been fixed.
+<li>All Pairs button: Is only enabled if there is anything that will be executed when selected.
+<li>Load Project: If a file of 100's of draft sequences are loaded, this was flagged as an error (but
+still loaded); it no longer called an error, though a message is written to terminal.
+</ul>
+</ol>
+
 <h3>Release: v5.0.4 (18Apr20)</h3>
 <ol>
 <li>SyMAP Query has had major changes:

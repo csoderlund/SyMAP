@@ -21,6 +21,31 @@ public class ErrorReport {
 	public static void print(String debugInfo) {
 		reportError(null, "Error: " + debugInfo, false);
 	}
+	
+	public static void print(String msg, String debugInfo) {// CAS505
+		msg = "Error: " + msg;
+		if (isApplet) { 
+			System.err.println(msg);
+			System.err.println(debugInfo);
+			return;
+		}
+		
+		System.err.println(msg);
+		try {
+			PrintWriter pWriter = new PrintWriter(new FileWriter(strFileName, true));
+			pWriter.println("\n" + getDate()); 
+			pWriter.println(msg);
+			pWriter.println(debugInfo);
+			pWriter.close();
+			System.err.println("See " + strFileName);
+			
+		} catch (IOException e1) {
+			System.err.println("DebugInfo: " + debugInfo);
+			System.err.println("An error has occurred, however SyMAP was unable to create an error log file");
+			return;
+		}
+	}
+	
 	public static void die(Throwable e, String debugInfo) {
 		reportError(e, "Fatal Error: " + debugInfo, false);
 		System.exit(-1);
@@ -29,15 +54,15 @@ public class ErrorReport {
 		reportError(null, "Fatal Error: " + debugInfo, false);
 		System.exit(-1);
 	}
-	public static void reportError(Throwable e, String debugInfo, boolean replaceContents) {
-		System.err.println(debugInfo);
+	public static void reportError(Throwable e, String msg, boolean replaceContents) {
+		System.err.println(msg);
 		
 		if (isApplet) { // CAS503
 			System.err.println(e);
 			return;
 		}
 		else {
-			System.err.println(e.getMessage());
+			if (e!=null) System.err.println(e.getMessage());
 		}
 		PrintWriter pWriter = null;
 		try {
@@ -54,12 +79,11 @@ public class ErrorReport {
 		
 		pWriter.println("\n" + getDate()); 
 		
-		if(debugInfo != null) pWriter.println(debugInfo + "\n");
+		if (msg != null) pWriter.println(msg + "\n");
 		
-		if (e != null)  {
-			e.printStackTrace(pWriter);
-			System.err.println("See " + strFileName);
-		}
+		if (e != null)  e.printStackTrace(pWriter);
+			
+		System.err.println("See " + strFileName);
 		
 		pWriter.close();
 	}

@@ -420,34 +420,45 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		}
 		return success;
 	}
-	private static void checkVariables(Connection con) { // CAS501
-		try
-        {
-			if (!ProjectManagerFrameCommon.printStats) return;
-			if (ProjectManagerFrameCommon.inReadOnlyMode) return;
+	private static void checkVariables(Connection con) { // CAS501, update CAS505
+		try{
+			if (!ProjectManagerFrameCommon.CHECK_SQLVAR) return;
 			
+			System.err.println("Check MySQL variables:");
+			int cntFlag=0;
 			Statement st = con.createStatement();
     			ResultSet rs = st.executeQuery("show variables like 'max_allowed_packet'");
     			if (rs.next()) {
     				long packet = rs.getLong(2);
     				
-    				if (packet<=1048576 || ProjectManagerFrameCommon.printStats) 
-    					System.err.println("max_allowed_packet=" + packet + "; see www.agcol.arizona.edu/symap/doc/TroubleShooting.html");
+    				System.err.println("   max_allowed_packet=" + packet);
+    				if (packet<4194304) {
+    					cntFlag++;
+    					System.err.println("   Suggest: SET GLOBAL max_allowed_packet=1073741824;");
+    				}
     			}
     			rs = st.executeQuery("show variables like 'innodb_buffer_pool_size'");
     			if (rs.next()) {
     				long packet = rs.getLong(2);
     				
-    				if (packet<=1048576 || ProjectManagerFrameCommon.printStats) 
-    					System.err.println("innodb_buffer_pool_size=" + packet + "; see www.agcol.arizona.edu/symap/doc/TroubleShooting.html");
+    				System.err.println("   innodb_buffer_pool_size=" + packet);
+    				if (packet< 134217728) {
+    					cntFlag++;
+    					System.err.println("   Suggest: set GLOBAL innodb_buffer_pool_size=1073741824;");
+    				}
     			}
     			rs = st.executeQuery("show variables like 'innodb_flush_log_at_trx_commit'");
     			if (rs.next()) {
     				int b = rs.getInt(2);
-    				
-    				if (b==1 || ProjectManagerFrameCommon.printStats) 
-    					System.err.println("innodb_flush_log_at_trx_commit=" + b + "; see www.agcol.arizona.edu/symap/doc/TroubleShooting.html");
+    				System.err.println("   innodb_flush_log_at_trx_commit=" + b);
+    				if (b==1) {
+    					cntFlag++;
+    					System.err.println("   Suggest: set GLOBAL innodb_flush_log_at_trx_commit=0");
+    				}
     			}
+    			if (cntFlag>0) System.err.println("  MySQL variables suggested changes: " + cntFlag);
+    			else System.err.println("  MySQL variables are okay ");
+    			System.err.println("For details: see www.agcol.arizona.edu/symap/doc/TroubleShooting.html");
         }
         catch (Exception e) {ErrorReport.print(e, "Getting system variables");	}
 	}

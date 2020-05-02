@@ -14,29 +14,23 @@ import javax.swing.JPanel;
 public class LegendPanel extends JPanel
 {
 	private static final long serialVersionUID = -5292053168212278988L;
-
-	public LegendPanel ( )         // for contig alignment
-	{
-		setLayout( null );
-        setBackground( Color.WHITE );
-        setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        //setAlignmentY(Component.LEFT_ALIGNMENT);
-        setAlignmentX(Component.LEFT_ALIGNMENT);
-        
-        setMinimumSize(new Dimension(500, 200));
-        setPreferredSize(getMinimumSize());
-        setMaximumSize(getMinimumSize());
-	}
+	private String [] names;
 	
-	public LegendPanel (boolean b ) // for pairwise alignment, need smaller box
+	public LegendPanel (String [] names ) 
 	{
+		this.names = names;
 		setLayout( null );
         setBackground( Color.WHITE );
         setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        //setAlignmentY(Component.LEFT_ALIGNMENT);
         setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        setMinimumSize(new Dimension(300, 130));
+        int w = 0, h=(names.length * 25) + 10;
+        for (String n : names) {
+        	 	if (w<n.length()) w=n.length();
+        }
+        w *= 9;
+        	
+        setMinimumSize(new Dimension(w, h));
         setPreferredSize(getMinimumSize());
         setMaximumSize(getMinimumSize());
 	}
@@ -48,26 +42,21 @@ public class LegendPanel extends JPanel
 	
 		int y = 10;
 		int x = 10;
-		g2.drawString("Legend", x, y+=10);
-		x += 25;
+		g2.drawString("Locations", x, y+=10);
+		x += 10;
 		
 		g2.setFont(new Font(g2.getFont().getName(), Font.PLAIN, g2.getFont().getSize()));
 
-		if (isPair) { // what else is there?
-			drawKey(0, g2, AlignmentPanelBase.gapGreen, 	    "Gap", 		x+20, y+=15);
-			drawKey(0, g2, AlignmentPanelBase.mismatchRed, 	"Non-synonymous mismatch", x+20, y+=15);
-			drawKey(0, g2, AlignmentPanelBase.purple, 		"Synonymous mismatch", x+20, y+=15);
-			drawKey(0, g2, AlignmentPanelBase.mediumGray, 	"X's in AA or extended end", 	 x+20, y+=15);
+		for (String n : names) { // CAS505 changed from incorrect legend to names
+			drawString(g2,  n,  x, y+=15);
 		}
 	}
-	private boolean isPair=false;
-	public void setIsPair(boolean b) {isPair=b;}
-
-//	private static final Color ERR = new Color(255, 230, 230);
-//	private static final Color FOR = new Color(230, 230, 255);
-//	private static final Color REV = Color.LIGHT_GRAY;
-
-
+	private static void drawString(Graphics2D g2,String s, int x, int y) {
+		Font font = new Font("Courier", Font.PLAIN, 10);
+	    g2.setFont(font);
+		g2.setColor(Color.BLACK);
+		g2.drawString(s, x+10, y+9);
+	}
 	private static void drawKey(int type, Graphics2D g2, Color c, String s, int x, int y) 
 	{
 		g2.setColor(c);
@@ -82,6 +71,6 @@ public class LegendPanel extends JPanel
 		}
 		
 		g2.setColor(Color.BLACK);
-		g2.drawString("= "+s, x+15, y+9);
+		g2.drawString(s, x+15, y+9);
 	}
 }

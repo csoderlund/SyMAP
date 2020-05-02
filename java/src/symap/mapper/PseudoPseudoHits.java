@@ -398,10 +398,10 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 				 
 				 if (isHover() || isHighlight()) {
 					 mapper.setHelpText(
-							 "Hit=" + data.getID() + " " + 
-							 "Identity=" + data.getPctid() + "\n" +
-							 "Left: len=" + (Math.abs(data.getEnd1()-data.getStart1())+1) + " " +
-							 "Right: len=" + (Math.abs(data.getEnd2()-data.getStart2())+1)
+						"Hit=" + data.getID() + " Identity=" + data.getPctid() + 
+						"\nLeft: len=" + (Math.abs(data.getEnd1()-data.getStart1())+1) +
+						" Right: len=" + (Math.abs(data.getEnd2()-data.getStart2())+1) +
+						"\nBlock #" + data.getBlock() // CAS505 added block
 					 );
 				 }
 				 else mapper.setHelpText(null);

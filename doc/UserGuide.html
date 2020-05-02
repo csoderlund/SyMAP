@@ -70,7 +70,7 @@ User Guide |
     	    <td colspan="3" valign="top" align="left" style='padding:20px 15px 0px 15px;font-size:85%'>
 
 <p>
-Document updated 26-Jan-20. This guide is for the Seq-to-Seq (sequence) synteny user interface.
+This guide is for the Seq-to-Seq (sequence) synteny user interface.
 Note, the term <i>pseudo</i>
 and <i>sequence</i> are used interchangeably. 
 <ol> 
@@ -122,7 +122,7 @@ The Dot Plot and Circle displays are available from various places.
 	<li><a href="#dot3">Dot Plot (Multi-genome) #3</a>
 	<li><a href="#annotsearch">SyMAP Queries </a>(Seq-to-Seq only)
 	</ul>
-<li><a href="#caveat">Self-synteny Displays</a>
+<li><a href="#self">Self-synteny Displays</a>
 <li><a href="#data_download">Data Download</a>
 <li><a href="#image">Print and Help</a>
 </ul>
@@ -851,17 +851,20 @@ are written, using the start/end coordinates shown in the table.
 You can add/remove columns using the "Select Columns" button at the bottom. This
 opens up a column-selection section. The columns are explain the the <b>Help</b> button on the table.
 
-<a name=caveat></a>
+<a name=self></a>
 <table width="95%" cellspacing=0 cellpadding=0 class="lgbreak">
 <tr><td align=left>
 <h2>Self-synteny Display</h2></td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
 </table>
+Self-synteny can be viewed in all views (see <a href=Demo.html#self>Dot Plot</a>). 
 
-The Chromosome Explorer does not work for a given chromosome self-alignment 
-(e.g. it will not show Chr1 aligned to Chr1).
-<p>However, from the Project Manager, select the self-synteny cell followed 
+<p>The one caveat
+is that a chromosome self-synteny (e.g. chr1 aligned to chr1) can only be viewed from the Dot Plot display.
+From the Project Manager, select the self-synteny cell followed 
 by Dot Plot. From the Dot Plot, any block or region
 can be selected to show the results in the Chromosome Explorer 2D display.
+When directly using the  Chromosome Explorer,  chromosome self-alignment cannot be viewed. 
+<p>The "SyMAP queries" does not work for self-synteny.
 
 <a name=data_download></a>
 <table width="95%" cellspacing=0 cellpadding=0 class="lgbreak">

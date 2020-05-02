@@ -141,7 +141,7 @@ public class AlignMain
 				
 				// CAS500 only delete tmp files if successful
 				String tmpDir = Constants.getNameTmpDir(proj1Name, (proj1Type==ProjType.fpc), proj2Name);
-				if (ProjectManagerFrameCommon.printStats) {
+				if (Constants.PRT_STATS) {
 					System.out.println("Do not delete " + tmpDir);
 				}
 				else {

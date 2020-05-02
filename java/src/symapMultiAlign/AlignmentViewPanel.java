@@ -1,5 +1,8 @@
 package symapMultiAlign;
 
+/**************************************
+ * For Symap Query: align selected set using muscle
+ */
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Point;
@@ -10,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.HashMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -23,18 +27,34 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 import symapQuery.SyMAPQueryFrame;
+import util.ErrorReport;
 
 public class AlignmentViewPanel extends JPanel {
 	private static final long serialVersionUID = -2090028995232770402L;
-
+	private String [] names;
+	
 	public AlignmentViewPanel(SyMAPQueryFrame parentFrame, String [] names, String [] sequences, String fileName) {
 		theParentFrame = parentFrame;
+		this.names = names;
 		
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		setBackground(Color.WHITE);
-		buildMultiAlignments(names, sequences, fileName);
+		
+		String [] shortNames = makeShortNames();
+		buildMultiAlignments(shortNames, sequences, fileName);
 	}
-	
+	private String [] makeShortNames() {
+		String [] xNames = new String [names.length];
+		
+		for (int i=0; i<names.length; i++) {
+			String n = names[i].replace(" - ", "-"); // Demo-draft - Anchored
+			String [] tok = n.split("\\s+");
+			
+			xNames[i] = (i+1) + ". " + tok[0] + "." + tok[2]; // displayed in alignment
+			names[i] = String.format("%d. %s", (i+1), names[i]); // created in TableDataPanel, display in Legend
+		}
+		return xNames;
+	}
 	private void buildMultiAlignments(String [] names, String [] sequences, String fileName) {
 		final String [] theNames = names;
 		final String [] theSequences = sequences;
@@ -103,7 +123,7 @@ public class AlignmentViewPanel extends JPanel {
 	}
 	
 	private void setMultiSequenceData(String [] names, String [] sequences, String fileName) {
-		theMultiAlignmentData = new MultiAlignmentData(fileName);
+		theMultiAlignmentData = new MultiAlignmentData(fileName, progressField);
 		for(int x=0; x<names.length; x++)
 			theMultiAlignmentData.addSequence(names[x], sequences[x]);
 		
@@ -132,8 +152,6 @@ public class AlignmentViewPanel extends JPanel {
 		theRow.setBackground(Color.WHITE);
 		
 		menuHorzRatio = new JComboBox ();
-		//menuHorzRatio.setPreferredSize( dim2 );
-		//menuHorzRatio.setMaximumSize ( dim2 );
 		menuHorzRatio.addItem( new MenuMapper ( "Horz. Ratio = 1:1", 1 ) );
 		menuHorzRatio.addItem( new MenuMapper ( "Horz. Ratio = 1:2", 2 ) );
 		menuHorzRatio.addItem( new MenuMapper ( "Horz. Ratio = 1:3", 3 ) );
@@ -171,24 +189,24 @@ public class AlignmentViewPanel extends JPanel {
 		theRow.add(Box.createHorizontalStrut(10));
 		theRow.add(btnShowType);
 		
-			btnExport = new JButton("Export");
-			btnExport.setBackground(Color.WHITE);
-			btnExport.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent arg0) {
-					if(theMultiPanel != null) {
-						String filename = "";
-						
-						filename = JOptionPane.showInputDialog("Enter file name");
-						if(filename != null && filename.length() > 0) {
-							if(!filename.endsWith(".fasta"))
-								filename += ".fasta";
-							theMultiAlignmentData.writeMuscleCache(filename);
-						}
+		btnExport = new JButton("Export");
+		btnExport.setBackground(Color.WHITE);
+		btnExport.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if(theMultiPanel != null) {
+					String filename = "";
+					
+					filename = JOptionPane.showInputDialog("Enter file name");
+					if(filename != null && filename.length() > 0) {
+						if(!filename.endsWith(".fasta"))
+							filename += ".fasta";
+						theMultiAlignmentData.writeMuscleCache(filename);
 					}
 				}
-			});
-			theRow.add(Box.createHorizontalStrut(10));
-			theRow.add(btnExport);			
+			}
+		});
+		theRow.add(Box.createHorizontalStrut(10));
+		theRow.add(btnExport);			
 		
 		theRow.setMaximumSize(theRow.getPreferredSize());
 		return theRow;
@@ -214,7 +232,6 @@ public class AlignmentViewPanel extends JPanel {
 			public void actionPerformed(ActionEvent arg0) {
 				Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
 				cb.setContents(new StringSelection(theMultiPanel.getSelectedSequence()), null);
-
 			}
 		});
 
@@ -253,20 +270,18 @@ public class AlignmentViewPanel extends JPanel {
 				mainPanel.add(theMultiPanel);
 
 				mainPanel.add(Box.createVerticalStrut(40));
-				/* CAS502 its wrong - gaps and mismatches are obvious
-				LegendPanel lPanel = new LegendPanel();
-				lPanel.setIsPair(true);
+				/* CAS502 its wrong - gaps and mismatches are obvious **/
+				/* CAS505 made legend the long names */
+				LegendPanel lPanel = new LegendPanel(names);
 				mainPanel.add(lPanel);
-				*/
+				
 			} else {
 				mainPanel.add(new JLabel("No Sequences"));
 			}
 			
 			mainPanel.revalidate();
 			mainPanel.repaint();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		} catch (Exception e) {ErrorReport.print(e, "Refresh Multi Alignment Panel"); }
 	}
 	
 	private void createMultiAlignPanels() {
@@ -292,7 +307,6 @@ public class AlignmentViewPanel extends JPanel {
 		mainPanel.setAlignmentX(LEFT_ALIGNMENT);
 		
 		scroller.setViewportView( mainPanel );
-		
 		
 		refreshPanels();
 	}
@@ -326,7 +340,6 @@ public class AlignmentViewPanel extends JPanel {
 	}
 
 	private SyMAPQueryFrame theParentFrame = null;
-	//Display panels
 	private JScrollPane scroller = null;
 	
 	//Main panels for the tab
@@ -336,13 +349,7 @@ public class AlignmentViewPanel extends JPanel {
 	//UI controls for the button panel
 	private JComboBox menuHorzRatio = null;
 	private JButton btnShowType = null;
-	
 	private JButton btnCopySeq = null;
-	private JButton btnShowAll = null;
-	private JButton btnShowAllPairs = null;
-	private JButton btnShowOnlyPairs = null;
-	private JButton btnShowHelp = null;
-	
 	private JButton btnExport = null;
 	
 	//Controls for progress/cancelling action

@@ -98,21 +98,10 @@ sub usage
 {
 	print <<END;
 
-	Usage:  ./symap [options]
-    
-	-r		: read-only mode
-	-c string	: filename of config file (to use instead of symap.config)
-	
-	-32		: 32-bit mode
-	-64		: 64-bit mode
-	-mN		: set max memory to N megabytes
-	-linux 		: linux platform
-	-mac		: mac platform
-	
-	Alignment:
-	-p N		: number of CPUs to use
-	-s		: print stats for debugging
-    
+	Usage:  ./symap3D [options]
+
+    	Use 'symap -h' for options
+       
 END
 
 }

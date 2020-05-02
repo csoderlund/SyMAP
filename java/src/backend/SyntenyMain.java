@@ -24,6 +24,7 @@ import util.Utilities;
 
 public class SyntenyMain 
 {
+	private boolean bNewOrder = Constants.NEW_ORDER;
 	private Logger mLog;
 	private UpdatePool pool;	
 	private Project mProj1, mProj2;
@@ -53,8 +54,6 @@ public class SyntenyMain
 	private long startTime;
 	
 	boolean bInterrupt = false;
-
-	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE;
 
 	public SyntenyMain(UpdatePool pool, Logger log, Properties props, SyProps pairProps) {
 		this.pool = pool;
@@ -280,16 +279,19 @@ public class SyntenyMain
 		}
 		if (bInterrupt) return false;
 		
-		if (ProjectManagerFrameCommon.printStats) {// CAS500
+		if (Constants.PRT_STATS) {// CAS500
 			//Utils.dumpHist();
 			Utils.dumpStats();
 		}
+		// XXX
 		if (mProj1.orderedAgainst())
 		{
 			String orderBy = pool.getProjProp(mProj1.idx, "order_against");
 			if (orderBy != null && orderBy.equals(mProj2.getName()))
 			{
-				orderGroups(false);	
+				OrderAgainst obj = new OrderAgainst(mProj1, mProj2, mLog, pool); // CAS505 in new file
+				if (bNewOrder) obj.orderGroupsV2(false);	
+				else obj.orderGroups(false);	
 			}	
 		}
 		else if (mProj2.orderedAgainst())
@@ -297,7 +299,9 @@ public class SyntenyMain
 			String orderBy = pool.getProjProp(mProj2.idx, "order_against");
 			if (orderBy != null && orderBy.equals(mProj1.getName()))
 			{
-				orderGroups(true);	
+				OrderAgainst obj = new OrderAgainst(mProj1, mProj2, mLog, pool);
+				if (bNewOrder) obj.orderGroupsV2(true);
+				else obj.orderGroups(true);
 			}	
 		}		
 		writeResultsToFile();
@@ -1520,6 +1524,7 @@ public class SyntenyMain
 	}
 	private void writeResultsToFile() throws Exception
 	{
+		mLog.msg("\nWrite final results");
 		ResultSet rs = null;
 		
 		String idField1 = Utils.getProjProp(mProj1.idx, "annot_id_field", pool);
@@ -1574,7 +1579,7 @@ public class SyntenyMain
 		}
 		fw.flush();
 		fw.close();
-		mLog.msg("Wrote " + blockFile);
+		mLog.msg("   Wrote " + blockFile);
 		
 		
 		fw = new FileWriter(anchFile);
@@ -1610,7 +1615,7 @@ public class SyntenyMain
 		}
 		fw.flush();
 		fw.close();
-		mLog.msg("Wrote " + anchFile);
+		mLog.msg("   Wrote " + anchFile);
 	}
 	private String parseAnnotID(String in, String fieldName)
 	{
@@ -1632,317 +1637,7 @@ public class SyntenyMain
 		
 		return in;
 	}
-	// If switchProjects is set, then A is being ordered against B, but 
-	// the alignment was run, and blocks are stored, as B vs. A. 
-	// Hence, we have to reverse the groups we get from the blocks. 
-	private void orderGroups(boolean switchProjects) throws Exception
-	{
-		Project pOrder =  (switchProjects ? mProj2 : mProj1);
-		Project pTarget = (switchProjects ? mProj1 : mProj2);
 	
-		File ordFile = new File(Constants.seqDataDir + pOrder.name + Constants.anchorCSVFile);
-		if (ordFile.exists()) ordFile.delete();
-		FileWriter ordFileW = new FileWriter(ordFile);
-		
-		mLog.msg("Ordering " + pOrder.getName() + " contigs against " + pTarget.getName());
-
-		ResultSet rs;
-		TreeSet<Integer> alreadyFlipped = new TreeSet<Integer>();
-		rs = pool.executeQuery("select idx,flipped from groups " +
-				" where proj_idx=" + pOrder.idx);
-		while (rs.next())
-		{
-			int idx = rs.getInt(1);
-			boolean flipped = rs.getBoolean(2);
-			if (flipped) alreadyFlipped.add(idx);
-		}
-		pool.executeUpdate("update groups set flipped=0,sort_order=idx where proj_idx=" + pOrder.idx);
-				
-		// We're going to order the grp1 by finding the grp2 that they have the most synteny
-		// hits with, and taking the start point of those hits.
-		TreeSet<Integer> grp1Seen = new TreeSet<Integer>();
-		TreeMap<Integer,Integer> grp1score = new TreeMap<Integer,Integer>();
-		TreeMap<Integer,Integer> grp1pos = new TreeMap<Integer,Integer>();
-		TreeMap<Integer,Integer> grp1len = new TreeMap<Integer,Integer>();
-		TreeMap<Integer,String> grp1name = new TreeMap<Integer,String>();
-		TreeMap<Integer,String> newGrp = new TreeMap<Integer,String>();
-		TreeSet<Integer> grp1flip = new TreeSet<Integer>();
-		TreeMap<Integer,Vector<Integer>> grpMaps = new TreeMap<Integer,Vector<Integer>>();
-		Vector<Integer> grp2Order = new Vector<Integer>();
-		rs = pool.executeQuery("select idx from groups " +
-						" where proj_idx=" + pTarget.getIdx() + 
-						" order by sort_order asc");
-		while (rs.next())
-		{
-			grp2Order.add(rs.getInt(1));
-		}
-		mLog.msg(grp2Order.size() + " groups to order ");
-		
-		// note avg(corr) is necessary because of the grouping, and the grouping is because we don't store the # of hits in the blocks table
-		rs = pool.executeQuery("select grp1_idx, grp2_idx, " +
-				"grp2.fullname, grp1.fullname, count(*) as score, " +
-				"start1, start2, avg(corr) as corr, " + 
-					" ps1.length as len1, ps2.length as len2  from blocks " + 
-					" join pseudo_block_hits on pseudo_block_hits.block_idx=blocks.idx " +
-					" join groups as grp2 on grp2.idx=grp2_idx " +
-					" join groups as grp1 on grp1.idx=grp1_idx " +
-					" join pseudos as ps1 on ps1.grp_idx = grp1_idx " +
-					" join pseudos as ps2 on ps2.grp_idx = grp2_idx " +
-					" where proj1_idx=" + mProj1.getIdx() + " and proj2_idx=" + mProj2.getIdx() + 
-					" group by blocks.grp1_idx,blocks.grp2_idx,blocks.blocknum order by score desc" );
-		while (rs.next())
-		{
-			int grp1Idx = (switchProjects ? rs.getInt("grp2_idx") : rs.getInt("grp1_idx"));
-			int grp2Idx = (switchProjects ? rs.getInt("grp1_idx") : rs.getInt("grp2_idx"));
-			int pos = (switchProjects ? rs.getInt("start1") : rs.getInt("start2"));
-			int len1 = (switchProjects ? rs.getInt("len2") : rs.getInt("len1"));
-			int score = rs.getInt("score");
-			float corr = rs.getFloat("corr");
-			String grp2Name = (switchProjects ? rs.getString("grp1.fullname") : rs.getString("grp2.fullname"));
-			String grp1Name = (switchProjects ? rs.getString("grp2.fullname") : rs.getString("grp1.fullname"));
-			if (grp1Seen.contains(grp1Idx))
-			{
-				continue; // if seen this group before then already got its best block	
-			}
-			if (!grpMaps.containsKey(grp2Idx))
-			{
-				grpMaps.put(grp2Idx, new Vector<Integer>());	
-			}
-			grpMaps.get(grp2Idx).add(grp1Idx);
-			grp1Seen.add(grp1Idx);
-			grp1pos.put(grp1Idx, pos);
-			grp1len.put(grp1Idx, len1);
-			grp1score.put(grp1Idx,score);
-			grp1name.put(grp1Idx,grp1Name);
-			newGrp.put(grp1Idx, grp2Name);
-			if (corr < 0) grp1flip.add(grp1Idx);
-		}
-		rs.close();
-		
-		// It seems like there should be an easier way to do this...
-		int curOrd = 1;
-		TreeMap<Integer,Integer> grp2ord = new TreeMap<Integer,Integer>();
-		Vector<Integer> grp1_ordered = new Vector<Integer>();
-		for (int grp2Idx : grp2Order)
-		{
-			if (!grpMaps.containsKey(grp2Idx)) continue;
-			Integer[] grp1s = grpMaps.get(grp2Idx).toArray(new Integer[1]);
-			Integer[] pos = new Integer[grp1s.length];
-			for (int i = 0; i < grp1s.length; i++)
-			{
-				pos[i] = grp1pos.get(grp1s[i]);
-			}
-			// We have parallel arrays of grp and pos, so sort the pos and apply this sort to the grp
-			Utils.HeapDoubleSort(pos, grp1s, new Utils.ObjCmp());
-			for (int i = 0; i < grp1s.length; i++)
-			{
-				grp2ord.put(grp1s[i], curOrd);
-				grp1_ordered.add(grp1s[i]);
-				curOrd++;
-			}
-		}
-		
-		String ordPfx =  Utils.getProjProp(pOrder.idx,  "grp_prefix", pool);
-		String targPfx = Utils.getProjProp(pTarget.idx, "grp_prefix", pool);
-
-		// assign the ones that didn't align anywhere
-		Vector<Integer> allGrpIdx = new Vector<Integer>();
-		rs = pool.executeQuery("select idx from groups where proj_idx=" + pOrder.idx);
-		while (rs.next())
-		{
-			int idx = rs.getInt(1);
-			allGrpIdx.add(idx);
-			if (!grp2ord.containsKey(idx))
-			{
-				grp2ord.put(idx, curOrd);
-				curOrd++;
-			}	
-		}
-		ordFileW.write(pOrder.name + "-" + ordPfx + "," + pTarget.name + "-" + targPfx + ",pos,F/R,#anchors," + pOrder.name + "-length\n");
-		
-		for (int idx : grp1_ordered)//grp2ord.keySet())
-		{
-			int ord = grp2ord.get(idx);
-			int pos = grp1pos.get(idx);
-			int len = grp1len.get(idx);
-			String RC = "F";
-			if (grp1flip.contains(idx))
-			{
-				pool.executeUpdate("update groups set sort_order=" + ord + ",flipped=1 where idx=" + idx);
-				RC = "R";
-			}
-			else
-			{
-				pool.executeUpdate("update groups set sort_order=" + ord + ",flipped=0 where idx=" + idx);
-			}
-			ordFileW.write(grp1name.get(idx) + "," + newGrp.get(idx) + "," + pos + "," + RC + "," + grp1score.get(idx) + "," + len + "\n"); 
-
-		}
-		ordFileW.close();
-		
-		// Now, update the newly flipped/unflipped groups and the anchors and synteny blocks containing them
-		mLog.msg("Updating flipped contigs and anchors....");
-		for (int idx : allGrpIdx)
-		{
-			if ( (grp1flip.contains(idx) && !alreadyFlipped.contains(idx)) || 
-					(!grp1flip.contains(idx) && alreadyFlipped.contains(idx)))
-			{
-				// First, reverse-conjugate the group sequence
-				String seq = "";
-				rs = pool.executeQuery("select seq from pseudo_seq2 where grp_idx=" + idx + " order by chunk asc");
-				while (rs.next())
-				{
-					seq += rs.getString("seq");
-				}
-				rs.close();
-				pool.executeUpdate("delete from pseudo_seq2 where grp_idx=" + idx);
-				String revSeq = Utils.reverseComplement(seq);
-				// Finally, upload the sequence in chunks
-				for (int chunk = 0; chunk*CHUNK_SIZE < revSeq.length(); chunk++)
-				{
-					int start = chunk*CHUNK_SIZE;
-					int len = Math.min(CHUNK_SIZE, seq.length() - start );
-
-					String cseq = revSeq.substring(start,start + len );
-					String st = "INSERT INTO pseudo_seq2 VALUES('" + idx + "','" + chunk + "','" + cseq + "')";
-					pool.executeUpdate(st);
-				}
-				// Now, flip coordinates of all anchors and blocks containing this group
-				pool.executeUpdate("update pseudo_hits as ph, pseudos as p  " +
-						" set ph.start1=p.length-ph.end1, ph.end1=p.length-ph.start1 " +
-						"where ph.grp1_idx=" + idx + " and p.grp_idx=" + idx );
-				pool.executeUpdate("update pseudo_hits as ph, pseudos as p  " +
-						" set ph.start2=p.length-ph.end2, ph.end2=p.length-ph.start2 " +
-						"where ph.grp2_idx=" + idx + " and p.grp_idx=" + idx );
-				pool.executeUpdate("update bes_hits as h, pseudos as p  " +
-						" set h.start2=p.length-h.end2, h.end2=p.length-h.start2 " +
-						"where h.grp2_idx=" + idx + " and p.grp_idx=" + idx );
-				pool.executeUpdate("update mrk_hits as h, pseudos as p  " +
-						" set h.start2=p.length-h.end2, h.end2=p.length-h.start2 " +
-						"where h.grp2_idx=" + idx + " and p.grp_idx=" + idx );
-				
-				pool.executeUpdate("update blocks as b, pseudos as p  " +
-						" set b.start1=p.length-b.end1, b.end1=p.length-b.start1, b.corr=-b.corr " +
-						"where b.grp1_idx=" + idx + " and p.grp_idx=" + idx );
-				pool.executeUpdate("update blocks as b, pseudos as p  " +
-						" set b.start2=p.length-b.end2, b.end2=p.length-b.start2, b.corr=-b.corr " +
-						"where b.grp2_idx=" + idx + " and p.grp_idx=" + idx );
-			}
-		}
-		// Lastly, print out the two ordered projects
-		mLog.msg("Creating anchored project from " + pOrder.getName());
-		mLog.msg("Wrote " + ordFile.getAbsolutePath());
-	
-		String groupedName = pOrder.getName() + Constants.anchorSuffix;	
-		String groupFileName = Constants.seqDataDir + groupedName;
-	
-		File groupedDir = new File(groupFileName);
-		if (groupedDir.exists())
-		{
-			/** CAS500 pops up at end, and can get lost on Mac and hang execution
-			int ret = JOptionPane.showConfirmDialog(null, "Anchored project " + groupedName + " was already created and " +
-					" will be overwritten; Continue? ","Confirm",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE);	
-			if (ret == JOptionPane.NO_OPTION) return;
-			**/
-			mLog.msg("Delete previous " + groupFileName);
-			Utilities.clearAllDir(groupedDir);
-			groupedDir.delete();
-		}	
-		mLog.msg("Create " + groupFileName);
-		Utilities.checkCreateDir(groupFileName, "SM anchored");
-		
-		File groupedSeqDir =Utilities.checkCreateDir(groupedDir + Constants.seqSeqDataDir, "SM anchored seq ");
-		File groupedAndir = Utilities.checkCreateDir(groupedDir + Constants.seqAnnoDataDir, "SM anchored anno ");
-		
-		File groupedFasta = Utilities.checkCreateFile(groupedSeqDir, groupedName + Constants.faFile, "SM fasta file");
-		File groupedGFF =   Utilities.checkCreateFile(groupedAndir, groupedName + ".gff", "SM gff");
-		File grpParam =     Utilities.checkCreateFile(groupedDir, Constants.paramsFile, "SM params");
-
-		FileWriter grpFastaW = 	new FileWriter(groupedFasta);
-		FileWriter grpParamW = 	new FileWriter(grpParam);
-		FileWriter groupedGFFW = new FileWriter(groupedGFF);
-		
-		String separator = "NNNNNNNNNN" + "NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +
-				"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN";
-
-		Vector<String> grpOrder = new Vector<String>();
-		rs = pool.executeQuery("select groups.fullname, groups.idx, groups.flipped, pseudo_seq2.seq from groups join pseudo_seq2 " +  
-				" on pseudo_seq2.grp_idx=groups.idx where groups.proj_idx=" + pOrder.idx + 
-				" order by groups.sort_order asc, pseudo_seq2.chunk asc");
-		int curGrpIdx = -1, groupedPos = 0, count=0;
-		String curNewGrp = "", curNewGrpName = "", curGrpName = "", prevGrpName = "";
-		boolean unanchStarted = false;
-		while (rs.next())
-		{
-			String name = rs.getString(1);
-			int grpIdx = rs.getInt(2);
-			String seq = rs.getString(4);
-			
-			if (grpIdx != curGrpIdx)
-			{
-				prevGrpName = curGrpName;
-				curGrpIdx = grpIdx;
-				curGrpName = name;
-				if (newGrp.containsKey(curGrpIdx))
-				{
-					if (!newGrp.get(curGrpIdx).equals(curNewGrp))
-					{
-						curNewGrp = newGrp.get(curGrpIdx);
-						curNewGrpName = curNewGrp;
-						grpOrder.add(curNewGrpName);
-						grpFastaW.write(">" + curNewGrpName + "\n");
-						groupedPos = 0;
-					}
-					else
-					{
-						// still in the same anchor section, hence must have written a prior contig to it, hence 
-						// need a separator
-						grpFastaW.write(separator); grpFastaW.write("\n");	
-						groupedGFFW.write(curNewGrpName + "\tconsensus\tgap\t" + groupedPos + "\t" + (groupedPos+separator.length()) + 
-								"\t.\t+\t.\tName \"GAP:" + prevGrpName + "-" + curGrpName + "\"\n");
-						groupedPos += separator.length();
-					}
-				}
-				else
-				{
-					// we're at the unanchored section
-					if (!unanchStarted)
-					{
-						curNewGrpName = targPfx + "UNK";
-						grpOrder.add(curNewGrpName);
-						grpFastaW.write(">" + curNewGrpName + "  |  " + curGrpName + "\n");
-						groupedPos = 0;	
-						unanchStarted = true;
-					}
-					else
-					{
-						grpFastaW.write(separator);	 grpFastaW.write("\n");
-						groupedGFFW.write(curNewGrpName + "\tconsensus\tgap\t" + groupedPos + "\t" + (groupedPos+separator.length()) + 
-								"\t.\t+\t.\tName \"GAP:" + prevGrpName + "-" + curGrpName + "\"\n");
-						groupedPos += separator.length();
-					}
-				}
-			}
-			for (int i = 0; i < seq.length(); i += 50)
-			{
-				int end = Math.min(i+50,seq.length()-1);
-				String line = seq.substring(i, end);
-				grpFastaW.write(line); grpFastaW.write("\n");
-			}
-			groupedPos += seq.length();
-			count++;
-			if (count%1000==0) System.out.print("Processed " + count + "...\r");
-		}
-		mLog.msg("Wrote " + groupedFasta);
-		grpFastaW.close();
-		groupedGFFW.close();
-		String dispName;
-
-		dispName = pOrder.displayName + " - Anchored";
-		grpParamW.write("category = " + pOrder.category + "\ndisplay_name=" + dispName + "\n");
-		grpParamW.write("grp_prefix=" + pTarget.grpPrefix + "\n");
-		grpParamW.close();
-	}
 	
 	private void setGeneRunCounts() throws Exception
 	{

@@ -96,20 +96,21 @@ sub usage
 	print <<END;
 
 	Usage:  ./symap [options]
+	-v		: check MySQL variables for optional values
+	-r		: read-only mode (used by viewSymap)
+	-c string	: filename of config file (to use instead of symap.config)	
 	
-	-r		: read-only mode
-	-c string	: filename of config file (to use instead of symap.config)
+	Alignment:
+	-p N		: number of CPUs to use
+	-s		: print stats for debugging
+	-o		: use original draft ordering algorithm
 	
+	Platform:
 	-32		: 32-bit mode
 	-64		: 64-bit mode
 	-mN		: set max memory to N megabytes
 	-linux 		: linux platform
 	-mac		: mac platform
-	
-	Alignment:
-	-p N		: number of CPUs to use
-	-s		: print stats for debugging
-    
 END
 
 }

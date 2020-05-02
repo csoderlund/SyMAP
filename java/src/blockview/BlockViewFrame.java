@@ -1,19 +1,22 @@
 package blockview;
 
-import javax.swing.*;
-
+/************************************************
+ * Draws the blocks for a synteny pair
+ */
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
-
-import util.DatabaseReader;
-import util.ImageViewer;
-
 import java.util.Vector;
 import java.util.TreeMap;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import javax.swing.event.*;
+import javax.swing.*;
+
+import util.DatabaseReader;
+import util.ImageViewer;
+import util.ErrorReport;
+
 // CAS42 12/27/17 Seq-FPC has crashes from multiple problem. 
 // They are fixed, but Seq-FPC reverse leaves a blank page of blocks
 public class BlockViewFrame extends JFrame
@@ -63,7 +66,7 @@ public class BlockViewFrame extends JFrame
 		mDB = dbReader;
 		init();
 	}
-	public void init() 
+	private void init() 
 	{		
 		try
 		{
@@ -179,7 +182,7 @@ public class BlockViewFrame extends JFrame
 			c1.fill = GridBagConstraints.SOUTHEAST;
 			pane.add(new JLabel("          "),c1);
 			
-			if (!unordered2)
+			if (!unordered2 )
 			{
 				c1.gridx++;
 				c1.fill = GridBagConstraints.SOUTHEAST;
@@ -236,7 +239,7 @@ public class BlockViewFrame extends JFrame
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+			ErrorReport.print(e, "Initializing panel for blocks");
 			return;
 		}
 
@@ -259,14 +262,14 @@ public class BlockViewFrame extends JFrame
 			reverseView();
 		}
 	};	
-	void reverseView() 
+	private void reverseView() 
 	{
 		int tmp = mIdx2;
 		mIdx2 = mRefIdx;
 		mRefIdx = tmp;
 		init();
 	}
-	void layoutBlocks() throws Exception
+	private void layoutBlocks() throws Exception
 	{
 		ResultSet rs;
 		Statement s = mDB.getConnection().createStatement();
@@ -412,7 +415,7 @@ public class BlockViewFrame extends JFrame
 			}
 		}
 	}
-	void blockMouseClick(MouseEvent m)
+	private void blockMouseClick(MouseEvent m)
 	{
 		for (int i = 0; i < mRefOrder.size(); i++)
 		{
@@ -427,7 +430,7 @@ public class BlockViewFrame extends JFrame
 		}
 	}
 	
-	void blockMouseMoved(MouseEvent m)
+	private void blockMouseMoved(MouseEvent m)
 	{
 		if (mBlockRects.size()==0) return; // CAS42 12/27/17
 		for (int i = 0; i < mRefOrder.size(); i++)
@@ -441,7 +444,7 @@ public class BlockViewFrame extends JFrame
 		}
 		setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));	
 	}	
-	void paintBlocks(Graphics g)
+	private void paintBlocks(Graphics g)
 	{
 		boolean bStoreRects = mBlockRects.isEmpty();
 		g.setFont(new Font("Verdana",0,14));
@@ -488,7 +491,8 @@ public class BlockViewFrame extends JFrame
 			g.setColor(Color.black);
 			g.setFont(chromeFont);
 			g.drawString(mRefNames.get(refIdx),x + chromXOffset, chromLabelOffset - 10 + y0);
-			g.setColor(new Color(0xE0,0xE0,0xE0));
+			// g.setColor(new Color(0xE0,0xE0,0xE0)); // CAS505 was showing white on linux
+			g.setColor(Color.lightGray); // CAS505
 			g.fillRect(x,chromLabelOffset + y0,chromWidth,chromHeight);
 			int yB = yA + chromHeight;
 			x += chromWidth;
@@ -499,7 +503,6 @@ public class BlockViewFrame extends JFrame
 					int y1 = chromLabelOffset + b.mS + y0;
 					int ht = (b.mE - b.mS);
 					g.setColor(new Color(mColors.get(grpColorOrder.get(b.mGrp2))));
-					//g.drawRect(x, y1, layerWidth, y2-y1);
 					g.fillRect(x, y1, layerWidth, ht);
 				}
 				x += layerWidth;
@@ -510,18 +513,7 @@ public class BlockViewFrame extends JFrame
 		}
 	}
 
-	void drawChrom(JPanel pane, String name, int size, int idx, int bpPerPx)
-	{
-		int pxSize = size/bpPerPx;
-		pane.setPreferredSize(new Dimension(pxSize,100));
-		pane.setBackground(Color.white);
-		JPanel chromPane = new JPanel();
-		chromPane.setBackground(Color.gray);
-		chromPane.setPreferredSize(new Dimension(pxSize,30));
-		pane.add(chromPane);
-		chromPane.setVisible(true);
-	}
-	void drawLegend(JPanel pane) throws Exception
+	private void drawLegend(JPanel pane) throws Exception
 	{
 		grpColorOrder = new TreeMap<Integer,Integer>();
 		Statement r = mDB.getConnection().createStatement();
@@ -540,7 +532,7 @@ public class BlockViewFrame extends JFrame
 			f.setVisible(true);
 			f.setBackground(Color.black);
 			pane.add(f);
-			JLabel l = new JLabel("0 (unanchored) ");
+			JLabel l = new JLabel("0 (unordered) ");
 			l.setFont(legendFont);
 			pane.add(l);			
 		}
@@ -591,11 +583,11 @@ public class BlockViewFrame extends JFrame
 	}
 
 
-	int colorInt(int R, int G, int B)
+	private int colorInt(int R, int G, int B)
 	{
 		return (R<<16) + (G<<8) + B;
 	}
-	void getUniqueColors(int amount) 
+	private void getUniqueColors(int amount) 
 	{
 		int max = (0xE0 << 16) + (0xE0 << 8)  + 0xE0;
 		int step =  (15*max)/(4*amount);
@@ -660,31 +652,21 @@ public class BlockViewFrame extends JFrame
 	        super.paintComponent(g); //paint background
 	        blockFrame.paintBlocks(g);
 	    }
-	    public void mouseClicked(MouseEvent m)
-	    {
-	    	blockFrame.blockMouseClick(m);
+	    public void mouseClicked(MouseEvent m){
+	    		blockFrame.blockMouseClick(m);
 	    }
-	    public void mousePressed(MouseEvent m)
-	    {
-	    	
+	    public void mousePressed(MouseEvent m){    	
 	    }	    
-	    public void mouseEntered(MouseEvent m)
-	    {
+	    public void mouseEntered(MouseEvent m){
 	    }	    
-	    public void mouseReleased(MouseEvent m)
-	    {
-	    	
+	    public void mouseReleased(MouseEvent m){
 	    }	    
-	    public void mouseExited(MouseEvent m)
-	    {
+	    public void mouseExited(MouseEvent m) {
 	    }	
-	    public void mouseDragged(MouseEvent m)
-	    {
-	    	
+	    public void mouseDragged(MouseEvent m) {
 	    }	  
-	    public void mouseMoved(MouseEvent m)
-	    {
-	    	blockFrame.blockMouseMoved(m);
+	    public void mouseMoved(MouseEvent m) {
+	    		blockFrame.blockMouseMoved(m);
 	    }	  	    
 	}	
 	class Block

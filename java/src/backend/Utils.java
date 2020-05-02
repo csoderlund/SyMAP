@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.util.Comparator;
 import java.util.zip.GZIPInputStream;
 
+import symap.projectmanager.common.ProjectManagerFrameCommon;
 import util.ErrorReport;
 import util.ProgressDialog;
 import util.Logger;
@@ -435,7 +436,7 @@ public class Utils
 	
 	public static String getParamsName()
 	{
-		String s1 = Constants.cfgFile;
+		String s1 = ProjectManagerFrameCommon.MAIN_PARAMS;
 		String s2 = Constants.paramsFile;
 		File f = new File(s1);
 		if (f.isFile())

@@ -18,8 +18,8 @@ import backend.UpdatePool;
 public class Project {
 	public String strDBName;
 	public String chrLabel = ""; 
-	public int numAnnot = 0;
-	public long length=0;
+	private int numAnnot = 0, numGene = 0, numGap = 0;
+	private long length=0;
 	
 	private int nIdx;		// unique database index
 	private String strType, strDisplayName, strDescription, strCategory;
@@ -54,7 +54,26 @@ public class Project {
 		this(nIdx, strName, strType);
 		this.strDisplayName = strDisplayName;
 	}
-	
+	public boolean hasGenes() {return numGene>0;}
+	public void setAnno(int numGene, int numGap, int numAnnot) {
+		this.numGene =  numGene;
+		this.numGap =   numGap;
+		this.numAnnot = numAnnot;
+	}
+	public String getAnnoStr() {
+		String msg= String.format("Annotations: %,d ", numAnnot);
+		if (numGene>0&&numGap>0) msg += String.format("(Genes: %,d, Gap: %,d)", numGene, numGap);
+		else if (numGene>0) msg += String.format("(Genes: %,d)", numGene);
+		else if (numGap>0)  msg += String.format("(Gaps: %,d)", numGap);
+		
+		return msg;
+	}
+	public void setLength(long length) {
+		this.length = length;
+	}
+	public long getLength() {
+		return length;
+	}
 	public Color getColor() { return color; }
 	public void setColor( Color c ) { color = c; }
 

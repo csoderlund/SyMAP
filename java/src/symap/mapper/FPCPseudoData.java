@@ -95,8 +95,9 @@ public class FPCPseudoData extends AbstractHitData implements SyMAPConstants {
 			double evalue, double pctid, int start2, int end2,
 			String query_seq, String target_seq, int gene_olap) 
 	{
+		int iblock = (int) block; // CAS505
 		return new PseudoMarkerData(id, name, strand, repetitive != 0
-				|| rmfd.isRepetitive(name), (block > 0), evalue, pctid, start2,
+				|| rmfd.isRepetitive(name), iblock, evalue, pctid, start2,
 				end2, query_seq, target_seq, gene_olap);
 	}
 
@@ -106,14 +107,14 @@ public class FPCPseudoData extends AbstractHitData implements SyMAPConstants {
 			byte bes2, String query_seq, String target_seq, int gene_olap) 
 	{
 		return new PseudoBESData(id, name, (bes == bes1 ? cb1 : cb2), bes,
-				strand, repetitive == 0 ? false : true, (block > 0),
+				strand, repetitive == 0 ? false : true, block,
 				evalue, pctid, start2, end2, query_seq, target_seq, gene_olap);
 	}
 
 	public static class PseudoMarkerData extends HitData {
 
 		public PseudoMarkerData(long id, String name, String strand,
-				boolean repetitive, boolean block, double evalue, double pctid,
+				boolean repetitive, int block, double evalue, double pctid,
 				int start2, int end2, String query_seq, String target_seq, int gene_olap) 
 		{
 			super(id,name,strand,repetitive,block,evalue,pctid,start2,end2,query_seq,target_seq,gene_olap);
@@ -133,7 +134,7 @@ public class FPCPseudoData extends AbstractHitData implements SyMAPConstants {
 		private byte bes;
 
 		public PseudoBESData(long id, String name, int pos, byte bes,
-				String strand, boolean repetitive, boolean block,
+				String strand, boolean repetitive, int block,
 				double evalue, double pctid, int start2, int end2,
 				String query_seq, String target_seq, int gene_olap) 
 		{

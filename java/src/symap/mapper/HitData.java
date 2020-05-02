@@ -2,17 +2,16 @@ package symap.mapper;
 
 import java.util.Comparator;
 
-
 /**
- * Class <code>HitData</code> holds the data of a hit.
- *
+ * Holds the data of a hit.
  */
 public abstract class HitData {	
 	private static final boolean DEBUG = false;
 	private long id;
 	private String name;
 	private byte repetitive;
-	private byte block;
+	private int blocknum; // CAS505 add
+	private byte isBlock;
 	private double evalue;
 	private byte pctid;
 	private int start1, end1; 
@@ -28,25 +27,16 @@ public abstract class HitData {
 
 	/**
 	 * Creates a new <code>HitData</code> instance.
-	 *
-	 * @param id a <code>long</code> value
-	 * @param name a <code>String</code> value
-	 * @param repetitive a <code>boolean</code> value true means filtered out
-	 * @param block a <code>boolean</code> value
-	 * @param evalue a <code>double</code> value
-	 * @param pctid a <code>double</code> value
-	 * @param start2 an <code>int</code> value
-	 * @param end2 an <code>int</code> value
-	 * @param strand an <code>String</code> value
 	 */
 	protected HitData(long id, String name, String strand, boolean repetitive,
-			boolean block, double evalue, double pctid, int start2, int end2,
+			int blocknum, double evalue, double pctid, int start2, int end2,
 			String query_seq, String target_seq, int gene_olap) 
 	{
 		this.id = id;
 		this.name = name;
 		this.repetitive = repetitive ? (byte)1 : (byte)0;
-		this.block = block ? (byte)1 : (byte)0;
+		this.blocknum = blocknum;
+		this.isBlock = (blocknum>0) ? (byte)1 : (byte)0;
 		this.evalue = evalue;
 		this.pctid = (byte)pctid;
 		this.start2 = start2;
@@ -67,7 +57,7 @@ public abstract class HitData {
 	}
 	
 	protected HitData(long id, String name, String strand, boolean repetitive,
-			boolean block, double evalue, double pctid, int start1, int end1, 
+			int block, double evalue, double pctid, int start1, int end1, 
 			int start2, int end2, int overlap,
 			String query_seq, String target_seq)
 	{
@@ -85,6 +75,7 @@ public abstract class HitData {
 	public boolean getOrientation2() { return orient2; }
 	public long getID() 		{ return id; }
 	public String getName() 	{ return name; }
+	public int getBlock()	{ return blocknum;}
 	public int getStart1() 		{ return start1; } 
 	public int getEnd1() 		{ return end1; }   
 	public int getLength1() 	{ return Math.abs(end1-start1); } 
@@ -97,11 +88,7 @@ public abstract class HitData {
 	public String getTargetSeq(){ return target_seq; } 
 	public String getQuerySeq() { return query_seq; }  
 
-	public int getOverlap()    
-	{ 
-
-		return overlap; 
-	}    
+	public int getOverlap()    { return overlap; }    
 	
 	public int getStart1(boolean swap) { return (swap ? start2 : start1); }
 	public int getEnd1(boolean swap)   { return (swap ? end2 : end1); }
@@ -123,12 +110,11 @@ public abstract class HitData {
 
 	public boolean isRepetitiveHit() { return repetitive != 0; }
 
-	public boolean isBlockHit() { return block != 0; }
+	public boolean isBlockHit() { return isBlock != 0; }
 
 	public boolean equals(Object obj) {
 		return (obj instanceof HitData && ((HitData)obj).id == id);
 	}
-
 
 	public static Comparator<HitData> getPseudoPositionComparator() {
 		return new Comparator<HitData>() {

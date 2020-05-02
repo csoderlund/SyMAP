@@ -456,6 +456,7 @@ public class QueryPanel extends JPanel {
 		row.setBackground(Color.WHITE);
 		
 		chkBlock = new JCheckBox("Block");
+		chkBlock.setBackground(Color.WHITE);
 		chkBlock.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) {
 				boolean blkNotSel = !chkBlock.isSelected();
@@ -474,6 +475,7 @@ public class QueryPanel extends JPanel {
 		row.add(txtBlock); row.add(Box.createHorizontalStrut(30));
 		
 		chkHitIdx = new JCheckBox("HitIdx");
+		chkHitIdx.setBackground(Color.WHITE);
 		chkHitIdx.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) {
 				boolean hitNotSel = !chkHitIdx.isSelected();

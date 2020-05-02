@@ -1,5 +1,8 @@
 package symapMultiAlign;
 
+/**************************************
+ * SyMAP query multiple alignment panel
+ */
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -37,7 +40,7 @@ public class MultipleAlignmentPanel extends AlignmentPanelBase {
 			maxSeqLen = Math.max(maxSeqLen, theSequences[x].length());
 			seqSelected[x] = false;
 		}
-//		description = theAlignment.getDescription();
+
 		columnSelected = new boolean[maxSeqLen];
 		for(int x=0; x<columnSelected.length; x++)
 			columnSelected[x] = false;
@@ -129,7 +132,6 @@ public class MultipleAlignmentPanel extends AlignmentPanelBase {
 	
 	protected boolean getIsStop ( String seq, int nPos ) // 
 	{   
-
 		if (isDNA) return false;
 		
 		if(seq.charAt(nPos) == '*') return true;
@@ -349,13 +351,10 @@ public class MultipleAlignmentPanel extends AlignmentPanelBase {
 	private int [] theSeqStarts = null;
 	private int [] theSeqStops = null;
 	private boolean isDNA = true;
-//	private Vector<String> description = null;
 	
-    MultilineTextPanel headerPanel;
-
     private boolean [] seqSelected = null;
     private boolean [] columnSelected = null;
-	Rectangle2D selectionBox = new Rectangle2D.Double (0,0,0,0);
+	private Rectangle2D selectionBox = new Rectangle2D.Double (0,0,0,0);
 	private Color borderColor = Color.BLACK;
 	
 	// Attributes for where to draw

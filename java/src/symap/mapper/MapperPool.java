@@ -14,6 +14,7 @@ import symap.SyMAPConstants;
 import symap.pool.DatabaseUser;
 import symap.pool.ProjectProperties;
 import symap.pool.ProjectPair;
+import util.ErrorReport;
 import util.ListCache;
 import util.DatabaseReader;
 import symap.track.Track;
@@ -75,12 +76,12 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 		"WHERE co.proj_idx=? AND co.number=?";
 
 	
-	private static final String PSEUDO_HITS_QUERY = 
-		"SELECT h.idx,h.evalue,h.pctid,h.start1,h.end1,h.start2,h.end2,h.strand,bh.block_idx," +
-		"h.gene_overlap," + 
-		"h.query_seq,h.target_seq " + 
+	private static final String PSEUDO_HITS_QUERY = // CAS504 bh.block_idx -> b.blocknum
+		"SELECT h.idx,h.evalue,h.pctid,h.start1,h.end1,h.start2,h.end2,h.strand,b.blocknum," +
+		"h.gene_overlap, h.query_seq, h.target_seq " + 
 		"FROM pseudo_hits AS h "+
 		"LEFT JOIN pseudo_block_hits AS bh ON (bh.hit_idx=h.idx) "+
+		"LEFT JOIN blocks as b on (b.idx=bh.block_idx) " + // CAS505 added for blocknum
 		"WHERE h.grp1_idx=? AND h.grp2_idx=?";
 	
 	public static final String REPETITIVE_MRK_FILTER_QUERY =
@@ -211,70 +212,68 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 		group1 = st1.getGroup();
 		group2 = st2.getGroup();
 
+		ProjectPair pp = projectProperties.getProjectPair(stProject1,stProject2);
 
-			ProjectPair pp = projectProperties.getProjectPair(stProject1,stProject2);
-
-			if (SyMAP.DEBUG) System.out.println("Looking for the Hits for Pseudos: p1="+stProject1+" p2="+stProject2+" pair="+pp.getPair()+" g1="+group1+" g2="+group2);
-			List<HitData> hitList = new LinkedList<HitData>();
-			Statement statement;
-			ResultSet rs;
-			String query;
-			try {
-				statement = createStatement();
-				
-					data = new PseudoPseudoData(stProject1,group1,stProject2,
-							group2,nmi.getHitContent(),hitList,reorder);
-				
-					query = PSEUDO_HITS_QUERY;
-					
-					query = setInt(query,group1);	
-					query = setInt(query,group2);
-					
-					
-					rs = statement.executeQuery(query);
-				
-					int start1, end1, start2, end2;
-					
-					while (rs.next()) {
-						start1 = rs.getInt(4);
-						end1   = rs.getInt(5);
-						start2 = rs.getInt(6);
-						end2   = rs.getInt(7);
-
-						HitData temp = 							PseudoPseudoData.getHitData(
-								rs.getLong(1),		/* long id 		*/
-								null,				/* String name 	*/
-								rs.getString(8),	/* String strand*/
-								0,					/* int repetitive*/
-								rs.getInt(9),		/* int block	*/
-								rs.getDouble(2),	/* double evalue*/
-								rs.getDouble(3),	/* double pctid	*/
-								start1,				/* int start1	*/
-								end1,				/* int end1		*/
-								start2,				/* int start2	*/
-								end2,				/* int end2		*/
-								rs.getInt(10),		/* int overlap  */ 		
-								rs.getString(11),	/* String query_seq */	
-								rs.getString(12));	/* String target_seq */	
+		if (SyMAP.DEBUG) System.out.println("Looking for the Hits for Pseudos: p1="+stProject1+" p2="+stProject2+" pair="+pp.getPair()+" g1="+group1+" g2="+group2);
+		List<HitData> hitList = new LinkedList<HitData>();
+		Statement statement;
+		ResultSet rs;
+		String query;
+		try {
+			statement = createStatement();
 			
-						hitList.add(temp);
-					}
-					closeResultSet(rs);
-					
-					data.addHitData(nmi.getHitContent(),hitList);
-					
-					i = hits.indexOf(data);
-					if (i < 0) hits.add(new PseudoPseudoHits(mapper,st1,st2,data,reorder));
-					else       ((PseudoPseudoHits)hits.get(i)).addHits(nmi.getHitContent(),hitList);
-					
-					hitList.clear();
-					if (pseudoPseudoCache != null) pseudoPseudoCache.add(data);
+			data = new PseudoPseudoData(stProject1,group1,stProject2,
+					group2,nmi.getHitContent(),hitList,reorder);
+		
+			query = PSEUDO_HITS_QUERY;
+			query = setInt(query,group1);	
+			query = setInt(query,group2);
 			
-				closeStatement(statement);
-			} catch (SQLException e) {
-				close();
-				throw e;
+			rs = statement.executeQuery(query);
+		
+			int start1, end1, start2, end2;
+			
+			while (rs.next()) {
+				start1 = rs.getInt(4);
+				end1   = rs.getInt(5);
+				start2 = rs.getInt(6);
+				end2   = rs.getInt(7);
+
+				HitData temp = 							PseudoPseudoData.getHitData(
+						rs.getLong(1),		/* long id 		*/
+						null,				/* String name 	*/
+						rs.getString(8),	/* String strand*/
+						0,					/* int repetitive*/
+						rs.getInt(9),		/* int block	*/
+						rs.getDouble(2),	/* double evalue*/
+						rs.getDouble(3),	/* double pctid	*/
+						start1,				/* int start1	*/
+						end1,				/* int end1		*/
+						start2,				/* int start2	*/
+						end2,				/* int end2		*/
+						rs.getInt(10),		/* int overlap  */ 		
+						rs.getString(11),	/* String query_seq */	
+						rs.getString(12));	/* String target_seq */	
+	
+				hitList.add(temp);
 			}
+			closeResultSet(rs);
+			
+			data.addHitData(nmi.getHitContent(),hitList);
+			
+			i = hits.indexOf(data);
+			if (i < 0) hits.add(new PseudoPseudoHits(mapper,st1,st2,data,reorder));
+			else       ((PseudoPseudoHits)hits.get(i)).addHits(nmi.getHitContent(),hitList);
+			
+			hitList.clear();
+			if (pseudoPseudoCache != null) pseudoPseudoCache.add(data);
+		
+			closeStatement(statement);
+		} catch (SQLException e) {
+			close();
+			ErrorReport.print(e, "Get hit data");
+			throw e;
+		}
 	}
 
 	private void setFPCPseudoData(Mapper mapper, MarkerTrack mt, Sequence st, List hits, MapInfo mi, MapInfo nmi) throws SQLException {

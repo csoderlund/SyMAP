@@ -37,7 +37,7 @@ All sequences must have this prefix.
 <li><i>Long names really clutter the display</i>; it is best to use a consistent prefix that SyMAP can remove,
 otherwise, use really short prefixes, e.g. 's' for scaffold, 'c' for chromosome.
 <li>NOTE: If you change this after load, you need to re-load and re-run all computations!
-<ul>
+</ul>
 
 <!-- <b>grp_sort</b><p> How your sequences should be ordered, either numerically, alphabetically, or in the order
 found in the fasta file (this only works if they are all in one file). Note that you
@@ -117,7 +117,7 @@ to be re-run following the parameter change.
 
 
 
-<tr><td colspan=3><i>Reload annotation, Alignment&Syntey (if annotation files exist, only Synteny will be run)</i>.
+<tr><td colspan=3><i>Reload annotation, Alignment&Synteny (if annotation files exist, only Synteny will be run)</i>.
 <tr>
 	<td align="left" valign="top">
 		annot_keywords
@@ -137,7 +137,7 @@ to be re-run following the parameter change.
 		annot_kw_mincount
 	</td>
 	<td align="left"  valign="top" width="400" >
-		For the SyMAP Query, all keywords are search UNLESS they have less than this many occurances,
+		For the SyMAP Query, all keywords are search UNLESS they have less than this many occurrences,
 		e.g. if only one gene has a given keyword, then it is not included on the SyMAP query search, however,
 		it will still be in the gene's annotation description. 
 	</td>
@@ -160,17 +160,22 @@ to be re-run following the parameter change.
 	</td>	
 </tr>
 
-<tr><td colspan=3><i>Alignment&Syntey (if alignment files exist, only Synteny will be run)</i>.
+<tr><td colspan=3><i>Alignment&Synteny (if alignment files exist, only Synteny will be run)</i>.
 <tr>
 	<td align="left" valign="top">
 		order_against
 	</td>
 	<td align="left"  valign="top" width="400" >
 		For draft contig sets, this allows you to order them using synteny to 
-		one of the other projects. 
-		The ordering occurs automatically after the synteny alignment is run, and a file showing 
-		the ordering is printed into the project directory. A new "Anchored" project is also created,
-		in which the draft contigs are concatenated into pseudomolecules based on the synteny.
+		one of the other projects. The ordering occurs automatically after the synteny alignment is run,
+		resulting in the following two:
+		<ul>
+		<li>A file showing the ordering is printed into the "order_against" project directory called "ordered.cvs". 
+		<li>A new "_ordered" project is created,
+		in which the draft contigs are concatenated into chromosome sequences based on the synteny;
+		these can be aligned to the "order_against" project in order to get a less fragmented 
+		alignment.
+		</ul>
 	</td>
 	<td align="left"  valign="top" >
 		None

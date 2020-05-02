@@ -4,8 +4,6 @@ import java.awt.Cursor;
 
 public interface SyMAPConstants {
 	
-	public static final String sqlFile = "scripts/symap.sql";
-	
 	// Hit Types
     public static final String MRK_TYPE = "mrk";
     public static final String BES_TYPE = "bes";

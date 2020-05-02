@@ -15,13 +15,13 @@ The possible functions vary with the state, as listed below:
 <tr><td valign=top>Load All Projects<td  valign=top>Load all projects that have not been loaded yet. 
 
 <tr><td colspan=2><i>If a project <b>is not</b> loaded to the database, you will see:</i>
-<tr><td valign=top>Remove project from disk<td  valign=top>Remove your files from disk. The project will no longer be shown on the left.
+<tr><td valign=top>Remove from disk<td  valign=top>Remove your files from disk. The project will no longer be shown on the left.
 <tr><td valign=top>Load project<td  valign=top>Loads the sequence and optional annotations to the database. 
-<tr><td valign=top>Parameters<td  valign=top>This brings up a panel of paramters.
+<tr><td valign=top>Parameters<td  valign=top>This brings up a panel of parameters.
 Make sure the parameters are set right before loading the project.
 
 <tr><td colspan=2><i>If a project <b>is</b> loaded into the database, you will see:</i>
-<tr><td valign=top>Remove project from database<td  valign=top>The sequences and annotation will be removed, but the files stay on disk.
+<tr><td valign=top>Remove from database<td  valign=top>The sequences and annotation will be removed, but the files stay on disk.
 <tr><td valign=top>Reload project<td  valign=top>Executes "Remove project from database" followed by "Load project". 
 <br>If there are
 alignment files, you will be asked if you want them removed; if your sequences or grp_prefix (see parameters) have
@@ -218,7 +218,7 @@ the number of CPUs may be entered as a command line argument (-p N) or entered i
 </tr>
 <tr>
 	<td align="center" valign="top" colspan=2>
-		<i>Queries</i> 
+		<i>For Seq-to-Seq Pairs</i> 
 	</td>
 </tr>
 <tr>
@@ -227,7 +227,7 @@ the number of CPUs may be entered as a command line argument (-p N) or entered i
 	</td>
 	<td align="left"  valign="top" width="550" >
 		Show the SyMAP Query interface, for locating shared genes, orphans, putative gene families,
-		and other valuable synteny-derived information.
+		and other valuable synteny-derived information. This does not work for self-synteny or FPC-to-Seq.
 	</td>
 </tr>
 </body>

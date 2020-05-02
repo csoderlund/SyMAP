@@ -111,7 +111,7 @@ public class Project
 			if (Cancelled.isCancelled()) return;
 			
 			int nGenes = g.loadAnnotation(pool, annotIdx2GrpIdx, annotIdx2Elem);
-			if (ProjectManagerFrameCommon.printStats) 
+			if (Constants.PRT_STATS) 
 				Utils.prtNumMsg(log, nGenes, " on " + g.fullname);
 			totalGenes+=nGenes;
 		}
@@ -198,9 +198,9 @@ public class Project
 			
 		}
 		else {
-			if (ProjectManagerFrameCommon.printStats)
+			if (Constants.PRT_STATS)
 				for (Group g : groups) {
-					if (ProjectManagerFrameCommon.printStats)
+					if (Constants.PRT_STATS)
 						log.msg(g.info());
 				}
 		}

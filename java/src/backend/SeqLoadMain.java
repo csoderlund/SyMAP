@@ -228,24 +228,13 @@ public class SeqLoadMain
 				log.msg(String.format("%10d sequences   %10d bases   %4d Ignored",
 						n, fileSize, fileIgnore));
 				
-				
-				if (n >= MAX_GRPS){
-					log.msg("*** More than " + MAX_GRPS + " sequences loaded");
-					log.msg("    Block view will not work right with this many sequences");
-					log.msg("    Use script/lenFasta.pl to determine 'min_size' to use to reduce number of loaded sequences");
-					ErrorCount.inc();
-				}
-				if (n >= MAX_COLORS)
-					log.msg("+++ There are " + MAX_COLORS + " distinct colors for blocks -- there will be duplicates");
-				
 				if (nBadCharLines > 0)
 					log.msg("+++ " + nBadCharLines + " lines contained characters other than AGCT; these will be replaced by N");
 			
 				Utils.setProjProp(projIdx,"badCharLines","" + nBadCharLines,pool);	
 			} // end loop through files
 			
-			if (nSeqs == 0) 
-			{
+			if (nSeqs == 0) {
 				log.msg("*** No sequences were loaded!!");
 				Utilities.showWarningMessage("No sequences were loaded! Check for problems with the sequence files and re-load.");
 				return false;
@@ -255,13 +244,18 @@ public class SeqLoadMain
 				log.msg(String.format("%10d sequences   %10d bases   %4d Ignored",
 						nSeqs, totalSize, seqIgnore));
 			}
-			if (nSeqs >= 2500)
+			if (nSeqs >= MAX_COLORS)
+				log.msg("+++ There are " + MAX_COLORS + " distinct colors for blocks -- there will be duplicates");
+			
+			if (nSeqs >= MAX_GRPS)
 			{
-				log.msg("+++ More than 2500 sequences loaded!");
+				log.msg("+++ More than " + MAX_GRPS + " sequences loaded!");
+				log.msg("  Unless you are ordering draft contigs,");
 				log.msg("    It is recommended to reload with a higher min_size setting, before proceeding");
-				ErrorCount.inc();
+				log.msg("    Use script/lenFasta.pl to determine 'min_size' to use to reduce number of loaded sequences");
+				//ErrorCount.inc(); CAS505 
 			}
-						updateSortOrder(grpList,pool,props,log);
+			updateSortOrder(grpList,pool,props,log);
 					
 			log.msg("Done:  " + Utilities.getDurationString(System.currentTimeMillis()-startTime) + "\n");
 		}

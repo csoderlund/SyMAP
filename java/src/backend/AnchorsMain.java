@@ -114,7 +114,7 @@ public class AnchorsMain
 			else 			rc = processFpcFiles();
 			if (!rc) return false;
 			
-			if (Constants.TRACE || ProjectManagerFrameCommon.printStats) {
+			if (Constants.TRACE || Constants.PRT_STATS) {
 				p1.printBinStats();  
 				p2.printBinStats(); 
 			}
@@ -189,13 +189,14 @@ public class AnchorsMain
 			
 			// Lastly flip the anchor coordinates if the first project is draft that has been ordered
 			// against another project
+			/*** CAS505 this gets changed int OrderAgainst
 			if (!p1.orderAgainst.equals("") && !p1.orderAgainst.equals(p2.getName()))
 			{
 				pool.executeUpdate("update pseudo_hits as ph, pseudos as p, groups as g  " +
 					" set ph.start1=p.length-ph.start1, ph.end1=p.length-ph.end1 " +
 					"where ph.pair_idx=" + pairIdx + " and p.grp_idx=ph.grp1_idx and g.idx=ph.grp1_idx and g.flipped=1");
 			}
-			
+			***/
 			if (p1.isSeq())
 			{
 				Utils.uploadStats(pool, pairIdx, p1.idx, p2.idx);
@@ -325,7 +326,7 @@ public class AnchorsMain
 			}
 			if (mTotalLargeHits > 0) {
 				Utils.prtNumMsg(log, mTotalLargeHits, "Large hits (> " + maxHitLength 
-						+ ")  " + mTotalBrokenHits + " Broken ");
+						+ ")  " + mTotalBrokenHits + " Split "); // CAS505 changed from 'Broken'
 			}
 			
 	/** Second scan - to cluster **/	
@@ -454,7 +455,7 @@ public class AnchorsMain
 		fh.close();
 		
 		// Only has values for self (or maybe user supplied files)
-		if (ProjectManagerFrameCommon.printStats) {
+		if (Constants.PRT_STATS) {
 			Utils.prtNumMsgNZ(skip1, "   Skip1 - Self with same group (is run separately)");
 			Utils.prtNumMsgNZ(skip2, "   Skip2 - Same project with group1>group2 (mirror later)");
 			Utils.prtNumMsgNZ(skip3, "   Skip3 - Same group   with start1<start2 (mirror later)");

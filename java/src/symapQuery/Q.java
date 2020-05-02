@@ -14,7 +14,7 @@ public class Q {
 	static final String chrCol =	"Chr";
 	static final String startCol =	"Start";
 	static final String endCol =	"End";
-	static final String geneHitCol = "Gene#";
+	static final String geneHitCol = "#Gene";
 	static final String All_Anno =   "All_Anno";
 	static final String empty    = "-";
 	

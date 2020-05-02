@@ -59,7 +59,7 @@ public class PseudoPseudoData extends AbstractHitData implements SyMAPConstants 
 			String query_seq, String target_seq)
 	{
 		return new PseudoHitData(id, name, strand, 
-				repetitive == 0 ? false : true, (block > 0),
+				repetitive == 0 ? false : true, block,
 				evalue, pctid, start1, end1, start2, end2, overlap,
 				query_seq, target_seq);
 	}
@@ -67,7 +67,7 @@ public class PseudoPseudoData extends AbstractHitData implements SyMAPConstants 
 	// wrapper class is required because HitData is abstract
 	public static class PseudoHitData extends HitData {
 		public PseudoHitData(long id, String name,
-				String strand, boolean repetitive, boolean block,
+				String strand, boolean repetitive, int block,
 				double evalue, double pctid, 
 				int start1, int end1, 
 				int start2, int end2, 
