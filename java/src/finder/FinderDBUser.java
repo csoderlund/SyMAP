@@ -28,7 +28,7 @@ public class FinderDBUser extends DotPlotDBUser {
 		"SELECT SUM(size) FROM contigs WHERE proj_idx=?";
 
 	private static final String GET_PSEUDO_GENOME_LENGTH = /* pid */
-		"SELECT SUM(p.length) FROM groups AS g JOIN pseudos AS p WHERE g.proj_idx=? AND g.idx=p.grp_idx"; 
+		"SELECT SUM(p.length) FROM xgroups AS g JOIN pseudos AS p WHERE g.proj_idx=? AND g.idx=p.grp_idx"; 
 	private static final String GET_FPC_NUM_FP_HITS = /* p2,p1,p2,p1 */
 		"SELECT COUNT(*) "+
 		"FROM fp_hits AS fh "+
@@ -54,7 +54,7 @@ public class FinderDBUser extends DotPlotDBUser {
 
 	private static final String GET_PSEUDO_NUM_MRK_HITS = /* p1,p2,p1,min_mrk_clones_hit */
 		"SELECT COUNT(*) "+
-		"FROM mrk_hits AS h JOIN groups AS g JOIN markers AS m JOIN mrk_ctg AS mc "+ 
+		"FROM mrk_hits AS h JOIN xgroups AS g JOIN markers AS m JOIN mrk_ctg AS mc "+ 
 		"WHERE h.proj1_idx=? AND g.proj_idx=? AND h.grp2_idx=g.idx AND "+
 		"      m.proj_idx=? AND m.name=h.marker AND mc.mrk_idx=m.idx AND mc.nhits >= ?";
 

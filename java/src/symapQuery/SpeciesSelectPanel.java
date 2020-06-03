@@ -216,10 +216,10 @@ public class SpeciesSelectPanel extends JPanel {
 			for(Project proj : theProjects) {
 				String chrNumStr="", chrIdxStr="";
 				
-				String strQ = "SELECT groups.name, groups.idx FROM groups " +
-							"JOIN projects ON groups.proj_idx = projects.idx " +
+				String strQ = "SELECT xgroups.name, xgroups.idx FROM xgroups " +
+							"JOIN projects ON xgroups.proj_idx = projects.idx " +
 							"WHERE projects.name = '" + proj.getDBName() + "' " +
-							"ORDER BY groups.sort_order ASC";
+							"ORDER BY xgroups.sort_order ASC";
 				ResultSet rs = stmt.executeQuery(strQ);
 				while (rs.next()) {
 					if (!chrNumStr.equals("")) {

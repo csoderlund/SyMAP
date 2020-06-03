@@ -1,7 +1,5 @@
 package backend;
 
-import util.Utilities;
-
 public class Constants {
 ////////////////////////////////////////////////////////
 // CAS500 v5 moved hard-coded constants for build to here
@@ -112,41 +110,27 @@ public static final String tmpRunDir = 		 "/tmp/";
 	 *  External programs (programs are hardcoded in .java)
 	 */
 
-	// sub-directories
-	public static String getPlatformPath(String program, String plat) 
-	{
-		if (Utilities.isLinux()) 
-		{
-			if (program.equals("blat"))		return "/lintel/"; // no 64b blat version
-			
-			if (plat.equals("i386"))        	return "/lintel/";
-			else if (plat.equals("x86_64")) 	return "/lintel64/";	
-			else if (Utilities.is64Bit() )  	return "/lintel64/";
-			else								return "/lintel/";
-		}
-		else if (Utilities.isMac())
-		{
-			return "/mac/"; 
-		}
-		else 
-		{
-			System.err.println("Unknown platform! Trying /lintel64/");
-			return "/lintel64/";
-		}
-	}
 	public static String getPlatformPath() {
-		if (Utilities.isLinux()) 
+		String plat =  System.getProperty("os.name").toLowerCase();
+		
+		if (plat.contains("linux")) 
 		{
-			if(Utilities.is64Bit()) 	return "/lintel64/";
-			else 					return "/lintel/";
+			if (is64()) return "/lintel64/";
+			else 		return "/lintel/";
 		}
-		else if (Utilities.isMac())
+		else if (plat.contains("mac"))
 		{
-									return "/mac/";
+			return "/mac/";
 		}
 		else {
 			System.err.println("Unknown platform! Trying /lintel64/");
 			return "/lintel64/";
 		}
+	}
+	public static boolean is64() {
+		return System.getProperty("os.arch").toLowerCase().contains("64");
+	}
+	public static String getPlatform() {
+		return  System.getProperty("os.name") + ":" + System.getProperty("os.arch");
 	}
 }

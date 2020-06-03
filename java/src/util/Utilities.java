@@ -40,24 +40,18 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.LinkedHashSet;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.StringTokenizer;
 
 import java.applet.Applet;
 import java.net.URL;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import java.io.File;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
-import java.sql.Statement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashMap;
+import java.text.SimpleDateFormat;
 
 import symap.SyMAP;
 import symap.frame.HelpBar;
@@ -68,44 +62,54 @@ import backend.Constants;
  * Class <code>Utilities</code> class for doing some miscelaneous things that 
  * may be useful to others. Requires plugin.jar
  * 
- * Make directory and files - used by most classes
+ * CAS506 - remove goobs on unused stuff and rearranged into the following order (marked with X's
+ * Interface
+ * basic array and string ops
+ * Geometry
+ * DNA string
+ * File
+ * Time
+ * PopUps
  */
 public class Utilities {
 	private static boolean TRACE = Constants.TRACE;
 	public static final Color HELP_PROMPT = new Color(0xEEFFEE); // CAS504 moved from dead file - for Help
-	private static Map<String, Integer> rs2col = null;
+	
 	private static Class resClass = null; // store this so help pages can be loaded from anywhere
 	private static Frame helpParentFrame = null; 
 	
 	private Utilities() { }
 
-	/**
-	 * Method <code>getScreenBounds</code> attempts to find an applet holder in 
-	 * the chain of ownership and uses the applet to call 
-	 * getScreenBounds(Applet,Window).
-	 *
-	 * @param window a <code>Window</code> value
-	 * @return a <code>Rectangle</code> value
-	 * @see AppletHolder
-	 * @see #getScreenBounds(Applet,Window)
-	 */
-	public static Rectangle getScreenBounds(Window window) {
-		Window owner = window;
-		while (owner != null && !(owner instanceof AppletHolder)) owner = owner.getOwner();
-		return getScreenBounds(owner instanceof AppletHolder ? ((AppletHolder)owner).getApplet() : null, window);
+	/** Instance stuff - only class methods **/ 
+	public static void setResClass(Class c)
+	{
+		resClass = c;
 	}
-
-	/**
-	 * Method <code>getScreenBounds</code> attempts to find the screen bounds 
-	 * from the screen insets.  If the insets don't appear to be set and 
-	 * applet != null, the applet attempts to access the available height and 
-	 * width through javascript (not MAYSCRIPT attribute in applet tag is most 
-	 * likely necessary for this to work).
-	 *
-	 * @param applet an <code>Applet</code> value
-	 * @param window a <code>Window</code> value
-	 * @return a <code>Rectangle</code> value
+	public static void setHelpParentFrame(Frame f)
+	{
+		helpParentFrame = f;
+	}
+	
+	/************************************************************
+	 * XXX Random interface 
 	 */
+	public static boolean isLinux() {
+		return System.getProperty("os.name").toLowerCase().contains("linux");
+	}
+	
+	public static boolean isWindows() {
+		return System.getProperty("os.name").toLowerCase().contains("windows");
+	}
+	
+	public static boolean isMac() {
+		return System.getProperty("os.name").toLowerCase().contains("mac");
+	}
+	
+	public static boolean is64Bit() {
+		return System.getProperty("os.arch").toLowerCase().contains("64");
+	}
+	
+	//  attempts to find the screen bounds from the screen insets.  
 	public static Rectangle getScreenBounds(Applet applet, Window window) {
 		GraphicsConfiguration config = window.getGraphicsConfiguration();
 		Rectangle b = config.getBounds();
@@ -115,54 +119,19 @@ public class Utilities {
 		else if (applet != null &&
 				config == GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration()) {
 			try {
+				/** CAS506
 				netscape.javascript.JSObject host = netscape.javascript.JSObject.getWindow(applet);
 				b.height = ((Number)host.eval("screen.availHeight")).intValue();
 				b.width  = ((Number)host.eval("screen.availWidth")).intValue();
+				**/
 			} 
-			catch (Exception e) {
-				
-			}
+			catch (Exception e) {}
 		}
 		return b;
 	}
 
-	public static Dimension stringDimension(String str) {
-		Dimension d = new Dimension();
-		int cWidth = 0;
-		for (int i = 0; i < str.length(); ++i) {
-			if (str.charAt(i) == '\n') {
-				d.width = Math.max(d.width,cWidth);
-				d.height++;
-				cWidth = 0;
-			}
-			else ++cWidth;
-		}
-		d.width = Math.max(d.width,cWidth);
-		return d;
-	}
-
-	/**
-	 * Method <code>setFullScreenSize</code> sets the window to the full screen size even it the
-	 * window's perferred size is smaller.
-	 *
-	 * @param window a <code>Window</code> value
-	 * @param view a <code>Container</code> value
-	 * @return a <code>viod</code> value
-	 */
-	public static void setFullScreenSize(Window window, Container view) {
-		Rectangle sb = getScreenBounds(window);
-		setWinSize(window,sb,new Dimension(sb.width,sb.height),view);
-	}
-
-	/**
-	 * Method <code>setFullSize</code> sets the window to the full size of the available screen or it's preferred
-	 * size, whichever is smaller, using the other methods
-	 * int this class.
-	 *
-	 * @param window a <code>Window</code> value
-	 * @param view a <code>Container</code> value needed to invalidate to insure proper updated (may not work correctly if null)
-	 * @see #getScreenBounds(Window)
-	 */
+	 // sets the window to the full size of the available screen or it's preferred
+	 // size, whichever is smaller, using the other methods in this class.
 	public static void setFullSize(Window window, Container view) {
 		window.pack();
 
@@ -173,6 +142,11 @@ public class Utilities {
 		pref.height = Math.min(pref.height,b.height);
 
 		setWinSize(window,b,pref,view);
+	}
+	private static Rectangle getScreenBounds(Window window) {
+		Window owner = window;
+		while (owner != null && !(owner instanceof AppletHolder)) owner = owner.getOwner();
+		return getScreenBounds(owner instanceof AppletHolder ? ((AppletHolder)owner).getApplet() : null, window);
 	}
 
 	private static void setWinSize(Window window, Rectangle screenBounds, Dimension pref, Container view) {
@@ -193,33 +167,179 @@ public class Utilities {
 		else
 			c.setCursor( Cursor.getDefaultCursor() );
 	}
+	
+	public static void exit(int status) {
+		System.out.println("Exiting SyMAP");
+		System.exit(status);
+	}
+	 public static void sleep(int milliseconds) {
+ 		try{ Thread.sleep(milliseconds); }
+ 		catch (InterruptedException e) { }
+	 }
 
-	/**
-	 * Method <code>contains</code> returns true if the given array contains the element o.
-	 *
-	 * @param ar an <code>Object[]</code> value
-	 * @param o an <code>Object</code> value
-	 * @return a <code>boolean</code> value
+	 public static boolean isRunning(String processName)
+		{
+			boolean running = false;
+			try  {
+		        	String line;
+		        	Process p = Runtime.getRuntime().exec("ps -ef");
+		        	BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		        	while ((line = input.readLine()) != null) 
+		        	{
+		            	if (line.contains(processName))
+		            	{
+		            		running = true;	
+		            		break;
+		            	}
+		        	}
+		        	input.close();
+		    } 
+			catch (Exception err) {}
+
+			return running;
+		}
+	 
+	 public static AbstractButton createButton(HelpListener parent, String path, String tip, HelpBar bar, ActionListener listener, boolean checkbox) {
+			AbstractButton button;
+			
+			Icon icon = ImageViewer.getImageIcon(path); 
+			if (icon != null) {
+			    if (checkbox)
+			    	button = new JCheckBox(icon);
+			    else
+			    	button = new JButton(icon);
+			    	button.setMargin(new Insets(0,0,0,0));
+			}
+			else {
+			    if (checkbox)
+			    	button = new JCheckBox(path);
+			    else
+			    	button = new JButton(path);
+			    	button.setMargin(new Insets(1,3,1,3));
+			}
+			if (listener != null) 
+			    button.addActionListener(listener);
+
+			button.setToolTipText(tip);
+			
+			button.setName(tip); 
+			if (bar != null) bar.addHelpListener(button,parent);
+			
+			return button;
+	 }
+		
+	// TODO get rid of Applet
+	 public static boolean tryOpenURL ( Applet theApplet, String theLink ) {
+	    	if (theLink == null)
+	    		return false;
+	    	
+	    	URL url = null;
+	    	try {
+	    		url = new URL(theLink);
+	    	}
+	    	catch (MalformedURLException e) {
+	    		System.out.println("Malformed URL: " + theLink);
+	    		return false;
+	    	}
+	    	return tryOpenURL(theApplet, url);
+ }
+ 
+	public static boolean tryOpenURL ( Applet theApplet, URL theLink )
+ {
+ 	// Show document with applet if we have one
+		if ( theApplet != null )
+		{
+			theApplet.getAppletContext().showDocument( theLink, "_blank" );
+			return true;
+		}
+		
+		// Brian says: Otherwise unless we become a web start application
+ 		// we are stuck with the below.  Copied this from: 
+		// http://www.centerkey.com/java/browser/
+	    	try 
+	    	{ 
+	    		if (isMac()) 
+	    		{ 
+	    			Class<?> fileMgr = Class.forName("com.apple.eio.FileManager"); 
+	    			Method openURL = fileMgr.getDeclaredMethod("openURL", new Class[] {String.class}); 
+	    			openURL.invoke(null, new Object[] { theLink.toString() }); 
+	    			return true;
+	    		} 
+	    		else if (isWindows()) 
+	    		{
+	    			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + theLink); 
+	    			return true;
+	    		}
+	    		else 
+	    		{ 
+	    			//assume Unix or Linux 
+	    			String[] browsers = { "firefox", "opera", "konqueror", "epiphany", "mozilla", "netscape" }; 
+	    			String browser = null; 
+	    			for (int count = 0; count < browsers.length && browser == null; count++) 
+	    				if (Runtime.getRuntime().exec( new String[] {"which", browsers[count]}).waitFor() == 0) 
+	    					browser = browsers[count]; 
+	    			if (browser == null) 
+	    				return false;
+	    			else 
+	    			{
+	    				Runtime.getRuntime().exec(new String[] {browser, theLink.toString()});
+	    				return true;
+	    			}
+	    		}
+	    	}
+	    	catch (Exception e) 
+	    	{ 	
+	    		e.printStackTrace();
+	    	}
+		return false;
+ }
+	
+
+	public static String getHost(Applet applet) {
+		if (applet == null) return null;
+		String domain = applet.getCodeBase().getHost();
+		int ind = domain.indexOf(":");
+		if (ind > 0)
+			domain = domain.substring(0,ind);
+		if (domain.length() == 0) domain = null;
+		return domain;
+	}
+
+	public static String getDomain(Applet applet) {
+		if (applet == null) return null;
+		String domain = applet.getCodeBase().getHost();
+		int wwwInd = domain.indexOf("www.");
+		if (wwwInd >= 0)
+			domain = domain.substring(wwwInd+4);
+		wwwInd = domain.indexOf(":");
+		if (wwwInd > 0)
+			domain = domain.substring(0,wwwInd);
+		if (domain.length() == 0) domain = null;
+
+		return domain;
+	}
+	public static String getBrowserPopupMessage(Applet applet) {
+		return (applet != null ? "\nMake sure popup windows are enabled in your web browser settings." : "" );
+	}
+ 
+	/*******************************************************************
+	 * XXX basic array and string ops
 	 */
+	 public static String pad(String s, int width)
+	 {
+	    width -= s.length();
+	    while (width-- > 0) s += " ";
+	    return s;
+	 }
+	 
 	public static boolean contains(Object[] ar, Object o) {
 		if (ar != null)
 			for (int i = 0; i < ar.length; ++i)
 				if (equals(o,ar[i])) return true;
 		return false;
 	}
-	
-	public static boolean contains(int[] ar, int x) {
-		if (ar != null)
-			for (int i = 0; i < ar.length; ++i)
-				if (ar[i] == x) return true;
-		return false;
-	}
-
-	public static Object get(Object[] ar, Object o) {
-		if (ar != null)
-			for (int i = 0; i < ar.length; ++i)
-				if (equals(o,ar[i])) return ar[i];
-		return null;
+	private static boolean equals(Object t1, Object t2) {
+		return t1 == null ? t2 == null : t1.equals(t2);
 	}
 	
 	// adjust rectangle coordinates for negative width or height
@@ -238,33 +358,6 @@ public class Utilities {
 					Math.abs( rect.getHeight() ));
 	}
 
-	/**
-	 * Method <code>concat</code> concatenates the arrays returning a new non null array.
-	 *
-	 * @param a1 an <code>int[]</code> value
-	 * @param a2 an <code>int[]</code> value
-	 * @return an <code>int[]</code> value
-	 */
-	public static int[] concat(int[] a1, int[] a2) {
-		int[] ret = new int[(a1 == null ? 0 : a1.length)+(a2 == null ? 0 : a2.length)];
-		if (ret.length != 0) {
-			if (a1 == null)
-				System.arraycopy(a2,0,ret,0,a2.length);
-			else if (a2 == null)
-				System.arraycopy(a1,0,ret,0,a1.length);
-			else {
-				System.arraycopy(a1,0,ret,0,a1.length);
-				System.arraycopy(a2,0,ret,a1.length,a2.length);
-			}
-		}
-		return ret;
-	}
-
-	public static int[] copy(int a[]) {
-		if (a == null) return new int[0];
-		return copy(a,a.length);
-	}
-
 	public static int[] copy(int[] a, int len) {
 		if (a == null || a.length == 0 || len <= 0) return new int[0];
 		int[] ret = new int[len];
@@ -272,12 +365,7 @@ public class Utilities {
 		return ret;
 	}
 
-	/**
-	 * Method <code>sortCopy</code> copys the array and sorts the copy, returning the copied array.
-	 *
-	 * @param a an <code>int[]</code> value
-	 * @return an <code>int[]</code> value
-	 */
+	 // copys the array and sorts the copy, returning the copied array.
 	public static int[] sortCopy(int[] a) {
 		if (a == null || a.length == 0) return new int[0];
 		int[] ret = new int[a.length];
@@ -290,30 +378,6 @@ public class Utilities {
 		if (ints == null || ints.length == 0) return "";
 		StringBuffer ret = new StringBuffer().append(ints[0]);
 		for (int i = 1; i < ints.length; i++) ret.append(",").append(ints[i]);
-		return ret.toString();
-	}
-
-	public static String getPrettyCommaSepString(int[] ints) {
-		if (ints == null || ints.length == 0) return "";
-		StringBuffer ret = new StringBuffer().append(ints[0]);
-		for (int i = 1; i < ints.length; i++) {
-			if (ints.length == 2)          ret.append(" and ");
-			else if (i + 1 == ints.length) ret.append(", and ");
-			else                           ret.append(", ");
-			ret.append(ints[i]);
-		}
-		return ret.toString();
-	}
-
-	public static String getPrettyCommaSepString(char[] chars) {
-		if (chars == null || chars.length == 0) return "";
-		StringBuffer ret = new StringBuffer().append(chars[0]);
-		for (int i = 1; i < chars.length; i++) {
-			if (chars.length == 2)          ret.append(" and ");
-			else if (i + 1 == chars.length) ret.append(", and ");
-			else                            ret.append(", ");
-			ret.append(chars[i]);
-		}
 		return ret.toString();
 	}
 
@@ -367,22 +431,7 @@ public class Utilities {
 		return ret;
 	}
 
-	public static Integer[] getIntObjectArray(int[] ints) {
-		if (ints == null || ints.length == 0) return new Integer[0];
-		Integer ret[] = new Integer[ints.length];
-		for (int i = 0; i < ints.length; i++) ret[i] = new Integer(ints[i]);
-		return ret;
-	}
-
-	public static int[] getIntArray(Object[] ints) {
-		if (ints == null || ints.length == 0) return new int[0];
-		int[] ret = new int[ints.length];
-		for (int i = 0; i < ints.length; i++)
-			ret[i] = ((Number)ints[i]).intValue();
-		return ret;
-	}
-
-	public static Collection<Integer> getInts(String input) throws IllegalArgumentException {
+	private static Collection<Integer> getInts(String input) throws IllegalArgumentException {
 		if (input == null || input.length() == 0) return new ArrayList<Integer>(0);
 
 		Collection<Integer> ints = new LinkedList<Integer>();
@@ -400,11 +449,11 @@ public class Utilities {
 
 				if (a < b) {
 					for (; a <= b; a++)
-						ints.add(new Integer(a));
+						ints.add(Integer.valueOf(a)); // CAS506 new Integer(a)
 				}
 				else {
 					for (; a >= b; a--)
-						ints.add(new Integer(a));
+						ints.add(Integer.valueOf(a)); // CAS506 new Integer(a)
 				}
 				if (it.hasMoreTokens())
 					throw new IllegalArgumentException("Invalid integer range entered.");
@@ -432,14 +481,14 @@ public class Utilities {
 
 				if (a < b) {
 					for (; a <= b; a++) {
-						if (!ints.contains(new Integer(a)))
-							ints.add(new Integer(a));
+						if (!ints.contains(Integer.valueOf(a))) // CAS506 new Integer(a)
+							ints.add(Integer.valueOf(a));
 					}
 				}
 				else {
 					for (; a >= b; a--) {
-						if (!ints.contains(new Integer(a)))
-							ints.add(new Integer(a));
+						if (!ints.contains(Integer.valueOf(a))) // CAS506 new Integer(a)
+							ints.add(Integer.valueOf(a));
 					}
 				}
 				if (it.hasMoreTokens())
@@ -453,139 +502,13 @@ public class Utilities {
 		return ints;
 	}
 
-	/**
-	 * Method <code>openURL</code> opens the given url in a browser window.
-	 * This should only be used for stand alone java applications that are able to execute
-	 * commands.
-	 *
-	 * @param url a <code>String</code> value of the url to open
-	 * @param showError a <code>boolean</code> value of true to display error message dialog if needed
-	 * @see Runtime#getRuntime()
-	 * @see Runtime#exec(String[])
-	 * @return a <code>boolean</code> value of true if no exceptions where encountered
+	public static boolean isStringEmpty(String s) {
+		return (s == null || s.length() == 0);
+	}
+	
+	/***************************************************
+	 * XXX Geometry
 	 */
-	public static boolean openURL(String url, boolean showError) { 
-		boolean ret = true;
-		String osName = System.getProperty("os.name");
-		try { 
-			if (osName.startsWith("Mac OS")) { 
-				Class<?> macUtils = Class.forName("com.apple.mrj.MRJFileUtils");
-				Method openURL = macUtils.getDeclaredMethod("openURL", new Class[] {String.class});
-				openURL.invoke(null, new Object[] {url}); 
-			} 
-			else if (osName.startsWith("Windows")) 
-				Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
-			else { //assume Unix or Linux 
-				String[] browsers = { "firefox", "opera", "konqueror", "mozilla", "netscape" }; 
-				String browser = null;
-				for (int count = 0; count < browsers.length && browser == null; count++) 
-					if (Runtime.getRuntime().exec( new String[] {"which", browsers[count]}).waitFor() == 0) 
-						browser = browsers[count]; 
-				if (browser == null) 
-					throw new Exception("Could not find web browser."); 
-				else Runtime.getRuntime().exec(new String[] {browser, url}); } 
-		} catch (Exception e) { 
-			if (showError)
-				JOptionPane.showMessageDialog(null,"Error attempting to launch web browser:\n"+e.getLocalizedMessage()); 
-			ret = false;
-		}
-		return ret;
-	}
-
-	/**
-	 * Method <code>getFileExtension</code> returns the file's extension.
-	 *
-	 * @param f a <code>File</code> value
-	 * @return a <code>String</code> value
-	 */
-	public static String getFileExtension(File f) {
-		String ext = null;
-		String s = f.getName();
-		int i = s.lastIndexOf('.');
-
-		if (i > 0 &&  i < s.length() - 1) {
-			ext = s.substring(i+1).toLowerCase();
-		}
-		return ext;
-	}
-
-	/**
-	 * Method <code>getFile</code> return the file. If fromHome the home directory is acquired
-	 * by <code>System.getProperty("user.home")</code> and the File constructor taking two string is
-	 * invoked (i.e. <code>new File(homeDir,name)<code>).  Otherwise, the file is created by
-	 * <code>new File(name)</code>
-	 *
-	 * @param name a <code>String</code> value of file name
-	 * @param fromHome a <code>boolean</code> value of true to set the path from the home directory
-	 * @return a <code>File</code> value
-	 */
-	public static File getFile(String name, boolean fromHome) {
-		if (name == null) return new File("");
-		if (fromHome) {
-			String dir = null;
-			try {
-				dir = System.getProperty("user.home");
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-			return new File(dir,name);
-		}
-		return new File(name);
-	}
-
-	/**
-	 * Method <code>equals</code> returns <code>t1 == null ? t2 == null : t1.equals(t2)</code>
-	 *
-	 * @param t1 an <code>Object</code> value
-	 * @param t2 an <code>Object</code> value
-	 * @return a <code>boolean</code> value
-	 */
-	public static boolean equals(Object t1, Object t2) {
-		return t1 == null ? t2 == null : t1.equals(t2);
-	}
-
-	public static String getHost(Applet applet) {
-		if (applet == null) return null;
-		String domain = applet.getCodeBase().getHost();
-		int ind = domain.indexOf(":");
-		if (ind > 0)
-			domain = domain.substring(0,ind);
-		if (domain.length() == 0) domain = null;
-		return domain;
-	}
-
-	public static String getDomain(Applet applet) {
-		if (applet == null) return null;
-		String domain = applet.getCodeBase().getHost();
-		int wwwInd = domain.indexOf("www.");
-		if (wwwInd >= 0)
-			domain = domain.substring(wwwInd+4);
-		wwwInd = domain.indexOf(":");
-		if (wwwInd > 0)
-			domain = domain.substring(0,wwwInd);
-		if (domain.length() == 0) domain = null;
-
-		return domain;
-	}
-
-	public static String getURI(String uriStr, String altHost) throws URISyntaxException {
-		if (uriStr.startsWith("jdbc:")) {
-			URI u = new URI(uriStr.substring(5));
-			return "jdbc:"+(new URI(u.getScheme(),u.getUserInfo(),altHost,u.getPort(),u.getPath(),u.getQuery(),u.getFragment()));
-		}
-		URI u = new URI(uriStr);
-		return new URI(u.getScheme(),u.getUserInfo(),altHost,u.getPort(),u.getPath(),u.getQuery(),u.getFragment()).toString();
-	}
-
-	public static URL getURL(URL url, String altHost) throws MalformedURLException {
-		if (altHost == null) 
-			return url;
-		else if (url != null)
-			return new URL(url.getProtocol(),altHost,url.getPort(),url.getFile());
-		return null;
-	}
-
 	public static double diagonal(Rectangle r) {
 		if (r == null) return 0;
 		return Math.sqrt((double)( (r.width*r.width) + (r.height*r.height) ));	
@@ -646,23 +569,20 @@ public class Utilities {
 		return (b1.getWidth() * b1.getHeight()) <= (b2.getWidth() * b2.getHeight()) ? s1 : s2;
 	}
 
-	public static String toString(int n) {
-		switch (n) {
-		case 0: return "zeroth";
-		case 1: return "first";
-		case 2: return "second";
-		case 3: return "third";
-		case 4: return "fourth";
-		case 5: return "fifth";
-		case 6: return "sixth";
-		case 7: return "seventh";
-		case 8: return "eighth";
-		case 9: return "nineth";
-		case 10:return "tenth";
+	public static boolean isOverlapping(int start1, int end1, int start2, int end2) {
+		if (   (start1 >= start2 && start1 <= end2) 
+			|| (end1   >= start2 && end1   <= end2)
+			|| (start2 >= start1 && start2 <= end1)
+			|| (end2   >= start1 && end2   <= end1))
+		{
+			return true;
 		}
-		return new Integer(n).toString();
+		
+		return false;
 	}
-
+	/*****************************************************
+	 * XXX DNA string
+	 */
 	// handle reverse complement of sequences for database changes
 	public static String revComplement(String seq) {
 		if (seq == null)
@@ -700,38 +620,37 @@ public class Utilities {
 		return new StringBuffer(s).reverse().toString();
 	}
 
-	
-	public static void exit(int status) {
-		System.out.println("Exiting SyMAP");
-		System.exit(status);
-	}
-	
-	public static boolean isOverlapping(int start1, int end1, int start2, int end2) {
-		if (   (start1 >= start2 && start1 <= end2) 
-			|| (end1   >= start2 && end1   <= end2)
-			|| (start2 >= start1 && start2 <= end1)
-			|| (end2   >= start1 && end2   <= end1))
-		{
-			return true;
+	/********************************************************************
+	 * XXX File ops
+	 */
+	public static String getFileExtension(File f) {
+		String ext = null;
+		String s = f.getName();
+		int i = s.lastIndexOf('.');
+
+		if (i > 0 &&  i < s.length() - 1) {
+			ext = s.substring(i+1).toLowerCase();
 		}
-		
-		return false;
+		return ext;
 	}
-	
-	public static boolean isContained(int start1, int end1, int start2, int end2) {
-		if (   (start1 >= start2 && start1 <= end2) 
-			&& (end1   >= start2 && end1   <= end2))
-		{
-			return true;
+
+	// Return the Files; if fromHome==true, relative to home directroy
+	public static File getFile(String name, boolean fromHome) {
+		if (name == null) return new File("");
+		if (fromHome) {
+			String dir = null;
+			try {
+				dir = System.getProperty("user.home");
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			return new File(dir,name);
 		}
-		
-		return false;
+		return new File(name);
 	}
-	
-	public static boolean isStringEmpty(String s) {
-		return (s == null || s.length() == 0);
-	}
-	
+
+
 	public static void deleteFile ( String strPath )
 	{
 		File theFile = new File ( strPath );
@@ -752,18 +671,6 @@ public class Utilities {
 			}
 		}
 		if (TRACE) System.out.println("XYZ clear all directory " + d);
-	}
-	public static void clearDir(String dir)
-	{
-		File d = new File(dir);
-		if (!d.exists()) d.mkdir();
-		if (d.isDirectory())
-		{
-			for (File f : d.listFiles())
-				if (f.isFile())
-					f.delete();
-		}
-		if (TRACE) System.out.println("XYZ clear directory " + dir);
 	}
 	
     public static boolean fileExists(String filepath)
@@ -874,143 +781,6 @@ public class Utilities {
 	public static String fileOnly(String path) {
 		return path.substring(path.lastIndexOf("/")+1, path.length());
 	}
-    public static String getDurationString(long duration) { // milliseconds
-	    	duration /= 1000;
-	    	long min = duration / 60; 
-	    	long sec = duration % 60; 
-	    	long hr = min / 60;
-	    	min = min % 60; 
-	    	long day = hr / 24;
-	    	hr = hr % 24;
-	    	
-	    	return (day > 0 ? day+" days " : "")
-	    			+ (hr > 0 ? hr+" hr " : "")
-	    			+ (min > 0 ? min+" min " : "") 
-	    			+ sec + " sec";
-    }
-    
-   
-    public static void sleep(int milliseconds) {
-    		try{ Thread.sleep(milliseconds); }
-    		catch (InterruptedException e) { }
-    }
-    
-    public static String pad(String s, int width)
-    {
-    		width -= s.length();
-    		while (width-- > 0) s += " ";
-    		return s;
-    }
-    
-    public static boolean tryOpenURL ( Applet theApplet, String theLink ) {
-	    	if (theLink == null)
-	    		return false;
-	    	
-	    	URL url = null;
-	    	try {
-	    		url = new URL(theLink);
-	    	}
-	    	catch (MalformedURLException e) {
-	    		System.out.println("Malformed URL: " + theLink);
-	    		return false;
-	    	}
-	    	return tryOpenURL(theApplet, url);
-    }
-    
-	public static boolean tryOpenURL ( Applet theApplet, URL theLink )
-    {
-    	// Show document with applet if we have one
-		if ( theApplet != null )
-		{
-			theApplet.getAppletContext().showDocument( theLink, "_blank" );
-			return true;
-		}
-		
-		// Brian says: Otherwise unless we become a web start application
-    		// we are stuck with the below.  Copied this from: 
-		// http://www.centerkey.com/java/browser/
-	    	try 
-	    	{ 
-	    		if (isMac()) 
-	    		{ 
-	    			Class<?> fileMgr = Class.forName("com.apple.eio.FileManager"); 
-	    			Method openURL = fileMgr.getDeclaredMethod("openURL", new Class[] {String.class}); 
-	    			openURL.invoke(null, new Object[] { theLink.toString() }); 
-	    			return true;
-	    		} 
-	    		else if (isWindows()) 
-	    		{
-	    			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + theLink); 
-	    			return true;
-	    		}
-	    		else 
-	    		{ 
-	    			//assume Unix or Linux 
-	    			String[] browsers = { "firefox", "opera", "konqueror", "epiphany", "mozilla", "netscape" }; 
-	    			String browser = null; 
-	    			for (int count = 0; count < browsers.length && browser == null; count++) 
-	    				if (Runtime.getRuntime().exec( new String[] {"which", browsers[count]}).waitFor() == 0) 
-	    					browser = browsers[count]; 
-	    			if (browser == null) 
-	    				return false;
-	    			else 
-	    			{
-	    				Runtime.getRuntime().exec(new String[] {browser, theLink.toString()});
-	    				return true;
-	    			}
-	    		}
-	    	}
-	    	catch (Exception e) 
-	    	{ 	
-	    		e.printStackTrace();
-	    	}
-		return false;
-    }
-	
-	public static boolean isLinux() {
-		return System.getProperty("os.name").toLowerCase().contains("linux");
-	}
-	
-	public static boolean isWindows() {
-		return System.getProperty("os.name").toLowerCase().contains("windows");
-	}
-	
-	public static boolean isMac() {
-		return System.getProperty("os.name").toLowerCase().contains("mac");
-	}
-	
-	public static boolean is64Bit() {
-		return System.getProperty("os.arch").toLowerCase().contains("64");
-	}
-	
-    public static AbstractButton createButton(HelpListener parent, String path, String tip, HelpBar bar, ActionListener listener, boolean checkbox) {
-		AbstractButton button;
-		
-		Icon icon = ImageViewer.getImageIcon(path); 
-		if (icon != null) {
-		    if (checkbox)
-		    	button = new JCheckBox(icon);
-		    else
-		    	button = new JButton(icon);
-		    	button.setMargin(new Insets(0,0,0,0));
-		}
-		else {
-		    if (checkbox)
-		    	button = new JCheckBox(path);
-		    else
-		    	button = new JButton(path);
-		    	button.setMargin(new Insets(1,3,1,3));
-		}
-		if (listener != null) 
-		    button.addActionListener(listener);
-
-		button.setToolTipText(tip);
-		
-		button.setName(tip); 
-		if (bar != null) bar.addHelpListener(button,parent);
-		
-		return button;
-    }
     
 	public static boolean hasCommandLineOption(String[] args, String name)
 	{
@@ -1037,67 +807,30 @@ public class Utilities {
 		}
 
 		return null;
-	}
-	
-	public static String getBrowserPopupMessage(Applet applet) {
-		return (applet != null ? "\nMake sure popup windows are enabled in your web browser settings." : "" );
-	}
-	
-	public static boolean isRunning(String processName)
-	{
-		boolean running = false;
-		try 
-		{
-	        	String line;
-	        	Process p = Runtime.getRuntime().exec("ps -ef");
-	        	BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	        	while ((line = input.readLine()) != null) 
-	        	{
-	            	if (line.contains(processName))
-	            	{
-	            		running = true;	
-	            		break;
-	            	}
-	        	}
-	        	input.close();
-	    } 
-		catch (Exception err) 
-		{
-	    }
-
-		return running;
-	}
-	
-    public static int ctrGet(Map<String,Integer> ctr, String key)
-    {
-    		return (ctr.containsKey(key) ? ctr.get(key) : 0);
-    }
-    public static void init_rs2col()
-    {
-    		rs2col = new HashMap<String,Integer>();
-    }
-    // 
-    // Store and retrieve ResultSet column mappings, since the native implementations are so slow.
-    // Must be initialized with init_rs2col. 
-    // Should be shareable between threads if they are all processing the exact same column output. 
-    //
-    public static synchronized int rs2col(String key, ResultSet rs) throws Exception
-    {
-    	if (!rs2col.containsKey(key))
-    	{
-    		try
-    		{
-    			rs2col.put(key, rs.findColumn(key));
-    		}
-    		catch(Exception e)
-    		{
-    			System.out.println("SQL result column " + key + " not found!!");
-    			throw(e);
-    		}
-    	}
-    	return rs2col.get(key);
-    }
+	} 	
    
+    /**********************************************************
+     * XXX Time methods
+     */
+	static public String getDateOnly ( ) // CAS506 day-month-year
+    {
+        Date date=new Date();
+        SimpleDateFormat sdf=new SimpleDateFormat("dd-MMM-yy"); 
+        return sdf.format(date);
+    }
+	       
+	public static String getDurationString(long duration) { // milliseconds
+    	duration /= 1000;
+    	long min = duration / 60; 
+    	long sec = duration % 60; 
+    	long hr = min / 60;
+    	min = min % 60; 
+    	long day = hr / 24;
+    	hr = hr % 24;
+    	
+    	return (day > 0 ? day+" days " : "") + (hr > 0 ? hr+" hr " : "") + (min > 0 ? min+" min " : "") 
+    			+ sec + " sec";
+	}
 	public static void timerStr(String msg, Date timeStart) {
 		Date now = new Date();
 		Long elapsed = now.getTime() - timeStart.getTime();
@@ -1141,27 +874,11 @@ public class Utilities {
 		str += min + "m:" + sec + "s";
 		System.out.println(x + str);
 	}
-	public static boolean tableHasColumn(String table, String column, Statement s) throws SQLException
-	{
-		boolean ret = false;
-		ResultSet rs = s.executeQuery("show columns from " + table + " where field='" + column + "'");
-		if (rs.first()) ret = true;
-		rs.close();
-		return ret;
-	}
-	
-	public static void setResClass(Class c)
-	{
-		resClass = c;
-	}
-	public static void setHelpParentFrame(Frame f)
-	{
-		helpParentFrame = f;
-	}
-	
+
 	/**************************************************************
-	 * Popups
+	 * XXX Popups
 	 */
+	
 	// CAS504 add
 	// isModal=true means that everything is frozen until the window is closed
 	public static void displayInfoMonoSpace(Component parentFrame, String title, 
@@ -1233,7 +950,9 @@ public class Utilities {
 		dialog.setVisible(true);
 		optionPane.getValue(); // Wait on user input
 	}
+	
 	public static void showOutOfMemoryMessage() { showOutOfMemoryMessage(null); }
+	
 	public static void showHTMLPage(JDialog parent, String title, String resource)
 	{
 		if (resClass == null)
@@ -1285,7 +1004,6 @@ public class Utilities {
 		dlgRoot.requestFocus();
 	}
 
-
 // html listener for product info editor pane
     private static void jepHandle(javax.swing.event.HyperlinkEvent evt) 
     {
@@ -1308,4 +1026,5 @@ public class Utilities {
 	        }
 	    }
     } 
+ 
 }

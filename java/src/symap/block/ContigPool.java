@@ -35,7 +35,7 @@ public class ContigPool extends DatabaseUser {
     	"pairs AS p INNER JOIN "+
     	"ctghits AS ch ON (p.proj1_idx=? AND p.proj2_idx=? AND ch.pair_idx=p.idx) INNER JOIN "+
     	"contigs AS c ON (c.idx=ch.ctg1_idx) INNER JOIN "+
-    	"groups AS g ON (g.idx=ch.grp2_idx) "+
+    	"xgroups AS g ON (g.idx=ch.grp2_idx) "+
     	"WHERE c.number=?";
 
 	protected static final String MARKER_QUERY =
@@ -48,9 +48,9 @@ public class ContigPool extends DatabaseUser {
 		boolean isProj1 = pair.getP1() == project;
 		
 		StringBuffer query = new StringBuffer("SELECT c.number FROM ");
-		query.append("groups").append(" AS g1,");
+		query.append("xgroups").append(" AS g1,");
 		query.append("blocks").append(" AS b,");
-		query.append("groups").append(" AS g2,");
+		query.append("xgroups").append(" AS g2,");
 		query.append("contigs").append(" AS c WHERE ");
 		query.append("g1.proj_idx=").append(pair.getP1()).append(" AND g1.name='").append(g1).append("' AND g1.idx=b.grp1_idx ");
 		query.append(" AND b.blocknum=").append(bn).append(" AND b.proj2_idx=").append(pair.getP2()).append(" AND ");

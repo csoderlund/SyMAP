@@ -60,7 +60,6 @@ public class ImageViewer {
 				System.err.println("Try using the Linux/Mac screen capture");
 				JOptionPane.showMessageDialog(null, m, 
 					"Version incompatiablity", JOptionPane.PLAIN_MESSAGE);
-				return;
 			}
 			ErrorReport.print(e,"Image viewer failed - it does not work with all Java versions");
 		}

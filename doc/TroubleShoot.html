@@ -1,86 +1,95 @@
-<HTML>
-<HEAD>
-	<TITLE>SyMAP Troubleshooting</TITLE>
+<html>
+<head>
+	<title>SyMAP Trouble Shoot</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	<style>
-		a.wt {color:inherit;}
-		table {font-size:100%}
-		tr {font-size:100%}
-		td {font-size:100%}
-		tt {font-size:13px}
-		a {font-size:100%}
-		li {padding-top:2px;}
+a.wt {color:inherit;}
+table {font-size:100%}
+tr {font-size:100%}
+td {font-size:100%}
+tt {font-size:13px}
+pre {font-size:13px}
+a {font-size:100%}
+code {font-family: courier, monospace;  font-size: 16px;font-weight: 300;font-variant: small-caps;}
 	</style>
 </head>
 <body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
-<!--#include virtual="/common/uaheader.html" -->
 
-	<a name=top></a>
-	<table align="center" width=750 style="border: 1px solid #999999" cellspacing="0" cellpadding="0">
-	  <tr>
-	  <td>
-		  <table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
-		    <tr>
-    	  <td height="60" width="161" align="left" valign="bottom">
-       		<img alt="" title="" src="img/agcol_logo.png">
-       	</td>
-		    <td height="60" width="428" align="left" valign="bottom"
-				style="padding:0px 0px 10px 30px">
-			    <font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
-				    <b>SyMAP Troubleshooting</b>
-			    </font> 
-		    </td>
-		    <td height="60" width="161" align="center" valign="bottom">&nbsp;
-        </td>
+
+<a name=top></a>	
+<table align="center" style="border: 1px solid #999999" cellspacing="0" cellpadding="0">
+	<tr><td width="100%" style="background-color: #CCCCCC;">
+	<a href="http://www.arizona.edu">
+	<img border="0" alt="The University of Arizona" title="The University of Arizona" src="./img/UA.gif"></a>
+	</td></tr>
+	
+	<tr><td>
+		<table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
+		  	<tr><td height="60" width="161" align="left" valign="bottom">
+       						<img alt="" title="" src="./img/agcol_logo.png">
+       			</td>
+		    	<td height="60" width="428" align="left" valign="bottom" style="padding:0px 0px 10px 30px" size=5>
+					<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
+				    	<b>SyMAP Trouble Shoot</b>
+					</font>
+		    	</td>
+		    	<td height="60" width="161" align="center" valign="bottom">&nbsp;
+        		</td>
 		    </tr>
-
-		    <tr>
-		    <td height="21" colspan="3" align="left">
+		    <tr><td height="21" colspan="3" align="left" valign="top">
 			    <table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
-			    <tr>
-			    <td align="left" bgcolor="#666666">
+			    	<tr><td align="left" bgcolor="#666666">
 <span style="font-size:75%;color:white">
 <a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
-<a href=../index.html class="wt">SyMAP Home</a> |
+<a href="http://www.agcol.arizona.edu/software/symap" class="wt">SyMAP Home</a> |
+<a href=index.html class="wt">Index</a> |
 <a href=SystemGuide.html class="wt">System Guide</a> |
 <a href=UserGuide.html class="wt">User Guide</a> |
 <a href=Tour.html class="wt">Tour</a> |
-Troubleshooting 
+Troubleshooting
 </span>
-          </table>
-			    </td>
-			    </tr>
-          <tr>
-    	    <td colspan="3" valign="top" align="left" style='padding:15px;font-size:85%;width:750px;'>
-
+					</td></tr>
+				</table>
+			</td></tr>
+			
+			
+	        <tr><td colspan="3" valign="top" align="left" style='padding:20px 15px 0px 15px;font-size:85%'>
+	        
 <a name="top"></a>
-<br>
 <i>Please send questions and suggestions to symap@agcol.arizona.edu.</i><br>
+<p>As of SyMAP v5.0.6, the Applet has been removed and will no longer be supported; 
+it is in earlier SyMAP versions, and can
+be obtained at <a href="https://github.com/csoderlund/SyMAP">github<a/>.
+
+<h4>Contents</h4>
 <p>
 <ul>
-<li>General
+<li>Memory
 <ul>
-<li><a href="#not_enough_memory1">Not enough memory with standalone</a></li>
+<li><a href="#not_enough_memory1">Not enough memory</a></li>
 </ul>
-
-<li>MySQL
+<br>
+<li>MySQL suggested settings
 <ul>
-<li><a href="#database_error">Database connect errors</a> ("Unable to connect","Error running SQL Command",...)</li>
-<li><a href="#mariadb">MariaDB cannot connect</a>
 <li><a href="#msqslow">Slow to load sequence and annotation</a>
 <li><a href="#slow">Slow queries</a>
 </ul>
-
-<li>Build problems
+<br>
+<li>MySQL 
 <ul>
-<li>Database
-<ul>
+<li><a href="#database_error">Database connect errors</a> ("Unable to connect","Error running SQL Command",...)</li>
+<li><a href="#mariadb">MariaDB cannot connect</a>
 <li><a href="#innodb">The MySQL database does not support Innodb tables</a>
-<li><a href="#mysql_norun">The built-in MySQL server cannot run...</a></li>
 <li><a href="#root">Please read "Security" section of the manual to find out how to run mysqld as root</a> 
 <li><a href="#msqcase"> Can't create table  (errno: 121)</a>
 </ul>
-
+<br>
+<li>External programs
+<ul>
+<li><a href="#exec">Not executable</a>
+<li><a href="#run">Fails to execute</a>
+</ul>
+<br>
 <li>Alignment
 <ul>
 <li><a href="#status">Status window disappeared</a>
@@ -92,21 +101,14 @@ Troubleshooting
 </ul>
 </ul>
 
-<li>Web problems
-<ul>
-<li><a href="#web">Unable to view Java applets</a>
-<li><a href="#not_enough_memory2">Not enough memory on web</a></li>
-</ul>
-
 </ul>
 
 <hr>
-<h2>General</h2>
+<h2>Memory</h2>
 <a name="#not_enough_memory1">
-<h3>Not enough memory with standalone</h3>
-When running SyMAP as a standalone application:
+<h3>Not enough memory</h3>
 For very large projects, or queries involving multiple
-genomes (e.g., 5 or more), the Project Manager may run out of memory.
+genomes (e.g. 5 or more), the Project Manager may run out of memory.
 To fix this problem, run symap with the -m parameter to increase the maximum
 memory used from the default 2048 MB to 4096 MB.:
 <pre><b>     &#62 ./symap -m 4096</b></pre>
@@ -121,74 +123,14 @@ You will also need to be using a 64-bit processor.
 
 <!---------------------------------------------------------!>
 <hr>
-<h2>MySQL</h2>
-<a name="database_error">
-<h3>Database connect errors</h3>
-Error messages mentioning the database or SQL probably mean that the database connection
-could not be established or was lost. A message at startup means SyMAP was not able
-to connect to the database using the provided information in <tt>symap.config</tt>; see below for 
-steps to debug this. 
-<p>
-After startup, if the program is left idle for some time then its
-database connection will close and it will show a complicated-looking error on 
-next usage. In this case the solution is to restart the program.
-<p>
-
-Following are some things to check for connection problems on SyMAP startup:
-
-<p><u>Check the database privileges</u>:
-The database users specified in symap.config may not have necessary access to the database.
-If you are running the standalone version, then the relevant user is 'db_adminuser' (unless
-you are running a read-only session using <tt>viewSymap</tt>). If you are running
-through the web applet, then is is 'db_clientuser'. In either case the user needs
-to have database access privileges <i>from the machine where you are working</i>. 
-Note that MySQL
-privileges are granted specifically to certain users on certain machines. You can test 
-the user access by using the MySQL command line client <tt>mysql</tt>, if it is installed
-on your machine, or by looking at the privilege table using an administration interface
-such as PHPMyAdmin. The <tt>mysqlaccess</tt> tool is also useful, if it is installed
-on your machine. 
-
-<p><u>Check the MySQL configuration</u>:
-The MySQL configuration file (/etc/my.cnf) should <b>not</b> contain any
-of the following lines that prevent remote access to the database.
-<tt><pre>     bind_address=127.0.0.1
-     skip_networking 
-</pre></tt>
-
-<p><u>Make sure the port is visible</u>:
-If the database is on a different computer, test that its port 3306 is visible
-from your computer:
-<pre>     telnet &lt;server address&gt; 3306
-</pre>
-
-If it doesn't make a connection then either the server isn't running, or 
-it is set to run on a non-standard port, or the
-port is blocked by a firewall. Contact a system administrator. (Note, 
-to get out of telnet type "<tt>^]</tt>".)
-
-<a name="mariadb">
-<h4>MariaDB cannot connect </h4>
-If you are using MariaDB (post version 10.4.12) and get the error:
-<pre>
-Unable to connect to the mysql database on localhost; are username and password correct?
-</pre>
-Try adding the following lines to the <tt>/etc/my.cnf</tt>:
-<pre>
-[mysqld]
-character-set-server=utf8mb4
-</pre>
-And restart MariaDB with <tt>systemctl restart mariadb</tt>. 
-<p>Thanks to Lori for this solution! 
-
+<h2>MySQL suggested settings</h2>
 <a name="msqslow">
 <h3>Slow to load sequence and annotation</h3>
 
 Two MySQL settings are especially important for SyMAP performance (and generally for InnoDB table
-performance). You can set these in the MySQL configuration file "my.cnf" and restart MySQL. 
-Note that my.cnf is located at /etc/my.cnf, on both Linux and Mac.
+performance). 
 <p>
-<table width=600 cellspacing=3 cellpadding=2 border=1 rules=all>
+<table width=650 cellspacing=3 cellpadding=2 border=1 rules=all>
 	<tr>
 		<td align=left valign=top><tt>innodb_buffer_pool_size</td>
 		<td>
@@ -214,10 +156,12 @@ To change the variables, then type:
 set global innodb_buffer_pool_size=1073741824;
 set global innodb_flush_log_at_trx_commit=0;
 </pre>
-Different machines and MySQL installations can produce different results with these variables.
+Alternatively, You can set these in the MySQL configuration file <tt>my.cnf</tt> and restart MySQL. 
+Note that <tt>my.cnf</tt> is typically located at <tt>/etc/my.cnf</tt>, on both Linux and Mac.
+
+<p>Different machines and MySQL installations can produce different results with these variables.
 If the SyMAP demo-seq to demo-seq2 load and synteny computations seem slow, 
 try different combinations of these two variables to see what performs the fastest inserts.
-
 
 <a name="slow">
 <h3>Slow queries</h3>
@@ -236,68 +180,194 @@ To change this variable, then type:
 <pre>set global max_allowed_packet=1073741824;</pre>
 <p><a href="#top">Return to top</a><br>
 
-<!--------------------------------------------------------!>
+<!---------------------------------------------------------!>
 <hr>
-<h2>Build problems</h2>
+<h2>MySQL</h2>
+<a name="database_error">
+<h3>Database connect errors</h3>
+After startup, if the program is left idle for some time then its
+database connection will close and it will show a complicated-looking error on 
+next usage, or it may say this:
+<pre>
+com.mysql.jdbc.CommunicationsException: Communications link failure due to underlying exception:
 
-<h3>Database</h3>
-Note that the demo_seq should load
-in less than a minutes, if its longer, check the variables stated in <a href=#msqslow>slow to load</a>.
+** BEGIN NEXTED EXCEPTION **
+</pre>
+In this case the solution is to restart the program. 
+<p>
+On startup, error messages mentioning the database or SQL probably mean that the database connection
+could not be established or was lost. A message at startup means SyMAP was not able
+to connect to the database using the provided information in <tt>symap.config</tt>. First, make sure
+your <tt>db_adminuser</tt> and <tt>db_adminpasswd</tt> are correct.
+
+<p>These days, the best way to find the MySQL problems is to search the internet. However,
+the following are some things to check for connection problems on SyMAP startup:
+
+<p><u>Check the database privileges</u>:
+The database users specified in <tt>symap.config</tt> may not have necessary access to the database.
+If you running the read/write <tt>symap</tt>, then the relevant user is <tt>db_adminuser</tt>. If 
+you are running a read-only session using <tt>viewSymap</tt>, it will use the
+read-only <tt>db_clientuser</tt> or read-write <tt>db-adminuser</tt>. In either case the user needs
+to have database access privileges <i>from the machine where you are working</i>. 
+
+Note that MySQL privileges are granted specifically to certain users on certain machines. You can test 
+the user access by using the MySQL command line client <tt>mysql</tt>, if it is installed
+on your machine, or by looking at the privilege table using an administration interface
+such as PHPMyAdmin. The <tt>mysqlaccess</tt> tool is also useful, if it is installed
+on your machine. 
+
+<p><u>Check the MySQL configuration</u>:
+The MySQL configuration file (<tt>/etc/my.cnf</tt>) should <b>not</b> contain any
+of the following lines that prevent remote access to the database.
+<tt>
+<pre>     
+	bind_address=127.0.0.1
+	skip_networking 
+</pre></tt>
+
+<p><u>Make sure the port is visible</u>:
+If the database is on a different computer, test that its port 3306 is visible
+from your computer:
+<pre>     telnet &lt;server address&gt; 3306
+</pre>
+
+If it does not make a connection then either the server is not running, or 
+it is set to run on a non-standard port, or the
+port is blocked by a firewall. Contact a system administrator. (Note, 
+to get out of telnet type "<tt>^]</tt>".)
+
+<a name="mariadb">
+<h3>MariaDB cannot connect </h3>
+If you are using MariaDB (post version 10.4.12) and get the error:
+<pre>
+Unable to connect to the mysql database on localhost; are username and password correct?
+</pre>
+Try adding the following lines to the <tt>/etc/my.cnf</tt>:
+<pre>
+[mysqld]
+character-set-server=utf8mb4
+</pre>
+And restart MariaDB with <tt>systemctl restart mariadb</tt>. 
+<p>Thanks to Lori for this solution! 
 
 <a name="innodb">
-<h5>The database does not support Innodb tables</h5>
+<h3>The database does not support Innodb tables</h3>
 This can happen in a couple of ways ways. Look in the mysql log for clues.  
 <li> MySQL started with the "skip-innodb" flag. Solution is to remove this. 
 <li> InnoDB log file problems. This can happen if you change the log file size, without
 deleting the log file. Solution: shut down mysql, remove the innodb log file, and restart mysql. 
 
-<a name="mysql_norun">
-<h5>"The built-in MySQL server cannot run..."</h5>
-SyMAP comes with a MySQL server built in, but it does not run right if there is another
-MySQL server already running on the computer. There are two solutions: either stop the 
-other server temporarily, or edit the parameters file to point SyMAP at that server (or
-another server) so it doesn't use the built-in MySQL. 
 
 <a name="root">
-<h5>Please read "Security" section of the manual to find out how to run mysqld as root</h5> 
+<h3>Please read "Security" section of the manual to find out how to run mysqld as root</h3> 
 You are launching SyMAP as the unix root user, which is blocked by MySQL 
 as a security hazard. Solution is simply to use a regular non-root user account.  
 
 <a name="msqcase">
-<h5>Can't create table  (errno: 121)</h5>
+<h3>Can't create table  (errno: 121)</h3>
 This can occur if you try to create a SyMAP database whose name differs only by
 case from an existing database, e.g. "symapTest" when "symaptest" already exists. 
 
 <p><a href="#top">Return to top</a><br>
 
-<h3>Alignment</h3>
+<!--------------------------------------------------------!>
+
+<hr>
+<a name="ext">
+<h2>External programs</h2>
+
+The SyMAP package comes with compiled versions of MUMmer (sequence alignment),
+Blat (FPC alignment) and Muscle (SyMAP Queries). These programs are in the
+<tt>symap_5/ext</tt> directory. There are compiled versions for 64-bit Linux
+and 64-bit MacOS. For example, in the <tt>symap_5/ext/mummer</tt> directory,
+there are sub-directories <tt>linux64</tt> and <tt>mac</tt>. SyMAP will
+select the correct directory for the machine you are running from, i.e. you
+do not need to do anything. 
+
+<a name="exec"></a>
+<h3>Not executable</h3>
+When SyMAP creates a database, it (1) checks the MySQL variables, and (2) checks
+that the external programs are executable. If you see a message like:
+<pre>
+***Error - file is not executable: ext/mummer/mac/promer
+</pre>
+Execute:
+<pre>
+> chmod 755 ext/mummer/mac/promer
+</pre>
+
+<h4>MacOS 10.15 (and possibly earlier versions)</h4>
+Any executable that has not been okayed by Apple get the error message
+"cannot be opened because the developer cannot be verified". Hence, you need
+to use the Finder to enter all <tt>/ext/&lt;program&gt;/mac</tt> directories,
+select each program, then choose to Open it; it will run the program in a terminal
+window and be saved as a program that can thereafter be run.
+
+<a name="run"></a>
+<h3>Fails to execute</h3>
+If when "Alignment&Synteny" is executing, you get a message to the terminal like:
+<pre>
+Error running command: /Users/cari/Workspace/github/symap/ext/mummer/mac/promer  
+-p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_cc.demo_seq2_f2.promer 
+data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa 
+data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
+</pre>
+One of the following should elucidate the problem (say the problem occurred when running <tt>promer</tt> on MacOS):
+<ol>
+<li>Enter the <tt>logs</tt> directory, then the directory of the pair (e.g. <tt>demo_seq_to_demo_seq2</tt>). View one
+of the <tt>.log</tt> file, which contains the output of <tt>promer</tt>.
+<li>Copy the command (beside "Error running command:") from the terminal, and past it on a new terminal line to execute.
+This shows <tt>promer</tt> output directly on the terminal.
+<li>Enter the <tt>ext/mummer/mac</tt> directory (or the appropriate one), and execute the command at the command line,
+e.g <tt>./promer</tt>. 
+</ol>
+All the above give additional that may show the problem and lead to the fix. 
+<p>
+Otherwise, you may need to compile the program on your machine. In this case,
+replace the existing executables with your compiled ones. For example, if you compile MUMmer,
+look at the respective <tt>ext/mummer/mac</tt> directory and copy the
+corresponding programs in. The <tt>promer</tt> and <tt>nucmer</tt> are perl scripts that
+have paths hard-coded at the top, which need to be changed to <tt>./ext/mummer/mac/</tt>.
+
+<h4>Early versions of MacOS</h4>
+The MacOS executables were compiled on a MacOS 10.15. These will not work on old versions such as MacOS 10.9;
+however, the directories with the the <tt>pre506</tt> suffixes. If you do the following:
+<pre>
+mv mac mac_506
+mv mac_pre506 mac
+</pre>
+These executables compiled ona MacOS 10.9 may work  on your Mac.
+
+<h4>32-bit</h4>
+It seems that 32-bit machines are history. However, the <tt>linux</tt> directories have executables
+assembled on a 32-bit machine. 
+
+<p><a href="#top">Return to top</a><br>
+
+<!--------------------------------------------------------!>
+<hr>
+
+
+<h2>Alignment</h2>
+If MUMmer or Blat fail to run, see the above section.
 
 <a name="status">
-<h4>Status window disappeared</h4>
+<h3>Status window disappeared</h3>
 Occasionally the status window disappears when running an alignment. 
 Clicking the top of the project manager sometimes
 brings it back. Otherwise, just check the output to the terminal,
 which tells you when it is done. You may
-have to restart the project manager to see the results.
+have to restart <tt>symap</tt> to see the results.
 
-<a name="glib">
-<h4>/lib64/libc.so.6: version `GLIBC_2.7' not found </h4>
-If this occurs while you are doing an alignment, it
- means that some libraries on your system are not compatible with those
-required by the version of MUMmer which is included with SyMAP. To solve this
-you will need to obtain the MUMmer source code distribution and compile
-it on your own system, which is not hard to do (however, 
-<a href="#mum64">note this important detail</a>). Then, copy the binary named
-"mummer" to the appropriate ext/mummer/&lt;platform&gt; directory and re-run SyMAP. 
 
 <a name="mumFail">
-<h4>MUMmer failed</h4>
+<h3>MUMmer failed</h3>
 Try using a hard-masked genome sequence. Ensembl supplies both soft-masked and
 hard-masked genome sequences. NCBI supplies soft-masked sequences, where the
 supplied ConvertNCBI script (scripts/ConvertNCBI) can convert the file to hard-mask.
 
 <a name="mum64">
-<h4>MUMmer/PROmer cannot handle large sequences</h4>
+<h3>MUMmer/PROmer cannot handle large sequences</h3>
 If the alignment doesn't produce results and you see errors indicating
 that PROmer cannot produce the .aaqry file, then the mummer binary may
 not be 64-bit. You can tell for sure by looking at the output lines like
@@ -318,7 +388,7 @@ for lintel64, but if you're building for a different platform you'll have
 to make this fix. 
 
 <a name="noanch">
-<h4>No anchors loaded</h4>
+<h3>No anchors loaded</h3>
 This message indicates that SyMAP could not parse the MUMmer or BLAT output files
 to load the anchors. 
 <p>
@@ -347,70 +417,14 @@ These contain the messages printed by MUMmer, and should show why it failed to r
 <p>
 
 <a name="bes">
-<h4>BES not loaded, or BES hits not loading</h4>
+<h3>FPC: BES not loaded, or BES hits not loading</h3>
 Generally, this is caused by a name formatting error. Make sure the BES
 names are formatted as clone names with extension "r" or "f". The clone
 names should <i>exactly match</i> those in FPC, and there should be no other prefix or suffix. 
 Do not use ".r" or ".f". 
 
 <p><a href="#top">Return to top</a><br>
-<hr>
-<!--------------------------------------------------------!>
-<h2>Web problems</h2>
-<a name="web">
-<h4>Unable to view Java applets</h4>
-
-<ul>
-<li>SyMAP requires the Java Runtime Environment (JRE) version 7 or later. The latest version tested is Java 8 Update 221.
-<li>Java Applets ONLY work with Windows Internet Explorer and Mac Safari.
-<li>A popup will first appear asking you to confirm that you trust this website.
-<li>It is useful to have the Java Console enabled so you can view the SyMAP trace output. 
- </ul>
- 
-<a name="not_enough_memory2">
-<h4>Not enough memory on web</a></h4>
-This section may be out-of-date.
-<p>When running SyMAP from a web page (i.e., as an applet):
-The default Java applet memory limit is very low, and memory may run out
-for large displays or for the 2D Base View.  Increase the Java memory limit for your system using 
-the instructions below:
-<p>
-On Windows:
-<ol>
-<li>From the <b>Start</b> menu button, select <b>Settings</b>, then <b>Control Panel</b> to open the Control Panel.
-Or right click on the Java icon in the lower right of the task bar.
-<li>Double click the Java icon to open the <b>Java Control Panel</b>.
-<li>Select the <b>Java</b> tab.
-<li>Click the <b>View</b> button under <b>Java Applet Runtime Settings</b>.
-<li>For each row, click the <b>Java Runtime Parameters</b> column and type <b>-Xmx512m</b> and press enter.
-<li>Click the <b>OK</b> button to close the Control Panel.
-<li>Restart your browser.
-</ol>
-On Mac:
-<ol>
-<li>In the Finder, select <b>Go</b> then select <b>Applications</b>.
-<li>In the new window select <b>Utilities</b>, then double-click <b>Java Preferences</b> to open the <b>Java Control Panel</b>.
-<li>Select the top-most Java version in the list under <b>Java Applet Plugin</b> and click <b>Options</b>.
-<li>Under <b>Java Runtime Parameters</b> enter <b>-Xmx512m</b>.
-<li>Click the <b>OK</b> button and close the Control Panel.
-<li>Restart your browser.
-</ol>
-On Unix:
-<ol>
-<li>First locate the Java plugin file, under your home directory in either 
-	<tt>~/.mozilla/plugins</tt> or <tt>~/.mozilla/firefox/plugins</tt>
-<li>Use <tt>ls -l</tt> to find where the plugin is linked from. This is the Java install directory. 
-<li>Change to the install directory and execute <b>bin/ControlPanel</b> to open the <b>Java Control Panel</b>.
-<li>Select the <b>Java</b> tab.
-<li>Click the <b>View</b> button under <b>Java Applet Runtime Settings</b>.
-<li>For each row, click the <b>Java Runtime Parameters</b> column and enter <b>-Xmx512m</b>.
-<li>Click the <b>OK</b> button to close the Control Panel.
-<li>Restart your browser.
-</ol>
-<p><a href="#top">Return to top</a><br>
-<hr>
-
-
+<p>&nbsp;
 </div>
 </table>
   <table width="100%" border="0" align="center">
@@ -423,7 +437,6 @@ On Unix:
   </table>
 <br>
 
-<p>&nbsp;</p>
 		</td>
 	</tr>
 

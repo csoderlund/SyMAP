@@ -30,6 +30,7 @@ import dotplot.DotPlotFrame;
 import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.pool.DatabaseUser;
+import symap.pool.Version;
 import util.Cancelled;
 import util.ErrorCount;
 import util.DatabaseReader;
@@ -43,10 +44,8 @@ import util.PropertiesReader;
 import blockview.*;
 import circview.*;
 
-import symap.projectmanager.common.PropertyFrame;
 import symapQuery.Q;
 import symapQuery.SyMAPQueryFrame;
-import symap.projectmanager.common.Project;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ProjectManagerFrameCommon extends JFrame implements ComponentListener {
@@ -200,12 +199,12 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		String db_adminpasswd  = mProps.getProperty("db_adminpasswd");
 		String db_clientuser   = mProps.getProperty("db_clientuser");
 		String db_clientpasswd = mProps.getProperty("db_clientpasswd");
-		String cpus 			  = 	mProps.getProperty("nCPUs"); // CAS500
+		String cpus 		   = mProps.getProperty("nCPUs"); // CAS500
 
 		if (db_server != null) 			db_server = db_server.trim();
 		if (db_name != null) 			db_name = db_name.trim();
 		if (db_adminuser != null) 		db_adminuser = db_adminuser.trim();
-		if (db_adminpasswd != null) 		db_adminpasswd = db_adminpasswd.trim();
+		if (db_adminpasswd != null) 	db_adminpasswd = db_adminpasswd.trim();
 		if (db_clientuser != null) 		db_clientuser = db_clientuser.trim();
 		if (db_clientpasswd != null) 	db_clientpasswd = db_clientpasswd.trim();
 
@@ -245,28 +244,32 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		if (Utilities.isStringEmpty(db_adminuser))	db_adminuser = "admin";
 		if (Utilities.isStringEmpty(db_clientuser))	db_clientuser = "admin";
 		if (Utilities.isStringEmpty(db_name))		db_name = "symap";
-		setTitle(WINDOW_TITLE + " - Database: " + db_name);
 		
+		setTitle(WINDOW_TITLE + " - Database: " + db_name);
 		System.out.println("SyMAP database " + db_name);
 		
 		// Open database connection and create database if it doesn't exist
         Class.forName("com.mysql.jdbc.Driver");
         DatabaseUser.shutdown(); // in case shutdown at exit didn't work/happen
         if (!inReadOnlyMode) {
-	        	if (!DatabaseUser.createDatabase(db_server, db_name, db_adminuser, db_adminpasswd)) {
-	        		System.err.println(DB_ERROR_MSG);
-	        		System.exit(-1);
-	        	}
+	        if (!DatabaseUser.createDatabase(db_server, db_name, db_adminuser, db_adminpasswd)) {
+	        	System.err.println(DB_ERROR_MSG);
+	        	System.exit(-1);
+	        }
         }
         return DatabaseUser.getDatabaseReader(SyMAPConstants.DB_CONNECTION_PROJMAN,
-        		DatabaseUser.getDatabaseURL(db_server, db_name),
-        		(inReadOnlyMode ? db_clientuser : db_adminuser),
-        		(inReadOnlyMode ? db_clientpasswd : db_adminpasswd), null);
+        	DatabaseUser.getDatabaseURL(db_server, db_name),
+        	(inReadOnlyMode ? db_clientuser : db_adminuser),
+        	(inReadOnlyMode ? db_clientpasswd : db_adminpasswd), null);
 	}
 	
 	private void initialize() {
 		try {
-			if (dbReader == null) dbReader = getDatabaseReader();
+			if (dbReader == null) {
+				dbReader = getDatabaseReader();
+				
+				new Version(new UpdatePool(dbReader));
+			}
 			
 			Utilities.setResClass(this.getClass());
 			Utilities.setHelpParentFrame(this);
@@ -555,7 +558,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	/***********************************************************
 	 * CAS505 rewrote
 	 */
-	
 	private void updateEnable() {
 		if (alignmentTable == null) return;
 		
@@ -861,7 +863,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			btnSelAlign.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					Project[] projects = getSelectedAlignmentProjects();
-					promptAndProgressAlignProjects(projects[0], projects[1], false);
+					if (checkPairs(projects[0], projects[1]))
+						promptAndProgressAlignProjects(projects[0], projects[1], false);
 				}
 			} );
 			
@@ -1016,7 +1019,52 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		
 		return mainPanel;
 	}
+	/******************************************************
+	 * CAS506 - add some checks before starting order against project
+	 */
+	private boolean checkPairs(Project mProj1, Project mProj2) {
+		String n1, n2, o;
+		
+		if (mProj1.isFPC() || mProj2.isFPC()) return true;
+		
+		String o1 = mProj1.getOrderAgainst();
+		String o2 = mProj2.getOrderAgainst();
+		
+		if (o1==null || o2==null) return true; // CAS506 got null on linux
+		if (o1.equals("") && o2.equals("")) return true;
+		
+		if (!o1.equals("") && !o2.equals("")) {
+			String msg = mProj1.getDBName() + " and " + mProj2.getDBName() + " both have 'ordered against'" +
+					"\nOnly one can have this set";
+			Utilities.showErrorMessage(msg);
+			return false;
+		}
+		
+		if (o2.equals(""))      {o=o1; n1=mProj1.getDBName(); n2=mProj2.getDBName(); }
+		else if (o1.equals("")) {o=o2; n1=mProj2.getDBName(); n2=mProj1.getDBName(); }
+		else return true;
+		
+		try {
+			if (!o.equals(n2)) {
+				String msg = n1 + " 'order against' set to " + o + 
+						"\nNo ordering with alignment to  " + n2 +
+						"\n(You may want to Cancel and set 'order against' to " + n2 +")\n";
+				if (!Utilities.showContinue("Order against", msg)) return false;
+			}
+		
+			String ordProjName = n1 + OrderAgainst.orderSuffix; // directory uses dbname, no display name
+			String ordDirName =  Constants.seqDataDir + ordProjName;
+			File   ordDir = new File(ordDirName);
 	
+			if (ordDir.exists()) {
+				String msg = "Directory exists: " + ordProjName  + "\nIt will be over-written.\n";
+				if (!Utilities.showContinue("Order against", msg)) return false;
+			}	
+			
+			return true;
+		}
+		catch (Exception e) {ErrorReport.print(e, "Checking order against"); return false;}
+	}
 	
 	private ActionListener showPairProps = new ActionListener() {
 		public void actionPerformed(ActionEvent arg0) 
@@ -1952,11 +2000,17 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			}
 		}		
 	}
-	
-	private void doAllPairs() // not used
+	/***********************************************
+	 * Called when All Pairs is selected
+	 * CAS506 added checkPairs logic
+	 */
+	private void doAllPairs() 
 	{
 		Cancelled.init();
 		if (alignmentTable == null) return;
+		
+		Vector <Project> pList1 = new Vector <Project> ();
+		Vector <Project> pList2 = new Vector <Project> ();
 		
 		int nRows = alignmentTable.getRowCount();
 		int nCols = alignmentTable.getColumnCount();
@@ -1989,12 +2043,24 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					p2 = ordered[1];
 					if (p1.getID() != p2.getID())
 					{
-						System.out.println("\n>>Starting " + p1.getDBName() + " and " + p2.getDBName());
-					
-						promptAndProgressAlignProjects(p1, p2, true);
+						if (checkPairs(p1, p2)) { // CAS506 
+							pList1.add(p1);
+							pList2.add(p2);
+						}
+						else {
+							System.out.println("Abort All Pairs");
+							return;
+						}
 					}
 				}
 			}	
+		}
+		System.out.println(">> Start all pairs: processing " + pList1.size() + " project pairs <<");
+		for (int i=0; i<pList1.size(); i++) {
+
+			System.out.println("\n>>Starting " + pList1.get(i) + " and " + pList2.get(i));
+		
+			promptAndProgressAlignProjects(pList1.get(i), pList2.get(i), true);
 		}
 		System.out.println("All Pairs complete. ");
 	}
@@ -2059,29 +2125,29 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				if (aligner.getNumRemaining() == 0 && aligner.getNumRunning() == 0) return;
 				if (Cancelled.isCancelled()) return;
 				
-				progress.updateText("\nRunning alignments:\n",
-				aligner.getStatusSummary() + "\n" +
-				aligner.getNumCompleted() + " alignments completed, " +
-				aligner.getNumRunning()   + " running, " +
-				aligner.getNumRemaining() + " remaining\n\n");
+				// CAS506 reworded progress message
+				String msg = "\nAlignments:  running " + aligner.getNumRunning()   + 
+						               ", completed " + aligner.getNumCompleted();
+				if (aligner.getNumRemaining()>0) 
+					            msg += ", queued " + aligner.getNumRemaining();
+				
+				progress.updateText("\nRunning alignments:\n", aligner.getStatusSummary() + msg + "\n");
 
 				while (aligner.getNumRunning() > 0 || aligner.getNumRemaining() > 0) {
 					if (Cancelled.isCancelled()) return;
 					Utilities.sleep(10000);
 					if (Cancelled.isCancelled()) return;
 					
+					msg = "\nAlignments:  running " + aligner.getNumRunning()   + 
+							                  ", completed " + aligner.getNumCompleted();
+					if (aligner.getNumRemaining()>0) 
+			            msg += ", queued " + aligner.getNumRemaining();
+					
 					progress.updateText("\nRunning alignments:\n",
-							aligner.getStatusSummary() + "\n" +
-							aligner.getNumCompleted() + " alignments completed, " +
-							aligner.getNumRunning()   + " running, " +
-							aligner.getNumRemaining() + " remaining\n\n");
+							aligner.getStatusSummary() + msg + "\n");
 				}
+				progress.updateText("Alignments:" ,  "Completed " + aligner.getNumCompleted() + "\n\n");
 				
-				progress.updateText("\nRunning alignments:\n",
-						aligner.getStatusSummary() + "\n" +
-						aligner.getNumCompleted() + " alignments completed, " +
-						aligner.getNumRunning()   + " running, " +
-						aligner.getNumRemaining() + " remaining\n\n");
 			}
 		};
 		
@@ -2570,7 +2636,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
         
         // Load count of groups for each project
         for (Project p : projects) {
-	        rs = pool.executeQuery("SELECT count(*) FROM groups AS p " +
+	        rs = pool.executeQuery("SELECT count(*) FROM xgroups AS p " +
 	        		"WHERE proj_idx=" + p.getID());
 	        
 	        rs.next();
@@ -2579,19 +2645,19 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	        rs.close();
 	        
 	        rs = pool.executeQuery("select count(*) from pseudo_annot as pa " +
-	        		" join groups as g on g.idx=pa.grp_idx " +
+	        		" join xgroups as g on g.idx=pa.grp_idx " +
 	        		" where g.proj_idx=" + p.getID());
 	        rs.first();
 	        int numAnnot = rs.getInt(1);
 	        
 	        rs = pool.executeQuery("select count(*) from pseudo_annot as pa " +
-	        		" join groups as g on g.idx=pa.grp_idx " +
+	        		" join xgroups as g on g.idx=pa.grp_idx " +
 	        		" where g.proj_idx=" + p.getID() + " and type='gene'");
 	        rs.first();
 	        int numGene = rs.getInt(1); // CAS505 add numGene and numGap
 	        
 	        rs = pool.executeQuery("select count(*) from pseudo_annot as pa " +
-	        		" join groups as g on g.idx=pa.grp_idx " +
+	        		" join xgroups as g on g.idx=pa.grp_idx " +
 	        		" where g.proj_idx=" + p.getID() + " and type='gap'");
 	        rs.first();
 	        int numGap = rs.getInt(1);
@@ -2601,8 +2667,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	        
 	        // CAS500 for Summary and for orderProjects
 	        rs = pool.executeQuery("select sum(length) from pseudos " +
-					"join groups on groups.idx=pseudos.grp_idx  " +
-					"where groups.proj_idx=" + p.getID());
+					"join xgroups on xgroups.idx=pseudos.grp_idx  " +
+					"where xgroups.proj_idx=" + p.getID());
 			if (rs.next()) p.setLength(rs.getLong(1));
 			rs.close();
         }
@@ -2648,7 +2714,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	private void removeProjectAnnotationFromDB(Project p) throws SQLException
 	{
 		UpdatePool pool = new UpdatePool(dbReader);
-        pool.executeUpdate("DELETE pseudo_annot.* from pseudo_annot, groups where pseudo_annot.grp_idx=groups.idx and groups.proj_idx=" + p.getID());
+        pool.executeUpdate("DELETE pseudo_annot.* from pseudo_annot, xgroups where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + p.getID());
 	}	
 	
 	private void removeAlignmentFromDB(Project p1, Project p2) throws Exception

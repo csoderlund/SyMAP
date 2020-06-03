@@ -16,9 +16,8 @@ import java.util.Collections;
 import java.util.TreeSet;
 import java.util.HashSet;
 
-import backend.Block; 
-import symap.projectmanager.common.ProjectManagerFrameCommon;
 import util.ErrorCount;
+import util.ErrorReport;
 import util.Logger;
 import util.Utilities;
 
@@ -75,7 +74,7 @@ public class SyntenyMain
 		
 		mLog.msg("Finding synteny for " + proj1Name + " and " + proj2Name);
 		//mProps.printNonDefaulted(mLog);
-
+		
 		mBlksByCase = new TreeMap<BCase,Integer>();
 		mBest = new TreeMap<Integer,Block>();
 		
@@ -314,7 +313,7 @@ public class SyntenyMain
 	{
 		bInterrupt = true;
 	}
-
+	
 	private void setGapProperties() throws Exception
 	{
 		int nHits = 0;
@@ -1016,13 +1015,14 @@ public class SyntenyMain
 	
 	private void uploadBlocks(Vector<Block> blocks) throws Exception
 	{
+		/** CAS506 very old schema update
 		if (!Utilities.tableHasColumn("blocks", "score",pool.createStatement() ))
 		{
 			System.out.println("Updating blocks table");
 			pool.executeUpdate("alter table blocks add score integer default 0 after corr");
 			pool.executeUpdate("update blocks set score=(select count(*) from pseudo_block_hits where block_idx=idx)");
 		}
-		
+		**/
 		for (Block b : blocks)
 		{
 			if (mProj1.isFPC())
@@ -1270,12 +1270,12 @@ public class SyntenyMain
 		TreeSet<Integer> ctgIdxUsed = new TreeSet<Integer>();
 		
 		String st = "SELECT ctg1_idx " +
-            		" FROM ctghits, contigs, groups " +
+            		" FROM ctghits, contigs, xgroups " +
             		" WHERE contigs.proj_idx = '" + mProj1.getIdx() + "'" +
             		" AND contigs.grp_idx = '" + mProj1.getUnanchoredGrpIdx() + "'" +
             		" AND contigs.idx = ctghits.ctg1_idx " +
-            		" AND groups.proj_idx = '" + mProj2.getIdx() + "'" +
-            		" AND ctghits.grp2_idx = groups.idx";
+            		" AND xgroups.proj_idx = '" + mProj2.getIdx() + "'" +
+            		" AND ctghits.grp2_idx = xgroups.idx";
 		ResultSet rs = pool.executeQuery(st);
 		while (rs.next())
 			ctgIdxUsed.add(rs.getInt(1));
@@ -1495,7 +1495,7 @@ public class SyntenyMain
 		}
 		assert(mProj1.idx == mProj2.idx);
 		Vector<Integer> grps = new Vector<Integer>();
-		rs = pool.executeQuery("select idx from groups where proj_idx=" + mProj1.idx);
+		rs = pool.executeQuery("select idx from xgroups where proj_idx=" + mProj1.idx);
 		while (rs.next())
 		{
 			grps.add(rs.getInt(1));
@@ -1554,8 +1554,8 @@ public class SyntenyMain
 		rs = pool.executeQuery("select blocknum, grp1.name, grp2.name, " +
 			" start1,end1,start2,end2,score,ngene1,ngene2,genef1,genef2 " +
 			" from blocks " +
-			" join groups as grp1 on grp1.idx=blocks.grp1_idx " + 
-			" join groups as grp2 on grp2.idx=blocks.grp2_idx " +
+			" join xgroups as grp1 on grp1.idx=blocks.grp1_idx " + 
+			" join xgroups as grp2 on grp2.idx=blocks.grp2_idx " +
 			" where blocks.pair_idx=" + mPairIdx + 
 			" order by grp1.sort_order asc,grp2.sort_order asc,blocknum asc");
 		while (rs.next())
@@ -1587,8 +1587,8 @@ public class SyntenyMain
 		rs = pool.executeQuery("select blocknum, grp1.name, grp2.name, " +
 			" ph.start1, ph.end1, ph.start2, ph.end2, a1.name, a2.name " +
 			" from blocks " +
-			" join groups            as grp1 on grp1.idx=blocks.grp1_idx " + 
-			" join groups            as grp2 on grp2.idx=blocks.grp2_idx " +
+			" join xgroups            as grp1 on grp1.idx=blocks.grp1_idx " + 
+			" join xgroups            as grp2 on grp2.idx=blocks.grp2_idx " +
 			" join pseudo_block_hits as pbh  on pbh.block_idx=blocks.idx " +
 			" join pseudo_hits       as ph   on ph.idx=pbh.hit_idx " + 
 			" left join pseudo_annot as a1   on a1.idx=ph.annot1_idx " +
@@ -1653,8 +1653,8 @@ public class SyntenyMain
 		}
 		// First set the order number for the genes, using the same number for 
 		// ones which overlap
-		pool.executeUpdate("update pseudo_annot, groups set pseudo_annot.genenum=0 where pseudo_annot.grp_idx=groups.idx and groups.proj_idx=" + mProj1.idx);
-		pool.executeUpdate("update pseudo_annot, groups set pseudo_annot.genenum=0 where pseudo_annot.grp_idx=groups.idx and groups.proj_idx=" + mProj2.idx);
+		pool.executeUpdate("update pseudo_annot, xgroups set pseudo_annot.genenum=0 where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + mProj1.idx);
+		pool.executeUpdate("update pseudo_annot, xgroups set pseudo_annot.genenum=0 where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + mProj2.idx);
 		
 		for (Project p : new Project[]{mProj1, mProj2})
 		{

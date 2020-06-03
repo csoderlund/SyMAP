@@ -3,21 +3,26 @@ package symap.pool;
 import java.sql.Connection;
 import java.sql.Statement;
 
+import symap.SyMAP;
 import util.ErrorReport;
+import util.Utilities;
 
 public class Schema {
 
 	public Schema(Connection conn) {
+		/********************************************
+		 * CAS506 MySQL v8 uses groups as a keyword, so changed ALL groups to xgroups
+		 * The update schema code was all over the place. So added mysql version and update
+		 */
 		/*********************************************
 		 * CAS504 moved from scripts/symap.sql to here. Called in DatabaseUser.createDatabase
 		 * Put it here now so I can add comments and I moved some tables...
 		 */
 		/*******************************************************
-		 Don't add fields to the middle of any of these tables
-		 because there are places in the code where values are inserted
-		 with order assumed!!!!!!!  CAS comment - bad design!
+		 Don't add fields to the middle of any of these tables because there are places in the code 
+		 where values are inserted with order assumed!!!!!!!  bad!
 		 Also if you add fields to the end of these tables you probably
-		 should change the code that populates the tables. CAS comment - bad design!
+		 should change the code that populates the tables. ick!
 		*****************************************************/
 		mConn = conn;
 // Projects
@@ -49,7 +54,7 @@ public class Schema {
 		    ")  ENGINE = InnoDB;";
 		executeUpdate(sql);
 		
-	    sql = "CREATE TABLE groups (" +
+	    sql = "CREATE TABLE xgroups (" +
 		    "idx                     INTEGER NOT NULL AUTO_INCREMENT," + // grp_idx
 		    "proj_idx                INTEGER NOT NULL," +
 		    "name                    VARCHAR(40) NOT NULL," +
@@ -135,8 +140,8 @@ public class Schema {
 		    "FOREIGN KEY (pair_idx) REFERENCES pairs (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj1_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj2_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
-		    "FOREIGN KEY (grp1_idx) REFERENCES groups (idx) ON DELETE CASCADE," +
-		    "FOREIGN KEY (grp2_idx) REFERENCES groups (idx) ON DELETE CASCADE" +
+		    "FOREIGN KEY (grp1_idx) REFERENCES xgroups (idx) ON DELETE CASCADE," +
+		    "FOREIGN KEY (grp2_idx) REFERENCES xgroups (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB;";
 		executeUpdate(sql);
 	
@@ -147,13 +152,13 @@ public class Schema {
 		    "file                TEXT NOT NULL," +
 		    "length              INTEGER NOT NULL," +
 		    "PRIMARY KEY (grp_idx)," +
-		    "FOREIGN KEY (grp_idx) REFERENCES groups (idx) ON DELETE CASCADE" +
+		    "FOREIGN KEY (grp_idx) REFERENCES xgroups (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB;";
 		executeUpdate(sql);
 		
 		sql = "CREATE TABLE pseudo_annot (" +
 		    "idx                 INTEGER AUTO_INCREMENT PRIMARY KEY," +  // annot_idx
-		    "grp_idx             INTEGER NOT NULL," +	// groups.idx
+		    "grp_idx             INTEGER NOT NULL," +	// xgroups.idx
 		    "type                VARCHAR(20) NOT NULL," +
 		    "name                TEXT  NOT NULL," +
 		    "start               INTEGER NOT NULL," +
@@ -161,7 +166,7 @@ public class Schema {
 		    "strand              ENUM('+','-') NOT NULL," +
 		    "text                TEXT  NOT NULL," +
 		    "INDEX (grp_idx,type)," +
-		    "FOREIGN KEY (grp_idx) REFERENCES groups (idx) ON DELETE CASCADE" +
+		    "FOREIGN KEY (grp_idx) REFERENCES xgroups (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB; "; 
 		executeUpdate(sql);
 		
@@ -180,7 +185,7 @@ public class Schema {
 		    "chunk               INTEGER NOT NULL," +
 		    "seq                 LONGTEXT  NOT NULL," +
 		    "INDEX (grp_idx)," +
-		    "FOREIGN KEY (grp_idx) REFERENCES groups (idx) ON DELETE CASCADE" +
+		    "FOREIGN KEY (grp_idx) REFERENCES xgroups (idx) ON DELETE CASCADE" +
 		    ") ENGINE = InnoDB; ";
 		executeUpdate(sql);	
 		
@@ -200,8 +205,8 @@ public class Schema {
 		    "pair_idx            INTEGER NOT NULL," +
 		    "proj1_idx           INTEGER NOT NULL," + // proj_props.proj_idx
 		    "proj2_idx           INTEGER NOT NULL," + // proj_props.proj_idx
-		    "grp1_idx            INTEGER NOT NULL," + // groups.idx
-		    "grp2_idx            INTEGER NOT NULL," + // groups.idx
+		    "grp1_idx            INTEGER NOT NULL," + // xgroups.idx
+		    "grp2_idx            INTEGER NOT NULL," + // xgroups.idx
 		    "evalue              DOUBLE NOT NULL," +
 		    "pctid               REAL NOT NULL," +
 		    "score               INTEGER NOT NULL," +
@@ -223,8 +228,8 @@ public class Schema {
 		    "FOREIGN KEY (pair_idx)  REFERENCES pairs (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj1_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj2_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
-		    "FOREIGN KEY (grp1_idx)  REFERENCES groups (idx) ON DELETE CASCADE," +
-		    "FOREIGN KEY (grp2_idx)  REFERENCES groups (idx) ON DELETE CASCADE" +
+		    "FOREIGN KEY (grp1_idx)  REFERENCES xgroups (idx) ON DELETE CASCADE," +
+		    "FOREIGN KEY (grp2_idx)  REFERENCES xgroups (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB; ";
 	    executeUpdate(sql);
 	    
@@ -247,9 +252,7 @@ public class Schema {
 		    "FOREIGN KEY (hit_idx)   REFERENCES pseudo_hits (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (block_idx) REFERENCES blocks (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB;";
-		 executeUpdate(sql);		
-		 
-	
+		 executeUpdate(sql);			
 		
 // FPC
 		sql = "CREATE TABLE contigs (" +
@@ -265,7 +268,7 @@ public class Schema {
 		    "INDEX (proj_idx,grp_idx)," +
 		    "INDEX (grp_idx)," +
 		    "FOREIGN KEY (proj_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
-		    "FOREIGN KEY (grp_idx) REFERENCES groups (idx) ON DELETE CASCADE" +
+		    "FOREIGN KEY (grp_idx) REFERENCES xgroups (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB;  ";  
 		 executeUpdate(sql);
 		 
@@ -384,7 +387,7 @@ public class Schema {
 		    "FOREIGN KEY (pair_idx) REFERENCES pairs (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj1_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj2_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
-		    "FOREIGN KEY (grp2_idx) REFERENCES groups (idx) ON DELETE CASCADE" +
+		    "FOREIGN KEY (grp2_idx) REFERENCES xgroups (idx) ON DELETE CASCADE" +
 		    ") ENGINE = InnoDB; ";
 		 executeUpdate(sql);
 		    
@@ -408,7 +411,7 @@ public class Schema {
 		    "INDEX (proj1_idx,grp2_idx,marker)," +
 		    "FOREIGN KEY (pair_idx) REFERENCES pairs (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj1_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
-		    "FOREIGN KEY (grp2_idx) REFERENCES groups (idx) ON DELETE CASCADE" +
+		    "FOREIGN KEY (grp2_idx) REFERENCES xgroups (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB; ";
 		 executeUpdate(sql);
 	
@@ -447,7 +450,7 @@ public class Schema {
 		    "INDEX (grp2_idx)," +
 		    "FOREIGN KEY (pair_idx) REFERENCES pairs (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (ctg1_idx) REFERENCES contigs (idx) ON DELETE CASCADE," +
-		    "FOREIGN KEY (grp2_idx) REFERENCES groups (idx) ON DELETE CASCADE" +
+		    "FOREIGN KEY (grp2_idx) REFERENCES xgroups (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB;";
 		 executeUpdate(sql);
 		    
@@ -530,10 +533,21 @@ public class Schema {
 		 sql = "SET FOREIGN_KEY_CHECKS = 1;";
 		 executeUpdate(sql);
 		    
-		 sql = "INSERT INTO props (name,value) VALUES ('VERSION', '3.0'); ";
+		 /** CAS506 add DBVer and UPDATE, change other two **/
+		 // sql = "INSERT INTO props (name,value) VALUES ('VERSION', '3.0'); ";
+		 sql = "INSERT INTO props (name,value) VALUES ('VERSION','" +  SyMAP.VERSION + "'); ";
 		 executeUpdate(sql);
 		    
-		 sql = "INSERT INTO props (name,value) VALUES ('INSTALLED', '. localtime() . '); "; 
+		 // referenced in Version
+		 sql = "INSERT INTO props (name,value) VALUES ('DBVER','" +  SyMAP.DBVERSTR + "'); ";
+		 executeUpdate(sql);
+		 
+		 // sql = "INSERT INTO props (name,value) VALUES ('INSTALLED', '. localtime() . '); "; enter string, not date
+		 String date = Utilities.getDateOnly();
+		 sql = "INSERT INTO props (name,value) VALUES ('INSTALLED', '" + date + "'); ";
+		 executeUpdate(sql);
+		 
+		 sql = "INSERT INTO props (name,value) VALUES ('UPDATE', '" + date + "'); ";
 		 executeUpdate(sql);
 	}
 	public int executeUpdate(String sql) 

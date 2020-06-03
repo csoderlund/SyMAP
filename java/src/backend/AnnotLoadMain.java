@@ -349,9 +349,9 @@ public class AnnotLoadMain
 	
 	private void deleteCurrentAnnotations() throws SQLException
 	{
-		String st = "DELETE FROM pseudo_annot USING pseudo_annot,groups " +
-					" WHERE groups.proj_idx='" + projIdx + 
-					"' AND pseudo_annot.grp_idx=groups.idx";
+		String st = "DELETE FROM pseudo_annot USING pseudo_annot,xgroups " +
+					" WHERE xgroups.proj_idx='" + projIdx + 
+					"' AND pseudo_annot.grp_idx=xgroups.idx";
 		pool.executeUpdate(st);
 	}
 	public static void main(String[] args) 

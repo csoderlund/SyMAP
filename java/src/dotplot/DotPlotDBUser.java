@@ -528,7 +528,7 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 			if (p.isPseudo())
 				qry = 
 					"SELECT g.idx,g.sort_order,g.name,p.length " +
-					"FROM groups AS g JOIN pseudos AS p ON (p.grp_idx=g.idx) " +
+					"FROM xgroups AS g JOIN pseudos AS p ON (p.grp_idx=g.idx) " +
 					"WHERE g.proj_idx=" + p.getID() +
 					(groupList == null ? "" : " AND g.idx IN " + groupList) + 
 					" AND g.sort_order > 0 " +
@@ -536,7 +536,7 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 			else // FPC
 				qry = 
 					"SELECT g.idx,g.sort_order,g.name,SUM(c.size) " +
-					"FROM contigs AS c JOIN groups AS g ON (c.grp_idx=g.idx) " +
+					"FROM contigs AS c JOIN xgroups AS g ON (c.grp_idx=g.idx) " +
 					"WHERE c.proj_idx=" + p.getID() +
 					(groupList == null ? "" : " AND g.idx IN " + groupList) + 
 					" AND g.sort_order > 0 " +
@@ -570,7 +570,7 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 			
 			qry = "SELECT b.grp1_idx,b.grp2_idx " +
 				  "FROM blocks AS b " +
-				  "JOIN groups AS g ON (g.idx=b.grp1_idx) " +
+				  "JOIN xgroups AS g ON (g.idx=b.grp1_idx) " +
 			      "WHERE (b.proj1_idx=" + (swapped ? pX.getID() : pY.getID()) +
 			      " AND b.proj2_idx=" + (swapped ? pY.getID() : pX.getID()) + 
 			      (groupList == null ? "" : " AND g.idx IN " + groupList) + 
@@ -612,7 +612,7 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 				
 				String qry = 
 					"SELECT g.idx,c.idx,c.number,c.ccb,c.size "+
-					"FROM groups AS g " +
+					"FROM xgroups AS g " +
 					"JOIN contigs AS c ON (g.idx=c.grp_idx) "+
 					"WHERE g.proj_idx=" + p.getID() +
 					(groupList == null ? "" : " AND g.idx IN " + groupList) + 

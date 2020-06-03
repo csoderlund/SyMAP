@@ -27,7 +27,7 @@ public class CookieUtil {
 	 */
 	public CookieUtil(Applet applet) {
 		try {
-			host = JSObject.getWindow(applet);
+			//host = JSObject.getWindow(applet); /CAS505
 		} catch (Exception e) {
 			System.err.println("Exception getting window object!");
 		}

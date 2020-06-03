@@ -74,11 +74,11 @@ public class Block2Frame extends JFrame
 			ResultSet rs;
 			Statement s = mDB.getConnection().createStatement();
 	
-			rs = s.executeQuery("select count(*) as ngrps from groups where proj_idx=" + mRefIdx);
+			rs = s.executeQuery("select count(*) as ngrps from xgroups where proj_idx=" + mRefIdx);
 			rs.first();
 			unorderedRef = (rs.getInt("ngrps") > 75);
 
-			rs = s.executeQuery("select count(*) as ngrps from groups where proj_idx=" + mIdx2);
+			rs = s.executeQuery("select count(*) as ngrps from xgroups where proj_idx=" + mIdx2);
 			rs.first();
 			unordered2 = (rs.getInt("ngrps") > 75);
 			
@@ -92,7 +92,7 @@ public class Block2Frame extends JFrame
 			rs.first();
 			isFpc = rs.getString("type").equals("fpc"); 
 			
-			rs = s.executeQuery("select idx from groups where name='0' and proj_idx=" + mIdx2);
+			rs = s.executeQuery("select idx from xgroups where name='0' and proj_idx=" + mIdx2);
 			if (rs.first()) {
 				unGrp2 = rs.getInt("idx");
 			}
@@ -101,8 +101,8 @@ public class Block2Frame extends JFrame
 			rs.first();
 			grpPfx = rs.getString("value");
 
-			rs = s.executeQuery("select name,length from groups join pseudos on pseudos.grp_idx=groups.idx " +
-					" where groups.idx=" + mGrpIdx);
+			rs = s.executeQuery("select name,length from xgroups join pseudos on pseudos.grp_idx=xgroups.idx " +
+					" where xgroups.idx=" + mGrpIdx);
 			if (!rs.first()) {
 				System.out.println("Unable to find reference group " + mGrpIdx);
 				return;
@@ -133,7 +133,7 @@ public class Block2Frame extends JFrame
 				}
 			}
 
-			rs = s.executeQuery("select name,idx from groups where proj_idx=" + mIdx2 + " and name != '0' order by sort_order asc");
+			rs = s.executeQuery("select name,idx from xgroups where proj_idx=" + mIdx2 + " and name != '0' order by sort_order asc");
 			int i = mGrp2Names.size();
 			while (rs.next())
 			{

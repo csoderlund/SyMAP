@@ -126,7 +126,7 @@ public class Project
 	{			
 		// CAS42 1/4/17 changed from selecting * to being specific and using get(n)
 		ResultSet rs = conn.executeQuery("SELECT idx, name, fullname " +
-				"FROM groups WHERE proj_idx=" + idx);
+				"FROM xgroups WHERE proj_idx=" + idx);
         while(rs.next())
         {
             int idx= rs.getInt(1);
@@ -292,9 +292,9 @@ public class Project
 		}
 		else {
 			ResultSet rs = conn.executeQuery("SELECT SUM(length) AS size " +
-					" FROM pseudos, groups " +  
-					" WHERE groups.proj_idx = " + idx +
-					" AND pseudos.grp_idx = groups.idx");
+					" FROM pseudos, xgroups " +  
+					" WHERE xgroups.proj_idx = " + idx +
+					" AND pseudos.grp_idx = xgroups.idx");
 			if (rs.next())
 				size = rs.getLong("size");
 			rs.close();

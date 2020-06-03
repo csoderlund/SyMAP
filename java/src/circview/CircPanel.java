@@ -369,14 +369,14 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			ResultSet rs;
 			if (fpc)
 			{
-				rs = s.executeQuery("select groups.idx,groups.name,sum(size) as length from groups join contigs " +
-						" on contigs.grp_idx=groups.idx where groups.proj_idx=" + idx + 
-						" and groups.name != '0' group by groups.idx order by sort_order");
+				rs = s.executeQuery("select xgroups.idx,xgroups.name,sum(size) as length from xgroups join contigs " +
+						" on contigs.grp_idx=xgroups.idx where xgroups.proj_idx=" + idx + 
+						" and xgroups.name != '0' group by xgroups.idx order by sort_order");
 			}
 			else
 			{
-				rs = s.executeQuery("select idx, name, length from groups join pseudos " + 
-						" on pseudos.grp_idx=groups.idx where groups.proj_idx=" + idx + " order by sort_order");
+				rs = s.executeQuery("select idx, name, length from xgroups join pseudos " + 
+						" on pseudos.grp_idx=xgroups.idx where xgroups.proj_idx=" + idx + " order by sort_order");
 
 			}
 			while (rs.next())

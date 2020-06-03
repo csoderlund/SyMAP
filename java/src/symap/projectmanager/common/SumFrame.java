@@ -225,7 +225,7 @@ public class SumFrame extends JFrame
 					"round(max(length)/1000,1), " +
 					"round(min(length)/1000,1), " + 
 					"sum(length)" + 
-					"from pseudos as p join groups as g on p.grp_idx=g.idx " +
+					"from pseudos as p join xgroups as g on p.grp_idx=g.idx " +
 					"where g.proj_idx=";
 			ResultSet rs = s.executeQuery(q + pidx1);
 			if (rs.first())
@@ -246,7 +246,7 @@ public class SumFrame extends JFrame
 			}
 			q = "select floor(log10(length)) as llen, " +
 					"count(*) as cnt " +
-					"from pseudos as p join groups as g on p.grp_idx=g.idx " + 
+					"from pseudos as p join xgroups as g on p.grp_idx=g.idx " + 
 					"where g.proj_idx=";
 			rs = s.executeQuery(q + pidx1 + " and length > 0 group by llen");
 			while (rs.next())
@@ -282,7 +282,7 @@ public class SumFrame extends JFrame
 			q = "select count(*) as cnt," +
 				"sum(end-start) as len " +
 				"from pseudo_annot as pa " +
-				"join groups as g on pa.grp_idx=g.idx " + 
+				"join xgroups as g on pa.grp_idx=g.idx " + 
 				"where pa.type='gene' and g.proj_idx=";
 			long ngenes1=0, glen1=0,ngenes2=0,glen2=0;
 			rs = s.executeQuery(q + pidx1);
@@ -349,7 +349,7 @@ public class SumFrame extends JFrame
 		String q = "select count(distinct h.idx) from pseudo_hits as h " +
 				"join pseudo_hits_annot as pha on pha.hit_idx=h.idx " +
 				"join pseudo_annot as pa on pa.idx=pha.annot_idx " +
-				"join groups as g on g.idx=pa.grp_idx where pair_idx=";
+				"join xgroups as g on g.idx=pa.grp_idx where pair_idx=";
 		rs = s.executeQuery(q  + pair_idx + " and g.proj_idx=" + pidx1); 
 		if (rs.first())
 		{
@@ -652,7 +652,7 @@ public class SumFrame extends JFrame
 		long bes_len=0, mrk_len=0;
 		ResultSet rs;
 		
-		rs = s.executeQuery("select count(*) from groups where proj_idx=" + pidx1);
+		rs = s.executeQuery("select count(*) from xgroups where proj_idx=" + pidx1);
 		if (rs.next()) nSeqs = rs.getInt(1);
 		rs = s.executeQuery("select count(*) from clones where proj_idx=" + pidx1);
 		if (rs.next()) nClone = rs.getInt(1);

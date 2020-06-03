@@ -25,11 +25,11 @@ public class OrderAgainst {
 	
 	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE;
 	
-	public static final String anchorSuffix 	=  "_anchored"; 
-	public static final String anchorCSVFile	=  "/anchored.csv";
+	private static final String anchorSuffix 	=  "_anchored"; 
+	private static final String anchorCSVFile	=  "/anchored.csv";
 
-	public static final String orderSuffix 	=  "_ordered"; // CAS505 for ordering V2
-	public static final String orderCSVFile	=  "/ordered.csv";
+	public static final String orderSuffix 		=  "_ordered"; // CAS505 for ordering V2
+	private static final String orderCSVFile	=  "/ordered.csv";
 	
 	private Logger mLog;
 	private UpdatePool pool;	
@@ -63,13 +63,13 @@ public class OrderAgainst {
 		ResultSet rs;
 		TreeSet<Integer> alreadyFlipped = new TreeSet<Integer>();
 	
-		rs = pool.executeQuery("select idx, flipped from groups where proj_idx=" + pDraft.idx);
+		rs = pool.executeQuery("select idx, flipped from xgroups where proj_idx=" + pDraft.idx);
 		while (rs.next()) {
 			int idx = rs.getInt(1);
 			boolean flipped = rs.getBoolean(2);
 			if (flipped) alreadyFlipped.add(idx);
 		}
-		pool.executeUpdate("update groups set flipped=0, sort_order=idx where proj_idx=" + pDraft.idx);
+		pool.executeUpdate("update xgroups set flipped=0, sort_order=idx where proj_idx=" + pDraft.idx);
 				
 		// Order the grp1 by finding the grp2 that they have the most synteny
 		// hits with, and taking the start point of those hits.
@@ -85,13 +85,13 @@ public class OrderAgainst {
 		TreeMap<Integer,Vector<Integer>> grpMaps = new TreeMap<Integer,Vector<Integer>>();
 		
 		Vector<Integer> grp2Order = new Vector<Integer>(); 
-		rs = pool.executeQuery("select idx from groups where proj_idx=" + pTarget.getIdx() + 
+		rs = pool.executeQuery("select idx from xgroups where proj_idx=" + pTarget.getIdx() + 
 						" order by sort_order asc");
 		while (rs.next())
 		{
 			grp2Order.add(rs.getInt(1));
 		}
-		mLog.msg("   " + grp2Order.size() + " groups to order against ");
+		mLog.msg("   " + grp2Order.size() + " xgroups to order against ");
 		
 		// note avg(corr) is necessary because of the grouping, and the grouping is because we don't store the # of hits in the blocks table
 		rs = pool.executeQuery("select grp1_idx, grp2_idx, " +
@@ -99,12 +99,13 @@ public class OrderAgainst {
 				"start1, start2, avg(corr) as corr, " + 
 				" ps1.length as len1, ps2.length as len2  from blocks " + 
 				" join pseudo_block_hits on pseudo_block_hits.block_idx=blocks.idx " +
-				" join groups as grp2    on grp2.idx=grp2_idx " +
-				" join groups as grp1    on grp1.idx=grp1_idx " +
+				" join xgroups as grp2    on grp2.idx=grp2_idx " +
+				" join xgroups as grp1    on grp1.idx=grp1_idx " +
 				" join pseudos as ps1    on ps1.grp_idx=grp1_idx " +
 				" join pseudos as ps2    on ps2.grp_idx=grp2_idx " +
 				" where proj1_idx=" + mProj1.getIdx() + " and proj2_idx=" + mProj2.getIdx() + 
-				" group by blocks.grp1_idx, blocks.grp2_idx, blocks.blocknum order by score desc" );
+				" by score desc, grp1_idx, grp2_idx, blocknum" );
+				// CAS506 " group by blocks.grp1_idx, blocks.grp2_idx, blocks.blocknum order by score desc" );
 		while (rs.next())
 		{
 			int grp1Idx = (bSwitch ? rs.getInt("grp2_idx") : rs.getInt("grp1_idx"));
@@ -168,7 +169,7 @@ public class OrderAgainst {
 
 		// Chr0; assign the ones that didn't align anywhere
 		Vector<Integer> allGrpIdx = new Vector<Integer>();
-		rs = pool.executeQuery("select idx from groups where proj_idx=" + pDraft.idx);
+		rs = pool.executeQuery("select idx from xgroups where proj_idx=" + pDraft.idx);
 		while (rs.next())
 		{
 			int idx = rs.getInt(1);
@@ -188,17 +189,17 @@ public class OrderAgainst {
 			int len = grp1len.get(idx);
 			String RC = "F";
 			if (grp1flip.contains(idx)) { // XXX block.corr<0
-				pool.executeUpdate("update groups set sort_order=" + ord + ",flipped=1 where idx=" + idx);
+				pool.executeUpdate("update xgroups set sort_order=" + ord + ",flipped=1 where idx=" + idx);
 				RC = "R";
 			}
 			else {
-				pool.executeUpdate("update groups set sort_order=" + ord + ",flipped=0 where idx=" + idx);
+				pool.executeUpdate("update xgroups set sort_order=" + ord + ",flipped=0 where idx=" + idx);
 			}
 			ordFileW.write(grp1name.get(idx) + "," + newGrp.get(idx) + "," + pos + "," + RC + "," + grp1score.get(idx) + "," + len + "\n"); 
 		}
 		ordFileW.close();
 		
-		// Now, update the newly flipped/unflipped groups and the anchors and synteny blocks containing them
+		// Now, update the newly flipped/unflipped xgroups and the anchors and synteny blocks containing them
 		int cnt=0;
 		mLog.msg("   Updating flipped contigs and anchors....");
 		for (int idx : allGrpIdx)
@@ -283,10 +284,10 @@ public class OrderAgainst {
 				           "NNNNNNNNNN" + "NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN";
 		
 		Vector<String> grpOrder = new Vector<String>();
-		rs = pool.executeQuery("select groups.fullname, groups.idx, pseudo_seq2.seq " +
-				" from groups " +
-				" join pseudo_seq2 on pseudo_seq2.grp_idx=groups.idx where groups.proj_idx=" + pDraft.idx + 
-				" order by groups.sort_order asc, pseudo_seq2.chunk asc");
+		rs = pool.executeQuery("select xgroups.fullname, xgroups.idx, pseudo_seq2.seq " +
+				" from xgroups " +
+				" join pseudo_seq2 on pseudo_seq2.grp_idx=xgroups.idx where xgroups.proj_idx=" + pDraft.idx + 
+				" order by xgroups.sort_order asc, pseudo_seq2.chunk asc");
 		int curGrpIdx = -1, groupedPos = 0, count=0;
 		String curNewGrp = "", curNewGrpName = "", curGrpName = "", prevGrpName = "";
 		long lenNewCtg = 0;
@@ -403,9 +404,9 @@ public class OrderAgainst {
 		
 		mLog.msg("\nOrdering " + pDraft.getName() + " contigs against " + pTarget.getName());
 
-		s1LoadDataDB(bSwitch, chr0, chr0Idx);
+		if (!s1LoadDataDB(bSwitch, chr0, chr0Idx)) return;
 	
-		s2OrderFlipGrpDB(targPfx, ordPfx, chr0, chr0Idx);
+		if (!s2OrderFlipGrpDB(targPfx, ordPfx, chr0, chr0Idx)) return;
 	
 		s3WriteNewProj();
 		
@@ -416,11 +417,11 @@ public class OrderAgainst {
 	/***********************************************************
 	 * Load groups from both projects
 	 */
-	private void s1LoadDataDB(boolean bSwitch, String chr0, int chr0Idx) {
+	private boolean s1LoadDataDB(boolean bSwitch, String chr0, int chr0Idx) {
 		try {
 			/** Get Draft and Target groups **/
 			ResultSet rs = pool.executeQuery("select idx, fullname, p.length " +
-					" from groups as g " +
+					" from xgroups as g " +
 					" join pseudos as p on p.grp_idx=g.idx " +
 					" where proj_idx=" + pDraft.idx);
 			while (rs.next()) {
@@ -431,7 +432,7 @@ public class OrderAgainst {
 				idxDraftMap.put(o.gidx, o);
 			}
 				
-			rs = pool.executeQuery("select idx, fullname from groups " +
+			rs = pool.executeQuery("select idx, fullname from xgroups " +
 					" where proj_idx=" + pTarget.idx);
 			while (rs.next()) {
 				Target o = new Target();
@@ -445,15 +446,22 @@ public class OrderAgainst {
 			idxTargetMap.put(chr0Idx, o); 
 			
 		/** Assign Target chromosome from blocks **/
+			/** CAS506 does not work in mySQL v8: SELECT list is not in GROUP BY clause and contains nonaggregated 
 			rs = pool.executeQuery("select grp1_idx, grp2_idx, start1, start2, score, corr from blocks " +
 				" where proj1_idx=" + mProj1.getIdx() + " and proj2_idx=" + mProj2.getIdx() + 
-				" group by blocks.grp1_idx, blocks.grp2_idx, blocks.blocknum order by score desc" );
+				" group by grp1_idx, grp2_idx, blocknum order by score desc" );
+		**/
+			
+			rs = pool.executeQuery("select grp1_idx, grp2_idx, start1, start2, score, corr from blocks " +
+					" where proj1_idx=" + mProj1.getIdx() + " and proj2_idx=" + mProj2.getIdx() + 
+					" order by score desc,  grp1_idx, grp2_idx, blocknum" );
 			
 			while (rs.next()) {
-				int tgidx1 = rs.getInt(1);
-				int tgidx2 = rs.getInt(2);
+				int tgidx1 =  rs.getInt(1);
+				int tgidx2 =  rs.getInt(2);
 				int tStart1 = rs.getInt(3);
 				int tStart2 = rs.getInt(4);
+				int score =   rs.getInt(5);
 				
 				int gidx1, gidx2, pos;
 				if (!bSwitch) {
@@ -467,7 +475,9 @@ public class OrderAgainst {
 					pos = tStart1;
 				}
 				Draft d = idxDraftMap.get(gidx1);
-				if (d.pos>0) continue; // a group can be split across multiple blocks; use first with biggest score
+				
+				// if (d.pos>0) continue; CAS506
+				if (d.score > score) continue; // a group (chr) can be split across multiple blocks; use first with biggest score
 				
 				d.pos = pos;
 				d.score = rs.getInt(5);
@@ -478,13 +488,14 @@ public class OrderAgainst {
 				d.tidx = t.gidx;
 			}
 			rs.close();
+			return true;
 		}
-		catch (Exception e) {ErrorReport.print(e, "Load Data"); }
+		catch (Exception e) {ErrorReport.print(e, "Load Data"); return false; }
 	}
 	/** 
 	 * Assign chr0 to unassigned, create ordered ctgs, write ordered file, update DB order
 	 ***/
-	private void s2OrderFlipGrpDB(String targPfx, String ordPfx, String chr0, int chr0Idx) {
+	private boolean s2OrderFlipGrpDB(String targPfx, String ordPfx, String chr0, int chr0Idx) {
 		try {
 			
 			for (Draft d : idxDraftMap.values()) {
@@ -507,7 +518,7 @@ public class OrderAgainst {
 			int nOrd=1; // new order of contigs in database; only place database changes for V2
 			for (Draft d : orderedDraft) {
 				int f = (d.bDoFlip) ? 1 : 0; // the flipped is not used anywhere
-				pool.executeUpdate("update groups set sort_order=" + nOrd + ",flipped=" + f 
+				pool.executeUpdate("update xgroups set sort_order=" + nOrd + ",flipped=" + f 
 						+ " where idx=" + d.gidx);
 				nOrd++;
 				
@@ -517,8 +528,9 @@ public class OrderAgainst {
 			}
 			ordFileW.close();
 			mLog.msg("   Wrote order to " + ordFile.getCanonicalPath());
+			return true;
 		}
-		catch (Exception e) {ErrorReport.print(e, "Order Draft"); }
+		catch (Exception e) {ErrorReport.print(e, "Order Draft"); return false; }
 	}
 	
 	/** 
@@ -529,7 +541,7 @@ public class OrderAgainst {
 			mLog.msg("   Creating new ordered project from " + pDraft.getName());
 			
 			String ordProjName = pDraft.getName() + orderSuffix;	
-			String ordDirName = Constants.seqDataDir + pDraft.getName() + orderSuffix;
+			String ordDirName = Constants.seqDataDir + ordProjName;
 			File   ordDir = new File(ordDirName);
 			if (ordDir.exists()) {
 				mLog.msg("   Delete previous " + ordDirName);

@@ -82,11 +82,11 @@ public class BlockViewFrame extends JFrame
 			ResultSet rs;
 			Statement s = mDB.getConnection().createStatement();
 	
-			rs = s.executeQuery("select count(*) as ngrps from groups where proj_idx=" + mRefIdx);
+			rs = s.executeQuery("select count(*) as ngrps from xgroups where proj_idx=" + mRefIdx);
 			rs.first();
 			unorderedRef = (rs.getInt("ngrps") > MAX_GRPS);
 
-			rs = s.executeQuery("select count(*) as ngrps from groups where proj_idx=" + mIdx2);
+			rs = s.executeQuery("select count(*) as ngrps from xgroups where proj_idx=" + mIdx2);
 			rs.first();
 			unordered2 = (rs.getInt("ngrps") > MAX_GRPS);
 			
@@ -126,7 +126,7 @@ public class BlockViewFrame extends JFrame
 				}
 			}
 			
-			rs = s.executeQuery("select idx from groups where name='0' and proj_idx=" + mIdx2);
+			rs = s.executeQuery("select idx from xgroups where name='0' and proj_idx=" + mIdx2);
 			if (rs.first())
 			{
 				unGrp2 = rs.getInt("idx");
@@ -278,7 +278,7 @@ public class BlockViewFrame extends JFrame
 		mRefSizes = new TreeMap<Integer,Integer>();
 		mRefOrder = new Vector<Integer>();
 		mLayout = new TreeMap<Integer,TreeMap<Integer,Vector<Block>>>();
-		rs = s.executeQuery("select idx,name,length from groups join pseudos on pseudos.grp_idx=groups.idx " + 
+		rs = s.executeQuery("select idx,name,length from xgroups join pseudos on pseudos.grp_idx=xgroups.idx " + 
 				" where proj_idx=" + mRefIdx + " order by sort_order asc");
 		int maxSize = 0;
 		
@@ -551,7 +551,7 @@ public class BlockViewFrame extends JFrame
 				mGrp2Names.put(unGrp2, "0");
 				mColors.add(0, 0);
 			}
-			rs = r.executeQuery("select name,idx from groups where name != '0' and proj_idx=" + mIdx2 + " order by sort_order asc");
+			rs = r.executeQuery("select name,idx from xgroups where name != '0' and proj_idx=" + mIdx2 + " order by sort_order asc");
 			int i = mGrps2.size();
 			while (rs.next() )
 			{

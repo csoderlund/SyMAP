@@ -224,8 +224,7 @@ public class AlignMain
 			program = "promer";
 		
 		String args = 	getProgramArgs(program, mMainProps);
-		String plat = 	(mMainProps.containsKey("platform") ? mMainProps.getProperty("platform") : "");
-		String platform = Constants.getPlatformPath(program, plat);
+		String platform = Constants.getPlatformPath();
 		
 	/** create list of comparisons to run **/
 		// under runDir/<p1>_to_<p2>/tmp/<px>/ with file names
@@ -313,8 +312,8 @@ public class AlignMain
 		if (Cancelled.isCancelled()) return false;
 		
 		ResultSet rs = pool.executeQuery("select count(*) as nseqs from pseudos " +
-			" join groups on groups.idx=pseudos.grp_idx " +
-			" where groups.proj_idx=" + projIdx);
+			" join xgroups on xgroups.idx=pseudos.grp_idx " +
+			" where xgroups.proj_idx=" + projIdx);
 		rs.first();
 		int nSeqs = rs.getInt("nseqs");
 		if (nSeqs == 0)
@@ -338,10 +337,10 @@ public class AlignMain
 			else  log.msg(projName +       ": Writing sequences into one or more files for target");
 			
 			// pseudos (files): grp_idx, fileName (e.g. chr3.seq), length
-			// groups  (chrs):  idx, proj_idx, name, fullname where grp_idx is groups.idx
+			// groups  (chrs):  idx, proj_idx, name, fullname where grp_idx is xgroups.idx
 			rs = pool.executeQuery("select grp_idx, length from pseudos " +
-					" join groups on groups.idx=pseudos.grp_idx " +
-					" where groups.proj_idx=" + projIdx + " order by groups.sort_order");
+					" join xgroups on xgroups.idx=pseudos.grp_idx " +
+					" where xgroups.proj_idx=" + projIdx + " order by xgroups.sort_order");
 			groups.add(new Vector<Integer>());
 			long curSize = 0;
 			int nOrigGrp = 0, nGrp = 0;
@@ -380,9 +379,9 @@ public class AlignMain
 			{
 				// Build a map of the gene annotations that we can use to mask each sequence chunk as we get it.
 				// The map is sorted into 100kb bins for faster searching. 
-				rs = pool.executeQuery("select groups.idx, pseudo_annot.start, pseudo_annot.end " +
-						" from pseudo_annot join groups on groups.idx=pseudo_annot.grp_idx " +
-						" where pseudo_annot.type='gene' and groups.proj_idx=" + projIdx);
+				rs = pool.executeQuery("select xgroups.idx, pseudo_annot.start, pseudo_annot.end " +
+						" from pseudo_annot join xgroups on xgroups.idx=pseudo_annot.grp_idx " +
+						" where pseudo_annot.type='gene' and xgroups.proj_idx=" + projIdx);
 				while (!interrupted && rs.next())
 				{
 					int grpIdx = rs.getInt(1);
@@ -430,7 +429,7 @@ public class AlignMain
 				{
 					if (interrupted) break;
 	
-					rs = pool.executeQuery("select name,fullname from groups where idx=" + gIdx);
+					rs = pool.executeQuery("select name,fullname from xgroups where idx=" + gIdx);
 					rs.first();
 					String grpFullName = rs.getString("fullname");
 					fw.write(">" + grpFullName + "\n");
@@ -440,7 +439,7 @@ public class AlignMain
 					else if (count==4)  msg += "... ";
 					count++;
 					
-					rs = pool.executeQuery("select seq from pseudo_seq2 join groups on groups.idx=pseudo_seq2.grp_idx " + 
+					rs = pool.executeQuery("select seq from pseudo_seq2 join xgroups on xgroups.idx=pseudo_seq2.grp_idx " + 
 							" where grp_idx=" + gIdx + " order by chunk asc");
 					int cNum = 0;
 					while (!interrupted && rs.next())

@@ -1,5 +1,11 @@
 package backend;
 
+/*********************************************************************
+ * This is used everywhere to get a connection.
+ * Methods are only used with backend.
+ * 
+ * CAS506 remove hasTables, getMaxID; a little rearrangement
+ */
 import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
@@ -35,19 +41,6 @@ public class UpdatePool extends DatabaseUser
 		this( getDatabaseReader(SyMAPConstants.DB_CONNECTION_BACKEND, dbstr, user, pass, null) );
 	}
 	
-	public int getMaxID(String table, String field) throws Exception
-	{
-		String sql = "select max(" + field + ") as maxidx from " + table;
-		ResultSet rs = executeQuery(sql);
-		rs.first();
-		return rs.getInt("maxidx");
-	}
-	public void bulkSetup(String key, String stmt)
-	{
-		mBulkStmt.put(key,stmt);
-		mBulkData.put(key, new Vector<String>());
-	}
-	
 	public void singleInsert(String tbl, Vector<String> vals) throws SQLException
 	{
 		String valStr = "('" + Utils.join(vals,"','") + "')";
@@ -76,6 +69,19 @@ public class UpdatePool extends DatabaseUser
 		if (mBulkData.get(key).size() == mBulkSize)
 			bulkInsert(key);
 	}
+
+
+	public void finishBulkInserts() throws SQLException
+	{
+		for (String key : mBulkStmt.keySet())
+			bulkInsert(key);
+	}
+	
+	private void bulkSetup(String key, String stmt)
+	{
+		mBulkStmt.put(key,stmt);
+		mBulkData.put(key, new Vector<String>());
+	}
 	
 	private void bulkInsert(String key) throws SQLException
 	{
@@ -86,12 +92,6 @@ public class UpdatePool extends DatabaseUser
 		
 		executeUpdate(stmt);
 		mBulkData.get(key).clear();
-	}
-	
-	public void finishBulkInserts() throws SQLException
-	{
-		for (String key : mBulkStmt.keySet())
-			bulkInsert(key);
 	}
 	
 	// For these methods, all strings coming from user input must be sanitized first
@@ -223,11 +223,7 @@ public class UpdatePool extends DatabaseUser
 
 		return val;
 	}
-	public boolean hasTables() throws Exception
-	{
-		ResultSet rs = executeQuery("show tables");
-		return rs.first();
-	}
+	
 	public boolean tableHasColumn(String table, String column) throws Exception
 	{
 		boolean ret = false;

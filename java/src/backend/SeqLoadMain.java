@@ -294,15 +294,15 @@ public class SeqLoadMain
 	{
 		// First, just set it to the idx order
 		int minIdx;
-		ResultSet rs = pool.executeQuery("select min(idx) as minidx from groups where proj_idx=" + projIdx);
+		ResultSet rs = pool.executeQuery("select min(idx) as minidx from xgroups where proj_idx=" + projIdx);
 		rs.first();
 		minIdx = rs.getInt("minidx");
-		pool.executeUpdate("update groups set sort_order = idx+1-" + minIdx + " where proj_idx=" + projIdx);
-		//pool.executeUpdate("update groups set sort_order = 1 where proj_idx=" + projIdx);
+		pool.executeUpdate("update xgroups set sort_order = idx+1-" + minIdx + " where proj_idx=" + projIdx);
+		//pool.executeUpdate("update xgroups set sort_order = 1 where proj_idx=" + projIdx);
 		
 		//if (!props.getProperty("grp_sort").equals("file"))
 		//{
-			// Order the groups based on the param file settings
+			// Order the xgroups based on the param file settings
 			GroupSorter gs = null;
 			if (!props.getProperty("grp_order").equals("")) 
 			{
@@ -353,7 +353,7 @@ public class SeqLoadMain
 			for (int i = 1; i <= grpList.size(); i++)
 			{
 				String grp = grpList.get(i-1);
-				pool.executeUpdate("update groups set sort_order=" + i + " where proj_idx=" + projIdx + 
+				pool.executeUpdate("update xgroups set sort_order=" + i + " where proj_idx=" + projIdx + 
 						" and name='" + grp + "'");
 			}
 		//}
@@ -362,9 +362,9 @@ public class SeqLoadMain
 	public static void uploadSequence(String grp, String fullname, String seq, String file,UpdatePool pool,int order) throws Exception
 	{
 		// First, create the group
-		pool.executeUpdate("INSERT INTO groups VALUES('0','" + projIdx + "','" + 
+		pool.executeUpdate("INSERT INTO xgroups VALUES('0','" + projIdx + "','" + 
 				grp + "','" + fullname + "'," + order + ",'0')" );
-		String sql = "select max(idx) as maxidx from groups where proj_idx=" + projIdx;
+		String sql = "select max(idx) as maxidx from xgroups where proj_idx=" + projIdx;
 		ResultSet rs = pool.executeQuery(sql);
 		rs.first();
 		int grpIdx = rs.getInt("maxidx");

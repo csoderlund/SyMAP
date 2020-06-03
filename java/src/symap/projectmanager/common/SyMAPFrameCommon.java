@@ -626,7 +626,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 					String projStr = Utils.join(projList,",");
 					String query = "select p1.name, p2.name, g1.name, g2.name, b.blocknum, b.start1, b.end1," +
 					" b.start2,b.end2,b.score,b.ngene1,b.genef1,b.ngene2,b.genef2,b.corr " +
-					" from blocks as b join groups as g1 on g1.idx=b.grp1_idx join groups as g2 on g2.idx=b.grp2_idx " +
+					" from blocks as b join xgroups as g1 on g1.idx=b.grp1_idx join xgroups as g2 on g2.idx=b.grp2_idx " +
 					" join projects as p1 on p1.idx=b.proj1_idx join projects as p2 on p2.idx=b.proj2_idx " +
 					" where p1.idx in (" + projStr + ") and p2.idx in (" + projStr + ") and p1.type='pseudo' and p2.type='pseudo' " +
 					" order by p1.name asc, p2.name asc, g1.idx asc, g2.idx asc, b.blocknum asc";

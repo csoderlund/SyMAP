@@ -18,7 +18,7 @@ public class PseudoPool extends DatabaseUser {
 
 	protected static final String SIZE_QUERY = 
 		"SELECT (SELECT length FROM pseudos WHERE grp_idx=?) as size, "+
-		"       (SELECT name FROM groups WHERE idx=?) as name; ";
+		"       (SELECT name FROM xgroups WHERE idx=?) as name; ";
 
 	protected static final String ANNOT_QUERY =
 		"SELECT name,type,start,end,strand FROM pseudo_annot WHERE grp_idx=? ORDER BY type DESC"; 
@@ -129,7 +129,7 @@ public class PseudoPool extends DatabaseUser {
 		try {
 			stat = createStatement();
 			String query = setInt(
-					setString("SELECT idx FROM groups WHERE (name=? AND proj_idx=?)",group),project);	
+					setString("SELECT idx FROM xgroups WHERE (name=? AND proj_idx=?)",group),project);	
 			rs = stat.executeQuery(query);
 			if (rs.next()) id = rs.getInt(1);
 		}

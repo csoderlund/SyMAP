@@ -10,59 +10,69 @@ td {font-size:100%}
 tt {font-size:13px}
 pre {font-size:13px}
 a {font-size:100%}
-.hang {text-indent:-20px; margin-left:20px;}
-table {
-  border-spacing: 10px 0;
-}
 	</style>
 </head>
 <body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
-<!--#include virtual="/common/uaheader.html" -->
 
 
 <a name=top></a>	
-
-<table width="850" border="0" align="center" cellpadding="0" cellspacing="0">
-	<tr>
-    	<td height="60" width="161" align="left" valign="bottom">
-       						<img alt="" title="" src="img/agcol_logo.png">
-       	</td>
-		<td height="60" width="428" align="left" valign="bottom" 
-							style="padding:0px 0px 10px 30px" size=5>
-				<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
-				<b>SyMAP Release Notes</b>
-				</font>
-		</td>
-		<td height="60" width="161" align="center" valign="bottom">&nbsp;
-        </td>
-	</tr>
-	<tr>
-		<td height="21" colspan="3" align="left" valign="top">
+<table align="center" style="border: 1px solid #999999" cellspacing="0" cellpadding="0">
+	<tr><td width="100%" style="background-color: #CCCCCC;">
+	<a href="http://www.arizona.edu">
+	<img border="0" alt="The University of Arizona" title="The University of Arizona" src="./img/UA.gif"></a>
+	</td></tr>
+	
+	<tr><td>
+		<table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
+		  	<tr><td height="60" width="161" align="left" valign="bottom">
+       						<img alt="" title="" src="./img/agcol_logo.png">
+       			</td>
+		    	<td height="60" width="428" align="left" valign="bottom" style="padding:0px 0px 10px 30px" size=5>
+					<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
+				    	<b>SyMAP Release Notes</b>
+					</font>
+		    	</td>
+		    	<td height="60" width="161" align="center" valign="bottom">&nbsp;
+        		</td>
+		    </tr>
+		    <tr><td height="21" colspan="3" align="left" valign="top">
 			    <table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
-			    <tr>
-			    <td align="left" bgcolor="#666666">
-				<span style="font-size:75%;color:white">
-				<a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
-				<a href=../index.html class="wt">SyMAP Home</a> |
-				<a href=SystemGuide.html class="wt">System Guide</a> |
-				<a href=UserGuide.html class="wt">User Guide</a> |
-				<a href=Tour.html class="wt">Tour</a> |
-				<a href=TroubleShoot.html class="wt">Troubleshooting </a> 
-				</span>
-				</td>
-				</tr>
+			    	<tr><td align="left" bgcolor="#666666">
+<span style="font-size:75%;color:white">
+<a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
+<a href="http://www.agcol.arizona.edu/software/symap" class="wt">SyMAP Home</a> |
+<a href=index.html class="wt">Index</a> |
+<a href=SystemGuide.html class="wt">System Guide</a> |
+<a href=UserGuide.html class="wt">User Guide</a> |
+<a href=Tour.html class="wt">Tour</a> |
+<a href=TroubleShoot.html class="wt">Troubleshooting </a>
+</span>
+					</td></tr>
 				</table>
-		</td>
-	</tr>
-	<tr>
-    	<td colspan="3" valign="top" align="left" 
-			style='padding:20px 15px 0px 15px;font-size:85%'>
-		
-<font face="Verdana, Arial, Helvetica, sans-serif" color="#000000" size="2">
+			</td></tr>
+			
+			
+	        <tr><td colspan="3" valign="top" align="left" style='padding:20px 15px 0px 15px;font-size:85%'>
 
-Neither the Applet or 3D view have been tested since the release of SyMAP v5.0.0. This is because
-I currently do not have access to either. However, to the best of my knowledge,
-nothing has changed that should cause either of these options problems.
+The 3D feature has not been tested with Release v5; however, it should still work.
+
+<h3>Release: v5.0.6 (2June20)</h3>
+<ol>
+<li>Some changes were necessary for SyMAP to run with MySQL v8.
+	<ul><li>The schema needed a change, which will occur on first reading of database.
+	</ul>
+<li>SyMAP works on MacOS Catalina 10.15
+	<ul><li>It checks each external program to see if it is executable, as this is not automatic with 10.15
+	(see <a href=TroubleShoot.html#ext>Trouble Shoot External Programs</a>).
+	</ul>
+<li>SyMAP can be compiled with Java v14 (some changed were necessary for this).
+<li>The Applet has been removed and will no longer be supported. (It is in earlier SyMAP versions, and can
+be obtained at <a href="https://github.com/csoderlund/SyMAP">github<a/>).
+<li>The built-in MySQL database on Linux is no longer supported.
+<li>The Alignment&Synteny has a couple checks for 'ordered_against' before processing:
+	(1) Is the order_against the same as the other selected project.
+	(2) Does the ordered directory already exist.
+</ol>
 
 <h3>Release: v5.0.5 (2May20)</h3>
 

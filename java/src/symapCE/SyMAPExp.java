@@ -127,7 +127,7 @@ public class SyMAPExp implements Observer {
      
      // Get group(s) and create track(s)
      UpdatePool pool = new UpdatePool(databaseReader);
-     String qry = "SELECT idx,name FROM groups " +
+     String qry = "SELECT idx,name FROM xgroups " +
      				"WHERE proj_idx=" + p.getID() +
      				" AND sort_order > 0 " + // make consistent with full dotplot for FPC projects
      				"ORDER BY sort_order";

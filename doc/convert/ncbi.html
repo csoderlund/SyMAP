@@ -1,6 +1,6 @@
 <html>
 <head>
-	<title>NCBI to SyMAP</title>
+	<title>NCBI Convert to SyMAP</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	<style>
 a.wt {color:inherit;}
@@ -10,54 +10,50 @@ td {font-size:100%}
 tt {font-size:13px}
 pre {font-size:13px}
 a {font-size:100%}
-.hang {text-indent:-20px; margin-left:20px;}
 	</style>
 </head>
 <body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
-<!--#include virtual="/common/uaheader.html" -->
+
 
 <a name=top></a>	
+<table align="center" style="border: 1px solid #999999" cellspacing="0" cellpadding="0">
+	<tr><td width="100%" style="background-color: #CCCCCC;">
+	<a href="http://www.arizona.edu">
+	<img border="0" alt="The University of Arizona" title="The University of Arizona" src="../img/UA.gif"></a>
+	</td></tr>
 	
-<table align="center" style="border: 1px solid #999999" cellspacing="0" cellpadding="0">  	
-	<tr>
-	  	<td>
-		  	<table width="850" border="0" align="center" cellpadding="0" cellspacing="0">
-		    	<tr>
-    	  			<td height="60" width="161" align="left" valign="bottom">
+	<tr><td>
+		<table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
+		  	<tr><td height="60" width="161" align="left" valign="bottom">
        						<img alt="" title="" src="../img/agcol_logo.png">
-       				</td>
-		    		<td height="60" width="428" align="left" valign="bottom" 
-							style="padding:0px 0px 10px 30px" size=5>
-							<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
-				    		<b>NCBI to SyMAP</b>
-							</font>
-		    		</td>
-		    		<td height="60" width="161" align="center" valign="bottom">&nbsp;
-        			</td>
-		    	</tr>
-		    	<tr>
-		    		<td height="21" colspan="3" align="left" valign="top">
-			    		<table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
-			    			<tr>
-			    				<td align="left" bgcolor="#666666">
+       			</td>
+		    	<td height="60" width="428" align="left" valign="bottom" style="padding:0px 0px 10px 30px" size=5>
+					<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
+				    	<b>NCBI convert to SyMAP</b>
+					</font>
+		    	</td>
+		    	<td height="60" width="161" align="center" valign="bottom">&nbsp;
+        		</td>
+		    </tr>
+		    <tr><td height="21" colspan="3" align="left" valign="top">
+			    <table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
+			    	<tr><td align="left" bgcolor="#666666">
 <span style="font-size:75%;color:white">
 <a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
-<a href=../index.html class="wt">SyMAP Home</a> |
-<a href=../SystemGuide.html class="wt">System Guide</a> |
-<a href=../UserGuide.html class="wt">User Guide</a> |
-<a href=../Tour.html class="wt">Tour</a> |
-<a href=../TroubleShoot.html class="wt">Troubleshooting </a> |
-<a href=index.html class="wt">Convert</a> 
+<a href="http://www.agcol.arizona.edu/software/symap" class="wt">SyMAP Home</a> |
+<a href=../index.html class="wt">Index</a> |
+<a href=SystemGuide.html class="wt">System Guide</a> |
+<a href=UserGuide.html class="wt">User Guide</a> |
+<a href=Tour.html class="wt">Tour</a> |
+<a href=TroubleShoot.html class="wt">Troubleshooting </a>
 </span>
-								</td>
-							</tr>
-						</table>
-			    	</td>
-			    </tr>
-	        	<tr>
-    	    		<td colspan="3" valign="top" align="left" 
-								style='padding:20px 15px 0px 15px;font-size:85%'>
-	
+					</td></tr>
+				</table>
+			</td></tr>
+			
+			
+	        <tr><td colspan="3" valign="top" align="left" style='padding:20px 15px 0px 15px;font-size:85%'>
+	        
 <h2>Overview</h2>
 This document corresponds to the ConvertNCBI release with SyMAP v5.0.2 (date 24-Feb-2020).
 <p>	
@@ -116,7 +112,9 @@ the mRNA attribute line, not the CDS, (2) The source is typically 'Gnomon'.
 <li>Make a subdirectory for your species and move the FASTA and GFF files
 into the directory. Leave the "fna.gz" and "gff.gz" suffixes on the files.
 <li>Type the following at the command line to copy the <tt>ConvertNCBI</tt> script to the <tt>seq</tt> directory: 
-<pre>cp ../../scripts/ConvertNCBI*.class .</pre>
+<pre>cp ../../scripts/ConvertNCBI*.class .
+chmod 755 *.class
+</pre>
 
 <li>Execute 
 <pre>java ConvertNCBI &lt;species&gt;</pre>
@@ -133,6 +131,7 @@ data/seq/rice/
 From the <tt>symap_5/data/seq</tt> directory, I executed:
 <pre>
 cp ../../scripts/ConvertNCBI*.class .
+chmod 755 *.class
 java ConvertNCBI rice
 </pre>
 This results in the following contents: 

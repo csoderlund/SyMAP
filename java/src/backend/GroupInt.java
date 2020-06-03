@@ -29,7 +29,7 @@ public class GroupInt
 	
 	public void addGrpToDB(UpdatePool pool) throws SQLException
 	{
-		String st = "SELECT count(*) AS count FROM groups WHERE proj_idx='" + projIdx + "'";
+		String st = "SELECT count(*) AS count FROM xgroups WHERE proj_idx='" + projIdx + "'";
 		ResultSet rs = pool.executeQuery(st);
 		int sort_order = 0;
 		if (rs.next())
@@ -42,11 +42,11 @@ public class GroupInt
 		
 		String grpFullName = grpPrefix + grpName;
 		
-		st = "INSERT INTO groups VALUES('0','" + projIdx + "','" + grpName + "','" + grpFullName + "','" 
+		st = "INSERT INTO xgroups VALUES('0','" + projIdx + "','" + grpName + "','" + grpFullName + "','" 
 			+ sort_order + "',0)"; 
 		pool.executeUpdate(st);
 		
-		st = "SELECT idx FROM groups WHERE proj_idx=" + projIdx + " AND name='" + grpName + "'";
+		st = "SELECT idx FROM xgroups WHERE proj_idx=" + projIdx + " AND name='" + grpName + "'";
 		grpIdx = pool.getIdx(st);
 	}
 }

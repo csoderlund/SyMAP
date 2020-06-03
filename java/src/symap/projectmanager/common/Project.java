@@ -1,7 +1,7 @@
 package symap.projectmanager.common;
 
 /****************************************************
- * There are TWO Project.java, the other one is in symap.projectmanager.common
+ * There are TWO Project.java, the other one is in backend
  */
 import java.awt.Color;
 import java.io.File;
@@ -241,7 +241,7 @@ public class Project {
 	public void loadGroups(UpdatePool db) throws SQLException
 	{
 		grpIdxList = new Vector<Integer>();
-		ResultSet rs = db.executeQuery("select idx from groups where proj_idx=" + nIdx);
+		ResultSet rs = db.executeQuery("select idx from xgroups where proj_idx=" + nIdx);
 		while (rs.next())
 		{
 			grpIdxList.add(rs.getInt(1));

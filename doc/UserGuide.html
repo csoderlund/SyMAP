@@ -1,6 +1,6 @@
-<HTML>
-<HEAD>
-	<TITLE>SyMAP User Guide</TITLE>
+<html>
+<head>
+	<title>SyMAP User Guide</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	<style>
 a.wt {color:inherit;}
@@ -10,69 +10,54 @@ td {font-size:100%}
 tt {font-size:13px}
 pre {font-size:13px}
 a {font-size:100%}
-		.emph {font-weight:bold;}
-		.semph {font-weight:bold;color:red;font-style:italic;}
-		.hang {margin-left:5px; text-indent:-5px;}
-		.rpad{padding-right:20px;}		
-		.lrpad{padding-left:10px;padding-right:20px;}
-		li {margin-top:2px;padding-left:2px}
-		.smbreak {margin-top:20px;}
-		.lgbreak {margin-top:40px;}
-		.imgbreaks {margin-top:20px;margin-bottom:20px;}
-		.codesec{padding-left:40px;margin-top:13px;margin-bottom:13px;font-weight: 500; font-family: courier, monospace;  font-size: 14px; color: #000000;}
-	</style>
+</style>
 </head>
+
 <body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
-<!--#include virtual="/common/uaheader.html" -->
 
 	<a name=top></a>
 	<table align="center" style="border: 1px solid #999999" cellspacing="0" cellpadding="0">
-	  <tr>
-	  </tr>
+	  <tr><td width="100%" style="background-color: #CCCCCC;">
+	  <a href="http://www.arizona.edu">
+	  <img border="0" alt="The University of Arizona" title="The University of Arizona" src="./img/UA.gif"></a>
+	  </td></tr>
 
-	  <tr>
-	  <td>
+	  <tr><td>
 		  <table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
-		    <tr>
-    	  <td height="60" width="161" align="left" valign="bottom">
-       		<img alt="" title="" src="img/agcol_logo.png">
-       	</td>
-		    <td height="60" width="428" align="left" valign="bottom"
-				style="padding:0px 0px 10px 30px">
-			    <font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
+		    <tr><td height="60" width="161" align="left" valign="bottom">
+       				<img alt="" title="" src="img/agcol_logo.png">
+       			</td>
+		    	<td height="60" width="428" align="left" valign="bottom" style="padding:0px 0px 10px 30px">
+			    	<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
 				    <b>SyMAP User Guide</b>
-			    </font> 
-		    </td>
-		    <td height="60" width="161" align="center" valign="bottom">&nbsp;
-        </td>
+			    	</font> 
+		    	</td>
+		    	<td height="60" width="161" align="center" valign="bottom">&nbsp;
+        		</td>
 		    </tr>
 
 		    <tr>
-		    <td height="21" colspan="3" align="left">
-			    <table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
-			    <tr>
-			    <td align="left" bgcolor="#666666">
+		    	<td height="21" colspan="3" align="left">
+			    	<table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
+			    	<tr><td align="left" bgcolor="#666666">
 <span style="font-size:75%;color:white">
 <a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
-<a href=../index.html class="wt">SyMAP Home</a> |
+<a href="http://www.agcol.arizona.edu/software/symap" class="wt">SyMAP Home</a> |
+<a href=index.html class="wt">Index</a> |
 <a href=SystemGuide.html class="wt">System Guide</a> |
 User Guide |
 <a href=Tour.html class="wt">Tour</a> |
 <a href=TroubleShoot.html class="wt">Troubleshooting</a> 
 </span>
-				</td>
-			</tr>
-          </table>
+				  </td></tr>
+                </table>
 			    </td>
-			    </tr>
+	         </tr>
 
-          <tr>
-    	    <td colspan="3" valign="top" align="left" style='padding:20px 15px 0px 15px;font-size:85%'>
+          <tr><td colspan="3" valign="top" align="left" style='padding:20px 15px 0px 15px;font-size:85%'>
 
-<p>
 This guide is for the Seq-to-Seq (sequence) synteny user interface.
-Note, the term <i>pseudo</i>
-and <i>sequence</i> are used interchangeably. 
+Note, the term <i>pseudo</i> and <i>sequence</i> are used interchangeably. 
 <ol> 
 <li>Most of the contents also apply to the FPC-to-Seq view (unless stated
 otherwise). Specific information is provided in <a href=UserGuideFPC.html target="_blank">FPC specific</a>.
@@ -858,12 +843,6 @@ opens up a column-selection section. The columns are explain the the <b>Help</b>
 </table>
 Self-synteny can be viewed in all views (see <a href=Demo.html#self>Dot Plot</a>). 
 
-<p>The one caveat
-is that a chromosome self-synteny (e.g. chr1 aligned to chr1) can only be viewed from the Dot Plot display.
-From the Project Manager, select the self-synteny cell followed 
-by Dot Plot. From the Dot Plot, any block or region
-can be selected to show the results in the Chromosome Explorer 2D display.
-When directly using the  Chromosome Explorer,  chromosome self-alignment cannot be viewed. 
 <p>The "SyMAP queries" does not work for self-synteny.
 
 <a name=data_download></a>

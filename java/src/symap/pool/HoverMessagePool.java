@@ -16,8 +16,8 @@ public class HoverMessagePool extends DatabaseUser {
 	private static final String BES_BLOCK_QUERY =
 		"SELECT DISTINCT g1.name,g2.name,ch.block_num "+
 		"FROM bes_hits AS h JOIN bes_block_hits AS bb JOIN " 
-			   +"ctghits AS ch JOIN contigs AS c JOIN groups AS g2 "+ 
-		"LEFT JOIN groups AS g1 ON (c.grp_idx=g1.idx) "+
+			   +"ctghits AS ch JOIN contigs AS c JOIN xgroups AS g2 "+ 
+		"LEFT JOIN xgroups AS g1 ON (c.grp_idx=g1.idx) "+
 		"WHERE h.proj1_idx=? AND h.proj2_idx=? AND h.clone=? AND h.bes_type=? AND h.idx=bb.hit_idx AND bb.ctghit_idx=ch.idx AND "+
 		"      ch.ctg1_idx=c.idx AND h.grp2_idx=g2.idx ";
 
@@ -27,8 +27,8 @@ public class HoverMessagePool extends DatabaseUser {
 	private static final String MRK_PSEUDO_BLOCKS_QUERY = 
 		"SELECT DISTINCT g1.name,g2.name,ch.block_num "+
 		"FROM mrk_hits AS h JOIN mrk_block_hits AS mb JOIN "
-			   +"ctghits as ch JOIN contigs AS c JOIN groups AS g2 "+ 
-		"LEFT JOIN groups AS g1 ON (c.grp_idx=g1.idx) "+
+			   +"ctghits as ch JOIN contigs AS c JOIN xgroups AS g2 "+ 
+		"LEFT JOIN xgroups AS g1 ON (c.grp_idx=g1.idx) "+
 		"WHERE h.proj1_idx=? AND h.marker=? AND h.idx=mb.hit_idx AND mb.ctghit_idx=ch.idx AND ch.ctg1_idx=c.idx AND "+
 		"      c.proj_idx=? AND ch.grp2_idx=g2.idx AND g2.proj_idx=?";
 
@@ -36,8 +36,8 @@ public class HoverMessagePool extends DatabaseUser {
 		"SELECT DISTINCT g1.name,g2.name,ch.block_num "+
 		"FROM markers AS m JOIN shared_mrk_block_hits AS mb JOIN " 
 			   +"ctghits AS ch JOIN contigs AS c1 JOIN contigs AS c2 "+ 
-		"LEFT JOIN groups AS g1 ON (c1.grp_idx=g1.idx) "+
-		"LEFT JOIN groups AS g2 ON (c2.grp_idx=g2.idx) "+
+		"LEFT JOIN xgroups AS g1 ON (c1.grp_idx=g1.idx) "+
+		"LEFT JOIN xgroups AS g2 ON (c2.grp_idx=g2.idx) "+
 		"WHERE m.proj_idx=? AND m.name=? AND m.idx=mb.mrk_idx AND mb.ctghit_idx=ch.idx AND ch.ctg1_idx=c1.idx AND "+
 		"      c1.proj_idx=? AND ch.ctg2_idx=c2.idx AND c2.proj_idx=?";	
 
@@ -48,7 +48,7 @@ public class HoverMessagePool extends DatabaseUser {
 
 	private static final String MRK_PSEUDO_HITS_QUERY =
 		"SELECT COUNT(*) "+
-		"FROM mrk_hits as h,groups as g "+
+		"FROM mrk_hits as h,xgroups as g "+
 		"WHERE h.proj1_idx=? AND h.marker=? AND g.proj_idx=? AND h.grp2_idx=g.idx";
 
 	// project,marker,project,marker,otherProject

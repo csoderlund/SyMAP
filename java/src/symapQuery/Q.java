@@ -60,7 +60,7 @@ public class Q {
 	 * Relations:
 	 * pseudo_annot 
 	 * 		"idx                 INTEGER AUTO_INCREMENT PRIMARY KEY," +  // annot_idx     
-			"grp_idx             INTEGER NOT NULL," +					// groups.idx   find species
+			"grp_idx             INTEGER NOT NULL," +					// xgroups.idx   find species
 		 	"type                VARCHAR(20) NOT NULL," +				// 'gene'		check for orphan
 			"name                TEXT  NOT NULL," +						// description	orphan and hit
 			"start               INTEGER NOT NULL," +					// chr start		orphan		
@@ -71,8 +71,8 @@ public class Q {
 	 * 		"pair_idx            INTEGER NOT NULL," +					// PH.pair_idx in (list)
 	 * 		"proj1_idx           INTEGER NOT NULL," + // proj_props.proj_idx
 			"proj2_idx           INTEGER NOT NULL," + // proj_props.proj_idx
-			"grp1_idx            INTEGER NOT NULL," + // groups.idx
-			"grp2_idx            INTEGER NOT NULL," + // groups.idx
+			"grp1_idx            INTEGER NOT NULL," + // xgroups.idx
+			"grp2_idx            INTEGER NOT NULL," + // xgroups.idx
 			"annot1_idx			INTEGER default 0," + // is gene check
 			"annot2_idx			INTEGER default 0," +
 			"start1              INTEGER NOT NULL," +

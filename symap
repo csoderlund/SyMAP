@@ -3,7 +3,10 @@
 # symap
 # Does not require the Java 3D libraries. Everything runs except the 3d display.
 
-# Read command line parameters to set memory and CPU limits.
+# Read command line parameters to set memory and a few SyMAP parameters.
+# CAS506 removed command line args for platform, didn't work
+#		 was attaching jar file that do not exist
+
 my $maxmem="2048m";
 print ">>>> SyMAP with no 3D ($maxmem) <<<<\n";
 
@@ -21,21 +24,10 @@ if ($allArgs =~ /-m\s*(\d+)m?/)
     print "\nusing memory $maxmem\n\n";
 }
 
-
 my $uname = `uname`;
-
 my $platform = "";
 my $word;
-if ($allArgs =~ /-linux/i)
-{
-	$platform = "linux";
-    $word = getWordSize();
-}
-elsif ($allArgs =~ /-mac/i)
-{
-	$platform = "mac";
-}
-elsif ($uname =~ /darwin/i)
+if ($uname =~ /darwin/i)
 {
 	$platform = "mac";
     $word = "64"; # setting not used
@@ -70,15 +62,8 @@ else
 
 my $jar = "symap.jar";
 my $main ="symapCE.ProjectManagerFrame";
-my $cmd = "java -Xmx$maxmem $libpath ";
-$cmd .= " -classpath java/jar/$jar:java/jar/mysql-connector-java-5.0.8-bin.jar:java/jar/mysql-connector-mxj-gpl-5-0-9.jar:java/jar/mysql-connector-mxj-gpl-5-0-9-db-files.jar:java/jar/biojava.jar:java/jar/aspectjrt.jar:java/jar/freehep-graphicsio-2.1.1.jar:java/jar/freehep-graphicsio-svg-2.1.1.jar:java/jar/freehep-graphics2d-2.1.1.jar:java/jar/freehep-util-2.0.2.jar:java/jar/freehep-io-2.0.2.jar:java/jar/freehep-xml-2.1.1.jar:java/jar/freehep-export-2.1.1.jar:java/jar/freehep-swing-2.0.3.jar:java/jar/freehep-graphicsio-ps-2.1.1.jar:java/jar/freehep-graphicsio-pdf-2.1.1.jar";
-
-# Get rid of args not used by app, and format the -p with no space
-$allArgs =~ s/-32//;
-$allArgs =~ s/-64//;
-$allArgs =~ s/-m\S+//i;
-$allArgs =~ s/-mac//i;
-$allArgs =~ s/-linux//i;
+my $cmd = "java -Xmx$maxmem $libpath -classpath java/jar/$jar";
+#$cmd .= " -classpath java/jar/$jar:java/jar/mysql-connector-java-5.0.8-bin.jar:java/jar/mysql-connector-mxj-gpl-5-0-9.jar:java/jar/mysql-connector-mxj-gpl-5-0-9-db-files.jar:java/jar/biojava.jar:java/jar/aspectjrt.jar:java/jar/freehep-graphicsio-2.1.1.jar:java/jar/freehep-graphicsio-svg-2.1.1.jar:java/jar/freehep-graphics2d-2.1.1.jar:java/jar/freehep-util-2.0.2.jar:java/jar/freehep-io-2.0.2.jar:java/jar/freehep-xml-2.1.1.jar:java/jar/freehep-export-2.1.1.jar:java/jar/freehep-swing-2.0.3.jar:java/jar/freehep-graphicsio-ps-2.1.1.jar:java/jar/freehep-graphicsio-pdf-2.1.1.jar";
 
 if ($allArgs =~ /-p\s+\d+/)
 {
@@ -96,7 +81,6 @@ sub usage
 	print <<END;
 
 	Usage:  ./symap [options]
-	-v		: check MySQL variables for optional values
 	-r		: read-only mode (used by viewSymap)
 	-c string	: filename of config file (to use instead of symap.config)	
 	
@@ -105,14 +89,7 @@ sub usage
 	-s		: print stats for debugging
 	-o		: use original draft ordering algorithm
 	
-	Platform:
-	-32		: 32-bit mode
-	-64		: 64-bit mode
-	-mN		: set max memory to N megabytes
-	-linux 		: linux platform
-	-mac		: mac platform
 END
-
 }
 
 #############################################
@@ -120,19 +97,10 @@ END
 # should only be called for platform linux
 sub getWordSize
 {
-	if ($allArgs =~ /-32/)
-    {
-    	return "32";
-    }
-    elsif ($allArgs =~ /-64/)
-    {
-    	return "64";
-    }
     my $uname = `uname -i`; # illegal option on mac
     if ($uname =~ /i386/)
     {
     	return "32";
     }
-    return "64";
-    
+    return "64"; 
 }
