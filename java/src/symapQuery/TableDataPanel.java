@@ -962,7 +962,7 @@ public class TableDataPanel extends JPanel {
 			int grp1Idx = (Integer) rd.chrIdx[0];
 			int grp2Idx = (Integer) rd.chrIdx[1];
 			
-			SyMAP symap = new SyMAP(theParentFrame.getApplet(), theParentFrame.getDatabase(), getInstance());
+			SyMAP symap = new SyMAP(theParentFrame.getDatabase(), getInstance());
 		
 			symap.getDrawingPanel().setMaps(1);
 			symap.getHistory().clear(); 

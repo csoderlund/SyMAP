@@ -1,37 +1,21 @@
 package props;
 
-import java.applet.Applet;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-import netscape.javascript.JSObject;
 
 /**
+ * CAS507 this file is dead, but referred in and messy to remove
  * Class <code>CookieUtil</code> is a class that can be used to create, access,
  * and delete cookies via an applet on a web page.
  *
  */
 public class CookieUtil {
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 	private static final String CHARSET = "ISO-8859-1";
 	
 	private boolean bExceptionReported = false; 
-
-	private JSObject host;
-
-	/**
-	 * Creates a new <code>CookieUtil</code> instance.
-	 *
-	 * @param applet an <code>Applet</code> value must be an applet currently being displayed
-	 */
-	public CookieUtil(Applet applet) {
-		try {
-			//host = JSObject.getWindow(applet); /CAS505
-		} catch (Exception e) {
-			System.err.println("Exception getting window object!");
-		}
-	}
 
 	/**
 	 * Method <code>getCookie</code> returns the value of the cookie
@@ -100,7 +84,7 @@ public class CookieUtil {
 	private void setCookie(String val) {
 		if (DEBUG) System.out.println("Setting Cookie ["+val+"]");
 		try {
-			((JSObject)host.getMember("document")).setMember("cookie",val);	
+			//((JSObject)host.getMember("document")).setMember("cookie",val);	
 		} catch (Exception e) {
 			if (!bExceptionReported)
 				System.err.println("Exception trying to set cookie value! (suppressing further notifications)");
@@ -112,9 +96,9 @@ public class CookieUtil {
 	private String getCookie() {
 		String cookie = null;
 		try {
-			cookie = (String)((JSObject)host.getMember("document")).getMember("cookie");
-			if (cookie == null)
-				cookie = (String)host.eval("document.cookie");
+			//cookie = (String)((JSObject)host.getMember("document")).getMember("cookie");
+			//if (cookie == null)
+			//	cookie = (String)host.eval("document.cookie");
 			if (DEBUG) System.out.println("Cookie Acquired ["+cookie+"]");
 		}
 		catch (Exception e) {

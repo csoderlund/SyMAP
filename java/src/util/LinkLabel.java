@@ -3,17 +3,12 @@ package util;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.FontMetrics;
-import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
-import java.applet.Applet;
-
 import javax.swing.JLabel;
-
-import symap.frame.SyMAPFrame;
 
 /**
  * Class <code>LinkLabel</code> is a JLabel with its text underlined and a 
@@ -128,18 +123,8 @@ public class LinkLabel extends JLabel implements MouseListener {
 		setCursor(null);
     }
 
-    public void mouseClicked(MouseEvent e) { 
-    
-    	if (url != null) {
-	    	Applet applet = null;
-	    	for (Frame f : Frame.getFrames()) { // get applet if exists
-	    		if (f instanceof SyMAPFrame) {
-	    			applet = ((SyMAPFrame)f).getApplet();
-	    			if (applet != null) break;
-	    		}
-	    	}
-	    	Utilities.tryOpenURL(applet, url);
-    	}
+    public void mouseClicked(MouseEvent e) { // CAS507 remove check for Applet
+    	if (url != null) Utilities.tryOpenURL(url);
     }
     
     public void mouseReleased(MouseEvent e) { }

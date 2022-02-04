@@ -37,7 +37,7 @@ public class ProjectManagerFrame3D extends ProjectManagerFrameCommon
 		Utilities.setCursorBusy(this, true);
 		try 
 		{
-			SyMAP3D symap3d = new SyMAP3D(DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_SYMAP_APPLET_3D, dbReader));
+			SyMAP3D symap3d = new SyMAP3D(DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_SYMAP_3D, dbReader));
 			for (Project p : availProjects) 
 				symap3d.addProject( p.getDBName(), p.getType() );
 			symap3d.build();

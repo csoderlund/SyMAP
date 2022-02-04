@@ -302,10 +302,12 @@ public class PairPropertyFrame extends JDialog {
 		buttonPanel.setBackground(Color.WHITE);
 		buttonPanel.add(btnKeep);
 		buttonPanel.add(Box.createHorizontalStrut(20));
+		/** CAS507 disabled because did not work right
 		if (!isGlobal) {
 			buttonPanel.add(btnLoadGlobal); 
 			buttonPanel.add(Box.createHorizontalStrut(20));
 		}
+		**/
 		buttonPanel.add(btnLoadDef);
 		buttonPanel.add(Box.createHorizontalStrut(20));
 		buttonPanel.add(btnDiscard);

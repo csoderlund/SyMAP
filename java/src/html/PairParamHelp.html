@@ -105,7 +105,7 @@ The arguments for BLAT and MUMmer are <b>NOT</b> checked for correctness.
 		NUCmer Only
 	</td>
 	<td align="left"  valign="top" width="350" >
-		User NUCmer for all alignments.*
+		Use NUCmer for all alignments.*
 	</td>
 	<td align="left"  valign="top" >
 		Align
@@ -119,7 +119,7 @@ The arguments for BLAT and MUMmer are <b>NOT</b> checked for correctness.
 		PROmer Only
 	</td>
 	<td align="left"  valign="top" width="350" >
-		User PROmer for all alignments.*
+		Use PROmer for all alignments.*
 	</td>
 	<td align="left"  valign="top" >
 		Align
@@ -195,23 +195,14 @@ when a chromosome sequence is run against itself, e.g. --nosimplify or --maxmatc
 though the latter can take a very long time.
 
 <h3>Rules for saving parameters</h3>
-Setting parameters:
+
 <ul>
-<li><i>Selected Pair Parameters</i>: If a project pair is selected from the matrix, then the parameters changed
-followed by "Save", the parameters will be saved to the database. 
-<li><i>Global Pair Parameters</i>: If no project pair is selected in the matrix, 
-then the parameters are changed followed by "Save", these parameters will be
-applied to all project pairs that DO NOT have previously saved parameters, or
-with the "Globals" button. Global parameters are only restained for the session.
-<li>Otherwise, default parameters will be used.
-</ul> 
-Storage of parameters:
-<ul>
+<li>When "Save" is selected, the parameters are stored in the databases.
 <li>To see the project pair parameters, select the pair followed by "Parameter",
 which will show:
 <ol>
 <li>If parameters are stored in the database for the pair, they will be shown.
-<li>If no parameters are stored in the database for the pair, the Global parameters
+<li>If no parameters are stored in the database for the pair, the default parameters
 will be shown. 
 </ol>
 <li>A "Remove project from database", "Reload project"

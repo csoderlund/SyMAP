@@ -3,7 +3,6 @@ package symapQuery;
 /**************************************************
  * The main query frame
  */
-import java.applet.Applet;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -35,18 +34,12 @@ public class SyMAPQueryFrame extends JFrame {
 	public static final String [] LOCAL_RESULT_COLUMNS = { "Query", "Filters" };
 	
 	public SyMAPQueryFrame(DatabaseReader dr, boolean is3D) {
-		this(null, dr, is3D);
-	}
-
-	public SyMAPQueryFrame(Applet applet, DatabaseReader dr, boolean is3D) {
 		setTitle("SyMAP Query");
-		theApplet = applet;
 		theReader = dr;
-		bIs3D = is3D;
 		
 		theProjects = new Vector<Project> ();		
 		
-		Rectangle screenRect = Utilities.getScreenBounds(applet,this);
+		Rectangle screenRect = Utilities.getScreenBounds(this);
 		screenWidth  = Math.min(1024, screenRect.width);
 		screenHeight = Math.min(1024, screenRect.height);
 		setSize(screenWidth, screenHeight);	
@@ -163,7 +156,7 @@ public class SyMAPQueryFrame extends JFrame {
 	}
 	
 	public DatabaseReader getDatabase() { return theReader; }
-	public Applet getApplet() { return theApplet; }
+	
 	public Vector<Project> getProjects() { return theProjects; }
 	
 	// Query result
@@ -289,7 +282,6 @@ public class SyMAPQueryFrame extends JFrame {
 	public SyMAPQueryFrame getThis() { return this; }
 	public QueryPanel getQueryPanel() {return queryPanel;}
 		
-	private Applet theApplet = null;
 	private DatabaseReader theReader = null;
 	private Vector<Project> theProjects = null;
 	
@@ -303,8 +295,7 @@ public class SyMAPQueryFrame extends JFrame {
 	private ResultSummaryPanel resultsPanel = null;
 	
 	private Vector<JPanel> results = null;
-	private boolean bIs3D = false;
-	
+
 	private QueryPanel queryPanel = null;
 	
 	private static int resultCounter = 0; 

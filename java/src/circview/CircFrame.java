@@ -12,8 +12,6 @@ import java.util.TreeSet;
 import java.util.Vector;
 import java.util.TreeMap;
 
-import java.applet.Applet;
-
 // Draw circle view block display.
 // Considerations:
 // 1. Allow more than two projects
@@ -53,17 +51,17 @@ public class CircFrame extends JFrame
 	{
 		super("SyMAP Circle View");
 		int[] pidxList = {projXIdx, projYIdx};
-		doConstruct(null,dbReader,pidxList,null,null);
+		doConstruct(dbReader,pidxList,null,null);
 	}
-	// Called by the chromosome explorer (both standalone and applet)
-	public CircFrame(Applet a, DatabaseReader dbReader, int[] pidxList, TreeSet<Integer> shownGroups,HelpBar hb) 
+	// Called by the chromosome explorer 
+	public CircFrame(DatabaseReader dbReader, int[] pidxList, TreeSet<Integer> shownGroups,HelpBar hb) 
 	{
 		super("SyMAP Circle View");
-		doConstruct(a,dbReader,pidxList,shownGroups, hb);
+		doConstruct(dbReader,pidxList,shownGroups, hb);
 	}
 
 	// This is the generic constructor, which is actually only called from the other constructors
-	public void doConstruct(Applet applet, DatabaseReader dbReader, int[] projIdxList, TreeSet<Integer> shownGroups, HelpBar _hb)
+	public void doConstruct(DatabaseReader dbReader, int[] projIdxList, TreeSet<Integer> shownGroups, HelpBar _hb)
 	{
 		allProj = new Vector<Project>();
 		mDB = dbReader;
@@ -91,7 +89,7 @@ public class CircFrame extends JFrame
 			}
 						
 			cp = new CircPanel(dbReader,projIdxList,shownGroups, hb);
-			controls = new ControlPanelCirc(cp,hb,applet);
+			controls = new ControlPanelCirc(cp,hb);
 			controls.selfCheckbox.setSelected(true); //allProj.size() == 1);
 
 			init();
@@ -110,15 +108,13 @@ public class CircFrame extends JFrame
 			Project proj = new Project(idx, rs.getString("name"), rs.getString("type").equals("fpc"), s);
 			allProj.add(proj);
 		}
-		else
-		{
+		else {
 			System.out.println("Can't find proj_idx=" + idx);
 		}
 	}
 
 	public void init() 
 	{		
-		
 		try
 		{
 			setPreferredSize(new Dimension(1000,900));
@@ -131,18 +127,14 @@ public class CircFrame extends JFrame
 			if (!extHelpBar)
 			{
 				add( hb, BorderLayout.SOUTH );
-			}			
-			
+			}				
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
 			return;
 		}		
-
 	}
-
-
 	class Project
 	{
 		int idx;
@@ -154,9 +146,6 @@ public class CircFrame extends JFrame
 			idx = _idx;
 			name = _name;
 			fpc = _fpc;
-
 		}
-
-
 	}
 }

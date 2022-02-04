@@ -628,7 +628,7 @@ public class Block2Frame extends JFrame
 	private void showDetailView(Block b)
 	{
 		try {
-			SyMAP symap = new SyMAP(null, mDB, null);
+			SyMAP symap = new SyMAP(mDB, null);
 			if (!isFpc)
 			{
 				symap.getDrawingPanel().setSequenceTrack(1,mRefIdx,mGrpIdx,Color.CYAN);

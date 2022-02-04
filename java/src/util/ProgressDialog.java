@@ -207,7 +207,7 @@ public class ProgressDialog extends JDialog implements Logger {
 			progressBar.setString("Completed, click 'Done' to continue ...");
 			if (ErrorCount.getCount() > 0)
 			{
-				msg("Some errors occurred, check printout before closing.");
+				msg("Some errors occurred, check text in this window, terminal or view logs/LOAD.log.");
 				button.setText("Done (Error Occurred)"); 
 			}
 			else

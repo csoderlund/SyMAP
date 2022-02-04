@@ -372,7 +372,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		editorPane.addHyperlinkListener(new HyperlinkListener() {
 			public void hyperlinkUpdate(HyperlinkEvent e) {
 				if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-					if ( !Utilities.tryOpenURL(null,e.getURL()) )
+					if ( !Utilities.tryOpenURL(e.getURL().toString()) ) 
 						System.err.println("Error opening URL: " + e.getURL().toString());
 				}
 			}
@@ -561,7 +561,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	private void updateEnable() {
 		if (alignmentTable == null) return;
 		
-		btnPairParams.setEnabled(true);  // can even select one
+		Project[] projects = getSelectedAlignmentProjects();
+		btnPairParams.setEnabled(projects!=null);  // CAS v507 must select one 
 		
 		int numProj =  alignmentTable.getRowCount();
 		btnAllPairs.setEnabled(numProj>1 && getDoAllPairs());
@@ -573,7 +574,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		btnAllDotplot.setEnabled(numDone>0);
 		btnAllQueryView.setEnabled(numDone>0 && isAllSeq());
 		
-		Project[] projects = getSelectedAlignmentProjects();
 		if ((projects!=null)) {
 			String val = getSelectedAlignmentValue();
 			
@@ -1000,7 +1000,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			{
 				mainPanel.add( Box.createRigidArea(new Dimension(0,15)) );	
 				mainPanel.add( createHorizPanel( new Component[] { lbl1,
-						btnSelAlign, btnSelClearPair, btnAllPairs, btnPairParams}, 5) );
+						btnAllPairs, btnSelAlign, btnSelClearPair,  btnPairParams}, 5) ); // CAS507 put allpairs first since btnPair is for select only now
 			}
 			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );
 			mainPanel.add( createHorizPanel( new Component[] {lbl2, btnSelDotplot, btnSelBlockView, btnSelCircView, btnSelSummary }, 5) );
@@ -1240,7 +1240,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	private void showQuery() {
 		Utilities.setCursorBusy(this, true);
 		try {
-			SyMAPQueryFrame qFrame = new SyMAPQueryFrame(DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_SYMAP_APPLET_3D, dbReader), false);
+			SyMAPQueryFrame qFrame = new SyMAPQueryFrame(DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_SYMAP_3D, dbReader), false);
 			for (Project p : availProjects) {
 				if(p.getStatus() == Project.STATUS_IN_DB)
 					qFrame.addProject( p );
@@ -2212,7 +2212,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				catch (OutOfMemoryError e) {
 					success = false;
 					statusThread.interrupt();
-					progress.msg( "Not enough memory");
+					progress.msg( "Not enough memory - increase $maxmem in symap script");
 					Utilities.showOutOfMemoryMessage(progress);
 				}
 				catch (Exception e) {
@@ -2526,7 +2526,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		}
 
 		// Open dot plot
-		DotPlotFrame frame = new DotPlotFrame(null, dbReader, pids, null, null, null, true);
+		DotPlotFrame frame = new DotPlotFrame(dbReader, pids, null, null, null, true);
 		frame.setSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
 		frame.setVisible(true);
 	}
@@ -2776,12 +2776,11 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			txtName.setMaximumSize(txtName.getPreferredSize());
 			txtName.setMinimumSize(txtName.getPreferredSize());
 			
-			cmbType = new JComboBox();
+			String items [] = {"Select type...", "Sequence", "FPC"};
+			cmbType = new JComboBox <String> (items);
 			cmbType.setAlignmentX(Component.LEFT_ALIGNMENT);
 			cmbType.setBackground(Color.WHITE);
-			cmbType.addItem("Select type...");
-			cmbType.addItem("sequence");
-			cmbType.addItem("fpc");
+			
 			cmbType.setSelectedIndex(1);
 			cmbType.setMaximumSize(cmbType.getPreferredSize());
 			cmbType.setMinimumSize(cmbType.getPreferredSize());
@@ -2864,7 +2863,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		public String getPType() 
 		{ 
 			String type = (String)cmbType.getSelectedItem(); 
-			if (type.equals("sequence")) type = Constants.seqType;
+			if (type.equals("Sequence")) type = Constants.seqType;
 			return type;
 		}
 		
@@ -2894,7 +2893,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		private JButton btnAdd = null;
 		private JButton btnCancel = null, btnHelp = null;
 		private JTextField txtName = null;
-		private JComboBox cmbType = null;
+		private JComboBox <String> cmbType = null;
 		private JPanel pnlMainPanel = null;
 	}
 

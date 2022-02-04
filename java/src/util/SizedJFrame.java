@@ -57,11 +57,6 @@ public class SizedJFrame extends JFrame implements KeyListener, ContainerListene
 		else             setLocation(defaultLocation);
 	}
 
-	public void setSizeAndLocationProp(PersistentProps baseProp, String sizePropName, String locationPropName) {
-		setSizeProp(baseProp.copy(sizePropName));
-		setLocationProp(baseProp.copy(locationPropName));
-	}
-
 	public void setLocationProp(PersistentProps prop) {
 		positionProp = prop;
 	}

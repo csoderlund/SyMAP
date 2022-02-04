@@ -1,6 +1,5 @@
 package symapCE;
 
-import java.applet.Applet;
 import java.awt.Color;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,12 +27,8 @@ public class SyMAPExp implements Observer {
 	Mapper mapper;
 	public static final Color[] projectColors = { Color.cyan, Color.green, new Color(0.8f, 0.5f, 1.0f),
 		Color.yellow, Color.orange };
-	
-	public SyMAPExp(DatabaseReader dr) throws SQLException {
-		this(null,dr);
-	}
 
-	public SyMAPExp(Applet applet, DatabaseReader dr) throws SQLException {
+	public SyMAPExp(DatabaseReader dr) throws SQLException {
 		databaseReader = dr;
 		
 		projects = new Vector<Project>();
@@ -41,7 +36,7 @@ public class SyMAPExp implements Observer {
 		
 		mapper = new Mapper();
 		
-		frame = new SyMAPFrameCommon(applet, databaseReader, mapper);
+		frame = new SyMAPFrameCommon(databaseReader, mapper);
 	}
 	
 	public void update(Observable o, Object arg) {

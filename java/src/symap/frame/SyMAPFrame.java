@@ -1,7 +1,5 @@
 package symap.frame;
 
-import java.applet.Applet;
-
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -17,28 +15,24 @@ import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.drawingpanel.DrawingPanel;
 import symap.drawingpanel.DrawingPanelListener;
-import util.AppletHolder;
 import util.Utilities;
 import util.SizedJFrame;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener, 
-														AppletHolder 
+public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener
 {	
 	private static final String DISPLAY_SIZE_COOKIE = "SyMAPDisplaySize";
 	private static final String DISPLAY_POSITION_COOKIE = "SyMAPDispayPosition";
 
-	private Applet applet;
 	private ControlPanel cp;
 	private DrawingPanel dp;
 	private HelpBar hb;
 
-	public SyMAPFrame(Applet applet, ControlPanel cp, DrawingPanel dp, HelpBar hb, 
+	public SyMAPFrame(ControlPanel cp, DrawingPanel dp, HelpBar hb, 
 			boolean showHelpBar, // for 3D
 			PersistentProps persistentProps) {
 		super(/*FRAME_TITLE*/"SyMAP "+SyMAP.VERSION);
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		this.applet = applet;
 		this.cp = cp;
 		this.dp = dp;
 		this.hb = hb;
@@ -61,34 +55,35 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener,
 		if (hb != null && showHelpBar/*&& HAS_HELPBAR*/) 
 			container.add(hb, BorderLayout.SOUTH);
 
-		setSizeAndLocationByProp(Utilities.getScreenBounds(applet,this));
+		setSizeAndLocationByProp(Utilities.getScreenBounds(this));
 
 		addKeyAndContainerListenerRecursively(this);
 	}
-	
-	public Applet getApplet() {
-		return applet;
-	}
 
 	public void show() {
-		if (isShowing()) dp.closeFilters();
-		Dimension d = new Dimension();
-		int nMaps = dp.getNumMaps();
-		int nAnnots = dp.getNumAnnots();
-		int width = Math.min(1000, 300 + 300*nMaps + 400*nAnnots);
-		d.setSize(width, 900);
-		setSize(d);
-		super.show();
-		if (dp.tracksSet())
-			dp.amake();
-		else
-			setFrameEnabled(false);
+		try {
+			if (isShowing()) dp.closeFilters();
+			Dimension d = new Dimension();
+			int nMaps = dp.getNumMaps();
+			int nAnnots = dp.getNumAnnots();
+			int width = Math.min(1000, 300 + 300*nMaps + 400*nAnnots);
+			d.setSize(width, 900);
+			setSize(d);
+			// setVisible(true);CAS507 doesn't work, and needs show
+			super.show(); 
+			if (dp.tracksSet())
+				dp.amake();
+			else
+				setFrameEnabled(false);
+		}
+		catch (Exception e) {e.printStackTrace();}
 	}
 
 	public void hide() {
 		dp.closeFilters();
 		//dp.getPools().clearPools();
-		super.hide();
+		super.hide(); 
+		// setVisible(false);
 	}
 
 	/**

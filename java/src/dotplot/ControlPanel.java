@@ -8,8 +8,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 
-import java.applet.Applet;
-
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 
@@ -50,7 +48,7 @@ public class ControlPanel extends JPanel implements Observer,
     private JLabel referenceLabel;      
     private JComboBox referenceSelector;
     
-    public ControlPanel(final Applet applet, Data d, Plot p, HelpBar hb) {
+    public ControlPanel(Data d, Plot p, HelpBar hb) {
 		this.data = d;
 		this.plot = p;
 	
@@ -67,13 +65,12 @@ public class ControlPanel extends JPanel implements Observer,
 		hb.addHelpListener(hitSizeSlider,this); 			
 	
 		helpButton = (JButton) Utilities.createButton(this,"/images/help.gif",
-				"Help: Online documentation." + Utilities.getBrowserPopupMessage(applet),
-				hb,null,false);
+				"Help: Online documentation.", hb,null,false);
 
 		helpButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String url = SyMAP.USER_GUIDE_URL + "#dotplot_display";
-				if ( !Utilities.tryOpenURL(applet, url) )
+				if ( !Utilities.tryOpenURL(url) )
 					System.err.println("Error opening URL: " + url);
 			}
 		});
@@ -85,8 +82,7 @@ public class ControlPanel extends JPanel implements Observer,
 		minusButton      = (JButton)  Utilities.createButton(this,"/images/minus.gif","Shrink: Decrease the scale.",hb,buttonListener,false);
 		plusButton       = (JButton)  Utilities.createButton(this,"/images/plus.gif","Grow: Increase the scale.",hb,buttonListener,false);
 		showImageButton  = (JButton)  Utilities.createButton(this,"/images/print.gif",
-				"Save: Save as image." + Utilities.getBrowserPopupMessage(applet),
-				hb,buttonListener,false);
+				"Save: Save as image.", hb,buttonListener,false);
 
 		scaleCheckbox = (JCheckBox) Utilities.createButton(this,"Scale","Scale: Draw to BP scale.",hb,buttonListener,true); 
 		scaleCheckbox.setBackground(getBackground()); 

@@ -16,7 +16,6 @@ import java.util.Observer;
 import java.util.Vector;
 
 import java.sql.SQLException;
-import java.applet.Applet;
 
 import symap.SyMAP;
 import symap.SyMAPConstants;
@@ -33,7 +32,6 @@ public class Data extends Observable implements DotPlotConstants {
 	public static final double DEFAULT_ZOOM = 0.99;
 
 	private SyMAP symap;
-	private Applet applet;
 	private ProjectProperties projProps;
 	private FilterData fd;
 	private ScoreBounds sb;
@@ -55,23 +53,11 @@ public class Data extends Observable implements DotPlotConstants {
 	private boolean onlyShowBlocksWhenHighlighted = false;
 	private Vector<Plot> plots = new Vector<Plot>();
 	
-	public Data(Applet a) {
-		this(a,new DotPlotDBUser(a));
-	}
-
-	public Data(Applet a, DotPlotDBUser db) {
-		this(a,db == null ? null : new Loader(db,a == null ? Loader.APPLICATION : Loader.APPLET));
-	}
-
 	public Data(DotPlotDBUser db) {
-		this(new Loader(db,Loader.APPLICATION));
+		this(new Loader(db));
 	}
 
-	public Data(Loader loader) {
-		this(null,loader);
-	}
-
-	public Data(Applet a, Loader l) {
+	public Data(Loader l) {
 		fd            = new FilterData();
 		sb            = new ScoreBounds();
 		projects      = null; 
@@ -87,11 +73,10 @@ public class Data extends Observable implements DotPlotConstants {
 		isScaled = false;
 		scaleFactor  = 1;
 
-		applet = a;
 		loader = l;
 
-		if (loader == null)
-			loader = new Loader(new DotPlotDBUser(applet),applet != null ? Loader.APPLET : Loader.APPLICATION);
+		//if (loader == null) CAS507
+		//	loader = new Loader(new DotPlotDBUser(), Loader.APPLICATION);
 
 		loader.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
@@ -106,7 +91,7 @@ public class Data extends Observable implements DotPlotConstants {
 		});
 
 		try {
-			symap = new SyMAP(applet,DatabaseReader.getInstance(
+			symap = new SyMAP(DatabaseReader.getInstance(
 							SyMAPConstants.DB_CONNECTION_DOTPLOT_2D,
 							getDotPlotDBUser().getDatabaseReader()), null);
 		} catch (Exception e) {
@@ -187,21 +172,6 @@ public class Data extends Observable implements DotPlotConstants {
 	public SyMAP getSyMAP() { return symap; }
 	public boolean isCentering() { return isCentering; }
 	public boolean canPaint() { return canPaint; }
-	
-	// Called from dotplot.DPAppplet.init and SyMAPBrowserApplet
-	public void initialize(String[] projNames) {
-		int [] projIDs;
-		if (projNames.length==1) {//CAS42 12/26/17 was just getting one name when expecting it to duplicated on self
-			projIDs = new int[2];
-			projIDs[0]=projIDs[1]=projProps.getID(projNames[0]);
-		}
-		else {
-			projIDs = new int[projNames.length];
-			for (int i = 0;  i < projNames.length;  i++)
-				projIDs[i] = projProps.getID(projNames[i]);
-		}
-		initialize(projIDs, null, null);
-	}
 	
 	public void initialize(int[] projIDs, int[] xGroupIDs, int[] yGroupIDs) {
 		try {

@@ -1,6 +1,5 @@
 package symap3D;
 
-import java.applet.Applet;
 import java.awt.Color;
 import java.awt.Component;
 import java.sql.ResultSet;
@@ -43,12 +42,8 @@ public class SyMAP3D implements Observer {
 	private Vector<Project> projects;
 	Vector<TrackCom> tracks;
 	Mapper mapper;
-	
-	public SyMAP3D(DatabaseReader dr) throws SQLException {
-		this(null,dr);
-	}
 
-	public SyMAP3D(Applet applet, DatabaseReader dr) throws SQLException {
+	public SyMAP3D(DatabaseReader dr) throws SQLException {
 		databaseReader = dr;
 		
 		projects = new Vector<Project>();
@@ -57,7 +52,7 @@ public class SyMAP3D implements Observer {
 		mapper = new Mapper3D();
 		
 		try {
-			frame = new SyMAPFrame3D(applet, databaseReader, (Mapper3D)mapper);
+			frame = new SyMAPFrame3D(databaseReader, (Mapper3D)mapper);
 		}
 		catch (Exception e) {ErrorReport.print(e, "3D explore - may not have 3D library");}
 	}
@@ -193,8 +188,7 @@ public class SyMAP3D implements Observer {
 		        	
 				t.setBpPerUnit( cbsize ); // save for loading blocks
 		        t.setSizeBP((ccb + size) * cbsize);
-        	}
-        	
+        	}       	
             rs.close();
         }
         
@@ -348,8 +342,7 @@ public class SyMAP3D implements Observer {
 			{
 				return true;
 			}
-		}
-		
+		}		
 		return false;
 	}
 	

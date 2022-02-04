@@ -42,8 +42,7 @@ public interface SyMAPConstants {
 	// All possible concurrent connections
 	public static final String DB_CONNECTION_BACKEND = "Backend";
 	public static final String DB_CONNECTION_PROJMAN = "Project Manager";
-	public static final String DB_CONNECTION_SYMAP_APPLET = "SyMAP Applet";
-	public static final String DB_CONNECTION_SYMAP_APPLET_3D = "SyMAP Applet 3D";
+	public static final String DB_CONNECTION_SYMAP_3D = "SyMAP 3D"; // CAS507 included _APPLET_, still accessed..
 	public static final String DB_CONNECTION_DOTPLOT = "Dotplot";
 	public static final String DB_CONNECTION_DOTPLOT_2D = "Dotplot 2D";
 }

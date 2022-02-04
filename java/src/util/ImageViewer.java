@@ -1,7 +1,5 @@
 package util;
 
-import java.applet.Applet;
-import java.applet.AppletContext;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -10,13 +8,11 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.net.URL;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileFilter;
 import org.freehep.graphicsbase.util.export.ExportDialog;
 
 import org.freehep.graphicsio.pdf.PDFExportFileType;
@@ -99,24 +95,6 @@ public class ImageViewer {
 	    }
 	}
 
-    public static Image getImage(Applet applet, URL url) {
-		if (applet != null) {
-		    	AppletContext context = applet.getAppletContext();
-		    Image image = null;
-		    if (url != null && context != null) {
-		    		image = context.getImage(url);
-		    }
-		    return image;
-		}
-		return Toolkit.getDefaultToolkit().getImage(url);
-    }
-
-    public static Icon getIcon(Applet applet, URL url) {
-		Image image = getImage(applet,url);
-		if (image != null) return new ImageIcon(image);
-	    return null;
-    }
-
     /**
      * Method <code>createImage</code> creates an image from the component <code>comp</code>.
      *
@@ -134,28 +112,5 @@ public class ImageViewer {
 		g2.fill(new Rectangle(0,0,size.width,size.height));
 		comp.paint(g2);
 		return bimg;
-    }
-
-    private static class ImageFilter extends FileFilter {
-		private static final String[] EXTENSIONS = {"jpeg","jpg"}; //,"gif","tiff","tif","png"};
-		private static final String[] EXT_FORMAT = {"jpeg","jpeg"}; //,"gif","tiff","tiff","png"};
-	
-		public boolean accept(File f) {
-		    return f.isDirectory() || Utilities.contains(EXTENSIONS,Utilities.getFileExtension(f));
-		}
-	
-		public String getDescription() {
-		    return "JPEG Image";
-		}
-	
-		public static String getFormatName(File file) {
-		    return getFormatName(Utilities.getFileExtension(file));
-		}
-	
-		public static String getFormatName(String extension) {
-		    for (int i = 0; i < EXTENSIONS.length; i++)
-			if (EXTENSIONS[i].equals(extension)) return EXT_FORMAT[i];
-		    return "jpeg"; // default
-		}
     }
 }

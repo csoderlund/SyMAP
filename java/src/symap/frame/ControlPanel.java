@@ -8,8 +8,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 
-import java.applet.Applet;
-
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -44,7 +42,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 	
 	private DrawingPanel dp;
 	private HistoryControl hc;
-	private ImageViewer imageViewer;
+	
 	private ColorDialogHandler cdh;
 
 	/**
@@ -62,14 +60,13 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 	 * @param bar a <code>HelpBar</code> value of the HelpBar if there is an 
 	 * associated help bar to register the button tips with (optional).
 	 */
-	public ControlPanel(final Applet applet, DrawingPanel dp, HistoryControl hc, ImageViewer iv, 
+	public ControlPanel(DrawingPanel dp, HistoryControl hc, ImageViewer iv, 
 			ColorDialogHandler cdh, HelpBar bar)
 	{
 		super();
 		this.dp = dp;
 		this.hc = hc;
 		this.cdh = cdh;
-		this.imageViewer = iv;
 
 		JButton homeButton       = (JButton) Utilities.createButton(this,"/images/home.gif","Home: Go back in history to the first view",bar,null,false);
 		JButton backButton       = (JButton) Utilities.createButton(this,"/images/back.gif","Back: Go back in history",bar,null,false);
@@ -81,19 +78,18 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		upButton         = (JButton) Utilities.createButton(this,"/images/plus.gif","Grow the alignment region",bar,buttonListener,false);
 		scaleButton      = (JButton) Utilities.createButton(this,"/images/scale.gif","Scale: Draw all of the tracks to BP scale",bar,buttonListener,false);
 		showImageButton  = (JButton) Utilities.createButton(this,"/images/print.gif",
-				"Save: Save as image." + Utilities.getBrowserPopupMessage(applet),
-				bar,buttonListener,false);
+				"Save: Save as image.", bar,buttonListener,false);
 		editColorsButton = (JButton) Utilities.createButton(this,"/images/colorchooser.gif","Colors: Edit the color settings",bar,buttonListener,false);
 		
 		JButton helpButton = null;
 		
 		helpButton = (JButton) Utilities.createButton(this,"/images/help.gif",
-				"Help: Online documentation." + Utilities.getBrowserPopupMessage(applet),
+				"Help: Online documentation.",
 				bar,null,false);
 		helpButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String url = SyMAP.USER_GUIDE_URL + "#alignment_display_2d";
-				if ( !Utilities.tryOpenURL(applet, url) )
+				if ( !Utilities.tryOpenURL(url) )
 					System.err.println("Error opening URL: " + url);
 			}
 		});
@@ -117,9 +113,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 
 			addToGrid(this, gridbag, constraints, new JLabel(), 1);
 			addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
-		}
-
-		
+		}	
 		addToGrid(this, gridbag, constraints, downButton, 1);
 		addToGrid(this, gridbag, constraints, upButton, 1);		
 		addToGrid(this, gridbag, constraints, scaleButton, 1);
@@ -147,11 +141,9 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 			else if (source == upButton)         dp.changeAlignRegion(2.0);
 
 			else if (source == editColorsButton) cdh.show();
-			else if (source == showImageButton)  imageViewer.showImage(dp);
+			else if (source == showImageButton)  ImageViewer.showImage(dp); // CAS507 made static
 		}
 	};
-
-
 	/**
 	 * Enables/disables all of the buttons on the panel except for the help button.
 	 * 
@@ -184,17 +176,17 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 	public static final String MOUSE_FUNCTION_ZOOM_SINGLE 	= "Zoom Selected Track";
 	public static final String MOUSE_FUNCTION_ZOOM_ALL 		= "Zoom All Tracks";
 	private Component createMouseFunctionSelector(HelpBar bar) {
-		JComboBox comboMouseFunctions = new JComboBox(
-			new String[] { // CAS504 change order and add _SEQ
+		String [] labels = { // CAS504 change order and add _SEQ
 				MOUSE_FUNCTION_ZOOM_ALL,
 				MOUSE_FUNCTION_ZOOM_SINGLE,
 				MOUSE_FUNCTION_CLOSEUP,
 				MOUSE_FUNCTION_SEQ
-		} );
+		};
+		JComboBox <String> comboMouseFunctions = new JComboBox <String> (labels); // CAS507 got rid on one warning
 		
 		comboMouseFunctions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-		        JComboBox cb = (JComboBox)e.getSource();
+		        JComboBox <String> cb = (JComboBox) e.getSource();
 		        String item = (String)cb.getSelectedItem();
 		        dp.setMouseFunction(item);
 			}

@@ -6,7 +6,6 @@ import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Window;
 import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.Insets;
 import java.awt.Toolkit;
@@ -42,7 +41,10 @@ import java.util.LinkedHashSet;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-import java.applet.Applet;
+import java.awt.Desktop;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.MalformedURLException;
 
@@ -110,23 +112,13 @@ public class Utilities {
 	}
 	
 	//  attempts to find the screen bounds from the screen insets.  
-	public static Rectangle getScreenBounds(Applet applet, Window window) {
+	public static Rectangle getScreenBounds(Window window) {
 		GraphicsConfiguration config = window.getGraphicsConfiguration();
 		Rectangle b = config.getBounds();
 		Insets inset = Toolkit.getDefaultToolkit().getScreenInsets(config);
 		if (inset.left != 0 || inset.right != 0 || inset.top != 0 || inset.bottom != 0)
 			b.setBounds(b.x+inset.left,b.y+inset.top,b.width-inset.left-inset.right,b.height-inset.top-inset.bottom);
-		else if (applet != null &&
-				config == GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration()) {
-			try {
-				/** CAS506
-				netscape.javascript.JSObject host = netscape.javascript.JSObject.getWindow(applet);
-				b.height = ((Number)host.eval("screen.availHeight")).intValue();
-				b.width  = ((Number)host.eval("screen.availWidth")).intValue();
-				**/
-			} 
-			catch (Exception e) {}
-		}
+		
 		return b;
 	}
 
@@ -142,11 +134,6 @@ public class Utilities {
 		pref.height = Math.min(pref.height,b.height);
 
 		setWinSize(window,b,pref,view);
-	}
-	private static Rectangle getScreenBounds(Window window) {
-		Window owner = window;
-		while (owner != null && !(owner instanceof AppletHolder)) owner = owner.getOwner();
-		return getScreenBounds(owner instanceof AppletHolder ? ((AppletHolder)owner).getApplet() : null, window);
 	}
 
 	private static void setWinSize(Window window, Rectangle screenBounds, Dimension pref, Container view) {
@@ -172,156 +159,128 @@ public class Utilities {
 		System.out.println("Exiting SyMAP");
 		System.exit(status);
 	}
-	 public static void sleep(int milliseconds) {
+	public static void sleep(int milliseconds) {
  		try{ Thread.sleep(milliseconds); }
  		catch (InterruptedException e) { }
-	 }
+	}
 
-	 public static boolean isRunning(String processName)
-		{
-			boolean running = false;
-			try  {
-		        	String line;
-		        	Process p = Runtime.getRuntime().exec("ps -ef");
-		        	BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		        	while ((line = input.readLine()) != null) 
-		        	{
-		            	if (line.contains(processName))
-		            	{
-		            		running = true;	
-		            		break;
-		            	}
-		        	}
-		        	input.close();
-		    } 
-			catch (Exception err) {}
+	public static boolean isRunning(String processName)
+	{
+		boolean running = false;
+		try  {
+	        	String line;
+	        	Process p = Runtime.getRuntime().exec("ps -ef");
+	        	BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	        	while ((line = input.readLine()) != null) 
+	        	{
+	            	if (line.contains(processName))
+	            	{
+	            		running = true;	
+	            		break;
+	            	}
+	        	}
+	        	input.close();
+	    } 
+		catch (Exception err) {}
 
-			return running;
-		}
+		return running;
+	}
 	 
 	 public static AbstractButton createButton(HelpListener parent, String path, String tip, HelpBar bar, ActionListener listener, boolean checkbox) {
-			AbstractButton button;
-			
-			Icon icon = ImageViewer.getImageIcon(path); 
-			if (icon != null) {
-			    if (checkbox)
-			    	button = new JCheckBox(icon);
-			    else
-			    	button = new JButton(icon);
-			    	button.setMargin(new Insets(0,0,0,0));
-			}
-			else {
-			    if (checkbox)
-			    	button = new JCheckBox(path);
-			    else
-			    	button = new JButton(path);
-			    	button.setMargin(new Insets(1,3,1,3));
-			}
-			if (listener != null) 
-			    button.addActionListener(listener);
-
-			button.setToolTipText(tip);
-			
-			button.setName(tip); 
-			if (bar != null) bar.addHelpListener(button,parent);
-			
-			return button;
-	 }
+		AbstractButton button;
 		
-	// TODO get rid of Applet
-	 public static boolean tryOpenURL ( Applet theApplet, String theLink ) {
-	    	if (theLink == null)
-	    		return false;
-	    	
-	    	URL url = null;
-	    	try {
-	    		url = new URL(theLink);
-	    	}
-	    	catch (MalformedURLException e) {
-	    		System.out.println("Malformed URL: " + theLink);
-	    		return false;
-	    	}
-	    	return tryOpenURL(theApplet, url);
- }
- 
-	public static boolean tryOpenURL ( Applet theApplet, URL theLink )
- {
- 	// Show document with applet if we have one
-		if ( theApplet != null )
-		{
-			theApplet.getAppletContext().showDocument( theLink, "_blank" );
-			return true;
+		Icon icon = ImageViewer.getImageIcon(path); 
+		if (icon != null) {
+		    if (checkbox)
+		    	button = new JCheckBox(icon);
+		    else
+		    	button = new JButton(icon);
+		    	button.setMargin(new Insets(0,0,0,0));
 		}
+		else {
+		    if (checkbox)
+		    	button = new JCheckBox(path);
+		    else
+		    	button = new JButton(path);
+		    	button.setMargin(new Insets(1,3,1,3));
+		}
+		if (listener != null) 
+		    button.addActionListener(listener);
+
+		button.setToolTipText(tip);
 		
-		// Brian says: Otherwise unless we become a web start application
- 		// we are stuck with the below.  Copied this from: 
-		// http://www.centerkey.com/java/browser/
-	    	try 
-	    	{ 
-	    		if (isMac()) 
-	    		{ 
-	    			Class<?> fileMgr = Class.forName("com.apple.eio.FileManager"); 
-	    			Method openURL = fileMgr.getDeclaredMethod("openURL", new Class[] {String.class}); 
-	    			openURL.invoke(null, new Object[] { theLink.toString() }); 
-	    			return true;
-	    		} 
-	    		else if (isWindows()) 
-	    		{
-	    			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + theLink); 
-	    			return true;
-	    		}
-	    		else 
-	    		{ 
-	    			//assume Unix or Linux 
-	    			String[] browsers = { "firefox", "opera", "konqueror", "epiphany", "mozilla", "netscape" }; 
-	    			String browser = null; 
-	    			for (int count = 0; count < browsers.length && browser == null; count++) 
-	    				if (Runtime.getRuntime().exec( new String[] {"which", browsers[count]}).waitFor() == 0) 
-	    					browser = browsers[count]; 
-	    			if (browser == null) 
-	    				return false;
-	    			else 
-	    			{
-	    				Runtime.getRuntime().exec(new String[] {browser, theLink.toString()});
-	    				return true;
-	    			}
-	    		}
-	    	}
-	    	catch (Exception e) 
-	    	{ 	
-	    		e.printStackTrace();
-	    	}
+		button.setName(tip); 
+		if (bar != null) bar.addHelpListener(button,parent);
+		
+		return button;
+	 }
+	 /**********************************************************
+	  * CAS507 replace the old one with this
+	  */
+	 public static boolean tryOpenURL (String theLink ) {
+    	if (theLink == null) return false;
+    	
+    	try {
+    		new URL(theLink); // make sure it works
+    	}
+    	catch (MalformedURLException e) {
+    		System.out.println("Malformed URL: " + theLink);
+    		return false;
+    	}
+    	if (isMac()) 	return tryOpenMac(theLink);
+    	else 			return tryOpenLinux(theLink);	
+	}
+	// CAS507 the previous method was becoming obsolete, but this doesn't work on Linux 1.8 
+	private static boolean tryOpenMac(String theLink) { 
+		Desktop desktop = java.awt.Desktop.getDesktop();
+    	URI oURL;
+    	try {
+			oURL = new URI(theLink);
+    	} catch (URISyntaxException e) {
+    		e.printStackTrace();
+    		return false;
+    	}
+    	
+		try {
+			desktop.browse(oURL);
+			return true;
+ 		} catch (IOException e) {
+ 			e.printStackTrace();
+ 		}
 		return false;
- }
+	}
 	
-
-	public static String getHost(Applet applet) {
-		if (applet == null) return null;
-		String domain = applet.getCodeBase().getHost();
-		int ind = domain.indexOf(":");
-		if (ind > 0)
-			domain = domain.substring(0,ind);
-		if (domain.length() == 0) domain = null;
-		return domain;
+	public static boolean tryOpenLinux (String theLink) // CAS507 removed Applet
+	{		
+		// Copied this from: http://www.centerkey.com/java/browser/   CAS507 added all listed browsers from this site
+    	try 
+    	{ 
+    		if (isWindows()) {
+    			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + theLink); // no idea if this works
+    			return true;
+    		}
+    		else { 
+    			String [] browsers = {"firefox", "opera", "konqueror", "epiphany", "mozilla", "netscape",
+    					   "google-chrome", "conkeror", "midori", "kazehakase", "x-www-browser"}; // CAS507 added
+    			String browser = null; 
+    			for (int count = 0; count < browsers.length && browser == null; count++) 
+    				if (Runtime.getRuntime().exec( new String[] {"which", browsers[count]}).waitFor() == 0) 
+    					browser = browsers[count]; 
+    			if (browser == null) 
+    				return false;
+    			else {
+    				Runtime.getRuntime().exec(new String[] {browser, theLink});
+    				return true;
+    			}
+    		}
+    	}
+    	catch (Exception e) 
+    	{ 	
+    		e.printStackTrace();
+    	}
+		return false;
 	}
-
-	public static String getDomain(Applet applet) {
-		if (applet == null) return null;
-		String domain = applet.getCodeBase().getHost();
-		int wwwInd = domain.indexOf("www.");
-		if (wwwInd >= 0)
-			domain = domain.substring(wwwInd+4);
-		wwwInd = domain.indexOf(":");
-		if (wwwInd > 0)
-			domain = domain.substring(0,wwwInd);
-		if (domain.length() == 0) domain = null;
-
-		return domain;
-	}
-	public static String getBrowserPopupMessage(Applet applet) {
-		return (applet != null ? "\nMake sure popup windows are enabled in your web browser settings." : "" );
-	}
- 
+	 
 	/*******************************************************************
 	 * XXX basic array and string ops
 	 */
@@ -936,7 +895,7 @@ public class Utilities {
 	
 	public static void showOutOfMemoryMessage(Component parent) {
 		System.err.println("Not enough memory.");
-		JOptionPane optionPane = new JOptionPane("Not enough memory.", JOptionPane.ERROR_MESSAGE);
+		JOptionPane optionPane = new JOptionPane("Not enough memory - increase $maxmem in symap script.", JOptionPane.ERROR_MESSAGE);
 		
 		LinkLabel label = new LinkLabel("Click to open the Troubleshooting Guide.", 
 				SyMAP.TROUBLE_GUIDE_URL + "#not_enough_memory");
@@ -1004,7 +963,7 @@ public class Utilities {
 		dlgRoot.requestFocus();
 	}
 
-// html listener for product info editor pane
+// html listener for product info editor pane CAS507 re
     private static void jepHandle(javax.swing.event.HyperlinkEvent evt) 
     {
     	javax.swing.event.HyperlinkEvent.EventType type = evt.getEventType();
@@ -1018,13 +977,15 @@ public class Utilities {
 	        }	
 	        try
 	        {
-	        	tryOpenURL(null,urlString);
+	        	//tryOpenURL(urlString);
+	        	System.out.println("Did not open URL string");
 	        }
 	        catch (Exception e)
 	        {
-	            System.out.println("Unable to laucnh external browser");
+	            System.out.println("Unable to launch external browser");
 	        }
 	    }
+	    else System.out.println("Not activated");
     } 
  
 }

@@ -8,8 +8,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 
-import java.applet.Applet;
-
 import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -30,15 +28,12 @@ public class ControlPanelCirc extends JPanel implements HelpListener
     HelpBar hb;
     JButton plusButton, minusButton, rotateButton, helpButton, saveButton;
     JCheckBox scaleCheckbox, selfCheckbox, rotCheckbox;
-    JComboBox invChooser;
-    Applet applet;
+    JComboBox <String> invChooser;
     
-    public ControlPanelCirc(CircPanel _cp, HelpBar _hb, final Applet _applet) 
+    public ControlPanelCirc(CircPanel _cp, HelpBar _hb) 
     {
-
     	hb = _hb;
     	cp = _cp;
-    	applet = _applet;
 
 		minusButton      = (JButton)  Utilities.createButton(null,"/images/minus.gif","Shrink: Decrease the scale.",hb,buttonListener,false);
 		plusButton       = (JButton)  Utilities.createButton(null,"/images/plus.gif","Grow: Increase the scale.",hb,buttonListener,false);
@@ -50,7 +45,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener
 		rotCheckbox.setSelected(false);
 
 		String[] invOptions = {"Show all blocks","Show inverted blocks","Show non-inverted blocks","Two-color scheme"};
-		invChooser = new JComboBox(invOptions);
+		invChooser = new JComboBox <String> (invOptions);
 		invChooser.setSelectedIndex(0);
 		invChooser.addActionListener(buttonListener);
 		invChooser.setName("Select how to show inverted and non-inverted synteny blocks");
@@ -62,7 +57,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener
 		helpButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String url = SyMAP.USER_GUIDE_URL;
-				if ( !Utilities.tryOpenURL(applet, url) )
+				if ( !Utilities.tryOpenURL(url) )
 					System.err.println("Error opening URL: " + url);
 			}
 		});

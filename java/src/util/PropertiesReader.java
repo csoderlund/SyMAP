@@ -92,32 +92,6 @@ public class PropertiesReader extends Properties {
 		return (String[])list.toArray(new String[list.size()]);
 	}
 
-	public int[] getInts(String prop) {
-		Vector<Integer> list = new Vector<Integer>();
-		String p = getString(prop+1);
-		for (int i = 2; p != null; i++) {
-			list.add(new Integer(p));
-			p = getString(prop+i);
-		}
-		int[] r = new int[list.size()];
-		for (int i = 0; i < r.length; i++)
-			r[i] = ((Integer)list.get(i)).intValue();
-		return r;
-	}
-
-	public double[] getDoubles(String prop) {
-		Vector<Double> list = new Vector<Double>();
-		String p = getString(prop+1);
-		for (int i = 2; p != null; i++) {
-			list.add(new Double(p));
-			p = getString(prop+i);
-		}
-		double[] r = new double[list.size()];
-		for (int i = 0; i < r.length; i++)
-			r[i] = ((Double)list.get(i)).doubleValue();
-		return r;
-	}
-
 	/**
 	 * Method <code>getInt</code>
 	 * 
@@ -125,9 +99,15 @@ public class PropertiesReader extends Properties {
 	 * 
 	 * @param key a <code>String</code> value of the property key.
 	 * @return an <code>int</code> value for the integer corresponding to key.
+	 * CAS507 check for blank. Remove methods getInts and getDoubles -- not used.
 	 */
 	public int getInt(String key) {
-		return Integer.parseInt((String)getProperty(key));
+		String val = (String)getProperty(key).trim();
+		if (val.contentEquals("")) {
+			System.out.println("Warning: No value for' " + key + "'. Using 0.");
+			return 0;
+		}
+		return Integer.parseInt(val);
 	}
 
 	/**
@@ -139,11 +119,21 @@ public class PropertiesReader extends Properties {
 	 * @return an <code>long</code> value for the integer coorisponding to key.
 	 */
 	public long getLong(String key) {
-		return Long.parseLong((String)getProperty(key));
+		String val = (String)getProperty(key).trim();
+		if (val.contentEquals("")) {
+			System.out.println("Warning: No value for' " + key + "'. Using 0.");
+			return 0;
+		}
+		return Long.parseLong(val);
 	}
 
 	public float getFloat(String key) {
-		return Float.parseFloat((String)getProperty(key));
+		String val = (String)getProperty(key).trim();
+		if (val.contentEquals("")) {
+			System.out.println("Warning: No value for' " + key + "'. Using 0.");
+			return 0;
+		}
+		return Float.parseFloat(val);
 	}
 
 	/**
@@ -155,7 +145,12 @@ public class PropertiesReader extends Properties {
 	 * @return a <code>double</code> value for the double coorisponding to key.
 	 */
 	public double getDouble(String key) {
-		return Double.parseDouble((String)getProperty(key));
+		String val = (String)getProperty(key).trim();
+		if (val.contentEquals("")) {
+			System.out.println("Warning: No value for' " + key + "'. Using 0.");
+			return 0;
+		}
+		return Double.parseDouble(val);
 	}
 
 	/**

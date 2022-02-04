@@ -1,6 +1,5 @@
 package props;
 
-import java.applet.Applet;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -36,20 +35,6 @@ public class CookieProps implements PersistentProps {
 		this.expires = expires;
 		this.secure = secure;
 		this.name = name;
-    }
-
-    /**
-     * Creates a new <code>CookieProps</code> instance using <code>applet</code> to create a new CookieUtil.
-     *
-     * @param applet an <code>Applet</code> value
-     * @param path a <code>String</code> value
-     * @param domain a <code>String</code> value
-     * @param expires a <code>Date</code> value
-     * @param secure a <code>boolean</code> value
-     * @param name a <code>String</code> value
-     */
-    public CookieProps(Applet applet, String path, String domain, Date expires, boolean secure, String name) {
-    		this(new CookieUtil(applet),path,domain,expires,secure,name);
     }
 
     /**

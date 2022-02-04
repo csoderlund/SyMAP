@@ -1,6 +1,5 @@
 package symap.projectmanager.common;
 
-import java.applet.Applet;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -46,12 +45,7 @@ import symap.drawingpanel.DrawingPanel;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import symap.frame.SyMAPFrame;
-import symap.projectmanager.common.CollapsiblePanel;
-import symap.projectmanager.common.Project;
-import symap.projectmanager.common.TrackCom;
-import symap.projectmanager.common.Mapper;
-//import symap3D.SyMAPFrameExp.MutexButtonPanel;
-//import symap3D.SyMAPFrameExp.MySplitPane;
+
 import util.DatabaseReader;
 import util.LinkLabel;
 import util.Utilities;
@@ -80,7 +74,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 	protected Mapper mapper;
 	protected SyMAP symap2D = null;
 	protected DotPlotFrame dotplot = null;
-	protected Applet applet;
 	protected DatabaseReader dbReader;
 	
 	protected boolean hasInit = false;
@@ -91,16 +84,13 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 	
 	//	private static GraphicsConfiguration preferredGraphicsConfig = SimpleUniverse.getPreferredConfiguration();
 	
-	public SyMAPFrameCommon(Applet applet, DatabaseReader dbReader) {
+	public SyMAPFrameCommon(DatabaseReader dbReader) {
 		super("SyMAP "+SyMAP.VERSION);
-		
-		this.applet = applet;
 		this.dbReader = dbReader;
 		
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		
-		
-		Rectangle screenRect = Utilities.getScreenBounds(applet,this);
+		Rectangle screenRect = Utilities.getScreenBounds(this);
 		screenWidth  = Math.min(1200, screenRect.width);
 		screenHeight = Math.min(900, screenRect.height);
 		setSize(screenWidth, screenHeight); 
@@ -122,9 +112,9 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
         helpBar = new HelpBar(500, 130, true, false, false);
         helpBar.setBorder( BorderFactory.createLineBorder(Color.LIGHT_GRAY) );
 	}
-	public SyMAPFrameCommon(Applet applet, DatabaseReader dbReader, Mapper mapper)
+	public SyMAPFrameCommon(DatabaseReader dbReader, Mapper mapper)
 	{
-		this(applet, dbReader);
+		this(dbReader);
 		this.mapper = mapper;
 	}
 
@@ -134,7 +124,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		if (symap2D != null) symap2D.clear();
 		symap2D = null;
 		dotplot = null;
-		applet = null;
 		super.dispose();
 	}
 	
@@ -148,7 +137,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		else if (viewNum == VIEW_CIRC) {
 			((CardLayout)cardPanel.getLayout()).show(cardPanel, Integer.toString(VIEW_CIRC));
 		}
-
 	}
 
 	private JPanel createViewControlBar() {
@@ -191,7 +179,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 				Utilities.setCursorBusy(getContentPane(), false);
 			}
 		});
-
 
 		viewControlBar.addButton(btnShow2D);
 		helpBar.addHelpListener(btnShow2D, new HelpListener() {
@@ -245,7 +232,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
         projPanel.setLayout(new BoxLayout(projPanel, BoxLayout.Y_AXIS));
        // projPanel.setMinimumSize(new Dimension(600, 600));
    
-        int maxHeight = 0;
 		Project[] projects = mapper.getProjects();
 		
 		// First figure out which groups have synteny in this set
@@ -266,7 +252,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			CollapsiblePanel cp = new CollapsiblePanel(p.getDisplayName(), null, false);
 			cp.add(pd);
 			cp.expand();
-			maxHeight += cp.getMaximumSize().getHeight() + 15;
 			
 			projPanel.add(cp);
 		}
@@ -277,7 +262,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
         helpLink.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				Utilities.setCursorBusy(SyMAPFrameCommon.this, true);
-				if ( !Utilities.tryOpenURL(applet,SyMAP.USER_GUIDE_URL) )
+				if ( !Utilities.tryOpenURL(SyMAP.USER_GUIDE_URL) )
 					System.err.println("Error opening URL: " + SyMAP.USER_GUIDE_URL);
 				Utilities.setCursorBusy(SyMAPFrameCommon.this, false);
 			}
@@ -341,7 +326,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			}
 		}
 		
-		CircFrame circframe = new CircFrame(applet,dbReader,pidxList,shownGroups,helpBar);
+		CircFrame circframe = new CircFrame(dbReader,pidxList,shownGroups,helpBar);
 		cardPanel.add(circframe.getContentPane(), Integer.toString(VIEW_CIRC)); // ok to add more than once
 		
 		setView(VIEW_CIRC);
@@ -359,7 +344,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		
 		// Create dotplot frame
 		if (dotplot == null)
-			dotplot = new DotPlotFrame(applet, dbReader, projects, xGroups, yGroups, helpBar, false);
+			dotplot = new DotPlotFrame(dbReader, projects, xGroups, yGroups, helpBar, false);
 		else if (isFirstDotplotView)
 			dotplot.getData().initialize(projects, xGroups, yGroups);
 
@@ -373,7 +358,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 	private boolean regenerate2DView() {
 		try {
 			if (symap2D == null)
-				symap2D = new SyMAP(applet, dbReader, helpBar, null);
+				symap2D = new SyMAP(dbReader, helpBar, null);
 			
 			SyMAPFrame frame = symap2D.getFrame();
 			if (frame == null) {
@@ -632,7 +617,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 					" order by p1.name asc, p2.name asc, g1.idx asc, g2.idx asc, b.blocknum asc";
 					
 					ResultSet rs = dbReader.getConnection().createStatement().executeQuery(query);
-					int n = 0;
 					while (rs.next())
 					{
 						for(int i = 1; i <= row.size(); i++)
@@ -640,18 +624,14 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 							row.set(i-1, rs.getString(i));
 						}
 						out.println(Utils.join(row, "\t"));
-						n++;
 					}
 					out.close();
 					// CAS501 System.err.println("Wrote " + n + " blocks");
 				}
-				
-
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-
     }
 }
 

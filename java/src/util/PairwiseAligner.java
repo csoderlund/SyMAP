@@ -491,7 +491,8 @@ public class PairwiseAligner
     private boolean checkAllocation ( )
     {
     		if (nCells > maxCells) {
-       		System.err.println("Not enough memory to align sequences - need " + nCells + "kb");
+    			System.err.println("Not enough memory to align sequences - need " + nCells + "kb");
+    			System.err.println("     - increase $maxmem in symap script");
     			return false;
     		}
     	    fLastBest = -Float.MAX_VALUE;
@@ -536,6 +537,7 @@ public class PairwiseAligner
     			matchDir = null;
     			maxCells = nCells;
     			System.err.println("Not enough memory to align sequences - need " + nCells + "kb");
+    			System.err.println("     - increase $maxmem in symap script");
     			return false;
     		}
         return true;

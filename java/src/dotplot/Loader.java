@@ -25,10 +25,7 @@ public class Loader extends StateObject implements DotPlotConstants {
     private static final int[] D_CONNECTIONS = {4, 0};
     private static final int[] FINDERS       = {1, 0};
     private static final int[] F_CONNECTIONS = {1, 0};
-
-    public static final int APPLICATION = 0;
-    public static final int APPLET      = 1;
-
+    
     private DotPlotDBUser db;
     
     private int numD, numDC, numF, numFC;
@@ -60,13 +57,13 @@ public class Loader extends StateObject implements DotPlotConstants {
 	
 		if (DEFAULT_KEEP_ABOVE_ALT1) {
 		    for (int i = 2; i < DotPlot.FINDER_RUNS; i++)
-			altNumKeepers.add(new Integer(i));
+			altNumKeepers.add(i); // CAS507 new Integer(i));
 		}
     }
 
-    public Loader(DotPlotDBUser db, int type) {
+    public Loader(DotPlotDBUser db) {
 		this();
-		type = APPLET; 
+		int type = 1; // CAS507 was type=applet and application, where it was permanently set to 1 
 		this.db    = db;
 		this.numD  = DOWNLOADERS[type];
 		this.numDC = D_CONNECTIONS[type];
@@ -75,16 +72,17 @@ public class Loader extends StateObject implements DotPlotConstants {
     }
 
     public void keepAltNum(int altNum) {
-		if (!altNumKeepers.contains(new Integer(altNum)))
-		    altNumKeepers.add(new Integer(altNum));
+		if (!altNumKeepers.contains(altNum))
+		    altNumKeepers.add(altNum);
     }
 
     private boolean doKeepAltNum(int altNum) {
-    	return altNumKeepers.contains(new Integer(altNum));
+    	return altNumKeepers.contains(altNum);
     }
 
     public void dontKeepAltNum(int altNum) {
-		while (altNumKeepers.remove(new Integer(altNum)));
+		// CAS507 while (altNumKeepers.remove(new Integer(altNum)));
+    	altNumKeepers.remove(altNum);
 		clearFoundHistory(altNum);
     }
 

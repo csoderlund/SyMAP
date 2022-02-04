@@ -1,6 +1,5 @@
 package symap3D;
 
-import java.applet.Applet;
 import java.awt.GraphicsConfiguration;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -26,11 +25,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JSlider;
-import javax.swing.JSplitPane;
 import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.plaf.basic.BasicSplitPaneUI;
 import javax.media.j3d.Canvas3D;
 
 import java.io.File;
@@ -49,7 +46,6 @@ import symap.SyMAP;
 import symap.projectmanager.common.Project;
 import symap.drawingpanel.DrawingPanel;
 import symap.frame.SyMAPFrame;
-import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import symap.projectmanager.common.Block;
 import symap.projectmanager.common.CollapsiblePanel;
@@ -78,8 +74,8 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 
 	private static GraphicsConfiguration preferredGraphicsConfig = SimpleUniverse.getPreferredConfiguration();
 	
-	public SyMAPFrame3D(Applet applet, DatabaseReader dbReader, Mapper3D mapper) {
-		super(applet, dbReader);
+	public SyMAPFrame3D(DatabaseReader dbReader, Mapper3D mapper) {
+		super(dbReader);
 		
 		this.mapper = mapper;
 		
@@ -93,7 +89,6 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 		if (symap2D != null) symap2D.clear();
 		symap2D = null;
 		dotplot = null;
-		applet = null;
 		
 		super.dispose();
 	}
@@ -152,7 +147,7 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 				}
 			}
 		}
-		CircFrame circframe = new CircFrame(applet,dbReader,pidxList,shownGroups,helpBar);
+		CircFrame circframe = new CircFrame(dbReader,pidxList,shownGroups,helpBar);
 		cardPanel.add(circframe.getContentPane(), Integer.toString(VIEW_CIRC)); // ok to add more than once
 		setView(VIEW_CIRC);
 	}	
@@ -257,13 +252,13 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 		helpButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String url = SyMAP.USER_GUIDE_URL + "#alignment_display_3d";
-				if ( !Utilities.tryOpenURL(applet, url) )
+				if ( !Utilities.tryOpenURL(url) )
 					System.err.println("Error opening URL: " + url);
 			}
 		});
 		helpBar.addHelpListener(helpButton, new HelpListener() {
 			public String getHelpText(MouseEvent e) { 
-				return 	"Help: Click to open the online manual in a web browser." + Utilities.getBrowserPopupMessage(applet);
+				return 	"Help: Click to open the online manual in a web browser.";
 			}
 		});
 		
@@ -431,7 +426,7 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
         helpLink.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				Utilities.setCursorBusy(SyMAPFrame3D.this, true);
-				if ( !Utilities.tryOpenURL(applet,SyMAP.USER_GUIDE_URL) )
+				if ( !Utilities.tryOpenURL(SyMAP.USER_GUIDE_URL) )
 					System.err.println("Error opening URL: " + SyMAP.USER_GUIDE_URL);
 				Utilities.setCursorBusy(SyMAPFrame3D.this, false);
 			}
@@ -490,7 +485,7 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 		
 		// Create dotplot frame
 		if (dotplot == null)
-			dotplot = new DotPlotFrame(applet, dbReader, projects, xGroups, yGroups, helpBar, false);
+			dotplot = new DotPlotFrame(dbReader, projects, xGroups, yGroups, helpBar, false);
 		else if (isFirstDotplotView)
 			dotplot.getData().initialize(projects, xGroups, yGroups);
 
@@ -504,7 +499,7 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 	private boolean regenerate2DView() {
 		try {
 			if (symap2D == null)
-				symap2D = new SyMAP(applet, dbReader, helpBar, null);
+				symap2D = new SyMAP(dbReader, helpBar, null);
 			
 			SyMAPFrame frame = symap2D.getFrame();
 			if (frame == null) {
@@ -592,10 +587,6 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 	
 	private class MutexButtonPanel extends JPanel implements ActionListener {
 		private GridBagConstraints constraints;
-		
-		public MutexButtonPanel() {
-			this(null, 0);
-		}
 		
 		public MutexButtonPanel(String title) {
 			this(title, 0);
@@ -725,84 +716,72 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 		pnl.add(btn);
 		return pnl;
 	}	
-	   private void downloadBlocks() {
-	    	try {
-				JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
-				chooser.setSelectedFile(new File("blocks.tsv"));
-				
-				if(chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-					if(chooser.getSelectedFile() != null) {
-						File f = chooser.getSelectedFile();
-						if (f.exists()) {
-							if (JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(null,"The file exists, do you want to overwrite it?", 
-									"File exists",JOptionPane.YES_NO_OPTION))
-							{
-								return;
-							}
-							f.delete();
-						}
-						f.createNewFile();
-						PrintWriter out = new PrintWriter(new FileWriter(chooser.getSelectedFile()));
-						Vector<String> row = new Vector<String>();
-						row.add("Species1");
-						row.add("Species2");
-						row.add("Chr1");
-						row.add("Chr2");
-						row.add("BlkNum");
-						row.add("Start1");
-						row.add("End1");
-						row.add("Start2");
-						row.add("End2");
-						row.add("#Hits");
-						row.add("Genes1");
-						row.add("%Genes1");
-						row.add("Genes2");
-						row.add("%Genes2");
-						row.add("PearsonR");
-						out.println(Utils.join(row, "\t"));
-						
-						Vector<String> projList = new Vector<String>();
-						Project[] projects = mapper.getProjects();
-						for (Project p : projects) {
-							projList.add(String.valueOf(p.getID()));
-						}
-						String projStr = Utils.join(projList,",");
-						String query = "select p1.name, p2.name, g1.name, g2.name, b.blocknum, b.start1, b.end1," +
-						" b.start2,b.end2,b.score,b.ngene1,b.genef1,b.ngene2,b.genef2,b.corr " +
-						" from blocks as b join xgroups as g1 on g1.idx=b.grp1_idx join xgroups as g2 on g2.idx=b.grp2_idx " +
-						" join projects as p1 on p1.idx=b.proj1_idx join projects as p2 on p2.idx=b.proj2_idx " +
-						" where p1.idx in (" + projStr + ") and p2.idx in (" + projStr + ") and p1.type='pseudo' and p2.type='pseudo' " +
-						" order by p1.name asc, p2.name asc, g1.idx asc, g2.idx asc, b.blocknum asc";
-						//System.err.println(query);
-						ResultSet rs = dbReader.getConnection().createStatement().executeQuery(query);
-						int n = 0;
-						while (rs.next())
+   private void downloadBlocks() {
+    	try {
+			JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
+			chooser.setSelectedFile(new File("blocks.tsv"));
+			
+			if(chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+				if(chooser.getSelectedFile() != null) {
+					File f = chooser.getSelectedFile();
+					if (f.exists()) {
+						if (JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(null,"The file exists, do you want to overwrite it?", 
+								"File exists",JOptionPane.YES_NO_OPTION))
 						{
-							for(int i = 1; i <= row.size(); i++)
-							{
-								row.set(i-1, rs.getString(i));
-							}
-							out.println(Utils.join(row, "\t"));
-							n++;
+							return;
 						}
-						out.close();
-						System.err.println("Wrote " + n + " blocks");
+						f.delete();
 					}
+					f.createNewFile();
+					PrintWriter out = new PrintWriter(new FileWriter(chooser.getSelectedFile()));
+					Vector<String> row = new Vector<String>();
+					row.add("Species1");
+					row.add("Species2");
+					row.add("Chr1");
+					row.add("Chr2");
+					row.add("BlkNum");
+					row.add("Start1");
+					row.add("End1");
+					row.add("Start2");
+					row.add("End2");
+					row.add("#Hits");
+					row.add("Genes1");
+					row.add("%Genes1");
+					row.add("Genes2");
+					row.add("%Genes2");
+					row.add("PearsonR");
+					out.println(Utils.join(row, "\t"));
 					
-
+					Vector<String> projList = new Vector<String>();
+					Project[] projects = mapper.getProjects();
+					for (Project p : projects) {
+						projList.add(String.valueOf(p.getID()));
+					}
+					String projStr = Utils.join(projList,",");
+					String query = "select p1.name, p2.name, g1.name, g2.name, b.blocknum, b.start1, b.end1," +
+					" b.start2,b.end2,b.score,b.ngene1,b.genef1,b.ngene2,b.genef2,b.corr " +
+					" from blocks as b join xgroups as g1 on g1.idx=b.grp1_idx join xgroups as g2 on g2.idx=b.grp2_idx " +
+					" join projects as p1 on p1.idx=b.proj1_idx join projects as p2 on p2.idx=b.proj2_idx " +
+					" where p1.idx in (" + projStr + ") and p2.idx in (" + projStr + ") and p1.type='pseudo' and p2.type='pseudo' " +
+					" order by p1.name asc, p2.name asc, g1.idx asc, g2.idx asc, b.blocknum asc";
+					//System.err.println(query);
+					ResultSet rs = dbReader.getConnection().createStatement().executeQuery(query);
+					int n = 0;
+					while (rs.next())
+					{
+						for(int i = 1; i <= row.size(); i++)
+						{
+							row.set(i-1, rs.getString(i));
+						}
+						out.println(Utils.join(row, "\t"));
+						n++;
+					}
+					out.close();
+					System.err.println("Wrote " + n + " blocks");
 				}
-			} catch(Exception e) {
-				e.printStackTrace();
 			}
-
-	    }
-	private class MySplitPane extends JSplitPane {
-		public MySplitPane(int newOrientation) {
-			super(newOrientation);
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
-		
-		public void setDividerVisible(boolean visible) {
-			((BasicSplitPaneUI)getUI()).getDivider().setVisible(visible);
-		}
-	}
+    }
 }

@@ -28,22 +28,6 @@ public class Converters
 		
 		return nMax;
 	}
-	
-	
-    public static String getMessageAndAppend ( Exception err )
-    {
-        // Very common error with very obtuse error message...
-        String str = "";
-        if ( err.toString().indexOf( "java.security.AccessControlException" ) >= 0 ) // The MYSQL driver throws nested exceptions...
-        {
-            str += "Note: for security reasons, Java Applets can only connect to a single IP address.";
-            str += "\n";
-            str += "Therefore all Java GBrowse components (web page, .jar file, configuration file, and database) must be accessed through the same IP address.";
-            str += "\n";
-        }
-        str += err.toString();
-        return str;
-    }
     
    public static Vector<String> getStackTrace ( Throwable err )
     {

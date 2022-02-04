@@ -1,7 +1,5 @@
 package dotplot;
 
-import java.applet.Applet;
-
 import java.util.List;
 import java.util.Vector;
 import java.util.ArrayList;
@@ -19,7 +17,6 @@ import symap.pool.DatabaseUser;
 import symap.pool.ProjectPair;
 import symap.mapper.MapperPool;
 import symap.mapper.RepetitiveMarkerFilterData;
-import symap.SyMAPApplet;
 import symap.SyMAPConstants;
 import finder.FBlock;
 import symap.pool.ProjectProperties;
@@ -46,26 +43,6 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 	public DotPlotDBUser(DatabaseReader dr, MapperPool mp) {
 		this(dr);
 		this.mapperPool = mp;
-	}
-
-	public DotPlotDBUser(Applet applet) {
-		this(applet,null);
-	}
-
-	/**
-	 * Creates a new <code>DotPlotDBUser</code> instance.
-	 *
-	 * @param applet an <code>Applet</code> value used to get attributes set by 
-	 * the applet for creating a DatabaseReader (optional)
-	 * @param databaseReaderName a <code>String</code> value DEFAULT_DBREADER_NAME is used if null
-	 */
-	public DotPlotDBUser(Applet applet, String databaseReaderName) {
-		this(getDatabaseReader(
-				databaseReaderName != null ? databaseReaderName : SyMAPConstants.DB_CONNECTION_DOTPLOT,
-				applet != null ? applet.getParameter(SyMAPApplet.DATABASE_URL) : null,
-				applet != null ? applet.getParameter(SyMAPApplet.USERNAME)     : null,
-				applet != null ? applet.getParameter(SyMAPApplet.PASSWORD)     : null,
-				/*applet != null ? Utilities.getHost(applet)                   :*/ null)); 
 	}
 
 	public void setMapperPool(MapperPool mp) {

@@ -7,34 +7,28 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
-import java.applet.Applet;
-
 import symap.frame.HelpBar;
 import util.DatabaseReader;
 
-// mdb added 7/10/09 for ProjectManagerFrame - FIXME: redundant with DotPlot.java
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class DotPlotFrame extends JFrame {
 	Data data;
 	
 	public DotPlotFrame(DatabaseReader dbReader, int projXIdx, int projYIdx) {
-		this(null, dbReader, new int[] { projXIdx, projYIdx }, null, null, null, true);
+		this(dbReader, new int[] { projXIdx, projYIdx }, null, null, null, true);
 	}
 	
 	public DotPlotFrame(DatabaseReader dbReader) {
-		this(null, dbReader, null, null, null, null, true);
+		this(dbReader, null, null, null, null, true);
 	}
 	
-	public DotPlotFrame(Applet applet, DatabaseReader dbReader, 
+	public DotPlotFrame(DatabaseReader dbReader, 
 			int[] projIDs, int[] xGroupIDs, int[] yGroupIDs, 
 			HelpBar helpBar, boolean hasReferenceSelector) 
 	{
 		super("SyMAP Dot Plot");
 		
-		if (applet != null)
-			data = new Data( applet );
-		else
-			data = new Data( new DotPlotDBUser(dbReader) );
+		data = new Data( new DotPlotDBUser(dbReader) );
 		
 		data.getSyMAP().clear(); // Clear caches - fixes "Couldn't find pair for projects" bug due to stale pairs data
 		
@@ -43,7 +37,7 @@ public class DotPlotFrame extends JFrame {
 			hb = new HelpBar(-1, 17, true, false, false);
 		
 		Plot plot = new Plot(data,hb);
-		ControlPanel controls = new ControlPanel(applet,data,plot,hb);
+		ControlPanel controls = new ControlPanel(data,plot,hb);
 		
 		if (projIDs != null) {
 			data.initialize(projIDs, xGroupIDs, yGroupIDs);

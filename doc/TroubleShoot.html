@@ -57,16 +57,15 @@ Troubleshooting
 	        
 <a name="top"></a>
 <i>Please send questions and suggestions to symap@agcol.arizona.edu.</i><br>
-<p>As of SyMAP v5.0.6, the Applet has been removed and will no longer be supported; 
-it is in earlier SyMAP versions, and can
-be obtained at <a href="https://github.com/csoderlund/SyMAP">github<a/>.
+<font color=green>SyMAP cannot be improved or problems fixed without user feedback!</font>
+
 
 <h4>Contents</h4>
 <p>
 <ul>
 <li>Memory
 <ul>
-<li><a href="#not_enough_memory1">Not enough memory</a></li>
+<li><a href="#memory">Not enough memory</a></li>
 </ul>
 <br>
 <li>MySQL suggested settings
@@ -93,9 +92,6 @@ be obtained at <a href="https://github.com/csoderlund/SyMAP">github<a/>.
 <li>Alignment
 <ul>
 <li><a href="#status">Status window disappeared</a>
-<li><a href="#glib">/lib64/libc.so.6: version `GLIBC_2.7' not found </a>
-<li><a href="#mumFail">MUMmer failed</a></li>
-<li><a href="#mum64">MUMmer/PROmer can't handle large sequences</a>	
 <li><a href="#noanch">No anchors loaded</a>
 <li><a href="#bes">BES not loaded</a>
 </ul>
@@ -105,7 +101,7 @@ be obtained at <a href="https://github.com/csoderlund/SyMAP">github<a/>.
 
 <hr>
 <h2>Memory</h2>
-<a name="#not_enough_memory1">
+<a name="memory">
 <h3>Not enough memory</h3>
 For very large projects, or queries involving multiple
 genomes (e.g. 5 or more), the Project Manager may run out of memory.
@@ -115,13 +111,11 @@ memory used from the default 2048 MB to 4096 MB.:
 Alternatively, you can edit the file <tt>symap</tt> and change
 <pre>
 my $maxmem="2048m"; # change this line to use "4096m" 
-</pre>
-
-You will also need to be using a 64-bit processor. 
+</pre> 
 
 <p><a href="#top">Return to top</a><br>
 
-<!---------------------------------------------------------!>
+<!--------------------------------------------------------->
 <hr>
 <h2>MySQL suggested settings</h2>
 <a name="msqslow">
@@ -180,7 +174,7 @@ To change this variable, then type:
 <pre>set global max_allowed_packet=1073741824;</pre>
 <p><a href="#top">Return to top</a><br>
 
-<!---------------------------------------------------------!>
+<!--------------------------------------------------------->
 <hr>
 <h2>MySQL</h2>
 <a name="database_error">
@@ -270,7 +264,7 @@ case from an existing database, e.g. "symapTest" when "symaptest" already exists
 
 <p><a href="#top">Return to top</a><br>
 
-<!--------------------------------------------------------!>
+<!-------------------------------------------------------->
 
 <hr>
 <a name="ext">
@@ -298,7 +292,10 @@ Execute:
 
 <h4>MacOS 10.15 (and possibly earlier versions)</h4>
 Any executable that has not been okayed by Apple get the error message
-"cannot be opened because the developer cannot be verified". Hence, you need
+<pre>
+cannot be opened because the developer cannot be verified
+</pre>
+Hence, you need
 to use the Finder to enter all <tt>/ext/&lt;program&gt;/mac</tt> directories,
 select each program, then choose to Open it; it will run the program in a terminal
 window and be saved as a program that can thereafter be run.
@@ -323,20 +320,30 @@ e.g <tt>./promer</tt>.
 </ol>
 All the above give additional that may show the problem and lead to the fix. 
 <p>
-Otherwise, you may need to compile the program on your machine. In this case,
-replace the existing executables with your compiled ones. For example, if you compile MUMmer,
-look at the respective <tt>ext/mummer/mac</tt> directory and copy the
-corresponding programs in. The <tt>promer</tt> and <tt>nucmer</tt> are perl scripts that
-have paths hard-coded at the top, which need to be changed to <tt>./ext/mummer/mac/</tt>.
+Otherwise, you may need to compile the program on your machine. See <a href="SystemGuide.html#mum">System Guide MUMmer</a>.
 
-<h4>Early versions of MacOS</h4>
-The MacOS executables were compiled on a MacOS 10.15. These will not work on old versions such as MacOS 10.9;
-however, the directories with the the <tt>pre506</tt> suffixes. If you do the following:
+<a name="mask">
+<h4>Not-masked or Soft-masked</h4>
+The following error can occur on rare occasions when sequences are not masked or soft-masked:
 <pre>
+20211207|120611|531174 ERROR: mummer and/or mgaps returned non-zero, please file a bug report
+</pre>
+Either: (1) Change the sequence to hard-masked, or (2) compile MUMmer v4 to use for the alignments; 
+see <a href="SystemGuide.html#mum">System Guide MUMmer</a>.
+
+<a name=mac>
+<h4>Early versions of MacOS</h4>
+The MacOS executables were compiled on a MacOS 10.15. They will not work on old versions such as MacOS 10.9.
+Try the following:
+<pre>
+cd ext/mummer
 mv mac mac_506
 mv mac_pre506 mac
+cd ../muscle
+mv muscle muscle_506
+mv muscle_pre506 muscle
 </pre>
-These executables compiled ona MacOS 10.9 may work  on your Mac.
+These executables compiled on MacOS 10.9 may work  on your Mac.
 
 <h4>32-bit</h4>
 It seems that 32-bit machines are history. However, the <tt>linux</tt> directories have executables
@@ -344,12 +351,11 @@ assembled on a 32-bit machine.
 
 <p><a href="#top">Return to top</a><br>
 
-<!--------------------------------------------------------!>
+<!-------------------------------------------------------->
 <hr>
 
 
 <h2>Alignment</h2>
-If MUMmer or Blat fail to run, see the above section.
 
 <a name="status">
 <h3>Status window disappeared</h3>
@@ -359,62 +365,10 @@ brings it back. Otherwise, just check the output to the terminal,
 which tells you when it is done. You may
 have to restart <tt>symap</tt> to see the results.
 
-
-<a name="mumFail">
-<h3>MUMmer failed</h3>
-Try using a hard-masked genome sequence. Ensembl supplies both soft-masked and
-hard-masked genome sequences. NCBI supplies soft-masked sequences, where the
-supplied ConvertNCBI script (scripts/ConvertNCBI) can convert the file to hard-mask.
-
-<a name="mum64">
-<h3>MUMmer/PROmer cannot handle large sequences</h3>
-If the alignment doesn't produce results and you see errors indicating
-that PROmer cannot produce the .aaqry file, then the mummer binary may
-not be 64-bit. You can tell for sure by looking at the output lines like
-<pre>
-# (maximum reference length is 536870908)
-# (maximum query length is 4294967295)
-</pre>
-If you see small numbers like this, it is not 64-bit. For 64-bit, the numbers
-are extremely large, much larger than any possible genome.
-To build a 64-bit mummer, you must set  
-<pre>
-#define SIXTYFOURBITS 
-</pre>
-in 
-src/kurtz/libbasedir/types.h (and, of course,
-compile on a 64-bit machine). We fixed this problem in the 3.4 version of SyMAP, 
-for lintel64, but if you're building for a different platform you'll have
-to make this fix. 
-
 <a name="noanch">
 <h3>No anchors loaded</h3>
 This message indicates that SyMAP could not parse the MUMmer or BLAT output files
-to load the anchors. 
-<p>
-The most likely reason is that MUMmer or BLAT failed to run.
-Usually this is because the platform (linux 32/64 bit, or mac)
-was not detected properly. First try re-starting symap using
-the '-32, -64, -linux, -mac' parameters to specify your platform 
-(run 'symap -h' for list of parameters). 
-<p>
-The next likely cause is trying to run a whole-chromosome MUMmer alignment on a 32-bit
-machine. MUMmer usually uses more than 2Gb per thread, which is not
-possible on a 32-bit machine. If you suspect this is the problem, try running
-on a 64-bit machine. If you compiled MUMmer yourself, check 
-<a href="#mum64">the above section</a>.
-<p>
-If that does not resolve the problem, The next step is to look in the project
-.log file in the /logs directory for 
-more detailed error messages. Then, you should look at the MUMmer log
-files (extension .mum.log) in the directory
-<tt>
-<pre>
-logs/&lt;proj1_to_proj2&gt;
-</pre>
-</tt>
-These contain the messages printed by MUMmer, and should show why it failed to run.  
-<p>
+to load the anchors. See above in <a href=#run>Fail to execute</a>.
 
 <a name="bes">
 <h3>FPC: BES not loaded, or BES hits not loading</h3>

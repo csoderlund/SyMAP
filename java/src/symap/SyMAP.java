@@ -2,8 +2,6 @@ package symap;
 
 import java.util.Date;
 import java.sql.SQLException;
-import java.net.URL;
-import java.applet.Applet;
 import java.awt.Component;
 import java.awt.Color;
 import javax.swing.JOptionPane;
@@ -27,8 +25,8 @@ import symapQuery.TableDataPanel;
  * be properly set along with all of the corresponding .properties files.
  */
 public class SyMAP {
-	public static final String VERSION = "v5.0.6";
-	public static final String DATE = " (3-June-20)";
+	public static final String VERSION = "v5.0.7";
+	public static final String DATE = " (4-Feb-22)";
 	public static final int DBVER =  2;
 	public static final String DBVERSTR = "db" + DBVER;
 	
@@ -72,40 +70,18 @@ public class SyMAP {
 	private PersistentProps    persistentProps;
 	private CloseUp            closeup;
 
-	public SyMAP(Applet applet, DatabaseReader dr, TableDataPanel theTablePanel) throws SQLException {
-		this(applet, dr, null, theTablePanel);
+	public SyMAP(DatabaseReader dr, TableDataPanel theTablePanel) throws SQLException {
+		this(dr, null, theTablePanel);
 	}
 
-	public SyMAP(Applet applet, DatabaseReader dr, HelpBar hb, TableDataPanel theTablePanel)
+	public SyMAP(DatabaseReader dr, HelpBar hb, TableDataPanel theTablePanel) // CAS507 removed applet
 	throws SQLException 
 	{
 		this.databaseReader = dr;
 
-		if (applet != null) {
-			URL url = null;
-			String urlBase = applet.getParameter("cgi_url");			
-			try {
-				if (urlBase != null)
-				{
-					url = new URL(urlBase + "/image_creator.cgi"); 
-				}
-				else
-				{ // CAS42 1/1/18 was www.symapdb.org which no longer exists - but dead code anyway
-					url = new URL("http://www.agcol.arizona.edu/symap/cgi-bin/image_creator.cgi"); 					
-				}
-			} 
-			catch (java.net.MalformedURLException e) {
-				e.printStackTrace();
-			}
-			//imageViewer = new AppletImageViewer(applet.getAppletContext(),url);
-		}
-		else
-			imageViewer = new ImageViewer();
+		imageViewer = new ImageViewer();
 
-		if (applet != null)
-			persistentProps = new CookieProps(applet,"/",Utilities.getDomain(applet),COOKIE_EXPIRES,false,null);
-		else
-			persistentProps = new FileProps(Utilities.getFile(PERSISTENT_PROPS_FILE,true),PP_HEADER,null);
+		persistentProps = new FileProps(Utilities.getFile(PERSISTENT_PROPS_FILE,true),PP_HEADER,null);
 
 		if (hb == null)
 			helpBar = new HelpBar(-1, 17, true, false, false);
@@ -131,9 +107,9 @@ public class SyMAP {
 
 		colorDialogHandler = new ColorDialogHandler(persistentProps,/*helpHandler,*/new PropertiesReader(SyMAP.class.getResource("/properties/colors.properties")));
 
-		controlPanel = new ControlPanel(applet,drawingPanel,historyControl,imageViewer,colorDialogHandler,helpBar);
+		controlPanel = new ControlPanel(drawingPanel,historyControl,imageViewer,colorDialogHandler,helpBar);
 
-		frame = new SyMAPFrame(applet,controlPanel,drawingPanel,helpBar,hb==null,persistentProps);
+		frame = new SyMAPFrame(controlPanel,drawingPanel,helpBar,hb==null,persistentProps);
 		
 		closeup = new CloseUp(drawingPanel,colorDialogHandler);
 
@@ -191,7 +167,7 @@ public class SyMAP {
 
 			if (subs.length > 0) major  = Integer.valueOf(subs[0]);
 			if (subs.length > 1) minor  = Integer.valueOf(subs[1]);
-			
+			// not less than 1.7
 			if (major == REQUIRED_JAVA_MAJOR_VERSION && minor < REQUIRED_JAVA_MINOR_VERSION)
 			{
 				System.err.println("Java version " 

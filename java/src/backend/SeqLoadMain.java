@@ -133,7 +133,9 @@ public class SeqLoadMain
 			Vector<String> grpList = new Vector<String>();
 			int nSeqs = 0, seqIgnore=0, cntFile=0;
 			long totalSize = 0;
-			int minSize = Integer.parseInt(props.getProperty("min_size"));
+			int minSize = 0;
+			try {minSize = Integer.parseInt(props.getProperty("min_size"));} // CAS507 catch blank input
+			catch (Exception e) {};
 			log.msg("+++ Sequences < " + minSize + "bp will be ignored ('min_size' project parameter).");
 	
 			TreeSet<String> grpNamesSeen = new TreeSet<String>();

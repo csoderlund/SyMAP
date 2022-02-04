@@ -38,7 +38,7 @@ public class ProjectManagerFrame extends ProjectManagerFrameCommon
 		Utilities.setCursorBusy(this, true);
 		try {
 			SyMAPExp symapExp = new SyMAPExp(
-					DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_SYMAP_APPLET_3D, dbReader));
+					DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_SYMAP_3D, dbReader));
 			for (Project p : availProjects) 
 				symapExp.addProject( p.getDBName(), p.getType() );
 			symapExp.build();
