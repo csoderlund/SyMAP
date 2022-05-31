@@ -1,0 +1,384 @@
+<HTML>
+<head>
+	<title>MUMmer with SyMAP</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<style>
+a.wt {color:inherit;}
+table {font-size:100%}
+tr {font-size:100%}
+td {font-size:100%}
+tt {font-size:13px}
+pre {font-size:13px}
+a {font-size:100%}
+</style>
+</head>
+
+<body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
+
+	<a name=top></a>
+	<table align="center" style="border: 1px solid #999999" cellspacing="0" cellpadding="0">
+	  <tr><td width="100%" style="background-color: #CCCCCC;">
+	  <a href="http://www.arizona.edu">
+	  <img border="0" alt="The University of Arizona" title="The University of Arizona" src="./img/UA.gif"></a>
+	  </td></tr>
+
+	  <tr><td>
+		  <table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
+		    <tr><td height="60" width="161" align="left" valign="bottom">
+       				<img alt="" title="" src="img/agcol_logo.png">
+       			</td>
+		    	<td height="60" width="428" align="left" valign="bottom" style="padding:0px 0px 10px 30px">
+			    	<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
+				    <b>MUMmer with SyMAP</b>
+			    	</font> 
+		    	</td>
+		    	<td height="60" width="161" align="center" valign="bottom">&nbsp;
+        		</td>
+		    </tr>
+		    
+		    <tr><td height="21" colspan="3" align="left" valign="top">
+			    <table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
+			    	<tr><td align="left" bgcolor="#666666">
+<span style="font-size:75%;color:white">
+<a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
+<a href="http://www.agcol.arizona.edu/software/symap" class="wt">SyMAP Home</a> |
+<a href=index.html class="wt">Index</a> |
+<a href=SystemGuide.html class="wt">System Guide</a> |
+<a href=UserGuide.html class="wt">User Guide</a> |
+<a href=Tour.html class="wt">Tour</a> |
+<a href=TroubleShoot.html class="wt">Troubleshooting </a>
+</span>
+					</td></tr>
+				</table>
+			</td></tr>
+	        <tr><td colspan="3" valign="top" align="left" style='padding:20px 15px 0px 15px;font-size:85%'>
+								
+This document discusses how to deal with one or more MUMmer alignments failing.  This document refers to the v5.0.8. The corresponding
+mummer documentation is <a href="https://mummer4.github.io" target="_blank">here</a>.
+
+<h4>Contents</h4>
+<ul>
+	<li><a href=#ext>Executables
+	<li><a href=#log>Finding the problem
+	<li><a href=#mem>Out of Memory
+	<ul>
+		<li><a href=#cat>Limit CPUs and uncheck Concat</a>
+		<li><a href=#maks>Not-masked or Soft-masked</a>
+		<li><a href=#fail1>Fail immediately</a>
+		<li><a href=#fail2>One or more alignments fail</a>
+	</ul>
+	
+	<li><a href=#mum4>Using MUMmer4 from SyMAP</a>
+	<li><a href=#cmd>Running MUMmer from the command line</a>
+	<li><a href=#help>Getting Help</a>
+	<li><a href=#mac>MacOS details</a>	
+</ul>
+If none of the following helps, contact symap@agcol.arizona.edu.
+<p>
+<a name="ext">
+<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
+<tr><td align=left>
+<h2>Executables</h2>
+</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+
+The alignment programs are provided in the <tt>symap/ext</tt> directory. There are 
+executables for 64-bit Linux and 64-bit MacOS. SyMAP will
+select the correct directory for the machine you are running from, i.e. you
+do not need to do anything. When SyMAP creates a database, it (1) checks the MySQL variables, and (2) checks
+that the external programs are executable. If you see a message like:
+<pre>
+***Error - file is not executable: ext/mummer/mac/promer
+</pre>
+Execute:
+<pre>
+> chmod 755 ext/mummer/mac/promer
+</pre>
+Execute the program from the command line to make sure it works on you machine, e.g.
+<pre>
+>./ext/mummer/mac/promer
+
+  USAGE: promer  [options]  <Reference>  <Query>
+
+  Try './ext/mummer/mac/promer -h' for more information.
+</pre>
+The above shows that the promer code will execute on my MacOS.
+
+<p>
+<a name="log">
+<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
+<tr><td align=left>
+<h2>Finding the problem</h2>
+</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+
+The log files are as follows:
+<pre>
+symap_5
+   error.log   # a SyMAP error will write its trace data into this file and list failed MUMmer
+   /logs
+      &lt;dbName&gt;_LOAD.log   # this keeps track of data loaded or removed from the database.
+      &lt;project-name1&gt;-to-&lt;project-name2&gt;   # one directory per project-to-project alignment
+         &lt;alignment&gt;.log      # one file per alignment
+         symap.log   # this keeps most of the output shown on the terminal for this alignment
+</pre>
+If an alignment is listed as failed in the <tt>error.log</tt> file,
+the corresponding <tt>&lt;alignment&gt;.log</tt> file will contain the MUMmer error. If there
+is no error listed in the <tt>error.log</tt>, check the <tt>symap.log</tt> and the <b>tail</b>
+of the alignment files.
+<p>
+If the error is not found in the log files or it is not clear, try the following:
+<ul>
+<li>Copy the command from the terminal, and past it on a new terminal line to execute.
+This shows <tt>promer</tt> output directly on the terminal.  
+</ul>
+
+<a name="mem">
+<h2>Out of memory</h2>
+A MUMmer failure is typically from insufficient memory.
+For performing large alignments (e.g. 1Gb genomes or more) <i>it is essential
+to have multiple CPUs, a 64-bit computer, and at least 5Gb of RAM
+for each CPU that you intend to use</i>. The following error typically indicates a memory problem.
+
+<pre>
+Alignment program error code: 141
+20220512|075853|6007| ERROR: mummer and/or mgaps returned non-zero, please file a bug report
+</pre>
+
+<a name="cat">
+<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
+<tr><td align=left>
+<h3>Limit CPUs and uncheck Concat</h3>
+</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+There is no straight-forward way to know if you have enough memory as it depends on the
+size and complexity of the two genomes being compared. If you think memory may be tight,
+you can limit the amount used at one time by limiting the number of CPUs, as each
+CPU uses a considerable amount of memory (e.g. 4 CPUs could collectively use 20GB of memory at once). 
+<p><a href="img/concat.png"><img src="img/concat.png" width=400 border=1></a>
+<p>
+By default, all sequences of the 1st genome are concatenated into one file and then
+multiple files are created from the 2nd genome to be searched against the first;
+the multiple files may have two or more sequential chromosomes concatenated together to create
+files that are &gt;60M. This
+is fastest, but uses more memory. Hence, you can uncheck "Concat" so that multiple files are
+created for each genomes, and all files from the 1st genome are searched against the 2nd genome. 
+The following statistics are from comparing Arabidopsis thaliana (119M) against Brassica rapa (297M)
+on a MacOS using 1 CPU.
+<table>
+<tr><td><u>Concatenated</u>
+<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<td><u>Not concatenated</u>
+<tr>
+<td>
+<pre>
+48819 hits
+  334 synteny blocks
+46319 gene hits
+38334 synteny hits
+
+Finished in 1 hr 7 min 41 sec
+</pre>
+<td>
+
+<td>
+<pre>
+48846 hits
+  334 synteny blocks
+46348 gene hits
+38345 synteny hits
+
+Finished in 1 hr 34 min 29 sec
+</pre>
+</table>
+
+<p>
+<a name="mask">
+<h3>Not-masked or Soft-masked</h3>
+A memory problem can occur if the genome sequence is not masked or only soft-masked.
+Either: (1) change the sequence to hard-masked, or (2) set the SyMAP parameter 'mask_all_but_genes' to yes.
+<p>
+<a name="fail1"></a>
+<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
+<tr><td align=left>
+<h3>Fails immediately</h3>
+</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+If an alignment fails immediately, and if the last line of the first <tt>&lt;alignment&gt;.log</tt> file is:
+<pre>
+1: PREPARING DATA
+</pre>
+the reason is probably that your machine does not have near enough memory as MUMmer could not even
+prepare the data. Try it again with unchecked "Concat"; if that does not work, you need more memory.
+
+<a name="fail2"></a>
+<h3>One or more fails</h3>
+
+Sometimes just one or a few of the alignment processes will fail. You will see a line such as:
+<pre>
+Error: Running command: /Users/cari/Workspace/symap_5/ext/mummer/mac/promer  
+-p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_cc.demo_seq2_f2.promer 
+data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa 
+data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
+</pre>
+ 
+<table border=0>
+<tr>
+<td><a href="img/runDialog.png"><img src="img/runDialog.png" width=420 border=1></a>
+<td>
+You will see the failure on the dialog box as is 
+shown on the left. The remaining processes will continue. When all processes are complete,
+you will see a "?" for the pair as shown on the below. 
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="img/runResults.png"><img src="img/runResults.png" width=220 border=1></a>
+<p>Select the "?" followed by
+"Selected Pair" and it will complete the failed processes.
+</table>
+<p>
+A preferred way is to set CPUs to a low number if the genomes are large, that way,
+it will likely finish the first time.
+<p>
+
+
+<a name="mum4">
+<h2>Using MUMmer4 from within SyMAP</h2>
+Sometimes when MUMmer v3 fails, MUMmer v4 will work.
+MUMmer4 is included in SyMAP package with a fix to promer (make sure you get v5.0.8 or later).
+Enter the <tt>ext/mummer4</tt> directory and follow the instructions in the README.
+<p>My observations on MacOS indicate that MUMmer v4 takes more memory 
+but less time than MUMmer v3.
+<p>
+
+<a name="cmd">
+<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
+<tr><td align=left>
+<h2>Running MUMmer from the command line</h2>
+</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+
+If you need to run MUMmer using the command line from some other machine, do the following:
+<ul>
+<li>Proj-name1 must be alphanumerically less than proj-name2. 
+Proj-name1 must be the query and proj-name2 the reference, e.g. 
+<pre>
+USAGE: promer  [options]  &lt;Reference&gt;  &lt;Query&gt;
+promer proj-name2 proj-name1
+</pre>
+<li>Distant genomes:
+<ul>
+<li>Use promer
+<li>The output of promer is input to "show-coords -dlkTH".
+</ul>
+<li>Self synteny:
+<ul>
+<li>Use nucmer. For the same chromosome against itself, use the parameter "--maxmatch".
+<li>The output of nucmer is input to "show-coords -dlTH".
+</ul>
+<li>Result files:
+<ul>
+<li>The result files must have suffix ".mum" 
+<li>Put the ".mum" files in the directory <tt>data/seq_results/&lt;proj1-to-proj2&gt;/align</tt>
+<li>In the <tt>&lt;proj1-to-proj2&gt;/align</tt> directory, execute:
+<pre>touch all.done</pre>
+This creates a file, which indicates to SyMAP that the alignments are done and to process
+the files in the directory ending with ".mum".
+
+</ul>
+<li>When you run "Selected Pair", SyMAP will recognize the files and use them to build the synteny blocks.
+</ul>
+
+<p><u>Example of using mummer for loaded projects demo_seq and demo_seq2:</u> 
+If you try this with demo_seq and demo_seq2, make sure there is no current alignment in the 
+database or disk for your project (e.g. "Clear Pair""). 
+
+<p>Demo_seq has chr3 and chr5, demo_seq2 has chr1 and chr3; these will be compared separately against each other.
+Demo_seq is alphanumerically less than demo_seq2, so it is first in the directory name
+but second in the command arguments (this is how SyMAP knows which
+project Chr3 belongs to). 
+
+
+<pre>
+cd data/seq_results
+mkdir demo_seq_to_demo_seq2
+mkdir demo_seq_to_demo_seq2/align
+touch demo_seq_to_demo_seq2/align/all.done
+cd ../..
+ext/mummer/mac/promer data/seq/demo_seq2/sequence/chr1.seq data/seq/demo_seq/sequence/chr3.seq
+ext/mummer/mac/show-coords -dlkTH out.delta >chr1chr3.mum
+mv chr1chr3.mum data/seq_results/demo_seq_to_demo_seq2/align
+rm out.delta
+</pre>
+This would need to be repeated 3 more times for <tt>chr1chr5.mum, chr3chr3.mum, chr3chr5.mum</tt> (put the commands
+in a script). The resulting <tt>align</tt> directory will have:
+<pre>
+all.done	chr1chr3.mum	chr1chr5.mum	chr3chr3.mum	chr3chr5.mum
+</pre>
+When symap is started and  demo_seq and demo_seq2 selected, there will be a "A" in their cell; select it followed by
+"Selected Pairs" and it will load the alignments and compute the synteny.
+<p>
+
+<a name=help>
+<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
+<tr><td align=left>
+<h2>Getting Help</h2>
+</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+If none of these suggestions fix your problem, email symap@agcol.arizona.edu with the following files
+(refer to the files in <a href=#log>Finding the problem</a>):
+<ol>
+<li><tt>error.log</tt>
+<li><tt>logs/&lt;project-name1&gt;-to-&lt;project-name2&gt;/symap.log</tt>
+<li>The <tt>_fn.log</tt> file from the alignment that failed, where n is the alignment number
+and the prefix before the "_" is <tt>&lt;project-name1&gt;_cc.&lt;project-name2&gt;</tt>.
+<li>Any output to the terminal (either copy and paste into the email, or send a screen capture)
+</ol>
+
+<a name="mac">
+<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
+<tr><td align=left>
+<h2>MacOS details</h2>
+</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+
+<h4>Executable on MacOS</h4>
+Any executable that has not been okayed by Apple get the error message
+<pre>
+cannot be opened because the developer cannot be verified
+</pre>
+Hence, you need
+to use the Finder to enter all <tt>/ext/&lt;program&gt;/mac</tt> directories,
+select each program, then choose to Open it; it will run the program in a terminal
+window and be saved as a program that can thereafter be run.
+
+<h4>Early versions of MacOS</h4>
+The MacOS executables were compiled on a MacOS 10.15. They will not work on old versions such as MacOS 10.9.
+Try the following:
+<pre>
+cd ext/mummer
+mv mac mac_506
+mv mac_pre506 mac
+cd ../muscle
+mv muscle muscle_506
+mv muscle_pre506 muscle
+</pre>
+These executables compiled on MacOS 10.9 may work on your Mac.
+
+				</td>
+		</tr>
+
+</table>
+	
+	<table width="100%" border="0" align="center" cellpadding=2 cellspacing=0 style="margin-top:40px">
+		<tr>
+			<td bgcolor="#DDDDDD" align="center">
+			<font face="Verdana, Arial, Helvetica, sans-serif" size="2">Email
+			Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></font>
+			</td>
+		</tr>
+	</table>
+	  
+	</td>
+</tr>
+</table>
+</BODY>
+</HTML>

@@ -105,9 +105,15 @@ use some of the function buttons, which apply to all the cells.
 </tr>
 </table>
 <p>
-<b> CPUs parameter:</b> Enter the maximum number of CPUs you wish to use for an alignment. SyMAP will use 
+<b> CPUs:</b> Enter the maximum number of CPUs to use for an alignment. SyMAP will use 
 up to that number (but may use fewer, depending on the number of sequences being aligned). Alternatively,
-the number of CPUs may be entered as a command line argument (-p N) or entered in the symap.config file.
+the number of CPUs may be entered as a command line argument (-p N) 
+or entered in the symap.config file; this second option will retain the setting between sessions.
+<p><b> Concat:</b>The chromosomes (and/or scaffolds) are concatenated together for one genome
+and searched against the chromosomes of the 2nd genome. If this is unchecked, then each chromosome
+of the first genome is searched against each chromosome of the 2nd genome; this is useful when
+there is limited memory. If chromosomes or scaffolds are small, multiple sequences
+will be concatenated into a file of &lt;60M.
 <p>
 <b>Function Buttons:</b>
 <br>

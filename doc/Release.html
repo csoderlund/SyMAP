@@ -55,6 +55,20 @@ a {font-size:100%}
 	        <tr><td colspan="3" valign="top" align="left" style='padding:20px 15px 0px 15px;font-size:85%'>
 
 The 3D feature has not been tested with Release v5; however, it should still work.
+<h3>Release: v5.0.8 (1June22)</h3>
+<ol>
+<li>A new option "Concat" has been added; when this is unchecked, it will not create a
+concatenation of the first genome to run against all chromosomes of the second, instead
+it perform a chromosome-by-chromosome search.
+<li><u>MUMmer4</u> can be used by compiling it on your machine from the /ext directory
+and adding its path to the "symap.config" file. See <a href=MUMmer.html#mum>Running MUMmer</a>.
+<li>When computing alignment&synteny, all stacktrace errors are now written into error.log.
+<li>The database name is prefixed to the "logs/LOAD.log" file name.
+<li>A new document has been created for when there is problems running
+<a href=MUMmer.html>MUMmer</a> from SyMAP.
+<li>ConvertNCBI script was writing the scaffold sequences to end of the last chromosome (this
+did not make the annotation or synteny wrong - just extra sequence).
+</ol>
 
 <h3>Release: v5.0.7 (4Feb22)</h3>
 <ol>

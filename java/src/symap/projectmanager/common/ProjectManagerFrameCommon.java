@@ -2,6 +2,7 @@ package symap.projectmanager.common;
 
 /*****************************************************
  * The main frame and provides all the high level functions for it.
+ * CAS508 moved the routines for alignment and synteny to AlignProjs, except for doAllPairs
  */
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,7 +12,6 @@ import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.Set;
 
 import java.io.File;
@@ -37,7 +37,6 @@ import util.DatabaseReader;
 import util.ErrorReport;
 import util.Utilities;
 import util.ProgressDialog;
-import util.Logger;
 import util.LinkLabel;
 import util.PropertiesReader;
 
@@ -55,9 +54,10 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	public static boolean inReadOnlyMode = false;
 	public static boolean CHECK_SQLVAR =  false;
 	public static String  MAIN_PARAMS =   "symap.config"; // default
-	public static int     maxCPUs = -1;
 	
-	public static boolean lgProj1st = false; // For Mummer; false sort on name; true sort on length
+	private static int     maxCPUs = -1;
+	private static boolean isCat = true;
+	private static boolean lgProj1st = false; // For Mummer; false sort on name; true sort on length
 	
 	/************************************************/
 	private static final String HTML = "/html/ProjMgrInstruct.html";
@@ -87,6 +87,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	private PairPropertyFrame ppFrame = null; // only !null if opened
 	private PropertiesReader mProps;
 	private Project curProj = null; // used only in the load-all-projects function
+	private String dbName = null; // CAS508 append to LOAD.log
 	
 	private int totalCPUs=0;
 	
@@ -101,6 +102,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	private AddProjectPanel addProjectPanel = null;
 	
 	private JTextField txtCPUs =null;
+	private JCheckBox checkCat=null;
 	protected ActionListener explorerListener = null;
 	
 	/*****************************************************************/
@@ -182,7 +184,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			}
 		}
 	}
-	private DatabaseReader getDatabaseReader() throws Exception {
+	private DatabaseReader getDatabaseReader()  { // CAS508 remove throw
 		String paramsfile = MAIN_PARAMS;
 		
 		if (Utilities.fileExists(paramsfile)) {
@@ -207,60 +209,69 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		if (db_adminpasswd != null) 	db_adminpasswd = db_adminpasswd.trim();
 		if (db_clientuser != null) 		db_clientuser = db_clientuser.trim();
 		if (db_clientpasswd != null) 	db_clientpasswd = db_clientpasswd.trim();
+		dbName = db_name;
 
-		if (inReadOnlyMode) { // CAS500 crashed if config file not present
-			if (db_clientuser==null || db_clientuser.length()==0) {
+		try { // CAS508 stop nested exception on DatabaseUser calls
+			if (inReadOnlyMode) { // CAS500 crashed if config file not present
+				if (db_clientuser==null || db_clientuser.length()==0) {
+					if (db_adminuser==null || db_adminuser.length()==0) 
+						ErrorReport.die("No db_adminuser or db_clientuser in " + paramsfile);
+					else db_clientuser = db_adminuser;
+				}
+				if (db_clientpasswd==null || db_clientpasswd.length()==0) {
+					if (db_adminpasswd==null || db_adminpasswd.length()==0) 
+						ErrorReport.die("No db_adminpasswd or db_clientpasswd in " + paramsfile);
+					else db_clientpasswd = db_adminpasswd;
+				}
+			}
+			else {
 				if (db_adminuser==null || db_adminuser.length()==0) 
-					ErrorReport.die("No db_adminuser or db_clientuser in " + paramsfile);
-				else db_clientuser = db_adminuser;
-			}
-			if (db_clientpasswd==null || db_clientpasswd.length()==0) {
+					ErrorReport.die("No db_adminuser defined in " + paramsfile);
 				if (db_adminpasswd==null || db_adminpasswd.length()==0) 
-					ErrorReport.die("No db_adminpasswd or db_clientpasswd in " + paramsfile);
-				else db_clientpasswd = db_adminpasswd;
+					ErrorReport.die("No db_adminpasswd defined in " + paramsfile);
 			}
-		}
-		else {
-			if (db_adminuser==null || db_adminuser.length()==0) 
-				ErrorReport.die("No db_adminuser defined in " + paramsfile);
-			if (db_adminpasswd==null || db_adminpasswd.length()==0) 
-				ErrorReport.die("No db_adminpasswd defined in " + paramsfile);
-		}
-		
-		if (db_server == null) 	db_server = "";
-		
-		if (cpus!=null && maxCPUs<=0) {
-			try {
-				maxCPUs = Integer.parseInt(cpus);
-				totalCPUs = Runtime.getRuntime().availableProcessors();
-				System.out.println("Max CPUs " + maxCPUs + " (out of " + totalCPUs + " available)");
+			if (db_server == null) 	db_server = "";
+			
+			String mummer 			= mProps.getProperty("mummer_path"); // CAS508 
+			if (mummer!=null && mummer!="") {
+				System.out.println("MUMmer path: " + mummer);
+				Constants.setMummer4Path(mummer);
 			}
-			catch (Exception e){ System.err.println("nCPUs: " + cpus + " is not an integer. Ignoring.");}
-		}
-	
-		DatabaseUser.checkDBRunning(db_server);
-		
-		// Check db params and set defaults
-		if (Utilities.isStringEmpty(db_adminuser))	db_adminuser = "admin";
-		if (Utilities.isStringEmpty(db_clientuser))	db_clientuser = "admin";
-		if (Utilities.isStringEmpty(db_name))		db_name = "symap";
-		
-		setTitle(WINDOW_TITLE + " - Database: " + db_name);
-		System.out.println("SyMAP database " + db_name);
-		
-		// Open database connection and create database if it doesn't exist
-        Class.forName("com.mysql.jdbc.Driver");
-        DatabaseUser.shutdown(); // in case shutdown at exit didn't work/happen
-        if (!inReadOnlyMode) {
-	        if (!DatabaseUser.createDatabase(db_server, db_name, db_adminuser, db_adminpasswd)) {
-	        	System.err.println(DB_ERROR_MSG);
-	        	System.exit(-1);
+			
+			if (cpus!=null && maxCPUs<=0) {
+				try {
+					maxCPUs = Integer.parseInt(cpus.trim()); // CAS508 add trim
+					totalCPUs = Runtime.getRuntime().availableProcessors();
+					System.out.println("Max CPUs " + maxCPUs + " (out of " + totalCPUs + " available)");
+				}
+				catch (Exception e){ System.err.println("nCPUs: " + cpus + " is not an integer. Ignoring.");}
+			}
+			
+			DatabaseUser.checkDBRunning(db_server);
+			
+			// Check db params and set defaults
+			if (Utilities.isStringEmpty(db_adminuser))	db_adminuser = "admin";
+			if (Utilities.isStringEmpty(db_clientuser))	db_clientuser = "admin";
+			if (Utilities.isStringEmpty(db_name))		db_name = "symap";
+			
+			setTitle(WINDOW_TITLE + " - Database: " + db_name);
+			System.out.println("SyMAP database " + db_name);
+			
+			// Open database connection and create database if it doesn't exist
+	        Class.forName("com.mysql.jdbc.Driver");
+	        DatabaseUser.shutdown(); // in case shutdown at exit didn't work/happen
+	        if (!inReadOnlyMode) {
+		        if (!DatabaseUser.createDatabase(db_server, db_name, db_adminuser, db_adminpasswd)) {
+		        	System.err.println(DB_ERROR_MSG);
+		        	System.exit(-1);
+		        }
 	        }
-        }
-        return DatabaseUser.getDatabaseReader(SyMAPConstants.DB_CONNECTION_PROJMAN,
-        	DatabaseUser.getDatabaseURL(db_server, db_name),
-        	(inReadOnlyMode ? db_clientuser : db_adminuser),
-        	(inReadOnlyMode ? db_clientpasswd : db_adminpasswd), null);
+	        return DatabaseUser.getDatabaseReader(SyMAPConstants.DB_CONNECTION_PROJMAN,
+	        	DatabaseUser.getDatabaseURL(db_server, db_name),
+	        	(inReadOnlyMode ? db_clientuser : db_adminuser),
+	        	(inReadOnlyMode ? db_clientpasswd : db_adminpasswd), null);
+		}
+		catch (Exception e) {ErrorReport.print("Error getting connection"); return null;}
 	}
 	
 	private void initialize() {
@@ -863,8 +874,14 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			btnSelAlign.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					Project[] projects = getSelectedAlignmentProjects();
-					if (checkPairs(projects[0], projects[1]))
-						promptAndProgressAlignProjects(projects[0], projects[1], false);
+					
+					if (checkPairs(projects[0], projects[1])) {
+						int nCPU = getCPUs();
+						if (nCPU==-1) return;
+						
+						new AlignProjs().run(getInstance(), projects[0], projects[1], 
+								false, dbReader, mProps, nCPU, checkCat.isSelected());
+					}
 				}
 			} );
 			
@@ -929,7 +946,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				}
 			});
 
-
 			btnAllQueryView = new JButton("SyMAP Queries");
 			btnAllQueryView.setVisible(true);
 			btnAllQueryView.addActionListener(new ActionListener() {
@@ -978,16 +994,22 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			txtCPUs = new JTextField(2);
 			txtCPUs.setMaximumSize(txtCPUs.getPreferredSize());
 			txtCPUs.setMinimumSize(txtCPUs.getPreferredSize());
-
 			txtCPUs.setText("" + maxCPUs);
+			checkCat = new JCheckBox("Concat", isCat);
+			checkCat.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					isCat = checkCat.isSelected();
+				}
+			});
 
 			mainPanel.add( new JSeparator() );
 			mainPanel.add( Box.createVerticalStrut(15) );
 			mainPanel.add(instructText); 
 			mainPanel.add( Box.createVerticalStrut(15) );
 			if (!inReadOnlyMode) {
-				mainPanel.add( createHorizPanel( new Component[] 
-					{ tableScroll, new JLabel(" "),new JLabel("CPUs:"), txtCPUs},5 ));			
+				Component cpu = createHorizPanel( new Component[] 
+						{ tableScroll, new JLabel("   CPUs:"), txtCPUs, new JLabel("  "), checkCat},5 );
+				mainPanel.add(cpu);			
 			}
 			else {	
 				mainPanel.add( createHorizPanel( new Component[] 
@@ -1714,30 +1736,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	
 	// CAS500 was putting log in data/pseudo_pseudo/seq1_to_seq2/symap.log
 	// changed to put in logs/seq1_to_seq2/symap.log
-	private FileWriter buildLogAlign(Project p1, Project p2)
-	{
-		FileWriter ret = null;
-		try
-		{
-			File pd = new File(Constants.logDir);
-			if (!pd.isDirectory()) pd.mkdir();
-			
-			String pairDir = Constants.logDir + p1.getDBName() + Constants.projTo + p2.getDBName(); 
-			pd = new File(pairDir);
-			if (!pd.isDirectory()) pd.mkdir();
-			
-			File lf = new File(pd,Constants.syntenyLog);
-			ret = new FileWriter(lf, true); // append
-			System.out.println("Append to log file: " + pairDir + "/" + Constants.syntenyLog);	
-		}
-		catch (Exception e)
-		{
-			ErrorReport.print(e, "Creating log file");
-		}
-		return ret;
-	}
-	private String buildLogAlignDir(Project p1, Project p2)
-	{
+	
+	public String buildLogAlignDir(Project p1, Project p2) {
 		try
 		{
 			String logName = Constants.logDir + p1.getDBName() + Constants.projTo + p2.getDBName();
@@ -1753,9 +1753,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	private FileWriter buildLogLoad()
 	{
 		FileWriter ret = null;
-		try
-		{
-			String name = Constants.loadLog;
+		try {
+			String name = dbName + "_" + Constants.loadLog; // CAS508 prefix with database name
 			 
 			File pd = new File(Constants.logDir);
 			if (!pd.isDirectory()) pd.mkdir();
@@ -1763,6 +1762,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			File lf = new File(pd,name);
 			if (!lf.exists())
 				System.out.println("Create log file: " + Constants.logDir + name);
+			else
+				System.out.println("Append to: " + Constants.logDir + name); // CAS508 add
 			ret = new FileWriter(lf, true);	
 		}
 		catch (Exception e) {ErrorReport.print(e, "Creating log file");}
@@ -1771,7 +1772,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	/****************************************************
 	 * Methods for renewing pairIdx and saving pair parameters
 	 */
-	private int getPairIdx(int id1, int id2) {
+	public int getPairIdx(int id1, int id2) {
 		int idx = 0;
 		try {
 			UpdatePool pool = new UpdatePool(dbReader);
@@ -1786,21 +1787,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		return idx;	
 	}
 	
-	private int pairIdxRenew(int id1, int id2) {
-		try {
-			int idx = getPairIdx(id1, id2);
-			UpdatePool pool = new UpdatePool(dbReader);
-			
-			// Remove all previous pair info
-			if (idx>0) 
-				pool.executeUpdate("DELETE FROM pairs WHERE idx=" + idx);
-			
-			return pairIdxCreate(id1, id2, pool);
-		}
-		catch (Exception e) {ErrorReport.die(e, "SyMAP error renewing pairidx");}
-		return 0;
-	}
-	private int pairIdxCreate(int id1, int id2, UpdatePool pool) {
+	public int pairIdxCreate(int id1, int id2, UpdatePool pool) {
 		try {
 			int idx=0;
 			if (pool==null) pool = new UpdatePool(dbReader);
@@ -1818,17 +1805,9 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		catch (Exception e) {ErrorReport.die(e, "SyMAP error getting pair idx");}
 		return 0;
 	}
-	// After getting props, renewing pairIdx, then save props with new pairIdx (here)
-	private void savePairProps(SyProps props, int pairIdx, Project p1, Project p2, Logger log) {
-		try {
-			String n1 = p1.getDBName(), n2=p2.getDBName();
-			String dir = Constants.getNameResultsDir(p1.strDBName, p1.isFPC(), p2.strDBName);
-			props.saveNonDefaulted(log, dir, p1.getID(), p2.getID(), pairIdx, n1, n2, new UpdatePool(dbReader));
-		} 
-		catch (Exception e){ErrorReport.print(e, "Save pair parameters");}
-	}
+	
 	// Called when Pair Parameter window opened
-	private SyProps getPairPropsFromDB(int id1, int id2) {
+	public SyProps getPairPropsFromDB(int id1, int id2) {
 		try {
 			SyProps props = new SyProps();
 			
@@ -1877,131 +1856,9 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	
 	private ProjectManagerFrameCommon getInstance() { return this; }
 	
-	/************************************************************************/
-	private void getPseudoCounts(TreeMap<String,Integer> hitCounts, int pidx) throws Exception
-	{
-		UpdatePool db = new UpdatePool(dbReader);
 	
-		ResultSet rs = db.executeQuery("select count(*) as nhits from pseudo_hits where pair_idx=" + pidx);	
-		rs.first();
-		hitCounts.put("nhits", rs.getInt("nhits"));
-		rs.close();
-		
-		rs = db.executeQuery("select count(*) as nhits from pseudo_block_hits as pbh join pseudo_hits as ph on pbh.hit_idx=ph.idx " +
-								" where ph.pair_idx=" + pidx);
-		rs.first();
-		hitCounts.put("blkhits", rs.getInt("nhits"));
-		rs.close();
-
-		rs =  db.executeQuery("select count(*) as nhits from pseudo_hits where gene_overlap > 0 and pair_idx=" + pidx);	
-		rs.first();
-		hitCounts.put("genehits", rs.getInt("nhits"));
-		rs.close();
-
-		rs = db.executeQuery("select count(*) as n from blocks where pair_idx=" + pidx);	
-		rs.first();
-		hitCounts.put("blocks", rs.getInt("n"));
-		rs.close();
-
-	}
-	private void getFPCCounts(TreeMap<String,Integer> counts, int pidx) throws Exception
-	{
-		UpdatePool db = new UpdatePool(dbReader);
-	
-		ResultSet rs = db.executeQuery("select count(*) as n from mrk_hits where pair_idx=" + pidx);	
-		rs.first();
-		counts.put("mrkhits", rs.getInt("n"));
-		rs.close();
-		
-		rs = db.executeQuery("select count(*) as n from bes_hits where pair_idx=" + pidx);	
-		rs.first();
-		counts.put("beshits", rs.getInt("n"));
-		rs.close();		
-
-		rs = db.executeQuery("select count(*) as n from blocks where pair_idx=" + pidx);	
-		rs.first();
-		counts.put("blocks", rs.getInt("n"));
-		rs.close();
-		
-		rs = db.executeQuery("select count(*) as n from mrk_block_hits as pbh join mrk_hits as ph on pbh.hit_idx=ph.idx " +
-								" where ph.pair_idx=" + pidx);
-		rs.first();
-		counts.put("mrkblkhits", rs.getInt("n"));
-		rs.close();
-
-		rs = db.executeQuery("select count(*) as n from bes_block_hits as pbh join bes_hits as ph on pbh.hit_idx=ph.idx " +
-								" where ph.pair_idx=" + pidx);
-		rs.first();
-		counts.put("besblkhits", rs.getInt("n"));
-		rs.close();
-
-
-	}
-	private int getFPCMarkers(Project p) throws Exception
-	{
-		int num = 0;
-		UpdatePool db = new UpdatePool(dbReader);
-		ResultSet rs =db.executeQuery("select count(*) as n from markers where proj_idx=" + p.getID());
-		rs.first();
-		num = rs.getInt("n");
-		rs.close();
-		return num;
-	}
-	private int getFPCBES(Project p) throws Exception
-	{
-		int num = 0;
-		UpdatePool db = new UpdatePool(dbReader);
-		ResultSet rs =db.executeQuery("select count(*) as n from bes_seq where proj_idx=" + p.getID());
-		rs.first();
-		num = rs.getInt("n");
-		rs.close();
-		return num;
-	}
-	
-	private void printStats(ProgressDialog prog, Project p1, Project p2) throws Exception
-	{
-		if (p2.isFPC()) // in case order is backwards
-		{
-			Project temp = p1;
-			p1 = p2;
-			p2 = temp;
-		}
-		int pairIdx = getPairIdx(p1.getID(),p2.getID());
-		if (pairIdx==0) return;
-
-		if (p1.isPseudo()) // pseudo/pseudo
-		{
-			Utils.prtNumMsg(prog, p1.getNumGroups(), p1.getDisplayName() + " chromosomes");
-			Utils.prtNumMsg(prog, p2.getNumGroups(), p2.getDisplayName() + " chromosomes");
-			TreeMap<String,Integer> counts = new TreeMap<String,Integer>();
-			getPseudoCounts(counts,pairIdx);
-			Utils.prtNumMsg(prog, counts.get("nhits"), "hits");
-			Utils.prtNumMsg(prog, counts.get("blocks"), "synteny blocks");
-			Utils.prtNumMsg(prog, counts.get("genehits"), "gene hits");
-			Utils.prtNumMsg(prog, counts.get("blkhits"), "synteny hits");
-		}
-		else
-		{
-			Utils.prtNumMsg(prog, p2.getNumGroups(), p2.getDisplayName() + " chromosomes");
-			Utils.prtNumMsg(prog, p1.getNumGroups(), p1.getDisplayName() + "(FPC) chromosomes (or LG)");
-			int nMrk = getFPCMarkers(p1);
-			Utils.prtNumMsg(prog, nMrk, "markers");
-			Utils.prtNumMsg(prog, getFPCBES(p1), "BESs");
-			
-			TreeMap<String,Integer> counts = new TreeMap<String,Integer>();
-			getFPCCounts(counts,pairIdx);
-			Utils.prtNumMsg(prog, counts.get("blocks"), "synteny blocks");
-			Utils.prtNumMsg(prog, counts.get("beshits"), "BES hits");
-			Utils.prtNumMsg(prog, counts.get("besblkhits"), "BES synteny hits");
-			if (nMrk > 0)
-			{
-				Utils.prtNumMsg(prog, counts.get("mrkhits"), "marker hits");
-				Utils.prtNumMsg(prog, counts.get("mrkblkhits"), "marker synteny hits");
-			}
-		}		
-	}
 	/***********************************************
-	 * Called when All Pairs is selected
+	 * XXX All Pairs is selected
 	 * CAS506 added checkPairs logic
 	 */
 	private void doAllPairs() 
@@ -2055,239 +1912,27 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				}
 			}	
 		}
-		System.out.println(">> Start all pairs: processing " + pList1.size() + " project pairs <<");
-		for (int i=0; i<pList1.size(); i++) {
-
-			System.out.println("\n>>Starting " + pList1.get(i) + " and " + pList2.get(i));
+		int maxCPUs = getCPUs();
+		if (maxCPUs==-1) return;
 		
-			promptAndProgressAlignProjects(pList1.get(i), pList2.get(i), true);
+		System.out.println("\n---- Start all pairs: processing " + pList1.size() + " project pairs ---");
+		for (int i=0; i<pList1.size(); i++) {
+			new AlignProjs().run(this, pList1.get(i), pList2.get(i), true, dbReader, mProps, maxCPUs, checkCat.isSelected());
 		}
 		System.out.println("All Pairs complete. ");
 	}
-	private void promptAndProgressAlignProjects(final Project p1, final Project p2, boolean closeWhenDone) {
-
-		FileWriter fw =      buildLogAlign(p1,p2);
-		String alignLogDir = buildLogAlignDir(p1,p2);
-		
+	private int getCPUs() {
 		int maxCPUs = 1;
-		try {
-			maxCPUs = Integer.parseInt(txtCPUs.getText());
-		}
+		try { maxCPUs = Integer.parseInt(txtCPUs.getText());}
 		catch (Exception e) {
 			Utilities.showErrorMessage("Please enter a valid value for number of CPUs to use.");
-			return;
+			return -1;
 		}
 		if (maxCPUs <= 0) maxCPUs = 1;
-		
-		try {
-			Date date = new Date();
-			fw.write("\n-------------- starting " + date.toString() + " --------------------\n");
-		} catch (Exception e){}
-		
-		String msg = (p1 == p2) ? 
-				"Aligning project " + p1.getDisplayName() + " to itself ..." :
-				"Aligning projects " + p1.getDisplayName() + " and " + p2.getDisplayName() + " ...";
-		
-		final ProgressDialog progress = new ProgressDialog(this, 
-				"Aligning Projects", msg, false, true, fw);
-		
-		// getting existing pair props
-		int id1=p1.getID(), id2=p2.getID();
-		SyProps pairProps = getPairPropsFromDB(id1, id2);
-		
-		// remove existing pair stuff and reassign pair props 
-		int pairIdx = pairIdxRenew(id1, id2);
-		Logger log = progress;
-		savePairProps(pairProps, pairIdx, p1, p2, log);
-		
-		if (closeWhenDone) {
-			progress.closeWhenDone();	
-		}
-		else {
-			progress.closeIfNoErrors();
-		}
-		
-		final AlignMain aligner = 
-			new AlignMain(new UpdatePool(dbReader), progress, 
-				p1.getDBName(), p2.getDBName(), maxCPUs, mProps, pairProps, alignLogDir);
-		if (aligner.mCancelled) return;
-		
-		final AnchorsMain anchors = 
-			new AnchorsMain(pairIdx, new UpdatePool(dbReader), progress, mProps, pairProps );
-		
-		final SyntenyMain synteny = 
-			new SyntenyMain( new UpdatePool(dbReader), progress, mProps, pairProps );
-		
-		final Thread statusThread = new Thread() {
-			public void run() {
-				
-				while (aligner.notStarted() && !Cancelled.isCancelled()) Utilities.sleep(1000);
-				if (aligner.getNumRemaining() == 0 && aligner.getNumRunning() == 0) return;
-				if (Cancelled.isCancelled()) return;
-				
-				// CAS506 reworded progress message
-				String msg = "\nAlignments:  running " + aligner.getNumRunning()   + 
-						               ", completed " + aligner.getNumCompleted();
-				if (aligner.getNumRemaining()>0) 
-					            msg += ", queued " + aligner.getNumRemaining();
-				
-				progress.updateText("\nRunning alignments:\n", aligner.getStatusSummary() + msg + "\n");
-
-				while (aligner.getNumRunning() > 0 || aligner.getNumRemaining() > 0) {
-					if (Cancelled.isCancelled()) return;
-					Utilities.sleep(10000);
-					if (Cancelled.isCancelled()) return;
-					
-					msg = "\nAlignments:  running " + aligner.getNumRunning()   + 
-							                  ", completed " + aligner.getNumCompleted();
-					if (aligner.getNumRemaining()>0) 
-			            msg += ", queued " + aligner.getNumRemaining();
-					
-					progress.updateText("\nRunning alignments:\n",
-							aligner.getStatusSummary() + msg + "\n");
-				}
-				progress.updateText("Alignments:" ,  "Completed " + aligner.getNumCompleted() + "\n\n");
-				
-			}
-		};
-		
-		final Thread alignThread = new Thread() {
-			public void run() {
-				boolean success = true;
-				
-				try {
-					// Perform alignment, load anchors and compute synteny
-					long timeStart = System.currentTimeMillis();
-
-					success &= aligner.run();
-					if (Cancelled.isCancelled()) 
-					{
-						progress.setVisible(false);
-						progress.setCancelled();
-						return;
-					}
-					if (!success) 
-					{
-						progress.finish(false);
-						return;
-					}
-							
-					long timeEnd = System.currentTimeMillis();
-					long diff = timeEnd - timeStart;
-					String timeMsg = Utilities.getDurationString(diff);
-					
-					// CAS501 - guess deleted so anchor could add, removed anchor add
-					//pool.executeUpdate("delete from pairs where (" + 
-					//	"	proj1_idx=" + p1.getID() + " and proj2_idx=" + p2.getID() + ") or (proj1_idx=" + p2.getID() + " and proj2_idx=" + p1.getID() + ")"); 
-					
-					if (Cancelled.isCancelled()) return;
-					
-					success &= anchors.run( p1.getDBName(), p2.getDBName() );
-					if (!success) 
-					{
-						progress.finish(false);
-						return;
-					}
-					if (Cancelled.isCancelled()) return;
-					
-					success &= synteny.run( p1.getDBName(), p2.getDBName() );
-					if (!success) 
-					{
-						progress.finish(false);
-						return;
-					}
-					if (Cancelled.isCancelled()) return;
-											
-					timeEnd = System.currentTimeMillis();
-					diff = timeEnd - timeStart;
-					timeMsg = Utilities.getDurationString(diff);
-					progress.appendText(">> Summary for " + p1.getDisplayName() + " and " + p2.getDisplayName() + "\n\n");
-					printStats(progress, p1, p2);
-					progress.appendText("\nFinished in " + timeMsg + "\n\n");
-					
-					UpdatePool pool = new UpdatePool(dbReader);
-					pool.executeUpdate("update pairs set aligned=1,aligndate=NOW() where (" + 
-						"	proj1_idx=" + p1.getID() + " and proj2_idx=" + p2.getID() + ") or (proj1_idx=" + p2.getID() + " and proj2_idx=" + p1.getID() + ")"); 
-				}
-				catch (OutOfMemoryError e) {
-					success = false;
-					statusThread.interrupt();
-					progress.msg( "Not enough memory - increase $maxmem in symap script");
-					Utilities.showOutOfMemoryMessage(progress);
-				}
-				catch (Exception e) {
-					success = false;
-					ErrorReport.print(e,"Running alignment");
-					statusThread.interrupt();
-				}
-				
-				progress.finish(success);
-			}
-		};
-		
-		progress.addActionListener( new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				System.out.println(e.getActionCommand());
-				// Stop aligner and wait on monitor threads to finish
-				aligner.interrupt();
-				anchors.interrupt();
-				try {
-					alignThread.wait(5000);
-					statusThread.wait(5000);
-				}
-				catch (Exception e2) { }
-				
-				// Threads should be done by now, but kill just in case
-				alignThread.interrupt();
-				statusThread.interrupt();
-				
-				// Close dialog
-				progress.setVisible(false);
-				if (e.getActionCommand().equals("Cancel"))
-				{
-					progress.setCancelled();
-					Cancelled.cancel();
-				}
-			}
-		});
-		
-		alignThread.start();
-		statusThread.start();
-		progress.start(); // blocks until thread finishes or user cancels
-		
-		if (progress.wasCancelled()) {
-			// Remove partially-loaded alignment
-			try {
-				Thread.sleep(1000);
-				System.out.println("Cancel alignment (removing alignment from DB)");
-				removeAlignmentFromDB(p1, p2);
-				System.out.println("Removal complete");
-			}
-			catch (Exception e) { 
-				ErrorReport.print(e, "Removing alignment");
-			}
-		}
-		else if (closeWhenDone)
-		{
-			progress.dispose();	
-		}
-		
-		//System.gc(); // cleanup memory after AlignMain, AnchorsMain, SyntenyMain
-		System.out.println("--------------------------------------------------");
-		refreshMenu();
-		try
-		{
-			if (fw != null)
-			{
-				Date date = new Date();
-				fw.write("\n-------------- done " + date.toString() + " --------------------\n");
-				fw.close();
-			}
-		}
-		catch (Exception e) {}
+		return maxCPUs;
 	}
 	
-	private void refreshMenu() {
+	public void refreshMenu() {
 		Utilities.setCursorBusy(this, true);
 		
 		initialize();
@@ -2717,7 +2362,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
         pool.executeUpdate("DELETE pseudo_annot.* from pseudo_annot, xgroups where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + p.getID());
 	}	
 	
-	private void removeAlignmentFromDB(Project p1, Project p2) throws Exception
+	public void removeAlignmentFromDB(Project p1, Project p2) throws Exception
 	{
 		UpdatePool pool = new UpdatePool(dbReader);
         pool.executeUpdate("DELETE from pairs WHERE proj1_idx="+p1.getID()+" AND proj2_idx="+p2.getID());

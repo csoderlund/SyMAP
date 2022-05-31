@@ -56,6 +56,7 @@ System Guide |
 								
 The following discusses building a SyMAP v5 database. This document
 has been updated as of v5.0.7; see <a href=Release.html>Release Notes</a> for changes.
+For release v5.0.8, a document on trouble shooting <a href=MUMmer.html#mum>MUMmer</a> alignments failures has been added.
 
 <h4>Contents</h4>
 <ul>
@@ -93,7 +94,7 @@ has been updated as of v5.0.7; see <a href=Release.html>Release Notes</a> for ch
 			<li>Alignments and external programs
 				<ul>
 					<li><a href=#ext>Alignment executables
-					<li><a href=#mum>Running MUMmer from the command line</a>
+					<li><a href=#mum>MUMmer with SyMAP details</a>
 				</ul>
 			<li>FPC project
 				<ul>
@@ -226,7 +227,7 @@ button providing further details on the use of its functions.
 			Use a Linux or Mac machine.  
 		</td>
 		<td align='left' valign='top'>
-			It needs to have Java v1.7 or later, and sufficient processing power.
+			It needs to have Java v1.8 or later, and sufficient processing power.
 			See <a href="#machine">system requirements</a>. 
 		</td>
 	</tr>
@@ -328,18 +329,17 @@ button providing further details on the use of its functions.
 SyMAP v5.0.6 has been tested on the following:
 <table border=1 cellspacing=5 cellpadding=5>
 <tr><td>Centos Linux amd64<td>MariaDB v10.4.12<td>Java 1.8
-<tr><td>MacOS x86_64 (Catalina 10.15.4)<td>MySQL v8.0.17<td>Java 14.0
-<tr><td>MacOS x86_64 (Maverick 10.9.5)<sup>*</sup><td>MySQL v5.6.21<td>Java 1.7
+<tr><td>MacOS x86_64 (Catalina 10.15.4)<td>MySQL v8.0.17<td>Java 17.0
+<tr><td>MacOS x86_64 (Maverick 10.9.5)<td>MySQL v5.6.21<td>Java 1.8
 </table>
-<sup>*</sup><small>The /ext directory of external executables does not work with the defaults: 
-see <a href="TroubleShoot.html#mac" target="_blank"> Trouble Shoot Mac</a>.</small>
 
-<p>The jar files have been compiled with Java 1.7, which is upward compatible. 
+<p>The jar files have been compiled with Java 1.8, which is upward compatible. 
 <p>
-For performing large alignments (e.g. 1Gb genomes or more) it is essential
+For performing large alignments (e.g. 1Gb genomes or more) <i>it is essential
 to have multiple CPUs, a 64-bit computer, and at least 5Gb of RAM
-for each CPU that you intend to use. (Note that you can set the
-number of CPUs for SyMAP to use). 
+for each CPU that you intend to use</i>. Note that you can set the
+number of CPUs for SyMAP to use. See <a href="MUMmer.html" target="_blank">MUMmer</a>
+for information on insufficient memory.
 <p>
 For viewing alignments, CPU and memory needs are typically negligible, unless
 you are performing queries on more than 4-5 genomes at once. 
@@ -369,7 +369,6 @@ and MUSCLE<sup>7</sup> (SyMAP Queries) are provided with the package.
 </td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
 </table>
 
-
 If you have not used SyMAP before, it is essential to run the demos. After you have 
 installed MySQL, do the following:
 <ol>
@@ -387,7 +386,7 @@ Creating database 'symapDemo' (jdbc:mysql://localhost/symapDemo?characterEncodin
 <br>It will check your MySQL variables; if there are any "Suggested" changes,
 see <a href="TroubleShoot.html#msqslow" target="_blank">Trouble Shoot MySQL</a>. It will also
 check that the provided executables (e.g. MUMmer); if it shows any problems,
-see <a href="TroubleShoot.html#ext" target="_blank">Trouble Shoot External</a>.
+see <a href="MUMmer.html#ext" target="_blank">MUMmer Executables</a>.
 <p>
 <table>
 <tr><td align="left" valign="top">
@@ -422,7 +421,8 @@ Then click the "Selected Pair" button to start the alignment.
 				
 <tr>
 <td align="left" valign="top">
-<p>The Synteny & Alignment should take less than 30 minutes with one CPU (15 minutes with two CPUs). 
+<p>The Synteny & Alignment takes less than 5 minutes on the MacOS 10.5 but could take up to 30 minutes
+on a slow machine. 
 <p>When done, the table will have a checkbox, signifying that the synteny is available for viewing. 
 Click the checked cell, which will enable the viewing buttons.  
 </td>
@@ -617,18 +617,21 @@ This is useful if you have multiple SyMAP databases.
 <a name="time"></a>
 <h2>Runtime and Memory</h2>
 
-The largest component of SyMAP execution time is in running
-MUMmer<sup>1,2</sup> (or BLAT<sup>3</sup>). The typical runtime is one CPU-hour per
-target sequence (or group of chromosomes, since SyMAP
-will group shorter sequences together for efficiency). 
-<p>
+If SyMAP runs out of memory, see <a href=TroubleShoot.html#memory  target="_blank">Trouble Shoot</a>.
+If MUMmer runs out of memory, see <a href=MUMmer.html target="_blank">MUMmer</a>.
+
+<p>The largest component of SyMAP execution time is in running
+MUMmer<sup>1,2</sup>. The time and memory for MUMmer all depends on the size
+of the genomes.
 For example, to align rice (12 chromosomes, 370Mb) to maize (10 chromosomes, 2Gb)
- required 1 hour, 3 minutes using 8 CPUs
+required 1 hour and 3 minutes using 8 CPUs
 with 2.3Ghz speed. SyMAP used one CPU per maize chromosome to align the enter rice chromosome
 against each of the 10 maize chromosomes (i.e. used 10 CPUs).
 <p>
 The memory usage of MUMmer is typically 5G per CPU, however it can
-be as high as 10G for very long or repetitive chromosomes. 
+be as high as 10G for very long or repetitive chromosomes. If MUMmer fails, it is often due
+to insufficient memory, see the <a href=MUMmer.html target="_blank">MUMmer</a> document, which
+explains how to determine the problem and ways around it.
 
 <p>&nbsp;<p>
 <a name="create">
@@ -734,13 +737,14 @@ Masking is not really necessary unless the genome is highly repetitive
 <i>and</i> those repeats are shared with other genomes being aligned. 
 (Repeats cause particular trouble for self-alignments,
 see <a href="#self">self-alignments in SyMAP</a>).
-<li>Occasionally, MUMmer fails aligning sequences which can be fixed by masking
-(see <a href="TroubleShoot.html#mask" target="_blank">Trouble Shoot Mask</a>)
+<li>Occasionally, MUMmer fails aligning sequences 
+(see <a href="MUMmer.html" target="_blank">MUMmer</a>, which explains detection and solutions
+for known reasons for failure).
 </ul>
 <p>
 Another masking option which is available if you have gene
 annotation is to mask out everything but the annotated genes. You
-can enable the "mask_genes" option on in the Project's Parameters window (shown <a href=#params2>above</a>);
+can enable the "mask_all_but_genes" option on the Project's Parameters window (shown <a href=#params2>above</a>);
 turn it on <i>before</i> doing the alignments.
 <p>
 Note that sequence files should be in FASTA format and the name of a sequence
@@ -842,11 +846,12 @@ so you might want to start with the largest 50, merge them, then repeat.
 <tr>
 <td>To perform self-synteny, select the cell for the same project followed by 
 "Selected Pair". The "All Pairs" option does not include self-synteny.
+<td><a href="img/self.png"><img src="img/self.png" width=230 border=1></a>
+</table>
 <p>
 By default, SyMAP uses the MUMmer 'nucmer' program for self-alignments. Each chromosomes
 is compared to every other chromosome including itself. 
-<td><a href="img/self.png"><img src="img/self.png" width=200 border=1></a>
-</table>
+
  
 <p>The Alignment & Synteny "Parameters" popup has an option to set "Self Args",
 which only uses the "Self Args" parameter(s) when comparing the chromosome sequence file
@@ -902,7 +907,7 @@ The file results of the alignment and synteny computations are is as follows:
 /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/align
 /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/final
 </pre>
-
+The log files are in the <tt>/logs</tt> directory, see <a href=MUMmer.html#log>Running MUMmer</a> for details.
 <a name="ext">
 <h2>Alignments and external programs</h2>
 
@@ -912,68 +917,12 @@ The alignment programs are provided in the <tt>symap/ext</tt> directory. There a
 executables for 64-bit Linux and 64-bit MacOS. SyMAP will
 select the correct directory for the machine you are running from, i.e. you
 do not need to do anything. Typically, these will work just fine;
-but if they do not, see <a href="TroubleShoot.html#ext" target="_blank">Trouble Shoot External</a>
-and the following section.
+but if they do not, see <a href="MUMmer.html" target="_blank">MUMmer</a>.
 
 <a name="mum">
-<h3>Running MUMmer from the command line</h3>
-A compile version of MUMmer v3 is included, where the latest release is MUMmer v4. A compiled
-version of MUMmer v4 cannot be included because it has hard-coded path names. 
-As discussed in <a href="TroubleShoot.html#ext" target="_blank">Trouble Shoot External</a>, sometimes
-when MUMmer v3 fails, MUMmer v4 will work .
-If you need to run MUMmer v4 using the command line, do the following:
-<ul>
-<li>Distant genomes:
-<ul>
-<li>Use promer
-<li>The output of promer is input to "show-coords -dlkTH".
-</ul>
-<li>Self synteny:
-<ul>
-<li>Use nucmer. For the same chromosome against itself, use the parameter "--maxmatch".
-<li>The output of nucmer is input to "show-coords -dlTH".
-</ul>
-<li>Result files:
-<ul>
-<li>The result files must have suffix ".mum" 
-<li>Put the ".mum" files in the directory <tt>data/seq_results/&lt;proj1-to-proj2&gt;/align</tt>
-<li>In the <tt>&lt;proj1-to-proj2&gt;/align</tt> directory, execute:
-<pre>touch all.done</pre>
-This creates a file, which indicates to SyMAP that the alignments are done and to process
-the files in the directory ending with ".mum".
-</ul>
-<li>When you run "Selected Pair", SyMAP will recognize the files and use them to build the synteny blocks.
-</ul>
-Example of compiling mummer4:
-<pre>
-cd ext/mummer4
-tar xvf mummer-4.0.0rc1.tar.gz
-mkdir macRC1
-cd macRC1
-pwd		# prints path to terminal, <i>copy path</i>
-cd ../mummer-4.0.0rc1
-./configure --prefix=<i>copied path</i>
-make 
-make install
-</pre>
-NOTE: You cannot move the mummer directory after creating it because the absolute paths are hard-coded.
-
-<p>Example of using mummer4 for loaded projects "foo" and "bar":
-<pre>
-cd data/seq_results
-mkdir foo_to_bar
-mkdir foo_to_bar/align
-touch foo_to_bar/align/all.done
-cd ../../ext/mummer4/macRC1
-./bin/promer ../../../data/seq/foo/sequence/genomic.fna ../../../data/seq/bar/sequence/genomic.fna
-./bin/show-coords -dlkTH out.delta >foobar.mum
-mv foobar.mum ../../../data/seq_results/foo_to_bar/align
-</pre>
-The /align directory can have any number of .mum files, that is, you can align the chromosome files against
-each other separately.
-<a name="mum4">
-<h4>Using MUMmer v4 within SyMAP</h4>
-Will be added for next release.
+<h3>MUMmer with SyMAP details</h3>
+As of SyMAP v5.0.8, all MUMmer details have been put in a separate document, see <a href="MUMmer.html" target="_blank">MUMmer</a>.
+This includes trouble shooting when MUMmer fails, and running MUMmer outside of SyMAP.
 
 <p>&nbsp;<p>	 
 <a name="fpc">
@@ -1037,8 +986,10 @@ if desired. In the alignment, one species is "query" and the other is
 "target". If one project is FPC, that is the query; if both are sequence,
 the query is the one with alphabetically the first name. The query sequences
 are written into one large file, while smaller target sequences are grouped
-into larger fasta files of size up to 70Mb, for more efficient processing
-in MUMmer. 
+into larger fasta files of size up to 60Mb, for more efficient processing
+in MUMmer. There is an option "Concat" that if unchecked, both query sequences
+are treated the same as the target; this is useful if the query and target are very large
+genomes.
 <p>
 <i>Anchor Clustering:</i><br>
 The raw anchor set consists of the hits found by MUMmer or BLAT.
@@ -1070,7 +1021,7 @@ surrounding region (to help reject false-positive chains). Criterion A can
 be adjusted in the Alignment & Synteny Parameters window.
 <p>
 <sup>*</sup> Note that the sequences are re-written from the database to the
-disk for three reasons: (A)To allow re-grouping for efficiency; (B) To ensure elimination
+disk for three reasons: (A) To allow re-grouping for efficiency; (B) To ensure elimination
 of invalid characters; (C) To mask non-gene regions, if desired. This also ensures that
 sequences names will match those in the database, and prevents problems caused by
 moving the source sequences on disk.
@@ -1089,7 +1040,7 @@ Kurtz, S., Phillippy, A., Delcher, A.L., Smoot, M., Shumway, M., Antonescu, C., 
 
 <p>
 <sup>2</sup>
-Marçais, G., A.L. Delcher, A.M. Phillippy, R. Coston, S.L. Salzberg, A. Zimin (2018)
+Marcais, G., A.L. Delcher, A.M. Phillippy, R. Coston, S.L. Salzberg, A. Zimin (2018)
 MUMmer4: A fast and versatile genome alignment system,  PLoS computational biology, 14(1): e1005944.
 
 <p>

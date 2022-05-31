@@ -105,17 +105,14 @@ public class SeqLoadMain
 					if (filstr == null) continue;
 					if (filstr.trim().equals("")) continue;
 					File f = new File(filstr);
-					if (!f.exists())
-					{
+					if (!f.exists()) {
 						log.msg("*** Cannot find sequence file " + filstr);
 					}
-					else if (f.isDirectory())
-					{
+					else if (f.isDirectory()) {
 						for (File f2 : f.listFiles())
 							seqFiles.add(f2);
 					}
-					else
-					{
+					else {
 						seqFiles.add(f);
 					}
 				}
@@ -227,7 +224,7 @@ public class SeqLoadMain
 					}
 					else {seqIgnore++; fileIgnore++;}
 				}
-				log.msg(String.format("%10d sequences   %10d bases   %4d Ignored",
+				log.msg(String.format("%10d sequences   %10d bases   %4d files ignored",
 						n, fileSize, fileIgnore));
 				
 				if (nBadCharLines > 0)
@@ -243,7 +240,7 @@ public class SeqLoadMain
 			}
 			if (cntFile>1) {
 				log.msg("Total:");
-				log.msg(String.format("%10d sequences   %10d bases   %4d Ignored",
+				log.msg(String.format("%10d sequences   %10d bases   %4d files ignored",
 						nSeqs, totalSize, seqIgnore));
 			}
 			if (nSeqs >= MAX_COLORS)
@@ -386,7 +383,7 @@ public class SeqLoadMain
 		}
 	}
 
-
+	// This is not run from the command line
 	public static void main(String[] args) 
 	{	
 		if (Constants.TRACE) System.out.println(">>>>> XYZ SeqLoadMain");

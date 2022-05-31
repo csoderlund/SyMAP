@@ -52,7 +52,6 @@ import java.io.File;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 
 import symap.SyMAP;
@@ -988,4 +987,22 @@ public class Utilities {
 	    else System.out.println("Not activated");
     } 
  
+    // CAS508
+    static public String kMText(long len) {
+		double d = (double) len;
+		String x = len+"";
+		if (len>=1000000000) {
+			d = d/1000000000.0;
+			x = String.format("%.1fB", d);
+		}
+		else if (len>=1000000) {
+			d = d/1000000.0;
+			x = String.format("%.1fM", d);
+		}
+		else if (len>=1000)  {
+			d = d/1000.0;
+			x = String.format("%.1fk", d);
+		}
+		return x;
+	}
 }

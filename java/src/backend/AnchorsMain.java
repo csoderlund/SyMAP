@@ -19,7 +19,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.lang.Math;
 
-import symap.projectmanager.common.ProjectManagerFrameCommon;
 import util.Cancelled;
 import util.ErrorCount;
 import util.ErrorReport;
@@ -70,8 +69,6 @@ public class AnchorsMain
 			log.msg("\nLoading alignments for " + proj1Name + " and " + proj2Name);
 			
 			Utils.initStats();
-
-			//pool.updateSchemaTo40();
 
 			ProjType pType = pool.getProjType(proj1Name);
 			isSelf = (proj1Name.equals(proj2Name) && pType == ProjType.pseudo); 
@@ -205,7 +202,7 @@ public class AnchorsMain
 		}
 		catch (OutOfMemoryError e)
 		{
-			System.out.println("\n\nOut of memory! To fix, \nA)Make sure you are using a 64-bit computer\nB)Edit the symap launch script and increase the memory limit.\n\n");
+			System.out.println("\n\nOut of memory! Edit the symap launch script and increase the memory limit ($maxmem).\n\n");
 			System.exit(0);
 		}		
 		return true;
@@ -387,7 +384,10 @@ public class AnchorsMain
 		int skip1=0, skip2=0, skip3=0;
 		
 		while (fh.ready()) {
-			if (bInterrupt) return 0;
+			if (bInterrupt) {
+				fh.close();
+				return 0;
+			}
 			
 			line = fh.readLine().trim();
 			if (line.length() == 0) continue;
@@ -491,8 +491,10 @@ public class AnchorsMain
 			line = fh.readLine().trim();
 			
 			if (line.length() == 0) continue;
-			if (bInterrupt) return 0;
-			
+			if (bInterrupt) {
+				fh.close();
+				return 0;
+			}
 			boolean success = scanNextMummerHit(line,hit);
 			if (!success) Utils.die("SyMAP error - scanNextHummerHit for scan2");
 			
@@ -660,7 +662,10 @@ public class AnchorsMain
 		int numErrors = 0;
 		
 		while (fh.ready()) {
-			if (bInterrupt) return 0;
+			if (bInterrupt) {
+				fh.close();
+				return 0;
+			}
 			Hit hit = new Hit();
 			hit.origHits = 1;
 			hit.query.fileType = file.mType1;

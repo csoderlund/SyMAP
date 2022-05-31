@@ -1,6 +1,6 @@
 <html>
 <head>
-	<title>SyMAP Trouble Shoot</title>
+	<title>SyMAP Trouble</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	<style>
 a.wt {color:inherit;}
@@ -30,7 +30,7 @@ code {font-family: courier, monospace;  font-size: 16px;font-weight: 300;font-va
        			</td>
 		    	<td height="60" width="428" align="left" valign="bottom" style="padding:0px 0px 10px 30px" size=5>
 					<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
-				    	<b>SyMAP Trouble Shoot</b>
+				    	<b>SyMAP Trouble</b>
 					</font>
 		    	</td>
 		    	<td height="60" width="161" align="center" valign="bottom">&nbsp;
@@ -83,12 +83,6 @@ Troubleshooting
 <li><a href="#msqcase"> Can't create table  (errno: 121)</a>
 </ul>
 <br>
-<li>External programs
-<ul>
-<li><a href="#exec">Not executable</a>
-<li><a href="#run">Fails to execute</a>
-</ul>
-<br>
 <li>Alignment
 <ul>
 <li><a href="#status">Status window disappeared</a>
@@ -112,12 +106,18 @@ Alternatively, you can edit the file <tt>symap</tt> and change
 <pre>
 my $maxmem="2048m"; # change this line to use "4096m" 
 </pre> 
+For memory issues related to running MUMmer, see <a href=MUMmer.html>MUMmer</a>.
 
-<p><a href="#top">Return to top</a><br>
+<p>
 
 <!--------------------------------------------------------->
 <hr>
+<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
+<tr><td align=left>
 <h2>MySQL suggested settings</h2>
+</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+
 <a name="msqslow">
 <h3>Slow to load sequence and annotation</h3>
 
@@ -172,11 +172,16 @@ To check the value, start mysql and type:
 <pre>show variables like "max_allowed_packet"; </pre>
 To change this variable, then type:
 <pre>set global max_allowed_packet=1073741824;</pre>
-<p><a href="#top">Return to top</a><br>
+<p>
 
 <!--------------------------------------------------------->
 <hr>
+<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
+<tr><td align=left>
 <h2>MySQL</h2>
+</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+
 <a name="database_error">
 <h3>Database connect errors</h3>
 After startup, if the program is left idle for some time then its
@@ -230,8 +235,14 @@ it is set to run on a non-standard port, or the
 port is blocked by a firewall. Contact a system administrator. (Note, 
 to get out of telnet type "<tt>^]</tt>".)
 
+<p>
 <a name="mariadb">
+<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
+<tr><td align=left>
 <h3>MariaDB cannot connect </h3>
+</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+
 If you are using MariaDB (post version 10.4.12) and get the error:
 <pre>
 Unable to connect to the mysql database on localhost; are username and password correct?
@@ -262,100 +273,13 @@ as a security hazard. Solution is simply to use a regular non-root user account.
 This can occur if you try to create a SyMAP database whose name differs only by
 case from an existing database, e.g. "symapTest" when "symaptest" already exists. 
 
-<p><a href="#top">Return to top</a><br>
-
-<!-------------------------------------------------------->
-
-<hr>
-<a name="ext">
-<h2>External programs</h2>
-
-The SyMAP package comes with compiled versions of MUMmer (sequence alignment),
-Blat (FPC alignment) and Muscle (SyMAP Queries). These programs are in the
-<tt>symap_5/ext</tt> directory. There are compiled versions for 64-bit Linux
-and 64-bit MacOS. For example, in the <tt>symap_5/ext/mummer</tt> directory,
-there are sub-directories <tt>linux64</tt> and <tt>mac</tt>. SyMAP will
-select the correct directory for the machine you are running from, i.e. you
-do not need to do anything. 
-
-<a name="exec"></a>
-<h3>Not executable</h3>
-When SyMAP creates a database, it (1) checks the MySQL variables, and (2) checks
-that the external programs are executable. If you see a message like:
-<pre>
-***Error - file is not executable: ext/mummer/mac/promer
-</pre>
-Execute:
-<pre>
-> chmod 755 ext/mummer/mac/promer
-</pre>
-
-<h4>MacOS 10.15 (and possibly earlier versions)</h4>
-Any executable that has not been okayed by Apple get the error message
-<pre>
-cannot be opened because the developer cannot be verified
-</pre>
-Hence, you need
-to use the Finder to enter all <tt>/ext/&lt;program&gt;/mac</tt> directories,
-select each program, then choose to Open it; it will run the program in a terminal
-window and be saved as a program that can thereafter be run.
-
-<a name="run"></a>
-<h3>Fails to execute</h3>
-If when "Alignment&Synteny" is executing, you get a message to the terminal like:
-<pre>
-Error running command: /Users/cari/Workspace/github/symap/ext/mummer/mac/promer  
--p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_cc.demo_seq2_f2.promer 
-data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa 
-data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
-</pre>
-One of the following should elucidate the problem (say the problem occurred when running <tt>promer</tt> on MacOS):
-<ol>
-<li>Enter the <tt>logs</tt> directory, then the directory of the pair (e.g. <tt>demo_seq_to_demo_seq2</tt>). View one
-of the <tt>.log</tt> file, which contains the output of <tt>promer</tt>.
-<li>Copy the command (beside "Error running command:") from the terminal, and past it on a new terminal line to execute.
-This shows <tt>promer</tt> output directly on the terminal.
-<li>Enter the <tt>ext/mummer/mac</tt> directory (or the appropriate one), and execute the command at the command line,
-e.g <tt>./promer</tt>. 
-</ol>
-All the above give additional that may show the problem and lead to the fix. 
 <p>
-Otherwise, you may need to compile the program on your machine. See <a href="SystemGuide.html#mum">System Guide MUMmer</a>.
-
-<a name="mask">
-<h4>Not-masked or Soft-masked</h4>
-The following error can occur on rare occasions when sequences are not masked or soft-masked:
-<pre>
-20211207|120611|531174 ERROR: mummer and/or mgaps returned non-zero, please file a bug report
-</pre>
-Either: (1) Change the sequence to hard-masked, or (2) compile MUMmer v4 to use for the alignments; 
-see <a href="SystemGuide.html#mum">System Guide MUMmer</a>.
-
-<a name=mac>
-<h4>Early versions of MacOS</h4>
-The MacOS executables were compiled on a MacOS 10.15. They will not work on old versions such as MacOS 10.9.
-Try the following:
-<pre>
-cd ext/mummer
-mv mac mac_506
-mv mac_pre506 mac
-cd ../muscle
-mv muscle muscle_506
-mv muscle_pre506 muscle
-</pre>
-These executables compiled on MacOS 10.9 may work  on your Mac.
-
-<h4>32-bit</h4>
-It seems that 32-bit machines are history. However, the <tt>linux</tt> directories have executables
-assembled on a 32-bit machine. 
-
-<p><a href="#top">Return to top</a><br>
-
-<!-------------------------------------------------------->
-<hr>
-
-
+<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
+<tr><td align=left>
 <h2>Alignment</h2>
+</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
+</table>
+
 
 <a name="status">
 <h3>Status window disappeared</h3>
@@ -368,7 +292,7 @@ have to restart <tt>symap</tt> to see the results.
 <a name="noanch">
 <h3>No anchors loaded</h3>
 This message indicates that SyMAP could not parse the MUMmer or BLAT output files
-to load the anchors. See above in <a href=#run>Fail to execute</a>.
+to load the anchors. For MUMmer, see <a href="MUMmer.html" target="_blank">MUMmer</a>.
 
 <a name="bes">
 <h3>FPC: BES not loaded, or BES hits not loading</h3>
@@ -377,7 +301,7 @@ names are formatted as clone names with extension "r" or "f". The clone
 names should <i>exactly match</i> those in FPC, and there should be no other prefix or suffix. 
 Do not use ".r" or ".f". 
 
-<p><a href="#top">Return to top</a><br>
+<p>
 <p>&nbsp;
 </div>
 </table>
@@ -397,10 +321,6 @@ Do not use ".r" or ".f".
 </table>
 </BODY>
 </HTML>
-
-
-
-
 
 
 

@@ -25,7 +25,6 @@ import javax.swing.JButton;
 import javax.swing.text.DefaultCaret;
 
 import java.io.FileWriter;
-import util.ErrorCount;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ProgressDialog extends JDialog implements Logger {
@@ -46,7 +45,7 @@ public class ProgressDialog extends JDialog implements Logger {
 	public ProgressDialog(final Frame owner, String strTitle, String strMessage, 
 			boolean isDeterminate, 
 			boolean hasConsole, // CAS500 always T now and always has logW
-			FileWriter logW) 
+			FileWriter logW)    // LOAD.log or symap.log (2nd also written to by backend.Log)
 	{
 		super(owner, strTitle, true);
 		Cancelled.init();
@@ -246,12 +245,16 @@ public class ProgressDialog extends JDialog implements Logger {
 		if (runTime < MIN_DISPLAY_TIME) // ensure dialog is visible
 			try { Thread.sleep(MIN_DISPLAY_TIME - runTime); } 
 			catch (Exception e) { }
-		setCursor( Cursor.getDefaultCursor() );
-		dispose(); // Close this dialog
+			
+		try {
+			setCursor( Cursor.getDefaultCursor() );
+			dispose(); // Close this dialog
+		}
+		catch (Exception e) {} // CAS508 Cancel causes stacktrace on dispose
 		
 		if (logFileW != null) // CAS500
 			try {logFileW.close();}
-			catch (Exception e) {ErrorReport.print("Cannot close file");} // CAS500
+		catch (Exception e) {ErrorReport.print("Cannot close file");} // CAS500
 	}	
 	public void setCancelled()
 	{

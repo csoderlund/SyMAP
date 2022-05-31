@@ -1,7 +1,9 @@
 package backend;
 
 /********************************************
- * used by backend.ProgSpec.doAlignment() only writes to file
+ * used by backend.ProgSpec.doAlignment() only writes to file symap.log in alignment specific directory
+ * see ProgressDialog for writing to LOAD.log and symap.log
+ * see util.ErrorReport to writing to error.log
  */
 import java.io.FileWriter;
 import java.io.IOException;

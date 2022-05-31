@@ -1,7 +1,9 @@
 package util;
 
 /********************************************
- * CAS500 added so printStackTrace goes to file
+ * CAS500 added so printStackTrace goes to file; does not need to be opened by caller
+ * See util.ProgressDialog for write to logs/LOAD.log and progress window
+ * See backend.Log for write to alignment specific symap.log file
  */
 import java.io.IOException;
 import java.io.PrintWriter;

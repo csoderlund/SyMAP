@@ -1,6 +1,7 @@
 package backend;
 
 /************************************* 
+ * Holds information for a given aligment
  * Executes the alignment program
  */
 import java.io.BufferedReader;
@@ -26,7 +27,7 @@ public class ProgSpec implements Comparable<ProgSpec>
 	private ProgType type;
 	private File f1, f2;
 	private String resDir, alignLogDirName;
-	private String outRoot, outFile, platPath;
+	private String outRoot, outFile;
 	private long startTime;	
 	
 	public static final int STATUS_UKNOWN  = 0;
@@ -41,16 +42,14 @@ public class ProgSpec implements Comparable<ProgSpec>
 	public ProgSpec(ProgType type, String program, String platpath, String args, 
 			File f1, File f2, String resdir, String alignLogDirName)
 	{
-		this.program = program;
-		this.platPath = platpath;
-		if (program.equals("blat"))	this.type = ProgType.blat;
-		else if (program.equals("promer") || program.equals("nucmer")) 	
-									this.type = ProgType.mummer;
+		this.program = program; 
+		if (program.equals("blat"))										this.type = ProgType.blat;
+		else if (program.equals("promer") || program.equals("nucmer")) 	this.type = ProgType.mummer;
 		else {
 			this.type = type;
 			if (program == null || program.length() == 0) {
-				if (type == ProgType.blat) 		this.program = "blat";
-				else if (type == ProgType.mummer) this.program = "promer";
+				if (type == ProgType.blat) 								 this.program = "blat";
+				else if (type == ProgType.mummer) 						this.program = "promer";
 			}
 		}
 		
@@ -65,7 +64,7 @@ public class ProgSpec implements Comparable<ProgSpec>
 		this.alignLogDirName = alignLogDirName;
 		
 		if (outputFileExists())	this.status = STATUS_DONE;
-		else						this.status = STATUS_QUEUED;
+		else					this.status = STATUS_QUEUED;
 	}
 	
 	public synchronized int     getStatus() { return status; }
@@ -75,25 +74,7 @@ public class ProgSpec implements Comparable<ProgSpec>
 	public synchronized boolean isError() { return status == STATUS_ERROR; }
 	public synchronized boolean isDone() { return status == STATUS_DONE; }
 	
-	private String getProgramPath(String program) {
-		// Determine platform (linux, windows, mac) and get path to packaged
-		// platform-specific executables.
-		File f = new File(Constants.extDir + program );
-		if (!f.isDirectory())
-		{
-			System.err.println("Unable to find the executables directory " + f.getAbsolutePath());
-			return "";
-		}
-		File g = new File(f,platPath);
-		if (!g.isDirectory())
-		{
-			System.err.println("Unable to find the executables directory " + g.getAbsolutePath());
-			return "";			
-		}
-		return g.getAbsolutePath();
-	}
-	public File getQueryFile()
-	{
+	public File getQueryFile() {
 		return f1;	
 	}
 	private boolean outputFileExists() {
@@ -114,14 +95,13 @@ public class ProgSpec implements Comparable<ProgSpec>
 		return f1.getName() + " to " + f2.getName();
 	}
 	
-	public String toString()
-	{
+	public String toString() {
 		String s = Utilities.pad( getDescription(), 40 ) + "   ";
 		if (isError()) 			s += "Error occurred (" + nExitValue + ")";
 		else if (isRunning()) 	s += Utilities.getDurationString( getRunTime() );
 		else if (isDone())		s += "Finished";
-		else if (isQueued())		s += "Queued";
-		else						s += "Unknown";		
+		else if (isQueued())	s += "Queued";
+		else					s += "Unknown";		
 		return s;
 	}
 	
@@ -129,67 +109,78 @@ public class ProgSpec implements Comparable<ProgSpec>
 		return System.currentTimeMillis() - startTime;
 	}
 	
-	public boolean doAlignment() throws Exception
-	{
-		startTime = System.currentTimeMillis();
-		setStatus(STATUS_RUNNING);
-
-		String doneFile = outFile + Constants.doneSuffix;
-		Utilities.deleteFile(doneFile);
-		
-		String query = f1.getPath(); // CAS500 getAbsolutePath
-		String targ  = f2.getPath();
-		
-		// CAS500 move log file to log directory
-		String aLogFile  = alignLogDirName + outRoot + ".log";
-		FileWriter flog = new FileWriter(aLogFile);
-		Logger aLog = new Log(flog);  
-		
+	public boolean doAlignment()  { // CAS508 remove throw Exception
 		int rc = -1;
 		String cmd="";
 		
-		if (program.equals("blat"))
-		{
-			String blatPath = getProgramPath("blat"); 
-			if (!blatPath.equals("")) blatPath += "/"; 
-			cmd = blatPath + program + " " + targ + " " + query + " " + args + " " + outFile;
-			rc = runCommand(cmd, flog, aLog); // send output and log messages to same file
-		}
-		else if (program.equals("promer") || program.equals("nucmer"))//(type == ProgType.mummer)
-		{
-			String intFilePath = resDir + outRoot + "." + program;
-			String deltaFilePath = intFilePath + ".delta";
-			String mummerPath = getProgramPath("mummer"); 
+		try {
+			startTime = System.currentTimeMillis();
+			setStatus(STATUS_RUNNING);
+	
+			String doneFile = outFile + Constants.doneSuffix;
+			Utilities.deleteFile(doneFile);
 			
-			// Run promer
-			if (!mummerPath.equals("")) mummerPath += "/"; 
-			cmd = mummerPath + program + " " + args + " -p " + intFilePath + " " + targ + " " + query;
-			rc = runCommand(cmd, flog, aLog); // send output and log messages to same file
+			String query = f1.getPath(); // CAS500 getAbsolutePath
+			String targ  = f2.getPath();
 			
-			// Run show-coords
-			if (rc == 0) { // CAS501 nucmer rc=1
-				String parms = (program.equals("promer") ? "-dlkTH" : "-dlTH"); // -k to remove secondary frame hits
-				cmd = mummerPath + "show-coords " + parms +  " " + deltaFilePath;
-				rc = runCommand(cmd, new FileWriter(outFile), aLog);
+			// CAS500 move log file to log directory
+			String runLogName  = alignLogDirName + outRoot + ".log";
+			FileWriter runFW = new FileWriter(runLogName);
+			Logger runLog = new Log(runFW);  
+			
+			if (program.equals("blat"))
+			{
+				String blatPath = Constants.getProgramPath("blat"); 
+				if (!blatPath.equals("")) blatPath += "/"; 
+				cmd = blatPath + program + " " + targ + " " + query + " " + args + " " + outFile;
+				rc = runCommand(cmd, runFW, runLog); // send output and log messages to same file
 			}
-			 
-			aLog.msg( "#" + alignNum + " done: " + Utilities.getDurationString(getRunTime()) );
-		}
-		else
-			throw( new Exception("Unsupported alignment type '" + program + "'") );
-		
-		if (rc == 0) {
-			cleanup(); // Cleanup intermediate files. CAS500 only if successful
-			Utilities.checkCreateFile(doneFile, "PS done");
-			setStatus(STATUS_DONE);
-		}
-		else {
-			System.err.print("\nError running command: " + cmd + "\n");
-			aLog.msgToFile("\nError running command: " + cmd + "\n"); // CAS500
+			else if (program.equals("promer") || program.equals("nucmer"))//(type == ProgType.mummer)
+			{
+				String intFilePath = resDir + outRoot + "." + program;
+				String deltaFilePath = intFilePath + ".delta";
+				
+				if (Constants.isMummerPath()) { // CAS508 path is set in symap.config
+					query = f1.getAbsolutePath();
+					targ =  f2.getAbsolutePath();
+					intFilePath =   new File(intFilePath).getAbsolutePath();
+					deltaFilePath = new File(deltaFilePath).getAbsolutePath();
+				}
+				
+				String mummerPath = Constants.getProgramPath("mummer"); 
+				if (!mummerPath.equals("") && !mummerPath.endsWith("/")) mummerPath += "/"; 
+				
+				// Run promer or nucmer
+				cmd = mummerPath + program + " " + args + " -p " + intFilePath + " " + targ + " " + query;
+				rc = runCommand(cmd, runFW, runLog); // send output and log messages to same file
+				
+				// Run show-coords
+				if (rc == 0) { // CAS501 nucmer rc=1
+					String parms = (program.equals("promer") ? "-dlkTH" : "-dlTH"); // -k to remove secondary frame hits
+					cmd = mummerPath + "show-coords " + parms +  " " + deltaFilePath;
+					rc = runCommand(cmd, new FileWriter(outFile), runLog);
+					runLog.msg( "#" + alignNum + " done: " + Utilities.getDurationString(getRunTime()) );
+				}
+				else runLog.msg( "#" + alignNum + " fail: " + Utilities.getDurationString(getRunTime()) );
+				
+			}
+			else System.err.println("SyMAP error: unsupported program");
+			
+			if (rc == 0) {
+				cleanup(); // Cleanup intermediate files. CAS500 only if successful
+				Utilities.checkCreateFile(doneFile, "PS done");
+				setStatus(STATUS_DONE);
+			}
+			else {
+				ErrorReport.print("Failed command: " + cmd);
+				setStatus(STATUS_ERROR);
+			}
+			runFW.close();
+			
+		} catch (Exception e) {
+			ErrorReport.print(e, "Running command: " + cmd);
 			setStatus(STATUS_ERROR);
 		}
-		flog.close();
-		
 		return (rc == 0); 
 	}
 	
@@ -218,84 +209,84 @@ public class ProgSpec implements Comparable<ProgSpec>
 		cleanup();
 	}
 	
-    public int runCommand ( String strCommand, Writer outWriter, Logger log ) throws Exception
-    {
-        boolean bDone = false;
-        System.err.println("#" + alignNum + " " + strCommand);
+    public int runCommand ( String strCommand, Writer runFW, Logger runLog ) {// runFW and runLog go to same file
+    	try {
+	        boolean bDone = false;
+	        System.err.println("#" + alignNum + " " + strCommand);
+	        
+	        if (runLog != null)
+		        runLog.msgToFile("#" + alignNum + " " + strCommand); // log file for this run
+	        
+	        // Execute command
+	        process = Runtime.getRuntime().exec( strCommand );
+	        
+	        // Capture stdout and stderr
+	        InputStream    stdout = process.getInputStream();       
+	        BufferedReader brOut = new BufferedReader( new InputStreamReader(stdout) );
+	        InputStream    stderr = process.getErrorStream();       
+	        BufferedReader brErr = new BufferedReader( new InputStreamReader(stderr) );
+	        try {
+	            synchronized ( stdout ) {
+	                while ( !bDone || brErr.ready() || brOut.ready()) {
+	                    // Send the sub-processes stderr to out stderr or log
+	                    while (brErr.ready()) {
+		                    if (runFW != null) 			runFW.write(brErr.read());
+		                    else if (runLog != null)	runLog.write((char)brErr.read());
+		                    else						System.err.print((char)brErr.read());
+	                    }
+	                    
+	                    // Consume stdout so the process doesn't hang...
+	                    while (brOut.ready()) {
+		                    if (runFW != null)	runFW.write(brOut.read());
+		                    else if (runLog != null)	runLog.write((char)brOut.read());
+		                    else					System.out.print((char)brOut.read());
+	                    } 
+	
+	                    if ( runFW != null )runFW.flush();
+	                 
+	                	stdout.wait( 1000 /*milliseconds*/ ); // sleep if nothing to do
+	                    
+	                    try {
+	                    	nExitValue = process.exitValue(); // throws exception if process not done
+	                        bDone = true;
+	                    }
+	                    catch ( Exception err ) { }
+	                }
+	            }
+	        }
+	        catch ( ClosedByInterruptException ignore ) { }
+	        catch ( InterruptedException ignore ) { }
         
-        if (log != null)
-	        log.msgToFile("#" + alignNum + " " + strCommand); // log file for this run
+	        if (nExitValue != 0) 
+	        	runLog.msg( "Alignment program error code: " + nExitValue );
+	        
+	        // Kill the process if it's still running (exception occurred)
+	        if ( !bDone ) {
+	        	interrupt();
+	        	runLog.msg( "Interrupted #" + alignNum + ": " + Utilities.getDurationString(getRunTime()) );
+	        }
+	        
+	        // Clean up
+	        if (runFW != null) runFW.flush();
         
-        // Execute command
-        process = Runtime.getRuntime().exec( strCommand );
-        
-        // Capture stdout and stderr
-        InputStream stdout = process.getInputStream();       
-        BufferedReader brOut = new BufferedReader( new InputStreamReader(stdout) );
-        InputStream stderr = process.getErrorStream();       
-        BufferedReader brErr = new BufferedReader( new InputStreamReader(stderr) );
-        
-        try {
-            synchronized ( stdout ) {
-                while ( !bDone || brErr.ready() || brOut.ready()) {
-                    // Send the sub-processes stderr to out stderr or log
-                    while (brErr.ready()) {
-	                    	if (outWriter != null) 	outWriter.write(brErr.read());
-	                    	else if (log != null)	log.write((char)brErr.read());
-	                    	else						System.err.print((char)brErr.read());
-                    }
-                    
-                    // Consume stdout so the process doesn't hang...
-                    while (brOut.ready()) {
-	                    	if (outWriter != null)	outWriter.write(brOut.read());
-	                    	else if (log != null)	log.write((char)brOut.read());
-	                    	else						System.out.print((char)brOut.read());
-                    } 
-
-                    if ( outWriter != null )outWriter.flush();
-                    
-                		stdout.wait( 1000 /*milliseconds*/ ); // sleep if nothing to do
-                    
-                    try {
-                    		nExitValue = process.exitValue(); // throws exception if process not done
-                        bDone = true;
-                    }
-                    catch ( Exception err ) { }
-                }
-            }
-        }
-        catch ( ClosedByInterruptException ignore ) { }
-        catch ( InterruptedException ignore ) { }
-        
-        if (nExitValue != 0) 
-        		log.msg( "Alignment program error code: " + nExitValue );
-        
-        // Kill the process if it's still running (exception occurred)
-        if ( !bDone ) {
-        		interrupt();
-        		log.msg( "Interrupted #" + alignNum + ": " + Utilities.getDurationString(getRunTime()) );
-        }
-        
-        // Clean up
-        if (outWriter != null) outWriter.flush();
-        
-        try { 
+	        try { 
 	        	// Prevent "too many open files" error
 	        	process.getOutputStream().close();
 	        	process.getInputStream().close();
 	        	process.getErrorStream().close();
 	        	process.destroy();
 	        	process = null;
-        }
-        catch (IOException e) { }
-        
+	        }
+	        catch (IOException e) { }
+    	} catch (Exception e) {ErrorReport.print(e, "Run command"); }
+    	
         return nExitValue;  
     }
     
     // "Comparable" interface for sorting
     public int compareTo(ProgSpec p) {
-    		if (p != null)
-    			return p.getDescription().compareTo( getDescription() );
-    		return -1;
+		if (p != null)
+			return p.getDescription().compareTo( getDescription() );
+		return -1;
     }
 }

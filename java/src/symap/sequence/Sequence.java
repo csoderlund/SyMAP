@@ -381,13 +381,13 @@ public class Sequence extends Track {
 		double x, y, h, x1, x2, tx, ty;
 		Rectangle2D.Double totalRect = new Rectangle2D.Double();
 
-		if (height > 0)
-			adjustBpPerPixel(
-					GenomicsNumber.getBpPerPixel(bpPerCb,
-							Math.abs(end.getValue()-start.getValue()),height));
-
+		if (height > 0) {
+			long diff = Math.abs(end.getValue()-start.getValue());
+			adjustBpPerPixel(GenomicsNumber.getBpPerPixel(bpPerCb, diff, height));
+		}
+		// this started happening with later Java versions if they click too fast
 		if (!validSize()) {
-			System.err.println("Unable to size sequence view as requested."); 				
+			System.err.println("Unable to size sequence view. Try again - make sure box is highlighted."); 				
 			adjustSize();
 		}
 
