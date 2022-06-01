@@ -43,8 +43,8 @@ public class ConvertNCBI {
 	private boolean MASKED = false;
 	
 	// Changed for specific input
-	private String chrPrefix="Chr";	// change to "c" if scaffolds too
-	private String scafPrefix="s";  // single letter is used because the "Chr" is usually removed to save space
+	private String chrPrefix="Chr";	// changed to "c" if scaffolds too
+	private String scafPrefix="s"; // single letter is used because the "Chr" is usually removed to save space
 	private int gapLen=30000;     // Print to gap.gff if #N's is greater than this
 	
 	// keywords 
@@ -188,6 +188,7 @@ public class ConvertNCBI {
     				
     				isChr = (LINKAGE) ? line.contains("linkage") : line.contains("chromosome");
     				isScaf = line.contains("scaffold");
+    				bPrt=false; // CAS508 
     				
     				if (isChr && !isScaf) {
     					nChr++;
@@ -207,15 +208,10 @@ public class ConvertNCBI {
 	    					bPrt=true;
 	    					fhOut.println(">" + seqPrefix + "  " + name);
 	    				}
-	    				else if (VERBOSE) {
-	    					prt("Ignore = " + line);
-	    				}
+	    				else if (VERBOSE) prt("Ignore = " + line);
     				}
     				else {
-    					if (VERBOSE) {
-    						prt("Ignore = " + line);
-    					}
-    					bPrt=false;
+    					if (VERBOSE) prt("Ignore = " + line);
     					nOther++;
     				}
     			}
@@ -257,6 +253,7 @@ public class ConvertNCBI {
     			}
     		}
 			if (len>0) printTrace(isChr, isScaf, len, seqPrefix);
+			
 			fhIn.close(); 	
 		}
 		catch (Exception e) {die(e, "rwFasta: " + fastaFile);}
@@ -365,7 +362,7 @@ public class ConvertNCBI {
 					System.out.print("   Process " + cntGene + " genes...\r");
 			 }
 			 fhIn.close();
-			 prt(String.format("   Use Genes %,d                     ", geneMap.size()));
+			 prt(String.format("   Use Genes %,d                         ", geneMap.size()));
 		 }
 		 catch (Exception e) {die(e, "rwAnnoGene");}
 	 }
@@ -668,7 +665,7 @@ public class ConvertNCBI {
 			for (int i=1; i< args.length; i++)
 				if (args[i].equals("-s")) {
 					INCLUDESCAF=true;
-					chrPrefix="c";
+					chrPrefix = "C";
 				}
 				else if (args[i].equals("-l")) LINKAGE=true;
 				else if (args[i].equals("-v")) VERBOSE=true;

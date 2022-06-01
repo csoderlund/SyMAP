@@ -1,9 +1,8 @@
-symap.sql - used by SyMAP to create a new database. DO NOT CHANGE.
+ConvertNCBI.pl - converts NCBI genomic.fna and genomic.gff to SyMAP input
+ConvertEnsembl - converts Ensembl .fa and .gff3 files to SyMAP input
+See www.agcol.arizona.edu/software/symap/doc/convert
 
 lenFasta.pl - prints the summary of the lengths of sequences in a fasta file,
 	which is useful for draft genome sequences to determine minsize cutoff.
-	See see www.agcol.arizona.edu/symap/doc/
+See www.agcol.arizona.edu/software/symap/doc/SystemGuide.html#draft2
 	
-ConvertNCBI - see www.agcol.arizona.edu/symap/doc/convert
-ConvertEnsembl - see www.agcol.arizona.edu/symap/doc/convert
-
