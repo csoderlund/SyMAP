@@ -1,88 +1,90 @@
-<HTML>
+<!DOCTYPE html>
+<html>
 <head>
-	<title>MUMmer with SyMAP</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-	<style>
-a.wt {color:inherit;}
-table {font-size:100%}
-tr {font-size:100%}
-td {font-size:100%}
-tt {font-size:13px}
-pre {font-size:13px}
-a {font-size:100%}
+<title>SyMAP MUMmer</title>
+<style>
+    a:link {text-decoration: none;color:#6666CC;}
+    a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
+    a.ext {font-weight: bold;}
+    mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+    tt {font-size:13px}
+	pre {font-size:13px}
+	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
 </style>
 </head>
 
-<body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
-
-	<a name=top></a>
-	<table align="center" style="border: 1px solid #999999" cellspacing="0" cellpadding="0">
-	  <tr><td width="100%" style="background-color: #CCCCCC;">
-	  <a href="http://www.arizona.edu">
-	  <img border="0" alt="The University of Arizona" title="The University of Arizona" src="./img/UA.gif"></a>
-	  </td></tr>
-
-	  <tr><td>
-		  <table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
-		    <tr><td height="60" width="161" align="left" valign="bottom">
-       				<img alt="" title="" src="img/agcol_logo.png">
-       			</td>
-		    	<td height="60" width="428" align="left" valign="bottom" style="padding:0px 0px 10px 30px">
-			    	<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
-				    <b>MUMmer with SyMAP</b>
-			    	</font> 
-		    	</td>
-		    	<td height="60" width="161" align="center" valign="bottom">&nbsp;
-        		</td>
-		    </tr>
-		    
-		    <tr><td height="21" colspan="3" align="left" valign="top">
-			    <table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
-			    	<tr><td align="left" bgcolor="#666666">
-<span style="font-size:75%;color:white">
-<a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
-<a href="http://www.agcol.arizona.edu/software/symap" class="wt">SyMAP Home</a> |
-<a href=index.html class="wt">Index</a> |
-<a href=SystemGuide.html class="wt">System Guide</a> |
-<a href=UserGuide.html class="wt">User Guide</a> |
-<a href=Tour.html class="wt">Tour</a> |
-<a href=TroubleShoot.html class="wt">Troubleshooting </a>
-</span>
-					</td></tr>
+<body>
+<a id="top"></a>
+<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
+	<tr><td>
+		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
+			<tr>
+				<td style="text-align: left; vertical-align: top; padding: 0">
+					<a href="http://www.agcol.arizona.edu">
+						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
+				</td>
+				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
+					Using MUMmer from SyMAP
+				</td>
+				<td style="text-align: right; vertical-align: top; padding: 0">
+					<a href="http://www.arizona.edu">
+						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+					<br>
+					<a href="http://www.bio5.org">
+						<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
+				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
+					<tr>
+						<td style="background-color: #666666; padding-bottom:4px;">
+						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
+						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
+						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
+						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="./Tour.html" class="white">Tour</a>
+					</tr>
 				</table>
-			</td></tr>
-	        <tr><td colspan="3" valign="top" align="left" style='padding:20px 15px 0px 15px;font-size:85%'>
-								
+				</td>
+			</tr>
+		</table>
+	</td></tr>
+
+	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+	<!---- START BODY -->
+
 This document discusses how to deal with one or more MUMmer alignments failing.  This document refers to the v5.0.8. The corresponding
-mummer documentation is <a href="https://mummer4.github.io" target="_blank">here</a>.
+mummer documentation is
+<a href="http://mummer.sourceforge.net" class="ext" target="_blank">v3</a> and
+<a href="https://mummer4.github.io" class="ext" target="_blank">v4</a>.
 
 <h4>Contents</h4>
 <ul>
-	<li><a href=#ext>Executables
-	<li><a href=#log>Finding the problem
-	<li><a href=#mem>Out of Memory
+	<li><a href="#ext">Executables</a>
+	<li><a href="#log">Finding the problem</a>
+	<li><a href="#mem">Out of Memory</a>
 	<ul>
-		<li><a href=#cat>Limit CPUs and uncheck Concat</a>
-		<li><a href=#maks>Not-masked or Soft-masked</a>
-		<li><a href=#fail1>Fail immediately</a>
-		<li><a href=#fail2>One or more alignments fail</a>
+		<li><a href="#cat">Limit CPUs and uncheck Concat</a>
+		<li><a href="#mask">Not-masked or Soft-masked</a>
+		<li><a href="#fail1">Fail immediately</a>
+		<li><a href="#fail2">One or more alignments fail</a>
 	</ul>
-	
-	<li><a href=#mum4>Using MUMmer4 from SyMAP</a>
-	<li><a href=#cmd>Running MUMmer from the command line</a>
-	<li><a href=#help>Getting Help</a>
-	<li><a href=#mac>MacOS details</a>	
+
+	<li><a href="#mum4">Using MUMmer4 from SyMAP</a>
+	<li><a href="#cmd">Running MUMmer from the command line</a>
+	<li><a href="#help">Getting Help</a>
+	<li><a href="#mac">MacOS details</a>
 </ul>
 If none of the following helps, contact symap@agcol.arizona.edu.
 <p>
-<a name="ext">
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<a id="ext"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Executables</h2>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The alignment programs are provided in the <tt>symap/ext</tt> directory. There are 
+The alignment programs are provided in the <tt>symap/ext</tt> directory. There are
 executables for 64-bit Linux and 64-bit MacOS. SyMAP will
 select the correct directory for the machine you are running from, i.e. you
 do not need to do anything. When SyMAP creates a database, it (1) checks the MySQL variables, and (2) checks
@@ -98,19 +100,17 @@ Execute the program from the command line to make sure it works on you machine, 
 <pre>
 >./ext/mummer/mac/promer
 
-  USAGE: promer  [options]  <Reference>  <Query>
+  USAGE: promer  [options]  &lt;Reference&gt;  &lt;Query&gt;
 
   Try './ext/mummer/mac/promer -h' for more information.
 </pre>
 The above shows that the promer code will execute on my MacOS.
 
 <p>
-<a name="log">
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<a id="log"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Finding the problem</h2>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 The log files are as follows:
 <pre>
@@ -130,10 +130,10 @@ of the alignment files.
 If the error is not found in the log files or it is not clear, try the following:
 <ul>
 <li>Copy the command from the terminal, and past it on a new terminal line to execute.
-This shows <tt>promer</tt> output directly on the terminal.  
+This shows <tt>promer</tt> output directly on the terminal.
 </ul>
 
-<a name="mem">
+<a id="mem"></a>
 <h2>Out of memory</h2>
 A MUMmer failure is typically from insufficient memory.
 For performing large alignments (e.g. 1Gb genomes or more) <i>it is essential
@@ -145,24 +145,23 @@ Alignment program error code: 141
 20220512|075853|6007| ERROR: mummer and/or mgaps returned non-zero, please file a bug report
 </pre>
 
-<a name="cat">
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<a id="cat"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Limit CPUs and uncheck Concat</h3>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 There is no straight-forward way to know if you have enough memory as it depends on the
 size and complexity of the two genomes being compared. If you think memory may be tight,
 you can limit the amount used at one time by limiting the number of CPUs, as each
-CPU uses a considerable amount of memory (e.g. 4 CPUs could collectively use 20GB of memory at once). 
-<p><a href="img/concat.png"><img src="img/concat.png" width=400 border=1></a>
+CPU uses a considerable amount of memory (e.g. 4 CPUs could collectively use 20GB of memory at once).
+<p><a href="img/concat.png"><img src="img/concat.png" alt="" style="border: 1px solid black; width: 400px"></a>
 <p>
 By default, all sequences of the 1st genome are concatenated into one file and then
 multiple files are created from the 2nd genome to be searched against the first;
 the multiple files may have two or more sequential chromosomes concatenated together to create
 files that are &gt;60M. This
 is fastest, but uses more memory. Hence, you can uncheck "Concat" so that multiple files are
-created for each genomes, and all files from the 1st genome are searched against the 2nd genome. 
+created for each genomes, and all files from the 1st genome are searched against the 2nd genome.
 The following statistics are from comparing Arabidopsis thaliana (119M) against Brassica rapa (297M)
 on a MacOS using 1 CPU.
 <table>
@@ -193,17 +192,17 @@ Finished in 1 hr 34 min 29 sec
 </table>
 
 <p>
-<a name="mask">
+<a id="mask"></a>
 <h3>Not-masked or Soft-masked</h3>
 A memory problem can occur if the genome sequence is not masked or only soft-masked.
 Either: (1) change the sequence to hard-masked, or (2) set the SyMAP parameter 'mask_all_but_genes' to yes.
 <p>
-<a name="fail1"></a>
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+
+<a id="fail1"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Fails immediately</h3>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 If an alignment fails immediately, and if the last line of the first <tt>&lt;alignment&gt;.log</tt> file is:
 <pre>
 1: PREPARING DATA
@@ -211,26 +210,26 @@ If an alignment fails immediately, and if the last line of the first <tt>&lt;ali
 the reason is probably that your machine does not have near enough memory as MUMmer could not even
 prepare the data. Try it again with unchecked "Concat"; if that does not work, you need more memory.
 
-<a name="fail2"></a>
+<a id="fail2"></a>
 <h3>One or more fails</h3>
 
 Sometimes just one or a few of the alignment processes will fail. You will see a line such as:
 <pre>
-Error: Running command: /Users/cari/Workspace/symap_5/ext/mummer/mac/promer  
--p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_cc.demo_seq2_f2.promer 
-data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa 
+Error: Running command: /Users/cari/Workspace/symap_5/ext/mummer/mac/promer
+-p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_cc.demo_seq2_f2.promer
+data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa
 data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
 </pre>
- 
-<table border=0>
+
+<table>
 <tr>
-<td><a href="img/runDialog.png"><img src="img/runDialog.png" width=420 border=1></a>
+<td><a href="img/runDialog.png"><img src="img/runDialog.png" alt="" style="border: 1px solid black; width: 420px"></a>
 <td>
-You will see the failure on the dialog box as is 
+You will see the failure on the dialog box as is
 shown on the left. The remaining processes will continue. When all processes are complete,
-you will see a "?" for the pair as shown on the below. 
+you will see a "?" for the pair as shown on the below.
 <p>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="img/runResults.png"><img src="img/runResults.png" width=220 border=1></a>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="img/runResults.png"><img src="img/runResults.png" alt="" style="border: 1px solid black; width: 220px"></a>
 <p>Select the "?" followed by
 "Selected Pair" and it will complete the failed processes.
 </table>
@@ -239,27 +238,24 @@ A preferred way is to set CPUs to a low number if the genomes are large, that wa
 it will likely finish the first time.
 <p>
 
-
-<a name="mum4">
+<a id="mum4"></a>
 <h2>Using MUMmer4 from within SyMAP</h2>
 Sometimes when MUMmer v3 fails, MUMmer v4 will work.
 MUMmer4 is included in SyMAP package with a fix to promer (make sure you get v5.0.8 or later).
 Enter the <tt>ext/mummer4</tt> directory and follow the instructions in the README.
-<p>My observations on MacOS indicate that MUMmer v4 takes more memory 
+<p>My observations on MacOS indicate that MUMmer v4 takes more memory
 but less time than MUMmer v3.
 <p>
 
-<a name="cmd">
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<a id="cmd"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Running MUMmer from the command line</h2>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 If you need to run MUMmer using the command line from some other machine, do the following:
 <ul>
-<li>Proj-name1 must be alphanumerically less than proj-name2. 
-Proj-name1 must be the query and proj-name2 the reference, e.g. 
+<li>Proj-name1 must be alphanumerically less than proj-name2.
+Proj-name1 must be the query and proj-name2 the reference, e.g.
 <pre>
 USAGE: promer  [options]  &lt;Reference&gt;  &lt;Query&gt;
 promer proj-name2 proj-name1
@@ -276,7 +272,7 @@ promer proj-name2 proj-name1
 </ul>
 <li>Result files:
 <ul>
-<li>The result files must have suffix ".mum" 
+<li>The result files must have suffix ".mum"
 <li>Put the ".mum" files in the directory <tt>data/seq_results/&lt;proj1-to-proj2&gt;/align</tt>
 <li>In the <tt>&lt;proj1-to-proj2&gt;/align</tt> directory, execute:
 <pre>touch all.done</pre>
@@ -287,15 +283,14 @@ the files in the directory ending with ".mum".
 <li>When you run "Selected Pair", SyMAP will recognize the files and use them to build the synteny blocks.
 </ul>
 
-<p><u>Example of using mummer for loaded projects demo_seq and demo_seq2:</u> 
-If you try this with demo_seq and demo_seq2, make sure there is no current alignment in the 
-database or disk for your project (e.g. "Clear Pair""). 
+<p><u>Example of using mummer for loaded projects demo_seq and demo_seq2:</u>
+If you try this with demo_seq and demo_seq2, make sure there is no current alignment in the
+database or disk for your project (e.g. "Clear Pair"").
 
 <p>Demo_seq has chr3 and chr5, demo_seq2 has chr1 and chr3; these will be compared separately against each other.
 Demo_seq is alphanumerically less than demo_seq2, so it is first in the directory name
 but second in the command arguments (this is how SyMAP knows which
-project Chr3 belongs to). 
-
+project Chr3 belongs to).
 
 <pre>
 cd data/seq_results
@@ -317,14 +312,13 @@ When symap is started and  demo_seq and demo_seq2 selected, there will be a "A" 
 "Selected Pairs" and it will load the alignments and compute the synteny.
 <p>
 
-<a name=help>
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<a id="help"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Getting Help</h2>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 If none of these suggestions fix your problem, email symap@agcol.arizona.edu with the following files
-(refer to the files in <a href=#log>Finding the problem</a>):
+(refer to the files in <a href="#log">Finding the problem</a>):
 <ol>
 <li><tt>error.log</tt>
 <li><tt>logs/&lt;project-name1&gt;-to-&lt;project-name2&gt;/symap.log</tt>
@@ -333,12 +327,10 @@ and the prefix before the "_" is <tt>&lt;project-name1&gt;_cc.&lt;project-name2&
 <li>Any output to the terminal (either copy and paste into the email, or send a screen capture)
 </ol>
 
-<a name="mac">
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<a id="mac"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>MacOS details</h2>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <h4>Executable on MacOS</h4>
 Any executable that has not been okayed by Apple get the error message
@@ -362,23 +354,13 @@ mv muscle muscle_506
 mv muscle_pre506 muscle
 </pre>
 These executables compiled on MacOS 10.9 may work on your Mac.
+<!---- END BODY -->
+	</td></tr>
+	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
 
-				</td>
-		</tr>
+</td></tr>
+</table>
+</body>
+</html>
 
-</table>
-	
-	<table width="100%" border="0" align="center" cellpadding=2 cellspacing=0 style="margin-top:40px">
-		<tr>
-			<td bgcolor="#DDDDDD" align="center">
-			<font face="Verdana, Arial, Helvetica, sans-serif" size="2">Email
-			Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></font>
-			</td>
-		</tr>
-	</table>
-	  
-	</td>
-</tr>
-</table>
-</BODY>
-</HTML>

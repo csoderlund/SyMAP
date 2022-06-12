@@ -1,68 +1,79 @@
+<!DOCTYPE html>
 <html>
 <head>
-	<title>SyMAP Release Notes</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-	<style>
-a.wt {color:inherit;}
-table {font-size:100%}
-tr {font-size:100%}
-td {font-size:100%}
-tt {font-size:13px}
-pre {font-size:13px}
-a {font-size:100%}
-	</style>
+<title>SyMAP Release Notes</title>
+<link rel="stylesheet" href="style.css">
+<style>
+	a:link {text-decoration: none;color:#6666CC;}
+	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
+	a.ext {font-weight: bold;}
+	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+	tt {font-size:13px}
+	pre {font-size:13px}
+	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
+</style>
 </head>
-<body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
 
-
-<a name=top></a>	
-<table align="center" style="border: 1px solid #999999" cellspacing="0" cellpadding="0">
-	<tr><td width="100%" style="background-color: #CCCCCC;">
-	<a href="http://www.arizona.edu">
-	<img border="0" alt="The University of Arizona" title="The University of Arizona" src="./img/UA.gif"></a>
-	</td></tr>
-	
+<body>
+<a id="top"></a>
+<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
 	<tr><td>
-		<table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
-		  	<tr><td height="60" width="161" align="left" valign="bottom">
-       						<img alt="" title="" src="./img/agcol_logo.png">
-       			</td>
-		    	<td height="60" width="428" align="left" valign="bottom" style="padding:0px 0px 10px 30px" size=5>
-					<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
-				    	<b>SyMAP Release Notes</b>
-					</font>
-		    	</td>
-		    	<td height="60" width="161" align="center" valign="bottom">&nbsp;
-        		</td>
-		    </tr>
-		    <tr><td height="21" colspan="3" align="left" valign="top">
-			    <table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
-			    	<tr><td align="left" bgcolor="#666666">
-<span style="font-size:75%;color:white">
-<a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
-<a href="http://www.agcol.arizona.edu/software/symap" class="wt">SyMAP Home</a> |
-<a href=index.html class="wt">Index</a> |
-<a href=SystemGuide.html class="wt">System Guide</a> |
-<a href=UserGuide.html class="wt">User Guide</a> |
-<a href=Tour.html class="wt">Tour</a> |
-<a href=TroubleShoot.html class="wt">Troubleshooting </a>
-</span>
-					</td></tr>
+		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
+			<tr>
+				<td style="text-align: left; vertical-align: top; padding: 0">
+					<a href="http://www.agcol.arizona.edu">
+						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
+				</td>
+				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
+					SyMAP Release Notes
+				</td>
+				<td style="text-align: right; vertical-align: top; padding: 0">
+					<a href="http://www.arizona.edu">
+						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+					<br>
+					<a href="http://www.bio5.org">
+						<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
+				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
+					<tr>
+						<td style="background-color: #666666; padding-bottom:4px;">
+						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
+						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
+						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
+						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="./Tour.html" class="white">Tour</a>
+					</tr>
 				</table>
-			</td></tr>
-			
-			
-	        <tr><td colspan="3" valign="top" align="left" style='padding:20px 15px 0px 15px;font-size:85%'>
+				</td>
+			</tr>
+		</table>
+	</td></tr>
+
+	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+	<!---- START BODY -->
 
 The 3D feature has not been tested with Release v5; however, it should still work.
+
+<h3>Release: v5.1 (12June22)</h3>
+The documentation has
+been moved from www.agcol.arizona.edu/software/symap to csoderlund.github.io/SyMAP.
+Any references to the online documentation within the code has been updated.
+For pre-v5.1 releases, the www.agcol.arizona.edu/software/symap/docs still exists.
+
+<p>The html Help files can now have URL links in them.
+
 <h3>Release: v5.0.8 (1June22)</h3>
 <ol>
 <li>A new option "Concat" has been added; when this is unchecked, it will not create a
 concatenation of the first genome to run against all chromosomes of the second, instead
 it perform a chromosome-by-chromosome search.
 <li><u>MUMmer4</u> can be used by compiling it on your machine from the /ext directory
-and adding its path to the "symap.config" file. See <a href=MUMmer.html#mum>Running MUMmer</a>.
-<li>When computing alignment&synteny, all stacktrace errors are now written into error.log.
+and adding its path to the "symap.config" file. See <a href=MUMmer.html>Running MUMmer</a>.
+<li>When computing alignment&amp;synteny, all stacktrace errors are now written into error.log.
 <li>The database name is prefixed to the "logs/LOAD.log" file name.
 <li>A new document has been created for when there is problems running
 <a href=MUMmer.html>MUMmer</a> from SyMAP.
@@ -73,16 +84,16 @@ did not make the annotation or synteny wrong - just extra sequence).
 <h3>Release: v5.0.7 (4Feb22)</h3>
 <ol>
 <li><u>MUMmer</u> has been updated since the last SyMAP release; the code in the /ext/mummer4 directory
-has been updated for the latest MUMmer. The documentation has been updated accordingly 
-(see <a href=SystemGuide.html#mum>Running MUMmer</a>).
+has been updated for the latest MUMmer. The documentation has been updated accordingly
+(see <a href=MUMmer.html>Running MUMmer</a>).
 <li><u>ConvertNCBI</u>: (1) Include ncbi_dataset format. (2) Convert hex to character.
 <li><u>Parameters</u>: (1) The Load would not work if any numeric parameter was set to blank.
-(2) For Alignment&Synteny "Parameters", the Global button was removed as it did not work
+(2) For Alignment&amp;Synteny "Parameters", the Global button was removed as it did not work
 except under weird conditions.
-<li><u>Help</u>: the viewer Help pages link to the pages at www.agcol.arizona.edu/software/symap. The 
+<li><u>Help</u>: the viewer Help pages link to the pages at www.agcol.arizona.edu/software/symap. The
 approach for Mac was becoming obsolete, so it was changed. For Linux, more supported browsers were added.
 <li>Improve documentation.
-<li>Developers: Removed all Applet code (was disabled previously, but code was in everything). 
+<li>Developers: Removed all Applet code (was disabled previously, but code was in everything).
 </ol>
 
 <!----------------------------------------------------------->
@@ -93,13 +104,13 @@ approach for Mac was becoming obsolete, so it was changed. For Linux, more suppo
 	</ul>
 <li>SyMAP works on MacOS Catalina 10.15
 	<ul><li>It checks each external program to see if it is executable, as this is not automatic with 10.15
-	(see <a href=TroubleShoot.html#ext>Trouble Shoot External Programs</a>).
+	(see <a href="TroubleShoot.html#ext">Trouble Shoot External Programs</a>).
 	</ul>
 <li>SyMAP can be compiled with Java v14 (some changed were necessary for this).
 <li>The Applet has been removed and will no longer be supported. (It is in earlier SyMAP versions, and can
-be obtained at <a href="https://github.com/csoderlund/SyMAP">github<a/>).
+be obtained at <a href="https://github.com/csoderlund/SyMAP">github</a>).
 <li>The built-in MySQL database on Linux is no longer supported.
-<li>The Alignment&Synteny has a couple checks for 'ordered_against' before processing:
+<li>The Alignment&amp;Synteny has a couple checks for 'ordered_against' before processing:
 	(1) Is the order_against the same as the other selected project.
 	(2) Does the ordered directory already exist.
 </ol>
@@ -110,17 +121,17 @@ be obtained at <a href="https://github.com/csoderlund/SyMAP">github<a/>).
 <li>Ordering algorithm: The main change is a rewrite of the ordering algorithm, which orders draft contigs
 against a completed sequence closely related genome. The previous algorithm sometimes
 would put many of the placed contigs incorrectly into 'chrUNK', though the
-ordering in the <tt>anchored.csv</tt> file was correct. 
+ordering in the <tt>anchored.csv</tt> file was correct.
 
 <li>SyMAP Manager:
 <ul>
 <li>Show #genes and #gaps in summary
 <li>Add Project: On Linux, the "Add" button would stay disabled, this has been fixed.
 </ul>
-	
+
 <li>Chromosome Explorer: Mouse over a hit and the block number will be shown along with the other information.
 
-<li>SyMAP Query: 
+<li>SyMAP Query:
 The "Align Sequence" display now show locations in text box under alignment.
 The v5.0.4 introduced a bug where the row selections display were not right, which
 is fixed.
@@ -143,7 +154,7 @@ still loaded); it no longer called an error, though a message is written to term
 <ol>
 <li>It is faster, e.g. finding the hits in synteny blocks for 5 plant genomes did take 9m:32s
 and now takes 0m:09s.
-<li>The query page has changed to allow more versatile queries. 
+<li>The query page has changed to allow more versatile queries.
 <li>The PgeneF is only computed if the "Compute PgeneF" option is checked; otherwise, there
 is no changes to this function or options.
 <li>Some of many minor changes:
@@ -156,7 +167,7 @@ Plus, if some genes do not have an ID or some other keyword, it can be confusing
 annotation.
 <li>The "Save for Reload" and "Reload Results" have been removed, as it is so much faster, this
 does not seem necessary anymore.
-<li>Both the Overview and Table Summary have small changes. 
+<li>Both the Overview and Table Summary have small changes.
 </ul>
 </ol>
 <li>scripts/ConvertNCBI has been updated to also create a gap file.
@@ -167,10 +178,10 @@ plus:
 <ul>
 <li>The following functions can be applied to the selected region of a sequence track:
 "Zoom All Tracks", "Zoom Selected Tracks", "Align (Max 30000)", "Show Sequence", where the
-first three are not new, but the labels changed for clarity. 
+first three are not new, but the labels changed for clarity.
 <li>The last one, "Show Sequence", has
 been added as there was no way to see the underlying sequence; it is simply a popup of the
-selected sequence. 
+selected sequence.
 <li>The "Align" view has been slightly changed to add comma's in large numbers and the length of the sequence.
 </ul>
 <li>The symapApplet.jar was not working in recent releases, which has been fixed.
@@ -184,7 +195,7 @@ buried, and the pop-up can be copied.
 <li><i>SyMap Queries</i>. (1) The filters set are shown at the top of the table.  (2) The "Only
 Orphan Genes" option can now only be used with the "Annotation Description", "Location", and
 "Include" options.
-<li>If access to MySQL does not work, a message is printed with the Java error message. 
+<li>If access to MySQL does not work, a message is printed with the Java error message.
 </ol>
 
 <h3>Release: v5.0.2 (24feb20)</h3>
@@ -192,9 +203,9 @@ Orphan Genes" option can now only be used with the "Annotation Description", "Lo
 <li>scripts/ConvertNCBI: (1) Produce a hard-masked genome sequence (input is soft-masked) with
 -m flag. (2) Includes the mRNA ID in the product attribute. (3) The product attribute has
 been improved.
-<li>SyMAP Bug fix for using chromosome and scaffolds in the same project. 
-<br>The following did not work: 
-Say the genomic  sequence input was a mix of chromosomes (prefix 'Chr') 
+<li>SyMAP Bug fix for using chromosome and scaffolds in the same project.
+<br>The following did not work:
+Say the genomic  sequence input was a mix of chromosomes (prefix 'Chr')
 and scaffolds (prefix 's'), and the Project parameters were prefix 'Chr' and minsize '10000',
 where the minsize filtered out annotated scaffolds, SyMAP would quit if there was
 annotation on filtered-out scaffolds; this has been fixed. Also, the documentation
@@ -207,130 +218,129 @@ was not correct for mixing sequence types (e.g. prefix 'Chr' and 's'); the Proje
 
 <ul>
 <li>Load Annotation
-<ul>
-<li>In the Params interface for a project, the user can set what keywords from the
+	<ul>
+	<li>In the Params interface for a project, the user can set what keywords from the
 column 9 "Attributes" field of the gff file to load; this was not working correctly
 and has now been fixed.
-<li>The type (column 3) of mRNA was being loaded as a gene, which causes duplicate records;
+	<li>The type (column 3) of mRNA was being loaded as a gene, which causes duplicate records;
 now mRNA's are ignored.
 </ul>
-<li>Alignment & Synteny
-<ul>
-<li>Though it was not possible to make MUMmer v4 part of SyMAP, it is possible
+<li>Alignment &amp; Synteny
+	<ul>
+	<li>Though it was not possible to make MUMmer v4 part of SyMAP, it is possible
 to install MUMmer v4 in the /ext/mummer directory and it will work. Instructions
-are provided in <a href="SystemGuide.html#mum4">System Guide</a>.
-<li>The nucmer "--maxmatch" parameter was automatically used for self-synteny when
+are provided in <a href="SystemGuide.html">System Guide</a>.
+	<li>The nucmer "--maxmatch" parameter was automatically used for self-synteny when
 a sequence file was being compared with itself; this would result in an extremely
 long execution time for large files (e.g. chromosomes). Consequently, this
 parameter has been removed, but can now be set by the user in the "Parameter" interface.
-<li><i>Pair Parameters</i>: (1) The user can set parameters in "Self Args", which are only
+	<li><i>Pair Parameters</i>: (1) The user can set parameters in "Self Args", which are only
 used when a chromosome sequence is being compared to itself. (2) This interface
-was very confusing as to when parameters were saved and what would be used; 
+was very confusing as to when parameters were saved and what would be used;
 this should be clearer now, and is explained in the "Help" for the Parameter interface.
-<li>If only part of the alignments finished and it ended pre-maturely, when run again,
+	<li>If only part of the alignments finished and it ended pre-maturely, when run again,
 it will not redo any finished alignments.
-</ul>
+	</ul>
 <li>Internally, goobs of commented out code has been removed.
 </ul>
 
-<h3>Release v5.0 (22jan20)</h4>
+<p><a href="#top">Go to top</a>
+
+<h3>Release v5.0 (22jan20)</h3>
 New projects cannot be added to v4.2 databases, but they can be queried (e.g. dotplot).
 The significant change
 is with the file structure for the data, where the old file structure will not
-work with this new release as shown further under <a href=#ds>Directory structure</a>.
+work with this new release as shown further under <a href="#ds">Directory structure</a>.
 
 
 <ul>
-
 <li>General
 	<ul>
-<li>Error messages (and stack traces) are written to error.log
-<li>There was one symap script with various flags, now there is four symap scripts
-with less flags, as follows:
-<table>
-<tr><td><i>Script</i><td><i>Build</i><td><i>View</i><td><i>Has 3D view</i>
-<tr><td><tt>./symap</tt> <td>Yes<td>Yes<td>No
-<tr><td><tt>./symap3D</tt> <td>Yes<td>Yes<td>Yes
-<tr><td><tt>./viewSymap</tt> <td>No<td>Yes<td>No
-<tr><td><tt>./viewSymap</tt> <td>No<td>Yes<td>Yes
-</table>
-<li>The symap -c command line parameter can be used to 
-specify a configuration file other than 'symap.config'
-<li>The Summary list of all selected projects has been enhanced.
+	<li>Error messages (and stack traces) are written to error.log
+	<li>There was one symap script with various flags, now there is four symap scripts
+	with less flags, as follows:
+	<table>
+	<tr><td><i>Script</i><td><i>Build</i><td><i>View</i><td><i>Has 3D view</i>
+	<tr><td><tt>./symap</tt> <td>Yes<td>Yes<td>No
+	<tr><td><tt>./symap3D</tt> <td>Yes<td>Yes<td>Yes
+	<tr><td><tt>./viewSymap</tt> <td>No<td>Yes<td>No
+	<tr><td><tt>./viewSymap</tt> <td>No<td>Yes<td>Yes
+	</table>
+	<li>The symap -c command line parameter can be used to
+	specify a configuration file other than 'symap.config'
+	<li>The Summary list of all selected projects has been enhanced.
 	</ul>
 
 <li>Query database
 	<ul>
-<li>The "Display for Selected Pair:" popup Summary is now available for self-synteny and FPC-Seq
+	<li>The "Display for Selected Pair:" popup Summary is now available for self-synteny and FPC-Seq
 	</ul>
 
 <li>Build database
 	<ul>
-<li>Log files: The log files are no longer in the results directories, instead they are in 
-the top level <tt>/logs</tt> directory, as follows: 
-<ol>
-<li>The output from the loads are concatenated to the file 
-<tt>/logs/LOAD.log</tt>. 
-<li>The output during alignment is in the
-<tt>/logs/&lt;proj1-to-proj2&gt;</tt> directory.
-<li>The output to the terminal from the alignment and synteny computation is
+	<li>Log files: The log files are no longer in the results directories, instead they are in
+	the top level <tt>/logs</tt> directory, as follows:
+		<ol>
+		<li>The output from the loads are concatenated to the file <tt>/logs/LOAD.log</tt>.
+		<li>The output during alignment is in the <tt>/logs/&lt;proj1-to-proj2&gt;</tt> directory.
+		<li>The output to the terminal from the alignment and synteny computation is
 written in the <tt>/logs/&lt;proj1-to-proj2&gt;symap.log</tt> file.
-</ol>
-
+		</ol>
+	</ul>
 <li>Load project
-<ul>
-<li>The input files can be gzipped (end with .gz)
-<li>The Parameters menu uses the previous location for the file/directory finder.
-<li>Add ConvertEnsembl.java to convert an Ensembl file to SyMAP annotation file.
-</ul>
+	<ul>
+	<li>The input files can be gzipped (end with .gz)
+	<li>The Parameters menu uses the previous location for the file/directory finder.
+	<li>Add ConvertEnsembl.java to convert an Ensembl file to SyMAP annotation file.
+	</ul>
 
-<li>Alignment & Synteny
+<li>Alignment &amp; Synteny
 <ul>
-<li>The trace output to terminal is much more informative.
-<li>The alignments for self-synteny have been optimized, which also 
+	<li>The trace output to terminal is much more informative.
+	<li>The alignments for self-synteny have been optimized, which also
   changes the results (e.g. demo_seq now has some tiny blocks were before
   it had none).
-<li>The number of CPUs can be set in the interface, or either of the following:
-<ol>
-<li>Use the -p command line parameter, e.g. <tt>./symap -p 12</tt>.
-<li>Set the 'nCPUs' configuration parameter in the symap.config file, e.g. <tt>nCPUs=12</tt>.
-</ol>
+	<li>The number of CPUs can be set in the interface, or either of the following:
+		<ol>
+		<li>Use the -p command line parameter, e.g. <tt>./symap -p 12</tt>.
+		<li>Set the 'nCPUs' configuration parameter in the symap.config file, e.g. <tt>nCPUs=12</tt>.
+		</ol>
 
-<li>Much of the code for building the syntenies has been re-written, but the results
-are basically the same with a few tiny differences.
+	<li>Much of the code for building the syntenies has been re-written, but the results
+	are basically the same with a few tiny differences.
 </ul>
-<a name=ds>
+
+<a id="ds"></a>
 <li>Directory structure: The following are the directory changes, where they
 are under <tt>/data</tt>.
-<table>
-<tr><td><i>New</i><td><i>Old</i><td><i>Description</i>
-<tr><td>/seq
-	<td>/pseudo
-	<td>Directory for sequence projects
-<tr><td>/seq/&lt;project&gt;/sequence
-	<td>/pseudo/&lt;project&gt;/sequence/pseudo
-	<td>Default directory for sequences
-<tr><td>/fpc_results
-	<td>/fpc_pseudo
-	<td>Directory of FPC to sequence project results
-<tr><td>/seq_results
-	<td>/seq_pseudo
-	<td>Directory of two sequence project results
-<tr><td>/seq_results/&lt;proj1-to-proj2&gt;/align
-	<td>/pseudo_pseudo/&lt;proj1-to-proj2&gt;/anchor
-	<td>Directory of alignments
-</table>
-</ul>
-
-</ul>
+	<table>
+	<tr><td><i>New</i><td><i>Old</i><td><i>Description</i>
+	<tr><td>/seq
+		<td>/pseudo
+		<td>Directory for sequence projects
+	<tr><td>/seq/&lt;project&gt;/sequence
+		<td>/pseudo/&lt;project&gt;/sequence/pseudo
+		<td>Default directory for sequences
+	<tr><td>/fpc_results
+		<td>/fpc_pseudo
+		<td>Directory of FPC to sequence project results
+	<tr><td>/seq_results
+		<td>/seq_pseudo
+		<td>Directory of two sequence project results
+	<tr><td>/seq_results/&lt;proj1-to-proj2&gt;/align
+		<td>/pseudo_pseudo/&lt;proj1-to-proj2&gt;/anchor
+		<td>Directory of alignments
+	</table>
 </ul>
 
 
 <p>
 
+<p><a href="#top">Go to top</a>
 
+<p>
 <hr>
-<p> 
+<p>
 <h3>Release: Jan2018 (build 120)</h3>
 <p>Release date: 1/16/18 - updated ConvertNCBI.java script.
 
@@ -364,32 +374,33 @@ min_size parameter to the 150th length.
 <li> Fix display sizing errors in circle view display
 <li>Fix database error for long project names (max project name remains 40)
 </ul>
+<p><a href="#top">Go to top</a>
 
-<big><b><u>Version 4.2</u></b></big><br>
+<h3>Version 4.2</h3>
 Release date:  4/23/2014
 <p><b>New Features:</b>
 <ul>
 <li> New, unified web access applet interface. Now you can present a unified SyMAP web display of some or all
 of the projects in your database using just one small HTML page (no CGI). Applet interfaces are also
-available for each of the sub-functions (dotplot, circle view, etc.) enabling customized web displays. 
+available for each of the sub-functions (dotplot, circle view, etc.) enabling customized web displays.
 </ul>
 <p>
 <b>Modified Features:</b>
 <ul>
 <li> The Explorer has been updated to be more usable for draft projects, i.e. when there are many
-sequences that have not been ordered and anchored to pseudomolecules. Specifically, it will now show 
-up to 450 sequences, and to decrease clutter it shows only sequences that actually have a synteny block. 
-<li> The prior web system files have been removed, including the cgi and supporting perl modules. 
+sequences that have not been ordered and anchored to pseudomolecules. Specifically, it will now show
+up to 450 sequences, and to decrease clutter it shows only sequences that actually have a synteny block.
+<li> The prior web system files have been removed, including the cgi and supporting perl modules.
 <li> The circle view now draws all text labels horizontally, due to rendering problems
-with rotated text on several platforms (most severely on Mac). The rotated text is still available through a  
+with rotated text on several platforms (most severely on Mac). The rotated text is still available through a
 checkbox option.
-It is no longer necessary to run the perl install script to install web functionality. 
+It is no longer necessary to run the perl install script to install web functionality.
 </ul>
-<big><b><u>Version 4.1</u></b></big><br>
+<h3>Version 4.1</h3>
 Release date:  2/20/2014<br>
 <p><b>New Features:</b>
 <ul>
-<li> Publication-quality image saving. A save button has been added to every graphical window allowing saving to 
+<li> Publication-quality image saving. A save button has been added to every graphical window allowing saving to
 a wide variety of formats, including scalable vector formats (svg, eps, pdf) which may be resized clearly to any size. (Many thanks to the developers of the FreeHEP Vector Graphics library, and especially Mark Donszelmann, for making this possible!)
 <li> Download of block co-ordinates. Choose the species of interest, open the Explorer, and the download button is at the lower left.
 </ul>
@@ -400,31 +411,31 @@ a wide variety of formats, including scalable vector formats (svg, eps, pdf) whi
 <li> Applet is signed with a DigiCert certificate, removing the security blocks which have been increasing
 in recent Java versions.
 <li> MUMmer binaries for Mac OSX have been replaced by 64-bit versions. The 32-bit versions which had been
-supplied could not access more than 2G RAM, preventing alignment of many chromosomes. 
+supplied could not access more than 2G RAM, preventing alignment of many chromosomes.
 
 </ul>
 <p>
-<big><b><u>Version 4.0</u></b></big><br>
+<h3>Version 4.0</h3>
 Release date:  7/15/2012<br>
 <p><b>New Features:</b>
 <ul>
 <li>Project Manager Enhancements
 <ul>
-<li> Create new projects through the Manager 
+<li> Create new projects through the Manager
 <li> No need to create directories or copy files
-<li> Alignment & Synteny parameters also available
+<li> Alignment &amp; Synteny parameters also available
 </ul>
 <li>Query Page Enhancements
 <ul>
-<li> Compute putative gene families across species 
+<li> Compute putative gene families across species
 <li> Many additional filters
 <li> Create and view Muscle multiple-alignment for selected results
 </ul>
 <li>Additional Features
 <ul>
-<li>Script 3track_figure.pl makes 3-genome figure for publication (see online 
+<li>Script 3track_figure.pl makes 3-genome figure for publication (see online
 <a href="Tour.html#svg">Tour</a>;
-script added to 4.0 package post-release) 
+script added to 4.0 package post-release)
 </ul>
 </ul>
 <p>
@@ -434,11 +445,11 @@ script added to 4.0 package post-release)
 <li> No longer creates the "_ordered" project output from <tt>order_against</tt>
 <li><tt>grp_prefix</tt> parameter now optional (but recommended). <tt>grp_sort</tt> eliminated.
 <li> Self-alignments improved by using -maxmatch option of MUMmer for individual chromsome self-alignments
-<li> Top-2 filtering modified to accept also hits within 80% of the 2nd best score, in order to 
+<li> Top-2 filtering modified to accept also hits within 80% of the 2nd best score, in order to
 retain gene-family hits and allow identification of families through the query interface.
 </ul>
 <p>
-<big><b><u>Version 3.5</u></b></big><br>
+<h3>Version 3.5</h3>
 Release date:  1/24/12<br>
 <p><b>New Features:</b>
 <ul>
@@ -460,7 +471,7 @@ Release date:  1/24/12<br>
 <li> Improved command-line launch script
 </ul>
 <p>
-<big><b><u>Version 3.4</u></b></big><br>
+<h3>Version 3.4</h3>
 Release date:  12/14/10<br>
 <p><b>Modified Features:</b>
 <ul>
@@ -476,10 +487,10 @@ Release date:  12/14/10<br>
 <li>Minor changes to CGI page displays to better accomodate unordered.
 <li>Fix compilation error in 64-bit MUMmer binary, which prevented use of very long pseudomolecules.
 </ul>
-</ul>
-<p>
-<font face="Verdana, Arial, Helvetica, sans-serif" color="#000000" size="2"> 
-<big><b><u>Version 3.3</u></b></big><br>
+
+
+<h3>Version 3.3</h3>
+
 Release date:  10/4/10<br>
 <p><b>Modified Features:</b>
 <ul>
@@ -488,13 +499,13 @@ Release date:  10/4/10<br>
 <li>Remove "Contig0" (singleton clones) from FPC displays
 <li>Adjustments to unannotated sequence clustering to obtain larger clusters,
     not dependent on the order of scanning of MUMmer output files.
-<li>When clicking a block in the dot plot, 2D view will open with hit filter setting "show only synteny hits" 
-<li>Some bug-fixes to search.cgi 
+<li>When clicking a block in the dot plot, 2D view will open with hit filter setting "show only synteny hits"
+<li>Some bug-fixes to search.cgi
 </ul>
 
 <p>
-<font face="Verdana, Arial, Helvetica, sans-serif" color="#000000" size="2"> 
-<big><b><u>Version 3.2</u></b></big><br>
+
+<h3>Version 3.2</h3>
 Release date:  6/9/10<br>
 <p><b>Modified Features:</b>
 <ul>
@@ -509,8 +520,7 @@ we may not have accounted for. <font color=green>So PLEASE, let us know if you h
 work with you to it.</font>
 </ul>
 
-<font face="Verdana, Arial, Helvetica, sans-serif" color="#000000" size="2"> 
-<big><b><u>Version 3.1</u></b></big><br>
+<h3>Version 3.1</h3>
 Release date:  2/12/10<br>
 This release includes major enhancements to the Dot Plot view.<br>
 <br>
@@ -521,12 +531,11 @@ This release includes major enhancements to the Dot Plot view.<br>
 <li>Dot Plot reference species on the x-axis can be changed dynamically via a new drop-down menu.</li>
 <li>Main web page redesigned.</li>
 </ul>
-</font>
+
 <p><br>
 
 
-<font face="Verdana, Arial, Helvetica, sans-serif" color="#000000" size="2"> 
-<big><b><u>Version 3.0</u></b></big><br>
+<h3>Version 3.0</h3>
 Release date:  1/7/10<br>
 This major release includes many new features, in particular the 3D viewer and Project Manager.<br>
 <br>
@@ -548,14 +557,11 @@ This major release includes many new features, in particular the 3D viewer and P
 <li>Support for sequence-to-sequence alignment.<li>
 <li>Hits are now clustered based on gene annotation and drawn as "ribbons" to indicate locations of sub-blocks.</li>
 </ul>
-</font>
-<p><br>
 
 
-<font face="Verdana, Arial, Helvetica, sans-serif" color="#000000" size="2"> 
-<big><b><u>Version 2.0</u></b></big><br>
+<h3>Version 2.0</h3>
 Release date:  5/18/07<br>
-This release includes many new features for the alignment view.  The dot plot view was 
+This release includes many new features for the alignment view.  The dot plot view was
 not changed.<br>
 
 <br>
@@ -567,10 +573,10 @@ not changed.<br>
 
 <b>New Features on Java interface:</b><br>
 <ul>
-<li> Filters: 
+<li> Filters:
 <ul>
 <li> For a given track (Block, Hit, Sequence) hover the mouse over the track and
-right click. A menu of the most common filters is shown; 
+right click. A menu of the most common filters is shown;
 this is much easier than opening up the Filter window.
 <li> From this window, you can go directly to the help for the given track.
 There is also a 'Navigation Help', as there are many ways to resize, scroll, etc.
@@ -582,8 +588,8 @@ shows the hits down the length of the sequence as a histogram showing how strong
 
 <li> <i>Show Hit Score Value</i> is a new filter that shows the %identity.
 Note that the sequence graphic is twice as wide to show the score bar and score value.
-<li> The sequence track can be scrolled by moving the mouse wheel when the 
-mouse is position over the sequence track. 
+<li> The sequence track can be scrolled by moving the mouse wheel when the
+mouse is position over the sequence track.
 This retains the same zoom and filters, but moves up or down the lenght of the sequence (i.e. pseudomolecule).
 <li> The gene annotation now shows the intron/exon structure.
 </ul>
@@ -616,24 +622,20 @@ display includes all the chromosomes that the contig hits.
 <li> Pseudomolecule sequences loaded in 1Mb chunks, removing database problems with large text fields
 <li> Filtering optimized in anchors.pl to reduce memory use in loading large blat outputs
 </ul>
-</font>
-<p><br>
 
-<font face="Verdana, Arial, Helvetica, sans-serif" color="#000000" size="2"> 
-<big><b><u>Version 1.0</u></b></big><br>
+
+<h3>Version 1.0</h3>
 Release date:  9/1/06<br>
-First full public release.<br>
-<br>
-</font>
-       
-        <tr>
-          <td bgcolor="#DDDDDD" align="center" colspan=3>
-            <font face="Verdana, Arial, Helvetica, sans-serif" size="2">Email: 
-            <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></font>
-          </td>
-        </tr>
-</table>
+First full public release.
 
-<!--#include virtual="/common/uafooter.html" -->
-</BODY>
-</HTML>
+<p><a href="#top">Go to top</a>
+
+<!---- END BODY -->
+	</td></tr>
+	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+
+</td></tr>
+</table>
+</body>
+</html>

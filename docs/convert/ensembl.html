@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SyMAP Ensembl</title>
+<style>
+	a:link {text-decoration: none;color:#6666CC;}
+	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
+	a.ext {font-weight: bold;}
+	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
+    .ty td {border: 1px  solid black; padding: 3px; }
+     tt {font-size:13px}
+	pre {font-size:13px}
+    body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
+</style>
+</head>
+
+<body>
+<a id="top"></a>
+<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
+	<tr><td>
+		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
+			<tr>
+				<td style="text-align: left; vertical-align: top; padding: 0">
+					<a href="http://www.agcol.arizona.edu">
+						<img src="../img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
+				</td>
+				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
+					Ensembl convert to SyMAP
+				</td>
+				<td style="text-align: right; vertical-align: top; padding: 0">
+					<a href="http://www.arizona.edu">
+						<img src="../img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+					<br>
+					<a href="http://www.bio5.org">
+						<img src="../img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
+				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
+					<tr>
+						<td style="background-color: #666666; padding-bottom:4px;">
+						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
+						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
+						<a href="../Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="../SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
+						<a href="../UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="../Tour.html" class="white">Tour</a>
+					</tr>
+				</table>
+				</td>
+			</tr>
+		</table>
+	</td></tr>
+
+	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+	<!---- START BODY -->
+
+Ensembl supplies FASTA formated files for genome sequence and GFF formated files for the annotation
+The following provides a simple scheme to produce the correctly formated files for SyMAP.
+<p>
+<b>Contents</b>
+	<table>
+		<tr>
+		<td style="vertical-align: text-top;">
+			<table>
+			<tr><td></td>
+				<td> <a href="#dl">Download</a></td></tr>
+			<tr><td></td>
+				<td> <a href="#cv">Convert files</a></td></tr>
+			<tr><td></td>
+				<td> <a href="#load">Load files into SyMAP</a></td></tr>
+			</table>
+		</td>
+		<td style="vertical-align: text-top;">
+			<table>
+			<tr><td>&nbsp;&nbsp;&nbsp;</td>
+				<td><a href="#what">What the ConvertEnsembl script does</a></td></tr>
+			<tr><td>&nbsp;&nbsp;&nbsp;</td>
+				<td> <a href="#edit">Editing the script</a></td></tr>
+			</table>
+		</td>
+	</table>
+
+
+<a id="dl"></a>
+<h2>Download</h2>
+
+<ol>
+<li>Go to <a href="https://www.ensembl.org/info/about/species.html" class="ext" target="_blank">Ensembl</a>, which shows all species
+for which Ensembl has a genome. For plants and fungi,
+see <a href="http://plants.ensembl.org"  class="ext" target="_blank" >EnsemblPlant</a>
+and <a href="http://fungi.ensembl.org"  class="ext" target="_blank">EnsemblFungi</a>.
+<li>Select your species.
+<li>Select "Download DNA sequence (FASTA)". This takes you to a FTP site.
+It is recommended that you download the "*.dna_sm.toplevel.fa.gz", as it
+is the soft masked chromosome sequences.
+<li>Select the "GFF3" from the "Download genes, cDNAs, ncRNA, proteins - FASTA - GFF3" line. This takes
+you to an FTP site. Download the *.chr.gff3.gz file.
+</ol>
+
+<a href="img/ENS-genome.png"><img src="img/ENS-genome.png" alt="" style="border: 1px solid black; width: 800px"></a>
+
+<a id="cv"></a>
+<h2>Convert files</h2>
+<ol>
+<li>Go to the <tt>symap_5/data/seq</tt> directory.
+<li>Make a subdirectory for your species and move the FASTA and GFF files
+into the directory. Leave the "fa.gz" and "gff3.gz" suffixes on the files.
+<li>Type the following at the command line to copy the <tt>ConvertEnsembl</tt> script to the <tt>pseudo</tt> directory:
+<pre>cp ../../scripts/ConvertEnsembl.class .</pre>
+
+<li>Execute
+<pre>java ConvertEnsembl &lt;species&gt;</pre>
+
+</ol>
+<h3>Example</h3>
+In <tt>symap_5/data/seq</tt> directory, I made a subdirectory called "rice" and
+moved the rice .fna.gz and gff3.gz files into it, then executed:
+<pre>
+cp ../../scripts/ConvertEnsembl.class .
+java ConvertEnsembl rice
+</pre>
+This results in the following contents:
+<pre>
+data/seq/rice/
+      Oryza_sativa.IRGSP-1.0.45.chr.gff3.gz
+      Oryza_sativa.IRGSP-1.0.dna_rm.toplevel.fa.gz
+      annotation/
+         gene.gff
+         exon.gff
+      sequence/
+         genomic.fna
+</pre>
+
+<p>
+<i>ConvertEnsembl optional flags</i>:
+<table class="ty">
+<tr><td><b>Flag</b><td><b>Description</b><td><b>Details</b><td><b>Default</b>
+<tr><td>-v<td>Verbose<td>Print out header lines of skipped sequences<td>No print
+</table>
+
+<a id="load"></a>
+<h2>Load files into SyMAP</h2>
+The above scenerio puts the files in the default SyMAP directories.
+When you start up SyMAP, you will see your projects listed on the left of the panel. Check the projects
+you want to load, which will cause them to be shown on the right of the symap window. The
+default parameters for the converted Ensembl projects will probably be sufficient.
+Select "Load All Projects".
+Once loaded, you can run the synteny algorithm be selecting "All Pairs". If you want to compute self-synteny,
+you have to do that individually with the "Selected Pair" button.
+
+
+<a id="what"></a>
+<h2>What the ConvertEnsembl script does</h2>
+The following occurs in the <tt>data/seq/&lt;project directory name&gt;</tt> where "project directory name"
+is the argument supplied to <tt>ConvertEnsembl</tt>:
+
+<ol>
+<li>Reads the file ending in '.fa.gz' and writes a new file called <tt>sequence/genomic.fna</tt> with the following changes:
+	<ol>
+	<li>Only sequences with word "chromosome" in their ">" header line and a number after the
+	">" will be copied to the genomics.fa file.
+	<li>The header line is replaced with ">ChrN" where N is 1,2...
+	</ol>
+
+<li>Reads the file ending in 'gff3.gz' and writes two new files called <tt>annotation/gene.gff</tt> and
+<tt>annotation/exon.gff</tt>, as follows:
+	<ol>
+	<li>Only lines with the 'type' (3rd column) equal 'gene' and 'exon' are read.
+	<li>The gene line is written to the <tt>gene.gff</tt> file with the following changes:
+		<ol type="i">
+		<li>The first column N is replace with the 'ChrN'.
+		<li>The last column 'attributes' only keeps the "ID=" and "description=" fields.
+
+The "description=" keyword is shortened to "desc=".
+If the description field contains "Source:...", it
+is removed.
+		</ol>
+	</ol>
+<li>The exon line is written to the <tt>exon.gff</tt> file with the first column N is replace
+with the 'ChrN'.
+</ol>
+
+
+<a id="edit"></a>
+<h2>Editing the script</h2>
+<p>The <tt>ConvertEnsembl.java</tt>
+code is supplied in the <tt>scripts</tt> directory. It is very simply written, it does not use external libraries
+and only common programming techniques found in all programming languages.
+<p>Once you make your changes, execute:
+<pre>
+javac ConvertEnsembl.java
+</pre>
+You will need to have JDK installed to use the 'javac' command.
+<p>
+
+<b>Some reasons for editing:</b>
+<ol>
+<li>This script has been tested on files from 8 different plant genomes. However,
+there can be variations that may not be accounted for.
+<li>You may prefer to keep more gene attributes then the script provides.
+<li>You may want to replace the "Chr" with some other prefix.
+</ol>
+<a href="#top">Go to top</a>
+<!---- END BODY -->
+	</td></tr>
+	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+
+</td></tr>
+</table>
+</body>
+</html>
+
+
+

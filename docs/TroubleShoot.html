@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SyMAP Trouble Shoot</title>
+<style>
+	a:link {text-decoration: none;color:#6666CC;}
+	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
+	a.ext {font-weight: bold;}
+	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
+    .ty td {border: 1px  solid black; padding: 3px; }
+    tt {font-size:13px}
+	pre {font-size:13px}
+	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
+</style>
+</head>
+
+<body>
+<a id="top"></a>
+<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
+	<tr><td>
+		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
+			<tr>
+				<td style="text-align: left; vertical-align: top; padding: 0">
+					<a href="http://www.agcol.arizona.edu">
+						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
+				</td>
+				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
+					SyMAP Trouble Shooting
+				</td>
+				<td style="text-align: right; vertical-align: top; padding: 0">
+					<a href="http://www.arizona.edu">
+						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+					<br>
+					<a href="http://www.bio5.org">
+						<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
+				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
+					<tr>
+						<td style="background-color: #666666; padding-bottom:4px;">
+						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
+						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
+						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
+						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="./Tour.html" class="white">Tour</a>
+					</tr>
+				</table>
+				</td>
+			</tr>
+		</table>
+	</td></tr>
+
+	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+	<!---- START BODY -->
+
+<i>Please send questions and suggestions to symap@agcol.arizona.edu.</i><br>
+<font color=green>SyMAP cannot be improved or problems fixed without user feedback!</font>
+
+<h4>Contents</h4>
+<p>
+<ul>
+<li>Memory
+<ul>
+<li><a href="#memory">Not enough memory</a></li>
+</ul>
+<br>
+<li>MySQL suggested settings
+<ul>
+<li><a href="#msqslow">Slow to load sequence and annotation</a>
+<li><a href="#slow">Slow queries</a>
+</ul>
+<br>
+<li>MySQL
+<ul>
+<li><a href="#database_error">Database connect errors</a> ("Unable to connect","Error running SQL Command",...)
+<li><a href="#mariadb">MariaDB cannot connect</a>
+<li><a href="#innodb">The MySQL database does not support Innodb tables</a>
+<li><a href="#root">Please read "Security" section of the manual to find out how to run mysqld as root</a>
+<li><a href="#msqcase"> Can't create table  (errno: 121)</a>
+</ul>
+<br>
+<li>Alignment
+<ul>
+<li><a href="#status">Status window disappeared</a>
+<li><a href="#noanch">No anchors loaded</a>
+<li><a href="#bes">BES not loaded</a>
+</ul>
+</ul>
+
+<hr>
+<h2>Memory</h2>
+<a id="memory"></a>
+<h3>Not enough memory</h3>
+For very large projects, or queries involving multiple
+genomes (e.g. 5 or more), the Project Manager may run out of memory.
+To fix this problem, run symap with the -m parameter to increase the maximum
+memory used from the default 2048 MB to 4096 MB.:
+<pre><b>     &gt; ./symap -m 4096</b></pre>
+Alternatively, you can edit the file <tt>symap</tt> and change
+<pre>
+my $maxmem="2048m"; # change this line to use "4096m"
+</pre>
+For memory issues related to running MUMmer, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
+
+<p>
+
+<!--------------------------------------------------------->
+<hr>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>MySQL suggested settings</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<a id="msqslow"></a>
+<h3>Slow to load sequence and annotation</h3>
+
+Two MySQL settings are especially important for SyMAP performance (and generally for InnoDB table
+performance).
+<p>
+<table class="ty" style="width:670px;">
+	<tr>
+		<td><tt>innodb_buffer_pool_size</tt></td>
+		<td>
+The default is too low for most purposes. You should set this to around 1Gb if possible (note that
+the units are bytes).
+		</td>
+	</tr>
+	<tr>
+		<td><tt>innodb_flush_log_at_trx_commit=0</tt></td>
+		<td>
+The default setting is 1, which results in very slow uploading of data.
+		</td>
+	</tr>
+</table>
+<p>
+To check the values, start mysql and type:
+<pre>
+show variables like "innodb_buffer_pool_size";
+show variables like "innodb_flush_log_at_trx_commit";
+</pre>
+To change the variables, then type:
+<pre>
+set global innodb_buffer_pool_size=1073741824;
+set global innodb_flush_log_at_trx_commit=0;
+</pre>
+Alternatively, You can set these in the MySQL configuration file <tt>my.cnf</tt> and restart MySQL.
+Note that <tt>my.cnf</tt> is typically located at <tt>/etc/my.cnf</tt>, on both Linux and Mac.
+
+<p>Different machines and MySQL installations can produce different results with these variables.
+If the SyMAP demo-seq to demo-seq2 load and synteny computations seem slow,
+try different combinations of these two variables to see what performs the fastest inserts.
+
+<a id="slow"></a>
+<h3>Slow queries</h3>
+<table  class="ty" style="width:600px;">
+	<tr>
+		<td><tt>max_allowed_packet</tt></td>
+		<td>
+This should be at least 500M if possible (the units are bytes).
+		</td>
+	</tr>
+</table>
+<p>
+To check the value, start mysql and type:
+<pre>show variables like "max_allowed_packet"; </pre>
+To change this variable, then type:
+<pre>set global max_allowed_packet=1073741824;</pre>
+<p>
+
+<!--------------------------------------------------------->
+<hr>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>MySQL</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<a id="database_error"></a>
+<h3>Database connect errors</h3>
+After startup, if the program is left idle for some time then its
+database connection will close and it will show a complicated-looking error on
+next usage, or it may say this:
+<pre>
+com.mysql.jdbc.CommunicationsException: Communications link failure due to underlying exception:
+
+** BEGIN NEXTED EXCEPTION **
+</pre>
+In this case the solution is to restart the program.
+<p>
+On startup, error messages mentioning the database or SQL probably mean that the database connection
+could not be established or was lost. A message at startup means SyMAP was not able
+to connect to the database using the provided information in <tt>symap.config</tt>. First, make sure
+your <tt>db_adminuser</tt> and <tt>db_adminpasswd</tt> are correct.
+
+<p>These days, the best way to find the MySQL problems is to search the internet. However,
+the following are some things to check for connection problems on SyMAP startup:
+
+<p><u>Check the database privileges</u>:
+The database users specified in <tt>symap.config</tt> may not have necessary access to the database.
+If you running the read/write <tt>symap</tt>, then the relevant user is <tt>db_adminuser</tt>. If
+you are running a read-only session using <tt>viewSymap</tt>, it will use the
+read-only <tt>db_clientuser</tt> or read-write <tt>db-adminuser</tt>. In either case the user needs
+to have database access privileges <i>from the machine where you are working</i>.
+
+Note that MySQL privileges are granted specifically to certain users on certain machines. You can test
+the user access by using the MySQL command line client <tt>mysql</tt>, if it is installed
+on your machine, or by looking at the privilege table using an administration interface
+such as PHPMyAdmin. The <tt>mysqlaccess</tt> tool is also useful, if it is installed
+on your machine.
+
+<p><u>Check the MySQL configuration</u>:
+The MySQL configuration file (<tt>/etc/my.cnf</tt>) should <b>not</b> contain any
+of the following lines that prevent remote access to the database.
+<tt>
+<pre>
+	bind_address=127.0.0.1
+	skip_networking
+</pre></tt>
+
+<p><u>Make sure the port is visible</u>:
+If the database is on a different computer, test that its port 3306 is visible
+from your computer:
+<pre>     telnet &lt;server address&gt; 3306
+</pre>
+
+If it does not make a connection then either the server is not running, or
+it is set to run on a non-standard port, or the
+port is blocked by a firewall. Contact a system administrator. (Note,
+to get out of telnet type "<tt>^]</tt>".)
+
+<p>
+<a id="mariadb"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>MariaDB cannot connect</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+If you are using MariaDB (post version 10.4.12) and get the error:
+<pre>
+Unable to connect to the mysql database on localhost; are username and password correct?
+</pre>
+Try adding the following lines to the <tt>/etc/my.cnf</tt>:
+<pre>
+[mysqld]
+character-set-server=utf8mb4
+</pre>
+And restart MariaDB with <tt>systemctl restart mariadb</tt>.
+<p>Thanks to Lori for this solution!
+
+<a id="innodb"></a>
+<h3>The database does not support Innodb tables</h3>
+This can happen in a couple of ways ways. Look in the mysql log for clues.
+<ul>
+<li> MySQL started with the "skip-innodb" flag. Solution is to remove this.
+<li> InnoDB log file problems. This can happen if you change the log file size, without
+deleting the log file. Solution: shut down mysql, remove the innodb log file, and restart mysql.
+</ul>
+
+<a id="root"></a>
+<h3>Please read "Security" section of the manual to find out how to run mysqld as root</h3>
+You are launching SyMAP as the unix root user, which is blocked by MySQL
+as a security hazard. Solution is simply to use a regular non-root user account.
+
+<a id="msqcase"></a>
+<h3>Can't create table  (errno: 121)</h3>
+This can occur if you try to create a SyMAP database whose name differs only by
+case from an existing database, e.g. "symapTest" when "symaptest" already exists.
+
+<p>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Alignment</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<a id="status"></a>
+<h3>Status window disappeared</h3>
+Occasionally the status window disappears when running an alignment.
+Clicking the top of the project manager sometimes
+brings it back. Otherwise, just check the output to the terminal,
+which tells you when it is done. You may
+have to restart <tt>symap</tt> to see the results.
+
+<a id="noanch"></a>
+<h3>No anchors loaded</h3>
+This message indicates that SyMAP could not parse the MUMmer or BLAT output files
+to load the anchors. For MUMmer, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
+
+<a id="bes"></a>
+<h3>FPC: BES not loaded, or BES hits not loading</h3>
+Generally, this is caused by a name formatting error. Make sure the BES
+names are formatted as clone names with extension "r" or "f". The clone
+names should <i>exactly match</i> those in FPC, and there should be no other prefix or suffix.
+Do not use ".r" or ".f".
+
+<p><a href="#top">Go to top</a>
+<!---- END BODY -->
+	</td></tr>
+	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+
+</td></tr>
+</table>
+</body>
+</html>
+
+
+
+

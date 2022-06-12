@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SyMAP Tour</title>
+<style>
+	a:link {text-decoration: none;color:#6666CC;}
+	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
+	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
+	a.ext {font-weight: bold;}
+	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
+</style>
+</head>
+
+<body>
+<a id="top"></a>
+<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
+	<tr><td>
+		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
+			<tr>
+				<td style="text-align: left; vertical-align: top; padding: 0">
+					<a href="http://www.agcol.arizona.edu">
+						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
+				</td>
+				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
+					SyMAP Tour
+				</td>
+				<td style="text-align: right; vertical-align: top; padding: 0">
+					<a href="http://www.arizona.edu">
+						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+					<br>
+					<a href="http://www.bio5.org">
+						<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
+				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
+					<tr>
+						<td style="background-color: #666666; padding-bottom:4px;">
+						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
+						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
+						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
+						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="./Tour.html" class="current">Tour</a>
+					</tr>
+				</table>
+				</td>
+			</tr>
+		</table>
+	</td></tr>
+
+	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+	<!---- START BODY -->
+
+
+Following is a quick tour of the many displays and queries available through SyMAP.
+
+<p>
+<h2>Contents</h2>
+<table >
+	<tr>
+
+<td style="padding-left:20px; vertical-align: text-top;">
+<u>Management:</u>
+<p><a href="#mgr">Project Manager</a>
+<p><a href="#exp">Chromosome Explorer</a>
+
+
+<td style="padding-left:20px; vertical-align: text-top;">
+<u>High-level views:</u>
+<p><a href="#circ">Circle</a>
+<p><a href="#dp">Dot Plot</a>
+<p><a href="#blk">Block</a>
+<p><a href="#3d">3D View</a>
+
+
+<td style="padding-left:20px; vertical-align: text-top;">
+<u>Detailed views:</u>
+<p><a href="#2d3">2D - 3 Chr</a>
+<p><a href="#2d2">2D - 2 Chr</a>
+<p><a href="#2dc">2D Closeup</a>
+<p><a href="#base">Base View</a>
+</td>
+
+<td style="padding-left:20px; vertical-align: text-top;">
+<u>Analysis:</u>
+<p><a href="#query">Query Interface</a>
+<p><a href="#qres">Query Result</a>
+<p><a href="#ma">Multiple Alignment</a>
+</td>
+
+</tr>
+</table>
+<p>
+
+<a id="mgr"></a>
+<h3>Project Manager</h3>
+
+
+After the synteny database has been build
+(see <a href=SystemGuide.html class="ext" target="_blank">System Guide</a>), the synteny can be viewed
+from the manager. All projects in the database will be listed on the left panel.
+<p>
+<table>
+<tr><td style="vertical-align: text-top;">
+Selecting projects on the left panel shows them on the right panel. A check mark in the
+<b>Available Syntenies</b> matrix indicates pairs that have computed synteny that can be viewed.
+
+<p>By selecting a cell with synteny,
+the "Display for Selected Pair:" buttons are activated, which
+display synteny views for the <i><b>two-genome</b></i>.
+
+<p>The "Display for All
+Projects" provides <i><b>multi-genome</b></i> synteny views for all projects in the
+matrix.
+<td><a href="img/main.png"><img src="img/main.png" alt="" style="border: 1px solid black; width: 550px"></a>
+</table>
+
+
+<p>
+<a id="exp"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Chromosome Explorer</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The Chromosome Explorer provides <i>multi-chromosome</i> for <i>multi-genome</i>.
+<p>
+<table><tr><td style="vertical-align: text-top;">
+
+Multiple chromosomes can be selected
+from different species on the left-hand panel.
+<p>The default display is the Circle view shown.
+From here, one can select Dot Plot, 2D or 3D (if available).
+
+<p>For <a href="#circ">Circle</a>,
+<a href="#dp">Dot Plot</a> and <a href="#3D">3D</a>,
+multiple chromosomes can be selected and viewed (as shown below).
+<p>For <a href="#2d">2D</a>,
+it is best to only have two or three chromosomes selected (as
+shown below).
+
+<td><a href="img/explorer.png"><img src="img/explorer.png" alt="" style="border: 1px solid black; width: 550px"></a>
+</table>
+<p>
+
+<a id="circ"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Circle View</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The Circle view is available for <i>two-genome</i> and <i>multi-chromosome</i>.
+<p>The left
+image shows all chromosomes for maize and rice.
+The right image shows one maize chromosome (3),
+two sorghum chromosomes (3, 8) and two rice chromosomes (1, 5).
+
+<table><tr>
+<td style="vertical-align: text-top;"><a href="img/circle-two-genome.png">
+	<img src='img/circle-two-genome.png' alt="" style="border: 1px solid black; width: 350px"></a>
+<td style="vertical-align: text-top;"><a href="img/circle-multi-chr.png">
+	<img src='img/circle-multi-chr.png' alt="" style="border: 1px solid black; width: 400px"></a>
+</table>
+
+<a id="dp"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Dot Plot</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The Dot Plot view is available for <i>two-genome</i> and <i>multi-chromosome</i>.
+<p>The left
+image shows all chromosomes for maize and rice.
+The right image shows one maize chromosome (3, reference),
+two sorghum chromosomes (3, 8) and two rice chromosome (1, 5).
+Synteny blocks are outlined in blue, and one can click to zoom further and
+arrive at a more detailed <a href="#2d">2D display</a>.
+
+<table><tr>
+<td  style="vertical-align: text-top;"><a href="img/dot-two-genome.png">
+	<img src='img/dot-two-genome.png' alt="" style="border: 1px solid black; width: 400px"></a>
+<td  style="vertical-align: text-top;"><a href="img/dot-multi-chr.png">
+	<img src='img/dot-multi-chr.png' alt="" style="border: 1px solid black; width: 350px"></a>
+</table>
+
+<a id="blk"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Block View</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The Block View is a <i>two-genome</i> view.
+<p>The synteny blocks are colored by chromosome  (see color key at top).
+<p>
+<table>
+<tr>
+<td><a href="img/block.png"><img src="img/block.png"  alt="" style="border: 1px solid black; width: 500px"></a>
+<td style="vertical-align: text-top;">
+Clicking a chromosome pops up a window of the chromosome as shown below. Clicking
+a block pops up a <a href="#2d">2D display</a>.
+<p><a href="img/block2.png"><img src="img/block2.png" alt="" style="border: 1px solid black; width: 200px"></a>
+</table>
+<p>
+
+<a id="3d"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>3D View</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<table>
+<tr><td style="vertical-align: text-top;">The 3D is a <i>multi-chromosome</i> view.
+<p>The 3D view is only available on systems that have the 3D
+Java libraries installed.
+<td><a href="img/3D-chr.png">
+	<img src="img/3D-chr.png" alt="" style="border: 1px solid black; width: 550px"></a>
+</table>
+<p>
+
+<a id="2d3"></a>
+<h3>2D 3-Chr</h3>
+
+<table>
+<tr>
+<td  style="vertical-align: text-top;">
+This is a <i>three-chromosome</i> view.
+<p>The dark blue down the center of the chromosomes are annotated genes.
+The brown lines between chromosomes are hits, where only hits that are part
+of a synteny block are shown here.
+<td><a href="img/2d-multi-chr.png"><img src='img/2d-multi-chr.png' alt="" style="border: 1px solid black; width: 550px"></a>
+</table>
+
+<a id="2d2"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>2D 2-Chr</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<table>
+<tr><td style="vertical-align: text-top;">
+This is a <i>two-chromosome</i> view.
+
+<p>The Maize Chr3 and Rice Chr1 were displayed, then zoomed into the top part (i.e.
+the top 7.97 Mb from the above image). It was then
+flipped (note that it is inverted in the above image), resulting the view on the right.
+<td><a href="img/2d-2chr.png"><img src='img/2d-2chr.png' alt="" style="border: 1px solid black; width: 550px"></a>
+</table>
+<p>
+
+
+<a id="2dc"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>2D Closeup</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<table>
+<tr><td style="vertical-align: text-top;">
+
+Zooming in further and turning on the annotation results in the view on the
+right.
+<td><a href="img/2d-closeup.png"><img src='img/2d-closeup.png' alt="" style="border: 1px solid black; width: 550px"></a>
+</table>
+<p>
+
+<a id="base"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Base View</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<table>
+<tr><td style="vertical-align: text-top;">It is possible to zoom in even further and see a basepair-level view
+of the region, with Needleman-Wunsch alignments generated on the fly.
+<td><a href="img/baseview.png"><img src='img/baseview.png' alt="" style="border: 1px solid black; width: 550px"></a>
+</table>
+<p>
+
+<a id="query"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Query Interface</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+SyMAP includes powerful search features to help make the most of synteny information.
+Aligned regions across the selected species are automatically grouped into "putative gene
+families". The filters allow you to locate the families of interest based on annotation,
+level of synteny, and presence or absence in different lineages.
+<p>
+<a href="img/query_query.png"><img src="img/query_query.png" alt="" style="border: 1px solid black; width: 550px"></a>
+
+<a id="qres"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Query Results</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The query results table has full flexibility in column selection, column ordering,
+and save/reload of searches. For example if you find an interesting family that is
+not annotated, you can easily save all the relevant sequences as a fasta file for further study.
+<p>
+<a href="img/queryres1.png"><img src="img/queryres1.png" alt="" style="border: 1px solid black; width: 550px"></a>
+
+
+<p><b>Putative gene families (PgeneF)</b>: The hits are grouped into gene families.
+<br>The PgeneF number is a unique number assigned to the gene family.
+<br>The PgFSize number is how many unique instances are in the family.
+
+<a id="ma"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Multiple alignment</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+Another unique option is to send the selected sequences directly to Muscle for multiple
+alignment, to reveal the patterns in the sequence alignments between the species.
+SyMAP parses and displays the MUSCLE (Edgar 2004 NAR:32) results:
+<p>
+<a href="img/multalign.png"><img src="img/multalign.png" alt="" style="border: 1px solid black; width: 550px"></a>
+<p>
+
+	<!---- END BODY -->
+	</td></tr>
+	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+
+</td></tr>
+</table>
+</body>
+</html>
+

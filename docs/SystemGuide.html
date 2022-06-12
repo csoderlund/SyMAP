@@ -1,124 +1,130 @@
-<HTML>
+<!DOCTYPE html>
+<html>
 <head>
-	<title>SyMAP System Guide</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-	<style>
-a.wt {color:inherit;}
-table {font-size:100%}
-tr {font-size:100%}
-td {font-size:100%}
-tt {font-size:13px}
-pre {font-size:13px}
-a {font-size:100%}
+<title>SyMAP System Guide</title>
+<style>
+	a:link {text-decoration: none;color:#6666CC;}
+	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
+	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
+	a.ext {font-weight: bold;}
+	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+	.tx td {padding: 5px;}
+	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
+    .ty td {border: 1px  solid black; padding: 3px; }
+    tt {font-size:13px}
+	pre {font-size:13px}
+	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
 </style>
 </head>
 
-<body style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:100%">
-
-	<a name=top></a>
-	<table align="center" style="border: 1px solid #999999" cellspacing="0" cellpadding="0">
-	  <tr><td width="100%" style="background-color: #CCCCCC;">
-	  <a href="http://www.arizona.edu">
-	  <img border="0" alt="The University of Arizona" title="The University of Arizona" src="./img/UA.gif"></a>
-	  </td></tr>
-
-	  <tr><td>
-		  <table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
-		    <tr><td height="60" width="161" align="left" valign="bottom">
-       				<img alt="" title="" src="img/agcol_logo.png">
-       			</td>
-		    	<td height="60" width="428" align="left" valign="bottom" style="padding:0px 0px 10px 30px">
-			    	<font face="Verdana, Arial, Helvetica, sans-serif" color="#000066" size="5">
-				    <b>SyMAP System Guide</b>
-			    	</font> 
-		    	</td>
-		    	<td height="60" width="161" align="center" valign="bottom">&nbsp;
-        		</td>
-		    </tr>
-		    
-		    <tr><td height="21" colspan="3" align="left" valign="top">
-			    <table width="100%" border="0" cellspacing="0" cellpadding="3" height="18">
-			    	<tr><td align="left" bgcolor="#666666">
-<span style="font-size:75%;color:white">
-<a href="http://www.agcol.arizona.edu" class="wt">AGCoL</a> |
-<a href="http://www.agcol.arizona.edu/software/symap" class="wt">SyMAP Home</a> |
-<a href=index.html class="wt">Index</a> |
-System Guide |
-<a href=UserGuide.html class="wt">User Guide</a> |
-<a href=Tour.html class="wt">Tour</a> |
-<a href=TroubleShoot.html class="wt">Troubleshooting </a>
-</span>
-					</td></tr>
+<body>
+<a id="top"></a>
+<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
+	<tr><td>
+		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
+			<tr>
+				<td style="text-align: left; vertical-align: top; padding: 0">
+					<a href="http://www.agcol.arizona.edu">
+						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
+				</td>
+				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
+					SyMAP System Guide
+				</td>
+				<td style="text-align: right; vertical-align: top; padding: 0">
+					<a href="http://www.arizona.edu">
+						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+					<br>
+					<a href="http://www.bio5.org">
+						<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
+				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
+					<tr>
+						<td style="background-color: #666666; padding-bottom:4px;">
+						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
+						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
+						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./SystemGuide.html" class="current">System Guide</a> <mark class="white">|</mark>
+						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="./Tour.html" class="white">Tour</a>
+					</tr>
 				</table>
-			</td></tr>
-			
-	        <tr><td colspan="3" valign="top" align="left" style='padding:20px 15px 0px 15px;font-size:85%'>
-								
+				</td>
+			</tr>
+		</table>
+	</td></tr>
+
+	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+	<!---- START BODY -->
+
 The following discusses building a SyMAP v5 database. This document
-has been updated as of v5.0.7; see <a href=Release.html>Release Notes</a> for changes.
-For release v5.0.8, a document on trouble shooting <a href=MUMmer.html#mum>MUMmer</a> alignments failures has been added.
+has been updated as of v5.0.7; see
+<a href=Release.html class="ext" target="_blank">Release Notes</a> for changes.
+For release v5.0.8, a document on trouble shooting
+<a href="MUMmer.html#mum"  class="ext" target="_blank">MUMmer</a> alignments failures has been added.
 
 <h4>Contents</h4>
 <ul>
-	<li><a href=#overview>Overview and Publications</a>
+	<li><a href="#overview">Overview and Publications</a>
 	<li>Getting Started
 		<ul>
-			<li><a href=#start>Steps for finding synteny</a>
-			<li><a href=#machine>System Requirements</a>
-			<li><a href=#installation>Installation</a>
-			<li><a href=#demo>Running the demo</a>
+			<li><a href="#start">Steps for finding synteny</a>
+			<li><a href="#machine">System Requirements</a>
+			<li><a href="#installation">Installation</a>
+			<li><a href="#demo">Running the demo</a>
 				<ul>
-				<li><a href=#draft>Ordering the demo draft</a>
+				<li><a href="#draft">Ordering the demo draft</a>
 				</ul>
 			<ul>
-				<li><a href=Demo.html target="_blank">Querying the demo</a>
+				<li><a href="Demo.html" class="ext" target="_blank">Querying the demo</a>
 			</ul>
 			</ul>
 	<li>New project
 		<ul>
-			<li><a href=#mysql>MySQL and Parameters</a>
-			<li><a href=#time>Runtime and Memory</a>
-			<li><a href=#create>Creating a New Project</a>
+			<li><a href="#mysql">MySQL and Parameters</a>
+			<li><a href="#time">Runtime and Memory</a>
+			<li><a href="#create">Creating a New Project</a>
 			<ul>
-				<li><a href=#params2>Parameters</a>
+				<li><a href="#params2">Parameters</a>
 			</ul>
 			<li>Sequence project
 			<ul>
-				<li><a href=#seqprep>Preparing the Sequences</a> 
-				<li><a href=#annot>Annotation files</a> - convert from NCBI or Ensembl
-				<li><a href=#draft2>Draft sequence</a>
-				<li><a href=#self>Self alignments</a>
-				<li><a href=#dir>Directory structure</a>
+				<li><a href="#seqprep">Preparing the Sequences</a>
+				<li><a href="#annot">Annotation files</a> - convert from NCBI or Ensembl
+				<li><a href="#draft2">Draft sequence</a>
+				<li><a href="#self">Self alignments</a>
+				<li><a href="#dir">Directory structure</a>
 			</ul>
 
 			<li>Alignments and external programs
 				<ul>
-					<li><a href=#ext>Alignment executables
-					<li><a href=#mum>MUMmer with SyMAP details</a>
+					<li><a href="#exe">Alignment executables</a>
+					<li><a href="#mum">MUMmer with SyMAP details</a>
 				</ul>
 			<li>FPC project
 				<ul>
-					<li><a href=#fpc>Working with FPC Files</a>
+					<li><a href="#fpc">Working with FPC Files</a>
 				</ul>
 		</ul>
-	<li><a href=#alg>How SyMAP Works</a>
-	<li><a href=#refs>References</a>
+	<li><a href="#alg">How SyMAP Works</a>
+	<li><a href="#refs">References</a>
 </ul>
 
-
-<a name="overview">
+<a id="overview"></a>
 <h1>Overview and Publications</h1>
-SyMAP is a system for computing, displaying, and analyzing syntenic alignments between 
-<font color=green><b>medium-to-high divergent eukaryotic genomes</b></font>. It does <b>not</b> work well
+SyMAP is a system for computing, displaying, and analyzing syntenic alignments between
+<font color=green>medium-to-high divergent eukaryotic genomes</font>. It does <b>not</b> work well
 for very similar genomes or bacterial genomes.
-<p>Its features include the following (for a pictorial introduction, see the 
-<a href="Tour.html" target="_blank">Tour</a>): 
+<p>Its features include the following (for a pictorial introduction, see the
+<a href="Tour.html" class="ext" target="_blank">Tour</a>):
 <p>
 <table>
 	<tr>
-		<td align='left' valign='top'>
-		<table cellpadding=7>
-		
+		<td style="vertical-align: text-top;">
+		<table class="tx">
+
 		<tr>
 			<td>
 				Find synteny between two sequenced genomes with optional annotation.
@@ -126,8 +132,8 @@ for very similar genomes or bacterial genomes.
 		</tr>
 		<tr>
 			<td>
-				Draft sequence ordering by synteny, i.e. 
-				<font color=green><b>align a draft genome to a fully sequence (not draft-to-draft</b></font>).
+				Draft sequence ordering by synteny, i.e.
+				<font color=green>align a draft genome to a fully sequence (not draft-to-draft</font>).
 			</td>
 		</tr>
 		<tr>
@@ -137,7 +143,7 @@ for very similar genomes or bacterial genomes.
 		</tr>
 		<tr>
 			<td>
-				For multiple selected synteny pairs, display using dot plot, circular, and side-by-side. 
+				For multiple selected synteny pairs, display using dot plot, circular, and side-by-side.
 			</td>
 		</tr>
 		<tr>
@@ -147,338 +153,332 @@ for very similar genomes or bacterial genomes.
 		</tr>
 		</table>
 	</td>
-	<td align='left' valign='middle'>
-			<table cellspacing=1 cellpadding=0 border=1>
+	<td>
+		<table class="ty">
 				<tr>
 					<td>
-						<a href="img/3d.png"><img src="img/3d.png" width=100 height=100></a>
+						<a href="img/3d-chr.png"><img src="img/3d-chr.png" alt="" style="width:100px"></a>
 					</td>
 					<td>
-						<a href="img/2d.png"><img src="img/2d.png" width=100 height=100></a>
+						<a href="img/2d.png"><img src="img/2d.png" alt="" style="width:100px"></a>
 					</td>
 					<td>
-						<a href="img/circmap.png"><img src="img/circmap.png" width=100 height=100></a>
+						<a href="img/circmap.png"><img src="img/circmap.png" alt="" style="width:100px"></a>
 					</td>
 
 				</tr>
 				<tr>
 					<td>
-						<a href="img/dotplot.png"><img src="img/dotplot.png" width=100 height=100></a>
+						<a href="img/dotplot.png"><img src="img/dotplot.png" alt="" style="width:100px"></a>
 					</td>
 					<td>
-						<a href="img/mgr.png"><img src="img/mgr.png" width=100 height=100></a>
+						<a href="img/mgr.png"><img src="img/mgr.png" alt="" style="width:100px"></a>
 					</td>
 					<td>
-						<a href="img/querysetup.png"><img src="img/querysetup.png" width=100 height=100></a>
+						<a href="img/querySetup.png"><img src="img/querySetup.png" alt="" style="width:100px"></a>
 					</td>
 
 				</tr>
-			</table>
-		</td> 
+		</table>
+		</td>
 	</tr>
 </table>
 <p>
 
-<a name="pubs">
+<a id="pubs"></a>
 <h4>Publications</h4>
 
-The back-end processing of SyMAP, including the synteny block 
-and anchor filtering algorithms, is described in the following 
+The back-end processing of SyMAP, including the synteny block
+and anchor filtering algorithms, is described in the following
 two publications. A sketch of the algorithms is also provided <a href="#alg">here</a>.
 
 <pre>
-        C. Soderlund, M. Bomhoff, and W. Nelson (2011) 
+        C. Soderlund, M. Bomhoff, and W. Nelson (2011)
         SyMAP: A turnkey synteny system with application to plant genomes.
         Nucleic Acids Research 39(10):e68.
 </pre>
 <p>
 <pre>
         C. Soderlund,  W. Nelson, A. Shoemaker and A. Paterson (2006)
-        SyMAP: A System for Discovering and Viewing Syntenic Regions of FPC maps 
+        SyMAP: A System for Discovering and Viewing Syntenic Regions of FPC maps
         Genome Research 16:1159-1168.
 </pre>
 
 SyMAP is freely distributed software, however
-<font color=green><b><i>if you use SyMAP results in published research, you must cite one
+<font color=green>if you use SyMAP results in published research, you must cite one
 or both of these articles along with any external programs you used within SyMAP such as
-MUMmer<sup>1,2</sup></i></font></b>
+MUMmer<sup>1,2</sup></font>
 
 
-<p>&nbsp;
-<a name=start></a>
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<br>&nbsp;
+<a id=start></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h1>Getting Started</h1>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <h2>Steps for finding synteny</h2>
 Follow the steps below to get started with SyMAP.
 Note that each SyMAP application window has a separate Help
-button providing further details on the use of its functions. 
+button providing further details on the use of its functions.
 <p>
 
-<table cellpadding=7 >
+<table class="tx">
 	<tr>
-		<td align='left' valign='top' >
-			1. 
-		</td>		
-		<td align='left' valign='top' >
-			Use a Linux or Mac machine.  
+		<td style="vertical-align: text-top;">
+			1.
 		</td>
-		<td align='left' valign='top'>
+		<td style="vertical-align: text-top;">
+			Use a Linux or Mac machine.
+		</td>
+		<td style="vertical-align: text-top;">
 			It needs to have Java v1.8 or later, and sufficient processing power.
-			See <a href="#machine">system requirements</a>. 
+			See <a href="#machine">system requirements</a>.
 		</td>
 	</tr>
-	
+
 	<tr>
-		<td align='left' valign='top'>
-			2. 
+		<td style="vertical-align: text-top;">
+			2.
 		</td>
-		<td align='left' valign='top'>
+		<td style="vertical-align: text-top;">
 			Set up MySQL.
 		</td>
-		<td align='left' valign='top'> See <a href="#mysql">MySQL</a>.
+		<td style="vertical-align: text-top;"> See <a href="#mysql">MySQL</a>.
 		</td>
 	</tr>
 	<tr>
-		<td align='left' valign='top'>
-			3.  
+		<td style="vertical-align: text-top;">
+			3.
 		</td>
-		<td align='left' valign='top'>
-			Download SyMAP. 
+		<td style="vertical-align: text-top;">
+			Download SyMAP.
 		</td>
-		<td align='left' valign='top'>
+		<td style="vertical-align: text-top;">
 			Installation is a simple unzip. See <a href="#installation">installation</a>.
 		</td>
 	</tr>
 	<tr>
-		<td align='left' valign='top'>
+		<td style="vertical-align: text-top;">
 			4.
 		</td>
-		<td align='left' valign='top'>
+		<td style="vertical-align: text-top;">
 			Run the demo.
 		</td>
-		<td align='left' valign='top'>
+		<td style="vertical-align: text-top;">
 			Highly recommended. See <a href="#demo">running the demo.</a>
 		</td>
 	</tr>
 	<tr>
-		<td align='left' valign='top'>
-			5.  
+		<td style="vertical-align: text-top;">
+			5.
 		</td>
-		<td align='left' valign='top'>
-			Prepare sequences and annotation.  
+		<td style="vertical-align: text-top;">
+			Prepare sequences and annotation.
 		</td>
-		<td align='left' valign='top'>
+		<td style="vertical-align: text-top;">
 			Sequences can be in one or many files and can be masked or unmasked.
 			See <a href="#seqprep">preparing the sequences</a>.
 			Annotation format is gff3; see <a href="#annot">annotation files</a>.
 		</td>
 	</tr>
-	
+
 
 	<tr>
-		<td align='left' valign='top'>
-			6. 
+		<td style="vertical-align: text-top;">
+			6.
 		</td>
-		<td align='left' valign='top'>
+		<td style="vertical-align: text-top;">
 			Load the files into SyMAP.
 		</td>
-		<td align='left' valign='top'>
+		<td style="vertical-align: text-top;">
 			The SyMAP interface makes this easy; see
 			<a href="#create">creating a new project</a>.
 		</td>
 	</tr>
 	<tr>
-		<td align='left' valign='top'>
-			7. 
+		<td style="vertical-align: text-top;">
+			7.
 		</td>
-		<td align='left' valign='top'>
+		<td style="vertical-align: text-top;">
 			Compute alignments and synteny.
 		</td>
-		<td align='left' valign='top'>
+		<td style="vertical-align: text-top;">
 			This is also easy through the SyMAP interface. See
 			<a href="#time">runtime and memory</a>.
 		</td>
 	</tr>
 	<tr>
-		<td align='left' valign='top'>
-			8. 
+		<td style="vertical-align: text-top;">
+			8.
 		</td>
-		<td align='left' valign='top'>
+		<td style="vertical-align: text-top;">
 			View results.
 		</td>
-		<td align='left' valign='top'>
+		<td style="vertical-align: text-top;">
 			Detailed
-			description of the user interface is in the <a href="UserGuide.html" target="_blank">User Guide</a>.
+			description of the user interface is in the <a href="UserGuide.html" class="ext" target="_blank">User Guide</a>.
 		</td>
 	</tr>
 </table>
-<p>If you are working with FPC files, see the section on <a href="#fpc">FPC</a>. 
+<p>If you are working with FPC files, see the section on <a href="#fpc">FPC</a>.
 
-<p>&nbsp;<p>
-<a name="machine">
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<br>
+<a id="machine"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>System Requirements</h2>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 SyMAP v5.0.6 has been tested on the following:
-<table border=1 cellspacing=5 cellpadding=5>
+<table class="ty">
 <tr><td>Centos Linux amd64<td>MariaDB v10.4.12<td>Java 1.8
 <tr><td>MacOS x86_64 (Catalina 10.15.4)<td>MySQL v8.0.17<td>Java 17.0
 <tr><td>MacOS x86_64 (Maverick 10.9.5)<td>MySQL v5.6.21<td>Java 1.8
 </table>
 
-<p>The jar files have been compiled with Java 1.8, which is upward compatible. 
+<p>The jar files have been compiled with Java 1.8, which is upward compatible.
 <p>
 For performing large alignments (e.g. 1Gb genomes or more) <i>it is essential
 to have multiple CPUs, a 64-bit computer, and at least 5Gb of RAM
 for each CPU that you intend to use</i>. Note that you can set the
-number of CPUs for SyMAP to use. See <a href="MUMmer.html" target="_blank">MUMmer</a>
+number of CPUs for SyMAP to use. See <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>
 for information on insufficient memory.
 <p>
 For viewing alignments, CPU and memory needs are typically negligible, unless
-you are performing queries on more than 4-5 genomes at once. 
+you are performing queries on more than 4-5 genomes at once.
 
 
-<a name="installation">
+<a id="installation"></a>
 <h2>Installation</h2>
 
 Installation simply consists of unzipping the download package, using
 the command
-<pre>     &#62 tar -xzvf symap_5.tar.gz</pre>
+<pre>     &gt; tar -xzvf symap_5.tar.gz</pre>
 This can be done anywhere and creates a directory called <tt>symap_5</tt>. You can
 move this directory later if desired.
 <p>
 To run SyMAP, enter the <tt>symap_5</tt> directory and run the command:
-<pre>     &#62 ./symap 
+<pre>     &gt; ./symap
 </pre>
 
 <p>MUMmer<sup>1,2</sup> (sequence alignment), Blat<sup>3</sup> (FPC alignment)
 and MUSCLE<sup>7</sup> (SyMAP Queries) are provided with the package.
 
-<p>&nbsp;
-<a name="demo">
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<!--------- DEMO ---------->
+<br>
+<a id="demo"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Running the Demo</h2>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-If you have not used SyMAP before, it is essential to run the demos. After you have 
+If you have not used SyMAP before, it is essential to run the demos. After you have
 installed MySQL, do the following:
 <ol>
-<li>Change into the <tt>symap_5</tt> directory. 
+<li>Change into the <tt>symap_5</tt> directory.
 <p>
-<li>Edit <tt>symap.config</tt> and enter database 
-and host information (see <a href=#mysql>MySQL</a>), e.g. <tt>db_name=symapDemo</tt>.
+<li>Edit <tt>symap.config</tt> and enter database
+and host information (see <a href="#mysql">MySQL</a>), e.g. <tt>db_name=symapDemo</tt>.
 <p>
-<li>From the command line, type <tt>./symap</tt>. 
+<li>From the command line, type <tt>./symap</tt>.
 </ol>
 <p>The first time you run SyMAP, it will create the database with information written to the terminal, e.g.
 <pre>
 Creating database 'symapDemo' (jdbc:mysql://localhost/symapDemo?characterEncoding=utf8).
 </pre>
 <br>It will check your MySQL variables; if there are any "Suggested" changes,
-see <a href="TroubleShoot.html#msqslow" target="_blank">Trouble Shoot MySQL</a>. It will also
+see <a href="TroubleShoot.html#msqslow" class="ext" target="_blank">Trouble Shoot MySQL</a>. It will also
 check that the provided executables (e.g. MUMmer); if it shows any problems,
-see <a href="MUMmer.html#ext" target="_blank">MUMmer Executables</a>.
+see <a href="MUMmer.html#ext" class="ext" target="_blank">MUMmer Executables</a>.
 <p>
 <table>
-<tr><td align="left" valign="top">
+<tr><td style="vertical-align: text-top;">
 The Project Manager window opens showing the four demo projects provided with the SyMAP packages.
 Check "Demo-Seq" and "Demo-Seq2".
 </td>
-<td align="left" valign="middle">
-	<a href="img/projman1.png"><img src="img/projman1.png" width=400 border=1></a>
+<td>
+	<a href="img/demoLoad.png"><img src="img/demoLoad.png" alt="" style="border: 1px solid black; width: 400px"></a>
 </td>
 </tr>
 
-<tr><td colspan=2 height=40>&nbsp;</td></tr>
+<tr><td style="colspan: 2; height: 40px;">&nbsp;</td></tr>
 
-<tr><td align="left" valign="top">
+<tr><td style="vertical-align: text-top;">
 
-A link "Load All Projects" will be displayed in the top of the right panel; select it to 
-load the projects, which will take several minutes. 
+A link "Load All Projects" will be displayed in the top of the right panel; select it to
+load the projects, which will take several minutes.
 <p>If loading the "Demo-Seq" takes
 <i>more than a few minutes</i>, you may need to adjust the MySQL parameters, see
-<a href="TroubleShoot.html#msqslow" target="_blank">TroubleShoot MySQL</a>.  
+<a href="TroubleShoot.html#msqslow" class="ext" target="_blank">TroubleShoot MySQL</a>.
 <p>When done, the Manager will look as shown in the image on the right.
-<p>In the "Available Syntenies" table, click the cell for the "Demo_Seq2" row and the "Demo_Seq" column.  
-Then click the "Selected Pair" button to start the alignment. 
+<p>In the "Available Syntenies" table, click the cell for the "Demo_Seq2" row and the "Demo_Seq" column.
+Then click the "Selected Pair" button to start the alignment.
 </td>
-					
-<td align="left" valign="middle">
-<a href="img/projman4.png"><img src="img/projman4.png" width=400 border=1></a>
+
+<td>
+<a href="img/demoMgr.png"><img src="img/demoMgr.png" alt="" style="border: 1px solid black; width: 400px"></a>
 </td>
 </tr>
 
-<tr><td colspan=2 height=40>&nbsp;</td></tr>
-				
+<tr><td style="colspan: 2; height: 40px;">&nbsp;</td></tr>
+
 <tr>
-<td align="left" valign="top">
-<p>The Synteny & Alignment takes less than 5 minutes on the MacOS 10.5 but could take up to 30 minutes
-on a slow machine. 
-<p>When done, the table will have a checkbox, signifying that the synteny is available for viewing. 
-Click the checked cell, which will enable the viewing buttons.  
+<td style="vertical-align: text-top;">
+The Synteny &amp; Alignment takes less than 5 minutes on the MacOS 10.5 but could take up to 30 minutes
+on a slow machine.
+<p>When done, the table will have a checkbox, signifying that the synteny is available for viewing.
+Click the checked cell, which will enable the viewing buttons.
 </td>
-					
-<td align="left" valign="middle">
-<a href="img/projman5.png"><img src="img/projman5.png" width=400 border=1></a>
+
+<td>
+<a href="img/demoTable.png"><img src="img/demoTable.png" alt="" style="border: 1px solid black; width: 400px"></a>
 </td>
 </tr>
-				
-<tr><td colspan=2 height=40>&nbsp;</td></tr>
-				
+
+<tr><td style="colspan: 2; height: 40px;">&nbsp;</td></tr>
+
 <tr>
-<td align="left" valign="top">
-Click "Summary" to view the v5 summary shown on the right; <i>there may be slight difference in the number of anchors because the results are slightly different when run when different numbers of CPUs</i>.  
-<p>To view the other interfaces, see <a href="Demo.html" target="_blank">Demo Query</a>.
+<td style="vertical-align: text-top;">
+Click "Summary" to view the v5 summary shown on the right; <i>there may be slight difference in the number of anchors because the results are slightly different when run when different numbers of CPUs</i>.
+<p>To view the other interfaces, see <a href="Demo.html" class="ext" target="_blank">Demo Results</a>.
 </td>
-<td align="left" valign="middle">
-<a href="img/projsum.png"><img src="img/projsum.png" width=400 border=1></a>
+<td>
+<a href="img/demoSum.png"><img src="img/demoSum.png" alt="" style="border: 1px solid black; width: 400px"></a>
 </td>
 </tr>
-</table>						
-				
-<a name="draft">
+</table>
+
+<a id="draft"></a>
 <h3>Ordering the demo draft</h3>
 
 The remainder of the demo relates to draft sequence, i.e. unanchored
-shotgun sequence. 
-					
+shotgun sequence.
+<p>
 <table>
-<tr><td colspan=2 height=40>&nbsp;</td></tr>
 	<tr>
-		<td>
+		<td style="vertical-align: text-top;">
 Load the Demo-Draft project, following
-the same steps used to load the previous two projects. 
+the same steps used to load the previous two projects.
 
 <p>Under the Demo-Draft listing, you will see
 the parameter "Order against: demo_seq2". With this setting,
 the Demo-Draft contigs will be ordered using synteny to
-Demo-Seq2.  
+Demo-Seq2.
 		</td>
-		<td align="left" valign="middle">
-<a href="img/demodraft1.png"><img src="img/demodraft1.png" width=400 border=1></a>
+		<td>
+<a href="img/demoDraft1.png"><img src="img/demoDraft1.png" alt="" style="border: 1px solid black; width: 400px"></a>
 		</td>
 	</tr>
-	<tr><td colspan=2 height=40>&nbsp;</td></tr>
+	<tr><td style="colspan: 2; height: 40px;">&nbsp;</td></tr>
 	<tr>
-		<td align="left" valign="top">
-Run the Alignment & Synteny, where the alignment should take less than 30 minutes with one CPU.
+		<td style="vertical-align: text-top;">
+Run the Alignment &amp; Synteny, where the alignment should take less than 30 minutes with one CPU.
 When done, open the Summary for the pair, as shown on the right; <i>there
 may be slight difference in the number of anchors because the results are
 slightly different when run when different numbers of CPUs.</i>
 
-See the first dot plot in <a href="Demo.html#draft" target="_blank">Demo-draft</a>.
+See the first dot plot in <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>.
 		</td>
-		<td align="left" valign="middle">
-<a href="img/projsum2.png"><img src="img/projsum2.png" width=400 border=1></a>
+		<td>
+<a href="img/demoSum2.png"><img src="img/demoSum2.png" alt="" style="border: 1px solid black; width: 400px"></a>
 		</td>
 	</tr>
 </table>
@@ -495,70 +495,67 @@ with the suffix "<tt>_ordered</tt>", as shown on the right. The chromosome names
 to the order-against project (e.g. Demo_seq2), and the third chromosome is 'chr0'
 which contains all draft sequences that were not placed.
 <p>
+
 <table>
-<tr><td>
+<tr><td style="vertical-align: text-top;">
 As shown in the image on the left, a new project has been added. Click <tt>Demo_Draft-ordered</tt> and
 load it.
-Running the Alignment&Synteny
+Running the Alignment&amp;Synteny
 between the <tt>_ordered</tt> project and Demo_seq2 will provide a more coherent display
-(see the second dot plot for <a href="Demo.html#draft" target="_blank">Demo-draft</a>). 
-<td><td align="center" valign="middle">
-<a href="img/demodraft3.png"><img src="img/demodraft3.png" width=400 border=1></a>
-
+(see the second dot plot for <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>).
+<td><td>
+<a href="img/demoDraft3.png"><img src="img/demoDraft3.png" alt="" style="border: 1px solid black; width: 400px"></a>
 </table>
 
 <p><b>Further demos:</b>
 <ol>
 <li>There is also Demo-FPC that can be aligned to Demo-Seq
-following the same set of steps as described above. 
-<li>The section on <a href=#self>Self alignments</a>
+following the same set of steps as described above.
+<li>The section on <a href="#self">Self alignments</a>
 discusses performing a demo_seq self alignment.
 </ol>
 This is the end of the demo.
-<p>&nbsp;<p>
-<!-------------------------------------------------------->
-
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<br>
+<!--------------------- NEW PROJECT ----------------------------------->
+<table style="width: 95%"><tr><td style="text-align: left">
 <h1>New Project</h1>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<a name="mysql">
+<a id="mysql"></a>
 <h2>MySQL and parameters</h2>
 
 If your machine does not have MySQL or MariaDB, download and install it. For example,
 MySQL can be downloaded from <a href="http://dev.mysql.com" class="ext" target="_blank">dev.mysql.com</a>.
-On a personal MacOS, simply download the '.dmg' file and following the instructions. 
+On a personal MacOS, simply download the '.dmg' file and following the instructions.
 On a work server, the system administrator may need to install it.
 
 <p>
 The MySQL installation does not need to be on the machine where
 you will do the computations or view the results, as long as
 it is on an accessible network. Once the server is ready, fill out
-the database parameters in the <tt>symap.config</tt> file in the 
-main SyMAP directory, as described below. 
+the database parameters in the <tt>symap.config</tt> file in the
+main SyMAP directory, as described below.
 
 <p>
 <font color=red>Important Note</font>: The default settings of MySQL are poorly suited for large-scale
-data storage. You will want to adjust the parameters 
+data storage. You will want to adjust the parameters
 <tt>innodb_buffer_pool_size</tt> and <tt>innodb_flush_log_at_trx_commit</tt> as described in
-<a href="TroubleShoot.html#msqslow" target="_blank">Trouble Shoot MySQL</a>.
+<a href="TroubleShoot.html#msqslow" class="ext" target="_blank">Trouble Shoot MySQL</a>.
 
 <p>
-<a name="params">
+<a id="params"></a>
 <h4>Database Parameters</h4>
 Parameters for accessing the MySQL database
 should be set in the <tt>symap.config</tt> file in the main symap directory, as follows:
 <p>
-<table width=650 rules=all cellpadding=4 border=1 align=center>
+<table class="ty">
 	<tr>
-		<td colspan=2 align=center >
+		<td colspan=2>
 		<i>Database Parameters</i>
 		</td>
 	</tr>
 	<tr>
-		<td align="left" valign="top" ><tt>db_name</tt></td>
+		<td style="vertical-align: text-top;"><tt>db_name</tt></td>
 		<td>
 			Name of the MySQL database, which SyMAP will create when it first reads
 			<tt>symap.config</tt>. It is standard to start the name with <tt>symap</tt>,
@@ -566,34 +563,34 @@ should be set in the <tt>symap.config</tt> file in the main symap directory, as 
 		</td>
 	</tr>
 	<tr>
-		<td align="left" valign="top" ><tt>db_server</tt></td>
+		<td style="vertical-align: text-top;"><tt>db_server</tt></td>
 		<td>
 			The machine hosting the MySQL database, e.g. <tt>myserver.myschool.edu</tt>. If using
 			your local machine, enter <tt>localhost</tt>.
 		</td>
 	</tr>
 	<tr>
-		<td align="left" valign="top" ><tt>db_adminuser</tt></td>
+		<td style="vertical-align: text-top;"><tt>db_adminuser</tt></td>
 		<td>
 			MySQL username of a user with sufficient privileges to create a database. Needed for
 			creating and updating alignments.
 		</td>
 	</tr>
 	<tr>
-		<td align="left" valign="top" ><tt>db_adminpasswd</tt></td>
+		<td style="vertical-align: text-top;"><tt>db_adminpasswd</tt></td>
 		<td>
-			Password of the admin user.	
+			Password of the admin user.
 		</td>
 	</tr>
 	<tr>
-		<td align="left" valign="top" ><tt>db_clientuser</tt></td>
+		<td style="vertical-align: text-top;"><tt>db_clientuser</tt></td>
 		<td>
 			MySQL username of a user with read-only access. This is only necessary if you
 			want a machine to run SyMAP as read-only.
 		</td>
 	</tr>
 	<tr>
-		<td align="left" valign="top" ><tt>db_clientpasswd</tt></td>
+		<td style="vertical-align: text-top;"><tt>db_clientpasswd</tt></td>
 		<td>
 			Password of the client user.
 		</td>
@@ -606,19 +603,19 @@ db_name             = symapDemo
 db_server           = localhost
 db_adminuser        = root
 db_adminpasswd      = &lt;password&gt;
-db_clientuser       = 
-db_clientpasswd     = 
+db_clientuser       =
+db_clientpasswd     =
 </pre>
 To use an alternative file than <tt>symap.config</tt>, use the "-c" command line argument, e.g.
 <pre>
 &gt;./symap -c symapTmp.config
 </pre>
 This is useful if you have multiple SyMAP databases.
-<a name="time"></a>
+<a id="time"></a>
 <h2>Runtime and Memory</h2>
 
-If SyMAP runs out of memory, see <a href=TroubleShoot.html#memory  target="_blank">Trouble Shoot</a>.
-If MUMmer runs out of memory, see <a href=MUMmer.html target="_blank">MUMmer</a>.
+If SyMAP runs out of memory, see <a href="TroubleShoot.html#memory" class="ext" target="_blank">Trouble Shoot</a>.
+If MUMmer runs out of memory, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 
 <p>The largest component of SyMAP execution time is in running
 MUMmer<sup>1,2</sup>. The time and memory for MUMmer all depends on the size
@@ -630,55 +627,53 @@ against each of the 10 maize chromosomes (i.e. used 10 CPUs).
 <p>
 The memory usage of MUMmer is typically 5G per CPU, however it can
 be as high as 10G for very long or repetitive chromosomes. If MUMmer fails, it is often due
-to insufficient memory, see the <a href=MUMmer.html target="_blank">MUMmer</a> document, which
+to insufficient memory, see the <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a> document, which
 explains how to determine the problem and ways around it.
 
-<p>&nbsp;<p>
-<a name="create">
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<br>&nbsp;
+<a id="create"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Creating a New Project</h2>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Start symap (i.e. <tt>./symap</tt>). All projects listed under <tt>/data/fpc</tt> are FPC projects
-and all projects listed under <tt>/data/seq</tt> are Sequence projects. 
+and all projects listed under <tt>/data/seq</tt> are Sequence projects.
 These sub-directories of <tt>/data/fpc</tt> and <tt>/data/seq</tt> will be listed on the
-left panel under <b>Projects</b>. You may create the project as discussed in <a href=#dir>Directory
+left panel under <b>Projects</b>. You may create the project as discussed in <a href="#dir">Directory
 structure</a>, or you may create a new project via the SyMAP interface.
 <p>
 <table>
-<tr><td  align="left" valign="top">
+<tr><td style="vertical-align: text-top;">
 To create a new project via the SyMAP interface, press the "Add Project" button
 at the lower left. Enter the project name beside "Name:"; if the project type is "fpc", change the dropdown
 beside "Type:". The Help
 button on the dialog provides further information. The following will discuss a type "sequence" project and
 everything is similar for the "fpc" project.
 <p>&nbsp;
-<td width="50%">
-<a href="img/projnew.png"><img src="img/projnew.png" width=400 border=1></a>
+<td>
+<a href="img/projNew.png"><img src="img/projNew.png" alt="" style="border: 1px solid black; width: 400px"></a>
 
 <p>
-<tr><td  align="left" valign="top">
+<tr><td style="vertical-align: text-top;">
 After saving the new project, it appears in the Projects list on the left, but
-it is still an empty shell. A directory will be made under the <tt>/data/seq</tt>, 
-e.g. for the project added on the right, a directory will be created called <tt>/data/seq/foobar</tt>. 
+it is still an empty shell. A directory will be made under the <tt>/data/seq</tt>,
+e.g. for the project added on the right, a directory will be created called <tt>/data/seq/foobar</tt>.
 Check its box and it will appear in the Summary section (right hand side).
-<td width="50%">
-<a href="img/projnew2.png"><img src="img/projnew2.png" width=400 border=1></a>
+<td>
+<a href="img/projNew2.png"><img src="img/projNew2.png" alt="" style="border: 1px solid black; width: 400px"></a>
 </table>
 
-<a name="params2">
+<a id="params2"></a>
 <h4>Parameters</h4>
 
 <table>
 <tr>
-<td  align="left" valign="top">
+<td style="vertical-align: text-top;">
 <i>For a project:</i> Click the <u>Parameters</u> link to open the Parameters window shown in the image on the right.
 <p>
 On the Parameters window you will add the filenames for the sequences and annotations for the project,
 as well as setting other parameters if desired. The Help button on this window
-provides the necessary details. 
+provides the necessary details.
 <p><i>Defaults:</i> If the annotations are put in the sub-directory <tt>/annotations</tt> and
 the sequences are put in the subdirectory <tt>/sequence</tt>, it is not necessary to enter where
 the annotations and sequences exist, e.g. the default directories for the project <tt>foobar</tt>
@@ -688,67 +683,65 @@ are as follows:
 /data/seq/foobar/sequences
 </pre>
 
-<td><a href="img/parameters1.png"><img src="img/parameters1.png" width=400 border=1></a>
+<td><a href="img/parameters1.png"><img src="img/parameters1.png" alt="" style="border: 1px solid black; width: 400px"></a>
 </table>
 
 <p>
-After setting the parameters, the project is ready to be loaded.  
+After setting the parameters, the project is ready to be loaded.
 <p>
 <table>
 <tr>
-<td  align="left" valign="top">
-<i>Alignment & Synteny</i> parameters can be changed by selecting a project pair cell 
-followed by the "Parameters" button, which brings up with window shown on the right. 
-See the "Help" for a description of the parameters. 
+<td style="vertical-align: text-top;">
+<i>Alignment &amp; Synteny</i> parameters can be changed by selecting a project pair cell
+followed by the "Parameters" button, which brings up with window shown on the right.
+See the "Help" for a description of the parameters.
 
-<p>These parameters generally do not need to be changed. 
+<p>These parameters generally do not need to be changed.
 
-<p><tt>Blat</tt> is the alignment program for FPC to Seq. 
+<p><tt>Blat</tt> is the alignment program for FPC to Seq.
 The <tt>MUMmer</tt> program <tt>PROmer</tt> is the default program
 for sequence alignments for different genomes. The <tt>MUMmer</tt> program <tt>NUCmer</tt> is the default program
-for sequence self-alignments. 
-<td valign="top">
-<a href="img/alignLine.png"><img src="img/alignLine.png"  width=400 border=1></a>
-<br><a href="img/parameters2.png"><img src="img/parameters2.png"  width=350 border=1></a>
+for sequence self-alignments.
+<td style="vertical-align: text-top;">
+<a href="img/alignLine.png"><img src="img/alignLine.png" alt="" style="border: 1px solid black; width: 400px"></a>
+<br><a href="img/parameters2.png"><img src="img/parameters2.png" alt="" style="border: 1px solid black; width: 350px"></a>
 </table>
 
 
 <!-------------------------------------------------------->
-<p>&nbsp;<p>
-<a name="seqprep">
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<br>
+<a id="seqprep"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Sequence project</h2>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <h3>Preparing the Sequences</h3>
-The first decision with whole-genome sequence is whether to used repeat masked sequences. 
+The first decision with whole-genome sequence is whether to used repeat masked sequences.
 <ul>
-<li>Masking reduces alignment time and false-positive hits, 
+<li>Masking reduces alignment time and false-positive hits,
 but also runs a risk of concealing true hits due to inaccurate masking.
 <li>SyMAP does not perform the repeat-masking so must be done with another program.
-However, you may obtain masked sequences from NCBI or Ensembl. 
-NCBI provides soft-masked sequences where the 
+However, you may obtain masked sequences from NCBI or Ensembl.
+NCBI provides soft-masked sequences where the
 <tt>scripts/ConvertNCBI</tt> script will convert it to hard-masked, and Ensembl
-provides both soft and hard-masked sequences (see <a href="./convert">Convert</a>). 
+provides both soft and hard-masked sequences (see <a href="./convert">Convert</a>).
 <li>
 Masking is not really necessary unless the genome is highly repetitive
-<i>and</i> those repeats are shared with other genomes being aligned. 
+<i>and</i> those repeats are shared with other genomes being aligned.
 (Repeats cause particular trouble for self-alignments,
 see <a href="#self">self-alignments in SyMAP</a>).
-<li>Occasionally, MUMmer fails aligning sequences 
-(see <a href="MUMmer.html" target="_blank">MUMmer</a>, which explains detection and solutions
+<li>Occasionally, MUMmer fails aligning sequences
+(see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>, which explains detection and solutions
 for known reasons for failure).
 </ul>
 <p>
 Another masking option which is available if you have gene
 annotation is to mask out everything but the annotated genes. You
-can enable the "mask_all_but_genes" option on the Project's Parameters window (shown <a href=#params2>above</a>);
+can enable the "mask_all_but_genes" option on the Project's Parameters window (shown <a href="#params2">above</a>);
 turn it on <i>before</i> doing the alignments.
 <p>
 Note that sequence files should be in FASTA format and the name of a sequence
-is the string immediately following the "&gt;", e.g. 
+is the string immediately following the "&gt;", e.g.
 <pre>
 &gt;Chr3  Oryza Sativa
 GAATTCGAATTTGGGTAATGCTAATCAATACAGGTCAAAATCTATGTATTGAGTGGAATATACTGCAAAGTAATTACCTT
@@ -758,109 +751,108 @@ CTTCCAAAGGAAAGCATTCCTTCTCTCTTGTGGGACTAGCAGATGATCTCGCAGCCAAGACGTGACCACCCAAGGCTCAC
 In this example, the sequence name is "Chr3" and the Chr3 sequence follows. The additional information
 "Oryza Sativa" is ignored.
 <p>
-<b><font color=green>Three things are important in naming sequences for SyMAP</font></b>:
-<table cellpadding=4 style="margin-left:10px;margin-top:5px;" >
+<font color=green>Three things are important in naming sequences for SyMAP</font>:
+<table style="margin-left:10px;margin-top:5px;padding:5px">
 	<tr>
-		<td align='left' valign='top' >
-			A. 
-		</td>		
-		<td align='left' valign='top' >
+		<td style="vertical-align: text-top;">
+			A.
+		</td>
+		<td style="vertical-align: text-top;">
 			<u>Sequence names can contain only letters, numbers, and underscores. </u>
 		</td>
 	</tr>
 	<tr>
-		<td align='left' valign='top' >
-			B. 
-		</td>		
-		<td align='left' valign='top' >
-			<u>The sequence names must <i>exactly</i> match those 
+		<td style="vertical-align: text-top;">
+			B.
+		</td>
+		<td style="vertical-align: text-top;">
+			<u>The sequence names must <i>exactly</i> match those
 			used in the annotation files (first column), or the
-			annotations will not be loaded. </u> 
+			annotations will not be loaded. </u>
 		</td>
 	</tr>
 	<tr>
-		<td align='left' valign='top' >
-			C. 
-		</td>		
-		<td align='left' valign='top' >
+		<td style="vertical-align: text-top;">
+			C.
+		</td>
+		<td style="vertical-align: text-top;">
 			Use a consistent prefix such as "Chr" for all sequences, followed
-			by a short number; set 'grp_prefix' to the prefix in Project's Parameters window (shown <a href=#params2>above</a>).
-			If there is not a consistent prefix, you may leave the 'grp_prefix' blank; 
+			by a short number; set 'grp_prefix' to the prefix in Project's Parameters window (shown <a href="#params2">above</a>).
+			If there is not a consistent prefix, you may leave the 'grp_prefix' blank;
 			beware, this can have unintended results, so should be avoided if possible.
 		</td>
 	</tr>
-	
+
 </table>
 
-<a name="annot">
+<a id="annot"></a>
 <h3>Annotation files</h3>
 
-Annotation files should be in 
-<a href="http://www.sequenceontology.org/gff3.shtml" target="_blank">gff3 format</a>. 
+Annotation files should be in
+<a href="http://www.sequenceontology.org/gff3.shtml" class="ext" target="_blank">gff3 format</a>.
 The first column (seqid) must exactly match the sequence names in
 the fasta files. The third column (type) determines how SyMAP
 uses the entry. Types "gene", "exon", "CDS", "centromere", and "gap"
 are recognized (other entries are ignored). "CDS" and "exon" are
-treated equivalently in SyMAP. 
+treated equivalently in SyMAP.
 <p>
 The last column (attributes) contains "tag=value" pairs describing
 the annotation. You can set which attributes to use, or use all
-those occurring more than a certain number of times; open the 
-Project's Parameters window (shown <a href=#params2>above</a>), look for parameter "annot_keywords". 
+those occurring more than a certain number of times; open the
+Project's Parameters window (shown <a href="#params2">above</a>), look for parameter "annot_keywords".
 <p>
 <i><b>Important:</b> Only the annotation on "gene" entries is shown in the
 displays or used for searching. For entries "exon", "CDS", "gap", and "centromere",
-only the coordinates from the gff file are used; the annotation text is not read.   
+only the coordinates from the gff file are used; the annotation text is not read.
 </i>
 
-<p><i><b>NCBI files:</b></i> A Java script (<tt>scripts/ConvertNCBI.class</tt>) has been provided that 
+<p><i><b>NCBI files:</b></i> A Java script (<tt>scripts/ConvertNCBI.class</tt>) has been provided that
 converts NCBI genome fasta files and gff annotation files
-into the format that works best with SyMAP. 
-See the <a href="convert/ncbi.html" target="_blank">documentation</a> for instructions. 
+into the format that works best with SyMAP.
+See the <a href="convert/ncbi.html" class="ext" target="_blank">documentation</a> for instructions.
 
-<p><i><b>Ensembl files:</b></i> A Java script (<tt>scripts/ConvertEnsembl.class</tt>) 
+<p><i><b>Ensembl files:</b></i> A Java script (<tt>scripts/ConvertEnsembl.class</tt>)
 has been provided that converts Ensembl genome fasta files and gff3 annotation files
-into the format that works best with SyMAP. 
-See the <a href="convert/ensembl.html" target="_blank">documentation</a> for instructions.
+into the format that works best with SyMAP.
+See the <a href="convert/ensembl.html" class="ext" target="_blank">documentation</a> for instructions.
 
+<a id="draft2"></a>
+<h3>Draft sequence</h3>
 
-<a name="draft2">
-<h3>Draft sequence</h3> 
-
-If you are ordering the draft sequence against a closely related genome, see <a href=#draft>demo draft</a> on how to proceed. 
+If you are ordering the draft sequence against a closely related genome, see <a href="#draft">demo draft</a> on how to proceed.
 
 <p>If you are not ordering the draft sequence,
-and if the draft sequence is in too many sequence pieces, 
+and if the draft sequence is in too many sequence pieces,
 then (1) it takes a long time for the MUMmer comparisons, (2)
-the display is very cluttered, and 
+the display is very cluttered, and
 (3) the blocks display does not work right. Limit the number of sequence pieces
-by setting <tt>min_size</tt> in the parameters window to only load the largest 150 sequences; 
+by setting <tt>min_size</tt> in the parameters window to only load the largest 150 sequences;
 there is a script called <tt>scripts/lenFasta.pl</tt> which
 will print out all the lengths; set the min_size to the 150th length. However, even 150 are a lot of blocks to view
 so you might want to start with the largest 50, merge them, then repeat.
 
 
-<a name="self">
+<a id="self"></a>
 <h3>Self Alignments</h3>
 <table>
 <tr>
-<td>To perform self-synteny, select the cell for the same project followed by 
+<td>To perform self-synteny, select the cell for the same project followed by
 "Selected Pair". The "All Pairs" option does not include self-synteny.
-<td><a href="img/self.png"><img src="img/self.png" width=230 border=1></a>
+<td><a href="img/self.png"><img src="img/self.png" alt="" style="border: 1px solid black; width: 230px"></a>
 </table>
 <p>
 By default, SyMAP uses the MUMmer 'nucmer' program for self-alignments. Each chromosomes
-is compared to every other chromosome including itself. 
+is compared to every other chromosome including itself.
 
- 
-<p>The Alignment & Synteny "Parameters" popup has an option to set "Self Args",
+
+<p>The Alignment &amp; Synteny "Parameters" popup has an option to set "Self Args",
 which only uses the "Self Args" parameter(s) when comparing the chromosome sequence file
 to itself. In v4.2, the "--maxmatch" parameter was always used, but now it
 is up to the user as to whether they want to add it to "Self Args" (it can greatly
 increase the execution time).
- 
-<p>Reasoning for using "--maxmatch": 
- MUMmer ordinarily 
+
+<p>Reasoning for using "--maxmatch":
+ MUMmer ordinarily
 seeds its alignments with unique matches, which eliminates the possibility
 of off-diagonal seeds in the alignment of a chromosome to itself. To overcome
 this problem, individual chromosome self-alignments can use
@@ -870,13 +862,11 @@ a large extent  by the default SyMAP filters, but the diagonal squares of
 the dot plot will still have more noise visible than the off-diagonal.
 
 
-<p>&nbsp;<p>
-<a name="dir">
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<br>&nbsp;
+<a id="dir"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Directory structure</h3>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 For SyMAP v5, the default location for sequence and annotation files is:
 <pre>
@@ -907,40 +897,42 @@ The file results of the alignment and synteny computations are is as follows:
 /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/align
 /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/final
 </pre>
-The log files are in the <tt>/logs</tt> directory, see <a href=MUMmer.html#log>Running MUMmer</a> for details.
-<a name="ext">
+The log files are in the <tt>/logs</tt> directory, see
+<a href="MUMmer.html#log" class="ext" target="_blank">Running MUMmer</a> for details.
+
+<br>&nbsp;
+<a id="ext"></a>
 <h2>Alignments and external programs</h2>
 
-<a name="ext">
+<a id="exe"></a>
 <h3>Alignment executables</h3>
-The alignment programs are provided in the <tt>symap/ext</tt> directory. There are 
+The alignment programs are provided in the <tt>symap/ext</tt> directory. There are
 executables for 64-bit Linux and 64-bit MacOS. SyMAP will
 select the correct directory for the machine you are running from, i.e. you
 do not need to do anything. Typically, these will work just fine;
-but if they do not, see <a href="MUMmer.html" target="_blank">MUMmer</a>.
+but if they do not, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 
-<a name="mum">
+<a id="mum"></a>
 <h3>MUMmer with SyMAP details</h3>
-As of SyMAP v5.0.8, all MUMmer details have been put in a separate document, see <a href="MUMmer.html" target="_blank">MUMmer</a>.
+As of SyMAP v5.0.8, all MUMmer details have been put in a separate document, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 This includes trouble shooting when MUMmer fails, and running MUMmer outside of SyMAP.
 
-<p>&nbsp;<p>	 
-<a name="fpc">
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<br>&nbsp;
+<a id="fpc"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>FPC project</h2>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 <h3>Working with FPC Files</h3>
 
 SyMAP can also align genomes represented by an FPC physical
 map, by first aligning the BACs using BAC-end sequences or marker
 sequences. If you plan to work with FPC alignments, the first
 step is to run the provided demo "Demo-FPC". Align it to "Demo-Seq2"
-using the same steps as described <a href="#demo">above</a>, and 
-explore the various displays. 
+using the same steps as described <a href="#demo">above</a>, and
+explore the various displays.
 <p>
-Creating an FPC project is the same as for a 
+Creating an FPC project is the same as for a
 <a href="#create">sequence project</a> except that you choose
 the type "fpc", and then the Project Parameters window
 has some different parameters. The Parameters window is where
@@ -948,15 +940,15 @@ you will enter the FPC file, and your fasta files of marker
 and BAC-end sequences.
 <p>
 Note that the BAC-end sequence names must be exactly the clone
-names used in FPC, with extension "r" or "f" labeling the 
+names used in FPC, with extension "r" or "f" labeling the
 strand. In other words, if the FPC map has a clone
 "a0435B26" then the BES for that clone can be named
 "a0435B26f" or "a0435B26r".
 <p>
-The BES and marker alignments in an FPC project are performed using 
+The BES and marker alignments in an FPC project are performed using
 BLAT<sup>3</sup>. The running time is typically
 several times longer than that of MUMmer (described <a href="#time">here</a>), but
-the memory usage is much lower.  
+the memory usage is much lower.
 <p>
 The default locations are:
 <pre>
@@ -964,17 +956,15 @@ The default locations are:
 /data/fpc/&lt;project-name&gt;/bes
 /data/fpc/&lt;project-name&gt;/mrk
 </pre>
-The options for sequence files under <a href=#dir>directory structure</a> applies to FPC files using
+The options for sequence files under <a href="#dir">directory structure</a> applies to FPC files using
 these default locations.
 <p>
 
 
-<a name="alg">
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<a id="alg"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>How SyMAP Works</h2>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 This section provides a brief overview of the SyMAP processing steps; for
 more, see the SyMAP published papers<sup>5,6</sup>. The processing
@@ -982,7 +972,7 @@ has four phases:
 <div style="padding:10px 0px 0px 20px;">
 <i>Alignment:</i> <br>
 The sequences are written to disk<sup>*</sup>, with gene-masking
-if desired. In the alignment, one species is "query" and the other is 
+if desired. In the alignment, one species is "query" and the other is
 "target". If one project is FPC, that is the query; if both are sequence,
 the query is the one with alphabetically the first name. The query sequences
 are written into one large file, while smaller target sequences are grouped
@@ -995,30 +985,30 @@ genomes.
 The raw anchor set consists of the hits found by MUMmer or BLAT.
 These are first clustered into gene, or putative-gene hits. This is
 done by clustering the hit regions on each sequence, and then defining new "gene"
-hits which connect these regions. For example if three separate 
+hits which connect these regions. For example if three separate
 exons hit between two genes, they will be clustered into one "gene"
 hit having a combined score equal to the sum of the raw hit scores.
 Clustering is by gene if the hits overlap annotation, otherwise, it uses
 a max separation 1kb, creating "putative gene" regions.
 <p>
 <i>Anchor Filtering:</i><br>
-The clustered "gene anchors" are now filtered using a version of 
+The clustered "gene anchors" are now filtered using a version of
 reciprocal-best filtering which is adapted for retaining duplications and
-gene families. For each pair of genes (or putative genes) which is 
+gene families. For each pair of genes (or putative genes) which is
 connected by a clustered anchor, the retained anchors must be among
  the top two anchors by score on both sides (top-2 allows for one
 ancestral whole-genome duplication). An anchor will also be retained if its
 score is at least 80% of that of the 2nd-best anchor on each side (this
 allows for retention of gene family anchors). These filter parameters
-may be adjusted through the Alignment & Synteny Parameters window. 
+may be adjusted through the Alignment &amp; Synteny Parameters window.
 <p>
 <i>Synteny Block Detection:</i><br>
 After the clustered anchors are loaded into the database,  the synteny
 synteny block algorithm runs. This algorithm looks for approximately-collinear
 sequences of anchors, subject to several parameters including (A) Number
-of anchors; (B) Collinearity of the anchors; (C) Amount of "noise" in the 
+of anchors; (B) Collinearity of the anchors; (C) Amount of "noise" in the
 surrounding region (to help reject false-positive chains). Criterion A can
-be adjusted in the Alignment & Synteny Parameters window.
+be adjusted in the Alignment &amp; Synteny Parameters window.
 <p>
 <sup>*</sup> Note that the sequences are re-written from the database to the
 disk for three reasons: (A) To allow re-grouping for efficiency; (B) To ensure elimination
@@ -1027,16 +1017,14 @@ sequences names will match those in the database, and prevents problems caused b
 moving the source sequences on disk.
 </div>
 
-<a name="refs">
-<table width="95%" cellspacing=0 cellpadding=0 class='smbreak'>
-<tr><td align=left>
+<a id="refs"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>References</h2>
-</td><td align=right valign=top class="toptxt"><a href="#top">Go to top</a></td></tr>
-</table>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <sup>1</sup>
-Kurtz, S., Phillippy, A., Delcher, A.L., Smoot, M., Shumway, M., Antonescu, C., Salzberg, S.L. 
-(2004) Versatile and open software for comparing large genomes, Genome Biology, 5:R12 
+Kurtz, S., Phillippy, A., Delcher, A.L., Smoot, M., Shumway, M., Antonescu, C., Salzberg, S.L.
+(2004) Versatile and open software for comparing large genomes, Genome Biology, 5:R12
 
 <p>
 <sup>2</sup>
@@ -1045,7 +1033,7 @@ MUMmer4: A fast and versatile genome alignment system,  PLoS computational biolo
 
 <p>
 <sup>3</sup>
-Kent, J. (2002) BLAT--the BLAST-like alignment tool, Genome Research 12:656-64. 
+Kent, J. (2002) BLAT--the BLAST-like alignment tool, Genome Research 12:656-64.
 
 <p>
 <sup>4</sup>
@@ -1056,34 +1044,25 @@ Circos: An information aesthetic for comparative genomics. Genome Research doi:1
 <sup>5</sup>
 Soderlund, C., Nelson, W., Shoemaker, A., and Paterson, A.(2006)
 SyMAP: A system for discovering and viewing syntenic regions of FPC maps.
-Genome Res. 16:1159-1168. 
+Genome Res. 16:1159-1168.
 <p>
 <sup>6</sup>
 Soderlund, C., Bomhoff, M., and Nelson, W. (2011)
 SyMAP: A turnkey synteny system with application to multiple large duplicated plant sequenced genomes.
 Nucleic Acids Res V39, issue 10, e68.
 <p>
-<sup>7</sup> 
-Edgar, R (2004) 
+<sup>7</sup>
+Edgar, R (2004)
 MUSCLE: a multiple sequence alignment method with reduced time and space complexity.
 BMC Bioinformatics 113.
 
-				</td>
-		</tr>
+<!---- END BODY -->
+	</td></tr>
+	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
 
+</td></tr>
 </table>
-	
-	<table width="100%" border="0" align="center" cellpadding=2 cellspacing=0 style="margin-top:40px">
-		<tr>
-			<td bgcolor="#DDDDDD" align="center">
-			<font face="Verdana, Arial, Helvetica, sans-serif" size="2">Email
-			Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></font>
-			</td>
-		</tr>
-	</table>
-	  
-	</td>
-</tr>
-</table>
-</BODY>
-</HTML>
+</body>
+</html>
+
