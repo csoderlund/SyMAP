@@ -62,7 +62,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	/************************************************/
 	private static final String HTML = "/html/ProjMgrInstruct.html";
 	private static final String WINDOW_TITLE = "SyMAP " + SyMAP.VERSION + " Project Manager";
-	private final String DB_ERROR_MSG = "A database error occurred, please see the Troubleshooting Guide at:\n" + SyMAP.TROUBLE_GUIDE_URL + "#database_error";	
+	private final String DB_ERROR_MSG = "A database error occurred, please see the Troubleshooting Guide at:\n" + SyMAP.TROUBLE_GUIDE_URL;	
 	private final String DATA_PATH = Constants.dataDir;
 	
 	private final int MIN_WIDTH = 900;

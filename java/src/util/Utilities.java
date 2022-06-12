@@ -28,6 +28,8 @@ import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 
 import java.awt.Frame;
 
@@ -213,72 +215,7 @@ public class Utilities {
 		
 		return button;
 	 }
-	 /**********************************************************
-	  * CAS507 replace the old one with this
-	  */
-	 public static boolean tryOpenURL (String theLink ) {
-    	if (theLink == null) return false;
-    	
-    	try {
-    		new URL(theLink); // make sure it works
-    	}
-    	catch (MalformedURLException e) {
-    		System.out.println("Malformed URL: " + theLink);
-    		return false;
-    	}
-    	if (isMac()) 	return tryOpenMac(theLink);
-    	else 			return tryOpenLinux(theLink);	
-	}
-	// CAS507 the previous method was becoming obsolete, but this doesn't work on Linux 1.8 
-	private static boolean tryOpenMac(String theLink) { 
-		Desktop desktop = java.awt.Desktop.getDesktop();
-    	URI oURL;
-    	try {
-			oURL = new URI(theLink);
-    	} catch (URISyntaxException e) {
-    		e.printStackTrace();
-    		return false;
-    	}
-    	
-		try {
-			desktop.browse(oURL);
-			return true;
- 		} catch (IOException e) {
- 			e.printStackTrace();
- 		}
-		return false;
-	}
-	
-	public static boolean tryOpenLinux (String theLink) // CAS507 removed Applet
-	{		
-		// Copied this from: http://www.centerkey.com/java/browser/   CAS507 added all listed browsers from this site
-    	try 
-    	{ 
-    		if (isWindows()) {
-    			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + theLink); // no idea if this works
-    			return true;
-    		}
-    		else { 
-    			String [] browsers = {"firefox", "opera", "konqueror", "epiphany", "mozilla", "netscape",
-    					   "google-chrome", "conkeror", "midori", "kazehakase", "x-www-browser"}; // CAS507 added
-    			String browser = null; 
-    			for (int count = 0; count < browsers.length && browser == null; count++) 
-    				if (Runtime.getRuntime().exec( new String[] {"which", browsers[count]}).waitFor() == 0) 
-    					browser = browsers[count]; 
-    			if (browser == null) 
-    				return false;
-    			else {
-    				Runtime.getRuntime().exec(new String[] {browser, theLink});
-    				return true;
-    			}
-    		}
-    	}
-    	catch (Exception e) 
-    	{ 	
-    		e.printStackTrace();
-    	}
-		return false;
-	}
+	 
 	 
 	/*******************************************************************
 	 * XXX basic array and string ops
@@ -896,8 +833,7 @@ public class Utilities {
 		System.err.println("Not enough memory.");
 		JOptionPane optionPane = new JOptionPane("Not enough memory - increase $maxmem in symap script.", JOptionPane.ERROR_MESSAGE);
 		
-		LinkLabel label = new LinkLabel("Click to open the Troubleshooting Guide.", 
-				SyMAP.TROUBLE_GUIDE_URL + "#not_enough_memory");
+		LinkLabel label = new LinkLabel("Click to open the Troubleshooting Guide.", SyMAP.TROUBLE_GUIDE_URL); // CAS510
 		label.setAlignmentX(Component.CENTER_ALIGNMENT);
 		optionPane.add(new JLabel(" "), 1);
 		optionPane.add(label, 2);
@@ -911,10 +847,13 @@ public class Utilities {
 	
 	public static void showOutOfMemoryMessage() { showOutOfMemoryMessage(null); }
 	
-	public static void showHTMLPage(JDialog parent, String title, String resource)
-	{
-		if (resClass == null)
-		{
+	/********************************************************************
+	 * 1. The following provides popups for java/src/html
+	 * 2. The Try methods provide direct links to http URLs (CAS509 allow External links in html)
+	 * 3. The ProjectManagerFrameCommon.createInstructionsPanel shows  the main page
+	 */
+	public static void showHTMLPage(JDialog parent, String title, String resource) {
+		if (resClass == null) {
 			System.err.println("Help can't be shown.\nDid you call setResClass?");
 			return;
 		}
@@ -925,13 +864,11 @@ public class Utilities {
 		dlg.setLayout(new BoxLayout(dlg,BoxLayout.Y_AXIS));
 		
 		StringBuffer sb = new StringBuffer();
-		try
-		{
+		try {
 			InputStream str = resClass.getResourceAsStream(resource);
 			
 			int ci = str.read();
-			while (ci != -1)
-			{
+			while (ci != -1) {
 				sb.append((char)ci);
 				ci = str.read();
 			}
@@ -943,13 +880,15 @@ public class Utilities {
 		JEditorPane jep = new JEditorPane();
 		jep.setContentType("text/html");
 		jep.setEditable(false);
-	    jep.addHyperlinkListener(new javax.swing.event.HyperlinkListener() 
-	    {
-	        public void hyperlinkUpdate(javax.swing.event.HyperlinkEvent evt) 
-	        {
-	            Utilities.jepHandle(evt);
-	        }
-	    });
+	   
+	    jep.addHyperlinkListener(new HyperlinkListener() {
+			public void hyperlinkUpdate(HyperlinkEvent e) {
+				if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+					if (!tryOpenURL(e.getURL().toString()) ) 
+						System.err.println("Error opening URL: " + e.getURL().toString());
+				}
+			}
+		});
 		jep.setText(html);
 		jep.setVisible(true);
 		jep.setCaretPosition(0);
@@ -962,31 +901,67 @@ public class Utilities {
 		dlgRoot.requestFocus();
 	}
 
-// html listener for product info editor pane CAS507 re
-    private static void jepHandle(javax.swing.event.HyperlinkEvent evt) 
-    {
-    	javax.swing.event.HyperlinkEvent.EventType type = evt.getEventType();
-	    if (type == javax.swing.event.HyperlinkEvent.EventType.ACTIVATED)
-	    {
-	        String urlString = evt.getURL().toExternalForm();
-	        if (urlString == null)
-	        {
-	            System.out.println("Problem extracting html link");
-	            return;
-	        }	
-	        try
-	        {
-	        	//tryOpenURL(urlString);
-	        	System.out.println("Did not open URL string");
-	        }
-	        catch (Exception e)
-	        {
-	            System.out.println("Unable to launch external browser");
-	        }
-	    }
-	    else System.out.println("Not activated");
-    } 
- 
+    /**********************************************************
+	  * CAS507 replace the old one with this
+	  */
+	 public static boolean tryOpenURL (String theLink ) {
+	   	if (theLink == null) return false;
+	   	
+	   	try {
+	   		new URL(theLink); // make sure it works
+	   	}
+	   	catch (MalformedURLException e) {
+	   		System.out.println("Malformed URL: " + theLink);
+	   		return false;
+	   	}
+	   	if (isMac()) 	return tryOpenMac(theLink);
+	   	else 			return tryOpenLinux(theLink);	
+	}
+	
+	private static boolean tryOpenMac(String theLink) { 
+		Desktop desktop = java.awt.Desktop.getDesktop();
+	   	URI oURL;
+	   	try {
+			oURL = new URI(theLink);
+	   	} catch (URISyntaxException e) {
+	   		ErrorReport.print(e, "URI syntax error on Mac: " + theLink);
+	   		return false;
+	   	}
+   	
+		try {
+			desktop.browse(oURL);
+			return true;
+		} catch (IOException e) {
+			ErrorReport.print(e, "URL desktop error on Mac: " + theLink);
+		}
+		return false;
+	}
+	
+	public static boolean tryOpenLinux (String theLink) { // CAS507 removed Applet
+		// Copied this from: http://www.centerkey.com/java/browser/   CAS507 added all listed browsers from this site
+	   	try { 
+	   		if (isWindows()) {
+	   			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + theLink); // no idea if this works
+	   			return true;
+	   		}
+	   		else { 
+	   			String [] browsers = {"firefox", "opera", "konqueror", "epiphany", "mozilla", "netscape",
+	   					   "google-chrome", "conkeror", "midori", "kazehakase", "x-www-browser"}; // CAS507 added
+	   			String browser = null; 
+	   			for (int count = 0; count < browsers.length && browser == null; count++) 
+	   				if (Runtime.getRuntime().exec( new String[] {"which", browsers[count]}).waitFor() == 0) 
+	   					browser = browsers[count]; 
+	   			if (browser == null) 
+	   				return false;
+	   			else {
+	   				Runtime.getRuntime().exec(new String[] {browser, theLink});
+	   				return true;
+	   			}
+	   		}
+	   	}
+	   	catch (Exception e) {ErrorReport.print(e, "URL error on Linux: " + theLink);}
+		return false;
+	}
     // CAS508
     static public String kMText(long len) {
 		double d = (double) len;

@@ -88,7 +88,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 				bar,null,false);
 		helpButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String url = SyMAP.USER_GUIDE_URL + "#alignment_display_2d";
+				String url = SyMAP.USER_GUIDE_URL + SyMAP.align2d; // CAS510
 				if ( !Utilities.tryOpenURL(url) )
 					System.err.println("Error opening URL: " + url);
 			}

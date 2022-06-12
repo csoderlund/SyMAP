@@ -56,7 +56,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener
 		helpButton = (JButton) Utilities.createButton(this,"/images/help.gif","Help: Online documentation." ,hb,null,false);
 		helpButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String url = SyMAP.USER_GUIDE_URL;
+				String url = SyMAP.USER_GUIDE_URL + SyMAP.circle; // CAS510
 				if ( !Utilities.tryOpenURL(url) )
 					System.err.println("Error opening URL: " + url);
 			}

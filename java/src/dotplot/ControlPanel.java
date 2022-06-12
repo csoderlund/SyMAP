@@ -69,7 +69,7 @@ public class ControlPanel extends JPanel implements Observer,
 
 		helpButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String url = SyMAP.USER_GUIDE_URL + "#dotplot_display";
+				String url = SyMAP.USER_GUIDE_URL + SyMAP.dotplot; // CAS510
 				if ( !Utilities.tryOpenURL(url) )
 					System.err.println("Error opening URL: " + url);
 			}
