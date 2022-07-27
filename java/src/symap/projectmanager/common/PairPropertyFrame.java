@@ -20,14 +20,15 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import util.Utilities;
+import backend.Constants;
 import backend.SyProps;
 
 public class PairPropertyFrame extends JDialog {
 	private static final long serialVersionUID = 1L;
-	private static final String [] LABELS = { 
+	private static final String [] LABELS = { // CAS511 put FPC in front of Blat, order does not matter
 		"Min Dots", "Top N", "Merge Blocks", 
 		"Do Synteny", "Do Clustering", "No Overlapping Blocks", 
-		"Blat Args", "NUCmer Args", "PROmer Args", "Self Args", "NUCmer Only","PROmer Only" };
+		"FPC Blat Args", "NUCmer Args", "PROmer Args", "Self Args", "NUCmer Only","PROmer Only" };
 	
 	// if change, change in SyProps too
 	private static final String [] SYMBOLS = { 
@@ -40,7 +41,7 @@ public class PairPropertyFrame extends JDialog {
 	private static final int NUM_FIELD_WIDTH = 3;
 	
 	private String title;
-	private boolean isGlobal=false;
+	private boolean isGlobal=false, hasFPC=false;
 	
 	// glProps = current set of properties, i.e., either defaults or the saved global parameters
 	// dbProps = the database-stored properties for the selected pair, if any. 
@@ -54,6 +55,8 @@ public class PairPropertyFrame extends JDialog {
 		
 		if (isGlobal) title="Global Pair Parameters";
 		else          title="Selected Pair Parameters";
+		
+		if (Utilities.pathExists(Constants.fpcDataDir)) hasFPC=true; // CAS511
 		
 		createMainPanel();
 		
@@ -254,28 +257,12 @@ public class PairPropertyFrame extends JDialog {
 		mainPanel.add(Box.createVerticalStrut(10));
 
 		row = createRowPanel();
-		row.add(chkNucOnly);
-		mainPanel.add(row);
-		mainPanel.add(Box.createVerticalStrut(10));
-
-		row = createRowPanel();
 		row.add(chkProOnly);
-		mainPanel.add(row);
-		mainPanel.add(Box.createVerticalStrut(10));
-
-		row = createRowPanel();
-		row.add(lblBlatArgs);
-		if(lblBlatArgs.getPreferredSize().width < LABEL_COLUMN_WIDTH)
-			row.add(Box.createHorizontalStrut(LABEL_COLUMN_WIDTH - lblBlatArgs.getPreferredSize().width));
-		row.add(txtBlatArgs);
 		mainPanel.add(row);
 		mainPanel.add(Box.createVerticalStrut(10));
 		
 		row = createRowPanel();
-		row.add(lblNucMerArgs);
-		if(lblNucMerArgs.getPreferredSize().width < LABEL_COLUMN_WIDTH)
-			row.add(Box.createHorizontalStrut(LABEL_COLUMN_WIDTH - lblNucMerArgs.getPreferredSize().width));
-		row.add(txtNucMerArgs);
+		row.add(chkNucOnly);
 		mainPanel.add(row);
 		mainPanel.add(Box.createVerticalStrut(10));
 
@@ -285,18 +272,36 @@ public class PairPropertyFrame extends JDialog {
 			row.add(Box.createHorizontalStrut(LABEL_COLUMN_WIDTH - lblProMerArgs.getPreferredSize().width));
 		row.add(txtProMerArgs);
 		mainPanel.add(row);	
-		mainPanel.add(Box.createVerticalStrut(20));
+		mainPanel.add(Box.createVerticalStrut(10));
 		
+		row = createRowPanel();
+		row.add(lblNucMerArgs);
+		if(lblNucMerArgs.getPreferredSize().width < LABEL_COLUMN_WIDTH)
+			row.add(Box.createHorizontalStrut(LABEL_COLUMN_WIDTH - lblNucMerArgs.getPreferredSize().width));
+		row.add(txtNucMerArgs);
+		mainPanel.add(row);
+		mainPanel.add(Box.createVerticalStrut(10));
+	
 		row = createRowPanel();
 		row.add(lblSelfArgs);
 		if(lblSelfArgs.getPreferredSize().width < LABEL_COLUMN_WIDTH)
 			row.add(Box.createHorizontalStrut(LABEL_COLUMN_WIDTH - lblSelfArgs.getPreferredSize().width));
 		row.add(txtSelfArgs);
 		mainPanel.add(row);	
-		mainPanel.add(Box.createVerticalStrut(20));
+		mainPanel.add(Box.createVerticalStrut(10));
 
-		row = createRowPanel();
+		if (hasFPC) { // CAS511 move label and only add if data/fpc exists
+			row = createRowPanel();
+			row.add(lblBlatArgs);
+			if(lblBlatArgs.getPreferredSize().width < LABEL_COLUMN_WIDTH)
+				row.add(Box.createHorizontalStrut(LABEL_COLUMN_WIDTH - lblBlatArgs.getPreferredSize().width));
+			row.add(txtBlatArgs);
+			mainPanel.add(row);
+			mainPanel.add(Box.createVerticalStrut(10));
+		}
+		mainPanel.add(Box.createVerticalStrut(10));
 		
+		row = createRowPanel();
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
 		buttonPanel.setBackground(Color.WHITE);

@@ -609,19 +609,6 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 		closeStatement(stat);
 	}
 
-	public static DatabaseReader getDatabaseReader(String appName) {
-		DatabaseReader dr = null;
-		try {
-			dr = getDatabaseReader(appName,
-					new PropertiesReader(DotPlotDBUser.class.getResource(DB_PROPS_FILE)));
-		} catch (Exception e) {
-			System.err.println("Problem loading default database properties file ["+DB_PROPS_FILE+"]");
-			System.err.println("\t"+e.getMessage());
-			dr = getDatabaseReader(appName,null,null,null,null);
-		}
-		return dr;
-	}
-
 	private static class ProjectHolder {
 		private Project[] projects;
 

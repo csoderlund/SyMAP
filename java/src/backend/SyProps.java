@@ -325,11 +325,11 @@ public class SyProps extends PropertiesReader
 	 * Writes the param file, though this is never read. Parameters are stored in database.
 	 */
 	private void writeFile(String dir, HashMap <String, String> chgVal) {
-		Utilities.checkCreateDir(dir, "PP write params file"); 
+		Utilities.checkCreateDir(dir, true); 
 		
 		File pfile = new File(dir,Constants.paramsFile);
-		if (!pfile.exists())
-			System.out.println("Create parameter file " + dir + Constants.paramsFile);
+		//if (!pfile.exists()) CAS511 don't need to output this
+		//	System.out.println("Create parameter file " + dir + Constants.paramsFile);
 		try {
 			PrintWriter out = new PrintWriter(pfile);
 			out.println("#");

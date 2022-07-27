@@ -11,7 +11,7 @@ import util.ErrorReport;
 import util.Utilities;
 
 public class Version {
-	int dbVer = SyMAP.DBVER; // 2
+	int dbVer = SyMAP.DBVER; 
 	String strVer = SyMAP.DBVERSTR; // db2
 	
 	public Version (UpdatePool pool) {
@@ -53,6 +53,7 @@ public class Version {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
 	}
+	
 	/***************************************************************
 	 * Run after every version update.
 	 * The props table values of DBVER and UPDATE are hardcoded in Schema.
@@ -104,7 +105,7 @@ public class Version {
 		}
 		catch (Exception e) {ErrorReport.print(e, sql); return false;}
 	}
-	/* Below are not - yet **/
+	
 	private boolean tableCheckAddColumn(String table, String col, String type, String aft) throws Exception
 	{
 		String cmd = "alter table " + table + " add " + col + " " + type ;
@@ -119,6 +120,7 @@ public class Version {
 		catch(Exception e) {ErrorReport.print(e, "MySQL error: " + cmd);}
 		return false;
 	}
+	/* Below are not - yet **/
 	private void tableCheckDropColumn(String table, String col) throws Exception
 	{
 		if (tableColumnExists(table,col)) {

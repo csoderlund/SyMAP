@@ -10,6 +10,7 @@ package symap.projectmanager.common;
 import javax.swing.*;
 
 import backend.Constants;
+import backend.UpdatePool;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -39,7 +40,7 @@ public class SumFrame extends JFrame
 	private Statement s = null;
 	private int pair_idx=0, pidx1=0, pidx2=0;
 	private int lenKb1=0, lenKb2=0;
-	private String pName1, pName2;
+	private String pName1, pName2, params="";
 	private long ctg_len=0, seq2_len=0;
 	
     // This one is called from the project manager
@@ -53,11 +54,8 @@ public class SumFrame extends JFrame
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		
 		addComponentListener(new ComponentListener() {
-			public void componentHidden(ComponentEvent arg0) {
-			}
-
-			public void componentMoved(ComponentEvent arg0) {
-			}
+			public void componentHidden(ComponentEvent arg0) {}
+			public void componentMoved(ComponentEvent arg0) {}
 
 			public void componentResized(ComponentEvent arg0) {
 				headerRow.setPreferredSize(
@@ -88,8 +86,7 @@ public class SumFrame extends JFrame
 					fTblPane.setMinimumSize(fTbl.getPreferredScrollableViewportSize());
 				}
 			}
-			public void componentShown(ComponentEvent arg0) {
-			}
+			public void componentShown(ComponentEvent arg0) {}
 		});
 		ResultSet rs;
 		try
@@ -99,32 +96,37 @@ public class SumFrame extends JFrame
 			headerRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 			headerRow.setBackground(Color.WHITE);
 			
-			s = db.getConnection().createStatement();
-
 			panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 			panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 			panel.setBackground(Color.WHITE);
 		
+			// CAS511 added 'params' only (not schema update)
+			UpdatePool pool = new UpdatePool(db);
+			boolean hasParams = false;
+			if (pool.tableColumnExists("pairs", "params")) hasParams=true;
+			String sql="select idx, aligndate";
+			if (hasParams) sql += ", params";  
+			
 			String alignDate = "Unknown";
-			rs = s.executeQuery("select idx, aligndate from pairs where proj1_idx=" + pidx1 + " and proj2_idx=" + pidx2 );
-			if (rs.first())
-			{
+			
+			s = db.getConnection().createStatement();
+			rs = s.executeQuery(sql + " from pairs where proj1_idx=" + pidx1 + " and proj2_idx=" + pidx2 );
+			if (rs.first()) {
 				pair_idx=rs.getInt(1);
 				alignDate = rs.getString(2);
+				if (hasParams) params = rs.getString(3);
 			}
-			else
-			{
-				rs = s.executeQuery("select idx, aligndate from pairs where proj1_idx=" + pidx2 + " and proj2_idx=" + pidx1 );
-				if (rs.first())
-				{
+			else {
+				rs = s.executeQuery(sql + " from pairs where proj1_idx=" + pidx2 + " and proj2_idx=" + pidx1 );
+				if (rs.first()){
 					pair_idx = rs.getInt(1);
 					alignDate = rs.getString(2);
+					if (hasParams) params = rs.getString(3);
 					int tmp = pidx1;
 					pidx1 = pidx2;
 					pidx2 = tmp;
 				}
-				else
-				{
+				else{
 					panel.add(new JLabel("Pair has not been aligned"));
 					return;
 				}
@@ -132,16 +134,14 @@ public class SumFrame extends JFrame
 			
 			rs = s.executeQuery("select name,type from projects where idx=" + pidx1);
 			String type1="";
-			if (rs.first())
-			{
+			if (rs.first()){
 				pName1 = rs.getString(1);
 				type1 = rs.getString(2);
 			}
 			rs = s.executeQuery("select name,type from projects where idx=" + pidx2);
-			if (rs.first())
-			{
+			if (rs.first()) 
 				pName2 = rs.getString(1);
-			}
+			
 			rs = s.executeQuery("SELECT value FROM proj_props WHERE proj_idx=" + pidx1 + " AND name='display_name'");
 			if (rs.next())
 				pName1 = rs.getString(1);
@@ -209,6 +209,18 @@ public class SumFrame extends JFrame
 			panel.add(new JLabel("Block Statistics"));
 			panel.add(Box.createVerticalStrut(5));
 			panel.add(bTblPane);
+			
+			panel.add(Box.createVerticalStrut(5));
+			
+			String [] x = params.split("::");
+			for (int i=0; i<x.length; i++) {
+				JPanel paramRow = new JPanel();
+				paramRow.setLayout(new BoxLayout(paramRow, BoxLayout.LINE_AXIS));
+				paramRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+				paramRow.setBackground(Color.WHITE);
+				paramRow.add(new JLabel(x[i]));
+				panel.add(paramRow);
+			}
 		}
 		catch(Exception e){ErrorReport.print(e, "Create summary");}
 	}

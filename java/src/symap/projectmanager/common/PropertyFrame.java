@@ -333,7 +333,7 @@ public class PropertyFrame extends JDialog {
 		// 	the /data/seq/<p>/params is created anyway for the parameters
 		String dir = (theMode == MODE_PSEUDO) ? 
 				(Constants.seqDataDir + theDBName) : (Constants.fpcDataDir + theDBName);
-		Utilities.checkCreateDir(dir, "PF write params file"); // CAS500 
+		Utilities.checkCreateDir(dir, true); // CAS500 
 		
 		File pfile = new File(dir,Constants.paramsFile);
 		if (!pfile.exists())

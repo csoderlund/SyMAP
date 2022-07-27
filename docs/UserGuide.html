@@ -10,7 +10,8 @@
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
 	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
     .ty td {border: 1px  solid black; padding: 3px; }
-     tt {font-size:13px}
+    top {vertical-align:text-top;}
+    tt {font-size:13px}
 	pre {font-size:13px}
 	body {font-family: Verdana, Arial, Helvetica,  sans-serif;  font-size: 14px; }
 </style>
@@ -61,8 +62,7 @@
 This guide is for the Seq-to-Seq (sequence) synteny user interface.
 Note, the term <i>pseudo</i> and <i>sequence</i> are used interchangeably.
 <ol>
-<li>Most of the contents also apply to the FPC-to-Seq view (unless stated
-otherwise). Specific information is provided in <a href=UserGuideFPC.html class="ext" target="_blank">FPC specific</a>.
+<li>Most of the contents also apply to the FPC-to-Seq view, where the specific information is provided in <a href=UserGuideFPC.html class="ext" target="_blank">FPC specific</a>.
 <li>For detailed information on installation, see
 the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
 <li>For a quick visual introduction, see the <a href="Tour.html" class="ext" target="_blank">Tour</a>.
@@ -92,7 +92,6 @@ The Dot Plot and Circle displays are available from various places.
 		<ul>
 		<li><a href="#alignment_display_circ">Circle Display (Multi-chromosome) #2</a>
 		<li><a href="#dot2">Dot Plot (Multi-chromosome) #2</a>
-		<li><a href="#alignment_display_3d">3D Display (if available)</a> <!-- # ref in code -->
 		<li><a href="#alignment_display_2d">2D Display</a> <!-- # ref in code -->
 			<ul>
 			<li><a href="#control">Control Panel and Navigation</a>
@@ -131,16 +130,12 @@ if you use SyMAP in a paper, poster, or presentation.
 <table style="width: 95%"><tr><td style="text-align: left">
 <h1>A. Main display</h1>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-The following commands result in the Manager image similar to the one shown below:
-<table class="ty">
-<tr><td><i>v5</i><td><i>v4.2</i><td><i>Description</i>
-<tr><td>viewSymap<td>symap -r -no3d<td>Read only, no 3D
-<tr><td>viewSymap3D<td>symap -r <td>Read only, with 3D
-</table>
+The display in the image below is shown when the following is executed from the terminal:
+<pre>   ./viewSymap</pre>
+Is it also available from <tt>./symap</tt>, where this display will also have the alignment commands.
 <p>
 <table>
-<tr><td>
+<tr><td class="top">
 All projects in the database will be listed on the left panel.
 <p>Selecting projects on the left panel shows them on the right panel. A check mark in the
 <b>Available Syntenies</b> table indicates pairs that have computed synteny that can be viewed.
@@ -280,9 +275,7 @@ the text rotated.
 <td><a href="img/circle-two-genome.png">
 	<img src="img/circle-two-genome.png" alt="" style="border: 1px solid black; width: 450px"></a>
 </table>
-<p><i>Note, if you are running SyMAP over an X-windows session on a remote server,
-the circle display will draw very slowly. For this case, the 3D display (if available) is
-recommended (or, use VNC or screen sharing to the remote server). </i>
+
 <!------------------------------------------------->
 <a id="sum"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -304,11 +297,10 @@ will be activated.
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 The Explorer is a two-panel display in which the left panel is used to select specific chromosomes, while the right panel
-shows the synteny for the selected chromosomes. Four different right-panel views are available:
+shows the synteny for the selected chromosomes. Three different right-panel views are available:
 <a href="#alignment_display_circ">circle</a>,
-<a href="#alignment_display_2d">2D</a>,
-<a href="#dotplot_display">Dotplot</a>,
-and <a href="#alignment_display_3d">3D</a> (the 3D is only available on systems that have the Java 3D libraries).
+<a href="#alignment_display_2d">2D</a> and
+<a href="#dotplot_display">Dotplot</a>.
 Below is a snapshot of the Explorer showing the circle format, which is the initial view.
 <p>
 <a id="circfig"></a>
@@ -321,10 +313,10 @@ Below is a snapshot of the Explorer showing the circle format, which is the init
 it.
 <li>Click the chromosome number above a chromosome to make it the <i>reference</i>. (The
 choice of reference sequence does not matter for the circle view,
-but it is important for the 2D, 3D, and Dot Plot views; see below).
-<li> Adding and removing chromosomes affects the 3D and Circle views instantly.
+but it is important for the 2D and Dot Plot views; see below).
+<li> Adding and removing chromosomes affects the Circle view instantly.
 To add/remove from the 2D or Dot Plot
-views, open either 3D or Circle view, make the change, and then re-open the 2D or Dot Plot.
+views, open the Circle view, make the change, and then re-open the 2D or Dot Plot.
 </ul>
 <p>
 Instructions: As the mouse moves over various
@@ -333,7 +325,6 @@ components, instructions for that component are shown in the Instruction box.
 
 The four buttons in the lower-left corner of the window change the view in the right panel,
 where the choices are
-<a href="#alignment_display_3d">3D</a>,
 <a href="#alignment_display_2d">2D</a>,
 <a href="#dotplot_display">Dotplot</a>,
  and <a href="#alignment_display_circ">Circle</a>.
@@ -347,7 +338,7 @@ Click the plus (<b><big>+</big></b>) button to show the project or Instruction b
 
 
 <p><b>Right panel:</b> The right panel shows the synteny display for the species and chromosomes selected on the left.
-There are four views: <a href="#alignment_display_3d">3D</a> (if available),
+There are three views:
 <a href="#alignment_display_2d">2D</a>,
 <a href="#dotplot_display">Dotplot</a>,
  and <a href="#alignment_display_circ">Circle</a>.
@@ -380,30 +371,7 @@ brings up the 2D view.
 <td><a href="img/dot-chr-2d.png">
 	<img src="img/dot-chr-2d.png" alt="" style="border: 1px solid black; width: 350px"></a>
 </table>
-<!----------------------------------------------------------------->
-<a id="alignment_display_3d"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>3D Display (if available)</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The 3D is only available on systems that have the Java 3D libraries.
-<p>
-The 3D display shows the selected chromosomes arrayed at equal spacing around the reference, which is
-placed in the center (see figure below):
-
-<table>
-<tr><td>
-The synteny blocks are shown as colored ribbons, with direct synteny blocks colored red, and inverted
-blocks colored green. (Note that the direct and inverse designations are for the overall block, but blocks may
-contain smaller-scale regions which are inverted relative to the block as a whole.)
-<p>
- Drag the mouse over
-the 3D view to rotate, move, or zoom the view, depending on which of the three Navigation buttons at the top is
-selected. For example, if the leftmost button is selected, as shown in the figure, then dragging with the
-mouse causes the figure to rotate.
-<td><a href="img/3D-chr.png">
-	<img src="img/3D-chr.png" alt="" style="border: 1px solid black; width: 500px"></a>
-</table>
 <!-------------------------------------------------------------------->
 <a id="alignment_display_2d"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -495,9 +463,8 @@ only way to the underlying sequence of a region than may or may not have hit.
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 The main panel is divided into <i>tracks</i>,
-where each track represents a sequence or FPC map (see <a href=UserGuideFPC.html class="ext" target="_blank">
-FPC specific</a> for details of the FPC tracks). Each track
-is aligned to the track oh its immediate left or right, and the
+where each track represents a sequence. Each track
+is aligned to the track on its immediate left or right, and the
 individual pieces of evidence for synteny (referred to as <i>anchors</i> or <i>hits</i>) are drawn as
 lines between the two tracks. Above each track
 is a "filter" button which allows configuration of the content displayed for
@@ -705,7 +672,7 @@ shows three genomes.
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 The query interface only works for multi-genome Seq-to-Seq synteny
-(i.e does not work for self-synteny or FPC-to-Seq).
+(i.e does not work for self-synteny).
 This interface has two basic
 functions:
 <br>
@@ -725,8 +692,7 @@ or exactly collinear pairs to filter out probable paralogs.  </i>
 <p>
 <i> &bull; Find orphan genes which are specific to one genome.</i>
 <p>
-To open the query interface, first select two or more sequence projects in the Project Manager (note, the
-queries are not supported for FPC maps). Then press the "SyMAP Queries" button to open the interface:
+To open the query interface, first select two or more sequence projects in the Project Manager. Then press the "SyMAP Queries" button to open the interface:
 <p>
 <a href="img/query_oview.png"><img src="img/query_oview.png" alt="" style="border: 1px solid black; width: 500px"></a>
 <p>
@@ -862,6 +828,14 @@ document were created with screen capture, along with the images in the SyMAP pu
 <p>The right
 icon brings up the this web page, typically to the correct section (obviously, there needs
 to be an internet connection).
+
+<!-------------------------- this link is in SyMap--------------------------------------->
+<a id="alignment_display_3d"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>3D Display (if available)</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+The 3D display is generally obsolete, but if there is a "3D" button on your display,  see
+<a href="./3D.html">3D</a>.
 
 <!---- END BODY -->
 	</td></tr>

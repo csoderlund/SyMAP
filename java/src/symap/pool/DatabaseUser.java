@@ -6,16 +6,11 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
-
 import backend.Constants;
-
-import java.util.LinkedHashSet;
 
 //import com.mysql.management.driverlaunched.ServerLauncherSocketFactory; CAS506 Java 14 not found
 
@@ -34,6 +29,7 @@ import util.ErrorReport;
  * 
  * CAS504 changed from reading Schema from file to calling new Schema
  * CAS506 removed all dead code for reading schema, and reorganized to try to make sense...
+ * CAS511 removed more dead code
  * 
  * if (ProjectManagerFrameCommon.CHECK_SQLVAR) checkVariables(conn);
  */
@@ -57,45 +53,38 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		QUERY_TIMEOUT = props.getInt("queryTimeout"); 
 	}
 
-	private DatabaseReader dr;
+	private DatabaseReader dr; // in util
 
 	private Connection connection = null;
 
 	protected DatabaseUser(DatabaseReader dr) {
 		this.dr = dr;
 	}
-
 	protected DatabaseReader getDatabaseReader() {
 		return dr;
 	}
-
-	protected PreparedStatement prepareStatement(String sql)
-			throws SQLException {
+	protected PreparedStatement prepareStatement(String sql) throws SQLException {
 		PreparedStatement r = getConnection().prepareStatement(sql);
 		r.setQueryTimeout(QUERY_TIMEOUT);
 		return r;
 	}
-
 	protected void close() {
 		if (connection != null) {
 			connection = null;
 		}
 	}
-
 	protected void closeResultSet(ResultSet rs) {
 		if (rs != null) {
 			try { rs.close(); }
 			catch (Exception e) { }
 		}
 	}
-
 	protected void closeStatement(Statement st) {
 		if (st != null) {
 			try { st.close(); }
 			catch (Exception e) { }
 		}
 	}
-	
 	/** executeQuery **/  
     // Based on http://dev.mysql.com/doc/refman/5.1/en/connector-j-usagenotes-troubleshooting.html#qandaitem-21-4-5-3-1-4
     public ResultSet executeQuery(String strQuery) throws SQLException 
@@ -216,10 +205,47 @@ public abstract class DatabaseUser implements SyMAPConstants {
     	int idx = -1;
 		ResultSet rs = executeQuery(strQuery);
 		if (rs.next())
-			idx = rs.getInt("idx");
+			idx = rs.getInt(1);
 		rs.close();
 		return idx;
     }
+	public void resetIdx(String table) { // CAS511 add
+		try {
+			int cnt = getIdx("select count(*) from " + table);
+			if (cnt==0)
+				executeUpdate("ALTER TABLE " + table + " AUTO_INCREMENT = 1");
+		}
+		catch (Exception e) {ErrorReport.print(e, "Reset auto-crement for " + table);}
+	}
+	/*******************************************************************8
+	 * CAS511 add for updating schema
+	 */
+	public boolean tableCheckAddColumn(String table, String col, String type, String aft) throws Exception
+	{
+		String cmd = "alter table " + table + " add " + col + " " + type ;
+		try {
+			if (!tableColumnExists(table,col)){
+				if (aft!=null && !aft.trim().equals("")) cmd += " after " + aft;
+				executeUpdate(cmd);
+				return true;
+			}
+			return false;
+		}
+		catch(Exception e) {ErrorReport.print(e, "MySQL error: " + cmd);}
+		return false;
+	}
+    public boolean tableColumnExists(String table, String column) throws Exception
+	{
+		ResultSet rs = executeQuery("show columns from " + table);
+		while (rs.next()) {
+			if (rs.getString(1).equals(column)) {
+				rs.close();
+				return true;
+			}
+		}
+		if (rs!=null) rs.close();
+		return false;
+	}
 	/***************** Extraneous public class methods *******************/
 	public boolean isContigs(int projectID, Collection<Integer> contigs) {
 		if (contigs == null || contigs.isEmpty())
@@ -263,6 +289,7 @@ public abstract class DatabaseUser implements SyMAPConstants {
 				closed = connection.isClosed();
 		} 
 		catch (Exception e) { }
+		
 		if (closed)
 			connection = dr.getConnection();
 		return connection;
@@ -316,29 +343,6 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		return d;
 	}
 
-
-	public static DatabaseReader getDatabaseReader(String appName, PropertiesReader props) {
-		String url = null, user = null, password = null, driver = null;
-		if (props != null) {
-			url = props.getString(DATABASE_URL_PROP);
-			user = props.getString(DATABASE_USER_PROP);
-			password = props.getString(DATABASE_PASSWORD_PROP);
-			driver = props.getString(DATABASE_DRIVER_PROP);
-		}
-		url = getURL(url, null);
-		if (user == null)		user = DEFAULT_DATABASE_USER;
-		if (password == null)	password = DEFAULT_DATABASE_PASSWORD;
-		if (driver == null)		driver = DATABASE_DRIVER;
-		
-		DatabaseReader d = null;
-		try {
-			d = DatabaseReader.getInstance(appName, url, user, password, driver);
-		} catch (ClassNotFoundException e) {
-			ErrorReport.print(e,"open database");
-		}
-		return d;
-	}
-
 	/***********************************************
 	 * Creates string for accessing the MySQL database
 	 */
@@ -388,7 +392,28 @@ public abstract class DatabaseUser implements SyMAPConstants {
 			System.exit(0);
 		}
 	}
-	
+	/***********************************************************
+	 * Database exists for the read only viewSymap CAS511 add
+	 */
+	public static boolean existDatabase(String hostname, String dbname, 
+			String username, String password) 
+	{
+		if (!checkHost(hostname,username,password))
+			return false;
+		try {
+			String hosturl = DatabaseUser.getDatabaseURL(hostname, "");
+			Connection conn = DriverManager.getConnection(hosturl, username,  password);
+			
+			Statement stmt = conn.createStatement();
+	    	ResultSet rs = stmt.executeQuery("SHOW DATABASES LIKE '" + dbname + "'");
+	    	boolean b = (rs.next()) ? true : false;
+	    	stmt.close();
+	    	conn.close();
+	    	return b;
+		}
+		catch (Exception e) {ErrorReport.print(e, "Checking for database " + dbname); return false;}
+		
+	}
 	/*************************************************************
 	 * Create database
 	 * CAS504 stopped using scripts/symap.sql and added Schema.java
@@ -440,19 +465,8 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		return success;
 	}
 	
-	protected static String setInsert(String sql, String insertString,
-			String lvalue, int[] rvalue) {
+	protected static String setInsert(String sql, String insertString, String lvalue, int[] rvalue) {
 		return sql.replaceFirst(insertString, toSQL(lvalue, rvalue));
-	}
-
-	protected static String setInsert(String sql, String insertString,
-			String lvalue, String[] rvalue) {
-		return sql.replaceFirst(insertString, toSQL(lvalue, rvalue));
-	}
-
-	protected static String setInsert(String sql, String is, String lvalue1,
-			String[] rvalue1, String lvalue2, String[] rvalue2) {
-		return sql.replaceFirst(is, toSQL(lvalue1, rvalue1, lvalue2, rvalue2));
 	}
 
 	protected static String setInt(String sql, int value) {
@@ -469,9 +483,6 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		return sql.replaceFirst("[?]", "'" + value + "'");
 	}
 
-	protected static String setConstant(String sql, String value) {
-		return sql.replaceFirst("[?]", value);
-	}
 	/**************** Private Static *****************************/
 	private static String getURL(String url, String altHost) {
 		if (url == null) {
@@ -586,44 +597,6 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		return buf.toString();
 	}
 
-	private static String toSQL(String lvalue, String[] rvalue) {
-		if (rvalue == null || rvalue.length == 0)
-			return "(0 = 1)";
-		Set<String> rvalues = new LinkedHashSet<String>(rvalue.length);
-		for (int i = 0; i < rvalue.length; i++)
-			rvalues.add(rvalue[i]);
-		Iterator<String> iter = rvalues.iterator();
-		lvalue = lvalue + "='";
-		StringBuffer buf = new StringBuffer("(").append(lvalue).append(
-				iter.next());
-		lvalue = "' OR " + lvalue;
-		while (iter.hasNext())
-			buf.append(lvalue).append(iter.next());
-		buf.append("')");
-		return buf.toString();
-	}
-
-	private static String toSQL(String lvalue1, String[] rvalue1,
-			String lvalue2, String[] rvalue2) {
-		if (rvalue1 == null || rvalue2 == null || rvalue1.length == 0)
-			return "(0 = 1)";
-		StringBuffer ret = new StringBuffer("(");
-		int i, j;
-		for (i = 0; i < rvalue1.length; i++) {
-			for (j = 0; j < i; j++)
-				if (rvalue1[j].equals(rvalue1[i]))
-					break;
-			if (j >= i) {
-				ret.append("(").append(lvalue1).append("='").append(rvalue1[i])
-						.append("' AND ").append(lvalue2).append("='").append(
-								rvalue2[i]).append("')");
-				if (i + 1 < rvalue1.length)
-					ret.append(" OR ");
-			}
-		}
-		return ret.toString();
-	}
-
 	private static boolean hasInnodb(Connection conn) throws Exception
 	{
 		boolean has = false;
@@ -657,11 +630,11 @@ public abstract class DatabaseUser implements SyMAPConstants {
 	 }
 	 
 	 public static byte getBESValue(String str) {
-			if (str != null) {
-				if (str.equals(R_VALUE_STR))	return R_VALUE;
-				if (str.equals(F_VALUE_STR))	return F_VALUE;
-			}
-			return NORF_VALUE;
+		if (str != null) {
+			if (str.equals(R_VALUE_STR))	return R_VALUE;
+			if (str.equals(F_VALUE_STR))	return F_VALUE;
+		}
+		return NORF_VALUE;
 	 }
 
 	public static String getBESValueStr(byte bes) {
@@ -673,7 +646,7 @@ public abstract class DatabaseUser implements SyMAPConstants {
 	/****************************************************************************
 	 * Check database settings when mysql database is created
 	 */
-	private static void checkVariables(Connection con, boolean prt) { // CAS501, update CAS505
+	public static void checkVariables(Connection con, boolean prt) { // CAS501, update CAS505
 		try{	
 			System.err.println("\nCheck MySQL variables");
 			int cntFlag=0;
@@ -712,7 +685,7 @@ public abstract class DatabaseUser implements SyMAPConstants {
 			}
 			
 			if (cntFlag>0) {
-				System.err.println("For details: see www.agcol.arizona.edu/symap/doc/TroubleShooting.html");
+				System.err.println("For details: see " + SyMAP.BASE_HELP_URL + "TroubleShoot.html");
 			}
 			else System.err.println("  MySQL variables are okay ");
 			

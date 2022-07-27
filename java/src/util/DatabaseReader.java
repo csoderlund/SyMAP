@@ -9,14 +9,17 @@ import java.sql.SQLException;
 
 /**
  * The DatabaseReader handles the establishment of connections to the database.
+ * See symap.pools.DatabaseUser.java 
  *
  * There is only one database reader for every name, url, user, password, and driver and
  * only one connection for that database reader.
  * 
  * CAS506 rearranged into logical order - no changes (removed kill())
+ * CAS511 removed deadcode
  */
 public class DatabaseReader {
-	private static Map<DatabaseReader,WeakReference<Connection>> databaseReaders = new HashMap<DatabaseReader,WeakReference<Connection>>();
+	private static Map<DatabaseReader,WeakReference<Connection>> 
+		databaseReaders = new HashMap<DatabaseReader,WeakReference<Connection>>();
 
 	private String name, url, user, password, driver;
 

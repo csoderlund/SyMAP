@@ -35,7 +35,7 @@ public static final double perBin = 0.8; // keep hits within 80% score of the to
 // Write to logs:  	ProgSpec for program alignment output
 //					ProjectManagerFrameCommon.buildLog for SyMAP alignment output
 public static final String logDir =     "logs/";     // in symap directory
-public static final String loadLog =    "LOAD.log";  // suffix for load log  (symap_load.log)
+public static final String loadLog =    "load.log";  // suffix for load log  (symap_load.log)
 public static final String syntenyLog = "symap.log"; // suffix for align log (p1_to_p2.log)
 
 // default directories of data ('/' in front indicates after project name

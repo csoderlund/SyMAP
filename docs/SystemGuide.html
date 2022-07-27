@@ -59,12 +59,13 @@
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
 
-The following discusses building a SyMAP v5 database. This document
-has been updated as of v5.0.7; see
-<a href=Release.html class="ext" target="_blank">Release Notes</a> for changes.
-For release v5.0.8, a document on trouble shooting
-<a href="MUMmer.html#mum"  class="ext" target="_blank">MUMmer</a> alignments failures has been added.
-
+The following discusses building a SyMAP v5 database.
+<ul>
+<li>For release v5.0.8, a document on trouble shooting <a href="MUMmer.html#mum"  class="ext" target="_blank">MUMmer</a> alignments failures has been added.
+<li>For release v5.1.1, 3D has been retired, but may still be usable (see <a href="3D.html"  class="ext" target="_blank">3D</a>).
+<li>For release v5.1.1, FPC (fingerprinted contigs)<sup>8,9</sup> has been semi-retired, though SyMAP still works for FPC. It is only discussed in the section on
+<a href="#fpc">FPC</a>.
+</ul>
 <h4>Contents</h4>
 <ul>
 	<li><a href="#overview">Overview and Publications</a>
@@ -75,11 +76,10 @@ For release v5.0.8, a document on trouble shooting
 			<li><a href="#installation">Installation</a>
 			<li><a href="#demo">Running the demo</a>
 				<ul>
+				<li><a href="#demoseq">Synteny between two genome sequences</a>
 				<li><a href="#draft">Ordering the demo draft</a>
+				<li><a href="#demoself">Self alignment</a>
 				</ul>
-			<ul>
-				<li><a href="Demo.html" class="ext" target="_blank">Querying the demo</a>
-			</ul>
 			</ul>
 	<li>New project
 		<ul>
@@ -136,11 +136,7 @@ for very similar genomes or bacterial genomes.
 				<font color=green>align a draft genome to a fully sequence (not draft-to-draft</font>).
 			</td>
 		</tr>
-		<tr>
-			<td>
-				Find synteny between an FPC map and sequenced genome.
-			</td>
-		</tr>
+
 		<tr>
 			<td>
 				For multiple selected synteny pairs, display using dot plot, circular, and side-by-side.
@@ -157,7 +153,7 @@ for very similar genomes or bacterial genomes.
 		<table class="ty">
 				<tr>
 					<td>
-						<a href="img/3d-chr.png"><img src="img/3d-chr.png" alt="" style="width:100px"></a>
+						<a href="img/manager.png"><img src="img/manager.png" alt="" style="width:100px"></a>
 					</td>
 					<td>
 						<a href="img/2d.png"><img src="img/2d.png" alt="" style="width:100px"></a>
@@ -208,7 +204,6 @@ SyMAP is freely distributed software, however
 <font color=green>if you use SyMAP results in published research, you must cite one
 or both of these articles along with any external programs you used within SyMAP such as
 MUMmer<sup>1,2</sup></font>
-
 
 <br>&nbsp;
 <a id=start></a>
@@ -353,18 +348,20 @@ you are performing queries on more than 4-5 genomes at once.
 Installation simply consists of unzipping the download package, using
 the command
 <pre>     &gt; tar -xzvf symap_5.tar.gz</pre>
-This can be done anywhere and creates a directory called <tt>symap_5</tt>. You can
-move this directory later if desired.
-<p>
-To run SyMAP, enter the <tt>symap_5</tt> directory and run the command:
-<pre>     &gt; ./symap
+This can be done anywhere and it creates a directory called <tt>symap_5</tt>. You can
+move this directory later if desired. The contents are:
+<pre>
+   LICENSE   README   data/   ext/   java/
+   scripts/  symap    symap.config   viewSymap
 </pre>
-
-<p>MUMmer<sup>1,2</sup> (sequence alignment), Blat<sup>3</sup> (FPC alignment)
-and MUSCLE<sup>7</sup> (SyMAP Queries) are provided with the package.
+The <tt>data/</tt> directory contains:
+<pre>   seq/   fpc.tar.gz   </pre>
+The <tt>seq/</tt> directory contains the demo files, and is the location for all input sequence files.
+<br>Remove <tt>fpc.tar.gz</tt> if you will not be working with FPC files.
+<p>The <tt>ext/</tt> directory contains the external programs MUMmer<sup>1,2</sup> (sequence alignment), Blat<sup>3</sup> (FPC alignment)
+and MUSCLE<sup>7</sup> (SyMAP Queries).
 
 <!--------- DEMO ---------->
-<br>
 <a id="demo"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>Running the Demo</h2>
@@ -389,6 +386,11 @@ see <a href="TroubleShoot.html#msqslow" class="ext" target="_blank">Trouble Shoo
 check that the provided executables (e.g. MUMmer); if it shows any problems,
 see <a href="MUMmer.html#ext" class="ext" target="_blank">MUMmer Executables</a>.
 <p>
+<a id="demoseq"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Synteny between two genome sequences</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 <table>
 <tr><td style="vertical-align: text-top;">
 The Project Manager window opens showing the four demo projects provided with the SyMAP packages.
@@ -437,7 +439,8 @@ Click the checked cell, which will enable the viewing buttons.
 
 <tr>
 <td style="vertical-align: text-top;">
-Click "Summary" to view the v5 summary shown on the right; <i>there may be slight difference in the number of anchors because the results are slightly different when run when different numbers of CPUs</i>.
+Click "Summary" to view the v5 summary shown on the right; <i>there may be slight differences in the #Anchors
+because of different numbers of CPUs, MacOS vs Linux, etc (but the #Blocks come out the same)</i>.
 <p>To view the other interfaces, see <a href="Demo.html" class="ext" target="_blank">Demo Results</a>.
 </td>
 <td>
@@ -447,11 +450,11 @@ Click "Summary" to view the v5 summary shown on the right; <i>there may be sligh
 </table>
 
 <a id="draft"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Ordering the demo draft</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The remainder of the demo relates to draft sequence, i.e. unanchored
-shotgun sequence.
-<p>
+
 <table>
 	<tr>
 		<td style="vertical-align: text-top;">
@@ -507,14 +510,11 @@ between the <tt>_ordered</tt> project and Demo_seq2 will provide a more coherent
 <a href="img/demoDraft3.png"><img src="img/demoDraft3.png" alt="" style="border: 1px solid black; width: 400px"></a>
 </table>
 
-<p><b>Further demos:</b>
-<ol>
-<li>There is also Demo-FPC that can be aligned to Demo-Seq
-following the same set of steps as described above.
-<li>The section on <a href="#self">Self alignments</a>
-discusses performing a demo_seq self alignment.
-</ol>
-This is the end of the demo.
+<a id="demoself"></a>
+<h3>Self alignment</h3>
+
+The section on <a href="#self">Self alignments</a> discusses the Demo_Seq project.
+
 <br>
 <!--------------------- NEW PROJECT ----------------------------------->
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -636,19 +636,16 @@ explains how to determine the problem and ways around it.
 <h2>Creating a New Project</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-Start symap (i.e. <tt>./symap</tt>). All projects listed under <tt>/data/fpc</tt> are FPC projects
-and all projects listed under <tt>/data/seq</tt> are Sequence projects.
-These sub-directories of <tt>/data/fpc</tt> and <tt>/data/seq</tt> will be listed on the
+Start symap (i.e. <tt>./symap</tt>).
+The sub-directories of <tt>/data/seq</tt> will be listed on the
 left panel under <b>Projects</b>. You may create the project as discussed in <a href="#dir">Directory
 structure</a>, or you may create a new project via the SyMAP interface.
 <p>
 <table>
 <tr><td style="vertical-align: text-top;">
 To create a new project via the SyMAP interface, press the "Add Project" button
-at the lower left. Enter the project name beside "Name:"; if the project type is "fpc", change the dropdown
-beside "Type:". The Help
-button on the dialog provides further information. The following will discuss a type "sequence" project and
-everything is similar for the "fpc" project.
+at the lower left. Enter the project name beside "Name:" and leave the "Type:" as "sequence". The Help
+button on the dialog provides further information.
 <p>&nbsp;
 <td>
 <a href="img/projNew.png"><img src="img/projNew.png" alt="" style="border: 1px solid black; width: 400px"></a>
@@ -698,7 +695,6 @@ See the "Help" for a description of the parameters.
 
 <p>These parameters generally do not need to be changed.
 
-<p><tt>Blat</tt> is the alignment program for FPC to Seq.
 The <tt>MUMmer</tt> program <tt>PROmer</tt> is the default program
 for sequence alignments for different genomes. The <tt>MUMmer</tt> program <tt>NUCmer</tt> is the default program
 for sequence self-alignments.
@@ -894,11 +890,11 @@ location), can remove the data files also.
 <p>
 The file results of the alignment and synteny computations are is as follows:
 <pre>
-/data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/align
-/data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/final
+   /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/align
+   /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/final
 </pre>
 The log files are in the <tt>/logs</tt> directory, see
-<a href="MUMmer.html#log" class="ext" target="_blank">Running MUMmer</a> for details.
+<a href="MUMmer.html#log" class="ext" target="_blank">Running MUMmer</a> for more details.
 
 <br>&nbsp;
 <a id="ext"></a>
@@ -922,15 +918,24 @@ This includes trouble shooting when MUMmer fails, and running MUMmer outside of 
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>FPC project</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+Untar <tt>data/fpc.tar.gz</tt> and restart <tt>symap</tt>.
+Align it to "Demo-Seq2" using the same steps as described <a href="#demo">above</a>, and
+explore the various displays.
+
+<p><tt>Blat</tt> is the alignment program for FPC to Seq. It will be shown in Alignment & Synteny parameters pop-up so the Blat parameters
+can be changed.
+
+<p>All projects listed under <tt>/data/fpc</tt> are FPC projects. To create a new project via the SyMAP interface,
+press the "Add Project" button
+at the lower left. Enter the project name beside "Name:"; change the dropdown
+beside "Type:" to "fpc".
+
 
 <h3>Working with FPC Files</h3>
 
-SyMAP can also align genomes represented by an FPC physical
+SyMAP can align genomes represented by an FPC physical
 map, by first aligning the BACs using BAC-end sequences or marker
-sequences. If you plan to work with FPC alignments, the first
-step is to run the provided demo "Demo-FPC". Align it to "Demo-Seq2"
-using the same steps as described <a href="#demo">above</a>, and
-explore the various displays.
+sequences.
 <p>
 Creating an FPC project is the same as for a
 <a href="#create">sequence project</a> except that you choose
@@ -952,9 +957,9 @@ the memory usage is much lower.
 <p>
 The default locations are:
 <pre>
-/data/fpc/&lt;project-name&gt;/&lt;name&gt;.fpc;
-/data/fpc/&lt;project-name&gt;/bes
-/data/fpc/&lt;project-name&gt;/mrk
+   /data/fpc/&lt;project-name&gt;/&lt;name&gt;.fpc;
+   /data/fpc/&lt;project-name&gt;/bes
+   /data/fpc/&lt;project-name&gt;/mrk
 </pre>
 The options for sequence files under <a href="#dir">directory structure</a> applies to FPC files using
 these default locations.
@@ -977,7 +982,7 @@ if desired. In the alignment, one species is "query" and the other is
 the query is the one with alphabetically the first name. The query sequences
 are written into one large file, while smaller target sequences are grouped
 into larger fasta files of size up to 60Mb, for more efficient processing
-in MUMmer. There is an option "Concat" that if unchecked, both query sequences
+in MUMmer. There is an option "Concat" that if unchecked, the query sequences
 are treated the same as the target; this is useful if the query and target are very large
 genomes.
 <p>
@@ -1024,37 +1029,45 @@ moving the source sequences on disk.
 
 <sup>1</sup>
 Kurtz, S., Phillippy, A., Delcher, A.L., Smoot, M., Shumway, M., Antonescu, C., Salzberg, S.L.
-(2004) Versatile and open software for comparing large genomes, Genome Biology, 5:R12
+(2004). Versatile and open software for comparing large genomes, Genome Biology, 5:R12
 
 <p>
 <sup>2</sup>
-Marcais, G., A.L. Delcher, A.M. Phillippy, R. Coston, S.L. Salzberg, A. Zimin (2018)
+Marcais, G., A.L. Delcher, A.M. Phillippy, R. Coston, S.L. Salzberg, A. Zimin (2018).
 MUMmer4: A fast and versatile genome alignment system,  PLoS computational biology, 14(1): e1005944.
 
 <p>
 <sup>3</sup>
-Kent, J. (2002) BLAT--the BLAST-like alignment tool, Genome Research 12:656-64.
+Kent, J. (2002). BLAT--the BLAST-like alignment tool, Genome Research 12:656-64.
 
 <p>
 <sup>4</sup>
-Krzywinski, M., J. Schein, I. Birol, J. Connors, R. Gascoyne, D. Horsman, S. Jones, M. Marra (2009)
+Krzywinski, M., J. Schein, I. Birol, J. Connors, R. Gascoyne, D. Horsman, S. Jones, M. Marra (2009).
 Circos: An information aesthetic for comparative genomics. Genome Research doi:10.1101/gr.092759.109.
 
 <p>
 <sup>5</sup>
-Soderlund, C., Nelson, W., Shoemaker, A., and Paterson, A.(2006)
+Soderlund, C., Nelson, W., Shoemaker, A., and Paterson, A.(2006).
 SyMAP: A system for discovering and viewing syntenic regions of FPC maps.
 Genome Res. 16:1159-1168.
 <p>
 <sup>6</sup>
-Soderlund, C., Bomhoff, M., and Nelson, W. (2011)
+Soderlund, C., Bomhoff, M., and Nelson, W. (2011).
 SyMAP: A turnkey synteny system with application to multiple large duplicated plant sequenced genomes.
 Nucleic Acids Res V39, issue 10, e68.
 <p>
 <sup>7</sup>
-Edgar, R (2004)
+Edgar, R (2004).
 MUSCLE: a multiple sequence alignment method with reduced time and space complexity.
 BMC Bioinformatics 113.
+<p>
+<sup>8</sup>
+Soderlund, C., S. Humphrey, A. Dunhum, and L. French (2000).
+Contigs built with fingerprints, markers and FPC V4.7. Genome Research 10:1772-1787.
+<p>
+<sup>9</sup>
+Engler, F., J. Hatfield, W. Nelson, and C. Soderlund (2003).
+Locating sequence on FPC maps and selecting a minimal tiling path. Genome Research 13:2152:2163.
 
 <!---- END BODY -->
 	</td></tr>

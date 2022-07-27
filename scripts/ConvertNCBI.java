@@ -656,7 +656,7 @@ public class ConvertNCBI {
 					        "\n-s  include scaffolds." +
 					        "\n-l  use linkage instead of chromosome." +
 					        "\n-v  write header lines of ignored sequences." +
-							"\n\nSee www.agcol.arizona.edu/software/symap/doc/convert/ncbi for details.");
+							"\n\nSee https://csoderlund.github.io/SyMAP/convert/ncbi for details.");
 			System.exit(0);
 		}
 		

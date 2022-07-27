@@ -99,17 +99,12 @@ public abstract class BlockFinder extends ParamHolder implements DotPlotConstant
      * @exception SQLException if an error occurs
      */
     public void setBlocks(int altNum) throws SQLException {
-	FBlock[] blocks = findBlocks();
-	if (blocks == null) blocks = new FBlock[0];
-	if (debug) printBlocks(blocks);
-	block.setAltBlocksRun(altNum,new AltBlocksRun(rid,blocks));
-	for (int i = 0; i < blocks.length; i++)
-	    blocks[i].setBlockHits(altNum);
-	if (db != null) writeBlocks(blocks);
-    }
-
-    protected void writeBlocks(FBlock[] ablocks) throws SQLException {
-	db.writeFBlocks(rid,block,ablocks);
+		FBlock[] blocks = findBlocks();
+		if (blocks == null) blocks = new FBlock[0];
+		if (debug) printBlocks(blocks);
+		block.setAltBlocksRun(altNum,new AltBlocksRun(rid,blocks));
+		for (int i = 0; i < blocks.length; i++)
+		    blocks[i].setBlockHits(altNum);
     }
 
     protected void printBlocks(FBlock[] ablocks) {

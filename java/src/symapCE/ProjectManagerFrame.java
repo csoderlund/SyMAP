@@ -14,9 +14,27 @@ import util.ErrorReport;
 public class ProjectManagerFrame extends ProjectManagerFrameCommon
 {
 	private static final long serialVersionUID = 1L;
+	
+	public static void main(String args[]) 
+	{
+		//System.out.println(System.getProperty("java.library.path"));	
+		if (!SyMAP.checkJavaSupported(null)) return;
+		
+		if (Utilities.hasCommandLineOption(args, "-h") || Utilities.hasCommandLineOption(args, "-help") 
+			|| Utilities.hasCommandLineOption(args, "--h")) {
+			
+			prtParams(args); // see ProjectManagerFrameCommon for all variable stuff
+			System.exit(0);
+		}
+		
+		ProjectManagerFrame frame = new ProjectManagerFrame(args);
+		frame.setVisible(true);
+	}
+	
 	ProjectManagerFrame(String args[])
 	{
 		super(args); // CAS505 moved parse args to ProjectManagerFrameCommon
+		
 		explorerListener = new ActionListener() {
 			public void actionPerformed(ActionEvent e) { 
 				showExplorer();
@@ -24,21 +42,13 @@ public class ProjectManagerFrame extends ProjectManagerFrameCommon
 		};
 	}
 	
-	public static void main(String args[]) 
-	{
-		//System.out.println(System.getProperty("java.library.path"));	
-		if (!SyMAP.checkJavaSupported(null))
-			return;
-		
-		ProjectManagerFrame frame = new ProjectManagerFrame(args);
-		frame.setVisible(true);
-	}
-	
 	private void showExplorer() {
 		Utilities.setCursorBusy(this, true);
 		try {
-			SyMAPExp symapExp = new SyMAPExp(
-					DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_SYMAP_3D, dbReader));
+			DatabaseReader dr = DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_SYMAP_3D, dbReader);
+			
+			SyMAPExp symapExp = new SyMAPExp(dr);
+			
 			for (Project p : availProjects) 
 				symapExp.addProject( p.getDBName(), p.getType() );
 			symapExp.build();
@@ -46,7 +56,7 @@ public class ProjectManagerFrame extends ProjectManagerFrameCommon
 			symapExp.getFrame().setVisible(true); 
 		}
 		catch (Exception err) {
-			ErrorReport.print(err, "Show explorer for non-3D");
+			ErrorReport.print(err, "Show SyMAP graphical window");
 		}
 		finally {
 			Utilities.setCursorBusy(this, false);

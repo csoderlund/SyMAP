@@ -324,7 +324,7 @@ public class ConvertEnsembl {
 					        "\n       a fasta file ending with .fa.gz" +
 					        "\n       a gff3  file ending with .gff3.gz" +  
 					        "\n-v  write header lines of ignored sequences [default false]." +
-							"\n\nSee www.agcol.arizona.edu/software/symap/doc/convert for details.");
+							"\n\nSee https://csoderlund.github.io/SyMAP/convert for details.");
 			System.exit(0);
 		}
 		

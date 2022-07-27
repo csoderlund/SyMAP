@@ -92,8 +92,10 @@ public class AnnotLoadMain
 				return true; // this is not considered an error
 			}
 			
-			for (File f2 : ad.listFiles()) 
+			for (File f2 : ad.listFiles()) {
+				if (!f2.isFile() || f2.isHidden()) continue; // CAS511 macos add ._ files in tar
 				annotFiles.add(f2);
+			}
 		}
 		else
 		{
@@ -110,8 +112,10 @@ public class AnnotLoadMain
 					log.msg("Cannot find annotation file " + filstr);
 				}
 				else if (f.isDirectory()) {
-					for (File f2 : f.listFiles()) 
+					for (File f2 : f.listFiles()) {
+						if (!f2.isFile() || f2.isHidden()) continue; // CAS511 macos add ._ files in tar
 						annotFiles.add(f2);
+					}
 				}
 				else {
 					annotFiles.add(f);

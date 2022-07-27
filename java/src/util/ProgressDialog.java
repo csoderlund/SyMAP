@@ -44,8 +44,8 @@ public class ProgressDialog extends JDialog implements Logger {
 	
 	public ProgressDialog(final Frame owner, String strTitle, String strMessage, 
 			boolean isDeterminate, 
-			boolean hasConsole, // CAS500 always T now and always has logW
-			FileWriter logW)    // LOAD.log or symap.log (2nd also written to by backend.Log)
+			boolean hasCancel, // CAS511 Removes has this as false, cause Hangs if Cancel
+			FileWriter logW)   // LOAD.log or symap.log (2nd also written to by backend.Log)
 	{
 		super(owner, strTitle, true);
 		Cancelled.init();
@@ -71,20 +71,17 @@ public class ProgressDialog extends JDialog implements Logger {
 		progressBar.setStringPainted(true);
 		progressBar.setString(""); // set height
 
-		// Console and button
-		if (hasConsole) {
-			textArea = new JTextArea(15, 80);
-			textArea.setMargin(new Insets(5,5,5,5));
-			textArea.setEditable(false);
-			textArea.setFont(new Font("monospaced", Font.PLAIN, 10));
-			//textArea.setWrapStyleWord(true);
-			textArea.setLineWrap(true);
-			((DefaultCaret)textArea.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE); // enable auto-scroll
+		textArea = new JTextArea(15, 80);
+		textArea.setMargin(new Insets(5,5,5,5));
+		textArea.setEditable(false);
+		textArea.setFont(new Font("monospaced", Font.PLAIN, 10));
+		//textArea.setWrapStyleWord(true);
+		textArea.setLineWrap(true);
+		((DefaultCaret)textArea.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE); // enable auto-scroll
 			
-			button = new JButton("Cancel");
-			button.setAlignmentX(Component.CENTER_ALIGNMENT);
-			button.addActionListener( handleButton );
-		}
+		button = new JButton("Cancel");
+		button.setAlignmentX(Component.CENTER_ALIGNMENT);
+		button.addActionListener( handleButton );
 		
 		// Add everything to top-level panel
 		panel = new JPanel();
@@ -95,10 +92,12 @@ public class ProgressDialog extends JDialog implements Logger {
 		panel.add( Box.createVerticalStrut(5) );
 		panel.add( progressBar );
 		panel.add( Box.createVerticalStrut(1) );
-		if (hasConsole) {
-			panel.add( new JScrollPane(textArea, 
+		
+		panel.add( new JScrollPane(textArea, 
 					JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER) );
+		
+		if (hasCancel) {
 			panel.add( Box.createVerticalStrut(10) );
 			panel.add( button );
 		}
@@ -160,10 +159,11 @@ public class ProgressDialog extends JDialog implements Logger {
 	}
 	
 	public synchronized void setText(String s) {
-		textArea.setText(s);
+		if (textArea!=null) textArea.setText(s);
 	}
 	
 	public synchronized void appendText(String s) {
+		if (textArea==null) return;
 		if (!s.endsWith("\n")) s += "\n";
 		textArea.append(s);
 		System.out.print(s);
@@ -179,6 +179,7 @@ public class ProgressDialog extends JDialog implements Logger {
 	}
 	
 	public synchronized void updateText(String search, String newText) {
+		if (textArea==null) return;
 		String text = textArea.getText();
 		int pos = text.lastIndexOf(search);
 		if (pos < 0)
@@ -194,29 +195,25 @@ public class ProgressDialog extends JDialog implements Logger {
 	}
 	
 	public void finish(boolean success) {
-		if (bCloseWhenDone)
-		{
+		if (bCloseWhenDone) {
 			finishAndClose(success);	
 			return;
 		}
-		if (bCloseIfNoErrors)
-		{
+		if (bCloseIfNoErrors) {
 			setCursor( Cursor.getDefaultCursor() );
 			progressBar.setIndeterminate(false);
-			progressBar.setString("Completed, click 'Done' to continue ...");
-			if (ErrorCount.getCount() > 0)
-			{
+			
+			if (ErrorCount.getCount() > 0) {
+				progressBar.setString("Completed, click 'Done' to continue ..."); // CAS511 move after if
 				msg("Some errors occurred, check text in this window, terminal or view logs/LOAD.log.");
 				button.setText("Done (Error Occurred)"); 
 			}
-			else
-			{
+			else {
 				finishAndClose(success);	
 				return;				
 			}
 		}
-		else
-		{
+		else {
 			long runTime = System.currentTimeMillis() - startTime;
 			if (runTime < MIN_DISPLAY_TIME) // ensure dialog is visible
 				try { Thread.sleep(MIN_DISPLAY_TIME - runTime); } 
@@ -234,8 +231,7 @@ public class ProgressDialog extends JDialog implements Logger {
 					progressBar.setString("Error occurred, click 'Cancel' to abort ...");
 				}
 			}
-			else
-			{
+			else {
 				dispose();
 			}
 		}
@@ -286,16 +282,13 @@ public class ProgressDialog extends JDialog implements Logger {
 		}
 	};
 	
-	
 	// Logger interface
 	public void msg(String msg) {
 		appendText(msg + "\n");
 	}
 	public void msgToFile(String s) {
-		if (logFileW != null)
-		{
-			try
-			{
+		if (logFileW != null) {
+			try {
 				logFileW.write(s);
 				logFileW.flush();
 			}

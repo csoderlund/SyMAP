@@ -40,7 +40,7 @@ public class AlignProjs extends JFrame {
 		FileWriter syFW =    symapLog(p1,p2);
 		String alignLogDir = frame.buildLogAlignDir(p1,p2);
 
-		System.out.println("\n>>Starting NEW " + p1 + " and " + p2);
+		System.out.println("\n>>Starting " + p1 + " and " + p2);
 	
 		try {
 			Date date = new Date();
@@ -119,6 +119,7 @@ public class AlignProjs extends JFrame {
 
 					/** Align **/
 					success &= aligner.run(); 
+					String params = aligner.getParams();
 					
 					if (Cancelled.isCancelled()) {
 						diaLog.setVisible(false);
@@ -141,16 +142,14 @@ public class AlignProjs extends JFrame {
 					if (Cancelled.isCancelled()) return;
 					
 					success &= anchors.run( p1.getDBName(), p2.getDBName() );
-					if (!success) 
-					{
+					if (!success) {
 						diaLog.finish(false);
 						return;
 					}
 					if (Cancelled.isCancelled()) return;
 					
 					success &= synteny.run( p1.getDBName(), p2.getDBName() );
-					if (!success) 
-					{
+					if (!success) {
 						diaLog.finish(false);
 						return;
 					}
@@ -159,13 +158,17 @@ public class AlignProjs extends JFrame {
 					timeEnd = System.currentTimeMillis();
 					diff = timeEnd - timeStart;
 					timeMsg = Utilities.getDurationString(diff);
-					diaLog.appendText(">> Summary for " + p1.getDisplayName() + " and " + p2.getDisplayName() + "\n\n");
+					diaLog.appendText(">> Summary for " + p1.getDisplayName() + " and " + p2.getDisplayName() + "\n");
 					printStats(diaLog, p1, p2);
 					diaLog.appendText("\nFinished in " + timeMsg + "\n\n");
 					
+					// CAS511 add params column (not schema update) to save args, mummer5, noCat	
 					UpdatePool pool = new UpdatePool(dbReader);
-					pool.executeUpdate("update pairs set aligned=1,aligndate=NOW() where (" + 
-						"	proj1_idx=" + p1.getID() + " and proj2_idx=" + p2.getID() + ") or (proj1_idx=" + p2.getID() + " and proj2_idx=" + p1.getID() + ")"); 
+					pool.tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null); 
+					
+					pool.executeUpdate("update pairs set aligned=1,aligndate=NOW(), params='" + params + "'"
+						+ " where (proj1_idx=" + p1.getID() + " and proj2_idx=" + p2.getID() 
+						+ ") or   (proj1_idx=" + p2.getID() + " and proj2_idx=" + p1.getID() + ")"); 
 				}
 				catch (OutOfMemoryError e) {
 					success = false;
@@ -256,7 +259,8 @@ public class AlignProjs extends JFrame {
 			
 			File lf = new File(pd,Constants.syntenyLog);
 			ret = new FileWriter(lf, true); // append
-			System.out.println("Append to log file: " + pairDir + "/" + Constants.syntenyLog);	
+			System.out.println("Append to log file: " 
+					+ pairDir + "/" + Constants.syntenyLog + " (Length " + Utilities.kMText(lf.length()) + ")");	
 		}
 		catch (Exception e) {ErrorReport.print(e, "Creating log file");}
 		return ret;
@@ -294,10 +298,8 @@ public class AlignProjs extends JFrame {
 		int pairIdx = frame.getPairIdx(p1.getID(),p2.getID());
 		if (pairIdx==0) return;
 
-		if (p1.isPseudo()) // pseudo/pseudo
+		if (p1.isPseudo()) // pseudo/pseudo CAS511 removed #chromosomes
 		{
-			Utils.prtNumMsg(prog, p1.getNumGroups(), p1.getDisplayName() + " chromosomes");
-			Utils.prtNumMsg(prog, p2.getNumGroups(), p2.getDisplayName() + " chromosomes");
 			TreeMap<String,Integer> counts = new TreeMap<String,Integer>();
 			getPseudoCounts(counts,pairIdx);
 			Utils.prtNumMsg(prog, counts.get("nhits"), "hits");
@@ -307,8 +309,6 @@ public class AlignProjs extends JFrame {
 		}
 		else
 		{
-			Utils.prtNumMsg(prog, p2.getNumGroups(), p2.getDisplayName() + " chromosomes");
-			Utils.prtNumMsg(prog, p1.getNumGroups(), p1.getDisplayName() + "(FPC) chromosomes (or LG)");
 			int nMrk = getFPCMarkers(p1);
 			Utils.prtNumMsg(prog, nMrk, "markers");
 			Utils.prtNumMsg(prog, getFPCBES(p1), "BESs");

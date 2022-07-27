@@ -66,7 +66,7 @@ public class AnchorsMain
 		try {
 			long startTime = System.currentTimeMillis();
 			
-			log.msg("\nLoading alignments for " + proj1Name + " and " + proj2Name);
+			log.msg("Loading alignments for " + proj1Name + " and " + proj2Name);
 			
 			Utils.initStats();
 

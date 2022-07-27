@@ -19,15 +19,15 @@ import symap.closeup.CloseUp;
 import symapQuery.TableDataPanel;
 
 /**
- * Class <code>SyMAP</code> is used to acquire and configure the desired objects.
+ * Class SyMAP is used to acquire and configure the desired objects.
  *
  * The properties file (/properties/symap.properties) needs to 
  * be properly set along with all of the corresponding .properties files.
  */
 public class SyMAP {
-	public static final String VERSION = "v5.1.0";
-	public static final String DATE = " (12-June-22)";
-	public static final int DBVER =  2;
+	public static final String 	VERSION = "v5.1.1";
+	public static final String 	DATE = " (27-July-22)";
+	public static final int 	DBVER =  2; 
 	public static final String DBVERSTR = "db" + DBVER;
 	
 	// CAS500 change v4.2 to doc; CAS510 change base to github; put #links here
@@ -43,7 +43,7 @@ public class SyMAP {
 	public static final int MAX_PROJECTS = 100; // for parsing applet params
 	
 	private static final int REQUIRED_JAVA_MAJOR_VERSION = 1; 
-	private static final int REQUIRED_JAVA_MINOR_VERSION = 7; // CAS500
+	private static final int REQUIRED_JAVA_MINOR_VERSION = 8; // CAS500
 	
 	private static final Color purple = new Color(204, 128, 255); 
 	public static final Color[] projectColors = { Color.cyan, Color.green, purple, Color.yellow, Color.orange }; // should match SyMAP3D.projectColors
@@ -157,9 +157,10 @@ public class SyMAP {
 	}
 
 	public static void printVersion() {
-		System.out.println("\nSyMAP Version " + VERSION + DATE);
-		System.out.println("Java Version " + getInstalledJavaVersionStr() + 
-				", mem: " + (Runtime.getRuntime().maxMemory() / (1024*1024)) + "M");
+		String base = BASE_HELP_URL.substring(0, BASE_HELP_URL.length()-1);
+		String d = (Runtime.getRuntime().maxMemory() / (1024*1024)) + "m";
+		System.out.println("\nSyMAP " + VERSION + DATE + "   " + base
+			+ "   Java v" + getInstalledJavaVersionStr() + " (" + d + ")");
 	}
 	
 	public static boolean checkJavaSupported(Component frame) {	

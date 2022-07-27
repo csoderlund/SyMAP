@@ -71,8 +71,9 @@ public class Schema {
 		    "idx                     INTEGER AUTO_INCREMENT PRIMARY KEY," +
 		    "proj1_idx               INTEGER NOT NULL," +
 		    "proj2_idx               INTEGER NOT NULL," +
-			"aligned					BOOLEAN default 0," +
+			"aligned				BOOLEAN default 0," +
 		    "aligndate				datetime," +
+			"params					VARCHAR (128)," +	// CAS511
 		    "UNIQUE INDEX (proj1_idx,proj2_idx)," +
 		    "FOREIGN KEY (proj1_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj2_idx) REFERENCES projects (idx) ON DELETE CASCADE" +

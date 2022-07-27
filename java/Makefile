@@ -1,10 +1,8 @@
-JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-14.0.1.jdk/Contents/Home
+JAVA_PATH=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
 #JAVA_PATH=/usr
 
 JAVAC_FLAGS = -g #,vars #-Xlint:deprecation
 
-# Note, other files are picked up through dependencies, but if a file is added
-# that isn't a dependency of one of these, then it won't be built
 JAVA_FILES=./src/symap/*.java  ./src/symapCE/*.java ./src/dotplot/*.java \
            ./src/symapCE/*.java  ./src/backend/*.java ./src/symapMultiAlign/*.java \
            ./src/symapQuery/*.java  ./src/symap3D/*.java ./src/blockview/*.java \
@@ -19,7 +17,6 @@ build:
 standalone_jars:
 	$(JAVA_PATH)/bin/jar -cf jar/symap.jar -C ./classes . -C ./src html -C ./src properties -C ./src images -C ./classes_symap . 
 	#$(JAVA_PATH)/bin/jar -cf jar/symap3D.jar -C ./classes . -C ./src html -C ./src properties -C ./src images -C ./classes_symap3D . 
-
 	 
 class_dirs:
 	rm -rf classes_symap/* classes_symap3D/* 
@@ -30,12 +27,11 @@ class_dirs:
 	cp -R classes_ext/both/* classes_symap
 	cp -R classes_ext/standalone/* classes_symap
 	cp -R classes_ext/freehep/* classes_symap
-	# 3D : contains all of standalone as well
-	mkdir -p classes_symap3D
-	cp -R classes_symap/* classes_symap3D
-	cp -R classes_ext/3d/* classes_symap3D
-	
-	
+# 3D : contains all of standalone as well
+	#mkdir -p classes_symap3D
+	#cp -R classes_symap/* classes_symap3D
+	#cp -R classes_ext/3d/* classes_symap3D
+		
 clean_classes:
 	rm -fr classes/* 
 clean:

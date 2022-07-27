@@ -616,7 +616,7 @@ public class Utilities {
 		}
 	}
     
-	public static File checkCreateDir(String dir, String trace)
+	public static File checkCreateDir(String dir, boolean bPrt)
 	{
 		try {
 			File f = new File(dir);
@@ -628,7 +628,7 @@ public class Utilities {
 			
 			if (!f.exists()) {
 				f.mkdir();
-				if (TRACE) System.out.println(trace + ": XYZ mkdir: " + dir);
+				if (bPrt) System.out.println("Create directory " + dir); // CAS511
 			}
 	
 			return f;
@@ -707,6 +707,12 @@ public class Utilities {
     /**********************************************************
      * XXX Time methods
      */
+	 static public String getDateTime ( )
+    {
+        Date date=new Date();
+        SimpleDateFormat sdf=new SimpleDateFormat("dd-MMM-yy HH:mm:ss"); 
+        return sdf.format(date);
+    }
 	static public String getDateOnly ( ) // CAS506 day-month-year
     {
         Date date=new Date();

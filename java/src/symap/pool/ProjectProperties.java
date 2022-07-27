@@ -13,8 +13,6 @@ public class ProjectProperties extends DatabaseUser {
 	private static final String PROJECT_PAIR_QUERY = 
 		"SELECT idx,proj1_idx,proj2_idx FROM pairs";
 
-	private static final String PROJECT_QUERY = "SELECT idx,type FROM projects";
-
 	private DatabaseProperties dp;
 	private List<ProjectPair> projectPairs;
 	private ProjectObj[] projects;
@@ -68,11 +66,11 @@ public class ProjectProperties extends DatabaseUser {
 	}
 
 	public String getProperty(int projectID, String property) {
-		return dp.getProperty(new Object[]{new Integer(projectID)},property);
+		return dp.getProperty(new Object[]{projectID},property);
 	}
 
 	public String getProperty(String project, String property) {
-		return dp.getProperty(new Object[]{new Integer(getID(project))},property);
+		return dp.getProperty(new Object[]{getID(project)},property);
 	}
 
 	public String getStringProperty(int projectID, String property, String defaultValue) {
@@ -82,12 +80,9 @@ public class ProjectProperties extends DatabaseUser {
 	}
 
 	public int getIntProperty(int projectID, String property, int defaultValue) {
-		return dp.getIntProperty(new Integer(projectID),property,defaultValue);
+		return dp.getIntProperty(projectID,property,defaultValue);
 	}
 
-	public int getIntProperty(String project, String property, int defaultValue) {
-		return dp.getIntProperty(new Integer(getID(project)),property,defaultValue);
-	}
 
 	/**
 	 * Method <code>getID</code> returns the id of the project or -1 if the project
@@ -96,7 +91,7 @@ public class ProjectProperties extends DatabaseUser {
 	 * @param project a <code>String</code> value of the name of the project
 	 * @return an <code>int</code> value of the project id or -1 if the project doesn't exist
 	 */
-	public int getID(String project) {
+	private int getID(String project) {
 		for (int i = 0; i < projects.length; i++) {
 			if (projects[i].name.equals(project)) return projects[i].id;
 		}

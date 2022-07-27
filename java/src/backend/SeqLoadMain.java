@@ -35,7 +35,6 @@ public class SeqLoadMain
 	{
 		try {
 			long startTime = System.currentTimeMillis();
-			log.msg("");
 			log.msg("Loading sequences for " + projName);
 			
 			//pool.updateSchemaTo40();
@@ -67,7 +66,8 @@ public class SeqLoadMain
 					new String[] { "name","display_name", "description", 
 				"category", "grp_prefix", "grp_sort", "grp_type","order_against",
 				"replace_bad_char","min_display_size_bp","mask_all_but_genes",
-				"min_size","sequence_files", "anno_files"});
+				"min_size","sequence_files", "anno_files",
+				"annot_keywords", "annot_kw_mincount"}); // CAS511 added these two, do not know why they were missing
 	
 			Vector<File> seqFiles = new Vector<File>();
 			
@@ -141,7 +141,7 @@ public class SeqLoadMain
 			{
 				int nBadCharLines = 0, fileIgnore = 0;
 				long fileSize = 0;
-				if (!f.isFile()) continue; // CAS42 1/2/18 was one big if
+				if (!f.isFile() || f.isHidden()) continue; // CAS511 macos add ._ files in tar
 				
 				cntFile++;
 				log.msg("Reading " + f.getName());
@@ -224,9 +224,9 @@ public class SeqLoadMain
 					}
 					else {seqIgnore++; fileIgnore++;}
 				}
-				log.msg(String.format("%10d sequences   %10d bases   %4d files ignored",
-						n, fileSize, fileIgnore));
-				
+				if (fileIgnore>0)
+					 log.msg(String.format("%10d sequences   %10d bases   %4d files ignored", n, fileSize, fileIgnore));
+				else log.msg(String.format("%10d sequences   %10d bases", n, fileSize));
 				if (nBadCharLines > 0)
 					log.msg("+++ " + nBadCharLines + " lines contained characters other than AGCT; these will be replaced by N");
 			
@@ -240,8 +240,9 @@ public class SeqLoadMain
 			}
 			if (cntFile>1) {
 				log.msg("Total:");
-				log.msg(String.format("%10d sequences   %10d bases   %4d files ignored",
-						nSeqs, totalSize, seqIgnore));
+				if (seqIgnore>0)
+					 log.msg(String.format("%10d sequences   %10d bases   %4d files ignored", nSeqs, totalSize, seqIgnore));
+				else log.msg(String.format("%10d sequences   %10d bases ", nSeqs, totalSize));
 			}
 			if (nSeqs >= MAX_COLORS)
 				log.msg("+++ There are " + MAX_COLORS + " distinct colors for blocks -- there will be duplicates");

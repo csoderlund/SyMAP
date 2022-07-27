@@ -267,10 +267,10 @@ public class OrderAgainst {
 			groupedDir.delete();
 		}	
 		mLog.msg("   Create " + groupFileName);
-		Utilities.checkCreateDir(groupFileName, "SM anchored");
+		Utilities.checkCreateDir(groupFileName, true /* bPrt */);
 		
-		File groupedSeqDir =Utilities.checkCreateDir(groupedDir + Constants.seqSeqDataDir, "SM anchored seq ");
-		File groupedAnnoDir = Utilities.checkCreateDir(groupedDir + Constants.seqAnnoDataDir, "SM anchored anno ");
+		File groupedSeqDir =Utilities.checkCreateDir(groupedDir + Constants.seqSeqDataDir, true);
+		File groupedAnnoDir = Utilities.checkCreateDir(groupedDir + Constants.seqAnnoDataDir, true);
 		
 		File groupedFasta = Utilities.checkCreateFile(groupedSeqDir, groupedName + Constants.faFile, "SM fasta file");
 		File groupedGFF =   Utilities.checkCreateFile(groupedAnnoDir, groupedName + ".gff", "SM gff");
@@ -548,13 +548,13 @@ public class OrderAgainst {
 				Utilities.clearAllDir(ordDir);
 				ordDir.delete();
 			}	
-			Utilities.checkCreateDir(ordDirName, "SM anchored");
+			Utilities.checkCreateDir(ordDirName, true);
 			
-			File ordSeqDir = Utilities.checkCreateDir(ordDir + Constants.seqSeqDataDir, "SM anchored seq ");
+			File ordSeqDir = Utilities.checkCreateDir(ordDir + Constants.seqSeqDataDir, true);
 			File ordFasta = Utilities.checkCreateFile(ordSeqDir, ordProjName + Constants.faFile, "SM fasta file");
 			FileWriter ordFastaFH = 	new FileWriter(ordFasta);
 			
-			File ordAnnoDir = Utilities.checkCreateDir(ordDir + Constants.seqAnnoDataDir, "SM anchored anno ");
+			File ordAnnoDir = Utilities.checkCreateDir(ordDir + Constants.seqAnnoDataDir, true);
 			File ordGFF =   Utilities.checkCreateFile(ordAnnoDir, ordProjName + ".gff", "SM gff");
 			FileWriter ordGffFH = new FileWriter(ordGFF);
 			

@@ -351,17 +351,20 @@ public class Utils
         return buffer;	
 	} 
 	/*****************************************************/
-	static String getProjProp(int projIdx, String name, UpdatePool conn) throws SQLException
+	static String getProjProp(int projIdx, String name, UpdatePool conn) 
 	{
-		String value = null;
-		
-		String st = "SELECT value FROM proj_props WHERE proj_idx='" + projIdx + "' AND name='" + name +"'";
-		ResultSet rs = conn.executeQuery(st);
-		if (rs.next())
-			value = rs.getString("value");
-		rs.close();
-		
-		return value;
+		try {
+			String value = null;
+			
+			String st = "SELECT value FROM proj_props WHERE proj_idx='" + projIdx + "' AND name='" + name +"'";
+			ResultSet rs = conn.executeQuery(st);
+			if (rs.next())
+				value = rs.getString("value");
+			rs.close();
+			
+			return value;
+		}
+		catch (Exception e) {ErrorReport.print(e, "Getting parameters from database"); return "";}
 	}
 	static void setProjProp(int projIdx, String name, String val, UpdatePool conn) throws Exception
 	{

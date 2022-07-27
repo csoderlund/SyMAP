@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SyMAP 3D</title>
+<style>
+    a:link {text-decoration: none;color:#6666CC;}
+    a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
+    a.ext {font-weight: bold;}
+    mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+    tt {font-size:13px}
+	pre {font-size:13px}
+	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
+</style>
+</head>
+
+<body>
+<a id="top"></a>
+<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
+	<tr><td>
+		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
+			<tr>
+				<td style="text-align: left; vertical-align: top; padding: 0">
+					<a href="http://www.agcol.arizona.edu">
+						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
+				</td>
+				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
+					SyMAP 3D
+				</td>
+				<td style="text-align: right; vertical-align: top; padding: 0">
+					<a href="http://www.arizona.edu">
+						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+					<br>
+
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
+				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
+					<tr>
+						<td style="background-color: #666666; padding-bottom:4px;">
+						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
+						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
+						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
+						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="./Tour.html" class="white">Tour</a>
+					</tr>
+				</table>
+				</td>
+			</tr>
+		</table>
+	</td></tr>
+
+	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+	<!---- START BODY -->
+
+<a id="alignment_display_3d"></a>
+<h3>User Guide for 3D</h3>
+
+The 3D display shows the selected chromosomes arrayed at equal spacing around the reference, which is
+placed in the center (see figure below):
+
+<table>
+<tr><td>
+The synteny blocks are shown as colored ribbons, with direct synteny blocks colored red, and inverted
+blocks colored green. (Note that the direct and inverse designations are for the overall block, but blocks may
+contain smaller-scale regions which are inverted relative to the block as a whole.)
+<p>
+ Drag the mouse over
+the 3D view to rotate, move, or zoom the view, depending on which of the three Navigation buttons at the top is
+selected. For example, if the leftmost button is selected, as shown in the figure, then dragging with the
+mouse causes the figure to rotate.
+<td><a href="img/3D-chr.png">
+	<img src="img/3D-chr.png" alt="" style="border: 1px solid black; width: 500px"></a>
+</table>
+
+
+<a id="alignment_display_3d"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>System Guide for 3D</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<table><tr><td>
+
+The 3D view shown is only available if the Java 3D libraries exist. The 3D libraries have become almost obsolete, but
+still exist in cyberspace.
+
+<p>The following describes how to use them with SyMAP (however, I have not verified it works).
+
+<ol>
+<li>You must obtain the following jar files:
+<pre>j3dcore.jar, j3dutils.jar, vecmath.jar, jogl.jar, gluegen-rt.jar</pre>
+<li>Either:
+<ul>
+<li>Email <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a> for the <tt>symap3D.jar</tt> file, or
+<li>Obtain the SyMAP code from <a href="https://github.com/csoderlund/SyMAP" class="ext" target="_blank">Github</a>.
+Uncomment the lines in the <tt>Makefile</tt> that create the <tt>symap3D.jar</tt> and 3D classes, then <tt>make</tt>.
+</ul>
+<br>
+<li>Create a script similar to the following, but change what is necessary to access the 3D jar files:
+<pre>
+#!/bin/sh
+mem="8192m";
+echo "--- SyMAP with query and view - with 3D ($mem) ----";
+java -Xmx$mem -classpath java/jar/symap3D.jar  symap3D.ProjectManagerFrame3D -r $@
+</pre>
+</ol>
+
+
+<!---- END BODY -->
+	</td></tr>
+	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+
+</td></tr>
+</table>
+</body>
+</html>
+
