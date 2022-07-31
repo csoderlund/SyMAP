@@ -2381,7 +2381,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	{
 		UpdatePool pool = new UpdatePool(dbReader);
         pool.executeUpdate("DELETE from projects WHERE name='"+p.getDBName()+"' AND type='"+p.getType()+"'");
-        pool.resetIdx("projects");
+        //pool.resetIdx("projects"); // CAS511 thought is was a problem, but wasn't
 	}
 	private void removeProjectAnnotationFromDB(Project p) throws SQLException
 	{
@@ -2393,7 +2393,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	{
 		UpdatePool pool = new UpdatePool(dbReader);
         pool.executeUpdate("DELETE from pairs WHERE proj1_idx="+p1.getID()+" AND proj2_idx="+p2.getID());
-        pool.resetIdx("pairs");
+        //pool.resetIdx("pairs");
 	}
 	
 	private boolean removeAlignmentFromDisk(Project p1, Project p2)

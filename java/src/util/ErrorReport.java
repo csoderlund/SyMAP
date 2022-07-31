@@ -50,8 +50,22 @@ public class ErrorReport {
 	}
 	public static void reportError(Throwable e, String msg, boolean replaceContents) {
 		System.err.println(msg);
+		if (e!=null) {
+			String [] lines = e.getMessage().split("\n"); // CAS511 can include nested stacktrace
+			if (lines.length>5) {
+				System.err.println(lines[0]);
+				for (String l : lines) {
+					if (l.startsWith("MESSAGE")) {
+						System.err.println(l);
+						break;
+					}
+				}
+			}
+			else {
+				System.err.println(e.getMessage());
+			}
+		}
 		
-		if (e!=null) System.err.println(e.getMessage());
 		PrintWriter pWriter = null;
 		try {
 			if(replaceContents) {
@@ -66,13 +80,11 @@ public class ErrorReport {
 		}
 		
 		pWriter.println("\n" + getDate()); 
-		
-		if (msg != null) pWriter.println(msg + "\n");
-		
-		if (e != null)  e.printStackTrace(pWriter);
-			
-		System.err.println("See " + strFileName);
-		
+		pWriter.println(msg + "\n");
+		if (e != null)  {
+			e.printStackTrace(pWriter);
+			System.err.println("See " + strFileName);
+		}
 		pWriter.close();
 	}
 	

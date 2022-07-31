@@ -56,7 +56,7 @@
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
 
-<h3>Release: v5.1.1 (27July22)</h3>
+<h3>Release: v5.1.1 (31July22)</h3>
 
 These changes are to 'tidy up' things; nothing major.
 <ul>
@@ -92,9 +92,12 @@ running the synteny.
 <li>The project parameters <tt>annot_keywords</tt> and <tt>annot_kwy_mincount</tt> are now being saved to the database
 so their values are shown correctly in the project parameters window on re-display.
 <li>A proper message is given when <tt>viewSymap</tt> tries to read a databases (<tt>symap.config</tt>) that does not exist.
-<li>Developers: removed more dead code; reset auto-increment if table is empty.
+<li>A stacktrace will not be printed to the terminal, only to the error.log (the e.getMessage() sometimes includes a partial
+stack).
+<li>Developers: removed more dead code.
 </ul>
 </ul>
+Note: this was first released on 27July22, then again on 31July22 with a slight change.
 
 
 <h3>Release: v5.1.0 (12June22)</h3>

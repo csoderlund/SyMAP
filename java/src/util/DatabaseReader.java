@@ -75,8 +75,9 @@ public class DatabaseReader {
 					try {
 						con = DriverManager.getConnection(dr.url,dr.user,dr.password);
 					} catch (SQLException e) {
-						String msg = "SQLException while establishing a connection to "+dr.url+" Error Code: "+e.getErrorCode();
-						ErrorReport.print(e, msg);
+						String msg = "SQLException while establishing a connection to "+
+									dr.url+"\nError Code: "+e.getErrorCode();
+						ErrorReport.die(e, msg); // CAS511 change from print to die
 						throw e;
 					}
 					databaseReaders.put(dr,new WeakReference<Connection>(con));
