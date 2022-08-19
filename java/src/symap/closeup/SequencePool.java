@@ -439,8 +439,8 @@ public class SequencePool extends DatabaseUser {
 			return null;
 		
 		int[] out = new int[2];
-		out[0] = new Integer(tokens[0]).intValue();
-		out[1] = new Integer(tokens[1]).intValue();
+		out[0] = Integer.parseInt(tokens[0]); // CAS512 new Integer(tokens[0]).intValue();
+		out[1] = Integer.parseInt(tokens[1]); // new Integer(tokens[1]).intValue();
 		return out;
 	}
 	

@@ -140,7 +140,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 			else if (source == downButton)       dp.changeAlignRegion(0.5);
 			else if (source == upButton)         dp.changeAlignRegion(2.0);
 
-			else if (source == editColorsButton) cdh.show();
+			else if (source == editColorsButton) cdh.showX();
 			else if (source == showImageButton)  ImageViewer.showImage(dp); // CAS507 made static
 		}
 	};

@@ -788,19 +788,19 @@ Annotation files should be in
 <a href="http://www.sequenceontology.org/gff3.shtml" class="ext" target="_blank">gff3 format</a>.
 The first column (seqid) must exactly match the sequence names in
 the fasta files. The third column (type) determines how SyMAP
-uses the entry. Types "gene", "exon", "CDS", "centromere", and "gap"
-are recognized (other entries are ignored). "CDS" and "exon" are
-treated equivalently in SyMAP.
+uses the entry. Types "gene", "exon", "centromere", and "gap"
+are recognized (other entries are ignored).
 <p>
-The last column (attributes) contains "tag=value" pairs describing
-the annotation. You can set which attributes to use, or use all
-those occurring more than a certain number of times; open the
+The last column (attributes) contains "keyword=value" pairs describing
+the annotation.
+<ul><li>For genes, all attributes are saved in the database for viewing.
+You can set which attributes keywords to save; open the
 Project's Parameters window (shown <a href="#params2">above</a>), look for parameter "annot_keywords".
-<p>
-<i><b>Important:</b> Only the annotation on "gene" entries is shown in the
-displays or used for searching. For entries "exon", "CDS", "gap", and "centromere",
-only the coordinates from the gff file are used; the annotation text is not read.
-</i>
+<li>For exons, the "parent" keyword=value is saved for viewing.
+</ul>
+Note: As of v5.1.2, the genes and exon entries are expected to be in one file. If they are
+separate, the exons are not correctly assigned to the genes when there are nested genes - but
+the synteny results are still correct.
 
 <p><i><b>NCBI files:</b></i> A Java script (<tt>scripts/ConvertNCBI.class</tt>) has been provided that
 converts NCBI genome fasta files and gff annotation files

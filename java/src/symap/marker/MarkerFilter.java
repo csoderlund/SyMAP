@@ -29,7 +29,7 @@ import symap.filter.Filter;
 public abstract class MarkerFilter extends Filter {
 	private JLabel markerNameLabel;
 	private JTextField markerNameText;
-	private JComboBox markerNameCombo;
+	private JComboBox <String> markerNameCombo;
 	private JCheckBox showOnlySharedMarkersBox;
 	private JRadioButton showNoMarkerNamesRadio;
 	private JRadioButton showOnlyMarkersWithHitsRadio;
@@ -215,9 +215,9 @@ public abstract class MarkerFilter extends Filter {
 		noChange = false;		
 	}
 
-	public void show() {
+	public void showX() {
 		if (!isShowing()) setupShow();
-		super.show();
+		super.setVisible(true); // CAS512 ;super.show();
 	}
 
 	protected void setDefault() {

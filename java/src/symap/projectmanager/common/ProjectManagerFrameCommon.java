@@ -53,6 +53,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	 */
 	public static boolean inReadOnlyMode = false;
 	public static String  MAIN_PARAMS =   "symap.config"; // default
+	public static boolean TEST_TRACE = false;
 	
 	private static int     maxCPUs = -1;
 	private static boolean isCat = true;
@@ -179,6 +180,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			if (Utilities.hasCommandLineOption(args, "-d")) {// not shown in -h help
 				System.out.println("-d Extra output for SyMAP Query");
 				Q.TEST_TRACE = true;
+				TEST_TRACE = true; // CAS12
 			}
 			
 			if (Utilities.hasCommandLineOption(args, "-a")) {// not shown in -h help
@@ -1135,14 +1137,11 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			showNewProjectHelp();
 		}
 	};
-	private void showNewProjectHelp()
-	{
+	private void showNewProjectHelp(){
 		Utilities.showHTMLPage(addProjectPanel,"New Project Help", "/html/NewProjHelp.html");	
 	}
-	private void showHelp() 
-	{
+	private void showHelp()  {
 		Utilities.showHTMLPage(null,"Project Manager Help", "/html/ProjManagerHelp.html");
-
 	}		
 
 	private MouseListener doLoad = new MouseAdapter() {
@@ -1169,8 +1168,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					UpdatePool pool = new UpdatePool(dbReader);
 					String projName = project.getDBName();
 					
-					if ( project.isFPC() )
-					{
+					if ( project.isFPC() ) {
 						success = FPCLoadMain.run( pool, progress, projName );
 						
 						if (!success || Cancelled.isCancelled()) { // CAS500
@@ -1178,12 +1176,10 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 							return;
 						}
 					}
-					else if ( project.isPseudo() ) 
-					{
+					else if ( project.isPseudo() )  {
 						success = SeqLoadMain.run( pool, progress, projName );
 					
-						if (success && !Cancelled.isCancelled()) 
-						{
+						if (success && !Cancelled.isCancelled())  {
 							AnnotLoadMain annot = new AnnotLoadMain(pool, progress,mProps);
 							success = annot.run( projName );
 						}
@@ -1198,7 +1194,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					ErrorReport.print(e, "Loading project");
 				}
 				finally {
-					progress.finish(success);
+					if (!progress.wasCancelled())
+						progress.finish(success);
 				}
 			}
 		};
@@ -1231,8 +1228,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				boolean success = true;
 				progress.appendText("\n>>> Load all projects <<<"); 
 				
-				for (Project project : availProjects)
-				{
+				for (Project project : availProjects) {
 					if (project.getStatus() != Project.STATUS_ON_DISK) continue;
 				
 					curProj = project;
@@ -1240,16 +1236,13 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 						UpdatePool pool = new UpdatePool(dbReader);
 						String projName = project.getDBName();
 						
-						if ( project.isFPC() )
-						{
+						if ( project.isFPC() ) {
 							success = FPCLoadMain.run( pool, progress, projName );
 						}
-						else if ( project.isPseudo() ) 
-						{
+						else if ( project.isPseudo() )  {
 							success = SeqLoadMain.run( pool, progress, projName );
 						
-							if (success && !Cancelled.isCancelled()) 
-							{
+							if (success && !Cancelled.isCancelled())  {
 								AnnotLoadMain annot = new AnnotLoadMain(pool, progress,mProps);
 								success = annot.run( projName );
 							}
@@ -1261,9 +1254,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					}
 				}
 				if (!progress.wasCancelled())
-				{
 					progress.finish(success);
-				}
 			}
 		};
 		
@@ -1317,8 +1308,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					UpdatePool pool = new UpdatePool(dbReader);
 					String projName = project.getDBName();
 					
-					if ( project.isPseudo() ) 
-					{
+					if ( project.isPseudo() ) {
 						AnnotLoadMain annot = new AnnotLoadMain(pool, progress, mProps);
 						success = annot.run( projName );
 					}
@@ -1328,7 +1318,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					ErrorReport.print(e, "Run Reload");
 				}
 				finally {
-					progress.finish(success);
+					if (!progress.wasCancelled()) // CAS512 add check
+						progress.finish(success);
 				}
 			}
 		};
@@ -1396,7 +1387,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		public void mouseClicked(MouseEvent e) {
 			if (!progressConfirm2("Reload annotation", "Reload annotation" +
 					"\n\nYou will need to re-run the synteny computations for this project, " +
-					"\nbut not the MUMmer or BLAT alignments.")) return;
+					"\nbut not the alignments.")) return; // CAS512 remove MUMmer and BLAT
 			
 			progressReloadAnnotation( ((ProjectLinkLabel)e.getSource()).getProject() );
 		}
@@ -1422,25 +1413,27 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	private MouseListener doReloadParams = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
 			Project theProject = ((ProjectLinkLabel)e.getSource()).getProject();
+			
 			PropertyFrame propFrame = new PropertyFrame(
 				getRef(), theProject.isPseudo(), theProject.getDisplayName(), 
-				theProject.getDBName(), dbReader, true);
+				theProject.getDBName(), dbReader, true, theProject.getPathName());
+			
 			propFrame.setVisible(true);
 			
-			if(!propFrame.isDisarded())
-			{			
+			if(!propFrame.isDisarded()) {			
 				theProject.updateParameters(new UpdatePool(dbReader),null);
 			}
-			
 			refreshMenu();		
 		}
 	};
 	private MouseListener doSetParamsNotLoaded = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
 			Project theProject = ((ProjectLinkLabel)e.getSource()).getProject();
+			
 			PropertyFrame propFrame = new PropertyFrame(
 				getRef(), theProject.isPseudo(), theProject.getDisplayName(), 
-				theProject.getDBName(), dbReader, false);
+				theProject.getDBName(), dbReader, false, theProject.getPathName());
+			
 			propFrame.setVisible(true);
 			
 			refreshMenu(); // CAS504
@@ -1560,8 +1553,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					progress.finish(success);
 				}
 			}
-		};
-		
+		};	
 		progress.start( rmThread ); 
 		
 		refreshMenu();
@@ -1673,8 +1665,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					
 					success = SeqLoadMain.run( pool, progress, projName );
 					
-					if (success && !Cancelled.isCancelled()) 
-					{
+					if (success && !Cancelled.isCancelled()) {
 						AnnotLoadMain annot = new AnnotLoadMain(pool, progress,mProps);
 						success = annot.run( projName );
 					}
@@ -1688,7 +1679,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				}
 			}
 		};
-		
 		progress.start( rmThread ); 
 		
 		refreshMenu();
@@ -1710,7 +1700,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		Project p2 = getProjectByDisplayName( strColProjName );
 		
 		return orderProjects(p1,p2);
-
 	}
 	// XXX this is important as having FPC first is assumed in other places
 	private Project[] orderProjects(Project p1, Project p2)
@@ -1740,7 +1729,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	
 	// CAS500 was putting log in data/pseudo_pseudo/seq1_to_seq2/symap.log
 	// changed to put in logs/seq1_to_seq2/symap.log
-	
 	public String buildLogAlignDir(Project p1, Project p2) {
 		try
 		{
@@ -1805,6 +1793,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				
 			ResultSet rs = pool.executeQuery("SELECT idx FROM pairs " +
 					"WHERE proj1_idx=" + id1 + " AND proj2_idx=" + id2);
+			
 			if (rs.first())
 				idx = rs.getInt(1);	
 			rs.close();
@@ -2113,15 +2102,12 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			projXIdx = projYIdx;
 			projYIdx = temp;
 		}
-		
-		try
-		{
+		try{
 			BlockViewFrame frame = new BlockViewFrame(dbReader, projXIdx, projYIdx);
 			frame.setMinimumSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
 			frame.setVisible(true);
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			ErrorReport.die(e, "Show block view");
 		}
 		
@@ -2243,8 +2229,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		UpdatePool pool = new UpdatePool(dbReader);
         ResultSet rs = pool.executeQuery("SELECT pairs.proj1_idx, pairs.proj2_idx FROM pairs " + 
         			" join projects as p1 on p1.idx=pairs.proj1_idx join projects as p2 on p2.idx=pairs.proj2_idx "  +
-        				" where pairs.aligned=1 " 
-        				);
+        				" where pairs.aligned=1 ");
         
         while ( rs.next() ) {
 	        	int proj1Idx = rs.getInt("proj1_idx");
@@ -2254,7 +2239,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	        		pairs.put( proj1Idx, new Vector<Integer>() );
 	        	pairs.get(proj1Idx).add(proj2Idx);
         }
-        
         rs.close();
 
         return pairs;
@@ -2360,8 +2344,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				Project newProj = new Project(-1, f.getName(), dirName, f.getName() );
 				newProj.setStatus( Project.STATUS_ON_DISK );
 				
-				if (!projects.contains(newProj)) 
-				{
+				if (!projects.contains(newProj))  {
 					newProj.getPropsFromDisk(f);
 					projects.add( newProj );	
 				}
@@ -2371,9 +2354,9 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	
 	private void sortProjects(Vector<Project> projects) {
 		Collections.sort( projects, new Comparator<Project>() {
-		    	public int compare(Project p1, Project p2) {
-		    		return p1.getDBName().compareTo( p2.getDBName() );
-		    	}
+		    public int compare(Project p1, Project p2) {
+		    	return p1.getDBName().compareTo( p2.getDBName() );
+		    }
 	    });
 	}
 	
@@ -2381,19 +2364,21 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	{
 		UpdatePool pool = new UpdatePool(dbReader);
         pool.executeUpdate("DELETE from projects WHERE name='"+p.getDBName()+"' AND type='"+p.getType()+"'");
-        //pool.resetIdx("projects"); // CAS511 thought is was a problem, but wasn't
+        pool.resetIdx("idx", "projects"); // CAS512 thought is was a problem, but wasn't
+        pool.resetIdx("idx", "xgroups"); // only resets if empty, otherwise, set auto-inc to max(idx)
 	}
 	private void removeProjectAnnotationFromDB(Project p) throws SQLException
 	{
 		UpdatePool pool = new UpdatePool(dbReader);
         pool.executeUpdate("DELETE pseudo_annot.* from pseudo_annot, xgroups where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + p.getID());
+        pool.resetIdx("idx", "pseudo_annot"); // CAS512
 	}	
 	
 	public void removeAlignmentFromDB(Project p1, Project p2) throws Exception
 	{
 		UpdatePool pool = new UpdatePool(dbReader);
         pool.executeUpdate("DELETE from pairs WHERE proj1_idx="+p1.getID()+" AND proj2_idx="+p2.getID());
-        //pool.resetIdx("pairs");
+        pool.resetIdx("idx", "pairs"); // CAS512
 	}
 	
 	private boolean removeAlignmentFromDisk(Project p1, Project p2)
@@ -2407,12 +2392,12 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
     private boolean removeDir(File dir) {
         if (dir.isDirectory()) {
             String[] children = dir.list();
-            if (children != null)
-            {
+            
+            if (children != null) {
 	            for (int i = 0;  i < children.length;  i++) {
 	                boolean success = removeDir(new File(dir, children[i]));
 	                if (!success) {
-	                		System.err.println("Error deleting " + dir.getAbsolutePath());
+	                	System.err.println("Error deleting " + dir.getAbsolutePath());
 	                    return false;
 	                }
 	            }
@@ -2425,6 +2410,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
     private void addNewProjectFromUI(Vector<Project> projects, String name, String type) {
 		Project newProj = new Project(-1, name, type, name );
 		newProj.setStatus( Project.STATUS_ON_DISK );
+		
 		if (!projects.contains(newProj)) {
 			System.out.println("Create " + DATA_PATH + type + "/" + name);
 			Utilities.checkCreateDir(DATA_PATH + type + "/" + name, true /* bprt*/);

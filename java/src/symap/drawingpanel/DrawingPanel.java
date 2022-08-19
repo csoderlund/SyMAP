@@ -11,7 +11,6 @@ import javax.swing.*;
 
 import java.sql.SQLException;
 
-import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.marker.MarkerList;
 import symap.frame.ControlPanel;
@@ -46,7 +45,7 @@ import util.Utilities;
 public class DrawingPanel extends JPanel 
 	implements ColorListener, HistoryListener, SyMAPConstants
 { 
-	private static final boolean METHOD_TRACE = false;
+	private static boolean TRACE = false; // symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
 		
 	public static Color backgroundColor = Color.white;
 	public static final int MAX_TRACKS = 100;
@@ -157,10 +156,7 @@ public class DrawingPanel extends JPanel
 				trackHolders[i].getTrack().clearTrackBuild();
 	}
 
-	/**
-	 * Method <code>getMapType</code> returns the first map in which
-	 * mapMember is a member and returns the Map type.
-	 */
+	/**  returns the first map in which mapMember is a member and returns the Map type. */
 	public int getMapType(Track mapMember) {
 		for (int i = 0; i < numMaps; i++)
 			if (mappers[i].getTrack1() == mapMember 
@@ -172,8 +168,7 @@ public class DrawingPanel extends JPanel
 	/**
 	 * Returns the data needed to recreate the drawing panel (all of the maps 
 	 * visible).  This information is all of the filter information and any 
-	 * information needed to acquire the data from the database not the actual 
-	 * data.
+	 * information needed to acquire the data from the database not the actual  data.
 	 */
 	public DrawingPanelData getData() {
 		return new DrawingPanelData(mappers,trackHolders,numMaps);
@@ -230,7 +225,7 @@ public class DrawingPanel extends JPanel
 				list.addAll(m.getHitsInRange(src,start,end));
 			}
 		}
-		if (METHOD_TRACE) System.out.println("getHitData: " + list.size() + " hits");
+		if (TRACE) System.out.println("getHitData: " + list.size() + " hits");
 		
 		return list;
 	}
@@ -240,8 +235,7 @@ public class DrawingPanel extends JPanel
 	 * if a track exists at pos.  If the track is not initialized before setting 
 	 * the start/end, it is initialized.
 	 * 
-	 * The ends of the map are locked till the next build if the track at pos 
-	 * is a Sequence.
+	 * The ends of the map are locked till the next build if the track at pos is a Sequence.
 	 */
 	public boolean setTrackEnds(int pos, double startBP, double endBP) throws IllegalArgumentException {
 		Track track = trackHolders[pos-1].getTrack();
@@ -409,8 +403,7 @@ public class DrawingPanel extends JPanel
 	}
 
 	/**
-	 * Method <code>update</code> makes the updates based on the
-	 * parameters passed.
+	 * update - makes the updates based on the parameters passed.
 	 *
 	 * If track is an instance of a Block, than a contig is put in
 	 * that track's place with a contig number of ((Integer)arg).intValue().
@@ -419,8 +412,7 @@ public class DrawingPanel extends JPanel
 	 * If track is an instance of a Contig, than a block track is put in it's 
 	 * place with a contig list of (Collection)arg.
 	 *
-	 * Finally the reset index is set, the history is updated, and the view is 
-	 * updated
+	 * Finally the reset index is set, the history is updated, and the view is updated
 	 */
 	public void update(final Track track, final Object arg) {
 		setFrameEnabled(false);
@@ -429,7 +421,7 @@ public class DrawingPanel extends JPanel
 			public void run() {
 				try {
 					if (track instanceof Block) { // when FPC contig is selected
-						if (SyMAP.DEBUG) System.out.println("draw block ");
+						if (TRACE) System.out.println("draw block ");
 						
 						Contig c = new Contig(dp,track.getHolder());
 						c.setup(track.getProject(), ((Integer)arg).intValue(),
@@ -438,19 +430,19 @@ public class DrawingPanel extends JPanel
 						
 						replaceTrack(track, c);
 					} else if (track instanceof Contig) { // obsolete?
-						if (SyMAP.DEBUG) System.out.println("draw contig ");
+						if (TRACE) System.out.println("draw contig ");
 						
 						Block block = new Block(dp,track.getHolder());
-						block.setup(track.getProject(), Block.getContigs((Collection)arg),
+						block.setup(track.getProject(), Block.getContigs((Collection) arg),
 								track.getOtherProject(), (ContigTrackData)track.getData());
 						
 						replaceTrack(track, block);
 					}
 				} catch (IllegalArgumentException iae) {
-					System.out.println(iae.getMessage());
+					ErrorReport.print(iae, "Drawing panel update: illegal argument");
 					Utilities.showErrorMessage(iae.getMessage(), -1); 		
 				} catch (IllegalStateException ise) {
-					System.out.println(ise.getMessage());
+					ErrorReport.print(ise, "Drawing panel update: illegal state");
 					Utilities.showErrorMessage(ise.getMessage(), -1); 		
 				} catch (Exception exc) {
 					ErrorReport.print(exc, "Unable to make map");
@@ -469,8 +461,7 @@ public class DrawingPanel extends JPanel
 	}
 
 	/**
-	 * Method <code>changeZoomFactor</code> changes the zooms by a factor.  The factor should be non negative and
-	 * a zero factor does not change the zooms.
+	 * changeZoomFactor: The factor should be non negative and a zero factor does not change the zooms.
 	 *
 	 * @param factor a <code>double</code> value factor by which to change the zooms of all of the tracks
 	 * @return a <code>boolean</code> value of true if all changes are successful
@@ -489,16 +480,12 @@ public class DrawingPanel extends JPanel
 	public boolean changeAlignRegion(double factor) {
 		setUpdateHistory();
 		
-		if (factor > 1)
-		{
+		if (factor > 1) {
 			boolean fullyExpanded = true;
 	
-			for (int i = 0; i <= numMaps; i++)
-			{
-				if (trackHolders[i].getTrack() != null)
-				{
-					if (!trackHolders[i].getTrack().fullyExpanded())
-					{
+			for (int i = 0; i <= numMaps; i++) {
+				if (trackHolders[i].getTrack() != null) {
+					if (!trackHolders[i].getTrack().fullyExpanded()) {
 						fullyExpanded = false;
 						break;
 					}
@@ -506,11 +493,8 @@ public class DrawingPanel extends JPanel
 			}
 			if (fullyExpanded) return true;
 		}
-		
-		for (int i = 0; i <= numMaps; i++)
-		{
-			if (trackHolders[i].getTrack() != null)
-			{
+		for (int i = 0; i <= numMaps; i++) {
+			if (trackHolders[i].getTrack() != null) {
 				trackHolders[i].getTrack().changeAlignRegion(factor);
 			}
 		}
@@ -555,7 +539,7 @@ public class DrawingPanel extends JPanel
 		trackHolders[position].setTrack(track);
 		setOtherTracksOtherProject(track,position);
 		if (position > numMaps) {
-			if (METHOD_TRACE) System.out.println("DrawingPanel.setTrack: increasing numMaps " + position);
+			if (TRACE) System.out.println("DrawingPanel.setTrack: increasing numMaps " + position);
 			numMaps = position; 
 		}
 	}
@@ -570,11 +554,8 @@ public class DrawingPanel extends JPanel
 	}
 
 	/**
-	 * Method <code>closeFilters</code> goes through each Mapper and track calling
-	 * there respective closeFilter methods
-	 *
-	 * @see TrackHolder#closeFilter()
-	 * @see Mapper#closeFilter()
+	 * Method <code>closeFilters</code> goes through each Mapper and track calling there respective closeFilter methods
+	 * @see TrackHolder#closeFilter() @see Mapper#closeFilter()
 	 */
 	public void closeFilters() {
 		int i;
@@ -586,10 +567,7 @@ public class DrawingPanel extends JPanel
 	}
 
 	/**
-	 * Method <code>setMaps</code> sets the drawing panel to correspond to the DrawingPanelData
-	 *
-	 * @param dpd a <code>DrawingPanelData</code> value
-	 * @return a <code>boolean</code> value of true if no exception occurs.
+	 * setMaps - sets the drawing panel to correspond to the DrawingPanelData
 	 */
 	public synchronized boolean setMaps(DrawingPanelData dpd) {
 		boolean good = false;
@@ -605,11 +583,13 @@ public class DrawingPanel extends JPanel
 			firstView = false;
 			good = true;
 		} catch (IllegalArgumentException iae) {
+			ErrorReport.print(iae, "Drawing panel setmaps: illegal argument");
 			Utilities.showErrorMessage(iae.getMessage(), -1); 	
 		} catch (IllegalStateException ise) {
+			ErrorReport.print(ise, "Drawing panel setmaps: illegal state");
 			Utilities.showErrorMessage(ise.getMessage(), -1); 	
 		} catch (Exception exc) {
-			ErrorReport.print(exc, "Unable to make map");
+			ErrorReport.print(exc, "Drawing panel setmaps: Unable to make map");
 			Utilities.showErrorMessage("Unable to make map", -1); 
 		} catch (OutOfMemoryError me) {
 			System.out.println("Caught OutOfMemoryError in SyMAP::setMaps() - "+me);
@@ -642,18 +622,16 @@ public class DrawingPanel extends JPanel
 				repaint();
 				status = true;
 			} catch (IllegalArgumentException iae) {
-				System.out.println(iae.getMessage());
+				ErrorReport.print(iae, "Drawing panel make: illegal argument");
 				Utilities.showErrorMessage(iae.getMessage(), -1); 	
 			} catch (IllegalStateException ise) {
-				System.out.println(ise.getMessage());
+				ErrorReport.print(ise, "Drawing panel make: illegal state");
 				Utilities.showErrorMessage(ise.getMessage(), -1); 	
 			} catch (Exception exc) {
-				exc.printStackTrace();
+				ErrorReport.print(exc, "Drawing panel make: exception");
 				Utilities.showErrorMessage("Unable to make map", -1); 
 			} catch (OutOfMemoryError me) {
-				System.out.println("Caught OutOfMemoryError in SyMAP::make() - "+me);
-				System.out.println("     Cause: "+me.getCause());
-				me.printStackTrace();
+				ErrorReport.print(me, "Drawing panel make: " +me.getCause());
 				Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1);
 				drawingPanelListener.setFrameEnabled(false);
 				throw me;
@@ -694,7 +672,7 @@ public class DrawingPanel extends JPanel
 	}
 
 	/**
-	 * Method <code>setClickedMarker</code> sets all the markers that are equal to <code>marker</code> to
+	 * setClickedMarker - sets all the markers that are equal to <code>marker</code> to
 	 * be click highlighted if clicked is true and not clicked highlighted if clicked is false.  All other markers
 	 * are set to not be click highlighted.
 	 */
@@ -715,7 +693,7 @@ public class DrawingPanel extends JPanel
 	}
 
 	/**
-	 * Method <code>setHoveredMarker</code> sets all the markers that are equal to <code>marker</code> to
+	 * setHoveredMarker - sets all the markers that are equal to <code>marker</code> to
 	 * be hovered if hovered is true and not hovered if hovered is false.  All other markers
 	 * are set to not be hovered.
 	 */
@@ -749,7 +727,7 @@ public class DrawingPanel extends JPanel
 	}
 
 	private void firstViewBuild() {
-		if (METHOD_TRACE) System.out.println("DrawingPanel.firstViewBuild");
+		if (TRACE) System.out.println("DrawingPanel.firstViewBuild");
 		
 		int i;
 		for (i = 0; i <= numMaps; i++) {
@@ -867,14 +845,13 @@ public class DrawingPanel extends JPanel
 
 	/**
 	 * Returns false if any of the tracks are not set up to the number of maps specified
-	 * 
 	 * @return true if the all the tracks are set
 	 * @see #setMaps(int)
 	 */
 	public boolean tracksSet() {
-		if (METHOD_TRACE) System.out.println("DrawingPanel.tracksSet: numMaps = " + numMaps);
+		if (TRACE) System.out.println("DrawingPanel.tracksSet: numMaps = " + numMaps);
 		for (int i = 0; i <= numMaps; i++) {
-			if (METHOD_TRACE) System.out.println("DrawingPanel.tracksSet: track " + i + " is " + trackHolders[i].getTrack());
+			if (TRACE) System.out.println("DrawingPanel.tracksSet: track " + i + " is " + trackHolders[i].getTrack());
 			if (trackHolders[i].getTrack() == null) return false;
 		} 
 		return true;
@@ -885,7 +862,7 @@ public class DrawingPanel extends JPanel
 	}
 
 	public void setMaps(int numberOfMaps) {
-		if (METHOD_TRACE) System.out.println("DrawingPanel.setMaps("+numberOfMaps+")");
+		if (TRACE) System.out.println("DrawingPanel.setMaps("+numberOfMaps+")");
 		
 		if (numberOfMaps < 1) numberOfMaps = 1;
 		else if (numberOfMaps > MAX_TRACKS - 1) numberOfMaps = MAX_TRACKS - 1;
@@ -900,19 +877,14 @@ public class DrawingPanel extends JPanel
 			}
 		}
 	}
-	public int getNumAnnots()
-	{
+	public int getNumAnnots() {
 		int ret = 0;
-		for (int i = 0; i < trackHolders.length; i++)
-		{
+		for (int i = 0; i < trackHolders.length; i++) {
 			TrackHolder th = trackHolders[i];
-			if (th != null)
-			{
+			if (th != null) {
 				Track t = th.getTrack();
-				if (t instanceof symap.sequence.Sequence)
-				{
-					if (((Sequence)t).getShowAnnot())
-					{
+				if (t instanceof symap.sequence.Sequence) {
+					if (((Sequence)t).getShowAnnot()) {
 						ret++;
 					}
 				}
@@ -932,31 +904,26 @@ public class DrawingPanel extends JPanel
 		setFrameEnabled(false);
 		new Thread(new MapMaker((DrawingPanelData)obj)).start();
 	}
-
 	public void setUpdateHistory() {
-		if (METHOD_TRACE) System.out.println("DrawingPanel.setUpdateHistory()");
+		if (TRACE) System.out.println("DrawingPanel.setUpdateHistory()");
 		doUpdateHistory = true;
 	}
-
 	public void setImmediateUpdateHistory() {
-		if (METHOD_TRACE) System.out.println("DrawingPanel.setImmediateUpdateHistory()");
+		if (TRACE) System.out.println("DrawingPanel.setImmediateUpdateHistory()");
 		updateHistory();
 	}
-
 	public void doConditionalUpdateHistory() {
-		if (METHOD_TRACE) System.out.println("DrawingPanel.doConditionalUpdateHistory()");
+		if (TRACE) System.out.println("DrawingPanel.doConditionalUpdateHistory()");
 		if (doUpdateHistory) {
 			updateHistory();
 			doUpdateHistory = false;
 		}
 	}
-
 	public void setResetIndex() {
 		resetResetIndex = true;
 	}
-
 	private void updateHistory() {
-		if (METHOD_TRACE) System.out.println("DrawingPanel.updateHistory()");
+		if (TRACE) System.out.println("DrawingPanel.updateHistory()");
 		historyControl.add(getData(),resetResetIndex);
 		resetResetIndex = false;
 	}

@@ -29,13 +29,13 @@ public class ContigFilter extends MarkerFilter {
 	private JTextField startText;
 	private JTextField endText;
 	private JTextField contigText;
-	private JComboBox cloneNameCombo;
+	private JComboBox <String> cloneNameCombo;
 
 	private JSlider widthSlider;
 	private JCheckBox showCloneNamesBox;
 	private JCheckBox showOnly2BESHitClonesBox, showOnly2BESCurrentHitClonesBox;
 
-	private JComboBox cloneRemarksCombo;
+	private JComboBox <String> cloneRemarksCombo;
 	private JList cloneRemarksList;
 	
 	private JCheckBoxMenuItem showCloneNamesPopupBox; 				
@@ -67,12 +67,12 @@ public class ContigFilter extends MarkerFilter {
 		GridBagLayout gridbag = new GridBagLayout();
 		GridBagConstraints constraints = new GridBagConstraints();
 
-		cloneRemarksCombo = new JComboBox(showHideHighlight);
+		cloneRemarksCombo = new JComboBox <String> (showHideHighlight);
 		cloneRemarksCombo.setSelectedIndex(Contig.CLONE_HIGHLIGHT);
 		cloneRemarksCombo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				if (!noChange) {
-					Object[] objs = cloneRemarksList.getSelectedValues();
+					Object[] objs = cloneRemarksList.getSelectedValuesList().toArray(); // CAS512 depreciated getSelectedValues()
 					if (objs != null && objs.length > 0) {
 						int[] remarks = new int[objs.length];
 						for (int i = 0; i < objs.length; ++i) remarks[i] = ((CloneRemarks.CloneRemark)objs[i]).getID();
@@ -89,7 +89,7 @@ public class ContigFilter extends MarkerFilter {
 		cloneRemarksList.addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
 				if (!noChange) { //&& !e.getValueIsAdjusting()) {
-					Object[] objs = cloneRemarksList.getSelectedValues();
+					Object[] objs = cloneRemarksList.getSelectedValuesList().toArray();
 					int[] remarks = new int[objs.length];
 					for (int i = 0; i < objs.length; ++i) remarks[i] = ((CloneRemarks.CloneRemark)objs[i]).getID();
 					ContigFilter.this.contig.setSelectedRemarks(remarks,cloneRemarksCombo.getSelectedIndex());
@@ -102,8 +102,8 @@ public class ContigFilter extends MarkerFilter {
 		cloneNameText                   = new JTextField("", 10);
 		startText                       = new JTextField("", 4);
 		endText                         = new JTextField("", 4);
-		contigText                      = new JTextField(new Integer(contig.getContig()).toString(), 3);
-		cloneNameCombo                  = new JComboBox(showHideHighlight);
+		contigText                      = new JTextField(contig.getContig()+"", 3); //new Integer(contig.getContig()).toString()
+		cloneNameCombo                  = new JComboBox <String>(showHideHighlight);
 		widthSlider                     = new JSlider(JSlider.HORIZONTAL, 0, MAX_WIDTH, width);
 		showCloneNamesBox               = new JCheckBox("Show Clone Names");
 		showOnly2BESHitClonesBox        = new JCheckBox("Show Only Clones With BES Paired Hits");
@@ -265,9 +265,9 @@ public class ContigFilter extends MarkerFilter {
 		noChange = false;	
 	}
 	
-	public void show() {
+	public void showX() {
 		if (!isShowing()) setupShow();
-		super.show();
+		super.setVisible(true); // CAS512 super.show();
 	}
 
 	/**

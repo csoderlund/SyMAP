@@ -42,14 +42,16 @@ public class PseudoData {
 	}
 
 	public int hashCode() {
-		return (new Integer(project).toString() + ':' + new Integer(group).toString()).hashCode();
+		// CAS512 return (new Integer(project).toString() + ':' + new Integer(group).toString()).hashCode();
+		return (project + ":" + group).hashCode();
 	}
 
+	// PseudoPool
 	public void setAnnotationData(AnnotationData[] annotData) {
 		if (annotData == null) annotData = new AnnotationData[0];
 		this.annotData = annotData;
 	}
-
+	// PseudoPool - transfer annotationData to annotations
 	public void setAnnotations(Vector<Annotation> annotations) {
 		annotations.clear();
 		annotations.ensureCapacity(annotData.length);
@@ -65,8 +67,7 @@ public class PseudoData {
 		
 		annotations.trimToSize();
 		
-		// Sort the annotations by type (ascending order) so that exons are
-		// drawn on top of genes.
+		// Sort the annotations by type (ascending order) so that 'exons' are drawn on top of 'genes'.
 		Collections.sort(annotations,
 			new Comparator<Annotation>() {
 				public int compare(Annotation a1, Annotation a2) { 

@@ -19,15 +19,12 @@ public abstract class HitData {
 	private boolean orient;
 	private boolean orient1;
 	private boolean orient2;
-	private String query_seq, target_seq; 
+	private String query_seq, target_seq; // coordinates of hit
 	private int overlap = -1; 
 	protected HitData(long id) {
 		this.id = id;
 	}
 
-	/**
-	 * Creates a new <code>HitData</code> instance.
-	 */
 	protected HitData(long id, String name, String strand, boolean repetitive,
 			int blocknum, double evalue, double pctid, int start2, int end2,
 			String query_seq, String target_seq, int gene_olap) 

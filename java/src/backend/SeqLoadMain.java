@@ -156,6 +156,8 @@ public class SeqLoadMain
 				{
 					String line = fh.readLine();
 					if (Cancelled.isCancelled()) break;
+					if (line.startsWith("#")) continue; // CAS512 add
+					
 					if (line.startsWith(">"))
 					{
 						if (grpName != null)
@@ -206,7 +208,8 @@ public class SeqLoadMain
 						if (line.matches(".*[^agctnAGCTN].*"))
 						{
 							nBadCharLines++;
-							line = line.replaceAll("[^agctnAGCTN]", "N");									
+							line = line.replaceAll("[^agctnAGCTN]", "N");	
+							
 						}
 						curSeq.append(line);
 					}
@@ -225,7 +228,7 @@ public class SeqLoadMain
 					else {seqIgnore++; fileIgnore++;}
 				}
 				if (fileIgnore>0)
-					 log.msg(String.format("%10d sequences   %10d bases   %4d files ignored", n, fileSize, fileIgnore));
+					 log.msg(String.format("%10d sequences   %10d bases   %4d sequences ignore", n, fileSize, fileIgnore));
 				else log.msg(String.format("%10d sequences   %10d bases", n, fileSize));
 				if (nBadCharLines > 0)
 					log.msg("+++ " + nBadCharLines + " lines contained characters other than AGCT; these will be replaced by N");
@@ -241,7 +244,7 @@ public class SeqLoadMain
 			if (cntFile>1) {
 				log.msg("Total:");
 				if (seqIgnore>0)
-					 log.msg(String.format("%10d sequences   %10d bases   %4d files ignored", nSeqs, totalSize, seqIgnore));
+					 log.msg(String.format("%10d sequences   %10d bases   %4d sequences ignored", nSeqs, totalSize, seqIgnore));
 				else log.msg(String.format("%10d sequences   %10d bases ", nSeqs, totalSize));
 			}
 			if (nSeqs >= MAX_COLORS)

@@ -51,7 +51,7 @@ public class PseudoPseudoData extends AbstractHitData implements SyMAPConstants 
 		}
 		return true;
 	}
-
+    // Set in MapperPool.setPseudoPseudoData
 	static public HitData getHitData(long id, String name,
 			String strand, int repetitive, int block, double evalue,
 			double pctid, int start1, int end1, int start2, int end2,

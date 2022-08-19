@@ -62,12 +62,13 @@ public class PropertyFrame extends JDialog {
 	
 	public PropertyFrame(Frame parentFrame, boolean isPseudo, 
 			String displayName, String dbName, DatabaseReader dbReader, 
-			boolean isLoadedProject) {
+			boolean isLoadedProject, String pathName) {
 		super(parentFrame, displayName + " parameters");
 		
 		theDisplayName = displayName;
 		theDBName = dbName;
 		bIsLoaded = isLoadedProject;
+		thePathName = pathName;
 		
 		if (!isPseudo) theMode = MODE_FPC;
 		else theMode = MODE_PSEUDO;
@@ -155,7 +156,7 @@ public class PropertyFrame extends JDialog {
 		JPanel tempPanel = new JPanel();
 		tempPanel.setLayout(new BoxLayout(tempPanel, BoxLayout.PAGE_AXIS));
 		tempPanel.setBackground(Color.WHITE);
-		tempPanel.add(new JLabel(">Summary and Display:"));
+		tempPanel.add(new JLabel(">Summary and Display: " + thePathName)); // CAS512 add theDirName
 	
 		for(int x=0; x<theFields.length; x++) {
 			tempPanel.add(Box.createVerticalStrut(5));
@@ -495,18 +496,9 @@ public class PropertyFrame extends JDialog {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Check sequence files"); }
 	}
-	private boolean isFieldEmpty(String fieldName) {
-		for(int x=0; x<theFields.length; x++) {
-			if(fieldName.equals(theFields[x].getLabel())) {
-				String value = theFields[x].getValue();
-				if (value==null || value.trim().equals("")) return true;
-				return false;
-			}
-		}
-		System.out.println("No parameter called " + fieldName);
-		return false;
-	}
+
 	private int theMode = -1;
+	private String thePathName = ""; // CAS512
 	private String theDisplayName = "";
 	private String theDBName = "";
 	private boolean bIsDiscarded = true;

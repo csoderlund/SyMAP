@@ -1,5 +1,8 @@
 package symap.track;
 
+/************************************
+ * FPC
+ */
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -32,9 +35,9 @@ public abstract class FilteredComponent implements SyMAPConstants, Comparable<Fi
 	private static final int NUM_HIT_TYPES = 3;
 	private static final Map<String,Integer> hitDisplayMap = Collections.synchronizedMap(new HashMap<String,Integer>());
 	static {
-		hitDisplayMap.put(MRK_TYPE,new Integer(0));
-		hitDisplayMap.put(BES_TYPE,new Integer(1));
-		hitDisplayMap.put(FINGERPRINT_TYPE,new Integer(2));
+		hitDisplayMap.put(MRK_TYPE,0);
+		hitDisplayMap.put(BES_TYPE,1); // CAS512 new Integer(1)
+		hitDisplayMap.put(FINGERPRINT_TYPE, 2);
 	}
 	private static final String[] hitDisplayStrings = {"Marker Hits","BES Hits","Fingerprint Hits"};
 
@@ -74,8 +77,6 @@ public abstract class FilteredComponent implements SyMAPConstants, Comparable<Fi
 
 	/**
 	 * Method <code>getName</code> returns the name of this FilteredComponent.
-	 *
-	 * @return a <code>String</code> value
 	 */
 	public String getName() {
 		return name;
@@ -83,8 +84,6 @@ public abstract class FilteredComponent implements SyMAPConstants, Comparable<Fi
 
 	/**
 	 * Method <code>setTextVisible</code> sets whether the name should be displayed or not.
-	 *
-	 * @param showName a <code>boolean</code> value
 	 */
 	public void setTextVisible(boolean showName) {
 		this.showName = showName;
@@ -92,18 +91,13 @@ public abstract class FilteredComponent implements SyMAPConstants, Comparable<Fi
 
 	/**
 	 * Method <code>isTextVisible</code> gets whether the name is set to be displayed or not.
-	 *
-	 * @return a <code>boolean</code> value
 	 */
 	public boolean isTextVisible() {
 		return showName;
 	}
 
 	/**
-	 * Method <code>setHighlighted</code> sets the state to be highlighted if highlight is true and
-	 * false otherwise.
-	 *
-	 * @param highlight a <code>boolean</code> value
+	 * Method <code>setHighlighted</code> sets the state to be highlighted if highlight is true and false otherwise.
 	 */
 	public void setHighlighted(boolean highlight) {
 		this.highlight = highlight;

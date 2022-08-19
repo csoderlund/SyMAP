@@ -32,10 +32,13 @@ import util.Utilities;
 import util.ErrorReport;
 
 /**
- * The Sequence track for a pseudo molecule. 
+ * The Sequence track for a pseudo molecule. Called from DrawingPanel
+ * Has a vector of annotations, which it also draws
  */
 public class Sequence extends Track {	
-	private static final boolean TEST_POPUP_ANNO=true;
+	//private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
+	
+	private static final boolean POPUP_ANNO=true; // Always true - double click Yellow anno for popup
 	private static final double OFFSET_SPACE = 7;
 	private static final double OFFSET_SMALL = 1;
 	
@@ -100,7 +103,7 @@ public class Sequence extends Track {
 	protected boolean showScoreLine, showScoreValue; 
 	protected boolean showGap, showCentromere;
 	protected boolean showFullGene;
-	protected boolean showRibbon; 
+	protected boolean showHitLen; 	// CAS512 renamed Ribbon to HitLen everywhere
 	protected String name;
 	
 	private PseudoPool psePool;
@@ -144,7 +147,7 @@ public class Sequence extends Track {
 		showAnnot      = DEFAULT_SHOW_ANNOT;
 		showScoreLine  = DEFAULT_SHOW_SCORE_LINE;   
 		showScoreValue = DEFAULT_SHOW_SCORE_VALUE; 	
-		showRibbon     = DEFAULT_SHOW_RIBBON; 		
+		showHitLen     = DEFAULT_SHOW_RIBBON; 		
 		showGap        = DEFAULT_SHOW_GAP;
 		showCentromere = DEFAULT_SHOW_CENTROMERE;
 		showFullGene   = DEFAULT_SHOW_GENE_FULL;
@@ -196,9 +199,7 @@ public class Sequence extends Track {
 			(name == null ? "" : name);
 	}
 
-	/**
-	 * @see Track#getPadding()
-	 */
+	/*** @see Track#getPadding() */
 	public double getPadding() {
 		return PADDING;
 	}
@@ -250,6 +251,7 @@ public class Sequence extends Track {
 	
 	public Vector<Annotation> getAnnotations() {return annotations;}
 	
+	// Called by CloseUpDialog
 	public Vector<Annotation> getAnnotations(int type, int start, int end) {
 		Vector<Annotation> out = new Vector<Annotation>();
 		
@@ -260,7 +262,7 @@ public class Sequence extends Track {
 		}	
 		return out;
 	}
-
+	// Called by SequenceFilter
 	public int[] getAnnotationTypeCounts() {
 		int[] counts = new int[Annotation.numTypes];
 		
@@ -293,17 +295,17 @@ public class Sequence extends Track {
 		return showScoreValue;
 	}
 	
-	public boolean showRibbon(boolean show) { // hit ribbon
-		if (showRibbon != show) {
-			showRibbon = show;
+	public boolean showHitLen(boolean show) { // hit ribbon
+		if (showHitLen != show) {
+			showHitLen = show;
 			clearTrackBuild();
 			return true;
 		}
 		return false;
 	}
 	
-	public boolean getShowRibbon() { 
-		return showRibbon;
+	public boolean getShowHitLen() { 
+		return showHitLen;
 	}
 
 	public boolean showFrame(boolean show) {
@@ -363,7 +365,8 @@ public class Sequence extends Track {
 	}
 
 	/**
-	 * Method <code>build</code> sets up the drawing objects for this sequence.
+	 * XXX Sets up the drawing objects for this sequence. Called by DrawingPanel and Track
+	 * Start and end are Track GenomicsNumber variables, stating start/end 
 	 */
 	public boolean build() { 
 		if (hasBuilt()) return true;
@@ -472,23 +475,21 @@ public class Sequence extends Track {
 			if (showAnnot && annot.isVisible()) { // Setup description
 				x1 = (orient == RIGHT_ORIENT ? rect.x + rect.width + RULER_LINE_LENGTH + 2 : rect.x);
 				x2 = (orient == RIGHT_ORIENT ? x1 + RULER_LINE_LENGTH : x1 - RULER_LINE_LENGTH);
-				if (annot.hasShortDescription() 
-						&& getBpPerPixel() < MIN_BP_FOR_ANNOT_DESC) 
+				if (annot.hasShortDescription() && getBpPerPixel() < MIN_BP_FOR_ANNOT_DESC) 
 				{ 
 					ty = annot.getY1();
 					
 					// Creates annotation description textbox (see TextBox.java)
 					TextBox tb = new TextBox(annot.getVectorDescription(),unitFont,(int)x1,(int)ty,40,200);
-					if (TEST_POPUP_ANNO) annot.setTextBox(tb); // CAS503
-					getHolder().add(tb);
+					if (POPUP_ANNO) annot.setTextBox(tb); 	// CAS503 right-click (mousePressed)
+					getHolder().add(tb); 					// adds it to the TrackHolder JComponent
 					bounds = tb.getBounds();
 					
-					totalRect.height = Math.max(totalRect.height, ty);
+					totalRect.height = Math.max(totalRect.height, ty); // adjust totalRect for this box
 					totalRect.y = Math.min(totalRect.y, ty);
 					if (orient == RIGHT_ORIENT) {
 						tx = x2 + OFFSET_SMALL;
-						totalRect.width = Math.max(totalRect.width,
-								bounds.getWidth() + bounds.getX() + tx);
+						totalRect.width = Math.max(totalRect.width, bounds.getWidth()+bounds.getX()+tx);
 					}
 					else {
 						tx = x2-OFFSET_SMALL-bounds.getWidth()-bounds.getX();
@@ -496,7 +497,7 @@ public class Sequence extends Track {
 					}
 				}
 			}
-		} // end for(all annotations)
+		} // end for loop of (all annotations)
 		
 		// show instructions for annotation descriptions when zoomed out
 		if (showAnnot && getBpPerPixel() >= MIN_BP_FOR_ANNOT_DESC) { 
@@ -582,7 +583,9 @@ public class Sequence extends Track {
 		if (bpPos > end.getValue())   bpPos = end.getValue(); 	
 		double x = (orient == LEFT_ORIENT ? rect.x+rect.width : rect.x);			
 		double y = rect.y + GenomicsNumber.getPixelValue(bpPerCb,bpPos-start.getValue(),bpPerPixel);
+		
 		if (flipped) y = rect.y + rect.y + rect.height - y;	
+		
 		return new Point2D.Double(x, y); 
 	}
 	
@@ -621,18 +624,22 @@ public class Sequence extends Track {
 		super.paintComponent(g); // must be done at the end
 	}
 
+	// Left or right click - left click/release has no action
 	public void mousePressed(MouseEvent e) {
 		// CAS503 add popUp description
-		if (TEST_POPUP_ANNO && e.isPopupTrigger()  && showAnnot) {
+		if (POPUP_ANNO && e.isPopupTrigger()  && showAnnot) { 	// Right click
 			Point p = e.getPoint();
-			for (Annotation annot : annotations) { 
-				if (annot.popupDesc(p)) 
+			for (Annotation annot : annotations) { 				// in yellow box
+				if (annot.boxContains(p)) {
+					annot.setExonList(annotations);				// CAS512 add exon list on first time
+					annot.popupDesc(p);
 					return;
+				}	
 			}
 		}
-		super.mousePressed(e);
+		super.mousePressed(e);									// right click - blue area for menu
 	}
-
+	
 	public void mouseReleased(MouseEvent e) { 
 		Point p = e.getPoint();
 		if (drawingPanel.isMouseFunctionPop() 
@@ -793,21 +800,26 @@ public class Sequence extends Track {
 	}
 
 	/**
-	 * Method <code>getHelpText</code> returns the desired text for when the mouse is
-	 * over a certain point.
+	 * Method getHelpText returns the desired text for when the mouse is over a certain point.
+	 * Called from symap.frame.HelpBar mouseMoved event
+	 * The rect is set in Annotation.setRectangle and its contains seems a little off
 	 */
 	public String getHelpText(MouseEvent event) {
 		Point p = event.getPoint();
 		if (rect.contains(p)) { // within blue rectangle of track
+			String x = null;
 			for (Annotation annot : annotations) {
-				if (annot.contains(p))
-					return annot.getLongDescription();
+				if (annot.contains(p)) {
+					if (x==null) x = annot.getLongDescription(); 
+					else x += "\n" + annot.getTag(); // CAS512 add exon if available
+				}
 			}
+			if (x!=null) return x;
 		}
 		else {					// not within blue rectangle of track
-			if (TEST_POPUP_ANNO) {
+			if (POPUP_ANNO) {	// CAS503 add - in yellow box; see end of Annotation.java and TextBox.java 
 				for (Annotation annot : annotations) { 
-					if (annot.boxContains(p)) // CAS503 add
+					if (annot.boxContains(p)) 
 						return "Right click for popup of description";
 				}
 			}

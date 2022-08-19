@@ -35,8 +35,7 @@ import util.Utilities;
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public abstract class Filter extends JDialog implements ActionListener,
-		ChangeListener, SyMAPConstants,
-		PopupMenuListener 
+		ChangeListener, SyMAPConstants, PopupMenuListener 
 {
 	private JButton okButton, cancelButton, defaultButton;
 	protected DrawingPanel drawingPanel;
@@ -44,7 +43,6 @@ public abstract class Filter extends JDialog implements ActionListener,
 	protected HelpBar helpBar;
 	protected JPopupMenu popup; 
 	protected JMenuItem popupTitle, showNavigationHelp, showTrackHelp; 
-	
 
 	protected Filter(Frame owner, DrawingPanel dp, String title, AbstractButton helpButton) {
 		super(owner,title,true);
@@ -109,7 +107,7 @@ public abstract class Filter extends JDialog implements ActionListener,
 	public void closeFilter() {
 		if (isShowing()) {
 			cancelAction();
-			hide();
+			setVisible(false); // CAS512 hide();
 		}
 	}
 
@@ -117,9 +115,9 @@ public abstract class Filter extends JDialog implements ActionListener,
 	 * Method <code>show</code> sets the help bar to be paused before showing, and not paused after
 	 * showing if the help bar is set.
 	 */
-	public void show() {
+	public void showX() {
 		if (helpBar != null) helpBar.setPaused(true,this);
-		super.show();
+		super.setVisible(true); // CAS512 super.show();
 		if (helpBar != null) helpBar.setPaused(false,this);
 	}	
 	
@@ -134,9 +132,9 @@ public abstract class Filter extends JDialog implements ActionListener,
 	/**
 	 * Method <code>hide</code> hides the dialog setting the help bar to not be paused on this object.
 	 */
-	public void hide() {
+	public void hideX() {
 		if (helpBar != null) helpBar.setPaused(false,this);
-		super.hide();
+		super.setVisible(false); // CAS512 super.hide();
 	}
 
 	/**
@@ -156,19 +154,19 @@ public abstract class Filter extends JDialog implements ActionListener,
 	public void actionPerformed(ActionEvent event) {
 		if (event.getSource() == okButton) { 
 			if (drawingPanel != null) drawingPanel.setFrameEnabled(false);
-			super.hide();
+			super.setVisible(false); // CAS512 super.hide();
 			new Thread(new RunOk()).start();
 		}
 		else if (event.getSource() == defaultButton) setDefault();
 		else if (event.getSource() == cancelButton) {
 			cancelAction();
-			hide();
+			setVisible(false); // CAS512 hide();
 			if (drawingPanel != null) drawingPanel.setFrameEnabled(true);
 		}
 	}
 
 	private void superShow() {
-		super.show();
+		super.setVisible(true); // CAS512 super.show();
 	}
 
 	private class RunOk implements Runnable {
@@ -182,7 +180,7 @@ public abstract class Filter extends JDialog implements ActionListener,
 						drawingPanel.setUpdateHistory();
 					}
 					if (!drawingPanel.smake()) superShow();
-					else hide();
+					else setVisible(false); // CAS512 hide();
 				} catch (Exception e) {
 					Utilities.showErrorMessage(e.getMessage(), -1);		
 					superShow();

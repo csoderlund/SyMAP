@@ -60,7 +60,7 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener
 		addKeyAndContainerListenerRecursively(this);
 	}
 
-	public void show() {
+	public void showX() {// CAS512 had to rename show() to something different
 		try {
 			if (isShowing()) dp.closeFilters();
 			Dimension d = new Dimension();
@@ -69,8 +69,8 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener
 			int width = Math.min(1000, 300 + 300*nMaps + 400*nAnnots);
 			d.setSize(width, 900);
 			setSize(d);
-			// setVisible(true);CAS507 doesn't work, and needs show
-			super.show(); 
+			// CAS512 super.show();
+			super.setVisible(true);
 			if (dp.tracksSet())
 				dp.amake();
 			else
@@ -79,11 +79,10 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener
 		catch (Exception e) {e.printStackTrace();}
 	}
 
-	public void hide() {
+	public void hideX() {
 		dp.closeFilters();
-		//dp.getPools().clearPools();
-		super.hide(); 
-		// setVisible(false);
+		// CAS512 super.hide(); 
+		super.setVisible(false);
 	}
 
 	/**

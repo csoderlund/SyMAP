@@ -43,6 +43,10 @@ public class Version {
 				updateVer1();
 				idb=2;
 			}
+			if (idb==2) {
+				updateVer2();
+				idb=3;
+			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
 	}
@@ -53,7 +57,21 @@ public class Version {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
 	}
-	
+	// CAS512 gather all columns added with 'alter'
+	private void updateVer2() {
+		try {
+			tableCheckDropColumn("pseudo_annot", "text"); // lose 512
+			tableCheckAddColumn("pseudo_annot", "genenum", "INTEGER default 0", null);  // added in SyntenyMain
+			tableCheckAddColumn("pseudo_annot", "gene_idx", "INTEGER default 0", null); // new 512
+			tableCheckAddColumn("pseudo_annot", "tag", "VARCHAR(30)", null); 			// new 512
+			tableCheckAddColumn("pseudo_hits", "runsize", "INTEGER default 0", null);   // checked in SyntenyMain
+			tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null);				// added 511
+			tableCheckAddColumn("blocks", "corr", "float default 0", null);				// SyMAPExp was checking for
+			updateProps();
+			System.err.println("Complete schema update to " + SyMAP.VERSION );
+		}
+		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
+	}
 	/***************************************************************
 	 * Run after every version update.
 	 * The props table values of DBVER and UPDATE are hardcoded in Schema.

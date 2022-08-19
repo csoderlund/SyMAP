@@ -57,7 +57,8 @@ public class Group
 	}
 	
 	public String getName() { return name; }
-	public int getAvgGeneLength() { return avgGeneLength; }
+	public String getFullName() { return fullname; } // CAS512 add for AnnotLoadMain terminal output
+ 	public int getAvgGeneLength() { return avgGeneLength; }
 	public int getMinGeneLength() { return minGeneLength; }
 	public int getMaxGeneLength() { return maxGeneLength; }
 	public int getIdx() { return idx; }

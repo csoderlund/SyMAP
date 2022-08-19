@@ -181,7 +181,7 @@ public class SwatchChooserPanel extends AbstractColorChooserPanel implements Cha
 
 			int alpha = getColorFromModel().getAlpha();
 			alphaSlider.setValue(alpha);
-			alphaSpinner.setValue(new Integer(alpha));
+			alphaSpinner.setValue(alpha); // CAS512 alphaSpinner.setValue(new Integer(alpha));
 
 			isLocked = false;
 		}
@@ -251,10 +251,11 @@ abstract class SwatchPanel extends JPanel {
 	protected abstract void initValues();
 	protected abstract void initColors();
 
-	public boolean isFocusTraversable() {
+	/* 
+	public boolean isFocusTraversable() { // CAS512 depreciated
 		return false;
 	}
-
+	*/
 	public void paintComponent(Graphics g) {
 		g.setColor(getBackground());
 		g.fillRect(0,0,getWidth(), getHeight());
@@ -307,6 +308,8 @@ abstract class SwatchPanel extends JPanel {
 }
 
 class RecentSwatchPanel extends SwatchPanel {
+	private static final long serialVersionUID = 1L;
+
 	protected void initValues() {
 		swatchSize = UIManager.getDimension("ColorChooser.swatchesRecentSwatchSize");
 		numSwatches = new Dimension(5,7);
@@ -332,6 +335,8 @@ class RecentSwatchPanel extends SwatchPanel {
 }
 
 class MainSwatchPanel extends SwatchPanel {
+	private static final long serialVersionUID = 1L;
+
 	public MainSwatchPanel(int alpha) {
 		super();
 		changeAlpha(alpha);

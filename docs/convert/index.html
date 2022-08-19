@@ -8,6 +8,8 @@
 	a.ext {font-weight: bold;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
 	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
+	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
+    .ty td, th {border: 1px  solid black; padding: 5px; }
 </style>
 </head>
 
@@ -54,7 +56,7 @@
 	<!---- START BODY -->
 
 	SyMAP supplies scripts to convert from NCBI or Ensembl files to SyMAP input. The following
-	describe how to download the files, convert them with the SyMAP supplied script, and input
+	two links describe how to download the files, convert them with the SyMAP supplied script, and input
 	them to SyMAP.
 	<br><br>
 	<center>
@@ -62,12 +64,43 @@
 	<tr><td>
 
 	<ul>
-	<li><a href=ncbi.html>Convert NCBI</a>
+	<li><a href=ncbi.html class="ext" target="_blank">Convert NCBI</a>
 	<p>
-	<li><a href=ensembl.html>Convert Ensembl</a>
+	<li><a href=ensembl.html class="ext" target="_blank">Convert Ensembl</a>
 	</ul>
+
 	</table>
 	</center>
+	<p>
+	<center>
+As of 15-Aug_2022, these scripts have been tested on the following:
+
+<table class=ty>
+<tr><th>Genome<th>NCBI*<th>Ensembl<th>~Length
+<tr><td>Arabidopsis thaliana<td>Chr 1-5<td>Chr 1-5<td>&nbsp;&nbsp;&nbsp;119M
+<tr><td>Oryza Sativa (rice) <td>Chr 1-12<td>Chr 1-12<td>&nbsp;&nbsp;&nbsp;373M
+<tr><td>Solanum tuberosum (potato)<td>Scafs 14,852<td>Chr 0-12<td>&nbsp;&nbsp;&nbsp;800M
+<tr><td>Solanum lycopersicum (tomato)<td>Chr 1-12<td>Chr 1-12<td>&nbsp;&nbsp;&nbsp;807M
+<tr><td>Caenorhabditis elegans<td>Chr I,II,III,IV,X<td>Chr I,II,III,IV,X<td>&nbsp;&nbsp;&nbsp;100M
+<tr><td>Sus scrofa (pig)<td>Chr 1-18, X, Y<td>Chr 1-18, X, Y<td>2,435M
+<tr><td>Danio rerio (zebrafish) <td>Chr 1-25<td>Chr 1-25<td>1,345M
+<tr><td>Bemisia tabaci (whitefly)<td>Scafs 19,750<td>Scafs 227<td>&nbsp;&nbsp;&nbsp;615M
+</table>
+*<small>Only <a href="ncbi.html#A" class="ext" target=_blank>download A</a> was tested on all genomes,
+but <a href="ncbi.html#B" class="ext" target=_blank>download B</a> was tested for rice.</small>
+</center>
+
+
+<p>These were all converted and loaded into SyMAP, but only the smaller ones were analyzed for synteny.
+
+<p><i>There may be
+	variations that I did not account for, hence, you may want to edit the script to tailor it. Alternatively,
+	you can contact me (symap@agcol.arizona.edu) and I will make the edit for you.</i>
+	<p>
+	The two scripts are very similar except some of their keywords and naming conventions vary.
+	Also, <tt>ConvertNCBI</tt> detects different products of the mRNAs for the
+	same gene, and condenses them to one. It also allows hard-masking of a soft-masked genome sequence, which is not
+	necessary for Ensembl since it offers both types of files.
 
 <!---- END BODY -->
 	</td></tr>

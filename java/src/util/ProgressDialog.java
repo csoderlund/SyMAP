@@ -205,7 +205,7 @@ public class ProgressDialog extends JDialog implements Logger {
 			
 			if (ErrorCount.getCount() > 0) {
 				progressBar.setString("Completed, click 'Done' to continue ..."); // CAS511 move after if
-				msg("Some errors occurred, check text in this window, terminal or view logs/LOAD.log.");
+				msg("Some errors occurred, check text in this window, terminal or view logs/load.log.");
 				button.setText("Done (Error Occurred)"); 
 			}
 			else {

@@ -50,7 +50,7 @@ public class SequenceFilter extends Filter {
 	private JCheckBox gapCheck, centromereCheck;
 	private JCheckBox rulerCheck, annotCheck;
 	private JCheckBox scoreLineCheck, scoreValueCheck; 	
-	private JCheckBox ribbonCheck; 						
+	private JCheckBox hitLenCheck; 						
 	private JCheckBox flippedCheck; 					
 	
 	private JCheckBoxMenuItem flippedPopupCheck; 						
@@ -58,7 +58,7 @@ public class SequenceFilter extends Filter {
 	private JCheckBoxMenuItem gapPopupCheck, centromerePopupCheck; 		
 	private JCheckBoxMenuItem rulerPopupCheck, annotPopupCheck; 		
 	private JCheckBoxMenuItem scoreLinePopupCheck, scoreValuePopupCheck;
-	private JCheckBoxMenuItem ribbonPopupCheck; 						
+	private JCheckBoxMenuItem hitLenPopupCheck; 						
 	private JMenuItem fullSequencePopupItem; 							
 
 	private JButton fullButton;
@@ -70,7 +70,7 @@ public class SequenceFilter extends Filter {
 	private boolean frame, gene, gap, centromere, ruler, annot, geneFull;
 	private boolean flipped; 				
 	private boolean scoreLine, scoreValue; 	
-	private boolean ribbon; 				
+	private boolean bHitLen; 				
 	private boolean noChange = false;
 
 	public SequenceFilter(Frame owner, DrawingPanel dp, AbstractButton helpButton, Sequence sequence) {
@@ -127,8 +127,8 @@ public class SequenceFilter extends Filter {
 		scoreValueCheck = new JCheckBox("Show Hit Score Value");		
 		scoreValueCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_VALUE);	
 		
-		ribbonCheck = new JCheckBox("Show Hit Length");			
-		ribbonCheck.setSelected(Sequence.DEFAULT_SHOW_RIBBON);	
+		hitLenCheck = new JCheckBox("Show Hit Length");			
+		hitLenCheck.setSelected(Sequence.DEFAULT_SHOW_RIBBON);	
 		
 		geneFullRadio = new JRadioButton("Length");
 		geneMidRadio = new  JRadioButton("Midpoint");
@@ -180,7 +180,7 @@ public class SequenceFilter extends Filter {
 		addToGrid(contentPane, gridbag, constraints, new JSeparator(), GridBagConstraints.REMAINDER);
 		
 		addToGrid(contentPane, gridbag, constraints, rulerCheck, GridBagConstraints.REMAINDER);
-		addToGrid(contentPane, gridbag, constraints, ribbonCheck, GridBagConstraints.REMAINDER);     
+		addToGrid(contentPane, gridbag, constraints, hitLenCheck, GridBagConstraints.REMAINDER);     
 		addToGrid(contentPane, gridbag, constraints, scoreLineCheck, GridBagConstraints.REMAINDER);  
 		addToGrid(contentPane, gridbag, constraints, scoreValueCheck, GridBagConstraints.REMAINDER); 
 
@@ -194,7 +194,7 @@ public class SequenceFilter extends Filter {
 		flippedCheck.addChangeListener(this);		
 		frameCheck.addChangeListener(this);
 		geneCheck.addChangeListener(this);
-		ribbonCheck.addChangeListener(this);		
+		hitLenCheck.addChangeListener(this);		
 		gapCheck.addChangeListener(this);
 		centromereCheck.addChangeListener(this);
 		rulerCheck.addChangeListener(this);
@@ -208,7 +208,7 @@ public class SequenceFilter extends Filter {
 		annotPopupCheck = new JCheckBoxMenuItem("Annotation Descriptions"); 
 		framePopupCheck = new JCheckBoxMenuItem("Framework Markers"); 
 		genePopupCheck = new JCheckBoxMenuItem("Genes"); 
-		ribbonPopupCheck = new JCheckBoxMenuItem("Hit Length"); 
+		hitLenPopupCheck = new JCheckBoxMenuItem("Hit Length"); 
 		gapPopupCheck = new JCheckBoxMenuItem("Gaps"); 
 		centromerePopupCheck = new JCheckBoxMenuItem("Centromere"); 
 		rulerPopupCheck = new JCheckBoxMenuItem("Ruler"); 
@@ -227,7 +227,7 @@ public class SequenceFilter extends Filter {
 		popup.add(framePopupCheck); 
 		
 		popup.add(rulerPopupCheck);
-		popup.add(ribbonPopupCheck); 
+		popup.add(hitLenPopupCheck); 
 		popup.add(scoreLinePopupCheck);
 		popup.add(scoreValuePopupCheck);
 		popup.add(fullSequencePopupItem);
@@ -242,7 +242,7 @@ public class SequenceFilter extends Filter {
 		annotPopupCheck.addActionListener(this);
 		scoreLinePopupCheck.addActionListener(this);
 		scoreValuePopupCheck.addActionListener(this);
-		ribbonPopupCheck.addActionListener(this); 
+		hitLenPopupCheck.addActionListener(this); 
 	}
 
 	public String getHelpID() {
@@ -261,7 +261,7 @@ public class SequenceFilter extends Filter {
 	 * Sets up the sequence dialog based on the current sequence track information before showing then
 	 * shows (<code>super.show()</code>).
 	 */
-	public void show() {
+	public void showX() {
 		if (!isShowing()) {
 			noChange = true;
 			
@@ -305,8 +305,8 @@ public class SequenceFilter extends Filter {
 			scoreValue = sequence.showScoreValue;	
 			scoreValueCheck.setSelected(scoreValue);
 			
-			ribbon = sequence.showRibbon;			
-			ribbonCheck.setSelected(ribbon);		
+			bHitLen = sequence.showHitLen;			
+			hitLenCheck.setSelected(bHitLen);		
 
 			geneFullRadio.setEnabled(geneCheck.isSelected());
 			geneMidRadio.setEnabled(geneCheck.isSelected());
@@ -316,7 +316,7 @@ public class SequenceFilter extends Filter {
 
 			noChange = false;
 		}
-		super.show();
+		super.setVisible(true); // CAS512 super.show();
 	}
 
 	protected void setDefault() {
@@ -329,15 +329,19 @@ public class SequenceFilter extends Filter {
 			annotCheck.setSelected(Sequence.DEFAULT_SHOW_ANNOT && annotCheck.isEnabled());
 			scoreLineCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_LINE); 	
 			scoreValueCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_VALUE); 
-			ribbonCheck.setSelected(Sequence.DEFAULT_SHOW_RIBBON); 			
+			hitLenCheck.setSelected(Sequence.DEFAULT_SHOW_RIBBON); 			
 			flippedCheck.setSelected(Sequence.DEFAULT_FLIPPED); 			
 
 			geneFullRadio.setSelected(Sequence.DEFAULT_SHOW_GENE_FULL);
 
 			startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
 			endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
-			startText.setText(new Double(0).toString());
-			endText.setText(new Double(sequence.getValue(sequence.getTrackSize(),endCombo.getSelectedItem().toString())).toString());
+			startText.setText("0");
+			long size = sequence.getTrackSize();
+			Object item = endCombo.getSelectedItem();
+			double end  = sequence.getValue(size, item.toString());
+			endText.setText(end + "");
+			//CAS512 unwind endText.setText(new Double(sequence.getValue(sequence.getTrackSize(),endCombo.getSelectedItem().toString())).toString());
 		
 			framePopupCheck.setState(Sequence.DEFAULT_SHOW_FRAME && framePopupCheck.isEnabled());
 			genePopupCheck.setState(Sequence.DEFAULT_SHOW_GENE && genePopupCheck.isEnabled());
@@ -349,22 +353,26 @@ public class SequenceFilter extends Filter {
 			scoreValuePopupCheck.setState(Sequence.DEFAULT_SHOW_SCORE_VALUE);
 			
 			flippedPopupCheck.setState(Sequence.DEFAULT_FLIPPED); 
-			ribbonPopupCheck.setState(Sequence.DEFAULT_SHOW_RIBBON); 
+			hitLenPopupCheck.setState(Sequence.DEFAULT_SHOW_RIBBON); 
 		}
 	}
 
 	private void setStart() {
-		if (sequence != null)
-			startText.setText(
-				new Double(
-					sequence.getValue(
-						sequence.getStart(),
-						startCombo.getSelectedItem().toString())).toString());
+		if (sequence == null) return;
+		long start = sequence.getStart();
+		Object item = startCombo.getSelectedItem();
+		double val = sequence.getValue(start, item.toString());
+		startText.setText(val+"");
+		// CAS512 startText.setText(new Double(sequence.getValue(sequence.getStart(),startCombo.getSelectedItem().toString())).toString());
 	}
 
 	private void setEnd() {
-		if (sequence != null)
-			endText.setText(new Double(sequence.getValue(sequence.getEnd(),endCombo.getSelectedItem().toString())).toString());
+		if (sequence == null) return;
+		long size = sequence.getTrackSize();
+		Object item = endCombo.getSelectedItem();
+		double end  = sequence.getValue(size, item.toString());
+		endText.setText(end + "");
+		// CAS512 endText.setText(new Double(sequence.getValue(sequence.getEnd(),endCombo.getSelectedItem().toString())).toString());
 	}
 
 	/**
@@ -395,8 +403,8 @@ public class SequenceFilter extends Filter {
 				changed = sequence.showScoreLine(scoreLineCheck.isSelected());	
 			else if (event.getSource() == scoreValueCheck)						
 				changed = sequence.showScoreValue(scoreValueCheck.isSelected());
-			else if (event.getSource() == ribbonCheck)							
-				changed = sequence.showRibbon(ribbonCheck.isSelected());		
+			else if (event.getSource() == hitLenCheck)							
+				changed = sequence.showHitLen(hitLenCheck.isSelected());		
 			else if (event.getSource() == geneFullRadio || event.getSource() == geneMidRadio)
 				changed = sequence.showFullGene(geneFullRadio.isSelected());
 			else if (event.getSource() == flippedCheck) 			
@@ -451,9 +459,9 @@ public class SequenceFilter extends Filter {
 				scoreValue = scoreValuePopupCheck.getState();
 				changed = sequence.showScoreValue(scoreValue);
 			}
-			else if (event.getSource() == ribbonPopupCheck) { 
-				ribbon = ribbonPopupCheck.getState();
-				changed = sequence.showRibbon(ribbon);
+			else if (event.getSource() == hitLenPopupCheck) { 
+				bHitLen = hitLenPopupCheck.getState();
+				changed = sequence.showHitLen(bHitLen);
 			}
 				
 			if (changed) {
@@ -482,7 +490,7 @@ public class SequenceFilter extends Filter {
 		scoreLine = sequence.showScoreLine;
 		scoreValue = sequence.showScoreValue;
 		flipped = sequence.isFlipped();	
-		ribbon = sequence.showRibbon;	
+		bHitLen = sequence.showHitLen;	
 		
 		framePopupCheck.setState(frame);
 		genePopupCheck.setState(gene);
@@ -492,7 +500,7 @@ public class SequenceFilter extends Filter {
 		rulerPopupCheck.setState(ruler);
 		scoreLinePopupCheck.setState(scoreLine); 
 		scoreValuePopupCheck.setState(scoreValue); 
-		ribbonPopupCheck.setState(ribbon); 	 
+		hitLenPopupCheck.setState(bHitLen); 	 
 		flippedPopupCheck.setState(flipped); 
 	}
 	
@@ -504,7 +512,7 @@ public class SequenceFilter extends Filter {
 		
 		if (endText.getText().length() > 0) {
 			try {
-			(new Double(endText.getText())).doubleValue();
+				Double.parseDouble(endText.getText()); // CAS512 (new Double(endText.getText())).doubleValue();
 			} catch (NumberFormatException nfe) {
 				Utilities.showErrorMessage(endText.getText() + " is not a valid end point");
 				return changed;
@@ -513,7 +521,7 @@ public class SequenceFilter extends Filter {
 
 		if (startText.getText().length() > 0) {
 			try {
-			(new Double(startText.getText())).doubleValue();
+				Double.parseDouble(startText.getText()); // CAS512 (new Double(startText.getText())).doubleValue();
 			} catch (NumberFormatException nfe) {
 				Utilities.showErrorMessage(startText.getText() + " is not a valid start point");
 				return changed;
@@ -560,8 +568,8 @@ public class SequenceFilter extends Filter {
 			scoreValue = !scoreValue;						
 			changed = true;									
 		}
-		if (ribbon != ribbonCheck.isSelected()) {	
-			ribbon = !ribbon;						
+		if (bHitLen != hitLenCheck.isSelected()) {	
+			bHitLen = !bHitLen;						
 			changed = true;							
 		}
 		
@@ -572,7 +580,7 @@ public class SequenceFilter extends Filter {
 		unit = GenomicsNumber.ABS_UNITS[startCombo.getSelectedIndex()];
 		if (startText.getText().length() > 0) {
 			try {
-				number = (new Double(startText.getText())).doubleValue();
+				number = Double.parseDouble(startText.getText()); // CAS512 (new Double(startText.getText())).doubleValue();
 				if (number < 0) number = 0;
 			} catch (NumberFormatException nfe) {
 				nfe.printStackTrace();
@@ -596,7 +604,7 @@ public class SequenceFilter extends Filter {
 		unit = GenomicsNumber.ABS_UNITS[endCombo.getSelectedIndex()];
 		if (endText.getText().length() > 0) {
 			try {
-				number = (new Double(endText.getText())).doubleValue();
+				number = Double.parseDouble(endText.getText()); // CAS512 number = (new Double(endText.getText())).doubleValue();
 			} catch (NumberFormatException nfe) {
 				nfe.printStackTrace();
 				throw new Exception("End value is not a number.");
@@ -609,7 +617,7 @@ public class SequenceFilter extends Filter {
 				e.printStackTrace();
 				throw e;
 			}
-			if (mult != number) endText.setText(new Double(mult).toString());
+			if (mult != number) endText.setText(mult+""); // CAS512 new Double(mult).toString()
 		} else {
 			sequence.resetEnd();
 			setEnd();
@@ -639,7 +647,7 @@ public class SequenceFilter extends Filter {
 		annotCheck.setSelected(annot);
 		scoreLineCheck.setSelected(scoreLine); 
 		scoreValueCheck.setSelected(scoreValue); 
-		ribbonCheck.setSelected(ribbon); 
+		hitLenCheck.setSelected(bHitLen); 
 		startText.setText(startStr);
 		startCombo.setSelectedIndex(startInd);
 		endText.setText(endStr);
@@ -650,8 +658,12 @@ public class SequenceFilter extends Filter {
 	private void setFullSequence() {
 		startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
 		endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
-		startText.setText(new Double(0).toString());
-		endText.setText(new Double(sequence.getValue(sequence.getTrackSize(),endCombo.getSelectedItem().toString())).toString());
+		startText.setText("0"); // CAS512 new Double(0).toString()
+		long size = sequence.getTrackSize();
+		Object item = endCombo.getSelectedItem();
+		double end  = sequence.getValue(size, item.toString());
+		endText.setText(end + "");
+		// CAS512 endText.setText(new Double(sequence.getValue(sequence.getTrackSize(),endCombo.getSelectedItem().toString())).toString());
 	}
 }
 

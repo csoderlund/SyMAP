@@ -233,30 +233,24 @@ public class UpdatePool extends DatabaseUser
 		return ret;
 	}
 	/***** CAS504
-	public void updateSchemaTo40() throws Exception
-	{
+	public void updateSchemaTo40() throws Exception {
 		updateSchemaTo35();
-		if (!tableHasColumn("groups","fullname"))
-		{
-			executeUpdate("alter table groups add fullname varchar(40) after name");
+		if (!tableHasColumn("groups","fullname")){
+			//executeUpdate("alter table groups add fullname varchar(40) after name");
 			executeUpdate("update groups set fullname=name");
 			executeUpdate("update groups,proj_props set fullname=concat(proj_props.value,groups.name) where " +
 					" proj_props.proj_idx=groups.proj_idx and proj_props.name='grp_prefix'");
 		}
-		if (!tableHasColumn("pseudo_hits", "runsize"))
-		{
-			System.err.println("Adding runsize column to database");
-			executeUpdate("alter table pseudo_hits add runsize int default 0");
+		if (!tableHasColumn("pseudo_hits", "runsize")){
+			//executeUpdate("alter table pseudo_hits add runsize int default 0");
 		}
 
-		if (!tableHasColumn("blocks", "genef1"))
-		{
-			System.err.println("Adding gene fraction columns to blocks table");
-			executeUpdate("alter table blocks add score integer default 0 after corr");
-			executeUpdate("alter table blocks add ngene1 integer default 0 after score");
-			executeUpdate("alter table blocks add ngene2 integer default 0 after ngene1");
-			executeUpdate("alter table blocks add genef1 float default 0 after ngene2");
-			executeUpdate("alter table blocks add genef2 float default 0 after genef1");
+		if (!tableHasColumn("blocks", "genef1")){
+			//executeUpdate("alter table blocks add score integer default 0 after corr");
+			//executeUpdate("alter table blocks add ngene1 integer default 0 after score");
+			//executeUpdate("alter table blocks add ngene2 integer default 0 after ngene1");
+			//executeUpdate("alter table blocks add genef1 float default 0 after ngene2");
+			//executeUpdate("alter table blocks add genef2 float default 0 after genef1");
 			Utils.updateGeneFractions(this);
 		}
 	}

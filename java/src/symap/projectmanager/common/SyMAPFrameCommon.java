@@ -217,7 +217,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 				isFirstDotplotView = true;
 				btnShow2D.setEnabled( mapper.getNumVisibleTracks() > 0 );
 				btnShowDotplot.setEnabled( mapper.getNumVisibleTracks() > 0 );
-				btnShowCircle.setEnabled( mapper.getNumVisibleTracks() > 0 );
+				btnShowCircle.setEnabled( true ); // CAS512 mapper.getNumVisibleTracks() > 0
 				if (viewControlBar.getSelected() == VIEW_CIRC)
 				{
 					regenerateCircleView();
@@ -520,9 +520,10 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			}
 			
 			// kludge:
-			if (btnShow2D != null) btnShow2D.setEnabled( mapper.getNumVisibleTracks() > 0 );
+			if (btnShow2D != null) 		btnShow2D.setEnabled( mapper.getNumVisibleTracks() > 0 );
 			if (btnShowDotplot != null) btnShowDotplot.setEnabled( mapper.getNumVisibleTracks() > 0 );
-			if (btnShowCircle != null) btnShowCircle.setEnabled( mapper.getNumVisibleTracks() > 0 );
+			//if (btnShowCircle != null) btnShowCircle.setEnabled( mapper.getNumVisibleTracks() > 0 );
+			if (btnShowCircle != null) 	btnShowCircle.setEnabled(true); // CAS512 - if click blocks on right, can reduce tracks
 			
 			// Select this button
 			button.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));

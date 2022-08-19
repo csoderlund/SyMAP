@@ -215,8 +215,6 @@ public class Utilities {
 		
 		return button;
 	 }
-	 
-	 
 	/*******************************************************************
 	 * XXX basic array and string ops
 	 */
@@ -237,22 +235,6 @@ public class Utilities {
 		return t1 == null ? t2 == null : t1.equals(t2);
 	}
 	
-	// adjust rectangle coordinates for negative width or height
-	public static void fixRect(Rectangle2D rect) {
-		if (rect.getWidth() < 0)
-			rect.setRect(
-					rect.getX()+rect.getWidth()+1,
-					rect.getY(),
-					Math.abs( rect.getWidth() ),
-					rect.getHeight());
-		if (rect.getHeight() < 0)
-			rect.setRect(
-					rect.getX(),
-					rect.getY()+rect.getHeight()+1,
-					rect.getWidth(),
-					Math.abs( rect.getHeight() ));
-	}
-
 	public static int[] copy(int[] a, int len) {
 		if (a == null || a.length == 0 || len <= 0) return new int[0];
 		int[] ret = new int[len];
@@ -986,4 +968,20 @@ public class Utilities {
 		}
 		return x;
 	}
+    static public String kText(long len) {
+    	double d = (double) len;
+    	String x = len+"";
+    	if (len>=1000)  {
+			d = d/1000.0;
+			x = String.format("%.1fk", d);
+		}
+		return x;
+    }
+    // CAS512
+    static public String coordsStr(boolean isPos, int start, int end) {
+    	String o = (isPos) ? "+" : "-";
+    	String s = kText((long) start);
+    	String e = kText((long) end);
+    	return String.format("Coords=%s(%s:%s) Len=%,d", o, s, e, (Math.abs(end-start)+1));
+    }
 }

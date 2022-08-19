@@ -27,13 +27,24 @@ public class AnnotLoadMain
 {
 	private Logger log;
 	private UpdatePool pool;
-	private SyProps props;
 	private Project project;
-	private int projIdx;
-	private String projDir;
-	private TreeMap<String,Integer> typeCounts;
-	private TreeSet<String> typesToLoad;
+
+	private final String defaultTypes = 			"gene,exon,frame,gap,centromere";
+	private TreeMap<String,Integer> typeCounts = 	new TreeMap<String,Integer>();;
+	private TreeSet<String> typesToLoad = 			new TreeSet<String>();
 	private static Properties mDBProps = null;
+	
+	// init
+	private Vector<File> annotFiles = 				new Vector<File>();
+	
+	private final String exonAttr = "Parent"; // CAS512 save exon attribute
+	private TreeMap<String,Integer> userAttr = 		new TreeMap <String,Integer>();
+	private TreeMap <String, Integer> ignoreAttr = 	new TreeMap <String,Integer> ();
+	private Integer minAttr=0;
+	private boolean bHasAttr = false;
+	
+	private boolean success=true;
+	private int cntGeneIdx=0;
 	
 	public AnnotLoadMain(UpdatePool pool, Logger log, Properties props) {
 		this.log = log;
@@ -45,171 +56,41 @@ public class AnnotLoadMain
 		long startTime = System.currentTimeMillis();
 		
 		log.msg("Loading annotation for " + projName);
-
-		//pool.updateSchemaTo40();
-
-		// Initialize local data
-		typeCounts = new TreeMap<String,Integer>();
-		typesToLoad = new TreeSet<String>();
-		projDir = Constants.seqDataDir + projName;
-		props = new SyProps(log, new File(projDir + Constants.paramsFile), mDBProps);
-		project = new Project(pool, log, props, projName, ProjType.pseudo, QueryType.Either);
-		projIdx = project.getIdx();
 		
-		// Parse user-specified types
-		String annot_types = 	props.getProperty("annot_types");
-		Integer keywordMin = 	props.getInt("annot_kw_mincount");
-		String annotKW = 		props.getString("annot_keywords");
-		boolean bHasKey = (annotKW.equals("")) ? false : true;
+		initFromParams(projName);	if (!success) return false;
+		deleteCurrentAnnotations();	if (!success) return false;
 		
-		// if no types specified then limit to types we render
-		if (annot_types == null || annot_types.length() == 0) 
-			annot_types = "gene,exon,frame,gap,centromere";
-		
-		if (annot_types != null && !annot_types.equals(""))
-		{
-			String [] ats = annot_types.split("\\s*,\\s*");
-			for (String at : ats) {
-				at = at.trim();
-				if (at.length() > 0)
-					typesToLoad.add(at);
-			}
-		}
-
-		String annotDir = projDir + Constants.seqAnnoDataDir;
-		Vector<File> annotFiles = new Vector<File>();
-
-		if (!props.containsKey("anno_files")) props.setProperty("anno_files", "");
-
-		if (props.getProperty("anno_files").equals(""))
-		{
-			// Check for annotation directory
-			log.msg("anno_files not specified - use " + annotDir);
-			File ad = new File(annotDir);
-			if (!ad.isDirectory()) {
-				log.msg("No annotation files provided");
-				log.msg("");
-				return true; // this is not considered an error
-			}
-			
-			for (File f2 : ad.listFiles()) {
-				if (!f2.isFile() || f2.isHidden()) continue; // CAS511 macos add ._ files in tar
-				annotFiles.add(f2);
-			}
-		}
-		else
-		{
-			String userFiles = props.getProperty("anno_files");
-			String[] fileList = userFiles.split(",");
-			log.msg("User specified annotation files - " + userFiles);
-			
-			for (String filstr : fileList)
-			{
-				if (filstr == null) continue;
-				if (filstr.trim().equals("")) continue;
-				File f = new File(filstr);
-				if (!f.exists()) {
-					log.msg("Cannot find annotation file " + filstr);
-				}
-				else if (f.isDirectory()) {
-					for (File f2 : f.listFiles()) {
-						if (!f2.isFile() || f2.isHidden()) continue; // CAS511 macos add ._ files in tar
-						annotFiles.add(f2);
-					}
-				}
-				else {
-					annotFiles.add(f);
-				}
-			}
-		}
-			
-		// Load annotation files
-		deleteCurrentAnnotations();
-		pool.executeUpdate("delete from pairs " +
-				" where proj1_idx=" + projIdx + " or proj2_idx=" + projIdx);
-		
+/*** LOAD FILE ***/
 		int nFiles = 0;
 		
-		// CAS501 regardless if Keywords were entered into the Params interface,
-		// they were still be shown on the 2D display. Now they are not entered into
-		// the database unless they are in the list (if there is a list).
-		final TreeMap<String,Integer> keywords = new TreeMap<String,Integer>();
-		TreeMap <String, Integer> ignoredKey = new TreeMap <String, Integer> ();
-		
-		// if ID is not included, it all still works...
-		if (bHasKey) {
-			if (annotKW.contains(",")) {
-				String[] kws = annotKW.trim().split(",");
-				for (String key : kws) keywords.put(key.trim(), 0);
-			}
-			else keywords.put(annotKW.trim(), 0); // CAS502
-			log.msg("User specified keywords (" + keywords.size() + "): " + annotKW );
-		}
+		long time = System.currentTimeMillis();
 		
 		for (File af : annotFiles) {
-			if (!af.isFile()) continue;
-			
 			nFiles++;
-			loadFile(af, bHasKey, keywords, ignoredKey);
-			if (Cancelled.isCancelled()) {
-				log.msg("User cancelled");
-				return false; // CAS500 dec19 was 'break'
-			}
+			loadFile(af);	if (!success) return false;
 		}
-		log.msg(nFiles + " file(s) loaded");
-				
-		pool.executeUpdate("update projects set hasannot=1,annotdate=NOW() where idx=" + projIdx);
+		pool.executeUpdate("update projects set hasannot=1,annotdate=NOW() where idx=" + project.getIdx());
+		Utils.timeMsg(log, time, nFiles + " file(s) loaded");
 		
-		// Print type counts
-		log.msg("GFF Types (* indicates not loaded):");
-		for (String type : typeCounts.keySet()) {
-			String ast = (!typesToLoad.contains(type) ? "*" : ""); // CAS42 1/1/18 formatted output
-			log.msg(String.format("   %-15s %d%s", type, typeCounts.get(type), ast));
-		}
-		
-		// Print annotation keyword counts
-		Vector<String> sortedKeys = new Vector<String>();
-		sortedKeys.addAll(keywords.keySet());
-		Collections.sort(sortedKeys, new Comparator<String>() {
-	        public int compare(String o1, String o2) {
-	            return keywords.get(o2).compareTo(keywords.get(o1));
-	        }
-        });
-		if (!bHasKey) 
-			log.msg("All annotation keywords (with count >= " + keywordMin + "):");
-		else 
-			log.msg("User specified annotation keywords:");
-		pool.executeUpdate("delete from annot_key where proj_idx=" + projIdx);
-        for (String key : sortedKeys)
-        {
-	        	int count = keywords.get(key);
-	        	if (!bHasKey && count < keywordMin) break; // been sorted on count
-	        	
-	        	log.msg(String.format("   %-15s %d", key,count)); // CAS42 1/1/18 formated output
-	        	pool.executeUpdate("insert into annot_key (proj_idx,keyname,count) values (" + 
-        			projIdx + ",'" + key + "'," + count + ")");
-        }
-        if (bHasKey && ignoredKey.size()>0)  {
-			log.msg("Ignored keywords (with count >= " + keywordMin + "):" );
-			for (String key : ignoredKey.keySet()) {
-				int count = ignoredKey.get(key);
-	        		if (count >= keywordMin) 
-	        			log.msg(String.format("   %-15s %d", key, count));
-			}
-        }
-		// Release data from heap
-		typesToLoad = null;
-		typeCounts = null;
-		System.gc(); // Java treats this as a suggestion
-		
-		Utils.timeMsg(log, startTime, "Load Anno");
+/** Compute gene order **/
+		log.msg("Computations " + projName);
+		time = System.currentTimeMillis();
+		AnnotLoadPost alp = new AnnotLoadPost(project, pool, log);
+		success = alp.run(cntGeneIdx); 	if (!success) return false;
+		Utils.timeMsg(log, time, "Computations complete");
+
+/** Wrap up **/
+		wrapup();		if (!success) return false;
+		Utils.timeMsg(log, startTime, "Load Anno for " + projName);
 		
 		return true;
 	}
-	
-	private void loadFile(File f, boolean bHasKey, TreeMap<String,Integer> keywords, 
-				TreeMap<String,Integer> ignoredKey) throws Exception
+	/************************************************************************8
+	 * Load file - old method still used for separate gene/exon
+	 */
+	private void loadFile(File f) throws Exception
 	{
+	try {
 		log.msg("Loading " + f.getName());
 		BufferedReader fh = Utils.openGZIP(f.getAbsolutePath()); // CAS500
 		
@@ -218,11 +99,22 @@ public class AnnotLoadMain
 		int numParseErrors = 0, numGrpErrors = 0;
 		final int MAX_ERROR_MESSAGES = 3;
 		
+		boolean bSkipExons=false;
+		int cntMRNA=0, cntSkipMRNA=0;
+		
+		int lastGeneIdx=-1; // keep track of the last gene idx to be inserted
+		int lastIdx=pool.getIdx("select max(idx) from pseudo_annot");
+		
 		PreparedStatement ps = pool.prepareStatement("insert into pseudo_annot " +
-				"(grp_idx,type,name,start,end,strand,text) values (?,?,?,?,?,?,'')"); 
+				"(grp_idx,type,name,start,end,strand,gene_idx, genenum,tag) "
+				+ "values (?,?,?,?,?,?,?,0,'')"); // CAS512 remove 'text' field, added gene_idx, tag
 		while ((line = fh.readLine()) != null)
 		{
-			if (Cancelled.isCancelled()) break;
+			if (Cancelled.isCancelled()) {
+				log.msg("User cancelled");
+				success=false;
+				break;
+			}
 				
 			lineNum++;
 			if (line.startsWith("#")) continue; // skip comment
@@ -232,53 +124,54 @@ public class AnnotLoadMain
 				ErrorCount.inc();
 				if (numParseErrors++ < MAX_ERROR_MESSAGES) {
 					log.msg("Parse error: expecting at least 9 tab-delimited fields in gff file at line " + lineNum);
-					if (numParseErrors >= MAX_ERROR_MESSAGES)
-						log.msg("(Suppressing further errors of this type)");
+					if (numParseErrors >= MAX_ERROR_MESSAGES) log.msg("(Suppressing further errors of this type)");
 				}
 				continue; // skip this annotation
 			}
 			String chr 		= fs[0];
-			String type1 	= fs[1];
-			String type 		= pool.sqlSanitize(fs[2]);
+			//String source = fs[1];	// ignored
+			String type 	= pool.sqlSanitize(fs[2]);
 			int start		= Integer.parseInt(fs[3]);
-			int end 			= Integer.parseInt(fs[4]);
+			int end 		= Integer.parseInt(fs[4]);
 			String strand	= fs[6];
-			String attr		= fs[8];
+			String attr		= pool.sqlSanitize(fs[8]); // CAS512 remove quotes
 			
-			// CHECK - should this be done? should CDS and RNA be 
-			if (type.equals("CDS"))   type = "exon";
-			if (type.contains("RNA") && !type.equals("mRNA")) type = "gene"; // CAS501 added !mRNA
+			boolean isGene = (type.contentEquals("gene")) ? true : false;
+			boolean isExon = (type.contentEquals("exon")) ? true : false;
+			
+			// if (type.equals("CDS"))   type = "exon"; CAS512 quit using, often same as exon
+			// if (type.contains("RNA") && !type.equals("mRNA")) type = "gene"; // CAS501 added !mRNA; CAS512 why RNA
 			
 			if (strand == null || (!strand.equals("-") && !strand.equals("+")))
 				strand = "+";
 			
-		/** type **/
+			/** Type: After count, discard unsupported types  **/
 			if (type == null || type.length() == 0) type = "unknown";
 			else if (type.length() > 20) type = type.substring(0, 20);
-			
-			// RepeatMasker doesn't follow the gff standard
-			if (type1.equals("RepeatMasker") && type.equals("similarity"))
-            		type = "RepeatMasker";
 			
 			if (!typeCounts.containsKey(type)) typeCounts.put(type, 1);
 			else typeCounts.put(type, 1 + typeCounts.get(type));
 			
-			// Discard unsupported types as specified in project params file.
-			if (typesToLoad.size() > 0 &&  !typesToLoad.contains(type)) 
-				continue; // skip this annotation
-		
-		/** Chromosome **/
+			/** only use exons from first mRNA **/
+			if (type.equals("mRNA")) {
+				cntMRNA++; 
+				if (cntMRNA>1) 					 {bSkipExons=true; cntSkipMRNA++;}
+			}
+			else if (type.contentEquals("gene")) {bSkipExons=false; cntMRNA=0;}
+			
+			if (typesToLoad.size() > 0 &&  !typesToLoad.contains(type)) continue;   
+			if (bSkipExons) continue; 
+			
+	/** Process for write **/
+			/** Chromosome **/
 			int grpIdx = project.grpIdxFromQuery(chr);
-			if (grpIdx < 0) {
-				// ErrorCount.inc(); CAS502 this is not an error; can happen if scaffolds have been filtered out
+			if (grpIdx < 0) {// ErrorCount.inc(); CAS502 this is not an error; can happen if scaffolds have been filtered out
 				if (numGrpErrors++ < MAX_ERROR_MESSAGES) {
-					log.msg("Warn: No loaded group (e.g. chr) sequence for " + chr + " on line " + lineNum);
-					if (numGrpErrors >= MAX_ERROR_MESSAGES)
-						log.msg("(Suppressing further errors of this type)");
+					log.msg("Warn: No loaded sequence (e.g. chr) for " + chr + " on line " + lineNum);
+					if (numGrpErrors >= MAX_ERROR_MESSAGES) log.msg("(Suppressing further errors of this type)");
 				}
 				continue; // skip this annotation
 			}
-			
 			// Swap coordinates so that start is always less than end.
 			if (start > end) {
 				int tmp = start;
@@ -286,78 +179,259 @@ public class AnnotLoadMain
 				end = tmp;
 			}
 		/** Annotation Keywords **/	
-			// Don't load exon descriptions as they are the same as the corresponding gene descriptions.
-			if (type.equals("exon")) attr="";
+			String parsedAttr="";	// MySQL text: Can hold up to 65k
 			
-			// CAS501 changed to create string of only user-supplied keywords
-			String parsedAttr="";
-			
-			String[] fields = attr.split(";"); // 	IF CHANGED, CHANGE CODE IN QUERY PAGE PARSING ALSO
-			for (String field : fields)
-			{
-				String[] words = field.trim().split("[\\s,=]");
-				String key = words[0].trim();
-				if (key.equals("")) continue;
-				
-				if (key.endsWith("="))
-					key = key.substring(0,key.length() - 1);
-				
-				if (bHasKey) { 
-					if (keywords.containsKey(key)) {
-						keywords.put(key, 1 + keywords.get(key));
-						parsedAttr += field + ";"; 
-					}
-					else {
-						if (!ignoredKey.containsKey(key)) ignoredKey.put(key, 0);
-						ignoredKey.put(key, 1 + ignoredKey.get(key));
+			if (isExon) { // CAS512 was not using any attr; now using parent or first
+				String[] keyValExon = attr.split(";"); 
+				for (String keyVal : keyValExon) {
+					String[] words = keyVal.trim().split("[\\s,=]");
+					String key = words[0].trim();
+					if (key.equals("")) continue;
+					
+					if (key.endsWith("="))
+						key = key.substring(0,key.length() - 1);
+					if (key.contentEquals(exonAttr))  {
+						parsedAttr = keyVal.trim() + ";";
+						break;
 					}
 				}
-				else {
-					if (!keywords.containsKey(key)) keywords.put(key, 0);
-					keywords.put(key, 1 + keywords.get(key));
-				}
+				if (parsedAttr.contentEquals("") && keyValExon.length>0)
+					parsedAttr = keyValExon[0] + ";";
 			}
-			
-			if (bHasKey) {
-				if (parsedAttr.endsWith(";")) 
-					parsedAttr = parsedAttr.substring(0, parsedAttr.length()-1);
+			else if (isGene) { // CAS501 changed to create string of only user-supplied keywords
+				String[] keyValGene = attr.split(";"); // 	IF CHANGED, CHANGE CODE IN QUERY PAGE PARSING ALSO
+				for (String keyVal : keyValGene) {
+					String[] words = keyVal.trim().split("[\\s,=]");
+					String key = words[0].trim();
+					if (key.equals("")) continue;
+					
+					if (key.endsWith("="))
+						key = key.substring(0,key.length() - 1);
+					
+					if (bHasAttr) { 
+						if (userAttr.containsKey(key)) {
+							userAttr.put(key, 1 + userAttr.get(key));
+							parsedAttr += keyVal.trim() + ";"; 
+						}
+						else {
+							if (!ignoreAttr.containsKey(key)) ignoreAttr.put(key, 0);
+							ignoreAttr.put(key, 1 + ignoreAttr.get(key));
+						}
+					}
+					else {									// no keywords excluded
+						if (!userAttr.containsKey(key)) userAttr.put(key, 0);
+						userAttr.put(key, 1 + userAttr.get(key));
+					}
+				}
+				
+				if (bHasAttr) {
+					if (parsedAttr.endsWith(";")) 
+						parsedAttr = parsedAttr.substring(0, parsedAttr.length()-1); // remove ; at end
+				}
+				else parsedAttr = attr;						// no keywords excluded
+					
+				if (parsedAttr.equals("") && type.equals("gene")) parsedAttr="[no description]"; // CAS503
 			}
 			else parsedAttr = attr;
-				
-			if (parsedAttr.equals("") && type.equals("gene")) parsedAttr="[no description]"; // CAS503
 			
-			// Load annotation into database
+			int gene_idx=0;
+			if (isExon) {
+				if (lastGeneIdx>0) {
+					gene_idx=lastGeneIdx;
+					cntGeneIdx++; // for AnnotLoadPost
+				}
+			}
+	
+		/** Load annotation into database **/
 			ps.setInt(1,grpIdx);
 			ps.setString(2,type);
 			ps.setString(3,parsedAttr);
 			ps.setInt(4,start);
 			ps.setInt(5,end);
 			ps.setString(6,strand);
+			ps.setInt(7, gene_idx);
 			
 			ps.addBatch();
-			totalLoaded++; cntBatch++;
+			totalLoaded++; cntBatch++; lastIdx++;
+			
 			if (cntBatch==1000) {
 				cntBatch=0;
 				ps.executeBatch();
-				System.out.print(totalLoaded + " annotations...\r"); // CAS42 1/1/18
-			}	
+				System.out.print("   " + totalLoaded + " annotations...\r"); // CAS42 1/1/18
+			}
+			if (isGene) {
+				lastGeneIdx=lastIdx;
+			}
 		}
 		if (cntBatch> 0) ps.executeBatch();
 		ps.close();
 		fh.close();
 		
 		log.msg("   " + totalLoaded + " annotations loaded from " + f.getName());
+		if (cntSkipMRNA>0)	  log.msg("   " + cntSkipMRNA + " skipped mRNA and exons");
 		if (numParseErrors>0) log.msg("   " + numParseErrors + " parse errors - lines discarded");
-		if (numGrpErrors>0) log.msg("   " + numGrpErrors + " group not found - lines discarded");
+		if (numGrpErrors>0)   log.msg("   " + numGrpErrors + " annotations not loaded (sequence was not loaded)");
+	}
+	catch (Exception e) {ErrorReport.print(e, "Load file"); success=false;}
 	}
 	
+	/******************************************************
+	 * Check files - gene&exons in same file? or separate
+	 */
+	
+	/************* Initialize local data *****************/
+	private void initFromParams(String projName) {
+		try {		
+			String projDir = 	Constants.seqDataDir + projName;
+			SyProps props =		new SyProps(log, new File(projDir + Constants.paramsFile), mDBProps); // read parms from file
+			project = 			new Project(pool, log, props, projName, ProjType.pseudo, QueryType.Either);
+			
+		// Files init
+			if (!props.containsKey("anno_files")) props.setProperty("anno_files", "");
+
+			if (props.getProperty("anno_files").equals(""))
+			{
+				// Check for annotation directory
+				String annotDir = 	projDir + Constants.seqAnnoDataDir;
+				log.msg("   anno_files not specified - use " + annotDir);
+				File ad = new File(annotDir);
+				if (!ad.isDirectory()) {
+					log.msg("   No annotation files provided");
+					log.msg("");
+					return; 			// this is not considered an error
+				}
+				for (File f2 : ad.listFiles()) {
+					if (!f2.isFile() || f2.isHidden()) continue; // CAS511 macos add ._ files in tar
+					
+					annotFiles.add(f2);
+				}
+			}
+			else {
+				String userFiles = props.getProperty("anno_files");
+				String[] fileList = userFiles.split(",");
+				log.msg("   User specified annotation files - " + userFiles);
+				
+				for (String filstr : fileList) {
+					if (filstr == null) continue;
+					if (filstr.trim().equals("")) continue;
+					
+					File f = new File(filstr);
+					if (!f.exists()) {
+						log.msg("***Cannot find annotation file " + filstr);
+					}
+					else if (f.isDirectory()) {
+						for (File f2 : f.listFiles()) {
+							if (!f2.isFile() || f2.isHidden()) continue; // CAS511 macos add ._ files in tar
+							
+							annotFiles.add(f2);
+						}
+					}
+					else {
+						annotFiles.add(f);
+					}
+				}
+			}
+			
+			// Types: if no types specified then limit to types we render
+			String annot_types = 	props.getProperty("annot_types"); // not a parameter
+			if (annot_types == null || annot_types.length() == 0) 
+				annot_types = defaultTypes;
+			
+			String [] ats = annot_types.split("\\s*,\\s*");
+			for (String at : ats) {
+				at = at.trim();
+				if (at.length() > 0) typesToLoad.add(at);
+			}
+		
+			// Keywords: CAS501 regardless if Keywords were entered into the Params interface,
+			// they were still be shown on the 2D display. Now they are not entered into
+			// the database unless they are in the list (if there is a list).
+			
+			// Parse user-specified types
+			minAttr = props.getInt("annot_kw_mincount");
+			String attrKW = props.getString("annot_keywords");
+			log.msg("   annot_keywords: " + attrKW);
+			log.msg("   annot_kw_mincount: " + minAttr);
+			
+			// if ID is not included, it all still works...
+			bHasAttr = (attrKW.equals("")) ? false : true;
+			if (bHasAttr) {
+				if (attrKW.contains(",")) {
+					String[] kws = attrKW.trim().split(",");
+					for (String key : kws) userAttr.put(key.trim(), 0);
+				}
+				else userAttr.put(attrKW.trim(), 0); // CAS502
+			}
+		}
+		catch (Exception e) {ErrorReport.print(e, "load anno init"); success=false;}
+	}
+	/********************** wrap up ***********************/
+	private void wrapup() {
+		try {
+			// Print type counts
+			log.msg("GFF Types (* indicates not loaded):");
+			for (String type : typeCounts.keySet()) {
+				String ast = (!typesToLoad.contains(type) ? "*" : ""); // CAS42 1/1/18 formatted output
+				log.msg(String.format("   %-15s %d%s", type, typeCounts.get(type), ast));
+			}
+			
+			// Print annotation keyword counts CAS512 was misleading, reworded
+			if (!bHasAttr) log.msg("All attribute keywords: (>=" + minAttr + ")");
+			else 		   log.msg("User specified attribute keywords: (>=" + minAttr + ")");
+			
+			Vector<String> sortedKeys = new Vector<String>();
+			sortedKeys.addAll(userAttr.keySet());
+			Collections.sort(sortedKeys, new Comparator<String>() {
+		        public int compare(String o1, String o2) {
+		            return userAttr.get(o2).compareTo(userAttr.get(o1));
+		        }
+	        });
+			
+			pool.executeUpdate("delete from annot_key where proj_idx=" + project.getIdx());
+	        for (String key : sortedKeys) {
+	        	int count = userAttr.get(key);
+	        	String x = (count<minAttr) ? "*" : "";
+	        	
+	        	if (bHasAttr || count>minAttr) 
+	        		log.msg(String.format("   %-15s %d %s", key,count, x)); 
+	        	if (count>minAttr) // SyMAP query uses these
+	        		pool.executeUpdate("insert into annot_key (proj_idx,keyname,count) values (" + 
+	        			project.getIdx() + ",'" + key + "'," + count + ")");
+	        }
+	        if (bHasAttr && ignoreAttr.size()>0)  {
+				log.msg("Ignored attribute keywords: (>=" + minAttr + ")" );
+				for (String key : ignoreAttr.keySet()) {
+					int count = ignoreAttr.get(key);
+					if (count>minAttr)
+						log.msg(String.format("   %-15s %d", key, count));
+				}
+	        }
+			// Release data from heap
+			typesToLoad = null;
+			typeCounts = null;
+			System.gc(); // Java treats this as a suggestion
+		}
+		catch (Exception e) {ErrorReport.print(e, "Compute gene order"); success=false;}
+	}
 	private void deleteCurrentAnnotations() throws SQLException
 	{
-		String st = "DELETE FROM pseudo_annot USING pseudo_annot,xgroups " +
-					" WHERE xgroups.proj_idx='" + projIdx + 
-					"' AND pseudo_annot.grp_idx=xgroups.idx";
-		pool.executeUpdate(st);
+		try {
+			String st = "DELETE FROM pseudo_annot USING pseudo_annot, xgroups " +
+						" WHERE xgroups.proj_idx='" + project.getIdx() + 
+						"' AND pseudo_annot.grp_idx=xgroups.idx";
+			pool.executeUpdate(st);
+			
+			pool.executeUpdate("delete from pairs " +
+					" where proj1_idx=" + project.getIdx() + " or proj2_idx=" + project.getIdx());
+			
+			pool.resetIdx("idx", "pseudo_annot"); // CAS512 only resets if empty, otherwise, sets auto-inc
+			pool.resetIdx("idx", "pairs");
+		}
+		catch (Exception e) {ErrorReport.print(e, "Delete current annotations"); success=false;}
 	}
+	/*****************************************************
+	 * Not used
+	 */
 	public static void main(String[] args) 
 	{
 		try {
@@ -383,5 +457,5 @@ public class AnnotLoadMain
 			DatabaseUser.shutdown();
 			ErrorReport.die(e, "Loading annotation files");
 		}
-	}
+	}	
 }

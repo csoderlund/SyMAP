@@ -27,10 +27,10 @@ public class GenomicsNumber {
 
 	private static final Map<String,Long> unitConversion = new HashMap<String,Long>();
 	static {
-		unitConversion.put(BP, new Long(1));
-		unitConversion.put(KB, new Long(1000));
-		unitConversion.put(MB, new Long(1000000));
-		unitConversion.put(GB, new Long(1000000000));
+		unitConversion.put(BP, 1L); // CAS512 new Long(1)
+		unitConversion.put(KB, 1000L);
+		unitConversion.put(MB, 1000000L);
+		unitConversion.put(GB, 1000000000L);
 	}
 
 	private static final NumberFormat nf = NumberFormat.getNumberInstance();
@@ -136,11 +136,11 @@ public class GenomicsNumber {
 	 * @return a <code>String</code> value
 	 */
 	public String toString() {
-		return new Long(number).toString()+" "+CB;
+		return number +" "+CB; // new Long(number).toString()+" "+CB;
 	}
 	
 	public String toString(int bpPerCb) { 
-		return new Long(number).toString()+" "+CB+" = "+getFormatted(bpPerCb,number,1);
+		return number +" "+CB+" = "+getFormatted(bpPerCb,number,1);
 	}
 
 	/**

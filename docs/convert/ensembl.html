@@ -59,26 +59,29 @@
 
 Ensembl supplies FASTA formated files for genome sequence and GFF formated files for the annotation
 The following provides a simple scheme to produce the correctly formated files for SyMAP.
+It has been tested on these <a href=index.html class="ext" target="_blank">genomes</a>.
 <p>
 <b>Contents</b>
 	<table>
 		<tr>
 		<td style="vertical-align: text-top;">
 			<table>
-			<tr><td></td>
-				<td> <a href="#dl">Download</a></td></tr>
-			<tr><td></td>
-				<td> <a href="#cv">Convert files</a></td></tr>
-			<tr><td></td>
-				<td> <a href="#load">Load files into SyMAP</a></td></tr>
+			<tr><td>&nbsp;
+				<td> <a href="#dl">Download</a>
+			<tr><td>&nbsp;
+				<td> <a href="#cv">Convert files</a>
+			<tr><td>&nbsp;
+				<td> <a href="#load">Load files into SyMAP</a>
 			</table>
 		</td>
 		<td style="vertical-align: text-top;">
-			<table>
+		<table><tr>
+				<td>&nbsp;&nbsp;&nbsp;
+				<td> <a href="#scaf">Scaffolds</a>
 			<tr><td>&nbsp;&nbsp;&nbsp;</td>
-				<td><a href="#what">What the ConvertEnsembl script does</a></td></tr>
-			<tr><td>&nbsp;&nbsp;&nbsp;</td>
-				<td> <a href="#edit">Editing the script</a></td></tr>
+				<td> <a href="#edit">Editing the script</a>
+			<tr><td>&nbsp;&nbsp;&nbsp;
+				<td><a href="#what">What the ConvertEnsembl script does</a>
 			</table>
 		</td>
 	</table>
@@ -93,32 +96,66 @@ for which Ensembl has a genome. For plants and fungi,
 see <a href="http://plants.ensembl.org"  class="ext" target="_blank" >EnsemblPlant</a>
 and <a href="http://fungi.ensembl.org"  class="ext" target="_blank">EnsemblFungi</a>.
 <li>Select your species.
-<li>Select "Download DNA sequence (FASTA)". This takes you to a FTP site.
-It is recommended that you download the "*.dna_sm.toplevel.fa.gz", as it
+<li>Select <font color=darkblue>Download DNA sequence </font><font color=grey>(FASTA)</font>. This takes you to a FTP site.
+It is recommended that you download the <tt>[prefix].dna_sm.toplevel.fa.gz</tt>, as it
 is the soft masked chromosome sequences.
-<li>Select the "GFF3" from the "Download genes, cDNAs, ncRNA, proteins - FASTA - GFF3" line. This takes
-you to an FTP site. Download the *.chr.gff3.gz file.
+<li>Select the <font color=darkblue>GFF3</font> from the
+<font color=darkgray>Download genes, cDNAs, ncRNA, proteins - </font><font color=darkblue>FASTA - GFF3</font> line. This takes
+you to an FTP site. Download the <tt>[prefix].chr.gff3.gz</tt> or <tt>[prefix].chr.gff3.gz</tt> file.
 </ol>
 
 <a href="img/ENS-genome.png"><img src="img/ENS-genome.png" alt="" style="border: 1px solid black; width: 800px"></a>
-
+<!------------------------------------------------------------>
 <a id="cv"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Convert files</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <ol>
 <li>Go to the <tt>symap_5/data/seq</tt> directory.
 <li>Make a subdirectory for your species and move the FASTA and GFF files
-into the directory. Leave the "fa.gz" and "gff3.gz" suffixes on the files.
+into the directory.
 <li>Type the following at the command line to copy the <tt>ConvertEnsembl</tt> script to the <tt>pseudo</tt> directory:
-<pre>cp ../../scripts/ConvertEnsembl.class .</pre>
+<pre>
+cp ../../scripts/ConvertEnsembl.class .
+chmod 755 *.class
+</pre>
 
 <li>Execute
 <pre>java ConvertEnsembl &lt;species&gt;</pre>
 
 </ol>
-<h3>Example</h3>
-In <tt>symap_5/data/seq</tt> directory, I made a subdirectory called "rice" and
-moved the rice .fna.gz and gff3.gz files into it, then executed:
+<p>
+<i>ConvertEnsembl optional flags</i>:
+<table class="ty">
+<tr><td><b>Flag</b><td><b>Description</b><td><b>Details</b><td><b>Default</b>
+<tr><td>-s<td>Scaffolds<td>Include scaffolds - see <a href="#scaf">Scaffolds</a><td>Chromosomes only
+<tr><td>-m<td>Mt and Pt<td>Include Mt and Pt entries<td>Do not include
+<tr><td>-v<td>Verbose<td>Print out header lines of skipped sequences<td>No print
+</table>
+<p><i><u>Beware</u></i>: There are variations in the text associated with ">" header lines. The rules
+used by this script are as follows:
+<ol>
+<li>If the ">" is followed by a number, X, Y, or roman numeral,
+ then it is a chromosome.
+<li>If the ">" is followed by "Mt" or "Pt", it is a special case chromosome.
+<li>All other ">" entries are considered scaffolds.
+</ol>
+It is a real good idea to execute the following on your fasta file:
 <pre>
+   zgrep ">" [species_name].dna_sm.toplevel.fa.gz
+</pre>
+This shows you the lines and confirms that the above rules will work for your species. If not,
+then you will need to edit the script to work (or ask me to at symap@agcol.arizona.edu).
+
+<h3>Example</h3>
+From the <tt>symap_5</tt> directory:
+<pre>
+cd data/seq
+mkdir rice
+cd rice
+mv ~/Download/Oryza_sativa.IRGSP-1.0.45.chr.gff3.gz .
+mv ~/Download/Oryza_sativa.IRGSP-1.0.dna_rm.toplevel.fa.gz .
+cd ..
 cp ../../scripts/ConvertEnsembl.class .
 java ConvertEnsembl rice
 </pre>
@@ -128,81 +165,122 @@ data/seq/rice/
       Oryza_sativa.IRGSP-1.0.45.chr.gff3.gz
       Oryza_sativa.IRGSP-1.0.dna_rm.toplevel.fa.gz
       annotation/
-         gene.gff
-         exon.gff
+         anno.gff
+         gaps.gff
       sequence/
          genomic.fna
 </pre>
+The output gives useful details of the annotation (e.g. see rice <a href=riceE.html class="ext" target="_blank">details</a>);
+if the details do not appear right, you may need to <a href="#edit">edit</a> the script for your genomes.
 
-<p>
-<i>ConvertEnsembl optional flags</i>:
-<table class="ty">
-<tr><td><b>Flag</b><td><b>Description</b><td><b>Details</b><td><b>Default</b>
-<tr><td>-v<td>Verbose<td>Print out header lines of skipped sequences<td>No print
-</table>
 
 <a id="load"></a>
 <h2>Load files into SyMAP</h2>
-The above scenerio puts the files in the default SyMAP directories.
-When you start up SyMAP, you will see your projects listed on the left of the panel. Check the projects
-you want to load, which will cause them to be shown on the right of the symap window. The
-default parameters for the converted Ensembl projects will probably be sufficient.
-Select "Load All Projects".
-Once loaded, you can run the synteny algorithm be selecting "All Pairs". If you want to compute self-synteny,
-you have to do that individually with the "Selected Pair" button.
+The above scenario puts the files in the default SyMAP directories.
+When you start up SyMAP, you will see your projects listed on the left of the panel
+(e.g <a href="../SystemGuide.html#demoseq" class="ext" target="_blank">as shown for demos</a>). Check the projects
+you want to load, which will cause them to be shown on the right of the symap window and continue
+as described in the <a href="../SystemGuide.html" class="ext" target="_blank">System Guide</a>.
 
+
+<a id="scaf"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Scaffolds</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+
+By default, the <tt>ConvertEnsembl</tt> script creates the <tt>genomic.fna</tt> file with only the chromosomes.
+However, you can have it also include the scaffolds by using the "-s" flag, e.g. using Oryza Sativa
+<pre>
+   java ConvertEnsembl rice -s
+</pre>
+This will include all chromosomes (prefix 'C') and scaffolds (prefix 's') in the <tt>genomic.fna</tt> file.
+Beware, there can be many tiny scaffolds. If they all aligned in SyMAP, it causes the display to be very cluttered.
+Hence, it is best to just align the largest ones (e.g. the longest 30); merge them if possible, then try
+the smaller ones. You should set the following SyMAP project parameters:
+<ol>
+<li><tt>grp_prefix</tt> needs to be blank as there is no common prefix now.
+<li><tt>min_size</tt> should be set to only load the largest scaffolds. To determine the value to use, run the
+<tt>lenFasta.pl</tt> script,
+e.g. from the <tt>seq</tt> directory and using rice as an example:
+<pre>
+   cp ../../scripts/lenFasta.pl .
+   perl lenFasta.pl rice/sequence/genomic.fna
+</pre>
+</ol>
+If <tt>ConvertEnsembl</tt> was run with
+<tt>Oryza_sativa.IRGSP-1.0.dna_sm.toplevel.fa.gz</tt> (downloaded 12-Aug-2022)
+using the "-s -m" flags, the resulting <tt>genomics.fna</tt> would have
+12 are chromosomes, 49 are scaffolds and Mt and Pt sequences.
+The script outputs all their
+sorted lengths followed by the following table:
+<pre>
+Read genomic.fa and print sorted lengths
+Read 63 sequences
+   N    Length  Seqid
+   1  43270923  >C01
+   2  36413819  >C03
+
+   ...
+Values for min_len (assuming no duplicate lengths):
+#Seqs  min_len
+   10 27531856
+   20    31094
+   30    16417
+   40    10901
+   50    10210
+   60     6261
+</pre>
+
+To align the top 30 sequences (12 chromosomes, 18 of the largest scaffolds),
+this says to set <tt>min_size</tt> to 16417.
+
+<a id="edit"></a>
+<h2>Editing the script</h2>
+<p>The <tt>ConvertEnsembl.java</tt> code is supplied in the <tt>scripts</tt> directory.
+It is very simply written, it does not use external libraries
+and only common programming techniques found in all programming languages.
+<p>Once you make your changes, execute:
+<pre>
+   javac ConvertEnsembl.java
+</pre>
+You will need to have JDK installed to use the 'javac' command.
 
 <a id="what"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>What the ConvertEnsembl script does</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+
 The following occurs in the <tt>data/seq/&lt;project directory name&gt;</tt> where "project directory name"
 is the argument supplied to <tt>ConvertEnsembl</tt>:
 
 <ol>
 <li>Reads the file ending in '.fa.gz' and writes a new file called <tt>sequence/genomic.fna</tt> with the following changes:
-	<ol>
-	<li>Only sequences with word "chromosome" in their ">" header line and a number after the
-	">" will be copied to the genomics.fa file.
-	<li>The header line is replaced with ">ChrN" where N is 1,2...
+	<ol type="a">
+	<li>If a ">seqid" has an id of a number, X, Y or Roman numeral, it is considered a chromosome and prefixed with
+	"Chr" and the sequence is written to file.
+	<li>If the "-m" flag is set and the ">seqid" has an id of Mt or Pt, is it prefixed with "Chr" and
+	the sequence is written to file.
+	<li>If the "-s" flag is set, all other sequences are written to file with an seqid of "sN" where N
+	is sequential.
+	<li>Any string of N's &gt;=30,000 are written to the <tt>annotation/gap.gff</tt> file.
 	</ol>
-
-<li>Reads the file ending in 'gff3.gz' and writes two new files called <tt>annotation/gene.gff</tt> and
-<tt>annotation/exon.gff</tt>, as follows:
-	<ol>
-	<li>Only lines with the 'type' (3rd column) equal 'gene' and 'exon' are read.
-	<li>The gene line is written to the <tt>gene.gff</tt> file with the following changes:
-		<ol type="i">
-		<li>The first column N is replace with the 'ChrN'.
-		<li>The last column 'attributes' only keeps the "ID=" and "description=" fields.
-
-The "description=" keyword is shortened to "desc=".
-If the description field contains "Source:...", it
-is removed.
-		</ol>
+<br>
+<li>Reads the file ending in 'gff3.gz' and writes the file <tt>annotation/anno.gff</tt>. The
+<a href="http://www.sequenceontology.org/gff3.shtml" class="ext" target="_blank">gff3 format</a>
+has 9 columns, where the first is the 'seqid', the third is the 'type' (e.g. feature 'gene'), the
+last column is a semicolon-delimited keyword=value 'attribute' list. The file is processed as follows:
+	<ol  type="a">
+	<li>Only lines with the 'type' (3rd column) equal 'gene', 'mRNA' and 'exon' are read.
+	<li>Genes with "biotype=protein_coding" are written to file, followed by the first mRNA and
+	its exons.
+	<li>All lines have their seqID replaced with that assigned in step 1. They all have a modified
+	set of attributes written.
 	</ol>
-<li>The exon line is written to the <tt>exon.gff</tt> file with the first column N is replace
-with the 'ChrN'.
 </ol>
 
 
-<a id="edit"></a>
-<h2>Editing the script</h2>
-<p>The <tt>ConvertEnsembl.java</tt>
-code is supplied in the <tt>scripts</tt> directory. It is very simply written, it does not use external libraries
-and only common programming techniques found in all programming languages.
-<p>Once you make your changes, execute:
-<pre>
-javac ConvertEnsembl.java
-</pre>
-You will need to have JDK installed to use the 'javac' command.
-<p>
-
-<b>Some reasons for editing:</b>
-<ol>
-<li>This script has been tested on files from 8 different plant genomes. However,
-there can be variations that may not be accounted for.
-<li>You may prefer to keep more gene attributes then the script provides.
-<li>You may want to replace the "Chr" with some other prefix.
-</ol>
 <a href="#top">Go to top</a>
 <!---- END BODY -->
 	</td></tr>

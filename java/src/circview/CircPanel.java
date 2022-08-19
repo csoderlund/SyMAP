@@ -48,14 +48,10 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	Statement s;
 	
 	private static final Color FAR_BACKGROUND;
-	private static final Color BACKGROUND;
-	private static final Color BACKGROUND_BORDER;
-
+	
 	static {
 		PropertiesReader props = new PropertiesReader(CircPanel.class.getResource(DotPlot.DOTPLOT_PROPS));
 		FAR_BACKGROUND        = props.getColor("farBackgroundColor");
-		BACKGROUND            = props.getColor("backgroundColor");
-		BACKGROUND_BORDER     = props.getColor("backgroundBorderColor");
 	}
 	private static int     MARGIN     = 20;
 	private static int CIRCMARGIN = 60;
@@ -239,7 +235,6 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	public JScrollPane getScrollPane() {
 		return scroller;
 	}
-	@SuppressWarnings("deprecation")
 
 	// This provides the help text for elements not supporting tooltips
 	public String getHelpText(MouseEvent event) 
@@ -293,15 +288,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		}
 		return null;
 	}
-	private static void addComponent(Container container, Component component, int gridx, int gridy,
-	      int gridwidth, int gridheight, int anchor, int fill) 
-	{
-			GridBagConstraints gbc = new GridBagConstraints(gridx, gridy, gridwidth, gridheight, 1.0, 1.0,
-		        anchor, fill, new Insets(0,0,0,0), 0, 0);
-		    container.add(component, gbc);
-	}
-			
-
+	
 	class Block
 	{
 		int s1,e1,s2,e2;

@@ -125,10 +125,11 @@ to be re-run following the parameter change.
 		annot_keywords
 	</td>
 	<td align="left"  valign="top" width="400" >
-		SyMAP parses keyword/value pairs from the attributes field (last column) of the annotation
+		SyMAP parses the <u>Gene</u> keyword/value pairs from the attributes field (last column) of the annotation
 		gff files, which are entered into the database as the "Annotation Description".
-		The keyword/value pairs to be saved in the database can be limited by listing
-		the desired keywords here (separated by commas).
+		The keyword/value pairs to be saved can be limited by listing
+		the desired keywords here (separated by commas).  Note: for <u>Exons</u>, only the first
+		keyword/value pair is saved in the database.
 	</td>
 	<td align="left"  valign="top" >
 
@@ -139,7 +140,7 @@ to be re-run following the parameter change.
 		annot_kw_mincount
 	</td>
 	<td align="left"  valign="top" width="400" >
-		For the SyMAP Query, all keywords are search UNLESS they have less than this many occurrences,
+		For the SyMAP Query, all Gene keywords are search UNLESS they have less than this many occurrences,
 		e.g. if only one gene has a given keyword, then it is not included on the SyMAP query search, however,
 		it will still be in the gene's annotation description.
 	</td>

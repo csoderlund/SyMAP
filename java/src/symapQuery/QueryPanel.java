@@ -96,14 +96,18 @@ public class QueryPanel extends JPanel {
 	private boolean isBlockNum()	{ return txtBlock.isEnabled() && txtBlock.getText().trim().length()>0;}
 	private boolean isHitIdx()	{ return txtHitIdx.isEnabled() && txtHitIdx.getText().trim().length()>0;}
 	
-	private int isCollinear() 	{ 
+	private int isCollinear(boolean prt) 	{ // CAS512 add warning the first time its called
 		if (!txtCollinearN.isEnabled()) return 0;
-		if (txtCollinearN.getText().length()==0) return 0;
+		String ntext = txtCollinearN.getText();
+		if (ntext.length()==0) return 0;
 		try {
-			int n = Integer.parseInt(txtCollinearN.getText());
-			if (n<=0) return 0;
+			int n = Integer.parseInt(ntext);
+			if (n<0) {
+				if (prt) Utilities.showWarningMessage("Invalid Colliner number (" + ntext + "), must be positive.");
+				return 0;
+			}
 			return n;
-		} catch (Exception e) {};
+		} catch (Exception e) { if (prt) Utilities.showWarningMessage("Invalid Colliner integer ("+ ntext + ")" );}; 
 		return 0;
 	}
 	// these are only good for the last query, so should only be used for building the ables
@@ -194,7 +198,7 @@ public class QueryPanel extends JPanel {
 		if (isNoAnno())	  	whereClause = joinBool(whereClause, 
 				"(PH.annot1_idx=0 and PH.annot2_idx=0) AND PA.idx is null", AND); // 'is null' is necessary. 
 		
-		int n = isCollinear();
+		int n = isCollinear(true);
 		if (n>0) whereClause = joinBool(whereClause, "PH.runsize>" + n, AND);
 		
 		return whereClause;
@@ -221,7 +225,7 @@ public class QueryPanel extends JPanel {
 		String list1=null, list2=null;
 		String [] vals = block.split("\\."); 
 		if (vals.length!=3) {
-			System.err.println("Invalid block number " + block);
+			Utilities.showWarningMessage("Invalid block number (" + block + "). Must have format n.n.n");
 			return "";
 		}
 		for (int p=0; p<nSpecies; p++) {
@@ -237,7 +241,7 @@ public class QueryPanel extends JPanel {
 			}
 		}
 		if (list1==null || list2==null) {
-			System.err.println("No block number " + block);
+			Utilities.showWarningMessage("Invalid block number (" + block + ")."); // CAS512 add popup warning
 			txtBlock.setText("");
 			return "";
 		}
@@ -328,7 +332,7 @@ public class QueryPanel extends JPanel {
 		else if (isTwoAnno())	retVal = joinStr(retVal, "Both Gene hits", ";  ");
 		else if (isNoAnno()) retVal = joinStr(retVal, 	"No Gene hits", ";  ");
 		
-		int n=isCollinear();
+		int n=isCollinear(false);
 		if (n>0)	retVal = joinStr(retVal, "Collinear >= " + n, ";  ");
 		
 		if (isPgeneF()) {

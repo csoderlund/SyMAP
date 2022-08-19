@@ -72,7 +72,7 @@ public class CloseUpDialog extends JDialog implements HitDialogInterface, CloseU
 
 	public int showIfHits() {
 		int h = getNumberOfHits();
-		if (h > 0) show();
+		if (h > 0) setVisible(true); // CAS512 show();
 		return h;
 	}
 	

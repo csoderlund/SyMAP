@@ -42,12 +42,13 @@ public class ColorDialogHandler {
 	 * Method <code>show</code> shows the dialog, first creating it if the color dialog hasn't been
 	 * shown before and notifies the listeners.
 	 */
-	public void show() {
+	public void showX() {
 		if (dialog == null) {
 			dialog = new ColorDialog(props,cookie/*,help*/);
 			dialog.setColors();
 		}
-		dialog.show();
+		// CAS512 dialog.show();
+		dialog.setVisible(true);
 		notifyListeners();
 	}
 

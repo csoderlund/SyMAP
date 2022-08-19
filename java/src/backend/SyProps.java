@@ -57,7 +57,7 @@ public class SyProps extends PropertiesReader
 		System.out.println("Read " + file);
 		setDefaults();
 		
-		Enumeration keys = defprops.propertyNames();
+		Enumeration <?> keys = defprops.propertyNames(); // CAS512 add <?>
 		while (keys.hasMoreElements())
 		{
 			String key = keys.nextElement().toString();
@@ -194,7 +194,7 @@ public class SyProps extends PropertiesReader
 		setProperty("annot_types", 	"");
 		setProperty("annot_files", 	"");
 		setProperty("sequence_files", 	"");
-		setProperty("annot_kw_mincount","0");
+		setProperty("annot_kw_mincount","50"); // CAS512 change default from 0
 		setProperty("annot_keywords","");
 		setProperty("all_annot",    "0"); 
 		setProperty("mask_all_but_genes", "0"); 
@@ -202,7 +202,7 @@ public class SyProps extends PropertiesReader
 	
 	private void fixProps()
 	{
-		Enumeration keys = propertyNames();
+		Enumeration <?> keys = propertyNames();
 		while (keys.hasMoreElements())
 		{
 			String key = keys.nextElement().toString();
@@ -229,7 +229,7 @@ public class SyProps extends PropertiesReader
 	 * Pair property methods (CAS501 added for 5.0.1)
 	 */
 	public void copyProps(SyProps p) {
-		Enumeration em = p.keys();
+		Enumeration <?> em = p.keys();
 		while (em.hasMoreElements()) {
 			String key = (String)em.nextElement();
 			for (String x : SYMBOLS) {
@@ -289,7 +289,7 @@ public class SyProps extends PropertiesReader
 	private HashMap <String, String> getNonDef() {
 		HashMap <String, String> chgVal = new HashMap <String, String> ();
 		SyProps defProps = new SyProps();
-		Enumeration em = defProps.keys();
+		Enumeration <?> em = defProps.keys();
 		while (em.hasMoreElements()) {
 			String key = (String)em.nextElement();
 			for (String x : SYMBOLS) {
@@ -347,5 +347,4 @@ public class SyProps extends PropertiesReader
 			out.close();
 		} catch(Exception e) {ErrorReport.print(e, "Creating params file");}
 	}
-	
 }

@@ -174,7 +174,7 @@ public class MapperFilter extends Filter {
 		allHitPopupRadio.addActionListener(prbl);
 	}
 
-	public void show() {
+	public void showX() {
 		nochange = true;
 
 		setSliderMaxMin();
@@ -265,7 +265,7 @@ public class MapperFilter extends Filter {
 		myHitFilter = hitfilter.copy();
 		setInput(myHitFilter);
 		nochange = false;
-		super.show();
+		super.setVisible(true); // CAS512 super.showX();
 	}
 
 	public String getHelpID() {
@@ -461,7 +461,7 @@ public class MapperFilter extends Filter {
 	}
 
 	private String getPctidString(int slider) {
-		return new Integer(slider).toString()+"%";
+		return slider + "%"; // CAS512 new Integer(slider).toString()+"%";
 	}
 
 	private String getEvalueString(int slider) {

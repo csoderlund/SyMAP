@@ -1,40 +1,36 @@
 package symap.sequence;
 
 /**
- * Class <code>AnnotationData</code> holds that data needed to recreate an Annotation
+ * Holds that data needed to recreate an Annotation Object
  * @see Annotation
  */
 public class AnnotationData {	
-	private String name;
-	private String type;
-	private /*long*/int start, end; 
-	private String strand; 
+	protected String name;
+	protected String type;
+	protected int start, end; 
+	
+	// CAS512 new variables
+	protected String strand, tag; 
+	protected int annot_idx, genenum, gene_idx;
 
-	/**
-	 * Creates a new <code>AnnotationData</code> instance.
-	 *
-	 * @param name a <code>String</code> value
-	 * @param type a <code>String</code> value
-	 * @param start a <code>long</code> value
-	 * @param end a <code>long</code> value
-	 * @param text a <code>String</code> value
-	 */
-	public AnnotationData(String name, String type, /*long*/int start, /*long*/int end, String strand) 
-	{
-		this.name = name;
+	// Called by PseudoPool
+	// "SELECT idx, type,name,start,end,strand, genenum, gene_idx, tag 
+	public AnnotationData(int annot_idx,String type, String name,  int start, int end, String strand, 
+			int genenum, int gene_idx, String tag) {
+		this.annot_idx = annot_idx;
 		this.type = type.intern();
+		this.name = name;
+		
 		this.start = start;
 		this.end = end;
-		this.strand = strand.intern(); 	
+		this.strand = strand.intern(); 
+		this.gene_idx = gene_idx;
+		this.genenum = genenum;
+		this.tag = (tag==null || tag.contentEquals("")) ? type : tag; 	
 	}
-
-	/**
-	 * Method <code>getAnnotation</code> returns an annotation object using the values
-	 * in this AnnotationData object.
-	 *
-	 * @return an <code>Annotation</code> value
-	 */
+	
+	// Called by PseudoData - convert to annotation object
 	public Annotation getAnnotation() {
-		return new Annotation(name,type,start,end,strand);
+		return new Annotation(name,type,start,end,strand, tag, gene_idx, annot_idx, genenum);
 	}
-}
+}	

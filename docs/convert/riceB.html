@@ -1,91 +1,100 @@
-<!DOCTYPE html>
 <html>
 <head>
-<title>Download B</title>
-</head>
+<title>ConvertNCBI riceB</title>
 <body>
 <pre>
-&gt;&gt;&gt;&gt; ConvertNCBI &lt;&lt;&lt;&lt;
-&gt;&gt;&gt;&gt; ConvertNCBI &lt;&lt;&lt;&lt;
+>>>> ConvertNCBI <<<<
 Parameters:
-   Project directory: riceB
+Project directory: convert/ncbi/riceB
 
 Processing fasta files
-Chr1 NC_029256.1       43,270,923
-Chr2 NC_029265.1       23,207,287
-Chr3 NC_029266.1       29,021,106
-Chr4 NC_029267.1       27,531,856
-Chr5 NC_029257.1       35,937,250
-Chr6 NC_029258.1       36,413,819
-Chr7 NC_029259.1       35,502,694
-Chr8 NC_029260.1       29,958,434
-Chr9 NC_029261.1       31,248,787
-Chr10 NC_029262.1      29,697,621
-Chr11 NC_029263.1      28,443,022
-Chr12 NC_029264.1      23,012,720
+Chr01       NC_029256.1           43,270,923
+Chr02       NC_029265.1           23,207,287
+Chr03       NC_029266.1           29,021,106
+Chr04       NC_029267.1           27,531,856
+Chr05       NC_029257.1           35,937,250
+Chr06       NC_029258.1           36,413,819
+Chr07       NC_029259.1           35,502,694
+Chr08       NC_029260.1           29,958,434
+Chr09       NC_029261.1           31,248,787
+Chr10       NC_029262.1           29,697,621
+Chr11       NC_029263.1           28,443,022
+Chr12       NC_029264.1           23,012,720
 Finish writing /genomic.fna
-A 105,617,936  a          0
-T 105,616,540  t          0
-C  81,523,641  c          0
-G  81,546,460  g          0
-N     118,255
-Soft masked: 0 lower case
-Gaps &gt;= 30000: 0
+A 105,290,866  a           0
+T 105,287,930  t           0
+C  81,262,952  c           0
+G  81,287,117  g           0
+N     116,654  n           0
+Gaps >= 30000: 0
 
-Processing riceB/ncbi_dataset/data/GCF_001433935.1/genomic.gff
-Process genes....
-   Use Genes 28,556
+Processing convert/ncbi/riceB/ncbi_dataset/data/GCF_001433935.1/genomic.gff
+   Use Genes 28,556 from 33,624
 Process mRNA....
-   Number of mRNA 28,556
-Finish writing /gene.gff
+   First mRNAs 28,556 from 42,417
 Process exons....
-   Number of Exons 153,923
-Finish writing exon.gff
+   Write Exons 153,923  from 333,815
+Finish writing /anno.gff
 
->>Total Types  (col 3)
-   CDS                   238,915
-   cDNA_match              1,507
-   exon                  333,815 *
-   gene                   33,624 *
-   intron                      1
-   inverted_repeat             2
-   lnc_RNA                 6,277
-   mRNA                   42,417 *
-   pseudogene              1,605
-   pseudogenic_tRNA            3
-   rRNA                      200
-   region                     58
-   sequence_feature          489
-   snRNA                      71
-   snoRNA                    610
-   tRNA                      672
-   transcript              3,840
->>Gene Source (col 2)
-   Gnomon                 31,900
-   RefSeq                    235
-   cmsearch                  874
-   tRNAscan-SE               615
->>Gene gene_biotype=
-   lncRNA                  3,270
-   misc_RNA                   57
-   protein_coding         28,744 *
-   rRNA                      200
-   snRNA                      71
-   snoRNA                    610
-   tRNA                      672
+>>Sequence
+     12 Chromosomes of     373,245,519 total length
+     43 Scaffolds   of         550,136 total length (12<10,000bp) -- not written to file
+      3 Other       of         627,180 total length -- not written to file
+
+>>All Types  (col 3)
+   CDS                     238,915
+   cDNA_match                1,507
+   exon                    333,815 *
+   gene                     33,624 *
+   intron                        1
+   inverted_repeat               2
+   lnc_RNA                   6,277
+   mRNA                     42,417 *
+   pseudogene                1,605
+   pseudogenic_tRNA              3
+   rRNA                        200
+   region                       58
+   sequence_feature            489
+   snRNA                        71
+   snoRNA                      610
+   tRNA                        672
+   transcript                3,840
+>>All Gene Source (col 2)
+   Gnomon                   31,900 *
+   RefSeq                      235 *
+   cmsearch                    874 *
+   tRNAscan-SE                 615 *
+>>All gene_biotype=
+   lncRNA                    3,270
+   misc_RNA                     57
+   protein_coding           28,744 *
+   rRNA                        200
+   snRNA                        71
+   snoRNA                      610
+   tRNA                        672
 >>Gene product=
    Unique                 28,556
    Variants               13,836
->>Genes gene_biotype=protein_coding on accepted Source:
-   Written to file        28,556
-   On Chromosomes         28,556
-   On Scaffold                21
-   Not on Chr/Scaf           167
->>Sequences
-     12 chromosomes of  373,245,519 total length
-     43 scaffold    of      550,136 total length  -- not written to file
-      3 other       of      627,180 total length  -- not written to file
-Done
+>>Written to file
+   Gene                   28,556
+   mRNA                   28,556
+   Exon                  153,923
+>>Chromosome gene count 28,556
+   Chr01      NC_029256.1             3,969
+   Chr02      NC_029265.1             1,562
+   Chr03      NC_029266.1             1,813
+   Chr04      NC_029267.1             1,646
+   Chr05      NC_029257.1             3,176
+   Chr06      NC_029258.1             3,447
+   Chr07      NC_029259.1             2,525
+   Chr08      NC_029260.1             2,270
+   Chr09      NC_029261.1             2,337
+   Chr10      NC_029262.1             2,267
+   Chr11      NC_029263.1             1,941
+   Chr12      NC_029264.1             1,603
+   Genes not on Chromosome      188
+ConvertNCBI completed
+
 </pre>
 </body>
 </html>

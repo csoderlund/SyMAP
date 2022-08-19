@@ -363,7 +363,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 					 g2.setPaint(getCColor()); 
 					 g2.draw(new Line2D.Double(x,y,x+lineLength,y));
 				 }
-				 if (st.getShowRibbon()) { 
+				 if (st.getShowHitLen()) { 
 					 if (lineLength == 0) lineLength = 30;
 					 Point2D rp1 = st.getPoint(data.getStart2(), stOrient);
 					 rp1.setLocation(sp.getX()+lineLength,rp1.getY());
@@ -592,7 +592,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 						 g2.drawLine(x,y,x+lineLength,y);
 					 }
 				 }
-				 if (st.getShowRibbon()) { 
+				 if (st.getShowHitLen()) { 
 					 if (lineLength == 0) lineLength = 30;
 					 Point2D rp1 = st.getPoint(data.getStart2(), stOrient);
 					 Point2D rp2 = st.getPoint(data.getEnd2(), stOrient);

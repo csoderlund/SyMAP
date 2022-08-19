@@ -50,7 +50,7 @@ public class ErrorReport {
 	}
 	public static void reportError(Throwable e, String msg, boolean replaceContents) {
 		System.err.println(msg);
-		if (e!=null) {
+		if (e!=null && e.getMessage()!=null) { // CAS512 add 2nd check
 			String [] lines = e.getMessage().split("\n"); // CAS511 can include nested stacktrace
 			if (lines.length>5) {
 				System.err.println(lines[0]);

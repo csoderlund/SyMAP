@@ -5,8 +5,9 @@ use strict;
 # Reads a fasta file and prints out the lengths in ascending order
 # It then prints out the min_len to use to limit symap to a given number of sequence
 #   for a draft sequencing project.
-
-my @lenVec;
+# CAS512 update to print ">" line
+ 
+my %lenMap;
 
 print "Read $ARGV[0] and print sorted lengths\n"; 
 chgFasta($ARGV[0]);
@@ -18,44 +19,52 @@ sub chgFasta {
 	
 	my $len=0;
 	my $cnt=0;
+	my $name="";
 	
 	while(<IN>){
 		my $line=$_;
+		chop $line;
 		if($line=~m/>/){
 			if ($len>0) {
-				$lenVec[$cnt++] = $len;
+				$lenMap{$name} = $len;
 			}
+			$name = $line;
 			$len=0;
-		}else{
-			chop $line;
+			$cnt++;
+		} else {
 			$len += length $line;
 		}
 	}
-	if ($len>0) {$lenVec[$cnt++] = $len;}
+	if ($len>0) {$lenMap{$name} = $len;}
 	print "Read $cnt sequences\n";
 }
 
 sub findCutoff {
-	my @sorted = reverse sort {$a <=> $b} @lenVec;
 	my $cnt=0;
-	my $num=0;
-	my %min_len = (10, 0, 20, 0, 30,0, 40, 0, 50, 0, 60, 0, 70, 0, 80, 0, 90, 0, 100,0);
-    
-	print "\nLengths:\n";
-	for (my $i=0; $i<scalar @sorted; $i++) {
+	my @lenVec; 
+	printf "%4s %9s  %s\n", "N", "Length", "Seqid";
+	foreach my $name (sort {$lenMap{$b} <=> $lenMap{$a}} keys %lenMap) {
+		my $len = $lenMap{$name};
+		if ($len<40) {last}
+		
+		$lenVec[$cnt]=$len;
 		$cnt++;
-        printf "%4d %8d\n", $cnt, $sorted[$i];
-        
-        foreach $num (keys %min_len) {
-        	if ($cnt==$num) {$min_len{$num}=$sorted[$i]; last;}
-        }
+        printf "%4d %9d  %s\n", $cnt, $len, $name;
     }
-    print "\nValues for min_len (assuming no duplicate lengths):\n";
-    printf "%5s %8s\n", "#Seqs", "min_len";
-    foreach $num (sort {$a<=>$b} keys  %min_len) {
-    	last if ($min_len{$num}==0);
-    	printf "%5d %8d\n", $num, $min_len{$num};
+    
+    my $max= scalar @lenVec; 
+    if ($max>9) {
+		my @cutoff = (10, 20, 30, 40,  50,  60,  70,  80,  90,  100); 
+	
+		print "\nValues for min_len (assuming no duplicate lengths):\n";
+		printf "%5s %8s\n", "#Seqs", "min_len";
+		for (my $i=0; $i<10; $i++) {
+			my $x = $cutoff[$i];
+	   
+			if ($x>$max) {last;}
+	   
+			printf "%5d %8d\n", $x, $lenVec[$x-1];
+		}
     }
 }
-
 

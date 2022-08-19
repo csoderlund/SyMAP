@@ -165,7 +165,9 @@ public class Schema {
 		    "start               INTEGER NOT NULL," +
 		    "end                 INTEGER NOT NULL," +
 		    "strand              ENUM('+','-') NOT NULL," +
-		    "text                TEXT  NOT NULL," +
+		    "genenum             INTEGER default 0," +  // was being added in SyntenyMain
+		    "gene_idx            INTEGER default 0," +  // CAS512 add - gene idx for exon
+		    "tag				 VARCHAR(30)," +		// CAS512 add - Gene(#exons) or Exon #N
 		    "INDEX (grp_idx,type)," +
 		    "FOREIGN KEY (grp_idx) REFERENCES xgroups (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB; "; 
@@ -175,7 +177,7 @@ public class Schema {
 		sql = "CREATE Table annot_key ( " +
 			"idx 				INTEGER AUTO_INCREMENT PRIMARY KEY," +	 // not reference
 			"proj_idx			INTEGER NOT NULL, " +
-			"keyname				TEXT, " +
+			"keyname			TEXT, " +
 			"count				BIGINT DEFAULT 0, " +
 			"FOREIGN KEY (proj_idx) REFERENCES projects (idx) ON DELETE CASCADE " +
 			") ENGINE = InnoDB;";

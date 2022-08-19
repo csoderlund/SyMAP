@@ -19,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
 import props.PersistentProps;
+import util.ErrorReport;
 //import util.HelpHandler;
 import util.PropertiesReader;
 
@@ -148,7 +149,8 @@ public class ColorDialog extends JDialog implements ActionListener {
 						dn = pvalue.substring(0,cInd);
 						if (c2Ind != cInd) {
 							des = pvalue.substring(cInd+1,c2Ind);
-							a = new Boolean(pvalue.substring(c2Ind+1)).booleanValue();
+							a = Boolean.parseBoolean(pvalue.substring(c2Ind+1));
+							// CAS512 a = new Boolean(pvalue.substring(c2Ind+1)).booleanValue();
 						}
 						else des = pvalue.substring(cInd+1);
 					}
@@ -160,7 +162,8 @@ public class ColorDialog extends JDialog implements ActionListener {
 		for (ind = 1; ; ind++) {
 			name = (String)props.getString(TAB+ind);
 			if (name == null) break;
-			tabOrderMap.put(name,new Integer(ind));
+			// CAS512 tabOrderMap.put(name,new Integer(ind));
+			tabOrderMap.put(name, ind);
 		}
 
 		for (ColorVariable colorVar : cvars) {
@@ -203,53 +206,50 @@ public class ColorDialog extends JDialog implements ActionListener {
 
 		pack();
 	}
-
+/* CAS512 depreciated, not called
 	public void show() {
-		/*
-		 * Cancel other changes that may have happend if the user closes
-		 * the dialog some other way.
-		 */
+		 //Cancel other changes that may have happend if the user closes
+		 //the dialog some other way.
 		cancelAction();
 
 		super.show();
 	}
-
+*/
 	public void setColors() {
 		String cookie = null;
 		if (persistentProps != null) cookie = persistentProps.getProp();
-		if (cookie != null && cookie.length() > 0) {
-			String[] variables = cookie.split(VAR_SEP);
-			String cn, vn, c, cvars[];
-			int pind, eind, r, g, b, a;
-			for (int i = 0; i < variables.length; i++) {
-				try {
-					pind = variables[i].lastIndexOf('.');
-					eind = variables[i].indexOf('=');
-					if (pind < 0 || eind < pind) {
-						System.out.println("Illegal Variable Found ["+variables[i]+"]!!!!");
+		if (cookie == null || cookie.length() == 0) {return;}
+		
+		String[] variables = cookie.split(VAR_SEP);
+		String cn, vn, c, cvars[];
+		int pind, eind, r, g, b, a;
+		for (int i = 0; i < variables.length; i++) {
+			try {
+				pind = variables[i].lastIndexOf('.');
+				eind = variables[i].indexOf('=');
+				if (pind < 0 || eind < pind) {
+					System.out.println("Illegal Variable Found ["+variables[i]+"]!!!!");
+				}
+				else {
+					cn = variables[i].substring(0,pind);
+					vn = variables[i].substring(pind+1,eind);
+					c  = variables[i].substring(eind+1);
+					cvars = c.split(",");
+					if (cvars.length < 3 || cvars.length > 4) {
+						System.out.println("Invalid Color Variable: ["+c+"]");
 					}
 					else {
-						cn = variables[i].substring(0,pind);
-						vn = variables[i].substring(pind+1,eind);
-						c  = variables[i].substring(eind+1);
-						cvars = c.split(",");
-						if (cvars.length < 3 || cvars.length > 4) {
-							System.out.println("Invalid Color Variable: ["+c+"]");
-						}
-						else {
-							r = new Integer(cvars[0]).intValue();
-							g = new Integer(cvars[1]).intValue();
-							b = new Integer(cvars[2]).intValue();
-							if (cvars.length == 4) a = new Integer(cvars[3]).intValue();
-							else a = 255;
-							changeColor(new ColorVariable(cn,vn,new Color(r,g,b,a)));
-						}
+						r = Integer.parseInt(cvars[0]); // CAS512 new Integer(cvars[0]).intValue();
+						g = Integer.parseInt(cvars[1]); //new Integer(cvars[1]).intValue();
+						b = Integer.parseInt(cvars[2]); //new Integer(cvars[2]).intValue();
+						if (cvars.length == 4) a = Integer.parseInt(cvars[3]); //new Integer(cvars[3]).intValue();
+						else a = 255;
+						changeColor(new ColorVariable(cn,vn,new Color(r,g,b,a)));
 					}
 				}
-				catch (Exception e) {
-					System.out.println("Exception Parsing Color Variable ["+variables[i]+"]!!!");
-					e.printStackTrace();
-				}
+			}
+			catch (Exception e) {
+				ErrorReport.print(e, "Exception Parsing Color Variable ["+variables[i]+"]!!!");
 			}
 		}
 	}
@@ -328,7 +328,6 @@ public class ColorDialog extends JDialog implements ActionListener {
 	}
 
 	protected static boolean setColor(String className, String variableName, Color color) {
-		boolean success = false;
 		try {
 			Class c = Class.forName(className);
 			Field f;
@@ -338,17 +337,15 @@ public class ColorDialog extends JDialog implements ActionListener {
 				f.set(null,color);
 			}
 			else {
-				int ind = new Integer(variableName.substring(lind+1,variableName.indexOf(']'))).intValue();		
+				// CAS512 int ind = new Integer(variableName.substring(lind+1,variableName.indexOf(']'))).intValue();		
+				int ind = Integer.parseInt(variableName.substring(lind+1,variableName.indexOf(']')));		
 				f = c.getField(variableName.substring(0,lind));
 				Vector colors = (Vector)f.get(null);
-				colors.set(ind,color);
+				colors.set(ind, color);
 			}
-			success = true;
+			return true;
 		}
-		catch (Exception exc) {
-			exc.printStackTrace();
-		}
-		return success;
+		catch (Exception e) {ErrorReport.print(e, "set color"); return false;}
 	}
 
 	protected static Color getColor(String className, String variableName) {
@@ -362,15 +359,14 @@ public class ColorDialog extends JDialog implements ActionListener {
 				color = (Color)f.get(null);
 			}
 			else {
-				int ind = new Integer(variableName.substring(lind+1,variableName.indexOf(']'))).intValue();		
+				// CAS512 int ind = new Integer(variableName.substring(lind+1,variableName.indexOf(']'))).intValue();		
+				int ind = Integer.parseInt(variableName.substring(lind+1,variableName.indexOf(']')));		
 				f = c.getField(variableName.substring(0,lind));
 				Vector colors = (Vector)f.get(null);
 				color = (Color)colors.get(ind);
 			}
 		}
-		catch (Exception exc) {
-			exc.printStackTrace();
-		}
+		catch (Exception e) {ErrorReport.print(e, "get color"); }
 		return color;
 	}
 }

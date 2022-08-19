@@ -46,12 +46,13 @@ public class FilterHandler implements Filtered, ActionListener {
 		}
 	}
 
+	/** CAS512 not called
 	public void show() {
 		if (filter != null) {
-			filter.show();
+			filter.showX(); 
 		}
 	}
-
+	**/
 	public void hide() {
 		if (filter != null) {
 			filter.closeFilter();
@@ -68,7 +69,7 @@ public class FilterHandler implements Filtered, ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == button)
-			if (filter != null && filter.canShow()) filter.show();
+			if (filter != null && filter.canShow()) filter.showX(); // CAS512 show()
 	}
 
 	protected Filter createFilter(Object obj) {

@@ -133,29 +133,25 @@ public class RGBAChooserPanel extends AbstractColorChooserPanel implements Chang
         if (!isLocked) {
             isLocked = true;
 
-	    Color color = getColorFromModel();
-	    int red = color.getRed();
-	    int blue = color.getBlue();
-	    int green = color.getGreen();
-	    int alpha = color.getAlpha();
-	    
-	    if (redSlider.getValue() != red)
-		redSlider.setValue(red);
-	    if (greenSlider.getValue() != green)
-		greenSlider.setValue(green);
-	    if (blueSlider.getValue() != blue)
-		blueSlider.setValue(blue);
-	    if (alphaSlider.getValue() != alpha)
-		alphaSlider.setValue(alpha);
-	    
-	    if (((Integer)redSpinner.getValue()).intValue() != red)
-		redSpinner.setValue(new Integer(red));
-	    if (((Integer)greenSpinner.getValue()).intValue() != green)
-		greenSpinner.setValue(new Integer(green));
-	    if (((Integer)blueSpinner.getValue()).intValue() != blue)
-		blueSpinner.setValue(new Integer(blue));
-	    if (((Integer)alphaSpinner.getValue()).intValue() != alpha)
-		alphaSpinner.setValue(new Integer(alpha));
+		    Color color = getColorFromModel();
+		    int red = color.getRed();
+		    int blue = color.getBlue();
+		    int green = color.getGreen();
+		    int alpha = color.getAlpha();
+		    
+		    if (redSlider.getValue() != red)	redSlider.setValue(red);
+		    if (greenSlider.getValue() != green)greenSlider.setValue(green);
+		    if (blueSlider.getValue() != blue)	blueSlider.setValue(blue);
+		    if (alphaSlider.getValue() != alpha)alphaSlider.setValue(alpha);
+		    
+		    if (((Integer)redSpinner.getValue()).intValue() != red)
+		    	redSpinner.setValue(red); 		// CAS redSpinner.setValue(new Integer(red));
+		    if (((Integer)greenSpinner.getValue()).intValue() != green)
+		    	greenSpinner.setValue(green); 	// greenSpinner.setValue(new Integer(green));
+		    if (((Integer)blueSpinner.getValue()).intValue() != blue)
+		    	blueSpinner.setValue(blue);		// blueSpinner.setValue(new Integer(blue));
+		    if (((Integer)alphaSpinner.getValue()).intValue() != alpha)
+		    	alphaSpinner.setValue(alpha); 	// alphaSpinner.setValue(new Integer(alpha));
 	    
             isLocked = false;
         }

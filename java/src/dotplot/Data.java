@@ -268,7 +268,7 @@ public class Data extends Observable implements DotPlotConstants {
 					symap.getDrawingPanel().setBlockTrack(2,pX.getID(),Utilities.getIntsString(ib.getContigNumbers(X)),Color.GREEN);
 				}
 				
-				symap.getFrame().show();
+				symap.getFrame().showX();
 			}
 			else {
 				Rectangle2D bounds = selectedBlock.getBounds2D();
@@ -326,7 +326,7 @@ public class Data extends Observable implements DotPlotConstants {
 				symap.getDrawingPanel().setBlockTrack(1,pY.getID(),track[Y],Color.CYAN);
 				symap.getDrawingPanel().setBlockTrack(2,pX.getID(),track[X],Color.GREEN);
 			}
-			symap.getFrame().show();
+			symap.getFrame().showX();
 		}
 	}
 

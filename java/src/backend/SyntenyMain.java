@@ -1016,11 +1016,9 @@ public class SyntenyMain
 	private void uploadBlocks(Vector<Block> blocks) throws Exception
 	{
 		/** CAS506 very old schema update
-		if (!Utilities.tableHasColumn("blocks", "score",pool.createStatement() ))
-		{
-			System.out.println("Updating blocks table");
-			pool.executeUpdate("alter table blocks add score integer default 0 after corr");
-			pool.executeUpdate("update blocks set score=(select count(*) from pseudo_block_hits where block_idx=idx)");
+		if (!Utilities.tableHasColumn("blocks", "score",pool.createStatement() )){
+			//pool.executeUpdate("alter table blocks add score integer default 0 after corr");
+			//pool.executeUpdate("update blocks set score=(select count(*) from pseudo_block_hits where block_idx=idx)");
 		}
 		**/
 		for (Block b : blocks)
@@ -1642,53 +1640,15 @@ public class SyntenyMain
 	private void setGeneRunCounts() throws Exception
 	{
 		mLog.msg("Label adjacent gene anchors");
-		if (!pool.tableHasColumn("pseudo_hits", "runsize"))
-		{
-			pool.executeUpdate("alter table pseudo_hits add runsize int default 0");
-		}
-		pool.executeUpdate("update pseudo_hits set runsize=0 where pair_idx=" + mPairIdx);
-		if (!pool.tableHasColumn("pseudo_annot", "genenum"))
-		{
-			pool.executeUpdate("alter table pseudo_annot add genenum int default 0");
-		}
-		// First set the order number for the genes, using the same number for 
-		// ones which overlap
-		pool.executeUpdate("update pseudo_annot, xgroups set pseudo_annot.genenum=0 where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + mProj1.idx);
-		pool.executeUpdate("update pseudo_annot, xgroups set pseudo_annot.genenum=0 where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + mProj2.idx);
+		/** CAS512 made sure they are added in Version db3
+		//if (!pool.tableHasColumn("pseudo_hits", "runsize")) pool.executeUpdate("alter table pseudo_hits add runsize int default 0");
+		//if (!pool.tableHasColumn("pseudo_annot", "genenum")) pool.executeUpdate("alter table pseudo_annot add genenum int default 0");
 		
-		for (Project p : new Project[]{mProj1, mProj2})
-		{
-			int totalGeneUpdate=0;
-			for (Group g : p.getGroups())
-			{
-				int genenum = 0;
-				PreparedStatement ps = pool.prepareStatement(
-						"update pseudo_annot set genenum=? where idx=?");
-				ResultSet rs = pool.executeQuery(
-					"select idx,start,end from pseudo_annot where grp_idx=" + g.idx + 
-					" and type='gene' order by start asc");
-				int sprev=-1, eprev=-1;
-				while (rs.next())
-				{
-					int idx = rs.getInt(1);
-					int s = rs.getInt(2);
-					int e = rs.getInt(3);
-					
-					if (sprev == -1 || !Utils.intervalsOverlap(sprev, eprev, s, e, 0))
-					{
-						genenum++;
-					}
-					ps.setInt(1, genenum);
-					ps.setInt(2, idx);
-					ps.addBatch();
-					sprev=s; eprev=e;
-				}
-				ps.executeBatch();
-				totalGeneUpdate+=genenum;
-				System.out.print("Group " + g.getName() + " " + genenum + " anchors\r");
-			}
-			Utils.prtNumMsg(mLog, totalGeneUpdate, "Gene update for " + p.name);
-		}
+		CAS512 MOVED compute genenum to AnnotLoadMain
+		**/
+		
+		pool.executeUpdate("update pseudo_hits set runsize=0 where pair_idx=" + mPairIdx);
+		
 		int num2go = mProj1.getGroups().size() * mProj2.getGroups().size();
 		mLog.msg("Process " + num2go + " group by group");
 		int count=0;

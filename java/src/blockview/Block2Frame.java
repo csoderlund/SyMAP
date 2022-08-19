@@ -642,7 +642,7 @@ public class Block2Frame extends JFrame
 				symap.getDrawingPanel().setBlockTrack(2,mIdx2,Utils.intArrayJoin(b.ctgNums,","),Color.GREEN);
 				symap.getDrawingPanel().setTrackEnds(1,b.mS*bpPerPx,b.mE*bpPerPx);								
 			}
-			symap.getFrame().show();
+			symap.getFrame().showX(); // CAS512
 		}
 		catch (Exception err) {
 			ErrorReport.print(err, "Show Detail View");

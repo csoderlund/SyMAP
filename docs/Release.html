@@ -56,6 +56,58 @@
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
 
+<h3>Release: v5.1.2 (19Aug22)</h3>
+The biggest changes are with the <tt>ConvertNCBI</tt> and <tt>ConvertEnsembl</tt> scripts.
+<ul>
+<li>Annotation
+<ul>
+<li>Input format:
+<ol type='i'>
+<li>The <tt>ConvertNCBI</tt> and <tt>ConvertEnsembl</tt> scripts created separate <tt>gene.gff</tt> and <tt>exon.gff</tt> files; now they
+create one file. The <tt>ConvertEnsembl</tt> was not producing a <tt>gap.gff</tt> file, and now it is. Both have been
+updated to be aware of more input variations and provide a better summary. See <a href=convert class="ext" target="_blank">Convert</a> for details.
+<li>The Demo_seq has separate <tt>gene.gff</tt> and <tt>exon.gff</tt> files; now it has one file.
+<li>SyMAP can still load separate gene and exon files, but its association of exon to gene is not as accurate.
+</ol>
+
+<li>Schema change
+<ol type='i'>
+<li>An existing database will be updated the first time it is viewed.
+<li>This adds a MySQL field to associate Exons with their Gene; for an existing database,
+the annotation would need to be reloaded for this to happen and be displayed (see 2d Gene Popup below).
+</ol>
+<li>Load Annotation
+<ol type='i'>
+<li>The code was treating 'CDS' as 'exon', now only exons are loaded.
+<li>The attributes were not being loaded for Exon; now, the "parent" attribute is loaded for the
+exon and shown when it is moused over.
+<li>Quotes are removed from attributes.
+<li>The exons are now being mapped to the parent gene to be used in the 2D display.
+</ol>
+</ul>
+<li>Chromosome Explorer
+<ul>
+<li>Tiny bug fix: the "Circ" button get stuck in un-active mode.
+<li>2D display
+<ul>
+<li>Tiny bug fix: For a single contiguous hit for a flipped chromosome, the hit length graphic was
+not aligned right.
+<li>When the Gene or Exon is moused over, it will include the number of exons or exon#, respectively.
+<li>When the hit line is moused over, it will include the project name, start and end coordinates.
+<li>2d Gene Popup: Includes the exons for the gene.
+</ul>
+</ul>
+<li>SyMAP Query
+<ul>
+<li>Add warnings for bad block or collinear input.
+</ul>
+<li>Developers
+<ul>
+<li>The code is now Java v8 compliant (no depreciated statements).
+</ul>
+</ol>
+</ul>
+
 <h3>Release: v5.1.1 (31July22)</h3>
 
 These changes are to 'tidy up' things; nothing major.

@@ -1,11 +1,12 @@
 package util;
 
+// Only used by symap.frame.SyMAPFrame.java
+
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Rectangle;
 import java.awt.Dimension;
 import java.awt.Point;
-import java.awt.GraphicsConfiguration;
 import java.awt.event.ComponentListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
@@ -20,23 +21,8 @@ public class SizedJFrame extends JFrame implements KeyListener, ContainerListene
 
 	private PersistentProps sizeProp, positionProp;
 
-	public SizedJFrame() {
-		super();
-		addComponentListener(new CompListener());
-	}
-
-	public SizedJFrame(GraphicsConfiguration gc) {
-		super(gc);
-		addComponentListener(new CompListener());
-	}
-
 	public SizedJFrame(String title) {
 		super(title);
-		addComponentListener(new CompListener());
-	}
-
-	public SizedJFrame(String title, GraphicsConfiguration gc) {
-		super(title,gc);
 		addComponentListener(new CompListener());
 	}
 
@@ -63,14 +49,6 @@ public class SizedJFrame extends JFrame implements KeyListener, ContainerListene
 
 	public void setSizeProp(PersistentProps prop) {
 		sizeProp = prop;
-	}
-
-	public PersistentProps getLocationProp() {
-		return positionProp;
-	}
-
-	public PersistentProps getSizeProp() {
-		return sizeProp;
 	}
 
 	protected void addKeyAndContainerListenerRecursively(Component c) {
@@ -134,8 +112,8 @@ public class SizedJFrame extends JFrame implements KeyListener, ContainerListene
 			int ind = ds.indexOf(',');
 			if (ind >= 0) {
 				try {
-					int w = new Integer(ds.substring(0,ind)).intValue();
-					int h = new Integer(ds.substring(ind+1)).intValue();
+					int w = Integer.parseInt(ds.substring(0,ind)); // CAS512 depreciated
+					int h = Integer.parseInt(ds.substring(ind+1)); // new Integer(ds.substring(ind+1)).intValue();
 					dim = new Dimension(w,h);
 				}
 				catch (Exception e) {
@@ -153,11 +131,11 @@ public class SizedJFrame extends JFrame implements KeyListener, ContainerListene
 	private void setDisplayProp(PersistentProps prop, Dimension dim) {
 		if (prop != null) {
 			if (dim != null) {
-				String ds = (new Integer(dim.width))+","+(new Integer(dim.height));
+				// CAS512 String ds = (new Integer(dim.width))+","+(new Integer(dim.height));
+				String ds = dim.width + "," + dim.height;
 				prop.setProp(ds);
 			}
 			else System.err.println("Dimension is null in SizedJFrame#setDisplayProp(PersistentProps,Dimension)!!!!");
 		}
 	}
-
 }

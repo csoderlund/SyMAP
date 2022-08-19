@@ -976,7 +976,7 @@ public class TableDataPanel extends JPanel {
 			symap.getDrawingPanel().setSequenceTrack(2, p1Idx, grp1Idx, Color.GREEN);
 			symap.getDrawingPanel().setTrackEnds(1, track2Start, track2End);
 			symap.getDrawingPanel().setTrackEnds(2, track1Start, track1End);
-			symap.getFrame().show();
+			symap.getFrame().showX();
 			Sequence.setDefaultShowAnnotation(false);
 		} catch(Exception e) {ErrorReport.print(e, "Create table");}
     }

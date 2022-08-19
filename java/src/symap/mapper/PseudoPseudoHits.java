@@ -1,5 +1,8 @@
 package symap.mapper;
 
+/***********************************************
+ * Two ends of a seq-seq hit; internal class PseudoHit has one end
+ */
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.geom.Point2D;
@@ -17,8 +20,7 @@ import symap.SyMAPConstants;
 import util.Utilities;
 
 public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPConstants {
-	private static final boolean TIME_TRACE = false;
-	private static final boolean METHOD_TRACE = false;
+	private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
 	
 	private static final int MOUSE_PADDING = 3;
 	
@@ -46,8 +48,6 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 	}
 
 	public boolean setHits(PseudoPseudoData data) {
-		long cStart = System.currentTimeMillis();
-		
 		PseudoPseudoData.PseudoHitData[] phd = data.getPseudoHitData();
 			
 		hits = new PseudoHit[data == null || phd == null ? 0 : phd.length];
@@ -60,8 +60,6 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 			hits[i] = new PseudoHit(phd[i]);
 			hits[i].set(selected);
 		}
-			
-		if (TIME_TRACE) System.out.println("PseudoPseudoHits: setHits() time = "+(System.currentTimeMillis()-cStart)+" ms");
 		return true;
 	}
 
@@ -79,29 +77,24 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 			}
 			return true;
 	}
-
 	public void clear() {
 		for (PseudoHit h : hits)
 			h.clear();	
 	}
-
 	public void set(Sequence st1, Sequence st2) {
 		this.st1 = st1;
 		this.st2 = st2;
 		for (PseudoHit h : hits)
 			h.set(false);
 	}
-
 	public void setMinMax(HitFilter hf) {
 		for (PseudoHit h : hits)
 			h.setMinMax(hf);
 	}
-
 	public void getSequenceMinMax(int[] minMax) {
 		for (PseudoHit h : hits)
 			h.getSequenceMinMax(minMax);
 	}
-	
 	public void getMinMax(int[] minMax, int start, int end, boolean swap) {
 		for (PseudoHit h : hits) {
 			if (h.isContained(start, end, swap)) {
@@ -110,16 +103,11 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 			}
 		}
 	}
-
 	/**
 	 * Method <code>getHitData</code> adds an FPCPseudoData object to 
 	 * hits containing all the marker hit data and bes hit data for the
 	 * hits that are visible, not filtered, and fall in the range of start and
 	 * end. If no hits exist than an FPCPseudoData object is not added.
-	 *
-	 * @param hitList a <code>List</code> value
-	 * @param start an <code>int</code> value
-	 * @param end an <code>int</code> value
 	 */
 	 public void getHitsInRange(List<AbstractHitData> hitList, int start, int end, boolean swap) {
 		 List<AbstractHitData> h = new LinkedList<AbstractHitData>();
@@ -127,8 +115,6 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 			 hits[i].getHit(h,start,end,swap);
 		 if (!h.isEmpty()) 
 			 hitList.add(new PseudoPseudoData(getProject1(),getGroup1(),getProject2(),getGroup2(),getHitContent(),h,swap));
-		 
-		 if (METHOD_TRACE) System.out.println("PseudoPseudoHits.getHitData: "+h.size()+" hits " + start + ":" + end + " " + swap);
 	 }
 
 	public void paintComponent(Graphics2D g2) {
@@ -148,19 +134,19 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 		for (PseudoHit h : hHits)
 			h.paintComponent(g2,stOrient1,stOrient2,stLocation1,stLocation2);
 	}
-
 	public void mouseMoved(MouseEvent e) {
 		for (PseudoHit h : hits)
 			h.mouseMoved(e);
 	}
-	 
 	public void mouseExited(MouseEvent e) { 
 		// Need to do this otherwise hits will stay highlighted when exited.
 		for (PseudoHit h : hits)
 			h.setHover(false); 
 		mapper.getDrawingPanel().repaint();
 	}
-
+	/**********************************************************************
+	 * PseudoHit class
+	 */
 	private class PseudoHit implements Hit {
 		private PseudoPseudoData.PseudoHitData data;
 		private Line2D.Double hitLine;
@@ -182,53 +168,38 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 					  (data.getEnd2(swap) >= start && data.getEnd2(swap) <= end) ||
 					  (start >= data.getStart2(swap) && end <= data.getEnd2(swap)) ));
 		}
-		 
+		
 		public void getHit(List hitList, int start, int end, boolean swap) { 
 			if ( isContained(start, end, swap) )
 				hitList.add(data);
 		}
-
 		public void setMinMax(HitFilter hf) {
-			// Note that we re-used the "bes" methods instead of creating
-			// new ones for pseudo-to-pseudo.
+			// Note that we re-used the "bes" methods instead of creating new ones for pseudo-to-pseudo.
 			hf.condSetBesEvalue(data.getEvalue(),data.getEvalue());
 			hf.condSetBesPctid(data.getPctid(),data.getPctid());
 		}
-
 		 public void getSequenceMinMax(int[] minMax) {
 			 if (isVisible() && !isFiltered()) {
 				 PseudoPseudoHits.getSequenceMinMax(minMax,data.getStart2(),data.getEnd2());
 			 }
-		 }
-		 
-		 public void getSequenceMinMax(int[] minMax, int start, int end, boolean swap) {
-			 if (isVisible() && !isFiltered()) {
-				 PseudoPseudoHits.getSequenceMinMax(minMax,start,end);
-			 }
-		 }
-
+		 }	
 		public String getType() {
 			return SEQ_TYPE;
 		}
-
 		 public boolean isBlockHit() {
 			 return data.isBlockHit();
 		 }
-
 		 public void set(boolean highlightHit) {
 			 highlight = highlightHit;
 			 geneContained = isGeneContained();
 			 geneOverlap = isGeneOverlap();
 		 }
-		 
 		 private boolean isGeneContained() {			 
 			 return (data.getOverlap() > 0); 
-		 }
-		 
+		 } 
 		 private boolean isGeneOverlap() {			 
 			 return (data.getOverlap() > 0); 
 		 }
-		 
 		 public boolean isFiltered() {
 			 HitFilter hitfilter = mapper.getHitFilter();
 			 return false 
@@ -237,20 +208,16 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 			 		|| (hitfilter.getGeneOverlap() && !geneOverlap) 
 			 		|| (hitfilter.getNonGene() && (geneOverlap || geneContained));
 		 }
-
 		 public boolean isHover() {
 			 return hover;
 		 }
-		 
 		 public boolean isHighlight() {
 			 return highlight;
 		 }
-
 		 public boolean isVisible() {
 			 return isSequenceVisible(st1,data.getStart1(),data.getEnd1()) 
 			 		&& isSequenceVisible(st2,data.getStart2(),data.getEnd2());
 		 }
-
 		 private boolean lineContains(Line2D.Double line, Point p) { 
 			 double lx1 = line.getX1();
 			 double lx2 = line.getX2();
@@ -262,30 +229,26 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 			 
 			 return (delta >= -MOUSE_PADDING && delta <= MOUSE_PADDING);
 		 }
-		 
 		 public boolean isHover(Point point) { 
 			 return isVisible() && lineContains(hitLine, point);
 		 }
-		 
 		 protected boolean setHover(Point point) { 
 			return setHover(isHover(point));
 		 }
-
 		 protected boolean setHover(boolean hover) {
 			if (hover != this.hover) {
 				this.hover = hover;
 				return true;
 			}
 			return false;
-		 }
-		 
+		 } 
 		 private Color getCColor() {
 			 if (isHighlight() || isHover())
 				 return Mapper.pseudoLineHighlightColor;
 			 return Mapper.pseudoLineColor;
 		 }
-		 
-		 private void drawHitRibbon(Graphics2D g2, Sequence st, Point2D pStart, Point2D pEnd, int orient, boolean forward) {
+		 // draws the length of the hit along the blue chromosome box
+		 private void drawHitLen(Graphics2D g2, Sequence st, Point2D pStart, Point2D pEnd, int orient, boolean forward) {
 			 String subHits;
 			 
 			 if (mapper.isSwapped(st) || (orient == LEFT_ORIENT && mapper.isSelf() ))
@@ -293,23 +256,21 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 			 else
 				 subHits = data.getTargetSeq();
 			 
-			 if (subHits == null || subHits.length() == 0) {
+			 if (subHits == null || subHits.length() == 0) {// CAS512 long time bug when flipped
 				 g2.setPaint(getCColor());
-				 g2.fill( new Rectangle2D.Double( 
-						 		pStart.getX(),
-	 							pStart.getY(),
-	 							Mapper.hitRibbonWidth,
-	 							Math.abs(pEnd.getY()-pStart.getY())) );
+				 Rectangle2D.Double rect = new Rectangle2D.Double(
+	 						pStart.getX(), pStart.getY(), Mapper.hitRibbonWidth, pEnd.getY()-pStart.getY());
+				 
+				 fixRect(rect); // for flipped track
+				 g2.fill(rect);
+				 // g2.fill( new Rectangle2D.Double( pStart.getX(),pStart.getY(),Mapper.hitRibbonWidth,Math.abs(pEnd.getY()-pStart.getY())) );
 			 }
 			 else {
 				 // Draw background rectangle
 				 g2.setPaint(Mapper.hitRibbonBackgroundColor);
 				 Rectangle2D.Double rect = new Rectangle2D.Double(
-						 						pStart.getX(),
-						 						pStart.getY(),
-						 						Mapper.hitRibbonWidth,
-						 						pEnd.getY()-pStart.getY());
-				 Utilities.fixRect(rect); // for flipped track
+						 			pStart.getX(), pStart.getY(), Mapper.hitRibbonWidth, pEnd.getY()-pStart.getY());
+				 fixRect(rect); // for flipped track
 				 g2.fill(rect);
 				 g2.draw(rect);
 				 g2.setPaint(getCColor());
@@ -319,19 +280,20 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 				 for (int i = 0;  i < subseq.length;  i++) {
 					 String[] pos = subseq[i].split(":");
 					 long start = Long.parseLong(pos[0]);
-					 long end = Long.parseLong(pos[1]);
+					 long end =   Long.parseLong(pos[1]);
+					 
 					 Point2D p1 = st.getPoint(start, orient);
 					 p1.setLocation( pStart.getX(), p1.getY() );
+					 
 					 Point2D p2 = st.getPoint(end, orient);
 					 p2.setLocation( pStart.getX(), p2.getY() );
+					 
 					 rect.setRect( p1.getX(), p1.getY(), Mapper.hitRibbonWidth, p2.getY()-p1.getY() );
-					 Utilities.fixRect(rect); // for flipped track
+					 fixRect(rect); // for flipped track
 					 g2.fill(rect);
 					 g2.draw(rect);
 				 }
 			 }
-
-	
 		 }
 		 
 		 public void paintComponent(Graphics2D g2, int stOrient1, int stOrient2, Point stLocation1, Point stLocation2) {
@@ -377,47 +339,46 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 					 g2.setPaint(Color.black);
 					 g2.drawString(""+(int)pctid, (int)textX, (int)sp2.getY());					 
 				 }
-				 if (st1.getShowRibbon()) { 
+				 if (st1.getShowHitLen()) { 
 					 Point2D rp1 = st1.getPoint(data.getStart1(), stOrient1);
 					 Point2D rp2 = st1.getPoint(data.getEnd1(), stOrient1);
 					 if (Math.abs(rp2.getY()-rp1.getY()) > 3) { // only draw if it will be visible
 						 rp1.setLocation(sp1.getX()-lineLength,rp1.getY());				 
 						 rp2.setLocation(sp1.getX()-lineLength,rp2.getY());
-						 drawHitRibbon(g2, st1, rp1, rp2, stOrient1, data.getOrientation1());
+						 drawHitLen(g2, st1, rp1, rp2, stOrient1, data.getOrientation1());
 					 }
 				 }
-				 if (st2.getShowRibbon()) { 
+				 if (st2.getShowHitLen()) { 
 					 Point2D rp3 = st2.getPoint(data.getStart2(), stOrient2);
 					 Point2D rp4 = st2.getPoint(data.getEnd2(), stOrient2);
 					 if (Math.abs(rp4.getY()-rp3.getY()) > 3) { // only draw if it will be visible
 						 rp3.setLocation(sp2.getX()+lineLength,rp3.getY());				 
 						 rp4.setLocation(sp2.getX()+lineLength,rp4.getY());
-						 drawHitRibbon(g2, st2, rp3, rp4, stOrient2,data.getOrientation2());
+						 drawHitLen(g2, st2, rp3, rp4, stOrient2,data.getOrientation2());
 					 }
 				 }
-				 
+				 // CAS512 added start:end, was using left/right, but do not know that
 				 if (isHover() || isHighlight()) {
+					 String p1 =  Utilities.coordsStr(data.getOrientation2(), data.getStart2(), data.getEnd2());
+					 String p2 =  Utilities.coordsStr(data.getOrientation1(), data.getStart1(), data.getEnd1());
+						
 					 mapper.setHelpText(
 						"Hit=" + data.getID() + " Identity=" + data.getPctid() + 
-						"\nLeft: len=" + (Math.abs(data.getEnd1()-data.getStart1())+1) +
-						" Right: len=" + (Math.abs(data.getEnd2()-data.getStart2())+1) +
+						"\n" + p1 + "\n" + p2 +
 						"\nBlock #" + data.getBlock() // CAS505 added block
 					 );
 				 }
 				 else mapper.setHelpText(null);
 			 }
 		 }
-
 		 public void clear() {
 			 //bh.clear(this);
 		 }
-
 		 public void mouseMoved(MouseEvent e) {
 			 if (setHover(e.getPoint()))
 				 mapper.getDrawingPanel().repaint();
 		 }
-	 }
-
+	 } // End class PseudoHit
 
 	 private static void getSequenceMinMax(int[] minMax, int start, int end) {
 		 if (start < end) {
@@ -429,14 +390,22 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 			 if (start > minMax[1]) minMax[1] = start;	    
 		 }
 	 }
-
 	 private boolean isSequenceVisible(Sequence st, int start, int end) {
 		 return st.isInRange( (start+end)>>1 );
 	 }
-
 	 private Point2D getSequenceCPoint(Sequence st, int start, int end, int orientation, Point loc) {
 		 Point2D p = st.getPoint( (start+end)>>1 , orientation );
 		 p.setLocation(p.getX()+loc.getX(),p.getY()+loc.getY());
 		 return p;
 	 }
+	// CAS512 moved from Utilities because this is the only class to use it
+	// adjust rectangle coordinates for negative width or height - on flipped
+	private static void fixRect(Rectangle2D rect) {
+		if (rect.getWidth() < 0)
+			rect.setRect(rect.getX()+rect.getWidth()+1, rect.getY(), Math.abs(rect.getWidth()), rect.getHeight());
+		
+		if (rect.getHeight() < 0)
+			rect.setRect(rect.getX(), rect.getY()+rect.getHeight()+1, rect.getWidth(), Math.abs(rect.getHeight()));
+	}
+
 }

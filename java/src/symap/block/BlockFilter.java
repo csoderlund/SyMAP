@@ -74,13 +74,13 @@ public class BlockFilter extends MarkerFilter {
 
 	protected void didFlip() { }
 
-	public void show() {
+	public void showX() {
 		if (block != null) {
 			if (!isShowing()) {
 				contigSetText.setText(block.contigSetText);
 				contigSet = contigSetText.getText();
 			}
-			super.show();
+			super.setVisible(true); // CAS512 super.show();
 		}
 	}
 

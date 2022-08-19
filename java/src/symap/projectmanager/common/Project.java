@@ -25,6 +25,7 @@ public class Project {
 	private String strType, strDisplayName, strDescription, strCategory;
 	private int numGroups;
 	private Color color;
+	private String pathName=""; // CAS512 display on 'params' window
 	
 	private Vector<Integer> grpIdxList;
 	
@@ -68,15 +69,12 @@ public class Project {
 		
 		return msg;
 	}
-	public void setLength(long length) {
-		this.length = length;
-	}
-	public long getLength() {
-		return length;
-	}
+	public void setLength(long length) {this.length = length;}
+	public long getLength() {return length;}
 	public Color getColor() { return color; }
 	public void setColor( Color c ) { color = c; }
-
+	public String getPathName() { return pathName;}
+	
 	public int getID() { return nIdx; }
 	public String getDBName() { return strDBName; }
 	
@@ -114,6 +112,7 @@ public class Project {
 	// if loaded, read from database in ProjectManagerFrameCommone
 	public void getPropsFromDisk(File dir)
 	{
+		pathName = dir.getName(); 
 		File pfile = new File(dir,Constants.paramsFile); 
 		if (pfile.isFile())
 		{

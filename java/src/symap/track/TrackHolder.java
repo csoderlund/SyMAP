@@ -13,11 +13,11 @@ import symap.drawingpanel.DrawingPanel;
 import symap.filter.FilterHandler;
 import symap.filter.Filtered;
 import symap.frame.HelpBar;
-import symap.SyMAP;
+import util.ErrorReport;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class TrackHolder extends JComponent implements Filtered {	
-	private static final boolean METHOD_TRACE = false;
+	private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
 	
 	private DrawingPanel dp;
 	private HelpBar hb;
@@ -25,7 +25,7 @@ public class TrackHolder extends JComponent implements Filtered {
 	private Track track;
 	private FilterHandler fh;
 
-	public TrackHolder(DrawingPanel dp, HelpBar hb) {
+	public TrackHolder(DrawingPanel dp, HelpBar hb) { // Called by DrawingPanel
 		super();
 		this.dp = dp;
 		this.hb = hb;
@@ -35,20 +35,20 @@ public class TrackHolder extends JComponent implements Filtered {
 		setVisible(false);
 	}
 
-	public void setOrientation(int orient) {
+	public void setOrientation(int orient) { // Called by DrawingPanel
 		orientation = orient;
 	}
 
-	public Track getTrack() {
+	public Track getTrack() { // Called by DrawingPanel, Mapper
 		return track;
 	}
 
-	public HelpBar getHelpBar() {
+	public HelpBar getHelpBar() { // Called by contig.Contig
 		return hb;
 	}
 
-	public void setTrack(Track t) {
-		if (METHOD_TRACE) System.out.println("TrackHolder.setTrack: " + t);
+	public void setTrack(Track t) { // Called by DrawingPanel and TrackHolder
+		if (TRACE) System.out.println("TrackHolder.setTrack: " + t);
 		
 		if (t == track) return ;
 
@@ -74,64 +74,56 @@ public class TrackHolder extends JComponent implements Filtered {
 		}
 	}
 
-	public TrackData getTrackData() {
+	public TrackData getTrackData() { // called by DrawingPanelData
 		if (track != null) return track.getData();
 		else return null;
 	}
 
-	public void setTrackData(TrackData td) {
+	public void setTrackData(TrackData td) { // called by DrawingPanel
 		if (td == null) setTrack(null);
 		else {
 			if (track == null || td.getTrackClass() != track.getClass()) {
-				if (SyMAP.DEBUG) System.out.println("Creating a new Track");
+				if (TRACE) System.out.println("Creating a new Track");
 				Track t = null;
-				try {
-					t = (Track)td.getTrackClass().getConstructor(new Class[]{dp.getClass(),getClass()})
-					.newInstance(new Object[]{dp,this});
+				try { // CAS512 this was one big statement
+					Class <?> [] x = new Class[]{dp.getClass(),getClass()};
+					Object [] y = new Object[]{dp,this};
+					t = (Track) td.getTrackClass().getConstructor(x).newInstance(y);
 				} catch(Exception e) {
-					e.printStackTrace();
+					ErrorReport.print(e, "setTrackData");
 				}
 				setTrack(t);
 			}
 			track.setup(td);
 		}
 	}
-
 	public int getTrackPadding() {
 		if (track != null) return (int)track.getPadding();
 		else return 0;
 	}
-
 	public Point getOffset() {
 		if (track != null) return track.getMoveOffset();
 		else return new Point();
 	}
-
 	public Dimension getPreferredSize() {
 		if (track != null) return track.getDimension();
 		else return new Dimension(0,0);
 	}
-
 	public void setVisible(boolean visible) {
 		if (track != null && fh.getFilterButton() != null) fh.getFilterButton().setEnabled(visible);
 		super.setVisible(visible);
 	}
-
 	public AbstractButton getFilterButton() {
 		if (track != null) return fh.getFilterButton();
 		else return new JButton();
 	}
-
 	public void closeFilter() {
 		fh.closeFilter();
 	}
-
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		if (track != null) track.paintComponent(g);
 	}
-	
-	
 	public void showPopupFilter(MouseEvent e) {
 		fh.showPopup(e);
 	}

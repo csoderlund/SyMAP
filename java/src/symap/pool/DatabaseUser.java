@@ -199,7 +199,9 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		r.setQueryTimeout(QUERY_TIMEOUT);
 		return r;
 	}
-	
+	/*******************************************************************8
+	 * Helper methods
+	 */
 	public int getIdx(String strQuery) throws SQLException 
     {
     	int idx = -1;
@@ -209,11 +211,27 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		rs.close();
 		return idx;
     }
-	public void resetIdx(String table) { // CAS511 add
+	public int getInt(String strQuery) { // CAS512 add, same as above
+		try {
+			int idx = -1;
+			ResultSet rs = executeQuery(strQuery);
+			if (rs.next())
+				idx = rs.getInt(1);
+			rs.close();
+			return idx;
+		}
+		catch (Exception e) {ErrorReport.print(e, "Get Int " + strQuery); return 0;}
+	}
+	public void resetIdx(String idx, String table) { // CAS511 add, CAS512 add max
 		try {
 			int cnt = getIdx("select count(*) from " + table);
-			if (cnt==0)
+			if (cnt==0) {
 				executeUpdate("ALTER TABLE " + table + " AUTO_INCREMENT = 1");
+			}
+			else {
+				int max = getIdx("select max(" + idx + ") from " + table);
+				executeUpdate("alter table " + table + " AUTO_INCREMENT=" + max);
+			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Reset auto-crement for " + table);}
 	}
@@ -246,41 +264,7 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		if (rs!=null) rs.close();
 		return false;
 	}
-	/***************** Extraneous public class methods *******************/
-	public boolean isContigs(int projectID, Collection<Integer> contigs) {
-		if (contigs == null || contigs.isEmpty())
-			return false;
-		String nc = " number=";
-		StringBuffer query = new StringBuffer("SELECT COUNT(*) FROM ").append("contigs");
-		query.append(" WHERE proj_idx=").append(projectID);
-
-		Iterator<Integer> iter = contigs.iterator();
-
-		query.append(" AND (").append(nc).append(iter.next());
-
-		while (iter.hasNext())
-			query.append(" OR").append(nc).append(iter.next());
-
-		query.append(")");
-
-		Statement stat = null;
-		ResultSet rs = null;
-		int count = 0;
-		try {
-			stat = createStatement();
-			rs = stat.executeQuery(query.toString());
-			rs.next();
-			count = rs.getInt(1);
-			closeResultSet(rs);
-			closeStatement(stat);
-		} catch (SQLException e) {
-			closeResultSet(rs);
-			rs = null;
-			closeStatement(stat);
-			stat = null;
-		}
-		return count > 0;
-	}  
+	
 	/************ Private methods **********************/
 	private Connection getConnection() throws SQLException {
 		boolean closed = true;
@@ -520,8 +504,7 @@ public abstract class DatabaseUser implements SyMAPConstants {
 	private static boolean dbHasTables(Connection conn) 
 	{
 		boolean has = true;
-		try
-		{
+		try {
       		Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery("show tables");
 			has = rs.first();
@@ -537,8 +520,7 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		Connection conn;
 		boolean success = true;
 		
-		if (!hostname.equals(""))
-		{
+		if (!hostname.equals("")) {
 			try {
 				conn = DriverManager.getConnection(
 						DatabaseUser.getDatabaseURL(hostname, ""), username, password);
@@ -556,8 +538,6 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		}
 		return success;
 	}
-	
-	
 	
 	private static String toSQL(String lvalue, int[] rvalue) {
 		if (rvalue == null || rvalue.length == 0)
@@ -602,20 +582,17 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		boolean has = false;
 		Statement st = conn.createStatement();
 		ResultSet rs = st.executeQuery("show engines");
-		while (rs.next())
-		{
+		while (rs.next()) {
 			String engine = rs.getString(1);
 			String status = rs.getString(2);
 			
 			if (engine.equalsIgnoreCase("innodb") && 
-					(status.equalsIgnoreCase("yes") || status.equalsIgnoreCase("default")) )
-			{
+					(status.equalsIgnoreCase("yes") || status.equalsIgnoreCase("default")) ) {
 				has = true;
 				break;
 			}
 		}
-		if (!has)
-		{
+		if (!has) {
 			System.err.println("The database does not support Innodb tables. Check the mysql error log problems.");
 		}
 		return has;
@@ -628,21 +605,6 @@ public abstract class DatabaseUser implements SyMAPConstants {
 		    		ServerLauncherSocketFactory.shutdown(new File(MXJ_PATH), null);
 		    **/
 	 }
-	 
-	 public static byte getBESValue(String str) {
-		if (str != null) {
-			if (str.equals(R_VALUE_STR))	return R_VALUE;
-			if (str.equals(F_VALUE_STR))	return F_VALUE;
-		}
-		return NORF_VALUE;
-	 }
-
-	public static String getBESValueStr(byte bes) {
-		if (bes == R_VALUE)	return R_VALUE_STR;
-		if (bes == F_VALUE)	return F_VALUE_STR;
-		return NORF_VALUE_STR;
-	}
-	
 	/****************************************************************************
 	 * Check database settings when mysql database is created
 	 */
@@ -693,4 +655,54 @@ public abstract class DatabaseUser implements SyMAPConstants {
         }
         catch (Exception e) {ErrorReport.print(e, "Getting system variables");	}
 	}
+	/***************** Extraneous public class methods *******************/
+	/************* move to more appropriate file *******************************/
+	 public static byte getBESValue(String str) {
+		if (str != null) {
+			if (str.equals(R_VALUE_STR))	return R_VALUE;
+			if (str.equals(F_VALUE_STR))	return F_VALUE;
+		}
+		return NORF_VALUE;
+	 }
+
+	public static String getBESValueStr(byte bes) {
+		if (bes == R_VALUE)	return R_VALUE_STR;
+		if (bes == F_VALUE)	return F_VALUE_STR;
+		return NORF_VALUE_STR;
+	}
+	
+	public boolean isContigs(int projectID, Collection<Integer> contigs) {
+		if (contigs == null || contigs.isEmpty())
+			return false;
+		String nc = " number=";
+		StringBuffer query = new StringBuffer("SELECT COUNT(*) FROM ").append("contigs");
+		query.append(" WHERE proj_idx=").append(projectID);
+
+		Iterator<Integer> iter = contigs.iterator();
+
+		query.append(" AND (").append(nc).append(iter.next());
+
+		while (iter.hasNext())
+			query.append(" OR").append(nc).append(iter.next());
+
+		query.append(")");
+
+		Statement stat = null;
+		ResultSet rs = null;
+		int count = 0;
+		try {
+			stat = createStatement();
+			rs = stat.executeQuery(query.toString());
+			rs.next();
+			count = rs.getInt(1);
+			closeResultSet(rs);
+			closeStatement(stat);
+		} catch (SQLException e) {
+			closeResultSet(rs);
+			rs = null;
+			closeStatement(stat);
+			stat = null;
+		}
+		return count > 0;
+	}  
 }

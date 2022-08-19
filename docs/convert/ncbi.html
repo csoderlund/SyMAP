@@ -58,7 +58,8 @@
 	<!---- START BODY -->
 
 This document corresponds to the ConvertNCBI release with SyMAP v5.0.2
-and updated for SyMAP v5.0.7 (dated 4-Feb-2022).
+and updated for SyMAP v5.1.2 (dated August-2022).
+It has been tested on these <a href=index.html class="ext" target=_blank>genomes</a>.
 <p>
 NCBI supplies FASTA formatted files for genome sequence and GFF3 formatted files for the annotation,
 where FASTA and GFF3 files are the input to SyMAP.
@@ -79,9 +80,9 @@ The following provides a simple scheme to produce only the files necessary.
 </td>
 <td style="vertical-align: text-top;">
 	<table>
-	<tr><td>&nbsp;&nbsp;&nbsp;4. </td><td><a href="#what">What the ConvertNCBI script does</a></td></tr>
 	<tr><td>&nbsp;&nbsp;&nbsp;5.</td><td> <a href="#scaf">Scaffolds</a></td></tr>
 	<tr><td>&nbsp;&nbsp;&nbsp;6.</td><td> <a href="#edit">Editing the script</a></td></tr>
+	<tr><td>&nbsp;&nbsp;&nbsp;4. </td><td><a href="#what">What the ConvertNCBI script does</a></td></tr>
 	</table>
 </td>
 </table>
@@ -91,40 +92,81 @@ The following provides a simple scheme to produce only the files necessary.
 
 <ol>
 <li>Go to <a href="https://www.ncbi.nlm.nih.gov" class="ext" target="_blank">NCBI</a>.
-<li>As shown in Fig 1, select "Genome" from the pull-down at the top.
+<li>As shown in Fig 1:
+<ol type="A">
+<li>Select "Genome" from the pull-down at the top.
 <li>Enter you genome name followed by "Search". You should see a page similar to Fig 2.
-<li>Download the FASTA and GFF file. Three approaches:
+</ol>
+
+<li>The following are two approaches to download the FASTA and GFF files:
+<a id="A"></a>
 <ol type="A">
 <li>As shown in Fig 2:
-<br>Use the <font color=darkblue><b>genome</b></font> link beside the "Download sequences in FASTA format for genome,..."
-<br>Use the <font color=darkblue><b>GFF</b></font> link beside the "Download genome annotation in GFF...".
-<br>Process as described in <a href="#cv1">Convert A</a>.
-<br>&nbsp;
-<li>As shown in Fig 3:
-<br>Go to the <font color=darkblue><b>NCBI Datasets</b></font> page (link at bottom of Fig 2), select the specific
-genome you want, then "Download". That brings up a window as shown in Fig 3. Select genome and GFF3 for download.
-<br>Process as described in <a href="#cv2">Convert B</a>.
-<br>&nbsp;
-<li>Use the <font color=darkblue><b>RefSeq</b></font> link in Fig 2 and download the files with the "fna.gz" and "gff.gz" suffixes.
-<br>Process as described in <a href="#cv1">Convert A</a>.
+<ol type="i">
+<li>Use the <font color=darkblue><b>genome</b></font> link beside the "Download sequences in FASTA format for genome,..."
+<li>Use the <font color=darkblue><b>GFF</b></font> link beside the "Download genome annotation in GFF...".
+<li>Process as described in <a href="#cv1">Convert A</a>.
+</ol>
+
+<a id="B"></a>
+<li>As shown in Fig 2 and Fig 3:
+<ol type="i">
+<li>Go to the <font color=darkblue><b>NCBI Datasets</b></font> page (link at bottom of Fig 2).
+This will bring up a window as shown in the background of Fig 3.
+<li>Select the assembly you want, then click on the Action dots, which brings up a menu; select
+Download. That brings up a window as shown in Fig 3.
+<li>Select the file source, then  genome FASTA and annotation GFF for download.
+<li>Process as described in <a href="#cv2">Convert B</a>.
+</ol>
+
+</ol>
 </ol>
 <p>If NCBI only provides the Genbank
 format, try using <a href="https://pypi.org/project/bioconvert/" class="ext" target="_blank">bioconvert</a> to convert to GFF3, followed
 by the SyMAP converter. Alternatively, try <a href="https://bio.tools/genbank2gff3" class="ext" target="_blank">Galaxy</a>.
 
-</ol>
-<br><a href="img/NCBI-search.png"><img src="img/NCBI-search.png" alt="" style="border: 1px solid black; width: 750px"></a>
-<br><b>Fig 1. </b> Search the NCBI site.
 
+<p><a href="img/NCBI-search.png"><img src="img/NCBI-search.png" alt="" style="border: 1px solid black; width: 750px"></a>
+<br><b>Fig 1. </b> Search the NCBI site.
+<p>&nbsp;
 <p><a href="img/NCBI-genome.png"><img src="img/NCBI-genome.png" alt="" style="border: 1px solid black; width: 500px"></a>
 <br><b>Fig 2. </b> Download A: download the genome and GFF files.
+<p>&nbsp;
+<p><a href="img/NCBI-genome-DS.png"><img src="img/NCBI-genome-DS.png" alt="" style="border: 1px solid black; width: 500px"></a>
+<br><b>Fig 3. </b> Download B: from NCBI Datasets, select the genome and GFF files.
 
-<p><a href="img/NCBI-genome-new.png"><img src="img/NCBI-genome-new.png" alt="" style="border: 1px solid black; width: 500px"></a>
-<br><b>Fig 3. </b> Download B: from NCBI Datasets, select the genome and GFF3 files.
+<!------------------------------------------------------->
+<h3>ConvertNCBI optional flags</h3>
+<table class="ty" style="width:90%;">
+<tr><td><b>Flag</b><td><b>Description</b><td><b>Details</b><td><b>Default</b>
+<tr><td>-s<td>Include Scaffolds<td>Include scaffolds in the output. See section <a href="#scaf">Scaffolds</a><td>No scaffolds
+<tr><td>-m<td>Hard-mask<td>NCBI genome sequences are soft-masked (generally for download A only), which is changed to hard masked<td>Leave as soft-mask
+<tr><td>-l<td>Use linkage groups<td>Search 'linkage' instead of 'chromosome'<td>Use chromosomes
+<tr><td>-v<td>Verbose<td>Print out header lines of skipped sequences<td>No print
+</table>
 
+<p><i><u>Beware</u></i>: There are variations in the text associated with the FASTA ">" header lines. The rules
+used by this script are as follows:
+<ol>
+<li>If the ">" line contains "chromosome N", where N={number, X, Y or roman numeral}, than it is identified as such.
+<li>If the ">" line contains "scaffold" or "contig", than it is identified as a scaffold (if "chromosome" is
+also on the line, it is still treated as a scaffold).
+<li>All other ">" entries are considered "other".
+</ol>
+It is a real good idea to execute the following on your fasta file:
+<pre>
+   zgrep ">" [prefix]._genomic.fna.gz
+</pre>
+This shows you the lines and confirms that the above rules will work for your species. If not,
+then you will need to edit the script to work (or ask me to at symap@agcol.arizona.edu).
+
+<!---------------------------------------------------------------->
 <a id="cv"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Convert files</h2>
-The following conversions were tested on the <i>Oryza Sativa</i> NCBI files on 31-Jan-22.
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The following conversions were tested on the <i>Oryza Sativa</i> NCBI files on 15-Aug-22.
 The download A genome sequence was soft-masked, but the download B was hard-masked.
 
 <a id="cv1"></a>
@@ -132,7 +174,7 @@ The download A genome sequence was soft-masked, but the download B was hard-mask
 <ol>
 <li>Go to the <tt>symap_5/data/seq</tt> directory.
 <li>Make a subdirectory for your species and move the FASTA and GFF files
-into the directory. Leave the <tt>fna.gz</tt> and <tt>gff.gz</tt> suffixes on the files.
+into the directory.
 <li>From the <tt>seq</tt> directory, type the following at the command line to copy the <tt>ConvertNCBI</tt> script:
 <pre>cp ../../scripts/ConvertNCBI*.class .
 chmod 755 *.class
@@ -143,179 +185,112 @@ chmod 755 *.class
 </ol>
 
 <h3>Example</h3>
-From the symap_5 directory:
+From the <tt>symap_5</tt> directory:
 <pre>
 &gt; cd data/seq
-&gt; mkdir rice
-&gt; cd rice
+&gt; mkdir riceA
+&gt; cd riceA
 &gt; mv ~/Download/GCF_001433935.1_IRGSP-1.0_genomic.fna.gz .
 &gt; mv ~/Download/GCF_001433935.1_IRGSP-1.0_genomic.gff.gz .
 &gt; cd ..
 &gt; cp ../../scripts/ConvertNCBI*.class .
 &gt; chmod 755 *.class
-&gt; java ConvertNCBI rice
+&gt; java ConvertNCBI riceA
 </pre>
 This results in the following contents:
 <pre>
 data/seq
 	ConvertNCBI.class
 	ConvertNCBI$Gene.class
-data/seq/rice/
+data/seq/riceA/
       GCF_001433935.1_IRGSP-1.0_genomic.fna.gz
       GCF_001433935.1_IRGSP-1.0_genomic.gff.gz
       annotation/
-         gene.gff
+         anno.gff
          gap.gff
-         exon.gff
       sequence/
          genomic.fna
 </pre>
-The output gives useful details of the annotation (e.g. see rice <a href=riceA.html class="ext" target="_blank">details</a>);
+The output gives useful details of the annotation (e.g. see riceA <a href=riceA.html class="ext" target="_blank">details</a>);
 if the details do not appear right, you may need to <a href="#edit">edit</a> the script for your genomes.
 <!--------------------------------------------------------------->
 <a id="cv2"></a>
 <h3>Convert files from ncbi_dataset.zip (download B)</h3>
-Follow all steps form Download A, except for step 2, do the following:
+This approach does not seem to soft-mask the sequence. Also, you need to check the resulting directory
+to make sure there is just one sub-directory.
+<p>Follow all steps from Download A, except for step 2, do the following:
 <ol start=2>
 <li>Make a subdirectory for your species and move the <tt>ncbi_dataset.zip</tt> file to the species directory and unzip it.
 </ol>
 
-
 <h3>Example</h3>
-From the symap_5 directory:
+From the <tt>symap_5</tt> directory:
 <pre>
 &gt; cd data/seq
-&gt; mkdir rice
-&gt; cd rice
+&gt; mkdir riceB
+&gt; cd riceB
 &gt; mv ~/Download/ncbi_dataset.zip .
-&gt; unzip ncbi_dataset.zip
+unzip ncbi_dataset.zip
 Archive:  ncbi_dataset.zip
   inflating: README.md
-  inflating: ncbi_dataset/data/data_summary.tsv
   inflating: ncbi_dataset/data/assembly_data_report.jsonl
-  inflating: ncbi_dataset/data/GCF_001433935.1/chr1.fna
-  inflating: ncbi_dataset/data/GCF_001433935.1/chr2.fna
+  inflating: ncbi_dataset/data/GCA_001433935.1/chr1.fna
+  inflating: ncbi_dataset/data/GCA_001433935.1/chr2.fna
   ...
-  inflating: ncbi_dataset/data/GCF_001433935.1/genomic.gff
+  inflating: ncbi_dataset/data/GCA_001433935.1/genomic.gff
+  inflating: ncbi_dataset/data/GCA_001433935.1/sequence_report.jsonl
+  inflating: ncbi_dataset/data/dataset_catalog.json
+
 &gt; cd ..
 &gt; cp ../../scripts/ConvertNCBI*.class .
 &gt; chmod 755 *.class
-&gt; java ConvertNCBI rice
+&gt; java ConvertNCBI riceB
 </pre>
 This results in the following contents (some NCBI files not listed):
 <pre>
 data/seq
 	ConvertNCBI.class
 	ConvertNCBI$Gene.class
-data/seq/rice/
+data/seq/riceB/
 	ncbi_dataset.zip
-	ncbi_dataset/data/GCF_001433935.1/
+	ncbi_dataset/data/GCA_001433935.1/
 		chr1.fna
 		...
 	annotation/
-		gene.gff
+		anno.gff
 		gap.gff
-		exon.gff
 	sequence/
 		genomic.fna
 </pre>
-The output gives useful details of the annotation (e.g. see rice <a href=riceB.html class="ext" target="_blank">details</a>);
+The output gives useful details of the annotation (e.g. see riceB <a href=riceB.html class="ext" target="_blank">details</a>);
 if the details do not appear right, you may need to <a href="#edit">edit</a> the script for your genomes.
 
-<h2>ConvertNCBI optional flags</h2>
-<table class="ty" style="width:90%;">
-<tr><td><b>Flag</b><td><b>Description</b><td><b>Details</b><td><b>Default</b>
-<tr><td>-m<td>Hard-mask<td>NCBI genome sequences are soft-masked, which is changed to hard masked<td>Leave as soft-mask
-<tr><td>-v<td>Verbose<td>Print out header lines of skipped sequences<td>No print
-<tr><td>-s<td>Include Scaffolds in output<td>See section <a href="#scaf">Scaffolds</a><td>No scaffolds
-<tr><td>-l<td>Use linkage groups<td>Search 'linkage' instead of 'chromosome'<td>Use chromosomes
-<tr><td>-r<td>Use only RefSeq records<td>-r and -g can be used together<td>Use all sources*
-<tr><td>-g<td>Use only Gnomon records<td>-r and -g can be used together<td>Use all sources*
-</table>
-*If neither -r or -g is used, then all sources are used.
-
+<!----------------------------------------------------------------->
 <a id="load"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Load files into SyMAP</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 The above scenario puts the files in the default SyMAP directories.
-When you start up SyMAP, you will see your projects listed on the left of the panel. Check the projects
+When you start up SyMAP, you will see your projects listed on the left of the panel
+(e.g <a href="../SystemGuide.html#demoseq" class="ext" target="_blank">as shown for demos</a>). Check the projects
 you want to load, which will cause them to be shown on the right of the symap window and continue
 as described in the <a href="../SystemGuide.html" class="ext" target="_blank">System Guide</a>.
 
-<a id="what"></a>
-<h2>What the ConvertNCBI script does</h2>
-
-The following occurs in the <tt>data/seq/&lt;project directory name&gt;</tt> where "project directory name"
-is the argument supplied to <tt>ConvertNCBI</tt>. The following is for Download A, but works similarly for Download B.
-It assumes no parameters are set (e.g. -s for scaffolds).
-
-<ul>
-<li>Reads the file ending in '.fna.gz' (or '.fna') and writes a new file called <tt>sequence/genomic.fna</tt> with the following changes:
-<ol>
-<li>Sequences must have the word "chromosome" in their ">" header line in order to be copied (unless -l or -s flags).
-<li>The header line is replaced with ">ChrN" where N is 1,2... (Note, this assumes that the chromosomes
-are in order in the file as it does not read the chromosome number from the header line).
-
-For example,
-<pre>
->NC_029256.1 Oryza sativa Japonica Group cultivar Nipponbare chromosome 1, IRGSP-1.0
-</pre>
-is replaced with:
-<pre>
->Chr1  NC_029256.1
-</pre>
-<li>Gaps of &gt;30,000 are written to the <tt>annotation/gap.gff</tt> file (30,000 is hard-coded in ConvertNCBI script).
-</ol>
-<br>&nbsp;
-<li>Reads the file ending in 'gff.gz' (or .gff) and writes two new files called <tt>annotation/gene.gff</tt> and
-<tt>annotation/exon.gff</tt>, as follows:
-
-<ul>
-<li><tt>gene.gff</tt>:
-
-<ol>
-<li>Only lines with type 'gene' and attribute 'gene-biotype=protein-coding' are processed.
-<li>Only lines with type 'mRNA' and have an accepted gene parent line are processed.
-<li>Only lines with type 'exon' and have an accepted mRNA parent line, where the mRNA is the first
-for the gene parent, are processed.
-<li>The gene line is written to the <tt>gene.gff</tt> file with the following changes:
-<ol type="i">
-<li>The first column 'seqid' is replace with the 'ChrN' value assigned when reading the '.fna' file.
-<li>The last column 'attributes' contain "ID=gene-&lt;id&gt;", "ID=rna-&lt;id&gt;"
-and the "product=" values from its mRNA lines. The gene attribute "Name=" is included if it is not a
-substring of the gene-ID.
-<li>The product value is created as follows:
-<ol type='a'>
-<li>If there are multiple mRNA lines for a gene where the values are different, they are concatenated together.
-<li>If there are multiple mRNA lines for a gene where
-the only difference is the variant, then only the variant difference is show, e.g.
-<pre>
-product=monocopper oxidase-like protein SKU5%2C transcript variant X2, X1, X3
-</pre>
-</ol>
-</ol>
-</ol>
-
-<li><tt>exon.gff</tt>
-<ol>
-<li>The exon line is written to the <tt>exon.gff</tt> file with the first column 'seqid' is replace
-with the 'ChrN' value assigned when reading the '.fna' file.
-<li>The ID and gene attributes are the only two keywords used in the attributes column.
-These are not used by SyMAP but are useful for verification.
-</ol>
-</ul>
-
-</ul>
-
+<!----------------------------------------------------------------->
 <a id="scaf"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Scaffolds</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 By default, the <tt>ConvertNCBI</tt> script creates the <tt>genomic.fna</tt> file with only the chromosomes.
-However, you can have it also include the scaffolds by using the "-s" flag, e.g.
+However, you can have it also include the scaffolds by using the "-s" flag, e.g. using Oryza Sativa
 <pre>
 java ConvertNCBI rice -s
 </pre>
-This will include all chromosomes (prefix 'c') and scaffolds (prefix 's') in the <tt>genomic.fna</tt> file.
+This will include all chromosomes (prefix 'C') and scaffolds (prefix 's') in the <tt>genomic.fna</tt> file.
 Beware, there can be many tiny scaffolds. If they all aligned in SyMAP, it causes the display to be very cluttered.
-Hence, it is best to just align the largest ones (e.g. the longest 50); merge them if possible, then try
+Hence, it is best to just align the largest ones (e.g. the longest 30); merge them if possible, then try
 the smaller ones. You should set the following SyMAP project parameters:
 <ol>
 <li><tt>grp_prefix</tt> needs to be blank as there is no common prefix now.
@@ -324,21 +299,20 @@ the smaller ones. You should set the following SyMAP project parameters:
 e.g. from the <tt>seq</tt> directory and using rice as an example:
 <pre>
 cp ../../scripts/lenFasta.pl .
-perl lenFasta.pl rice/sequence/genomic.fna
-rm lenFasta.pl		# do NOT leave this script in the sequence directory
+perl lenFasta.pl riceA/sequence/genomic.fna
 </pre>
 </ol>
-As of 30-Jan-22 (GCF_001433935.1_IRGSP-1.0_genomic.fna),
+As of 12-Aug-22 (GCF_001433935.1_IRGSP-1.0_genomic.fna),
 rice has 58 sequences where 12 are chromosomes, 43 are scaffolds
 and 3 are other. The script outputs all their
 sorted lengths followed by the following table:
 <pre>
-Read genomic.fna and print sorted lengths
+Read riceA/sequence/genomic.fna and print sorted lengths
 Read 55 sequences
-
-Lengths:
-   1 43270923
-   2 36413819
+   N    Length  Seqid
+   1  43270923  >C01 NC_029256.1
+   2  36413819  >C03 NC_029258.1
+   3  35937250  >C02 NC_029257.1
 ...
 Values for min_len (assuming no duplicate lengths):
 #Seqs  min_len
@@ -353,18 +327,75 @@ To align the top 30 sequences (12 chromosomes, 18 of the largest scaffolds),
 this says to set <tt>min_size</tt> to 11447.
 
 <a id="edit"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Editing the script</h2>
-This script was used to build the 2020 syntenies from
-the NCBI genome and annotation files, which can be viewed at
-<a href="http://www.agcol.arizona.edu/symapdb" class="ext" target="_blank">symapdb3</a> (the applets are obsolete).
-<p>However, you may want the make changes such as what attributes are included. Therefore, the <tt>ConvertNCBI.java</tt>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+You may want the make changes such as what attributes are included. Therefore, the <tt>ConvertNCBI.java</tt>
 code is supplied in the <tt>scripts</tt> directory. It is very simply written, it does not use external libraries
 and only uses common programming techniques.
 <p>Once you make your changes, execute:
 <pre>
-javac ConvertNCBI.java
+   javac ConvertNCBI.java
 </pre>
 You will need to have JDK installed to use the 'javac' command.
+<!------------------------------------------------------------->
+<a id="what"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>What the ConvertNCBI script does</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The following occurs in the <tt>data/seq/&lt;project directory name&gt;</tt> where "project directory name"
+is the argument supplied to <tt>ConvertNCBI</tt>. The following is for Download A,
+but works similarly for Download B.
+It assumes no parameters are set (e.g. -s for scaffolds).
+
+<ul>
+<li>Reads the file ending in '.fna.gz' (or '.fna') and writes a new file called <tt>sequence/genomic.fna</tt> with the following changes:
+<ol>
+<li>Sequences must have the word "chromosome" in their ">" header line in order to be copied (unless -l or -s flags).
+<li>The header line is replaced with ">ChrN", where N comes from the header line "chromosome N", e.g.
+"chromosome 1", etc.
+
+For example,
+<pre>
+>NC_029256.1 Oryza sativa Japonica Group cultivar Nipponbare chromosome 1, IRGSP-1.0
+</pre>
+is replaced with:
+<pre>
+>Chr1  NC_029256.1
+</pre>
+<li>Gaps of &gt;30,000 are written to the <tt>annotation/gap.gff</tt> file (30,000 is hard-coded in ConvertNCBI script).
+</ol>
+<br>&nbsp;
+<li>Reads the file ending in 'gff.gz' (or .gff) and writes the file <tt>annotation/anno.gff</tt>. The
+<a href="http://www.sequenceontology.org/gff3.shtml" class="ext" target="_blank">gff3 format</a>
+has 9 columns, where the first is the 'seqid', the third is the 'type' (e.g. feature 'gene'), the
+last column is a semicolon-delimited keyword=value attribute list. The input file is processed as follows:
+
+<ol>
+<li>The <i>type=gene</i> with attribute <i>gene-biotype=protein-coding</i> are processed.
+The gene line is written to the <tt>anno.gff</tt> file with the following changes:
+
+<ol type="i">
+<li>The first column 'seqid' is replace with the 'ChrN' value assigned when reading the '.fna' file.
+<li>A subset of the attributes are written, where the product keyword value is modified as follows:
+<ol type='a'>
+<li>If there are multiple mRNA lines for a gene where the values are different, they are concatenated together.
+<li>If there are multiple mRNA lines for a gene where
+the only difference is the variant, then only the variant difference is show, e.g.
+<pre>
+product=monocopper oxidase-like protein SKU5%2C transcript variant X2, X1, X3
+</pre>
+</ol>
+</ol>
+
+<li>The first <i>type=mRNA</i> line for a gene is written to the <tt>anno.gff</tt> file followed
+by its <i>type=exon</i>, where they each are written with the new seqid and a subset of the
+attributes.
+</ol>
+</ul>
+
 <p><a href="#top">Go to top</a>
 <!---- END BODY -->
 	</td></tr>

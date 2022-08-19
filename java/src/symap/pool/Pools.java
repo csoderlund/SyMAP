@@ -13,6 +13,8 @@ import util.PropertiesReader;
 import softref.SoftListCache;
 
 public class Pools {
+	//private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
+	
 	protected static final boolean DO_CACHING; 
 	protected static final int MAX_CONTIG_POOL, MIN_CONTIG_POOL;
 	protected static final int MAX_CONTIG_CLONE_POOL, MIN_CONTIG_CLONE_POOL;
@@ -75,6 +77,8 @@ public class Pools {
 	public Pools(DatabaseReader dr) throws SQLException {
 		pp = new ProjectProperties(dr);
 		
+		// CAS512 caching is set to false, though when I tried true, it seemed to work, 
+		//   so why was it turned off? It is now turned back off.
 		if (DO_CACHING) {
 			BlockContigCache bcc = new BlockContigCache(MIN_CONTIG_POOL,MAX_CONTIG_POOL,MIN_CONTIG_CLONE_POOL,MAX_CONTIG_CLONE_POOL);
 			contigPool           = new ContigPool(dr,pp,bcc);
