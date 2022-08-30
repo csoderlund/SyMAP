@@ -40,8 +40,9 @@ public class AnnotLoadMain
 	private final String exonAttr = "Parent"; // CAS512 save exon attribute
 	private TreeMap<String,Integer> userAttr = 		new TreeMap <String,Integer>();
 	private TreeMap <String, Integer> ignoreAttr = 	new TreeMap <String,Integer> ();
-	private Integer minAttr=0;
-	private boolean bHasAttr = false;
+	private int userSetMinKeywordCnt=0;
+	private boolean bUserSetKeywords = false;
+	private final int savAtLeastKeywords=10; // These are columns in SyMAP Query
 	
 	private boolean success=true;
 	private int cntGeneIdx=0;
@@ -80,7 +81,7 @@ public class AnnotLoadMain
 		Utils.timeMsg(log, time, "Computations complete");
 
 /** Wrap up **/
-		wrapup();		if (!success) return false;
+		summary();		if (!success) return false;
 		Utils.timeMsg(log, startTime, "Load Anno for " + projName);
 		
 		return true;
@@ -100,7 +101,7 @@ public class AnnotLoadMain
 		final int MAX_ERROR_MESSAGES = 3;
 		
 		boolean bSkipExons=false;
-		int cntMRNA=0, cntSkipMRNA=0;
+		int cntMRNA=0, cntSkipMRNA=0, cntSkipGeneAttr=0;
 		
 		int lastGeneIdx=-1; // keep track of the last gene idx to be inserted
 		int lastIdx=pool.getIdx("select max(idx) from pseudo_annot");
@@ -108,14 +109,12 @@ public class AnnotLoadMain
 		PreparedStatement ps = pool.prepareStatement("insert into pseudo_annot " +
 				"(grp_idx,type,name,start,end,strand,gene_idx, genenum,tag) "
 				+ "values (?,?,?,?,?,?,?,0,'')"); // CAS512 remove 'text' field, added gene_idx, tag
-		while ((line = fh.readLine()) != null)
-		{
+		while ((line = fh.readLine()) != null) {
 			if (Cancelled.isCancelled()) {
 				log.msg("User cancelled");
 				success=false;
 				break;
-			}
-				
+			}	
 			lineNum++;
 			if (line.startsWith("#")) continue; // skip comment
 			
@@ -183,9 +182,11 @@ public class AnnotLoadMain
 			
 			if (isExon) { // CAS512 was not using any attr; now using parent or first
 				String[] keyValExon = attr.split(";"); 
+				
 				for (String keyVal : keyValExon) {
-					String[] words = keyVal.trim().split("[\\s,=]");
+					String[] words = keyVal.trim().split("=");
 					String key = words[0].trim();
+					if (words.length!=2) continue;
 					if (key.equals("")) continue;
 					
 					if (key.endsWith("="))
@@ -200,15 +201,17 @@ public class AnnotLoadMain
 			}
 			else if (isGene) { // CAS501 changed to create string of only user-supplied keywords
 				String[] keyValGene = attr.split(";"); // 	IF CHANGED, CHANGE CODE IN QUERY PAGE PARSING ALSO
+				
 				for (String keyVal : keyValGene) {
-					String[] words = keyVal.trim().split("[\\s,=]");
+					String[] words = keyVal.trim().split("="); // CAS513 if no '=', then no keyword
+					if (words.length!=2) {
+						cntSkipGeneAttr++;
+						continue;
+					}
 					String key = words[0].trim();
 					if (key.equals("")) continue;
 					
-					if (key.endsWith("="))
-						key = key.substring(0,key.length() - 1);
-					
-					if (bHasAttr) { 
+					if (bUserSetKeywords) { 
 						if (userAttr.containsKey(key)) {
 							userAttr.put(key, 1 + userAttr.get(key));
 							parsedAttr += keyVal.trim() + ";"; 
@@ -224,7 +227,7 @@ public class AnnotLoadMain
 					}
 				}
 				
-				if (bHasAttr) {
+				if (bUserSetKeywords) {
 					if (parsedAttr.endsWith(";")) 
 						parsedAttr = parsedAttr.substring(0, parsedAttr.length()-1); // remove ; at end
 				}
@@ -268,9 +271,10 @@ public class AnnotLoadMain
 		fh.close();
 		
 		log.msg("   " + totalLoaded + " annotations loaded from " + f.getName());
-		if (cntSkipMRNA>0)	  log.msg("   " + cntSkipMRNA + " skipped mRNA and exons");
-		if (numParseErrors>0) log.msg("   " + numParseErrors + " parse errors - lines discarded");
-		if (numGrpErrors>0)   log.msg("   " + numGrpErrors + " annotations not loaded (sequence was not loaded)");
+		if (cntSkipGeneAttr>0) log.msg("   " + cntSkipGeneAttr + " skipped gene attribute with no '='");
+		if (cntSkipMRNA>0)	   log.msg("   " + cntSkipMRNA + " skipped mRNA and exons");
+		if (numParseErrors>0)  log.msg("   " + numParseErrors + " parse errors - lines discarded");
+		if (numGrpErrors>0)    log.msg("   " + numGrpErrors + " annotations not loaded (sequence was not loaded)");
 	}
 	catch (Exception e) {ErrorReport.print(e, "Load file"); success=false;}
 	}
@@ -348,14 +352,13 @@ public class AnnotLoadMain
 			// the database unless they are in the list (if there is a list).
 			
 			// Parse user-specified types
-			minAttr = props.getInt("annot_kw_mincount");
+			userSetMinKeywordCnt = props.getInt("annot_kw_mincount");
 			String attrKW = props.getString("annot_keywords");
-			log.msg("   annot_keywords: " + attrKW);
-			log.msg("   annot_kw_mincount: " + minAttr);
+			if (!attrKW.contentEquals("")) log.msg("   annot_keywords: " + attrKW);
 			
 			// if ID is not included, it all still works...
-			bHasAttr = (attrKW.equals("")) ? false : true;
-			if (bHasAttr) {
+			bUserSetKeywords = (attrKW.equals("")) ? false : true;
+			if (bUserSetKeywords) {
 				if (attrKW.contains(",")) {
 					String[] kws = attrKW.trim().split(",");
 					for (String key : kws) userAttr.put(key.trim(), 0);
@@ -366,7 +369,7 @@ public class AnnotLoadMain
 		catch (Exception e) {ErrorReport.print(e, "load anno init"); success=false;}
 	}
 	/********************** wrap up ***********************/
-	private void wrapup() {
+	private void summary() {
 		try {
 			// Print type counts
 			log.msg("GFF Types (* indicates not loaded):");
@@ -374,10 +377,6 @@ public class AnnotLoadMain
 				String ast = (!typesToLoad.contains(type) ? "*" : ""); // CAS42 1/1/18 formatted output
 				log.msg(String.format("   %-15s %d%s", type, typeCounts.get(type), ast));
 			}
-			
-			// Print annotation keyword counts CAS512 was misleading, reworded
-			if (!bHasAttr) log.msg("All attribute keywords: (>=" + minAttr + ")");
-			else 		   log.msg("User specified attribute keywords: (>=" + minAttr + ")");
 			
 			Vector<String> sortedKeys = new Vector<String>();
 			sortedKeys.addAll(userAttr.keySet());
@@ -387,22 +386,28 @@ public class AnnotLoadMain
 		        }
 	        });
 			
+			int cntSav=0;
+			if (bUserSetKeywords) log.msg("User specified attribute keywords: ");
+			else log.msg("Best attribute keywords:");
+		
 			pool.executeUpdate("delete from annot_key where proj_idx=" + project.getIdx());
 	        for (String key : sortedKeys) {
+	        	cntSav++;
+	        	if (cntSav>savAtLeastKeywords) {
+	        		log.msg(sortedKeys.size() + " Attribute keywords; skip remaining....");
+	        		break;
+	        	}
 	        	int count = userAttr.get(key);
-	        	String x = (count<minAttr) ? "*" : "";
 	        	
-	        	if (bHasAttr || count>minAttr) 
-	        		log.msg(String.format("   %-15s %d %s", key,count, x)); 
-	        	if (count>minAttr) // SyMAP query uses these
-	        		pool.executeUpdate("insert into annot_key (proj_idx,keyname,count) values (" + 
+	        	log.msg(String.format("   %-15s %d", key,count)); 
+	        	pool.executeUpdate("insert into annot_key (proj_idx,keyname,count) values (" + 
 	        			project.getIdx() + ",'" + key + "'," + count + ")");
 	        }
-	        if (bHasAttr && ignoreAttr.size()>0)  {
-				log.msg("Ignored attribute keywords: (>=" + minAttr + ")" );
+	        if (ignoreAttr.size()>0)  {
+				log.msg("Ignored attribute keywords: ");
 				for (String key : ignoreAttr.keySet()) {
 					int count = ignoreAttr.get(key);
-					if (count>minAttr)
+					if (count>userSetMinKeywordCnt)
 						log.msg(String.format("   %-15s %d", key, count));
 				}
 	        }

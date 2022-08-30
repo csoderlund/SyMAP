@@ -11,6 +11,7 @@ import javax.swing.JTextField;
 
 import symap.projectmanager.common.Project;
 import util.ErrorReport;
+import util.Utilities;
 
 /************************************************
  * create the Vector <DBdata> rowsFromDB
@@ -38,10 +39,9 @@ public class DBdata {
 			Vector<Project> projList,	// species in order displayed
 			QueryPanel theQueryPanel,  	// for species information	
 			String [] annoColumns, 		// Species\nkeyword array in order displayed
-			JTextField loadTextField,    // write progress
+			JTextField loadTextField,   // write progress
 			HashMap <Integer, Integer> geneCntMap, // output variable of spIdx annotidx counts
-			HashMap<String,Integer> proj2regions   // PgeneF ouput
-			)  
+			HashMap<String,Integer> proj2regions)  // PgeneF ouput
 	{
 		qPanel = theQueryPanel;
 		spPanel = qPanel.getSpeciesPanel();
@@ -130,16 +130,6 @@ public class DBdata {
          	loadStatus.setText("Create gene counts");
          	makeGeneCnts(rows, geneCntMap);
          	
-         	if (Q.TEST_TRACE) {
-				System.out.println("Dups " + cntDup );
-				if (isFilter) {
-					String msg=" One Anno " + qPanel.isOneAnno() + " Two Anno "+ qPanel.isTwoAnno()
-							+ "   Locs " + grpStart.size() + ".";
-					System.out.println("Filter: " + cntFilter + " rows;    " + msg);
-					if (qPanel.isPgeneF())
-						System.out.println("PgeneF remove: " + cntPgeneF + " rows");
-				}
-			}
          	return rows;
      	} 
 		catch (Exception e) {ErrorReport.print(e, "Reading rows from db");}
@@ -313,18 +303,18 @@ public class DBdata {
 			hitIdx = 		rs.getInt(Q.HITIDX);
 			
 			spIdx[0] = 		rs.getInt(Q.PROJ1IDX);
-			chrIdx[0] = 		rs.getInt(Q.GRP1IDX);
+			chrIdx[0] = 	rs.getInt(Q.GRP1IDX);
 			start[0] = 		rs.getInt(Q.GRP1START);
 			end[0] = 		rs.getInt(Q.GRP1END);
 			
 			spIdx[1] = 		rs.getInt(Q.PROJ2IDX);
-			chrIdx[1] = 		rs.getInt(Q.GRP2IDX);  
+			chrIdx[1] = 	rs.getInt(Q.GRP2IDX);  
 			start[1] = 		rs.getInt(Q.GRP2START); // hit start to chromosome
 			end[1] = 		rs.getInt(Q.GRP2END);   // hit end to chromosome
 			
 			runSize = 		rs.getInt(Q.RSIZE);
 			blockNum =		rs.getInt(Q.BNUM);
-			blockScore =		rs.getInt(Q.BSCORE);
+			blockScore =	rs.getInt(Q.BSCORE);
 			
 			int annoGrpIdx = rs.getInt(Q.AGIDX);		// grpIdx, so unique
 			if (annoGrpIdx > 0) { // does this annotation belong with the 1st or 2nd half of hit?
@@ -368,9 +358,9 @@ public class DBdata {
 			
 			anno0.add(rs.getInt(Q.AIDX));
 			annotStr[0]	=	rs.getString(Q.ANAME);
-			chrIdx[0] = 		rs.getInt(Q.AGIDX);
+			chrIdx[0] = 	rs.getInt(Q.AGIDX);
 			start[0] =		rs.getInt(Q.ASTART);		// Gene start to chromosome
-			end[0] =			rs.getInt(Q.AEND);
+			end[0] =		rs.getInt(Q.AEND);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Read orphan");}
 	}
@@ -385,7 +375,7 @@ public class DBdata {
 			chrNum[x] = 					spPanel.getChrNameFromChrIdx(chrIdx[x]);
 			if (isOrphan) spIdx[x] =  	spPanel.getSpIdxFromChrIdx(chrIdx[x]); 
 
-			if (blockNum>0) block = chrNum[0] + "." + chrNum[1] + "." + blockNum;
+			if (blockNum>0) block = Utilities.blockStr(chrNum[0], chrNum[1], blockNum); // CAS513 use blockStr
 			
 			/******* Anno Keys ******************/
 			if (!annoKeys.containsKey(spIdx[x])) continue; // If this is index 0, then still need 1
@@ -437,17 +427,23 @@ public class DBdata {
 	 */
 	private boolean passFilters() {
 		try {
+			
 			if (isOrphan) {
-				for (int gidx : grpStart.keySet()) {
-					int s = grpStart.get(gidx);
-					int e = grpEnd.get(gidx);
+				if (grpStart.size()==0) return true;
 				
+				boolean found=false;
+				for (int gidx : grpStart.keySet()) {
+					int s = grpStart.get(gidx); 
+					int e = grpEnd.get(gidx);
+					
 					if (chrIdx[0]==gidx) {
-						if (s<start[0]) return false;
-						if (e>0 && end[0]>e) return false;
+						found = true;	  // its a selected
+						
+						if (s > 0 && start[0] < s) return false; // but incorrect 
+						if (e > 0 && end[0]   > e) return false;
 					}
 				}
-				return true;
+				return found;
 			}
 			
 			if (qPanel.isOneAnno()) {

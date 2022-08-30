@@ -124,60 +124,22 @@ for very similar genomes or bacterial genomes.
 	<tr>
 		<td style="vertical-align: text-top;">
 		<table class="tx">
-
-		<tr>
-			<td>
-				Find synteny between two sequenced genomes with optional annotation.
-			</td>
-		</tr>
-		<tr>
-			<td>
-				Draft sequence ordering by synteny, i.e.
+		<tr><td>Find synteny between two sequenced genomes with optional annotation.
+		<tr><td>Draft sequence ordering by synteny, i.e.
 				<font color=green>align a draft genome to a fully sequence (not draft-to-draft</font>).
-			</td>
-		</tr>
-
-		<tr>
-			<td>
-				For multiple selected synteny pairs, display using dot plot, circular, and side-by-side.
-			</td>
-		</tr>
-		<tr>
-			<td>
-				Complete annotation-based queries with construction of cross-species gene families.
-			</td>
-		</tr>
+		<tr><td>For multiple selected synteny pairs, display using dot plot, circular, and side-by-side.
+		<tr><td>Complete annotation-based queries with construction of cross-species gene families.
 		</table>
-	</td>
 	<td>
-		<table class="ty">
-				<tr>
-					<td>
-						<a href="img/manager.png"><img src="img/manager.png" alt="" style="width:100px"></a>
-					</td>
-					<td>
-						<a href="img/2d.png"><img src="img/2d.png" alt="" style="width:100px"></a>
-					</td>
-					<td>
-						<a href="img/circmap.png"><img src="img/circmap.png" alt="" style="width:100px"></a>
-					</td>
-
-				</tr>
-				<tr>
-					<td>
-						<a href="img/dotplot.png"><img src="img/dotplot.png" alt="" style="width:100px"></a>
-					</td>
-					<td>
-						<a href="img/mgr.png"><img src="img/mgr.png" alt="" style="width:100px"></a>
-					</td>
-					<td>
-						<a href="img/querySetup.png"><img src="img/querySetup.png" alt="" style="width:100px"></a>
-					</td>
-
-				</tr>
+		<small>Click an image to see the closeup.</small>
+		<table class="tx">
+			<tr><td><a href="img/symapRosid.png"><img src="img/symapRosid.png" alt="" style="width:110px;border: 1px solid black;"></a>
+				<td><a href="img/2dRosid.png"><img src="img/2dRosid.png" alt=""       style="width:110px;border: 1px solid black;"></a>
+				<td><a href="img/querySetup.png"><img src="img/querySetup.png" alt="" style="width:100px; border: 1px solid black;"></a>
+			<tr><td><a href="img/dotRosid.png"><img src="img/dotRosid.png" alt=""     style="width:110px; border: 1px solid black;"></a>
+				<td><a href="img/blockRosid.png"><img src="img/blockRosid.png" alt="" style="width:110px; border: 1px solid black;"></a>
+				<td><a href="img/circRosid.png"><img src="img/circRosid.png" alt=""   style="width:90px; border: 1px solid black;"></a>
 		</table>
-		</td>
-	</tr>
 </table>
 <p>
 
@@ -218,102 +180,43 @@ button providing further details on the use of its functions.
 <p>
 
 <table class="tx">
-	<tr>
-		<td style="vertical-align: text-top;">
-			1.
-		</td>
-		<td style="vertical-align: text-top;">
-			Use a Linux or Mac machine.
-		</td>
-		<td style="vertical-align: text-top;">
-			It needs to have Java v1.8 or later, and sufficient processing power.
+	<tr><td style="vertical-align: text-top;">1.
+		<td style="vertical-align: text-top;">Use a Linux or Mac machine.
+		<td style="vertical-align: text-top;">It needs to have Java v1.8 or later, and sufficient processing power.
 			See <a href="#machine">system requirements</a>.
-		</td>
-	</tr>
-
 	<tr>
-		<td style="vertical-align: text-top;">
-			2.
-		</td>
-		<td style="vertical-align: text-top;">
-			Set up MySQL.
-		</td>
+		<td style="vertical-align: text-top;">2.
+		<td style="vertical-align: text-top;">Set up MySQL.
 		<td style="vertical-align: text-top;"> See <a href="#mysql">MySQL</a>.
-		</td>
-	</tr>
 	<tr>
-		<td style="vertical-align: text-top;">
-			3.
-		</td>
-		<td style="vertical-align: text-top;">
-			Download SyMAP.
-		</td>
-		<td style="vertical-align: text-top;">
-			Installation is a simple unzip. See <a href="#installation">installation</a>.
-		</td>
-	</tr>
+		<td style="vertical-align: text-top;">3.
+		<td style="vertical-align: text-top;">Download SyMAP.
+		<td style="vertical-align: text-top;">Installation is a simple unzip. See <a href="#installation">installation</a>.
 	<tr>
-		<td style="vertical-align: text-top;">
-			4.
-		</td>
-		<td style="vertical-align: text-top;">
-			Run the demo.
-		</td>
-		<td style="vertical-align: text-top;">
-			Highly recommended. See <a href="#demo">running the demo.</a>
-		</td>
-	</tr>
+		<td style="vertical-align: text-top;">4.
+		<td style="vertical-align: text-top;">Run the demo.
+		<td style="vertical-align: text-top;">Highly recommended. See <a href="#demo">running the demo.</a>
 	<tr>
-		<td style="vertical-align: text-top;">
-			5.
-		</td>
-		<td style="vertical-align: text-top;">
-			Prepare sequences and annotation.
-		</td>
-		<td style="vertical-align: text-top;">
-			Sequences can be in one or many files and can be masked or unmasked.
+		<td style="vertical-align: text-top;">5.
+		<td style="vertical-align: text-top;">Prepare sequences and annotation.
+		<td style="vertical-align: text-top;">Sequences can be in one or many files and can be masked or unmasked.
 			See <a href="#seqprep">preparing the sequences</a>.
 			Annotation format is gff3; see <a href="#annot">annotation files</a>.
-		</td>
-	</tr>
-
-
 	<tr>
-		<td style="vertical-align: text-top;">
-			6.
-		</td>
-		<td style="vertical-align: text-top;">
-			Load the files into SyMAP.
-		</td>
-		<td style="vertical-align: text-top;">
-			The SyMAP interface makes this easy; see
+		<td style="vertical-align: text-top;">6.
+		<td style="vertical-align: text-top;">Load the files into SyMAP.
+		<td style="vertical-align: text-top;">The SyMAP interface makes this easy; see
 			<a href="#create">creating a new project</a>.
-		</td>
-	</tr>
 	<tr>
-		<td style="vertical-align: text-top;">
-			7.
-		</td>
-		<td style="vertical-align: text-top;">
-			Compute alignments and synteny.
-		</td>
-		<td style="vertical-align: text-top;">
-			This is also easy through the SyMAP interface. See
+		<td style="vertical-align: text-top;">7.
+		<td style="vertical-align: text-top;">Compute alignments and synteny.
+		<td style="vertical-align: text-top;">This is also easy through the SyMAP interface. See
 			<a href="#time">runtime and memory</a>.
-		</td>
-	</tr>
 	<tr>
-		<td style="vertical-align: text-top;">
-			8.
-		</td>
-		<td style="vertical-align: text-top;">
-			View results.
-		</td>
-		<td style="vertical-align: text-top;">
-			Detailed
+		<td style="vertical-align: text-top;">8.
+		<td style="vertical-align: text-top;">View results.
+		<td style="vertical-align: text-top;">Detailed
 			description of the user interface is in the <a href="UserGuide.html" class="ext" target="_blank">User Guide</a>.
-		</td>
-	</tr>
 </table>
 <p>If you are working with FPC files, see the section on <a href="#fpc">FPC</a>.
 
@@ -395,13 +298,9 @@ see <a href="MUMmer.html#ext" class="ext" target="_blank">MUMmer Executables</a>
 <tr><td style="vertical-align: text-top;">
 The Project Manager window opens showing the four demo projects provided with the SyMAP packages.
 Check "Demo-Seq" and "Demo-Seq2".
-</td>
-<td>
-	<a href="img/demoLoad.png"><img src="img/demoLoad.png" alt="" style="border: 1px solid black; width: 400px"></a>
-</td>
-</tr>
+<td><a href="img/demoLoad.png"><img src="img/demoLoad.png" alt="" style="border: 1px solid black; width: 400px"></a>
 
-<tr><td style="colspan: 2; height: 40px;">&nbsp;</td></tr>
+<tr><td style="colspan: 2; height: 40px;">&nbsp;
 
 <tr><td style="vertical-align: text-top;">
 
@@ -413,14 +312,11 @@ load the projects, which will take several minutes.
 <p>When done, the Manager will look as shown in the image on the right.
 <p>In the "Available Syntenies" table, click the cell for the "Demo_Seq2" row and the "Demo_Seq" column.
 Then click the "Selected Pair" button to start the alignment.
-</td>
 
 <td>
 <a href="img/demoMgr.png"><img src="img/demoMgr.png" alt="" style="border: 1px solid black; width: 400px"></a>
-</td>
-</tr>
 
-<tr><td style="colspan: 2; height: 40px;">&nbsp;</td></tr>
+<tr><td style="colspan: 2; height: 40px;">&nbsp;
 
 <tr>
 <td style="vertical-align: text-top;">
@@ -428,25 +324,19 @@ The Synteny &amp; Alignment takes less than 5 minutes on the MacOS 10.5 but coul
 on a slow machine.
 <p>When done, the table will have a checkbox, signifying that the synteny is available for viewing.
 Click the checked cell, which will enable the viewing buttons.
-</td>
 
 <td>
 <a href="img/demoTable.png"><img src="img/demoTable.png" alt="" style="border: 1px solid black; width: 400px"></a>
-</td>
-</tr>
 
-<tr><td style="colspan: 2; height: 40px;">&nbsp;</td></tr>
+<tr><td style="colspan: 2; height: 40px;">&nbsp;
 
 <tr>
 <td style="vertical-align: text-top;">
 Click "Summary" to view the v5 summary shown on the right; <i>there may be slight differences in the #Anchors
 because of different numbers of CPUs, MacOS vs Linux, etc (but the #Blocks come out the same)</i>.
 <p>To view the other interfaces, see <a href="Demo.html" class="ext" target="_blank">Demo Results</a>.
-</td>
 <td>
 <a href="img/demoSum.png"><img src="img/demoSum.png" alt="" style="border: 1px solid black; width: 400px"></a>
-</td>
-</tr>
 </table>
 
 <a id="draft"></a>
@@ -456,8 +346,7 @@ because of different numbers of CPUs, MacOS vs Linux, etc (but the #Blocks come 
 
 
 <table>
-	<tr>
-		<td style="vertical-align: text-top;">
+	<tr><td style="vertical-align: text-top;">
 Load the Demo-Draft project, following
 the same steps used to load the previous two projects.
 
@@ -465,12 +354,9 @@ the same steps used to load the previous two projects.
 the parameter "Order against: demo_seq2". With this setting,
 the Demo-Draft contigs will be ordered using synteny to
 Demo-Seq2.
-		</td>
 		<td>
 <a href="img/demoDraft1.png"><img src="img/demoDraft1.png" alt="" style="border: 1px solid black; width: 400px"></a>
-		</td>
-	</tr>
-	<tr><td style="colspan: 2; height: 40px;">&nbsp;</td></tr>
+	<tr><td style="colspan: 2; height: 40px;">&nbsp;
 	<tr>
 		<td style="vertical-align: text-top;">
 Run the Alignment &amp; Synteny, where the alignment should take less than 30 minutes with one CPU.
@@ -479,11 +365,9 @@ may be slight difference in the number of anchors because the results are
 slightly different when run when different numbers of CPUs.</i>
 
 See the first dot plot in <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>.
-		</td>
 		<td>
 <a href="img/demoSum2.png"><img src="img/demoSum2.png" alt="" style="border: 1px solid black; width: 400px"></a>
-		</td>
-	</tr>
+
 </table>
 
 <p>The ordering algorithm changes the order of the draft contigs in the database, but does
@@ -506,6 +390,7 @@ load it.
 Running the Alignment&amp;Synteny
 between the <tt>_ordered</tt> project and Demo_seq2 will provide a more coherent display
 (see the second dot plot for <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>).
+Using the "parameters" window, the <tt>Demo_Draft-ordered</tt> can be shortened.
 <td><td>
 <a href="img/demoDraft3.png"><img src="img/demoDraft3.png" alt="" style="border: 1px solid black; width: 400px"></a>
 </table>
@@ -964,7 +849,8 @@ The default locations are:
 The options for sequence files under <a href="#dir">directory structure</a> applies to FPC files using
 these default locations.
 <p>
-
+Since the usage of FPC-Seq is rare now, new releases are only quickly tested on the Demo FPC-Seq. If you
+run into any problems, please do not hesitate to contact symap@agcol.arizona.edu.
 
 <a id="alg"></a>
 <table style="width: 95%"><tr><td style="text-align: left">

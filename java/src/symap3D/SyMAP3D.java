@@ -112,9 +112,10 @@ public class SyMAP3D implements Observer {
 	{
         int nProjIdx = -1;
         String strDisplayName = null;
+        String loaddate=""; // CAS513 add to put on left side by name
 
         UpdatePool pool = new UpdatePool(databaseReader);
-        ResultSet rs = pool.executeQuery("SELECT p.idx, pp.value " +
+        ResultSet rs = pool.executeQuery("SELECT p.idx, p.loaddate, pp.value " +
         		"FROM projects AS p " +
         		"JOIN proj_props AS pp ON (p.idx=pp.proj_idx) " +
         		"WHERE pp.name='display_name' " +
@@ -122,6 +123,7 @@ public class SyMAP3D implements Observer {
         
         if ( rs.next() ) {
         	nProjIdx = rs.getInt("p.idx");
+        	loaddate = rs.getString("p.loaddate");
         	strDisplayName = rs.getString("pp.value");
         }
 
@@ -132,7 +134,7 @@ public class SyMAP3D implements Observer {
         	return null;
         }
         
-        return new Project(nProjIdx, strProjName, strTypeName, strDisplayName);
+        return new Project(nProjIdx, strProjName, strTypeName, strDisplayName, loaddate);
 	}
 	
 	private Vector<TrackCom> loadProjectTracks(Project p) throws SQLException

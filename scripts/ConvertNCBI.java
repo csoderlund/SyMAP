@@ -58,8 +58,6 @@ public class ConvertNCBI {
 	// search in .fna files
 	private final String chrKey		= "chromosome";
 	private final String lgKey 		= "linkage";
-	private final String scaf1Key 	= "scaffold";  
-	private final String scaf2Key 	= "contig"; // ncbi_dataset
 		
 	// types
 	private final String geneType = "gene";
@@ -172,6 +170,13 @@ public class ConvertNCBI {
 			prt( String.format("C %,11d  c %,11d", cntBase.get('C'), cntBase.get('c')) );
 			prt( String.format("G %,11d  g %,11d", cntBase.get('G'), cntBase.get('g')) );
 			prt( String.format("N %,11d  n %,11d", cntBase.get('N'), cntBase.get('n') ));
+			String other=""; // CAS513
+			for (char b : cntBase.keySet()) {
+				boolean found = false;
+				for (char x : base) if (x==b) {found=true; break;}
+				if (!found) other += String.format("%c %,d  ", b, cntBase.get(b));
+			}
+			if (other!="") prt(other);
 			cntBase.clear();
 			
 			if (MASKED) prt(String.format("Hard masked: %,d lower case changed to N", cntMask));
@@ -207,7 +212,8 @@ public class ConvertNCBI {
     				idcol1 = tok[0];
     				
     				isChr = (LINKAGE) ? line.contains(lgKey) : line.contains(chrKey);
-    				isScaf = line.contains(scaf1Key) || line.contains(scaf2Key);
+    				isScaf = (!isChr) ? true : false;
+    				// isScaf = line.contains(scaf1Key) || line.contains(scaf2Key); CAS513 this is not consistent
     		
     				bPrt=false; // CAS508 
     				if (isChr && !isScaf) { // can have chromosome and scaffold on same > line
@@ -302,9 +308,9 @@ public class ConvertNCBI {
 					if (m.matches()) name = m.group(2);
 				}
 			}
-			if (name==null) {
-				name = nChr+""; 
+			if (name==null) { // Peach uses G1, G2,....
 				nChr++;
+				name = nChr+""; 
 			}
 			
 			name = chrPrefix + padNum(name);
@@ -312,8 +318,8 @@ public class ConvertNCBI {
 			if (chr2id.containsKey(name)) {
 				prt(name + " not unique: line " + line);
 				while (chr2id.containsKey(name) && nChr<50) {
-					name = chrPrefix + padNum(nChr+"");
 					nChr++;
+					name = chrPrefix + padNum(nChr+"");
 				}
 			}
 			return name;
@@ -369,6 +375,7 @@ public class ConvertNCBI {
 	 */
 	 private void rwAnno() { 
 		 try {
+			if (inGffFile==null) return; // CAS513 
 			prt("\nProcessing " + inGffFile);
 			rwAnnoGene();	// put genes in geneMap
 			rwAnnoMRNA();   // add product to gene product
@@ -591,14 +598,16 @@ public class ConvertNCBI {
 		prt("                                         ");
 		prt(">>Sequence                      ");
 		String nw = "-- not written to file";
-			System.out.format("   %,5d %-11s of %,15d total length\n", cntChr, "Chromosomes", chrLen);
+			System.out.format("   %,6d %-11s of %,15d total length\n", cntChr, "Chromosomes", chrLen);
 	
 		if (nScaf>0) {
 			String x = (INCLUDESCAF) ? "" : nw;
-			System.out.format("   %,5d %-11s of %,15d total length (%,d<%,d) %s\n", nScaf, "Scaffolds", scafLen, cntScafSmall, scafMaxLen, x);
+			System.out.format("   %,6d %-11s of %,15d total length (%,d<%,d) %s\n", nScaf, "Scaffolds", scafLen, cntScafSmall, scafMaxLen, x);
 		}
 		if (nOther>0)
-			System.out.format("   %,5d %-11s of %,15d total length %s\n", nOther, "Other", otherLen, nw);
+			System.out.format("   %,6d %-11s of %,15d total length %s\n", nOther, "Other", otherLen, nw);
+		
+		if (inGffFile==null) return;
 		
 		prt("                                         ");
 		prt(">>All Types  (col 3)                       ");
@@ -674,7 +683,7 @@ public class ConvertNCBI {
 		
 		if (!isDS) {// fna and gff in projDir
 			if (inFaFile==null) die("Project directory does not have a file ending with .fna or .fna.gz");
-			if (inGffFile==null)die("Project directory does not have a file ending with .gff or .gff.gz");
+			if (inGffFile==null)prt("Project directory does not have a file ending with .gff or .gff.gz");
 			return;
 		}
 		
@@ -716,8 +725,8 @@ public class ConvertNCBI {
 		}
 		catch (Exception e) {die(e, "Checking " + dsDir);}
 		
-		if (inGffFile==null)  	die(dsDir + " does not have a file ending with .gff or .gff.gz");
 		if (inFaFiles.size()==0) die(dsDir + " has no files ending in .fna or .fna.gz");
+		if (inGffFile==null)  	 prt(dsDir + " does not have a file ending with .gff or .gff.gz");
 		return;
 	}
 	 private boolean checkDir(String dir) {
@@ -759,12 +768,13 @@ public class ConvertNCBI {
 	 private void checkArgs(String [] args) {
 		if (args.length==0 || args[0].equals("-h") || args[0].equals("-help") || args[0].equals("help")) {
 			prt("\nConvertNCBI <project directory> [options] 				");
-			prt("   the project directory must contain:  " +
+			prt("   the project directory must contain the FASTA file and the GFF is optional: " +
 					        "\n       FASTA file ending with .fna or .fna.gz" +
 					        "\n       GFF   file ending with .gff or .gff.gz" +  
+					        "\n       Alternatively, the directory can contain the ncbi_dataset directory." +
 					        "\nOptions:" +
 					        "\n-m  assuming a soft-masked genome file, convert it to hard-masked." +
-					        "\n-s  include " + scaf1Key + " and " + scaf2Key + "." +
+					        "\n-s  include any sequence not labeled 'chromosome'." +
 
 					        "\n-l  use linkage instead of chromosome." +
 					        "\n-v  write header lines of ignored sequences." +
@@ -787,8 +797,8 @@ public class ConvertNCBI {
 		prt("Parameters:");
 		if (ALLEXON) prt("   Write all exons for each gene to gff file");
 		if (INCLUDESCAF) {
-			prt("   Include "+ scaf1Key + " and " + scaf2Key);
-			prt("      Uses prefixes Chr '" + chrPrefix + "' and Scaffold '" + scafPrefix);
+			prt("   Include any sequence not labeled 'chromosome'");
+			prt("      Uses prefixes Chr '" + chrPrefix + "' and Scaffold '" + scafPrefix );
 			prt("      IMPORTANT: SyMAP Project Parameters - set grp_prefix to blank ");
 		}
 				

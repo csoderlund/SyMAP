@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.Vector;
 import java.util.Comparator;
 import java.util.Set;
@@ -135,6 +136,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		add(splitPane);
 		
 		setSize(MIN_WIDTH, MIN_HEIGHT);
+		setLocationRelativeTo(null); // CAS513 center frame
 		
 		addComponentListener(this); // hack to enforce minimum frame size
 	}
@@ -715,10 +717,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		return label;
 	}
 	
-	private Font createPlainFont(Font basis) {
-		return new Font(basis.getName(), Font.PLAIN, basis.getSize());
-	}
-	
 	private JPanel createSummaryPanel() {
 		// Make enclosing panel
 		JLabel lblTitle = createLabel("Summary", Font.BOLD, 18);
@@ -809,6 +807,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			ProjectLinkLabel btnReloadAnnot = null;
 			ProjectLinkLabel btnReloadParams = null;
 			ProjectLinkLabel btnReloadSeq = null;
+			
 			if (p.getStatus() == Project.STATUS_ON_DISK) {
 				btnRemoveFromDisk = new ProjectLinkLabel("Remove from disk", p, Color.red);
 				btnRemoveFromDisk.addMouseListener( doRemoveDisk );
@@ -1347,12 +1346,13 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	private MouseListener doRemove = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
 			Project p = ((ProjectLinkLabel)e.getSource()).getProject();
+			String msg = "Remove " + p.getDisplayName() + " from database"; // CAS513 add dbname
 			if (!removeAlignmentsCheck(p)) {
-				if (!progressConfirm2("Remove project from database","Remove project from database")) return;
+				if (!progressConfirm2(msg,msg)) return;
 				progressRemoveProject(0, p );
 			}
 			else {
-				int rc = progressConfirm3("Remove project from database","Remove project from database" +
+				int rc = progressConfirm3(msg,msg +
 					"\nOnly: remove only" +
 					"\nAll : remove project and remove previous alignments");
 				if (rc==0) return;
@@ -1410,6 +1410,9 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				title, JOptionPane.YES_NO_OPTION, 
 				JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
 	}
+	/****************************************************************
+	 * 
+	 */
 	private MouseListener doReloadParams = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
 			Project theProject = ((ProjectLinkLabel)e.getSource()).getProject();
@@ -1420,8 +1423,11 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			
 			propFrame.setVisible(true);
 			
-			if(!propFrame.isDisarded()) {			
+			if (propFrame.isSaveToDB()) {			
 				theProject.updateParameters(new UpdatePool(dbReader),null);
+			}
+			if (propFrame.isChgGrpPrefix()) { // CAS513 add the ability to change GrpPrefix after load
+				theProject.updateGrpPrefix(new UpdatePool(dbReader), null);
 			}
 			refreshMenu();		
 		}
@@ -1559,7 +1565,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		refreshMenu();
 	}
 	private void progressClearPair(final Project p1, final Project p2) {
-		String strOptionMessage = "Previous MUMmer or BLAT output files for " + p1.getDBName() + " to " + p2.getDBName() + " will be deleted.";
+		String strOptionMessage = "Previous alignment output files for " + p1.getDBName() + " to " + p2.getDBName() + " will be deleted.";
 		if (!Utilities.showContinue(this, "Clear Pair", strOptionMessage)) return;
 		
 		ErrorCount.init();
@@ -1987,27 +1993,44 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		subPanel.setBorder( BorderFactory.createEmptyBorder(5, 5, 5, 0) );
 		subPanel.setBackground(Color.white);
 		
-		TreeMap<String,Vector<Project>> cat2Proj = new TreeMap<String,Vector<Project>>();
+		// CAS513 changed for Vector to TreeSet so alphabetical display
+		TreeMap<String, TreeSet<Project>> cat2Proj = new TreeMap<String, TreeSet<Project>>();
 		for (Project p : projects) {
 			String category = p.getCategory();
 			if (category == null || category.length() == 0)
 				category = "Uncategorized";
 			if (!cat2Proj.containsKey(category))
-				cat2Proj.put(category, new Vector<Project>());
+				cat2Proj.put(category, new TreeSet<Project>());
 			cat2Proj.get(category).add(p);
 		}
 		
-		Set<String> categories = cat2Proj.keySet();
-		for (String category : categories) {
-			if (categories.size() > 1 || !category.equals("Uncategorized")) // Don't show "Uncategorized" if no other categories exist
-				subPanel.add( new JLabel(category) );
-			for (Project p : cat2Proj.get(category)) {
+		// CAS513 Figure out what to show 
+		Set <String> categories = cat2Proj.keySet();
+		TreeMap <String, Integer> showMap = new TreeMap <String, Integer> ();
+		for (String cat : categories) {
+			for (Project p : cat2Proj.get(cat)) {
+				if (inReadOnlyMode && p.getCntSynteny().equals("")) continue; // CAS513 nothing to view
+				
+				if (showMap.containsKey(cat)) showMap.put(cat, showMap.get(cat)+1);
+				else 						  showMap.put(cat, 1);
+			}
+		}
+		for (String cat : showMap.keySet()) {
+			if (showMap.get(cat)==0) continue;
+			
+			subPanel.add( new JLabel(cat) );
+			
+			for (Project p : cat2Proj.get(cat)) {
+				if (inReadOnlyMode && p.getCntSynteny().equals("")) continue; // CAS513 nothing to view
+					
 				ProjectCheckBox cb = null;
 				String name = p.getDisplayName();
-				if(p.getStatus() == Project.STATUS_ON_DISK)
-					name += " (not loaded)";
+				boolean bLoaded = (p.getStatus() != Project.STATUS_ON_DISK);
+				if (bLoaded) 
+					name += " (" + p.getLoadDate() + ") " + p.getCntSynteny(); // CAS513 change from (not loaded) 
 				cb = new ProjectCheckBox( name, p );
-				cb.setFont(createPlainFont(cb.getFont()));
+				Font f = new Font(cb.getFont().getName(), Font.PLAIN, cb.getFont().getSize());
+				cb.setFont(f); 
 				subPanel.add( cb );
 			}
 			subPanel.add( Box.createVerticalStrut(5) );
@@ -2261,12 +2284,13 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		
 		// Get loaded projects
 		UpdatePool pool = new UpdatePool(dbReader);
-        ResultSet rs = pool.executeQuery("SELECT idx, name, type FROM projects");
+        ResultSet rs = pool.executeQuery("SELECT idx, name, type, loaddate FROM projects");
         while ( rs.next() ) {
-	        	int nIdx = rs.getInt("idx");
-	        	String strName = rs.getString("name");
-	        	String strType = rs.getString("type");
-	        	projects.add( new Project(nIdx, strName, strType) );
+        	int nIdx = rs.getInt(1);
+        	String strName = rs.getString(2);
+        	String strType = rs.getString(3);
+        	String strDate = rs.getString(4); // CAS513 add
+        	projects.add( new Project(nIdx, strName, strType, strDate) );
         }
         rs.close();
         
@@ -2274,9 +2298,9 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
         for (Project p : projects) {
 	        	HashMap<String,String> projProps = loadProjectProps(pool, p.getID()); 
 	        	
-	        	p.setDisplayName(projProps.get("display_name"));
-	        	p.setDescription(projProps.get("description"));
-	        	p.setCategory(projProps.get("category"));
+	        p.setDisplayName(projProps.get("display_name"));
+	        p.setDescription(projProps.get("description"));
+	        p.setCategory(projProps.get("category"));
            	p.setOrderAgainst(projProps.get("order_against"));
            	
            	if (projProps.containsKey("grp_type") && 
@@ -2326,6 +2350,12 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					"where xgroups.proj_idx=" + p.getID());
 			if (rs.next()) p.setLength(rs.getLong(1));
 			rs.close();
+			
+			// CAS513 for Main list on left, mark those with synteny
+			rs = pool.executeQuery("select count(*) from pairs where proj1_idx=" + p.getID() +
+					" or proj2_idx=" + p.getID());
+			if (rs.next()) p.setCntSynteny(rs.getInt(1));
+			rs.close();
         }
         
         sortProjects(projects);
@@ -2341,7 +2371,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		}
 		for (File f : root.listFiles()) {
 			if (f.isDirectory() && !f.getName().startsWith(".")) {
-				Project newProj = new Project(-1, f.getName(), dirName, f.getName() );
+				Project newProj = new Project(-1, f.getName(), dirName, f.getName(), "");
 				newProj.setStatus( Project.STATUS_ON_DISK );
 				
 				if (!projects.contains(newProj))  {
@@ -2408,7 +2438,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
     }
 
     private void addNewProjectFromUI(Vector<Project> projects, String name, String type) {
-		Project newProj = new Project(-1, name, type, name );
+		Project newProj = new Project(-1, name, type, name, "" );
 		newProj.setStatus( Project.STATUS_ON_DISK );
 		
 		if (!projects.contains(newProj)) {

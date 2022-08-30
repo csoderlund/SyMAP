@@ -1,6 +1,9 @@
 package symap.projectmanager.common;
 /*******************************************
  * Displays the project parameter window and saves them to file
+ * 	They are loaded into the proj_props DB table on Load
+ * 
+ * CAS513 reorder a bunch and some renaming; added grp_prefix update
  */
 import java.awt.Color;
 import java.awt.Component;
@@ -59,10 +62,12 @@ public class PropertyFrame extends JDialog {
 	private static int INITIAL_HEIGHT = 600;
 	
 	public static String lastFPCDir=null, lastSeqDir=null; // CAS500
+	private int idxGrpPrefix=0, idxMinKWcnt=0; 
 	
 	public PropertyFrame(Frame parentFrame, boolean isPseudo, 
 			String displayName, String dbName, DatabaseReader dbReader, 
 			boolean isLoadedProject, String pathName) {
+		
 		super(parentFrame, displayName + " parameters");
 		
 		theDisplayName = displayName;
@@ -78,79 +83,84 @@ public class PropertyFrame extends JDialog {
 		
 		theListener = new CaretListener() {
 			public void caretUpdate(CaretEvent arg0) {
-				boolean showSave = true;
+				boolean showSave = true;			
 				for(int x=0; x<theFields.length && showSave; x++) {
 					if(theFields[x].getLabel().equals("display_name")) {
-						if(theFields[x].getValue().length() == 0)
-							showSave = false;
+						if(theFields[x].getValue().length() == 0) showSave = false; // must have a value
 					}
 					else if(theFields[x].getLabel().equals("grp_type")) {
-						if(theFields[x].getValue().length() == 0)
-							showSave = false;
+						if(theFields[x].getValue().length() == 0) showSave = false; // must have a value
 					}
 				}
 				btnSave.setEnabled(showSave);
 			}
 		};
-		thePseudoProjectNames = getSeqProjectNames(dbReader);
+		thePseudoProjectNames = getSeqProjectNames(dbReader); // Used by OrderBy drop-down
 		buildMainPanel();
 		
-		if(!updateFieldsFromDB(dbReader)) { 
-			updateFieldsFromFile(); 
+		if(!updateFieldsFromDB(dbReader)) { // if loaded 
+			updateFieldsFromFile(); 		// not loaded
 		}
-		if (isPseudo) checkSeq();
-		else checkFPC();
 		
-		setInitValues();//Record initial values to see if they change
+		setInitValues(); // Save initial values to see if they change
 		
 		setSize(INITIAL_HEIGHT, INITIAL_WIDTH);
 		setMinimumSize(new Dimension(INITIAL_HEIGHT, INITIAL_WIDTH));
 		
 		setModal(true);
+		
+		setLocationRelativeTo(parentFrame); // CAS513 put on top of parent
 	}
 	
 	public PropertyFrame getInstance() { return this; }
 	
-	public boolean isDisarded() { return bIsDiscarded; }
-		
 	private void buildMainPanel() {
+		// Different PropertyComponent for File, DropDown and other
+		int startLoad=0, i=0;
+		boolean bReload=true, bReAlign=true;
 		
 		if(theMode == MODE_FPC) {
 			theFields = new PropertyComponent[9];
-			
-			theFields[0] = new PropertyComponent("category", "Uncategorized", 1, false, false);
-			theFields[1] = new PropertyComponent("display_name", theDisplayName, 1, false, false);
-			theFields[2] = new PropertyComponent("grp_type", "Chromosome", 1, false, false);
-			theFields[3] = new PropertyComponent("description", "", 2, false, false);	
-			theFields[4] = new PropertyComponent("grp_prefix", "", 1, false, false);
-			theFields[5] = new PropertyComponent("cbsize", "1200", 1, false, false);	
-			
-			
-			theFields[6] = new PropertyComponent("fpc_file", "", true, true, true);
-			theFields[7] = new PropertyComponent("bes_files", "", true, true, false);
-			theFields[8] = new PropertyComponent("marker_files", "", true, true, false);
-		} else { //MODE_PSEUDO CAS42 1/4/17 reordered them
-			theFields = new PropertyComponent[13];
-			
-			theFields[0] = new PropertyComponent("category", "Uncategorized", 1, false, false);
-			theFields[1] = new PropertyComponent("display_name", theDisplayName, 1, false, false);
-			theFields[2] = new PropertyComponent("grp_type", "Chromosome", 1, false, false);
-			theFields[3] = new PropertyComponent("description", "", 2, false, false);	
-			theFields[4] = new PropertyComponent("min_display_size_bp", "0", 1, false, false);	
 		
-			theFields[5] = new PropertyComponent("grp_prefix", "Chr", 1, false, false);
-			theFields[6] = new PropertyComponent("min_size", "100000", 1, true, false); // Hardcoded in Projects too
+			theFields[i++] = new PropertyComponent("category", "Uncategorized", 1, 		!bReload, !bReAlign);
+			theFields[i++] = new PropertyComponent("display_name", theDisplayName, 1, 	!bReload, !bReAlign);
+			theFields[i++] = new PropertyComponent("grp_type", "Chromosome", 1, 		!bReload, !bReAlign);
+			theFields[i++] = new PropertyComponent("description", "", 2, 				!bReload, !bReAlign);	
+			
+			startLoad=i;
+			theFields[i++] = new PropertyComponent("grp_prefix", "", 1, !bReload, !bReAlign);
+			theFields[i++] = new PropertyComponent("cbsize", "1200", 1, !bReload, !bReAlign);	
+			
+			theFields[i++] = new PropertyComponent("fpc_file", "",     bReload, bReAlign, true);
+			theFields[i++] = new PropertyComponent("bes_files", "",    bReload, bReAlign, false);
+			theFields[i++] = new PropertyComponent("marker_files", "", bReload, bReAlign, false);
+		} 
+		else { //MODE_PSEUDO CAS42 1/4/17 reordered them
+			theFields = new PropertyComponent[13];
+			theFields[i++] = new PropertyComponent("category", "Uncategorized", 1, 		!bReload, !bReAlign);
+			theFields[i++] = new PropertyComponent("display_name", theDisplayName, 1, 	!bReload, !bReAlign);
+			theFields[i++] = new PropertyComponent("grp_type", "Chromosome", 1, 		!bReload, !bReAlign);
+			theFields[i++] = new PropertyComponent("description", "", 2, 				!bReload, !bReAlign);	
+			theFields[i++] = new PropertyComponent("min_display_size_bp", "0", 1, 		!bReload, !bReAlign);	
+			
+			// special cases
+			idxMinKWcnt=i;
+			theFields[i++] = new PropertyComponent("annot_kw_mincount", "50", 1, 	!bReload, !bReAlign);	// CAS513 2 lines->1, moved
+			idxGrpPrefix = i;
+			startLoad=i-1; // put >Load before this field 
+			theFields[i++] = new PropertyComponent("grp_prefix", "Chr", 1, 			!bReload, !bReAlign);
+			
+			theFields[i++] = new PropertyComponent("min_size", "100000", 1, bReload, !bReAlign); // Hardcoded in Projects too
 			// CAS42 1/4/17 this is in the Help, but not here
 			//theFields[4] = new PropertyComponent("grp_sort", PSEUDO_GRP_SORT, 0, true, false);
+			theFields[i++] = new PropertyComponent("annot_keywords", "", 2, bReload, !bReAlign); // CAS512 was false for Reload		
 			
-			theFields[7] = new PropertyComponent("annot_keywords", "", 2, false, false);			
-			theFields[8] = new PropertyComponent("annot_kw_mincount", "50", 2, false, false);	
-			theFields[9] = new PropertyComponent("order_against", getProjectSelections(), 0, false, true);
-			theFields[10] = new PropertyComponent("mask_all_but_genes", PSEUDO_MASK_GENES, 1, false, true);
+			theFields[i++] = new PropertyComponent("order_against", getOrderBySelections(), 0, !bReload, bReAlign);
+			theFields[i++] = new PropertyComponent("mask_all_but_genes", PSEUDO_MASK_GENES, 1, !bReload, bReAlign);
 			
 			// CAS500 swap the order of these two
-			theFields[11] = new PropertyComponent("sequence_files", "", true, true, false);
-			theFields[12] = new PropertyComponent("anno_files", "", true, true, false);
+			theFields[i++] = new PropertyComponent("sequence_files", "", 	bReload, bReAlign, false);
+			theFields[i++] = new PropertyComponent("anno_files", "", 		bReload, bReAlign, false);
 		}
 			
 		JPanel tempPanel = new JPanel();
@@ -162,7 +172,7 @@ public class PropertyFrame extends JDialog {
 			tempPanel.add(Box.createVerticalStrut(5));
 			theFields[x].setTextListener(theListener);
 			tempPanel.add(theFields[x]);
-			if ((theMode != MODE_FPC && x==4) || (theMode == MODE_FPC && x==3)) {
+			if ((theMode != MODE_FPC && x==startLoad) || (theMode == MODE_FPC && x==startLoad)) {
 				tempPanel.add(Box.createVerticalStrut(15));
 				tempPanel.add(new JLabel(">Load, Computation and Display:"));
 			}
@@ -176,22 +186,7 @@ public class PropertyFrame extends JDialog {
 		getContentPane().add(tempPanel);
 	}
 	
-	private String [] getProjectSelections() {
-		Vector<String> retVal = new Vector<String> ();
-		
-		retVal.add("None");
-		
-		if(thePseudoProjectNames != null) {
-			for(int x=0; x< thePseudoProjectNames.length; x++) {
-				if(!theDBName.equals(thePseudoProjectNames[x])) {
-					retVal.add(thePseudoProjectNames[x]);
-				}
-			}
-		}
-		
-		return retVal.toArray(new String[retVal.size()]);
-	}
-	
+	/******************************************************************/
 	private JPanel createButtonPanel() {
 		JPanel retVal = new JPanel();
 		retVal.setLayout(new BoxLayout(retVal, BoxLayout.PAGE_AXIS));
@@ -206,18 +201,14 @@ public class PropertyFrame extends JDialog {
 		btnSave.setBackground(Color.WHITE);
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if(checkUpdateNeeded()) {
-					writeFile();
-					bIsDiscarded = false;
-					closeDialog();
-				}
+				save();
 			}
 		});
 		btnCancel = new JButton("Cancel");
 		btnCancel.setBackground(Color.WHITE);
 		btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				bIsDiscarded = true;
+				bSaveToDB = false;
 				closeDialog();
 			}
 		});
@@ -229,10 +220,8 @@ public class PropertyFrame extends JDialog {
 				showHelp();
 			}
 		});
-		buttonPanel.add(btnSave);
-		buttonPanel.add(Box.createHorizontalStrut(10));
-		buttonPanel.add(btnCancel);
-		buttonPanel.add(Box.createHorizontalStrut(100));
+		buttonPanel.add(btnSave);		buttonPanel.add(Box.createHorizontalStrut(10));
+		buttonPanel.add(btnCancel);		buttonPanel.add(Box.createHorizontalStrut(100));
 		buttonPanel.add(btnHelp);
 		buttonPanel.setBackground(Color.WHITE);
 		buttonPanel.setMaximumSize(buttonPanel.getPreferredSize());
@@ -241,14 +230,77 @@ public class PropertyFrame extends JDialog {
 
 		return retVal;
 	}
+	
+	/*******************************************************************/
+	private String [] getOrderBySelections() {
+		Vector<String> retVal = new Vector<String> ();
+		
+		retVal.add("None");
+		
+		if (thePseudoProjectNames != null) {
+			for (int x=0; x< thePseudoProjectNames.length; x++) {
+				if (!theDBName.equals(thePseudoProjectNames[x])) {
+					retVal.add(thePseudoProjectNames[x]);
+				}
+			}
+		}
+		return retVal.toArray(new String[retVal.size()]);
+	}
+	private String [] getSeqProjectNames(DatabaseReader dbReader) { 
+		String [] retVal = null;			// assigned to thePseudoProjectNames
+		try {
+			Connection conn = dbReader.getConnection();
+			Statement  stmt = conn.createStatement();
+			
+			Vector<String> names = new Vector<String> ();
+			ResultSet rset = stmt.executeQuery("SELECT projects.name FROM projects " +
+					"WHERE type='pseudo' ORDER BY projects.name ASC");
+			while(rset.next()) {
+				names.add(rset.getString("projects.name"));
+			}
+			
+			if(!names.isEmpty())
+				retVal = names.toArray(new String[names.size()]);
+			
+			rset.close();	stmt.close(); conn.close();
+
+			return retVal;
+		} catch(Exception e) {ErrorReport.print(e, "Reading projects from databse"); return null;} 
+	}
+	
+	/**********************************************************************
+	 * Get/Set fields
+	 ***************************************************************/
+	// Read the database and sets theField interface value
+	private boolean updateFieldsFromDB(DatabaseReader dbReader) {
+		boolean retVal = false;
+		try {
+			Connection conn = dbReader.getConnection();
+			Statement  stmt = conn.createStatement();
+			
+			ResultSet rset = stmt.executeQuery("SELECT proj_props.name, proj_props.value " +
+					"FROM proj_props " +
+					"JOIN projects on proj_props.proj_idx = projects.idx " +
+					"WHERE projects.name = '" + theDBName + "'" );
+			while(rset.next()) {
+				retVal = true;
+				setField(rset.getString(1), rset.getString(2));
+			}
+			rset.close();	stmt.close(); conn.close();
+
+			return retVal;
+		} catch(Exception e) { 
+			ErrorReport.print(e, "Reading parameters from databse");
+			return false;
+		}
+	}
 	// Only called if params not gotten from DB.
 	private boolean updateFieldsFromFile() {
 		String dir = (theMode == MODE_PSEUDO) ? 
 				(Constants.seqDataDir + theDBName) : (Constants.fpcDataDir + theDBName);
 		
 		File pfile = new File(dir, Constants.paramsFile);
-		if (pfile.isFile())
-		{
+		if (pfile.isFile()) {
 			System.out.println("Get params from " + dir +  Constants.paramsFile);
 			PropertiesReader props = new PropertiesReader( pfile);
 			for (Object obj : props.keySet()) {
@@ -261,77 +313,149 @@ public class PropertyFrame extends JDialog {
 		}
 		return false;
 	}
-	
-	private String [] getSeqProjectNames(DatabaseReader dbReader) {
-		Connection conn = null;
-		Statement stmt = null;
-		ResultSet rset = null;
-		
-		String [] retVal = null;
-		try {
-			conn = dbReader.getConnection();
-			stmt = conn.createStatement();
-			
-			Vector<String> names = new Vector<String> ();
-			rset = stmt.executeQuery("SELECT projects.name FROM projects " +
-					"WHERE type='pseudo' ORDER BY projects.name ASC");
-			while(rset.next()) {
-				names.add(rset.getString("projects.name"));
+	private boolean setField(String fieldName, String fieldValue) {
+		for(int x=0; x<theFields.length; x++) {
+			if(fieldName.equals(theFields[x].getLabel())) {
+				if(fieldName.equals("mask_all_but_genes")) {
+					if(fieldValue.equals("1") || fieldValue.equals("yes")) 	fieldValue = "yes";
+					else													fieldValue = "no";
+				}
+				theFields[x].setValue(fieldValue);
+				return true;
 			}
-			
-			if(!names.isEmpty())
-				retVal = names.toArray(new String[names.size()]);
-			
-			rset.close();
-			stmt.close();
-			conn.close();
-
-			return retVal;
-		} catch(Exception e) {return null;} 
-	}
-	
-	private boolean updateFieldsFromDB(DatabaseReader dbReader) {
-		boolean retVal = false;
-		Connection conn = null;
-		Statement stmt = null;
-		ResultSet rset = null;
-		try {
-			conn = dbReader.getConnection();
-			stmt = conn.createStatement();
-			
-			rset = stmt.executeQuery("SELECT proj_props.name, proj_props.value " +
-					"FROM proj_props " +
-					"JOIN projects on proj_props.proj_idx = projects.idx " +
-					"WHERE projects.name = '" + theDBName + "'" );
-			while(rset.next()) {
-				retVal = true;
-				setField(rset.getString(1), rset.getString(2));
-			}
-			rset.close();
-			stmt.close();
-			conn.close();
-
-			return retVal;
-		} catch(Exception e) {
-			return false;
-		} finally {
-			try {
-				rset.close();
-				stmt.close();
-				conn.close();
-				
-				return retVal;
-			} catch(Exception e) {}
 		}
+		return false;
 	}
+	// The Field values after they have been set from DB or file
+	private void setInitValues() {
+		valueBuffer = new String[theFields.length];
+		
+		for(int x=0; x<valueBuffer.length; x++)
+			valueBuffer[x] = theFields[x].getValue();
+	}
+	/***************************************************************
+	 * XXX Save
+	 * CAS513 changed the logic on this part and added ChgGrpPrefix
+	 */
+	public boolean isSaveToDB() 	{ return bSaveToDB; } // if true, reads from file and writes to DB (if loaded)
+	public boolean isChgGrpPrefix() { return bChgGrpPrefix;}
 	
-	private void closeDialog() {
-		dispose();
+	private void save() {
+		boolean bLoad =  isReQuiredReload();	if (!bLoad) return;
+		
+		boolean bAlign = isRequiredRealign(); 	if (!bAlign) return;
+		
+		boolean bGrp  =  isRequiredGrpPrefix();	if (!bGrp) return;
+		
+		isRequiredMinKWcnt();
+	
+		//if (bIsLoaded) 	System.out.println("Write params to file and database for " + theDisplayName);
+		//else 			System.out.println("Write params to file for " + theDisplayName);
+		
+		writeParamsFile();	
+		bSaveToDB = true;   // will only do this if already loaded
+		
+		closeDialog();
 	}
-	// the params file is read in symap.projectmanager.common.Project
-	private void writeFile() {
-		// if the sequence files are not in the /data directory, 
-		// 	the /data/seq/<p>/params is created anyway for the parameters
+	 /** Realign parameters **/
+	private boolean isRequiredRealign() {
+		String params="";
+		boolean required = false;
+		for(int x=0; x<valueBuffer.length; x++) {
+			if(theFields[x].isRealignField() 
+					&& !theFields[x].getValue().equals(valueBuffer[x]) 
+					&& !theFields[x].isDefaultValue())
+			{
+				params += theFields[x].getLabel() + ",";
+				required = true;
+			}
+		}
+		if (!required) return  true;
+		if (!bIsLoaded) return true;  // write to file only
+		
+		params = params.substring(0, params.length()-1); // chop final ,
+		
+		String msg = "Realign\nThe change to the following parameter(s): " + params + 
+				  	"\n will take effect on the next alignment." +
+			   		"\n\nProceed with save?";
+		int n = JOptionPane.showConfirmDialog( this, msg , "", JOptionPane.YES_NO_OPTION);
+		
+		if (n == JOptionPane.YES_OPTION) return true;
+		return false;
+	}
+	/** Reload parameters **/
+	private boolean isReQuiredReload() { // Change any parameter that requires reload
+		boolean required = false;
+		String params="";
+		
+		for(int x=0; x<valueBuffer.length; x++) {
+			if(theFields[x].isReloadField() 
+					&& !theFields[x].getValue().equals(valueBuffer[x]) 
+					&& !theFields[x].isDefaultValue())
+			{
+				params += theFields[x].getLabel() + ",";
+				required = true;
+			}
+		}
+		if (!required) return true;
+		if (!bIsLoaded) return true;	// write to file only
+		
+		params = params.substring(0, params.length()-1); // chop final ,
+		
+		String msg = "Reload\nThe change to the following parameter(s): " +  params + 
+				"\n will take effect on the next Reload of the project." +
+				"\n\nProceed with save?";
+		
+		int n = JOptionPane.showConfirmDialog( this, msg,"", JOptionPane.YES_NO_OPTION);
+		
+		if (n == JOptionPane.YES_OPTION) return true;
+		return false;
+	}
+	 /** Grp Prefix **/
+	private boolean isRequiredGrpPrefix() { 
+		bChgGrpPrefix = false;
+		String val = theFields[idxGrpPrefix].getValue();
+		
+		if (val.equals(valueBuffer[idxGrpPrefix])) 	return true;
+		if (!bIsLoaded) 							return true; 
+		
+		if (val.contentEquals("")) {
+			String msg ="grp_prefix set to blank has no effect on a loaded project. "
+					+ "\nOn a reload, there will be no change to the group names. (See Help)";
+			int n = JOptionPane.showConfirmDialog( this, msg, "", JOptionPane.YES_NO_OPTION);
+			
+			if (n == JOptionPane.YES_OPTION) return true;
+			else return false;
+		}
+		
+		String msg = "The grp_prefix '" + val +"' will be removed from all group display labels."+
+				"\n   This is not reversible (i.e. it cannot be added back). \n\nProceed with save?";
+		int n = JOptionPane.showConfirmDialog( this, msg, "", JOptionPane.YES_NO_OPTION);
+		
+		if (n == JOptionPane.YES_OPTION) {
+			bChgGrpPrefix=true;
+			return true;
+		}
+		return false;
+	}
+	/** annot_kw_mincnt **/
+	private boolean isRequiredMinKWcnt() { 
+		String val = theFields[idxMinKWcnt].getValue();
+		
+		if (val.equals(valueBuffer[idxMinKWcnt])) 	return true;
+		if (!bIsLoaded) 							return true; 
+		
+		JOptionPane.showMessageDialog(this, 
+				"Changing the annot_kw_mincount number may change \nthe Annotation columns for SyMAP Query.");
+		return true;
+	}
+	/*******************************************************
+	 * Write Params file
+	 * 	the params file is read in symap.projectmanager.common.Project
+	 * 	if the sequence files are not in the /data directory, 
+	 * 		the /data/seq/<p>/params is created anyway for the parameters
+	 */
+	private void writeParamsFile() {	
 		String dir = (theMode == MODE_PSEUDO) ? 
 				(Constants.seqDataDir + theDBName) : (Constants.fpcDataDir + theDBName);
 		Utilities.checkCreateDir(dir, true); // CAS500 
@@ -355,159 +479,28 @@ public class PropertyFrame extends JDialog {
 					//special case for conversion
 					if(label.equals("mask_all_but_genes")) {
 						if(val.equals("yes")) 	out.println("mask_all_but_genes = 1");
-						else						out.println("mask_all_but_genes = 0");
+						else					out.println("mask_all_but_genes = 0");
 					}
 					else if(label.equals("order_against")) {
-						if(!val.equals("None"))
-							out.println("order_against = " + val);
+						if(!val.equals("None"))	out.println("order_against = " + val);
 					}
-					else
-						out.println(label + " = " + val.replace('\n', ' '));
+					else out.println(label + " = " + val.replace('\n', ' '));
 				}
 				else {
-					out.println(label + " = "); // save empty ones too
+						 out.println(label + " = "); // save empty ones too
 				}
 			}
 			out.close();
 		} catch(Exception e) {ErrorReport.print(e, "Creating params file");}
 	}
 	
-	private boolean setField(String fieldName, String fieldValue) {
-		for(int x=0; x<theFields.length; x++) {
-			if(fieldName.equals(theFields[x].getLabel())) {
-				if(fieldName.equals("mask_all_but_genes")) {
-					if(fieldValue.equals("1") || fieldValue.equals("yes"))
-						fieldValue = "yes";
-					else
-						fieldValue = "no";
-				}
-				theFields[x].setValue(fieldValue);
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private void setInitValues() {
-		valueBuffer = new String[theFields.length];
-		
-		for(int x=0; x<valueBuffer.length; x++)
-			valueBuffer[x] = theFields[x].getValue();
-	}
-	
-	private boolean checkUpdateNeeded() {
-		StringBuffer alignParms = new StringBuffer("");
-		StringBuffer loadParms = new StringBuffer("");
-		boolean bAlign = isRealignmentRequired(alignParms);
-		boolean bLoad = isReloadRequired(loadParms);
-		if (bLoad) {
-			if(!checkReloads(alignParms.toString(),loadParms.toString()))
-				return false;
-		}
-		else if (bAlign) 
-		{
-			if(!checkRealignments(alignParms.toString()))
-				return false;	
-		}
-		return true;
-	}
-	
-	private boolean checkRealignments(String parms) {
-
-		int n = JOptionPane.showConfirmDialog(
-			    this,
-			    "The following parameter changes will take effect for subsequent alignments: " + parms + " .\nProceed with save?",
-			    "",
-			    JOptionPane.YES_NO_OPTION);
-		
-		if(n == JOptionPane.YES_OPTION)
-			return true;
-
-		
-		return false;
-	}
-	
-	private boolean checkReloads(String alignparms, String loadparms) {
-
-		String msg = "The following parameter changes will not take effect until the project is reloaded: " + loadparms + ".";
-		if (!Utilities.isStringEmpty(alignparms) )
-		{
-			msg += "\nAlso the following parameter changes will be used for subsequent alignments: " + alignparms + ".";
-		}
-		msg +=  "\nProceed with save?";
-		int n = JOptionPane.showConfirmDialog(
-			    this,
-			    msg,"",
-			    JOptionPane.YES_NO_OPTION);
-		
-		if(n == JOptionPane.YES_OPTION)
-			return true;
-	
-		return false;
-	}
-
 	private void showHelp() {
 		Utilities.showHTMLPage(this, "Project Parameter Help", 
 				(theMode == MODE_FPC ? "/html/FpcParamHelp.html" : "/html/ProjParamHelp.html"));	
 	}
-
-	private boolean isRealignmentRequired(StringBuffer parms) {
-		if(!bIsLoaded) return false;
-		boolean required = false;
-		for(int x=0; x<valueBuffer.length; x++) {
-			if(theFields[x].isRealignField() && !theFields[x].getValue().equals(valueBuffer[x]) && !theFields[x].isDefaultValue())
-			{
-				parms.append(theFields[x].getLabel() + ",");
-				required = true;
-			}
-		}
-		if (required) parms = parms.deleteCharAt(parms.length()-1); // chop final ,
-		return required;
+	private void closeDialog() {
+		dispose();
 	}
-	
-	private boolean isReloadRequired(StringBuffer parms) {
-		if(!bIsLoaded) return false;
-		boolean required = false;
-		for(int x=0; x<valueBuffer.length; x++) {
-			if(theFields[x].isReloadField() && !theFields[x].getValue().equals(valueBuffer[x]) && !theFields[x].isDefaultValue())
-			{
-				parms.append(theFields[x].getLabel() + ",");
-				required = true;
-			}
-		}
-		if (required) parms = parms.deleteCharAt(parms.length()-1); // chop final ,
-		return required;
-	}
-	
-	/***********************************************
-	 * If the needed file location has not been entered, 
-	 * 	check the default locations and add if they exists.
-	 * TODO finish...
-	 */
-	private void checkSeq() {
-		try {
-			
-		}
-		catch (Exception e) {ErrorReport.print(e, "Check sequence files"); }
-	}
-	private void checkFPC() {
-		try {
-			
-		}
-		catch (Exception e) {ErrorReport.print(e, "Check sequence files"); }
-	}
-
-	private int theMode = -1;
-	private String thePathName = ""; // CAS512
-	private String theDisplayName = "";
-	private String theDBName = "";
-	private boolean bIsDiscarded = true;
-	private boolean bIsLoaded = false;
-	private PropertyComponent [] theFields;
-	private String [] valueBuffer = null;
-	private String [] thePseudoProjectNames = null;
-	private JButton btnSave = null, btnCancel = null, btnHelp = null;
-	private CaretListener theListener = null;
 	
 	/***************************************************************/
 	public class PropertyComponent extends JPanel{
@@ -575,8 +568,8 @@ public class PropertyFrame extends JDialog {
 		
 		public String getLabel() { return theLabel.getText(); }
 		public String getValue() {
-			if(nMode == MODE_TEXT)       return ((JTextField)theComponent).getText();
-			if(nMode == MODE_MULTI_LINE) return ((JTextArea)theComponent).getText();
+			if(nMode == MODE_TEXT)       return ((JTextField)   theComponent).getText();
+			if(nMode == MODE_MULTI_LINE) return ((JTextArea)    theComponent).getText();
 			if(nMode == MODE_FILE_LIST)  return ((FileListTable)theComponent).getValue();
 			//MODE_LIST
 			return (String)((JComboBox)theComponent).getSelectedItem();
@@ -584,8 +577,8 @@ public class PropertyFrame extends JDialog {
 		
 		public void setValue(String value) {
 			isDefault = false;
-			if(nMode == MODE_TEXT)            ((JTextField)theComponent).setText(value);
-			else if(nMode == MODE_MULTI_LINE) ((JTextArea)theComponent).setText(value);
+			if(nMode == MODE_TEXT)            ((JTextField)   theComponent).setText(value);
+			else if(nMode == MODE_MULTI_LINE) ((JTextArea)    theComponent).setText(value);
 			else if(nMode == MODE_FILE_LIST)  ((FileListTable)theComponent).setValue(value);
 			else { //MODE_LIST
 				((JComboBox)theComponent).setSelectedItem(value);
@@ -598,7 +591,7 @@ public class PropertyFrame extends JDialog {
 		}
 		
 		public boolean isRealignField() { return bRealign; }
-		public boolean isReloadField() { return bReload; }
+		public boolean isReloadField()  { return bReload; }
 		public boolean isDefaultValue() { return isDefault; }
 		
 		public void setTextListener(CaretListener l) {
@@ -633,7 +626,7 @@ public class PropertyFrame extends JDialog {
 		private boolean bRealign = false;
 		private boolean isDefault = true;
 		private int nMode = -1;
-	} // end class
+	} // end PropertyComponent class
 	
 	/*******************************************************/
 	private class FileListTable extends JPanel {
@@ -643,7 +636,7 @@ public class PropertyFrame extends JDialog {
 			bSingleSelect = singleSelect;
 			
 			theTable = new JTable();
-	    		theModel = new FileTableModel();
+	    	theModel = new FileTableModel();
 	    	
 	        theTable.setAutoCreateColumnsFromModel( true );
 	        theTable.setColumnSelectionAllowed( false );
@@ -684,7 +677,7 @@ public class PropertyFrame extends JDialog {
 					
 					if(cf.showOpenDialog(getInstance()) == JFileChooser.APPROVE_OPTION) {
 						path = cf.getSelectedFile().getAbsolutePath().trim();
-						if(path.length() > 0) theModel.addRow(path);
+						if (path.length() > 0) theModel.addRow(path);
 						theTable.setVisible(false);
 						theTable.setVisible(true);
 						setDefaultDir(path);
@@ -707,12 +700,11 @@ public class PropertyFrame extends JDialog {
 					
 					if(cf.showOpenDialog(getInstance()) == JFileChooser.APPROVE_OPTION) {
 						path = cf.getSelectedFile().getAbsolutePath().trim();
-						if(path.length() > 0) theModel.addRow(path + "/");
+						if (path.length() > 0) theModel.addRow(path + "/");
 						theTable.setVisible(false);
 						theTable.setVisible(true);
 						setDefaultDir(path);
 					}
-					
 					updateButtons();
 				}
 			});
@@ -725,7 +717,7 @@ public class PropertyFrame extends JDialog {
 					theTable.getSelectionModel().clearSelection();
 					theTable.setVisible(false);
 					theTable.setVisible(true);
-			}
+				}
 			});
 	        btnRemove.setEnabled(false);
 	        
@@ -736,10 +728,8 @@ public class PropertyFrame extends JDialog {
 	        buttonRow.setLayout(new BoxLayout(buttonRow, BoxLayout.LINE_AXIS));
 	        buttonRow.setBackground(Color.WHITE);
 	        
-	        buttonRow.add(btnAddFile);
-	        buttonRow.add(Box.createHorizontalStrut(20));
-	        buttonRow.add(btnAddDir);
-	        buttonRow.add(Box.createHorizontalStrut(20));
+	        buttonRow.add(btnAddFile);	buttonRow.add(Box.createHorizontalStrut(20));
+	        buttonRow.add(btnAddDir);	buttonRow.add(Box.createHorizontalStrut(20));
 	        buttonRow.add(btnRemove);
 	        
 	        add(sPane);
@@ -784,7 +774,6 @@ public class PropertyFrame extends JDialog {
 			
 			return retVal;
 		}
-		
 		public void setValue(String value) {
 			String [] vals = value.split(",");
 			theModel.clearAll();
@@ -793,7 +782,6 @@ public class PropertyFrame extends JDialog {
 					theModel.addRow(vals[x]);
 			}
 		}
-		
 		private void updateButtons() {
 			if(bSingleSelect && theTable.getRowCount() > 0) {
 				btnAddFile.setEnabled(false);
@@ -804,7 +792,6 @@ public class PropertyFrame extends JDialog {
 				btnAddDir.setEnabled(true);
 			}
 		}
-
 		private JScrollPane sPane = null;
 		private JTable theTable = null;
 		private FileTableModel theModel = null;
@@ -846,5 +833,19 @@ public class PropertyFrame extends JDialog {
 			
 			private Vector<String> theFiles = null;		
 		}
-	} // end class
+	} // end File class
+	
+	/**************************************************************************/
+	private int theMode = -1;
+	private String thePathName = ""; // CAS512
+	private String theDisplayName = "";
+	private String theDBName = "";
+	private boolean bSaveToDB = true;
+	private boolean bIsLoaded = false;
+	private boolean bChgGrpPrefix = false;
+	private PropertyComponent [] theFields;
+	private String [] valueBuffer = null;
+	private String [] thePseudoProjectNames = null;
+	private JButton btnSave = null, btnCancel = null, btnHelp = null;
+	private CaretListener theListener = null;
 }

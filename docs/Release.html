@@ -55,6 +55,56 @@
 
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
+<h3>Release: v5.1.3 (30Aug22)</h3>
+There is no major new development, but small interface improvements and SyMAP Query has a small bug fix.
+<ul>
+<li>Main window
+<ul>
+<li>Projects listed on left are now in alphabetical order per category. If the project is loaded
+into the database, the load date is shown to its right. If it has computed synteny, the number of syntenies is in brackets.
+<li>The symap window is centered, along with the Chromosome Explorer and SyMAP Query window.
+<li>viewSyMAP: only shows the projects that have synteny computed.
+</ul>
+<li>Load Annotation
+<ul>
+<li>grp_prefix: This can now be removed from existing projects, i.e. if the 'Chr' was left on,
+so the 2D display is clustered with Chr01, Chr02, etc, then the 'Chr' can be removed.
+<li>annot_kw_mincount: the Help made no sense for this. It has been upgraded to do the following:
+the SyMAP Query shows the GFF attribute columns that have &gt;=annot_kw_mincount occurrences.
+It can be changed at any time through the symap parameters window.
+<li>When the annotation is loaded and the attribute (column 9) is parsed for keywords, the only keywords
+considered are those followed by a '=' (it used to allow spaces between keyword and value).
+</ul>
+
+<li>2D chromosome view
+<ul>
+<li>The popup annotation is now a smaller constant sized scrollable window.
+<li>The annotation hoover and popup coordinates are more readable.
+</ul>
+
+<li>SyMAP Query
+<ul>
+<li>The Block query is now on just the block number along with the selection of chromosomes.
+<li>Small changes:
+<ul>
+<li>The Results Panel includes the number of rows in the query.
+<li>The query will not run if there is an error in the input, and there is better error-checking.
+<li>The window is smaller and the columns panel in the table is fixed width.
+<li>When the full block name is shown, any leading zeros are removed, e.g. 01.03.2&rarr;1.3.2.
+</ul>
+<li>Bug fix: The Orphan query with one or more chromosome selected gave wrong results (it was obvious); moreover,
+if a start or stop was entered, it gave an error. This is fully functional now.
+</ul>
+
+<li>Convert
+<ul>
+<li>Both scripts work if there is not a gff file (they were requiring it).
+<li>For both scripts, the bases that are not ACGT are summarized.
+<li>ConvertNCBI - anything that does not have "chromosome" in its ">" line is considered a scaffold.
+(ConvertEnsembl already does this).
+</ul>
+</ul>
+
 
 <h3>Release: v5.1.2 (19Aug22)</h3>
 The biggest changes are with the <tt>ConvertNCBI</tt> and <tt>ConvertEnsembl</tt> scripts.

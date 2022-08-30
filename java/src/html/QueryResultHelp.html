@@ -5,26 +5,26 @@
 <h1>SyMAP Query Results</h1>
 <p>
 This page shows the table of hits (anchors) resulting from the query, where each hit connects
-two species. (If the query
+two species.  If the query
 was for orphan genes, then each row represents one gene and shows data
-only for one genome). 
+only for one genome.
 <h2>Button functions</h2>
 
 <u>For selected:</u> As detailed for the following two:
 
 <p><b>Align sequences</b>
 <br>Select one or more rows: All sequences (two per row) are written out and a multiple alignment is created
-using MUSCLE (Edgar 2004 NAR:32) and shown in the main panel. 
+using MUSCLE (Edgar 2004 NAR:32) and shown in the main panel.
 
 <p>NOTE: This is especially
-useful to view the similarity of putative gene families (PgeneF), 
-as follows: check "Compute PgeneF" and "Run Query", show the 
+useful to view the similarity of putative gene families (PgeneF),
+as follows: check "Compute PgeneF" and "Run Query", show the
 PgeneF and PgFsize columns, sort on PgeneF, then select the rows for PgeneF to
 align.
 
 <p><b>Show Synteny</b>
 <br>Select one row: Brings up a SyMAP 2-track view for the selected entry. The hits are initially padded to each side
-by the margin amount indicated (default 50kb), but you can easily zoom further out in the 2-track views.  
+by the margin amount indicated (default 50kb), but you can easily zoom further out in the 2-track views.
 
 
 <p><u>For table (or selected):</u> One or more rows can be selected for the following two exports,
@@ -37,7 +37,7 @@ using the selected set of columns to a CSV format suitable for import into Excel
 <p><b>Export Fasta</b>
 <br>
 Export the sequences from the selected hits in Fasta format. Both sides of each hit
-are written, using the start/end coordinates shown in the table. 
+are written, using the start/end coordinates shown in the table.
 <br>NOTE: this is a very slow function and takes minutes if many rows are selected.
 
 
@@ -46,7 +46,7 @@ are written, using the start/end coordinates shown in the table.
 The table shows the hits (or orphan genes) resulting from the query. Each row is a single
 hit or orphan gene. Note that the table contains columns for <i>all</i> of the selected
 species, but each hit only connects two species, and the other species columns are empty (and
-an orphan gene only has one non-empty species). 
+an orphan gene only has one non-empty species).
 <p>
 You can sort the columns by clicking on them, and rearrange them by dragging the header
 boxes. You can add/remove columns using the "Select Columns" button at the bottom. Following
@@ -68,7 +68,7 @@ are the meanings of the columns:
 	<td valign="top"><b>PgeneF</b></td>
 	<td>&nbsp;</td>
 	<td>
-		If <b>Compute PgeneF</b>: PgeneF number. All hits in a given PgeneF have the same number. Note that 
+		If <b>Compute PgeneF</b>: PgeneF number. All hits in a given PgeneF have the same number. Note that
 		the number is generated during the search and won't necessarily be the same
 		in a different search.
 	</td>
@@ -77,7 +77,8 @@ are the meanings of the columns:
 	<td valign="top"><b>PgFSize</b></td>
 	<td>&nbsp;</td>
 	<td>
-		If <b>Compute PgeneF</b>: Size of the PgeneF which contains this hit.
+		If <b>Compute PgeneF</b>: Size of the PgeneF which contains this hit. Sort on this column to view the
+		other rows with same PgeneF.
 	</td>
 </tr>
 <tr>
@@ -85,7 +86,7 @@ are the meanings of the columns:
 	<td>&nbsp;</td>
 	<td>
 		Database index of the hit. This is shown on the "Chromosome Explorer" when
-		the mouse is over the hit line. 
+		the mouse is over the hit line.
 	</td>
 </tr>
 <tr>
@@ -138,7 +139,7 @@ are the meanings of the columns:
 	<td valign="top"><b>Gene#</b></td>
 	<td>&nbsp;</td>
 	<td>For each species, the genes are numbered, where the number is specific to the query results. A gene may have multiple hits, and
-	a hit may overlap multiple genes. 
+	a hit may overlap multiple genes.
 	</td>
 </tr>
 <tr>
@@ -149,8 +150,8 @@ are the meanings of the columns:
 <tr>
 	<td colspan=3>
 	The keywords for the annotations of each species are listed.
-	They can be different for each species, e.g. one may have "ID" while another uses "Name" for the 
-	gene names. "All_anno" shows all of the attributes joined together.  
+	They can be different for each species, e.g. one may have "ID" while another uses "Name" for the
+	gene names. "All_anno" shows all of the attributes joined together.
 	</td>
 </tr>
 </table>
@@ -158,12 +159,12 @@ are the meanings of the columns:
 <h3>Statistics</h3>
 This section shows overall statistics for the query results. Most of the
 statistics are self-explanatory except the following:
-<p><b>Annotated</b> and <b>Genes</b>: The first is the number of hits that 
-overlap one or more genes, where a gene can have multiple hits. 
+<p><b>Annotated</b> and <b>Genes</b>: The first is the number of hits that
+overlap one or more genes, where a gene can have multiple hits.
 The second is the number of Genes with at least one hit.
 <p><b>Regions</b>: This statistic
 is only shown if <b>Compute PgeneF</b> was checked, and it is
-the number of distinct regions covered on that species.  
+the number of distinct regions covered on that species.
 
 </body>
 </html>

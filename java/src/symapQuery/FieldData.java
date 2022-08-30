@@ -10,7 +10,7 @@ public class FieldData {
  	// type is all Integer, included Block, see Column Comparator, which sorts it correctly
 	// leave Q.rowCol, though for placement, though the actual row is computed in DBdata
 	private static final String [] GENERAL_COLUMNS =	 {Q.rowCol, "PgeneF", "PgFSize", "HitIdx", Q.blockCol, "Block\nScore","Run\nSize"};
-	private static final Boolean [] GENERAL_COLUMN_DEF =  {true   , false   , false     , false   , true      , true        ,false};
+	private static final Boolean [] GENERAL_COLUMN_DEF =  {true   , false   , false     , true   , true      , false        ,false}; // CAS513 HitID=f, Score=t
 	
 	private static final String [] SPECIES_COLUMNS = {Q.chrCol, Q.startCol,Q.endCol, Q.geneHitCol};
 	private static final Class <?> [] SPECIES_TYPES = {String.class, Integer.class, Integer.class, String.class};
@@ -19,11 +19,11 @@ public class FieldData {
 	//****************************************************************************
 	//* Static methods
 	//****************************************************************************
-	public static String [] getGeneralColHead() 		{return GENERAL_COLUMNS; }
+	public static String [] getGeneralColHead() 	 {return GENERAL_COLUMNS; }
 	public static Boolean [] getGeneralColDefaults() {return GENERAL_COLUMN_DEF; }
 	
-	public static String [] getSpeciesColHead() 		{return SPECIES_COLUMNS; }
-	public static Class <?> [] getSpeciesColType() 	{return SPECIES_TYPES; }
+	public static String [] getSpeciesColHead() 	 {return SPECIES_COLUMNS; }
+	public static Class <?> [] getSpeciesColType() 	 {return SPECIES_TYPES; }
 	public static Boolean [] getSpeciesColDefaults() {return SPECIES_COLUMN_DEF; }
 	
 	// XXX If change this, change number in Q.java, as they are the numeric index into ResultSet
@@ -33,28 +33,28 @@ public class FieldData {
 	public static FieldData getFields() {
 		FieldData fd = new FieldData();
 		//     alias not used       type           sql.table.field    order#		Description  
-		fd.addField(String.class,    Q.PA, "idx",     Q.AIDX,   "Annotation idx");
-		fd.addField(String.class, Q.PA, "grp_idx", Q.AGIDX,  "Annotation grp idx");
-		fd.addField(String.class,  Q.PA, "start",   Q.ASTART,  "Annotation start");
-		fd.addField(String.class,    Q.PA, "end",     Q.AEND,   "Annotation end");
-		fd.addField(String.class,  Q.PA, "name",    Q.ANAME,  "Annotation attributes");
+		fd.addField(String.class, Q.PA, "idx",     Q.AIDX,       "Annotation idx");
+		fd.addField(String.class, Q.PA, "grp_idx", Q.AGIDX,      "Annotation grp idx");
+		fd.addField(String.class, Q.PA, "start",   Q.ASTART,     "Annotation start");
+		fd.addField(String.class, Q.PA, "end",     Q.AEND,       "Annotation end");
+		fd.addField(String.class, Q.PA, "name",    Q.ANAME,      "Annotation attributes");
 		
-		fd.addField(String.class,      Q.PH, "idx",      Q.HITIDX,  "Hit idx");
-		fd.addField(Integer.class, 	Q.PH, "proj1_idx", Q.PROJ1IDX,  "Project 1 idx");
-		fd.addField(Integer.class, 	Q.PH, "proj2_idx", Q.PROJ2IDX,  "Project 2 idx");
-		fd.addField(Integer.class, 		Q.PH, "grp1_idx", Q.GRP1IDX,  "");
-		fd.addField(Integer.class, 		Q.PH, "grp2_idx", Q.GRP2IDX,  "");
-		fd.addField(Integer.class,     Q.PH, "start1",   Q.GRP1START,  "Group 1 start");
-		fd.addField(Integer.class,     Q.PH, "start2",   Q.GRP2START,  "Group 2 start");
-		fd.addField(Integer.class,       Q.PH, "end1",     Q.GRP1END,  "Group 1 end");
-		fd.addField(Integer.class,       Q.PH, "end2",     Q.GRP2END,  "Group 2 end");
-		fd.addField(String.class,     Q.PH, "runsize",  Q.RSIZE,  "Collinear run size");
+		fd.addField(String.class, Q.PH, "idx",      Q.HITIDX,    "Hit idx");
+		fd.addField(Integer.class,Q.PH, "proj1_idx",Q.PROJ1IDX,  "Project 1 idx");
+		fd.addField(Integer.class,Q.PH, "proj2_idx",Q.PROJ2IDX,  "Project 2 idx");
+		fd.addField(Integer.class,Q.PH, "grp1_idx", Q.GRP1IDX,   "");
+		fd.addField(Integer.class,Q.PH, "grp2_idx", Q.GRP2IDX,   "");
+		fd.addField(Integer.class,Q.PH, "start1",   Q.GRP1START, "Group 1 start");
+		fd.addField(Integer.class,Q.PH, "start2",   Q.GRP2START, "Group 2 start");
+		fd.addField(Integer.class,Q.PH, "end1",     Q.GRP1END,   "Group 1 end");
+		fd.addField(Integer.class,Q.PH, "end2",     Q.GRP2END,   "Group 2 end");
+		fd.addField(String.class, Q.PH, "runsize",  Q.RSIZE,     "Collinear run size");
 
-		fd.addField(String.class,     Q.B, "blocknum",  Q.BNUM,  "Block Number");
-		fd.addField(String.class,   Q.B, "score",     Q.BSCORE,  "Block Score (#Anchors)");
+		fd.addField(String.class, Q.B, "blocknum",  Q.BNUM,      "Block Number");
+		fd.addField(String.class, Q.B, "score",     Q.BSCORE,    "Block Score (#Anchors)");
 		
-		fd.addField(Integer.class,     Q.PH, "annot1_idx",  Q.ANNOT1IDX,  "Index of 1st anno");
-		fd.addField(Integer.class,     Q.PH, "annot2_idx",  Q.ANNOT2IDX,  "Index of 2nd anno");
+		fd.addField(Integer.class,Q.PH, "annot1_idx",Q.ANNOT1IDX,"Index of 1st anno");
+		fd.addField(Integer.class,Q.PH, "annot2_idx",Q.ANNOT2IDX,"Index of 2nd anno");
 		
 		// 
 		// The MySQL LEFT JOIN joins two tables and fetches rows based on a condition, which is matching in both the tables and 
@@ -97,7 +97,7 @@ public class FieldData {
 		}
 		return retVal.toArray(new Class<?>[retVal.size()]);
 	}
-	// used?
+	
 	public String [] getDBFieldDescriptions() {
 		if(theFields.size() == 0) return null;
 
@@ -113,7 +113,7 @@ public class FieldData {
         return retVal;
 	}
 	// Used in Select getDBFieldList() from ....
-	private String getDBFieldList(boolean isOrphan) {
+	public String getDBFieldList(boolean isOrphan) {
 		Iterator<FieldItem> iter = theFields.iterator();
 		FieldItem item = null;
 		
@@ -130,32 +130,7 @@ public class FieldData {
 		}	
 		return sqlCols;
 	}
-	
-	public String makeSQLquery(String hitQuery, String orphanQuery, boolean isOrphan) 
-	{
-		if (isOrphan) {
-			return "SELECT " + getDBFieldList(isOrphan) + 
-					" FROM pseudo_annot AS " + Q.PA + orphanQuery;
-		}
-		return "SELECT " + getDBFieldList(isOrphan) + " FROM pseudo_hits AS " + Q.PH + 
-				" \n" + getJoins() +
-				" \n" + hitQuery +
-				" \n ORDER BY PH.idx  asc";
-	}
-
-	private void addField(Class<?> type, String dbTable, String dbField, int num, String description) {
-		FieldItem fd = new FieldItem(type, description);
-		fd.setQuery(dbTable, dbField, num);
-		theFields.add(fd);
-	}
-	
-	private void addJoin(String table, String condition, String strSymbol) { 
-		theJoins.add(new JoinItem(table, condition, strSymbol,false)); }
-	
-	private void addLeftJoin(String table, String condition, String strSymbol) {
-		theJoins.add(new JoinItem(table, condition, strSymbol,true)); }
-	
-	private String getJoins() { 
+	public String getJoins() { 
 		Iterator<JoinItem> iter = theJoins.iterator();
 		String retVal = "";
 		while(iter.hasNext()) {
@@ -164,11 +139,21 @@ public class FieldData {
 		}
 		return retVal;
 	}
-
+	/****************************************************
+	 * private 
+	 */
+	private void addField(Class<?> type, String dbTable, String dbField, int num, String description) {
+		FieldItem fd = new FieldItem(type, description);
+		fd.setQuery(dbTable, dbField, num);
+		theFields.add(fd);
+	}
+	private void addLeftJoin(String table, String condition, String strSymbol) {
+		theJoins.add(new JoinItem(table, condition, strSymbol,true)); 
+	}
 	private Vector<FieldItem> theFields = null;
 	private Vector<JoinItem> theJoins = null;
 	
-	public class JoinItem {
+	private class JoinItem {
 		public JoinItem(String table, String condition, String symbol, boolean left) {
 			strTable = table;
 			strCondition = condition;
@@ -189,7 +174,7 @@ public class FieldData {
 		private boolean bleft = false;
 	}
 
-	public class FieldItem {
+	private class FieldItem {
 		public FieldItem(Class<?> type, String description) {
 			cType = type;
 			strDescription = description;

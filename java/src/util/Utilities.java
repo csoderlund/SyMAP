@@ -54,6 +54,7 @@ import java.io.File;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 
 import symap.SyMAP;
@@ -784,6 +785,30 @@ public class Utilities {
 		
 		helpDiag.setVisible(true);		
 	}
+	public static void displayInfoMonoSpace(Component parentFrame, String title, 
+			String theMessage, boolean isModal, Dimension d) { // CAS513 add for Gene/exon popup
+		JOptionPane pane = new JOptionPane();
+		
+		JTextArea messageArea = new JTextArea(theMessage);
+
+		JScrollPane sPane = new JScrollPane(messageArea); 
+		messageArea.setFont(new Font("monospaced", Font.BOLD, 12));
+		messageArea.setEditable(false);
+		messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		
+		pane.setMessage(sPane);
+		pane.setMessageType(JOptionPane.PLAIN_MESSAGE);
+
+		JDialog helpDiag = pane.createDialog(parentFrame, title);
+		helpDiag.setModal(isModal);
+		helpDiag.setResizable(true);
+		if (helpDiag.getWidth() >= d.width || helpDiag.getHeight() >= d.height) {	
+			helpDiag.setSize(d);
+		}
+		helpDiag.setSize(d);
+		
+		helpDiag.setVisible(true);		
+	}
 	static public boolean showContinue (String title, String msg) {
 		String [] options = {"Continue", "Cancel"};
 		int ret = JOptionPane.showOptionDialog(null, 
@@ -950,7 +975,7 @@ public class Utilities {
 	   	catch (Exception e) {ErrorReport.print(e, "URL error on Linux: " + theLink);}
 		return false;
 	}
-    // CAS508
+    // CAS508 - for writing to log
     static public String kMText(long len) {
 		double d = (double) len;
 		String x = len+"";
@@ -968,20 +993,30 @@ public class Utilities {
 		}
 		return x;
 	}
-    static public String kText(long len) {
-    	double d = (double) len;
-    	String x = len+"";
-    	if (len>=1000)  {
-			d = d/1000.0;
-			x = String.format("%.1fk", d);
-		}
-		return x;
+  
+    static public String kText(int len) { // CAS513 change to use NumberFormat
+    	if (len>=1000) {
+    		NumberFormat nf = NumberFormat.getNumberInstance();
+    		nf.setMaximumFractionDigits(2);
+    		
+    		double d = ((double) len)/1000.0;
+    		return nf.format(d) + "k";
+    	}
+    	else {
+    		return len+"";
+    	}
     }
-    // CAS512
+    // CAS512 - for writing hoover and popup
     static public String coordsStr(boolean isPos, int start, int end) {
     	String o = (isPos) ? "+" : "-";
-    	String s = kText((long) start);
-    	String e = kText((long) end);
-    	return String.format("Coords=%s(%s:%s) Len=%,d", o, s, e, (Math.abs(end-start)+1));
+    	String s = kText(start);
+    	String e = kText(end);
+    	return String.format("Coords=%s(%s - %s) Len=%,d", o, s, e, (Math.abs(end-start)+1));
+    }
+    // CAS513 - to remove leading zeros before making full block name
+    static public String blockStr(String c1, String c2, int block) {
+    	String x1 = (c1.startsWith("0") && c1.length()>1) ? c1.substring(1) : c1;
+    	String x2 = (c2.startsWith("0") && c2.length()>1) ? c2.substring(1) : c2;
+    	return x1 + "." + x2 + "." + block;
     }
 }

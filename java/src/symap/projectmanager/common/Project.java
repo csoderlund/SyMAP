@@ -5,9 +5,11 @@ package symap.projectmanager.common;
  */
 import java.awt.Color;
 import java.io.File;
+import java.util.Date;
 import java.util.Vector;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 
 import backend.Constants;
 import util.ErrorReport;
@@ -15,17 +17,18 @@ import util.ProgressDialog;
 import util.PropertiesReader;
 import backend.UpdatePool;
 
-public class Project {
+public class Project implements Comparable <Project> {//CAS513 for TreeSet sort
 	public String strDBName;
 	public String chrLabel = ""; 
 	private int numAnnot = 0, numGene = 0, numGap = 0;
 	private long length=0;
 	
 	private int nIdx;		// unique database index
-	private String strType, strDisplayName, strDescription, strCategory;
+	private String strType, strDisplayName, strDescription, strCategory, strDate="";
 	private int numGroups;
 	private Color color;
 	private String pathName=""; // CAS512 display on 'params' window
+	private int numSynteny=0;	// CAS513 number of synteny it is in
 	
 	private Vector<Integer> grpIdxList;
 	
@@ -41,18 +44,24 @@ public class Project {
 	public static final short STATUS_ON_DISK = 0x0001; // project exists in file hierarchy
 	public static final short STATUS_IN_DB   = 0x0002; // project exists in the database
 	
-	public Project(int nIdx, String strName, String strType) { 
+	public Project(int nIdx, String strName, String strType, String loaddate) { 
 		this.nIdx = nIdx;
 		this.strDBName = strName;
 		this.strType = strType;
-		// CAS500 The type is from the directory name under /data, which is 'seq'
-		// The type in the db is 'pseudo'.
+	
+		if (loaddate!="") { // CAS513 add loaddate for display
+			strDate = reformatDate(loaddate);
+		}
+		
+		// CAS500 The type is from the directory name under /data, which is 'seq', the type in the db is 'pseudo'.
 		if (strType.equals(Constants.seqType)) this.strType=Constants.dbSeqType;
 		strCategory = "Uncategorized";
 	}
-	
-	public Project(int nIdx, String strName, String strType, String strDisplayName) { 
-		this(nIdx, strName, strType);
+	public int compareTo(Project b) {
+		return strDisplayName.compareTo(b.strDisplayName);
+	}
+	public Project(int nIdx, String strName, String strType, String strDisplayName, String loaddate) { 
+		this(nIdx, strName, strType, loaddate);
 		this.strDisplayName = strDisplayName;
 	}
 	public boolean hasGenes() {return numGene>0;}
@@ -69,6 +78,11 @@ public class Project {
 		
 		return msg;
 	}
+	public void setCntSynteny(int cnt) {numSynteny=cnt;} // CAS513 add
+	public String getCntSynteny() {
+		if (numSynteny==0) return "";
+		else return "[" + numSynteny + "]";
+	}
 	public void setLength(long length) {this.length = length;}
 	public long getLength() {return length;}
 	public Color getColor() { return color; }
@@ -77,6 +91,7 @@ public class Project {
 	
 	public int getID() { return nIdx; }
 	public String getDBName() { return strDBName; }
+	public String getLoadDate() {return strDate;}
 	
 	public String getDisplayName() { return strDisplayName; }
 	public void setDisplayName(String s) { strDisplayName = s; }
@@ -171,63 +186,89 @@ public class Project {
 		msg += " Min size " + min_size;
 		return msg;
 	}
-	public void updateParameters(UpdatePool db, ProgressDialog progress) 
-	{
-		try
-		{
+	public void updateParameters(UpdatePool db, ProgressDialog progress) {
+		try {
 			String dir = isPseudo() ? Constants.seqDataDir : Constants.fpcDataDir;
 			dir += strDBName;
 			
 			if (progress != null)
-			{
 				progress.msg("Read params file from " + dir + "\n");	
-			}
+			
 			File pfile = new File(dir,Constants.paramsFile);
-			if (pfile.isFile())
-			{
-				PropertiesReader props = new PropertiesReader( pfile);
-				db.executeUpdate("delete from proj_props where proj_idx=" + nIdx);
-				int n = 0;
-				String annotKW = "";
-				for (Object obj : props.keySet())
-				{
-					String pname = obj.toString().trim();
-					String value = props.getProperty(pname).trim();
-					if (pname.equals("annot_keywords")) annotKW = value;
-					db.executeUpdate("insert into proj_props (proj_idx,name,value) values(" + nIdx + ",'" + pname + "','" + value + "')");
-					if (progress != null)
-					{
-						progress.msg(pname + " = " + value);	
-					}
-					n++;
-				}
-				if (!annotKW.equals(""))
-				{
-					db.executeUpdate("delete from annot_key where proj_idx=" + nIdx);
-					String[] kws = annotKW.trim().split(",");
-					for (String kw : kws)
-					{
-						kw = kw.trim();
-			        		db.executeUpdate("insert into annot_key (proj_idx,keyname,count) values (" + 
-			        			nIdx + ",'" + kw + "',0)");
-					}
-				}
-				if (progress != null) progress.msg("\nloaded " + n + " properties");
-				if (Constants.TRACE)
-					System.out.println("Loaded " + n + " properties for " + strDBName);
-			}
-			else
-			{
+			if (!pfile.isFile()) {
 				System.out.println("Cannot open params file in " + dir);	
 				if (progress != null)
-				{
 					progress.msg("Cannot open params file in " + dir);	
+				return;
+			}
+			/**************************************************/
+			db.executeUpdate("delete from proj_props where proj_idx=" + nIdx);
+			
+			// update proj_props
+			PropertiesReader props = new PropertiesReader( pfile);
+			int n = 0;
+			String annotKW = "";
+			for (Object obj : props.keySet()) {
+				String pname = obj.toString().trim();
+				String value = props.getProperty(pname).trim();
+				if (pname.equals("annot_keywords")) annotKW = value;
+				db.executeUpdate("insert into proj_props (proj_idx,name,value) values(" + nIdx + ",'" + pname + "','" + value + "')");
+				if (progress != null)
+					progress.msg(pname + " = " + value);	
+				n++;
+			}
+			
+			// update annot_key
+			if (!annotKW.equals("")) {
+				db.executeUpdate("delete from annot_key where proj_idx=" + nIdx);
+				
+				String[] kws = annotKW.trim().split(",");
+				for (String kw : kws) {
+					kw = kw.trim();
+		        	db.executeUpdate("insert into annot_key (proj_idx,keyname,count) values (" + 
+		        			nIdx + ",'" + kw + "',0)");
 				}
+			}
+			if (progress != null) progress.msg("\nloaded " + n + " properties");
+		}
+		catch (Exception e){ErrorReport.print(e, "Failed to update parameters");}
+	}
+	public void updateGrpPrefix(UpdatePool db, ProgressDialog progress) {
+		try {
+			Vector <Integer> idxSet = new Vector <Integer> ();
+			Vector <String> nameSet = new Vector <String> ();
+			
+			String prefix="";
+			ResultSet rs = db.executeQuery("select value from proj_props "
+					+ "where proj_idx=" + nIdx + " and name='grp_prefix'");
+			if (rs.next()) prefix=rs.getString(1);
+			else {
+				System.err.println("No grp_prefix defined for " + strDisplayName);
+				return;
+			}
+			
+			rs = db.executeQuery("select idx, name from xgroups where proj_idx=" + nIdx);
+			while (rs.next()) {
+				int ix = rs.getInt(1);
+				String name = rs.getString(2);
+				if (name.startsWith(prefix)) {
+					name = name.substring(prefix.length());
+					idxSet.add(ix);
+					nameSet.add(name);
+				}
+			}
+			rs.close();
+			
+			if (progress != null) progress.msg("Change " + idxSet.size() + " grp names");
+			else System.err.println("Change " + idxSet.size() + " group names to remove '" + prefix + "'" );
+			
+			for (int i=0; i<idxSet.size(); i++) {					
+					db.executeUpdate("update xgroups set name='" + nameSet.get(i) + 
+												  "' WHERE idx=" + idxSet.get(i));
 			}
 		}
 		catch (Exception e){ErrorReport.print(e, "Failed to update parameters");}
 	}
-	
 	public boolean equals(Object o) {
 		if (o instanceof Project) {
 			Project p = (Project)o;
@@ -241,14 +282,25 @@ public class Project {
 	{
 		grpIdxList = new Vector<Integer>();
 		ResultSet rs = db.executeQuery("select idx from xgroups where proj_idx=" + nIdx);
-		while (rs.next())
-		{
+		while (rs.next()) {
 			grpIdxList.add(rs.getInt(1));
 		}
 	}
 	public String toString() { return strDBName; }
 	
-	public void print() {
-		if (Constants.TRACE) System.out.format("XYZ %2d %10s %5s status=%d\n", nIdx, strDBName, strType, nStatus);
+	// CAS513 add for date shown on left
+	private String reformatDate(String load) {
+		try {
+			String dt;
+			if (load.indexOf(" ")>0) dt = load.substring(0, load.indexOf(" "));
+			else if (load.startsWith("20")) dt = load;
+			else return "loaded";
+			
+			SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd"); 
+	        Date d = sdf.parse(dt);
+	        sdf = new SimpleDateFormat("ddMMMyy"); 
+	        return sdf.format(d);
+		}
+		catch (Exception e) {return "loaded";}
 	}
 }

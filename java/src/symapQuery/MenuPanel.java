@@ -1,5 +1,8 @@
 package symapQuery;
 
+/**********************************************
+ * The left side of the SyMAP Query panel, which shows the 3 sections and result tabs
+ */
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -38,7 +41,6 @@ public class MenuPanel extends JPanel {
 		buildPanel();
 		showSelectedMenu();
 	}
-	
 	public void handleClick(ActionEvent ae) {
 		theSelection = -1;
 		int x;
@@ -54,7 +56,6 @@ public class MenuPanel extends JPanel {
 		}
 		showSelectedMenu();
 	}
-	
 	public void addResult(String label) {
 		JButton newResult = new JButton(label);
 
@@ -70,7 +71,6 @@ public class MenuPanel extends JPanel {
 		buildPanel();
 		setSelection(theOptions.length + theResults.size() - 1);
 	}
-	
 	public void removeResult(int pos) {
 		theResults.get(pos).removeActionListener(theListener);
 		theResults.remove(pos);
@@ -97,28 +97,6 @@ public class MenuPanel extends JPanel {
 	public void setSelection(int selection) { 
 		theSelection = selection;
 		showSelectedMenu();
-	}
-	
-	public void setToolTipForMenu(String label, String text) {
-		boolean found = false;
-		
-		for(int x=0; x<theOptions.length && !found; x++) {
-			if(theOptions[x].getText().equals(label)) {
-				theOptions[x].setToolTipText(text);
-				found = true;
-			}
-		}
-		
-		if(!found) {
-			Iterator<JButton> iter = theResults.iterator();
-			while(iter.hasNext() && !found) {
-				JButton temp = iter.next();
-				if(temp.getText().equals(label)) {
-					found = true;
-					temp.setToolTipText(text);
-				}
-			}
-		}		
 	}
 	
 	private void buildPanel() {

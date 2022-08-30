@@ -39,7 +39,7 @@ public class AnnotLoadPost {
 	private void genesNumber() {
 		try {
 			// First set the order number for the genes, using the same number for ones which overlap
-			log.msg("  Compute gene order " + project.name);
+			log.msg("  Compute gene order ");
 			
 			pool.executeUpdate("update pseudo_annot, xgroups set pseudo_annot.genenum=0 "
 					+ "where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + project.idx);
@@ -69,9 +69,9 @@ public class AnnotLoadPost {
 				}
 				ps.executeBatch();
 				totalGeneUpdate+=genenum;
-				System.err.print("   " + g.getFullName() + " " + genenum + " genes\r");
+				System.err.print("   " + g.getFullName() + " " + genenum + " genes        \r");
 			}
-			Utils.prtNumMsg(log, totalGeneUpdate, "Non-overlapping genes");
+			Utils.prtNumMsg(log, totalGeneUpdate, "Non-overlapping genes        ");
 		}
 		catch (Exception e) {ErrorReport.print(e, "Compute gene order"); isSuccess=false;}
 	}
@@ -195,6 +195,11 @@ public class AnnotLoadPost {
 						geneSet.add(gd);
 					}
 					rs.close();
+					if (geneSet.size()==0) { // CAS513 check added
+						System.err.println("No genes loaded");
+						isSuccess=false;
+						return;
+					}
 			    //---------------------------------------------------------------
 				// EXONS all exons for this group/strand - assign to Gene curGD
 					GeneData curGD = geneSet.get(0);

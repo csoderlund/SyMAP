@@ -363,10 +363,11 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 					 String p2 =  Utilities.coordsStr(data.getOrientation1(), data.getStart1(), data.getEnd1());
 						
 					 mapper.setHelpText(
-						"Hit=" + data.getID() + " Identity=" + data.getPctid() + 
-						"\n" + p1 + "\n" + p2 +
-						"\nBlock #" + data.getBlock() // CAS505 added block
-					 );
+						"Block #" + data.getBlock() + // CAS505 added block; CAS513 want to see on 2D only display
+						" Hit=" + data.getID() + 
+						" Score=" + data.getPctid() + // CAS513 Identity->Score (as called on menu)
+						"\n" + p1 + 
+						"\n" + p2);
 				 }
 				 else mapper.setHelpText(null);
 			 }

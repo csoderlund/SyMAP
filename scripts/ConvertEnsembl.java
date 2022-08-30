@@ -215,6 +215,14 @@ public class ConvertEnsembl {
 			prt( String.format("C %,11d  c %,11d", cntBase.get('C'), cntBase.get('c')) );
 			prt( String.format("G %,11d  g %,11d", cntBase.get('G'), cntBase.get('g')) );
 			prt( String.format("N %,11d  n %,11d", cntBase.get('N'), cntBase.get('n') ));
+			String other=""; // CAS513
+			for (char b : cntBase.keySet()) {
+				boolean found = false;
+				for (char x : base) if (x==b) {found=true; break;}
+				if (!found) other += String.format("%c %,d  ", b, cntBase.get(b));
+			}
+			if (other!="") prt(other);
+			
 			cntBase.clear();
 		
 			prt(String.format("Gaps >= %d: %d (using N and n)", gapLen, nGap));
@@ -278,6 +286,8 @@ public class ConvertEnsembl {
 	private int skipLine=0;
 	private void rwAnno() {
 		try {
+			if (inGffFile==null) return; // CAS513
+			
 			BufferedReader fhIn = openGZIP(inGffFile);
 			PrintWriter fhOut = new PrintWriter(new FileOutputStream(annoDir + outGffFile, false));
 			fhOut.println("### Written by SyMAP ConvertEnsembl");
@@ -465,18 +475,19 @@ public class ConvertEnsembl {
 		
 		System.out.println(">>Sequences ");
 		String nw = "-- not written to file";
-		System.out.format("  %,5d %-11s of %,15d total length\n", nChr, "Chromosomes", chrLen);
+		System.out.format("  %,6d %-11s of %,15d total length\n", nChr, "Chromosomes", chrLen);
 		if (nMtPt>0) {
 			String x = (INCLUDEMtPt) ? "" : nw;
-			System.out.format("  %,5d %-11s of %,15d total length %s\n", nMtPt, "Mt/Pt", mtptLen, x);
+			System.out.format("  %,6d %-11s of %,15d total length %s\n", nMtPt, "Mt/Pt", mtptLen, x);
 		}
 		if (nScaf>0) {
 			String x = (INCLUDESCAF) ? "" : nw;
-			System.out.format("  %,5d %-11s of %,15d total length (%,d<%,dbp) %s\n", nScaf, "Scaffolds", scafLen, cntScafSmall, scafMaxLen, x);
+			System.out.format("  %,6d %-11s of %,15d total length (%,d<%,dbp) %s\n", nScaf, "Scaffolds", scafLen, cntScafSmall, scafMaxLen, x);
 		}
 		if (nOther>0)
-			System.out.format("  %,5d %-11s of %,15d total length %s\n", nOther, "Other", otherLen, nw);
+			System.out.format("  %,6d %-11s of %,15d total length %s\n", nOther, "Other", otherLen, nw);
 		
+		if (inGffFile==null) return;
 		System.out.println("                                         ");
 		System.out.println(">>All Type (col 3)                       ");
 		for (String key : allTypeCnt.keySet())  {
@@ -540,7 +551,7 @@ public class ConvertEnsembl {
 		catch (Exception e) {die(e, "Checking files");}
 		
 		if (inFaFile==null) die("Project directory does not have a file ending with .fna or .fna.gz");
-		if (inGffFile==null)die("Project directory does not have a file ending with .gff3 or .gff3.gz");
+		if (inGffFile==null) prt("Project directory does not have a file ending with .gff3 or .gff3.gz");
 		
 		seqDir = projDir + "/" + seqDir;
 		createDir(seqDir);
@@ -590,7 +601,7 @@ public class ConvertEnsembl {
 		if (args.length==0 || args[0].equals("-h") || args[0].equals("-help") || args[0].equals("help")) {
 			System.out.println("\nConvertEnsembl <project directory> [-r] [-c] [-v] 				");
 			System.out.println(
-					"   the project directory must contain:  \n" +
+					"   the project directory must contain the FASTA file and the GFF is optional:  \n" +
 					"       FASTA file ending with .fa   or .fa.gz   e.g. Oryza_sativa.IRGSP-1.0.dna_sm.toplevel.fa.gz\n" +
 					"       GFF   file ending with .gff3 or .gff3.gz e.g. Oryza_sativa.IRGSP-1.0.45.chr.gff3.gz\n" +  
 					"   Options:\n" +

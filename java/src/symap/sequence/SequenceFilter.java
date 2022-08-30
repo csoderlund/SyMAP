@@ -361,18 +361,18 @@ public class SequenceFilter extends Filter {
 		if (sequence == null) return;
 		long start = sequence.getStart();
 		Object item = startCombo.getSelectedItem();
-		double val = sequence.getValue(start, item.toString());
+		double val = sequence.getValue(start, item.toString()); // PseudoPseudoData.PseudoHitData
 		startText.setText(val+"");
-		// CAS512 startText.setText(new Double(sequence.getValue(sequence.getStart(),startCombo.getSelectedItem().toString())).toString());
+		// CAS512 Double startText.setText(new Double(sequence.getValue(sequence.getStart(),startCombo.getSelectedItem().toString())).toString());
 	}
 
 	private void setEnd() {
 		if (sequence == null) return;
 		long size = sequence.getTrackSize();
 		Object item = endCombo.getSelectedItem();
-		double end  = sequence.getValue(size, item.toString());
+		double end  = sequence.getValue(size, item.toString()); // PseudoPseudoData.PseudoHitData
 		endText.setText(end + "");
-		// CAS512 endText.setText(new Double(sequence.getValue(sequence.getEnd(),endCombo.getSelectedItem().toString())).toString());
+		// CAS512 Double endText.setText(new Double(sequence.getValue(sequence.getEnd(),endCombo.getSelectedItem().toString())).toString());
 	}
 
 	/**

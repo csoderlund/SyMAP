@@ -33,84 +33,27 @@ import util.Utilities;
 
 public class QueryPanel extends JPanel {
 	private static final long serialVersionUID = 2804096298674364175L;
-	private boolean OR=false, AND=true;
+	private boolean AND=true;
 
 	public QueryPanel(SyMAPQueryFrame parentFrame) {
 		theParentFrame = parentFrame;
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		setBackground(Color.WHITE);
-		
-		pnlStepOne = new CollapsiblePanel("1. Filter hits", "");
-		pnlStepTwo = new CollapsiblePanel("2. Filter putative gene families (PgeneFs)", "");
 
-		speciesPanel = new SpeciesSelectPanel(theParentFrame);
-		nSpecies = speciesPanel.getNumSpecies();
-		
-		JPanel searchPanel = createFilter1TextPanel();
-		JPanel buttonPanel = createButtonPanel(searchPanel.getPreferredSize().width); 
-		add(buttonPanel);							add(Box.createVerticalStrut(25));
-		
-		pnlStepOne.add(Box.createVerticalStrut(10));
-		pnlStepOne.add(searchPanel);				 	pnlStepOne.add(Box.createVerticalStrut(25));
-		pnlStepOne.add(createFilter2BasicPanel()); 	pnlStepOne.add(Box.createVerticalStrut(5));
-		pnlStepOne.add(speciesPanel);				pnlStepOne.add(Box.createVerticalStrut(25));
-		pnlStepOne.add(createFilter3OrphanPanel());
-		pnlStepOne.collapse();
-		pnlStepOne.expand();
-		
-		pnlStepTwo.add(createFilter4PgeneFPanel());
-		pnlStepTwo.collapse();
-		pnlStepTwo.expand();
-		
-		add(pnlStepOne);
-		add(Box.createVerticalStrut(5));
-		add(pnlStepTwo);
-		add(Box.createVerticalStrut(5));
+		createQueryPanel();
 	}
-	private void setPgenefEnable(boolean b) {
-		chkLinkageInc.setEnabled(b);
-		chkUnannotInc.setEnabled(b);
-		chkOnlyInc.setEnabled(b);
-		for(int x=0; x<exSpecies.length; x++)  exSpecies[x].setEnabled(b);
-		for(int x=0; x<incSpecies.length; x++) incSpecies[x].setEnabled(b);
-	}
-	private void setBasicEnabled(boolean b) {
-		blockRow.setEnabled(b);
-		annoRow.setEnabled(b);
-		txtCollinearN.setEnabled(b);
-		lblCollinearN.setEnabled(b);
-		chkOrphan.setEnabled(b); cmbOrphanSpecies.setEnabled(b);
-		chkBlock.setEnabled(b); txtBlock.setEnabled(b);
-		chkHitIdx.setEnabled(b); txtHitIdx.setEnabled(b);
-	}
-	public void addExecuteListener(ActionListener l) { btnExecute.addActionListener(l);}
+	public  boolean isOneAnno() { return annoOptRow.isEnabled() && annoOptRow.isOne(); }
+	public  boolean isTwoAnno() { return annoOptRow.isEnabled() && annoOptRow.isTwo(); }
 	
-	private boolean isBlock() 	{ return blockRow.isEnabled() && blockRow.isOne(); }
-	private boolean isNotBlock() { return blockRow.isEnabled() && blockRow.isTwo(); }
-	
-	public  boolean isOneAnno() 	{ return annoRow.isEnabled() && annoRow.isOne(); }
-	public boolean isTwoAnno() 	{ return annoRow.isEnabled() && annoRow.isTwo(); }
-	private boolean isNoAnno() 	{ return annoRow.isEnabled() && annoRow.isThree(); }
+	private boolean isNoAnno() 	{ return annoOptRow.isEnabled() && annoOptRow.isThree(); }
+	private boolean isBlock() 	{ return blockOptRow.isEnabled() && blockOptRow.isOne(); }
+	private boolean isNotBlock() { return blockOptRow.isEnabled() && blockOptRow.isTwo(); }
 	private boolean isAnnoTxt()	{ return txtAnno.isEnabled() && txtAnno.getText().trim().length()>0;}
-	private boolean isBlockNum()	{ return txtBlock.isEnabled() && txtBlock.getText().trim().length()>0;}
+	private boolean isBlockNum(){ return txtBlock.isEnabled() && txtBlock.getText().trim().length()>0;}
 	private boolean isHitIdx()	{ return txtHitIdx.isEnabled() && txtHitIdx.getText().trim().length()>0;}
 	
-	private int isCollinear(boolean prt) 	{ // CAS512 add warning the first time its called
-		if (!txtCollinearN.isEnabled()) return 0;
-		String ntext = txtCollinearN.getText();
-		if (ntext.length()==0) return 0;
-		try {
-			int n = Integer.parseInt(ntext);
-			if (n<0) {
-				if (prt) Utilities.showWarningMessage("Invalid Colliner number (" + ntext + "), must be positive.");
-				return 0;
-			}
-			return n;
-		} catch (Exception e) { if (prt) Utilities.showWarningMessage("Invalid Colliner integer ("+ ntext + ")" );}; 
-		return 0;
-	}
-	// these are only good for the last query, so should only be used for building the ables
+	// these are only good for the last query, so should only be used for building the tables
 	public boolean isOrphan() 		{ return chkOrphan.isEnabled() && chkOrphan.isSelected(); }
 	public boolean isPgeneF()    	{ return chkPgeneF.isEnabled() && chkPgeneF.isSelected(); }
 	public boolean isLinkageInc() 	{ return chkLinkageInc.isEnabled() && chkLinkageInc.isSelected(); }
@@ -118,141 +61,142 @@ public class QueryPanel extends JPanel {
 	public boolean isOnlyInc()    	{ return chkOnlyInc.isEnabled() && chkOnlyInc.isSelected(); }
 	public boolean isInclude(int sp) {return incSpecies[sp].isEnabled() && incSpecies[sp].isSelected(); }
 	public boolean isExclude(int sp) {return exSpecies[sp].isEnabled() && exSpecies[sp].isSelected();}
-	public SpeciesSelectPanel getSpeciesPanel() { return speciesPanel;}
+	public SpeciesSelectPanel getSpeciesPanel() {return speciesPanel;}
 	public  HashMap <Integer, String> getGrpCoords() { return grpCoords;}
-	
 	/****************************************************
-	 *  Orphan
-	 *  "SELECT " + getDBFieldList(isOrphan) + " FROM pseudo_annot AS " + Q.PA + " " + whereClause;
-	 */
-	public String makeOrphanWhere() {
-		String whereClause = " where not exists(select * from pseudo_hits_annot AS PHA where PA.idx=PHA.annot_idx) and PA.type='gene'	";
+	 * Make query
+	 **************************************************/
+	public String makeSQLquery() 
+	{
+		bValidQuery=true;
+		boolean bOrphan = isOrphan();
 		
+		FieldData theFields = FieldData.getFields();
+   	 
+		String sql;
+		if (bOrphan) sql = "SELECT " + theFields.getDBFieldList(bOrphan) + makeOrphanSQL();
+		else 		 sql = "SELECT " + theFields.getDBFieldList(bOrphan) + makeHitSQL(theFields.getJoins());
+
+		return sql;
+	}
+	/****************************************************
+	 *  Orphan "SELECT " + getDBFieldList(isOrphan) + " FROM pseudo_annot AS " + Q.PA + " " + whereClause;
+	 *  CAS513 previous was not working right - rewrote some things
+	 */
+	private String makeOrphanSQL() {
+		String from = " FROM pseudo_annot AS " + Q.PA;
+		
+		String whereClause = 
+			" where not exists"
+			+ "(select * from pseudo_hits_annot AS PHA where PA.idx=PHA.annot_idx) "
+			+ "and PA.type='gene'";
+	
 	// Annotation
 		String text = txtAnno.getText();
 		String anno = (text.length() == 0) ? "" : "PA.name LIKE '%" + text + "%'";
-		whereClause = joinBool(whereClause, anno, true);
+		whereClause = joinBool(whereClause, anno, AND);
+	
+	// Selected project - (cancels 
+		String selSp = (String) cmbOrphanSp.getSelectedItem();
+		boolean bAll = (selSp.contentEquals("All")); // specified project takes precedence
 		
-	// Species, chromosome, location
-		String selSp = (String) cmbOrphanSpecies.getSelectedItem();
-		
-		String chrWhere="", locWhere="";
-		for(int x=0; x<nSpecies; x++) {
-			String species =  speciesPanel.getSpName(x);
-			if (!selSp.equals("All") && !selSp.equals(species)) continue;
+		String locSQL = (bAll) ? makeSpChrWhere() : ""; 
+		if (!locSQL.contentEquals("")) {
+			whereClause = joinBool(whereClause, locSQL, AND); // Specifies grp_idx
+		}
+		else { // create list of all grp_idx from valid projects
+			grpCoords.clear(); // cleared in makeSpChrWhere, which isn't run in this case
 			
-			int chrIdx = speciesPanel.getSelChrIdx(x);
-			if (chrIdx<0) {
-				chrWhere = joinStr(chrWhere, speciesPanel.getChrIdxStr(x), ",");
-			}
-			else {
-				String start = speciesPanel.getChrStart(x);
-				String stop =  speciesPanel.getChrStop(x);
-				if (start.equals("") && stop.equals("")) chrWhere = joinStr(chrWhere, String.valueOf(chrIdx), ",");
-				else {
-					String clause = "(PA.grp_idx=" + chrIdx + " AND PA.start>=" + start + " AND PA.end<=" + stop + ")";
-					locWhere = joinBool(locWhere, clause, OR);
+			String chrWhere="";
+			for(int x=0; x<nSpecies; x++) {
+				String species =  speciesPanel.getSpName(x);
+				if (selSp.equals("All") || selSp.equals(species))  {
+					chrWhere = joinStr(chrWhere, speciesPanel.getChrIdxStr(x), ","); // list of grp_idx for project
 				}
-			}
-		}	
-		if (!chrWhere.equals("")) chrWhere = "PA.grp_idx in (" + chrWhere + ")";
-		if (!locWhere.equals("")) locWhere = "(" + locWhere + ")";
-		String chrStr = "(" + joinBool(chrWhere, locWhere, OR) + ")";
-		whereClause = joinBool(whereClause, chrStr, AND);
-		
-		return whereClause;
+			}	
+			String clause = "PA.grp_idx in (" + chrWhere + ")";
+			whereClause = joinBool(whereClause, clause, AND);
+		}
+		return from + whereClause;
 	}
 	/*********************************************************
-	 * Hit
-	 * SELECT " + getDBFieldList() + " FROM pseudo_hits AS " + Q.PH + whereClause
+	 * Hit SELECT " + getDBFieldList() + " FROM pseudo_hits AS " + Q.PH + whereClause
+	 * isOneAnno requires postprocessing
+	 * isTwoAnno needs postprocessing only because there are a few cases where (PH.annot1_idx>0 and PH.annot2_idx>0)
+	 *    is not true but it really  is true. It needs to be fixed in AnchorMain, which will take some work....
+	 * if (isTwoAnno())  		whereClause = joinBool(whereClause, 
+	 * 	"(PH.annot1_idx>0 and PH.annot2_idx>0)  AND PA.idx is not null", AND);
 	 */
-	public String makeHitWhere() {
+	private String makeHitSQL(String join) {
 		String whereClause= " where " + speciesPanel.getPairWhere(); // PH.pair_idx in (...)
 		
 		if (isHitIdx()) { // if hit, no other filters
 			whereClause = joinBool(whereClause, "PH.idx=" + txtHitIdx.getText(), AND);
-			return whereClause;
+			return " FROM pseudo_hits AS " + Q.PH + join + " " + whereClause;
 		}
 		
-		whereClause = joinBool(whereClause, makeHitAnno(), AND);
-		
-		if (isBlockNum()) { // if block, only anno filter
-			whereClause = joinBool(whereClause, makeHitBlock(), AND);
-			return whereClause;
-		}
+		whereClause = joinBool(whereClause, makeHitAnnoWhere(), AND);
 		
 		// Chr, loc
-		whereClause = joinBool(whereClause, makeHitSpChr(), AND);
+		whereClause = joinBool(whereClause, makeSpChrWhere(), AND);
 		
-		// isSynteny, isAnno, isColinear
-		if (isBlock())         	whereClause = joinBool(whereClause, "PBH.block_idx is not null", AND);
-		else if (isNotBlock()) 	whereClause = joinBool(whereClause, "PBH.block_idx is null", AND);
-		
-		/** 
-		 * isOneAnno requires postprocessing
-	     * isTwoAnno needs postprocessing only because there are a few cases where (PH.annot1_idx>0 and PH.annot2_idx>0)
-		 *    is not true but it really  is true. It needs to be fixed in AnchorMain, which will take some work....
-		 * if (isTwoAnno())  		whereClause = joinBool(whereClause, 
-		 * 	"(PH.annot1_idx>0 and PH.annot2_idx>0)  AND PA.idx is not null", AND);
-		 **/
-		if (isNoAnno())	  	whereClause = joinBool(whereClause, 
-				"(PH.annot1_idx=0 and PH.annot2_idx=0) AND PA.idx is null", AND); // 'is null' is necessary. 
-		
-		int n = isCollinear(true);
-		if (n>0) whereClause = joinBool(whereClause, "PH.runsize>" + n, AND);
-		
-		return whereClause;
+		if (isBlockNum()) { // if block, only anno filter and chromosome (CAS513 add chromosome)
+			whereClause = joinBool(whereClause, makeHitBlockWhere(), AND);
+		}
+		else {// isSynteny, isAnno, isColinear; isOneAnno, isTwoAnno use post-processing
+			if (isBlock())         	whereClause = joinBool(whereClause, "PBH.block_idx is not null", AND);
+			else if (isNotBlock()) 	whereClause = joinBool(whereClause, "PBH.block_idx is null", AND);
+			
+			if (isNoAnno())	  // either and both occur in the DBdata filters
+				whereClause = joinBool(whereClause, 
+					"(PH.annot1_idx=0 and PH.annot2_idx=0) AND PA.idx is null", AND); // 'is null' is necessary. 
+			
+			int n = isCollinear(true);
+			if (n>0) whereClause = joinBool(whereClause, "PH.runsize>" + n, AND);
+		}
+		return " FROM pseudo_hits AS " + Q.PH + join + " " + whereClause + "  ORDER BY PH.idx  asc";
 	}	
 	/****************************************
-	 * If this extra select is no done, then ONLY rows with PA.name with zinc are returned
-	 * and there is no annotation for the otherside of the het
+	 * If this extra select is not done, then ONLY rows with PA.name with zinc are returned
+	 * and there is no annotation for the other side of the hit
 	 */
-	private String makeHitAnno() {
+	private String makeHitAnnoWhere() {
 		if (!isAnnoTxt()) return "";
 		
 		String clause = "PA.name LIKE '%" + txtAnno.getText() + "%'";
+		
 		return  "PH.idx in (SELECT  PH.idx " +
-				"FROM pseudo_hits AS PH " +
+				"FROM      pseudo_hits       AS PH " +
 				"LEFT JOIN pseudo_hits_annot AS PHA ON PH.idx = PHA.hit_idx " +
-				"LEFT JOIN pseudo_annot AS PA ON PHA.annot_idx = PA.idx " +
+				"LEFT JOIN pseudo_annot      AS PA  ON PHA.annot_idx = PA.idx " +
 				"WHERE " + clause + ")";
 	}
-	private String makeHitBlock() {
-		String where="";
+	/******************************************************** 
+	 * CAS504 added block search; CAS513 didn't always work - changed to just looking for block=N
+	 * Convert block string to where statement 
+	 *****/
+	private String makeHitBlockWhere() {
 		String block = txtBlock.getText().trim();
 		if (block.equals("")) return "";
 		
-		String list1=null, list2=null;
-		String [] vals = block.split("\\."); 
-		if (vals.length!=3) {
-			Utilities.showWarningMessage("Invalid block number (" + block + "). Must have format n.n.n");
-			return "";
+		try {
+			int n = Integer.parseInt(block);
+			return "B.blocknum=" + n;
 		}
-		for (int p=0; p<nSpecies; p++) {
-			String [] grpIdx = speciesPanel.getChrIdxList(p);
-			String [] grpNum = speciesPanel.getChrNumList(p);
-			for (int i=0; i<grpNum.length; i++) {
-				if (grpNum[i].equals(vals[0])) {
-					list1 = (list1==null) ? grpIdx[i] : (list1 + "," + grpIdx[i]);
-				}
-				else if (grpNum[i].equals(vals[1])) {
-					list2 = (list2==null) ? grpIdx[i] : (list2 + "," + grpIdx[i]);
-				}
-			}
-		}
-		if (list1==null || list2==null) {
-			Utilities.showWarningMessage("Invalid block number (" + block + ")."); // CAS512 add popup warning
+		catch (Exception e) {
+			Utilities.showWarningMessage(
+				"Invalid block number (" + block + "). Should be single number.\n"
+			+ " Set chromosomes to narrow it down to a block like 3.1.2."); // CAS512 add popup warning
 			txtBlock.setText("");
+			bValidQuery=false;
 			return "";
 		}
-		where = "B.blocknum=" + vals[2] + 
-				" AND (B.grp1_idx in (" + list1 + ") AND B.grp2_idx in (" + list2 + "))";
-		return where;
 	}
 	/************************************
 	 * The chromosomes are queried in MySQL and the locations in DBdata
+	 * Works for both orphan and hit
 	 */
-	private String makeHitSpChr() {
+	private String makeSpChrWhere() {
 		String grpList="", where="";
 		grpCoords.clear();
 		
@@ -273,22 +217,38 @@ public class QueryPanel extends JPanel {
 			
 			String start = speciesPanel.getChrStart(p);
 			String stop = speciesPanel.getChrStop(p);
+			if (start==null || stop==null) {
+				bValidQuery=false;
+				return "";
+			}
 			if (start.equals("")) start = "0";
 			if (stop.equals(""))  stop = "0";
 			
 			grpCoords.put(index, start + Q.delim2 + stop); // need all selected for DBdata.passFilter
 		}
 		if (grpList.equals("")) return "";
-		else if (grpList.contains(",")) {
-			grpList = "(" + grpList + ")";
-			where  = "( (PH.grp1_idx IN " + grpList + ") ";
-			where += " AND ";
-			where += "  (PH.grp2_idx IN " + grpList + ") )";
+		
+		else if (isOrphan()) { // CAS513 add orphan check
+			if (grpList.contains(",")) {
+				grpList = "(" + grpList + ")";
+				where  = "(PA.grp_idx IN " + grpList + ") ";
+			}
+			else {
+				where  = "(PA.grp_idx = " + grpList + ") ";
+			}
 		}
 		else {
-			where  = "( (PH.grp1_idx = " + grpList + ") ";
-			where += " OR ";
-			where += "  (PH.grp2_idx = " + grpList + ") )";
+			if (grpList.contains(",")) {
+				grpList = "(" + grpList + ")";
+				where  = "( (PH.grp1_idx IN " + grpList + ") ";
+				where += " AND ";
+				where += "  (PH.grp2_idx IN " + grpList + ") )";
+			}
+			else {
+				where  = "( (PH.grp1_idx = " + grpList + ") ";
+				where += " OR ";
+				where += "  (PH.grp2_idx = " + grpList + ") )";
+			}
 		}
 		return where; 
 	}
@@ -300,8 +260,7 @@ public class QueryPanel extends JPanel {
 		return left + " OR " + right;
 	}	
 	/*******************************************************
-	 * Summary
-	 * CAS503 made this a complete list of filters
+	 * Summary  CAS503 made this a complete list of filters
 	 */
 	public String makeSummary() { 
 		int numSpecies = speciesPanel.getNumSpecies();
@@ -311,29 +270,32 @@ public class QueryPanel extends JPanel {
 			return "HitIdx="+txtHitIdx.getText().trim();
 		}
 		String retVal = txtAnno.getText();
-		retVal = joinStr(retVal, makeSummaryBasic(), ";  ");
+		
+		String loc =  makeSummaryLocation();
 		
 		if (isBlockNum()) {
+			retVal = joinStr(retVal, loc, ";  ");
 			retVal = joinStr(retVal, "Block="+txtBlock.getText().trim(), ";  ");
 			return retVal;
 		}
 		
 		if(isOrphan()) {
 			retVal = joinStr(retVal, "Only orphans", ";  ");
-			String selSp = (String) cmbOrphanSpecies.getSelectedItem();
-			retVal = joinStr(retVal, selSp, ";  ");
+			String selSp = (String) cmbOrphanSp.getSelectedItem();
+			if (selSp.contentEquals("All")) retVal = joinStr(retVal, loc, ";  ");
+			else 							retVal = joinStr(retVal, selSp, ";  "); 
 			return retVal;
 		}
 		
-		if (isBlock())		retVal = joinStr(retVal, "Block hits", ";  ");
-		else if (isNotBlock()) retVal = joinStr(retVal, "No Block hits", ";  ");
+		if (isBlock())			retVal = joinStr(retVal, "Block hits", ";  ");
+		else if (isNotBlock()) 	retVal = joinStr(retVal, "No Block hits", ";  ");
 		
-		if (isOneAnno())		retVal = joinStr(retVal, 	"Either Gene hit", ";  ");
+		if (isOneAnno())		retVal = joinStr(retVal, "One Gene hit", ";  ");
 		else if (isTwoAnno())	retVal = joinStr(retVal, "Both Gene hits", ";  ");
-		else if (isNoAnno()) retVal = joinStr(retVal, 	"No Gene hits", ";  ");
+		else if (isNoAnno()) 	retVal = joinStr(retVal, "No Gene hits", ";  ");
 		
 		int n=isCollinear(false);
-		if (n>0)	retVal = joinStr(retVal, "Collinear >= " + n, ";  ");
+		if (n>0)				retVal = joinStr(retVal, "Collinear >= " + n, ";  ");
 		
 		if (isPgeneF()) {
 			retVal = joinStr(retVal, "Run PgeneF", ";  ");
@@ -350,12 +312,13 @@ public class QueryPanel extends JPanel {
 			if(isLinkageInc())	retVal = joinStr(retVal, "Linkage", ";  ");
 			if(isOnlyInc())		retVal = joinStr(retVal, "Only included", ";  ");
 		}
-		if (retVal.equals("")) retVal="None";
+		if (retVal.equals("")) retVal="None (All unique hits)"; // CAS513 None was misleading, as no hits is not shown
 	
 		return retVal; 
 	}
+	
 	// CAS504 add Include 
-	private String makeSummaryBasic() {
+	private String makeSummaryLocation() {
 		int numSpecies = speciesPanel.getNumSpecies();
 
 		String retVal = ""; // CAS503 added info and remove some wordiness, i.e. do not need to list species unless location
@@ -369,7 +332,7 @@ public class QueryPanel extends JPanel {
 				String loc = " Chr " + chroms;
 				if (!start.equals("") && !end.equals("")) loc += " Range " + start + "-" + end; 
 				else if (!start.equals("")) loc += " Start " + start; 
-				else if (!end.equals(""))   loc += " Range 1-" + end;
+				else if (!end.equals(""))   loc += " Range 0-" + end; // CAS513 was 1
 				retVal = joinStr(retVal, species + loc , ", ");
 			}
 		}		
@@ -382,22 +345,134 @@ public class QueryPanel extends JPanel {
 		else if (!s2.equals("")) return s2;
 		else return "";
 	}
+	private int isCollinear(boolean prt) 	{ // CAS512 add warning the first time its called
+		if (!txtCollinearN.isEnabled()) return 0;
+		String ntext = txtCollinearN.getText();
+		if (ntext.length()==0) return 0;
+		try {
+			int n = Integer.parseInt(ntext);
+			if (n<0) {
+				if (prt) Utilities.showWarningMessage("Invalid Colliner number (" + ntext + "), must be positive.");
+				return 0;
+			}
+			return n;
+		} catch (Exception e) { 
+			if (prt) Utilities.showWarningMessage("Invalid Colliner integer ("+ ntext + ")" );
+			bValidQuery=false;
+		}; 
+		return 0;
+	}
 	/********************************************************************
-	 * Filter panels
-	 */
-	private JPanel createFilter2BasicPanel() {
+	 * XXX Filter panels
+	 ***************************************************************/
+	private void createQueryPanel() {
+		speciesPanel = new SpeciesSelectPanel(theParentFrame);
+		nSpecies = speciesPanel.getNumSpecies();			// used in orphanPanel
+		
+		JPanel buttonPanel = createButtonPanel();
+		JPanel searchPanel = createFilterAnnoPanel();
+		JPanel orphanPanel = createFilterOrphanPanel();
+		JPanel blockPanel  = createFilterBlockPanel();
+		JPanel basicPanel  = createFilterOptionsPanel();
+		JPanel pgenePanel  = createFilterPgeneFPanel();
+	 
+		add(buttonPanel);								add(Box.createVerticalStrut(15));
+		
+		pnlStepOne = new CollapsiblePanel("1. Filter hits", ""); 
+		pnlStepOne.add(searchPanel);		pnlStepOne.add(Box.createVerticalStrut(15));
+		pnlStepOne.add(basicPanel);			pnlStepOne.add(Box.createVerticalStrut(10));
+		pnlStepOne.add(speciesPanel);		pnlStepOne.add(Box.createVerticalStrut(5));
+		pnlStepOne.add(blockPanel);			pnlStepOne.add(Box.createVerticalStrut(5));
+		pnlStepOne.add(orphanPanel);
+		 				
+		pnlStepOne.collapse();
+		pnlStepOne.expand();
+		add(pnlStepOne);								
+		
+		pnlStepTwo = new CollapsiblePanel("2. Filter putative gene families (PgeneFs)", "");
+		pnlStepTwo.add(pgenePanel);
+		
+		pnlStepTwo.collapse();
+		pnlStepTwo.expand();
+		add(pnlStepTwo);								add(Box.createVerticalStrut(5));
+	}
+	private JPanel createButtonPanel() {
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
+		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		panel.setBackground(Color.WHITE);
+		
+		btnExecute = new JButton("Run Search"); 
+		btnExecute.setAlignmentX(Component.CENTER_ALIGNMENT);
+		btnExecute.setBackground(Color.WHITE);
+		btnExecute.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String query = makeSQLquery();
+				String sum = makeSummary();
+				if (bValidQuery)
+					theParentFrame.makeTable(query, sum, isOrphan());
+			}
+		});
+		JButton btnClear = new JButton("Clear Filters");
+		btnClear.setAlignmentX(Component.LEFT_ALIGNMENT);
+		btnClear.setBackground(Color.white);
+		
+		btnClear.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				setClearFilters();
+			}
+		});
+		JButton btnHelp = new JButton("Help");
+		btnHelp.setAlignmentX(Component.RIGHT_ALIGNMENT);
+		btnHelp.setBackground(Utilities.HELP_PROMPT);
+		
+		btnHelp.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				Utilities.showHTMLPage(null, "SyMAP Query Help", "/html/QueryHelp.html");
+			}
+		});
+		
+		panel.add(btnClear);		panel.add(Box.createHorizontalStrut(170));
+		panel.add(btnExecute);		panel.add(Box.createHorizontalStrut(220));
+		panel.add(btnHelp);
+		
+		panel.setMaximumSize(panel.getPreferredSize());
+		return panel;
+	}
+	
+	/** Filter Hits **/
+	private JPanel createFilterAnnoPanel() {
+		JPanel page = new JPanel();
+		page.setLayout(new BoxLayout(page, BoxLayout.PAGE_AXIS));
+		page.setBackground(Color.WHITE);
+		
+		JPanel row = new JPanel();
+		row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
+		row.setBackground(Color.WHITE);
+
+		JLabel aLabel = new JLabel("Annotation Description");
+		txtAnno = new JTextField(30);
+		row.add(aLabel); row.add(Box.createHorizontalStrut(10));
+		row.add(txtAnno); 
+		row.setMaximumSize(row.getPreferredSize());
+		row.setAlignmentX(LEFT_ALIGNMENT);
+		page.add(row); 
+		
+		return page;
+	}	
+	private JPanel createFilterOptionsPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		panel.setBackground(Color.WHITE);
 		
-		blockRow = new OptionsRow("In Block (Synteny hit)", "Yes", "No", "", "All", 4, 150);
-		blockRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-		panel.add(blockRow); panel.add(Box.createVerticalStrut(5));
+		blockOptRow = new OptionsRow("In Block (Synteny hit)", "Yes", "No", "", "All", 4, 150);
+		blockOptRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+		panel.add(blockOptRow); panel.add(Box.createVerticalStrut(5));
 		
-		annoRow = new OptionsRow("Annotated (Gene hit)", "Either", "Both", "None", "All", 4, 150);
-		annoRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-		panel.add(annoRow); panel.add(Box.createVerticalStrut(5));
+		annoOptRow = new OptionsRow("Annotated (Gene hit)", "One", "Both", "None", "All", 4, 150);
+		annoOptRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+		panel.add(annoOptRow); panel.add(Box.createVerticalStrut(5));
 		
 		JPanel row = new JPanel();
 		row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
@@ -409,11 +484,63 @@ public class QueryPanel extends JPanel {
 		txtCollinearN = new JTextField(4); txtCollinearN.setBackground(Color.WHITE);
 		txtCollinearN.setText("0"); txtCollinearN.setMaximumSize(txtCollinearN.getPreferredSize());
 		row.add(txtCollinearN);
-		panel.add(row); panel.add(Box.createVerticalStrut(20));
+		panel.add(row);
 		
 		return panel;
 	}
-	private JPanel createFilter3OrphanPanel() {
+	/** Block and Hit **/
+	private JPanel createFilterBlockPanel() {
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		panel.setBackground(Color.WHITE);
+		
+		JPanel row = new JPanel();
+		row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
+		row.setBackground(Color.WHITE);
+		
+		chkBlock = new JCheckBox("Block");
+		chkBlock.setBackground(Color.WHITE);
+		chkBlock.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) {
+				boolean blkSel = chkBlock.isSelected();
+				setAllEnabled(!blkSel);
+				if (blkSel) {
+					chkBlock.setEnabled(true);
+					txtBlock.setEnabled(chkBlock.isSelected());
+					speciesPanel.setEnabled(true); 
+				}
+			}
+		});
+		txtBlock = new JTextField(4); txtBlock.setEnabled(false);
+		row.add(chkBlock); row.add(Box.createHorizontalStrut(10));
+		row.add(txtBlock); row.add(Box.createHorizontalStrut(30));
+		
+		chkHitIdx = new JCheckBox("HitIdx");
+		chkHitIdx.setBackground(Color.WHITE);
+		chkHitIdx.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) {
+				boolean hitSel = chkHitIdx.isSelected();
+				setAllEnabled(!hitSel); // turn all off
+				
+				if (hitSel) { // just turn hit on
+					chkHitIdx.setEnabled(true);
+					txtHitIdx.setEnabled(chkHitIdx.isSelected());
+				}
+			}
+		});
+		txtHitIdx = new JTextField(8); txtHitIdx.setEnabled(false);
+		row.add(chkHitIdx); row.add(Box.createHorizontalStrut(10));
+		row.add(txtHitIdx); 	
+		
+		row.setMaximumSize(row.getPreferredSize());
+		row.setAlignmentX(LEFT_ALIGNMENT);
+		panel.add(row);
+		
+		return panel;
+	}
+	/** Orphan **/
+	private JPanel createFilterOrphanPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -425,87 +552,52 @@ public class QueryPanel extends JPanel {
 		row.setAlignmentX(Component.LEFT_ALIGNMENT);
 		row.setBackground(Color.WHITE);
 		
-		chkOrphan = new JCheckBox("Only orphan genes ");	
+		chkOrphan = new JCheckBox("Only orphan genes (no hits)");	
 		chkOrphan.setAlignmentX(Component.LEFT_ALIGNMENT);
 		chkOrphan.setBackground(Color.WHITE);
 		chkOrphan.addActionListener(new ActionListener() { // CAS503 disabled others if orphans checked
 			public void actionPerformed(ActionEvent e) {
-				boolean orpNotSel = !chkOrphan.isSelected();
-				setBasicEnabled(orpNotSel);
-				chkPgeneF.setEnabled(orpNotSel);
-				if (chkPgeneF.isSelected() && orpNotSel) setPgenefEnable(true);
-				else 	setPgenefEnable(false);	
-				chkOrphan.setEnabled(true);
-				cmbOrphanSpecies.setEnabled(true);
+				boolean orpSel = chkOrphan.isSelected();
+				setAllEnabled(!orpSel);
+				
+				if (orpSel) {
+					String selSp = (String) cmbOrphanSp.getSelectedItem();
+					boolean bAll = (selSp.contentEquals("All")); // specified project takes precedence
+					speciesPanel.setEnabled(bAll); // CAS513 project takes precedence
+					
+					chkOrphan.setEnabled(true);
+					cmbOrphanSp.setEnabled(true); 
+				}
 			}
 		});
 		row.add(chkOrphan); row.add(Box.createHorizontalStrut(5));
 		
-		cmbOrphanSpecies = new JComboBox();
-		cmbOrphanSpecies.setBackground(Color.WHITE);
-		cmbOrphanSpecies.addItem("All");
-		int num = speciesPanel.getNumSpecies();
-		for(int x=0; x<num; x++)
-			cmbOrphanSpecies.addItem(speciesPanel.getSpName(x));
-		cmbOrphanSpecies.setMaximumSize(cmbOrphanSpecies.getPreferredSize());
+		cmbOrphanSp = new JComboBox <String> (); // CAS513 add type
+		cmbOrphanSp.setBackground(Color.WHITE);
+		cmbOrphanSp.addItem("All");
+		
+		for(int x=0; x<nSpecies; x++)
+			cmbOrphanSp.addItem(speciesPanel.getSpName(x));
+		cmbOrphanSp.setMaximumSize(cmbOrphanSp.getPreferredSize());
+		
+		cmbOrphanSp.addActionListener(new ActionListener() { // CAS503 disabled chr
+			public void actionPerformed(ActionEvent e) {
+				String selSp = (String) cmbOrphanSp.getSelectedItem();
+				boolean bAll = (selSp.contentEquals("All")); // specified project takes precedence
+				speciesPanel.setEnabled(bAll); // CAS513 project takes precedence
+			}
+		});
 		
 		row.add(new JLabel("Project: ")); row.add(Box.createHorizontalStrut(1));
-		row.add(cmbOrphanSpecies); 
+		row.add(cmbOrphanSp); 
 		row.setMaximumSize(row.getPreferredSize());
 		row.setAlignmentX(LEFT_ALIGNMENT);
-		panel.add(row); panel.add(Box.createVerticalStrut(10));
+		panel.add(row); 
 		
-		row = new JPanel();
-		row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-		row.setBackground(Color.WHITE);
-		
-		chkBlock = new JCheckBox("Block");
-		chkBlock.setBackground(Color.WHITE);
-		chkBlock.addActionListener(new ActionListener() { 
-			public void actionPerformed(ActionEvent e) {
-				boolean blkNotSel = !chkBlock.isSelected();
-				setBasicEnabled(blkNotSel);
-				
-				chkPgeneF.setEnabled(blkNotSel);
-				if (chkPgeneF.isSelected() && blkNotSel) setPgenefEnable(true);
-				else 	setPgenefEnable(false);	
-				
-				chkBlock.setEnabled(true);
-				txtBlock.setEnabled(chkBlock.isSelected());
-			}
-		});
-		txtBlock = new JTextField(8); txtBlock.setEnabled(false);
-		row.add(chkBlock); row.add(Box.createHorizontalStrut(10));
-		row.add(txtBlock); row.add(Box.createHorizontalStrut(30));
-		
-		chkHitIdx = new JCheckBox("HitIdx");
-		chkHitIdx.setBackground(Color.WHITE);
-		chkHitIdx.addActionListener(new ActionListener() { 
-			public void actionPerformed(ActionEvent e) {
-				boolean hitNotSel = !chkHitIdx.isSelected();
-				setBasicEnabled(hitNotSel);
-				
-				chkPgeneF.setEnabled(hitNotSel);
-				if (chkPgeneF.isSelected() && hitNotSel) setPgenefEnable(true);
-				else 	setPgenefEnable(false);	
-				
-				txtAnno.setEnabled(hitNotSel);
-				speciesPanel.setEnabled(hitNotSel); // only one that sets this
-				
-				chkHitIdx.setEnabled(true);
-				txtHitIdx.setEnabled(chkHitIdx.isSelected());
-			}
-		});
-		txtHitIdx = new JTextField(8); txtHitIdx.setEnabled(false);
-		row.add(chkHitIdx); row.add(Box.createHorizontalStrut(10));
-		row.add(txtHitIdx); 	
-		
-		row.setMaximumSize(row.getPreferredSize());
-		row.setAlignmentX(LEFT_ALIGNMENT);
-		panel.add(row);
 		return panel;
 	}
-	private JPanel createFilter4PgeneFPanel() {		
+	/** Filter Punitive gene family **/
+	private JPanel createFilterPgeneFPanel() {		
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -518,8 +610,7 @@ public class QueryPanel extends JPanel {
 		chkPgeneF.setBackground(Color.WHITE);
 		chkPgeneF.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) {
-				setPgenefEnable(chkPgeneF.isSelected());
-				
+				setPgenefEnable(chkPgeneF.isSelected());	
 			}
 		});
 		chkPgeneF.setSelected(false);
@@ -611,92 +702,54 @@ public class QueryPanel extends JPanel {
 	
 		return panel;
 	}
-
-	private JPanel createButtonPanel(int width) {
-		JPanel panel = new JPanel();
-		panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
-		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		panel.setBackground(Color.WHITE);
+	// CAS513 the enables and clears needs a bit of rewiring
+	private void setClearFilters() {
+		setAllEnabled(true);
 		
-		btnExecute = new JButton("Run Search");
-		btnExecute.setAlignmentX(Component.CENTER_ALIGNMENT);
-		btnExecute.setBackground(Color.WHITE);
-
-		JButton btnClear = new JButton("Clear Filters");
-		btnExecute.setAlignmentX(Component.LEFT_ALIGNMENT);
-		btnClear.setBackground(Color.white);
-		btnClear.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				setClearFilters();
-			}
-		});
-
-		JButton btnHelp = new JButton("Help");
-		btnHelp.setAlignmentX(Component.RIGHT_ALIGNMENT);
-		btnHelp.setBackground(Utilities.HELP_PROMPT);
+		txtAnno.setText("");
+		blockOptRow.setValue(4); // options
+		annoOptRow.setValue(4);  
+		txtCollinearN.setText("");
 		
-		btnHelp.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				Utilities.showHTMLPage(null, "SyMAP Query Help", "/html/QueryHelp.html");
-			}
-		});
+		txtBlock.setText(""); 			 txtBlock.setEnabled(false);	chkBlock.setSelected(false);
+		txtHitIdx.setText(""); 			 txtHitIdx.setEnabled(false);   chkHitIdx.setSelected(false);
+		cmbOrphanSp.setSelectedIndex(0); cmbOrphanSp.setEnabled(false); chkOrphan.setSelected(false);
 		
-		panel.add(btnClear);
-		panel.add(Box.createHorizontalStrut(180));
-		panel.add(btnExecute);
-		panel.add(Box.createHorizontalStrut(240));
-		panel.add(btnHelp);
+		chkPgeneF.setSelected(false); setPgenefEnable(false);
 		
-		panel.setMaximumSize(panel.getPreferredSize());
-		return panel;
+		speciesPanel.clear();
 	}
 	
-	private JPanel createFilter1TextPanel() {
-		JPanel page = new JPanel();
-		page.setLayout(new BoxLayout(page, BoxLayout.PAGE_AXIS));
-		page.setBackground(Color.WHITE);
+	private void setAllEnabled(boolean b) { // everything
+		blockOptRow.setEnabled(b);
+		annoOptRow.setEnabled(b);
 		
-		JPanel row = new JPanel();
-		row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-		row.setBackground(Color.WHITE);
-
-		JLabel aLabel = new JLabel("Annotation Description");
-		txtAnno = new JTextField(30);
-		row.add(aLabel); row.add(Box.createHorizontalStrut(10));
-		row.add(txtAnno); 
-		row.setMaximumSize(row.getPreferredSize());
-		row.setAlignmentX(LEFT_ALIGNMENT);
-		page.add(row); 
+		lblCollinearN.setEnabled(b); txtCollinearN.setEnabled(b);
 		
-		return page;
-	}	
-	
-	private void setClearFilters() {
-		txtAnno.setText("");
-		blockRow.setValue(4);
-		annoRow.setValue(4);
-		txtCollinearN.setText("");
-		chkOrphan.setSelected(false); cmbOrphanSpecies.setSelectedIndex(0);
-		speciesPanel.clear();
-		chkBlock.setSelected(false); txtBlock.setText("");
-		chkHitIdx.setSelected(false); txtHitIdx.setText("");
+		chkOrphan.setEnabled(b); cmbOrphanSp.setEnabled(b);
+		chkBlock.setEnabled(b);  txtBlock.setEnabled(b);
+		chkHitIdx.setEnabled(b); txtHitIdx.setEnabled(b);
 		
-		chkPgeneF.setSelected(false);
-		chkOnlyInc.setSelected(false);
-		chkUnannotInc.setSelected(false);
-		chkLinkageInc.setSelected(false);
-		for(int x=0; x<exSpecies.length; x++)  exSpecies[x].setSelected(false);
-		for(int x=0; x<incSpecies.length; x++) incSpecies[x].setSelected(false);
+		speciesPanel.setEnabled(b); // All chr, start, end
 		
-		setBasicEnabled(true);
-		chkPgeneF.setEnabled(true);
+		chkPgeneF.setEnabled(b);
 		setPgenefEnable(false);
 	}
-	/**********************************************************************
-	 * 
-	 */
-	public class OptionsRow extends JPanel implements ItemSelectable, ItemListener
-	{
+	private void setPgenefEnable(boolean b) {
+		chkLinkageInc.setEnabled(b);
+		chkUnannotInc.setEnabled(b);
+		chkOnlyInc.setEnabled(b);
+		for(int x=0; x<exSpecies.length; x++)  exSpecies[x].setEnabled(b);
+		for(int x=0; x<incSpecies.length; x++) incSpecies[x].setEnabled(b);
+	}
+
+	public  boolean isValidQuery() 	{ 
+		boolean b = bValidQuery;
+		bValidQuery=true;
+		return b;
+	}
+	/************************************************************************/
+	public class OptionsRow extends JPanel implements ItemSelectable, ItemListener {
 		private static final long serialVersionUID = -8714286499322636798L;
 		
 		private JLabel titleLabel;
@@ -743,15 +796,12 @@ public class QueryPanel extends JPanel {
 			case3Button.setEnabled(enabled);
 			ignButton.setEnabled(enabled);
 		}
-		
-		public void itemStateChanged(ItemEvent e) 
-		{
-		    	Iterator<ItemListener> iter = listeners.iterator();
-		    	while ( iter.hasNext() ) {
-		    		JRadioButton b = (JRadioButton)e.getItem();
-		    		iter.next().itemStateChanged(
-		    				new ItemEvent(this, e.getID(), b.getText(), e.getStateChange()));
-		    	}
+		public void itemStateChanged(ItemEvent e) {
+	    	Iterator<ItemListener> iter = listeners.iterator();
+	    	while ( iter.hasNext() ) {
+	    		JRadioButton b = (JRadioButton)e.getItem();
+	    		iter.next().itemStateChanged(new ItemEvent(this, e.getID(), b.getText(), e.getStateChange()));
+	    	}
 		}
 		public boolean isOne() 		{return case1Button.isSelected();}
 		public boolean isTwo()  		{return case2Button.isSelected();}
@@ -763,8 +813,7 @@ public class QueryPanel extends JPanel {
 			if (case3Button.isSelected()) return 3;
 			return 4;
 		}
-		public void setValue( int nVal )
-		{
+		public void setValue( int nVal ) {
 			switch ( nVal ) {
 			case 1: group.setSelected(case1Button.getModel(), true); break;
 			case 2:	group.setSelected(case2Button.getModel(), true); break;		
@@ -772,19 +821,15 @@ public class QueryPanel extends JPanel {
 			case 4:	group.setSelected(ignButton.getModel(), true); break;
 			}
 		}
-		
 		public void addItemListener(ItemListener l) {
 			listeners.add(l);
 		}
-		
 		public Object[] getSelectedObjects() {
 			return null;
 		}
-		
 		public void removeItemListener(ItemListener l) {
 			listeners.remove(l);
 		}
-		
 		public String toString() {
 			if (case1Button.isSelected()) return titleLabel.getText() + " " + case1Button.getText();
 			else if (case2Button.isSelected()) return titleLabel.getText() + " " + case2Button.getText();
@@ -792,7 +837,7 @@ public class QueryPanel extends JPanel {
 			else if (ignButton.isSelected()) return titleLabel.getText() + " " + ignButton.getText();
 			else return "<blank>";
 		}
-	}
+	} // end Options class
     /************************************************************/
 	private SyMAPQueryFrame theParentFrame = null;
 	
@@ -809,11 +854,11 @@ public class QueryPanel extends JPanel {
 			chkOnlyInc = null, chkUnannotInc = null, chkLinkageInc = null;
 	
 	// CAS504 add
-	private OptionsRow  blockRow = null, annoRow=null;
+	private OptionsRow  blockOptRow = null, annoOptRow=null;
 	private JTextField txtCollinearN = null;
 	private JLabel lblCollinearN = null;
 	
-	private JComboBox cmbOrphanSpecies = null;
+	private JComboBox <String> cmbOrphanSp = null;
 	private JCheckBox chkPgeneF = null;
 	private JCheckBox chkBlock = null, chkHitIdx = null;
 	private JTextField txtBlock = null, txtHitIdx = null;
@@ -822,4 +867,6 @@ public class QueryPanel extends JPanel {
 	
 	private int nSpecies=0;
 	private HashMap <Integer, String> grpCoords = new HashMap <Integer, String> ();
+	
+	private boolean bValidQuery=true;
 }

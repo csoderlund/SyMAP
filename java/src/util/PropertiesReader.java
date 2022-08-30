@@ -14,8 +14,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 /**
- * Class <code>PropertiesReader</code> handles getting values from properties
- * files
+ * Class <code>PropertiesReader</code> handles getting values from properties files
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class PropertiesReader extends Properties {
@@ -26,20 +25,13 @@ public class PropertiesReader extends Properties {
 		super();
 	}
 
-	/**
-	 * Creates a new <code>PropertiesReader</code> instance loading in the properties from <code>url</code>.
-	 * If an IOException occurs, the load fails and an error message is printed to standard error.
-	 *
-	 * @param url an <code>URL</code> value
-	 */
 	public PropertiesReader(URL url) {
 		super();
 		try {
 			load(url.openStream());
 			fixProps();
 		} catch (IOException e) {  
-			System.err.println("PropertiesReader unable to load "+url);
-			e.printStackTrace();
+			ErrorReport.print(e, "PropertiesReader unable to load "+url);
 		}
 	}
 
@@ -53,26 +45,16 @@ public class PropertiesReader extends Properties {
 			e.printStackTrace();
 		}
 	}
-	private void fixProps() 
-	{
-		for (Enumeration<?> e = propertyNames(); e.hasMoreElements(); )
-		{
+	private void fixProps() {
+		for (Enumeration<?> e = propertyNames(); e.hasMoreElements(); ) {
 			String propName = e.nextElement().toString();
 			String val = getProperty(propName);
-			if (val.contains("#"))
-			{
+			if (val.contains("#")) {
 				val = val.replaceAll("#.*","");
 				setProperty(propName,val);
 			}
 		}
 	}
-
-	/**
-	 * Method <code>getString</code> returns the string value of the property interned.
-	 * 
-	 * @param key a <code>String</code> value of the property key.
-	 * @return a <code>String</code> value for the key o null if it's not found.
-	 */
 	public String getString(String key) {
 		String s = (String)getProperty(key);
 		if (s != null) {
@@ -81,7 +63,6 @@ public class PropertiesReader extends Properties {
 		if (s != null) s = s.intern();
 		return s;
 	}
-
 	public String[] getStrings(String prop) {
 		Vector<String> list = new Vector<String>();
 		String p = getString(prop+1);
@@ -93,35 +74,21 @@ public class PropertiesReader extends Properties {
 	}
 
 	/**
-	 * Method <code>getInt</code>
-	 * 
-	 * An exception of some sort will be thrown if the property doesn't exist.
-	 * 
-	 * @param key a <code>String</code> value of the property key.
-	 * @return an <code>int</code> value for the integer corresponding to key.
 	 * CAS507 check for blank. Remove methods getInts and getDoubles -- not used.
 	 */
 	public int getInt(String key) {
 		String val = (String)getProperty(key).trim();
 		if (val.contentEquals("")) {
-			System.out.println("Warning: No value for' " + key + "'. Using 0.");
+			// System.out.println("Warning: No value for '" + key + "'. Using 0."); CAS513 - assume they mean 0
 			return 0;
 		}
 		return Integer.parseInt(val);
 	}
 
-	/**
-	 * Method <code>getLong</code>
-	 * 
-	 * An exception of some sort will be thrown if the property doesn't exist.
-	 * 
-	 * @param key a <code>String</code> value of the property key.
-	 * @return an <code>long</code> value for the integer coorisponding to key.
-	 */
 	public long getLong(String key) {
 		String val = (String)getProperty(key).trim();
 		if (val.contentEquals("")) {
-			System.out.println("Warning: No value for' " + key + "'. Using 0.");
+			//System.out.println("Warning: No value for '" + key + "'. Using 0.");
 			return 0;
 		}
 		return Long.parseLong(val);
@@ -130,45 +97,25 @@ public class PropertiesReader extends Properties {
 	public float getFloat(String key) {
 		String val = (String)getProperty(key).trim();
 		if (val.contentEquals("")) {
-			System.out.println("Warning: No value for' " + key + "'. Using 0.");
+			//System.out.println("Warning: No value for '" + key + "'. Using 0.0.");
 			return 0;
 		}
 		return Float.parseFloat(val);
 	}
 
-	/**
-	 * Method <code>getDouble</code>
-	 * 
-	 * An exception of some sort will be thrown if the property doesn't exist.
-	 * 
-	 * @param key a <code>String</code> value of the property key.
-	 * @return a <code>double</code> value for the double coorisponding to key.
-	 */
 	public double getDouble(String key) {
 		String val = (String)getProperty(key).trim();
 		if (val.contentEquals("")) {
-			System.out.println("Warning: No value for' " + key + "'. Using 0.");
+			//System.out.println("Warning: No value for '" + key + "'. Using 0.");
 			return 0;
 		}
 		return Double.parseDouble(val);
 	}
 
-	/**
-	 * Method <code>getColor</code>
-	 * 
-	 * @param key a <code>String</code> value
-	 * @return a <code>Color</code> value
-	 */
 	public Color getColor(String key) {
 		return parseColor((String)getProperty(key));
 	}
 
-	/**
-	 * Method <code>getColors</code>
-	 * 
-	 * @param key a <code>String</code> value
-	 * @return a <code>Vector</code> value
-	 */
 	public Vector<Color> getColors(String key) {
 		StringTokenizer st = new StringTokenizer((String)getProperty(key), ";");
 		Vector<Color> v = new Vector<Color>(st.countTokens());
@@ -188,12 +135,6 @@ public class PropertiesReader extends Properties {
 		return new Color(r, g, b, a);
 	}
 
-	/**
-	 * Method <code>getFont</code>
-	 * 
-	 * @param key a <code>String</code> value
-	 * @return a <code>Font</code> value
-	 */
 	public Font getFont(String key) {
 		StringTokenizer st = new StringTokenizer((String)getProperty(key), ",");
 		String name = st.nextToken();
@@ -202,12 +143,6 @@ public class PropertiesReader extends Properties {
 		return new Font(name, style, size);
 	}
 
-	/**
-	 * Method <code>getPoint</code>
-	 * 
-	 * @param key a <code>String</code> value
-	 * @return a <code>Point2D</code> value
-	 */
 	public Point2D getPoint(String key) {
 		StringTokenizer st = new StringTokenizer((String)getProperty(key), ",");
 		double x = Double.parseDouble(st.nextToken());
@@ -215,12 +150,6 @@ public class PropertiesReader extends Properties {
 		return new Point2D.Double(x, y);
 	}
 
-	/**
-	 * Method <code>getDimension</code> returns the dimension
-	 *
-	 * @param key a <code>String</code> value
-	 * @return a <code>Dimension</code> value
-	 */
 	public Dimension getDimension(String key) {
 		StringTokenizer st = new StringTokenizer((String)getProperty(key), ",");
 		int width = (int)Double.parseDouble(st.nextToken());
@@ -228,12 +157,6 @@ public class PropertiesReader extends Properties {
 		return new Dimension(width,height);
 	}
 
-	/**
-	 * Method <code>getDoubleDimension</code> returns a Dimension2D that stores its dimension in double precision.
-	 *
-	 * @param key a <code>String</code> value
-	 * @return a <code>DoubleDimension</code> value
-	 */
 	public DoubleDimension getDoubleDimension(String key) {
 		StringTokenizer st = new StringTokenizer((String)getProperty(key), ",");
 		double width =  Double.parseDouble(st.nextToken());
@@ -241,40 +164,21 @@ public class PropertiesReader extends Properties {
 		return new DoubleDimension(width,height);	
 	}
 
-	/**
-	 * Method <code>getBoolean</code> returns true if the property is found and is equal to true ignoring case.
-	 *
-	 * @param key a <code>String</code> value
-	 * @return a <code>boolean</code> value
-	 */
 	public boolean getBoolean(String key) {
 		String value = getProperty(key);
 		if (value != null && (value.equals("1") || value.toLowerCase().equals("true")))
 			return true;
 		return false;
 	}
-
 	/**
-	 * Method <code>getFile</code> return the file. If fromHome the home directory is acquired
-	 * by <code>System.getProperty("user.home")</code> and the File constructor taking two string is
-	 * invoked (i.e. <code>new File(homeDir,propValue)<code>).  Otherwise, the file is created by
-	 * <code>new File(propValue)</code>
-	 *
-	 * @param name a <code>String</code> value of property name
-	 * @param fromHome a <code>boolean</code> value of true to set the path from the home directory
-	 * @return a <code>File</code> value
-	 * @see Utilities#getFile(String,boolean)
+	 * If fromHome the home directory is acquired by System.getProperty("user.home") 
+	 * and the File constructor taking two string is invoked (i.e. new File(homeDir,propValue)).  
+	 * Otherwise, the file is created by new File(propValue)
 	 */
 	public File getFile(String name, boolean fromHome) {
 		return Utilities.getFile(getString(name),fromHome);
 	}
 
-	/**
-	 * Method <code>getURL</code> returns the url or null if any problems occur.
-	 *
-	 * @param key a <code>String</code> value
-	 * @return an <code>URL</code> value
-	 */
 	public URL getURL(String key) {
 		URL url = null;
 		try {

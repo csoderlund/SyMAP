@@ -228,8 +228,8 @@ public class SeqLoadMain
 					else {seqIgnore++; fileIgnore++;}
 				}
 				if (fileIgnore>0)
-					 log.msg(String.format("%10d sequences   %10d bases   %4d sequences ignore", n, fileSize, fileIgnore));
-				else log.msg(String.format("%10d sequences   %10d bases", n, fileSize));
+					 log.msg(String.format("%,10d sequences   %,10d bases   %,4d sequences ignore", n, fileSize, fileIgnore));
+				else log.msg(String.format("%,10d sequences   %,10d bases", n, fileSize));
 				if (nBadCharLines > 0)
 					log.msg("+++ " + nBadCharLines + " lines contained characters other than AGCT; these will be replaced by N");
 			
@@ -244,8 +244,8 @@ public class SeqLoadMain
 			if (cntFile>1) {
 				log.msg("Total:");
 				if (seqIgnore>0)
-					 log.msg(String.format("%10d sequences   %10d bases   %4d sequences ignored", nSeqs, totalSize, seqIgnore));
-				else log.msg(String.format("%10d sequences   %10d bases ", nSeqs, totalSize));
+					 log.msg(String.format("%,10d sequences   %,10d bases   %,4d sequences ignored", nSeqs, totalSize, seqIgnore));
+				else log.msg(String.format("%,10d sequences   %,10d bases ", nSeqs, totalSize));
 			}
 			if (nSeqs >= MAX_COLORS)
 				log.msg("+++ There are " + MAX_COLORS + " distinct colors for blocks -- there will be duplicates");

@@ -30,7 +30,9 @@ import javax.swing.table.AbstractTableModel;
 public class ResultSummaryPanel extends JPanel {
 	private static final long serialVersionUID = -4532933089334778200L;
 
-	public ResultSummaryPanel(SyMAPQueryFrame parentFrame, String [] columnLabels) {
+	private static final String [] columnLabels = { "Query", "Filters" };
+	
+	public ResultSummaryPanel(SyMAPQueryFrame parentFrame) {
 		theParentFrame = parentFrame;
 		setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
@@ -85,6 +87,8 @@ public class ResultSummaryPanel extends JPanel {
 		theTable.clearSelection();
 		theTable.revalidate();
 		updateButtons();
+		
+		if (rows.size()==0) theParentFrame.resetCounter(); // CAS513 add
 	}
 	
 	private void removeAllSummaries() {
@@ -98,6 +102,8 @@ public class ResultSummaryPanel extends JPanel {
 		theTable.clearSelection();
 		theTable.revalidate();
 		updateButtons();
+		
+		theParentFrame.resetCounter(); // CAS513 add
 	}
 	
 	private void updateButtons() {
@@ -125,7 +131,6 @@ public class ResultSummaryPanel extends JPanel {
 				removeSelectedSummaries(theTable.getSelectedRows());
 			}
 		});
-		
 		btnRemoveAllQueries = new JButton("Remove All Queries");
 		btnRemoveAllQueries.setEnabled(false);
 		btnRemoveAllQueries.setBackground(Color.WHITE);
@@ -134,8 +139,6 @@ public class ResultSummaryPanel extends JPanel {
 				removeAllSummaries();
 			}
 		});
-		
-		
 		thePanel.add(btnRemoveSelQueries);
 		thePanel.add(Box.createHorizontalStrut(20));
 		thePanel.add(btnRemoveAllQueries);
@@ -189,16 +192,13 @@ public class ResultSummaryPanel extends JPanel {
 		public int getColumnCount() {
             return colNames.length;
         }
-
         public int getRowCount() {
             return rows.size();
-        }
-        
+        }     
         public Object getValueAt(int row, int col) {
             String [] r = rows.elementAt(row);
             return r[col];
-        }
-        
+        }     
         public String getColumnName(int col) {
             return colNames[col];
         }

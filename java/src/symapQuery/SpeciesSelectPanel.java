@@ -105,7 +105,7 @@ public class SpeciesSelectPanel extends JPanel {
 	public int getSelChrIdx(int panel)		{return spPanels.get(panel).getSelChrIdx();}
 	public String getSelChrNum(int panel) 	{return spPanels.get(panel).getSelChrNum();}
 	public String getChrStart(int panel) 	{return spPanels.get(panel).getStartFullNum();}
-	public String getChrStop(int panel) 	    {return spPanels.get(panel).getStopFullNum();}
+	public String getChrStop(int panel) 	{return spPanels.get(panel).getStopFullNum();}
 	
 	public String getPairWhere() 			{ return pairWhere;}
 	
@@ -118,7 +118,7 @@ public class SpeciesSelectPanel extends JPanel {
 		removeAll();
 		
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-		add(Box.createVerticalStrut(10));
+		add(Box.createVerticalStrut(5));
 		JPanel labelPanel = new JPanel();
 		labelPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.LINE_AXIS));
@@ -144,8 +144,7 @@ public class SpeciesSelectPanel extends JPanel {
 		excludePanel.setMinimumSize(dim);
 		excludePanel.setMaximumSize(dim);
 		
-		labelPanel.add(includePanel);
-		labelPanel.add(Box.createHorizontalStrut(5));
+		labelPanel.add(includePanel);	labelPanel.add(Box.createHorizontalStrut(5));
 		labelPanel.add(excludePanel);
 		labelPanel.setMaximumSize(labelPanel.getPreferredSize());
 		
@@ -196,7 +195,7 @@ public class SpeciesSelectPanel extends JPanel {
 					row.add(temp);
 					
 					add(row);
-					add(Box.createVerticalStrut(10));
+					add(Box.createVerticalStrut(5));
 				}
 			}
 		}
@@ -231,16 +230,16 @@ public class SpeciesSelectPanel extends JPanel {
 				}
 				rs.close();
 				
-				SpeciesSelect p = new SpeciesSelect(this, proj.getDisplayName(),
+				SpeciesSelect ssp = new SpeciesSelect(this, proj.getDisplayName(),
 						proj.getID(), proj.getCategory(), chrNumStr, chrIdxStr);
 				
-				spPanels.add(p);
+				spPanels.add(ssp);
 				spName2spIdx.put(proj.getDisplayName(), proj.getID());
-				spIdx2panel.put(proj.getID(), p);
+				spIdx2panel.put(proj.getID(), ssp);
 				spidx[x++] = proj.getID();
 				
-				String [] chrIdxList = p.getChrIdxList();
-				for (String idx : chrIdxList) chrIdx2panel.put(Integer.parseInt(idx), p);
+				String [] chrIdxList = ssp.getChrIdxList();
+				for (String idx : chrIdxList) chrIdx2panel.put(Integer.parseInt(idx), ssp);
 			}
 			
 			// Get pair indices - this isn't used in the panels, but is used to all queries but Orphan
@@ -274,7 +273,7 @@ public class SpeciesSelectPanel extends JPanel {
 				pairWhere="";
 				Utilities.showErrorMessage("No synteny pairs. Attempts to Run Query will fail.");
 			}
-			else if (!idList.contains(",")) 	pairWhere = "PH.pair_idx=" + idList + " ";
+			else if (!idList.contains(",")) pairWhere = "PH.pair_idx=" + idList + " ";
 			else 							pairWhere = "PH.pair_idx IN (" + idList + ") ";
 		} 
 		catch(Exception e) {ErrorReport.print(e, "Species panel");}
@@ -289,19 +288,19 @@ public class SpeciesSelectPanel extends JPanel {
 		public SpeciesSelect(SpeciesSelectPanel parent, 
 				String spName, int spIdx, String strCategory, String chrNumStr, String chrIdxStr) {
 			this.theParent = parent;
-			this.spIdx = spIdx;
+			this.spIdx = spIdx;	// projects.idx
 			this.strCategory = strCategory;
-			this.chrIdxStr = chrIdxStr;
+			this.chrIdxStr = chrIdxStr;	
 			
-			chrIdxList = chrIdxStr.split(",");
+			chrIdxList = chrIdxStr.split(",");	// xgroups.idx for 
 			chrNumList = chrNumStr.split(",");
 			
 			controlPanel = new JPanel();
 						
-			lblSpecies = new JLabel(spName);
+			lblSpecies = new JLabel(spName);	// projects.name
 			lblSpecies.setBackground(Color.WHITE);
 			lblChrom = new JLabel("Chr: ");
-			cmbChroms = new JComboBox();
+			cmbChroms = new  JComboBox <String> ();
 			
 			cmbChroms.addItem("All");
 			for(int x=0; x<chrNumList.length; x++)
@@ -323,7 +322,7 @@ public class SpeciesSelectPanel extends JPanel {
 			lblStop =  new JLabel("To");  lblStop.setBackground(Color.WHITE);lblStop.setEnabled(false);
 			txtStop =  new JTextField(10);txtStop.setBackground(Color.WHITE);txtStop.setEnabled(false);
 			
-			cmbScale = new JComboBox();
+			cmbScale = new JComboBox <String> ();
 			cmbScale.setBackground(Color.WHITE);
 			cmbScale.addItem("bp"); cmbScale.addItem("kb"); cmbScale.addItem("mb");
 			cmbScale.setSelectedIndex(1);
@@ -369,21 +368,38 @@ public class SpeciesSelectPanel extends JPanel {
 		public void setEnabled(boolean b) {
 			cmbChroms.setEnabled(b);
 		}
-		private String getStartFullNum() {
+		private String getStartFullNum() { // CAS513 add error message and return null
+			String text = txtStart.getText();
+			if (text.contentEquals("")) return "";
+			
 			try {
 				long temp = Long.parseLong(txtStart.getText());
-				if(temp < 0) return "";
+				if(temp < 0) {
+					Utilities.showWarningMessage("Invalid From (start) coordinate '" + text + "'");
+					return null;
+				}
 				if (temp == 0) return "0";
 				return temp + getScaleDigits();
-			} catch(NumberFormatException e) {return "";}
+			} catch(NumberFormatException e) {
+				Utilities.showWarningMessage("Invalid From (start) coordinate '" + text + "'");
+				return null;
+			}
 		}
 		
 		private String getStopFullNum() {
+			String text = txtStop.getText();
+			if (text.contentEquals("")) return "";
 			try {
 				long temp = Long.parseLong(txtStop.getText());
-				if(temp <= 0) return "";
+				if(temp <= 0) {
+					Utilities.showWarningMessage("Invalid To (end) coordinate '" + text + "'");
+					return null;
+				}
 				return temp + getScaleDigits();
-			} catch(NumberFormatException e) {return "";}
+			} catch(NumberFormatException e) {
+				Utilities.showWarningMessage("Invalid To (end) coordinate '" + text + "'");
+				return null;
+			}
 		}
 		private String getScaleDigits() {
 			if(cmbScale.getSelectedIndex() == 1) return "000";
@@ -431,10 +447,10 @@ public class SpeciesSelectPanel extends JPanel {
 		private Dimension getChromSize() { return cmbChroms.getPreferredSize(); }
 		
 		private JLabel lblSpecies = null;
-		private JComboBox cmbChroms = null;
+		private JComboBox <String> cmbChroms = null; // CAS513 add type
 		private JLabel lblStart = null, lblStop = null, lblChrom = null;
 		private JTextField txtStart = null, txtStop = null;
-		private JComboBox cmbScale = null;
+		private JComboBox <String >cmbScale = null; // CAS513 add type
 		private JPanel controlPanel = null;
 		
 		private int spIdx=0;
@@ -449,7 +465,7 @@ public class SpeciesSelectPanel extends JPanel {
 	private SyMAPQueryFrame theParentFrame = null;
 	private Vector<SpeciesSelect> spPanels = null;
 	
-	// CAS504
+	// CAS504 - changed 5 arrays to HashMaps with Idxs
 	private HashMap <Integer, SpeciesSelect> chrIdx2panel = new HashMap <Integer, SpeciesSelect> ();
 	private HashMap <Integer, SpeciesSelect> spIdx2panel = new HashMap <Integer, SpeciesSelect> ();
 	private HashMap <String, Integer> spName2spIdx = new HashMap <String, Integer> ();

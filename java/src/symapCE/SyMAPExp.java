@@ -94,27 +94,28 @@ public class SyMAPExp implements Observer { // TODO replace for Java v9
 	{
 	     int nProjIdx = -1;
 	     String strDisplayName = null;
+	     String loaddate=""; // CAS513 to put on left side by name
 	
 	     UpdatePool pool = new UpdatePool(databaseReader);
-	     ResultSet rs = pool.executeQuery("SELECT p.idx, pp.value " +
+	     ResultSet rs = pool.executeQuery("SELECT p.idx, p.loaddate, pp.value " +
 	     		"FROM projects AS p " +
 	     		"JOIN proj_props AS pp ON (p.idx=pp.proj_idx) " +
 	     		"WHERE pp.name='display_name' " +
 	     		"AND p.name='"+strProjName+"' AND p.type='"+strTypeName+"'");
 	     
 	     if ( rs.next() ) {
+	    	loaddate = rs.getString("p.loaddate");
 	     	nProjIdx = rs.getInt("p.idx");
 	     	strDisplayName = rs.getString("pp.value");
 	     }
-	
 	     rs.close();
 	     
 	     if (nProjIdx < 0) {
-	     	System.err.println("Couldn't find project '"+strProjName+"' in database.");
+	     	System.err.println("Project '"+strProjName+"' not loaded.");
 	     	return null;
 	     }
 	     
-	     return new Project(nProjIdx, strProjName, strTypeName, strDisplayName);
+	     return new Project(nProjIdx, strProjName, strTypeName, strDisplayName, loaddate);
 	}
 	
 	private Vector<TrackCom> loadProjectTracks(Project p) throws SQLException

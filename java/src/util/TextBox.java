@@ -6,6 +6,7 @@ package util;
  */
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -141,6 +142,7 @@ public class TextBox extends JComponent  {
 	public void popupDesc(String exonList) { // CAS512 add exonList
 		String msg = "";
 		for (String x : descText) msg += x + "\n";
-		Utilities.displayInfoMonoSpace(this, "Description", msg + exonList, false); //  CAS504 moved
+		Dimension d = new Dimension (350, 220); // CAS513 add size (w,h)
+		Utilities.displayInfoMonoSpace(this, "Description", msg + exonList, false, d); //  CAS504 moved
 	}
 }

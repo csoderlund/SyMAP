@@ -4,7 +4,6 @@ package blockview;
  * Block view for a single selected chromosome
  */
 import javax.swing.*;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
@@ -12,6 +11,7 @@ import java.sql.*;
 import util.DatabaseReader;
 import util.ErrorReport;
 import util.ImageViewer;
+import util.Utilities;
 
 import java.util.Vector;
 import java.util.TreeMap;
@@ -30,6 +30,7 @@ public class Block2Frame extends JFrame
 	final int chromWidth = 15;
 	final int chromWidth2 = 25;
 	final int layerWidth = 100;
+	final int tooManySeqs = 75;
 
 	int mRefIdx;
 	String refName, grpPfx;
@@ -76,11 +77,11 @@ public class Block2Frame extends JFrame
 	
 			rs = s.executeQuery("select count(*) as ngrps from xgroups where proj_idx=" + mRefIdx);
 			rs.first();
-			unorderedRef = (rs.getInt("ngrps") > 75);
+			unorderedRef = (rs.getInt("ngrps") > tooManySeqs);
 
 			rs = s.executeQuery("select count(*) as ngrps from xgroups where proj_idx=" + mIdx2);
 			rs.first();
-			unordered2 = (rs.getInt("ngrps") > 75);
+			unordered2 = (rs.getInt("ngrps") > tooManySeqs);
 			
 			if (unorderedRef && unordered2) 
 			{
@@ -138,7 +139,7 @@ public class Block2Frame extends JFrame
 			while (rs.next())
 			{
 				int idx = rs.getInt("idx");
-				mGrp2Names.put(idx, rs.getString("name"));
+				mGrp2Names.put(idx, rs.getString("name")); // name has grp_prefix removed
 				colorOrder.put(idx,i);
 				i++;
 			}
@@ -263,8 +264,10 @@ public class Block2Frame extends JFrame
 				g.fillRect(x, y1, chromWidth2, ht);
 				g.setColor(Color.black);
 				g.drawRect(x, y1, chromWidth2, ht);
-				String chrName = mGrp2Names.get(b.mGrp2) + ":";
+				
+				String chrName = mGrp2Names.get(b.mGrp2) + ":"; // e.g. 3: where 3 is chr3
 				int offset = 7*chrName.length() + 1;
+				
 				g.setFont(font2);
 				g.drawString(chrName, x-10,  y1-15);
 				g.setFont(font1);
@@ -420,7 +423,7 @@ public class Block2Frame extends JFrame
 			int blocknum = rs.getInt("blocknum");
 			int idx = rs.getInt("idx");
 			String ctgs = rs.getString("ctgs");
-			String blockName = mGrp2Names.get(grp2) + "." + mRefChr + "." + blocknum;
+			String blockName = Utilities.blockStr(mGrp2Names.get(grp2), mRefChr, blocknum); // CAS513 call blockStr
 			Block b = new Block(grp2,start/bpPerPx,end/bpPerPx,s2,e2,blockName, idx,ctgs,unordered2);
 			mBlocks.add(b);
 		}

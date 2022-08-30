@@ -40,11 +40,10 @@ public class AlignProjs extends JFrame {
 		FileWriter syFW =    symapLog(p1,p2);
 		String alignLogDir = frame.buildLogAlignDir(p1,p2);
 
-		System.out.println("\n>>Starting " + p1 + " and " + p2);
+		System.out.println("\n>>Starting " + p1 + " and " + p2 + "     " + Utilities.getDateTime());
 	
 		try {
-			Date date = new Date();
-			syFW.write("\n-------------- starting " + date.toString() + " --------------------\n");
+			syFW.write("\n---------------------------------------------------------\n");
 		} catch (Exception e){}
 		
 		String msg = (p1 == p2) ? 

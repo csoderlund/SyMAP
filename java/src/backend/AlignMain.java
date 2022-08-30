@@ -519,7 +519,7 @@ public class AlignMain
 						cNum++;
 					}
 				}
-				log.msg(msg + ": length " + fileSize);
+				log.msg(msg + String.format(": length %,d", fileSize)); // CAS513 add comma
 				fw.close();
 			}
 			return true;

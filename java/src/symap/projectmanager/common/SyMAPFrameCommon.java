@@ -1,5 +1,8 @@
 package symap.projectmanager.common;
 
+/*****************************************************
+ * Chromosome Explorer 
+ */
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -19,9 +22,6 @@ import java.io.PrintWriter;
 import java.util.TreeSet;
 import java.util.Vector;
 
-//import javax.media.j3d.Canvas3D;
-//import javax.media.j3d.RenderingError;
-//import javax.media.j3d.RenderingErrorListener;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -47,12 +47,10 @@ import symap.frame.HelpListener;
 import symap.frame.SyMAPFrame;
 
 import util.DatabaseReader;
+import util.ErrorReport;
 import util.LinkLabel;
 import util.Utilities;
 import circview.*;
-
-//import com.sun.j3d.utils.universe.SimpleUniverse;
-
 import dotplot.DotPlotFrame;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
@@ -94,6 +92,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		screenWidth  = Math.min(1200, screenRect.width);
 		screenHeight = Math.min(900, screenRect.height);
 		setSize(screenWidth, screenHeight); 
+		setLocationRelativeTo(null); // CAS513 center frame
 		
 		// Using a card layout to switch views fixes the Windows CONTEXT_CREATION_ERROR problem
 		cardPanel = new JPanel();
@@ -230,8 +229,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		// Create project graphical menus
         JPanel projPanel = new JPanel();
         projPanel.setLayout(new BoxLayout(projPanel, BoxLayout.Y_AXIS));
-       // projPanel.setMinimumSize(new Dimension(600, 600));
-   
+    
 		Project[] projects = mapper.getProjects();
 		
 		// First figure out which groups have synteny in this set
@@ -288,7 +286,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		controlPanel.add( Box.createVerticalGlue() );
 		
 		splitPane.setLeftComponent(controlPanel);
-		
 	}
 	
 	public void build() { // can't be named "show()" because of override
@@ -436,7 +433,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			Utilities.showOutOfMemoryMessage();
 		}
 		catch (Exception err) {
-			err.printStackTrace();
+			ErrorReport.print(err, "2D view");
 		}
 		
 		return false;
@@ -631,7 +628,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 				}
 			}
 		} catch(Exception e) {
-			e.printStackTrace();
+			ErrorReport.print(e, "Generate blocks");
 		}
     }
 }
