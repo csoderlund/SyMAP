@@ -2,33 +2,61 @@
 <body style="padding:20px;font-family:arial;">
 
 <h1>SyMAP Queries</h1>
-<p>
-This feature allows you to query many aspects of the alignment and synteny
-between species in order to transfer information between species,
-improve annotations, and understand the expansion and contraction
-of gene families.
-<p>
-The query occurs in two stages, corresponding to the section numbers
-on the Query Page. The second stage only occurs if the <b>Compute PgeneF</b>
-box is checked.
+Except for the "Single genes", all queries return rows where there is a <i>hit pair</i>, i.e.
+aligned region between to two chromosomes from two projects. Most queries can be used in conjunction with other
+queries unless its specified otherwise.
 
-<h2>1. Filter hits</h2>
-
-The first stage is to retrieve <i>hits (anchors)</i> from the database, based on
-filters such as chromosome and annotation string. Note that each anchor
-connects two <i>species (projects)</i> and hence represents a <i>pair</i> of aligned
-regions for two of the selected species. Filters are as follows:
+<h2>1. General</h2>
 
 <p><b>Annotation Description</b>
 <br>Enter the value for any of the keywords in the annotation string,
 e.g. if there is an ID (gene name) and product keyword, they both will be searched.
-Hits will be returned which overlap a gene with the corresponding annotation;
-the gene can be on either side of the hit.
+For all queries except those for "Single genes", hits will be returned which overlap a gene
+with the corresponding annotation; the gene can be on either side of the hit.
 
-<p>NOTE: Genes will ONLY be shown if they are part of a hit. However, if "Only Orphan Genes"
-is selected, then they will only be shown if they are NOT part of a hit.
-Hence, if your looking for a particular gene, enter the gene name and search; if
-there are no results, select "Only Orphan Genes" and search again.
+<p><b>Chromosome/location</b>
+<table border=0>
+<tr><td valign="top">Chr<td><td>&nbsp;<td>Select a specific chromosome for the species (note this could
+also be scaffolds).
+<tr><td valign="top">From<td><td>&nbsp;<td>All 'Start' coordinates for the corresponding species will be
+&gt;= this number.
+<tr><td valign="top">To<td><td>&nbsp;<td>All 'End' coordinates for the corresponding species will be
+&lt;= this number.
+</table>
+For Hit Pairs: If one or more chromosomes are selected, only hits where one side is to the species/chromosomes are shown.
+However, if a given specie does not have a chromosome selected, then any of its chromosomes can be
+on the opposite side of the hit.
+
+<!--------------------------------------------------->
+<h2>2. Single gene</h2>
+The two queries the produce a table of genes.  There is no hit or block
+information since the rows do not represent pairs.
+<p><u>Search criteria</u>: both options can be restricted by:
+<ul>
+<li>Using the "Project" pull-down (cannot set "Chr").
+<li>Set "Chr:"" with optional coordinates (cannot set "Project").
+<li>Enter "Annotation Description"
+</ul>
+Options:
+<ul>
+<li><b>Orphan genes (no hits)</b>
+<br>
+Genes that do not a have a hit and meet the search criteria.
+The orphan genes are relative to the projects shown on the SyMAP Query page.
+For example, if species X, Y and Z have synteny computed between all pairs,
+but only X and Y are selected, the orphan genes for X would be those with no hits to Y.
+If X,Y&Z are selected, the orphan genes for X would be those with no hits to Y and Z.
+<li><b>All genes (w/o hits)</b>, i.e. genes with and without hit
+<br>This shows all genes that meet the search criteria, regardless if they have a hit or not.
+There is always the same set of genes for a project, regardless of synteny.
+</ul>
+<!--------------------------------------------------->
+<h2>3. Pair hits</h2>
+
+The first stage is to retrieve hits from the database, based on
+filters such as chromosome and annotation string. Each hit
+connects two <i>species (projects)</i> and hence represents a <i>pair</i> of aligned
+regions for two of the selected species. Filters are as follows:
 
 <p><b>In Block (Synteny Hit)</b>
 <table border=0>
@@ -58,20 +86,6 @@ species will have 4 hits in a row, all of which hit genes.
 <p>NOTE: A collinear chain of genes is not the same as a SyMAP synteny block, because blocks
 require at least 7 anchors, and are allowed to have intervening genes which do not align.
 
-<p><b>Chromosome/location</b>
-<table border=0>
-<tr><td valign="top">Chr<td><td>&nbsp;<td>Select a specific chromosome for the species, hence,
-the 'Chr' column for this species will only show this value.
-<tr><td valign="top">From<td><td>&nbsp;<td>All 'Start' coordinates for the corresponding species will be
-&gt;= this number.
-<tr><td valign="top">To<td><td>&nbsp;<td>All 'End' coordinates for the corresponding species will be
-&lt;= this number.
-</table>
-NOTE: If one or more chromosomes are selected, only hits where one side is to the species/chromosomes are shown.
-However,
-if a given specie does not have a chromosome selected, then any of its chromosomes can be
-on the opposite side of the hit.
-
 <p><b>Block</b>
 <br>This is a single block number. Use it in conjunction with the chromosome pull-downs. For example,
 if you select Chr 1 from the first project, Chr 2 from a second project, and enter block=3, you will see
@@ -79,22 +93,12 @@ hits in block 1.2.3 from the two project chromosomes you selected.
 
 <p><b>HitIdx</b>
 <br>Entering a valid HitIdx number will return ONE row, where this cannot be combined with any other filters.
+This is the number that is shown in the "HitIdx" column for the pair table results.
 
-<p>
-<b>Only orphan genes (no hits)</b>
-<br>
-Genes that do not a have a hit and meet the search criteria,
-e.g. matching the annotation query string and the chromosome location requirements.
-In order to view the orphan hits from just one species, it can be selected in
-the "Projects" pull-down. Alternatively, a single chromosome can be selected in the chromosome pull-down.
-<p>NOTE: The orphan genes are ones that do not a hit to ANY project with which the synteny was computed.
-For example, if species X, Y and Z have synteny computed between all pairs,
-the number of orphans for X are the same whether you are running SyMAP Query with X&Y, X&Z or X,Y&Z.
-
-
-<h2>2. Filter putative gene families (PgeneFs)</h2>
+<!--------------------------------------------------->
+<h2>4. Filter putative gene families (PgeneFs)</h2>
 This is only computed if the <b>Computed PgeneF</b> is checked.
-Using the hits that pass the Stage 1 filters, SyMAP constructs putative gene families (PgeneFs)
+Using the hits that pass the other filters, SyMAP constructs putative gene families (PgeneFs)
 spanning the selected species. This is done by grouping hits which overlap on at
 least one genome. <i>Note, if you have more than 6 species selected, this stage can take
 an hour or more.</i>
@@ -102,7 +106,7 @@ an hour or more.</i>
 Each PgeneF is given a number, which is shown in the Query Results table (column name "PgeneF").
 The size of the PgeneF is also shown (column "PgFSize").
 <p>
-Filters at this stage apply to the PgeneF as a whole:
+Filters using the PgeneF values:
 
 <p><b>Include/Exclude</b>
 <br>

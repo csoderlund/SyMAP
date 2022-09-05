@@ -63,12 +63,12 @@ public class TableDataPanel extends JPanel {
 	
 	// called by SymapQueryFrame
 	public TableDataPanel(SyMAPQueryFrame parentFrame, String resultName,  boolean [] selections,
-			String query, String sum, boolean bOrphan) {
+			String query, String sum, boolean bSingle) {
 		theParentFrame = parentFrame;
 		theName = 		 resultName;
 		
 		theQueryPanel = 	theParentFrame.getQueryPanel();
-		isOrphan		=   bOrphan;
+		isSingle		=   bSingle;
 		theQuery =		 	query;
 		theSummary = 		sum;
 		
@@ -175,15 +175,13 @@ public class TableDataPanel extends JPanel {
         	HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> (); 
         	HashMap <String,Integer> proj2regions = new HashMap  <String, Integer> (); // ComputePgeneF
         		
-         	Vector  <DBdata> rowsFromDB = 
-         		DBdata.loadRowsFromDB(rs, theParentFrame.getProjects(),
+         	Vector  <DBdata> rowsFromDB =  DBdata.loadRowsFromDB(rs, theParentFrame.getProjects(),
          			theParentFrame.getQueryPanel(), theAnnoKeys.getColumns(), loadStatus,
-         			geneCntMap, proj2regions ); // Inputs for Summary
+         			geneCntMap, proj2regions); // Inputs for Summary
          				 
         	theTableData.addRowsWithProgress(rowsFromDB, loadStatus);
         		
-            SummaryPanel sp = new SummaryPanel(rowsFromDB, theQueryPanel, 
-            			proj2regions, geneCntMap);
+            SummaryPanel sp = new SummaryPanel(rowsFromDB, theQueryPanel, proj2regions, geneCntMap);
             statsPanel = sp.getPanel();
             
             rowsFromDB.clear(); // NOTE: IF want to use later, then the Statics need to be removed from DBdata
@@ -232,9 +230,9 @@ public class TableDataPanel extends JPanel {
  	    btnShowAlign.setAlignmentX(Component.LEFT_ALIGNMENT);
  	    btnShowAlign.setBackground(Color.WHITE);
  	    btnShowAlign.addActionListener(new ActionListener() {
- 	    		public void actionPerformed(ActionEvent arg0) {
- 	    			showAlignment();
- 	    		}
+    		public void actionPerformed(ActionEvent arg0) {
+    			showAlignment();
+    		}
  		});  
  	    topRow.add(btnShowAlign);			topRow.add(Box.createHorizontalStrut(10));
 	 	    
@@ -414,7 +412,7 @@ public class TableDataPanel extends JPanel {
         	page.add(row);
         	if (x < species.length - 1) page.add(new JSeparator());
     	}
-    	String loc = (isOrphan) ? "Gene" : "Hit"; // CAS503
+    	String loc = (isSingle) ? "Gene" : "Hit"; // CAS503
     	page.setBorder(BorderFactory.createTitledBorder(loc + " Location"));
     	page.setMaximumSize(page.getPreferredSize());
 
@@ -477,13 +475,13 @@ public class TableDataPanel extends JPanel {
         		
         		if(curWidth + ANNO_COLUMN_WIDTH > ANNO_PANEL_WIDTH) {
         			colPanel.add(row);
-	        	    	row = new JPanel();
-	        	    	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-	        	    	row.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-	        	    	row.setBackground(Color.WHITE);
-	        	    	
-	        	    	row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH + 10));
-	        	    	curWidth = ANNO_COLUMN_WIDTH + 10;
+        	    	row = new JPanel();
+        	    	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
+        	    	row.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+        	    	row.setBackground(Color.WHITE);
+        	    	
+        	    	row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH + 10));
+        	    	curWidth = ANNO_COLUMN_WIDTH + 10;
         		}
         		row.add(chkTemp);
         		
@@ -702,7 +700,7 @@ public class TableDataPanel extends JPanel {
     	}
     }
     private void setPanelSelected() {
-		if (isOrphan) return;
+		if (isSingle) return;
 		
 		boolean b = (theTable.getSelectedRowCount() == 1)  ? true : false;
 	 	txtMargin.setEnabled(b);
@@ -824,7 +822,7 @@ public class TableDataPanel extends JPanel {
 					for(int x=0; x<selNum; x++) {
 						if (!rd.load(x)) return;
 							
-						int n = (isOrphan) ? 1 : 2;
+						int n = (isSingle) ? 1 : 2;
 						for (int i=0; i<n; i++) {
 							// this getSequence is slow.
 							String seq = theParentFrame.getSequence(rd.start[i], rd.end[i], rd.chrIdx[i]);
@@ -861,7 +859,7 @@ public class TableDataPanel extends JPanel {
      * Show alignment
      */
     private void showAlignment() {
-		if (isOrphan) return;
+		if (isSingle) return;
 		if (theTable.getSelectedRowCount() == 0)  return;
 		
 		Thread inThread = new Thread(new Runnable() {
@@ -922,7 +920,7 @@ public class TableDataPanel extends JPanel {
      */
     private void showSynteny() {
 		try{
-			if (isOrphan) return;
+			if (isSingle) return;
 			if (theTable.getSelectedRowCount() != 1)  return;
     			
 			double padding = Double.parseDouble(txtMargin.getText()) * 1000;
@@ -993,11 +991,10 @@ public class TableDataPanel extends JPanel {
         	if(loadStatus.getText().equals("Cancelled")) return null; 
         	loadStatus.setText("Performing database search....");
         	
-        	if (Q.TEST_TRACE)	loadDataTESTwrite(theQuery, null, isOrphan);
-        	
         	try {
         		/**** EXECUTE ***/
         		ResultSet rs = stmt.executeQuery(theQuery);  
+        		if (Q.TEST_TRACE)	loadDataTESTwrite(theQuery, rs, isSingle);
         		return rs;
         	}
         	catch(Exception e)	{ErrorReport.print(e, "Load Data1"); return null;}
@@ -1006,16 +1003,16 @@ public class TableDataPanel extends JPanel {
 	}
 	private void loadDataTESTwrite(String strQuery, ResultSet rs, boolean isOrphan) {
 		if (strQuery!=null) {
-		 	try
-		 	{
-        		BufferedWriter w = new BufferedWriter(new FileWriter("/tmp/symap_query2.txt"));
+		 	try {
+        		BufferedWriter w = new BufferedWriter(new FileWriter("/tmp/symap_sql.txt"));
         		w.write("\n" + strQuery+ "\n\n");
         		w.close();
         	} catch(Exception e){};
 		}
-		else if (isOrphan) {
-			try
-			{
+		if (rs==null) return;
+		
+		if (isOrphan) {
+			try {
         		BufferedWriter w = new BufferedWriter(new FileWriter("/tmp/symap_orphan_results.xls"));
         		w.write("Row\tAStart\tAnnoIdx\tID\n");
         		int cnt=0;
@@ -1037,7 +1034,7 @@ public class TableDataPanel extends JPanel {
 		else {
 		 	try {
         		BufferedWriter w = new BufferedWriter(new FileWriter("/tmp/symap_results.xls"));
-        		w.write("Row\tblock\tHitIdx\tgrp1\tgrp2\tanno1\tanno2\tAnnoIDX\tAnnoGrp\tAname\n");
+        		w.write("Row\tblock\tHitIdx\tgrp1\tgrp2\tanno1\tanno2\tAnnoIDX\tAnnoGrp\tAname\tAGene\n");
         		int cnt=0;
         		while (rs.next()) {
         			String n = rs.getString(Q.ANAME);
@@ -1049,7 +1046,7 @@ public class TableDataPanel extends JPanel {
         			rs.getInt(Q.GRP1IDX) + "\t" + 	rs.getInt(Q.GRP2IDX)   + "\t" + 
         			rs.getInt(Q.ANNOT1IDX) + "\t" + 	rs.getInt(Q.ANNOT2IDX)   + "\t" + 
         			rs.getInt(Q.AIDX)   +  "\t" + 	rs.getInt(Q.AGIDX)  + "\t" +
-        			 n  + "\n");
+        			 n  +  "\t" + rs.getInt(Q.AGENE) + "\n");
         			cnt++;
         		}
         		w.close();
@@ -1372,7 +1369,7 @@ public class TableDataPanel extends JPanel {
     					if (x>2) break; // should not happen
     				}
     				if (tok[1].equals(Q.chrCol)) 		chrNum[i0or1] = sVal;
-    				else if (tok[1].equals(Q.startCol))  start[i0or1] = iVal;
+    				else if (tok[1].equals(Q.startCol)) start[i0or1] = iVal;
     				else if (tok[1].equals(Q.endCol)) 	end[i0or1] = iVal;
     			}
     			SpeciesSelectPanel spPanel = theQueryPanel.getSpeciesPanel();
@@ -1427,7 +1424,7 @@ public class TableDataPanel extends JPanel {
 	private AnnoData theAnnoKeys = null;
   
 	private String theName = "", theSummary = "", theQuery = "";
-	private boolean isOrphan = false; // Cannot use theQueryPanel.isOrphan because only good for last query
+	private boolean isSingle = false; // Cannot use theQueryPanel.isOrphan because only good for last query
     
 	private static int nTableID = 0;
 }

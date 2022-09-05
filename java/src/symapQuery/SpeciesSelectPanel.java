@@ -182,8 +182,7 @@ public class SpeciesSelectPanel extends JPanel {
 	
 				if(catName.equals(temp.getCategory())) {
 					if(firstOne) {
-						if(sortedCat.size() > 1)
-							add(new JLabel(catName.toUpperCase()));
+						if(sortedCat.size() > 1) add(new JLabel(catName.toUpperCase()));
 						firstOne = false;
 					}
 					JPanel row = new JPanel();
@@ -195,7 +194,7 @@ public class SpeciesSelectPanel extends JPanel {
 					row.add(temp);
 					
 					add(row);
-					add(Box.createVerticalStrut(5));
+					add(Box.createVerticalStrut(3)); // CAS514  
 				}
 			}
 		}

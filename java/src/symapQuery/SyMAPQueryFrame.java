@@ -21,6 +21,7 @@ import util.DatabaseReader;
 import util.Utilities;
 
 import util.ErrorReport;
+import symap.SyMAP;
 import symap.pool.PoolManager;
 import symap.pool.Pools;
 import symap.projectmanager.common.Project;
@@ -32,7 +33,7 @@ public class SyMAPQueryFrame extends JFrame {
 	
 	// ProjectManager creates this object, add the projects, then calls build.
 	public SyMAPQueryFrame(DatabaseReader dr, boolean is3D) {
-		setTitle("SyMAP Query");
+		setTitle("SyMAP Query " + SyMAP.VERSION); // CAS514 add version
 		theReader = dr;
 		
 		theProjects = new Vector<Project> ();		
@@ -91,7 +92,7 @@ public class SyMAPQueryFrame extends JFrame {
 		updateView();
 	}
 	// called from queryPanel on Run Query
-	public void makeTable(String query, String sum, boolean bOrphan) {
+	public void makeTable(String query, String sum, boolean bSingle) {
 		boolean [] saveLastColumns = null;
 		for(int x=allResults.size()-1; x>=0 && saveLastColumns == null; x--) {
 			if(allResults.get(x) instanceof TableDataPanel) {
@@ -99,7 +100,7 @@ public class SyMAPQueryFrame extends JFrame {
 			}
 		}
 		TableDataPanel newTablePanel = new TableDataPanel(getInstance(), getNextResultLabel(), 
-											saveLastColumns, query, sum, bOrphan);
+											saveLastColumns, query, sum, bSingle);
 		
 		menuPanel.addResult(newTablePanel.getName()+":");
 		

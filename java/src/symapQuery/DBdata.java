@@ -30,7 +30,7 @@ public class DBdata {
 	private static QueryPanel qPanel;
 	private static SpeciesSelectPanel spPanel;
 	private static JTextField loadStatus;
-	private static boolean isOrphan=false;
+	private static boolean isSingle=false, isOrphan = false;;
 	
 	private static int cntDup=0, cntFilter=0, cntPgeneF=0;
 	
@@ -46,6 +46,7 @@ public class DBdata {
 		qPanel = theQueryPanel;
 		spPanel = qPanel.getSpeciesPanel();
 		loadStatus = loadTextField;
+		isSingle = qPanel.isSingle();
 		isOrphan = qPanel.isOrphan();
 		
 		cntDup=0; cntFilter=0; // restart counts
@@ -60,10 +61,10 @@ public class DBdata {
 		int rowNum=1;
 		
 		try {
-			if (isOrphan) {
+			if (isSingle) {
 				while (rs.next()) {
 					DBdata dd = new DBdata();
-					dd.loadOrphan(rs, rowNum);
+					dd.loadSingle(rs, rowNum);
 					rows.add(dd); 
          			rowNum++;
          			if (rowNum%Q.INC ==0) 
@@ -71,6 +72,7 @@ public class DBdata {
 				}
 			}
 			else {
+				// two records for each hit, for each side of pair; block, hitIdx, are the same
 	         	while (rs.next()) {
 	         		int hitIdx = rs.getInt(Q.HITIDX);
 	         		
@@ -91,9 +93,11 @@ public class DBdata {
 	         	} 	
 			}
 			rs.close();
+			if (Q.TEST_TRACE) System.err.println("Dups: " + cntDup);
 			
 		// Filter
 			if (isFilter) {
+				if (Q.TEST_TRACE) System.err.println("Fil: " + qPanel.isOneAnno() + qPanel.isTwoAnno() + (grpStart.size()>0));
 				rowNum=0;
 				Vector <DBdata> filterRows = new Vector <DBdata> ();
 				for (DBdata dd : rows) {
@@ -109,8 +113,29 @@ public class DBdata {
 				}
 				rows.clear();
 				rows = filterRows;
+				
+				if (Q.TEST_TRACE) System.err.println("Filter " + cntFilter);
 			}
-			
+		// Single only filter
+			if (isSingle && !isOrphan) {
+				int lastIdx=-1;
+				rowNum=0;
+				Vector <DBdata> filterRows = new Vector <DBdata> ();
+				for (DBdata dd : rows) {
+					if (lastIdx!= dd.annoSet0.first())  {// you have to have a gene
+						lastIdx = dd.annoSet0.first();
+						
+						filterRows.add(dd);	
+						rowNum++;
+						dd.rowNum = rowNum;
+						if (rowNum%Q.INC ==0) 
+							loadStatus.setText("Filtered " + rowNum + " rows");
+					}
+				}
+				rows.clear();
+				rows = filterRows;
+			}
+				
 		// Finish
 			rowNum=0;
          	for (DBdata dd : rows) {
@@ -125,11 +150,8 @@ public class DBdata {
          		loadStatus.setText("Compute PgeneF and filter");
          		rows = runPgeneF(rows, proj2regions);
          	}
-         	
-         // Make unique gene (annotIdx) map; has to be done after filter
-         	loadStatus.setText("Create gene counts");
-         	makeGeneCnts(rows, geneCntMap);
-         	
+         	makeGeneCnts(rows, geneCntMap); // CAS514 delete makeGeneCnts, use genenum from DB instead
+        	
          	return rows;
      	} 
 		catch (Exception e) {ErrorReport.print(e, "Reading rows from db");}
@@ -187,7 +209,9 @@ public class DBdata {
 		}
 		catch (Exception e) {ErrorReport.print(e, "make keyword array");}
 	}
-	
+	/**********************************************************
+	 * Set up coordinates from the interface for filter
+	 */
 	static private void makeGrpLoc(HashMap <Integer, String> grpCoords) {
 		try {
 			grpStart = new HashMap <Integer, Integer> ();
@@ -267,7 +291,7 @@ public class DBdata {
         
          	for (DBdata dd : rows) {
          		for (int x=0; x<2; x++) {
-         	        TreeSet <Integer> anno = (x==0) ? dd.anno0 : dd.anno1;
+         	        TreeSet <Integer> anno = (x==0) ? dd.annoSet0 : dd.annoSet1;
 	         		for (int aidx : anno) {
 	         			int num=0;
 	         			int spx = dd.spIdx[x];
@@ -280,8 +304,6 @@ public class DBdata {
 	         			else {
 	         				num = numPerGene.get(aidx);
 	         			}
-	         			if (dd.geneNum[x].equals("")) dd.geneNum[x] = num + "";
-	     				else dd.geneNum[x] += "," + num;
 	         		}
          		}
          	}
@@ -291,7 +313,6 @@ public class DBdata {
 		}
 		catch (Exception e) {ErrorReport.print(e, "make gene cnt");}
 	}
-	
 	/****************************************************************
 	 * XXX DBdata class - one instance per row
 	 */
@@ -300,6 +321,8 @@ public class DBdata {
 	private void loadHit(ResultSet rs, int row) {
 		try {
 			this.rowNum = row;
+			
+			// from hit table - same values added for each side of hit - if anno on both sides
 			hitIdx = 		rs.getInt(Q.HITIDX);
 			
 			spIdx[0] = 		rs.getInt(Q.PROJ1IDX);
@@ -316,14 +339,17 @@ public class DBdata {
 			blockNum =		rs.getInt(Q.BNUM);
 			blockScore =	rs.getInt(Q.BSCORE);
 			
-			int annoGrpIdx = rs.getInt(Q.AGIDX);		// grpIdx, so unique
-			if (annoGrpIdx > 0) { // does this annotation belong with the 1st or 2nd half of hit?
+			// from anno table 
+			int annoGrpIdx = rs.getInt(Q.AGIDX);	// grpIdx, so unique; same as chrIdx[0|1]
+			if (annoGrpIdx > 0) { 					// can be hit with no anno
 				int x = (annoGrpIdx==chrIdx[0]) ? 0 : 1; 
+				
 				annotStr[x] =	rs.getString(Q.ANAME);
+				geneNum[x] = 	rs.getInt(Q.AGENE); // CAS514
 				
 				int annoIdx = rs.getInt(Q.AIDX);
-				if (x==0) anno0.add(annoIdx);
-				else      anno1.add(annoIdx);
+				if (x==0) annoSet0.add(annoIdx); // multiple anno's for same hit
+				else      annoSet1.add(annoIdx);
 			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Read hit record");}
@@ -337,43 +363,44 @@ public class DBdata {
 			int annoIdx = rs.getInt(Q.AIDX);  
 			
 			int x = (annoGrpIdx==chrIdx[0]) ? 0 : 1; // goes with 1st or 2nd half of hit?
-			int sz = (x==0) ? anno0.size() : anno1.size();
 			
+			geneNum[x] = 	rs.getInt(Q.AGENE); // CAS514
+			
+			int sz = (x==0) ? annoSet0.size() : annoSet1.size();
 			if (sz>0)  { // can be multiple hits for same project	
 				annotStr[x]	+=	";" + rs.getString(Q.ANAME);
 				cntDup++; 
 			}  
-			else {
-				annotStr[x]	=	rs.getString(Q.ANAME);
-			}
+			else annotStr[x]	=	rs.getString(Q.ANAME);
 			
-			if (x==0) anno0.add(annoIdx);
-			else      anno1.add(annoIdx);
+			if (x==0) annoSet0.add(annoIdx);
+			else      annoSet1.add(annoIdx);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Merge");}
 	}
-	private void loadOrphan(ResultSet rs, int row) {
+	private void loadSingle(ResultSet rs, int row) {
 		try {
 			this.rowNum = row;
 			
-			anno0.add(rs.getInt(Q.AIDX));
+			annoSet0.add(rs.getInt(Q.AIDX));
 			annotStr[0]	=	rs.getString(Q.ANAME);
 			chrIdx[0] = 	rs.getInt(Q.AGIDX);
 			start[0] =		rs.getInt(Q.ASTART);		// Gene start to chromosome
 			end[0] =		rs.getInt(Q.AEND);
+			geneNum[0] = 	rs.getInt(Q.AGENE);  // CAS514
 		}
-		catch (Exception e) {ErrorReport.print(e, "Read orphan");}
+		catch (Exception e) {ErrorReport.print(e, "Read single");}
 	}
 	/*********************************************
 	 * Create block string and make anno keys 
 	 */
 	private boolean finish(String [] annoColumns) {
 	try {
-		int n = (isOrphan) ? 1 : 2;
+		int n = (isSingle) ? 1 : 2;
 		for (int x=0; x<n; x++) {
-			spName[x] = 					spPanel.getSpNameFromChrIdx(chrIdx[x]);
-			chrNum[x] = 					spPanel.getChrNameFromChrIdx(chrIdx[x]);
-			if (isOrphan) spIdx[x] =  	spPanel.getSpIdxFromChrIdx(chrIdx[x]); 
+			spName[x] = 				spPanel.getSpNameFromChrIdx(chrIdx[x]);
+			chrNum[x] = 				spPanel.getChrNameFromChrIdx(chrIdx[x]);
+			if (isSingle) spIdx[x] =  	spPanel.getSpIdxFromChrIdx(chrIdx[x]); 
 
 			if (blockNum>0) block = Utilities.blockStr(chrNum[0], chrNum[1], blockNum); // CAS513 use blockStr
 			
@@ -427,8 +454,7 @@ public class DBdata {
 	 */
 	private boolean passFilters() {
 		try {
-			
-			if (isOrphan) {
+			if (isSingle) {
 				if (grpStart.size()==0) return true;
 				
 				boolean found=false;
@@ -447,11 +473,11 @@ public class DBdata {
 			}
 			
 			if (qPanel.isOneAnno()) {
-				if (anno0.size() >0 && anno1.size() >0) return false; // both anno
-				if (anno0.size()<=0 && anno1.size()<=0) return false; // both not anno
+				if (annoSet0.size() >0 && annoSet1.size() >0) return false; // both anno
+				if (annoSet0.size()<=0 && annoSet1.size()<=0) return false; // both not anno
 			}
 			else if (qPanel.isTwoAnno()) {
-				if (anno0.size()<=0 || anno1.size()<=0) return false; // both anno
+				if (annoSet0.size()<=0 || annoSet1.size()<=0) return false; // both anno
 			}
 			
 			if (grpStart.size()==0) return true;
@@ -475,6 +501,7 @@ public class DBdata {
 			
 		} catch (Exception e) {ErrorReport.print(e, "Reading rows"); return false;}
 	}
+	
 	/*********************************************************
 	 * Called if ComputePgeneF is run
 	 */
@@ -482,7 +509,6 @@ public class DBdata {
 		this.pgenef = pgenef;
 		this.pgfsize = pgfsize;
 	}
-
 	/*************************************************
 	 * TableData.addRowsWithProgress: returns row formated for table.
 	 * 
@@ -510,13 +536,13 @@ public class DBdata {
 				row.add(chrNum[0]); 
 				row.add(start[0]); 
 				row.add(end[0]); 
-				row.add((anno0.size()>0) ? geneNum[0] : "-"); // could change this to a gene# list
+				row.add(geneNum[0]);
 			}
 			else if (spIdx[1]==spIdxList[i]) {
 				row.add(chrNum[1]); 
 				row.add(start[1]); 
 				row.add(end[1]); 
-				row.add((anno1.size()>0) ? geneNum[1] : "-");
+				row.add(geneNum[1]);
 			}
 			else {
 				row.add(Q.empty); row.add(Q.empty); row.add(Q.empty); row.add(Q.empty);
@@ -567,8 +593,8 @@ public class DBdata {
 		return x;
 	}
 	public boolean hasAnno(int x) 	{
-		if (x==0) return anno0.size()>0;
-		else      return anno1.size()>0;
+		if (x==0) return annoSet0.size()>0;
+		else      return annoSet1.size()>0;
 	}
 	public boolean hasBlock() 	{return blockNum>0;}
 	
@@ -576,16 +602,17 @@ public class DBdata {
 	 * Class variables -- public -- accessed in ComputePgeneF
 	 */
 // Annot 
-	private TreeSet <Integer> anno0 = new TreeSet <Integer> (); // not same order as annotStr
-	private TreeSet <Integer> anno1 = new TreeSet <Integer> (); // just used to count genes
+	private TreeSet <Integer> annoSet0 = new TreeSet <Integer> (); // not same order as annotStr
+	private TreeSet <Integer> annoSet1 = new TreeSet <Integer> (); // just used to count genes
 	private String [] annotStr =	 {"", ""};
 	
 // hit
 	private int hitIdx = -1;
-	private int [] spIdx = {-1, -1};	
-	private int [] chrIdx = 	{-1, -1};		
+	private int [] spIdx =  {-1, -1};	
+	private int [] chrIdx = {-1, -1};		
 	private int [] start = 	{-1, -1};  // or from pseudo_annot for orphans
-	private int [] end = 	{-1, -1}; 	
+	private int [] end = 	{-1, -1}; 
+	private int [] geneNum = {0, 0}; // CAS514 add
 	
 // block
 	private int blockNum=-1, blockScore=-1, runSize=-1;
@@ -600,6 +627,5 @@ public class DBdata {
 	
 	// AnnoStr broken down into keyword values in finish()
 	private HashMap <Integer, String[]> annoVals = new HashMap <Integer, String[]>  (); // 0,1, values in order
-	// Assigned on makeGeneCnts
-	private String [] geneNum = {"",""}; 
+	// Assigned on makeGeneCnt; private String [] geneCnt = {"",""};  CAS514 replace with geneNum from db
 }

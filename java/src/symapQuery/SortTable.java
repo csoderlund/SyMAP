@@ -28,9 +28,9 @@ public class SortTable extends JTable implements ListSelectionListener {
         theClickListeners = new Vector<ActionListener> ();
         theDoubleClickListeners = new Vector<ActionListener> ();
         
-    		theModel = new SortTableModel(tData);
+    	theModel = new SortTableModel(tData);
     	
-    		setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+    	setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         setAutoCreateColumnsFromModel( true );
        	setColumnSelectionAllowed( false );
        	setCellSelectionEnabled( false );
@@ -65,59 +65,54 @@ public class SortTable extends JTable implements ListSelectionListener {
     }  
     
     public void removeListeners() {
-    		theClickListeners.clear();
-    		theDoubleClickListeners.clear();
+    	theClickListeners.clear();
+    	theDoubleClickListeners.clear();
     }
-    
     public void addSingleClickListener(ActionListener l) {
-    		theClickListeners.add(l);
+    	theClickListeners.add(l);
     }
-    
     public void addDoubleClickListener(ActionListener l) {
-    		theDoubleClickListeners.add(l);
+    	theDoubleClickListeners.add(l);
     }
-    
     public void sortAtColumn(int column) {
-    		theModel.sortAtColumn(column);
+    	theModel.sortAtColumn(column);
     }
-        
     public Component prepareRenderer(TableCellRenderer renderer,int Index_row, int Index_col) {
-	    	Component comp = super.prepareRenderer(renderer, Index_row, Index_col);
-	    	if(comp instanceof JLabel) {
-	        	JLabel compLbl = (JLabel)comp;
-	        	Class<?> cl = getColumnClass(Index_col);
-	
-	        	//even index, selected or not selected
-	        	if(isRowSelected(Index_row)) {
-	        		compLbl.setBackground(bgColorHighlight);
-	        		compLbl.setForeground(bgColor);
-	        	}
-	        	else if (Index_row % 2 == 0) {
-	        		compLbl.setBackground(bgColorAlt);
-	        		compLbl.setForeground(txtColor);
-	        } 
-	        else {
-	            	compLbl.setBackground(bgColor);
-	            	compLbl.setForeground(txtColor);
-	        }
-	        	if(cl == Integer.class) {
-	        		compLbl.setText(addCommas(compLbl.getText()));
-	        	}
-	        	else if(cl == Long.class) {
-	        		compLbl.setText(addCommas(compLbl.getText()));
-	        	}
-	        	compLbl.setHorizontalAlignment(SwingConstants.LEFT);
-	        	if(compLbl.getText().length() == 0)
-	        		compLbl.setText("-");
+    	Component comp = super.prepareRenderer(renderer, Index_row, Index_col);
+    	if (comp instanceof JLabel) {
+        	JLabel compLbl = (JLabel)comp;
+        	Class<?> cl = getColumnClass(Index_col);
+
+        	//even index, selected or not selected
+        	if (isRowSelected(Index_row)) {
+        		compLbl.setBackground(bgColorHighlight);
+        		compLbl.setForeground(bgColor);
+        	}
+        	else if (Index_row % 2 == 0) {
+        		compLbl.setBackground(bgColorAlt);
+        		compLbl.setForeground(txtColor);
+        	} 
+        	else {
+            	compLbl.setBackground(bgColor);
+            	compLbl.setForeground(txtColor);
+        	}
+        	if (cl == Integer.class) {
+        		compLbl.setText(addCommas(compLbl.getText()));
+        	}
+        	else if (cl == Long.class) {
+        		compLbl.setText(addCommas(compLbl.getText()));
+        	}
+        	compLbl.setHorizontalAlignment(SwingConstants.LEFT);
+        	if (compLbl.getText().length() == 0)
+        		compLbl.setText("-");
 	        return compLbl;    		
-	    	}
-	    	return comp;
+	    }
+	    return comp;
     }
     
     private static String addCommas(String val) {
-    		return val.replaceAll("(\\d)(?=(\\d{3})+$)", "$1,");
+    	return val.replaceAll("(\\d)(?=(\\d{3})+$)", "$1,");
     }
-
     private Color bgColor = Color.WHITE;
     private Color bgColorAlt = new Color(240,240,255);
     private Color bgColorHighlight = Color.GRAY;
@@ -144,8 +139,7 @@ public class SortTable extends JTable implements ListSelectionListener {
             column = getColumnModel().getColumn(i);
             
             comp = headerRenderer.getTableCellRendererComponent(
-                                 this, column.getHeaderValue(),
-                                 false, false, 0, i);
+                    this, column.getHeaderValue(), false, false, 0, i);
             
             cellWidth = comp.getPreferredSize().width; // header width 
             
@@ -158,10 +152,9 @@ public class SortTable extends JTable implements ListSelectionListener {
 	            if (j > 1001) break; // only check beginning rows, for performance reasons
             }  
             String head = (String) column.getHeaderValue();
-            if (head.contains(Q.chrCol) || head.contains(Q.geneHitCol)) 
-            								maxDef = MAX_AUTOFIT_COLUMN_CHR_WIDTH;
+            if (head.contains(Q.chrCol)) maxDef = MAX_AUTOFIT_COLUMN_CHR_WIDTH;
             else if (theModel.getColumnClass(i) == String.class)  
-            								maxDef = MAX_AUTOFIT_COLUMN_STR_WIDTH;
+            							maxDef = MAX_AUTOFIT_COLUMN_STR_WIDTH;
             else 						maxDef = MAX_AUTOFIT_COLUMN_INT_WIDTH;
             
             column.setPreferredWidth(Math.min(cellWidth, maxDef)+5);
@@ -169,33 +162,30 @@ public class SortTable extends JTable implements ListSelectionListener {
     }
     
     public class SortTableModel extends AbstractTableModel {
+		private static final long serialVersionUID = -2360668369025795459L;
 
-    		private static final long serialVersionUID = -2360668369025795459L;
-
-    		public SortTableModel(TableData values) {
-    			theData = values;
+		public SortTableModel(TableData values) {
+			theData = values;
+		}
+		public boolean isCellEditable(int row, int column) { return false; }
+		public Class<?> getColumnClass(int columnIndex) { return theData.getColumnType(columnIndex); }
+		public String getColumnName(int columnIndex) { return theData.getColumnName(columnIndex); }
+		public int getColumnCount() { return theData.getNumColumns(); }
+		public int getRowCount() { return theData.getNumRows(); }
+		public Object getValueAt(int rowIndex, int columnIndex) { return theData.getValueAt(rowIndex, columnIndex); }
+		public void sortAtColumn(final int columnIndex) {
+	    Thread t = new Thread(new Runnable() {
+    		public void run() {
+            	setCursor(new Cursor(Cursor.WAIT_CURSOR));
+        		theData.sortByColumn(columnIndex);
+        		fireTableDataChanged();
+        		theData.sortMasterList(theModel.getColumnName(columnIndex));
+             	setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
     		}
-
-    		public boolean isCellEditable(int row, int column) { return false; }
-    		public Class<?> getColumnClass(int columnIndex) { return theData.getColumnType(columnIndex); }
-    		public String getColumnName(int columnIndex) { return theData.getColumnName(columnIndex); }
-    		public int getColumnCount() { return theData.getNumColumns(); }
-    		public int getRowCount() { return theData.getNumRows(); }
-    		public Object getValueAt(int rowIndex, int columnIndex) { return theData.getValueAt(rowIndex, columnIndex); }
-    		public void sortAtColumn(final int columnIndex) {
-		    Thread t = new Thread(new Runnable() {
-	    		public void run() {
-	            	setCursor(new Cursor(Cursor.WAIT_CURSOR));
-	        		theData.sortByColumn(columnIndex);
-	        		fireTableDataChanged();
-	        		theData.sortMasterList(theModel.getColumnName(columnIndex));
-	             	setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-	    		}
-		    });
-		    t.setPriority(Thread.MIN_PRIORITY);
-		    t.start();
-    		}
-
-    		private TableData theData = null;
+	    	});
+	    	t.setPriority(Thread.MIN_PRIORITY);
+	    	t.start();
+		}
+		private TableData theData = null;
     }
 }

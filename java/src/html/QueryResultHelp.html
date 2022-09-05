@@ -130,16 +130,17 @@ are the meanings of the columns:
 	<td>&nbsp;</td>
 	<td>
 		Start/end of the hit region.
-		<br>NOTE1: Hits are clustered during anchor loading, so hit regions
+		<br><u>NOTE1</u>: Hits are clustered during anchor loading, so hit regions
 		are not necessarily single MUMmer alignments).
-		<br>NOTE2: If the table contains orphan genes, then the coordinates are the gene coordinates.
+		<br><u>NOTE2</u>: If the table contains single project genes (e.g. orphan or all),
+		    then the coordinates are the gene coordinates.
 	</td>
 </tr>
 <tr>
-	<td valign="top"><b>Gene#</b></td>
+	<td valign="top"><b>#Gene</b></td>
 	<td>&nbsp;</td>
-	<td>For each species, the genes are numbered, where the number is specific to the query results. A gene may have multiple hits, and
-	a hit may overlap multiple genes.
+	<td>The order number along the chromosome of the gene. This is shown on the Chromosome Explorer
+	"Annotation Description" and when the mouse hoovers over the gene.
 	</td>
 </tr>
 <tr>

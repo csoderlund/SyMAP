@@ -40,8 +40,8 @@ public class SequenceFilter extends Filter {
 	private JTextField startText;
 	private JTextField endText;
 
-	private JComboBox startCombo;
-	private JComboBox endCombo;
+	private JComboBox <String> startCombo; // CAS514 add type
+	private JComboBox <String> endCombo;
 
 	private JRadioButton geneFullRadio;
 	private JRadioButton geneMidRadio;
@@ -95,8 +95,8 @@ public class SequenceFilter extends Filter {
 		startText = new JTextField("",15);
 		endText = new JTextField("",15);
 
-		startCombo = new JComboBox(GenomicsNumber.ABS_UNITS);
-		endCombo = new JComboBox(GenomicsNumber.ABS_UNITS);
+		startCombo = new JComboBox <String>(GenomicsNumber.ABS_UNITS);
+		endCombo = new JComboBox <String>(GenomicsNumber.ABS_UNITS);
 
 		startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
 		endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
@@ -249,9 +249,6 @@ public class SequenceFilter extends Filter {
 		return "sequencefilter";//Filter.SEQUENCE_FILTER_ID;
 	}
 
-	/**
-	 * Method <code>canShow</code> returns true if the Sequence has been initialized.
-	 */
 	public boolean canShow() {
 		if (sequence == null) return false;
 		return sequence.hasInit();
@@ -259,7 +256,7 @@ public class SequenceFilter extends Filter {
 
 	/**
 	 * Sets up the sequence dialog based on the current sequence track information before showing then
-	 * shows (<code>super.show()</code>).
+	 * shows (super.show()).
 	 */
 	public void showX() {
 		if (!isShowing()) {
@@ -376,10 +373,7 @@ public class SequenceFilter extends Filter {
 	}
 
 	/**
-	 * Method <code>stateChanged</code> handles updating the Sequence track 
-	 * when a checkbox changes.
-	 *
-	 * @param event a <code>ChangeEvent</code> value
+	 * stateChanged handles updating the Sequence track when a checkbox changes.
 	 */
 	public void stateChanged(ChangeEvent event) {
 		if (sequence != null && !noChange) {
@@ -471,7 +465,7 @@ public class SequenceFilter extends Filter {
 		}
 		super.actionPerformed(event);
 	}
-	// 
+	
 	public void popupMenuWillBecomeVisible(PopupMenuEvent event) { 
 		int[] annotTypeCounts = sequence.getAnnotationTypeCounts();
 		if (annotTypeCounts[Annotation.FRAMEWORK_INT] == 0) 		framePopupCheck.setEnabled(false);
@@ -503,8 +497,8 @@ public class SequenceFilter extends Filter {
 		hitLenPopupCheck.setState(bHitLen); 	 
 		flippedPopupCheck.setState(flipped); 
 	}
-	
-	protected boolean okAction() throws Exception {
+	// CAS514 would throw exception which stopped symap
+	protected boolean okAction()  {
 		if (sequence == null) return false;
 		if (!sequence.hasInit()) return true;
 
@@ -584,14 +578,14 @@ public class SequenceFilter extends Filter {
 				if (number < 0) number = 0;
 			} catch (NumberFormatException nfe) {
 				nfe.printStackTrace();
-				throw new Exception("Start value is not a number.");
+				Utilities.showErrorMessage("Start value is not a number.");
+				return false;
 			}
 			try {
 				sequence.setStart((long)Math.round(number * GenomicsNumber.getUnitConversion(unit)));
 			} catch (IllegalArgumentException e) {
 				setStart();
-				e.printStackTrace();
-				throw e;
+				return false;
 			}
 		} else {
 			sequence.resetStart();
@@ -607,15 +601,15 @@ public class SequenceFilter extends Filter {
 				number = Double.parseDouble(endText.getText()); // CAS512 number = (new Double(endText.getText())).doubleValue();
 			} catch (NumberFormatException nfe) {
 				nfe.printStackTrace();
-				throw new Exception("End value is not a number.");
+				Utilities.showErrorMessage("End value is not a number.");
+				return false;
 			}
 			double mult = GenomicsNumber.getUnitConversion(unit);
 			try {
 				mult = sequence.setEnd((long)Math.round(number * mult)) / mult;
 			} catch (IllegalArgumentException e) {
 				setEnd();
-				e.printStackTrace();
-				throw e;
+				return false;
 			}
 			if (mult != number) endText.setText(mult+""); // CAS512 new Double(mult).toString()
 		} else {
@@ -625,9 +619,9 @@ public class SequenceFilter extends Filter {
 		if (sequence.getStart() == sequence.getEnd()) {
 			sequence.setStart(tstart);
 			sequence.setEnd(tend);
-			throw new Exception("The start and end value must be different.");
+			Utilities.showErrorMessage("The start and end value must be different.");
+			return false;
 		}
-
 		endStr = endText.getText();
 		endInd = endCombo.getSelectedIndex();
 

@@ -262,7 +262,8 @@ public class SequencePool extends DatabaseUser {
 						temp.queryEnd = extractEnd(hqr.queryIndices[i]);
 						startOfs = temp.queryStart - hqr.queryStart;
 						endOfs = extractEnd(hqr.queryIndices[i]) - hqr.queryStart;
-						if ((startOfs+endOfs)>=hqr.querySeq.length()) continue; // CAS501 - fix for crash
+						// CAS514 this makes only first part of alignment work - 
+						//if ((startOfs+endOfs)>=hqr.querySeq.length()) continue; // CAS501 - fix for crash
 						temp.querySeq = hqr.querySeq.substring(startOfs, endOfs+1);
 						if (hqr.strand.charAt(0) == '-') {
 							temp.querySeq = Utilities.revComplement(temp.querySeq);
@@ -329,8 +330,6 @@ public class SequencePool extends DatabaseUser {
 						    extractEnd(hqr.targetIndices[hqr.targetIndices.length-1])
 							- extractStart(hqr.targetIndices[0]);
 					hqr.targetSeq = loadPseudoSeq(pseudoRange, grp2_idx);
-					
-
 				}
 				if (hqr.strand.charAt(0) == '-')
 					hqr.revComplementQuery = true;
@@ -341,8 +340,7 @@ public class SequencePool extends DatabaseUser {
 			}
 		}
 		catch (SQLException e) {
-			System.err.println("SQL exception acquiring alignment data: getHitQueryResults");
-			System.err.println("Message: " + e.getMessage());
+			ErrorReport.print(e, "Acquiring alignment"); 
 			throw e;
 		} 
 		finally {

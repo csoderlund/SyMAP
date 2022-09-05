@@ -28,9 +28,10 @@ import symap.frame.HelpListener;
 import symap.pool.ProjectProperties;
 import symap.drawingpanel.DrawingPanel;
 import util.ErrorReport;
+import util.Utilities;
 
 /**
- * Class <code>Track</code> contains the base track information.
+ * Class Track contains the base track information.
  */
 public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		SyMAPConstants, KeyListener,
@@ -204,16 +205,14 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	public abstract void clearData();
 
 	/**
-	 * Method <code>getMoveOffset</code> returns the move offset for the track to
-	 * be used by the holder/layout manager.
+	 * getMoveOffset returns the move offset for the track to be used by the holder/layout manager.
 	 */
 	public Point getMoveOffset() {
 		return moveOffset;
 	}
 
 	/**
-	 * Method <code>getGraphics</code> returns the holders graphics object if 
-	 * a holder exists, null otherwise.
+	 * getGraphics returns the holders graphics object if a holder exists, null otherwise.
 	 * @see javax.swing.JComponent#getGraphics()
 	 */
 	public Graphics getGraphics() {
@@ -222,8 +221,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	}
 
 	/**
-	 * Method <code>getLocation</code> returns the location of the holder
-	 * or a point at location 0,0 if holder is not set.
+	 * getLocation returns the location of the holder or a point at location 0,0 if holder is not set.
 	 */
 	public Point getLocation() {
 		if (holder != null) return holder.getLocation();
@@ -231,8 +229,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	}
 
 	/**
-	 * Method <code>getMidX</code> returns the viewable middle 
-	 * as determined by the track.
+	 * getMidX returns the viewable middle as determined by the track.
 	 */
 	public double getMidX() {
 		return rect.getX()+(rect.getWidth()/2.0);
@@ -315,7 +312,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	/**
 	 * Sets the bp/pixel of the track, setting the track to need to be built on 
 	 * the next make.  If bp is less than or equal to zero, nothing is done.
-	 * 
 	 * @param bp New bp/pixel
 	 */
 	public void setBpPerPixel(double bp) {
@@ -360,7 +356,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			clearTrackBuild();
 		}
 	}
-
 	/**
 	 * Sets the height to not be considered on the next build.  Sets the track to
 	 * need to be built on the next make if the height was set.
@@ -371,7 +366,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			clearTrackBuild();
 		}
 	}
-
 	/**
 	 * Sets the width to not be considered on the next build.  Sets the track 
 	 * to need to be built on the next make if the width was set.
@@ -382,13 +376,10 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			clearTrackBuild();
 		}
 	}
-
 	/**
 	 * Sets the orientation of the track, settting the track to need to be 
 	 * built on the next make on a change.
-	 * 
 	 * Some track implementations may only accept RIGHT_ORIENT and LEFT_ORIENT.
-	 * 
 	 * @param orientation The side at which the track is on in the map.  
 	 * LEFT_ORIENT is used if this value is not defined
 	 */
@@ -412,7 +403,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			clearAllBuild();
 		}
 	}
-
 	/**
 	 * Resets the tracks start to 0, setting the track to be built on the next build on a change. 
 	 */
@@ -422,16 +412,19 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			clearAllBuild();
 		}
 	}
-
 	/**
-	 * Sets the start of the track.
-	 * @param startValue start value in CB (BP for tracks where CB is not applicable).
+	 * Sets the start of the track - startValue start value in CB (BP for tracks where CB is not applicable).
+	 * CAS514 was throwing exception and stopping symap
 	 */
-	public void setStart(long startValue) throws IllegalArgumentException {
-		if (startValue > size.getValue())
-			throw new IllegalArgumentException("Start value "+startValue+" is greater than size "+size.getValue()+".");
-		if (startValue < 0) throw new IllegalArgumentException("Start value is less than zero.");
-
+	public void setStart(long startValue)  {
+		if (startValue > size.getValue()) {
+			Utilities.showWarningMessage("Start value "+startValue+" is greater than size "+size.getValue()+".");
+			return;
+		}
+		if (startValue < 0) {
+			Utilities.showWarningMessage("Start value is less than zero.");
+			return;
+		}
 		if (start.getValue() != startValue) {
 			firstBuild = true;
 
@@ -441,12 +434,14 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	}
 
 	/**
-	 * Sets the end of the track. If endBP is greater than the size, than the end is set to the size. 
-	 * @param endValue end point in base pair
+	 * Sets the end of the track. endValue end point in base pair
+	 * CAS514 was throwing exception and stopping symap
 	 */
-	public long setEnd(long endValue) throws IllegalArgumentException {
-		if (endValue < 0) throw new IllegalArgumentException("End value is less than zero.");
-
+	public long setEnd(long endValue) {
+		if (endValue < 0) {
+			Utilities.showWarningMessage("End value is less than zero.");
+			return size.getValue();
+		}
 		if (endValue > size.getValue()) endValue = size.getValue();
 
 		if (end.getValue() != endValue) {
@@ -459,15 +454,17 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	}
 
 	/**
-	 * Sets the start of the track
-	 * @param startBP start point in base pair
+	 * Sets the start of the track. startBP start point in base pair
 	 */
-	public void setStartBP(long startBP, boolean resetPlusMinus) throws IllegalArgumentException {
+	public void setStartBP(long startBP, boolean resetPlusMinus)  {
 		if (startBP > size.getBPValue()) {
-			throw new IllegalArgumentException("Start value "+startBP+" is greater than size "+size.getBPValue()+".");
+			Utilities.showWarningMessage("Start value "+startBP+" is greater than size "+size.getBPValue()+".");
+			return;
 		}
-
-		if (startBP < 0) throw new IllegalArgumentException("Start value "+startBP+" is less than zero.");
+		if (startBP < 0) {
+			Utilities.showWarningMessage("Start value "+startBP+" is less than zero.");
+			return;
+		}
 
 		if (resetPlusMinus) curCenter = 0;
 		if (start.getBPValue() != startBP) {
@@ -478,17 +475,13 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	}
 
 	/**
-	 * Sets the end of the track. If endBP is greater than the size, than 
-	 * the end is set to the size.
-	 * 
-	 * @param endBP end point in base pair
+	 * Sets the end of the track. endBP end point in base pair
 	 * @return The end amount used (i.e. endBP or size if endBP > size)
-	 * @throws IllegalArgumentException Thrown if endBP is less than 0.
 	 */
-	public long setEndBP(long endBP, boolean resetPlusMinus) throws IllegalArgumentException {
-		if (endBP < 0) throw new IllegalArgumentException("End value is less than zero.");
+	public long setEndBP(long endBP, boolean resetPlusMinus)  {
+		if (endBP < 0) Utilities.showWarningMessage("End value is less than zero.");
 
-		if (endBP > size.getBPValue()) endBP = size.getBPValue();
+		if (endBP > size.getBPValue() || endBP<0) endBP = size.getBPValue();
 
 		if (resetPlusMinus) curCenter = 0;
 		if (end.getBPValue() != endBP) {
@@ -533,16 +526,13 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	}
 
 	/**
-	 * Method <code>getValue</code> is a convenience method for getting
-	 * the value of a CB number (equivalent to BP when CB is not applicable)
+	 * getValue is a convenience method for getting the value of a CB number (equivalent to BP when CB is not applicable)
 	 * using this tracks current settings.
-	 *
 	 * Equivalent to GenomicsNumber.getValue(units,track.getBpPerCB(),cb,track.getBpPerPixel())
 	 */
 	public double getValue(long cb, String units) {
 		return GenomicsNumber.getValue(units,bpPerCb,cb,bpPerPixel);
 	}
-
 	/**
 	 * Paints the Track title.  This method should be overloaded by subclasses 
 	 * which still need to call super.paintComponent().
@@ -573,38 +563,30 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			drawingPanel.clearTrackBuild();
 		else clearTrackBuild();
 	}
-
 	public void clearTrackBuild() {
 		hasBuild = false;
 	}
-
 	public boolean hasInit() {
 		return hasInit;
 	}
-
 	public boolean hasBuilt() {
 		return hasBuild;
 	}
-
 	protected void setBuild() {
 		hasBuild = true;
 		firstBuild = false;
 	}
-
 	protected void clearInit() {
 		firstBuild = true;
 		hasInit = false;
 		clearAllBuild();
 	}
-
 	protected void setInit() {
 		hasInit = true;
 	}
-	
 	private double getAvailPixels() {
 		return (drawingPanel.getViewHeight() - (trackOffset.getY() * 2));
 	}
-
 	protected void setFullBpPerPixel() {
 		if (firstBuild) {
 			bpPerPixel = (end.getBPValue() - start.getBPValue()) / getAvailPixels();
@@ -615,15 +597,12 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			defaultBpPerPixel = bpPerPixel;
 		}
 	}
-
 	protected void notifyObserver(Object obj) {
 		if (drawingPanel != null) drawingPanel.update(this, obj);
 	}
-
 	protected void notifyObserver() {
 		if (drawingPanel != null) drawingPanel.smake();
 	}
-
 	protected void layout() {
 		if (holder != null && holder.getParent() instanceof JComponent) {
 			((JComponent)holder.getParent()).doLayout();
@@ -634,15 +613,12 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			drawingPanel.repaint();
 		}
 	}
-
 	protected void adjustBpPerPixel(double bp) {
 		if (bp > 0) bpPerPixel = bp;
 	}
-
 	protected Rectangle2D getTitleBounds() {
 		return new TextLayout(getTitle(),titleFont,getFontRenderContext()).getBounds();
 	}
-
 	protected void setTitle() {
 		String title = getTitle(); // CAS512 returned null, but not repeated 
 		if (title==null) {
@@ -661,12 +637,10 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		if (holder != null)
 			holder.setPreferredSize(dimension);
 	}
-
 	protected boolean validSize() {
 		double dif = end.getPixelValue() - start.getPixelValue();
 		return (dif > 0 && dif <= MAX_PIXEL_HEIGHT);
 	}
-
 	protected void adjustSize() {
 		double dif = end.getPixelValue() - start.getPixelValue();
 		if (dif < 0) {
@@ -681,7 +655,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			// CAS501 System.out.println("Adjusting track size");
 		}
 	}
-
 	protected int getBP(double y) {
 		y -= rect.getY();
 		if (y < 0)
@@ -702,30 +675,25 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 
 		return (int)Math.round(y);
 	}
-
 	protected Cursor getCursor() {
 		return /*holder*/drawingPanel.getCursor(); 
 		
 	}
-
 	protected void setCursor(Cursor c) {
 		if (c == null)
 			/*holder*/drawingPanel.setCursor(SyMAPConstants.DEFAULT_CURSOR); 
 		else
 			/*holder*/drawingPanel.setCursor(c); 
 	}
-
 	protected void repaint() {
 		if (drawingPanel != null) drawingPanel.repaint();
 		else if (holder != null) holder.repaint();
 	}
-
 	protected FontRenderContext getFontRenderContext() {
 		if (holder != null && holder.getGraphics() != null)
 			return ((Graphics2D)holder.getGraphics()).getFontRenderContext();
 		return null;
 	}
-
 	public abstract double getPadding();
 	public abstract void setOtherProject(int otherProject);
 	public abstract void setup(TrackData track);
@@ -743,7 +711,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		if (c != null)
 			bgColor = c;
 	}
-	
 	public void mouseDragged(MouseEvent e) { 
 		Cursor cursor = getCursor();
 		if (cursor != null && cursor.getType() == Cursor.WAIT_CURSOR)
@@ -759,8 +726,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 				if (build()) layout();
 			}
 		} 
-		else if (drawingPanel.isMouseFunction())
-		{ 
+		else if (drawingPanel.isMouseFunction()){ 
 			if (isCleared(dragRect)) {
 				dragPoint.setLocation(p);
 				if (dragPoint.getX() < rect.x)
@@ -787,7 +753,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 					dragRect.height = p.y - dragRect.y;
 				}
 			}
-
 			// match with rect
 			dragRect.width = (int) rect.width;
 			dragRect.x = (int) rect.x;
@@ -816,9 +781,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			holder.showPopupFilter(e);
 		}
 		else if (cursor.getType() == Cursor.S_RESIZE_CURSOR) { // Resize
-			
 		}
-
 		else { //(e.isControlDown()) { // Zoom
 			setCursor(CROSSHAIR_CURSOR);
 			if (isCleared(dragRect)) {
@@ -856,7 +819,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			}
 		}
 	}
-
 	public void mouseReleased(MouseEvent e) {
 		boolean needUpdate = false;
 		
@@ -889,7 +851,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 					}
 				} catch (Exception ex) {ErrorReport.print(ex, "Exception resizing track!");}
 			}
-	
 			if (needUpdate 
 					|| (startResizeBpPerPixel != NO_VALUE && startResizeBpPerPixel != bpPerPixel) 
 					|| (!isCleared(startMoveOffset) && !startMoveOffset.equals(moveOffset)))
@@ -898,7 +859,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			clearMouseSettings();
 		}
 	}
-
 	private void clearMouseSettings() {
 		if (!isCleared(dragRect)) {
 			clear(dragRect);
@@ -909,7 +869,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		clear(dragPoint);
 		startResizeBpPerPixel = NO_VALUE;
 	}
-
 	protected boolean isCleared(Point p) {
 		return p.x == NO_VALUE && p.y == NO_VALUE;
 	}
@@ -942,7 +901,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			return ".*";
 		return str.replaceAll("\\*", "(.*)");
 	}
-
 	protected static String addAsterics(String str) {
 		if (str == null) str = new String();
 		else str = str.trim();

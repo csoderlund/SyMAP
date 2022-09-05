@@ -8,15 +8,15 @@ public class Q {
 	public static boolean TEST_TRACE=false; // Write to /tmp and other trace output
 	
 	static final int INC=5000;
-	static final String rowCol = "Row";
+	static final String rowCol   = "Row";
 	static final String blockCol = "Block"; // if used in 'contain', this will also match Block Score
 	
 	static final String chrCol =	"Chr";
 	static final String startCol =	"Start";
 	static final String endCol =	"End";
-	static final String geneHitCol = "#Gene";
-	static final String All_Anno =   "All_Anno";
-	static final String empty    = "-";
+	static final String geneNCol =  "Gene#";
+	static final String All_Anno =  "All_Anno";
+	static final String empty    = 	"-";
 	
 	static final String delim = "\n";	// uses as delimiter between Species::annoKey, and put annoKey on 2nd column line
 	static final String delim2 = ":";	// used for other keys
@@ -26,36 +26,36 @@ public class Q {
 	static final String PH = 	"PH"; 	// pseudo_hits
 	static final String PHA = 	"PHA"; 	// pseudo_annot_hits
 	static final String PBH = 	"PBH"; 	// pseudo_block_hits
-	static final String B = 		"B"; 	// block
+	static final String B = 	"B"; 	// block
 	
-	static final int AIDX = 1;				// PA.idx
-	static final int AGIDX = 2;				// PA.grp_idx
-	static final int ASTART = 3;				// PA.start
-	static final int AEND = 4;				// PA.end
-	static final int ANAME = 5;				// PA.name (description)
+	static final int AIDX = 1;			// PA.idx
+	static final int AGIDX = 2;			// PA.grp_idx
+	static final int ASTART = 3;		// PA.start
+	static final int AEND = 4;			// PA.end
+	static final int ANAME = 5;			// PA.name (description)
+	static final int AGENE = 6;			// PA.genenum CAS514 added; was computed in DBdata
 	
-	static final int HITIDX =   6;			// PH.idx
-	static final int PROJ1IDX =  7;		// PH.proj1_idx  (can get from grpIdx, but this is for sanity checking
-	static final int PROJ2IDX =  8;		// PH.proj2_idx
-	static final int GRP1IDX =  9;		// PH.grp1_idx
-	static final int GRP2IDX =  10;		// PH.grp1_idx
-	static final int GRP1START = 11;		// PH.start1
-	static final int GRP2START = 12;		// PH.start2
-	static final int GRP1END = 13;			// PH.end1
-	static final int GRP2END = 14;			// PH.end2
-	static final int RSIZE = 15;				// PH.runsize
+	static final int HITIDX =   7;		// PH.idx
+	static final int PROJ1IDX =  8;		// PH.proj1_idx  (can get from grpIdx, but this is for sanity checking
+	static final int PROJ2IDX =  9;		// PH.proj2_idx
+	static final int GRP1IDX =  10;		// PH.grp1_idx
+	static final int GRP2IDX =  11;		// PH.grp1_idx
+	static final int GRP1START = 12;	// PH.start1
+	static final int GRP2START = 13;	// PH.start2
+	static final int GRP1END = 14;		// PH.end1
+	static final int GRP2END = 15;		// PH.end2
+	static final int RSIZE = 16;		// PH.runsize
 	
-	static final int BNUM = 16;				// B.blocknum
-	static final int BSCORE = 17;			// B.blockscore
-	static final int ANNOT1IDX = 18;		// PH.annot1_idx
-	static final int ANNOT2IDX = 19;		// PH.annot2_idx
+	static final int BNUM = 17;			// B.blocknum
+	static final int BSCORE = 18;		// B.blockscore
+	static final int ANNOT1IDX = 19;	// PH.annot1_idx
+	static final int ANNOT2IDX = 20;	// PH.annot2_idx
 	
-	static final String ANNO = "ANNO";				// populated by keyword 
-	static final String GSIZE = "GSIZE";				// computed PgFsize
-	static final String GRP = "GRP";					// computed PgeneF
-	static final String PGF = "PGF";					// Compute
+	static final String ANNO = "ANNO";	// populated by keyword 
+	static final String GSIZE = "GSIZE";// computed PgFsize
+	static final String GRP = "GRP";	// computed PgeneF
+	static final String PGF = "PGF";	// Compute
 	
-
 	/**************************************************************
 	 * Relations:
 	 * pseudo_annot 

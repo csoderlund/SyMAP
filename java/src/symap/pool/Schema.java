@@ -94,7 +94,7 @@ public class Schema {
 		    ")  ENGINE = InnoDB;";
 		executeUpdate(sql);
 		
-		    // blank table
+		 /** blank table CAS514 not used
 		sql = "CREATE TABLE projgrp (" +
 		    "idx             INTEGER NOT NULL AUTO_INCREMENT," +
 		    "name            VARCHAR(40) NOT NULL," +
@@ -112,6 +112,7 @@ public class Schema {
 		    "FOREIGN KEY (proj_idx) REFERENCES projects (idx) ON DELETE CASCADE" +
 		    "    )  ENGINE = InnoDB;";
 		executeUpdate(sql);
+		**/
 // Blocks
 		sql = "CREATE TABLE blocks (" +
 		    "idx                     INTEGER AUTO_INCREMENT PRIMARY KEY," + // block_idx

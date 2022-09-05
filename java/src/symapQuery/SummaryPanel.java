@@ -70,7 +70,7 @@ public class SummaryPanel  extends JPanel {
 	    	}
 	    	gidxSet.clear();
 	    	
-		if (qPanel.isOrphan()) 	createOrphan(chrStrMap);
+		if (qPanel.isSingle()) 	createSingle(chrStrMap);
 		else 					createHits(chrStrMap, geneCntMap, proj2regions);
 	}
 	/*****************************************************
@@ -136,7 +136,7 @@ public class SummaryPanel  extends JPanel {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Create hit summary");}
 	}
-	private void createOrphan(HashMap<String, String> chrStrMap) {
+	private void createSingle(HashMap<String, String> chrStrMap) {
 		try {
 			HashMap <Integer, Integer> proj2orphs = new HashMap <Integer, Integer> ();
 			
@@ -148,6 +148,7 @@ public class SummaryPanel  extends JPanel {
 		/* create summary */
 			
 			statsPanel.add(Box.createVerticalStrut(5));
+			String type = (qPanel.isOrphan()) ? "Orphans" : "Genes"; // CAS514
 			
 			for (int spIdx : proj2orphs.keySet() )
 			{
@@ -156,7 +157,8 @@ public class SummaryPanel  extends JPanel {
 				String chrStr = chrStrMap.containsKey(pname) ? chrStrMap.get(pname) : "Unk";
 				
 				statsPanel.add(Box.createVerticalStrut(2));
-				String label = String.format("%-13s    Orphans: %,7d     Chr: %s",pname, o, chrStr);
+				String label = String.format("%-13s    %s: %,7d     Chr: %s",pname, type, o, chrStr);
+				
 				JLabel theLabel = new JLabel(label);
 				
 				theLabel.setFont(new Font("Monospaced", Font.PLAIN, 12));

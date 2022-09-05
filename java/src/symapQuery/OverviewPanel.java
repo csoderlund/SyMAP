@@ -29,8 +29,8 @@ public class OverviewPanel extends JPanel {
 	}
 	
 	private void buildOverview() {
-		String overView = "<FONT FACE='arial'><H2>Welcome to SyMAP Query</H2><p>";
-		overView += "<div style='width:500px;'>\n"; // CAS504 change table entries
+		String overView = "<FONT FACE='arial'><p>&nbsp;"; 
+		overView += "<div style='width:500px;'>"; // CAS504 change table entries
 		overView += "<TABLE >" +
 				"<TR><TH ALIGN=LEFT>Project</TH><TH>&nbsp;&nbsp;&nbsp;&nbsp;</TH>" +
 					"<TH ALIGN=LEFT>Category</TH><TH>&nbsp;&nbsp;&nbsp;&nbsp;</TH>" +

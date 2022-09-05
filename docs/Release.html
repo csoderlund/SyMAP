@@ -55,6 +55,33 @@
 
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
+<h3>Release: v5.1.4 (4Sept22)</h3>
+
+<ul>
+<li>SyMAP Query
+<ul>
+<li>Filters:
+<ol>
+<li>Added a <u>General</u> section for the annotation and location, since they can work with all other queries.
+Made the <u>Single</u> project (Orphan genes and all genes) a separate section.
+<li>Add a filter to <u>Show genes w/o hits</u> for a project, which shows all genes.
+<li>Changed the <u>Orphan genes</u> filter to show orphans relative to the chosen projects (it was across all synteny
+project, even projects selected for the SyMAP query).
+<li>The Hit# query did not work in some situations.
+</ol>
+<li>Improved the query summary. Also, the location had been left off the summary for most filters.
+<li>Replaced the result table <u>#Gene</u> column: it was computed per query, whereas the replacement is stored in the database.
+The replacement is the order number of the gene along the chromosomes, which stays constant across all queries
+and is shown on the Chromosome Explorer Annotation and the hoover of the gene.
+
+</ul>
+<li>Chromosome Explorer
+<ul>
+<li>Sequence Filter: If a wrong coordinate was entered, the program exited.
+<li>Alignment Bug Fix: only the first part of the alignment was working (fairly recent bug).
+</ul>
+</ul>
+
 <h3>Release: v5.1.3 (30Aug22)</h3>
 There is no major new development, but small interface improvements and SyMAP Query has a small bug fix.
 <ul>

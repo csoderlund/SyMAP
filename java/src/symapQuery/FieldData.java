@@ -8,12 +8,12 @@ import java.util.Vector;
 
 public class FieldData {
  	// type is all Integer, included Block, see Column Comparator, which sorts it correctly
-	// leave Q.rowCol, though for placement, though the actual row is computed in DBdata
-	private static final String [] GENERAL_COLUMNS =	 {Q.rowCol, "PgeneF", "PgFSize", "HitIdx", Q.blockCol, "Block\nScore","Run\nSize"};
+	// leave Q.rowCol, though for placement, though the actual row is computed in DBdata (CAS514 HitIdx->Hit#, #Gene->Gene#)
+	private static final String [] GENERAL_COLUMNS =	 {Q.rowCol, "PgeneF", "PgFSize", "Hit#", Q.blockCol, "Block\nScore","Run\nSize"};
 	private static final Boolean [] GENERAL_COLUMN_DEF =  {true   , false   , false     , true   , true      , false        ,false}; // CAS513 HitID=f, Score=t
 	
-	private static final String [] SPECIES_COLUMNS = {Q.chrCol, Q.startCol,Q.endCol, Q.geneHitCol};
-	private static final Class <?> [] SPECIES_TYPES = {String.class, Integer.class, Integer.class, String.class};
+	private static final String [] SPECIES_COLUMNS = {Q.chrCol, Q.startCol,Q.endCol, Q.geneNCol};
+	private static final Class <?> [] SPECIES_TYPES = {String.class, Integer.class, Integer.class, Integer.class};
 	private static final Boolean [] SPECIES_COLUMN_DEF =  {false, false, false     , false};
 	
 	//****************************************************************************
@@ -28,16 +28,18 @@ public class FieldData {
 	
 	// XXX If change this, change number in Q.java, as they are the numeric index into ResultSet
 	// Columns loaded from database, do not correspond to query table columns
-	private static int orphanFields = 5; // Columns loaded for orphans
+	// The single start/end is not used by pairs
+	private static int orphanFields = 6; // Columns loaded for orphans
 	
 	public static FieldData getFields() {
 		FieldData fd = new FieldData();
-		//     alias not used       type           sql.table.field    order#		Description  
+		// type not used, see above       sql.table.field    order#		Description  
 		fd.addField(String.class, Q.PA, "idx",     Q.AIDX,       "Annotation idx");
 		fd.addField(String.class, Q.PA, "grp_idx", Q.AGIDX,      "Annotation grp idx");
 		fd.addField(String.class, Q.PA, "start",   Q.ASTART,     "Annotation start");
 		fd.addField(String.class, Q.PA, "end",     Q.AEND,       "Annotation end");
 		fd.addField(String.class, Q.PA, "name",    Q.ANAME,      "Annotation attributes");
+		fd.addField(Integer.class,Q.PA, "genenum", Q.AGENE,      "Annotation genenum");
 		
 		fd.addField(String.class, Q.PH, "idx",      Q.HITIDX,    "Hit idx");
 		fd.addField(Integer.class,Q.PH, "proj1_idx",Q.PROJ1IDX,  "Project 1 idx");
@@ -59,9 +61,9 @@ public class FieldData {
 		// 
 		// The MySQL LEFT JOIN joins two tables and fetches rows based on a condition, which is matching in both the tables and 
 		// the unmatched rows will also be available from the table written before the JOIN clause.
-		fd.addLeftJoin("pseudo_hits_annot", 	"PH.idx = PHA.hit_idx", 		 Q.PHA);
+		fd.addLeftJoin("pseudo_hits_annot", "PH.idx = PHA.hit_idx", 	 Q.PHA);
 		fd.addLeftJoin("pseudo_annot", 		"PHA.annot_idx = PA.idx", 	 Q.PA);
-		fd.addLeftJoin("pseudo_block_hits", 	"PBH.hit_idx=PH.idx", 	 	 Q.PBH);
+		fd.addLeftJoin("pseudo_block_hits", "PBH.hit_idx=PH.idx", 	 	 Q.PBH);
 		fd.addLeftJoin("blocks", 			"B.idx=PBH.block_idx", 	 	 Q.B);
 
 		return fd;
@@ -81,22 +83,6 @@ public class FieldData {
 	//****************************************************************************
 
 	public int getNumFields() { return theFields.size(); }
-	
-	// for column headers
-	public Class<?> [] getDisplayTypes() { 
-		if(theFields.size() == 0) return null;
-
-		Vector<Class<?>> retVal = new Vector<Class<?>> ();
-		Iterator<FieldItem> iter = theFields.iterator();
-		FieldItem item = null;
-
-		while(iter.hasNext()) {
-			item = iter.next();
-			Class<?> type = item.getFieldType();
-			retVal.addElement(type);
-		}
-		return retVal.toArray(new Class<?>[retVal.size()]);
-	}
 	
 	public String [] getDBFieldDescriptions() {
 		if(theFields.size() == 0) return null;
@@ -185,7 +171,6 @@ public class FieldData {
 			strDBField = field;
 			dbNum = num;
 		}
-		public Class<?> getFieldType() { return cType; }
 		public String getDBTable() { return strDBTable; }
 		public String getDBFieldName() { return strDBField; }
 		public String getDescription() { return strDescription; }
