@@ -211,23 +211,23 @@ public class Schema {
 		    "proj2_idx           INTEGER NOT NULL," + // proj_props.proj_idx
 		    "grp1_idx            INTEGER NOT NULL," + // xgroups.idx
 		    "grp2_idx            INTEGER NOT NULL," + // xgroups.idx
-		    "evalue              DOUBLE NOT NULL," +
-		    "pctid               REAL NOT NULL," +
-		    "score               INTEGER NOT NULL," +
+		    "evalue              DOUBLE NOT NULL," +  // No value, though accessed
+		    "pctid               TINYINT UNSIGNED NOT NULL," +    // Col6, Avg %ID CAS515 REAL->TINYINT (rounded percent) 
+		    "score               INTEGER NOT NULL," + // Col5, queryLen - not used
 		    "strand              TEXT NOT NULL," +
 		    "start1              INTEGER NOT NULL," +
 		    "end1                INTEGER NOT NULL," + 
 		    "start2              INTEGER NOT NULL," +
 		    "end2                INTEGER NOT NULL, " +  
-		    "query_seq           MEDIUMTEXT  NOT NULL," +
+		    "query_seq           MEDIUMTEXT  NOT NULL," + // start-end of each merged hit
 		    "target_seq          MEDIUMTEXT  NOT NULL," +
-		    "gene_overlap		TINYINT NOT NULL, " +
-		    "countpct			TINYINT UNSIGNED NOT NULL," +
-		    "cvgpct				TINYINT UNSIGNED NOT NULL," +
-		    "refidx				INTEGER default 0," +
+		    "gene_overlap		TINYINT NOT NULL, " +	  // number of genes it overlaps
+		    "countpct			INTEGER UNSIGNED default 0," +  // unused 0; CAS515 number of merged, tinyint->integer
+		    "cvgpct				TINYINT UNSIGNED NOT NULL," +  //was unused 0 -> CAS515 Col7 %sim
+		    "refidx				INTEGER default 0," +          //used in self-synteny
 			"annot1_idx			INTEGER default 0," +
 			"annot2_idx			INTEGER default 0," +
-		    "runsize		INTEGER default 0," +
+		    "runsize			INTEGER default 0," +		// size of colinear set
 		    "INDEX (proj1_idx,proj2_idx,grp1_idx,grp2_idx)," +
 		    "FOREIGN KEY (pair_idx)  REFERENCES pairs (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj1_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
@@ -516,6 +516,7 @@ public class Schema {
 		    ")  ENGINE = InnoDB; ";
 		 executeUpdate(sql);
 		   
+		 /** CAS515 only reference
 		 sql = "CREATE TABLE shared_mrk_filter (" +
 		    "pair_idx                INTEGER NOT NULL," +
 		    "proj1_idx               INTEGER NOT NULL," +
@@ -524,7 +525,7 @@ public class Schema {
 		    "reason                  INTEGER NOT NULL" +
 		    ")  ENGINE = InnoDB; ";
 		 executeUpdate(sql);
-		    
+		 **/
 		 sql = "CREATE TABLE fp_filter (" +
 		    "pair_idx                INTEGER NOT NULL," +
 		    "clone1_idx              INTEGER NOT NULL," +

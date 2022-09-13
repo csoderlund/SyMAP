@@ -56,12 +56,12 @@ public class PseudoPseudoData extends AbstractHitData implements SyMAPConstants 
 			String strand, int repetitive, int block, double evalue,
 			double pctid, int start1, int end1, int start2, int end2,
 			int overlap, 
-			String query_seq, String target_seq)
+			String query_seq, String target_seq, int pSim, int nMergeHits)
 	{
 		return new PseudoHitData(id, name, strand, 
 				repetitive == 0 ? false : true, block,
 				evalue, pctid, start1, end1, start2, end2, overlap,
-				query_seq, target_seq);
+				query_seq, target_seq, pSim, nMergeHits);
 	}
 
 	// wrapper class is required because HitData is abstract
@@ -72,11 +72,11 @@ public class PseudoPseudoData extends AbstractHitData implements SyMAPConstants 
 				int start1, int end1, 
 				int start2, int end2, 
 				int overlap,	
-				String query_seq, String target_seq)
+				String query_seq, String target_seq, int pSim, int nMergeHits)
 		{
 			super(id, name, strand, repetitive, block, evalue, pctid, 
 					start1, end1, start2, end2, overlap,
-					query_seq, target_seq);
+					query_seq, target_seq, pSim, nMergeHits);
 		}
 
 		public boolean equals(Object obj) {
@@ -85,8 +85,10 @@ public class PseudoPseudoData extends AbstractHitData implements SyMAPConstants 
 		}
 
 		public String toString() { // CAS501 Pseudo->Seq; called by SequenceFilter; shown on CloseUp
-			if (getName()==null) return ("Hit #"+getID()); // CAS514 add Hit
-			return "Seq Data " + getName()+ "  Hit #"+getID();  
+			String d = getHitData(); // CAS515 give full infor
+			d = d.replace("\n", " ").trim();
+			if (getName()==null) return (d); // CAS514 add Hit
+			return "Seq Data " + getName()+ "  " + d;  
 		}
 	}
 }

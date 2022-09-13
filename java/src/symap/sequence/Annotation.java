@@ -20,8 +20,7 @@ import util.Utilities;
  * Drawing the annotation requires calling setRectangle() first.
  */
 public class Annotation {
-	private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
-	
+	private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE; // -d
 	/**
 	 * Values used in the database to represent annotation types.
 	 */
@@ -50,7 +49,6 @@ public class Annotation {
 		types.add(EXON);   
 		types.add(SYGENE); 
 	}
-
 	public static Color geneColor;
 	public static Color frameColor;
 	public static Color gapColor;
@@ -77,10 +75,10 @@ public class Annotation {
 	private boolean strand;
 	private int gene_idx=0;  // If this is an exon, it is the gene_idx that it belongs to
 	private int annot_idx=0; 
-	private int genenum=0;
 	private String exonList=null;
 	
 	private Rectangle2D.Double rect;
+	private Rectangle2D.Double hoverGeneRect; // CAS515 so hover cover for gene covers full width of exon
 	private TextBox descBox=null; // CAS503
 
 	/**
@@ -93,26 +91,34 @@ public class Annotation {
 		this.end = end;
 		this.strand = (strand == null || !strand.equals("-"));
 		description = name;  
-		this.tag = tag;
 		this.gene_idx = gene_idx;
 		this.annot_idx = idx;
-		this.genenum = genenum;
+	
+		if (genenum>0) { // CAS515 merge tag and genenum in a more readable format
+			String [] tok = tag.split("\\(");	
+			if (tok.length==2) this.tag = "Gene #" + genenum + " (Exons " + tok[1];
+			else               this.tag = tag + " #" + genenum;
+		}
+		else this.tag = tag;
 		
 		rect = new Rectangle2D.Double();
+		hoverGeneRect = new Rectangle2D.Double();
 	}
-
 	/**
 	 * DRAW sets up the rectangle; called in Sequence.build()
+	 * CAS515 ordered lines to be more logical
 	 */
 	public void setRectangle(
-			Rectangle2D boundry, 
+			Rectangle2D boundry, // center of chromosome rectangle (rect.x+1,rect.y,rect.width-2,rect.height)
 			long startBP, long endBP, // display start and end of chromosome 
-			double bpPerPixel, double width, boolean flip) 
+			double bpPerPixel, double dwidth, double hoverWidth, boolean flip) 
 	{
-		double y, height, oy;
+		double x, y, height;
+		double chrX=boundry.getX(), upChrY=boundry.getY(), chrHeight=boundry.getHeight(), chrWidth=boundry.getWidth();
+		double lowChrY = upChrY + chrHeight; // lowest chromosome edge
+		
 		long ts, te;
-		double x = boundry.getX() + (boundry.getWidth()-width)/2; 
-
+		 
 		if (start > end) {
 			ts = end;
 			te = start;
@@ -120,34 +126,42 @@ public class Annotation {
 			ts = start;
 			te = end;
 		}
-
 		if (ts < startBP)	ts = startBP;	
 		if (te > endBP)		te = endBP;		
-			
-		if (boundry.getWidth() < width)
-			width = boundry.getWidth();
-
-		oy = boundry.getY() + boundry.getHeight();
-
-		if (!flip) 	y = (ts - startBP) / bpPerPixel + boundry.getY(); 
-		else 		y = (endBP - ts) / bpPerPixel + boundry.getY();		 
+		
+		if (!flip) 	y = (ts - startBP) / bpPerPixel + upChrY; 
+		else 		y = (endBP - ts)   / bpPerPixel + upChrY;		
 		
 		height = (te - ts) / bpPerPixel;
 		if (flip) y -= height; 
-
-		if (y + height >= boundry.getY() && y <= oy) {
-			if (y < boundry.getY())
-				y = boundry.getY();
-			if (y + height > oy)
-				height = oy - y;
-			rect.setRect(x, y, width, height);
+		
+		x = chrX + (chrWidth - dwidth)/2; // set x before modify width
+		if (chrWidth < dwidth) dwidth = chrWidth;
+		
+		double lowY = y + height;
+		if (y < upChrY)      y = upChrY;
+		if (lowY > lowChrY)  height = lowChrY - y;
+		
+		if (lowY >= upChrY && y <= lowChrY) { 
+			rect.setRect(x, y, dwidth, height);
 		} else {
 			rect.setRect(0, 0, 0, 0);
+		}
+		
+		hoverGeneRect.setRect(0, 0, 0, 0);
+		if (hoverWidth!=0) {
+			double xx = chrX + (chrWidth-hoverWidth)/2; // set x before modify width
+			if (chrWidth < hoverWidth) hoverWidth = chrWidth;
+		
+			if (lowY >= upChrY && y <= lowChrY) { 
+				hoverGeneRect.setRect(xx, y, hoverWidth, height);
+			} 
 		}
 	}
 	/** clears the rectangle coordinates so that the annotation will not be painted **/
 	public void clear() {
 		rect.setRect(0, 0, 0, 0);
+		hoverGeneRect.setRect(0, 0, 0, 0);
 	}
 	 /** returns the midpoint of the mark; called after calling setRectangle **/
 	public double getY() {
@@ -170,6 +184,11 @@ public class Annotation {
 		if (isVisible()) {
 			rect.x -= x;
 			rect.y -= y;
+			
+			if (hoverGeneRect.getX()!=0 && hoverGeneRect.getY() !=0) {
+				hoverGeneRect.x -= x;
+				hoverGeneRect.y -= y;
+			}
 		}
 	}
 
@@ -199,8 +218,9 @@ public class Annotation {
 	// for seq-seq closeup
 	public boolean getStrand() {return strand;}
 	
-	/** determines if the rectangle of this annotation contains the point p. */
+	/** XXX determines if the rectangle of this annotation contains the point p. */
 	public boolean contains(Point p) {
+		if (type == GENE_INT) return hoverGeneRect.contains(p.getX(), p.getY());
 		return rect.contains(p.getX(), p.getY());
 	}
 	/*** For CloseUpDialog - what is in the name field */
@@ -210,8 +230,7 @@ public class Annotation {
 	/** Display in box beside genes when Show Annotation Description */
 	public Vector<String> getVectorDescription() {
 		Vector<String> out = new Vector<String>();
-		String gn = (genenum>0) ? " #"+ genenum : " ";
-		out.add(tag + gn);				// CAS512 add tag, genenum	
+		out.add(tag);				// CAS512 add tag	
 		out.add(getLocLong());
 		for (String token : description.split(";")) 
 				out.add( token.trim() ); // CAS501 added trim
@@ -226,9 +245,8 @@ public class Annotation {
 		String longDes;
 		
 		if (type == GENE_INT || type == EXON_INT) {
-			String xDesc = description.replaceAll(";", "\n"); 	 // CAS503
-			String gn = (genenum>0) ? " #"+ genenum : " ";
-			longDes = tag + gn +  "\n" + getLocLong() + "\n" + xDesc;	 // CAS512 add tag, genenum	
+			String xDesc = description.replaceAll(";", "\n");   	 // CAS503
+			longDes = tag +  "\n" + getLocLong() + "\n" + xDesc;	 // CAS512 add tag	
 		}
 		else if (type == GAP_INT) 			longDes = "Gap\n" + getLocLong(); // CAS504 add getLoc
 		else if (type == CENTROMERE_INT) 	longDes = "Centromere\n" + getLocLong();
@@ -237,6 +255,7 @@ public class Annotation {
 		
 		return longDes;
 	}
+	
 	public String getTag() {return tag;} // CAS512 add for HelpBox 
 	
 	public boolean hasShortDescription() {
@@ -270,11 +289,14 @@ public class Annotation {
 				g2.drawLine((int)rect.x, (int)rect.y, (int)rect.x + (int)rect.width, (int)rect.y); 
 		}
 	}
-	
 	public String toString() {
-		return "[Annotation: {Rect: " + rect + "}]";
+		String x = String.format("%-8s [Rect %.2f,%.2f,%.2f,%.2f] [Seq: %d,%d]", tag,
+				rect.x,rect.y,rect.width, rect.height, start, end);
+		if (type==GENE_INT) 
+			x += String.format(" [HRect %.2f,%.2f,%.2f,%.2f]",
+					hoverGeneRect.x,hoverGeneRect.y,hoverGeneRect.width, hoverGeneRect.height);
+		return x;
 	}
-
 	public static int getType(String type) {
 		int i = (byte)types.indexOf(type);
 		if (i < 0) {
@@ -288,7 +310,6 @@ public class Annotation {
 	 * CAS503 added so can display popup of description
 	 * Right-click on annotation
 	 */
-	
 	public void setExonList(Vector <Annotation> annoVec) { // CAS512 add ExonList to popup
 		if (exonList!=null) return;
 		try {
@@ -306,11 +327,10 @@ public class Annotation {
 	public String getExon(int parent_idx) { // called on "another" annotation object
 		if (isExon() && this.gene_idx==parent_idx) {
 			String x = Utilities.coordsStr(strand, start, end);
-			return String.format("%10s %s", tag, x);
+			return String.format("%-8s %s", tag, x); // Exon #xx
 		}
 		return null;
 	}
-	
 	public void setTextBox(TextBox tb) {
 		descBox = tb;
 	}

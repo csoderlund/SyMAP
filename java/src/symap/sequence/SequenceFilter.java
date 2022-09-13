@@ -121,10 +121,10 @@ public class SequenceFilter extends Filter {
 		rulerCheck.setSelected(Sequence.DEFAULT_SHOW_RULER);
 		annotCheck.setSelected(Sequence.DEFAULT_SHOW_ANNOT  && annotCheck.isEnabled()); 
 		
-		scoreLineCheck = new JCheckBox("Show Hit Score Bar");			
+		scoreLineCheck = new JCheckBox("Show Hit %Id Bar");	// CAS515 Score is %Id		
 		scoreLineCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_LINE);	
 
-		scoreValueCheck = new JCheckBox("Show Hit Score Value");		
+		scoreValueCheck = new JCheckBox("Show Hit %Id Value");		
 		scoreValueCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_VALUE);	
 		
 		hitLenCheck = new JCheckBox("Show Hit Length");			
@@ -212,8 +212,8 @@ public class SequenceFilter extends Filter {
 		gapPopupCheck = new JCheckBoxMenuItem("Gaps"); 
 		centromerePopupCheck = new JCheckBoxMenuItem("Centromere"); 
 		rulerPopupCheck = new JCheckBoxMenuItem("Ruler"); 
-		scoreLinePopupCheck = new JCheckBoxMenuItem("Hit Score Bar"); 		
-		scoreValuePopupCheck = new JCheckBoxMenuItem("Hit Score Value"); 	
+		scoreLinePopupCheck = new JCheckBoxMenuItem("Hit %Id Bar");  // CAS515 Score is the %Id		
+		scoreValuePopupCheck = new JCheckBoxMenuItem("Hit %Id Value"); 	// ditto
 	
 	/** Sequence show options **/
 		popupTitle.setText("Sequence Show Options:"); 

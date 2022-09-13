@@ -55,6 +55,34 @@
 
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
+
+<h3>Release: v5.1.5 (13Sept22)</h3>
+<ul>
+<li>Online Docs - the biggest change of this release is an updating of the documentation.
+<li>Alignment & Synteny
+<ul>
+<li>Clear Pair provides option to "only delete synteny from database" or "delete synteny and remove files".
+<li>The MUMmer %Sim column is now loaded in addition to the %Id column.
+
+<li>The Hit# will be assigned sorted on the query start coordinate.
+</ul>
+<li>Chromosome Explorer
+<ul>
+<li>Hover over Gene: the gene information will be shown when hovering anywhere within the gene's rectangle.
+(It used to only show Gene information if the mouse was hovered directly over the center.)
+<li>The Hit information now has %Id and %Sim, plus the number of merged hits.
+</ul>
+<li>Blocks - the chromosome blocks view has a smaller window.
+<li>demo_seq2 - Removed duplicate genes (worked okay, but technically wrong).
+<li>Developers
+<ul>
+<li>If all hits are removed (e.g. Clear Pair), the index will be reset so that the next loaded hit will have a HitIdx (Hit #)
+that starts at 1.
+<li>The alignment files may have header lines. Any line that does not start with a digit will be ignored.
+<li>Removed some dead tables from Schema and changed a few datatypes.
+</ul>
+</ul>
+
 <h3>Release: v5.1.4 (4Sept22)</h3>
 
 <ul>
@@ -72,7 +100,7 @@ project, even projects selected for the SyMAP query).
 <li>Improved the query summary. Also, the location had been left off the summary for most filters.
 <li>Replaced the result table <u>#Gene</u> column: it was computed per query, whereas the replacement is stored in the database.
 The replacement is the order number of the gene along the chromosomes, which stays constant across all queries
-and is shown on the Chromosome Explorer Annotation and the hoover of the gene.
+and is shown on the Chromosome Explorer Annotation and the hover of the gene.
 
 </ul>
 <li>Chromosome Explorer
@@ -106,7 +134,7 @@ considered are those followed by a '=' (it used to allow spaces between keyword 
 <li>2D chromosome view
 <ul>
 <li>The popup annotation is now a smaller constant sized scrollable window.
-<li>The annotation hoover and popup coordinates are more readable.
+<li>The annotation hover and popup coordinates are more readable.
 </ul>
 
 <li>SyMAP Query

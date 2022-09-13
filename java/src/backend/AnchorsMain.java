@@ -46,7 +46,7 @@ public class AnchorsMain
 	private boolean bInterrupt = false;
 	private Project p1, p2;
 	private int mTotalHits=0, mTotalLargeHits=0, mTotalBrokenHits=0;
-	private boolean isSelf = false, isFPC = false, doClust = true;
+	private boolean isSelf = false, isNucmer=false, isFPC = false, doClust = true;
 	private String resultDir=null;
 
 	public AnchorsMain(int idx, UpdatePool pool, Logger log,Properties props, SyProps pairProps) {
@@ -164,7 +164,14 @@ public class AnchorsMain
 			Utils.incStat("TopNFinalKeep", nBothIn);		
 						
 			int numLoaded = 0;
-			for (Hit hit : hits) {
+			
+			// CAS515 they end up out of any logical order; since the Hitidx is the Hit#, put in logical order
+			pool.executeUpdate("alter table pseudo_hits modify countpct integer"); 
+			Vector <Hit> vecHits = new Vector <Hit> (hits.size());
+			for (Hit h : hits) vecHits.add(h);
+			Hit.sortByTarget(vecHits);
+			
+			for (Hit hit : vecHits) {
 				if (hit.status == HitStatus.In) {
 					if (bInterrupt) return false;
 					
@@ -391,6 +398,13 @@ public class AnchorsMain
 			
 			line = fh.readLine().trim();
 			if (line.length() == 0) continue;
+			if (!Character.isDigit(line.charAt(0))) {// CAS515 add in order to allow headers
+				if (line.startsWith("NUCMER")) {
+					isNucmer=true;
+					log.msg("Scanning NUCMER file");
+				}
+				continue; 
+			}
 			lineNum++;
 			
 			Hit hit = new Hit();
@@ -484,17 +498,20 @@ public class AnchorsMain
 		int totalLargeHits = 0, totalBrokenHits = 0;
 		while (fh.ready()) 
 		{
-			Hit hit = new Hit();
-			hit.origHits = 1;
-			hit.query.fileType  = file.mType1;
-			hit.target.fileType = file.mType2;
-			line = fh.readLine().trim();
-			
-			if (line.length() == 0) continue;
 			if (bInterrupt) {
 				fh.close();
 				return 0;
 			}
+			line = fh.readLine().trim();
+			
+			if (line.length() == 0) continue;
+			if (!Character.isDigit(line.charAt(0))) continue; // CAS515 allow header lines
+			
+			Hit hit = new Hit();	// CAS515 make Object after reject lines
+			hit.origHits = 1;
+			hit.query.fileType  = file.mType1;
+			hit.target.fileType = file.mType2;
+			
 			boolean success = scanNextMummerHit(line,hit);
 			if (!success) Utils.die("SyMAP error - scanNextHummerHit for scan2");
 			
@@ -893,7 +910,12 @@ public class AnchorsMain
 		
 		return true;
 	}
-	
+	/*********************************************
+	 * 0        1       2        3       4       5       6
+	 * [S1]    [E1]    [S2]    	[E2]    [LEN 1] [LEN 2] [% IDY] [% SIM] [% STP] [LEN R] [LEN Q]     [FRM]   [TAGS]
+      15491   15814  20452060 20451737   324     324    61.11   78.70   1.39    73840631  37257345  2   -3  chr1    chr3
+	 NUCMER does not have %SIM or %STP
+	 */
 	private boolean scanNextMummerHit(String line, Hit hit)
 	{
 		String[] fs = line.split("\\s+");
@@ -901,12 +923,15 @@ public class AnchorsMain
 			return false;
 		
 		int poffset = (fs.length > 13 ? 2 : 0); // nucmer vs. promer
+		
 		int tstart 	= Integer.parseInt(fs[0]);
 		int tend 	= Integer.parseInt(fs[1]);
 		int qstart 	= Integer.parseInt(fs[2]);
 		int qend 	= Integer.parseInt(fs[3]);
-		int match 	= Integer.parseInt(fs[5]);
+		int match 	= Integer.parseInt(fs[5]); // query length 
 		int pctid 	= Math.round(Float.parseFloat(fs[6]));
+		int pctsim 	= (isNucmer) ? 0 :  Math.round(Float.parseFloat(fs[7]));
+		if (pctsim>110) pctsim=0; // in case mummer file does not have Nucmer header;
 		String target 	= fs[11 + poffset];
 		String query 	= fs[12 + poffset];
 				
@@ -920,6 +945,7 @@ public class AnchorsMain
 		hit.target.end = tend;
 		hit.matchLen = match;
 		hit.pctid = pctid;
+		hit.pctsim = pctsim;
 		hit.strand = strand.intern(); // reduce hit memory footprint
 		
 		return true;
@@ -983,15 +1009,18 @@ public class AnchorsMain
 				pool.bulkInsertAdd("mrk", vals);				
 				break;
 			case Seq:
-			case Gene:
+			case Gene: // See UpdatePool
+				//stmt = "insert into pseudo_hits (pair_idx,proj1_idx,proj2_idx," +
+				//"grp1_idx,grp2_idx,evalue,pctid,score,strand,start1,end1,start2,end2,query_seq," +
+				//"target_seq,gene_overlap,countpct,cvgpct,annot1_idx,annot2_idx)";
 				vals.add("" + pairIdx);
 				vals.add("" + p1.getIdx());
 				vals.add("" + p2.getIdx());
 				vals.add("" + hit.query.grpIdx);
 				vals.add("" + hit.target.grpIdx);
-				vals.add("0");
+				vals.add("0");			// evalue, referred to but never has a value
 				vals.add("" + hit.pctid);
-				vals.add("" + hit.matchLen);
+				vals.add("" + hit.matchLen); // saved as score, but never used
 				vals.add(hit.strand);
 				vals.add("" + hit.query.start);
 				vals.add("" + hit.query.end);
@@ -1000,8 +1029,8 @@ public class AnchorsMain
 				vals.add(Utils.intArrayToBlockStr(hit.query.blocks));
 				vals.add(Utils.intArrayToBlockStr(hit.target.blocks));
 				vals.add("" + geneOlap);
-				vals.add("0");
-				vals.add("0");
+				vals.add(""+ (hit.query.blocks.length/2)); //CAS515 countpct;  unsigned tiny int; now #Merged Hits
+				vals.add("" + hit.pctsim); // CAS515 cvgpct was 0; unsigned tiny int; now Avg%Sim
 				vals.add("" + hit.annotIdx1);
 				vals.add("" + hit.annotIdx2);
 				pool.bulkInsertAdd("pseudo", vals);

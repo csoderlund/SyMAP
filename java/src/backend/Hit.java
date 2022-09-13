@@ -8,13 +8,14 @@ enum RF {R,F}; // BES .r or .f
 
 public class Hit implements Comparable <Hit> // CAS500 added <Hit>
 {
-	public int matchLen, pctid, idx;
+	public int matchLen, pctid, pctsim, idx; // pctid=%ID, pctsim=%sim
 	public String strand, clone = "";
 	public RF rf;
 	public HitStatus status = HitStatus.Undecided;
 	public SubHit query, target;
 	public HitType mBT = null;
-	public int annotIdx1 = 0, annotIdx2 = 0, origHits = 0;
+	public int annotIdx1 = 0, annotIdx2 = 0;
+	public int origHits = 0; 
 	public int binsize1=0, binsize2=0; // store topN bin sizes for stats
 	
 	public Hit() {
@@ -31,13 +32,15 @@ public class Hit implements Comparable <Hit> // CAS500 added <Hit>
 		target.end   = 0;
 		matchLen     = 0;
 		pctid        = 0;
+		pctsim		 = 0;
 	}
 	// COPY CONSTRUCTOR - MAY NEED UPDATE IF MEMBER VARIABLES ARE CHANGED
-	// Used by Break hit
+	// Used by Break hit - if hitlengt
 	public Hit(Hit h)
 	{ 
 		matchLen = h.matchLen;
 		pctid = h.pctid;
+		pctsim = h.pctsim; // CAS515 add
 		strand = h.strand;
 		clone = h.clone;
 		rf = h.rf;
@@ -89,9 +92,9 @@ public class Hit implements Comparable <Hit> // CAS500 added <Hit>
 	}
 	// for debug
 	public String toString() {
-		return "idx=" + idx + " status=" + status + " matchLen=" + matchLen + " pctid=" + pctid 
-					+ " strand=" + strand 
-					+ " qs=" + query.start + " qe=" + query.end + " ts=" + target.start + " te=" + target.end;
+		return "idx=" + idx + " status=" + status + " maxMatch=" + matchLen + " pctid=" + pctid 
+				+ "pctsim=" + pctsim + " strand=" + strand 
+				+ " qs=" + query.start + " qe=" + query.end + " ts=" + target.start + " te=" + target.end;
 	}
 	
 	public static void sortByQuery(Vector<Hit> hits) {
@@ -136,7 +139,8 @@ public class Hit implements Comparable <Hit> // CAS500 added <Hit>
 		this.origHits += h.origHits;
 		
 		this.matchLen = this.query.end - this.query.start; 
-		this.pctid = (this.pctid == 0 ? h.pctid : (this.pctid + h.pctid) / 2);
+		this.pctid =  (this.pctid == 0 ? h.pctid : (this.pctid + h.pctid) / 2);
+		this.pctsim = (this.pctsim == 0 ? h.pctsim : (this.pctsim + h.pctsim) / 2); // CAS515 add
 	}
 	
 	// called in AnchorsMain.clusterGeneHits2 and preFilterHits2

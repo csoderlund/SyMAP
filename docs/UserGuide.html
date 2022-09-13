@@ -3,6 +3,9 @@
 <head>
 <title>SyMAP User Guide</title>
 <style>
+	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
+	a:link {text-decoration: none;color:#6666CC;}
 	a:link {text-decoration: none;color:#6666CC;}
 	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
@@ -60,9 +63,8 @@
 	<!---- START BODY -->
 
 This guide is for the Seq-to-Seq (sequence) synteny user interface.
-Note, the term <i>pseudo</i> and <i>sequence</i> are used interchangeably.
 <ol>
-<li>Most of the contents also apply to the FPC-to-Seq view, where the specific information is provided in <a href=UserGuideFPC.html class="ext" target="_blank">FPC specific</a>.
+<li>Most of the contents also apply to the FPC-to-Seq view. For specific information see <a href=UserGuideFPC.html class="ext" target="_blank">FPC specific</a>.
 <li>For detailed information on installation, see
 the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
 <li>For a quick visual introduction, see the <a href="Tour.html" class="ext" target="_blank">Tour</a>.
@@ -72,152 +74,182 @@ the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
 <h2>Contents</h2>
 The Dot Plot and Circle displays are available from various places.
 <ul>
-<li><a href="#mgr">A. Main Display</a>
-<li>B. Display for Selected Pair (Two-Genome Views):
+<li><a href="#mgr">Main Display</a>
+<li><a href="#pair"><i>Displays for Selected Pair (Two-Genome Views)</i></a>
 	<ul>
-	<li><a href="#dotplot_display">Dot Plot (Two genome) #1</a> <!-- # ref in code -->
-		<ul>
-		<li><a href="#dotplot_control">Dotplot Control Panel</a>
-		<li><a href="#dotplot_filter">Dotplot Filters</a>
-	</ul>
-
+	<li><a href="#circle">Circle Display #1</a> <!-- # ref in code -->
+	<li><a href="#dotplot_display">Dot Plot #1</a> <!-- # ref in code -->
 	<li><a href="#block">Block Display</a>
-	<li><a href="#circle">Circle Display (Two genome) #1</a> <!-- # ref in code -->
 	<li><a href="#sum">Summary</a>
 	</ul>
 
-<li>C. Display for All Projects (Multi-Genome Views):
+<li><a href="#all"><i>Displays for All Projects (Multi-Genome Views)</i></a>
 	<ul>
-	<li><a href="#explorer">Chromosome Explorer</a> (Multi-chromosome views)
+	<li><a href="#explorer">Chromosome Explorer  (Multi-chromosome)</a>
 		<ul>
-		<li><a href="#alignment_display_circ">Circle Display (Multi-chromosome) #2</a>
-		<li><a href="#dot2">Dot Plot (Multi-chromosome) #2</a>
+		<li><a href="#alignment_display_circ">Circle Display  #2</a>
+		<li><a href="#alignment_display_dot">Dot Plot #2</a>
 		<li><a href="#alignment_display_2d">2D Display</a> <!-- # ref in code -->
 			<ul>
-			<li><a href="#control">Control Panel and Navigation</a>
-			<li><a href="#main">Tracks in Main Panel</a>
-				<ul>
-				<li><a href="#sequence_track">Sequence Track and Filter</a>
-				<li><a href="#hit">Hit Filter</a>
-				</ul>
-			<li><a href="#base">Base View</a>
-
+			<li><a href="#base">Align (Base View)</a>
 			</ul>
 		</ul>
-	<li><a href="#dot3">Dot Plot (Multi-genome) #3</a>
-	<li><a href="#annotsearch">SyMAP Queries </a>(Seq-to-Seq only)
+	<li><a href="#dot3">Dot Plot #3</a>
+	<li><a href="#annotsearch">SyMAP Queries </a>
 	</ul>
 <li><a href="#self">Self-synteny Displays</a>
 <li><a href="#data_download">Data Download</a>
 <li><a href="#image">Print and Help</a>
 </ul>
-
+<h4>Citations</h4>
 The SyMAP User Agreement requires you cite one of the following articles
 if you use SyMAP in a paper, poster, or presentation.
-
 <pre>
-        C. Soderlund,  W. Nelson, A. Shoemaker and A. Paterson (2006)
-        SyMAP: A System for Discovering and Viewing Syntenic Regions of FPC maps
-        Genome Research 16:1159-1168.
+	C. Soderlund, M. Bomhoff, and W. Nelson (2010)
+	SyMAP: A turnkey synteny system with application to plant genomes.
+	Nucleic Acids Res 39(10):e68. <a href="https://academic.oup.com/nar/article/39/10/e68/1310457" target="_blank" class="ext">Link</a>
 </pre>
 <pre>
-        C. Soderlund, M. Bomhoff, and W. Nelson (2010)
-        SyMAP: A turnkey synteny system with application to plant genomes.
-        Nucleic Acids Res 39(10):e68.
+	C. Soderlund,  W. Nelson, A. Shoemaker and A. Paterson (2006)
+	SyMAP: A System for Discovering and Viewing Syntenic Regions of FPC maps
+	Genome Research 16:1159-1168. <a href="https://genome.cshlp.org/content/16/9/1159.abstract" target="_blank" class="ext">Link</a>
 </pre>
-
+<pre>
+	Also cite the MUMmer publication: <a href="https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005944" target="_blank" class="ext">Marcais et al. 2018</a> or <a href="https://genomebiology.biomedcentral.com/articles/10.1186/gb-2004-5-2-r12"  target="_blank" class="ext">Kurtz et al. 2004.</a>
+</pre>
 <a id="mgr"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h1>A. Main display</h1>
+<h1>Main display</h1>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-The display in the image below is shown when the following is executed from the terminal:
+&rarr;For simplicity, sequence groups will be referred to as "Chromosome"", though they may be scaffolds or linkage groups.
+<p>
+The display in the image on the right is shown when the following is executed from the terminal:
 <pre>   ./viewSymap</pre>
-Is it also available from <tt>./symap</tt>, where this display will also have the alignment commands.
+Is it also available from <tt>./symap</tt>, which will also have the alignment commands.
 <p>
 <table>
-<tr><td class="top">
-All projects in the database will be listed on the left panel. If a date is beside the project name,
-it has been loaded into the database on that date. If a [n] follows the date, it is part of n computed syntenies.
-<p>Selecting projects on the left panel shows them on the right panel. A check mark in the
-<b>Available Syntenies</b> table indicates pairs that have computed synteny that can be viewed.
-<p>By selecting a cell with synteny, the <b>Display for Selected Pair:</b> buttons are activated.
+<tr><td style="vertical-align:text-top;">
 
-<td><a href="img/symapdb3.png"><img src="img/symapdb3.png"  alt="" style="border: 1px solid black; width: 500px"></a>
+All projects in the database will be listed on the left panel. The date beside the project name
+is when it was loaded. If a [n] follows the date, it is part of n computed syntenies.
+
+<p>Selecting projects on the left panel shows them on the right panel.
+A check mark in the <ttb>Available Syntenies</ttb> table indicates pairs that have computed synteny that can be viewed.
+The two view options beside <ttl>Display for All Pairs</ttl> will be activated.
+
+<p>By selecting a cell with synteny, the <ttl>Display for Selected Pair</ttl> buttons are activated.
+
+<td><a href="img/viewRosid.png"><img src="img/viewRosid.png"  alt="viewRosid" style="border: 1px solid black; width: 550px"></a>
 </table>
 
-<h1>B. Display for Selected Pair</h1>
-The four buttons beside this label are "whole genome" displays for the selected pair (highlighted yellow).
+<a id="pair"></a>
+<h1>Displays for Selected Pair</h1>
+The buttons beside this label are "whole genome" displays for the selected pair (highlighted yellow).
+<!------------------------------------------------->
+<a id="circle"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Circle Display #1 (Two Genome)</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+The two-genome and multi-chromosome Circle displays work the same;
+see <a href="file:///Users/cari/Sites/symap/docs/UserGuide.html#explorer">Explorer</a>
+for the chromosome display.
+<p>
+<table>
+<tr><td style="vertical-align:text-top;">
+The circle display shows the chromosomes arranged in a circle,
+with synteny blocks shown as colored ribbons between the chromosomes.
+The color of a ribbon comes from one of the two chromosomes it connects; for example,
+in the image on the right, the Cabbage Chr1 is red and the corresponding ribbon is red.
+<p>Clicking on a species names causes its colors to be used preferentially (<i>sometimes it
+is necessary to click at the very beginning or end of the name for this to work</i>).
+<p>Clicking on a chromosome (e.g. the red part of the circle for Cabbage Chr1)
+causes ribbons from that chromosome to be shown on top.
+
+<h4>Control Panel</h4>
+Referring to top of the display, the first two buttons (<b>+, -</b>) change the size, while the third rotates the image.
+<p>
+<ttl>Scale to genome size:</ttl> This checkbox causes the chromosomes to be drawn proportionately to their
+actual length in basepairs. Otherwise, each species is allocated the same amount of space,
+e.g. for two species each one gets exactly half the circle.
+<td><a href="img/circle-2g.png">
+	<img src="img/circle-2g.png" alt="circle-two-genome" style="border: 1px solid black; width: 450px"></a>
+</table>
+The drop-down menu has: <ttl>Show all blocks</ttl>,
+<ttl>Show all blocks</ttl>,
+<ttl>Show inverted blocks</ttl>,
+<ttl>Show non-inverted block</ttl>,
+<ttl>Two-color scheme</ttl>, which shows inverted=green, non-inverted=red.
+
+<p><ttl>Self-align</ttl> (If self-synteny has been computed) This checkbox controls whether blocks are shown between chromosomes
+of the same species.
+<p>
+<ttl>Rotated text</ttl> Depending on the system, it may be easier (or harder) to read with
+the text rotated.
+
 <!------------------------------------------------------------>
 <a id="dotplot_display"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h2>Dot Plot (Two Genome)</h2>
+<h2>Dot Plot #1 (Two Genome)</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-Dots represent anchors (also referred to as <i>hits</i>). A blue box indicates a
-<i>Synteny Block</i>. The horizontal and vertical grid lines
-delineate the chromosomes (or linkage groups) of the two genomes being compared.
-<p>
 <table>
 <tr>
-<td>
- The
-individual grid boxes (cell) for each chromosome pair are referred to as <i>Regions</i>, and clicking
-on a region brings up a larger-scale <i>Region view</i>.
-<p>Within the region view:
+<td style="vertical-align:text-top;">
+Dots represent anchors (also referred to as <i>hits</i>). A blue box indicates a
+<i>Synteny Block</i>. A chromosome pair is represented by a <i>cell</i>.
+<p>
+Clicking a cell will replace the whole genome view with the dotplot for the chromosome pair.
+<p>Within the cell dotplot:
 <ul>
-<li>Click on a blue box or drag the mouse to highlight a sub-region.</li>
-<li>Then, click on the highlighted sub-region to bring up a SyMAP 2D view for that sub-region.</li>
+<li>Click a block to view the 2D display of the block.
+<li>Or, use the mouse to define a region, which will put a box around it. Then click the box to view the 2D display.
 <li>This is illustrated in the <a href="#dot2">Chromosome Dotplot</a>.
 </ul>
 
-<td><a href="img/dot-two-genome.png"><img src="img/dot-two-genome.png"  alt="" style="border: 1px solid black; width: 500px"></a>
+<td><a href="img/dotplot-2g.png"><img src="img/dotplot-2g.png"  alt="dotplot-2g" style="border: 1px solid black; width: 550px"></a>
 </table>
 
 <a id="dotplot_control"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h2>Dotplot Control Panel</h2>
+<h4>Control Panel</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<a href="img/controlpanel2.png"><img src="img/controlpanel2.png"  alt="" style="border: 1px solid black;"></a>
+<a href="img/dotplot-control.png"><img src="img/dotplot-control.png"  alt="dotplot controls" style="border: 1px solid black;width: 600px"></a>
 <p>
-<b>Home</b> Resets the zoom selection to the full grid view of the entire dot plot.
+<ttl>Home</ttl> Resets the zoom selection to the whole genome dot plot.
 <p>
-<b>Zoom</b> The plus (<b><big>+</big></b>) and minus (<b><big>-</big></b>) buttons shrink or grow the display.
+<ttl>Zoom</ttl> The plus (<ttl><big>+</big></ttl>) and minus (<ttl><big>-</big></ttl>) buttons shrink or grow the display.
 <p>
-<b>Scale</b> The check box resizes the species displayed on the y-axis according to the current scale of
+<ttl>Scale</ttl> The check box resizes the species displayed on the y-axis according to the current scale of
 the species displayed on the x-axis.
 <p>
-<b>Reference</b> The drop-down menu allows the reference species on the x-axis to be changed.
+<ttl>Reference</ttl> The drop-down menu allows the reference species on the x-axis to be changed.
 <p>
-<b>Size</b> The slider increases/decreases the size of the dots in the display.
+<ttl>Size</ttl> The slider increases/decreases the size of the dots in the display.
 
 
 <a id="dotplot_filter"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Dotplot Filters</h3>
+<h4>Dotplot Filters</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table>
 <tr><td>
 The Filter image on the right indicates the default settings.
-<p><b>Show Only Block Hits</b>
+<p><ttl>%Identity</ttl> Show all hits that have &gt;N% identity, where the %Identity is from the MUMmer anchor file.
+<p><ttl>Show Only Block Hits</ttl>
 A <i>block hit</i> is a hit that the SyMAP synteny-finding algorithm
 used to create a synteny block.
-<p>
-<b>Show All Hits</b>
+<p><ttl>Show All Hits</ttl>
 Displays all hits. Note that the SyMAP hit loading algorithm removes
-some repetitive hits from the raw anchor set, so some hits from the raw BLAT
-or MUMmer files will not be shown.
-<p>
-<b>Highlight Block Hits</b>
+some repetitive hits from the raw anchor set, so some hits from the MUMmer files will not be shown.
+<p><ttl>Highlight Block Hits</ttl>
 Highlight hits that make up a synteny block in blue.
-<p>
-<b>Show Blocks</b>
+<p><ttl>Show Blocks</ttl>
 This option draws blue rectangles around the synteny blocks.
-<p>
-<b>Show Empty Regions</b>
+<p><ttl>Show Empty Regions</ttl>
 When deselected, hides regions that do not contain any synteny blocks.
-<td><a href="img/dotplot_filter.png"><img src="img/dotplot_filter.png" alt="" style="border: 1px solid black; width: 220px"></a>
+<td><a href="img/dotplot-filter.png"><img src="img/dotplot-filter.png" alt="dotplot filter" style="border: 1px solid black; width: 220px"></a>
 </table>
 <!------------------------------------------------->
 <a id="block"></a>
@@ -225,56 +257,16 @@ When deselected, hides regions that do not contain any synteny blocks.
 <h2>Blocks Display (Two Genome)</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The image below shows the block display for Maize and Rice.
-The 10 Maize chromosomes are color coded as shown at the top, and aligned to
-the 12 rice chromosomes. The Rice to Maize block view can be viewed by
+The image below shows the block display for B.rapa and Cabbage.
+The 10 B.rapa chromosomes are color coded as shown at the top, and aligned to
+the 9 Cabbage chromosomes. The Cabbage to B.rapa block view can be viewed by
 selecting <u>reverse</u>.
 <table>
 <tr>
-<td><a href="img/block.png"><img src="img/block.png" alt="" style="border: 1px solid black; width: 500px"></a>
+<td><a href="img/block.png"><img src="img/block.png" alt="block" style="border: 1px solid black; width: 500px"></a>
 <td>Clicking a chromosome pops up a window of the chromosome as shown below. Clicking
 a block pops up a 2D view.
-<p><a href="img/block2.png"><img src="img/block2.png"  alt="" style="border: 1px solid black; width: 220px"></a>
-
-</table>
-<!------------------------------------------------->
-<a id="circle"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>Circle Display (Two Genome)</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-The circle display shows the chromosomes arranged in a circle,
-with synteny blocks shown as colored
-ribbons between the chromosomes.
-The color of a ribbon comes from one of the two chromosomes it connects; for example,
-in the image below, the Rice Chr1 is red and the corresponding ribbon is red.
-Clicking on a species names causes its colors to be used preferentially (<i>sometimes it
-is necessary to click at the very beginning or end of the name for this to work</i>).
-Clicking on a chromosome (e.g. the the red part of the circle for Rice Chr1)
-causes ribbons from that chromosome to be shown on top.
-<p>
-<table>
-<tr><td>
-The three controls on the left above the circle image control various aspects of the display.
-The first two buttons (<b>+, -</b>) change the size, while the third rotates the image.
-<p>
-<b>Scale to genome size:</b> This checkbox causes the chromosomes to be drawn proportionately to their
-actual length in basepairs. Otherwise, each species is allocated the same amount of space,
-e.g. for two species each one gets exactly half the circle.
-<p>
-<b>Show all blocks:</b>
-The drop-down menu has "Show inverted blocks", "Show non-inverted blocks",
-and "Two-color scheme", where this last option shows inverted=green, non-inverted=red.
-<p>
-<b>Self-align: </b> This checkbox controls whether blocks are shown between chromosomes
-of the same species (if there is a check mark in the projects self-synteny cell indicating
-its been computed).
-<p>
-<b>Rotated text:</b> Depending on the system, it may be easier (or harder) to read with
-the text rotated.
-
-<td><a href="img/circle-two-genome.png">
-	<img src="img/circle-two-genome.png" alt="" style="border: 1px solid black; width: 450px"></a>
+<p><a href="img/block-chr.png"><img src="img/block-chr.png"  alt="block chr" style="border: 1px solid black; width: 290px"></a>
 </table>
 
 <!------------------------------------------------->
@@ -283,14 +275,15 @@ the text rotated.
 <h2>Summary (Two Genome)</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The <b>Help</b> button on this view explains the different columns.
-<p><a href="img/sum-two-genome.png">
-	<img src="img/sum-two-genome.png" alt="" style="border: 1px solid black; width: 650px"></a>
-<!------------------------------------------------->
-
-<h1>C. Display for All Projects</h1>
-Select two or more projects and the "Chromosome Explorer" and "Dotplot" buttons
-will be activated.
+The <ttb>Help</ttb> button on this view explains the different columns.
+<p><a href="img/sum-2g.png">
+	<img src="img/sum-2g.png" alt="sum-two-genome" style="border: 1px solid black; width: 650px"></a>
+<!--------------------------------------------------------------------------------------->
+<!------------------------------------------------------------------------------------->
+<a id="all"></a>
+<h1>Displays for All Projects</h1>
+From the <a href="#mgr"> main SyMAP display</a>, select two or more projects, which will
+activate the "Chromosome Explorer" and "Dotplot" buttons.
 
 <a id="explorer"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -298,15 +291,14 @@ will be activated.
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 The Explorer is a two-panel display in which the left panel is used to select specific chromosomes, while the right panel
-shows the synteny for the selected chromosomes. Three different right-panel views are available:
-<a href="#alignment_display_circ">circle</a>,
+shows the synteny for the selected chromosomes using one of the following views:
+<a href="#alignment_display_circ">Circle</a>,
 <a href="#alignment_display_2d">2D</a> and
-<a href="#dotplot_display">Dotplot</a>.
-Below is a snapshot of the Explorer showing the circle format, which is the initial view.
+<a href="#alignment_display_dot">Dotplot</a>.
+Below is a snapshot of the Explorer showing the circle, which is the initial view.
 <p>
-<a id="circfig"></a>
 <a href="img/explorer.png">
-	<img src="img/explorer.png" alt="" style="border: 1px solid black; width: 650px"></a>
+	<img src="img/explorer.png" alt="explorer" style="border: 1px solid black; width: 650px"></a>
 
 <p><b>Left panel: </b>The left panel controls which species and chromosomes are shown:
 <ul>
@@ -320,57 +312,53 @@ To add/remove from the 2D or Dot Plot
 views, open the Circle view, make the change, and then re-open the 2D or Dot Plot.
 </ul>
 <p>
-Instructions: As the mouse moves over various
-components, instructions for that component are shown in the Instruction box.
+<ttl>Instructions</ttl>: As the mouse moves over various
+components, instructions or information for that component are shown in the Instruction box.
 <p>
-
-The four buttons in the lower-left corner of the window change the view in the right panel,
-where the choices are
-<a href="#alignment_display_2d">2D</a>,
-<a href="#dotplot_display">Dotplot</a>,
- and <a href="#alignment_display_circ">Circle</a>.
+<ttl>Views:</ttl> The buttons in the lower-left corner of the window change the synteny view in the right panel.
 <p>
-Download Blocks: Exports a table of all of the synteny block co-ordinates for the selected species; see also <a href="#data_download">Data Download</a>.
+<ttl>Download Blocks</ttl>: Exports a table of all of the synteny block coordinates for the selected species; see also <a href="#data_download">Data Download</a>.
 <p>
-Click the minus (<b><big>-</big></b>) button next to a project name or the Instruction box,
+Click the minus (<ttl><big>-</big></ttl>) button next to a project name or the Instruction box,
 and that section will be hidden;
 the minus sign will change to a plus.
-Click the plus (<b><big>+</big></b>) button to show the project or Instruction box..
+Click the plus (<ttl><big>+</big></ttl>) button to show the project or Instruction box..
 
 
-<p><b>Right panel:</b> The right panel shows the synteny display for the species and chromosomes selected on the left.
-There are three views:
-<a href="#alignment_display_2d">2D</a>,
-<a href="#dotplot_display">Dotplot</a>,
- and <a href="#alignment_display_circ">Circle</a>.
-The first three modes are
-essentially overview modes, while the 2D view allows zooming in to details, all the way
+<p><b>Right panel:</b>
+The right panel shows the synteny display for the species and chromosomes selected on the left.
+The three view for the right panel are
+<a href="#alignment_display_circ">Circ</a>,
+<a href="#alignment_display_2d">2D</a> and
+<a href="#alignment_display_dot">Dotplot</a>.
+The first two views are
+essentially overviews, while the 2D view allows zooming in to details, all the way
 to the basepair level if desired.
 Each right-panel display format has its own controls; see the individual sections for details.
 
 <!----------------------------------------------------------------->
 <a id="alignment_display_circ"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Circle Display (Multi-chromosome)</h3>
+<h3>Circle Display #2 (Multi-chromosome)</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-This view is shown in the above image.
+This view is shown in the above <a href="#explorer">Chromosome Explorer</a> image.
 All features are described in the first <a href="#circle">circle section</a>,
 except it is chromosome-based instead of genome-based.
 
 <!----------------------------------------------------------------->
-<a id="dot2"></a>
-<h3>Dot Plot (Multi-chromosome)</h3>
+<a id="alignment_display_dot"></a>
+<h3>Dot Plot #2 (Multi-chromosome)</h3>
 
 All features are described in the first <a href="#dotplot_display">dot plot section</a>,
 except that it is chromosome-based instead of genome-based.
-Selecting a region followed by a synteny block (or selected region)
-brings up the 2D view.
+Selecting a chromosome pair (cell) from the image on the left will replace it with the dotplot for the cell
+on the right. Clicking on a synteny block (or selected region) brings up the 2D view shown furthest right below.
 <table>
-<tr><td><a href="img/dot-chr.png">
-	<img src="img/dot-chr.png" alt="" style="border: 1px solid black; width: 350px"></a>
-<td><a href="img/dot-chr-2d.png">
-	<img src="img/dot-chr-2d.png" alt="" style="border: 1px solid black; width: 350px"></a>
+<tr><td><a href="img/dotplot-3chr.png">
+	<img src="img/dotplot-3chr.png" alt="dotplot 3chr" style="border: 1px solid black; width: 350px"></a>
+<td><a href="img/dotplot-chr-2d.png">
+	<img src="img/dotplot-chr-2d.png" alt="dotplot-chr-2d" style="border: 1px solid black; width: 360px"></a>
 </table>
 
 <!-------------------------------------------------------------------->
@@ -379,274 +367,254 @@ brings up the 2D view.
 <h3>2D Display (Multi-chromosome)</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The 2D display is activated from the <a href="#explorer">Explorer</a> by
-clicking the <b>2D</b> button (or by selecting a region or block from a dot plot).
-<p>
 <table>
-<tr><td>
-On the right is an image depicting an alignment from Rice Chr10 to Maize Chr1 to Sorghum Chr1.
-Note that Maize Chr1 is the <i>reference</i>
-chromosome, hence is placed in between the others.
-<p>
-The alignment window displays <i>tracks</i> (drawn as rectangles) of sequence information,
-showing synteny <i>hits</i> (drawn as lines) between tracks.
-<p>
-Left click in a track shows the most commonly used filters and features (e.g.
-flipping the region). They are also on the filter menu above each track
-(e.g. Sequence Filter). See the Filter descriptions below.
-<td><a href="img/symapAlign.png">
-	<img src="img/symapAlign.png" alt="" style="border: 1px solid black; width: 550px"></a>
+<tr><td>Contents:&nbsp;&nbsp;&nbsp;
+<td><a href="#view">View a region</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<td><a href="#control">Control Panel</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<td><a href="#sequence_filter">Sequence Filter</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<td><a href="#hitfilter">Hit Filter</a>&nbsp;&nbsp;&nbsp;
 </table>
 
+<p>
+The 2D display is activated from the <a href="#explorer">Explorer</a> by
+clicking the <ttb>2D</ttb> button (or by selecting a region or block from a dot plot).
+<p>
+<table>
+<tr><td style="vertical-align:text-top;">
+On the right is an image depicting an alignment from A.thal Chr4 to Cabbage Chr1 to B.rapa Chr2.
+Note that Cabbage Chr1 is the <i>reference</i>
+chromosome, hence is placed in between the others.
+<p>
+Each chromosome is drawn as a light-blue rectangle, called <i>tracks</i>.
+The sequence length is shown at the bottom of a track; the coordinates are displayed on the side.
+<p>The gene annotations (if exists) are drawn down the middle of the rectangle in dark-blue.
+<p>The synteny <i>hits</i> are the brown lines between tracks.
+The colors can be changed using the Color Icon in the upper right.
+<p>
+Right click in the sequence track will cause a popup of the most commonly used filters and features (e.g.
+flipping the region). They are also on the filter menu above each track
+(see <a href="#sequence_filter">Sequence Filter</a>).
+
+<td><a href="img/2d-3chr.png">
+	<img src="img/2d-3chr.png" alt="2d-3chr" style="border: 1px solid black; width: 550px"></a>
+</table>
+
+
+<!------------------------------------------------------->
+<a id="view"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>View a region</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The example below was derived from a two chromosome display of B.rapa Chr2 and Cabbage Chr1. The region
+was displayed by right-clicking
+near the top of the chromosome, dragging the mouse and releasing it in order to view the selected region.
+The <ttb>Sequence Filter</ttb> was set to display <ttl>Annotation Descriptions</ttl>.
+
+<p>
+<table>
+<tr><td  style="vertical-align:text-top;">
+Genes: The black lines with heavier blue bars interspersed down the center indicate exon/intron
+predictions. A solid black line would indicate the absence of introns in the annotation.
+
+<p>Hits: The alternating brown/gray lines indicate anchor hit clusters; e.g. the lower gene shown on the right
+has 16 separate MUMmer hits that are clustered together to represent one hit (#269294).
+The solid brown lines indicate
+a single hit (or multiple hits very close together), while the gray lines are spaces with no alignment.
+
+<p>Ruler: The ruler on the right side of the sequence rectangle shows the relative BP position along the sequence.
+
+<td><a href="img/2d-closeup.png">
+	<img src="img/2d-closeup.png" alt="2d-closeup" style="border: 1px solid black; width: 500px"></a>
+</table>
+
+<table style="width: 70%;">
+<tr><td>
+Hovering the mouse over a hit or gene will show its information in the <ttl>Instruction</ttl> box,
+as shown here for Hit #269294. Hovering the mouse over a gene will shown the gene information in
+the instruction box.
+<td><a href="img/2d-hit.png"><img src="img/2d-hit.png" alt="2d-hit" style="border: 1px solid black; width: 230px"></a>
+<tr><td>Right clicking on a yellow annotation box results in a popup, as shown on the far right. Besides the
+gene information, it also shows the list of exons. It is useful for copying all or part of the description, and viewing the
+information when the box is partially hidden.
+<td><a href="img/2d-desc.png"><img src="img/2d-desc.png" alt="2d-desc" style="border: 1px solid black; width: 250px"></a>
+</table>
+<p>
+Annotation data of the following types may be loaded into SyMAP and displayed.
+<table class="ty" style="width:650;">
+	<tr><td><i>Annotation Type</i><td><i>Display</i>
+	<tr><td>Gaps<td>Red band across the chromosome
+	<tr><td>Centromere<td>Blue "X" across the chromosome
+	<tr><td>Predicted genes and exons
+		<td>Annotation strip in center of chromosome, as described above.
+</table>
+The display colors can be changed using the Color Icon in the upper right (color panel not shown).
+<!----->
+
 <a id="control"></a>
+<a id="2dctrl"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h4>Control Panel and Navigation</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The control panel provides buttons that allow for navigation between views, scaling, color customization, and help.
+<a href="img/2d-control.png"><img src="img/2d-control.png" alt="2d controlpanel"></a>
 <p>
-<a href="img/controlpanel.png"><img src="img/controlpanel.png" alt=""></a>
-<p>
-<b>History (Home, &lt;, &gt;)</b> SyMAP retains a record of the prior views (like a web browser).
-The history navigation back (<b><big>&lt;</big></b>) and
-forward (<b><big>&gt;</big></b>) buttons allow you to
+<ttl>History (Home, &lt;, &gt;)</ttl> SyMAP retains a record of the prior views (like a web browser).
+The history navigation back (<ttl><big>&lt;</big></ttl>) and
+forward (<ttl><big>&gt;</big></ttl>) buttons allow you to
 move back and forth through the previous views.
-The <b>Home</b> button returns to the initial view.
+The <ttl>Home Icon</ttl> button returns to the initial view.
 <p>
-<b>Zoom Buttons (-, +)</b>
+<ttl>Zoom Buttons (-, +)</ttl>
 The zoom buttons allow for quickly expanding and narrowing the view region.
- The minus (<b><big>-</big></b>) button shrinks the view region by 50%, keeping
-the same center, while the plus (<b><big>+</big></b>) button doubles the view region,
+ The minus (<ttl><big>-</big></ttl>) button shrinks the view region by 50%, keeping
+the same center, while the plus (<ttl><big>+</big></ttl>) button doubles the view region,
 again keeping the same center.
 <p>
-<b>Scale Button</b>
+<ttl>Scale Icon Button</ttl>
 The Scale button
-(right of <b><big>+</big></b>) resizes the tracks so that they are in the same scale
+(right of <ttl><big>+</big></ttl>) resizes the tracks so that they are in the same scale
 (base pairs per pixel) as the reference sequence track in the view.
 <p>
 <a id="mouse_function_selector"></a>
-<b>Selected region</b>
+<ttl>Selected:</ttl>
 This drop-down selector assigns a function to the mouse's left button
 click and drag actions:
 
 <table class="ty" style="font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
 <tr><td style="white-space: nowrap; vertical-align: text-top;">Zoom All Tracks<td>Zoom the track to the selected region and all other tracks with hits in the region.
 <tr><td style="white-space: nowrap; vertical-align: text-top;">Zoom Selected Track<td>Zoom to the selected region on the selected track; all other tracks do not change.
-<tr><td style="white-space: nowrap; vertical-align: text-top;">Align (Max 30000)<td>Open the base alignment view for the selected region (see <a href="#base">Base View</a>).
-No more than 30000 bases can be selected.
-<tr><td style="white-space: nowrap; vertical-align: text-top;">Show Sequence<td>The selected sequence will be shown in a popup. This has limited utility, but is the
-only way to the underlying sequence of a region than may or may not have hit.
+<tr><td style="white-space: nowrap; vertical-align: text-top;">Align (Max 30000)<td>
+Open the base alignment view for the selected region (see <a href="#base">Base View</a>).
+No more than 30000 bases can be selected. There MUST be hits in the region to align.
+<tr><td style="white-space: nowrap; vertical-align: text-top;">Show Sequence<td>
+The selected sequence will be shown in a popup, which can be copied. This has limited utility, but is the
+only way to view the entire underlying sequence (the align view shows the bases of hit regions only).
 </table>
 
-<p><b>Colors</b> Opens a menu for customizing colors.
+<p><ttl>Print, Colors, <big>?</big></ttl>. See <a href="#image">Help and Print</a> for the 1st and 3rd button.
+The <ttl>Color Icon Button</ttl> opens a menu for customizing colors.
 <p>
-<b>Additional navigation:</b>
+Additional navigation:
 <table  class="ty" style="font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
 <tr>
-	<td style="white-space: nowrap; vertical-align: text-top;"><b>Resize Track</b>&nbsp;</td>
+	<td style="white-space: nowrap; vertical-align: text-top;">Resize Track&nbsp;</td>
 	<td>Drag bottom of track</td>
 	<td>Position mouse at bottom of track (resize cursor appears), hold down left
 	mouse button, and move mouse.</td></tr>
 <tr>
-	<td style="white-space: nowrap; vertical-align: text-top;"><b>Scroll Track</b>&nbsp;</td>
+	<td style="white-space: nowrap; vertical-align: text-top;">Scroll Track&nbsp;</td>
 	<td>Mouse wheel</td>
 	<td>Position mouse over track and use mouse wheel.</td></tr>
 <tr>
-	<td><b>Filter</b>&nbsp;</td>
+	<td>Filter&nbsp;</td>
 	<td>Right mouse button</td>
 	<td>Position mouse over track or white space between tracks, and click right mouse button.</td></tr>
 </table>
 
-
-<a id="main"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h4>Tracks in Main Panel</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-The main panel is divided into <i>tracks</i>,
-where each track represents a sequence. Each track
-is aligned to the track on its immediate left or right, and the
-individual pieces of evidence for synteny (referred to as <i>anchors</i> or <i>hits</i>) are drawn as
-lines between the two tracks. Above each track
-is a "filter" button which allows configuration of the content displayed for
-that track (e.g. annotations), and above the space between each pair of tracks
-is a "hit filter" button that allows selection of the types of hits displayed
-between the tracks on either side (e.g. only show syntenic hits).
-
-<a id="sequence_track"></a>
-<h4><i>Sequence Track and Filter</i></h4>
-
-A Sequence track may represent a sequenced chromosome, linkage group or scaffold.
-The sequence length
-and the coordinates of the displayed region are indicated above and below the track.
 <p>
-Annotation data of the following types may be loaded into SyMAP and displayed.
-(Note that display colors <a href="#control">can be changed</a>.)
-<p>
-<table class="ty" style="width:650;">
-	<tr>
-		<td><i>Annotation Type</i></td>
-		<td><i>Display</i></td>
-	</tr>
-	<tr>
-		<td>Gaps</td>
-		<td>Red band across the chromosome</td>
-	</tr>
-	<tr>
-		<td>Centromere</td>
-		<td>Blue "X" across the chromosome</td>
-	</tr>
-	<tr>
-		<td>Predicted genes and exons</td>
-		<td>Annotation strip in center of chromosome (see <a href="#seqtrackimg">image</a> )</td>
-	</tr>
-</table>
-
-<p>
-The sequence information displayed can be configured via the
-<a href="#sequence_filter">Sequence Filter</a> by clicking the
-<b>Sequence Filter</b> button above the sequence track, or by right-clicking the
-mouse over the sequence track.
-<p>
-The example below shows a sequence-to-sequence alignment, which was derived by right-clicking
-at the top of the region, pulling down the mouse and releasing in order to view a small region.
-
-<p>
-<a id="seqtrackimg"></a>
-<table>
-<tr><td>
-The black lines with heavier blue bars interspersed down the center indicate exon/intron
-predictions. A solid black line would indicate the absence of introns in the annotation.
-<p>The alternating brown/gray lines indicate anchor clusters. The solid brown lines indicate
-a single anchor (or multiple anchors very close together), while the gray lines are spaces with no alignment.
-<p>The ruler on the right side of the sequence rectangle
-shows the relative BP position along the sequence.
-<p>Additional information about each
-annotation may be seen by choosing "Show Annotation Description" from the Sequence Filter.
-
-<td><a href="img/2d-closeup.png">
-	<img src="img/2d-closeup.png" alt="" style="border: 1px solid black; width: 500px"></a>
-
-<tr><td>Right clicking everywhere but in a yellow annotation box provides
-a pop-up menu with most of the items found on the Sequence Filter. Right
-clicking on a yellow box results in a popup, as shown on the right; this
-is useful for copying all or part of the description, and when the box
-is partially hidden.
-<td><a href="img/2d-desc.png">
-	<img src="img/2d-desc.png" alt="" style="border: 1px solid black; width: 250px"></a>
-</table>
-
-<p>
-
 <a id="sequence_filter"></a>
-The Sequence Filter allows the user to select the type of information shown for the
-sequence.  It is accessed via the <b>Sequence Filter</b> button above the sequence track,
-or by right-clicking the mouse over the sequence track.
+<a id="sequence_track"></a>
+<h4>Sequence Filter</h4>
+
+Select <ttb>Sequence Filter</ttb> button above the sequence track to change the display for the
+respective chromosome.
 <p>
-<b>Start and End</b>
-The positions of the sequence display can be set via the
-corresponding text boxes.
+<ttl>Start</ttl> and <ttl>End</ttl>
+The positions of the sequence display can be set via the corresponding text boxes.
 The units of the values entered can be selected from the accompanying drop down menus
 (BP, KB, MB, GB).
-<p>
-<b>Full Sequence</b> Sets the start and end positions of
-the sequence display to encompass the whole chromosome.
-<p>
 
 <table>
 <tr><td>
+<ttl>Full Sequence</ttl> Sets the start and end positions of
+the sequence display to encompass the whole chromosome.
 <p>
-<b>Flip</b> Reverses the orientation of the sequence track.
+<ttl>Flip</ttl> Reverses the orientation of the sequence track.
 <p>
-<b>Show Genes</b>
-Enables/disables the display of gene/exon annotations
- along the sequence.
+<ttl>Show Genes</ttl> Enables/disables the display of gene/exon annotations along the sequence.
 <p>
-<b>Show Annotation Descriptions</b> Enables/disables the display of the annotation descriptions along the
+<ttl>Show Annotation Descriptions</ttl> Enables/disables the display of the annotation descriptions along the
 right side of sequence. NOTE: this only works if you are zoomed in close enough that they can clearly
 be displayed.
-
 <p>
-<b>Show Gaps</b> Enables/disables the display of sequence gaps (drawn as solid red
+<ttl>Show Gaps</ttl> Enables/disables the display of sequence gaps (drawn as solid red
 rectangles) along the sequence.
 <p>
-<b>Show Centromere</b> Enables/disables the display of the centromere (drawn as a cyan "X") on
-the sequence.
+<ttl>Show Centromere</ttl> Enables/disables the display of the centromere (drawn as a cyan "X") on the sequence.
 <p>
-<b>Show Framework Markers</b> Typically genetic markers or radiation hybrid markers.
-This option enables/disables the display of framework markers (drawn as solid green
-rectangles) along the sequence.
-<p>
-
+<ttl>Show Framework Markers</ttl> Ignore, not relevant.
 <td>
 <a href="img/sequencefilter.png">
-	<img src="img/sequencefilter.png" alt="" style="border: 1px solid black; width: 300px"></a>
+	<img src="img/sequencefilter.png" alt="sequencefilter" style="border: 1px solid black; width: 300px"></a>
 </table>
 
 <p>
-<b>Show Ruler</b> Enables/disables the display of the sequence ruler along the right side
+<ttl>Show Ruler</ttl> Enables/disables the display of the sequence ruler along the right side
 of the sequence.
 <p>
-<b>Show Hit Length</b> Enables/disables the display of the hit length line next to each hit along the
+<ttl>Show Hit Length</ttl> Enables/disables the display of the hit length line next to each hit along the
 sequence.  The hit length line denotes the start and end points of the hits relative
 to the sequence (may not be visible for tiny hits).
 <p>
-<b>Show Hit Score Line</b> Enables/disables the display of the score line next to each hit along the
+<ttl>Show Hit %Id Line</ttl> Enables/disables the display of the %Id line next to each hit along the
 sequence.  The length of the line represents the magnitude of the % Identity value for
 the hit.
 <p>
-<b>Show Hit Score Value</b> Enables/disables the display of the score value next to each hit along the
-sequence.  The score value corresponds to the % Identity value for the hit.
+<ttl>Show Hit %Id Value</ttl> Enables/disables the display of the %Id value next to each hit along the
+sequence.  The score value corresponds to the % Identity value for the hit from the MUMmer anchor file.
 
+<table style="width:50%;">
+<tr><td>A subset of the filters are available by right
+clicking in the light blue area of the chromosome rectangle.
+<td><a href="img/sequencefilter2.png">
+	<img src="img/sequencefilter2.png" alt="sequencefilter" style="border: 1px solid black; width: 150px"></a>
+</table>
+
+<!------------->
 <a id="hitfilter"></a>
 <a id="hit"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h4><i>Hit Filter</i></h4>
+<h4>Hit Filter</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The Hit Filter menu allows the user to select which types of hits are displayed.
+The <ttb>Hit Filter</ttb> menu allows the user to select which types of hits are displayed.
 <table>
 <tr><td>
+<ttl>Show Only Synteny Hits</ttl> Shows only hits that are part of a synteny block.
 <p>
-The types of filter are as follows:
-
+<ttl>Show Only Hits to Genes</ttl> Show only hits which intersect a gene annotation.
 <p>
-<b>Show Only Synteny Hits</b> Shows only hits that are part of a synteny block.
+<ttl>Show Only Non-Gene Hits</ttl> Show only hits which do not intersect a gene annotation.
 <p>
-<b>Show Only Hits to Genes</b> Show only hits which intersect a gene annotation.
-<p>
-<b>Show Only Non-Gene Hits</b> Show only hits which do not intersect a gene annotation.
-<p>
-<b>Show All Hits</b> hows all known hits.
+<ttl>Show All Hits</ttl> hows all known hits.
 
 <td><a href="img/hitfilterS.png">
-	<img src="img/hitfilterS.png" alt="" style="border: 1px solid black; width: 250px"></a>
+	<img src="img/hitfilterS.png" alt="hitfilterS" style="border: 1px solid black; width: 250px"></a>
 </table>
 
 <a id="base"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h4>Base View</h4></td>
+<h3>Align (Base View)</h3></td>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-Select "Base View" from the "Mouse" drop-down, then select a region of maximum 50kb.
+Select <ttl>Align (Max 30000bp)</ttl> from the <ttb>Selected:</ttb> drop-down, then select a region of maximum 30kb,
+<i>which must have hits</i>.
 To select a region,  drag the
 mouse along the sequence and release when the desired range is highlighted.
 <p>
 <a href="img/baseview.png">
-	<img src="img/baseview.png" alt="" style="border: 1px solid black; width: 750px"></a>
+	<img src="img/baseview.png" alt="baseview" style="border: 1px solid black; width: 750px"></a>
 <p>
-If there are multiple hits in the selected region, than the base view of those hits
-appears in a new dialog.  This view consists of a ruler along the top showing the area
+The aligned base view of the hits will
+appears in a new window.  This view consists of a ruler along the top showing the area
 of the sequence covered, the hits, and the genes.
 <p>
 <b>Hits</b><br>
-Hits are displayed as lines with an arrow on one end showing the direction of the hit.
-Clicking on a hit brings up the hit's
-BLAST view in the bottom of the dialog. The hit presently shown in the BLAST view is
-shown in gray.  A vertical red line along a hit represents a mismatch .
-A vertical green line
-along a hit represents a deletion. An arrow pointing down (i.e. 'v') along a hit
-represents an insertion.
+Hits are displayed as lines with an arrow on one end showing the direction of the hit;
+a hit may represent multiple MUMmer hits, and is further broken into sub-hits where there are indels.
+A vertical red line along a represents a mismatch.
+Clicking on a sub-hit line brings up the its base alignment view in the bottom of the dialog.
 <p>
 <b>Genes</b><br>
 Annotated genes are displayed below the hits.  Exons are represented by a blue box, and
@@ -658,13 +626,13 @@ hits. Genes that overlap this gene will be partially shown.
 <!-------------------------------------------------------------------->
 <a id="dot3"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Dot Plot (Multi-genome)</h3>
+<h3>Dot Plot #3 (Multi-genome)</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 All selected projects will be shown in the Dot Plot. The interface is the same as
 discussed in <a href="#dotplot_display">Dot Plot (Two Genome)</a>. The dot plot in the image
 shows three genomes.
-<p><a href="img/dotplot.png"><img src="img/dotplot.png" alt="" style="border: 1px solid black; width: 600px"></a>
+<p><a href="img/dotplot-3g.png"><img src="img/dotplot-3g.png" alt="" style="border: 1px solid black; width: 600px"></a>
 <!-------------------------------------------------------------------->
 
 <a id="annotsearch"></a>
@@ -674,85 +642,41 @@ shows three genomes.
 
 The query interface only works for multi-genome Seq-to-Seq synteny
 (i.e does not work for self-synteny).
-This interface has two basic
-functions:
-<br>
-A. Locate homologous (or paralogous) regions based on annotation and location
-<br>
-B. Create putative gene families spanning multiple species, and apply family-based filters
 <p>
-Some sample queries which are possible through the interface:
+To open the query interface, first select two or more sequence projects in the Project Manager.
+Then select the <ttb>SyMAP Queries</ttb> button to open the interface:
 <p>
-<i>&bull; Find un-annotated regions on one genome which are homologous to regions on another genome
-which have already been annotated. </i>
-<p>
-<i> &bull; Find putative gene families which are present in one lineage but absent in another.</i>
-<p>
-<i>&bull; Identify the likely orthologs on genome A of a given gene on genome B, by using synteny blocks
-or exactly collinear pairs to filter out probable paralogs.  </i>
-<p>
-<i> &bull; Find orphan genes which are specific to one genome.</i>
-<p>
-To open the query interface, first select two or more sequence projects in the Project Manager. Then press the "SyMAP Queries" button to open the interface:
-<p>
-<a href="img/query_oview.png"><img src="img/query_oview.png" alt="" style="border: 1px solid black; width: 500px"></a>
+<a href="img/query_oview.png"><img src="img/query_oview.png" alt="query_oview" style="border: 1px solid black; width: 500px"></a>
 <p>
 The Overview window (above) lists the projects which were selected for querying. To set up a query, open the
-"Query Setup" window by clicking on its title in the left panel. This opens the window below:
+<ttl>Query Setup</ttl> window by clicking on its title in the left panel. This opens the window below:
 <p>
-<a href="img/query_query.png"><img src="img/query_query.png" alt="" style="border: 1px solid black; width: 550px"></a>
+<a href="img/query_query.png"><img src="img/query_query.png" alt="query_query" style="border: 1px solid black; width: 550px"></a>
 <p>
-Here you set up the query and then press "Run Search" to execute it. <p>
-The query occurs in two stages, corresponding to the section numbers
-on the Query Page. The second start, PgeneF, only runs if the "Compute PgeneF" is checked.
-
-<h3>1. Filter hits</h3>
-
-The first stage is to retrieve hits (anchors) from the database, based on
-filters such as chromosome and annotation string. Note that each anchor
-connects two species and hence represents a <i>pair</i> of putatively-related
-regions on the two species. The filters are described in the <b>Help</b> in the upper corner.
-
-<p><b>Annotation Description</b>
-<br>
-Enter a search string for any annotation keyword
-(e.g. the gene name or description). Hits will be returned which overlap a matching annotation
-on either side.
-<p>When looking for a particular gene, say "gene-LOC9268236", enter this into the text box
-and "Run Query". If there are no results, select "Only orphan genes" and run it again.
-
-<p><b>Collinear genes N&gt;= N</b>
+Set up the query and then select <ttb>Run Search</ttb> to execute it.
+The Query option are fully explained in the <ttb>Help</ttb> popup.
+The following describes two special features:
+<p><ttl>Collinear genes N&gt;= N</ttl>
 <br>
 Return only hits which are part of a pair of N aligning genes having no intervening
 non-aligning genes. There is a column called "RunSize" that provides the number
 of adjacent aligning genes. Note that this is not the same as synteny blocks, which
 allows intervening non-aligning genes.
-
-<p><b>Show orphan genes</b>
+<p><ttl>Filter putative gene families (PgeneFs)</ttl>
 <br>
-If checked, this shows all orphan genes for the project selected (or all projects).
-That is, it shows genes that have no overlapping hits to ANY other project for which
-it has been compared.
-
-
-<h3>2. Filter putative gene families (PgeneFs)</h3>
-
-Using the hits that pass the Stage 1 filters, SyMAP constructs putative gene families (PgeneFs)
+Using the hits that pass the hit filters, SyMAP constructs putative gene families (PgeneFs)
 spanning the selected species. This is done by grouping hits whose hit regions overlap on
 at least one genome. <i>Note, if you have more than 6 species selected, this stage can take
 an hour or more.</i>
 <p>
 Each PgeneF is given a number, which is shown in the Query Results table (column name "PgeneF").
 The size of the PgeneF is also shown (column "PgFSize").
-<p>
-The filters are described in the Query <b>Help</b> page.
 
 <h3>SyMAP Query Result Table</h3>
 <p>
 When the query is complete, the Query Results page opens showing the table of results:
 <p>
-
-<a href="img/queryres1.png"><img src="img/queryres1.png" alt="" style="border: 1px solid black; width: 550px"></a>
+<a href="img/query_result.png"><img src="img/query_result.png" alt="query results" style="border: 1px solid black; width: 550px"></a>
 
 <p>
 The table contains all the hits (anchors) resulting from the query. Each hit connects
@@ -760,7 +684,7 @@ two species and you can see the respective chromosomes and start/end locations o
 the hits, as well as gene annotations overlapped by the hits.
 <p>
 Note that the table contains columns for <i>all</i> of the selected
-species (see snapshot below), but each hit only connects two species, and the other species columns are empty.
+species, but each hit only connects two species, and the other species columns are empty.
 If the query specified orphan genes, then each row represents one gene and shows data only
 for one species.
 <p>
@@ -770,49 +694,51 @@ and rearrange them by dragging the header boxes.
 <h4>Button functions</h4>
 
 <div style="width:700px;margin-top:10px; margin-left:15px;">
-<b>Align sequences</b>:
+<ttb>Align sequences</ttb>:
 Sequences of the selected hit are written out and a multiple alignment is created
 using MUSCLE (Edgar 2004 NAR:32).
 <p>
-<b>Show Synteny</b> :
+<ttb>Show Synteny</ttb> :
 Brings up a SyMAP 2-track view for each selected entry, so the hit
 can be seen in their full chromosomal context. The hit is initially padded to each side
 by the margin amount indicated (default 50kb), but you can easily zoom further out in the 2-track views.
 <p>
-<b>Export CSV</b>:
+<ttb>Export CSV</ttb>:
 Saves the selected hits (or entire table) using the selected set of columns to a CSV format suitable for import into Excel.
 <p>
-<p>
-<b>Save as Fasta</b>: Sequences from the selected hits (or entire table) are written to a Fasta file. Both sides of each hit
+<ttb>Save as Fasta</ttb>: Sequences from the selected hits (or entire table) are written to a Fasta file. Both sides of each hit
 are written, using the start/end coordinates shown in the table.
-<p>
 </div>
 
 <h3>Results Table Columns</h3>
-You can add/remove columns using the <b>Select Columns</b> button at the bottom. This
-opens up a column-selection section. The columns are explain the the <b>Help</b> button on the table.
+You can add/remove columns using the <ttb>Select Columns</ttb> button at the bottom. This
+opens up a column-selection section. The columns are explain the the <ttb>Help</ttb> button on the table.
 
 <a id="self"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>Self-synteny Display</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-Self-synteny can be viewed in all views (see <a href="Demo.html#self" class="ext" target="_blank">Demo Dot Plot</a>).
+Self-synteny can be viewed in all views
+(see <a href="Demo.html#self" class="ext" target="_blank">Demo Dot Plot</a>), with the following exception:
+The 2D does not work for a single chromosome compared
+to itself. However, by going through the dotplot or blocks view, you can click on a self-chromosome block and view it in
+the 2D view.
 
-<p>The "SyMAP queries" does not work for self-synteny.
+<p>The <ttb>SyMAP queries</ttb> does not work for self-synteny.
 
 <a id="data_download"></a>
 <h2>Data Download</h2>
 
-There are two ways to download data for SyMAP synteny blocks, individual anchors, and annotations:
+There are two ways to download data for SyMAP synteny blocks, individual hit anchors, and annotations:
 <ul>
 <li> Through the <a href="#explorer">Explorer</a>. Select the species of interest,
  open the Explorer, and the download button is at the lower left.
- This exports a table of all the computed synteny block co-ordinates for all the
+ This exports a table of all the computed synteny block coordinates for all the
  selected species, including their self-alignments, if those were computed.
-<li> Through the <a href="#annotsearch">Query interface</a>. For example,
+<li> Through the <a href="#annotsearch">SyMAP Queries</a>. For example,
  choosing two species and executing a query with the default parameters
- will show a table of all the anchors found between the two species, plus
+ will show a table of all the hits found between the two species, plus
 their annotations and synteny block membership, if any.
 </ul>
 
@@ -821,13 +747,13 @@ their annotations and synteny block membership, if any.
 <h2>Print and Help</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-Most displays shown have a <img src="img/print.png" alt="" style="border: 1px solid black; width: 50px"> set of icons.
+Most displays shown have a <img src="img/print.png" alt="print" style="border: 1px solid black; width: 50px"> set of icons.
 <p>The left icon is for printing the image. However, this does not work with all versions
 of Java. If it does not work, use the system "Screen Capture" (all the images in this
 document were created with screen capture, along with the images in the SyMAP publications).
 
 <p>The right
-icon brings up the this web page, typically to the correct section (obviously, there needs
+icon brings up this web page, typically to the correct section (obviously, there needs
 to be an internet connection).
 
 <!-------------------------- this link is in SyMap--------------------------------------->

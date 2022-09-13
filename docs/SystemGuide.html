@@ -3,6 +3,8 @@
 <head>
 <title>SyMAP System Guide</title>
 <style>
+	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
 	a:link {text-decoration: none;color:#6666CC;}
 	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
@@ -133,12 +135,12 @@ for very similar genomes or bacterial genomes.
 	<td>
 		<small>Click an image to see the closeup.</small>
 		<table class="tx">
-			<tr><td><a href="img/symapRosid.png"><img src="img/symapRosid.png" alt="" style="width:110px;border: 1px solid black;"></a>
-				<td><a href="img/2dRosid.png"><img src="img/2dRosid.png" alt=""       style="width:110px;border: 1px solid black;"></a>
-				<td><a href="img/querySetup.png"><img src="img/querySetup.png" alt="" style="width:100px; border: 1px solid black;"></a>
-			<tr><td><a href="img/dotRosid.png"><img src="img/dotRosid.png" alt=""     style="width:110px; border: 1px solid black;"></a>
-				<td><a href="img/blockRosid.png"><img src="img/blockRosid.png" alt="" style="width:110px; border: 1px solid black;"></a>
-				<td><a href="img/circRosid.png"><img src="img/circRosid.png" alt=""   style="width:90px; border: 1px solid black;"></a>
+			<tr><td><a href="img/symapRosid.png"><img src="img/symapRosid.png" alt="viewRosid" style="width:120px;border: 1px solid black;"></a>
+				<td><a href="img/2d-3chr.png"><img src="img/2d-3chr.png" alt="2d-3chr"       style="width:110px;border: 1px solid black;"></a>
+				<td><a href="img/querySetup.png"><img src="img/querySetup.png" alt="querySetup" style="width:100px; border: 1px solid black;"></a>
+			<tr><td><a href="img/dotplot-3g.png"><img src="img/dotplot-3g.png" alt="dotplot-3-genome"     style="width:120px; border: 1px solid black;"></a>
+				<td><a href="img/block.png"><img src="img/block.png" alt="block-2-genome" style="width:110px; border: 1px solid black;"></a>
+				<td><a href="img/circle-2g.png"><img src="img/circle-2g.png" alt="circle-2-genome"   style="width:90px; border: 1px solid black;"></a>
 		</table>
 </table>
 <p>
@@ -297,36 +299,36 @@ see <a href="MUMmer.html#ext" class="ext" target="_blank">MUMmer Executables</a>
 <table>
 <tr><td style="vertical-align: text-top;">
 The Project Manager window opens showing the four demo projects provided with the SyMAP packages.
-Check "Demo-Seq" and "Demo-Seq2".
-<td><a href="img/demoLoad.png"><img src="img/demoLoad.png" alt="" style="border: 1px solid black; width: 400px"></a>
+Check <ttl>Demo-Seq</ttl> and <ttl>Demo-Seq2</ttl>.
+<td><a href="img/demoLoad.png"><img src="img/demoLoad.png" alt="demoLoad" style="border: 1px solid black; width: 400px"></a>
 
 <tr><td style="colspan: 2; height: 40px;">&nbsp;
 
 <tr><td style="vertical-align: text-top;">
 
-A link "Load All Projects" will be displayed in the top of the right panel; select it to
+A link <ttb>Load All Projects</ttb> will be displayed in the top of the right panel; select it to
 load the projects, which will take several minutes.
 <p>If loading the "Demo-Seq" takes
 <i>more than a few minutes</i>, you may need to adjust the MySQL parameters, see
 <a href="TroubleShoot.html#msqslow" class="ext" target="_blank">TroubleShoot MySQL</a>.
 <p>When done, the Manager will look as shown in the image on the right.
-<p>In the "Available Syntenies" table, click the cell for the "Demo_Seq2" row and the "Demo_Seq" column.
-Then click the "Selected Pair" button to start the alignment.
+<p>In the <ttb>Available Syntenies</ttb> table, click the cell for the "Demo_Seq2" row and the "Demo_Seq" column.
+Then click the <ttb>Selected Pair</ttb> button to start the alignment.
 
 <td>
-<a href="img/demoMgr.png"><img src="img/demoMgr.png" alt="" style="border: 1px solid black; width: 400px"></a>
+<a href="img/demoMgr.png"><img src="img/demoMgr.png" alt="demoMgr" style="border: 1px solid black; width: 400px"></a>
 
 <tr><td style="colspan: 2; height: 40px;">&nbsp;
 
 <tr>
 <td style="vertical-align: text-top;">
-The Synteny &amp; Alignment takes less than 5 minutes on the MacOS 10.5 but could take up to 30 minutes
+The Alignment&amp;Synteny takes less than 5 minutes on the MacOS 10.5 but could take up to 30 minutes
 on a slow machine.
 <p>When done, the table will have a checkbox, signifying that the synteny is available for viewing.
 Click the checked cell, which will enable the viewing buttons.
 
 <td>
-<a href="img/demoTable.png"><img src="img/demoTable.png" alt="" style="border: 1px solid black; width: 400px"></a>
+<a href="img/demoTable.png"><img src="img/demoTable.png" alt="demoTable" style="border: 1px solid black; width: 400px"></a>
 
 <tr><td style="colspan: 2; height: 40px;">&nbsp;
 
@@ -336,7 +338,7 @@ Click "Summary" to view the v5 summary shown on the right; <i>there may be sligh
 because of different numbers of CPUs, MacOS vs Linux, etc (but the #Blocks come out the same)</i>.
 <p>To view the other interfaces, see <a href="Demo.html" class="ext" target="_blank">Demo Results</a>.
 <td>
-<a href="img/demoSum.png"><img src="img/demoSum.png" alt="" style="border: 1px solid black; width: 400px"></a>
+<a href="img/demoSum.png"><img src="img/demoSum.png" alt="demoSum" style="border: 1px solid black; width: 400px"></a>
 </table>
 
 <a id="draft"></a>
@@ -355,7 +357,7 @@ the parameter "Order against: demo_seq2". With this setting,
 the Demo-Draft contigs will be ordered using synteny to
 Demo-Seq2.
 		<td>
-<a href="img/demoDraft1.png"><img src="img/demoDraft1.png" alt="" style="border: 1px solid black; width: 400px"></a>
+<a href="img/demoDraft1.png"><img src="img/demoDraft1.png" alt="demoDraft1" style="border: 1px solid black; width: 400px"></a>
 	<tr><td style="colspan: 2; height: 40px;">&nbsp;
 	<tr>
 		<td style="vertical-align: text-top;">
@@ -366,7 +368,7 @@ slightly different when run when different numbers of CPUs.</i>
 
 See the first dot plot in <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>.
 		<td>
-<a href="img/demoSum2.png"><img src="img/demoSum2.png" alt="" style="border: 1px solid black; width: 400px"></a>
+<a href="img/demoSum2.png"><img src="img/demoSum2.png" alt="demoSum2" style="border: 1px solid black; width: 400px"></a>
 
 </table>
 
@@ -378,7 +380,7 @@ whether they should be flipped to a file called <tt>/data/seq/Demo_seq2/ordering
 <p>2. <i>Fasta files of ordered sequences: </i>
 It creates sequence files from the ordered contigs that are flipped when appropriate,
 which are put into a new project
-with the suffix "<tt>_ordered</tt>", as shown on the right. The chromosome names correspond
+with the suffix "<tt>_ordered</tt>", as shown in the image below. The chromosome names correspond
 to the order-against project (e.g. Demo_seq2), and the third chromosome is 'chr0'
 which contains all draft sequences that were not placed.
 <p>
@@ -390,9 +392,9 @@ load it.
 Running the Alignment&amp;Synteny
 between the <tt>_ordered</tt> project and Demo_seq2 will provide a more coherent display
 (see the second dot plot for <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>).
-Using the "parameters" window, the <tt>Demo_Draft-ordered</tt> can be shortened.
+Using the <u>parameters</u> window, the <tt>Demo_Draft-ordered</tt> name can be shortened.
 <td><td>
-<a href="img/demoDraft3.png"><img src="img/demoDraft3.png" alt="" style="border: 1px solid black; width: 400px"></a>
+<a href="img/demoDraft3.png"><img src="img/demoDraft3.png" alt="demoDraft3" style="border: 1px solid black; width: 400px"></a>
 </table>
 
 <a id="demoself"></a>
@@ -528,12 +530,13 @@ structure</a>, or you may create a new project via the SyMAP interface.
 <p>
 <table>
 <tr><td style="vertical-align: text-top;">
-To create a new project via the SyMAP interface, press the "Add Project" button
-at the lower left. Enter the project name beside "Name:" and leave the "Type:" as "sequence". The Help
+To create a new project via the SyMAP interface, press the <ttb>Add Project</ttb> button
+at the lower left. Enter the project name beside <ttl>Name:</ttl> and leave the <ttl>Type:</ttl>
+as <ttl>sequence</ttl>. The Help
 button on the dialog provides further information.
 <p>&nbsp;
 <td>
-<a href="img/projNew.png"><img src="img/projNew.png" alt="" style="border: 1px solid black; width: 400px"></a>
+<a href="img/projNew.png"><img src="img/projNew.png" alt="projNew" style="border: 1px solid black; width: 400px"></a>
 
 <p>
 <tr><td style="vertical-align: text-top;">
@@ -542,7 +545,7 @@ it is still an empty shell. A directory will be made under the <tt>/data/seq</tt
 e.g. for the project added on the right, a directory will be created called <tt>/data/seq/foobar</tt>.
 Check its box and it will appear in the Summary section (right hand side).
 <td>
-<a href="img/projNew2.png"><img src="img/projNew2.png" alt="" style="border: 1px solid black; width: 400px"></a>
+<a href="img/projNew2.png"><img src="img/projNew2.png" alt="projNew2" style="border: 1px solid black; width: 400px"></a>
 </table>
 
 <a id="params2"></a>
@@ -565,7 +568,7 @@ are as follows:
 /data/seq/foobar/sequences
 </pre>
 
-<td><a href="img/parameters1.png"><img src="img/parameters1.png" alt="" style="border: 1px solid black; width: 400px"></a>
+<td><a href="img/parameters1.png"><img src="img/parameters1.png" alt="parameters1" style="border: 1px solid black; width: 400px"></a>
 </table>
 
 <p>
@@ -575,8 +578,8 @@ After setting the parameters, the project is ready to be loaded.
 <tr>
 <td style="vertical-align: text-top;">
 <i>Alignment &amp; Synteny</i> parameters can be changed by selecting a project pair cell
-followed by the "Parameters" button, which brings up with window shown on the right.
-See the "Help" for a description of the parameters.
+followed by the <ttb>Parameters</ttb> button, which brings up with window shown on the right.
+See the <ttb>Help</ttb> for a description of the parameters.
 
 <p>These parameters generally do not need to be changed.
 
@@ -584,8 +587,8 @@ The <tt>MUMmer</tt> program <tt>PROmer</tt> is the default program
 for sequence alignments for different genomes. The <tt>MUMmer</tt> program <tt>NUCmer</tt> is the default program
 for sequence self-alignments.
 <td style="vertical-align: text-top;">
-<a href="img/alignLine.png"><img src="img/alignLine.png" alt="" style="border: 1px solid black; width: 400px"></a>
-<br><a href="img/parameters2.png"><img src="img/parameters2.png" alt="" style="border: 1px solid black; width: 350px"></a>
+<a href="img/alignLine.png"><img src="img/alignLine.png" alt="alignLine" style="border: 1px solid black; width: 400px"></a>
+<br><a href="img/parameters2.png"><img src="img/parameters2.png" alt="parameters2" style="border: 1px solid black; width: 350px"></a>
 </table>
 
 
@@ -718,15 +721,15 @@ so you might want to start with the largest 50, merge them, then repeat.
 <table>
 <tr>
 <td>To perform self-synteny, select the cell for the same project followed by
-"Selected Pair". The "All Pairs" option does not include self-synteny.
-<td><a href="img/self.png"><img src="img/self.png" alt="" style="border: 1px solid black; width: 230px"></a>
+<ttb>Selected Pair</ttb>. The <ttb>All Pairs</ttb> option does not include self-synteny.
+<td><a href="img/self.png"><img src="img/self.png" alt="self" style="border: 1px solid black; width: 230px"></a>
 </table>
 <p>
 By default, SyMAP uses the MUMmer 'nucmer' program for self-alignments. Each chromosomes
 is compared to every other chromosome including itself.
 
 
-<p>The Alignment &amp; Synteny "Parameters" popup has an option to set "Self Args",
+<p>The Alignment &amp; Synteny <ttb>Parameters</ttb> popup has an option to set "Self Args",
 which only uses the "Self Args" parameter(s) when comparing the chromosome sequence file
 to itself. In v4.2, the "--maxmatch" parameter was always used, but now it
 is up to the user as to whether they want to add it to "Self Args" (it can greatly
@@ -742,8 +745,11 @@ the cost of greatly increased noise. The extra noise is then filtered to
 a large extent  by the default SyMAP filters, but the diagonal squares of
 the dot plot will still have more noise visible than the off-diagonal.
 
+<p>The self-synteny of demo_seq shows two tiny blocks. A better demonstration is to download
+Arabidopsis thaliana from NCBI, convert it with the <a href="./convert" target="_blank" class="ext">
+NCBI convert script</a>, and run the self synteny. It took 16 minutes with one processor on a Mac Mini (2018) with
+64GB main memory.
 
-<br>&nbsp;
 <a id="dir"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>Directory structure</h3>
@@ -807,7 +813,7 @@ Untar <tt>data/fpc.tar.gz</tt> and restart <tt>symap</tt>.
 Align it to "Demo-Seq2" using the same steps as described <a href="#demo">above</a>, and
 explore the various displays.
 
-<p><tt>Blat</tt> is the alignment program for FPC to Seq. It will be shown in Alignment & Synteny parameters pop-up so the Blat parameters
+<p><tt>Blat</tt> is the alignment program for FPC to Seq. It will be shown in <ttl>Alignment & Synteny</ttl> parameters pop-up so the Blat parameters
 can be changed.
 
 <p>All projects listed under <tt>/data/fpc</tt> are FPC projects. To create a new project via the SyMAP interface,

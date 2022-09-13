@@ -81,6 +81,7 @@
 <li><a href="#innodb">The MySQL database does not support Innodb tables</a>
 <li><a href="#root">Please read "Security" section of the manual to find out how to run mysqld as root</a>
 <li><a href="#msqcase"> Can't create table  (errno: 121)</a>
+<li><a href="#index">MySQL indices</a>
 </ul>
 <br>
 <li>Alignment
@@ -95,15 +96,22 @@
 <h2>Memory</h2>
 <a id="memory"></a>
 <h3>Not enough memory</h3>
-For very large projects, or queries involving multiple
-genomes (e.g. 5 or more), the Project Manager may run out of memory.
-To fix this problem, run symap with the -m parameter to increase the maximum
-memory used from the default 2048 MB to 4096 MB.:
-<pre><b>     &gt; ./symap -m 4096</b></pre>
-Alternatively, you can edit the file <tt>symap</tt> and change
+
+If SyMAP gives an out of memory error, you need to increase the memory. The <tt>symap</tt>
+script has the following lines:
 <pre>
-my $maxmem="2048m"; # change this line to use "4096m"
+#!/bin/sh
+mem="8192m";
+echo ">>>> SyMAP build, query and view ($mem)     `date` <<<<"
+java -Xmx$mem -classpath java/jar/symap.jar symapCE.ProjectManagerFrame $@
 </pre>
+Change the number after <tt>mem=</tt>. The <tt>viewSyMAP</tt> script also requests 8192m memory,
+which you can also edit.
+<p>
+If your machine does not have much memory,
+you can reduce the amount of memory requested, but beware, you probably will not have enough memory
+to process large genomes.
+<p>
 For memory issues related to running MUMmer, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 
 <p>
@@ -266,6 +274,12 @@ as a security hazard. Solution is simply to use a regular non-root user account.
 This can occur if you try to create a SyMAP database whose name differs only by
 case from an existing database, e.g. "symapTest" when "symaptest" already exists.
 
+<a id="index"></a>
+<h3>MySQL indices</h3>
+Most records in MySQL have an index. The <tt>Hit#</tt> shown in SyMAP (queries and 2d) is one
+such index. If you have many alignments in the database, this number will get very large. Also,
+if you add alignments and delete them, the index can keep growing. Solution: once you determine the
+set of alignments you want, delete the database and just reload what you want for the final database.
 <p>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>Alignment</h2>

@@ -358,16 +358,13 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 					 }
 				 }
 				 // CAS512 added start:end, was using left/right, but do not know that
+				 // CAS515 rearrange and add %Sim and nMerge
 				 if (isHover() || isHighlight()) {
-					 String p1 =  Utilities.coordsStr(data.getOrientation2(), data.getStart2(), data.getEnd2());
-					 String p2 =  Utilities.coordsStr(data.getOrientation1(), data.getStart1(), data.getEnd1());
-						
 					 mapper.setHelpText(
 						"Block #" + data.getBlock() + // CAS505 added block; CAS513 want to see on 2D only display
-						" Hit=" + data.getID() + 
-						" Score=" + data.getPctid() + // CAS513 Identity->Score (as called on menu)
-						"\n" + p1 + 
-						"\n" + p2);
+						data.getHitData() + 			// CAS513 Identity->Score; CAS515 changed again
+						"\n" + data.getLengths() + 
+						"\n" + data.getCoords());
 				 }
 				 else mapper.setHelpText(null);
 			 }

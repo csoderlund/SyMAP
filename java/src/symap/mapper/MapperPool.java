@@ -78,7 +78,7 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 	
 	private static final String PSEUDO_HITS_QUERY = // CAS504 bh.block_idx -> b.blocknum
 		"SELECT h.idx,h.evalue,h.pctid,h.start1,h.end1,h.start2,h.end2,h.strand,b.blocknum," +
-		"h.gene_overlap, h.query_seq, h.target_seq " + 
+		"h.gene_overlap, h.query_seq, h.target_seq, h.cvgpct, h.countpct " +  // CAS515 add last two
 		"FROM pseudo_hits AS h "+
 		"LEFT JOIN pseudo_block_hits AS bh ON (bh.hit_idx=h.idx) "+
 		"LEFT JOIN blocks as b on (b.idx=bh.block_idx) " + // CAS505 added for blocknum
@@ -253,7 +253,9 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 						end2,				/* int end2		*/
 						rs.getInt(10),		/* int overlap  */ 		
 						rs.getString(11),	/* String query_seq */	
-						rs.getString(12));	/* String target_seq */	
+						rs.getString(12),	/* String target_seq */	
+						rs.getInt(13),		/* int cvgpct->avg %sim */
+						rs.getInt(14));		/* int countpct -> nMergedHits */
 	
 				hitList.add(temp);
 			}

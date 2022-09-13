@@ -72,6 +72,13 @@ public class Version {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
 	}
+	// things to include on next update
+	private void updateVer3() {
+		try {
+			pool.executeUpdate("alter table pseudo_hits modify countpct integer");  // Remove from AnchorsMain, 169
+		}
+		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
+	}
 	/***************************************************************
 	 * Run after every version update.
 	 * The props table values of DBVER and UPDATE are hardcoded in Schema.

@@ -156,7 +156,8 @@ public class ProgSpec implements Comparable<ProgSpec>
 				
 				// Run show-coords
 				if (rc == 0) { // CAS501 nucmer rc=1
-					String parms = (program.equals("promer") ? "-dlkTH" : "-dlTH"); // -k to remove secondary frame hits
+					//CAS515 String parms = (program.equals("promer") ? "-dlkTH" : "-dlTH"); // -k to remove secondary frame hits
+					String parms = (program.equals("promer") ? "-dlkT" : "-dlT"); // -k to remove secondary frame hits
 					cmd = mummerPath + "show-coords " + parms +  " " + deltaFilePath;
 					rc = runCommand(cmd, new FileWriter(outFile), runLog);
 					runLog.msg( "#" + alignNum + " done: " + Utilities.getDurationString(getRunTime()) );

@@ -1011,7 +1011,14 @@ public class Utilities {
     	String o = (isPos) ? "+" : "-";
     	String s = kText(start);
     	String e = kText(end);
-    	return String.format("Coords=%s(%s - %s) Len=%,d", o, s, e, (Math.abs(end-start)+1));
+    	return String.format("Len=%,d Coords=%s(%s - %s)", (Math.abs(end-start)+1), o, s, e);
+    }
+    // CAS515 - for more detailed hoover called by HitData
+    static public String coordsStr(int i, boolean isPos, int start, int end) {
+    	String o = (isPos) ? "+" : "-";
+    	String s = kText(start);
+    	String e = kText(end);
+    	return String.format("Coords%d=%s(%s - %s)", i, o, s, e);
     }
     // CAS513 - to remove leading zeros before making full block name
     static public String blockStr(String c1, String c2, int block) {

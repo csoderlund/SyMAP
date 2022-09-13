@@ -1,6 +1,7 @@
 package symap.mapper;
 
 import java.util.Comparator;
+import util.Utilities;
 
 /**
  * Holds the data of a hit.
@@ -13,7 +14,8 @@ public abstract class HitData {
 	private int blocknum; // CAS505 add
 	private byte isBlock;
 	private double evalue;
-	private byte pctid;
+	private byte pctid, pctsim; // CAS515 add pctsim and nMerge
+	private int nMerge;
 	private int start1, end1; 
 	private int start2, end2;
 	private boolean orient;
@@ -27,7 +29,7 @@ public abstract class HitData {
 
 	protected HitData(long id, String name, String strand, boolean repetitive,
 			int blocknum, double evalue, double pctid, int start2, int end2,
-			String query_seq, String target_seq, int gene_olap) 
+			String query_seq, String target_seq, int gene_olap, int pctsim, int nMerge) 
 	{
 		this.id = id;
 		this.name = name;
@@ -41,6 +43,8 @@ public abstract class HitData {
 		this.query_seq = query_seq; 	
 		this.target_seq = target_seq;	
 		this.overlap = gene_olap;
+		this.pctsim = (byte) pctsim;
+		this.nMerge = nMerge;
 		
 		if (strand.length() >= 3) { 
 			this.orient = strand.charAt(0) == strand.charAt(2);
@@ -56,16 +60,31 @@ public abstract class HitData {
 	protected HitData(long id, String name, String strand, boolean repetitive,
 			int block, double evalue, double pctid, int start1, int end1, 
 			int start2, int end2, int overlap,
-			String query_seq, String target_seq)
+			String query_seq, String target_seq, int pctsim, int nMerge)
 	{
-		this(id,name,strand,repetitive,block,evalue,pctid,start2,end2,"","", overlap);
+		this(id,name,strand,repetitive,block,evalue,pctid,start2,end2,"","", overlap, pctsim, nMerge);
 		this.start1 = start1;
 		this.end1 = end1;
 		this.overlap = overlap;		
 		this.query_seq = query_seq; 
 		this.target_seq = target_seq;
 	}
-
+	// CAS515 add next three hit Help hover
+	public String getLengths() {
+		return String.format("Len1=%,d Len2=%,d", getLength1(), getLength2());
+	}
+	public String getCoords() {
+		return Utilities.coordsStr(1, orient1, start1, end1) + "\n" 
+	         + Utilities.coordsStr(2, orient2, start2, end2);
+	}
+	public String getHitData() {
+		String msg = " Hit #" + id;
+		if (nMerge>0) msg += "\nAvg";
+		msg += " %Id=" + pctid;
+		if (pctsim>0) msg += " %Sim=" + pctsim;
+		if (nMerge>0) msg += " of " + nMerge + " hits";
+		return msg;
+	}
 	public String toString() 	{ return name; }
 	public boolean getOrientation() { return orient; }
 	public boolean getOrientation1() { return orient1; }

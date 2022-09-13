@@ -3,6 +3,8 @@
 <head>
 <title>SyMAP MUMmer</title>
 <style>
+	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
     a:link {text-decoration: none;color:#6666CC;}
     a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
     a.ext {font-weight: bold;}
@@ -154,13 +156,13 @@ There is no straight-forward way to know if you have enough memory as it depends
 size and complexity of the two genomes being compared. If you think memory may be tight,
 you can limit the amount used at one time by limiting the number of CPUs, as each
 CPU uses a considerable amount of memory (e.g. 4 CPUs could collectively use 20GB of memory at once).
-<p><a href="img/concat.png"><img src="img/concat.png" alt="" style="border: 1px solid black; width: 400px"></a>
+<p><a href="img/concat.png"><img src="img/concat.png" alt="concat" style="border: 1px solid black; width: 400px"></a>
 <p>
 By default, all sequences of the 1st genome are concatenated into one file and then
 multiple files are created from the 2nd genome to be searched against the first;
 the multiple files may have two or more sequential chromosomes concatenated together to create
 files that are &gt;60M. This
-is fastest, but uses more memory. Hence, you can uncheck "Concat" so that multiple files are
+is fastest, but uses more memory. Hence, you can uncheck <ttb>Concat</ttb> so that multiple files are
 created for each genomes, and all files from the 1st genome are searched against the 2nd genome.
 The following statistics are from comparing Arabidopsis thaliana (119M) against Brassica rapa (297M)
 on a MacOS using 1 CPU.
@@ -208,7 +210,7 @@ If an alignment fails immediately, and if the last line of the first <tt>&lt;ali
 1: PREPARING DATA
 </pre>
 the reason is probably that your machine does not have near enough memory as MUMmer could not even
-prepare the data. Try it again with unchecked "Concat"; if that does not work, you need more memory.
+prepare the data. Try it again with unchecked <ttb>Concat</ttb>; if that does not work, you need more memory.
 
 <a id="fail2"></a>
 <h3>One or more fails</h3>
@@ -223,15 +225,15 @@ data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
 
 <table>
 <tr>
-<td><a href="img/runDialog.png"><img src="img/runDialog.png" alt="" style="border: 1px solid black; width: 420px"></a>
+<td><a href="img/runDialog.png"><img src="img/runDialog.png" alt="runDialog" style="border: 1px solid black; width: 420px"></a>
 <td>
 You will see the failure on the dialog box as is
 shown on the left. The remaining processes will continue. When all processes are complete,
 you will see a "?" for the pair as shown on the below.
 <p>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="img/runResults.png"><img src="img/runResults.png" alt="" style="border: 1px solid black; width: 220px"></a>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="img/runResults.png"><img src="img/runResults.png" alt="runResults" style="border: 1px solid black; width: 220px"></a>
 <p>Select the "?" followed by
-"Selected Pair" and it will complete the failed processes.
+<ttb>Selected Pair</ttb> and it will complete the failed processes.
 </table>
 <p>
 A preferred way is to set CPUs to a low number if the genomes are large, that way,
@@ -280,12 +282,12 @@ This creates a file, which indicates to SyMAP that the alignments are done and t
 the files in the directory ending with ".mum".
 
 </ul>
-<li>When you run "Selected Pair", SyMAP will recognize the files and use them to build the synteny blocks.
+<li>When you run <ttb>Selected Pair</ttb>, SyMAP will recognize the files and use them to build the synteny blocks.
 </ul>
 
 <p><u>Example of using mummer for loaded projects demo_seq and demo_seq2:</u>
 If you try this with demo_seq and demo_seq2, make sure there is no current alignment in the
-database or disk for your project (e.g. "Clear Pair"").
+database or disk for your project (e.g. <ttb>Clear Pair</ttb>).
 
 <p>Demo_seq has chr3 and chr5, demo_seq2 has chr1 and chr3; these will be compared separately against each other.
 Demo_seq is alphanumerically less than demo_seq2, so it is first in the directory name

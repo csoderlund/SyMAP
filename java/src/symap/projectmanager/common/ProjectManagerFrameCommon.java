@@ -1565,8 +1565,12 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		refreshMenu();
 	}
 	private void progressClearPair(final Project p1, final Project p2) {
-		String strOptionMessage = "Previous alignment output files for " + p1.getDBName() + " to " + p2.getDBName() + " will be deleted.";
-		if (!Utilities.showContinue(this, "Clear Pair", strOptionMessage)) return;
+		// CAS515 add option to only clear from database
+		String msg = "Clear pair " + p1.getDBName() + " to " + p2.getDBName();
+		int rc = progressConfirm3("Clear project", msg +
+				"\nOnly: Delete synteny from database only" +
+				"\nAll : Delete synteny from database and remove previous alignments");
+		if (rc==0) return;
 		
 		ErrorCount.init();
 		FileWriter fw = buildLogLoad(); // CAS500
@@ -1588,7 +1592,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					catch(Exception e){}
 
 					removeAlignmentFromDB(p1,p2);
-					removeAlignmentFromDisk(p1,p2);
+					if (rc==2) removeAlignmentFromDisk(p1,p2);
 				}
 				catch (Exception e) {
 					success = false;
@@ -2409,6 +2413,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		UpdatePool pool = new UpdatePool(dbReader);
         pool.executeUpdate("DELETE from pairs WHERE proj1_idx="+p1.getID()+" AND proj2_idx="+p2.getID());
         pool.resetIdx("idx", "pairs"); // CAS512
+        pool.resetIdx("idx", "pseudo_hits"); // CAS515
 	}
 	
 	private boolean removeAlignmentFromDisk(Project p1, Project p2)

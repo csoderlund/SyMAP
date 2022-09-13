@@ -42,6 +42,7 @@ public class Sequence extends Track {
 	private static final double OFFSET_SPACE = 7;
 	private static final double OFFSET_SMALL = 1;
 	
+	private static final int GENE_DIV = 4; // Gene is this much narrower than exon
 	private static final int MIN_BP_FOR_ANNOT_DESC = 500; 
 
 	public static final boolean DEFAULT_FLIPPED 		= false; 
@@ -355,8 +356,7 @@ public class Sequence extends Track {
 			ErrorReport.print(s1, "Initializing Sequence failed.");
 			psePool.close();
 			return false;
-		}
-		
+		}	
 		resetStart();
 		resetEnd();
 		setInit();
@@ -395,7 +395,8 @@ public class Sequence extends Track {
 		}
 
 		GenomicsNumber length = new GenomicsNumber(this,end.getValue() - start.getValue());
-		rect.setRect(trackOffset.getX(), trackOffset.getY(), width, length.getPixelValue());
+		rect.setRect(trackOffset.getX(), trackOffset.getY(), width, length.getPixelValue()); // chr rect
+		
 		totalRect.setRect(0, 0, rect.x + rect.width + 2, rect.y + rect.height + 2);
 		frc = getFontRenderContext();
 
@@ -450,36 +451,33 @@ public class Sequence extends Track {
 		Rectangle2D.Double centRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
 		
 		for (Annotation annot : annotations) {	
-			if (((annot.isGene() || annot.isExon()) && !showGene)
-				|| (annot.isGap() && !showGap)
-				|| (annot.isCentromere() && !showCentromere)
-				|| (annot.isFramework() && !showFrame))
+			if (((annot.isGene() || annot.isExon()) && !showGene) || (annot.isGap() && !showGap)
+				|| (annot.isCentromere() && !showCentromere) || (annot.isFramework() && !showFrame))
 			{
 				annot.clear();
-				continue;
+				continue;		// not to be shown
 			}
-			
-			double width = rect.width;
+			double dwidth = rect.width, hwidth=0; // displayWidth, hoverWidth for gene
 			
 			if (annot.isGene()) {
-				width = ANNOT_WIDTH;
-				if (showFullGene) width /= 4; 
+				dwidth = hwidth = ANNOT_WIDTH;
+				if (showFullGene) dwidth /= GENE_DIV; // showFullGene always true
 			}
 			else if (annot.isExon() || annot.isSyGene()) 
-				width = ANNOT_WIDTH;
+				dwidth = ANNOT_WIDTH;
 			
 			annot.setRectangle(centRect,
 					start.getBPValue(), end.getBPValue(),
-					bpPerPixel, width, flipped);
+					bpPerPixel, dwidth, hwidth, flipped);
 			
-			if (showAnnot && annot.isVisible()) { // Setup description
+			if (showAnnot && annot.isVisible()) { // Setup yellow description
 				x1 = (orient == RIGHT_ORIENT ? rect.x + rect.width + RULER_LINE_LENGTH + 2 : rect.x);
 				x2 = (orient == RIGHT_ORIENT ? x1 + RULER_LINE_LENGTH : x1 - RULER_LINE_LENGTH);
 				if (annot.hasShortDescription() && getBpPerPixel() < MIN_BP_FOR_ANNOT_DESC) 
 				{ 
 					ty = annot.getY1();
 					
-					// Creates annotation description textbox (see TextBox.java)
+					// Creates annotation description popup textbox (see TextBox.java)
 					TextBox tb = new TextBox(annot.getVectorDescription(),unitFont,(int)x1,(int)ty,40,200);
 					if (POPUP_ANNO) annot.setTextBox(tb); 	// CAS503 right-click (mousePressed)
 					getHolder().add(tb); 					// adds it to the TrackHolder JComponent
@@ -802,7 +800,7 @@ public class Sequence extends Track {
 	/**
 	 * Method getHelpText returns the desired text for when the mouse is over a certain point.
 	 * Called from symap.frame.HelpBar mouseMoved event
-	 * The rect is set in Annotation.setRectangle and its contains seems a little off
+	 * The rect is set in Annotation.setRectangle
 	 */
 	public String getHelpText(MouseEvent event) {
 		Point p = event.getPoint();

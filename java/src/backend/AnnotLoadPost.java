@@ -149,7 +149,7 @@ public class AnnotLoadPost {
 						if (cntBatch>5000) {
 							ps.executeBatch();
 							cntBatch=0;
-							System.err.print("   " + grp.getFullName() + " assign " + exonUpdate + " exons to "  + geneUpdate + " genes\r");
+							System.err.print("   " + grp.getFullName() + " assign " + exonUpdate + " exons to "  + geneUpdate + " genes    \r");
 						}
 					}
 					if (cntBatch>0) ps.executeBatch();
@@ -254,7 +254,7 @@ public class AnnotLoadPost {
 						if (cntBatch>5000) {
 							ps.executeBatch();
 							cntBatch=0;
-							System.err.print("   " + grp.getFullName() + " assign " + exonUpdate + " exons to "  + geneUpdate + " genes\r");
+							System.err.print("   " + grp.getFullName() + " assign " + exonUpdate + " exons to "  + geneUpdate + " genes     \r");
 						}
 					}
 					if (cntBatch>0) ps.executeBatch();
