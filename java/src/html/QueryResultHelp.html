@@ -14,7 +14,8 @@ only for one genome.
 
 <p><b>Align sequences</b>
 <br>Select one or more rows: All sequences (two per row) are written out and a multiple alignment is created
-using MUSCLE (Edgar 2004 NAR:32) and shown in the main panel.
+using MUSCLE (Edgar 2004 NAR:32) and shown in the main panel. The alignment is left in the <tt>muscle</tt>
+sub-directory and is over-written with each new alignment.
 
 <p>NOTE: This is especially
 useful to view the similarity of putative gene families (PgeneF),
@@ -39,8 +40,7 @@ using the selected set of columns to a CSV format suitable for import into Excel
 Export the sequences from the selected hits in Fasta format. Both sides of each hit
 are written, using the start/end coordinates shown in the table.
 <br>NOTE: this is a very slow function and takes minutes if many rows are selected.
-
-
+<!----------------------------------------------------->
 <h2>Results Table</h2>
 
 The table shows the hits (or orphan genes) resulting from the query. Each row is a single
@@ -54,107 +54,65 @@ are the meanings of the columns:
 <p>
 <table cellpadding=3>
 <tr>
-	<td colspan=3>
-		<i>General</i>
-	</td>
-
-</tr>
+	<td colspan=3><i>General</i>
 <tr>
-	<td valign="top"><b>Row</b></td>
-	<td>&nbsp;</td>
-	<td>Row number within the table</td>
-</tr>
+	<td valign="top"><b>Row</b><td>&nbsp;
+	<td>Row number within the table
 <tr>
-	<td valign="top"><b>PgeneF</b></td>
-	<td>&nbsp;</td>
-	<td>
-		If <b>Compute PgeneF</b>: PgeneF number. All hits in a given PgeneF have the same number. Note that
-		the number is generated during the search and won't necessarily be the same
-		in a different search.
-	</td>
-</tr>
-<tr>
-	<td valign="top"><b>PgFSize</b></td>
-	<td>&nbsp;</td>
-	<td>
-		If <b>Compute PgeneF</b>: Size of the PgeneF which contains this hit. Sort on this column to view the
-		other rows with same PgeneF.
-	</td>
-</tr>
-<tr>
-	<td valign="top"><b>HitIdx</b></td>
-	<td>&nbsp;</td>
-	<td>
-		Database index of the hit. This is shown on the "Chromosome Explorer" when
-		the mouse is over the hit line.
-	</td>
-</tr>
-<tr>
-	<td valign="top"><b>Block</b></td>
-	<td>&nbsp;</td>
-	<td>
-		Synteny block containing this hit (if any). The format is C1.C2.N, where
+	<td valign="top"><b>Block</b><td>&nbsp;
+	<td>Synteny block containing this hit (if any). The format is C1.C2.N, where
 		C1 and C2 are the chromosome numbers and N is the block number for the two chromosomes.
-	</td>
-</tr>
 <tr>
-	<td valign="top" nowrap><b>Block Score</b></td>
-	<td>&nbsp;</td>
-	<td>
-		The number of hits which comprise the synteny block.
-	</td>
-</tr>
+	<td valign="top" nowrap><b>Block Score</b><td>&nbsp;
+	<td>The number of hits which comprise the synteny block.
 <tr>
-	<td valign="top"><b>RunSize</b></td>
-	<td>&nbsp;</td>
-	<td>
-		If the hit is contained in an uninterrupted collinear set of shared
+	<td valign="top"><b>RunSize</b><td>&nbsp;
+	<td>If the hit is contained in an uninterrupted collinear set of shared
 		genes, RunSize shows the length of the set. This column is used for the
 		"Collinear gene" query.
-	</td>
-</tr>
+<tr>
+	<td valign="top"><b>PgeneF</b><td>&nbsp;
+	<td>If <b>Compute PgeneF</b>: PgeneF number. All hits in a given PgeneF have the same number. Note that
+		the number is generated during the search and won't necessarily be the same
+		in a different search.
+<tr>
+	<td valign="top"><b>PgFSize</b><td>&nbsp;
+	<td>If <b>Compute PgeneF</b>: Size of the PgeneF which contains this hit. Sort on this column to view the
+		other rows with same PgeneF.
+<tr>
+	<td valign="top"><b>Hit#</b><td>&nbsp;
+	<td>Database index of the hit. This is shown on the "Chromosome Explorer" when
+		the mouse is over the hit line.
+<tr><td valign="top"><b>Hit %Id</b><td>&nbsp;
+	<td>Percent identity of the alignment.The value of the "Identity" column from the MUMmer file.
+<tr><td valign="top"><b>Hit %Sim</b><td>&nbsp;
+	<td>Percent similarity of the alignment (as determined by the BLOSUM scoring matrix).
+	The value of the "Similarity" column from the MUMmer file.
+<tr><td valign="top"><b>Hit #Merge</b><td>&nbsp;
+	<td>The number of clustered hits into one merged hit.
 <tr>
 	<td colspan=3>
 		<i>Location: one row for each species</i>
-	</td>
-</tr>
 <tr>
-	<td valign="top"><b>Chr</b></td>
-	<td>&nbsp;</td>
-	<td>
-		Chromosome (or draft sequence number) where the hit is aligned
-	</td>
-</tr>
+	<td valign="top"><b>Chr</b><td>&nbsp;
+	<td>Chromosome (or draft sequence number) where the hit is aligned
 <tr>
-	<td valign="top" nowrap><b>Start/End</b></td>
-	<td>&nbsp;</td>
-	<td>
-		Start/end of the hit region.
-		<br><u>NOTE1</u>: Hits are clustered during anchor loading, so hit regions
-		are not necessarily single MUMmer alignments).
-		<br><u>NOTE2</u>: If the table contains single project genes (e.g. orphan or all),
+	<td valign="top" nowrap><b>Start/End</b><td>&nbsp;
+	<td>Start/end of the hit region.
+		<br><u>Merged hits</u>: Hits are clustered during anchor loading, so hit regions
+		are not necessarily single MUMmer alignments.
+		<br><u>Hit vs Gene coordinates</u>: If the table contains single project genes (e.g. orphan or all),
 		    then the coordinates are the gene coordinates.
-	</td>
-</tr>
 <tr>
-	<td valign="top"><b>Gene#</b></td>
-	<td>&nbsp;</td>
+	<td valign="top"><b>Gene#</b><td>&nbsp;
 	<td>The order number along the chromosome of the gene. This is shown on the Chromosome Explorer
 	"Annotation Description" and when the mouse hoovers over the gene.
-	</td>
-</tr>
 <tr>
-	<td colspan=3>
-		<i>Annotation: one row for each species</i>
-	</td>
-</tr>
+	<td colspan=3><i>Annotation: one row for each species</i>
 <tr>
-	<td colspan=3>
-	The keywords for the annotations of each species are listed.
+	<td colspan=3>The keywords for the annotations of each species are listed.
 	They can be different for each species, e.g. one may have "ID" while another uses "Name" for the
 	gene names. "All_anno" shows all of the attributes joined together.
-	</td>
-</tr>
 </table>
 
 <h3>Statistics</h3>

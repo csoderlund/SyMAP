@@ -117,7 +117,7 @@ public class FPCPseudoData extends AbstractHitData implements SyMAPConstants {
 				boolean repetitive, int block, double evalue, double pctid,
 				int start2, int end2, String query_seq, String target_seq, int gene_olap) 
 		{
-			super(id,name,strand,repetitive,block,evalue,pctid,start2,end2,query_seq,target_seq,gene_olap, 0,0);
+			super(id,name,strand,repetitive,block,evalue,pctid,start2,end2,query_seq,target_seq,gene_olap, 0,0, 0.0, "");
 		}
 
 		public boolean equals(Object obj) {
@@ -138,7 +138,7 @@ public class FPCPseudoData extends AbstractHitData implements SyMAPConstants {
 				double evalue, double pctid, int start2, int end2,
 				String query_seq, String target_seq, int gene_olap) 
 		{
-			super(id, name, strand, repetitive, block, evalue, pctid, start2, end2, query_seq, target_seq, gene_olap, 0,0);
+			super(id, name, strand, repetitive, block, evalue, pctid, start2, end2, query_seq, target_seq, gene_olap, 0,0, 0.0, "");
 			this.pos = pos;
 			this.bes = bes;
 		}

@@ -128,10 +128,10 @@ public class Schema {
 		    "start2                  INTEGER NOT NULL," +
 		    "end2                    INTEGER NOT NULL," +
 		    "ctgs2                   TEXT NOT NULL," +
-		    "level                   INTEGER NOT NULL," +
-		    "contained               INTEGER NOT NULL," +
+		    "level                   INTEGER NOT NULL," + // not used
+		    "contained               INTEGER NOT NULL," + // not used
 		    "comment                 TEXT NOT NULL," +
-			"corr					float default 0," +
+			"corr					float default 0," +   // <0 is inverted
 			"score					INTEGER default 0," +
 			"ngene1					integer default 0," +
 			"ngene2					integer default 0," +

@@ -18,11 +18,12 @@ import javax.swing.JTextField;
 
 import symapQuery.Q;
 import util.ErrorReport;
+import util.Utilities;
 import backend.Constants;
 
 public class MultiAlignmentData {
-	private final static String DEFAULT_SOURCE_FILE_NAME = "SourceAlignments.fasta";
-	private final static String DEFAULT_TARGET_FILE_NAME = "TargetAlignments.fasta";
+	private final static String DEFAULT_SOURCE_FILE_NAME = "muscle/Source.fa"; // CAS516 put in directory and do not delete
+	private final static String DEFAULT_TARGET_FILE_NAME = "muscle/Align.fa";
 	private final static String DEFAULT_TARGET_DIRECTORY = "muscle";
 	private final static String MUSCLE_DIR = Constants.extDir + "muscle";
 	private final static int SEQUENCE_LINE_LENGTH = 80;
@@ -47,6 +48,7 @@ public class MultiAlignmentData {
 			String path  = MUSCLE_DIR + Constants.getPlatformPath() + DEFAULT_TARGET_DIRECTORY;
 			
 			progressField.setText("Writing sequences to file");
+			Utilities.checkCreateDir("muscle", true);
 			writeFASTA(DEFAULT_SOURCE_FILE_NAME);
 			
 			progressField.setText("Running MUSCLE");
@@ -58,8 +60,8 @@ public class MultiAlignmentData {
 			
 			progressField.setText("Reading results");
 			if (readFASTA(DEFAULT_TARGET_FILE_NAME, true, true)) { // CAS505 check for success
-				deleteFile(DEFAULT_SOURCE_FILE_NAME);
-				deleteFile(DEFAULT_TARGET_FILE_NAME);
+				//deleteFile(DEFAULT_SOURCE_FILE_NAME); // CAS516 quit deleting
+				//deleteFile(DEFAULT_TARGET_FILE_NAME);
 			}
 			progressField.setText("Displaying results");
 		} catch(Exception e) {

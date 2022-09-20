@@ -2,6 +2,8 @@ package symap.sequence;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Stroke;
@@ -71,7 +73,7 @@ public class Annotation {
 	// private String name;
 	private int type;
 	private int start, end;						
-	private String description, tag;	
+	private String description, tag, tagGeneN;	
 	private boolean strand;
 	private int gene_idx=0;  // If this is an exon, it is the gene_idx that it belongs to
 	private int annot_idx=0; 
@@ -94,10 +96,14 @@ public class Annotation {
 		this.gene_idx = gene_idx;
 		this.annot_idx = idx;
 	
+		tagGeneN="";
 		if (genenum>0) { // CAS515 merge tag and genenum in a more readable format
 			String [] tok = tag.split("\\(");	
-			if (tok.length==2) this.tag = "Gene #" + genenum + " (Exons " + tok[1];
-			else               this.tag = tag + " #" + genenum;
+			if (tok.length==2) {
+				this.tag = "Gene #" + genenum + " (Exons " + tok[1];
+				tagGeneN =  "Gene #" + genenum;
+			}
+			else   this.tag = tag + " #" + genenum;
 		}
 		else this.tag = tag;
 		
@@ -310,6 +316,13 @@ public class Annotation {
 	 * CAS503 added so can display popup of description
 	 * Right-click on annotation
 	 */
+	public String getExon(int parent_idx) { // called on "exon" annotation object
+		if (isExon() && this.gene_idx==parent_idx) {
+			String x = Utilities.coordsStr(strand, start, end);
+			return String.format("%-8s %s", tag, x); // Exon #xx
+		}
+		return null;
+	}
 	public void setExonList(Vector <Annotation> annoVec) { // CAS512 add ExonList to popup
 		if (exonList!=null) return;
 		try {
@@ -322,27 +335,24 @@ public class Annotation {
 			exonList = list;
 		}
 		catch (Exception e) {ErrorReport.print(e, "Get exon list for " + gene_idx);}
-		
 	}
-	public String getExon(int parent_idx) { // called on "another" annotation object
-		if (isExon() && this.gene_idx==parent_idx) {
-			String x = Utilities.coordsStr(strand, start, end);
-			return String.format("%-8s %s", tag, x); // Exon #xx
-		}
-		return null;
-	}
+	// the following 3 methods are for popup from yellow box
 	public void setTextBox(TextBox tb) {
 		descBox = tb;
 	}
 	public boolean boxContains(Point p) {
 		if (descBox==null) return false;
-		
 		return descBox.containsP(p);
 	}
-	public boolean popupDesc(Point p) { // Called on mouse event in Sequence
-		if (descBox==null || !descBox.containsP(p)) return false;
-		 
-		descBox.popupDesc(exonList); // Popup from TextBox method - it has description
-		return true;
+	public void popupDesc(String name) {
+		descBox.popupDesc(exonList, name + "; " + tagGeneN);
+	}
+	// CAS516 popup from clicking gene
+	public void popupDesc(Component parentFrame, String name) { // CAS516 for clicking gene
+		String msg = "";
+		for (String x : getVectorDescription()) msg += x + "\n";
+		Dimension d = new Dimension (350, 220); 
+		Utilities.displayInfoMonoSpace(parentFrame, name + "; " + tagGeneN, msg + exonList, 
+				d, 0.0, 0.0); 
 	}
 }

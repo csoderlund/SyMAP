@@ -76,7 +76,9 @@ public class Sequence extends Track {
 	private static final double MAX_DEFAULT_BP_PER_PIXEL;
 	private static final double PADDING = 100; 
 	private static final double ANNOT_WIDTH;
-	private static final String HOVER_MESSAGE = "Right-click for menu."; 
+	private static final String HOVER_MESSAGE = 
+			"Right-click on gene annotation for popup of description."
+		+ "\nRight-click in rectangle space for menu."; 
 	static {
 		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/sequence.properties"));
 	
@@ -470,15 +472,14 @@ public class Sequence extends Track {
 					start.getBPValue(), end.getBPValue(),
 					bpPerPixel, dwidth, hwidth, flipped);
 			
-			if (showAnnot && annot.isVisible()) { // Setup yellow description
+		// XXX Setup yellow description
+			if (showAnnot && annot.isVisible()) { 
 				x1 = (orient == RIGHT_ORIENT ? rect.x + rect.width + RULER_LINE_LENGTH + 2 : rect.x);
 				x2 = (orient == RIGHT_ORIENT ? x1 + RULER_LINE_LENGTH : x1 - RULER_LINE_LENGTH);
-				if (annot.hasShortDescription() && getBpPerPixel() < MIN_BP_FOR_ANNOT_DESC) 
-				{ 
+				if (annot.hasShortDescription() && getBpPerPixel() < MIN_BP_FOR_ANNOT_DESC)  { 
 					ty = annot.getY1();
-					
-					// Creates annotation description popup textbox (see TextBox.java)
-					TextBox tb = new TextBox(annot.getVectorDescription(),unitFont,(int)x1,(int)ty,40,200);
+					TextBox tb = new TextBox(annot.getVectorDescription(),unitFont,
+										     (int)x1, (int)ty, 40, 200);
 					if (POPUP_ANNO) annot.setTextBox(tb); 	// CAS503 right-click (mousePressed)
 					getHolder().add(tb); 					// adds it to the TrackHolder JComponent
 					bounds = tb.getBounds();
@@ -592,7 +593,6 @@ public class Sequence extends Track {
 	public double getWidth() { return rect.getWidth(); }
 	
 	public void paintComponent(Graphics g) {
-		
 		if (hasBuilt()) {
 			Graphics2D g2 = (Graphics2D) g;
 
@@ -605,7 +605,6 @@ public class Sequence extends Track {
 				for (Rule rule : ruleList)
 					rule.paintComponent(g2);
 			}
-			
 			for (Annotation annot : annotations)
 				if (annot.isVisible())
 					annot.paintComponent(g2); 
@@ -622,17 +621,57 @@ public class Sequence extends Track {
 		super.paintComponent(g); // must be done at the end
 	}
 
-	// Left or right click - left click/release has no action
+	/**
+	 * Method getHelpText returns the desired text for when the mouse is over a certain point.
+	 * Called from symap.frame.HelpBar mouseMoved event
+	 */
+	public String getHelpText(MouseEvent event) {
+		Point p = event.getPoint();
+		if (rect.contains(p)) { // within blue rectangle of track
+			String x = null;
+			for (Annotation annot : annotations) {
+				if (annot.contains(p)) {
+					if (x==null) x = annot.getLongDescription(); 
+					else x += "\n" + annot.getTag(); // CAS512 add exon if available
+				}
+			}
+			if (x!=null) return x;
+		}
+		else {					// not within blue rectangle of track
+			if (POPUP_ANNO) {	// CAS503 add - in yellow box; see end of Annotation.java and TextBox.java 
+				for (Annotation annot : annotations) { 
+					if (annot.boxContains(p)) 
+						return "Right click for popup of description";
+				}
+			}
+		}
+		return "Sequence Track (" + getTitle() + "):  " + HOVER_MESSAGE; 
+	}
+	/*************************************************
+	 * Gene space or yellow box - popup
+	 * else pass to parent
+	 */
 	public void mousePressed(MouseEvent e) {
-		// CAS503 add popUp description
-		if (POPUP_ANNO && e.isPopupTrigger()  && showAnnot) { 	// Right click
+		if (e.isPopupTrigger()) { // CAS516 add popup on right click
 			Point p = e.getPoint();
-			for (Annotation annot : annotations) { 				// in yellow box
-				if (annot.boxContains(p)) {
-					annot.setExonList(annotations);				// CAS512 add exon list on first time
-					annot.popupDesc(p);
-					return;
-				}	
+			if (rect.contains(p)) { // within blue rectangle of track
+				for (Annotation annot : annotations) { 
+					if (annot.contains(p)) {	// XXX in this gene annotation
+						annot.setExonList(annotations);		
+						annot.popupDesc(getHolder(), getProjectDisplayName() + " " + getName());
+						return;
+					}
+				}
+			}
+			// CAS503 add popUp description; created in Build
+			if (POPUP_ANNO && showAnnot) { 					
+				for (Annotation annot : annotations) { 				
+					if (annot.boxContains(p)) {				// in gene's yellow box
+						annot.setExonList(annotations);		// CAS512 add exon list on first time
+						annot.popupDesc(getProjectDisplayName() + " "  + getName());
+						return;
+					}	
+				}
 			}
 		}
 		super.mousePressed(e);									// right click - blue area for menu
@@ -797,33 +836,7 @@ public class Sequence extends Track {
 		}
 	}
 
-	/**
-	 * Method getHelpText returns the desired text for when the mouse is over a certain point.
-	 * Called from symap.frame.HelpBar mouseMoved event
-	 * The rect is set in Annotation.setRectangle
-	 */
-	public String getHelpText(MouseEvent event) {
-		Point p = event.getPoint();
-		if (rect.contains(p)) { // within blue rectangle of track
-			String x = null;
-			for (Annotation annot : annotations) {
-				if (annot.contains(p)) {
-					if (x==null) x = annot.getLongDescription(); 
-					else x += "\n" + annot.getTag(); // CAS512 add exon if available
-				}
-			}
-			if (x!=null) return x;
-		}
-		else {					// not within blue rectangle of track
-			if (POPUP_ANNO) {	// CAS503 add - in yellow box; see end of Annotation.java and TextBox.java 
-				for (Annotation annot : annotations) { 
-					if (annot.boxContains(p)) 
-						return "Right click for popup of description";
-				}
-			}
-		}
-		return "Sequence Track (" + getTitle() + "):  " + HOVER_MESSAGE; 
-	}
+	
 
 	public String getTitle() {
 		return getProjectDisplayName()+" "+getName();

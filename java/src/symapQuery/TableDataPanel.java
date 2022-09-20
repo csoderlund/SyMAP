@@ -60,6 +60,7 @@ import symap.sequence.Sequence;
 public class TableDataPanel extends JPanel {
 	private static final long serialVersionUID = -3827610586702639105L;
 	private static final int ANNO_COLUMN_WIDTH = 100, ANNO_PANEL_WIDTH = 900;
+	private static final int GEN_COLUMN_WIDTH = 110;
 	
 	// called by SymapQueryFrame
 	public TableDataPanel(SyMAPQueryFrame parentFrame, String resultName,  boolean [] selections,
@@ -336,38 +337,53 @@ public class TableDataPanel extends JPanel {
 		
 		return columnPanel;
     }
+    /***********************************************
+     * General columns pertaining to hits and blocks
+     */
     private JPanel createGeneralSelectPanel() {
     	JPanel retVal = new JPanel();
     	retVal.setLayout(new BoxLayout(retVal, BoxLayout.PAGE_AXIS));
     	retVal.setAlignmentX(Component.LEFT_ALIGNMENT);
     	retVal.setBackground(Color.WHITE);
     
-    	JPanel genRow = new JPanel();
-    	genRow.setLayout(new BoxLayout(genRow, BoxLayout.LINE_AXIS));
-    	genRow.setBackground(Color.WHITE);
-    	genRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-
     	String [] genCols = FieldData.getGeneralColHead();
     	Boolean [] genColDef = FieldData.getGeneralColDefaults();
-    	chkGeneralFields = new JCheckBox[genCols.length];
-    	for(int x=0; x<chkGeneralFields.length; x++) {
+    	int nCol = genCols.length, newRow=genCols.length-4;
+    	
+    	JPanel row=null;
+    	chkGeneralFields = new JCheckBox[nCol];
+    	for(int x=0; x<nCol; x++) {
+    		if (x==0 || x==newRow) {
+    			if (x==newRow) retVal.add(row);
+    			
+    			row = new JPanel();
+    	    	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
+    	    	row.setBackground(Color.WHITE);
+    	    	row.setAlignmentX(Component.LEFT_ALIGNMENT);
+    		}
     		chkGeneralFields[x] = new JCheckBox(genCols[x]);
     		chkGeneralFields[x].setAlignmentX(Component.LEFT_ALIGNMENT);
     		chkGeneralFields[x].setBackground(Color.WHITE);
     		chkGeneralFields[x].addActionListener(colSelectChange);
     		chkGeneralFields[x].setSelected(genColDef[x]);
+    		row.add(chkGeneralFields[x]);
     		
-    		genRow.add(chkGeneralFields[x]);
-    		genRow.add(Box.createHorizontalStrut(5));
+    		if (!genCols[x].startsWith("Pg")) {
+    			int width = GEN_COLUMN_WIDTH - chkGeneralFields[x].getPreferredSize().width;
+    			if (width > 0) row.add(Box.createHorizontalStrut(width));	
+    		}
+    		row.add(Box.createHorizontalStrut(5));
     	}
-    	retVal.add(genRow);
+    	retVal.add(row);
     	
     	retVal.setBorder(BorderFactory.createTitledBorder("General"));
     	retVal.setMaximumSize(retVal.getPreferredSize());
 
     	return retVal;
     }
-    
+    /**************************************************
+     * Species: Chr Start End Len Gene#
+     */
     private JPanel createSpLocSelectPanel() {
     	JPanel page = new JPanel();
     	page.setLayout(new BoxLayout(page, BoxLayout.PAGE_AXIS));
@@ -376,7 +392,7 @@ public class TableDataPanel extends JPanel {
         	
     	String [] species = theParentFrame.getDisplayNames();
     
-    	chkSpeciesFields = new JCheckBox[species.length][4];
+    	chkSpeciesFields = new JCheckBox[species.length][5];
     	
     	for(int x=0; x<species.length; x++) {
     		JPanel row = new JPanel();
@@ -406,8 +422,7 @@ public class TableDataPanel extends JPanel {
         		
         		row.add(chkSpeciesFields[x][y]);
         		
-        		int width = ANNO_COLUMN_WIDTH - chkSpeciesFields[x][y].getPreferredSize().width;
-        		if (width  > 0) row.add(Box.createHorizontalStrut(width));
+        		row.add(Box.createHorizontalStrut(10));
         	}
         	page.add(row);
         	if (x < species.length - 1) page.add(new JSeparator());
@@ -418,6 +433,9 @@ public class TableDataPanel extends JPanel {
 
     	return page;
     }
+    /*******************************************
+     *  Annotation from gff file
+     */
     private JPanel createSpAnnoSelectPanel() {
     	JPanel retVal = new JPanel();
     	retVal.setLayout(new BoxLayout(retVal, BoxLayout.LINE_AXIS));
@@ -428,6 +446,7 @@ public class TableDataPanel extends JPanel {
     	
     	int [] speciesIDs = theAnnoKeys.getSpeciesIDList();
     	
+    	// Check selected
     	for(int x=0; x<speciesIDs.length; x++) {
     		Vector<JCheckBox> annoCol = new Vector<JCheckBox> ();
     		
@@ -457,20 +476,21 @@ public class TableDataPanel extends JPanel {
     	
     	Iterator<Vector<JCheckBox>> spIter = chkAnnoFields.iterator();
     	int pos = 0;
-    	while(spIter.hasNext()) {
+    	while (spIter.hasNext()) {
         	JPanel row = new JPanel();
         	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
         	row.setAlignmentX(JComponent.LEFT_ALIGNMENT);
         	row.setBackground(Color.WHITE);
         	
-        	int curWidth = ANNO_COLUMN_WIDTH;
+        	// Species name
         	JLabel spLabel = new JLabel(theAnnoKeys.getSpeciesNameByID(speciesIDs[pos]));
         	int width = ANNO_COLUMN_WIDTH - spLabel.getPreferredSize().width;
         	if(width > 0) row.add(Box.createHorizontalStrut(width));
         	row.add(spLabel); row.add(Box.createHorizontalStrut(10));
         	
+        	int curWidth = ANNO_COLUMN_WIDTH;
         	Iterator<JCheckBox> annoIter = spIter.next().iterator();
-        	while(annoIter.hasNext()) {
+        	while (annoIter.hasNext()) {
         		JCheckBox chkTemp = annoIter.next();
         		
         		if(curWidth + ANNO_COLUMN_WIDTH > ANNO_PANEL_WIDTH) {
@@ -931,7 +951,7 @@ public class TableDataPanel extends JPanel {
 				
 			// for the get statements
 			synStart1 = rd.start[0]; synEnd1 = rd.end[0];
-			synStart2 = rd.start[1]; synEnd1 = rd.end[1];
+			synStart2 = rd.start[1]; synEnd2 = rd.end[1]; // CAS516 was synEnd1
 				
 			double track1Start = (Integer) rd.start[0];
 			track1Start = Math.max(0, track1Start - padding);
@@ -970,11 +990,13 @@ public class TableDataPanel extends JPanel {
  	 * Next four are called by mapper to display the synteny, which is weird given that
  	 * the values are aleady sent. Since only the last row is stored here, can only select one
  	 * row at a time
+ 	 * CAS516 change to one call instead of 4
  	 */
- 	 public long getSelectedSeq1Start() {return synStart1;}
- 	 public long getSelectedSeq2Start() {return synStart2;}
- 	 public long getSelectedSeq1End() 	{return synEnd1;}
- 	 public long getSelectedSeq2End() 	{return synEnd2;}
+     public boolean isHitSelected(int s1, int e1, int s2, int e2) {
+    	 if  (s1==synStart1 && e1==synEnd1 && s2==synStart2 && e2==synEnd2) return true;
+    	 if  (s2==synStart1 && e2==synEnd1 && s1==synStart2 && e1==synEnd2) return true;
+    	 return false;
+     }
  	 private int synStart1, synStart2, synEnd1, synEnd2; 
 	    
     /***************************************************************

@@ -1,17 +1,18 @@
 package util;
 
 /******************************************************
- * Draws the annotation description box
+ * Draws the yellow annotation description box
  * They stay the same width regular of expand/shrink, instead turns on scroll bar
+ * Also used for right click in yellow box and popup of right click on gene.
  */
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.Point;
+import java.awt.Dimension;
 import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -23,19 +24,18 @@ public class TextBox extends JComponent  {
 	private static final int INSET = 5;
 	private static final int startWidth = 600;
 	private int trueWidth = 0;
-	private String [] descText=null; // CAS503 for popup description
-	private Rectangle2D.Double rect = new Rectangle2D.Double(); // CAS503
+	private String [] descText; // CAS503 for popup description
+	private Rectangle2D.Double rect = new Rectangle2D.Double(); // CAS503 for popup display
 	
 	public TextBox(Vector<String> text, Font font, int x, int y, int wrapLen, int truncLen) {
 		this(text.toArray(new String[0]), font, x, y, wrapLen, truncLen);
 	}
-	
 	public TextBox(String text, Font font, int x, int y, int wrapLen, int truncLen) { // Popup saying need zooming
 		this(text.split("\n"), font, x, y, wrapLen, truncLen);
 	}
 
 	private TextBox(String[] text, Font font, int x, int y,int wrapLen, int truncLen) {
-		descText=text;
+		descText = text;
 		int width = 0;
 		int tx = INSET;
 		int ty = INSET;
@@ -54,9 +54,7 @@ public class TextBox extends JComponent  {
 				ty += label.getHeight();
 				width = Math.max(width, label.getWidth() + INSET*2);
 				trueWidth = Math.max(trueWidth, label.getWidth() + INSET*2);
-				if (width > startWidth) {
-					width = startWidth;
-				}
+				if (width > startWidth) width = startWidth;
 			}
 			else {
 				if (line.length() <= wrapLen) {
@@ -70,9 +68,7 @@ public class TextBox extends JComponent  {
 					ty += label.getHeight();
 					width = Math.max(width, label.getWidth() + INSET*2);
 					trueWidth = Math.max(trueWidth, label.getWidth() + INSET*2);
-					if (width > startWidth) {
-						width = startWidth;
-					}
+					if (width > startWidth) width = startWidth;
 				}
 				else {
 					String[] words = line.split("\\s+");
@@ -102,9 +98,7 @@ public class TextBox extends JComponent  {
 							ty += label.getHeight();
 							width = Math.max(width, label.getWidth() + INSET*2);
 							trueWidth = Math.max(trueWidth, label.getWidth() + INSET*2);
-							if (width > startWidth) {
-								width = startWidth;
-							}
+							if (width > startWidth) width = startWidth;
 							if (totalLen >= truncLen) break; // note, don't truncate until filling a line
 							curLine = new StringBuffer();
 						}
@@ -131,18 +125,15 @@ public class TextBox extends JComponent  {
 		paintComponents(g); // draw text
 	}
 	/*******************************************************
-	 * CAS503 - add the following code to allow a popup of the description
-	 * this was added so that it can be copied, and because sometimes the box gets half hidden
-	 * CAS512 Sequence.mousePress calls Annotation.boxContains, which calls containsP, if yes, 
-	 * 		creates Exon list from annotation vector, and passes here for popup
+	 * CAS503 add popup
 	 */
 	public boolean containsP(Point p) {
 		return rect.contains(p);
 	}
-	public void popupDesc(String exonList) { // CAS512 add exonList
+	public void popupDesc(String exonList, String title) { // CAS512 add exonList
 		String msg = "";
 		for (String x : descText) msg += x + "\n";
 		Dimension d = new Dimension (350, 220); // CAS513 add size (w,h)
-		Utilities.displayInfoMonoSpace(this, "Description", msg + exonList, false, d); //  CAS504 moved
+		Utilities.displayInfoMonoSpace(this, title, msg + exonList, d, 0,0); // CAS504 moved; CAS516 add title
 	}
 }

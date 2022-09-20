@@ -55,11 +55,11 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 		"INNER JOIN mrk_hits       AS h  ON (h.proj1_idx=? AND h.grp2_idx=? AND h.marker=m.name) "+
 		"LEFT  JOIN mrk_filter     AS mf ON (mf.mrk_idx=m.idx AND mf.proj2_idx=?) "+
 		"LEFT  JOIN pseudo_filter  AS pf ON (pf.proj1_idx=? AND pf.grp2_idx=? AND "+
-		"                                              (h.end2+h.start2)>>1 >= pf.start AND (h.end2+h.start2)>>1 <= pf.end) "+
+		"      (h.end2+h.start2)>>1 >= pf.start AND (h.end2+h.start2)>>1 <= pf.end) "+
 		"LEFT  JOIN mrk_block_hits AS mb ON (mb.hit_idx=h.idx AND "+
-		"                                              mb.ctghit_idx IN (SELECT ch.idx "+
-		"                                                                FROM ctghits AS ch "+
-		"                                                                WHERE ch.ctg1_idx=c.idx AND ch.grp2_idx=?)) "+
+		"       mb.ctghit_idx IN (SELECT ch.idx "+
+		"       FROM ctghits AS ch "+
+		"       WHERE ch.ctg1_idx=c.idx AND ch.grp2_idx=?)) "+
 		"WHERE c.proj_idx=? AND c.number=?";
 
 	private static final String PSEUDO_BESHITS_QUERY = 
@@ -78,7 +78,9 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 	
 	private static final String PSEUDO_HITS_QUERY = // CAS504 bh.block_idx -> b.blocknum
 		"SELECT h.idx,h.evalue,h.pctid,h.start1,h.end1,h.start2,h.end2,h.strand,b.blocknum," +
-		"h.gene_overlap, h.query_seq, h.target_seq, h.cvgpct, h.countpct " +  // CAS515 add last two
+		"h.gene_overlap, h.query_seq, h.target_seq, " +
+		"h.cvgpct, h.countpct, " +    // CAS515 add cvgpct, countpct,
+		"h.runsize, b.corr " +  	  // CAS516 add these two
 		"FROM pseudo_hits AS h "+
 		"LEFT JOIN pseudo_block_hits AS bh ON (bh.hit_idx=h.idx) "+
 		"LEFT JOIN blocks as b on (b.idx=bh.block_idx) " + // CAS505 added for blocknum
@@ -232,14 +234,16 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 			rs = statement.executeQuery(query);
 		
 			int start1, end1, start2, end2;
+			String tag;
 			
 			while (rs.next()) {
 				start1 = rs.getInt(4);
 				end1   = rs.getInt(5);
 				start2 = rs.getInt(6);
 				end2   = rs.getInt(7);
+				tag    = "g" + rs.getInt(10) + "r" + rs.getInt(15); // CAS516 gene_overlap, runsize
 
-				HitData temp = 							PseudoPseudoData.getHitData(
+				HitData temp = 		PseudoPseudoData.getHitData(
 						rs.getLong(1),		/* long id 		*/
 						null,				/* String name 	*/
 						rs.getString(8),	/* String strand*/
@@ -251,12 +255,14 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 						end1,				/* int end1		*/
 						start2,				/* int start2	*/
 						end2,				/* int end2		*/
-						rs.getInt(10),		/* int overlap  */ 		
+						rs.getInt(10),		/* int gene_overlap  */ 		
 						rs.getString(11),	/* String query_seq */	
 						rs.getString(12),	/* String target_seq */	
 						rs.getInt(13),		/* int cvgpct->avg %sim */
-						rs.getInt(14));		/* int countpct -> nMergedHits */
-	
+						rs.getInt(14),      /* int countpct -> nMergedHits */
+						rs.getDouble(16),	/* CAS516 b.corr */
+						tag
+						);		
 				hitList.add(temp);
 			}
 			closeResultSet(rs);

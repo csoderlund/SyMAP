@@ -25,8 +25,8 @@ import symapQuery.TableDataPanel;
  * be properly set along with all of the corresponding .properties files.
  */
 public class SyMAP {
-	public static final String 	VERSION = "v5.1.5";
-	public static final String 	DATE = " (13-Sept-22)";
+	public static final String 	VERSION = "v5.1.6";
+	public static final String 	DATE = " (20-Sept-22)";
 	public static final int 	DBVER =  3; 			// CAS512 update from 2
 	public static final String DBVERSTR = "db" + DBVER;
 	

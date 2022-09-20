@@ -329,15 +329,20 @@ public class DBdata {
 			chrIdx[0] = 	rs.getInt(Q.GRP1IDX);
 			start[0] = 		rs.getInt(Q.GRP1START);
 			end[0] = 		rs.getInt(Q.GRP1END);
+			len[0] = Math.abs(end[0]-start[0])+1;
 			
 			spIdx[1] = 		rs.getInt(Q.PROJ2IDX);
 			chrIdx[1] = 	rs.getInt(Q.GRP2IDX);  
 			start[1] = 		rs.getInt(Q.GRP2START); // hit start to chromosome
 			end[1] = 		rs.getInt(Q.GRP2END);   // hit end to chromosome
+			len[1] = Math.abs(end[1]-start[1])+1;
 			
 			runSize = 		rs.getInt(Q.RSIZE);
 			blockNum =		rs.getInt(Q.BNUM);
 			blockScore =	rs.getInt(Q.BSCORE);
+			pid	=			rs.getInt(Q.PID);
+			psim	=		rs.getInt(Q.PSIM);
+			hcnt	=		rs.getInt(Q.HCNT);
 			
 			// from anno table 
 			int annoGrpIdx = rs.getInt(Q.AGIDX);	// grpIdx, so unique; same as chrIdx[0|1]
@@ -387,6 +392,7 @@ public class DBdata {
 			chrIdx[0] = 	rs.getInt(Q.AGIDX);
 			start[0] =		rs.getInt(Q.ASTART);		// Gene start to chromosome
 			end[0] =		rs.getInt(Q.AEND);
+			len[0] = Math.abs(end[0]-start[0])+1;
 			geneNum[0] = 	rs.getInt(Q.AGENE);  // CAS514
 		}
 		catch (Exception e) {ErrorReport.print(e, "Read single");}
@@ -523,12 +529,18 @@ public class DBdata {
 
 		// general
 		row.add(rowNum);		
-		if (pgenef<=0)      row.add(Q.empty);  else row.add(pgenef);
-		if (pgfsize<=0)     row.add(Q.empty);  else row.add(pgfsize);
-		if (hitIdx<=0)      row.add(Q.empty);  else row.add(hitIdx);
+		
 		if (blockNum<=0)    row.add(Q.empty);  else row.add(block);
 		if (blockScore<=0)  row.add(Q.empty);  else row.add(blockScore);
 		if (runSize<0)      row.add(Q.empty);  else row.add(runSize);
+		
+		if (pgenef<=0)      row.add(Q.empty);  else row.add(pgenef);
+		if (pgfsize<=0)     row.add(Q.empty);  else row.add(pgfsize);
+		
+		if (hitIdx<=0)      row.add(Q.empty);  else row.add(hitIdx);
+		if (pid<=0)			row.add(Q.empty);  else row.add(pid);
+		if (psim<=0)		row.add(Q.empty);  else row.add(psim);
+		if (hcnt<=0)		row.add(Q.empty);  else row.add(hcnt);
 		
 		// chr, start, end
 		for (int i=0; i<spIdxList.length; i++) { // add columns for ALL species
@@ -536,16 +548,19 @@ public class DBdata {
 				row.add(chrNum[0]); 
 				row.add(start[0]); 
 				row.add(end[0]); 
-				row.add(geneNum[0]);
+				row.add(len[0]);
+				if (geneNum[0]<=0) row.add(Q.empty); else row.add(geneNum[0]); // CAS516 sorts to bottom
 			}
 			else if (spIdx[1]==spIdxList[i]) {
 				row.add(chrNum[1]); 
 				row.add(start[1]); 
 				row.add(end[1]); 
-				row.add(geneNum[1]);
+				row.add(len[1]);
+				if (geneNum[1]<=0) row.add(Q.empty); else row.add(geneNum[1]); // CAS516 sorts to bottom
 			}
 			else {
-				row.add(Q.empty); row.add(Q.empty); row.add(Q.empty); row.add(Q.empty);
+				row.add(Q.empty); row.add(Q.empty); row.add(Q.empty); 
+				row.add(Q.empty); row.add(Q.empty);
 			}
 		}
 		// annotation
@@ -608,11 +623,13 @@ public class DBdata {
 	
 // hit
 	private int hitIdx = -1;
+	private int pid = -1, psim = -1, hcnt=-1; // CAS516 add
 	private int [] spIdx =  {-1, -1};	
 	private int [] chrIdx = {-1, -1};		
 	private int [] start = 	{-1, -1};  // or from pseudo_annot for orphans
 	private int [] end = 	{-1, -1}; 
-	private int [] geneNum = {0, 0}; // CAS514 add
+	private int [] len = 	{-1, -1};  // CAS516 add
+	private int [] geneNum = {-1, -1}; // CAS514 add
 	
 // block
 	private int blockNum=-1, blockScore=-1, runSize=-1;

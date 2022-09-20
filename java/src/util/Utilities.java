@@ -785,8 +785,10 @@ public class Utilities {
 		
 		helpDiag.setVisible(true);		
 	}
-	public static void displayInfoMonoSpace(Component parentFrame, String title, 
-			String theMessage, boolean isModal, Dimension d) { // CAS513 add for Gene/exon popup
+	// CAS513 add for Gene/exon popup
+	public static JOptionPane displayInfoMonoSpace(Component parentFrame, String title, 
+			String theMessage, Dimension d, double x, double y) 
+	{ 
 		JOptionPane pane = new JOptionPane();
 		
 		JTextArea messageArea = new JTextArea(theMessage);
@@ -800,14 +802,15 @@ public class Utilities {
 		pane.setMessageType(JOptionPane.PLAIN_MESSAGE);
 
 		JDialog helpDiag = pane.createDialog(parentFrame, title);
-		helpDiag.setModal(isModal);
+		helpDiag.setModal(false); // true - freeze other windows
 		helpDiag.setResizable(true);
 		if (helpDiag.getWidth() >= d.width || helpDiag.getHeight() >= d.height) {	
 			helpDiag.setSize(d);
 		}
-		helpDiag.setSize(d);
-		
-		helpDiag.setVisible(true);		
+		helpDiag.setVisible(true);	
+		helpDiag.setAlwaysOnTop(true);
+		if (x!=0.0 && y!=0.0) helpDiag.setLocation((int) x, (int) y);
+		return pane;
 	}
 	static public boolean showContinue (String title, String msg) {
 		String [] options = {"Continue", "Cancel"};
@@ -1011,7 +1014,7 @@ public class Utilities {
     	String o = (isPos) ? "+" : "-";
     	String s = kText(start);
     	String e = kText(end);
-    	return String.format("Len=%,d Coords=%s(%s - %s)", (Math.abs(end-start)+1), o, s, e);
+    	return String.format("Len=%4d Coords=%s(%s - %s)", (Math.abs(end-start)+1), o, s, e);
     }
     // CAS515 - for more detailed hoover called by HitData
     static public String coordsStr(int i, boolean isPos, int start, int end) {

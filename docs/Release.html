@@ -4,6 +4,8 @@
 <title>SyMAP Release Notes</title>
 <link rel="stylesheet" href="style.css">
 <style>
+	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
 	a:link {text-decoration: none;color:#6666CC;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
@@ -55,6 +57,41 @@
 
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
+
+<h3>Release: v5.1.6 (20Sept22)</h3>
+<ul>
+<li>Blocks
+<ul>
+<li>For the single chromosome view: Inverted blocks have dotted outline.
+<li>The windows are better sized.
+<li>Fixed rare bug: For the initial multi-chromosome view: If there are many chromosomes, they were being cutoff; now the scroll bar allows them all to be shown.
+</ul>
+<li>2d Display
+<ul>
+<li>The full gene description can be viewed by right clicking on a gene annotation in the track;
+see <a href="UserGuide.html#view" target="_blank" class="ext">UserGuide</a>.
+<li>Hover over a hit may include "Inv" (inverted block) and will include "gNrM" (N exon hits, M colinear run size);
+see <a href="UserGuide.html#view" target="_blank" class="ext">UserGuide</a>;
+</ul>
+<li>SyMAP Query
+<ul>
+<li>Add general columns <ttl>Hit %Id</ttl>, <ttl>Hit %Sim</ttl>, <ttl>Hit #Merge</ttl>
+<li>Add species column <ttl>Len</ttl> which is the length of the hit (or merged hit).
+<li>Bug Fix: <ttl>Show Synteny</ttl>: the hover over the hit only showed the correct hit <ttl>Information</ttl>
+for those below the selected hit - that is fixed.
+<li>Gene# of 0 will sort to bottom of table with a '-'.
+<li>MUSCLE alignment: (1) Fixed rare bug. (2) The alignment files will be left in the <ttl>muscle</ttl>
+directory, but over-written with each new alignment.
+</ul>
+<li>Alignment&Synteny: (2 tiny things)
+<ul>
+<li>If promer or nucmer are over-rided in the <ttl>Parameters</ttl>, it will say on the Summary page (unless the
+alignment is re-used).
+<li>Fixed rare bug: if the <ttl>Parameters</ttl> are changed before <i>any</i> alignment has been done, there is an error
+because the <ttl>data/seq_results</ttl> directory has not been created.
+</ul>
+</ul>
+
 
 <h3>Release: v5.1.5 (13Sept22)</h3>
 <ul>

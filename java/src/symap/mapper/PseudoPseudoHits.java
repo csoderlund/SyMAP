@@ -2,6 +2,7 @@ package symap.mapper;
 
 /***********************************************
  * Two ends of a seq-seq hit; internal class PseudoHit has one end
+ * Draws the hit
  */
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -17,10 +18,9 @@ import java.util.LinkedList;
 
 import symap.sequence.Sequence;
 import symap.SyMAPConstants;
-import util.Utilities;
 
 public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPConstants {
-	private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
+	//private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
 	
 	private static final int MOUSE_PADDING = 3;
 	
@@ -32,7 +32,7 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 	public PseudoPseudoHits(int p1ID, int group1, int p2ID, int group2, boolean swap) {
 		super(p1ID,group1,p2ID,group2,Mapper.PSEUDO2PSEUDO,swap);		
 	}
-
+	// called in MapperPool
 	public PseudoPseudoHits(Mapper mapper, Sequence st1, Sequence st2, PseudoPseudoData data, boolean swap) {
 		this(data.getProject1(),data.getGroup1(),data.getProject2(),data.getGroup2(),swap);
 		this.mapper = mapper;
@@ -52,13 +52,10 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 			
 		hits = new PseudoHit[data == null || phd == null ? 0 : phd.length];
 		for (int i = 0; i < hits.length; i++) {
-			boolean selected = phd[i].getStart1() == mapper.getSelectedSeq1Start();
-			selected = selected || phd[i].getStart2() == mapper.getSelectedSeq2Start();
-			selected = selected || phd[i].getEnd1() == mapper.getSelectedSeq1End();
-			selected = selected || phd[i].getEnd2() == mapper.getSelectedSeq2End();
-				
+			// this is for TableDataPanel which has a selected row, that stays highlight in green
+			boolean isSelected = mapper.isHitSelected(phd[i].getStart1(), phd[i].getEnd1(), phd[i].getStart2(),phd[i].getEnd2());	
 			hits[i] = new PseudoHit(phd[i]);
-			hits[i].set(selected);
+			hits[i].set(isSelected);
 		}
 		return true;
 	}
@@ -145,7 +142,7 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 		mapper.getDrawingPanel().repaint();
 	}
 	/**********************************************************************
-	 * PseudoHit class
+	 * XXXXX PseudoHit class
 	 */
 	private class PseudoHit implements Hit {
 		private PseudoPseudoData.PseudoHitData data;
@@ -153,7 +150,8 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 		private boolean hover;	
 		private boolean highlight;
 		private boolean geneContained; 
-		private boolean geneOverlap; 	
+		private boolean geneOverlap; 
+		private boolean bSelected; // From TableDataPanel
 
 		public PseudoHit(PseudoPseudoData.PseudoHitData data) {
 			this.data = data;
@@ -189,8 +187,9 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 		 public boolean isBlockHit() {
 			 return data.isBlockHit();
 		 }
-		 public void set(boolean highlightHit) {
-			 highlight = highlightHit;
+		 public void set(boolean isSelectedHit) { // CAS516 change from setting highlight to bSelected
+			 bSelected = isSelectedHit;
+			 highlight = false;
 			 geneContained = isGeneContained();
 			 geneOverlap = isGeneOverlap();
 		 }
@@ -243,9 +242,9 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 			return false;
 		 } 
 		 private Color getCColor() {
-			 if (isHighlight() || isHover())
-				 return Mapper.pseudoLineHighlightColor;
-			 return Mapper.pseudoLineColor;
+			 if (isHighlight() || isHover())return Mapper.pseudoLineHighlightColor;
+			 else if (bSelected) 			return Color.green;				// CAS516 different color for selected
+			 else							return Mapper.pseudoLineColor;
 		 }
 		 // draws the length of the hit along the blue chromosome box
 		 private void drawHitLen(Graphics2D g2, Sequence st, Point2D pStart, Point2D pEnd, int orient, boolean forward) {
@@ -359,10 +358,10 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 				 }
 				 // CAS512 added start:end, was using left/right, but do not know that
 				 // CAS515 rearrange and add %Sim and nMerge
-				 if (isHover() || isHighlight()) {
+				 if (isHover() || isHighlight()) { // CAS516 XXX
 					 mapper.setHelpText(
 						"Block #" + data.getBlock() + // CAS505 added block; CAS513 want to see on 2D only display
-						data.getHitData() + 			// CAS513 Identity->Score; CAS515 changed again
+						data.getHitData() + 		// CAS513 Identity->Score; CAS515 changed again
 						"\n" + data.getLengths() + 
 						"\n" + data.getCoords());
 				 }

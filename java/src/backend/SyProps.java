@@ -325,6 +325,7 @@ public class SyProps extends PropertiesReader
 	 * Writes the param file, though this is never read. Parameters are stored in database.
 	 */
 	private void writeFile(String dir, HashMap <String, String> chgVal) {
+		Utilities.checkCreateDir(Constants.seqRunDir, true); // CAS516 if change params before 1st align
 		Utilities.checkCreateDir(dir, true); 
 		
 		File pfile = new File(dir,Constants.paramsFile);

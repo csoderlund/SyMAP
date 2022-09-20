@@ -6,12 +6,10 @@ import java.util.Collection;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.Iterator;
-import java.io.BufferedWriter;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Comparator;
 import java.util.zip.GZIPInputStream;
@@ -90,14 +88,12 @@ public class Utils
 		
 		return false;
 	}
-	public static int checkDoneMaybe(String dir, boolean isFPC) 
-	{
+	public static int checkDoneMaybe(String dir, boolean isFPC) {
 		File d = new File(dir);
 		if (!d.exists() || d.isFile()) return 0;
 		
 		int numFiles=0;
-		for (File x : d.listFiles())
-		{
+		for (File x : d.listFiles()) {
 			if (!x.isFile()) continue;
 			if (x.isHidden()) continue;
 			
@@ -117,8 +113,7 @@ public class Utils
 		}
 		return numFiles;
 	}
-	public static void writeDoneFile(String dir) 
-	{
+	public static void writeDoneFile(String dir)  {
 		try {
 			File f = new File(dir);
 			File d = new File(f,"all.done");
@@ -126,43 +121,28 @@ public class Utils
 		}
 		catch (Exception e) {ErrorReport.print(e, "Cannot write done file to " + dir);}
 	}
-	public static void deleteDoneFile(String dir) 
-	{
-		try {
-			File f = new File(dir);
-			File d = new File(f,"all.done");
-			if (d.exists()) d.delete();
-		}
-		catch (Exception e) {ErrorReport.print(e, "Cannot write done file to " + dir);}
-	}
 	/*****************************************************
 	 * Hists stats
 	 */
-	static void initStats()
-	{
+	static void initStats() {
 		mStats = new TreeMap<String,Float>();	
 		mKeyOrder= new Vector<String>();
 		mHist = new TreeMap<String,TreeMap<Integer,Integer>>();
 	}
-	static void initHist(String key, Integer... levels)
-	{
+	static void initHist(String key, Integer... levels) {
 		mHist.put(key, new TreeMap<Integer,Integer>());
-		for (Integer i : levels)
-		{
+		for (Integer i : levels) {
 			mHist.get(key).put(i,0);
 		}
 		mHist.get(key).put(Integer.MAX_VALUE,0);
 	}
-	static void incHist(String key, int val) throws Exception
-	{
+	static void incHist(String key, int val) throws Exception {
 		int l = -1;
-		for (int lvl : mHist.get(key).keySet())
-		{
+		for (int lvl : mHist.get(key).keySet()) {
 			l = lvl;
 			if (val < lvl) break;
 		}
-		if (l == -1)
-		{
+		if (l == -1) {
 			throw(new Exception("Bad level: " + val));	
 		}
 		int curval = mHist.get(key).get(l);
@@ -172,26 +152,21 @@ public class Utils
 	static void incHist(String key, int val, int inc) throws Exception
 	{
 		int l = -1;
-		for (int lvl : mHist.get(key).keySet())
-		{
+		for (int lvl : mHist.get(key).keySet()) {
 			l = lvl;
 			if (val < lvl) break;
 		}
-		if (l == -1)
-		{
+		if (l == -1) {
 			throw(new Exception("Bad level: " + val));	
 		}
 		int curval = mHist.get(key).get(l);
 		curval += inc;
 		mHist.get(key).put(l,curval);
 	}	
-	static void dumpHist()
-	{
-		for (String name : mHist.keySet())
-		{
+	static void dumpHist() {
+		for (String name : mHist.keySet()) {
 			System.out.println("Histogram: " + name);	
-			for (int lvl : mHist.get(name).keySet())
-			{
+			for (int lvl : mHist.get(name).keySet()) {
 				int val = mHist.get(name).get(lvl);
 				System.out.println("<" + lvl + ":" + val);
 			}
@@ -200,40 +175,18 @@ public class Utils
 	/************************************************
 	 * Keyword stats
 	 */
-	static void incStat(String key, float inc)
-	{
-		if (mStats != null)
-		{
-			if (!mStats.containsKey(key))
-			{
+	static void incStat(String key, float inc){
+		if (mStats != null) {
+			if (!mStats.containsKey(key)) {
 				mStats.put(key, 0.0F);	
 				mKeyOrder.add(key);
 			}
 			mStats.put(key, inc + mStats.get(key));
 		}
 	}
-	static void statAvg(String numkey, String denomkey, String avgkey)
-	{
+	static void dumpStats() {
 		if (mStats == null) return;
-		if (!mStats.containsKey(numkey) || !mStats.containsKey(denomkey))
-		{
-			return;
-		}	
-		float num = mStats.get(numkey);
-		float denom = mStats.get(denomkey);
-		
-		if (denom > .5) // in case comes out .0000001 or something
-		{
-			float avg = num/denom;
-			incStat(avgkey,avg);
-		}
-		
-	}
-	static void dumpStats()
-	{
-		if (mStats == null) return;
-		for (String key : mKeyOrder)
-		{
+		for (String key : mKeyOrder) {
 			Float val = mStats.get(key);
 			System.out.println(key + " = " + val);
 		}
@@ -241,8 +194,7 @@ public class Utils
 	static void uploadStats(UpdatePool db, int pair_idx, int pidx1, int pidx2) throws Exception
 	{
 		if (mStats == null) return;
-		for (String key : mKeyOrder)
-		{
+		for (String key : mKeyOrder) {
 			Integer val = mStats.get(key).intValue();
 			
 			db.executeUpdate("replace into pair_props (pair_idx,proj1_idx,proj2_idx,name,value) values(" + pair_idx + 
@@ -250,33 +202,17 @@ public class Utils
 		}
 	}
 	/**********************************************************/
-	static int[] strArrayToInt(String[] sa)
-	{
+	static int[] strArrayToInt(String[] sa) {
 		int[] ia = new int[sa.length];
 		for (int i = 0; i < sa.length; i++)
 			ia[i] = Integer.parseInt(sa[i]);
 		return ia;
 	}
 	
-	static String strArrayJoin(String[] sa, String delim)
-	{
+	public static String intArrayJoin(int[] sa, String delim) {
 		String out = "";
 		if (sa != null) {
-			for (int i = 0; i < sa.length; i++)
-			{
-				out += sa[i];
-				if (i < sa.length -1)
-					out += delim;
-			}
-		}
-		return out;
-	}
-	public static String intArrayJoin(int[] sa, String delim)
-	{
-		String out = "";
-		if (sa != null) {
-			for (int i = 0; i < sa.length; i++)
-			{
+			for (int i = 0; i < sa.length; i++) {
 				out += sa[i];
 				if (i < sa.length -1)
 					out += delim;
@@ -284,12 +220,10 @@ public class Utils
 		}
 		return out;
 	}	
-	static String intArrayToBlockStr(int[] ia)
-	{
+	static String intArrayToBlockStr(int[] ia) {
 		String out = "";
 		if (ia != null) {
-			for (int i = 0; i < ia.length; i+=2)
-			{
+			for (int i = 0; i < ia.length; i+=2) {
 				out += ia[i] + ":" + ia[i+1];
 				if (i + 1 < ia.length - 1)
 					out += ",";
@@ -298,8 +232,7 @@ public class Utils
 		return out;
 	}
 	
-	static String strVectorJoin(java.util.Vector<String> sa, String delim)
-	{
+	static String strVectorJoin(java.util.Vector<String> sa, String delim) {
 		String out = "";
 		for (int i = 0; i < sa.size(); i++)
 		{
@@ -310,20 +243,17 @@ public class Utils
 		return out;
 	}
 	
-	static boolean intervalsTouch(int s1,int e1, int s2, int e2)
-	{
+	static boolean intervalsTouch(int s1,int e1, int s2, int e2) {
 		return intervalsOverlap(s1,e1,s2,e2,0);
 	}	
 	
-	static public boolean intervalsOverlap(int s1,int e1, int s2, int e2, int max_gap)
-	{
+	static public boolean intervalsOverlap(int s1,int e1, int s2, int e2, int max_gap) {
 		int gap = Math.max(s1,s2) - Math.min(e1,e2);
 		return (gap <= max_gap);
 	}
 	
 	// Returns the amount of the overlap (negative for gap)
-	static int intervalsOverlap(int s1,int e1, int s2, int e2)
-	{
+	static int intervalsOverlap(int s1,int e1, int s2, int e2) {
 		int gap = Math.max(s1,s2) - Math.min(e1,e2);
 		return -gap;
 	}	
@@ -332,14 +262,12 @@ public class Utils
 		return ( (s1 >= s2 && e1 <= e2) || (s2 >= s1 && e2 <= e1));
 	}	
 	
-	static float simpleRatio(int top, int bot)
-	{
+	static float simpleRatio(int top, int bot) {
 		float ratio = (float)(.1*Math.round(10.0*(float)top/(float)bot));
 		return ratio;
 	}
 	
-	static public String join(Collection<?> s, String delimiter) 
-	{
+	static public String join(Collection<?> s, String delimiter)  {
 		String buffer = "";
 	    Iterator<?> iter = s.iterator();
 	    while (iter.hasNext()) 
@@ -351,8 +279,7 @@ public class Utils
         return buffer;	
 	} 
 	/*****************************************************/
-	static String getProjProp(int projIdx, String name, UpdatePool conn) 
-	{
+	static String getProjProp(int projIdx, String name, UpdatePool conn)  {
 		try {
 			String value = null;
 			
@@ -371,8 +298,7 @@ public class Utils
 		conn.executeUpdate("delete from proj_props where name='" + name + "' and proj_idx=" + projIdx);
 		conn.executeUpdate("insert into proj_props (name, value, proj_idx) values('" + name + "','" + val + "','" + projIdx + "')");	
 	}
-	static int getPairIdx(int proj1Idx, int proj2Idx, UpdatePool conn) throws SQLException
-	{
+	static int getPairIdx(int proj1Idx, int proj2Idx, UpdatePool conn) throws SQLException {
 		int idx = 0;
 		
 		String st = "SELECT idx FROM pairs WHERE proj1_idx='" + proj1Idx + "' AND proj2_idx='" + proj2Idx +"'";
@@ -384,22 +310,17 @@ public class Utils
 		return idx;
 	}
 
-	
-	public static boolean yesNo(String question)
-	{
-		BufferedReader inLine = new BufferedReader(new InputStreamReader(
-				System.in));
+	public static boolean yesNo(String question) {
+		BufferedReader inLine = new BufferedReader(new InputStreamReader(System.in));
 
 		System.err.print(question + " (y/n)? "); // CAS42 SOP no newline; easy to miss otherwise
-		try
-		{
+		try {
 			String resp = inLine.readLine();
 			if (resp.equals("y"))
 				return true;
 			else if (resp.equals("n"))
 				return false;
-			else
-			{
+			else {
 				System.err.println("Sorry, could not understand the response, please try again:");
 				System.err.print(question + " (y/n)? "); // CAS42 SOP no newline; easy to miss otherwise
 				resp = inLine.readLine();
@@ -407,8 +328,7 @@ public class Utils
 					return true;
 				else if (resp.equals("n"))
 					return false;
-				else
-				{
+				else {
 					System.err.println("Sorry, could not understand the response, exiting.");
 					System.exit(0);
 					// Have to just exit since returning "n" won't necessarily cause an exit
@@ -419,36 +339,16 @@ public class Utils
 		} catch (Exception e){return false;}
 	}
 	
-	public static void fastaPrint(BufferedWriter fh, String name, char[] str) throws IOException
-	{
-		final int FASTA_LINE_LEN = 80;
-		
-		if (name.length() > 0)
-		{
-			fh.append(">" + name);				
-			fh.newLine();
-		}
-		for (int i = 0; i < str.length; i += FASTA_LINE_LEN)
-		{
-			int len = Math.min(FASTA_LINE_LEN, str.length-i);
-			fh.write(str, i, len);
-			fh.newLine();			
-		}
-		fh.flush();
-	}
-	
 	public static String getParamsName()
 	{
 		String s1 = ProjectManagerFrameCommon.MAIN_PARAMS;
 		String s2 = Constants.paramsFile;
 		File f = new File(s1);
-		if (f.isFile())
-		{
+		if (f.isFile()) {
 			return s1;	
 		}
 		f = new File(s2);
-		if (f.isFile())
-		{
+		if (f.isFile()) {
 			return s2;	
 		}
 		System.err.println("Parameters file " + s1 + " not found");
@@ -525,26 +425,7 @@ public class Utils
 		in = in.replace('T', 'a');
 		return in.toLowerCase();
 	}
-	public static void updateGeneFractions(UpdatePool db) throws Exception
-	{
-		db.executeUpdate("update blocks set ngene1 = (select count(*) from pseudo_annot as pa " +
-		"where pa.grp_idx=grp1_idx  and (greatest(pa.start,start1) < least(pa.end,end1)) and pa.type='gene')");
-		db.executeUpdate("update blocks set ngene2 = (select count(*) from pseudo_annot as pa " +
-		"where pa.grp_idx=grp2_idx  and (greatest(pa.start,start2) < least(pa.end,end2)) and pa.type='gene')");
-		
-		db.executeUpdate("update blocks set genef1=(select count(distinct annot_idx) from  " +
-				" pseudo_hits_annot as pha " +
-				" join pseudo_block_hits as pbh on pbh.hit_idx=pha.hit_idx " +
-				" join pseudo_annot as pa on pa.idx=pha.annot_idx " +
-				" where pbh.block_idx=blocks.idx and pa.grp_idx=blocks.grp1_idx)/ngene1 " +
-				" where ngene1 > 0");
-		db.executeUpdate("update blocks set genef2=(select count(distinct annot_idx) from  " +
-				" pseudo_hits_annot as pha " +
-				" join pseudo_block_hits as pbh on pbh.hit_idx=pha.hit_idx " +
-				" join pseudo_annot as pa on pa.idx=pha.annot_idx " +
-				" where pbh.block_idx=blocks.idx and pa.grp_idx=blocks.grp2_idx)/ngene2 " +
-				" where ngene2 > 0");
-	}
+	
 	public static void updateGeneFractions(UpdatePool db, int pair_idx) throws Exception
 	{
 		db.executeUpdate("update blocks set ngene1 = (select count(*) from pseudo_annot as pa " +

@@ -13,7 +13,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.HashMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -79,7 +78,7 @@ public class AlignmentViewPanel extends JPanel {
 						
 						updateExportButton();
 					} catch (Exception e) {
-						e.printStackTrace();
+						ErrorReport.print(e, "Build Alignment"); // CAS516 e.printStackTrace
 					}
 				}
 			});

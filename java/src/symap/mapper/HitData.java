@@ -16,6 +16,8 @@ public abstract class HitData {
 	private double evalue;
 	private byte pctid, pctsim; // CAS515 add pctsim and nMerge
 	private int nMerge;
+	private double corr;		// CAS516 add
+	private String tag;			// CAS516 g(gene_overlap)r(runsize) see MapperPool
 	private int start1, end1; 
 	private int start2, end2;
 	private boolean orient;
@@ -29,7 +31,8 @@ public abstract class HitData {
 
 	protected HitData(long id, String name, String strand, boolean repetitive,
 			int blocknum, double evalue, double pctid, int start2, int end2,
-			String query_seq, String target_seq, int gene_olap, int pctsim, int nMerge) 
+			String query_seq, String target_seq, int gene_olap, int pctsim, int nMerge, 
+			double corr, String tag) 
 	{
 		this.id = id;
 		this.name = name;
@@ -45,6 +48,8 @@ public abstract class HitData {
 		this.overlap = gene_olap;
 		this.pctsim = (byte) pctsim;
 		this.nMerge = nMerge;
+		this.corr = corr;
+		this.tag = tag;
 		
 		if (strand.length() >= 3) { 
 			this.orient = strand.charAt(0) == strand.charAt(2);
@@ -60,9 +65,10 @@ public abstract class HitData {
 	protected HitData(long id, String name, String strand, boolean repetitive,
 			int block, double evalue, double pctid, int start1, int end1, 
 			int start2, int end2, int overlap,
-			String query_seq, String target_seq, int pctsim, int nMerge)
+			String query_seq, String target_seq, int pctsim, int nMerge, double corr, String tag)
 	{
-		this(id,name,strand,repetitive,block,evalue,pctid,start2,end2,"","", overlap, pctsim, nMerge);
+		this(id,name,strand,repetitive,block,evalue,pctid,start2,end2,"","", overlap, 
+				pctsim, nMerge, corr, tag);
 		this.start1 = start1;
 		this.end1 = end1;
 		this.overlap = overlap;		
@@ -78,11 +84,13 @@ public abstract class HitData {
 	         + Utilities.coordsStr(2, orient2, start2, end2);
 	}
 	public String getHitData() {
-		String msg = " Hit #" + id;
-		if (nMerge>0) msg += "\nAvg";
+		String x = (corr<0) ? " Inv" : "";
+		String msg =  x + "    Hit #" + id + " " + tag; // CAS516 add Inv and tag
+		msg += " \n";
+		if (nMerge>0) msg += "Avg";
 		msg += " %Id=" + pctid;
 		if (pctsim>0) msg += " %Sim=" + pctsim;
-		if (nMerge>0) msg += " of " + nMerge + " hits";
+		if (nMerge>0) msg += " of " + nMerge + " hits ";
 		return msg;
 	}
 	public String toString() 	{ return name; }
@@ -94,11 +102,11 @@ public abstract class HitData {
 	public int getBlock()	{ return blocknum;}
 	public int getStart1() 		{ return start1; } 
 	public int getEnd1() 		{ return end1; }   
-	public int getLength1() 	{ return Math.abs(end1-start1); } 
+	public int getLength1() 	{ return Math.abs(end1-start1)+1; } // CAS516 add +1
 	public int getStart2() 		{ return start2; }
 	public int getEnd2() 		{ return end2; }
 	public int getPos2() 		{ return (start2+end2)>>1; }
-	public int getLength2() 	{ return Math.abs(end2-start2); } 
+	public int getLength2() 	{ return Math.abs(end2-start2)+1; } // CAS516 add +1
 	public double getEvalue() 	{ return evalue; }
 	public double getPctid() 	{ return (double)pctid; }
 	public String getTargetSeq(){ return target_seq; } 

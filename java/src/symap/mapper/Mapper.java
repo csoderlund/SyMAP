@@ -82,7 +82,7 @@ public class Mapper
 	private DrawingPanel drawingPanel; 
 	private TrackHolder trackHolders[];
 	private FilterHandler fh;
-	private TableDataPanel theParentPanel;
+	private TableDataPanel theTablePanel;
 	private List<AbstractHitData> hits;
 	private MapperPool pool;
 	private HitFilter hitfilter;
@@ -101,7 +101,7 @@ public class Mapper
 		this.fh = fh;
 		initing = true;
 		hitfilter = new HitFilter(this);
-		theParentPanel = listPanel;
+		theTablePanel = listPanel;
 		mapinfo = new MapInfo();
 		fh.set(this);
 		trackHolders = new TrackHolder[2];
@@ -117,31 +117,13 @@ public class Mapper
 		
 		if (hb != null) hb.addHelpListener(this,this); 
 	}
+	// CAS516 change to one call instead of 4
+	public boolean isHitSelected(int s1, int e1, int s2, int e2) {
+		if(theTablePanel != null)
+			return theTablePanel.isHitSelected(s1, e1, s2, e2);
+		return false;
+	}
 	
-	public long getSelectedSeq1Start() {
-		if(theParentPanel != null)
-			return theParentPanel.getSelectedSeq1Start();
-		return -1;
-	}
-
-	public long getSelectedSeq2Start() {
-		if(theParentPanel != null)
-			return theParentPanel.getSelectedSeq2Start();
-		return -1;
-	}
-
-	public long getSelectedSeq1End() {
-		if(theParentPanel != null)
-			return theParentPanel.getSelectedSeq1End();
-		return -1;
-	}
-
-	public long getSelectedSeq2End() {
-		if(theParentPanel != null)
-			return theParentPanel.getSelectedSeq2End();
-		return -1;
-	}
-
 	public void clearData() {
 		hits = new ClearList(10, 50);
 		mapinfo = new MapInfo();

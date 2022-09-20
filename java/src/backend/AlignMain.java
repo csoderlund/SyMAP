@@ -48,6 +48,7 @@ public class AlignMain
 	private boolean error = false;
 	
 	private String resultDir, alignParams;
+	private final String usePrevious = "Use previous alignment";
 	
 	public AlignMain(UpdatePool pool, Logger log, 
 			String proj1Name, String proj2Name,
@@ -111,7 +112,7 @@ public class AlignMain
 			System.gc(); // free unused heap for blat/mummer to use (Java treats this as a suggestion)
 			
 			if (alignExists()) {
-				alignParams = "Use previous alignment";
+				alignParams = usePrevious;
 				return true; // must have all.done and at least one .mum file
 			}
 			
@@ -244,17 +245,20 @@ public class AlignMain
 			else if (isSelf) program = "nucmer";
 			
 			// user over-rides
-			if (program.equals("promer") && mMainProps.getProperty("nucmer_only").equals("1"))
+			alignParams = "";
+			if (program.equals("promer") && mMainProps.getProperty("nucmer_only").equals("1")) {
 				program = "nucmer";
-			else if (program.equals("nucmer") && mMainProps.getProperty("promer_only").equals("1"))
+				alignParams = "nucmer; "; // CAS516 show override on Summary page
+			}
+			else if (program.equals("nucmer") && mMainProps.getProperty("promer_only").equals("1")) {
 				program = "promer";
-			
+				alignParams = "promer; "; // CAS516 ditto
+			}
 			String args = getProgramArgs(program, mMainProps);
 			String self = (isSelf) ? (" " + mMainProps.getProperty("self_args")) : ""; // CAS511 moved out of loop
 			
 			// CAS511 to be saved to DB pairs.params
-			alignParams = "";
-			if (!bDoCat)                  alignParams = "No Concat; ";
+			if (!bDoCat)                  alignParams += "No Concat; ";
 			if (Constants.isMummerPath()) alignParams += Constants.getProgramPath("mummer") + "; ";
 			if (!args.contentEquals(""))  alignParams += args + "; ";
 			if (!self.contentEquals(""))  alignParams += "Self:" + self;

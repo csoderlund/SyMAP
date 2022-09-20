@@ -266,7 +266,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			}
 		});
         
-		CollapsiblePanel helpCollapsiblePanel = new CollapsiblePanel("Instructions", null, false);
+		CollapsiblePanel helpCollapsiblePanel = new CollapsiblePanel("Information", null, false); // CAS516 changed from "Instructions"
 		helpCollapsiblePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
 		helpCollapsiblePanel.add( helpBar );
 		helpCollapsiblePanel.add( helpLink );

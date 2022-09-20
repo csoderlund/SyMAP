@@ -24,9 +24,9 @@ public class LegendPanel extends JPanel
         setBorder(BorderFactory.createLineBorder(Color.BLACK));
         setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        int w = 0, h=(names.length * 25) + 10;
+        int w = 0, h=(names.length * 25) + 15; // CAS516 10->15
         for (String n : names) {
-        	 	if (w<n.length()) w=n.length();
+        	 if (w<n.length()) w=n.length();
         }
         w *= 9;
         	

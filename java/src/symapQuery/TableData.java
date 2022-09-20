@@ -155,9 +155,9 @@ public class TableData implements Serializable {
 
     	arrData = new Object[vData.size()][];
     	Iterator <Vector<Object>> iter = vData.iterator();
+    	Vector<Object> rowV;
     	
     	int x = 0;
-    	Vector<Object> rowV;
     	while(iter.hasNext()) {
     		arrData[x] = new Object[arrHeaders.length];
     		rowV = iter.next();

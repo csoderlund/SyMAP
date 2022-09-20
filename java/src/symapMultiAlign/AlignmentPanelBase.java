@@ -172,8 +172,8 @@ public class AlignmentPanelBase extends JPanel
 		int endGapStart = sequence.length();
 		
 		//Find the locations of the start and stop 
-		while(sequence.charAt(startGapEnd) == '.') startGapEnd++;
-		while(sequence.charAt(endGapStart-1) == '.') endGapStart--;
+		while (startGapEnd<endGapStart && sequence.charAt(startGapEnd) == '.') startGapEnd++; // CAS516 add check
+		while (endGapStart>0 && sequence.charAt(endGapStart-1) == '.') endGapStart--;		  // CAS516 add check
 		
 		// Determine the position of the sequence line, but don't draw until after the hashes
 		// draw the line and arrow heads

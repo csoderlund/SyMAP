@@ -23,14 +23,14 @@ import javax.swing.event.*;
 import symap.*;
 import backend.*;
 
-public class Block2Frame extends JFrame
-{
+public class Block2Frame extends JFrame {
 	private static final long serialVersionUID = 1L;
-	private int blockMaxHeight = 800; // CAS515 was 900
-	private int bpPerPx;
-	private final int chromWidth = 15, chromWidth2 = 25, layerWidth = 100;
-	private final int tooManySeqs = 75;
+	private final int fBlockMaxHeight = 800; // CAS515 was 900
+	private final int fChromWidth = 15, fChromWidth2 = 25; // width of Ref Chr; all others
+	private final int fLayerWidth = 90; 		// CAS56 was 100; width of level
+	private final int fTooManySeqs = 75;
 
+	private int bpPerPx;
 	private int mRefIdx;
 	private String refName, tarName, grpPfx;
 	private int mIdx2, mGrpIdx, mPairIdx;
@@ -47,7 +47,8 @@ public class Block2Frame extends JFrame
 	private boolean isFpc = false;
 	private boolean savedRects = false;
 	private JButton saveBtn;
-	private Container topPane;
+	private Container mainPane;
+	private int farL, farR;
 	
 	public Block2Frame(DatabaseReader dbReader, int refIdx, int idx2, int grpIdx, int pairIdx, boolean reversed) {
 		super("SyMAP Block Detail View " + SyMAP.VERSION);
@@ -68,22 +69,17 @@ public class Block2Frame extends JFrame
 			if (!initFromDB()) return;
 			if (!layoutBlocks()) return;
 			
-			int chrmHt = mRefSize/bpPerPx;
-			int width = (1+mLayout.size()) * (layerWidth + chromWidth); 
-			
 			this.getContentPane().removeAll();
 			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			Dimension d = new Dimension(width, chrmHt + 100); // was 130
-			setPreferredSize(d); setMinimumSize(d);
 			
-			topPane = new JPanel();
-			topPane.setBackground(Color.white);
-			topPane.setLayout(new GridBagLayout()); 
-			JScrollPane scroller = new JScrollPane(topPane);
+			mainPane = new JPanel();
+			mainPane.setBackground(Color.white);
+			mainPane.setLayout(new GridBagLayout()); 
+			JScrollPane scroller = new JScrollPane(mainPane);
 			
-			GridBagConstraints c = new GridBagConstraints();
-			c.gridx = c.gridy = 0;
-			c.fill = GridBagConstraints.NORTH;
+			GridBagConstraints cPane = new GridBagConstraints();
+			cPane.gridx = cPane.gridy = 0;
+			cPane.fill = GridBagConstraints.NORTH;
 			
 			// top row
 			JPanel topRow = new JPanel();
@@ -92,12 +88,12 @@ public class Block2Frame extends JFrame
 			
 			JLabel title = new JLabel(tarName+ " synteny to " + refName + " " + grpPfx + mRefChr); 
 			title.setFont(new Font("Verdana",Font.BOLD,18));
-			GridBagConstraints c1 = new GridBagConstraints();
-			c1.gridx = c1.gridy = 0;
-			topRow.add(title,c1);	
+			GridBagConstraints cRow = new GridBagConstraints();
+			cRow.gridx = cRow.gridy = 0;
+			topRow.add(title,cRow);	
 			
-			c1.gridx++;
-			topRow.add(new JLabel("      "),c1);
+			cRow.gridx++;
+			topRow.add(new JLabel("      "),cRow);
 			
 			Icon icon = ImageViewer.getImageIcon("/images/print.gif"); 
 			saveBtn =  new JButton(icon);
@@ -106,22 +102,43 @@ public class Block2Frame extends JFrame
 			saveBtn.setToolTipText("Save Image");
 			saveBtn.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					ImageViewer.showImage(topPane);
+					ImageViewer.showImage(mainPane);
 				}
 			});
-			c1.gridx++;
-			topRow.add(saveBtn,c1);
+			cRow.gridx++;
+			topRow.add(saveBtn,cRow);
 			
 			topRow.setVisible(true);
-			topPane.add(topRow,c);
+			mainPane.add(topRow,cPane);
 
-			BlockPanel blockPanel = new BlockPanel(this);
-			d = new Dimension(width,chrmHt + 40);
-			blockPanel.setPreferredSize(d); blockPanel.setMaximumSize(d);
-			blockPanel.setVisible(true);
-			c.gridy++;
-			topPane.add(blockPanel,c);
+		// Click for detail
+			JPanel selectRow = new JPanel();
+			selectRow.setBackground(Color.white);
+			JLabel select = new JLabel("Click block for 2D display"); 
+			select.setFont(new Font("Verdana",0,12));
+			selectRow.add(select);
+			cPane.gridy++; 
+			mainPane.add(selectRow,cPane);
 			
+		// Block panel
+			BlockPanel blockPanel = new BlockPanel(this);
+			blockPanel.setVisible(true);
+			cPane.gridy++;
+			mainPane.add(blockPanel,cPane);
+		
+		// dimensions
+			int chrmHt = (mRefSize/bpPerPx) + 100;
+			int totalWinWidth = ((1+mLayout.size()) * fLayerWidth) + fChromWidth; 
+			int d1winWidth =  totalWinWidth;
+			if (d1winWidth>1000)     d1winWidth=1000;
+			else if (d1winWidth<400) d1winWidth=400;
+			Dimension d = new Dimension(d1winWidth, chrmHt);
+			setPreferredSize(d); setMinimumSize(d);
+			
+			d = new Dimension(totalWinWidth,chrmHt);
+			blockPanel.setPreferredSize(d); blockPanel.setMinimumSize(d);
+			
+			this.setLocationRelativeTo(null);
 			this.getContentPane().add(scroller);
 			this.validate();
 			this.repaint();
@@ -135,11 +152,11 @@ public class Block2Frame extends JFrame
 	
 			rs = s.executeQuery("select count(*) as ngrps from xgroups where proj_idx=" + mRefIdx);
 			rs.first();
-			unorderedRef = (rs.getInt("ngrps") > tooManySeqs);
+			unorderedRef = (rs.getInt("ngrps") > fTooManySeqs);
 
 			rs = s.executeQuery("select count(*) as ngrps from xgroups where proj_idx=" + mIdx2);
 			rs.first();
-			unordered2 = (rs.getInt("ngrps") > tooManySeqs);
+			unordered2 = (rs.getInt("ngrps") > fTooManySeqs);
 			
 			if (unorderedRef && unordered2) {
 				System.out.println("Genomes have too many chromosomes/contigs to show in block view");
@@ -213,106 +230,125 @@ public class Block2Frame extends JFrame
 			return false;
 		}
 	}
-	private void paintBlocks(Graphics g) throws Exception {
-		g.setFont(new Font("Verdana",0,14));
+	private void paintBlocks(Graphics g1) throws Exception {
+		Graphics2D g2 = (Graphics2D) g1;
+		g2.setFont(new Font("Verdana",0,14));
 		int y0 = 40;
-		int x = layerWidth/2;
+		int x = fLayerWidth/2;
 		int chromHeight = mRefSize/bpPerPx;
 		int chromXLeft, chromXRight;
 		
-		int L;
-		for (L = -1;mLayout.containsKey(L); L--);
-		L++;
-		chromXLeft = x + (-L)*(layerWidth);
-		chromXRight = chromXLeft + chromWidth; 
-		g.setColor(Color.green);
+		// CAS516 add different outline to inverted
+		// BasicStroke(float width, int cap, int join, float miterlimit, float[] dash, float dash_phase)
+		Stroke stroke0 = new BasicStroke(1.0f);
+		Stroke stroke1 = new BasicStroke(2.0f);
+		float [] dash = {2f, 2f};
+		Stroke stroke2 = new BasicStroke(2f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1.0f, dash, 2.0f);
+		
+		int L=farL;
+		chromXLeft  = x + (-L)*(fLayerWidth);
+		chromXRight = chromXLeft + fChromWidth; 
+		g2.setColor(Color.green);
+		
+		// Draw lines from ref to chr to the left
 		for (; L < 0; L++) {
 			for (Block b : mLayout.get(L)) {
-				int y1 = b.mS + y0;
-				int ht = (b.mE - b.mS);
-				g.drawLine(x, y1, chromXLeft, y1);
-				g.drawLine(x, y1+ht-1, chromXLeft, y1+ht-1);
+				int y1 =  b.mS + y0;
+				int ht =  b.mE - b.mS;
+				g2.drawLine(x, y1, chromXLeft, y1);
+				g2.drawLine(x, y1+ht-1, chromXLeft, y1+ht-1);
 			}
-			x += layerWidth;
+			x += fLayerWidth;
 		}
-		x += chromWidth + layerWidth - chromWidth2;
+		// Draw lines from ref to chr to the rigth
+		x += fChromWidth + fLayerWidth - fChromWidth2;
 		for (L=1; mLayout.containsKey(L); L++) {			
 			for (Block b : mLayout.get(L)){
 				int y1 = b.mS + y0;
-				int ht = (b.mE - b.mS);
-				g.drawLine(x, y1, chromXRight, y1);
-				g.drawLine(x, y1+ht-1, chromXRight, y1+ht-1);
+				int ht = b.mE - b.mS;
+				g2.drawLine(x, y1, chromXRight, y1);
+				g2.drawLine(x, y1+ht-1, chromXRight, y1+ht-1);
 			} 
-			x += layerWidth;
+			x += fLayerWidth;
 		}
 		
 		Font font1 = new Font("verdana",0,10); 
 		Font font2 = new Font("verdana",Font.BOLD,10); 
-		g.setFont(font1);
-		x = layerWidth/2;		
-		for (L = -1;mLayout.containsKey(L); L--);
-		for (L++; L < 0; L++) {
+		g2.setFont(font1);
+		x = fLayerWidth/2;	
+		
+		for (L=farL; L < 0; L++) {
 			for (Block b : mLayout.get(L)){
 				int y1 = b.mS + y0;
-				int ht = (b.mE - b.mS);
+				int ht = b.mE - b.mS;
 				int co = colorOrder.get(b.unordered ? unGrp2 : b.mGrp2);
-				g.setColor(new Color(mColors.get(co)));
-				g.fillRect(x, y1, chromWidth2, ht);
-				g.setColor(Color.black);
-				g.drawRect(x, y1, chromWidth2, ht);
+				g2.setColor(new Color(mColors.get(co)));
+				g2.fillRect(x, y1, fChromWidth2, ht);
+				g2.setColor(Color.black);
+				
+				if (b.bInv) g2.setStroke(stroke2);
+				else        g2.setStroke(stroke1);
+				g2.drawRect(x, y1, fChromWidth2, ht);
 				
 				String chrName = mGrp2Names.get(b.mGrp2) + ":"; // e.g. 3: where 3 is chr3
 				int offset = 7*chrName.length() + 1;
 				
-				g.setFont(font2);
-				g.drawString(chrName, x-10,  y1-15);
-				g.setFont(font1);
-				g.drawString(b.name,x-10+offset, y1-15);
-				g.drawString(b.numHits + " anchors",x-10, y1-5);
+				g2.setFont(font2);
+				g2.drawString(chrName, x-10,  y1-15);
+				g2.setFont(font1);
+				g2.drawString(b.name,x-10+offset, y1-15);
+				g2.drawString(b.numHits + " anchors",x-10, y1-5);
 				if (isFpc) {
-					addCtgs(b,g,x,y1,chromWidth2,ht);
+					addCtgs(b,g2,x,y1,fChromWidth2,ht);
 				}
 				if (!savedRects) {
-					b.blockRect = new Rectangle(x,y1,chromWidth2,ht);
+					b.blockRect = new Rectangle(x,y1,fChromWidth2,ht);
 				}		
 			}
-			x += layerWidth;
+			x += fLayerWidth;
 		}
-		g.setColor(new Color(210,180,140));
-		g.fillRect(x, y0,chromWidth,chromHeight);
-		g.setColor(Color.black);
-		g.drawRect(x, y0, chromWidth, chromHeight);
-		g.drawString(refName,x, y0-15);
-		g.drawString(grpPfx + mRefChr,x, y0-5);
-		x += chromWidth + layerWidth - chromWidth2;
-		for (L=1; mLayout.containsKey(L); L++) {
+		// Draw ref chr
+		g2.setStroke(stroke0);
+		g2.setColor(Color.LIGHT_GRAY);  // CAS516 new Color(210,180,140)
+		g2.fillRect(x, y0,fChromWidth,chromHeight);
+		g2.setColor(Color.black);
+		g2.drawRect(x, y0, fChromWidth, chromHeight);
+		g2.drawString(refName,x, y0-15);
+		g2.drawString(grpPfx + mRefChr,x, y0-5);
+		
+		// Draw rectangles to the right
+		x += fChromWidth + fLayerWidth - fChromWidth2;
+		for (L=1; L<=farR; L++) {
 			for (Block b : mLayout.get(L)) {
 				int y1 = b.mS + y0;
-				int ht = (b.mE - b.mS);
+				int ht = b.mE - b.mS;
 				int co = colorOrder.get(b.unordered ? unGrp2 : b.mGrp2);
-				g.setColor(new Color(mColors.get(co)));
-				g.fillRect(x, y1, chromWidth2, ht);
-				g.setColor(Color.black);
-				g.drawRect(x, y1, chromWidth2, ht);
+				g2.setColor(new Color(mColors.get(co)));
+				g2.fillRect(x, y1, fChromWidth2, ht);
+				g2.setColor(Color.black);
+				
+				if (b.bInv) g2.setStroke(stroke2);
+				else        g2.setStroke(stroke1);
+				g2.drawRect(x, y1, fChromWidth2, ht);
 				String chrName = mGrp2Names.get(b.mGrp2) + ":";
 				int offset = 7*chrName.length() + 1;
-				g.setFont(font2);
-				g.drawString(chrName, x-10,  y1-15);
-				g.setFont(font1);
-				g.drawString(b.name,x-10+offset, y1-15);
-				g.drawString(b.numHits + " anchors",x-10, y1-5);
+				g2.setFont(font2);
+				g2.drawString(chrName, x-10,  y1-15);
+				g2.setFont(font1);
+				g2.drawString(b.name,x-10+offset, y1-15);
+				g2.drawString(b.numHits + " anchors",x-10, y1-5);
 				if (isFpc) {
-					addCtgs(b,g,x,y1,chromWidth2,ht);
+					addCtgs(b,g2,x,y1,fChromWidth2,ht);
 				}
 				if (!savedRects) {
-					b.blockRect = new Rectangle(x,y1,chromWidth2,ht);
+					b.blockRect = new Rectangle(x,y1,fChromWidth2,ht);
 				}				
 			} 
-			x += layerWidth;
+			x += fLayerWidth;
 		}	
 		savedRects = true;
 	}	
-	private void addCtgs(Block b, Graphics g, int x, int y, int w, int h) throws Exception {
+	private void addCtgs(Block b, Graphics2D g, int x, int y, int w, int h) throws Exception {
 		String[] ctgs = b.ctgs.split(",");
 		if (b.ctgSizes == null) {
 			b.ctgSizes = new int[ctgs.length];
@@ -377,21 +413,25 @@ public class Block2Frame extends JFrame
 
 		mLayout = new TreeMap<Integer,Vector<Block>>();
 
-		bpPerPx = mRefSize/blockMaxHeight;
+		bpPerPx = mRefSize/fBlockMaxHeight;
 		
 		// get the blocks in decreasing order of size.
 		// as we add each one to the list we assign it an index which is just its order in the list. 
 		mBlocks = new Vector<Block>();
-		if (!mReversed) {
-			rs = s.executeQuery("select idx,grp1_idx as grp2, start2 as start,end2 as end, blocknum,ctgs1 as ctgs," +
-					" start1 as s2, end1 as e2 from blocks where pair_idx=" + mPairIdx + 
-				" and grp2_idx=" + mGrpIdx + " order by (end2 - start2) desc");
+		String sql;
+		if (!mReversed) { // CAS516 add corr
+			sql ="select idx, grp1_idx as grp2, start2 as start, end2 as end, blocknum, ctgs1 as ctgs," +
+				" start1 as s2, end1 as e2, corr " +
+				" from blocks where pair_idx=" + mPairIdx + 
+				" and grp2_idx=" + mGrpIdx + " order by (end2 - start2) desc";
 		}
 		else {
-			rs = s.executeQuery("select idx, grp2_idx as grp2, start1 as start,end1 as end,blocknum,ctgs2 as ctgs, " +
-					" start2 as s2, end2 as e2 from blocks where pair_idx=" + mPairIdx + 
-			" and grp1_idx=" + mGrpIdx + " order by (end1 - start1) desc");		
+			sql="select idx, grp2_idx as grp2, start1 as start, end1 as end, blocknum, ctgs2 as ctgs, " +
+			   " start2 as s2, end2 as e2, corr " +
+			   " from blocks where pair_idx=" + mPairIdx + 
+			   " and grp1_idx=" + mGrpIdx + " order by (end1 - start1) desc";		
 		}
+		rs = s.executeQuery(sql);
 		while (rs.next()) {
 			int grp2 = rs.getInt("grp2"); //(unordered2 ? unGrp2 : rs.getInt("grp2"));
 			int start = rs.getInt("start");
@@ -401,8 +441,9 @@ public class Block2Frame extends JFrame
 			int blocknum = rs.getInt("blocknum");
 			int idx = rs.getInt("idx");
 			String ctgs = rs.getString("ctgs");
+			boolean isInv = (rs.getFloat("corr")<0); // CAS516 add
 			String blockName = Utilities.blockStr(mGrp2Names.get(grp2), mRefChr, blocknum); // CAS513 call blockStr
-			Block b = new Block(grp2,start/bpPerPx,end/bpPerPx,s2,e2,blockName, idx,ctgs,unordered2);
+			Block b = new Block(grp2, start/bpPerPx, end/bpPerPx, s2, e2, blockName, idx, ctgs, unordered2, isInv);
 			mBlocks.add(b);
 		}
 		rs.close();
@@ -410,11 +451,11 @@ public class Block2Frame extends JFrame
 		for (Block b : mBlocks) {
 			b.numHits = countBlockHits(b.idx,s);
 		}
-		// go through the blocks and make the layout
-		
+		// go through the blocks and make layout; find the first level where this block can fit
+		// similar algorithm as BlockView, so order is basically the same
 		for(int i = 0; i < mBlocks.size(); i++) {
 			Block b = mBlocks.get(i);
-			// find the first level where this block can fit
+			
 			int L;
 			for (L = 1; ;L++) {
 				if (!mLayout.containsKey(L)) {
@@ -452,10 +493,12 @@ public class Block2Frame extends JFrame
 			}
 			if (!mLayout.containsKey(L)) {
 				mLayout.put(L, new Vector<Block>());
+				if (L<0) farL=L;
+				else farR=L;
 			}
 			mLayout.get(L).add(b);
 		}
-
+/** CAS516 not necessary
 		for (int L = 1; ; L++) {
 			if (mLayout.containsKey(L)) {
 				if (!mLayout.containsKey(-L)) {
@@ -471,6 +514,7 @@ public class Block2Frame extends JFrame
 				break;
 			}
 		}
+**/
 		return true;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Layout blocks"); return false;}
@@ -527,8 +571,7 @@ public class Block2Frame extends JFrame
 		return rs.getInt("count");
 	}
 	private class Block {
-		int mS; int mE; /// on the reference, stored in *pixels*, so that the "overlaps"
-						// test can use a pixel gap
+		int mS; int mE;   // on the reference, stored in *pixels*, so that the "overlaps"
 		int mS2; int mE2; // on the query, stored as *basepairs*
 		int mGrp2; 
 		String name;
@@ -540,8 +583,10 @@ public class Block2Frame extends JFrame
 		int[] ctgNums = null;
 		int totalSize = 0;
 		boolean unordered;
+		boolean bInv;
 		
-		public Block(int _grp2, int _s, int _e, int _s2, int _e2, String _name, int _idx, String _ctgs,boolean _unord)
+		public Block(int _grp2, int _s, int _e, int _s2, int _e2, String _name, int _idx, 
+				String _ctgs, boolean _unord, boolean isInv)
 		{
 			mGrp2 = _grp2;
 			mS = _s;
@@ -552,6 +597,7 @@ public class Block2Frame extends JFrame
 			idx = _idx;
 			ctgs = _ctgs;
 			unordered = _unord;
+			bInv = isInv;
 		}
 		public boolean overlaps(Block b) {
 			return (Math.max(b.mS, mS) <= Math.min(b.mE,mE) + 30); // should match value in BlockViewFrame

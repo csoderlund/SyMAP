@@ -11,6 +11,7 @@
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+	.tx td {padding: 5px;}
 	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
     .ty td {border: 1px  solid black; padding: 3px; }
     top {vertical-align:text-top;}
@@ -121,7 +122,14 @@ if you use SyMAP in a paper, poster, or presentation.
 <table style="width: 95%"><tr><td style="text-align: left">
 <h1>Main display</h1>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-&rarr;For simplicity, sequence groups will be referred to as "Chromosome"", though they may be scaffolds or linkage groups.
+Terminology:
+<ul>
+<li>For simplicity, sequence groups will be referred to as "Chromosome"", though they may be scaffolds or linkage groups.
+<li>A <i>hit (or anchor)</i> is a matched sequence between two chromosomes.
+<li>A <i>block</i> is an approximately-collinear sequences of anchors. There may be small inverted regions within
+a block, or an inverted block may have small non-inverted regions.
+</ul>
+<center><font color=green><i><big>Click on any image in this document to see the closeup.</big></i></font></center>
 <p>
 The display in the image on the right is shown when the following is executed from the terminal:
 <pre>   ./viewSymap</pre>
@@ -139,7 +147,9 @@ The two view options beside <ttl>Display for All Pairs</ttl> will be activated.
 
 <p>By selecting a cell with synteny, the <ttl>Display for Selected Pair</ttl> buttons are activated.
 
-<td><a href="img/viewRosid.png"><img src="img/viewRosid.png"  alt="viewRosid" style="border: 1px solid black; width: 550px"></a>
+<td>
+
+<br><a href="img/viewRosid.png"><img src="img/viewRosid.png"  alt="viewRosid" style="border: 1px solid black; width: 550px"></a>
 </table>
 
 <a id="pair"></a>
@@ -264,9 +274,10 @@ selecting <u>reverse</u>.
 <table>
 <tr>
 <td><a href="img/block.png"><img src="img/block.png" alt="block" style="border: 1px solid black; width: 500px"></a>
-<td>Clicking a chromosome pops up a window of the chromosome as shown below. Clicking
-a block pops up a 2D view.
-<p><a href="img/block-chr.png"><img src="img/block-chr.png"  alt="block chr" style="border: 1px solid black; width: 290px"></a>
+<td>Clicking a chromosome displays a window of the chromosome as shown below; the dotted border
+indicates an inverted block (i.e. the majority of hits are inverted). Clicking
+a block displays its 2D view.
+<br><a href="img/block-chr.png"><img src="img/block-chr.png"  alt="block chr" style="border: 1px solid black; width: 260px"></a>
 </table>
 
 <!------------------------------------------------->
@@ -312,18 +323,17 @@ To add/remove from the 2D or Dot Plot
 views, open the Circle view, make the change, and then re-open the 2D or Dot Plot.
 </ul>
 <p>
-<ttl>Instructions</ttl>: As the mouse moves over various
-components, instructions or information for that component are shown in the Instruction box.
+<ttl>Informations</ttl>: As the mouse moves over various
+components, instructions or information for that component are shown in the <ttl>Information</ttl> box.
 <p>
 <ttl>Views:</ttl> The buttons in the lower-left corner of the window change the synteny view in the right panel.
 <p>
 <ttl>Download Blocks</ttl>: Exports a table of all of the synteny block coordinates for the selected species; see also <a href="#data_download">Data Download</a>.
 <p>
-Click the minus (<ttl><big>-</big></ttl>) button next to a project name or the Instruction box,
+Click the minus (<ttl><big>-</big></ttl>) button next to a project name or the <ttl>Information</ttl> box,
 and that section will be hidden;
 the minus sign will change to a plus.
-Click the plus (<ttl><big>+</big></ttl>) button to show the project or Instruction box..
-
+Click the plus (<ttl><big>+</big></ttl>) button to show the project or <ttl>Information</ttl> box.
 
 <p><b>Right panel:</b>
 The right panel shows the synteny display for the species and chromosomes selected on the left.
@@ -428,15 +438,30 @@ a single hit (or multiple hits very close together), while the gray lines are sp
 	<img src="img/2d-closeup.png" alt="2d-closeup" style="border: 1px solid black; width: 500px"></a>
 </table>
 
-<table style="width: 70%;">
-<tr><td>
-Hovering the mouse over a hit or gene will show its information in the <ttl>Instruction</ttl> box,
-as shown here for Hit #269294. Hovering the mouse over a gene will shown the gene information in
-the instruction box.
-<td><a href="img/2d-hit.png"><img src="img/2d-hit.png" alt="2d-hit" style="border: 1px solid black; width: 230px"></a>
-<tr><td>Right clicking on a yellow annotation box results in a popup, as shown on the far right. Besides the
-gene information, it also shows the list of exons. It is useful for copying all or part of the description, and viewing the
-information when the box is partially hidden.
+<table class="tx">
+<tr>
+<td>
+Hovering the mouse over a hit or gene will show its information in the <ttl>Information</ttl> box.
+<p>In the image on the right:
+<br><ttl>Inv</ttl> indicates that it is part of an inverted block.
+<td>
+<ttl>gN</ttl> (<ttl>N={0,1,2}</ttl>) indicates that the hit overlaps an exon on one side, or two sides
+or none.
+<p><ttl>rM</ttl> (<ttl>M&ge;0</ttl>) indicates that it is part of a colinear run of size M.
+Colinear runs can be queried on in <a href="#annotsearch">SyMAP Queries</a>.
+
+<td style="width:240px;>
+<a href="img/2d-hit.png"><img src="img/2d-hit.png" alt="2d-hit" style="border: 1px solid black; width: 240px"></a>
+<tr><td colspan=3>&nbsp;
+
+<tr>
+<td style="width:230px; vertical-align:text-top;">To view the popup of the gene description shown on the right,
+either:
+<br>(1) right-click on a yellow gene description box, or
+<br>(2) right-click on the gene in the track (the gene will be showing in the <ttl>Information</ttl> box from hovering over it).
+<td style="width:230px;vertical-align:text-top;">Besides the
+gene information, it also shows the list of exons. It is useful for copying all or part of the description. It does not
+go away until the <ttb>OK</ttb> button is selected. Any number of gene description popups can be present.
 <td><a href="img/2d-desc.png"><img src="img/2d-desc.png" alt="2d-desc" style="border: 1px solid black; width: 250px"></a>
 </table>
 <p>
@@ -658,10 +683,12 @@ The Query option are fully explained in the <ttb>Help</ttb> popup.
 The following describes two special features:
 <p><ttl>Collinear genes N&gt;= N</ttl>
 <br>
-Return only hits which are part of a pair of N aligning genes having no intervening
-non-aligning genes. There is a column called "RunSize" that provides the number
-of adjacent aligning genes. Note that this is not the same as synteny blocks, which
-allows intervening non-aligning genes.
+Return only hits which are part of  N aligning genes pairs having no intervening
+non-aligning genes. There may be intervening hits that do not align to genes,
+and a gene in the colinear run can have an aligning hit to only the intron region.
+There is a column called "RunSize" that provides the number
+of adjacent aligning genes.
+In contrast, synteny blocks allows intervening non-aligning genes.
 <p><ttl>Filter putative gene families (PgeneFs)</ttl>
 <br>
 Using the hits that pass the hit filters, SyMAP constructs putative gene families (PgeneFs)
@@ -693,23 +720,31 @@ and rearrange them by dragging the header boxes.
 
 <h4>Button functions</h4>
 
-<div style="width:700px;margin-top:10px; margin-left:15px;">
+<table class="tx">
+<tr><td style="vertical-align: text-top;">
 <ttb>Align sequences</ttb>:
 Sequences of the selected hit are written out and a multiple alignment is created
-using MUSCLE (Edgar 2004 NAR:32).
-<p>
+using MUSCLE (Edgar 2004 NAR:32). The figure on the right shows the MUSCLE alignment of
+two genes from Cabbage
+Chr01 and genes from B.rapa on Chr08 and Chr01.
+<p>&nbsp;<p>
 <ttb>Show Synteny</ttb> :
 Brings up a SyMAP 2-track view for each selected entry, so the hit
-can be seen in their full chromosomal context. The hit is initially padded to each side
+can be seen in their full chromosomal context.
+The hit is initially padded to each side
 by the margin amount indicated (default 50kb), but you can easily zoom further out in the 2-track views.
-<p>
+<p>As shown on the right, the selected hit will be highlighted in green.
+This view does not have the left side panel with the <ttl>Information</ttl> box,
+so the hover information is written along the bottom.
+<td>
+<a href="img/query_muscle.png"><img src="img/query_muscle.png" alt="query muscle" style="border: 1px solid black; width: 450px"></a>
+<p><a href="img/query_synteny.png"><img src="img/query_synteny.png" alt="query synteny" style="border: 1px solid black; width: 450px"></a>
+</table>
 <ttb>Export CSV</ttb>:
 Saves the selected hits (or entire table) using the selected set of columns to a CSV format suitable for import into Excel.
 <p>
 <ttb>Save as Fasta</ttb>: Sequences from the selected hits (or entire table) are written to a Fasta file. Both sides of each hit
 are written, using the start/end coordinates shown in the table.
-</div>
-
 <h3>Results Table Columns</h3>
 You can add/remove columns using the <ttb>Select Columns</ttb> button at the bottom. This
 opens up a column-selection section. The columns are explain the the <ttb>Help</ttb> button on the table.

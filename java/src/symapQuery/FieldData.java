@@ -2,19 +2,25 @@ package symapQuery;
 
 /*************************************************
  * The columns for the query result table
+ * Added in TableDataPanel. Database query in DBdata
  */
 import java.util.Iterator;
 import java.util.Vector;
 
 public class FieldData {
  	// type is all Integer, included Block, see Column Comparator, which sorts it correctly
-	// leave Q.rowCol, though for placement, though the actual row is computed in DBdata (CAS514 HitIdx->Hit#, #Gene->Gene#)
-	private static final String [] GENERAL_COLUMNS =	 {Q.rowCol, "PgeneF", "PgFSize", "Hit#", Q.blockCol, "Block\nScore","Run\nSize"};
-	private static final Boolean [] GENERAL_COLUMN_DEF =  {true   , false   , false     , true   , true      , false        ,false}; // CAS513 HitID=f, Score=t
+	// leave Q.rowCol for placement, the actual row is computed in DBdata (CAS514 HitIdx->Hit#, #Gene->Gene#)
+	// TableDataPanel.createGeneralSelectPanel expects 4 hit columns and the Pg prefix
+	private static final String [] GENERAL_COLUMNS =	 
+		{Q.rowCol, Q.blockCol, "Block\nScore","Run \nSize ","PgeneF", "PgFSize",
+		"Hit#",    "Hit\n%Id", "Hit\n%Sim","Hit\n#Merge"}; // CAS516 add these 4
 	
-	private static final String [] SPECIES_COLUMNS = {Q.chrCol, Q.startCol,Q.endCol, Q.geneNCol};
-	private static final Class <?> [] SPECIES_TYPES = {String.class, Integer.class, Integer.class, Integer.class};
-	private static final Boolean [] SPECIES_COLUMN_DEF =  {false, false, false     , false};
+	private static final Boolean [] GENERAL_COLUMN_DEF =  
+		{true, true, true, false, false, false, true, false, false, false}; // CAS513 HitID=f, Score=t
+	
+	private static final String [] SPECIES_COLUMNS = {Q.chrCol, Q.startCol, Q.endCol, Q.lenCol, Q.geneNCol};
+	private static final Class <?> [] SPECIES_TYPES = {String.class, Integer.class, Integer.class,Integer.class, Integer.class};
+	private static final Boolean [] SPECIES_COLUMN_DEF =  {false, false, false, false , false};
 	
 	//****************************************************************************
 	//* Static methods
@@ -28,16 +34,16 @@ public class FieldData {
 	
 	// XXX If change this, change number in Q.java, as they are the numeric index into ResultSet
 	// Columns loaded from database, do not correspond to query table columns
-	// The single start/end is not used by pairs
-	private static int orphanFields = 6; // Columns loaded for orphans
+	private static int orphanFields = 6; // MySQL columns loaded for orphans
 	
+	// MySQL fields to load
 	public static FieldData getFields() {
 		FieldData fd = new FieldData();
 		// type not used, see above       sql.table.field    order#		Description  
 		fd.addField(String.class, Q.PA, "idx",     Q.AIDX,       "Annotation idx");
 		fd.addField(String.class, Q.PA, "grp_idx", Q.AGIDX,      "Annotation grp idx");
-		fd.addField(String.class, Q.PA, "start",   Q.ASTART,     "Annotation start");
-		fd.addField(String.class, Q.PA, "end",     Q.AEND,       "Annotation end");
+		fd.addField(String.class, Q.PA, "start",   Q.ASTART,     "Annotation or Hit start");
+		fd.addField(String.class, Q.PA, "end",     Q.AEND,       "Annotation or Hit end");
 		fd.addField(String.class, Q.PA, "name",    Q.ANAME,      "Annotation attributes");
 		fd.addField(Integer.class,Q.PA, "genenum", Q.AGENE,      "Annotation genenum");
 		
@@ -51,6 +57,9 @@ public class FieldData {
 		fd.addField(Integer.class,Q.PH, "end1",     Q.GRP1END,   "Group 1 end");
 		fd.addField(Integer.class,Q.PH, "end2",     Q.GRP2END,   "Group 2 end");
 		fd.addField(String.class, Q.PH, "runsize",  Q.RSIZE,     "Collinear run size");
+		fd.addField(String.class, Q.PH, "pctid",    Q.PID,     	 "Hit Average %Identity"); // CAS516 add these 3
+		fd.addField(String.class, Q.PH, "cvgpct",   Q.PSIM,      "Hit Average %Similarity");
+		fd.addField(String.class, Q.PH, "countpct", Q.HCNT,      "Merged hits");
 
 		fd.addField(String.class, Q.B, "blocknum",  Q.BNUM,      "Block Number");
 		fd.addField(String.class, Q.B, "score",     Q.BSCORE,    "Block Score (#Anchors)");
