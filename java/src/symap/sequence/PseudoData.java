@@ -71,6 +71,11 @@ public class PseudoData {
 		Collections.sort(annotations,
 			new Comparator<Annotation>() {
 				public int compare(Annotation a1, Annotation a2) { 
+					if (a1.isGene() && a2.isGene()) {
+						if (a1.getGeneNum()==a2.getGeneNum()) return a1.getStart()-a2.getStart();
+							return a1.getGeneNum()-a2.getGeneNum(); // CAS517 sort on gene#
+					}
+					
 					return (a1.getType() - a2.getType()); 			  
 				}
 			}

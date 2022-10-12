@@ -58,6 +58,51 @@
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
 
+If you are using SyMAP and want to update to a new version, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
+
+<h3>Release: v5.1.7 (12Oct22)</h3>
+This release concentrates on making the 2D display provide more information.
+<p>For existing SyMAP databases: (1) See <u>overlapping genes</u>.
+(2) If you have customized hit or gene colors, you will need to reset them.
+<ul>
+<li>Processing
+<ul>
+<li><u>Overlapping genes</u> have been numbered with the same gene number; now they are given a suffix, e.g.
+Gene #1011a, Gene #1011b. For existing databases, the annotation must be re-loaded to get this feature; then
+the synteny needs to be recomputed (existing MUMmer files will be used).
+<li><ttc>ConvertEnsembl</ttc> has a new option "-u" to use the sequence names from the FASTA file.
+</ul>
+
+<li>Chromosome Explorer:
+<ul>
+<li>Colors (Color wheel in upper right corner):
+<ul>
+<li>Hits are now colored brown (hits have the same strand on both sequences) or green (different strands).
+<li>Genes can now be colored according to if they are on the positive or negative strand,
+where the default is dark blue (positive) and purple (negative).
+<li>The FPC options are no longer shown if there is no FPC in the 2D display.
+</ul>
+
+<li>Annotation
+<ul>
+<li>Overlapping genes are now staggered, i.e. the exons of one overlapping gene will be displayed further out than the other.
+<li>When right-clicking on a gene or its yellow text box, the results now show the hits to the gene
+along with the gene information and exons.
+<li>When right-click on a hit-wire (between two chromosomes), a popup of its merged hits is shown (or single hit).
+<li>Tiny bug fix: Yellow text box: if one clicked on the outer edge, it would popup the wrong gene.
+</ul>
+</ul>
+
+<li>SyMAP Query:
+<ul>
+<li>The Colinear genes was filtering on &gt; instead of &gt;=. It also has new filter of "=";
+hence, you can set the chromosomes and the Colinear genes to get all colinear runs of N on a specific
+pair of chromosomes (e.g. 3.1.9).
+<li>SyMAP does a better job of making filters inactive if they will not be used or have not been "checked".
+</ul>
+</ul>
+
+
 <h3>Release: v5.1.6 (20Sept22)</h3>
 <ul>
 <li>Blocks

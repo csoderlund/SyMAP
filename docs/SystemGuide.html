@@ -110,6 +110,7 @@ The following discusses building a SyMAP v5 database.
 					<li><a href="#fpc">Working with FPC Files</a>
 				</ul>
 		</ul>
+	<li><a href="#update">Update SyMAP</a>
 	<li><a href="#alg">How SyMAP Works</a>
 	<li><a href="#refs">References</a>
 </ul>
@@ -857,6 +858,26 @@ these default locations.
 <p>
 Since the usage of FPC-Seq is rare now, new releases are only quickly tested on the Demo FPC-Seq. If you
 run into any problems, please do not hesitate to contact symap@agcol.arizona.edu.
+
+<a id="update"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Update SyMAP</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+If you have been working with SyMAP and have existing projects, you can update to a new SyMAP version by:
+<ul>
+<li>Download SyMAP.
+<li>Put it in a temporary location and untar it.
+<li>Move <tt>symap_5/java/jar/symap.jar</tt> to the <tt>java/jar</tt> location of your permanent SyMAP.
+</ul>
+Read the <a href="Release.html">Release notes</a> to see if there are any further changes; it will
+state at the beginning of any release what may need to be done.  Some examples are:
+<ul>
+<li>There may be a database update, which will prompt you that it is being done - let it do it. However,
+you generally cannot go back to the older SyMAP jar file once done.
+<li>New or update scripts in the <tt>/script</tt> directory that may be useful to you.
+<li>Occasionally you will need to reload the annotation and synteny to get new features, which is why it
+is wise to keep your previously run MUMmer files.
+</ul>
 
 <a id="alg"></a>
 <table style="width: 95%"><tr><td style="text-align: left">

@@ -2,6 +2,7 @@ package symap.mapper;
 
 import java.util.List;
 import java.util.RandomAccess;
+import java.awt.event.MouseEvent;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -75,6 +76,7 @@ public abstract class AbstractHitData {
 	// empty here, to be defined by inheritor (for pseudo-pseudo closeup)
 	public void getHitsInRange(List<AbstractHitData> hits, int start, int end, boolean swap) { }
 	public HitData[] getHitData() { return null; }
+	public boolean doPopupDesc(MouseEvent e) {return false;}
 	
 	public void getMinMax(int[] minMax, int start, int end, boolean swap) { }
 	

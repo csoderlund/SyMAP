@@ -174,6 +174,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			if (Utilities.hasCommandLineOption(args, "-t")) {// not shown in -h help
 				System.out.println("-t Debug output");
 				Constants.TRACE = true;
+				SyMAP.TRACE = true; // CAS517
+				TEST_TRACE = true; 
 			}
 			if (Utilities.hasCommandLineOption(args, "-o")) {// CAS505
 				System.out.println("-o Use the original version of draft ordering");

@@ -75,12 +75,10 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 	protected DatabaseReader dbReader;
 	
 	protected boolean hasInit = false;
-	protected boolean isFirst2DView = true;
+	// protected boolean isFirst2DView = true; CAS517 not used
 	protected boolean isFirstDotplotView = true;
 	protected int selectedView = 1;
 	protected int screenWidth, screenHeight;
-	
-	//	private static GraphicsConfiguration preferredGraphicsConfig = SimpleUniverse.getPreferredConfiguration();
 	
 	public SyMAPFrameCommon(DatabaseReader dbReader) {
 		super("SyMAP "+SyMAP.VERSION);
@@ -211,14 +209,13 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			if (mapper.hasChanged()) {
 				// Repaint project panels
 				controlPanel.repaint();
+				
 				// Regenerate main display
-				isFirst2DView = true;
 				isFirstDotplotView = true;
 				btnShow2D.setEnabled( mapper.getNumVisibleTracks() > 0 );
 				btnShowDotplot.setEnabled( mapper.getNumVisibleTracks() > 0 );
 				btnShowCircle.setEnabled( true ); // CAS512 mapper.getNumVisibleTracks() > 0
-				if (viewControlBar.getSelected() == VIEW_CIRC)
-				{
+				if (viewControlBar.getSelected() == VIEW_CIRC){
 					regenerateCircleView();
 				}
 			}
@@ -353,10 +350,32 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 	}
 		
 	private boolean regenerate2DView() {
-		try {
-			if (symap2D == null)
+		try {	
+			TrackCom ref = mapper.getReferenceTrack();
+			TrackCom[] selectedTracks = mapper.getVisibleTracks(); // none reference tracks
+			
+			if (selectedTracks.length > 4 &&
+					JOptionPane.showConfirmDialog(null,"This view may take a while to load and/or cause SyMAP to run out of memory, try anyway?","Warning",
+						JOptionPane.YES_NO_OPTION,JOptionPane.ERROR_MESSAGE) != JOptionPane.YES_OPTION) 
+				return false;
+			
+			if (SyMAP.TRACE) System.out.println("*****Regenerate 2d " + selectedTracks.length);
+			
+			if (symap2D == null) { // CAS517 move after get tracks 
 				symap2D = new SyMAP(dbReader, helpBar, null);
 			
+				//CAS517 add - so will include FPC colors and Frame Markers if true
+				if (symap2D.getFrame()!=null) {
+					boolean hasFPC=false;
+					if (ref.isFPC()) hasFPC=true; 
+					else {
+						for (int i = 0;  i < selectedTracks.length;  i++) {
+							if (selectedTracks[i].isFPC()) hasFPC=true;
+						}
+					}
+					symap2D.setHasFPC(hasFPC); // This calls setColors, which has to be after hasFPC, but has lots of non-obvious consequences
+				}
+			}
 			SyMAPFrame frame = symap2D.getFrame();
 			if (frame == null) {
 				System.err.println("SyMAPFrame3D:  Error creating 2D frame!");
@@ -364,68 +383,48 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			}
 			
 			DrawingPanel dp = symap2D.getDrawingPanel();
+			dp.setFrameEnabled(false);// Disable 2D rendering
+			dp.resetData(); // clear caches
+			symap2D.getHistory().clear(); // clear history
+			dp.setMaps(0);
 			
-			// start the 2D over when they go back and forth
-			if (true/*|| isFirst2DView*/) { 
-				// Get selected tracks
-				TrackCom ref = mapper.getReferenceTrack();
-				TrackCom[] selectedTracks = mapper.getVisibleTracks();
+			// Setup 2D
+			int position = 1;
+			for (int i = 0;  i < selectedTracks.length;  i++) {
+				TrackCom t = selectedTracks[i];
 				
-				if (selectedTracks.length > 4 &&
-						JOptionPane.showConfirmDialog(null,"This view may take a while to load and/or cause SyMAP to run out of memory, try anyway?","Warning",
-							JOptionPane.YES_NO_OPTION,JOptionPane.ERROR_MESSAGE) != JOptionPane.YES_OPTION)
-				{
-					return false;
+				// Add track
+				if (t.isPseudo())
+					dp.setSequenceTrack( position++, t.getProjIdx(), t.getGroupIdx(), t.getColor() );
+				else {
+					String contigs = Mapper.getContigListForBlocks(
+							mapper.getBlocksForTracks( t.getGroupIdx(), ref.getGroupIdx() ));
+					dp.setBlockTrack( position++, t.getProjIdx(), "Chr " + t.getGroupName(), contigs, t.getColor() );
 				}
 				
-				// Disable 2D rendering
-				dp.setFrameEnabled(false);
-				
-				// Clear existing
-				dp.resetData(); // clear caches
-				symap2D.getHistory().clear(); // clear history
-				dp.setMaps(0);
-				
-				// Setup 2D
-				int position = 1;
-				for (int i = 0;  i < selectedTracks.length;  i++) {
-					TrackCom t = selectedTracks[i];
-					
-					// Add track
-					if (t.isPseudo())
-						dp.setSequenceTrack( position++, t.getProjIdx(), t.getGroupIdx(), t.getColor() );
+				// Add alternating reference track
+				if (selectedTracks.length == 1 || selectedTracks.length-1 != i) { // middle tracks
+					if (ref.isPseudo())
+						dp.setSequenceTrack( position++, ref.getProjIdx(), ref.getGroupIdx(), ref.getColor() );
 					else {
+						// Get contigs for left track
 						String contigs = Mapper.getContigListForBlocks(
-								mapper.getBlocksForTracks( t.getGroupIdx(), ref.getGroupIdx() ));
-						dp.setBlockTrack( position++, t.getProjIdx(), "Chr " + t.getGroupName(), contigs, t.getColor() );
-					}
-					
-					// Add alternating reference track
-					if (selectedTracks.length == 1 || selectedTracks.length-1 != i) { // middle tracks
-						if (ref.isPseudo())
-							dp.setSequenceTrack( position++, ref.getProjIdx(), ref.getGroupIdx(), ref.getColor() );
-						else {
-							// Get contigs for left track
-							String contigs = Mapper.getContigListForBlocks(
-									mapper.getBlocksForTracks( ref.getGroupIdx(), t.getGroupIdx() ));
-							// Get contigs for right track if present
-							if (i+1 < selectedTracks.length)
-								contigs += Mapper.getContigListForBlocks(
-										mapper.getBlocksForTracks( ref.getGroupIdx(), selectedTracks[i+1].getGroupIdx() ));
-							dp.setBlockTrack( position++, ref.getProjIdx(), "Chr " + ref.getGroupName(), contigs, ref.getColor() );
-						}
+								mapper.getBlocksForTracks( ref.getGroupIdx(), t.getGroupIdx() ));
+						// Get contigs for right track if present
+						if (i+1 < selectedTracks.length)
+							contigs += Mapper.getContigListForBlocks(
+									mapper.getBlocksForTracks( ref.getGroupIdx(), selectedTracks[i+1].getGroupIdx() ));
+						dp.setBlockTrack( position++, ref.getProjIdx(), "Chr " + ref.getGroupName(), contigs, ref.getColor() );
 					}
 				}
-				dp.setMaps( position - 2 );
 			}
+			dp.setMaps( position - 2 );
 			
 			// Enable 2D display
 			cardPanel.add(frame.getContentPane(), Integer.toString(VIEW_2D)); // ok to add more than once
 			setView(VIEW_2D);
 			
 			dp.amake(); // redraw and make visible
-			
-			isFirst2DView = false;
 			return true;
 		}
 		catch (OutOfMemoryError e) { 

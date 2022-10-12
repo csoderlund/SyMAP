@@ -152,8 +152,8 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 		 int i;
 		 Point mtLocation = mt.getLocation();
 		 Point stLocation = st.getLocation();
-		 int mtOrient = mapper.getOrientation(mt);
-		 int stOrient = mapper.getOrientation(st);
+		 int mtOrient = mapper.getTrackPosition(mt);
+		 int stOrient = mapper.getTrackPosition(st);
 
 		 List<PseudoMarkerHit> hMrkHits = new LinkedList<PseudoMarkerHit>();
 		 List<PseudoBESHit> hBesHits = new LinkedList<PseudoBESHit>();
@@ -308,7 +308,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 if (mh.isHighlighted() || isHighlighted())
 				 return Mapper.markerLineHighlightColor;
 			 if (mapper.getHitFilter().getColorByStrand()) 
-				 return data.getOrientation() ? Mapper.posOrientLineColor : Mapper.negOrientLineColor;
+				 return data.isSameOrient() ? Mapper.posOrientLineColor : Mapper.negOrientLineColor;
 			 return Mapper.markerLineColor;
 		 }
 		 
@@ -344,7 +344,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 if (isVisible() && !isFiltered()) {
 				 Point2D sp = getSequenceCPoint(data.getStart2(),data.getEnd2(),stOrient,stLocation);
 				 Point2D mp = mh.getCPoint(mt,mtOrient,mtLocation,showJoinDot);
-				 mh.paintComponent(g2,mt,mtLocation,sp,showJoinDot,mapper.getHitFilter().getColorByStrand(),data.getOrientation());
+				 mh.paintComponent(g2,mt,mtLocation,sp,showJoinDot,mapper.getHitFilter().getColorByStrand(),data.isSameOrient());
 				 if (mp != null) {
 					 g2.setPaint(getCColor()); 
 					 hitLine.setLine(sp,mp); 
@@ -438,7 +438,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 
 		 public String getType() { return BES_TYPE; }
 		 public byte getBES() { return data.getBES(); }
-		 public boolean getOrientation() { return data.getOrientation(); }
+		 public boolean getOrientation() { return data.isSameOrient(); }
 		 public boolean isBlockHit() { return data.isBlockHit(); }
 
 		 public void set() {
@@ -538,7 +538,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 if (bh.isHighlighted() || isHighlighted())
 				 return Mapper.besLineHighlightColor;
 			 if (mapper.getHitFilter().getColorByStrand()) 
-				 return data.getOrientation() ? Mapper.posOrientLineColor : Mapper.negOrientLineColor;
+				 return data.isSameOrient() ? Mapper.posOrientLineColor : Mapper.negOrientLineColor;
 			 return Mapper.besLineColor;
 		 }
 		 

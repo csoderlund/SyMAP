@@ -107,12 +107,12 @@ public class SequenceFilter extends Filter {
 		flippedCheck = new JCheckBox("Flip"); 				
 		flippedCheck.setSelected(Sequence.DEFAULT_FLIPPED); 
 		
-		frameCheck = new JCheckBox("Show Framework Markers");
-		geneCheck = new JCheckBox("Show Genes");
-		gapCheck = new JCheckBox("Show Gaps");
+		frameCheck 		= new JCheckBox("Show Framework Markers");
+		geneCheck 		= new JCheckBox("Show Genes");
+		gapCheck 		= new JCheckBox("Show Gaps");
 		centromereCheck = new JCheckBox("Show Centromere");
-		rulerCheck = new JCheckBox("Show Ruler");
-		annotCheck = new JCheckBox("Show Annotation Descriptions");
+		rulerCheck 		= new JCheckBox("Show Ruler");
+		annotCheck 		= new JCheckBox("Show Annotation Descriptions");
 
 		frameCheck.setSelected(Sequence.DEFAULT_SHOW_FRAME && frameCheck.isEnabled());
 		geneCheck.setSelected(Sequence.DEFAULT_SHOW_GENE && geneCheck.isEnabled());
@@ -175,7 +175,7 @@ public class SequenceFilter extends Filter {
 		
 		addToGrid(contentPane, gridbag, constraints, gapCheck, GridBagConstraints.REMAINDER);
 		addToGrid(contentPane, gridbag, constraints, centromereCheck, GridBagConstraints.REMAINDER);
-		addToGrid(contentPane, gridbag, constraints, frameCheck, GridBagConstraints.REMAINDER);
+		if (dp.hasFPC()) addToGrid(contentPane, gridbag, constraints, frameCheck, GridBagConstraints.REMAINDER);
 
 		addToGrid(contentPane, gridbag, constraints, new JSeparator(), GridBagConstraints.REMAINDER);
 		
@@ -203,17 +203,17 @@ public class SequenceFilter extends Filter {
 		scoreValueCheck.addChangeListener(this);	
 		
 		/** Popup **/
-		fullSequencePopupItem = new JMenuItem("Full Sequence");
-		flippedPopupCheck = new JCheckBoxMenuItem("Flip Sequence"); 
-		annotPopupCheck = new JCheckBoxMenuItem("Annotation Descriptions"); 
-		framePopupCheck = new JCheckBoxMenuItem("Framework Markers"); 
-		genePopupCheck = new JCheckBoxMenuItem("Genes"); 
-		hitLenPopupCheck = new JCheckBoxMenuItem("Hit Length"); 
-		gapPopupCheck = new JCheckBoxMenuItem("Gaps"); 
-		centromerePopupCheck = new JCheckBoxMenuItem("Centromere"); 
-		rulerPopupCheck = new JCheckBoxMenuItem("Ruler"); 
-		scoreLinePopupCheck = new JCheckBoxMenuItem("Hit %Id Bar");  // CAS515 Score is the %Id		
-		scoreValuePopupCheck = new JCheckBoxMenuItem("Hit %Id Value"); 	// ditto
+		fullSequencePopupItem 	= new JMenuItem("Full Sequence");
+		flippedPopupCheck 		= new JCheckBoxMenuItem("Flip Sequence"); 
+		annotPopupCheck			= new JCheckBoxMenuItem("Annotation Descriptions"); 
+		framePopupCheck 		= new JCheckBoxMenuItem("Framework Markers"); 
+		genePopupCheck 			= new JCheckBoxMenuItem("Genes"); 
+		hitLenPopupCheck 		= new JCheckBoxMenuItem("Hit Length"); 
+		gapPopupCheck 			= new JCheckBoxMenuItem("Gaps"); 
+		centromerePopupCheck 	= new JCheckBoxMenuItem("Centromere"); 
+		rulerPopupCheck 		= new JCheckBoxMenuItem("Ruler"); 
+		scoreLinePopupCheck 	= new JCheckBoxMenuItem("Hit %Id Bar");  // CAS515 Score is the %Id		
+		scoreValuePopupCheck 	= new JCheckBoxMenuItem("Hit %Id Value"); 	// ditto
 	
 	/** Sequence show options **/
 		popupTitle.setText("Sequence Show Options:"); 
@@ -224,7 +224,7 @@ public class SequenceFilter extends Filter {
 			
 		popup.add(gapPopupCheck); 
 		popup.add(centromerePopupCheck); 
-		popup.add(framePopupCheck); 
+		if (dp.hasFPC()) popup.add(framePopupCheck); // CAS517
 		
 		popup.add(rulerPopupCheck);
 		popup.add(hitLenPopupCheck); 

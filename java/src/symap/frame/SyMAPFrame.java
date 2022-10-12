@@ -31,28 +31,27 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener
 	public SyMAPFrame(ControlPanel cp, DrawingPanel dp, HelpBar hb, 
 			boolean showHelpBar, // for 3D
 			PersistentProps persistentProps) {
-		super(/*FRAME_TITLE*/"SyMAP "+SyMAP.VERSION);
+		super("SyMAP "+SyMAP.VERSION);
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		this.cp = cp;
 		this.dp = dp;
 		this.hb = hb;
-		if (DISPLAY_SIZE_COOKIE != null && persistentProps != null)     
+		if (persistentProps != null) {  // CAS517 was checking for null DISPLAY_ values
 			setSizeProp(persistentProps.copy(DISPLAY_SIZE_COOKIE));
-		if (DISPLAY_POSITION_COOKIE != null && persistentProps != null) 
 			setLocationProp(persistentProps.copy(DISPLAY_POSITION_COOKIE));
-
+		}
 		dp.setListener(this);
 
 		Container container = getContentPane();
 		container.setLayout(new BorderLayout());
 
 		JPanel bottomPanel = new JPanel(new BorderLayout());
-		if (cp != null /*&& HAS_CONTROL_PANEL*/) 
+		if (cp != null) 
 			bottomPanel.add(cp,BorderLayout.NORTH);
 		bottomPanel.add(dp.getView(),BorderLayout.CENTER);
 
 		container.add(bottomPanel,BorderLayout.CENTER);
-		if (hb != null && showHelpBar/*&& HAS_HELPBAR*/) 
+		if (hb != null && showHelpBar) 
 			container.add(hb, BorderLayout.SOUTH);
 
 		setSizeAndLocationByProp(Utilities.getScreenBounds(this));
@@ -69,8 +68,7 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener
 			int width = Math.min(1000, 300 + 300*nMaps + 400*nAnnots);
 			d.setSize(width, 900);
 			setSize(d);
-			// CAS512 super.show();
-			super.setVisible(true);
+			super.setVisible(true); // CAS512 super.show();
 			if (dp.tracksSet())
 				dp.amake();
 			else
@@ -81,15 +79,9 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener
 
 	public void hideX() {
 		dp.closeFilters();
-		// CAS512 super.hide(); 
-		super.setVisible(false);
+		super.setVisible(false); // CAS512 super.hide(); 
 	}
 
-	/**
-	 * Method <code>setFrameEnabled</code> sets the frame to be enabled/disabled.
-	 *
-	 * @param enable a <code>boolean</code> value
-	 */
 	public void setFrameEnabled(boolean enable) {
 		if (enable) {
 			dp.getParent().setCursor(SyMAPConstants.DEFAULT_CURSOR); 
@@ -112,17 +104,11 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener
 		JOptionPane.showMessageDialog(this,message,"Error",JOptionPane.ERROR_MESSAGE);
 	}
 
-	public Frame getFrame() {
-		return (Frame)this;
-	}
+	public Frame getFrame() 				{return (Frame)this;}
 
-	public ControlPanel getControlPanel() {
-		return cp;
-	}
+	public ControlPanel getControlPanel() 	{return cp;}
 
-	public DrawingPanel getDrawingPanel() {
-		return dp;
-	}
+	public DrawingPanel getDrawingPanel() 	{return dp;}
 
 	public void keyPressed(KeyEvent e) {
 		if (e.isAltDown() && e.isControlDown() && e.getKeyCode() == KeyEvent.VK_C && dp != null)

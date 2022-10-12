@@ -24,7 +24,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 /**
- * Class <code>RGBAChooserPanel</code> is based of of the DefaultRGBChooserPanel with
+ * Class RGBAChooserPanel is based of of the DefaultRGBChooserPanel with
  * an added slider and spinner for the alpha value (optional).
  *
  * @see AbstractColorChooserPanel
@@ -42,92 +42,69 @@ public class RGBAChooserPanel extends AbstractColorChooserPanel implements Chang
     private boolean doAlpha;
 
     /**
-     * Creates a new <code>RGBAChooserPanel</code> instance in
-     * which alpha is enabled.
-     *
+     * Creates a new RGBAChooserPanel instance in which alpha is enabled.
      */
     public RGBAChooserPanel() { 
-	this(true);
+    	this(true);
     }
 
     /**
-     * Creates a new <code>RGBAChooserPanel</code> instance.
-     *
-     * @param alphaEnabled a <code>boolean</code> value of true to allow for changing the alpha value
+     * Creates a new RGBAChooserPanel instance.
+     * @param alphaEnabled a boolean value of true to allow for changing the alpha value
      */
     public RGBAChooserPanel(boolean alphaEnabled) {
-	super();
-	doAlpha = alphaEnabled;
-	isLocked = false;
+		super();
+		doAlpha = alphaEnabled;
+		isLocked = false;
     }
-
-    /**
-     * Method <code>getDisplayName</code> returns "RGBA"
-     *
-     * @return a <code>String</code> value
-     */
     public String getDisplayName() {
-	return "RGBA";
+    	return "RGBA";
     }
-
-    /**
-     * Method <code>getSmallDisplayIcon</code>
-     *
-     * @return an <code>Icon</code> value of null
-     */
     public Icon getSmallDisplayIcon() {
         return null;
     }
-
-    /**
-     * Method <code>getLargeDisplayIcon</code>
-     *
-     * @return an <code>Icon</code> value of null
-     */
     public Icon getLargeDisplayIcon() {
         return null;
     }
 
     /**
-     * Method <code>buildChooser</code> sets up the view
+     * Method buildChooser sets up the view
      *
      */
     protected void buildChooser() {
         setLayout(new BorderLayout());
         Color color = getColorFromModel();
 
-	GridBagLayout gridbag = new GridBagLayout();
-        JPanel panel = new JPanel(gridbag);
-	GridBagConstraints constraints = new GridBagConstraints();
-
-	constraints.fill = GridBagConstraints.NONE;
-	constraints.gridheight = 1;
-	constraints.ipadx = 10;
-	constraints.ipady = 10;
+		GridBagLayout gridbag = new GridBagLayout();
+	        JPanel panel = new JPanel(gridbag);
+		GridBagConstraints constraints = new GridBagConstraints();
+	
+		constraints.fill = GridBagConstraints.NONE;
+		constraints.gridheight = 1;
+		constraints.ipadx = 10;
+		constraints.ipady = 10;
 
         add(panel, BorderLayout.CENTER);
 
-	redSlider = createSlider(color.getRed());
-	redSpinner = createSpinner(color.getRed());
-	setRow(new JLabel("Red"),redSlider,redSpinner,panel,gridbag,constraints);
-
-	greenSlider = createSlider(color.getGreen());
-	greenSpinner = createSpinner(color.getGreen());
-	setRow(new JLabel("Green"),greenSlider,greenSpinner,panel,gridbag,constraints);
-
-	blueSlider = createSlider(color.getBlue());
-	blueSpinner = createSpinner(color.getBlue());
-	setRow(new JLabel("Blue"),blueSlider,blueSpinner,panel,gridbag,constraints);
-
-	alphaSlider = createSlider(color.getAlpha());
-	alphaSpinner = createSpinner(color.getAlpha());
-	if (doAlpha) setRow(new JLabel("Alpha"),alphaSlider,alphaSpinner,panel,gridbag,constraints);
+		redSlider = createSlider(color.getRed());
+		redSpinner = createSpinner(color.getRed());
+		setRow(new JLabel("Red"),redSlider,redSpinner,panel,gridbag,constraints);
+	
+		greenSlider = createSlider(color.getGreen());
+		greenSpinner = createSpinner(color.getGreen());
+		setRow(new JLabel("Green"),greenSlider,greenSpinner,panel,gridbag,constraints);
+	
+		blueSlider = createSlider(color.getBlue());
+		blueSpinner = createSpinner(color.getBlue());
+		setRow(new JLabel("Blue"),blueSlider,blueSpinner,panel,gridbag,constraints);
+	
+		alphaSlider = createSlider(color.getAlpha());
+		alphaSpinner = createSpinner(color.getAlpha());
+		if (doAlpha) setRow(new JLabel("Alpha"),alphaSlider,alphaSpinner,panel,gridbag,constraints);
     }
 
     /**
-     * Method <code>updateChooser</code> updates the sliders and spinners based
-     * on the current color.
-     *
+     * Method updateChooser updates the sliders and spinners based on the current color.
      */
     public void updateChooser() {
         if (!isLocked) {
@@ -158,58 +135,53 @@ public class RGBAChooserPanel extends AbstractColorChooserPanel implements Chang
     }
 
     /**
-     * Method <code>stateChanged</code> handles the changing of sliders and spinners
-     *
-     * @param e a <code>ChangeEvent</code> value
+     * Method stateChanged handles the changing of sliders and spinner
+     * @param e a ChangeEvent value
      */
     public void stateChanged(ChangeEvent e) {
-	if (!isLocked) {
-	    if (e.getSource() instanceof JSlider) {
-		Color color = new Color(redSlider.getValue(),greenSlider.getValue(),blueSlider.getValue(),alphaSlider.getValue());
-		getColorSelectionModel().setSelectedColor(color);
-	    } 
-	    else if (e.getSource() instanceof JSpinner) {
-		int red = ((Integer)redSpinner.getValue()).intValue();
-		int green = ((Integer)greenSpinner.getValue()).intValue();
-		int blue = ((Integer)blueSpinner.getValue()).intValue();
-		int alpha = ((Integer)alphaSpinner.getValue()).intValue();
-		getColorSelectionModel().setSelectedColor(new Color(red,green,blue,alpha));
-	    }
-	}
+		if (!isLocked) {
+		    if (e.getSource() instanceof JSlider) {
+		    	Color color = new Color(redSlider.getValue(),greenSlider.getValue(),blueSlider.getValue(),alphaSlider.getValue());
+		    	getColorSelectionModel().setSelectedColor(color);
+		    } 
+		    else if (e.getSource() instanceof JSpinner) {
+		    	int red = ((Integer)redSpinner.getValue()).intValue();
+		    	int green = ((Integer)greenSpinner.getValue()).intValue();
+		    	int blue = ((Integer)blueSpinner.getValue()).intValue();
+		    	int alpha = ((Integer)alphaSpinner.getValue()).intValue();
+		    	getColorSelectionModel().setSelectedColor(new Color(red,green,blue,alpha));
+		    }
+		}
     }
-    
     private void setRow(JLabel label, JSlider slider, JSpinner spinner, JPanel panel, 
 			GridBagLayout layout, GridBagConstraints constraints) {
-	addToGrid(panel,layout,constraints,new JLabel(),1);
-	constraints.anchor = GridBagConstraints.EAST;
-	addToGrid(panel,layout,constraints,label,1);
-	constraints.anchor = GridBagConstraints.CENTER;
-	addToGrid(panel,layout,constraints,slider,3);
-	constraints.anchor = GridBagConstraints.WEST;
-	addToGrid(panel,layout,constraints,spinner,1);
-	addToGrid(panel,layout,constraints,new JLabel(),GridBagConstraints.REMAINDER);
+		addToGrid(panel,layout,constraints,new JLabel(),1);
+		constraints.anchor = GridBagConstraints.EAST;
+		addToGrid(panel,layout,constraints,label,1);
+		constraints.anchor = GridBagConstraints.CENTER;
+		addToGrid(panel,layout,constraints,slider,3);
+		constraints.anchor = GridBagConstraints.WEST;
+		addToGrid(panel,layout,constraints,spinner,1);
+		addToGrid(panel,layout,constraints,new JLabel(),GridBagConstraints.REMAINDER);
     }
-
     private void addToGrid(Container cp, GridBagLayout layout, GridBagConstraints constraints, Component comp, int width) {
-	constraints.gridwidth = width;
-	layout.setConstraints(comp, constraints);
-	cp.add(comp);
+		constraints.gridwidth = width;
+		layout.setConstraints(comp, constraints);
+		cp.add(comp);
     }
-
     private JSlider createSlider(int value) {
-	JSlider slider = new JSlider(JSlider.HORIZONTAL,MIN_VALUE,MAX_VALUE,value);
-        slider.setMajorTickSpacing(85);
-        slider.setMinorTickSpacing(17);
-        slider.setPaintTicks(true);
-        slider.setPaintLabels(true);
-	slider.addChangeListener(this);
-	return slider;
+		JSlider slider = new JSlider(JSlider.HORIZONTAL,MIN_VALUE,MAX_VALUE,value);
+	        slider.setMajorTickSpacing(85);
+	        slider.setMinorTickSpacing(17);
+	        slider.setPaintTicks(true);
+	        slider.setPaintLabels(true);
+		slider.addChangeListener(this);
+		return slider;
     }
-
     private JSpinner createSpinner(int value) {
-	JSpinner spinner = new JSpinner(new SpinnerNumberModel(value, MIN_VALUE, MAX_VALUE, 1));
-	spinner.addChangeListener(this);
-	return spinner;
+		JSpinner spinner = new JSpinner(new SpinnerNumberModel(value, MIN_VALUE, MAX_VALUE, 1));
+		spinner.addChangeListener(this);
+		return spinner;
     }
 }
     

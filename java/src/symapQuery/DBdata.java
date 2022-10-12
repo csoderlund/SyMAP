@@ -408,7 +408,11 @@ public class DBdata {
 			chrNum[x] = 				spPanel.getChrNameFromChrIdx(chrIdx[x]);
 			if (isSingle) spIdx[x] =  	spPanel.getSpIdxFromChrIdx(chrIdx[x]); 
 
-			if (blockNum>0) block = Utilities.blockStr(chrNum[0], chrNum[1], blockNum); // CAS513 use blockStr
+			if (blockNum>0) blockStr = Utilities.blockStr(chrNum[0], chrNum[1], blockNum); // CAS513 use blockStr
+			if (runSize>0)  {
+				runStr = Utilities.blockStr(chrNum[0], chrNum[1], runSize); // CAS517 add chrs
+				if (runNum>0) runStr += "." + runNum;
+			}
 			
 			/******* Anno Keys ******************/
 			if (!annoKeys.containsKey(spIdx[x])) continue; // If this is index 0, then still need 1
@@ -530,9 +534,9 @@ public class DBdata {
 		// general
 		row.add(rowNum);		
 		
-		if (blockNum<=0)    row.add(Q.empty);  else row.add(block);
+		if (blockNum<=0)    row.add(Q.empty);  else row.add(blockStr);
 		if (blockScore<=0)  row.add(Q.empty);  else row.add(blockScore);
-		if (runSize<0)      row.add(Q.empty);  else row.add(runSize);
+		if (runSize<0)      row.add(Q.empty);  else row.add(runStr);
 		
 		if (pgenef<=0)      row.add(Q.empty);  else row.add(pgenef);
 		if (pgfsize<=0)     row.add(Q.empty);  else row.add(pgfsize);
@@ -632,8 +636,8 @@ public class DBdata {
 	private int [] geneNum = {-1, -1}; // CAS514 add
 	
 // block
-	private int blockNum=-1, blockScore=-1, runSize=-1;
-	private String block = Q.empty;
+	private int blockNum=-1, blockScore=-1, runSize=-1, runNum=-1;
+	private String blockStr = Q.empty, runStr = Q.empty;
 	
 // Other
 	private int rowNum=0;				// this rowNum is not used in table, but is a placeholder and used in debugging

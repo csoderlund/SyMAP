@@ -24,7 +24,6 @@ public class TextBox extends JComponent  {
 	private static final int INSET = 5;
 	private static final int startWidth = 600;
 	private int trueWidth = 0;
-	private String [] descText; // CAS503 for popup description
 	private Rectangle2D.Double rect = new Rectangle2D.Double(); // CAS503 for popup display
 	
 	public TextBox(Vector<String> text, Font font, int x, int y, int wrapLen, int truncLen) {
@@ -35,7 +34,6 @@ public class TextBox extends JComponent  {
 	}
 
 	private TextBox(String[] text, Font font, int x, int y,int wrapLen, int truncLen) {
-		descText = text;
 		int width = 0;
 		int tx = INSET;
 		int ty = INSET;
@@ -108,7 +106,7 @@ public class TextBox extends JComponent  {
 		}
 		setSize(width, ty + INSET);
 		setLocation(x, y);
-		rect.setRect(x, y, width, ty + INSET); // CAS503 - for popup of description
+		rect.setRect(getX(), getY(), getWidth(), getHeight()); // CAS503 - for popup of description; CAS517 fixed dimensions
 	}
 	
 	public void paintComponent(Graphics g) {
@@ -125,15 +123,13 @@ public class TextBox extends JComponent  {
 		paintComponents(g); // draw text
 	}
 	/*******************************************************
-	 * CAS503 add popup
+	 * CAS503 add popup; CAS517 all done in Annotation because popup can be from gene click
 	 */
 	public boolean containsP(Point p) {
 		return rect.contains(p);
 	}
-	public void popupDesc(String exonList, String title) { // CAS512 add exonList
-		String msg = "";
-		for (String x : descText) msg += x + "\n";
-		Dimension d = new Dimension (350, 220); // CAS513 add size (w,h)
-		Utilities.displayInfoMonoSpace(this, title, msg + exonList, d, 0,0); // CAS504 moved; CAS516 add title
+	public void popupDesc(String title, String msg) { 				// CAS512 add exonList
+		Dimension d = new Dimension (350, 220); 					// CAS513 add size (w,h)
+		Utilities.displayInfoMonoSpace(this, title, msg, d, 0,0); 	// CAS504 moved; CAS516 add title
 	}
 }

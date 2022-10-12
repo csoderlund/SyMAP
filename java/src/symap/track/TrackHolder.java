@@ -24,31 +24,31 @@ public class TrackHolder extends JComponent implements Filtered {
 	private int orientation;
 	private Track track;
 	private FilterHandler fh;
+	private int trackNum;	// CAS517 add for Sequence track 
 
-	public TrackHolder(DrawingPanel dp, HelpBar hb) { // Called by DrawingPanel
+	public TrackHolder(DrawingPanel dp, HelpBar hb, int trackNum) { // Called by DrawingPanel
 		super();
 		this.dp = dp;
 		this.hb = hb;
+		this.trackNum = trackNum;
+		
 		fh = new FilterHandler(dp,hb);
 		track = null;
+		
 		setOpaque(false);
 		setVisible(false);
 	}
 
-	public void setOrientation(int orient) { // Called by DrawingPanel
-		orientation = orient;
-	}
+	public void setOrientation(int orient) { orientation = orient;}// Called by DrawingPanel
 
-	public Track getTrack() { // Called by DrawingPanel, Mapper
-		return track;
-	}
-
-	public HelpBar getHelpBar() { // Called by contig.Contig
-		return hb;
-	}
+	public Track getTrack() { return track;}// Called by DrawingPanel, Mapper
+	
+	public int getTrackNum() {return trackNum;}
+	
+	public HelpBar getHelpBar() { return hb;}// Called by contig.Contig
 
 	public void setTrack(Track t) { // Called by DrawingPanel and TrackHolder
-		if (TRACE) System.out.println("TrackHolder.setTrack: " + t);
+		if (TRACE && t!=null) System.out.println("TrackHolder.setTrack: " + t);
 		
 		if (t == track) return ;
 

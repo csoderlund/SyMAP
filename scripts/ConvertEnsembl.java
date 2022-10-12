@@ -1,4 +1,3 @@
-
 /*************************************************************
  * ConvertEnsembl: Ensembl genome files formatted for SyMAP
  * See https://csoderlund.github.io/SyMAP/convert
@@ -17,6 +16,7 @@
  * 		add scaffold option and improve summary output
  * To determine chromosome vs scaffold, the following rule is used:
  * 		if the ">id" id is numeric, X, Y, Mt, Pt then its chromosome; else its scaffold.
+ * CAS 11-Oct-2022 add -u option
  */
 import java.io.BufferedReader;
 import java.io.File;
@@ -33,7 +33,9 @@ public class ConvertEnsembl {
 	private boolean VERBOSE = false; 
 	private boolean INCLUDESCAF = false;
 	private boolean INCLUDEMtPt = false; // not option
+	private boolean USENAMES = false;
 	
+	private final int maxName=5;
 	private final int gapLen=30000;     // Print to gap.gff if #N's is greater than this
 	private final int scafMaxNum=20;	// print first 20
 	private final int scafMaxLen=10000;	// All scaffold are printed to fasta file, but only summarized if >scafMax
@@ -159,7 +161,9 @@ public class ConvertEnsembl {
     				}
     				else if (isScaf && INCLUDESCAF) {
     					nScaf++;
-	    				prtName = scafPrefix + padNum(nScaf+""); // scaf use name
+    					if (USENAMES && idCol1.length()<=maxName) prtName = idCol1;
+    					else prtName = scafPrefix + padNum(nScaf+""); // scaf use name
+    					
 	    				id2scaf.put(idCol1, prtName);
 	    				cntScafGene.put(idCol1, 0);
 	    				gapStart=1; gapCnt=0; baseLoc=0;
@@ -606,31 +610,43 @@ public class ConvertEnsembl {
 					"       GFF   file ending with .gff3 or .gff3.gz e.g. Oryza_sativa.IRGSP-1.0.45.chr.gff3.gz\n" +  
 					"   Options:\n" +
 					"   -s  include any sequence not labeled 'chromosome'.\n" +
+					"   -u  use sequence names from FASTA file when less than 5 characters (remaining will be scaffolds)\n" +
 					"   -m  include Mt and Pt chromosomes.\n" +
 					"   -v  write header lines of ignored sequences [default false].\n" +
 					"\nSee https://csoderlund.github.io/SyMAP/convert for details.");
 			System.exit(0);
 		}
 		
+		prt("Parameters:");
+		prt("Directory: " + args[0]);
 		projDir = args[0];
 		if (args.length>1) {
 			for (int i=1; i< args.length; i++) {
-				if (args[i].equals("-v")) VERBOSE=true;
+				if (args[i].equals("-v")) {
+					VERBOSE=true;
+					prt("   Print ignored sequences");
+				}
+				else if (args[i].equals("-u")) {
+					USENAMES=true;
+					INCLUDESCAF=true;
+					chrPrefix = "C";
+					prt("   Use FASTA file labels if <=" + maxName);
+					prt("      Others will be called Scaffold with prefix '" + scafPrefix + "'");
+					prt("      IMPORTANT: SyMAP Project Parameters - set grp_prefix to blank!! (unless all sequences start with same prefix)");
+				}
 				else if (args[i].equals("-s")) {
 					INCLUDESCAF=true;
 					chrPrefix = "C";
+					prt("   Include any sequence not labeled 'chromosome'");
+					prt("      Uses prefixes Chr '" + chrPrefix + "' and Scaffold '" + scafPrefix );
+					prt("      IMPORTANT: SyMAP Project Parameters - set grp_prefix to blank ");
 				}
-				else if (args[i].equals("-m")) INCLUDEMtPt=true;
+				else if (args[i].equals("-m")) {
+					INCLUDEMtPt=true;
+					prt("   Include Mt and Pt chromosomes");
+				}
 			}
-		}
-		prt("Parameters:");
-		if (INCLUDESCAF) {
-			prt("   Include any sequence not labeled 'chromosome'");
-			prt("      Uses prefixes Chr '" + chrPrefix + "' and Scaffold '" + scafPrefix );
-			prt("      IMPORTANT: SyMAP Project Parameters - set grp_prefix to blank ");
-		}
-		if (INCLUDEMtPt) prt("   Include Mt and Pt chromosomes");
-		if (VERBOSE)     prt("   Print ignored sequences");
+		}   
 	}
 	private void die(Exception e, String msg) {
 		System.err.println("Die -- " + msg);

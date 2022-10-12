@@ -14,7 +14,7 @@
 	.tx td {padding: 5px;}
 	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
     .ty td {border: 1px  solid black; padding: 3px; }
-    top {vertical-align:text-top;}
+    atop {vertical-align:text-top;}
     tt {font-size:13px}
 	pre {font-size:13px}
 	body {font-family: Verdana, Arial, Helvetica,  sans-serif;  font-size: 14px; }
@@ -379,93 +379,48 @@ on the right. Clicking on a synteny block (or selected region) brings up the 2D 
 
 <table>
 <tr><td>Contents:&nbsp;&nbsp;&nbsp;
+<td><a href="#2dfull">Full display</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#view">View a region</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#control">Control Panel</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#sequence_filter">Sequence Filter</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#hitfilter">Hit Filter</a>&nbsp;&nbsp;&nbsp;
 </table>
-
-<p>
+<a id="2dfull"></a>
+<h4>Full display</h4>
 The 2D display is activated from the <a href="#explorer">Explorer</a> by
 clicking the <ttb>2D</ttb> button (or by selecting a region or block from a dot plot).
 <p>
-<table>
-<tr><td style="vertical-align:text-top;">
-On the right is an image depicting an alignment from A.thal Chr4 to Cabbage Chr1 to B.rapa Chr2.
+Below is an image depicting an alignment from A.thal Chr4 to Cabbage Chr1 to B.rapa Chr2.
 Note that Cabbage Chr1 is the <i>reference</i>
 chromosome, hence is placed in between the others.
-<p>
-Each chromosome is drawn as a light-blue rectangle, called <i>tracks</i>.
+<p>Each chromosome is drawn as a light-blue rectangle, called <i>tracks</i>.
 The sequence length is shown at the bottom of a track; the coordinates are displayed on the side.
-<p>The gene annotations (if exists) are drawn down the middle of the rectangle in dark-blue.
-<p>The synteny <i>hits</i> are the brown lines between tracks.
-The colors can be changed using the Color Icon in the upper right.
-<p>
-Right click in the sequence track will cause a popup of the most commonly used filters and features (e.g.
-flipping the region). They are also on the filter menu above each track
-(see <a href="#sequence_filter">Sequence Filter</a>).
 
+<p>
+<table>
+<tr><td style="vertical-align:text-top;">
+<p>The <i>gene annotations</i> (if exists) are drawn down the middle of the rectangle in dark-blue (positive strand)
+and purple (negative strand). Overlapping genes are horizontally staggered.
+
+<p>The <i>hits</i> are the lines between tracks, referred to <i>hit-wires</i>, which connect the hit region
+on each sequence.
+Hit-wires colored brown align to the same strand on both sequences (i.e. ++,--) and light forest-green
+align to different strands (i.e. +-, -+).
+<p>
+
+The colors can be changed using the Color Icon in the upper right (see <a href="#control">Controls</a>).
+More details on gene and hit display are provided in the section below.
 <td><a href="img/2d-3chr.png">
 	<img src="img/2d-3chr.png" alt="2d-3chr" style="border: 1px solid black; width: 550px"></a>
 </table>
 
-
-<!------------------------------------------------------->
-<a id="view"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>View a region</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-The example below was derived from a two chromosome display of B.rapa Chr2 and Cabbage Chr1. The region
-was displayed by right-clicking
-near the top of the chromosome, dragging the mouse and releasing it in order to view the selected region.
-The <ttb>Sequence Filter</ttb> was set to display <ttl>Annotation Descriptions</ttl>.
+<p>
+Right click in the blue region of the sequence track will cause a popup of the most commonly used filters and features (e.g.
+flipping the region). They are also on the filter menu above each track
+(see <a href="#sequence_filter">Sequence Filter</a>).
 
 <p>
-<table>
-<tr><td  style="vertical-align:text-top;">
-Genes: The black lines with heavier blue bars interspersed down the center indicate exon/intron
-predictions. A solid black line would indicate the absence of introns in the annotation.
-
-<p>Hits: The alternating brown/gray lines indicate anchor hit clusters; e.g. the lower gene shown on the right
-has 16 separate MUMmer hits that are clustered together to represent one hit (#269294).
-The solid brown lines indicate
-a single hit (or multiple hits very close together), while the gray lines are spaces with no alignment.
-
-<p>Ruler: The ruler on the right side of the sequence rectangle shows the relative BP position along the sequence.
-
-<td><a href="img/2d-closeup.png">
-	<img src="img/2d-closeup.png" alt="2d-closeup" style="border: 1px solid black; width: 500px"></a>
-</table>
-
-<table class="tx">
-<tr>
-<td>
-Hovering the mouse over a hit or gene will show its information in the <ttl>Information</ttl> box.
-<p>In the image on the right:
-<br><ttl>Inv</ttl> indicates that it is part of an inverted block.
-<td>
-<ttl>gN</ttl> (<ttl>N={0,1,2}</ttl>) indicates that the hit overlaps an exon on one side, or two sides
-or none.
-<p><ttl>rM</ttl> (<ttl>M&ge;0</ttl>) indicates that it is part of a colinear run of size M.
-Colinear runs can be queried on in <a href="#annotsearch">SyMAP Queries</a>.
-
-<td style="width:240px;>
-<a href="img/2d-hit.png"><img src="img/2d-hit.png" alt="2d-hit" style="border: 1px solid black; width: 240px"></a>
-<tr><td colspan=3>&nbsp;
-
-<tr>
-<td style="width:230px; vertical-align:text-top;">To view the popup of the gene description shown on the right,
-either:
-<br>(1) right-click on a yellow gene description box, or
-<br>(2) right-click on the gene in the track (the gene will be showing in the <ttl>Information</ttl> box from hovering over it).
-<td style="width:230px;vertical-align:text-top;">Besides the
-gene information, it also shows the list of exons. It is useful for copying all or part of the description. It does not
-go away until the <ttb>OK</ttb> button is selected. Any number of gene description popups can be present.
-<td><a href="img/2d-desc.png"><img src="img/2d-desc.png" alt="2d-desc" style="border: 1px solid black; width: 250px"></a>
-</table>
-<p>
-Annotation data of the following types may be loaded into SyMAP and displayed.
+<u>Other annotation</u>: Annotation data of the following types may be loaded into SyMAP and displayed.
 <table class="ty" style="width:650;">
 	<tr><td><i>Annotation Type</i><td><i>Display</i>
 	<tr><td>Gaps<td>Red band across the chromosome
@@ -474,6 +429,66 @@ Annotation data of the following types may be loaded into SyMAP and displayed.
 		<td>Annotation strip in center of chromosome, as described above.
 </table>
 The display colors can be changed using the Color Icon in the upper right (color panel not shown).
+<!------------------------------------------------------->
+<a id="view"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>View a region</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The example below was derived from a two chromosome display of A.thal Chr4 and Cabbage Chr1. The region
+was displayed by right-clicking
+near the top of the chromosome, dragging the mouse and releasing it in order to view the selected region.
+The <ttb>Sequence Filter</ttb> was set to display <ttl>Annotation Descriptions</ttl>.
+
+<p>
+<table>
+<tr><td  style="vertical-align:text-top;">
+Gene annotations: The introns are shown as thinner black rectangles. The exons are drawn as thicker rectangles,
+colored dark blue (positive strand) or purple (negative strand).
+A solid thick bar indicates the absence of introns in the annotation.
+<p>The staggered genes, where one is
+further out then the other, indicate overlapping genes; they have the same gene# with a different suffix.
+Note: the algorithm for detecting overlapping genes misses some, and will be fixed in a later release; however,
+this does not cause any error (though sometimes it is necessary to use "Show Annotations").
+
+<p>Hits: The brown or green hit-wire connects two regions on the two sequences. The regions are referred
+to as <i>hit lengths</i>, which are shown on the track at the end of a hit-wire.
+There may be multiple hits merged together with gaps in between, where the gaps are represented by
+a grey area.
+
+<td><a href="img/2d-closeup.png">
+	<img src="img/2d-closeup.png" alt="2d-closeup" style="border: 1px solid black; width: 500px"></a>
+</table>
+
+<table class="tx">
+<tr>
+<td>
+<u>Information:</u>: Hovering the mouse over a hit-wire or gene will show its information in the <ttl>Information</ttl> box.
+<p>In the image on the right is hit information for the top hit-wire in the above image.
+<td style="width:240px;">
+<a href="img/2d-hit.png"><img src="img/2d-hit.png" alt="2d-hit" style="border: 1px solid black; width: 240px"></a>
+</table>
+<ul>
+<li><ttl>(!=)</ttl> indicates the hit ends are on two different strands; <ttl>(=)</ttl> indicates the same strand.
+<li><ttl>Inv</ttl> indicates that it is part of an inverted block.
+<li><ttl>gN</ttl> (<ttl>N={0,1,2}</ttl>) indicates that the hit overlaps an exon on one side, or two sides
+or none.
+<li><ttl>rM</ttl> (<ttl>M&ge;0</ttl>) indicates that it is part of a colinear run of size M.
+Colinear runs can be queried on in <a href="#annotsearch">SyMAP Queries</a>.
+</ul>
+
+<u>More detailed information:</u> Popups of a gene or hit-wire provides more detailed information.
+To view the popup of the gene description,
+either: (1) right-click on a yellow gene description box, or
+(2) right-click on the gene in the track.
+To view the popup of a hit-wire, right click on it (the hit-wire must be highlighted in red from hovering over it to be clickable).
+<p>The information in a popup can be copied by dragging the mouse over it followed by the copy command. The popup does not
+go away until the <ttb>OK</ttb> button is selected, or the <ttl>Explorer</ttl> is exited. Any number of gene popups can be present.
+<p>The example below shows the two genes that are connected by the hit-wire shown in the between.
+<p><a href="img/2d-desc.png"><img src="img/2d-desc.png" alt="2d-desc" style="border: 1px solid black; width: 750px"></a>
+<p>If there are more than two tracks shown, the gene popup will only show the hits to the track on the right. However,
+clicking the hit-wire between the first two tracks will show the hit information.
+
 <!----->
 
 <a id="control"></a>
@@ -513,12 +528,15 @@ click and drag actions:
 Open the base alignment view for the selected region (see <a href="#base">Base View</a>).
 No more than 30000 bases can be selected. There MUST be hits in the region to align.
 <tr><td style="white-space: nowrap; vertical-align: text-top;">Show Sequence<td>
-The selected sequence will be shown in a popup, which can be copied. This has limited utility, but is the
-only way to view the entire underlying sequence (the align view shows the bases of hit regions only).
+The selected sequence will be shown in a popup, which can be copied. See <a href="#base">Align, Alternative section</a>.
 </table>
-
-<p><ttl>Print, Colors, <big>?</big></ttl>. See <a href="#image">Help and Print</a> for the 1st and 3rd button.
-The <ttl>Color Icon Button</ttl> opens a menu for customizing colors.
+<p>
+<table class="tx">
+<tr><td>
+<ttl>Colors, Print, <big>?</big></ttl>. See <a href="#image">Help and Print</a> for the 2nd and 3rd button.
+<p>The <ttl>Color Icon Button</ttl> opens a menu for customizing colors, as shown on the right.
+<td><a href="img/2d-color.png"><img src="img/2d-color.png" alt="2d colors" style="border: 1px solid black; width: 240px"></a>
+</table>
 <p>
 Additional navigation:
 <table  class="ty" style="font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
@@ -540,10 +558,13 @@ Additional navigation:
 <p>
 <a id="sequence_filter"></a>
 <a id="sequence_track"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h4>Sequence Filter</h4>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Select <ttb>Sequence Filter</ttb> button above the sequence track to change the display for the
-respective chromosome.
+respective chromosome. If the sequence track does not have a given annotation (e.g. Gaps), then that item
+will be un-selectable.
 <p>
 <ttl>Start</ttl> and <ttl>End</ttl>
 The positions of the sequence display can be set via the corresponding text boxes.
@@ -589,12 +610,9 @@ the hit.
 <ttl>Show Hit %Id Value</ttl> Enables/disables the display of the %Id value next to each hit along the
 sequence.  The score value corresponds to the % Identity value for the hit from the MUMmer anchor file.
 
-<table style="width:50%;">
-<tr><td>A subset of the filters are available by right
+<p>A subset of the filters are available by right
 clicking in the light blue area of the chromosome rectangle.
-<td><a href="img/sequencefilter2.png">
-	<img src="img/sequencefilter2.png" alt="sequencefilter" style="border: 1px solid black; width: 150px"></a>
-</table>
+
 
 <!------------->
 <a id="hitfilter"></a>
@@ -647,7 +665,14 @@ the leftmost or rightmost exon box will have an arrow tip indicating whether the
 is on the + strand (right-pointing) or - strand (left-pointing) relative to the
 sequence. The system attempts to expand the view to show the full gene that has
 hits. Genes that overlap this gene will be partially shown.
-
+<a id="abase"></a>
+<h4>Alternative</h4>
+To view the base alignment, use the <ttl>Show Sequence</ttl> (from the <ttl>Selected:</ttl> pulldown).
+Select the 1st region to be aligned, then select the 2nd region. These two sequences can be copied
+from the popups, and aligned with online tools such as
+<a href="https://www.bioinformatics.nl/cgi-bin/emboss/matcher" class="ext" target=_blank>EMBOSS Matcher</a>
+or <a href="https://www.ezbiocloud.net/tools/pairAlign" class="ext" target=_blank>EZ BioCloud</a> (max 5000bp).
+<p>Another alternative is to find the hit in the <ttl>SyMAP Query</ttl>, then view the MUSCLE MSA.
 <!-------------------------------------------------------------------->
 <a id="dot3"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -686,7 +711,7 @@ The following describes two special features:
 Return only hits which are part of  N aligning genes pairs having no intervening
 non-aligning genes. There may be intervening hits that do not align to genes,
 and a gene in the colinear run can have an aligning hit to only the intron region.
-There is a column called "RunSize" that provides the number
+There is a column called "Collinear" that provides the number
 of adjacent aligning genes.
 In contrast, synteny blocks allows intervening non-aligning genes.
 <p><ttl>Filter putative gene families (PgeneFs)</ttl>

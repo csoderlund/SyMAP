@@ -56,12 +56,13 @@ public class PseudoPseudoData extends AbstractHitData implements SyMAPConstants 
 			String strand, int repetitive, int block, double evalue,
 			double pctid, int start1, int end1, int start2, int end2,
 			int overlap, 
-			String query_seq, String target_seq, int pSim, int nMergeHits, double corr, String tag)
+			String query_seq, String target_seq, int pSim, int nMergeHits, double corr, String tag,
+			String chr1, String chr2) // CAS517 add two chrNames
 	{
 		return new PseudoHitData(id, name, strand, 
 				repetitive == 0 ? false : true, block,
 				evalue, pctid, start1, end1, start2, end2, overlap,
-				query_seq, target_seq, pSim, nMergeHits, corr, tag);
+				query_seq, target_seq, pSim, nMergeHits, corr, tag, chr1, chr2);
 	}
 
 	// wrapper class is required because HitData is abstract
@@ -72,12 +73,13 @@ public class PseudoPseudoData extends AbstractHitData implements SyMAPConstants 
 				int start1, int end1, 
 				int start2, int end2, 
 				int overlap,	
-				String query_seq, String target_seq, int pSim, int nMergeHits, double corr, String tag)
+				String query_seq, String target_seq, int pSim, int nMergeHits, double corr, String tag,
+				String chr1, String chr2)
 		{
 			super(id, name, strand, repetitive, block, evalue, pctid, 
 					start1, end1, start2, end2, overlap,
 					query_seq, target_seq, 
-					pSim, nMergeHits, corr, tag); //CAS515 add 1st 2, CAS516 add corr, tag
+					pSim, nMergeHits, corr, tag, chr1, chr2); //CAS515 add 1st 2, CAS516 add corr, tag
 		}
 
 		public boolean equals(Object obj) {

@@ -15,6 +15,7 @@ import java.awt.geom.Rectangle2D;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Vector;
+import java.util.HashMap;
 
 import number.GenomicsNumber;
 import symap.SyMAP;
@@ -24,7 +25,7 @@ import symap.track.Track;
 import symap.track.TrackData;
 import symap.track.TrackHolder;
 import symap.drawingpanel.DrawingPanel;
-
+import symap.mapper.PseudoPseudoHits;
 import util.PropertiesReader;
 import util.Rule;
 import util.TextBox;
@@ -32,12 +33,10 @@ import util.Utilities;
 import util.ErrorReport;
 
 /**
- * The Sequence track for a pseudo molecule. Called from DrawingPanel
- * Has a vector of annotations, which it also draws
+ * The Sequence track for a chromosome. Called from DrawingPanel
+ * Has a vector of annotations, which it also draws. The hit is drawn in this rectangle by PseudoPseudoHits
  */
 public class Sequence extends Track {	
-	//private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
-	
 	private static final boolean POPUP_ANNO=true; // Always true - double click Yellow anno for popup
 	private static final double OFFSET_SPACE = 7;
 	private static final double OFFSET_SMALL = 1;
@@ -49,7 +48,7 @@ public class Sequence extends Track {
 	public static final boolean DEFAULT_SHOW_RULER      = true;
 	public static final boolean DEFAULT_SHOW_GENE       = true;  
 	public static final boolean DEFAULT_SHOW_FRAME      = true;
-	public static /*final*/ boolean DEFAULT_SHOW_ANNOT  = false; 
+	public static       boolean DEFAULT_SHOW_ANNOT  	= false; 
 	public static final boolean DEFAULT_SHOW_SCORE_LINE	= true;  
 	public static final boolean DEFAULT_SHOW_SCORE_VALUE= false; 
 	public static final boolean DEFAULT_SHOW_RIBBON		= true;	 
@@ -106,13 +105,16 @@ public class Sequence extends Track {
 	protected boolean showScoreLine, showScoreValue; 
 	protected boolean showGap, showCentromere;
 	protected boolean showFullGene;
-	protected boolean showHitLen; 	// CAS512 renamed Ribbon to HitLen everywhere
+	protected boolean showHitLen; 	// CAS512 renamed Ribbon to HitLen everywhere; show Hit Graphics on Sequence rect
 	protected String name;
+	
+	private PseudoPseudoHits pseudoPseudoHitsObj; 	// CAS517 added so can get to hits 
+	private boolean isQuery;			  			// CAS517 
 	
 	private PseudoPool psePool;
 	private SequencePool seqPool;
 	private List<Rule> ruleList;
-	private Vector<Annotation> annotations;
+	private Vector<Annotation> allAnnoVec;
 	private TextLayout headerLayout, footerLayout;
 	private Point2D.Float headerPoint, footerPoint;
 	
@@ -124,13 +126,19 @@ public class Sequence extends Track {
 		super(dp, holder, MIN_DEFAULT_BP_PER_PIXEL, MAX_DEFAULT_BP_PER_PIXEL, defaultSequenceOffset);
 		this.psePool = psePool;
 		this.seqPool = seqPool; // CAS504 added for sequence popup
+		
 		ruleList = new Vector<Rule>(15,2);
-		annotations = new Vector<Annotation>(50,1000);
+		allAnnoVec = new Vector<Annotation>(50,1000);
 		headerPoint = new Point2D.Float();
 		footerPoint = new Point2D.Float();
 
 		group   = NO_VALUE;
 		project = NO_VALUE;
+	}
+	// CAS517 add in order to have access to hits, then decided not to use, but could come in handy
+	public void setPseudoPseudoHits(PseudoPseudoHits pObj, boolean isSwapped) { 
+		this.pseudoPseudoHitsObj = pObj;
+		this.isQuery = isSwapped;
 	}
 	
 	public void setOtherProject(int otherProject) {
@@ -144,6 +152,7 @@ public class Sequence extends Track {
 			if (this.otherProject != NO_VALUE) init();
 		}
 		else reset();
+		
 		showRuler      = DEFAULT_SHOW_RULER;
 		showGene       = DEFAULT_SHOW_GENE;
 		showFrame      = DEFAULT_SHOW_FRAME;
@@ -159,8 +168,7 @@ public class Sequence extends Track {
 
 	public void setup(TrackData td) {
 		SequenceTrackData sd = (SequenceTrackData)td;
-		if (td.getProject() != project 	|| sd.getGroup() != group 
-										|| td.getOtherProject() != otherProject)
+		if (td.getProject() != project 	|| sd.getGroup() != group  || td.getOtherProject() != otherProject)
 			reset(td.getProject(),td.getOtherProject());
 		
 		sd.setTrack(this);
@@ -173,16 +181,12 @@ public class Sequence extends Track {
 		return new SequenceTrackData(this);
 	}
 
-	/**
-	 * Clears the internal lists and calls super.clear()
-	 * @see Track#clear()
-	 */
+	/** @see Track#clear() */
 	public void clear() {
 		ruleList.clear();
-		annotations.clear();
+		allAnnoVec.clear();
 		headerPoint.setLocation(0,0);
 		footerPoint.setLocation(0,0);
-		
 		dragPoint.setLocation(0,0);
 		
 		super.clear();
@@ -190,10 +194,8 @@ public class Sequence extends Track {
 
 	public void clearData() {
 		ruleList.clear();
-		annotations.removeAllElements();
+		allAnnoVec.removeAllElements();
 	}
-
-	public String toString() {return "[Sequence "+getProjectName()+" "+getGroup()+"]";}
 
 	public int getGroup() {return group;}
 
@@ -203,13 +205,9 @@ public class Sequence extends Track {
 	}
 
 	/*** @see Track#getPadding() */
-	public double getPadding() {
-		return PADDING;
-	}
+	public double getPadding() {return PADDING;}
 	
-	public static void setDefaultShowAnnotation(boolean b) {
-		DEFAULT_SHOW_ANNOT = b;
-	}
+	public static void setDefaultShowAnnotation(boolean b) {DEFAULT_SHOW_ANNOT = b;}
 
 	public boolean showRuler(boolean show) {
 		if (showRuler != show) {
@@ -239,7 +237,7 @@ public class Sequence extends Track {
 	}
 
 	public boolean showAnnotation(boolean show) {
-		if (annotations.size() == 0) {
+		if (allAnnoVec.size() == 0) {
 			showAnnot = false;
 			return false;
 		}
@@ -252,13 +250,13 @@ public class Sequence extends Track {
 	}
 	public boolean getShowAnnot() { return showAnnot;}
 	
-	public Vector<Annotation> getAnnotations() {return annotations;}
+	public Vector<Annotation> getAnnotations() {return allAnnoVec;}
 	
 	// Called by CloseUpDialog
 	public Vector<Annotation> getAnnotations(int type, int start, int end) {
 		Vector<Annotation> out = new Vector<Annotation>();
 		
-		for (Annotation a : annotations) {
+		for (Annotation a : allAnnoVec) {
 			if ((type == -1 || a.getType() == type) 
 					&& Utilities.isOverlapping(start, end, a.getStart(), a.getEnd()))
 				out.add(a);
@@ -269,7 +267,7 @@ public class Sequence extends Track {
 	public int[] getAnnotationTypeCounts() {
 		int[] counts = new int[Annotation.numTypes];
 		
-		for (Annotation a : annotations)
+		for (Annotation a : allAnnoVec)
 			counts[a.getType()]++;
 		
 		return counts;
@@ -283,7 +281,11 @@ public class Sequence extends Track {
 		return false;
 	}
 	
+	public boolean getShowHitLen() { return showHitLen; }
+	
 	public boolean getShowScoreLine() { return showScoreLine;}
+	
+	public boolean getShowScoreValue() { return showScoreValue; }
 	
 	public boolean showScoreValue(boolean show) { 
 		if (showScoreValue != show) {
@@ -293,12 +295,8 @@ public class Sequence extends Track {
 		}
 		return false;
 	}
-	
-	public boolean getShowScoreValue() { 
-		return showScoreValue;
-	}
-	
-	public boolean showHitLen(boolean show) { // hit ribbon
+	// drawn in PseudoPseudoHits.PseudoHits.paintHitLen
+	public boolean showHitLen(boolean show) { // hit ribbon - graphics on sequence rectangle
 		if (showHitLen != show) {
 			showHitLen = show;
 			clearTrackBuild();
@@ -307,10 +305,6 @@ public class Sequence extends Track {
 		return false;
 	}
 	
-	public boolean getShowHitLen() { 
-		return showHitLen;
-	}
-
 	public boolean showFrame(boolean show) {
 		if (showFrame != show) {
 			showFrame = show;
@@ -346,14 +340,14 @@ public class Sequence extends Track {
 		}
 		return false;
 	}
-	
+	// Set the annotation vector here
 	protected boolean init() {
 		if (hasInit()) return true;
 		if (project < 1 || group < 1 || otherProject < 1) return false;
 
 		try {
-			name = psePool.setSequence(this, size, annotations);	
-			if (annotations.size() == 0) showAnnot = false;
+			name = psePool.setSequence(this, size, allAnnoVec);	
+			if (allAnnoVec.size() == 0) showAnnot = false;
 		} catch (SQLException s1) {
 			ErrorReport.print(s1, "Initializing Sequence failed.");
 			psePool.close();
@@ -369,12 +363,14 @@ public class Sequence extends Track {
 	/**
 	 * XXX Sets up the drawing objects for this sequence. Called by DrawingPanel and Track
 	 * Start and end are Track GenomicsNumber variables, stating start/end 
+	 * 
+	 * The Hit Length, Hit %Id Value and Bar are drawn in PseudoPseudoHits.PseudoHits.paintHitLen and its paintComponent
 	 */
 	public boolean build() { 
 		if (hasBuilt()) return true;
 		if (!hasInit()) return false;
 		
-		if (annotations.size() == 0) showAnnot = false;
+		if (allAnnoVec.size() == 0) showAnnot = false;
 		
 		if (width == NO_VALUE) width = DEFAULT_WIDTH;
 
@@ -447,12 +443,20 @@ public class Sequence extends Track {
 		}
 
 		/* 
-		 * Setup the annotations - 
+		 * Setup the annotations
 		 */
 		getHolder().removeAll(); 
 		Rectangle2D.Double centRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
 		
-		for (Annotation annot : annotations) {	
+		int CONSTANT_OFFSET=12;
+		boolean isRight = (orient == RIGHT_ORIENT);
+		int lastGeneNum=-1,  nextOffset=CONSTANT_OFFSET;
+		double lastStart=0;
+		HashMap <Integer, Integer> olapMap = new HashMap <Integer, Integer> (); // CAS517 added for overlapping genes
+		
+		if (SyMAP.TRACE) System.err.println("SEQ: " + allAnnoVec.size() + " " + getHolder().getTrackNum() + " " + toString());
+		// XXX Sorted by genes (genenum, start), then exons (see PseudoData.setAnnotations)
+	    for (Annotation annot : allAnnoVec) {
 			if (((annot.isGene() || annot.isExon()) && !showGene) || (annot.isGap() && !showGap)
 				|| (annot.isCentromere() && !showCentromere) || (annot.isFramework() && !showFrame))
 			{
@@ -460,33 +464,54 @@ public class Sequence extends Track {
 				continue;		// not to be shown
 			}
 			double dwidth = rect.width, hwidth=0; // displayWidth, hoverWidth for gene
+			int offset=0;
 			
 			if (annot.isGene()) {
 				dwidth = hwidth = ANNOT_WIDTH;
 				if (showFullGene) dwidth /= GENE_DIV; // showFullGene always true
+				
+				if (annot.getGeneNum() == lastGeneNum) {
+					olapMap.put(annot.getAnnoIdx(), nextOffset);
+					offset = nextOffset;
+					if (nextOffset==CONSTANT_OFFSET) 		nextOffset += CONSTANT_OFFSET;
+					else if (nextOffset>CONSTANT_OFFSET) 	nextOffset=0;
+					else 									nextOffset=CONSTANT_OFFSET; 
+				}
+				else {
+					nextOffset = CONSTANT_OFFSET; // for next overlapping
+					lastGeneNum = annot.getGeneNum();
+				}
 			}
-			else if (annot.isExon() || annot.isSyGene()) 
+			else if (annot.isExon() || annot.isSyGene()) {
 				dwidth = ANNOT_WIDTH;
+				if (olapMap.containsKey(annot.getGeneIdx())) 
+					offset = olapMap.get(annot.getGeneIdx());
+			}
 			
-			annot.setRectangle(centRect,
-					start.getBPValue(), end.getBPValue(),
-					bpPerPixel, dwidth, hwidth, flipped);
+			if (offset>0 && isRight) offset = -offset;
 			
-		// XXX Setup yellow description
-			if (showAnnot && annot.isVisible()) { 
-				x1 = (orient == RIGHT_ORIENT ? rect.x + rect.width + RULER_LINE_LENGTH + 2 : rect.x);
-				x2 = (orient == RIGHT_ORIENT ? x1 + RULER_LINE_LENGTH : x1 - RULER_LINE_LENGTH);
+			annot.setRectangle(centRect, start.getBPValue(), end.getBPValue(),
+					bpPerPixel, dwidth, hwidth, flipped, offset);
+			
+		// Setup yellow description
+			if (annot.isGene() && showAnnot && annot.isVisible()) { // CAS517 added isGene
 				if (annot.hasShortDescription() && getBpPerPixel() < MIN_BP_FOR_ANNOT_DESC)  { 
+					x1 = isRight ? (rect.x + rect.width + RULER_LINE_LENGTH + 2) : rect.x;
+					x2 = (isRight ? x1 + RULER_LINE_LENGTH  : x1 - RULER_LINE_LENGTH);
+					
 					ty = annot.getY1();
-					TextBox tb = new TextBox(annot.getVectorDescription(),unitFont,
-										     (int)x1, (int)ty, 40, 200);
+					if (lastStart==ty) ty = ty+CONSTANT_OFFSET;
+					lastStart=ty;
+					
+					TextBox tb = new TextBox(annot.getVectorDescription(),unitFont, (int)x1, (int)ty, 40, 200);
+					
 					if (POPUP_ANNO) annot.setTextBox(tb); 	// CAS503 right-click (mousePressed)
 					getHolder().add(tb); 					// adds it to the TrackHolder JComponent
-					bounds = tb.getBounds();
 					
+					bounds = tb.getBounds();
 					totalRect.height = Math.max(totalRect.height, ty); // adjust totalRect for this box
 					totalRect.y = Math.min(totalRect.y, ty);
-					if (orient == RIGHT_ORIENT) {
+					if (isRight) {
 						tx = x2 + OFFSET_SMALL;
 						totalRect.width = Math.max(totalRect.width, bounds.getWidth()+bounds.getX()+tx);
 					}
@@ -497,6 +522,7 @@ public class Sequence extends Track {
 				}
 			}
 		} // end for loop of (all annotations)
+		olapMap.clear();
 		
 		// show instructions for annotation descriptions when zoomed out
 		if (showAnnot && getBpPerPixel() >= MIN_BP_FOR_ANNOT_DESC) { 
@@ -504,10 +530,8 @@ public class Sequence extends Track {
 			x2 = (orient == RIGHT_ORIENT ? x1 + RULER_LINE_LENGTH : x1 - RULER_LINE_LENGTH);
 			ty = rect.y+rect.height/2;
 			TextBox tb = new TextBox(
-					"Annotation descriptions cannot be displayed\n"+
-					"at this scale, zoom in further by dragging\n" +
-					"the mouse over the sequence rectangle.\n",
-					unitFont,(int)x1,(int)ty,200,1000);
+				"Annotation descriptions cannot be displayed\nat this scale, zoom in further by dragging\n" +
+				"the mouse over the sequence rectangle.\n", unitFont,(int)x1,(int)ty,200,1000);
 			getHolder().add(tb);
 			bounds = tb.getBounds();
 			
@@ -563,7 +587,7 @@ public class Sequence extends Track {
 		rect.y -= totalRect.y;
 		for (Rule rule : ruleList)
 			rule.setOffset(totalRect.x, totalRect.y);
-		for (Annotation annot : annotations)
+		for (Annotation annot : allAnnoVec)
 			annot.setOffset(totalRect.x-1, totalRect.y);
 
 		headerPoint.x -= totalRect.x;
@@ -577,10 +601,10 @@ public class Sequence extends Track {
 		return true;
 	}
 	
-	public Point2D getPoint(long bpPos, int orient) {
+	public Point2D getPoint(long bpPos, int trackPos) {
 		if (bpPos < start.getValue()) bpPos = start.getValue(); 
 		if (bpPos > end.getValue())   bpPos = end.getValue(); 	
-		double x = (orient == LEFT_ORIENT ? rect.x+rect.width : rect.x);			
+		double x = (trackPos == LEFT_ORIENT ? rect.x+rect.width : rect.x);			
 		double y = rect.y + GenomicsNumber.getPixelValue(bpPerCb,bpPos-start.getValue(),bpPerPixel);
 		
 		if (flipped) y = rect.y + rect.y + rect.height - y;	
@@ -605,7 +629,7 @@ public class Sequence extends Track {
 				for (Rule rule : ruleList)
 					rule.paintComponent(g2);
 			}
-			for (Annotation annot : annotations)
+			for (Annotation annot : allAnnoVec)
 				if (annot.isVisible())
 					annot.paintComponent(g2); 
 
@@ -621,62 +645,6 @@ public class Sequence extends Track {
 		super.paintComponent(g); // must be done at the end
 	}
 
-	/**
-	 * Method getHelpText returns the desired text for when the mouse is over a certain point.
-	 * Called from symap.frame.HelpBar mouseMoved event
-	 */
-	public String getHelpText(MouseEvent event) {
-		Point p = event.getPoint();
-		if (rect.contains(p)) { // within blue rectangle of track
-			String x = null;
-			for (Annotation annot : annotations) {
-				if (annot.contains(p)) {
-					if (x==null) x = annot.getLongDescription(); 
-					else x += "\n" + annot.getTag(); // CAS512 add exon if available
-				}
-			}
-			if (x!=null) return x;
-		}
-		else {					// not within blue rectangle of track
-			if (POPUP_ANNO) {	// CAS503 add - in yellow box; see end of Annotation.java and TextBox.java 
-				for (Annotation annot : annotations) { 
-					if (annot.boxContains(p)) 
-						return "Right click for popup of description";
-				}
-			}
-		}
-		return "Sequence Track (" + getTitle() + "):  " + HOVER_MESSAGE; 
-	}
-	/*************************************************
-	 * Gene space or yellow box - popup
-	 * else pass to parent
-	 */
-	public void mousePressed(MouseEvent e) {
-		if (e.isPopupTrigger()) { // CAS516 add popup on right click
-			Point p = e.getPoint();
-			if (rect.contains(p)) { // within blue rectangle of track
-				for (Annotation annot : annotations) { 
-					if (annot.contains(p)) {	// XXX in this gene annotation
-						annot.setExonList(annotations);		
-						annot.popupDesc(getHolder(), getProjectDisplayName() + " " + getName());
-						return;
-					}
-				}
-			}
-			// CAS503 add popUp description; created in Build
-			if (POPUP_ANNO && showAnnot) { 					
-				for (Annotation annot : annotations) { 				
-					if (annot.boxContains(p)) {				// in gene's yellow box
-						annot.setExonList(annotations);		// CAS512 add exon list on first time
-						annot.popupDesc(getProjectDisplayName() + " "  + getName());
-						return;
-					}	
-				}
-			}
-		}
-		super.mousePressed(e);									// right click - blue area for menu
-	}
-	
 	public void mouseReleased(MouseEvent e) { 
 		Point p = e.getPoint();
 		if (drawingPanel.isMouseFunctionPop() 
@@ -836,8 +804,6 @@ public class Sequence extends Track {
 		}
 	}
 
-	
-
 	public String getTitle() {
 		return getProjectDisplayName()+" "+getName();
 	}
@@ -883,7 +849,94 @@ public class Sequence extends Track {
 			drawingPanel.smake(); // redraw after user clicks "ok"
 		}
 	}
-	/* XXX CAS504  Show Sequence */
+	public String toString() {
+		int tn = getHolder().getTrackNum();
+		String ref = (tn%2==0) ? " REF " : " "; 
+		return "[Sequence "+getFullName() + " Chr" + getGroup()+ ref + isQuery + "]";
+	}
+
+	/**
+	 * returns the desired text for when the mouse is over a certain point.
+	 * Called from symap.frame.HelpBar mouseMoved event
+	 */
+	public String getHelpText(MouseEvent event) {
+		Point p = event.getPoint();
+		if (rect.contains(p)) { // within blue rectangle of track
+			String x = null;
+			int gIdx=0;
+			for (Annotation annot : allAnnoVec) {
+				if (annot.contains(p)) {
+					if (x==null) {
+						if (annot.isGap()) 			return annot.getLongDescription().trim();
+						if (annot.isCentromere()) 	return annot.getLongDescription().trim();
+						
+						x = annot.getLongDescription().trim(); 
+						gIdx = annot.getAnnoIdx();
+					}
+					else { // CAS517  inactive - messes up with overlapping genes 
+						if (annot.isExon() && annot.getGeneIdx()==gIdx) {
+							x += "\n" + annot.getLongDescription().trim(); 	// CAS512 add exon if available
+							return x;
+						}
+					}
+				}
+			}
+			if (x!=null) return x;
+		}
+		else {					// not within blue rectangle of track
+			if (POPUP_ANNO) {	// CAS503 add - in yellow box; see end of Annotation.java and TextBox.java 
+				for (Annotation annot : allAnnoVec) { 
+					if (annot.boxContains(p)) 
+						return "Right click for popup of description";
+				}
+			}
+		}
+		return "Sequence Track (" + getTitle() + "):  " + HOVER_MESSAGE; 
+	}
+	public String getFullName() {
+		return "Track #" + getHolder().getTrackNum() + " " + getProjectDisplayName() + " " + getName();
+	}
+	/*************************************************
+	 * In click in anno space: if click in yellow box or anno, popup info
+	 * else pass to parent
+	 */
+	public void mousePressed(MouseEvent e) {
+		if (e.isPopupTrigger()) { // CAS516 add popup on right click
+			String title = getFullName();
+			String chr = getProjectDisplayName() + " " + getName();
+			Point p = e.getPoint();
+			if (rect.contains(p)) { // within blue rectangle of track
+				for (Annotation annot : allAnnoVec) { 
+					if (annot.contains(p)) {	// in this gene annotation
+						setGene(annot);	
+						annot.popupDesc(getHolder(), title, chr);
+						return;
+					}
+				}
+			}
+			// CAS503 add popUp description; created in Build
+			if (POPUP_ANNO && showAnnot) { 					
+				for (Annotation annot : allAnnoVec) { 		
+					if (annot.boxContains(p)) {	// within gene's yellow box
+						setGene(annot);	
+						annot.popupDesc(null, title, chr); 
+						return;
+					}	
+				}
+			}
+		}
+		super.mousePressed(e);					// right click - blue area for menu
+	}
+	private void setGene(Annotation annot) {
+		if (pseudoPseudoHitsObj==null) return; // FPC
+		if (!annot.hasHitList()) { // CAS517 added
+			String hits = pseudoPseudoHitsObj.getHitsStr(this, annot.getStart(), annot.getEnd());
+			annot.setHitList(hits);
+		}
+		annot.setExonList(allAnnoVec);
+	}
+	/* CAS504  Show Sequence 
+	 * CAS571 compared a pos & neg with TAIR */
 	private void popupSequence(int start, int end) {
 		try {
 			if (end-start > 1000000) {
@@ -893,7 +946,7 @@ public class Sequence extends Track {
 			String projName = getProjectName();
 			int grpid = getGroup();
 			String coords = start + ":" + end;
-			String title = String.format("%s %,d-%,d  Len=%,d", projName, start, end, (end-start+1));
+			String title = String.format("%s %,d - %,d  %,dbp", projName, start, end, (end-start+1));
 			 
 			String seq = seqPool.loadPseudoSeq(coords, grpid);
 			StringBuffer bf = new StringBuffer ();
@@ -905,7 +958,7 @@ public class Sequence extends Track {
 			if (x<len) bf.append(seq.substring(x, len) + "\n");
 			String msg = bf.toString();
 			
-			Utilities.displayInfoMonoSpace(null /*Component*/, title, msg, false /*!isModal*/);
+			Utilities.displayInfoMonoSpace(getHolder(), title, msg, false /*!isModal*/);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Error showing popup of sequence");}
 	}

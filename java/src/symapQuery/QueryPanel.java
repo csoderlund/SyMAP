@@ -54,6 +54,8 @@ public class QueryPanel extends JPanel {
 	
 	private boolean isBlockNum(){ // CAS514 was not checking for selected
 		return chkBlock.isEnabled() && chkBlock.isSelected() && txtBlock.getText().trim().length()>0;}
+	private boolean isColinear(){ // CAS514 was not checking for selected
+		return chkColinear.isEnabled() && chkColinear.isSelected() && txtColinear.getText().trim().length()>0;}
 	private boolean isHitIdx()	{ 
 		return chkHitIdx.isEnabled() && chkHitIdx.isSelected() && txtHitIdx.getText().trim().length()>0;}
 	
@@ -153,13 +155,16 @@ public class QueryPanel extends JPanel {
 			return " FROM pseudo_hits AS " + Q.PH + join + " " + whereClause;
 		}
 		
-		whereClause = joinBool(whereClause, makeHitAnnoWhere(), AND);
+		whereClause = joinBool(whereClause, makeAnnoWhere(), AND);
 		
 		// Chr, loc
 		whereClause = joinBool(whereClause, makeSpChrWhere(), AND);
 		
 		if (isBlockNum()) { // if block, only anno filter and chromosome (CAS513 add chromosome)
-			whereClause = joinBool(whereClause, makeHitBlockWhere(), AND);
+			whereClause = joinBool(whereClause, makeChkBlockWhere(), AND);
+		}
+		if (isColinear()) { // if block, only anno filter and chromosome (CAS513 add chromosome)
+			whereClause = joinBool(whereClause, makeChkColinearWhere(), AND);
 		}
 		else {// isSynteny, isAnno, isColinear; isOneAnno, isTwoAnno use post-processing
 			if (isBlock())         	whereClause = joinBool(whereClause, "PBH.block_idx is not null", AND);
@@ -170,7 +175,7 @@ public class QueryPanel extends JPanel {
 					"(PH.annot1_idx=0 and PH.annot2_idx=0) AND PA.idx is null", AND); // 'is null' is necessary. 
 			
 			int n = isCollinear(true);
-			if (n>0) whereClause = joinBool(whereClause, "PH.runsize>" + n, AND);
+			if (n>0) whereClause = joinBool(whereClause, "PH.runsize>=" + n, AND); // CAS517 was >
 		}
 		return " FROM pseudo_hits AS " + Q.PH + join + " " + whereClause + "  ORDER BY PH.idx  asc";
 	}	
@@ -178,7 +183,7 @@ public class QueryPanel extends JPanel {
 	 * If this extra select is not done, then ONLY rows with PA.name with zinc are returned
 	 * and there is no annotation for the other side of the hit
 	 */
-	private String makeHitAnnoWhere() {
+	private String makeAnnoWhere() {
 		if (!isAnnoTxt()) return "";
 		
 		String clause = "PA.name LIKE '%" + txtAnno.getText() + "%'";
@@ -193,7 +198,7 @@ public class QueryPanel extends JPanel {
 	 * CAS504 added block search; CAS513 didn't always work - changed to just looking for block=N
 	 * Convert block string to where statement 
 	 *****/
-	private String makeHitBlockWhere() {
+	private String makeChkBlockWhere() {
 		String block = txtBlock.getText().trim();
 		if (block.equals("")) return "";
 		
@@ -206,6 +211,23 @@ public class QueryPanel extends JPanel {
 				"Invalid block number (" + block + "). Should be single number.\n"
 			+ " Set chromosomes to narrow it down to a block like 3.1.2."); // CAS512 add popup warning
 			txtBlock.setText("");
+			bValidQuery=false;
+			return "";
+		}
+	}
+	private String makeChkColinearWhere() {
+		String run = txtColinear.getText().trim();
+		if (run.equals("")) return "";
+		
+		try {
+			int n = Integer.parseInt(run);
+			return "ph.runsize=" + n;
+		}
+		catch (Exception e) {
+			Utilities.showWarningMessage(
+				"Invalid collinear number (" + run + "). Should be single number.\n"
+			+ " Set chromosomes to narrow it down to a collinear run 3.1.2."); 
+			txtColinear.setText("");
 			bValidQuery=false;
 			return "";
 		}
@@ -306,6 +328,9 @@ public class QueryPanel extends JPanel {
 		if (isBlockNum()) {
 			retVal = joinStr(retVal, "Block="+txtBlock.getText().trim(), ";  ");
 		}
+		if (isColinear()) {
+			retVal = joinStr(retVal, "Colinear="+txtColinear.getText().trim(), ";  ");
+		}
 		else {
 			if (isBlock())			retVal = joinStr(retVal, "Block hits", ";  ");
 			else if (isNotBlock()) 	retVal = joinStr(retVal, "No Block hits", ";  ");
@@ -395,27 +420,27 @@ public class QueryPanel extends JPanel {
 		JPanel buttonPanel = createButtonPanel();
 		JPanel searchPanel = createFilterAnnoPanel();
 		JPanel orphanPanel = createFilterSinglePanel();
-		JPanel blockPanel  = createFilterBlockPanel();
+		JPanel blockPanel  = createFilterCheckPanel();
 		JPanel basicPanel  = createFilterOptionsPanel();
 		JPanel pgenePanel  = createFilterPgeneFPanel();
 	 
 		add(buttonPanel);								add(Box.createVerticalStrut(10));
 		
 		pnlStep1 = new CollapsiblePanel("1. General", ""); 
-		pnlStep1.add(searchPanel);		pnlStep1.add(Box.createVerticalStrut(10));
+		pnlStep1.add(searchPanel);		
 		pnlStep1.add(speciesPanel);	
 		pnlStep1.collapse();
 		pnlStep1.expand();
 		add(pnlStep1);	
 		
 		pnlStep2 = new CollapsiblePanel("2. Single genes", "");
-		pnlStep2.add(orphanPanel);
+		pnlStep2.add(orphanPanel);			
 		pnlStep2.collapse();
 		pnlStep2.expand();
 		add(pnlStep2);								
 		
 		pnlStep3 = new CollapsiblePanel("3. Pair hits", ""); 
-		pnlStep3.add(basicPanel);			pnlStep2.add(Box.createVerticalStrut(10));
+		pnlStep3.add(basicPanel);			pnlStep3.add(Box.createVerticalStrut(5));
 		pnlStep3.add(blockPanel);				
 		pnlStep3.collapse();
 		pnlStep3.expand();
@@ -515,12 +540,12 @@ public class QueryPanel extends JPanel {
 		txtCollinearN = new JTextField(4); txtCollinearN.setBackground(Color.WHITE);
 		txtCollinearN.setText("0"); txtCollinearN.setMaximumSize(txtCollinearN.getPreferredSize());
 		row.add(txtCollinearN);
-		panel.add(row);
+		panel.add(row); 
 		
 		return panel;
 	}
 	/** Block and Hit **/
-	private JPanel createFilterBlockPanel() {
+	private JPanel createFilterCheckPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -538,7 +563,7 @@ public class QueryPanel extends JPanel {
 				setAllEnabled(!blkSel);
 				if (blkSel) {
 					chkBlock.setEnabled(true);
-					txtBlock.setEnabled(chkBlock.isSelected());
+					txtBlock.setEnabled(true);
 					speciesPanel.setEnabled(true); 
 				}
 			}
@@ -547,6 +572,23 @@ public class QueryPanel extends JPanel {
 		row.add(chkBlock); row.add(Box.createHorizontalStrut(10));
 		row.add(txtBlock); row.add(Box.createHorizontalStrut(30));
 		
+		chkColinear = new JCheckBox("Collinear");
+		chkColinear.setBackground(Color.WHITE);
+		chkColinear.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) {
+				boolean coSel = chkColinear.isSelected();
+				setAllEnabled(!coSel);
+				if (coSel) {
+					chkColinear.setEnabled(true);
+					txtColinear.setEnabled(true);
+					speciesPanel.setEnabled(true); 
+				}
+			}
+		});
+		txtColinear = new JTextField(4); txtColinear.setEnabled(false);
+		row.add(chkColinear); row.add(Box.createHorizontalStrut(10));
+		row.add(txtColinear); row.add(Box.createHorizontalStrut(30));
+		
 		chkHitIdx = new JCheckBox("Hit#");
 		chkHitIdx.setBackground(Color.WHITE);
 		chkHitIdx.addActionListener(new ActionListener() { 
@@ -554,9 +596,10 @@ public class QueryPanel extends JPanel {
 				boolean hitSel = chkHitIdx.isSelected();
 				setAllEnabled(!hitSel); // turn all off
 				
-				if (hitSel) { // just turn hit on
+				if (hitSel) {
 					chkHitIdx.setEnabled(true);
-					txtHitIdx.setEnabled(chkHitIdx.isSelected());
+					txtHitIdx.setEnabled(true);
+					txtAnno.setEnabled(false); 
 				}
 			}
 		});
@@ -599,10 +642,6 @@ public class QueryPanel extends JPanel {
 					chkSingle.setEnabled(true);
 					cmbGeneSpecies.setEnabled(true);
 					cmbGeneOpt.setEnabled(true);
-				}
-				else {
-					cmbGeneSpecies.setEnabled(false);
-					cmbGeneOpt.setEnabled(false);
 				}
 			}
 		});
@@ -761,6 +800,7 @@ public class QueryPanel extends JPanel {
 		txtCollinearN.setText("");
 		
 		txtBlock.setText(""); 			 txtBlock.setEnabled(false);	chkBlock.setSelected(false);
+		txtColinear.setText(""); 		 txtColinear.setEnabled(false);	chkColinear.setSelected(false);
 		txtHitIdx.setText(""); 			 txtHitIdx.setEnabled(false);   chkHitIdx.setSelected(false);
 		
 		chkSingle.setSelected(false);
@@ -773,19 +813,20 @@ public class QueryPanel extends JPanel {
 	}
 	
 	private void setAllEnabled(boolean b) { // everything
-		//txtAnno.setEnabled(b); all use except HitIdx, which ignores
+		txtAnno.setEnabled(true); // all use except HitIdx, which disables
 		
 		blockOptRow.setEnabled(b); 
 		annoOptRow.setEnabled(b); 
 	
 		lblCollinearN.setEnabled(b); txtCollinearN.setEnabled(b);
 		
-		chkBlock.setEnabled(b);  txtBlock.setEnabled(b);
-		chkHitIdx.setEnabled(b); txtHitIdx.setEnabled(b);
+		chkBlock.setEnabled(b);  txtBlock.setEnabled(false); // only chkBlock enables
+		chkColinear.setEnabled(b);  txtColinear.setEnabled(false); // only chkColinear enables
+		chkHitIdx.setEnabled(b); txtHitIdx.setEnabled(false);// only chkHitIdx enables
 	
 		speciesPanel.setEnabled(b); // All chr, start, end
 		
-		chkSingle.setEnabled(b); cmbGeneSpecies.setEnabled(b); cmbGeneOpt.setEnabled(b);
+		chkSingle.setEnabled(b); cmbGeneSpecies.setEnabled(false); cmbGeneOpt.setEnabled(false); // only chkSingle enables
 		
 		chkPgeneF.setEnabled(b);
 		setPgenefEnable(false);
@@ -919,8 +960,8 @@ public class QueryPanel extends JPanel {
 	private JComboBox <String> cmbGeneSpecies = null;
 	
 	private JCheckBox chkPgeneF = null;
-	private JCheckBox chkBlock = null, chkHitIdx = null;
-	private JTextField txtBlock = null, txtHitIdx = null;
+	private JCheckBox chkBlock = null, chkColinear = null, chkHitIdx = null;
+	private JTextField txtBlock = null, txtColinear = null, txtHitIdx = null;
 	
 	private JButton btnExecute = null;
 	

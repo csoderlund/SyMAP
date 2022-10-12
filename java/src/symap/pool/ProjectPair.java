@@ -25,13 +25,8 @@ public class ProjectPair {
 	}
 
 	/**
-	 * Creates a new <code>ProjectPair</code> instance. This instance doesn't 
-	 * have the pair ids set, so should only be used to locate valid 
-	 * ProjectPairs since the comparison methods (e.g., equals()) only 
-	 * consider the project ids. 
-	 *
-	 * @param p1 an <code>int</code> value
-	 * @param p2 an <code>int</code> value
+	 * This instance doesn't have the pair ids set, so should only be used to locate valid 
+	 * ProjectPairs since the comparison methods (e.g., equals()) only consider the project ids. 
 	 */
 	protected ProjectPair(int p1, int p2) {
 		this(0,p1,p2);

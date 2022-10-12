@@ -61,7 +61,7 @@ public class AlignProjs extends JFrame {
 		SyProps pairProps = frame.getPairPropsFromDB(id1, id2);
 		
 		// remove existing pair stuff and reassign pair props 
-		int pairIdx = pairIdxRenew(id1, id2);
+		int pairIdx = pairIdxRenew(p1, p2);
 		Logger syLog = diaLog;
 		savePairProps(pairProps, pairIdx, p1, p2, syLog);
 		
@@ -264,16 +264,16 @@ public class AlignProjs extends JFrame {
 		catch (Exception e) {ErrorReport.print(e, "Creating log file");}
 		return ret;
 	}
-	private int pairIdxRenew(int id1, int id2) {
+	private int pairIdxRenew(Project p1, Project p2) {
 		try {
+			/** CAS517 use main remove
 			int idx = frame.getPairIdx(id1, id2);
 			UpdatePool pool = new UpdatePool(dbReader);
-			
-			// Remove all previous pair info
-			if (idx>0) 
-				pool.executeUpdate("DELETE FROM pairs WHERE idx=" + idx);
-			
-			return frame.pairIdxCreate(id1, id2, pool);
+			if (idx>0) pool.executeUpdate("DELETE FROM pairs WHERE idx=" + idx);
+			**/
+			frame.removeAlignmentFromDB(p1, p2);
+			UpdatePool pool = new UpdatePool(dbReader);
+			return frame.pairIdxCreate(p1.getID(), p2.getID(), pool);
 		}
 		catch (Exception e) {ErrorReport.die(e, "SyMAP error renewing pairidx");}
 		return 0;

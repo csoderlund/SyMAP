@@ -31,7 +31,7 @@ import util.ErrorReport;
 import util.Utilities;
 
 /**
- * Class Track contains the base track information.
+ * Class Track contains the base track information. 
  */
 public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		SyMAPConstants, KeyListener,
@@ -112,9 +112,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		if (holder.getTrack() != null) this.position = holder.getTrack().position; // maintain position when "back to block view" selected
 	}
 
-	public TrackHolder getHolder() { // Called by Sequence and DrawingPanel
-		return holder;
-	}
+	public TrackHolder getHolder() { return holder;}// Called by Sequence and DrawingPanel
 
 	public void setHeld() { } // TrackHolder
 
@@ -204,12 +202,8 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 
 	public abstract void clearData();
 
-	/**
-	 * getMoveOffset returns the move offset for the track to be used by the holder/layout manager.
-	 */
-	public Point getMoveOffset() {
-		return moveOffset;
-	}
+	/*** getMoveOffset returns the move offset for the track to be used by the holder/layout manager.*/
+	public Point getMoveOffset() {return moveOffset;}
 
 	/**
 	 * getGraphics returns the holders graphics object if a holder exists, null otherwise.
@@ -220,50 +214,33 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		return null;
 	}
 
-	/**
-	 * getLocation returns the location of the holder or a point at location 0,0 if holder is not set.
-	 */
+	/*** getLocation returns the location of the holder or a point at location 0,0 if holder is not set.*/
 	public Point getLocation() {
 		if (holder != null) return holder.getLocation();
 		else return new Point();
 	}
 
-	/**
-	 * getMidX returns the viewable middle as determined by the track.
-	 */
+	/*** getMidX returns the viewable middle as determined by the track.*/
 	public double getMidX() {
 		return rect.getX()+(rect.getWidth()/2.0);
 	}
 
-	public int getProject() {
-		return project;
-	}
+	public int getProject() {return project;}
 
-	public int getOtherProject() {
-		return otherProject;
-	}
+	public int getOtherProject() {return otherProject;}
 	
-	public String getProjectType() {
-		return projectType;
-	}
+	public String getProjectType() {return projectType;}
 	
-	public String getOtherProjectType() {
-		return otherProjectType;
-	}
+	public String getOtherProjectType() {return otherProjectType;}
 
-	public String getProjectName() {
-		return projectName;
-	}
+	public String getProjectName() {return projectName;}
 
-	public String getProjectDisplayName() {
-		return displayName;
-	}
-	public double getBpPerPixel() { // GenomicsNumberHolder interface
-		return bpPerPixel;
-	}
-	public int getBpPerCb() { // GenomicsNumberHolder interface
-		return bpPerCb;
-	}
+	public String getProjectDisplayName() {return displayName;}
+
+	public double getBpPerPixel() { return bpPerPixel;}// GenomicsNumberHolder interface
+	
+	public int getBpPerCb() { return bpPerCb;}// GenomicsNumberHolder interface
+	
 	public boolean changeZoomFactor(double factor) {
 		if (factor > 0) {
 			setBpPerPixel( getBpPerPixel() * ( 1.0 / factor ) );
@@ -326,12 +303,8 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	}
 
 	/**
-	 * Sets the height in pixels. Height can be used by the individual 
-	 * implementations of the track during the build. If pixels is less than 
-	 * or equal to 0, 1 is used. If pixels is greater than
-	 * MAX_PIXEL_HEIGHT, than the MAX_PIXEL_HEIGHT is used.
-	 * 
-	 * @param pixels Height of the track in pixels on the next build
+	 * Sets the height in pixels. Height can be used by the individual track during the build. 
+	 * If pixels is less than or equal to 0, 1 is used. 
 	 */
 	public void setHeight(double pixels) {
 		pixels = Math.min(Math.max(pixels,1),MAX_PIXEL_HEIGHT);
@@ -341,14 +314,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		}
 	}
 
-	/**
-	 * Sets the width in pixels.  Width can be used by the individual 
-	 * implementations of the track during the build. If pixels is less than 0, 
-	 * 0 is used. If pixels is greater than
-	 * MAX_PIXEL_WIDTH, than the MAX_PIXEL_WIDTH is used.
-	 * 
-	 * @param pixels Width of the track in pixels on the next build
-	 */
+	/*** Sets the width in pixels.  Width can be used by the individual implementations of the track during the build. */
 	public void setWidth(double pixels) {
 		pixels = Math.min(Math.max(pixels,0),MAX_PIXEL_WIDTH);
 		if (width != pixels) {
@@ -356,33 +322,21 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			clearTrackBuild();
 		}
 	}
-	/**
-	 * Sets the height to not be considered on the next build.  Sets the track to
-	 * need to be built on the next make if the height was set.
-	 */
+	/*** Sets the height to not be considered on the next build. */
 	public void clearHeight() {
 		if (height != NO_VALUE) {
 			height = NO_VALUE;
 			clearTrackBuild();
 		}
 	}
-	/**
-	 * Sets the width to not be considered on the next build.  Sets the track 
-	 * to need to be built on the next make if the width was set.
-	 */
+	/*** Sets the width to not be considered on the next build. */
 	public void clearWidth() {
 		if (width != NO_VALUE) {
 			width = NO_VALUE;
 			clearTrackBuild();
 		}
 	}
-	/**
-	 * Sets the orientation of the track, settting the track to need to be 
-	 * built on the next make on a change.
-	 * Some track implementations may only accept RIGHT_ORIENT and LEFT_ORIENT.
-	 * @param orientation The side at which the track is on in the map.  
-	 * LEFT_ORIENT is used if this value is not defined
-	 */
+	/*** Some track implementations may only accept RIGHT_ORIENT and LEFT_ORIENT.*/
 	protected void setOrientation(int orientation) {
 		if (orientation != RIGHT_ORIENT && orientation != CENTER_ORIENT) orientation = LEFT_ORIENT;
 		if (orientation != orient) {
@@ -393,19 +347,14 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	
 	public int getOrientation() { return orient; }
 
-	/**
-	 * Resets the track's end to the size set during initialization, 
-	 * setting the track to be built on the next build on a change.
-	 */
+	/*** Resets the track's end to the size set during initialization, setting the track to be built on the next build on a change.*/
 	public void resetEnd() {
 		if (end.getValue() != size.getValue()) {
 			end.setValue(size.getValue());
 			clearAllBuild();
 		}
 	}
-	/**
-	 * Resets the tracks start to 0, setting the track to be built on the next build on a change. 
-	 */
+	/*** Resets the tracks start to 0, setting the track to be built on the next build on a change. */
 	public void resetStart() {
 		if (start.getValue() != 0) {
 			start.setValue(0);
@@ -497,33 +446,15 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		return num >= start.getValue() && num <= end.getValue();
 	}
 
-	/**
-	 * returns the CB (BP if CB not applicable) value of the start of the Track.
-	 */
-	public long getStart() {
-		return start.getValue();
-	}
+	/*** following 3 returns the CB (BP if CB not applicable) value of the start of the Track.*/
+	public long getStart() {return start.getValue();}
 
-	/**
-	 * returns the CB (BP if CB not applicable) value of the end of the Track.
-	 */
-	public long getEnd() {
-		return end.getValue();
-	}
+	public long getEnd() {return end.getValue(); }
 
-	/**
-	 * returns the CB (BP if CB not applicable) value of the size of the Track.
-	 */
-	public long getTrackSize() {
-		return size.getValue();
-	}
+	public long getTrackSize() {return size.getValue();}
 
-	/**
-	 * returns the dimension of the track  which corresponds to the preferred size post build.
-	 */
-	public Dimension getDimension() {
-		return dimension; 
-	}
+	/*** returns the dimension of the track  which corresponds to the preferred size post build.*/
+	public Dimension getDimension() {return dimension; }
 
 	/**
 	 * getValue is a convenience method for getting the value of a CB number (equivalent to BP when CB is not applicable)

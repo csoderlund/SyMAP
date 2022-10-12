@@ -370,7 +370,6 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 				controlPanel.repaint();
 				
 				// Regenerate main display
-				isFirst2DView = true;
 				isFirstDotplotView = true;
 				btnShow2D.setEnabled( mapper.getNumVisibleTracks() > 0 );
 				btnShowDotplot.setEnabled( mapper.getNumVisibleTracks() > 0 );
@@ -499,18 +498,19 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 	private boolean regenerate2DView() {
 		try {
 			if (symap2D == null)
-				symap2D = new SyMAP(dbReader, helpBar, null);
+				symap2D = new SyMAP(dbReader, helpBar, null); 
 			
 			SyMAPFrame frame = symap2D.getFrame();
 			if (frame == null) {
 				System.err.println("SyMAPFrame3D:  Error creating 2D frame!");
 				return false;
 			}
+			symap2D.setHasFPC(false); // CAS517 FPC does not get color change in 3D mode
 			
 			DrawingPanel dp = symap2D.getDrawingPanel();
 			
 			// start the 2D over when they go back and forth
-			if (true || isFirst2DView) { 
+			if (true) { 
 				// Get selected tracks
 				TrackCom ref = ((Mapper3D)mapper).getReferenceTrack();
 				TrackCom[] selectedTracks = ((Mapper3D)mapper).getVisibleTracks();
@@ -571,7 +571,6 @@ public class SyMAPFrame3D extends SyMAPFrameCommon {
 			
 			dp.amake(); // redraw and make visible
 			
-			isFirst2DView = false;
 			return true;
 		}
 		catch (OutOfMemoryError e) { 

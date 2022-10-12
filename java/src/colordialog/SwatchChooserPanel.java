@@ -29,7 +29,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 /**
- * Class <code>SwatchChooserPanel</code> is based off of the DefaultSwatchChooserPanel with
+ * Class SwatchChooserPanel is based off of the DefaultSwatchChooserPanel with
  * an added slider and spinner for Alpha values (optional).
  *
  * @see AbstractColorChooserPanel
@@ -46,18 +46,15 @@ public class SwatchChooserPanel extends AbstractColorChooserPanel implements Cha
 	private boolean doAlpha;  // not allowing alpha changes
 
 	/**
-	 * Creates a new <code>SwatchChooserPanel</code> instance in
-	 * which alpha is enabled.
-	 *
+	 * Creates a new SwatchChooserPanel instance in which alpha is enabled.
 	 */
 	public SwatchChooserPanel() { 
 		this(true);
 	}
 
 	/**
-	 * Creates a new <code>SwatchChooserPanel</code> instance.
-	 *
-	 * @param alphaEnabled a <code>boolean</code> value of true to allow for changing the alpha value
+	 * Creates a new SwatchChooserPanel instance.
+	 * @param alphaEnabled a boolean value of true to allow for changing the alpha value
 	 */
 	public SwatchChooserPanel(boolean alphaEnabled) {
 		super();
@@ -65,36 +62,18 @@ public class SwatchChooserPanel extends AbstractColorChooserPanel implements Cha
 		isLocked = false;
 	}
 
-	/**
-	 * Method <code>getDisplayName</code> returns "Swatches"
-	 *
-	 * @return a <code>String</code> value
-	 */
 	public String getDisplayName() {
 		return "Swatches";
 	}
-
-	/**
-	 * Method <code>getSmallDisplayIcon</code> returns null
-	 *
-	 * @return an <code>Icon</code> value of null
-	 */
 	public Icon getSmallDisplayIcon() {
 		return null;
 	}
-
-	/**
-	 * Method <code>getLargeDisplayIcon</code> returns null
-	 *
-	 * @return an <code>Icon</code> value of null
-	 */
 	public Icon getLargeDisplayIcon() {
 		return null;
 	}
 
 	/**
-	 * Method <code>buildChooser</code> sets up the view and the listeners
-	 *
+	 * Method buildChooser sets up the view and the listeners
 	 */
 	protected void buildChooser() {
 		int alpha = getColorFromModel().getAlpha();
@@ -150,9 +129,8 @@ public class SwatchChooserPanel extends AbstractColorChooserPanel implements Cha
 	}
 
 	/**
-	 * Method <code>stateChanged</code> handles the changing of the alpha slider and alpha spinner.
-	 *
-	 * @param e a <code>ChangeEvent</code> value
+	 * Method stateChanged handles the changing of the alpha slider and alpha spinner.
+	 * @param e a ChangeEvent value
 	 */
 	public void stateChanged(ChangeEvent e) {
 		if (!isLocked && e.getSource() == alphaSlider || e.getSource() == alphaSpinner) {
@@ -171,9 +149,7 @@ public class SwatchChooserPanel extends AbstractColorChooserPanel implements Cha
 	}
 
 	/**
-	 * Method <code>updateChooser</code> updates the alpha slider and alpha spinner
-	 * to the current color from the color model.
-	 *
+	 * Method updateChooser updates the alpha slider and alpha spinner to the current color from the color model.
 	 */
 	public void updateChooser() { 
 		if (!isLocked) {
@@ -188,10 +164,9 @@ public class SwatchChooserPanel extends AbstractColorChooserPanel implements Cha
 	}
 
 	/**
-	 * Method <code>mousePressed</code> handles the mouse clicking on
+	 * Method mousePressed handles the mouse clicking on
 	 * spots in the main color grid and the recent color grid.
-	 *
-	 * @param e a <code>MouseEvent</code> value
+	 * @param e a MouseEvent value
 	 */
 	public void mousePressed(MouseEvent e) {
 		if (e.getSource() == recentSwatchPanel) {
@@ -205,32 +180,9 @@ public class SwatchChooserPanel extends AbstractColorChooserPanel implements Cha
 		}
 	}
 
-	/**
-	 * Method <code>mouseClicked</code> does nothing
-	 *
-	 * @param e a <code>MouseEvent</code> value
-	 */
 	public void mouseClicked(MouseEvent e) { }
-
-	/**
-	 * Method <code>mouseEntered</code> does nothing
-	 *
-	 * @param e a <code>MouseEvent</code> value
-	 */
 	public void mouseEntered(MouseEvent e) { }
-
-	/**
-	 * Method <code>mouseExited</code> does nothing
-	 *
-	 * @param e a <code>MouseEvent</code> value
-	 */
 	public void mouseExited(MouseEvent e) { }
-
-	/**
-	 * Method <code>mouseReleased</code> does nothing
-	 *
-	 * @param e a <code>MouseEvent</code> value
-	 */
 	public void mouseReleased(MouseEvent e) { }
 }
 
@@ -331,7 +283,6 @@ class RecentSwatchPanel extends SwatchPanel {
 		colors[0] = c;
 		repaint();
 	}
-
 }
 
 class MainSwatchPanel extends SwatchPanel {

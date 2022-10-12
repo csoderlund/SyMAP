@@ -24,61 +24,21 @@ import util.ErrorReport;
 import util.PropertiesReader;
 
 /**
- * Class <code>ColorDialog</code> is used for editing the colors in a dialog box.
- *
- * The colors and tabs are dynamically determined by the properties in the PropertyReader object.
- * It is important that any variable that is found in the properties file
- * is made public in the class.
- *
- * ColorDialog works by changing the specified public static variables in the specified
- * classes.  The caller is responsible for putting the changes in affect. 
- * <br><br>
- * An example of a valid properties file is:<br>
- *<br>
- * # The title of the dialog box<br>
- * title=SyMAP Color Editor<br>
- * # The help id to use for the help button if applicable<br>
- * help=colors<br>
- * # string - the cookie name, don't set to have cookies not set<br>
- * cookie=SyMapColors<br>
- * # The number of columns of colors in each tab<br>
- * columns=3<br>
- * # dimension - The color icon dimensions<br>
- * iconDim=35,20<br>
- * # string - the base package to verify that the property is one of the below<br>
- * basePackage=edu<br>
- *<br>
- * # This class holds the information for all of the variables that<br>
- * # should be configurable by the user. The class must be part of a package<br>
- * # with the packages being seperated by '.' (i.e. colordialog.ColorDialog)<br>
- * # and the first package equaling the value of the basePackage property to seperate the<br>
- * # property from others.<br>
- * #<br>
- * # All variables listed must be declared public within the class.<br>
- * #<br>
- * # this properties file holds the following form (except for the colorChooserButtonImage variable):<br>
- * # &lt;class name&gt;=&lt;display name&gt;<br>
- * # or<br>
- * # &lt;class name&gt;@&lt;variable name&gt;=&lt;display name&gt;[,&lt;description&gt;[,&lt;alpha adjustable {true|false} 
- *                                                                                        defaults to true&gt;]]<br>
- * #  where all &lt;class name&gt; has an associated &lt;display name&gt;<br>
- *<br>
- * example.ClassObject=Title on Tab<br>
- * example.AnotherObject=Second Tab<br>
- * example.DifObject=Title on Tab<br>
- * <br>
- * example.ClassObject@colorVariableName=The Display Name<br>
- * example.ClassObject@colorVar=Display Name,The long description<br>
- * example.AnotherObject@colorVar=DN,Another long description,true<br>
- * example.DifObject@var[0]=Var at index 0 name<br>
- * example.DifObject@var[1]=Var at index 1 name<br>
- *  ...<br>
- * <br>
- * Tabs can be ordered by giving the variable name tab#, where # starts at 1, with the value of the tab name (i.e. tab1=Title on Tab).
- *<br><br>
- * @see JDialog
- * @see ActionListener
- * @see ColorDialogHandler
+ * Class ColorDialog is used for editing the colors in a dialog box.
+ * For example, to add the color for pseudoLineColorPP:
+ * 		properties/color.properties
+ * 			symap.mapper.Mapper@pseudoLineColorPP
+ * 		In symap.mapper.Mapper.java
+ * 			it reads /properties/mapper.properties
+ * 			add pseudoLineColorPP as a public static variable and read it value
+ * 		/properties/mapper.properties
+ * 			add it to this file
+ * 		Add to appropriate code to use value, in this case, it was in PseudoPseudoHits.java
+ * 
+ * Tabs are ordered by giving the variable name tab#, where # starts at 1, with the value of the tab name (i.e. tab1=Title on Tab).
+ * @see JDialog, ActionListener, ColorDialogHandler
+ * 
+ * CAS517 made many changes for readability 
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ColorDialog extends JDialog implements ActionListener {
@@ -89,20 +49,16 @@ public class ColorDialog extends JDialog implements ActionListener {
 
 	protected PersistentProps persistentProps = null;
 	protected PropertiesReader props = null;
+	protected boolean hasFPC;
 
 	private JTabbedPane tabbedPane;
 	private JButton okButton, cancelButton, defaultButton;
 	
 	/**
-	 * Creates a new <code>ColorDialog</code> instance.
-	 *
-	 * @param props a <code>PropertiesReader</code> containing the properties to set up the dialog
-	 * @param cookie a <code>PersistentProps</code> value of the persistent props handler to set and get the color cookie from. If null
-	 *               or the cookie name is not set in the props file than no cookies will be set.
-	 * @param help a <code>HelpHandler</code> value of the help handler to add a help button (optional)
+	 * @param props - java/src/properties/color.properties - static 
+	 * @param cookie - user/.symap_saved_props - changes to colors are stored here
 	 */
-	public ColorDialog(PropertiesReader props, 
-			PersistentProps cookie) 
+	public ColorDialog(PropertiesReader props, PersistentProps cookie, boolean hasFPC) 
 	{
 		super();
 
@@ -110,79 +66,86 @@ public class ColorDialog extends JDialog implements ActionListener {
 		setTitle("SyMAP Color Editor"); 
 
 		this.props = props;
-
-		if (cookie != null /*&& props.getString("cookie") != null*/) 
-			persistentProps = cookie.copy("SyMapColors"/*props.getString("cookie")*/);
+		if (cookie != null) persistentProps = cookie.copy("SyMapColors");
+		this.hasFPC = hasFPC;
 
 		int columns = 3;
 		Dimension iconDim = new Dimension(35,20);
 
-		String basePackage = "symap";
-
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);
 
-		Vector<ColorTab> tabs = new Vector<ColorTab>();
-		HashMap<String,String> tabMap = new HashMap<String,String>();
-		HashMap<String,Integer> tabOrderMap = new HashMap<String,Integer>();
-		Vector<ColorVariable> cvars = new Vector<ColorVariable>();
-		Enumeration propertyNames = props.propertyNames();
-		String name, pvalue, dn, des;
-		boolean a;
+		Vector<ColorTab>        tabsVec = 		new Vector<ColorTab>();
+		HashMap<String,String>  tabMap = 		new HashMap<String,String>();
+		HashMap<String,Integer> tabOrderMap = 	new HashMap<String,Integer>();
+		Vector<ColorVariable>   cvarsVec = 		new Vector<ColorVariable>();
+		
+		String name, pvalue, dn, desc;
+		boolean bAlpha;
 		int ind, cInd, c2Ind;
+		
+		// Read symap lines
+		Enumeration <?> propertyNames = props.propertyNames();
 		while (propertyNames.hasMoreElements()) {
 			name = (String)propertyNames.nextElement();
-			if (name.startsWith(basePackage)) {
-				pvalue = props.getString(name);
-				ind = name.indexOf('@');
-				if (ind < 0) {
-					tabMap.put(name,pvalue);
-				}
-				else {
-					cInd = pvalue.indexOf(',');
-					c2Ind = pvalue.lastIndexOf(',');
+			if (!name.startsWith("symap"))  continue;
+			
+			pvalue = props.getString(name);
+	
+			ind = name.indexOf('@');
+			if (ind < 0) {					// e.g. symap.sequence.Sequence=Sequence Track
+				tabMap.put(name,pvalue);
+			}
+			else {							// e.g. symap.sequence.Sequence@unitColor=Ruler,The color of the ruler text
+				cInd = pvalue.indexOf(',');
+				c2Ind = pvalue.lastIndexOf(',');
 
-					dn = pvalue;
-					des = null;
-					a = DEFAULT_ALPHA_ENABLED;
+				dn = pvalue;
+				desc = null; // description
+				bAlpha = DEFAULT_ALPHA_ENABLED;
 
-					if (cInd > 0) {
-						dn = pvalue.substring(0,cInd);
-						if (c2Ind != cInd) {
-							des = pvalue.substring(cInd+1,c2Ind);
-							a = Boolean.parseBoolean(pvalue.substring(c2Ind+1));
-							// CAS512 a = new Boolean(pvalue.substring(c2Ind+1)).booleanValue();
-						}
-						else des = pvalue.substring(cInd+1);
+				if (cInd > 0) {
+					dn = pvalue.substring(0,cInd).trim();
+					if (c2Ind != cInd) {
+						desc = pvalue.substring(cInd+1, c2Ind).trim();
+						bAlpha = Boolean.parseBoolean(pvalue.substring(c2Ind+1)); // CAS512 a = new Boolean(pvalue.substring(c2Ind+1)).booleanValue();
 					}
-					cvars.add(new ColorVariable(name.substring(0,ind),name.substring(ind+1),dn,des,iconDim,a));
+					else desc = pvalue.substring(cInd+1).trim();
+				}
+				if (hasFPC || desc==null || !desc.startsWith("FPC")) {
+					String path = name.substring(0,ind);
+					String var =  name.substring(ind+1);
+					cvarsVec.add(new ColorVariable(path,var,dn,desc,iconDim,bAlpha));
 				}
 			}
 		}		
 
+		// read tab lines, 					e.g. tab2=Sequence Track
 		for (ind = 1; ; ind++) {
 			name = (String)props.getString(TAB+ind);
 			if (name == null) break;
-			// CAS512 tabOrderMap.put(name,new Integer(ind));
-			tabOrderMap.put(name, ind);
+			name = name.trim();
+
+			if (hasFPC || !name.contentEquals("FPC")) 
+				tabOrderMap.put(name, ind); // CAS512 tabOrderMap.put(name,new Integer(ind));
 		}
 
-		for (ColorVariable colorVar : cvars) {
+		for (ColorVariable colorVar : cvarsVec) {
 			name = (String)tabMap.get(colorVar.className);
 			ind = tabOrderMap.get(name) == null ? Integer.MAX_VALUE : ((Integer)tabOrderMap.get(name)).intValue();
 			ColorTab colorTab = new ColorTab(name,columns,ind);
-			ind = tabs.indexOf(colorTab);
+			ind = tabsVec.indexOf(colorTab);
 			if (ind < 0) {
-				tabs.add(colorTab);
+				tabsVec.add(colorTab);
 			}
 			else {
-				colorTab = (ColorTab)tabs.get(ind);
+				colorTab = (ColorTab)tabsVec.get(ind);
 			}
 			colorTab.addVariable(colorVar);
 		}
 
-		Collections.sort(tabs);
+		Collections.sort(tabsVec);
 
-		for (ColorTab colorTab : tabs) {
+		for (ColorTab colorTab : tabsVec) {
 			tabbedPane.add(colorTab);
 			colorTab.setup();
 		}
@@ -304,7 +267,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 			}
 		}
 	}
-
+	/* write change to user.home/.symap_prop */
 	private void setCookie() {
 		if (persistentProps != null) {
 			Component[] comps = tabbedPane.getComponents();
@@ -326,7 +289,9 @@ public class ColorDialog extends JDialog implements ActionListener {
 			else persistentProps.deleteProp();
 		}
 	}
-
+	/********************************************************
+	 * Writes to static color variables in the specified file
+	 */
 	protected static boolean setColor(String className, String variableName, Color color) {
 		try {
 			Class c = Class.forName(className);

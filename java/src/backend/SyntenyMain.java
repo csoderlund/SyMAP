@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.PreparedStatement;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Vector;
@@ -19,7 +18,6 @@ import java.util.HashSet;
 import util.ErrorCount;
 import util.ErrorReport;
 import util.Logger;
-import util.Utilities;
 
 public class SyntenyMain 
 {
@@ -62,9 +60,8 @@ public class SyntenyMain
 		mProps = pairProps;
 	}
 	
-	public boolean run(String proj1Name, String proj2Name) 
-	throws Exception 
-	{
+	public boolean run(String proj1Name, String proj2Name) {
+	try {
 		if (!mProps.getBoolean("do_synteny")) {
 			mLog.msg("Skipping synteny finding (do_synteny=0)");
 			return true;
@@ -83,8 +80,7 @@ public class SyntenyMain
 		
 		ProjType type = pool.getProjType(proj1Name);
 		resultDir = Constants.getNameResultsDir(proj1Name, (type==ProjType.fpc), proj2Name);	
-		if (!(new File(resultDir)).exists()) 
-		{
+		if (!(new File(resultDir)).exists()) {
 			mLog.msg("Cannot find pair directory " + resultDir);
 			ErrorCount.inc();
 			return false;
@@ -98,8 +94,7 @@ public class SyntenyMain
 		mSelf = (mProj1.getIdx() == mProj2.getIdx());
 
 		mPairIdx = Utils.getPairIdx(mProj1.getIdx(), mProj2.getIdx(), pool);
-		if (mPairIdx == 0)
-		{
+		if (mPairIdx == 0) {
 			mLog.msg("Cannot find project pair in database for " + mProj1.getName() + "," + mProj2.getName());
 			ErrorCount.inc();
 			return false;
@@ -128,15 +123,12 @@ public class SyntenyMain
 		
 		for (Group grp1 : mProj1.getGroups()) {
 			for (Group grp2 : mProj2.getGroups()) {
-				if (mProj1.isSeq()) 
-				{
-					if (!mSelf)
-					{
+				if (mProj1.isSeq()) {
+					if (!mSelf) {
 						doSeqGrpGrpSynteny(grp1,grp2);
 						if (bInterrupt) return false;
 					}
-					else if (grp1.getIdx() <= grp2.getIdx())
-					{
+					else if (grp1.getIdx() <= grp2.getIdx()) {
 						doSeqGrpGrpSynteny(grp1,grp2);
 						if (bInterrupt) return false;
 					}
@@ -148,15 +140,11 @@ public class SyntenyMain
 				System.out.print(nGrpGrp + " pairs remaining...\r"); // CAS42 1/1/8 was mLog
 			}
 		}
-		
-		if (mProj1.isSeq() && mProj2.isSeq() && mProj1.idx != mProj2.idx)
-		{
-			setGeneRunCounts();
-		}
+		System.out.println("Finish                                 \r"); // CAS517 get rid of last pairs remaining
+		// CAS517 removed computing coliner runs to AnchorMain/AnchorsPost
 		if (bInterrupt) return false;
 		
-		if (mSelf)
-		{
+		if (mSelf) {
 			symmetrizeBlocks();	
 		}
 		
@@ -170,8 +158,7 @@ public class SyntenyMain
 			}
 		}
 		
-		if (mProj1.isFPC())
-		{
+		if (mProj1.isFPC()){
 			uploadBest();
 			unanchoredBlocks();
 			if (bInterrupt) return false;
@@ -180,8 +167,7 @@ public class SyntenyMain
 			doCloneSwaps();
 		}
 		
-		if (mProj1.isSeq() && mProps.getProperty("no_overlapping_blocks").equals("1"))
-		{
+		if (mProj1.isSeq() && mProps.getProperty("no_overlapping_blocks").equals("1")) {
 			mLog.msg("Removing overlapping blocks");
 			TreeMap<Integer,Vector<Block>> seenBlocks = new TreeMap<Integer,Vector<Block>>();
 			Vector<Integer> deleteList = new Vector<Integer>();
@@ -206,71 +192,56 @@ public class SyntenyMain
 
 				Block newb = new Block(s1, e1, s2, e2, gidx1, gidx2,mPairIdx, mProj1, mProj2, bnum, "");
 				boolean delete = false;
-				if (!seenBlocks.containsKey(gidx1))
-				{
+				if (!seenBlocks.containsKey(gidx1)) {
 					seenBlocks.put(gidx1, new Vector<Block>());	
 				}
-				if (!seenBlocks.containsKey(gidx2))
-				{
+				if (!seenBlocks.containsKey(gidx2)) {
 					seenBlocks.put(gidx2, new Vector<Block>());	
 				}
 				
-				for (Block b : seenBlocks.get(gidx1))
-				{
+				for (Block b : seenBlocks.get(gidx1)){
 					int maxGap = Math.min((e1-s1)/10, (b.mE1-b.mS1)/10);
-					if (Utils.intervalsOverlap(s1, e1, b.mS1, b.mE1, -maxGap) )
-					{
+					if (Utils.intervalsOverlap(s1, e1, b.mS1, b.mE1, -maxGap) ){
 						delete = true;
 						break;
 					}
 				}
-				for (Block b : seenBlocks.get(gidx2))
-				{
+				for (Block b : seenBlocks.get(gidx2)){
 					int maxGap = Math.min((e2-s2)/10, (b.mE2-b.mS2)/10);
-					if (Utils.intervalsOverlap(s2, e2, b.mS2, b.mE2, -maxGap))
-					{
+					if (Utils.intervalsOverlap(s2, e2, b.mS2, b.mE2, -maxGap)){
 						delete = true;
 						break;
 					}
 				}				
-				if (delete)
-				{
+				if (delete) {
 					deleteList.add(idx);
 				}
-				else
-				{
+				else {
 					seenBlocks.get(gidx1).add(newb);	
 					seenBlocks.get(gidx2).add(newb);	
 				}
 			}
 			int nDel = deleteList.size();
-			if (nDel > 0)
-			{
+			if (nDel > 0) {
 				Utils.prtNumMsg(mLog, nDel, "blocks to delete");
-				for (int bidx : deleteList)
-				{
+				for (int bidx : deleteList) {
 					pool.executeUpdate("delete from blocks where idx=" + bidx);	
 				}
 			}
 		}
-		if (mProj1.isSeq())
-		{
-			for (HitType bt : HitType.values())
-			{
+		if (mProj1.isSeq()){
+			for (HitType bt : HitType.values()) {
 				String rlbl = "RawSyHits" + bt.toString();
 				String blbl = "BlockHits" + bt.toString();
 				
-				if (Utils.mStats != null && Utils.mStats.containsKey(rlbl) && Utils.mStats.containsKey(blbl))
-				{
+				if (Utils.mStats != null && Utils.mStats.containsKey(rlbl) && Utils.mStats.containsKey(blbl)) {
 					float rnum = Utils.mStats.get(rlbl);
 					float bnum = Utils.mStats.get(blbl);
 					float pct = (100*bnum)/rnum;
 					Utils.incStat("BlockPercent" + bt.toString(), pct);
 				}
 			}	
-		
-			if ( mProps.getProperty("print_stats").equals("1")) 
-			{			
+			if ( mProps.getProperty("print_stats").equals("1")) {			
 				Utils.dumpHist();
 				Utils.dumpStats();
 			}
@@ -283,21 +254,17 @@ public class SyntenyMain
 			Utils.dumpStats();
 		}
 		// XXX
-		if (mProj1.orderedAgainst())
-		{
+		if (mProj1.orderedAgainst()) {
 			String orderBy = pool.getProjProp(mProj1.idx, "order_against");
-			if (orderBy != null && orderBy.equals(mProj2.getName()))
-			{
+			if (orderBy != null && orderBy.equals(mProj2.getName())) {
 				OrderAgainst obj = new OrderAgainst(mProj1, mProj2, mLog, pool); // CAS505 in new file
 				if (bNewOrder) obj.orderGroupsV2(false);	
 				else obj.orderGroups(false);	
 			}	
 		}
-		else if (mProj2.orderedAgainst())
-		{
+		else if (mProj2.orderedAgainst()){
 			String orderBy = pool.getProjProp(mProj2.idx, "order_against");
-			if (orderBy != null && orderBy.equals(mProj1.getName()))
-			{
+			if (orderBy != null && orderBy.equals(mProj1.getName())) {
 				OrderAgainst obj = new OrderAgainst(mProj1, mProj2, mLog, pool);
 				if (bNewOrder) obj.orderGroupsV2(true);
 				else obj.orderGroups(true);
@@ -308,6 +275,8 @@ public class SyntenyMain
 		Utils.timeMsg(mLog, startTime, "Synteny");
 		
 		return true;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Computing Synteny"); return false; }
 	}
 	void interrupt()
 	{
@@ -1634,242 +1603,6 @@ public class SyntenyMain
 		}		
 		
 		return in;
-	}
-	
-	
-	private void setGeneRunCounts() throws Exception
-	{
-		mLog.msg("Label adjacent gene anchors");
-		/** CAS512 made sure they are added in Version db3
-		//if (!pool.tableHasColumn("pseudo_hits", "runsize")) pool.executeUpdate("alter table pseudo_hits add runsize int default 0");
-		//if (!pool.tableHasColumn("pseudo_annot", "genenum")) pool.executeUpdate("alter table pseudo_annot add genenum int default 0");
-		
-		CAS512 MOVED compute genenum to AnnotLoadMain
-		**/
-		
-		pool.executeUpdate("update pseudo_hits set runsize=0 where pair_idx=" + mPairIdx);
-		
-		int num2go = mProj1.getGroups().size() * mProj2.getGroups().size();
-		mLog.msg("Process " + num2go + " group by group");
-		int count=0;
-		
-		// Now get the hits with genes ordered on one side and just count the ordered runs on the other side
-		for (Group g1 : mProj1.getGroups())
-		{
-			for (Group g2: mProj2.getGroups())
-			{
-				//
-				// Build sparse matrix of gene number hits; complex because of how stored in DB and
-				// because a hit can hit more than one gene number.
-				// We will be strict about connecting + strand hits in forward direction, - strand in reverse direction.
-				// 
-				ResultSet rs = pool.executeQuery("select max(genenum) as maxnum from pseudo_annot as pa where pa.grp_idx=" + g2.idx);
-				rs.first();
-				int maxN2 = rs.getInt("maxnum");
-				
-				rs = pool.executeQuery("select h.idx,a.genenum,a.grp_idx, h.strand from pseudo_hits as h " +
-						" join pseudo_hits_annot as pha on pha.hit_idx=h.idx " +
-						" join pseudo_annot as a on a.idx=pha.annot_idx " +
-						" where h.grp1_idx=" + g1.idx + " and h.grp2_idx=" + g2.idx +
-						" order by a.genenum asc, h.idx asc");
-				TreeMap<Integer,Vector<Integer>> hidx2gn1 = new TreeMap<Integer,Vector<Integer>>();
-				TreeMap<Integer,Vector<Integer>> hidx2gn2 = new TreeMap<Integer,Vector<Integer>>();
-				TreeMap<Integer,Boolean> hidx2inv = new TreeMap<Integer,Boolean>();
-				TreeMap<Integer,TreeMap<Integer,Integer>> gn2hidxF = new TreeMap<Integer,TreeMap<Integer,Integer>>();
-				TreeMap<Integer,TreeMap<Integer,Integer>> gn2hidxR = new TreeMap<Integer,TreeMap<Integer,Integer>>();
-				while (rs.next())
-				{
-					int hidx = rs.getInt(1);
-					int gnum = rs.getInt(2);
-					int grp = rs.getInt(3);
-					String str = rs.getString(4);
-					boolean inv = (str.contains("+") && str.contains("-"));
-					if (inv && grp == g2.idx)
-					{
-						// reverse the gene numbers for inverted hits since we want to connect them backwards
-						// use 2* so they won't overlap (although they will also go in separate sparse mats)
-						gnum = (1 + 2*maxN2) - gnum;
-					}
-					if (!hidx2gn1.containsKey(hidx))
-					{
-						hidx2gn1.put(hidx, new Vector<Integer>());
-						hidx2gn2.put(hidx, new Vector<Integer>());
-						hidx2inv.put(hidx, inv);			
-					}
-					if (grp == g1.idx)
-						hidx2gn1.get(hidx).add(gnum);
-					else
-						hidx2gn2.get(hidx).add(gnum);
-				}
-	
-				for (int hidx : hidx2gn1.keySet())
-				{
-					int n1 = hidx2gn1.get(hidx).size();
-					int n2 = hidx2gn2.get(hidx).size();
-	
-					if (n1 == 0 || n2 == 0) continue;
-					TreeMap<Integer,TreeMap<Integer,Integer>> sparse = gn2hidxF;
-					if (hidx2inv.get(hidx))
-					{
-						sparse = gn2hidxR;
-					}
-					for (int i = 0; i < Math.min(n1,n2); i++)
-					{
-						int gn1 = hidx2gn1.get(hidx).get(i);
-						int gn2 = hidx2gn2.get(hidx).get(i);
-						if (!sparse.containsKey(gn1))
-						{
-							sparse.put(gn1, new TreeMap<Integer,Integer>());
-							sparse.get(gn1).put(gn2, hidx);
-						}
-					}
-					for (int i = Math.min(n1,n2); i < Math.max(n1, n2); i++)
-					{
-						int gn1 = (i < n1 ? hidx2gn1.get(hidx).get(i) : hidx2gn1.get(hidx).get(n1-1) );
-						int gn2 = (i < n2 ? hidx2gn2.get(hidx).get(i) : hidx2gn2.get(hidx).get(n2-1) );
-						if (!sparse.containsKey(gn1))
-						{
-							sparse.put(gn1, new TreeMap<Integer,Integer>());
-							sparse.get(gn1).put(gn2, hidx);
-						}
-					}
-				}
-				//System.out.println("Sparse matrix traverse...");
-				// Connect the dots in the sparse matrices.
-				// Both use increasing gene order since we already reversed the gene order if necessary.
-				TreeMap<Integer,Integer> hitScores = new TreeMap<Integer,Integer>();
-				int gapSize = 1;
-				for (Object o : new Object[]{gn2hidxF,gn2hidxR})
-				{
-					TreeMap<Integer,TreeMap<Integer,Integer>> sparse = (TreeMap<Integer,TreeMap<Integer,Integer>>)o;
-					TreeMap<Integer,TreeMap<Integer,Integer>> scores = new TreeMap<Integer,TreeMap<Integer,Integer>>();
-					TreeMap<Integer,TreeSet<Integer>> maxs = new TreeMap<Integer,TreeSet<Integer>>();
-					TreeMap<Integer,Integer> backLinks = new TreeMap<Integer,Integer>();
-					HashSet<Integer> alreadyLinked = new HashSet<Integer>();
-					// Traverse sparse matrix (gn1,gn2) in increasing order of gn1,gn2 (note keySet from tree is sorted)
-					// Build backlinks and scores, and track the sparse nodes that are currently heads of maximal chains
-					for (int gn1 : sparse.keySet())
-					{
-						scores.put(gn1, new TreeMap<Integer,Integer>());
-						for (int gn2 : sparse.get(gn1).keySet())
-						{
-							scores.get(gn1).put(gn2, 1);
-							int gn1_min = gn1 - gapSize;
-							int gn2_min = gn2 - gapSize;
-							int gn1_connect = -1;
-							int gn2_connect = -1;
-							int newScore = -1;
-							for (int gn1_try = gn1-1; gn1_try >= gn1_min; gn1_try--)
-							{
-								if (!scores.containsKey(gn1_try)) continue;
-								for (int gn2_try = gn2-1; gn2_try >= gn2_min; gn2_try--)
-								{
-									if (scores.get(gn1_try).containsKey(gn2_try))
-									{
-										if (scores.get(gn1_try).get(gn2_try)+1 > newScore)
-										{
-											newScore = scores.get(gn1_try).get(gn2_try)+1;
-											gn1_connect = gn1_try;
-											gn2_connect = gn2_try;
-										}
-									}
-								}								
-							}
-							if (newScore > 0) // there was a backlink
-							{
-								assert(newScore >= 2);
-								scores.get(gn1).put(gn2,newScore);
-								// If the backlink was to a prior maximal chain, then it's no longer maximal
-								if (maxs.containsKey(gn1_connect))
-								{
-									if (maxs.get(gn1_connect).contains(gn2_connect))
-									{
-										maxs.get(gn1_connect).remove(gn2_connect);
-									}
-								}
-								if (!maxs.containsKey(gn1))
-								{
-									maxs.put(gn1, new TreeSet<Integer>());
-								}
-								maxs.get(gn1).add(gn2); // it is currently maximal just because of the traverse order
-								int hidx1 = sparse.get(gn1).get(gn2);
-								int hidx2 = sparse.get(gn1_connect).get(gn2_connect);
-								// We have to be careful because a hit can span adjacent genes on both genomes. 
-								// Also, two or more hits can span the same adjacent genes on both genomes.
-								// We have to avoid creating a self-link or link cycle.
-								if (hidx1 != hidx2) 
-								{										// Don't create a backlink FROM hit1 if 
-									if (!alreadyLinked.contains(hidx1) ) // something already links TO hit1		
-									{
-										backLinks.put(hidx1,hidx2);
-										alreadyLinked.add(hidx2);
-									}
-								}
-							}
-						}
-					}
-					// Takes some effort to get a highest-to-lowest ordered list of scores with their corresponding hits
-					TreeMap<Integer,Integer> hit2max = new TreeMap<Integer,Integer>(); 
-					for (int gn1 : maxs.keySet())
-					{
-						for (int gn2 : maxs.get(gn1))
-						{
-							int score = scores.get(gn1).get(gn2);
-							int hidx = sparse.get(gn1).get(gn2);
-							if (!hit2max.containsKey(hidx) || score > hit2max.get(hidx)) // 2nd should probably never happen
-							{
-								hit2max.put(hidx, score);
-							}
-						}
-					}
-					TreeMap<Integer, TreeSet<Integer>> scores2Hits = new TreeMap<Integer, TreeSet<Integer>>();
-					for (int hidx : hit2max.keySet())
-					{
-						int score = hit2max.get(hidx);
-						if (!scores2Hits.containsKey(score))
-						{
-							scores2Hits.put(score, new TreeSet<Integer>());
-						}
-						scores2Hits.get(score).add(hidx);
-					}
-
-					for (int score : scores2Hits.descendingKeySet())
-					{
-						for (int hidx : scores2Hits.get(score))
-						{
-							if (hitScores.containsKey(hidx)) continue;
-							hitScores.put(hidx,score);
-							while (backLinks.containsKey(hidx))
-							{
-								int hidx1 = backLinks.get(hidx);
-								hidx = hidx1;
-								if (!hitScores.containsKey(hidx))
-								{
-									hitScores.put(hidx, score);
-								}
-
-							}							
-						}
-					}
-				} // end of forward/reverse loop
-				PreparedStatement ps = pool.prepareStatement(
-						"update pseudo_hits set runsize=? where idx=?");
-				for (int hidx : hitScores.keySet())
-				{
-					int score = hitScores.get(hidx);
-					ps.setInt(1, score);
-					ps.setInt(2,hidx);
-					ps.addBatch();
-					count++;
-				}
-				ps.executeBatch();
-				
-				num2go--;
-				if (num2go>0) // CAS500 22nov19
-					System.out.print("Left to process: " + num2go + "\r");
-			}
-		}
-		Utils.prtNumMsg(mLog, count, " updates");
 	}
 	/*
 	 *  CLASSES

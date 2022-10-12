@@ -4,14 +4,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
 
-import symap.frame.HelpBar;
-import symap.frame.HelpListener;
-import util.DatabaseReader;
-import util.ImageViewer;
-import util.PropertiesReader;
-
-import dotplot.DotPlot;
-
 import java.util.Vector;
 import java.util.TreeMap;
 import java.awt.geom.AffineTransform;
@@ -23,29 +15,43 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
+import symap.frame.HelpBar;
+import symap.frame.HelpListener;
+import util.DatabaseReader;
+import util.ErrorReport;
+import util.ImageViewer;
+import util.PropertiesReader;
+
+import dotplot.DotPlot;
+
+
 public class CircPanel extends JPanel implements HelpListener, MouseListener,MouseMotionListener
 {
 	private static final long serialVersionUID = -1711255873365895293L;
-	int mRefIdx, mIdx2;
-	String refName, Name2;
-	DatabaseReader mDB;
-	Vector<Integer> mColors;
-	final int maxColors = 100;
-	TreeMap<Integer,String> mRefNames, mGrp2Names;
-	TreeMap<Integer,Integer> mRefSizes;
-	Vector<Integer> mRefOrder;
-	TreeMap<Integer,Integer> grpColorOrder;
-	Vector<Integer> mGrps2;	
-	Vector<Block> mBlocks;
 	
-	int mPairIdx;
-	
-	Vector<Group> allGrps;
-	Vector<Project> allProj;
-	Vector<Integer> projColorOrder;
 	public TreeMap<Integer,Group> idx2Grp;
-	TreeMap<Integer,Vector<Block>> grp2Blocks;
-	Statement s;
+	
+	//private int mRefIdx, mIdx2;
+	//private String refName, Name2;
+	private DatabaseReader mDB;
+	private Vector<Integer> mColors;
+	//private final int maxColors = 100;
+	//private TreeMap<Integer,String> mRefNames, mGrp2Names;
+	//private TreeMap<Integer,Integer> mRefSizes;
+	//private Vector<Integer> mRefOrder;
+	//private TreeMap<Integer,Integer> grpColorOrder;
+	//private Vector<Integer> mGrps2;	
+	//private Vector<Block> mBlocks;
+	
+	//private int mPairIdx;
+	
+	private TreeMap<String, String> name2Dis = new TreeMap<String, String> (); // CAS517
+	private Vector<Group> allGrps;
+	private Vector<Project> allProj;
+	private Vector<Integer> projColorOrder;
+	
+	private TreeMap<Integer,Vector<Block>> grp2Blocks;
+	private Statement s;
 	
 	private static final Color FAR_BACKGROUND;
 	
@@ -84,35 +90,26 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		mDB = dbReader;
 		hb = _hb;
 		
-		if (projIdxList.length == 0) 
-		{
+		if (projIdxList.length == 0) {
 			System.out.println("Circle view called with no projects!"); 
 			return;
 		}
-		
-
-		try
-		{
+		try {
 			s = mDB.getConnection().createStatement();
-			for (int i = 0; i < projIdxList.length; i++)
-			{
-				if (projIdxList[i] > 0)
-				{
+			for (int i = 0; i < projIdxList.length; i++){
+				if (projIdxList[i] > 0) {
 					addProject(projIdxList[i]);
 				}
 			}
-			if (shownGroups != null)
-			{
-				for (Group g : allGrps)
-				{
+			if (shownGroups != null){
+				for (Group g : allGrps){
 					g.shown = shownGroups.contains(g.idx);
 				}
 			}
 			init();
 		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
+		catch(Exception e){
+			ErrorReport.print(e, "Create CircPanel");
 		}
 	}
 	
@@ -132,12 +129,10 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		addMouseListener(this);
 		addMouseMotionListener(this);
 
-		for (Project p : allProj)
-		{
+		for (Project p : allProj){
 			projColorOrder.add(p.idx);
 		}
-		try
-		{
+		try{
 			int nColors = 0;
 			for (Project p : allProj)
 			{
@@ -301,9 +296,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			s1 = _s1; e1 = _e1;
 			s2 = _s2; e2 = _e2;
 			inverted = _inv;
-
 		}
-
 	}
 	public class Group
 	{
@@ -384,6 +377,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			if (rs.first())
 			{
 				displayName = rs.getString("value");
+				name2Dis.put(name, displayName); // CAS517
 			}
 		}
 		int totalSize()
@@ -725,7 +719,8 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		if (g != null)
 		{
 			setCursor( Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) );
-			hb.setHelp(g.projName + "/" + g.name + ", click to bring to top, doubleclick to hide others",this);
+			String dName = name2Dis.containsKey(g.projName) ? name2Dis.get(g.projName) : g.projName; // CAS517
+			hb.setHelp(dName + "/" + g.name + "\nClick to bring to top, doubleclick to hide others",this);
 		}
 		else
 		{

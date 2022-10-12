@@ -128,8 +128,7 @@ public class AnchorsMain
 			int nQueryIn = 0, nTargetIn = 0, nBothIn=0;
 			boolean bAnd = mProps.getBoolean("topn_and"); // true
 			
-			for (Hit h : hits) 
-			{	
+			for (Hit h : hits) {	
 				if (h.target.status == HitStatus.In) nTargetIn++;
 				if (h.query.status ==  HitStatus.In) nQueryIn++;
 				
@@ -148,12 +147,10 @@ public class AnchorsMain
 			hits.addAll(diagHits); // diagHits only for self
 			
 			for (Hit hit : hits) { 
-				if (hit.status == HitStatus.In)
-				{			
+				if (hit.status == HitStatus.In) {			
 					Utils.incHist("TopNHist1Accept", hit.binsize1);
 					Utils.incHist("TopNHist2Accept", hit.binsize2);
-					if (hit.mBT != null) // null for fpc-seq, !null for seq-seq
-					{
+					if (hit.mBT != null) { // null for fpc-seq, !null for seq-seq
 						Utils.incStat(hit.mBT.toString() + "FinalHits", 1);
 						Utils.incStat(hit.mBT.toString() + "FinalOrigHits", hit.origHits);
 					}
@@ -185,8 +182,7 @@ public class AnchorsMain
 			hits.clear();
 			hits = null;
 			
-			if (isSelf)
-			{
+			if (isSelf) {
 				addMirroredHits();	
 			}
 			hitAnnotations(p1,p2);
@@ -201,10 +197,15 @@ public class AnchorsMain
 					"where ph.pair_idx=" + pairIdx + " and p.grp_idx=ph.grp1_idx and g.idx=ph.grp1_idx and g.flipped=1");
 			}
 			***/
-			if (p1.isSeq())
-			{
+			if (p1.isSeq()) {
 				Utils.uploadStats(pool, pairIdx, p1.idx, p2.idx);
 			}	
+			
+			// CAS517 move from SyntenyMain - there is no reason to wait until after synteny computation
+			if (p1.isSeq() && p2.isSeq() && p1.idx != p2.idx) {
+				AnchorsPost obj = new AnchorsPost(pairIdx, p1, p2, pool, log);
+				obj.setGeneRunCounts();
+			}
 			Utils.timeMsg(log, startTime, "Anchors");
 		}
 		catch (OutOfMemoryError e)

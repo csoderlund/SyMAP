@@ -42,7 +42,7 @@ import java.util.LinkedList;
 import java.util.LinkedHashSet;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-
+import java.util.Vector;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
@@ -76,6 +76,7 @@ import backend.Constants;
  * PopUps
  */
 public class Utilities {
+	private static boolean FULL_INT = true;
 	private static boolean TRACE = Constants.TRACE;
 	public static final Color HELP_PROMPT = new Color(0xEEFFEE); // CAS504 moved from dead file - for Help
 	
@@ -998,30 +999,33 @@ public class Utilities {
 	}
   
     static public String kText(int len) { // CAS513 change to use NumberFormat
-    	if (len>=1000) {
+    	if (FULL_INT) return String.format("%,d", len);
+    	if (len>=10000) {
     		NumberFormat nf = NumberFormat.getNumberInstance();
     		nf.setMaximumFractionDigits(2);
+    		nf.setMinimumFractionDigits(2);
     		
     		double d = ((double) len)/1000.0;
     		return nf.format(d) + "k";
     	}
     	else {
-    		return len+"";
+    		return String.format("%,d", len);
     	}
     }
-    // CAS512 - for writing hoover and popup
-    static public String coordsStr(boolean isPos, int start, int end) {
+    // CAS512 - for writing Annotation hoover and popup
+    static public String coordsAnno(boolean isPos, int start, int end, String delim) {
     	String o = (isPos) ? "+" : "-";
     	String s = kText(start);
     	String e = kText(end);
-    	return String.format("Len=%4d Coords=%s(%s - %s)", (Math.abs(end-start)+1), o, s, e);
+    	return String.format("%s(%s - %s) %,5dbp", o, s, e, (Math.abs(end-start)+1)); // CAS517 add \n Coords->Loc
     }
-    // CAS515 - for more detailed hoover called by HitData
-    static public String coordsStr(int i, boolean isPos, int start, int end) {
-    	String o = (isPos) ? "+" : "-";
+    // CAS515 - for more detailed hover called by HitData
+    static public String coordsHit(String chr, boolean isPos, int start, int end, String delim) {
+    	String o = ""; // CAS517x (isPos) ? "+" : "-";
     	String s = kText(start);
     	String e = kText(end);
-    	return String.format("Coords%d=%s(%s - %s)", i, o, s, e);
+    	String x = String.format("%s(%s - %s)", o, s, e);
+    	return String.format("%s. %-22s %,5dbp",chr, x, (Math.abs(end-start)+1)); // CAS517 Coords->Loc
     }
     // CAS513 - to remove leading zeros before making full block name
     static public String blockStr(String c1, String c2, int block) {
@@ -1029,4 +1033,177 @@ public class Utilities {
     	String x2 = (c2.startsWith("0") && c2.length()>1) ? c2.substring(1) : c2;
     	return x1 + "." + x2 + "." + block;
     }
+    // CAS517 - format exon list (e.g. #1:20:50,#1:20:50)
+    static public String formatExon(String elist) {
+    	String [] tok = elist.split("\n");
+    	if (tok.length!=2) return elist;
+    	String exonList = tok[1];
+    			
+    	int rm = "Exon #".length();
+    	String list="";
+    	String [] tokc = exonList.split(",");
+    	int dist=0, last=0;
+    	
+    	String [] fields = {"#", "Coords" ,"Len", "Intron"};
+		int [] justify =   {1,    0,    0,     0};
+		int nRow = tokc.length;
+	    int nCol=  fields.length;
+	    String [][] rows = new String[nRow][nCol];
+	    int r=0, c=0;
+	    
+	    int x1, x2;
+    	for (String x : tokc) {
+    		String [] y = x.split(":");
+    		if (y.length!=3) {System.err.println("Parsing y: " + exonList); return exonList;}
+    		
+    		if (!y[0].startsWith("Exon #")) System.err.println(y[0]);
+    		String n = y[0].substring(rm);
+    		try {
+    			x1 = Integer.parseInt(y[1]);
+    			x2 = Integer.parseInt(y[2]);
+    		}
+    		catch (Exception e) {System.err.println("Parsing int: " + exonList); return exonList;}
+    		
+			if (x1>x2) System.err.println("ERROR start>end " + x1 + "," + x2);
+		
+			rows[r][c++] = n; 
+			rows[r][c++] =  String.format("%s - %s", kText(x1), kText(x2));
+			rows[r][c++] =  String.format("%,d",(x2-x1+1));
+			
+			if (last>0) {
+				dist = Math.abs(last-x1)+1;
+				rows[r][c] = kText(dist);
+			}
+			else rows[r][c] = "-";
+			last = x2;
+			
+    		r++; c=0;
+    	}
+    	list = makeTable(nCol, nRow, fields, justify, rows);
+    	return tok[0] + "\n" + list;
+    }
+    // CAS517 - format a merged gene hit (e.g. 100:200,300:400)
+    static public String formatHit(String hList) {
+    	String [] tok = hList.split("\n");
+    	if (tok.length!=2) return hList;
+    	String hitList = tok[1];
+    			
+    	String list="";
+    	String [] tokc = hitList.split(",");
+    	int dist=0, last=0;
+    	
+    	String [] fields = {"#", "Coords" ,"Len", "Gap"};
+		int [] justify =   {1,    0,    0,     0};
+		int nRow = tokc.length;
+	    int nCol=  fields.length;
+	    String [][] rows = new String[nRow][nCol];
+	    int r=0, c=0;
+	    
+	    int x1, x2;
+    	for (String x : tokc) {
+    		String [] y = x.split(":");
+    		if (y.length!=2) {System.err.println("Parsing y: " + hitList); return hitList;}
+    		
+    		try {
+    			x1 = Integer.parseInt(y[0]);
+    			x2 = Integer.parseInt(y[1]);
+    		}
+    		catch (Exception e) {System.err.println("Parsing int: " + hitList); return hitList;}
+    		
+			if (x1>x2) System.err.println("ERROR start>end " + x1 + "," + x2);
+		
+			rows[r][c++] = (r+1)+""; 
+			rows[r][c++] =  String.format("%s - %s", kText(x1), kText(x2));
+			rows[r][c++] =  String.format("%,d",(x2-x1+1));
+			
+			if (last>0) {
+				dist = Math.abs(x2-last)+1;
+				rows[r][c] = kText(dist);
+			}
+			else rows[r][c] = "-";
+			last = x2;
+			
+    		r++; c=0;
+    	}
+    	list = makeTable(nCol, nRow, fields, justify, rows);
+    	return tok[0] + "\n" + list;
+    }
+    /*******************************************************
+	 * XXX Table maker CAS517 copied from TCW
+	 */
+	public static String makeTable(
+			int nCol, int nRow, String[] fields, int [] justify, String [][] rows) 
+	{	
+		Vector <String> lines = new Vector <String>();
+		makeTable(lines, nCol, nRow, fields, justify, rows);
+		String x="";
+		for (String l : lines) x += l + "\n";
+		return x;
+	}
+	public static void makeTable(
+			Vector <String> lines, int nCol, int nRow, String[] fields, int [] justify, String [][] rows)
+	{
+		int c, r;
+		String line;
+		String space = "  ";
+		
+		// compute column lengths
+		int []collen = new int [nCol];
+		for (c=0; c < nCol; c++) collen[c] = 0;
+		
+        for (c=0; c< nCol; c++) { // longest value
+            for (r=0; r<nRow && rows[r][c] != null; r++) {
+        		if (rows[r][c] == null) rows[r][c] = "";
+        		if (rows[r][c].length() > collen[c]) 
+        			collen[c] = rows[r][c].length();
+            }
+        }
+        if (fields != null) {    // heading longer than any value?
+			for (c=0; c < nCol; c++) {
+				if (collen[c] > 0) {
+					if (fields[c] == null) fields[c] = "";
+					if (fields[c].length() > collen[c]) 
+						collen[c]=fields[c].length();
+				}
+			}
+	        // output headings
+	        line = space; // length of space in front
+	        for (c=0; c< nCol; c++) 
+	        		if (collen[c] > 0) 
+	        			line += pad(fields[c],collen[c], 1) + space;
+	        lines.add(line);
+        }
+        // output rows
+        for (r=0; r<nRow; r++) {
+        	line = space;
+            for (c=0; c<nCol; c++) {
+                 if (collen[c] > 0) 
+                	 	line += pad(rows[r][c],collen[c],justify[c]) + space;
+                 rows[r][c] = ""; // so wouldn't reuse in next table
+            }
+            lines.add(line);
+        }
+	}
+	
+    private static String pad(String s, int width, int o)
+    {
+		if (s == null) return " ";
+        if (s.length() > width) {
+            String t = s.substring(0, width-1);
+            System.out.println("'" + s + "' truncated to '" + t + "'");
+            s = t;
+            s += " ";
+        }
+        else if (o == 0) { // left
+            String t="";
+            width -= s.length();
+            while (width-- > 0) t += " ";
+            s = t + s;
+        }
+        else {
+            width -= s.length();
+            while (width-- > 0) s += " ";
+        }
+        return s;
+    } 
 }

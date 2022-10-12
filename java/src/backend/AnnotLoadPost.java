@@ -81,34 +81,54 @@ public class AnnotLoadPost {
 	 */
 	private void genesCntExons() {
 		try {
-			log.msg("  Assign #exons to genes");
+			log.msg("  Assign #exons and tags to genes");
 			
 			PreparedStatement ps = pool.prepareStatement(
 					"update pseudo_annot set tag=? where idx=?");
 			
-			int totexonUpdate=0, totgeneUpdate=0;
-			String [] strand = {"+", "-"};
+			int totexonUpdate=0, totgeneUpdate=0, totOverlap=0;
+			char [] suffix = {'a','b','c','d','e','f','g','h', 'i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+			int isuf=0;
 			
 			for (Group grp : project.getGroups()) {
-				for (String st : strand) {		// isn't necessary to go by group/strand, but reduces memory
-					
 					// GENES all genes for this group/strand
 					HashMap <Integer, GeneData> geneMap = new HashMap <Integer, GeneData> (); 
+					Vector <Integer> geneOrder = new Vector <Integer> ();
+					GeneData lastgd = null;
+					
 					ResultSet rs = pool.executeQuery(
-						"select idx from pseudo_annot where grp_idx=" + grp.idx + 
-						  " and strand='" + st + "' and type='gene'"); // order doesn't matter
+						"select idx, start, genenum from pseudo_annot "
+						+ " where grp_idx=" + grp.idx + " and type='gene' "
+						+ " order by genenum, start"); 
 					while (rs.next()) {
 						GeneData gd = new GeneData ();
 						gd.idx = rs.getInt(1);
+						gd.start = rs.getInt(2);
+						gd.genenum = rs.getInt(3);
+						gd.tag = "Gene #" + gd.genenum;
+						
+						if (lastgd!=null && lastgd.genenum==gd.genenum) {
+							totOverlap++;
+							if (isuf==0) lastgd.tag += suffix[isuf++];
+							gd.tag += suffix[isuf++];
+							if (isuf>=suffix.length-2) {
+								System.err.println("Too many overlapping genes for #" + lastgd.genenum);
+								isuf=0;
+							}
+						}
+						else isuf=0;
+						
+						lastgd = gd;
 						geneMap.put(gd.idx, gd);
+						geneOrder.add(gd.idx);
 					}
 					rs.close();
 			    //---------------------------------------------------------------
 				// EXONS all exons for this group/strand - assign to Gene curGD
 					
 					rs = pool.executeQuery(
-						"select idx, gene_idx from pseudo_annot where grp_idx=" + grp.idx + 
-						" and strand='" + st + "' and type='exon'"); 
+						"select idx, gene_idx from pseudo_annot "
+						+ "where grp_idx=" + grp.idx + " and type='exon'"); 
 					while (rs.next()) {
 						int idx = 		rs.getInt(1);
 						int gene_idx = 	rs.getInt(2);
@@ -127,8 +147,9 @@ public class AnnotLoadPost {
 					// WRITE write to db; names parsed in Annotation.java getLongDescription
 					int exonUpdate=0, geneUpdate=0, cntBatch=0;
 					
-					for (GeneData gene : geneMap.values()) {
-						String tag = "Gene (" + gene.exonIdx.size() + ")";
+					for (int geneidx : geneOrder) {
+						GeneData gene = geneMap.get(geneidx);
+						String tag = gene.tag + " (" + gene.exonIdx.size() + ")"; /** Annotation.java depends on this format!**/
 	
 						ps.setString(1, tag);  // name
 						ps.setInt(2,    gene.idx); // update gene
@@ -155,10 +176,10 @@ public class AnnotLoadPost {
 					if (cntBatch>0) ps.executeBatch();
 					totexonUpdate += exonUpdate;
 					totgeneUpdate += geneUpdate;
-				}
 			}
 			ps.close(); 
 			
+			if (totOverlap>0) Utils.prtNumMsg(log, totOverlap, "Overlapping genes");
 			Utils.prtNumMsg(log, totexonUpdate, "Exon update (avg " +  
 						String.format("%.3f", (float) totexonUpdate/(float)totgeneUpdate) + ")");
 		}
@@ -275,7 +296,8 @@ public class AnnotLoadPost {
 	}	
 	/************************************************************/
 	private class GeneData {
-		int idx, start, end;
+		int idx, start, end, genenum;
+		String tag;
 		Vector <Integer> exonIdx = new Vector <Integer> ();
 	}
 	private boolean isSuccess=true;

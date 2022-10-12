@@ -9,6 +9,7 @@ import java.awt.Point;
 import java.awt.Stroke;
 import java.awt.geom.Rectangle2D;
 import java.util.Vector;
+import java.util.TreeMap;
 
 import symap.SyMAP;
 import util.ErrorReport;
@@ -22,7 +23,7 @@ import util.Utilities;
  * Drawing the annotation requires calling setRectangle() first.
  */
 public class Annotation {
-	private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE; // -d
+	private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
 	/**
 	 * Values used in the database to represent annotation types.
 	 */
@@ -42,20 +43,22 @@ public class Annotation {
 	public static final int SYGENE_INT     	= 5; 
 	public static final int HIT_INT     	= 6; 
 	public static final int numTypes 		= 7; 
-	public static Vector<String> types = new Vector<String>(numTypes, 1); 
+	public static Vector<String> typeVec = new Vector<String>(numTypes, 1); 
 	static {
-		types.add(GENE);
-		types.add(FRAMEWORK);
-		types.add(GAP);
-		types.add(CENTROMERE);
-		types.add(EXON);   
-		types.add(SYGENE); 
+		typeVec.add(GENE);
+		typeVec.add(FRAMEWORK);
+		typeVec.add(GAP);
+		typeVec.add(CENTROMERE);
+		typeVec.add(EXON);   
+		typeVec.add(SYGENE); 
 	}
+	// accessed and changed by ColorDialog - do not change
 	public static Color geneColor;
 	public static Color frameColor;
 	public static Color gapColor;
 	public static Color centromereColor;
-	public static Color exonColor;   
+	public static Color exonColorP; 				// CAS517 add P/N
+	public static Color exonColorN;
 	public static Color sygeneColor = Color.yellow; // CAS503 sygene obsolete?
 	
 	private static final float crossWidth; // the width of the line in the cross
@@ -67,43 +70,53 @@ public class Annotation {
 		frameColor = props.getColor("frameColor");
 		gapColor = props.getColor("gapColor");
 		centromereColor = props.getColor("centromereColor");
-		exonColor = props.getColor("exonColor"); 
+		exonColorP = props.getColor("exonColorP"); 
+		exonColorN = props.getColor("exonColorN"); 
 	}
 
 	// private String name;
 	private int type;
 	private int start, end;						
 	private String description, tag, tagGeneN;	
-	private boolean strand;
+	private boolean bStrandPos;
 	private int gene_idx=0;  // If this is an exon, it is the gene_idx that it belongs to
 	private int annot_idx=0; 
-	private String exonList=null;
+	private int genenum=0;	 // CAS517 for sorting in PseudoData
 	
 	private Rectangle2D.Double rect;
 	private Rectangle2D.Double hoverGeneRect; // CAS515 so hover cover for gene covers full width of exon
 	private TextBox descBox=null; // CAS503
-
+	private String exonList=null; // CAS512 add ExonList to popup
+	private String hitList=null;  // CAS517 add HitList to popup
+	
 	/**
 	 * Creates a new Annotation instance setting the description values, color, and draw method based on type.
+	 * Read from database in PseudoPool.setSequence 
+	 * Creates AnnotationData object array
+	 * Then goes to PseudoData for sorting
+	 * How insane is that - that is what OO is teaching very smart students as good programming
 	 */
 	public Annotation(String name, String annot_type, int start, int end, String strand, 
 			String tag, int gene_idx, int idx, int genenum) {
 		this.type = getType(annot_type);
 		this.start = start;
 		this.end = end;
-		this.strand = (strand == null || !strand.equals("-"));
-		description = name;  
+		this.bStrandPos = (strand == null || !strand.equals("-"));
+		this.description = name;  
 		this.gene_idx = gene_idx;
 		this.annot_idx = idx;
+		this.genenum = genenum;
 	
 		tagGeneN="";
 		if (genenum>0) { // CAS515 merge tag and genenum in a more readable format
-			String [] tok = tag.split("\\(");	
+			String [] tok = tag.split("\\(");	// Gene #500 (n)  pre-v517 Gene (n)
 			if (tok.length==2) {
-				this.tag = "Gene #" + genenum + " (Exons " + tok[1];
-				tagGeneN =  "Gene #" + genenum;
+				tagGeneN = (tok[0].contains("#")) ? tok[0] : "Gene #"+genenum; // pre-v517 did not include genenum
+				this.tag = tagGeneN +  " (Exons " + tok[1];	
 			}
-			else   this.tag = tag + " #" + genenum;
+			else   {
+				this.tag = tagGeneN = "Gene #" + genenum;
+			}
 		}
 		else this.tag = tag;
 		
@@ -111,13 +124,12 @@ public class Annotation {
 		hoverGeneRect = new Rectangle2D.Double();
 	}
 	/**
-	 * DRAW sets up the rectangle; called in Sequence.build()
-	 * CAS515 ordered lines to be more logical
+	 * DRAW sets up the rectangle; called in Sequence.build(); CAS515 ordered lines to be more logical
 	 */
 	public void setRectangle(
-			Rectangle2D boundry, // center of chromosome rectangle (rect.x+1,rect.y,rect.width-2,rect.height)
+			Rectangle2D boundry,      // center of chromosome rectangle (rect.x+1,rect.y,rect.width-2,rect.height)
 			long startBP, long endBP, // display start and end of chromosome 
-			double bpPerPixel, double dwidth, double hoverWidth, boolean flip) 
+			double bpPerPixel, double dwidth, double hoverWidth, boolean flip, int offset) // CAS517 offset 
 	{
 		double x, y, height;
 		double chrX=boundry.getX(), upChrY=boundry.getY(), chrHeight=boundry.getHeight(), chrWidth=boundry.getWidth();
@@ -142,27 +154,26 @@ public class Annotation {
 		if (flip) y -= height; 
 		
 		x = chrX + (chrWidth - dwidth)/2; // set x before modify width
+		if (offset!=0) x = x-offset;	 // CAS517 for overlapping genes, 0 for not
+		
 		if (chrWidth < dwidth) dwidth = chrWidth;
 		
 		double lowY = y + height;
 		if (y < upChrY)      y = upChrY;
 		if (lowY > lowChrY)  height = lowChrY - y;
 		
-		if (lowY >= upChrY && y <= lowChrY) { 
-			rect.setRect(x, y, dwidth, height);
-		} else {
-			rect.setRect(0, 0, 0, 0);
-		}
+		if (lowY >= upChrY && y <= lowChrY) rect.setRect(x, y, dwidth, height);
+		else 								rect.setRect(0, 0, 0, 0);
 		
-		hoverGeneRect.setRect(0, 0, 0, 0);
-		if (hoverWidth!=0) {
+		if (hoverWidth!=0) { // gene
 			double xx = chrX + (chrWidth-hoverWidth)/2; // set x before modify width
+			if (offset!=0) xx= xx-offset;				// CAS517 for overlapping genes
+			
 			if (chrWidth < hoverWidth) hoverWidth = chrWidth;
 		
-			if (lowY >= upChrY && y <= lowChrY) { 
-				hoverGeneRect.setRect(xx, y, hoverWidth, height);
-			} 
-		}
+			if (lowY >= upChrY && y <= lowChrY) hoverGeneRect.setRect(xx, y, hoverWidth, height);
+			else 								hoverGeneRect.setRect(0, 0, 0, 0); 
+		}									
 	}
 	/** clears the rectangle coordinates so that the annotation will not be painted **/
 	public void clear() {
@@ -199,7 +210,10 @@ public class Annotation {
 	}
 
 	private Color getColor() {
-		if (type == EXON_INT)		return exonColor;	
+		if (type == EXON_INT) {
+			if (bStrandPos) return exonColorP;	
+			else return exonColorN;
+		}
 		if (type == GENE_INT)		return geneColor;
 		if (type == SYGENE_INT) 	return sygeneColor; 
 		if (type == GAP_INT)		return gapColor;
@@ -220,13 +234,19 @@ public class Annotation {
 
 	public int getStart() {return start;}
 	public int getEnd() {return end;}
+	public int getGeneIdx() { return gene_idx;} // CAS517 for Sequence to know if overlap exon
+	public int getAnnoIdx() { return annot_idx;}// ditto
+	public int getGeneNum() { return genenum;}	// CAS517 for sorting in PseudoData
+	public int getGeneLen()	{ return Math.abs(end-start)+1;} // ditto
 	
 	// for seq-seq closeup
-	public boolean getStrand() {return strand;}
+	public boolean getStrand() {return bStrandPos;}
 	
 	/** XXX determines if the rectangle of this annotation contains the point p. */
 	public boolean contains(Point p) {
-		if (type == GENE_INT) return hoverGeneRect.contains(p.getX(), p.getY());
+		if (type == GENE_INT) {
+			return hoverGeneRect.contains(p.getX(), p.getY());
+		}
 		return rect.contains(p.getX(), p.getY());
 	}
 	/*** For CloseUpDialog - what is in the name field */
@@ -237,25 +257,26 @@ public class Annotation {
 	public Vector<String> getVectorDescription() {
 		Vector<String> out = new Vector<String>();
 		out.add(tag);				// CAS512 add tag	
-		out.add(getLocLong());
+		out.add(getLocLong(" "));
 		for (String token : description.split(";")) 
 				out.add( token.trim() ); // CAS501 added trim
 		return out;
 	}
 	
-	private String getLocLong() { // CAS504
-		return Utilities.coordsStr(strand, start, end); // CAS512 update
+	private String getLocLong(String delim) { // CAS504
+		return Utilities.coordsAnno(bStrandPos, start, end, delim); // CAS512 update
 	}
 	/** Shown in info text box when mouse over object */
 	public String getLongDescription() {
 		String longDes;
 		
-		if (type == GENE_INT || type == EXON_INT) {
+		if (type == GENE_INT) {
 			String xDesc = description.replaceAll(";", "\n");   	 // CAS503
-			longDes = tag +  "\n" + getLocLong() + "\n" + xDesc;	 // CAS512 add tag	
+			longDes = tag +  "\n" + getLocLong("\n") + "\n" + xDesc;	 // CAS512 add tag	
 		}
-		else if (type == GAP_INT) 			longDes = "Gap\n" + getLocLong(); // CAS504 add getLoc
-		else if (type == CENTROMERE_INT) 	longDes = "Centromere\n" + getLocLong();
+		else if (type == EXON_INT)			longDes = tag + " " +getLocLong("\n"); // CAS517 tag +  "\n" + getLocLong("\n") + "\n" + xDesc;
+		else if (type == GAP_INT) 			longDes = "Gap\n" + getLocLong("\n"); // CAS504 add getLoc
+		else if (type == CENTROMERE_INT) 	longDes = "Centromere\n" + getLocLong("\n");
 		else if (type == FRAMEWORK_INT) 	longDes = "Framework Marker\n" + description;
 		else								longDes = "Name " + description;
 		
@@ -304,10 +325,10 @@ public class Annotation {
 		return x;
 	}
 	public static int getType(String type) {
-		int i = (byte)types.indexOf(type);
+		int i = (byte)typeVec.indexOf(type);
 		if (i < 0) {
-			i = (byte)types.size();
-			types.add(type);
+			i = (byte)typeVec.size();
+			typeVec.add(type);
 		}
 		return i;
 	}
@@ -316,27 +337,43 @@ public class Annotation {
 	 * CAS503 added so can display popup of description
 	 * Right-click on annotation
 	 */
+	public boolean hasHitList() {return hitList!=null; } //  CAS517 added this
+	public void setHitList(String hList) {hitList=hList;} 
+	
+	// for hover
 	public String getExon(int parent_idx) { // called on "exon" annotation object
 		if (isExon() && this.gene_idx==parent_idx) {
-			String x = Utilities.coordsStr(strand, start, end);
+			String x = Utilities.coordsAnno(bStrandPos, start, end, " ");
 			return String.format("%-8s %s", tag, x); // Exon #xx
+		}
+		return null;
+	}
+	// for popup
+	public String strExon(int parent_idx) {
+		if (isExon() && this.gene_idx==parent_idx) {
+			return tag + ":" + start+ ":" + end; 
 		}
 		return null;
 	}
 	public void setExonList(Vector <Annotation> annoVec) { // CAS512 add ExonList to popup
 		if (exonList!=null) return;
 		try {
-			String list="";
+			String list=null;
 			
+			TreeMap <Integer, String> stMap = new TreeMap <Integer, String> ();
 			for (Annotation ad : annoVec) {
-				String x = ad.getExon(annot_idx); // method of "ad" annotation
-				if (x!=null) list += "\n" + x;
+				String x = ad.strExon(annot_idx); // method of "ad" annotation
+				if (x!=null) stMap.put(ad.start, x);
 			}
-			exonList = list;
+			for (String val : stMap.values()) {
+				if (list==null) list = val;
+				else  list += "," + val;
+			}
+			exonList = "Exons " + "\n" + list;
 		}
 		catch (Exception e) {ErrorReport.print(e, "Get exon list for " + gene_idx);}
 	}
-	// the following 3 methods are for popup from yellow box
+	// the following 3 methods are for popup from yellow box 
 	public void setTextBox(TextBox tb) {
 		descBox = tb;
 	}
@@ -344,15 +381,28 @@ public class Annotation {
 		if (descBox==null) return false;
 		return descBox.containsP(p);
 	}
-	public void popupDesc(String name) {
-		descBox.popupDesc(exonList, name + "; " + tagGeneN);
-	}
-	// CAS516 popup from clicking gene
-	public void popupDesc(Component parentFrame, String name) { // CAS516 for clicking gene
-		String msg = "";
-		for (String x : getVectorDescription()) msg += x + "\n";
-		Dimension d = new Dimension (350, 220); 
-		Utilities.displayInfoMonoSpace(parentFrame, name + "; " + tagGeneN, msg + exonList, 
-				d, 0.0, 0.0); 
+	
+	// CAS516 popup from clicking gene or yellow box, CAS517 add hitList
+	public void popupDesc(Component parentFrame, String name, String chr) { 
+		String msg = null;
+		for (String x : getVectorDescription()) {
+			if (msg==null) msg = x + " " + chr + "\n";
+			else msg += x + "\n";
+		}
+		
+		if (exonList!=null) // FPC
+			msg += "\n" + Utilities.formatExon(exonList) + "\n";
+		
+		if (hitList!=null) {
+			String [] hitWires = hitList.split(";");
+			for (String h : hitWires) msg += Utilities.formatHit(h);
+		}
+		String title =  name + "; " + tagGeneN;
+		
+		if (parentFrame!=null) {
+			Dimension d = new Dimension (350, 220); 
+			Utilities.displayInfoMonoSpace(parentFrame, title, msg,  d, 0.0, 0.0); 
+		}
+		else descBox.popupDesc(title, msg); // aligns it with yellow box
 	}
 }

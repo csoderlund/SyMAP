@@ -12,15 +12,15 @@ public class FieldData {
 	// leave Q.rowCol for placement, the actual row is computed in DBdata (CAS514 HitIdx->Hit#, #Gene->Gene#)
 	// TableDataPanel.createGeneralSelectPanel expects 4 hit columns and the Pg prefix
 	private static final String [] GENERAL_COLUMNS =	 
-		{Q.rowCol, Q.blockCol, "Block\nScore","Run \nSize ","PgeneF", "PgFSize",
+		{Q.rowCol, Q.blockCol, "Block\nScore",Q.runCol,"PgeneF", "PgFSize",
 		"Hit#",    "Hit\n%Id", "Hit\n%Sim","Hit\n#Merge"}; // CAS516 add these 4
 	
 	private static final Boolean [] GENERAL_COLUMN_DEF =  
 		{true, true, true, false, false, false, true, false, false, false}; // CAS513 HitID=f, Score=t
 	
-	private static final String [] SPECIES_COLUMNS = {Q.chrCol, Q.startCol, Q.endCol, Q.lenCol, Q.geneNCol};
-	private static final Class <?> [] SPECIES_TYPES = {String.class, Integer.class, Integer.class,Integer.class, Integer.class};
-	private static final Boolean [] SPECIES_COLUMN_DEF =  {false, false, false, false , false};
+	private static final String []     SPECIES_COLUMNS = {Q.chrCol, Q.startCol, Q.endCol, Q.lenCol, Q.geneNCol};
+	private static final Class <?> []  SPECIES_TYPES =   {String.class, Integer.class, Integer.class,Integer.class, Integer.class};
+	private static final Boolean []    SPECIES_COLUMN_DEF =  {false, false, false, false , false};
 	
 	//****************************************************************************
 	//* Static methods

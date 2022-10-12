@@ -6,10 +6,10 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.ListIterator;
+
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.ResultSet;
-import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.pool.DatabaseUser;
 import symap.pool.ProjectProperties;
@@ -20,6 +20,7 @@ import util.DatabaseReader;
 import symap.track.Track;
 import symap.sequence.Sequence;
 import symap.marker.MarkerTrack;
+import symap.SyMAP;
 
 /**
  * The pool of Mapper hits.
@@ -132,6 +133,7 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 	private ProjectProperties projectProperties;
 	private ListCache fpcPseudoCache, repetitiveMarkerFilterCache, fpcFpcCache;
 	private ListCache pseudoPseudoCache; 
+	private boolean TRACE=SyMAP.TRACE;
 
 	public MapperPool(DatabaseReader dr, ProjectProperties pp, 
 			ListCache fpcPseudoCache, ListCache repetitiveMarkerFilterCache, 
@@ -164,13 +166,14 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 			MapInfo mapinfo, HitFilter hf, List hits) throws SQLException 
 	{
 		MapInfo newMapInfo = new MapInfo(t1,t2,hf.getBlock(),hf.getNonRepetitive());
+		
 		if (newMapInfo.equalIfUpgradeHitContent(mapinfo)) {
-			if (SyMAP.DEBUG) System.out.println("New Map Info equal with upgrade. New Hit Content = "+newMapInfo.getHitContent()+
-					" Old Hit Content = "+mapinfo.getHitContent());
+			if (TRACE) System.out.println(t1.getPosition() + " " + t2.getPosition() + 
+					" New Hit Content = "+newMapInfo.getHitContent()+ " Old Hit Content = "+mapinfo.getHitContent());
 			mapinfo.setHitContent(newMapInfo.getHitContent());
 			return false;
 		}
-
+	
 		if (mapinfo.getMapperType() != newMapInfo.getMapperType()) hits.clear();
 
 		if (fpcFpcCache != null) 	   fpcFpcCache.clear();
@@ -205,24 +208,28 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 	{
 		int i;
 		PseudoPseudoData data/*, tempData*/;
-		int stProject1, stProject2;
-		int group1, group2;	
 		boolean reorder = false;
 		
-		stProject1 = st1.getProject();
-		stProject2 = st2.getProject();
-		group1 = st1.getGroup();
-		group2 = st2.getGroup();
+		int stProject1 = st1.getProject();
+		int stProject2 = st2.getProject();
+		int group1 = st1.getGroup();
+		int group2 = st2.getGroup();
+		String chr1="?", chr2="?";
 
 		ProjectPair pp = projectProperties.getProjectPair(stProject1,stProject2);
 
-		if (SyMAP.DEBUG) System.out.println("Looking for the Hits for Pseudos: p1="+stProject1+" p2="+stProject2+" pair="+pp.getPair()+" g1="+group1+" g2="+group2);
+		if (TRACE) System.out.println("Looking for the Hits for Pseudos: p1="+stProject1+" p2="+stProject2+" pair="+pp.getPair()+" g1="+group1+" g2="+group2);
 		List<HitData> hitList = new LinkedList<HitData>();
 		Statement statement;
 		ResultSet rs;
 		String query;
 		try {
 			statement = createStatement();
+			
+			rs = statement.executeQuery("select name from xgroups where idx=" + group1); // CAS517 add chrname for display
+			if (rs.next()) chr1=rs.getString(1);
+			rs = statement.executeQuery("select name from xgroups where idx=" + group2);
+			if (rs.next()) chr2=rs.getString(1);
 			
 			data = new PseudoPseudoData(stProject1,group1,stProject2,
 					group2,nmi.getHitContent(),hitList,reorder);
@@ -261,7 +268,7 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 						rs.getInt(13),		/* int cvgpct->avg %sim */
 						rs.getInt(14),      /* int countpct -> nMergedHits */
 						rs.getDouble(16),	/* CAS516 b.corr */
-						tag
+						tag, chr1, chr2		/* CAS517 add chr1, chr2 */
 						);		
 				hitList.add(temp);
 			}
@@ -480,7 +487,7 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 		}
 
 		if (!neededDataList.isEmpty()) {
-			if (SyMAP.DEBUG) System.out.println("Looking for "+neededDataList+" from database.");
+			if (TRACE) System.out.println("Looking for "+neededDataList+" from database.");
 
 			if (smfd == null && nmi.getHitContent() > MapInfo.ONLY_BLOCK_HITS) smfd = getRepetitiveMarkerFilterData(pp);
 

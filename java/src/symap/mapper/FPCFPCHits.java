@@ -169,8 +169,8 @@ public class FPCFPCHits extends AbstractHitData implements Hits, SyMAPConstants 
 	}
 
 	public void paintComponent(Graphics2D g2) { 
-		int orient1 = mapper.getOrientation(mt1);
-		int orient2 = mapper.getOrientation(mt2);
+		int orient1 = mapper.getTrackPosition(mt1);
+		int orient2 = mapper.getTrackPosition(mt2);
 		Point loc1 = mt1.getLocation();
 		Point loc2 = mt2.getLocation();
 		boolean showJoinDot = mapper.getHitFilter().getShowJoinDot();

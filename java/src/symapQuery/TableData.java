@@ -246,9 +246,12 @@ public class TableData implements Serializable {
     		nColumn = column;
     	}
     	public int compare(Object [] o1, Object [] o2) { // CAS504 rewrote much of this
+    	try {
     		if (nColumn == -1) return 0;
     		
-			if (arrHeaders[nColumn].getColumnName().equals(Q.rowCol)) {
+    		String colHeader = arrHeaders[nColumn].getColumnName();
+    		
+			if (colHeader.equals(Q.rowCol)) {
 				return 0;
 			}
 			if(o1[nColumn] == null || o2[nColumn] == null) { // DBdata checks, there should be no null
@@ -271,7 +274,7 @@ public class TableData implements Serializable {
 				if(arrHeaders[nColumn].isAscending()) retval = -1;
 				else retval = 1;
 			}	
-			else if (arrHeaders[nColumn].getColumnName().equals(Q.blockCol)) {
+			else if (colHeader.equals(Q.blockCol) || colHeader.startsWith(Q.runCol)) { // CAS517 add runCol
 				String [] vals1 = ((String)o1[nColumn]).split("\\."); 
 				String [] vals2 = ((String)o2[nColumn]).split("\\.");
 				
@@ -326,6 +329,8 @@ public class TableData implements Serializable {
 				return retval;
 			else
 				return retval * -1;
+    	}
+    	catch (Exception e) {ErrorReport.print(e, "Sorting"); return 0;}
     	}
     
 		private int nColumn;

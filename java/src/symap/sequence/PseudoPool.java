@@ -15,8 +15,6 @@ import util.ListCache;
  * The PseudoPool handles the cache of data for the Sequence Track.
  */
 public class PseudoPool extends DatabaseUser {	
-	private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
-	
 	protected static final String SIZE_QUERY = 
 		"SELECT (SELECT length FROM pseudos WHERE grp_idx=?) as size, "+
 		"       (SELECT name FROM xgroups WHERE idx=?) as name; ";
@@ -56,7 +54,6 @@ public class PseudoPool extends DatabaseUser {
 		if (pdata != null) {
 			gnsize.setBPValue(pdata.getSize());
 			pdata.setAnnotations(annotations); // transfers annoData to annotations vector
-			if (TRACE) System.out.println("Return existing pseudoData cache");
 			return pdata.getName();
 		}
 		
@@ -109,8 +106,7 @@ public class PseudoPool extends DatabaseUser {
 			statement = null;
 		}
 		
-		try {// TODO add exons to genes
-			
+		try {
 			AnnotationData [] annoData = annoVec.toArray(new AnnotationData[annoVec.size()]); // CAS512 simplified
 			pdata.setAnnotationData(annoData);
 		}

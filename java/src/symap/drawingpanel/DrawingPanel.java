@@ -45,7 +45,7 @@ import util.Utilities;
 public class DrawingPanel extends JPanel 
 	implements ColorListener, HistoryListener, SyMAPConstants
 { 
-	private static boolean TRACE = false; // symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
+	private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
 		
 	public static Color backgroundColor = Color.white;
 	public static final int MAX_TRACKS = 100;
@@ -69,7 +69,9 @@ public class DrawingPanel extends JPanel
 
 	private int numMaps = 1;
 	
-	private String mouseFunction = null; 	
+	private String mouseFunction = null; 
+	
+	private boolean hasFPC = false;
 	
 	public DrawingPanel(TableDataPanel listPanel /*notused*/, 
 			Pools pools, HistoryControl hc, HelpBar bar) {
@@ -93,7 +95,7 @@ public class DrawingPanel extends JPanel
 			
 		trackHolders = new TrackHolder[MAX_TRACKS];
 		for (int i = 0; i < trackHolders.length; i++) {
-			trackHolders[i] = new TrackHolder(this,bar);
+			trackHolders[i] = new TrackHolder(this,bar, (i+1)); // CAS517 add trackNum
 			trackHolders[i].setOrientation( i == 0 ? LEFT_ORIENT : RIGHT_ORIENT );
 			add(trackHolders[i]);
 		}
@@ -463,8 +465,8 @@ public class DrawingPanel extends JPanel
 	/**
 	 * changeZoomFactor: The factor should be non negative and a zero factor does not change the zooms.
 	 *
-	 * @param factor a <code>double</code> value factor by which to change the zooms of all of the tracks
-	 * @return a <code>boolean</code> value of true if all changes are successful
+	 * @param factor a double value factor by which to change the zooms of all of the tracks
+	 * @return a boolean value of true if all changes are successful
 	 */
 	public boolean changeZoomFactor(double factor) {
 		setUpdateHistory();
@@ -554,7 +556,7 @@ public class DrawingPanel extends JPanel
 	}
 
 	/**
-	 * Method <code>closeFilters</code> goes through each Mapper and track calling there respective closeFilter methods
+	 * Method closeFilters goes through each Mapper and track calling there respective closeFilter methods
 	 * @see TrackHolder#closeFilter() @see Mapper#closeFilter()
 	 */
 	public void closeFilters() {
@@ -672,7 +674,7 @@ public class DrawingPanel extends JPanel
 	}
 
 	/**
-	 * setClickedMarker - sets all the markers that are equal to <code>marker</code> to
+	 * setClickedMarker - sets all the markers that are equal to marker to
 	 * be click highlighted if clicked is true and not clicked highlighted if clicked is false.  All other markers
 	 * are set to not be click highlighted.
 	 */
@@ -693,7 +695,7 @@ public class DrawingPanel extends JPanel
 	}
 
 	/**
-	 * setHoveredMarker - sets all the markers that are equal to <code>marker</code> to
+	 * setHoveredMarker - sets all the markers that are equal to marker to
 	 * be hovered if hovered is true and not hovered if hovered is false.  All other markers
 	 * are set to not be hovered.
 	 */
@@ -927,5 +929,8 @@ public class DrawingPanel extends JPanel
 		historyControl.add(getData(),resetResetIndex);
 		resetResetIndex = false;
 	}
+	/** CAS517 to only show FPC options if there is any FPC selected **/
+	public void setFPC(boolean b) {hasFPC = b; }
+	public boolean hasFPC() { return hasFPC; }
 }
 

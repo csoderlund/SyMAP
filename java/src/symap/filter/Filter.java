@@ -100,7 +100,7 @@ public abstract class Filter extends JDialog implements ActionListener,
 	}
 
 	/**
-	 * Method <code>closeFilter</code> checks if the filter dialog is showing.  If it is, cancelAction()
+	 * Method closeFilter checks if the filter dialog is showing.  If it is, cancelAction()
 	 * is called and the filter is hidden.
 	 * @see #hide()
 	 */
@@ -112,7 +112,7 @@ public abstract class Filter extends JDialog implements ActionListener,
 	}
 
 	/**
-	 * Method <code>show</code> sets the help bar to be paused before showing, and not paused after
+	 * Method show sets the help bar to be paused before showing, and not paused after
 	 * showing if the help bar is set.
 	 */
 	public void showX() {
@@ -130,18 +130,13 @@ public abstract class Filter extends JDialog implements ActionListener,
 	public void popupMenuWillBecomeInvisible(PopupMenuEvent event) { } 
 
 	/**
-	 * Method <code>hide</code> hides the dialog setting the help bar to not be paused on this object.
+	 * Method hide hides the dialog setting the help bar to not be paused on this object.
 	 */
 	public void hideX() {
 		if (helpBar != null) helpBar.setPaused(false,this);
 		super.setVisible(false); // CAS512 super.hide();
 	}
 
-	/**
-	 * Method <code>stateChanged</code> does nothing
-	 *
-	 * @param event a <code>ChangeEvent</code> value
-	 */
 	public void stateChanged(ChangeEvent event) { }
 
 	/**
@@ -197,33 +192,20 @@ public abstract class Filter extends JDialog implements ActionListener,
 		cp.add(comp);
 	}
 
-	/**
-	 * Method <code>getHelpID</code> should return the help id that corrisponds to the particular filter.
-	 *
-	 * @return a <code>String</code> value
-	 */
+	/*** Method getHelpID should return the help id that corresponds to the particular filter.*/
 	public abstract String getHelpID();
 
-	/**
-	 * Sets the default values
-	 */
 	protected abstract void setDefault();
 
-	/**
-	 * @return true if the dialog is in a state it can be shown
-	 */
+	/** @return true if the dialog is in a state it can be shown */
 	public abstract boolean canShow();
 
-	/**
-	 * Sets all the values back to the way they where on the last ok or default.
-	 */
+	/** * Sets all the values back to the way they where on the last ok or default. */
 	protected abstract void cancelAction();
 
 	/**
-	 * Method <code>okAction</code> should perform necessary operations for when
-	 * the ok button is pressed.
-	 *
-	 * @return an <code>boolean</code> value of whether or not the history should be updated.
+	 * Method okAction should perform necessary operations for when the ok button is pressed.
+	 * @return an boolean value of whether or not the history should be updated.
 	 * @exception Exception if there is an error in the user's input. The message of the exception will be displayed.
 	 */
 	protected abstract boolean okAction() throws Exception;

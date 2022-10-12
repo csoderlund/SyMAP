@@ -25,11 +25,8 @@ import util.ImageViewer;
 import util.Utilities;
 
 /**
- * The top panel containing things such as the forward/back buttons, 
- * reset button, etc...
- * 
- * Handles the actions of those buttons through the arguments passed into 
- * the constructor.
+ * The top panel containing things such as the forward/back buttons, reset button, etc...
+ * Handles the actions of those buttons through the arguments passed into the constructor.
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ControlPanel extends JPanel implements SyMAPConstants,
@@ -46,19 +43,12 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 	private ColorDialogHandler cdh;
 
 	/**
-	 * Creates a new <code>ControlPanel</code> instance. 
-	 *
-	 * @param dp a <code>DrawingPanel</code> value of the drawing panel which 
-	 * the control panel will use when certain buttons are pressed.
-	 * @param hc a <code>HistoryControl</code> value of the history control in 
-	 * which the control panel will register the appropriate buttons with.
-	 * @param iv an <code>ImageViewer</code> value of the image viewer used in 
-	 * acquiring the icons and showing the image when the print image button 
-	 * is pressed.
-	 * @param cdh a <code>ColorDialogHandler</code> value of the color dialog 
-	 * handler which will be shown when the corresponding button is pressed.
-	 * @param bar a <code>HelpBar</code> value of the HelpBar if there is an 
-	 * associated help bar to register the button tips with (optional).
+	 * Creates a new ControlPanel instance. 
+	 * @param dp a DrawingPanel value of the drawing panel which the control panel will use when certain buttons are pressed.
+	 * @param hc a HistoryControl value of the history control in which the control panel will register the appropriate buttons with.
+	 * @param iv an ImageViewer value of the image viewer used in acquiring the icons and printing image
+	 * @param cdh a ColorDialogHandler value of the color dialog handler which will be shown when the corresponding button is pressed.
+	 * @param bar a HelpBar value of the HelpBar if there is an associated help bar to register the button tips with (optional).
 	 */
 	public ControlPanel(DrawingPanel dp, HistoryControl hc, ImageViewer iv, 
 			ColorDialogHandler cdh, HelpBar bar)
@@ -125,10 +115,8 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		addToGrid(this, gridbag, constraints, new JLabel(), 1);
 		addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
 		
-		
+		if (cdh != null) addToGrid(this,gridbag,constraints,editColorsButton,1); // CAS517 put before Print
 		addToGrid(this, gridbag, constraints, showImageButton, 1);
-
-		if (cdh != null) addToGrid(this,gridbag,constraints,editColorsButton,1);
 		if (helpButton != null) addToGrid(this,gridbag,constraints, helpButton,1);
 	}
 	
@@ -144,11 +132,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 			else if (source == showImageButton)  ImageViewer.showImage(dp); // CAS507 made static
 		}
 	};
-	/**
-	 * Enables/disables all of the buttons on the panel except for the help button.
-	 * 
-	 * @param enable
-	 */
+	/*** Enables/disables all of the buttons on the panel except for the help button. */
 	public void setPanelEnabled(boolean enable) {
 		scaleButton.setEnabled(enable);
 		showImageButton.setEnabled(enable);

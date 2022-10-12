@@ -10,9 +10,6 @@ import util.DatabaseReader;
 import symap.mapper.Mapper;
 
 public class ProjectProperties extends DatabaseUser {
-	private static final String PROJECT_PAIR_QUERY = 
-		"SELECT idx,proj1_idx,proj2_idx FROM pairs";
-
 	private DatabaseProperties dp;
 	private List<ProjectPair> projectPairs;
 	private ProjectObj[] projects;
@@ -32,7 +29,7 @@ public class ProjectProperties extends DatabaseUser {
 
 		Statement stat = null;
 		ResultSet rs = null;
-		int id, p1, p2;
+		int id, p1id, p2id;
 		try {
 			stat = createStatement();
 			rs = stat.executeQuery("select idx,type,name from projects");
@@ -46,12 +43,12 @@ public class ProjectProperties extends DatabaseUser {
 				projects = new ProjectObj[pvector.size()];
 				projects = (ProjectObj[])pvector.toArray(projects);
 			}
-
-			rs = stat.executeQuery(PROJECT_PAIR_QUERY);
+			
+			rs = stat.executeQuery("SELECT idx,proj1_idx,proj2_idx FROM pairs");
 			while (rs.next()) {
-				p1 = rs.getInt(2);
-				p2 = rs.getInt(3);
-				projectPairs.add( new ProjectPair(rs.getInt(1),p1,p2,getMapType(p1,p2),getP1Scale(p1,p2)) );
+				p1id = rs.getInt(2);
+				p2id = rs.getInt(3);
+				projectPairs.add( new ProjectPair(rs.getInt(1), p1id, p2id, getMapType(p1id,p2id), getP1Scale(p1id,p2id)) );
 			}
 			closeResultSet(rs);
 			closeStatement(stat);
@@ -83,14 +80,6 @@ public class ProjectProperties extends DatabaseUser {
 		return dp.getIntProperty(projectID,property,defaultValue);
 	}
 
-
-	/**
-	 * Method <code>getID</code> returns the id of the project or -1 if the project
-	 * was not found.
-	 *
-	 * @param project a <code>String</code> value of the name of the project
-	 * @return an <code>int</code> value of the project id or -1 if the project doesn't exist
-	 */
 	private int getID(String project) {
 		for (int i = 0; i < projects.length; i++) {
 			if (projects[i].name.equals(project)) return projects[i].id;

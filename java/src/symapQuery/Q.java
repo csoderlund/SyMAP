@@ -9,7 +9,8 @@ public class Q {
 	
 	static final int INC=5000;
 	static final String rowCol   = "Row";
-	static final String blockCol = "Block"; // if used in 'contain', this will also match Block Score
+	static final String blockCol = "Block"; // equals TableData.ColumnComparator
+	static final String runCol =   "Collinear";   // startsWith TableData.ColumnComparator
 	
 	static final String chrCol =	"Chr";
 	static final String startCol =	"Start";

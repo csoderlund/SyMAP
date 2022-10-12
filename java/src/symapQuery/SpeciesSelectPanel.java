@@ -366,6 +366,13 @@ public class SpeciesSelectPanel extends JPanel {
 		}
 		public void setEnabled(boolean b) {
 			cmbChroms.setEnabled(b);
+			// CAS517 add enable for locations
+			boolean x = !(cmbChroms.getSelectedItem().equals("All"));
+			if (b==false) x = false;
+			
+			txtStart.setEnabled(x); txtStop.setEnabled(x);
+			cmbScale.setEnabled(x);
+			lblStart.setEnabled(x); lblStop.setEnabled(x);
 		}
 		private String getStartFullNum() { // CAS513 add error message and return null
 			String text = txtStart.getText();

@@ -149,7 +149,7 @@ public class MapperFilter extends Filter {
 			public void actionPerformed(ActionEvent event) {
 				if (mapper != null) {				
 					setCursor(SyMAPConstants.WAIT_CURSOR);
-					if (event.getSource() == blockHitPopupRadio)
+					if (event.getSource() == blockHitPopupRadio) 
 						blockHitRadio.setSelected(blockHitPopupRadio.isSelected());
 					else if (event.getSource() == containedGeneHitPopupRadio)
 						containedGeneHitRadio.setSelected(containedGeneHitPopupRadio.isSelected());
@@ -159,6 +159,7 @@ public class MapperFilter extends Filter {
 						nonrepetitiveHitRadio.setSelected(nonrepetitiveHitPopupRadio.isSelected());
 					else if (event.getSource() == allHitPopupRadio)
 						allHitRadio.setSelected(allHitPopupRadio.isSelected());		
+					
 					if (hitfilter.set(getHitFilter())) {
 						mapper.clearTrackBuild();
 						if (drawingPanel != null) drawingPanel.smake();
