@@ -61,7 +61,7 @@ public class QueryPanel extends JPanel {
 	
 	// these are only good for the last query, so should only be used for building the tables
 	public boolean isSingle() 		{ return chkSingle.isEnabled() && chkSingle.isSelected(); }
-	public boolean isOrphan()		{ return chkSingle.isEnabled() && cmbGeneOpt.getSelectedIndex()==0;}
+	public boolean isOrphan()		{ return chkSingle.isEnabled() && cmbSingleOpt.getSelectedIndex()==0;}
 	
 	public boolean isPgeneF()    	{ return chkPgeneF.isEnabled() 		&& chkPgeneF.isSelected(); }
 	public boolean isLinkageInc() 	{ return chkLinkageInc.isEnabled() 	&& chkLinkageInc.isSelected(); }
@@ -119,18 +119,19 @@ public class QueryPanel extends JPanel {
 		whereClause = joinBool(whereClause, anno, AND);
 	
 	// Selected project -
-		String selSp = (String) cmbGeneSpecies.getSelectedItem();
-		boolean bAll = (selSp.contentEquals("All")); // specified project takes precedence
 		
-		String locSQL = (bAll) ? makeSpChrWhere() : ""; 
+		String locSQL = makeSpChrWhere(); 
 		if (!locSQL.contentEquals("")) {
 			whereClause = joinBool(whereClause, locSQL, AND); // Specifies grp_idx
 		}
 		else { // create list of all grp_idx from valid projects
+			String selSingSp = (String) cmbSingleSpecies.getSelectedItem();
+			boolean bAll = (selSingSp.contentEquals("All")); // specified project takes precedence
+			
 			String chrWhere="";
 			for(int x=0; x<nSpecies; x++) {
 				String species =  speciesPanel.getSpName(x);
-				if (selSp.equals("All") || selSp.equals(species))  {
+				if (bAll || selSingSp.equals(species))  {
 					chrWhere = joinStr(chrWhere, speciesPanel.getChrIdxStr(x), ","); // list of grp_idx for project
 				}
 			}	
@@ -249,7 +250,7 @@ public class QueryPanel extends JPanel {
 		if (!isSet) return "";
 		
 		for(int p=0; p<nSpecies; p++) {
-			int index = speciesPanel.getSelChrIdx(p); // returns a PH.grp1_idx 
+			int index = speciesPanel.getSelChrIdx(p); // returns a PH.grp1_idx; CAS518 returns -1 if disabled
 			if(index <= 0) continue;
 			
 			if (grpList.equals("")) grpList = index+"";
@@ -312,16 +313,17 @@ public class QueryPanel extends JPanel {
 		}
 		// anno and loc used for all the rest; but single only uses with All
 		String anno = txtAnno.getText();
-		String loc =  makeSummaryLocation();
+		String loc =  makeSummaryLocation(); // chr must be set to return location
 		String retVal="";
 		
 		if(isSingle()) {
 			retVal = (isOrphan()) ? "Orphans genes" : "All genes";
 			retVal = joinStr(retVal, anno, ";  ");
 			
-			String selSp = (String) cmbGeneSpecies.getSelectedItem();
-			if (selSp.contentEquals("All")) retVal = joinStr(retVal, loc, ";  ");
-			else 							retVal = joinStr(retVal, selSp, ";  "); 
+			String selSingSp = (String) cmbSingleSpecies.getSelectedItem();
+			if (loc!="") retVal = joinStr(retVal, loc, ";  ");
+			else retVal = joinStr(retVal, selSingSp, ";  "); 
+				
 			return retVal;
 		}
 		
@@ -372,10 +374,12 @@ public class QueryPanel extends JPanel {
 		String retVal = ""; // CAS503 added info and remove some wordiness, i.e. do not need to list species unless location
 
 		for(int x=0; x<numSpecies; x++) {
+			if (!speciesPanel.isSpEnabled(x)) continue; // CAS518 can be disabled by Single
+			
 			String species = speciesPanel.getSpName(x);
 			String chroms =  speciesPanel.getSelChrNum(x);
-			String start = speciesPanel.getStartAbbr(x);
-			String end = speciesPanel.getStopAbbr(x);
+			String start = 	 speciesPanel.getStartAbbr(x);
+			String end = 	 speciesPanel.getStopAbbr(x);
 			if(!chroms.equals("All")) {
 				String loc = " Chr " + chroms;
 				if (!start.equals("") && !end.equals("")) loc += " Range " + start + "-" + end; 
@@ -635,48 +639,49 @@ public class QueryPanel extends JPanel {
 				setAllEnabled(!isSelect);
 				
 				if (isSelect) {
-					String selSp = (String) cmbGeneSpecies.getSelectedItem();
+					String selSp = (String) cmbSingleSpecies.getSelectedItem();
 					boolean bAll = (selSp.contentEquals("All")); // specified project takes precedence
-					speciesPanel.setEnabled(bAll); // CAS513 project takes precedence
-					
+					speciesPanel.setEnabled(false);
+					if (!bAll) speciesPanel.setSpEnabled(selSp); // CAS517 turn on if species selected
 					chkSingle.setEnabled(true);
-					cmbGeneSpecies.setEnabled(true);
-					cmbGeneOpt.setEnabled(true);
+					cmbSingleSpecies.setEnabled(true);
+					cmbSingleOpt.setEnabled(true);
 				}
 			}
 		});
 		chkSingle.setSelected(false);
 		row.add(chkSingle); row.add(Box.createHorizontalStrut(5));
 		
-		cmbGeneOpt = new JComboBox <String> (); // CAS514 add for all genes
-		cmbGeneOpt.setBackground(Color.WHITE);
-		cmbGeneOpt.addItem("Orphan genes (no hits)");
-		cmbGeneOpt.addItem("All genes (w/o hits)");
-		cmbGeneOpt.addActionListener(new ActionListener() { 
+		cmbSingleOpt = new JComboBox <String> (); // CAS514 add for all genes
+		cmbSingleOpt.setBackground(Color.WHITE);
+		cmbSingleOpt.addItem("Orphan genes (no hits)");
+		cmbSingleOpt.addItem("All genes (w/o hits)");
+		cmbSingleOpt.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) {}
 		});
-		cmbGeneOpt.setEnabled(false);
-		row.add(cmbGeneOpt); row.add(Box.createHorizontalStrut(5));
+		cmbSingleOpt.setEnabled(false);
+		row.add(cmbSingleOpt); row.add(Box.createHorizontalStrut(5));
 		
-		cmbGeneSpecies = new JComboBox <String> (); // CAS513 add type
-		cmbGeneSpecies.setBackground(Color.WHITE);
-		cmbGeneSpecies.addItem("All");
+		cmbSingleSpecies = new JComboBox <String> (); // CAS513 add type
+		cmbSingleSpecies.setBackground(Color.WHITE);
+		cmbSingleSpecies.addItem("All");
 		
 		for(int x=0; x<nSpecies; x++)
-			cmbGeneSpecies.addItem(speciesPanel.getSpName(x));
-		cmbGeneSpecies.setMaximumSize(cmbGeneSpecies.getPreferredSize());
+			cmbSingleSpecies.addItem(speciesPanel.getSpName(x));
+		cmbSingleSpecies.setMaximumSize(cmbSingleSpecies.getPreferredSize());
 		
-		cmbGeneSpecies.addActionListener(new ActionListener() { // CAS503 disabled chr
+		cmbSingleSpecies.addActionListener(new ActionListener() { // CAS503 disabled chr
 			public void actionPerformed(ActionEvent e) {
-				String selSp = (String) cmbGeneSpecies.getSelectedItem();
+				speciesPanel.setEnabled(false); 
+				String selSp = (String) cmbSingleSpecies.getSelectedItem();
 				boolean bAll = (selSp.contentEquals("All")); // specified project takes precedence
-				speciesPanel.setEnabled(bAll); // CAS513 project takes precedence
+				if (!bAll) speciesPanel.setSpEnabled(selSp); // CAS518 was confusing, allow Chr selection after species
 			}
 		});
-		cmbGeneSpecies.setEnabled(false);
+		cmbSingleSpecies.setEnabled(false);
 		
 		row.add(new JLabel("Project: ")); row.add(Box.createHorizontalStrut(1));
-		row.add(cmbGeneSpecies); 
+		row.add(cmbSingleSpecies); 
 		
 		row.setMaximumSize(row.getPreferredSize());
 		row.setAlignmentX(LEFT_ALIGNMENT);
@@ -804,8 +809,8 @@ public class QueryPanel extends JPanel {
 		txtHitIdx.setText(""); 			 txtHitIdx.setEnabled(false);   chkHitIdx.setSelected(false);
 		
 		chkSingle.setSelected(false);
-		cmbGeneOpt.setSelectedIndex(0);     cmbGeneOpt.setEnabled(false);
-		cmbGeneSpecies.setSelectedIndex(0); cmbGeneSpecies.setEnabled(false); 
+		cmbSingleOpt.setSelectedIndex(0);     cmbSingleOpt.setEnabled(false);
+		cmbSingleSpecies.setSelectedIndex(0); cmbSingleSpecies.setEnabled(false); 
 		
 		chkPgeneF.setSelected(false); setPgenefEnable(false);
 		
@@ -826,7 +831,7 @@ public class QueryPanel extends JPanel {
 	
 		speciesPanel.setEnabled(b); // All chr, start, end
 		
-		chkSingle.setEnabled(b); cmbGeneSpecies.setEnabled(false); cmbGeneOpt.setEnabled(false); // only chkSingle enables
+		chkSingle.setEnabled(b); cmbSingleSpecies.setEnabled(false); cmbSingleOpt.setEnabled(false); // only chkSingle enables
 		
 		chkPgeneF.setEnabled(b);
 		setPgenefEnable(false);
@@ -952,12 +957,12 @@ public class QueryPanel extends JPanel {
 			chkOnlyInc = null, chkUnannotInc = null, chkLinkageInc = null;
 	
 	// CAS504 add
-	private OptionsRow  blockOptRow = null, annoOptRow=null;
+	private OptionsRow blockOptRow = null, annoOptRow=null;
 	private JTextField txtCollinearN = null;
 	private JLabel lblCollinearN = null;
 	
-	private JComboBox <String> cmbGeneOpt = null;
-	private JComboBox <String> cmbGeneSpecies = null;
+	private JComboBox <String> cmbSingleOpt = null;
+	private JComboBox <String> cmbSingleSpecies = null;
 	
 	private JCheckBox chkPgeneF = null;
 	private JCheckBox chkBlock = null, chkColinear = null, chkHitIdx = null;

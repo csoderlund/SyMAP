@@ -50,6 +50,14 @@ public class SpeciesSelectPanel extends JPanel {
 	public void setEnabled(boolean b) {
 		for (SpeciesSelect p : spPanels) p.setEnabled(b);
 	}
+	public void setSpEnabled(String spName) { // CAS518 select chr for single
+		for (SpeciesSelect p : spPanels) 
+			if (spName.contentEquals(p.getSpName())) {
+				p.setEnabled(true);
+				return;
+			}
+		System.err.println("Could not find " + spName);
+	}
 	
 	public int getNumSpecies() 				{return spPanels.size();}
 	public int getSpIdx(int p)				{return spPanels.get(p).getSpIdx();}
@@ -98,6 +106,7 @@ public class SpeciesSelectPanel extends JPanel {
 		}
 		return 0;
 	}
+	public boolean isSpEnabled(int p) 		{return spPanels.get(p).isSpEnabled();} // CAS518 add
 	public String [] getChrIdxList(int p) 	{return spPanels.get(p).getChrIdxList();}
 	public String getChrIdxStr(int p) 		{return spPanels.get(p).getChrIdxStr();}
 	public String [] getChrNumList(int p) 	{return spPanels.get(p).getChrNumList();}
@@ -430,12 +439,19 @@ public class SpeciesSelectPanel extends JPanel {
 		}
 	
 		private String getSpName() {return lblSpecies.getText();}
-		private String getSelChrNum() {return (String)cmbChroms.getSelectedItem();}
+		private String getSelChrNum() {
+			return (String)cmbChroms.getSelectedItem();
+		}
+		private boolean isSpEnabled() {return cmbChroms.isEnabled();} // CAS518 
 		private int getSelChrIdx() {
+			if (!cmbChroms.isEnabled()) return -1; // CAS518 Single make sure enabled
+			
 			String chr = (String)cmbChroms.getSelectedItem();
 			if (chr.equals("All")) return -1;
+			
 			for (int i=0; i<chrNumList.length; i++) 
 				if (chrNumList[i].equals(chr)) return Integer.parseInt(chrIdxList[i]);
+			
 			System.out.println("Error: no " + chr);
 			return -1;
 		}

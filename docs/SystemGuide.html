@@ -687,9 +687,7 @@ You can set which attributes keywords to save; open the
 Project's Parameters window (shown <a href="#params2">above</a>), look for parameter "annot_keywords".
 <li>For exons, the "parent" keyword=value is saved for viewing.
 </ul>
-Note: As of v5.1.2, the genes and exon entries are expected to be in one file. If they are
-separate, the exons are not correctly assigned to the genes when there are nested genes - but
-the synteny results are still correct.
+Note: As of v5.1.8, the genes and exons must be in one file.
 
 <p><i><b>NCBI files:</b></i> A Java script (<tt>scripts/ConvertNCBI.class</tt>) has been provided that
 converts NCBI genome fasta files and gff annotation files
@@ -785,7 +783,11 @@ The file results of the alignment and synteny computations are is as follows:
    /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/align
    /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/final
 </pre>
-The log files are in the <tt>/logs</tt> directory, see
+After the database is complete, these can be removed. However, sometimes SyMAP version updates require
+the project files to be reloaded and/or the synteny to be recomputed; if these files remain, the existing
+MUMmer files will be used, which <i><b>saves a lot of time</b></i>.
+
+<p>The log files are in the <tt>/logs</tt> directory, see
 <a href="MUMmer.html#log" class="ext" target="_blank">Running MUMmer</a> for more details.
 
 <br>&nbsp;

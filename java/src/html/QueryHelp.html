@@ -33,8 +33,8 @@ The two queries the produce a table of genes.  There is no hit or block
 information since the rows do not represent pairs.
 <p><u>Search criteria</u>: both options can be restricted by:
 <ul>
-<li>Using the "Project" pull-down (cannot set "Chr").
-<li>Set "Chr:"" with optional coordinates (cannot set "Project").
+<li>Using the "Project" pull-down, select a project.
+<li>If a project is selected, then a chromosome and optional location can be selected.
 <li>Enter "Annotation Description"
 </ul>
 Options:
@@ -91,9 +91,10 @@ require at least 7 anchors, and are allowed to have intervening genes which do n
 if you select Chr 1 from the first project, Chr 2 from a second project, and enter block=3, you will see
 hits in block 1.2.3 from the two project chromosomes you selected.
 
-<p><b>HitIdx</b>
-<br>Entering a valid HitIdx number will return ONE row, where this cannot be combined with any other filters.
-This is the number that is shown in the "HitIdx" column for the pair table results.
+<p><b>Hit#</b>
+<br>Entering a valid Hit# number will return ONE row, where this cannot be combined with any other filters.
+This is the number that is shown in the "Hit#" column for the pair table results. The Hit# is the index into
+the database, so it can change if the database is rebuilt.
 
 <!--------------------------------------------------->
 <h2>4. Filter putative gene families (PgeneFs)</h2>

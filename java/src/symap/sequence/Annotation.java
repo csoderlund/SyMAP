@@ -107,12 +107,14 @@ public class Annotation {
 		this.annot_idx = idx;
 		this.genenum = genenum;
 	
+		// see backend.AnnotLoadPost.computeTags for formatting; e.g Gene #500a (N 100bp)
+		// CAS515 merge tag and genenum in a more readable format; CAS517 add suffix; CAS518 add total exon length (no change to parsing)
 		tagGeneN="";
-		if (genenum>0) { // CAS515 merge tag and genenum in a more readable format
-			String [] tok = tag.split("\\(");	// Gene #500 (n)  pre-v517 Gene (n)
+		if (genenum>0) { 
+			String [] tok = tag.split("\\(");	
 			if (tok.length==2) {
 				tagGeneN = (tok[0].contains("#")) ? tok[0] : "Gene #"+genenum; // pre-v517 did not include genenum
-				this.tag = tagGeneN +  " (Exons " + tok[1];	
+				this.tag = tagGeneN +  " (Exons " + tok[1];	 					// -> Add 'Exon' for display
 			}
 			else   {
 				this.tag = tagGeneN = "Gene #" + genenum;
@@ -234,10 +236,13 @@ public class Annotation {
 
 	public int getStart() {return start;}
 	public int getEnd() {return end;}
-	public int getGeneIdx() { return gene_idx;} // CAS517 for Sequence to know if overlap exon
-	public int getAnnoIdx() { return annot_idx;}// ditto
-	public int getGeneNum() { return genenum;}	// CAS517 for sorting in PseudoData
+	public int getGeneIdx() { return gene_idx;} 			// CAS517 for Sequence to know if overlap exon
+	public int getAnnoIdx() { return annot_idx;}			// ditto
 	public int getGeneLen()	{ return Math.abs(end-start)+1;} // ditto
+	public int getGeneNum() { return genenum;}				// CAS517 for sorting in PseudoData
+	public String getTag() {return tag;} 					// CAS512 add for HelpBox
+	public String getGeneNumStr() {return tagGeneN;}		// CAS518 for...
+	
 	
 	// for seq-seq closeup
 	public boolean getStrand() {return bStrandPos;}
@@ -282,8 +287,6 @@ public class Annotation {
 		
 		return longDes;
 	}
-	
-	public String getTag() {return tag;} // CAS512 add for HelpBox 
 	
 	public boolean hasShortDescription() {
 		if (type==EXON_INT && !TRACE) return false; // CAS512 do not want exons on "Show Annotations"
@@ -369,7 +372,7 @@ public class Annotation {
 				if (list==null) list = val;
 				else  list += "," + val;
 			}
-			exonList = "Exons " + "\n" + list;
+			exonList = list;
 		}
 		catch (Exception e) {ErrorReport.print(e, "Get exon list for " + gene_idx);}
 	}
@@ -384,14 +387,22 @@ public class Annotation {
 	
 	// CAS516 popup from clicking gene or yellow box, CAS517 add hitList
 	public void popupDesc(Component parentFrame, String name, String chr) { 
+	try {
+		if (!tag.contains("(")) return;
+		
+		String [] tok = tag.split("\\("); // see backend.AnnotLoadPost.computeTags
+		
 		String msg = null;
 		for (String x : getVectorDescription()) {
-			if (msg==null) msg = x + " " + chr + "\n";
+			if (msg==null) msg = tok[0] + " " + chr + "\n";
 			else msg += x + "\n";
 		}
 		
-		if (exonList!=null) // FPC
-			msg += "\n" + Utilities.formatExon(exonList) + "\n";
+		if (exonList!=null) {// FPC
+			String exon = tok[1].replace("(",""); // CAS518 move Exon N len to here
+			exon = tok[1].replace(")","");
+			msg += "\n" + exon + "\n" + Utilities.formatExon(exonList) + "\n";
+		}
 		
 		if (hitList!=null) {
 			String [] hitWires = hitList.split(";");
@@ -404,5 +415,6 @@ public class Annotation {
 			Utilities.displayInfoMonoSpace(parentFrame, title, msg,  d, 0.0, 0.0); 
 		}
 		else descBox.popupDesc(title, msg); // aligns it with yellow box
+	} catch (Exception e) {ErrorReport.print(e, "Creating genepopup");}
 	}
 }

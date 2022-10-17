@@ -43,6 +43,8 @@ import java.util.LinkedHashSet;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
@@ -1033,12 +1035,31 @@ public class Utilities {
     	String x2 = (c2.startsWith("0") && c2.length()>1) ? c2.substring(1) : c2;
     	return x1 + "." + x2 + "." + block;
     }
-    // CAS517 - format exon list (e.g. #1:20:50,#1:20:50)
-    static public String formatExon(String elist) {
-    	String [] tok = elist.split("\n");
-    	if (tok.length!=2) return elist;
-    	String exonList = tok[1];
-    			
+    
+    // CAS518 return genenum.suffix or genenum
+    public static String getGenenum(String c1, String tag) { 	
+    	String x1 = (c1.startsWith("0") && c1.length()>1) ? c1.substring(1) : c1;
+    	if (tag==null || tag=="") return x1 +".?."; // older databases do not have tag
+    	
+    	Pattern pat1 = Pattern.compile("Gene #(\\d+)([a-z]+[0-9]*)(.*)$");
+		Pattern pat2 = Pattern.compile("Gene #(\\d+)(.*)$");
+		Matcher m = pat1.matcher(tag);
+		if (m.matches()) {
+			String y = m.group(1);
+			String z = m.group(2);
+			return x1 + "." + y + "." + z;
+		}
+		else { 
+			m = pat2.matcher(tag);
+			if (m.matches()) {
+				String y = m.group(1);
+				return x1 + "." + y + ".";
+			}
+			else return tag;
+		}
+    }
+    // CAS517 - format exon list (e.g. Exon #1:20:50,Exon #1:20:50)
+    static public String formatExon(String exonList) {	
     	int rm = "Exon #".length();
     	String list="";
     	String [] tokc = exonList.split(",");
@@ -1080,7 +1101,7 @@ public class Utilities {
     		r++; c=0;
     	}
     	list = makeTable(nCol, nRow, fields, justify, rows);
-    	return tok[0] + "\n" + list;
+    	return list;
     }
     // CAS517 - format a merged gene hit (e.g. 100:200,300:400)
     static public String formatHit(String hList) {
@@ -1128,6 +1149,7 @@ public class Utilities {
     	list = makeTable(nCol, nRow, fields, justify, rows);
     	return tok[0] + "\n" + list;
     }
+   
     /*******************************************************
 	 * XXX Table maker CAS517 copied from TCW
 	 */

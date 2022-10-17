@@ -92,6 +92,7 @@ The Dot Plot and Circle displays are available from various places.
 		<li><a href="#alignment_display_dot">Dot Plot #2</a>
 		<li><a href="#alignment_display_2d">2D Display</a> <!-- # ref in code -->
 			<ul>
+			<li><a href="#view">View a region</a>
 			<li><a href="#base">Align (Base View)</a>
 			</ul>
 		</ul>
@@ -447,9 +448,9 @@ Gene annotations: The introns are shown as thinner black rectangles. The exons a
 colored dark blue (positive strand) or purple (negative strand).
 A solid thick bar indicates the absence of introns in the annotation.
 <p>The staggered genes, where one is
-further out then the other, indicate overlapping genes; they have the same gene# with a different suffix.
-Note: the algorithm for detecting overlapping genes misses some, and will be fixed in a later release; however,
-this does not cause any error (though sometimes it is necessary to use "Show Annotations").
+further out then the other, indicate overlapping and contained genes; they have the same gene# with a different suffix.
+There can only be 3 layers (the image on the right has 2 layers) of overlapping genes, so if there is more than that, then
+they may not be distinguishable and you will need to display <ttl>Annotation Description</ttl.>
 
 <p>Hits: The brown or green hit-wire connects two regions on the two sequences. The regions are referred
 to as <i>hit lengths</i>, which are shown on the track at the end of a hit-wire.
@@ -469,6 +470,7 @@ a grey area.
 <a href="img/2d-hit.png"><img src="img/2d-hit.png" alt="2d-hit" style="border: 1px solid black; width: 240px"></a>
 </table>
 <ul>
+<li><ttl>Hit #</ttl> the number is an index into the database, and can change if the database is rebuilt.
 <li><ttl>(!=)</ttl> indicates the hit ends are on two different strands; <ttl>(=)</ttl> indicates the same strand.
 <li><ttl>Inv</ttl> indicates that it is part of an inverted block.
 <li><ttl>gN</ttl> (<ttl>N={0,1,2}</ttl>) indicates that the hit overlaps an exon on one side, or two sides
@@ -478,9 +480,7 @@ Colinear runs can be queried on in <a href="#annotsearch">SyMAP Queries</a>.
 </ul>
 
 <u>More detailed information:</u> Popups of a gene or hit-wire provides more detailed information.
-To view the popup of the gene description,
-either: (1) right-click on a yellow gene description box, or
-(2) right-click on the gene in the track.
+To view the popup of the gene description, right-click on the gene in the track.
 To view the popup of a hit-wire, right click on it (the hit-wire must be highlighted in red from hovering over it to be clickable).
 <p>The information in a popup can be copied by dragging the mouse over it followed by the copy command. The popup does not
 go away until the <ttb>OK</ttb> button is selected, or the <ttl>Explorer</ttl> is exited. Any number of gene popups can be present.

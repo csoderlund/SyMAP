@@ -216,13 +216,15 @@ public class SyProps extends PropertiesReader
 	}
 	
 	// FPCLoadMain and SeqLoadMain
-	public void uploadProjProps(UpdatePool pool, int pidx, String[] keys) throws SQLException
-	{
-		for (String key : keys) {
-			String val = getProperty(key);
-			String st = "INSERT INTO proj_props VALUES('" + pidx + "','" + key + "','" + val + "')";
-			pool.executeUpdate(st);
+	public void uploadProjProps(UpdatePool pool, int pidx, String[] keys) throws SQLException{
+		try {
+			for (String key : keys) {
+				String val = getProperty(key);
+				String st = "INSERT INTO proj_props VALUES('" + pidx + "','" + key + "','" + val + "')";
+				pool.executeUpdate(st);
+			}
 		}
+		catch (Exception e) {ErrorReport.print(e, "Could not enter properties"); } //CAS518 for user to see...
 	}
 	
 	/*****************************************************

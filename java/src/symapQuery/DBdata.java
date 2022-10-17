@@ -329,13 +329,13 @@ public class DBdata {
 			chrIdx[0] = 	rs.getInt(Q.GRP1IDX);
 			start[0] = 		rs.getInt(Q.GRP1START);
 			end[0] = 		rs.getInt(Q.GRP1END);
-			len[0] = Math.abs(end[0]-start[0])+1;
+			len[0] =		 Math.abs(end[0]-start[0])+1;
 			
 			spIdx[1] = 		rs.getInt(Q.PROJ2IDX);
 			chrIdx[1] = 	rs.getInt(Q.GRP2IDX);  
 			start[1] = 		rs.getInt(Q.GRP2START); // hit start to chromosome
 			end[1] = 		rs.getInt(Q.GRP2END);   // hit end to chromosome
-			len[1] = Math.abs(end[1]-start[1])+1;
+			len[1] = 		Math.abs(end[1]-start[1])+1;
 			
 			runSize = 		rs.getInt(Q.RSIZE);
 			blockNum =		rs.getInt(Q.BNUM);
@@ -350,7 +350,7 @@ public class DBdata {
 				int x = (annoGrpIdx==chrIdx[0]) ? 0 : 1; 
 				
 				annotStr[x] =	rs.getString(Q.ANAME);
-				geneNum[x] = 	rs.getInt(Q.AGENE); // CAS514
+				geneNum[x] = 	rs.getString(Q.AGENE); // CAS514 add; CAS518 change genenum to tag
 				
 				int annoIdx = rs.getInt(Q.AIDX);
 				if (x==0) annoSet0.add(annoIdx); // multiple anno's for same hit
@@ -369,7 +369,7 @@ public class DBdata {
 			
 			int x = (annoGrpIdx==chrIdx[0]) ? 0 : 1; // goes with 1st or 2nd half of hit?
 			
-			geneNum[x] = 	rs.getInt(Q.AGENE); // CAS514
+			geneNum[x] = 	rs.getString(Q.AGENE); // CAS514
 			
 			int sz = (x==0) ? annoSet0.size() : annoSet1.size();
 			if (sz>0)  { // can be multiple hits for same project	
@@ -393,7 +393,7 @@ public class DBdata {
 			start[0] =		rs.getInt(Q.ASTART);		// Gene start to chromosome
 			end[0] =		rs.getInt(Q.AEND);
 			len[0] = Math.abs(end[0]-start[0])+1;
-			geneNum[0] = 	rs.getInt(Q.AGENE);  // CAS514
+			geneNum[0] = 	rs.getString(Q.AGENE);  // CAS514
 		}
 		catch (Exception e) {ErrorReport.print(e, "Read single");}
 	}
@@ -413,6 +413,7 @@ public class DBdata {
 				runStr = Utilities.blockStr(chrNum[0], chrNum[1], runSize); // CAS517 add chrs
 				if (runNum>0) runStr += "." + runNum;
 			}
+			if (geneNum[x]!=Q.empty) geneNum[x] = Utilities.getGenenum(chrNum[x], geneNum[x]); // CAS518 formatted
 			
 			/******* Anno Keys ******************/
 			if (!annoKeys.containsKey(spIdx[x])) continue; // If this is index 0, then still need 1
@@ -553,14 +554,14 @@ public class DBdata {
 				row.add(start[0]); 
 				row.add(end[0]); 
 				row.add(len[0]);
-				if (geneNum[0]<=0) row.add(Q.empty); else row.add(geneNum[0]); // CAS516 sorts to bottom
+				row.add(geneNum[0]); // CAS518 num to string
 			}
 			else if (spIdx[1]==spIdxList[i]) {
 				row.add(chrNum[1]); 
 				row.add(start[1]); 
 				row.add(end[1]); 
 				row.add(len[1]);
-				if (geneNum[1]<=0) row.add(Q.empty); else row.add(geneNum[1]); // CAS516 sorts to bottom
+				row.add(geneNum[1]); // CAS518 num to string
 			}
 			else {
 				row.add(Q.empty); row.add(Q.empty); row.add(Q.empty); 
@@ -633,7 +634,7 @@ public class DBdata {
 	private int [] start = 	{-1, -1};  // or from pseudo_annot for orphans
 	private int [] end = 	{-1, -1}; 
 	private int [] len = 	{-1, -1};  // CAS516 add
-	private int [] geneNum = {-1, -1}; // CAS514 add
+	private String [] geneNum = {Q.empty, Q.empty}; // CAS514 add; CAS518 chr.gene#.suffix
 	
 // block
 	private int blockNum=-1, blockScore=-1, runSize=-1, runNum=-1;

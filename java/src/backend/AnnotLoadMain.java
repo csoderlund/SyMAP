@@ -78,7 +78,7 @@ public class AnnotLoadMain
 		time = System.currentTimeMillis();
 		AnnotLoadPost alp = new AnnotLoadPost(project, pool, log);
 		success = alp.run(cntGeneIdx); 	if (!success) return false;
-		Utils.timeMsg(log, time, "Computations complete");
+		Utils.timeMsg(log, time, "Computations");
 
 /** Wrap up **/
 		summary();		if (!success) return false;
@@ -89,8 +89,7 @@ public class AnnotLoadMain
 	/************************************************************************8
 	 * Load file - old method still used for separate gene/exon
 	 */
-	private void loadFile(File f) throws Exception
-	{
+	private void loadFile(File f) throws Exception {
 	try {
 		log.msg("Loading " + f.getName());
 		BufferedReader fh = Utils.openGZIP(f.getAbsolutePath()); // CAS500
@@ -101,7 +100,7 @@ public class AnnotLoadMain
 		final int MAX_ERROR_MESSAGES = 3;
 		
 		boolean bSkipExons=false;
-		int cntMRNA=0, cntSkipMRNA=0, cntSkipGeneAttr=0;
+		int cntMRNA=0, cntSkipMRNA=0, cntSkipGeneAttr=0, cntGene=0, cntExon=0;
 		
 		int lastGeneIdx=-1; // keep track of the last gene idx to be inserted
 		int lastIdx=pool.getIdx("select max(idx) from pseudo_annot");
@@ -181,6 +180,7 @@ public class AnnotLoadMain
 			String parsedAttr="";	// MySQL text: Can hold up to 65k
 			
 			if (isExon) { // CAS512 was not using any attr; now using parent or first
+				cntExon++;
 				String[] keyValExon = attr.split(";"); 
 				
 				for (String keyVal : keyValExon) {
@@ -200,6 +200,7 @@ public class AnnotLoadMain
 					parsedAttr = keyValExon[0] + ";";
 			}
 			else if (isGene) { // CAS501 changed to create string of only user-supplied keywords
+				cntGene++;
 				String[] keyValGene = attr.split(";"); // 	IF CHANGED, CHANGE CODE IN QUERY PAGE PARSING ALSO
 				
 				for (String keyVal : keyValGene) {
@@ -271,17 +272,18 @@ public class AnnotLoadMain
 		fh.close();
 		
 		log.msg("   " + totalLoaded + " annotations loaded from " + f.getName());
+		if (cntGene>0 || cntExon>0) { // CAS518 no longer supporting exons in separate file
+			log.msg("   " + cntGene + " genes; " + cntExon + " exons");
+			if (cntGene==0) 
+				log.msg("Warning: genes and exons must be in the same file for accurate results");
+		}
 		if (cntSkipGeneAttr>0) log.msg("   " + cntSkipGeneAttr + " skipped gene attribute with no '='");
 		if (cntSkipMRNA>0)	   log.msg("   " + cntSkipMRNA + " skipped mRNA and exons");
 		if (numParseErrors>0)  log.msg("   " + numParseErrors + " parse errors - lines discarded");
-		if (numGrpErrors>0)    log.msg("   " + numGrpErrors + " annotations not loaded (sequence was not loaded)");
+		if (numGrpErrors>0)    log.msg("   " + numGrpErrors + " annotations not loaded (no associated sequence name)");
 	}
 	catch (Exception e) {ErrorReport.print(e, "Load file"); success=false;}
 	}
-	
-	/******************************************************
-	 * Check files - gene&exons in same file? or separate
-	 */
 	
 	/************* Initialize local data *****************/
 	private void initFromParams(String projName) {
@@ -297,7 +299,7 @@ public class AnnotLoadMain
 			{
 				// Check for annotation directory
 				String annotDir = 	projDir + Constants.seqAnnoDataDir;
-				log.msg("   anno_files not specified - use " + annotDir);
+				log.msg("   Anno_files not specified - use " + annotDir);
 				File ad = new File(annotDir);
 				if (!ad.isDirectory()) {
 					log.msg("   No annotation files provided");

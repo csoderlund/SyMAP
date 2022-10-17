@@ -15,6 +15,8 @@ import java.awt.geom.Rectangle2D;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Vector;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 import number.GenomicsNumber;
@@ -37,7 +39,7 @@ import util.ErrorReport;
  * Has a vector of annotations, which it also draws. The hit is drawn in this rectangle by PseudoPseudoHits
  */
 public class Sequence extends Track {	
-	private static final boolean POPUP_ANNO=true; // Always true - double click Yellow anno for popup
+	public static boolean POPUP_ANNO=false; // not working from Query/dotplot
 	private static final double OFFSET_SPACE = 7;
 	private static final double OFFSET_SMALL = 1;
 	
@@ -118,6 +120,11 @@ public class Sequence extends Track {
 	private TextLayout headerLayout, footerLayout;
 	private Point2D.Float headerPoint, footerPoint;
 	
+	private HashMap <Integer, Integer> olapMap = new HashMap <Integer, Integer> (); // CAS517 added for overlapping genes; CAS518 global
+	private Rectangle2D.Double centGeneRect;		// CAS518 add so do not display message if hover in-between genes
+	private final int OVERLAP_OFFSET=12;			// CAS517/518 for overlap and yellow text
+	private final int MAX_GAP=3; 					// CAS518 also in backend.AnnotLoadPost
+	
 	public Sequence(DrawingPanel dp, TrackHolder holder) {
 		this(dp, holder, dp.getPools().getPseudoPool(), dp.getPools().getSequencePool());
 	}
@@ -134,6 +141,7 @@ public class Sequence extends Track {
 
 		group   = NO_VALUE;
 		project = NO_VALUE;
+		centGeneRect = new Rectangle2D.Double();
 	}
 	// CAS517 add in order to have access to hits, then decided not to use, but could come in handy
 	public void setPseudoPseudoHits(PseudoPseudoHits pObj, boolean isSwapped) { 
@@ -185,6 +193,7 @@ public class Sequence extends Track {
 	public void clear() {
 		ruleList.clear();
 		allAnnoVec.clear();
+		olapMap.clear();
 		headerPoint.setLocation(0,0);
 		footerPoint.setLocation(0,0);
 		dragPoint.setLocation(0,0);
@@ -347,7 +356,7 @@ public class Sequence extends Track {
 
 		try {
 			name = psePool.setSequence(this, size, allAnnoVec);	
-			if (allAnnoVec.size() == 0) showAnnot = false;
+			if (allAnnoVec.size() == 0) showAnnot = false; 
 		} catch (SQLException s1) {
 			ErrorReport.print(s1, "Initializing Sequence failed.");
 			psePool.close();
@@ -361,9 +370,9 @@ public class Sequence extends Track {
 	}
 
 	/**
-	 * XXX Sets up the drawing objects for this sequence. Called by DrawingPanel and Track
+	 * XXX Build layout: 
+	 * Sets up the drawing objects for this sequence. Called by DrawingPanel and Track
 	 * Start and end are Track GenomicsNumber variables, stating start/end 
-	 * 
 	 * The Hit Length, Hit %Id Value and Bar are drawn in PseudoPseudoHits.PseudoHits.paintHitLen and its paintComponent
 	 */
 	public boolean build() { 
@@ -445,66 +454,54 @@ public class Sequence extends Track {
 		/* 
 		 * Setup the annotations
 		 */
-		getHolder().removeAll(); 
-		Rectangle2D.Double centRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
-		
-		int CONSTANT_OFFSET=12;
 		boolean isRight = (orient == RIGHT_ORIENT);
-		int lastGeneNum=-1,  nextOffset=CONSTANT_OFFSET;
 		double lastStart=0;
-		HashMap <Integer, Integer> olapMap = new HashMap <Integer, Integer> (); // CAS517 added for overlapping genes
+		
+		getHolder().removeAll(); 
+		Rectangle2D centRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
+		centGeneRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
 		
 		if (SyMAP.TRACE) System.err.println("SEQ: " + allAnnoVec.size() + " " + getHolder().getTrackNum() + " " + toString());
+		
+		buildOlap(); // builds first time only
+			
 		// XXX Sorted by genes (genenum, start), then exons (see PseudoData.setAnnotations)
 	    for (Annotation annot : allAnnoVec) {
-			if (((annot.isGene() || annot.isExon()) && !showGene) || (annot.isGap() && !showGap)
-				|| (annot.isCentromere() && !showCentromere) || (annot.isFramework() && !showFrame))
-			{
-				annot.clear();
-				continue;		// not to be shown
+	    	if (((annot.isGene() || annot.isExon()) && !showGene) || (annot.isGap() && !showGap)
+			    || (annot.isCentromere() && !showCentromere) || (annot.isFramework() && !showFrame)){
+					annot.clear();
+					return true;
 			}
+	    	
 			double dwidth = rect.width, hwidth=0; // displayWidth, hoverWidth for gene
 			int offset=0;
 			
 			if (annot.isGene()) {
 				dwidth = hwidth = ANNOT_WIDTH;
 				if (showFullGene) dwidth /= GENE_DIV; // showFullGene always true
+				if (olapMap.containsKey(annot.getAnnoIdx())) offset = olapMap.get(annot.getAnnoIdx());
 				
-				if (annot.getGeneNum() == lastGeneNum) {
-					olapMap.put(annot.getAnnoIdx(), nextOffset);
-					offset = nextOffset;
-					if (nextOffset==CONSTANT_OFFSET) 		nextOffset += CONSTANT_OFFSET;
-					else if (nextOffset>CONSTANT_OFFSET) 	nextOffset=0;
-					else 									nextOffset=CONSTANT_OFFSET; 
-				}
-				else {
-					nextOffset = CONSTANT_OFFSET; // for next overlapping
-					lastGeneNum = annot.getGeneNum();
-				}
 			}
 			else if (annot.isExon() || annot.isSyGene()) {
 				dwidth = ANNOT_WIDTH;
-				if (olapMap.containsKey(annot.getGeneIdx())) 
-					offset = olapMap.get(annot.getGeneIdx());
+				if (olapMap.containsKey(annot.getGeneIdx())) offset = olapMap.get(annot.getGeneIdx());
 			}
-			
 			if (offset>0 && isRight) offset = -offset;
 			
 			annot.setRectangle(centRect, start.getBPValue(), end.getBPValue(),
 					bpPerPixel, dwidth, hwidth, flipped, offset);
 			
-		// Setup yellow description
+			// Setup yellow description
 			if (annot.isGene() && showAnnot && annot.isVisible()) { // CAS517 added isGene
 				if (annot.hasShortDescription() && getBpPerPixel() < MIN_BP_FOR_ANNOT_DESC)  { 
-					x1 = isRight ? (rect.x + rect.width + RULER_LINE_LENGTH + 2) : rect.x;
+					x1 = isRight ? (rect.x + rect.width + RULER_LINE_LENGTH + 2) : rect.x; 
 					x2 = (isRight ? x1 + RULER_LINE_LENGTH  : x1 - RULER_LINE_LENGTH);
 					
 					ty = annot.getY1();
-					if (lastStart==ty) ty = ty+CONSTANT_OFFSET;
+					if (lastStart==ty) ty = ty+OVERLAP_OFFSET;
 					lastStart=ty;
 					
 					TextBox tb = new TextBox(annot.getVectorDescription(),unitFont, (int)x1, (int)ty, 40, 200);
-					
 					if (POPUP_ANNO) annot.setTextBox(tb); 	// CAS503 right-click (mousePressed)
 					getHolder().add(tb); 					// adds it to the TrackHolder JComponent
 					
@@ -522,30 +519,6 @@ public class Sequence extends Track {
 				}
 			}
 		} // end for loop of (all annotations)
-		olapMap.clear();
-		
-		// show instructions for annotation descriptions when zoomed out
-		if (showAnnot && getBpPerPixel() >= MIN_BP_FOR_ANNOT_DESC) { 
-			x1 = (orient == RIGHT_ORIENT ? rect.x + rect.width + RULER_LINE_LENGTH + 2 : rect.x);
-			x2 = (orient == RIGHT_ORIENT ? x1 + RULER_LINE_LENGTH : x1 - RULER_LINE_LENGTH);
-			ty = rect.y+rect.height/2;
-			TextBox tb = new TextBox(
-				"Annotation descriptions cannot be displayed\nat this scale, zoom in further by dragging\n" +
-				"the mouse over the sequence rectangle.\n", unitFont,(int)x1,(int)ty,200,1000);
-			getHolder().add(tb);
-			bounds = tb.getBounds();
-			
-			totalRect.height = Math.max(totalRect.height, ty);
-			totalRect.y = Math.min(totalRect.y, ty);
-			if (orient == RIGHT_ORIENT) {
-				tx = x2 + OFFSET_SMALL;
-				totalRect.width = Math.max(totalRect.width, bounds.getWidth() + bounds.getX() + tx);
-			}
-			else {
-				tx = x2-OFFSET_SMALL-bounds.getWidth()-bounds.getX();
-				totalRect.x = Math.min(totalRect.x, tx);
-			}
-		}
 		
 		/*
 		 * Set header and footer
@@ -601,6 +574,141 @@ public class Sequence extends Track {
 		return true;
 	}
 	
+	/*******************************************************
+	 * Called during init(); used in build()
+	 */
+	private void buildOlap() {
+		if (olapMap.size()>0) return;
+
+		int lastGeneNum=-1;
+		Vector <Annotation> numList = new Vector <Annotation> ();
+		
+		 for (Annotation annot : allAnnoVec) {
+		    	if (!annot.isGene()) continue;
+		    	if (annot.isExon()) break; // at end
+		    	
+				if (annot.getGeneNum() == lastGeneNum) {
+					numList.add(annot);
+					continue;
+				}
+				
+				buildPlace(numList);
+				numList.clear();
+				
+				lastGeneNum = annot.getGeneNum();
+				numList.add(annot);
+		 }
+		 if (olapMap.size()==0) {
+			 if (SyMAP.TRACE) System.err.println("No overlaps");
+			 olapMap.put(-1,-1);
+		 }
+	}
+	/*******************************************************
+	 * The following is very heuristic because can only have offset <=CONSTANT_OFFSET*3
+	 * Plus is run on every build, so needs to be fast
+	 */
+	private void buildPlace(Vector <Annotation> numList) {
+		try {
+			if (numList.size()==1) return;
+			if (numList.size()==2) { // get(0) has no offset
+				olapMap.put(numList.get(1).getAnnoIdx(), OVERLAP_OFFSET);
+				return;
+			}
+		// Create vector ordered by length
+			Vector <GeneData> gdVec = new Vector <GeneData> ();
+			for (Annotation annot : numList) gdVec.add(new GeneData(annot));
+			
+			Collections.sort(gdVec,
+				new Comparator<GeneData>() {
+					public int compare(GeneData a1, GeneData a2) { return (a2.len - a1.len);}
+				});
+		
+		// Determine contained and overlap relations	
+			for (int i=0; i<gdVec.size()-1; i++) {
+				GeneData gdi = gdVec.get(i);
+				
+				for (int j=i+1; j<gdVec.size(); j++) {
+					GeneData gdj = gdVec.get(j);
+					if (!gdi.isContained(gdj))
+						 gdi.isOverlap(gdj);
+				}
+			}
+		// If just has contained, it goes in offset=0, and everything else if off 1
+			for (GeneData gd : gdVec) {
+				if (gd.cntHasIn>0 && gd.cntIsIn==0) {
+					for (GeneData in : gd.inVec) in.offset += OVERLAP_OFFSET;
+					gd.done=true;
+				}
+			}
+		// Can have contained within contained
+			for (GeneData gd : gdVec) {
+				if (gd.done) continue;
+				if (gd.cntHasIn>0) {
+					for (GeneData in : gd.inVec) in.offset += OVERLAP_OFFSET;
+					gd.done=true;
+				}
+			}
+		// Overlap - this can add multiple adds - but caught in last loop
+			for (GeneData gd : gdVec) {
+				for (GeneData ol : gd.olVec) {
+					if (!ol.done)      ol.offset += OVERLAP_OFFSET;
+					else if (!gd.done) {
+						gd.offset += OVERLAP_OFFSET;
+						gd.done=true;
+					}
+				}
+				gd.done=true;
+			}
+		// Set olapMap - the 12 and 24 seem to have different spacing, hence the kludge of ++
+			int maxOlap = OVERLAP_OFFSET*3;
+			for (GeneData gd : gdVec) {
+				if (gd.offset==0) continue;
+				
+				if (gd.offset==OVERLAP_OFFSET) gd.offset++;
+				else if (gd.offset>=maxOlap) {
+					if (SyMAP.TRACE) System.out.println(gd.offset + " 3 overlaps: " + gd.annot.getGeneNumStr());
+					gd.offset = (OVERLAP_OFFSET+1);
+				}
+				
+				olapMap.put(gd.annot.getAnnoIdx(), gd.offset);
+			}
+		}
+		catch (Exception e) {ErrorReport.print(e, "Place overlapping genes");}
+	}
+	private class GeneData {
+		Annotation annot;
+		int start, end, len;
+		int offset=0;
+		int cntHasIn=0, cntIsIn=0;
+		boolean done=false;
+		Vector <GeneData> inVec = new Vector <GeneData> ();
+		Vector <GeneData> olVec = new Vector <GeneData> ();
+		
+		public GeneData(Annotation annot) {
+			this.annot=annot;
+			start = annot.getStart();
+			end = annot.getEnd();
+			len = end-start+1;
+		}
+		boolean isContained(GeneData gd) {
+			if (gd.start >= start && gd.end <= end) {
+				cntHasIn++;   inVec.add(gd);
+				gd.cntIsIn++;
+				return true;
+			}
+			return false;
+		}
+		private boolean isOverlap(GeneData gd) {
+			int gap = Math.min(end,gd.end) - Math.max(start,gd.start);
+			if (gap <= MAX_GAP) return false;
+			olVec.add(gd);
+			gd.olVec.add(this);
+			return true;
+		}
+	}
+	/***************** complete build methods **************************************/
+	
+	/***********************************************************************************/
 	public Point2D getPoint(long bpPos, int trackPos) {
 		if (bpPos < start.getValue()) bpPos = start.getValue(); 
 		if (bpPos > end.getValue())   bpPos = end.getValue(); 	
@@ -891,6 +999,7 @@ public class Sequence extends Track {
 				}
 			}
 		}
+		if (centGeneRect.contains(p)) return "   "; // CAS518 so it will not show any message in gene area
 		return "Sequence Track (" + getTitle() + "):  " + HOVER_MESSAGE; 
 	}
 	public String getFullName() {
@@ -935,8 +1044,7 @@ public class Sequence extends Track {
 		}
 		annot.setExonList(allAnnoVec);
 	}
-	/* CAS504  Show Sequence 
-	 * CAS571 compared a pos & neg with TAIR */
+	/* CAS504 Add Show Sequence; CAS571 compared a pos & neg with TAIR */
 	private void popupSequence(int start, int end) {
 		try {
 			if (end-start > 1000000) {

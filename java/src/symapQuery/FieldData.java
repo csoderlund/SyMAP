@@ -19,7 +19,7 @@ public class FieldData {
 		{true, true, true, false, false, false, true, false, false, false}; // CAS513 HitID=f, Score=t
 	
 	private static final String []     SPECIES_COLUMNS = {Q.chrCol, Q.startCol, Q.endCol, Q.lenCol, Q.geneNCol};
-	private static final Class <?> []  SPECIES_TYPES =   {String.class, Integer.class, Integer.class,Integer.class, Integer.class};
+	private static final Class <?> []  SPECIES_TYPES =   {String.class, Integer.class, Integer.class,Integer.class, String.class};
 	private static final Boolean []    SPECIES_COLUMN_DEF =  {false, false, false, false , false};
 	
 	//****************************************************************************
@@ -45,7 +45,7 @@ public class FieldData {
 		fd.addField(String.class, Q.PA, "start",   Q.ASTART,     "Annotation or Hit start");
 		fd.addField(String.class, Q.PA, "end",     Q.AEND,       "Annotation or Hit end");
 		fd.addField(String.class, Q.PA, "name",    Q.ANAME,      "Annotation attributes");
-		fd.addField(Integer.class,Q.PA, "genenum", Q.AGENE,      "Annotation genenum");
+		fd.addField(String.class, Q.PA, "tag", 	   Q.AGENE,      "Annotation gene#"); // CAS518 changed to String/tag
 		
 		fd.addField(String.class, Q.PH, "idx",      Q.HITIDX,    "Hit idx");
 		fd.addField(Integer.class,Q.PH, "proj1_idx",Q.PROJ1IDX,  "Project 1 idx");

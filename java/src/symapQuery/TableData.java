@@ -273,8 +273,9 @@ public class TableData implements Serializable {
 			else if (o2[nColumn] instanceof String && ((String)o2[nColumn]).equals(Q.empty)) {
 				if(arrHeaders[nColumn].isAscending()) retval = -1;
 				else retval = 1;
-			}	
-			else if (colHeader.equals(Q.blockCol) || colHeader.startsWith(Q.runCol)) { // CAS517 add runCol
+			}
+			else if (colHeader.equals(Q.blockCol) || colHeader.equals(Q.runCol) 
+								                  || colHeader.endsWith(Q.geneNCol)) { // CAS517 add runCol; CAS518 add geneNCol
 				String [] vals1 = ((String)o1[nColumn]).split("\\."); 
 				String [] vals2 = ((String)o2[nColumn]).split("\\.");
 				

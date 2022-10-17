@@ -60,6 +60,38 @@
 
 If you are using SyMAP and want to update to a new version, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
 
+<h3>Release: v5.1.8 (17Oct22)</h3>
+This release continues to concentrates on making the 2D display provide more information.
+<br>For existing SyMAP databases, see <u>Overlapping genes</u>.
+
+<ul>
+<li>Processing - annotation needs to be reloaded in order to get the new gene placement and Gene#.
+<ul>
+<li><u>Overlapping genes</u>: the algorithm has been redone so that all overlapping and contained genes
+have the same number with suffixes a-z; and if there are more than 26 overlapping genes,
+then it starts over with numbers following
+the a-z; e.g. Gene #100a, #100z,  #100a1, #100b1, ...
+<li>Load sequence: the project will now be removed if the load fails.
+</ul>
+
+<li>2D display
+<ul>
+<li>The placement of overlapping is greatly improved; the improvements depend on reloading the annotation for v518
+(though it works as before without reloading).
+<li>When the mouse is in the gene space, it will only provide <ttl>Information</ttl> if the mouse is over a gene;
+this makes it easier to run the mouse down the gene space to find a given gene number.
+<li>The length of the exons is included in the gene tag, e.g. Gene #100a (Exons 3 2123bp)
+<li>Right click in the yellow annotation box was not working for 2D from Dotplot or SyMAP Query,
+so it has disabled since the right click on gene annotation works fine from everywhere.
+</ul>
+<li>SyMAP Query
+<ul>
+<li>The <ttl>Gene#</ttl> column now shows the number and suffix; it is of format chr.genenum.suffix.
+For older databases, this does not provide useful information as it expect v5.1.7 format or later.
+<li>Single: The logic has been changed so that if you select a project, then you can select a chromosome.
+</ul>
+
+</ul>
 <h3>Release: v5.1.7 (12Oct22)</h3>
 This release concentrates on making the 2D display provide more information.
 <p>For existing SyMAP databases: (1) See <u>overlapping genes</u>.

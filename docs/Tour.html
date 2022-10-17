@@ -196,9 +196,12 @@ a block pops up a <a href="#2d">2D display</a>.
 <tr>
 <td  style="vertical-align: text-top;">
 This is a <i>three-chromosome</i> view.
-<p>The dark blue down the center of the chromosomes are annotated genes.
-The brown lines between chromosomes are hits, where only hits that are part
-of a synteny block are shown here.
+<p>The dark blue and purple down the center of the chromosomes are annotated exons,
+where blue is positive strand and purple is negative strand.
+<p>The brown and green lines between chromosomes are hit-wires connected the similar
+region on the two chromosomes.  The brown are hit-wires with the same orientation on both
+connecting chromosomes and the green are different orientation.
+Only hits that are part of a synteny block are shown here.
 <td><a href="img/2d-3chr.png"><img src='img/2d-3chr.png' alt="2d-3chr" style="border: 1px solid black; width: 550px"></a>
 </table>
 
@@ -211,8 +214,10 @@ of a synteny block are shown here.
 <tr><td style="vertical-align: text-top;">
 This is a <i>two-chromosome</i> view.
 
-<p>The B.rapa Chr2 and Cabbage chr1 were displayed, the middle area was selected and flipped.
-<td><a href="img/2d-2chr.png"><img src='img/2d-2chr.png' alt="" style="border: 1px solid black; width: 550px"></a>
+<p>The A.thal Chr4 and Cabbage Chr1 were displayed, a region was selected and the right track flipped.
+<p>The genes are staggered if they overlap by more than 3 bases.
+<p>The thin rectangles near the edge of each track are the hit regions connected by the hit-wire.
+<td><a href="img/2d-2chr-tour.png"><img src='img/2d-2chr-tour.png' alt="" style="border: 1px solid black; width: 550px"></a>
 </table>
 <p>
 
@@ -224,7 +229,11 @@ This is a <i>two-chromosome</i> view.
 
 <table>
 <tr><td style="vertical-align: text-top;">
-Zooming in further and turning on the annotation results in the view on the right.
+The image on the right shows a smaller region with the <ttl>Annotation Descriptions</ttl> option
+is turned on.
+<p>The yellow boxes or a gene can be right clicked to view a popup of extended information,
+including the exons and hits.
+<p>The hit-wire can be right clicked to view of popup of details of its information.
 <td><a href="img/2d-closeup.png"><img src='img/2d-closeup.png' alt="" style="border: 1px solid black; width: 550px"></a>
 </table>
 

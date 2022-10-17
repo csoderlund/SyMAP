@@ -9,14 +9,14 @@ public class Q {
 	
 	static final int INC=5000;
 	static final String rowCol   = "Row";
-	static final String blockCol = "Block"; // equals TableData.ColumnComparator
-	static final String runCol =   "Collinear";   // startsWith TableData.ColumnComparator
+	static final String blockCol = "Block"; 	// equals TableData.ColumnComparator
+	static final String runCol =   "Collinear"; // CAS517 equals TableData.ColumnComparator
 	
 	static final String chrCol =	"Chr";
 	static final String startCol =	"Start";
 	static final String endCol =	"End";
 	static final String lenCol = 	"Len";
-	static final String geneNCol =  "Gene#";
+	static final String geneNCol =  "Gene#";	// CAS518 endsWith TableData.ColumnComparator
 	static final String All_Anno =  "All_Anno";
 	static final String empty    = 	"-";
 	
