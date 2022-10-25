@@ -17,7 +17,7 @@ import util.ErrorReport;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class TrackHolder extends JComponent implements Filtered {	
-	private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
+	private static boolean TRACE = symap.SyMAP.DEBUG; // CAS519 changed from ProjectManager...TEST_TRACE
 	
 	private DrawingPanel dp;
 	private HelpBar hb;

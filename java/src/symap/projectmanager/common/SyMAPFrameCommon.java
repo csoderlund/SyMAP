@@ -359,7 +359,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 						JOptionPane.YES_NO_OPTION,JOptionPane.ERROR_MESSAGE) != JOptionPane.YES_OPTION) 
 				return false;
 			
-			if (SyMAP.TRACE) System.out.println("*****Regenerate 2d " + selectedTracks.length);
+			if (SyMAP.DEBUG) System.out.println("*****Regenerate 2d " + selectedTracks.length);
 			
 			if (symap2D == null) { // CAS517 move after get tracks 
 				symap2D = new SyMAP(dbReader, helpBar, null);

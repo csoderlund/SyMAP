@@ -12,13 +12,20 @@ public class Q {
 	static final String blockCol = "Block"; 	// equals TableData.ColumnComparator
 	static final String runCol =   "Collinear"; // CAS517 equals TableData.ColumnComparator
 	
-	static final String chrCol =	"Chr";
-	static final String startCol =	"Start";
-	static final String endCol =	"End";
-	static final String lenCol = 	"Len";
-	static final String geneNCol =  "Gene#";	// CAS518 endsWith TableData.ColumnComparator
+	// CAS519 was Gene for Orphan and Hit for Pairs; now it always shows the genes; Chr is always same for hit/gene
+	static final String chrCol =	 "Chr";
+	static final String gStartCol =	 "Gstart";
+	static final String gEndCol =	 "Gend";
+	static final String gLenCol = 	 "Glen";
+	static final String gStrandCol = "Gst";		// CAS519 add, endsWith TableData.ColumnComparator
+	static final String gNCol =  	 "Gene#";	// CAS518 endsWith TableData.ColumnComparator
+	static final String hStartCol =	 "Hstart";
+	static final String hEndCol =	 "Hend";
+	static final String hLenCol = 	 "Hlen";
+	
 	static final String All_Anno =  "All_Anno";
 	static final String empty    = 	"-";
+	static final int    iNoVal   = -1;  // CAS519 add for gene coord defaults
 	
 	static final String delim = "\n";	// uses as delimiter between Species::annoKey, and put annoKey on 2nd column line
 	static final String delim2 = ":";	// used for other keys
@@ -34,27 +41,28 @@ public class Q {
 	static final int AGIDX = 2;			// PA.grp_idx
 	static final int ASTART = 3;		// PA.start
 	static final int AEND = 4;			// PA.end
-	static final int ANAME = 5;			// PA.name (description)
-	static final int AGENE = 6;			// PA.genenum CAS514 added; was computed in DBdata
+	static final int ASTRAND = 5;		// PA.strand
+	static final int ANAME = 6;			// PA.name (description)
+	static final int AGENE = 7;			// PA.genenum CAS514 added; was computed in DBdata
 	
-	static final int HITIDX =   7;		// PH.idx
-	static final int PROJ1IDX =  8;		// PH.proj1_idx  (can get from grpIdx, but this is for sanity checking
-	static final int PROJ2IDX =  9;		// PH.proj2_idx
-	static final int GRP1IDX =  10;		// PH.grp1_idx
-	static final int GRP2IDX =  11;		// PH.grp1_idx
-	static final int GRP1START = 12;	// PH.start1
-	static final int GRP2START = 13;	// PH.start2
-	static final int GRP1END = 14;		// PH.end1
-	static final int GRP2END = 15;		// PH.end2
-	static final int RSIZE = 16;		// PH.runsize
-	static final int PID = 17;			// PH.pctid
-	static final int PSIM = 18;			// PH.cvgpct
-	static final int HCNT = 19;			// PH.countpct
+	static final int HITIDX =   8;		// PH.idx
+	static final int PROJ1IDX =  9;		// PH.proj1_idx  (can get from grpIdx, but this is for sanity checking
+	static final int PROJ2IDX =  10;	// PH.proj2_idx
+	static final int GRP1IDX =  11;		// PH.grp1_idx
+	static final int GRP2IDX =  12;		// PH.grp1_idx
+	static final int HIT1START = 13;	// PH.start1
+	static final int HIT2START = 14;	// PH.start2
+	static final int HIT1END = 15;		// PH.end1
+	static final int HIT2END = 16;		// PH.end2
+	static final int COLINEAR = 17;		// PH.runsize
+	static final int PID = 18;			// PH.pctid
+	static final int PSIM = 19;			// PH.cvgpct
+	static final int HCNT = 20;			// PH.countpct
 	
-	static final int BNUM = 20;			// B.blocknum
-	static final int BSCORE = 21;		// B.blockscore
-	static final int ANNOT1IDX = 22;	// PH.annot1_idx
-	static final int ANNOT2IDX = 23;	// PH.annot2_idx
+	static final int BNUM = 21;			// B.blocknum
+	static final int BSCORE = 22;		// B.blockscore
+	static final int ANNOT1IDX = 23;	// PH.annot1_idx
+	static final int ANNOT2IDX = 24;	// PH.annot2_idx
 	
 	static final String ANNO = "ANNO";	// populated by keyword 
 	static final String GSIZE = "GSIZE";// computed PgFsize

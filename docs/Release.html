@@ -59,6 +59,33 @@
 	<!---- START BODY -->
 
 If you are using SyMAP and want to update to a new version, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
+<h3>Release: v5.1.9 (25Oct22)</h3>
+This release has some interface improvements to SyMAP Query.
+<ul>
+<li>SyMAP Project Parameters
+<ul>
+<li>The <ttl>Parameters</ttl> display has a new parameter
+called <tt>abbrev_name</tt> which must be a 4 character abbreviation. This is used in the SyMAP Query
+column headings. If one is not entered, then the last 4 characters of the <tt>display_name</tt>
+is used.
+<li>Bug fix: A <ttl>Save</ttl> after annotation was loaded would zero out the counts for annotation keywords, which
+resulted in no annotation keywords (only All_anno) being shown in the <ttl>Query Columns</ttl>; this no longer happens.
+</ul>
+<li>2D display
+<ul>
+<li>The gene placement algorithm was improved.
+</ul>
+<li>SyMAP Query
+<ul>
+<li>Hit Pairs Table: The <ttl>Location</ttl> columns now include the Gene start/end/len and the strand assigned to the gene in the GFF file.
+<li>Single Genes Table: Only shows the columns that are relevant to genes.
+<li>Hover over column: the description is shown at the bottom.
+</ul>
+<li>Load Annotation: This computes the Gene#, and was allowing a gap of 3 without calling them overlap;
+this has been changed to 0.
+<li>Demos: A few small changes to the annotation files. Params updated.
+<li>Developers: Cleaned-up trace and debug flags.
+</ul>
 
 <h3>Release: v5.1.8 (17Oct22)</h3>
 This release continues to concentrates on making the 2D display provide more information.

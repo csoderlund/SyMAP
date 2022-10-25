@@ -18,45 +18,82 @@ public class FieldData {
 	private static final Boolean [] GENERAL_COLUMN_DEF =  
 		{true, true, true, false, false, false, true, false, false, false}; // CAS513 HitID=f, Score=t
 	
-	private static final String []     SPECIES_COLUMNS = {Q.chrCol, Q.startCol, Q.endCol, Q.lenCol, Q.geneNCol};
-	private static final Class <?> []  SPECIES_TYPES =   {String.class, Integer.class, Integer.class,Integer.class, String.class};
-	private static final Boolean []    SPECIES_COLUMN_DEF =  {false, false, false, false , false};
+	private static final String [] GENERAL_COLUMN_DESC = 
+		{"Row number", 
+		 "Block: synteny block number (chr.chr.number)", 
+		 "Block score: number of hits in the synteny block",
+		 "Collinear: number of adjacent genes (chr.chr.number)", 
+		 "PgeneF: (Compute PgeneF only) putative gene family number", 
+		 "PgFSize: (Compute PgeneF only) putative gene family size",
+		 "Hit#: an index representing the hit", 
+		 "Hit %Id: percen identity from the MUMmer file",
+		 "Hit %Sim: percent similarity from the MUMmer file", 
+		 "Hit #Merge: number of merged hits, where 1 is a single hit"
+		};
 	
+	// Prefixed with Species: CAS519 have hit and gene start/end/len; and add gene strand
+	private static final String []     SPECIES_COLUMNS = 
+		{Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol, Q.gNCol, Q.hStartCol, Q.hEndCol, Q.hLenCol,};
+	private static final Class <?> []  SPECIES_TYPES =   
+		{String.class, Integer.class, Integer.class,Integer.class, String.class, String.class, Integer.class, Integer.class,Integer.class};
+	private static final Boolean []    SPECIES_COLUMN_DEF =  
+		{false, false, false, false , false, false, false, false, false};
+	private static String [] SPECIES_COLUMN_DESC = {
+		"Chr: Chromosome (or Scaffold, etc)", 
+		"Gstart: Start coordinate of gene", "Gend: End coordinate of gene", "Glen: Length of gene", "Gst: Gene strand", 
+		"Gene#: Sequential. Overlap genes, same #, different suffix",
+		"Hstart: start coordinate of hit(s)", "Hend: End coordinate of hit(s)", "Hlen: Length of hit"
+	};
+
 	//****************************************************************************
 	//* Static methods
 	//****************************************************************************
 	public static String [] getGeneralColHead() 	 {return GENERAL_COLUMNS; }
 	public static Boolean [] getGeneralColDefaults() {return GENERAL_COLUMN_DEF; }
+	public static String [] getGeneralColDesc() 	 {return GENERAL_COLUMN_DESC; }
 	
 	public static String [] getSpeciesColHead() 	 {return SPECIES_COLUMNS; }
 	public static Class <?> [] getSpeciesColType() 	 {return SPECIES_TYPES; }
 	public static Boolean [] getSpeciesColDefaults() {return SPECIES_COLUMN_DEF; }
+	public static String [] getSpeciesColDesc() 	 {return SPECIES_COLUMN_DESC; }
 	
 	// XXX If change this, change number in Q.java, as they are the numeric index into ResultSet
 	// Columns loaded from database, do not correspond to query table columns
-	private static int orphanFields = 6; // MySQL columns loaded for orphans
+	private static int singleGenFields = 1; // CAS519 general headings
+	private static int singleSpFields = 6; // MySQL columns loaded and displayed for single 
+	
+	public static int getSpColumnCount(boolean isSingle) { // CAS519
+		if (isSingle) return singleSpFields;
+		else return SPECIES_COLUMNS.length;
+	}
+	public static int getGenColumnCount(boolean isSingle) { // CAS519
+		if (isSingle) return singleGenFields;
+		else return GENERAL_COLUMNS.length;
+	}
+	
 	
 	// MySQL fields to load
 	public static FieldData getFields() {
 		FieldData fd = new FieldData();
 		// type not used, see above       sql.table.field    order#		Description  
-		fd.addField(String.class, Q.PA, "idx",     Q.AIDX,       "Annotation idx");
-		fd.addField(String.class, Q.PA, "grp_idx", Q.AGIDX,      "Annotation grp idx");
-		fd.addField(String.class, Q.PA, "start",   Q.ASTART,     "Annotation or Hit start");
-		fd.addField(String.class, Q.PA, "end",     Q.AEND,       "Annotation or Hit end");
+		fd.addField(String.class, Q.PA, "idx",     Q.AIDX,       "Annotation index");
+		fd.addField(String.class, Q.PA, "grp_idx", Q.AGIDX,      "Annotation chromosome idx");
+		fd.addField(String.class, Q.PA, "start",   Q.ASTART,     "Annotation start");
+		fd.addField(String.class, Q.PA, "end",     Q.AEND,       "Annotation end");
+		fd.addField(String.class, Q.PA, "strand",  Q.ASTRAND,    "Annotation strand");
 		fd.addField(String.class, Q.PA, "name",    Q.ANAME,      "Annotation attributes");
 		fd.addField(String.class, Q.PA, "tag", 	   Q.AGENE,      "Annotation gene#"); // CAS518 changed to String/tag
 		
 		fd.addField(String.class, Q.PH, "idx",      Q.HITIDX,    "Hit idx");
-		fd.addField(Integer.class,Q.PH, "proj1_idx",Q.PROJ1IDX,  "Project 1 idx");
-		fd.addField(Integer.class,Q.PH, "proj2_idx",Q.PROJ2IDX,  "Project 2 idx");
-		fd.addField(Integer.class,Q.PH, "grp1_idx", Q.GRP1IDX,   "");
-		fd.addField(Integer.class,Q.PH, "grp2_idx", Q.GRP2IDX,   "");
-		fd.addField(Integer.class,Q.PH, "start1",   Q.GRP1START, "Group 1 start");
-		fd.addField(Integer.class,Q.PH, "start2",   Q.GRP2START, "Group 2 start");
-		fd.addField(Integer.class,Q.PH, "end1",     Q.GRP1END,   "Group 1 end");
-		fd.addField(Integer.class,Q.PH, "end2",     Q.GRP2END,   "Group 2 end");
-		fd.addField(String.class, Q.PH, "runsize",  Q.RSIZE,     "Collinear run size");
+		fd.addField(Integer.class,Q.PH, "proj1_idx",Q.PROJ1IDX,  "1st species index");
+		fd.addField(Integer.class,Q.PH, "proj2_idx",Q.PROJ2IDX,  "2nd species index");
+		fd.addField(Integer.class,Q.PH, "grp1_idx", Q.GRP1IDX,   "1st chromosome index");
+		fd.addField(Integer.class,Q.PH, "grp2_idx", Q.GRP2IDX,   "2nd chromosome index");
+		fd.addField(Integer.class,Q.PH, "start1",   Q.HIT1START, "1st hit start");
+		fd.addField(Integer.class,Q.PH, "start2",   Q.HIT2START, "2nd hit start");
+		fd.addField(Integer.class,Q.PH, "end1",     Q.HIT1END,   "1st hit end");
+		fd.addField(Integer.class,Q.PH, "end2",     Q.HIT2END,   "2nd hit end");
+		fd.addField(String.class, Q.PH, "runsize",  Q.COLINEAR,     "Collinear run size");
 		fd.addField(String.class, Q.PH, "pctid",    Q.PID,     	 "Hit Average %Identity"); // CAS516 add these 3
 		fd.addField(String.class, Q.PH, "cvgpct",   Q.PSIM,      "Hit Average %Similarity");
 		fd.addField(String.class, Q.PH, "countpct", Q.HCNT,      "Merged hits");
@@ -121,7 +158,7 @@ public class FieldData {
 			sqlCols += ", " + item.getDBTable() + "." + item.getDBFieldName();
 			
 			cnt++;
-			if (isOrphan && cnt==orphanFields) break;
+			if (isOrphan && cnt>singleSpFields) break;
 		}	
 		return sqlCols;
 	}

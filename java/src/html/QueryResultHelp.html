@@ -51,6 +51,7 @@ an orphan gene only has one non-empty species).
 You can sort the columns by clicking on them, and rearrange them by dragging the header
 boxes. You can add/remove columns using the "Select Columns" button at the bottom. Following
 are the meanings of the columns:
+<p>The "Orphan" and "All genes" tables only have the Gene Location and Annotation columns.
 <p>
 <table cellpadding=3>
 <tr>
@@ -66,9 +67,9 @@ are the meanings of the columns:
 	<td valign="top" nowrap><b>Block Score</b><td>&nbsp;
 	<td>The number of hits which comprise the synteny block.
 <tr>
-	<td valign="top"><b>RunSize</b><td>&nbsp;
+	<td valign="top"><b>Collinear</b><td>&nbsp;
 	<td>If the hit is contained in an uninterrupted collinear set of shared
-		genes, RunSize shows the length of the set. This column is used for the
+		genes, Collinear shows the length of the set. This column is used for the
 		"Collinear gene" query.
 <tr>
 	<td valign="top"><b>PgeneF</b><td>&nbsp;
@@ -97,12 +98,13 @@ are the meanings of the columns:
 	<td valign="top"><b>Chr</b><td>&nbsp;
 	<td>Chromosome (or draft sequence number) where the hit is aligned
 <tr>
-	<td valign="top" nowrap><b>Start/End</b><td>&nbsp;
-	<td>Start/end of the hit region.
+	<td valign="top" nowrap><b>Hstart/Hend</b><td>&nbsp;
+	<td>Hstart/Hend of the hit region.
 		<br><u>Merged hits</u>: Hits are clustered during anchor loading, so hit regions
 		are not necessarily single MUMmer alignments.
-		<br><u>Hit vs Gene coordinates</u>: If the table contains single project genes (e.g. orphan or all),
-		    then the coordinates are the gene coordinates.
+<tr>
+	<td valign="top" nowrap><b>Gstart/Gend/Gs</b><td>&nbsp;
+	<td>Gstart/Gend of the annotated gene. The Gs is the strand (=/-).
 <tr>
 	<td valign="top"><b>Gene#</b><td>&nbsp;
 	<td>The order number along the chromosome of the gene. This is shown on the Chromosome Explorer
@@ -112,8 +114,10 @@ are the meanings of the columns:
 <tr>
 	<td colspan=3>The keywords for the annotations of each species are listed.
 	They can be different for each species, e.g. one may have "ID" while another uses "Name" for the
-	gene names. "All_anno" shows all of the attributes joined together.
+	gene names. "All_anno" shows all of the attributes joined together. The keywords used can be limited
+	using the <tt>Project Parameters</tt> (see <tt>annot_kw_mincont</tt> and <tt>annot_keywords</tt>).
 </table>
+
 
 <h3>Statistics</h3>
 This section shows overall statistics for the query results. Most of the

@@ -1149,7 +1149,16 @@ public class Utilities {
     	list = makeTable(nCol, nRow, fields, justify, rows);
     	return tok[0] + "\n" + list;
     }
-   
+    static public String formatAbbrev(String dname) {
+    	if (dname==null || dname=="") return "????";
+    	if (dname.length()>4) return dname.substring(dname.length()-4);
+    	else if (dname.length()<4) {
+    		String n = dname;
+    		while (n.length()<4) n+="0";
+    		return n;
+    	}
+    	else return dname;
+    }
     /*******************************************************
 	 * XXX Table maker CAS517 copied from TCW
 	 */

@@ -43,6 +43,7 @@ public class DBdata {
 			HashMap <Integer, Integer> geneCntMap, // output variable of spIdx annotidx counts
 			HashMap<String,Integer> proj2regions)  // PgeneF ouput
 	{
+		clear();
 		qPanel = theQueryPanel;
 		spPanel = qPanel.getSpeciesPanel();
 		loadStatus = loadTextField;
@@ -157,6 +158,13 @@ public class DBdata {
 		catch (Exception e) {ErrorReport.print(e, "Reading rows from db");}
 		return rows;
 	}
+	private static void clear() { // CAS519 added since everything is static
+		if (annoKeys!=null) 	annoKeys.clear();
+		if (grpStart!=null) 	grpStart.clear();
+		if (grpEnd!=null) 		grpEnd.clear();
+		if (spNameList!=null) 	spNameList=null;
+		if (spIdxList!=null) 	spIdxList=null;
+	}
 	/*****************************************************
 	 * Species columns in order of projects
 	 */
@@ -176,7 +184,7 @@ public class DBdata {
 	/********************************************
 	 * annoColumns is created in TableDataPanel.loadProjectAnnotations()
 	 * The annoColumns array contains spIdx::keyword entries for all projects.
-	 * The keywords should be in order that they are to be displayed
+	 * The keywords should be in order the way they are to be displayed
 	 */
 	private static void makeAnnoKeys(String [] annoColumns) {
 		try {	
@@ -187,8 +195,8 @@ public class DBdata {
 			for (int i=0; i<annoColumns.length; i++) {
 				String sp = annoColumns[i].split(Q.delim)[0];
 				
-				if (cntSpKeys.containsKey(sp)) cntSpKeys.put(sp, cntSpKeys.get(sp)+1);
-				else cntSpKeys.put(sp, 1);
+				if (cntSpKeys.containsKey(sp)) 	cntSpKeys.put(sp, cntSpKeys.get(sp)+1);
+				else 							cntSpKeys.put(sp, 1);
 			}
 			
 			// Make array of keywords for each species
@@ -225,7 +233,7 @@ public class DBdata {
 					s = Integer.parseInt(coords[0]);
 					e = Integer.parseInt(coords[1]);
 				}
-				catch (Exception ex) {ErrorReport.print(ex, "Parsing coords " + gidx + " " + grpCoords.get(gidx));}
+				catch (Exception ex) {System.err.println("Cannot process coords " + grpCoords.get(gidx));}
 				
 				grpStart.put(gidx, s);
 				grpEnd.put(gidx, e);
@@ -327,30 +335,36 @@ public class DBdata {
 			
 			spIdx[0] = 		rs.getInt(Q.PROJ1IDX);
 			chrIdx[0] = 	rs.getInt(Q.GRP1IDX);
-			start[0] = 		rs.getInt(Q.GRP1START);
-			end[0] = 		rs.getInt(Q.GRP1END);
-			len[0] =		 Math.abs(end[0]-start[0])+1;
+			hstart[0] = 	rs.getInt(Q.HIT1START);
+			hend[0] = 		rs.getInt(Q.HIT1END);
+			hlen[0] =		Math.abs(hend[0]-hstart[0])+1;
 			
 			spIdx[1] = 		rs.getInt(Q.PROJ2IDX);
 			chrIdx[1] = 	rs.getInt(Q.GRP2IDX);  
-			start[1] = 		rs.getInt(Q.GRP2START); // hit start to chromosome
-			end[1] = 		rs.getInt(Q.GRP2END);   // hit end to chromosome
-			len[1] = 		Math.abs(end[1]-start[1])+1;
+			hstart[1] = 	rs.getInt(Q.HIT2START); 
+			hend[1] = 		rs.getInt(Q.HIT2END);   
+			hlen[1] = 		Math.abs(hend[1]-hstart[1])+1;
 			
-			runSize = 		rs.getInt(Q.RSIZE);
+			runSize = 		rs.getInt(Q.COLINEAR);
 			blockNum =		rs.getInt(Q.BNUM);
 			blockScore =	rs.getInt(Q.BSCORE);
 			pid	=			rs.getInt(Q.PID);
 			psim	=		rs.getInt(Q.PSIM);
 			hcnt	=		rs.getInt(Q.HCNT);
+			if (hcnt==0) hcnt=1;				// CAS519 makes more sense to be 1 merge instead of empty
 			
-			// from anno table 
+			// from anno table - first half of hit
 			int annoGrpIdx = rs.getInt(Q.AGIDX);	// grpIdx, so unique; same as chrIdx[0|1]
 			if (annoGrpIdx > 0) { 					// can be hit with no anno
 				int x = (annoGrpIdx==chrIdx[0]) ? 0 : 1; 
 				
+				gstart[x] =		rs.getInt(Q.ASTART);		// CAS519 add these 4 columns
+				gend[x] =		rs.getInt(Q.AEND);
+				glen[x] = 		Math.abs(gend[x]-gstart[x])+1;
+				gstrand[x] = 	rs.getString(Q.ASTRAND); 
+				
 				annotStr[x] =	rs.getString(Q.ANAME);
-				geneNum[x] = 	rs.getString(Q.AGENE); // CAS514 add; CAS518 change genenum to tag
+				geneNum[x] = 	rs.getString(Q.AGENE); 		// CAS514 add; CAS518 change genenum to tag
 				
 				int annoIdx = rs.getInt(Q.AIDX);
 				if (x==0) annoSet0.add(annoIdx); // multiple anno's for same hit
@@ -368,6 +382,11 @@ public class DBdata {
 			int annoIdx = rs.getInt(Q.AIDX);  
 			
 			int x = (annoGrpIdx==chrIdx[0]) ? 0 : 1; // goes with 1st or 2nd half of hit?
+			
+			gstart[x] =		rs.getInt(Q.ASTART);		// CAS519 add these 4 columns
+			gend[x] =		rs.getInt(Q.AEND);
+			glen[x] = 		Math.abs(gend[x]-gstart[x])+1;
+			gstrand[x] = 	rs.getString(Q.ASTRAND); 
 			
 			geneNum[x] = 	rs.getString(Q.AGENE); // CAS514
 			
@@ -390,10 +409,11 @@ public class DBdata {
 			annoSet0.add(rs.getInt(Q.AIDX));
 			annotStr[0]	=	rs.getString(Q.ANAME);
 			chrIdx[0] = 	rs.getInt(Q.AGIDX);
-			start[0] =		rs.getInt(Q.ASTART);		// Gene start to chromosome
-			end[0] =		rs.getInt(Q.AEND);
-			len[0] = Math.abs(end[0]-start[0])+1;
-			geneNum[0] = 	rs.getString(Q.AGENE);  // CAS514
+			gstart[0] =		rs.getInt(Q.ASTART);		// Gene start to chromosome
+			gend[0] =		rs.getInt(Q.AEND);
+			glen[0] = 		Math.abs(gend[0]-gstart[0])+1;
+			gstrand[0] = 	rs.getString(Q.ASTRAND); // CAS519 add
+			geneNum[0] = 	rs.getString(Q.AGENE);  // CAS514 add
 		}
 		catch (Exception e) {ErrorReport.print(e, "Read single");}
 	}
@@ -476,8 +496,8 @@ public class DBdata {
 					if (chrIdx[0]==gidx) {
 						found = true;	  // its a selected
 						
-						if (s > 0 && start[0] < s) return false; // but incorrect 
-						if (e > 0 && end[0]   > e) return false;
+						if (s > 0 && gstart[0] < s) return false; // but incorrect 
+						if (e > 0 && gend[0]   > e) return false;
 					}
 				}
 				return found;
@@ -503,8 +523,8 @@ public class DBdata {
 					if (chrIdx[x]==gidx) {
 						found = true;	  // its a selected
 						
-						if (s > 0 && start[x] < s) return false; // but incorrect 
-						if (e > 0 && end[x]   > e) return false;
+						if (s > 0 && (hstart[x] < s && gstart[x]<s)) return false; // CAS519 show if either hit or gene is in boundary 
+						if (e > 0 && (hend[x] > e   && gend[x]<e)) return false;
 					}
 				}
 			}
@@ -535,37 +555,41 @@ public class DBdata {
 		// general
 		row.add(rowNum);		
 		
-		if (blockNum<=0)    row.add(Q.empty);  else row.add(blockStr);
-		if (blockScore<=0)  row.add(Q.empty);  else row.add(blockScore);
-		if (runSize<0)      row.add(Q.empty);  else row.add(runStr);
-		
-		if (pgenef<=0)      row.add(Q.empty);  else row.add(pgenef);
-		if (pgfsize<=0)     row.add(Q.empty);  else row.add(pgfsize);
-		
-		if (hitIdx<=0)      row.add(Q.empty);  else row.add(hitIdx);
-		if (pid<=0)			row.add(Q.empty);  else row.add(pid);
-		if (psim<=0)		row.add(Q.empty);  else row.add(psim);
-		if (hcnt<=0)		row.add(Q.empty);  else row.add(hcnt);
-		
-		// chr, start, end
+		if (!isSingle) {
+			if (blockNum<=0)    row.add(Q.empty);  else row.add(blockStr);
+			if (blockScore<=0)  row.add(Q.empty);  else row.add(blockScore);
+			if (runSize<0)      row.add(Q.empty);  else row.add(runStr);
+			
+			if (pgenef<=0)      row.add(Q.empty);  else row.add(pgenef);
+			if (pgfsize<=0)     row.add(Q.empty);  else row.add(pgfsize);
+			
+			if (hitIdx<=0)      row.add(Q.empty);  else row.add(hitIdx);
+			if (pid<=0)			row.add(Q.empty);  else row.add(pid);
+			if (psim<=0)		row.add(Q.empty);  else row.add(psim);
+			if (hcnt<=0)		row.add(Q.empty);  else row.add(hcnt);
+		}
+		// chr, start, end; CAS519 add gene&hit for pairs
+		int cntCol = FieldData.getSpColumnCount(isSingle);
 		for (int i=0; i<spIdxList.length; i++) { // add columns for ALL species
-			if (spIdx[0] == spIdxList[i]) {
-				row.add(chrNum[0]); 
-				row.add(start[0]); 
-				row.add(end[0]); 
-				row.add(len[0]);
-				row.add(geneNum[0]); // CAS518 num to string
-			}
-			else if (spIdx[1]==spIdxList[i]) {
-				row.add(chrNum[1]); 
-				row.add(start[1]); 
-				row.add(end[1]); 
-				row.add(len[1]);
-				row.add(geneNum[1]); // CAS518 num to string
+			int x=-1;
+			if (spIdx[0] == spIdxList[i]) x=0;
+			else if (spIdx[1]==spIdxList[i]) x=1;
+			
+			if (x>=0) {
+				row.add(chrNum[x]); 
+				if (gstart[x]<0)  	row.add(Q.empty); else row.add(gstart[x]); 
+				if (gend[x]<0)  	row.add(Q.empty); else row.add(gend[x]); 
+				if (glen[x]<=0)  	row.add(Q.empty); else row.add(glen[x]);
+				row.add(gstrand[x]);
+				row.add(geneNum[x]); // CAS518 num to string
+				if (!isSingle) {
+					row.add(hstart[x]); 
+					row.add(hend[x]); 
+					row.add(hlen[x]);
+				}
 			}
 			else {
-				row.add(Q.empty); row.add(Q.empty); row.add(Q.empty); 
-				row.add(Q.empty); row.add(Q.empty);
+				for (int j=0; j<cntCol; j++) row.add(Q.empty);
 			}
 		}
 		// annotation
@@ -609,7 +633,7 @@ public class DBdata {
 	
 	public int getHitIdx() { return hitIdx;}
 	public int [] getCoords() {
-		int [] x = {start[0], end[0], start[1], end[1]};
+		int [] x = {hstart[0], hend[0], hstart[1], hend[1]}; // CAS519 hit
 		return x;
 	}
 	public boolean hasAnno(int x) 	{
@@ -628,12 +652,16 @@ public class DBdata {
 	
 // hit
 	private int hitIdx = -1;
-	private int pid = -1, psim = -1, hcnt=-1; // CAS516 add
-	private int [] spIdx =  {-1, -1};	
-	private int [] chrIdx = {-1, -1};		
-	private int [] start = 	{-1, -1};  // or from pseudo_annot for orphans
-	private int [] end = 	{-1, -1}; 
-	private int [] len = 	{-1, -1};  // CAS516 add
+	private int pid = -1, psim = -1, hcnt=-1; // CAS516 add; 
+	private int [] spIdx =  {Q.iNoVal, Q.iNoVal};	
+	private int [] chrIdx = {Q.iNoVal, Q.iNoVal};		
+	private int [] gstart = {Q.iNoVal, Q.iNoVal};  // CAS519 add all g-fields. 
+	private int [] gend = 	{Q.iNoVal, Q.iNoVal}; 
+	private int [] glen = 	{Q.iNoVal, Q.iNoVal};  
+	private String [] gstrand = {Q.empty, Q.empty};
+	private int [] hstart = {Q.iNoVal, Q.iNoVal};  
+	private int [] hend = 	{Q.iNoVal, Q.iNoVal}; 
+	private int [] hlen = 	{Q.iNoVal, Q.iNoVal};  // CAS516 add
 	private String [] geneNum = {Q.empty, Q.empty}; // CAS514 add; CAS518 chr.gene#.suffix
 	
 // block

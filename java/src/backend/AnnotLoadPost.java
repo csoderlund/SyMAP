@@ -18,7 +18,7 @@ import util.ErrorReport;
 import util.Logger;
 
 public class AnnotLoadPost {
-	private final int MAX_GAP=3; // CAS518 also in sequence.Sequence
+	private final int MAX_GAP=0; // CAS519 changed from 3
 	private Logger log;
 	private UpdatePool pool;
 	private Project project;

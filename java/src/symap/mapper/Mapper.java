@@ -128,7 +128,6 @@ public class Mapper extends JComponent
 	
 	
 	public void clearData() {
-		if (SyMAP.TRACE) System.out.println("Mapper clearData");
 		hits = new ClearList(10, 50);
 		mapinfo = new MapInfo();
 	}
@@ -174,7 +173,7 @@ public class Mapper extends JComponent
 
 		initing = true;
 
-		if (SyMAP.TRACE) System.out.println("In mapper init");
+		if (SyMAP.DEBUG) System.out.println("In mapper init");
 		boolean change = false;
 		synchronized (hits) {
 			try {

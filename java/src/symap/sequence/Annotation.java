@@ -23,7 +23,7 @@ import util.Utilities;
  * Drawing the annotation requires calling setRectangle() first.
  */
 public class Annotation {
-	private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
+	private static boolean TRACE = symap.SyMAP.DEBUG;
 	/**
 	 * Values used in the database to represent annotation types.
 	 */

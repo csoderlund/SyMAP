@@ -35,19 +35,19 @@ public class SyProps extends PropertiesReader
 	//    Called from FPCLoadMain and SeqLoadMain
 	public SyProps(Logger log, File file)
 	{
-		System.out.println("Read " + file);
+		if (log!=null)  log.msg("Read " + file);
+		else System.out.println("Read " + file);
+		
 		setDefaults();
 		try {
 			load(new FileInputStream(file));
 			fixProps();
 		}
 		catch (java.io.FileNotFoundException e) {
-			if (log != null)
-				log.msg(file.getAbsolutePath() + " not found");
+			if (log != null) log.msg(file.getAbsolutePath() + " not found");
 		}
 		catch (java.io.IOException e2) {
-			if (log != null)
-				log.msg(file.getAbsolutePath() + " read error");
+			if (log != null) log.msg(file.getAbsolutePath() + " read error");
 		}
 	}
 	// Load: added to allow properties from main params file as well
@@ -58,8 +58,7 @@ public class SyProps extends PropertiesReader
 		setDefaults();
 		
 		Enumeration <?> keys = defprops.propertyNames(); // CAS512 add <?>
-		while (keys.hasMoreElements())
-		{
+		while (keys.hasMoreElements()) {
 			String key = keys.nextElement().toString();
 			String val = defprops.getProperty(key);
 			if (containsKey(key)) 
@@ -70,12 +69,10 @@ public class SyProps extends PropertiesReader
 			fixProps();
 		}
 		catch (java.io.FileNotFoundException e) {
-			if (log != null)
-				log.msg(file.getAbsolutePath() + " not found");
+			if (log != null) log.msg(file.getAbsolutePath() + " not found");
 		}
 		catch (java.io.IOException e2) {
-			if (log != null)
-				log.msg(file.getAbsolutePath() + " read error");
+			if (log != null) log.msg(file.getAbsolutePath() + " read error");
 		}
 	}
 	// The only properties that appear changable are those in the 
@@ -200,11 +197,9 @@ public class SyProps extends PropertiesReader
 		setProperty("mask_all_but_genes", "0"); 
 	}
 	
-	private void fixProps()
-	{
+	private void fixProps() {
 		Enumeration <?> keys = propertyNames();
-		while (keys.hasMoreElements())
-		{
+		while (keys.hasMoreElements()) {
 			String key = keys.nextElement().toString();
 			String val = getProperty(key);
 

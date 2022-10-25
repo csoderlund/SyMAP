@@ -123,7 +123,6 @@ public class Sequence extends Track {
 	private HashMap <Integer, Integer> olapMap = new HashMap <Integer, Integer> (); // CAS517 added for overlapping genes; CAS518 global
 	private Rectangle2D.Double centGeneRect;		// CAS518 add so do not display message if hover in-between genes
 	private final int OVERLAP_OFFSET=12;			// CAS517/518 for overlap and yellow text
-	private final int MAX_GAP=3; 					// CAS518 also in backend.AnnotLoadPost
 	
 	public Sequence(DrawingPanel dp, TrackHolder holder) {
 		this(dp, holder, dp.getPools().getPseudoPool(), dp.getPools().getSequencePool());
@@ -461,7 +460,7 @@ public class Sequence extends Track {
 		Rectangle2D centRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
 		centGeneRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
 		
-		if (SyMAP.TRACE) System.err.println("SEQ: " + allAnnoVec.size() + " " + getHolder().getTrackNum() + " " + toString());
+		if (SyMAP.DEBUG) System.err.println("SEQ: " + allAnnoVec.size() + " " + getHolder().getTrackNum() + " " + toString());
 		
 		buildOlap(); // builds first time only
 			
@@ -575,7 +574,7 @@ public class Sequence extends Track {
 	}
 	
 	/*******************************************************
-	 * Called during init(); used in build()
+	 * CAS518 added: Called during init(); used in build()
 	 */
 	private void buildOlap() {
 		if (olapMap.size()>0) return;
@@ -598,14 +597,15 @@ public class Sequence extends Track {
 				lastGeneNum = annot.getGeneNum();
 				numList.add(annot);
 		 }
+		 buildPlace(numList); // CAS519 missing last one
+		 
 		 if (olapMap.size()==0) {
-			 if (SyMAP.TRACE) System.err.println("No overlaps");
 			 olapMap.put(-1,-1);
 		 }
 	}
 	/*******************************************************
-	 * The following is very heuristic because can only have offset <=CONSTANT_OFFSET*3
-	 * Plus is run on every build, so needs to be fast
+	 * It is run on every build, so needs to be fast, but is a heuristic
+	 * CAS519 simplified algo
 	 */
 	private void buildPlace(Vector <Annotation> numList) {
 		try {
@@ -620,57 +620,36 @@ public class Sequence extends Track {
 			
 			Collections.sort(gdVec,
 				new Comparator<GeneData>() {
-					public int compare(GeneData a1, GeneData a2) { return (a2.len - a1.len);}
+					public int compare(GeneData a1, GeneData a2) { 
+						if (a1.start!=a2.start) return (a1.start - a2.start); // it does not always catch =start
+						
+						if (SyMAP.TRACE) System.out.println(a1.annot.getGeneNumStr() + " " + a1.start + " " + a1.len + " " + a2.len + " " + (a2.len - a1.len));
+						return (a2.len - a1.len);
+					}
 				});
 		
-		// Determine contained and overlap relations	
+		// Determine contained and overlap relations AND assign initial level	
 			for (int i=0; i<gdVec.size()-1; i++) {
 				GeneData gdi = gdVec.get(i);
-				
 				for (int j=i+1; j<gdVec.size(); j++) {
 					GeneData gdj = gdVec.get(j);
-					if (!gdi.isContained(gdj))
+					if (!gdi.isContain(gdj))
 						 gdi.isOverlap(gdj);
 				}
 			}
-		// If just has contained, it goes in offset=0, and everything else if off 1
 			for (GeneData gd : gdVec) {
-				if (gd.cntHasIn>0 && gd.cntIsIn==0) {
-					for (GeneData in : gd.inVec) in.offset += OVERLAP_OFFSET;
-					gd.done=true;
-				}
-			}
-		// Can have contained within contained
-			for (GeneData gd : gdVec) {
-				if (gd.done) continue;
-				if (gd.cntHasIn>0) {
-					for (GeneData in : gd.inVec) in.offset += OVERLAP_OFFSET;
-					gd.done=true;
-				}
-			}
-		// Overlap - this can add multiple adds - but caught in last loop
-			for (GeneData gd : gdVec) {
-				for (GeneData ol : gd.olVec) {
-					if (!ol.done)      ol.offset += OVERLAP_OFFSET;
-					else if (!gd.done) {
-						gd.offset += OVERLAP_OFFSET;
-						gd.done=true;
+				for (GeneData o : gd.olVec) {
+					if (gd.level==o.level)  {
+						o.level = gd.level+1;
+						if (o.level==3) o.level=0;
 					}
 				}
-				gd.done=true;
 			}
-		// Set olapMap - the 12 and 24 seem to have different spacing, hence the kludge of ++
-			int maxOlap = OVERLAP_OFFSET*3;
 			for (GeneData gd : gdVec) {
-				if (gd.offset==0) continue;
+				if (gd.level==0) continue;
 				
-				if (gd.offset==OVERLAP_OFFSET) gd.offset++;
-				else if (gd.offset>=maxOlap) {
-					if (SyMAP.TRACE) System.out.println(gd.offset + " 3 overlaps: " + gd.annot.getGeneNumStr());
-					gd.offset = (OVERLAP_OFFSET+1);
-				}
-				
-				olapMap.put(gd.annot.getAnnoIdx(), gd.offset);
+				int offset = gd.level* OVERLAP_OFFSET;
+				olapMap.put(gd.annot.getAnnoIdx(), offset);
 			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Place overlapping genes");}
@@ -678,32 +657,29 @@ public class Sequence extends Track {
 	private class GeneData {
 		Annotation annot;
 		int start, end, len;
-		int offset=0;
-		int cntHasIn=0, cntIsIn=0;
-		boolean done=false;
-		Vector <GeneData> inVec = new Vector <GeneData> ();
+		int level=0;
 		Vector <GeneData> olVec = new Vector <GeneData> ();
 		
 		public GeneData(Annotation annot) {
 			this.annot=annot;
 			start = annot.getStart();
 			end = annot.getEnd();
-			len = end-start+1;
+			len = Math.abs(end-start)+1;
 		}
-		boolean isContained(GeneData gd) {
+		boolean isContain(GeneData gd) {
 			if (gd.start >= start && gd.end <= end) {
-				cntHasIn++;   inVec.add(gd);
-				gd.cntIsIn++;
+				olVec.add(gd);
 				return true;
 			}
 			return false;
 		}
 		private boolean isOverlap(GeneData gd) {
 			int gap = Math.min(end,gd.end) - Math.max(start,gd.start);
-			if (gap <= MAX_GAP) return false;
-			olVec.add(gd);
-			gd.olVec.add(this);
-			return true;
+			if (gap > 0) {
+				olVec.add(gd);
+				return true;
+			}
+			return false;
 		}
 	}
 	/***************** complete build methods **************************************/

@@ -68,7 +68,7 @@ public class TableData implements Serializable {
 	 * Constructors
 	 */
     public TableData(TableDataPanel parent) {
-    	vData = 		new Vector<Vector<Object>>();
+    	vData = 	new Vector<Vector<Object>>();
     	vHeaders = 	new Vector<TableDataHeader>();
     	theParent = parent;
     }
@@ -81,22 +81,24 @@ public class TableData implements Serializable {
     	theParent.sortMasterColumn(columnName);
     }
 
-    public void setColumnHeaders( String [] species, String [] annoKeys) {
+    public void setColumnHeaders( String [] species, String [] annoKeys, boolean isSingle) {
         vHeaders.clear();
         	
         // General
         String [] genColNames = FieldData.getGeneralColHead();
+        int genColCnt = FieldData.getGenColumnCount(isSingle); // CAS519
         
-    	for(int x=0; x<genColNames.length; x++)
+    	for(int x=0; x<genColCnt; x++)
     		addColumnHeader(genColNames[x], Integer.class);
     	
     	// Loc headers and type
-    	String [] spColNames =	FieldData.getSpeciesColHead();
-    	Class <?> [] colType =  FieldData.getSpeciesColType();
+    	String [] spColNames =	  FieldData.getSpeciesColHead();
+    	Class <?> [] spColType =  FieldData.getSpeciesColType();
+    	int spColCnt = FieldData.getSpColumnCount(isSingle);	// CAS519 less columns for single
     	
     	for(int x=0; x < species.length; x++) {
-    		for (int c=0; c< spColNames.length; c++)
-    			addColumnHeader(species[x]+ Q.delim + spColNames[c], colType[c]);
+    		for (int c=0; c< spColCnt; c++)
+    			addColumnHeader(species[x]+ Q.delim + spColNames[c], spColType[c]);
     	}
     	// array of species+Q.delim+keywords in correct order
     	for (int x=0; x<annoKeys.length; x++) {
@@ -148,7 +150,7 @@ public class TableData implements Serializable {
     	catch (Exception e) {ErrorReport.print(e, "add Rows With Progress");}
     }
     
-    public void finalize() {
+    public void finalize() { 
     	arrHeaders = new TableDataHeader[vHeaders.size()];
     	vHeaders.copyInto(arrHeaders);
     	vHeaders.clear();
@@ -261,8 +263,10 @@ public class TableData implements Serializable {
 		
 			int retval = 0;
 		
-			// this check will work for any of the columns that may not have values
-			if (o1[nColumn] instanceof String && ((String)o1[nColumn]).equals(Q.empty) &&
+			if (colHeader.endsWith(Q.gStrandCol)) { // CAS519 want '-' to sort normal (not empty)
+				retval = ((String)o1[nColumn]).compareTo((String)o2[nColumn]);
+			}
+			else if (o1[nColumn] instanceof String && ((String)o1[nColumn]).equals(Q.empty) &&
 				o2[nColumn] instanceof String && ((String)o2[nColumn]).equals(Q.empty)) {
 				return 0;
 			}
@@ -275,7 +279,7 @@ public class TableData implements Serializable {
 				else retval = 1;
 			}
 			else if (colHeader.equals(Q.blockCol) || colHeader.equals(Q.runCol) 
-								                  || colHeader.endsWith(Q.geneNCol)) { // CAS517 add runCol; CAS518 add geneNCol
+								                  || colHeader.endsWith(Q.gNCol)) { // CAS517 add runCol; CAS518 add geneNCol
 				String [] vals1 = ((String)o1[nColumn]).split("\\."); 
 				String [] vals2 = ((String)o2[nColumn]).split("\\.");
 				
@@ -345,7 +349,7 @@ public class TableData implements Serializable {
 		HashMap <String, Object> headVal = new HashMap <String, Object> ();
 		for (int i=0; i<arrHeaders.length; i++) {
 			String colName = arrHeaders[i].getColumnName();
-			if (colName.contains(Q.chrCol) || colName.contains(Q.startCol) || colName.contains(Q.endCol)) 
+			if (colName.contains(Q.chrCol) || colName.contains(Q.hStartCol) || colName.contains(Q.hEndCol)) 
 			{	
 				headVal.put(colName, arrData[row][i]);
 			}

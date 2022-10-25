@@ -45,8 +45,11 @@ public class SyMAPQueryFrame extends JFrame {
 		setLocationRelativeTo(null); // CAS513 center frame
 	}
 	public void addProject(Project project) {
-		if(!project.getType().equals("fpc"))
+		if(!project.getType().equals("fpc")) {
 			theProjects.add(project);
+			if (!project.hasAbbrev()) // CAS519 need to let user know that it can be set
+				System.err.println(project.getDisplayName() + " does not have abbrev set in Parameters: using " + project.getAbbrevName());
+		}
 	}
 	public void build() {
 		buildMenuPanel();
@@ -95,8 +98,11 @@ public class SyMAPQueryFrame extends JFrame {
 	public void makeTable(String query, String sum, boolean bSingle) {
 		boolean [] saveLastColumns = null;
 		for(int x=allResults.size()-1; x>=0 && saveLastColumns == null; x--) {
-			if(allResults.get(x) instanceof TableDataPanel) {
-				saveLastColumns = ((TableDataPanel)allResults.get(x)).getColumnSelections();
+			if (allResults.get(x) instanceof TableDataPanel) {
+				if (((TableDataPanel)allResults.get(x)).isSingle()==bSingle) { // CAS519 add single check, and break
+					saveLastColumns = ((TableDataPanel)allResults.get(x)).getColumnSelections();
+					break;
+				}
 			}
 		}
 		TableDataPanel newTablePanel = new TableDataPanel(getInstance(), getNextResultLabel(), 
@@ -193,7 +199,6 @@ public class SyMAPQueryFrame extends JFrame {
 		}
 	}
 	
-	
 	public String [] getDisplayNames() {
 		String [] retVal = new String[theProjects.size()];
 		
@@ -202,7 +207,20 @@ public class SyMAPQueryFrame extends JFrame {
 		}
 		return retVal;
 	}
-	
+	public String [] getAbbrevNames() { // CAS519 added for column headings
+		String [] retVal = new String[theProjects.size()];
+		
+		for(int x=0; x<retVal.length; x++) {
+			retVal[x] = theProjects.get(x).getAbbrevName();
+		}
+		return retVal;
+	}
+	public String getDisplayFromAbbrev(String aname) { // CA519 added for loadRow used by Show Synteny 
+		for (Project p : theProjects) {
+			if (aname.contentEquals(p.getAbbrevName())) return p.getDisplayName();
+		}
+		return null;
+	}
 	public DatabaseReader getDatabase() { return theReader; }
 	
 	public Vector<Project> getProjects() { return theProjects; }

@@ -83,7 +83,7 @@ public class Utils
 		if (!d.exists() || d.isFile()) return false;
 		
 		File f = new File(d,"all.done");
-		if (Constants.TRACE) System.out.println(" XYZ all.done " + dir + " " + d.exists());
+		if (Constants.TRACE) System.out.println(" Trace: all.done " + dir + " " + d.exists());
 		if (f.exists()) return true;
 		
 		return false;

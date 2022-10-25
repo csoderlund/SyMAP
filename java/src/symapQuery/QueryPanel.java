@@ -317,7 +317,7 @@ public class QueryPanel extends JPanel {
 		String retVal="";
 		
 		if(isSingle()) {
-			retVal = (isOrphan()) ? "Orphans genes" : "All genes";
+			retVal = (isOrphan()) ? "Orphan genes" : "All genes";
 			retVal = joinStr(retVal, anno, ";  ");
 			
 			String selSingSp = (String) cmbSingleSpecies.getSelectedItem();

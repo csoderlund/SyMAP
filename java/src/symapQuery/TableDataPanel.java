@@ -7,6 +7,7 @@ package symapQuery;
  */
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -73,7 +74,7 @@ public class TableDataPanel extends JPanel {
 		theQuery =		 	query;
 		theSummary = 		sum;
 		
-		if (Q.TEST_TRACE) System.out.println("\n>" + theSummary);
+		if (Q.TEST_TRACE) System.out.println("\n>" + theSummary + "\n" + query);
 		
 		if(selections != null) {
 			theOldSelections = new boolean[selections.length];
@@ -177,7 +178,7 @@ public class TableDataPanel extends JPanel {
         	HashMap <String,Integer> proj2regions = new HashMap  <String, Integer> (); // ComputePgeneF
         		
          	Vector  <DBdata> rowsFromDB =  DBdata.loadRowsFromDB(rs, theParentFrame.getProjects(),
-         			theParentFrame.getQueryPanel(), theAnnoKeys.getColumns(), loadStatus,
+         			theParentFrame.getQueryPanel(), theAnnoKeys.getColumns(false /*displayname*/), loadStatus,
          			geneCntMap, proj2regions); // Inputs for Summary
          				 
         	theTableData.addRowsWithProgress(rowsFromDB, loadStatus);
@@ -190,7 +191,7 @@ public class TableDataPanel extends JPanel {
         }
         	
         FieldData theFields = FieldData.getFields();
-        theTableData.setColumnHeaders(theParentFrame.getDisplayNames(), theAnnoKeys.getColumns());
+        theTableData.setColumnHeaders(theParentFrame.getAbbrevNames(), theAnnoKeys.getColumns(true /*abbrev*/), isSingle);
         theTableData.finalize();
 
 		theTable = new SortTable(TableData.createModel(getSelectedColumns(), theTableData, this));
@@ -348,7 +349,9 @@ public class TableDataPanel extends JPanel {
     
     	String [] genCols = FieldData.getGeneralColHead();
     	Boolean [] genColDef = FieldData.getGeneralColDefaults();
-    	int nCol = genCols.length, newRow=genCols.length-4;
+    	String [] genDesc= FieldData.getGeneralColDesc();
+    	int nCol = FieldData.getGenColumnCount(isSingle);
+    	int newRow = (nCol>1) ? genCols.length-4 : 1;
     	
     	JPanel row=null;
     	chkGeneralFields = new JCheckBox[nCol];
@@ -365,6 +368,11 @@ public class TableDataPanel extends JPanel {
     		chkGeneralFields[x].setAlignmentX(Component.LEFT_ALIGNMENT);
     		chkGeneralFields[x].setBackground(Color.WHITE);
     		chkGeneralFields[x].addActionListener(colSelectChange);
+    		final String desc = genDesc[x];			
+    		chkGeneralFields[x].addMouseListener(new MouseAdapter() {	// CAS519 add
+        		public void mouseEntered(MouseEvent e) {setStatus(desc);}
+        		public void mouseExited(MouseEvent e)  {setStatus("");}
+        	});
     		chkGeneralFields[x].setSelected(genColDef[x]);
     		row.add(chkGeneralFields[x]);
     		
@@ -382,7 +390,9 @@ public class TableDataPanel extends JPanel {
     	return retVal;
     }
     /**************************************************
-     * Species: Chr Start End Len Gene#
+     * Species: 
+     * 		Single: Chr Gstart Gend Glen GStrand Gene#
+     * 		Pair: 	Chr Gstart Gend Glen GStrand Gene# Hstart Hend Hlen
      */
     private JPanel createSpLocSelectPanel() {
     	JPanel page = new JPanel();
@@ -390,9 +400,13 @@ public class TableDataPanel extends JPanel {
     	page.setAlignmentX(Component.LEFT_ALIGNMENT);
     	page.setBackground(Color.WHITE);
         	
-    	String [] species = theParentFrame.getDisplayNames();
-    
-    	chkSpeciesFields = new JCheckBox[species.length][5];
+    	String [] species = theParentFrame.getAbbrevNames();
+    	String [] colHeads = FieldData.getSpeciesColHead();
+		Boolean [] colDefs = FieldData.getSpeciesColDefaults();
+		String [] colDesc= FieldData.getSpeciesColDesc();
+		int cntCol = FieldData.getSpColumnCount(isSingle); // CAS519 add because single/pairs no longer have the same #columns
+		
+    	chkSpeciesFields = new JCheckBox[species.length][cntCol];
     	
     	for(int x=0; x<species.length; x++) {
     		JPanel row = new JPanel();
@@ -400,38 +414,41 @@ public class TableDataPanel extends JPanel {
         	row.setAlignmentX(Component.LEFT_ALIGNMENT);
         	row.setBackground(Color.WHITE);
     		
-        	JLabel tmpLabel = new JLabel(species[x]);
-        	if(ANNO_COLUMN_WIDTH - tmpLabel.getPreferredSize().width > 0)
-        		row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH - tmpLabel.getPreferredSize().width));
+        
+    		row.add(createSpeciesLabel(species[x]));
+    		row.add(Box.createHorizontalStrut(5));
     		
-    		row.add(new JLabel(species[x]));
-    		row.add(Box.createHorizontalStrut(10));
-    		
-    		String [] colHeads = FieldData.getSpeciesColHead();
-    		Boolean [] colDefs = FieldData.getSpeciesColDefaults();
-    		
-    		for (int i=0; i<colHeads.length; i++) {
+    		for (int i=0; i<cntCol; i++) {
     			chkSpeciesFields[x][i] = new JCheckBox(colHeads[i]);   
     			chkSpeciesFields[x][i].setSelected(colDefs[i]);
     		}
     		
-        	for(int y=0; y<chkSpeciesFields[x].length; y++) {
+        	for(int y=0; y<cntCol; y++) {
         		chkSpeciesFields[x][y].setAlignmentX(Component.LEFT_ALIGNMENT);
         		chkSpeciesFields[x][y].setBackground(Color.WHITE);
         		chkSpeciesFields[x][y].addActionListener(colSelectChange);
-        		
+        		final String desc = colDesc[y];
+        		chkSpeciesFields[x][y].addMouseListener(new MouseAdapter() { // CAS519 add
+            		public void mouseEntered(MouseEvent e) {setStatus(desc);}
+            		public void mouseExited(MouseEvent e)  {setStatus("");}
+            	});
         		row.add(chkSpeciesFields[x][y]);
         		
-        		row.add(Box.createHorizontalStrut(10));
+        		row.add(Box.createHorizontalStrut(4));
         	}
         	page.add(row);
         	if (x < species.length - 1) page.add(new JSeparator());
     	}
-    	String loc = (isSingle) ? "Gene" : "Hit"; // CAS503
+    	String loc = (isSingle) ? "Gene" : "Gene&Hit"; // CAS503, CAS519 Hit->Gene&Hit
     	page.setBorder(BorderFactory.createTitledBorder(loc + " Location"));
     	page.setMaximumSize(page.getPreferredSize());
 
     	return page;
+    }
+    private JLabel createSpeciesLabel(String name) {
+    	JLabel label = new JLabel(name,JLabel.RIGHT);
+    	label.setFont(new Font("Monospaced",Font.PLAIN, 11));
+    	return label;
     }
     /*******************************************
      *  Annotation from gff file
@@ -457,6 +474,13 @@ public class TableDataPanel extends JPanel {
     			JCheckBox chkCol = new JCheckBox(annotName);
     			chkCol.setBackground(Color.WHITE);
     			chkCol.addActionListener(colSelectChange);
+    			String d = (annotName.contentEquals(Q.All_Anno)) ? 
+    					"All annotation from GFF file" : "Column heading is keyword from GFF file";
+    			final String desc = d;
+        		chkCol.addMouseListener(new MouseAdapter() { // CAS519 add
+            		public void mouseEntered(MouseEvent e) {setStatus(desc);}
+            		public void mouseExited(MouseEvent e) {setStatus("");}
+            	});
     			
     			String lc = annotName.toLowerCase();
     			if (lc.equalsIgnoreCase("description") || lc.equalsIgnoreCase("product") // CAS513 caseIgnore
@@ -483,9 +507,11 @@ public class TableDataPanel extends JPanel {
         	row.setBackground(Color.WHITE);
         	
         	// Species name
-        	JLabel spLabel = new JLabel(theAnnoKeys.getSpeciesNameByID(speciesIDs[pos]));
-        	int width = ANNO_COLUMN_WIDTH - spLabel.getPreferredSize().width;
-        	if(width > 0) row.add(Box.createHorizontalStrut(width));
+        	// CAS519 use abbrev JLabel spLabel = new JLabel(theAnnoKeys.getSpeciesNameByID(speciesIDs[pos]));
+        	//int width = ANNO_COLUMN_WIDTH - spLabel.getPreferredSize().width;
+        	//if(width > 0) row.add(Box.createHorizontalStrut(width));
+        	String abbrev = theAnnoKeys.getSpeciesAbbrevByID(speciesIDs[pos]);
+        	JLabel spLabel = createSpeciesLabel(abbrev);
         	row.add(spLabel); row.add(Box.createHorizontalStrut(10));
         	
         	int curWidth = ANNO_COLUMN_WIDTH;
@@ -506,8 +532,9 @@ public class TableDataPanel extends JPanel {
         		row.add(chkTemp);
         		
         		curWidth += ANNO_COLUMN_WIDTH;
-        		width = ANNO_COLUMN_WIDTH - chkTemp.getPreferredSize().width;
-        		if (width > 0) row.add(Box.createHorizontalStrut(width));
+        		//width = ANNO_COLUMN_WIDTH - chkTemp.getPreferredSize().width;
+        		//if (width > 0) row.add(Box.createHorizontalStrut(width));
+        		row.add(Box.createHorizontalStrut(5));
         	}
         	colPanel.add(row);
         	if(spIter.hasNext())
@@ -555,12 +582,20 @@ public class TableDataPanel extends JPanel {
 			}
 		}});
 
-    	buttonPanel.add(showColumnSelect); buttonPanel.add(Box.createHorizontalStrut(20));
-    	buttonPanel.add(btnShowStats); buttonPanel.add(Box.createHorizontalStrut(20)); //So the resized button doesn't get clipped
+		txtStatus = new JTextField(400); // CAS519 new 
+		txtStatus.setEditable(false);
+		txtStatus.setBorder(BorderFactory.createEmptyBorder());
+		txtStatus.setBackground(Color.WHITE);
+		
+    	buttonPanel.add(showColumnSelect); buttonPanel.add(Box.createHorizontalStrut(10));
+    	buttonPanel.add(btnShowStats); buttonPanel.add(Box.createHorizontalStrut(10)); //So the resized button doesn't get clipped
+    	buttonPanel.add(txtStatus);
     	
     	buttonPanel.setMaximumSize(buttonPanel.getPreferredSize());
     	return buttonPanel;
     }
+    private void setStatus(String desc) {txtStatus.setText(desc);}
+    
     private JPanel createTableStatusPanel() {
     	JPanel thePanel = new JPanel();
     	thePanel.setLayout(new BoxLayout(thePanel, BoxLayout.LINE_AXIS));
@@ -628,20 +663,22 @@ public class TableDataPanel extends JPanel {
           ((TableColumn)en.nextElement()).setHeaderRenderer(renderer);
         } 
 	}
+
     private String [] getSelectedColumns() {
 		Vector<String> retVal = new Vector<String> ();
-		String [] annoColumns = theAnnoKeys.getColumns();
 		
 		for(int x=0; x<chkGeneralFields.length; x++) {
 			if(chkGeneralFields[x].isSelected())
 				retVal.add(chkGeneralFields[x].getText());
 		}
+		
+		String [] annoColumns = theAnnoKeys.getColumns(true);
 		for(int x=0; x<getNumAnnoCheckBoxes(); x++) {
 			if(getAnnoCheckBoxAt(x).isSelected()) {
 				retVal.add(annoColumns[x]);
 			}
 		}	
-		String [] species = theParentFrame.getDisplayNames();
+		String [] species = theParentFrame.getAbbrevNames();
 		for(int x=0; x<species.length; x++) {
 			for(int y=0; y<chkSpeciesFields[x].length; y++) {
 				if(chkSpeciesFields[x][y].isSelected()) {
@@ -653,7 +690,7 @@ public class TableDataPanel extends JPanel {
 	}
 	
     private void setColumnSelections() {
-    	if(theOldSelections == null)
+    	if (theOldSelections == null)
     		return; 
     	
     	int targetPos = 0;
@@ -840,7 +877,7 @@ public class TableDataPanel extends JPanel {
 					PrintWriter out = new PrintWriter(new FileWriter(new File(fName)));
 					
 					for(int x=0; x<selNum; x++) {
-						if (!rd.load(x)) return;
+						if (!rd.loadRow(x)) return;
 							
 						int n = (isSingle) ? 1 : 2;
 						for (int i=0; i<n; i++) {
@@ -908,7 +945,7 @@ public class TableDataPanel extends JPanel {
 
 					RowData rd = new RowData ();
 					for(int x=0; x<selRows.length; x++) {
-						if (!rd.load(selRows[x])) return; // CAS505 was incorrectly x
+						if (!rd.loadRow(selRows[x])) return; // CAS505 was incorrectly x
 							
 						String name = String.format("%-10s  Chr %2s  Start %,10d  End %,10d",
 								rd.spName[0], rd.chrNum[0], rd.start[0], rd.end[0]);
@@ -947,12 +984,12 @@ public class TableDataPanel extends JPanel {
 			int row = theTable.getSelectedRows()[0];
 			
 			RowData rd = new RowData();
-			rd.load(row);
+			if (!rd.loadRow(row)) return;
 				
 			// for the get statements
 			synStart1 = rd.start[0]; synEnd1 = rd.end[0];
 			synStart2 = rd.start[1]; synEnd2 = rd.end[1]; // CAS516 was synEnd1
-				
+			
 			double track1Start = (Integer) rd.start[0];
 			track1Start = Math.max(0, track1Start - padding);
 			
@@ -984,7 +1021,7 @@ public class TableDataPanel extends JPanel {
 			symap.getDrawingPanel().setTrackEnds(2, track1Start, track1End);
 			symap.getFrame().showX();
 			Sequence.setDefaultShowAnnotation(false);
-		} catch(Exception e) {ErrorReport.print(e, "Create table");}
+		} catch(Exception e) {ErrorReport.print(e, "Create 2D Synteny");}
     }
     /******************************************************
  	 * Next four are called by mapper to display the synteny, which is weird given that
@@ -1068,7 +1105,7 @@ public class TableDataPanel extends JPanel {
         			rs.getInt(Q.GRP1IDX) + "\t" + 	rs.getInt(Q.GRP2IDX)   + "\t" + 
         			rs.getInt(Q.ANNOT1IDX) + "\t" + 	rs.getInt(Q.ANNOT2IDX)   + "\t" + 
         			rs.getInt(Q.AIDX)   +  "\t" + 	rs.getInt(Q.AGIDX)  + "\t" +
-        			 n  +  "\t" + rs.getInt(Q.AGENE) + "\n");
+        			 n  +  "\t" + rs.getString(Q.AGENE) + "\n");
         			cnt++;
         		}
         		w.close();
@@ -1110,9 +1147,9 @@ public class TableDataPanel extends JPanel {
 				
 				rset = stmt.executeQuery(query);
 				while(rset.next()) {
-					theAnnoKeys.addAnnoIDForSpecies(p.getID(), rset.getString(1));
+					theAnnoKeys.addAnnoIDForSpecies(p, rset.getString(1));
 				}
-				theAnnoKeys.addAnnoIDForSpecies(p.getID(),  Q.All_Anno);
+				theAnnoKeys.addAnnoIDForSpecies(p,  Q.All_Anno);
 				rset.close();	
 			}
 			stmt.close();
@@ -1140,21 +1177,24 @@ public class TableDataPanel extends JPanel {
  		retVal[1] = theSummary;
  		return retVal;
  	}
+	public boolean isSingle() {return isSingle;}
  	public boolean [] getColumnSelections() {
 		try {
-	    	int numCols = chkGeneralFields.length + (chkSpeciesFields.length * chkSpeciesFields[0].length);
+			int genColCnt = FieldData.getGenColumnCount(isSingle); // CAS519 adjust for single/pairs
+			int spColCnt = FieldData.getSpColumnCount(isSingle);
+	    	int numCols = genColCnt + (chkSpeciesFields.length * spColCnt);
 	    	for(int x=0; x<chkAnnoFields.size(); x++) {
 	    		numCols += chkAnnoFields.get(x).size();
 	    	}
 	    	
 	    	boolean [] retVal = new boolean[numCols];
 	    	int targetPos = 0;
-	    	for(int x=0; x<chkGeneralFields.length; x++) {
+	    	for(int x=0; x<genColCnt; x++) {
 	    		retVal[targetPos] = chkGeneralFields[x].isSelected();
 	    		targetPos++;
 	    	}   	
 	    	for(int x=0; x<chkSpeciesFields.length; x++) {
-	    		for(int y=0; y<chkSpeciesFields[x].length; y++) {
+	    		for(int y=0; y<spColCnt; y++) {
 	    			retVal[targetPos] = chkSpeciesFields[x][y].isSelected();
 	    			targetPos++;
 	    		}
@@ -1169,14 +1209,6 @@ public class TableDataPanel extends JPanel {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Getting columns"); return null;}
  	}
-
-	private String getProjectDisplayName(int index) {
-		for(int x=0; x<theParentFrame.getProjects().size(); x++) {
-			if(theParentFrame.getProjects().get(x).getID() == index)
-				return theParentFrame.getProjects().get(x).getDisplayName();
-		}
-		return null;
-	}
    /****************************************************************
     * Classes
     */
@@ -1184,11 +1216,14 @@ public class TableDataPanel extends JPanel {
     	public AnnoData() {
     		theAnnos = new Vector<AnnoID> ();
     	}
-    	public void addSpecies(int speciesID) {
-    		if((getSpeciesPosition(speciesID)) < 0) {
-    			theAnnos.add(new AnnoID(getProjectDisplayName(speciesID), speciesID));
+    	public void addAnnoIDForSpecies(Project p, String annoID) { // CAS519 changed to send project instead of project ID
+    		int speciesID = p.getID();
+    		if (getSpeciesPosition(speciesID) < 0) {
+    			theAnnos.add(new AnnoID(p.getDisplayName(), p.getAbbrevName(), speciesID));
     			Collections.sort(theAnnos);
     		}
+    		int pos = getSpeciesPosition(speciesID);
+    		theAnnos.get(pos).addAnnoID(annoID);
     	}
     	public int getNumberAnnosForSpecies(int speciesID) {
     		int pos = getSpeciesPosition(speciesID);
@@ -1197,11 +1232,7 @@ public class TableDataPanel extends JPanel {
     		
     		return theAnnos.get(pos).getNumAnnoIDs();
     	}
-    	public void addAnnoIDForSpecies(int speciesID, String annoID) {
-    		addSpecies(speciesID);
-    		int pos = getSpeciesPosition(speciesID);
-    		theAnnos.get(pos).addAnnoID(annoID);
-    	}
+    	
     	public String getAnnoIDforSpeciesAt(int speciesID, int annoPos) {
     		int pos = getSpeciesPosition(speciesID);
     		return theAnnos.get(pos).getAnnoAt(annoPos);
@@ -1218,21 +1249,21 @@ public class TableDataPanel extends JPanel {
     		}
     		return retVal;
     	}
-    	public String getSpeciesNameByID(int speciesID) {
+    	public String getSpeciesAbbrevByID(int speciesID) {
     		int pos = getSpeciesPosition(speciesID);
     		if(pos < 0) return null;
-    		return theAnnos.get(pos).getSpeciesName();
+    		return theAnnos.get(pos).getAbbrevName();
     	}
     	/**
-    	 * returns list of all Species::keyword; used in DBdata and to create the column headers
+    	 * returns list of all Species::keyword; used in DBdata (species) and to create the column headers (abbrev)
     	 */
-    	public String [] getColumns() { 
+    	public String [] getColumns(boolean bAbbrev) { 
     		Vector<String> annoKeyList = new Vector<String> ();
     		
     		Iterator<AnnoID> speciesIter = theAnnos.iterator();
     		while(speciesIter.hasNext()) {
     			AnnoID key = speciesIter.next();
-    			String species = key.getSpeciesName();
+    			String species = (bAbbrev) ? key.getAbbrevName() : key.getSpeciesName();
     			for(int x=0; x<key.getNumAnnoIDs(); x++) {
     				annoKeyList.add(species + Q.delim + key.getAnnoAt(x)); 
     			}
@@ -1250,16 +1281,17 @@ public class TableDataPanel extends JPanel {
     			if(spID.getSpeciesID() == speciesID) found = true;
     			else	  pos++;
     		}
-    		if(!found) return -1;
+    		if (!found) return -1;
     		return pos;
     	}
     	
     	private Vector<AnnoID> theAnnos = null;
-    	
+    	/*******************************************************************/
     	private class AnnoID implements Comparable<AnnoID> {
-    		public AnnoID(String speciesName, int speciesID) {
+    		public AnnoID(String speciesName, String abbvName, int speciesID) {
     			theIDs = new Vector<String> ();
     			theSpeciesName = speciesName;
+    			theAbbrevName = abbvName;
     			theSpeciesID = speciesID;
     		}
     		
@@ -1269,11 +1301,11 @@ public class TableDataPanel extends JPanel {
     		
     		public int getNumAnnoIDs() { return theIDs.size(); }
     		public String getAnnoAt(int pos) { return theIDs.get(pos); }
-    		
-    		public String getSpeciesName() { return theSpeciesName; }
+    		public String getSpeciesName() { return theSpeciesName;}
+    		public String getAbbrevName() { return theAbbrevName;}
     		public int getSpeciesID() { return theSpeciesID; }
     		
-    		private String theSpeciesName = "";
+    		private String theSpeciesName = "", theAbbrevName = "";
     		private int theSpeciesID = -1; 
     		private Vector<String> theIDs = null;
 		
@@ -1344,6 +1376,7 @@ public class TableDataPanel extends JPanel {
     	  }
     }
     /***************************************************
+     * Gets row data for Show Synteny, Align Sequences, or WriteFasta
      * CAS504 added this class to take the place of using hidden columns to get data
      * theTableData.getRowData(row) returns the chr,start,end of all species in line,
      * where some can be blank
@@ -1351,57 +1384,72 @@ public class TableDataPanel extends JPanel {
     private class RowData {
 		public RowData () {}
 		
-		public boolean load(int row) {
+		public boolean loadRow(int row) {
 			try {
-    			HashMap <String, Object> headVal = theTableData.getRowData(row); // colName, value
+    			HashMap <String, Object> colVal = theTableData.getRowData(row); // colName, value
     			HashMap <String, Integer> sp2x = new HashMap <String, Integer> ();
-    			int x=0;
+    			int isp=0;
     			
-    			for (String head : headVal.keySet()) {
-    				String [] tok = head.split(Q.delim); // speciesName\nChr or Start or End
-    				
-    				Object o = headVal.get(head);
-    				
-    				String sVal="";
-    				int iVal=0;
+    			for (String head : colVal.keySet()) {
+    				Object o = colVal.get(head);
     				if (o instanceof String) {
     					String str = (String) o;
     					if (str.equals("") || str.equals("-")) continue; // the blanks species
     				}
-    				if (tok[1].equals(Q.chrCol)) {
+    				
+    				String [] field = head.split(Q.delim); // speciesName\nChr or Start or End
+    				if (field.length!=2) continue;
+    				String species=field[0];
+    				String col=field[1];
+    				
+    				String sVal="";
+    				int iVal=0;
+    				if (col.equals(Q.chrCol)) {
     					if (o instanceof Integer) sVal = String.valueOf(o);
-    					else sVal = (String) o;
+    					else                      sVal = (String) o;
     				}
-    				else if (o instanceof Integer) {
-    					iVal = (Integer) o;
-    				}
+    				else if (o instanceof Integer) { iVal = (Integer) o; }
     				else {
     					System.out.println("Symap error: Row Data " + head + " " + o + " is not type string or integer");
     					return false;
     				}
     				
     				int i0or1=0;						// only two none blank
-    				if (sp2x.containsKey(tok[0])) 
-    					i0or1 = sp2x.get(tok[0]);
+    				if (sp2x.containsKey(species)) 
+    					i0or1 = sp2x.get(species);
     				else {
-    					sp2x.put(tok[0], x);
-    					spName[x] = tok[0];
-    					i0or1 = x;
-    					x++;
-    					if (x>2) break; // should not happen
+    					sp2x.put(species, isp);
+    					spName[isp] = species;
+    					i0or1 = isp;
+    					isp++;
+    					if (isp>2) break; // should not happen
     				}
-    				if (tok[1].equals(Q.chrCol)) 		chrNum[i0or1] = sVal;
-    				else if (tok[1].equals(Q.startCol)) start[i0or1] = iVal;
-    				else if (tok[1].equals(Q.endCol)) 	end[i0or1] = iVal;
+    				if (col.equals(Q.chrCol)) 		  chrNum[i0or1] = sVal;
+    				else if (col.equals(Q.hStartCol)) start[i0or1] = iVal;
+    				else if (col.equals(Q.hEndCol))   end[i0or1] = iVal;
     			}
     			SpeciesSelectPanel spPanel = theQueryPanel.getSpeciesPanel();
     			
-    			for (x=0; x<2; x++) {
-    				spIdx[x] =  spPanel.getSpIdxFromSpName(spName[x]);
-    				chrIdx[x] = spPanel.getChrIdxFromChrNumSpIdx(chrNum[x], spIdx[x]);
+    			if (spName[1]==null || spName[1]=="") {
+    				Utilities.showWarningMessage("The abbrev_names are the same, cannot show Synteny");
+    				return false;
     			}
+    			spName[0] = theParentFrame.getDisplayFromAbbrev(spName[0]);
+    			spName[1] = theParentFrame.getDisplayFromAbbrev(spName[1]);
+    			
+    			for (isp=0; isp<2; isp++) {
+    				spIdx[isp] =  spPanel.getSpIdxFromSpName(spName[isp]);
+    				chrIdx[isp] = spPanel.getChrIdxFromChrNumSpIdx(chrNum[isp], spIdx[isp]);
+    			}
+    			prt();
     			return true;
     		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return false;}
+		}
+		public void prt() {
+			if (Q.TEST_TRACE) 
+				System.out.println("Trace: " + spName[0] + ": " +chrIdx[0] + ":" + start[0] + ":"+ end[0] + "   " +
+						spName[1] + ": " +chrIdx[1] + ":" + start[1] + ":"+ end[1]);
+
 		}
 		String [] spName = {"",""};
 		int [] spIdx = {0,0};
@@ -1439,6 +1487,7 @@ public class TableDataPanel extends JPanel {
 	
 	private JPanel columnPanel = null, columnButtonPanel = null;
 	private JButton showColumnSelect = null, btnShowStats = null, btnHelp = null;
+	private JTextField txtStatus = null;
     
 	public SyMAPQueryFrame theParentFrame = null;
 	public QueryPanel      theQueryPanel = null;

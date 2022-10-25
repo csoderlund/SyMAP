@@ -24,8 +24,8 @@ import symapQuery.TableDataPanel;
  * CAS517 removed some dead code
  */
 public class SyMAP {
-	public static final String 	VERSION = "v5.1.8";
-	public static final String 	DATE = " (17-Oct-22)";
+	public static final String 	VERSION = "v5.1.9";
+	public static final String 	DATE = " (25-Oct-22)";
 	public static final int 	DBVER =  3; 			// CAS512 update from 2
 	public static final String  DBVERSTR = "db" + DBVER;
 	
@@ -44,12 +44,11 @@ public class SyMAP {
 	private static final int HISTORY_SIZE = 10;
 
 	public static boolean TRACE=false; // set in ProjectManagerFrameCommon on -t
-	public static final boolean DEBUG; 
+	public static boolean DEBUG=false; // CAS519 set in ProjectManagerFrameCommon on -d
+	
 	private static final int    TIME_BETWEEN_MEMORY_TEST;
-
 	static {
 		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource(PROPERTIES_FILE)); 
-		DEBUG                    = props.getBoolean("debug");
 		TIME_BETWEEN_MEMORY_TEST = props.getInt("timeBetweenMemoryTest");
 	}
 	

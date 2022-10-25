@@ -136,9 +136,10 @@ public class PropertyFrame extends JDialog {
 			theFields[i++] = new PropertyComponent("marker_files", "", bReload, bReAlign, false);
 		} 
 		else { //MODE_PSEUDO CAS42 1/4/17 reordered them
-			theFields = new PropertyComponent[13];
+			theFields = new PropertyComponent[14];
 			theFields[i++] = new PropertyComponent("category", "Uncategorized", 1, 		!bReload, !bReAlign);
 			theFields[i++] = new PropertyComponent("display_name", theDisplayName, 1, 	!bReload, !bReAlign);
+			theFields[i++] = new PropertyComponent("abbrev_name","", 1, 				!bReload, !bReAlign); // CAS519 add for SyMAP Query
 			theFields[i++] = new PropertyComponent("grp_type", "Chromosome", 1, 		!bReload, !bReAlign);
 			theFields[i++] = new PropertyComponent("description", "", 2, 				!bReload, !bReAlign);	
 			theFields[i++] = new PropertyComponent("min_display_size_bp", "0", 1, 		!bReload, !bReAlign);	
@@ -314,9 +315,9 @@ public class PropertyFrame extends JDialog {
 		return false;
 	}
 	private boolean setField(String fieldName, String fieldValue) {
-		for(int x=0; x<theFields.length; x++) {
-			if(fieldName.equals(theFields[x].getLabel())) {
-				if(fieldName.equals("mask_all_but_genes")) {
+		for (int x=0; x<theFields.length; x++) {
+			if (fieldName.equals(theFields[x].getLabel())) {
+				if (fieldName.equals("mask_all_but_genes")) {
 					if(fieldValue.equals("1") || fieldValue.equals("yes")) 	fieldValue = "yes";
 					else													fieldValue = "no";
 				}
@@ -333,6 +334,38 @@ public class PropertyFrame extends JDialog {
 		for(int x=0; x<valueBuffer.length; x++)
 			valueBuffer[x] = theFields[x].getValue();
 	}
+	private boolean checkAbbrev() {
+		String fieldName="abbrev_name";
+		
+		for(int x=0; x<theFields.length; x++) {
+			String label = theFields[x].getLabel();
+			if (!label.equals(fieldName) ) continue;
+			
+			String val = theFields[x].getValue();
+			if (val.contentEquals("")) return true;
+			
+			if (val.length()!=4) {
+				String nVal;
+				if (val.length()>4) nVal = val.substring(0,4);
+				else {
+					nVal=val;
+					while (nVal.length()<4) nVal+= "0";
+				}
+				String msg = "abbrev_name must be exactly equal to size 4.\n" + 
+							 "  current value '" + val + "' has size " + val.length() + "\n" +
+							 "  saved name will be '" + nVal + "'" +
+				   		     "\n\nProceed with save?";
+				int n = JOptionPane.showConfirmDialog( this, msg , "", JOptionPane.YES_NO_OPTION);
+			
+				if (n == JOptionPane.NO_OPTION) return false;
+				
+				theFields[x].setValue(nVal);
+				return true;
+			}
+			return true;
+		}
+		return true;
+	}		
 	/***************************************************************
 	 * XXX Save
 	 * CAS513 changed the logic on this part and added ChgGrpPrefix
@@ -341,6 +374,8 @@ public class PropertyFrame extends JDialog {
 	public boolean isChgGrpPrefix() { return bChgGrpPrefix;}
 	
 	private void save() {
+		if (!checkAbbrev()) return;
+		
 		boolean bLoad =  isReQuiredReload();	if (!bLoad) return;
 		
 		boolean bAlign = isRequiredRealign(); 	if (!bAlign) return;
@@ -463,6 +498,7 @@ public class PropertyFrame extends JDialog {
 		File pfile = new File(dir,Constants.paramsFile);
 		if (!pfile.exists())
 			System.out.println("Create parameter file " + dir + Constants.paramsFile);
+		
 		try {
 			PrintWriter out = new PrintWriter(pfile);
 			
@@ -477,17 +513,17 @@ public class PropertyFrame extends JDialog {
 				
 				if(val.length() > 0) {
 					//special case for conversion
-					if(label.equals("mask_all_but_genes")) {
+					if (label.equals("mask_all_but_genes")) {
 						if(val.equals("yes")) 	out.println("mask_all_but_genes = 1");
 						else					out.println("mask_all_but_genes = 0");
 					}
-					else if(label.equals("order_against")) {
-						if(!val.equals("None"))	out.println("order_against = " + val);
+					else if (label.equals("order_against")) {
+						if (!val.equals("None"))	out.println("order_against = " + val);
 					}
 					else out.println(label + " = " + val.replace('\n', ' '));
 				}
 				else {
-						 out.println(label + " = "); // save empty ones too
+					out.println(label + " = "); // save empty ones too
 				}
 			}
 			out.close();

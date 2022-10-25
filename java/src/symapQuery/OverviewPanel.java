@@ -33,12 +33,14 @@ public class OverviewPanel extends JPanel {
 		overView += "<div style='width:500px;'>"; // CAS504 change table entries
 		overView += "<TABLE >" +
 				"<TR><TH ALIGN=LEFT>Project</TH><TH>&nbsp;&nbsp;&nbsp;&nbsp;</TH>" +
+				"<TH ALIGN=LEFT>Abbrev</TH><TH>&nbsp;&nbsp;&nbsp;&nbsp;</TH>" +		// CAS519 add
 					"<TH ALIGN=LEFT>Category</TH><TH>&nbsp;&nbsp;&nbsp;&nbsp;</TH>" +
 					"<TH ALIGN=LEFT>Description</TH></TR>";
 		Iterator<Project> iter = theParentFrame.getProjects().iterator();
 		while(iter.hasNext()) {
 			Project temp = iter.next();
 			overView += "<TR><TD>" + temp.getDisplayName() + "</TD><TD>&nbsp;</TD>";
+			overView += "<TD>" + temp.getAbbrevName() + "</TD><TD>&nbsp;</TD>";
 			overView += "<TD>" + temp.getCategory() + "</TD><TD>&nbsp;</TD>";
 			overView += "<TD>" + temp.getDescription() + "</TD>";
 			overView += "</TR>";

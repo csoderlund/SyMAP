@@ -1,7 +1,7 @@
 package backend;
 
 /*****************************************************
- * Both projects being compared have a Project object.
+ * Both projects being compared have a Project object. (Note, there is another Project.java in commons)
  * For FPC, the binning occurs in this file (in Group file for SEQ)
  */
 import java.sql.ResultSet;
@@ -14,10 +14,9 @@ import java.util.Enumeration;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-import symap.projectmanager.common.ProjectManagerFrameCommon;
 import util.Cancelled;
 import util.Logger;
-import backend.Group;
+
 
 enum ProjType {unknown,fpc,pseudo}; // CAS500 leave this pseudo as schema has enum with pseudo
 
@@ -101,12 +100,10 @@ public class Project
 	public boolean isUnordered() { return false;}
 	public boolean orderedAgainst() {return !orderAgainst.equals("");}
 	
-	public void loadAnnotation(UpdatePool pool) throws SQLException
-	{
+	public void loadAnnotation(UpdatePool pool) throws SQLException {
 		int totalGenes=0;
 		
-		for (Enumeration<Group> e = groups.elements(); e.hasMoreElements();)
-		{
+		for (Enumeration<Group> e = groups.elements(); e.hasMoreElements();) {
 			Group g = e.nextElement();
 			if (Cancelled.isCancelled()) return;
 			
@@ -122,21 +119,18 @@ public class Project
 		for (Group g: groups) n+= g.getnClusters();
 		return n;
 	}
-	private void loadGroups(QueryType qt) throws SQLException
-	{			
+	private void loadGroups(QueryType qt) throws SQLException {			
 		// CAS42 1/4/17 changed from selecting * to being specific and using get(n)
 		ResultSet rs = conn.executeQuery("SELECT idx, name, fullname " +
 				"FROM xgroups WHERE proj_idx=" + idx);
-        while(rs.next())
-        {
+        while(rs.next())  {
             int idx= rs.getInt(1);
             String name = rs.getString(2);
             String fullname = rs.getString(3);
             
             Group grp = new Group(props,name,fullname,idx,qt);
             
-            if (isFPC())
-            {
+            if (isFPC()) {
 	            if (name.equals("0")) 	unanchoredGrpIdx = idx;
 	            else						groups.add(grp);
             }
@@ -149,23 +143,19 @@ public class Project
         rs.close();
 	}
 	
-	public int grpIdxFromQuery(String name)
-	{	
+	public int grpIdxFromQuery(String name) {	
 		Matcher m = namePat.matcher(name);
-		if (m.matches())
-		{
+		if (m.matches()) {
 			String grp = m.group(2);
 			if (grpName2Idx.containsKey(grp))  return grpName2Idx.get(grp);
 		}
-		else
-		{
+		else {
 			if (grpName2Idx.containsKey(name)) return grpName2Idx.get(name);
 		}
 		return -1;
 	}
 	
-	public int getGrpIdx(String name)
-	{
+	public int getGrpIdx(String name){
 		return grpName2Idx.get(name);
 	}
 	
@@ -176,17 +166,14 @@ public class Project
 	// PreFilter
 	// Called for sh.query and sh.target to filter both separately
 	// For SEQ: overlapping hits are binned and the TopN applied to the bin lists
-	public void checkPreFilter2(Hit hit, SubHit sh) throws Exception
-	{
-		if (sh.fileType == FileType.Seq) 
-		{
+	public void checkPreFilter2(Hit hit, SubHit sh) throws Exception{
+		if (sh.fileType == FileType.Seq) {
 			Group grp = idx2Grp.get(sh.grpIdx);
 			grp.checkAddToHitBin2(hit,sh);		// bins stored by group (e.g. chr)
 		}
 		else {// Mrk or Bes
 			TreeMap<String,HitBin> Query2Bin = queryBinMap.get(sh.fileType);
-			if (!Query2Bin.containsKey(sh.name))
-			{
+			if (!Query2Bin.containsKey(sh.name)) {
 				Query2Bin.put(sh.name,new HitBin(hit, sh, topN, queryType));
 				return;
 			}
@@ -194,9 +181,7 @@ public class Project
 		}
 	}
 	public void printBinStats2() {
-		if (isFPC()) {
-			
-		}
+		if (isFPC()) {}
 		else {
 			if (Constants.PRT_STATS)
 				for (Group g : groups) {
@@ -205,8 +190,7 @@ public class Project
 				}
 		}
 	}
-	public void printBinStats()
-	{
+	public void printBinStats(){
 		if (isFPC()) {
 			for (FileType ft : queryBinMap.keySet())
 			{
@@ -245,42 +229,33 @@ public class Project
 	// // Go through the hit bins and mark the ones passing TopN
 	// FPC: HitBins in this file called queryBinMap
 	// SEQ: HitBins in Group file called 
-	public void filterHits(Set<Hit> hits) throws Exception
-	{
-		if (isFPC()) 		
-		{
-			for (FileType ft : queryBinMap.keySet())
-			{
+	public void filterHits(Set<Hit> hits) throws Exception {
+		if (isFPC()) {
+			for (FileType ft : queryBinMap.keySet()){
 				TreeMap<String,HitBin> binmap = queryBinMap.get(ft);
 				
 				for (HitBin hb : binmap.values())
 					hb.filterHits(hits);
 			}
 		}
-		else
-		{
+		else {
 			for (Group g : groups) {// HitBins are by group (e.g. chr)
 				g.filterHits(hits);
 			}
 		}
 	}
-	public void setGrpGeneParams(int maxGap, int maxGeneSize)
-	{
-		for (Group g : groups)
-		{
+	public void setGrpGeneParams(int maxGap, int maxGeneSize) {
+		for (Group g : groups) {
 			g.setGeneParams(maxGap, maxGeneSize);
 		}
 	}
 
-	public void collectPGInfo() // called for seq-seq
-	{
-		for (Group g : groups)
-		{
+	public void collectPGInfo() {// called for seq-seq
+		for (Group g : groups) {
 			g.collectPGInfo(name);
 		}
 	}
-	public long getSize() throws SQLException
-	{
+	public long getSize() throws SQLException {
 		long size = 0;
 		
 		if (isFPC()) { // CAS500 moved from FPCdata to here
@@ -299,7 +274,6 @@ public class Project
 				size = rs.getLong("size");
 			rs.close();
 		}
-		
 		return size;
 	}
 }

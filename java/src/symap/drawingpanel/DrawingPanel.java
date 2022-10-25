@@ -45,7 +45,7 @@ import util.Utilities;
 public class DrawingPanel extends JPanel 
 	implements ColorListener, HistoryListener, SyMAPConstants
 { 
-	private static boolean TRACE = symap.projectmanager.common.ProjectManagerFrameCommon.TEST_TRACE;
+	private static boolean TRACE = symap.SyMAP.DEBUG;
 		
 	public static Color backgroundColor = Color.white;
 	public static final int MAX_TRACKS = 100;

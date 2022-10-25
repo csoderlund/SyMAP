@@ -172,19 +172,18 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			}
 			
 			if (Utilities.hasCommandLineOption(args, "-t")) {// not shown in -h help
-				System.out.println("-t Debug output");
-				Constants.TRACE = true;
-				SyMAP.TRACE = true; // CAS517
-				TEST_TRACE = true; 
+				System.out.println("-t Trace output");
+				Constants.TRACE = true; // in backend
+				SyMAP.TRACE = true; // CAS517 
 			}
 			if (Utilities.hasCommandLineOption(args, "-o")) {// CAS505
 				System.out.println("-o Use the original version of draft ordering");
 				Constants.NEW_ORDER = false;
 			}
 			if (Utilities.hasCommandLineOption(args, "-d")) {// not shown in -h help
-				System.out.println("-d Extra output for SyMAP Query");
+				System.out.println("-d Debug (developer only)");
+				SyMAP.DEBUG = true;
 				Q.TEST_TRACE = true;
-				TEST_TRACE = true; // CAS12
 			}
 			
 			if (Utilities.hasCommandLineOption(args, "-a")) {// not shown in -h help
@@ -2302,9 +2301,10 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
         
         // Load project properties from DB
         for (Project p : projects) {
-	        	HashMap<String,String> projProps = loadProjectProps(pool, p.getID()); 
+	        HashMap<String,String> projProps = loadProjectProps(pool, p.getID()); 
 	        	
 	        p.setDisplayName(projProps.get("display_name"));
+	        p.setAbbrevName(projProps.get("abbrev_name")); // CAS519 add 
 	        p.setDescription(projProps.get("description"));
 	        p.setCategory(projProps.get("category"));
            	p.setOrderAgainst(projProps.get("order_against"));

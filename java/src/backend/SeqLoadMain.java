@@ -30,11 +30,13 @@ public class SeqLoadMain
 	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE;
 	private static final int MAX_GRPS = BlockViewFrame.MAX_GRPS; // CAS42 12/6/17 - for message
 	private static final int MAX_COLORS = BlockViewFrame.maxColors; // CAS42 12/6/17 - for message
+	private static boolean TRACE = symap.SyMAP.TRACE; // CAS519 add for Guillermo hang problem
 	
 	public static boolean run(UpdatePool pool, Logger log, String projName) throws Exception {
 		try {
 			long startTime = System.currentTimeMillis();
 			log.msg("Loading sequences for " + projName);
+			if (TRACE) log.msg("Tracing each step....");
 			
 	// Params: Load project params file and set defaults for unspecified fields
 			String projDir = Constants.seqDataDir + projName;
@@ -46,6 +48,8 @@ public class SeqLoadMain
 			if (props.getProperty("description") == null) 	props.setProperty("description", "");
 	
 	// Create project in DB
+			if (TRACE) log.msg("Checking database");
+			
 			projIdx = pool.getProjIdx(projName, ProjType.pseudo);
 			if (projIdx > 0) 
 				pool.deleteProject(projIdx);
@@ -58,13 +62,16 @@ public class SeqLoadMain
 			log.msg("Create project in database ");
 			pool.createProject(projName, ProjType.pseudo); 
 			
+			if (TRACE) log.msg("Processing properties");
 			projIdx = pool.getProjIdx(projName, ProjType.pseudo);
 			props.uploadProjProps(pool, projIdx, new String[] { "name","display_name", "description", 
 				"category", "grp_prefix", "grp_sort", "grp_type","order_against","replace_bad_char",
 				"min_display_size_bp","mask_all_but_genes", "min_size","sequence_files", "anno_files",
-				"annot_keywords", "annot_kw_mincount"}); // CAS511 added these two, do not know why they were missing
-	
+				"annot_keywords", "annot_kw_mincount",// CAS511 added these two, do not know why they were missing
+				"abbrev_name"}); // CAS519 added
+			
 	// Check Sequence files 
+			if (TRACE) log.msg("Processing files");
 			Vector<File> seqFiles = new Vector<File>();	
 			if (!props.containsKey("sequence_files")) props.setProperty("sequence_files", "");
 			
@@ -293,21 +300,16 @@ public class SeqLoadMain
 		//{
 			// Order the xgroups based on the param file settings
 			GroupSorter gs = null;
-			if (!props.getProperty("grp_order").equals("")) 
-			{
+			if (!props.getProperty("grp_order").equals("")) {
 				String[] grpOrder = props.getProperty("grp_order").split(",");
 				gs = new GroupSorter(grpOrder);
 			}
-			else if (props.getProperty("grp_sort").equals("numeric")) 
-			{
-				for (String grp : grpList)
-				{
-					try
-					{
+			else if (props.getProperty("grp_sort").equals("numeric")) {
+				for (String grp : grpList){
+					try {
 						Integer.parseInt(grp);
 					}
-					catch(Exception e)
-					{
+					catch(Exception e){
 						log.msg("Group name " + grp + " is not a number; groups will not be sorted.");
 						ErrorCount.inc();
 						return;
@@ -316,37 +318,30 @@ public class SeqLoadMain
 				
 				gs = new GroupSorter(GrpSortType.Numeric);
 			}
-			else if (props.getProperty("grp_sort").startsWith("alpha")) 
-			{
+			else if (props.getProperty("grp_sort").startsWith("alpha")) {
 				gs = new GroupSorter(GrpSortType.Alpha);
 			}
 	
-			if (gs != null)
-			{
+			if (gs != null) {
 				String undef = "";
-				for (String grp : grpList)
-				{
-					if (!gs.orderCheck(grp))
-					{
+				for (String grp : grpList) {
+					if (!gs.orderCheck(grp)) {
 						undef += grp + ", ";
 					}
 				}
-				if (undef.length() > 0) 
-				{
+				if (undef.length() > 0)  {
 					log.msg("Group order not defined for: " + undef.substring(0, undef.length()-2));
 					ErrorCount.inc();
 					return;
 				}
 				Collections.sort(grpList,gs);
 			}
-			for (int i = 1; i <= grpList.size(); i++)
-			{
+			for (int i = 1; i <= grpList.size(); i++) {
 				String grp = grpList.get(i-1);
 				pool.executeUpdate("update xgroups set sort_order=" + i + " where proj_idx=" + projIdx + 
 						" and name='" + grp + "'");
 			}
 		//}
-
 	}
 	public static void uploadSequence(String grp, String fullname, String seq, String file,UpdatePool pool,int order) throws Exception
 	{
@@ -362,8 +357,7 @@ public class SeqLoadMain
 		pool.executeUpdate("insert into pseudos (grp_idx,file,length) values(" + grpIdx + ",'" + file + "'," + seq.length() + ")");
 		
 		// Finally, upload the sequence in chunks
-		for (int chunk = 0; chunk*CHUNK_SIZE < seq.length(); chunk++)
-		{
+		for (int chunk = 0; chunk*CHUNK_SIZE < seq.length(); chunk++) {
 			int start = chunk*CHUNK_SIZE;
 			int len = Math.min(CHUNK_SIZE, seq.length() - start );
 
@@ -374,9 +368,7 @@ public class SeqLoadMain
 	}
 
 	// This is not run from the command line
-	public static void main(String[] args) 
-	{	
-		if (Constants.TRACE) System.out.println(">>>>> XYZ SeqLoadMain");
+	public static void main(String[] args) {	
 		if (args.length < 1) {
 			System.out.println("Usage: ..."); 
 			return;

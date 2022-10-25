@@ -133,7 +133,7 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 	private ProjectProperties projectProperties;
 	private ListCache fpcPseudoCache, repetitiveMarkerFilterCache, fpcFpcCache;
 	private ListCache pseudoPseudoCache; 
-	private boolean TRACE=SyMAP.TRACE;
+	private boolean TRACE=SyMAP.DEBUG;
 
 	public MapperPool(DatabaseReader dr, ProjectProperties pp, 
 			ListCache fpcPseudoCache, ListCache repetitiveMarkerFilterCache, 

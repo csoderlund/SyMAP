@@ -15,6 +15,7 @@ import backend.Constants;
 import util.ErrorReport;
 import util.ProgressDialog;
 import util.PropertiesReader;
+import util.Utilities;
 import backend.UpdatePool;
 
 public class Project implements Comparable <Project> {//CAS513 for TreeSet sort
@@ -25,6 +26,8 @@ public class Project implements Comparable <Project> {//CAS513 for TreeSet sort
 	
 	private int nIdx;		// unique database index
 	private String strType, strDisplayName, strDescription, strCategory, strDate="";
+	private String strAbbrevName; // CAS519 for Symap query columns
+	private boolean hasAbbrev=true; // CAS519 if not set in Parameter, then this set to false
 	private int numGroups;
 	private Color color;
 	private String pathName=""; // CAS512 display on 'params' window
@@ -96,6 +99,16 @@ public class Project implements Comparable <Project> {//CAS513 for TreeSet sort
 	public String getDisplayName() { return strDisplayName; }
 	public void setDisplayName(String s) { strDisplayName = s; }
 	
+	public boolean hasAbbrev() {return hasAbbrev;}
+	public String getAbbrevName() {return strAbbrevName; }
+	public void setAbbrevName(String s) { 
+		if (s==null || s.length()==0 || s.contentEquals("null")) {
+			s = Utilities.formatAbbrev(strDisplayName);
+			hasAbbrev=false;
+		}
+		strAbbrevName = s; 
+	}
+	
 	public String getType() { return strType; }
 	public boolean isPseudo() { 
 		return (strType.equals(Constants.seqType) || strType.equals(Constants.dbSeqType)); 
@@ -129,52 +142,54 @@ public class Project implements Comparable <Project> {//CAS513 for TreeSet sort
 	{
 		pathName = dir.getName(); 
 		File pfile = new File(dir,Constants.paramsFile); 
-		if (pfile.isFile())
+		if (!pfile.isFile()) return;
+		
+		PropertiesReader props = new PropertiesReader( pfile);
+		if (props.getProperty("category") != null && !props.getProperty("category").equals(""))
 		{
-			PropertiesReader props = new PropertiesReader( pfile);
-			if (props.getProperty("category") != null && !props.getProperty("category").equals(""))
-			{
-				strCategory = props.getProperty("category");
-			}
-			if (props.getProperty("display_name") != null && !props.getProperty("display_name").equals(""))
-			{
-				strDisplayName = props.getProperty("display_name");	
-			}
-			if (props.getProperty("order_against") != null && !props.getProperty("order_against").equals(""))
-			{
-				orderAgainst = props.getProperty("order_against");	
-			}					
-			if (props.getProperty("grp_type") != null && !props.getProperty("grp_type").equals(""))
-			{
-				chrLabel = props.getProperty("grp_type");	
-			}
-			if (props.getProperty("description") != null && !props.getProperty("description").equals(""))
-			{
-				strDescription = props.getProperty("description"); // CAS500 wasn't read	
-			}
-			// CAS504 added following to put on Summary for Unloaded
-			if (props.getProperty("mask_all_but_genes") != null && !props.getProperty("mask_all_but_genes").equals(""))
-			{
-				String d = props.getProperty("mask_all_but_genes");
-				isMasked = (d.equals("1")); 	
-			}
-			if (props.getProperty("annot_keywords") != null && !props.getProperty("annot_keywords").equals(""))
-			{
-				annotKeywords = props.getProperty("annot_keywords"); 	
-			}
-			if (props.getProperty("min_size") != null && !props.getProperty("min_size").equals(""))
-			{
-				min_size = props.getProperty("min_size"); 	
-			}
-			
-			if (props.getProperty("sequence_files") != null && !props.getProperty("sequence_files").equals(""))
-			{
-				isDefaultFiles=false;	
-			}
-			if (props.getProperty("anno_files") != null && !props.getProperty("anno_files").equals(""))
-			{
-				isDefaultFiles=false;	
-			}
+			strCategory = props.getProperty("category");
+		}
+		if (props.getProperty("display_name") != null && !props.getProperty("display_name").equals(""))
+		{
+			strDisplayName = props.getProperty("display_name");	
+		}
+		if (props.getProperty("abbrev_name") != null && !props.getProperty("abbrev_name").equals("")) // CAS519 add
+		{
+			strAbbrevName = props.getProperty("abbrev_name");	
+		}
+		if (props.getProperty("order_against") != null && !props.getProperty("order_against").equals(""))
+		{
+			orderAgainst = props.getProperty("order_against");	
+		}					
+		if (props.getProperty("grp_type") != null && !props.getProperty("grp_type").equals(""))
+		{
+			chrLabel = props.getProperty("grp_type");	
+		}
+		if (props.getProperty("description") != null && !props.getProperty("description").equals(""))
+		{
+			strDescription = props.getProperty("description"); // CAS500 wasn't read	
+		}
+		// CAS504 added following to put on Summary for Unloaded
+		if (props.getProperty("mask_all_but_genes") != null && !props.getProperty("mask_all_but_genes").equals(""))
+		{
+			String d = props.getProperty("mask_all_but_genes");
+			isMasked = (d.equals("1")); 	
+		}
+		if (props.getProperty("annot_keywords") != null && !props.getProperty("annot_keywords").equals(""))
+		{
+			annotKeywords = props.getProperty("annot_keywords"); 	
+		}
+		if (props.getProperty("min_size") != null && !props.getProperty("min_size").equals(""))
+		{
+			min_size = props.getProperty("min_size"); 	
+		}
+		if (props.getProperty("sequence_files") != null && !props.getProperty("sequence_files").equals(""))
+		{
+			isDefaultFiles=false;	
+		}
+		if (props.getProperty("anno_files") != null && !props.getProperty("anno_files").equals(""))
+		{
+			isDefaultFiles=false;	
 		}
 	}
 	public String notLoadedInfo() {
@@ -207,18 +222,19 @@ public class Project implements Comparable <Project> {//CAS513 for TreeSet sort
 			// update proj_props
 			PropertiesReader props = new PropertiesReader( pfile);
 			int n = 0;
-			String annotKW = "";
+			
 			for (Object obj : props.keySet()) {
 				String pname = obj.toString().trim();
 				String value = props.getProperty(pname).trim();
-				if (pname.equals("annot_keywords")) annotKW = value;
+				
 				db.executeUpdate("insert into proj_props (proj_idx,name,value) values(" + nIdx + ",'" + pname + "','" + value + "')");
 				if (progress != null)
 					progress.msg(pname + " = " + value);	
 				n++;
 			}
 			
-			// update annot_key
+			/** CAS519 delete this!! update annot_key
+			 * if (pname.equals("annot_keywords")) annotKW = value; was above
 			if (!annotKW.equals("")) {
 				db.executeUpdate("delete from annot_key where proj_idx=" + nIdx);
 				
@@ -229,6 +245,7 @@ public class Project implements Comparable <Project> {//CAS513 for TreeSet sort
 		        			nIdx + ",'" + kw + "',0)");
 				}
 			}
+			*/
 			if (progress != null) progress.msg("\nloaded " + n + " properties");
 		}
 		catch (Exception e){ErrorReport.print(e, "Failed to update parameters");}
