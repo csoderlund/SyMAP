@@ -80,8 +80,9 @@ pair will be shown; hence, the 'Gene Hit' columns will have two <tt>No</tt> valu
 <p><b>Collinear genes &gt;= N</b>
 <br>Only hits where at each one side of the pair is part of N aligning genes with no intervening
 non-aligning genes, hence, all values in the 'RunSize' column will be &gt;= N. For example,
-if a row has a 'RunSize' of 4 and you select "Show Synteny" for the row, at least one of the
-species will have 4 hits in a row, all of which hit genes.
+if a row has a 'Collinear' of 4 and you select "Show Synteny" for the row, at least one of the
+species will have 4 hits in a row, all of which hit genes. <i>Note: since release v5.1.8, an
+occasional collinear set is wrong: this will be fixed in v5.2.0 with an improved algorithm and display.</i>
 
 <p>NOTE: A collinear chain of genes is not the same as a SyMAP synteny block, because blocks
 require at least 7 anchors, and are allowed to have intervening genes which do not align.

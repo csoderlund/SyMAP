@@ -25,7 +25,7 @@ import symapQuery.TableDataPanel;
  */
 public class SyMAP {
 	public static final String 	VERSION = "v5.1.9";
-	public static final String 	DATE = " (25-Oct-22)";
+	public static final String 	DATE = " (26-Oct-22)";
 	public static final int 	DBVER =  3; 			// CAS512 update from 2
 	public static final String  DBVERSTR = "db" + DBVER;
 	
@@ -45,6 +45,7 @@ public class SyMAP {
 
 	public static boolean TRACE=false; // set in ProjectManagerFrameCommon on -t
 	public static boolean DEBUG=false; // CAS519 set in ProjectManagerFrameCommon on -d
+	static public boolean GENEN_ONLY=false; // -z CAS519b to update the gene# without having to redo synteny
 	
 	private static final int    TIME_BETWEEN_MEMORY_TEST;
 	static {

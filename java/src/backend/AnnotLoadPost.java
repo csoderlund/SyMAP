@@ -2,12 +2,16 @@ package backend;
 
 /******************************************************
  * CAS512 added for post-processing of annotation
- *  geneNumber = assigns consecutive gene numbers along the chromosome
- *  genesMapExon = assigns exons to genes IF it was not done in AnnotLoadMain
- *  genesCntExon = if it is done, it assigns tag only
- *  
- * CAS518 no longer support having exons in separate file. Remove method genesMapExon.
- *        update assigning suffixes
+v5.1.2 	Exons pseudo_annot.gene_idx and tag to map exon to gene in AnnotLoadMain (was doing here too, but removed 518)
+		Genenum was computed in AnchorsPost, then AnnotLoadMain
+v5.1.4	Gene# Replaced the result table #Gene column: it was computed per query, whereas the replacement is stored in the database. The replacement is the order number of the gene along the chromosomes, which stays constant across all queries and is shown on the Chromosome Explorer Annotation and the hover of the gene.
+v5.1.7 	Gene# Overlapping genes have been numbered with the same gene number; now they are given a suffix, e.g. Gene #1011a, Gene #1011b.
+v5.1.8 	Gene# Overlapping genes: the algorithm has been redone so that all overlapping and contained genes have the same number with suffixes a-z; and if there are more than 26 overlapping genes, then it starts over with numbers following the a-z; e.g. Gene #100a, #100z, #100a1, #100b1, ...
+		No longer support having exons in separate file.
+v5.1.9	Gene # This computes the Gene#, and was allowing a gap of 3 without calling them overlap; this has been changed to 0.
+
+AnchorsPost uses genenum for collinear computation 
+The 2D gene placement algorithm uses the pseudo_annot.genenum but not the suffix from the pseudo_annot.tag 
  */
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,6 +20,7 @@ import java.util.HashMap;
 
 import util.ErrorReport;
 import util.Logger;
+import util.Utilities;
 
 public class AnnotLoadPost {
 	private final int MAX_GAP=0; // CAS519 changed from 3
@@ -65,9 +70,7 @@ public class AnnotLoadPost {
 		catch (Exception e) {ErrorReport.print(e, "Post process annotation"); return false;}
 	}
 	/*********************************************************
-	 * This does not work for long genes with many small embedded genes
-	 * Find longs ones with embedded - they are z. The placement algorithm puts it in the middle
-	 * and the others on either size.
+	 * Assign Gene#
 	 */
 	private void computeGeneNum(Group g) {
 		try {	
@@ -157,6 +160,7 @@ public class AnnotLoadPost {
 			ResultSet rs = pool.executeQuery("select idx, gene_idx, start, end from pseudo_annot "
 				+ "where grp_idx=" + grp.idx + " and type='exon'"); 
 			
+			int err=0;
 			while (rs.next()) {
 				int idx = 		rs.getInt(1);
 				int gene_idx = 	rs.getInt(2);
@@ -167,10 +171,18 @@ public class AnnotLoadPost {
 					gd.exonLen += (rs.getInt(4)-rs.getInt(3)+1);
 				}
 				else {
+					err++;
+					if (err>10) break;
 					System.err.println("Internal error: no gene " + gene_idx + " for exon " + idx);
 				}
 			}
 			rs.close();
+			if (err>5 && symap.SyMAP.GENEN_ONLY) {
+				Utilities.showWarningMessage("This SyMAP database was built with an old version.\n"
+					+ "The -z will not work with it. You will need to reload.");
+				isSuccess=false;
+				return;
+			}
 				
 		// WRITE write to db; names parsed in Annotation.java getLongDescription
 			PreparedStatement ps = pool.prepareStatement(
@@ -208,7 +220,7 @@ public class AnnotLoadPost {
 				if (cntBatch>5000) {
 					ps.executeBatch();
 					cntBatch=0;
-					System.err.print("   " + grp.getFullName() + " assign " + exonUpdate + " exons to "  + geneUpdate + " genes    \r");
+					System.err.print("   " + grp.getFullName() + " count " + exonUpdate + " exons for "  + geneUpdate + " genes    \r");
 				}
 			}
 			if (cntBatch>0) ps.executeBatch();

@@ -20,9 +20,9 @@ public class FieldData {
 	
 	private static final String [] GENERAL_COLUMN_DESC = 
 		{"Row number", 
-		 "Block: synteny block number (chr.chr.number)", 
+		 "Block: synteny block number (chr.chr.#)", 
 		 "Block score: number of hits in the synteny block",
-		 "Collinear: number of adjacent genes (chr.chr.number)", 
+		 "Collinear: number of adjacent genes (chr.chr.#) See Help.", 
 		 "PgeneF: (Compute PgeneF only) putative gene family number", 
 		 "PgFSize: (Compute PgeneF only) putative gene family size",
 		 "Hit#: an index representing the hit", 
@@ -41,7 +41,7 @@ public class FieldData {
 	private static String [] SPECIES_COLUMN_DESC = {
 		"Chr: Chromosome (or Scaffold, etc)", 
 		"Gstart: Start coordinate of gene", "Gend: End coordinate of gene", "Glen: Length of gene", "Gst: Gene strand", 
-		"Gene#: Sequential. Overlap genes, same #, different suffix",
+		"Gene#: Sequential. Overlap genes have same number (chr.#.{a-z})", 
 		"Hstart: start coordinate of hit(s)", "Hend: End coordinate of hit(s)", "Hlen: Length of hit"
 	};
 

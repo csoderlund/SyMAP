@@ -158,6 +158,9 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			System.out.println("  -p N		: number of CPUs to use");
 			System.out.println("  -s		: print stats for debugging");
 			System.out.println("  -o		: use original draft ordering algorithm");
+			
+			System.out.println("\nReload Annotation:");
+			System.out.println("  -z		: Reload Annotatin will only run the Gene# assignment algorithm");
 		}
 	}
 	// these are listed to terminal in the 'symap' perl script.
@@ -201,6 +204,10 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			if (Utilities.hasCommandLineOption(args, "-c")) {// CAS501
 				MAIN_PARAMS = Utilities.getCommandLineOption(args, "-c");
 				System.out.println("-c Configuration file " + MAIN_PARAMS);
+			}
+			if (Utilities.hasCommandLineOption(args, "-z")) {// CAS519b
+				SyMAP.GENEN_ONLY=true;
+				System.out.println("-z Reload Annotatin will only run the Gene# assignment algorithm");
 			}
 		}
 	}
@@ -1386,10 +1393,16 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	};
 	private MouseListener doReloadAnnot = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
-			if (!progressConfirm2("Reload annotation", "Reload annotation" +
-					"\n\nYou will need to re-run the synteny computations for this project, " +
-					"\nbut not the alignments.")) return; // CAS512 remove MUMmer and BLAT
-			
+			if (!SyMAP.GENEN_ONLY) { 
+				if (!progressConfirm2("Reload annotation", "Reload annotation" +
+						"\n\nYou will need to re-run the synteny computations for this project, " +
+						"\nbut not the alignments.")) return; // CAS512 remove MUMmer and BLAT
+			}
+			else { // CAS519
+				if (!progressConfirm2("Reload annotation", "Reload annotation" +
+						"\n\nThe -z flag is set. Only the Gene# assignment algorithm will be run. " +
+						"\nNo further action will be necessary.")) return; 
+			}
 			progressReloadAnnotation( ((ProjectLinkLabel)e.getSource()).getProject() );
 		}
 	};	

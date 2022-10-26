@@ -59,7 +59,31 @@
 	<!---- START BODY -->
 
 If you are using SyMAP and want to update to a new version, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
-<h3>Release: v5.1.9 (25Oct22)</h3>
+<a name="v519"></a>
+<h3>Release: v5.1.9 (26-Oct-22)</h3>
+I have made numerous changes to the Gene# assignment algorithm and 2D gene placement algorithm over the recent
+releases.
+<ol>
+<li>Pre-v5.1.2 SyMAP databases <u>do not work</u> with the new 2D gene placement algorithm.
+<br>&rarr;To make it work, the annotation needs to be reloaded and the synteny re-run (hopefully, you have kept your old MUMmer files).
+<br>&nbsp;
+<li>v5.1.2 to v5.1.7 works with the new 2D placement algorithm,
+but the Gene# assignment algorithm <u>does not work</u> for genes with multiple embedded genes, hence, the placement is not always correct.
+<br>&rarr;To update the Gene#, use the -z option discussed below.
+<br>&nbsp;
+<li>v5.1.8 updated the Gene# assignment algorithm to work for embedded genes, and give overlapping genes suffixes (a-z,a2-z2, etc).
+<br><i>Collinear Bug</i>: This change caused an occasional incorrect collinear set to be called.
+<br>&rarr;I am about to redo the code and make viewing the collinear set easier.
+<br>&nbsp;
+<li>v5.1.9 changed the Gene# assignment to call two genes overlapping if they overlap by even 1bp
+(instead of &gt;3bp). To update the Gene#, use the -z option discussed below.
+</ol>
+
+-z option: To execute the v5.1.9 Gene# assignment algorithm, execute <tt>./symap -z</tt>,
+then select <ttl>Reload Annotation</ttl>; the synteny algorithm does NOT need
+to be re-run.
+
+<h3>Release: v5.1.9 (25-Oct-22)</h3>
 This release has some interface improvements to SyMAP Query.
 <ul>
 <li>SyMAP Project Parameters
@@ -87,12 +111,12 @@ this has been changed to 0.
 <li>Developers: Cleaned-up trace and debug flags.
 </ul>
 
-<h3>Release: v5.1.8 (17Oct22)</h3>
+<h3>Release: v5.1.8 (17-Oct-22)</h3>
 This release continues to concentrates on making the 2D display provide more information.
-<br>For existing SyMAP databases, see <u>Overlapping genes</u>.
+<br>For existing SyMAP databases, see <a href="#v519">v519</a>.
 
 <ul>
-<li>Processing - annotation needs to be reloaded in order to get the new gene placement and Gene#.
+<li>Processing
 <ul>
 <li><u>Overlapping genes</u>: the algorithm has been redone so that all overlapping and contained genes
 have the same number with suffixes a-z; and if there are more than 26 overlapping genes,
@@ -119,9 +143,9 @@ For older databases, this does not provide useful information as it expect v5.1.
 </ul>
 
 </ul>
-<h3>Release: v5.1.7 (12Oct22)</h3>
+<h3>Release: v5.1.7 (12-Oct-22)</h3>
 This release concentrates on making the 2D display provide more information.
-<p>For existing SyMAP databases: (1) See <u>overlapping genes</u>.
+<p>For existing SyMAP databases: (1) See <a href="#v519">v519</a> for overlapping genes.
 (2) If you have customized hit or gene colors, you will need to reset them.
 <ul>
 <li>Processing
@@ -162,7 +186,7 @@ pair of chromosomes (e.g. 3.1.9).
 </ul>
 
 
-<h3>Release: v5.1.6 (20Sept22)</h3>
+<h3>Release: v5.1.6 (20-Sept-22)</h3>
 <ul>
 <li>Blocks
 <ul>
@@ -197,7 +221,7 @@ because the <ttl>data/seq_results</ttl> directory has not been created.
 </ul>
 
 
-<h3>Release: v5.1.5 (13Sept22)</h3>
+<h3>Release: v5.1.5 (13-Sept-22)</h3>
 <ul>
 <li>Online Docs - the biggest change of this release is an updating of the documentation.
 <li>Alignment & Synteny
@@ -224,7 +248,7 @@ that starts at 1.
 </ul>
 </ul>
 
-<h3>Release: v5.1.4 (4Sept22)</h3>
+<h3>Release: v5.1.4 (4-Sept-22)</h3>
 
 <ul>
 <li>SyMAP Query
@@ -251,7 +275,7 @@ and is shown on the Chromosome Explorer Annotation and the hover of the gene.
 </ul>
 </ul>
 
-<h3>Release: v5.1.3 (30Aug22)</h3>
+<h3>Release: v5.1.3 (30-Aug-22)</h3>
 There is no major new development, but small interface improvements and SyMAP Query has a small bug fix.
 <ul>
 <li>Main window
@@ -319,7 +343,7 @@ updated to be aware of more input variations and provide a better summary. See <
 <li>Schema change
 <ol type='i'>
 <li>An existing database will be updated the first time it is viewed.
-<li>This adds a MySQL field to associate Exons with their Gene; for an existing database,
+<li><i>This adds a MySQL field to associate Exons with their Gene</i>; for an existing database,
 the annotation would need to be reloaded for this to happen and be displayed (see 2d Gene Popup below).
 </ol>
 <li>Load Annotation
@@ -351,7 +375,7 @@ not aligned right.
 <ul>
 <li>The code is now Java v8 compliant (no depreciated statements).
 </ul>
-</ol>
+
 </ul>
 
 <h3>Release: v5.1.1 (31July22)</h3>

@@ -70,7 +70,8 @@ are the meanings of the columns:
 	<td valign="top"><b>Collinear</b><td>&nbsp;
 	<td>If the hit is contained in an uninterrupted collinear set of shared
 		genes, Collinear shows the length of the set. This column is used for the
-		"Collinear gene" query.
+		"Collinear gene" query. <i>Note: since release v5.1.8, an
+occasional collinear set is wrong: this will be fixed in v5.2.0 with an improved algorithm and display.</i>
 <tr>
 	<td valign="top"><b>PgeneF</b><td>&nbsp;
 	<td>If <b>Compute PgeneF</b>: PgeneF number. All hits in a given PgeneF have the same number. Note that
@@ -97,18 +98,21 @@ are the meanings of the columns:
 <tr>
 	<td valign="top"><b>Chr</b><td>&nbsp;
 	<td>Chromosome (or draft sequence number) where the hit is aligned
+
+<tr>
+	<td valign="top" nowrap><b>Gstart/Gend/Gs</b><td>&nbsp;
+	<td>Gstart/Gend of the annotated gene. The Gst is the strand (+/-).
+<tr>
+	<td valign="top"><b>Gene#</b><td>&nbsp;
+	<td>The gene number is chrN.#.{a-z}. The # is the sequential number along the chromosome.
+	If a run of genes overlap, they receive the
+	same gene number with different suffixes {a-z, a2-z2, etc}. This is shown on the Chromosome Explorer
+	"Annotation Description" and when the mouse hoovers over the gene.
 <tr>
 	<td valign="top" nowrap><b>Hstart/Hend</b><td>&nbsp;
 	<td>Hstart/Hend of the hit region.
 		<br><u>Merged hits</u>: Hits are clustered during anchor loading, so hit regions
 		are not necessarily single MUMmer alignments.
-<tr>
-	<td valign="top" nowrap><b>Gstart/Gend/Gs</b><td>&nbsp;
-	<td>Gstart/Gend of the annotated gene. The Gs is the strand (=/-).
-<tr>
-	<td valign="top"><b>Gene#</b><td>&nbsp;
-	<td>The order number along the chromosome of the gene. This is shown on the Chromosome Explorer
-	"Annotation Description" and when the mouse hoovers over the gene.
 <tr>
 	<td colspan=3><i>Annotation: one row for each species</i>
 <tr>

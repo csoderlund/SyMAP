@@ -16,15 +16,19 @@ import java.util.Comparator;
 
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
+import symap.SyMAP;
 import symap.pool.DatabaseUser;
 import util.Cancelled;
 import util.ErrorCount;
 import util.Logger;
+import util.Utilities;
 import util.ErrorReport;
 
-public class AnnotLoadMain 
-{
+public class AnnotLoadMain {
+	static public boolean GENEN_ONLY=SyMAP.GENEN_ONLY; // -z CAS519b to update the gene# without having to redo synteny
+	
 	private Logger log;
 	private UpdatePool pool;
 	private Project project;
@@ -55,6 +59,11 @@ public class AnnotLoadMain
 	
 	public boolean run(String projName) throws Exception {
 		long startTime = System.currentTimeMillis();
+		
+		if (GENEN_ONLY) { // CAS519b
+			geneNOnly(projName);
+			return success;
+		}
 		
 		log.msg("Loading annotation for " + projName);
 		
@@ -435,6 +444,38 @@ public class AnnotLoadMain
 			pool.resetIdx("idx", "pairs");
 		}
 		catch (Exception e) {ErrorReport.print(e, "Delete current annotations"); success=false;}
+	}
+	private boolean geneNOnly(String projName) { // CAS519b
+		try {
+			String projDir = 	Constants.seqDataDir + projName;
+			SyProps props =		new SyProps(log, new File(projDir + Constants.paramsFile), mDBProps); // read parms from file
+			project = 			new Project(pool, log, props, projName, ProjType.pseudo, QueryType.Either);
+			
+			ResultSet rs = pool.executeQuery("select hasannot from projects where idx=" + project.getIdx());
+			int cnt=0;
+			if (rs.next()) cnt=rs.getInt(1);
+			if (cnt>0) {
+				rs = pool.executeQuery("select count(*) from pseudo_annot " + 
+						"join xgroups on pseudo_annot.grp_idx = xgroups.idx " + 
+						"WHERE pseudo_annot.type = 'gene' and xgroups.proj_idx = " + project.getIdx());
+				if (rs.next()) cnt=rs.getInt(1);
+			}
+			rs.close();
+			if (cnt==0) {
+				Utilities.showWarningMessage("Project has no annotation, so cannot update Gene#");
+				return true;
+			}
+				
+			log.msg("Run Gene# assignment algorithm for " + project.getName());
+			long time = System.currentTimeMillis();
+			
+			AnnotLoadPost alp = new AnnotLoadPost(project, pool, log);
+			success = alp.run(cnt); 	if (!success) return false;
+			
+			Utils.timeMsg(log, time, "Computations");
+		}
+		catch (Exception e) {ErrorReport.print(e, "checking for annnotations"); }
+		return false;
 	}
 	/*****************************************************
 	 * Not used
