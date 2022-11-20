@@ -39,12 +39,11 @@ import util.PropertiesReader;
  * @see JDialog, ActionListener, ColorDialogHandler
  * 
  * CAS517 made many changes for readability 
+ * CAS520 properties reads in random order. So the alpha in colors.properties was replaced with order number
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ColorDialog extends JDialog implements ActionListener {
 	private static final String TAB = "tab";
-
-	private static final boolean DEFAULT_ALPHA_ENABLED = true;
 	private static final String VAR_SEP = ":";
 
 	protected PersistentProps persistentProps = null;
@@ -58,8 +57,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 	 * @param props - java/src/properties/color.properties - static 
 	 * @param cookie - user/.symap_saved_props - changes to colors are stored here
 	 */
-	public ColorDialog(PropertiesReader props, PersistentProps cookie, boolean hasFPC) 
-	{
+	public ColorDialog(PropertiesReader props, PersistentProps cookie, boolean hasFPC) {
 		super();
 
 		setModal(true);
@@ -69,30 +67,27 @@ public class ColorDialog extends JDialog implements ActionListener {
 		if (cookie != null) persistentProps = cookie.copy("SyMapColors");
 		this.hasFPC = hasFPC;
 
-		int columns = 3;
 		Dimension iconDim = new Dimension(35,20);
 
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);
 
-		Vector<ColorTab>        tabsVec = 		new Vector<ColorTab>();
-		HashMap<String,String>  tabMap = 		new HashMap<String,String>();
-		HashMap<String,Integer> tabOrderMap = 	new HashMap<String,Integer>();
-		Vector<ColorVariable>   cvarsVec = 		new Vector<ColorVariable>();
+		HashMap<String,String>  tabMap = 		new HashMap<String,String>(); // initial structure of tabs
+		Vector<ColorVariable>   cvarsVec = 		new Vector<ColorVariable>();  // displayname/colors
 		
 		String name, pvalue, dn, desc;
-		boolean bAlpha;
 		int ind, cInd, c2Ind;
+		int nOrder=0;
 		
-		// Read symap lines
+		// Read symap lines - does not retain input order
 		Enumeration <?> propertyNames = props.propertyNames();
 		while (propertyNames.hasMoreElements()) {
 			name = (String)propertyNames.nextElement();
 			if (!name.startsWith("symap"))  continue;
 			
 			pvalue = props.getString(name);
-	
+
 			ind = name.indexOf('@');
-			if (ind < 0) {					// e.g. symap.sequence.Sequence=Sequence Track
+			if (ind < 0) {					// e.g. symap.sequence.Sequence=Track
 				tabMap.put(name,pvalue);
 			}
 			else {							// e.g. symap.sequence.Sequence@unitColor=Ruler,The color of the ruler text
@@ -101,25 +96,29 @@ public class ColorDialog extends JDialog implements ActionListener {
 
 				dn = pvalue;
 				desc = null; // description
-				bAlpha = DEFAULT_ALPHA_ENABLED;
-
+				
 				if (cInd > 0) {
 					dn = pvalue.substring(0,cInd).trim();
 					if (c2Ind != cInd) {
 						desc = pvalue.substring(cInd+1, c2Ind).trim();
-						bAlpha = Boolean.parseBoolean(pvalue.substring(c2Ind+1)); // CAS512 a = new Boolean(pvalue.substring(c2Ind+1)).booleanValue();
+						nOrder = Integer.parseInt(pvalue.substring(c2Ind+1)); // CAS512 a = new Boolean(pvalue.substring(c2Ind+1)).booleanValue();
 					}
-					else desc = pvalue.substring(cInd+1).trim();
+					else {
+						desc = pvalue.substring(cInd+1).trim();
+						nOrder=0;
+					}
 				}
 				if (hasFPC || desc==null || !desc.startsWith("FPC")) {
 					String path = name.substring(0,ind);
 					String var =  name.substring(ind+1);
-					cvarsVec.add(new ColorVariable(path,var,dn,desc,iconDim,bAlpha));
+					cvarsVec.add(new ColorVariable(path,var,dn,desc,iconDim,nOrder));
 				}
 			}
 		}		
 
+// Tabs
 		// read tab lines, 					e.g. tab2=Sequence Track
+		HashMap<String,Integer> tabOrderMap = 	new HashMap<String,Integer>();
 		for (ind = 1; ; ind++) {
 			name = (String)props.getString(TAB+ind);
 			if (name == null) break;
@@ -128,24 +127,25 @@ public class ColorDialog extends JDialog implements ActionListener {
 			if (hasFPC || !name.contentEquals("FPC")) 
 				tabOrderMap.put(name, ind); // CAS512 tabOrderMap.put(name,new Integer(ind));
 		}
-
+		// Build tabs in order
+		Vector<ColorTab>    tabVec = 		new Vector<ColorTab>(); 
+		
 		for (ColorVariable colorVar : cvarsVec) {
 			name = (String)tabMap.get(colorVar.className);
 			ind = tabOrderMap.get(name) == null ? Integer.MAX_VALUE : ((Integer)tabOrderMap.get(name)).intValue();
-			ColorTab colorTab = new ColorTab(name,columns,ind);
-			ind = tabsVec.indexOf(colorTab);
-			if (ind < 0) {
-				tabsVec.add(colorTab);
-			}
-			else {
-				colorTab = (ColorTab)tabsVec.get(ind);
-			}
+			
+			ColorTab colorTab = new ColorTab(name, ind);
+			
+			ind = tabVec.indexOf(colorTab);
+			if (ind < 0) tabVec.add(colorTab);
+			else 		 colorTab = (ColorTab)tabVec.get(ind);
+			
 			colorTab.addVariable(colorVar);
 		}
 
-		Collections.sort(tabsVec);
+		Collections.sort(tabVec); // sort by order
 
-		for (ColorTab colorTab : tabsVec) {
+		for (ColorTab colorTab : tabVec) {
 			tabbedPane.add(colorTab);
 			colorTab.setup();
 		}
@@ -168,6 +168,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 		getContentPane().add(buttonPanel,BorderLayout.SOUTH);
 
 		pack();
+		setLocationRelativeTo(null); // CAS520
 	}
 /* CAS512 depreciated, not called
 	public void show() {
@@ -178,6 +179,9 @@ public class ColorDialog extends JDialog implements ActionListener {
 		super.show();
 	}
 */
+	/*************************************************************
+	 * SyMapColors=symap.mapper.Mapper.pseudoLineColorNN\=153,0,153,255
+	 */
 	public void setColors() {
 		String cookie = null;
 		if (persistentProps != null) cookie = persistentProps.getProp();
@@ -188,13 +192,13 @@ public class ColorDialog extends JDialog implements ActionListener {
 		int pind, eind, r, g, b, a;
 		for (int i = 0; i < variables.length; i++) {
 			try {
-				pind = variables[i].lastIndexOf('.');
+				pind = variables[i].lastIndexOf('.'); // name shown beside color box
 				eind = variables[i].indexOf('=');
 				if (pind < 0 || eind < pind) {
 					System.out.println("Illegal Variable Found ["+variables[i]+"]!!!!");
 				}
 				else {
-					cn = variables[i].substring(0,pind);
+					cn = variables[i].substring(0,pind); // path
 					vn = variables[i].substring(pind+1,eind);
 					c  = variables[i].substring(eind+1);
 					cvars = c.split(",");

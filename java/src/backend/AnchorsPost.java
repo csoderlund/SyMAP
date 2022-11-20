@@ -1,21 +1,36 @@
 package backend;
 
+/**************************************************
+ * Computes the collinear sets (pseudo_hits.runsize, runnum) and 
+ * 		number hits per gene (pseudo_annot.numHits) and hitnum and block (pseudo_hits)
+ * 9/21/22 move setGeneNumCounts from SyntenyMain
+ * CAS512 MOVED compute genenum from SyntenyMain to AnnotLoadMain
+ * CAS517 started updating, but got side-tracked
+ * CAS520 added setAnnot, setHit and rewrote collinearSets
+ * the term 'run' is used here for collinear (run/set)
+ */
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.HashSet;
-import java.util.TreeMap;
+import java.util.HashMap;
 import java.util.TreeSet;
+import java.util.TreeMap;
 import java.util.Vector;
 
+import symap.SyMAP;
 import util.ErrorReport;
 import util.Logger;
+import util.Utilities;
 
 public class AnchorsPost {
-	private int mPairIdx;
+	private boolean debug = SyMAP.DEBUG;
+	private boolean test = true;
+	
+	private int mPairIdx; // project pair 
 	private Logger mLog;
 	private UpdatePool pool;
 	private Project mProj1, mProj2;
-	private int count=0;
+	private int countUpdate=0, totalSets=0, totalMult=0, totalMerge=0;
+	private int [] cntSizeSet = {0,0,0,0,0};
 	
 	public AnchorsPost(int pairIdx, Project proj1, Project proj2, UpdatePool xpool, Logger log) {
 		mPairIdx = pairIdx;
@@ -24,424 +39,626 @@ public class AnchorsPost {
 		pool = xpool;
 		mLog = log;
 	}
-	
-	public void setGeneRunCounts() {
-	try {
-		/* CAS512 runsize and genenum added here; MOVED compute genenum to AnnotLoadMain */
-		
-		pool.executeUpdate("update pseudo_hits set runsize=0 where pair_idx=" + mPairIdx);
-		
-		int num2go = mProj1.getGroups().size() * mProj2.getGroups().size();
-		mLog.msg("Process " + num2go + " group pairs for colinear runs");
-		
-		
-		for (Group g1 : mProj1.getGroups()) {
-			for (Group g2: mProj2.getGroups()) {
+	/*********************************************************
+	 * Also does pseudo_hits.hitnum and pseudo_annot.numhits
+	 */
+	public void collinearSets() {
+		try {
+			pool.executeUpdate("update pseudo_hits set runsize=0, runnum=0 where pair_idx=" + mPairIdx);
+			
+			int num2go = mProj1.getGroups().size() * mProj2.getGroups().size();
+			mLog.msg("Finding Collinear sets for " + num2go + " group pairs");
+			
+			for (Group g1 : mProj1.getGroups()) if (!setAnnotHits(g1)) return;
+			for (Group g2 : mProj2.getGroups()) if (!setAnnotHits(g2)) return;
+			
+			for (Group g1 : mProj1.getGroups()) {
+				for (Group g2: mProj2.getGroups()) {
+					
+					if (!setPseudoHits(g1, g2)) return;
+					
+					if (!step0BuildSets(g1, g2)) return;
 				
-				//if (!buildColinear(g1, g2)) return;
-				if (!buildColinearOrig(g1, g2)) return;
-				
-				num2go--;
-				if (num2go>0) // CAS500 22nov19
-					System.out.print("Left to process: " + num2go + "\r");
+					num2go--;
+					if (num2go>0) 
+						System.err.print(num2go + " pairs remaining...        \r");
+					debug=false;
+				}
 			}
+			Utils.prtNumMsg(mLog, countUpdate, "Updates                          ");
+			Utils.prtNumMsg(mLog, totalMult,"Gene has + and - hits");
+			Utils.prtNumMsg(mLog, totalMerge,"Overlapped genes with same hits");
+			Utils.prtNumMsg(mLog, totalSets, "Collinear sets");
+			String size = "     Summary:     =2: " +cntSizeSet[0];
+			size +=       "    =3: " + cntSizeSet[1];
+			size +=       "   <=5: " + cntSizeSet[2];
+			size += 	  "  <=10: " + cntSizeSet[3];
+			size +=       "   >10: " + cntSizeSet[4];
+			Utils.prt(mLog, size);
 		}
-		Utils.prtNumMsg(mLog, count, " updates");
+		catch (Exception e) {ErrorReport.print(e, "Compute colinear genes"); }
 	}
-	catch (Exception e) {ErrorReport.print(e, "Compute colinear genes"); }
+	/*****************************************************
+	 * CAS520 add pseudo_annot.numhits; but not used yet
+	 */
+	private boolean setAnnotHits(Group g1 ) {
+		try {
+			pool.executeUpdate("update pseudo_annot set numhits=0 where grp_idx=" + g1.idx);
+			ResultSet rs = pool.executeQuery("select count(*) from pseudo_annot where grp_idx=" + g1.idx);
+			int cnt = (rs.next()) ? rs.getInt(1) : 0;
+			if (cnt==0) return false; 
+			
+			HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> ();
+			
+			rs = pool.executeQuery("select pha.annot_idx from pseudo_hits_annot as pha"
+					+ " join pseudo_annot as pa on pha.annot_idx=pa.idx "
+					+ " where pa.grp_idx=" + g1.idx);
+			while (rs.next()) {
+				int aidx = rs.getInt(1);
+				if (geneCntMap.containsKey(aidx)) geneCntMap.put(aidx,geneCntMap.get(aidx)+1);
+				else geneCntMap.put(aidx, 1);
+			}
+			rs.close();
+			
+			PreparedStatement ps = pool.prepareStatement("update pseudo_annot set numhits=? where idx=?");
+			for (int idx : geneCntMap.keySet()) {
+				int num = geneCntMap.get(idx);
+				ps.setInt(1, num);
+				ps.setInt(2, idx);
+				ps.addBatch();
+			}
+			ps.executeBatch();
+			return true;
+		}
+		catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); return false;}
+	}
+	/***************************************************************
+	 * CAS520 creates a hitnum to use for display, which is sequential and does not change on reload
+	 * CAS520 add block to pseudo_hits, as it saves painful joins
+	 * The code is here because it was the easiest place to put it.
+	 */
+	private boolean setPseudoHits(Group g1 , Group g2) {
+		try {
+			pool.executeUpdate("update pseudo_hits set hitnum=0, runnum=0, runsize=0 "
+					+ " where grp1_idx= " + g1.idx + " and grp2_idx=" + g2.idx);
+			
+			HashMap <Integer, Integer> hitNumMap = new HashMap <Integer, Integer> ();
+		// assign
+			int hitcnt=1;
+			ResultSet rs = pool.executeQuery("select idx, (end1-start1) as len from pseudo_hits "
+					+ " where grp1_idx= " + g1.idx + " and grp2_idx=" + g2.idx
+					+ " order by start1 ASC, len DESC");
+			while (rs.next()) {
+				int hidx = rs.getInt(1);
+				hitNumMap.put(hidx, hitcnt);
+				hitcnt++;
+			}
+			rs.close();
+			
+		// save	
+			PreparedStatement ps = pool.prepareStatement("update pseudo_hits set hitnum=? where idx=?");
+			for (int idx : hitNumMap.keySet()) {
+				int num = hitNumMap.get(idx);
+				ps.setInt(1, num);
+				ps.setInt(2, idx);
+				ps.addBatch();
+			}
+			ps.executeBatch();
+			return true;
+		}
+		catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); return false;}
 	}
 	
 /*****************************************************************************************************
- * This is the original algorithm, with a few changes for readability
- * // get the hits with genes ordered on one side and just count the ordered runs on the other side
+ *                    COLLINEAR SETS between two chromosomes
  */	
-	private boolean buildColinearOrig(Group g1, Group g2) {
+	// initial
+	private TreeMap<Integer,Hit> hitMap = new TreeMap<Integer,Hit>(); 	
+
+	private TreeMap <Integer, Gene> geneMap1 = new TreeMap <Integer, Gene> (); // gnum, gene
+	private TreeMap <Integer, Gene> geneMap2 = new TreeMap <Integer, Gene> (); // gnum, gene
+	private HashMap <Integer, Integer> gidxtnumA = new HashMap <Integer, Integer> (); // idx, gnum for 1st numbering
+	private HashMap <Integer, Integer> gidxtnumB = new HashMap <Integer, Integer> (); // idx, gnum for collapse numbering
+	
+	// geneMap1 and geneMap2 are transferred to geneMapF and geneMapR
+	private TreeMap <Integer, Gene> geneMapF = new TreeMap <Integer, Gene> (); // gnum, gene with =
+	private TreeMap <Integer, Gene> geneMapR = new TreeMap <Integer, Gene> (); // gnum, gene with !=
+	private int finalRunNum=0;
+	private String chrs;
+	
+	private boolean step0BuildSets(Group g1, Group g2) {
+	chrs = g1.fullname + ":" + g2.fullname;
 	try {
-		//
-		// Build sparse matrix of gene number hits; complex because of how stored in DB and
-		// because a hit can hit more than one gene number.
-		// We will be strict about connecting + strand hits in forward direction, - strand in reverse direction.
-		// 
-		ResultSet rs = pool.executeQuery("select max(genenum) as maxnum from pseudo_annot as pa where pa.grp_idx=" + g2.idx);
-		rs.first();
-		int maxN2 = rs.getInt("maxnum");
+		if (debug) System.out.println(">>>Compute " + g1.idx + " " + g2.idx + " " + chrs);
 		
-		// each hit is downloaded 1-2x depending on whether have annotation on both or one side 
-		rs = pool.executeQuery("select ph.idx, pa.genenum, pa.grp_idx, ph.strand " +
-				" from pseudo_hits       as ph " +
-				" join pseudo_hits_annot as pha on ph.idx = pha.hit_idx" +
-				" join pseudo_annot      as pa  on pa.idx = pha.annot_idx " +
-				" where ph.grp1_idx=" + g1.idx + " and ph.grp2_idx=" + g2.idx +
-				" order by pa.genenum asc, ph.idx asc");
+		if (!step1LoadFromDB(g1, g2)) return false;
+		if (!step2Hits2Genes()) return false;
 		
-		TreeMap<Integer,Hit> hit2gn = new TreeMap<Integer,Hit>();
+		if (!step3AssignGeneNum(1, geneMap1)) return false;
+		if (!step3AssignGeneNum(2, geneMap2)) return false;
+		gidxtnumA.clear();
 		
-		// Create hit2gn 
-		while (rs.next()) {
-			int hidx = rs.getInt(1);
-			int gnum = rs.getInt(2);
-			int grpIdx = rs.getInt(3);
-			String str = rs.getString(4);
-			boolean inv = (str.contains("+") && str.contains("-"));
-			if (inv && grpIdx == g2.idx) {
-				// reverse the gene numbers for inverted hits since we want to connect them backwards
-				// use 2* so they won't overlap (although they will also go in separate sparse mats)
-				gnum = (1 + 2*maxN2) - gnum;
-			}
-			Hit hObj;
-			if (!hit2gn.containsKey(hidx)) {
-				hObj = new Hit(inv);
-				hit2gn.put(hidx, hObj);
-			}
-			else hObj = hit2gn.get(hidx);
-			hObj.add(grpIdx == g1.idx, gnum);
-		}
+		if (!step4CreateFR()) return false;
 		
-		TreeMap<Integer,TreeMap<Integer,Integer>> gn2hidxF = new TreeMap<Integer,TreeMap<Integer,Integer>>(); // gn1 <gn2, hit>
-		TreeMap<Integer,TreeMap<Integer,Integer>> gn2hidxR = new TreeMap<Integer,TreeMap<Integer,Integer>>(); // gn1 <gn2, hit>
-		TreeMap<Integer,TreeMap<Integer,Integer>> sparse; // gn1 <gn2, hit>
+		finalRunNum=0; // restart for each chr-chr
+		if (!step5AssignRunNum(true  /*isR*/ , geneMapR)) return false;
+		if (!step6SaveToDB(g1, g2)) return false;
 		
-		// transfer hit2gn to gn2hitF/R
-		for (int hidx : hit2gn.keySet()){
-			Hit hObj = hit2gn.get(hidx);
-			int n1 = hObj.getLen1();
-			int n2 = hObj.getLen2();
+		if (!step5AssignRunNum(false /*!isR*/, geneMapF)) return false;
+		if (!step6SaveToDB(g1, g2)) return false;
+		
+		geneMap1.clear(); geneMap2.clear(); gidxtnumB.clear();
+		geneMapF.clear(); geneMapR.clear(); hitMap.clear();
 
-			if (n1 == 0 || n2 == 0) continue; // skips if anno only on one side
-			
-			sparse = (hObj.inv) ? gn2hidxR : gn2hidxF;// gn2hidxR/F 
-			
-			for (int i = 0; i < Math.min(n1,n2); i++) {
-				int gn1 = hObj.getGn1(i);
-				int gn2 = hObj.getGn2(i);
-				if (!sparse.containsKey(gn1)) {			
-					sparse.put(gn1, new TreeMap<Integer,Integer>()); // Gene gObj = new Gene(); sparse.put(gn1, gObj)
-					sparse.get(gn1).put(gn2, hidx);
-				}
-			}
-			for (int i = Math.min(n1,n2); i < Math.max(n1, n2); i++) {
-				int gn1 = (i < n1 ? hObj.getGn1(i) : hObj.getGn1(n1-1) );
-				int gn2 = (i < n2 ? hObj.getGn2(i) : hObj.getGn2(n2-1) );
-				if (!sparse.containsKey(gn1)){
-					sparse.put(gn1, new TreeMap<Integer,Integer>()); // Gene gObj = new Gene(); sparse.put(gn1, gObj)
-					sparse.get(gn1).put(gn2, hidx);					 // gObj.gn2 = gn2; gObj.hit = hidx;
-				}
-			}
-			hObj.clearVec();
-		}
-		// done with hidx2gn 
-		
-		
-		// CAS517 use clear instead of recreating over and over
-		// Connect the dots in the sparse matrices.
-		// Both use increasing gene order since we already reversed the gene order if necessary.
-		TreeMap<Integer,Integer> hitScores = new TreeMap<Integer,Integer>(); // hitId, score 
-		
-		TreeMap<Integer,TreeMap<Integer,Integer>> gnScore = new TreeMap<Integer,TreeMap<Integer,Integer>>(); // gn1 <gn2, score>
-		TreeMap<Integer,TreeSet<Integer>> gnMax = new TreeMap<Integer,TreeSet<Integer>>(); // gn1 <gn2>
-		TreeMap<Integer,Integer> hitBackLink = new TreeMap<Integer,Integer>(); // backLink: hitid, hitid
-		HashSet<Integer> hitAlreadyLink = new HashSet<Integer>();              // alreadyLink: hitid
-		
-		int gapSize = 1;
-		for (int k=0; k<2; k++){
-			sparse = (k==0) ? gn2hidxF : gn2hidxR;
-			gnScore.clear();
-			gnMax.clear();
-			hitBackLink.clear();
-			hitAlreadyLink.clear();
-			
-			// Traverse sparse matrix (gn1,gn2) in increasing order of gn1,gn2 (note keySet from tree is sorted)
-			// Build backlinks and scores, and track the sparse nodes that are currently heads of maximal chains
-			for (int gn1 : sparse.keySet()) {
-				gnScore.put(gn1, new TreeMap<Integer,Integer>());
-				for (int gn2 : sparse.get(gn1).keySet()) {
-					gnScore.get(gn1).put(gn2, 1);
-					int gn1_min = gn1 - gapSize;
-					int gn2_min = gn2 - gapSize;
-					int gn1_connect = -1;
-					int gn2_connect = -1;
-					int newScore = -1;
-					
-					for (int gn1_try = gn1-1; gn1_try >= gn1_min; gn1_try--) {
-						if (!gnScore.containsKey(gn1_try)) continue;
-						
-						for (int gn2_try = gn2-1; gn2_try >= gn2_min; gn2_try--) {
-							if (!gnScore.get(gn1_try).containsKey(gn2_try)) continue;
-							
-							if (gnScore.get(gn1_try).get(gn2_try)+1 > newScore) {
-								newScore = gnScore.get(gn1_try).get(gn2_try)+1;
-								gn1_connect = gn1_try;
-								gn2_connect = gn2_try;
-							}
-						}								
-					}
-					if (newScore > 0) {// there was a backlink
-						assert(newScore >= 2);
-						gnScore.get(gn1).put(gn2,newScore);
-						// If the backlink was to a prior maximal chain, then it's no longer maximal
-						if (gnMax.containsKey(gn1_connect)) {
-							if (gnMax.get(gn1_connect).contains(gn2_connect)) {
-								gnMax.get(gn1_connect).remove(gn2_connect);
-							}
-						}
-						if (!gnMax.containsKey(gn1)) {
-							gnMax.put(gn1, new TreeSet<Integer>());
-						}
-						gnMax.get(gn1).add(gn2); // it is currently maximal just because of the traverse order
-						int hidx1 = sparse.get(gn1).get(gn2);
-						int hidx2 = sparse.get(gn1_connect).get(gn2_connect);
-						// We have to be careful because a hit can span adjacent genes on both genomes. 
-						// Also, two or more hits can span the same adjacent genes on both genomes.
-						// We have to avoid creating a self-link or link cycle.
-						if (hidx1 != hidx2)  {										// Don't create a backlink FROM hit1 if 
-							if (!hitAlreadyLink.contains(hidx1) ) { // something already links TO hit1		
-								hitBackLink.put(hidx1,hidx2);
-								hitAlreadyLink.add(hidx2);
-							}
-						}
-					}
-				}
-			}
-			// Takes some effort to get a highest-to-lowest ordered list of scores with their corresponding hits
-			TreeMap<Integer,Integer> hit2max = new TreeMap<Integer,Integer>(); 
-			for (int gn1 : gnMax.keySet()) {
-				for (int gn2 : gnMax.get(gn1)){
-					int score = gnScore.get(gn1).get(gn2);
-					int hidx = sparse.get(gn1).get(gn2);
-					if (!hit2max.containsKey(hidx) || score > hit2max.get(hidx)) { // 2nd should probably never happen
-						hit2max.put(hidx, score);
-					}
-				}
-			}
-			TreeMap<Integer, TreeSet<Integer>> scores2Hits = new TreeMap<Integer, TreeSet<Integer>>();
-			for (int hidx : hit2max.keySet()) {
-				int score = hit2max.get(hidx);
-				if (!scores2Hits.containsKey(score)) {
-					scores2Hits.put(score, new TreeSet<Integer>());
-				}
-				scores2Hits.get(score).add(hidx);
-			}
-
-			for (int score : scores2Hits.descendingKeySet()) {
-				for (int hidx : scores2Hits.get(score)) {
-					if (hitScores.containsKey(hidx)) continue;
-					
-					hitScores.put(hidx,score);
-					while (hitBackLink.containsKey(hidx)) {
-						int hidx1 = hitBackLink.get(hidx);
-						hidx = hidx1;
-						if (!hitScores.containsKey(hidx)) {
-							hitScores.put(hidx, score);
-						}
-					}							
-				}
-			}
-		} // end of forward/reverse loo[
-		PreparedStatement ps = pool.prepareStatement("update pseudo_hits set runsize=? where idx=?");
-		for (int hidx : hitScores.keySet()) {
-			int score = hitScores.get(hidx);
-			ps.setInt(1, score);
-			ps.setInt(2,hidx);
-			ps.addBatch();
-			count++;
-		}
-		ps.executeBatch();
 		return true;
 	}
-	catch (Exception e) {ErrorReport.print(e, "Build collinear"); return false; }
+	catch (Exception e) {ErrorReport.print(e, "Build collinear " + chrs); return false; }
 	}
 	
-	/*****************************************************************************
-	 * In progress... simplifying algorithm and adding runNum
-	*****************************************************************************/
-	private boolean buildColinear(Group g1, Group g2) {
-	try {
-		pool.executeUpdate("update pseudo_hits set runsize=0 where pair_idx=" + mPairIdx);
-		// when this column gets added, update AnchorMain.addMirrorHits
-		pool.tableCheckAddColumn("pseudo_hits", "runnum", "INTEGER default 0", "runsize");
-		
-		ResultSet rs = pool.executeQuery("select max(genenum) as maxnum from pseudo_annot as pa where pa.grp_idx=" + g2.idx);
-		rs.first();
-		int maxN2 = rs.getInt("maxnum");
-		
-		TreeMap<Integer,Gene> gn1hit = new TreeMap<Integer,Gene>();
-		TreeMap<Integer,Gene> gn2hit = new TreeMap<Integer,Gene>();
-		
-		rs = pool.executeQuery("select genenum, strand from pseudo_annot where genenum>0 and grp_idx=" + g1.idx);
-		while (rs.next()) {
-			int gnum = rs.getInt(1);
-			boolean inv = rs.getString(2).contentEquals("-");
-			gn1hit.put(gnum, new Gene(inv, gnum));
-		}
-		System.err.println(g1.idx + " Grp1 " + gn1hit.size());
-		
-		rs = pool.executeQuery("select genenum, strand from pseudo_annot where genenum>0 and grp_idx=" + g2.idx);
-		while (rs.next()) {
-			int gnum = rs.getInt(1);
-			boolean inv = rs.getString(2).contentEquals("-");
-			gn2hit.put(gnum, new Gene(inv, gnum));
-		}
-		System.err.println(g2.idx + " Grp2 " + gn2hit.size());
-		
-		// each hit is downloaded 1-2x depending on whether have annotation on one or both sides 
-		rs = pool.executeQuery("select ph.idx, pa.genenum, pa.grp_idx, ph.strand, ph.gene_overlap " +
-						" from pseudo_hits       as ph " +
-						" join pseudo_hits_annot as pha on ph.idx = pha.hit_idx" +
-						" join pseudo_annot      as pa  on pa.idx = pha.annot_idx " +
-						" where ph.grp1_idx=" + g1.idx + " and ph.grp2_idx=" + g2.idx +
-						" order by pa.genenum asc, ph.idx asc");
-				
-		TreeMap<Integer,Hit> hit2gn = new TreeMap<Integer,Hit>();
-		
-		// Create hit2gn 
-		while (rs.next()) {
-			int hidx = rs.getInt(1);
-			int gnum = rs.getInt(2);
-			
-			int grpIdx = rs.getInt(3);
-			String str = rs.getString(4);
-			int gene_overlap = rs.getInt(5);
-			
-			boolean inv = (str.contains("+") && str.contains("-"));
-			boolean isChr1 = grpIdx == g1.idx;
-			boolean isChr2 = grpIdx == g2.idx;
-			
-			int inum = gnum;
-			if (inv && isChr2) inum = (1 + 2*maxN2) - gnum; // causes gnum to be in reverse order
-			
-			Hit hObj;
-			if (!hit2gn.containsKey(hidx)) {
-				hObj = new Hit(inv, hidx, gene_overlap);
-				hit2gn.put(hidx, hObj);
-			}
-			else hObj = hit2gn.get(hidx);
-			
+	/*************************************************************
+	 * Create hit and gene maps
+	 *   Create hitMap from gene_overlap>1: the pseudo_hits_annot table can hold multiple occurrences of a hit.
+	 *   It can hit on one or both side, and multiple genes on one side (overlapping, contained, or close)
+	 *   Use the two from the pseudo_hits table  
+	 */
+	private boolean step1LoadFromDB(Group g1, Group g2) {
+		try {
 			Gene gObj;
-			if (isChr1) {
-				if (!gn1hit.containsKey(gnum)) die("1 no " + inum + " " + gnum);
-				gObj = gn1hit.get(inum);
+			Hit hObj;
+			ResultSet rs;
+			
+		// Hits to 2 genes - annot1 and annot2 have the best overlap; ignore others
+			rs = pool.executeQuery("select ph.idx, ph.strand, ph.hitnum, ph.annot1_idx, ph.annot2_idx, B.blocknum " +
+				" from pseudo_hits as ph  " +
+				" LEFT JOIN pseudo_block_hits AS PBH ON PBH.hit_idx=ph.idx" +
+				" LEFT JOIN blocks AS B ON B.idx=PBH.block_idx " +
+				" where ph.grp1_idx=" + g1.idx + " and ph.grp2_idx=" + g2.idx + 
+				" and ph.gene_overlap>1"); 
+			while (rs.next()) {
+				int i=1;
+				int hidx = 		rs.getInt(i++);
+				String str = 	rs.getString(i++);
+				int hitnum =	rs.getInt(i++);
+				int gidx1= 		rs.getInt(i++);
+				int gidx2 = 	rs.getInt(i++);
+				int blocknum =  rs.getInt(i++);
+				
+				boolean inv = (str.contains("+") && str.contains("-"));
+				
+				if (!hitMap.containsKey(hitnum)) {
+					hObj = new Hit(inv, hidx, hitnum, gidx1, gidx2, blocknum);
+					hitMap.put(hitnum, hObj);
+				}
+				else if (test) System.out.println("SyMAP error: two " + hitnum); 
+			}
+			// only returns one side of hit; this is to find where a hit aligns to overlapping genes
+			rs = pool.executeQuery(
+					"select ph.hitnum, pa.idx, pa.grp_idx  from pseudo_hits       as ph " +
+					" join pseudo_hits_annot as pha on ph.idx = pha.hit_idx" +
+					" join pseudo_annot      as pa  on pa.idx = pha.annot_idx " +
+					" where ph.grp1_idx=" + g1.idx + " and ph.grp2_idx=" + g2.idx + 
+					" and ph.gene_overlap>1 ");
+			while (rs.next()) {
+				int hitnum =	rs.getInt(1);
+				int gidx = 		rs.getInt(2);
+				int chridx= 	rs.getInt(3);
+				
+				if (hitMap.containsKey(hitnum)) {
+					hObj = hitMap.get(hitnum);
+					hObj.addGeneIdx((chridx==g1.idx), gidx);
+				}
+				else if (test) System.err.println("SyMAP error: no hitnum " + hitnum);
+			}
+			
+	// All genes 
+			String ssql = "select idx, tag, start, end, genenum, strand, (end-start) as len from pseudo_annot "
+								+ "	where type='gene' and grp_idx="; 
+			String osql = " order by start ASC, len DESC";
+			                        
+			int tnum=0;
+			rs = pool.executeQuery(ssql + g1.idx + osql);
+			while (rs.next()) {
+				int idx = rs.getInt(1);		// tag          start         end            genenum        strand
+				gObj = new Gene(idx, tnum, rs.getString(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getString(6));
+				geneMap1.put(tnum, gObj);  // using tnum keeps then ordered by start
+				gidxtnumA.put(idx, tnum);
+				tnum++;
+			}
+			
+			tnum=0;
+			rs = pool.executeQuery(ssql + g2.idx + osql);
+			while (rs.next()) {
+				int idx = rs.getInt(1);
+				gObj = new Gene(idx, tnum, rs.getString(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getString(6));
+				geneMap2.put(tnum, gObj);	
+				gidxtnumA.put(idx, tnum);
+				tnum++;
+			}
+			rs.close();
+	
+			return true;
+		}
+		catch (Exception e) {ErrorReport.print(e, "Load from DB " + chrs); return false; }
+	}
+	/*******************************************************************/
+	private boolean step2Hits2Genes() {
+	try {
+		// Transfer hit set to each gene
+		for (Hit hObj : hitMap.values()) {
+			for (int gidx : hObj.geneSet1) {
+				int tnum = gidxtnumA.get(gidx);
+				geneMap1.get(tnum).hitIdxSet.add(hObj.hitnum);
+			}
+			for (int gidx : hObj.geneSet2) {
+				int tnum = gidxtnumA.get(gidx);
+				geneMap2.get(tnum).hitIdxSet.add(hObj.hitnum);
+			}
+		}
+		// Assign hit-g2 to g1 using hit.gidx1 (annot1_idx) and hit.gidx2 (annot2_idx)
+		for (int hn : hitMap.keySet()){
+			Hit hObj = hitMap.get(hn);
+		
+			int tnum1 = gidxtnumA.get(hObj.gidx1); 
+			int tnum2 = gidxtnumA.get(hObj.gidx2);
+			
+			Gene gObj1 = geneMap1.get(tnum1);
+			Gene gObj2 = geneMap2.get(tnum2);
+			
+			gObj1.isMain=true;
+			gObj2.isMain=true;
+			
+			if (gObj1.addHit(gObj2, hObj)) totalMult++;
+			
+			if (hObj.bInv) gObj2.rtnum = 1; // to be updated after renumbering
+		}		
+		return true;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Hits to genes " + chrs); return false; }
+	}
+	/***************************************************************
+	 * Collapse overlapping genes with shared hits
+	 * ReAssign unique numbers to the rest
+	 */
+	private boolean step3AssignGeneNum(int mapNum, TreeMap <Integer, Gene> geneMap) {
+	try {
+		// Set skip non-blocks hits if there is a block one 
+		for (Gene g : geneMap1.values()) g.removeHits();
+						
+		TreeMap <Integer, Olaps> olapSet = new TreeMap <Integer, Olaps> ();
+		Vector <Gene> geneVec = new Vector <Gene> ();
+			
+		// Find overlap genes
+		int cntMain=0;
+		for (Gene gObj : geneMap.values()) {
+			if (gObj.isMain) cntMain++;
+			if (!gObj.isOlap) continue;
+			
+			if (!olapSet.containsKey(gObj.genenum)) olapSet.put(gObj.genenum, new Olaps());
+			Olaps og = olapSet.get(gObj.genenum);
+			og.tnum.add(gObj.tnum);
+		}
+		if (debug) System.out.println(">>> Overlaps " + olapSet.size() + " " + cntMain + " of " + geneMap.size());
+		
+		// Collapse overlaps with same hits
+		for (Gene mainObj : geneMap.values()) {
+			if (!mainObj.isMain) continue; 
+			if (!mainObj.isOlap) continue;
+			
+			Olaps olObj = olapSet.get(mainObj.genenum);
+			
+			for (int tnum : olObj.tnum) {
+				if (tnum!=mainObj.tnum) {
+					Gene xObj = geneMap.get(tnum);
+					if (!xObj.isMain && !xObj.isMerge) {
+						xObj.setMerge(mainObj, mainObj.hitIdxSet);  // sets isMerge if hits are the same
+					}
+				}
+			}
+		}
+		olapSet.clear();
+		
+		for (Gene gObj : geneMap.values()) {
+			if (!gObj.isMerge) geneVec.add(gObj);
+			else {
+				if (debug) gObj.prt("ign ");
+				totalMerge++;
+			}
+		}
+		if (debug) System.out.println(">>> Final " + geneVec.size() + " " + totalMerge);
+		
+		// transfer new set back to geneMap and assign new tnums
+		geneMap.clear();
+		int maxN2 = geneVec.size();
+		int tnum=1;
+		
+		for (Gene gObj : geneVec) {
+			gObj.tnum = tnum++;
+			// reverse the g2 gene numbers for inverted hits to connect them backwards
+			if (mapNum==2 && gObj.rtnum>0) gObj.rtnum = maxN2 - gObj.tnum;
+						
+			geneMap.put(gObj.tnum, gObj);
+			gidxtnumB.put(gObj.idx, gObj.tnum);
+		}
+		geneVec.clear();
+		
+		return true;
+	}
+	catch (Exception e) {ErrorReport.print(e, mapNum + " assign tmpnum " + chrs); return false; }
+	}
+	private class Olaps {
+		Vector <Integer> tnum = new Vector <Integer> ();
+	}
+	
+	/*****************************************************************
+	 * Transfer genes to geneMapF (=) and geneMapR (!=); All genes with hits get added
+	 */
+	private boolean step4CreateFR() {
+	try {
+		for (int hn : hitMap.keySet()){
+			Hit hObj = hitMap.get(hn);
+			if (hObj.skip) continue;
+			
+			if (!gidxtnumB.containsKey(hObj.gidx1)) {
+				if (test) System.out.println("Not exist #" + hObj.hitnum + " " + hObj.gidx1);
+				continue;
+			}
+			int tnum1 = gidxtnumB.get(hObj.gidx1); 
+			Gene gObj1 = geneMap1.get(tnum1);
+			
+			if (hObj.bInv) { 
+				if (!geneMapR.containsKey(tnum1)) geneMapR.put(tnum1, gObj1);
 			}
 			else {
-				if (!gn2hit.containsKey(gnum)) die("2 no " + gnum + " " + inum);
-				gObj = gn2hit.get(gnum);
-			}
-			gObj.addHit(hObj); 		// add hit to gene
-			hObj.add(isChr1,gnum); 	// add genenum to hit
+				if (!geneMapF.containsKey(tnum1)) geneMapF.put(tnum1, gObj1);
+			}	
 		}
-		int cnt0=0, cnt2=0;
-		System.err.println(">Gene1");
-		for (int gnum : gn1hit.keySet()) {
-			Gene gObj = gn1hit.get(gnum);
-			if (gObj.hits.size()==0) {
-				cnt0++;
-				if (cnt0<4) {
-					String line = " Gene: " + gObj.gnum;
-					System.err.println(line);
-				}
-			}
-			else if (gObj.hits.size()>1) {
-				cnt2++;
-				if (cnt2<4) {
-					String line = " Gene: " + gObj.gnum;
-					for (Hit hObj : gObj.hits)  line += String.format("  %,6d ", hObj.idx);
-					System.err.println(line);
-				}
-			}
-		}
-		System.err.println("Zero hits: " + cnt0 + " More than one: " + cnt2);
-		cnt0=cnt2=0;
-		System.err.println(">Gene2");
-		for (int gnum : gn2hit.keySet()) {
-			Gene gObj = gn2hit.get(gnum);
-			if (gObj.hits.size()==0) {
-				cnt0++;
-				if (cnt0<4) {
-					String line = " Gene: " + gObj.gnum;
-					System.err.println(line);
-				}
-			}
-			else if (gObj.hits.size()>1) {
-				cnt2++;
-				if (cnt2<4) {
-					String line = " Gene: " + gObj.gnum;
-					for (Hit hObj : gObj.hits)  line += String.format("  %,6d ", hObj.idx);
-					System.err.println(line);
-				}
-			}
-		}
-		System.err.println("Zero hits: " + cnt0 + " More than one: " + cnt2);
-		cnt0=cnt2=0;
-		System.err.println(">Hits");
-		for (int idx : hit2gn.keySet()) {
-			Hit hObj = hit2gn.get(idx);
-			if (hObj.gn1.size()>1) {
-				cnt2++; 
-				if (cnt2<4) {
-					String line = String.format("1. Hit: %,6d (g%d)", idx, hObj.gn1.size());
-					for (int gnum : hObj.gn1)  line += String.format("%,6d ", gnum);
-					System.err.println(line);
-				}
-			}
-			if (hObj.gn2.size()>1) {
-				cnt2++; 
-				if (cnt2<4) {
-					String line = String.format("1. Hit: %,6d (g%d)", idx, hObj.gn2.size());
-					for (int gnum : hObj.gn2)  line += String.format("%,6d ", gnum);
-					System.err.println(line);
-				}
-			}
-		}
-		System.err.println("Zero hits: " + cnt0 + " More than one: " + cnt2);
 		return true;
 	}
-	catch (Exception e) {ErrorReport.print(e, "compute colinear runs"); return false;}
+	catch (Exception e) {ErrorReport.print(e, "create FR " + chrs); return false; }
 	}
-	private void die (String msg) {
-		System.err.println(msg);
-		System.exit(0);;
+	/*************************************************************
+	 * All genes in geneMap have a hit, but if the next gene#!=prev+1, then skip a gene
+	 * but what if overlapping gene has hit but is not in geneMap because not annot_idx
+	 */
+	private boolean step5AssignRunNum(boolean bInv, TreeMap <Integer, Gene> geneMap) {
+	try {
+		if (debug) System.out.println(">>Assign " + chrs + " " + bInv);
+		int lastg1=-1, lastg2=-1;
+		TreeMap <Integer, Integer> runSizeMap = new TreeMap <Integer, Integer> (); // runnum, runsize
+		
+		int tmpnum=0;
+		
+	// assign runnums - geneMap sorted by tnum/rtnum
+		for (int t1num : geneMap.keySet()) {
+			Gene gObj1 = geneMap.get(t1num);
+			
+			gObj1.setGeneIndex(bInv, (lastg2+1));
+			Hit  hObj =   gObj1.getHitObj();
+			Gene gObj2 =  gObj1.getGeneObj();
+		
+			int t2num = (hObj.bInv) ? gObj2.rtnum : gObj2.tnum;
+			
+			boolean b1notLast = (t1num != lastg1+1); 
+			boolean b2notLast = (t2num != lastg2+1);
+			if (b1notLast || b2notLast) tmpnum++; 
+			
+			hObj.runnum = tmpnum;
+			lastg1 = t1num; 
+			lastg2 = t2num;
+			
+			if (runSizeMap.containsKey(tmpnum)) runSizeMap.put(tmpnum, runSizeMap.get(tmpnum)+1);
+			else 								runSizeMap.put(tmpnum, 1);	
+			
+			if (debug) gObj1.prt("add ");
+		}
+		
+		// reassign final runnums where size>1
+		TreeMap <Integer, Integer> goodRunMap = new TreeMap <Integer, Integer> ();
+		for (int tnum : runSizeMap.keySet()) {
+			if (runSizeMap.get(tnum)>1) {
+				finalRunNum++;
+				goodRunMap.put(tnum, finalRunNum);
+			}
+		}
+		totalSets+=finalRunNum;
+		
+		// transfer runnum to final collinear set numbers and sizes
+		for (int hitnum : hitMap.keySet()) {
+			Hit hObj = hitMap.get(hitnum);
+			int tnum = hObj.runnum;
+			if (tnum>0 && goodRunMap.containsKey(tnum)) {
+				hObj.frunsize = runSizeMap.get(tnum);
+				hObj.frunnum  = goodRunMap.get(tnum);
+			}
+		}
+		return true;
 	}
-	/******************************************************************/
+	catch (Exception e) {ErrorReport.print(e, "Build sets " + chrs); return false; }
+	}
+	/*****************************************************************/
+	private boolean step6SaveToDB(Group g1, Group g2) {
+	try {
+		PreparedStatement ps = pool.prepareStatement("update pseudo_hits set runsize=?, runnum=? where idx=?");
+		for (int hitnum : hitMap.keySet()) {
+			Hit hObj = hitMap.get(hitnum);
+			int rsize = hObj.frunsize;
+			if (rsize>0) {
+				ps.setInt(1, rsize);
+				ps.setInt(2, hObj.frunnum);
+				ps.setInt(3, hObj.hidx);
+				ps.addBatch();
+				countUpdate++;
+			}
+		}
+		ps.executeBatch();
+		
+		// counts
+		for (int hidx : hitMap.keySet()) {
+			Hit hObj = hitMap.get(hidx);
+			int rsize = hObj.frunsize;
+			if (rsize>0) {
+				if (rsize==2)       cntSizeSet[0]++;
+				else if (rsize==3)  cntSizeSet[1]++;
+				else if (rsize<=5)  cntSizeSet[2]++;
+				else if (rsize<=10) cntSizeSet[3]++;
+				else cntSizeSet[4]++;
+			}
+			hObj.frunsize=hObj.frunnum=hObj.runnum=0;
+		}
+		return true;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Save sets to database " + chrs); return false; }
+	}
+	/******************************************************************
+	 * annot_hit:  idx  annot1_hit annot2_hit  (best two overlaps)
+	 */
 	private class Hit {
-		// Step 1: read input; clear after transferring to gene array
-		public Hit(boolean inv) {this.inv = inv;}
-		
-		public Hit(boolean inv, int idx, int gene_overlap) {
-			this.inv = inv;
-			this.idx = idx; 
-			this.gene_overlap = gene_overlap;
+		public Hit(boolean inv, int idx, int hitnum, int gidx1, int gidx2, int blocknum) {
+			this.bInv = inv; 
+			this.hidx = idx;
+			this.hitnum=hitnum;
+			this.gidx1= gidx1;
+			this.gidx2= gidx2;
+			this.blocknum=blocknum;
 		}
 		
-		public void add(boolean is1, int gn_idx) {
-			if (is1) gn1.add(gn_idx);
-			else 	 gn2.add(gn_idx);
+		public void addGeneIdx(boolean is1st, int idx) {
+			if (is1st) 	geneSet1.add(idx);
+			else 		geneSet2.add(idx);
 		}
-		public int getLen1() { return gn1.size();}
-		public int getLen2() { return gn2.size();}
-		
-		public int getGn1(int i) { return gn1.get(i);}
-		public int getGn2(int i) { return gn2.get(i);}
-		
-		public void clearVec() {
-			gn1.clear();
-			gn2.clear();
+		public String prtStr() {
+			String x = (bInv) ? "Inv" : "   ";
+			String y = String.format("%6d #%-5d %s  trun %4d  frun %4d, %4d  gidx %d:%d ",
+					hidx, hitnum, x, runnum, frunnum, frunsize, gidx1, gidx2);
+			String z = "Set1 ";
+			for (int g : geneSet1) z += " " + g;
+			z += "  set2 ";
+			for (int g : geneSet2) z += " " + g;
+			
+			return y + z;
 		}
-		boolean inv=false;
-		Vector <Integer> gn1 = new Vector <Integer> (); // genes with this hit overlapping
-		Vector <Integer> gn2 = new Vector <Integer> ();
-		int gene_overlap, idx;
+		boolean bInv=false;
+		int hidx, hitnum, blocknum;
+		int gidx1=-1, gidx2=-1;     // best
+		TreeSet <Integer> geneSet1 = new TreeSet <Integer> ();
+		TreeSet <Integer> geneSet2 = new TreeSet <Integer> ();
+		
+		int frunsize=0, frunnum=0;	// to be saved to db
+		int runnum=0;				// working...
+		boolean skip=false;
 	}
 	
+	/******************************************************/
 	private class Gene {
-		public Gene(boolean inv, int gnum) {
-			this.inv = inv;
-			this.gnum = gnum; // original num
+		public Gene(int idx,  int tnum, String tag, int start, int end, int genenum, String strand) {
+			this.idx = idx;
+			this.tnum = tnum;
+			this.start = start;
+			this.end = end;
+			this.genenum = genenum;
+			this.tag  = Utilities.getGenenumFromTag(tag);
+			String [] tok = this.tag.split("\\.");
+			isOlap = (tok.length>1);
+			this.bPosStrand= (strand.contentEquals("+"));
 		}
-		public void addHit(Hit hObj) {
-			hits.add(hObj);
+		
+		public boolean addHit(Gene gObj, Hit hObj) {
+			gObj2Vec.add(gObj);
+			hObjVec.add(hObj);
+			vSize = gObj2Vec.size();
+			return (vSize>1);
 		}
-		boolean inv=false;
-		int gnum;
-		Vector <Hit> hits = new Vector <Hit> (); // typical one hit
+		// keep block and remove non-block; this got rid of problem of only having N hits for collinear set of size N+1
+		public void removeHits() {
+			if (vSize==1) return;
+				
+			Vector <Gene> gObj2Tmp = new Vector <Gene> ();
+			Vector <Hit> hObjTmp =  new Vector <Hit> ();
+			for (int i=0; i<vSize; i++) {
+				if (hObjVec.get(i).blocknum==0) {
+					hObjVec.get(i).skip=true;
+					hitIdxSet.remove(hObjVec.get(i).hidx);
+				}
+				else {
+					gObj2Tmp.add(gObj2Vec.get(i));
+					hObjTmp.add(hObjVec.get(i));
+				}
+			}
+			hObjVec = hObjTmp;
+			gObj2Vec = gObj2Tmp;
+			vSize = gObj2Vec.size();
+		}
+		// if it is contained, and has exact same hits as main overlap, it is removed
+		public void setMerge(Gene mainObj, TreeSet <Integer> hitSet) {
+			if (hitSet.size()!=hitIdxSet.size()) return;
+			if (!(start>=mainObj.start && end<=mainObj.end)) return;
+			
+			for (int x : hitSet) {
+				if (!hitIdxSet.contains(x)) return;
+			}
+			isMerge=true;
+		}
+		
+		// if multiple hits-gene2, find the one that is last or closest
+		public void setGeneIndex(boolean inv, int last) {
+			if (vSize==1) return;
+			
+			for (int i=0; i<vSize; i++) {
+				if (inv  && gObj2Vec.get(i).rtnum==last) {vIdx=i; return;}
+				if (!inv && gObj2Vec.get(i).tnum==last) {vIdx=i; return;}
+			}
+			
+			int bestdiff= (inv) ?  (gObj2Vec.get(0).rtnum-last) : (gObj2Vec.get(0).tnum-last);
+			for (int i=1; i<vSize; i++) {
+				int diff = (inv) ? (gObj2Vec.get(i).rtnum-last) : (gObj2Vec.get(i).tnum-last);
+				if (diff<bestdiff) {
+					vIdx=i;
+					bestdiff=diff;
+				}
+			}
+			if (debug) System.out.println("best " + vIdx + " " + bestdiff + " " + tag + " hit#" + hObjVec.get(vIdx).hitnum);
+		}
+		public Hit getHitObj()   { return hObjVec.get(vIdx);}
+		public Gene getGeneObj() { return gObj2Vec.get(vIdx);}
+		
+		public void prt(String msg) {
+			if (gObj2Vec.size()<=0) {
+				System.out.println(msg + " " + tag + " TmpGN " + tnum + " idx " + idx + " " + bPosStrand);
+				return;
+			}
+			for (int i=0; i<vSize; i++) {
+				String h = "#" + hObjVec.get(i).hitnum;
+				String x = (hObjVec.get(i).bInv) ? "I" : " ";
+				String b = (hObjVec.get(i).blocknum>0) ? "B" : " "; 
+				String g1 = "GN1 " + tag;
+				String g2 = "GN2 " + gObj2Vec.get(i).tag;
+				String s = (i==0) ? "Run" : "   ";
+				String  hit = String.format("%s %3d %-10s Hit %-4s %s%s %-10s:: ", s, hObjVec.get(i).runnum, 
+						g1, h, x, b, g2);
+		
+				int g2num = (hObjVec.get(i).bInv) ? gObj2Vec.get(i).rtnum : gObj2Vec.get(i).tnum;
+				String gene = String.format("   TmpGN %4d %6d  V: %d,%d", tnum,  g2num, vSize, vIdx);
+				
+				System.out.println(msg + " " + hit + " " + gene + " " + idx + ":" + gObj2Vec.get(i).idx + " "+ chrs + 
+						" Mg"+isMerge+" A"+isMain+hitIdxSet.size());
+			}
+		}
+		
+		// gObj2Vec and hObjVec go together.
+		Vector <Gene> gObj2Vec = new Vector <Gene> ();
+		Vector <Hit> hObjVec =  new Vector <Hit> ();
+		
+		TreeSet <Integer> hitIdxSet = new TreeSet <Integer>();
+		boolean isMerge=false; // if hits are the same as another
+		boolean isMain=false;  // pseudo_hits.annot1_idx or anno2_idx
+		
+		int vSize=0, vIdx=0;
+		int tnum=0;  // set in runLoadFromDB
+		int rtnum=0; // set in runCreateFR for R
+		
+		String tag="";	// // e.g. Gene #999 (4 1,128bp) 
+		int idx, genenum, start, end;
+		boolean isOlap=false, bPosStrand=true;
 	}
 }
 

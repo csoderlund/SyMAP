@@ -2,7 +2,8 @@
 <body style="padding:20px;font-family:arial;">
 
 <h1>SyMAP Queries</h1>
-Except for the "Single genes", all queries return rows where there is a <i>hit pair</i>, i.e.
+For more information, see <a href="https://csoderlund.github.io/SyMAP/UserGuide.html#queries">User Guide</a>.
+<p>Except for the "Single genes", all queries return rows where there is a <i>hit pair</i>, i.e.
 aligned region between to two chromosomes from two projects. Most queries can be used in conjunction with other
 queries unless its specified otherwise.
 
@@ -77,26 +78,37 @@ pair will be shown; hence, the 'Gene Hit' columns will have two <tt>Yes</tt> val
 pair will be shown; hence, the 'Gene Hit' columns will have two <tt>No</tt> values.
 </table>
 
-<p><b>Collinear genes &gt;= N</b>
-<br>Only hits where at each one side of the pair is part of N aligning genes with no intervening
-non-aligning genes, hence, all values in the 'RunSize' column will be &gt;= N. For example,
-if a row has a 'Collinear' of 4 and you select "Show Synteny" for the row, at least one of the
-species will have 4 hits in a row, all of which hit genes. <i>Note: since release v5.1.8, an
-occasional collinear set is wrong: this will be fixed in v5.2.0 with an improved algorithm and display.</i>
+<p><b>Collinear size &gt;= N</b>
+<br>List all hits in collinear sets that have size &gt;= N (collinear column is formated Chr.Chr.Size.Set).
+See <a href="https://csoderlund.github.io/SyMAP/UserGuide.html#csets">User Guide</a>, which explains
+a collinear set and why some are only partially correct (i.e. often an overlapping gene causes one set to split into two).
 
-<p>NOTE: A collinear chain of genes is not the same as a SyMAP synteny block, because blocks
-require at least 7 anchors, and are allowed to have intervening genes which do not align.
+<p>NOTE: A collinear set is not the same as a SyMAP synteny block, because blocks
+require at least 7 anchors, and are allowed to have intervening genes which do not align; a collinear set
+is 2 or more genes connected by hits with no intervening non-hit genes.
 
 <p><b>Block</b>
 <br>This is a single block number. Use it in conjunction with the chromosome pull-downs. For example,
 if you select Chr 1 from the first project, Chr 2 from a second project, and enter block=3, you will see
 hits in block 1.2.3 from the two project chromosomes you selected.
 
-<p><b>Hit#</b>
-<br>Entering a valid Hit# number will return ONE row, where this cannot be combined with any other filters.
-This is the number that is shown in the "Hit#" column for the pair table results. The Hit# is the index into
-the database, so it can change if the database is rebuilt.
+<p><b>Collinear Set#</b>
+<br>All hits in a collinear set have the same set#, which is the last number of the collinear column.
+This can be used in conjunction with the chromosome pull-downs (as for blocks).
 
+<p><b>Hit#</b>
+<br>The hits are numbered for each chromosome pair, e.g. there will be a Hit#1 for every chromosome pair that
+has hits. The hit can align to multiple genes on either chromosome; but it will only return one hit pair for the Hit#.
+This can be used in conjunction with the chromosome pull-downs (as for blocks).
+
+<p><b>Gene#</b>
+<br>The Gene# column is formatted Chr.Gene#.suffix where the suffix may be blank; <i>only</i> enter
+the gene#. The results of this query are a bit strange, but gets you close to the gene of interest:
+<ul>
+<li>It will return all genes from all species <i>that have a hit</i> with the Gene#. It will return all hits to the Gene#.
+<li>If there are overlapping genes with the Gene#, it typically only returns one of the genes.
+<li>It will only return one side of the hit pair, the side that corresponds to the Gene#.
+</ul>
 <!--------------------------------------------------->
 <h2>4. Filter putative gene families (PgeneFs)</h2>
 This is only computed if the <b>Computed PgeneF</b> is checked.

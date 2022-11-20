@@ -1,4 +1,4 @@
 #!/bin/sh
 mem="8192m";
 echo ">>>> SyMAP build, query and view ($mem)     `date` <<<<"
-java -Xmx$mem -classpath java/jar/symap.jar symapCE.ProjectManagerFrame $@
+java -Xmx$mem -classpath java/jar/symap.jar symapCE.SyMAPmanager $@

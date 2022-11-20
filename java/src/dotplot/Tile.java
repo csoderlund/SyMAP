@@ -219,7 +219,7 @@ public class Tile implements DotPlotConstants {
 		}
 
 		 public String toString() {
-			 return new Integer(getNumber()).toString();
+			 return String.format("%d", getNumber()); // CAS520 new Integer(getNumber()).toString();
 		 }
 	}
 

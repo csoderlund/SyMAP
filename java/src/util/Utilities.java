@@ -1037,23 +1037,28 @@ public class Utilities {
     }
     
     // CAS518 return genenum.suffix or genenum
-    public static String getGenenum(String c1, String tag) { 	
-    	String x1 = (c1.startsWith("0") && c1.length()>1) ? c1.substring(1) : c1;
-    	if (tag==null || tag=="") return x1 +".?."; // older databases do not have tag
+    public static String makeChrGenenum(String c1, String tag) { 	
+    	String chr = (c1.startsWith("0") && c1.length()>1) ? c1.substring(1) : c1;
     	
+    	if (tag==null || tag=="") return chr +".?."; // older databases do not have tag
+    	
+    	String gn = getGenenumFromTag(tag);
+    	return chr + "." + gn;
+    }
+    static public String getGenenumFromTag(String tag) {
     	Pattern pat1 = Pattern.compile("Gene #(\\d+)([a-z]+[0-9]*)(.*)$");
 		Pattern pat2 = Pattern.compile("Gene #(\\d+)(.*)$");
 		Matcher m = pat1.matcher(tag);
 		if (m.matches()) {
 			String y = m.group(1);
 			String z = m.group(2);
-			return x1 + "." + y + "." + z;
+			return y + "." + z;
 		}
 		else { 
 			m = pat2.matcher(tag);
 			if (m.matches()) {
 				String y = m.group(1);
-				return x1 + "." + y + ".";
+				return y + ".";
 			}
 			else return tag;
 		}
@@ -1158,6 +1163,28 @@ public class Utilities {
     		return n;
     	}
     	else return dname;
+    }
+    // parse tag for collinear: CAS520 e.g. g2 c10.5 created in MapperPool.setPseudoPseudoData
+    static public int getCollinear(String tag) {
+    	try {
+    		String set = "";
+    		Pattern pat1 = Pattern.compile("g\\d+ c\\d+\\.(\\d+)");	
+    		Matcher m = pat1.matcher(tag);
+    		if (m.matches()) set = m.group(1);
+    		
+    		if (set=="") {
+	    		Pattern pat2 = Pattern.compile("g\\d+(b[1-9].*)"); // pre-520 e.g. g2b5 (g2b0 is false)
+	    		m = pat2.matcher(tag);
+	    		if (m.matches()) set = m.group(1);
+    		}
+    		try {
+    			int d = Integer.parseInt(set);
+    			return d;
+    		}
+    		catch (Exception e) {}
+    	}
+    	catch (Exception e) {ErrorReport.print(e, "Parsing tag " + tag); }
+    	return 0;
     }
     /*******************************************************
 	 * XXX Table maker CAS517 copied from TCW

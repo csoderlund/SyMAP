@@ -3,9 +3,11 @@
 <head>
 <title>SyMAP System Guide</title>
 <style>
+	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
 	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
 	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
-	a:link {text-decoration: none;color:#6666CC;}
 	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
@@ -65,8 +67,8 @@ The following discusses building a SyMAP v5 database.
 <ul>
 <li>For release v5.0.8, a document on trouble shooting <a href="MUMmer.html#mum"  class="ext" target="_blank">MUMmer</a> alignments failures has been added.
 <li>For release v5.1.1, 3D has been retired, but may still be usable (see <a href="3D.html"  class="ext" target="_blank">3D</a>).
-<li>For release v5.1.1, FPC (fingerprinted contigs)<sup>8,9</sup> has been semi-retired, though SyMAP still works for FPC. It is only discussed in the section on
-<a href="#fpc">FPC</a>.
+<li>For release v5.2.0,  FPC (fingerprinted contigs)<sup>8,9</sup> is totally retired from SyMAP; it is suggested to use the v5.1.0 release for FPC projects, which
+is available from Github. FPC is only discussed in the section on <a href="#fpc">FPC</a>.
 </ul>
 <h4>Contents</h4>
 <ul>
@@ -532,8 +534,7 @@ structure</a>, or you may create a new project via the SyMAP interface.
 <table>
 <tr><td style="vertical-align: text-top;">
 To create a new project via the SyMAP interface, press the <ttb>Add Project</ttb> button
-at the lower left. Enter the project name beside <ttl>Name:</ttl> and leave the <ttl>Type:</ttl>
-as <ttl>sequence</ttl>. The <ttb>Help</ttb>
+at the lower left. Enter the project name beside <ttl>Name:</ttl>; the <ttb>Help</ttb>
 button on the dialog provides further information.
 <p>&nbsp;
 <td>
@@ -812,6 +813,8 @@ This includes trouble shooting when MUMmer fails, and running MUMmer outside of 
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>FPC project</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+For working with FPC, it is suggested you use release v5.1.0 (it probably works with up to v5.1.9; does not work for post-v5.1.9 releases).
+<p>
 Untar <tt>data/fpc.tar.gz</tt> and restart <tt>symap</tt>.
 Align it to "Demo-Seq2" using the same steps as described <a href="#demo">above</a>, and
 explore the various displays.
@@ -826,7 +829,6 @@ beside "Type:" to "fpc".
 
 
 <h3>Working with FPC Files</h3>
-
 SyMAP can align genomes represented by an FPC physical
 map, by first aligning the BACs using BAC-end sequences or marker
 sequences.
@@ -858,29 +860,45 @@ The default locations are:
 The options for sequence files under <a href="#dir">directory structure</a> applies to FPC files using
 these default locations.
 <p>
-Since the usage of FPC-Seq is rare now, new releases are only quickly tested on the Demo FPC-Seq. If you
-run into any problems, please do not hesitate to contact symap@agcol.arizona.edu.
-
+If you run into any problems, please do not hesitate to contact symap@agcol.arizona.edu.
+<!------------------------------------------------------------------------->
 <a id="update"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>Update SyMAP</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-If you have been working with SyMAP and have existing projects, you can update to a new SyMAP version by:
+If you have been working with SyMAP and have existing projects, you can update to a new SyMAP version by
+downloading SyMAP, and:
 <ul>
-<li>Download SyMAP.
+<li>Put it in a permanent location and untar it.
+<li>Replace the <tt>/data</tt> and <tt>symap.config</tt> from your previous SyMAP location to this new location.
+<li>This approach is safest as it acquires all changes (e.g. scripts) except for changes to the demo files.
+</ul>
+or
+<ul>
 <li>Put it in a temporary location and untar it.
 <li>Move <tt>symap_5/java/jar/symap.jar</tt> to the <tt>java/jar</tt> location of your permanent SyMAP.
-</ul>
-Read the <a href="Release.html">Release notes</a> to see if there are any further changes; it will
-state at the beginning of any release what may need to be done.  Some examples are:
-<ul>
-<li>There may be a database update, which will prompt you that it is being done - let it do it. However,
-you generally cannot go back to the older SyMAP jar file once done.
-<li>New or update scripts in the <tt>/script</tt> directory that may be useful to you.
-<li>Occasionally you will need to reload the annotation and synteny to get new features, which is why it
-is wise to keep your previously run MUMmer files.
+<li>Check to
+see if there are any <tt>scripts</tt> or <tt>ext</tt> changes that need to also be copied over.
 </ul>
 
+<p>The following table shows what versions require action by the user.
+<table class=ty>
+<tr><td><b>Release</b><td><b>Changed files</b><sup>1</sup><td><b>Action by User</b>
+<tr><td>v5.2.0 <td><tt>symap</tt>,<tt>viewSymap</tt>,<tt>scripts/ConvertNCBI.*</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
+<tr><td>v5.1.9 to v5.1.7<td>Only the <tt>symap.jar</tt><td>See <sup>3</sup>. If you have customized hit or gene colors, you will need to reset them.
+</table>
+<ol>
+<li>Always get the new <tt>java/jar/symap.jar</tt>.
+<li>The <ttl>Alignment&Synteny</ttl> will use existing MUMmer files if they have not been removed.
+<li>To update to the latest Gene# assignment, it depends on what version you have:
+<table class=ty>
+<tr><td>v5.1.2 to v5.1.7<td>Execute <tt>./symap -z</tt>, then select <ttl>Reload Annotation</ttl>; the synteny algorithm does NOT need to be re-run.
+<tr><td>pre-v5.1.2<td>Delete database, <ttl>Reload Annotation</ttl> and run <ttl>Alignment&Synteny</ttl>. The database does not have
+to be deleted, but its cleaner to do so.
+</table>
+</ol>
+FPC is no longer supported from v5.2.0 forward. Earlier releases are still available from Github and AGCoL,
+which can be downloaded.
 <a id="alg"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>How SyMAP Works</h2>

@@ -20,7 +20,7 @@ public class PseudoPool extends DatabaseUser {
 		"       (SELECT name FROM xgroups WHERE idx=?) as name; ";
 
 	protected static final String ANNOT_QUERY =
-		"SELECT idx, type,name,start,end,strand, genenum, gene_idx, tag FROM pseudo_annot "
+		"SELECT idx, type,name,start,end,strand, genenum, gene_idx, tag, numhits FROM pseudo_annot " // CAS520 add numhits
 		+ " WHERE grp_idx=? ORDER BY type DESC"; 
 	
 	private ListCache pseudoCache;
@@ -88,7 +88,9 @@ public class PseudoPool extends DatabaseUser {
 							rs.getString(6),	/* strand	*/
 							rs.getInt(7),		/* genenum	*/
 							rs.getInt(8),		/* gene_idx */
-							rs.getString(9));	/* tag */
+							rs.getString(9),		/* tag */
+							rs.getInt(10)
+							);	/* tag */
 					
 					annoVec.add(annot);
 				}

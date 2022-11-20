@@ -20,7 +20,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import util.Utilities;
-import backend.Constants;
 import backend.SyProps;
 
 public class PairPropertyFrame extends JDialog {
@@ -56,7 +55,7 @@ public class PairPropertyFrame extends JDialog {
 		if (isGlobal) title="Global Pair Parameters";
 		else          title="Selected Pair Parameters";
 		
-		if (Utilities.pathExists(Constants.fpcDataDir)) hasFPC=true; // CAS511
+		// CAS520 always false now if (Utilities.pathExists(Constants.fpcDataDir)) hasFPC=true; // CAS511
 		
 		createMainPanel();
 		

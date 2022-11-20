@@ -96,7 +96,7 @@ public class Group implements Comparable<Group> {
 	public int getSize() { return size; }
 	public float getScaleFactor() { return scaleFactor; }
 	public int getEffectiveSize() { return (int)(size*scaleFactor); }
-	public String toString() { return new Integer(id).toString(); }
+	public String toString() { return String.format("%d",id); } // CAS520 Integer.toString
 
 	public boolean equals(Object obj) { 
 		return obj instanceof Group && ((Group)obj).id == id;

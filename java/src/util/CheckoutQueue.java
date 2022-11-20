@@ -35,7 +35,7 @@ public class CheckoutQueue {
 		objects.clear();
 		counts.clear();
 		objects.addAll(contents);
-		while (counts.size() < objects.size()) counts.add(new Integer(0));
+		while (counts.size() < objects.size()) counts.add(0); // CAS520 Integer
 	}
 
 	public synchronized void stop() {
@@ -52,7 +52,7 @@ public class CheckoutQueue {
 		int ind = objects.indexOf(obj);
 		if (ind < 0) {
 			objects.add(obj);
-			counts.add(new Integer(0));
+			counts.add(0);
 		}
 		else {
 			counts.set(ind,decrease(counts.get(ind)));
@@ -118,10 +118,11 @@ public class CheckoutQueue {
 
 	private Integer decrease(Object obj) {
 		int i = ((Integer)obj).intValue();
-		return new Integer(i > 0 ? i-1 : 0);
+		return (i > 0 ? i-1 : 0); // CAS520
 	}
 
 	private Integer increase(Object obj) {
-		return new Integer( ((Integer)obj).intValue() + 1 );
+		return (Integer)obj + 1;
+		// CAS520 return new Integer( ((Integer)obj).intValue() + 1 );
 	}
 }

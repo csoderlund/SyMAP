@@ -332,30 +332,37 @@ public class DBdata {
 			
 			// from hit table - same values added for each side of hit - if anno on both sides
 			hitIdx = 		rs.getInt(Q.HITIDX);
+			hitNum = 		rs.getInt(Q.HITNUM);
 			
 			spIdx[0] = 		rs.getInt(Q.PROJ1IDX);
 			chrIdx[0] = 	rs.getInt(Q.GRP1IDX);
 			hstart[0] = 	rs.getInt(Q.HIT1START);
 			hend[0] = 		rs.getInt(Q.HIT1END);
 			hlen[0] =		Math.abs(hend[0]-hstart[0])+1;
+			annotIdx[0]	= 	rs.getInt(Q.ANNOT1IDX);
 			
 			spIdx[1] = 		rs.getInt(Q.PROJ2IDX);
 			chrIdx[1] = 	rs.getInt(Q.GRP2IDX);  
 			hstart[1] = 	rs.getInt(Q.HIT2START); 
 			hend[1] = 		rs.getInt(Q.HIT2END);   
 			hlen[1] = 		Math.abs(hend[1]-hstart[1])+1;
+			annotIdx[1]	= 	rs.getInt(Q.ANNOT2IDX);
 			
-			runSize = 		rs.getInt(Q.COLINEAR);
+			runSize = 		rs.getInt(Q.COSIZE);
+			runNum = 		rs.getInt(Q.CONUM);
 			blockNum =		rs.getInt(Q.BNUM);
 			blockScore =	rs.getInt(Q.BSCORE);
 			pid	=			rs.getInt(Q.PID);
 			psim	=		rs.getInt(Q.PSIM);
 			hcnt	=		rs.getInt(Q.HCNT);
 			if (hcnt==0) hcnt=1;				// CAS519 makes more sense to be 1 merge instead of empty
+			String s	=	rs.getString(Q.HST);
+			hst = (s.contains("+") && s.contains("-")) ? "!=" : "=";
 			
 			// from anno table - first half of hit
 			int annoGrpIdx = rs.getInt(Q.AGIDX);	// grpIdx, so unique; same as chrIdx[0|1]
-			if (annoGrpIdx > 0) { 					// can be hit with no anno
+			int annoIdx = rs.getInt(Q.AIDX);
+			if (annoGrpIdx > 0 && (annoIdx==annotIdx[0] || annoIdx==annotIdx[1])) { // CAS520 all annot_idx,hit_idx loaded; make sure best
 				int x = (annoGrpIdx==chrIdx[0]) ? 0 : 1; 
 				
 				gstart[x] =		rs.getInt(Q.ASTART);		// CAS519 add these 4 columns
@@ -366,7 +373,6 @@ public class DBdata {
 				annotStr[x] =	rs.getString(Q.ANAME);
 				geneNum[x] = 	rs.getString(Q.AGENE); 		// CAS514 add; CAS518 change genenum to tag
 				
-				int annoIdx = rs.getInt(Q.AIDX);
 				if (x==0) annoSet0.add(annoIdx); // multiple anno's for same hit
 				else      annoSet1.add(annoIdx);
 			}
@@ -378,9 +384,10 @@ public class DBdata {
 	 */
 	private void loadHitMerge(ResultSet rs) {
 		try {
-			int annoGrpIdx = rs.getInt(Q.AGIDX);
 			int annoIdx = rs.getInt(Q.AIDX);  
+			if (annoIdx!=annotIdx[0] && annoIdx!=annotIdx[1]) return; // CAS520 get best
 			
+			int annoGrpIdx = rs.getInt(Q.AGIDX);
 			int x = (annoGrpIdx==chrIdx[0]) ? 0 : 1; // goes with 1st or 2nd half of hit?
 			
 			gstart[x] =		rs.getInt(Q.ASTART);		// CAS519 add these 4 columns
@@ -413,7 +420,7 @@ public class DBdata {
 			gend[0] =		rs.getInt(Q.AEND);
 			glen[0] = 		Math.abs(gend[0]-gstart[0])+1;
 			gstrand[0] = 	rs.getString(Q.ASTRAND); // CAS519 add
-			geneNum[0] = 	rs.getString(Q.AGENE);  // CAS514 add
+			geneNum[0] = 	rs.getString(Q.AGENE);   // CAS514 add
 		}
 		catch (Exception e) {ErrorReport.print(e, "Read single");}
 	}
@@ -430,10 +437,10 @@ public class DBdata {
 
 			if (blockNum>0) blockStr = Utilities.blockStr(chrNum[0], chrNum[1], blockNum); // CAS513 use blockStr
 			if (runSize>0)  {
-				runStr = Utilities.blockStr(chrNum[0], chrNum[1], runSize); // CAS517 add chrs
-				if (runNum>0) runStr += "." + runNum;
+				collinearStr = Utilities.blockStr(chrNum[0], chrNum[1], runSize); // CAS517 add chrs;
+				if (runNum>0)  collinearStr += "." + runNum; 					  // CAS520 add runNum
 			}
-			if (geneNum[x]!=Q.empty) geneNum[x] = Utilities.getGenenum(chrNum[x], geneNum[x]); // CAS518 formatted
+			if (geneNum[x]!=Q.empty) geneNum[x] = Utilities.makeChrGenenum(chrNum[x], geneNum[x]); // CAS518 formatted
 			
 			/******* Anno Keys ******************/
 			if (!annoKeys.containsKey(spIdx[x])) continue; // If this is index 0, then still need 1
@@ -443,8 +450,8 @@ public class DBdata {
 			
 			String [] valList = new String [cnt]; // if n keys, then n values
 			for (int i=0; i<cnt; i++) valList[i]="";
-			
-			if (annotStr[x].equals("")) {
+	
+			if (annotStr[x].equals("")) { 
 				for (int i=0; i<cnt; i++) valList[i]="";
 			}
 			else {
@@ -558,15 +565,16 @@ public class DBdata {
 		if (!isSingle) {
 			if (blockNum<=0)    row.add(Q.empty);  else row.add(blockStr);
 			if (blockScore<=0)  row.add(Q.empty);  else row.add(blockScore);
-			if (runSize<0)      row.add(Q.empty);  else row.add(runStr);
+			if (runSize<0)      row.add(Q.empty);  else row.add(collinearStr);
 			
 			if (pgenef<=0)      row.add(Q.empty);  else row.add(pgenef);
 			if (pgfsize<=0)     row.add(Q.empty);  else row.add(pgfsize);
 			
-			if (hitIdx<=0)      row.add(Q.empty);  else row.add(hitIdx);
+			if (hitNum<=0)      row.add(hitIdx);   else row.add(hitNum);
 			if (pid<=0)			row.add(Q.empty);  else row.add(pid);
 			if (psim<=0)		row.add(Q.empty);  else row.add(psim);
 			if (hcnt<=0)		row.add(Q.empty);  else row.add(hcnt);
+			if (hst.contentEquals(""))		row.add(Q.empty);  else row.add(hst); // CAS520 add column
 		}
 		// chr, start, end; CAS519 add gene&hit for pairs
 		int cntCol = FieldData.getSpColumnCount(isSingle);
@@ -630,8 +638,7 @@ public class DBdata {
 	public int    getSpIdx(int x) 	{return spIdx[x];}
 	public String getChrNum(int x) 	{return chrNum[x];}
 	public int    getChrIdx(int x) 	{return chrIdx[x];}
-	
-	public int getHitIdx() { return hitIdx;}
+	public int 	  getHitIdx() 		{return hitIdx;}
 	public int [] getCoords() {
 		int [] x = {hstart[0], hend[0], hstart[1], hend[1]}; // CAS519 hit
 		return x;
@@ -651,8 +658,9 @@ public class DBdata {
 	private String [] annotStr =	 {"", ""};
 	
 // hit
-	private int hitIdx = -1;
-	private int pid = -1, psim = -1, hcnt=-1; // CAS516 add; 
+	private int hitIdx = -1, hitNum = -1;
+	private int pid = -1, psim = -1, hcnt=-1; 	// CAS516 add; 
+	private String hst="";						// CAS520 add column
 	private int [] spIdx =  {Q.iNoVal, Q.iNoVal};	
 	private int [] chrIdx = {Q.iNoVal, Q.iNoVal};		
 	private int [] gstart = {Q.iNoVal, Q.iNoVal};  // CAS519 add all g-fields. 
@@ -663,10 +671,11 @@ public class DBdata {
 	private int [] hend = 	{Q.iNoVal, Q.iNoVal}; 
 	private int [] hlen = 	{Q.iNoVal, Q.iNoVal};  // CAS516 add
 	private String [] geneNum = {Q.empty, Q.empty}; // CAS514 add; CAS518 chr.gene#.suffix
+	private int [] annotIdx = {Q.iNoVal, Q.iNoVal}; // CAS520 add because was not getting annot1_idx and annot2_idx
 	
 // block
 	private int blockNum=-1, blockScore=-1, runSize=-1, runNum=-1;
-	private String blockStr = Q.empty, runStr = Q.empty;
+	private String blockStr = Q.empty, collinearStr = Q.empty;
 	
 // Other
 	private int rowNum=0;				// this rowNum is not used in table, but is a placeholder and used in debugging

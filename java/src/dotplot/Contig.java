@@ -31,9 +31,7 @@ public class Contig {
 		return obj instanceof Contig && ((Contig)obj).id == id;
 	}
 
-	public String toString() {
-		return new Integer(id).toString();
-	}
+	public String toString() { return String.format("%d",id);} // CAS520 new Integer(id).toString();
 
 	public int getID() { return id; }
 	public int getNumber() { return number; }

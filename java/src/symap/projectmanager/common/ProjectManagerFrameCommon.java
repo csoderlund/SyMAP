@@ -348,10 +348,10 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					
 					Utilities.checkCreateDir(Constants.logDir, true /* bPrt */);
 					
-					// CAS511 quit creating data/seq, data/fpc, etc on startup
+					// CAS511 quit creating data/seq, data/fpc, etc on startup; CAS520 gives message on fpcType
 				
 					loadProjectsFromDisk(projects, strDataPath,  Constants.seqType);
-					loadProjectsFromDisk(projects, strDataPath,  Constants.fpcType);
+					loadProjectsFromDisk(projects, strDataPath,  Constants.fpcType); 
 				}
 			}
 			
@@ -977,7 +977,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				}
 			});
 
-			btnAllQueryView = new JButton("SyMAP Queries");
+			btnAllQueryView = new JButton("Queries"); // CAS520 SyMAP Queries moves up a line
 			btnAllQueryView.setVisible(true);
 			btnAllQueryView.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -1004,7 +1004,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			JLabel lbl1 = new JLabel("Alignment & Synteny");
 			JLabel lbl2 = new JLabel("Display for Selected Pair");
 			JLabel lbl3 = new JLabel("Display for All Pairs");
-			JLabel lbl4 = new JLabel("For Seq-to-Seq Pairs");
+			JLabel lbl4 = new JLabel("                     "); // CAS520 change Seq-to-Seq to blank
 			Dimension d = lbl2.getPreferredSize();
 			lbl1.setPreferredSize(d);
 			lbl3.setPreferredSize(d);
@@ -1059,10 +1059,10 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			mainPanel.add( createHorizPanel( new Component[] {lbl2, btnSelDotplot, btnSelBlockView, btnSelCircView, btnSelSummary }, 5) );
 
 			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );
-			mainPanel.add( createHorizPanel( new Component[] {lbl3, btnAllChrExp, btnAllDotplot }, 5) );
+			mainPanel.add( createHorizPanel( new Component[] {lbl3, btnAllChrExp, btnAllDotplot, btnAllQueryView }, 5) );
 
 			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );
-			mainPanel.add( createHorizPanel( new Component[] {lbl4, btnAllQueryView }, 5) );
+			mainPanel.add( createHorizPanel( new Component[] {lbl4 }, 5) );
 		} else {
 			mainPanel.add( Box.createVerticalGlue() );
 			mainPanel.add( createTextArea("") ); // kludge to fix layout problem			
@@ -1188,7 +1188,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					
 						if (success && !Cancelled.isCancelled())  {
 							AnnotLoadMain annot = new AnnotLoadMain(pool, progress,mProps);
-							success = annot.run( projName );
+							success = annot.run( projName);
 						}
 						else { // CAS500
 							System.err.println("Cancel load");
@@ -1251,7 +1251,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 						
 							if (success && !Cancelled.isCancelled())  {
 								AnnotLoadMain annot = new AnnotLoadMain(pool, progress,mProps);
-								success = annot.run( projName );
+								success = annot.run( projName);
 							}
 						}
 					}
@@ -1317,7 +1317,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					
 					if ( project.isPseudo() ) {
 						AnnotLoadMain annot = new AnnotLoadMain(pool, progress, mProps);
-						success = annot.run( projName );
+						success = annot.run( projName);
 					}
 				}
 				catch (Exception e) {
@@ -1395,8 +1395,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		public void mouseClicked(MouseEvent e) {
 			if (!SyMAP.GENEN_ONLY) { 
 				if (!progressConfirm2("Reload annotation", "Reload annotation" +
-						"\n\nYou will need to re-run the synteny computations for this project, " +
-						"\nbut not the alignments.")) return; // CAS512 remove MUMmer and BLAT
+						"\n\nYou will need to re-run the synteny computations for this project," +      // CAS520 do not remove synteny
+						"\nany existing alignment files will be used.")) return; // CAS512 remove MUMmer and BLAT
 			}
 			else { // CAS519
 				if (!progressConfirm2("Reload annotation", "Reload annotation" +
@@ -1691,7 +1691,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					
 					if (success && !Cancelled.isCancelled()) {
 						AnnotLoadMain annot = new AnnotLoadMain(pool, progress,mProps);
-						success = annot.run( projName );
+						success = annot.run( projName);
 					}
 				}
 				catch (Exception e) {
@@ -2302,12 +2302,12 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		
 		// Get loaded projects
 		UpdatePool pool = new UpdatePool(dbReader);
-        ResultSet rs = pool.executeQuery("SELECT idx, name, type, loaddate FROM projects");
+        ResultSet rs = pool.executeQuery("SELECT idx, name, type, annotdate FROM projects");
         while ( rs.next() ) {
         	int nIdx = rs.getInt(1);
         	String strName = rs.getString(2);
         	String strType = rs.getString(3);
-        	String strDate = rs.getString(4); // CAS513 add
+        	String strDate = rs.getString(4);       // CAS513 add
         	projects.add( new Project(nIdx, strName, strType, strDate) );
         }
         rs.close();
@@ -2386,6 +2386,10 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	
 		if (root == null || !root.isDirectory()) {
 			// CAS511 System.err.println("Missing directory " + root.getName());
+			return;
+		}
+		if (dirName.contentEquals(Constants.fpcType)) { // CAS520
+			System.err.println("FPC is no longer supported starting with v5.2.0; ignore data/fpc directory");
 			return;
 		}
 		for (File f : root.listFiles()) {
@@ -2533,6 +2537,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			pnlMainPanel.add(Box.createVerticalStrut(10));
 			pnlMainPanel.add(tempRow);
 			
+/** CAS520 remove last of visible FPC 
 			tempRow = new JPanel();
 			tempRow.setLayout(new BoxLayout(tempRow, BoxLayout.LINE_AXIS));
 			tempRow.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -2544,7 +2549,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			
 			pnlMainPanel.add(Box.createVerticalStrut(20));
 			pnlMainPanel.add(tempRow);
-			
+**/
 			tempRow = new JPanel();
 			tempRow.setLayout(new BoxLayout(tempRow, BoxLayout.LINE_AXIS));
 			tempRow.setAlignmentX(Component.CENTER_ALIGNMENT);

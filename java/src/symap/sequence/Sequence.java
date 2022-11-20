@@ -49,6 +49,7 @@ public class Sequence extends Track {
 	public static final boolean DEFAULT_FLIPPED 		= false; 
 	public static final boolean DEFAULT_SHOW_RULER      = true;
 	public static final boolean DEFAULT_SHOW_GENE       = true;  
+	public static final boolean DEFAULT_SHOW_GENE_LINE  = false;  
 	public static final boolean DEFAULT_SHOW_FRAME      = true;
 	public static       boolean DEFAULT_SHOW_ANNOT  	= false; 
 	public static final boolean DEFAULT_SHOW_SCORE_LINE	= true;  
@@ -77,9 +78,9 @@ public class Sequence extends Track {
 	private static final double MAX_DEFAULT_BP_PER_PIXEL;
 	private static final double PADDING = 100; 
 	private static final double ANNOT_WIDTH;
-	private static final String HOVER_MESSAGE = 
-			"Right-click on gene annotation for popup of description."
-		+ "\nRight-click in rectangle space for menu."; 
+	private static final String HOVER_MESSAGE =  
+					"\nHover on gene or right-click on gene for popup of full description.\n";
+	
 	static {
 		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/sequence.properties"));
 	
@@ -103,7 +104,7 @@ public class Sequence extends Track {
 	}
 
 	protected int group;
-	protected boolean showRuler, showGene, showFrame, showAnnot;
+	protected boolean showRuler, showGene, showFrame, showAnnot, showGeneLine;
 	protected boolean showScoreLine, showScoreValue; 
 	protected boolean showGap, showCentromere;
 	protected boolean showFullGene;
@@ -162,6 +163,7 @@ public class Sequence extends Track {
 		
 		showRuler      = DEFAULT_SHOW_RULER;
 		showGene       = DEFAULT_SHOW_GENE;
+		showGeneLine       = DEFAULT_SHOW_GENE_LINE;
 		showFrame      = DEFAULT_SHOW_FRAME;
 		showAnnot      = DEFAULT_SHOW_ANNOT;
 		showScoreLine  = DEFAULT_SHOW_SCORE_LINE;   
@@ -330,7 +332,14 @@ public class Sequence extends Track {
 		}
 		return false;
 	}
-
+	public boolean showGeneLine(boolean show) {// CAS520 add
+		if (showGeneLine != show) {
+			showGeneLine = show;
+			clearTrackBuild();
+			return true;
+		}
+		return false;
+	}
 	public boolean showFullGene(boolean show) {
 		if (showFullGene != show) {
 			showFullGene = show;
@@ -466,10 +475,12 @@ public class Sequence extends Track {
 			
 		// XXX Sorted by genes (genenum, start), then exons (see PseudoData.setAnnotations)
 	    for (Annotation annot : allAnnoVec) {
-	    	if (((annot.isGene() || annot.isExon()) && !showGene) || (annot.isGap() && !showGap)
-			    || (annot.isCentromere() && !showCentromere) || (annot.isFramework() && !showFrame)){
+	    	if (((annot.isGene() || annot.isExon()) && !showGene) 
+	    			|| (annot.isGap() && !showGap)
+	    			|| (annot.isCentromere() && !showCentromere) 
+	    			|| (annot.isFramework() && !showFrame)){
 					annot.clear();
-					return true;
+					continue; // CAS520 v518 bug, does not display track if, return true;
 			}
 	    	
 			double dwidth = rect.width, hwidth=0; // displayWidth, hoverWidth for gene
@@ -487,8 +498,9 @@ public class Sequence extends Track {
 			}
 			if (offset>0 && isRight) offset = -offset;
 			
+		/****/
 			annot.setRectangle(centRect, start.getBPValue(), end.getBPValue(),
-					bpPerPixel, dwidth, hwidth, flipped, offset);
+					bpPerPixel, dwidth, hwidth, flipped, offset, showGeneLine); // CAS520 add showGeneLine
 			
 			// Setup yellow description
 			if (annot.isGene() && showAnnot && annot.isVisible()) { // CAS517 added isGene
@@ -605,7 +617,8 @@ public class Sequence extends Track {
 	}
 	/*******************************************************
 	 * It is run on every build, so needs to be fast, but is a heuristic
-	 * CAS519 simplified algo
+	 * CAS519 simplified algo; uses genenum to find set of overlapping, 
+	 * but does not use genenum suffix (uses same overlap check as in AnnoLoadPost.computeGeneNum)
 	 */
 	private void buildPlace(Vector <Annotation> numList) {
 		try {

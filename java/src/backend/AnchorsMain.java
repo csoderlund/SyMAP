@@ -10,6 +10,9 @@ import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.util.TreeSet;
 import java.util.Vector;
+
+import symap.SyMAP;
+
 import java.util.Properties;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -174,7 +177,7 @@ public class AnchorsMain
 					
 					uploadHit(hit, p1, p2); // enters hit into database
 					if (++numLoaded % 5000 == 0)
-						System.out.print(numLoaded + " loaded...\r"); // CAS42 1/1/18 was log.msg
+						System.err.print(numLoaded + " loaded...\r"); // CAS42 1/1/18 was log.msg
 				}
 			}
 			pool.finishBulkInserts();
@@ -200,16 +203,14 @@ public class AnchorsMain
 			if (p1.isSeq()) {
 				Utils.uploadStats(pool, pairIdx, p1.idx, p2.idx);
 			}	
+			// CAS517 move from SyntenyMain - CAS520 moved back to SyntenyMain, so hits# are block based
 			
-			// CAS517 move from SyntenyMain - there is no reason to wait until after synteny computation
-			if (p1.isSeq() && p2.isSeq() && p1.idx != p2.idx) {
-				AnchorsPost obj = new AnchorsPost(pairIdx, p1, p2, pool, log);
-				obj.setGeneRunCounts();
-			}
+			pool.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + p1.getIdx());
+			pool.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + p2.getIdx());
+			
 			Utils.timeMsg(log, startTime, "Anchors");
 		}
-		catch (OutOfMemoryError e)
-		{
+		catch (OutOfMemoryError e) {
 			System.out.println("\n\nOut of memory! Edit the symap launch script and increase the memory limit ($maxmem).\n\n");
 			System.exit(0);
 		}		
@@ -276,7 +277,7 @@ public class AnchorsMain
 			log.msg("Alignment files in " + alignDir);
 			
 			// process all aligned files in directory
-			log.msg("Scan files to create clusters:"); 	
+			log.msg("Scan files to create merged hits:"); 	
 			int nHitsScanned = 0;
 			TreeSet<String> skipList = new TreeSet<String>();
 			File[] fs = dh.listFiles();
@@ -1066,9 +1067,9 @@ public class AnchorsMain
 	**/
 	private void addMirroredHits() throws Exception
 	{
-		// Create the reflected hits for self-alignment cases
-		pool.executeUpdate("insert into pseudo_hits (select 0,pair_idx,proj1_idx,proj2_idx,grp2_idx,grp1_idx,evalue,pctid," + 
-				"score,strand,start2,end2,start1,end1,target_seq,query_seq,gene_overlap,countpct,cvgpct,idx,annot2_idx,annot1_idx,runsize " + 
+		// Create the reflected hits for self-alignment cases; CAS520 add hitnum
+		pool.executeUpdate("insert into pseudo_hits (select 0, hitnum, pair_idx,proj1_idx,proj2_idx,grp2_idx,grp1_idx,evalue,pctid," + 
+				"score,strand,start2,end2,start1,end1,target_seq,query_seq,gene_overlap,countpct,cvgpct,idx,annot2_idx,annot1_idx,runnum, runsize " + // CAS520 add  runnum
 				" from pseudo_hits where pair_idx=" + pairIdx + " and refidx=0 and start1 != start2 and end1 != end2)"	
 			);
 		pool.executeUpdate("update pseudo_hits as ph1, pseudo_hits as ph2 set ph1.refidx=ph2.idx where ph1.idx=ph2.refidx " +
@@ -1082,7 +1083,7 @@ public class AnchorsMain
 	private void hitAnnotations(Project p1, Project p2) throws SQLException
 	{
 		Vector<Hit> newHits = getUploadedHits(p1);
-		log.msg("Load hits with annotation overlaps ");
+		log.msg("Load hits to gene annotations ");
 		
 		/////////// p2 (always seq)
 		HashMap<String,Integer> counts2 = new HashMap<String,Integer>();
@@ -1092,7 +1093,7 @@ public class AnchorsMain
 			Group g = p2.getGrpByIdx(h.target.grpIdx);
 			g.addAnnotHitOverlaps(h,h.target,pool,counts2);
 			count++;
-			if (count % 5000 == 0) System.out.print(count + " checked...\r"); 
+			if (count % 5000 == 0) System.err.print(count + " checked...\r"); 
 		}
 		if (counts2.keySet().size() > 0) {
 			if (counts2.size()==1) {
@@ -1117,7 +1118,7 @@ public class AnchorsMain
 				Group g = p1.getGrpByIdx(h.query.grpIdx);
 				g.addAnnotHitOverlaps(h,h.query,pool,counts1);
 				count++;
-				if (count % 5000 == 0) System.out.print(count + " checked...\r"); // CAS42 1/1/18 changed from log
+				if (count % 5000 == 0) System.err.print(count + " checked...\r"); // CAS42 1/1/18 changed from log
 			}
 			
 			if (counts1.keySet().size() > 0) {

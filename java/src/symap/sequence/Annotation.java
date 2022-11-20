@@ -64,8 +64,8 @@ public class Annotation {
 	private static final float crossWidth; // the width of the line in the cross
 	static {
 		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/annotation.properties"));
-		
 		crossWidth = (float) props.getDouble("crossWidth");
+		
 		geneColor = props.getColor("geneColor");
 		frameColor = props.getColor("frameColor");
 		gapColor = props.getColor("gapColor");
@@ -81,13 +81,14 @@ public class Annotation {
 	private boolean bStrandPos;
 	private int gene_idx=0;  // If this is an exon, it is the gene_idx that it belongs to
 	private int annot_idx=0; 
-	private int genenum=0;	 // CAS517 for sorting in PseudoData
+	private int genenum=0;	 	// CAS517 for sorting in PseudoData
 	
 	private Rectangle2D.Double rect;
 	private Rectangle2D.Double hoverGeneRect; // CAS515 so hover cover for gene covers full width of exon
 	private TextBox descBox=null; // CAS503
 	private String exonList=null; // CAS512 add ExonList to popup
 	private String hitList=null;  // CAS517 add HitList to popup
+	private boolean bGeneLineOpt=false; // CAS520 show line at start of gene option
 	
 	/**
 	 * Creates a new Annotation instance setting the description values, color, and draw method based on type.
@@ -97,7 +98,7 @@ public class Annotation {
 	 * How insane is that - that is what OO is teaching very smart students as good programming
 	 */
 	public Annotation(String name, String annot_type, int start, int end, String strand, 
-			String tag, int gene_idx, int idx, int genenum) {
+			String tag, int gene_idx, int idx, int genenum, int numhits) {
 		this.type = getType(annot_type);
 		this.start = start;
 		this.end = end;
@@ -107,14 +108,19 @@ public class Annotation {
 		this.annot_idx = idx;
 		this.genenum = genenum;
 	
-		// see backend.AnnotLoadPost.computeTags for formatting; e.g Gene #500a (N 100bp)
-		// CAS515 merge tag and genenum in a more readable format; CAS517 add suffix; CAS518 add total exon length (no change to parsing)
+		// see backend.AnnotLoadPost.computeTags for formatting; e.g Gene #500a (N Mbp) where N=#exons and M=exon length
+		// CAS512 add pseudo_annot.gene_idx so exon is mapped to the gene; need reload annot
+		// CAS515 merge tag and genenum in a more readable format; 
+		// CAS517 add genenum and suffix to tag in AnnotPost; 
+		// CAS518 add total exon length (no change to parsing)
+		// CAS520 add h numhits, then removed because hard to see in display.
 		tagGeneN="";
 		if (genenum>0) { 
 			String [] tok = tag.split("\\(");	
 			if (tok.length==2) {
-				tagGeneN = (tok[0].contains("#")) ? tok[0] : "Gene #"+genenum; // pre-v517 did not include genenum
-				this.tag = tagGeneN +  " (Exons " + tok[1];	 					// -> Add 'Exon' for display
+				tagGeneN = (tok[0].contains("#")) ? tok[0] : "Gene #" + genenum; 
+				this.tag = tagGeneN;	 			   
+				this.tag += " (#Exons=" + tok[1];
 			}
 			else   {
 				this.tag = tagGeneN = "Gene #" + genenum;
@@ -131,8 +137,10 @@ public class Annotation {
 	public void setRectangle(
 			Rectangle2D boundry,      // center of chromosome rectangle (rect.x+1,rect.y,rect.width-2,rect.height)
 			long startBP, long endBP, // display start and end of chromosome 
-			double bpPerPixel, double dwidth, double hoverWidth, boolean flip, int offset) // CAS517 offset 
+			double bpPerPixel, double dwidth, double hoverWidth, boolean flip, 
+			int offset, boolean bGeneLineOpt) // CAS517 offset 
 	{
+		this.bGeneLineOpt=bGeneLineOpt;
 		double x, y, height;
 		double chrX=boundry.getX(), upChrY=boundry.getY(), chrHeight=boundry.getHeight(), chrWidth=boundry.getWidth();
 		double lowChrY = upChrY + chrHeight; // lowest chromosome edge
@@ -155,7 +163,7 @@ public class Annotation {
 		height = (te - ts) / bpPerPixel;
 		if (flip) y -= height; 
 		
-		x = chrX + (chrWidth - dwidth)/2; // set x before modify width
+		x = chrX + (chrWidth - dwidth)/2; // set x before modify width 
 		if (offset!=0) x = x-offset;	 // CAS517 for overlapping genes, 0 for not
 		
 		if (chrWidth < dwidth) dwidth = chrWidth;
@@ -314,6 +322,17 @@ public class Annotation {
 		else { // TICK or RECT 
 			if (rect.height >= 2) { 			// Only draw full rectangle if it is large enough to see.
 				g2.fillRect((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
+				
+				if (type==GENE_INT && bGeneLineOpt) {// CAS520 add black line on top of gene to distinguish closely placed genes
+					g2.setColor(Color.BLACK);
+					Stroke oldstroke = g2.getStroke();
+					g2.setStroke(new BasicStroke(2)); 
+					
+					int w = 10; // 15=width of exon from sequence.properties
+					g2.drawLine((int)rect.x-w, (int)rect.y, ((int)rect.x + w+3), (int)rect.y);
+					g2.setStroke(oldstroke);
+				}
+		
 			}
 			else 								// Else draw as line 
 				g2.drawLine((int)rect.x, (int)rect.y, (int)rect.x + (int)rect.width, (int)rect.y); 

@@ -14,6 +14,7 @@ import java.util.TreeMap;
 
 import javax.swing.JFrame;
 
+import symap.SyMAP;
 import symap.projectmanager.common.Project;
 import symap.projectmanager.common.ProjectManagerFrameCommon;
 import util.Cancelled;
@@ -165,7 +166,8 @@ public class AlignProjs extends JFrame {
 					UpdatePool pool = new UpdatePool(dbReader);
 					pool.tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null); 
 					
-					pool.executeUpdate("update pairs set aligned=1,aligndate=NOW(), params='" + params + "'"
+					pool.executeUpdate("update pairs set aligned=1, aligndate=NOW(), "
+						+ "syver='" + SyMAP.VERSION + "', params='" + params + "'" // CAS520 add syver
 						+ " where (proj1_idx=" + p1.getID() + " and proj2_idx=" + p2.getID() 
 						+ ") or   (proj1_idx=" + p2.getID() + " and proj2_idx=" + p1.getID() + ")"); 
 				}

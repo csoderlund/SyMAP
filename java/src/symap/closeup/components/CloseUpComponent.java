@@ -298,14 +298,14 @@ public class CloseUpComponent extends JComponent {
 			// It fit in an existing layer
 			if (layerNum < layers.size()) {
 				layers.get(layerNum).extend(start, end);
-				map.put(id, new Integer(layerNum));
+				map.put(id, layerNum); // CAS520 new Integer
 				h.setLayer(layerNum);
 				continue;
 			}
 			
 			// Otherwise, make new layer
 			layers.add(new Layer(start, end));
-			map.put(id, new Integer(layerNum));
+			map.put(id, layerNum);// CAS520 new Integer
 			h.setLayer(layerNum);
 		}
 		

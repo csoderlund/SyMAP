@@ -1,5 +1,8 @@
 package symap.mapper;
 
+/****************************************
+ * This does nothing but move stuff around
+ */
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -51,32 +54,32 @@ public class PseudoPseudoData extends AbstractHitData implements SyMAPConstants 
 		}
 		return true;
 	}
-    // Set in MapperPool.setPseudoPseudoData
-	static public HitData getHitData(long id, String name,
-			String strand, int repetitive, int block, double evalue,
+    // Update HitData Set in MapperPool.setPseudoPseudoData 
+	static public HitData getHitData(long id, int hitnum,
+			String strand, int repetitive, int block, 
 			double pctid, int start1, int end1, int start2, int end2,
 			int overlap, 
 			String query_seq, String target_seq, int pSim, int nMergeHits, double corr, String tag,
 			String chr1, String chr2) // CAS517 add two chrNames
 	{
-		return new PseudoHitData(id, name, strand, 
-				repetitive == 0 ? false : true, block,
-				evalue, pctid, start1, end1, start2, end2, overlap,
+		return new PseudoHitData(id, hitnum, strand, 
+				false, block,
+				pctid, start1, end1, start2, end2, overlap,
 				query_seq, target_seq, pSim, nMergeHits, corr, tag, chr1, chr2);
 	}
 
-	// wrapper class is required because HitData is abstract
+	// // Update HitData Set wrapper class is required because HitData is abstract
 	public static class PseudoHitData extends HitData {
-		public PseudoHitData(long id, String name,
+		public PseudoHitData(long id, int hitnum,
 				String strand, boolean repetitive, int block,
-				double evalue, double pctid, 
+				double pctid, 
 				int start1, int end1, 
 				int start2, int end2, 
 				int overlap,	
 				String query_seq, String target_seq, int pSim, int nMergeHits, double corr, String tag,
 				String chr1, String chr2)
 		{
-			super(id, name, strand, repetitive, block, evalue, pctid, 
+			super(id, hitnum, strand, repetitive, block, pctid, 
 					start1, end1, start2, end2, overlap,
 					query_seq, target_seq, 
 					pSim, nMergeHits, corr, tag, chr1, chr2); //CAS515 add 1st 2, CAS516 add corr, tag

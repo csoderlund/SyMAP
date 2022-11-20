@@ -13,22 +13,25 @@ public class FieldData {
 	// TableDataPanel.createGeneralSelectPanel expects 4 hit columns and the Pg prefix
 	private static final String [] GENERAL_COLUMNS =	 
 		{Q.rowCol, Q.blockCol, "Block\nScore",Q.runCol,"PgeneF", "PgFSize",
-		"Hit#",    "Hit\n%Id", "Hit\n%Sim","Hit\n#Merge"}; // CAS516 add these 4
-	
+		"Hit#",    "Hit\n%Id", "Hit\n%Sim","Hit\n#Merge", "Hit\nSt"}; // CAS516 add these 4; CAS520 add st
+	private static final Class <?> []  GENERAL_TYPES = 					// CAS520 had to add for String
+		{Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,
+				Integer.class,Integer.class,Integer.class,Integer.class, String.class};
 	private static final Boolean [] GENERAL_COLUMN_DEF =  
-		{true, true, true, false, false, false, true, false, false, false}; // CAS513 HitID=f, Score=t
+		{true, true, true, true, false, false, true, false, false, false, false}; // CAS513 HitID=f, Score=t
 	
 	private static final String [] GENERAL_COLUMN_DESC = 
 		{"Row number", 
-		 "Block: synteny block number (chr.chr.#)", 
-		 "Block score: number of hits in the synteny block",
-		 "Collinear: number of adjacent genes (chr.chr.#) See Help.", 
+		 "Block: Synteny block number (chr.chr.#)", 
+		 "Block score: Number of hits in the synteny block",
+		 "Collinear: Number of adjacent genes and set number (chr.chr.N.#)", 
 		 "PgeneF: (Compute PgeneF only) putative gene family number", 
 		 "PgFSize: (Compute PgeneF only) putative gene family size",
-		 "Hit#: an index representing the hit", 
-		 "Hit %Id: percen identity from the MUMmer file",
-		 "Hit %Sim: percent similarity from the MUMmer file", 
-		 "Hit #Merge: number of merged hits, where 1 is a single hit"
+		 "Hit#: Number representing the hit", 
+		 "Hit %Id: Percent identity from the MUMmer file",
+		 "Hit %Sim: Percent similarity from the MUMmer file", 
+		 "Hit #Merge: Number of merged hits, where 1 is a single hit",
+		 "Hit St: '=' is both hit ends are to the same strand, '!=' otherwise" 
 		};
 	
 	// Prefixed with Species: CAS519 have hit and gene start/end/len; and add gene strand
@@ -40,15 +43,20 @@ public class FieldData {
 		{false, false, false, false , false, false, false, false, false};
 	private static String [] SPECIES_COLUMN_DESC = {
 		"Chr: Chromosome (or Scaffold, etc)", 
-		"Gstart: Start coordinate of gene", "Gend: End coordinate of gene", "Glen: Length of gene", "Gst: Gene strand", 
+		"Gstart: Start coordinate of gene", 
+		"Gend: End coordinate of gene", 
+		"Glen: Length of gene", 
+		"Gst: Gene strand", 
 		"Gene#: Sequential. Overlap genes have same number (chr.#.{a-z})", 
-		"Hstart: start coordinate of hit(s)", "Hend: End coordinate of hit(s)", "Hlen: Length of hit"
+		"Hstart: Start coordinate of hit(s)", 
+		"Hend: End coordinate of hit(s)", "Hlen: Length of hit"
 	};
 
 	//****************************************************************************
 	//* Static methods
 	//****************************************************************************
 	public static String [] getGeneralColHead() 	 {return GENERAL_COLUMNS; }
+	public static Class <?> [] getGeneralColType() 	 {return GENERAL_TYPES; }
 	public static Boolean [] getGeneralColDefaults() {return GENERAL_COLUMN_DEF; }
 	public static String [] getGeneralColDesc() 	 {return GENERAL_COLUMN_DESC; }
 	
@@ -71,7 +79,6 @@ public class FieldData {
 		else return GENERAL_COLUMNS.length;
 	}
 	
-	
 	// MySQL fields to load
 	public static FieldData getFields() {
 		FieldData fd = new FieldData();
@@ -84,7 +91,8 @@ public class FieldData {
 		fd.addField(String.class, Q.PA, "name",    Q.ANAME,      "Annotation attributes");
 		fd.addField(String.class, Q.PA, "tag", 	   Q.AGENE,      "Annotation gene#"); // CAS518 changed to String/tag
 		
-		fd.addField(String.class, Q.PH, "idx",      Q.HITIDX,    "Hit idx");
+		fd.addField(Integer.class,Q.PH, "idx",      Q.HITIDX,    "Hit index"); 
+		fd.addField(Integer.class,Q.PH, "hitnum",   Q.HITNUM,    "Hit number"); // CAS520 add
 		fd.addField(Integer.class,Q.PH, "proj1_idx",Q.PROJ1IDX,  "1st species index");
 		fd.addField(Integer.class,Q.PH, "proj2_idx",Q.PROJ2IDX,  "2nd species index");
 		fd.addField(Integer.class,Q.PH, "grp1_idx", Q.GRP1IDX,   "1st chromosome index");
@@ -93,10 +101,12 @@ public class FieldData {
 		fd.addField(Integer.class,Q.PH, "start2",   Q.HIT2START, "2nd hit start");
 		fd.addField(Integer.class,Q.PH, "end1",     Q.HIT1END,   "1st hit end");
 		fd.addField(Integer.class,Q.PH, "end2",     Q.HIT2END,   "2nd hit end");
-		fd.addField(String.class, Q.PH, "runsize",  Q.COLINEAR,     "Collinear run size");
 		fd.addField(String.class, Q.PH, "pctid",    Q.PID,     	 "Hit Average %Identity"); // CAS516 add these 3
 		fd.addField(String.class, Q.PH, "cvgpct",   Q.PSIM,      "Hit Average %Similarity");
 		fd.addField(String.class, Q.PH, "countpct", Q.HCNT,      "Merged hits");
+		fd.addField(String.class, Q.PH, "strand",   Q.HST,       "Strand +/-, /-, etc");
+		fd.addField(String.class, Q.PH, "runsize",  Q.COSIZE,    "Collinear run size");
+		fd.addField(String.class, Q.PH, "runnum",   Q.CONUM,     "Collinear number"); // CAS520 add
 
 		fd.addField(String.class, Q.B, "blocknum",  Q.BNUM,      "Block Number");
 		fd.addField(String.class, Q.B, "score",     Q.BSCORE,    "Block Score (#Anchors)");

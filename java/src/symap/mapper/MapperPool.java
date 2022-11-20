@@ -25,13 +25,168 @@ import symap.SyMAP;
 /**
  * The pool of Mapper hits.
  * The pool utilizes a ListCache.
+ * CAS520 FPC is partially removed
  */
 public class MapperPool extends DatabaseUser implements SyMAPConstants {
+	private ProjectProperties projectProperties;
+	private ListCache fpcPseudoCache, repetitiveMarkerFilterCache, fpcFpcCache;
+	private ListCache pseudoPseudoCache; 
+	private boolean TRACE=SyMAP.DEBUG;
+
+	public MapperPool(DatabaseReader dr, ProjectProperties pp, 
+			ListCache fpcPseudoCache, ListCache repetitiveMarkerFilterCache, 
+			ListCache fpcFpcCache, ListCache pseudoPseudoCache) {  
+		super(dr);
+		this.projectProperties = pp;
+		this.pseudoPseudoCache = pseudoPseudoCache; 
+	}
+
+	public synchronized void close() {
+		super.close();
+	}
+
+	public synchronized void clear() {
+		super.close();
+		if (pseudoPseudoCache != null) 			 pseudoPseudoCache.clear(); 
+	}
+	
+	public boolean hasPair(Track t1, Track t2) {
+		return projectProperties.hasProjectPair(t1.getProject(),t2.getProject());
+	}
+
+	public synchronized boolean setData(Mapper mapper, Track t1, Track t2,
+			MapInfo mapinfo, HitFilter hf, List hits) throws SQLException 
+	{
+		MapInfo newMapInfo = new MapInfo(t1,t2,hf.isBlock(),hf.getNonRepetitive());
+		
+		if (newMapInfo.equalIfUpgradeHitContent(mapinfo)) {
+			mapinfo.setHitContent(newMapInfo.getHitContent());
+			return false;
+		}
+	
+		if (mapinfo.getMapperType() != newMapInfo.getMapperType()) hits.clear();
+		if (pseudoPseudoCache != null) pseudoPseudoCache.clear();
+		
+		hits.clear(); // prevent hit accumulation on pseudo-pseudo 
+		
+		if (t1 instanceof Sequence && t2 instanceof Sequence) { // PSEUDO to PSEUDO
+			if (hasPair(t1,t2))
+				setPseudoPseudoData(mapper,(Sequence)t1,(Sequence)t2,hits,mapinfo,newMapInfo);
+			else // swap projects
+				setPseudoPseudoData(mapper,(Sequence)t2,(Sequence)t1,hits,mapinfo,newMapInfo);
+		}
+		
+		mapinfo.set(newMapInfo);
+
+		return true;
+	}
+
+	private static final String PSEUDO_HITS_QUERY = 
+			"SELECT h.idx, h.hitnum, h.pctid, h.start1, h.end1, h.start2, h.end2, h.strand," + // CAS520 change evalue to hitnum
+			"h.gene_overlap, h.query_seq, h.target_seq, " +
+			"h.cvgpct, h.countpct, " +    	// CAS515 add cvgpct, countpct,
+			"h.runsize, h.runnum, " +		// CAS520 add runnum
+			"b.corr, b.blocknum " +  	  	// CAS516 add corr; CAS504 bh.block_idx -> b.blocknum
+			"FROM pseudo_hits AS h "+
+			"LEFT JOIN pseudo_block_hits AS bh ON (bh.hit_idx=h.idx) "+
+			"LEFT JOIN blocks as b on (b.idx=bh.block_idx) " + // CAS505 added for blocknum
+			"WHERE h.grp1_idx=? AND h.grp2_idx=? order by h.start1"; // CAS520 add order by
+	/*************************************************************************
+	 * Update HitData
+	 */
+	private void setPseudoPseudoData(Mapper mapper, Sequence st1, Sequence st2, 
+			List hits, MapInfo mi, MapInfo nmi) throws SQLException 
+	{
+		int i;
+		PseudoPseudoData data/*, tempData*/;
+		boolean reorder = false;
+		
+		int stProject1 = st1.getProject();
+		int stProject2 = st2.getProject();
+		int group1 = st1.getGroup();
+		int group2 = st2.getGroup();
+		String chr1="?", chr2="?";
+
+		ProjectPair pp = projectProperties.getProjectPair(stProject1,stProject2);
+
+		if (TRACE) System.out.println("Looking for the Hits for Pseudos: p1="+stProject1+" p2="+stProject2+" pair="+pp.getPair()+" g1="+group1+" g2="+group2);
+		List<HitData> hitList = new LinkedList<HitData>();
+		Statement statement;
+		ResultSet rs;
+		String query, tag;
+		try {
+			statement = createStatement();
+			
+			rs = statement.executeQuery("select name from xgroups where idx=" + group1); // CAS517 add chrname for display
+			if (rs.next()) chr1=rs.getString(1);
+			rs = statement.executeQuery("select name from xgroups where idx=" + group2);
+			if (rs.next()) chr2=rs.getString(1);
+			
+			data = new PseudoPseudoData(stProject1,group1,stProject2,
+					group2,nmi.getHitContent(),hitList,reorder);
+		
+			query = PSEUDO_HITS_QUERY;
+			query = setInt(query,group1);	
+			query = setInt(query,group2);
+			
+			rs = statement.executeQuery(query);
+			/*
+		  	1 h.idx, 2 h.hitnum, 3 h.pctid, 4 h.start1, 5 h.end1, 6 h.start2, 7 h.end2, 8 h.strand,
+		 	9 h.gene_overlap, 10 h.query_seq, 11 h.target_seq, 12 h.cvgpct, 13 h.countpct, 
+			14 h.runsize, 15 h.runnum, 16 b.corr, 17 b.blocknum 
+			 */
+			while (rs.next()) {
+				tag    = "g" + rs.getInt(9); // CAS516 gene_overlap, runsize; 
+				int runsize = rs.getInt(14);
+				int runnum  = rs.getInt(15);
+				if (runsize>0 && runnum>0) tag += " c" + runsize + "." + runnum; // CAS520 add runnum
+				else if (runsize>0)        tag += " c" + runsize;			    // parsed in Utilities.isCollinear
+		
+				HitData temp = 		PseudoPseudoData.getHitData(
+						rs.getLong(1),		/* long id 		*/
+						rs.getInt(2),		/* int hitnum 	*/
+						rs.getString(8),	/* String strand*/
+						0,					/* int repetitive*/
+						rs.getInt(17),		/* int block	*/
+						rs.getDouble(3),	/* double pctid	*/
+						rs.getInt(4),		/* int start1	*/
+						rs.getInt(5),		/* int end1		*/
+						rs.getInt(6),		/* int start2	*/
+						rs.getInt(7),		/* int end2		*/
+						rs.getInt(9),		/* int gene_overlap  */ 		
+						rs.getString(10),	/* String query_seq */	
+						rs.getString(11),	/* String target_seq */	
+						rs.getInt(12),		/* int cvgpct->avg %sim */
+						rs.getInt(13),      /* int countpct -> nMergedHits */
+						rs.getDouble(16),	/* CAS516 b.corr */
+						tag, chr1, chr2		/* CAS517 add chr1, chr2 */
+						);		
+				hitList.add(temp);
+			}
+			closeResultSet(rs);
+			
+			data.addHitData(nmi.getHitContent(),hitList);
+			
+			i = hits.indexOf(data);
+			if (i < 0) hits.add(new PseudoPseudoHits(mapper,st1,st2,data,reorder));
+			else       ((PseudoPseudoHits)hits.get(i)).addHits(nmi.getHitContent(),hitList);
+			
+			hitList.clear();
+			if (pseudoPseudoCache != null) pseudoPseudoCache.add(data);
+		
+			closeStatement(statement);
+		} catch (SQLException e) {
+			close();
+			ErrorReport.print(e, "Get hit data");
+			throw e;
+		}
+	}
+
+	/*******************************************************************************/
 	private static final String C1_INSERT = "C1_INSERT";
 	private static final String C2_INSERT = "C2_INSERT";
 	private static final String C1_RVALUE = "c1.number";
 	private static final String C2_RVALUE = "c2.number";
-
 	private static final String PSEUDO_MRK_BLOCK_APPEND         = "(mb.hit_idx IS NOT NULL AND mb.hit_idx > 0)";
 	private static final String PSEUDO_MRK_NON_BLOCK_APPEND     = "(mb.hit_idx IS NULL OR mb.hit_idx = 0)";
 	private static final String PSEUDO_MRK_NONREPETITIVE_APPEND = // also gets markers that are themselves repetitive
@@ -76,17 +231,6 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 		"                                            (h.start2+h.end2)>>1 >= pf.start AND (h.start2+h.end2)>>1 <= pf.end) "+
 		"WHERE co.proj_idx=? AND co.number=?";
 
-	
-	private static final String PSEUDO_HITS_QUERY = // CAS504 bh.block_idx -> b.blocknum
-		"SELECT h.idx,h.evalue,h.pctid,h.start1,h.end1,h.start2,h.end2,h.strand,b.blocknum," +
-		"h.gene_overlap, h.query_seq, h.target_seq, " +
-		"h.cvgpct, h.countpct, " +    // CAS515 add cvgpct, countpct,
-		"h.runsize, b.corr " +  	  // CAS516 add these two
-		"FROM pseudo_hits AS h "+
-		"LEFT JOIN pseudo_block_hits AS bh ON (bh.hit_idx=h.idx) "+
-		"LEFT JOIN blocks as b on (b.idx=bh.block_idx) " + // CAS505 added for blocknum
-		"WHERE h.grp1_idx=? AND h.grp2_idx=?";
-	
 	public static final String REPETITIVE_MRK_FILTER_QUERY =
 		"SELECT DISTINCT m.name "+
 		"FROM markers as m "+
@@ -129,167 +273,7 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 		"WHERE h.proj1_idx=? AND h.proj2_idx=? AND "+
 		"      c1.proj_idx=? AND "+C1_INSERT+" AND cl1.proj_idx=? AND cl1.ctg_idx=c1.idx AND h.clone1=cl1.name AND "+
 		"      c2.proj_idx=? AND "+C2_INSERT+" AND cl2.proj_idx=? AND cl2.ctg_idx=c2.idx AND h.clone2=cl2.name ";
-
-	private ProjectProperties projectProperties;
-	private ListCache fpcPseudoCache, repetitiveMarkerFilterCache, fpcFpcCache;
-	private ListCache pseudoPseudoCache; 
-	private boolean TRACE=SyMAP.DEBUG;
-
-	public MapperPool(DatabaseReader dr, ProjectProperties pp, 
-			ListCache fpcPseudoCache, ListCache repetitiveMarkerFilterCache, 
-			ListCache fpcFpcCache, ListCache pseudoPseudoCache) {  
-		super(dr);
-		this.projectProperties = pp;
-		this.fpcPseudoCache = fpcPseudoCache;
-		this.repetitiveMarkerFilterCache = repetitiveMarkerFilterCache;
-		this.fpcFpcCache = fpcFpcCache;
-		this.pseudoPseudoCache = pseudoPseudoCache; 
-	}
-
-	public synchronized void close() {
-		super.close();
-	}
-
-	public synchronized void clear() {
-		super.close();
-		if (fpcPseudoCache != null) 			 fpcPseudoCache.clear();
-		if (repetitiveMarkerFilterCache != null) repetitiveMarkerFilterCache.clear();
-		if (fpcFpcCache != null) 				 fpcFpcCache.clear();
-		if (pseudoPseudoCache != null) 			 pseudoPseudoCache.clear(); 
-	}
 	
-	public boolean hasPair(Track t1, Track t2) {
-		return projectProperties.hasProjectPair(t1.getProject(),t2.getProject());
-	}
-
-	public synchronized boolean setData(Mapper mapper, Track t1, Track t2,
-			MapInfo mapinfo, HitFilter hf, List hits) throws SQLException 
-	{
-		MapInfo newMapInfo = new MapInfo(t1,t2,hf.getBlock(),hf.getNonRepetitive());
-		
-		if (newMapInfo.equalIfUpgradeHitContent(mapinfo)) {
-			if (TRACE) System.out.println(t1.getPosition() + " " + t2.getPosition() + 
-					" New Hit Content = "+newMapInfo.getHitContent()+ " Old Hit Content = "+mapinfo.getHitContent());
-			mapinfo.setHitContent(newMapInfo.getHitContent());
-			return false;
-		}
-	
-		if (mapinfo.getMapperType() != newMapInfo.getMapperType()) hits.clear();
-
-		if (fpcFpcCache != null) 	   fpcFpcCache.clear();
-		if (fpcPseudoCache != null)    fpcPseudoCache.clear();
-		if (pseudoPseudoCache != null) pseudoPseudoCache.clear();
-		
-		hits.clear(); // prevent hit accumulation on pseudo-pseudo 
-		
-		if (t1 instanceof Sequence && t2 instanceof Sequence) { // PSEUDO to PSEUDO
-			if (hasPair(t1,t2))
-				setPseudoPseudoData(mapper,(Sequence)t1,(Sequence)t2,hits,mapinfo,newMapInfo);
-			else // swap projects
-				setPseudoPseudoData(mapper,(Sequence)t2,(Sequence)t1,hits,mapinfo,newMapInfo);
-		}
-		else if (t1 instanceof Sequence || t2 instanceof Sequence) { // FPC to PSEUDO
-			if (t1 instanceof Sequence)
-				setFPCPseudoData(mapper,(MarkerTrack)t2,(Sequence)t1,hits,mapinfo,newMapInfo);
-			else
-				setFPCPseudoData(mapper,(MarkerTrack)t1,(Sequence)t2,hits,mapinfo,newMapInfo);
-		}
-		else { // FPC to FPC
-			setFPCFPCData(mapper,(MarkerTrack)t1,(MarkerTrack)t2,hits,mapinfo,newMapInfo);
-		}
-
-		mapinfo.set(newMapInfo);
-
-		return true;
-	}
-
-	private void setPseudoPseudoData(Mapper mapper, Sequence st1, Sequence st2, 
-			List hits, MapInfo mi, MapInfo nmi) throws SQLException 
-	{
-		int i;
-		PseudoPseudoData data/*, tempData*/;
-		boolean reorder = false;
-		
-		int stProject1 = st1.getProject();
-		int stProject2 = st2.getProject();
-		int group1 = st1.getGroup();
-		int group2 = st2.getGroup();
-		String chr1="?", chr2="?";
-
-		ProjectPair pp = projectProperties.getProjectPair(stProject1,stProject2);
-
-		if (TRACE) System.out.println("Looking for the Hits for Pseudos: p1="+stProject1+" p2="+stProject2+" pair="+pp.getPair()+" g1="+group1+" g2="+group2);
-		List<HitData> hitList = new LinkedList<HitData>();
-		Statement statement;
-		ResultSet rs;
-		String query;
-		try {
-			statement = createStatement();
-			
-			rs = statement.executeQuery("select name from xgroups where idx=" + group1); // CAS517 add chrname for display
-			if (rs.next()) chr1=rs.getString(1);
-			rs = statement.executeQuery("select name from xgroups where idx=" + group2);
-			if (rs.next()) chr2=rs.getString(1);
-			
-			data = new PseudoPseudoData(stProject1,group1,stProject2,
-					group2,nmi.getHitContent(),hitList,reorder);
-		
-			query = PSEUDO_HITS_QUERY;
-			query = setInt(query,group1);	
-			query = setInt(query,group2);
-			
-			rs = statement.executeQuery(query);
-		
-			int start1, end1, start2, end2;
-			String tag;
-			
-			while (rs.next()) {
-				start1 = rs.getInt(4);
-				end1   = rs.getInt(5);
-				start2 = rs.getInt(6);
-				end2   = rs.getInt(7);
-				tag    = "g" + rs.getInt(10) + "r" + rs.getInt(15); // CAS516 gene_overlap, runsize
-
-				HitData temp = 		PseudoPseudoData.getHitData(
-						rs.getLong(1),		/* long id 		*/
-						null,				/* String name 	*/
-						rs.getString(8),	/* String strand*/
-						0,					/* int repetitive*/
-						rs.getInt(9),		/* int block	*/
-						rs.getDouble(2),	/* double evalue*/
-						rs.getDouble(3),	/* double pctid	*/
-						start1,				/* int start1	*/
-						end1,				/* int end1		*/
-						start2,				/* int start2	*/
-						end2,				/* int end2		*/
-						rs.getInt(10),		/* int gene_overlap  */ 		
-						rs.getString(11),	/* String query_seq */	
-						rs.getString(12),	/* String target_seq */	
-						rs.getInt(13),		/* int cvgpct->avg %sim */
-						rs.getInt(14),      /* int countpct -> nMergedHits */
-						rs.getDouble(16),	/* CAS516 b.corr */
-						tag, chr1, chr2		/* CAS517 add chr1, chr2 */
-						);		
-				hitList.add(temp);
-			}
-			closeResultSet(rs);
-			
-			data.addHitData(nmi.getHitContent(),hitList);
-			
-			i = hits.indexOf(data);
-			if (i < 0) hits.add(new PseudoPseudoHits(mapper,st1,st2,data,reorder));
-			else       ((PseudoPseudoHits)hits.get(i)).addHits(nmi.getHitContent(),hitList);
-			
-			hitList.clear();
-			if (pseudoPseudoCache != null) pseudoPseudoCache.add(data);
-		
-			closeStatement(statement);
-		} catch (SQLException e) {
-			close();
-			ErrorReport.print(e, "Get hit data");
-			throw e;
-		}
-	}
 
 	private void setFPCPseudoData(Mapper mapper, MarkerTrack mt, Sequence st, List hits, MapInfo mi, MapInfo nmi) throws SQLException {
 		int i;

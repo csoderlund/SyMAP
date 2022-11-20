@@ -6,11 +6,9 @@ package symap.projectmanager.common;
  * 
  * CAS42 1/7/18 Made the tables a little bigger as the 2nd row was partially chopped
  * CAS500 Split the file into methods, used numbers of Mysql get, added FPC-Seq
+ * CAS520 removed FPC
  */
 import javax.swing.*;
-
-import backend.Constants;
-import backend.UpdatePool;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -41,7 +39,7 @@ public class SumFrame extends JFrame
 	private int pair_idx=0, pidx1=0, pidx2=0;
 	private int lenKb1=0, lenKb2=0;
 	private String pName1, pName2, params="";
-	private long ctg_len=0, seq2_len=0;
+	private long seq2_len=0;
 	
     // This one is called from the project manager
 	public SumFrame(DatabaseReader db, int idx1, int idx2) 
@@ -101,27 +99,26 @@ public class SumFrame extends JFrame
 			panel.setBackground(Color.WHITE);
 		
 			// CAS511 added 'params' only (not schema update)
-			UpdatePool pool = new UpdatePool(db);
-			boolean hasParams = false;
-			if (pool.tableColumnExists("pairs", "params")) hasParams=true;
-			String sql="select idx, aligndate";
-			if (hasParams) sql += ", params";  
+			//UpdatePool pool = new UpdatePool(db);
+			String sql="select idx, aligndate, params, syver";
 			
-			String alignDate = "Unknown";
+			String alignDate = "Unknown", syver="Unk";
 			
 			s = db.getConnection().createStatement();
 			rs = s.executeQuery(sql + " from pairs where proj1_idx=" + pidx1 + " and proj2_idx=" + pidx2 );
 			if (rs.first()) {
 				pair_idx=rs.getInt(1);
 				alignDate = rs.getString(2);
-				if (hasParams) params = rs.getString(3);
+				params = rs.getString(3);
+				syver = rs.getString(4);
 			}
 			else {
 				rs = s.executeQuery(sql + " from pairs where proj1_idx=" + pidx2 + " and proj2_idx=" + pidx1 );
 				if (rs.first()){
 					pair_idx = rs.getInt(1);
 					alignDate = rs.getString(2);
-					if (hasParams) params = rs.getString(3);
+					params = rs.getString(3);
+					syver = rs.getString(4);
 					int tmp = pidx1;
 					pidx1 = pidx2;
 					pidx2 = tmp;
@@ -132,16 +129,6 @@ public class SumFrame extends JFrame
 				}
 			}
 			
-			rs = s.executeQuery("select name,type from projects where idx=" + pidx1);
-			String type1="";
-			if (rs.first()){
-				pName1 = rs.getString(1);
-				type1 = rs.getString(2);
-			}
-			rs = s.executeQuery("select name,type from projects where idx=" + pidx2);
-			if (rs.first()) 
-				pName2 = rs.getString(1);
-			
 			rs = s.executeQuery("SELECT value FROM proj_props WHERE proj_idx=" + pidx1 + " AND name='display_name'");
 			if (rs.next())
 				pName1 = rs.getString(1);
@@ -150,7 +137,8 @@ public class SumFrame extends JFrame
 				pName2 = rs.getString(1);
 			
 			String d = alignDate.substring(0, alignDate.indexOf(" "));
-			headerRow.add(new JLabel(pName1 + " vs. " + pName2 + "   Created " + d));
+			String v = (syver!=null) ? (" " + syver) : "";
+			headerRow.add(new JLabel(pName1 + " vs. " + pName2 + "   Created " + d + v));
 			getContentPane().add(scroller,BorderLayout.CENTER);
 			
 			btnHelp = new JButton("Help");
@@ -176,36 +164,21 @@ public class SumFrame extends JFrame
 			panel.add(headerRow);
 			panel.add(Box.createVerticalStrut(10));
 			
-			boolean isFPC = type1.equals(Constants.fpcType);
-			if (isFPC) {
-				createProjFPC();
-				panel.add(new JLabel("FPC Statistics"));
-				panel.add(Box.createVerticalStrut(5));
-				panel.add(fTblPane);
-				panel.add(Box.createVerticalStrut(10));
-				
-				int tmp = pidx1; 		pidx1 = pidx2; // force it to only do seq2
-				String tmpS = pName1; 	pName1 = pName2;
-				createProjSeq();
-				pidx1 = tmp;				pName1 = tmpS;
-			}
-			else {
-				createProjSeq();
-			}
+			
+			createProjSeq();
+	
 			panel.add(new JLabel("Genome and Annotation Statistics"));
 			panel.add(Box.createVerticalStrut(5));
 			panel.add(spTblPane);
 			panel.add(Box.createVerticalStrut(10));
 			
-			if (isFPC) createAnchorFPC();
-			else       createAnchorSeq();
+			createAnchorSeq();
 			panel.add(new JLabel("Anchor (Hit) Statistics"));
 			panel.add(Box.createVerticalStrut(5));
 			panel.add(hTblPane);
 			panel.add(Box.createVerticalStrut(10));
 			
-			if (isFPC) createBlockFPC();
-			else createBlockSeq();
+			createBlockSeq();
 			panel.add(new JLabel("Block Statistics"));
 			panel.add(Box.createVerticalStrut(5));
 			panel.add(bTblPane);
@@ -655,212 +628,4 @@ public class SumFrame extends JFrame
 	}
 	catch (Exception e) {ErrorReport.print(e, "Making blocks summary");}
 	}
-	
-	/********************************************************************/
-	private void createProjFPC() {
-	try {
-		int nSeqs=0, nCtgs=0, nClone=0, nBES=0, nMrk=0;
-		String sbes_len="unk", smrk_len="unk", sCB_size="";
-		long bes_len=0, mrk_len=0;
-		ResultSet rs;
-		
-		rs = s.executeQuery("select count(*) from xgroups where proj_idx=" + pidx1);
-		if (rs.next()) nSeqs = rs.getInt(1);
-		rs = s.executeQuery("select count(*) from clones where proj_idx=" + pidx1);
-		if (rs.next()) nClone = rs.getInt(1);
-		rs = s.executeQuery("select count(*), sum(size) from contigs where proj_idx=" + pidx1);
-		if (rs.next()) {
-			nCtgs = rs.getInt(1);
-			ctg_len = rs.getLong(2);
-		}
-		rs = s.executeQuery("select count(*) from bes_seq where proj_idx=" + pidx1);
-		if (rs.next()) nBES = rs.getInt(1);
-		rs = s.executeQuery("select count(*) from markers where proj_idx=" + pidx1);
-		if (rs.next()) nMrk = rs.getInt(1);
-		
-		rs = s.executeQuery("select value from proj_props where name='bes_len' and proj_idx=" + pidx1);
-		if (rs.next()) sbes_len = rs.getString(1);
-		rs = s.executeQuery("select value from proj_props where name='mrk_len' and proj_idx=" + pidx1);
-		if (rs.next()) smrk_len = rs.getString(1);
-		rs = s.executeQuery("select value from proj_props where name='cbsize' and proj_idx=" + pidx1);
-		if (rs.next()) sCB_size = rs.getString(1);
-		
-		String bLenKb="-", mLenKb="-";
-		try {
-			bes_len = Integer.parseInt(sbes_len);
-			mrk_len = Integer.parseInt(smrk_len);
-			
-			bLenKb = Math.round(bes_len/1000) + "";
-			mLenKb = Math.round(mrk_len/1000) + "";
-		}
-		catch (Exception e) {/*use default - */} 
-		
-		String bAvg = String.format("%s (%.0f)", bLenKb, (double) bes_len/ (double)nBES);
-		String mAvg = String.format("%s (%.0f)", mLenKb, (double) mrk_len/ (double)nMrk);
-		
-		
-		String[] cnames = {"Species","#Seqs","#Contigs","#Clones", 
-				"#BES","#Markers", "Ctg CB", "BES Kb (Avg)", "Mrk Kb (Avg)"};
-		Object[][] data = { 
-				{pName1,nSeqs,nCtgs, nClone, nBES,nMrk, ctg_len, bAvg, mAvg},
-				{"","","","","", "","", "", ""}};
-		fTbl = new JTable(data,cnames);
-		fTbl.getTableHeader().setBackground(Color.WHITE);
-		
-		fTblPane = new JScrollPane(fTbl);
-		fTblPane.setAlignmentX(Component.LEFT_ALIGNMENT);
-		fTblPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		fTblPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);	
-	}
-	catch (Exception e) {ErrorReport.print(e, "Making FPC summary");}
-	}
-	/**********************************************************************/
-	private void createAnchorFPC() {
-	try {
-		ResultSet rs;
-		int nBesHits=0, nMrkHits=0, nBesBlock=0, nMrkBlock=0, nBesAnno=0, nMrkAnno=0;
-		int nBesCov1=0, nBesCov2=0, nMrkCov1=0, nMrkCov2=0;
-		double dBesAvg1=0.0, dBesAvg2=0.0, dMrkAvg1=0.0, dMrkAvg2=0.0;
-		
-		rs = s.executeQuery("select count(*) from bes_hits where pair_idx=" + pair_idx); 
-		if (rs.first()) nBesHits = rs.getInt(1);
-		
-		rs = s.executeQuery("select count(*) from mrk_hits where pair_idx=" + pair_idx); 
-		if (rs.first()) nMrkHits = rs.getInt(1);
-		
-		// %InBlocks
-		rs = s.executeQuery("select count(*) from bes_hits as h " +
-				"join bes_block_hits as pbh on pbh.hit_idx=h.idx " +
-				"where pair_idx=" + pair_idx); 
-		if (rs.first()) nBesBlock = rs.getInt(1);
-		
-		rs = s.executeQuery("select count(*) from mrk_hits as h " +
-				"join mrk_block_hits as pbh on pbh.hit_idx=h.idx " +
-				"where pair_idx=" + pair_idx); 
-		if (rs.first()) nMrkBlock = rs.getInt(1);
-		
-		// Annotated
-		rs = s.executeQuery("select count(*) from bes_hits as h " +
-				"join bes_block_hits as pbh on pbh.hit_idx=h.idx " +
-				"where h.gene_overlap=1 AND pair_idx=" + pair_idx); 
-		if (rs.first()) nBesAnno = rs.getInt(1);
-		
-		rs = s.executeQuery("select count(*) from mrk_hits as h " +
-				"join mrk_block_hits as pbh on pbh.hit_idx=h.idx " +
-				"where h.gene_overlap=1 AND pair_idx=" + pair_idx); 
-		if (rs.first()) nMrkAnno = rs.getInt(1);
-		
-		// Coverage -- total length of anchored BES and Mrk
-		rs = s.executeQuery("select sum(end1-start1), avg(end1-start1) from bes_hits as h " +
-				"join bes_block_hits as bh on bh.hit_idx=h.idx " +
-				"where end1>start1 AND pair_idx=" + pair_idx); 
-		if (rs.first()) {
-			nBesCov1 = rs.getInt(1);
-			dBesAvg1 = rs.getDouble(2);
-		}
-			
-		rs = s.executeQuery("select sum(end1-start1), avg(end1-start1) from mrk_hits as h " +
-				"join mrk_block_hits as bh on bh.hit_idx=h.idx " +
-				"where end1>start1 AND pair_idx=" + pair_idx); 
-		if (rs.first()) {
-			nMrkCov1 = rs.getInt(1);
-			dMrkAvg1 = rs.getDouble(2);
-		}
-		
-		rs = s.executeQuery("select sum(end2-start2), avg(end2-start2) from bes_hits as h " +
-				"join bes_block_hits as bh on bh.hit_idx=h.idx " +
-				"where end2>start2 AND pair_idx=" + pair_idx); 
-		if (rs.first()) {
-			nBesCov2 = rs.getInt(1);
-			dBesAvg2 = rs.getDouble(2);
-		}
-			
-		rs = s.executeQuery("select sum(end2-start2), avg(end2-start2) from mrk_hits as h " +
-				"join mrk_block_hits as bh on bh.hit_idx=h.idx " +
-				"where end2>start2 AND pair_idx=" + pair_idx); 
-		if (rs.first()) {
-			nMrkCov2 = rs.getInt(1);
-			dMrkAvg2 = rs.getDouble(2);
-		}
-		
-		String b1 = String.format("%5d (%3.0f)", Math.round(nBesCov1/1000), dBesAvg1);
-		String m1 = String.format("%5d (%3.0f)", Math.round(nMrkCov1/1000), dMrkAvg1);
-		String b2 = String.format("%5d (%3.0f)", Math.round(nBesCov2/1000), dBesAvg2);
-		String m2 = String.format("%5d (%3.0f)", Math.round(nMrkCov2/1000), dMrkAvg2);
-		
-		String[] cnames2 = {"Species",
-						"#BES Anchors", "#Mrk Anchors",
-						"#BES InBlocks", "#Mrk InBlocks","" +
-						"#BES Anno", "#Mrk Anno", "BES Cov Kb (Avg)", "Mrk Cov Kb (Avg)"};
-		Object[][] data2 = { 
-		{pName1,  nBesHits, nMrkHits, nBesBlock, nMrkBlock, "-", "-", b1, m1},
-		{pName2,  "-", "-", "-", "-",            nBesAnno, nMrkAnno,  b2, m2}};
-		
-		hTbl = new JTable(data2,cnames2);
-		hTbl.getTableHeader().setBackground(Color.WHITE);
-		
-		hTblPane = new JScrollPane(hTbl);
-		hTblPane.setAlignmentX(Component.LEFT_ALIGNMENT);
-		hTblPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		hTblPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-	}
-	catch (Exception e) {ErrorReport.print(e, "Making anchor summary");}
-	}
-
-
-	private void createBlockFPC() {
-	try {
-		int nblks=0, bcov1=0, bcov2=0, ninv=0, nBlockCtgs=0;
-		long cov1=0, cov2=0;
-		String sCtgs="";
-		int lastS1=0, lastE1=0, lastS2=0, lastE2=0;
-		
-		ResultSet rs = s.executeQuery("select start1, end1, corr, ctgs1 " +
-				"from blocks where pair_idx=" + pair_idx + " order by start1");
-		while (rs.next())
-		{
-			nblks++;
-			
-			int start1 = rs.getInt(1);
-			int end1 = rs.getInt(2);
-			if (lastS1!=start1 && lastE1!=end1)
-				cov1 += (end1-start1);
-			lastS1=start1; lastE1=end1;
-			
-			double corr = rs.getDouble(3);
-			if (corr<0) ninv++;
-			
-			sCtgs += rs.getString(4) + ",";	
-		}
-		 rs = s.executeQuery("select start2, end2 " +
-					"from blocks where pair_idx=" + pair_idx + " order by start2");
-		while (rs.next())
-		{
-			int start2 = rs.getInt(1);
-			int end2 = rs.getInt(2);
-			
-			if (lastS2!=start2 && lastE2!=end2)
-				cov2 += (end2-start2);
-			lastS2=start2; lastE2=end2;
-		}
-			
-		bcov1 = (int) (((double) cov1/ (double) ctg_len)  * 100.0);
-		bcov2 = (int) (((double) cov2/ (double) seq2_len) * 100.0);
-		
-		String [] ctgs = sCtgs.split(",");
-		nBlockCtgs = ctgs.length;
-		
-		String[] cnames3 = {"Species","#Blocks","Inverted", "Approx %Cov", "Ctg inBlock"};
-		Object[][] data3 = { {pName1, nblks, ninv, bcov1+"% (CB)", nBlockCtgs},
-				             {pName2, "''", "''",  bcov2+"% (Kb)", "-"}};
-		bTbl = new JTable(data3,cnames3);
-		bTbl.getTableHeader().setBackground(Color.WHITE);
-		bTblPane = new JScrollPane(bTbl);
-		bTblPane.setAlignmentX(Component.LEFT_ALIGNMENT);
-		bTblPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		bTblPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-	}
-	catch (Exception e) {ErrorReport.print(e, "Making blocks summary");}
-	}
-	
 }

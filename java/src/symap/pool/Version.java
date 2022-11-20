@@ -12,12 +12,13 @@ import util.Utilities;
 
 public class Version {
 	int dbVer = SyMAP.DBVER; 
-	String strVer = SyMAP.DBVERSTR; // db2
+	String strVer = SyMAP.DBVERSTR; // db4
 	
 	public Version (UpdatePool pool) {
 		this.pool = pool;
 		checkForUpdate();
 	}
+	// if first run from viewSymap, updates anyway (so if no write permission, crashes)
 	private void checkForUpdate() {
 		try {
 			String strDBver = "db1";
@@ -47,6 +48,10 @@ public class Version {
 				updateVer2();
 				idb=3;
 			}
+			if (idb==3) {
+				updateVer3();
+				idb=4;
+			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
 	}
@@ -55,7 +60,7 @@ public class Version {
 			if (tableRename("groups", "xgroups"))
 				updateProps();
 		}
-		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
+		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
 	}
 	// CAS512 gather all columns added with 'alter'
 	private void updateVer2() {
@@ -67,17 +72,29 @@ public class Version {
 			tableCheckAddColumn("pseudo_hits", "runsize", "INTEGER default 0", null);   // checked in SyntenyMain
 			tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null);				// added 511
 			tableCheckAddColumn("blocks", "corr", "float default 0", null);				// SyMAPExp was checking for
+			
 			updateProps();
-			System.err.println("Complete schema update to " + SyMAP.VERSION );
 		}
-		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
+		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
 	}
-	// things to include on next update
+	// v5.20.0
 	private void updateVer3() {
 		try {
 			pool.executeUpdate("alter table pseudo_hits modify countpct integer");  // Remove from AnchorsMain, 169
+			tableCheckAddColumn("pseudo_hits",  "runnum",  "integer default 0", null);
+			tableCheckAddColumn("pseudo_hits",  "hitnum",  "integer default 0", null);
+			tableCheckAddColumn("pseudo_annot", "numhits", "tinyint unsigned default 0", null);
+			
+			tableCheckAddColumn("pairs",    "params", "tinytext", null); // added in earlier version, but never checked
+			tableCheckAddColumn("pairs",    "syver", "tinytext", null);
+			tableCheckAddColumn("projects", "syver", "tinytext", null);
+			
+			updateProps();
+			
+			System.err.println("For pre-v519 databases, reload annotation ");
+			System.err.println("For pre-v520 databases, recompute synteny ");
 		}
-		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
+		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
 	}
 	/***************************************************************
 	 * Run after every version update.
@@ -87,15 +104,20 @@ public class Version {
 	 */
 	private void updateProps() {
 		try {
+			/** CAS520 why check
 			ResultSet rs = pool.executeQuery("select value from props where name='VERSION'");
 			if (rs.next()) {
 				String v = rs.getString(1);
 				if (v.contentEquals("3.0")) // value before v5.0.6
 					replaceProps("VERSION",SyMAP.VERSION);
 			}
+			**/
+			replaceProps("VERSION",SyMAP.VERSION);
+			
 			replaceProps("UPDATE", Utilities.getDateOnly());
 			
 			replaceProps("DBVER", SyMAP.DBVERSTR);
+			System.err.println("Complete schema update to " +  SyMAP.DBVERSTR + " for SyMAP " + SyMAP.VERSION );
 		}
 		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
 	}

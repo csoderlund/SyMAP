@@ -27,7 +27,7 @@ import util.Utilities;
 import util.ErrorReport;
 
 public class AnnotLoadMain {
-	static public boolean GENEN_ONLY=SyMAP.GENEN_ONLY; // -z CAS519b to update the gene# without having to redo synteny
+	static public boolean GENEN_ONLY=SyMAP.GENEN_ONLY; 	// -z CAS519b to update the gene# without having to redo synteny
 	
 	private Logger log;
 	private UpdatePool pool;
@@ -79,7 +79,8 @@ public class AnnotLoadMain {
 			nFiles++;
 			loadFile(af);	if (!success) return false;
 		}
-		pool.executeUpdate("update projects set hasannot=1,annotdate=NOW() where idx=" + project.getIdx());
+		pool.executeUpdate("update projects set hasannot=1," // CAS520 add version
+				+ " annotdate=NOW(), syver='" + SyMAP.VERSION + "' where idx=" + project.getIdx());
 		Utils.timeMsg(log, time, nFiles + " file(s) loaded");
 		
 /** Compute gene order **/
@@ -436,11 +437,12 @@ public class AnnotLoadMain {
 						" WHERE xgroups.proj_idx='" + project.getIdx() + 
 						"' AND pseudo_annot.grp_idx=xgroups.idx";
 			pool.executeUpdate(st);
+
+			pool.resetIdx("idx", "pseudo_annot"); // CAS512 only resets if empty, otherwise, sets auto-inc
+			
 			
 			pool.executeUpdate("delete from pairs " +
-					" where proj1_idx=" + project.getIdx() + " or proj2_idx=" + project.getIdx());
-			
-			pool.resetIdx("idx", "pseudo_annot"); // CAS512 only resets if empty, otherwise, sets auto-inc
+						" where proj1_idx=" + project.getIdx() + " or proj2_idx=" + project.getIdx());
 			pool.resetIdx("idx", "pairs");
 		}
 		catch (Exception e) {ErrorReport.print(e, "Delete current annotations"); success=false;}

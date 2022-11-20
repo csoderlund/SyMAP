@@ -10,6 +10,7 @@
  *   	   update 14/Aug/22 v512 
  *   						produce one gff file, write the gene entry followed by the first mRNA's exons
  *   						better summary output
+ *   	   update 27/Oct/22 add keyword=value Protein=name
  *         
  * Note: I am no expert on NCBI GFF format, so I cannot guarantee this is 100% correct mapping.
  * Your sequences/annotations may have other variations.
@@ -37,6 +38,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.zip.GZIPInputStream;
 
 public class ConvertNCBI {
@@ -44,6 +46,8 @@ public class ConvertNCBI {
 	private boolean LINKAGE = false;
 	private boolean INCLUDESCAF = false;
 	private boolean MASKED = false;
+	private boolean ATTRPROT = false;
+	private boolean ATTRPROTALL = false;
 	private boolean VERBOSE = false;
 	private boolean ALLEXON = false; // not documented
 	
@@ -63,6 +67,7 @@ public class ConvertNCBI {
 	private final String geneType = "gene";
 	private final String mrnaType = "mRNA";
 	private final String exonType = "exon";
+	private final String cdsType  = "CDS";  
 	
 	// attribute keywords
 	private final String idAttrKey 		= "ID";
@@ -110,7 +115,8 @@ public class ConvertNCBI {
 	private TreeMap <String, Integer> allGeneSrcCnt = new TreeMap <String, Integer> ();
 	private int cntDupProduct=0, cntXProduct=0, cntUniqueProduct=0, cntMultUniqueProduct=0;
 	private int cntChrGeneAll=0, cntScafGeneAll=0, cntGeneNotOnSeq=0, cntScafSmall=0;
-	private int nScaf=0, nChr=0, nOther=0, nGap=0, cntChr=0;
+	private int nScaf=0, nChr=0, nOther=0, nGap=0, cntChr=0, maxProt=0;
+	private String maxGene="";
 	private long chrLen=0, scafLen=0, otherLen=0;
 	private final int PRT = 10000;
 	
@@ -118,7 +124,7 @@ public class ConvertNCBI {
 		new ConvertNCBI(args);
 	}
 	private ConvertNCBI(String [] args) {
-		prt(">>>> ConvertNCBI <<<<");
+		prt(">>>> ConvertNCBI v5.2.0 <<<<");
 		
 		hexMap.put("%2C", ",");
 		hexMap.put("%25", "%");
@@ -132,7 +138,7 @@ public class ConvertNCBI {
 		rwAnno();
 		
 		printSummary();
-		prt("ConvertNCBI completed");
+		prt("ConvertNCBI completed " + projDir);
 	}
 	/***************************************************************************
 	 * * Fasta file example:
@@ -141,9 +147,9 @@ public class ConvertNCBI {
 	 * NOTE: NCBI files are soft-masked, which is used to compute the gaps.
 	 *       If its then hard-masked (soft->N's), gaps and hard-masked appear the same 
 	 */
-	PrintWriter fhOut, ghOut;
-	int cntMask=0;
-	TreeMap <Character, Integer> cntBase = new TreeMap <Character, Integer> ();
+	private PrintWriter fhOut, ghOut;
+	private int cntMask=0;
+	private TreeMap <Character, Integer> cntBase = new TreeMap <Character, Integer> ();
 	private void rwFasta() {
 		try {
 			fhOut = new PrintWriter(new FileOutputStream(seqDir + outFaFile, false));
@@ -458,8 +464,10 @@ public class ConvertNCBI {
 		 try {
 			 prt("Process mRNA....");
 			 BufferedReader fhIn = openGZIP(inGffFile);
-			 String line="";
-			 int cntReadRNA=0;
+			 String line="", lastGene="";
+			 int cntReadRNA=0, cntReadCDS=0;
+			 HashMap <String, Gene> gMrnaMap = new HashMap <String, Gene> (); // mRNA for current gene; to detect all proteins
+			 boolean bPROT = (ATTRPROT || ATTRPROTALL);
 			 
 			 while ((line = fhIn.readLine()) != null) {
 				line = line.trim();
@@ -469,29 +477,46 @@ public class ConvertNCBI {
 				if (tok.length!=9) continue;
 				
 				String type =  tok[2];  // gene, mRNA, exon...
-				if (!type.equals(mrnaType)) continue;
+				if (! (type.equals(mrnaType) || (bPROT && type.equals(cdsType))) ) continue;
+				
+				String [] typeAttrs = tok[8].split(";"); 
+				String pid =   getVal(parentAttrKey, typeAttrs);
+				
+				if (type.contentEquals(cdsType)) { // CAS520
+					if (gMrnaMap.containsKey(pid)) {
+						String idKey =  getVal(idAttrKey, typeAttrs);
+						Gene g = gMrnaMap.get(pid);
+						g.mergeProtein(idKey);
+						cntReadCDS++;
+					}
+					continue;
+				}
+				
+				Gene gObj = geneMap.get(pid);
+				if (!geneMap.containsKey(pid)) continue;	// parent gene was excluded
+				
+				if (!lastGene.contentEquals(pid)) {
+					gMrnaMap.clear();
+					lastGene=pid;
+				}
 				cntReadRNA++;
 				if (cntReadRNA%PRT==0) System.err.print("   Process " + cntReadRNA + " mRNA...\r");
 				
-				String [] typeAttrs = tok[8].split(";"); 
-				String pid = getVal(parentAttrKey, typeAttrs);
-				if (!geneMap.containsKey(pid)) continue;	// parent gene was excluded
-				
-				String idKey =      getKeyVal(idAttrKey, typeAttrs);
 				String productKey = getKeyVal(productAttrKey, typeAttrs);
 				
-				Gene g = geneMap.get(pid);
-				boolean bIs1st = g.bNoProduct();
-				if (bIs1st)	g.setProduct(idKey, productKey);
-				else		g.mergeProduct(idKey, productKey);
+				String idKey =  getKeyVal(idAttrKey, typeAttrs);
+				boolean bIs1st = gObj.bNoProduct();
+				if (bIs1st)	     gObj.setProduct(idKey, productKey);
+				else		     gObj.mergeProduct(idKey, productKey);
 	
-				if (bIs1st || ALLEXON) {
-					String mID =  getVal(idAttrKey, typeAttrs);
-					mrnaMap.put(mID, g);	
-				}
+				String mID =  getVal(idAttrKey, typeAttrs);
+				if (bIs1st || ALLEXON) mrnaMap.put(mID, gObj);	
+				
+				if (ATTRPROTALL || (ATTRPROT && bIs1st)) gMrnaMap.put(mID, gObj);
 			 }
 			 fhIn.close();
-			 prt(String.format("   First mRNAs %,d from %,d           ", mrnaMap.size(), cntReadRNA));		 
+			 prt(String.format("   First mRNAs %,d from %,d           ", mrnaMap.size(), cntReadRNA));	
+			 if (cntReadCDS>0) prt(String.format("   CDS  %d ", cntReadCDS));
 		 }
 		 catch (Exception e) {die(e, "rwAnnoMRNA");}
 	 }
@@ -565,7 +590,6 @@ public class ConvertNCBI {
 				String parStr =  parentAttrKey + "=" + parID;
 				String geneStr = exonGeneAttrKey + "=" + getVal(exonGeneAttrKey, typeAttrs);
 				String newAttrs = idStr + ";" + parStr + ";" + geneStr;
-				
 				String nLine = chrName + "\t" + tok[1] + "\t" + tok[2] + "\t" + tok[3] + "\t" + tok[4]
 							+ "\t" + tok[5] + "\t" + tok[6] + "\t" + tok[7] + "\t" + newAttrs;
 				
@@ -650,6 +674,8 @@ public class ConvertNCBI {
 		
 		if (INCLUDESCAF) System.out.format("   %s %,8d\n", "Genes not on Chr/Scaf", cntGeneNotOnSeq);
 		else 			 System.out.format("   %s %,8d\n", "Genes not on Chromosome", cntGeneNotOnSeq);
+		
+		if (ATTRPROTALL) System.out.format("   %s %,8d\n", "Maximum # of proteins for " + maxGene, maxProt);
 	 }
 	 /**************************************************************************/
 	 private void checkInitFiles() {
@@ -775,8 +801,9 @@ public class ConvertNCBI {
 					        "\nOptions:" +
 					        "\n-m  assuming a soft-masked genome file, convert it to hard-masked." +
 					        "\n-s  include any sequence not labeled 'chromosome'." +
-
 					        "\n-l  use linkage instead of chromosome." +
+					        "\n-p  include the 1st protein name (1st mRNA) in the attribute field." +
+					        "\n-pa  include all protein names in the attribute field." +
 					        "\n-v  write header lines of ignored sequences." +
 							"\n\nSee https://csoderlund.github.io/SyMAP/convert for details.");
 			System.exit(0);
@@ -793,6 +820,8 @@ public class ConvertNCBI {
 				else if (args[i].equals("-v")) VERBOSE=true;
 				else if (args[i].equals("-m")) MASKED=true;
 				else if (args[i].equals("-e")) ALLEXON=true;
+				else if (args[i].equals("-p")) ATTRPROT=true;
+				else if (args[i].equals("-pa")) ATTRPROTALL=true;
 		}
 		prt("Parameters:");
 		if (ALLEXON) prt("   Write all exons for each gene to gff file");
@@ -806,8 +835,10 @@ public class ConvertNCBI {
 			prt("   Use Linkage groups");
 			chrPrefix="Lg";
 		}
-		if (MASKED)  prt("   Hard mask sequence");
-		if (VERBOSE) prt("   Verbose - print ignored sequences");
+		if (MASKED)  		prt("   Hard mask sequence");
+		if (ATTRPROT)  		prt("   Include 1st protein name in attributes");
+		if (ATTRPROTALL)  	prt("   Include all protein names in attributes");
+		if (VERBOSE) 		prt("   Verbose - print ignored sequences");
 		prt("Project directory: " + projDir);
 	}
 	 private void die(Exception e, String msg) {
@@ -825,12 +856,21 @@ public class ConvertNCBI {
 		System.out.println(msg);
 	}
 	private class Gene {
-		private String chr="", line="", products="";
+		private String chr="", line="", products="", proteins="";
+		private HashSet <String> protSet = new HashSet <String>();
 		
-		Gene(String chr, String line) {
+		private Gene(String chr, String line) {
 			this.chr = chr;
 			this.line = line;
 		}
+		private void mergeProtein(String protein) {
+			String p = protein.replace("cds-","");
+			if (!protSet.contains(protein)) {
+				if (proteins=="") proteins = p;
+				else proteins += "," + p;
+				protSet.add(protein);
+			}
+ 		}
 		private boolean bNoProduct() {return products.equals("");}
 		private void setProduct(String idrna, String curProduct) {
 			if (!curProduct.equals("")) cntUniqueProduct++;
@@ -895,11 +935,19 @@ public class ConvertNCBI {
 			String line = chr + "\t" + tok[1] + "\t" + tok[2] + "\t" + tok[3] + "\t" + tok[4]
 			+ "\t" + tok[5] + "\t" + tok[6] + "\t" + tok[7] + "\t" + newAttrs;
 			
+			if ((ATTRPROT || ATTRPROTALL) && proteins!="") {
+				line += ";protein=" + proteins; // CAS520 add proteins
+			}
 			if (line.contains("%")) {
 				for (String hex : hexMap.keySet()) {
 					if (line.contains(hex)) line = line.replace(hex, hexMap.get(hex));
 				}
 			}
+			if (protSet.size()>maxProt) {
+				maxProt = protSet.size();
+				maxGene = newAttrs.substring(0, newAttrs.indexOf(";"));
+			}
+			protSet.clear();
 			return line;
 		}
 		private String getChr() { return chr;}

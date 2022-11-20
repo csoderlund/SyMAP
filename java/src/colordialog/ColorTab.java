@@ -5,22 +5,21 @@ import java.awt.BorderLayout;
 import javax.swing.BoxLayout;
 import java.awt.GridLayout;
 import java.util.Vector;
-import java.util.Iterator;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 class ColorTab extends JPanel implements Comparable<ColorTab> {
 	private Vector<ColorVariable> comps;
-	private final int COLOR_COLUMNS;
+	private int nRows=3;
 	private int order;
 
-	protected ColorTab(String tabName, int columns, int order) {
+	protected ColorTab(String tabName,  int order) {
 		super(new BorderLayout());
-		COLOR_COLUMNS = columns;
+		
 		setName(tabName);
 		comps = new Vector<ColorVariable>();
 		this.order = order;
 	}
-
+	
 	public int compareTo(ColorTab t) {
 		return order - t.order;
 	}
@@ -32,24 +31,36 @@ class ColorTab extends JPanel implements Comparable<ColorTab> {
 	public void setup() {
 		removeAll();
 
-		int size = comps.size();
-		int height = size / COLOR_COLUMNS;
-		if (size % COLOR_COLUMNS != 0) height++;
-		setLayout(new GridLayout(1,COLOR_COLUMNS));
-
+		int nCells = comps.size();
+		int nCols = nCells / nRows;
+		if (nCells % nRows != 0) nCols++;
+		
+		setLayout(new GridLayout(1, nRows));
+		
+		// CAS520 add order - this assumes the order# are correctly entered in colors.properties 1-size
+		ColorVariable [] orderComps = new ColorVariable [nCells];
+		for (int i=0; i<nCells; i++) {
+			int j = comps.get(i).getOrder();
+			orderComps[j-1] =  comps.get(i);
+		}
+		
 		ColorVariable cv;
 		JPanel opanel, panel, apanel;
-		Iterator<ColorVariable> iter = comps.iterator();
-		int i, j;
 		opanel = new JPanel();
-		for (i = 0; i < COLOR_COLUMNS; i++) {
+		int i, j, k=0;
+		
+		// Adjacent columns are created with nCols each
+		for (i = 0; i < nCols; i++) {
 			panel = new JPanel(null);
 			panel.setLayout(new BoxLayout(panel,BoxLayout.Y_AXIS));
-			for (j = 0; j < height && iter.hasNext(); j++) {
+			if (nCells-k==4) nRows=2;
+			
+			for (j = 0; j < nRows && k < nCells; j++, k++) {
 				apanel = new JPanel(new BorderLayout());
-				cv = iter.next();
+				cv = orderComps[k];
+			
 				apanel.add(cv.button,BorderLayout.WEST);
-				apanel.add(cv.label,BorderLayout.CENTER);
+				apanel.add(cv.label, BorderLayout.CENTER);
 				panel.add(apanel);
 			}
 			opanel.add(panel);

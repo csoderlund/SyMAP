@@ -479,7 +479,7 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 				g.drawLine(MARGIN + 1, rect.y, dim.width + MARGIN - 1, rect.y);
 				g.setColor(Color.black);	
 				fm = g.getFontMetrics();
-				g.drawString(new Integer(contig.getNumber()).toString(), MARGIN, rect.y+fm.getAscent());
+				g.drawString(String.format("%d",contig.getNumber()), MARGIN, rect.y+fm.getAscent()); // CAS520 Integer.toString
 			}
 
 			iter = gX.getContigList().iterator(); // if not FPC, there won't be any elements in the list
@@ -491,7 +491,7 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 				g.drawLine(rect.x,MARGIN + 1,rect.x,dim.height + MARGIN - 1);
 				g.setColor(Color.black);	
 				fm = g.getFontMetrics();
-				g.drawString(new Integer(contig.getNumber()).toString(),rect.x,MARGIN+fm.getAscent());
+				g.drawString(String.format("%d",contig.getNumber()),rect.x,MARGIN+fm.getAscent());
 			}
 		}
 

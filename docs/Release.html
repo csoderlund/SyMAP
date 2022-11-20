@@ -4,9 +4,11 @@
 <title>SyMAP Release Notes</title>
 <link rel="stylesheet" href="style.css">
 <style>
+	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
 	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
 	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
-	a:link {text-decoration: none;color:#6666CC;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
@@ -59,32 +61,103 @@
 	<!---- START BODY -->
 
 If you are using SyMAP and want to update to a new version, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
-<a name="v519"></a>
-<h3>Release: v5.1.9 (26-Oct-22)</h3>
-I have made numerous changes to the Gene# assignment algorithm and 2D gene placement algorithm over the recent
-releases.
+<br>The following release instructions will link you to this page if there is action required by you.
+
+
+<h3>Release: v5.2.0 (20-Nov-22)</h3>
+For existing databases, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>; the synteny
+algorithm needs to be re-run to get the collinear changes.
+<p>This release is concentrated on improving the algorithm and display of <u>collinear sets</u>;
+see <a href="./UserGuide.html#csets">details</a>.
+There is new viewing support for Collinear sets: see <a href="./UserGuide.html#hitfilter">2D Hit Filter</a>
+and <a href="./UserGuide.html#qview">Queries</a>.
+
 <ol>
-<li>Pre-v5.1.2 SyMAP databases <u>do not work</u> with the new 2D gene placement algorithm.
-<br>&rarr;To make it work, the annotation needs to be reloaded and the synteny re-run (hopefully, you have kept your old MUMmer files).
-<br>&nbsp;
-<li>v5.1.2 to v5.1.7 works with the new 2D placement algorithm,
-but the Gene# assignment algorithm <u>does not work</u> for genes with multiple embedded genes, hence, the placement is not always correct.
-<br>&rarr;To update the Gene#, use the -z option discussed below.
-<br>&nbsp;
-<li>v5.1.8 updated the Gene# assignment algorithm to work for embedded genes, and give overlapping genes suffixes (a-z,a2-z2, etc).
-<br><i>Collinear Bug</i>: This change caused an occasional incorrect collinear set to be called.
-<br>&rarr;I am about to redo the code and make viewing the collinear set easier.
-<br>&nbsp;
-<li>v5.1.9 changed the Gene# assignment to call two genes overlapping if they overlap by even 1bp
-(instead of &gt;3bp). To update the Gene#, use the -z option discussed below.
+<li>The <tt>symap</tt> and <tt>viewSymap</tt> scripts have been changed to access
+<tt>SyMAPmanager</tt> instead of <tt>ProjectManagerFrame</tt>. NOTE: if you are updating, make sure you
+get these new scripts!!
+
+<li>Processing
+<ul>
+<li><u>Collinear sets</u>:
+<ul>
+<li>The collinear sets algorithm has been greatly improved for more accurate results.
+The <tt>Alignment&Synteny</tt> needs to be re-run to compute the updated sets.
+<li>Each collinear set has a unique number for the chromosome pair.
+</ul>
+<li>The <ttl>Hit#</ttl> used in Queries and the 2D display was the index into the database and could get very large.
+A <tt>hit number</tt> is now computed during processing, which is a sequential number for the chromosome pair (e.g. there will be
+a Hit#1 for each chromosome pair with hits).
+</ul>
+
+<li>Chromosome Explorer 2D display:
+<ol>
+<li><ttl>Hit Filter</ttl>:
+<ol type="a">
+<li>Has many new options, see <a href="./UserGuide.html#hitfilter">Hit Filters</a>
+<li>The <tt>Cancel</tt> and <tt>Defaults</tt> buttons never did work right; they do now.
 </ol>
 
--z option: To execute the v5.1.9 Gene# assignment algorithm, execute <tt>./symap -z</tt>,
+<li><ttl>Color wheel</ttl>, for <ttl>Hits</ttl>, there are two new options:
+<ol type="a">
+<li><ttl>Hover</ttl> provides the color the hit-wire turns when the mouse hovers over it.
+<li><ttl>Highlight1</ttl>  and <ttl>Highlight2</ttl> provides the highlight colors, which alternate
+when Collinear sets or Synteny blocks are shown.
+</ol>
+
+<li><ttl>Sequence Filter</ttl>:
+<ol type="a">
+<li><ttl>Gene Delimiter</ttl>: This is a new option, which draws a black line over the top exon of each gene when
+they are zoomed enough to see the exons. See <a href="./UserGuide.html#ex2d">2D view</a>.
+</ol>
+</ol>
+
+<li>Queries
+<ol>
+<li>The <ttl>Show Synteny</ttl> has been changed to <ttl>View 2D</ttl> with the options (2nd two are new):
+<br>(1) Region (kb), (2) Synteny Block, (3) Collinear Set. See <a href="./UserGuide.html#qview">Results</a>.
+<li><ttl>Show</ttl>: This is a new option which produces a popup of all data for the selected row.
+This allows copying any text.
+<li>The collinear column displays the set as N.M, where N is the size and M is the unique set number.
+<li><ttl>Gene#</ttl>: This is a new query, where one gene number can be entered (no suffix). This is
+a good way to view all hits for a given gene.
+<li><ttl>Hit St</ttl>: There is a new column, which is "=" if the two hit ends are equals, else it is "!=".
+<li>A hit may align to overlapping genes, but only one hit pair is shown; now the best overlap for each
+side is shown (before it was random).
+</ol>
+
+<li>Assorted minor stuff
+<ul>
+<li><tt>ConvertNCBI</tt> script has a new "-p" and "-pa" options to include as attributes the first protein or all protein names for the gene.
+<li>Schema update: there is an schema update that occurs the first time an existing database is read.
+<li>The <ttl>SyMAP Queries</ttl> button has been moved and renamed <ttl>Queries</ttl>.
+The 2D Filter and Color Wheel panels will be displayed in the middle of screen.
+The 2D <ttl>Information</ttl> box now shows the <ttl>Hit Filter</ttl> settings.
+<li>The SyMAP version of running synteny is on the summary panel.
+<li> All visible traces of FPC have been removed. From this release forward, FPC will no longer be supported.
+However, there are still releases from AGCoL and Github that support it;
+see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
+
+</ul>
+<li>Developers
+<br>(1) All 'new Integer()' etc, have been removed; hence, compiles under Java 17 without complaint.
+(2) Schema update: The 'runum' has
+been added to the hits table, which provided the set number for collinear pairs. The SyMAP version is now
+stored in the projects and pairs table. The annotation table contains a new column for the number of hits.
+(3) FPC code is all mixed in with the seq-to-seq; but it is no longer consistent with changes.
+</ol>
+<!--------------------------------------------------------------------->
+<a name="v519"></a>
+<h3>Release: v5.1.9 (26-Oct-22)</h3>
+For existing databases, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
+
+<p>Release v5.1.7 to v5.1.9 greatly improved the <u>Gene# assignment algorithm</u> and the <u>2D gene placement</u>.
+<p>Added -z option: To execute the latest Gene# assignment algorithm, execute <tt>./symap -z</tt>,
 then select <ttl>Reload Annotation</ttl>; the synteny algorithm does NOT need
 to be re-run.
 
-<h3>Release: v5.1.9 (25-Oct-22)</h3>
-This release has some interface improvements to SyMAP Query.
+<h4>(25-Oct-22)</h4>
+This release has some interface improvements to SyMAP Query and the 2D gene placement algorithm was improved.
 <ul>
 <li>SyMAP Project Parameters
 <ul>
@@ -110,15 +183,16 @@ this has been changed to 0.
 <li>Demos: A few small changes to the annotation files. Params updated.
 <li>Developers: Cleaned-up trace and debug flags.
 </ul>
-
+<!--------------------------------------------------------------------->
 <h3>Release: v5.1.8 (17-Oct-22)</h3>
-This release continues to concentrates on making the 2D display provide more information.
-<br>For existing SyMAP databases, see <a href="#v519">v519</a>.
+For existing databases, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
+
+<p>This release continues to concentrates on making the 2D display provide more information.
 
 <ul>
 <li>Processing
 <ul>
-<li><u>Overlapping genes</u>: the algorithm has been redone so that all overlapping and contained genes
+<li>Gene# assignment: the algorithm has been redone so that all overlapping and contained genes
 have the same number with suffixes a-z; and if there are more than 26 overlapping genes,
 then it starts over with numbers following
 the a-z; e.g. Gene #100a, #100z,  #100a1, #100b1, ...
@@ -143,14 +217,16 @@ For older databases, this does not provide useful information as it expect v5.1.
 </ul>
 
 </ul>
+<!--------------------------------------------------------------------->
 <h3>Release: v5.1.7 (12-Oct-22)</h3>
-This release concentrates on making the 2D display provide more information.
-<p>For existing SyMAP databases: (1) See <a href="#v519">v519</a> for overlapping genes.
-(2) If you have customized hit or gene colors, you will need to reset them.
+For existing databases, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
+<p>This release concentrates on making the 2D display provide more information with different colors for
+genes and hits.
+
 <ul>
 <li>Processing
 <ul>
-<li><u>Overlapping genes</u> have been numbered with the same gene number; now they are given a suffix, e.g.
+<li>Gene# assignment: have been numbered with the same gene number; now they are given a suffix, e.g.
 Gene #1011a, Gene #1011b. For existing databases, the annotation must be re-loaded to get this feature; then
 the synteny needs to be recomputed (existing MUMmer files will be used).
 <li><ttc>ConvertEnsembl</ttc> has a new option "-u" to use the sequence names from the FASTA file.
@@ -185,8 +261,9 @@ pair of chromosomes (e.g. 3.1.9).
 </ul>
 </ul>
 
-
+<!--------------------------------------------------------------------->
 <h3>Release: v5.1.6 (20-Sept-22)</h3>
+This release has improvements to the Block display, 2D display and SyMAP Query.
 <ul>
 <li>Blocks
 <ul>
@@ -194,7 +271,7 @@ pair of chromosomes (e.g. 3.1.9).
 <li>The windows are better sized.
 <li>Fixed rare bug: For the initial multi-chromosome view: If there are many chromosomes, they were being cutoff; now the scroll bar allows them all to be shown.
 </ul>
-<li>2d Display
+<li>2D Display
 <ul>
 <li>The full gene description can be viewed by right clicking on a gene annotation in the track;
 see <a href="UserGuide.html#view" target="_blank" class="ext">UserGuide</a>.
@@ -220,7 +297,7 @@ because the <ttl>data/seq_results</ttl> directory has not been created.
 </ul>
 </ul>
 
-
+<!--------------------------------------------------------------------->
 <h3>Release: v5.1.5 (13-Sept-22)</h3>
 <ul>
 <li>Online Docs - the biggest change of this release is an updating of the documentation.
@@ -247,7 +324,7 @@ that starts at 1.
 <li>Removed some dead tables from Schema and changed a few datatypes.
 </ul>
 </ul>
-
+<!--------------------------------------------------------------------->
 <h3>Release: v5.1.4 (4-Sept-22)</h3>
 
 <ul>
@@ -274,7 +351,7 @@ and is shown on the Chromosome Explorer Annotation and the hover of the gene.
 <li>Alignment Bug Fix: only the first part of the alignment was working (fairly recent bug).
 </ul>
 </ul>
-
+<!--------------------------------------------------------------------->
 <h3>Release: v5.1.3 (30-Aug-22)</h3>
 There is no major new development, but small interface improvements and SyMAP Query has a small bug fix.
 <ul>
@@ -325,9 +402,11 @@ if a start or stop was entered, it gave an error. This is fully functional now.
 </ul>
 </ul>
 
-
+<!--------------------------------------------------------------------->
 <h3>Release: v5.1.2 (19Aug22)</h3>
-The biggest changes are with the <tt>ConvertNCBI</tt> and <tt>ConvertEnsembl</tt> scripts.
+This release associates Exons with their genes; hence, your database needs to be
+<a href="SystemGuide.html#update" class="ext" target="_blank">updated</a>.
+
 <ul>
 <li>Annotation
 <ul>

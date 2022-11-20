@@ -1,7 +1,5 @@
 package util;
 
-import util.Converters;
-
 /**
  * The DPalign method perform dynamic programming
  * The methods getHorzResult and getVertResult build and scored the aligned sequences
@@ -313,7 +311,7 @@ public class PairwiseAligner
                 throw new RuntimeException ( "Invalid direction..." );
             }
         }       
-        lastGap = new Character ( chGap );
+        lastGap = chGap; // CAS520 new Character
     }
     
     private boolean matchAffine (String strHorz, String strVert )
@@ -484,7 +482,7 @@ public class PairwiseAligner
                 throw new RuntimeException ( "Invalid direction..." );
             }  
         }      
-        lastGap = new Character ( chGap );
+        lastGap = chGap;
     }
     
     // For doHomology, the arrays get reused.

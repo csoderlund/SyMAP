@@ -15,6 +15,7 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
+import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.pool.DatabaseUser;
 import util.DatabaseReader;
@@ -160,14 +161,15 @@ public class UpdatePool extends DatabaseUser
 	
 	public void createProject(String name, ProjType type) throws SQLException
 	{
-		executeUpdate("INSERT INTO projects (name,type,loaddate) " +
-							"VALUES('" + name + "','" + 
-							type.toString().toLowerCase() + "',NOW())");
+		executeUpdate("INSERT INTO projects (name,type,loaddate, syver) " + // CAS520 add version
+				"VALUES('" + name + "','" + type.toString().toLowerCase() + " ',NOW()" + 
+							",'" + SyMAP.VERSION + "')");
 	}
 	
 	public void deleteProject(int idx) throws SQLException
 	{
-		executeUpdate("DELETE FROM projects WHERE idx='" + idx + "' LIMIT 1");			
+		executeUpdate("DELETE FROM projects WHERE idx='" + idx + "' LIMIT 1");	
+		resetIdx("idx", "projects"); // CAS520 add
 	}
 	
 	public int getProjIdx(String name, ProjType type) throws SQLException

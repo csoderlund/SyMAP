@@ -27,6 +27,9 @@ public class Utils
 	static TreeMap<String,Vector<Integer>> mHistLevels;
 	static TreeMap<String,TreeMap<Integer,Integer>> mHist;
 	
+	public static void prt(Logger log, String msg) { // CAS520 add
+		log.msg(msg);
+	}
 	public static void prtNumMsg(ProgressDialog prog, int num, String msg) {
 		prog.appendText(String.format("%9d %s           ", num, msg));
 	}
@@ -42,6 +45,7 @@ public class Utils
 	public static void prtNumMsgNZ(int num, String msg) {
 		if (num>0) System.out.format("%9d %s              \n", num, msg);
 	}
+	
 	public static void timeMsg(Logger log, long startTime, String msg) {
 		log.msg(msg + " done:  " 
 				+ Utilities.getDurationString(System.currentTimeMillis()-startTime) 

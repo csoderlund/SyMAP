@@ -21,12 +21,16 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.TreeMap;
 
 import symap.sequence.Sequence;
 import util.Utilities;
+import symap.SyMAP;
 import symap.SyMAPConstants;
 
 public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPConstants {
+	private static boolean debug = SyMAP.DEBUG;
+	
 	private static final int MOUSE_PADDING = 3;
 	
 	private Mapper mapper;
@@ -98,7 +102,7 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 		for (PseudoHit h : allHitsArray)
 			h.clear();	
 	}
-	
+	// called from mapper.myinit sets for the Hit Filter %id slider
 	public void setMinMax(HitFilter hf) { 
 		for (PseudoHit h : allHitsArray)
 			h.setMinMax(hf);
@@ -125,24 +129,55 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 					 getHitContent(),h,swap));
 	 }
 	 /*****************************************************
-	  * Paint all hits
+	  * XXX Paint all hits
 	  */
 	 public void paintComponent(Graphics2D g2) {
-		Point stLocation1 = seqObj1.getLocation();
-		Point stLocation2 = seqObj2.getLocation();
-		int trackRelativePos1 = mapper.getTrackPosition(seqObj1); // left or right
-		int trackRelativePos2 = mapper.getTrackPosition(seqObj2);
+		Point stLoc1 = seqObj1.getLocation();
+		Point stLoc2 = seqObj2.getLocation();
+		int trackRelPos1 = mapper.getTrackPosition(seqObj1); // left or right
+		int trackRelPos2 = mapper.getTrackPosition(seqObj2);
 		List<PseudoHit> hHits = new LinkedList<PseudoHit>();
-
-		// Draw non-highlighted hits first
+		
+		boolean bHiSet   = mapper.getHitFilter().isHiSet();
+		boolean bHiBlock = mapper.getHitFilter().isHiBlock();
+		boolean bHi = (bHiSet || bHiBlock);
+		TreeMap <Integer, Boolean> highMap = new TreeMap <Integer, Boolean> ();
+		boolean toggle=true; 
+		
+		// CAS520 add highlight to block and collinear
+		// allHitArray sorted by start1; this does not correspond to sequential blocks (sorted sets).
+		// start1 corresponds to grp1_idx; sorted by start1 does not correspond to sequence sets
+		if (bHi) {
+			if (debug) System.out.println("highlight ");
+			for (PseudoHit h : allHitsArray) {
+				int set = (bHiSet) ?  h.getCollinearSet() : h.getBlock();
+				if (set!=0 && !highMap.containsKey(set)) {
+					if (debug) System.out.println("set " + set + " " +toggle + " "+ h.getPhData().getStart1() + " " +  h.getPhData().getStart2());
+					highMap.put(set, toggle);
+					toggle = !toggle;
+				}
+			}
+			toggle=true;
+			if (bHiSet) { //sorted by start1 does not correspond to sequence sets
+				for (int set : highMap.keySet()) {
+					highMap.put(set, toggle);
+					toggle = !toggle;
+				}
+			}
+		}
+		toggle=true; 
 		for (PseudoHit h : allHitsArray) {
+			if (bHi) {
+				int set = (bHiSet) ?  h.getCollinearSet() : h.getBlock();
+				if (set!=0) toggle = highMap.get(set);
+			}
 			if (h.isHover()) hHits.add(h);
-			else h.paintComponent(g2,trackRelativePos1,trackRelativePos2,stLocation1,stLocation2);
+			else h.paintComponent(g2, trackRelPos1, trackRelPos2, stLoc1, stLoc2, toggle);
 		}
 
-		// Draw highlighted hits on top
+		// Draw highlighted hits on top with highlight
 		for (PseudoHit h : hHits)
-			h.paintComponent(g2,trackRelativePos1,trackRelativePos2,stLocation1,stLocation2);
+			h.paintComponent(g2,trackRelPos1,trackRelPos2,stLoc1,stLoc2, true);
 	}
 	/*************************************************************
 	 * Hover and popups
@@ -220,50 +255,68 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 		private Line2D.Double hitWire;
 		private Rectangle2D.Double fullHitRect1=null, fullHitRect2=null; // CAS517 ends of wire
 		
-		private boolean hover;		// hover line is highlighted; CAS517 remove boolean highlight, not used
-		private boolean geneContained; 
-		private boolean geneOverlap; 
+		private boolean bHover;		// hover line is highlighted; CAS517 remove boolean highlight, not used
 		private boolean bSelected; // From TableDataPanel
 		
 		public PseudoHit(PseudoPseudoData.PseudoHitData data) {
 			this.phDataObj = data;
 			hitWire = new Line2D.Double();
-			hover = false;
+			bHover = false;
+		}
+		public int getCollinearSet() { // CAS520 to toggle collinear highlight
+			return phDataObj.getCollinearSet();
+		}
+		public int getBlock() { // CAS520 to toggle block highlight
+			return phDataObj.getBlock();
 		}
 		
 		private void getHit(List hitList, int start, int end, boolean swap) { 
 			if ( isContained(start, end, swap) )
 				hitList.add(phDataObj);
 		}
+		public String getType() 		{return SEQ_TYPE;}
 		
+		// CAS520 change for seqseq
 		public void setMinMax(HitFilter hf) {
-			hf.condSetBesEvalue(phDataObj.getEvalue(),phDataObj.getEvalue());
-			hf.condSetBesPctid(phDataObj.getPctid(),phDataObj.getPctid());
+			hf.condSetPctid(phDataObj.getPctid());
+		}
+		public void set(boolean isSelectedHit) { // CAS516 change from setting highlight to bSelected
+			bSelected = isSelectedHit;
 		}
 		public void getSequenceMinMax(int[] minMax) {
 			if (isVisible() && !isFiltered()) {
 				PseudoPseudoHits.getSequenceMinMax(minMax,phDataObj.getStart2(),phDataObj.getEnd2());
 			}
 		}	
+		public PseudoPseudoData.PseudoHitData getPhData() {return phDataObj;}
 		
-		public String getType() 		{return SEQ_TYPE;}
-		public boolean isBlockHit() 	{return phDataObj.isBlockHit();}
-		
-		public boolean isHover() {return hover; } // for this hit wire object
+		public boolean isBlockHit() 	{return phDataObj.isBlock();}
+		public boolean isHover() {return bHover; } // for this hit wire object
 		 
-		public void set(boolean isSelectedHit) { // CAS516 change from setting highlight to bSelected
-			bSelected = isSelectedHit;
-			geneContained = isGeneContained();
-			geneOverlap = isGeneOverlap();
+		public boolean isHighLightHit() { // CAS520 add method
+			 HitFilter hf = mapper.getHitFilter();
+			 if (hf.isHiBlock() && phDataObj.isBlock()) return true;
+			 if (hf.isHiSet() 	&& phDataObj.isSet()) return true;
+			 if (hf.isHi2Gene() && phDataObj.is2Gene()) return true;
+			 if (hf.isHi1Gene() && phDataObj.is1Gene()) return true;
+			 if (hf.isHi0Gene() && phDataObj.is0Gene()) return true;
+			 return false;	// hf.isHiNone default
 		}
-		
-		public boolean isFiltered() {
-			 HitFilter hitfilter = mapper.getHitFilter();
-			 return false 
-			 		|| (hitfilter.getBlock() && !phDataObj.isBlockHit()) 
-			 		|| (hitfilter.getGeneContained() && !geneContained) 
-			 		|| (hitfilter.getGeneOverlap() && !geneOverlap) 
-			 		|| (hitfilter.getNonGene() && (geneOverlap || geneContained));
+		// XXX
+		public boolean isFiltered() { // CAS520 rewrite for new filters
+			 HitFilter hf = mapper.getHitFilter();
+			 
+			 double pctid = hf.getPctid();
+			 boolean show = (phDataObj.getPctid()>=pctid);
+			 
+			 if (hf.isAllHit() && show) return false;
+			 if (hf.isBlock()  && phDataObj.isBlock() && show) return false;
+			 if (hf.isSet()    && phDataObj.isSet()   && show) return false;
+			 if (hf.is2Gene()  && phDataObj.is2Gene()  && show) return false;
+			 if (hf.is1Gene()  && phDataObj.is1Gene()  && show) return false;
+			 if (hf.is0Gene()  && phDataObj.is0Gene() && show) return false;
+			 
+			 return true; 
 		 }
 		 
 		 public boolean isVisible() {
@@ -271,9 +324,6 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 			 		isSequenceVisible(seqObj2, phDataObj.getStart2(), phDataObj.getEnd2());
 		 }
 		
-		private boolean isGeneContained() {return (phDataObj.getOverlap() > 0); } 
-		private boolean isGeneOverlap()   {return (phDataObj.getOverlap() > 0); }
-	
 		// is Hit Wire contained in hover
 		public boolean isContained(int start, int end, boolean swap) { 
 			return ( isVisible() && !isFiltered() && 
@@ -301,15 +351,20 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 			 return setHover(b); 
 		 } 
 		 protected boolean setHover(boolean hover) {
-			if (hover != this.hover) {
-				this.hover = hover;
+			if (hover != this.bHover) {
+				this.bHover = hover;
 				return true;
 			}
 			return false;
 		 } 
-		 private Color getCColor(String orient) {
-			 if (isHover())return Mapper.pseudoLineHighlightColor;
-			 else if (bSelected) 			return Color.green;				// CAS516 different color for selected
+		 private Color getCColor(String orient, boolean toggle) {
+			 if (isHover())          return Mapper.pseudoLineHoverColor;	// CS520 change Highlight to Hover
+			 else if (bSelected) 	 return Mapper.pseudoLineHoverColor;	// CAS516 different color for query selected
+			 else if (isHighLightHit()) {
+				 if (toggle) return Mapper.pseudoLineHighlightColor1;		// CAS520 for new filters for block and co hits
+				 else 		 return Mapper.pseudoLineHighlightColor2;
+			 }
+			 
 			 else if (orient.contentEquals("++")) return Mapper.pseudoLineColorPP; 
 			 else if (orient.contentEquals("+-")) return Mapper.pseudoLineColorPN;
 			 else if (orient.contentEquals("-+")) return Mapper.pseudoLineColorNP;
@@ -320,17 +375,18 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 		 /***************************************************************************
 		  * Draw hit line connector, and hit info on seq1/seq2 rectangle (%ID, hitLen)
 		  */
-		 public void paintComponent(Graphics2D g2, int trackPos1, int trackPos2, Point stLocation1, Point stLocation2) {
+		 public void paintComponent(Graphics2D g2, int trackPos1, int trackPos2, Point stLoc1, Point stLoc2, 
+				 boolean btoggle) { // CAS520 add toggle for collinear set 
 			 if (!isVisible() || isFiltered()) return;
 			 
 		   /* get border locations of sequence tracks to draw hit stuff to/in */
-			 Point2D sp1 = getSequenceCPoint(seqObj1, phDataObj.getStart1(), phDataObj.getEnd1(), trackPos1, stLocation1);
-			 Point2D sp2 = getSequenceCPoint(seqObj2, phDataObj.getStart2(), phDataObj.getEnd2(), trackPos2, stLocation2);
+			 Point2D sp1 = getSequenceCPoint(seqObj1, phDataObj.getStart1(), phDataObj.getEnd1(), trackPos1, stLoc1);
+			 Point2D sp2 = getSequenceCPoint(seqObj2, phDataObj.getStart2(), phDataObj.getEnd2(), trackPos2, stLoc2);
 			 int x1=(int)sp1.getX(), y1=(int)sp1.getY();
 			 int x2=(int)sp2.getX(), y2=(int)sp2.getY();
 			 
 			/* hitLine: hit connecting seq1/seq2 chromosomes */
-			 g2.setPaint(getCColor(phDataObj.getOrients())); // set color
+			 g2.setPaint(getCColor(phDataObj.getOrients(), btoggle)); // set color;
 			 hitWire.setLine(sp1,sp2); 
 			 g2.draw(hitWire);	
 			 		
@@ -374,7 +430,7 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 					 rp1.setLocation(x1-lineLength,rp1.getY());				 
 					 rp2.setLocation(x1-lineLength,rp2.getY());
 					 
-					 paintHitLen(g2, seqObj1, rp1, rp2, trackPos1, phDataObj.isPosOrient1());
+					 paintHitLen(g2, seqObj1, rp1, rp2, trackPos1, phDataObj.isPosOrient1(), btoggle);
 				 }
 			 }
 			 if (seqObj2.getShowHitLen()) {
@@ -384,7 +440,7 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 					 rp3.setLocation(x2+lineLength,rp3.getY());				 
 					 rp4.setLocation(x2+lineLength,rp4.getY());
 					 
-					 paintHitLen(g2, seqObj2, rp3, rp4, trackPos2, phDataObj.isPosOrient2());
+					 paintHitLen(g2, seqObj2, rp3, rp4, trackPos2, phDataObj.isPosOrient2(), btoggle);
 				 }
 			 }
 			 /* Hover over hit line connector; CAS517 move creation to HitData */
@@ -396,7 +452,8 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 		 /***************************************************************************
 		  * Draw hit - draws the length of the hit along the blue chromosome box, which shows breaks between merged hitsd
 		  */
-		 private void paintHitLen(Graphics2D g2, Sequence st, Point2D pStart, Point2D pEnd, int trackPos, boolean forward) {
+		 private void paintHitLen(Graphics2D g2, Sequence st, Point2D pStart, Point2D pEnd, 
+				 int trackPos, boolean forward, boolean toggle) {
 			 double psx = pStart.getX();
 			 double psy = pStart.getY();
 			 double w = Mapper.hitRibbonWidth;
@@ -415,7 +472,7 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 				 subHits = phDataObj.getTargetSeq();
 
 			 if (subHits == null || subHits.length() == 0) {// CAS512 long time bug when flipped and one hit
-				 g2.setPaint(getCColor(phDataObj.getOrients()));
+				 g2.setPaint(getCColor(phDataObj.getOrients(), toggle));
 				 rect = new Rectangle2D.Double(psx, psy, w, pEnd.getY()-psy);
 				 
 				 fixRect(rect); // for flipped track
@@ -429,7 +486,7 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 				 g2.fill(rect);
 				 g2.draw(rect);
 				 
-				 g2.setPaint(getCColor(phDataObj.getOrients()));
+				 g2.setPaint(getCColor(phDataObj.getOrients(), toggle));
 				 
 				 // Draw sub-hits
 				 String[] subseq = subHits.split(",");
@@ -465,7 +522,7 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 			
 			boolean isPos = (isQuery) ? phDataObj.isPosOrient1() : phDataObj.isPosOrient2();
 			String o = ""; // (isPos) ? "+" : "-"; CAS517x 
-			String hit = "Hit #" + phDataObj.getID() + " " + o + "\n";
+			String hit = "Hit #" + phDataObj.getHitNum() + " " + o + "\n"; // CAS520 changed from hit idx to hitnum
 			
 			if (isQuery) 	return hit + phDataObj.getQueryBounds();
 			else 			return hit + phDataObj.getTargetBounds();
@@ -473,7 +530,7 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 		/* CAS516 popup from clicking hit wire 
 		 * */
 		public void popupDesc() { 
-			String title="Hit #" + phDataObj.getID();
+			String title="Hit #" + phDataObj.getHitNum(); // CAS520 changed from hit idx to hitnum
 			
 			String msg = phDataObj.createHover(st1LTst2) + "\n"; 
 			
@@ -485,6 +542,7 @@ public class PseudoPseudoHits extends AbstractHitData implements Hits, SyMAPCons
 				
 				msg +=  st1LTst2 ? (msg1+msg2) : (msg2+msg1);
 			}
+			msg += "\nIndex " + phDataObj.getID(); // CAS520 puts at bottom, useful for debugging and out of way
 			Dimension d = new Dimension (350, 220); 
 			Utilities.displayInfoMonoSpace(mapper, title, msg,  d, 0.0, 0.0); 
 		}

@@ -11,13 +11,13 @@ import symap.pool.ProjectProperties;
 import util.State;
 
 /**
- * Class <code>BlockFinder</code> is the base abstract class for block finding algorithms
+ * Class BlockFinder is the base abstract class for block finding algorithms
  * to be used in Sytry.
  *
- * Extending class must implement <code>findBlocks()</code>.  If configurable paramaters
- * are being added, <code>setDefaultParams()</code>, <code>setParam(FinderParam param, Object value)</code>,
- * <code>numberOfParams()</code>, and <code>getParam(int i)</code> should be overrided.  The super method should
- * also be invoked as BlockFinder has it's own configurable paramater, <code>debug</code>.
+ * Extending class must implement findBlocks().  If configurable paramaters
+ * are being added, setDefaultParams(), setParam(FinderParam param, Object value),
+ * numberOfParams(), and getParam(int i) should be overrided.  The super method should
+ * also be invoked as BlockFinder has it's own configurable paramater, debug.
  *
  * @see ParamHolder
  * @see DotPlotConstants
@@ -31,13 +31,13 @@ public abstract class BlockFinder extends ParamHolder implements DotPlotConstant
     protected boolean stop;
 
     /**
-     * Creates a new <code>BlockFinder</code> instance.
+     * Creates a new BlockFinder instance.
      *
-     * @param pp a <code>ProjectProperties</code> value
-     * @param db a <code>FinderDBUser</code> value
-     * @param block a <code>Block</code> value
-     * @param rid an <code>int</code> value
-     * @param props a <code>PropertiesReader</code> value of properties file specific to the algorithms for setting default values.
+     * @param pp a ProjectProperties value
+     * @param db a FinderDBUser value
+     * @param block a Block value
+     * @param rid an int value
+     * @param props a PropertiesReader value of properties file specific to the algorithms for setting default values.
      */
     protected BlockFinder(ProjectProperties pp, FinderDBUser db, Tile block, int rid, PropertiesReader props) {
 		super(props);
@@ -63,11 +63,11 @@ public abstract class BlockFinder extends ParamHolder implements DotPlotConstant
     }
 
     /**
-     * Method <code>getGenomeLength</code> gets the length of the genome on axis <code>axis</code> 
+     * Method getGenomeLength gets the length of the genome on axis axis 
      *
-     * @param axis an <code>int</code> value of DotPlotConstants.X or DotPlotConstants.Y
-     * @param factor an <code>boolean</code> if true, the return value is first multiplied by getFactor(axis)
-     * @return an <code>int</code> value of the length of the genome (bp for pseudo and cb for FPC)
+     * @param axis an int value of DotPlotConstants.X or DotPlotConstants.Y
+     * @param factor an boolean if true, the return value is first multiplied by getFactor(axis)
+     * @return an int value of the length of the genome (bp for pseudo and cb for FPC)
      * @exception SQLException if an error occurs
      */
     protected int getGenomeLength(int axis, boolean factor) throws SQLException {
@@ -76,10 +76,10 @@ public abstract class BlockFinder extends ParamHolder implements DotPlotConstant
     }
 
     /**
-     * Method <code>getGenomeAnchors</code> gets the number of hits between the genomes.  See
+     * Method getGenomeAnchors gets the number of hits between the genomes.  See
      * FinderDBUser for the query details.
      *
-     * @return an <code>int</code> value
+     * @return an int value
      * @exception SQLException if an error occurs
      */
     protected int getGenomeAnchors() throws SQLException {
@@ -92,10 +92,10 @@ public abstract class BlockFinder extends ParamHolder implements DotPlotConstant
     }
 
     /**
-     * Method <code>setBlocks</code> executes the findBlocks(Block) method
-     * and sets the blocks alternate blocks (i.e. <code>Block.setABlocks(ABlock[])</code>).
+     * Method setBlocks executes the findBlocks(Block) method
+     * and sets the blocks alternate blocks (i.e. Block.setABlocks(ABlock[])).
      *
-     * @param altNum an <code>int</code> value
+     * @param altNum an int value
      * @exception SQLException if an error occurs
      */
     public void setBlocks(int altNum) throws SQLException {
@@ -121,62 +121,62 @@ public abstract class BlockFinder extends ParamHolder implements DotPlotConstant
     }
 
     /**
-     * Method <code>findBlocks</code> must implement the block finding algorithm returning
+     * Method findBlocks must implement the block finding algorithm returning
      * an array of the blocks found.
      *
-     * @return a <code>FBlock[]</code> value
+     * @return a FBlock[] value
      * @exception SQLException if an error occurs
      */
     protected abstract FBlock[] findBlocks() throws SQLException;
 
     /**
-     * Method <code>getBlockFinder</code> returns a BlockFinder with the given class
+     * Method getBlockFinder returns a BlockFinder with the given class
      * name.
      *
-     * @param pp a <code>ProjectProperties</code> value
-     * @param db a <code>FinderDBUser</code> value
-     * @param className a <code>String</code> value
-     * @param block a <code>Block</code> value
-     * @param rid a <code>int</code> of the desired run id for the block
-     * @return a <code>BlockFinder</code> value or null on error or if className is null
+     * @param pp a ProjectProperties value
+     * @param db a FinderDBUser value
+     * @param className a String value
+     * @param block a Block value
+     * @param rid a int of the desired run id for the block
+     * @return a BlockFinder value or null on error or if className is null
      */
     public static BlockFinder getBlockFinder(ProjectProperties pp, FinderDBUser db, String className, Tile block, int rid) {
 	BlockFinder bf = null;
 	if (className != null)
 	    try {
-		Class bfClass = Class.forName(className);
-		Class[] paramClasses = new Class[] {ProjectProperties.class,FinderDBUser.class,Tile.class,Integer.TYPE};
-		Object[] paramArgs = new Object[] {pp,db,block,new Integer(rid)};
-		Constructor bfCon = bfClass.getConstructor(paramClasses);
-		bf = (BlockFinder)bfCon.newInstance(paramArgs);
+			Class bfClass = Class.forName(className);
+			Class[] paramClasses = new Class[] {ProjectProperties.class,FinderDBUser.class,Tile.class,Integer.TYPE};
+			Object[] paramArgs = new Object[] {pp,db,block,rid}; // CAS520 new Integer
+			Constructor bfCon = bfClass.getConstructor(paramClasses);
+			bf = (BlockFinder)bfCon.newInstance(paramArgs);
 	    }
 	    catch (Exception e) { e.printStackTrace(); }
 	return bf;
     }
 
     /**
-     * Method <code>getParams</code> returns the params for a block finder with class name <code>className</code>
-     * by instansiating a new one through <code>getBlockFinder(ProjectProperties,FinderDBUser,String,Block,int)</code>
-     * and calling <code>BlockFinder.getParams()</code> on the returned object.
+     * Method getParams returns the params for a block finder with class name className
+     * by instansiating a new one through getBlockFinder(ProjectProperties,FinderDBUser,String,Block,int)
+     * and calling BlockFinder.getParams() on the returned object.
      *
-     * @param className a <code>String</code> value
-     * @return a <code>FinderParam[]</code> value
+     * @param className a String value
+     * @return a FinderParam[] value
      */
     public static FinderParam[] getParams(String className) {
-	BlockFinder bf = getBlockFinder(null,null,className,null,-1);
-	return bf.getParams();
+		BlockFinder bf = getBlockFinder(null,null,className,null,-1);
+		return bf.getParams();
     }
 
     /**
-     * Method <code>printDebug</code> prints the debug message message if the
+     * Method printDebug prints the debug message message if the
      * BlockFinder is set to have debug on.
      *
-     * Prints: <code>DEBUG "+block.toString()+": "+message</code>
+     * Prints: DEBUG "+block.toString()+": "+message
      *
-     * @param message a <code>String</code> value
+     * @param message a String value
      */
     protected void printDebug(String message) {
-	if (debug)
-	    System.out.println("DEBUG "+block+": "+message);
+		if (debug)
+		    System.out.println("DEBUG "+block+": "+message);
     }
 }

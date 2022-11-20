@@ -11,7 +11,7 @@ import util.DatabaseReader;
 import util.Utilities;
 import util.ErrorReport;
 
-public class ProjectManagerFrame extends ProjectManagerFrameCommon
+public class SyMAPmanager extends ProjectManagerFrameCommon
 {
 	private static final long serialVersionUID = 1L;
 	
@@ -27,11 +27,11 @@ public class ProjectManagerFrame extends ProjectManagerFrameCommon
 			System.exit(0);
 		}
 		
-		ProjectManagerFrame frame = new ProjectManagerFrame(args);
+		SyMAPmanager frame = new SyMAPmanager(args);
 		frame.setVisible(true);
 	}
 	
-	ProjectManagerFrame(String args[])
+	SyMAPmanager(String args[])
 	{
 		super(args); // CAS505 moved parse args to ProjectManagerFrameCommon
 		

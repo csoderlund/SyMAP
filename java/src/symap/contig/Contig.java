@@ -133,19 +133,11 @@ public class Contig extends MarkerTrack {
 		if (otherProject != this.otherProject) setup(project,contig,otherProject,null);
 	}
 
-	/**
-	 * Method <code>setup</code>
-	 *
-	 * @param project an <code>int</code> value
-	 * @param contig an <code>int</code> value
-	 * @param otherProject an <code>int</code> value
-	 * @param mtd a <code>MarkerTrackData</code> value (optional)
-	 */
 	public void setup(int project, int contig, int otherProject, MarkerTrackData mtd) {
 		if (this.project != project || this.contig != contig || this.otherProject != otherProject) {
 			reset(project,otherProject);
 			this.contig = contig;
-			fromBlockList.add(new Integer(contig));
+			fromBlockList.add(contig); // CAS520
 			if (holder != null && holder.getHelpBar() != null) holder.getHelpBar().addHelpListener(toBlockLink);
 			toBlockLink.addMouseMotionListener(this);		
 			if (otherProject != NO_VALUE) init();
@@ -224,8 +216,7 @@ public class Contig extends MarkerTrack {
 	}
 
 	/**
-	 * Clears the internal list members and also calls super.clear().
-	 *  
+	 * Clears the internal list members and also calls super.clear(). 
 	 * @see MarkerTrack#clear()
 	 */
 	public void clear() {
@@ -254,7 +245,6 @@ public class Contig extends MarkerTrack {
 	}
 
 	/**
-	 * 
 	 * @see Track#getPadding()
 	 */
 	public double getPadding() {
@@ -321,15 +311,14 @@ public class Contig extends MarkerTrack {
 				cloneCondFilters.remove(Clone.CLONE_REMARK_COND_FILTERED);
 		}
 		clearAllBuild();
-		//drawingPanel.repaint();
 	}
 
 	/**
 	 * Filters the clones to show, hide, or highlight based on the name matched by the pattern.
 	 * 
-	 * @param pattern a <code>String</code> value given as a regular expression.
-	 * @param show an <code>int</code> value of the CLONE_SHOW, CLONE_HIDE, CLONE_HIGHLIGHT
-	 * @return a <code>boolean</code> value of true when a clone matched the pattern
+	 * @param pattern a String value given as a regular expression.
+	 * @param show an int value of the CLONE_SHOW, CLONE_HIDE, CLONE_HIGHLIGHT
+	 * @return a boolean value of true when a clone matched the pattern
 	 * @exception IllegalArgumentException if show is invalid
 	 */
 	public boolean filterCloneNames(String pattern, int show) throws IllegalArgumentException {
@@ -373,14 +362,14 @@ public class Contig extends MarkerTrack {
 	}
 
 	/**
-	 * Method <code>flip</code> sets the contig to be flipped or not flipped on the next build.
+	 * Method flip sets the contig to be flipped or not flipped on the next build.
 	 * The contig is started out as being not flipped.  This method may also change the contig's
 	 * start and end if needed.
 	 *
-	 * @param flip a <code>boolean</code> value
-	 * @param changeEnds a <code>boolean</code> value of true to modify the contig's start and end to corrispond to
+	 * @param flip a boolean value
+	 * @param changeEnds a boolean value of true to modify the contig's start and end to corrispond to
 	 *                                         the same location as before considering the flip.
-	 * @return a <code>boolean</code> value of true on a change
+	 * @return a boolean value of true on a change
 	 */
 	public boolean flip(boolean flip, boolean changeEnds) {
 		if (flipped != flip && hasInit()) {
@@ -415,8 +404,6 @@ public class Contig extends MarkerTrack {
 
 	/**
 	 * Sets the clone names to be shown or hidden on the next build.
-	 * 
-	 * @param show
 	 */
 	public void showCloneNames(boolean show) {
 		if (show != showCloneNames) {
@@ -426,12 +413,10 @@ public class Contig extends MarkerTrack {
 	}
 
 	/**
-	 * Method <code>showBothBESFilter</code> sets the clones up to be filtered on <code>filter</code>.
+	 * Method showBothBESFilter sets the clones up to be filtered on filter.
 	 * filter =&gt; Contig.NO_BOTH_BES_FILTER    -&gt; not filter on this
 	 *           Clone.BOTH_BES_COND_FILTERED -&gt; filter on having hits on both bes's
 	 *           Clone.BOTH_BES_CURRENT_COND_FILTERED -&gt; filter on having hits currently showing on both bes's 
-	 *
-	 * @param filter a <code>String</code> value
 	 */
 	public void showBothBESFilter(String filter) {
 		if (filter != showBothBESFilter) {
@@ -443,9 +428,6 @@ public class Contig extends MarkerTrack {
 		}
 	}
 
-	/**
-	 * @return the contig number.
-	 */
 	public int getContig() {
 		return contig;
 	}
@@ -457,16 +439,14 @@ public class Contig extends MarkerTrack {
 	/**
 	 * Sets the new contig number to contig, clearing init if contig is different then the current contig number.
 	 * Also sets the block list when the To Block link is clicked to the single contig if the current list doesn't
-	 * contain contig <code>contig</code>.
-	 * 
-	 * @param contig the new contig number
+	 * contain contig contig.
 	 */
 	public void setContig(int contig) {
 		if (contig != this.contig) {
 			this.contig = contig;
 			clearHeight();
 			clearWidth();
-			Integer contigInt = new Integer(contig);
+			Integer contigInt = contig;
 			if (!fromBlockList.contains(contigInt)) {
 				fromBlockList.clear();
 				fromBlockList.add(contigInt);
@@ -477,9 +457,7 @@ public class Contig extends MarkerTrack {
 	}
 
 	/**
-	 * Method <code>setFromBlockList</code> sets the block list for when the user clicks on the To Block link.
-	 *
-	 * @param contigList a <code>Collection</code> value
+	 * Method setFromBlockList sets the block list for when the user clicks on the To Block link.
 	 */
 	public void setFromBlockList(Collection<Integer> contigList) {
 		fromBlockList.clear();
@@ -522,8 +500,6 @@ public class Contig extends MarkerTrack {
 		cloneRemarks = (CloneRemarks.CloneRemark[])remarks.toArray(new CloneRemarks.CloneRemark[0]);
 		Arrays.sort(cloneRemarks);
 
-		if (SyMAP.DEBUG) System.out.println("CloneRemarks.length = "+cloneRemarks.length+" from "+crs);
-
 		resetStart();
 		resetEnd();
 		setInit();
@@ -535,8 +511,6 @@ public class Contig extends MarkerTrack {
 		if (hasBuilt()) return true;
 		if (!hasInit()) return false;
 
-		//System.out.println("Contig.build");
-		
 		setFullBpPerPixel();
 
 		toBlockLink.setupLink();
@@ -685,28 +659,14 @@ public class Contig extends MarkerTrack {
 		return true;
 	}
 
-	/**
-	 * @return the current width of the contig in pixels.
-	 */
 	public int getContigWidth() {
 		return (int) Math.round(rect.getWidth());
 	}
 
-	/**
-	 * @return the base width of the contig.
-	 */
 	public int getBaseWidth() {
 		return (int) Math.round(baseWidth);
 	}
 
-	/**
-	 * Method <code>getMarker</code> Searches the marker list for the marker with
-	 * a name equal to <code>name</code>.
-	 *
-	 * @param name a <code>String</code> value of the name of the marker to find.
-	 * @param contig an <code>int</code> value of the contig to look in.
-	 * @return a <code>Marker</code> value of found marker or null if marker not found
-	 */
 	public Marker getMarker(String name, int contig) {
 		if (this.contig == contig || contig == NO_VALUE)
 			return markerList.getMarker(name);
@@ -720,25 +680,14 @@ public class Contig extends MarkerTrack {
 		return null;
 	}
 
-	/**
-	 * Method <code>getClone</code> searches the list of clones for a clone 
-	 * with a name equal to <code>name</code>.
-	 *
-	 * @param name a <code>String</code> of the name of clone to find
-	 * @return a <code>Clone</code> value of the clone or null if not found
-	 */
 	public Clone getClone(String name) {
 		for (Clone c : cloneList) {
 			if (c.getName().equals(name))
 				return c;
 		}
-		if (SyMAP.DEBUG) System.out.println("#!#!#!#!#! Name ["+name+"] clone cannot be found #!#!#!#!#!");
 		return null;
 	}
 
-	/**
-	 * Paints the Contig.
-	 */
 	public void paintComponent(Graphics g) { 
 		if (hasBuilt()) {
 			super.paintComponent(g);
@@ -757,7 +706,7 @@ public class Contig extends MarkerTrack {
 		boolean success = false;
 		try {
 			ArrayList<Integer> tvec = new ArrayList<Integer>(1);
-			tvec.add(new Integer(contigNum));
+			tvec.add(contigNum);
 			success = pool.isContigs(getProject(),tvec);
 		} catch (Exception e) { }
 		return success;
@@ -772,14 +721,6 @@ public class Contig extends MarkerTrack {
 		return count;
 	}
 
-	/**
-	 * Method <code>getHelpText</code> returns the help text desired when the
-	 * mouse is at a certain point.
-	 * 
-	 * @param event
-	 *            a <code>MouseEvent</code> value
-	 * @return a <code>String</code> value
-	 */
 	public String getHelpText(MouseEvent event) {
 		Point point = event.getPoint();
 		String pretext = "Contig Track ("+getTitle()+"):  "; 
@@ -806,9 +747,7 @@ public class Contig extends MarkerTrack {
 	}
 
 	/**
-	 * Sets markers to be highlight or not highlighted
-	 * determined by <code>Marker.setHover(Point)</code>.
-	 *  
+	 * Sets markers to be highlight or not highlighted determined by Marker.setHover(Point). 
 	 * @see java.awt.event.MouseMotionListener#mouseMoved(java.awt.event.MouseEvent)
 	 */
 	public void mouseMoved(MouseEvent e) {
@@ -828,7 +767,6 @@ public class Contig extends MarkerTrack {
 
 	/**
 	 * Handles the clicking of the To Block link, notifying the track observer.
-	 * 
 	 * @see java.awt.event.MouseListener#mouseClicked(java.awt.event.MouseEvent)
 	 */
 	public void mouseClicked(MouseEvent e) {

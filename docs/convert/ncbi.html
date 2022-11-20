@@ -3,7 +3,9 @@
 <head>
 <title>SyMAP NCBI</title>
 <style>
-	a:link {text-decoration: none;color:#6666CC;}
+	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
@@ -141,6 +143,9 @@ by the SyMAP converter. Alternatively, try <a href="https://bio.tools/genbank2gf
 <tr><td><b>Flag</b><td><b>Description</b><td><b>Details</b><td><b>Default</b>
 <tr><td>-s<td>Include Scaffolds<td>Any sequence not labeled a "chromosome" will be written as a scaffold. See section <a href="#scaf">Scaffolds</a><td>No scaffolds
 <tr><td>-m<td>Hard-mask<td>NCBI genome sequences are soft-masked (generally for download A only), which is changed to hard masked<td>Leave as soft-mask
+<tr><td>-p<td>1st protein name<td>1st protein name for the gene will be at the end of the <tt>Attributes</tt> using the <tt>protein=</tt> keyword.
+This can be searched using the <ttb>Queries</ttb><td>Do not include
+<tr><td>-pa<td>All protein names<td>Same as above, but all protein names for the gene will be included in the <tt>protein=</tt> keyword. <td>Do not include
 <tr><td>-l<td>Use linkage groups<td>Search 'linkage' instead of 'chromosome'<td>Use chromosomes
 <tr><td>-v<td>Verbose<td>Print out header lines of skipped sequences<td>No print
 </table>
@@ -393,6 +398,10 @@ product=monocopper oxidase-like protein SKU5%2C transcript variant X2, X1, X3
 <li>The first <i>type=mRNA</i> line for a gene is written to the <tt>anno.gff</tt> file followed
 by its <i>type=exon</i>, where they each are written with the new seqid and a subset of the
 attributes.
+<br>&nbsp;
+<li>If the "-p" flag is set, then the <tt>ID=</tt> from the first <i>type=CDS</i> for the gene is extracted, and the "cds-" removed. From the files
+I have tested, this name corresponds with the ">" name in the NCBI protein file. Likewise for the "-pa" flags, but all unique ID's from the
+gene's <i>type=CDS</i> records are made into a comma-delimited list; note, this can cause a long list.
 </ol>
 </ul>
 

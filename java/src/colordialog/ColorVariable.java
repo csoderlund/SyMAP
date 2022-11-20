@@ -13,25 +13,29 @@ import javax.swing.JLabel;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 
 public class ColorVariable implements ActionListener {
-	protected String className;
-	protected String variableName;
+	protected String className; // e.g. Mapper
+	protected String variableName; // e.g. mapper (symap.Mapper.mapper)
+	protected String displayName;
 	protected JLabel label;
 	protected JButton button;
 	private ColorIcon icon;
 	private Color defaultColor, prevColor;
-	private boolean alphaEnabled;
+	private boolean alphaEnabled=true;
+	private int order; // CAS520
 	private JColorChooser cc;
 	private JDialog dialog;
 
 	protected ColorVariable(String className, String variableName, String display_name,
-			String description, Dimension dim, boolean alphaEnabled) {
+			String description, Dimension dim, int nOrder) {
 		defaultColor = ColorDialog.getColor(className,variableName);
 		prevColor = defaultColor;
 
 		this.className = className;
 		this.variableName = variableName;
-		this.alphaEnabled = alphaEnabled;
+		this.displayName = display_name;
 		label = new JLabel(display_name);
+		this.order = nOrder;
+		
 		icon = new ColorIcon(defaultColor,null,dim.width,dim.height);
 		button = new JButton(icon);
 		button.setMargin(new Insets(0,0,0,0));
@@ -46,7 +50,7 @@ public class ColorVariable implements ActionListener {
 		this.defaultColor = color;
 		this.prevColor = color;
 	}
-
+	
 	public boolean equals(Object obj) {
 		if (obj instanceof ColorVariable) {
 			return ( className.equals(((ColorVariable)obj).className) && 
@@ -54,12 +58,14 @@ public class ColorVariable implements ActionListener {
 		}
 		return false;
 	}
-
+	public int getOrder() { return order; }
+	
+	// do not change; used to store changed color in cookie
 	public String toString() {
 		Color c = icon.getColor();
 		return className+"."+variableName+"="+c.getRed()+","+c.getGreen()+","+c.getBlue()+","+c.getAlpha();
 	}
-
+	
 	public boolean isDefault() {
 		return (defaultColor != null && defaultColor.equals(icon.getColor()));
 	}

@@ -66,7 +66,8 @@ public /*abstract*/ class AbstractSequence {
 	public static String toString(AbstractSequence q, int queryStart, AbstractSequence t, int targetStart) { 
 		AbstractSequence query = (AbstractSequence)q;
 		AbstractSequence target = (AbstractSequence)t;
-		int padSpace = new Integer(targetStart+target.seq.length).toString().length()+1;
+		String x = String.format("%d", (targetStart+target.seq.length));
+		int padSpace = x.length()+1; // CAS520  new Integer(targetStart+target.seq.length).toString()
 		StringBuffer buf = new StringBuffer();
 		for (int i = 0; i < padSpace; i++) buf.append(" ");
 
@@ -96,11 +97,13 @@ public /*abstract*/ class AbstractSequence {
 
 			qEnd = getRL( query.seq,i,len+i)*qMult + qEnd;
 			tEnd = getRL(target.seq,i,len+i)*tMult + tEnd;
-
-			buf.append(QUERY).append(qStart).append(PAD_SPACE.substring(0,padSpace-new Integer(qStart).toString().length()));
+			// CAS520 new Integer(qStart).toString().length()
+			x = String.format("%d", qStart);
+			buf.append(QUERY).append(qStart).append(PAD_SPACE.substring(0,x.toString().length()));
 			buf.append(new String(query.seq,i,len)).append(" ").append(qEnd).append(NL);
 			buf.append(LPSPC).append(getLines(q,t,i,i+len)).append(NL);
-			buf.append(SBJCT).append(tStart).append(PAD_SPACE.substring(0,padSpace-new Integer(tStart).toString().length()));
+			x = String.format("%d", qStart);
+			buf.append(SBJCT).append(tStart).append(PAD_SPACE.substring(0,padSpace-x.toString().length()));
 			buf.append(new String(target.seq,i,len)).append(" ").append(tEnd).append(NL).append(NL);
 		}
 
@@ -147,7 +150,7 @@ public /*abstract*/ class AbstractSequence {
 		for (i = 0; i < qs.seq.length; ++i) {
 			if (qs.seq[i] != ts.seq[i] && qs.seq[i] != DASH && ts.seq[i] != DASH) {
 				if (pos != prev) {
-					misses.add(new Double(pos/size));
+					misses.add((double)pos/(double)size); // CAS520 new Double
 					prev = pos;
 				}
 			}
@@ -175,7 +178,7 @@ public /*abstract*/ class AbstractSequence {
 		for (i = 0; i < qs.seq.length; ++i) {
 			if (ts.seq[i] == DASH) {
 				if (pos != prev) {
-					misses.add(new Double(pos/size));
+					misses.add((double)pos/(double)size); //CAS520 double
 					prev = pos;
 				}
 			}
@@ -202,7 +205,7 @@ public /*abstract*/ class AbstractSequence {
 		for (i = 0; i < qs.seq.length; ++i) {
 			if (qs.seq[i] == DASH) {
 				if (pos != prev) {
-					misses.add(new Double(pos/size));
+					misses.add((double)pos/(double)size); //CAS520 double
 					prev = pos;
 				}
 			}

@@ -111,12 +111,9 @@ public class MapInfo {
 	}
 
 	/**
-	 * Method <code>equalIfUpgradeHitContent</code> returns true if the MapInfo 
+	 * Method equalIfUpgradeHitContent returns true if the MapInfo 
 	 * would be equal to mi if it (the calling object) where to upgrade it's 
 	 * hit content to mi's hit content (mi.hasHitContent(getHitContent())).
-	 *
-	 * @param mi a <code>MapInfo</code> value
-	 * @return a <code>boolean</code> value
 	 */
 	public boolean equalIfUpgradeHitContent(MapInfo mi) {
 		if (t1Type == mi.t1Type && t2Type == mi.t2Type 
@@ -241,7 +238,7 @@ public class MapInfo {
 	private List<Integer> myGetList(int[] contigs) {
 		if (contigs == null) return null;
 		List<Integer> list = new ArrayList<Integer>(contigs.length);
-		for (int i = 0; i < contigs.length; i++) list.add(new Integer(contigs[i]));
+		for (int i = 0; i < contigs.length; i++) list.add(contigs[i]); // CAS520 Integer
 		return list;
 	}
 }    

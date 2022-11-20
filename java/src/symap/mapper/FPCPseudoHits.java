@@ -233,7 +233,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 		 }
 
 		 public boolean isBlockHit() {
-			return data.isBlockHit();
+			return data.isBlock();
 		 }
 		 
 		 public boolean isGeneContained() { 
@@ -248,16 +248,16 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 
 		public boolean isFiltered() {
 			HitFilter hitfilter = mapper.getHitFilter();
-			return (hitfilter.getBlock() && !data.isBlockHit())
+			return (hitfilter.isBlock() && !data.isBlock())
 					|| (hitfilter.getNonRepetitive() && data.isRepetitiveHit() 
-							&& !data.isBlockHit()) || hitfilter.getMrkHide()
+							&& !data.isBlock()) || hitfilter.getMrkHide()
 					|| hitfilter.getMrkEvalue() < data.getEvalue()
-					|| hitfilter.getMrkPctid() > data.getPctid()
+					|| hitfilter.getPctid() > data.getPctid()
 					|| mh.isFiltered(mt, hitfilter.getOnlyShared())
 					|| isSequenceFiltered(data.getStart2(), data.getEnd2())
-			 		|| (hitfilter.getGeneContained() && !geneContained) 
-			 		|| (hitfilter.getGeneOverlap() && !geneOverlap) 
-			 		|| (hitfilter.getNonGene() && (geneOverlap || geneContained)); 
+			 		|| (hitfilter.is2Gene() && !geneContained) 
+			 		|| (hitfilter.isGeneOverlap() && !geneOverlap) 
+			 		|| (hitfilter.is0Gene() && (geneOverlap || geneContained)); 
 		}
 
 		public boolean isHighlighted() {
@@ -307,8 +307,8 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 		 private Color getCColor() { 
 			 if (mh.isHighlighted() || isHighlighted())
 				 return Mapper.markerLineHighlightColor;
-			 if (mapper.getHitFilter().getColorByStrand()) 
-				 return data.isSameOrient() ? Mapper.posOrientLineColor : Mapper.negOrientLineColor;
+			 //if (mapper.getHitFilter().getColorByStrand()) 
+				// return data.isSameOrient() ? Mapper.posOrientLineColor : Mapper.negOrientLineColor;
 			 return Mapper.markerLineColor;
 		 }
 		 
@@ -344,7 +344,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 if (isVisible() && !isFiltered()) {
 				 Point2D sp = getSequenceCPoint(data.getStart2(),data.getEnd2(),stOrient,stLocation);
 				 Point2D mp = mh.getCPoint(mt,mtOrient,mtLocation,showJoinDot);
-				 mh.paintComponent(g2,mt,mtLocation,sp,showJoinDot,mapper.getHitFilter().getColorByStrand(),data.isSameOrient());
+				 mh.paintComponent(g2,mt,mtLocation,sp,showJoinDot,true,data.isSameOrient());
 				 if (mp != null) {
 					 g2.setPaint(getCColor()); 
 					 hitLine.setLine(sp,mp); 
@@ -439,7 +439,7 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 		 public String getType() { return BES_TYPE; }
 		 public byte getBES() { return data.getBES(); }
 		 public boolean getOrientation() { return data.isSameOrient(); }
-		 public boolean isBlockHit() { return data.isBlockHit(); }
+		 public boolean isBlockHit() { return data.isBlock(); }
 
 		 public void set() {
 			 bh.set(this,mt,data.getName(),getContig());
@@ -489,13 +489,13 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 			 return hitfilter.getBesHide() 
 			 		|| hitfilter.getBesEvalue() < data.getEvalue() 
 			 		|| hitfilter.getBesPctid() > data.getPctid() 
-			 		|| (hitfilter.getBlock() && !data.isBlockHit()) 
-			 		|| (hitfilter.getNonRepetitive() && data.isRepetitiveHit() && !data.isBlockHit()) 
+			 		|| (hitfilter.isBlock() && !data.isBlock()) 
+			 		|| (hitfilter.getNonRepetitive() && data.isRepetitiveHit() && !data.isBlock()) 
 			 		|| bh.isFiltered(mt,hitfilter,getContig())
 			 		|| isSequenceFiltered(data.getStart2(),data.getEnd2()) 
-			 		|| (hitfilter.getGeneContained() && !geneContained) 
-			 		|| (hitfilter.getGeneOverlap() && !geneOverlap) 
-			 		|| (hitfilter.getNonGene() && (geneOverlap || geneContained)); 
+			 		|| (hitfilter.is2Gene() && !geneContained) 
+			 		|| (hitfilter.isGeneOverlap() && !geneOverlap) 
+			 		|| (hitfilter.is0Gene() && (geneOverlap || geneContained)); 
 		 }
 
 		 public boolean isHighlighted() {
@@ -537,8 +537,8 @@ public class FPCPseudoHits extends AbstractHitData implements Hits, SyMAPConstan
 		 private Color getCColor() { 
 			 if (bh.isHighlighted() || isHighlighted())
 				 return Mapper.besLineHighlightColor;
-			 if (mapper.getHitFilter().getColorByStrand()) 
-				 return data.isSameOrient() ? Mapper.posOrientLineColor : Mapper.negOrientLineColor;
+			// if (mapper.getHitFilter().getColorByStrand()) 
+			//	 return data.isSameOrient() ? Mapper.posOrientLineColor : Mapper.negOrientLineColor;
 			 return Mapper.besLineColor;
 		 }
 		 

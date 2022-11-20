@@ -33,12 +33,13 @@ public class Schema {
 		executeUpdate(sql);
 
 		sql = "CREATE TABLE projects (" +
-		    "idx             INTEGER NOT NULL AUTO_INCREMENT," + // proj_idx
-		    "type            enum('fpc','pseudo')  NOT NULL," +
-		    "name            VARCHAR(40) NOT NULL," +
-			"loaddate		datetime NOT NULL," +
+		    "idx            INTEGER NOT NULL AUTO_INCREMENT," + // proj_idx
+		    "type           enum('fpc','pseudo')  NOT NULL," +
+		    "name           VARCHAR(40) NOT NULL," +
 			"hasannot		boolean default 0," +
-			"annotdate		datetime," +
+			"annotdate		datetime," +	// date of load sequence and/or annotation
+			"loaddate		datetime," +	// db create, CAS520 update synteny 
+			"syver			tinytext," +	// CAS520 version of load sequence and/or annotation
 		    "PRIMARY KEY (idx)," +
 		    "UNIQUE INDEX (name)," +
 		    "INDEX (type)" +
@@ -73,6 +74,7 @@ public class Schema {
 		    "proj2_idx               INTEGER NOT NULL," +
 			"aligned				BOOLEAN default 0," +
 		    "aligndate				datetime," +
+		    "syver			tinytext," +	// CAS520 version of load sequence and/or annotation
 			"params					VARCHAR (128)," +	// CAS511
 		    "UNIQUE INDEX (proj1_idx,proj2_idx)," +
 		    "FOREIGN KEY (proj1_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
@@ -169,6 +171,7 @@ public class Schema {
 		    "genenum             INTEGER default 0," +  // was being added in SyntenyMain
 		    "gene_idx            INTEGER default 0," +  // CAS512 add - gene idx for exon
 		    "tag				 VARCHAR(30)," +		// CAS512 add - Gene(#exons) or Exon #N
+		    "numhits			 tinyint unsigned default 0," +  // CAS520 show in Query; max 255
 		    "INDEX (grp_idx,type)," +
 		    "FOREIGN KEY (grp_idx) REFERENCES xgroups (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB; "; 
@@ -206,28 +209,30 @@ public class Schema {
 // Sequence hits
 	    sql = "CREATE TABLE pseudo_hits (" +
 		    "idx                 INTEGER AUTO_INCREMENT PRIMARY KEY," + // hit_id
+	    	"hitnum				 INTEGER default 0,"+			// CAS520 relative to location along chr
 		    "pair_idx            INTEGER NOT NULL," +
-		    "proj1_idx           INTEGER NOT NULL," + // proj_props.proj_idx
-		    "proj2_idx           INTEGER NOT NULL," + // proj_props.proj_idx
-		    "grp1_idx            INTEGER NOT NULL," + // xgroups.idx
-		    "grp2_idx            INTEGER NOT NULL," + // xgroups.idx
-		    "evalue              DOUBLE NOT NULL," +  // No value, though accessed
-		    "pctid               TINYINT UNSIGNED NOT NULL," +    // Col6, Avg %ID CAS515 REAL->TINYINT (rounded percent) 
-		    "score               INTEGER NOT NULL," + // Col5, queryLen - not used
+		    "proj1_idx           INTEGER NOT NULL," + 			 // proj_props.proj_idx
+		    "proj2_idx           INTEGER NOT NULL," + 			 // proj_props.proj_idx
+		    "grp1_idx            INTEGER NOT NULL," + 			 // xgroups.idx
+		    "grp2_idx            INTEGER NOT NULL," + 			 // xgroups.idx
+		    "evalue              DOUBLE NOT NULL," +  			 // No value, though accessed (FPC?)
+		    "pctid               TINYINT UNSIGNED NOT NULL," +   // Col6, Avg %ID CAS515 REAL->TINYINT (rounded percent) 
+		    "score               INTEGER NOT NULL," +            // Col5, queryLen - not used
 		    "strand              TEXT NOT NULL," +
 		    "start1              INTEGER NOT NULL," +
 		    "end1                INTEGER NOT NULL," + 
 		    "start2              INTEGER NOT NULL," +
 		    "end2                INTEGER NOT NULL, " +  
-		    "query_seq           MEDIUMTEXT  NOT NULL," + // start-end of each merged hit
+		    "query_seq           MEDIUMTEXT  NOT NULL," +      	// start-end of each merged hit
 		    "target_seq          MEDIUMTEXT  NOT NULL," +
-		    "gene_overlap		TINYINT NOT NULL, " +	  // number of genes it overlaps
-		    "countpct			INTEGER UNSIGNED default 0," +  // unused 0; CAS515 number of merged, tinyint->integer
-		    "cvgpct				TINYINT UNSIGNED NOT NULL," +  //was unused 0 -> CAS515 Col7 %sim
-		    "refidx				INTEGER default 0," +          //used in self-synteny
+		    "gene_overlap		TINYINT NOT NULL, " +	       	// number of genes it overlaps
+		    "countpct			INTEGER UNSIGNED default 0," + 	// unused 0; CAS515 number of merged, tinyint->integer
+		    "cvgpct				TINYINT UNSIGNED NOT NULL," +  	// unused 0; CAS515 Col7 %sim
+		    "refidx				INTEGER default 0," +          	// used in self-synteny
 			"annot1_idx			INTEGER default 0," +
 			"annot2_idx			INTEGER default 0," +
-		    "runsize			INTEGER default 0," +		// size of colinear set
+			"runnum				INTEGER default 0," +			// CAS520 number consecutive collinear groups
+		    "runsize			INTEGER default 0," +			// size of collinear set
 		    "INDEX (proj1_idx,proj2_idx,grp1_idx,grp2_idx)," +
 		    "FOREIGN KEY (pair_idx)  REFERENCES pairs (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj1_idx) REFERENCES projects (idx) ON DELETE CASCADE," +

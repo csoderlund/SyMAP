@@ -33,6 +33,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -50,13 +51,14 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
-import dotplot.FilterData;
+//import dotplot.FilterData;
 import util.ErrorReport;
 import util.Utilities;
 
 import symap.SyMAP;
 import symap.projectmanager.common.Project;
 import symap.sequence.Sequence;
+import symap.mapper.HitFilter;
 
 public class TableDataPanel extends JPanel {
 	private static final long serialVersionUID = -3827610586702639105L;
@@ -227,8 +229,20 @@ public class TableDataPanel extends JPanel {
     	topRow.setAlignmentX(Component.LEFT_ALIGNMENT);
     	
     	topRow.add(new JLabel("For selected: ")); topRow.add(Box.createHorizontalStrut(5));
-    
-    	btnShowAlign = new JButton("Align Sequences"); 
+    	
+    // Show CAS520
+    	btnShowRow = new JButton("Show"); // CAS520 add to view data in row
+ 	    btnShowRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+ 	    btnShowRow.setBackground(Color.WHITE);
+ 	    btnShowRow.addActionListener(new ActionListener() {
+	   		public void actionPerformed(ActionEvent arg0) {
+	   			showRow();
+	   		}
+		});  
+ 	  
+ 	    topRow.add(btnShowRow);	topRow.add(Box.createHorizontalStrut(10));
+ 	    
+    	btnShowAlign = new JButton("Align"); 
  	    btnShowAlign.setAlignmentX(Component.LEFT_ALIGNMENT);
  	    btnShowAlign.setBackground(Color.WHITE);
  	    btnShowAlign.addActionListener(new ActionListener() {
@@ -238,7 +252,7 @@ public class TableDataPanel extends JPanel {
  		});  
  	    topRow.add(btnShowAlign);			topRow.add(Box.createHorizontalStrut(10));
 	 	    
-	    btnShowSynteny = new JButton("Show Synteny"); 
+	    btnShowSynteny = new JButton("View 2D"); 
 	    btnShowSynteny.setAlignmentX(Component.LEFT_ALIGNMENT);
 	    btnShowSynteny.setBackground(Color.WHITE);
 	    btnShowSynteny.addActionListener(new ActionListener() {
@@ -246,17 +260,26 @@ public class TableDataPanel extends JPanel {
 				showSynteny();		
 			}
 		}); 
-	    topRow.add(btnShowSynteny);	topRow.add(Box.createHorizontalStrut(2));
+	    topRow.add(btnShowSynteny);		topRow.add(Box.createHorizontalStrut(1));
+	    topRow.add(new JLabel("as"));	topRow.add(Box.createHorizontalStrut(1));
+	    cmbSynOpts = new JComboBox <String> ();
+	    cmbSynOpts.setBackground(Color.WHITE);
+	    cmbSynOpts.addItem("Region (kb)");
+	    cmbSynOpts.addItem("Synteny Block");
+	    cmbSynOpts.addItem("Collinear Set");
+	    cmbSynOpts.setSelectedIndex(0);
+	    topRow.add(cmbSynOpts);			topRow.add(Box.createHorizontalStrut(1));
 	    
 		txtMargin = new JTextField(3);
 	    txtMargin.setText("50");
 	    txtMargin.setMinimumSize(txtMargin.getPreferredSize());
-	    topRow.add(new JLabel("with "));
 	    topRow.add(txtMargin);
-	    topRow.add(new JLabel("kb margin ")); topRow.add(Box.createHorizontalStrut(40));
+	    topRow.add(new JLabel("kb")); 	topRow.add(Box.createHorizontalStrut(20));
 	    
 	    btnShowAlign.setEnabled(false);
 	    btnShowSynteny.setEnabled(false);
+	    btnShowRow.setEnabled(false);
+	    cmbSynOpts.setEnabled(false);
 	    txtMargin.setEnabled(false);
 	    
 	    btnHelp = new JButton("Help");
@@ -308,8 +331,8 @@ public class TableDataPanel extends JPanel {
 			}
 		});     
 	   
-	    botRow.add(btnSaveCSV);		botRow.add(Box.createHorizontalStrut(5));
-	    botRow.add(btnSaveFasta);	botRow.add(Box.createHorizontalStrut(50));
+	    botRow.add(btnSaveCSV);		botRow.add(Box.createHorizontalStrut(10));
+	    botRow.add(btnSaveFasta);	botRow.add(Box.createHorizontalStrut(10));
 	    botRow.add(btnUnSelectAll);	botRow.add(Box.createHorizontalStrut(5));
 	   
 		buttonPanel.add(topRow);
@@ -351,7 +374,7 @@ public class TableDataPanel extends JPanel {
     	Boolean [] genColDef = FieldData.getGeneralColDefaults();
     	String [] genDesc= FieldData.getGeneralColDesc();
     	int nCol = FieldData.getGenColumnCount(isSingle);
-    	int newRow = (nCol>1) ? genCols.length-4 : 1;
+    	int newRow = (nCol>1) ? genCols.length-5 : 1; // CAS520 add a hit column
     	
     	JPanel row=null;
     	chkGeneralFields = new JCheckBox[nCol];
@@ -374,6 +397,7 @@ public class TableDataPanel extends JPanel {
         		public void mouseExited(MouseEvent e)  {setStatus("");}
         	});
     		chkGeneralFields[x].setSelected(genColDef[x]);
+    		if (x==0)chkGeneralFields[x].setEnabled(false); // CAS520 cannot remove because doesn't work to
     		row.add(chkGeneralFields[x]);
     		
     		if (!genCols[x].startsWith("Pg")) {
@@ -741,6 +765,8 @@ public class TableDataPanel extends JPanel {
   
     	txtMargin.setEnabled(enable);
     	btnShowSynteny.setEnabled(enable);
+    	cmbSynOpts.setEnabled(enable);
+    	btnShowRow.setEnabled(enable);
     	btnSaveCSV.setEnabled(enable);
     	btnUnSelectAll.setEnabled(enable);
     	btnSaveFasta.setEnabled(enable);
@@ -757,11 +783,14 @@ public class TableDataPanel extends JPanel {
     	}
     }
     private void setPanelSelected() {
+    	boolean b = (theTable.getSelectedRowCount() == 1)  ? true : false;
+    	btnShowRow.setEnabled(b);
+    	
 		if (isSingle) return;
-		
-		boolean b = (theTable.getSelectedRowCount() == 1)  ? true : false;
+	
 	 	txtMargin.setEnabled(b);
     	btnShowSynteny.setEnabled(b);
+    	cmbSynOpts.setEnabled(b);
     	
     	b = (theTable.getSelectedRowCount() >= 1)  ? true : false;
     	btnShowAlign.setEnabled(b);
@@ -973,6 +1002,22 @@ public class TableDataPanel extends JPanel {
 		inThread.start();
     }
     /**************************************************************
+     * Show Row in popup
+     */
+    private void showRow() {
+		try{
+			if (isSingle) return;
+			if (theTable.getSelectedRowCount() != 1)  return;
+			
+			int row = theTable.getSelectedRows()[0];
+			RowData rd = new RowData();
+			String outLine = rd.loadRowAsString(row);
+			Utilities.displayInfoMonoSpace(this, "Row#" + (row+1), outLine, false);
+		}
+    	catch(Exception e) {ErrorReport.print(e, "Show row");}
+    }
+   
+    /**************************************************************
      * Show Synteny
      */
     private void showSynteny() {
@@ -980,24 +1025,53 @@ public class TableDataPanel extends JPanel {
 			if (isSingle) return;
 			if (theTable.getSelectedRowCount() != 1)  return;
     			
-			double padding = Double.parseDouble(txtMargin.getText()) * 1000;
 			int row = theTable.getSelectedRows()[0];
-			
 			RowData rd = new RowData();
 			if (!rd.loadRow(row)) return;
 				
 			// for the get statements
+			double track1Start=0, track2Start=0, track2End=0, track1End=0;
+			int item = (cmbSynOpts.getSelectedIndex());
+			if (item>0) { 
+				double [] coords;
+				if (item==2) {
+					if (rd.collinear==0) {
+						Utilities.showWarningMessage("The selected row does not belong to a collinear set " + rd.collinear);
+						return;
+					}
+					coords = loadCollinearCoords(rd.collinear, rd.chrIdx[0], rd.chrIdx[1]);
+				}
+				else  {
+					if (rd.block==0) {
+						Utilities.showWarningMessage("The selected row does not belong to a synteny block " + rd.block);
+						return;
+					}
+					coords = loadBlockCoords(rd.block, rd.chrIdx[0], rd.chrIdx[1]);
+				}
+				if (coords==null) {
+					Utilities.showWarningMessage("SyMAP could not get the coordinates");
+					return;
+				}
+				double pad=20.0;
+				track1Start = coords[0] - pad; if (track1Start<0) track1Start=0;
+				track1End   = coords[1] + pad; 
+				track2Start = coords[2] - pad; if (track2Start<0) track2Start=0;
+				track2End   = coords[3] + pad;
+			}
+			else { // region
+				double padding = Double.parseDouble(txtMargin.getText()) * 1000;
+				
+				track1Start = (Integer) rd.start[0];
+				track1Start = Math.max(0, track1Start - padding);
+				
+				track2Start = (Integer) rd.start[1];
+				track2Start = Math.max(0, track2Start - padding);
+				
+				track1End = (Integer) rd.end[0] + padding;
+				track2End = (Integer) rd.end[1] + padding;
+			}
 			synStart1 = rd.start[0]; synEnd1 = rd.end[0];
 			synStart2 = rd.start[1]; synEnd2 = rd.end[1]; // CAS516 was synEnd1
-			
-			double track1Start = (Integer) rd.start[0];
-			track1Start = Math.max(0, track1Start - padding);
-			
-			double track2Start = (Integer) rd.start[1];
-			track2Start = Math.max(0, track2Start - padding);
-			
-			double track1End = (Integer) rd.end[0] + padding;
-			double track2End = (Integer) rd.end[1] + padding;
 
 			int p1Idx = (Integer) rd.spIdx[0];
 			int p2Idx = (Integer) rd.spIdx[1];
@@ -1005,16 +1079,24 @@ public class TableDataPanel extends JPanel {
 			int grp1Idx = (Integer) rd.chrIdx[0];
 			int grp2Idx = (Integer) rd.chrIdx[1];
 			
+			// create new drawing panel
 			SyMAP symap = new SyMAP(theParentFrame.getDatabase(), getInstance());
 		
 			symap.getDrawingPanel().setMaps(1);
 			symap.getHistory().clear(); 
 
-			FilterData fd2 = new FilterData();
-			fd2.setShowHits(FilterData.ALL_HITS); 
-			symap.getDrawingPanel().setHitFilter(1,fd2);
-			Sequence.setDefaultShowAnnotation(true); 
-
+			//FilterData fd2 = new FilterData();
+			//fd2.setShowHits(FilterData.ALL_HITS); 
+			
+			HitFilter hd = new HitFilter (); // CAS520 change from dotplot.FilterData
+			if (item==0 || item==2) Sequence.setDefaultShowAnnotation(true);
+			
+			if (item==0) 		hd.setForQuery(false, false, true);  // block, collinear, all
+			else if (item==1) 	hd.setForQuery(true, false, false);  
+			else 				hd.setForQuery(false, true, false);
+			
+			symap.getDrawingPanel().setHitFilter(1,hd);
+			
 			symap.getDrawingPanel().setSequenceTrack(1, p2Idx, grp2Idx, Color.CYAN);
 			symap.getDrawingPanel().setSequenceTrack(2, p1Idx, grp1Idx, Color.GREEN);
 			symap.getDrawingPanel().setTrackEnds(1, track2Start, track2End);
@@ -1025,7 +1107,7 @@ public class TableDataPanel extends JPanel {
     }
     /******************************************************
  	 * Next four are called by mapper to display the synteny, which is weird given that
- 	 * the values are aleady sent. Since only the last row is stored here, can only select one
+ 	 * the values are already sent. Since only the last row is stored here, can only select one
  	 * row at a time
  	 * CAS516 change to one call instead of 4
  	 */
@@ -1156,6 +1238,75 @@ public class TableDataPanel extends JPanel {
 			conn.close();
 		} catch(Exception e) {ErrorReport.print(e, "set project annotations");}
 	}
+	/*******************************************************************
+	 * 2D-view Block
+	 */
+	private double [] loadBlockCoords(int block, int idx1, int idx2) {
+		double [] coords = null;
+		try {
+			Connection conn = theParentFrame.getDatabase().getConnection();
+			Statement stmt = conn.createStatement();
+		
+			ResultSet rs = stmt.executeQuery("select start1, end1, start2, end2 from blocks "
+					+ " where blocknum="+block+ " and grp1_idx=" + idx1 + " and grp2_idx=" + idx2);
+			if (rs.next()) {
+				coords = new double [4];
+				for (int i=0; i<4; i++) coords[i] = rs.getDouble(i+1);
+			}
+			if (coords==null) { // try opposite way
+				rs = stmt.executeQuery("select start2, end2, start1, end1 from blocks "
+						+ " where blocknum="+block+ " and grp1_idx=" + idx2 + " and grp2_idx=" + idx1);
+				if (rs.next()) {
+					coords = new double [4];
+					for (int i=0; i<4; i++) coords[i] = rs.getDouble(i+1);
+				}
+			}
+			stmt.close();
+			conn.close();
+			return coords;
+		}
+		catch(Exception e) {ErrorReport.print(e, "set project annotations"); return null;}
+	}
+	/*******************************************************************
+	 * 2D-view Collinear
+	 */
+	private double [] loadCollinearCoords(int set, int idx1, int idx2) {
+		double [] coords = null;
+		try {
+			Connection conn = theParentFrame.getDatabase().getConnection();
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("select start1, end1, start2, end2 from pseudo_hits "
+					+ "where runnum=" + set + " and grp1_idx=" + idx1 + " and grp2_idx=" + idx2);
+			double start1=Double.MAX_VALUE, end1=-1, start2=Double.MAX_VALUE, end2=-1, d;
+			while (rs.next()) {
+				d = rs.getInt(1);	if (d<start1) start1 = d;
+				d = rs.getInt(2);	if (d>end1)   end1 = d;
+				
+				d = rs.getInt(3); 	if (d<start2) start2 = d;
+				d = rs.getInt(4);	if (d>end2)   end2 = d;
+			}
+			if (start1==Double.MAX_VALUE) { // try flipping idx1 and idx2
+				rs = stmt.executeQuery("select start1, end1, start2, end2 from pseudo_hits "
+						+ "where runnum=" + set + " and grp1_idx=" + idx2 + " and grp2_idx=" + idx1);
+				while (rs.next()) {
+					d = rs.getInt(1);	if (d<start2) start2 = d;
+					d = rs.getInt(2);	if (d>end2)   end2 = d;
+					
+					d = rs.getInt(3); 	if (d<start1) start1 = d;
+					d = rs.getInt(4);	if (d>end1)   end1 = d;
+				}
+			}
+			if (start1!=Double.MAX_VALUE) {
+				coords = new double [4];
+				coords[0]=start1; coords[1]=end1; coords[2]=start2; coords[3]=end2;
+			}
+			stmt.close();
+			conn.close();
+			return coords;
+		}
+		catch(Exception e) {ErrorReport.print(e, "set project annotations"); return null;}
+	}
+	
     /****************************************************************
      * Public
      */
@@ -1379,14 +1530,14 @@ public class TableDataPanel extends JPanel {
      * Gets row data for Show Synteny, Align Sequences, or WriteFasta
      * CAS504 added this class to take the place of using hidden columns to get data
      * theTableData.getRowData(row) returns the chr,start,end of all species in line,
-     * where some can be blank
+     * where some can be blank. CAS520 also return block and collinear
      */
     private class RowData {
 		public RowData () {}
 		
 		public boolean loadRow(int row) {
 			try {
-    			HashMap <String, Object> colVal = theTableData.getRowData(row); // colName, value
+    			HashMap <String, Object> colVal = theTableData.getRowLocData(row); // colName, value
     			HashMap <String, Integer> sp2x = new HashMap <String, Integer> ();
     			int isp=0;
     			
@@ -1395,6 +1546,18 @@ public class TableDataPanel extends JPanel {
     				if (o instanceof String) {
     					String str = (String) o;
     					if (str.equals("") || str.equals("-")) continue; // the blanks species
+    				}
+    				if (head.contentEquals(Q.blockCol)) { // CAS520 add block and collinear
+    					String x = (String) o;
+    					x =  (x.contains(".")) ? x.substring(x.lastIndexOf(".")+1) : "0";
+    					block = Integer.parseInt(x);
+    					continue;
+    				}
+    				if (head.contentEquals(Q.runCol)) {
+    					String x = (String) o;
+    					x =  (x.contains(".")) ? x.substring(x.lastIndexOf(".")+1) : "0";
+    					collinear = Integer.parseInt(x);
+    					continue;
     				}
     				
     				String [] field = head.split(Q.delim); // speciesName\nChr or Start or End
@@ -1445,6 +1608,12 @@ public class TableDataPanel extends JPanel {
     			return true;
     		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return false;}
 		}
+		public String loadRowAsString(int row) {
+			try {
+				String outLine = theTableData.getRowData(row); // colName, value
+    			return outLine;
+    		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return "error";}
+		}
 		public void prt() {
 			if (Q.TEST_TRACE) 
 				System.out.println("Trace: " + spName[0] + ": " +chrIdx[0] + ":" + start[0] + ":"+ end[0] + "   " +
@@ -1458,6 +1627,9 @@ public class TableDataPanel extends JPanel {
 		String [] chrNum = {"",""};
 		int [] start = {0,0};
 		int [] end = {0,0};
+		
+		int block=0;
+		int collinear=0;
     }
     /**************************************************************
      * Private variable
@@ -1468,8 +1640,9 @@ public class TableDataPanel extends JPanel {
     private JTextField rowCount = null;
     
     private JTextField loadStatus = null, txtMargin = null;
-    private JButton btnShowSynteny = null, btnShowAlign = null; 
+    private JButton btnShowSynteny = null, btnShowAlign = null, btnShowRow = null; 
     private JButton btnUnSelectAll = null, btnSaveFasta = null, btnSaveCSV = null;
+    private JComboBox <String> cmbSynOpts = null;
     
     private ListSelectionListener selListener = null;
     private Thread buildThread = null;

@@ -24,16 +24,16 @@ import symapQuery.TableDataPanel;
  * CAS517 removed some dead code
  */
 public class SyMAP {
-	public static final String 	VERSION = "v5.1.9";
-	public static final String 	DATE = " (26-Oct-22)";
-	public static final int 	DBVER =  3; 			// CAS512 update from 2
+	public static final String 	VERSION = "v5.2.0";
+	public static final String 	DATE = " (20-Nov-22)";
+	public static final int 	DBVER =  4; 			// CAS512 2->3, CAS520 3->4
 	public static final String  DBVERSTR = "db" + DBVER;
 	
 	// CAS500 change v4.2 to doc; CAS510 change base to github; put #links here
-	public static final String BASE_HELP_URL_prev51 =    "http://www.agcol.arizona.edu/software/symap/doc/"; 
-	public static final String BASE_HELP_URL = "https://csoderlund.github.io/SyMAP/"; // CAS510
+	public static final String BASE_HELP_URL_prev51 =   "http://www.agcol.arizona.edu/software/symap/doc/"; 
+	public static final String BASE_HELP_URL = 			"https://csoderlund.github.io/SyMAP/"; // CAS510
 	public static final String USER_GUIDE_URL =    BASE_HELP_URL + "UserGuide.html"; 
-	public static final String circle = "#circle";				
+	public static final String circle =  "#circle";				
 	public static final String dotplot = "#dotplot_display";
 	public static final String align2d = "#alignment_display_2d";
 	public static final String align3d = "#alignment_display_3d";

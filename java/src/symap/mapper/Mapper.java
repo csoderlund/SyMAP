@@ -57,7 +57,9 @@ public class Mapper extends JComponent
 	public static Color pseudoLineColorPN;
 	public static Color pseudoLineColorNP;
 	public static Color pseudoLineColorNN;
-	public static Color pseudoLineHighlightColor;	
+	public static Color pseudoLineHoverColor;		// CAS520 renamed to Hover and use Highlight for Highlight	
+	public static Color pseudoLineHighlightColor1;
+	public static Color pseudoLineHighlightColor2;
 	public static Color hitRibbonBackgroundColor;	
 	public static int 	hitRibbonWidth; 			
 	static {
@@ -77,7 +79,9 @@ public class Mapper extends JComponent
 		pseudoLineColorPN = 		props.getColor("pseudoLineColorPN"); 
 		pseudoLineColorNP = 		props.getColor("pseudoLineColorNP"); 
 		pseudoLineColorNN = 		props.getColor("pseudoLineColorNN"); 
-		pseudoLineHighlightColor = 	props.getColor("pseudoLineHighlightColor"); 
+		pseudoLineHoverColor = 		props.getColor("pseudoLineHoverColor");
+		pseudoLineHighlightColor1 = 	props.getColor("pseudoLineHighlightColor1"); 
+		pseudoLineHighlightColor2 = 	props.getColor("pseudoLineHighlightColor2"); 
 		hitRibbonBackgroundColor = 	props.getColor("hitRibbonBackgroundColor"); 
 		hitRibbonWidth = 			props.getInt("hitRibbonWidth"); 
 	}
@@ -86,17 +90,18 @@ public class Mapper extends JComponent
 	private TrackHolder trackHolders[];
 	private FilterHandler fh;
 	private TableDataPanel theTablePanel;
-	private List<AbstractHitData> hits;
+	private List<AbstractHitData> hitList;
 	private MapperPool pool;
 	private HitFilter hitfilter;
 	private MapInfo mapinfo;
 	private volatile boolean initing;
-	private String helpText; 
+	private String helpText;
+	private String hoverText=""; // CAS520 add
 	
 	private static final String HOVER_MESSAGE = 
-			"Hover on hit-wire for information.\n" +
-			"Right-click on hit-wire for popup of full information.\n"
-			+ "Right-click in hit space for filter menu."; 
+			"\nHit-wire information: Hover on hit-wire or " 
+			+ "right-click on hit-wire for popup of full information.\n";
+			
 
 	public Mapper(DrawingPanel drawingPanel, 
 			TrackHolder th1, TrackHolder th2,
@@ -109,6 +114,7 @@ public class Mapper extends JComponent
 		this.fh = fh;
 		initing = true;
 		hitfilter = new HitFilter(this);
+		hoverText = hitfilter.getHover(); // CAS520 add
 		theTablePanel = listPanel;
 		mapinfo = new MapInfo();
 		fh.set(this);
@@ -121,20 +127,21 @@ public class Mapper extends JComponent
 		addMouseListener(this); 		
 		addMouseWheelListener(this);	
 		addMouseMotionListener(this);
-		hits = new ClearList(10, 50);
+		hitList = new ClearList(10, 50);
 		
 		if (hb != null) hb.addHelpListener(this,this); 
 	}
 	
 	
 	public void clearData() {
-		hits = new ClearList(10, 50);
+		hitList = new ClearList(10, 50);
 		mapinfo = new MapInfo();
 	}
 
 	public void update(HitFilter hf) { // HitFilterListener interface
-		if (!mapinfo.hasHitContent(hf.getBlock(), hf.getNonRepetitive()))
+		if (!mapinfo.hasHitContent(hf.isBlock(), hf.getNonRepetitive()))
 			init();
+		hoverText = hf.getHover(); // CAS520 add
 	}
 
 	/** Method closeFilter closes this mappers filter window @see FilterHandler#hide() */
@@ -175,21 +182,21 @@ public class Mapper extends JComponent
 
 		if (SyMAP.DEBUG) System.out.println("In mapper init");
 		boolean change = false;
-		synchronized (hits) {
+		synchronized (hitList) {
 			try {
-				change = pool.setData(this, t1, t2, mapinfo, hf, hits);
+				change = pool.setData(this, t1, t2, mapinfo, hf, hitList);
 			} catch (SQLException s1) {
 				ErrorReport.print(s1, "First attempt at initializing Mapper failed.");
 				try {
 					pool.close();
-					change = pool.setData(this, t1, t2, mapinfo, hf, hits);
+					change = pool.setData(this, t1, t2, mapinfo, hf, hitList);
 				} catch (SQLException s2) {
 					ErrorReport.print(s2, "Second attempt at initializing Mapper failed. Giving up.");
 					return false;
 				}
 			}
 			if (change) {
-				Iterator<AbstractHitData> iter = hits.iterator();
+				Iterator<AbstractHitData> iter = hitList.iterator();
 				while (iter.hasNext()) {
 					((Hits) iter.next()).setMinMax(hitfilter);
 				}				
@@ -212,8 +219,8 @@ public class Mapper extends JComponent
 	/******************************************************************/
 	public void getSequenceMinMax(int[] minMax) {
 		if (getMapType() == FPC2PSEUDO) {
-			synchronized (hits) {
-				for (AbstractHitData h : hits)
+			synchronized (hitList) {
+				for (AbstractHitData h : hitList)
 					((FPCPseudoHits) h).getSequenceMinMax(minMax);
 			}
 		}
@@ -251,8 +258,8 @@ public class Mapper extends JComponent
 	public List<AbstractHitData> getHitsInRange(Track src, int start, int end) {
 		List<AbstractHitData> retHits = new LinkedList<AbstractHitData>();
 		
-		synchronized (hits) {
-			for (AbstractHitData h : hits)
+		synchronized (hitList) {
+			for (AbstractHitData h : hitList)
 				h.getHitsInRange(retHits, start, end, isQuery(src));
 		}
 		return retHits;
@@ -261,8 +268,8 @@ public class Mapper extends JComponent
 	public int[] getMinMax(Track src, int start, int end) {
 		int[] minMax = new int[] { Integer.MAX_VALUE, Integer.MIN_VALUE };
 		
-		synchronized (hits) {
-			for (AbstractHitData h : hits)
+		synchronized (hitList) {
+			for (AbstractHitData h : hitList)
 				h.getMinMax(minMax, start, end, isQuery(src));
 		}
 		
@@ -306,13 +313,13 @@ public class Mapper extends JComponent
 	public void paintComponent(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g;
 		if (!initing) {
-			for (AbstractHitData h : hits)
+			for (AbstractHitData h : hitList)
 				((Hits) h).paintComponent(g2);
 		}
 	}
 	public void mouseMoved(MouseEvent e) {
 		if (!initing)
-			for (Iterator iter = hits.iterator(); iter.hasNext(); ((Hits) iter.next()).mouseMoved(e));
+			for (Iterator iter = hitList.iterator(); iter.hasNext(); ((Hits) iter.next()).mouseMoved(e));
 	}
 	
 	public void mouseDragged(MouseEvent e) { }
@@ -322,7 +329,7 @@ public class Mapper extends JComponent
 	
 	public void mouseExited(MouseEvent e) {
 		if (!initing)
-			for (Iterator iter = hits.iterator(); iter.hasNext(); ((Hits) iter.next()).mouseExited(e));
+			for (Iterator iter = hitList.iterator(); iter.hasNext(); ((Hits) iter.next()).mouseExited(e));
 	}
 	public void mouseReleased(MouseEvent e) { }
 	
@@ -337,7 +344,7 @@ public class Mapper extends JComponent
 	// CAS517 add for popup hit wire description; see PseudoPseudoHits.PseudoHits.doPopupDesc
 	public void mousePressed(MouseEvent e) {
 		if (e.isPopupTrigger()) {
-			for (AbstractHitData h : hits) {
+			for (AbstractHitData h : hitList) {
 				if (h.doPopupDesc(e)) return;
 			}
 			fh.showPopup(e);
@@ -349,12 +356,12 @@ public class Mapper extends JComponent
 	}
 	// called by HelpBar
 	public String getHelpText(MouseEvent e) { 
-		if (helpText == null)	return HOVER_MESSAGE;
+		if (helpText == null)	return hoverText + HOVER_MESSAGE;
 		else					return helpText; 
 	}
 	// set in PseudoPseudoHits.PseudoHits
 	public void setHelpText(String text) {
-		if (text == null)		helpText = HOVER_MESSAGE;
+		if (text == null)		helpText = hoverText + HOVER_MESSAGE  ;
 		else					helpText = text;
 	}
 }

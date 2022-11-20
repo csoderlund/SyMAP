@@ -12,6 +12,9 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
+/***********************************************
+ * Called by CloseUpComponent
+ */
 public class Ruler {
 	private static final double TICK_TEXT_OFFSET = 5;
 
@@ -60,7 +63,8 @@ public class Ruler {
 						(tDim == null ? 0 : tDim.getHeight()/2.0) - TICK_TEXT_OFFSET);
 				for (int i = 0; i < points.length; ++i) {
 					g2.rotate(-Math.PI/4.0,(float)points[i],y);
-					g2.drawString(new Integer(getUnit(points[i],unitPerPixel)).toString(),(float)points[i]-fontOffset,y);
+					String x = String.format("%d", getUnit(points[i],unitPerPixel)); // CAS520 Integer toString
+					g2.drawString(x.toString(),(float)points[i]-fontOffset,y);
 					g2.setTransform(saveAt);
 				}
 			}
@@ -80,13 +84,13 @@ public class Ruler {
 			double x = bounds.x + bounds.getWidth()/2.0;
 			double m = bounds.x + fm.getAscent() + fm.getDescent();
 			while (x >= m) {
-				points.add(new Double(x));
+				points.add(x); // CAS520 double
 				x -= tickSpace;
 			}
 			m = bounds.x + bounds.getWidth() - fm.getAscent() - fm.getDescent();
 			x = bounds.x + bounds.getWidth()/2.0 + tickSpace;
 			while (x <= m) {
-				points.add(new Double(x));
+				points.add(x);
 				x += tickSpace;
 			}
 		}
@@ -156,9 +160,10 @@ public class Ruler {
 		if (!tickText) return 0;
 		int max = 0;
 		int stop = Math.max(0,maxNumber - 100);
-		for (; maxNumber >= stop; --maxNumber)
-			max = Math.max(SwingUtilities.computeStringWidth(fm,
-					new Integer(maxNumber).toString()),max);
+		for (; maxNumber >= stop; --maxNumber) {
+			String x = String.format("%d", maxNumber); // CAS520 Integer.toString
+			max = Math.max(SwingUtilities.computeStringWidth(fm,x),max);
+		}
 		return max;
 	}
 

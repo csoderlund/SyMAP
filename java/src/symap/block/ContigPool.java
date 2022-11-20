@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.HashMap;
 
 import number.GenomicsNumber;
-import symap.SyMAP;
 import symap.marker.MarkerData;
 import symap.pool.DatabaseUser;
 import symap.pool.ProjectProperties;
@@ -104,7 +103,7 @@ public class ContigPool extends DatabaseUser {
 				rs = stat.executeQuery(query);
 				List<Integer> clist = new ArrayList<Integer>();
 				while (rs.next())
-					clist.add(new Integer(rs.getInt(1)));
+					clist.add(rs.getInt(1)); // CAS520 Integer
 				contigs = Block.getContigs(clist);
 				clist.clear();
 				closeResultSet(rs);
@@ -145,7 +144,7 @@ public class ContigPool extends DatabaseUser {
 		// Create a list of contig numbers already cached in innerBlocks
 		ArrayList<Integer> cachedBlocks = new ArrayList<Integer>(innerBlocks.size());
 		for (Block.InnerBlock ib : innerBlocks)
-			cachedBlocks.add(new Integer(ib.getContig()));
+			cachedBlocks.add(ib.getContig());
 
 		// Create a list of contig numbers (neededBlocks) that aren't cached yet
 		Iterator<Integer> iter = contigList.iterator();

@@ -234,7 +234,7 @@ public class FPCFPCHits extends AbstractHitData implements Hits, SyMAPConstants 
 
 		public boolean isFiltered() {
 			HitFilter hitfilter = mapper.getHitFilter();
-			return (hitfilter.getBlock() && !data.isBlockHit())
+			return (hitfilter.isBlock() && !data.isBlockHit())
 					|| (hitfilter.getNonRepetitive() && data.isRepetitiveHit() && !data
 							.isBlockHit())
 					|| hitfilter.getFpHide()
@@ -329,7 +329,7 @@ public class FPCFPCHits extends AbstractHitData implements Hits, SyMAPConstants 
 
 		public boolean isFiltered() {
 			HitFilter hitfilter = mapper.getHitFilter();
-			return (hitfilter.getBlock() && !block) || (hitfilter.getNonRepetitive() && repetitive && !block) ||
+			return (hitfilter.isBlock() && !block) || (hitfilter.getNonRepetitive() && repetitive && !block) ||
 			hitfilter.getMrkHide() || 
 			mh1.isFiltered(mt1,hitfilter.getOnlyShared()) || 
 			mh2.isFiltered(mt2,hitfilter.getOnlyShared());

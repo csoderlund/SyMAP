@@ -3,30 +3,33 @@
 
 <i>If you are looking for query result column definitions, scroll down.</i>
 <h1>SyMAP Query Results</h1>
-<p>
-This page shows the table of hits (anchors) resulting from the query, where each hit connects
-two species.  If the query
-was for orphan genes, then each row represents one gene and shows data
+For more information, see <a href="https://csoderlund.github.io/SyMAP/UserGuide.html#queries">User Guide</a>.
+<p>The results table list the hits (anchors) resulting from the query, where each hit connects
+two species.  If the query was for single genes, then each row represents one gene and shows data
 only for one genome.
 <h2>Button functions</h2>
 
 <u>For selected:</u> As detailed for the following two:
 
-<p><b>Align sequences</b>
+<p><b>Show</b>
+<br>A popup will show the information for all columns of the selected row.
+
+<p><b>Align</b>
 <br>Select one or more rows: All sequences (two per row) are written out and a multiple alignment is created
 using MUSCLE (Edgar 2004 NAR:32) and shown in the main panel. The alignment is left in the <tt>muscle</tt>
 sub-directory and is over-written with each new alignment.
 
-<p>NOTE: This is especially
-useful to view the similarity of putative gene families (PgeneF),
-as follows: check "Compute PgeneF" and "Run Query", show the
-PgeneF and PgFsize columns, sort on PgeneF, then select the rows for PgeneF to
-align.
-
-<p><b>Show Synteny</b>
-<br>Select one row: Brings up a SyMAP 2-track view for the selected entry. The hits are initially padded to each side
-by the margin amount indicated (default 50kb), but you can easily zoom further out in the 2-track views.
-
+<p><b>View 2D</b>
+<br>Select one row: Brings up a SyMAP 2-track view for the selected entry.
+<table border=1>
+<tr><td nowrap>Region (kb) <td>The hits are initially padded to each side
+by the margin amount indicated (default 30kb), but you can easily zoom further out in the 2-track views.
+The default filter is "Show all hits".
+<tr><td nowrap>Synteny block <td>The entire block for this hit will be shown. The default filter is
+"Show Block Hits".
+<tr><td nowrap>Collinear set <td>If the hit is in a collinear set, the set will be shown. The default filter
+is "Highlight Collinear Set; Show Block and Set Hits".
+</table>
 
 <p><u>For table (or selected):</u> One or more rows can be selected for the following two exports,
 or if no rows are selected, the table is exported.
@@ -43,16 +46,22 @@ are written, using the start/end coordinates shown in the table.
 <!----------------------------------------------------->
 <h2>Results Table</h2>
 
-The table shows the hits (or orphan genes) resulting from the query. Each row is a single
-hit or orphan gene. Note that the table contains columns for <i>all</i> of the selected
-species, but each hit only connects two species, and the other species columns are empty (and
-an orphan gene only has one non-empty species).
-<p>
+The table shows the hits (or single genes) resulting from the query.
+<ul>
+<li>The table contains columns for <i>all</i> of the selected
+species, but each hit only connects two species, and the other species columns are empty.
+<li>If the hit aligns to a gene on either/both ends,
+columns of information about the gene(s) is included; however, if the hit aligns to overlapping
+genes, only the gene with the best overlap is provided.
+<li>If the results are for single genes, then only one species information is provided and the
+other species columns are blank.
+</ul>
+
+<h3>Columns</h3>
 You can sort the columns by clicking on them, and rearrange them by dragging the header
 boxes. You can add/remove columns using the "Select Columns" button at the bottom. Following
 are the meanings of the columns:
-<p>The "Orphan" and "All genes" tables only have the Gene Location and Annotation columns.
-<p>
+<p>The "Single genes" tables only have the Gene Location and Annotation columns.
 <table cellpadding=3>
 <tr>
 	<td colspan=3><i>General</i>
@@ -68,10 +77,8 @@ are the meanings of the columns:
 	<td>The number of hits which comprise the synteny block.
 <tr>
 	<td valign="top"><b>Collinear</b><td>&nbsp;
-	<td>If the hit is contained in an uninterrupted collinear set of shared
-		genes, Collinear shows the length of the set. This column is used for the
-		"Collinear gene" query. <i>Note: since release v5.1.8, an
-occasional collinear set is wrong: this will be fixed in v5.2.0 with an improved algorithm and display.</i>
+	<td>Collinear set containing this hit (if any). The format is C1.C2.Size.Set (e.g. 1.2.5.100; there are 5
+		adjacent gene hits in set 100 on Chr1 to Chr2).
 <tr>
 	<td valign="top"><b>PgeneF</b><td>&nbsp;
 	<td>If <b>Compute PgeneF</b>: PgeneF number. All hits in a given PgeneF have the same number. Note that
@@ -83,7 +90,7 @@ occasional collinear set is wrong: this will be fixed in v5.2.0 with an improved
 		other rows with same PgeneF.
 <tr>
 	<td valign="top"><b>Hit#</b><td>&nbsp;
-	<td>Database index of the hit. This is shown on the "Chromosome Explorer" when
+	<td>The hit number, which are sequential numbers for the chromosome pair. This is shown on the "Chromosome Explorer" when
 		the mouse is over the hit line.
 <tr><td valign="top"><b>Hit %Id</b><td>&nbsp;
 	<td>Percent identity of the alignment.The value of the "Identity" column from the MUMmer file.
@@ -92,6 +99,8 @@ occasional collinear set is wrong: this will be fixed in v5.2.0 with an improved
 	The value of the "Similarity" column from the MUMmer file.
 <tr><td valign="top"><b>Hit #Merge</b><td>&nbsp;
 	<td>The number of clustered hits into one merged hit.
+<tr><td valign="top"><b>Hit St</b><td>&nbsp;
+	<td>If "=", both hit ends are to the same strand; if "!=", they are to different strands.
 <tr>
 	<td colspan=3>
 		<i>Location: one row for each species</i>
@@ -104,7 +113,8 @@ occasional collinear set is wrong: this will be fixed in v5.2.0 with an improved
 	<td>Gstart/Gend of the annotated gene. The Gst is the strand (+/-).
 <tr>
 	<td valign="top"><b>Gene#</b><td>&nbsp;
-	<td>The gene number is chrN.#.{a-z}. The # is the sequential number along the chromosome.
+	<td>The gene number is C.#.{a-z}. The C is the chromosome number.
+	The # is the sequential number along the chromosome.
 	If a run of genes overlap, they receive the
 	same gene number with different suffixes {a-z, a2-z2, etc}. This is shown on the Chromosome Explorer
 	"Annotation Description" and when the mouse hoovers over the gene.

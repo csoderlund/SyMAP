@@ -86,10 +86,11 @@ public class TableData implements Serializable {
         	
         // General
         String [] genColNames = FieldData.getGeneralColHead();
+        Class <?> [] genColType =  FieldData.getGeneralColType();// CAS520 
         int genColCnt = FieldData.getGenColumnCount(isSingle); // CAS519
         
     	for(int x=0; x<genColCnt; x++)
-    		addColumnHeader(genColNames[x], Integer.class);
+    		addColumnHeader(genColNames[x], genColType[x]);
     	
     	// Loc headers and type
     	String [] spColNames =	  FieldData.getSpeciesColHead();
@@ -97,8 +98,9 @@ public class TableData implements Serializable {
     	int spColCnt = FieldData.getSpColumnCount(isSingle);	// CAS519 less columns for single
     	
     	for(int x=0; x < species.length; x++) {
+    		String sp = species[x]+ Q.delim ;
     		for (int c=0; c< spColCnt; c++)
-    			addColumnHeader(species[x]+ Q.delim + spColNames[c], spColType[c]);
+    			addColumnHeader(sp + spColNames[c], spColType[c]);
     	}
     	// array of species+Q.delim+keywords in correct order
     	for (int x=0; x<annoKeys.length; x++) {
@@ -278,23 +280,23 @@ public class TableData implements Serializable {
 				if(arrHeaders[nColumn].isAscending()) retval = -1;
 				else retval = 1;
 			}
-			else if (colHeader.equals(Q.blockCol) || colHeader.equals(Q.runCol) 
-								                  || colHeader.endsWith(Q.gNCol)) { // CAS517 add runCol; CAS518 add geneNCol
+			else if (colHeader.equals(Q.blockCol) || colHeader.endsWith(Q.gNCol) || colHeader.endsWith(Q.runCol)) { // CAS518 add geneNCol
 				String [] vals1 = ((String)o1[nColumn]).split("\\."); 
 				String [] vals2 = ((String)o2[nColumn]).split("\\.");
+				int n = Math.min(vals1.length, vals2.length);
 				
-				for(int x=0; x<vals1.length && x<vals2.length && retval == 0; x++) {
+				for(int x=0; x<n && retval == 0; x++) {
 					boolean valid = true;
-					Integer leftVal = null;
-					Integer rightVal = null;
+					Integer leftVal = null, rightVal = null;
 					
 					try {
 						leftVal = Integer.parseInt(vals1[x]); // CAS514 new Integer(Integer.parseInt(vals1[x]));
-						rightVal = Integer.parseInt(vals2[x]);       // new Integer(Integer.parseInt(vals2[x]));
+						rightVal = Integer.parseInt(vals2[x]);      
 					}
-					catch(Exception e) {valid = false;}
-					if(valid) retval = leftVal.compareTo(rightVal);
-					else      retval = vals1[x].compareTo(vals2[x]);
+					catch(Exception e) {valid = false;} // char for gene#
+					
+					if (valid) retval = leftVal.compareTo(rightVal);
+					else       retval = vals1[x].compareTo(vals2[x]);
 				}
 			}
 			/** CAS514 remove special processing for Q.geneNCol **/
@@ -330,10 +332,9 @@ public class TableData implements Serializable {
 			else if( arrHeaders[nColumn].getColumnClass() == Long.class)
 				retval = ((Long)o1[nColumn]).compareTo((Long)o2[nColumn]);
 			
-			if(arrHeaders[nColumn].isAscending())
-				return retval;
-			else
-				return retval * -1;
+			if (retval==0) return 0;  // CAS520 add 0 check
+			if(arrHeaders[nColumn].isAscending())	return retval;
+			else									return retval * -1;
     	}
     	catch (Exception e) {ErrorReport.print(e, "Sorting"); return 0;}
     	}
@@ -345,7 +346,7 @@ public class TableData implements Serializable {
      * For TableDataPanel methods that needs the following values for both ends of hit
      * chrNum, start, end
      */
-    public HashMap <String, Object> getRowData(int row) {
+    public HashMap <String, Object> getRowLocData(int row) {
 		HashMap <String, Object> headVal = new HashMap <String, Object> ();
 		for (int i=0; i<arrHeaders.length; i++) {
 			String colName = arrHeaders[i].getColumnName();
@@ -353,9 +354,22 @@ public class TableData implements Serializable {
 			{	
 				headVal.put(colName, arrData[row][i]);
 			}
+			else if (colName.equals(Q.blockCol) || colName.contains(Q.runCol)) { // CAS520 add for Show Synteny Opts
+				headVal.put(colName, arrData[row][i]);
+			}
 		}
 		return headVal;
     }
+    // CAS520 for view row
+    public String getRowData(int row) {
+    	String line="";
+		for (int i=0; i<arrHeaders.length; i++) {
+			String colName = arrHeaders[i].getColumnName().replace(Q.delim, "-");
+			line += String.format("%-15s %s\n", colName, arrData[row][i].toString());
+		}
+		return line;
+    }
+    
     //attributes
     //private boolean bReadOnly = false;  // CAS504 DELETE
     //private String cashe something...   // CAS504 DELETE

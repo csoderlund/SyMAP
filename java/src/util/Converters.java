@@ -173,7 +173,7 @@ public class Converters
     public static void addIntArray ( int [] fromIntArray, Collection<Integer> toCollection )
     {
         for (int i = 0; i < fromIntArray.length; ++i)
-            toCollection.add( new Integer (fromIntArray[i]) );      
+            toCollection.add(fromIntArray[i]);   // CAS520 new Integer    
     }
     
     public static <T> Vector<T> combineVectors ( Vector<T> prepend, Vector<T> append )

@@ -115,7 +115,7 @@ public class AnnotLoadPost {
 			
 			for (GeneData gd : geneMap.values()) gd.tag = "Gene #" + gd.genenum + gd.suffix; 
 			
-			System.err.print("   " + g.getFullName() + " " + genenum + " genes        \r");
+			System.err.print("   " + g.getFullName() + " " + genenum + " genes                    \r");
 			totGeneNum+= genenum;
 			genenum=0;
 		}
@@ -259,4 +259,45 @@ public class AnnotLoadPost {
 		}
 		int cntHasIn=0, cntIsIn=0, cntOverlap=0;
 	}	
+/** original
+	 * private void genesNumber() {
+		try {
+			// First set the order number for the genes, using the same number for ones which overlap
+			log.msg("  Compute gene order " + project.name);
+			
+			pool.executeUpdate("update pseudo_annot, xgroups set pseudo_annot.genenum=0, pseudo_annot.gene_idx=0 "
+					+ "where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + project.idx);
+			
+			int totalGeneUpdate=0;
+			for (Group g : project.getGroups())
+			{
+				int genenum = 0;
+				PreparedStatement ps = pool.prepareStatement( "update pseudo_annot set genenum=? where idx=?");
+				ResultSet rs = pool.executeQuery(
+					"select idx,start,end from pseudo_annot where grp_idx=" + g.idx + 
+					" and type='gene' order by start asc");
+				int sprev=-1, eprev=-1;
+				while (rs.next())
+				{
+					int idx = rs.getInt(1);
+					int s = rs.getInt(2);
+					int e = rs.getInt(3);
+					
+					if (sprev == -1 || !Utils.intervalsOverlap(sprev, eprev, s, e, 0)) {
+						genenum++;
+					}
+					ps.setInt(1, genenum);
+					ps.setInt(2, idx);
+					ps.addBatch();
+					sprev=s; eprev=e;
+				}
+				ps.executeBatch();
+				totalGeneUpdate+=genenum;
+				System.err.print("   " + g.getFullName() + " " + genenum + " genes\r");
+			}
+			Utils.prtNumMsg(log, totalGeneUpdate, "Non-overlapping genes");
+		}
+		catch (Exception e) {ErrorReport.print(e, "Compute gene order"); success=false;}
+	}
+	 */
 }

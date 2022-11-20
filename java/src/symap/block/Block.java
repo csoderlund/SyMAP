@@ -28,6 +28,7 @@ import symap.track.Track;
 import symap.track.TrackData;
 import symap.track.TrackHolder;
 import symap.drawingpanel.DrawingPanel;
+import util.ErrorReport;
 import util.PropertiesReader;
 import util.Rule;
 import util.Utilities;
@@ -114,14 +115,6 @@ public class Block extends MarkerTrack {
 		this.block = block;
 	}
 
-	/**
-	 * Method <code>setup</code>
-	 *
-	 * @param project an <code>int</code> value
-	 * @param contigs a <code>String</code> value
-	 * @param otherProject an <code>int</code> value
-	 * @param mtd a <code>MarkerTrackData</code> value (optional)
-	 */
 	public void setup(int project, String contigs, int otherProject, MarkerTrackData mtd) {
 		if (contigs.indexOf(".") > 0) {
 			block = contigs;
@@ -149,7 +142,7 @@ public class Block extends MarkerTrack {
 
 		if (flipped) reverse(innerBlockList);
 		for (InnerBlock ib : innerBlockList)
-			ib.reset(flipped,contigList.contains(new Integer(ib.getContig())));
+			ib.reset(flipped,contigList.contains(ib.getContig())); // CAS520
 		flipped = DEFAULT_FLIPPED;
 
 		if (otherProject != NO_VALUE) init();
@@ -163,7 +156,6 @@ public class Block extends MarkerTrack {
 	}
 
 	public void setup(TrackData td) {
-
 		BlockTrackData bd = (BlockTrackData)td;
 
 		if (td.getProject() != project || !contigList.equals(bd.getContigList()) || td.getOtherProject() != otherProject) {
@@ -176,7 +168,7 @@ public class Block extends MarkerTrack {
 
 		if (flip) reverse(innerBlockList);
 		for (InnerBlock ib : innerBlockList)
-			ib.reset(flip,contigList.contains(new Integer(ib.getContig())));
+			ib.reset(flip,contigList.contains(ib.getContig()));
 
 		firstBuild = false;
 		init();
@@ -194,7 +186,6 @@ public class Block extends MarkerTrack {
 
 	/**
 	 * Clears the private member lists and calls super.clear().
-	 * 
 	 * @see MarkerTrack#clear()
 	 */
 	public void clear() {
@@ -211,11 +202,6 @@ public class Block extends MarkerTrack {
 		innerBlockList.removeAllElements();
 	}
 
-	/**
-	 * Method <code>toString</code> returns a string representation of this object.
-	 *
-	 * @return a <code>String</code> value
-	 */
 	public String toString() {
 		return "[Block (Contigs: " + contigList + ")]";
 	}
@@ -231,10 +217,6 @@ public class Block extends MarkerTrack {
 	/**
 	 * Method <code>flip</code> sets the block to be flipped or not flipped on 
 	 * the next build.  The block is started out as being not flipped.
-	 *
-	 * @param flip a <code>boolean</code> value
-	 * @param changeEnds a <code>boolean</code> value is ignored
-	 * @return a <code>boolean</code> value of true on a change
 	 */
 	public boolean flip(boolean flip, boolean changeEnds) {
 		if (flipped != flip) {
@@ -250,10 +232,7 @@ public class Block extends MarkerTrack {
 	}
 
 	/**
-	 * Method <code>getContigList</code> returns a copy of the Collection of 
-	 * current contigs.
-	 *
-	 * @return a <code>Collection</code> value
+	 * Method <code>getContigList</code> returns a copy of the Collection of current contigs.
 	 */
 	public Collection<Integer> getContigList() {
 		return new LinkedHashSet<Integer>(contigList);
@@ -330,12 +309,10 @@ public class Block extends MarkerTrack {
 		try {
 			pool.setBlock(this,contigList,innerBlockList,size);
 		} catch (SQLException s1) {
-			s1.printStackTrace();
-			System.err.println("Initializing Block failed.");
+			ErrorReport.print(s1, "Initializing block");
 			pool.close();
 			return false;
 		}
-
 		if (preSize != contigList.size()) {
 			
 			Utilities.showWarningMessage("Not all contigs were able to be shown in the view."); 
@@ -484,9 +461,6 @@ public class Block extends MarkerTrack {
 	/**
 	 * Method <code>isContigVisible</code> returns true if this block
 	 * contains the contig and it is visible.
-	 *
-	 * @param contig an <code>int</code> value
-	 * @return a <code>boolean</code> value
 	 */
 	public boolean isContigVisible(int contig) {
 		for (InnerBlock ib : innerBlockList) {
@@ -495,15 +469,10 @@ public class Block extends MarkerTrack {
 		}
 		return false;
 	}
-
-
 	/**
 	 * Method <code>getXPoint</code> gets the x point along the block given the orientation.
 	 * So if orient == LEFT_ORIENT the right side of the rectangle is given, otherwise the left
 	 * side is returned
-	 *
-	 * @param orient an <code>int</code> value
-	 * @return a <code>double</code> value of the x coordinate
 	 */
 	public double getXPoint(int orient) {
 		double x = rect.x;
@@ -511,11 +480,6 @@ public class Block extends MarkerTrack {
 		return x;
 	}
 
-	/**
-	 * Method <code>paintComponent</code>
-	 *
-	 * @param g a <code>Graphics</code> value
-	 */
 	public void paintComponent(Graphics g) {
 		if (hasBuilt()) {
 			Graphics2D g2 = (Graphics2D)g;
@@ -535,10 +499,6 @@ public class Block extends MarkerTrack {
 	 * Method <code>setStartBP</code> checks the blocks and removes the ones 
 	 * that fall before the given base pair value.  The block needs to have 
 	 * been built before in order to determine the placing of the contigs.
-	 *
-	 * @param startBP a <code>long</code> value
-	 * @exception IllegalArgumentException if an error occurs when start is 
-	 * 				less than zero or greater than size
 	 */
 	public void setStartBP(long startBP) throws IllegalArgumentException {
 		if (!hasInit()) return ;
@@ -556,7 +516,7 @@ public class Block extends MarkerTrack {
 				if (SyMAP.DEBUG) System.out.println("Removing the contig "+ib.getContig()+" from the block view by way of start.");
 
 				ib.setVisible(false);
-				contigList.remove(new Integer(ib.getContig()));
+				contigList.remove(ib.getContig());
 				change = true;
 			}
 		}
@@ -572,11 +532,6 @@ public class Block extends MarkerTrack {
 	 * Method <code>setEndBP</code> checks the blocks and removes the ones that 
 	 * fall completely outside of 0 to the given base pair value.  The block 
 	 * needs to have been built before to determine the placing of the contigs.
-	 *
-	 * @param endBP a <code>double</code> value 
-	 * @return a <code>long</code> value always equal to endBP
-	 * @exception IllegalArgumentException if an error occurs with the end 
-	 * 				value being less than zero
 	 */
 	public long setEndBP(long endBP) throws IllegalArgumentException {
 		if (!hasInit()) return 0;
@@ -592,7 +547,7 @@ public class Block extends MarkerTrack {
 				if (SyMAP.DEBUG) System.out.println("Removing the contig "+ib.getContig()+" from the block view by way of end.");
 
 				ib.setVisible(false);
-				contigList.remove(new Integer(ib.getContig()));
+				contigList.remove(ib.getContig());
 				change = true;
 			}
 		}
@@ -607,32 +562,14 @@ public class Block extends MarkerTrack {
 		return endBP;
 	}
 
-	/**
-	 * Method <code>getStart</code> returns Long.MIN_VALUE
-	 *
-	 * @return a <code>long</code> value
-	 */
 	public long getStart() {
 		return Long.MIN_VALUE;
 	}
 
-	/**
-	 * Method <code>getEnd</code> returns Long.MAX_VALUE
-	 *
-	 * @return a <code>long</code> value
-	 */
 	public long getEnd() {
 		return Long.MAX_VALUE;
 	}
 
-	/**
-	 * Method <code>getHelpText</code> returns the desired help text when the
-	 * mouse is over a given point.
-	 * 
-	 * @param event
-	 *            a <code>MouseEvent</code> value
-	 * @return a <code>String</code> value
-	 */
 	public String getHelpText(MouseEvent event) {
 		Point point = event.getPoint();
 		String pretext = "Block Track (" + getTitle() + "):  "; 
@@ -657,9 +594,6 @@ public class Block extends MarkerTrack {
 	/**
 	 * Determines if the user clicked on a block and notifies the track observer
 	 * of the contig that was clicked if needed.
-	 * 
-	 * @param e
-	 *            a <code>MouseEvent</code> value
 	 */
 	public void mouseClicked(MouseEvent e) {
 		super.mouseClicked(e);
@@ -669,7 +603,7 @@ public class Block extends MarkerTrack {
 				for (InnerBlock ib : innerBlockList) {
 					if (ib.isVisible() && ib.contains(p)) {
 						setCursor(null);
-						notifyObserver(new Integer(ib.getContig()));
+						notifyObserver(ib.getContig());
 						break;
 					}
 				}
@@ -890,7 +824,7 @@ public class Block extends MarkerTrack {
 		}
 
 		public double setTextLayout(FontRenderContext frc) {
-			tl = new TextLayout(new Integer(contig).toString(), contigFont, frc);
+			tl = new TextLayout(String.format("%d", contig), contigFont, frc); // CAS520 Integer
 			Rectangle2D rec = tl.getBounds();
 			return rec.getX() + rec.getWidth();
 		}

@@ -211,7 +211,7 @@ public class ContigFilter extends MarkerFilter {
 	}
 
 	protected void setDefault() {
-		contigText.setText(new Integer(contig.contig).toString());
+		contigText.setText(""+contig.contig); // CAS520 new Integer(contig.contig).toString()
 		widthSlider.setValue(contig.getBaseWidth());
 
 		showOnly2BESHitClonesBox.setSelected(false);
@@ -221,7 +221,7 @@ public class ContigFilter extends MarkerFilter {
 		cloneNameText.setText("");
 
 		startText.setText("0");
-		endText.setText(new Long(contig.getTrackSize()).toString());
+		endText.setText(""+contig.getTrackSize()); // CAS520 new Long(contig.getTrackSize()).toString()
 
 		super.setDefault();
 	}
@@ -243,7 +243,7 @@ public class ContigFilter extends MarkerFilter {
 		showOnly2BESHitClones = contig.showBothBESFilter == Clone.BOTH_BES_COND_FILTERED;
 		showOnly2BESCurrentHitClones = contig.showBothBESFilter == Clone.BOTH_BES_CURRENT_COND_FILTERED;
 
-		contigText.setText(new Integer(contigNum).toString());
+		contigText.setText(""+contigNum);
 		widthSlider.setValue(width);
 		showCloneNamesBox.setSelected(showCloneNames);
 		showOnly2BESHitClonesBox.setSelected(showOnly2BESHitClones);
@@ -270,11 +270,6 @@ public class ContigFilter extends MarkerFilter {
 		super.setVisible(true); // CAS512 super.show();
 	}
 
-	/**
-	 * Method <code>canShow</code> returns true if the Contig has been initialized.
-	 *
-	 * @return a <code>boolean</code> value
-	 */
 	public boolean canShow() {
 		if (contig == null) return false;
 		return contig.hasInit();
@@ -282,12 +277,12 @@ public class ContigFilter extends MarkerFilter {
 
 	private void setStart() {
 		if (contig != null)
-			startText.setText(new Long(contig.getStart()).toString());
+			startText.setText(""+contig.getStart());
 	}
 
 	private void setEnd() {
 		if (contig != null)
-			endText.setText(new Long(contig.getEnd()).toString());
+			endText.setText(""+contig.getEnd());
 	}
 
 	protected void didFlip() {
@@ -302,10 +297,10 @@ public class ContigFilter extends MarkerFilter {
 		long tstart, tend;
 		boolean changed = false;
 
-		if (!contigText.getText().equals(new Integer(contigNum).toString())) {
+		if (!contigText.getText().equals(""+contigNum)) {
 			int tContigNum;
 			try {
-				tContigNum = new Integer(contigText.getText()).intValue();
+				tContigNum = Integer.parseInt(contigText.getText()); // CAS520 new Integer
 			} catch (NumberFormatException nfe) {
 				throw new Exception("Contig value entered is not valid.");
 			}
@@ -342,7 +337,7 @@ public class ContigFilter extends MarkerFilter {
 
 		if (startText.getText().trim().length() > 0) {
 			try {
-				number = (long)Math.round((new Double(startText.getText())).doubleValue());
+				number = (long)Math.round(Double.parseDouble(startText.getText())); // CAS520 (new Double(startText.getText())).doubleValue()
 			} catch (NumberFormatException nfe) {
 				throw new Exception("Start value entered is not a number.");
 			}
@@ -354,12 +349,12 @@ public class ContigFilter extends MarkerFilter {
 			}
 		} else {
 			contig.resetStart();
-			startText.setText(new Long(contig.getStart()).toString());
+			startText.setText(""+contig.getStart());
 		}
 
 		if (endText.getText().trim().length() > 0) {
 			try {
-				number = (long)Math.round((new Double(endText.getText())).doubleValue());
+				number = (long)Math.round(Double.parseDouble(endText.getText()));
 			} catch (NumberFormatException nfe) {
 				throw new Exception("End value entered is not a number.");
 			}
@@ -370,10 +365,10 @@ public class ContigFilter extends MarkerFilter {
 				setEnd();
 				throw new Exception("Invalid end value entered.");
 			}
-			if (newNum != number) endText.setText(new Long(newNum).toString());
+			if (newNum != number) endText.setText(""+newNum);
 		} else {
 			contig.resetEnd();
-			endText.setText((new Long(contig.getEnd())).toString());
+			endText.setText(""+(contig.getEnd()));
 		}
 
 		if (contig.getStart() == contig.getEnd()) {
@@ -455,7 +450,6 @@ public class ContigFilter extends MarkerFilter {
 		}
 	}
 	
-	
 	public void popupMenuWillBecomeVisible(PopupMenuEvent event) {
 		setupShow();		
 		showCloneNamesPopupBox.setState(showCloneNames);
@@ -472,7 +466,7 @@ public class ContigFilter extends MarkerFilter {
 		endText.setText(endStr);
 		widthSlider.setValue(width);
 		showCloneNamesBox.setSelected(showCloneNames);
-		contigText.setText(new Integer(contigNum).toString());
+		contigText.setText(""+contigNum);
 	}
 }
 

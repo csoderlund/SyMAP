@@ -50,24 +50,6 @@ public class SyArranger extends Arranger implements DotPlotConstants {
 		if (ADD_ALL)
 			ranges = addSubRanges(ranges,block,bp,mhits);
 
-		//for (int i = 0; i < ranges.length; i++) System.out.println(ranges[i]);
-
-		//printInts(ranges);
-
-		/*
-	  int nv[] = getIntArray(ranges);
-	  GR gr;
-	  Reversal rev[] = new Reversal[0];
-	  try {
-	  gr = new GR(new Permutation(nv));
-	  rev = gr.run();
-	  } catch (Exception e) {
-	  e.printStackTrace();
-	  }
-
-	  printReversals(rev);
-		 */
-
 		SubBlock[] sbs = createSubBlocks(block,ranges,mhits);
 
 		return sbs;
@@ -101,7 +83,7 @@ public class SyArranger extends Arranger implements DotPlotConstants {
 	protected void printInts(BPRange[] ranges) {
 		System.out.print("[");
 		for (int i = 0; i < ranges.length; i++)
-			System.out.print(new Integer(ranges[i].value()).toString()+" ");
+			System.out.print(ranges[i].value()+" "); // CAS520 new Integer
 		System.out.println("]\n");
 	}
 
@@ -115,7 +97,6 @@ public class SyArranger extends Arranger implements DotPlotConstants {
 				nHits[++n] = hits[i];
 				if (n == i) i++;
 			}
-			//else System.out.println("Removing "+hits[i]+" because equal to "+nHits[n]);
 		}
 		if (++n != hits.length) {
 			Hit[] th = new Hit[n];
@@ -239,19 +220,19 @@ public class SyArranger extends Arranger implements DotPlotConstants {
 			endInd     = ind;
 			endValue   = value;
 			indxs.clear();
-			indxs.add(new Integer(ind));
+			indxs.add(ind);
 		}
 
 		public void expand(int ind, int value) {
 			if (ind < startInd) {
 				startInd   = ind;
 				startValue = value;
-				indxs.add(0,new Integer(ind));
+				indxs.add(0,ind);
 			}
 			else if (ind > endInd) {
 				endInd   = ind;
 				endValue = value;
-				indxs.add(new Integer(ind));
+				indxs.add(ind);
 			}
 		}
 
@@ -266,12 +247,12 @@ public class SyArranger extends Arranger implements DotPlotConstants {
 			if (ind < startInd) {
 				startInd   = ind;
 				startValue = value;
-				indxs.add(0,new Integer(ind));
+				indxs.add(0,ind);
 			}
 			else {
 				endInd   = ind;
 				endValue = value;
-				indxs.add(new Integer(ind));
+				indxs.add(ind);
 			}
 
 			return true;
