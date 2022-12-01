@@ -116,9 +116,9 @@ public abstract class Filter extends JDialog implements ActionListener,
 	 * showing if the help bar is set.
 	 */
 	public void showX() {
-		if (helpBar != null) helpBar.setPaused(true,this);
+		//CAS521 dead code if (helpBar != null) helpBar.setPaused(true,this);
 		super.setVisible(true); // CAS512 super.show();
-		if (helpBar != null) helpBar.setPaused(false,this);
+		//CAS521 dead code if (helpBar != null) helpBar.setPaused(false,this);
 	}	
 	
 	public void showPopup(MouseEvent e) { 
@@ -133,7 +133,7 @@ public abstract class Filter extends JDialog implements ActionListener,
 	 * Method hide hides the dialog setting the help bar to not be paused on this object.
 	 */
 	public void hideX() {
-		if (helpBar != null) helpBar.setPaused(false,this);
+		// CAS521 dead code if (helpBar != null) helpBar.setPaused(false,this);
 		super.setVisible(false); // CAS512 super.hide();
 	}
 

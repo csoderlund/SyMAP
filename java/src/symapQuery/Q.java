@@ -11,6 +11,7 @@ public class Q {
 	static final String rowCol   = "Row";
 	static final String blockCol = "Block"; 	// equals TableData.ColumnComparator
 	static final String runCol =   "Collinear"; // CAS517 equals TableData.ColumnComparator
+	static final String hitCol =   "Hit#";		// CAS521 used for Align text
 	
 	// CAS519 was Gene for Orphan and Hit for Pairs; now it always shows the genes; Chr is always same for hit/gene
 	static final String chrCol =	 "Chr";

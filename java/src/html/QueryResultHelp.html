@@ -7,10 +7,10 @@ For more information, see <a href="https://csoderlund.github.io/SyMAP/UserGuide.
 <p>The results table list the hits (anchors) resulting from the query, where each hit connects
 two species.  If the query was for single genes, then each row represents one gene and shows data
 only for one genome.
+
 <h2>Button functions</h2>
 
-<u>For selected:</u> As detailed for the following two:
-
+<u>Selected:</u> One row can be selected.
 <p><b>Show</b>
 <br>A popup will show the information for all columns of the selected row.
 
@@ -23,15 +23,16 @@ sub-directory and is over-written with each new alignment.
 <br>Select one row: Brings up a SyMAP 2-track view for the selected entry.
 <table border=1>
 <tr><td nowrap>Region (kb) <td>The hits are initially padded to each side
-by the margin amount indicated (default 30kb), but you can easily zoom further out in the 2-track views.
+by the margin amount indicated (default 50kb), but you can easily zoom further out in the 2-track views.
 The default filter is "Show all hits".
 <tr><td nowrap>Synteny block <td>The entire block for this hit will be shown. The default filter is
 "Show Block Hits".
 <tr><td nowrap>Collinear set <td>If the hit is in a collinear set, the set will be shown. The default filter
 is "Highlight Collinear Set; Show Block and Set Hits".
 </table>
+High: If this is checked, the selected hit will be highlighted in the 2D display using the hover color.
 
-<p><u>For table (or selected):</u> One or more rows can be selected for the following two exports,
+<p><u>Table (or selected):</u> One or more rows can be selected for the following exports,
 or if no rows are selected, the table is exported.
 
 <p><b>Export CSV</b>
@@ -133,7 +134,7 @@ are the meanings of the columns:
 </table>
 
 
-<h3>Statistics</h3>
+<h2>Statistics</h2>
 This section shows overall statistics for the query results. Most of the
 statistics are self-explanatory except the following:
 <p><b>Annotated</b> and <b>Genes</b>: The first is the number of hits that

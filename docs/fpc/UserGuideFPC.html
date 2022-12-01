@@ -3,7 +3,9 @@
 <head>
 <title>SyMAP Seq-FPC</title>
 <style>
-	a:link {text-decoration: none;color:#6666CC;}
+	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
@@ -23,17 +25,17 @@
 			<tr>
 				<td style="text-align: left; vertical-align: top; padding: 0">
 					<a href="http://www.agcol.arizona.edu">
-						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
+						<img src="../img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
 				</td>
 				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
 					SyMAP Sequence-FPC synteny
 				</td>
 				<td style="text-align: right; vertical-align: top; padding: 0">
 					<a href="http://www.arizona.edu">
-						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+						<img src="../img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
 					<br>
 					<a href="http://www.bio5.org">
-						<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+						<img src="../img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
 				</td>
 			</tr>
 			<tr>
@@ -43,10 +45,10 @@
 						<td style="background-color: #666666; padding-bottom:4px;">
 						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
 						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
-						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-						<a href="./SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
-						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
-						<a href="./Tour.html" class="white">Tour</a>
+						<a href="../Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="../SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
+						<a href="../UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="../Tour.html" class="white">Tour</a>
 					</tr>
 				</table>
 				</td>
@@ -57,9 +59,9 @@
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
 This guide provides detailed FPC-to-Seq instructions for the SyMAP <b>2D</b> user interface, which
-includes some duplicated information from <a href=UserGuide.html target="_blank">User Guide</a> since
+includes some duplicated information from <a href=../UserGuide.html class="ext" target="_blank">User Guide</a> since
 the FPC track and Sequence track are displayed together.
-All instructions for the other displays in the <a href=UserGuide.html target="_blank">User Guide</a>
+All instructions for the other displays in the <a href=../UserGuide.html class="ext" target="_blank">User Guide</a>
 apply to FPC-to-Seq unless stated otherwise.
 
 <h2>Contents</h2>
@@ -78,7 +80,7 @@ apply to FPC-to-Seq unless stated otherwise.
 <h2>2D Display</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The 2D display is activated from the Explorer by
+The 2D display is activated from the Explorer by<a href=UserGuideFPC.html>FPC User Guide</a>
 clicking the <b>2D</b> button,
 or by selecting a block in the Dot Plot.
 <p>
@@ -88,7 +90,7 @@ Below is a image depicting an <b>FPC-to-sequence comparison</b> for Maize FPC
 Note that rice chr1 is the "reference"
 chromosome, hence is placed in between the others.
 <p>
-<a href="img/fpc/alignSeqFPC.png"><img src="img/fpc/alignSeqFPC.png" alt="alignSeqFPC" style="border: 1px solid black; width: 650px"></a>
+<a href="img/alignSeqFPC.png"><img src="img/alignSeqFPC.png" alt="alignSeqFPC" style="border: 1px solid black; width: 650px"></a>
 <p>
 The alignment window displays "tracks" (drawn as rectangles) of sequence information, showing synteny  "hits" (drawn as lines) between tracks.
 <p>
@@ -250,7 +252,7 @@ Additional information about each
 annotation may be seen by choosing "Show Description for Annotations" from the Sequence Filter.
 </ul>
 </td>
-<td><a href="img/fpc/sequencetrack1.png"><img src="img/fpc/sequencetrack1.png" alt="sequencetrack1" style="border: 1px solid black; width: 400px"></a>
+<td><a href="img/sequencetrack1.png"><img src="img/sequencetrack1.png" alt="sequencetrack1" style="border: 1px solid black; width: 400px"></a>
 </td></tr></table>
 
 <p>
@@ -286,7 +288,7 @@ Enables/disables the display of gene/exon annotations
 This option enables/disables the display of framework markers (drawn as solid green
 rectangles) along the sequence.
 
-<td><a href="img/fpc/sequencefilter.png"><img src="img/fpc/sequencefilter.png" alt="sequencefilter" style="border: 1px solid black; width: 300px"></a>
+<td><a href="img/sequencefilter.png"><img src="img/sequencefilter.png" alt="sequencefilter" style="border: 1px solid black; width: 300px"></a>
 </table>
 
 
@@ -345,7 +347,7 @@ Project1Chromosome.Project2Chromosome.BlockID
 In the screenshot above, the Synteny Block Number "6.1.1" refers to Maize Chromosome 6
 mapped to Rice Chromosome 1, synteny block #1 of this pairing.
 
-<td><a href="img/fpc/blocktrack.png"><img src="img/fpc/blocktrack.png" alt="blocktrack" style="border: 1px solid black; width: 150px"></a>
+<td><a href="img/blocktrack.png"><img src="img/blocktrack.png" alt="blocktrack" style="border: 1px solid black; width: 150px"></a>
 </table>
 <p>
 
@@ -373,7 +375,7 @@ may not be visible if the view has been zoomed.
 <b>Show Only Marker Names With Visible Hits</b> Only show the names of markers which have hits visible in the
 current view.
 
-<td><a href="img/fpc/blockfilter.png"><img src="img/fpc/blockfilter.png" alt="blockfilter" style="border: 1px solid black; width: 300px"></a>
+<td><a href="img/blockfilter.png"><img src="img/blockfilter.png" alt="blockfilter" style="border: 1px solid black; width: 300px"></a>
 </table>
 
 <p>
@@ -414,7 +416,7 @@ are shared with the Block track are maintained when using this link.
 The contig information displayed can be controlled via the
 <a href="#contig_filter">Contig Filter</a>.
 
-<td><a href="img/fpc/contigtrack.gif"><img src="img/fpc/contigtrack.gif" alt="contigtrack" style="border: 1px solid black; width: 400px"></a>
+<td><a href="img/contigtrack.gif"><img src="img/contigtrack.gif" alt="contigtrack" style="border: 1px solid black; width: 400px"></a>
 </table>
 <p>
 
@@ -426,16 +428,16 @@ line represent a BES.
 <p>
 <table class="ty" style="font-family: Verdana, Arial, Helvetica, sans-serif; font-size:10pt; border-spacing: 5px; ">
 <tr><td></td><td><b>Dot Color</b></td><td><b>Meaning</b></td></tr>
-<tr><td><img src="img/fpc/clonedot_open.png" alt="clonedot_open"></td><td>open</td><td>the BES has no hit</td></tr>
-<tr><td><img src="img/fpc/clonedot_light.png" alt="clonedot_light"></td><td>light purple</td><td>the BES has a hit</td></tr>
-<tr><td><img src="img/fpc/clonedot_black.png" alt="clonedot_black"></td><td>black</td><td>the BES has a hit within a block and has no hits showing</td></tr>
-<tr><td><img src="img/fpc/clonedot_dark.png" alt="clonedot_dark"></td><td>dark purple</td><td>the BES has a hit within a block and has a hit showing</td></tr>
+<tr><td><img src="img/clonedot_open.png" alt="clonedot_open"></td><td>open</td><td>the BES has no hit</td></tr>
+<tr><td><img src="img/clonedot_light.png" alt="clonedot_light"></td><td>light purple</td><td>the BES has a hit</td></tr>
+<tr><td><img src="img/clonedot_black.png" alt="clonedot_black"></td><td>black</td><td>the BES has a hit within a block and has no hits showing</td></tr>
+<tr><td><img src="img/clonedot_dark.png" alt="clonedot_dark"></td><td>dark purple</td><td>the BES has a hit within a block and has a hit showing</td></tr>
 </table>
 <p>
-<img src="img/fpc/markerhit.png"  alt="markerhit">A green line in the middle of the clone going towards
+<img src="img/markerhit.png"  alt="markerhit">A green line in the middle of the clone going towards
 another track is a <a href="#markerhit">marker hit</a>.
 <p>
-<img src="img/fpc/inversehit.png"  alt="inversehit">Gold-colored clones are clones having both BES hits
+<img src="img/inversehit.png"  alt="inversehit">Gold-colored clones are clones having both BES hits
  with the same orientation. This can indicate an inversion breakpoint within the clone.
 <p>
 Moving the mouse over a clone will give a description in the status bar and highlight
@@ -525,7 +527,7 @@ check box.  The width of the contig can than be adjusted to
 give sufficient space for the names.
 <p>
 <b>Flip the Contig</b> Reverse the order in which the clones are displayed.
-<td><a href="img/fpc/contigfilter.png"><img src="img/fpc/contigfilter.png" alt="contigfilter" style="border: 1px solid black; width: 300px"></a>
+<td><a href="img/contigfilter.png"><img src="img/contigfilter.png" alt="contigfilter" style="border: 1px solid black; width: 300px"></a>
 </table>
 
 <p>
@@ -570,7 +572,7 @@ This can make synteny more visible, but it also adds
 some redundant lines for markers which are attached to many clones.
 
 
-<td><a href="img/fpc/hitfilter.png"><img src="img/fpc/hitfilter.png" alt="hitfilter" style="border: 1px solid black; width: 300px"></a>
+<td><a href="img/hitfilter.png"><img src="img/hitfilter.png" alt="hitfilter" style="border: 1px solid black; width: 300px"></a>
 </table>
 <p>
 <b>Show Only Synteny Hits</b>: Shows only hits that are part of a synteny block.
@@ -589,7 +591,7 @@ some redundant lines for markers which are attached to many clones.
 
 Select "Base View" from the "Mouse" dropdown. The base view displays a detailed diagram of the selected hit.
 <p>
-<a href="img/fpc/closeup.png"><img src="img/fpc/closeup.png" alt="closeup"></a>
+<a href="img/closeup.png"><img src="img/closeup.png" alt="closeup"></a>
 <p>
 A base view of the hits along a sequence track can be brought up by dragging the
 mouse along the sequence and releasing when the desired range is highlighted. The range

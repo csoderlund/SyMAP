@@ -3,6 +3,8 @@ package symapQuery;
 /**************************************************
  * The main query frame
  */
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -30,11 +32,21 @@ import symapMultiAlign.AlignmentViewPanel;
 public class SyMAPQueryFrame extends JFrame {
 	private static final String [] MENU_ITEMS = { "> Instructions", "> Query Setup", "> Results" }; 
 	
-	
 	// ProjectManager creates this object, add the projects, then calls build.
 	public SyMAPQueryFrame(DatabaseReader dr, boolean is3D) {
 		setTitle("SyMAP Query " + SyMAP.VERSION); // CAS514 add version
 		theReader = dr;
+		
+		/** CAS521 was in the middle of adding column save; finish for 522
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		addWindowListener(new WindowAdapter() {
+		    public void windowClosing(WindowEvent e) {
+		        FieldData.saveColumnDefaults(getAbbrevNames(), getLastColumns(false));
+		        dispose();
+		    }
+		});
+		FieldData.setColumnDefaults(getAbbrevNames());
+		**/
 		
 		theProjects = new Vector<Project> ();		
 		
@@ -96,15 +108,8 @@ public class SyMAPQueryFrame extends JFrame {
 	}
 	// called from queryPanel on Run Query
 	public void makeTable(String query, String sum, boolean bSingle) {
-		boolean [] saveLastColumns = null;
-		for(int x=allResults.size()-1; x>=0 && saveLastColumns == null; x--) {
-			if (allResults.get(x) instanceof TableDataPanel) {
-				if (((TableDataPanel)allResults.get(x)).isSingle()==bSingle) { // CAS519 add single check, and break
-					saveLastColumns = ((TableDataPanel)allResults.get(x)).getColumnSelections();
-					break;
-				}
-			}
-		}
+		boolean [] saveLastColumns = getLastColumns(bSingle);
+		
 		TableDataPanel newTablePanel = new TableDataPanel(getInstance(), getNextResultLabel(), 
 											saveLastColumns, query, sum, bSingle);
 		
@@ -115,6 +120,18 @@ public class SyMAPQueryFrame extends JFrame {
 		allResults.add(newTablePanel);
 		
 		updateView(); // shows the table with Stop 
+	}
+	private boolean [] getLastColumns(boolean bSingle) {
+		boolean [] saveLastColumns = null;
+		for(int x=allResults.size()-1; x>=0 && saveLastColumns == null; x--) {
+			if (allResults.get(x) instanceof TableDataPanel) {
+				if (((TableDataPanel)allResults.get(x)).isSingle()==bSingle) { // CAS519 add single check, and break
+					saveLastColumns = ((TableDataPanel)allResults.get(x)).getColumnSelections();
+					break;
+				}
+			}
+		}
+		return saveLastColumns;
 	}
 	public void updateResultCount(TableDataPanel newTablePanel) {
 		int numResults = newTablePanel.getNumResults();
@@ -127,23 +144,20 @@ public class SyMAPQueryFrame extends JFrame {
 		
 		updateView();
 	}
-	public void addAlignmentTab(TableDataPanel parent, String [] names, String [] sequences) {
-		String label = names.length + " sequences";
-		
+	public void addAlignmentTab(TableDataPanel parent, String [] names, String [] lines, String [] seqs, String sum) {
 		final SyMAPQueryFrame theFrame = this;
 		final TableDataPanel parentCopy = parent;
 		final String [] theNames = names;
-		final String [] theSequences = sequences;
-		final String thePOGName = label;
-		final String summary = "Summary";
+		final String [] theLines = lines;
+		final String [] theSeqs = seqs;
+		final String summary = sum;
 		Thread thread = new Thread(new Runnable() {
 			public void run() {
 				try {
 					String filename = "temp";
 					
-					AlignmentViewPanel newTab = new AlignmentViewPanel(theFrame, theNames, theSequences, filename);
-					String tabName;
-					tabName = "Align " + (++nMultiAlignmentCounter) + ": " + thePOGName;
+					AlignmentViewPanel newTab = new AlignmentViewPanel(theFrame, theNames, theLines, theSeqs, filename);
+					String tabName = "Align " + (++nMultiAlignmentCounter) + ": " + summary;
 						
 					addResultPanel(parentCopy, newTab, tabName, summary);
 				} catch (Exception e) {

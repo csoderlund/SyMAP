@@ -141,7 +141,7 @@ public class SyntenyMain
 			}
 		}
 		System.err.print("                                     \r"); // CAS517 get rid of last pairs remaining
-		Utils.timeMsg(mLog, startTime, "Finding"); // CAS520 add time
+		Utils.timeMsg(mLog, startTime, "Synteny"); // CAS520 add time
 		
 		if (bInterrupt) return false;
 		
@@ -280,7 +280,7 @@ public class SyntenyMain
 		}		
 		writeResultsToFile();
 		
-		Utils.timeMsg(mLog, startTime, "Synteny");
+		// CAS521 has a finished elsewhere Utils.timeMsg(mLog, startTime, "Synteny");
 		
 		return true;
 	}

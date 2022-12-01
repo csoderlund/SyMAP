@@ -61,9 +61,40 @@
 	<!---- START BODY -->
 
 If you are using SyMAP and want to update to a new version, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
-<br>The following release instructions will link you to this page if there is action required by you.
 
+<h3>Release: v5.2.1 (1-Dec-22)</h3>
+For existing SyMAP databases: The colors in the circle view will be different for the 2nd project.
+<ol>
+<li><ttl>Circle view</ttl>
+<ul>
+<li>Whole genome:  <ttl>Reverse</ttl>: A new function that allows the reference to be reversed.
+The color of a project's blocks stays consistent if compared to projects with different number of chromosomes (n&lt;=25).
+<li>Chromosome view: The selected reference will have its colors shown by default.
+<li>The project name that is reference is in bold italics.
+</ul>
 
+<li><ttl>Queries</ttl>:
+<ul>
+<li><ttl>High</ttl>: Added check box to unselect if the user does not want the selected hit highlighted.
+<li>Improved the information for the MUSCLE alignment. See <a href="UserGuide.html#qview">Query Align</a>.
+<li>Fixed <ttl>Clear Filters</ttl> to leave <ttl>Chr:</ttl> enabled.
+</ul>
+<li><ttl>SyMAP manager</ttl>:
+<ul>
+<li><ttl>View</ttl>: A new  link that brings up the chromosome information for a project.
+<li>Collinear computation bug fixes: (1) self-chromosome can cause error so disabled. (2) If
+a chromosome had no hits (can happen with small scaffolds), collinear was not computed.
+</ul>
+
+<li><ttl>2D Sequence Filter</ttl> bug: "Apply" could perform an unwanted change of boundaries on sequence.
+
+<li>Developers: Removed 3D from code, classes_ext.tar.gz, Makefile.
+Put in a check for no projects, as a user's trace showed it can happen.
+Remove the Filtered interface. Removed more FPC code (Drawing Panel, Mapper Pool, SyMAP Frame).
+Changed 2 Observers to PropertyChangeEvent. Reduce /props from 4 to 1 file.
+</ol>
+
+<!----------------------------------------------------------------->
 <h3>Release: v5.2.0 (20-Nov-22)</h3>
 For existing databases, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>; the synteny
 algorithm needs to be re-run to get the collinear changes.

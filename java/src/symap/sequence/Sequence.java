@@ -404,8 +404,8 @@ public class Sequence extends Track {
 			adjustBpPerPixel(GenomicsNumber.getBpPerPixel(bpPerCb, diff, height));
 		}
 		// this started happening with later Java versions if they click too fast
-		if (!validSize()) {
-			System.err.println("Unable to size sequence view. Try again - make sure box is highlighted."); 				
+		if (!validSize()) { // CAS521 make popup
+			Utilities.showWarningMessage("Unable to size sequence view. Try again - make sure box is highlighted."); 				
 			adjustSize();
 		}
 

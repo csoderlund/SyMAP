@@ -58,24 +58,28 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		this.hc = hc;
 		this.cdh = cdh;
 
-		JButton homeButton       = (JButton) Utilities.createButton(this,"/images/home.gif","Home: Go back in history to the first view",bar,null,false);
-		JButton backButton       = (JButton) Utilities.createButton(this,"/images/back.gif","Back: Go back in history",bar,null,false);
-		JButton forwardButton    = (JButton) Utilities.createButton(this,"/images/forward.gif","Forward: Go forward in history",bar,null,false);
+		JButton homeButton       = (JButton) Utilities.createButton(this,"/images/home.gif",
+				"Home: Go back in history to the first view",bar,null,false, false);
+		JButton backButton       = (JButton) Utilities.createButton(this,"/images/back.gif",
+				"Back: Go back in history",bar,null,false, false);
+		JButton forwardButton    = (JButton) Utilities.createButton(this,"/images/forward.gif",
+				"Forward: Go forward in history",bar,null,false, false);
 
 		if (hc != null) hc.setButtons(homeButton,null/*resetButton*/,null/*doubleBackButton*/,backButton,forwardButton,null/*exitButton*/);
 
-		downButton       = (JButton) Utilities.createButton(this,"/images/minus.gif","Shrink the alignment region",bar,buttonListener,false);
-		upButton         = (JButton) Utilities.createButton(this,"/images/plus.gif","Grow the alignment region",bar,buttonListener,false);
-		scaleButton      = (JButton) Utilities.createButton(this,"/images/scale.gif","Scale: Draw all of the tracks to BP scale",bar,buttonListener,false);
+		downButton       = (JButton) Utilities.createButton(this,"/images/minus.gif",
+				"Shrink the alignment region",bar,buttonListener,false, false);
+		upButton         = (JButton) Utilities.createButton(this,"/images/plus.gif",
+				"Grow the alignment region",bar,buttonListener,false, false);
+		scaleButton      = (JButton) Utilities.createButton(this,"/images/scale.gif",
+				"Scale: Draw all of the tracks to BP scale",bar,buttonListener,false, false);
 		showImageButton  = (JButton) Utilities.createButton(this,"/images/print.gif",
-				"Save: Save as image.", bar,buttonListener,false);
-		editColorsButton = (JButton) Utilities.createButton(this,"/images/colorchooser.gif","Colors: Edit the color settings",bar,buttonListener,false);
+				"Save: Save as image.", bar,buttonListener,false, false);
+		editColorsButton = (JButton) Utilities.createButton(this,"/images/colorchooser.gif",
+				"Colors: Edit the color settings",bar,buttonListener,false, false);
 		
-		JButton helpButton = null;
-		
-		helpButton = (JButton) Utilities.createButton(this,"/images/help.gif",
-				"Help: Online documentation.",
-				bar,null,false);
+		JButton helpButton = (JButton) Utilities.createButton(this,"/images/help.gif",
+				"Help: Online documentation.", bar,null,false, false);
 		helpButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String url = SyMAP.USER_GUIDE_URL + SyMAP.align2d; // CAS510

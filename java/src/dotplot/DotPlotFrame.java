@@ -34,7 +34,7 @@ public class DotPlotFrame extends JFrame {
 		
 		HelpBar hb = helpBar;
 		if (helpBar == null)
-			hb = new HelpBar(-1, 17, true, false, false);
+			hb = new HelpBar(-1, 17); // CAS521 removed dead args
 		
 		Plot plot = new Plot(data,hb);
 		ControlPanel controls = new ControlPanel(data,plot,hb);

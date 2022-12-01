@@ -350,13 +350,13 @@ public class TableData implements Serializable {
 		HashMap <String, Object> headVal = new HashMap <String, Object> ();
 		for (int i=0; i<arrHeaders.length; i++) {
 			String colName = arrHeaders[i].getColumnName();
-			if (colName.contains(Q.chrCol) || colName.contains(Q.hStartCol) || colName.contains(Q.hEndCol)) 
-			{	
-				headVal.put(colName, arrData[row][i]);
-			}
-			else if (colName.equals(Q.blockCol) || colName.contains(Q.runCol)) { // CAS520 add for Show Synteny Opts
-				headVal.put(colName, arrData[row][i]);
-			}
+			if (colName.contains(Q.chrCol)) 		headVal.put(colName, arrData[row][i]);
+			else if (colName.contains(Q.hStartCol)) headVal.put(colName, arrData[row][i]);
+			else if (colName.contains(Q.hEndCol)) 	headVal.put(colName, arrData[row][i]);
+			else if (colName.contains(Q.gNCol)) 	headVal.put(colName, arrData[row][i]);// CAS521
+			else if (colName.equals(Q.blockCol)) 	headVal.put(colName, arrData[row][i]);
+			else if (colName.equals(Q.runCol)) 		headVal.put(colName, arrData[row][i]); // CAS520
+			else if (colName.equals(Q.hitCol)) 		headVal.put(colName, arrData[row][i]); // CAS521
 		}
 		return headVal;
     }

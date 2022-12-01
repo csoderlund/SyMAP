@@ -11,12 +11,11 @@ import javax.swing.JComponent;
 
 import symap.drawingpanel.DrawingPanel;
 import symap.filter.FilterHandler;
-import symap.filter.Filtered;
 import symap.frame.HelpBar;
 import util.ErrorReport;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class TrackHolder extends JComponent implements Filtered {	
+public class TrackHolder extends JComponent  {	
 	private static boolean TRACE = symap.SyMAP.DEBUG; // CAS519 changed from ProjectManager...TEST_TRACE
 	
 	private DrawingPanel dp;

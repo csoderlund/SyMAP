@@ -605,8 +605,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	private void updateEnable() {
 		if (alignmentTable == null) return;
 		
-		Project[] projects = getSelectedAlignmentProjects();
-		btnPairParams.setEnabled(projects!=null);  // CAS v507 must select one 
+		Project[] projects = getSelectedAlignmentProjects(); 
+		btnPairParams.setEnabled(projects!=null);  // CAS507 must select one 
 		
 		int numProj =  alignmentTable.getRowCount();
 		btnAllPairs.setEnabled(numProj>1 && getDoAllPairs());
@@ -672,9 +672,9 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		public void columnRemoved(TableColumnModelEvent e) { }
 		public void columnSelectionChanged(ListSelectionEvent e) {
 			if (!e.getValueIsAdjusting())
-				updateEnable();
+				updateEnable(); 
 		}
-		
+	
 	};
 	
 	private class ReadOnlyTableModel extends DefaultTableModel {
@@ -810,11 +810,10 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			}
 			textPanel.setMaximumSize(textPanel.getPreferredSize());
 
-			ProjectLinkLabel btnRemoveFromDisk = null;
-			ProjectLinkLabel btnLoadOrRemove = null;
-			ProjectLinkLabel btnReloadAnnot = null;
-			ProjectLinkLabel btnReloadParams = null;
-			ProjectLinkLabel btnReloadSeq = null;
+			ProjectLinkLabel btnRemoveFromDisk = null, btnLoadOrRemove = null;
+			ProjectLinkLabel btnReloadAnnot = null, btnReloadSeq = null;
+			ProjectLinkLabel btnReloadParams = null, btnView = null;
+			
 			
 			if (p.getStatus() == Project.STATUS_ON_DISK) {
 				btnRemoveFromDisk = new ProjectLinkLabel("Remove from disk", p, Color.red);
@@ -830,16 +829,17 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				btnLoadOrRemove = new ProjectLinkLabel("Remove from database", p, Color.blue);
 				btnLoadOrRemove.addMouseListener( doRemove );
 
-				btnReloadParams = new ProjectLinkLabel("Parameters", p, Color.blue);
-				btnReloadParams.addMouseListener( doReloadParams );
-
 				btnReloadSeq = new ProjectLinkLabel("Reload project", p, Color.blue);
 				btnReloadSeq.addMouseListener( doReloadSeq );
 				
-				if (p.isPseudo()) {
-					btnReloadAnnot = new ProjectLinkLabel("Reload annotation", p, Color.blue);
-					btnReloadAnnot.addMouseListener( doReloadAnnot );
-				}
+				btnReloadAnnot = new ProjectLinkLabel("Reload annotation", p, Color.blue);
+				btnReloadAnnot.addMouseListener( doReloadAnnot );
+				
+				btnReloadParams = new ProjectLinkLabel("Parameters", p, Color.blue);
+				btnReloadParams.addMouseListener( doReloadParams );
+
+				btnView = new ProjectLinkLabel("View", p, Color.blue); // CAS521 add
+				btnView.addMouseListener( doViewProj );
 			}
 			if (p.getStatus() == Project.STATUS_ON_DISK) {
 				if (!inReadOnlyMode) // CAS500
@@ -848,17 +848,11 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			}
 			else {
 				if (!inReadOnlyMode) { 
-					if (p.isPseudo()) {
-						subPanel.add( createHorizPanel( new Component[] 
-							{ lblTitle, btnLoadOrRemove, btnReloadSeq,btnReloadAnnot, btnReloadParams}, 15 ) );						
-					}
-					else {
-						subPanel.add( createHorizPanel( new Component[] 
-							{ lblTitle, btnLoadOrRemove,btnReloadAnnot, btnReloadParams}, 15 ) );											
-					}
+					subPanel.add( createHorizPanel( new Component[] 
+					{ lblTitle, btnLoadOrRemove, btnReloadSeq, btnReloadAnnot, btnReloadParams, btnView}, 10 ) );						
 				}
 				else { // CAS500
-					subPanel.add( createHorizPanel( new Component[] { lblTitle}, 15));
+					subPanel.add( createHorizPanel( new Component[] { lblTitle, btnView}, 15));
 				}
 			}
 			subPanel.add( textPanel );
@@ -904,6 +898,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			btnSelAlign.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					Project[] projects = getSelectedAlignmentProjects();
+					if (projects==null) return;
 					
 					if (checkPairs(projects[0], projects[1])) {
 						int nCPU = getCPUs();
@@ -921,6 +916,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			btnSelClearPair.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					Project[] projects = getSelectedAlignmentProjects();
+					if (projects==null) return;
 					progressClearPair(projects[0], projects[1]);
 				}
 			} );	
@@ -1124,6 +1120,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		{
 			SyProps prevProps = null;
 			Project[] sel = getSelectedAlignmentProjects();
+		
 			Project p1=null, p2=null;
 			if (sel != null) {
 				try {
@@ -1406,27 +1403,15 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			progressReloadAnnotation( ((ProjectLinkLabel)e.getSource()).getProject() );
 		}
 	};	
-	// CAS42 1/4/18 confirm any action that removes things
-	private boolean progressConfirm2(String title, String msg) {
-		String [] options = {"Cancel", "Continue"};
-		int ret = JOptionPane.showOptionDialog(null, 
-				msg,
-				title, JOptionPane.YES_NO_OPTION, 
-				JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
-		if (ret == 0) return false;
-		else return true;
-	}
-	// CAS500 this is when there is two possible actions
-	private int progressConfirm3(String title, String msg) {
-		String [] options = {"Cancel", "Only", "All"};
-		return JOptionPane.showOptionDialog(null, 
-				msg,
-				title, JOptionPane.YES_NO_OPTION, 
-				JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
-	}
-	/****************************************************************
-	 * 
-	 */
+	
+	private MouseListener doViewProj = new MouseAdapter() { // CAS521 add
+		public void mouseClicked(MouseEvent e) {
+			Project theProject = ((ProjectLinkLabel)e.getSource()).getProject();
+			String info = loadProjectForView(new UpdatePool(dbReader), theProject);
+			
+			Utilities.displayInfoMonoSpace(getInstance(), "View " + theProject.getDisplayName(), info, false);	
+		}
+	};
 	private MouseListener doReloadParams = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
 			Project theProject = ((ProjectLinkLabel)e.getSource()).getProject();
@@ -1459,7 +1444,24 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			refreshMenu(); // CAS504
 		}		
 	};
-
+	// CAS42 1/4/18 confirm any action that removes things
+	private boolean progressConfirm2(String title, String msg) {
+		String [] options = {"Cancel", "Continue"};
+		int ret = JOptionPane.showOptionDialog(null, 
+				msg,
+				title, JOptionPane.YES_NO_OPTION, 
+				JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+		if (ret == 0) return false;
+		else return true;
+	}
+	// CAS500 this is when there is two possible actions
+	private int progressConfirm3(String title, String msg) {
+		String [] options = {"Cancel", "Only", "All"};
+		return JOptionPane.showOptionDialog(null, 
+				msg,
+				title, JOptionPane.YES_NO_OPTION, 
+				JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
+	}
 	private ProjectManagerFrameCommon getRef() { return this; }
 
 	private boolean removeAlignmentsCheck(Project p) {
@@ -1707,23 +1709,29 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		
 		refreshMenu();
 	}
-
+	// CAS521 I recieved an error report on the strColProjName line getting null. Added error checks in all calling methods.
 	private Project[] getSelectedAlignmentProjects() {
-		if (alignmentTable == null)
-			return null;
-		
-		int nRow = alignmentTable.getSelectedRow();
-		int nCol = alignmentTable.getSelectedColumn();
-		if (nRow < 0 || nCol < 0)
-			return null;
-		
-		String strRowProjName = alignmentTable.getValueAt(nRow, 0).toString();
-		String strColProjName = alignmentTable.getValueAt(nCol-1, 0).toString();
-		
-		Project p1 = getProjectByDisplayName( strRowProjName );
-		Project p2 = getProjectByDisplayName( strColProjName );
-		
-		return orderProjects(p1,p2);
+		int nRow=-1, nCol=-1;
+		try {
+			if (alignmentTable == null) return null;
+			
+			nRow = alignmentTable.getSelectedRow();
+			nCol = alignmentTable.getSelectedColumn();
+			if (nRow < 0 || nCol <= 0) {// CAS521 change < to <=
+				//This happens on startup. 
+				//System.err.println("SyMAP could not get selected projects at row "  + nRow + " and column " + nCol);
+				return null; 
+			}
+			
+			String strRowProjName = alignmentTable.getValueAt(nRow, 0).toString();
+			String strColProjName = alignmentTable.getValueAt(nCol-1, 0).toString();
+			
+			Project p1 = getProjectByDisplayName( strRowProjName );
+			Project p2 = getProjectByDisplayName( strColProjName );
+			
+			return orderProjects(p1,p2);
+		}
+		catch (Exception e) {ErrorReport.print("Could not get row " + nRow + " and column " + nCol); return null;}
 	}
 	// XXX this is important as having FPC first is assumed in other places
 	private Project[] orderProjects(Project p1, Project p2)
@@ -2108,6 +2116,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		
 		// Get the two projects selected in alignment table
 		Project[] p = getSelectedAlignmentProjects();
+		if (p==null) return;
+		
 		int projXIdx = p[0].getID();
 		int projYIdx = projXIdx; // default to self-alignment
 		if (p.length > 1)
@@ -2132,6 +2142,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		
 		// Get the two projects selected in alignment table
 		Project[] p = getSelectedAlignmentProjects();
+		if (p==null) return;
+		
 		int projXIdx = p[0].getID();
 		int projYIdx = projXIdx; // default to self-alignment
 		if (p.length > 1)
@@ -2160,6 +2172,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		
 		// Get the two projects selected in alignment table
 		Project[] p = getSelectedAlignmentProjects();
+		if (p==null) return;
+		
 		int projXIdx = p[0].getID();
 		int projYIdx = projXIdx; // default to self-alignment
 		if (p.length > 1)
@@ -2185,6 +2199,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		
 		// Get the two projects selected in alignment table
 		Project[] p = getSelectedAlignmentProjects();
+		if (p==null) return;
+		
 		int projXIdx = p[0].getID();
 		int projYIdx = projXIdx; // default to self-alignment
 		if (p.length > 1)
@@ -2380,6 +2396,45 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
         sortProjects(projects);
         
         return projects;
+	}
+	private String loadProjectForView(UpdatePool pool, Project p) { // CAS521 add to can see what was loaded
+	try {
+		TreeMap <String, Integer> chrNameMap = new TreeMap <String, Integer> ();
+		TreeMap <Integer, Integer> chrLenMap = new TreeMap <Integer, Integer> ();
+		
+		ResultSet rs = pool.executeQuery("select xgroups.idx, xgroups.fullname, pseudos.length from pseudos " +
+				" join xgroups on xgroups.idx=pseudos.grp_idx " +
+				" where xgroups.proj_idx=" + p.getID());
+		while (rs.next()) {
+			int idx = rs.getInt(1);
+			String name = rs.getString(2);
+			int len = rs.getInt(3);
+			chrNameMap.put(name, idx);
+			chrLenMap.put(idx, len);
+		}
+		
+		String info="Project " + p.getDisplayName() + "\n\n";
+		String [] fields = {"Chr", "Length" ,"#Genes"};
+		int [] justify =   {1,    0,    0};
+		int nRow = chrNameMap.size();
+	    int nCol=  fields.length;
+	    String [][] rows = new String[nRow][nCol];
+	    int r=0, c=0;
+	    
+	    for (String name : chrNameMap.keySet()) {
+	    	int idx = chrNameMap.get(name);
+	    	rs = pool.executeQuery("select count(*) from pseudo_annot where type='gene' and grp_idx=" + idx);
+	    	int geneCnt = (rs.next()) ? rs.getInt(1) : 0;
+	    	rows[r][c++] = name;
+	    	rows[r][c++] = String.format("%,d",chrLenMap.get(idx));
+	    	rows[r][c] =  String.format("%,d",geneCnt);
+	    	r++; c=0;
+	    }
+	    info += Utilities.makeTable(nCol, nRow, fields, justify, rows);
+		
+		return info;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Load Project for view"); return "Error";}
 	}
 	private void loadProjectsFromDisk(Vector<Project> projects, String strDataPath, String dirName) {
 		File root = new File(strDataPath + dirName); // dirName is same as strType p

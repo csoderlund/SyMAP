@@ -60,7 +60,7 @@ public class HitFilter {
 		msg += "Show "; // something always shows
 		if (bBlock) 	msg += "Block, ";
 		if (bSet)	 	msg += "Sets, ";
-		if (b2Gene) 		msg += ">0 Genes, ";
+		if (b2Gene) 	msg += ">0 Genes, ";
 		if (b0Gene) 	msg += "=0 Genes, ";
 		if (bAllHit) 	msg += "All, ";
 		
@@ -70,7 +70,7 @@ public class HitFilter {
 	}
 	// block, set, region CAS520 add for showing synteny from query; b is blocks by default
 	public void setForQuery(boolean b, boolean s, boolean r) { 
-		if (s)      {setBlock(true); setSet(true); setHiSet(true);}
+		if (s)      {setBlock(true); setSet(true); setHiSet(true); setHiNone(false);}
 		else if (r) {setBlock(false); setAllHit(true);}
 	}
 	

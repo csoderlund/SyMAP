@@ -228,7 +228,7 @@ public class TableDataPanel extends JPanel {
     	topRow.setBackground(Color.WHITE);
     	topRow.setAlignmentX(Component.LEFT_ALIGNMENT);
     	
-    	topRow.add(new JLabel("For selected: ")); topRow.add(Box.createHorizontalStrut(5));
+    	topRow.add(new JLabel("Selected: ")); topRow.add(Box.createHorizontalStrut(5));
     	
     // Show CAS520
     	btnShowRow = new JButton("Show"); // CAS520 add to view data in row
@@ -240,7 +240,7 @@ public class TableDataPanel extends JPanel {
 	   		}
 		});  
  	  
- 	    topRow.add(btnShowRow);	topRow.add(Box.createHorizontalStrut(10));
+ 	    topRow.add(btnShowRow);	topRow.add(Box.createHorizontalStrut(6));
  	    
     	btnShowAlign = new JButton("Align"); 
  	    btnShowAlign.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -250,7 +250,7 @@ public class TableDataPanel extends JPanel {
     			showAlignment();
     		}
  		});  
- 	    topRow.add(btnShowAlign);			topRow.add(Box.createHorizontalStrut(10));
+ 	    topRow.add(btnShowAlign);			topRow.add(Box.createHorizontalStrut(6));
 	 	    
 	    btnShowSynteny = new JButton("View 2D"); 
 	    btnShowSynteny.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -274,13 +274,19 @@ public class TableDataPanel extends JPanel {
 	    txtMargin.setText("50");
 	    txtMargin.setMinimumSize(txtMargin.getPreferredSize());
 	    topRow.add(txtMargin);
-	    topRow.add(new JLabel("kb")); 	topRow.add(Box.createHorizontalStrut(20));
+	    topRow.add(new JLabel("kb")); 	topRow.add(Box.createHorizontalStrut(2));
+	    
+	    // CAS521 I wasted 3hrs trying to add Selected to the HitFilter, should have been easy. OO is the worst!
+	    chkHigh = new JCheckBox("High");
+	    chkHigh.setSelected(true);
+	    topRow.add(chkHigh); 	topRow.add(Box.createHorizontalStrut(5));
 	    
 	    btnShowAlign.setEnabled(false);
 	    btnShowSynteny.setEnabled(false);
 	    btnShowRow.setEnabled(false);
 	    cmbSynOpts.setEnabled(false);
 	    txtMargin.setEnabled(false);
+	    chkHigh.setEnabled(false);
 	    
 	    btnHelp = new JButton("Help");
 		btnHelp.setAlignmentX(Component.RIGHT_ALIGNMENT);
@@ -301,7 +307,7 @@ public class TableDataPanel extends JPanel {
 		botRow.setBackground(Color.WHITE);
 		botRow.setAlignmentX(Component.LEFT_ALIGNMENT);
     	
-		botRow.add(new JLabel("For table (or selected): ")); botRow.add(Box.createHorizontalStrut(2));
+		botRow.add(new JLabel("Table (or selected): ")); botRow.add(Box.createHorizontalStrut(2));
 	
 	    btnSaveCSV = new JButton("Export CSV");
 	    btnSaveCSV.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -371,7 +377,7 @@ public class TableDataPanel extends JPanel {
     	retVal.setBackground(Color.WHITE);
     
     	String [] genCols = FieldData.getGeneralColHead();
-    	Boolean [] genColDef = FieldData.getGeneralColDefaults();
+    	boolean [] genColDef = FieldData.getGeneralColDefaults();
     	String [] genDesc= FieldData.getGeneralColDesc();
     	int nCol = FieldData.getGenColumnCount(isSingle);
     	int newRow = (nCol>1) ? genCols.length-5 : 1; // CAS520 add a hit column
@@ -426,11 +432,12 @@ public class TableDataPanel extends JPanel {
         	
     	String [] species = theParentFrame.getAbbrevNames();
     	String [] colHeads = FieldData.getSpeciesColHead();
-		Boolean [] colDefs = FieldData.getSpeciesColDefaults();
+		
 		String [] colDesc= FieldData.getSpeciesColDesc();
 		int cntCol = FieldData.getSpColumnCount(isSingle); // CAS519 add because single/pairs no longer have the same #columns
 		
     	chkSpeciesFields = new JCheckBox[species.length][cntCol];
+    	boolean [] colDefs = FieldData.getSpeciesColDefaults();
     	
     	for(int x=0; x<species.length; x++) {
     		JPanel row = new JPanel();
@@ -438,10 +445,11 @@ public class TableDataPanel extends JPanel {
         	row.setAlignmentX(Component.LEFT_ALIGNMENT);
         	row.setBackground(Color.WHITE);
     		
-        
+       
     		row.add(createSpeciesLabel(species[x]));
     		row.add(Box.createHorizontalStrut(5));
     		
+    		//boolean [] colDefs = FieldData.getSpeciesColDefaults(x);
     		for (int i=0; i<cntCol; i++) {
     			chkSpeciesFields[x][i] = new JCheckBox(colHeads[i]);   
     			chkSpeciesFields[x][i].setSelected(colDefs[i]);
@@ -490,6 +498,8 @@ public class TableDataPanel extends JPanel {
     	// Check selected
     	for(int x=0; x<speciesIDs.length; x++) {
     		Vector<JCheckBox> annoCol = new Vector<JCheckBox> ();
+    		
+    		//boolean [] colDefs = FieldData.getAnnoColDefaults(x);
     		
     		for(int y=0; y<theAnnoKeys.getNumberAnnosForSpecies(speciesIDs[x]); y++){
     			
@@ -766,6 +776,7 @@ public class TableDataPanel extends JPanel {
     	txtMargin.setEnabled(enable);
     	btnShowSynteny.setEnabled(enable);
     	cmbSynOpts.setEnabled(enable);
+    	chkHigh.setEnabled(enable);
     	btnShowRow.setEnabled(enable);
     	btnSaveCSV.setEnabled(enable);
     	btnUnSelectAll.setEnabled(enable);
@@ -791,6 +802,7 @@ public class TableDataPanel extends JPanel {
 	 	txtMargin.setEnabled(b);
     	btnShowSynteny.setEnabled(b);
     	cmbSynOpts.setEnabled(b);
+    	chkHigh.setEnabled(b);
     	
     	b = (theTable.getSelectedRowCount() >= 1)  ? true : false;
     	btnShowAlign.setEnabled(b);
@@ -969,30 +981,51 @@ public class TableDataPanel extends JPanel {
 							return;
 						}
 					}
+					Vector<String> theTags = new Vector<String> (); 
 					Vector<String> theNames = new Vector<String> ();
-					Vector<String> theSequences = new Vector<String> ();
-
+					Vector<String> theLines = new Vector<String> ();
+					Vector<String> theSeqs = new Vector<String> ();
+					
+					String [] fields = {"", "Hit#", "Species" ,"Chr", "Start", "End", "Gene#"};
+					int [] justify =   {1,   0,      1,          0,     0,       0,    1}; // 1 left justify
+					int nRow = selRows.length*2;
+				    int nCol=  fields.length;
+				    String [][] rows = new String[nRow][nCol];
+				    int r=0;
+				    
 					RowData rd = new RowData ();
 					for(int x=0; x<selRows.length; x++) {
 						if (!rd.loadRow(selRows[x])) return; // CAS505 was incorrectly x
+						
+						for (int i=0; i<2; i++) {
+							String tag = String.format("%s %s %d %d", rd.spAbbr[i], rd.chrNum[i], rd.start[i], rd.end[i]);
+							if(theTags.contains(tag)) continue;
+							theTags.add(tag);
 							
-						String name = String.format("%-10s  Chr %2s  Start %,10d  End %,10d",
-								rd.spName[0], rd.chrNum[0], rd.start[0], rd.end[0]);
-						if(!theNames.contains(name)) {
+							String name =  String.format("%d. %s.%s", (r+1), rd.spAbbr[i], rd.chrNum[i]);
 							theNames.add(name);
-							theSequences.add(theParentFrame.getSequence(rd.start[0], rd.end[0], rd.chrIdx[0]));
-						}
-									
-						name = String.format("%-10s  Chr %2s  Start %,10d  End %,10d",
-								rd.spName[1], rd.chrNum[1], rd.start[1], rd.end[1]);
-						if(!theNames.contains(name)) {
-							theNames.add(name);
-							theSequences.add(theParentFrame.getSequence(rd.start[1], rd.end[1], rd.chrIdx[1]));
+							
+							theSeqs.add(theParentFrame.getSequence(rd.start[i], rd.end[i], rd.chrIdx[i]));
+							
+							int c=0;
+							rows[r][c++]=(r+1) + ".";
+							rows[r][c++]=rd.hitnum+"";
+							rows[r][c++]=rd.spAbbr[i];
+							rows[r][c++]=rd.chrNum[i];
+							rows[r][c++]=String.format("%,d",rd.start[i]);
+							rows[r][c++]=String.format("%,d",rd.end[i]);
+							rows[r][c++]=rd.genenum[i];
+							r++;
 						}
 					}
-					theParentFrame.addAlignmentTab(getInstance(), theNames.toArray(new String[0]), theSequences.toArray(new String[0]));
+					String sum= r + " seqs";
+					Utilities.makeTable(theLines, nCol, nRow, fields, justify, rows);
+			
+					theParentFrame.addAlignmentTab(getInstance(), theNames.toArray(new String[0]), 
+							theLines.toArray(new String[0]), theSeqs.toArray(new String[0]), sum);
 					theNames.clear();
-					theSequences.clear();
+					theLines.clear();
+					theSeqs.clear();
 					
 					setPanelEnabled(true);
 				}
@@ -1112,6 +1145,7 @@ public class TableDataPanel extends JPanel {
  	 * CAS516 change to one call instead of 4
  	 */
      public boolean isHitSelected(int s1, int e1, int s2, int e2) {
+    	 if (!chkHigh.isSelected()) return false;
     	 if  (s1==synStart1 && e1==synEnd1 && s2==synStart2 && e2==synEnd2) return true;
     	 if  (s2==synStart1 && e2==synEnd1 && s1==synStart2 && e1==synEnd2) return true;
     	 return false;
@@ -1531,13 +1565,14 @@ public class TableDataPanel extends JPanel {
      * CAS504 added this class to take the place of using hidden columns to get data
      * theTableData.getRowData(row) returns the chr,start,end of all species in line,
      * where some can be blank. CAS520 also return block and collinear
+     * CAS521 also return hit# and Gene# for Align; use short name for species
      */
     private class RowData {
 		public RowData () {}
 		
 		public boolean loadRow(int row) {
 			try {
-    			HashMap <String, Object> colVal = theTableData.getRowLocData(row); // colName, value
+    			HashMap <String, Object> colVal = theTableData.getRowLocData(row); // only needed columns are returned
     			HashMap <String, Integer> sp2x = new HashMap <String, Integer> ();
     			int isp=0;
     			
@@ -1545,8 +1580,8 @@ public class TableDataPanel extends JPanel {
     				Object o = colVal.get(head);
     				if (o instanceof String) {
     					String str = (String) o;
-    					if (str.equals("") || str.equals("-")) continue; // the blanks species
-    				}
+    					if (str.equals("") || str.equals(Q.empty)) continue; // the blanks species
+    				}  
     				if (head.contentEquals(Q.blockCol)) { // CAS520 add block and collinear
     					String x = (String) o;
     					x =  (x.contains(".")) ? x.substring(x.lastIndexOf(".")+1) : "0";
@@ -1559,7 +1594,12 @@ public class TableDataPanel extends JPanel {
     					collinear = Integer.parseInt(x);
     					continue;
     				}
-    				
+    				if (head.contentEquals(Q.hitCol)) {	// CAS521
+    					String x = String.valueOf(o);
+    					hitnum = Integer.parseInt(x);
+    					continue;
+    				}
+				
     				String [] field = head.split(Q.delim); // speciesName\nChr or Start or End
     				if (field.length!=2) continue;
     				String species=field[0];
@@ -1572,6 +1612,7 @@ public class TableDataPanel extends JPanel {
     					else                      sVal = (String) o;
     				}
     				else if (o instanceof Integer) { iVal = (Integer) o; }
+    				else if (o instanceof String)  { sVal = (String)  o; }
     				else {
     					System.out.println("Symap error: Row Data " + head + " " + o + " is not type string or integer");
     					return false;
@@ -1582,7 +1623,7 @@ public class TableDataPanel extends JPanel {
     					i0or1 = sp2x.get(species);
     				else {
     					sp2x.put(species, isp);
-    					spName[isp] = species;
+    					spAbbr[isp] = species;
     					i0or1 = isp;
     					isp++;
     					if (isp>2) break; // should not happen
@@ -1590,15 +1631,16 @@ public class TableDataPanel extends JPanel {
     				if (col.equals(Q.chrCol)) 		  chrNum[i0or1] = sVal;
     				else if (col.equals(Q.hStartCol)) start[i0or1] = iVal;
     				else if (col.equals(Q.hEndCol))   end[i0or1] = iVal;
+    				else if (col.equals(Q.gNCol))	  genenum[i0or1] = sVal;	// CAS521
     			}
     			SpeciesSelectPanel spPanel = theQueryPanel.getSpeciesPanel();
     			
-    			if (spName[1]==null || spName[1]=="") {
-    				Utilities.showWarningMessage("The abbrev_names are the same, cannot show Synteny");
+    			if (spAbbr[1]==null || spAbbr[1]=="") {
+    				Utilities.showWarningMessage("The abbrev_names are the same, cannot continue...");
     				return false;
     			}
-    			spName[0] = theParentFrame.getDisplayFromAbbrev(spName[0]);
-    			spName[1] = theParentFrame.getDisplayFromAbbrev(spName[1]);
+    			spName[0] = theParentFrame.getDisplayFromAbbrev(spAbbr[0]);
+    			spName[1] = theParentFrame.getDisplayFromAbbrev(spAbbr[1]);
     			
     			for (isp=0; isp<2; isp++) {
     				spIdx[isp] =  spPanel.getSpIdxFromSpName(spName[isp]);
@@ -1620,14 +1662,17 @@ public class TableDataPanel extends JPanel {
 						spName[1] + ": " +chrIdx[1] + ":" + start[1] + ":"+ end[1]);
 
 		}
-		String [] spName = {"",""};
+		String [] spName = {"",""}; 
+		String [] spAbbr = {"",""}; 
 		int [] spIdx = {0,0};
 		int [] chrIdx = {0,0};
 		
 		String [] chrNum = {"",""};
 		int [] start = {0,0};
 		int [] end = {0,0};
+		String [] genenum = {"",""};
 		
+		int hitnum=0;				
 		int block=0;
 		int collinear=0;
     }
@@ -1640,6 +1685,7 @@ public class TableDataPanel extends JPanel {
     private JTextField rowCount = null;
     
     private JTextField loadStatus = null, txtMargin = null;
+    private JCheckBox chkHigh = null;
     private JButton btnShowSynteny = null, btnShowAlign = null, btnShowRow = null; 
     private JButton btnUnSelectAll = null, btnSaveFasta = null, btnSaveCSV = null;
     private JComboBox <String> cmbSynOpts = null;

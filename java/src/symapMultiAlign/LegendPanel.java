@@ -1,12 +1,14 @@
 package symapMultiAlign;
 
+/***********************************************
+ * Draws the table of hit information beneath alignment
+ */
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Polygon;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
@@ -21,14 +23,14 @@ public class LegendPanel extends JPanel
 		this.names = names;
 		setLayout( null );
         setBackground( Color.WHITE );
-        setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        //setBorder(BorderFactory.createLineBorder(Color.BLACK)); // CAS521 remove border
         setAlignmentX(Component.LEFT_ALIGNMENT);
         
         int w = 0, h=(names.length * 25) + 15; // CAS516 10->15
         for (String n : names) {
         	 if (w<n.length()) w=n.length();
         }
-        w *= 9;
+        w *= 8;
         	
         setMinimumSize(new Dimension(w, h));
         setPreferredSize(getMinimumSize());
@@ -40,10 +42,8 @@ public class LegendPanel extends JPanel
 		super.paintComponent( g );
 		Graphics2D g2 = (Graphics2D)g;
 	
-		int y = 10;
+		int y = 5;
 		int x = 10;
-		g2.drawString("Locations", x, y+=10);
-		x += 10;
 		
 		g2.setFont(new Font(g2.getFont().getName(), Font.PLAIN, g2.getFont().getSize()));
 
@@ -52,25 +52,9 @@ public class LegendPanel extends JPanel
 		}
 	}
 	private static void drawString(Graphics2D g2,String s, int x, int y) {
-		Font font = new Font("Courier", Font.PLAIN, 10);
+		Font font = new Font("Courier", Font.PLAIN, 12); // CAS521 10->12
 	    g2.setFont(font);
 		g2.setColor(Color.BLACK);
 		g2.drawString(s, x+10, y+9);
-	}
-	private static void drawKey(int type, Graphics2D g2, Color c, String s, int x, int y) 
-	{
-		g2.setColor(c);
-		if (type == 0)
-			g2.fillRect(x, y, 10, 10);
-		else {
-			Polygon triangle = new Polygon();
-			triangle.addPoint(x,y);
-			triangle.addPoint(x+10,y);
-			triangle.addPoint(x+5,y+10);
-			g2.fill(triangle);
-		}
-		
-		g2.setColor(Color.BLACK);
-		g2.drawString(s, x+15, y+9);
 	}
 }

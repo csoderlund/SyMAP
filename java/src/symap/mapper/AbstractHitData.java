@@ -1,14 +1,11 @@
 package symap.mapper;
 
 import java.util.List;
-import java.util.RandomAccess;
 import java.awt.event.MouseEvent;
-import java.util.Iterator;
-import java.util.LinkedList;
 
 /**
- * Class <code>AbstractHitData</code>
- *
+ * Class AbstractHitData
+ * CAS521 removed unused splitOnHitContentAndClear, hasHitContent, upgradeHitContent
  */
 public abstract class AbstractHitData {
 	private int hitContent;
@@ -30,10 +27,6 @@ public abstract class AbstractHitData {
 		this.hitContent = MapInfo.NOT_SET;
 		this.swap = swap; 
 		this.bHighlight = false; 
-	}
-
-	public boolean hasHitContent(int hc) {
-		return MapInfo.hasHitContent(hitContent,hc);
 	}
 
 	protected boolean upgradeHitContent(int type) {
@@ -82,52 +75,4 @@ public abstract class AbstractHitData {
 	
 	public int getMapType() { return mapType; }
 	public boolean isSwapped() { return swap; }
-	
-	public static List[] splitOnHitContent(List<AbstractHitData> c) {
-		List[] lists = new List[MapInfo.ALL_HITS+1];
-		for (int i = 0; i < lists.length; i++) lists[i] = new LinkedList();
-
-		for (AbstractHitData d : c) {
-			try {
-				lists[d.getHitContent()].add(d);
-			} catch (ArrayIndexOutOfBoundsException e) {
-				if (d.getHitContent() < 0) throw e;
-				List[] tl = new List[d.getHitContent()+1];
-				System.arraycopy(lists,0,tl,0,lists.length);
-				for (int i = lists.length; i < tl.length; i++) tl[i] = new LinkedList();
-				lists = tl;
-				lists[d.getHitContent()].add(d);
-			}
-		}
-		return lists;
-	}
-
-	public static List[] splitOnHitContentAndClear(List<AbstractHitData> c) {
-		if (c instanceof RandomAccess) {
-			List[] l = splitOnHitContent(c);
-			c.clear();
-			return l;
-		}
-
-		List[] lists = new List[MapInfo.ALL_HITS+1];
-		for (int i = 0; i < lists.length; i++) lists[i] = new LinkedList();
-
-		Iterator<?> iter = c.iterator();
-		AbstractHitData d;
-		while (iter.hasNext()) {
-			d = (AbstractHitData)iter.next();
-			try {
-				lists[d.getHitContent()].add(d);
-			} catch (ArrayIndexOutOfBoundsException e) {
-				if (d.getHitContent() < 0) throw e;
-				List[] tl = new List[d.getHitContent()+1];
-				System.arraycopy(lists,0,tl,0,lists.length);
-				for (int i = lists.length; i < tl.length; i++) tl[i] = new LinkedList();
-				lists = tl;
-				lists[d.getHitContent()].add(d);
-			}
-			iter.remove();
-		}
-		return lists;
-	}
 }

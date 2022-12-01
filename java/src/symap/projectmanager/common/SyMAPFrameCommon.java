@@ -1,7 +1,7 @@
 package symap.projectmanager.common;
 
 /*****************************************************
- * Chromosome Explorer 
+ * Chromosome Explorer -  left side
  */
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -19,6 +19,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.Vector;
 
@@ -80,6 +81,12 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 	protected int selectedView = 1;
 	protected int screenWidth, screenHeight;
 	
+	// called by symapCE.SyMAPExp
+	public SyMAPFrameCommon(DatabaseReader dbReader, Mapper mapper) {
+		this(dbReader);
+		this.mapper = mapper;
+	}
+	
 	public SyMAPFrameCommon(DatabaseReader dbReader) {
 		super("SyMAP "+SyMAP.VERSION);
 		this.dbReader = dbReader;
@@ -106,13 +113,8 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
         setLayout(new BorderLayout());
         add(splitPane, BorderLayout.CENTER);
         
-        helpBar = new HelpBar(500, 130, true, false, false);
+        helpBar = new HelpBar(500, 130); // CAS521 removed dead args
         helpBar.setBorder( BorderFactory.createLineBorder(Color.LIGHT_GRAY) );
-	}
-	public SyMAPFrameCommon(DatabaseReader dbReader, Mapper mapper)
-	{
-		this(dbReader);
-		this.mapper = mapper;
 	}
 
 	public void dispose() { // override
@@ -233,15 +235,14 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		TreeSet<Integer> grpIdxWithSynteny = new TreeSet<Integer>();
 		for (Project p : projects) {
 			Block[] blks = mapper.getBlocksForProject(p.getID());
-			for (Block blk : blks)
-			{
+			for (Block blk : blks) {
 				grpIdxWithSynteny.add(blk.getGroup1Idx());
 				grpIdxWithSynteny.add(blk.getGroup2Idx());
 			}
 		}
 		
 		for (Project p : projects) {
-			ProjectPanelCommon pd = new ProjectPanelCommon(mapper, p, projectChange,grpIdxWithSynteny);
+			ProjectPanelCommon pd = new ProjectPanelCommon(mapper, p, projectChange, grpIdxWithSynteny);
 			helpBar.addHelpListener(pd,this);
 			
 			CollapsiblePanel cp = new CollapsiblePanel(p.getDisplayName(), null, false);
@@ -252,9 +253,9 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		}
 
 		// Create instructions panel
-        LinkLabel helpLink = new LinkLabel("Click for online help");
-        helpLink.setFont(new Font(helpLink.getFont().getName(), Font.PLAIN, helpLink.getFont().getSize()));
-        helpLink.addMouseListener(new MouseAdapter() {
+        LinkLabel infoLink = new LinkLabel("Click for online help");
+        infoLink.setFont(new Font(infoLink.getFont().getName(), Font.PLAIN, infoLink.getFont().getSize()));
+        infoLink.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				Utilities.setCursorBusy(SyMAPFrameCommon.this, true);
 				if ( !Utilities.tryOpenURL(SyMAP.USER_GUIDE_URL) )
@@ -263,23 +264,20 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			}
 		});
         
-		CollapsiblePanel helpCollapsiblePanel = new CollapsiblePanel("Information", null, false); // CAS516 changed from "Instructions"
-		helpCollapsiblePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
-		helpCollapsiblePanel.add( helpBar );
-		helpCollapsiblePanel.add( helpLink );
-		helpCollapsiblePanel.expand();
+		CollapsiblePanel infoCollapsiblePanel = new CollapsiblePanel("Information", null, false); // CAS516 changed from "Instructions"
+		infoCollapsiblePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
+		infoCollapsiblePanel.add( helpBar );
+		infoCollapsiblePanel.add( infoLink );
+		infoCollapsiblePanel.expand();
 		
 		// Setup top-level panel
         controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
         controlPanel.setBorder( BorderFactory.createEmptyBorder(0, 5, 0, 0) );
 		controlPanel.add( projPanel );
-		controlPanel.add( helpCollapsiblePanel );
-		controlPanel.add( Box.createVerticalStrut(20) );
-		controlPanel.add( createViewControlBar() );
-		controlPanel.add( Box.createVerticalStrut(10) );
-		controlPanel.add(createDownloadBar());
-		controlPanel.add( Box.createVerticalStrut(10) );
+		controlPanel.add( infoCollapsiblePanel ); 	controlPanel.add( Box.createVerticalStrut(20) );
+		controlPanel.add( createViewControlBar() );	controlPanel.add( Box.createVerticalStrut(10) );
+		controlPanel.add( createDownloadBar());		controlPanel.add( Box.createVerticalStrut(10) );
 		controlPanel.add( Box.createVerticalGlue() );
 		
 		splitPane.setLeftComponent(controlPanel);
@@ -302,25 +300,24 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		}
 	}
 	
-	private void regenerateCircleView()
-	{	
+	private void regenerateCircleView(){	
 		int[] pidxList = new int[mapper.getProjects().length];
 		TreeSet<Integer> shownGroups = new TreeSet<Integer>();
-
-		for (int i = 0; i < mapper.getProjects().length; i++)
-		{
+		
+		int refIdx=-1; // CAS521 add so will have priority colors 
+		for (int i = 0; i < mapper.getProjects().length; i++){
 			int pid = mapper.getProjects()[i].getID();
 			pidxList[i] = pid;
-			for (TrackCom t : mapper.getTracks(pid))
-			{
-				if (t.isVisible() || mapper.getReferenceTrack() == t)
-				{
+			
+			for (TrackCom t : mapper.getTracks(pid)){
+				if (t.isVisible() || mapper.getReferenceTrack() == t) {
 					shownGroups.add(t.getGroupIdx());
+					if (mapper.getReferenceTrack() == t) refIdx=pid;
 				}
 			}
 		}
 		
-		CircFrame circframe = new CircFrame(dbReader,pidxList,shownGroups,helpBar);
+		CircFrame circframe = new CircFrame(dbReader,pidxList,shownGroups,helpBar, refIdx);
 		cardPanel.add(circframe.getContentPane(), Integer.toString(VIEW_CIRC)); // ok to add more than once
 		
 		setView(VIEW_CIRC);
@@ -364,17 +361,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			if (symap2D == null) { // CAS517 move after get tracks 
 				symap2D = new SyMAP(dbReader, helpBar, null);
 			
-				//CAS517 add - so will include FPC colors and Frame Markers if true
-				if (symap2D.getFrame()!=null) {
-					boolean hasFPC=false;
-					if (ref.isFPC()) hasFPC=true; 
-					else {
-						for (int i = 0;  i < selectedTracks.length;  i++) {
-							if (selectedTracks[i].isFPC()) hasFPC=true;
-						}
-					}
-					symap2D.setHasFPC(hasFPC); // This calls setColors, which has to be after hasFPC, but has lots of non-obvious consequences
-				}
+				// CAS521 totally remove FPC CAS517 to add include FPC colors and Frame Markers if FPC true 
 			}
 			SyMAPFrame frame = symap2D.getFrame();
 			if (frame == null) {
@@ -393,29 +380,12 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			for (int i = 0;  i < selectedTracks.length;  i++) {
 				TrackCom t = selectedTracks[i];
 				
-				// Add track
-				if (t.isPseudo())
-					dp.setSequenceTrack( position++, t.getProjIdx(), t.getGroupIdx(), t.getColor() );
-				else {
-					String contigs = Mapper.getContigListForBlocks(
-							mapper.getBlocksForTracks( t.getGroupIdx(), ref.getGroupIdx() ));
-					dp.setBlockTrack( position++, t.getProjIdx(), "Chr " + t.getGroupName(), contigs, t.getColor() );
-				}
+				// Add track CAS521 remove FPC stuff
+				dp.setSequenceTrack( position++, t.getProjIdx(), t.getGroupIdx(), t.getColor() );
 				
 				// Add alternating reference track
 				if (selectedTracks.length == 1 || selectedTracks.length-1 != i) { // middle tracks
-					if (ref.isPseudo())
-						dp.setSequenceTrack( position++, ref.getProjIdx(), ref.getGroupIdx(), ref.getColor() );
-					else {
-						// Get contigs for left track
-						String contigs = Mapper.getContigListForBlocks(
-								mapper.getBlocksForTracks( ref.getGroupIdx(), t.getGroupIdx() ));
-						// Get contigs for right track if present
-						if (i+1 < selectedTracks.length)
-							contigs += Mapper.getContigListForBlocks(
-									mapper.getBlocksForTracks( ref.getGroupIdx(), selectedTracks[i+1].getGroupIdx() ));
-						dp.setBlockTrack( position++, ref.getProjIdx(), "Chr " + ref.getGroupName(), contigs, ref.getColor() );
-					}
+					dp.setSequenceTrack( position++, ref.getProjIdx(), ref.getGroupIdx(), ref.getColor() );
 				}
 			}
 			dp.setMaps( position - 2 );
@@ -431,9 +401,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			symap2D = null;
 			Utilities.showOutOfMemoryMessage();
 		}
-		catch (Exception err) {
-			ErrorReport.print(err, "2D view");
-		}
+		catch (Exception err) {ErrorReport.print(err, "2D view");}
 		
 		return false;
 	}
@@ -489,8 +457,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			for (int i = 0;  i < comps.length;  i++) {
 				if (comps[i] instanceof JButton) {
 					JButton b = (JButton)comps[i];
-					if (b.isSelected())
-					{
+					if (b.isSelected()){
 						return i;
 					}
 				}
@@ -548,8 +515,6 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		
 		return null;
 	}
-	//
-	// Duplicated to SyMAPFrame3D!!
 	//
 	private JPanel createDownloadBar() {
 		JPanel pnl = new JPanel();
@@ -623,12 +588,9 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 						out.println(Utils.join(row, "\t"));
 					}
 					out.close();
-					// CAS501 System.err.println("Wrote " + n + " blocks");
 				}
 			}
-		} catch(Exception e) {
-			ErrorReport.print(e, "Generate blocks");
-		}
+		} catch(Exception e) {ErrorReport.print(e, "Generate blocks");}
     }
 }
 

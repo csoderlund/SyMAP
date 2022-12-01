@@ -19,7 +19,7 @@ import symap.mapper.MapperFilter;
 import symap.sequence.Sequence;
 import symap.sequence.SequenceFilter;
 
-public class FilterHandler implements Filtered, ActionListener {
+public class FilterHandler implements ActionListener { // CAS521 remove Filtered interface
 	protected JButton helpButton;
 	protected DrawingPanel drawingPanel;
 	protected HelpBar helpBar;

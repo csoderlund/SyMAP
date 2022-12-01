@@ -14,7 +14,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelListener; 	
 import javax.swing.JComponent;
 import javax.swing.AbstractButton;
-import symap.filter.Filtered;
 import symap.filter.FilterHandler;
 import symap.SyMAP;
 import symap.SyMAPConstants;
@@ -30,10 +29,11 @@ import util.ErrorReport;
 
 /**
  * The Mapper that holds two tracks (overlaying them when drawn) and all of the hits.
+ * Called from DrawingPanel
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Mapper extends JComponent 
-	implements Filtered, HitFilter.HitFilterListener, SyMAPConstants, 
+	implements  HitFilter.HitFilterListener, SyMAPConstants, // CAS521 remove Filtered Interface
 		MouseMotionListener, MouseListener, MouseWheelListener, HelpListener 		
 {
 	// Constants used for signifying the type of map.
@@ -102,7 +102,6 @@ public class Mapper extends JComponent
 			"\nHit-wire information: Hover on hit-wire or " 
 			+ "right-click on hit-wire for popup of full information.\n";
 			
-
 	public Mapper(DrawingPanel drawingPanel, 
 			TrackHolder th1, TrackHolder th2,
 			FilterHandler fh, MapperPool pool, 
@@ -127,7 +126,7 @@ public class Mapper extends JComponent
 		addMouseListener(this); 		
 		addMouseWheelListener(this);	
 		addMouseMotionListener(this);
-		hitList = new ClearList(10, 50);
+		hitList = new ClearList (10, 50);
 		
 		if (hb != null) hb.addHelpListener(this,this); 
 	}

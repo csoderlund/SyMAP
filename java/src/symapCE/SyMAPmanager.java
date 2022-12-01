@@ -1,5 +1,9 @@
 package symapCE;
 
+/*********************************************
+ * Called by symap and viewSymap scripts
+ * ProjectManagerFrameCommon displays interface, SyMAPFrameCommon calls showExplorer
+ */
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -16,8 +20,7 @@ public class SyMAPmanager extends ProjectManagerFrameCommon
 	private static final long serialVersionUID = 1L;
 	
 	public static void main(String args[]) 
-	{
-		//System.out.println(System.getProperty("java.library.path"));	
+	{	
 		if (!SyMAP.checkJavaSupported(null)) return;
 		
 		if (Utilities.hasCommandLineOption(args, "-h") || Utilities.hasCommandLineOption(args, "-help") 
@@ -31,8 +34,7 @@ public class SyMAPmanager extends ProjectManagerFrameCommon
 		frame.setVisible(true);
 	}
 	
-	SyMAPmanager(String args[])
-	{
+	SyMAPmanager(String args[]) {
 		super(args); // CAS505 moved parse args to ProjectManagerFrameCommon
 		
 		explorerListener = new ActionListener() {
@@ -55,9 +57,7 @@ public class SyMAPmanager extends ProjectManagerFrameCommon
 			symapExp.getFrame().build();
 			symapExp.getFrame().setVisible(true); 
 		}
-		catch (Exception err) {
-			ErrorReport.print(err, "Show SyMAP graphical window");
-		}
+		catch (Exception err) {ErrorReport.print(err, "Show SyMAP graphical window");}
 		finally {
 			Utilities.setCursorBusy(this, false);
 		}

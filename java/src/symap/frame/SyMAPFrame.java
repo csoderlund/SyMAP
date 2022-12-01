@@ -29,8 +29,7 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener
 	private HelpBar hb;
 
 	public SyMAPFrame(ControlPanel cp, DrawingPanel dp, HelpBar hb, 
-			boolean showHelpBar, // for 3D
-			PersistentProps persistentProps) {
+			boolean showHelpBar, PersistentProps persistentProps) {
 		super("SyMAP "+SyMAP.VERSION);
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		this.cp = cp;
@@ -85,23 +84,24 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener
 	public void setFrameEnabled(boolean enable) {
 		if (enable) {
 			dp.getParent().setCursor(SyMAPConstants.DEFAULT_CURSOR); 
-			if (hb != null) hb.setBusy(false, this);
+			// CAS521 does nothing if (hb != null) hb.setBusy(false, this);
 		}
 		else {
 			dp.getParent().setCursor(SyMAPConstants.WAIT_CURSOR); 
-			if (hb != null) hb.setBusy(true, this);
+			// CAS521 does nothing  if (hb != null) hb.setBusy(true, this);
 		}
 		if (cp != null) cp.setPanelEnabled(enable);
 		dp.setVisible(enable);
 	}
 
 	public void displayWarning(String message) {
-		if (hb != null) hb.addWarningMessage(message);
+		// CAS dead if (hb != null) hb.addWarningMessage(message);
+		System.err.println("Warning: " + message);
+		JOptionPane.showMessageDialog(this, message, "Warning" ,JOptionPane.WARNING_MESSAGE);
 	}
-
 	public void displayError(String message) {
-		System.err.println("ERROR MESSAGE: "+message);
-		JOptionPane.showMessageDialog(this,message,"Error",JOptionPane.ERROR_MESSAGE);
+		System.err.println("Error: " + message);
+		JOptionPane.showMessageDialog(this, message, "Error" ,JOptionPane.ERROR_MESSAGE);
 	}
 
 	public Frame getFrame() 				{return (Frame)this;}

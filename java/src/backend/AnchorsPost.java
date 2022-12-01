@@ -29,7 +29,7 @@ public class AnchorsPost {
 	private Logger mLog;
 	private UpdatePool pool;
 	private Project mProj1, mProj2;
-	private int countUpdate=0, totalSets=0, totalMult=0, totalMerge=0;
+	private int countUpdate=0, totalMult=0, totalMerge=0;
 	private int [] cntSizeSet = {0,0,0,0,0};
 	
 	public AnchorsPost(int pairIdx, Project proj1, Project proj2, UpdatePool xpool, Logger log) {
@@ -47,34 +47,42 @@ public class AnchorsPost {
 			pool.executeUpdate("update pseudo_hits set runsize=0, runnum=0 where pair_idx=" + mPairIdx);
 			
 			int num2go = mProj1.getGroups().size() * mProj2.getGroups().size();
-			mLog.msg("Finding Collinear sets for " + num2go + " group pairs");
+			mLog.msg("Finding Collinear sets");
+			long time = System.currentTimeMillis();
 			
+			/** CAS521 this isn't being used, so wait until it is
+			System.err.print("   setting gene counts...        \r");
 			for (Group g1 : mProj1.getGroups()) if (!setAnnotHits(g1)) return;
 			for (Group g2 : mProj2.getGroups()) if (!setAnnotHits(g2)) return;
+			**/
 			
 			for (Group g1 : mProj1.getGroups()) {
 				for (Group g2: mProj2.getGroups()) {
+					System.err.print(num2go + " pairs remaining...            \r");
+					num2go--;
 					
-					if (!setPseudoHits(g1, g2)) return;
+					if (!setPseudoHits(g1, g2)) continue;
+					if (g1.idx==g2.idx) continue; 		// CAS521 can crash on self-chr
 					
 					if (!step0BuildSets(g1, g2)) return;
 				
-					num2go--;
-					if (num2go>0) 
-						System.err.print(num2go + " pairs remaining...        \r");
 					debug=false;
 				}
 			}
 			Utils.prtNumMsg(mLog, countUpdate, "Updates                          ");
-			Utils.prtNumMsg(mLog, totalMult,"Gene has + and - hits");
-			Utils.prtNumMsg(mLog, totalMerge,"Overlapped genes with same hits");
-			Utils.prtNumMsg(mLog, totalSets, "Collinear sets");
+			
+			/** these are wrong
+		    Utils.prtNumMsg(mLog, totalMerge,"Overlapped genes with same hits");
+		    Utils.prtNumMsg(mLog, totalMult,"Gene has + and - hits"); 
 			String size = "     Summary:     =2: " +cntSizeSet[0];
 			size +=       "    =3: " + cntSizeSet[1];
 			size +=       "   <=5: " + cntSizeSet[2];
 			size += 	  "  <=10: " + cntSizeSet[3];
 			size +=       "   >10: " + cntSizeSet[4];
 			Utils.prt(mLog, size);
+			**/
+			Utils.timeMsg(mLog, time, "Collinear");
+			
 		}
 		catch (Exception e) {ErrorReport.print(e, "Compute colinear genes"); }
 	}
@@ -86,7 +94,7 @@ public class AnchorsPost {
 			pool.executeUpdate("update pseudo_annot set numhits=0 where grp_idx=" + g1.idx);
 			ResultSet rs = pool.executeQuery("select count(*) from pseudo_annot where grp_idx=" + g1.idx);
 			int cnt = (rs.next()) ? rs.getInt(1) : 0;
-			if (cnt==0) return false; 
+			if (cnt==0) return true; // CAS521 this is not a failure 
 			
 			HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> ();
 			
@@ -171,7 +179,9 @@ public class AnchorsPost {
 	try {
 		if (debug) System.out.println(">>>Compute " + g1.idx + " " + g2.idx + " " + chrs);
 		
-		if (!step1LoadFromDB(g1, g2)) return false;
+		if (!step1LoadFromDB(g1, g2)) return false;  // hitMap, geneMap1, geneMap2, gidxtnumA
+		if (hitMap.size()==0) return true;			 // CAS521 add
+		
 		if (!step2Hits2Genes()) return false;
 		
 		if (!step3AssignGeneNum(1, geneMap1)) return false;
@@ -433,6 +443,7 @@ public class AnchorsPost {
 			Gene gObj1 = geneMap.get(t1num);
 			
 			gObj1.setGeneIndex(bInv, (lastg2+1));
+			
 			Hit  hObj =   gObj1.getHitObj();
 			Gene gObj2 =  gObj1.getGeneObj();
 		
@@ -460,7 +471,6 @@ public class AnchorsPost {
 				goodRunMap.put(tnum, finalRunNum);
 			}
 		}
-		totalSets+=finalRunNum;
 		
 		// transfer runnum to final collinear set numbers and sizes
 		for (int hitnum : hitMap.keySet()) {
@@ -482,7 +492,7 @@ public class AnchorsPost {
 		for (int hitnum : hitMap.keySet()) {
 			Hit hObj = hitMap.get(hitnum);
 			int rsize = hObj.frunsize;
-			if (rsize>0) {
+			if (rsize>1) { // CAS521 was 0
 				ps.setInt(1, rsize);
 				ps.setInt(2, hObj.frunnum);
 				ps.setInt(3, hObj.hidx);
@@ -496,7 +506,7 @@ public class AnchorsPost {
 		for (int hidx : hitMap.keySet()) {
 			Hit hObj = hitMap.get(hidx);
 			int rsize = hObj.frunsize;
-			if (rsize>0) {
+			if (rsize>1) {
 				if (rsize==2)       cntSizeSet[0]++;
 				else if (rsize==3)  cntSizeSet[1]++;
 				else if (rsize<=5)  cntSizeSet[2]++;
@@ -600,12 +610,13 @@ public class AnchorsPost {
 		}
 		
 		// if multiple hits-gene2, find the one that is last or closest
-		public void setGeneIndex(boolean inv, int last) {
-			if (vSize==1) return;
+		public int setGeneIndex(boolean inv, int last) {
+			vSize=gObj2Vec.size();
+			if (vSize==1) {vIdx=0; return 0;};
 			
 			for (int i=0; i<vSize; i++) {
-				if (inv  && gObj2Vec.get(i).rtnum==last) {vIdx=i; return;}
-				if (!inv && gObj2Vec.get(i).tnum==last) {vIdx=i; return;}
+				if (inv  && gObj2Vec.get(i).rtnum==last) {vIdx=i; return vIdx;}
+				if (!inv && gObj2Vec.get(i).tnum==last)  {vIdx=i; return vIdx;}
 			}
 			
 			int bestdiff= (inv) ?  (gObj2Vec.get(0).rtnum-last) : (gObj2Vec.get(0).tnum-last);
@@ -615,8 +626,9 @@ public class AnchorsPost {
 					vIdx=i;
 					bestdiff=diff;
 				}
-			}
+			}	
 			if (debug) System.out.println("best " + vIdx + " " + bestdiff + " " + tag + " hit#" + hObjVec.get(vIdx).hitnum);
+			return vIdx;
 		}
 		public Hit getHitObj()   { return hObjVec.get(vIdx);}
 		public Gene getGeneObj() { return gObj2Vec.get(vIdx);}

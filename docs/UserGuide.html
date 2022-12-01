@@ -80,8 +80,8 @@ The Dot Plot and Circle displays are available from various places.
 <li><a href="#mgr">Main Display</a>
 <li><a href="#pair"><i>Displays for Selected Pair (Two-Genome Views)</i></a>
 	<ul>
-	<li><a href="#circle">Circle Display #1</a> <!-- # ref in code -->
-	<li><a href="#dotplot_display">Dot Plot #1</a> <!-- # ref in code -->
+	<li><a href="#circle">Circle Display #1</a> - <font color=green>details of Circle</font> <!-- # ref in code -->
+	<li><a href="#dotplot_display">Dot Plot #1</a> - <font color=green>details of Dotplot</font> <!-- # ref in code -->
 	<li><a href="#block">Block Display</a>
 	<li><a href="#sum">Summary</a>
 	</ul>
@@ -141,20 +141,26 @@ of 2 or more anchors. See <a href="#csets">details</a>.
 The display in the image on the lower right is shown when the following is executed from the terminal:
 <pre>   ./viewSymap</pre>
 Is it also available from <tt>./symap</tt>, which will include the alignment commands.
+<p>
+<table>
+<tr><td>
+<p>&nbsp;
 <p>All projects in the database will be listed on the left panel. The date beside the project name
 is when it was loaded. If a [n] follows the date, it is part of n computed syntenies.
 
-<table>
-<tr><td>
-Selecting projects on the left panel shows them on the right panel.
-A check mark in the <ttb>Available Syntenies</ttb> table indicates pairs that have computed synteny that can be viewed.
-<p><ttl>Display for All Pairs</ttl>: these views will be applied to all checked syntenies.
-<p><ttl>Display for Selected Pair</ttl>: By selecting a cell with synteny, these views are activated for the
-selected synteny.
+<p>Selecting projects on the left panel shows them on the right panel. Clicking the <ttl>View</ttl> popups
+a window with the loaded information about the project.
+
+<p>A check mark in the <ttb>Available Syntenies</ttb> table indicates pairs that have computed synteny that can be viewed.
+
 <td>
 <center><font color=green><i><big>Click on any image in this document to see the closeup.</big></i></font></center>
 <br><a href="img/viewRosid.png"><img src="img/viewRosid.png"  alt="viewRosid" style="border: 1px solid black; width: 550px"></a>
 </table>
+<p><ttl>Display for Selected Pair</ttl>: By selecting a cell with synteny, these views are activated for the
+selected synteny.
+<p><ttl>Display for All Pairs</ttl>: These views will be applied to all checked syntenies.
+
 
 <a id="pair"></a>
 <h1>Displays for Selected Pair</h1>
@@ -171,34 +177,48 @@ for the chromosome display.
 <table>
 <tr><td style="vertical-align:text-top;">
 The circle display shows the chromosomes arranged in a circle,
-with synteny blocks shown as colored ribbons between the chromosomes.
-The color of a ribbon comes from one of the two chromosomes it connects; for example,
-in the image on the right, the Cabbage Chr1 is red and the corresponding ribbon is red.
-<p>Clicking on a species names causes its colors to be used preferentially (<i>sometimes it
-is necessary to click at the very beginning or end of the name for this to work</i>).
-<p>Clicking on a chromosome (e.g. the red part of the circle for Cabbage Chr1)
-causes ribbons from that chromosome to be shown on top.
-
-<h4>Control Panel</h4>
-Referring to top of the display, the first two buttons (<b>+, -</b>) change the size, while the third rotates the image.
+with synteny blocks shown as <u>colored blocks</u> between the chromosomes.
+The color of a block comes from one of the two chromosomes it connects; for example,
+in the image on the right, the Cabbage Chr1 <u>color arc</u> is red and the corresponding block is red.
 <p>
-<ttl>Scale to genome size:</ttl> This checkbox causes the chromosomes to be drawn proportionately to their
-actual length in basepairs. Otherwise, each species is allocated the same amount of space,
-e.g. for two species each one gets exactly half the circle.
+<table class="ty">
+<tr><td colspan=2>Click Once
+<tr><td>Project name*<td>The projects colors will be used for the blocks.
+<tr><td>Chromosome color arc<td>Causes the blocks from the chromosome to be shown in front.
+<tr><td colspan=2>Click Twice
+<tr><td>Chromosome color arc<td>Only the blocks to the selected chromosome will be shown. Click again to undo.
+</table>
+<p>*Project name:
+<br>&rarr;The mouse will turn from an "arrow" to a "upward pointing finger" when it is close enough
+to the name to be clickable; it may not be right on the name.
+<br>&rarr;The project name with colored blocks will be in shown in bold italics.
+
 <td><a href="img/circle-2g.png">
 	<img src="img/circle-2g.png" alt="circle-two-genome" style="border: 1px solid black; width: 450px"></a>
 </table>
-The drop-down menu has: <ttl>Show all blocks</ttl>,
-<ttl>Show all blocks</ttl>,
-<ttl>Show inverted blocks</ttl>,
-<ttl>Show non-inverted block</ttl>,
-<ttl>Two-color scheme</ttl>, which shows inverted=green, non-inverted=red.
 
+
+<h4>Control Panel</h4>
+
+Referring to top of the display, the first two buttons (<b>+, -</b>) change the size, while the third rotates the image.
+<p>
+<ttl>Scale:</ttl> This checkbox causes the chromosomes to be drawn proportionately to their
+actual length in basepairs. Otherwise, each species is allocated the same amount of space,
+e.g. for two species each one gets exactly half the circle.
+
+<p>The drop-down menu has:
+<table class="tx">
+<tr><td><ttl>All blocks</ttl><td>Default is show all blocks
+<tr><td><ttl>Inverted</ttl><td>Only show the inverted blocks
+<tr><td><ttl>Non-inverted</ttl><td>Only show the non-inverted blocks
+<tr><td><ttl>Two-color</ttl><td>Color the blocks as inverted=green, non-inverted=red.
+</table>
 <p><ttl>Self-align</ttl> (If self-synteny has been computed) This checkbox controls whether blocks are shown between chromosomes
 of the same species.
+<p><ttl>Reverse</ttl> (Only available for 2-genome display) This checkbox reverses the order
+of the two projects on the display.
 <p>
-<ttl>Rotated text</ttl> Depending on the system, it may be easier (or harder) to read with
-the text rotated.
+<ttl>Rotated text</ttl> Depending on the system, it may be easier (or harder) to read with the text rotated.
 
 <!------------------------------------------------------------>
 <a id="dotplot_display"></a>
@@ -693,7 +713,7 @@ to one chromosome of the pair.
 <a id="ex2d"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h4>Filter Example</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <table>
 <tr><td>The image on the right has the <ttb>Sequence Filter</ttb> option of <ttl>Show Gene Delimiter</ttl>
 and the <ttb>Hit Filter</ttb> option of <ttl>Highlight Collinear Hits</ttl>.
@@ -826,17 +846,22 @@ and rearrange them by dragging the header boxes.
 
 <a id="qview"></a>
 <h4>Button functions</h4>
-<a href="img/query_buttons.png"><img src="img/query_buttons.png" alt="query buttons" style="border: 1px solid black; width: 550px"></a>
+<a href="img/query_buttons.png"><img src="img/query_buttons.png" alt="query buttons" style="border: 1px solid black; width: 600px"></a>
 <p><ttb>Show</ttb>: For the selected row, a popup will show all columns and associated information for the hit.
 The text in the popup can be copied.
+
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
 <ttb>Align</ttb>:
 Select one or more rows. The sequences of the selected hit(s) are written out and a multiple alignment is created
 using MUSCLE (Edgar 2004 NAR:32). The figure on the right shows the MUSCLE alignment of
-two genes from Cabbage
-Chr01 and genes from B.rapa on Chr08 and Chr01.
-<p>
+two genes from B.rapa and genes from Cabbage and A.thal.
+<td>
+<a href="img/query_muscle.png"><img src="img/query_muscle.png" alt="query muscle" style="border: 1px solid black; width: 450px"></a>
+</table>
+
+<table class="tx">
+<tr><td style="vertical-align: text-top;">
 <ttb>View 2D</ttb>:
 Select a row. The hit is displayed in its 2-track view, either by
 <ol>
@@ -847,15 +872,13 @@ Select a row. The hit is displayed in its 2-track view, either by
 Note that these 3 views have different hit filters set, which is shown on the bottom when you hover in
 hit space. For example, in the image on the right, the lower left states "High Sets; Show Blocks, Sets"; i.e.
 all block and collinear hits are shown, and the collinear set is highlighted.
-
-<p>The selected hit is highlighted
-in red (which is part of the collinear set); the selected color is the same as the hover color, and can be changed
+<p><ttl>High</ttl>: If this is selected, the selected hit is highlighted in red;
+the selected color is the same as the hover color, and can be changed
 in the <a href="#wheel">Color Icon</a>.
-
-<td>
-<a href="img/query_muscle.png"><img src="img/query_muscle.png" alt="query muscle" style="border: 1px solid black; width: 450px"></a>
-<p><a href="img/query_synteny.png"><img src="img/query_synteny.png" alt="query synteny" style="border: 1px solid black; width: 450px"></a>
+<td><a href="img/query_synteny.png"><img src="img/query_synteny.png" alt="query synteny" style="border: 1px solid black; width: 450px"></a>
 </table>
+
+
 <ttb>Export CSV</ttb>:
 Saves the selected hits (or entire table) using the selected set of columns to a CSV format suitable for import into Excel.
 <p>
@@ -914,8 +937,7 @@ to be an internet connection).
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>3D Display (if available)</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-The 3D display is generally obsolete, but if there is a "3D" button on your display,  see
-<a href="./3D.html">3D</a>.
+The 3D display is obsolete, but if there is a "3D" button on your display,  see <a href="./3D.html">3D</a>.
 
 <!------------------------------------------------------------------------------>
 <a id="csets"></a>

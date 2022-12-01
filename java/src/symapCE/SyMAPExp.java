@@ -1,11 +1,15 @@
 package symapCE;
 
+/*********************************************************
+ * 2D for Chromosome Explorer
+ * CAS521 remove FPC
+ */
+import java.beans.PropertyChangeEvent;  // CAS521 replaced Depreciated Observer with this
+import java.beans.PropertyChangeListener;
+
 import java.awt.Color;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Observable;
-import java.util.Observer;
 import java.util.Vector;
 
 import util.DatabaseReader;
@@ -17,9 +21,7 @@ import symap.projectmanager.common.SyMAPFrameCommon;
 import symap.projectmanager.common.TrackCom;
 import symap.projectmanager.common.Mapper;
 
-
-//Mimicking structure of SyMAP 2D with this class (Explorer)
-public class SyMAPExp implements Observer { // TODO replace for Java v9
+public class SyMAPExp implements PropertyChangeListener { 
 	
 	private SyMAPFrameCommon frame;
 	private DatabaseReader databaseReader;
@@ -33,17 +35,17 @@ public class SyMAPExp implements Observer { // TODO replace for Java v9
 		databaseReader = dr;
 		
 		projects = new Vector<Project>();
-		tracks = new Vector<TrackCom>();
+		tracks =   new Vector<TrackCom>();
 		
-		mapper = new Mapper();
+		mapper =   new Mapper();
 		
-		frame = new SyMAPFrameCommon(databaseReader, mapper);
+		frame =    new SyMAPFrameCommon(databaseReader, mapper);
 	}
-	
-	public void update(Observable o, Object arg) {
+	public void propertyChange(PropertyChangeEvent evt) {
 		if (frame != null) frame.repaint();
 	}
 	
+	// symapCE.SyMAPmanager.showExplorer
 	public boolean addProject(String strName, String strType) {
 		try {
 			Project p = loadProject(strName, strType);
@@ -54,20 +56,10 @@ public class SyMAPExp implements Observer { // TODO replace for Java v9
 				return true;
 			}
 		}
-		catch (Exception e) {
-			ErrorReport.print(e, "Add project for Explorer");
-		}
-
+		catch (Exception e) {ErrorReport.print(e, "Add project for Explorer");}
 		return false;
 	}
-	
-	public boolean hasProject(String strName, String strType) {
-		for (Project p : projects)
-			if (p.getDBName().equals(strName) && p.getType().equals(strType))
-				return true;
-		return false;
-	}
-	
+	// symapCE.SyMAPmanager.showExplorer
 	public boolean build() {
 		try {
 			Vector<Block> blocks = loadAllBlocks(tracks);
@@ -79,19 +71,15 @@ public class SyMAPExp implements Observer { // TODO replace for Java v9
 			tracks = null;
 			return true;
 		}
-		catch (Exception e) {
-			ErrorReport.print(e, "Build Explorer");
-		}
-		
+		catch (Exception e) {ErrorReport.print(e, "Build Explorer");}
 		return false;
 	}
-	
+	// symapCE.SyMAPmanager.showExplorer
 	public SyMAPFrameCommon getFrame() {
 		return frame;
 	}
 	
-	private Project loadProject(String strProjName, String strTypeName) throws SQLException
-	{
+	private Project loadProject(String strProjName, String strTypeName) throws SQLException{
 	     int nProjIdx = -1;
 	     String strDisplayName = null;
 	     String loaddate=""; // CAS513 to put on left side by name
@@ -124,14 +112,13 @@ public class SyMAPExp implements Observer { // TODO replace for Java v9
      
 	     // Get group(s) and create track(s)
 	     UpdatePool pool = new UpdatePool(databaseReader);
-	     String qry = "SELECT idx,name FROM xgroups " +
-	     				"WHERE proj_idx=" + p.getID() +
+	     String qry = "SELECT idx,name FROM xgroups WHERE proj_idx=" + p.getID() +
 	     				" AND sort_order > 0 " + // make consistent with full dotplot for FPC projects
 	     				"ORDER BY sort_order";
 	     ResultSet rs = pool.executeQuery(qry);
 	     while( rs.next() ) {
-	     	int nGroupIdx = rs.getInt("idx");
-	     	String strGroupName = rs.getString("name");
+	     	int nGroupIdx = rs.getInt(1);
+	     	String strGroupName = rs.getString(2);
 	     	projTracks.add(new TrackCom(p, strGroupName, nGroupIdx));
 	     }
 	     rs.close();
@@ -143,54 +130,13 @@ public class SyMAPExp implements Observer { // TODO replace for Java v9
 	     
 	     // Initialize tracks
 	     for (TrackCom t : projTracks) {
-	     	// PSEUDO
-	     	if (t.isPseudo()) {
-		        rs = pool.executeQuery("SELECT length FROM pseudos "+
-		        						"WHERE (grp_idx="+t.getGroupIdx()+")");
-		        while( rs.next() ) {
-		        	t.setSizeBP( rs.getLong("length") );
-		        }
-	     	}
-		        // FPC
-	     	else if (t.isFPC()) {
-	     		int ccb;
-	     		int size;
-	     		int cbsize;
-	     		
-		        rs = pool.executeQuery("SELECT ccb,size FROM contigs "+
-		        						"WHERE (grp_idx="+t.getGroupIdx()+") ORDER BY ccb");
-		        rs.last();
-		        ccb = rs.getInt("ccb");
-		        size = rs.getInt("size");
-		        	
-				rs = pool.executeQuery("SELECT VALUE FROM proj_props "+
-										"WHERE (name='cbsize')");
-				rs.next();
-				cbsize = rs.getInt("value");
-		        	
-				t.setBpPerUnit( cbsize ); // save for loading blocks
-		        t.setSizeBP((ccb + size) * cbsize);
-	     	}
-	         rs.close();
+	        rs = pool.executeQuery("SELECT length FROM pseudos WHERE (grp_idx="+t.getGroupIdx()+")");
+	        while( rs.next() ) {
+	        	t.setSizeBP( rs.getLong(1) );
+	        }
+	        rs.close();
 	     }
-	     
 	     return projTracks;
-	}
-	
-	private static String contigIdxArraytoNumArray(String ctgList, HashMap<String,String> ctgIdxToNum) {
-	 	String[] ctgIdx = ctgList.split(",");
-	 	if (ctgIdx.length == 0)
-	 		return null;
-	 	
-	 	String[] ctgNum = new String[ctgIdx.length];
-	 	for (int i = 0;  i < ctgIdx.length;  i++)
-	 		ctgNum[i] = ctgIdxToNum.get(ctgIdx[i]);
-	 	
-	 	String out = "";
-	 	for (String s : ctgNum)
-	 		out += s + ",";
-	 		
-	 	return out;
 	}
 	
 	private static String getGroupList(Vector<TrackCom> tracks) {
@@ -204,17 +150,9 @@ public class SyMAPExp implements Observer { // TODO replace for Java v9
 	throws SQLException
 	{
 		Vector<Block> blocks = new Vector<Block>();
-		HashMap<String,String> contigIdxToNum = new HashMap<String,String>();
- 	
-		// Load contig numbers
+		
 		UpdatePool pool = new UpdatePool(databaseReader);
-		String strQ = "SELECT idx,number FROM contigs";
-	
-		ResultSet rs = pool.executeQuery(strQ);
-		while( rs.next() )
-			contigIdxToNum.put(rs.getString("idx"), rs.getString("number"));
-		rs.close();
-     
+		
 		/* CAS512 is added, See if we have the corr field - CAS was probably added to schema long ago
 		 boolean haveCorr = true;
 	     try {pool.executeQuery("select corr from blocks limit 1");}
@@ -223,10 +161,10 @@ public class SyMAPExp implements Observer { // TODO replace for Java v9
 		*/
 	     // Load blocks for each track
 	     String strGroupList = "(" + getGroupList(tracks) + ")";
-	     strQ = "SELECT idx,grp1_idx,grp2_idx,start1,end1,start2,end2,ctgs1,ctgs2, corr FROM blocks " + 
+	     String strQ = "SELECT idx,grp1_idx,grp2_idx,start1,end1,start2,end2,ctgs1,ctgs2, corr FROM blocks " + 
 						"WHERE (grp1_idx IN "+strGroupList+" AND grp2_idx IN "+strGroupList+")";
      
-	     rs = pool.executeQuery(strQ);
+	     ResultSet rs = pool.executeQuery(strQ);
 	     while( rs.next() ) {
 	     	int blockIdx = rs.getInt(1); // CAS512 replace fields with numbers
 	     	int grp1_idx = rs.getInt(2);
@@ -243,18 +181,6 @@ public class SyMAPExp implements Observer { // TODO replace for Java v9
 	     	TrackCom t1 = TrackCom.getTrackByGroupIdx(tracks, grp1_idx);
 	     	TrackCom t2 = TrackCom.getTrackByGroupIdx(tracks, grp2_idx);
 	     	
-	     	if (t1.isFPC()) {
-	     		start1 = start1 * t1.getBpPerUnit();
-	     		end1 = end1 * t1.getBpPerUnit();
-	     	}
-	     	if (t2.isFPC()) {
-	     		start2 = start2 * t2.getBpPerUnit();
-	     		end2 = end2 * t2.getBpPerUnit();
-	     	}
-	     	
-	     	ctgs1 = contigIdxArraytoNumArray(ctgs1, contigIdxToNum);
-	     	ctgs2 = contigIdxArraytoNumArray(ctgs2, contigIdxToNum);
-	
 	     	Block b = new Block(blockIdx, t1.getProjIdx(), t2.getProjIdx(), 
 	     			t1.getGroupIdx(), t2.getGroupIdx(), 
 	     			start1, end1, start2, end2, ctgs1, ctgs2, corr);
@@ -263,8 +189,6 @@ public class SyMAPExp implements Observer { // TODO replace for Java v9
 	     	}
 	     }
 	     rs.close();
-	     
-	     // CAS501 System.out.println("Loaded " + blocks.size() + " blocks");
 	     return blocks;
 	}
 }

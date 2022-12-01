@@ -3,9 +3,16 @@ package symapQuery;
 /*************************************************
  * The columns for the query result table
  * Added in TableDataPanel. Database query in DBdata
+ * 
+ * CAS521 
+ * .symap_saved_props
+ * SyMapColumns_gen=xxxx
+ * SyMapColumns_abbrev=xxxx
  */
 import java.util.Iterator;
 import java.util.Vector;
+
+import util.ErrorReport;
 
 public class FieldData {
  	// type is all Integer, included Block, see Column Comparator, which sorts it correctly
@@ -13,11 +20,13 @@ public class FieldData {
 	// TableDataPanel.createGeneralSelectPanel expects 4 hit columns and the Pg prefix
 	private static final String [] GENERAL_COLUMNS =	 
 		{Q.rowCol, Q.blockCol, "Block\nScore",Q.runCol,"PgeneF", "PgFSize",
-		"Hit#",    "Hit\n%Id", "Hit\n%Sim","Hit\n#Merge", "Hit\nSt"}; // CAS516 add these 4; CAS520 add st
+		Q.hitCol,    "Hit\n%Id", "Hit\n%Sim","Hit\n#Merge", "Hit\nSt"}; // CAS516 add these 4; CAS520 add st
+	
 	private static final Class <?> []  GENERAL_TYPES = 					// CAS520 had to add for String
 		{Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,
 				Integer.class,Integer.class,Integer.class,Integer.class, String.class};
-	private static final Boolean [] GENERAL_COLUMN_DEF =  
+	
+	private static final boolean [] GENERAL_COLUMN_DEF =  
 		{true, true, true, true, false, false, true, false, false, false, false}; // CAS513 HitID=f, Score=t
 	
 	private static final String [] GENERAL_COLUMN_DESC = 
@@ -37,10 +46,13 @@ public class FieldData {
 	// Prefixed with Species: CAS519 have hit and gene start/end/len; and add gene strand
 	private static final String []     SPECIES_COLUMNS = 
 		{Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol, Q.gNCol, Q.hStartCol, Q.hEndCol, Q.hLenCol,};
+	
 	private static final Class <?> []  SPECIES_TYPES =   
 		{String.class, Integer.class, Integer.class,Integer.class, String.class, String.class, Integer.class, Integer.class,Integer.class};
-	private static final Boolean []    SPECIES_COLUMN_DEF =  
+	
+	private static final boolean []    SPECIES_COLUMN_DEF =  
 		{false, false, false, false , false, false, false, false, false};
+	
 	private static String [] SPECIES_COLUMN_DESC = {
 		"Chr: Chromosome (or Scaffold, etc)", 
 		"Gstart: Start coordinate of gene", 
@@ -51,19 +63,18 @@ public class FieldData {
 		"Hstart: Start coordinate of hit(s)", 
 		"Hend: End coordinate of hit(s)", "Hlen: Length of hit"
 	};
-
+	
 	//****************************************************************************
 	//* Static methods
 	//****************************************************************************
 	public static String [] getGeneralColHead() 	 {return GENERAL_COLUMNS; }
 	public static Class <?> [] getGeneralColType() 	 {return GENERAL_TYPES; }
-	public static Boolean [] getGeneralColDefaults() {return GENERAL_COLUMN_DEF; }
 	public static String [] getGeneralColDesc() 	 {return GENERAL_COLUMN_DESC; }
 	
 	public static String [] getSpeciesColHead() 	 {return SPECIES_COLUMNS; }
 	public static Class <?> [] getSpeciesColType() 	 {return SPECIES_TYPES; }
-	public static Boolean [] getSpeciesColDefaults() {return SPECIES_COLUMN_DEF; }
 	public static String [] getSpeciesColDesc() 	 {return SPECIES_COLUMN_DESC; }
+	
 	
 	// XXX If change this, change number in Q.java, as they are the numeric index into ResultSet
 	// Columns loaded from database, do not correspond to query table columns
@@ -124,7 +135,36 @@ public class FieldData {
 
 		return fd;
 	}
-               
+	/**********************************************************
+	 * Read/Write persistentProps.columns
+	 */
+	// CAS521 add non-static columns so can read persistentProps to change
+	static private String propName="SyMapColumns";
+	static private boolean [] generalDefaults;
+	static private boolean [][] speciesDefaults;
+	static private Vector <boolean []> annoDefaults = new Vector <boolean []> ();
+	
+	// to be finished for next relase
+	public static boolean [] getGeneralColDefaults() {return GENERAL_COLUMN_DEF; }
+	public static boolean [] getSpeciesColDefaults() {return SPECIES_COLUMN_DEF; }
+	public static boolean [] getAnnoColDefaults(int x) {return null; }
+	
+	//public static boolean [] getGeneralColDefaults() {return generalDefaults; }
+	//public static boolean [] getSpeciesColDefaults(int x) {return speciesDefaults[x]; }
+	//public static boolean [] getAnnoColDefaults(int x) {return annoDefaults.get(x); }
+	
+	public static void setColumnDefaults(String [] abbrev) {
+	try {
+		
+	}
+	catch (Exception e) {ErrorReport.print(e, "set column defaults");}
+	}
+	public static void saveColumnDefaults(String [] abbrev, boolean [] defs) {
+	try {
+		
+	}
+	catch (Exception e) {ErrorReport.print(e, "save column defaults");}
+	}         
 	//****************************************************************************
 	//* Constructors
 	//****************************************************************************
@@ -181,6 +221,7 @@ public class FieldData {
 		}
 		return retVal;
 	}
+	
 	/****************************************************
 	 * private 
 	 */

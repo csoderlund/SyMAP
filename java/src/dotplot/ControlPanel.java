@@ -65,7 +65,7 @@ public class ControlPanel extends JPanel implements Observer,
 		hb.addHelpListener(hitSizeSlider,this); 			
 	
 		helpButton = (JButton) Utilities.createButton(this,"/images/help.gif",
-				"Help: Online documentation.", hb,null,false);
+				"Help: Online documentation.", hb,null,false, false);
 
 		helpButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -75,16 +75,18 @@ public class ControlPanel extends JPanel implements Observer,
 			}
 		});
 	
-		homeButton       = (JButton)  Utilities.createButton(this,"/images/home.gif","Home: Go back to full view.",hb,buttonListener,false);
-		homeButton.setEnabled(data.isZoomed());
-	
-		filterButton     = (JButton)  Utilities.createButton(this,"Filters","Filters: Change filter settings.",hb,buttonListener,false);
-		minusButton      = (JButton)  Utilities.createButton(this,"/images/minus.gif","Shrink: Decrease the scale.",hb,buttonListener,false);
-		plusButton       = (JButton)  Utilities.createButton(this,"/images/plus.gif","Grow: Increase the scale.",hb,buttonListener,false);
+		homeButton       = (JButton)  Utilities.createButton(this,"/images/home.gif",
+				"Home: Go back to full view.",hb,buttonListener,false, data.isZoomed());
+		filterButton     = (JButton)  Utilities.createButton(this,"Filters",
+				"Filters: Change filter settings.",hb,buttonListener,false, false);
+		minusButton      = (JButton)  Utilities.createButton(this,"/images/minus.gif",
+				"Shrink: Decrease the scale.",hb,buttonListener,false, false);
+		plusButton       = (JButton)  Utilities.createButton(this,"/images/plus.gif",
+				"Grow: Increase the scale.",hb,buttonListener,false, false);
 		showImageButton  = (JButton)  Utilities.createButton(this,"/images/print.gif",
-				"Save: Save as image.", hb,buttonListener,false);
-
-		scaleCheckbox = (JCheckBox) Utilities.createButton(this,"Scale","Scale: Draw to BP scale.",hb,buttonListener,true); 
+				"Save: Save as image.", hb,buttonListener,false, false);
+		scaleCheckbox = (JCheckBox) Utilities.createButton(this,"Scale",
+				"Scale: Draw to BP scale.",hb,buttonListener,true, false); 
 		scaleCheckbox.setBackground(getBackground()); 
 		
 		referenceSelector = new JComboBox();

@@ -155,7 +155,7 @@ public class CloseUpDialog extends JDialog implements HitDialogInterface, CloseU
 		view = new CloseUpComponent();
 		blast = new BlastComponent();
 		
-		helpBar = new HelpBar(-1, 17, true, false, false);
+		helpBar = new HelpBar(-1, 17); // CAS521 removed dead args
 		helpBar.addHelpListener(view,this);
 		helpBar.addHelpListener(blast,this);
 

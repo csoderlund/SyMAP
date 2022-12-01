@@ -1,35 +1,24 @@
 package symap.drawingpanel;
 
-import java.util.Vector;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collection;
-
 import java.awt.*;
 import javax.swing.*;
-
 import java.sql.SQLException;
 
 import symap.SyMAPConstants;
-import symap.marker.MarkerList;
 import symap.frame.ControlPanel;
 import symap.frame.HelpBar;
 import symap.pool.Pools;
 import symap.mapper.AbstractHitData;
 import symap.mapper.Mapper;
 import symap.mapper.MapperData;
+import symap.marker.Marker;
 import symap.filter.FilterHandler;
 import symap.track.*;
-import symap.marker.Marker;
-import symap.marker.MarkerTrack;
 import colordialog.ColorListener;
 import history.HistoryControl;
 import history.HistoryListener;
-import symap.contig.Contig;
-import symap.contig.ContigTrackData;
-import symap.block.Block;
-import symap.block.BlockTrackData;
 import symap.sequence.Sequence;
 import symap.closeup.CloseUp;
 import symap.mapper.HitFilter;
@@ -40,12 +29,13 @@ import util.Utilities;
 
 /**
  * The DrawingPanel is the area that the maps are drawn onto.
+ * CAS521 totally removed all FPC (CAS517 had added stuff to not show FPC if no /fpc)
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class DrawingPanel extends JPanel 
 	implements ColorListener, HistoryListener, SyMAPConstants
 { 
-	private static boolean TRACE = symap.SyMAP.DEBUG;
+	private static boolean TRACE = symap.SyMAP.TRACE;
 		
 	public static Color backgroundColor = Color.white;
 	public static final int MAX_TRACKS = 100;
@@ -70,8 +60,6 @@ public class DrawingPanel extends JPanel
 	private int numMaps = 1;
 	
 	private String mouseFunction = null; 
-	
-	private boolean hasFPC = false;
 	
 	public DrawingPanel(TableDataPanel listPanel /*notused*/, 
 			Pools pools, HistoryControl hc, HelpBar bar) {
@@ -108,7 +96,6 @@ public class DrawingPanel extends JPanel
 			add(mappers[i]);
 			mappers[i].setLocation(0,0);
 		}
-
 		setLayout(new TrackLayout(trackHolders,mappers,buttonPanel)); 
 	}
 	
@@ -211,6 +198,7 @@ public class DrawingPanel extends JPanel
 		try {
 			pools.getProjectProperties().reset();
 		} catch (SQLException e) { }
+		
 		for (int i = 0; i <  numMaps; ++i) mappers[i].clearData();
 		for (int i = 0; i <= numMaps; ++i) {
 			if (trackHolders[i].getTrack() != null)
@@ -250,11 +238,11 @@ public class DrawingPanel extends JPanel
 		}
 		return false;
 	}
-
+	// symapQuery Show Synteny from table
 	public void setHitFilter(int map, HitFilter hf) {
 		mappers[map-1].getHitFilter().set(hf);
 	}
-
+	// Dotplot.Data zoomArea and zoomBlock
 	public void setHitFilter(int map, FilterData fd) {
 		mappers[map-1].getHitFilter().set(fd);
 	}
@@ -360,41 +348,6 @@ public class DrawingPanel extends JPanel
 		return initTrack(track,position);
 	}
 	
-	public boolean setContigTrack(int position, int project, int contig) {
-		closeFilters();
-
-		TrackHolder holder = trackHolders[position-1];
-		Track track = holder.getTrack();
-		if ( !(track instanceof Contig) ) track = new Contig(this,holder);
-		((Contig)track).setup(project,contig,getOpposingTrackProject(position-1),null);
-
-		return initTrack(track,position);
-	}
-	
-	// for 3D - show FPC in 2D view
-	public boolean setBlockTrack(int position, int project, String contigs, Color color) 
-	throws IllegalArgumentException 
-	{
-		return setBlockTrack(position, project, null, contigs, color);
-	}
-
-	public boolean setBlockTrack(int position, int project, String group, String contigs, Color color) 
-	throws IllegalArgumentException 
-	{
-		closeFilters();
-
-		TrackHolder holder = trackHolders[position-1];
-		Track track = holder.getTrack();
-
-		if ( !(track instanceof Block) ) track = new Block(this,holder);
-		((Block)track).setup(project,contigs,getOpposingTrackProject(position-1),null);
-		
-		track.setBackground(color); // for 3D
-		if (group != null) ((Block)track).setBlock(group); // for 3D
-
-		return initTrack(track,position);
-	}
-
 	private boolean initTrack(Track track, int position) {
 		track.setPosition(position); 
 		setTrack(track, position);
@@ -406,55 +359,12 @@ public class DrawingPanel extends JPanel
 
 	/**
 	 * update - makes the updates based on the parameters passed.
-	 *
-	 * If track is an instance of a Block, than a contig is put in
-	 * that track's place with a contig number of ((Integer)arg).intValue().
-	 * The from block list for the contig is also acquired from the block track.
-	 *
-	 * If track is an instance of a Contig, than a block track is put in it's 
-	 * place with a contig list of (Collection)arg.
-	 *
 	 * Finally the reset index is set, the history is updated, and the view is updated
 	 */
 	public void update(final Track track, final Object arg) {
 		setFrameEnabled(false);
-		final DrawingPanel dp = this;
 		new Thread(new Runnable() {
 			public void run() {
-				try {
-					if (track instanceof Block) { // when FPC contig is selected
-						if (TRACE) System.out.println("draw block ");
-						
-						Contig c = new Contig(dp,track.getHolder());
-						c.setup(track.getProject(), ((Integer)arg).intValue(),
-								track.getOtherProject(), (BlockTrackData)track.getData());
-						c.setFromBlockList(((Block)track).getContigList());
-						
-						replaceTrack(track, c);
-					} else if (track instanceof Contig) { // obsolete?
-						if (TRACE) System.out.println("draw contig ");
-						
-						Block block = new Block(dp,track.getHolder());
-						block.setup(track.getProject(), Block.getContigs((Collection) arg),
-								track.getOtherProject(), (ContigTrackData)track.getData());
-						
-						replaceTrack(track, block);
-					}
-				} catch (IllegalArgumentException iae) {
-					ErrorReport.print(iae, "Drawing panel update: illegal argument");
-					Utilities.showErrorMessage(iae.getMessage(), -1); 		
-				} catch (IllegalStateException ise) {
-					ErrorReport.print(ise, "Drawing panel update: illegal state");
-					Utilities.showErrorMessage(ise.getMessage(), -1); 		
-				} catch (Exception exc) {
-					ErrorReport.print(exc, "Unable to make map");
-				} catch (OutOfMemoryError me) {
-					System.out.println("Out of memory: "+me.getCause());
-					ErrorReport.print(me, "Out of memory");
-					Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1); 
-					drawingPanelListener.setFrameEnabled(false);
-					throw me;
-				}
 				setResetIndex();
 				setUpdateHistory();
 				smake();
@@ -639,29 +549,22 @@ public class DrawingPanel extends JPanel
 				throw me;
 			}
 		}
-		
 		return status;
 	}
 
 	private class MapMaker implements Runnable {
-		int status = 0;
 		DrawingPanelData data = null;
 
 		public MapMaker() {
 			data = null;
 		}
-
 		public MapMaker(DrawingPanelData data) {
 			this.data = data;
 		}
-
 		public void run() {
-			status = 0;
 			if (data == null || setMaps(data)) {
-				if (make()) status = 1;
-				else status = -1;
+				make(); 
 			}
-			else status = -1;
 		}
 	}
 
@@ -671,48 +574,6 @@ public class DrawingPanel extends JPanel
 	 */
 	public void setFirstView() {
 		firstView = true;
-	}
-
-	/**
-	 * setClickedMarker - sets all the markers that are equal to marker to
-	 * be click highlighted if clicked is true and not clicked highlighted if clicked is false.  All other markers
-	 * are set to not be click highlighted.
-	 */
-	public void setClickedMarker(Marker marker, boolean clicked) {
-		MarkerList list;
-		Track t;
-		for (int i = 0; i <= numMaps; i++) {
-			t = trackHolders[i].getTrack();
-			if (t != null && t instanceof MarkerTrack) {
-				list = ((MarkerTrack)t).getMarkerList();
-				if (list != null) {
-					for (Marker cmarker : list.getMarkers())
-						cmarker.setClickHighlighted(clicked && marker.equals(cmarker));
-				}
-			}
-		}
-		repaint();
-	}
-
-	/**
-	 * setHoveredMarker - sets all the markers that are equal to marker to
-	 * be hovered if hovered is true and not hovered if hovered is false.  All other markers
-	 * are set to not be hovered.
-	 */
-	public void setHoveredMarker(Marker marker, boolean hovered) {
-		MarkerList list;	
-		Track t;
-		for (int i = 0; i <= numMaps; i++) {
-			t = trackHolders[i].getTrack();
-			if (t != null && t instanceof MarkerTrack) {
-				list = ((MarkerTrack)t).getMarkerList();
-				if (list != null) {
-					for (Marker cmarker : list.getMarkers())
-						cmarker.setHover(hovered && cmarker.equals(marker));
-				}
-			}
-		}
-		repaint();
 	}
 
 	private void initAll() { 
@@ -776,51 +637,6 @@ public class DrawingPanel extends JPanel
 	}
 
 	private void buildAll() {
-		Iterator<Marker> iter, titer;
-		Vector<Marker> sharedMarkers = null, trackMarkers = new Vector<Marker>(), allMarkers = new Vector<Marker>();
-		boolean sharing = false;
-		MarkerList mlist;
-		List<Marker> tempList;
-		Marker marker, clickedMarker = null, hoveredMarker = null;
-		Track t;
-		for (int i = 0; i <= numMaps; i++) {
-			t = trackHolders[i].getTrack();
-			if (t instanceof MarkerTrack && (mlist = ((MarkerTrack)t).getMarkerList()) != null) {
-				tempList = mlist.getMarkers();
-				titer = tempList.iterator();
-				while (titer.hasNext()) {
-					marker = (Marker)titer.next();
-					marker.setShared(false);
-					if (marker.isClickHighlighted()) clickedMarker = marker;
-					if (marker.isHover()) hoveredMarker = marker;
-					allMarkers.add(marker);
-				}
-				trackMarkers.clear();
-				trackMarkers.addAll(tempList);
-				if (sharedMarkers == null) {
-					sharedMarkers = new Vector<Marker>();
-				}
-				else {
-					sharing = true;
-					sharedMarkers.retainAll(trackMarkers);
-					trackMarkers.retainAll(sharedMarkers);
-				}
-				sharedMarkers.addAll(trackMarkers);
-			}
-		}
-
-		iter = allMarkers.iterator();
-		while (iter.hasNext()) {
-			marker = (Marker)iter.next();
-			if (marker.equals(clickedMarker)) marker.setClickHighlighted(true);
-			if (marker.equals(hoveredMarker)) marker.setHover(true);
-		}
-		if (sharing && sharedMarkers != null) {
-			iter = sharedMarkers.iterator();
-			while (iter.hasNext())
-				((Marker)iter.next()).setShared(true);
-		}
-		
 		if (firstView) {
 			firstViewBuild();
 			firstView = false;
@@ -894,14 +710,7 @@ public class DrawingPanel extends JPanel
 		}
 		return ret;
 	}
-	public void setHighlightedClones(int[] remarkIDs) {
-		closeFilters();
-		for (int i = 0; i <= numMaps; i++) {
-			if (trackHolders[i].getTrack() instanceof Contig)
-				((Contig)trackHolders[i].getTrack()).setSelectedRemarks(remarkIDs,Contig.CLONE_HIGHLIGHT);
-		}
-	}
-
+	
 	public void setHistory(Object obj) {
 		setFrameEnabled(false);
 		new Thread(new MapMaker((DrawingPanelData)obj)).start();
@@ -929,8 +738,10 @@ public class DrawingPanel extends JPanel
 		historyControl.add(getData(),resetResetIndex);
 		resetResetIndex = false;
 	}
-	/** CAS517 to only show FPC options if there is any FPC selected **/
-	public void setFPC(boolean b) {hasFPC = b; }
-	public boolean hasFPC() { return hasFPC; }
+	// CAS521 FPC stubs
+	public boolean setBlockTrack(int position, int project, String contigs, Color color)  {return true;}
+	public boolean setBlockTrack(int position, int project, String group, String contigs, Color color) {return true;}
+	public void setClickedMarker(Marker marker, boolean clicked) {}
+	public void setHoveredMarker(Marker marker, boolean hovered) {}
 }
 

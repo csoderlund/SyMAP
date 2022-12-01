@@ -2,6 +2,7 @@ package symapMultiAlign;
 
 /**************************************
  * For Symap Query: align selected set using muscle
+ * CAS521: pass in shortName instead of computing here. pass in lines for the legend
  */
 import java.awt.Color;
 import java.awt.Component;
@@ -30,30 +31,19 @@ import util.ErrorReport;
 
 public class AlignmentViewPanel extends JPanel {
 	private static final long serialVersionUID = -2090028995232770402L;
-	private String [] names;
+	private String [] lines;
 	
-	public AlignmentViewPanel(SyMAPQueryFrame parentFrame, String [] names, String [] sequences, String fileName) {
+	public AlignmentViewPanel(SyMAPQueryFrame parentFrame, 
+			String [] shortNames, String [] lines, String [] sequences, String fileName) {
 		theParentFrame = parentFrame;
-		this.names = names;
+		this.lines = lines;
 		
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		setBackground(Color.WHITE);
 		
-		String [] shortNames = makeShortNames();
 		buildMultiAlignments(shortNames, sequences, fileName);
 	}
-	private String [] makeShortNames() {
-		String [] xNames = new String [names.length];
-		
-		for (int i=0; i<names.length; i++) {
-			String n = names[i].replace(" - ", "-"); // Demo-draft - Anchored
-			String [] tok = n.split("\\s+");
-			
-			xNames[i] = (i+1) + ". " + tok[0] + "." + tok[2]; // displayed in alignment
-			names[i] = String.format("%d. %s", (i+1), names[i]); // created in TableDataPanel, display in Legend
-		}
-		return xNames;
-	}
+	
 	private void buildMultiAlignments(String [] names, String [] sequences, String fileName) {
 		final String [] theNames = names;
 		final String [] theSequences = sequences;
@@ -138,8 +128,9 @@ public class AlignmentViewPanel extends JPanel {
 
 		add(Box.createVerticalStrut(10));
 		add(getButtonRow1());
-		add(Box.createVerticalStrut(10));
-		add(getMultiButtonRow());
+		
+		//add(Box.createVerticalStrut(10)); CAS521 doesn't seem to work right. Plus in muscle/
+		//add(getMultiButtonRow());
 		
 		buttonPanel.setAlignmentX(LEFT_ALIGNMENT);
 	}
@@ -243,14 +234,7 @@ public class AlignmentViewPanel extends JPanel {
 	private void refreshPanels() {
 		refreshMultiPanels();
 	}
-	
-	private void refreshMultiButtons() {
-		if(theMultiPanel.getNumSequencesSelected() == 1)
-			btnCopySeq.setEnabled(true);
-		else
-			btnCopySeq.setEnabled(false);
-	}
-	
+		
 	private void refreshMultiPanels() {
 		mainPanel.removeAll();
 		try {
@@ -267,11 +251,11 @@ public class AlignmentViewPanel extends JPanel {
 					theMultiPanel.setDrawMode(AlignmentPanelBase.TEXTMODE);
 				
 				mainPanel.add(theMultiPanel);
-
-				mainPanel.add(Box.createVerticalStrut(40));
-				/* CAS502 its wrong - gaps and mismatches are obvious **/
-				/* CAS505 made legend the long names */
-				LegendPanel lPanel = new LegendPanel(names);
+				mainPanel.add(Box.createVerticalStrut(3));
+				/* CAS502 its wrong - the legend included gaps and mismatches, which are obvious **/
+				/* CAS505 made legend the long names; CAS521 made legend table rows */
+				LegendPanel lPanel = new LegendPanel(lines);
+				//mainPanel.add(Box.createHorizontalStrut(10));
 				mainPanel.add(lPanel);
 				
 			} else {
@@ -333,11 +317,13 @@ public class AlignmentViewPanel extends JPanel {
 					theMultiPanel.selectNoRows();
 					theMultiPanel.selectNoColumns();
 				}
-			
-			refreshMultiButtons();
+			//refreshMultiButtons();
 		}
 	}
-
+	private void refreshMultiButtons() {
+		if(theMultiPanel.getNumSequencesSelected() == 1)btnCopySeq.setEnabled(true);
+		else btnCopySeq.setEnabled(false);
+	}
 	private SyMAPQueryFrame theParentFrame = null;
 	private JScrollPane scroller = null;
 	

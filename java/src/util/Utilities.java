@@ -190,25 +190,28 @@ public class Utilities {
 
 		return running;
 	}
-	 
-	 public static AbstractButton createButton(HelpListener parent, String path, String tip, HelpBar bar, ActionListener listener, boolean checkbox) {
+	 // someday i will break this into createImageButton, createButton and createCheckBox; takes more lines to overload...
+	 public static AbstractButton createButton(HelpListener parent, String path, String tip, HelpBar bar, 
+			 ActionListener listener, boolean isCheckbox, boolean bSelected) {
 		AbstractButton button;
 		
 		Icon icon = ImageViewer.getImageIcon(path); 
 		if (icon != null) {
-		    if (checkbox)
+		    if (isCheckbox)
 		    	button = new JCheckBox(icon);
 		    else
 		    	button = new JButton(icon);
 		    	button.setMargin(new Insets(0,0,0,0));
 		}
 		else {
-		    if (checkbox)
+		    if (isCheckbox)
 		    	button = new JCheckBox(path);
 		    else
 		    	button = new JButton(path);
 		    	button.setMargin(new Insets(1,3,1,3));
 		}
+		if (isCheckbox) button.setSelected(bSelected); // CAS521 add
+		
 		if (listener != null) 
 		    button.addActionListener(listener);
 
@@ -219,6 +222,7 @@ public class Utilities {
 		
 		return button;
 	 }
+	
 	/*******************************************************************
 	 * XXX basic array and string ops
 	 */

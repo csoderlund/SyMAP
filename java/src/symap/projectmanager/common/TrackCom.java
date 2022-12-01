@@ -3,13 +3,6 @@ package symap.projectmanager.common;
 import java.util.Vector;
 import java.awt.Color;
 
-import javax.vecmath.Point3f;
-
-import com.sun.j3d.utils.geometry.Primitive;
-
-import symap.projectmanager.common.Project;
-//import symap3D.Track3D;
-
 public class TrackCom {
 	protected Project project;
 	private String strGroupName;
@@ -19,10 +12,6 @@ public class TrackCom {
 	private int bpPerUnit; 			// for fpc 
 	boolean bVisible = false;
 
-	// 3D stuff
-	private Point3f pos;
-	private Primitive shape3D;
-	
 	public TrackCom(Project project, String strGroupName, int nGroupIdx) {
 		this.project = project;
 		this.strGroupName = strGroupName;
@@ -69,7 +58,6 @@ public class TrackCom {
 		posArg2 = arg2;
 	}
 	
-
 	public static TrackCom getTrackByGroupIdx(Vector<TrackCom> tracks, int grpIdx) {
 		for (TrackCom t : tracks) {
 			if (t.getGroupIdx() == grpIdx)
@@ -77,14 +65,4 @@ public class TrackCom {
 		}
 		return null;
 	}
-	
-	
-	// 3D stuff
-	public Primitive getShape3D() { return shape3D; }
-	public void setShape3D( Primitive shape3D ) { this.shape3D = shape3D; }
-	
-	public Point3f getPosition() { return pos; }	
-	public void setPosition( Point3f pos ) { this.pos = pos; }
-	
-
 }

@@ -875,6 +875,7 @@ public class QueryPanel extends JPanel {
 		chkPgeneF.setSelected(false); setPgenefEnable(false);
 		
 		speciesPanel.clear();
+		speciesPanel.setEnabled(true); // CAS521 was leaving it disabled
 	}
 	
 	private void setAllEnabled(boolean b) { // everything

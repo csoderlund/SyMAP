@@ -48,7 +48,8 @@ public class ColorDialog extends JDialog implements ActionListener {
 
 	protected PersistentProps persistentProps = null;
 	protected PropertiesReader props = null;
-	protected boolean hasFPC;
+	private String propName="SyMapColors";
+	protected boolean hasFPC=false; // CAS521 no longer set since dead
 
 	private JTabbedPane tabbedPane;
 	private JButton okButton, cancelButton, defaultButton;
@@ -57,15 +58,14 @@ public class ColorDialog extends JDialog implements ActionListener {
 	 * @param props - java/src/properties/color.properties - static 
 	 * @param cookie - user/.symap_saved_props - changes to colors are stored here
 	 */
-	public ColorDialog(PropertiesReader props, PersistentProps cookie, boolean hasFPC) {
+	public ColorDialog(PropertiesReader props, PersistentProps cookie) {
 		super();
 
 		setModal(true);
 		setTitle("SyMAP Color Editor"); 
 
 		this.props = props;
-		if (cookie != null) persistentProps = cookie.copy("SyMapColors");
-		this.hasFPC = hasFPC;
+		if (cookie != null) persistentProps = cookie.copy(propName);
 
 		Dimension iconDim = new Dimension(35,20);
 
@@ -78,7 +78,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 		int ind, cInd, c2Ind;
 		int nOrder=0;
 		
-		// Read symap lines - does not retain input order
+		// Read /properties file, symap lines - does not retain input order
 		Enumeration <?> propertyNames = props.propertyNames();
 		while (propertyNames.hasMoreElements()) {
 			name = (String)propertyNames.nextElement();

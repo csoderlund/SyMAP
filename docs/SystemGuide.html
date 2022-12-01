@@ -67,8 +67,8 @@ The following discusses building a SyMAP v5 database.
 <ul>
 <li>For release v5.0.8, a document on trouble shooting <a href="MUMmer.html#mum"  class="ext" target="_blank">MUMmer</a> alignments failures has been added.
 <li>For release v5.1.1, 3D has been retired, but may still be usable (see <a href="3D.html"  class="ext" target="_blank">3D</a>).
-<li>For release v5.2.0,  FPC (fingerprinted contigs)<sup>8,9</sup> is totally retired from SyMAP; it is suggested to use the v5.1.0 release for FPC projects, which
-is available from Github. FPC is only discussed in the section on <a href="#fpc">FPC</a>.
+<li>For release v5.2.0,  FPC (fingerprinted contigs)<sup>8,9</sup> is totally retired from SyMAP.
+To use FPC, see <a href="#fpc">FPC</a>.
 </ul>
 <h4>Contents</h4>
 <ul>
@@ -106,10 +106,6 @@ is available from Github. FPC is only discussed in the section on <a href="#fpc"
 				<ul>
 					<li><a href="#exe">Alignment executables</a>
 					<li><a href="#mum">MUMmer with SyMAP details</a>
-				</ul>
-			<li>FPC project
-				<ul>
-					<li><a href="#fpc">Working with FPC Files</a>
 				</ul>
 		</ul>
 	<li><a href="#update">Update SyMAP</a>
@@ -262,11 +258,10 @@ move this directory later if desired. The contents are:
    LICENSE   README   data/   ext/   java/
    scripts/  symap    symap.config   viewSymap
 </pre>
-The <tt>data/</tt> directory contains:
-<pre>   seq/   fpc.tar.gz   </pre>
-The <tt>seq/</tt> directory contains the demo files, and is the location for all input sequence files.
-<br>Remove <tt>fpc.tar.gz</tt> if you will not be working with FPC files.
-<p>The <tt>ext/</tt> directory contains the external programs MUMmer<sup>1,2</sup> (sequence alignment), Blat<sup>3</sup> (FPC alignment)
+The <tt>data/</tt> directory contains a <tt>/seq</tt> sub-directory,
+which contains the demo files, and is the location for all input sequence files.
+
+<p>The <tt>ext/</tt> directory contains the external programs MUMmer<sup>1,2</sup> (sequence alignment)
 and MUSCLE<sup>7</sup> (SyMAP Queries).
 
 <!--------- DEMO ---------->
@@ -325,7 +320,7 @@ Then click the <ttb>Selected Pair</ttb> button to start the alignment.
 
 <tr>
 <td style="vertical-align: text-top;">
-The Alignment&amp;Synteny takes less than 5 minutes on the MacOS 10.5 but could take up to 30 minutes
+The <ttl>Alignment&amp;Synteny</ttl> takes less than 5 minutes on the MacOS 10.5 but could take up to 30 minutes
 on a slow machine.
 <p>When done, the table will have a checkbox, signifying that the synteny is available for viewing.
 Click the checked cell, which will enable the viewing buttons.
@@ -364,7 +359,7 @@ Demo-Seq2.
 	<tr><td style="colspan: 2; height: 40px;">&nbsp;
 	<tr>
 		<td style="vertical-align: text-top;">
-Run the Alignment &amp; Synteny, where the alignment should take less than 30 minutes with one CPU.
+Run the <ttl>Alignment &amp; Synteny</ttl>, where the alignment should take less than 30 minutes with one CPU.
 When done, open the Summary for the pair, as shown on the right; <i>there
 may be slight difference in the number of anchors because the results are
 slightly different when run when different numbers of CPUs.</i>
@@ -392,7 +387,7 @@ which contains all draft sequences that were not placed.
 <tr><td style="vertical-align: text-top;">
 As shown in the image on the left, a new project has been added. Click <tt>Demo_Draft-ordered</tt> and
 load it.
-Running the Alignment&amp;Synteny
+Running the <ttl>Alignment&amp;Synteny</ttl>
 between the <tt>_ordered</tt> project and Demo_seq2 will provide a more coherent display
 (see the second dot plot for <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>).
 Using the <u>parameters</u> window, the <tt>Demo_Draft-ordered</tt> name can be shortened.
@@ -808,58 +803,16 @@ but if they do not, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer
 As of SyMAP v5.0.8, all MUMmer details have been put in a separate document, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 This includes trouble shooting when MUMmer fails, and running MUMmer outside of SyMAP.
 
-<br>&nbsp;
+<!------------------------------------------------------------------------->
 <a id="fpc"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h2>FPC project</h2>
+<h3>FPC project</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-For working with FPC, it is suggested you use release v5.1.0 (it probably works with up to v5.1.9; does not work for post-v5.1.9 releases).
-<p>
-Untar <tt>data/fpc.tar.gz</tt> and restart <tt>symap</tt>.
-Align it to "Demo-Seq2" using the same steps as described <a href="#demo">above</a>, and
-explore the various displays.
-
-<p><tt>Blat</tt> is the alignment program for FPC to Seq. It will be shown in <ttl>Alignment & Synteny</ttl> parameters pop-up so the Blat parameters
-can be changed.
-
-<p>All projects listed under <tt>/data/fpc</tt> are FPC projects. To create a new project via the SyMAP interface,
-press the "Add Project" button
-at the lower left. Enter the project name beside "Name:"; change the dropdown
-beside "Type:" to "fpc".
-
-
-<h3>Working with FPC Files</h3>
-SyMAP can align genomes represented by an FPC physical
-map, by first aligning the BACs using BAC-end sequences or marker
-sequences.
-<p>
-Creating an FPC project is the same as for a
-<a href="#create">sequence project</a> except that you choose
-the type "fpc", and then the Project Parameters window
-has some different parameters. The Parameters window is where
-you will enter the FPC file, and your fasta files of marker
-and BAC-end sequences.
-<p>
-Note that the BAC-end sequence names must be exactly the clone
-names used in FPC, with extension "r" or "f" labeling the
-strand. In other words, if the FPC map has a clone
-"a0435B26" then the BES for that clone can be named
-"a0435B26f" or "a0435B26r".
-<p>
-The BES and marker alignments in an FPC project are performed using
-BLAT<sup>3</sup>. The running time is typically
-several times longer than that of MUMmer (described <a href="#time">here</a>), but
-the memory usage is much lower.
-<p>
-The default locations are:
-<pre>
-   /data/fpc/&lt;project-name&gt;/&lt;name&gt;.fpc;
-   /data/fpc/&lt;project-name&gt;/bes
-   /data/fpc/&lt;project-name&gt;/mrk
-</pre>
-The options for sequence files under <a href="#dir">directory structure</a> applies to FPC files using
-these default locations.
-<p>
+For working with FPC, it is suggested you use release v5.1.0. FPC probably works with up to v5.1.9;
+it does NOT work for post-v5.1.9 releases.
+In pre-v5.1.9, untar <tt>data/fpc.tar.gz</tt> for the demo files.
+For documentation, see the System Guide at
+<a href="http://www.agcol.arizona.edu/software/symap/doc/SystemGuide.html#fpc">AGCol</a>.
 If you run into any problems, please do not hesitate to contact symap@agcol.arizona.edu.
 <!------------------------------------------------------------------------->
 <a id="update"></a>
@@ -869,36 +822,37 @@ If you run into any problems, please do not hesitate to contact symap@agcol.ariz
 If you have been working with SyMAP and have existing projects, you can update to a new SyMAP version by
 downloading SyMAP, and:
 <ul>
-<li>Put it in a permanent location and untar it.
+<li>Put <tt>symap_5.tar.gz</tt> in a permanent location and untar it.
 <li>Replace the <tt>/data</tt> and <tt>symap.config</tt> from your previous SyMAP location to this new location.
 <li>This approach is safest as it acquires all changes (e.g. scripts) except for changes to the demo files.
 </ul>
 or
 <ul>
-<li>Put it in a temporary location and untar it.
+<li>Put <tt>symap_5.tar.gz</tt> in a temporary location and untar it.
 <li>Move <tt>symap_5/java/jar/symap.jar</tt> to the <tt>java/jar</tt> location of your permanent SyMAP.
 <li>Check to
-see if there are any <tt>scripts</tt> or <tt>ext</tt> changes that need to also be copied over.
+see if there are any <tt>/scripts</tt> or <tt>/ext</tt> changes that need to also be copied over.
 </ul>
 
 <p>The following table shows what versions require action by the user.
 <table class=ty>
 <tr><td><b>Release</b><td><b>Changed files</b><sup>1</sup><td><b>Action by User</b>
-<tr><td>v5.2.0 <td><tt>symap</tt>,<tt>viewSymap</tt>,<tt>scripts/ConvertNCBI.*</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
+<tr><td>v5.2.0 <td><tt>symap</tt>, <tt>viewSymap</tt>, <tt>scripts/ConvertNCBI.*</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
 <tr><td>v5.1.9 to v5.1.7<td>Only the <tt>symap.jar</tt><td>See <sup>3</sup>. If you have customized hit or gene colors, you will need to reset them.
 </table>
 <ol>
 <li>Always get the new <tt>java/jar/symap.jar</tt>.
+<p>
 <li>The <ttl>Alignment&Synteny</ttl> will use existing MUMmer files if they have not been removed.
+<p>
 <li>To update to the latest Gene# assignment, it depends on what version you have:
 <table class=ty>
 <tr><td>v5.1.2 to v5.1.7<td>Execute <tt>./symap -z</tt>, then select <ttl>Reload Annotation</ttl>; the synteny algorithm does NOT need to be re-run.
-<tr><td>pre-v5.1.2<td>Delete database, <ttl>Reload Annotation</ttl> and run <ttl>Alignment&Synteny</ttl>. The database does not have
+<tr><td>pre-v5.1.2<td>Delete database, <ttl>Load Project</ttl> and run <ttl>Alignment&Synteny</ttl>. The database does not have
 to be deleted, but its cleaner to do so.
 </table>
 </ol>
-FPC is no longer supported from v5.2.0 forward. Earlier releases are still available from Github and AGCoL,
-which can be downloaded.
+
 <a id="alg"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>How SyMAP Works</h2>
@@ -911,8 +865,8 @@ has four phases:
 <i>Alignment:</i> <br>
 The sequences are written to disk<sup>*</sup>, with gene-masking
 if desired. In the alignment, one species is "query" and the other is
-"target". If one project is FPC, that is the query; if both are sequence,
-the query is the one with alphabetically the first name. The query sequences
+"target".
+The query is the one with alphabetically the first name. The query sequences
 are written into one large file, while smaller target sequences are grouped
 into larger fasta files of size up to 60Mb, for more efficient processing
 in MUMmer. There is an option "Concat" that if unchecked, the query sequences
@@ -920,7 +874,7 @@ are treated the same as the target; this is useful if the query and target are v
 genomes.
 <p>
 <i>Anchor Clustering:</i><br>
-The raw anchor set consists of the hits found by MUMmer or BLAT.
+The raw anchor set consists of the hits found by MUMmer.
 These are first clustered into gene, or putative-gene hits. This is
 done by clustering the hit regions on each sequence, and then defining new "gene"
 hits which connect these regions. For example if three separate
@@ -968,10 +922,6 @@ Kurtz, S., Phillippy, A., Delcher, A.L., Smoot, M., Shumway, M., Antonescu, C., 
 <sup>2</sup>
 Marcais, G., A.L. Delcher, A.M. Phillippy, R. Coston, S.L. Salzberg, A. Zimin (2018).
 MUMmer4: A fast and versatile genome alignment system,  PLoS computational biology, 14(1): e1005944.
-
-<p>
-<sup>3</sup>
-Kent, J. (2002). BLAT--the BLAST-like alignment tool, Genome Research 12:656-64.
 
 <p>
 <sup>4</sup>

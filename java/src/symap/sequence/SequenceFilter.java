@@ -34,17 +34,11 @@ import util.Utilities;
 public class SequenceFilter extends Filter {	
 	private static final String DEFAULT_ENDS_UNIT = GenomicsNumber.KB;
 
-	private JLabel startLabel;
-	private JLabel endLabel;
-
-	private JTextField startText;
-	private JTextField endText;
-
-	private JComboBox <String> startCombo; // CAS514 add type
-	private JComboBox <String> endCombo;
-
-	private JRadioButton geneFullRadio;
-	private JRadioButton geneMidRadio;
+	private JLabel startLabel, endLabel;
+	private JTextField startText, endText;
+	private JComboBox <String> startCombo, endCombo; // CAS514 add type
+	
+	private JRadioButton geneFullRadio, geneMidRadio; // CAS520 not displayed - function seems unclear
 
 	private JCheckBox frameCheck, geneCheck, geneLineCheck; // CAS520 add line
 	private JCheckBox gapCheck, centromereCheck;
@@ -65,6 +59,7 @@ public class SequenceFilter extends Filter {
 
 	private Sequence sequence;
 
+	// previous settings
 	private String startStr, endStr;
 	private int startInd, endInd;
 	private boolean bFrame, bGene, bGap, bCentromere, bRuler, bAnnot, bGeneFull;
@@ -75,7 +70,6 @@ public class SequenceFilter extends Filter {
 	private boolean bNoChange = false;
 
 	public SequenceFilter(Frame owner, DrawingPanel dp, AbstractButton helpButton, Sequence sequence) {
-	/** Menu **/
 		super(owner,dp,"Sequence Filter",helpButton);
 		this.sequence = sequence;
 
@@ -91,19 +85,19 @@ public class SequenceFilter extends Filter {
 		});
 
 		startLabel = new JLabel("Start:");
-		endLabel = new JLabel("End:");
+		endLabel =   new JLabel("End:");
 
 		startText = new JTextField("",10); // CAS520 was 15
-		endText = new JTextField("",10);
+		endText =   new JTextField("",10);
 
 		startCombo = new JComboBox <String>(GenomicsNumber.ABS_UNITS);
-		endCombo = new JComboBox <String>(GenomicsNumber.ABS_UNITS);
+		endCombo =   new JComboBox <String>(GenomicsNumber.ABS_UNITS);
 
 		startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
 		endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
 
 		startInd = startCombo.getSelectedIndex();
-		endInd = startInd;
+		endInd =   startInd;
 		
 		flippedCheck = new JCheckBox("Flip"); 				
 		flippedCheck.setSelected(Sequence.DEFAULT_FLIPPED); 
@@ -182,8 +176,7 @@ public class SequenceFilter extends Filter {
 		
 		addToGrid(contentPane, gridbag, constraints, gapCheck, GridBagConstraints.REMAINDER);
 		addToGrid(contentPane, gridbag, constraints, centromereCheck, GridBagConstraints.REMAINDER);
-		if (dp.hasFPC()) addToGrid(contentPane, gridbag, constraints, frameCheck, GridBagConstraints.REMAINDER);
-
+		
 		addToGrid(contentPane, gridbag, constraints, new JSeparator(), GridBagConstraints.REMAINDER);
 		
 		addToGrid(contentPane, gridbag, constraints, rulerCheck, GridBagConstraints.REMAINDER);
@@ -197,6 +190,7 @@ public class SequenceFilter extends Filter {
 		setResizable(false);
 		setLocationRelativeTo(null); // CAS520
 		
+		// All check boxes are applied immediately but the start/end only on Apply
 		geneFullRadio.addChangeListener(this);
 		geneMidRadio.addChangeListener(this);
 		flippedCheck.addChangeListener(this);		
@@ -235,7 +229,6 @@ public class SequenceFilter extends Filter {
 			
 		popup.add(gapPopupCheck); 
 		popup.add(centromerePopupCheck); 
-		if (dp.hasFPC()) popup.add(framePopupCheck); // CAS517
 		
 		popup.add(rulerPopupCheck);
 		popup.add(hitLenPopupCheck); 
@@ -359,7 +352,7 @@ public class SequenceFilter extends Filter {
 		
 			framePopupCheck.setState(Sequence.DEFAULT_SHOW_FRAME && framePopupCheck.isEnabled());
 			genePopupCheck.setState(Sequence.DEFAULT_SHOW_GENE && genePopupCheck.isEnabled());
-			genePopupCheck.setState(Sequence.DEFAULT_SHOW_GENE_LINE && geneLinePopupCheck.isEnabled());
+			geneLinePopupCheck.setState(Sequence.DEFAULT_SHOW_GENE_LINE && geneLinePopupCheck.isEnabled()); // CAS521 1st no Line
 			gapPopupCheck.setState(Sequence.DEFAULT_SHOW_GAP && gapPopupCheck.isEnabled());
 			centromerePopupCheck.setState(Sequence.DEFAULT_SHOW_CENTROMERE && centromerePopupCheck.isEnabled());
 			rulerPopupCheck.setState(Sequence.DEFAULT_SHOW_RULER);
@@ -391,7 +384,7 @@ public class SequenceFilter extends Filter {
 	}
 
 	/**
-	 * stateChanged handles updating the Sequence track when a checkbox changes.
+	 * stateChanged handles updating the Sequence track when a checkbox changes, but not start/end.
 	 */
 	public void stateChanged(ChangeEvent event) {
 		if (sequence != null && !bNoChange) {
@@ -493,18 +486,18 @@ public class SequenceFilter extends Filter {
 		if (annotTypeCounts[Annotation.CENTROMERE_INT] == 0) 	centromerePopupCheck.setEnabled(false);
 		if (annotTypeCounts[Annotation.GENE_INT] == 0) 			annotPopupCheck.setEnabled(false);
 		
-		bFrame = sequence.showFrame && framePopupCheck.isEnabled();
-		bGene = sequence.showGene && genePopupCheck.isEnabled();
+		bFrame = 	sequence.showFrame && framePopupCheck.isEnabled();
+		bGene = 	sequence.showGene && genePopupCheck.isEnabled();
 		bGeneLine = sequence.showGeneLine && geneLinePopupCheck.isEnabled(); // CAS520 add
 		
-		bGap = sequence.showGap && gapPopupCheck.isEnabled();
+		bGap = 		sequence.showGap && gapPopupCheck.isEnabled();
 		bCentromere = sequence.showCentromere && centromerePopupCheck.isEnabled();
-		bAnnot = sequence.showAnnot && annotPopupCheck.isEnabled();
-		bRuler = sequence.showRuler;
+		bAnnot = 	sequence.showAnnot && annotPopupCheck.isEnabled();
+		bRuler = 	sequence.showRuler;
 		bScoreLine = sequence.showScoreLine;
 		bScoreValue = sequence.showScoreValue;
-		bFlipped = sequence.isFlipped();	
-		bHitLen = sequence.showHitLen;	
+		bFlipped = 	sequence.isFlipped();	
+		bHitLen = 	sequence.showHitLen;	
 		
 		framePopupCheck.setState(bFrame);
 		genePopupCheck.setState(bGene);
@@ -520,30 +513,57 @@ public class SequenceFilter extends Filter {
 		flippedPopupCheck.setState(bFlipped); 
 	}
 	// CAS514 would throw exception which stopped symap
+	// CAS521 fixed problem where Apply would show the full chromosome, but keep start/end the same
 	protected boolean okAction()  {
 		if (sequence == null) return false;
 		if (!sequence.hasInit()) return true;
 
 		boolean changed = false;
 		
-		if (endText.getText().length() > 0) {
+	// Start/End  CAS521 evaluate first - rewritten; fixed bug that Apply would set it back if nothing set
+		double tstart=0, tend=0;
+		
+		int eInd = 		endCombo.getSelectedIndex();
+		String eStr = 	endText.getText();
+		int sInd = 		startCombo.getSelectedIndex();
+		String sStr = 	startText.getText();
+		
+		boolean numChgE = (eInd!=endInd || !eStr.contentEquals(endStr));
+		boolean numChgS = (sInd!=startInd || !sStr.contentEquals(startStr));
+		
+		if (numChgS || numChgE) {
 			try {
-				Double.parseDouble(endText.getText()); // CAS512 (new Double(endText.getText())).doubleValue();
+				tend = Double.parseDouble(eStr); // CAS512 (new Double(endText.getText())).doubleValue();
 			} catch (NumberFormatException nfe) {
-				Utilities.showErrorMessage(endText.getText() + " is not a valid end point");
+				Utilities.showErrorMessage(eStr + " is not a valid end point");
+				return false;
+			}
+			tend = tend * GenomicsNumber.getUnitConversion(GenomicsNumber.ABS_UNITS[eInd]);
+		
+			try {
+				tstart = Double.parseDouble(sStr); // CAS512 (new Double(startText.getText())).doubleValue();
+			} catch (NumberFormatException nfe) {
+				Utilities.showErrorMessage(sStr + " is not a valid start point");
 				return changed;
 			}
-		}
-
-		if (startText.getText().length() > 0) {
-			try {
-				Double.parseDouble(startText.getText()); // CAS512 (new Double(startText.getText())).doubleValue();
-			} catch (NumberFormatException nfe) {
-				Utilities.showErrorMessage(startText.getText() + " is not a valid start point");
-				return changed;
+			tstart = tstart * GenomicsNumber.getUnitConversion(GenomicsNumber.ABS_UNITS[sInd]);
+		
+			if (tstart>=tend) {
+				Utilities.showErrorMessage("The start (" + tstart + ") must be less than end (" + tend + ")");
+				return false;
 			}
+			endStr = endText.getText();
+			endInd = endCombo.getSelectedIndex();
+			sequence.setEnd((long)tend);
+			
+			startStr = startText.getText();
+			startInd = startCombo.getSelectedIndex();
+			sequence.setStart((long)tstart);
+			
+			changed=true;
 		}
 		
+	// Check boxes
 		if (bFlipped != flippedCheck.isSelected()) { 
 			bFlipped = !bFlipped;
 			changed = true;
@@ -593,67 +613,6 @@ public class SequenceFilter extends Filter {
 			changed = true;							
 		}
 		
-		String unit;
-		double number;
-		long tstart, tend;
-
-		unit = GenomicsNumber.ABS_UNITS[startCombo.getSelectedIndex()];
-		if (startText.getText().length() > 0) {
-			try {
-				number = Double.parseDouble(startText.getText()); // CAS512 (new Double(startText.getText())).doubleValue();
-				if (number < 0) number = 0;
-			} catch (NumberFormatException nfe) {
-				nfe.printStackTrace();
-				Utilities.showErrorMessage("Start value is not a number.");
-				return false;
-			}
-			try {
-				sequence.setStart((long)Math.round(number * GenomicsNumber.getUnitConversion(unit)));
-			} catch (IllegalArgumentException e) {
-				setStart();
-				return false;
-			}
-		} else {
-			sequence.resetStart();
-			setStart();
-		}
-
-		tstart = sequence.getStart();
-		tend = sequence.getEnd();
-
-		unit = GenomicsNumber.ABS_UNITS[endCombo.getSelectedIndex()];
-		if (endText.getText().length() > 0) {
-			try {
-				number = Double.parseDouble(endText.getText()); // CAS512 number = (new Double(endText.getText())).doubleValue();
-			} catch (NumberFormatException nfe) {
-				nfe.printStackTrace();
-				Utilities.showErrorMessage("End value is not a number.");
-				return false;
-			}
-			double mult = GenomicsNumber.getUnitConversion(unit);
-			try {
-				mult = sequence.setEnd((long)Math.round(number * mult)) / mult;
-			} catch (IllegalArgumentException e) {
-				setEnd();
-				return false;
-			}
-			if (mult != number) endText.setText(mult+""); // CAS512 new Double(mult).toString()
-		} else {
-			sequence.resetEnd();
-			setEnd();
-		}
-		if (sequence.getStart() == sequence.getEnd()) {
-			sequence.setStart(tstart);
-			sequence.setEnd(tend);
-			Utilities.showErrorMessage("The start and end value must be different.");
-			return false;
-		}
-		endStr = endText.getText();
-		endInd = endCombo.getSelectedIndex();
-
-		startStr = startText.getText();
-		startInd = startCombo.getSelectedIndex();
-
 		return !sequence.hasBuilt() || changed;
 	}
 

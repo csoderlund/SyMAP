@@ -1,16 +1,14 @@
 package symap.projectmanager.common;
 
-import java.util.Observable;
 import java.util.TreeSet;
 import java.util.Vector;
 
-public class Mapper extends Observable {
+public class Mapper  { // CAS521 removed 'extend Observer' - wasn't even used
 	public static final float MIN_CYLINDER_HEIGHT = 0.02f;
 	public static final float CYLINDER_WIDTH = 0.04f;
 	public static final float DISPLAY_RADIUS = 0.4f;
 	
-	// Fudge factor to make the blocks slightly overlap the cylinders to
-	// prevent spaces from jaggy effect.
+	// Fudge factor to make the blocks slightly overlap the cylinders to prevent spaces from jaggy effect.
 	public static final float JAGGY_FUDGE = 0.95f;
 	
 	protected Project[] projects;	
@@ -20,17 +18,9 @@ public class Mapper extends Observable {
 		
 	protected float maxBpPerUnit = 0;
 	
-	public static final int PICK_DO_NOTHING = 0;
-	public static final int PICK_DELETE     = 1;
-	
-	public static final int NAVIGATION_NONE      = 0;
-	public static final int NAVIGATION_ROTATE    = 1;
-	public static final int NAVIGATION_TRANSLATE = 2;
-	public static final int NAVIGATION_ZOOM      = 3;
-	private int nNavigationFunction = NAVIGATION_ROTATE;
-	
 	private boolean bChanged = false;
 	
+	// Created in symapCE.SyMAPExp
 	public Mapper() { 
 		reference = null;
 	}
@@ -46,7 +36,7 @@ public class Mapper extends Observable {
 		for (TrackCom t : tracks)
 			maxBpPerUnit = Math.max(maxBpPerUnit, t.getSizeBP());
 	}
-	
+	// symap.projectmanager.common.SyMAPFrameCommon
 	public TrackCom[] getTracks(int nProjID) {
 		Vector<TrackCom> out = new Vector<TrackCom>();
 		
@@ -56,22 +46,20 @@ public class Mapper extends Observable {
 		
 		return out.toArray(new TrackCom[0]);
 	}
+	// symap.projectmanager.common.ProjectPanelCommon
 	public TrackCom[] getTracks(int nProjID,TreeSet<Integer> grpIdxWithSynteny) {
 		Vector<TrackCom> out = new Vector<TrackCom>();
 		
-		for (TrackCom t : tracks)
-		{
-			if (t.getProjIdx() == nProjID)
-			{
-				if (grpIdxWithSynteny.contains(t.getGroupIdx()))
-				{
+		for (TrackCom t : tracks){
+			if (t.getProjIdx() == nProjID){
+				if (grpIdxWithSynteny.contains(t.getGroupIdx())){
 					out.add(t);
 				}
 			}
 		}
-		
 		return out.toArray(new TrackCom[0]);
 	}	
+	// symapCE.SyMAPExp
 	public void setBlocks(Block[] blocks) {
 		this.blocks = blocks;
 	}
@@ -99,15 +87,7 @@ public class Mapper extends Observable {
 		
 		return out.toArray(new Block[0]);
 	}
-	
-	static public String getContigListForBlocks( Block[] blockArray ) {
-		String out = "";
-		
-		for (int i = 0;  i < blockArray.length;  i++)
-			out += blockArray[i].getCtgs1() + ",";
-		
-		return out;
-	}
+	// CAS521 remove obsolete getContigListForBlocks
 	
 	public Project[] getProjects() { return projects; }
 	public int getNumProjects() { return projects.length; }
@@ -116,7 +96,7 @@ public class Mapper extends Observable {
 		Vector<Integer> out = new Vector<Integer>();
 		out.add( reference.getProjIdx() );
 		for (Project p : projects) {
-			if (/*p.getID() != reference.getProjIdx() && */getNumVisibleTracks(p.getID()) > 0)
+			if (getNumVisibleTracks(p.getID()) > 0)
 				out.add(p.getID());
 		}
 		
@@ -187,6 +167,4 @@ public class Mapper extends Observable {
 	public float getMaxBpPerUnit() { return maxBpPerUnit; }
 		
 	public boolean hasChanged() { return bChanged; }
-	
-	public int getNavigationFunction() { return nNavigationFunction; }
 }

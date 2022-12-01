@@ -8,6 +8,7 @@ import java.lang.ref.WeakReference;
 import util.PropertiesReader;
 //import util.HelpHandler;
 import props.PersistentProps;
+import symap.SyMAP;
 
 /**
  * Class ColorDialogHandler handles the showing and setting of colors of a color dialog box.  
@@ -20,23 +21,22 @@ public class ColorDialogHandler {
 	private PersistentProps cookie;
 	private PropertiesReader props;
 	private ColorDialog dialog = null;
-	private boolean hasFPC; // CAS517 add so will not display FPC if no FPC
-
+	private final String propsFile = "/properties/colors.properties"; // CAS521 moved from SyMAP.java
+	
 	/**
 	 * @param cookie - in user's directory file .symap_saved_props
 	 * @param props - java/src/properties
 	 */
-	public ColorDialogHandler(PersistentProps cookie,  PropertiesReader props)  {
+	public ColorDialogHandler(PersistentProps cookie)  { //CAS521 remove hasFPC
+		props = new PropertiesReader(SyMAP.class.getResource(propsFile));
 		listeners = new Vector<WeakReference<ColorListener>>();
 		this.cookie = cookie;
-		this.props = props;
+		setColors(); // CAS521 moved from SyMAP.java to here
 	}
-	public void setHasFPC(boolean hasFPC) {
-		this.hasFPC = hasFPC;
-	}
+	
 	public void showX() {
 		if (dialog == null) {
-			dialog = new ColorDialog(props,cookie, hasFPC);
+			dialog = new ColorDialog(props,cookie);
 			dialog.setColors();
 		}
 		dialog.setVisible(true); // CAS512 dialog.show();
@@ -48,7 +48,7 @@ public class ColorDialogHandler {
 			dialog.defaultAction();
 			dialog.okAction();
 		}
-		dialog = new ColorDialog(props,cookie, hasFPC);
+		dialog = new ColorDialog(props,cookie);
 		dialog.setColors();
 		notifyListeners();
 	}

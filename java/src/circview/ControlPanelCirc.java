@@ -22,38 +22,48 @@ import util.ImageViewer;
 import util.Utilities;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class ControlPanelCirc extends JPanel implements HelpListener 
-{
-     CircPanel cp;
-    HelpBar hb;
-    JButton plusButton, minusButton, rotateButton, helpButton, saveButton;
-    JCheckBox scaleCheckbox, selfCheckbox, rotCheckbox;
-    JComboBox <String> invChooser;
-    
-    public ControlPanelCirc(CircPanel _cp, HelpBar _hb) 
-    {
-    	hb = _hb;
-    	cp = _cp;
-
-		minusButton      = (JButton)  Utilities.createButton(null,"/images/minus.gif","Shrink: Decrease the scale.",hb,buttonListener,false);
-		plusButton       = (JButton)  Utilities.createButton(null,"/images/plus.gif","Grow: Increase the scale.",hb,buttonListener,false);
-		rotateButton       = (JButton)  Utilities.createButton(null,"/images/rotate.gif","Rotate the image.",hb,buttonListener,false);
-		scaleCheckbox = (JCheckBox)  Utilities.createButton(null,"Scale to genome size","Scale to genome and chromosome sizes in bp",hb,buttonListener,true); 
-		selfCheckbox = (JCheckBox)  Utilities.createButton(null,"Self-align","Show self-alignment synteny blocks",hb,buttonListener,true); 
-		selfCheckbox.setSelected(true);
-		rotCheckbox = (JCheckBox)  Utilities.createButton(null,"Rotated text","Draw with labels rotated",hb,buttonListener,true); 
-		rotCheckbox.setSelected(false);
-
-		String[] invOptions = {"Show all blocks","Show inverted blocks","Show non-inverted blocks","Two-color scheme"};
+public class ControlPanelCirc extends JPanel implements HelpListener  {
+    private CircPanel circPanel;
+    private HelpBar helpPanel;
+    private JButton plusButton, minusButton, rotateButton, helpButton, saveButton;
+    private JCheckBox scaleCheckbox, rotCheckbox, revCheckbox;
+    private JCheckBox selfCheckbox;
+    private JComboBox <String> invChooser;
+   
+    public ControlPanelCirc(CircPanel _cp, HelpBar _hb, boolean bIsWG, boolean isSelf) {
+    	helpPanel = _hb;
+    	circPanel = _cp;
+    	circPanel.bShowSelf = isSelf;
+    	
+    	// createButton: HelpListener parent, String path, String tip, HelpBar bar, ActionListener listener, boolean isCheckbox
+		minusButton   = (JButton)  Utilities.createButton(null,"/images/minus.gif",
+							"Shrink: Decrease the scale.", helpPanel, buttonListener, false, false);
+		plusButton    = (JButton)  Utilities.createButton(null,"/images/plus.gif",
+							"Grow: Increase the scale.", helpPanel, buttonListener, false, false);
+		rotateButton  = (JButton)  Utilities.createButton(null,"/images/rotate.gif",
+							"Rotate the image.", helpPanel, buttonListener, false, false);
+		scaleCheckbox = (JCheckBox)Utilities.createButton(null,"Scale",
+							"Scale to genome and chromosome sizes in bp", helpPanel, buttonListener, true, false); 
+		selfCheckbox = (JCheckBox)  Utilities.createButton(null,"Self-align",
+				"Show self-alignment synteny blocks", helpPanel, buttonListener, true, isSelf); 
+		rotCheckbox = (JCheckBox)  Utilities.createButton(null,"Rotate text", 
+				"Draw with labels rotated", helpPanel,buttonListener,true, false); 
+		revCheckbox = (JCheckBox)  Utilities.createButton(null,"Reverse",
+				"Reverse reference",helpPanel,buttonListener,true, false); 
+		
+		String[] invOptions = {"All blocks","Inverted","Non-inverted","Two-color"};
 		invChooser = new JComboBox <String> (invOptions);
+		invChooser.setPreferredSize(invChooser.getMinimumSize());
 		invChooser.setSelectedIndex(0);
 		invChooser.addActionListener(buttonListener);
-		invChooser.setName("Select how to show inverted and non-inverted synteny blocks");
-		hb.addHelpListener(invChooser,this);
+		invChooser.setName("Show inverted or non-inverted blocks; or green=inverted, red=non-inverted.");
+		invChooser.addActionListener(buttonListener);
 		
 
-		saveButton = (JButton) Utilities.createButton(this,"/images/print.gif","Save image" ,hb,buttonListener,false);
-		helpButton = (JButton) Utilities.createButton(this,"/images/help.gif","Help: Online documentation." ,hb,null,false);
+		saveButton = (JButton) Utilities.createButton(this,"/images/print.gif",
+				"Save image" ,helpPanel,buttonListener,false, false);
+		helpButton = (JButton) Utilities.createButton(this,"/images/help.gif",
+				"Help: Online documentation." ,helpPanel,null,false, false);
 		helpButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String url = SyMAP.USER_GUIDE_URL + SyMAP.circle; // CAS510
@@ -62,7 +72,6 @@ public class ControlPanelCirc extends JPanel implements HelpListener
 			}
 		});
 	
-		
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
 		setLayout(gbl);
@@ -76,51 +85,38 @@ public class ControlPanelCirc extends JPanel implements HelpListener
 		addToGrid(gbl,gbc,scaleCheckbox,1,1); 		
 		addToGrid(gbl,gbc,invChooser,1,1); 		
 		addToGrid(gbl,gbc,selfCheckbox,1,1);
+		if (bIsWG && !isSelf) addToGrid(gbl,gbc,revCheckbox,1,1); // whole genome only
 		addToGrid(gbl,gbc,rotCheckbox,1,1);
 		addToGrid(gbl,gbc,saveButton,1,1);
 		addToGrid(gbl,gbc,helpButton,GridBagConstraints.REMAINDER,0);
-	
     }
     
-    private ActionListener buttonListener = new ActionListener() 
-    {
-	    public void actionPerformed(ActionEvent evt) 
-	    {
+    private ActionListener buttonListener = new ActionListener() {
+	    public void actionPerformed(ActionEvent evt) {
 			Object src = evt.getSource();
-			if (src == minusButton)      
-			{
-				cp.zoom(0.95);
+			if (src == minusButton)   		circPanel.zoom(0.95);
+			else if (src == plusButton) 	circPanel.zoom(1/0.95);
+			else if (src == rotateButton)	circPanel.rotate(-10);
+			else if (src == scaleCheckbox)	circPanel.toggleScaled(((JCheckBox)src).isSelected());
+			else if (src == revCheckbox) {
+				circPanel.bRevRef = ((JCheckBox)src).isSelected();
+				circPanel.reverse();
+				circPanel.makeRepaint();
 			}
-			else if (src == plusButton)       
-			{
-				cp.zoom(1/0.95);
+			else if (src == selfCheckbox){
+				circPanel.bShowSelf = ((JCheckBox)src).isSelected();
+				circPanel.makeRepaint();
 			}
-			else if (src == rotateButton)
-			{
-				cp.rotate(-10);
+			else if (src == rotCheckbox){
+				circPanel.bRotateText = ((JCheckBox)src).isSelected();
+				circPanel.makeRepaint();
 			}
-			else if (src == scaleCheckbox)
-			{
-				cp.toggleScaled(((JCheckBox)src).isSelected());
+			else if (src == invChooser){
+				circPanel.invChoice = ((JComboBox)src).getSelectedIndex();
+				circPanel.makeRepaint();
 			}
-			else if (src == selfCheckbox)
-			{
-				cp.showSelf = ((JCheckBox)src).isSelected();
-				cp.makeRepaint();
-			}
-			else if (src == rotCheckbox)
-			{
-				cp.bRotateText = ((JCheckBox)src).isSelected();
-				cp.makeRepaint();
-			}
-			else if (src == invChooser)
-			{
-				cp.invChoice = ((JComboBox)src).getSelectedIndex();
-				cp.makeRepaint();
-			}
-			else if (src == saveButton)
-			{
-				ImageViewer.showImage(cp);
+			else if (src == saveButton) {
+				ImageViewer.showImage(circPanel);
 			}
 	    }
 	};
@@ -139,6 +135,4 @@ public class ControlPanelCirc extends JPanel implements HelpListener
 		Component comp = (Component)event.getSource();
 		return comp.getName();
 	}
-	
-
 }

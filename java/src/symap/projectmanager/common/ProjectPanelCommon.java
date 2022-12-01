@@ -1,5 +1,8 @@
 package symap.projectmanager.common;
 
+/**************************************************
+ * Creates a project on the left side: project name and clickable chromosome icons
+ */
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -13,14 +16,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.TreeSet;
-
-import symap.projectmanager.common.Block;
-
 import javax.swing.JComponent;
-
-import symap.projectmanager.common.Project;
-import symap.projectmanager.common.TrackCom;
-import symap.projectmanager.common.Mapper;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ProjectPanelCommon extends JComponent 
@@ -55,15 +51,13 @@ public class ProjectPanelCommon extends JComponent
 			height = Math.max(height, (int)(MAX_CHR_HEIGHT * t.getSizeBP() / mapper.getMaxBpPerUnit()));
 		
 		chrHeight = height + 5;
-		if (tracks.length > maxTracks)
-		{
+		if (tracks.length > maxTracks){
 			System.out.println(project.getDisplayName() + " has more than " + maxTracks + " sequences.\nThe first " + maxTracks + " will be shown.");
 		}
 		
 		int numTracks = Math.min(tracks.length,maxTracks);
-		while (numTracks > lineSize && numTracks % lineSize > 0 && numTracks % lineSize < 4)
-		{
-			lineSize++; // Don't put just one or two on a new line
+		while (numTracks > lineSize && numTracks % lineSize > 0 && numTracks % lineSize < 4){
+			lineSize++; 			// Don't put just one or two on a new line
 		}
 		int width = lineSize * (WIDTH + GAP) + GAP;
 		int nRows = 1 + numTracks/lineSize;
@@ -83,8 +77,7 @@ public class ProjectPanelCommon extends JComponent
 		int y = FONT_HEIGHT;
 		
 		// Draw each chromosome
-		// Label box runs from y-FONT_HEIGHT to y
-		// Chromosome rectangle runs from y+6 to y+6+height
+		// Label box runs from y-FONT_HEIGHT to y; Chromosome rectangle runs from y+6 to y+6+height
 		g2.setFont(new Font(g2.getFont().getName(), Font.PLAIN, 9));
 		FontMetrics fm = g2.getFontMetrics();
 		int nTrack = 0;
@@ -115,8 +108,7 @@ public class ProjectPanelCommon extends JComponent
 			else 
 				g2.setColor(Color.red.darker());
 			
-			for (Block b : blocks) {
-				// Make this project be the query and the reference be the target
+			for (Block b : blocks) {		// Make this project be the query and the reference be the target
 				if (b.isTarget(project.getID()))
 					b = b.swap(); 
 				
@@ -136,12 +128,10 @@ public class ProjectPanelCommon extends JComponent
 			x += WIDTH+GAP;
 			nTrack++;
 			numTracks++;
-			if (numTracks > maxTracks)
-			{
+			if (numTracks > maxTracks) {
 				break;
 			}
-			if (nTrack % lineSize == 0)
-			{
+			if (nTrack % lineSize == 0) {
 				x = 5;
 				y += chrHeight + FONT_HEIGHT + 10;
 				nTrack = 0;
@@ -162,38 +152,34 @@ public class ProjectPanelCommon extends JComponent
 			if (!mapper.isReference(t)) {
 				if (xClick >= x && xClick <= x+WIDTH 
 						&& yClick >= y && yClick <= y+chrHeight+6) 
-				{ // Rectangle clicked: add/remove track
+				{ 													// Rectangle clicked: add/remove track
 					mapper.setTrackVisible(t, !t.isVisible());
 					bChanged = true;
 					break;
 				}
 				else if (xClick >= x && xClick <= x+WIDTH 
 						&& yClick >= y-19 && yClick < y) 
-				{ // Number clicked: change reference
+				{ 													// Number clicked: change reference
 					mapper.setReferenceTrack(t);
-					mapper.hideVisibleTracks(); // clear selection (excluding reference)
+					mapper.hideVisibleTracks(); 					// clear selection (excluding reference)
 					bChanged = true;
 					break;
 				}
 			}
-			
 			x += WIDTH+5;
 			nTrack++;
 			numTracks++;
-			if (numTracks > maxTracks)
-			{
+			if (numTracks > maxTracks){
 				break;
 			}
-			if (nTrack % lineSize == 0)
-			{
+			if (nTrack % lineSize == 0){
 				x = 5;
 				y += chrHeight + FONT_HEIGHT + 10;
 				nTrack = 0;
 			}
 		}
 		
-		if (bChanged) {
-			// Call parent handler to redraw all displays of this type
+		if (bChanged) { // Call parent handler to redraw all displays of this type
 			if (listener != null)
 				listener.actionPerformed( new ActionEvent(this, -1, "Redraw") );
 		}

@@ -17,15 +17,21 @@ import symap.closeup.CloseUp;
 import symapQuery.TableDataPanel;
 
 /**
- * Class SyMAP is used to acquire and configure the desired objects.
- *
+ * Class SyMAP sets up the Explorer; it is used to acquire and configure the desired objects.
+ * common.SyMAPFrameCommon.regenerate2DView
+ * dotplot.Data
+ * blockview.Block2Frame
+ * symapQuery.tableDataPanel.showSynteny
+ * 
+ * Note: it makes no sense why this is under symap and not under common. Plus why constants are here...
+ * 
  * The properties file (java/src/properties/symap.properties) needs to 
  * be properly set along with all of the corresponding .properties files.
  * CAS517 removed some dead code
  */
 public class SyMAP {
-	public static final String 	VERSION = "v5.2.0";
-	public static final String 	DATE = " (20-Nov-22)";
+	public static final String 	VERSION = "v5.2.1";
+	public static final String 	DATE = " (1-Dec-22)";
 	public static final int 	DBVER =  4; 			// CAS512 2->3, CAS520 3->4
 	public static final String  DBVERSTR = "db" + DBVER;
 	
@@ -39,8 +45,8 @@ public class SyMAP {
 	public static final String align3d = "#alignment_display_3d";
 	public static final String TROUBLE_GUIDE_URL = BASE_HELP_URL + "TroubleShoot.html";
 		
-	private static final  String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // under user's directory
-	private static final String PROPERTIES_FILE = "/properties/symap.properties"; // under java/src
+	public static final  String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // under user's directory; see props.PersistenProps
+	private static final String PROPERTIES_FILE = "/properties/symap.properties"; // under java/src; see util.PropertiesReader 
 	private static final int HISTORY_SIZE = 10;
 
 	public static boolean TRACE=false; // set in ProjectManagerFrameCommon on -t
@@ -53,8 +59,6 @@ public class SyMAP {
 		TIME_BETWEEN_MEMORY_TEST = props.getInt("timeBetweenMemoryTest");
 	}
 	
-	private static final String PP_HEADER = "SyMAP Saved Properties. Do not modify.";
-
 	private SyMAPFrame         frame;
 	private DrawingPanel       drawingPanel;
 	private ControlPanel       controlPanel;
@@ -67,12 +71,11 @@ public class SyMAP {
 	private PersistentProps    persistentProps;
 	private CloseUp            closeup;
 
-	/** Dotplot, Block2Frame, Query -- if hasFPC, user must change in 2-pane 2D **/
+	/** Dotplot, Block2Frame, Query **/
 	public SyMAP(DatabaseReader dr, TableDataPanel theTablePanel) throws SQLException {
 		this(dr, null, theTablePanel);
-		colorDialogHandler.setColors();   // CAS517 this was done below, but wait until FPC is set
 	}
-	/** Symap explorer **/
+	/** Chromosome Explorer **/
 	public SyMAP(DatabaseReader dr, HelpBar hb, TableDataPanel theTablePanel) // CAS507 removed applet
 	throws SQLException 
 	{
@@ -80,32 +83,29 @@ public class SyMAP {
 
 		imageViewer = new ImageViewer();
 
-		persistentProps = new FileProps(Utilities.getFile(PERSISTENT_PROPS_FILE,true),PP_HEADER,null);
+		persistentProps = new PersistentProps(); // CAS521 changed PersistentProps - it has all args now
 
-		if (hb == null)
-			helpBar = new HelpBar(-1, 17, true, false, false);
-		else
-			helpBar = hb; // for 3D
+		if (hb == null) helpBar = new HelpBar(-1, 17); // CAS521 removed dead args
+		else			helpBar = hb; // for full explorer
 
 		history = new History(HISTORY_SIZE);
 
 		historyControl = new HistoryControl(history);
 
-		Pools p = null;
+		Pools pool = null;
 		try {
-			p = PoolManager.getInstance().getPools(dr);
+			pool = PoolManager.getInstance().getPools(dr);
 		} catch (SQLException e) {
 			ErrorReport.print(e, "Getting pool");
-			if (showDatabaseErrorMessage(e.getMessage())) p = PoolManager.getInstance().getPools(dr); 
+			if (showDatabaseErrorMessage(e.getMessage())) pool = PoolManager.getInstance().getPools(dr); 
 			else throw e;
 		}
 
-		drawingPanel = new DrawingPanel(theTablePanel,p,historyControl,helpBar);
+		drawingPanel = new DrawingPanel(theTablePanel,pool,historyControl,helpBar);
 
 		historyControl.setListener(drawingPanel);
 
-		colorDialogHandler = new ColorDialogHandler(persistentProps,
-				new PropertiesReader(SyMAP.class.getResource("/properties/colors.properties")));
+		colorDialogHandler = new ColorDialogHandler(persistentProps); // CAS521 moved properties to ColorDialogHandler
 
 		controlPanel = new ControlPanel(drawingPanel,historyControl,imageViewer,colorDialogHandler,helpBar);
 
@@ -119,11 +119,12 @@ public class SyMAP {
 		
 		if (TIME_BETWEEN_MEMORY_TEST >= 0) MemoryTest.run(TIME_BETWEEN_MEMORY_TEST,System.out);
 	}
+	/** added in CAS517, then totally removed in CAS521 
 	public void setHasFPC(boolean hasFPC) {
 		colorDialogHandler.setHasFPC(hasFPC);
-		colorDialogHandler.setColors();   // CAS517 this was done above, but wait until FPC is set
+		colorDialogHandler.setColors();   
 	}
-	
+	**/
 	private boolean showDatabaseErrorMessage(String msg) {
 		return JOptionPane.showConfirmDialog(null,msg,"Database error occurred, try again?",
 				JOptionPane.YES_NO_OPTION,JOptionPane.ERROR_MESSAGE) == JOptionPane.YES_OPTION;

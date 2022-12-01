@@ -51,7 +51,7 @@ public class MultiAlignmentData {
 			Utilities.checkCreateDir("muscle", true);
 			writeFASTA(DEFAULT_SOURCE_FILE_NAME);
 			
-			progressField.setText("Running MUSCLE");
+			progressField.setText("Running MUSCLE in /muscle directory, please be patient....");
 			String cmd = path + " -in " + DEFAULT_SOURCE_FILE_NAME + " -out " + DEFAULT_TARGET_FILE_NAME;
 			if (Q.TEST_TRACE) System.out.println(cmd);
 			
