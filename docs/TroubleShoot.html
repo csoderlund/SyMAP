@@ -90,7 +90,11 @@
 <ul>
 <li><a href="#status">Status window disappeared</a>
 <li><a href="#noanch">No anchors loaded</a>
-<li><a href="#bes">BES not loaded</a>
+</ul>
+<br>
+<li>MacOS
+<ul>
+<li><a href="#macos">Running external programs
 </ul>
 </ul>
 
@@ -115,9 +119,7 @@ you can reduce the amount of memory requested, but beware, you probably will not
 to process large genomes.
 <p>
 For memory issues related to running MUMmer, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
-
 <p>
-
 <!--------------------------------------------------------->
 <hr>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -282,30 +284,39 @@ Most records in MySQL have an index. The <tt>Hit#</tt> shown in SyMAP (queries a
 such index. If you have many alignments in the database, this number will get very large. Also,
 if you add alignments and delete them, the index can keep growing. Solution: once you determine the
 set of alignments you want, delete the database and just reload what you want for the final database.
-<p>
+
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>Alignment</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <a id="status"></a>
-<h3>Status window disappeared</h3>
+<b>Status window disappeared</b>
 Occasionally the status window disappears when running an alignment.
 Clicking the top of the project manager sometimes
 brings it back. Otherwise, just check the output to the terminal,
 which tells you when it is done. You may
 have to restart <tt>symap</tt> to see the results.
 
+<p>
 <a id="noanch"></a>
-<h3>No anchors loaded</h3>
+<b>No anchors loaded</b>
 This message indicates that SyMAP could not parse the MUMmer or BLAT output files
 to load the anchors. For MUMmer, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 
-<a id="bes"></a>
-<h3>FPC: BES not loaded, or BES hits not loading</h3>
-Generally, this is caused by a name formatting error. Make sure the BES
-names are formatted as clone names with extension "r" or "f". The clone
-names should <i>exactly match</i> those in FPC, and there should be no other prefix or suffix.
-Do not use ".r" or ".f".
+<a id="macos"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>MacOS and external programs</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+MacOS 10.15 has made it difficult to run programs downloaded from the web
+unless its been authenticated by Apple. Running external programs from SyMAP,
+you will either get popup that states "xxx cannot be opened because developer cannot be verified",
+or the program will just fail. Do the following:
+<ul>
+<li>Using the Finder, select the program and Open With "Terminal" or "iTerm".
+<li>You will get a pop-up, select "Open".
+</ul>
+After that, you will be able to run it via SyMAP.
+
 
 <p><a href="#top">Go to top</a>
 <!---- END BODY -->

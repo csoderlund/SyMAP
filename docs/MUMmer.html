@@ -121,10 +121,10 @@ The log files are as follows:
 symap_5
    error.log   # a SyMAP error will write its trace data into this file and list failed MUMmer
    /logs
-      &lt;dbName&gt;_LOAD.log   # this keeps track of data loaded or removed from the database.
-      &lt;project-name1&gt;-to-&lt;project-name2&gt;   # one directory per project-to-project alignment
-         &lt;alignment&gt;.log      # one file per alignment
-         symap.log   # this keeps most of the output shown on the terminal for this alignment
+      &lt;dbName&gt;_LOAD.log	# this keeps track of data loaded or removed from the database.
+      &lt;project-name1&gt;-to-&lt;project-name2&gt; # one directory per project-to-project alignment
+         &lt;alignment&gt;.log	# one file per alignment
+         symap.log              # this keeps most of the output shown on the terminal for this alignment
 </pre>
 If an alignment is listed as failed in the <tt>error.log</tt> file,
 the corresponding <tt>&lt;alignment&gt;.log</tt> file will contain the MUMmer error. If there
@@ -140,15 +140,12 @@ This shows <tt>promer</tt> output directly on the terminal.
 <a id="mem"></a>
 <h2>Out of memory</h2>
 A MUMmer failure is typically from insufficient memory.
-For performing large alignments (e.g. 1Gb genomes or more) <i>it is essential
-to have multiple CPUs, a 64-bit computer, and at least 5Gb of RAM
-for each CPU that you intend to use</i>. The following error typically indicates a memory problem.
-
+The following error typically indicates a memory problem.
 <pre>
 Alignment program error code: 141
 20220512|075853|6007| ERROR: mummer and/or mgaps returned non-zero, please file a bug report
 </pre>
-
+This error will probably not show at the terminal; read the above section.
 <a id="cat"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>Limit CPUs and uncheck Concat</h3>

@@ -97,14 +97,12 @@ provides full information on the functions.
 
 <tr>
 	<td style="vertical-align: text-top;">
-Return to the Manager, and click the <ttb>Chromosome Explorer</ttb> button. This brings up the Explorer, shown at right.
+Return to the Manager, and click the <ttb>Chromosome Explorer</ttb> button. This brings up the Explorer.
+The top left chromosome icon
+will have its number highlighed in a red box; this indicates it is the default reference chromosome.
+
 <p>
-Here you can pick different
-sets of chromosomes, using the small icons at left, and see them in different views.
-At first you only see the reference chromosome, which is initially chr3 from Demo-Seq
-(the reference has a red box around its number).
-<p>
-Click on the icons for Demo-Seq2 chr1 and chr3, to see the Circos-style<sup>3</sup> view
+Click on the icon body for Demo-Seq2 1 and 3 (i.e. chr1 and chr3) to see the Circos-style<sup>3</sup> view
 shown on the right.
 The ribbons represent synteny blocks.
 	</td>
@@ -117,7 +115,7 @@ The ribbons represent synteny blocks.
 <tr>
 	<td style="vertical-align: text-top;">
 Click the <ttb>2D</ttb> button to see a side-by-side view ofthe same chromosomes. Note that the reference is in the middle.
-Brown lines show the individual anchors.
+The lines between chromosomes indicate the individual anchors.
 	</td>
 	<td>
 	<a href="img/demo2d.png"><img src="img/demo2d.png" alt="demo2d" style="border: 1px solid black; width: 400px"></a>
@@ -127,17 +125,15 @@ Brown lines show the individual anchors.
 
 <tr>
 	<td style="vertical-align: text-top;">
-Selecting a region on one of the sequence tracks using the mouse zooms to that region.
+A region of one of the chromosomes was selected to zoom in, as shown in the image on the right.
 <p>
-Now the annotation exons for individual genes can be seen
+The exons for individual genes can be seen
 in the center of each sequence track. The length of the hit is shown on the inner boundary
 of the each chromosome segment.
 <p>
-If you zoom in even closer, then you can click the <ttb>Sequence Filter</ttb>
-button and the top of a sequence track
-and check the option <ttl>Show Descriptions
-for Annotations</ttl>, and you will see the annotation text
-for each gene.
+There is a sequence filter for <ttl>Show Annotations</ttl>. This will show the annotation as shown
+on the right, but it must be zoomed in close enough. Alternatively, as long as the view is zoomed enough to see
+the individual exons, right-click on a gene for a popup of the annotation.
 </td>
 <td>
 <a href="img/demo2dzoom.png"><img src="img/demo2dzoom.png" alt="demo2dzoom" style="border: 1px solid black; width: 400px"></a>
@@ -146,8 +142,8 @@ for each gene.
 <tr><td style="colspan: 2; height: 40px;">&nbsp;</td></tr>
 <tr>
 <td style="vertical-align: text-top;">
-Returning to the Manager, click the <ttb>SyMAP Queries</ttb> button. This brings up
-the SyMAP Query window in Overview mode. Click the <ttb>Query Setup</ttb> option
+Returning to the Manager, click the <ttb>Queries</ttb> button. This brings up
+the query window in Overview mode. Click the <ttb>Query Setup</ttb> option
 on the left-hand side and you will see the Query Setup window:
 <td>
 <a href="img/demoQuery.png"><img src="img/demoQuery.png" alt="demoQuery" style="border: 1px solid black; width: 400px"></a>
@@ -195,7 +191,7 @@ When the ordering algorithm is run, it creates a new project called "Demo-Draft_
 where the 43 contigs are written into three chromosomes; the first two correspond
 to chr1 and chr3 of Demo_Seq2, and chr0 contains the contigs that do not align.
 <p>The new project Demo-Draft_ordered
-was aligned with Demo_Seq2, resulting in the dot plot will appear as shown on the right.
+was aligned with Demo_Seq2, resulting in the dot plot shown on the right.
 	</td>
 	<td>
 <a href="img/demoDraftOrd.png"><img src="img/demoDraftOrd.png" alt="demoDraftOrd" style="border: 1px solid black; width: 400px"></a>
