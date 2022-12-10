@@ -13,7 +13,6 @@ import symap.pool.Pools;
 import symap.mapper.AbstractHitData;
 import symap.mapper.Mapper;
 import symap.mapper.MapperData;
-import symap.marker.Marker;
 import symap.filter.FilterHandler;
 import symap.track.*;
 import colordialog.ColorListener;
@@ -143,15 +142,6 @@ public class DrawingPanel extends JPanel
 		for (int i = 0; i <= numMaps; i++)
 			if (trackHolders[i].getTrack() != null)
 				trackHolders[i].getTrack().clearTrackBuild();
-	}
-
-	/**  returns the first map in which mapMember is a member and returns the Map type. */
-	public int getMapType(Track mapMember) {
-		for (int i = 0; i < numMaps; i++)
-			if (mappers[i].getTrack1() == mapMember 
-					|| mappers[i].getTrack2() == mapMember)
-				return mappers[i].getMapType();
-		throw new IllegalArgumentException("Mapper with Track doesn't exist!");
 	}
 
 	/**
@@ -605,7 +595,6 @@ public class DrawingPanel extends JPanel
 		Sequence seq = null;
 		int[] mm = {Integer.MAX_VALUE,Integer.MIN_VALUE};
 		for (i = 0; i < numMaps; i++) {
-			mappers[i].getSequenceMinMax(mm);
 			if (seq != null) {
 				for (int j = 0; j < 2; j++) {
 					if (seq == mappers[i].getTrack(j)) {
@@ -738,10 +727,5 @@ public class DrawingPanel extends JPanel
 		historyControl.add(getData(),resetResetIndex);
 		resetResetIndex = false;
 	}
-	// CAS521 FPC stubs
-	public boolean setBlockTrack(int position, int project, String contigs, Color color)  {return true;}
-	public boolean setBlockTrack(int position, int project, String group, String contigs, Color color) {return true;}
-	public void setClickedMarker(Marker marker, boolean clicked) {}
-	public void setHoveredMarker(Marker marker, boolean hovered) {}
 }
 

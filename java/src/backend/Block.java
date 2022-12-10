@@ -7,25 +7,23 @@ import java.sql.SQLException;
 import util.Logger;
 
 enum BCase {A,B,C,D,Reject};
-enum BlockType {CtgPseudo, GrpPseudo, PseudoPseudo};
 
 public class Block 
 {
-	int mS1, mE1, mS2, mE2;
-	Vector<SyHit> mHits;
-	TreeSet<Integer> mHitIdxSet;
-	float mCorr1, mCorr2;
-	BCase mCase = BCase.Reject;
-	String mCtgs1 = "";
-	int mGrpIdx1;
-	int mGrpIdx2;
-	BlockType mType;
-	int mNum=0;
-	int mIdx;
-	Vector<CtgHit> mCtgHits;
-	int mPairIdx = 0;
-	Project mProj1;
-	Project mProj2;
+	public int mS1, mE1, mS2, mE2;
+	public Vector<SyHit> mHits;
+	
+	public float mCorr1, mCorr2;
+	public BCase mCase = BCase.Reject;
+	public int mGrpIdx1;
+	public int mGrpIdx2;
+	public int mIdx;
+	public int mNum=0;
+	
+	private TreeSet<Integer> mHitIdxSet;
+	private int mPairIdx = 0;
+	private Project mProj1;
+	private Project mProj2;
 	
 	public Block(int pidx, Project proj1, Project proj2)
 	{
@@ -37,7 +35,7 @@ public class Block
 	}
 	
 	public Block(int s1, int e1, int s2, int e2, int gidx1, int gidx2,
-				int pidx, Project proj1, Project proj2, int bnum, String ctgstr)
+				int pidx, Project proj1, Project proj2, int bnum)
 	{
 		mS1 = s1;
 		mS2 = s2;
@@ -51,7 +49,6 @@ public class Block
 		mProj1 = proj1;
 		mProj2 = proj2;	
 		mNum = bnum;
-		mCtgs1 = ctgstr;
 	}
 
 	public void clear()
@@ -83,7 +80,6 @@ public class Block
 	{
 		assert mGrpIdx1 == b.mGrpIdx1;
 		assert mGrpIdx2 == b.mGrpIdx2;
-		assert mType == b.mType;
 	
 		mS1 = Math.min(mS1,b.mS1);
 		mS2 = Math.min(mS2,b.mS2);
@@ -123,16 +119,12 @@ public class Block
 		vals.add(String.valueOf(mGrpIdx1));
 		vals.add(String.valueOf(mS1));
 		vals.add(String.valueOf(mE1));
-		vals.add(mCtgs1);
 
 		vals.add(String.valueOf(mProj2.getIdx()));
 		vals.add(String.valueOf(mGrpIdx2));
 		vals.add(String.valueOf(mS2));
 		vals.add(String.valueOf(mE2));
-		vals.add("");
 		
-		vals.add("0");
-		vals.add("0");
 		double avgPctID = avgPctID();
 		vals.add("Avg %ID:" + String.valueOf(avgPctID));
 		vals.add(String.valueOf(mCorr1));
@@ -152,8 +144,7 @@ public class Block
 						" AND start1=" + mS1 +
 						" AND end1=" + mE1 +
 						" AND start2=" + mS2 +
-						" AND end2=" + mE2 +
-						" AND ctgs1='" + mCtgs1 + "'";
+						" AND end2=" + mE2;
 		mIdx = pool.getIdx(st);
 	}
 }

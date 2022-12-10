@@ -5,6 +5,7 @@ package backend;
  * Methods are only used with backend.
  * 
  * CAS506 remove hasTables, getMaxID; a little rearrangement
+ * CAS522 removed FPC
  */
 import java.sql.SQLException;
 import java.sql.ResultSet;
@@ -101,15 +102,7 @@ public class UpdatePool extends DatabaseUser
 
 	private void initBulk()
 	{
-		String stmt = "insert into bes_hits (pair_idx,proj1_idx,proj2_idx,clone," +
-			"bes_type," + "grp2_idx,evalue,pctid,score,strand,start1,end1,start2," +
-			"end2,query_seq,target_seq,gene_overlap)";
-		bulkSetup("bes",stmt);
-
-		stmt = "insert into mrk_hits (pair_idx,proj1_idx,marker," +
-			"grp2_idx,evalue,pctid,score,strand,start1,end1,start2,end2,query_seq," +
-			"target_seq,gene_overlap)";
-		bulkSetup("mrk",stmt);
+		String stmt;
 
 		// AnchorsMain.uploadHit
 		stmt = "insert into pseudo_hits (pair_idx,proj1_idx,proj2_idx," +
@@ -117,38 +110,11 @@ public class UpdatePool extends DatabaseUser
 			"target_seq,gene_overlap,countpct,cvgpct,annot1_idx,annot2_idx)";
 		bulkSetup("pseudo",stmt);
 
-		stmt = "insert into bes_block_hits (hit_idx,ctghit_idx)";
-		bulkSetup("bes_block_hits",stmt);
-		
-		stmt = "insert into mrk_block_hits (hit_idx,ctghit_idx)";
-		bulkSetup("mrk_block_hits",stmt);
-		
 		stmt = "insert into pseudo_block_hits (hit_idx,block_idx)"; 
 		bulkSetup("pseudo_block_hits",stmt);								
 		
 		stmt = "insert ignore into pseudo_hits_annot (hit_idx,annot_idx,olap)"; // ignore is to prevent double insertions
 		bulkSetup("pseudo_hits_annot",stmt);									// for self alignments
-
-		stmt = "insert into clone_remarks_byctg (ctg_idx,remark_idx,count)";
-		bulkSetup("clone_remarks_byctg",stmt);
-
-		stmt = "insert into bes_seq (proj_idx,clone,type,seq,rep)";
-		bulkSetup("bes_seq",stmt);
-		
-		stmt = "insert into clones (proj_idx,name,ctg_idx,cb1,cb2,bes1,bes2,remarks)";
-		bulkSetup("clones",stmt);
-
-		stmt = "insert into markers (proj_idx,name,type,remarks)";
-		bulkSetup("markers",stmt);
-
-		stmt = "insert into mrk_clone (mrk_idx,clone_idx)";
-		bulkSetup("mrk_clone",stmt);
-
-		stmt = "insert into mrk_ctg (mrk_idx,ctg_idx,pos,nhits)";
-		bulkSetup("mrk_ctg",stmt);
-
-		stmt = "insert into mrk_seq (proj_idx,marker,seq)";
-		bulkSetup("mrk_seq",stmt);	
 
 		stmt = "insert into pseudo_annot (grp_idx,type,name,start,end,strand,text)";
 		bulkSetup("pseudo_annot",stmt);	
@@ -159,11 +125,10 @@ public class UpdatePool extends DatabaseUser
 		return getDatabaseReader().getConnection().prepareStatement(st);
 	}
 	
-	public void createProject(String name, ProjType type) throws SQLException
+	public void createProject(String name) throws SQLException
 	{
 		executeUpdate("INSERT INTO projects (name,type,loaddate, syver) " + // CAS520 add version
-				"VALUES('" + name + "','" + type.toString().toLowerCase() + " ',NOW()" + 
-							",'" + SyMAP.VERSION + "')");
+				"VALUES('" + name + "','pseudo',NOW(),'" + SyMAP.VERSION + "')");
 	}
 	
 	public void deleteProject(int idx) throws SQLException
@@ -172,13 +137,12 @@ public class UpdatePool extends DatabaseUser
 		resetIdx("idx", "projects"); // CAS520 add
 	}
 	
-	public int getProjIdx(String name, ProjType type) throws SQLException
+	public int getProjIdx(String name) throws SQLException
 	{
 		int idx = -1;
 	
 		ResultSet rs = executeQuery(
-				"SELECT idx FROM projects WHERE name='" + name + 
-				"' AND type='" + type.toString().toLowerCase() + "'");
+				"SELECT idx FROM projects WHERE name='" + name + "'");
 		
 		if (rs.next())
 			idx = rs.getInt("idx");
@@ -186,22 +150,6 @@ public class UpdatePool extends DatabaseUser
 		rs.close();
 		
 		return idx;
-	}
-	
-	public ProjType getProjType(String name) throws SQLException
-	{
-		ResultSet rs = executeQuery("SELECT type FROM projects WHERE name='" + name + "'");
-		if (rs.next()) {
-			String strType = rs.getString("type");
-			for (ProjType t : ProjType.values())
-				if (t.toString().equals(strType)) {
-					rs.close();
-					return t;
-				}
-		}
-		rs.close();
-	
-		return ProjType.unknown;
 	}
 	
 	public boolean projectExists(String name) throws SQLException
@@ -234,27 +182,4 @@ public class UpdatePool extends DatabaseUser
 		rs.close();
 		return ret;
 	}
-	/***** CAS504
-	public void updateSchemaTo40() throws Exception {
-		updateSchemaTo35();
-		if (!tableHasColumn("groups","fullname")){
-			//executeUpdate("alter table groups add fullname varchar(40) after name");
-			executeUpdate("update groups set fullname=name");
-			executeUpdate("update groups,proj_props set fullname=concat(proj_props.value,groups.name) where " +
-					" proj_props.proj_idx=groups.proj_idx and proj_props.name='grp_prefix'");
-		}
-		if (!tableHasColumn("pseudo_hits", "runsize")){
-			//executeUpdate("alter table pseudo_hits add runsize int default 0");
-		}
-
-		if (!tableHasColumn("blocks", "genef1")){
-			//executeUpdate("alter table blocks add score integer default 0 after corr");
-			//executeUpdate("alter table blocks add ngene1 integer default 0 after score");
-			//executeUpdate("alter table blocks add ngene2 integer default 0 after ngene1");
-			//executeUpdate("alter table blocks add genef1 float default 0 after ngene2");
-			//executeUpdate("alter table blocks add genef2 float default 0 after genef1");
-			Utils.updateGeneFractions(this);
-		}
-	}
-	**/
 }

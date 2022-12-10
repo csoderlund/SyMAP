@@ -12,19 +12,14 @@ public class DotPlot {
 	// an extra run for the sub chains.
 	public static final int TOT_RUNS;
 
-	// The number of runs used in Sytry including the default. 
-	// So, TOT_RUNS - 1 (the sub-chain run).
-	public static final int FINDER_RUNS;
-
 	public static final int SUB_CHAIN_RUN; // The sub-chain run (i.e., TOT_RUNS - 1)
 	
 	public static final boolean RUN_SUBCHAIN_FINDER;
 
 	static {
 		PropertiesReader props = new PropertiesReader(DotPlot.class.getResource(DOTPLOT_PROPS));
-		int n = props.getInt("numCompRuns");
+		int n = props.getInt("numCompRuns"); // =1
 		if (n < 0) n = 0;
-		FINDER_RUNS   = n + 2;
 		TOT_RUNS      = n + 3;
 		SUB_CHAIN_RUN = n + 2;
 		RUN_SUBCHAIN_FINDER = props.getBoolean("runSubChainFinder");

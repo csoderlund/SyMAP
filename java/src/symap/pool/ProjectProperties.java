@@ -7,7 +7,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import util.DatabaseProperties;
 import util.DatabaseReader;
-import symap.mapper.Mapper;
 
 public class ProjectProperties extends DatabaseUser {
 	private DatabaseProperties dp;
@@ -48,7 +47,7 @@ public class ProjectProperties extends DatabaseUser {
 			while (rs.next()) {
 				p1id = rs.getInt(2);
 				p2id = rs.getInt(3);
-				projectPairs.add( new ProjectPair(rs.getInt(1), p1id, p2id, getMapType(p1id,p2id), getP1Scale(p1id,p2id)) );
+				projectPairs.add( new ProjectPair(rs.getInt(1), p1id, p2id, getP1Scale(p1id,p2id)) );
 			}
 			closeResultSet(rs);
 			closeStatement(stat);
@@ -101,31 +100,6 @@ public class ProjectProperties extends DatabaseUser {
 		return null;
 	}
 
-	public int getMapType(int p1ID, int p2ID) {
-		if (isPseudo(p1ID) && isPseudo(p2ID)) return Mapper.PSEUDO2PSEUDO; 
-		if (isPseudo(p1ID) || isPseudo(p2ID)) return Mapper.FPC2PSEUDO; 
-		return Mapper.FPC2FPC; 
-	}
-
-	public boolean isFPCPseudo(int p1ID, int p2ID) {
-		return getType(p1ID) == "pseudo" || getType(p2ID) == "pseudo";
-	}
-
-	public boolean isPseudo(int pID) {
-		return getType(pID) == "pseudo";
-	}
-	
-	public boolean isFPC(int pID) {
-		return getType(pID) == "fpc";
-	}
-
-	public String getType(String project) {
-		for (int i = 0; i < projects.length; i++) {
-			if (projects[i].name.equals(project)) return projects[i].type;
-		}
-		return null;
-	}
-
 	public String getDisplayName(int projectID) {
 		return getProperty(projectID,"display_name");
 	}
@@ -135,24 +109,11 @@ public class ProjectProperties extends DatabaseUser {
 	}
 
 	private double getP1Scale(int p1, int p2) {
-		if (isFPC(p1) && isPseudo(p2))
-			return getIntProperty(p1,"cbsize",1);
-		else if (isFPC(p1) && isFPC(p2))		
-			return getIntProperty(p1,"cbsize",1) / (double)getIntProperty(p2,"cbsize",1);
-		
 		return 1;
 	}
 
 	public ProjectPair[] getProjectPairs() {
 		return (ProjectPair[])projectPairs.toArray(new ProjectPair[projectPairs.size()]);
-	}
-
-	public NamedProjectPair[] getNamedProjectPairs() {
-		NamedProjectPair npp[] = new NamedProjectPair[projectPairs.size()];
-		int i = 0;
-		for (ProjectPair p : projectPairs)
-			npp[i++] = new NamedProjectPair(p,getName(p.getP1()),getName(p.getP2()));
-		return npp;
 	}
 
 	public ProjectPair getProjectPair(String p1, String p2) {

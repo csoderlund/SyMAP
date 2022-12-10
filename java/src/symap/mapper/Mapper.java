@@ -19,7 +19,6 @@ import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.drawingpanel.DrawingPanel;
 import symap.track.*;
-import symap.sequence.Sequence;
 import symap.frame.HelpBar; 		
 import symap.frame.HelpListener; 	
 import symapQuery.TableDataPanel;
@@ -36,23 +35,11 @@ public class Mapper extends JComponent
 	implements  HitFilter.HitFilterListener, SyMAPConstants, // CAS521 remove Filtered Interface
 		MouseMotionListener, MouseListener, MouseWheelListener, HelpListener 		
 {
-	// Constants used for signifying the type of map.
-	public static final int FPC2PSEUDO 	  = 1;
-	public static final int FPC2FPC 	  = 2;
-	public static final int PSEUDO2PSEUDO = 3; 
+	public static final int PSEUDO2PSEUDO = 1; 
 	
 	// drawing methods directly access these, and ColorDialog can change them
-	public static Color cloneLineColor;
-	public static Color cloneLineHighlightColor;
-	public static Color besLineColor;
-	public static Color besLineHighlightColor;
-	public static Color markerJoinDotColor;
-	public static Color markerLineColor;
-	public static Color sharedMarkerLineColor;
-	public static Color markerLineHighlightColor;
 	public static Color negOrientLineColor;
 	public static Color posOrientLineColor;
-	public static double markerJoinDotRadius;
 	public static Color pseudoLineColorPP; 
 	public static Color pseudoLineColorPN;
 	public static Color pseudoLineColorNP;
@@ -64,15 +51,6 @@ public class Mapper extends JComponent
 	public static int 	hitRibbonWidth; 			
 	static {
 		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/mapper.properties"));
-		cloneLineColor = 			props.getColor("cloneLineColor");
-		cloneLineHighlightColor = 	props.getColor("cloneLineHighlightColor");
-		besLineColor = 				props.getColor("besLineColor");
-		besLineHighlightColor = 	props.getColor("besLineHighlightColor");
-		markerJoinDotColor = 		props.getColor("markerJoinDotColor");
-		markerJoinDotRadius = 		props.getDouble("markerJoinDotRadius");
-		markerLineColor = 			props.getColor("markerLineColor");
-		sharedMarkerLineColor = 	props.getColor("sharedMarkerLineColor");
-		markerLineHighlightColor = 	props.getColor("markerLineHighlightColor");
 		posOrientLineColor = 		props.getColor("posOrientLineColor");
 		negOrientLineColor = 		props.getColor("negOrientLineColor");
 		pseudoLineColorPP = 		props.getColor("pseudoLineColorPP"); 
@@ -130,7 +108,6 @@ public class Mapper extends JComponent
 		
 		if (hb != null) hb.addHelpListener(this,this); 
 	}
-	
 	
 	public void clearData() {
 		hitList = new ClearList(10, 50);
@@ -215,15 +192,6 @@ public class Mapper extends JComponent
 		fh.getFilterButton().setEnabled(visible);
 		super.setVisible(visible);
 	}
-	/******************************************************************/
-	public void getSequenceMinMax(int[] minMax) {
-		if (getMapType() == FPC2PSEUDO) {
-			synchronized (hitList) {
-				for (AbstractHitData h : hitList)
-					((FPCPseudoHits) h).getSequenceMinMax(minMax);
-			}
-		}
-	}
 
 	public MapperData getMapperData() {return new MapperData(this);}
 	
@@ -239,12 +207,6 @@ public class Mapper extends JComponent
 	
 	public Track getTrack(int trackNum) {return trackHolders[trackNum].getTrack();}
 
-	public int getMapType() {
-		Track t1 = trackHolders[0].getTrack(), t2 = trackHolders[1].getTrack();
-		if (t1 instanceof Sequence && t2 instanceof Sequence) return PSEUDO2PSEUDO; 
-		if (t1 == null || t2 == null || t1 instanceof Sequence || t2 instanceof Sequence) return FPC2PSEUDO;
-		return FPC2FPC;
-	}
 	
 	protected int getTrackPosition(Track t) {
 		if (trackHolders[0].getTrack() == t)
@@ -253,7 +215,6 @@ public class Mapper extends JComponent
 			return RIGHT_ORIENT;
 	}
 	
-	/*** @see FPCPseudoHits#getHitsInRange(List,int,int) */
 	public List<AbstractHitData> getHitsInRange(Track src, int start, int end) {
 		List<AbstractHitData> retHits = new LinkedList<AbstractHitData>();
 		

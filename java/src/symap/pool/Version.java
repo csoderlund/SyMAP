@@ -52,6 +52,10 @@ public class Version {
 				updateVer3();
 				idb=4;
 			}
+			if (idb==4) {
+				updateVer4();
+				idb=5;
+			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
 	}
@@ -93,6 +97,45 @@ public class Version {
 			
 			System.err.println("For pre-v519 databases, reload annotation ");
 			System.err.println("For pre-v520 databases, recompute synteny ");
+		}
+		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
+	}
+	// v5.3.0 (code has v522, but major change)
+	private void updateVer4() {
+		try {
+			tableDrop("mrk_clone");
+			tableDrop("mrk_ctg"); 
+			tableDrop("clone_remarks_byctg"); 
+			tableDrop("bes_block_hits");
+			tableDrop("mrk_block_hits"); 
+			tableDrop("fp_block_hits");
+			tableDrop("shared_mrk_block_hits");
+			tableDrop("shared_mrk_filter");
+			
+			tableDrop("clones"); 
+			tableDrop("markers");  
+			tableDrop("bes_seq"); 
+			tableDrop("mrk_seq");
+			tableDrop("clone_remarks"); 
+			tableDrop("bes_hits"); 
+			tableDrop("mrk_hits");
+			tableDrop("fp_hits"); 
+			tableDrop("ctghits");
+			tableDrop("contigs"); 
+			
+			tableDrop("mrk_filter"); 
+			tableDrop("bes_filter");
+			tableDrop("fp_filter"); 
+			tableDrop("pseudo_filter"); // never used
+			
+			tableCheckDropColumn("blocks", "level");
+			tableCheckDropColumn("blocks", "contained");
+			tableCheckDropColumn("blocks", "ctgs1");
+			tableCheckDropColumn("blocks", "ctgs2");
+				
+			updateProps();
+			System.err.println("FPC tables removed from Schema. No user action necessary.\n"
+					+ "   Older verion SyMAP will not work with this database.");
 		}
 		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
 	}
@@ -142,6 +185,7 @@ public class Version {
 		catch (Exception e) {ErrorReport.print(e, "Replace props: " + sql);}
 	}
 	// MySQL v8 groups is a new special keywords, so the ` is necessary for that particular rename.
+
 	private boolean tableRename(String oldTable, String newTable) {
 		String sql = "RENAME TABLE `" + oldTable + "` TO " + newTable;
 		
@@ -152,7 +196,6 @@ public class Version {
 		}
 		catch (Exception e) {ErrorReport.print(e, sql); return false;}
 	}
-	
 	private boolean tableCheckAddColumn(String table, String col, String type, String aft) throws Exception
 	{
 		String cmd = "alter table " + table + " add " + col + " " + type ;
@@ -167,7 +210,7 @@ public class Version {
 		catch(Exception e) {ErrorReport.print(e, "MySQL error: " + cmd);}
 		return false;
 	}
-	/* Below are not - yet **/
+	
 	private void tableCheckDropColumn(String table, String col) throws Exception
 	{
 		if (tableColumnExists(table,col)) {
@@ -175,7 +218,17 @@ public class Version {
 			pool.executeUpdate(cmd);
 		}
 	}
-	
+	private boolean tableDrop(String table) {
+		String sql = "Drop table " + table;
+		
+		try {
+			if (tableExists(table))
+				pool.executeUpdate(sql);
+			return true;
+		}
+		catch (Exception e) {ErrorReport.print(e, sql); return false;}
+	}
+	/* Below are not - yet **/
 	private void tableCheckRenameColumn(String table, String oldCol, String newCol, String type) throws Exception
 	{
 		if (tableColumnExists(table,oldCol)) {

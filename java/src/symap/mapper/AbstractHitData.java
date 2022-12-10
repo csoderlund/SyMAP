@@ -59,10 +59,7 @@ public abstract class AbstractHitData {
 	
 	public int getContent1() { return group1; }
 	public int getContent2() { return group2; }
-	public int getContig() { return group1; }
 	public int getGroup() { return group2; }
-	public int getContig1() { return group1; }
-	public int getContig2() { return group2; }
 	public int getGroup1() { return group1; }
 	public int getGroup2() { return group2; }
 	

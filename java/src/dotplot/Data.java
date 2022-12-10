@@ -19,14 +19,13 @@ import java.sql.SQLException;
 
 import symap.SyMAP;
 import symap.SyMAPConstants;
+import symap.mapper.HitFilter;
 import symap.pool.ProjectProperties;
 
 import symap.sequence.Sequence;
 import util.DatabaseReader;
+import util.ErrorReport;
 import util.Utilities;
-import arranger.DPArrangerResults;
-import arranger.SyArranger;
-import arranger.SubBlock;
 
 public class Data extends Observable implements DotPlotConstants {
 	public static final double DEFAULT_ZOOM = 0.99;
@@ -34,7 +33,6 @@ public class Data extends Observable implements DotPlotConstants {
 	private SyMAP symap;
 	private ProjectProperties projProps;
 	private FilterData fd;
-	private ScoreBounds sb;
 	private Project projects[];
 	private Tile[] tiles;
 	private double zoomFactor;
@@ -50,7 +48,6 @@ public class Data extends Observable implements DotPlotConstants {
 	private double scaleFactor;
 	private int dotSize = 1;
 	private Loader loader;
-	private boolean onlyShowBlocksWhenHighlighted = false;
 	private Vector<Plot> plots = new Vector<Plot>();
 	
 	public Data(DotPlotDBUser db) {
@@ -59,7 +56,6 @@ public class Data extends Observable implements DotPlotConstants {
 
 	public Data(Loader l) {
 		fd            = new FilterData();
-		sb            = new ScoreBounds();
 		projects      = null; 
 		tiles         = new Tile[0];
 		zoomFactor    = DEFAULT_ZOOM;
@@ -95,45 +91,22 @@ public class Data extends Observable implements DotPlotConstants {
 							SyMAPConstants.DB_CONNECTION_DOTPLOT_2D,
 							getDotPlotDBUser().getDatabaseReader()), null);
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.err.println("Unable to create SyMAP instance");
-			throw new RuntimeException("Unable to create SyMAP instance");
+			ErrorReport.print(e, "Unable to create SyMAP instance");
 		}
-
 		projProps = symap.getDrawingPanel().getPools().getProjectProperties();
 	}
-
+	// ControlPanel and Plot
 	public void addObserver(Observer o) {
 		if (o instanceof Plot) plots.add((Plot)o);
 		super.addObserver(o);
 	}
 
-	public void deleteObserver(Observer o) {
-		if (o instanceof Plot) plots.remove(o);
-		super.deleteObserver(o);
-	}
-
-	public void deleteObservers() {
-		plots.clear();
-		super.deleteObservers();
-	}
-
-	public void setOnlyShowBlocksWhenHighlighted(boolean val) {
-		onlyShowBlocksWhenHighlighted = val;
-	}
-
-	public boolean isOnlyShowBlocksWhenHighlighted() {
-		return onlyShowBlocksWhenHighlighted;
-	}
-
-	public DotPlotDBUser getDotPlotDBUser() {
+	// Plot and Data
+	
+	private DotPlotDBUser getDotPlotDBUser() {
 		return loader.getDB();
 	}
-
-	public Loader getLoader() {
-		return loader;
-	}
-
+	// DotPlotFrame
 	public void kill() {
 		clear();
 		tiles = new Tile[0]; 
@@ -149,7 +122,7 @@ public class Data extends Observable implements DotPlotConstants {
 		getDotPlotDBUser().getDatabaseReader().close();
 	}
 
-	public void clear() {
+	private void clear() {
 		loader.stop();
 
 		Filter.hideFilter(this);
@@ -168,7 +141,7 @@ public class Data extends Observable implements DotPlotConstants {
 		update();
 		canPaint = false;
 	}
-
+	
 	public SyMAP getSyMAP() { return symap; }
 	public boolean isCentering() { return isCentering; }
 	public boolean canPaint() { return canPaint; }
@@ -177,7 +150,7 @@ public class Data extends Observable implements DotPlotConstants {
 		try {
 			clear();
 			initProjects(projIDs, xGroupIDs, yGroupIDs);
-			loader.execute(projProps,projects,tiles,sb,true);
+			loader.execute(projProps,projects,tiles,fd,true);
 			
 			if (getNumVisibleGroups() == 2)
 				selectTile(100, 100); // kludge
@@ -195,10 +168,6 @@ public class Data extends Observable implements DotPlotConstants {
 			Project p = Project.getProject(projects, 1, projIDs[i]);
 			if (p == null)
 				p = new Project(projIDs[i], projProps);
-			
-			// kludge for FPC (x-axis) to Pseudo from 3D frame
-			if (i == 1 && newProjects.get(0).isFPC() && p.isFPC())
-				continue;
 			
 			newProjects.add( p );
 		}
@@ -227,113 +196,78 @@ public class Data extends Observable implements DotPlotConstants {
 		
 		initialize(newProjects, null, null);
 	}
-
+	// Select for 2D
 	private void zoomBlock() {
+		if (selectedBlock==null) return;
+		
 		symap.getDrawingPanel().setMaps(1);
 		symap.getHistory().clear(); 
-		if (selectedBlock != null) {
-			if (selectedBlock instanceof InnerBlock) {
-				InnerBlock ib = (InnerBlock)selectedBlock;
-				Project pX = projects[X];
-				Project pY = getCurrentProj();
-				Group gX = ib.getGroup(X);
-				Group gY = ib.getGroup(Y);
+		
+		if (selectedBlock instanceof InnerBlock) {
+			InnerBlock ib = (InnerBlock)selectedBlock;
+			Project pX = projects[X];
+			Project pY = getCurrentProj();
+			Group gX = ib.getGroup(X);
+			Group gY = ib.getGroup(Y);
 
-				FilterData fd2 = new FilterData(fd);
-				fd2.setShowHits(FilterData.BLOCK_HITS); 
-				symap.getDrawingPanel().setHitFilter(1,fd2);
-				Sequence.setDefaultShowAnnotation(false); 
+			HitFilter hd = new HitFilter (); // CAS530 use 2D filter
+			hd.setForDP(true, false);
+			symap.getDrawingPanel().setHitFilter(1,hd);
+			
+			Sequence.setDefaultShowAnnotation(false); 
 
-				if (pX.isPseudo() && pY.isPseudo()) { // PSEUDO to PSEUDO
-					symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),gY.getID(),Color.CYAN);
-					
-					symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),gX.getID(),Color.GREEN);
-					
-					symap.getDrawingPanel().setTrackEnds(1,ib.getStart(Y),ib.getEnd(Y));
-					
-					symap.getDrawingPanel().setTrackEnds(2,ib.getStart(X),ib.getEnd(X));
-				}
-				else if (pX.isPseudo() && pY.isFPC()) { // FPC to PSEUDO
-					symap.getDrawingPanel().setBlockTrack(1,pY.getID(),ib.getName(),Color.CYAN);
-					symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),gX.getID(),Color.GREEN);
-					symap.getDrawingPanel().setTrackEnds(2,ib.getStart(X),ib.getEnd(X));
-				}
-				else if (pX.isFPC() && pY.isPseudo()) { // PSEUDO to FPC 
-					symap.getDrawingPanel().setBlockTrack(1,pX.getID(),swapGroupsInBlockName(ib.getName()),Color.CYAN);
-					symap.getDrawingPanel().setSequenceTrack(2,pY.getID(),gY.getID(),Color.GREEN);
-					symap.getDrawingPanel().setTrackEnds(2,ib.getStart(Y),ib.getEnd(Y));
-				}
-				else {// FPC to FPC
-					symap.getDrawingPanel().setBlockTrack(1,pY.getID(),ib.getName(),Color.CYAN);
-					symap.getDrawingPanel().setBlockTrack(2,pX.getID(),Utilities.getIntsString(ib.getContigNumbers(X)),Color.GREEN);
-				}
-				
-				symap.getFrame().showX();
-			}
-			else {
-				Rectangle2D bounds = selectedBlock.getBounds2D();
-				zoomArea(bounds.getMinX(),bounds.getMinY(),bounds.getMaxX(),bounds.getMaxY());
-			}
+			symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),gY.getID(),Color.CYAN);
+			
+			symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),gX.getID(),Color.GREEN);
+			
+			symap.getDrawingPanel().setTrackEnds(1,ib.getStart(Y),ib.getEnd(Y));
+			
+			symap.getDrawingPanel().setTrackEnds(2,ib.getStart(X),ib.getEnd(X));
+			
+			symap.getFrame().showX();
+		}
+		else {
+			Rectangle2D bounds = selectedBlock.getBounds2D();
+			zoomArea(bounds.getMinX(),bounds.getMinY(),bounds.getMaxX(),bounds.getMaxY());
 		}
 	}
 	
-	private String swapGroupsInBlockName(String name) {
-		String[] fields = name.split("\\.");
-		return fields[1] + "." + fields[0] + "." + fields[2];
-	}
-
 	public void zoomArea() {
 		zoomArea(x1,y1,x2,y2);
 	}
-
+	
 	private void zoomArea(double x1, double y1, double x2, double y2) {
-		symap.getDrawingPanel().setMaps(1);
-		symap.getDrawingPanel().setHitFilter(1,fd);
-		symap.getHistory().clear(); 
-
 		Project pX = projects[X];
 		Project pY = getCurrentProj();
 		String track[] = {"",""};
-		int start[] = {(int)Math.floor(x1),(int)Math.floor(y1)};
-		int end[]   = {(int)Math.ceil(x2),(int)Math.ceil(y2)};
 		for (int n = 0;  n < 2;  n++) {
-			if (projects[n].isFPC())
-				track[n] = Utilities.getIntsString(Contig.getContigNumbers(currentGrp[n].getContigs(start[n],end[n])));
-			else // isPseudo()
-				track[n] = currentGrp[n].toString();
+			track[n] = currentGrp[n].toString();
+		}
+		if (track[X].length() == 0 || track[Y].length() == 0) {
+			System.out.println("No Sequences found to display! x=" + track[X] + " y=" + track[Y]);
+			return;
 		}
 		
-		if (track[X].length() == 0 || track[Y].length() == 0)
-			System.out.println("No Contigs Found! x=" + track[X] + " y=" + track[Y]);
-		else {
-			if (pX.isPseudo() && pY.isPseudo()) { // PSEUDO to PSEUDO
-				symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),Integer.parseInt(track[Y]),Color.CYAN);
-				symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),Integer.parseInt(track[X]),Color.GREEN);
-				symap.getDrawingPanel().setTrackEnds(1,y1,y2);
-				symap.getDrawingPanel().setTrackEnds(2,x1,x2);
-			}
-			else if (pX.isPseudo() && pY.isFPC()) { // FPC to PSEUDO
-				symap.getDrawingPanel().setBlockTrack(1,pY.getID(),track[Y],Color.CYAN);
-				symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),Integer.parseInt(track[X]),Color.GREEN);
-				symap.getDrawingPanel().setTrackEnds(2,x1,x2);
-			}
-			else if (pX.isFPC() && pY.isPseudo()) { // PSEUDO to FPC 
-				symap.getDrawingPanel().setBlockTrack(1,pX.getID(),track[X],Color.CYAN);
-				symap.getDrawingPanel().setSequenceTrack(2,pY.getID(),Integer.parseInt(track[Y]),Color.GREEN);
-				symap.getDrawingPanel().setTrackEnds(2,y1,y2);
-			}
-			else { // FPC to FPC
-				symap.getDrawingPanel().setBlockTrack(1,pY.getID(),track[Y],Color.CYAN);
-				symap.getDrawingPanel().setBlockTrack(2,pX.getID(),track[X],Color.GREEN);
-			}
-			symap.getFrame().showX();
-		}
+		symap.getDrawingPanel().setMaps(1);
+		symap.getHistory().clear(); 
+		
+		HitFilter hd = new HitFilter (); // CAS530 use 2D filter
+		hd.setForDP(false, true);
+		symap.getDrawingPanel().setHitFilter(1,hd);
+		Sequence.setDefaultShowAnnotation(false); 
+		
+		symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),Integer.parseInt(track[Y]),Color.CYAN);
+		symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),Integer.parseInt(track[X]),Color.GREEN);
+		symap.getDrawingPanel().setTrackEnds(1,y1,y2);
+		symap.getDrawingPanel().setTrackEnds(2,x1,x2);
+		
+		symap.getFrame().showX();
 	}
 
 	public void resetAll() {
 		zoomFactor = DEFAULT_ZOOM;
 		selectedBlock = null;
-		fd.setDefaults(sb);
+		fd.setDefaults();
 		update();
 	}
 
@@ -404,22 +338,16 @@ public class Data extends Observable implements DotPlotConstants {
 	public void selectBlock(double xUnits, double yUnits) {
 		Shape shapes[] = new Shape[DotPlot.TOT_RUNS];
 		Shape s = null;
-		if (fd.isShowBlocks() && !hasSelectedArea && isZoomed() 
-				&& (!isOnlyShowBlocksWhenHighlighted() || fd.isHighlightAnyBlockHits())) 
+		if (fd.isShowBlocks() && !hasSelectedArea && isZoomed()) 
 		{
 			for (int i = 0; i < shapes.length; i++) {
-				shapes[i] = !isOnlyShowBlocksWhenHighlighted() || fd.isHighlightBlockHits(i) ? 
-						Tile.getABlock(tiles,currentGrp[X],currentGrp[Y],i,xUnits,yUnits) : null;
+				shapes[i] = Tile.getABlock(tiles,currentGrp[X],currentGrp[Y],i,xUnits,yUnits);
 			}
 			
 			s = Utilities.getSmallestBoundingArea(shapes);
 			if (s != null) {
 				if (s == selectedBlock)
 					zoomBlock();
-				else if (s instanceof ABlock) {
-					if (DotPlot.RUN_SUBCHAIN_FINDER && !(s instanceof SubBlock) && fd.isHighlightSubChains())
-						new SyArranger().arrange(new DPArrangerResults(Tile.getTile(tiles,currentGrp[X],currentGrp[Y]),(ABlock)s));
-				}
 			}
 		}
 		selectedBlock = s;
@@ -483,13 +411,6 @@ public class Data extends Observable implements DotPlotConstants {
 		}
 	}
 
-	public void clearSelectedBlock() {
-		if (selectedBlock != null) {
-			selectedBlock = null;
-			update();
-		}
-	}
-
 	public void selectArea(Dimension size, double x1, double y1, double x2, double y2) {
 		double xmax = currentGrp[X].getSize();
 		double ymax = currentGrp[Y].getSize();
@@ -517,12 +438,9 @@ public class Data extends Observable implements DotPlotConstants {
 	}
 
 	public FilterData getFilterData() { return fd; }
-	public ScoreBounds getScoreBounds() { return sb; }
-	// CAS42 12/26/17 - does not work on self dot-plots in applet, because projects[1] is not defined
 	public Project getProject(int axis) { return projects[axis]; }
 	public int getNumProjects() { return projects.length; } 
 	public Project[] getProjects() { return projects; }
-	
 	
 	public Project getProjectByID(int id) {
 		for (Project p : projects)
@@ -608,7 +526,7 @@ public class Data extends Observable implements DotPlotConstants {
 	public long getVisibleGroupsSizeY(Group[] xGroups) {
 		long size = 0;
 		for (Group g : getVisibleGroupsY(xGroups))
-		size += g.getEffectiveSize();
+			size += g.getEffectiveSize();
 		return size;
 	}
 

@@ -21,6 +21,8 @@ import util.Utilities;
  * The code groups them into a single record.
  */
 public class DBdata {
+	private static boolean debug = symap.SyMAP.DEBUG;
+	
 	private static String [] spNameList; 				// species Names
 	private static int [] 	spIdxList; 					// species spIdx in same order
 	private static HashMap <Integer, String[]> annoKeys; // spIdx, keys in order
@@ -237,6 +239,10 @@ public class DBdata {
 				
 				grpStart.put(gidx, s);
 				grpEnd.put(gidx, e);
+			}
+			if (debug) {
+				for (int idx : grpStart.keySet())
+					System.out.format("%3d %,10d %,10d\n", idx, grpStart.get(idx), grpEnd.get(idx));
 			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "make location list");}
@@ -493,21 +499,21 @@ public class DBdata {
 	private boolean passFilters() {
 		try {
 			if (isSingle) {
-				if (grpStart.size()==0) return true;
+				if (grpStart.size()==0) return true; // no locs set
 				
 				boolean found=false;
 				for (int gidx : grpStart.keySet()) {
-					int s = grpStart.get(gidx); 
-					int e = grpEnd.get(gidx);
+					int sf = grpStart.get(gidx);   	// 0 if not set or set to 0
+					int ef = grpEnd.get(gidx); 	
 					
 					if (chrIdx[0]==gidx) {
 						found = true;	  // its a selected
 						
-						if (s > 0 && gstart[0] < s) return false; // but incorrect 
-						if (e > 0 && gend[0]   > e) return false;
+						if (sf > 0 && gstart[0] < sf) return false; 
+						if (ef > 0 && gend[0]   > ef) return false;
 					}
 				}
-				return found;
+				return found; // should always be true since some chr selected
 			}
 			
 			if (qPanel.isOneAnno()) {
@@ -523,15 +529,15 @@ public class DBdata {
 			// if one or more chromosome selected, one of the chr pairs has to be a selected one
 			boolean found=false;
 			for (int gidx : grpStart.keySet()) {
-				int s = grpStart.get(gidx); 
-				int e = grpEnd.get(gidx);
+				int sf = grpStart.get(gidx); 
+				int ef = grpEnd.get(gidx);
 				
 				for (int x=0; x<2; x++) { // using hit coords
 					if (chrIdx[x]==gidx) {
 						found = true;	  // its a selected
 						
-						if (s > 0 && (hstart[x] < s && gstart[x]<s)) return false; // CAS519 show if either hit or gene is in boundary 
-						if (e > 0 && (hend[x] > e   && gend[x]<e)) return false;
+						if (sf > 0 && hstart[x] < sf)return false;  
+						if (ef > 0 && hend[x] > ef)  return false; // CAS522 was a <e since v519
 					}
 				}
 			}

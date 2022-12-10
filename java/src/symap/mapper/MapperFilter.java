@@ -76,8 +76,6 @@ public class MapperFilter extends Filter {
 	private HitFilter hitfilter;    // current settings
 	private HitFilter lastHitFilter; // last settings
 
-	private int mapType = -1;
-
 	private volatile boolean nochange = false;
 
 	public MapperFilter(Frame owner, DrawingPanel dp, AbstractButton helpButton, Mapper map) {
@@ -168,59 +166,56 @@ public class MapperFilter extends Filter {
 	public void showX() {
 		nochange = true;
 		
-		if (mapType != mapper.getMapType()) {
-			mapType = mapper.getMapType();
-			
-			Container contentPane = getContentPane();
-			GridBagLayout gridbag = new GridBagLayout();
-			GridBagConstraints c1 = new GridBagConstraints();
+		Container contentPane = getContentPane();
+		GridBagLayout gridbag = new GridBagLayout();
+		GridBagConstraints c1 = new GridBagConstraints();
 
-			contentPane.removeAll();
+		contentPane.removeAll();
 
-			contentPane.setLayout(gridbag);
-			c1.fill = GridBagConstraints.HORIZONTAL;
-			c1.gridheight = 1;
-			c1.ipadx = 4;
-			c1.ipady = 7;
+		contentPane.setLayout(gridbag);
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.gridheight = 1;
+		c1.ipadx = 4;
+		c1.ipady = 7;
 
-			// highlight
-			addToGrid(contentPane, gridbag, c1, new JLabel("  Highlight"), GridBagConstraints.REMAINDER);
-			addToGrid(contentPane, gridbag, c1, blockRadio, 1);
-			addToGrid(contentPane, gridbag, c1, setRadio, GridBagConstraints.REMAINDER); 
-			
-			addToGrid(contentPane, gridbag, c1, gene2Radio, 1);
-			addToGrid(contentPane, gridbag, c1, gene1Radio, GridBagConstraints.REMAINDER); 
-			
-			addToGrid(contentPane, gridbag, c1, gene0Radio, 1);
-			addToGrid(contentPane, gridbag, c1, noneRadio, GridBagConstraints.REMAINDER); 
-			
-			addToGrid(contentPane, gridbag, c1, new JSeparator(), GridBagConstraints.REMAINDER);
-			
-			// show
-			addToGrid(contentPane, gridbag, c1, new JLabel("  Show"), GridBagConstraints.REMAINDER);
-			addToGrid(contentPane, gridbag, c1, blockCheck, 1);
-			addToGrid(contentPane, gridbag, c1, setCheck, GridBagConstraints.REMAINDER);
-			
-			addToGrid(contentPane, gridbag, c1, gene2Check, 1); 
-			addToGrid(contentPane, gridbag, c1, gene1Check, GridBagConstraints.REMAINDER); 
-			
-			addToGrid(contentPane, gridbag, c1, gene0Check, 1);
-			addToGrid(contentPane, gridbag, c1, allCheck, GridBagConstraints.REMAINDER);
-			addToGrid(contentPane, gridbag, c1, new JSeparator(), GridBagConstraints.REMAINDER);
-			
-			// %id
-			setSliderMaxMin();
-			addToGrid(contentPane, gridbag, c1, new JLabel("  Identity"), 1);
-			addToGrid(contentPane, gridbag, c1, pctidText, 1);
-			addToGrid(contentPane, gridbag, c1, pctidSlider, GridBagConstraints.REMAINDER);
-			
-			// buttons
-			addToGrid(contentPane, gridbag, c1, buttonPanel, GridBagConstraints.REMAINDER);
+		// highlight
+		addToGrid(contentPane, gridbag, c1, new JLabel("  Highlight"), GridBagConstraints.REMAINDER);
+		addToGrid(contentPane, gridbag, c1, blockRadio, 1);
+		addToGrid(contentPane, gridbag, c1, setRadio, GridBagConstraints.REMAINDER); 
+		
+		addToGrid(contentPane, gridbag, c1, gene2Radio, 1);
+		addToGrid(contentPane, gridbag, c1, gene1Radio, GridBagConstraints.REMAINDER); 
+		
+		addToGrid(contentPane, gridbag, c1, gene0Radio, 1);
+		addToGrid(contentPane, gridbag, c1, noneRadio, GridBagConstraints.REMAINDER); 
+		
+		addToGrid(contentPane, gridbag, c1, new JSeparator(), GridBagConstraints.REMAINDER);
+		
+		// show
+		addToGrid(contentPane, gridbag, c1, new JLabel("  Show"), GridBagConstraints.REMAINDER);
+		addToGrid(contentPane, gridbag, c1, blockCheck, 1);
+		addToGrid(contentPane, gridbag, c1, setCheck, GridBagConstraints.REMAINDER);
+		
+		addToGrid(contentPane, gridbag, c1, gene2Check, 1); 
+		addToGrid(contentPane, gridbag, c1, gene1Check, GridBagConstraints.REMAINDER); 
+		
+		addToGrid(contentPane, gridbag, c1, gene0Check, 1);
+		addToGrid(contentPane, gridbag, c1, allCheck, GridBagConstraints.REMAINDER);
+		addToGrid(contentPane, gridbag, c1, new JSeparator(), GridBagConstraints.REMAINDER);
+		
+		// %id
+		setSliderMaxMin();
+		addToGrid(contentPane, gridbag, c1, new JLabel("  Identity"), 1);
+		addToGrid(contentPane, gridbag, c1, pctidText, 1);
+		addToGrid(contentPane, gridbag, c1, pctidSlider, GridBagConstraints.REMAINDER);
+		
+		// buttons
+		addToGrid(contentPane, gridbag, c1, buttonPanel, GridBagConstraints.REMAINDER);
 
-			pack();
-			setResizable(false);
-			setLocationRelativeTo(null); // CAS520
-		}
+		pack();
+		setResizable(false);
+		setLocationRelativeTo(null); // CAS520
+		
 		lastHitFilter = hitfilter.copy();
 		setInput(lastHitFilter);
 		nochange = false;

@@ -92,7 +92,7 @@ public class Utils
 		
 		return false;
 	}
-	public static int checkDoneMaybe(String dir, boolean isFPC) {
+	public static int checkDoneMaybe(String dir) {
 		File d = new File(dir);
 		if (!d.exists() || d.isFile()) return 0;
 		
@@ -106,14 +106,7 @@ public class Utils
 			if (name.endsWith(Constants.doneSuffix)) continue;
 			if (name.endsWith(".log")) continue; // pre v5
 			
-			if (isFPC) {
-				if (name.endsWith(Constants.blatSuffix)) 
-					numFiles++;
-			}
-			else {
-				if (name.endsWith(Constants.mumSuffix)) 
-					numFiles++;	
-			}			
+			if (name.endsWith(Constants.mumSuffix)) numFiles++;			
 		}
 		return numFiles;
 	}

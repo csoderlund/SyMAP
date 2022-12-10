@@ -49,17 +49,7 @@ public class Tile implements DotPlotConstants {
 		return group[axis].getProjID();
 	}
 
-	public AltBlocksRun getAltBlocksRun(int altNum) {
-		return altRuns[altNum];
-	}
-
-	public void setAltBlocksRun(int altNum, AltBlocksRun altRun) {
-		altRuns[altNum] = altRun;
-		if (altRun == null || altRun.getABlocks().length == 0) {
-			Hit[] hits = getHits();
-			for (int i = 0; i < hits.length; i++) hits[i].setAltBlock(altNum,false);
-		}
-	}
+	
 
 	public ABlock[] getABlocks(int altNum) {
 		if (altNum == 0) {
@@ -84,9 +74,9 @@ public class Tile implements DotPlotConstants {
 		}
 	}
 
-	public void addIBlock(int number, int sX, int eX, int[] ctgX, int sY, int eY, int[] ctgY) {		
+	public void addIBlock(int number, int sX, int eX, int sY, int eY) {		
 		synchronized (iblocks) {
-			iblocks.add(new IBlock(number,sX,eX,group[X].getContigs(ctgX),sY,eY,group[Y].getContigs(ctgY)));
+			iblocks.add(new IBlock(number,sX,eX,sY,eY));
 			Collections.sort(iblocks);
 		}
 	}
@@ -147,9 +137,9 @@ public class Tile implements DotPlotConstants {
 		}	
 	}
 
-	public boolean setHits(Hit[] hits, int loadLevel) { return loadObject.setLoaded(hits,loadLevel); }
-	public Hit[] getHits()     { return loadObject.getHits(); }
-	public Hit[] getHitsCopy() { return loadObject.getHitsCopy(); }
+	public boolean setHits(DPHit[] hits, int loadLevel) { return loadObject.setLoaded(hits,loadLevel); }
+	public DPHit[] getHits()     { return loadObject.getHits(); }
+	public DPHit[] getHitsCopy() { return loadObject.getHitsCopy(); }
 	public int getNumHits()    { return loadObject.getNumHits(); }
 	public Group getGroup(int axis) { return group[axis]; }
 	public boolean isSomeLoaded()   { return loadObject.isLoaded(SOME_LOADED); }
@@ -191,31 +181,24 @@ public class Tile implements DotPlotConstants {
 	}
 
 	private class IBlock extends ABlock implements Comparable<ABlock>, InnerBlock {
-		private Contig[][] contigs = new Contig[2][];
-
-		private IBlock(int num, int sX, int eX, Contig[] ctgX, int sY, int eY, Contig[] ctgY) {
+		private IBlock(int num, int sX, int eX, int sY, int eY) {
 			super(Tile.this,num,sX,eX,sY,eY);
-			this.contigs[X] = ctgX;
-			this.contigs[Y] = ctgY;	    
 		}
 
 		public int[] getContigNumbers(int axis) {
-			int[] ret = new int[contigs[axis] == null ? 0 : contigs[axis].length];
-			for (int j = 0; j < ret.length; ++j)
-				ret[j] = contigs[axis][j].getNumber();
-			return ret;
+			return null;
 		}
 
-		public Hit[] getHits(boolean includeRepetitive, boolean onlyBlock) {
-			Hit[] h = getParent().getHits();
-			List<Hit> hits = new ArrayList<Hit>(h.length / getNumIBlocks());
+		public DPHit[] getHits(boolean includeRepetitive, boolean onlyBlock) {
+			DPHit[] h = getParent().getHits();
+			List<DPHit> hits = new ArrayList<DPHit>(h.length / getNumIBlocks());
 			for (int i = 0; i < h.length; i++) {
-				if (contains(h[i]) && (!onlyBlock || h[i].isBlock()) && (includeRepetitive || !h[i].isRepetitive())) {
+				if (contains(h[i]) && (!onlyBlock || h[i].isBlock())) {
 					hits.add(h[i]);
 				}
 			}
 
-			return (Hit[])hits.toArray(new Hit[0]);
+			return (DPHit[])hits.toArray(new DPHit[0]);
 		}
 
 		 public String toString() {
@@ -224,7 +207,7 @@ public class Tile implements DotPlotConstants {
 	}
 
 	private static class LoadObject {
-		private Hit hits[];
+		private DPHit hits[];
 		private int loaded;
 
 		public LoadObject() {
@@ -232,7 +215,7 @@ public class Tile implements DotPlotConstants {
 			hits = null;
 		}
 
-		public synchronized boolean setLoaded(Hit[] hits, int loadLevel) {
+		public synchronized boolean setLoaded(DPHit[] hits, int loadLevel) {
 			if (loaded < loadLevel) {
 				this.hits = hits;
 				loaded = loadLevel;
@@ -250,13 +233,13 @@ public class Tile implements DotPlotConstants {
 			return loaded >= loadLevel;
 		}
 
-		public synchronized Hit[] getHits() {
-			return hits == null ? new Hit[0] : hits;
+		public synchronized DPHit[] getHits() {
+			return hits == null ? new DPHit[0] : hits;
 		}
 
-		public synchronized Hit[] getHitsCopy() {
-			if (hits == null || hits.length == 0) return new Hit[0];
-			Hit[] rHits = new Hit[hits.length];
+		public synchronized DPHit[] getHitsCopy() {
+			if (hits == null || hits.length == 0) return new DPHit[0];
+			DPHit[] rHits = new DPHit[hits.length];
 			System.arraycopy(hits,0,rHits,0,hits.length);	    
 			return rHits;
 		}

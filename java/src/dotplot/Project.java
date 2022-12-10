@@ -1,7 +1,5 @@
 package dotplot;
 
-import java.util.List;
-import java.util.LinkedList;
 import java.util.Vector;
 
 import java.awt.Color;
@@ -14,7 +12,6 @@ public class Project {
 	private String name;
 	private String grpPrefix;
 	private String grpType;
-	private boolean isPseudo;
 	private Group[] groups;
 	private Color color = null; 
 	private int scale = 1; 
@@ -24,7 +21,6 @@ public class Project {
 	public Project(int id, ProjectProperties pp) {
 		this(id, pp.getName(id), 
 				 pp.getDisplayName(id), 
-				 pp.getType(id) == "pseudo",
 				 pp.getStringProperty(id,"grp_prefix",""), 
 				 pp.getStringProperty(id,"grp_type",""),
 				 pp.getIntProperty(id,"cbsize",1),
@@ -32,7 +28,7 @@ public class Project {
 			);
 	}
 
-	public Project(int id, String name, String displayName, boolean isPseudo, 
+	public Project(int id, String name, String displayName, 
 			String grpPrefix, String grpType,
 			int scale, int minGrpSize) 
 	{
@@ -41,7 +37,6 @@ public class Project {
 		this.displayName = displayName == null ? "" : displayName;
 		this.grpPrefix   = grpPrefix   == null ? "" : grpPrefix;
 		this.grpType     = grpType     == null ? "" : grpType;
-		this.isPseudo    = isPseudo;
 		this.scale       = scale; 
 		this.minGrpSize  = minGrpSize;
 	}
@@ -54,10 +49,6 @@ public class Project {
 		if (grps != null) {
 			Group.setScaleFactors(grps, minGrpSize);
 			Group.setOffsets(grps);
-		}
-		else if (groups != null) {
-			//throw new RuntimeException("Groups are already set!");
-			for (Group g : groups) g.getContigList().clear();
 		}
 		groups = grps;
 	}
@@ -95,19 +86,6 @@ public class Project {
 		return null;
 	}
 	
-	public void addContig(int gid, int cid, int number, int ccb, int size) {
-		Group g = getGroupByID(gid);
-		g.addContig(new Contig(g,cid,number,ccb,size));
-	}
-
-	public Contig[] getContigs() {
-		if (getNumGroups() <= 0) return new Contig[0];
-		List<Contig> l = new LinkedList<Contig>();
-		for (int i = 0; i < groups.length; ++i)
-			l.addAll(groups[i].getContigList());
-		return (Contig[])l.toArray(new Contig[l.size()]);
-	}
-
 	public int getNumGroups() {
 		return groups == null ? 0 : groups.length;
 	}
@@ -124,8 +102,6 @@ public class Project {
 	public String getGrpType() { return grpType; }
 	public String getDisplayName() { return displayName; }
 	public String getName() { return name; }
-	public boolean isPseudo() { return isPseudo; }
-	public boolean isFPC() { return !isPseudo; }
 	public String toString() { return displayName; /*new Integer(id).toString();*/ } 
 
 	public boolean equals(Object obj) {

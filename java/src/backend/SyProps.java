@@ -87,7 +87,6 @@ public class SyProps extends PropertiesReader
 		/**********************************************************
 		 * Alignment parameters
 		 **********************************************************/
-		setProperty("blat_args",			"-minScore=30 -minIdentity=70 -tileSize=10 -qMask=lower -maxIntron=10000"); 		
 		setProperty("nucmer_args",			""); 		
 		setProperty("promer_args",			""); 
 		setProperty("self_args",             ""); // CAS501 removed --maxmatch in AlignMain
@@ -156,7 +155,6 @@ public class SyProps extends PropertiesReader
 		setProperty("do_unanchored", 		"1");
 		setProperty("unanch_join_dist_bp", 	"300000");
 		setProperty("subblock_multiple", 	"3"); // for bes fixing
-		setProperty("do_bes_fixing", 		"1");
 		
 		// Testing
 		setProperty("checkctg1", "0");	
@@ -167,14 +165,6 @@ public class SyProps extends PropertiesReader
 		setProperty("maxjoin_bp", 	"1000000000");
 		
 		setProperty("do_synteny", "1"); 
-	
-		/**********************************************************
-		 * FPC project parameters
-		 **********************************************************/
-		setProperty("max_mrk_ctgs_hit", 	"10");
-		setProperty("min_mrk_clones_hit", 	"1");
-		setProperty("min_ctg_size", 		"0");
-		setProperty("cbsize", 		"1200"); // typical for hicf
 	
 		/**********************************************************
 		 * Pseudo project parameters
@@ -210,7 +200,7 @@ public class SyProps extends PropertiesReader
 		}
 	}
 	
-	// FPCLoadMain and SeqLoadMain
+	// SeqLoadMain
 	public void uploadProjProps(UpdatePool pool, int pidx, String[] keys) throws SQLException{
 		try {
 			for (String key : keys) {

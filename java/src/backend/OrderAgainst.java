@@ -235,13 +235,6 @@ public class OrderAgainst {
 				pool.executeUpdate("update pseudo_hits as ph, pseudos as p  " +
 						" set ph.start2=p.length-ph.end2, ph.end2=p.length-ph.start2 " +
 						"where ph.grp2_idx=" + idx + " and p.grp_idx=" + idx );
-				pool.executeUpdate("update bes_hits as h, pseudos as p  " +
-						" set h.start2=p.length-h.end2, h.end2=p.length-h.start2 " +
-						"where h.grp2_idx=" + idx + " and p.grp_idx=" + idx );
-				pool.executeUpdate("update mrk_hits as h, pseudos as p  " +
-						" set h.start2=p.length-h.end2, h.end2=p.length-h.start2 " +
-						"where h.grp2_idx=" + idx + " and p.grp_idx=" + idx );
-				
 				pool.executeUpdate("update blocks as b, pseudos as p  " +
 						" set b.start1=p.length-b.end1, b.end1=p.length-b.start1, b.corr=-b.corr " +
 						"where b.grp1_idx=" + idx + " and p.grp_idx=" + idx );

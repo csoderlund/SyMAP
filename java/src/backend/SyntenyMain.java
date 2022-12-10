@@ -2,6 +2,7 @@ package backend;
 
 /**************************************************
  * CAS500 1/2020 change all MySQl Gets to digits.
+ * CAS522 removed FPC
  */
 import java.io.File;
 import java.io.FileWriter;
@@ -29,7 +30,6 @@ public class SyntenyMain
 	private int mPairIdx;
 	private String resultDir;
 	
-	//private int checkCtgIdx1 = 0, checkGrpIdx1 = 0, checkGrpIdx2 = 0;
 	private boolean mSelf = false;
 
 	private int mMaxgap1, mMaxgap2, mMingap1, mMingap2;
@@ -41,13 +41,8 @@ public class SyntenyMain
 	private float mCorr1A, mCorr1B, mCorr1C, mCorr1D; 
 	private float mCorr2A, mCorr2B, mCorr2C, mCorr2D; 
 	
-	private TreeMap<Integer,Integer> mClonesFixed2Score;
-	private TreeMap<Integer,Integer> mClonesSinglesFixed2Score;
-	private TreeSet<Integer> mClonesToSwap;
-	
 	private TreeMap<BCase,Integer> mBlksByCase;
-	private TreeMap<Integer,Block> mBest;
-
+	
 	private long startTime;
 	
 	boolean bInterrupt = false;
@@ -70,24 +65,21 @@ public class SyntenyMain
 		startTime = System.currentTimeMillis();
 		
 		mLog.msg("Finding synteny for " + proj1Name + " and " + proj2Name);
-		//mProps.printNonDefaulted(mLog);
 		
 		mBlksByCase = new TreeMap<BCase,Integer>();
-		mBest = new TreeMap<Integer,Block>();
 		
 		for (BCase bt : BCase.values())
 			mBlksByCase.put(bt,0);
 		
-		ProjType type = pool.getProjType(proj1Name);
-		resultDir = Constants.getNameResultsDir(proj1Name, (type==ProjType.fpc), proj2Name);	
+		resultDir = Constants.getNameResultsDir(proj1Name, proj2Name);	
 		if (!(new File(resultDir)).exists()) {
 			mLog.msg("Cannot find pair directory " + resultDir);
 			ErrorCount.inc();
 			return false;
 		}
 			
-		mProj1 = new Project(pool, mLog, mProps,proj1Name,type, QueryType.Query);
-		mProj2 = new Project(pool, mLog, mProps,proj2Name, ProjType.pseudo, QueryType.Target);
+		mProj1 = new Project(pool, mLog, mProps,proj1Name, QueryType.Query);
+		mProj2 = new Project(pool, mLog, mProps,proj2Name, QueryType.Target);
 		
 		setBlockTestProps();
 
@@ -101,41 +93,25 @@ public class SyntenyMain
 		}
 		
 		pool.executeUpdate("delete from blocks where pair_idx='" + mPairIdx + "'");
-		pool.executeUpdate("delete from ctghits where pair_idx='" + mPairIdx + "'");
 
 		// CAS500 removed checkgrp1 property checks and assignments to checkgrp1/2
 		
 		setGapProperties();
 		clearBlocks();
 		
-		if (mProj1.isFPC()) {
-			if (mProps.getBoolean("do_bes_fixing")) {
-				// CAS500 this is not documented, it is automatically done.
-				// mLog.msg("BES end adjustment will be performed (set do_bes_fixing=0 to disable)");
-				mClonesFixed2Score = new TreeMap<Integer,Integer>();
-				mClonesSinglesFixed2Score = new TreeMap<Integer,Integer>();
-				mClonesToSwap = new TreeSet<Integer>();
-			}
-		}
-		
 		int nGrpGrp = mProj1.getGroups().size() * mProj2.getGroups().size();
 		Utils.prtNumMsg(mLog, nGrpGrp, "group-x-group pairs to analyze");
 		
 		for (Group grp1 : mProj1.getGroups()) {
 			for (Group grp2 : mProj2.getGroups()) {
-				if (mProj1.isSeq()) {
-					if (!mSelf) {
-						doSeqGrpGrpSynteny(grp1,grp2);
-						if (bInterrupt) return false;
-					}
-					else if (grp1.getIdx() <= grp2.getIdx()) {
-						doSeqGrpGrpSynteny(grp1,grp2);
-						if (bInterrupt) return false;
-					}
+				if (!mSelf) {
+					doSeqGrpGrpSynteny(grp1,grp2);
+					if (bInterrupt) return false;
 				}
-				else
-					doFPCGrpGrpSynteny(grp1,grp2);	
-				
+				else if (grp1.getIdx() <= grp2.getIdx()) {
+					doSeqGrpGrpSynteny(grp1,grp2);
+					if (bInterrupt) return false;
+				}
 				nGrpGrp--;
 				System.err.print(nGrpGrp + " pairs remaining...\r"); // CAS42 1/1/8 was mLog
 			}
@@ -157,26 +133,7 @@ public class SyntenyMain
 			symmetrizeBlocks();	
 		}
 		
-		// Now do the ctg/grp syntenies
-		if (mProj1.isFPC()) {
-			for (FPCContig ctg : mProj1.getFPCData().mCtgs.get(mProj1.getUnanchoredGrpIdx())) {	
-				for (Group grp2 : mProj2.getGroups()) {		
-					doCtgGrpSynteny(ctg,grp2);
-					if (bInterrupt) return false;
-				}
-			}
-		}
-		
-		if (mProj1.isFPC()){
-			uploadBest();
-			unanchoredBlocks();
-			if (bInterrupt) return false;
-			
-			Utils.prtNumMsg(mLog, mClonesToSwap.size(), "BES to swap");
-			doCloneSwaps();
-		}
-		
-		if (mProj1.isSeq() && mProps.getProperty("no_overlapping_blocks").equals("1")) {
+		if (mProps.getProperty("no_overlapping_blocks").equals("1")) {
 			mLog.msg("Removing overlapping blocks");
 			TreeMap<Integer,Vector<Block>> seenBlocks = new TreeMap<Integer,Vector<Block>>();
 			Vector<Integer> deleteList = new Vector<Integer>();
@@ -198,7 +155,7 @@ public class SyntenyMain
 				int gidx2 = rs.getInt(7);
 				int bnum = rs.getInt(8);
 
-				Block newb = new Block(s1, e1, s2, e2, gidx1, gidx2,mPairIdx, mProj1, mProj2, bnum, "");
+				Block newb = new Block(s1, e1, s2, e2, gidx1, gidx2,mPairIdx, mProj1, mProj2, bnum);
 				boolean delete = false;
 				if (!seenBlocks.containsKey(gidx1)) {
 					seenBlocks.put(gidx1, new Vector<Block>());	
@@ -237,24 +194,24 @@ public class SyntenyMain
 				}
 			}
 		}
-		if (mProj1.isSeq()){
-			for (HitType bt : HitType.values()) {
-				String rlbl = "RawSyHits" + bt.toString();
-				String blbl = "BlockHits" + bt.toString();
-				
-				if (Utils.mStats != null && Utils.mStats.containsKey(rlbl) && Utils.mStats.containsKey(blbl)) {
-					float rnum = Utils.mStats.get(rlbl);
-					float bnum = Utils.mStats.get(blbl);
-					float pct = (100*bnum)/rnum;
-					Utils.incStat("BlockPercent" + bt.toString(), pct);
-				}
-			}	
-			if ( mProps.getProperty("print_stats").equals("1")) {			
-				Utils.dumpHist();
-				Utils.dumpStats();
+	
+		for (HitType bt : HitType.values()) {
+			String rlbl = "RawSyHits" + bt.toString();
+			String blbl = "BlockHits" + bt.toString();
+			
+			if (Utils.mStats != null && Utils.mStats.containsKey(rlbl) && Utils.mStats.containsKey(blbl)) {
+				float rnum = Utils.mStats.get(rlbl);
+				float bnum = Utils.mStats.get(blbl);
+				float pct = (100*bnum)/rnum;
+				Utils.incStat("BlockPercent" + bt.toString(), pct);
 			}
-			Utils.uploadStats(pool, mPairIdx, mProj1.idx, mProj2.idx);
+		}	
+		if ( mProps.getProperty("print_stats").equals("1")) {			
+			Utils.dumpHist();
+			Utils.dumpStats();
 		}
+		Utils.uploadStats(pool, mPairIdx, mProj1.idx, mProj2.idx);
+	
 		if (bInterrupt) return false;
 		
 		if (Constants.PRT_STATS) {// CAS500
@@ -293,41 +250,13 @@ public class SyntenyMain
 	private void setGapProperties() throws Exception{
 		int nHits = 0;
 		
-		if (mProj1.isSeq()) {
-			String st = "select count(*) as nhits from pseudo_hits where proj1_idx='" + mProj1.getIdx() + "'" + 
-									" and proj2_idx='" + mProj2.getIdx() + "'";
-			ResultSet rs = pool.executeQuery(st);
-			if (rs.next())
-				nHits = rs.getInt("nhits");
-			rs.close();
-			Utils.prtNumMsg(mLog, nHits, "Total hits");
-		}
-		else {
-			int nBesHits = 0;
-			int nMrkHits = 0;
-			
-			String st = "select count(*) as nhits from bes_hits where proj1_idx='" + mProj1.getIdx() + "'" + 
-					" and proj2_idx='" + mProj2.getIdx() + "'";
-			ResultSet rs = pool.executeQuery(st);
-			if (rs.next())
-				nBesHits = rs.getInt("nhits");
-			rs.close();
-			
-			st = "select count(*) as nhits from mrk_hits " + 
-				" join markers on markers.name = mrk_hits.marker " + 
-				" join mrk_ctg on mrk_ctg.mrk_idx = markers.idx " + 
-					" where mrk_hits.pair_idx='" + mPairIdx + "'" +
-					" and markers.proj_idx = '" + mProj1.getIdx() + "'";
-			rs = pool.executeQuery(st);
-			if (rs.next())
-				nMrkHits = rs.getInt("nhits");
-			rs.close();
-			
-			nHits = nBesHits + nMrkHits;
-			Utils.prtNumMsg(mLog, nHits, "Total hits");
-			Utils.prtNumMsg(mLog, nBesHits, "BES hits");
-			Utils.prtNumMsg(mLog, nMrkHits, "Marker hits (counting multiple contigs)");
-		}
+		String st = "select count(*) as nhits from pseudo_hits where proj1_idx='" + mProj1.getIdx() + "'" + 
+								" and proj2_idx='" + mProj2.getIdx() + "'";
+		ResultSet rs = pool.executeQuery(st);
+		if (rs.next())
+			nHits = rs.getInt("nhits");
+		rs.close();
+		Utils.prtNumMsg(mLog, nHits, "Total hits");
 		
 		if (nHits == 0)
 			throw(new Exception("No anchors loaded!"));
@@ -388,7 +317,7 @@ public class SyntenyMain
 				if (Utils.intervalsOverlap(start1, end1, start2, end2, 0))
 					continue;
 			}	
-			hits.add(new SyHit(pos1,pos2,id,SyHitType.Pseudo,pctid,gene));
+			hits.add(new SyHit(pos1,pos2,id,pctid,gene));
 			
 			Utils.incStat("SyntenyHitsTotal", 1);
 			if (gene == 0)
@@ -412,7 +341,6 @@ public class SyntenyMain
 		
 		int num = 1;			
 		for (Block b : blocks){
-			b.mType = BlockType.PseudoPseudo;
 			b.mNum = num++;
 		}
 		uploadBlocks(blocks);
@@ -428,180 +356,6 @@ public class SyntenyMain
 		return out;
 	}
 
-	private void doFPCGrpGrpSynteny(Group grp1, Group grp2) throws Exception {
-		Vector<SyHit> hits = new Vector<SyHit>();
-		String st;
-		
-		// Markers
-      	st = "select mrk_hits.idx as hidx, markers.idx as midx, contigs.idx as ctgidx," + 
-		" mrk_hits.start2, mrk_hits.end2, mrk_hits.pctid, (contigs.ccb+mrk_ctg.pos) as pos1" +
-		" from mrk_hits " +
-		" join markers on markers.name=mrk_hits.marker" +
-		" join mrk_ctg on mrk_ctg.mrk_idx=markers.idx " +
-		" join contigs on contigs.idx=mrk_ctg.ctg_idx " +
-		" where contigs.grp_idx='" + grp1.getIdx() + "'" +
-		" and markers.proj_idx='" + mProj1.getIdx() + "'" +
-		" and mrk_hits.grp2_idx = '" + grp2.getIdx() + "'" +
-		" and mrk_hits.proj1_idx = '" + mProj1.getIdx() + "'";
-
-		ResultSet rs = pool.executeQuery(st);
-		while (rs.next()){
-			int pos1 = rs.getInt("pos1");
-			int pos2 = (rs.getInt("start2") + rs.getInt("end2"))/2;
-			SyHit sh = new SyHit(pos1,pos2,rs.getInt("hidx"),SyHitType.Mrk,rs.getInt("pctid"),0);
-			
-			sh.mCtgIdx1 = rs.getInt("ctgidx");
-			hits.add(sh);
-		}
-		rs.close();
-
-		// BES
-      	st = "select bes_hits.idx as hidx, bes_hits.bes_type, contigs.idx as ctgidx," +
-      			" bes_hits.start2, bes_hits.end2, contigs.ccb, " +
-      			"bes_hits.pctid, bes_hits.evalue as score," +
-      			"clones.cb1, clones.cb2,  " +
-      			" clones.bes1, clones.bes2,clones.idx as clone_idx " +
-      		" from bes_hits " +
-      		" join clones on clones.name=bes_hits.clone " +
-      		" join contigs on contigs.idx=clones.ctg_idx " +
-      		" where contigs.grp_idx='" + grp1.getIdx() + "'" +
-      		" and bes_hits.proj1_idx='" + mProj1.getIdx() + "'" +
-      		" and bes_hits.proj2_idx='" + mProj2.getIdx() + "'" +
-      		" and bes_hits.grp2_idx = '" + grp2.getIdx() + "'";
-		rs = pool.executeQuery(st);
-		while (rs.next()) {
-			int pos1;
-			int pos1_alt;
-			if (rs.getString("bes_type").equals(rs.getString("bes1"))){
-				pos1 = rs.getInt("cb1") + rs.getInt("ccb");
-				pos1_alt = rs.getInt("cb2") + rs.getInt("ccb");
-			}
-			else{
-				pos1 = rs.getInt("cb2") + rs.getInt("ccb");					
-				pos1_alt = rs.getInt("cb1") + rs.getInt("ccb");
-			}
-			int pos2 = (rs.getInt("start2") + rs.getInt("end2"))/2;
-			SyHit sh = new SyHit(pos1,pos2,rs.getInt("hidx"),SyHitType.Bes,rs.getInt("pctid"),0);
-			sh.mCtgIdx1 = rs.getInt("ctgidx");
-			sh.mCloneIdx1 = rs.getInt("clone_idx");
-			sh.mRF = RF.valueOf(rs.getString("bes_type").toUpperCase());
-			assert sh.mRF != null;
-			sh.mScore = rs.getInt("score");
-			sh.mPos1_alt = pos1_alt;
-			hits.add(sh);
-		}
-		rs.close();
-		
-		Vector<Block> blocks = new Vector<Block>();
-		
-		chainFinder(hits,blocks,null);	
-		for (Block b : blocks)
-			fixBES(b);
-		blocks = mergeBlocks(blocks);
-
-		setBlockGrps(blocks,grp1.getIdx(),grp2.getIdx());
-		for (Block b : blocks)
-			mProj1.getFPCData().setBlockContigs(b);
-
-		int num = 1;
-		for (Block b : blocks){
-			b.mType = BlockType.GrpPseudo;
-			b.mNum = num;
-			uploadCtgWindows(b,mProj1.getFPCData());
-			num++;
-		}		
-		uploadBlocks(blocks);
-	}
-	
-	private void doCtgGrpSynteny(FPCContig ctg1, Group grp2) throws SQLException{
-		Vector<SyHit> hits = new Vector<SyHit>();
-		String st;
-		
-		// Markers
-      	st = "select mrk_hits.idx as hidx, markers.idx as midx, " + 
-      		" mrk_hits.start2, mrk_hits.end2, mrk_ctg.pos as pos1,mrk_hits.pctid" +
-      		" from mrk_hits " +
-      		" join markers on markers.name=mrk_hits.marker" +
-			" join mrk_ctg on mrk_ctg.mrk_idx=markers.idx " +
-			" where mrk_ctg.ctg_idx='" + ctg1.mIdx + "'" + 
-			" and markers.proj_idx='" + mProj1.getIdx() + "'" +
-			" and mrk_hits.grp2_idx = '" + grp2.getIdx() + "'" +
-			" and mrk_hits.proj1_idx = '" + mProj1.getIdx() + "'";
-		ResultSet rs = pool.executeQuery(st);
-		while (rs.next()){
-			int pos1 = rs.getInt("pos1");
-			int pos2 = (rs.getInt("start2") + rs.getInt("end2"))/2;
-			SyHit sh = new SyHit(pos1,pos2,rs.getInt("hidx"),SyHitType.Mrk,rs.getInt("pctid"),0);
-			sh.mCtgIdx1 = ctg1.mIdx;
-			hits.add(sh);
-		}
-		rs.close();
-
-		// BES
-      	st = "select bes_hits.idx as hidx, bes_hits.bes_type,bes_hits.pctid, bes_hits.evalue as score," +
-      			" bes_hits.start2, bes_hits.end2, clones.cb1, clones.cb2, " +
-      			" clones.bes1, clones.bes2, clones.idx as clone_idx " +
-      		" from bes_hits " +
-      		" join clones on clones.name=bes_hits.clone " +
-      		" where clones.ctg_idx='" + ctg1.mIdx + "'" +
-      		" and bes_hits.proj1_idx='" + mProj1.getIdx() + "'" +
-      		" and bes_hits.proj2_idx='" + mProj2.getIdx() + "'" +
-      		" and bes_hits.grp2_idx = '" + grp2.getIdx() + "'";
-		rs = pool.executeQuery(st);
-		while (rs.next()){
-			int pos1;
-			int pos1_alt;
-			if (rs.getString("bes_type").equals(rs.getString("bes1"))) {
-				pos1 = rs.getInt("cb1");
-				pos1_alt = rs.getInt("cb2");
-			}
-			else {
-				pos1 = rs.getInt("cb2");	
-				pos1_alt = rs.getInt("cb1");
-			}
-			int pos2 = (rs.getInt("start2") + rs.getInt("end2"))/2;
-			SyHit sh = new SyHit(pos1,pos2,rs.getInt("hidx"),SyHitType.Bes,rs.getInt("pctid"),0);
-			sh.mCtgIdx1 = ctg1.mIdx;
-			sh.mCloneIdx1 = rs.getInt("clone_idx");
-			sh.mRF = RF.valueOf(rs.getString("bes_type").toUpperCase());
-			assert sh.mRF != null;
-			sh.mScore = rs.getInt("score");
-			sh.mPos1_alt = pos1_alt;
-			hits.add(sh);
-		}
-		rs.close();
-			
-		Vector<Block> blocks = new Vector<Block>();
-		
-		Block bestblk = new Block(mPairIdx,mProj1,mProj2);
-		bestblk.mGrpIdx1 = mProj1.getUnanchoredGrpIdx();
-		bestblk.mGrpIdx2 = grp2.getIdx();
-		
-		chainFinder(hits,blocks,bestblk);
-
-		if (bestblk.mHits.size() > 0){
-			if (!mBest.containsKey(ctg1.mIdx) ||
-					mBest.get(ctg1.mIdx).mHits.size() < bestblk.mHits.size()){
-				mBest.put(ctg1.mIdx,bestblk);
-			}
-		}
-		for (Block b : blocks)
-			fixBES(b);
-		
-		blocks = mergeBlocks(blocks);
-
-		setBlockGrps(blocks,mProj1.getUnanchoredGrpIdx(),grp2.getIdx());
-
-		int num = 1;
-		for (Block b : blocks){
-			b.mCtgs1 = String.valueOf(ctg1.mIdx);
-			b.mType = BlockType.CtgPseudo;
-			b.mNum = num;
-			uploadCtgWindows(b,mProj1.getFPCData());
-			num++;
-		}
-	}
-	
 	// This routine organizes the "binary search" of the gap parameter space
 	//
 	// How it works:
@@ -895,9 +649,7 @@ public class SyntenyMain
 	private void setBlockTestProps() throws Exception {
 		mMindots = mProps.getInt("mindots");
 		mMindots_keepbest = mProps.getInt("mindots_keepbest");
-		mMingap1 = (mProj1.isSeq() ? 
-							mProps.getInt("mingap1") :
-							mProps.getInt("mingap1_cb"));
+		mMingap1 = mProps.getInt("mingap1");
 		mMingap2 = mProps.getInt("mingap2");
 		mMindotsA = mMindots;
 		mMindotsB = mMindots;
@@ -936,44 +688,15 @@ public class SyntenyMain
 		}
 		**/
 		for (Block b : blocks) {
-			if (mProj1.isFPC()){
-				if (b.mGrpIdx1 != mProj1.getUnanchoredGrpIdx()){
-					b.doUpload(pool);
-				}
-			}
-			else{
-				b.doUpload(pool);	
-			}
-			
-			if (mProj1.isSeq()){
-				uploadPseudoBlockHits(b);
-			}
+			b.doUpload(pool);	
+			uploadPseudoBlockHits(b);
 		}
-		if (mProj1.isSeq()){
-			Utils.updateGeneFractions(pool, mPairIdx);
-		}
+		Utils.updateGeneFractions(pool, mPairIdx);
 	}
 	
 	private void clearBlocks() throws SQLException{	
 		String stmt = "DELETE FROM blocks WHERE pair_idx=" + mPairIdx;
 		pool.executeUpdate(stmt);
-	}
-	
-	// Get the contig hit windows from the blocks and upload
-	// Also, upload the block hits at this time, because they are
-	// indexed to the contig hit windows
-	private void uploadCtgWindows(Block b, FPCData f) throws SQLException{
-		TreeMap<Integer,CtgHit> ctgHitMap = new TreeMap<Integer,CtgHit>();
-		for (SyHit h : b.mHits){
-			if (!ctgHitMap.containsKey(h.mCtgIdx1))
-				ctgHitMap.put(h.mCtgIdx1, new CtgHit(h.mCtgIdx1, b.mGrpIdx2, mPairIdx));
-			ctgHitMap.get(h.mCtgIdx1).addHit(h);		
-		}
-		for (CtgHit ch : ctgHitMap.values()){
-			ch.mCorr = (hitCorrelation(ch.mHits) > 0 ? "+" : "-");
-			ch.mBlockNum = b.mNum;
-			ch.doUpload(pool);
-		}
 	}
 	
 	private void uploadPseudoBlockHits(Block b) throws SQLException{
@@ -1006,7 +729,7 @@ public class SyntenyMain
 		int maxjoin2 = 0;
 		float joinfact = 0;
 		if (doMerge) {		
-			maxjoin1 = (mProj1.isFPC() ? mProps.getInt("maxjoin_cb") : mProps.getInt("maxjoin_bp"));
+			maxjoin1 = mProps.getInt("maxjoin_bp");
 			maxjoin2 = mProps.getInt("maxjoin_bp");
 			joinfact = mProps.getFloat("joinfact");
 		}
@@ -1063,273 +786,6 @@ public class SyntenyMain
 		return mergedBlocks;
 	}
 	
-	// Form "blocks" by overlapping the target alignment regions of unanchored contigs
-	private void unanchoredBlocks() throws SQLException {
-		mLog.msg("Aligning unanchored contigs");
-		for (Group grp2 : mProj2.getGroups())
-			unanchoredBlocksToGroup(grp2);
-	}
-	
-	private void unanchoredBlocksToGroup(Group grp2) throws SQLException {
-		Vector<CtgHit> ctgHits = new Vector<CtgHit>();
-		
-		String st = "SELECT ctghits.idx, ctg1_idx,start2,end2,score,contigs.size as csize " +
-            		" FROM ctghits, contigs " +
-            		" WHERE contigs.proj_idx = '" + mProj1.getIdx() + "'" +
-            		" AND contigs.grp_idx = '" + mProj1.getUnanchoredGrpIdx() + "'" +
-            		" AND contigs.idx = ctghits.ctg1_idx " +
-            		" AND ctghits.grp2_idx = '" + grp2.getIdx() + "'";
-		ResultSet rs = pool.executeQuery(st);
-		while (rs.next()){
-			ctgHits.add(new CtgHit(rs.getInt(2), rs.getInt(3), 
-							rs.getInt(4),rs.getInt(5), rs.getInt(6)) );
-		}
-		rs.close();
-		
-		// first group the ctg windows by doing a transitive closure on the target intervals
-		SyGraph graph = new SyGraph(ctgHits.size());
-		int gap = mProps.getInt("unanch_join_dist_bp");
-		for (int i = 0; i < ctgHits.size(); i++){
-			CtgHit ch1 = ctgHits.get(i);
-						
-			for (int j = i + 1; j < ctgHits.size(); j++){
-				CtgHit ch2 = ctgHits.get(j);
-
-				if (Utils.intervalsOverlap(ch1.mS2,ch1.mE2,ch2.mS2,ch2.mE2,gap) )
-					graph.addNode(i,j);
-			}
-		}
-		HashSet<TreeSet<Integer>> blockSets = graph.transitiveClosure();
-
-		// compute the block sizes and the order of the contigs within them
-		// if a contig appears multiple times in one, use its highest scoring location
-		// lastly, upload and number the blocks
-		int bnum = 1;
-		for (TreeSet<Integer> s : blockSets){
-			int s2 = Integer.MAX_VALUE;
-			int e2 = 0;
-			TreeMap<Integer,CtgHit> ctgLoc = new TreeMap<Integer,CtgHit>();
-			for (Integer i : s){
-				CtgHit ch = ctgHits.get(i);
-				s2 = Math.min(s2,ch.mS2);
-				e2 = Math.max(e2,ch.mE2);
-				int ctgIdx = ch.mCtgIdx1;
-				if (!ctgLoc.containsKey(ctgIdx) || ctgLoc.get(ctgIdx).mScore < ch.mScore){
-					ctgLoc.put(ctgIdx, ch);
-				}
-			}
-			Vector<CtgHit> ctgOrder = new Vector<CtgHit>(ctgLoc.values());
-			Collections.sort(ctgOrder,new SyntenyMain.ctgLocComp());
-			Vector<String> ctgList = new Vector<String>();
-			int s1 = 0;
-			int e1 = 0;
-			for (CtgHit ch : ctgOrder){
-				ctgList.add(String.valueOf(ch.mCtgIdx1));
-				e1 += ch.mCtgSize; // set the "end" coordinate to give the right size
-			}
-			String ctgStr = Utils.join(ctgList,",");
-			Block blk = new Block(s1, e1, s2, e2, mProj1.getUnanchoredGrpIdx(), grp2.getIdx(),mPairIdx, mProj1,mProj2, bnum,ctgStr);
-			
-			blk.doUpload(pool);
-			
-			for (Integer i : s){
-				int ctgHitIdx = ctgHits.get(i).mIdx;
-				st = "update ctghits set block_num='" + String.valueOf(bnum) + "' where idx='" + String.valueOf(ctgHitIdx) + "'";
-				pool.executeUpdate(st);
-			}
-			bnum++;
-		}
-	}
-	
-	// Find the best chain for each contig for which we don't already have a ctghit. 
-	private void uploadBest() throws SQLException{
-		if (!mProps.getBoolean("keep_best")) return;
-		mLog.msg("Adding best contig alignments (since keep_best=1)");
-		
-		TreeSet<Integer> ctgIdxUsed = new TreeSet<Integer>();
-		
-		String st = "SELECT ctg1_idx " +
-            		" FROM ctghits, contigs, xgroups " +
-            		" WHERE contigs.proj_idx = '" + mProj1.getIdx() + "'" +
-            		" AND contigs.grp_idx = '" + mProj1.getUnanchoredGrpIdx() + "'" +
-            		" AND contigs.idx = ctghits.ctg1_idx " +
-            		" AND xgroups.proj_idx = '" + mProj2.getIdx() + "'" +
-            		" AND ctghits.grp2_idx = xgroups.idx";
-		ResultSet rs = pool.executeQuery(st);
-		while (rs.next())
-			ctgIdxUsed.add(rs.getInt(1));
-		rs.close();
-		
-		for (int ctgIdx : mBest.keySet())
-			if (!ctgIdxUsed.contains(ctgIdx))
-				uploadCtgWindows(mBest.get(ctgIdx),mProj1.getFPCData());
-	}
-
-	private void fixBES(Block b){
-	    // Start by breaking the block into sub-blocks, hopefully
-	    // corresponding to inversion breakpoints (but many
-	    // sporadic instances also occur). 
-	    // First figure out what would be a good gap to break on.
-		// Sort the hits  on index 2 so we check gaps on index 1.
-		// Larger than normal gaps suggest an inversion breakpoint.
-		
-		Collections.sort(b.mHits,new SyHitComp());
-		Vector<Float> gaps = new Vector<Float>();
-		for (int i = 1; i < b.mHits.size(); i++) {
-			float gap = b.mHits.get(i).mPos1 - b.mHits.get(i-1).mPos1;
-			gaps.add(gap);
-		}
-		SyStats gapStats = new SyStats(gaps);
-		float avgGap = gapStats.getAvg();
-		float devGap = gapStats.getDev();
-		
-		float sbGap = avgGap + devGap * mProps.getFloat("subblock_multiple");
-
-		TreeMap<Integer,Vector<SyHit>> subBlocks = new TreeMap<Integer,Vector<SyHit>>();
-		subBlocks.put(0, new Vector<SyHit>());
-		
-		Integer segNum = 0;
-		SyHit hPrev = null;
-		for (int i = 0; i < b.mHits.size(); i++){
-			if (hPrev == null) hPrev = b.mHits.get(i);
-			SyHit hCur = b.mHits.get(i);
-			if (Math.abs(hCur.mPos1 - hPrev.mPos1) > sbGap) {
-				segNum++;
-				subBlocks.put(segNum, new Vector<SyHit>());
-			}
-			subBlocks.get(segNum).add(hCur);
-			hPrev = hCur;			
-		}
-		
-		// Now go through the sub blocks and adjust the BES based on the correlation
-		
-		Vector<Double> corrList = new Vector<Double>();
-		Vector<Integer> sizeList = new Vector<Integer>();
-		for (Vector<SyHit> sbHits : subBlocks.values()){
-			int size = sbHits.size();
-			if (size <= 5){
-				continue;
-			}
-			double corr = hitCorrelation(sbHits);
-			
-			corrList.add(corr);
-			sizeList.add(size);
-			
-			// Find and fix the paired BES first. 
-			// They are adjusted so that the best-scoring r/f hits agree
-			// with the best-scoring block containing that clone.
-			
-			TreeMap<Integer,TreeMap<RF,SyHit>> bestHits = new TreeMap<Integer,TreeMap<RF,SyHit>>();
-			
-			// Collect the BES hit locations in this block, for clones
-			// not already adjusted using a better block.
-			// If a BES hits more than once in the block, we ignore it.
-			
-			TreeSet<Integer> ignoreClones = new TreeSet<Integer>();
-			for (SyHit h : sbHits){
-				if (h.mType != SyHitType.Bes) continue;
-				if (mClonesFixed2Score.containsKey(h.mCloneIdx1)) {
-					if (mClonesFixed2Score.get(h.mCloneIdx1) > b.mHits.size())
-						continue; // already did this clone in a better block
-				}
-				if (!bestHits.containsKey(h.mCloneIdx1))
-					bestHits.put(h.mCloneIdx1, new TreeMap<RF,SyHit>());
-				if (!bestHits.get(h.mCloneIdx1).containsKey(h.mRF))
-					bestHits.get(h.mCloneIdx1).put(h.mRF, h);
-				else 
-					ignoreClones.add(h.mCloneIdx1);
-			}
-			
-			// Adjust each paired hit
-			// and save them off to use in checking the singles
-			
-			Vector<SyHit> checks = new Vector<SyHit>();
-			
-			for (Integer cidx : bestHits.keySet()){
-				if (bestHits.get(cidx).keySet().size() < 2) continue;
-				if (ignoreClones.contains(cidx)) continue;
-				
-				SyHit hR = bestHits.get(cidx).get(RF.R);
-				SyHit hF = bestHits.get(cidx).get(RF.F);
-				
-				if (!pairAgrees(corr,hR,hF)){
-					mClonesToSwap.add(cidx);
-					int tmp = hR.mPos1;
-					hR.mPos1 = hF.mPos1;
-					hF.mPos1 = tmp;
-				}
-				else if (mClonesToSwap.contains(cidx))
-					mClonesToSwap.remove(cidx);
-
-				checks.add(hR);
-				checks.add(hF);
-				mClonesFixed2Score.put(cidx,b.mHits.size());
-			}
-			
-			// Now do the singles, by making them agree
-			// with the best-matching paired BES hit or marker hit
-			
-			for (SyHit h : sbHits)
-				if (h.mType == SyHitType.Mrk)
-					checks.add(h);
-			
-			if (checks.size() > 0){
-				for (Integer cidx : bestHits.keySet()){
-					if (bestHits.get(cidx).keySet().size() > 1) continue;
-					if (ignoreClones.contains(cidx)) continue;
-					if (mClonesSinglesFixed2Score.containsKey(cidx)){
-						if (mClonesSinglesFixed2Score.get(cidx) > b.mHits.size())
-							continue; // already did this clone as a single in a better block
-					}
-					
-					RF rf = bestHits.get(cidx).firstKey();
-					SyHit h = bestHits.get(cidx).get(rf);
-					
-					// Find the marker or paired bes hitting closest on the target	
-					SyHit chBest = null;
-					for (SyHit ch : checks) {
-						if (chBest == null) chBest = ch;
-						if (Math.abs(ch.mPos2 - h.mPos2) < Math.abs(chBest.mPos2 - h.mPos2))
-							chBest = ch;
-					}
-					if (!singleAgrees(h,chBest))
-						mClonesToSwap.add(cidx);
-					else if (mClonesToSwap.contains(cidx))
-						mClonesToSwap.remove(cidx);
-					mClonesSinglesFixed2Score.put(cidx,b.mHits.size());
-				}			
-			}
-		}
-	}
-	
-	// Check whether a hit pair agrees with the given correlation
-	// (i.e., if corr < 0 the lines should cross, otherwise not)
-	private boolean pairAgrees(double corr, SyHit hR, SyHit hF){
-		return (0 < corr*(hR.mPos1 - hF.mPos1)*(hR.mPos2 - hF.mPos2));
-	}
-	
-	// See if the given hit would be a better match with BES swapped
-	private boolean singleAgrees(SyHit h, SyHit check){	
-		int diff1 = Math.abs(h.mPos1 - check.mPos1);
-		int diff1_alt = Math.abs(h.mPos1_alt - check.mPos1);
-		
-		return (diff1 < diff1_alt);
-	}
-	
-	private void doCloneSwaps() throws SQLException {
-		for (int cidx : mClonesToSwap){
-			String st = "SELECT bes1,bes2 FROM clones WHERE idx='" + cidx + "'";
-			ResultSet rs = pool.executeQuery(st);
-			if (rs.next()) {
-				String bes1 = rs.getString(1);
-				String bes2 = rs.getString(2);
-				rs.close();
-				
-				st = "UPDATE clones SET bes1 = '" + bes2 + "', bes2='" + bes1 + "' WHERE idx='" + cidx + "'";
-				pool.executeUpdate(st);
-			}
-		}
-	}
 	// Add the mirror reflected blocks for self alignments
 	private void symmetrizeBlocks() throws Exception {
 		Vector<Integer> idxlist = new Vector<Integer>();
@@ -1339,8 +795,8 @@ public class SyntenyMain
 		}
 		rs.close();
 		for (int idx : idxlist) {
-			pool.executeUpdate("insert into blocks (select 0,pair_idx,blocknum,proj2_idx,grp2_idx,start2,end2,ctgs2,proj1_idx,grp1_idx,start1,end1,ctgs1," +
-					"level,contained,comment,corr,score,0,0,0,0 from blocks where idx=" + idx + ")");
+			pool.executeUpdate("insert into blocks (select 0,pair_idx,blocknum,proj2_idx,grp2_idx,start2,end2,proj1_idx,grp1_idx,start1,end1," +
+					"comment,corr,score,0,0,0,0 from blocks where idx=" + idx + ")");
 			
 			rs = pool.executeQuery("select max(idx) as maxidx from blocks");
 			rs.first();
@@ -1363,8 +819,8 @@ public class SyntenyMain
 			int newMaxBlkNum = 2*maxBlkNum + 1;
 			
 			// For each old block, make a new block with reflected coordinates, and blocknum computed as in the query
-			pool.executeUpdate("insert into blocks (select 0,pair_idx," + newMaxBlkNum + "-blocknum,proj2_idx,grp2_idx,start2,end2,ctgs2,proj1_idx,grp1_idx,start1,end1,ctgs1," +
-					"level,contained,comment,corr,score,0,0,0,0 from blocks where grp1_idx=grp2_idx and grp1_idx=" + gidx + " and blocknum <= " + maxBlkNum + ")"); // last clause prob not needed
+			pool.executeUpdate("insert into blocks (select 0,pair_idx," + newMaxBlkNum + "-blocknum,proj2_idx,grp2_idx,start2,end2,proj1_idx,grp1_idx,start1,end1," +
+					"comment,corr,score,0,0,0,0 from blocks where grp1_idx=grp2_idx and grp1_idx=" + gidx + " and blocknum <= " + maxBlkNum + ")"); // last clause prob not needed
 			
 			// Lastly add the reflected block hits. For each original block hit, get its original block, get the new block (known
 			// by its blocknum), get the reflected hit (from refidx), and add the reflected hit as a block hit for the new block.
@@ -1482,14 +938,6 @@ public class SyntenyMain
                 return h1.mPos2 - h2.mPos2;
         	else
         		return h1.mPos1 - h2.mPos1;
-        }
-    }
-	private static class ctgLocComp implements Comparator<CtgHit>  {
-        public int compare(CtgHit h1, CtgHit h2) {
-        	int pos1 = (h1.mS2 + h1.mE2)/2;
-        	int pos2 = (h2.mS2 + h2.mE2)/2;
-        	
-        	return pos1 - pos2;
         }
     }
 }

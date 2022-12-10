@@ -37,10 +37,6 @@ public interface SyMAPConstants {
     public static final byte NO_HITS       = (byte)0x00;
     public static final byte IN_BLOCK      = (byte)0x10;
     public static final byte LEAST_ONE_HIT = (byte)0x20;
-    public static final byte REPETITIVE  = (byte)0x40;
  
-    public static final String MRK_TYPE = "mrk";
-    public static final String BES_TYPE = "bes";
-    public static final String FINGERPRINT_TYPE = "clone";
     public static final String SEQ_TYPE = "seq";
 }

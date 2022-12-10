@@ -17,14 +17,11 @@ import util.ErrorReport;
 import util.Logger;
 import util.Utilities;
 
-enum ProgType {blat,mummer};
-
 public class ProgSpec implements Comparable<ProgSpec> 
 {
 	public int alignNum;
 	public String program, args;
 	
-	private ProgType type;
 	private File f1, f2;
 	private String resDir, alignLogDirName;
 	private String outRoot, outFile;
@@ -39,20 +36,10 @@ public class ProgSpec implements Comparable<ProgSpec>
 	private Process process;
 	private int status, nExitValue = -1;
 	
-	public ProgSpec(ProgType type, String program, String platpath, String args, 
+	public ProgSpec(String program, String platpath, String args, 
 			File f1, File f2, String resdir, String alignLogDirName)
 	{
 		this.program = program; 
-		if (program.equals("blat"))										this.type = ProgType.blat;
-		else if (program.equals("promer") || program.equals("nucmer")) 	this.type = ProgType.mummer;
-		else {
-			this.type = type;
-			if (program == null || program.length() == 0) {
-				if (type == ProgType.blat) 								 this.program = "blat";
-				else if (type == ProgType.mummer) 						this.program = "promer";
-			}
-		}
-		
 		this.args = args;
 		this.f1 = f1;
 		this.f2 = f2;
@@ -60,7 +47,7 @@ public class ProgSpec implements Comparable<ProgSpec>
 		
 		this.outRoot =  Constants.getNameAlignFile(f1.getName(), f2.getName());
 		
-		this.outFile = resDir + outRoot + "." + (this.type==ProgType.blat ? "blat" : "mum");
+		this.outFile = resDir + outRoot + Constants.mumSuffix;
 		this.alignLogDirName = alignLogDirName;
 		
 		if (outputFileExists())	this.status = STATUS_DONE;
@@ -128,14 +115,7 @@ public class ProgSpec implements Comparable<ProgSpec>
 			FileWriter runFW = new FileWriter(runLogName);
 			Logger runLog = new Log(runFW);  
 			
-			if (program.equals("blat"))
-			{
-				String blatPath = Constants.getProgramPath("blat"); 
-				if (!blatPath.equals("")) blatPath += "/"; 
-				cmd = blatPath + program + " " + targ + " " + query + " " + args + " " + outFile;
-				rc = runCommand(cmd, runFW, runLog); // send output and log messages to same file
-			}
-			else if (program.equals("promer") || program.equals("nucmer"))//(type == ProgType.mummer)
+			if (program.equals("promer") || program.equals("nucmer"))//(type == ProgType.mummer)
 			{
 				String intFilePath = resDir + outRoot + "." + program;
 				String deltaFilePath = intFilePath + ".delta";
@@ -186,18 +166,13 @@ public class ProgSpec implements Comparable<ProgSpec>
 	}
 	
 	private void cleanup() {
-		if (type == ProgType.blat) {
-			// Nothing to remove for blat
-		}
-		else if (type == ProgType.mummer) { 
-			String intFilePath = resDir + outRoot + "." + program;
-			Utilities.deleteFile(intFilePath + ".delta");
-			Utilities.deleteFile(intFilePath + ".cluster");
-			Utilities.deleteFile(intFilePath + ".mgaps");
-			Utilities.deleteFile(intFilePath + ".aaqry"); // promer only
-			Utilities.deleteFile(intFilePath + ".aaref"); // promer only
-			Utilities.deleteFile(intFilePath + ".ntref"); // nucmer only
-		}
+		String intFilePath = resDir + outRoot + "." + program;
+		Utilities.deleteFile(intFilePath + ".delta");
+		Utilities.deleteFile(intFilePath + ".cluster");
+		Utilities.deleteFile(intFilePath + ".mgaps");
+		Utilities.deleteFile(intFilePath + ".aaqry"); // promer only
+		Utilities.deleteFile(intFilePath + ".aaref"); // promer only
+		Utilities.deleteFile(intFilePath + ".ntref"); // nucmer only
 	}
 	
 	public void interrupt() {

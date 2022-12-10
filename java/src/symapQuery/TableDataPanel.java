@@ -279,6 +279,7 @@ public class TableDataPanel extends JPanel {
 	    // CAS521 I wasted 3hrs trying to add Selected to the HitFilter, should have been easy. OO is the worst!
 	    chkHigh = new JCheckBox("High");
 	    chkHigh.setSelected(true);
+	    chkHigh.setBackground(Color.WHITE);
 	    topRow.add(chkHigh); 	topRow.add(Box.createHorizontalStrut(5));
 	    
 	    btnShowAlign.setEnabled(false);
@@ -986,7 +987,7 @@ public class TableDataPanel extends JPanel {
 					Vector<String> theLines = new Vector<String> ();
 					Vector<String> theSeqs = new Vector<String> ();
 					
-					String [] fields = {"", "Hit#", "Species" ,"Chr", "Start", "End", "Gene#"};
+					String [] fields = {"", "Hit#", "Species" ,"Chr", "Hit Start", "Hit End", "Gene#"};
 					int [] justify =   {1,   0,      1,          0,     0,       0,    1}; // 1 left justify
 					int nRow = selRows.length*2;
 				    int nCol=  fields.length;

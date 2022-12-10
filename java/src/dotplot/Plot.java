@@ -15,7 +15,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.font.TextLayout;
 
-import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -40,29 +39,20 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 	private static final Color FAR_BACKGROUND;
 	private static final Color BACKGROUND;
 	private static final Color BACKGROUND_BORDER;
-	private static final Color MRK_HIT_COLOR;
-	private static final Color BES_HIT_COLOR;
-	private static final Color FP_HIT_COLOR;
 	private static final Color SELECTED;
-	private static final Color CONTIG;
 	private static final Font PROJ_FONT;
 	private static final Font GRP_FONT;
 
-	public static final Color[] BLOCK_HITS_COLORS;
-	public static final Color SHARED_BLOCK_HITS_COLOR;
-
+	private static final Color colorBox = Color.blue;
+	private static final Color colorBlockHits = Color.blue;
+	private static final Color colorHits = Color.BLACK;
+	
 	static {
 		PropertiesReader props = new PropertiesReader(Plot.class.getResource(DotPlot.DOTPLOT_PROPS));
 		FAR_BACKGROUND        = props.getColor("farBackgroundColor");
 		BACKGROUND            = props.getColor("backgroundColor");
 		BACKGROUND_BORDER     = props.getColor("backgroundBorderColor");
-		MRK_HIT_COLOR         = props.getColor("mrkHitColor");
-		BES_HIT_COLOR         = props.getColor("besHitColor");
-		FP_HIT_COLOR          = props.getColor("fpHitColor");
 		SELECTED              = props.getColor("selectedColor");
-		CONTIG                = props.getColor("contigColor");
-		BLOCK_HITS_COLORS       = (Color[])props.getColors("blockHitsColors").toArray(new Color[0]);
-		SHARED_BLOCK_HITS_COLOR = props.getColor("sharedBlockHitsColor"); 
 		PROJ_FONT 				= props.getFont("projFont");
 		GRP_FONT 				= props.getFont("grpFont");
 	}
@@ -76,7 +66,6 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 	private Dimension dim;
 	private int x1, x2, y1, y2; // coordinates of selected region 
 	private double xPixelPerBP, yPixelPerBP;
-	private double xPixelPerGrp, yPixelPerGrp;
 	private boolean isSelectingArea = false;
 	private Point center;
 	private double avgRes = DEFAULT_AVG_RES;
@@ -297,8 +286,6 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 			yPixelPerBP = dim.getHeight() / data.getVisibleGroupsSizeY(data.getVisibleGroups(X));
 		}
 
-		xPixelPerGrp = 0;
-		yPixelPerGrp = 0;
 		if (data.isScaled()) 
 		{
 			yPixelPerBP = xPixelPerBP * data.getScaleFactor();
@@ -318,30 +305,23 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 		
 		// Figure out the longest group names
 		int maxYGrpName = 0;
-		int sumYGrpName = 0;
 		FontMetrics mtc = g.getFontMetrics(g.getFont());		
-		for (Group grp : yGroups)
-		{
+		for (Group grp : yGroups) {
 			int w = mtc.stringWidth(grp.getName());
-			sumYGrpName += w;
-			if (w > maxYGrpName)
-			{
+			if (w > maxYGrpName){
 				maxYGrpName = w;	
 			}
 		}
 		int maxXGrpName = 0;
-		for (Group grp : xGroups)
-		{
+		for (Group grp : xGroups) {
 			int w = mtc.stringWidth(grp.getName());
-			if (w > maxXGrpName)
-			{
+			if (w > maxXGrpName) {
 				maxXGrpName = w;	
 			}
 		}	
-		//System.out.println(maxXGrpName + " " + maxYGrpName);
 		int plotStartX = MARGIN; //Math.max(MARGIN,maxYGrpName); 
 		//draw groups
-		// we have to be careful how we do things to avoid roundoff discrepancies from the scale factors
+		// be careful to avoid roundoff discrepancies from the scale factors
 		for (Group grp : xGroups) {
 			int x1 = plotStartX + (int)(grp.getOffset() * xPixelPerBP );
 			int x2 = x1 + (int)((int)(grp.getSize()  * grp.getScaleFactor()) * xPixelPerBP); // use this order to match calc of grp offsets
@@ -352,12 +332,11 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 			int y1 = MARGIN + (int)(grp.getOffset() * yPixelPerBP );
 			int y2 = y1 + (int)((int)(grp.getSize() * grp.getScaleFactor())*yPixelPerBP) ;
 			
-				drawCentered(g, grp.getName(), MARGIN/2, y1, plotStartX, y2, HORIZONTAL);
+			drawCentered(g, grp.getName(), MARGIN/2, y1, plotStartX, y2, HORIZONTAL);
 			
 			if (grp != yGroups[yGroups.length-1]) g.drawLine(plotStartX, y2, dim.width + plotStartX, y2);
 		}
 	
-		
 		//draw blocks
 		if (fd.isShowBlocks()) {
 			for (Tile tile : data.getTiles()) {
@@ -374,7 +353,7 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 							int rwidth  = (int)((int)((ib.getEnd(X) - ib.getStart(X))) * xPixelPerBP * gX.getScaleFactor());
 							int rheight  = (int)((int)((ib.getEnd(Y) - ib.getStart(Y))) * yPixelPerBP * gY.getScaleFactor());
 							
-							g.setColor(getBlockColor(data,tile,0,(ABlock)ib,fd));
+							g.setColor(colorBox);
 							g.drawRect(rx+plotStartX, ry+MARGIN, rwidth, rheight);
 						}
 					}
@@ -391,14 +370,13 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 				int x = plotStartX + (int)(gX.getOffset()*xPixelPerBP);
 				int y = MARGIN + (int)(gY.getOffset()*yPixelPerBP);
 				if (tile.isSomeLoaded()) {
-					for (Hit h : tile.getHits()) {
-						if ((!fd.isShowBlockHits() || h.isBlock()) && !h.isRepetitive()) {
-							int type = h.getType();
-							if (fd.getHide(type) || h.getPctid() < fd.getPctid(type) 
-									|| h.getEvalue() > fd.getEvalue(type)) continue;
-							g.setColor(getHitColor(type,h,fd));
-							drawHit(g, h, x, y, dotsize,gX.getScaleFactor(), gY.getScaleFactor());
-						}
+					for (DPHit h : tile.getHits()) {
+						if (fd.isShowBlockHits() && !h.isBlock()) continue;
+						if (h.getPctid() < fd.getPctid()) continue;
+						
+						Color c = (fd.isHighlightBlockHits() && h.isBlock()) ? colorBlockHits : colorHits;
+						g.setColor(c);
+						drawHit(g, h, x, y, dotsize,gX.getScaleFactor(), gY.getScaleFactor());
 					}
 				}
 			}
@@ -418,7 +396,7 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 	}
 	
 	//  draw hit as line or polygon
-	private void drawHit(Graphics g, Hit h, int x, int y, int size, float xFact, float yFact) {
+	private void drawHit(Graphics g, DPHit h, int x, int y, int size, float xFact, float yFact) {
 		int s = h.getLength() / 2;
 		int x1 = x + (int)((h.getX() - s)*xPixelPerBP*xFact);
 		int y1 = y + (int)((h.getY() - Math.abs(s))*yPixelPerBP*yFact);
@@ -465,40 +443,10 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 		drawCentered(g, gY.getName(), MARGIN / 2 + 10, MARGIN, MARGIN, MARGIN + dim.height, HORIZONTAL);
 
 		Rectangle rect = new Rectangle();
-		FontMetrics fm;
-
-		//draw contig lines
-		if (fd.isShowContigs()) {
-			Iterator<Contig> iter = gY.getContigList().iterator();
-			Contig contig;
-			while (iter.hasNext()) {
-				contig = (Contig)iter.next();
-				rect.y = MARGIN + (int)(contig.getCCB() * yPixelPerBP);
-				if (rect.y == MARGIN) rect.y++;
-				g.setColor(CONTIG);
-				g.drawLine(MARGIN + 1, rect.y, dim.width + MARGIN - 1, rect.y);
-				g.setColor(Color.black);	
-				fm = g.getFontMetrics();
-				g.drawString(String.format("%d",contig.getNumber()), MARGIN, rect.y+fm.getAscent()); // CAS520 Integer.toString
-			}
-
-			iter = gX.getContigList().iterator(); // if not FPC, there won't be any elements in the list
-			while (iter.hasNext()) {
-				contig = (Contig)iter.next();
-				rect.x = MARGIN + (int)(contig.getCCB() * xPixelPerBP);
-				if (rect.x == MARGIN) rect.x++;
-				g.setColor(CONTIG);
-				g.drawLine(rect.x,MARGIN + 1,rect.x,dim.height + MARGIN - 1);
-				g.setColor(Color.black);	
-				fm = g.getFontMetrics();
-				g.drawString(String.format("%d",contig.getNumber()),rect.x,MARGIN+fm.getAscent());
-			}
-		}
 
 		Tile tile = Tile.getTile(data.getTiles(),gX,gY);
 		//draw blocks
-		if (fd.isShowBlocks() && tile != null 
-				&& (!data.isOnlyShowBlocksWhenHighlighted() || fd.isHighlightBlockHits()))
+		if (fd.isShowBlocks() && tile != null)
 		{
 			InnerBlock ib;
 			for (int i = tile.getNumIBlocks(); i > 0; --i) {
@@ -511,7 +459,7 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 					g.setColor(SELECTED);
 					g.fillRect(rect.x,rect.y,rect.width,rect.height);
 				}
-				g.setColor(getBlockColor(data,tile,0,(ABlock)ib,fd));
+				g.setColor(colorBox);
 				g.drawRect(rect.x,rect.y,rect.width,rect.height);
 			}
 		}
@@ -536,50 +484,50 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 		}
 
 		if (tile == null || !tile.isSomeLoaded()) return ;
-		Hit hits[] = tile.getHits();
+		DPHit hits[] = tile.getHits();
 
 		//draw hits
 		int dotsize = dotSize();
 		double aspect = (double)getHeight()/(double)getWidth(); 
 		for (int i = hits.length-1; i >= 0; --i) {
-			if (hits[i] != null && ((!fd.isShowBlockHits() || hits[i].isBlock()) && !hits[i].isRepetitive()) || fd.isShowAllHits()) {
-				int t = hits[i].getType();
-				if (fd.getHide(t) || hits[i].getPctid() < fd.getPctid(t) || hits[i].getEvalue() > fd.getEvalue(t)) continue;
-				g.setColor(getHitColor(t,hits[i],fd));
+			if (hits[i] == null) continue;
+			if (fd.isShowBlockHits() && !hits[i].isBlock()) continue;
+			if (hits[i].getPctid() < fd.getPctid()) continue;
+			
+			Color c = (fd.isHighlightBlockHits() && hits[i].isBlock()) ? colorBlockHits : colorHits;
+			g.setColor(c);
+			
+			int s = hits[i].getLength() / 2;
+			int x1 = (int)((hits[i].getX() - s)*xPixelPerBP)+MARGIN;
+			int y1 = (int)((hits[i].getY() - Math.abs(s))*yPixelPerBP)+MARGIN;
+			int x2 = (int)((hits[i].getX() + s)*xPixelPerBP)+MARGIN;
+			int y2 = (int)((hits[i].getY() + Math.abs(s))*yPixelPerBP)+MARGIN;
+			if (dotsize <= 1)
+				g.drawLine(x1,y1,x2,y2);
+			else { 
+				// Scale dot size
+				int[] x = new int[4];
+				int[] y = new int[4];
+				x[0] = x1 - (int)(dotsize);
+				y[0] = y1 - (int)(dotsize*aspect);
+				x[1] = x1 + (int)(dotsize);
+				y[1] = y1 - (int)(dotsize*aspect);
+				x[2] = x2 + (int)(dotsize);
+				y[2] = y2 + (int)(dotsize*aspect);
+				x[3] = x2 - (int)(dotsize);
+				y[3] = y2 + (int)(dotsize*aspect);
 				
-				int s = hits[i].getLength() / 2;
-				int x1 = (int)((hits[i].getCoord(X) - s)*xPixelPerBP)+MARGIN;
-				int y1 = (int)((hits[i].getCoord(Y) - Math.abs(s))*yPixelPerBP)+MARGIN;
-				int x2 = (int)((hits[i].getCoord(X) + s)*xPixelPerBP)+MARGIN;
-				int y2 = (int)((hits[i].getCoord(Y) + Math.abs(s))*yPixelPerBP)+MARGIN;
-				if (dotsize <= 1)
-					g.drawLine(x1,y1,x2,y2);
-				else { 
-					// Scale dot size
-					int[] x = new int[4];
-					int[] y = new int[4];
-					x[0] = x1 - (int)(dotsize);
-					y[0] = y1 - (int)(dotsize*aspect);
-					x[1] = x1 + (int)(dotsize);
-					y[1] = y1 - (int)(dotsize*aspect);
-					x[2] = x2 + (int)(dotsize);
-					y[2] = y2 + (int)(dotsize*aspect);
-					x[3] = x2 - (int)(dotsize);
-					y[3] = y2 + (int)(dotsize*aspect);
-					
-					// Constrain to drawing area
-					x[0] = Math.max(x[0], MARGIN);
-					x[1] = Math.min(x[1], MARGIN+dim.width);
-					x[2] = Math.min(x[2], MARGIN+dim.width);
-					x[3] = Math.max(x[3], MARGIN);
-					y[0] = Math.max(y[0], MARGIN);
-					y[1] = Math.max(y[1], MARGIN);
-					y[2] = Math.min(y[2], MARGIN+dim.height);
-					y[3] = Math.min(y[3], MARGIN+dim.height);
-					
-					g.fillPolygon(x, y, 4);
-				}
+				// Constrain to drawing area
+				x[0] = Math.max(x[0], MARGIN);
+				x[1] = Math.min(x[1], MARGIN+dim.width);
+				x[2] = Math.min(x[2], MARGIN+dim.width);
+				x[3] = Math.max(x[3], MARGIN);
+				y[0] = Math.max(y[0], MARGIN);
+				y[1] = Math.max(y[1], MARGIN);
+				y[2] = Math.min(y[2], MARGIN+dim.height);
+				y[3] = Math.min(y[3], MARGIN+dim.height);
 				
+				g.fillPolygon(x, y, 4);
 			}
 		}
 	}
@@ -715,31 +663,5 @@ public class Plot extends JPanel implements Observer, DotPlotConstants,
 		public void mouseEntered(MouseEvent e) { }
 		public void mouseExited(MouseEvent e)  { }
 		public void mouseMoved(MouseEvent e)   { }
-	}
-	
-	private static Color getBlockColor(Data data, Tile b, int altNum, ABlock ab, FilterData fd) {
-		for (int i = 0; i < DotPlot.TOT_RUNS; i++) {
-			if (i == altNum || (data.isOnlyShowBlocksWhenHighlighted() && !fd.isHighlightBlockHits(i))) continue;
-			if (b.hasMatchingBlock(i,ab)) return fd.getSharedHitsColor();
-		}
-		return fd.getBlockHitsColor(altNum);
-	}
-
-	private static Color getHitColor(int hitType, Hit hit, FilterData fd) {
-		for (int i = 0; i < DotPlot.TOT_RUNS; i++) {
-			if (hit.isBlock(i) && fd.isHighlightBlockHits(i)) {
-				for (int j = i+1; j < DotPlot.TOT_RUNS; j++) {
-					if (fd.isHighlightBlockHits(j) && hit.isBlock(j))
-						return fd.getSharedHitsColor();
-				}
-				return fd.getBlockHitsColor(i);
-			}
-		}
-		switch (hitType) {
-			case MRK: return MRK_HIT_COLOR;
-			case BES: return BES_HIT_COLOR;
-			case FP:  return FP_HIT_COLOR;
-		}
-		return null;
 	}
 }

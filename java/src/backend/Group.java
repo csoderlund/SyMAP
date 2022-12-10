@@ -48,8 +48,7 @@ public class Group
 		hitBins = 	new Vector<HitBin>();
 		hitBinMap = 	new TreeMap<Integer,Vector<HitBin>>();
 		
-		if (qt != QueryType.Either)
-		{
+		if (qt != QueryType.Either) {
 			hitBinSize = 	props.getInt("hit_bin");  	// 10000 - SyProps
 			annotBinSize = 	props.getInt("annot_bin"); 	// 30000 - SyProps
 			topN = 			props.getInt("topn"); 		// default 2; change in interface
@@ -175,7 +174,6 @@ public class Group
 			minGeneLength = 0;
 		return totalGenes;
 	}
-	
 	
 	private HashMap<AnnotElem,Integer> getAllOverlappingAnnots(int start, int end)
 	{
@@ -343,13 +341,15 @@ public class Group
 		for (AnnotElem ae : getAllOverlappingAnnots(sh.start, sh.end).keySet())
 		{
 			if (ae.idx == 0) continue;
+			
 			Vector<String> vals = new Vector<String>();
 			vals.add(String.valueOf(h.idx));
 			vals.add(String.valueOf(ae.idx));
 			vals.add(String.valueOf(Utils.intervalsOverlap(ae.start,ae.end,sh.start,sh.end)));
+			
 			conn.bulkInsertAdd("pseudo_hits_annot", vals);
-			if (!usedTypes.contains(ae.mGT))
-			{
+			
+			if (!usedTypes.contains(ae.mGT)) {
 				if (counts.containsKey(ae.mGT.toString()))
 					counts.put(ae.mGT.toString(), counts.get(ae.mGT.toString()) + 1);
 				else

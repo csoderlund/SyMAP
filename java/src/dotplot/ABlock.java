@@ -73,12 +73,7 @@ public abstract class ABlock implements Shape, DotPlotConstants, Comparable<ABlo
 		return b;
 	}
 
-	/**
-	 * Method <code>compareTo</code> compares by block number
-	 *
-	 * @param obj an <code>Object</code> value
-	 * @return an <code>int</code> value
-	 */
+	
 	public int compareTo(ABlock a) {
 		return number - a.number;
 	}
@@ -107,7 +102,7 @@ public abstract class ABlock implements Shape, DotPlotConstants, Comparable<ABlo
 		return contains(r.getX(),r.getY(),r.getWidth(),r.getHeight());
 	}
 
-	public boolean contains(Hit h) {
+	public boolean contains(DPHit h) {
 		return contains(h.getX(),h.getY());
 	}
 
@@ -188,7 +183,7 @@ public abstract class ABlock implements Shape, DotPlotConstants, Comparable<ABlo
 		else rect.add(block.rect);
 	}
 
-	public void addHit(Hit hit) {
+	public void addHit(DPHit hit) {
 		if (!rectSet) {
 			rect.setRect(hit.getX(),hit.getY(),0,0);
 			rectSet = true;
@@ -221,10 +216,9 @@ public abstract class ABlock implements Shape, DotPlotConstants, Comparable<ABlo
 		number = n;
 	}
 
-	public abstract Hit[] getHits(boolean includeRepetitive, boolean onlyBlock);
-	public abstract int[] getContigNumbers(int axis);
-
-	protected void setPosition(List indexs, Hit[] hits) {
+	public abstract DPHit[] getHits(boolean includeRepetitive, boolean onlyBlock);
+	
+	protected void setPosition(List indexs, DPHit[] hits) {
 		clear();
 		for (Iterator iter = indexs.iterator(); iter.hasNext(); )
 			addHit(hits[((Number)iter.next()).intValue()]);

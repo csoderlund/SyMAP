@@ -8,10 +8,6 @@ import java.awt.event.MouseEvent;
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
 
-import symap.block.Block;
-import symap.block.BlockFilter;
-import symap.contig.Contig;
-import symap.contig.ContigFilter;
 import symap.drawingpanel.DrawingPanel;
 import symap.frame.HelpBar;
 import symap.mapper.Mapper;
@@ -74,20 +70,10 @@ public class FilterHandler implements ActionListener { // CAS521 remove Filtered
 
 	protected Filter createFilter(Object obj) {
 		Filter filter = null;
-		if      (obj instanceof Block)    filter = createBlockFilter((Block)obj);
-		else if (obj instanceof Contig)   filter = createContigFilter((Contig)obj);
-		else if (obj instanceof Sequence) filter = createSequenceFilter((Sequence)obj);
+		if (obj instanceof Sequence) filter = createSequenceFilter((Sequence)obj);
 		else if (obj instanceof Mapper)   filter = createMapperFilter((Mapper)obj);
 		if (filter != null && helpBar != null) filter.setHelpBar(helpBar);
 		return filter;
-	}
-
-	protected Filter createBlockFilter(Block block) {
-		return new BlockFilter(drawingPanel.getFrame(),drawingPanel,helpButton,block);
-	}
-
-	protected Filter createContigFilter(Contig contig) {
-		return new ContigFilter(drawingPanel.getFrame(),drawingPanel,helpButton,contig);
 	}
 
 	protected Filter createSequenceFilter(Sequence sequence) {

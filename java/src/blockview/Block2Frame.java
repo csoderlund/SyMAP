@@ -8,20 +8,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
+import java.util.Vector;
+import java.util.TreeMap;
+import java.awt.geom.Rectangle2D;
+import javax.swing.event.*;
 
+import symap.SyMAP;
 import util.DatabaseReader;
 import util.ErrorReport;
 import util.ImageViewer;
 import util.Utilities;
-
-import java.util.Vector;
-import java.util.TreeMap;
-import java.awt.geom.Rectangle2D;
-
-import javax.swing.event.*;
-
-import symap.*;
-import backend.*;
 
 public class Block2Frame extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -44,14 +40,14 @@ public class Block2Frame extends JFrame {
 	private String mRefChr;
 	private TreeMap<Integer,String> mGrp2Names;
 	private TreeMap<Integer,Integer> colorOrder;
-	private boolean isFpc = false;
+	
 	private boolean savedRects = false;
 	private JButton saveBtn;
 	private Container mainPane;
 	private int farL, farR;
 	
 	public Block2Frame(DatabaseReader dbReader, int refIdx, int idx2, int grpIdx, int pairIdx, boolean reversed) {
-		super("SyMAP Block Detail View " + SyMAP.VERSION);
+		super("SyMAP Block Detail View " + symap.SyMAP.VERSION);
 		mRefIdx = refIdx;
 		mIdx2 = idx2;
 		mGrpIdx = grpIdx;
@@ -162,10 +158,6 @@ public class Block2Frame extends JFrame {
 				System.out.println("Genomes have too many chromosomes/contigs to show in block view");
 				return false;
 			}
-			
-			rs = s.executeQuery("select type from projects where idx=" + mIdx2);
-			rs.first();
-			isFpc = rs.getString("type").equals("fpc"); 
 			
 			rs = s.executeQuery("select idx from xgroups where name='0' and proj_idx=" + mIdx2);
 			if (rs.first()) {
@@ -298,9 +290,7 @@ public class Block2Frame extends JFrame {
 				g2.setFont(font1);
 				g2.drawString(b.name,x-10+offset, y1-15);
 				g2.drawString(b.numHits + " anchors",x-10, y1-5);
-				if (isFpc) {
-					addCtgs(b,g2,x,y1,fChromWidth2,ht);
-				}
+				
 				if (!savedRects) {
 					b.blockRect = new Rectangle(x,y1,fChromWidth2,ht);
 				}		
@@ -337,9 +327,7 @@ public class Block2Frame extends JFrame {
 				g2.setFont(font1);
 				g2.drawString(b.name,x-10+offset, y1-15);
 				g2.drawString(b.numHits + " anchors",x-10, y1-5);
-				if (isFpc) {
-					addCtgs(b,g2,x,y1,fChromWidth2,ht);
-				}
+				
 				if (!savedRects) {
 					b.blockRect = new Rectangle(x,y1,fChromWidth2,ht);
 				}				
@@ -348,64 +336,7 @@ public class Block2Frame extends JFrame {
 		}	
 		savedRects = true;
 	}	
-	private void addCtgs(Block b, Graphics2D g, int x, int y, int w, int h) throws Exception {
-		String[] ctgs = b.ctgs.split(",");
-		if (b.ctgSizes == null) {
-			b.ctgSizes = new int[ctgs.length];
-			b.ctgNums = new int[ctgs.length];
-			b.totalSize = 0;
-			Statement s = mDB.getConnection().createStatement(); // CAS515 moved from calling routine
-			ResultSet rs=null;
-			for (int i = 0; i < b.ctgSizes.length; i++) {
-				rs = s.executeQuery("select size,number from contigs where idx=" + ctgs[i]);
-				rs.first();
-				b.ctgSizes[i] = rs.getInt("size");
-				b.ctgNums[i] = rs.getInt("number");
-				b.totalSize += b.ctgSizes[i];
-			}
-			if (rs!=null) rs.close();
-			s.close();
-		}
-		float discrep = 0.0F;
-		g.setColor(Color.black);
-		int curY = -10; // stores the current position of contig numbers drawn to the right
-		for (int i = 0; i < b.ctgSizes.length; i++) {
-			float ctgHF = h*b.ctgSizes[i]/b.totalSize;
-			int ctgH = (int)ctgHF;
-			discrep += (ctgHF - ctgH);
-			if (discrep > 1) {
-				ctgH++;
-				discrep--;
-			}		
-			if (ctgH >= 14) {
-				if (b.mGrp2 == unGrp2) {
-					g.setColor(Color.white);
-				}
-				g.drawString("" + b.ctgNums[i], x + 1, y + 10);
-				if (b.mGrp2 == unGrp2){
-					g.setColor(Color.black);
-				}			
-			}
-			else {
-				// draw the number string to the right
-				if (y+ctgH/2+4 > curY + 10) {
-					// we're far enough below the last one that we can draw it 
-					// immediately to the right and restart the positioning
-					curY = y +ctgH/2+4 ;
-				}
-				else {
-					curY += 10;
-				}
-				g.drawString("" + b.ctgNums[i], x + w + 10, curY);
-				g.drawLine(x + w, y + ctgH/2, x + w + 9, curY-4);
-				
-			}
-			y += ctgH;
-			if (i < b.ctgSizes.length-1) {
-				g.drawLine(x, y, x + w, y);
-			}
-		}
-	}
+	
 	private boolean layoutBlocks() {
 	try {
 		ResultSet rs;
@@ -420,13 +351,13 @@ public class Block2Frame extends JFrame {
 		mBlocks = new Vector<Block>();
 		String sql;
 		if (!mReversed) { // CAS516 add corr
-			sql ="select idx, grp1_idx as grp2, start2 as start, end2 as end, blocknum, ctgs1 as ctgs," +
+			sql ="select idx, grp1_idx as grp2, start2 as start, end2 as end, blocknum," +
 				" start1 as s2, end1 as e2, corr " +
 				" from blocks where pair_idx=" + mPairIdx + 
 				" and grp2_idx=" + mGrpIdx + " order by (end2 - start2) desc";
 		}
 		else {
-			sql="select idx, grp2_idx as grp2, start1 as start, end1 as end, blocknum, ctgs2 as ctgs, " +
+			sql="select idx, grp2_idx as grp2, start1 as start, end1 as end, blocknum,  " +
 			   " start2 as s2, end2 as e2, corr " +
 			   " from blocks where pair_idx=" + mPairIdx + 
 			   " and grp1_idx=" + mGrpIdx + " order by (end1 - start1) desc";		
@@ -440,10 +371,9 @@ public class Block2Frame extends JFrame {
 			int e2 = rs.getInt("e2");
 			int blocknum = rs.getInt("blocknum");
 			int idx = rs.getInt("idx");
-			String ctgs = rs.getString("ctgs");
 			boolean isInv = (rs.getFloat("corr")<0); // CAS516 add
 			String blockName = Utilities.blockStr(mGrp2Names.get(grp2), mRefChr, blocknum); // CAS513 call blockStr
-			Block b = new Block(grp2, start/bpPerPx, end/bpPerPx, s2, e2, blockName, idx, ctgs, unordered2, isInv);
+			Block b = new Block(grp2, start/bpPerPx, end/bpPerPx, s2, e2, blockName, idx, unordered2, isInv);
 			mBlocks.add(b);
 		}
 		rs.close();
@@ -577,16 +507,13 @@ public class Block2Frame extends JFrame {
 		String name;
 		int numHits = 0;
 		int idx;
-		String ctgs;
 		Rectangle2D blockRect;
-		int[] ctgSizes = null;
-		int[] ctgNums = null;
 		int totalSize = 0;
 		boolean unordered;
 		boolean bInv;
 		
 		public Block(int _grp2, int _s, int _e, int _s2, int _e2, String _name, int _idx, 
-				String _ctgs, boolean _unord, boolean isInv)
+				boolean _unord, boolean isInv)
 		{
 			mGrp2 = _grp2;
 			mS = _s;
@@ -595,7 +522,6 @@ public class Block2Frame extends JFrame {
 			mE2 = _e2;
 			name = _name;
 			idx = _idx;
-			ctgs = _ctgs;
 			unordered = _unord;
 			bInv = isInv;
 		}
@@ -626,17 +552,12 @@ public class Block2Frame extends JFrame {
 	private void showDetailView(Block b) {
 		try {
 			SyMAP symap = new SyMAP(mDB, null);
-			if (!isFpc) {
-				symap.getDrawingPanel().setSequenceTrack(1,mRefIdx,mGrpIdx,Color.CYAN);
-				symap.getDrawingPanel().setSequenceTrack(2,mIdx2,b.mGrp2,Color.GREEN);
-				symap.getDrawingPanel().setTrackEnds(1,b.mS*bpPerPx,b.mE*bpPerPx);
-				symap.getDrawingPanel().setTrackEnds(2,b.mS2,b.mE2);				
-			}
-			else {
-				symap.getDrawingPanel().setSequenceTrack(1,mRefIdx,mGrpIdx,Color.CYAN);
-				symap.getDrawingPanel().setBlockTrack(2,mIdx2,Utils.intArrayJoin(b.ctgNums,","),Color.GREEN);
-				symap.getDrawingPanel().setTrackEnds(1,b.mS*bpPerPx,b.mE*bpPerPx);								
-			}
+			
+			symap.getDrawingPanel().setSequenceTrack(1,mRefIdx,mGrpIdx,Color.CYAN);
+			symap.getDrawingPanel().setSequenceTrack(2,mIdx2,b.mGrp2,Color.GREEN);
+			symap.getDrawingPanel().setTrackEnds(1,b.mS*bpPerPx,b.mE*bpPerPx);
+			symap.getDrawingPanel().setTrackEnds(2,b.mS2,b.mE2);
+									
 			symap.getFrame().showX(); // CAS512
 		}
 		catch (Exception err) {

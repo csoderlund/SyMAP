@@ -3,13 +3,10 @@ Installation instructions:
 1. Edit the makefile to change JAVA_PATH to your java path
 
 2. From the command line:
-	tar xvf classes_ext.tar.gz
-	make class_dirs
+	tar xf classes_ext.tar.gz
 	make
 	cd ..
-	tar xvf ext.tar.gz
+	tar xf ext.tar.gz
 	
 3. Optional: For the demo files, they may be extracted from the SyMAP package.
-
-
 

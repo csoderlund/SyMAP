@@ -46,9 +46,9 @@ public class SyMAPExp implements PropertyChangeListener {
 	}
 	
 	// symapCE.SyMAPmanager.showExplorer
-	public boolean addProject(String strName, String strType) {
+	public boolean addProject(String strName) {
 		try {
-			Project p = loadProject(strName, strType);
+			Project p = loadProject(strName);
 			if ( p != null ) {
 				p.setColor( projectColors[projects.size() % (projectColors.length)] );				
 				tracks.addAll( loadProjectTracks(p) );
@@ -79,7 +79,7 @@ public class SyMAPExp implements PropertyChangeListener {
 		return frame;
 	}
 	
-	private Project loadProject(String strProjName, String strTypeName) throws SQLException{
+	private Project loadProject(String strProjName) throws SQLException{
 	     int nProjIdx = -1;
 	     String strDisplayName = null;
 	     String loaddate=""; // CAS513 to put on left side by name
@@ -89,7 +89,7 @@ public class SyMAPExp implements PropertyChangeListener {
 	     		"FROM projects AS p " +
 	     		"JOIN proj_props AS pp ON (p.idx=pp.proj_idx) " +
 	     		"WHERE pp.name='display_name' " +
-	     		"AND p.name='"+strProjName+"' AND p.type='"+strTypeName+"'");
+	     		"AND p.name='"+strProjName+"'");
 	     
 	     if ( rs.next() ) {
 	    	loaddate = rs.getString("p.loaddate");
@@ -103,7 +103,7 @@ public class SyMAPExp implements PropertyChangeListener {
 	     	return null;
 	     }
 	     
-	     return new Project(nProjIdx, strProjName, strTypeName, strDisplayName, loaddate);
+	     return new Project(nProjIdx, strProjName,  strDisplayName, loaddate);
 	}
 	
 	private Vector<TrackCom> loadProjectTracks(Project p) throws SQLException
@@ -161,7 +161,7 @@ public class SyMAPExp implements PropertyChangeListener {
 		*/
 	     // Load blocks for each track
 	     String strGroupList = "(" + getGroupList(tracks) + ")";
-	     String strQ = "SELECT idx,grp1_idx,grp2_idx,start1,end1,start2,end2,ctgs1,ctgs2, corr FROM blocks " + 
+	     String strQ = "SELECT idx,grp1_idx,grp2_idx,start1,end1,start2,end2, corr FROM blocks " + 
 						"WHERE (grp1_idx IN "+strGroupList+" AND grp2_idx IN "+strGroupList+")";
      
 	     ResultSet rs = pool.executeQuery(strQ);
@@ -173,17 +173,14 @@ public class SyMAPExp implements PropertyChangeListener {
 	     	long end1    = rs.getLong(5);
 	     	long start2  = rs.getLong(6);
 	     	long end2    = rs.getLong(7);
-	     	String ctgs1 = rs.getString(8);
-	     	String ctgs2 = rs.getString(9);
 	     	// CAS512 float corr = (haveCorr ? rs.getFloat("corr") : 0.01F); // if no corr field, make sure they are positive
-	     	float corr = rs.getFloat(10);
+	     	float corr = rs.getFloat(8);
 	     	
 	     	TrackCom t1 = TrackCom.getTrackByGroupIdx(tracks, grp1_idx);
 	     	TrackCom t2 = TrackCom.getTrackByGroupIdx(tracks, grp2_idx);
 	     	
 	     	Block b = new Block(blockIdx, t1.getProjIdx(), t2.getProjIdx(), 
-	     			t1.getGroupIdx(), t2.getGroupIdx(), 
-	     			start1, end1, start2, end2, ctgs1, ctgs2, corr);
+	     			t1.getGroupIdx(), t2.getGroupIdx(), start1, end1, start2, end2,  corr);
 	     	if (!blocks.contains(b)) {
 	     		blocks.add(b);
 	     	}

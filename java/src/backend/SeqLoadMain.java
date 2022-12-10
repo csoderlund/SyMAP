@@ -50,7 +50,7 @@ public class SeqLoadMain
 	// Create project in DB
 			if (TRACE) log.msg("Checking database");
 			
-			projIdx = pool.getProjIdx(projName, ProjType.pseudo);
+			projIdx = pool.getProjIdx(projName);
 			if (projIdx > 0) 
 				pool.deleteProject(projIdx);
 			
@@ -60,10 +60,10 @@ public class SeqLoadMain
 				return false;
 			}
 			log.msg("Create project in database ");
-			pool.createProject(projName, ProjType.pseudo); 
+			pool.createProject(projName); 
 			
 			if (TRACE) log.msg("Processing properties");
-			projIdx = pool.getProjIdx(projName, ProjType.pseudo);
+			projIdx = pool.getProjIdx(projName);
 			props.uploadProjProps(pool, projIdx, new String[] { "name","display_name", "description", 
 				"category", "grp_prefix", "grp_sort", "grp_type","order_against","replace_bad_char",
 				"min_display_size_bp","mask_all_but_genes", "min_size","sequence_files", "anno_files",

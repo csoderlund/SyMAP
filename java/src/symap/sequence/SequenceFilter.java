@@ -234,7 +234,7 @@ public class SequenceFilter extends Filter {
 		popup.add(hitLenPopupCheck); 
 		popup.add(scoreLinePopupCheck);
 		popup.add(scoreValuePopupCheck);
-		popup.add(fullSequencePopupItem);
+		// popup.add(fullSequencePopupItem); CAS530 not working
 		
 		fullSequencePopupItem.addActionListener(this);
 		flippedPopupCheck.addActionListener(this); 

@@ -2,6 +2,7 @@ package symap.projectmanager.common;
 
 /****************************************************
  * There are TWO Project.java, the other one is in backend
+ * CAS522 remove FPC
  */
 import java.awt.Color;
 import java.io.File;
@@ -25,7 +26,7 @@ public class Project implements Comparable <Project> {//CAS513 for TreeSet sort
 	private long length=0;
 	
 	private int nIdx;		// unique database index
-	private String strType, strDisplayName, strDescription, strCategory, strDate="";
+	private String strDisplayName, strDescription, strCategory, strDate="";
 	private String strAbbrevName; // CAS519 for Symap query columns
 	private boolean hasAbbrev=true; // CAS519 if not set in Parameter, then this set to false
 	private int numGroups;
@@ -47,25 +48,22 @@ public class Project implements Comparable <Project> {//CAS513 for TreeSet sort
 	public static final short STATUS_ON_DISK = 0x0001; // project exists in file hierarchy
 	public static final short STATUS_IN_DB   = 0x0002; // project exists in the database
 	
-	public Project(int nIdx, String strName, String strType, String loaddate) { 
+	public Project(int nIdx, String strName, String loaddate) { 
 		this.nIdx = nIdx;
 		this.strDBName = strName;
-		this.strType = strType;
-	
-		if (loaddate!="") { // CAS513 add loaddate for display
-			strDate = reformatDate(loaddate);
-		}
 		
-		// CAS500 The type is from the directory name under /data, which is 'seq', the type in the db is 'pseudo'.
-		if (strType.equals(Constants.seqType)) this.strType=Constants.dbSeqType;
+		if (loaddate!="")  // CAS513 add loaddate for display
+			strDate = reformatDate(loaddate);
+		
 		strCategory = "Uncategorized";
 	}
+	public Project(int nIdx, String strName,  String strDisplayName, String loaddate) { 
+		this(nIdx, strName, loaddate);
+		this.strDisplayName = strDisplayName;
+	}
+	
 	public int compareTo(Project b) {
 		return strDisplayName.compareTo(b.strDisplayName);
-	}
-	public Project(int nIdx, String strName, String strType, String strDisplayName, String loaddate) { 
-		this(nIdx, strName, strType, loaddate);
-		this.strDisplayName = strDisplayName;
 	}
 	public boolean hasGenes() {return numGene>0;}
 	public void setAnno(int numGene, int numGap, int numAnnot) {
@@ -108,12 +106,6 @@ public class Project implements Comparable <Project> {//CAS513 for TreeSet sort
 		}
 		strAbbrevName = s; 
 	}
-	
-	public String getType() { return strType; }
-	public boolean isPseudo() { 
-		return (strType.equals(Constants.seqType) || strType.equals(Constants.dbSeqType)); 
-	}
-	public boolean isFPC() { return strType.equals(Constants.fpcType); }
 	
 	public short getStatus() { return nStatus; }
 	public void setStatus(short n) { nStatus = n; }
@@ -203,7 +195,7 @@ public class Project implements Comparable <Project> {//CAS513 for TreeSet sort
 	}
 	public void updateParameters(UpdatePool db, ProgressDialog progress) {
 		try {
-			String dir = isPseudo() ? Constants.seqDataDir : Constants.fpcDataDir;
+			String dir = Constants.seqDataDir;
 			dir += strDBName;
 			
 			if (progress != null)
@@ -289,10 +281,8 @@ public class Project implements Comparable <Project> {//CAS513 for TreeSet sort
 	public boolean equals(Object o) {
 		if (o instanceof Project) {
 			Project p = (Project)o;
-			return (strDBName != null && strDBName.equals(p.getDBName())
-					&& strType != null && strType.equals(p.getType()));
+			return (strDBName != null && strDBName.equals(p.getDBName()));
 		}
-		
 		return false;
 	}
 	public void loadGroups(UpdatePool db) throws SQLException

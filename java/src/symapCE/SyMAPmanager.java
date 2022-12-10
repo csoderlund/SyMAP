@@ -52,7 +52,7 @@ public class SyMAPmanager extends ProjectManagerFrameCommon
 			SyMAPExp symapExp = new SyMAPExp(dr);
 			
 			for (Project p : availProjects) 
-				symapExp.addProject( p.getDBName(), p.getType() );
+				symapExp.addProject( p.getDBName() );
 			symapExp.build();
 			symapExp.getFrame().build();
 			symapExp.getFrame().setVisible(true); 

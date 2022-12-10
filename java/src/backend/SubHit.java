@@ -8,13 +8,11 @@ public class SubHit
 	public String name; 		
 	public int[] blocks; // array of sub-block start/end coordinates
 	public HitStatus status = HitStatus.Undecided;
-	public FileType fileType; 	
 	
 	public SubHit(SubHit h)
 	{
 		end =      h.end;
 		start =    h.start;
-		fileType = h.fileType;
 		grpIdx =   h.grpIdx;
 		name = 	   new String(h.name);
 		status =   h.status;

@@ -73,6 +73,12 @@ public class HitFilter {
 		if (s)      {setBlock(true); setSet(true); setHiSet(true); setHiNone(false);}
 		else if (r) {setBlock(false); setAllHit(true);}
 	}
+	// CAS530 dotplot
+	public void setForDP(boolean b, boolean r) {
+		setBlock(false); setAllHit(false);
+		if (b) setBlock(true);
+		if (r) setAllHit(true);
+	}
 	
 	public void setDefaults() {
 		bHiBlock  = bHiSet = bHi2Gene = bHi0Gene = bHi1Gene = false;		
@@ -114,7 +120,7 @@ public class HitFilter {
 		if (setBlock(fd.isShowBlockHits(),false))           changed = true;
 		if (set2Gene(fd.isShowContainedGeneHits(),false))	changed = true;   
 		if (set0Gene(fd.isShowNonGeneHits(),false))			changed = true;
-		if (setPctid(fd.getPctid(0),false))           	changed = true;
+		if (setPctid(fd.getPctid(),false))           	changed = true;
 		if (changed) updateListeners();
 		return changed;
 	}

@@ -11,8 +11,6 @@ import java.sql.ResultSet;
 import java.util.TreeSet;
 import java.util.Vector;
 
-import symap.SyMAP;
-
 import java.util.Properties;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,12 +26,8 @@ import util.ErrorReport;
 import util.Logger;
 import util.Utilities;
 
-enum AlignType   { Blat, Mum };
 enum HitStatus   { In, Out, Undecided };
 enum QueryType   { Query, Target, Either };
-
-//CAS500 Pseudo->Seq (directory is /seq, still pseudo in database); Gene appears to be obsolete
-enum FileType    { Bes, Mrk, Gene, Seq, Unknown }; 
 
 public class AnchorsMain
 {
@@ -49,7 +43,7 @@ public class AnchorsMain
 	private boolean bInterrupt = false;
 	private Project p1, p2;
 	private int mTotalHits=0, mTotalLargeHits=0, mTotalBrokenHits=0;
-	private boolean isSelf = false, isNucmer=false, isFPC = false, doClust = true;
+	private boolean isSelf = false, isNucmer=false, doClust = true;
 	private String resultDir=null;
 
 	public AnchorsMain(int idx, UpdatePool pool, Logger log,Properties props, SyProps pairProps) {
@@ -73,22 +67,18 @@ public class AnchorsMain
 			
 			Utils.initStats();
 
-			ProjType pType = pool.getProjType(proj1Name);
-			isSelf = (proj1Name.equals(proj2Name) && pType == ProjType.pseudo); 
-			isFPC = (pType == ProjType.fpc);
+			isSelf = proj1Name.equals(proj2Name); 
 			
-			p1 = new Project(pool, log, mProps, proj1Name, pType, QueryType.Query);
+			p1 = new Project(pool, log, mProps, proj1Name,  QueryType.Query);
 			
 			// make new object even if it is a self alignment - or filtering gets confused
-			p2 = new Project(pool, log, mProps, proj2Name, ProjType.pseudo, QueryType.Target);
+			p2 = new Project(pool, log, mProps, proj2Name, QueryType.Target);
 	
 		/** assignments **/
 			
 			if (Cancelled.isCancelled()) return false; // CAS500 all cancelled returned true
 			
-			if (p1.isSeq()) p1.loadAnnotation(pool);
-			
-			assert(p2.isSeq()); 
+			p1.loadAnnotation(pool);
 			p2.loadAnnotation(pool);
 			
 			// renewPairIdx(p1, p2); CAS501
@@ -100,7 +90,7 @@ public class AnchorsMain
 			if (Cancelled.isCancelled()) return false;
 	
 			// e.g. data/seq_results/p1_to_p2
-			resultDir = Constants.getNameResultsDir(proj1Name, isFPC, proj2Name);
+			resultDir = Constants.getNameResultsDir(proj1Name, proj2Name);
 			if ( !Utilities.pathExists(resultDir) ) {
 				log.msg("Cannot find pair directory " + resultDir);
 				ErrorCount.inc();
@@ -109,9 +99,7 @@ public class AnchorsMain
 			diagHits = new Vector<Hit>();
 			
 	/** Read files and prefilter hits ***/	
-			boolean rc;
-			if (p1.isSeq()) rc = processSeqFiles();
-			else 			rc = processFpcFiles();
+			boolean rc = processSeqFiles();
 			if (!rc) return false;
 			
 			if (Constants.TRACE || Constants.PRT_STATS) {
@@ -200,9 +188,9 @@ public class AnchorsMain
 					"where ph.pair_idx=" + pairIdx + " and p.grp_idx=ph.grp1_idx and g.idx=ph.grp1_idx and g.flipped=1");
 			}
 			***/
-			if (p1.isSeq()) {
-				Utils.uploadStats(pool, pairIdx, p1.idx, p2.idx);
-			}	
+		
+			Utils.uploadStats(pool, pairIdx, p1.idx, p2.idx);
+			
 			// CAS517 move from SyntenyMain - CAS520 moved back to SyntenyMain, so hits# are block based
 			
 			pool.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + p1.getIdx());
@@ -220,50 +208,7 @@ public class AnchorsMain
 	{
 		bInterrupt = true;	
 	}
-	private boolean processFpcFiles() {
-		try {
-			// Changes results slightly if bes is before mrk
-			String[] btypes1 = new String[] {Constants.mrkType, Constants.besType};
-			String alignDir = resultDir + Constants.alignDir ;
-			
-			File dh = new File(alignDir);
-			if (!dh.exists() || !dh.isDirectory()) {
-				log.msg("Error: /align directory does not exist " + alignDir);
-				return false;
-			}
-			log.msg("Align directory " + alignDir);
-			int nHitsScanned = 0;
-			
-			for(int i1 = 0; i1 < btypes1.length; i1++) {
-				String btype1 = btypes1[i1];
-				log.msg("Processing type " + btype1);
-				
-				// process all aligned files in directory	
-				File[] fs = dh.listFiles();
-				for (int k = 0; k < fs.length; k++) {
-					File f = fs[k];
-					if (!f.isFile() || !f.getName().endsWith(Constants.blatSuffix)) continue;
-				
-					if (f.getName().startsWith(btype1)) {
-						AnchorFile af = new AnchorFile(f, btype1, Constants.seqType);
-						int nHits = scanBlatFile(af, p1, p2);
-						nHitsScanned+=nHits;
-								
-						if (bInterrupt) return false;
-						Utils.prtNumMsg(log, nHits, "scanned " + Utils.fileFromPath(f.toString()));
-					}
-				}
-			}
-			Utils.prtNumMsg(log, nHitsScanned, "Total scanned hits           ");
-			
-			if (nHitsScanned == 0) { // CASz check was not here, so always wrote
-				log.msg("No readable anchors were found - BLAT probably did not run correctly.");
-				return false;
-			}
-			return true;
-		}
-		catch (Exception e) {ErrorReport.print(e, "Reading fpc anchors"); return false;}
-	}
+	
 	/*******************************************************************/
 	private boolean processSeqFiles() {
 		try {
@@ -277,7 +222,7 @@ public class AnchorsMain
 			log.msg("Alignment files in " + alignDir);
 			
 			// process all aligned files in directory
-			log.msg("Scan files to create merged hits:"); 	
+			log.msg("Scan files to create merged hits"); 	
 			int nHitsScanned = 0;
 			TreeSet<String> skipList = new TreeSet<String>();
 			File[] fs = dh.listFiles();
@@ -300,10 +245,9 @@ public class AnchorsMain
 						if (!skipSelf && !fName.startsWith(Constants.selfPrefix)) continue;
 					}
 					
-					AnchorFile af = new AnchorFile(f,Constants.seqType, Constants.seqType);
-					int nHits = scanFile1(af, p1, p2, skipSelf); 
+					int nHits = scanFile1(f, p1, p2, skipSelf); 
 							
-					if (nHits == 0) skipList.add(af.mFile.getName());
+					if (nHits == 0) skipList.add(f.getName());
 					else nHitsScanned += nHits;
 					
 					Utils.prtNumMsg(log, nHits, "scanned " + Utils.fileFromPath(f.toString()));
@@ -336,7 +280,7 @@ public class AnchorsMain
 			}
 			
 	/** Second scan - to cluster **/	
-			log.msg("Scan files to load hits:");
+			log.msg("Scan files to load hits");
 			
 			nHitsScanned = 0;			
 			int filesScanned = 0, filesToScan = fs.length;	
@@ -359,10 +303,8 @@ public class AnchorsMain
 						if (i==0 &&  fName.startsWith(Constants.selfPrefix)) continue;
 						if (i==1 && !fName.startsWith(Constants.selfPrefix)) continue;
 					}
-					
-					AnchorFile af = new AnchorFile(f,Constants.seqType, Constants.seqType);
 							
-					int nHits = scanFile2(af, p1, p2, bSelf);
+					int nHits = scanFile2(f, p1, p2, bSelf);
 					nHitsScanned += nHits;
 							
 					filesScanned++;
@@ -383,9 +325,9 @@ public class AnchorsMain
 	}
 	
 	// seq to seq - first time through, create the predicted genes
-	private int scanFile1(AnchorFile file, Project p1, Project p2, boolean skipSelf) throws Exception
+	private int scanFile1(File mFile, Project p1, Project p2, boolean skipSelf) throws Exception
 	{
-		BufferedReader fh = new BufferedReader(new FileReader(file.mFile));
+		BufferedReader fh = new BufferedReader(new FileReader(mFile));
 		
 		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
 		String line;
@@ -411,13 +353,11 @@ public class AnchorsMain
 			
 			Hit hit = new Hit();
 			hit.origHits = 1;
-			hit.query.fileType = file.mType1;
-			hit.target.fileType = file.mType2;
-			
+		
 			boolean success = scanNextMummerHit(line,hit);
 			if (!success) {
 				if (numErrors < 5){
-					log.msg("Parse error on line " + lineNum + " in " + file.mFile.getName());
+					log.msg("Parse error on line " + lineNum + " in " + mFile.getName());
 					numErrors++;
 					continue;
 				}
@@ -491,9 +431,9 @@ public class AnchorsMain
 	}
 	// seq/seq 2nd time through - do the clustering
 	// this is about the same as scanFile1 except for no checks, diagonals, and final processing
-	private int scanFile2(AnchorFile file, Project p1, Project p2, boolean skipSelf) throws Exception
+	private int scanFile2(File mFile, Project p1, Project p2, boolean skipSelf) throws Exception
 	{
-		BufferedReader fh = new BufferedReader(new FileReader(file.mFile));
+		BufferedReader fh = new BufferedReader(new FileReader(mFile));
 		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
 		String line;
 		
@@ -511,8 +451,6 @@ public class AnchorsMain
 			
 			Hit hit = new Hit();	// CAS515 make Object after reject lines
 			hit.origHits = 1;
-			hit.query.fileType  = file.mType1;
-			hit.target.fileType = file.mType2;
 			
 			boolean success = scanNextMummerHit(line,hit);
 			if (!success) Utils.die("SyMAP error - scanNextHummerHit for scan2");
@@ -656,81 +594,6 @@ public class AnchorsMain
 		return ret;
 	}
 	
-	// for fpc/pseudo only
-	private int scanBlatFile(AnchorFile file, Project p1, Project p2) throws Exception
-	{
-		AlignType alignType = null;
-		if (file.mFile.getName().endsWith(".blat"))
-			alignType = AlignType.Blat;
-		else return 0;
-		
-		BufferedReader fh = new BufferedReader(new FileReader(file.mFile));
-		int lineNum = 0;
-
-		if (alignType == AlignType.Blat) {
-			// Skip header 
-			fh.readLine();
-			fh.readLine();
-			fh.readLine();
-			fh.readLine();
-			fh.readLine();
-		}
-		
-		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
-		String line;
-		int numErrors = 0;
-		
-		while (fh.ready()) {
-			if (bInterrupt) {
-				fh.close();
-				return 0;
-			}
-			Hit hit = new Hit();
-			hit.origHits = 1;
-			hit.query.fileType = file.mType1;
-			hit.target.fileType = file.mType2;
-			line = fh.readLine().trim();
-			lineNum++;
-			if (line.length() > 0)
-			{
-				boolean success = false; 
-				boolean reversed = (file.mType1 == FileType.Seq && file.mType2 != FileType.Seq); // Obsolete
-				success = scanNextBlatHit(line,hit,reversed);
-				
-				if (!success)
-				{
-					if (numErrors < 5)
-					{
-						log.msg("Parse error on line " + lineNum + " in " + file.mFile.getName());
-						numErrors++;
-						continue;
-					}
-					else throw( new Exception("Too many errors in file!") );
-				}
-
-				if (hit.query.fileType == FileType.Bes)
-				{
-					if (!p1.getFPCData().parseBES(hit.query.name,hit))
-						throw(new Exception("Unable to parse BES " + hit.query.name));
-				}
-				
-				if (hit.target.fileType == FileType.Seq) {
-					hit.target.grpIdx = p2.grpIdxFromQuery(hit.target.name);
-					if (hit.target.grpIdx == -1)
-						throw(new Exception("Target not found: " + hit.target.name));
-				}
-				
-				rawHits.add(hit);
-			}
-		}
-		fh.close();
-		Utils.incStat("RawHits",rawHits.size());
-
-		preFilterHits2(rawHits, p1, p2);
-		
-		return lineNum;
-	}		
-
 	// Cluster the mummer hits into larger hits using the annotations, including the "predicted genes".
 	// So our possible hit set will now be a subset of annotations x annotations, and the 
 	// actual length of the hits will be the sum of the hits that went into them.
@@ -847,71 +710,6 @@ public class AnchorsMain
 		}	
 	}
 
-	private boolean scanNextBlatHit(String line, Hit hit, boolean reversed)
-	{
-		String[] fs = line.split("\\s+");
-		if (fs.length < 21)
-			return false;
-		
-		int match = Integer.parseInt(fs[0]) + Integer.parseInt(fs[2]);
-		int mis = Integer.parseInt(fs[1]);
-		String strand 	= fs[8];
-			
-		int tstart 	= Integer.parseInt(fs[15]);
-		int tend 	= Integer.parseInt(fs[16]);
-		int qstart 	= Integer.parseInt(fs[11]);
-		int qend 	= Integer.parseInt(fs[12]);
-		int qlen 	= Integer.parseInt(fs[10]);
-				
-		int[] qstarts 	= Utils.strArrayToInt(fs[19].split(","));
-		int[] tstarts 	= Utils.strArrayToInt(fs[20].split(","));
-		int[] bsizes 	= Utils.strArrayToInt(fs[18].split(","));
-
-		// for reverse strand hits, blat reverses the coordinates of the blocks
-		if (strand.equals("-"))
-		{
-			for (int i = 0; i < qstarts.length; i++)
-				qstarts[i] = qlen - qstarts[i] - bsizes[i];
-		}
-
-		int pctid = Math.round(100*match/(match + mis));
-		strand = (strand.equals("-") ? "+/-" : "+/+");
-		
-		int[] qseqs = new int[qstarts.length*2];
-		int[] tseqs = new int[tstarts.length*2];
-		
-		for (int i = 0; i < qstarts.length; i++)
-		{
-			int qend1 = qstarts[i] + bsizes[i] - 1;
-			int tend1 = tstarts[i] + bsizes[i] - 1;
-			
-			qseqs[i*2] = qstarts[i];
-			qseqs[i*2+1] = qend1;
-			
-			tseqs[i*2] = tstarts[i];
-			tseqs[i*2+1] = tend1;
-		}	
-		
-		hit.query.start  = (!reversed ? qstart : tstart);
-		hit.query.end    = (!reversed ? qend   : tend);
-		hit.target.start = (!reversed ? tstart : qstart);
-		hit.target.end   = (!reversed ? tend   : qend);
-		
-		hit.query.name  = (!reversed ? fs[9]  : fs[13]);
-		hit.target.name = (!reversed ? fs[13] : fs[9]);
-		
-		hit.query.name = hit.query.name.intern();
-		hit.target.name = hit.target.name.intern();
-		
-		hit.matchLen = match;
-		hit.pctid = pctid;
-		hit.strand = strand.intern(); 
-		
-		hit.query.blocks = (!reversed ? qseqs : tseqs);
-		hit.target.blocks = (!reversed ? tseqs : qseqs);
-		
-		return true;
-	}
 	/*********************************************
 	 * 0        1       2        3       4       5       6
 	 * [S1]    [E1]    [S2]    	[E2]    [LEN 1] [LEN 2] [% IDY] [% SIM] [% STP] [LEN R] [LEN Q]     [FRM]   [TAGS]
@@ -955,116 +753,39 @@ public class AnchorsMain
 
 	private void uploadHit(Hit hit, Project p1, Project p2) throws Exception
 	{
-		// Set gene overlap field. For pseudo, we've already got this due to clustering, but for
-		// FPC we've got to set it. 
+		// Set gene overlap field. For pseudo, we've already got this due to clustering, this is for FPC?
 		int geneOlap = 0;
-		if (p1.isFPC())
-		{
-			Group g2 = p2.getGrpByIdx(hit.target.grpIdx);
-			if (g2 != null && g2.testHitForAnnotOverlap(hit.target)) geneOlap = 1; 
-		}
-		else
-		{
-			if (hit.mBT == HitType.GeneGene)			geneOlap = 2;	
-			else if (hit.mBT == HitType.GeneNonGene)	geneOlap = 1;	
-		}
+		if (hit.mBT == HitType.GeneGene)			geneOlap = 2;	
+		else if (hit.mBT == HitType.GeneNonGene)	geneOlap = 1;	
+
 		Vector<String> vals = new Vector<String>(30);
-		switch (hit.query.fileType)
-		{
-			case Bes:
-				String rf = (hit.rf == RF.R ? "r" : "f");
-				vals.add("" + pairIdx);
-				vals.add("" + p1.getIdx());
-				vals.add("" + p2.getIdx());
-				vals.add(hit.clone);
-				vals.add(rf);
-				vals.add("" + hit.target.grpIdx);
-				vals.add("0");
-				vals.add("" + hit.pctid);
-				vals.add("" + hit.matchLen);
-				vals.add(hit.strand);
-				vals.add("" + hit.query.start);
-				vals.add("" + hit.query.end);
-				vals.add("" + hit.target.start);
-				vals.add("" + hit.target.end);
-				vals.add(Utils.intArrayToBlockStr(hit.query.blocks));
-				vals.add(Utils.intArrayToBlockStr(hit.target.blocks));
-				vals.add("" + geneOlap);
-				pool.bulkInsertAdd("bes", vals);					
-				break;
-			case Mrk:
-				vals.add("" + pairIdx);
-				vals.add("" + p1.getIdx());
-				vals.add(hit.query.name);
-				vals.add("" + hit.target.grpIdx);
-				vals.add("0");
-				vals.add("" + hit.pctid);
-				vals.add("" + hit.matchLen);
-				vals.add(hit.strand);
-				vals.add("" + hit.query.start);
-				vals.add("" + hit.query.end);
-				vals.add("" + hit.target.start);
-				vals.add("" + hit.target.end);
-				vals.add(Utils.intArrayToBlockStr(hit.query.blocks));
-				vals.add(Utils.intArrayToBlockStr(hit.target.blocks));
-				vals.add("" + geneOlap);
-				pool.bulkInsertAdd("mrk", vals);				
-				break;
-			case Seq:
-			case Gene: // See UpdatePool
-				//stmt = "insert into pseudo_hits (pair_idx,proj1_idx,proj2_idx," +
-				//"grp1_idx,grp2_idx,evalue,pctid,score,strand,start1,end1,start2,end2,query_seq," +
-				//"target_seq,gene_overlap,countpct,cvgpct,annot1_idx,annot2_idx)";
-				vals.add("" + pairIdx);
-				vals.add("" + p1.getIdx());
-				vals.add("" + p2.getIdx());
-				vals.add("" + hit.query.grpIdx);
-				vals.add("" + hit.target.grpIdx);
-				vals.add("0");			// evalue, referred to but never has a value
-				vals.add("" + hit.pctid);
-				vals.add("" + hit.matchLen); // saved as score, but never used
-				vals.add(hit.strand);
-				vals.add("" + hit.query.start);
-				vals.add("" + hit.query.end);
-				vals.add("" + hit.target.start);
-				vals.add("" + hit.target.end);
-				vals.add(Utils.intArrayToBlockStr(hit.query.blocks));
-				vals.add(Utils.intArrayToBlockStr(hit.target.blocks));
-				vals.add("" + geneOlap);
-				vals.add(""+ (hit.query.blocks.length/2)); //CAS515 countpct;  unsigned tiny int; now #Merged Hits
-				vals.add("" + hit.pctsim); // CAS515 cvgpct was 0; unsigned tiny int; now Avg%Sim
-				vals.add("" + hit.annotIdx1);
-				vals.add("" + hit.annotIdx2);
-				pool.bulkInsertAdd("pseudo", vals);
-				break;
-			default:
-				throw(new Exception("Unknown file type!!"));
-		}
+		// See UpdatePool
+		// stmt = "insert into pseudo_hits (pair_idx,proj1_idx,proj2_idx," +
+		//"grp1_idx,grp2_idx,evalue,pctid,score,strand,start1,end1,start2,end2,query_seq," +
+		//"target_seq,gene_overlap,countpct,cvgpct,annot1_idx,annot2_idx)";
+		vals.add("" + pairIdx);
+		vals.add("" + p1.getIdx());
+		vals.add("" + p2.getIdx());
+		vals.add("" + hit.query.grpIdx);
+		vals.add("" + hit.target.grpIdx);
+		vals.add("0");			// evalue, referred to but never has a value
+		vals.add("" + hit.pctid);
+		vals.add("" + hit.matchLen); // saved as score, but never used
+		vals.add(hit.strand);
+		vals.add("" + hit.query.start);
+		vals.add("" + hit.query.end);
+		vals.add("" + hit.target.start);
+		vals.add("" + hit.target.end);
+		vals.add(Utils.intArrayToBlockStr(hit.query.blocks));
+		vals.add(Utils.intArrayToBlockStr(hit.target.blocks));
+		vals.add("" + geneOlap);
+		vals.add(""+ (hit.query.blocks.length/2)); //CAS515 countpct;  unsigned tiny int; now #Merged Hits
+		vals.add("" + hit.pctsim); // CAS515 cvgpct was 0; unsigned tiny int; now Avg%Sim
+		vals.add("" + hit.annotIdx1);
+		vals.add("" + hit.annotIdx2);
+		pool.bulkInsertAdd("pseudo", vals);		
 	}
-	/*** CAS504 don't need
-	private void checkUpdateHitsTable() throws Exception
-	{
-		ResultSet rs = pool.executeQuery("show columns from pseudo_hits where field='annot1_idx'");
-		if (!rs.first())
-		{
-			pool.executeUpdate("alter table pseudo_hits add annot1_idx integer default 0");	
-			pool.executeUpdate("alter table pseudo_hits add annot2_idx integer default 0");	
-		}
-	}
-	**/
-	/** CAS501 moved to ProjectManagerFrameCommon so can save parameters 
-	private void renewPairIdx(Project p1, Project p2) throws SQLException
-	{
-		String st = "DELETE FROM pairs WHERE proj1_idx=" + p1.getIdx() + " AND proj2_idx=" + p2.getIdx();
-		pool.executeUpdate(st);
 	
-		st = "INSERT INTO pairs (proj1_idx,proj2_idx) VALUES('" + p1.getIdx() + "','" + p2.getIdx() + "')";
-		pool.executeUpdate(st);
-		
-		st = "SELECT idx FROM pairs WHERE proj1_idx=" + p1.getIdx() + " AND proj2_idx=" + p2.getIdx();
-		pairIdx = pool.getIdx(st);
-	}
-	**/
 	private void addMirroredHits() throws Exception
 	{
 		// Create the reflected hits for self-alignment cases; CAS520 add hitnum
@@ -1087,14 +808,18 @@ public class AnchorsMain
 		
 		/////////// p2 (always seq)
 		HashMap<String,Integer> counts2 = new HashMap<String,Integer>();
-		int count = 0;
+		int count = 0, cntSkip=0;
 		for (Hit h : newHits) {
-			if (h.target.grpIdx == p2.unanchoredGrpIdx) continue;
+			if (h.target.grpIdx == p2.unanchoredGrpIdx) {cntSkip++;continue;}
+			
 			Group g = p2.getGrpByIdx(h.target.grpIdx);
-			g.addAnnotHitOverlaps(h,h.target,pool,counts2);
+			g.addAnnotHitOverlaps(h, h.target, pool,counts2);
+			
 			count++;
 			if (count % 5000 == 0) System.err.print(count + " checked...\r"); 
 		}
+		if (cntSkip>0) System.err.println("Warning: " + cntSkip + " skipped targets");
+		
 		if (counts2.keySet().size() > 0) {
 			if (counts2.size()==1) {
 				for (String atype : counts2.keySet())
@@ -1107,31 +832,30 @@ public class AnchorsMain
 			}
 		}	
 		///////// p1
-		if (p1.type == ProjType.pseudo)
-		{
-			HashMap<String,Integer> counts1 = new HashMap<String,Integer>();
+		
+		HashMap<String,Integer> counts1 = new HashMap<String,Integer>();
 
-			count = 0;
-			for (Hit h : newHits) {
-				if (h.query.grpIdx == p1.unanchoredGrpIdx) continue;
-				
-				Group g = p1.getGrpByIdx(h.query.grpIdx);
-				g.addAnnotHitOverlaps(h,h.query,pool,counts1);
-				count++;
-				if (count % 5000 == 0) System.err.print(count + " checked...\r"); // CAS42 1/1/18 changed from log
-			}
+		count = cntSkip= 0;
+		for (Hit h : newHits) {
+			if (h.query.grpIdx == p1.unanchoredGrpIdx) {cntSkip++; continue;}
 			
-			if (counts1.keySet().size() > 0) {
-				if (counts1.size()==1) {
-					for (String atype : counts1.keySet())
-						Utils.prtNumMsg(log, counts1.get(atype), "for " + p1.name);
-				}
-				else { 
-					log.msg("For " + p1.name + ":");
-					for (String atype : counts1.keySet())
-						Utils.prtNumMsg(log, counts1.get(atype), atype);
-				}		
+			Group g = p1.getGrpByIdx(h.query.grpIdx);
+			g.addAnnotHitOverlaps(h,h.query,pool,counts1);
+			count++;
+			if (count % 5000 == 0) System.err.print(count + " checked...\r"); // CAS42 1/1/18 changed from log
+		}
+		if (cntSkip>0) System.err.println("Warning: " + cntSkip + " skipped query");
+		
+		if (counts1.keySet().size() > 0) {
+			if (counts1.size()==1) {
+				for (String atype : counts1.keySet())
+					Utils.prtNumMsg(log, counts1.get(atype), "for " + p1.name);
 			}
+			else { 
+				log.msg("For " + p1.name + ":");
+				for (String atype : counts1.keySet())
+					Utils.prtNumMsg(log, counts1.get(atype), atype);
+			}		
 		}
 		pool.finishBulkInserts();
 	}
@@ -1139,7 +863,6 @@ public class AnchorsMain
 	private Vector<Hit> getUploadedHits(Project p1) throws SQLException
 	{
 		Vector<Hit> ret = new Vector<Hit>();
-		if (p1.type != ProjType.pseudo) return ret;
 		
       	String st = "SELECT pseudo_hits.idx as hidx, pseudo_hits.start2, pseudo_hits.end2, " +
       			" pseudo_hits.start1, pseudo_hits.end1, pseudo_hits.grp1_idx, pseudo_hits.grp2_idx" +
@@ -1171,21 +894,6 @@ public class AnchorsMain
 	 */
 	private void addProps() {
 		try {
-		/* CAS501
-		mProps.uploadPairProps( pool, p1.getIdx(), p2.getIdx(), pairIdx,
-					new String[] { 		
-						"topn_and", "topn", "topn_maxwindow", "use_genemask",
-						"gene_pad",	"do_clustering", "joinfact", "merge_blocks", 
-						"mindots", "keep_best", "mindots_keepbest",
-						"mingap1", "mingap1_cb", "mingap2", "search_factor",
-						"corr1_A", "corr1_B", "corr1_C", "corr1_D",	
-						"corr2_A", "corr2_B", "corr2_C", "corr2_D",	
-						"avg1_A", "avg2_A",  "maxgap1", "maxgap2",
-						"do_unanchored", "unanch_join_dist_bp", "subblock_multiple", 
-						"do_bes_fixing", "checkctg1", "checkgrp1", "checkgrp2",
-						"maxjoin_cb", "maxjoin_bp", "do_synteny","nucmer_only","promer_only",
-						"blat_args","nucmer_args","promer_args"});
-		*/
 		// Obsolete unless default changed in SyProp
 		HitBin.initKeepTypes();
 		if (mProps.getProperty("keep_gene_gene").equals("1")) // false
@@ -1209,35 +917,10 @@ public class AnchorsMain
 		Utils.initHist("TopNHist2Accept", 3,6,10,25,50,100);
 		Utils.initHist("TopNHistTotal2", 3,6,10,25,50,100);
 		
-		if (p1.isSeq()) 
-			  p1.setGrpGeneParams(mProps.getInt("max_cluster_gap"),mProps.getInt("max_cluster_size"));
-		if (p2.isSeq()) 
-			  p2.setGrpGeneParams(mProps.getInt("max_cluster_gap"),mProps.getInt("max_cluster_size"));
-		}
-		catch (Exception e) {ErrorReport.print("adding properties for Anchors");}
+		p1.setGrpGeneParams(mProps.getInt("max_cluster_gap"),mProps.getInt("max_cluster_size"));
+		
+		p2.setGrpGeneParams(mProps.getInt("max_cluster_gap"),mProps.getInt("max_cluster_size"));
 	}
-	/*
-	 * Sub-classes
-	 */
-	public class AnchorFile 
-	{
-		File mFile;
-		FileType mType1, mType2;
-		
-		public AnchorFile(File file, String btype1, String btype2) throws Exception
-		{
-			mFile = file;
-			mType1 = parseFileType(btype1);
-			mType2 = parseFileType(btype2);
-		}
-		
-		public FileType parseFileType(String typename) throws Exception
-		{
-			for (FileType ft : FileType.values())
-				if (ft.toString().equalsIgnoreCase(typename))
-					return ft;
-
-			throw(new Exception("Unable to parse file type " + typename));
-		}
+	catch (Exception e) {ErrorReport.print("adding properties for Anchors");}
 	}
 }

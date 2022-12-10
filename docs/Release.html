@@ -64,11 +64,29 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 
 <h3>Summary of recent major releases</h3>
 <table class="tx">
+<tr><td><a href="#v530">v5.3.0</a><td>(10-Dec-22)<td>Updated database schema.
 <tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="UserGuide.html#csets">viewing</a>
 <tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view"> 2D gene placement</a>
 </table>
 
+<a id="v530"></a>
+<h3>Release: v5.3.0 (10-Dec-22)</h3>
+For existing SyMAP databases: the database schema will be updated on the first viewing of an existing database.
 
+<p>This release does not have any new features, but FPC was removed from the schema and code, which is an major internal change.
+<i>Typically the SyMAP software can view an earlier or later version SyMAP database, but that is
+not the case with this release.</i>
+<ol>
+<li><ttl>Queries</ttl>: fixed a v5.1.9 bug in location filtering.
+<li><ttl>Dotplot</ttl>: fixed a v5.1.9 bug; if a region was selected, the Hit Filter was set to show no hits.
+<li><ttl>Github</ttl>:
+<ul>
+<li>Removed most of FPC from the code and Schema.
+<br>
+<li>Simplify classes_ext and Makefile
+</ul>
+
+</ol>
 <a id="v521"></a>
 <h3>Release: v5.2.1 (1-Dec-22)</h3>
 For existing SyMAP databases: The colors in the circle view will be different for the 2nd project.

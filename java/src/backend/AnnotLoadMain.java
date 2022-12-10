@@ -300,7 +300,7 @@ public class AnnotLoadMain {
 		try {		
 			String projDir = 	Constants.seqDataDir + projName;
 			SyProps props =		new SyProps(log, new File(projDir + Constants.paramsFile), mDBProps); // read parms from file
-			project = 			new Project(pool, log, props, projName, ProjType.pseudo, QueryType.Either);
+			project = 			new Project(pool, log, props, projName, QueryType.Either);
 			
 		// Files init
 			if (!props.containsKey("anno_files")) props.setProperty("anno_files", "");
@@ -451,7 +451,7 @@ public class AnnotLoadMain {
 		try {
 			String projDir = 	Constants.seqDataDir + projName;
 			SyProps props =		new SyProps(log, new File(projDir + Constants.paramsFile), mDBProps); // read parms from file
-			project = 			new Project(pool, log, props, projName, ProjType.pseudo, QueryType.Either);
+			project = 			new Project(pool, log, props, projName, QueryType.Either);
 			
 			ResultSet rs = pool.executeQuery("select hasannot from projects where idx=" + project.getIdx());
 			int cnt=0;

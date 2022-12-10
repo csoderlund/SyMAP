@@ -26,9 +26,6 @@ public class TrackCom {
 	public boolean isVisible() { return bVisible; }
 	public void setVisible( boolean bVisible ) { this.bVisible = bVisible; }
 	
-	public boolean isPseudo() { return project.isPseudo(); }
-	public boolean isFPC() { return project.isFPC(); }
-	
 	public int getProjIdx() { return project.getID(); }
 	public int getGroupIdx() { return nGroupIdx; }
 	

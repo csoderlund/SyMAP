@@ -47,31 +47,33 @@ public class SummaryPanel  extends JPanel {
 		HashMap<String,String> chrStrMap = new HashMap<String, String>();
 		HashSet<Integer> gidxSet = new HashSet<Integer> ();
 		
-	    	for (DBdata dd : rowsFromDB) {
-	    		if (!gidxSet.contains(dd.getChrIdx(0))) gidxSet.add(dd.getChrIdx(0));
-	    		if (!gidxSet.contains(dd.getChrIdx(1))) gidxSet.add(dd.getChrIdx(1));
-	    	}
-	   
-	    	for (int p = 0; p < spPanel.getNumSpecies(); p++) {
-	    		String projName = spPanel.getSpName(p);
-	    		
-	    		String [] gidx =  spPanel.getChrIdxList(p);
-	    		HashSet <Integer> spGidx = new HashSet <Integer> ();
-	    		for (String c : gidx) 
-	    			spGidx.add(Integer.parseInt(c));
-	    		
-	    		int nchrs =       gidx.length;
-	    		int xchr = 0;
-	    		for (int idx : gidxSet) 
-	    			if (spGidx.contains(idx)) xchr++;
-	    		 		
-	    		String chrStr = String.format("%2d of %2d", xchr, nchrs);
-	    		chrStrMap.put(projName, chrStr);
-	    	}
-	    	gidxSet.clear();
+    	for (DBdata dd : rowsFromDB) {
+    		if (!gidxSet.contains(dd.getChrIdx(0))) gidxSet.add(dd.getChrIdx(0));
+    		if (!gidxSet.contains(dd.getChrIdx(1))) gidxSet.add(dd.getChrIdx(1));
+    	}
+   
+    	Vector <Integer> order = new Vector <Integer> (); // CAS522 added so stats are in order
+    	for (int p = 0; p < spPanel.getNumSpecies(); p++) {
+    		String projName = spPanel.getSpName(p);
+    		order.add(spPanel.getSpIdx(p));
+    		
+    		String [] gidx =  spPanel.getChrIdxList(p);
+    		HashSet <Integer> spGidx = new HashSet <Integer> ();
+    		for (String c : gidx) 
+    			spGidx.add(Integer.parseInt(c));
+    		
+    		int nchrs =       gidx.length;
+    		int xchr = 0;
+    		for (int idx : gidxSet) 
+    			if (spGidx.contains(idx)) xchr++;
+    		 		
+    		String chrStr = String.format("%2d of %2d", xchr, nchrs);
+    		chrStrMap.put(projName, chrStr);
+    	}
+    	gidxSet.clear();
 	    	
 		if (qPanel.isSingle()) 	createSingle(chrStrMap);
-		else 					createHits(chrStrMap, geneCntMap, proj2regions);
+		else 					createHits(chrStrMap, geneCntMap, proj2regions, order);
 	}
 	/*****************************************************
 	 * Has Gene:  Either %d Both %d  None %d      Has Block: Yes %d  No %d 
@@ -80,7 +82,7 @@ public class SummaryPanel  extends JPanel {
 	 */
 	private void createHits(HashMap <String, String>  chrStrMap, 
 							HashMap <Integer, Integer> annoCntMap,
-							HashMap <String, Integer> proj2regions) {
+							HashMap <String, Integer> proj2regions, Vector <Integer> order) {
 		try {
 			int either=0, both=0, none=0, block=0;
 			HashMap <Integer, Integer> proj2hits =  new HashMap <Integer, Integer> ();
@@ -89,6 +91,7 @@ public class SummaryPanel  extends JPanel {
 			for (DBdata dd : rowsFromDB) {
 				int spIdx1 = dd.getSpIdx(0);
 				int spIdx2 = dd.getSpIdx(1);
+				
 				counterInc(proj2hits, spIdx1, 1);
 				counterInc(proj2hits, spIdx2, 1);
 				
@@ -110,7 +113,7 @@ public class SummaryPanel  extends JPanel {
 			statsPanel.add(theLabel);
 			statsPanel.add(Box.createVerticalStrut(5));
 			
-			for (int spIdx : proj2hits.keySet() )
+			for (int spIdx : order )
 			{
 				String pName = spPanel.getSpNameFromSpIdx(spIdx);
 				int nReg =  proj2regions.containsKey(pName) ? proj2regions.get(pName) : 0;
@@ -169,9 +172,9 @@ public class SummaryPanel  extends JPanel {
 	}
 	private void counterInc(HashMap<Integer,Integer> ctr, Integer key, int inc  )
     {
-    		if (inc == 0) return;
+    	if (inc == 0) return;
 		if (!ctr.containsKey(key))	ctr.put(key, inc);
-		else							ctr.put(key, ctr.get(key)+inc);
+		else						ctr.put(key, ctr.get(key)+inc);
     }
 	
 }

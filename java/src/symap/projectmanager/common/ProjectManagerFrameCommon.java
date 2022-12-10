@@ -3,6 +3,7 @@ package symap.projectmanager.common;
 /*****************************************************
  * The main frame and provides all the high level functions for it.
  * CAS508 moved the routines for alignment and synteny to AlignProjs, except for doAllPairs
+ * CAS522 removed the last of FPC
  */
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -323,11 +324,11 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			Utilities.setHelpParentFrame(this);
 			
 			projPairs = loadProjectPairsFromDB();
-			projects = loadProjectsFromDB();
+			projects =  loadProjectsFromDB();
+			if (projPairs==null || projects==null) ErrorReport.die("Major problem");
 			
-			if (globalPairProps==null) {
+			if (globalPairProps==null) 
 				globalPairProps = new SyProps();
-			}
 			
 			if (!inReadOnlyMode) { // CAS500
 				String strDataPath = Constants.dataDir;
@@ -348,10 +349,9 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					
 					Utilities.checkCreateDir(Constants.logDir, true /* bPrt */);
 					
-					// CAS511 quit creating data/seq, data/fpc, etc on startup; CAS520 gives message on fpcType
-				
+					// CAS511 quit creating data/seq, etc on startup; CAS520 gives message on fpc
 					loadProjectsFromDisk(projects, strDataPath,  Constants.seqType);
-					loadProjectsFromDisk(projects, strDataPath,  Constants.fpcType); 
+					loadProjectsFromDisk(projects, strDataPath,  "fpc"); 
 				}
 			}
 			
@@ -458,22 +458,18 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				int id2 = p2.getID();
 				
 				Project[] ordP = orderProjects(p1,p2);
-				String resultDir = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[0].isFPC(), ordP[1].getDBName());
+				String resultDir = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
 				
 				if ((projPairs.containsKey(id1) && projPairs.get(id1).contains(id2)) ||
 					(projPairs.containsKey(id2) && projPairs.get(id2).contains(id1)))
 				{
 					row.add(TBL_DONE); 
 				}
-				else if (p1.isFPC() && p2.isFPC() )
-				{
-					row.add(TBL_NA);	
-				}
 				else if (Utils.checkDoneFile(resultDir))
 				{					
 					row.add(TBL_ADONE); 
 				}
-				else if (Utils.checkDoneMaybe(resultDir, ordP[0].isFPC())>0)
+				else if (Utils.checkDoneMaybe(resultDir)>0)
 				{
 					row.add( TBL_QDONE); 
 				}
@@ -593,11 +589,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		}
 		return false;
 	}
-	private boolean isAllSeq() {
-		for (Project p : availProjects) 
-			if (p.isFPC()) return false;
-		return true;
-	}
 	
 	/***********************************************************
 	 * CAS505 rewrote
@@ -616,19 +607,18 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		
 		numDone = getNumCompleted(true); // ignore selfs
 		btnAllDotplot.setEnabled(numDone>0);
-		btnAllQueryView.setEnabled(numDone>0 && isAllSeq());
+		btnAllQueryView.setEnabled(numDone>0);
 		
 		if ((projects!=null)) {
 			String val = getSelectedAlignmentValue();
 			
-			boolean bothFPC =  (projects[0].isFPC() && projects[1].isFPC());
 			boolean allDone =  (val!=null && val.contains(TBL_DONE));
 			boolean partDone = (val!=null && (!val.contains(TBL_ADONE) || !val.contains(TBL_QDONE)));
 			
 			if (allDone) btnSelAlign.setText("Selected Pair (Redo)");	
 			else 		 btnSelAlign.setText("Selected Pair");	
 			
-			btnSelAlign.setEnabled(!bothFPC);
+			btnSelAlign.setEnabled(true);
 			btnSelClearPair.setEnabled(allDone || partDone);
 			btnSelDotplot.setEnabled( allDone ); 
 			btnSelCircView.setEnabled(allDone);  
@@ -775,9 +765,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			// line 1
 			String label1 = "Project: " + p.getDBName(); // CAS500 was Database Name
 			
-			boolean isFPC = p.getType().equals(Constants.fpcType);
-			if (isFPC) label1 += "    FPC Map";
-				
 			String o = p.getOrderAgainst();
 			if (o != null && o.length() > 0) label1 += "    Order against: " + o;
 			
@@ -798,15 +785,11 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				String chrLbl = (p.chrLabel.endsWith("s")) ? 
 						p.chrLabel() + "s: " :  p.chrLabel() + ": "; 
 				
-				if (isFPC)
-					textPanel.add(new JLabel(chrLbl + p.getNumGroups()));	
-				else {
-					String label2 = 
-						String.format("%s%d    Bases: %,d    %s", 
-								chrLbl, p.getNumGroups(), p.getLength(), p.getAnnoStr());
-					
-					textPanel.add(new JLabel(label2));
-				}
+				String label2 = 
+					String.format("%s%d    Bases: %,d    %s", 
+							chrLbl, p.getNumGroups(), p.getLength(), p.getAnnoStr());
+				
+				textPanel.add(new JLabel(label2));
 			}
 			textPanel.setMaximumSize(textPanel.getPreferredSize());
 
@@ -1074,8 +1057,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	private boolean checkPairs(Project mProj1, Project mProj2) {
 		String n1, n2, o;
 		
-		if (mProj1.isFPC() || mProj2.isFPC()) return true;
-		
 		String o1 = mProj1.getOrderAgainst();
 		String o2 = mProj2.getOrderAgainst();
 		
@@ -1172,25 +1153,15 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					UpdatePool pool = new UpdatePool(dbReader);
 					String projName = project.getDBName();
 					
-					if ( project.isFPC() ) {
-						success = FPCLoadMain.run( pool, progress, projName );
-						
-						if (!success || Cancelled.isCancelled()) { // CAS500
-							System.err.println("Cancel load");
-							return;
-						}
+					success = SeqLoadMain.run( pool, progress, projName );
+				
+					if (success && !Cancelled.isCancelled())  {
+						AnnotLoadMain annot = new AnnotLoadMain(pool, progress,mProps);
+						success = annot.run( projName);
 					}
-					else if ( project.isPseudo() )  {
-						success = SeqLoadMain.run( pool, progress, projName );
-					
-						if (success && !Cancelled.isCancelled())  {
-							AnnotLoadMain annot = new AnnotLoadMain(pool, progress,mProps);
-							success = annot.run( projName);
-						}
-						else { // CAS500
-							System.err.println("Cancel load");
-							return;
-						}
+					else { // CAS500
+						System.err.println("Cancel load");
+						return;
 					}
 				}
 				catch (Exception e) {
@@ -1240,16 +1211,11 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 						UpdatePool pool = new UpdatePool(dbReader);
 						String projName = project.getDBName();
 						
-						if ( project.isFPC() ) {
-							success = FPCLoadMain.run( pool, progress, projName );
-						}
-						else if ( project.isPseudo() )  {
-							success = SeqLoadMain.run( pool, progress, projName );
-						
-							if (success && !Cancelled.isCancelled())  {
-								AnnotLoadMain annot = new AnnotLoadMain(pool, progress,mProps);
-								success = annot.run( projName);
-							}
+						success = SeqLoadMain.run( pool, progress, projName );
+					
+						if (success && !Cancelled.isCancelled())  {
+							AnnotLoadMain annot = new AnnotLoadMain(pool, progress,mProps);
+							success = annot.run( projName);
 						}
 					}
 					catch (Exception e) {
@@ -1312,10 +1278,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					UpdatePool pool = new UpdatePool(dbReader);
 					String projName = project.getDBName();
 					
-					if ( project.isPseudo() ) {
-						AnnotLoadMain annot = new AnnotLoadMain(pool, progress, mProps);
-						success = annot.run( projName);
-					}
+					AnnotLoadMain annot = new AnnotLoadMain(pool, progress, mProps);
+					success = annot.run( projName);
 				}
 				catch (Exception e) {
 					success = false;
@@ -1417,7 +1381,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			Project theProject = ((ProjectLinkLabel)e.getSource()).getProject();
 			
 			PropertyFrame propFrame = new PropertyFrame(
-				getRef(), theProject.isPseudo(), theProject.getDisplayName(), 
+				getRef(), theProject.getDisplayName(), 
 				theProject.getDBName(), dbReader, true, theProject.getPathName());
 			
 			propFrame.setVisible(true);
@@ -1436,7 +1400,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			Project theProject = ((ProjectLinkLabel)e.getSource()).getProject();
 			
 			PropertyFrame propFrame = new PropertyFrame(
-				getRef(), theProject.isPseudo(), theProject.getDisplayName(), 
+				getRef(),  theProject.getDisplayName(), 
 				theProject.getDBName(), dbReader, false, theProject.getPathName());
 			
 			propFrame.setVisible(true);
@@ -1466,35 +1430,19 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 
 	private boolean removeAlignmentsCheck(Project p) {
 		try {
-			File[] topLevels = new File[2];
-	
-			if (p.isFPC()) {
-				topLevels[0] = new File(Constants.getNameResultsDir(true));
-				topLevels[1] = null;
-			}
-			else {
-				topLevels[0] = new File(Constants.getNameResultsDir(true));
-				topLevels[1] = new File(Constants.getNameResultsDir(false));
-			}
+			File top = new File(Constants.getNameResultsDir());
 			
-			for (File top : topLevels){
-				if (top == null || !top.exists()) continue; // CAS511 may not have /data/seq_results directory
-				Vector<File> alignDirs = new Vector<File>();
-				
-				for (File f : top.listFiles()) {
-					if (f.isDirectory()) {
-						if (p.isFPC() && f.getName().startsWith(p.getDBName()+Constants.projTo)) {
-							alignDirs.add(f); // for fpc, it has to come first
-						}
-						else{
-							if	(f.getName().startsWith(p.getDBName()+ Constants.projTo) ||
-									f.getName().endsWith(Constants.projTo+p.getDBName())) {
-								alignDirs.add(f);
-							}
-						}
+			if (top == null || !top.exists()) return false; // CAS511 may not have /data/seq_results directory
+			Vector<File> alignDirs = new Vector<File>();
+			
+			for (File f : top.listFiles()) {
+				if (f.isDirectory()) {
+					if	(f.getName().startsWith(p.getDBName()+ Constants.projTo) ||
+							f.getName().endsWith(Constants.projTo+p.getDBName())) {
+						alignDirs.add(f);
 					}
-					if (alignDirs.size() > 0) return true;
 				}
+				if (alignDirs.size() > 0) return true;
 			}
 		} catch (Exception e) {ErrorReport.print(e, "Remove alignment files");} // CAS511 add try-catch
 		return false;
@@ -1504,46 +1452,31 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			if (progress!=null)
 				progress.appendText("Removing alignments from disk - " + p.getDBName());		
 			
-			File[] topLevels = new File[2];
+			File top = new File(Constants.getNameResultsDir()); // check seq_results
 			
-			if (p.isFPC()) {
-				topLevels[0] = new File(Constants.getNameResultsDir(true)); // check fpc_results 
-				topLevels[1] = null;
-			}
-			else {
-				topLevels[0] = new File(Constants.getNameResultsDir(false)); // check seq_results
-				topLevels[1] = new File(Constants.getNameResultsDir(true));  // check fpc_results
-			}
 			boolean success = true;
 			String projTo = Constants.projTo;
 			
-			for (File top : topLevels) {
-				if (top == null  || !top.exists()) continue;
-				
-				Vector<File> alignDirs = new Vector<File>();
-				
-				for (File f : top.listFiles()) {
-					if (f.isDirectory()) {
-						if (p.isFPC() && f.getName().startsWith(p.getDBName()+ projTo)) { // fpc name must come first
-							alignDirs.add(f); 
-						}
-						else {
-							if	(f.getName().startsWith(p.getDBName()+ projTo) ||
-								 f.getName().endsWith(projTo+p.getDBName())) {
-								alignDirs.add(f);
-							}
-						}
+			if (top == null  || !top.exists()) return true;
+			
+			Vector<File> alignDirs = new Vector<File>();
+			
+			for (File f : top.listFiles()) {
+				if (f.isDirectory()) {
+					if	(f.getName().startsWith(p.getDBName()+ projTo) ||
+						 f.getName().endsWith(projTo+p.getDBName())) {
+						alignDirs.add(f);
 					}
 				}
-				if (alignDirs.size() == 0) return true;
-				
-				for (File f : alignDirs) {
-					if (progress!=null)
-						progress.appendText("   Removing alignment - " + f.getName());	
-					else 
-						System.out.println("   Removing alignment - " + f.getName());
-					success &= removeDir(f);
-				}
+			}
+			if (alignDirs.size() == 0) return true;
+			
+			for (File f : alignDirs) {
+				if (progress!=null)
+					progress.appendText("   Removing alignment - " + f.getName());	
+				else 
+					System.out.println("   Removing alignment - " + f.getName());
+				success &= removeDir(f);
 			}
 			return success;
 		} catch (Exception e) {ErrorReport.print(e, "Remove all alignment files"); return false;}
@@ -1647,7 +1580,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 
 					removeAllAlignmentsFromDisk(project, null); // CAS500 in case not earlier removed
 					
-					String path = (project.isFPC()) ? Constants.fpcDataDir : Constants.seqDataDir;
+					String path = Constants.seqDataDir;
 					path += project.getDBName();
 					
 					removeDir(new File(path)); // CAS505 not removing topdir on Linux, so try again
@@ -1733,11 +1666,9 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		}
 		catch (Exception e) {ErrorReport.print("Could not get row " + nRow + " and column " + nCol); return null;}
 	}
-	// XXX this is important as having FPC first is assumed in other places
+	// XXX order is important everywhere lgProj1st never used now...
 	private Project[] orderProjects(Project p1, Project p2)
 	{
-		if (p1.isFPC()) 			return new Project[] { p1, p2 };	// keep fpc first
-		else if ( p2.isFPC()  ) 	return new Project[] { p2, p1 }; // not allows make fpc first
 		
 		if (lgProj1st) { // often biggest first is best, but not always
 			if (p1.getLength() < p2.getLength()) 
@@ -1876,7 +1807,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			if (pairIdx==0) 
 				pairIdx = pairIdxCreate(id1, id2, pool);
 			
-			String dir = Constants.getNameResultsDir(p1.strDBName, p1.isFPC(), p2.strDBName);
+			String dir = Constants.getNameResultsDir(p1.strDBName, p2.strDBName);
 			String n1 = p1.getDBName(), n2=p2.getDBName();
 			p.saveNonDefaulted(null, dir, id1, id2, pairIdx, n1,n2, pool);
 		} 
@@ -1967,12 +1898,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		try {
 			String strDataPath = DATA_PATH;
 			Utilities.checkCreateDir(strDataPath, true);
-			if (p1.isFPC() || p2.isFPC()) {
-				Utilities.checkCreateDir(Constants.fpcDataDir, true);
-				Utilities.checkCreateDir(Constants.fpcRunDir,  true);
-			}
-			else Utilities.checkCreateDir(Constants.seqRunDir,  true);
-			
+			Utilities.checkCreateDir(Constants.seqRunDir,  true);
 			Utilities.checkCreateDir(Constants.seqDataDir, true); 
 			
 			return true;
@@ -1996,7 +1922,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	private JPanel createProjectPanel() {
 		addProjectPanel = new AddProjectPanel(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				addNewProjectFromUI(projects, addProjectPanel.getName(), addProjectPanel.getPType());
+				addNewProjectFromUI(projects, addProjectPanel.getName());
 				refreshMenu();
 			}
 		});
@@ -2276,13 +2202,11 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			}
 		}
 	};
-	
-	
-	private HashMap<Integer,Vector<Integer>> loadProjectPairsFromDB() throws SQLException
-	{
+	/***********************************************************************/
+	private HashMap<Integer,Vector<Integer>> loadProjectPairsFromDB() {
+	try {
 		HashMap<Integer,Vector<Integer>> pairs = new HashMap<Integer,Vector<Integer>>();
 		
-		// Load the aligned project pairs
 		UpdatePool pool = new UpdatePool(dbReader);
         ResultSet rs = pool.executeQuery("SELECT pairs.proj1_idx, pairs.proj2_idx FROM pairs " + 
         			" join projects as p1 on p1.idx=pairs.proj1_idx join projects as p2 on p2.idx=pairs.proj2_idx "  +
@@ -2299,10 +2223,11 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
         rs.close();
 
         return pairs;
+	}catch (Exception e) {ErrorReport.print(e,"Load projects pairs"); return null;}
 	}
 	
-	private HashMap<String,String> loadProjectProps(UpdatePool pool, int projIdx) throws SQLException
-	{
+	private HashMap<String,String> loadProjectProps(UpdatePool pool, int projIdx) {
+	try {
 		HashMap<String,String> projProps = new HashMap<String,String>();
         ResultSet rs = pool.executeQuery("SELECT name, value " +
         		"FROM proj_props WHERE proj_idx=" + projIdx);
@@ -2310,21 +2235,21 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
         		projProps.put( rs.getString("name"), rs.getString("value") );
         rs.close();
         return projProps;
+	}catch (Exception e) {ErrorReport.print(e,"Load projects properties"); return null;}
 	}
 	
-	private Vector<Project> loadProjectsFromDB() throws SQLException
-	{
+	private Vector<Project> loadProjectsFromDB() throws SQLException{
+	try {
 		Vector<Project> projects = new Vector<Project>();
 		
 		// Get loaded projects
 		UpdatePool pool = new UpdatePool(dbReader);
-        ResultSet rs = pool.executeQuery("SELECT idx, name, type, annotdate FROM projects");
+        ResultSet rs = pool.executeQuery("SELECT idx, name, annotdate FROM projects");
         while ( rs.next() ) {
         	int nIdx = rs.getInt(1);
         	String strName = rs.getString(2);
-        	String strType = rs.getString(3);
-        	String strDate = rs.getString(4);       // CAS513 add
-        	projects.add( new Project(nIdx, strName, strType, strDate) );
+        	String strDate = rs.getString(3);       // CAS513 add
+        	projects.add( new Project(nIdx, strName, strDate) );
         }
         rs.close();
         
@@ -2338,8 +2263,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	        p.setCategory(projProps.get("category"));
            	p.setOrderAgainst(projProps.get("order_against"));
            	
-           	if (projProps.containsKey("grp_type") && 
-           			!projProps.get("grp_type").equals("")) 
+           	if (projProps.containsKey("grp_type") && !projProps.get("grp_type").equals("")) 
            				p.setChrLabel(projProps.get("grp_type"));
            	
            	// CAS504 add isMasked
@@ -2350,8 +2274,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
         
         // Load count of groups for each project
         for (Project p : projects) {
-	        rs = pool.executeQuery("SELECT count(*) FROM xgroups AS p " +
-	        		"WHERE proj_idx=" + p.getID());
+	        rs = pool.executeQuery("SELECT count(*) FROM xgroups WHERE proj_idx=" + p.getID());
 	        
 	        rs.next();
 	        int nGroups = rs.getInt(1);
@@ -2376,7 +2299,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	        rs.first();
 	        int numGap = rs.getInt(1);
 	        rs.close();
-	        
+        
 	        p.setAnno(numGene, numGap, numAnnot);
 	        
 	        // CAS500 for Summary and for orderProjects
@@ -2391,11 +2314,12 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					" or proj2_idx=" + p.getID());
 			if (rs.next()) p.setCntSynteny(rs.getInt(1));
 			rs.close();
-        }
-        
+        }      
         sortProjects(projects);
         
         return projects;
+	}
+	catch (Exception e) {ErrorReport.print(e,"Load projects"); return null;}
 	}
 	private String loadProjectForView(UpdatePool pool, Project p) { // CAS521 add to can see what was loaded
 	try {
@@ -2443,13 +2367,13 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			// CAS511 System.err.println("Missing directory " + root.getName());
 			return;
 		}
-		if (dirName.contentEquals(Constants.fpcType)) { // CAS520
+		if (dirName.contentEquals("fpc")) { // CAS520
 			System.err.println("FPC is no longer supported starting with v5.2.0; ignore data/fpc directory");
 			return;
 		}
 		for (File f : root.listFiles()) {
 			if (f.isDirectory() && !f.getName().startsWith(".")) {
-				Project newProj = new Project(-1, f.getName(), dirName, f.getName(), "");
+				Project newProj = new Project(-1, f.getName(), f.getName(), "");
 				newProj.setStatus( Project.STATUS_ON_DISK );
 				
 				if (!projects.contains(newProj))  {
@@ -2467,32 +2391,35 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		    }
 	    });
 	}
-	
-	private void removeProjectFromDB(Project p) throws SQLException
-	{
+	/**********************************************************/
+	private void removeProjectFromDB(Project p) {
+	try {
 		UpdatePool pool = new UpdatePool(dbReader);
-        pool.executeUpdate("DELETE from projects WHERE name='"+p.getDBName()+"' AND type='"+p.getType()+"'");
+        pool.executeUpdate("DELETE from projects WHERE name='"+p.getDBName()+"'");
         pool.resetIdx("idx", "projects"); // CAS512 thought is was a problem, but wasn't
         pool.resetIdx("idx", "xgroups"); // only resets if empty, otherwise, set auto-inc to max(idx)
+	} catch (Exception e) {ErrorReport.print(e, "Remove project from DB"); }
 	}
-	private void removeProjectAnnotationFromDB(Project p) throws SQLException
-	{
+	private void removeProjectAnnotationFromDB(Project p) {
+	try {
 		UpdatePool pool = new UpdatePool(dbReader);
         pool.executeUpdate("DELETE pseudo_annot.* from pseudo_annot, xgroups where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + p.getID());
         pool.resetIdx("idx", "pseudo_annot"); // CAS512
+	} catch (Exception e) {ErrorReport.print(e, "Remove annotation from DB"); }
 	}	
 	
-	public void removeAlignmentFromDB(Project p1, Project p2) throws Exception
-	{
+	public void removeAlignmentFromDB(Project p1, Project p2) {
+	try {
 		UpdatePool pool = new UpdatePool(dbReader);
         pool.executeUpdate("DELETE from pairs WHERE proj1_idx="+p1.getID()+" AND proj2_idx="+p2.getID());
         pool.resetIdx("idx", "pairs"); // CAS512
         pool.resetIdx("idx", "pseudo_hits"); // CAS515
+	} catch (Exception e) {ErrorReport.print(e, "Remove alignment from DB"); }
 	}
 	
 	private boolean removeAlignmentFromDisk(Project p1, Project p2)
 	{
-		String path = Constants.getNameResultsDir(p1.getDBName(), p1.isFPC(), p2.getDBName());
+		String path = Constants.getNameResultsDir(p1.getDBName(),  p2.getDBName());
 		System.out.println("Remove " + path);
 		return removeDir( new File( path ) );
 	}
@@ -2516,13 +2443,13 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
         return dir.delete();
     }
 
-    private void addNewProjectFromUI(Vector<Project> projects, String name, String type) {
-		Project newProj = new Project(-1, name, type, name, "" );
+    private void addNewProjectFromUI(Vector<Project> projects, String name) {
+		Project newProj = new Project(-1, name, name, "" );
 		newProj.setStatus( Project.STATUS_ON_DISK );
 		
 		if (!projects.contains(newProj)) {
-			System.out.println("Create " + DATA_PATH + type + "/" + name);
-			Utilities.checkCreateDir(DATA_PATH + type + "/" + name, true /* bprt*/);
+			System.out.println("Create " + DATA_PATH + Constants.seqType + "/" + name);
+			Utilities.checkCreateDir(DATA_PATH + Constants.seqType + "/" + name, true /* bprt*/);
 			projects.add( newProj );						
 		}
     }
@@ -2543,15 +2470,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			txtName.setAlignmentX(Component.LEFT_ALIGNMENT);
 			txtName.setMaximumSize(txtName.getPreferredSize());
 			txtName.setMinimumSize(txtName.getPreferredSize());
-			
-			String items [] = {"Select type...", "Sequence", "FPC"};
-			cmbType = new JComboBox <String> (items);
-			cmbType.setAlignmentX(Component.LEFT_ALIGNMENT);
-			cmbType.setBackground(Color.WHITE);
-			
-			cmbType.setSelectedIndex(1);
-			cmbType.setMaximumSize(cmbType.getPreferredSize());
-			cmbType.setMinimumSize(cmbType.getPreferredSize());
 			
 			btnAdd = new JButton("Add");
 			btnAdd.setBackground(Color.WHITE);
@@ -2592,19 +2510,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			pnlMainPanel.add(Box.createVerticalStrut(10));
 			pnlMainPanel.add(tempRow);
 			
-/** CAS520 remove last of visible FPC 
-			tempRow = new JPanel();
-			tempRow.setLayout(new BoxLayout(tempRow, BoxLayout.LINE_AXIS));
-			tempRow.setAlignmentX(Component.CENTER_ALIGNMENT);
-			tempRow.setBackground(Color.WHITE);
-
-			tempRow.add(new JLabel("Type:"));
-			tempRow.add(Box.createHorizontalStrut(5));
-			tempRow.add(cmbType);
-			
-			pnlMainPanel.add(Box.createVerticalStrut(20));
-			pnlMainPanel.add(tempRow);
-**/
 			tempRow = new JPanel();
 			tempRow.setLayout(new BoxLayout(tempRow, BoxLayout.LINE_AXIS));
 			tempRow.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -2629,15 +2534,9 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		}
 		
 		public String getName() { return txtName.getText(); }
-		public String getPType() { 
-			String type = (String)cmbType.getSelectedItem(); 
-			if (type.equals("Sequence")) type = Constants.seqType;
-			return type;
-		}
 		
 		public void reset() { 
 			txtName.setText("");
-			cmbType.setSelectedIndex(1); // CAS504 make sequence the default
 			btnAdd.setEnabled(true);
 		}
 		
@@ -2651,28 +2550,18 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				Utilities.showErrorMessage("Name must be characters, numbers or underscore");
 				return false;
 			}
-			if  (cmbType.getSelectedIndex() == 0) {
-				Utilities.showErrorMessage("The type must be set");
-				return false;
-			}
 			// CAS511 check/create directories here if Add Project
 			String strDataPath = DATA_PATH;
 			Utilities.checkCreateDir(strDataPath, true);
-			if  (cmbType.getSelectedIndex() == 1) {
-				Utilities.checkCreateDir(Constants.seqDataDir, true /* bPrt */); 
-				Utilities.checkCreateDir(Constants.seqRunDir,  true);
-			}
-			else {
-				Utilities.checkCreateDir(Constants.fpcDataDir, true );
-				Utilities.checkCreateDir(Constants.fpcRunDir,  true);
-			}
+			Utilities.checkCreateDir(Constants.seqDataDir, true /* bPrt */); 
+			Utilities.checkCreateDir(Constants.seqRunDir,  true);
+			
 			return true;
 		}
 		
 		private JButton btnAdd = null;
 		private JButton btnCancel = null, btnHelp = null;
 		private JTextField txtName = null;
-		private JComboBox <String> cmbType = null;
 		private JPanel pnlMainPanel = null;
 	}
 

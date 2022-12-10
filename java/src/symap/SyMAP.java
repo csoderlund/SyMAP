@@ -30,9 +30,9 @@ import symapQuery.TableDataPanel;
  * CAS517 removed some dead code
  */
 public class SyMAP {
-	public static final String 	VERSION = "v5.2.1";
-	public static final String 	DATE = " (1-Dec-22)";
-	public static final int 	DBVER =  4; 			// CAS512 2->3, CAS520 3->4
+	public static final String 	VERSION = "v5.3.0"; // pre-v530 code can not read post-dbs
+	public static final String 	DATE = " (10-Dec-22)";
+	public static final int 	DBVER =  5; 			// CAS512 v3, CAS520 v4, CAS522 v5
 	public static final String  DBVERSTR = "db" + DBVER;
 	
 	// CAS500 change v4.2 to doc; CAS510 change base to github; put #links here

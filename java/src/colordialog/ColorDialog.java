@@ -49,7 +49,6 @@ public class ColorDialog extends JDialog implements ActionListener {
 	protected PersistentProps persistentProps = null;
 	protected PropertiesReader props = null;
 	private String propName="SyMapColors";
-	protected boolean hasFPC=false; // CAS521 no longer set since dead
 
 	private JTabbedPane tabbedPane;
 	private JButton okButton, cancelButton, defaultButton;
@@ -108,11 +107,10 @@ public class ColorDialog extends JDialog implements ActionListener {
 						nOrder=0;
 					}
 				}
-				if (hasFPC || desc==null || !desc.startsWith("FPC")) {
-					String path = name.substring(0,ind);
-					String var =  name.substring(ind+1);
-					cvarsVec.add(new ColorVariable(path,var,dn,desc,iconDim,nOrder));
-				}
+				
+				String path = name.substring(0,ind);
+				String var =  name.substring(ind+1);
+				cvarsVec.add(new ColorVariable(path,var,dn,desc,iconDim,nOrder));
 			}
 		}		
 
@@ -124,8 +122,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 			if (name == null) break;
 			name = name.trim();
 
-			if (hasFPC || !name.contentEquals("FPC")) 
-				tabOrderMap.put(name, ind); // CAS512 tabOrderMap.put(name,new Integer(ind));
+			tabOrderMap.put(name, ind); // CAS512 tabOrderMap.put(name,new Integer(ind));
 		}
 		// Build tabs in order
 		Vector<ColorTab>    tabVec = 		new Vector<ColorTab>(); 

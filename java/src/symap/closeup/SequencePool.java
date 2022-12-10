@@ -11,7 +11,7 @@ import java.util.Vector;
 
 import symap.pool.DatabaseUser;
 import symap.mapper.HitData;
-import symap.mapper.FPCPseudoData;
+
 import symap.mapper.Mapper;
 import symap.mapper.PseudoPseudoData;
 import symap.mapper.AbstractHitData;
@@ -29,18 +29,6 @@ public class SequencePool extends DatabaseUser {
 	
 	// Note that target_seq and query_seq refer to indices of sequence 
 	// segments not the sequences themselves.
-	private static final String MRK_ALIGNMENT_QUERY = 
-		"SELECT h.strand,h.start1,h.end1,h.query_seq,h.target_seq,s.seq,h.grp2_idx "
-		+ "FROM mrk_hits AS h "
-		+ "JOIN mrk_seq AS s "
-		+ "WHERE h.idx=? AND h.proj1_idx=s.proj_idx AND h.marker=s.marker";
-
-	private static final String BES_ALIGNMENT_QUERY = 
-		"SELECT h.strand,h.start1,h.end1,h.query_seq,h.target_seq,s.seq,h.grp2_idx "
-		+ "FROM bes_hits AS h " 
-		+ "JOIN bes_seq AS s "
-		+ "WHERE h.idx=? AND h.proj1_idx=s.proj_idx AND h.clone=s.clone AND h.bes_type=s.type";
-	
 	private static final String PSEUDO_ALIGNMENT_QUERY = 
 		"SELECT h.strand,h.start1,h.end1,h.query_seq,h.target_seq,null,h.grp2_idx,h.grp1_idx "
 		+ "FROM pseudo_hits AS h WHERE h.idx=?";
@@ -94,8 +82,8 @@ public class SequencePool extends DatabaseUser {
 					
 					HitAlignment ha = new HitAlignment(
 							hd[i],
-							(data.getMapType() != Mapper.PSEUDO2PSEUDO ? pp.getDisplayName(project) : null),
-							(data.getMapType() != Mapper.PSEUDO2PSEUDO ? content : -1), // contig # only for FPC-FPC/PSEUDO
+							null,
+							-1, 
 							hqr.strand,
 							pp.getDisplayName(otherProject),
 							new AbstractSequence(qSeq, hqr.strand.charAt(2)), 
@@ -189,13 +177,7 @@ public class SequencePool extends DatabaseUser {
 		Statement stat = null;
 		ResultSet rs = null;
 		HitQueryResults hqr = new HitQueryResults();
-		
-		if (hd instanceof FPCPseudoData.PseudoMarkerData)
-			query = MRK_ALIGNMENT_QUERY;
-		else if (hd instanceof FPCPseudoData.PseudoBESData)
-			query = BES_ALIGNMENT_QUERY;
-		else if (hd instanceof PseudoPseudoData.PseudoHitData)
-			query = PSEUDO_ALIGNMENT_QUERY;
+		query = PSEUDO_ALIGNMENT_QUERY;
 		
 		query = setLong(query, hd.getID());
 		try {

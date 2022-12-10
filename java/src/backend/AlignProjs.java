@@ -283,48 +283,22 @@ public class AlignProjs extends JFrame {
 	private void savePairProps(SyProps props, int pairIdx, Project p1, Project p2, Logger log) {
 		try {
 			String n1 = p1.getDBName(), n2=p2.getDBName();
-			String dir = Constants.getNameResultsDir(p1.strDBName, p1.isFPC(), p2.strDBName);
+			String dir = Constants.getNameResultsDir(p1.strDBName,  p2.strDBName);
 			props.saveNonDefaulted(log, dir, p1.getID(), p2.getID(), pairIdx, n1, n2, new UpdatePool(dbReader));
 		} 
 		catch (Exception e){ErrorReport.print(e, "Save pair parameters");}
 	}
 	private void printStats(ProgressDialog prog, Project p1, Project p2) throws Exception
 	{
-		if (p2.isFPC()) // in case order is backwards
-		{
-			Project temp = p1;
-			p1 = p2;
-			p2 = temp;
-		}
 		int pairIdx = frame.getPairIdx(p1.getID(),p2.getID());
 		if (pairIdx==0) return;
 
-		if (p1.isPseudo()) // pseudo/pseudo CAS511 removed #chromosomes
-		{
-			TreeMap<String,Integer> counts = new TreeMap<String,Integer>();
-			getPseudoCounts(counts,pairIdx);
-			Utils.prtNumMsg(prog, counts.get("nhits"), "hits");
-			Utils.prtNumMsg(prog, counts.get("blocks"), "synteny blocks");
-			Utils.prtNumMsg(prog, counts.get("genehits"), "gene hits");
-			Utils.prtNumMsg(prog, counts.get("blkhits"), "synteny hits");
-		}
-		else
-		{
-			int nMrk = getFPCMarkers(p1);
-			Utils.prtNumMsg(prog, nMrk, "markers");
-			Utils.prtNumMsg(prog, getFPCBES(p1), "BESs");
-			
-			TreeMap<String,Integer> counts = new TreeMap<String,Integer>();
-			getFPCCounts(counts,pairIdx);
-			Utils.prtNumMsg(prog, counts.get("blocks"), "synteny blocks");
-			Utils.prtNumMsg(prog, counts.get("beshits"), "BES hits");
-			Utils.prtNumMsg(prog, counts.get("besblkhits"), "BES synteny hits");
-			if (nMrk > 0)
-			{
-				Utils.prtNumMsg(prog, counts.get("mrkhits"), "marker hits");
-				Utils.prtNumMsg(prog, counts.get("mrkblkhits"), "marker synteny hits");
-			}
-		}		
+		TreeMap<String,Integer> counts = new TreeMap<String,Integer>();
+		getPseudoCounts(counts,pairIdx);
+		Utils.prtNumMsg(prog, counts.get("nhits"), "hits");
+		Utils.prtNumMsg(prog, counts.get("blocks"), "synteny blocks");
+		Utils.prtNumMsg(prog, counts.get("genehits"), "gene hits");
+		Utils.prtNumMsg(prog, counts.get("blkhits"), "synteny hits");
 	}
 	private void getPseudoCounts(TreeMap<String,Integer> hitCounts, int pidx) throws Exception
 	{
@@ -352,57 +326,4 @@ public class AlignProjs extends JFrame {
 		rs.close();
 
 	}
-	private void getFPCCounts(TreeMap<String,Integer> counts, int pidx) throws Exception
-	{
-		UpdatePool db = new UpdatePool(dbReader);
-	
-		ResultSet rs = db.executeQuery("select count(*) as n from mrk_hits where pair_idx=" + pidx);	
-		rs.first();
-		counts.put("mrkhits", rs.getInt("n"));
-		rs.close();
-		
-		rs = db.executeQuery("select count(*) as n from bes_hits where pair_idx=" + pidx);	
-		rs.first();
-		counts.put("beshits", rs.getInt("n"));
-		rs.close();		
-
-		rs = db.executeQuery("select count(*) as n from blocks where pair_idx=" + pidx);	
-		rs.first();
-		counts.put("blocks", rs.getInt("n"));
-		rs.close();
-		
-		rs = db.executeQuery("select count(*) as n from mrk_block_hits as pbh join mrk_hits as ph on pbh.hit_idx=ph.idx " +
-								" where ph.pair_idx=" + pidx);
-		rs.first();
-		counts.put("mrkblkhits", rs.getInt("n"));
-		rs.close();
-
-		rs = db.executeQuery("select count(*) as n from bes_block_hits as pbh join bes_hits as ph on pbh.hit_idx=ph.idx " +
-								" where ph.pair_idx=" + pidx);
-		rs.first();
-		counts.put("besblkhits", rs.getInt("n"));
-		rs.close();
-	}
-	private int getFPCMarkers(Project p) throws Exception
-	{
-		int num = 0;
-		UpdatePool db = new UpdatePool(dbReader);
-		ResultSet rs =db.executeQuery("select count(*) as n from markers where proj_idx=" + p.getID());
-		rs.first();
-		num = rs.getInt("n");
-		rs.close();
-		return num;
-	}
-	private int getFPCBES(Project p) throws Exception
-	{
-		int num = 0;
-		UpdatePool db = new UpdatePool(dbReader);
-		ResultSet rs =db.executeQuery("select count(*) as n from bes_seq where proj_idx=" + p.getID());
-		rs.first();
-		num = rs.getInt("n");
-		rs.close();
-		return num;
-	}
-	
-
 }

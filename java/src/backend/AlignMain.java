@@ -1,10 +1,11 @@
 package backend;
 
 /*******************************************************
- * Run blat/mummer for alignments
+ * Run mummer for alignments
  * CAS500 1/2020 this has been almost totally rewritten, but results are the same,
  * 	except there is intelligence built into setting up the files for alignment,
  *  which can make a difference
+ * CAS522 remove FPC
  */
 import java.io.File;
 import java.io.FileWriter;
@@ -30,7 +31,6 @@ public class AlignMain
 	
 	private Logger log;
 	private String proj1Name, proj2Name;
-	private ProjType proj1Type, proj2Type;
 	private int proj1Idx, proj2Idx;
 	
 	private String alignLogDirName;
@@ -70,10 +70,8 @@ public class AlignMain
 		toDoList = 		new LinkedList<ProgSpec>();
 			
 		try {
-			proj1Type = pool.getProjType(proj1Name);
-			proj2Type = pool.getProjType(proj2Name);
-			proj1Idx =  pool.getProjIdx(proj1Name,proj1Type);
-			proj2Idx =  pool.getProjIdx(proj2Name,proj2Type);	
+			proj1Idx =  pool.getProjIdx(proj1Name);
+			proj2Idx =  pool.getProjIdx(proj2Name);	
 		}
 		catch (Exception e) { ErrorReport.print(e, "Align Main");}
 	}
@@ -166,7 +164,7 @@ public class AlignMain
 					log.msg("Alignments:  success " + getNumCompleted());
 					
 					// CAS500 only delete tmp files if successful
-					String tmpDir = Constants.getNameTmpDir(proj1Name, (proj1Type==ProjType.fpc), proj2Name);
+					String tmpDir = Constants.getNameTmpDir(proj1Name, proj2Name);
 					if (Constants.PRT_STATS) {
 						System.out.println("Do not delete " + tmpDir);
 					}
@@ -201,34 +199,25 @@ public class AlignMain
 			Utilities.checkCreateDir(resultDir, true /* bPrt */);
 					
 			// temporary directories to put data for alignment
-			boolean isFPC = (proj1Type==ProjType.fpc);
-			String tmpDir =  Constants.getNameTmpDir(proj1Name, isFPC, proj2Name);
+			String tmpDir =  Constants.getNameTmpDir(proj1Name, proj2Name);
 			Utilities.checkCreateDir(tmpDir, false);
 			
-			boolean isSelf = (proj1Type == proj2Type && proj1Name.equals(proj2Name));
-			String tmpDir1 = Constants.getNameTmpPreDir(proj1Name, isFPC, proj2Name, proj1Name);
+			boolean isSelf = (proj1Name.equals(proj2Name));
+			String tmpDir1 = Constants.getNameTmpPreDir(proj1Name,  proj2Name, proj1Name);
 			String tmpDir2 = (isSelf) ? tmpDir1 :
-				Constants.getNameTmpPreDir(proj1Name, isFPC, proj2Name, proj2Name);
+				Constants.getNameTmpPreDir(proj1Name, proj2Name, proj2Name);
 			File fh_tDir1 = Utilities.checkCreateDir(tmpDir1, false);
 			File fh_tDir2 = Utilities.checkCreateDir(tmpDir2, false);
 			
 		// Preprocessing for proj1
-			
-			if (isFPC) {
-				writePreprocFPC(fh_tDir1, proj1Idx, proj1Name, pool, true); // isBes
-				writePreprocFPC(fh_tDir1, proj1Idx, proj1Name, pool, false); // !isBes
-			}
-			else {
-				if (!writePreprocSeq(fh_tDir1, proj1Idx, proj1Name, pool, bDoCat, isSelf)) { // concat=true
-					mCancelled = true;
-					Cancelled.cancel();
-					System.out.println("Cancelling");
-					return;								
-				}
+			if (!writePreprocSeq(fh_tDir1, proj1Idx, proj1Name, pool, bDoCat, isSelf)) { // concat=true
+				mCancelled = true;
+				Cancelled.cancel();
+				System.out.println("Cancelling");
+				return;								
 			}
 			
 		// Preprocessing for proj2	
-			
 			if (!writePreprocSeq(fh_tDir2, proj2Idx, proj2Name, pool, false, isSelf)) { // concat=false
 				mCancelled = true;
 				Cancelled.cancel();
@@ -237,12 +226,8 @@ public class AlignMain
 			}
 			
 			/** Assign values for Alignment **/
-			
-			ProgType pType = (isFPC) ? ProgType.blat : ProgType.mummer;
-			
 			String program = "promer";
-			if (isFPC) program = "blat";
-			else if (isSelf) program = "nucmer";
+			if (isSelf) program = "nucmer";
 			
 			// user over-rides
 			alignParams = "";
@@ -288,7 +273,7 @@ public class AlignMain
 						else if (f1.getName().compareTo(f2.getName()) < 0)  continue; 
 					}
 			
-					ProgSpec ps = new ProgSpec(pType,program, platform,aArgs, f1, f2, alignDir, alignLogDirName);
+					ProgSpec ps = new ProgSpec(program, platform,aArgs, f1, f2, alignDir, alignLogDirName);
 					if (ps.isDone()) continue;
 					
 					allAlignments.add(ps);
@@ -301,42 +286,6 @@ public class AlignMain
 				error = true;
 			}
 		} catch (Exception e) {ErrorReport.print(e, "Build alignments"); error=true;}
-	}
-	// BES/MRK write sequences to one file
-	private boolean writePreprocFPC(File dir, int pidx, String projName, UpdatePool db, boolean isBes) throws Exception
-	{
-		try {
-			if (Cancelled.isCancelled()) return false;
-			
-			String fName = (isBes) ? Constants.besType : Constants.mrkType;
-			fName = fName + "." + projName + Constants.faFile;
-		
-			File f = Utilities.checkCreateFile(dir, fName, "AM create file to write");
-			FileWriter fw = new FileWriter(f);
-	
-			String query = "";
-			if (isBes) {
-				query = "select concat(clone,type) as name, seq from bes_seq where proj_idx=" + pidx;
-			}
-			else {
-				query = "select marker as name, seq from mrk_seq where proj_idx=" + pidx;
-			}
-			ResultSet rs = db.executeQuery(query);
-			while (rs.next()) {
-				String name = rs.getString(1);
-				String seq = rs.getString(2);
-				fw.write(">" + name + "\n");
-				for (int j = 0; j < seq.length(); j += 50) {
-					int endw = Math.min(j+50,seq.length());
-					fw.write(seq.substring(j, endw));
-					fw.write("\n");
-				}
-			}
-			rs.close();
-			fw.close();
-			return true;
-		}
-		catch (Exception e) {ErrorReport.print(e, "Write preprocessed FPC files"); return false;}
 	}
 	
 	/**************************************
@@ -537,16 +486,15 @@ public class AlignMain
 	
 	private boolean alignExists() {
 		try {
-			boolean isFPC = (proj1Type==ProjType.fpc);
-			resultDir = Constants.getNameResultsDir(proj1Name, isFPC, proj2Name);
+			resultDir = Constants.getNameResultsDir(proj1Name, proj2Name);
 			
-			String alignDir = Constants.getNameResultsDir(proj1Name, isFPC, proj2Name);
+			String alignDir = Constants.getNameResultsDir(proj1Name, proj2Name);
 			alignDir += Constants.alignDir;
 			File f = new File(alignDir);
 			if (!f.exists()) return false;
 			
 			boolean done = Utils.checkDoneFile(alignDir);
-			int n = Utils.checkDoneMaybe(alignDir, isFPC);
+			int n = Utils.checkDoneMaybe(alignDir);
 			if (done && n>0) {
 				log.msg("Warning: " + n + " alignment files exist - using existing files ...");
 				log.msg("   If not correct, remove " + resultDir + " and re-align.");

@@ -57,11 +57,9 @@ public class SyMAPQueryFrame extends JFrame {
 		setLocationRelativeTo(null); // CAS513 center frame
 	}
 	public void addProject(Project project) {
-		if(!project.getType().equals("fpc")) {
-			theProjects.add(project);
-			if (!project.hasAbbrev()) // CAS519 need to let user know that it can be set
-				System.err.println(project.getDisplayName() + " does not have abbrev set in Parameters: using " + project.getAbbrevName());
-		}
+		theProjects.add(project);
+		if (!project.hasAbbrev()) // CAS519 need to let user know that it can be set
+			System.err.println(project.getDisplayName() + " does not have abbrev set in Parameters: using " + project.getAbbrevName());
 	}
 	public void build() {
 		buildMenuPanel();

@@ -1,28 +1,18 @@
 package symap.mapper;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
 
 import symap.track.Track;
-import symap.contig.Contig;
 import symap.sequence.Sequence;
-import symap.marker.MarkerTrack;
 
 public class MapInfo {
 	public static final int NOT_SET       = 0;
-
-	// Track Types
-	public static final int BLOCK_TYPE    =  1;
-	public static final int CONTIG_TYPE   =  2;
-	public static final int SEQUENCE_TYPE =  3;
 
 	// Hit Content Types
 	public static final int ONLY_BLOCK_HITS    = 1; // aka synteny hits
 	public static final int ONLY_FILTERED_HITS = 2;
 	public static final int ALL_HITS           = 3;
 
-	private int t1Type,t2Type; // Track types
 	private int hitContent;
 	private int p1, p2; // Project IDs
 	private int[][] contents;
@@ -44,7 +34,7 @@ public class MapInfo {
 	}
 
 	public String toString() {
-		return "[MapInfo hitContent = "+hitContent+" t1Type = "+t1Type+" t2Type = "+t2Type+"]";
+		return "[MapInfo hitContent = "+hitContent+"]";
 	}
 
 	public int getProject1() {
@@ -104,7 +94,7 @@ public class MapInfo {
 	}
 
 	public void clear() {
-		p1 = p2 = t1Type = t2Type = hitContent = NOT_SET;
+		p1 = p2 = hitContent = NOT_SET;
 		contents = new int[2][];
 		contents[0] = new int[0];
 		contents[1] = new int[0];
@@ -116,8 +106,7 @@ public class MapInfo {
 	 * hit content to mi's hit content (mi.hasHitContent(getHitContent())).
 	 */
 	public boolean equalIfUpgradeHitContent(MapInfo mi) {
-		if (t1Type == mi.t1Type && t2Type == mi.t2Type 
-				&& p1 == mi.p1 && p2 == mi.p2 && mi.hasHitContent(hitContent)) 
+		if (p1 == mi.p1 && p2 == mi.p2 && mi.hasHitContent(hitContent)) 
 		{
 			if (mi.contents[0].length != contents[0].length 
 					|| mi.contents[1].length != contents[1].length) return false;
@@ -132,8 +121,7 @@ public class MapInfo {
 	public boolean equals(Object obj) {
 		if (obj instanceof MapInfo) {
 			MapInfo mi = (MapInfo)obj;
-			if (t1Type == mi.t1Type && t2Type == mi.t2Type 
-					&& p1 == mi.p1 && p2 == mi.p2 && hitContent == mi.hitContent) {
+			if (p1 == mi.p1 && p2 == mi.p2 && hitContent == mi.hitContent) {
 				if (mi.contents[0].length != contents[0].length 
 						|| mi.contents[1].length != contents[1].length) return false;
 				for (int j = 0; j < 2; j++)
@@ -150,8 +138,6 @@ public class MapInfo {
 	}
 
 	public void set(MapInfo mi) {
-		t1Type = mi.t1Type;
-		t2Type = mi.t2Type;
 		p1 = mi.p1;
 		p2 = mi.p2;
 		contents = (int[][])mi.contents.clone();
@@ -170,75 +156,14 @@ public class MapInfo {
 		p1 = t1.getProject();
 		p2 = t2.getProject();
 
-		if      (t1 instanceof Sequence)    t1Type = SEQUENCE_TYPE;
-		else if (t1 instanceof Contig)      t1Type = CONTIG_TYPE;
-		else                                t1Type = BLOCK_TYPE;
-		if      (t2 instanceof Sequence)    t2Type = SEQUENCE_TYPE;
-		else if (t2 instanceof Contig)      t2Type = CONTIG_TYPE;
-		else                                t2Type = BLOCK_TYPE;
-
-		if (t1Type == SEQUENCE_TYPE && t2Type == SEQUENCE_TYPE) { // PSEUDO to PSEUDO
-			Sequence st1 = (Sequence)t1;
-			Sequence st2 = (Sequence)t2;
-			contents[0] = new int[1];
-			contents[1] = new int[1];
-			contents[0][0] = st1.getGroup();
-			contents[1][0] = st2.getGroup();
-		}
-		else if (t1Type == SEQUENCE_TYPE || t2Type == SEQUENCE_TYPE) { // FPC to PSEUDO
-			Sequence st;
-			MarkerTrack mt;
-			int si;
-			if (t1Type == SEQUENCE_TYPE) {
-				si = 0;
-				st = (Sequence)t1;
-				mt = (MarkerTrack)t2;
-			}
-			else {
-				si = 1;
-				st = (Sequence)t2;
-				mt = (MarkerTrack)t1;
-			}
-			contents[si] = new int[1];
-			contents[si][0] = st.getGroup();
-			contents[(si+1)%2] = mt.getContigs();
-		}
-		else { // FPC to FPC
-			contents[0] = ((MarkerTrack)t1).getContigs();
-			contents[1] = ((MarkerTrack)t2).getContigs();
-		}
+		Sequence st1 = (Sequence)t1;
+		Sequence st2 = (Sequence)t2;
+		contents[0] = new int[1];
+		contents[1] = new int[1];
+		contents[0][0] = st1.getGroup();
+		contents[1][0] = st2.getGroup();
+		
 		Arrays.sort(contents[0]);
 		Arrays.sort(contents[1]);
-	}
-
-	public int getMapperType() {
-		if (t1Type == SEQUENCE_TYPE && t2Type == SEQUENCE_TYPE) return Mapper.PSEUDO2PSEUDO; 
-		if (t1Type == SEQUENCE_TYPE || t2Type == SEQUENCE_TYPE) return Mapper.FPC2PSEUDO; 
-		return Mapper.FPC2FPC; 
-	}
-
-	public int getGroup() {
-		if (t1Type == SEQUENCE_TYPE) return contents[0][0];
-		if (t2Type == SEQUENCE_TYPE) return contents[1][0];
-		return -1;
-	}
-
-	public int[] getContigs() {
-		if (t1Type == SEQUENCE_TYPE) return (int[])contents[1].clone();
-		if (t2Type == SEQUENCE_TYPE) return (int[])contents[0].clone();
-		return null;
-	}
-
-	public List<Integer> getContigList() {
-		if (t2Type == SEQUENCE_TYPE) return myGetList(contents[0]);
-		if (t1Type == SEQUENCE_TYPE) return myGetList(contents[1]);
-		return null;
-	}
-
-	private List<Integer> myGetList(int[] contigs) {
-		if (contigs == null) return null;
-		List<Integer> list = new ArrayList<Integer>(contigs.length);
-		for (int i = 0; i < contigs.length; i++) list.add(contigs[i]); // CAS520 Integer
-		return list;
 	}
 }    

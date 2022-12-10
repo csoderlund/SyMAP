@@ -35,19 +35,6 @@ public class GroupSorter implements Comparator<String>
 		}
 	}
 	
-	public boolean orderCheck(GroupInt g)
-	{
-		if (mType == GrpSortType.Explicit)
-		{
-			String name = g.getName();
-			//System.out.println("grporder check " + name);
-			if (!mGrpOrder.containsKey(name))
-			{
-				return false;
-			}
-		}
-		return true;
-	}
 	public boolean orderCheck(String name)
 	{
 		if (mType == GrpSortType.Explicit)
@@ -60,10 +47,7 @@ public class GroupSorter implements Comparator<String>
 		}
 		return true;
 	}	
-	public int compare(GroupInt g1, GroupInt g2)
-	{	
-		return compare(g1.getName(), g2.getName());
-	}
+	
 	// Intelligent sequence name sorter (albeit very inefficient).
 	// Strips off any matching prefix, then does a numeric compare
 	// on the remainder,  if it is numeric. 

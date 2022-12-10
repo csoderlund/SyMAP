@@ -1,5 +1,10 @@
 package dotplot;
 
+/*****************************************************************
+ * Called from the SyMAP manager and Explorer
+ * CAS522 removed FPC and took out gobs of code that was doing nothing
+ * there is still massive amount of unnecessary code and OO spaghetti slop
+ */
 import java.awt.BorderLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -7,6 +12,7 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
+import symap.SyMAP;
 import symap.frame.HelpBar;
 import util.DatabaseReader;
 
@@ -18,15 +24,11 @@ public class DotPlotFrame extends JFrame {
 		this(dbReader, new int[] { projXIdx, projYIdx }, null, null, null, true);
 	}
 	
-	public DotPlotFrame(DatabaseReader dbReader) {
-		this(dbReader, null, null, null, null, true);
-	}
-	
 	public DotPlotFrame(DatabaseReader dbReader, 
 			int[] projIDs, int[] xGroupIDs, int[] yGroupIDs, 
 			HelpBar helpBar, boolean hasReferenceSelector) 
 	{
-		super("SyMAP Dot Plot");
+		super("SyMAP Dot Plot " + SyMAP.VERSION);
 		
 		data = new Data( new DotPlotDBUser(dbReader) );
 		
@@ -60,6 +62,8 @@ public class DotPlotFrame extends JFrame {
 		add( plot.getScrollPane(),BorderLayout.CENTER );
 		if (helpBar == null)
 			add( hb, BorderLayout.SOUTH );
+		
+		//setLocationRelativeTo(null); puts in lower corner
 	}
 	
 	public Data getData() { return data; }

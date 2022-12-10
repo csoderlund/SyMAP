@@ -1,7 +1,6 @@
 package symap.mapper;
 
 import java.util.List;
-import java.util.ArrayList;
 import java.util.LinkedList;
 
 import java.sql.SQLException;
@@ -25,7 +24,6 @@ import symap.SyMAP;
  */
 public class MapperPool extends DatabaseUser implements SyMAPConstants {
 	private ProjectProperties projectProperties;
-	private ListCache repetitiveMarkerFilterCache;
 	private ListCache pseudoPseudoCache; 
 	private boolean TRACE=SyMAP.DEBUG;
 
@@ -60,7 +58,6 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 			return false;
 		}
 	
-		if (mapinfo.getMapperType() != newMapInfo.getMapperType()) hits.clear();
 		if (pseudoPseudoCache != null) pseudoPseudoCache.clear();
 		
 		hits.clear(); // prevent hit accumulation on pseudo-pseudo 
@@ -177,56 +174,4 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 			throw e;
 		}
 	}
-
-	public static final String REPETITIVE_MRK_FILTER_QUERY =
-		"SELECT DISTINCT m.name "+
-		"FROM markers as m "+
-		"WHERE (SELECT COUNT(*) "+
-		"       FROM mrk_ctg as mc1 "+
-		"       WHERE m.proj_idx=? AND mc1.mrk_idx=m.idx) > ? OR "+
-		"      (SELECT COUNT(*) "+
-		"       FROM mrk_ctg as mc2 "+
-		"       WHERE m.proj_idx=? AND mc2.mrk_idx=m.idx) > ?";
-
-	public static final String RMFQ_SINGLE_PROJECT =
-		"SELECT m.name "+
-		"FROM markers AS m "+
-		"WHERE m.proj_idx=? AND (SELECT COUNT(*) FROM mrk_ctg AS mc WHERE mc.mrk_idx=m.idx) > ? ";
-
-	
-	public RepetitiveMarkerFilterData getRepetitiveMarkerFilterData(ProjectPair pp) throws SQLException {
-		RepetitiveMarkerFilterData p = null;
-		
-		if (repetitiveMarkerFilterCache != null)
-			p = (RepetitiveMarkerFilterData) repetitiveMarkerFilterCache.get(new RepetitiveMarkerFilterData(pp.getP1(), pp.getP2()));
-
-		if (p != null) return p;
-
-		ArrayList<String> fd = new ArrayList<String>();
-		Statement stat = null;
-		ResultSet rs = null;
-		try {
-			stat = createStatement();
-
-			if (pp.getP1() == pp.getP2()) rs = stat.executeQuery(setInt(setInt(RMFQ_SINGLE_PROJECT,pp.getP1()),pp.getMaxMarkerHits()));
-			else
-				rs = stat.executeQuery(setInt(setInt(setInt(setInt(REPETITIVE_MRK_FILTER_QUERY,pp.getP1()),
-						pp.getMaxMarkerHits()),pp.getP2()),pp.getMaxMarkerHits()));
-
-			while (rs.next())
-				fd.add(rs.getString(1));
-
-			p = new RepetitiveMarkerFilterData(pp.getP1(),pp.getP2(),fd);
-			if (repetitiveMarkerFilterCache != null) repetitiveMarkerFilterCache.add(p);
-		}
-		finally {
-			closeStatement(stat);
-			closeResultSet(rs);
-			stat = null;
-			rs = null;
-			fd = null;
-		}
-		return p;
-	}
-
 }

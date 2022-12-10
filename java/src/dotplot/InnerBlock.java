@@ -21,5 +21,5 @@ public interface InnerBlock extends Shape {
     public int getWidth();
     public int getHeight();
 
-    public Hit[] getHits(boolean includeRepetitive, boolean onlyBlock);
+    public DPHit[] getHits(boolean includeRepetitive, boolean onlyBlock);
 }

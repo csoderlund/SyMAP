@@ -308,8 +308,8 @@ public class QueryPanel extends JPanel {
 			}
 			if (start.equals("")) start = "0";
 			if (stop.equals(""))  stop  = "0";
-			
-			grpCoords.put(index, start + Q.delim2 + stop); // need all selected for DBdata.passFilter
+			if (start!="0" || stop!="0")
+				grpCoords.put(index, start + Q.delim2 + stop); // for DBdata.passFilter
 		}
 		if (grpList.equals("")) return "";
 		

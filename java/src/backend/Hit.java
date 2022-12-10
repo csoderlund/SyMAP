@@ -4,13 +4,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Vector;
 
-enum RF {R,F}; // BES .r or .f
-
 public class Hit implements Comparable <Hit> // CAS500 added <Hit>
 {
 	public int matchLen, pctid, pctsim, idx; // pctid=%ID, pctsim=%sim
-	public String strand, clone = "";
-	public RF rf;
+	public String strand;
 	public HitStatus status = HitStatus.Undecided;
 	public SubHit query, target;
 	public HitType mBT = null;
@@ -42,8 +39,6 @@ public class Hit implements Comparable <Hit> // CAS500 added <Hit>
 		pctid = h.pctid;
 		pctsim = h.pctsim; // CAS515 add
 		strand = h.strand;
-		clone = h.clone;
-		rf = h.rf;
 		status = h.status;
 		idx = h.idx;
 		origHits = h.origHits;
@@ -132,9 +127,7 @@ public class Hit implements Comparable <Hit> // CAS500 added <Hit>
 		this.query.end       = Math.max(h.query.end,    this.query.end);
 		this.target.start    = Math.min(h.target.start, this.target.start);
 		this.target.end      = Math.max(h.target.end,   this.target.end );
-		this.query.fileType  = h.query.fileType;
 		this.query.grpIdx    = h.query.grpIdx;
-		this.target.fileType = h.target.fileType;
 		this.target.grpIdx   = h.target.grpIdx;
 		this.origHits += h.origHits;
 		

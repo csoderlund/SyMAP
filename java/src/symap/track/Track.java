@@ -42,6 +42,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 
 	protected static final double MOUSE_PADDING = 2;
 
+	private static final  Color REFNAME = new Color(0,0,200); // CAS530 change from red to deep blue
 	private static final Color titleColor = Color.black;
 	private static final Color dragColor = new Color(255,255,255,120);
 	private static final Color dragBorder = Color.black;
@@ -472,7 +473,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		Graphics2D g2 = (Graphics2D)g;
 
 		if (position % 2 == 0)
-			g2.setPaint(Color.red);
+			g2.setPaint(REFNAME);
 		else
 			g2.setPaint(titleColor);
 		

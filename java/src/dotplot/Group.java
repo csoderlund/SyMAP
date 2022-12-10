@@ -1,10 +1,6 @@
 package dotplot;
 
 import java.util.HashMap;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 public class Group implements Comparable<Group> {
 	private int id;
@@ -13,7 +9,6 @@ public class Group implements Comparable<Group> {
 	private int size;
 	private long offset;
 	private float scaleFactor = 1;
-	private List<Contig> contigs = new LinkedList<Contig>();
 	private int projID;
 	private HashMap<Group,Boolean> hasBlocks;	
 	private boolean isVisible = true;  			
@@ -31,64 +26,6 @@ public class Group implements Comparable<Group> {
 		return projID;
 	}
 
-	public void addContig(Contig contig) {
-		contigs.add(contig);
-	}
-
-	public Contig[] getContigs() { 
-		return (Contig[])contigs.toArray(new Contig[0]);
-	}
-
-	public List<Contig> getContigList() {
-		return contigs;
-	}
-
-	public Contig[] getContigs(int[] contigIDs) {
-		if (contigIDs == null || contigIDs.length == 0) return new Contig[0];
-		Contig ret[] = new Contig[contigIDs.length];
-		for (int i = 0; i < contigIDs.length; ++i)
-			ret[i] = Contig.getContig(contigIDs[i],contigs);
-		return ret;
-	}
-
-	public List<Contig> getContigs(int start, int end) {
-		List<Contig> list = new ArrayList<Contig>(contigs.size());
-		int ctgStart, ctgEnd;
-		for (Contig c : contigs) {
-			ctgStart = c.getCCB();
-			ctgEnd   = c.getEnd();
-			if ((ctgStart <= start && ctgEnd >= start) ||
-					(ctgStart <= end && ctgEnd >= end) ||
-					(ctgStart >= start && ctgEnd <= end)) 
-			{
-				list.add(c);
-			}
-		}
-		return list;
-	}
-
-	public Contig getContig(int contigNumber) {
-		Iterator<Contig> iter = contigs.iterator();
-		Contig c;
-		while (iter.hasNext()) {
-			c = iter.next();
-			if (c.getNumber() == contigNumber) return c;
-		}
-		return null;
-	}
-
-	public int getContigEnd(int contigNumber) {
-		Contig c = getContig(contigNumber);
-		if (c == null) return 0; 
-		return c.getCCB()+c.getSize();
-	}
-
-	public int getContigPosition(int contigNumber) {
-		Contig c = getContig(contigNumber);
-		if (c == null) return 0; 
-		return c.getCCB();
-	}
-	
 	public long getOffset() { return offset; }
 	public int getID() { return id; }
 	public int getSortOrder() { return sortOrder; }

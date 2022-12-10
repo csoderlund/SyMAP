@@ -4,6 +4,7 @@ package symap.projectmanager.common;
  * 	They are loaded into the proj_props DB table on Load
  * 
  * CAS513 reorder a bunch and some renaming; added grp_prefix update
+ * CAS522 removed FPC
  */
 import java.awt.Color;
 import java.awt.Component;
@@ -51,9 +52,6 @@ import util.Utilities;
 public class PropertyFrame extends JDialog {
 	private static final long serialVersionUID = -8007681805846455592L;
 
-	public static final int MODE_FPC = 1;
-	public static final int MODE_PSEUDO = 2;
-	
 	private static final String [] PSEUDO_MASK_GENES = { "yes", "no" };
 	
 	private static final Color HELP_BUTTON_COLOR = new Color(0xEEFFEE);
@@ -61,10 +59,10 @@ public class PropertyFrame extends JDialog {
 	private static int INITIAL_WIDTH = 640;
 	private static int INITIAL_HEIGHT = 600;
 	
-	public static String lastFPCDir=null, lastSeqDir=null; // CAS500
+	public static String lastSeqDir=null; // CAS500
 	private int idxGrpPrefix=0, idxMinKWcnt=0; 
 	
-	public PropertyFrame(Frame parentFrame, boolean isPseudo, 
+	public PropertyFrame(Frame parentFrame, 
 			String displayName, String dbName, DatabaseReader dbReader, 
 			boolean isLoadedProject, String pathName) {
 		
@@ -74,9 +72,6 @@ public class PropertyFrame extends JDialog {
 		theDBName = dbName;
 		bIsLoaded = isLoadedProject;
 		thePathName = pathName;
-		
-		if (!isPseudo) theMode = MODE_FPC;
-		else theMode = MODE_PSEUDO;
 		
 		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
 		getContentPane().setBackground(Color.WHITE);
@@ -119,50 +114,32 @@ public class PropertyFrame extends JDialog {
 		int startLoad=0, i=0;
 		boolean bReload=true, bReAlign=true;
 		
-		if(theMode == MODE_FPC) {
-			theFields = new PropertyComponent[9];
+		theFields = new PropertyComponent[14];
+		theFields[i++] = new PropertyComponent("category", "Uncategorized", 1, 		!bReload, !bReAlign);
+		theFields[i++] = new PropertyComponent("display_name", theDisplayName, 1, 	!bReload, !bReAlign);
+		theFields[i++] = new PropertyComponent("abbrev_name","", 1, 				!bReload, !bReAlign); // CAS519 add for SyMAP Query
+		theFields[i++] = new PropertyComponent("grp_type", "Chromosome", 1, 		!bReload, !bReAlign);
+		theFields[i++] = new PropertyComponent("description", "", 2, 				!bReload, !bReAlign);	
+		theFields[i++] = new PropertyComponent("min_display_size_bp", "0", 1, 		!bReload, !bReAlign);	
 		
-			theFields[i++] = new PropertyComponent("category", "Uncategorized", 1, 		!bReload, !bReAlign);
-			theFields[i++] = new PropertyComponent("display_name", theDisplayName, 1, 	!bReload, !bReAlign);
-			theFields[i++] = new PropertyComponent("grp_type", "Chromosome", 1, 		!bReload, !bReAlign);
-			theFields[i++] = new PropertyComponent("description", "", 2, 				!bReload, !bReAlign);	
-			
-			startLoad=i;
-			theFields[i++] = new PropertyComponent("grp_prefix", "", 1, !bReload, !bReAlign);
-			theFields[i++] = new PropertyComponent("cbsize", "1200", 1, !bReload, !bReAlign);	
-			
-			theFields[i++] = new PropertyComponent("fpc_file", "",     bReload, bReAlign, true);
-			theFields[i++] = new PropertyComponent("bes_files", "",    bReload, bReAlign, false);
-			theFields[i++] = new PropertyComponent("marker_files", "", bReload, bReAlign, false);
-		} 
-		else { //MODE_PSEUDO CAS42 1/4/17 reordered them
-			theFields = new PropertyComponent[14];
-			theFields[i++] = new PropertyComponent("category", "Uncategorized", 1, 		!bReload, !bReAlign);
-			theFields[i++] = new PropertyComponent("display_name", theDisplayName, 1, 	!bReload, !bReAlign);
-			theFields[i++] = new PropertyComponent("abbrev_name","", 1, 				!bReload, !bReAlign); // CAS519 add for SyMAP Query
-			theFields[i++] = new PropertyComponent("grp_type", "Chromosome", 1, 		!bReload, !bReAlign);
-			theFields[i++] = new PropertyComponent("description", "", 2, 				!bReload, !bReAlign);	
-			theFields[i++] = new PropertyComponent("min_display_size_bp", "0", 1, 		!bReload, !bReAlign);	
-			
-			// special cases
-			idxMinKWcnt=i;
-			theFields[i++] = new PropertyComponent("annot_kw_mincount", "50", 1, 	!bReload, !bReAlign);	// CAS513 2 lines->1, moved
-			idxGrpPrefix = i;
-			startLoad=i-1; // put >Load before this field 
-			theFields[i++] = new PropertyComponent("grp_prefix", "Chr", 1, 			!bReload, !bReAlign);
-			
-			theFields[i++] = new PropertyComponent("min_size", "100000", 1, bReload, !bReAlign); // Hardcoded in Projects too
-			// CAS42 1/4/17 this is in the Help, but not here
-			//theFields[4] = new PropertyComponent("grp_sort", PSEUDO_GRP_SORT, 0, true, false);
-			theFields[i++] = new PropertyComponent("annot_keywords", "", 2, bReload, !bReAlign); // CAS512 was false for Reload		
-			
-			theFields[i++] = new PropertyComponent("order_against", getOrderBySelections(), 0, !bReload, bReAlign);
-			theFields[i++] = new PropertyComponent("mask_all_but_genes", PSEUDO_MASK_GENES, 1, !bReload, bReAlign);
-			
-			// CAS500 swap the order of these two
-			theFields[i++] = new PropertyComponent("sequence_files", "", 	bReload, bReAlign, false);
-			theFields[i++] = new PropertyComponent("anno_files", "", 		bReload, bReAlign, false);
-		}
+		// special cases
+		idxMinKWcnt=i;
+		theFields[i++] = new PropertyComponent("annot_kw_mincount", "50", 1, 	!bReload, !bReAlign);	// CAS513 2 lines->1, moved
+		idxGrpPrefix = i;
+		startLoad=i-1; // put >Load before this field 
+		theFields[i++] = new PropertyComponent("grp_prefix", "Chr", 1, 			!bReload, !bReAlign);
+		
+		theFields[i++] = new PropertyComponent("min_size", "100000", 1, bReload, !bReAlign); // Hardcoded in Projects too
+		// CAS42 1/4/17 this is in the Help, but not here
+		//theFields[4] = new PropertyComponent("grp_sort", PSEUDO_GRP_SORT, 0, true, false);
+		theFields[i++] = new PropertyComponent("annot_keywords", "", 2, bReload, !bReAlign); // CAS512 was false for Reload		
+		
+		theFields[i++] = new PropertyComponent("order_against", getOrderBySelections(), 0, !bReload, bReAlign);
+		theFields[i++] = new PropertyComponent("mask_all_but_genes", PSEUDO_MASK_GENES, 1, !bReload, bReAlign);
+		
+		// CAS500 swap the order of these two
+		theFields[i++] = new PropertyComponent("sequence_files", "", 	bReload, bReAlign, false);
+		theFields[i++] = new PropertyComponent("anno_files", "", 		bReload, bReAlign, false);
 			
 		JPanel tempPanel = new JPanel();
 		tempPanel.setLayout(new BoxLayout(tempPanel, BoxLayout.PAGE_AXIS));
@@ -173,7 +150,7 @@ public class PropertyFrame extends JDialog {
 			tempPanel.add(Box.createVerticalStrut(5));
 			theFields[x].setTextListener(theListener);
 			tempPanel.add(theFields[x]);
-			if ((theMode != MODE_FPC && x==startLoad) || (theMode == MODE_FPC && x==startLoad)) {
+			if (x==startLoad) {
 				tempPanel.add(Box.createVerticalStrut(15));
 				tempPanel.add(new JLabel(">Load, Computation and Display:"));
 			}
@@ -297,8 +274,7 @@ public class PropertyFrame extends JDialog {
 	}
 	// Only called if params not gotten from DB.
 	private boolean updateFieldsFromFile() {
-		String dir = (theMode == MODE_PSEUDO) ? 
-				(Constants.seqDataDir + theDBName) : (Constants.fpcDataDir + theDBName);
+		String dir = Constants.seqDataDir + theDBName;
 		
 		File pfile = new File(dir, Constants.paramsFile);
 		if (pfile.isFile()) {
@@ -491,8 +467,7 @@ public class PropertyFrame extends JDialog {
 	 * 		the /data/seq/<p>/params is created anyway for the parameters
 	 */
 	private void writeParamsFile() {	
-		String dir = (theMode == MODE_PSEUDO) ? 
-				(Constants.seqDataDir + theDBName) : (Constants.fpcDataDir + theDBName);
+		String dir = Constants.seqDataDir + theDBName;
 		Utilities.checkCreateDir(dir, true); // CAS500 
 		
 		File pfile = new File(dir,Constants.paramsFile);
@@ -531,8 +506,7 @@ public class PropertyFrame extends JDialog {
 	}
 	
 	private void showHelp() {
-		Utilities.showHTMLPage(this, "Project Parameter Help", 
-				(theMode == MODE_FPC ? "/html/FpcParamHelp.html" : "/html/ProjParamHelp.html"));	
+		Utilities.showHTMLPage(this, "Project Parameter Help",  "/html/ProjParamHelp.html");	
 	}
 	private void closeDialog() {
 		dispose();
@@ -773,20 +747,12 @@ public class PropertyFrame extends JDialog {
 		}
 		private String getDefaultDir() {
 			String defDir;
-			if (theMode == MODE_FPC) {
-				if (lastFPCDir==null) {
-					defDir = Constants.fpcDataDir;
-					if (Utilities.pathExists(defDir+theDBName)) defDir += theDBName;
-				}
-				else defDir=lastFPCDir;
+			
+			if (lastSeqDir==null) {
+				defDir = Constants.seqDataDir;
+				if (Utilities.pathExists(defDir+theDBName)) defDir += theDBName;
 			}
-			else {
-				if (lastSeqDir==null) {
-					defDir = Constants.seqDataDir;
-					if (Utilities.pathExists(defDir+theDBName)) defDir += theDBName;
-				}
-				else defDir=lastSeqDir;
-			}
+			else defDir=lastSeqDir;
 			return defDir;
 		}
 		private void setDefaultDir(String path) {
@@ -797,8 +763,7 @@ public class PropertyFrame extends JDialog {
 			if (last>1) 
 				upPath = path.substring(0, last);
 			
-			if (theMode == MODE_FPC) lastFPCDir = upPath;
-			else lastSeqDir=upPath;
+			lastSeqDir=upPath;
 		}
 		public String getValue() {
 			String retVal = "";

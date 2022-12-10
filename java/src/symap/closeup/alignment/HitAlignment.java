@@ -40,8 +40,8 @@ public class HitAlignment implements Comparable<HitAlignment> {
 			int targetStart, int targetEnd, int fullTargetWidth) 
 	{
 		this.hd = hd;
-		this.projDispName = projDispName;
-		this.content = content;
+		this.projDispName = projDispName; // probably always null
+		this.content = content;			  // probably always -1 
 		this.strand = strand;
 		this.queryName = queryName;
 		this.qStart = queryStart;
