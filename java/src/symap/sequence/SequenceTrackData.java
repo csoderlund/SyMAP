@@ -8,11 +8,11 @@ import symap.track.Track;
  */
 public class SequenceTrackData extends TrackData {
 	private int group;
-	private boolean showGene, showFrame;
+	private boolean showGene;
 	private boolean showGap, showCentromere;
 	private boolean showRuler, showAnnot;
 	private boolean showFullGene;
-	private boolean showScoreLine, showScoreValue; 	
+	private boolean showScoreLine, showScoreValue, showHitNum; 	
 	private boolean flipped; 						
 
 	protected SequenceTrackData(Track sequence) {
@@ -22,13 +22,13 @@ public class SequenceTrackData extends TrackData {
 		group          = seq.group;
 		showRuler      = seq.showRuler;
 		showGene       = seq.showGene;
-		showFrame      = seq.showFrame;
 		showAnnot      = seq.showAnnot;
 		showGap        = seq.showGap;
 		showCentromere = seq.showCentromere;
 		showFullGene   = seq.showFullGene;
 		showScoreLine  = seq.showScoreLine;		
 		showScoreValue = seq.showScoreValue;	
+		showHitNum 		= seq.showHitNum;	
 		flipped        = seq.isFlipped();		
 	}
 
@@ -39,13 +39,13 @@ public class SequenceTrackData extends TrackData {
 		seq.group          = group;
 		seq.showRuler      = showRuler;
 		seq.showGene       = showGene;
-		seq.showFrame      = showFrame;
 		seq.showAnnot      = showAnnot;
 		seq.showGap        = showGap;
 		seq.showCentromere = showCentromere;
 		seq.showFullGene   = showFullGene;
 		seq.showScoreLine  = showScoreLine; 	
-		seq.showScoreValue = showScoreValue; 	
+		seq.showScoreValue = showScoreValue; 
+		seq.showHitNum = showHitNum; 
 		seq.flip(flipped); 						
 	}
 

@@ -1,22 +1,13 @@
 package symap.mapper;
 
 import java.util.Comparator;
+import symap.closeup.SeqData;
 import util.Utilities;
 
 /**
- * Holds the data of a hit. 
- 	Extended by PseudoMarkerData, PseudoBESData, PseudoHitData
-  
-	search Update HitData
- 		to get data to here: HitData, 
- 		MapperPool.setPseudoPseudoData reads DB		
-		PseudoPseudoData.PseudoHitData passes through
- 			then more times in FPC stuff, even though the hits have different needs
- 		
-  	PseudoPseudoHits paint, filters
-  		MapperPool.setPseudoPseudoData populates
+ * CAS531 was abstract so the code went through loops to get data into it via PseudoPseudoData, which is removed
  */
-public abstract class HitData {	
+public class HitData {	
 	private long id;
 	private int hitnum;				// CAS520 add, newly assigned hitnum
 	private int blocknum; 			// CAS505 add
@@ -36,47 +27,28 @@ public abstract class HitData {
 	private int overlap = -1; 
 	private String chr1, chr2; 		// CAS517 add
 	
-	protected HitData(long id, int hitnum, String strand, boolean repetitive,
-			int blocknum, double pctid, int start2, int end2,
-			String query_seq, String target_seq, int gene_olap, int pctsim, int nMerge, 
-			double corr, String tag) 
+	// Update HitData PseudoHitData 
+	protected HitData(long id, int hitnum, String strand, int block,  double pctid, 
+			int start1, int end1, int start2, int end2, int overlap,
+			String query_seq, String target_seq, int pctsim, int nMerge, double corr, 
+			String tag, String chr1, String chr2)
 	{
 		this.id = id;
 		this.hitnum = hitnum;
-		this.blocknum = blocknum;
+		this.blocknum = block;
 		this.isBlock = (blocknum>0) ? true : false;
 		this.pctid = (byte)pctid;
 		this.start2 = start2;
 		this.end2 = end2;
 		this.query_seq = query_seq; 	// start1, end1
 		this.target_seq = target_seq;	// start2, end2
-		this.overlap = gene_olap;
+		this.overlap = overlap;
 		this.pctsim = (byte) pctsim;
 		this.nMerge = nMerge;
 		this.corr = corr;
 		this.tag = tag;		// Set in MapperPool.setPseudoPseudoData as g(gene_overlap) c(runsize).(runnum)
 		this.collinearSet = Utilities.getCollinear(tag); // CAS520
 		this.isCollinear = (collinearSet==0) ? false : true; // CAS520
-		chr1="1";
-		chr2="2";
-			
-		if (strand.length() >= 3) { 
-			this.isSameOrient = strand.charAt(0) == strand.charAt(2);
-			this.isPosOrient1 = (strand.charAt(0) == '+');
-			this.isPosOrient2 = (strand.charAt(2) == '+');
-		}
-		else {
-			if (symap.SyMAP.TRACE) System.err.println("Invalid strand value '"+strand+"' for hit id="+id);
-			this.isSameOrient = true;
-		}
-	}
-	// Update HitData PseudoHitData 
-	protected HitData(long id, int hitnum, String strand, boolean repetitive,
-			int block,  double pctid, int start1, int end1, 
-			int start2, int end2, int overlap,
-			String query_seq, String target_seq, int pctsim, int nMerge, double corr, String tag, String chr1, String chr2)
-	{
-		this(id,hitnum,strand,repetitive,block,pctid,start2,end2,"","", overlap, pctsim, nMerge, corr, tag);
 		
 		this.start1 = start1;
 		this.end1 = end1;
@@ -85,9 +57,18 @@ public abstract class HitData {
 		this.target_seq = target_seq;
 		this.chr1 = chr1;
 		this.chr2 = chr2;
+		
+		if (strand.length() >= 3) { 
+			this.isSameOrient = strand.charAt(0) == strand.charAt(2);
+			this.isPosOrient1 = (strand.charAt(0) == '+');
+			this.isPosOrient2 = (strand.charAt(2) == '+');
+		}
+		else {
+			if (symap.SyMAP.TRACE) System.err.println("HitData: Invalid strand value '"+strand+"' for hit id="+id);
+			this.isSameOrient = true;
+		}
 	}
-	public String toString() 	{ return "Hit #" + hitnum; }
-	public String getName()		{ return "Hit #" + hitnum;}
+	
 	public boolean isSameOrient()  { return isSameOrient; }
 	public boolean isPosOrient1() { return isPosOrient1; }
 	public boolean isPosOrient2() { return isPosOrient2; }
@@ -173,6 +154,16 @@ public abstract class HitData {
 		if (nMerge>0) msg += " of " + nMerge + " hits ";
 		return msg;
 	}
+	// called for CloseUp Align
+	public String toString() 	{ 
+		String msg="";
+		if (nMerge>0) msg += " Avg";
+		msg += " %Id=" + pctid;
+		if (pctsim>0) msg += " %Sim=" + pctsim;
+		if (nMerge>0) msg += " of " + nMerge + " sub-hits";
+		return "Hit #" + hitnum + msg; 
+	}
+	public String getName()		{ return "Hit #" + hitnum;}
 	/********************************************************
 	 * CAS512 left/right->start:end; CAS516 add Inv, tag CAS517 puts track1 info before track2
 	 */
@@ -184,16 +175,12 @@ public abstract class HitData {
 		if (nMerge>0) msg += "Avg";
 		msg += " %Id=" + pctid;
 		if (pctsim>0) msg += " %Sim=" + pctsim;
-		if (nMerge>0) msg += " of " + nMerge + " merged hits";
+		if (nMerge>0) msg += " of " + nMerge + " sub-hits";
 		
-		String msg1 = Utilities.coordsHit(chr1, isPosOrient1, start1, end1, "\n");
-		String msg2 = Utilities.coordsHit(chr2, isPosOrient2, start2, end2, "\n");
+		String msg1 = chr1 + " " + SeqData.coordsStr(isPosOrient1, start1, end1);
+		String msg2 = chr2 + " " + SeqData.coordsStr(isPosOrient2, start2, end2);
 		String coords = s1LTs2 ? (msg1+"\n"+msg2) : (msg2+"\n"+msg1);
 		
 		return  msg + "\n\n" + coords;
 	}
-	// dead fpc
-	public boolean isRepetitiveHit() { return false; } // FPC
-	public int getOverlap()    { return overlap; }    
-	public double getEvalue() 	{ return 0.0; } 
 }

@@ -3,19 +3,20 @@ package symap.sequence;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Stroke;
 import java.awt.geom.Rectangle2D;
 import java.util.Vector;
+import java.util.Comparator;
 import java.util.TreeMap;
 
 import symap.SyMAP;
+import symap.closeup.TextShowInfo;
+import symap.closeup.SeqData;
 import util.ErrorReport;
 import util.PropertiesReader;
 import util.TextBox;
-import util.Utilities;
 
 /**
  * Class Annotation is used for storing and painting an annotation graphics to the screen.
@@ -23,64 +24,16 @@ import util.Utilities;
  * Drawing the annotation requires calling setRectangle() first.
  */
 public class Annotation {
-	private static boolean TRACE = symap.SyMAP.DEBUG;
-	/**
-	 * Values used in the database to represent annotation types.
-	 */
-	public static final String GENE 		= "gene";
-	public static final String FRAMEWORK 	= "frame";
-	public static final String GAP 			= "gap";
-	public static final String CENTROMERE 	= "centromere";
-	public static final String EXON 		= "exon";  
-	public static final String SYGENE       = "sygene"; 
-	public static final String HIT      	= "hit"; 
+	private static boolean DEBUG = symap.SyMAP.DEBUG;
 	
-	public static final int GENE_INT 		= 0;
-	public static final int FRAMEWORK_INT 	= 1;
-	public static final int GAP_INT 		= 2;
-	public static final int CENTROMERE_INT 	= 3;
-	public static final int EXON_INT 		= 4; 
-	public static final int SYGENE_INT     	= 5; 
-	public static final int HIT_INT     	= 6; 
-	public static final int numTypes 		= 7; 
-	public static Vector<String> typeVec = new Vector<String>(numTypes, 1); 
-	static {
-		typeVec.add(GENE);
-		typeVec.add(FRAMEWORK);
-		typeVec.add(GAP);
-		typeVec.add(CENTROMERE);
-		typeVec.add(EXON);   
-		typeVec.add(SYGENE); 
-	}
-	// accessed and changed by ColorDialog - do not change
-	public static Color geneColor;
-	public static Color frameColor;
-	public static Color gapColor;
-	public static Color centromereColor;
-	public static Color exonColorP; 				// CAS517 add P/N
-	public static Color exonColorN;
-	public static Color sygeneColor = Color.yellow; // CAS503 sygene obsolete?
-	
-	private static final float crossWidth; // the width of the line in the cross
-	static {
-		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/annotation.properties"));
-		crossWidth = (float) props.getDouble("crossWidth");
-		
-		geneColor = props.getColor("geneColor");
-		frameColor = props.getColor("frameColor");
-		gapColor = props.getColor("gapColor");
-		centromereColor = props.getColor("centromereColor");
-		exonColorP = props.getColor("exonColorP"); 
-		exonColorN = props.getColor("exonColorN"); 
-	}
+	// colors at bottom
 
-	// private String name;
 	private int type;
 	private int start, end;						
 	private String description, tag, tagGeneN;	
 	private boolean bStrandPos;
-	private int gene_idx=0;  // If this is an exon, it is the gene_idx that it belongs to
-	private int annot_idx=0; 
+	private int gene_idx=0;  // If this is an exon, it is the gene_idx (pseudo_annot.idx) that it belongs to
+	private int annot_idx=0; // pseudo_annot.idx
 	private int genenum=0;	 	// CAS517 for sorting in PseudoData
 	
 	private Rectangle2D.Double rect;
@@ -95,7 +48,6 @@ public class Annotation {
 	 * Read from database in PseudoPool.setSequence 
 	 * Creates AnnotationData object array
 	 * Then goes to PseudoData for sorting
-	 * How insane is that - that is what OO is teaching very smart students as good programming
 	 */
 	public Annotation(String name, String annot_type, int start, int end, String strand, 
 			String tag, int gene_idx, int idx, int genenum, int numhits) {
@@ -250,10 +202,7 @@ public class Annotation {
 	public int getGeneNum() { return genenum;}				// CAS517 for sorting in PseudoData
 	public String getTag() {return tag;} 					// CAS512 add for HelpBox
 	public String getGeneNumStr() {return tagGeneN;}		// CAS518 for...
-	
-	
-	// for seq-seq closeup
-	public boolean getStrand() {return bStrandPos;}
+	public boolean isStrandPos() {return bStrandPos;}	// for seq-seq closeup
 	
 	/** XXX determines if the rectangle of this annotation contains the point p. */
 	public boolean contains(Point p) {
@@ -277,7 +226,7 @@ public class Annotation {
 	}
 	
 	private String getLocLong(String delim) { // CAS504
-		return Utilities.coordsAnno(bStrandPos, start, end, delim); // CAS512 update
+		return SeqData.coordsStr(bStrandPos, start, end); // CAS512 update
 	}
 	/** Shown in info text box when mouse over object */
 	public String getLongDescription() {
@@ -297,7 +246,7 @@ public class Annotation {
 	}
 	
 	public boolean hasShortDescription() {
-		if (type==EXON_INT && !TRACE) return false; // CAS512 do not want exons on "Show Annotations"
+		if (type==EXON_INT && !DEBUG) return false; // CAS512 do not want exons on "Show Annotations"
 
 		return description != null && description.length() > 0;
 	}
@@ -365,7 +314,7 @@ public class Annotation {
 	// for hover
 	public String getExon(int parent_idx) { // called on "exon" annotation object
 		if (isExon() && this.gene_idx==parent_idx) {
-			String x = Utilities.coordsAnno(bStrandPos, start, end, " ");
+			String x = SeqData.coordsStr(bStrandPos, start, end);
 			return String.format("%-8s %s", tag, x); // Exon #xx
 		}
 		return null;
@@ -417,23 +366,79 @@ public class Annotation {
 			else msg += x + "\n";
 		}
 		
-		if (exonList!=null) {// FPC
+		if (exonList!=null) {
 			String exon = tok[1].replace("(",""); // CAS518 move Exon N len to here
 			exon = tok[1].replace(")","");
-			msg += "\n" + exon + "\n" + Utilities.formatExon(exonList) + "\n";
+			msg += "\n" + exon + "\n" + SeqData.formatExon(exonList) + "\n";
 		}
 		
 		if (hitList!=null) {
 			String [] hitWires = hitList.split(";");
-			for (String h : hitWires) msg += Utilities.formatHit(h);
+			for (String h : hitWires) msg += SeqData.formatHit(h);
 		}
 		String title =  name + "; " + tagGeneN;
 		
 		if (parentFrame!=null) {
-			Dimension d = new Dimension (350, 220); 
-			Utilities.displayInfoMonoSpace(parentFrame, title, msg,  d, 0.0, 0.0); 
+			new TextShowInfo(parentFrame, title, msg);
 		}
 		else descBox.popupDesc(title, msg); // aligns it with yellow box
 	} catch (Exception e) {ErrorReport.print(e, "Creating genepopup");}
+	}
+	// CAS531 add for TextShowSeq to sort exons
+	public static Comparator<Annotation> getExonStartComparator() {
+		return new Comparator<Annotation>() {
+			public int compare(Annotation a1, Annotation a2) {
+				return a2.start - a1.start; 
+			}
+		};
+	}
+	/***********************************************************************
+	 * Values used in the database to represent annotation types.
+	 */
+	public static final String GENE 		= "gene";
+	public static final String FRAMEWORK 	= "frame";
+	public static final String GAP 			= "gap";
+	public static final String CENTROMERE 	= "centromere";
+	public static final String EXON 		= "exon";  
+	public static final String SYGENE       = "sygene"; 
+	public static final String HIT      	= "hit"; 
+	
+	public static final int GENE_INT 		= 0;
+	public static final int FRAMEWORK_INT 	= 1;
+	public static final int GAP_INT 		= 2;
+	public static final int CENTROMERE_INT 	= 3;
+	public static final int EXON_INT 		= 4; 
+	public static final int SYGENE_INT     	= 5; 
+	public static final int HIT_INT     	= 6; 
+	public static final int numTypes 		= 7; 
+	public static Vector<String> typeVec = new Vector<String>(numTypes, 1); 
+	static {
+		typeVec.add(GENE);
+		typeVec.add(FRAMEWORK);
+		typeVec.add(GAP);
+		typeVec.add(CENTROMERE);
+		typeVec.add(EXON);   
+		typeVec.add(SYGENE); 
+	}
+	// accessed and changed by ColorDialog - do not change
+	public static Color geneColor;
+	public static Color frameColor;
+	public static Color gapColor;
+	public static Color centromereColor;
+	public static Color exonColorP; 				// CAS517 add P/N
+	public static Color exonColorN;
+	public static Color sygeneColor = Color.yellow; // CAS503 sygene obsolete?
+	
+	private static final float crossWidth; // the width of the line in the cross
+	static {
+		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/annotation.properties"));
+		crossWidth = (float) props.getDouble("crossWidth");
+		
+		geneColor = props.getColor("geneColor");
+		frameColor = props.getColor("frameColor");
+		gapColor = props.getColor("gapColor");
+		centromereColor = props.getColor("centromereColor");
+		exonColorP = props.getColor("exonColorP"); 
+		exonColorN = props.getColor("exonColorN"); 
 	}
 }

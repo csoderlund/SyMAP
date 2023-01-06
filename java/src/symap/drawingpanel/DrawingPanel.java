@@ -1,16 +1,17 @@
 package symap.drawingpanel;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.Vector;
+
 import java.awt.*;
 import javax.swing.*;
 import java.sql.SQLException;
 
+import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.frame.ControlPanel;
 import symap.frame.HelpBar;
 import symap.pool.Pools;
-import symap.mapper.AbstractHitData;
+import symap.mapper.HitData;
 import symap.mapper.Mapper;
 import symap.mapper.MapperData;
 import symap.filter.FilterHandler;
@@ -34,7 +35,7 @@ import util.Utilities;
 public class DrawingPanel extends JPanel 
 	implements ColorListener, HistoryListener, SyMAPConstants
 { 
-	private static boolean TRACE = symap.SyMAP.TRACE;
+	private static boolean DEBUG = symap.SyMAP.DEBUG;
 		
 	public static Color backgroundColor = Color.white;
 	public static final int MAX_TRACKS = 100;
@@ -46,8 +47,7 @@ public class DrawingPanel extends JPanel
 	
 	private CloseUp closeup;
 
-	private boolean doUpdateHistory = true;
-	private boolean resetResetIndex = true;
+	private boolean doUpdateHistory = true, resetResetIndex = true;
 
 	private Pools pools;
 
@@ -101,8 +101,10 @@ public class DrawingPanel extends JPanel
 	public void paint(Graphics g) {
 		super.paint(g);
 		
-		for (Mapper m : mappers)
-			m.paint(g);
+		for (Mapper m : mappers) {
+			if (m.isActive()) // CAS531 since Mapper.List->Mapper.seqHitObj, there was a timing bug until this was added
+				m.paint(g);
+		}
 	}
 
 	public void setListener(DrawingPanelListener dpl) {
@@ -195,17 +197,18 @@ public class DrawingPanel extends JPanel
 				trackHolders[i].getTrack().clearData();
 		}
 	}
-
-	public List<AbstractHitData> getHitsInRange(Track src, int start, int end) {
-		List<AbstractHitData> list = new ArrayList<AbstractHitData>();
+	// Closeup align 
+	public Vector <HitData> getHitsInRange(Track seqObjTrack, int start, int end) {
+		Vector <HitData> list = new Vector <HitData>();
 		for (Mapper m : mappers) {
-			Track t1 = m.getTrack1(); // left
-			Track t2 = m.getTrack2(); // right
-			if (t1 == src || t2 == src) {
-				list.addAll(m.getHitsInRange(src,start,end));
+			if (m.isActive()) {
+				Track t1 = m.getTrack1(); // left
+				Track t2 = m.getTrack2(); // right
+				if (t1 == seqObjTrack || t2 == seqObjTrack)  
+					list.addAll(m.getHitsInRange(seqObjTrack,start,end));
 			}
 		}
-		if (TRACE) System.out.println("getHitData: " + list.size() + " hits");
+		if (DEBUG) System.out.println("getHitData: " + list.size() + " hits");
 		
 		return list;
 	}
@@ -271,24 +274,26 @@ public class DrawingPanel extends JPanel
 		for (int i = 0; i < numMaps; i++) {
 			Track t1 = mappers[i].getTrack1(); // left
 			Track t2 = mappers[i].getTrack2(); // right
-			if (t1 == src && orientation == RIGHT_ORIENT)
-				return t2;
-			else if (t2 == src && orientation == LEFT_ORIENT)
-				return t1;
+
+			if (t1 == src && orientation == RIGHT_ORIENT) 		return t2;
+			else if (t2 == src && orientation == LEFT_ORIENT) 	return t1;
 		}
+		if (SyMAP.DEBUG) System.out.println("getOpposingTrack is null " + orientation + " " + src.toString());
 		return null;
 	}
 
 	private void zoomTracks(Track src, int start, int end, int orientation ) {
 		Track t = getOpposingTrack(src, orientation);
+		if (t==null) return; // CAS531 needed after changing Mapper.seqHits to one object from List;
+		
 		int[] minMax = getMinMax(src, t, start, end);
 		if (minMax != null) {
 			int pad = (minMax[1] - minMax[0]) / 20; // 5%
-			minMax[0] = Math.max(0,minMax[0]-pad);
-			minMax[1] = Math.min((int)t.getTrackSize()-1,minMax[1]+pad);
+			minMax[0] = Math.max(0, minMax[0]-pad);
+			minMax[1] = Math.min((int)t.getTrackSize()-1, minMax[1]+pad);
 			t.setEnd(minMax[1]);
 			t.setStart(minMax[0]);
-			zoomTracks(t, minMax[0], minMax[1], orientation);
+			zoomTracks(t, minMax[0], minMax[1], orientation); // recursive
 		}
 	}
 	
@@ -441,17 +446,8 @@ public class DrawingPanel extends JPanel
 		trackHolders[position].setTrack(track);
 		setOtherTracksOtherProject(track,position);
 		if (position > numMaps) {
-			if (TRACE) System.out.println("DrawingPanel.setTrack: increasing numMaps " + position);
+			if (DEBUG) System.out.println("DrawingPanel.setTrack: increasing numMaps " + position);
 			numMaps = position; 
-		}
-	}
-
-	protected void replaceTrack(Track oldTrack, Track newTrack) {
-		for (int i = 0; i <= numMaps; i++) {
-			if (trackHolders[i].getTrack() == oldTrack) {
-				trackHolders[i].setTrack(newTrack);
-				break;
-			}
 		}
 	}
 
@@ -580,7 +576,7 @@ public class DrawingPanel extends JPanel
 	}
 
 	private void firstViewBuild() {
-		if (TRACE) System.out.println("DrawingPanel.firstViewBuild");
+		if (DEBUG) System.out.println("DrawingPanel.firstViewBuild");
 		
 		int i;
 		for (i = 0; i <= numMaps; i++) {
@@ -656,9 +652,9 @@ public class DrawingPanel extends JPanel
 	 * @see #setMaps(int)
 	 */
 	public boolean tracksSet() {
-		if (TRACE) System.out.println("DrawingPanel.tracksSet: numMaps = " + numMaps);
+		if (DEBUG) System.out.println("DrawingPanel.tracksSet: numMaps = " + numMaps);
 		for (int i = 0; i <= numMaps; i++) {
-			if (TRACE) System.out.println("DrawingPanel.tracksSet: track " + i + " is " + trackHolders[i].getTrack());
+			if (DEBUG) System.out.println("DrawingPanel.tracksSet: track " + i + " is " + trackHolders[i].getTrack());
 			if (trackHolders[i].getTrack() == null) return false;
 		} 
 		return true;
@@ -669,7 +665,7 @@ public class DrawingPanel extends JPanel
 	}
 
 	public void setMaps(int numberOfMaps) {
-		if (TRACE) System.out.println("DrawingPanel.setMaps("+numberOfMaps+")");
+		if (DEBUG) System.out.println("DrawingPanel.setMaps("+numberOfMaps+")");
 		
 		if (numberOfMaps < 1) numberOfMaps = 1;
 		else if (numberOfMaps > MAX_TRACKS - 1) numberOfMaps = MAX_TRACKS - 1;
@@ -705,15 +701,15 @@ public class DrawingPanel extends JPanel
 		new Thread(new MapMaker((DrawingPanelData)obj)).start();
 	}
 	public void setUpdateHistory() {
-		if (TRACE) System.out.println("DrawingPanel.setUpdateHistory()");
+		if (DEBUG) System.out.println("DrawingPanel.setUpdateHistory()");
 		doUpdateHistory = true;
 	}
 	public void setImmediateUpdateHistory() {
-		if (TRACE) System.out.println("DrawingPanel.setImmediateUpdateHistory()");
+		if (DEBUG) System.out.println("DrawingPanel.setImmediateUpdateHistory()");
 		updateHistory();
 	}
 	public void doConditionalUpdateHistory() {
-		if (TRACE) System.out.println("DrawingPanel.doConditionalUpdateHistory()");
+		if (DEBUG) System.out.println("DrawingPanel.doConditionalUpdateHistory()");
 		if (doUpdateHistory) {
 			updateHistory();
 			doUpdateHistory = false;
@@ -723,7 +719,7 @@ public class DrawingPanel extends JPanel
 		resetResetIndex = true;
 	}
 	private void updateHistory() {
-		if (TRACE) System.out.println("DrawingPanel.updateHistory()");
+		if (DEBUG) System.out.println("DrawingPanel.updateHistory()");
 		historyControl.add(getData(),resetResetIndex);
 		resetResetIndex = false;
 	}

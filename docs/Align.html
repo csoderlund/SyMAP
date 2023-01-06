@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SyMAP 2D Align</title>
+<style>
+	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
+    a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
+    a.ext {font-weight: bold;}
+    .tx td {padding: 5px;}
+	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
+    .ty td {border: 1px  solid black; padding: 5px; text-align: right}
+    mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+    ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
+    tt {font-size:13px}
+	pre {font-size:13px}
+	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
+</style>
+</head>
+
+<body>
+<a id="top"></a>
+<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
+	<tr><td>
+		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
+			<tr>
+				<td style="text-align: left; vertical-align: top; padding: 0">
+					<a href="http://www.agcol.arizona.edu">
+						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
+				</td>
+				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
+					SyMAP 2D Align
+				</td>
+				<td style="text-align: right; vertical-align: top; padding: 0">
+					<a href="http://www.arizona.edu">
+						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+					<br>
+
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
+				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
+					<tr>
+						<td style="background-color: #666666; padding-bottom:4px;">
+						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
+						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
+						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
+						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="./Tour.html" class="white">Tour</a>
+					</tr>
+				</table>
+				</td>
+			</tr>
+		</table>
+	</td></tr>
+
+	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+	<!---- START BODY -->
+
+<a id="alignment_display_3d"></a>
+<h2>Details of 2D Alignment</h2>
+
+<p><u>SyMAP clusters hits as follows</u>:
+The raw anchor set consists of the hits found by MUMmer. When possible, multiple hits are clustered
+into a single hit. Clustering is by gene if the hits overlap annotation, otherwise, it uses a max separation 1kb,
+creating "putative gene" regions. The hits in a cluster are called <i>sub-hits</i>;
+all sub-hits of a cluster are on the same strand.
+
+<p><u>Alignment:</u> SyMAP uses Promer by default for analysis of two different genomes.
+Promer translates sequences, uses a fast suffix tree alignment algorithm, then converts the coordinates back to
+nucleotide. SyMAP alignments use a semi-global dynamic programming (DP) algorithm on the nucleotide sequences using the MUMmer coordinates,
+which can produce a slightly different alignment. The following oddities can happen:
+<ul>
+<li><a href="#olap">Overlap</a>: The hits can overlap.
+<li><a href="#trim">Trim</a>: There can be non-matching sequence at the beginning or end of the DP alignment. SyMAP trims this sequence before display.
+<li><a href="#strand">Strand</a>: Two genes can be connected by a hit, where the genes are on strands +/- but the hits are on strands -/+,
+and vice versa. However, if the the gene strands are the same, the hit strands will be the same (=); likewise
+if the gene strands are different, the hit strands will be different (!=).
+</ul>
+<i>Click on any image to view a closeup of it.</i>
+<!-------------------------------------------------------------->
+<a id="olap"></a>
+<h3>Overlap hits</h3>
+The Hit Information image on the lower left titled "Hit #28" shows the coordinates of the sub-hits. Some rules:
+	<ol>
+	<li>The sub-hit column '#' in Track #1 corresponds to the column '#' in Track #2
+	(e.g. the rows #2 align to each other).
+	<li>The sub-hit order is always relative to the alphabetically greater project name (e.g. Cabbage&gt;A.thal).
+	<li>The coordinates are relative to the input genome sequences.
+	<li>Both lists are sorted by start coordinate, where the start is always listed before the end.
+	<li>Though two sub-hits may overlap (negative gap), they will not align to the same region on the opposite chromosome.
+	</ol>
+<table><tr>
+<td valign="top">
+Hit #28 Track #2  below shows the distance between #3 and #2 as -68.
+Viewing Track #2 on the right, #28.2 and #28.3 overlap but they do not overlap on Track #1.
+<p><a href="img/alignHitInfo1.png">
+<img src="img/alignHitInfo1.png" alt="hitInfo" style="border: 1px solid black; width: 220px"></a>
+
+<td valign="top">
+<small>Track #2 Selected Cabbage</small>
+<br><a href="img/baseview.png">
+<img src="img/baseviewSm.png" alt="Align graphics" style="border: 1px solid black; width: 500px"></a>
+<br><small>Track #1 Selected A.thal</small>
+<br><a href="img/baseviewOther.png">
+<img src="img/baseviewOther.png" alt="Align graphics" style="border: 1px solid black; width: 500px"></a>
+</table>
+
+<p><b>Extreme example:</b>
+<table>
+<tr>
+<td valign="top"><a href="img/alignHitInfo2.png">
+	<img src="img/alignHitInfo2.png" alt="hitInfo2" style="border: 1px solid black; width: 220px"></a>
+<td>&nbsp;
+<td>
+	The Hit Information image on the left shows Track #1 has the hits all mixed up, whereas Track #2 has the hits all overlapping (negative gap).
+	<p>The first image below shows a partial view of the Track #1 non-overlapping dis-ordered sub-hits.
+	The second image
+	shows Track #2 overlapping sub-hits, where they are piled on top of each other. It is better to use the text align to view Track #2.
+	<p>
+
+<small>Track #1 partial A.thal view</small>
+	<br><a href="img/alignGrOlap2.png">
+	<img src="img/alignGrOlap2.png" alt="Align graphics" style="border: 1px solid black; width: 520px"></a>
+
+<br><small>Track #2 full Cabbage view</small>
+<br><a href="img/alignGrOlap.png">
+		<img src="img/alignGrOlap.png" alt="Align graphics" style="border: 1px solid black; width: 220px"></a>
+</table>
+
+<p><a href="#top">Go to Top</a>
+
+<!-------------------------------------------------------------->
+<a id="olap"></a>
+<h3>Trimmed alignments</h3>
+SyMAP extracts the sequence between the coordinates provided by MUMmer and aligns the sequence.
+When the sequences do not align fully, the alignment is trimmed.
+For example, Hit #6 has 7 sub-hits, of which 3 have some trimming:
+<table class="ty">
+<tr><td>&nbsp;<td colspan="2" style="text-align: center">Lengths<td colspan="2" style="text-align: center">Trimmed  (gaps)
+<tr><td>Sub-hit<td style="text-align: center">Input<td>Aligned<td style="text-align: center">Start<td style="text-align: center">End
+<tr><td>#218.4<td>357, 351<td>368<td>0 (0,0)<td>5 (5,0)
+<tr><td>#218.5<td>366, 369<td>374<td>0 (0,0)<td>1 (0,0)
+<tr><td>#218.6<td>165, 165<td>165<td>1 (0,0)<td>7 (0,7)
+</table>
+<p>The MUMmer hit for sub-hit #6 is:
+<pre>
+[S1]     [E1]     [S2]    [E2]   [LEN 1][LEN 2][% IDY] [% SIM] [% STP] [FRM]   [TAGS]
+16505269 16505427 8884782 8884618 159   165     80.00   87.27	0.00    1 -1	Chr01 Chr04
+</pre>
+<table>
+<tr><td>On the right is the sub-hit #6 alignment. The Start coordinate
+is 8884618 but the image shows 8884619, indicating the first base was trimmed, i.e.
+without trimming, it would display the start as shown below:
+<br><a href="img/alignStartTrim.png">
+<img src="img/alignStartTrim.png" alt="Start trimmed align" style="border: 1px solid black; width: 120px"></a>
+<p>The end has 7 extra bases on the lower strand that have been trimmed; the following shows the end
+without trimming:
+<br><a href="img/alignEndTrim.png">
+<img src="img/alignEndTrim.png" alt="Start trimmed align" style="border: 1px solid black; width: 125px"></a>
+
+<td><a href="img/alignTrim.png">
+<img src="img/alignTrim.png" alt="Trimmed align" style="border: 1px solid black; width: 500px"></a>
+</table>
+
+<p>If you want to view the amount trimmed, you can run <ttb>viewSyMAP</ttb> with the "-a" flag,
+and it will not trim the results.
+
+<p><a href="#top">Go to Top</a>
+
+<a id="strand"></a>
+<h3>Gene strand vs hit strands</h3>
+<table>
+<tr>
+<td valign="top">The image on the right shows a gene on the positive strand of A.thal and a gene on the negative strand
+of Cabbage. However, the hit joining the genes is negative to the A.thal gene and positive to the Cabbage gene.
+<td><a href="img/alignOpStrand.png">
+<img src="img/alignOpStrand.png" alt="Align opposite strands" style="border: 1px solid black; width: 500px"></a>
+
+<tr><td  valign="top">To see the alignment on the reverse strands, use the <ttl>Align Hit</ttl>, which results
+in the top image on the right; at the bottom of this window is a button <ttl>Reverse</ttl>.
+
+<p>&nbsp;
+<p>&nbsp;
+<p>&nbsp;
+<p>Select <ttl>Reverse</ttl> to get the alignment with both sequences reversed complimented, as shown on the
+right.
+
+<td>
+<a href="img/alignTextRev.png">
+<img src="img/alignTextRev.png" alt="Align text" style="border: 1px solid black; width: 500px"></a>
+</table>
+
+<p><a href="#top">Go to Top</a>
+<!---- END BODY -->
+	</td></tr>
+	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+
+</td></tr>
+</table>
+</body>
+</html>
+

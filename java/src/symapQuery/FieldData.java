@@ -20,7 +20,7 @@ public class FieldData {
 	// TableDataPanel.createGeneralSelectPanel expects 4 hit columns and the Pg prefix
 	private static final String [] GENERAL_COLUMNS =	 
 		{Q.rowCol, Q.blockCol, "Block\nScore",Q.runCol,"PgeneF", "PgFSize",
-		Q.hitCol,    "Hit\n%Id", "Hit\n%Sim","Hit\n#Merge", "Hit\nSt"}; // CAS516 add these 4; CAS520 add st
+		Q.hitCol,    "Hit\n%Id", "Hit\n%Sim","Hit\n#Sub", "Hit\nSt"}; // CAS516 add these 4; CAS520 add st
 	
 	private static final Class <?> []  GENERAL_TYPES = 					// CAS520 had to add for String
 		{Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,
@@ -39,7 +39,7 @@ public class FieldData {
 		 "Hit#: Number representing the hit", 
 		 "Hit %Id: Percent identity from the MUMmer file",
 		 "Hit %Sim: Percent similarity from the MUMmer file", 
-		 "Hit #Merge: Number of merged hits, where 1 is a single hit",
+		 "Hit #Sub: Number of clustered sub-hits, where 1 is a single hit",
 		 "Hit St: '=' is both hit ends are to the same strand, '!=' otherwise" 
 		};
 	
@@ -60,8 +60,8 @@ public class FieldData {
 		"Glen: Length of gene", 
 		"Gst: Gene strand", 
 		"Gene#: Sequential. Overlap genes have same number (chr.#.{a-z})", 
-		"Hstart: Start coordinate of hit(s)", 
-		"Hend: End coordinate of hit(s)", "Hlen: Length of hit"
+		"Hstart: Start coordinate of clustered sub-hits", 
+		"Hend: End coordinate of clustered sub-hits", "Hlen: Length of clustered sub-hits"
 	};
 	
 	//****************************************************************************
@@ -114,7 +114,7 @@ public class FieldData {
 		fd.addField(Integer.class,Q.PH, "end2",     Q.HIT2END,   "2nd hit end");
 		fd.addField(String.class, Q.PH, "pctid",    Q.PID,     	 "Hit Average %Identity"); // CAS516 add these 3
 		fd.addField(String.class, Q.PH, "cvgpct",   Q.PSIM,      "Hit Average %Similarity");
-		fd.addField(String.class, Q.PH, "countpct", Q.HCNT,      "Merged hits");
+		fd.addField(String.class, Q.PH, "countpct", Q.HCNT,      "Clustered hits");
 		fd.addField(String.class, Q.PH, "strand",   Q.HST,       "Strand +/-, /-, etc");
 		fd.addField(String.class, Q.PH, "runsize",  Q.COSIZE,    "Collinear run size");
 		fd.addField(String.class, Q.PH, "runnum",   Q.CONUM,     "Collinear number"); // CAS520 add

@@ -7,7 +7,7 @@ import java.sql.SQLException;
 
 import symap.mapper.MapperPool;
 import symap.sequence.PseudoPool;
-import symap.closeup.SequencePool;
+import symap.closeup.AlignPool;
 import util.DatabaseReader;
 
 public class Pools {
@@ -16,20 +16,20 @@ public class Pools {
 	private ProjectProperties pp;
 	private PseudoPool pseudoPool;
 	private MapperPool mapperPool;
-	private SequencePool sequencePool;
+	private AlignPool alignPool;
 
 	public Pools(DatabaseReader dr) throws SQLException {
 		pp = new ProjectProperties(dr);
 		
-		pseudoPool           = new PseudoPool(dr,null);
-		mapperPool           = new MapperPool(dr,pp,null,null,null,null); // nulls are for dead cach
-		sequencePool        = new SequencePool(dr,pp);
+		pseudoPool   = new PseudoPool(dr);
+		mapperPool   = new MapperPool(dr,pp); // CAS531 removed null for dead cache
+		alignPool    = new AlignPool(dr,pp);
 	}
 
 	public void clearPools() {
 		pseudoPool.clear();
 		mapperPool.clear();
-		sequencePool.clear();
+		alignPool.clear();
 		try { pp.reset(); } 
 		catch (Exception e) { }
 	}
@@ -38,7 +38,7 @@ public class Pools {
 		pp.close();
 		pseudoPool.close();
 		mapperPool.close();
-		sequencePool.close();
+		alignPool.close();
 	}
 
 	public PseudoPool getPseudoPool() {
@@ -49,8 +49,8 @@ public class Pools {
 		return mapperPool;
 	}
 
-	public SequencePool getSequencePool() {
-		return sequencePool;
+	public AlignPool getAlignPool() {
+		return alignPool;
 	}
 
 	public ProjectProperties getProjectProperties() {

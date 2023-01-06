@@ -1,21 +1,22 @@
 package symap.closeup;
 
 import java.sql.SQLException;
+import java.util.Vector;
 
-import symap.SyMAP;
 import symap.drawingpanel.DrawingPanel;
+import symap.mapper.HitData;
 import symap.sequence.Sequence;
 import colordialog.ColorDialogHandler;
 import util.ErrorReport;
-import util.PropertiesReader;
 
-public class CloseUp {
-	public static final int MAX_CLOSEUP_BP;
-	static {
-		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/closeup.properties"));
-		MAX_CLOSEUP_BP         = props.getInt("maxCloseupBP");
-	}
-
+/*******************************************************
+ * created in symap.SyMAP at startup
+ * CAS531 major rewrite of all closeup files
+ * CAS531 it use to just have different subhits next to each other where gaps were so it
+ * would correspond to sequence coordinates - now the gaps are there, so the coords will be a little off
+ */
+public class CloseUp  {
+	public static final int MAX_CLOSEUP_BP=30000;
 	private DrawingPanel dp;
 	private ColorDialogHandler cdh;
 
@@ -23,44 +24,26 @@ public class CloseUp {
 		this.dp = dp;
 		this.cdh = cdh;
 	}
-
+	
 	/**
-	 * If no hits are found, then no dialog is shown.
+	 * Called by Sequence on mouse release; If no hits are found, then no dialog is shown.
 	 */
-	public int showCloseUp(Sequence seq, int start, int end) {
-		HitDialogInterface ad = null;
-
-		// if (end - start > MAX_CLOSEUP_BP) end = start + MAX_CLOSEUP_BP; // already checked
-		
-		ad = getCloseUpDialog(seq,start,end);
-		
-		if (ad != null && cdh != null) cdh.addListener(ad);
-		return ad == null ? -1 : ad.showIfHits();
-	}
-
-	protected CloseUpDialog getCloseUpDialog(Sequence seq, int start, int end) {
+	public int showCloseUp(Vector <HitData> hitList, Sequence seqObj, int start, int end, String otherProject, boolean isQuery) {
+		// create the panel
 		if (dp != null) dp.setFrameEnabled(false);
-		CloseUpDialog dialog = null;
+		CloseUpDialog cuDialog;
+		
 		try {
-			dialog = new CloseUpDialog(this,seq,start,end);
-		}
-		catch (SQLException e) {
-			ErrorReport.print(e, "First attempt at creating a CloseUpDialog Failed");
-			
-			try {
-				dialog = new CloseUpDialog(this,seq,start,end);
-			}
-			catch (SQLException e2) {
-				ErrorReport.print(e, "Second attempt at creating a CloseUpDialog Failed");
-				System.err.println("Giving up on creating a CloseUpDialog.");
-			}
-		}
+			cuDialog = new CloseUpDialog(this, hitList, seqObj,start,end, otherProject, isQuery); // CAS531 changed from HitDialogInterface
+		} catch (SQLException e) {ErrorReport.print(e, "Creating a CloseUpDialog"); return 0;}
+		
 		if (dp != null) dp.setFrameEnabled(true);
-		return dialog;
+		if (cuDialog != null && cdh != null) cdh.addListener(cuDialog);
+		
+		return cuDialog == null ? -1 : cuDialog.showIfHits();
 	}
 
 	public DrawingPanel getDrawingPanel() {
 		return dp;
 	}
-
 }

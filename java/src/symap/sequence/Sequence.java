@@ -22,12 +22,13 @@ import java.util.HashMap;
 import number.GenomicsNumber;
 import symap.SyMAP;
 import symap.closeup.CloseUp;
-import symap.closeup.SequencePool; // CAS504 has extraction of sequence
+import symap.closeup.TextShowSeq;
 import symap.track.Track;
 import symap.track.TrackData;
 import symap.track.TrackHolder;
 import symap.drawingpanel.DrawingPanel;
-import symap.mapper.PseudoPseudoHits;
+import symap.mapper.HitData;
+import symap.mapper.SeqHits;
 import util.PropertiesReader;
 import util.Rule;
 import util.TextBox;
@@ -38,84 +39,20 @@ import util.ErrorReport;
  * The Sequence track for a chromosome. Called from DrawingPanel
  * Has a vector of annotations, which it also draws. The hit is drawn in this rectangle by PseudoPseudoHits
  */
-public class Sequence extends Track {	
-	public static boolean POPUP_ANNO=false; // not working from Query/dotplot
-	private static final double OFFSET_SPACE = 7;
-	private static final double OFFSET_SMALL = 1;
-	
-	private static final int GENE_DIV = 4; // Gene is this much narrower than exon
-	private static final int MIN_BP_FOR_ANNOT_DESC = 500; 
-
-	public static final boolean DEFAULT_FLIPPED 		= false; 
-	public static final boolean DEFAULT_SHOW_RULER      = true;
-	public static final boolean DEFAULT_SHOW_GENE       = true;  
-	public static final boolean DEFAULT_SHOW_GENE_LINE  = false;  
-	public static final boolean DEFAULT_SHOW_FRAME      = true;
-	public static       boolean DEFAULT_SHOW_ANNOT  	= false; 
-	public static final boolean DEFAULT_SHOW_SCORE_LINE	= true;  
-	public static final boolean DEFAULT_SHOW_SCORE_VALUE= false; 
-	public static final boolean DEFAULT_SHOW_RIBBON		= true;	 
-	public static final boolean DEFAULT_SHOW_GAP        = true;
-	public static final boolean DEFAULT_SHOW_CENTROMERE = true;
-	public static final boolean DEFAULT_SHOW_GENE_FULL  = true;  
-
-	public static Color unitColor;
-	public static Color bgColor1; 
-	public static Color bgColor2; 
-	
-	private static final Color border = Color.black; 
-	private static Color footerColor;
-	private static Font footerFont;
-	private static Font unitFont;
-	private static final Point2D defaultSequenceOffset = new Point2D.Double(20,40); 
-	private static final Point2D titleOffset = new Point2D.Double(1,3); 
-	private static int mouseWheelScrollFactor;	
-	private static int mouseWheelZoomFactor; 	
-	private static final double DEFAULT_WIDTH;
-	private static final double SPACE_BETWEEN_RULES;
-	private static final double RULER_LINE_LENGTH;
-	private static final double MIN_DEFAULT_BP_PER_PIXEL;
-	private static final double MAX_DEFAULT_BP_PER_PIXEL;
-	private static final double PADDING = 100; 
-	private static final double ANNOT_WIDTH;
-	private static final String HOVER_MESSAGE =  
-					"\nHover on gene or right-click on gene for popup of full description.\n";
-	
-	static {
-		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/sequence.properties"));
-	
-		unitColor                  = props.getColor("unitColor");
-		bgColor1            		 = props.getColor("bgColor1");
-		bgColor2            		 = props.getColor("bgColor2");
-	
-		footerColor                = props.getColor("footerColor");
-		footerFont                 = props.getFont("footerFont");
-		unitFont                   = props.getFont("unitFont");
-		DEFAULT_WIDTH              = props.getDouble("defaultWidth");
-		SPACE_BETWEEN_RULES        = props.getDouble("spaceBetweenRules");
-		RULER_LINE_LENGTH          = props.getDouble("rulerLineLength");
-		MIN_DEFAULT_BP_PER_PIXEL   = props.getDouble("minDefaultBpPerPixel");
-		MAX_DEFAULT_BP_PER_PIXEL   = props.getDouble("maxDefaultBpPerPixel");
-
-		ANNOT_WIDTH                = props.getDouble("annotWidth");
-		
-		mouseWheelScrollFactor	   = props.getInt("mouseWheelScrollFactor"); 	
-		mouseWheelZoomFactor	   = props.getInt("mouseWheelZoomFactor"); 		
-	}
-
+public class Sequence extends Track {
+	// moved colors and constants to end
 	protected int group;
-	protected boolean showRuler, showGene, showFrame, showAnnot, showGeneLine;
-	protected boolean showScoreLine, showScoreValue; 
+	protected boolean showRuler, showGene, showAnnot, showGeneLine;
+	protected boolean showScoreLine, showScoreValue, showHitNum; // CAS531 add showHitNum
 	protected boolean showGap, showCentromere;
 	protected boolean showFullGene;
 	protected boolean showHitLen; 	// CAS512 renamed Ribbon to HitLen everywhere; show Hit Graphics on Sequence rect
-	protected String name;
+	protected String name;			// e.g. Chr01
 	
-	private PseudoPseudoHits pseudoPseudoHitsObj; 	// CAS517 added so can get to hits 
-	private boolean isQuery;			  			// CAS517 
+	private SeqHits seqHitsObj; 	// CAS517 added so can get to hits 
+	private boolean isQuery;	    // CAS517 added; CAS531 renamed to be clear that it is pairs.proj1_idx and first in hits
 	
 	private PseudoPool psePool;
-	private SequencePool seqPool;
 	private List<Rule> ruleList;
 	private Vector<Annotation> allAnnoVec;
 	private TextLayout headerLayout, footerLayout;
@@ -126,13 +63,12 @@ public class Sequence extends Track {
 	private final int OVERLAP_OFFSET=12;			// CAS517/518 for overlap and yellow text
 	
 	public Sequence(DrawingPanel dp, TrackHolder holder) {
-		this(dp, holder, dp.getPools().getPseudoPool(), dp.getPools().getSequencePool());
+		this(dp, holder, dp.getPools().getPseudoPool());
 	}
 
-	private Sequence(DrawingPanel dp, TrackHolder holder, PseudoPool psePool, SequencePool seqPool) {
+	private Sequence(DrawingPanel dp, TrackHolder holder, PseudoPool psePool) {
 		super(dp, holder, MIN_DEFAULT_BP_PER_PIXEL, MAX_DEFAULT_BP_PER_PIXEL, defaultSequenceOffset);
 		this.psePool = psePool;
-		this.seqPool = seqPool; // CAS504 added for sequence popup
 		
 		ruleList = new Vector<Rule>(15,2);
 		allAnnoVec = new Vector<Annotation>(50,1000);
@@ -140,34 +76,34 @@ public class Sequence extends Track {
 		footerPoint = new Point2D.Float();
 
 		group   = NO_VALUE;
-		project = NO_VALUE;
+		projIdx = NO_VALUE;
 		centGeneRect = new Rectangle2D.Double();
 	}
-	// CAS517 add in order to have access to hits, then decided not to use, but could come in handy
-	public void setPseudoPseudoHits(PseudoPseudoHits pObj, boolean isSwapped) { 
-		this.pseudoPseudoHitsObj = pObj;
+	// CAS517 add in order to have access to hits 
+	public void setSeqHits(SeqHits pObj, boolean isSwapped) { 
+		this.seqHitsObj = pObj;
 		this.isQuery = isSwapped;
 	}
 	
 	public void setOtherProject(int otherProject) {
-		if (otherProject != this.otherProject) setup(project,group,otherProject);
+		if (otherProject != this.otherProjIdx) setup(projIdx,group,otherProject);
 	}
 
 	public void setup(int project, int group, int otherProject) {
-		if (this.group != group || this.project != project || this.otherProject != otherProject) { 
+		if (this.group != group || this.projIdx != project || this.otherProjIdx != otherProject) { 
 			reset(project,otherProject);
 			this.group = group;
-			if (this.otherProject != NO_VALUE) init();
+			if (this.otherProjIdx != NO_VALUE) init();
 		}
 		else reset();
 		
 		showRuler      = DEFAULT_SHOW_RULER;
 		showGene       = DEFAULT_SHOW_GENE;
-		showGeneLine       = DEFAULT_SHOW_GENE_LINE;
-		showFrame      = DEFAULT_SHOW_FRAME;
+		showGeneLine   = DEFAULT_SHOW_GENE_LINE;
 		showAnnot      = DEFAULT_SHOW_ANNOT;
 		showScoreLine  = DEFAULT_SHOW_SCORE_LINE;   
 		showScoreValue = DEFAULT_SHOW_SCORE_VALUE; 	
+		showHitNum 		= false;
 		showHitLen     = DEFAULT_SHOW_RIBBON; 		
 		showGap        = DEFAULT_SHOW_GAP;
 		showCentromere = DEFAULT_SHOW_CENTROMERE;
@@ -177,7 +113,7 @@ public class Sequence extends Track {
 
 	public void setup(TrackData td) {
 		SequenceTrackData sd = (SequenceTrackData)td;
-		if (td.getProject() != project 	|| sd.getGroup() != group  || td.getOtherProject() != otherProject)
+		if (td.getProject() != projIdx 	|| sd.getGroup() != group  || td.getOtherProject() != otherProjIdx)
 			reset(td.getProject(),td.getOtherProject());
 		
 		sd.setTrack(this);
@@ -227,7 +163,6 @@ public class Sequence extends Track {
 		}
 		return false;
 	}
-
 	public boolean showGap(boolean show) {
 		if (showGap != show) {
 			showGap = show;
@@ -236,7 +171,6 @@ public class Sequence extends Track {
 		}
 		return false;
 	}
-
 	public boolean showCentromere(boolean show) {
 		if (showCentromere != show) {
 			showCentromere = show;
@@ -245,7 +179,6 @@ public class Sequence extends Track {
 		}
 		return false;
 	}
-
 	public boolean showAnnotation(boolean show) {
 		if (allAnnoVec.size() == 0) {
 			showAnnot = false;
@@ -262,15 +195,15 @@ public class Sequence extends Track {
 	
 	public Vector<Annotation> getAnnotations() {return allAnnoVec;}
 	
-	// Called by CloseUpDialog
+	// Called by CloseUpDialog; type is Gene or Exon
 	public Vector<Annotation> getAnnotations(int type, int start, int end) {
 		Vector<Annotation> out = new Vector<Annotation>();
 		
 		for (Annotation a : allAnnoVec) {
-			if ((type == -1 || a.getType() == type) 
-					&& Utilities.isOverlapping(start, end, a.getStart(), a.getEnd()))
+			if (a.getType() == type && Utilities.isOverlapping(start, end, a.getStart(), a.getEnd()))
 				out.add(a);
 		}	
+	if (SyMAP.DEBUG) System.out.println("SEQ " + allAnnoVec.size() + " " +out.size() + " " + start + " " + end + " " + toString());
 		return out;
 	}
 	// Called by SequenceFilter
@@ -291,21 +224,35 @@ public class Sequence extends Track {
 		return false;
 	}
 	
+	public SeqHits getSeqHits() { return seqHitsObj;} // CAS531 add for Closeup title
+	
 	public boolean getShowHitLen() { return showHitLen; }
 	
 	public boolean getShowScoreLine() { return showScoreLine;}
 	
 	public boolean getShowScoreValue() { return showScoreValue; }
 	
+	public boolean getShowHitNum() { return showHitNum; }
+	
 	public boolean showScoreValue(boolean show) { 
 		if (showScoreValue != show) {
 			showScoreValue = show;
+			if (show) showHitNum(false);
 			clearTrackBuild();
 			return true;
 		}
 		return false;
 	}
-	// drawn in PseudoPseudoHits.PseudoHits.paintHitLen
+	public boolean showHitNum(boolean show) { // CAS531 add
+		if (showHitNum != show) {
+			showHitNum = show;
+			if (show) showScoreValue(false);
+			clearTrackBuild();
+			return true;
+		}
+		return false;
+	}
+	// drawn SeqHits.PseudoHits.paintHitLen
 	public boolean showHitLen(boolean show) { // hit ribbon - graphics on sequence rectangle
 		if (showHitLen != show) {
 			showHitLen = show;
@@ -315,15 +262,6 @@ public class Sequence extends Track {
 		return false;
 	}
 	
-	public boolean showFrame(boolean show) {
-		if (showFrame != show) {
-			showFrame = show;
-			clearTrackBuild();
-			return true;
-		}
-		return false;
-	}
-
 	public boolean showGene(boolean show) {
 		if (showGene != show) {
 			showGene = show;
@@ -335,14 +273,6 @@ public class Sequence extends Track {
 	public boolean showGeneLine(boolean show) {// CAS520 add
 		if (showGeneLine != show) {
 			showGeneLine = show;
-			clearTrackBuild();
-			return true;
-		}
-		return false;
-	}
-	public boolean showFullGene(boolean show) {
-		if (showFullGene != show) {
-			showFullGene = show;
 			clearTrackBuild();
 			return true;
 		}
@@ -360,7 +290,7 @@ public class Sequence extends Track {
 	// Set the annotation vector here
 	protected boolean init() {
 		if (hasInit()) return true;
-		if (project < 1 || group < 1 || otherProject < 1) return false;
+		if (projIdx < 1 || group < 1 || otherProjIdx < 1) return false;
 
 		try {
 			name = psePool.setSequence(this, size, allAnnoVec);	
@@ -477,8 +407,7 @@ public class Sequence extends Track {
 	    for (Annotation annot : allAnnoVec) {
 	    	if (((annot.isGene() || annot.isExon()) && !showGene) 
 	    			|| (annot.isGap() && !showGap)
-	    			|| (annot.isCentromere() && !showCentromere) 
-	    			|| (annot.isFramework() && !showFrame)){
+	    			|| (annot.isCentromere() && !showCentromere)){
 					annot.clear();
 					continue; // CAS520 v518 bug, does not display track if, return true;
 			}
@@ -636,7 +565,7 @@ public class Sequence extends Track {
 					public int compare(GeneData a1, GeneData a2) { 
 						if (a1.start!=a2.start) return (a1.start - a2.start); // it does not always catch =start
 						
-						if (SyMAP.TRACE) System.out.println(a1.annot.getGeneNumStr() + " " + a1.start + " " + a1.len + " " + a2.len + " " + (a2.len - a1.len));
+						if (SyMAP.DEBUG) System.out.println("Seq cmp: a1 " + a1.annot.getGeneNumStr() + " s1: " + a1.start + " l1: " + a1.len + " l2: " + a2.len + " l2-l1: " + (a2.len - a1.len));
 						return (a2.len - a1.len);
 					}
 				});
@@ -743,25 +672,23 @@ public class Sequence extends Track {
 	}
 
 	public void mouseReleased(MouseEvent e) { 
-		Point p = e.getPoint();
-		if (drawingPanel.isMouseFunctionPop() 
-				&& dragRect.getHeight() > 0 
-				&& rect.contains(p.getX(), p.getY()))
-		{
-			int start = getBP( dragRect.getY() );
-			int end = getBP( dragRect.getY() + dragRect.getHeight() );
-			
-			if (flipped) {
-				int temp = start;
-				start = (int)getEnd() - end + (int)getStart();
-				end = (int)getEnd() - temp + (int)getStart();
+		// Point p = e.getPoint(); The rect check was causing it to fail when zoomed in, and does not seem necessary
+		if (drawingPanel.isMouseFunctionPop())  {
+			if (dragRect.getHeight() > 0 /*&& rect.contains(p)*/) {
+				int start = getBP( dragRect.getY() );
+				int end =   getBP( dragRect.getY() + dragRect.getHeight() );
+				
+				if (flipped) {
+					int temp = start;
+					start = (int)getEnd() - end + (int)getStart();
+					end = (int)getEnd() - temp + (int)getStart();
+				}
+				
+				if (drawingPanel.isMouseFunctionCloseup()) showCloseupAlign(start, end); // XXX
+				else showSequence(start, end); 
 			}
-			
-			if (drawingPanel.isMouseFunctionCloseup()) openCloseup(start, end);
-			else popupSequence(start, end); 
 		}
-		
-		super.mouseReleased(e);
+		super.mouseReleased(e); // call track.mouseReleased
 	}
 	
 	private void scrollRange(int notches, long viewSize) {
@@ -838,14 +765,16 @@ public class Sequence extends Track {
 			int happened = 0;
 			if (isCleared(dragRect)) {
 				dragPoint.setLocation(point);
-				if (dragPoint.getX() < rect.x)
+				if (dragPoint.getX() < rect.x) 						
 					dragPoint.setLocation(rect.x, dragPoint.getY());
-				else if (dragPoint.getX() > rect.x + rect.width)
+				else if (dragPoint.getX() > rect.x + rect.width) 	
 					dragPoint.setLocation(rect.x + rect.width, dragPoint.getY());
-				if (dragPoint.getY() < rect.y)
+				
+				if (dragPoint.getY() < rect.y)						
 					dragPoint.setLocation(dragPoint.getX(), rect.y);
-				else if (dragPoint.getY() > rect.y + rect.height)
+				else if (dragPoint.getY() > rect.y + rect.height)	
 					dragPoint.setLocation(dragPoint.getX(), rect.y + rect.height);
+				
 				dragRect.setLocation(dragPoint);
 				dragRect.setSize(0, 0);
 			} 
@@ -901,9 +830,7 @@ public class Sequence extends Track {
 		}
 	}
 
-	public String getTitle() {
-		return getProjectDisplayName()+" "+getName();
-	}
+	
 
 	protected Point2D getTitlePoint(Rectangle2D titleBounds) {	
 		Rectangle2D headerBounds = (flipped ? footerLayout.getBounds() : /*headerLayout.getBounds()*/new Rectangle2D.Double(0, 0, 0, 0)); 
@@ -928,30 +855,8 @@ public class Sequence extends Track {
 	}
 	
 	public boolean isFlipped() { return flipped; }
-
-	/* Show Alignment */
-	private void openCloseup(int start, int end) {
-		if (drawingPanel == null || drawingPanel.getCloseUp() == null)
-			return;
-
-		try {// The CloseUp panel created at startup and reused.
-			int hits = drawingPanel.getCloseUp().showCloseUp(this, start, end);
-			if (hits == 0)
-				Utilities.showWarningMessage("No hits found in region.\nCannot align without hits."); 
-			else if (hits < 0)
-				Utilities.showWarningMessage("Error showing close up view."); 
-		}
-		catch (OutOfMemoryError e) { 
-			Utilities.showOutOfMemoryMessage();
-			drawingPanel.smake(); // redraw after user clicks "ok"
-		}
-	}
-	public String toString() {
-		int tn = getHolder().getTrackNum();
-		String ref = (tn%2==0) ? " REF " : " "; 
-		return "[Sequence "+getFullName() + " Chr" + getGroup()+ ref + isQuery + "]";
-	}
-
+	public boolean isQuery() { return isQuery; } // CAS531 add
+	
 	/**
 	 * returns the desired text for when the mouse is over a certain point.
 	 * Called from symap.frame.HelpBar mouseMoved event
@@ -994,6 +899,51 @@ public class Sequence extends Track {
 	public String getFullName() {
 		return "Track #" + getHolder().getTrackNum() + " " + getProjectDisplayName() + " " + getName();
 	}
+	public String getTitle() {
+		return getProjectDisplayName()+" "+getName();
+	}
+	
+	/* Show Alignment */
+	private void showCloseupAlign(int start, int end) {
+		if (drawingPanel == null || drawingPanel.getCloseUp() == null) return;
+
+		try {// The CloseUp panel created at startup and reused.
+			if (end-start>CloseUp.MAX_CLOSEUP_BP) {// CAS531 add this check
+				Utilities.showWarningMessage("Region greater than " + CloseUp.MAX_CLOSEUP_BP + ". Cannot align.");
+				return;
+			}
+			Vector <HitData> hitList = new Vector <HitData> ();
+			seqHitsObj.getHitsInRange(hitList, start, end, isQuery);
+			if (hitList.size()==0) {
+				 Utilities.showWarningMessage("No hits found in region. Cannot align without hits."); 
+				 return;
+			}
+		
+			int rc = drawingPanel.getCloseUp().showCloseUp(hitList, this, start, end, getOtherProjectName(), isQuery);
+			
+			if (rc < 0) Utilities.showWarningMessage("Error showing close up view."); 
+		}
+		catch (OutOfMemoryError e) { 
+			Utilities.showOutOfMemoryMessage();
+			drawingPanel.smake(); // redraw after user clicks "ok"
+		}
+	}
+	
+	/* CAS504 Add Show Sequence; CAS571 compared a pos & neg with TAIR 
+	 * CAS531 add menu with 'hit', 'gene', 'exons', 'region'
+	 * XXX annoVec find contains(start,end)
+	 *     (seqHitsObj
+	 **/
+	private void showSequence(int start, int end) {
+		try {
+			if (end-start > 1000000) {
+				String x = "Regions is greater than 1Mbp (" + (end-start+1) + ")";
+				if (!Utilities.showContinue("Show Sequence", x)) return;
+			}
+			new TextShowSeq(drawingPanel, this, getProjectDisplayName(), getGroup(), start, end, isQuery);
+		}
+		catch (Exception e) {ErrorReport.print(e, "Error showing popup of sequence");}
+	}
 	/*************************************************
 	 * In click in anno space: if click in yellow box or anno, popup info
 	 * else pass to parent
@@ -1026,37 +976,81 @@ public class Sequence extends Track {
 		super.mousePressed(e);					// right click - blue area for menu
 	}
 	private void setGene(Annotation annot) {
-		if (pseudoPseudoHitsObj==null) return; // FPC
+		if (seqHitsObj==null) return; 
 		if (!annot.hasHitList()) { // CAS517 added
-			String hits = pseudoPseudoHitsObj.getHitsStr(this, annot.getStart(), annot.getEnd());
+			String hits = seqHitsObj.getHitsStr(this, annot.getStart(), annot.getEnd());
 			annot.setHitList(hits);
 		}
 		annot.setExonList(allAnnoVec);
 	}
-	/* CAS504 Add Show Sequence; CAS571 compared a pos & neg with TAIR */
-	private void popupSequence(int start, int end) {
-		try {
-			if (end-start > 1000000) {
-				String x = "Regions is greater than 1Mbp (" + (end-start+1) + ")";
-				if (!Utilities.showContinue("Show Sequence", x)) return;
-			}
-			String projName = getProjectName();
-			int grpid = getGroup();
-			String coords = start + ":" + end;
-			String title = String.format("%s %,d - %,d  %,dbp", projName, start, end, (end-start+1));
-			 
-			String seq = seqPool.loadPseudoSeq(coords, grpid);
-			StringBuffer bf = new StringBuffer ();
-			int len = seq.length(), x=0, inc=120;
-			while ((x+inc)<len) {
-				bf.append(seq.substring(x, x+inc) + "\n");
-				x+=inc;
-			}
-			if (x<len) bf.append(seq.substring(x, len) + "\n");
-			String msg = bf.toString();
-			
-			Utilities.displayInfoMonoSpace(getHolder(), title, msg, false /*!isModal*/);
-		}
-		catch (Exception e) {ErrorReport.print(e, "Error showing popup of sequence");}
+	public String toString() {
+		int tn = getHolder().getTrackNum();
+		String ref = (tn%2==0) ? " REF " : " "; 
+		return "[Sequence "+getFullName() + " Chr" + getGroup()+ ref + isQuery + "]";
 	}
+	
+	/*************************************************************************/
+	public static boolean POPUP_ANNO=false; // not working from Query/dotplot
+	private static final double OFFSET_SPACE = 7;
+	private static final double OFFSET_SMALL = 1;
+	
+	private static final int GENE_DIV = 4; // Gene is this much narrower than exon
+	private static final int MIN_BP_FOR_ANNOT_DESC = 500; 
+
+	public static final boolean DEFAULT_FLIPPED 		= false; 
+	public static final boolean DEFAULT_SHOW_RULER      = true;
+	public static final boolean DEFAULT_SHOW_GENE       = true;  
+	public static final boolean DEFAULT_SHOW_GENE_LINE  = false;  
+	public static       boolean DEFAULT_SHOW_ANNOT  	= false; 
+	public static final boolean DEFAULT_SHOW_SCORE_LINE	= true;  
+	public static final boolean DEFAULT_SHOW_SCORE_VALUE= false; 
+	public static final boolean DEFAULT_SHOW_RIBBON		= true;	 
+	public static final boolean DEFAULT_SHOW_GAP        = true;
+	public static final boolean DEFAULT_SHOW_CENTROMERE = true;
+	public static final boolean DEFAULT_SHOW_GENE_FULL  = true;  
+
+	public static Color unitColor;
+	public static Color bgColor1; 
+	public static Color bgColor2; 
+	
+	private static final Color border = Color.black; 
+	private static Color footerColor;
+	private static Font footerFont;
+	private static Font unitFont;
+	private static final Point2D defaultSequenceOffset = new Point2D.Double(20,40); 
+	private static final Point2D titleOffset = new Point2D.Double(1,3); 
+	private static int mouseWheelScrollFactor;	
+	private static int mouseWheelZoomFactor; 	
+	private static final double DEFAULT_WIDTH;
+	private static final double SPACE_BETWEEN_RULES;
+	private static final double RULER_LINE_LENGTH;
+	private static final double MIN_DEFAULT_BP_PER_PIXEL;
+	private static final double MAX_DEFAULT_BP_PER_PIXEL;
+	private static final double PADDING = 100; 
+	private static final double ANNOT_WIDTH;
+	private static final String HOVER_MESSAGE =  
+					"\nHover on gene or right-click on gene for popup of full description.\n";
+	
+	static {
+		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/sequence.properties"));
+	
+		unitColor                  = props.getColor("unitColor");
+		bgColor1            		 = props.getColor("bgColor1");
+		bgColor2            		 = props.getColor("bgColor2");
+	
+		footerColor                = props.getColor("footerColor");
+		footerFont                 = props.getFont("footerFont");
+		unitFont                   = props.getFont("unitFont");
+		DEFAULT_WIDTH              = props.getDouble("defaultWidth");
+		SPACE_BETWEEN_RULES        = props.getDouble("spaceBetweenRules");
+		RULER_LINE_LENGTH          = props.getDouble("rulerLineLength");
+		MIN_DEFAULT_BP_PER_PIXEL   = props.getDouble("minDefaultBpPerPixel");
+		MAX_DEFAULT_BP_PER_PIXEL   = props.getDouble("maxDefaultBpPerPixel");
+
+		ANNOT_WIDTH                = props.getDouble("annotWidth");
+		
+		mouseWheelScrollFactor	   = props.getInt("mouseWheelScrollFactor"); 	
+		mouseWheelZoomFactor	   = props.getInt("mouseWheelZoomFactor"); 		
+	}
+
 }

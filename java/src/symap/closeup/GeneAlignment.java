@@ -1,4 +1,4 @@
-package symap.closeup.alignment;
+package symap.closeup;
 
 import java.awt.Graphics2D;
 import java.awt.Color;
@@ -8,7 +8,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 
 import util.ArrowBox;
-import symap.closeup.components.CloseUpComponent;
 
 public class GeneAlignment implements Comparable<GeneAlignment> {
 	private String name;
@@ -18,7 +17,7 @@ public class GeneAlignment implements Comparable<GeneAlignment> {
 
 	private int paintStart = Integer.MIN_VALUE, paintEnd = Integer.MAX_VALUE;
 	private Rectangle2D.Double bounds = new Rectangle2D.Double();
-	private boolean forward;
+	private boolean isForward;
 
 	public GeneAlignment(String name, int start, int end, boolean forward) {
 		if (name != null)
@@ -27,7 +26,7 @@ public class GeneAlignment implements Comparable<GeneAlignment> {
 		this.name = name;
 		this.start = start;
 		this.end = end;
-		this.forward = forward;
+		this.isForward = forward;
 	}
 
 	public GeneAlignment(String name, int start, int end, boolean forward, Exon[] exons) {
@@ -136,15 +135,16 @@ public class GeneAlignment implements Comparable<GeneAlignment> {
 
 		double arrowWidth = CloseUpComponent.EXON_ARROW_WIDTH;
 		for (int i = 0; i < exons.length; ++i) {
-			exonBounds.x = bounds.x + exons[i].getStart(startBP,bpPerPixel);
-			exonBounds.width = exons[i].getWidth(startBP,endBP,bpPerPixel);
+			exonBounds.x = bounds.x + exons[i].getStart(startBP, bpPerPixel);
+			exonBounds.width = exons[i].getWidth(startBP, endBP, bpPerPixel);
+			
 			if (exonBounds.width > 0) {
-				if (i == 0 || i+1 == exons.length) {
-					if (exons.length == 1) exon.setBounds(exonBounds,arrowWidth,forward ? ArrowBox.RIGHT : ArrowBox.LEFT);
-					else if (i == 0)       exon.setBounds(exonBounds,arrowWidth,forward ? ArrowBox.NONE  : ArrowBox.LEFT);
-					else                   exon.setBounds(exonBounds,arrowWidth,forward ? ArrowBox.RIGHT : ArrowBox.NONE);
+				if (i == 0 || i == exons.length-1) {
+					if (exons.length == 1) exon.setBounds(exonBounds, arrowWidth, (isForward) ? ArrowBox.RIGHT : ArrowBox.LEFT);
+					else if (i == 0)       exon.setBounds(exonBounds, arrowWidth, (isForward) ? ArrowBox.NONE  : ArrowBox.LEFT);
+					else                   exon.setBounds(exonBounds, arrowWidth, (isForward) ? ArrowBox.RIGHT : ArrowBox.NONE);
 				}
-				else                       exon.setBounds(exonBounds,arrowWidth,ArrowBox.NONE);
+				else                       exon.setBounds(exonBounds, arrowWidth, ArrowBox.NONE);
 				g2.draw(exon);
 				g2.fill(exon);
 			}

@@ -40,14 +40,12 @@ public class TrackHolder extends JComponent  {
 
 	public void setOrientation(int orient) { orientation = orient;}// Called by DrawingPanel
 
-	public Track getTrack() { return track;}// Called by DrawingPanel, Mapper
+	public Track getTrack() {return track;}// Called by DrawingPanel, Mapper
 	
 	public int getTrackNum() {return trackNum;}
 	
-	public HelpBar getHelpBar() { return hb;}// Called by contig.Contig
-
 	public void setTrack(Track t) { // Called by DrawingPanel and TrackHolder
-		if (TRACE && t!=null) System.out.println("TrackHolder.setTrack: " + t);
+		if (TRACE && t!=null) System.out.println("TrackHolder.setTrack: " + t + " " + toString());
 		
 		if (t == track) return ;
 
@@ -125,5 +123,9 @@ public class TrackHolder extends JComponent  {
 	}
 	public void showPopupFilter(MouseEvent e) {
 		fh.showPopup(e);
+	}
+	public String toString() {
+		String x = String.format("%2d", orientation);
+		return "TH " + x + " #" + trackNum;
 	}
 }

@@ -1,5 +1,8 @@
 package dotplot;
 
+/***************************************
+ * The database calls are in DotPlotDBUser. Unbelievable amount of code to just read the database
+ */
 import java.sql.SQLException;
 import java.util.List;
 import java.util.ArrayList;
@@ -13,11 +16,9 @@ import util.CheckoutQueue;
 import util.Utilities;
 
 import symap.pool.ProjectProperties;
-import symap.SyMAP;
 import symap.pool.ProjectPair;
 
 public class Loader extends StateObject implements DotPlotConstants {
-    private static final boolean DEBUG = SyMAP.DEBUG;
     private static final int TIME_BETWEEN_DOWNLOADERS = 0;
     
     private DotPlotDBUser db;
@@ -54,17 +55,6 @@ public class Loader extends StateObject implements DotPlotConstants {
 		foundBlocks   = new Vector<FoundBlock>();
     }
 
-    public void clearAllFoundHistory() {
-		synchronized (foundBlocks) {
-		    foundBlocks.clear();
-		}
-    }
-    public void clearFoundHistory(int altNum) {
-		synchronized (foundBlocks) {
-		    for (Iterator<FoundBlock> iter = foundBlocks.iterator(); iter.hasNext(); )
-		    	if ((iter.next()).altNum == altNum) iter.remove();
-		}
-    }
     private void clearFoundHistory(Project[] projects, Finder[] finders) {
 		synchronized (foundBlocks) {
 		    for (Iterator<FoundBlock> iter = foundBlocks.iterator(); iter.hasNext(); )
@@ -76,7 +66,7 @@ public class Loader extends StateObject implements DotPlotConstants {
     }
 
     private void init() {
-		printDebug("Initializing...");
+		printDebug(" Initializing... " + numD); // print
 	
 		downloaderDatabases.put(db);
 		finderDatabases = downloaderDatabases;
@@ -89,27 +79,23 @@ public class Loader extends StateObject implements DotPlotConstants {
 		new StartDownloaders(threads).start();
     }
     // Data
-    public boolean execute(ProjectProperties pp, Project[] projects, Tile[] tiles, 
-			   FilterData fd, boolean filtered) 
+    public boolean execute(ProjectProperties pp, Project[] projects, Tile[] tiles, FilterData fd, boolean filtered) 
     {
-    	return execute(pp,projects,tiles,fd,filtered,-1,null,null,0);
+    	return execute(pp,projects,tiles,fd,filtered,-1 /*rid*/,null /* finder*/,null /* params*/,0 /*altnum*/);	
     }
-
-    private boolean execute(ProjectProperties pp, Project[] projects, 
-    			Tile[] tiles, FilterData fd, 
-    			boolean filtered, int rid, String finder, 
-    			Object[] params, int altNum) 
+    // called from above
+    private boolean execute(ProjectProperties pp, Project[] projects, Tile[] tiles, FilterData fd, boolean filtered, 
+    		int rid, String finder, Object[] params, int altNum) 
     {
     	return execute(pp,projects,tiles,fd,filtered,
     			new Finder[] {new Finder(rid,finder,params,altNum)});
     }
-
+    // called from above
     private synchronized boolean execute(ProjectProperties pp, Project[] projects, 
     			Tile[] tiles, FilterData fd,
 				boolean filtered, Finder[] finders) 
     {
-		if (METHOD_TRACE) System.out.println("Entering Loader.execute(...)");
-		printDebug("In execute...");
+		printDebug(" In execute..."); // prints
 		if (!hasState()) init();
 		
 		if (setActive()) {
@@ -117,12 +103,12 @@ public class Loader extends StateObject implements DotPlotConstants {
 		    	clearFoundHistory(projects,finders);
 		    
 		    List<TileHolder> holders = toHolders(pp,projects,tiles,fd,filtered,finders);
-		    printDebug("Adding "+holders.size()+" tiles...");
+		    printDebug(" Adding "+holders.size()+" tiles..."); // prints
 		    blockHolders.addAll(holders);
 		    downloaderQueue.put(holders);
 		    downloaderQueue.resume();
 		}
-		if (METHOD_TRACE) System.out.println("Exiting Loader.execute(...)");
+		
 		return true;
     }
     // Data.clear
@@ -145,7 +131,7 @@ public class Loader extends StateObject implements DotPlotConstants {
 				public void run() {
 				    synchronized (downloaders) {
 						while (!downloaders.isEmpty()) {
-						    printDebug(downloaders.size()+" Downloaders still working. Waiting...");
+						    printDebug(" " + downloaders.size()+" Downloaders still working. Waiting..."); // no 
 						    try {
 						    	downloaders.wait(60000);
 						    } catch (InterruptedException e) { }
@@ -153,7 +139,7 @@ public class Loader extends StateObject implements DotPlotConstants {
 				    }
 				    synchronized (finders) {
 						while (!finders.isEmpty()) {
-						    printDebug(finders.size()+" Finders still working. Waiting...");
+						    printDebug(" " +  finders.size()+" Finders still working. Waiting..."); // no
 						    try {
 						    	finders.wait(60000);
 						    } catch (InterruptedException e) { }
@@ -190,9 +176,9 @@ public class Loader extends StateObject implements DotPlotConstants {
     }
 
     private void downloaderDone(DownloadThread t) {
-		printDebug("In downloaderDone("+t+")");
+		printDebug(" In downloaderDone("+t+")"); 
 		synchronized (downloaders) {
-		    printDebug("Downloader "+t+" is done.");
+		    printDebug(" Downloader "+t+" is done."); 
 		    downloaders.remove(t);
 		    if (downloaders.isEmpty()) {
 				printDebug("Downloaders are all done");
@@ -202,17 +188,14 @@ public class Loader extends StateObject implements DotPlotConstants {
     }
 
     protected void fireStateChange() {
-		printDebug("Firing State Change...");
 		super.fireStateChange();
     }
 
     protected void fireBlockDone(Tile block) {
-		printDebug("Firing Block Done "+block);
 		super.fireStateChange();
     }
 
     protected void fireBlockChange(Tile block) {
-		printDebug("Firing Block Change "+block);
 		super.fireStateChange();
     }
 
@@ -247,7 +230,7 @@ public class Loader extends StateObject implements DotPlotConstants {
 				    break;
 				}
 				tile = th.getTile();
-				printDebug(this+" has "+tile);
+				printDebug(this+" has "+tile); // print
 				try {
 				    if (!tile.isSomeLoaded() || (!th.isFiltered() && !tile.isLoaded())) {
 						if (!tile.isSomeLoaded()) {
@@ -275,7 +258,7 @@ public class Loader extends StateObject implements DotPlotConstants {
     }
 
     private static void printDebug(String message) {
-    	if (DEBUG) System.out.println("Loader: "+message);
+    	//if (SyMAP.DEBUG) System.out.println("Loader: "+message);
     }
 
     private List<TileHolder> toHolders(ProjectProperties pp, Project[] projects, 
@@ -305,6 +288,7 @@ public class Loader extends StateObject implements DotPlotConstants {
 		    this.finder = finder;
 		    this.params = params;
 		    this.altNum = altNum;
+		    printDebug("Create finder");
 		}
 	
 		private TileHolder getTileHolder(ProjectProperties pp, 
@@ -326,7 +310,7 @@ public class Loader extends StateObject implements DotPlotConstants {
 		private DownloadThread[] threads;
 	
 		public StartDownloaders(DownloadThread[] threads) {
-		    super("Downloader Starter");
+		    super(" Downloader Starter");
 		    this.threads = threads;
 		}
 	
@@ -336,8 +320,8 @@ public class Loader extends StateObject implements DotPlotConstants {
 		}
 	
 		public void run() {
+			printDebug("Starting Downloader... " + threads.length);
 		    for (int i = 0; i < threads.length; i++) {
-				printDebug("Starting Downloader...");
 				threads[i].start();
 				if (i+1 < threads.length && TIME_BETWEEN_DOWNLOADERS > 0) {
 					try { sleep(TIME_BETWEEN_DOWNLOADERS); } 

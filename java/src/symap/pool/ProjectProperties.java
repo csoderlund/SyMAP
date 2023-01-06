@@ -93,13 +93,6 @@ public class ProjectProperties extends DatabaseUser {
 		return null;	
 	}
 
-	public String getType(int projectID) {
-		for (int i = 0; i < projects.length; i++) {
-			if (projects[i].id == projectID) return projects[i].type;
-		}
-		return null;
-	}
-
 	public String getDisplayName(int projectID) {
 		return getProperty(projectID,"display_name");
 	}

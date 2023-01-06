@@ -222,7 +222,7 @@ public class AnchorsMain
 			log.msg("Alignment files in " + alignDir);
 			
 			// process all aligned files in directory
-			log.msg("Scan files to create merged hits"); 	
+			log.msg("Scan files to create cluster hits"); 	
 			int nHitsScanned = 0;
 			TreeSet<String> skipList = new TreeSet<String>();
 			File[] fs = dh.listFiles();

@@ -1,8 +1,6 @@
 package dotplot;
 
 public interface DotPlotConstants {
-    public static final boolean METHOD_TRACE = false;
-
     public static final int MIN = 0;
     public static final int MAX = 1;
 

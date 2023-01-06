@@ -277,45 +277,4 @@ public class HitFilter {
 		}
 		return false;
 	}
-	
-	/***********************************************/
-	// FPC stubbs - no longer activ
-	public boolean getFpHide() {return false;}
-	public boolean setFpHide(boolean hide) {return false;}
-	public double getFpEvalue() {return 0.0;}
-	public boolean setFpEvalue(double score) {return false;}
-	public boolean getOnlyShared() {return false;}
-	public boolean setOnlySharedHits(boolean filter) {return false;}
-	public boolean getMrkHide() {return false;}
-	public boolean setMrkHide(boolean hide) {return false;}
-	public boolean getBesHide() {return false;}
-	public boolean setBesHide(boolean hide) {return false;}
-	public double getMrkEvalue() {return 0.0;}
-	public boolean setMrkEvalue(double score) {return false;}
-	public double getBesEvalue() {return 0.0;}
-	public boolean setBesEvalue(double score) {return false;}
-	public double getBesPctid() {return 0.0;}
-	public boolean setBesPctid(double score) {return false;}
-	public boolean getShowJoinDot() {return false;}
-	public boolean setShowJoinDot(boolean show) {return false;}
-	public boolean getNonRepetitive() {return false;}
-	public boolean setNonRepetitive(boolean nonrepetitive) {return false;}
-	public double getMaxFpEvalue() {return 0.0;}
-	public double getMinFpEvalue() {return 0.0;}
-	public void condSetFpEvalue(double min, double max) {}
-	public double getMaxMrkEvalue() {return 0.0;}
-	public double getMinMrkEvalue() {return 0.0;}
-	public void condSetMrkEvalue(double min, double max) {}
-	public double getMaxBesEvalue() {return 0.0;}
-	public double getMinBesEvalue() {return 0.0;}
-	public void condSetBesEvalue(double min, double max) {}
-	public double getMaxMrkPctid() {return 0.0;}
-	public double getMinMrkPctid() {return 0.0;}
-	public void condSetMrkPctid(double min, double max) {}
-	public double getMaxBesPctid() {return 0.0;}
-	public double getMinBesPctid() {return 0.0;}
-	public void condSetBesPctid(double min, double max) {}	
-	public boolean isGeneOverlap() { return false;}
-	public boolean setGeneOverlap(boolean filter) { return false;}	
-	
 }

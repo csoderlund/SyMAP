@@ -17,6 +17,8 @@ import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
+import symap.closeup.TextShowInfo;
+
 // a URL-savvy graphical text box
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class TextBox extends JComponent  {
@@ -129,7 +131,6 @@ public class TextBox extends JComponent  {
 		return rect.contains(p);
 	}
 	public void popupDesc(String title, String msg) { 				// CAS512 add exonList
-		Dimension d = new Dimension (350, 220); 					// CAS513 add size (w,h)
-		Utilities.displayInfoMonoSpace(this, title, msg, d, 0,0); 	// CAS504 moved; CAS516 add title
+		new TextShowInfo(this, title, msg);
 	}
 }

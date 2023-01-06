@@ -1,6 +1,3 @@
-/**
- * 
- */
 package dotplot;
 
 import java.awt.Dimension;
@@ -27,14 +24,20 @@ import util.DatabaseReader;
 import util.ErrorReport;
 import util.Utilities;
 
+/**
+ * This contains the arrays of data (Project and Tile) and much of the interface code
+ */
+
 public class Data extends Observable implements DotPlotConstants {
 	public static final double DEFAULT_ZOOM = 0.99;
 
+	private Project projects[]; // loaded data
+	private Tile[] tiles;
+	
 	private SyMAP symap;
 	private ProjectProperties projProps;
-	private FilterData fd;
-	private Project projects[];
-	private Tile[] tiles;
+	private FilterData filter;
+	
 	private double zoomFactor;
 	private Shape selectedBlock;
 	private boolean hasSelectedArea;
@@ -55,7 +58,7 @@ public class Data extends Observable implements DotPlotConstants {
 	}
 
 	public Data(Loader l) {
-		fd            = new FilterData();
+		filter        = new FilterData();
 		projects      = null; 
 		tiles         = new Tile[0];
 		zoomFactor    = DEFAULT_ZOOM;
@@ -80,20 +83,18 @@ public class Data extends Observable implements DotPlotConstants {
 			}
 		});
 
-		fd.addObserver(new Observer() {
+		filter.addObserver(new Observer() {
 			public void update(Observable o, Object arg) {
 				Data.this.update();
 			}
 		});
 
-		try {
-			symap = new SyMAP(DatabaseReader.getInstance(
-							SyMAPConstants.DB_CONNECTION_DOTPLOT_2D,
-							getDotPlotDBUser().getDatabaseReader()), null);
-		} catch (Exception e) {
-			ErrorReport.print(e, "Unable to create SyMAP instance");
-		}
-		projProps = symap.getDrawingPanel().getPools().getProjectProperties();
+		try { // ugh - symap is used in different contexts, so needs to be active
+			DatabaseReader dr = DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_DOTPLOT_2D, getDotPlotDBUser().getDatabaseReader());
+			symap = new SyMAP(dr, null);
+		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
+		
+		projProps = symap.getDrawingPanel().getPools().getProjectProperties(); // ugh
 	}
 	// ControlPanel and Plot
 	public void addObserver(Observer o) {
@@ -102,7 +103,6 @@ public class Data extends Observable implements DotPlotConstants {
 	}
 
 	// Plot and Data
-	
 	private DotPlotDBUser getDotPlotDBUser() {
 		return loader.getDB();
 	}
@@ -150,7 +150,7 @@ public class Data extends Observable implements DotPlotConstants {
 		try {
 			clear();
 			initProjects(projIDs, xGroupIDs, yGroupIDs);
-			loader.execute(projProps,projects,tiles,fd,true);
+			loader.execute(projProps,projects,tiles,filter,true);
 			
 			if (getNumVisibleGroups() == 2)
 				selectTile(100, 100); // kludge
@@ -166,8 +166,7 @@ public class Data extends Observable implements DotPlotConstants {
 			newProjects.add( new Project(projIDs[0], projProps) );
 		for (int i = 1;  i < projIDs.length;  i++) {
 			Project p = Project.getProject(projects, 1, projIDs[i]);
-			if (p == null)
-				p = new Project(projIDs[i], projProps);
+			if (p == null) p = new Project(projIDs[i], projProps);
 			
 			newProjects.add( p );
 		}
@@ -197,13 +196,14 @@ public class Data extends Observable implements DotPlotConstants {
 		initialize(newProjects, null, null);
 	}
 	// Select for 2D
-	private void zoomBlock() {
+	private void show2dBlock() {
 		if (selectedBlock==null) return;
 		
 		symap.getDrawingPanel().setMaps(1);
 		symap.getHistory().clear(); 
 		
 		if (selectedBlock instanceof InnerBlock) {
+			
 			InnerBlock ib = (InnerBlock)selectedBlock;
 			Project pX = projects[X];
 			Project pY = getCurrentProj();
@@ -212,31 +212,34 @@ public class Data extends Observable implements DotPlotConstants {
 
 			HitFilter hd = new HitFilter (); // CAS530 use 2D filter
 			hd.setForDP(true, false);
+			
+			try { // CAS531 need to recreate since I changed the Hits code; bonus, allows multiple 2d displays
+				DatabaseReader dr = DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_DOTPLOT_2D, getDotPlotDBUser().getDatabaseReader());
+				symap = new SyMAP(dr, null);
+			} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
+			
 			symap.getDrawingPanel().setHitFilter(1,hd);
 			
 			Sequence.setDefaultShowAnnotation(false); 
-
-			symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),gY.getID(),Color.CYAN);
-			
+			printDebug("Block#" + ib.getNumber() + " " + ib.getStart(Y) + " " 
+								   + ib.getEnd(Y)+ " " + ib.getStart(X) + " " + ib.getEnd(X));
+			symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),gY.getID(),Color.CYAN);	
 			symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),gX.getID(),Color.GREEN);
-			
 			symap.getDrawingPanel().setTrackEnds(1,ib.getStart(Y),ib.getEnd(Y));
-			
 			symap.getDrawingPanel().setTrackEnds(2,ib.getStart(X),ib.getEnd(X));
-			
 			symap.getFrame().showX();
 		}
 		else {
 			Rectangle2D bounds = selectedBlock.getBounds2D();
-			zoomArea(bounds.getMinX(),bounds.getMinY(),bounds.getMaxX(),bounds.getMaxY());
+			show2dArea(bounds.getMinX(),bounds.getMinY(),bounds.getMaxX(),bounds.getMaxY());
 		}
 	}
 	
 	public void zoomArea() {
-		zoomArea(x1,y1,x2,y2);
+		show2dArea(x1,y1,x2,y2);
 	}
 	
-	private void zoomArea(double x1, double y1, double x2, double y2) {
+	private void show2dArea(double x1, double y1, double x2, double y2) {
 		Project pX = projects[X];
 		Project pY = getCurrentProj();
 		String track[] = {"",""};
@@ -248,10 +251,15 @@ public class Data extends Observable implements DotPlotConstants {
 			return;
 		}
 		
+		try {
+			DatabaseReader dr = DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_DOTPLOT_2D, getDotPlotDBUser().getDatabaseReader());
+			symap = new SyMAP(dr, null);
+		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
+		
 		symap.getDrawingPanel().setMaps(1);
 		symap.getHistory().clear(); 
 		
-		HitFilter hd = new HitFilter (); // CAS530 use 2D filter
+		HitFilter hd = new HitFilter(); // CAS530 use 2D filter
 		hd.setForDP(false, true);
 		symap.getDrawingPanel().setHitFilter(1,hd);
 		Sequence.setDefaultShowAnnotation(false); 
@@ -267,7 +275,7 @@ public class Data extends Observable implements DotPlotConstants {
 	public void resetAll() {
 		zoomFactor = DEFAULT_ZOOM;
 		selectedBlock = null;
-		fd.setDefaults();
+		filter.setDefaults();
 		update();
 	}
 
@@ -277,8 +285,7 @@ public class Data extends Observable implements DotPlotConstants {
 	}	
 
 	private void sqlError(SQLException e, String q) {
-		if (e != null)
-			e.printStackTrace();
+		if (e != null) ErrorReport.print(e, q);
 		throw new RuntimeException("Error running SQL Command"+(q == null ? "" : ": "+q));
 	}
 
@@ -338,7 +345,7 @@ public class Data extends Observable implements DotPlotConstants {
 	public void selectBlock(double xUnits, double yUnits) {
 		Shape shapes[] = new Shape[DotPlot.TOT_RUNS];
 		Shape s = null;
-		if (fd.isShowBlocks() && !hasSelectedArea && isZoomed()) 
+		if (filter.isShowBlocks() && !hasSelectedArea && isZoomed()) 
 		{
 			for (int i = 0; i < shapes.length; i++) {
 				shapes[i] = Tile.getABlock(tiles,currentGrp[X],currentGrp[Y],i,xUnits,yUnits);
@@ -347,7 +354,7 @@ public class Data extends Observable implements DotPlotConstants {
 			s = Utilities.getSmallestBoundingArea(shapes);
 			if (s != null) {
 				if (s == selectedBlock)
-					zoomBlock();
+					show2dBlock();
 			}
 		}
 		selectedBlock = s;
@@ -437,7 +444,7 @@ public class Data extends Observable implements DotPlotConstants {
 		return (selectedBlock instanceof ABlock) ? (ABlock)selectedBlock : null;
 	}
 
-	public FilterData getFilterData() { return fd; }
+	public FilterData getFilterData() { return filter; }
 	public Project getProject(int axis) { return projects[axis]; }
 	public int getNumProjects() { return projects.length; } 
 	public Project[] getProjects() { return projects; }
@@ -450,11 +457,11 @@ public class Data extends Observable implements DotPlotConstants {
 	}
 	
 	public boolean isGroupVisible(Group g) {
-		return (g.isVisible() && (g.hasBlocks() || fd.isShowEmpty()));
+		return (g.isVisible() && (g.hasBlocks() || filter.isShowEmpty()));
 	}
 	
 	public boolean isGroupVisible(Group gY, Group[] gX) {
-		return (gY.isVisible() && (gY.hasBlocks(gX) || fd.isShowEmpty()));
+		return (gY.isVisible() && (gY.hasBlocks(gX) || filter.isShowEmpty()));
 	}
 	
 	public int getNumVisibleGroups() {
@@ -534,4 +541,8 @@ public class Data extends Observable implements DotPlotConstants {
 	public double getX2() { return x2; }
 	public double getY1() { return y1; }
 	public double getY2() { return y2; }
+	
+	private void printDebug (String msg) {
+		if (SyMAP.DEBUG) System.out.println("Data: " + msg);
+	}
 }

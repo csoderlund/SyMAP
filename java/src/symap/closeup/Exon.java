@@ -1,5 +1,8 @@
-package symap.closeup.alignment;
+package symap.closeup;
 
+/*******************************************************************
+ * Holds the exon coordinates for the gene drawn in GeneAlignment
+ */
 public class Exon implements Comparable<Exon> {
 	private int start;
 	private int end;
@@ -29,20 +32,17 @@ public class Exon implements Comparable<Exon> {
 	}
 
 	public double getWidth(int startBP, int endBP, double bpPerPixel) {
-		return Math.max(( (end > endBP ? endBP : end) - (start < startBP ? startBP : start) )/bpPerPixel,0);
+		int x = (end > endBP) ? endBP : end;
+		int y = (start < startBP) ? startBP : start;
+		return Math.max((x-y)/bpPerPixel, 0);
 	}
 
 	public double getEnd(int startBP, int endBP, double bpPerPixel) {
 		if (end < startBP) return 0;
-		return ((end > endBP ? endBP : end) - startBP)/bpPerPixel;
+		int x = (end > endBP) ? endBP : end;
+		return (x - startBP)/bpPerPixel;
 	}
 
-	/**
-	 * Method <code>compareTo</code> compares the starting position (i.e. <code>getStart() - ((Exon)obj).getStart()</code>)
-	 *
-	 * @param obj an <code>Object</code> value
-	 * @return an <code>int</code> value
-	 */
 	public int compareTo(Exon e) {
 		return start - e.start;
 	}

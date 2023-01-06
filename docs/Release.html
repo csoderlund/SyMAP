@@ -64,10 +64,56 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 
 <h3>Summary of recent major releases</h3>
 <table class="tx">
-<tr><td><a href="#v530">v5.3.0</a><td>(10-Dec-22)<td>Updated database schema.
-<tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="UserGuide.html#csets">viewing</a>
+<tr><td><a href="#v530">v5.3.1</a><td>(6-Jan-23)<td>Improved <a href="UserGuide.html#base">hit alignment</a> features.
+<tr><td><a href="#v530">v5.3.0</a><td>(10-Dec-22)<td>Updated database schema to remove all FPC tables.
+<tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="Collinear.html">viewing</a>
 <tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view"> 2D gene placement</a>
 </table>
+
+<a id="v531"></a>
+<h3>Release: v5.3.1 (6-Jan-23)</h3>
+Improvements to viewing the alignments of hits; see <a href="UserGuide.html#base">Align (Base View)</a> and
+<a href="Align.html">Alignment Details</a>.
+<ol>
+<li>2D
+<ul>
+<li><ttl>Align (Max 30,000)</ttl>
+<ul>
+<li>Each MUMmer subhit is now shown at the bottom as a full dynamic programming alignment (it was broken up
+at each gap).
+<li>The MUMmer subhits can overlap, so they are now staggered in the graphic display.
+<li>The sequence is no longer converted to uppercase, i.e. if the sequence is soft-masked, it will show on the alignment.
+<li>The hit color can be set in the color wheel.
+</ul>
+
+<li><ttl>Hit Information</ttl>:
+<ol>
+<li><ttl>Align Hit</ttl> <font color=green>New</font> :  When hover over a hit-wire and right-click, an information box pops up; that box now has
+an <ttl>Align Hit</ttl> button that shows a text alignment in blast-style format.
+<li>The Hits for each track are listed in descending start order, and the gap is negative if it overlaps with the previous.
+</ol>
+
+<li><ttl>Show Seq Options</ttl> <font color=green>New</font>: The <ttl>Show Sequence</ttl> is now <ttl>Show Seq Options</ttl> which has a popup menu that allows the user
+to select whether to show the hit sequence, reverse hit, or region from the selected area.
+<li><ttl>Sequence Filter</ttl>: Has a <font color=green>New</font> option <ttl>Show Hit#</ttl> which shows the hit# in the same location as the <ttl>%Id Value</ttl>
+(only one of these two option can be active at a time).
+<li>Tiny problems fixed:
+(1) Fixed a problem where a sequence could not be selected for <ttl>Align</ttl> or <ttl>Show Sequence</ttl> if the zoom region was small.
+(2) When the view went from 2D->Circle->2D, the "Selected:" would not be reset to "Zoom All".
+(3) The arrow has been removed from the graphical align hit because it meaning was not clear.
+(4) The term 'merged hits' was changed to 'clustered hits', where the cluster has sub-hits; the term
+merged could be misleading.
+
+</ul>
+
+<li>DotPlot
+<ul>
+<li>Multiple 2d displays can occur now.
+</ul>
+
+<li>Developers: (1) Removed over 15 useless files of code. Removed used Cache from everything.
+(2) Cleaned up the Mapper package hit code and Closeup package.
+</ol>
 
 <a id="v530"></a>
 <h3>Release: v5.3.0 (10-Dec-22)</h3>
@@ -126,7 +172,7 @@ Changed 2 Observers to PropertyChangeEvent. Reduce /props from 4 to 1 file.
 For existing databases, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>; the synteny
 algorithm needs to be re-run to get the collinear changes.
 <p>This release is concentrated on improving the algorithm and display of <u>collinear sets</u>;
-see <a href="./UserGuide.html#csets">details</a>.
+see <a href="./Collinear.html">details</a>.
 There is new viewing support for Collinear sets: see <a href="./UserGuide.html#hitfilter">2D Hit Filter</a>
 and <a href="./UserGuide.html#qview">Queries</a>.
 

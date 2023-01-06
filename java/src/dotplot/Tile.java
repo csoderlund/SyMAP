@@ -16,15 +16,15 @@ public class Tile implements DotPlotConstants {
 
 	private Group group[]; // x and y
 	private List iblocks;  // synteny blocks
-	private AltBlocksRun altRuns[];
+	//private AltBlocksRun altRuns[]; CAS531 more dead code; removed file AltBlocksRun
 	private LoadObject loadObject;
 
 	private Tile() {
 		group      = new Group[2];
 		iblocks    = new Vector(1,1);
 		loadObject = new LoadObject();
-		altRuns    = new AltBlocksRun[DotPlot.TOT_RUNS];
-		for (int i = 0; i < altRuns.length; i++) altRuns[i] = null;
+		//altRuns    = new AltBlocksRun[DotPlot.TOT_RUNS];
+		//for (int i = 0; i < altRuns.length; i++) altRuns[i] = null;
 	}
 
 	public Tile(Group grpX, Group grpY) {
@@ -57,12 +57,10 @@ public class Tile implements DotPlotConstants {
 				return (ABlock[])iblocks.toArray(new ABlock[0]);
 			}
 		}
-		return altRuns[altNum] == null ? new ABlock[0] : altRuns[altNum].getABlocks();
+		return new ABlock[0];
+		//return altRuns[altNum] == null ? new ABlock[0] : altRuns[altNum].getABlocks();
 	}
 
-	public int getAltRID(int altNum) {
-		return altRuns[altNum] == null ? -1 : altRuns[altNum].getRID();
-	}
 
 	public void setIBlocks(InnerBlock[] iblocks) {
 		synchronized (iblocks) {
@@ -157,7 +155,7 @@ public class Tile implements DotPlotConstants {
 	public static Tile getTile(List<Tile> tiles, Group grpX, Group grpY) {
 		return getTile(tiles.toArray(new Tile[0]), grpX, grpY);
 	}
-
+	
 	public static InnerBlock getIBlock(Tile[] blocks, Group grpX, Group grpY, int number) {
 		Tile block = getTile(blocks,grpX,grpY);
 		InnerBlock b = null;
@@ -179,14 +177,10 @@ public class Tile implements DotPlotConstants {
 		if (t != null) b = t.getABlock(altNum,xUnits,yUnits);
 		return b;
 	}
-
+	/****************************************************/
 	private class IBlock extends ABlock implements Comparable<ABlock>, InnerBlock {
 		private IBlock(int num, int sX, int eX, int sY, int eY) {
 			super(Tile.this,num,sX,eX,sY,eY);
-		}
-
-		public int[] getContigNumbers(int axis) {
-			return null;
 		}
 
 		public DPHit[] getHits(boolean includeRepetitive, boolean onlyBlock) {
@@ -205,7 +199,7 @@ public class Tile implements DotPlotConstants {
 			 return String.format("%d", getNumber()); // CAS520 new Integer(getNumber()).toString();
 		 }
 	}
-
+	/****************************************************/
 	private static class LoadObject {
 		private DPHit hits[];
 		private int loaded;

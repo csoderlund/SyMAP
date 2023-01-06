@@ -241,7 +241,7 @@ public class SyMAPQueryFrame extends JFrame {
 		Pools p = null;
 		try {
 			p = PoolManager.getInstance().getPools(theReader);	
-			return p.getSequencePool().loadPseudoSeq(start + ":" + stop, groupIdx);
+			return p.getAlignPool().loadPseudoSeq(start + ":" + stop, groupIdx);
 		} catch (SQLException e) {
 			ErrorReport.print(e, "Get sequence");
 		}

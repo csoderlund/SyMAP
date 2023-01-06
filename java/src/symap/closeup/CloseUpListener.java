@@ -1,6 +1,4 @@
-package symap.closeup.components;
-
-import symap.closeup.alignment.HitAlignment;
+package symap.closeup;
 
 public interface CloseUpListener {
     public void hitClicked(HitAlignment ha);

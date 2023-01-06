@@ -19,7 +19,6 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.Vector;
 
@@ -373,6 +372,7 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 			dp.setFrameEnabled(false);// Disable 2D rendering
 			dp.resetData(); // clear caches
 			symap2D.getHistory().clear(); // clear history
+			symap2D.getControlPanel().clear(); // CAS531 to reset Select:
 			dp.setMaps(0);
 			
 			// Setup 2D

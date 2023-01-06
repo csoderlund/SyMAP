@@ -30,8 +30,8 @@ import symapQuery.TableDataPanel;
  * CAS517 removed some dead code
  */
 public class SyMAP {
-	public static final String 	VERSION = "v5.3.0"; // pre-v530 code can not read post-dbs
-	public static final String 	DATE = " (10-Dec-22)";
+	public static final String 	VERSION = "v5.3.1"; // pre-v530 code can not read post-dbs
+	public static final String 	DATE = " (6-Jan-23)";
 	public static final int 	DBVER =  5; 			// CAS512 v3, CAS520 v4, CAS522 v5
 	public static final String  DBVERSTR = "db" + DBVER;
 	
@@ -46,18 +46,12 @@ public class SyMAP {
 	public static final String TROUBLE_GUIDE_URL = BASE_HELP_URL + "TroubleShoot.html";
 		
 	public static final  String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // under user's directory; see props.PersistenProps
-	private static final String PROPERTIES_FILE = "/properties/symap.properties"; // under java/src; see util.PropertiesReader 
 	private static final int HISTORY_SIZE = 10;
 
 	public static boolean TRACE=false; // set in ProjectManagerFrameCommon on -t
 	public static boolean DEBUG=false; // CAS519 set in ProjectManagerFrameCommon on -d
-	static public boolean GENEN_ONLY=false; // -z CAS519b to update the gene# without having to redo synteny
-	
-	private static final int    TIME_BETWEEN_MEMORY_TEST;
-	static {
-		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource(PROPERTIES_FILE)); 
-		TIME_BETWEEN_MEMORY_TEST = props.getInt("timeBetweenMemoryTest");
-	}
+	public static boolean GENEN_ONLY=false; // -z CAS519b to update the gene# without having to redo synteny
+	public static boolean bTrim=true;	// CAS531 do not trim 2D alignments; see closeup.AlignPool
 	
 	private SyMAPFrame         frame;
 	private DrawingPanel       drawingPanel;
@@ -116,8 +110,6 @@ public class SyMAP {
 		drawingPanel.setCloseUp(closeup);
 
 		colorDialogHandler.addListener((ColorListener)drawingPanel);
-		
-		if (TIME_BETWEEN_MEMORY_TEST >= 0) MemoryTest.run(TIME_BETWEEN_MEMORY_TEST,System.out);
 	}
 	/** added in CAS517, then totally removed in CAS521 
 	public void setHasFPC(boolean hasFPC) {
@@ -138,6 +130,8 @@ public class SyMAP {
 	public SyMAPFrame getFrame() {return frame;}
 
 	public DrawingPanel getDrawingPanel() {return drawingPanel;}
+	
+	public ControlPanel getControlPanel() {return controlPanel;} // CAS531 add for 
 
 	public History getHistory() {return history;}
 

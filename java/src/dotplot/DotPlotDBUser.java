@@ -10,8 +10,6 @@ import java.sql.SQLException;
 
 import util.DatabaseReader;
 import util.Utilities;
-import util.ListCache;
-import softref.SoftListCache;
 import symap.pool.DatabaseUser;
 import symap.pool.ProjectPair;
 import symap.SyMAPConstants;
@@ -20,13 +18,13 @@ import symap.pool.ProjectProperties;
 public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyMAPConstants {
 	public static final String DB_PROPS_FILE = "/properties/database.properties"; 
 
-	private ListCache projectCache = new SoftListCache(1,1);
+	//private ListCache projectCache = new SoftListCache(1,1);
 
 	public DotPlotDBUser(DatabaseReader dr) {
 		super(dr);
 	}
 	public void clear() {
-		projectCache.clear();
+		//projectCache.clear();
 	}
 	// Data
 	public DatabaseReader getDatabaseReader() {
@@ -126,17 +124,14 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 		}
 	}
 	// Data
-	public void setProjects(Project[] projects, 
-			int[] xGroups, int[] yGroups, 	
-			ProjectProperties pp) 			throws SQLException {
+	public void setProjects(Project[] projects, int[] xGroups, int[] yGroups, ProjectProperties pp) 			throws SQLException {
 		try {
+			/** CAS531 dead code
 			ProjectHolder th = new ProjectHolder(projects);
 			ProjectHolder ph = (ProjectHolder)projectCache.get(th);
-			if (ph != null)
-				ph.copyInto(projects);
-			else
-				projectCache.add(th);
-				
+			if (ph != null) ph.copyInto(projects);
+			else projectCache.add(th);
+			**/	
 			setGroups(projects, xGroups, yGroups, pp);
 		}
 		catch (SQLException e) {
@@ -223,7 +218,7 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 		
 		closeStatement(stat);
 	}
-
+/** CAS531 dead code 
 	private static class ProjectHolder {
 		private Project[] projects;
 
@@ -245,4 +240,5 @@ public class DotPlotDBUser extends DatabaseUser implements DotPlotConstants, SyM
 			ps[1] = projects[1];
 		}
 	}
+**/
 }

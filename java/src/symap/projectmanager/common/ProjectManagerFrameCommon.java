@@ -55,7 +55,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	 */
 	public static boolean inReadOnlyMode = false;
 	public static String  MAIN_PARAMS =   "symap.config"; // default
-	public static boolean TEST_TRACE = false;
 	
 	private static int     maxCPUs = -1;
 	private static boolean isCat = true;
@@ -148,6 +147,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		if (Utilities.hasCommandLineOption(args, "-r")) {
 			System.out.println("Usage:  ./viewSymap [options]");
 			System.out.println("  -c string : filename of config file (to use instead of symap.config)");
+			System.out.println("  -a string : do not trim 2D alignments");
 		}
 		else {
 			System.out.println("Usage:  ./symap [options]");
@@ -190,10 +190,6 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				Q.TEST_TRACE = true;
 			}
 			
-			if (Utilities.hasCommandLineOption(args, "-a")) {// not shown in -h help
-				System.out.println("-a Align largest project to smallest");
-				lgProj1st = true;
-			}
 			if (Utilities.hasCommandLineOption(args, "-p")) { // #CPU
 				String x = Utilities.getCommandLineOption(args, "-p"); //CAS500
 				try {
@@ -202,6 +198,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				}
 				catch (Exception e){ System.err.println(x + " is not an integer. Ignoring.");}
 			}
+			
 			if (Utilities.hasCommandLineOption(args, "-c")) {// CAS501
 				MAIN_PARAMS = Utilities.getCommandLineOption(args, "-c");
 				System.out.println("-c Configuration file " + MAIN_PARAMS);
@@ -209,6 +206,13 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			if (Utilities.hasCommandLineOption(args, "-z")) {// CAS519b
 				SyMAP.GENEN_ONLY=true;
 				System.out.println("-z Reload Annotatin will only run the Gene# assignment algorithm");
+			}
+
+			if (Utilities.hasCommandLineOption(args, "-a")) { // CAS531 change
+				SyMAP.bTrim=false;
+				System.out.println("-a Do not trim 2D alignments");
+				//System.out.println("-a Align largest project to smallest");
+				//lgProj1st = true;
 			}
 		}
 	}

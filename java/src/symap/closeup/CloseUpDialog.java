@@ -6,165 +6,72 @@ import java.awt.event.MouseEvent;
 import javax.swing.JScrollPane;
 import javax.swing.JDialog;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Vector;
 
+import colordialog.ColorListener;
 import symap.sequence.Sequence;
 import symap.sequence.Annotation;
-import symap.mapper.AbstractHitData;
-import symap.closeup.components.BlastComponent;
-import symap.closeup.components.CloseUpComponent;
-import symap.closeup.components.CloseUpListener;
-import symap.closeup.alignment.HitAlignment;
-import symap.closeup.alignment.GeneAlignment;
-import symap.closeup.alignment.Exon;
-import symap.drawingpanel.DrawingPanel;
+import symap.mapper.HitData;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import util.Utilities;
 
+/*************************************************
+ * Displays the alignment; called from CloseUp, which is called by SyMAP
+ */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class CloseUpDialog extends JDialog implements HitDialogInterface, CloseUpListener,
-														HelpListener 
+public class CloseUpDialog extends JDialog implements CloseUpListener, ColorListener, HelpListener 
 {
-	private SequencePool sp;
-	private CloseUpComponent view;
+	private AlignPool alignPool;
+	private CloseUpComponent viewComp;
 	private JScrollPane blastScroll, viewScroll;
-	private BlastComponent blast;
+	private TextComponent textComp;
 	private HitAlignment selectedHa; 
 	private HelpBar helpBar; 
+	private final int MAX_WIDTH=1500;
+	private String projS, projO; // selected and other
 
-	public CloseUpDialog(CloseUp closeup) {
-		super(closeup.getDrawingPanel().getFrame(),false);
-		this.sp = closeup.getDrawingPanel().getPools().getSequencePool();
+	public CloseUpDialog(CloseUp closeup, Vector <HitData> hitList, Sequence seqObj, int start, int end, String otherProject, boolean isProj1) throws SQLException {
+		alignPool = closeup.getDrawingPanel().getPools().getAlignPool();
+		projS = seqObj.getProjectDisplayName();
+		projO = seqObj.getOtherProjectName();
 		initView();
-	}
-
-	public CloseUpDialog(CloseUp closeup, Sequence seq, int start, int end) throws SQLException {
-		this(closeup);
 		
-		DrawingPanel dp = closeup.getDrawingPanel();
-		List<AbstractHitData> hitList = dp.getHitsInRange(seq,start,end);
+		setView(seqObj, hitList, start, end, isProj1);
 		
-		setView(seq,hitList,start,end);
-		String x = String.format("Target: %s  %s  %,d - %,d  (%,d)", 
-				seq.getProjectDisplayName(), seq.getName(),
-				view.getStart(), view.getEnd(), (view.getEnd()-view.getStart()+1)); // CAS504 
+		String d = SeqData.coordsStr(start, end);
+		String other = seqObj.getOtherProjectName() + " " + seqObj.getSeqHits().getOtherName(seqObj);
+		String x = String.format("Selected Region: %s  %s  %s to %s", projS, seqObj.getName(), d, other); // CAS504, CAS531
 		setTitle(x);
+	
+		Utilities.setFullSize(this,viewComp, MAX_WIDTH); // CAS531 makes it less than width of screen
+		setLocationRelativeTo(null);
 	}
-
-	public void resetColors() {
-		blast.setBackground(BlastComponent.backgroundColor);
-		blastScroll.getViewport().setBackground(BlastComponent.backgroundColor);
-		blast.repaint();
-		view.setBackground(CloseUpComponent.backgroundColor);
-		viewScroll.getViewport().setBackground(CloseUpComponent.backgroundColor);
-		view.repaint();
-	}
-
-	public int getNumberOfHits() {
-		if (view == null) {
-			System.err.println("CloseUpDialog: view is null");
-			return 0;
-		}
-		return view.getNumberOfHits();
-	}
-
+	
 	public int showIfHits() {
-		int h = getNumberOfHits();
+		if (viewComp==null) return -1;
+		
+		int h = viewComp.getNumberOfHits();
+		
 		if (h > 0) setVisible(true); // CAS512 show();
 		return h;
 	}
-	
-	private GeneAlignment[] getGeneAlignments(Sequence s, int start, int end) {
-		Vector<Annotation> annotations = s.getAnnotations(Annotation.GENE_INT, start, end);
-		Vector<GeneAlignment> alignments = new Vector<GeneAlignment>();
-		
-		for (Annotation a : annotations) {
-			GeneAlignment ga = new GeneAlignment(a.getShortDescription(), a.getStart(), a.getEnd(), a.getStrand());
-			Vector<Annotation> exons = s.getAnnotations(Annotation.EXON_INT, a.getStart(), a.getEnd());
-			Exon[] exonArray = (exons.isEmpty() ? null : new Exon[exons.size()]);
-			
-			for (int i = 0;  i < exons.size();  i++)
-				exonArray[i] = new Exon(exons.get(i).getStart(), exons.get(i).getEnd());
-			ga.setExons(exonArray);
-			
-			if (!alignments.contains(ga)) // in case database has redundant entries (as with Rice)
-				alignments.add(ga);
-			else 
-				System.err.println("Duplicate gene annotation: " + a.getShortDescription());
-		}
-		
-		return alignments.toArray(new GeneAlignment[0]);
-	}
-
-	public void setView(Sequence src, List<AbstractHitData> hitList, int start, int end) 
-	throws SQLException 
-	{
-		HitAlignment[] ha = null;
-		GeneAlignment[] ga = null;
-		int min_x = Integer.MAX_VALUE;
-		int max_x = Integer.MIN_VALUE;
-		
-		if (hitList != null && !hitList.isEmpty()) {
-			ha = sp.getHitAlignments(src,hitList);
-			
-			// Expand to show all of alignments			
-			for (HitAlignment h : ha) {
-				min_x = Math.min(min_x, h.getStart());
-				max_x = Math.max(max_x, h.getEnd());
-			}
-			
-			ga = getGeneAlignments(src, min_x, max_x);
-			
-			// Expand the reduced region to show full gene		
-			for (GeneAlignment g : ga) {
-				if (g.getMax() < min_x) continue; // no hits on this gene so don't show
-				if (g.getMin() < min_x) min_x = g.getMin();
-				if (g.getMax() > max_x && g.getMin() < max_x) max_x = g.getMax();
-			}
-		}
-		
-		if (ha != null && ha.length > 0) { 
-			selectedHa = ha[0]; 
-			ha[0].setSelected(true);
-		}
-
-		view.set(min_x, max_x, ga, ha);
-		if (ha != null && ha.length > 0)
-			hitClicked(ha[0]);
-		Utilities.setFullSize(this,view);
-	}
-
-	// ASD modified to handle color change
-	public void hitClicked(HitAlignment ha) {
-		if (ha != null) {
-			if (selectedHa != null)
-				selectedHa.setSelected(false);
-			ha.setSelected(true); 
-			selectedHa = ha;
-			view.repaint(); // Repaint to show color change
-			blast.setAlignment(ha);
-			getContentPane().validate();
-		}
-	}
-
 	private void initView() {
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-		view = new CloseUpComponent();
-		blast = new BlastComponent();
+		viewComp = new CloseUpComponent();
+		textComp = new TextComponent(projS, projO);
 		
 		helpBar = new HelpBar(-1, 17); // CAS521 removed dead args
-		helpBar.addHelpListener(view,this);
-		helpBar.addHelpListener(blast,this);
+		helpBar.addHelpListener(viewComp,this);
+		helpBar.addHelpListener(textComp,this);
 
-		view.addCloseUpListener(this);
+		viewComp.addCloseUpListener(this);
 
-		viewScroll  = new JScrollPane(view,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-		blastScroll = new JScrollPane(blast,JScrollPane.VERTICAL_SCROLLBAR_NEVER,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-		viewScroll.getViewport().setBackground(view.getBackground());
-		blastScroll.getViewport().setBackground(blast.getBackground());
+		viewScroll  = new JScrollPane(viewComp,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+		blastScroll = new JScrollPane(textComp,JScrollPane.VERTICAL_SCROLLBAR_NEVER,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+		viewScroll.getViewport().setBackground(viewComp.getBackground());
+		blastScroll.getViewport().setBackground(textComp.getBackground());
 
 		Container cp = getContentPane();
 		cp.setLayout(new BorderLayout());
@@ -173,12 +80,81 @@ public class CloseUpDialog extends JDialog implements HitDialogInterface, CloseU
 		cp.add(helpBar, BorderLayout.SOUTH); 
 	}
 	
+	public void setView(Sequence src, Vector <HitData> hitList, int start, int end,  boolean isProj1_idx) throws SQLException 
+	{
+		HitAlignment[] hitAlignArr = alignPool.getHitAlignments(hitList, isProj1_idx, projS, projO);
+		if (hitAlignArr==null || hitAlignArr.length==0) return;
+		
+		GeneAlignment[] geneAlignArr = getGeneAlignments(src, start, end);
+		
+		// find boundary of hits
+		int startG = Integer.MAX_VALUE;
+		int endG = Integer.MIN_VALUE;
+		for (HitAlignment h : hitAlignArr) {
+			startG = Math.min(startG, h.getSstart());
+			endG =   Math.max(endG, h.getAend());
+		}
+		int startH=startG, endH=endG;
+		
+		// Expand the reduced region to show full gene	
+		for (GeneAlignment gn : geneAlignArr) {
+			if (gn.getMax() < startH || gn.getMin()>endH) continue; // no hits on this gene so don't show
+			
+			startG = Math.min(startG, gn.getMin());
+			endG =   Math.max(endG, gn.getMax());
+		}		
+		viewComp.setData(startG, endG, geneAlignArr, hitAlignArr);
+		
+		selectedHa = hitAlignArr[0]; 
+		hitAlignArr[0].setSelected(true);
+		hitClicked(hitAlignArr[0]);
+	}
+	
+	private GeneAlignment[] getGeneAlignments(Sequence seq, int start, int end) {
+		Vector<Annotation> annoVec = 
+				seq.getAnnotations(Annotation.GENE_INT, start, end);
+		
+		Vector<GeneAlignment> alignments = new Vector<GeneAlignment>();
+		for (Annotation a : annoVec) {
+			GeneAlignment ga = new GeneAlignment(a.getShortDescription(), a.getStart(), a.getEnd(), a.isStrandPos());
+			
+			Vector<Annotation> exons = seq.getAnnotations(Annotation.EXON_INT, a.getStart(), a.getEnd());
+			Exon[] exonArray = (exons.isEmpty() ? null : new Exon[exons.size()]);
+		
+			for (int i = 0;  i < exons.size();  i++)
+				exonArray[i] = new Exon(exons.get(i).getStart(), exons.get(i).getEnd());
+			ga.setExons(exonArray);
+			
+			if (!alignments.contains(ga)) // in case database has redundant entries (as with Rice)
+				alignments.add(ga);
+		}
+		
+		return alignments.toArray(new GeneAlignment[0]);
+	}
+	public void resetColors() {
+		textComp.setBackground(TextComponent.backgroundColor);
+		blastScroll.getViewport().setBackground(TextComponent.backgroundColor);
+		textComp.repaint();
+		viewComp.setBackground(CloseUpComponent.backgroundColor);
+		viewScroll.getViewport().setBackground(CloseUpComponent.backgroundColor);
+		viewComp.repaint();
+	}
+
+	// modified to handle color change
+	public void hitClicked(HitAlignment ha) {
+		if (ha != null) {
+			if (selectedHa != null) selectedHa.setSelected(false);
+			ha.setSelected(true); 
+			selectedHa = ha;
+			viewComp.repaint(); // Repaint to show color change
+			textComp.setAlignment(ha);
+			getContentPane().validate();
+		}
+	}
+
 	public String getHelpText(MouseEvent e) {
-		if (e.getSource() == view)
-			return "Click on a hit to select it and view the base alignment.";
-		else if (e.getSource() == blast)
-			return "Highlight text and press CTRL-C to copy.";
-		else
-			return null;
+		if (e.getSource() == viewComp) 		return "Click on a hit to select it and view the base alignment.";
+		else if (e.getSource() == textComp) return "Highlight text and press CTRL-C to copy.";
+		else return null;
 	}
 }

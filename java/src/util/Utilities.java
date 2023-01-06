@@ -129,18 +129,20 @@ public class Utilities {
 
 	 // sets the window to the full size of the available screen or it's preferred
 	 // size, whichever is smaller, using the other methods in this class.
-	public static void setFullSize(Window window, Container view) {
+	 // CAS531 added a max size for CloseUpDialog as full screen is too big on a big screen
+	public static void setFullSize(Window window, Container view, int max) {
 		window.pack();
 
 		Dimension pref = window.getPreferredSize();
 		Rectangle b = getScreenBounds(window);
 
-		pref.width = Math.min(pref.width,b.width);
+		pref.width = Math.min(pref.width,b.width); 
+		pref.width = Math.min(pref.width, max);
 		pref.height = Math.min(pref.height,b.height);
 
 		setWinSize(window,b,pref,view);
 	}
-
+	
 	private static void setWinSize(Window window, Rectangle screenBounds, Dimension pref, Container view) {
 		Point loc = window.getLocation();
 		if (pref.width+loc.x > screenBounds.width) loc.x = screenBounds.x;
@@ -465,45 +467,7 @@ public class Utilities {
 		
 		return false;
 	}
-	/*****************************************************
-	 * XXX DNA string
-	 */
-	// handle reverse complement of sequences for database changes
-	public static String revComplement(String seq) {
-		if (seq == null)
-			return null;
-		StringBuffer retStr = new StringBuffer();
-		int i;
-		for (i = 0; i < seq.length(); i++) {
-			char c = seq.charAt(i);
-			switch (c) {
-			case 'A':
-			case 'a':
-				retStr.append("T");
-				break;
-			case 'T':
-			case 't':
-				retStr.append("A");
-				break;
-			case 'G':
-			case 'g':
-				retStr.append("C");
-				break;
-			case 'C':
-			case 'c':
-				retStr.append("G");
-				break;
-			default:
-				retStr.append("N"); // anything nonstandard gets an N
-			}
-		}
-		retStr = retStr.reverse();
-		return retStr.toString();
-	}
 	
-	public static String reverseString(String s) {
-		return new StringBuffer(s).reverse().toString();
-	}
 
 	/********************************************************************
 	 * XXX File ops
@@ -792,31 +756,29 @@ public class Utilities {
 		
 		helpDiag.setVisible(true);		
 	}
-	// CAS513 add for Gene/exon popup
+	// CAS513 add for Gene/hit popup; CAS531 discontinued for gene/hit as moved to Closeup.TextPopup
 	public static JOptionPane displayInfoMonoSpace(Component parentFrame, String title, 
 			String theMessage, Dimension d, double x, double y) 
-	{ 
-		JOptionPane pane = new JOptionPane();
-		
+	{ 	
+		// scrollable selectable message area
 		JTextArea messageArea = new JTextArea(theMessage);
-
 		JScrollPane sPane = new JScrollPane(messageArea); 
 		messageArea.setFont(new Font("monospaced", Font.BOLD, 12));
 		messageArea.setEditable(false);
 		messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		
-		pane.setMessage(sPane);
-		pane.setMessageType(JOptionPane.PLAIN_MESSAGE);
-
+		// put scrollable pane in option pane
+		JOptionPane pane = new JOptionPane(sPane, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION);
+		
+		// add dialog, which has title
 		JDialog helpDiag = pane.createDialog(parentFrame, title);
 		helpDiag.setModal(false); // true - freeze other windows
 		helpDiag.setResizable(true);
-		if (helpDiag.getWidth() >= d.width || helpDiag.getHeight() >= d.height) {	
-			helpDiag.setSize(d);
-		}
+		if (helpDiag.getWidth() >= d.width || helpDiag.getHeight() >= d.height) helpDiag.setSize(d);
 		helpDiag.setVisible(true);	
 		helpDiag.setAlwaysOnTop(true);
 		if (x!=0.0 && y!=0.0) helpDiag.setLocation((int) x, (int) y);
+		
 		return pane;
 	}
 	static public boolean showContinue (String title, String msg) {
@@ -1018,21 +980,7 @@ public class Utilities {
     		return String.format("%,d", len);
     	}
     }
-    // CAS512 - for writing Annotation hoover and popup
-    static public String coordsAnno(boolean isPos, int start, int end, String delim) {
-    	String o = (isPos) ? "+" : "-";
-    	String s = kText(start);
-    	String e = kText(end);
-    	return String.format("%s(%s - %s) %,5dbp", o, s, e, (Math.abs(end-start)+1)); // CAS517 add \n Coords->Loc
-    }
-    // CAS515 - for more detailed hover called by HitData
-    static public String coordsHit(String chr, boolean isPos, int start, int end, String delim) {
-    	String o = ""; // CAS517x (isPos) ? "+" : "-";
-    	String s = kText(start);
-    	String e = kText(end);
-    	String x = String.format("%s(%s - %s)", o, s, e);
-    	return String.format("%s. %-22s %,5dbp",chr, x, (Math.abs(end-start)+1)); // CAS517 Coords->Loc
-    }
+   
     // CAS513 - to remove leading zeros before making full block name
     static public String blockStr(String c1, String c2, int block) {
     	String x1 = (c1.startsWith("0") && c1.length()>1) ? c1.substring(1) : c1;
@@ -1067,97 +1015,7 @@ public class Utilities {
 			else return tag;
 		}
     }
-    // CAS517 - format exon list (e.g. Exon #1:20:50,Exon #1:20:50)
-    static public String formatExon(String exonList) {	
-    	int rm = "Exon #".length();
-    	String list="";
-    	String [] tokc = exonList.split(",");
-    	int dist=0, last=0;
-    	
-    	String [] fields = {"#", "Coords" ,"Len", "Intron"};
-		int [] justify =   {1,    0,    0,     0};
-		int nRow = tokc.length;
-	    int nCol=  fields.length;
-	    String [][] rows = new String[nRow][nCol];
-	    int r=0, c=0;
-	    
-	    int x1, x2;
-    	for (String x : tokc) {
-    		String [] y = x.split(":");
-    		if (y.length!=3) {System.err.println("Parsing y: " + exonList); return exonList;}
-    		
-    		if (!y[0].startsWith("Exon #")) System.err.println(y[0]);
-    		String n = y[0].substring(rm);
-    		try {
-    			x1 = Integer.parseInt(y[1]);
-    			x2 = Integer.parseInt(y[2]);
-    		}
-    		catch (Exception e) {System.err.println("Parsing int: " + exonList); return exonList;}
-    		
-			if (x1>x2) System.err.println("ERROR start>end " + x1 + "," + x2);
-		
-			rows[r][c++] = n; 
-			rows[r][c++] =  String.format("%s - %s", kText(x1), kText(x2));
-			rows[r][c++] =  String.format("%,d",(x2-x1+1));
-			
-			if (last>0) {
-				dist = Math.abs(last-x1)+1;
-				rows[r][c] = kText(dist);
-			}
-			else rows[r][c] = "-";
-			last = x2;
-			
-    		r++; c=0;
-    	}
-    	list = makeTable(nCol, nRow, fields, justify, rows);
-    	return list;
-    }
-    // CAS517 - format a merged gene hit (e.g. 100:200,300:400)
-    static public String formatHit(String hList) {
-    	String [] tok = hList.split("\n");
-    	if (tok.length!=2) return hList;
-    	String hitList = tok[1];
-    			
-    	String list="";
-    	String [] tokc = hitList.split(",");
-    	int dist=0, last=0;
-    	
-    	String [] fields = {"#", "Coords" ,"Len", "Gap"};
-		int [] justify =   {1,    0,    0,     0};
-		int nRow = tokc.length;
-	    int nCol=  fields.length;
-	    String [][] rows = new String[nRow][nCol];
-	    int r=0, c=0;
-	    
-	    int x1, x2;
-    	for (String x : tokc) {
-    		String [] y = x.split(":");
-    		if (y.length!=2) {System.err.println("Parsing y: " + hitList); return hitList;}
-    		
-    		try {
-    			x1 = Integer.parseInt(y[0]);
-    			x2 = Integer.parseInt(y[1]);
-    		}
-    		catch (Exception e) {System.err.println("Parsing int: " + hitList); return hitList;}
-    		
-			if (x1>x2) System.err.println("ERROR start>end " + x1 + "," + x2);
-		
-			rows[r][c++] = (r+1)+""; 
-			rows[r][c++] =  String.format("%s - %s", kText(x1), kText(x2));
-			rows[r][c++] =  String.format("%,d",(x2-x1+1));
-			
-			if (last>0) {
-				dist = Math.abs(x2-last)+1;
-				rows[r][c] = kText(dist);
-			}
-			else rows[r][c] = "-";
-			last = x2;
-			
-    		r++; c=0;
-    	}
-    	list = makeTable(nCol, nRow, fields, justify, rows);
-    	return tok[0] + "\n" + list;
-    }
+  
     static public String formatAbbrev(String dname) {
     	if (dname==null || dname=="") return "????";
     	if (dname.length()>4) return dname.substring(dname.length()-4);

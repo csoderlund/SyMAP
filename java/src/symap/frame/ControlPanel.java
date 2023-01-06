@@ -36,6 +36,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 	
 	private JButton upButton, downButton;
 	private JButton showImageButton, editColorsButton;
+	private JComboBox <String> mouseFunction; // CAS531 added so can reset
 	
 	private DrawingPanel dp;
 	private HistoryControl hc;
@@ -115,7 +116,8 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
 			
 		addToGrid(this, gridbag, constraints, new JLabel("Selected:"), 1);
-		addToGrid(this, gridbag, constraints, createMouseFunctionSelector(bar), 1);
+		mouseFunction = createMouseFunctionSelector(bar);
+		addToGrid(this, gridbag, constraints, mouseFunction, 1);
 		addToGrid(this, gridbag, constraints, new JLabel(), 1);
 		addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
 		
@@ -144,9 +146,11 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 
 		downButton.setEnabled(enable);
 		upButton.setEnabled(enable);
-		if (hc != null) hc.setEnabled(enable);
+		if (hc != null) hc.setEnabled(enable);	 
 	}
-
+	public void clear() { // CAS531 put back to zoom
+		mouseFunction.setSelectedIndex(0); 
+	}
 	private void addToGrid(Container cp, GridBagLayout layout,
 			GridBagConstraints constraints, Component comp, int width) 
 	{
@@ -159,11 +163,11 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		Component comp = (Component)event.getSource();
 		return comp.getName();
 	}
-	public static final String MOUSE_FUNCTION_SEQ 			= "Show Sequence";
+	public static final String MOUSE_FUNCTION_SEQ 			= "Show Seq Options";
 	public static final String MOUSE_FUNCTION_CLOSEUP 		= "Align (Max " + CloseUp.MAX_CLOSEUP_BP + "bp)";
 	public static final String MOUSE_FUNCTION_ZOOM_SINGLE 	= "Zoom Selected Track";
 	public static final String MOUSE_FUNCTION_ZOOM_ALL 		= "Zoom All Tracks";
-	private Component createMouseFunctionSelector(HelpBar bar) {
+	private JComboBox createMouseFunctionSelector(HelpBar bar) {
 		String [] labels = { // CAS504 change order and add _SEQ
 				MOUSE_FUNCTION_ZOOM_ALL,
 				MOUSE_FUNCTION_ZOOM_SINGLE,

@@ -9,7 +9,6 @@ import number.GenomicsNumber;
 import symap.pool.DatabaseUser;
 import util.DatabaseReader;
 import util.ErrorReport;
-import util.ListCache;
 
 /**
  * The PseudoPool handles the cache of data for the Sequence Track.
@@ -23,11 +22,10 @@ public class PseudoPool extends DatabaseUser {
 		"SELECT idx, type,name,start,end,strand, genenum, gene_idx, tag, numhits FROM pseudo_annot " // CAS520 add numhits
 		+ " WHERE grp_idx=? ORDER BY type DESC"; 
 	
-	private ListCache pseudoCache;
+	//private ListCache pseudoCache; CAS531 removed dead cache
 
-	public PseudoPool(DatabaseReader dr, ListCache cache) { 
+	public PseudoPool(DatabaseReader dr) { 
 		super(dr);
-		pseudoCache = cache;
 	}
 
 	public synchronized void close() {
@@ -36,7 +34,6 @@ public class PseudoPool extends DatabaseUser {
 
 	public synchronized void clear() {
 		super.close();
-		if (pseudoCache != null) pseudoCache.clear();
 	}
 
 	/**
@@ -47,18 +44,8 @@ public class PseudoPool extends DatabaseUser {
 	public synchronized String setSequence(Sequence seqObj, GenomicsNumber gnsize, Vector<Annotation> annotations) throws SQLException {
 		int project = seqObj.getProject();
 		int group =   seqObj.getGroup();
-		PseudoData pdata = null;
-		if (pseudoCache != null)
-			pdata = (PseudoData)(pseudoCache.get(new PseudoData(project,group)));
 		
-		if (pdata != null) {
-			gnsize.setBPValue(pdata.getSize());
-			pdata.setAnnotations(annotations); // transfers annoData to annotations vector
-			return pdata.getName();
-		}
-		
-		pdata = new PseudoData(project, group);
-		if (pseudoCache != null) pseudoCache.add(pdata);
+		PseudoData pdata  = new PseudoData(project, group);
 
 		Statement statement = null;
 		ResultSet rs = null;

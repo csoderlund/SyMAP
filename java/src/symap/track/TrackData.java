@@ -17,7 +17,7 @@ public abstract class TrackData {
 
 	protected TrackData(Track track) {
 		trackClass        = track.getClass();
-		project           = track.project;
+		project           = track.projIdx;
 		start             = track.start.getValue();
 		end               = track.end.getValue();
 		size              = track.size.getValue();
@@ -27,21 +27,21 @@ public abstract class TrackData {
 		bpPerPixel        = track.bpPerPixel;
 		height            = track.height;
 		width             = track.width;
-		otherProject      = track.otherProject;
+		otherProject      = track.otherProjIdx;
 	}
 
 	protected void setTrack(Track track) {
 		track.start.setValue(start);
 		track.end.setValue(end);
 		track.size.setValue(size);
-		track.project           = project;
+		track.projIdx           = project;
 		track.orient            = orient;
 		track.moveOffset.setLocation(moveOffset);
 		track.defaultBpPerPixel = defaultBpPerPixel;
 		track.bpPerPixel        = bpPerPixel;
 		track.height            = height;
 		track.width             = width;
-		track.otherProject      = otherProject;
+		track.otherProjIdx      = otherProject;
 		track.clearAllBuild();
 	}
 

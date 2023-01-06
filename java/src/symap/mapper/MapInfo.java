@@ -6,9 +6,8 @@ import symap.track.Track;
 import symap.sequence.Sequence;
 
 public class MapInfo {
-	public static final int NOT_SET       = 0;
-
 	// Hit Content Types
+	public static final int NOT_SET       = 0;
 	public static final int ONLY_BLOCK_HITS    = 1; // aka synteny hits
 	public static final int ONLY_FILTERED_HITS = 2;
 	public static final int ALL_HITS           = 3;
@@ -25,8 +24,8 @@ public class MapInfo {
 		set(mi);
 	}
 
-	public MapInfo(Track t1, Track t2, boolean showOnlyBlock, boolean showOnlyFiltered) {
-		this(t1,t2,getHitContent(showOnlyBlock,showOnlyFiltered));
+	public MapInfo(Track t1, Track t2, boolean showOnlyBlock) {
+		this(t1, t2, getHitContent(showOnlyBlock));
 	}
 
 	public MapInfo(Track t1, Track t2, int hitContent) {
@@ -49,23 +48,7 @@ public class MapInfo {
 		return hitContent;
 	}
 
-	public void upgradeHitContent(int nHitContent) {
-		hitContent = upgradeHitContent(hitContent,nHitContent);
-	}
-
-	public static int upgradeHitContent(int hitContent, int nHitContent) {
-		if (nHitContent == ALL_HITS) hitContent = ALL_HITS;
-		else if (nHitContent == ONLY_FILTERED_HITS) {
-			if (hitContent != ALL_HITS) hitContent = ONLY_FILTERED_HITS;
-		}
-		else if (nHitContent == ONLY_BLOCK_HITS) {
-			if (hitContent == NOT_SET) hitContent = ONLY_BLOCK_HITS;
-		}
-		return hitContent;
-	}
-
-	public static int getHitContent(boolean showOnlyBlock, boolean showOnlyFiltered) {
-		if (showOnlyFiltered) return ONLY_FILTERED_HITS;
+	public static int getHitContent(boolean showOnlyBlock) {
 		if (showOnlyBlock)    return ONLY_BLOCK_HITS;
 		return ALL_HITS;
 	}
@@ -99,12 +82,7 @@ public class MapInfo {
 		contents[0] = new int[0];
 		contents[1] = new int[0];
 	}
-
-	/**
-	 * Method equalIfUpgradeHitContent returns true if the MapInfo 
-	 * would be equal to mi if it (the calling object) where to upgrade it's 
-	 * hit content to mi's hit content (mi.hasHitContent(getHitContent())).
-	 */
+	// true means hits are already loaded
 	public boolean equalIfUpgradeHitContent(MapInfo mi) {
 		if (p1 == mi.p1 && p2 == mi.p2 && mi.hasHitContent(hitContent)) 
 		{

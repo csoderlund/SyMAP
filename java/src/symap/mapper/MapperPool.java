@@ -1,21 +1,20 @@
 package symap.mapper;
 
-import java.util.List;
-import java.util.LinkedList;
-
+import java.util.Vector;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.ResultSet;
+
+import symap.SyMAP;
 import symap.SyMAPConstants;
+import symap.sequence.Sequence;
+import symap.track.Track;
 import symap.pool.DatabaseUser;
 import symap.pool.ProjectProperties;
 import symap.pool.ProjectPair;
+
 import util.ErrorReport;
-import util.ListCache;
 import util.DatabaseReader;
-import symap.track.Track;
-import symap.sequence.Sequence;
-import symap.SyMAP;
 
 /**
  * The pool of Mapper hits.
@@ -24,15 +23,12 @@ import symap.SyMAP;
  */
 public class MapperPool extends DatabaseUser implements SyMAPConstants {
 	private ProjectProperties projectProperties;
-	private ListCache pseudoPseudoCache; 
+	// private ListCache pseudoPseudoCache; CAS531 dead
 	private boolean TRACE=SyMAP.DEBUG;
 
-	public MapperPool(DatabaseReader dr, ProjectProperties pp, 
-			ListCache fpcPseudoCache, ListCache repetitiveMarkerFilterCache, 
-			ListCache fpcFpcCache, ListCache pseudoPseudoCache) {  
+	public MapperPool(DatabaseReader dr, ProjectProperties pp) {  
 		super(dr);
 		this.projectProperties = pp;
-		this.pseudoPseudoCache = pseudoPseudoCache; 
 	}
 
 	public synchronized void close() {
@@ -41,37 +37,19 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 
 	public synchronized void clear() {
 		super.close();
-		if (pseudoPseudoCache != null) 			 pseudoPseudoCache.clear(); 
 	}
 	
 	public boolean hasPair(Track t1, Track t2) {
 		return projectProperties.hasProjectPair(t1.getProject(),t2.getProject());
 	}
 
-	public synchronized boolean setData(Mapper mapper, Track t1, Track t2,
-			MapInfo mapinfo, HitFilter hf, List hits) throws SQLException 
-	{
-		MapInfo newMapInfo = new MapInfo(t1,t2,hf.isBlock(),hf.getNonRepetitive());
+	public SeqHits setData(Mapper mapper, Track t1, Track t2,MapInfo mapInfo, HitFilter hf) {
+		SeqHits seqHitObj;
 		
-		if (newMapInfo.equalIfUpgradeHitContent(mapinfo)) {
-			mapinfo.setHitContent(newMapInfo.getHitContent());
-			return false;
-		}
-	
-		if (pseudoPseudoCache != null) pseudoPseudoCache.clear();
+		if (hasPair(t1,t2)) seqHitObj = setSeqHitData(mapper, (Sequence)t1, (Sequence)t2, mapInfo);
+		else                seqHitObj = setSeqHitData(mapper, (Sequence)t2, (Sequence)t1, mapInfo);
 		
-		hits.clear(); // prevent hit accumulation on pseudo-pseudo 
-		
-		if (t1 instanceof Sequence && t2 instanceof Sequence) { // PSEUDO to PSEUDO
-			if (hasPair(t1,t2))
-				setPseudoPseudoData(mapper,(Sequence)t1,(Sequence)t2,hits,mapinfo,newMapInfo);
-			else // swap projects
-				setPseudoPseudoData(mapper,(Sequence)t2,(Sequence)t1,hits,mapinfo,newMapInfo);
-		}
-		
-		mapinfo.set(newMapInfo);
-
-		return true;
+		return seqHitObj;
 	}
 
 	private static final String PSEUDO_HITS_QUERY = 
@@ -87,13 +65,7 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 	/*************************************************************************
 	 * Update HitData
 	 */
-	private void setPseudoPseudoData(Mapper mapper, Sequence st1, Sequence st2, 
-			List hits, MapInfo mi, MapInfo nmi) throws SQLException 
-	{
-		int i;
-		PseudoPseudoData data/*, tempData*/;
-		boolean reorder = false;
-		
+	private SeqHits setSeqHitData(Mapper mapper, Sequence st1, Sequence st2,  MapInfo nmi)  {
 		int stProject1 = st1.getProject();
 		int stProject2 = st2.getProject();
 		int group1 = st1.getGroup();
@@ -103,7 +75,7 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 		ProjectPair pp = projectProperties.getProjectPair(stProject1,stProject2);
 
 		if (TRACE) System.out.println("Looking for the Hits for Pseudos: p1="+stProject1+" p2="+stProject2+" pair="+pp.getPair()+" g1="+group1+" g2="+group2);
-		List<HitData> hitList = new LinkedList<HitData>();
+		Vector <HitData> hitList = new Vector <HitData>();
 		Statement statement;
 		ResultSet rs;
 		String query, tag;
@@ -115,9 +87,6 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 			rs = statement.executeQuery("select name from xgroups where idx=" + group2);
 			if (rs.next()) chr2=rs.getString(1);
 			
-			data = new PseudoPseudoData(stProject1,group1,stProject2,
-					group2,nmi.getHitContent(),hitList,reorder);
-		
 			query = PSEUDO_HITS_QUERY;
 			query = setInt(query,group1);	
 			query = setInt(query,group2);
@@ -135,11 +104,10 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 				if (runsize>0 && runnum>0) tag += " c" + runsize + "." + runnum; // CAS520 add runnum
 				else if (runsize>0)        tag += " c" + runsize;			    // parsed in Utilities.isCollinear
 		
-				HitData temp = 		PseudoPseudoData.getHitData(
+				HitData temp = 		new HitData(
 						rs.getLong(1),		/* long id 		*/
 						rs.getInt(2),		/* int hitnum 	*/
 						rs.getString(8),	/* String strand*/
-						0,					/* int repetitive*/
 						rs.getInt(17),		/* int block	*/
 						rs.getDouble(3),	/* double pctid	*/
 						rs.getInt(4),		/* int start1	*/
@@ -158,20 +126,17 @@ public class MapperPool extends DatabaseUser implements SyMAPConstants {
 			}
 			closeResultSet(rs);
 			
-			data.addHitData(nmi.getHitContent(),hitList);
-			
-			i = hits.indexOf(data);
-			if (i < 0) hits.add(new PseudoPseudoHits(mapper,st1,st2,data,reorder));
-			else       ((PseudoPseudoHits)hits.get(i)).addHits(nmi.getHitContent(),hitList);
+			SeqHits seqHitObj = new SeqHits(stProject1,group1,stProject2,
+					group2, mapper, st1, st2, hitList, false);
 			
 			hitList.clear();
-			if (pseudoPseudoCache != null) pseudoPseudoCache.add(data);
 		
 			closeStatement(statement);
+			return seqHitObj;
 		} catch (SQLException e) {
 			close();
 			ErrorReport.print(e, "Get hit data");
-			throw e;
+			return null;
 		}
 	}
 }

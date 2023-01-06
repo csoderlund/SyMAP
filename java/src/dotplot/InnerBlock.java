@@ -11,7 +11,6 @@ public interface InnerBlock extends Shape {
     public int getNumber();
     public Tile getParent();
     public Group getGroup(int axis);
-    public int[] getContigNumbers(int axis);
 
     public int getStart(int axis);
     public int getEnd(int axis);

@@ -58,10 +58,9 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	private TextLayout titleLayout;
 	private Point2D.Float titlePoint;
 	private Point2D defaultTrackOffset;
-	private String projectName, projectType, displayName;
-	private String otherProjectType; 
+	protected String projectName, displayName, otherProjName;
 
-	protected int project, otherProject;
+	protected int projIdx, otherProjIdx;
 	protected int orient;
 	protected Point moveOffset;
 	protected double defaultBpPerPixel;
@@ -84,15 +83,14 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	protected TrackHolder holder;
 	protected DrawingPanel drawingPanel;
 	
-	protected long curCenter=0;
-	protected long curWidth=0; // for +/- buttons
+	protected long curCenter=0, curWidth=0; // for +/- buttons
 
 	protected Track(DrawingPanel dp, TrackHolder holder, double minBpPerPixel, 
 			double maxBpPerPixel, Point2D defaultTrackOffset) // Called by Sequence and MarkerTrack
 	{
 		this.drawingPanel = dp;
 		this.holder = holder;
-		otherProject = project = NO_VALUE;
+		otherProjIdx = projIdx = NO_VALUE;
 		titlePoint = new Point2D.Float();
 		rect = new Rectangle2D.Double();
 		trackOffset = new Point();
@@ -117,18 +115,17 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 
 	public void setHeld() { } // TrackHolder
 
-	protected void reset(int project, int otherProject) { // Sequence, MarkerTrack
+	protected void reset(int project, int otherProject) { // Sequence
 		clear();
 		firstBuild = true;
-		if (this.project != project || this.otherProject != otherProject) {
-			this.project = project;
-			this.otherProject = otherProject;
+		if (this.projIdx != project || this.otherProjIdx != otherProject) {
+			this.projIdx = project;
+			this.otherProjIdx = otherProject;
 
 			ProjectProperties pp = drawingPanel.getPools().getProjectProperties();
 			displayName = pp.getDisplayName(project);
 			projectName = pp.getName(project);
-			projectType = pp.getType(project);
-			otherProjectType = pp.getType(otherProject);
+			otherProjName = pp.getDisplayName(otherProject);
 			bpPerCb     = pp.getIntProperty(project,"cbsize",1);
 
 			if (bpPerCb == 1) {
@@ -158,7 +155,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		}
 	}
 
-	protected void reset() { // Sequence and MarkerTrack
+	protected void reset() { // Sequence
 		firstBuild = true;
 
 		rect.setRect(0,0,0,0);
@@ -226,13 +223,11 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		return rect.getX()+(rect.getWidth()/2.0);
 	}
 
-	public int getProject() {return project;}
+	public int getProject() {return projIdx;}
 
-	public int getOtherProject() {return otherProject;}
+	public int getOtherProject() {return otherProjIdx;}
 	
-	public String getProjectType() {return projectType;}
-	
-	public String getOtherProjectType() {return otherProjectType;}
+	public String getOtherProjectName() {return otherProjName;}
 
 	public String getProjectName() {return projectName;}
 
@@ -755,11 +750,10 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		boolean needUpdate = false;
 		
 		if (e.isPopupTrigger()) { 
-			holder.showPopupFilter(e);
+			holder.showPopupFilter(e); // this never seems to happen
 		}
-		else {
-			if (!isCleared(dragRect) && drawingPanel.isMouseFunctionZoom()) 
-			{
+		else { // sequence.mouseRelease is first, and checks for Align or Show popup; else, comes here for zoom
+			if (!isCleared(dragRect) && drawingPanel.isMouseFunctionZoom()) {
 				try {
 					long newStart = getBP(dragRect.y);
 					long newEnd   = getBP(dragRect.y+dragRect.height);
@@ -783,11 +777,11 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 					}
 				} catch (Exception ex) {ErrorReport.print(ex, "Exception resizing track!");}
 			}
-			if (needUpdate 
-					|| (startResizeBpPerPixel != NO_VALUE && startResizeBpPerPixel != bpPerPixel) 
-					|| (!isCleared(startMoveOffset) && !startMoveOffset.equals(moveOffset)))
-				if (drawingPanel != null) drawingPanel.setImmediateUpdateHistory();
-	
+			if (needUpdate  || (startResizeBpPerPixel != NO_VALUE && startResizeBpPerPixel != bpPerPixel) 
+							|| (!isCleared(startMoveOffset) && !startMoveOffset.equals(moveOffset))) {
+				drawingPanel.setImmediateUpdateHistory();
+				clearMouseSettings();
+			}
 			clearMouseSettings();
 		}
 	}
