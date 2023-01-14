@@ -3,6 +3,7 @@ package symap.projectmanager.common;
 /**********************************************
  * The parameter window for Alignment&Synteny
  * CAS501 massive changes to make it a little clearer what parameters apply to a pair
+ * CAS532 finished removing fpc
  */
 import java.awt.Color;
 import java.awt.Component;
@@ -19,28 +20,28 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import util.Utilities;
 import backend.SyProps;
 
 public class PairPropertyFrame extends JDialog {
 	private static final long serialVersionUID = 1L;
-	private static final String [] LABELS = { // CAS511 put FPC in front of Blat, order does not matter
+	private final String helpHTML = "/html/PairParamHelp.html";
+	private static final String [] LABELS = { 
 		"Min Dots", "Top N", "Merge Blocks", 
 		"Do Synteny", "Do Clustering", "No Overlapping Blocks", 
-		"FPC Blat Args", "NUCmer Args", "PROmer Args", "Self Args", "NUCmer Only","PROmer Only" };
+		"NUCmer Args", "PROmer Args", "Self Args", "NUCmer Only","PROmer Only" };
 	
 	// if change, change in SyProps too
 	private static final String [] SYMBOLS = { 
 		"mindots", "topn", "merge_blocks", 
 		"do_synteny", "do_clustering", "no_overlapping_blocks", 
-		"blat_args", "nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only" };
+		"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only" };
 	
 	private static final int LABEL_COLUMN_WIDTH = 150;
 	private static final int TEXT_FIELD_WIDTH = 15;
 	private static final int NUM_FIELD_WIDTH = 3;
 	
 	private String title;
-	private boolean isGlobal=false, hasFPC=false;
+	private boolean isGlobal=false;
 	
 	// glProps = current set of properties, i.e., either defaults or the saved global parameters
 	// dbProps = the database-stored properties for the selected pair, if any. 
@@ -76,19 +77,17 @@ public class PairPropertyFrame extends JDialog {
 	private String getValue(String symbol) {
 		int x=0;
 		if(symbol.equals(SYMBOLS[x++])) 		return txtMinDots.getText();
-		else if(symbol.equals(SYMBOLS[x++])) return txtTopN.getText();
+		else if(symbol.equals(SYMBOLS[x++])) 	return txtTopN.getText();
 		else if(symbol.equals(SYMBOLS[x++]))	return chkMergeBlocks.isSelected()?"1":"0";
 		else if(symbol.equals(SYMBOLS[x++]))	return chkDoSynteny.isSelected()?"1":"0";
 		else if(symbol.equals(SYMBOLS[x++]))	return chkDoClustering.isSelected()?"1":"0";
 		else if(symbol.equals(SYMBOLS[x++]))	return chkNoOverlappingBlocks.isSelected()?"1":"0";
-		else if(symbol.equals(SYMBOLS[x++]))	return txtBlatArgs.getText();
 		else if(symbol.equals(SYMBOLS[x++]))	return txtNucMerArgs.getText();
 		else if(symbol.equals(SYMBOLS[x++]))	return txtProMerArgs.getText();
 		else if(symbol.equals(SYMBOLS[x++]))	return txtSelfArgs.getText();
 		else if(symbol.equals(SYMBOLS[x++]))	return chkNucOnly.isSelected()?"1":"0";
 		else if(symbol.equals(SYMBOLS[x++]))	return chkProOnly.isSelected()?"1":"0";
-		else 
-			return "";
+		else return "";
 	}
 	
 	private void setValue(String symbol, String value) {
@@ -99,7 +98,6 @@ public class PairPropertyFrame extends JDialog {
 		else if(symbol.equals(SYMBOLS[x++]))	chkDoSynteny.setSelected(value.equals("1"));
 		else if(symbol.equals(SYMBOLS[x++]))	chkDoClustering.setSelected(value.equals("1"));
 		else if(symbol.equals(SYMBOLS[x++]))	chkNoOverlappingBlocks.setSelected(value.equals("1"));
-		else if(symbol.equals(SYMBOLS[x++]))	txtBlatArgs.setText(value);
 		else if(symbol.equals(SYMBOLS[x++]))	txtNucMerArgs.setText(value);
 		else if(symbol.equals(SYMBOLS[x++]))	txtProMerArgs.setText(value);
 		else if(symbol.equals(SYMBOLS[x++]))	txtSelfArgs.setText(value);
@@ -138,11 +136,6 @@ public class PairPropertyFrame extends JDialog {
 		chkNoOverlappingBlocks.setBackground(Color.WHITE);
 		chkNoOverlappingBlocks.setMaximumSize(chkNoOverlappingBlocks.getPreferredSize());
 		chkNoOverlappingBlocks.setMinimumSize(chkNoOverlappingBlocks.getPreferredSize());
-		
-		lblBlatArgs = new JLabel(LABELS[x++]);
-		txtBlatArgs = new JTextField(TEXT_FIELD_WIDTH);
-		txtBlatArgs.setMaximumSize(txtBlatArgs.getPreferredSize());
-		txtBlatArgs.setMinimumSize(txtBlatArgs.getPreferredSize());
 		
 		lblNucMerArgs = new JLabel(LABELS[x++]);
 		txtNucMerArgs = new JTextField(TEXT_FIELD_WIDTH);
@@ -223,9 +216,6 @@ public class PairPropertyFrame extends JDialog {
 		
 		JPanel row = createRowPanel();		
 		row.add(new JLabel(title + " for Alignment & Synteny"));
-
-		row.add(Box.createHorizontalStrut(150));
-		row.add(btnHelp);
 		mainPanel.add(row);
 		mainPanel.add(Box.createVerticalStrut(10));
 		
@@ -288,24 +278,13 @@ public class PairPropertyFrame extends JDialog {
 		row.add(txtSelfArgs);
 		mainPanel.add(row);	
 		mainPanel.add(Box.createVerticalStrut(10));
-
-		if (hasFPC) { // CAS511 move label and only add if data/fpc exists
-			row = createRowPanel();
-			row.add(lblBlatArgs);
-			if(lblBlatArgs.getPreferredSize().width < LABEL_COLUMN_WIDTH)
-				row.add(Box.createHorizontalStrut(LABEL_COLUMN_WIDTH - lblBlatArgs.getPreferredSize().width));
-			row.add(txtBlatArgs);
-			mainPanel.add(row);
-			mainPanel.add(Box.createVerticalStrut(10));
-		}
-		mainPanel.add(Box.createVerticalStrut(10));
 		
 		row = createRowPanel();
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
 		buttonPanel.setBackground(Color.WHITE);
 		buttonPanel.add(btnKeep);
-		buttonPanel.add(Box.createHorizontalStrut(20));
+		buttonPanel.add(Box.createHorizontalStrut(5));
 		/** CAS507 disabled because did not work right
 		if (!isGlobal) {
 			buttonPanel.add(btnLoadGlobal); 
@@ -313,8 +292,10 @@ public class PairPropertyFrame extends JDialog {
 		}
 		**/
 		buttonPanel.add(btnLoadDef);
-		buttonPanel.add(Box.createHorizontalStrut(20));
+		buttonPanel.add(Box.createHorizontalStrut(5));
 		buttonPanel.add(btnDiscard);
+		buttonPanel.add(Box.createHorizontalStrut(5));
+		buttonPanel.add(btnHelp); // CAS532 moved from top to here, like proj_params
 		buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		
 		row.add(Box.createHorizontalGlue());
@@ -330,6 +311,7 @@ public class PairPropertyFrame extends JDialog {
 		add(mainPanel);
 		pack();
 		setResizable(false);
+		setLocationRelativeTo(null); // CAS532
 	}
 	
 	private JPanel createRowPanel() {
@@ -342,7 +324,7 @@ public class PairPropertyFrame extends JDialog {
 	}
 	private void showHelp() 
 	{
-		Utilities.showHTMLPage( this,"Alignment & Synteny Parameter Help", "/html/PairParamHelp.html");
+		util.Jhtml.showHTMLPage( this,"Alignment & Synteny Parameter Help", helpHTML);
 	}	
 	
 	
@@ -360,9 +342,6 @@ public class PairPropertyFrame extends JDialog {
 	private JCheckBox chkNoOverlappingBlocks = null;
 	private JCheckBox chkNucOnly = null;
 	private JCheckBox chkProOnly = null;
-	
-	private JLabel lblBlatArgs = null;
-	private JTextField txtBlatArgs = null;
 	
 	private JLabel lblNucMerArgs = null;
 	private JTextField txtNucMerArgs = null;

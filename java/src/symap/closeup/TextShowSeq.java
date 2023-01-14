@@ -29,7 +29,6 @@ import symap.mapper.HitData;
 import symap.sequence.Annotation;
 import symap.sequence.Sequence;
 import util.ErrorReport;
-import util.Utilities;
 
 /*****************************************************
  * Show Seq Options pull-down; called when sequence is selected
@@ -52,7 +51,7 @@ public class TextShowSeq extends JDialog implements ActionListener {
 	private Vector <HitData> hitList;
 	private Vector<Annotation> geneList;
 	
-	private JButton okButton, cancelButton, helpButton;
+	private JButton okButton, cancelButton;
 	private JRadioButton exonButton, transExonButton, geneButton;
 	private JRadioButton hitButton, revHitButton, transHitButton, fullHitButton,  regionButton;
 	
@@ -94,9 +93,7 @@ public class TextShowSeq extends JDialog implements ActionListener {
 		okButton.addActionListener(this);
 		cancelButton = new JButton("Cancel"); cancelButton.setBackground(Color.white);
 		cancelButton.addActionListener(this);
-		helpButton = new JButton("Help"); helpButton.setBackground(Color.white);
-		helpButton.addActionListener(this);
-		buttonPanel.add(okButton); buttonPanel.add(cancelButton);buttonPanel.add(helpButton);
+		buttonPanel.add(okButton); buttonPanel.add(cancelButton);
 		
 		Container cp = getContentPane();
 		GridBagLayout gbl = new GridBagLayout();
@@ -161,9 +158,6 @@ public class TextShowSeq extends JDialog implements ActionListener {
 		}
 		else if (e.getSource() == cancelButton) {
 			setVisible(false);
-		}
-		else if (e.getSource() == helpButton) {
-			Utilities.showHTMLPage( this,"Show Sequence", "/html/ShowSeq.html");
 		}
 	}
 	// Each show will return Vector <SeqData> to be shown as FASTA 

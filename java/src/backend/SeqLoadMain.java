@@ -44,8 +44,9 @@ public class SeqLoadMain
 			
 			if (props.getProperty("display_name") == null) 	props.setProperty("display_name", projName);
 			if (props.getProperty("name") == null) 			props.setProperty("name", projName);
-			if (props.getProperty("category") == null) 		props.setProperty("category", "Uncategorized");			
-			if (props.getProperty("description") == null) 	props.setProperty("description", "");
+			if (props.getProperty("abbrev_name") == null) 	props.setProperty("abbrev_name", projName.substring(0,4));// CAS532 add
+			//CAS532 if (props.getProperty("category") == null) props.setProperty("category", "Uncategorized");			
+			//if (props.getProperty("description") == null) 	props.setProperty("description", "");
 	
 	// Create project in DB
 			if (TRACE) log.msg("Checking database");
@@ -65,16 +66,20 @@ public class SeqLoadMain
 			if (TRACE) log.msg("Processing properties");
 			projIdx = pool.getProjIdx(projName);
 			props.uploadProjProps(pool, projIdx, new String[] { "name","display_name", "description", 
-				"category", "grp_prefix", "grp_sort", "grp_type","order_against","replace_bad_char",
+				"category", "grp_prefix", "grp_sort", "grp_type","order_against",
 				"min_display_size_bp","mask_all_but_genes", "min_size","sequence_files", "anno_files",
 				"annot_keywords", "annot_kw_mincount",// CAS511 added these two, do not know why they were missing
-				"abbrev_name"}); // CAS519 added
+				"abbrev_name", 						// CAS519 added
+				"proj_seq_dir", "proj_seq_date", "proj_anno_dir", "proj_anno_date"}); // CAS532 added files params
 			
 	// Check Sequence files 
 			if (TRACE) log.msg("Processing files");
+			
 			Vector<File> seqFiles = new Vector<File>();	
 			if (!props.containsKey("sequence_files")) props.setProperty("sequence_files", "");
 			
+			String saveSeqDir="";
+			long modDirDate=0;
 			if (props.getProperty("sequence_files").equals("")) {
 				String seqDir = projDir + Constants.seqSeqDataDir; // created with Add Project
 				log.msg("   Sequence_files not specified - use " + seqDir);
@@ -82,9 +87,11 @@ public class SeqLoadMain
 				if (!Utilities.pathExists(seqDir)) {
 					return rtError(pool, log, projIdx, "Sequence files not found in " + seqDir);
 				}			
-				
 				File sdf = new File(seqDir);
 				if (sdf.exists() && sdf.isDirectory()) {
+					saveSeqDir = seqDir;
+					modDirDate = sdf.lastModified();
+					
 					for (File f2 : sdf.listFiles())
 						seqFiles.add(f2);
 				}
@@ -100,14 +107,21 @@ public class SeqLoadMain
 					if (filstr == null) continue;
 					if (filstr.trim().equals("")) continue;
 					File f = new File(filstr);
+					
 					if (!f.exists()) {
 						log.msg("*** Cannot find sequence file " + filstr + " - try to continue...");
 					}
 					else if (f.isDirectory()) {
+						saveSeqDir = f.getAbsolutePath();
+						modDirDate = f.lastModified();
+						
 						for (File f2 : f.listFiles())
 							seqFiles.add(f2);
 					}
 					else {
+						saveSeqDir = Utils.pathOnly(f.getAbsolutePath());
+						modDirDate = f.lastModified();
+						
 						seqFiles.add(f);
 					}
 				}
@@ -202,7 +216,7 @@ public class SeqLoadMain
 				if (grpName != null) {
 					if (curSeq.length() >= minSize) {
 						grpList.add(grpName);
-						uploadSequence(grpName,grpFullName,curSeq.toString(),f.getName(),pool,nSeqs+1);	
+						uploadSequence(grpName, grpFullName, curSeq.toString(), f.getName(), pool, nSeqs+1);	
 						nSeqs++; n++;
 						totalSize += curSeq.length();
 						fileSize += curSeq.length();
@@ -216,12 +230,16 @@ public class SeqLoadMain
 				if (nBadCharLines > 0)
 					log.msg("+++ " + nBadCharLines + " lines contained characters other than AGCT; these will be replaced by N");
 			
-				Utils.setProjProp(projIdx,"badCharLines","" + nBadCharLines,pool);	
+				SyProps.setProjProp(projIdx,"badCharLines","" + nBadCharLines,pool);	
 			} // end loop through files
 			
 			if (nSeqs == 0) {
 				return rtError(pool, log, projIdx, "No sequences were loaded! Check for problems with the sequence files and re-load.");
 			}
+			// CAS532 add these to print on View
+			SyProps.setProjProp(projIdx,"proj_seq_date", Utils.getDateStr(modDirDate),pool);
+			SyProps.setProjProp(projIdx,"proj_seq_dir", saveSeqDir,pool);
+			
 			if (cntFile>1) {
 				log.msg("Total:");
 				if (seqIgnore>0)
@@ -343,7 +361,8 @@ public class SeqLoadMain
 			}
 		//}
 	}
-	public static void uploadSequence(String grp, String fullname, String seq, String file,UpdatePool pool,int order) throws Exception
+	public static void uploadSequence(String grp, String fullname, String seq, String file,
+			UpdatePool pool,int order) throws Exception
 	{
 		// First, create the group
 		pool.executeUpdate("INSERT INTO xgroups VALUES('0','" + projIdx + "','" + 

@@ -24,6 +24,7 @@ import javax.swing.event.PopupMenuEvent;
 import number.GenomicsNumber;
 import symap.drawingpanel.DrawingPanel;
 import symap.filter.Filter;
+import util.Jhtml;
 import util.Utilities;
 
 /**
@@ -69,7 +70,7 @@ public class SequenceFilter extends Filter {
 	private boolean bNoChange = false;
 
 	public SequenceFilter(Frame owner, DrawingPanel dp, AbstractButton helpButton, Sequence sequence) {
-		super(owner,dp,"Sequence Filter",helpButton);
+		super(owner,dp,"Sequence Filter", Jhtml.seqfilter); // CAS532 added help
 		this.sequence = sequence;
 
 		Container contentPane = getContentPane();

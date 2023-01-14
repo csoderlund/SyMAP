@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SyMAP Queries</title>
+<style>
+	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
+    a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
+    a.ext {font-weight: bold;}
+    .tx td {padding: 5px;}
+	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
+    .ty td {border: 1px  solid black; padding: 5px; text-align: left}
+    mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+    ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+    ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
+	ttp  {font-family: Helvetica, monospace; font-size: 14px; font-weight: 600;}
+    tt {font-size:13px}
+	pre {font-size:13px}
+	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
+</style>
+</head>
+
+<body>
+<a id="top"></a>
+<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
+	<tr><td>
+		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
+			<tr>
+				<td style="text-align: left; vertical-align: top; padding: 0">
+					<a href="http://www.agcol.arizona.edu">
+						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
+				</td>
+				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
+					SyMAP Queries
+				</td>
+				<td style="text-align: right; vertical-align: top; padding: 0">
+					<a href="http://www.arizona.edu">
+						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+					<br>
+
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
+				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
+					<tr>
+						<td style="background-color: #666666; padding-bottom:4px;">
+						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
+						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
+						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
+						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="./Tour.html" class="white">Tour</a>
+					</tr>
+				</table>
+				</td>
+			</tr>
+		</table>
+	</td></tr>
+
+	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+	<!---- START BODY -->
+
+Content:
+<table class=tx>
+<tr>
+<td><a href="#face"><u>Interface</u></a>
+<br>&nbsp;&nbsp;&nbsp;
+<br>&nbsp;&nbsp;&nbsp;
+<br>&nbsp;&nbsp;&nbsp;
+<br>&nbsp;&nbsp;&nbsp;
+<td>&nbsp;
+<td><a href="#query"><u>Queries</u></a>
+<br><a href="#gen">General</a>
+<br><a href="#sin">Single gene</a>
+<br><a href="#pair">Pair hits</a>
+<br><a href="#pfs">PgeneFs</a>
+<td>&nbsp;
+<td><a href="#result"><u>Results</u></a>
+<br><a href="#tab">Result table</a>
+<br><a href="#col">Columns</a>
+<br><a href="#but">Button functions</a>
+<br><a href="#stat">Statistics</a>
+</table>
+See <a href="./UserGuide.html#term">Terminology</a> in the User Guide.
+
+<hr>
+<a id="face"></a>
+<h2>Interface</h2>
+To open the query interface, first select two or more sequence projects in the Project Manager.
+Then select the <ttb>Queries</ttb> button to open the queries interface.
+
+<p>
+<a href="img/query_oview.png"><img src="img/query_oview.png" alt="query_oview" style="border: 1px solid black; width: 500px"></a>
+<p>
+The <ttl>Instructions</ttl> window (above) lists the projects which were selected for querying.
+Open the <ttl>Query Setup</ttl> window by clicking on its tab in the left panel.
+Set up the desired filters and then select <ttb>Run Search</ttb> to execute it.
+When the query is complete, the <a href="#result">table of results</a> will be displayed.
+
+<a id="query"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Queries</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<p>
+<a id="qresults"></a>
+<a href="img/query_query.png"><img src="img/query_query.png" alt="query_query" style="border: 1px solid black; width: 550px"></a>
+<p>Rules:
+<ul>
+<li>Except for the <ttl>Single</ttl> filter, all queries return rows where there is a <i>hit pair</i>, i.e.
+aligned region between to two chromosomes from two projects.
+<li>All queries are on the <ttx>Pair hits</ttx> unless <ttl>Single</ttl> is selected.
+<li>Most filters can be used in conjunction with other
+filters; options will be disabled if they cannot be used with a selected filter.
+</ul>
+
+<a id="gen"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>1. General</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<ttl>Annotation Description</ttl>
+<br>Enter the value for any of the keywords in the annotation string,
+e.g. if there is an 'ID' and 'product' keyword, they both will be searched.
+Hits will be returned which overlap a gene
+with the corresponding annotation; the gene can be on either side of the hit.
+
+<p><ttl>Chromosome/location</ttl>
+<table class="tx">
+<tr><td style="vertical-align: text-top;">Chr<td>&nbsp;
+	<td>Select a specific chromosome for the species.
+<tr><td style="vertical-align: text-top;">From<td>&nbsp;
+	<td>The <ttx>Start</ttx> coordinates for the selected chromosome will be &gt;= this number.
+<tr><td style="vertical-align: text-top;">To<td>&nbsp;
+	<td>The <ttx>End</ttx> coordinates for the selected chromosome will be &lt;= this number.
+<tr><td>&nbsp;<td>&nbsp;<td>
+For <ttx>Pair hits</ttx>, the <i>hit</i> coordinates must pass the start and end.
+<br>For <ttx>Single genes</ttx>, the <i>gene</i> coordinates must pass start and end.
+
+</table>
+
+<!--------------------------------------------------->
+<a id="sin"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>2. Single gene</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The <ttl>Single</ttl> queries produces rows of genes; there is no hit or block
+information since the rows do not represent pairs.
+
+Options:
+<ul>
+<li><ttl>Orphan genes (no hits)</ttl>
+<br>
+Genes that do not a have a hit and meet the additional filters.
+The orphan genes are relative to the projects shown on the <ttl>Instruction</ttl> page.
+For example, if species X, Y and Z have synteny computed between all pairs,
+but only X and Y are selected, the orphan genes for X would be those with no hits to Y.
+If X,Y&Z are selected, the orphan genes for X would be those with no hits to Y and Z.
+<br>&nbsp;
+<li><ttl>All genes (w/o hits)</ttl>, i.e. genes with and without hits
+<br>This shows all genes that meet the additional filters, regardless if they have a hit or not.
+There is always the same set of genes for a project, regardless of synteny.
+</ul>
+
+<p><u>Additional filters</u>: both options can be restricted by:
+<ul>
+<li>Using the <ttl>Project</ttl> pull-down, select a project.
+<li>If a project is selected, then a chromosome and optional location can be selected.
+<li>A <ttl>Annotation Description</ttl> may be entered.
+</ul>
+<!--------------------------------------------------->
+<a id="pair"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>3. Pair hits</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+Each hit connects two <i>species (projects)</i> and hence represents a <i>pair</i> of aligned
+regions for two of the selected species. Filters are as follows:
+
+<p><ttl>In Block (Synteny Hit)</ttl>
+<table class="tx">
+<tr><td  style="vertical-align: text-top;">Yes<td><td>&nbsp;<td>Only hits that are part of a synteny
+block will be returned. All hits will have a value for the <ttx>Block</ttx> column.
+<tr><td style="vertical-align: text-top;">No<td><td>&nbsp;<td>Only hits that are NOT part of a synteny
+block will be returned. No hits will have a value for the <ttx>Block</ttx> column.
+</table>
+
+<p><ttl>Annotated (Gene Hit)</ttl>
+<table class="tx">
+<tr><td style="vertical-align: text-top;">Either<td><td>&nbsp;<td>Only hits that are annotated for ONE side of the
+pair will be shown. The <ttx>Gene#</ttx> columns will have a value for one side of each hit.
+<tr><td style="vertical-align: text-top;">Both<td><td>&nbsp;<td>Only hits that are annotated for BOTH sides of the
+pair will be shown. The <ttx>Gene#</ttx> columns will have values for both sides of the hit.
+<tr><td style="vertical-align: text-top;">None<td><td>&nbsp;<td>Only hits that are NOT annotated for either side of the
+pair will be shown. The <ttx>Gene#</ttx> columns will not have a value for either side of the hit.
+</table>
+
+<p><ttl>Collinear size &gt;= N</ttl>
+<br>List all hits in collinear sets that have size &gt;= N (the <ttx>Collinear</ttx> column is formated Chr.Chr.Size.Set#).
+See <a href="Query.html" target="_blank" class="ext">Collinear</a>, which explains
+the SyMAP collinear sets.
+
+<p><ttl>Block#</ttl>
+<br>This is a single block number. Use it in conjunction with the chromosome pull-downs. For example,
+if you select Chr 1 from the first project, Chr 2 from a second project, and enter block=3, you will see
+hits in block 1.2.3 from the two project chromosomes you selected.
+
+<p><ttl>Collinear Set#</ttl>
+<br>All hits in a collinear set have the same Set#, which is the last number of the <ttx>Collinear</ttx> column.
+This can be used in conjunction with the chromosome pull-downs (as for blocks).
+
+<p><ttl>Hit#</ttl>
+<br>The hits are numbered for each chromosome pair, e.g. there will be a Hit#1 for every chromosome pair that
+has hits. The hit can align to multiple genes on either chromosome; but it will only return one hit pair for the Hit#.
+This can be used in conjunction with the chromosome pull-downs (as for blocks).
+
+<p><ttl>Gene#</ttl>
+<br>The Gene# column is formatted Chr.Gene#.suffix where the suffix may be blank; <i>only</i> enter
+the Gene#. This cannot be used with any other filters. The results of this query are a bit strange, but gets you close to the gene of interest:
+<ul>
+<li>It will return all genes from all species <i>that have a hit</i> with the <ttx>Gene#</ttx>.
+<li>It will return all hits to the <ttx>Gene#</ttx>.
+<li>If there are overlapping genes with the <ttx>Gene#</ttx> (e.g. 1.a, 1.b), it only returns one of the genes.
+<li>It will only return annotation for one side of the hit pair, the side that corresponds to the <ttx>Gene#</ttx>.
+</ul>
+<!--------------------------------------------------->
+<a id="pfs"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>4. Filter putative gene families (PgeneFs)</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+This is only computed if the <ttl>Computed PgeneF</ttl> is checked.
+Using the hits that pass the other filters, SyMAP constructs putative gene families (PgeneFs)
+spanning the selected species. This is done by grouping hits which overlap on at
+least one genome. <i>Note, if you have more than 6 species selected, this stage can take
+an hour or more.</i>
+<p>
+Each PgeneF is given a number, which is shown in the Query Results table (column name <ttx>PgeneF</ttx>).
+The size of the PgeneF is also shown (column <ttx>PgFSize</ttx>).
+<p>
+Filters using the PgeneF values:
+
+<p><ttl>Include/Exclude</ttl>
+<br>
+These filters permit searching for gene families shared by one group of species but not
+present in another.
+<p>
+If a species is checked to include, then the PgeneF will only be retained if it includes
+at least one hit which hits that species.
+<p>
+For &gt;2 species only: If a species is checked to exclude,
+then the PgeneF will be discarded if any of its hits are to that species.
+
+<p><ttl>For the included species:</ttl>
+
+<table class="tx">
+
+<tr><td style="vertical-align: text-top;"><ttl>No annotation to the included species</ttl>
+<td>Find PgeneFs which are not yet annotated. A PgeneF will be discarded if it is annotated on any of
+the species which are checked in the <ttl>Include</ttl> line.
+
+<tr><td style="vertical-align: text-top;"><ttl>Complete linkage if included species</ttl>
+<td>For &gt;2 species only: Require the PgeneF to be fully linked, i.e. for each pair of species A and B in the group,
+there must be a hit linking A to B.
+
+<tr><td style="vertical-align: text-top;"><ttl>At least one hit for each included species</ttl>
+<td>For &gt;2 species only: Only PgeneF hits will be shown if they have hits to the included species,
+although the PgeneF numbers will reflect groupings created using all hits.
+</table>
+<!---------------------------------------------------------------------->
+<!---------------------------------------------------------------------->
+<!---------------------------------------------------------------------->
+<a id="result"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Results</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<p>
+<a href="img/query_result.png"><img src="img/query_result.png" alt="query results" style="border: 1px solid black; width: 550px"></a>
+<p>Click <a href="img/query_single_result.png">Single Result Table</a> for example.
+
+<!----------------------------------------------------->
+<a id="tab"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Results Table</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The results table lists the hits (anchors) resulting from the query, where each hit connects
+two species.  If the query was for single genes, then each row represents one gene and shows data
+only for one species.
+
+<p>Specifics of rows of <ttx>Pair hits</ttx>:
+<ul>
+<li>If a hit aligns to
+two or more genes on one of the chromosomes, there will only be ONE row for the hit
+listing the gene with the greatest overlap with the hit.
+<li>A gene may be listed more than once if multiple hits align to it with a best overlap.
+</ul>
+<p>Specifics of columns:
+<ul>
+<li><ttx>Pair Hits</ttx>: The table contains columns for <i>all</i> of the selected
+species, but each hit only connects two species, and the other species columns are empty.
+<li><ttx>Single genes</ttx>: If the query specified <ttl>Single</ttl> genes, then each row represents one gene and shows data only
+for one species.
+<li><ttx>Gene#</ttx>: If the search is on a <ttl>Gene#</ttl>, the resulting hit for the gene will be shown, but only the species
+columns corresponding to the gene will be shown.
+</ul>
+
+<a id="col"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Columns</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+You can sort the columns by clicking on them, and rearrange them by dragging the header
+boxes. You can add/remove columns using the <ttb>Select Columns</ttb> button at the bottom. Following
+are the meanings of the columns:
+<p>The <a href="img/query_single_result.png">Single genes</a> tables only have the Gene Location and Annotation columns.
+<table class="tx">
+<tr>
+	<td colspan=3><i>General</i>
+<tr>
+	<td style="vertical-align: text-top;"><ttx>Row</ttx><td>&nbsp;
+	<td>Row number within the table
+<tr>
+	<td style="vertical-align: text-top;"><ttx>Block</ttx><td>&nbsp;
+	<td>Synteny block containing this hit (if any). The format is Cn.Cm.Block#, where
+		Cn and Cm are the chromosome numbers.
+<tr>
+	<td style="vertical-align: text-top; white-space: nowrap;"><ttx>Block Score</ttx><td>&nbsp;
+	<td>The number of hits which comprise the synteny block.
+<tr>
+	<td style="vertical-align: text-top;"><ttx>Collinear</ttx><td>&nbsp;
+	<td>Collinear set containing this hit (if any). The format is Cn.Cm.Size.Set# (e.g. 1.2.5.100; there are 5
+		adjacent gene hits in set# 100 on Chr1 to Chr2).
+<tr>
+	<td style="vertical-align: text-top;"><ttx>PgeneF</ttx><td>&nbsp;
+	<td>If <ttl>Compute PgeneF</ttl>: PgeneF number. All hits in a given PgeneF have the same number. Note that
+		the number is generated during the search and won't necessarily be the same
+		in a different search.
+<tr>
+	<td style="vertical-align: text-top;"><ttx>PgFSize</ttx><td>&nbsp;
+	<td>If <ttl>Compute PgeneF</ttl>: Size of the PgeneF which contains this hit. Sort on this column to view the
+		other rows with same PgeneF.
+<tr>
+	<td style="vertical-align: text-top;"><ttx>Hit#</ttx><td>&nbsp;
+	<td>The hit number, which are sequential numbers for the chromosome pair.
+	This number shown on the <ttp>Chromosome Explorer</ttp> when the mouse is over the hit line.
+<tr><td style="vertical-align: text-top;"><ttx>Hit %Id</ttx><td>&nbsp;
+	<td>Percent identity of the alignment.The value of the "Identity" column from the MUMmer file.
+<tr><td style="vertical-align: text-top;"><ttx>Hit %Sim</ttx><td>&nbsp;
+	<td>Percent similarity of the alignment (as determined by the BLOSUM scoring matrix).
+	The value of the "Similarity" column from the MUMmer file.
+<tr><td style="vertical-align: text-top;"><ttx>Hit #Subs</ttx><td>&nbsp;
+	<td>The number of sub-hits in a clustered hit.
+<tr><td style="vertical-align: text-top;"><ttx>Hit St</ttx><td>&nbsp;
+	<td>If "=", both hit ends are to the same strand; if "!=", they are to different strands.
+<tr>
+	<td colspan=3>
+		<i>Location: one row for each species</i>
+<tr>
+	<td style="vertical-align: text-top;"><ttx>Chr</ttx><td>&nbsp;
+	<td>Chromosome of the hit.
+
+<tr>
+	<td style="vertical-align: text-top; white-space: nowrap;"><ttx>Gstart/Gend/Gst</ttx><td>&nbsp;
+	<td>Start and end of the annotated gene. The <ttx>Gst</ttx> is the strand (+/-).
+<tr>
+	<td style="vertical-align: text-top;"><ttx>Gene#</ttx><td>&nbsp;
+	<td>The gene number is C.#.{a-z}. The C is the chromosome number.
+	The # is the sequential number along the chromosome.
+	If a run of genes overlap, they receive the
+	same gene number with different suffixes {a-z, a2-z2, etc}. This is shown on the <ttp>Chromosome Explorer</ttp>
+	"Annotation Description" and when the mouse hoovers over the gene.
+<tr>
+	<td style="vertical-align: text-top; white-space: nowrap;"><ttx>Hstart/Hend</ttx><td>&nbsp;
+	<td>Start and end of the hit region.
+		<br><u>Clustered hits</u>: Hits are clustered during anchor loading, so hit regions
+		are not necessarily single MUMmer alignments.
+<tr>
+	<td colspan=3><i>Annotation: one row for each species</i>
+<tr>
+	<td colspan=3>The keywords for the annotations of each species are listed;
+	they can be different for each species. The "All_anno" column shows all of the "keyword=attributes" joined together.
+	From the <tt>./symap</tt> interface, keywords can be limited using the <tt>Project Parameters</tt>;
+	<tt>annot_kw_mincont</tt> can be set any time and <tt>annot_keywords</tt>
+	must be set before the project is loaded.
+</table>
+
+<a id="save"></a>
+<h4>Save Columns</h4>
+The columns selection is saved in a file called <tt>.symap_saved_props</tt> in the user's home directory.
+If you only have one SyMAP database, there is no need to read the following:
+
+<p>Say the last database D<sub>n</sub> queried had N species,
+and the current database D<sub>m</sub> has M species, where D<sub>n</sub> and D<sub>m</sub> are different
+SyMAP databases:
+<ol>
+<li>If N=M: the <ttx>General</ttx> and <ttx>Location</ttx> columns will
+be set according to the previous settings, but the <ttx>Gene Annotation</ttx> columns may be wrong.
+<li>If N&gt;M or N&lt;M: the <ttx>General</ttx> will be according to the previous settings,
+all <tt>Location</tt> columns will be set like the first D<sub>n</sub> species, and no
+<tt>Gene Annotation</tt> columns will be set.
+</ol>
+This feature was implemented in v5.3.2.
+<a id="but"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Button functions</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<a href="img/query_buttons.png"><img src="img/query_buttons.png" alt="query buttons" style="border: 1px solid black; width: 600px"></a>
+<p><ttb>Show</ttb>: For the selected row, a popup will show all columns and associated information for the hit.
+The text in the popup can be copied.
+
+<table class="tx">
+<tr><td style="vertical-align: text-top;">
+<ttb>Align</ttb>:
+Select one or more rows. The sequences of the selected hit(s) are written out and a multiple alignment is created
+using MUSCLE (Edgar 2004 NAR:32). The figure on the right shows the MUSCLE alignment of
+two genes from B.rapa and genes from Cabbage and A.thal.
+<td>
+<a href="img/query_muscle.png"><img src="img/query_muscle.png" alt="query muscle" style="border: 1px solid black; width: 450px"></a>
+</table>
+
+<ttb>View 2D</ttb>: This displays the <ttp>2D</ttp> view for the selected entry. The following 3 views
+are provided using the drop-down (default <ttl>Region (kb)</ttl>).
+<table class="tx">
+<tr><td style="vertical-align: text-top;">
+
+<table class="ty">
+<tr><td style="white-space: nowrap;"><ttl>Region (kb)</ttl>
+<td>The selected hit is padded to each side by the amount indicated (default 50kb).
+The default filter is <ttl>Show all hits</ttl>.
+<tr><td style="white-space: nowrap;"><ttl>Synteny block</ttl>
+<td>The entire block for this hit will be shown. The default filter is <ttl>Show Block Hits</ttl>.
+<tr><td style="white-space: nowrap;"><ttl>Collinear set <td>If the hit is in a collinear set, the set will be shown.
+The default filter is <ttl>Highlight Collinear Set; Show Block and Set Hits</ttl>.
+</table>
+
+<td><a href="img/query_synteny.png"><img src="img/query_synteny.png" alt="query synteny" style="border: 1px solid black; width: 450px"></a>
+</table>
+After the initial display, the <ttp>2D</ttp> view can be changed as described in the
+<a href="UserGuide.html#control" class="ext" target="_blank">User Guide</a>.
+<p><ttl>High</ttl>: If this is selected, the selected hit is highlighted in red;
+the selected color is the same as the hover color, and can be changed
+in the <a href="UserGuide.html#wheel"  class="ext" target="_blank">Color Icon</a>.
+
+<p><u>Table (or selected):</u> One or more rows can be selected for the following exports,
+or if no rows are selected, the table is exported with either to the following formats:
+
+<p><ttb>Export CSV</ttb>:
+Saves the selected hits (or entire table) using the selected set of columns to a CSV format suitable for import into Excel.
+<p>
+<ttb>Save Fasta</ttb>: Sequences from the selected hits (or entire table) are written to a Fasta file. Both sides of each hit
+are written, using the start/end coordinates shown in the table.
+<br>NOTE: this is a very slow function and takes minutes if many rows are selected.
+
+
+<a id="stat"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Statistics</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+Statistics for the query results are shown at the bottom of the results table. They can be
+hidden by selecting <ttl>Hide Stats</ttl>.
+<p><a href="img/query_stats.png"><img src="img/query_stats.png" alt="result stats" style="border: 1px solid black; width: 450px"></a>
+
+<p>Most of the statistics are self-explanatory except the following:
+<p><ttx>Annotated</ttx> and <ttx>Genes</ttx>: The first is the number of hits that
+overlap one or more genes, where a gene can have multiple hits.
+The second is the number of Genes with at least one hit.
+<p><ttx>Regions</ttx>: This statistic
+is only shown if <ttl>Compute PgeneF</ttl> was checked, and it is
+the number of distinct regions covered on that species.
+
+
+<!---- END BODY -->
+	</td></tr>
+	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+
+</td></tr>
+</table>
+</body>
+</html>
+

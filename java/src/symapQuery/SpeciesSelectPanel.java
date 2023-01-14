@@ -1,8 +1,9 @@
 package symapQuery;
 
 /******************************************************
- * For LocalQueryPanel
- * Creates Species Chrom: From To for Step 1
+ * For QueryPanel: 
+ *  Load DB data and creates panel for all species
+ * 		Species Chr: From To 
  * 
  * CAS504 extend it to provide the project and group MYSQL indices
  */

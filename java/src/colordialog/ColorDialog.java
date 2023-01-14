@@ -19,8 +19,8 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
 import props.PersistentProps;
+import symap.SyMAP;
 import util.ErrorReport;
-//import util.HelpHandler;
 import util.PropertiesReader;
 
 /**
@@ -40,56 +40,97 @@ import util.PropertiesReader;
  * 
  * CAS517 made many changes for readability 
  * CAS520 properties reads in random order. So the alpha in colors.properties was replaced with order number
+ * CAS532 fixed bug of defaults not always working by reading pFiles instead of using getColor
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ColorDialog extends JDialog implements ActionListener {
 	private static final String TAB = "tab";
 	private static final String VAR_SEP = ":";
 
-	protected PersistentProps persistentProps = null;
-	protected PropertiesReader props = null;
+	private PersistentProps changedProps = null;
 	private String propName="SyMapColors";
 
 	private JTabbedPane tabbedPane;
 	private JButton okButton, cancelButton, defaultButton;
 	
+	private final String propsFile = "/properties/colors.properties"; // CAS521 moved from SyMAP.java
+	private String [] pFiles = {"annotation", "closeup","mapper", "sequence"}; // CAS532 add to save defaults
+	static private HashMap <String, Color> colorDefs = new HashMap <String, Color> (); // CAS532
+		
 	/**
-	 * @param props - java/src/properties/color.properties - static 
 	 * @param cookie - user/.symap_saved_props - changes to colors are stored here
 	 */
-	public ColorDialog(PropertiesReader props, PersistentProps cookie) {
+	public ColorDialog(PersistentProps cookie) {
 		super();
 
 		setModal(true);
 		setTitle("SyMAP Color Editor"); 
 
-		this.props = props;
-		if (cookie != null) persistentProps = cookie.copy(propName);
-
-		Dimension iconDim = new Dimension(35,20);
-
+		if (cookie != null) changedProps = cookie.copy(propName);
+		
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);
 
-		HashMap<String,String>  tabMap = 		new HashMap<String,String>(); // initial structure of tabs
-		Vector<ColorVariable>   cvarsVec = 		new Vector<ColorVariable>();  // displayname/colors
+		initDefaultProps(); 
+		initPropColors();
+		initCookieColors();
+		
+		okButton = new JButton("Ok");
+		cancelButton = new JButton("Cancel");
+		defaultButton = new JButton("Default");
+		JButton helpButton = util.Jhtml.createHelpIconUserSm(util.Jhtml.colorIcon); // CAS532 add
+
+		okButton.addActionListener(this);
+		cancelButton.addActionListener(this);
+		defaultButton.addActionListener(this);
+
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.add(okButton);
+		buttonPanel.add(cancelButton);
+		buttonPanel.add(defaultButton);
+		buttonPanel.add(helpButton);
+
+		getContentPane().setLayout(new BorderLayout());
+		getContentPane().add(tabbedPane,BorderLayout.CENTER);
+		getContentPane().add(buttonPanel,BorderLayout.SOUTH);
+
+		pack();
+		setLocationRelativeTo(null); // CAS520
+	}
+/* CAS512 depreciated, not called
+	public void show() {
+		 //Cancel other changes that may have happend if the user closes
+		 //the dialog some other way.
+		cancelAction();
+
+		super.show();
+	}
+*/
+	private void initPropColors() { // CAS532 moved from constructor and make separate method
+	try {
+		Dimension iconDim = new Dimension(35,20);
+
+		HashMap<String,String>  tabMap = 	new HashMap<String,String>(); // initial structure of tabs
+		Vector<ColorVariable>   cvarsVec = 	new Vector<ColorVariable>();  // displayname/colors
 		
 		String name, pvalue, dn, desc;
 		int ind, cInd, c2Ind;
 		int nOrder=0;
 		
 		// Read /properties file, symap lines - does not retain input order
-		Enumeration <?> propertyNames = props.propertyNames();
+		PropertiesReader defaultProps = new PropertiesReader(SyMAP.class.getResource(propsFile));
+		
+		Enumeration <?> propertyNames = defaultProps.propertyNames();
 		while (propertyNames.hasMoreElements()) {
 			name = (String)propertyNames.nextElement();
-			if (!name.startsWith("symap"))  continue;
+			if (!name.startsWith("symap"))  continue; // e.g. tab1=General
 			
-			pvalue = props.getString(name);
+			pvalue = defaultProps.getString(name);
 
 			ind = name.indexOf('@');
-			if (ind < 0) {					// e.g. symap.sequence.Sequence=Track
+			if (ind < 0) {				// e.g. symap.sequence.Sequence=Track
 				tabMap.put(name,pvalue);
 			}
-			else {							// e.g. symap.sequence.Sequence@unitColor=Ruler,The color of the ruler text
+			else {				// e.g. symap.sequence.Sequence@unitColor=Ruler,The color of the ruler text,1
 				cInd = pvalue.indexOf(',');
 				c2Ind = pvalue.lastIndexOf(',');
 
@@ -110,6 +151,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 				
 				String path = name.substring(0,ind);
 				String var =  name.substring(ind+1);
+				
 				cvarsVec.add(new ColorVariable(path,var,dn,desc,iconDim,nOrder));
 			}
 		}		
@@ -118,18 +160,18 @@ public class ColorDialog extends JDialog implements ActionListener {
 		// read tab lines, 					e.g. tab2=Sequence Track
 		HashMap<String,Integer> tabOrderMap = 	new HashMap<String,Integer>();
 		for (ind = 1; ; ind++) {
-			name = (String)props.getString(TAB+ind);
+			name = (String) defaultProps.getString(TAB+ind);
 			if (name == null) break;
 			name = name.trim();
 
-			tabOrderMap.put(name, ind); // CAS512 tabOrderMap.put(name,new Integer(ind));
+			tabOrderMap.put(name, ind); 
 		}
 		// Build tabs in order
 		Vector<ColorTab>    tabVec = 		new Vector<ColorTab>(); 
 		
 		for (ColorVariable colorVar : cvarsVec) {
 			name = (String)tabMap.get(colorVar.className);
-			ind = tabOrderMap.get(name) == null ? Integer.MAX_VALUE : ((Integer)tabOrderMap.get(name)).intValue();
+			ind = (tabOrderMap.get(name)==null) ? Integer.MAX_VALUE : tabOrderMap.get(name); // CAS532 was Integer conversion
 			
 			ColorTab colorTab = new ColorTab(name, ind);
 			
@@ -146,44 +188,36 @@ public class ColorDialog extends JDialog implements ActionListener {
 			tabbedPane.add(colorTab);
 			colorTab.setup();
 		}
-
-		okButton = new JButton("Ok");
-		cancelButton = new JButton("Cancel");
-		defaultButton = new JButton("Default");
-
-		okButton.addActionListener(this);
-		cancelButton.addActionListener(this);
-		defaultButton.addActionListener(this);
-
-		JPanel buttonPanel = new JPanel();
-		buttonPanel.add(okButton);
-		buttonPanel.add(cancelButton);
-		buttonPanel.add(defaultButton);
-
-		getContentPane().setLayout(new BorderLayout());
-		getContentPane().add(tabbedPane,BorderLayout.CENTER);
-		getContentPane().add(buttonPanel,BorderLayout.SOUTH);
-
-		pack();
-		setLocationRelativeTo(null); // CAS520
 	}
-/* CAS512 depreciated, not called
-	public void show() {
-		 //Cancel other changes that may have happend if the user closes
-		 //the dialog some other way.
-		cancelAction();
-
-		super.show();
+	catch (Exception e) {ErrorReport.print(e, "init prop colors");}
 	}
-*/
+	
+	private void initDefaultProps() { // CAS532 add
+	try {
+		for (String f : pFiles) {
+			String file = "/properties/" + f + ".properties";
+			PropertiesReader defProps = new PropertiesReader(SyMAP.class.getResource(file));
+			
+			Enumeration <?> propertyNames = defProps.propertyNames();
+			while (propertyNames.hasMoreElements()) {
+				String name = (String)propertyNames.nextElement();
+				String pvalue = defProps.getString(name);
+				if (pvalue.contains(",")) {
+					Color cvalue = defProps.getColor(name);
+					colorDefs.put(name, cvalue);
+				}
+			}
+		}
+	}
+	catch (Exception e) {ErrorReport.print(e, "init prop colors");}
+	}
 	/*************************************************************
 	 * SyMapColors=symap.mapper.Mapper.pseudoLineColorNN\=153,0,153,255
 	 */
-	public void setColors() {
-		String cookie = null;
-		if (persistentProps != null) cookie = persistentProps.getProp();
-		if (cookie == null || cookie.length() == 0) {return;}
-		
+	private void initCookieColors() {
+		String cookie = (changedProps != null) ? changedProps.getProp() : null;
+		if (cookie == null || cookie.length() == 0) return;
+			
 		String[] variables = cookie.split(VAR_SEP);
 		String cn, vn, c, cvars[];
 		int pind, eind, r, g, b, a;
@@ -208,7 +242,8 @@ public class ColorDialog extends JDialog implements ActionListener {
 						b = Integer.parseInt(cvars[2]); //new Integer(cvars[2]).intValue();
 						if (cvars.length == 4) a = Integer.parseInt(cvars[3]); //new Integer(cvars[3]).intValue();
 						else a = 255;
-						changeColor(new ColorVariable(cn,vn,new Color(r,g,b,a)));
+						
+						changeCookieColor(new ColorVariable(cn,vn,new Color(r,g,b,a)));
 					}
 				}
 			}
@@ -217,7 +252,16 @@ public class ColorDialog extends JDialog implements ActionListener {
 			}
 		}
 	}
-
+	private void changeCookieColor(ColorVariable cv) { // called from right above reading properties
+		Component[] comps = tabbedPane.getComponents();
+		for (int i = 0; i < comps.length; i++) {
+			if (comps[i] instanceof ColorTab) {
+				if (((ColorTab)comps[i]).changeColor(cv)) break;
+			}
+		}
+	}
+	
+	/****************************************************************/
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == okButton) {
 			okAction();
@@ -232,107 +276,90 @@ public class ColorDialog extends JDialog implements ActionListener {
 			defaultAction();
 		}
 	}
-
+	
 	protected void cancelAction() {
 		Component[] comps = tabbedPane.getComponents();
 		for (int i = 0; i < comps.length; i++) {
-			if (comps[i] instanceof ColorTab) {
+			if (comps[i] instanceof ColorTab) 
 				((ColorTab)comps[i]).cancel();
-			}
 		}
 	}
-
 	protected void okAction() {
 		Component[] comps = tabbedPane.getComponents();
 		for (int i = 0; i < comps.length; i++) {
-			if (comps[i] instanceof ColorTab) {
+			if (comps[i] instanceof ColorTab) 
 				((ColorTab)comps[i]).commit();
-			}
 		}
 	}
-
+	/**CAS532 changed to just set defaults for current tab 
+	   The getSelectedIndex() gets wrong index on Linux, which adds extra components at the beginning */
 	protected void defaultAction() {
-		Component[] comps = tabbedPane.getComponents();
-		for (int i = 0; i < comps.length; i++) {
-			if (comps[i] instanceof ColorTab) {
-				((ColorTab)comps[i]).setDefault();
-			}
+		try {
+			Component c = tabbedPane.getSelectedComponent();
+			((ColorTab) c).setDefault();
+		}
+		catch (Exception e) {
+			ErrorReport.print(e, "This feature does not work on this machine. Setting all defaults. (Please email symap@agcol.arizona.edu)");
+			Component[] comps = tabbedPane.getComponents();
+			for (int i = 0; i < comps.length; i++) 
+				if (comps[i] instanceof ColorTab) 
+					((ColorTab)comps[i]).setDefault();
 		}
 	}
 
-	private void changeColor(ColorVariable cv) {
+	/* write change to user.home/.symap_prop; called after any changed colors; called on Ok */
+	private void setCookie() {
+		if (changedProps == null) return;
+		
 		Component[] comps = tabbedPane.getComponents();
+		Vector<ColorVariable> v = new Vector<ColorVariable>();
 		for (int i = 0; i < comps.length; i++) {
 			if (comps[i] instanceof ColorTab) {
-				if (((ColorTab)comps[i]).changeColor(cv)) break;
+				v.addAll(((ColorTab)comps[i]).getChangedVariables());
 			}
 		}
-	}
-	/* write change to user.home/.symap_prop */
-	private void setCookie() {
-		if (persistentProps != null) {
-			Component[] comps = tabbedPane.getComponents();
-			Vector<ColorVariable> v = new Vector<ColorVariable>();
-			for (int i = 0; i < comps.length; i++) {
-				if (comps[i] instanceof ColorTab) {
-					v.addAll(((ColorTab)comps[i]).getChangedVariables());
-				}
-			}
-			Iterator<ColorVariable> iter = v.iterator();
-			StringBuffer cookie = new StringBuffer();
-			ColorVariable cv;
-			for (int i = v.size(); i > 0; i--) {
-				cv = iter.next();
-				cookie.append(cv.toString());
-				if (i > 1) cookie.append(VAR_SEP);
-			}
-			if (v.size() > 0) persistentProps.setProp(cookie.toString());
-			else persistentProps.deleteProp();
+		Iterator<ColorVariable> iter = v.iterator();
+		StringBuffer cookie = new StringBuffer();
+		ColorVariable cv;
+		for (int i = v.size(); i > 0; i--) {
+			cv = iter.next();
+			cookie.append(cv.toString());
+			if (i > 1) cookie.append(VAR_SEP);
 		}
+		if (v.size() > 0) 	changedProps.setProp(cookie.toString());
+		else 				changedProps.deleteProp();
 	}
 	/********************************************************
-	 * Writes to static color variables in the specified file
+	 * Writes to static color variables in the specified file; called by ColorVariable on change
+	 * CAS532 removed some dead code looking for variableName.indexOf('[') which never happens
 	 */
 	protected static boolean setColor(String className, String variableName, Color color) {
 		try {
-			Class c = Class.forName(className);
-			Field f;
-			int lind = variableName.indexOf('[');
-			if (lind < 0) {
-				f = c.getField(variableName);
-				f.set(null,color);
-			}
-			else {
-				// CAS512 int ind = new Integer(variableName.substring(lind+1,variableName.indexOf(']'))).intValue();		
-				int ind = Integer.parseInt(variableName.substring(lind+1,variableName.indexOf(']')));		
-				f = c.getField(variableName.substring(0,lind));
-				Vector colors = (Vector)f.get(null);
-				colors.set(ind, color);
-			}
+			Class <?> c = Class.forName(className);
+			Field f = c.getField(variableName);
+			f.set(null,color);
+			
 			return true;
 		}
 		catch (Exception e) {ErrorReport.print(e, "set color"); return false;}
 	}
 
-	protected static Color getColor(String className, String variableName) {
+	protected static Color getColor(String className, String variableName) {// replaced with getDefault
 		Color color = null;
 		try {
-			Class c = Class.forName(className);
-			Field f;
-			int lind = variableName.indexOf('[');
-			if (lind < 0) {
-				f = c.getField(variableName);
-				color = (Color)f.get(null);
-			}
-			else {
-				// CAS512 int ind = new Integer(variableName.substring(lind+1,variableName.indexOf(']'))).intValue();		
-				int ind = Integer.parseInt(variableName.substring(lind+1,variableName.indexOf(']')));		
-				f = c.getField(variableName.substring(0,lind));
-				Vector colors = (Vector)f.get(null);
-				color = (Color)colors.get(ind);
-			}
+			Class <?> c = Class.forName(className);
+			Field f = c.getField(variableName);
+			color = (Color)f.get(null);
 		}
 		catch (Exception e) {ErrorReport.print(e, "get color"); }
 		return color;
+	}
+	
+	protected static Color getDefault(String var) {
+		if (!colorDefs.containsKey(var)) {
+			System.out.println("Not found " + var);
+			return Color.black;
+		}
+		return colorDefs.get(var);
 	}
 }

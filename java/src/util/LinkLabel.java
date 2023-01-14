@@ -124,7 +124,7 @@ public class LinkLabel extends JLabel implements MouseListener {
     }
 
     public void mouseClicked(MouseEvent e) { // CAS507 remove check for Applet
-    	if (url != null) Utilities.tryOpenURL(url);
+    	if (url != null) util.Jhtml.tryOpenURL(url);
     }
     
     public void mouseReleased(MouseEvent e) { }

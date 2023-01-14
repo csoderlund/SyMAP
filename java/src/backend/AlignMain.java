@@ -48,7 +48,7 @@ public class AlignMain
 	private boolean error = false;
 	
 	private String resultDir, alignParams;
-	private final String usePrevious = "Use previous alignment";
+	private String usePrevious = "Use previous alignment";
 	
 	public AlignMain(UpdatePool pool, Logger log, 
 			String proj1Name, String proj2Name,
@@ -81,9 +81,9 @@ public class AlignMain
 		for (int i=0; i<2; i++) {
 			int idx = (i==0) ? proj1Idx : proj2Idx;
 			
-			String projName = 	Utils.getProjProp(idx, "display_name", pool);
-			String gmprop =   	Utils.getProjProp(idx, "mask_all_but_genes", pool);
-			String minsize = 	Utils.getProjProp(idx, "min_size", pool);
+			String projName = 	SyProps.getProjProp(idx, "display_name", pool);
+			String gmprop =   	SyProps.getProjProp(idx, "mask_all_but_genes", pool);
+			String minsize = 	SyProps.getProjProp(idx, "min_size", pool);
 				
 			gmprop =  (gmprop != null && gmprop.equals("1")) ? "Masking non-genic sequence; " : "";
 			minsize = (minsize != null && !minsize.contentEquals("100000")) ? "min-size " + minsize + "; " : "";
@@ -191,7 +191,7 @@ public class AlignMain
 		try {
 			String cat = (bDoCat) ? "" : "  (No Concat)";
 			log.msg("\nAligning " + proj1Name + " and " + proj2Name + cat);
-			Utils.setProjProp(proj1Idx,"concatenated","0",pool);
+			SyProps.setProjProp(proj1Idx,"concatenated","0",pool);
 			
 		/* create directories */
 			
@@ -309,7 +309,7 @@ public class AlignMain
 				return false;
 			}
 			
-			String gmprop = Utils.getProjProp(projIdx, "mask_all_but_genes", pool);
+			String gmprop = SyProps.getProjProp(projIdx, "mask_all_but_genes", pool);
 			boolean geneMask = (gmprop != null && gmprop.equals("1"));	
 			gmprop = (geneMask) ? "Masking non-genic sequence; " : "";
 			if (geneMask) log.msg(projName + ": " + gmprop);
@@ -498,6 +498,7 @@ public class AlignMain
 			if (done && n>0) {
 				log.msg("Warning: " + n + " alignment files exist - using existing files ...");
 				log.msg("   If not correct, remove " + resultDir + " and re-align.");
+				usePrevious += " " + Utils.getDateStr(f.lastModified()); 
 				return true;
 			}			
 			if (n>0) 
@@ -513,9 +514,6 @@ public class AlignMain
 		String prop = prog + "_args";
 		if (props.containsKey(prop)) {
 			return props.getProperty(prop);
-		}
-		if (prog.equals("blat")) { // why not getting blat_args prop?
-			return "-minScore=30 -minIdentity=70 -tileSize=10 -maxIntron=10000";
 		}
 		return "";
 	}

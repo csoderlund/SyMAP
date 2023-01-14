@@ -30,6 +30,7 @@ import javax.swing.JTextField;
 
 import symap.projectmanager.common.Project;
 import util.ErrorReport;
+import util.Jhtml;
 import util.Utilities;
 
 public class QueryPanel extends JPanel {
@@ -525,15 +526,7 @@ public class QueryPanel extends JPanel {
 				setClearFilters();
 			}
 		});
-		JButton btnHelp = new JButton("Help");
-		btnHelp.setAlignmentX(Component.RIGHT_ALIGNMENT);
-		btnHelp.setBackground(Utilities.HELP_PROMPT);
-		
-		btnHelp.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				Utilities.showHTMLPage(null, "SyMAP Query Help", "/html/QueryHelp.html");
-			}
-		});
+		JButton btnHelp = Jhtml.createHelpIconQuery(Jhtml.query);
 		
 		panel.add(btnClear);		panel.add(Box.createHorizontalStrut(170));
 		panel.add(btnExecute);		panel.add(Box.createHorizontalStrut(220));

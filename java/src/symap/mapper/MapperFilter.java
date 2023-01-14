@@ -21,6 +21,7 @@ import javax.swing.JSeparator;
 import symap.SyMAPConstants;
 import symap.drawingpanel.DrawingPanel;
 import symap.filter.Filter;
+import util.Jhtml;
 
 /**
  * HitFilter Interface: The Mapper filter dialog implementation.
@@ -79,7 +80,7 @@ public class MapperFilter extends Filter {
 	private volatile boolean nochange = false;
 
 	public MapperFilter(Frame owner, DrawingPanel dp, AbstractButton helpButton, Mapper map) {
-		super(owner,dp,"Hit Filter",helpButton);
+		super(owner,dp,"Hit Filter", util.Jhtml.hitfilter);
 		this.mapper = map;
 		this.hitfilter = mapper.getHitFilter();
 		

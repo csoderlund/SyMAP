@@ -179,7 +179,6 @@ public class Annotation {
 		if (type == GENE_INT)		return geneColor;
 		if (type == SYGENE_INT) 	return sygeneColor; 
 		if (type == GAP_INT)		return gapColor;
-		if (type == FRAMEWORK_INT)	return frameColor;
 		if (type == CENTROMERE_INT)	return centromereColor;
 
 		return Color.black; 
@@ -188,7 +187,6 @@ public class Annotation {
 	public int getType() {return type;}
 
 	public boolean isGene() 	  { return type == GENE_INT; }
-	public boolean isFramework()  { return type == FRAMEWORK_INT; }
 	public boolean isGap() 		  { return type == GAP_INT; }
 	public boolean isCentromere() { return type == CENTROMERE_INT; }
 	public boolean isExon() 	  { return type == EXON_INT; }   
@@ -395,16 +393,18 @@ public class Annotation {
 	/***********************************************************************
 	 * Values used in the database to represent annotation types.
 	 */
+	private static final float crossWidth= (float) 2.0; // the width of the line in the cross
+	
 	public static final String GENE 		= "gene";
-	public static final String FRAMEWORK 	= "frame";
+	public static final String FRAMEWORK 	= "frame"; // dead fpc
 	public static final String GAP 			= "gap";
 	public static final String CENTROMERE 	= "centromere";
 	public static final String EXON 		= "exon";  
-	public static final String SYGENE       = "sygene"; 
+	public static final String SYGENE       = "sygene"; // not used
 	public static final String HIT      	= "hit"; 
 	
 	public static final int GENE_INT 		= 0;
-	public static final int FRAMEWORK_INT 	= 1;
+	public static final int FRAMEWORK_INT 	= 1; // dead
 	public static final int GAP_INT 		= 2;
 	public static final int CENTROMERE_INT 	= 3;
 	public static final int EXON_INT 		= 4; 
@@ -422,20 +422,15 @@ public class Annotation {
 	}
 	// accessed and changed by ColorDialog - do not change
 	public static Color geneColor;
-	public static Color frameColor;
 	public static Color gapColor;
 	public static Color centromereColor;
 	public static Color exonColorP; 				// CAS517 add P/N
 	public static Color exonColorN;
-	public static Color sygeneColor = Color.yellow; // CAS503 sygene obsolete?
+	public static Color sygeneColor = Color.yellow; // CAS503 not used
 	
-	private static final float crossWidth; // the width of the line in the cross
 	static {
 		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/annotation.properties"));
-		crossWidth = (float) props.getDouble("crossWidth");
-		
 		geneColor = props.getColor("geneColor");
-		frameColor = props.getColor("frameColor");
 		gapColor = props.getColor("gapColor");
 		centromereColor = props.getColor("centromereColor");
 		exonColorP = props.getColor("exonColorP"); 

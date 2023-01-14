@@ -1,7 +1,5 @@
 package symapQuery;
-/**************************************
- * CAS504 this file replaced the previous approach to parsing the sql results
- */
+
 import java.sql.ResultSet;
 import java.util.Vector;
 import java.util.TreeSet;
@@ -14,11 +12,15 @@ import util.ErrorReport;
 import util.Utilities;
 
 /************************************************
- * create the Vector <DBdata> rowsFromDB
- * 
- * Note that each hit can appear in multiple records depending how many annotations it has. 
+ * create the Vector <DBdata> rowsFromDB; 
+ * TableDataPanel.buildTable calls the static method loadRowsFromDB, and passes in the result set.
+ *   buildTable then calls makeRow on each DBdata to put in order.
+ *   
+ * Each hit can appear in multiple records depending how many annotations it has. 
  * They are ordered by hit_idx so the identical hits will be consecutive.
- * The code groups them into a single record.
+ * The code merges each hit_idx  into a single row.
+ * 
+ * CAS504 this file replaced the previous approach to parsing the sql results
  */
 public class DBdata {
 	private static boolean debug = symap.SyMAP.DEBUG;

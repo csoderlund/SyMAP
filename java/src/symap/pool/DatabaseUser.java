@@ -647,7 +647,7 @@ public abstract class DatabaseUser implements SyMAPConstants {
 			}
 			
 			if (cntFlag>0) {
-				System.err.println("For details: see " + SyMAP.BASE_HELP_URL + "TroubleShoot.html");
+				System.err.println("For details: see " + util.Jhtml.TROUBLE_GUIDE_URL);
 			}
 			else System.err.println("  MySQL variables are okay ");
 			

@@ -70,6 +70,35 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 <tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view"> 2D gene placement</a>
 </table>
 
+<a id="v532"></a>
+<h3>Release: v5.3.2 (14-Jan-23)</h3>
+This release added <ttl><big>?</big></ttl> buttons for online help, and has some small <ttl>Query</ttl> and
+<ttl>2D Color Icon</ttl> updates.
+<ul>
+<li>Load and synteny: <ttl>View</ttl> will show the sequence and annotation paths used along with their date.
+If an existing alignment is used, then <ttl>Summary</ttl> will show the date that the alignment was run.
+<li><ttl>Chromosome Explorer 2D</ttl>
+<ul>
+<li>Color Icon
+<ul>
+<li><ttl>Default</ttl>: Changed from resetting all colors to just resetting the colors for the current tab.
+<li><ttl><big>?</big></ttl>: a new button that links to the online user guide for instructions.
+<li>Fixed an old bug where the <ttl>Default</ttl> did not always work until <ttl>viewSymap</ttl> was restarted.
+</ul>
+<li>The <ttl>Sequence</ttl> and <ttl>Hit filter</ttl>, and the <ttl>Selected</ttl> pull-down,
+have <ttl><big>?</big></ttl> links to their online help.
+</ul>
+<li><ttl>Queries</ttl>
+<ul>
+<li>The selected columns will be saved, as detailed in <a href="Query.html#save">Save Columns</a>.
+<li>The <ttl>Help</ttl> has been changed to <ttl><big>?</big></ttl> for online documentation.
+<li>A new html page has been created for the <ttl>Queries</ttl> at <a href="Query.html">Query</a>
+<li>The columns would sometimes be displayed in a weird order, which has been fixed.
+</ul>
+<li>Developers: Created <tt>utils/Jhtml.java</tt> that has all html links and code in one place. The <tt>/properties</tt>
+only contains colors and mainly those that can be changed by user.
+</ul>
+
 <a id="v531"></a>
 <h3>Release: v5.3.1 (6-Jan-23)</h3>
 Improvements to viewing the alignments of hits; see <a href="UserGuide.html#base">Align (Base View)</a> and

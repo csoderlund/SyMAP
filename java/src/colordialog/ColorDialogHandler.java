@@ -2,54 +2,45 @@ package colordialog;
 
 import java.util.Vector;
 import java.util.Iterator;
-
 import java.lang.ref.WeakReference;
 
-import util.PropertiesReader;
-//import util.HelpHandler;
 import props.PersistentProps;
-import symap.SyMAP;
 
 /**
  * Class ColorDialogHandler handles the showing and setting of colors of a color dialog box.  
  * @see ColorDialog and SyMAP.java (caller)
+ * 
+ * CAS532 moved properties stuff to ColorDialog and removed some dead code
  */
 public class ColorDialogHandler {
 
 	private Vector<WeakReference<ColorListener>> listeners;
 
-	private PersistentProps cookie;
-	private PropertiesReader props;
+	private PersistentProps cookie; // read from file
 	private ColorDialog dialog = null;
-	private final String propsFile = "/properties/colors.properties"; // CAS521 moved from SyMAP.java
 	
 	/**
-	 * @param cookie - in user's directory file .symap_saved_props
-	 * @param props - java/src/properties
+	 * Created in SyMAP.java at startup
+	 * cookie - in user's directory file .symap_saved_props
 	 */
 	public ColorDialogHandler(PersistentProps cookie)  { //CAS521 remove hasFPC
-		props = new PropertiesReader(SyMAP.class.getResource(propsFile));
-		listeners = new Vector<WeakReference<ColorListener>>();
-		this.cookie = cookie;
-		setColors(); // CAS521 moved from SyMAP.java to here
+		listeners = 	new Vector<WeakReference<ColorListener>>();
+		this.cookie  =  cookie;
+		setColors(); 									// CAS521 moved from SyMAP.java to here
 	}
-	
+	// frame.ControlPanel calls when color icon clicked
 	public void showX() {
-		if (dialog == null) {
-			dialog = new ColorDialog(props,cookie);
-			dialog.setColors();
-		}
-		dialog.setVisible(true); // CAS512 dialog.show();
+		if (dialog == null) dialog = new ColorDialog(cookie); 					
+		dialog.setVisible(true); 						// CAS512 dialog.show();
 		notifyListeners();
 	}
-	public void setColors() {
+	private void setColors() {
 		if (dialog != null) {
 			dialog.setVisible(false); 
 			dialog.defaultAction();
 			dialog.okAction();
 		}
-		dialog = new ColorDialog(props,cookie);
-		dialog.setColors();
+		dialog = new ColorDialog(cookie); 
 		notifyListeners();
 	}
 

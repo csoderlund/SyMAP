@@ -835,8 +835,8 @@ public class SyntenyMain
 		mLog.msg("Write final results");
 		ResultSet rs = null;
 		
-		String idField1 = Utils.getProjProp(mProj1.idx, "annot_id_field", pool);
-		String idField2 = Utils.getProjProp(mProj2.idx, "annot_id_field", pool);
+		String idField1 = SyProps.getProjProp(mProj1.idx, "annot_id_field", pool);
+		String idField2 = SyProps.getProjProp(mProj2.idx, "annot_id_field", pool);
 		if (idField1 == null) idField1="ID";
 		if (idField2 == null) idField2="ID";
 		

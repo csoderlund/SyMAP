@@ -2,13 +2,17 @@ package backend;
 
 /*******************************************
  * Params parameters for both project and synteny
+ * Project:  Loads the data/seq/<p>/params from Project Parameter window and called from SeqLoadMain
+ * Pair: saveNonDefaulted called from AlignProjs and ProjectManagerFrameCommon
+ * Written to proj_props in backend.Utils
+ * Written to pair_props from saveNonDefaults
  */
 import java.util.Enumeration;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.PrintWriter;
-
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 import java.util.HashMap;
@@ -25,14 +29,12 @@ public class SyProps extends PropertiesReader
 	private final String [] SYMBOLS = { 
 		"mindots", "topn", "merge_blocks", 
 		"do_synteny", "do_clustering", "no_overlapping_blocks", 
-		"blat_args", "nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only" };
+		"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only" };
 			
 	public SyProps() {
 		setDefaults();
 	}
-	// For Loads: Loads the data/fpc/<p>/params file and data/seq/<p>/params
-	//    params are written from the Project Parameter window.
-	//    Called from FPCLoadMain and SeqLoadMain
+	//  Called from SeqLoadMain
 	public SyProps(Logger log, File file)
 	{
 		if (log!=null)  log.msg("Read " + file);
@@ -76,7 +78,7 @@ public class SyProps extends PropertiesReader
 		}
 	}
 	// The only properties that appear changable are those in the 
-	// Parameter interfaces. Lots of DEAD stuff here.
+	// Parameter interfaces. Lots of DEAD stuff here. CAS532 cleaned up a little...
 	private void setDefaults()
 	{
 		// *********NOTE*********** 
@@ -99,13 +101,7 @@ public class SyProps extends PropertiesReader
 		setProperty("topn_and", 			"1");
 		setProperty("topn", 				"2"); 		
 		setProperty("topn_maxwindow", 	"100000");
-		setProperty("annot_in1",			""); 		// obsolete annotation types to include for proj 1
-		setProperty("annot_in2",			""); 		// obsolete annotation types to include for proj 2
-		setProperty("annot_out1",		""); 		// obsolete annotation types to exclude for proj 1
-		setProperty("annot_out2",		""); 		// obsolete annotation types to exclude for proj 2
-		setProperty("annot_mark1",		"gene"); 	// obsolete gene is assumed for everything
-		setProperty("annot_mark2",		"gene"); 	// obsolete 
-		setProperty("annot_bin",			"30000"); 	// bp size of annotation bin
+		setProperty("annot_bin",		"30000"); 	// bp size of annotation bin
 		setProperty("hit_bin",			"10000"); 	// # hits per hit bin
 		setProperty("use_genemask",	"0"); 		// use to enable gene-to-gene alignment, must reload project after setting
 		setProperty("gene_pad",			"1000");	// bp pad before start and after end for gene extraction
@@ -151,40 +147,39 @@ public class SyProps extends PropertiesReader
 		setProperty("maxgap1", "0");		
 		setProperty("maxgap2", "0");
 		
-		// Synteny - FPC only
-		setProperty("do_unanchored", 		"1");
-		setProperty("unanch_join_dist_bp", 	"300000");
-		setProperty("subblock_multiple", 	"3"); // for bes fixing
-		
 		// Testing
-		setProperty("checkctg1", "0");	
-		setProperty("checkgrp1", "0");	
-		setProperty("checkgrp2", "0");	
-		
-		setProperty("maxjoin_cb", 	"1000000");
 		setProperty("maxjoin_bp", 	"1000000000");
-		
 		setProperty("do_synteny", "1"); 
 	
 		/**********************************************************
-		 * Pseudo project parameters
+		 * Project parameters CAS532 all params here except those set in SeqLoadMain.run()
 		 **********************************************************/
+		setProperty("category", "Uncategorized");
 		setProperty("grp_type", 	"Chromosome");
-		setProperty("grp_sort", 	"alpha");
-		setProperty("grp_prefix", 	"Chr");
-		setProperty("grp_order", 	"");
-		setProperty("order_against", 	"");
-		setProperty("replace_bad_char", 	"0");
-		setProperty("min_size", 	"100000");
+		setProperty("description", "");
 		setProperty("min_display_size_bp", 	"0");
-		setProperty("annot_id_field","ID");
-		setProperty("annot_types", 	"");
-		setProperty("annot_files", 	"");
-		setProperty("sequence_files", 	"");
 		setProperty("annot_kw_mincount","50"); // CAS512 change default from 0
+		
+		setProperty("grp_prefix", 	"Chr");
+		setProperty("min_size", 	"100000");
 		setProperty("annot_keywords","");
-		setProperty("all_annot",    "0"); 
-		setProperty("mask_all_but_genes", "0"); 
+		setProperty("order_against", 	"");
+		setProperty("mask_all_but_genes", "0");
+		
+		setProperty("sequence_files", 	"");
+		setProperty("annot_files", 	"");
+		setProperty("annot_types", 	"");
+		
+		// not set by user
+		setProperty("proj_seq_dir", "");		// CAS532 add these 5; SeqLoadMain
+		setProperty("proj_seq_date", "");			
+		setProperty("proj_anno_dir", "");		// AnnotLoadMain
+		setProperty("proj_anno_date", "");		
+		setProperty("pair_align_date", "");		// AnchorsMain
+		
+		setProperty("grp_sort", 	"alpha"); 	// not set anywhere, but accessed
+		setProperty("grp_order", 	"");		// ditto
+		setProperty("annot_id_field","ID"); 	// this is not set, but could be useful
 	}
 	
 	private void fixProps() {
@@ -250,6 +245,7 @@ public class SyProps extends PropertiesReader
 		}
 	}
 	// For anything different from defaults, print to terminal, print to file, save to db
+	// Called from AlignProjs and ProjectManagerFrameCommon
 	public void saveNonDefaulted(Logger log, String dir, int idx1, int idx2, int pairIdx, String n1, String n2, UpdatePool pool) {
 		HashMap <String, String> chgVal = getNonDef();
 		
@@ -334,5 +330,47 @@ public class SyProps extends PropertiesReader
 			}
 			out.close();
 		} catch(Exception e) {ErrorReport.print(e, "Creating params file");}
+	}
+	/********************************************************************
+	 * CAS532 moved from Utils to here so that all props/params would be in this file
+	 * Add setPairProp
+	 */
+	/*****************************************************/
+	static String getProjProp(int projIdx, String name, UpdatePool conn)  {
+		try {
+			String value = null;
+			
+			String st = "SELECT value FROM proj_props WHERE proj_idx='" + projIdx + "' AND name='" + name +"'";
+			ResultSet rs = conn.executeQuery(st);
+			if (rs.next())
+				value = rs.getString("value");
+			rs.close();
+			
+			return value;
+		}
+		catch (Exception e) {ErrorReport.print(e, "Getting parameters from database"); return "";}
+	}
+	static void setProjProp(int projIdx, String name, String val, UpdatePool conn) throws Exception
+	{
+		conn.executeUpdate("delete from proj_props where name='" + name + "' and proj_idx=" + projIdx);
+		conn.executeUpdate("insert into proj_props (name, value, proj_idx) values('" + name + "','" + val + "','" + projIdx + "')");	
+	}
+	static void setPairProp(int pairIdx, int pidx1, int pidx2, String name, String val, UpdatePool conn) throws Exception 
+	{
+		conn.executeUpdate("delete from pair_props where name='" + name + "' and pair_idx=" + pairIdx);
+		
+		conn.executeUpdate("INSERT INTO pair_props VALUES ('" + 
+				pairIdx + "','" + pidx1 + "','" + pidx2 + "','" + name + "','" + val + "')");	
+	}
+	static int getPairIdx(int proj1Idx, int proj2Idx, UpdatePool conn) throws SQLException {
+		int idx = 0;
+		
+		String st = "SELECT idx FROM pairs WHERE proj1_idx='" + proj1Idx + "' AND proj2_idx='" + proj2Idx +"'";
+		ResultSet rs = conn.executeQuery(st);
+		if (rs.next())
+			idx = rs.getInt("idx");
+		rs.close();
+		
+		return idx;
 	}
 }

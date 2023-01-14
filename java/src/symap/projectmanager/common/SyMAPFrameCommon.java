@@ -50,7 +50,8 @@ import util.DatabaseReader;
 import util.ErrorReport;
 import util.LinkLabel;
 import util.Utilities;
-import circview.*;
+import util.Jhtml;
+import circview.CircFrame;
 import dotplot.DotPlotFrame;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
@@ -257,8 +258,8 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
         infoLink.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				Utilities.setCursorBusy(SyMAPFrameCommon.this, true);
-				if ( !Utilities.tryOpenURL(SyMAP.USER_GUIDE_URL) )
-					System.err.println("Error opening URL: " + SyMAP.USER_GUIDE_URL);
+				if ( !Jhtml.tryOpenURL(Jhtml.USER_GUIDE_URL) )
+					System.err.println("Error opening URL: " + Jhtml.USER_GUIDE_URL);
 				Utilities.setCursorBusy(SyMAPFrameCommon.this, false);
 			}
 		});

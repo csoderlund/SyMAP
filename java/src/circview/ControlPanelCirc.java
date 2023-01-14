@@ -15,7 +15,6 @@ import javax.swing.JLabel;
 import javax.swing.JSeparator;
 import javax.swing.JComboBox;
 
-import symap.SyMAP;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import util.ImageViewer;
@@ -64,14 +63,10 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 				"Save image" ,helpPanel,buttonListener,false, false);
 		helpButton = (JButton) Utilities.createButton(this,"/images/help.gif",
 				"Help: Online documentation." ,helpPanel,null,false, false);
-		helpButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String url = SyMAP.USER_GUIDE_URL + SyMAP.circle; // CAS510
-				if ( !Utilities.tryOpenURL(url) )
-					System.err.println("Error opening URL: " + url);
-			}
-		});
-	
+		
+		helpButton = util.Jhtml.createHelpIconUserLg(util.Jhtml.circle);
+		
+
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
 		setLayout(gbl);

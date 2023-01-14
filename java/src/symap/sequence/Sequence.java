@@ -1008,49 +1008,34 @@ public class Sequence extends Track {
 	public static final boolean DEFAULT_SHOW_GAP        = true;
 	public static final boolean DEFAULT_SHOW_CENTROMERE = true;
 	public static final boolean DEFAULT_SHOW_GENE_FULL  = true;  
-
+	
+	private static final Color border = Color.black; 
+	private static Color footerColor = Color.black;
+	private static Font footerFont = new Font("Ariel",0,10);
+	private static Font unitFont = new Font("Ariel",0,10);;
+	private static final Point2D defaultSequenceOffset = new Point2D.Double(20,40); 
+	private static final Point2D titleOffset = new Point2D.Double(1,3); 
+	private static int mouseWheelScrollFactor = 20;	
+	private static int mouseWheelZoomFactor = 4; 	
+	private static final double DEFAULT_WIDTH = 100.0;
+	private static final double SPACE_BETWEEN_RULES = 35.0;
+	private static final double RULER_LINE_LENGTH = 3.0;
+	private static final double MIN_DEFAULT_BP_PER_PIXEL = 1;
+	private static final double MAX_DEFAULT_BP_PER_PIXEL =1000000;
+	private static final double PADDING = 100; 
+	private static final double ANNOT_WIDTH = 15.0;
+	private static final String HOVER_MESSAGE =  
+					"\nHover on gene or right-click on gene for popup of full description.\n";
+	
 	public static Color unitColor;
 	public static Color bgColor1; 
 	public static Color bgColor2; 
 	
-	private static final Color border = Color.black; 
-	private static Color footerColor;
-	private static Font footerFont;
-	private static Font unitFont;
-	private static final Point2D defaultSequenceOffset = new Point2D.Double(20,40); 
-	private static final Point2D titleOffset = new Point2D.Double(1,3); 
-	private static int mouseWheelScrollFactor;	
-	private static int mouseWheelZoomFactor; 	
-	private static final double DEFAULT_WIDTH;
-	private static final double SPACE_BETWEEN_RULES;
-	private static final double RULER_LINE_LENGTH;
-	private static final double MIN_DEFAULT_BP_PER_PIXEL;
-	private static final double MAX_DEFAULT_BP_PER_PIXEL;
-	private static final double PADDING = 100; 
-	private static final double ANNOT_WIDTH;
-	private static final String HOVER_MESSAGE =  
-					"\nHover on gene or right-click on gene for popup of full description.\n";
-	
-	static {
+	static { // CAS532 remove everything except colors that can be set by user
 		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/sequence.properties"));
 	
 		unitColor                  = props.getColor("unitColor");
-		bgColor1            		 = props.getColor("bgColor1");
-		bgColor2            		 = props.getColor("bgColor2");
-	
-		footerColor                = props.getColor("footerColor");
-		footerFont                 = props.getFont("footerFont");
-		unitFont                   = props.getFont("unitFont");
-		DEFAULT_WIDTH              = props.getDouble("defaultWidth");
-		SPACE_BETWEEN_RULES        = props.getDouble("spaceBetweenRules");
-		RULER_LINE_LENGTH          = props.getDouble("rulerLineLength");
-		MIN_DEFAULT_BP_PER_PIXEL   = props.getDouble("minDefaultBpPerPixel");
-		MAX_DEFAULT_BP_PER_PIXEL   = props.getDouble("maxDefaultBpPerPixel");
-
-		ANNOT_WIDTH                = props.getDouble("annotWidth");
-		
-		mouseWheelScrollFactor	   = props.getInt("mouseWheelScrollFactor"); 	
-		mouseWheelZoomFactor	   = props.getInt("mouseWheelZoomFactor"); 		
+		bgColor1            	   = props.getColor("bgColor1");
+		bgColor2            	   = props.getColor("bgColor2");
 	}
-
 }

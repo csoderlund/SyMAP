@@ -506,7 +506,7 @@ public class PropertyFrame extends JDialog {
 	}
 	
 	private void showHelp() {
-		Utilities.showHTMLPage(this, "Project Parameter Help",  "/html/ProjParamHelp.html");	
+		util.Jhtml.showHTMLPage(this, "Project Parameter Help",  "/html/ProjParamHelp.html");	
 	}
 	private void closeDialog() {
 		dispose();

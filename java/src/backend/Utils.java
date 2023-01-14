@@ -2,6 +2,8 @@ package backend;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.TreeMap;
 import java.util.Vector;
@@ -58,6 +60,11 @@ public class Utils
 		int i = path.lastIndexOf("/");
 		if (i<=0) return path;
 		return path.substring(i);
+	}
+	public static String pathOnly(String path) {
+		int i = path.lastIndexOf("/");
+		if (i<=0) return path;
+		return path.substring(0, i);
 	}
 	public static BufferedReader openGZIP(String file) {
 		try {
@@ -117,6 +124,10 @@ public class Utils
 			d.createNewFile();
 		}
 		catch (Exception e) {ErrorReport.print(e, "Cannot write done file to " + dir);}
+	}
+	public static String getDateStr(long l) {
+		DateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
+		return sdf.format(l);
 	}
 	/*****************************************************
 	 * Hists stats
@@ -276,25 +287,6 @@ public class Utils
         return buffer;	
 	} 
 	/*****************************************************/
-	static String getProjProp(int projIdx, String name, UpdatePool conn)  {
-		try {
-			String value = null;
-			
-			String st = "SELECT value FROM proj_props WHERE proj_idx='" + projIdx + "' AND name='" + name +"'";
-			ResultSet rs = conn.executeQuery(st);
-			if (rs.next())
-				value = rs.getString("value");
-			rs.close();
-			
-			return value;
-		}
-		catch (Exception e) {ErrorReport.print(e, "Getting parameters from database"); return "";}
-	}
-	static void setProjProp(int projIdx, String name, String val, UpdatePool conn) throws Exception
-	{
-		conn.executeUpdate("delete from proj_props where name='" + name + "' and proj_idx=" + projIdx);
-		conn.executeUpdate("insert into proj_props (name, value, proj_idx) values('" + name + "','" + val + "','" + projIdx + "')");	
-	}
 	static int getPairIdx(int proj1Idx, int proj2Idx, UpdatePool conn) throws SQLException {
 		int idx = 0;
 		

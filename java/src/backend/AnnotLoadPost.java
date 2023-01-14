@@ -220,9 +220,10 @@ public class AnnotLoadPost {
 				if (cntBatch>5000) {
 					ps.executeBatch();
 					cntBatch=0;
-					System.err.print("   " + grp.getFullName() + " count " + exonUpdate + " exons for "  + geneUpdate + " genes    \r");
+					System.err.print("   " + grp.getFullName() + " count " + exonUpdate + " exons for "  + geneUpdate + " genes        \r");
 				}
 			}
+			System.err.print("                                                                         \r");
 			if (cntBatch>0) ps.executeBatch();
 			totexonUpdate += exonUpdate;
 			totgeneUpdate += geneUpdate;

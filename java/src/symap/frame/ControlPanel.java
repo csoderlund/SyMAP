@@ -17,11 +17,11 @@ import javax.swing.SwingConstants;
 
 import colordialog.ColorDialogHandler;
 import history.HistoryControl;
-import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.closeup.CloseUp;
 import symap.drawingpanel.DrawingPanel;
 import util.ImageViewer;
+import util.Jhtml;
 import util.Utilities;
 
 /**
@@ -79,16 +79,8 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		editColorsButton = (JButton) Utilities.createButton(this,"/images/colorchooser.gif",
 				"Colors: Edit the color settings",bar,buttonListener,false, false);
 		
-		JButton helpButton = (JButton) Utilities.createButton(this,"/images/help.gif",
-				"Help: Online documentation.", bar,null,false, false);
-		helpButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String url = SyMAP.USER_GUIDE_URL + SyMAP.align2d; // CAS510
-				if ( !Utilities.tryOpenURL(url) )
-					System.err.println("Error opening URL: " + url);
-			}
-		});
-
+		JButton helpButton = Jhtml.createHelpIconUserLg(Jhtml.align2d);
+		
 		GridBagLayout gridbag = new GridBagLayout();
 		GridBagConstraints constraints = new GridBagConstraints();
 		setLayout(gridbag);
@@ -163,24 +155,29 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		Component comp = (Component)event.getSource();
 		return comp.getName();
 	}
+	private static final String HELP					    = "? Online Help"; // CAS532 add
 	public static final String MOUSE_FUNCTION_SEQ 			= "Show Seq Options";
 	public static final String MOUSE_FUNCTION_CLOSEUP 		= "Align (Max " + CloseUp.MAX_CLOSEUP_BP + "bp)";
 	public static final String MOUSE_FUNCTION_ZOOM_SINGLE 	= "Zoom Selected Track";
 	public static final String MOUSE_FUNCTION_ZOOM_ALL 		= "Zoom All Tracks";
-	private JComboBox createMouseFunctionSelector(HelpBar bar) {
+	private JComboBox <String> createMouseFunctionSelector(HelpBar bar) {
 		String [] labels = { // CAS504 change order and add _SEQ
 				MOUSE_FUNCTION_ZOOM_ALL,
 				MOUSE_FUNCTION_ZOOM_SINGLE,
 				MOUSE_FUNCTION_CLOSEUP,
-				MOUSE_FUNCTION_SEQ
+				MOUSE_FUNCTION_SEQ,
+				HELP
 		};
 		JComboBox <String> comboMouseFunctions = new JComboBox <String> (labels); // CAS507 got rid on one warning
 		
 		comboMouseFunctions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-		        JComboBox <String> cb = (JComboBox) e.getSource();
-		        String item = (String)cb.getSelectedItem();
-		        dp.setMouseFunction(item);
+		        String item = (String) comboMouseFunctions.getSelectedItem();
+		        if (item.contentEquals(HELP)) {
+		        	Jhtml.onlineHelp(Jhtml.control);
+		        	comboMouseFunctions.setSelectedIndex(0);
+		        }
+		        else dp.setMouseFunction(item);
 			}
 		});
 		

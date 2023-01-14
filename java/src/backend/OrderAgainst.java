@@ -164,8 +164,8 @@ public class OrderAgainst {
 			}
 		}
 		
-		String ordPfx =  Utils.getProjProp(pDraft.idx,  "grp_prefix", pool);
-		String targPfx = Utils.getProjProp(pTarget.idx, "grp_prefix", pool);
+		String ordPfx =  SyProps.getProjProp(pDraft.idx,  "grp_prefix", pool);
+		String targPfx = SyProps.getProjProp(pTarget.idx, "grp_prefix", pool);
 
 		// Chr0; assign the ones that didn't align anywhere
 		Vector<Integer> allGrpIdx = new Vector<Integer>();
@@ -390,8 +390,8 @@ public class OrderAgainst {
 		if (!bSwitch) {pDraft = mProj1; pTarget = mProj2; }
 		else          {pDraft = mProj2; pTarget = mProj1; }
 		
-		String ordPfx =  Utils.getProjProp(pDraft.idx,  "grp_prefix", pool);
-		String targPfx = Utils.getProjProp(pTarget.idx, "grp_prefix", pool);
+		String ordPfx =  SyProps.getProjProp(pDraft.idx,  "grp_prefix", pool);
+		String targPfx = SyProps.getProjProp(pTarget.idx, "grp_prefix", pool);
 		String chr0 = targPfx + "UNK";
 		int chr0Idx = 99999;
 		

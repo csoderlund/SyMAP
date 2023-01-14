@@ -10,7 +10,8 @@
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
 	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
-	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
+	ttp  {font-family: Helvetica, monospace; font-size: 14px; font-weight: 600;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
 	.tx td {padding: 5px;}
 	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
@@ -64,7 +65,7 @@
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
 
-This guide is for the <ttb>viewSymap</ttb> user interface.
+This guide is for the <ttp>viewSymap</ttp> user interface.
 <ol>
 
 <li>For detailed information on installation, see
@@ -74,10 +75,11 @@ the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
 <li>Please send bug reports and suggestions to <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>.
 </ol>
 
-<h2>Contents</h2>
-The Dot Plot and Circle displays are available from various places.
+<b>Contents</b>
+<table>
+<tr><td style="width: 400px;">
 <ul>
-<li><a href="#mgr">Main Display</a>
+<li><a href="#mgr">Project Manager</a>
 <li><a href="#pair"><i>Displays for Selected Pair (Two-Genome Views)</i></a>
 	<ul>
 	<li><a href="#circle">Circle Display #1</a> - <font color=green>details of Circle</font> <!-- # ref in code -->
@@ -86,6 +88,7 @@ The Dot Plot and Circle displays are available from various places.
 	<li><a href="#sum">Summary</a>
 	</ul>
 
+<!-- # ref in code; see util.Jhtml.java, which has all links into this document -->
 <li><a href="#all"><i>Displays for All Projects (Multi-Genome Views)</i></a>
 	<ul>
 	<li><a href="#explorer">Chromosome Explorer  (Multi-chromosome)</a>
@@ -95,6 +98,7 @@ The Dot Plot and Circle displays are available from various places.
 		<li><a href="#alignment_display_2d">2D Display</a> <!-- # ref in code -->
 			<ul>
 			<li><a href="#view">View a region</a>
+			<li><a href="#control">Control Panel and Navigation</a> <!-- # ref in code -->
 			<li><a href="#sequence_filter">Filters</a>
 			<li><a href="#base">Align (Base View)</a>
 			</ul>
@@ -109,10 +113,32 @@ The Dot Plot and Circle displays are available from various places.
 <ul>
 <li><a href="Collinear.html" target="_blank" class="ext">Collinear Sets</a> <font color=green>New v5.2.0</font>
 <li><a href="Align.html" target="_blank" class="ext">Alignments</a> <font color=green>Improved v5.3.1</font>
+<li><a href="Query.html" target="_blank" class="ext">Queries</a>
 </ul>
 </ul>
+
+<td style="vertical-align: text-top;">
+<table>
+<tr><td><br><small><i>The Dot Plot and Circle are available from various places.</i></small>
+<tr><td>
+<small>Project Manager</small>
+<br><a href="./img/view1.png">
+		<img src="./img/view1.png" alt="Dots and Circle" title="Dots and Circle"  style="width: 340px; border:1px solid black"></a>
+<tr><td>&nbsp;
+<tr><td>&nbsp;
+<tr><td>
+<small>Chromosome Explorer</small>
+<br>
+<a href="./img/view2.png">
+	<img src="./img/view2.png" alt="Dots and Circle" title="Dots and Circle" style="width: 160px; border:1px solid black"></a>
+<tr><td>&nbsp;
+<tr><td>&nbsp;
+<tr><td><i><small>Click on any image in this document to see the closeup.</small></i>
+</table>
+</table>
+
 <h4>Citations</h4>
-The SyMAP User Agreement requires you cite one of the following articles
+The SyMAP User Agreement requires you to cite the following publication
 if you use SyMAP in a paper, poster, or presentation.
 <pre>
 	C. Soderlund, M. Bomhoff, and W. Nelson (2010)
@@ -120,28 +146,28 @@ if you use SyMAP in a paper, poster, or presentation.
 	Nucleic Acids Res 39(10):e68. <a href="https://academic.oup.com/nar/article/39/10/e68/1310457" target="_blank" class="ext">Link</a>
 </pre>
 <pre>
-	Also cite the MUMmer publication:
-	<a href="https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005944" target="_blank" class="ext">Marcais et al. 2018</a> or <a href="https://genomebiology.biomedcentral.com/articles/10.1186/gb-2004-5-2-r12"  target="_blank" class="ext">Kurtz et al. 2004.</a>
+	Also cite the MUMmer publication: <a href="https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005944" target="_blank" class="ext">Marcais et al. 2018</a> or <a href="https://genomebiology.biomedcentral.com/articles/10.1186/gb-2004-5-2-r12"  target="_blank" class="ext">Kurtz et al. 2004</a>
 </pre>
+
+<a id="term"></a>
+<h4>Terminology</h4>
+<table class="ty">
+<tr><td>Chromosome<td>For simplicity, sequence groups will be referred to as "Chromosome", though they may be scaffolds, linkage groups, etc.
+<tr><td style="white-space: nowrap;"><i>Hit (or anchor)</i><td>A matched sequence between two chromosomes.
+<tr><td style="white-space: nowrap;"><i>Paired genes</i><td>Two genes joined by a hit.
+<tr><td><i>Synteny block</i><td>An approximately-collinear sequences of anchors; a block can
+have intervening genes which do not align. There may be small inverted regions within
+a block.  By default, blocks have at least 7 anchors.
+<tr><td><i>Collinear set</i><td>A sequence of paired aligned genes with no intervening non-paired genes or inverted gene
+pairs. A set can consist of 2 or more genes. See <a href="Collinear.html" target="_blank" class="ext">details</a>.
+</table>
 
 <!---------------------------------------------------------->
 <a id="mgr"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h1>Main display</h1>
+<h1>Project Manager</h1>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-Terminology:
-<table class="ty">
-<tr><td>Chromosome<td>For simplicity, sequence groups will be referred to as "Chromosome", though they may be scaffolds, linkage groups, etc.
-<tr><td nowrap><i>Hit (or anchor)</i><td>A matched sequence between two chromosomes.
-<tr><td nowrap><i>Paired genes</i><td>Two genes joined by a hit.
-<tr><td><i>Synteny block</i><td>An approximately-collinear sequences of anchors. There may be small inverted regions within
-a block, or an inverted block may have small non-inverted regions.  By default, blocks have at least 7 anchors.
-<tr><td><i>Collinear set</i><td>A sequence of paired genes with no intervening non-paired genes. A set can consist
-of 2 or more anchors. See <a href="Collinear.html" target="_blank" class="ext">details</a>.
-</table>
 
-
-<p>
 The display in the image on the lower right is shown when the following is executed from the terminal:
 <pre>   ./viewSymap</pre>
 Is it also available from <tt>./symap</tt>, which will include the alignment commands.
@@ -158,7 +184,7 @@ a window with the loaded information about the project.
 <p>A check mark in the <ttb>Available Syntenies</ttb> table indicates pairs that have computed synteny that can be viewed.
 
 <td>
-<center><font color=green><i><big>Click on any image in this document to see the closeup.</big></i></font></center>
+<center><i>Click on any image in this document to see the closeup.</i></center>
 <br><a href="img/viewRosid.png"><img src="img/viewRosid.png"  alt="viewRosid" style="border: 1px solid black; width: 550px"></a>
 </table>
 <p><ttl>Display for Selected Pair</ttl>: By selecting a cell with synteny, these views are activated for the
@@ -322,7 +348,7 @@ The <ttb>Help</ttb> button on this view explains the different columns.
 <hr>
 <a id="all"></a>
 <h1>Displays for All Projects</h1>
-From the <a href="#mgr"> main SyMAP display</a>, select two or more projects, which will
+From the <a href="#mgr">Project Manager</a>, select two or more projects, which will
 activate the "Chromosome Explorer" and "Dotplot" buttons.
 
 <a id="explorer"></a>
@@ -549,7 +575,6 @@ clicking the hit wire between the first two tracks will show the hit information
 <!----------------------------------------------------------->
 
 <a id="control"></a>
-<a id="2dctrl"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h4>Control Panel and Navigation</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
@@ -598,20 +623,24 @@ not relevant if there are no clustered hits).
 </table>
 <p><ttl>Print, <big>?</big> Icons</ttl>  see <a href="#image">Help and Print</a>.
 
-<a id="wheel"></a>
-<p><ttl>Color Icon</ttl> opens a menu for customizing colors, as shown below. Click a color box, and a color chooser will popup
+<a id="wheel"></a> <!-- # ref in code -->
+<p><u><ttl>Color Icon</ttl></u>
+Opens a menu for customizing colors, as shown below.
+<ul>
+<li>Click a tab (e.g. Hit) to view the associated colors.
+<li>Click a color box and a color chooser will popup
 that lets you change the color; the change will be saved for subsequent SyMAP sessions.
-
+<li><ttl>Ok</ttl>: Instantiate all changes and close the menu.
+<li><ttl>Cancel</ttl>: Cancel any changes and close the menu.
+<li><ttl>Default</ttl>: For the selected tab, changes all colors back to the default colors.
+</ul>
 <table class="tx">
+<tr><td>
 <tr>
-
 <td><a href="img/2d-color.png"><img src="img/2d-color.png" alt="Track Colors" style="border: 1px solid black; width: 240px"></a>
 <td><a href="img/2d-color2.png"><img src="img/2d-color2.png" alt="Hit Colors" style="border: 1px solid black; width: 240px"></a>
 <td><a href="img/2d-color3.png"><img src="img/2d-color3.png" alt="Change Colors" style="border: 1px solid black; width: 180px"></a>
 </table>
-Known problem: If the <ttl>Default</ttl> button is selected, but the colors do not go back to the defaults,
-restart <ttb>viewSyMAP</ttb>.
-
 
 <p>
 <u>Additional navigation</u>:
@@ -634,8 +663,8 @@ restart <ttb>viewSyMAP</ttb>.
 </table>
 
 <!----------------------------------------------------------->
-<a id="sequence_filter"></a>
-<a id="sequence_track"></a>
+<a id="sequence_track"></a> <!-- # ref in fpc html -->
+<a id="sequence_filter"></a> <!-- # ref in code -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <h4>Sequence Filter</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
@@ -699,8 +728,7 @@ clicking in the light blue area of the chromosome rectangle.
 
 <!----------------------------------------------------------->
 <!------------->
-<a id="hitfilter"></a>
-<a id="hit"></a>
+<a id="hitfilter"></a> <!-- # ref in code -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <h4>Hit Filter</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
@@ -816,112 +844,20 @@ shows three genomes.
 <h2>Queries</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The query interface only works for multi-genome Seq-to-Seq synteny
-(i.e does not work for self-synteny).
-<p>
 To open the query interface, first select two or more sequence projects in the Project Manager.
-Then select the <ttb>Queries</ttb> button to open the interface:
-<p>
-<a href="img/query_oview.png"><img src="img/query_oview.png" alt="query_oview" style="border: 1px solid black; width: 500px"></a>
-<p>
-The <ttl>Instructions</ttl> window (above) lists the projects which were selected for querying. To set up a query, open the
-<ttl>Query Setup</ttl> window by clicking on its title in the left panel. This opens the window below:
+Then select the <ttb>Queries</ttb> button to open the interface, then select <ttl>Query Setup</ttl>.
 <p>
 <a id="qresults"></a>
 <a href="img/query_query.png"><img src="img/query_query.png" alt="query_query" style="border: 1px solid black; width: 550px"></a>
 <p>
 Set up the query and then select <ttb>Run Search</ttb> to execute it.
-The Query option are fully explained in the <ttb>Help</ttb> popup.
-The following describes two special features:
-<p><ttl>Collinear genes &gt;=N</ttl>
-<br>
-Return only hits which are part of  N aligning genes pairs having no intervening
-non-aligning genes. In contrast, synteny blocks allows intervening non-aligning genes.
-There is a column called "Collinear" that provides the number of adjacent aligning genes.
-
-<p><ttl>Filter putative gene families (PgeneFs)</ttl>
-<br>
-Using the hits that pass the hit filters, SyMAP constructs putative gene families (PgeneFs)
-spanning the selected species. This is done by grouping hits whose hit regions overlap on
-at least one genome. <i>Note, if you have more than 6 species selected, this stage can take
-an hour or more.</i>
-<p>
-Each PgeneF is given a number, which is shown in the Query Results table (column name "PgeneF").
-The size of the PgeneF is also shown (column "PgFSize").
-
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>Query Result Table</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
 <p>
 When the query is complete, the Query Results page opens showing the table of results:
 <p>
 <a href="img/query_result.png"><img src="img/query_result.png" alt="query results" style="border: 1px solid black; width: 550px"></a>
-
-<p>Oddities about the rows of hits:
-<ul>
-<li>If a hit aligns to
-two or more genes on one of the chromosomes, there will only be ONE row for the hit
-listing the gene with the greatest overlap with the hit.
-<li>A gene may be listed more than once if multiple hits align to it with a best overlap.
-</ul>
-<p>Oddities about the columns:
-<ul>
-<li>The table contains columns for <i>all</i> of the selected
-species, but each hit only connects two species, and the other species columns are empty.
-<li>If the query specified <ttl>Single</ttl> genes, then each row represents one gene and shows data only
-for one species.
-<li>If the search is on a <ttl>Gene#</ttl>, the resulting hit for the gene will be shown, but only the species
-columns corresponding to the gene will be shown.
-</ul>
-The columns can be sorted by clicking on the column name,
-and rearrange them by dragging the header boxes.
-
-<a id="qview"></a>
-<h4>Button functions</h4>
-<a href="img/query_buttons.png"><img src="img/query_buttons.png" alt="query buttons" style="border: 1px solid black; width: 600px"></a>
-<p><ttb>Show</ttb>: For the selected row, a popup will show all columns and associated information for the hit.
-The text in the popup can be copied.
-
-<table class="tx">
-<tr><td style="vertical-align: text-top;">
-<ttb>Align</ttb>:
-Select one or more rows. The sequences of the selected hit(s) are written out and a multiple alignment is created
-using MUSCLE (Edgar 2004 NAR:32). The figure on the right shows the MUSCLE alignment of
-two genes from B.rapa and genes from Cabbage and A.thal.
-<td>
-<a href="img/query_muscle.png"><img src="img/query_muscle.png" alt="query muscle" style="border: 1px solid black; width: 450px"></a>
-</table>
-
-<table class="tx">
-<tr><td style="vertical-align: text-top;">
-<ttb>View 2D</ttb>:
-Select a row. The hit is displayed in its 2-track view, either by
-<ol>
-<li>Region (kb) - uses the kb setting
-<li>Synteny Block
-<li>Collinear Set
-</ol>
-Note that these 3 views have different hit filters set, which is shown on the bottom when you hover in
-hit space. For example, in the image on the right, the lower left states "High Sets; Show Blocks, Sets"; i.e.
-all block and collinear hits are shown, and the collinear set is highlighted.
-<p><ttl>High</ttl>: If this is selected, the selected hit is highlighted in red;
-the selected color is the same as the hover color, and can be changed
-in the <a href="#wheel">Color Icon</a>.
-<td><a href="img/query_synteny.png"><img src="img/query_synteny.png" alt="query synteny" style="border: 1px solid black; width: 450px"></a>
-</table>
-
-<ttb>Export CSV</ttb>:
-Saves the selected hits (or entire table) using the selected set of columns to a CSV format suitable for import into Excel.
-<p>
-<ttb>Save as Fasta</ttb>: Sequences from the selected hits (or entire table) are written to a Fasta file. Both sides of each hit
-are written, using the start/end coordinates shown in the table.
-
-<h3>Results Table Columns</h3>
-You can add/remove columns using the <ttb>Select Columns</ttb> button at the bottom. This
-opens up a column-selection section. The columns are explain the the <ttb>Help</ttb> button on the table
-and on the lower part of the panel.
-
+<p>See <a href="Query.html" target="_blank" class="ext">Queries Details</a> for further information.
+<!-------------------------------------------------------------------->
+<hr>
 <a id="self"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>Self-synteny Display</h2>
@@ -960,9 +896,11 @@ Most displays shown have a <img src="img/print.png" alt="print" style="border: 1
 of Java. If it does not work, use the system "Screen Capture" (all the images in this
 document were created with screen capture, along with the images in the SyMAP publications).
 
-<p>The right
-icon brings up this web page, typically to the correct section (obviously, there needs
+<p>The right icon brings up this web page, typically to the correct section (obviously, there needs
 to be an internet connection).
+<p><ttl>Help</ttl> versus <ttl><big>?</big></ttl>: In SyMAP, a <ttl>Help</ttl> button
+will bring up a help panel (no internet necessary). A <ttl><big>?</big></ttl> requires an
+internet connection and will link to a region of this guide.
 
 <!-------------------------- this link is in SyMap--------------------------------------->
 <a id="alignment_display_3d"></a>

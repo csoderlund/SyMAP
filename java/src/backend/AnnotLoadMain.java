@@ -305,8 +305,10 @@ public class AnnotLoadMain {
 		// Files init
 			if (!props.containsKey("anno_files")) props.setProperty("anno_files", "");
 
-			if (props.getProperty("anno_files").equals(""))
-			{
+			String saveAnnoDir="";
+			long modDirDate=0;
+			
+			if (props.getProperty("anno_files").equals("")) {
 				// Check for annotation directory
 				String annotDir = 	projDir + Constants.seqAnnoDataDir;
 				log.msg("   Anno_files not specified - use " + annotDir);
@@ -321,6 +323,7 @@ public class AnnotLoadMain {
 					
 					annotFiles.add(f2);
 				}
+				saveAnnoDir=annotDir;
 			}
 			else {
 				String userFiles = props.getProperty("anno_files");
@@ -336,6 +339,7 @@ public class AnnotLoadMain {
 						log.msg("***Cannot find annotation file " + filstr);
 					}
 					else if (f.isDirectory()) {
+						saveAnnoDir=filstr;
 						for (File f2 : f.listFiles()) {
 							if (!f2.isFile() || f2.isHidden()) continue; // CAS511 macos add ._ files in tar
 							
@@ -343,9 +347,15 @@ public class AnnotLoadMain {
 						}
 					}
 					else {
+						saveAnnoDir=Utils.pathOnly(filstr);
 						annotFiles.add(f);
 					}
 				}
+			}
+			if (saveAnnoDir!="") {// CAS532 add these to print on View
+				modDirDate = new File(saveAnnoDir).lastModified();
+				SyProps.setProjProp(project.getIdx(),"proj_anno_date", Utils.getDateStr(modDirDate),pool);
+				SyProps.setProjProp(project.getIdx(),"proj_anno_dir", saveAnnoDir,pool);
 			}
 			
 			// Types: if no types specified then limit to types we render

@@ -147,7 +147,7 @@ public class SumFrame extends JFrame
 			btnHelp.setBackground(Utilities.HELP_PROMPT);
 			btnHelp.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
-					Utilities.showHTMLPage(null, "Summary Help", "/html/SummaryHelp.html");
+					util.Jhtml.showHTMLPage(null, "Summary Help", "/html/SummaryHelp.html");
 				}
 			});
 			

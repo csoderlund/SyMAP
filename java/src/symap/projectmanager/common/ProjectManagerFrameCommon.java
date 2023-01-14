@@ -2,6 +2,7 @@ package symap.projectmanager.common;
 
 /*****************************************************
  * The main frame and provides all the high level functions for it.
+ * This also has command line help and arguments
  * CAS508 moved the routines for alignment and synteny to AlignProjs, except for doAllPairs
  * CAS522 removed the last of FPC
  */
@@ -38,6 +39,7 @@ import util.ErrorCount;
 import util.DatabaseReader;
 import util.ErrorReport;
 import util.Utilities;
+import util.Jhtml;
 import util.ProgressDialog;
 import util.LinkLabel;
 import util.PropertiesReader;
@@ -63,14 +65,10 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	/************************************************/
 	private static final String HTML = "/html/ProjMgrInstruct.html";
 	private static final String WINDOW_TITLE = "SyMAP " + SyMAP.VERSION + " ";
-	private final String DB_ERROR_MSG = "A database error occurred, please see the Troubleshooting Guide at:\n" + SyMAP.TROUBLE_GUIDE_URL;	
+	private final String DB_ERROR_MSG = "A database error occurred, please see the Troubleshooting Guide at:\n" + Jhtml.TROUBLE_GUIDE_URL;	
 	private final String DATA_PATH = Constants.dataDir;
 	
-	private final int MIN_WIDTH = 900;
-	private final int MIN_HEIGHT = 600;
-	private final int MIN_CWIDTH = 900;
-	private final int MIN_CHEIGHT = 1000;
-
+	private final int MIN_WIDTH = 900, MIN_HEIGHT = 600, MIN_CWIDTH = 900, MIN_CHEIGHT = 1000;
 	private final int MIN_DIVIDER_LOC = 240;
 	
 	// If changed - don't make one a substring of another!!
@@ -147,13 +145,16 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		if (Utilities.hasCommandLineOption(args, "-r")) {
 			System.out.println("Usage:  ./viewSymap [options]");
 			System.out.println("  -c string : filename of config file (to use instead of symap.config)");
-			System.out.println("  -a string : do not trim 2D alignments");
+			System.out.println("  -a  		: do not trim 2D alignments");
+			System.out.println("  -v        : check MySQL for important settings");
+			System.out.println("  -h        : show help to terminal and exit");
 		}
 		else {
 			System.out.println("Usage:  ./symap [options]");
-			System.out.println("  -h        : show help to terminal and exit");
+			System.out.println("  -c string : filename of config file (to use instead of symap.config)");
+			System.out.println("  -a  		: do not trim 2D alignments");
 			System.out.println("  -v        : check MySQL for important settings");
-			System.out.println("  -c string	: filename of config file (to use instead of symap.config)");
+			System.out.println("  -h        : show help to terminal and exit");
 	
 			System.out.println("\nAlignment:");
 			System.out.println("  -p N		: number of CPUs to use");
@@ -324,8 +325,8 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 					DatabaseUser.checkVariables(dbReader.getConnection(), true); // CAS511 add
 			}
 			
-			Utilities.setResClass(this.getClass());
-			Utilities.setHelpParentFrame(this);
+			Jhtml.setResClass(this.getClass());
+			Jhtml.setHelpParentFrame(this);
 			
 			projPairs = loadProjectPairsFromDB();
 			projects =  loadProjectsFromDB();
@@ -420,7 +421,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		editorPane.addHyperlinkListener(new HyperlinkListener() {
 			public void hyperlinkUpdate(HyperlinkEvent e) {
 				if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-					if ( !Utilities.tryOpenURL(e.getURL().toString()) ) 
+					if ( !Jhtml.tryOpenURL(e.getURL().toString()) ) 
 						System.err.println("Error opening URL: " + e.getURL().toString());
 				}
 			}
@@ -863,9 +864,9 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			
 			JTextArea text1 = new JTextArea(
 					"Table Legend:\n"
-					+ TBL_DONE + " : synteny has been computed, ready to view.\n"
+					+ TBL_DONE 	+ " : synteny has been computed, ready to view.\n"
 					+ TBL_ADONE + " : alignment is done, synteny needs to be computed.\n"
-					+ "n/a : the projects cannot be aligned."
+					+ TBL_NA 	+ " : the projects cannot be aligned."
 					,4,1);
 			text1.setBackground( getBackground() );
 			text1.setEditable(false);
@@ -1127,10 +1128,10 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		}
 	};
 	private void showNewProjectHelp(){
-		Utilities.showHTMLPage(addProjectPanel,"New Project Help", "/html/NewProjHelp.html");	
+		Jhtml.showHTMLPage(addProjectPanel,"New Project Help", "/html/NewProjHelp.html");	
 	}
 	private void showHelp()  {
-		Utilities.showHTMLPage(null,"Project Manager Help", "/html/ProjManagerHelp.html");
+		Jhtml.showHTMLPage(null,"Project Manager Help", "/html/ProjManagerHelp.html");
 	}		
 
 	private MouseListener doLoad = new MouseAdapter() {
@@ -1248,12 +1249,14 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	
 	private void showQuery() {
 		Utilities.setCursorBusy(this, true);
-		try {
-			SyMAPQueryFrame qFrame = new SyMAPQueryFrame(DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_SYMAP_3D, dbReader), false);
+		try { // CAS532 send project vector 
+			Vector <Project> pVec = new Vector <Project> ();
 			for (Project p : availProjects) {
 				if(p.getStatus() == Project.STATUS_IN_DB)
-					qFrame.addProject( p );
+					pVec.add( p );
 			}
+			DatabaseReader dr = DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_SYMAP_3D, dbReader);
+			SyMAPQueryFrame qFrame = new SyMAPQueryFrame(dr, pVec);
 			qFrame.build();
 			qFrame.setVisible(true);
 		} 
@@ -2359,7 +2362,23 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	    	r++; c=0;
 	    }
 	    info += Utilities.makeTable(nCol, nRow, fields, justify, rows);
+	    
+	    // CAS532 add the following 
+	    String file="", fdate=null;
+	    String sql = "SELECT value FROM proj_props WHERE proj_idx='" +  p.getID();
+	    rs = pool.executeQuery(sql + "' AND name='proj_seq_dir'");
+		file = (rs.next()) ? rs.getString(1) : "";
+		rs = pool.executeQuery(sql + "' AND name='proj_seq_date'");
+		fdate = (rs.next()) ? rs.getString(1) : "";
+		if (file!="") info += "\nSeq:  " + file + "\nDate: " + fdate + "\n";
 		
+		file="";
+		rs = pool.executeQuery(sql + "' AND name='proj_anno_dir'");
+		file = (rs.next()) ? rs.getString(1) : "";
+		rs = pool.executeQuery(sql + "' AND name='proj_anno_date'");
+		fdate = (rs.next()) ? rs.getString(1) : "";
+		if (file!="") info += "\nAnno: " + file + "\nDate: " + fdate + "\n";
+			
 		return info;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Load Project for view"); return "Error";}

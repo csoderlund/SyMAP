@@ -3,21 +3,14 @@ package symapQuery;
 /*************************************************
  * The columns for the query result table
  * Added in TableDataPanel. Database query in DBdata
- * 
- * CAS521 
- * .symap_saved_props
- * SyMapColumns_gen=xxxx
- * SyMapColumns_abbrev=xxxx
  */
 import java.util.Iterator;
 import java.util.Vector;
 
-import util.ErrorReport;
-
 public class FieldData {
  	// type is all Integer, included Block, see Column Comparator, which sorts it correctly
 	// leave Q.rowCol for placement, the actual row is computed in DBdata (CAS514 HitIdx->Hit#, #Gene->Gene#)
-	// TableDataPanel.createGeneralSelectPanel expects 4 hit columns and the Pg prefix
+	// TableDataPanel.createGeneralSelectPanel expects 5 hit columns and the Pg prefix
 	private static final String [] GENERAL_COLUMNS =	 
 		{Q.rowCol, Q.blockCol, "Block\nScore",Q.runCol,"PgeneF", "PgFSize",
 		Q.hitCol,    "Hit\n%Id", "Hit\n%Sim","Hit\n#Sub", "Hit\nSt"}; // CAS516 add these 4; CAS520 add st
@@ -51,7 +44,7 @@ public class FieldData {
 		{String.class, Integer.class, Integer.class,Integer.class, String.class, String.class, Integer.class, Integer.class,Integer.class};
 	
 	private static final boolean []    SPECIES_COLUMN_DEF =  
-		{false, false, false, false , false, false, false, false, false};
+		{false, false, false, false , false, true, false, false, false};
 	
 	private static String [] SPECIES_COLUMN_DESC = {
 		"Chr: Chromosome (or Scaffold, etc)", 
@@ -70,16 +63,17 @@ public class FieldData {
 	public static String [] getGeneralColHead() 	 {return GENERAL_COLUMNS; }
 	public static Class <?> [] getGeneralColType() 	 {return GENERAL_TYPES; }
 	public static String [] getGeneralColDesc() 	 {return GENERAL_COLUMN_DESC; }
+	public static boolean [] getGeneralColDefaults() 	{return GENERAL_COLUMN_DEF; }
 	
 	public static String [] getSpeciesColHead() 	 {return SPECIES_COLUMNS; }
 	public static Class <?> [] getSpeciesColType() 	 {return SPECIES_TYPES; }
 	public static String [] getSpeciesColDesc() 	 {return SPECIES_COLUMN_DESC; }
-	
+	public static boolean [] getSpeciesColDefaults() 	{return SPECIES_COLUMN_DEF; }
 	
 	// XXX If change this, change number in Q.java, as they are the numeric index into ResultSet
 	// Columns loaded from database, do not correspond to query table columns
 	private static int singleGenFields = 1; // CAS519 general headings
-	private static int singleSpFields = 6; // MySQL columns loaded and displayed for single 
+	private static int singleSpFields = 6;  // MySQL columns loaded and displayed for single 
 	
 	public static int getSpColumnCount(boolean isSingle) { // CAS519
 		if (isSingle) return singleSpFields;
@@ -125,7 +119,6 @@ public class FieldData {
 		fd.addField(Integer.class,Q.PH, "annot1_idx",Q.ANNOT1IDX,"Index of 1st anno");
 		fd.addField(Integer.class,Q.PH, "annot2_idx",Q.ANNOT2IDX,"Index of 2nd anno");
 		
-		// 
 		// The MySQL LEFT JOIN joins two tables and fetches rows based on a condition, which is matching in both the tables and 
 		// the unmatched rows will also be available from the table written before the JOIN clause.
 		fd.addLeftJoin("pseudo_hits_annot", "PH.idx = PHA.hit_idx", 	 Q.PHA);
@@ -135,36 +128,7 @@ public class FieldData {
 
 		return fd;
 	}
-	/**********************************************************
-	 * Read/Write persistentProps.columns
-	 */
-	// CAS521 add non-static columns so can read persistentProps to change
-	static private String propName="SyMapColumns";
-	static private boolean [] generalDefaults;
-	static private boolean [][] speciesDefaults;
-	static private Vector <boolean []> annoDefaults = new Vector <boolean []> ();
 	
-	// to be finished for next relase
-	public static boolean [] getGeneralColDefaults() {return GENERAL_COLUMN_DEF; }
-	public static boolean [] getSpeciesColDefaults() {return SPECIES_COLUMN_DEF; }
-	public static boolean [] getAnnoColDefaults(int x) {return null; }
-	
-	//public static boolean [] getGeneralColDefaults() {return generalDefaults; }
-	//public static boolean [] getSpeciesColDefaults(int x) {return speciesDefaults[x]; }
-	//public static boolean [] getAnnoColDefaults(int x) {return annoDefaults.get(x); }
-	
-	public static void setColumnDefaults(String [] abbrev) {
-	try {
-		
-	}
-	catch (Exception e) {ErrorReport.print(e, "set column defaults");}
-	}
-	public static void saveColumnDefaults(String [] abbrev, boolean [] defs) {
-	try {
-		
-	}
-	catch (Exception e) {ErrorReport.print(e, "save column defaults");}
-	}         
 	//****************************************************************************
 	//* Constructors
 	//****************************************************************************
@@ -259,24 +223,21 @@ public class FieldData {
 
 	private class FieldItem {
 		public FieldItem(Class<?> type, String description) {
-			cType = type;
+			// cType = type;
 			strDescription = description;
  		}
 
 		public void setQuery(String table, String field, int num) {
 			strDBTable = table;
 			strDBField = field;
-			dbNum = num;
+			// dbNum = num; index into rs.get; see Q.java
 		}
 		public String getDBTable() { return strDBTable; }
 		public String getDBFieldName() { return strDBField; }
 		public String getDescription() { return strDescription; }
-		public int getOrder() { return dbNum; }
 		
-		private Class<?> cType = null; 	//Data type for the column
 		private String strDBTable; 		//Source table for the value
 		private String strDBField; 		//Source field in the named DB table
 		private String strDescription;	//Description of the field
-		private int dbNum=0;				// index into rs.get; see Q.java
 	}
 }

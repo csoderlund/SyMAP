@@ -191,6 +191,10 @@ public class AnchorsMain
 		
 			Utils.uploadStats(pool, pairIdx, p1.idx, p2.idx);
 			
+			// CAS532 add for Pair Summary with 'use existing files'
+			long modDirDate = new File(resultDir).lastModified();
+			SyProps.setPairProp(pairIdx, p1.getIdx(), p2.getIdx(), "pair_align_date", Utils.getDateStr(modDirDate),pool);
+			
 			// CAS517 move from SyntenyMain - CAS520 moved back to SyntenyMain, so hits# are block based
 			
 			pool.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + p1.getIdx());

@@ -10,8 +10,9 @@ import util.Utilities;
 
 /*************************************************************
  * This reads/writes from user.dir/.symap_saved_props
- * ColorDialog.setColors() getProp; setCookie() setProp and deleteProp; name=SyMapColors
- * util.SizedJFrame and SyMAPframe, name=SyMAPDisplayPosition
+ *   ColorDialog.setColors() getProp; setCookie() setProp and deleteProp; name=SyMapColors
+ *   symapQuery.FieldData setColumnDefaults(), saveColumnDefaults(); name=SyMapColumns1 and name=SyMapColumns2
+ *   util.SizedJFrame and SyMAPframe, name=SyMAPDisplayPosition
  * 
  * util.PropertiesReader reads from /properties
  * 

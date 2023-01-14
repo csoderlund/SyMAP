@@ -23,9 +23,9 @@ import javax.swing.DefaultBoundedRangeModel;
 import java.util.Observer;
 import java.util.Observable;
 
-import symap.SyMAP;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
+import util.ImageViewer;
 import util.Utilities;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
@@ -46,7 +46,7 @@ public class ControlPanel extends JPanel implements Observer,
     private JSlider hitSizeSlider;
     private JCheckBox scaleCheckbox; 	
     private JLabel referenceLabel;      
-    private JComboBox referenceSelector;
+    private JComboBox <Project> referenceSelector;
     
     public ControlPanel(Data d, Plot p, HelpBar hb) {
 		this.data = d;
@@ -64,17 +64,8 @@ public class ControlPanel extends JPanel implements Observer,
 		hitSizeSlider.setName("Dot Size: Change dot size."); 
 		hb.addHelpListener(hitSizeSlider,this); 			
 	
-		helpButton = (JButton) Utilities.createButton(this,"/images/help.gif",
-				"Help: Online documentation.", hb,null,false, false);
-
-		helpButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String url = SyMAP.USER_GUIDE_URL + SyMAP.dotplot; // CAS510
-				if ( !Utilities.tryOpenURL(url) )
-					System.err.println("Error opening URL: " + url);
-			}
-		});
-	
+		helpButton = util.Jhtml.createHelpIconUserLg(util.Jhtml.dotplot);
+		
 		homeButton       = (JButton)  Utilities.createButton(this,"/images/home.gif",
 				"Home: Go back to full view.",hb,buttonListener,false, data.isZoomed());
 		filterButton     = (JButton)  Utilities.createButton(this,"Filters",
@@ -89,7 +80,7 @@ public class ControlPanel extends JPanel implements Observer,
 				"Scale: Draw to BP scale.",hb,buttonListener,true, false); 
 		scaleCheckbox.setBackground(getBackground()); 
 		
-		referenceSelector = new JComboBox();
+		referenceSelector = new JComboBox <Project> ();
 		referenceSelector.addActionListener(buttonListener);
 		referenceSelector.setName("Reference: Change reference (x-axis) project.");
 		hb.addHelpListener(referenceSelector,this);
@@ -129,7 +120,7 @@ public class ControlPanel extends JPanel implements Observer,
 			    }
 			    else if (src == minusButton)      data.factorZoom(0.95);
 			    else if (src == plusButton)       data.factorZoom(1/0.95);
-			    else if (src == showImageButton)  data.getSyMAP().getImageViewer().showImage(plot);
+			    else if (src == showImageButton)  ImageViewer.showImage(plot); // CAS532 data.getSyMAP().getImageViewer().showImage(plot);
 			    else if (src == scaleCheckbox) { 
 				    	if (scaleCheckbox.isSelected())
 				    		data.setScale(true);

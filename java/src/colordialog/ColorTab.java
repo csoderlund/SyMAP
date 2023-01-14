@@ -8,7 +8,7 @@ import java.util.Vector;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 class ColorTab extends JPanel implements Comparable<ColorTab> {
-	private Vector<ColorVariable> comps;
+	private Vector<ColorVariable> cvVec;
 	private int nRows=3;
 	private int order;
 
@@ -16,7 +16,7 @@ class ColorTab extends JPanel implements Comparable<ColorTab> {
 		super(new BorderLayout());
 		
 		setName(tabName);
-		comps = new Vector<ColorVariable>();
+		cvVec = new Vector<ColorVariable>();
 		this.order = order;
 	}
 	
@@ -25,13 +25,13 @@ class ColorTab extends JPanel implements Comparable<ColorTab> {
 	}
 
 	public void addVariable(ColorVariable cv) {
-		comps.add(cv);
+		cvVec.add(cv);
 	}
 
 	public void setup() {
 		removeAll();
 
-		int nCells = comps.size();
+		int nCells = cvVec.size();
 		int nCols = nCells / nRows;
 		if (nCells % nRows != 0) nCols++;
 		
@@ -40,8 +40,8 @@ class ColorTab extends JPanel implements Comparable<ColorTab> {
 		// CAS520 add order - this assumes the order# are correctly entered in colors.properties 1-size
 		ColorVariable [] orderComps = new ColorVariable [nCells];
 		for (int i=0; i<nCells; i++) {
-			int j = comps.get(i).getOrder();
-			orderComps[j-1] =  comps.get(i);
+			int j = cvVec.get(i).getOrder();
+			orderComps[j-1] =  cvVec.get(i);
 		}
 		
 		ColorVariable cv;
@@ -69,32 +69,34 @@ class ColorTab extends JPanel implements Comparable<ColorTab> {
 	}
 
 	public void cancel() {
-		for (ColorVariable cv : comps)
+		for (ColorVariable cv : cvVec)
 			cv.cancelColorChange();
 	}
 
-	public void commit() {
-		for (ColorVariable cv : comps)
+	public void commit() { // ok
+		for (ColorVariable cv : cvVec)
 			cv.commitColorChange();
 	}
 
+	public void setDefault() {
+		for (ColorVariable cv : cvVec) 
+			cv.setDefaultColor();
+	
+	}
+	// ColorDialog.changeCookieColor
 	public boolean changeColor(ColorVariable cv) {
-		int ind = comps.indexOf(cv);
+		int ind = cvVec.indexOf(cv);
 		if (ind < 0) return false;
-		((ColorVariable)comps.get(ind)).commitColorChange(cv);
+
+		((ColorVariable)cvVec.get(ind)).commitColorChange(cv);
 		return true;
 	}
-
+	// setCookie - find cv's whose color diffs from default
 	public Vector<ColorVariable> getChangedVariables() {
 		Vector<ColorVariable> v = new Vector<ColorVariable>();
-		for (ColorVariable cv : comps)
+		for (ColorVariable cv : cvVec)
 			if (!cv.isDefault()) v.add(cv);
 		return v;
-	}
-
-	public void setDefault() {
-		for (ColorVariable cv : comps)
-			cv.setDefaultColor();
 	}
 
 	public boolean equals(Object obj) {

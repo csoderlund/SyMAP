@@ -17,53 +17,39 @@ import symap.closeup.CloseUp;
 import symapQuery.TableDataPanel;
 
 /**
- * Class SyMAP sets up the Explorer; it is used to acquire and configure the desired objects.
- * common.SyMAPFrameCommon.regenerate2DView
- * dotplot.Data
- * blockview.Block2Frame
- * symapQuery.tableDataPanel.showSynteny
- * 
- * Note: it makes no sense why this is under symap and not under common. Plus why constants are here...
- * 
- * The properties file (java/src/properties/symap.properties) needs to 
- * be properly set along with all of the corresponding .properties files.
- * CAS517 removed some dead code
+ * Class SyMAP sets up the Explorer for:
+ * 	common.SyMAPFrameCommon.regenerate2DView
+ * 	dotplot.Data
+ * 	blockview.Block2Frame
+ * 	symapQuery.tableDataPanel.showSynteny
+ *	CAS532 moved HTML links to Jhtml
  */
 public class SyMAP {
-	public static final String 	VERSION = "v5.3.1"; // pre-v530 code can not read post-dbs
-	public static final String 	DATE = " (6-Jan-23)";
-	public static final int 	DBVER =  5; 			// CAS512 v3, CAS520 v4, CAS522 v5
+	public static final String 	VERSION = "v5.3.2"; // pre-v530 code can not read post-dbs
+	public static final String 	DATE = " (14-Jan-23)";
+	public static final int 	DBVER =  5; 	 	// CAS512 v3, CAS520 v4, CAS522 v5
 	public static final String  DBVERSTR = "db" + DBVER;
 	
-	// CAS500 change v4.2 to doc; CAS510 change base to github; put #links here
-	public static final String BASE_HELP_URL_prev51 =   "http://www.agcol.arizona.edu/software/symap/doc/"; 
-	public static final String BASE_HELP_URL = 			"https://csoderlund.github.io/SyMAP/"; // CAS510
-	public static final String USER_GUIDE_URL =    BASE_HELP_URL + "UserGuide.html"; 
-	public static final String circle =  "#circle";				
-	public static final String dotplot = "#dotplot_display";
-	public static final String align2d = "#alignment_display_2d";
-	public static final String align3d = "#alignment_display_3d";
-	public static final String TROUBLE_GUIDE_URL = BASE_HELP_URL + "TroubleShoot.html";
-		
 	public static final  String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // under user's directory; see props.PersistenProps
 	private static final int HISTORY_SIZE = 10;
 
-	public static boolean TRACE=false; // set in ProjectManagerFrameCommon on -t
-	public static boolean DEBUG=false; // CAS519 set in ProjectManagerFrameCommon on -d
+	public static boolean TRACE=false; 		// set in ProjectManagerFrameCommon on -t
+	public static boolean DEBUG=false; 		// CAS519 set in ProjectManagerFrameCommon on -d
 	public static boolean GENEN_ONLY=false; // -z CAS519b to update the gene# without having to redo synteny
-	public static boolean bTrim=true;	// CAS531 do not trim 2D alignments; see closeup.AlignPool
+	public static boolean bTrim=true;		// CAS531 do not trim 2D alignments; see closeup.AlignPool
 	
 	private SyMAPFrame         frame;
 	private DrawingPanel       drawingPanel;
 	private ControlPanel       controlPanel;
 	private HelpBar            helpBar;
-	private ColorDialogHandler colorDialogHandler;
+	
 	private DatabaseReader     databaseReader;
 	private HistoryControl     historyControl;
 	private History            history;
 	private ImageViewer        imageViewer;
 	private PersistentProps    persistentProps;
 	private CloseUp            closeup;
+	private ColorDialogHandler colorDialogHandler;
 
 	/** Dotplot, Block2Frame, Query **/
 	public SyMAP(DatabaseReader dr, TableDataPanel theTablePanel) throws SQLException {
@@ -99,7 +85,7 @@ public class SyMAP {
 
 		historyControl.setListener(drawingPanel);
 
-		colorDialogHandler = new ColorDialogHandler(persistentProps); // CAS521 moved properties to ColorDialogHandler
+		colorDialogHandler = new ColorDialogHandler(persistentProps); // This sets changed colors; CAS521 moved properties to ColorDialogHandler
 
 		controlPanel = new ControlPanel(drawingPanel,historyControl,imageViewer,colorDialogHandler,helpBar);
 
@@ -140,7 +126,8 @@ public class SyMAP {
 	public DatabaseReader getDatabaseReader() { return databaseReader;}
 
 	public static void printVersion() {
-		String base = BASE_HELP_URL.substring(0, BASE_HELP_URL.length()-1);
+		String url = util.Jhtml.BASE_HELP_URL;
+		String base = url.substring(0, url.length()-1);
 		String d = (Runtime.getRuntime().maxMemory() / (1024*1024)) + "m";
 		System.out.println("\nSyMAP " + VERSION + DATE + "   " + base
 			+ "   Java v" + getInstalledJavaVersionStr() + " (" + d + ")");

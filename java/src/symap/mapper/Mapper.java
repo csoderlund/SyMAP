@@ -271,7 +271,7 @@ public class Mapper extends JComponent
 	public static Color pseudoLineHighlightColor1;
 	public static Color pseudoLineHighlightColor2;
 	public static Color hitRibbonBackgroundColor;	
-	public static int 	hitRibbonWidth; 			
+	public static int 	hitRibbonWidth=3; 			
 	static {
 		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/mapper.properties"));
 		posOrientLineColor = 		props.getColor("posOrientLineColor");
@@ -284,6 +284,5 @@ public class Mapper extends JComponent
 		pseudoLineHighlightColor1 = props.getColor("pseudoLineHighlightColor1"); 
 		pseudoLineHighlightColor2 = props.getColor("pseudoLineHighlightColor2"); 
 		hitRibbonBackgroundColor = 	props.getColor("hitRibbonBackgroundColor"); 
-		hitRibbonWidth = 			props.getInt("hitRibbonWidth"); 
 	}
 }

@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Window;
+import java.awt.event.ActionListener;
 import java.awt.GraphicsConfiguration;
 import java.awt.Rectangle;
 import java.awt.Insets;
@@ -13,56 +14,36 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Container;
 import java.awt.Shape;
-import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.JButton;
-import javax.swing.JEditorPane;
-import javax.swing.JLabel;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
-
-import java.awt.Frame;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.LinkedHashSet;
-import java.util.ArrayList;
-import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.awt.Desktop;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.MalformedURLException;
 
 import java.io.File;
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 
-import symap.SyMAP;
+import backend.Constants;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
-import backend.Constants;
 
 /**
  * Class <code>Utilities</code> class for doing some miscelaneous things that 
@@ -82,38 +63,43 @@ public class Utilities {
 	private static boolean TRACE = Constants.TRACE;
 	public static final Color HELP_PROMPT = new Color(0xEEFFEE); // CAS504 moved from dead file - for Help
 	
-	private static Class resClass = null; // store this so help pages can be loaded from anywhere
-	private static Frame helpParentFrame = null; 
-	
+
 	private Utilities() { }
 
-	/** Instance stuff - only class methods **/ 
-	public static void setResClass(Class c)
-	{
-		resClass = c;
-	}
-	public static void setHelpParentFrame(Frame f)
-	{
-		helpParentFrame = f;
-	}
-	
 	/************************************************************
 	 * XXX Random interface 
 	 */
-	public static boolean isLinux() {
-		return System.getProperty("os.name").toLowerCase().contains("linux");
-	}
-	
-	public static boolean isWindows() {
-		return System.getProperty("os.name").toLowerCase().contains("windows");
-	}
-	
-	public static boolean isMac() {
-		return System.getProperty("os.name").toLowerCase().contains("mac");
-	}
-	
-	public static boolean is64Bit() {
-		return System.getProperty("os.arch").toLowerCase().contains("64");
+	// someday i will break this into createImageButton, createButton and createCheckBox; takes more lines to overload...
+	public static AbstractButton createButton(HelpListener parent, String path, String tip, HelpBar bar, 
+			 ActionListener listener, boolean isCheckbox, boolean bSelected) {
+		AbstractButton button;
+		
+		Icon icon = ImageViewer.getImageIcon(path); 
+		if (icon != null) {
+		    if (isCheckbox)
+		    	button = new JCheckBox(icon);
+		    else
+		    	button = new JButton(icon);
+		    	button.setMargin(new Insets(0,0,0,0));
+		}
+		else {
+		    if (isCheckbox)
+		    	button = new JCheckBox(path);
+		    else
+		    	button = new JButton(path);
+		    	button.setMargin(new Insets(1,3,1,3));
+		}
+		if (isCheckbox) button.setSelected(bSelected); // CAS521 add
+		
+		if (listener != null) 
+		    button.addActionListener(listener);
+
+		button.setToolTipText(tip);
+		
+		button.setName(tip); 
+		if (bar != null) bar.addHelpListener(button,parent);
+		
+		return button;
 	}
 	
 	//  attempts to find the screen bounds from the screen insets.  
@@ -192,39 +178,6 @@ public class Utilities {
 
 		return running;
 	}
-	 // someday i will break this into createImageButton, createButton and createCheckBox; takes more lines to overload...
-	 public static AbstractButton createButton(HelpListener parent, String path, String tip, HelpBar bar, 
-			 ActionListener listener, boolean isCheckbox, boolean bSelected) {
-		AbstractButton button;
-		
-		Icon icon = ImageViewer.getImageIcon(path); 
-		if (icon != null) {
-		    if (isCheckbox)
-		    	button = new JCheckBox(icon);
-		    else
-		    	button = new JButton(icon);
-		    	button.setMargin(new Insets(0,0,0,0));
-		}
-		else {
-		    if (isCheckbox)
-		    	button = new JCheckBox(path);
-		    else
-		    	button = new JButton(path);
-		    	button.setMargin(new Insets(1,3,1,3));
-		}
-		if (isCheckbox) button.setSelected(bSelected); // CAS521 add
-		
-		if (listener != null) 
-		    button.addActionListener(listener);
-
-		button.setToolTipText(tip);
-		
-		button.setName(tip); 
-		if (bar != null) bar.addHelpListener(button,parent);
-		
-		return button;
-	 }
-	
 	/*******************************************************************
 	 * XXX basic array and string ops
 	 */
@@ -234,24 +187,7 @@ public class Utilities {
 	    while (width-- > 0) s += " ";
 	    return s;
 	 }
-	 
-	public static boolean contains(Object[] ar, Object o) {
-		if (ar != null)
-			for (int i = 0; i < ar.length; ++i)
-				if (equals(o,ar[i])) return true;
-		return false;
-	}
-	private static boolean equals(Object t1, Object t2) {
-		return t1 == null ? t2 == null : t1.equals(t2);
-	}
 	
-	public static int[] copy(int[] a, int len) {
-		if (a == null || a.length == 0 || len <= 0) return new int[0];
-		int[] ret = new int[len];
-		System.arraycopy(a,0,ret,0,Math.min(len,a.length));
-		return ret;
-	}
-
 	 // copys the array and sorts the copy, returning the copied array.
 	public static int[] sortCopy(int[] a) {
 		if (a == null || a.length == 0) return new int[0];
@@ -267,47 +203,12 @@ public class Utilities {
 		for (int i = 1; i < ints.length; i++) ret.append(",").append(ints[i]);
 		return ret.toString();
 	}
-
-	public static String getIntsString(int[] ints) {
-		final StringBuffer DASH = new StringBuffer("-");
-		final StringBuffer COMMA = new StringBuffer(",");
-		StringBuffer ret = new StringBuffer();
-		int i,k;
-		for (i = 0; i < ints.length; i++) {
-			ret.append(ints[i]);
-			for (; i + 1 < ints.length; i++)
-				if (ints[i+1] != ints[i]) break;
-			if (i + 1 < ints.length) {
-				for (k = i; i + 1 < ints.length; i++)
-					if (ints[i] + 1 != ints[i+1]) break;
-
-				if (k != i) {
-					--i;
-					ret.append(DASH);
-				}
-				else ret.append(COMMA);
-			}
+	public static int getInt(String i) { // CAS532 added
+		try {
+			int x = Integer.parseInt(i);
+			return x;
 		}
-		return ret.toString();	
-	}
-
-	public static String getIntsString(Collection<Integer> integerList) throws IllegalArgumentException {
-		if (integerList.size() != new HashSet<Integer>(integerList).size())
-			throw new IllegalArgumentException("Dublicate integers not allowed. "+integerList);
-		int ints[] = new int[integerList.size()];
-		Iterator<Integer> iter = integerList.iterator();
-		for (int i = 0; iter.hasNext(); i++) 
-			ints[i] = iter.next().intValue();
-		return getIntsString(ints);
-	}
-
-	public static int[] getIntArray(String input) throws IllegalArgumentException {
-		Collection<Integer> ints = getInts(input);
-		int[] ret = new int[ints.size()];
-		Iterator<Integer> iter = ints.iterator();
-		for (int i = 0; i < ret.length; ++i)
-			ret[i] = iter.next().intValue();
-		return ret;
+		catch (Exception e) {return 0;}
 	}
 
 	public static int[] getIntArray(Collection<Integer> ints) throws ClassCastException {
@@ -318,77 +219,6 @@ public class Utilities {
 		return ret;
 	}
 
-	private static Collection<Integer> getInts(String input) throws IllegalArgumentException {
-		if (input == null || input.length() == 0) return new ArrayList<Integer>(0);
-
-		Collection<Integer> ints = new LinkedList<Integer>();
-		StringTokenizer st = new StringTokenizer(input, ",");
-		StringTokenizer it;
-		int a, b;
-		try {
-			while (st.hasMoreTokens()) {
-				it = new StringTokenizer(st.nextToken(), "-");
-				a = Integer.decode(it.nextToken()).intValue();
-				if (it.hasMoreTokens())
-					b = Integer.decode(it.nextToken().trim()).intValue();
-				else
-					b = a;
-
-				if (a < b) {
-					for (; a <= b; a++)
-						ints.add(Integer.valueOf(a)); // CAS506 new Integer(a)
-				}
-				else {
-					for (; a >= b; a--)
-						ints.add(Integer.valueOf(a)); // CAS506 new Integer(a)
-				}
-				if (it.hasMoreTokens())
-					throw new IllegalArgumentException("Invalid integer range entered.");
-			}
-		} catch (NumberFormatException nfe) {
-			throw new IllegalArgumentException("Number entered in integer range is invalid.");
-		}
-
-		return ints;
-	}
-
-	public static Collection<Integer> getIntsSet(String input) throws IllegalArgumentException {
-		Collection<Integer> ints = new LinkedHashSet<Integer>();
-		StringTokenizer st = new StringTokenizer(input, ",");
-		StringTokenizer it;
-		int a = 0, b;
-		try {
-			while (st.hasMoreTokens()) {
-				it = new StringTokenizer(st.nextToken(), "-");
-				a = Integer.decode(it.nextToken()).intValue();
-				if (it.hasMoreTokens())
-					b = Integer.decode(it.nextToken().trim()).intValue();
-				else
-					b = a;
-
-				if (a < b) {
-					for (; a <= b; a++) {
-						if (!ints.contains(Integer.valueOf(a))) // CAS506 new Integer(a)
-							ints.add(Integer.valueOf(a));
-					}
-				}
-				else {
-					for (; a >= b; a--) {
-						if (!ints.contains(Integer.valueOf(a))) // CAS506 new Integer(a)
-							ints.add(Integer.valueOf(a));
-					}
-				}
-				if (it.hasMoreTokens())
-					throw new IllegalArgumentException("Invalid integer range entered.");
-			}
-		} 
-		catch (NumberFormatException nfe) {
-			throw new IllegalArgumentException("Number entered in integer range is invalid: " + a);
-		}
-
-		return ints;
-	}
-
 	public static boolean isStringEmpty(String s) {
 		return (s == null || s.length() == 0);
 	}
@@ -396,33 +226,7 @@ public class Utilities {
 	/***************************************************
 	 * XXX Geometry
 	 */
-	public static double diagonal(Rectangle r) {
-		if (r == null) return 0;
-		return Math.sqrt((double)( (r.width*r.width) + (r.height*r.height) ));	
-	}
-
-	public static double distance(Rectangle r1, Rectangle r2) {
-		if (r1.intersects(r2)) return 0;
-
-		int x1 = r1.x+r1.width;
-		int x2 = r2.x+r2.width;
-		int y1 = r1.y+r1.height;
-		int y2 = r2.y+r2.height;
-
-		int d = 0;
-		if (r1.x > x2)
-			d += (r1.x - x2) * (r1.x - x2);
-		else if (r2.x > x1)
-			d += (r2.x - x1) * (r2.x - x1);
-
-		if (r1.y > y2)
-			d += (r1.y - y2) * (r1.y - y2);
-		else if (r2.y > y1)
-			d += (r2.y - y1) * (r2.y - y1);
-
-		return Math.sqrt((double)d);
-	}
-
+	
 	public static Shape getSmallestBoundingArea(Shape[] shapes) {
 		if (shapes == null || shapes.length == 0) return null;
 		Shape shape = null;
@@ -468,21 +272,10 @@ public class Utilities {
 		return false;
 	}
 	
-
 	/********************************************************************
 	 * XXX File ops
 	 */
-	public static String getFileExtension(File f) {
-		String ext = null;
-		String s = f.getName();
-		int i = s.lastIndexOf('.');
-
-		if (i > 0 &&  i < s.length() - 1) {
-			ext = s.substring(i+1).toLowerCase();
-		}
-		return ext;
-	}
-
+	
 	// Return the Files; if fromHome==true, relative to home directroy
 	public static File getFile(String name, boolean fromHome) {
 		if (name == null) return new File("");
@@ -524,21 +317,21 @@ public class Utilities {
 	
     public static boolean fileExists(String filepath)
     {
-	    	if (filepath == null) return false;
-	    	File f = new File(filepath);
-	    	return f.exists() && f.isFile();
+    	if (filepath == null) return false;
+    	File f = new File(filepath);
+    	return f.exists() && f.isFile();
     }
     public static boolean dirExists(String filepath)
     {
-	    	if (filepath == null) return false;
-	    	File f = new File(filepath);
-	    	return f.exists() && f.isDirectory();
+    	if (filepath == null) return false;
+    	File f = new File(filepath);
+    	return f.exists() && f.isDirectory();
     }
     public static boolean pathExists(String path)
     {
-    		if (path == null) return false;
-    		File f = new File(path);
-    		return f.exists();
+		if (path == null) return false;
+		File f = new File(path);
+		return f.exists();
     }
     public static int dirNumFiles(File d)
 	{
@@ -548,26 +341,6 @@ public class Utilities {
 			if (f.isFile() && !f.isHidden()) numFiles++;	
 		}
 		return numFiles;
-	}
-    public static File checkCreateDir(File path, String dir, String trace)
-	{
-		try {
-			File f = new File(path, dir);
-			if (f.exists() && f.isFile()) {
-				System.out.println("Please remove file " + f.getName()
-						+ " as SyMAP needs to create a directory at this path");
-				System.exit(0);
-			}
-			if (!f.exists()) {
-				f.mkdir();
-				if (TRACE) System.out.println(trace + ": XYZ mkdir: " + path.getName() + " " + dir);
-			}
-			return f;
-		}
-		catch (Exception e) {
-			ErrorReport.print(e, "Create dir " + path.getName() + " " + dir);
-			return null;
-		}
 	}
     
 	public static File checkCreateDir(String dir, boolean bPrt)
@@ -818,7 +591,7 @@ public class Utilities {
 		System.err.println("Not enough memory.");
 		JOptionPane optionPane = new JOptionPane("Not enough memory - increase $maxmem in symap script.", JOptionPane.ERROR_MESSAGE);
 		
-		LinkLabel label = new LinkLabel("Click to open the Troubleshooting Guide.", SyMAP.TROUBLE_GUIDE_URL); // CAS510
+		LinkLabel label = new LinkLabel("Click to open the Troubleshooting Guide.", Jhtml.TROUBLE_GUIDE_URL); // CAS510
 		label.setAlignmentX(Component.CENTER_ALIGNMENT);
 		optionPane.add(new JLabel(" "), 1);
 		optionPane.add(label, 2);
@@ -832,121 +605,6 @@ public class Utilities {
 	
 	public static void showOutOfMemoryMessage() { showOutOfMemoryMessage(null); }
 	
-	/********************************************************************
-	 * 1. The following provides popups for java/src/html
-	 * 2. The Try methods provide direct links to http URLs (CAS509 allow External links in html)
-	 * 3. The ProjectManagerFrameCommon.createInstructionsPanel shows  the main page
-	 */
-	public static void showHTMLPage(JDialog parent, String title, String resource) {
-		if (resClass == null) {
-			System.err.println("Help can't be shown.\nDid you call setResClass?");
-			return;
-		}
-		JDialog dlgRoot = (parent == null ? new JDialog(helpParentFrame,title,false)
-										: new JDialog(parent,title,false));
-		dlgRoot.setPreferredSize(new Dimension(800,800));
-		Container dlg = dlgRoot.getContentPane();
-		dlg.setLayout(new BoxLayout(dlg,BoxLayout.Y_AXIS));
-		
-		StringBuffer sb = new StringBuffer();
-		try {
-			InputStream str = resClass.getResourceAsStream(resource);
-			
-			int ci = str.read();
-			while (ci != -1) {
-				sb.append((char)ci);
-				ci = str.read();
-			}
-		}
-		catch(Exception e){ErrorReport.print(e, "Show HTML page");}
-		
-		String html = sb.toString();
-		
-		JEditorPane jep = new JEditorPane();
-		jep.setContentType("text/html");
-		jep.setEditable(false);
-	   
-	    jep.addHyperlinkListener(new HyperlinkListener() {
-			public void hyperlinkUpdate(HyperlinkEvent e) {
-				if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-					if (!tryOpenURL(e.getURL().toString()) ) 
-						System.err.println("Error opening URL: " + e.getURL().toString());
-				}
-			}
-		});
-		jep.setText(html);
-		jep.setVisible(true);
-		jep.setCaretPosition(0);
-		JScrollPane jsp = new JScrollPane(jep);
-		dlg.add(jsp);
-	
-		dlgRoot.pack();
-		dlgRoot.setVisible(true);
-		dlgRoot.toFront();
-		dlgRoot.requestFocus();
-	}
-
-    /**********************************************************
-	  * CAS507 replace the old one with this
-	  */
-	 public static boolean tryOpenURL (String theLink ) {
-	   	if (theLink == null) return false;
-	   	
-	   	try {
-	   		new URL(theLink); // make sure it works
-	   	}
-	   	catch (MalformedURLException e) {
-	   		System.out.println("Malformed URL: " + theLink);
-	   		return false;
-	   	}
-	   	if (isMac()) 	return tryOpenMac(theLink);
-	   	else 			return tryOpenLinux(theLink);	
-	}
-	
-	private static boolean tryOpenMac(String theLink) { 
-		Desktop desktop = java.awt.Desktop.getDesktop();
-	   	URI oURL;
-	   	try {
-			oURL = new URI(theLink);
-	   	} catch (URISyntaxException e) {
-	   		ErrorReport.print(e, "URI syntax error on Mac: " + theLink);
-	   		return false;
-	   	}
-   	
-		try {
-			desktop.browse(oURL);
-			return true;
-		} catch (IOException e) {
-			ErrorReport.print(e, "URL desktop error on Mac: " + theLink);
-		}
-		return false;
-	}
-	
-	public static boolean tryOpenLinux (String theLink) { // CAS507 removed Applet
-		// Copied this from: http://www.centerkey.com/java/browser/   CAS507 added all listed browsers from this site
-	   	try { 
-	   		if (isWindows()) {
-	   			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + theLink); // no idea if this works
-	   			return true;
-	   		}
-	   		else { 
-	   			String [] browsers = {"firefox", "opera", "konqueror", "epiphany", "mozilla", "netscape",
-	   					   "google-chrome", "conkeror", "midori", "kazehakase", "x-www-browser"}; // CAS507 added
-	   			String browser = null; 
-	   			for (int count = 0; count < browsers.length && browser == null; count++) 
-	   				if (Runtime.getRuntime().exec( new String[] {"which", browsers[count]}).waitFor() == 0) 
-	   					browser = browsers[count]; 
-	   			if (browser == null) 
-	   				return false;
-	   			else {
-	   				Runtime.getRuntime().exec(new String[] {browser, theLink});
-	   				return true;
-	   			}
-	   		}
-	   	}
-	   	catch (Exception e) {ErrorReport.print(e, "URL error on Linux: " + theLink);}
-		return false;
-	}
     // CAS508 - for writing to log
     static public String kMText(long len) {
 		double d = (double) len;

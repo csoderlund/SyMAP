@@ -12,7 +12,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowFocusListener; 
 import java.awt.event.WindowEvent; 
 
-import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
@@ -28,6 +27,7 @@ import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.drawingpanel.DrawingPanel;
 import symap.frame.HelpBar;
+import util.Jhtml;
 import util.Utilities;
 
 /**
@@ -37,20 +37,21 @@ import util.Utilities;
 public abstract class Filter extends JDialog implements ActionListener,
 		ChangeListener, SyMAPConstants, PopupMenuListener 
 {
-	private JButton okButton, cancelButton, defaultButton;
+	private JButton okButton, cancelButton, defaultButton, helpButton;
 	protected DrawingPanel drawingPanel;
 	protected JPanel buttonPanel;
 	protected HelpBar helpBar;
 	protected JPopupMenu popup; 
 	protected JMenuItem popupTitle, showNavigationHelp, showTrackHelp; 
 
-	protected Filter(Frame owner, DrawingPanel dp, String title, AbstractButton helpButton) {
+	protected Filter(Frame owner, DrawingPanel dp, String title, String idHelp) {// CAS532 added idHelp
 		super(owner,title,true);
 		this.drawingPanel = dp;
 
 		okButton = new JButton("Apply");
 		cancelButton = new JButton("Cancel");
 		defaultButton = new JButton("Defaults");
+		helpButton = Jhtml.createHelpIconUserSm(idHelp);
 
 		okButton.addActionListener(this);
 		cancelButton.addActionListener(this);
@@ -62,7 +63,7 @@ public abstract class Filter extends JDialog implements ActionListener,
 		innerPanel.add(okButton);
 		innerPanel.add(cancelButton);
 		innerPanel.add(defaultButton);
-		if (helpButton != null) innerPanel.add(helpButton);
+		innerPanel.add(helpButton);
 		buttonPanel.add(innerPanel,BorderLayout.CENTER);
 		
 		popup = new JPopupMenu(); 
