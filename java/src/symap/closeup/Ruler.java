@@ -1,4 +1,4 @@
-package util;
+package symap.closeup;
 
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
@@ -8,6 +8,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Dimension2D;
 import javax.swing.SwingUtilities;
+
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;

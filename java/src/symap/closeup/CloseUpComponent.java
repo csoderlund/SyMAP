@@ -17,8 +17,6 @@ import java.util.Arrays;
 import java.util.TreeMap;
 
 import util.PropertiesReader;
-import util.DoubleDimension;
-import util.Ruler;
 import symap.SyMAP;
 
 /***************************************************************
@@ -230,7 +228,6 @@ public class CloseUpComponent extends JComponent {
 	
 	// Gene Alignment
 	public static final double EXON_HEIGHT=12, INTRON_HEIGHT=2;
-	public static final double EXON_ARROW_WIDTH=7;
 	private static final double GENE_HEIGHT = Math.max(EXON_HEIGHT, INTRON_HEIGHT);
 
 	private static final Dimension2D RULER_ARROW_DIM = new Dimension(10,15); // w,h

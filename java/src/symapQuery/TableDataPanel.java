@@ -192,7 +192,7 @@ public class TableDataPanel extends JPanel {
         }
         	    
         theTableData.setColumnHeaders(theParentFrame.getAbbrevNames(), theAnnoKeys.getColumns(true /*abbrev*/), isSingle);
-        theTableData.finalize();
+        theTableData.finalizeX();
 
 		theTable = new SortTable(TableData.createModel(getSelectedColumns(), theTableData, this));
         theTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);

@@ -26,9 +26,9 @@ import util.Utilities;
 public class SyProps extends PropertiesReader
 {	
 	// copied from PairPropertyFrame; only want to print/save what can be changed in this interface
+	// CAS533 remove: "do_clustering", "no_overlapping_blocks", "do_synteny"
 	private final String [] SYMBOLS = { 
 		"mindots", "topn", "merge_blocks", 
-		"do_synteny", "do_clustering", "no_overlapping_blocks", 
 		"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only" };
 			
 	public SyProps() {
@@ -85,6 +85,7 @@ public class SyProps extends PropertiesReader
 		// if properties are added, they also have to be added to 
 		// upload lists (look for uploadPairProps,uploadProjProps)
 		// PairPropertiesFrame
+		// If the defaults for min_size or topn change, change in SumFrame
 		//
 		/**********************************************************
 		 * Alignment parameters
@@ -104,11 +105,10 @@ public class SyProps extends PropertiesReader
 		setProperty("annot_bin",		"30000"); 	// bp size of annotation bin
 		setProperty("hit_bin",			"10000"); 	// # hits per hit bin
 		setProperty("use_genemask",	"0"); 		// use to enable gene-to-gene alignment, must reload project after setting
-		setProperty("gene_pad",			"1000");	// bp pad before start and after end for gene extraction
-		setProperty("do_clustering",     "1");		
+		setProperty("gene_pad",			"1000");	// bp pad before start and after end for gene extraction		
 		setProperty("max_cluster_gap",   "1000"); 	
 		setProperty("max_cluster_size",  "50000");	
-		setProperty("print_stats",       "0");	
+		setProperty("print_stats",       "0");	// not used; replaced with -s command line param
 		setProperty("keep_gene_gene",    "0");	
 		setProperty("keep_gene",         "0");	
 		setProperty("only_gene_gene",    "0");	
@@ -121,7 +121,6 @@ public class SyProps extends PropertiesReader
 		final int mindots = 7; // master block score requirement
 		setProperty("joinfact", 		".25");	// controls block-merge phase
 		setProperty("merge_blocks", 	"0");	// perform block merge
-		setProperty("no_overlapping_blocks", 	"0");	// prune the duplicated blocks
 		setProperty("mindots", 			Integer.toString(mindots));
 		setProperty("keep_best", 		"0");	// keep the best alignment for each ctg even if below thresh
 		setProperty("mindots_keepbest", "3");	// minimal score for keep_best
@@ -149,7 +148,6 @@ public class SyProps extends PropertiesReader
 		
 		// Testing
 		setProperty("maxjoin_bp", 	"1000000000");
-		setProperty("do_synteny", "1"); 
 	
 		/**********************************************************
 		 * Project parameters CAS532 all params here except those set in SeqLoadMain.run()

@@ -531,8 +531,8 @@ public class SyMAPFrameCommon extends JFrame implements HelpListener {
 		return pnl;
 	}
     private void downloadBlocks() {
-    	try {
-			JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
+    	try { // CAS533 add /exports
+			JFileChooser chooser = new JFileChooser(System.getProperty("user.dir") + "/exports/");
 			chooser.setSelectedFile(new File("blocks.tsv"));
 			
 			if(chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {

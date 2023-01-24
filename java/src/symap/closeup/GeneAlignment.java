@@ -1,15 +1,26 @@
 package symap.closeup;
 
 import java.awt.Graphics2D;
+import java.awt.Polygon;
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.Color;
 import java.awt.FontMetrics;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.PathIterator;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-
 import java.util.Arrays;
 
-import util.ArrowBox;
-
+/***************************************************************
+ * Draws the gene graphics for closeup
+ * CAS533 removed Arrow from the end of the 1st/last exon, as +/- is in the text
+ */
 public class GeneAlignment implements Comparable<GeneAlignment> {
+	// Gene Alignment
+	private static final double EXON_HEIGHT = CloseUpComponent.EXON_HEIGHT; // 12
+	private static final double INTRON_HEIGHT = CloseUpComponent.INTRON_HEIGHT;// 2;
+
 	private String name;
 	private int start;
 	private int end;
@@ -17,7 +28,6 @@ public class GeneAlignment implements Comparable<GeneAlignment> {
 
 	private int paintStart = Integer.MIN_VALUE, paintEnd = Integer.MAX_VALUE;
 	private Rectangle2D.Double bounds = new Rectangle2D.Double();
-	private boolean isForward;
 
 	public GeneAlignment(String name, int start, int end, boolean forward) {
 		if (name != null)
@@ -26,14 +36,8 @@ public class GeneAlignment implements Comparable<GeneAlignment> {
 		this.name = name;
 		this.start = start;
 		this.end = end;
-		this.isForward = forward;
 	}
-
-	public GeneAlignment(String name, int start, int end, boolean forward, Exon[] exons) {
-		this(name,start,end, forward);
-		setExons(exons);
-	}
-
+	
 	public void setExons(Exon[] e) {
 		exons = new Exon[e == null ? 0 : e.length];
 		for (int i = 0; i < exons.length; ++i)
@@ -58,12 +62,12 @@ public class GeneAlignment implements Comparable<GeneAlignment> {
 
 	public void setBounds(double x, double y, double bpPerPixel, int minStartBP, int maxEndBP) {
 		paintStart = minStartBP;
-		paintEnd = maxEndBP;
+		paintEnd   = maxEndBP;
 
 		bounds.x = x;
 		bounds.y = y;
 		bounds.width = getLength(paintStart,paintEnd) / bpPerPixel;
-		bounds.height = Math.max(CloseUpComponent.EXON_HEIGHT,CloseUpComponent.INTRON_HEIGHT);
+		bounds.height = EXON_HEIGHT;
 	}
 
 	public Rectangle2D getBounds() { return bounds; }
@@ -99,13 +103,13 @@ public class GeneAlignment implements Comparable<GeneAlignment> {
 
 		if (end < startBP) return false;
 
-		ArrowBox exon = new ArrowBox();
+		ExonBox exon = new ExonBox();
 		Rectangle2D.Double exonBounds = new Rectangle2D.Double();
 
 		exonBounds.x      = bounds.x;
 		exonBounds.width  = bounds.width;
-		exonBounds.y      = bounds.y + (bounds.height - CloseUpComponent.INTRON_HEIGHT) / 2.0;
-		exonBounds.height = CloseUpComponent.INTRON_HEIGHT;
+		exonBounds.y      = bounds.y + (bounds.height - INTRON_HEIGHT) / 2.0;
+		exonBounds.height = INTRON_HEIGHT;
 
 		if (exons.length > 0) {
 			if (exons[0].getStart() <= startBP) {
@@ -130,29 +134,21 @@ public class GeneAlignment implements Comparable<GeneAlignment> {
 		}
 
 		g2.setPaint(CloseUpComponent.exonColor);
-		exonBounds.y         = bounds.y + (bounds.height - CloseUpComponent.EXON_HEIGHT) / 2.0;
-		exonBounds.height    = CloseUpComponent.EXON_HEIGHT;
+		exonBounds.y         = bounds.y + (bounds.height - EXON_HEIGHT) / 2.0;
+		exonBounds.height    = EXON_HEIGHT;
 
-		double arrowWidth = CloseUpComponent.EXON_ARROW_WIDTH;
 		for (int i = 0; i < exons.length; ++i) {
 			exonBounds.x = bounds.x + exons[i].getStart(startBP, bpPerPixel);
 			exonBounds.width = exons[i].getWidth(startBP, endBP, bpPerPixel);
 			
 			if (exonBounds.width > 0) {
-				if (i == 0 || i == exons.length-1) {
-					if (exons.length == 1) exon.setBounds(exonBounds, arrowWidth, (isForward) ? ArrowBox.RIGHT : ArrowBox.LEFT);
-					else if (i == 0)       exon.setBounds(exonBounds, arrowWidth, (isForward) ? ArrowBox.NONE  : ArrowBox.LEFT);
-					else                   exon.setBounds(exonBounds, arrowWidth, (isForward) ? ArrowBox.RIGHT : ArrowBox.NONE);
-				}
-				else                       exon.setBounds(exonBounds, arrowWidth, ArrowBox.NONE);
+				exon.setBounds(exonBounds);
 				g2.draw(exon);
 				g2.fill(exon);
 			}
 		}
 		return true;
 	}
-
-
 	public boolean equals(Object obj) {
 		if (obj instanceof GeneAlignment) {
 			GeneAlignment g = (GeneAlignment)obj;
@@ -160,12 +156,48 @@ public class GeneAlignment implements Comparable<GeneAlignment> {
 		}
 		return false;
 	}
-
-	public String toString() { return "Gene "+name+" "+start+"-"+end; }
-	private int getStartBP(int paintStart) { return Math.max(start < end ? start : end,paintStart); }
-	private int getEndBP(int paintEnd) { return Math.min(start < end ? end : start,paintEnd); }
 	public int getMin() { return start < end ? start : end; }
 	public int getMax() { return start > end ? start : end; }
+	public String toString() { return "Gene "+name+" "+start+"-"+end; }
+	
+	private int getStartBP(int paintStart) { return Math.max(start < end ? start : end,paintStart); }
+	private int getEndBP(int paintEnd) { return Math.min(start < end ? end : start,paintEnd); }
 	private int getLength(int paintStart, int paintEnd) { return Math.max(getEndBP(paintEnd) - getStartBP(paintStart),0); }
 	private int getFirst() { return start < end ? start : end; }
+	/****************************************************************************
+	 * Exon; 
+	 * CAS533 ArrowBox moved from a separate file in Util; then removed arrow 
+	 */
+	public class ExonBox implements Shape {
+		
+		private DoublePolygon poly;
+
+		public ExonBox() {poly = new DoublePolygon();}
+
+		public void setBounds(Rectangle2D bounds) {
+			poly.reset();
+			poly.addPoint(bounds.getX(),bounds.getY());
+			poly.addPoint(bounds.getX(),bounds.getY() + bounds.getHeight());
+			poly.addPoint(bounds.getX()+bounds.getWidth(), bounds.getY() + bounds.getHeight());
+			poly.addPoint(bounds.getX()+bounds.getWidth(), bounds.getY());
+		}
+
+		public boolean contains(double x, double y) {return poly.contains(x,y);}
+		public boolean contains(double x, double y, double w, double h) {return poly.contains(x,y,w,h);}
+		public boolean contains(Point2D p) {return poly.contains(p);}
+		public boolean contains(Rectangle2D r) {return poly.contains(r);}
+		public Rectangle getBounds() {return poly.getBounds();}
+		public Rectangle2D getBounds2D() {return poly.getBounds2D();}
+		public PathIterator getPathIterator(AffineTransform at) {return poly.getPathIterator(at);}
+		public PathIterator getPathIterator(AffineTransform at, double flatness) {return poly.getPathIterator(at,flatness);}
+		public boolean intersects(double x, double y, double w, double h) {return poly.intersects(x,y,w,h);}
+		public boolean intersects(Rectangle2D r) {return poly.intersects(r);}
+
+		private class DoublePolygon extends Polygon {// CAS533 was static
+			public DoublePolygon() {super();}
+			public void addPoint(double x, double y) {
+				super.addPoint((int)Math.round(x),(int)Math.round(y));
+			}
+		}
+	}
 }

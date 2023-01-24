@@ -13,8 +13,6 @@ import java.awt.Toolkit;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Container;
-import java.awt.Shape;
-import java.awt.geom.Rectangle2D;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -38,6 +36,7 @@ import java.util.regex.Pattern;
 import java.io.File;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 
@@ -62,7 +61,6 @@ public class Utilities {
 	private static boolean FULL_INT = true;
 	private static boolean TRACE = Constants.TRACE;
 	public static final Color HELP_PROMPT = new Color(0xEEFFEE); // CAS504 moved from dead file - for Help
-	
 
 	private Utilities() { }
 
@@ -221,55 +219,6 @@ public class Utilities {
 
 	public static boolean isStringEmpty(String s) {
 		return (s == null || s.length() == 0);
-	}
-	
-	/***************************************************
-	 * XXX Geometry
-	 */
-	
-	public static Shape getSmallestBoundingArea(Shape[] shapes) {
-		if (shapes == null || shapes.length == 0) return null;
-		Shape shape = null;
-		Rectangle2D bounds = null;
-		double min = -1;
-		Shape comp = null;
-		double area = 0;
-		for (int i = 0; i < shapes.length; i++) {
-			comp = shapes[i];
-			if (comp != null) {
-				bounds = comp.getBounds2D();
-				area = bounds.getWidth() * bounds.getHeight();
-				if (shape == null || area < min) {
-					shape = comp;
-					min = area;
-				}
-			}
-		}
-
-		return shape;
-	}
-
-	public static Shape getSmallestBoundingArea(Shape s1, Shape s2) {
-		if (s1 == null) return s2;
-		if (s2 == null) return s1;
-
-		Rectangle2D b1, b2;
-		b1 = s1.getBounds2D();
-		b2 = s2.getBounds2D();
-
-		return (b1.getWidth() * b1.getHeight()) <= (b2.getWidth() * b2.getHeight()) ? s1 : s2;
-	}
-
-	public static boolean isOverlapping(int start1, int end1, int start2, int end2) {
-		if (   (start1 >= start2 && start1 <= end2) 
-			|| (end1   >= start2 && end1   <= end2)
-			|| (start2 >= start1 && start2 <= end1)
-			|| (end2   >= start1 && end2   <= end1))
-		{
-			return true;
-		}
-		
-		return false;
 	}
 	
 	/********************************************************************
@@ -434,6 +383,30 @@ public class Utilities {
     /**********************************************************
      * XXX Time methods
      */
+	static public String getNormalizedDate(String nDate) {// date from NOW() 'year-mo-dy time'
+		String d=nDate.substring(0, nDate.indexOf(" "));
+		String [] tok = d.split("-");
+		if (tok.length!=3) return nDate;
+		
+		int m = getInt(tok[1]);
+		String ms="Jan";
+		if (m==2) ms="Feb"; 
+		else if (m==3) ms="Mar";
+		else if (m==4) ms="Apr";
+		else if (m==5) ms="May";
+		else if (m==6) ms="Jun";
+		else if (m==7) ms="Jul";
+		else if (m==8) ms="Aug";
+		else if (m==9) ms="Sep";
+		else if (m==10) ms="Nov";
+		else if (m==11) ms="Oct";
+		else if (m==12) ms="Dec";
+		return tok[2] + "-" + ms + "-" + tok[0];
+	}
+	public static String getDateStr(long l) {
+		DateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
+		return sdf.format(l);
+	}
 	 static public String getDateTime ( )
     {
         Date date=new Date();
@@ -479,15 +452,20 @@ public class Utilities {
 	static public long getNanoTime () {
  		return System.nanoTime(); 
 	}
+	static public String getTimeStr(long startTime) { // CAS533
+		long et = System.nanoTime()-startTime;
+		long sec = et /1000000000;
+		return timerStr2(sec);
+	}
 	static public void printElapsedNanoTime(String msg, long startTime) {
 		long et = System.nanoTime()-startTime;
 		long sec = et /1000000000;
-		timerStr2(msg, sec);
+		String t = timerStr2(sec);
+		System.out.format("%-8s  %s\n", msg, t);
+		
 	}
 	
-	static public void timerStr2(String msg, long et) {
-		String x = String.format("%-8s  ", msg);
-	
+	static public String timerStr2(long et) {
 		long day = 	et/86400; //24*3600
 		long time =  et%86400;
 		long hr =  time/3600;
@@ -500,7 +478,7 @@ public class Utilities {
 		if (day > 0) str += day + "d:";
 		if (hr > 0 ) str += hr + "h:";
 		str += min + "m:" + sec + "s";
-		System.out.println(x + str);
+		return str;
 	}
 
 	/**************************************************************

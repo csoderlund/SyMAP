@@ -43,6 +43,7 @@ public class Jhtml {
 	public static final String control = 	"#control";
 	public static final String hitfilter =  "#hitfilter";
 	public static final String seqfilter =  "#sequence_filter";
+	public static final String dotfilter =	"#dotplot_filter";
 	
 	public static JButton createHelpIconUserLg(String id) {
 		return createHelpIcon("/images/help.gif", USER_GUIDE_URL + id);

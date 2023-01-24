@@ -25,8 +25,8 @@ import symapQuery.TableDataPanel;
  *	CAS532 moved HTML links to Jhtml
  */
 public class SyMAP {
-	public static final String 	VERSION = "v5.3.2"; // pre-v530 code can not read post-dbs
-	public static final String 	DATE = " (14-Jan-23)";
+	public static final String 	VERSION = "v5.3.3"; // pre-v530 code can not read post-dbs
+	public static final String 	DATE = " (24-Jan-23)";
 	public static final int 	DBVER =  5; 	 	// CAS512 v3, CAS520 v4, CAS522 v5
 	public static final String  DBVERSTR = "db" + DBVER;
 	
@@ -61,8 +61,6 @@ public class SyMAP {
 	{
 		this.databaseReader = dr;
 
-		imageViewer = new ImageViewer();
-
 		persistentProps = new PersistentProps(); // CAS521 changed PersistentProps - it has all args now
 
 		if (hb == null) helpBar = new HelpBar(-1, 17); // CAS521 removed dead args
@@ -87,7 +85,7 @@ public class SyMAP {
 
 		colorDialogHandler = new ColorDialogHandler(persistentProps); // This sets changed colors; CAS521 moved properties to ColorDialogHandler
 
-		controlPanel = new ControlPanel(drawingPanel,historyControl,imageViewer,colorDialogHandler,helpBar);
+		controlPanel = new ControlPanel(drawingPanel,historyControl, colorDialogHandler,helpBar);
 
 		frame = new SyMAPFrame(controlPanel,drawingPanel,helpBar,hb==null,persistentProps);
 		

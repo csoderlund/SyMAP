@@ -2,8 +2,6 @@ package dotplot;
 
 import java.util.Vector;
 
-import java.awt.Color;
-
 import symap.pool.ProjectProperties;
 
 public class Project {
@@ -13,38 +11,28 @@ public class Project {
 	private String grpPrefix;
 	private String grpType;
 	private Group[] groups;
-	private Color color = null; 
-	private int scale = 1; 
 	private int minGrpSize = 0;
 
-	
 	public Project(int id, ProjectProperties pp) {
 		this(id, pp.getName(id), 
 				 pp.getDisplayName(id), 
 				 pp.getStringProperty(id,"grp_prefix",""), 
 				 pp.getStringProperty(id,"grp_type",""),
-				 pp.getIntProperty(id,"cbsize",1),
 				 pp.getIntProperty(id, "min_display_size_bp",0)
 			);
 	}
 
-	public Project(int id, String name, String displayName, 
-			String grpPrefix, String grpType,
-			int scale, int minGrpSize) 
+	private Project(int id, String name, String displayName, 
+			String grpPrefix, String grpType, int minGrpSize) 
 	{
 		this.id          = id;
 		this.name        = name;
 		this.displayName = displayName == null ? "" : displayName;
 		this.grpPrefix   = grpPrefix   == null ? "" : grpPrefix;
 		this.grpType     = grpType     == null ? "" : grpType;
-		this.scale       = scale; 
 		this.minGrpSize  = minGrpSize;
 	}
 	
-	public Color getColor() { return color; }
-	public void setColor(Color c) { this.color = c; }
-	public int getScale() { return scale; }
-
 	public void setGroups(Group[] grps) {
 		if (grps != null) {
 			Group.setScaleFactors(grps, minGrpSize);
@@ -53,21 +41,6 @@ public class Project {
 		groups = grps;
 	}
 
-	public boolean isGroupsSet() {
-		return groups != null;
-	}
-	
-	public Group[] getGroups() {
-		return groups == null ? new Group[0] : groups;
-	}
-
-	public Group getGroup(String name) {
-		if (groups != null)
-			for (Group g : groups)
-				if (g.getName().equals(name)) return g;
-		return null;
-	}
-	
 	public Group getGroupByOrder(int sortOrder) {
 		return groups == null ? null : groups[sortOrder-1];
 	}
@@ -102,27 +75,27 @@ public class Project {
 	public String getGrpType() { return grpType; }
 	public String getDisplayName() { return displayName; }
 	public String getName() { return name; }
-	public String toString() { return displayName; /*new Integer(id).toString();*/ } 
+	public String toString() { return displayName; } 
 
 	public boolean equals(Object obj) {
 		return obj instanceof Project && ((Project)obj).id == id;
 	}
-
-	public static Tile[] getGroupPairs(Project[] projects, Tile[] tiles, ProjectProperties pp) {
+	/*****************************************************
+	 * Called in data.initialize to set up tiles
+	 */
+	public static Tile[] createTiles(Project[] projects, Tile[] tiles, ProjectProperties pp) {
 		Vector<Tile> out = new Vector<Tile>(tiles.length);
-		
+		Project pX = projects[0];
 		for (int i = 1;  i < projects.length;  i++) {
 			Project pY = projects[i];
-			for (Group gX : projects[0].groups) {
+			for (Group gX : pX.groups) {
 				for (Group gY : pY.groups) {
 					Tile t = Tile.getTile(tiles, gX, gY);
-					if (t == null)
-						t = new Tile(gX, gY);
+					if (t == null) t = new Tile(pX, pY, gX, gY);
 					out.add(t);
 				}
 			}
 		}
-		
 		return out.toArray(new Tile[0]);
 	}
 	

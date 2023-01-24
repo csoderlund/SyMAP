@@ -152,7 +152,7 @@ public class TableData implements Serializable {
     	catch (Exception e) {ErrorReport.print(e, "add Rows With Progress");}
     }
     
-    public void finalize() { 
+    public void finalizeX() { // CAS533 added X so not deprecated
     	arrHeaders = new TableDataHeader[vHeaders.size()];
     	vHeaders.copyInto(arrHeaders);
     	vHeaders.clear();

@@ -1,4 +1,4 @@
-package util;
+package symap.sequence;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -18,12 +18,6 @@ public class Rule {
 	private TextLayout layout;
 	private boolean drawLine;
 
-	/**
-	 * Creates a Rule instance. 
-	 * 
-	 * @param unitColor
-	 * @param unitFont
-	 */
 	public Rule(Color unitColor, Font unitFont) {
 		this.unitColor = unitColor;
 		this.unitFont = unitFont;
@@ -32,54 +26,24 @@ public class Rule {
 		drawLine = true;
 	}
 
-	/**
-	 * @param show show the line or not
-	 */
 	public void showLine(boolean show) {
 		drawLine = show;
 	}
 
-	/**
-	 * Sets the Rule's line points.
-	 * 
-	 * @param x1
-	 * @param y1
-	 * @param x2
-	 * @param y2
-	 */
 	public void setLine(double x1, double y1, double x2, double y2) {
 		line.setLine(x1, y1, x2, y2);
 	}
 
-	/**
-	 * Sets the TextLayout and the point at which it should be drawn.
-	 * 
-	 * @param textLayout
-	 * @param x
-	 * @param y
-	 */
 	public void setText(TextLayout textLayout, double x, double y) {
 		layout = textLayout;
 		point.setLocation((float) x, (float) y);
 	}
 
-	/**
-	 * 
-	 * Offset the whole rule.
-	 * 
-	 * @param x amount to subtract from the x coordinates
-	 * @param y amount to subtract from the y coordinates
-	 */
 	public void setOffset(double x, double y) {
 		line.setLine(line.x1 - x, line.y1 - y, line.x2 - x, line.y2 - y);
 		point.setLocation(point.x - x, point.y - y);
 	}
 
-	/**
-	 * Draws this object onto g.
-	 * 
-	 * @param g2 Graphics2D object onto which this object is painted to.
-	 */
 	public void paintComponent(Graphics2D g2) {
 		if (layout != null) {
 			g2.setPaint(unitColor);

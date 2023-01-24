@@ -12,9 +12,11 @@ public class Constants {
 /**********************************************
  * Command line arguments
  */
-public static boolean TRACE =     false;
-public static boolean NEW_ORDER = true;
-public static boolean PRT_STATS=  false; 
+// Set in ProjectManagerFrameCommon
+public static boolean TRACE =     false; 		// -t not shown in help
+public static boolean NEW_ORDER = true;	 		// -o not shown in help; may not work anymore
+public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block coords
+public static boolean PRT_STATS=  false; 		// -s
 
 /*************************************************************/
 

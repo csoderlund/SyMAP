@@ -70,6 +70,48 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 <tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view"> 2D gene placement</a>
 </table>
 
+<a id="v533"></a>
+<h3>Release: v5.3.3 (24-Jan-23)</h3>
+This release has various minor changes and additions.
+<ul>
+<li><ttb>Synteny&Alignment</ttb>
+<ul>
+<li>Synteny algorithm: The block start and end was assigned coordinates at the mid-point
+of the first and last hit; this has been changed to the start of the first hit and end of
+the last hit.
+<li><ttl>Selected Pair Parameters</ttl>: The <ttl>No Overlapping Blocks</ttl> was removed because it does not work.
+The <ttl>Summary</ttl> shows changes from defaults for the <ttl>MinDots</ttl>, <ttl>TopN</ttl> and <ttl>Merge Blocks</ttl> parameters.
+</ul>
+<li><ttb>Print Image</ttb>
+<ul>
+<li>Most SyMAP graphics have a print image icon, which was
+not working for post Java V8; it now works for any version.
+</ul>
+<li><ttb>Dotplot</ttb>
+<ul>
+<li><ttl>Filter</ttl> - see <a href="UserGuide.html#dotplot_filter">DotPlot Filter</a>.
+<ul>
+<li>
+New <ttl>Green</ttl>, <ttl>ID%</ttl>, <ttl>Mix</ttl> and <ttl>Show Block Numbers</ttl> options.
+The dot size was moved from the main display to the filter. Add  <ttl><big>?</big></ttl> button.
+<li>The filter display now freezes the other panels.
+It no longer resets to default Filters on Home or selecting a cell.
+</ul>
+
+<li>The cells display all at once; before they were added one at a time.
+<li><ttl>Home</ttl> now works for the 2-chromosome dotplot, which goes back to full view.
+</ul>
+
+<li>Developer:
+<ul>
+<li>Compiles under Java 17 with no warnings (removed Observable). Massively reduced and cleaned
+Dotplot code. Removed many un-used files from the util package and moved some others to the package of
+their sole use. Removed arrow from the end of the gene in the CloseUp. The <tt>classes_ext</tt> have
+been cleaned of most unused classes and files.
+</ul>
+</ul>
+
+<!----------------------------------------------------------->
 <a id="v532"></a>
 <h3>Release: v5.3.2 (14-Jan-23)</h3>
 This release added <ttl><big>?</big></ttl> buttons for online help, and has some small <ttl>Query</ttl> and
@@ -273,7 +315,7 @@ see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
 
 </ul>
 <li>Developers
-<br>(1) All 'new Integer()' etc, have been removed; hence, compiles under Java 17 without complaint.
+<br>(1) All 'new Integer()' etc, have been removed.
 (2) Schema update: The 'runum' has
 been added to the hits table, which provided the set number for collinear pairs. The SyMAP version is now
 stored in the projects and pairs table. The annotation table contains a new column for the number of hits.

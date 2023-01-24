@@ -1,4 +1,4 @@
-package util;
+package symap.closeup;
 
 import java.awt.geom.Dimension2D;
 

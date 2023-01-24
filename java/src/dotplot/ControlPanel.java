@@ -8,66 +8,44 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
-
 import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JSeparator;
-import javax.swing.JSlider;
 import javax.swing.JComboBox;
-import javax.swing.DefaultBoundedRangeModel;
-
-import java.util.Observer;
-import java.util.Observable;
 
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import util.ImageViewer;
 import util.Utilities;
 
+/**********************************************************
+ * The upper row for the DotPlot
+ * CAS533 I removed implements Observer, and it worked as before; 
+ * 		but after removing Observer from Data, had to add plot.repaint 
+ */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class ControlPanel extends JPanel implements Observer,
-													HelpListener 
-{
-    public static final int MIN_DOT_SIZE = 1;
-    public static final int MAX_DOT_SIZE = 5;
-	
-    private Data data;
-    private Plot plot;
-    private JButton homeButton;
-    private JButton minusButton;
-    private JButton plusButton;
-    private JButton filterButton;
-    private JButton helpButton;
-    private JButton showImageButton;
-    private JSlider hitSizeSlider;
+public class ControlPanel extends JPanel implements HelpListener {
+    private Data data; 		// changes to zoom, etc set in data
+    private Plot plot; 		// for show image and repaint
+    private Filter filter=null; 	// CAS533 add; was recreating every time 
+    
+    private JButton homeButton, minusButton, plusButton;
+    private JButton filterButton, helpButton, showImageButton;
     private JCheckBox scaleCheckbox; 	
     private JLabel referenceLabel;      
     private JComboBox <Project> referenceSelector;
-    
+  
     public ControlPanel(Data d, Plot p, HelpBar hb) {
 		this.data = d;
 		this.plot = p;
-	
-		hitSizeSlider = new JSlider(new DefaultBoundedRangeModel(MIN_DOT_SIZE,1,MIN_DOT_SIZE,MAX_DOT_SIZE));
-		hitSizeSlider.setBackground(getBackground());
-		hitSizeSlider.setSnapToTicks(true);
-		hitSizeSlider.setMajorTickSpacing(1);
-		hitSizeSlider.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-			    data.setDotSize(hitSizeSlider.getValue());
-			}
-		});
-		hitSizeSlider.setName("Dot Size: Change dot size."); 
-		hb.addHelpListener(hitSizeSlider,this); 			
+		filter = new Filter(d, this);
 	
 		helpButton = util.Jhtml.createHelpIconUserLg(util.Jhtml.dotplot);
 		
 		homeButton       = (JButton)  Utilities.createButton(this,"/images/home.gif",
-				"Home: Go back to full view.",hb,buttonListener,false, data.isZoomed());
+				"Home: Go back to full view.",hb,buttonListener,false, data.isTileView());
 		filterButton     = (JButton)  Utilities.createButton(this,"Filters",
 				"Filters: Change filter settings.",hb,buttonListener,false, false);
 		minusButton      = (JButton)  Utilities.createButton(this,"/images/minus.gif",
@@ -99,55 +77,44 @@ public class ControlPanel extends JPanel implements Observer,
 		addToGrid(gbl,gbc,referenceLabel = new JLabel("Reference:"),1,0);
 		addToGrid(gbl,gbc,referenceSelector,1,1); 		
 		addToGrid(gbl,gbc,filterButton,1,2);
-		addToGrid(gbl,gbc,new JLabel("Size:"),1,0);
-		addToGrid(gbl,gbc,hitSizeSlider,1,5);
 		addToGrid(gbl,gbc,showImageButton,1,1);
 		addToGrid(gbl,gbc,helpButton,GridBagConstraints.REMAINDER,0);
-	
-		data.addObserver(this);
     }
+    public void kill() {filter.setVisible(false);} // DotPlotFrame on shutdown; only needed if !modal
+    public void update() {plot.repaint();} // Filter change
     
     private ActionListener buttonListener = new ActionListener() {
 	    public void actionPerformed(ActionEvent evt) {
 			Object src = evt.getSource();
-			if (src == filterButton) Filter.showFilter(data);
+			if (src == filterButton) {
+				filter.showX();
+			}
 			else {
-			    if (src == homeButton 
-			    		&& data.getNumVisibleGroups() > 2) 
-			    {
-			    		data.setHome(); 
-			    		data.resetAll();
-			    }
+			    if (src == homeButton) data.setHome(); // CAS533 remove && data.getNumVisibleGroups() > 2
 			    else if (src == minusButton)      data.factorZoom(0.95);
 			    else if (src == plusButton)       data.factorZoom(1/0.95);
-			    else if (src == showImageButton)  ImageViewer.showImage(plot); // CAS532 data.getSyMAP().getImageViewer().showImage(plot);
+			    else if (src == showImageButton)  ImageViewer.showImage("DotPlot", plot); // CAS532 data.getSyMAP().getImageViewer().showImage(plot);
 			    else if (src == scaleCheckbox) { 
-				    	if (scaleCheckbox.isSelected())
-				    		data.setScale(true);
-				    	else {
-				    		data.setZoom(Data.DEFAULT_ZOOM); 
-				    		data.setScale(false); 
-				    	}
+			    	if (scaleCheckbox.isSelected())
+			    		data.setScale(true);
+			    	else {
+			    		data.setZoom(Data.DEFAULT_ZOOM); 
+			    		data.setScale(false); 
+			    	}
 			    }
 			    else if (src == referenceSelector) {
-			    		data.setReference((Project)referenceSelector.getSelectedItem());
+			    	data.setReference((Project)referenceSelector.getSelectedItem());
 			    }
+			    plot.repaint();
 			}
 	    }
 	};
-
-    public void update(Observable obs, Object obj) { // for Observer interface
-    		homeButton.setEnabled(true); 
-    }
-	
     private void addToGrid(GridBagLayout gbl, GridBagConstraints gbc, Component comp, int i, int sep) {
 		gbc.gridwidth = i;
 		gbl.setConstraints(comp,gbc);
 		add(comp);
 		if (sep > 0) addToGrid(gbl,gbc,new JLabel(),1,0);
-		if (sep > 1) {
-		    addToGrid(gbl,gbc,new JSeparator(JSeparator.VERTICAL),1,0);
-		}
+		if (sep > 1) addToGrid(gbl,gbc,new JSeparator(JSeparator.VERTICAL),1,0);
     }
     
 	public String getHelpText(MouseEvent event) { 
@@ -155,7 +122,7 @@ public class ControlPanel extends JPanel implements Observer,
 		return comp.getName();
 	}
 	
-	public void setProjects(Project[] projects) {
+	public void setProjects(Project[] projects) { // DotPlotFrame
 		if (projects == null) {
 			referenceLabel.setVisible(false);
 			referenceSelector.setVisible(false);

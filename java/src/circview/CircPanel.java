@@ -18,14 +18,12 @@ import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import util.DatabaseReader;
 import util.ErrorReport;
-import util.PropertiesReader;
-
-import dotplot.DotPlot;
 
 /**************************************************************
  * Draws the circle view for Selected-2-WG and 2D-N-chr
  * CAS521 cleanup and some rewrite
  * 		2-WG add reverse
+ * CAS533 was accessing DotPlot just to get static background color.white
  */
 public class CircPanel extends JPanel implements HelpListener, MouseListener,MouseMotionListener {
 	private static final long serialVersionUID = -1711255873365895293L;
@@ -51,12 +49,8 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	private String helpName = "Move mouse near name (changes to finger) and click to color by this project.";
 	private String helpArc = "Click arc to bring its blocks to top.\nDouble click arc to only show its blocks.";
 	
-	private static final Color FAR_BACKGROUND;
+	private static final Color FAR_BACKGROUND = Color.WHITE;
 	
-	static {
-		PropertiesReader props = new PropertiesReader(CircPanel.class.getResource(DotPlot.DOTPLOT_PROPS));
-		FAR_BACKGROUND        = props.getColor("farBackgroundColor");
-	}
 	private static int MARGIN     = 20;
 	private static int CIRCMARGIN = 60;
 	

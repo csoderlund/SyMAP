@@ -51,8 +51,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 	 * @param cdh a ColorDialogHandler value of the color dialog handler which will be shown when the corresponding button is pressed.
 	 * @param bar a HelpBar value of the HelpBar if there is an associated help bar to register the button tips with (optional).
 	 */
-	public ControlPanel(DrawingPanel dp, HistoryControl hc, ImageViewer iv, 
-			ColorDialogHandler cdh, HelpBar bar)
+	public ControlPanel(DrawingPanel dp, HistoryControl hc, ColorDialogHandler cdh, HelpBar bar)
 	{
 		super();
 		this.dp = dp;
@@ -127,7 +126,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 			else if (source == upButton)         dp.changeAlignRegion(2.0);
 
 			else if (source == editColorsButton) cdh.showX();
-			else if (source == showImageButton)  ImageViewer.showImage(dp); // CAS507 made static
+			else if (source == showImageButton)  ImageViewer.showImage("Exp_2D", (JPanel)dp); // CAS507 made static
 		}
 	};
 	/*** Enables/disables all of the buttons on the panel except for the help button. */

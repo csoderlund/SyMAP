@@ -2,15 +2,18 @@ package symap.closeup;
 
 import java.awt.BasicStroke;
 import java.awt.FontMetrics;
+import java.awt.Graphics;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Dimension2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
+import javax.swing.Icon;
 import java.awt.geom.Point2D;
 
 import symap.mapper.HitData;
-import util.Arrow;
-import util.ArrowLine;
 
 /****************************************************
  * Display Hit Alignments; created in AlignPool; drawn from CloseUpComponent
@@ -273,5 +276,35 @@ public class HitAlignment implements Comparable<HitAlignment> {
 	}
 	public int compareTo(HitAlignment ha) {
 		return getSstart() - ha.getSend();
+	}
+	/****************************************************************
+	 * Insert Icon; Arrow down, CAS533 was a separate file in util
+	 */
+	public class Arrow implements Icon {
+	    public static final double POINT_DOWN  = 0;
+	    private Dimension2D dim;
+	    private Line2D line = new Line2D.Double();
+
+	    public Arrow(Dimension2D dim) {this.dim = dim;}
+	    
+	    public int getIconHeight() {return (int)dim.getHeight();}
+
+	    public int getIconWidth() {return (int)dim.getWidth();}
+	    
+	    public void paintIcon(Component c, Graphics g, int x, int y) {
+	    	paint((Graphics2D)g,(double)x,(double)y, POINT_DOWN);
+	    }
+	    public void paint(Graphics2D g2, double x, double y, double direction) {
+			AffineTransform saveAt = g2.getTransform();
+		
+			g2.rotate(direction,x+dim.getWidth()/2.0,y+dim.getHeight()/2.0);
+		
+			line.setLine(x,y,x + dim.getWidth()/2.0,y+dim.getHeight());
+			g2.draw(line);
+			line.setLine(line.getX2(),line.getY2(),x+dim.getWidth(),y);
+			g2.draw(line);
+		
+			g2.setTransform(saveAt);
+	    }
 	}
 }

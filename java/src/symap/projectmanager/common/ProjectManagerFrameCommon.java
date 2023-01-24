@@ -145,24 +145,24 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		if (Utilities.hasCommandLineOption(args, "-r")) {
 			System.out.println("Usage:  ./viewSymap [options]");
 			System.out.println("  -c string : filename of config file (to use instead of symap.config)");
-			System.out.println("  -a  		: do not trim 2D alignments");
+			System.out.println("  -a        : do not trim 2D alignments");
 			System.out.println("  -v        : check MySQL for important settings");
 			System.out.println("  -h        : show help to terminal and exit");
 		}
 		else {
 			System.out.println("Usage:  ./symap [options]");
 			System.out.println("  -c string : filename of config file (to use instead of symap.config)");
-			System.out.println("  -a  		: do not trim 2D alignments");
+			System.out.println("  -a        : do not trim 2D alignments (Explorer only)");
 			System.out.println("  -v        : check MySQL for important settings");
 			System.out.println("  -h        : show help to terminal and exit");
 	
-			System.out.println("\nAlignment:");
-			System.out.println("  -p N		: number of CPUs to use");
-			System.out.println("  -s		: print stats for debugging");
-			System.out.println("  -o		: use original draft ordering algorithm");
-			
 			System.out.println("\nReload Annotation:");
-			System.out.println("  -z		: Reload Annotatin will only run the Gene# assignment algorithm");
+			System.out.println("  -z        : Reload Annotatin will only run the Gene# assignment algorithm");
+			
+			System.out.println("\nSynteny&Alignment:");
+			System.out.println("  -p N      : number of CPUs to use");
+			System.out.println("  -b        : use original block coordinates");
+			System.out.println("  -s        : print stats for debugging or information");
 		}
 	}
 	// these are listed to terminal in the 'symap' perl script.
@@ -171,26 +171,16 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 			if (Utilities.hasCommandLineOption(args, "-r")) {// used by viewSymap
 				inReadOnlyMode = true; // no message to terminal
 			}
-			if (Utilities.hasCommandLineOption(args, "-s")) {// not shown in -h help
-				System.out.println("-s Print Stats");
-				Constants.PRT_STATS = true;
+			if (Utilities.hasCommandLineOption(args, "-c")) {// CAS501
+				MAIN_PARAMS = Utilities.getCommandLineOption(args, "-c");
+				System.out.println("-c Configuration file " + MAIN_PARAMS);
 			}
-			
-			if (Utilities.hasCommandLineOption(args, "-t")) {// not shown in -h help
-				System.out.println("-t Trace output");
-				Constants.TRACE = true; // in backend
-				SyMAP.TRACE = true; // CAS517 
+			if (Utilities.hasCommandLineOption(args, "-a")) { // CAS531 change
+				SyMAP.bTrim=false;
+				System.out.println("-a Do not trim 2D alignments");
+				//System.out.println("-a Align largest project to smallest");
+				//lgProj1st = true;
 			}
-			if (Utilities.hasCommandLineOption(args, "-o")) {// CAS505
-				System.out.println("-o Use the original version of draft ordering");
-				Constants.NEW_ORDER = false;
-			}
-			if (Utilities.hasCommandLineOption(args, "-d")) {// not shown in -h help
-				System.out.println("-d Debug (developer only)");
-				SyMAP.DEBUG = true;
-				Q.TEST_TRACE = true;
-			}
-			
 			if (Utilities.hasCommandLineOption(args, "-p")) { // #CPU
 				String x = Utilities.getCommandLineOption(args, "-p"); //CAS500
 				try {
@@ -199,21 +189,38 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 				}
 				catch (Exception e){ System.err.println(x + " is not an integer. Ignoring.");}
 			}
-			
-			if (Utilities.hasCommandLineOption(args, "-c")) {// CAS501
-				MAIN_PARAMS = Utilities.getCommandLineOption(args, "-c");
-				System.out.println("-c Configuration file " + MAIN_PARAMS);
-			}
 			if (Utilities.hasCommandLineOption(args, "-z")) {// CAS519b
 				SyMAP.GENEN_ONLY=true;
 				System.out.println("-z Reload Annotatin will only run the Gene# assignment algorithm");
 			}
-
-			if (Utilities.hasCommandLineOption(args, "-a")) { // CAS531 change
-				SyMAP.bTrim=false;
-				System.out.println("-a Do not trim 2D alignments");
-				//System.out.println("-a Align largest project to smallest");
-				//lgProj1st = true;
+			if (Utilities.hasCommandLineOption(args, "-s")) {
+				System.out.println("-s Print Stats");
+				Constants.PRT_STATS = true;
+			}
+			if (Utilities.hasCommandLineOption(args, "-b")) {
+				System.out.println("-b Original block coordinates");
+				Constants.NEW_BLOCK_COORDS = false;
+			}
+			// not shown in -h help - hence, the double character so user does not use by mistable
+			// the -dd and -tt are not well differentiated
+			if (Utilities.hasCommandLineOption(args, "-dd")) {// not shown in -h help
+				System.out.println("-dd Debug (developer only)");// CAS533 changed to -dd 
+				SyMAP.DEBUG = true;
+				Q.TEST_TRACE = true;
+			}
+			if (Utilities.hasCommandLineOption(args, "-tt")) {
+				System.out.println("-tt Trace output");
+				Constants.TRACE = true; // in backend
+				SyMAP.TRACE = true; // CAS517 
+			}
+			// old tests
+			if (Utilities.hasCommandLineOption(args, "-oo")) {// CAS505 not shown in -h help
+				System.out.println("-oo Use the original version of draft ordering");
+				Constants.NEW_ORDER = false;
+			}
+			if (Utilities.hasCommandLineOption(args, "-aa")) { // CAS531 change
+				System.out.println("-aa Align largest project to smallest");
+				lgProj1st = true;
 			}
 		}
 	}
@@ -2366,6 +2373,7 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 	    // CAS532 add the following 
 	    String file="", fdate=null;
 	    String sql = "SELECT value FROM proj_props WHERE proj_idx='" +  p.getID();
+	    
 	    rs = pool.executeQuery(sql + "' AND name='proj_seq_dir'");
 		file = (rs.next()) ? rs.getString(1) : "";
 		rs = pool.executeQuery(sql + "' AND name='proj_seq_date'");
@@ -2379,6 +2387,16 @@ public class ProjectManagerFrameCommon extends JFrame implements ComponentListen
 		fdate = (rs.next()) ? rs.getString(1) : "";
 		if (file!="") info += "\nAnno: " + file + "\nDate: " + fdate + "\n";
 			
+		// CAS533 add these two
+		String val;
+		rs = pool.executeQuery(sql + "' AND name='mask_all_but_genes'");
+		val = (rs.next()) ? rs.getString(1) : "";
+		if (val!="" && val.contentEquals("1")) info += "\nMask all but genes\n";
+		
+		rs = pool.executeQuery(sql + "' AND name='min_size'");
+		val = (rs.next()) ? rs.getString(1) : "";
+		if (val!="" && !val.contentEquals("100000")) info += "\nMin_size " + val + "\n";
+		
 		return info;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Load Project for view"); return "Error";}

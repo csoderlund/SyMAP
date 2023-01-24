@@ -191,7 +191,6 @@ a window with the loaded information about the project.
 selected synteny.
 <p><ttl>Display for All Pairs</ttl>: These views will be applied to all checked syntenies.
 
-
 <a id="pair"></a>
 <h1>Displays for Selected Pair</h1>
 The buttons beside this label are "whole genome" displays for the selected pair (highlighted yellow).
@@ -227,9 +226,7 @@ to the name to be clickable; it may not be right on the name.
 	<img src="img/circle-2g.png" alt="circle-two-genome" style="border: 1px solid black; width: 450px"></a>
 </table>
 
-
 <h4>Control Panel</h4>
-
 Referring to top of the display, the first two buttons (<b>+, -</b>) change the size, while the third rotates the image.
 <p>
 <ttl>Scale:</ttl> This checkbox causes the chromosomes to be drawn proportionately to their
@@ -251,6 +248,8 @@ of the two projects on the display.
 <ttl>Rotated text</ttl> Depending on the system, it may be easier (or harder) to read with the text rotated.
 
 <!------------------------------------------------------------>
+<!------------------------------------------------------------>
+<!------------------------------------------------------------>
 <a id="dotplot_display"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>Dot Plot #1 (Two Genome)</h2>
@@ -259,7 +258,7 @@ of the two projects on the display.
 <table>
 <tr>
 <td style="vertical-align:text-top;">
-Dots represent anchors (also referred to as <i>hits</i>). A blue box indicates a
+Dots represent anchors (<i>hits</i>). A blue box indicates a
 <i>Synteny Block</i>. A chromosome pair is represented by a <i>cell</i>.
 <p>
 Clicking a cell will replace the whole genome view with the dotplot for the chromosome pair.
@@ -267,12 +266,13 @@ Clicking a cell will replace the whole genome view with the dotplot for the chro
 <ul>
 <li>Click a block to view the 2D display of the block.
 <li>Or, use the mouse to define a region, which will put a box around it. Then click the box to view the 2D display.
-<li>This is illustrated in the <a href="#dot2">Chromosome Dotplot</a>.
+<li>This is illustrated in the <a href="#alignment_display_dot">Chromosome Dotplot</a>.
 </ul>
 
 <td><a href="img/dotplot-2g.png"><img src="img/dotplot-2g.png"  alt="dotplot-2g" style="border: 1px solid black; width: 550px"></a>
 </table>
 
+<!------------------------------------------------------------>
 <a id="dotplot_control"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h4>Control Panel</h4>
@@ -288,32 +288,75 @@ Clicking a cell will replace the whole genome view with the dotplot for the chro
 the species displayed on the x-axis.
 <p>
 <ttl>Reference</ttl> The drop-down menu allows the reference species on the x-axis to be changed.
-<p>
-<ttl>Size</ttl> The slider increases/decreases the size of the dots in the display.
 
-<a id="dotplot_filter"></a>
+<!------------------------------------------------------------>
+<a id="dotplot_filter"></a> <!-- # ref in code -->
 <table style="width: 95%"><tr><td style="text-align: left">
-<h4>Dotplot Filters</h4>
+<h4>DotPlot Filter</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table>
-<tr><td>
-The Filter image on the right indicates the default settings.
-<p><ttl>%Identity</ttl> Show all hits that have &gt;N% identity, where the %Identity is from the MUMmer anchor file.
-<p><ttl>Show Only Block Hits</ttl>
-A <i>block hit</i> is a hit that the SyMAP synteny-finding algorithm
-used to create a synteny block.
-<p><ttl>Show All Hits</ttl>
-Displays all hits. Note that the SyMAP hit loading algorithm removes
-some repetitive hits from the raw anchor set, so some hits from the MUMmer files will not be shown.
-<p><ttl>Highlight Block Hits</ttl>
-Highlight hits that make up a synteny block in blue.
-<p><ttl>Show Blocks</ttl>
-This option draws blue rectangles around the synteny blocks.
-<p><ttl>Show Empty Regions</ttl>
-When deselected, hides regions that do not contain any synteny blocks.
-<td><a href="img/dotplot-filter.png"><img src="img/dotplot-filter.png" alt="dotplot filter" style="border: 1px solid black; width: 220px"></a>
+
+<table>
+<tr><td  style="vertical-align: text-top;">
+As soon as a <ttb>Filter</ttb> option is changed, it will be reflected on the dotplot. However, no other panel can be
+accessed until one of the following buttons is clicked, which will close the <ttb>Filter</ttb> window.
+<p>
+<table class="ty">
+<tr><td><ttl>Apply</ttl><td>Keep the current settings.
+<tr><td><ttl>Cancel</ttl><td>Revert back to the settings used when the <ttb>Filter</ttb> window was opened.
+<tr><td><ttl>Defaults</ttl><td>Apply the defaults, which are shown in the image above.
 </table>
+<td><a href="img/dotplot-filter.png">
+<img src="img/dotplot-filter.png" alt="dotplot filter" style="border: 1px solid black; width: 300px"></a>
+</table>
+<table>
+<tr><td>
+<table  class="ty">
+<tr><td style="vertical-align: text-top;"><ttl>Hit %Identity</ttl>
+    <td>Show all hits that have &gt;N% identity, where the %Identity is from the MUMmer anchor file.
+    The label on the left starts at the lowest %Id in the plot (in this case %33).
+<tr><td style="vertical-align: text-top;"><ttl>Dot Size</ttl><sup>a</sup>
+    <td>Increase the size of the dots in the plot.
+<tr><td><ttl>Scale dot by hit</ttl><sup>a</sup>
+	<td>
+	<ttl>Length</ttl> &nbsp;The dot is a rectangle relative to the hit's length.
+	<br><ttl>%Id</ttl>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The dot is scaled by the hit's %Id (Identity).
+	<br><ttl>None</ttl> &nbsp;&nbsp;&nbsp;&nbsp;All dots are the same size.
+<tr><td style="vertical-align: text-top;"><ttl>Block Hits</ttl>
+	<td>Color the block dots <ttl>Black</ttl>, <ttl>Blue</ttl> or <ttl>Green</ttl>.
+<tr><td><ttl>Show Hits</ttl>
+	<td>
+	<ttl>All</ttl>  &nbsp;&nbsp;&nbsp;&nbsp;Show all hits.
+	<br><ttl>Mix</ttl>    &nbsp;&nbsp;&nbsp;&nbsp;Show all hits, but non-blocks hits will be displayed with size=1 and no scale.
+	<br><ttl>Block</ttl>  &nbsp;Show only show hits assigned to blocks.
+
+<tr><td style="vertical-align: text-top;"><ttl>Show Blocks</ttl>
+	<td>Draw a blue rectangle around each block of hits.
+<tr><td style="vertical-align: text-top;"><ttl>Show Block Numbers</ttl>
+	<td>Draw the block number in or near the block; this only works when <ttl>Show Blocks</ttl> is also checked.
+	This works best on the cell view.
+</table>
+<small><sup>a</sup> These options can make the dots flow over the borders, see <u>DotPlot Filtered Display</u>.</small>
+<br><small><sup>b</sup> The SyMAP hit loading algorithm removes
+some repetitive hits from the raw anchor set, so some hits from the MUMmer files will not be shown.</small>
+
+<p><ttl>Show Empty Regions</ttl> (Not shown in above image) This option is only present
+if at least one of the genomes displayed has &gt;=20 chromosomes or scaffolds; this is most relevant
+when one genome is draft sequence, as there can be rows or columns with no blocks.
+When the option is deselected, it hides rows or columns that do not contain any synteny blocks.
+
+<p><u>DotPlot Filtered Display</u>
+<table><tr><td>
+When the dots are all the same size and are scaled to 1, they fit inside or on their respective block. However,
+when they are changed to rectangles or their sizes increase, they can overlap the border of their block. In this
+case, the <ttl>Block Hits Blue</ttl> make the block hits clear.
+<p>This is illustrated on the right, where the filters are set the <ttl>Length</ttl>, <ttl>Dot Size</ttl>=3, and
+<ttl>Blue Block Hits</ttl>. Some of the blue block hits are on the border of the block blue box.
+<td><a href="img/dotplot-block.png">
+<img src="img/dotplot-block.png" alt="dotplot filter" style="border: 1px solid black; width: 200px"></a>
+</table>
+
 <!------------------------------------------------->
 <a id="block"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -876,14 +919,22 @@ the 2D view.
 
 There are two ways to download data for SyMAP synteny blocks, individual hit anchors, and annotations:
 <ul>
-<li> Through the <a href="#explorer">Explorer</a>. Select the species of interest,
- open the Explorer, and the download button is at the lower left.
+<li><a href="#explorer">Explorer</a>: Select the species of interest,
+ open the <ttb>Explorer</ttb>, and click the <ttl>Download Blocks</ttl> button is at the lower left.
  This exports a table of all the computed synteny block coordinates for all the
  selected species, including their self-alignments, if those were computed.
-<li> Through the <a href="#queries">Queries</a> interface. For example,
- choosing two species and executing a query with the default parameters
- will show a table of all the hits found between the two species, plus
-their annotations and synteny block membership, if any.
+<p>The columns are:
+<br><small>
+Species1  Species2  Chr1  Chr2  BlkNum Start1 End1  Start2 End2 #Hits   Genes1  %Genes1 Genes2  %Genes2 PearsonR
+</small>
+<p>The <ttl>Genes1</ttl> column is the number of genes from <ttl>Species1</ttl> in the block and <ttl>%Genes1</ttl>
+is the percentage of genes that have a hit.
+The <ttl>PearsonR</ttl> is the is the approximate linearity of the hits in the chain as measured
+by the Pearson correlation coefficient; a negative PCC is an inverted block.
+
+<li><a href="#queries">Queries</a>: The results of a query are shown in a table,
+which can be exported as a CSV file. Whatever column that have been selected will
+be written to the file.
 </ul>
 
 <a id="image"></a>
@@ -892,8 +943,8 @@ their annotations and synteny block membership, if any.
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Most displays shown have a <img src="img/print.png" alt="print" style="border: 1px solid black; width: 50px"> set of icons.
-<p>The left icon is for printing the image. However, this does not work with all versions
-of Java. If it does not work, use the system "Screen Capture" (all the images in this
+<p>The left icon is for printing the image. If this does not provide the view you want,
+use the system "Screen Capture" (all the images in this
 document were created with screen capture, along with the images in the SyMAP publications).
 
 <p>The right icon brings up this web page, typically to the correct section (obviously, there needs

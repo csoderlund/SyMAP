@@ -1,32 +1,33 @@
 package dotplot;
 
+/*****************************************************
+ * Represents a hit for DotPlot; populated in DotPlotDBUser
+ */
 public class DPHit implements Cloneable {
 	private int x, y;
 	private double pctid;
-	private boolean block[] = new boolean[DotPlot.TOT_RUNS];
+	private boolean block; // CAS533 was an array; removed altblk stuff
 	private int length; 
 
-	public DPHit(int posX, int posY,  double pctid, boolean block, int length) 
-	{
+	public DPHit(int posX, int posY,  double pctid, boolean block, int length) {
 		x = posX;
 		y = posY;
 		this.pctid = pctid;
-		this.block[0] = block;
-		for (int i = 1; i < this.block.length; i++) this.block[i] = false;
+		this.block = block;
 		this.length = length; 
 	}
-
-	public int getX() { return x; } // added for performance
-	public int getY() { return y; } // added for performance
-	
-	public double getPctid() { return pctid; }
-	
-	public int getLength() { return length; } 
-	public boolean isBlock() { return block[0]; }
-	public boolean isBlock(int altNum) { return block[altNum]; }
-
-	public void setAltBlock(int altNum, boolean block) {
-		if (altNum != 0) /* can't change if it's a real block hit */
-			this.block[altNum] = block;
+	public void swap() { // CAS533 add to swap reference
+		int t=x; x=y; y=t;
 	}
+	public int getX() {return x; } 
+	public int getY() {return y; } 
+	
+	public double getPctid()   {return pctid; }
+	public int getScalePctid(double min) {// CAS533 scale 1-5
+		double x = (pctid-min)+1;
+		return (int) (x/20.0); 
+	} 
+	
+	public int getLength()  {return length; } 
+	public boolean isBlock(){return block; }
 }

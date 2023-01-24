@@ -1,7 +1,7 @@
 package symap.frame;
 
 /******************************************************************
- * Help Box on left side of Chromosome explorer
+ * Help Box on left side of Chromosome explorer and bottom of other displays
  * CAS521 removed lots of dead code
  */
 import java.awt.Component;
@@ -64,9 +64,7 @@ public class HelpBar extends JPanel
 		helpLabel.setMaximumSize(new Dimension(width*10,height*10));
 		helpLabel.setMinimumSize(new Dimension(0,height));
 			
-			add(helpLabel);
-		
-		//if (statusTimer != null)statusTimer.start();
+		add(helpLabel);
 	}
 	public void setHelp(String help, Object obj) {
 		if (help == null || help.equals("")) { 
@@ -79,8 +77,6 @@ public class HelpBar extends JPanel
 		helpLabel.setText(help);
 		currentHelpObj = obj;	
 	}
-
-	
 
 	public void addHelpListener(Component comp) { 
 		synchronized (comps) {

@@ -1,120 +1,149 @@
 package dotplot;
 
-import java.util.Observable;
-
-public class FilterData extends Observable implements DotPlotConstants {
-	private double pctid = ANY_PCTID, minPctid=0;
+/************************************************************
+ * Filter Data; Data class contains FilterData object, which gets passed to Filter
+ * CAS533 removed 'extends Observable'; moved update to Filter
+ */
+public class FilterData  {
+	private static int BLOCK_HITS = 0, ALL_HITS = 1,  MIX_HITS = 2;
+	private static int HIGH_BLACK = 0, HIGH_BLUE = 1, HIGH_GREEN = 2;
+	private static int DOT_LEN = 0,    DOT_PCT = 1,   DOT_NO = 2;
 	
-	private int showHits = ALL_HITS; // 0 show all, 1 show block
-	private boolean bHighBlockHits = false;
-	private boolean bShowBlocks    = true; 
-	private boolean bShowEmpty     = true; // hide groups with no blocks
+	private double dPctid = 0, defaultPctid=0;
+	private int iDotSize=1; 			 // CAS533 add; moved from controls
 	
-	public FilterData() {}
-
-	public FilterData(FilterData fd) {
-		this();
-		set(fd);
+	private int nShowHits = ALL_HITS;
+	private int nHighHits = HIGH_BLACK; 
+	private int nDotScale = DOT_LEN;
+	
+	private boolean bShowBlocks     = true;
+	private boolean bShowBlkNum	 	= false;
+	private boolean bShowEmpty      = true; // hide groups with no blocks
+	
+	public FilterData() {} // Data
+	
+	public FilterData copy() {
+		FilterData fd =  new FilterData();
+		fd.defaultPctid = defaultPctid;
+		fd.dPctid 		= dPctid;
+		fd.iDotSize 	= iDotSize;
+		
+		fd.nDotScale	= nDotScale;
+		fd.nShowHits 	= nShowHits;
+		fd.nHighHits	= nHighHits;
+		
+		fd.bShowBlocks 	= bShowBlocks;
+		fd.bShowBlkNum	= bShowBlkNum;
+		fd.bShowEmpty 	= bShowEmpty;
+		return fd;
 	}
-
-	public void setDefaults() {
-		if (!equals(new FilterData())) {
-			pctid=minPctid;
-			showHits = ALL_HITS;
-			
-			bHighBlockHits=false;
-			bShowBlocks = true;
-			bShowEmpty = true;
-			update();
-		}
+		
+	public void setFromFD(FilterData fd) {// FilterListener.cancel
+		defaultPctid 	= fd.defaultPctid;
+		dPctid 			= fd.dPctid;
+		iDotSize 		= fd.iDotSize;
+		
+		nDotScale		= fd.nDotScale;
+		nShowHits 		= fd.nShowHits;
+		nHighHits 		= fd.nHighHits;
+		
+		bShowBlocks 	= fd.bShowBlocks;
+		bShowBlkNum		= fd.bShowBlkNum;
+		bShowEmpty 		= fd.bShowEmpty;
 	}
-
-	public void set(FilterData fd) {
-		if (!equals(fd)) {
-			pctid=fd.minPctid;
-			showHits = fd.showHits;
-			
-			bHighBlockHits = fd.bHighBlockHits;
-			bShowBlocks = fd.bShowBlocks;
-			bShowEmpty = fd.bShowEmpty;
-			
-			update();
-		}
+	public void setDefaults() { // Data.resetAll; FilterListener.defaults
+		dPctid 		= defaultPctid;
+		iDotSize 	= 1;
+		
+		nDotScale	= DOT_LEN;
+		nShowHits 	= ALL_HITS;
+		nHighHits 	= HIGH_BLACK;
+		
+		bShowBlocks = true;
+		bShowBlkNum = false;
+		bShowEmpty 	= true;
 	}
-	public void setBounds(double min, double max) { 
-		pctid=minPctid=min; 
-		update();
+	
+	public void setBounds(double min, double max) { // Data
+		dPctid = defaultPctid = min; 
 	}
 	public boolean equals(Object obj) {
 		if (obj instanceof FilterData) {
 			FilterData fd = (FilterData)obj;
 			
-			return fd.pctid==pctid 
-					&& fd.bShowBlocks == bShowBlocks 
-					&& fd.bHighBlockHits == bHighBlockHits
-					&& fd.bShowEmpty == bShowEmpty
-					&& fd.showHits == showHits;
+			return fd.dPctid==dPctid && fd.iDotSize==iDotSize 
+				&& fd.nDotScale==nDotScale && fd.nShowHits==nShowHits && fd.nHighHits==nHighHits
+				&& fd.bShowBlocks == bShowBlocks && fd.bShowBlkNum == bShowBlkNum
+				&& fd.bShowEmpty == bShowEmpty;
 		}
 		return false;
 	}
-
-	public FilterData copy() {
-		return new FilterData(this);
-	}
-
-	private void update() {
-		setChanged();
-		notifyObservers();
-	}
-
-	public double getPctid() { return pctid; } // remove type
 	
-	public boolean isHighlightBlockHits() 	{ return bHighBlockHits;}
-	public boolean isShowBlocks() 			{ return bShowBlocks; }
+	public double  getPctid() 				{ return dPctid; } 
+	public int     getDotSize() 			{ return iDotSize; } 
+	
+	public boolean isPctScale()				{ return nDotScale==DOT_PCT; }
+	public boolean isLenScale()				{ return nDotScale==DOT_LEN; }
+	
+	public boolean isHighBlockHits() 		{ return nHighHits!=HIGH_BLACK;}
+	public boolean isHighGreen()			{ return nHighHits==HIGH_GREEN;}
+	public boolean isHighBlue()				{ return nHighHits==HIGH_BLUE;}
+	
+	public boolean isShowBlockHits() 		{ return nShowHits == BLOCK_HITS; }
+	public boolean isShowAllHits() 			{ return nShowHits == ALL_HITS; }
+	public boolean isShowMixHits() 			{ return nShowHits == MIX_HITS; }
+	
+	public boolean isShowBlocks() 			{ return bShowBlocks; }  
+	public boolean isShowBlkNum() 			{ return bShowBlkNum; }  
 	public boolean isShowEmpty() 			{ return bShowEmpty; }
-	public boolean isShowBlockHits() 		{ return showHits == BLOCK_HITS; }
-	public boolean isShowAllHits() 			{ return showHits == ALL_HITS; }
-	public int getShowHits() 				{ return showHits; }
 	
-	// not used
-	public boolean isShowContainedGeneHits() { return showHits == CONTAINED_GENE_HITS; } 
-	public boolean isShowOverlapGeneHits() { return showHits == OVERLAP_GENE_HITS; }
-	public boolean isShowNonGeneHits() { return showHits == NON_GENE_HITS; } 	
+	/*******************************************************************/
+	// Filter.FilterListener changes
+	public boolean setPctid(double s) {
+		double x = dPctid;
+		dPctid = s;
+		return (x!=dPctid);
+	}
+	public boolean setDotSize(int s) {
+		int x = iDotSize;
+		iDotSize = s;
+		return (x!=iDotSize);
+	}
+	public boolean setDotScale(boolean lenScale, boolean pctScale) {
+		int n = nDotScale;
+		if (lenScale) 		nDotScale=DOT_LEN;
+		else if (pctScale) 	nDotScale=DOT_PCT;
+		else 				nDotScale=DOT_NO;
+		return (n!=nDotScale);
+	}
+	public boolean setShowHits(boolean onlyBlock, boolean all) {
+		int x = nShowHits;
+		if (onlyBlock) 	nShowHits = BLOCK_HITS;
+		else if (all)  	nShowHits = ALL_HITS;
+		else 			nShowHits = MIX_HITS;
+		return (x!=nShowHits);
+	}
+	public boolean setHighHits(boolean blue, boolean green) {
+		int x = nHighHits;
+		if (green) 		nHighHits = HIGH_GREEN;
+		else if (blue)  nHighHits = HIGH_BLUE;
+		else 			nHighHits = HIGH_BLACK;
+		return (x!=nShowHits);
+	}
 	
-	public void setPctid(double s) {
-		pctid = s;
-		update();
+	public boolean setShowBlocks(boolean showBlocks) {
+		boolean b = bShowBlocks;
+		bShowBlocks = showBlocks;
+		return (b!=bShowBlocks);
 	}
-	public void setShowHits(boolean onlyBlock, boolean all) {
-		int t = showHits;
-		if (onlyBlock) showHits = BLOCK_HITS;
-		else if (all)  showHits = ALL_HITS;
-		if (t != showHits) update();
+	public boolean setShowBlkNum(boolean showBlkNum) {
+		boolean b = bShowBlkNum;
+		bShowBlkNum = showBlkNum;
+		return (b!=bShowBlkNum);
 	}
-	
-	public void setHighBlockHits(boolean highBlockHits) {
-		if (this.bHighBlockHits != highBlockHits) {
-			this.bHighBlockHits = highBlockHits;
-			update();
-		}
-	}
-	
-	public void setShowHits(int showHits) {
-		if (this.showHits != showHits) {
-			this.showHits = showHits;
-			update();
-		}
-	}
-	public void setShowBlocks(boolean showBlocks) {
-		if (this.bShowBlocks != showBlocks) {
-			this.bShowBlocks = showBlocks;
-			update();
-		}
-	}
-	public void setShowEmpty(boolean showEmpty) {
-		if (this.bShowEmpty != showEmpty) {
-			this.bShowEmpty = showEmpty;
-			update();
-		}
+	public boolean setShowEmpty(boolean showEmpty) {
+		boolean b = bShowEmpty;
+		bShowEmpty = showEmpty;
+		return (b!=bShowEmpty);
 	}
 }

@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.font.FontRenderContext;
@@ -30,7 +31,6 @@ import symap.drawingpanel.DrawingPanel;
 import symap.mapper.HitData;
 import symap.mapper.SeqHits;
 import util.PropertiesReader;
-import util.Rule;
 import util.TextBox;
 import util.Utilities;
 import util.ErrorReport;
@@ -200,11 +200,18 @@ public class Sequence extends Track {
 		Vector<Annotation> out = new Vector<Annotation>();
 		
 		for (Annotation a : allAnnoVec) {
-			if (a.getType() == type && Utilities.isOverlapping(start, end, a.getStart(), a.getEnd()))
+			if (a.getType() == type && isOverlapping(start, end, a.getStart(), a.getEnd()))
 				out.add(a);
 		}	
-	if (SyMAP.DEBUG) System.out.println("SEQ " + allAnnoVec.size() + " " +out.size() + " " + start + " " + end + " " + toString());
 		return out;
+	}
+	private boolean isOverlapping(int start1, int end1, int start2, int end2) {
+		if ((start1 >= start2 && start1 <= end2) || (end1  >= start2 && end1 <= end2)
+		 || (start2 >= start1 && start2 <= end1) || (end2  >= start1 && end2 <= end1))
+		{
+			return true;
+		}
+		return false;
 	}
 	// Called by SequenceFilter
 	public int[] getAnnotationTypeCounts() {
@@ -645,6 +652,9 @@ public class Sequence extends Track {
 	public void paintComponent(Graphics g) {
 		if (hasBuilt()) {
 			Graphics2D g2 = (Graphics2D) g;
+			// CAS533 add so text is better in ImageViewer
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+	                            RenderingHints.VALUE_ANTIALIAS_ON);
 
 			g2.setPaint((position % 2 == 0 ? bgColor1 : bgColor2)); 
 			g2.fill(rect);

@@ -39,9 +39,8 @@ public class SumFrame extends JFrame
 	private int pair_idx=0, pidx1=0, pidx2=0;
 	private int lenKb1=0, lenKb2=0;
 	private String pName1, pName2, params="";
-	private long seq2_len=0;
 	
-    // This one is called from the project manager
+    // Called from the project manager
 	public SumFrame(DatabaseReader db, int idx1, int idx2) 
 	{
 		super("SyMAP Summary");
@@ -98,14 +97,14 @@ public class SumFrame extends JFrame
 			panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 			panel.setBackground(Color.WHITE);
 		
-			// CAS511 added 'params' only (not schema update)
-			//UpdatePool pool = new UpdatePool(db);
-			String sql="select idx, aligndate, params, syver";
+			/**********************************************************/
+			// Get basic data.    CAS511 added 'params' only (not schema update)
+			String sql="select idx, aligndate, params, syver from pairs where ";
 			
 			String alignDate = "Unknown", syver="Unk";
 			
 			s = db.getConnection().createStatement();
-			rs = s.executeQuery(sql + " from pairs where proj1_idx=" + pidx1 + " and proj2_idx=" + pidx2 );
+			rs = s.executeQuery(sql + " proj1_idx=" + pidx1 + " and proj2_idx=" + pidx2 );
 			if (rs.first()) {
 				pair_idx=rs.getInt(1);
 				alignDate = rs.getString(2);
@@ -113,7 +112,7 @@ public class SumFrame extends JFrame
 				syver = rs.getString(4);
 			}
 			else {
-				rs = s.executeQuery(sql + " from pairs where proj1_idx=" + pidx2 + " and proj2_idx=" + pidx1 );
+				rs = s.executeQuery(sql + " proj1_idx=" + pidx2 + " and proj2_idx=" + pidx1 );
 				if (rs.first()){
 					pair_idx = rs.getInt(1);
 					alignDate = rs.getString(2);
@@ -128,16 +127,30 @@ public class SumFrame extends JFrame
 					return;
 				}
 			}
+			// CAS533 add merge blocks, Min dots and Top N; these are only put in pair_props if value is not default
+			rs = s.executeQuery("SELECT value from pair_props where name='merge_blocks' and pair_idx=" + pair_idx);
+			String val = (rs.next()) ? rs.getString(1) : "";
+			if (val!="" && val.contentEquals("1")) params += "::Merge blocks";
 			
-			rs = s.executeQuery("SELECT value FROM proj_props WHERE proj_idx=" + pidx1 + " AND name='display_name'");
-			if (rs.next())
-				pName1 = rs.getString(1);
-			rs = s.executeQuery("SELECT value FROM proj_props WHERE proj_idx=" + pidx2 + " AND name='display_name'");
-			if (rs.next())
-				pName2 = rs.getString(1);
+			rs = s.executeQuery("SELECT value from pair_props where name='mindots' and pair_idx=" + pair_idx);
+			val = (rs.next()) ? rs.getString(1) : "";
+			if (val!="") params += "::Min dots=" + val;
 			
-			String d = alignDate.substring(0, alignDate.indexOf(" "));
-			String v = (syver!=null) ? (" " + syver) : "";
+			rs = s.executeQuery("SELECT value from pair_props where name='topn' and pair_idx=" + pair_idx);
+			val = (rs.next()) ? rs.getString(1) : "";
+			if (val!="") params += "::Top N=" + val;
+							
+			sql = "SELECT value FROM proj_props where name='display_name' and proj_idx=";
+			rs = s.executeQuery(sql + pidx1);
+			if (rs.next()) pName1 = rs.getString(1);
+			
+			rs = s.executeQuery(sql + pidx2);
+			if (rs.next()) pName2 = rs.getString(1);
+			
+			String d = Utilities.getNormalizedDate(alignDate);
+			String v = (syver!=null) ? ("  " + syver) : "";
+			/***********************************************************************/
+			
 			headerRow.add(new JLabel(pName1 + " vs. " + pName2 + "   Created " + d + v));
 			getContentPane().add(scroller,BorderLayout.CENTER);
 			
@@ -164,9 +177,7 @@ public class SumFrame extends JFrame
 			panel.add(headerRow);
 			panel.add(Box.createVerticalStrut(10));
 			
-			
 			createProjSeq();
-	
 			panel.add(new JLabel("Genome and Annotation Statistics"));
 			panel.add(Box.createVerticalStrut(5));
 			panel.add(spTblPane);
@@ -208,54 +219,46 @@ public class SumFrame extends JFrame
 			String q = "select count(*) as cnt," +
 					"round(sum(length)/1000,1), " +
 					"round(max(length)/1000,1), " +
-					"round(min(length)/1000,1), " + 
-					"sum(length)" + 
+					"round(min(length)/1000,1) " + 
 					"from pseudos as p join xgroups as g on p.grp_idx=g.idx " +
 					"where g.proj_idx=";
 			ResultSet rs = s.executeQuery(q + pidx1);
-			if (rs.first())
-			{
+			if (rs.first()){
 				ngrp1=rs.getInt(1);
 				lenKb1 = rs.getInt(2);
 				maxlen1 = rs.getInt(3);
 				minlen1 = rs.getInt(4);
 			}
 			rs = s.executeQuery(q + pidx2);
-			if (rs.first())
-			{
+			if (rs.first()) {
 				ngrp2=rs.getInt(1);
 				lenKb2 = rs.getInt(2);
 				maxlen2 = rs.getInt(3);
 				minlen2 = rs.getInt(4);
-				seq2_len = rs.getLong(5);
 			}
 			q = "select floor(log10(length)) as llen, " +
 					"count(*) as cnt " +
 					"from pseudos as p join xgroups as g on p.grp_idx=g.idx " + 
 					"where g.proj_idx=";
 			rs = s.executeQuery(q + pidx1 + " and length > 0 group by llen");
-			while (rs.next())
-			{
+			while (rs.next()) {
 				int llen = rs.getInt(1);
 				int cnt = rs.getInt(2);
 				lens1.put(llen,cnt);
 			}
 			rs = s.executeQuery(q + pidx2 + " and length > 0 group by llen");
-			while (rs.next())
-			{
+			while (rs.next()) {
 				int llen = rs.getInt(1);
 				int cnt = rs.getInt(2);
 				lens2.put(llen,cnt);
 			}
 			
 			int c11=0,c21=0,c31=0,c41=0,c12=0,c22=0,c32=0,c42=0;
-			for (int i = 0; i <= 4; i++)
-			{
+			for (int i = 0; i <= 4; i++){
 				c12 += (lens1.containsKey(i) ? lens1.get(i) : 0);
 				c22 += (lens2.containsKey(i) ? lens2.get(i) : 0);
 			}
-			for (int i = 7; i <= 20; i++)
-			{
+			for (int i = 7; i <= 20; i++){
 				c41 += (lens1.containsKey(i) ? lens1.get(i) : 0);
 				c42 += (lens2.containsKey(i) ? lens2.get(i) : 0);
 			}
@@ -271,14 +274,12 @@ public class SumFrame extends JFrame
 				"where pa.type='gene' and g.proj_idx=";
 			long ngenes1=0, glen1=0,ngenes2=0,glen2=0;
 			rs = s.executeQuery(q + pidx1);
-			if (rs.first())
-			{
+			if (rs.first()){
 				ngenes1 = rs.getInt(1);
 				glen1 = rs.getInt(2);
 			}
 			rs = s.executeQuery(q + pidx2);
-			if (rs.first())
-			{
+			if (rs.first()){
 				ngenes2 = rs.getInt(1);
 				glen2 = rs.getInt(2);
 			}
@@ -310,7 +311,7 @@ public class SumFrame extends JFrame
 	}
 	/****************************************************************/
 	private void createAnchorSeq() {
-		try {
+	try {
 		long nhits=0,pInBlock=0, pAnno1=0,pAnno2=0;
 		int h11=0,h21=0,h31=0,h41=0,h12=0,h22=0,h32=0,h42=0;
 		TreeMap<Integer,Integer> hits1 = new TreeMap<Integer,Integer>();
@@ -324,8 +325,7 @@ public class SumFrame extends JFrame
 		rs = s.executeQuery("select count(*) from pseudo_hits as h " +
 				"join pseudo_block_hits as pbh on pbh.hit_idx=h.idx " +
 				"where pair_idx=" + pair_idx); 
-		if (rs.first())
-		{
+		if (rs.first()){
 			pInBlock = rs.getInt(1);
 			pInBlock = (nhits>0) ? Math.round(100*pInBlock/nhits) : 0;
 		}
@@ -336,16 +336,14 @@ public class SumFrame extends JFrame
 				"join pseudo_annot as pa on pa.idx=pha.annot_idx " +
 				"join xgroups as g on g.idx=pa.grp_idx where pair_idx=";
 		rs = s.executeQuery(q  + pair_idx + " and g.proj_idx=" + pidx1); 
-		if (rs.first())
-		{
+		if (rs.first()){
 			pAnno1 = rs.getInt(1);
 			pAnno1 = (nhits>0) ? Math.round(100*pAnno1/nhits) : 0;
 		}
 		
 		// %Annotated 2
 		rs = s.executeQuery(q + pair_idx + " and g.proj_idx=" + pidx2); 
-		if (rs.first())
-		{
+		if (rs.first()){
 			pAnno2 = rs.getInt(1);
 			pAnno2 = (nhits>0) ? Math.round(100*pAnno2/nhits) : 0;
 		}
@@ -354,8 +352,7 @@ public class SumFrame extends JFrame
 		rs = s.executeQuery("select floor(log10(end1-start1)) as len, " +
 				"count(*) as cnt from pseudo_hits " + 
 				"where end1-start1>0 and pair_idx=" + pair_idx + " group by len");
-		while (rs.next())
-		{
+		while (rs.next()){
 			int len = rs.getInt(1);
 			int cnt = rs.getInt(2);
 			hits1.put(len, cnt);
@@ -363,19 +360,16 @@ public class SumFrame extends JFrame
 		rs = s.executeQuery("select floor(log10(end2-start2)) as len, " +
 				"count(*) as cnt from pseudo_hits " + 
 				"where end2-start2>0 and pair_idx=" + pair_idx + " group by len");
-		while (rs.next())
-		{
+		while (rs.next()){
 			int len = rs.getInt(1);
 			int cnt = rs.getInt(2);
 			hits2.put(len, cnt);
 		}
-		for (int i = 0; i <= 1; i++)
-		{
+		for (int i = 0; i <= 1; i++){
 			h11 += (hits1.containsKey(i) ? hits1.get(i) : 0);
 			h12 += (hits2.containsKey(i) ? hits2.get(i) : 0);
 		}
-		for (int i = 4; i <= 20; i++)
-		{
+		for (int i = 4; i <= 20; i++){
 			h41 += (hits1.containsKey(i) ? hits1.get(i) : 0);
 			h42 += (hits2.containsKey(i) ? hits2.get(i) : 0);
 		}		
@@ -394,21 +388,18 @@ public class SumFrame extends JFrame
 		
 		// Do the query twice to save memory. With query cache it should not be much slower.
 		rs = s.executeQuery("select grp1_idx,start1,end1 from pseudo_hits where pair_idx=" + pair_idx);
-		while (rs.next())
-		{
+		while (rs.next()){
 			int idx = rs.getInt(1);
 			long start1 = rs.getInt(2);
 			long end1 = rs.getInt(3);
 			if (!bins.containsKey(idx)) bins.put(idx, new TreeSet<Integer>());
 			
-			for (int b = (int)(start1/100); b <= (int)(end1/100); b++)
-			{
+			for (int b = (int)(start1/100); b <= (int)(end1/100); b++){
 				bins.get(idx).add(b);
 			}
 		}
 		
-		for (int b : bins.keySet())
-		{
+		for (int b : bins.keySet()) {
 			hcov1 += bins.get(b).size();
 		}
 		hcov1 /= 10; // to kb
@@ -417,20 +408,17 @@ public class SumFrame extends JFrame
 		rs = s.executeQuery("select grp2_idx,start2,end2 from pseudo_hits where pair_idx=" + pair_idx);
 		bins.clear();
 		
-		while (rs.next())
-		{
+		while (rs.next()) {
 			int idx = rs.getInt(1);
 			long start2 = rs.getInt(2);
 			long end2 = rs.getInt(3);
 			if (!bins.containsKey(idx)) bins.put(idx, new TreeSet<Integer>());
 			
-			for (int b = (int)(start2/100); b <= (int)(end2/100); b++)
-			{
+			for (int b = (int)(start2/100); b <= (int)(end2/100); b++){
 				bins.get(idx).add(b);
 			}
 		}
-		for (int b : bins.keySet())
-		{
+		for (int b : bins.keySet()) {
 			hcov2 += bins.get(b).size();
 		}
 		hcov2 /= 10; // to kb
@@ -460,8 +448,8 @@ public class SumFrame extends JFrame
 		hTblPane.setAlignmentX(Component.LEFT_ALIGNMENT);
 		hTblPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		hTblPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-		}
-		catch (Exception e) {ErrorReport.print(e, "Summary anchors");}
+	}
+	catch (Exception e) {ErrorReport.print(e, "Summary anchors");}
 	}
 	/***********************************************************************/
 	// Again we'll use bins for the block overlaps, this time with size 1kb
@@ -478,8 +466,7 @@ public class SumFrame extends JFrame
 				"start1,end1,start2,end2," +
 				"corr,ngene1,genef1,ngene2,genef2 " +
 				"from blocks where pair_idx=" + pair_idx);
-		while (rs.next())
-		{
+		while (rs.next()) {
 			nblks++;
 			float corr = 	rs.getFloat(7);
 			if (corr < 0)  	ninv++;
@@ -498,8 +485,7 @@ public class SumFrame extends JFrame
 			if (!bins2.containsKey(idx))
 				bins2.put(idx, new TreeMap<Integer,Integer>());
 
-			for (int b = (int)(start/1000); b <= (int)(end/1000); b++)
-			{
+			for (int b = (int)(start/1000); b <= (int)(end/1000); b++){
 				if (!bins2.get(idx).containsKey(b))
 					bins2.get(idx).put(b,1);
 				else
@@ -519,21 +505,17 @@ public class SumFrame extends JFrame
 		} // end rs while 
 		
 		int b11=0,b21=0,b31=0,b41=0;
-		for (int i = 0; i <= 4; i++)
-		{
+		for (int i = 0; i <= 4; i++) {
 			b11 += (blks.containsKey(i) ? blks.get(i) : 0);
 		}
-		for (int i = 7; i <= 20; i++)
-		{
+		for (int i = 7; i <= 20; i++) {
 			b41 += (blks.containsKey(i) ? blks.get(i) : 0);
 		}		
 		b21 = (blks.containsKey(5) ? blks.get(5) : 0);
 		b31 = (blks.containsKey(6) ? blks.get(6) : 0);
 		
-		for (int i : bins2.keySet())
-		{
-			for (int j : bins2.get(i).keySet())
-			{
+		for (int i : bins2.keySet()) {
+			for (int j : bins2.get(i).keySet()) {
 				bcov1++;
 				if (bins2.get(i).get(j) > 1) bdcov1++;
 			}
@@ -543,16 +525,14 @@ public class SumFrame extends JFrame
 		blks.clear();
 		bins2.clear();
 		rs.beforeFirst();
-		while (rs.next())
-		{
+		while (rs.next()) {
 			int idx = 		rs.getInt(2);
 			long start = 	rs.getInt(5);
 			long end = 		rs.getInt(6);
 			if (!bins2.containsKey(idx))
 				bins2.put(idx, new TreeMap<Integer,Integer>());
 	
-			for (int b = (int)(start/1000); b <= (int)(end/1000); b++)
-			{
+			for (int b = (int)(start/1000); b <= (int)(end/1000); b++){
 				if (!bins2.get(idx).containsKey(b))
 					bins2.get(idx).put(b,1);
 				else
@@ -572,20 +552,16 @@ public class SumFrame extends JFrame
 		} // end rs while
 		
 		int b12=0,b22=0,b32=0,b42=0;
-		for (int i = 0; i <= 4; i++)
-		{
+		for (int i = 0; i <= 4; i++){
 			b12 += (blks.containsKey(i) ? blks.get(i) : 0);
 		}
-		for (int i = 7; i <= 20; i++)
-		{
+		for (int i = 7; i <= 20; i++){
 			b42 += (blks.containsKey(i) ? blks.get(i) : 0);
 		}		
 		b22 = (blks.containsKey(5) ? blks.get(5) : 0);
 		b32 = (blks.containsKey(6) ? blks.get(6) : 0);
-		for (int i : bins2.keySet())
-		{
-			for (int j : bins2.get(i).keySet())
-			{
+		for (int i : bins2.keySet()){
+			for (int j : bins2.get(i).keySet()) {
 				bcov2++;
 				if (bins2.get(i).get(j) > 1) bdcov2++;
 			}

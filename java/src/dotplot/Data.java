@@ -4,20 +4,13 @@ import java.awt.Dimension;
 import java.awt.Shape;
 import java.awt.Color;
 import java.awt.geom.Rectangle2D;
-
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
-
-import java.util.Observable;
-import java.util.Observer;
 import java.util.Vector;
-
-import java.sql.SQLException;
 
 import symap.SyMAP;
 import symap.SyMAPConstants;
 import symap.mapper.HitFilter;
 import symap.pool.ProjectProperties;
+import symap.pool.ProjectPair;
 
 import symap.sequence.Sequence;
 import util.DatabaseReader;
@@ -25,46 +18,45 @@ import util.ErrorReport;
 import util.Utilities;
 
 /**
- * This contains the arrays of data (Project and Tile) and much of the interface code
+ * This contains the arrays of data (Project and Tile) and interface code with Filter
+ * CAS533 Removed Observable, removed Loader (was painting tile at time); rearranged 
  */
-
-public class Data extends Observable implements DotPlotConstants {
+public class Data  {
 	public static final double DEFAULT_ZOOM = 0.99;
-
+	public static final int X  = 0, Y   = 1;
+	private final String dbStr = SyMAPConstants.DB_CONNECTION_DOTPLOT_2D;
+	
 	private Project projects[]; // loaded data
 	private Tile[] tiles;
 	
+	private Group currentGrp[];	// selected tile, 2 grps
+	private Project currentProjY; 
+	private int maxGrps=0;
+	
 	private SyMAP symap;
 	private ProjectProperties projProps;
-	private FilterData filter;
+	private FilterData filtData;
 	
-	private double zoomFactor;
+	private double sX1, sX2, sY1, sY2;
 	private Shape selectedBlock;
-	private boolean hasSelectedArea;
-	private boolean isZoomed;
-	private double x1, x2, y1, y2;
-	private Group currentGrp[];
-	private Project currentProjY; 
-	private boolean canPaint;
-	private boolean isCentering = false;
+	private double zoomFactor;
+	private boolean hasSelectedArea, isTileView;
 	private boolean isScaled;
-	private double scaleFactor;
-	private int dotSize = 1;
-	private Loader loader;
-	private Vector<Plot> plots = new Vector<Plot>();
+	private double scaleFactor = 1;
+	private double minPctId=100;
 	
+	// CAS533 added this in order to replace the massive Loader.java; it no longer draws tite by tile
+	private DotPlotDBUser dbUser;
+	
+	// Called from DotPlotFrame
 	public Data(DotPlotDBUser db) {
-		this(new Loader(db));
-	}
-
-	public Data(Loader l) {
-		filter        = new FilterData();
+		dbUser = db;
+		
 		projects      = null; 
 		tiles         = new Tile[0];
 		zoomFactor    = DEFAULT_ZOOM;
 		hasSelectedArea = false;
-		isZoomed      = false;
-		canPaint      = false;
+		isTileView      = false;
 		currentGrp    = new Group[] {null,null};
 		currentProjY  = null; 
 		selectedBlock = null;
@@ -72,129 +64,74 @@ public class Data extends Observable implements DotPlotConstants {
 		isScaled = false;
 		scaleFactor  = 1;
 
-		loader = l;
-
-		//if (loader == null) CAS507
-		//	loader = new Loader(new DotPlotDBUser(), Loader.APPLICATION);
-
-		loader.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				update();
-			}
-		});
-
-		filter.addObserver(new Observer() {
-			public void update(Observable o, Object arg) {
-				Data.this.update();
-			}
-		});
-
 		try { // ugh - symap is used in different contexts, so needs to be active
-			DatabaseReader dr = DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_DOTPLOT_2D, getDotPlotDBUser().getDatabaseReader());
+			DatabaseReader dr = DatabaseReader.getInstance(dbStr, dbUser.getDatabaseReader());
 			symap = new SyMAP(dr, null);
 		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 		
 		projProps = symap.getDrawingPanel().getPools().getProjectProperties(); // ugh
 	}
-	// ControlPanel and Plot
-	public void addObserver(Observer o) {
-		if (o instanceof Plot) plots.add((Plot)o);
-		super.addObserver(o);
-	}
-
-	// Plot and Data
-	private DotPlotDBUser getDotPlotDBUser() {
-		return loader.getDB();
-	}
-	// DotPlotFrame
-	public void kill() {
-		clear();
-		tiles = new Tile[0]; 
-		if (projects != null) {
-			for (Project p : projects)
-				if (p != null) p.setGroups(null);
-		}
-		loader.kill();
-		if (symap != null) {
-			symap.getDatabaseReader().close();
-			symap = null; 
-		}
-		getDotPlotDBUser().getDatabaseReader().close();
-	}
-
-	private void clear() {
-		loader.stop();
-
-		Filter.hideFilter(this);
-
-		scaleFactor = 1;
-
-		zoomFactor = DEFAULT_ZOOM;
-		hasSelectedArea = false;
-		isZoomed = false;
-		selectedBlock= null;
-		x1 = x2 = y1 = y2 = 0;
-		if (currentGrp != null)
-			currentGrp[0] = currentGrp[1] = null;
-		currentProjY = null;	
-		
-		update();
-		canPaint = false;
-	}
-	
-	public SyMAP getSyMAP() { return symap; }
-	public boolean isCentering() { return isCentering; }
-	public boolean canPaint() { return canPaint; }
-	
+	/*************************************************************
+	 *  DotPlotFrame (genome), SyMAPFrameCommon (groups), Data.setReference (change ref)
+	 * @param xGroupIDs, yGroupIDs null if genome
+	 * CAS533 for blocks and hits:
+	 * 		this was loader.execute(projProps,projects,tiles,sb,true);added swap instead of reading database again
+	 */
 	public void initialize(int[] projIDs, int[] xGroupIDs, int[] yGroupIDs) {
-		try {
-			clear();
-			initProjects(projIDs, xGroupIDs, yGroupIDs);
-			loader.execute(projProps,projects,tiles,filter,true);
-			
-			if (getNumVisibleGroups() == 2)
-				selectTile(100, 100); // kludge
-			
-		} catch (SQLException e) { sqlError(e,null); }
-	}
-
-	private void initProjects(int[] projIDs, int[] xGroupIDs, int[] yGroupIDs) throws SQLException {
+	try {
+		clear();
+		
+	/* init projects*/
 		Vector<Project> newProjects = new Vector<Project>(projIDs.length);
-		if (projects != null && projects[0].getID() == projIDs[0])
-			newProjects.add( projects[0] );
-		else 
-			newProjects.add( new Project(projIDs[0], projProps) );
-		for (int i = 1;  i < projIDs.length;  i++) {
+		for (int i = 0;  i < projIDs.length;  i++) {// 1 -> 0
 			Project p = Project.getProject(projects, 1, projIDs[i]);
 			if (p == null) p = new Project(projIDs[i], projProps);
-			
 			newProjects.add( p );
 		}
 		projects = newProjects.toArray(new Project[0]);
+	
+		dbUser.setGrpPerProj(projects, xGroupIDs, yGroupIDs, projProps); // needs to redone for ref
+		for (Project p : projects) 
+			maxGrps = Math.max(p.getNumGroups(), maxGrps);
 		
-		getDotPlotDBUser().setProjects(projects, xGroupIDs, yGroupIDs, projProps);
+	/* init tiles */
+		tiles = Project.createTiles(projects, tiles, projProps);
+
+		long time = Utilities.getNanoTime();
 		
+	/* add blocks and hits to tiles */
+		for (Tile tObj : tiles) {
+			boolean bSwap = projProps.isSwapped(tObj.getProjID(X), tObj.getProjID(Y)); // if DB.pairs.proj1_idx=proj(Y)
+			if (tObj.hasHits()) tObj.swap(tObj.getProjID(X), tObj.getProjID(Y));
+			else {
+				dbUser.setBlocks(tObj, bSwap);
+
+				dbUser.setHits(tObj, bSwap);
+			}
+		}
+		prt("Load dotplot: " + Utilities.getTimeStr(time));
+
+		filtData = new FilterData(); 
+		minPctId = dbUser.getMinPctID();
+		filtData.setBounds(minPctId, 100);
+	
+		if (getNumVisibleGroups() == 2) selectTile(100, 100); // kludge; this sets current...
+	} catch (Exception e) { ErrorReport.print(e,"Initialize"); }
+	}
+	public double getMinPctid() { return minPctId; }
+	/***************************************************************************/
+	private void clear() { // initialize, kill
 		scaleFactor = 1;
-
-		canPaint = true;
-		tiles = Project.getGroupPairs(projects, tiles, projProps);
-
-		update();
+		zoomFactor = DEFAULT_ZOOM;
+		hasSelectedArea = false;
+		isTileView = false;
+		selectedBlock= null;
+		sX1 = sX2 = sY1 = sY2 = 0;
+		currentGrp[0] = currentGrp[1] = null;
+		currentProjY = null;	
+		maxGrps=0;
 	}
-
-	public void setReference(Project reference) {
-		if (reference == projects[X])
-			return;
-		
-		int[] newProjects = new int[projects.length];
-		newProjects[0] = reference.getID();
-		int i = 1;
-		for (Project p : projects)
-			if (p.getID() != reference.getID())
-				newProjects[i++] = p.getID();
-		
-		initialize(newProjects, null, null);
-	}
+	/***********************************************************************/
 	// Select for 2D
 	private void show2dBlock() {
 		if (selectedBlock==null) return;
@@ -202,9 +139,8 @@ public class Data extends Observable implements DotPlotConstants {
 		symap.getDrawingPanel().setMaps(1);
 		symap.getHistory().clear(); 
 		
-		if (selectedBlock instanceof InnerBlock) {
-			
-			InnerBlock ib = (InnerBlock)selectedBlock;
+		if (selectedBlock instanceof ABlock) {
+			ABlock ib = (ABlock)selectedBlock;
 			Project pX = projects[X];
 			Project pY = getCurrentProj();
 			Group gX = ib.getGroup(X);
@@ -214,15 +150,15 @@ public class Data extends Observable implements DotPlotConstants {
 			hd.setForDP(true, false);
 			
 			try { // CAS531 need to recreate since I changed the Hits code; bonus, allows multiple 2d displays
-				DatabaseReader dr = DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_DOTPLOT_2D, getDotPlotDBUser().getDatabaseReader());
+				DatabaseReader dr = DatabaseReader.getInstance(dbStr, dbUser.getDatabaseReader());
 				symap = new SyMAP(dr, null);
 			} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 			
 			symap.getDrawingPanel().setHitFilter(1,hd);
 			
 			Sequence.setDefaultShowAnnotation(false); 
-			printDebug("Block#" + ib.getNumber() + " " + ib.getStart(Y) + " " 
-								   + ib.getEnd(Y)+ " " + ib.getStart(X) + " " + ib.getEnd(X));
+			prt("Block#" + ib.getNumber() + " " + ib.getStart(Y) + " " + ib.getEnd(Y)+ " " 
+					+ ib.getStart(X) + " " + ib.getEnd(X));
 			symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),gY.getID(),Color.CYAN);	
 			symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),gX.getID(),Color.GREEN);
 			symap.getDrawingPanel().setTrackEnds(1,ib.getStart(Y),ib.getEnd(Y));
@@ -233,10 +169,6 @@ public class Data extends Observable implements DotPlotConstants {
 			Rectangle2D bounds = selectedBlock.getBounds2D();
 			show2dArea(bounds.getMinX(),bounds.getMinY(),bounds.getMaxX(),bounds.getMaxY());
 		}
-	}
-	
-	public void zoomArea() {
-		show2dArea(x1,y1,x2,y2);
 	}
 	
 	private void show2dArea(double x1, double y1, double x2, double y2) {
@@ -252,7 +184,7 @@ public class Data extends Observable implements DotPlotConstants {
 		}
 		
 		try {
-			DatabaseReader dr = DatabaseReader.getInstance(SyMAPConstants.DB_CONNECTION_DOTPLOT_2D, getDotPlotDBUser().getDatabaseReader());
+			DatabaseReader dr = DatabaseReader.getInstance(dbStr, dbUser.getDatabaseReader());
 			symap = new SyMAP(dr, null);
 		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 		
@@ -271,207 +203,138 @@ public class Data extends Observable implements DotPlotConstants {
 		
 		symap.getFrame().showX();
 	}
+	
+	/*****************************************
+	 * DotPlotFrame
+	 */
+	public SyMAP getSyMAP() { return symap; }
+	public Project[] getProjects() { return projects; }
+	public void kill() {
+		clear();
+		tiles = new Tile[0]; 
+		if (projects != null) {
+			for (Project p : projects)
+				if (p != null) p.setGroups(null);
+		}
 
-	public void resetAll() {
+		if (symap != null) {
+			symap.getDatabaseReader().close();
+			symap = null; 
+		}
+		dbUser.getDatabaseReader().close();
+	}
+
+	/*****************************************
+	 * XXX Control
+	 */
+	public void setHome() {
+		isTileView = false;
 		zoomFactor = DEFAULT_ZOOM;
 		selectedBlock = null;
-		filter.setDefaults();
-		update();
+		hasSelectedArea = false;
+		// filtData.setDefaults();
 	}
-
-	public void update() {
-		setChanged();
-		notifyObservers();
-	}	
-
-	private void sqlError(SQLException e, String q) {
-		if (e != null) ErrorReport.print(e, q);
-		throw new RuntimeException("Error running SQL Command"+(q == null ? "" : ": "+q));
+	public void setReference(Project reference) {
+		if (reference == projects[X])
+			return;
+		
+		int[] newProjects = new int[projects.length];
+		newProjects[0] = reference.getID();
+		int i = 1;
+		for (Project p : projects)
+			if (p.getID() != reference.getID())
+				newProjects[i++] = p.getID();
+		
+		initialize(newProjects, null, null);
 	}
+	public void setScale(boolean scale) {this.isScaled = scale;}
+	public void setZoom(double zoom)    {this.zoomFactor = zoom; }; // Control and Plot
 
-	public boolean isLoading() {
-		return loader.isLoading();
-	}
-
-	public boolean isZoomed() {
-		return isZoomed;
+	public void factorZoom(double mult) {
+		if (mult == 1) return;
+		
+		zoomFactor *= mult;
 	}
 	
-	public static Group getGroupByOffset(long offset, Group[] groups) {
-		if (groups != null)
-			for (int i = groups.length-1; i >= 0; i--)
-				if (groups[i].getOffset() < offset) return groups[i];
-		return null;
-	}
-
-	public void selectTile(long xUnits, long yUnits) {
-		if (projects[X] == null || projects[Y] == null) return ;
+	/***********************************************
+	 * XXX Plot
+	 */
+	public boolean hasSelectedArea()  {return hasSelectedArea;}
+	public ABlock  getSelectedBlock() {return (ABlock) selectedBlock;}
+	public boolean isTileView() 	  {return isTileView;} // plot and Control
+	
+	public void    show2dArea() 	  {show2dArea(sX1,sY1,sX2,sY2);}
+		
+	// Plot.PlotListener mouseClick
+	public boolean selectTile(long xUnits, long yUnits) {
+		if (projects[X] == null || projects[Y] == null) return false;
 
 		currentGrp[X] = projects[X].getGroupByOffset(xUnits);
 		
 		currentGrp[Y] = getGroupByOffset(yUnits, getVisibleGroupsY(getVisibleGroups(X)));
-		currentProjY = getProjectByID(currentGrp[Y].getProjID());
+		currentProjY  = getProjectByID(currentGrp[Y].getProjID());
 		
 		if (currentGrp[X] != null && currentGrp[Y] != null && currentProjY != null) {
 			zoomFactor = DEFAULT_ZOOM;
-			isZoomed = true;
-			update();
+			isTileView = true;
 		}
+		return true;
 	}
-
-	public int getDotSize() {
-		return dotSize;
-	}
-
-	public void setDotSize(int ds) {
-		if (ds != dotSize) {
-			dotSize = ds;
-			update();
-		}
-	}
-
-	public Group getCurrentGrp(int axis) {
-		return currentGrp[axis];
-	}
-	
-	public Project getCurrentProj() {
-		return currentProjY;
-	}
-
-	public int getCurrentGrpSize(int axis) {
-		return currentGrp[axis] == null ? 0 : currentGrp[axis].getSize();
-	}
-
-	public void selectBlock(double xUnits, double yUnits) {
-		Shape shapes[] = new Shape[DotPlot.TOT_RUNS];
+	public boolean selectBlock(double xUnits, double yUnits) {
 		Shape s = null;
-		if (filter.isShowBlocks() && !hasSelectedArea && isZoomed()) 
-		{
-			for (int i = 0; i < shapes.length; i++) {
-				shapes[i] = Tile.getABlock(tiles,currentGrp[X],currentGrp[Y],i,xUnits,yUnits);
-			}
-			
-			s = Utilities.getSmallestBoundingArea(shapes);
+		if (filtData.isShowBlocks() && !hasSelectedArea && isTileView()) {
+			s = Tile.getBlock(tiles,currentGrp[X],currentGrp[Y],xUnits,yUnits);
+		
 			if (s != null) {
 				if (s == selectedBlock)
 					show2dBlock();
 			}
 		}
 		selectedBlock = s;
-
-		update();
+		return (selectedBlock!=null);
 	}
-	
-	public Tile[] getTiles()  		{ return tiles;       }
-	public double getZoomFactor() 	{ return zoomFactor;  }
-	public double getScaleFactor()  { return scaleFactor; }
-	public boolean isScaled() 		{ return isScaled;    }
-
-	public void setHome() {
-		isZoomed = false;
-		zoomFactor = DEFAULT_ZOOM;
-		selectedBlock = null;
-		hasSelectedArea = false;
-		update();
-	}
-
-	public void setScale(boolean scale) {
-		if (this.isScaled != scale) {
-			this.isScaled = scale;
-			update();
-		}
-	}
-
-	public void setZoom(double zoom) {
-		if (this.zoomFactor != zoom) {
-			this.zoomFactor = zoom;
-			update();
-		}
-	}
-	
-	public void factorZoom(double mult) {
-		if (mult != 1) {
-			isCentering = true;
-
-			Plot plots[] = (Plot[])this.plots.toArray(new Plot[0]);
-			for (int i = 0; i < plots.length; i++)
-				plots[i].saveCenter();
-
-			zoomFactor *= mult;
-			update();
-
-			isCentering = false;
-
-			for (int i = 0; i < plots.length; i++)
-				plots[i].restoreCenter();
-		}
-	}
-
-	public boolean hasSelectedArea() {
-		return hasSelectedArea;
-	}
-
-	public void clearSelectedArea() {
-		if (hasSelectedArea) {
-			hasSelectedArea = false;
-			update();
-		}
-	}
-
-	public void selectArea(Dimension size, double x1, double y1, double x2, double y2) {
-		double xmax = currentGrp[X].getSize();
-		double ymax = currentGrp[Y].getSize();
+	public boolean selectArea(Dimension size, double x1, double y1, double x2, double y2) {
+		double xmax = currentGrp[X].getGrpLenBP();
+		double ymax = currentGrp[Y].getGrpLenBP();
 		double xfactor = size.getWidth() / xmax;
 		double yfactor = size.getHeight() / ymax;
 
 		selectedBlock = null;
 		hasSelectedArea = true;
-		this.x1 = Math.min(x1,x2) / xfactor;
-		this.x2 = Math.max(x1,x2) / xfactor;
-		this.y1 = Math.min(y1,y2) / yfactor;
-		this.y2 = Math.max(y1,y2) / yfactor;
+		this.sX1 = Math.min(x1,x2) / xfactor;
+		this.sX2 = Math.max(x1,x2) / xfactor;
+		this.sY1 = Math.min(y1,y2) / yfactor;
+		this.sY2 = Math.max(y1,y2) / yfactor;
 
 		//keep inside bounds, or ignore if completely outside
-		if (this.x1 < 0) this.x1 = 0;
-		if (this.y1 < 0) this.y1 = 0;
-		if (this.x2 > xmax) this.x2 = xmax;
-		if (this.y2 > ymax) this.y2 = ymax;
-		if (this.x1 > xmax || this.x2 < 0 || this.y1 > ymax || this.y2 < 0)
+		if (this.sX1 < 0) this.sX1 = 0;
+		if (this.sY1 < 0) this.sY1 = 0;
+		if (this.sX2 > xmax) this.sX2 = xmax;
+		if (this.sY2 > ymax) this.sY2 = ymax;
+		if (this.sX1 > xmax || this.sX2 < 0 || this.sY1 > ymax || this.sY2 < 0)
 			hasSelectedArea = false;
-	}
-
-	public ABlock getSelectedBlock() {
-		return (selectedBlock instanceof ABlock) ? (ABlock)selectedBlock : null;
-	}
-
-	public FilterData getFilterData() { return filter; }
-	public Project getProject(int axis) { return projects[axis]; }
-	public int getNumProjects() { return projects.length; } 
-	public Project[] getProjects() { return projects; }
-	
-	public Project getProjectByID(int id) {
-		for (Project p : projects)
-			if (p.getID() == id)
-				return p;
-		return null;
+		return hasSelectedArea;
 	}
 	
-	public boolean isGroupVisible(Group g) {
-		return (g.isVisible() && (g.hasBlocks() || filter.isShowEmpty()));
+	public boolean clearSelectedArea() {
+		boolean rc = hasSelectedArea;
+		hasSelectedArea = false;
+		return rc;
 	}
-	
-	public boolean isGroupVisible(Group gY, Group[] gX) {
-		return (gY.isVisible() && (gY.hasBlocks(gX) || filter.isShowEmpty()));
+	/***************************************************************************/
+	public boolean isGroupVisible(Group g) { // plot and data
+		return (g.isVisible() && (g.hasBlocks() || filtData.isShowEmpty()));
 	}
-	
-	public int getNumVisibleGroups() {
+	private boolean isGroupVisible(Group gY, Group[] gX) { // data
+		return (gY.isVisible() && (gY.hasBlocks(gX) || filtData.isShowEmpty()));
+	}
+	public int getNumVisibleGroups() { // control and data
 		int count = 0;
 		for (Project p : projects)
 			count += p.getNumVisibleGroups();
 		return count;
 	}
-	
-	public Group[] getVisibleGroups(int axis) {
+	public Group[] getVisibleGroups(int axis) { // plot and data
 		int num = getProject(axis).getNumGroups();
 		Vector<Group> out = new Vector<Group>(num);
 		
@@ -483,12 +346,10 @@ public class Data extends Observable implements DotPlotConstants {
 		
 		return out.toArray(new Group[0]);
 	}
-	
-	public Group[] getVisibleGroupsY(Group[] xGroups) {
+	public Group[] getVisibleGroupsY(Group[] xGroups) { // plot and data
 		Vector<Group> out = new Vector<Group>();
 		
-		if (isZoomed)
-			out.add(currentGrp[Y]);
+		if (isTileView) out.add(currentGrp[Y]);
 		else {
 			for (int axis = 1;  axis < projects.length;  axis++) {
 				int num = projects[axis].getNumGroups();
@@ -499,11 +360,27 @@ public class Data extends Observable implements DotPlotConstants {
 				}
 			}
 		}
-		
 		return out.toArray(new Group[0]);
 	}
-	
-	public Group[] getVisibleGroups(int yAxis, Group[] xGroups) {
+	public long getVisibleGroupsSizeY(Group[] xGroups) { // plot.setDims
+		long size = 0;
+		for (Group g : getVisibleGroupsY(xGroups))
+			size += g.getEffectiveSize();
+		return size;
+	}
+	public long getVisibleGroupsSize(int axis) { // plot.setDims
+		long size = 0;
+		for (Group g : getVisibleGroups(axis))
+			size += g.getEffectiveSize();
+		return size;
+	}
+	public long getVisibleGroupsSize(int yAxis, Group[] xGroups) { // plot.paintComponenet
+		long size = 0;
+		for (Group g : getVisibleGroups(yAxis, xGroups))
+			size += g.getEffectiveSize();
+		return size;
+	}
+	private Group[] getVisibleGroups(int yAxis, Group[] xGroups) { // above
 		Vector<Group> out = new Vector<Group>();
 		
 		int numGroups = projects[yAxis].getNumGroups();
@@ -512,37 +389,48 @@ public class Data extends Observable implements DotPlotConstants {
 			if (isGroupVisible(g, xGroups))
 				out.add(g);
 		}
-		
 		return out.toArray(new Group[0]);
 	}
+	/***************************************************************************/
+	public FilterData getFilterData() { return filtData; } // plot and Filter.FilterListener
+	public Project getProject(int axis) { return projects[axis]; } // plot and data
+	public int getNumProjects() { return projects.length; } // plot and data
 	
-	public long getVisibleGroupsSize(int axis) {
-		long size = 0;
-		for (Group g : getVisibleGroups(axis))
-			size += g.getEffectiveSize();
-		return size;
+	public Group getCurrentGrp(int axis) 	{return currentGrp[axis];}
+	public Project getCurrentProj() 		{return currentProjY;}
+	public int getCurrentGrpSize(int axis) {
+		return currentGrp[axis] == null ? 0 : currentGrp[axis].getGrpLenBP();
+	}
+	public int getMaxGrps() { return maxGrps;}
+	public double getX1() { return sX1; } // plot
+	public double getX2() { return sX2; }
+	public double getY1() { return sY1; }
+	public double getY2() { return sY2; }
+	public Tile[] getTiles()  		{ return tiles;       }
+	
+	public double getZoomFactor() 	{ return zoomFactor;  }
+	public double getScaleFactor()  { return scaleFactor; }
+	public boolean isScaled() 		{ return isScaled;    }
+	public int getDotSize()			{return filtData.getDotSize();}
+	
+	public ProjectPair getProjectPair(int x, int y) {
+		return projProps.getProjectPair(projects[x].getID(),projects[y].getID());
+	}
+	/******************************************************************/
+	private static Group getGroupByOffset(long offset, Group[] groups) {
+		if (groups != null)
+			for (int i = groups.length-1; i >= 0; i--)
+				if (groups[i].getOffset() < offset) return groups[i];
+		return null;
+	}
+	private Project getProjectByID(int id) { // Data.selectTile
+		for (Project p : projects)
+			if (p.getID() == id)
+				return p;
+		return null;
 	}
 	
-	public long getVisibleGroupsSize(int yAxis, Group[] xGroups) {
-		long size = 0;
-		for (Group g : getVisibleGroups(yAxis, xGroups))
-			size += g.getEffectiveSize();
-		return size;
-	}
-
-	public long getVisibleGroupsSizeY(Group[] xGroups) {
-		long size = 0;
-		for (Group g : getVisibleGroupsY(xGroups))
-			size += g.getEffectiveSize();
-		return size;
-	}
-
-	public double getX1() { return x1; }
-	public double getX2() { return x2; }
-	public double getY1() { return y1; }
-	public double getY2() { return y2; }
-	
-	private void printDebug (String msg) {
+	private void prt (String msg) {
 		if (SyMAP.DEBUG) System.out.println("Data: " + msg);
 	}
 }

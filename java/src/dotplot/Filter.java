@@ -2,6 +2,7 @@ package dotplot;
 
 /*********************************************
  * Filter popup - see FilterData
+ * CAS533 removed 'extends Observable' and SBObserable; made Filter object in ControlPanel once
  */
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -25,46 +26,36 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
-import java.util.Observer;
-import java.util.Observable;
-import java.util.Vector;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class Filter extends JDialog implements DotPlotConstants {
-	private Data data;
+public class Filter extends JDialog  {
+	private final int manyGrps=20; // show empty
+	private final String hitLabel = " Hit %Identity ";
+	private final String dotLabel = " Dot Size      ";
 	
-	private FilterData myFilterData;
+	private Data data;
+	private FilterData cpFiltData;	// CAS533 add
+	private ControlPanel cntl;		// CAS533 add
 
-	private JSlider pctidSliders  = new JSlider();
-	private JLabel pctidLabels  = new JLabel ();
+	private JSlider pctidSlider, dotSizeSlider; 
+	private JLabel  pctidLabel, dotSizeLabel; 
+	
+	private JRadioButton bPctScale,  bLenScale,  bNoScale;
+	private JRadioButton bBlueHigh,  bGreenHigh, bBlackHigh;
+	private JRadioButton bBlockHits, bAllHits,   bMixHits;
+	
+	private JCheckBox showBlocksBox,  showBlkNumBox;
+	private JCheckBox showEmptyBox; 
 	
 	private JPanel buttonPanel;
 	private JButton cancelButton, defaultButton, okButton;
-	
-	private JRadioButton showBlockHitsBtn, showAllHitsBtn;
-	private JCheckBox showBlocksBox,  highBlockHitsBox;
-	private JCheckBox showEmptyBox; 
 
-	public static void showFilter(Data d) {
-		SBObserver.show(new Filter(d));
-	}
-
-	public static void hideFilter(Data d) {
-		SBObserver.hide();
-	}
-
-	private Filter(Data d) {
+	public Filter(Data d, ControlPanel c) {
 		data = d;
+		cntl = c;
 		
 		FilterListener listener = new FilterListener();
-		myFilterData = new FilterData(data.getFilterData());
 		
-		pctidSliders.addChangeListener(listener);
-		listener.stateChanged(new ChangeEvent(pctidSliders));
-		
-		setTitle("Filters");
-		setModal(false);
-
 		okButton = createButton("Apply","Save changes and close");
 		okButton.addActionListener(listener);
 
@@ -74,33 +65,87 @@ public class Filter extends JDialog implements DotPlotConstants {
 		defaultButton = createButton("Defaults", "Reset to defaults and close");
 		defaultButton.addActionListener(listener);
 
+		JButton helpButton = util.Jhtml.createHelpIconUserSm(util.Jhtml.dotfilter); // CAS533 add
+		
 		buttonPanel = new JPanel(new BorderLayout());
 		buttonPanel.add(new JSeparator(), "North");
 		JPanel jpanel = new JPanel();
 		jpanel.add(okButton);
 		jpanel.add(cancelButton);
 		jpanel.add(defaultButton);
+		jpanel.add(helpButton);
 		buttonPanel.add(jpanel, "Center");
 
-		showBlockHitsBtn = new JRadioButton("Show Only Block Hits");
-		showBlockHitsBtn.addItemListener(listener);
+		int id = (int) data.getFilterData().getPctid();
+		pctidSlider = new JSlider(id, 100, id);
+		pctidSlider.setMajorTickSpacing(10);
+		pctidSlider.setMinorTickSpacing(5);
+		pctidSlider.setPaintTicks(true);
+		pctidLabel = new JLabel(hitLabel + id); // %identity
+		pctidSlider.addChangeListener(listener);
+		listener.stateChanged(new ChangeEvent(pctidSlider));
+		
+		dotSizeSlider = new JSlider(1, 5, 1); // min, max, init
+		dotSizeSlider.setMajorTickSpacing(1);
+		dotSizeSlider.setPaintTicks(true);
+		dotSizeLabel = new JLabel (dotLabel + "1");
+		dotSizeSlider.addChangeListener(listener);
+		listener.stateChanged(new ChangeEvent(dotSizeSlider));
+		
+		bPctScale = new JRadioButton("%Id");
+		bPctScale.addItemListener(listener);
+		
+		bLenScale = new JRadioButton("Length");
+		bLenScale.addItemListener(listener);
+		
+		bNoScale = new JRadioButton("None");
+		bNoScale.addItemListener(listener);
 
-		showAllHitsBtn = new JRadioButton("Show All Hits");
-		showAllHitsBtn.addItemListener(listener);
+		ButtonGroup sgroup = new ButtonGroup();
+		sgroup.add(bPctScale);
+		sgroup.add(bLenScale);
+		sgroup.add(bNoScale);
+		bLenScale.setSelected(true);
+		
+		bBlueHigh = new JRadioButton("Blue");
+		bBlueHigh.addItemListener(listener);
+		
+		bGreenHigh = new JRadioButton("Green");
+		bGreenHigh.addItemListener(listener);
+		
+		bBlackHigh = new JRadioButton("Black");
+		bBlackHigh.addItemListener(listener);
+
+		ButtonGroup hgroup = new ButtonGroup();
+		hgroup.add(bBlueHigh);
+		hgroup.add(bGreenHigh);
+		hgroup.add(bBlackHigh);
+		bBlackHigh.setSelected(true);
+		
+		bBlockHits = new JRadioButton("Block");
+		bBlockHits.addItemListener(listener);
+
+		bAllHits = new JRadioButton("All");
+		bAllHits.addItemListener(listener);
+		
+		bMixHits = new JRadioButton("Mix");
+		bMixHits.addItemListener(listener);
 
 		ButtonGroup group = new ButtonGroup();
-		group.add(showBlockHitsBtn);
-		group.add(showAllHitsBtn);
+		group.add(bBlockHits);
+		group.add(bAllHits);
+		group.add(bMixHits);
+		bAllHits.setSelected(true);
 		
-		highBlockHitsBox = new JCheckBox("Highlight Block Hits");
-		highBlockHitsBox.addItemListener(listener);
+		showBlkNumBox = new JCheckBox("Show Block Numbers");
+		showBlkNumBox.addItemListener(listener);
 
 		showBlocksBox = new JCheckBox("Show Blocks");
 		showBlocksBox.addItemListener(listener);
 
 		showEmptyBox = new JCheckBox("Show Empty Regions");
 		showEmptyBox.addItemListener(listener);
-
+		
 		Container cp = getContentPane();
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -109,144 +154,165 @@ public class Filter extends JDialog implements DotPlotConstants {
 		gbc.gridheight = 1;
 		gbc.ipadx = 5;
 		gbc.ipady = 8;
+		int rem = GridBagConstraints.REMAINDER;
 		
-		addToGrid(cp,gbl,gbc,new JLabel(" Hits"),1); 
-		addToGrid(cp,gbl,gbc,new JLabel(),GridBagConstraints.REMAINDER);
+		addToGrid(cp,gbl,gbc,pctidLabel, 1);
+		addToGrid(cp,gbl,gbc,pctidSlider, rem);
 		
-		addToGrid(cp,gbl,gbc,new JLabel(" Identity:"),1);
-		addToGrid(cp,gbl,gbc,pctidLabels, 1);
-		addToGrid(cp,gbl,gbc,pctidSliders, GridBagConstraints.REMAINDER);
-		addToGrid(cp,gbl,gbc,new JSeparator(),GridBagConstraints.REMAINDER);
+		addToGrid(cp,gbl,gbc,dotSizeLabel, 1);
+		addToGrid(cp,gbl,gbc,dotSizeSlider, rem);
 		
-		addToGrid(cp,gbl,gbc,showBlockHitsBtn,GridBagConstraints.REMAINDER);
-		addToGrid(cp,gbl,gbc,showAllHitsBtn,GridBagConstraints.REMAINDER);
-		addToGrid(cp,gbl,gbc,new JSeparator(),GridBagConstraints.REMAINDER);
+		addToGrid(cp,gbl,gbc,new JLabel(" Scale dot by hit"),1);
+		addToGrid(cp,gbl,gbc,bLenScale,1);
+		addToGrid(cp,gbl,gbc,bPctScale,1);
+		addToGrid(cp,gbl,gbc,bNoScale,rem);
+		
+		addToGrid(cp,gbl,gbc,new JLabel(" Block Hits"),1);
+		addToGrid(cp,gbl,gbc,bBlackHigh,1);
+		addToGrid(cp,gbl,gbc,bBlueHigh,1);
+		addToGrid(cp,gbl,gbc,bGreenHigh,rem);
+		
+		addToGrid(cp,gbl,gbc,new JLabel(" Show Hits"),1);
+		addToGrid(cp,gbl,gbc,bAllHits,1);
+		addToGrid(cp,gbl,gbc,bMixHits,1);
+		addToGrid(cp,gbl,gbc,bBlockHits,rem);
+		
+		addToGrid(cp,gbl,gbc,new JSeparator(),rem);
+		
+		addToGrid(cp,gbl,gbc,showBlocksBox,1);
+		addToGrid(cp,gbl,gbc,showBlkNumBox,rem);
+		
+		if (data.getMaxGrps()>manyGrps) {
+			addToGrid(cp,gbl,gbc,new JSeparator(),rem);
+			addToGrid(cp,gbl,gbc,showEmptyBox, rem); 
+		}
+		
+		addToGrid(cp,gbl,gbc,buttonPanel, rem);
 
-		addToGrid(cp,gbl,gbc,highBlockHitsBox,GridBagConstraints.REMAINDER);
-		addToGrid(cp,gbl,gbc,showBlocksBox,GridBagConstraints.REMAINDER);
-		addToGrid(cp,gbl,gbc,showEmptyBox,GridBagConstraints.REMAINDER); 
-		
-		addToGrid(cp,gbl,gbc,buttonPanel,GridBagConstraints.REMAINDER);
-
-		init();
+		setFromFD();
 
 		pack();
 		setResizable(false);
 
+		setTitle("DotPlot Filter");
+		
 		Dimension dim = getToolkit().getScreenSize();
 		setLocation(dim.width / 4,dim.height / 4);
+		toFront();
+		requestFocus();
+		setModal(true); 
 	}
-
+	public void showX() {
+		cpFiltData = data.getFilterData().copy();
+		setFromFD();
+		setVisible(true);
+	}
+	public void setFromFD() {
+		FilterData fd = data.getFilterData();
+		
+		int id = (int) fd.getPctid();
+		if (id>100) id=100;
+		pctidSlider.setValue(id);
+		String x = (id < 100) ? ((id < 10) ? "  " : " ") : ""; // blanks
+		pctidLabel.setText(hitLabel + x + id);
+		
+		dotSizeSlider.setValue((int)fd.getDotSize());
+		
+		bPctScale.setSelected(fd.isPctScale());
+		bLenScale.setSelected(fd.isLenScale());
+		
+		bBlueHigh.setSelected(fd.isHighBlue());
+		bGreenHigh.setSelected(fd.isHighGreen());
+		bBlackHigh.setSelected(!fd.isHighBlockHits());
+		
+		bBlockHits.setSelected(fd.isShowBlockHits());
+		bAllHits.setSelected(fd.isShowAllHits());
+		
+		showBlocksBox.setSelected(fd.isShowBlocks());
+		showBlkNumBox.setEnabled(fd.isShowBlocks());
+		showBlkNumBox.setSelected(fd.isShowBlkNum());
+		
+		showEmptyBox.setSelected(fd.isShowEmpty()); 
+	}
 	private JButton createButton(String s, String t) {
 		JButton jbutton = new JButton(s);
 		jbutton.setMargin(new Insets(1,3,1,3));
 		jbutton.setToolTipText(t);
 		return jbutton;
 	}
-
 	private void addToGrid(Container c, GridBagLayout gbl, GridBagConstraints gbc, Component comp, int i) {
 		gbc.gridwidth = i;
 		gbl.setConstraints(comp,gbc);
 		c.add(comp);
 	}
-
-	public void init() {
-		pctidSliders.setValue((int)myFilterData.getPctid());
-		
-		highBlockHitsBox.setSelected(myFilterData.isHighlightBlockHits());
-		showBlocksBox.setSelected(myFilterData.isShowBlocks());
-		showEmptyBox.setSelected(myFilterData.isShowEmpty()); 
-		
-		if (myFilterData.isShowAllHits())        showAllHitsBtn.setSelected(true);
-		else if (myFilterData.isShowBlockHits()) showBlockHitsBtn.setSelected(true);
-	}
-
-	private static class SBObserver implements Observer {
-		private Filter filter;
-
-		private static Vector<SBObserver> observers = new Vector<SBObserver>(1,1);
-
-		private SBObserver(Filter filter) { 
-			this.filter = filter;
-		}
-
-		private static void hide() {
-			SBObserver o = new SBObserver(null);
-			int i = observers.indexOf(o);
-			if (i >= 0) {
-				o = observers.get(i);
-				o.filter.setVisible(false); 
-				o.filter.dispose();
-				observers.remove(i);
-			}
-		}
-
-		private static void show(Filter filter) {
-			SBObserver o = new SBObserver(filter);
-			int i = observers.indexOf(o);
-			if (i >= 0) {
-				o = observers.get(i);
-				if (!o.filter.isShowing()) 
-				{
-					o.filter.setVisible(false); 
-					o.filter.dispose();
-					o.filter = filter;
-				}
-			}
-			else {
-				observers.add(o);
-				//o.sb.addObserver(o);
-				//o.filter.setMinMaxValues(o.sb);
-			}
-			o.filter.setVisible(true); 
-		}
-
-		public void update(Observable o, Object arg) {
-			
-		}
-	}
-
+	
+	/************************************************************************************/
 	private class FilterListener implements ActionListener, ChangeListener, ItemListener {
 		private FilterListener() { }
 
 		public void actionPerformed(ActionEvent e) {
 			Object src = e.getSource();
-			if      (src == okButton) setVisible(false); 
+			if (src == okButton) {
+				setVisible(false); 
+			}
 			else if (src == cancelButton) {
-				data.getFilterData().set(myFilterData);
+				data.getFilterData().setFromFD(cpFiltData);
+				setFromFD();
+				cntl.update();
 				setVisible(false); 
 			}
 			else if (src == defaultButton) {
 				data.getFilterData().setDefaults();
+				setFromFD();
+				cntl.update();
 				setVisible(false); 
 			}
 		}
-
 		public void stateChanged(ChangeEvent e) {
 			Object src = e.getSource();
 			FilterData fd = data.getFilterData();
-			if (src == pctidSliders) {
-				int s = pctidSliders.getValue();
-				String x = (s < 100 ? (s < 10 ? "  " : " ") : "");
-				pctidLabels.setText(x + s + "%");
-				fd.setPctid(s);
+			
+			if (src == pctidSlider) {
+				int s = pctidSlider.getValue();
+				String x = (s < 100) ? ((s < 10) ? "  " : " ") : ""; // blanks
+				pctidLabel.setText(hitLabel + x + s);
+			  
+				boolean b = fd.setPctid(s);
+				if (b) cntl.update();
+			}
+			else if (src == dotSizeSlider) {
+				int s = dotSizeSlider.getValue();
+				String x = (s<10) ? "  " : " "; // blanks
+				dotSizeLabel.setText(dotLabel + x + s);
+				boolean b = fd.setDotSize(s);
+				if (b) cntl.update();
 			}
 		}
-
 		public void itemStateChanged(ItemEvent evt) {
-			Object src = evt.getSource();
+			Object src = evt.getSource();	
 			FilterData fd = data.getFilterData();
-			
-			if (src == showBlockHitsBtn || src == showAllHitsBtn)
-				fd.setShowHits(showBlockHitsBtn.isSelected(), showAllHitsBtn.isSelected());
-			else if (src == highBlockHitsBox)
-				fd.setHighBlockHits(evt.getStateChange() == ItemEvent.SELECTED);
-			else if (src == showEmptyBox) 
-				fd.setShowEmpty(evt.getStateChange() == ItemEvent.SELECTED);
-			else if (src == showBlocksBox)
-				fd.setShowBlocks(evt.getStateChange() == ItemEvent.SELECTED);
-			else if (src == showEmptyBox) 
-				fd.setShowEmpty(evt.getStateChange() == ItemEvent.SELECTED);
+		
+			boolean b=false;
+			if (src == bBlockHits || src == bAllHits || src == bMixHits) {
+				b = fd.setShowHits(bBlockHits.isSelected(), bAllHits.isSelected());
+			}
+			else if (src == bBlueHigh || src == bGreenHigh || src == bBlackHigh) {
+				b = fd.setHighHits(bBlueHigh.isSelected(), bGreenHigh.isSelected());
+			}
+			else if (src == bPctScale || src==bLenScale || src==bNoScale) {
+				b = fd.setDotScale(bLenScale.isSelected(), bPctScale.isSelected());
+			}
+			else {
+				boolean isChg = (evt.getStateChange() == ItemEvent.SELECTED);
+				
+				if (src == showBlocksBox)	{
+					b = fd.setShowBlocks(isChg);
+					showBlkNumBox.setEnabled(showBlocksBox.isSelected());
+				}
+				else if (src == showBlkNumBox)	b = fd.setShowBlkNum(isChg);
+				else if (src == showEmptyBox) 	b = fd.setShowEmpty(isChg);
+			}
+			if (b) cntl.update();
 		}
 	}
 }

@@ -1,9 +1,5 @@
 package dotplot;
 
-/***********************************************
- * Used by Tile.IBlock class
- * CAS531 removed dead stuff
- */
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
@@ -11,39 +7,36 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-public abstract class ABlock implements Shape, DotPlotConstants, Comparable<ABlock>, Cloneable {
+/***********************************************
+ * Represents the rectangle of a block (does not contains its hits)
+ * CAS531 removed dead stuff; CAS533 changed from abstract
+ * 
+ * The Shape is used in Tile, see getSmallestBoundingArea
+ */
+
+public class ABlock implements Shape, Comparable<ABlock> {
+	private final int X = Data.X, Y = Data.Y;
+	
 	private int number;
 	private Rectangle rect;
-	private boolean rectSet;
+	
 	private Tile parent;
-
-	protected StringBuffer summary;
-
-	protected ABlock() { 
-		super();
-
-		summary = new StringBuffer();
-		rect = new Rectangle();
-		rectSet = false;
-	}
+	int sX, eX, sY, eY; // CAS533 added for swap
 
 	public ABlock(Tile parent, int blockNum, int sX, int eX, int sY, int eY) {    
-		this();
+		this.sX=sX; this.eX=eX; this.sY=sY; this.eY=eY;
+		rect = new Rectangle();
+		
 		this.parent = parent;
 		this.number = blockNum;
 		rect.setFrameFromDiagonal(sX,sY,eX,eY);
-		rectSet = true;
 	}
-	public Object clone() {
-		ABlock b = null;
-		try {
-			b = (ABlock)super.clone();
-			b.number = number;
-			b.rect = (Rectangle)rect.clone();
-			b.rectSet = rectSet;
-		} catch (CloneNotSupportedException e) { e.printStackTrace(); }
-		return b;
+	public void swap() { // CAS533 instead of reading from DB again, just swap
+		int t=sX; sX=sY; sY=t;
+		    t=eX; eX=eY; eY=t;
+		rect.setFrameFromDiagonal(sX,sY,eX,eY);
 	}
+	
 	public int compareTo(ABlock a) {
 		return number - a.number;
 	}
@@ -55,24 +48,15 @@ public abstract class ABlock implements Shape, DotPlotConstants, Comparable<ABlo
 		return false;
 	}
 	
-	// InnerBlock which is implemented by Tile.IBlock which extends ABlock
-	public Tile getParent() {return parent;}
-	public Group getGroup(int axis) {return parent.getGroup(axis);}
-	
 	public String getName() {
 		return parent.getGroup(Y).getName()+"."+parent.getGroup(X).getName()+"."+getNumber();
 	}
-	public int getStart(int axis) {
-		return (axis == X ? rect.x : rect.y);
-	}
-	public int getEnd(int axis) {
-		return (axis == X ? rect.x+rect.width : rect.y+rect.height);
-	}
-	public int getNumber() {return number;}
-	public int getX() {return rect.x;}
-	public int getY() {return rect.y;}
-	public int getWidth() {return rect.width;}
-	public int getHeight() {return rect.height;}
+	// Called by Plot and Data
+	public int getStart(int axis) {return (axis == X ? rect.x : rect.y);}
+	public int getEnd(int axis)   {return (axis == X ? rect.x+rect.width : rect.y+rect.height);}
+	public int getNumber()        {return number;}
+	public String getNumberStr()  {return number+"";}
+	public Group getGroup(int axis) {return parent.getGroup(axis);}
 
 	////// Shape
 	public boolean contains(double x, double y) {
@@ -86,9 +70,6 @@ public abstract class ABlock implements Shape, DotPlotConstants, Comparable<ABlo
 	}
 	public boolean contains(Rectangle2D r) {
 		return contains(r.getX(),r.getY(),r.getWidth(),r.getHeight());
-	}
-	public boolean contains(DPHit h) {
-		return contains(h.getX(),h.getY());
 	}
 	public Rectangle getBounds() {
 		return rect.getBounds();
@@ -116,19 +97,10 @@ public abstract class ABlock implements Shape, DotPlotConstants, Comparable<ABlo
 	}
 
 	// other
-	public boolean equalRectangles(ABlock ablock, int pad) {
-		Rectangle r = ablock.rect;
-		return closeTo(rect.x,r.x,pad) && closeTo(rect.y,r.y,pad) && closeTo(rect.x+rect.width,r.x+r.width,pad) && closeTo(rect.y+rect.height,r.y+r.height,pad);
-	}
-	private static boolean closeTo(int n1, int n2, int pad) {
-		return (n1 < n2) ? n2 - n1 <= pad : n1 - n2 <= pad;
-	}
 	public String toString() {
 		return "[ABlock #"+number+" ("+rect.x+","+rect.y+") - ("+(rect.x+rect.width)+","+(rect.y+rect.height)+")]";
 	}
 	protected void clear() {
 		rect.setRect(0,0,0,0);
-		rectSet = false;
 	}
-	public abstract DPHit[] getHits(boolean includeRepetitive, boolean onlyBlock);
 }

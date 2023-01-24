@@ -43,7 +43,7 @@ public class Block2Frame extends JFrame {
 	
 	private boolean savedRects = false;
 	private JButton saveBtn;
-	private Container mainPane;
+	private JPanel mainPane; // CAS533 changed from Container to JPanel for ImageViewer
 	private int farL, farR;
 	
 	public Block2Frame(DatabaseReader dbReader, int refIdx, int idx2, int grpIdx, int pairIdx, boolean reversed) {
@@ -98,7 +98,7 @@ public class Block2Frame extends JFrame {
 			saveBtn.setToolTipText("Save Image");
 			saveBtn.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					ImageViewer.showImage(mainPane);
+					ImageViewer.showImage("Block", mainPane);
 				}
 			});
 			cRow.gridx++;
@@ -141,6 +141,7 @@ public class Block2Frame extends JFrame {
 		}
 		catch(Exception e){ErrorReport.print(e, "Init for Chromosome Blocks");}
 	}
+
 	private boolean initFromDB() {
 		try {
 			ResultSet rs;
@@ -508,7 +509,6 @@ public class Block2Frame extends JFrame {
 		int numHits = 0;
 		int idx;
 		Rectangle2D blockRect;
-		int totalSize = 0;
 		boolean unordered;
 		boolean bInv;
 		

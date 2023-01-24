@@ -1,42 +1,30 @@
-package util;
+package symap.closeup;
 
-import java.awt.*;
-import java.awt.geom.*;
+import java.awt.Polygon;
+import java.awt.Rectangle;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Dimension2D;
+import java.awt.geom.PathIterator;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
+/****************************************************************
+ * Hit line and Ruler; CAS533 was a separate file in util
+ */
 public class ArrowLine implements Shape {
-	public static final int NO_ARROW    = 0;
-	public static final int LEFT_ARROW  = 1;
-	public static final int RIGHT_ARROW = 2;
-	public static final int BOTH_ARROWS = 3;
-
+	public static final int NO_ARROW    = 0, LEFT_ARROW  = 1, RIGHT_ARROW = 2, BOTH_ARROWS = 3;
 	private DoublePolygon poly;
 	private double lineY, arrowLineWidth;
 
-	public ArrowLine() {
-		poly = new DoublePolygon();
-	}
-
-	public ArrowLine(Rectangle2D bounds, double lineThickness, Dimension2D arrowDimension, int arrow) {
-		this();
-		setBounds(bounds,lineThickness,arrowDimension,arrow);
-	}
-
-	public double getLineY() {
-		return Math.round(lineY);
-	}
-
-	public double getArrowLineWidth() {
-		return arrowLineWidth;
-	}
+	public ArrowLine() {poly = new DoublePolygon();}
 
 	public void setBounds(Rectangle2D bounds, double lineThickness, Dimension2D arrowDimension, int arrow) {
 		if (arrow == NO_ARROW) setBounds(bounds,lineThickness,null,null);
 		else                   setBounds(bounds,lineThickness,
 				arrow == RIGHT_ARROW ? null : arrowDimension,
-						arrow == LEFT_ARROW  ? null : arrowDimension);
+				arrow == LEFT_ARROW  ? null : arrowDimension);
 	}
-
 	public void setBounds(Rectangle2D bounds, double lineThickness, Dimension2D lArrowDim, Dimension2D rArrowDim) {
 		poly.reset();
 		if (bounds.getWidth() <= 0) return ;
@@ -126,53 +114,23 @@ public class ArrowLine implements Shape {
 		}
 	}
 
-	public boolean contains(double x, double y) {
-		return poly.contains(x,y);
-	}
+	public boolean contains(double x, double y) {return poly.contains(x,y);}
+	public boolean contains(double x, double y, double w, double h) {return poly.contains(x,y,w,h);}
+	public boolean contains(Point2D p) {return poly.contains(p);}
+	public boolean contains(Rectangle2D r) {return poly.contains(r);}
+	public Rectangle getBounds() {return poly.getBounds();}
+	public Rectangle2D getBounds2D() {return poly.getBounds2D();}
+	public PathIterator getPathIterator(AffineTransform at) {return poly.getPathIterator(at);}
+	public PathIterator getPathIterator(AffineTransform at, double flatness) {return poly.getPathIterator(at,flatness);}
+	public boolean intersects(double x, double y, double w, double h) {return poly.intersects(x,y,w,h);}
 
-	public boolean contains(double x, double y, double w, double h) {
-		return poly.contains(x,y,w,h);
-	}
+	public boolean intersects(Rectangle2D r) {return poly.intersects(r);}
 
-	public boolean contains(Point2D p) {
-		return poly.contains(p);
-	}
-
-	public boolean contains(Rectangle2D r) {
-		return poly.contains(r);
-	}
-
-	public Rectangle getBounds() {
-		return poly.getBounds();
-	}
-
-	public Rectangle2D getBounds2D() {
-		return poly.getBounds2D();
-	}
-
-	public PathIterator getPathIterator(AffineTransform at) {
-		return poly.getPathIterator(at);
-	}
-
-	public PathIterator getPathIterator(AffineTransform at, double flatness) {
-		return poly.getPathIterator(at,flatness);
-	}
-
-	public boolean intersects(double x, double y, double w, double h) {
-		return poly.intersects(x,y,w,h);
-	}
-
-	public boolean intersects(Rectangle2D r) {
-		return poly.intersects(r);
-	}
-
-	private static class DoublePolygon extends Polygon {
-		public DoublePolygon() {
-			super();
-		}
-
+	private class DoublePolygon extends Polygon {//CAS533 was static
+		public DoublePolygon() {super();}
 		public void addPoint(double x, double y) {
 			super.addPoint((int)Math.round(x),(int)Math.round(y));
 		}
 	}
 }
+

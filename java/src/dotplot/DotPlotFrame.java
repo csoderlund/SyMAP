@@ -2,10 +2,11 @@ package dotplot;
 
 /*****************************************************************
  * Called from the SyMAP manager and Explorer
- * CAS522 removed FPC and took out gobs of code that was doing nothing
- * there is still massive amount of unnecessary code and OO spaghetti slop
+ * CAS522 from the dotplot package, removed FPC and lots of useless code
+ * CAS533 from the dotplot package, removed massive amounts of more useless code
  */
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -20,51 +21,49 @@ import util.DatabaseReader;
 public class DotPlotFrame extends JFrame {
 	Data data;
 	
+	// ProjectManagerFrameCommon
 	public DotPlotFrame(DatabaseReader dbReader, int projXIdx, int projYIdx) {
 		this(dbReader, new int[] { projXIdx, projYIdx }, null, null, null, true);
 	}
-	
-	public DotPlotFrame(DatabaseReader dbReader, 
-			int[] projIDs, int[] xGroupIDs, int[] yGroupIDs, 
-			HelpBar helpBar, boolean hasReferenceSelector) 
+	// SyMAPFrameCommon, ProjectManagerFrameCommon, above
+	public DotPlotFrame(DatabaseReader dbReader, int[] projIDs,
+			int[] xGroupIDs, int[] yGroupIDs, 	// null if whole genome
+			HelpBar helpBar, 					// not null if from CE
+			boolean hasReferenceSelector)  		// false if from CE
 	{
 		super("SyMAP Dot Plot " + SyMAP.VERSION);
+		if (projIDs==null || projIDs.length==0) System.err.println("No Projects! Email symap@agcol.arizona.edu"); 
+	
+		data = new Data( new DotPlotDBUser(dbReader) ); // created FilterData object
+		data.getSyMAP().clear(); 						// Clear caches - fix bug due to stale pairs data
+		data.initialize(projIDs, xGroupIDs, yGroupIDs);
 		
-		data = new Data( new DotPlotDBUser(dbReader) );
+		HelpBar hb = (helpBar!=null) ?  helpBar : new HelpBar(-1, 17);// CAS521 removed dead args
 		
-		data.getSyMAP().clear(); // Clear caches - fixes "Couldn't find pair for projects" bug due to stale pairs data
+		Plot plot = new Plot(data, hb);
 		
-		HelpBar hb = helpBar;
-		if (helpBar == null)
-			hb = new HelpBar(-1, 17); // CAS521 removed dead args
-		
-		Plot plot = new Plot(data,hb);
 		ControlPanel controls = new ControlPanel(data,plot,hb);
-		
-		if (projIDs != null) {
-			data.initialize(projIDs, xGroupIDs, yGroupIDs);
-			controls.setProjects( data.getProjects() ); 
-		}
-		
-		if (projIDs == null || !hasReferenceSelector)
-			controls.setProjects(null);
+		controls.setProjects( data.getProjects() ); 
+		if (!hasReferenceSelector) controls.setProjects(null);
 
-		// Setup frame
+	// Setup frame
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {
 				if (data != null) data.kill();
 				data = null;
+				controls.kill(); // CAS533 add
 			}
 		});
 		setLayout( new BorderLayout() );
 		add( controls, BorderLayout.NORTH );
 		add( plot.getScrollPane(),BorderLayout.CENTER );
-		if (helpBar == null)
-			add( hb, BorderLayout.SOUTH );
+		if (helpBar==null) add( hb, BorderLayout.SOUTH ); // otherwise, in CE on side
 		
-		//setLocationRelativeTo(null); puts in lower corner
+		Dimension dim = getToolkit().getScreenSize(); // CAS533 this works
+		setLocation(dim.width / 4,dim.height / 4);
+		//setLocationRelativeTo(null); this puts in lower corner
 	}
 	
-	public Data getData() { return data; }
+	public Data getData() { return data; } // SyMAPFrameCommon
 }

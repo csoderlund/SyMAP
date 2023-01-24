@@ -23,7 +23,6 @@ import symap.sequence.Sequence;
 import symap.closeup.CloseUp;
 import symap.mapper.HitFilter;
 import symapQuery.TableDataPanel;
-import dotplot.FilterData;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -234,10 +233,6 @@ public class DrawingPanel extends JPanel
 	// symapQuery Show Synteny from table
 	public void setHitFilter(int map, HitFilter hf) {
 		mappers[map-1].getHitFilter().set(hf);
-	}
-	// Dotplot.Data zoomArea and zoomBlock
-	public void setHitFilter(int map, FilterData fd) {
-		mappers[map-1].getHitFilter().set(fd);
 	}
 
 	public void downloadAllHits(int map) {

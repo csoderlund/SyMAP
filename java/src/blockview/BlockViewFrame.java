@@ -127,7 +127,7 @@ public class BlockViewFrame extends JFrame{
 			saveBtn.setToolTipText("Save Image");
 			saveBtn.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					ImageViewer.showImage(mainPane);
+					ImageViewer.showImage("Blocks", mainPane);
 				}
 			});
 			cRow.gridx++;
@@ -189,6 +189,7 @@ public class BlockViewFrame extends JFrame{
 		}
 		catch(Exception e){ErrorReport.print(e, "Initializing panel for blocks");}
 	}
+
 	private boolean initFromDB() {
 		try {
 			ResultSet rs;

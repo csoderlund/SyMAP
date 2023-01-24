@@ -75,29 +75,9 @@ public class AlignMain
 		}
 		catch (Exception e) { ErrorReport.print(e, "Align Main");}
 	}
-	public String getParams() {// CAS511 add to save to DB pairs.params
-		String msg="", m1="", m2="";
-
-		for (int i=0; i<2; i++) {
-			int idx = (i==0) ? proj1Idx : proj2Idx;
-			
-			String projName = 	SyProps.getProjProp(idx, "display_name", pool);
-			String gmprop =   	SyProps.getProjProp(idx, "mask_all_but_genes", pool);
-			String minsize = 	SyProps.getProjProp(idx, "min_size", pool);
-				
-			gmprop =  (gmprop != null && gmprop.equals("1")) ? "Masking non-genic sequence; " : "";
-			minsize = (minsize != null && !minsize.contentEquals("100000")) ? "min-size " + minsize + "; " : "";
-			
-			msg = (!gmprop.contentEquals("") || !minsize.contentEquals("")) ? 
-					(projName + ": " + gmprop + minsize) : "";
-			if (i==0) m1 = msg; else m2 = msg;
-		}
-		
-		msg = m1 + m2;
-		
-		if (msg.contentEquals("")) return alignParams;
-		return msg + "::" + alignParams;
-	} 
+	public String getParams() {// CAS511 add to save to DB pairs.params; CAS533 remove project params (in View)
+		 return alignParams;
+	}
 	
 	/*******************************************************
 	 * Run all alignments for p1-p2 
@@ -110,7 +90,7 @@ public class AlignMain
 			System.gc(); // free unused heap for blat/mummer to use (Java treats this as a suggestion)
 			
 			if (alignExists()) {
-				alignParams = usePrevious;
+				alignParams = usePrevious; 
 				return true; // must have all.done and at least one .mum file
 			}
 			
@@ -498,7 +478,7 @@ public class AlignMain
 			if (done && n>0) {
 				log.msg("Warning: " + n + " alignment files exist - using existing files ...");
 				log.msg("   If not correct, remove " + resultDir + " and re-align.");
-				usePrevious += " " + Utils.getDateStr(f.lastModified()); 
+				usePrevious += "  " + Utils.getDateStr(f.lastModified()); 
 				return true;
 			}			
 			if (n>0) 

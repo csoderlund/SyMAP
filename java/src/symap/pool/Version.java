@@ -4,6 +4,7 @@ package symap.pool;
  * CAS506 created to provide an organized why for database updates.
  */
 import java.sql.ResultSet;
+import java.util.HashMap;
 
 import backend.UpdatePool;
 import symap.SyMAP;
@@ -11,12 +12,18 @@ import util.ErrorReport;
 import util.Utilities;
 
 public class Version {
-	int dbVer = SyMAP.DBVER; 
-	String strVer = SyMAP.DBVERSTR; // db4
+	public int dbVer = SyMAP.DBVER; 
+	public String strVer = SyMAP.DBVERSTR; // db4
+	public boolean debug = SyMAP.DEBUG;
 	
 	public Version (UpdatePool pool) {
 		this.pool = pool;
 		checkForUpdate();
+		if (debug) updateDEBUG();
+	}
+	public Version (UpdatePool pool, boolean remove) {// CAS533 added so can add/remove columns for testing
+		this.pool = pool;
+		removeDEBUG();
 	}
 	// if first run from viewSymap, updates anyway (so if no write permission, crashes)
 	private void checkForUpdate() {
@@ -138,6 +145,80 @@ public class Version {
 					+ "   Older verion SyMAP will not work with this database.");
 		}
 		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
+	}
+	/****************************************************
+	 * 
+	 */
+	private void updateDEBUG() {
+	try {
+		System.out.println("Update DB debug");
+// projs.(idx,name)	
+		HashMap <Integer, String> projs = new HashMap <Integer, String> ();
+		ResultSet rs = pool.executeQuery("select idx, name from projects");
+		while (rs.next()) projs.put(rs.getInt(1), rs.getString(2));
+// grps.(idx,name)
+		HashMap <Integer, String> grps = new HashMap <Integer, String> ();
+		rs = pool.executeQuery("select idx, name from xgroups");
+		while (rs.next()) grps.put(rs.getInt(1), rs.getString(2));
+// pairs.(idx,proj1_idx, proj2_idx)	
+		HashMap <Integer, String> pairs = new HashMap <Integer, String> ();
+		rs = pool.executeQuery("select idx, proj1_idx, proj2_idx from pairs");
+		while (rs.next()) {
+			int idx1 = rs.getInt(2);
+			int idx2 = rs.getInt(3);
+			String key = projs.get(idx1) + ":" + projs.get(idx2);
+			pairs.put(rs.getInt(1), key);
+		}
+		
+   // pairs.proj_names	
+		if (!tableColumnExists("pairs", "proj_names")) {
+			tableCheckAddColumn("pairs",  "proj_names",  "tinytext", "proj2_idx");
+			for (int pidx : pairs.keySet()) {
+				pool.executeUpdate("update pairs set proj_names='" + pairs.get(pidx) 
+					+ "' where idx=" + pidx);
+			}
+			System.out.println("Update pairs");
+		}
+	// xgroups.proj_name	
+		if (!tableColumnExists("xgroups", "proj_name")) {
+			tableCheckAddColumn("xgroups",  "proj_name",  "tinytext", "fullname");
+			for (int pidx : projs.keySet()) {
+				pool.executeUpdate("update xgroups set proj_name='" + projs.get(pidx) 
+					+ "' where proj_idx=" + pidx);
+			}
+			System.out.println("Update xgroups");
+		}
+	// blocks.proj_names
+		if (!tableColumnExists("blocks", "proj_names")) {
+			tableCheckAddColumn("blocks",  "proj_names", "tinytext", "pair_idx");
+			for (int pidx : pairs.keySet()) {
+				pool.executeUpdate("update blocks set proj_names='" + pairs.get(pidx) 
+				+ "' where pair_idx=" + pidx);
+			}
+			System.out.println("Update blocks.pairs");
+		}
+		if (!tableColumnExists("blocks", "grp1")) {
+			tableCheckAddColumn("blocks",  "grp1",  "tinytext", "proj_names");	
+			tableCheckAddColumn("blocks",  "grp2",  "tinytext", "grp1");	
+			for (int gidx : grps.keySet()) {
+				pool.executeUpdate("update blocks set grp1='" + grps.get(gidx) 
+					+ "' where grp1_idx=" +gidx);
+				pool.executeUpdate("update blocks set grp2='" + grps.get(gidx) 
+					+ "' where grp2_idx=" +gidx);
+			}
+			System.out.println("Update blocks.grps");
+		}
+		
+	}catch (Exception e) {ErrorReport.print(e, "Could not update database for debug");}
+	}
+	private void removeDEBUG() {
+		try {
+			if (!tableColumnExists("blocks", "proj_names")) return;
+			tableCheckDropColumn("blocks", "proj_names");
+			tableCheckDropColumn("blocks", "grp1");
+			tableCheckDropColumn("blocks", "grp2");
+			System.out.println("Remove blocks.grps");
+		}catch (Exception e) {ErrorReport.print(e, "Could not remove debug");}
 	}
 	/***************************************************************
 	 * Run after every version update.

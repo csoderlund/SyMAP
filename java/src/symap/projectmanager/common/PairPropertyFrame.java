@@ -21,40 +21,36 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import backend.SyProps;
+import util.ErrorReport;
 
 public class PairPropertyFrame extends JDialog {
 	private static final long serialVersionUID = 1L;
 	private final String helpHTML = "/html/PairParamHelp.html";
+	// CAS533 remove: do_synteny, Do Clustering - dead, No Overlapping Blocks - buggy
 	private static final String [] LABELS = { 
 		"Min Dots", "Top N", "Merge Blocks", 
-		"Do Synteny", "Do Clustering", "No Overlapping Blocks", 
 		"NUCmer Args", "PROmer Args", "Self Args", "NUCmer Only","PROmer Only" };
 	
 	// if change, change in SyProps too
 	private static final String [] SYMBOLS = { 
 		"mindots", "topn", "merge_blocks", 
-		"do_synteny", "do_clustering", "no_overlapping_blocks", 
 		"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only" };
 	
 	private static final int LABEL_COLUMN_WIDTH = 150;
 	private static final int TEXT_FIELD_WIDTH = 15;
 	private static final int NUM_FIELD_WIDTH = 3;
 	
-	private String title;
-	private boolean isGlobal=false;
+	private String title="Selected Pair Parameters";
 	
 	// glProps = current set of properties, i.e., either defaults or the saved global parameters
+	//    this never did work right, so currently removed totally
 	// dbProps = the database-stored properties for the selected pair, if any. 
 	public PairPropertyFrame(SyProps glProps, SyProps dbProps, Project p1, Project p2, ProjectManagerFrameCommon parent) {
-		this.globalProps = glProps; 
 		this.p1 = p1;
 		this.p2 = p2;
 		this.parent = parent;
 		
-		if (p1==null) isGlobal=true;
-		
-		if (isGlobal) title="Global Pair Parameters";
-		else          title="Selected Pair Parameters";
+		if (p1==null) ErrorReport.die("There must be two projects");
 		
 		// CAS520 always false now if (Utilities.pathExists(Constants.fpcDataDir)) hasFPC=true; // CAS511
 		
@@ -79,9 +75,6 @@ public class PairPropertyFrame extends JDialog {
 		if(symbol.equals(SYMBOLS[x++])) 		return txtMinDots.getText();
 		else if(symbol.equals(SYMBOLS[x++])) 	return txtTopN.getText();
 		else if(symbol.equals(SYMBOLS[x++]))	return chkMergeBlocks.isSelected()?"1":"0";
-		else if(symbol.equals(SYMBOLS[x++]))	return chkDoSynteny.isSelected()?"1":"0";
-		else if(symbol.equals(SYMBOLS[x++]))	return chkDoClustering.isSelected()?"1":"0";
-		else if(symbol.equals(SYMBOLS[x++]))	return chkNoOverlappingBlocks.isSelected()?"1":"0";
 		else if(symbol.equals(SYMBOLS[x++]))	return txtNucMerArgs.getText();
 		else if(symbol.equals(SYMBOLS[x++]))	return txtProMerArgs.getText();
 		else if(symbol.equals(SYMBOLS[x++]))	return txtSelfArgs.getText();
@@ -95,9 +88,6 @@ public class PairPropertyFrame extends JDialog {
 		if(symbol.equals(SYMBOLS[x++]))		txtMinDots.setText(value);
 		else if(symbol.equals(SYMBOLS[x++]))	txtTopN.setText(value);
 		else if(symbol.equals(SYMBOLS[x++]))	chkMergeBlocks.setSelected(value.equals("1"));
-		else if(symbol.equals(SYMBOLS[x++]))	chkDoSynteny.setSelected(value.equals("1"));
-		else if(symbol.equals(SYMBOLS[x++]))	chkDoClustering.setSelected(value.equals("1"));
-		else if(symbol.equals(SYMBOLS[x++]))	chkNoOverlappingBlocks.setSelected(value.equals("1"));
 		else if(symbol.equals(SYMBOLS[x++]))	txtNucMerArgs.setText(value);
 		else if(symbol.equals(SYMBOLS[x++]))	txtProMerArgs.setText(value);
 		else if(symbol.equals(SYMBOLS[x++]))	txtSelfArgs.setText(value);
@@ -121,21 +111,6 @@ public class PairPropertyFrame extends JDialog {
 		chkMergeBlocks.setBackground(Color.WHITE);
 		chkMergeBlocks.setMaximumSize(chkMergeBlocks.getPreferredSize());
 		chkMergeBlocks.setMinimumSize(chkMergeBlocks.getPreferredSize());
-		
-		chkDoSynteny = new JCheckBox(LABELS[x++]);
-		chkDoSynteny.setBackground(Color.WHITE);
-		chkDoSynteny.setMaximumSize(chkDoSynteny.getPreferredSize());
-		chkDoSynteny.setMinimumSize(chkDoSynteny.getPreferredSize());
-		
-		chkDoClustering = new JCheckBox(LABELS[x++]);
-		chkDoClustering.setBackground(Color.WHITE);
-		chkDoClustering.setMaximumSize(chkDoClustering.getPreferredSize());
-		chkDoClustering.setMinimumSize(chkDoClustering.getPreferredSize());
-		
-		chkNoOverlappingBlocks = new JCheckBox(LABELS[x++]);
-		chkNoOverlappingBlocks.setBackground(Color.WHITE);
-		chkNoOverlappingBlocks.setMaximumSize(chkNoOverlappingBlocks.getPreferredSize());
-		chkNoOverlappingBlocks.setMinimumSize(chkNoOverlappingBlocks.getPreferredSize());
 		
 		lblNucMerArgs = new JLabel(LABELS[x++]);
 		txtNucMerArgs = new JTextField(TEXT_FIELD_WIDTH);
@@ -175,15 +150,6 @@ public class PairPropertyFrame extends JDialog {
 			}
 		});
 			
-		btnLoadGlobal = new JButton("Globals");
-		btnLoadGlobal.setBackground(Color.WHITE);
-		btnLoadGlobal.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				setDefaults(globalProps);
-			}
-		});
-		if (globalProps == null) btnLoadGlobal.setEnabled(false);
-		
 		btnLoadDef = new JButton("Defaults");
 		btnLoadDef.setBackground(Color.WHITE);
 		btnLoadDef.addActionListener(new ActionListener() {
@@ -240,11 +206,6 @@ public class PairPropertyFrame extends JDialog {
 		mainPanel.add(row);
 		mainPanel.add(Box.createVerticalStrut(10));
 		
-		row = createRowPanel();
-		row.add(chkNoOverlappingBlocks);
-		mainPanel.add(row);
-		mainPanel.add(Box.createVerticalStrut(10));
-
 		row = createRowPanel();
 		row.add(chkProOnly);
 		mainPanel.add(row);
@@ -322,11 +283,9 @@ public class PairPropertyFrame extends JDialog {
 		
 		return row;
 	}
-	private void showHelp() 
-	{
+	private void showHelp() {
 		util.Jhtml.showHTMLPage( this,"Alignment & Synteny Parameter Help", helpHTML);
 	}	
-	
 	
 	private JPanel mainPanel = null;
 	
@@ -337,9 +296,6 @@ public class PairPropertyFrame extends JDialog {
 	private JTextField txtTopN = null;
 	
 	private JCheckBox chkMergeBlocks = null;
-	private JCheckBox chkDoSynteny = null;
-	private JCheckBox chkDoClustering = null;	
-	private JCheckBox chkNoOverlappingBlocks = null;
 	private JCheckBox chkNucOnly = null;
 	private JCheckBox chkProOnly = null;
 	
@@ -352,12 +308,8 @@ public class PairPropertyFrame extends JDialog {
 	private JLabel lblProMerArgs = null;
 	private JTextField txtProMerArgs = null;
 	
-	private JButton btnKeep = null;
-	private JButton btnDiscard = null;
-	private JButton btnLoadGlobal = null;
-	private JButton btnLoadDef = null;
+	private JButton btnKeep = null, btnDiscard = null, btnLoadDef = null;
 	
-	private SyProps globalProps = null;
 	private Project p1, p2;
 	private ProjectManagerFrameCommon parent;
 }

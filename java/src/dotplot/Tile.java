@@ -1,42 +1,38 @@
 package dotplot;
 
-import java.util.List;
 import java.util.Vector;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.awt.Shape;
+import java.awt.geom.Rectangle2D;
 import java.util.Collections;
 
-import util.Utilities;
-
-public class Tile implements DotPlotConstants {
-	private static final int EQUAL_ABLOCKS_PAD = 0;
-
-	public static final int FULLY_LOADED = 2;
-	public static final int SOME_LOADED  = 1;
-
+/***********************************************
+ * A cell representing hits and blocks of 2 chromosomes
+ * CAS533 remove LoadObject
+ */
+public class Tile  {
+	private final int X = Data.X, Y = Data.Y;
+	
 	private Group group[]; // x and y
-	private List iblocks;  // synteny blocks
-	//private AltBlocksRun altRuns[]; CAS531 more dead code; removed file AltBlocksRun
-	private LoadObject loadObject;
-
-	private Tile() {
+	private Project proj[]; // CAS533 add
+	private Vector <ABlock> ablocks;  // synteny blocks
+	private DPHit hits[] = null;
+	
+	public Tile(Project pX, Project pY, Group grpX, Group grpY) {
+		proj	   = new Project[2];
 		group      = new Group[2];
-		iblocks    = new Vector(1,1);
-		loadObject = new LoadObject();
-		//altRuns    = new AltBlocksRun[DotPlot.TOT_RUNS];
-		//for (int i = 0; i < altRuns.length; i++) altRuns[i] = null;
-	}
-
-	public Tile(Group grpX, Group grpY) {
-		this();
+		ablocks    = new  Vector <ABlock> ();
+		
+		proj[X] = pX;
+		proj[Y] = pY;
 		group[X] = grpX;
 		group[Y] = grpY;
 	}
-
-	public String toString() {
-		return "Tile "+group[Y].getName()+","+group[X].getName();
+	// Called by DotPlotDBUser
+	public void addBlock(int number, int sX, int eX, int sY, int eY) {		
+		ablocks.add(new ABlock(this, number,sX,eX,sY,eY));
+		Collections.sort(ablocks);
 	}
-
 	public boolean equals(Object obj) {
 		if (obj instanceof Tile) {
 			Tile b = (Tile)obj;
@@ -44,202 +40,86 @@ public class Tile implements DotPlotConstants {
 		}
 		return false;
 	}
-	
-	public int getProjID(int axis) {
-		return group[axis].getProjID();
-	}
-
-	
-
-	public ABlock[] getABlocks(int altNum) {
-		if (altNum == 0) {
-			synchronized (iblocks) {
-				return (ABlock[])iblocks.toArray(new ABlock[0]);
-			}
-		}
-		return new ABlock[0];
-		//return altRuns[altNum] == null ? new ABlock[0] : altRuns[altNum].getABlocks();
-	}
-
-
-	public void setIBlocks(InnerBlock[] iblocks) {
-		synchronized (iblocks) {
-			this.iblocks.clear();
-			if (iblocks != null)
-				for (int i = 0; i < iblocks.length; ++i)
-					this.iblocks.add(iblocks[i]);
-			Collections.sort(this.iblocks);
-		}
-	}
-
-	public void addIBlock(int number, int sX, int eX, int sY, int eY) {		
-		synchronized (iblocks) {
-			iblocks.add(new IBlock(number,sX,eX,sY,eY));
-			Collections.sort(iblocks);
-		}
-	}
-
-	public void clearIBlocks() {
-		synchronized (iblocks) {
-			iblocks.clear();
-		}
-	}
-
-	public InnerBlock getIBlock(int number) {
-		synchronized (iblocks) {
-			return (IBlock)iblocks.get(number-1);
-		}
+	public void clearBlocks() { ablocks.clear();}
+		
+	public boolean setHits(DPHit[] hits) { 
+		this.hits = hits;
+		return true;
 	}
 	
-	public int getNumIBlocks() {
-		synchronized (iblocks) {
-			return iblocks.size();
-		}
+	public ABlock getBlock(int number) {return ablocks.get(number-1);} // Called by Plot
+		
+	public int getNumBlocks() {return ablocks.size(); }// Called by Plot
+		
+	public DPHit[] getHits()     { return hits; }// Called by Plot and Ablock
+	
+	public int getProjID(int axis) {return group[axis].getProjID(); }// or proj.getID()
+	
+	public Project getProject(int axis) {return proj[axis];}
+	
+	public Group getGroup(int axis) { return group[axis]; }
+	
+	public boolean hasHits() {return (hits!=null && hits.length>0);}
+	
+	public void swap(int pid1, int pid2) { // CAS533 add
+		if (pid1==proj[X].getID() && pid2==proj[Y].getID()) return;
+		
+		Group tg = group[0]; group[0]=group[1]; group[1]=tg;
+		Project tp = proj[0]; proj[0]=proj[1]; proj[1]=tp;
+		for (ABlock blk : ablocks)  blk.swap();
+		for (DPHit ht : hits) ht.swap();
 	}
 	
-	public boolean hasMatchingBlock(int altNum, ABlock ablock) {
-		ABlock[] ablocks = getABlocks(altNum);
-		for (int i = 0; i < ablocks.length; i++)
-			if (ablocks[i].equalRectangles(ablock,EQUAL_ABLOCKS_PAD)) return true;
-		return false;
+	public String toString() {
+		int h = (hits==null) ? 0 : hits.length;
+		return "Tile "+group[Y].getName()+","+group[X].getName() 
+				+ " Blocks " + ablocks.size() + " Hits " + h
+				+ "   " + proj[Y].getDisplayName() +"," + proj[X].getDisplayName();
 	}
-
-	public ABlock getABlock(int altNum, double xUnits, double yUnits) {
-		if (altNum == 0) return (ABlock)getIBlock(xUnits,yUnits);
-		ABlock[] ablocks = getABlocks(altNum);
-		ABlock b = null;
-		ABlock smallest = null;
-		for (int i = 0; i < ablocks.length; i++) {
-			b = ablocks[i];
-			if (b.contains(xUnits,yUnits)) {
-				if (smallest == null || Utilities.getSmallestBoundingArea(smallest,b) == b)
-					smallest = b;	
-			}
-		}
-		return smallest;
+	public String toBlocks() {
+		String msg = "#" + ablocks.size();
+		for (ABlock bk : ablocks) msg += " " + bk.getName();
+		return msg;
 	}
-
-	public InnerBlock getIBlock(double xUnits, double yUnits) {
-		synchronized (iblocks) {
-			IBlock b = null;
-			IBlock smallest = null;
-			Iterator iter = iblocks.iterator();
+	/****************************************************************/
+	// Called by Plot, Tile, Project
+	public static Tile getTile(Tile[] tiles, Group grpX, Group grpY) {
+		if (tiles != null)
+			for (Tile t : tiles)
+				if (t.group[Data.X] == grpX && t.group[Data.Y] == grpY) 
+					return t;
+		return null;
+	}
+	/*************************************************************************/
+	// Called from Data when there is a mouse selection
+	public static ABlock getBlock(Tile[] tiles, Group grpX, Group grpY,  double xUnits, double yUnits) {
+		Tile t = getTile(tiles,grpX,grpY);
+		ABlock b =  (t != null) ? t.getBlock(xUnits,yUnits) : null;
+		return b;
+	}
+	private ABlock getBlock(double xUnits, double yUnits) { // called above
+		synchronized (ablocks) {
+			ABlock b = null;
+			ABlock smallest = null;
+			Iterator <ABlock> iter = ablocks.iterator();
 			while (iter.hasNext()) {
-				b = (IBlock)iter.next();
+				b = (ABlock)iter.next();
 				if (b.contains(xUnits,yUnits)) {
-					if (smallest == null || Utilities.getSmallestBoundingArea(smallest,b) == b)
+					if (smallest == null || getSmallestBoundingArea(smallest,b) == b)
 						smallest = b;
 				}
 			}
 			return smallest;
 		}	
 	}
+	private static Shape getSmallestBoundingArea(Shape s1, Shape s2) { // called above
+		if (s1 == null) return s2;
+		if (s2 == null) return s1;
 
-	public boolean setHits(DPHit[] hits, int loadLevel) { return loadObject.setLoaded(hits,loadLevel); }
-	public DPHit[] getHits()     { return loadObject.getHits(); }
-	public DPHit[] getHitsCopy() { return loadObject.getHitsCopy(); }
-	public int getNumHits()    { return loadObject.getNumHits(); }
-	public Group getGroup(int axis) { return group[axis]; }
-	public boolean isSomeLoaded()   { return loadObject.isLoaded(SOME_LOADED); }
-	public boolean isLoaded() { return loadObject.isLoaded(FULLY_LOADED); }
-	public boolean isLoaded(int loadLevel) { return loadObject.isLoaded(loadLevel); }
+		Rectangle2D b1, b2;
+		b1 = s1.getBounds2D();
+		b2 = s2.getBounds2D();
 
-	public static Tile getTile(Tile[] tiles, Group grpX, Group grpY) {
-		if (tiles != null)
-			for (Tile t : tiles)
-				if (t.group[X] == grpX && t.group[Y] == grpY) 
-					return t;
-		return null;
-	}
-	
-	public static Tile getTile(List<Tile> tiles, Group grpX, Group grpY) {
-		return getTile(tiles.toArray(new Tile[0]), grpX, grpY);
-	}
-	
-	public static InnerBlock getIBlock(Tile[] blocks, Group grpX, Group grpY, int number) {
-		Tile block = getTile(blocks,grpX,grpY);
-		InnerBlock b = null;
-		if (block != null) b = block.getIBlock(number);
-		return b;
-	}
-
-	public static InnerBlock getIBlock(Tile[] tiles, Group grpX, Group grpY, double xUnits, double yUnits) {
-		Tile t = getTile(tiles,grpX,grpY);
-		InnerBlock b = null;
-		if (t != null) b = t.getIBlock(xUnits,yUnits);
-		return b;
-	}
-
-	public static ABlock getABlock(Tile[] tiles, Group grpX, Group grpY, int altNum, double xUnits, double yUnits) {
-		if (altNum == 0) return (ABlock)getIBlock(tiles,grpX,grpY,xUnits,yUnits);
-		Tile t = getTile(tiles,grpX,grpY);
-		ABlock b = null;
-		if (t != null) b = t.getABlock(altNum,xUnits,yUnits);
-		return b;
-	}
-	/****************************************************/
-	private class IBlock extends ABlock implements Comparable<ABlock>, InnerBlock {
-		private IBlock(int num, int sX, int eX, int sY, int eY) {
-			super(Tile.this,num,sX,eX,sY,eY);
-		}
-
-		public DPHit[] getHits(boolean includeRepetitive, boolean onlyBlock) {
-			DPHit[] h = getParent().getHits();
-			List<DPHit> hits = new ArrayList<DPHit>(h.length / getNumIBlocks());
-			for (int i = 0; i < h.length; i++) {
-				if (contains(h[i]) && (!onlyBlock || h[i].isBlock())) {
-					hits.add(h[i]);
-				}
-			}
-
-			return (DPHit[])hits.toArray(new DPHit[0]);
-		}
-
-		 public String toString() {
-			 return String.format("%d", getNumber()); // CAS520 new Integer(getNumber()).toString();
-		 }
-	}
-	/****************************************************/
-	private static class LoadObject {
-		private DPHit hits[];
-		private int loaded;
-
-		public LoadObject() {
-			loaded = 0;
-			hits = null;
-		}
-
-		public synchronized boolean setLoaded(DPHit[] hits, int loadLevel) {
-			if (loaded < loadLevel) {
-				this.hits = hits;
-				loaded = loadLevel;
-				return true;
-			}
-			return false;
-		}
-
-		public synchronized void clearLoaded() {
-			hits = null;
-			loaded = 0;
-		}
-
-		public synchronized boolean isLoaded(int loadLevel) {
-			return loaded >= loadLevel;
-		}
-
-		public synchronized DPHit[] getHits() {
-			return hits == null ? new DPHit[0] : hits;
-		}
-
-		public synchronized DPHit[] getHitsCopy() {
-			if (hits == null || hits.length == 0) return new DPHit[0];
-			DPHit[] rHits = new DPHit[hits.length];
-			System.arraycopy(hits,0,rHits,0,hits.length);	    
-			return rHits;
-		}
-
-		public synchronized int getNumHits() {
-			return hits == null ? 0 : hits.length;
-		}
+		return (b1.getWidth() * b1.getHeight()) <= (b2.getWidth() * b2.getHeight()) ? s1 : s2;
 	}
 }

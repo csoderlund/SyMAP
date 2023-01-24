@@ -111,7 +111,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 				circPanel.makeRepaint();
 			}
 			else if (src == saveButton) {
-				ImageViewer.showImage(circPanel);
+				ImageViewer.showImage("Circle", circPanel);
 			}
 	    }
 	};

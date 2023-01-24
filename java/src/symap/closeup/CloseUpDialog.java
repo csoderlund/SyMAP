@@ -122,7 +122,7 @@ public class CloseUpDialog extends JDialog implements CloseUpListener, ColorList
 			Exon[] exonArray = (exons.isEmpty() ? null : new Exon[exons.size()]);
 		
 			for (int i = 0;  i < exons.size();  i++)
-				exonArray[i] = new Exon(exons.get(i).getStart(), exons.get(i).getEnd());
+				exonArray[i] = new Exon(exons.get(i).getStart(), exons.get(i).getEnd(), exons.get(i).getTag());
 			ga.setExons(exonArray);
 			
 			if (!alignments.contains(ga)) // in case database has redundant entries (as with Rice)

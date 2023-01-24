@@ -1,7 +1,6 @@
 package util;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.geom.Point2D;
 import java.io.IOException;
@@ -14,12 +13,12 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 /**
- * Class <code>PropertiesReader</code> handles getting values from properties files
+ * Class PropertiesReader handles getting values from properties files
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class PropertiesReader extends Properties {
 	/**
-	 * Creates a new empty <code>PropertiesReader</code> instance.
+	 * Creates a new empty PropertiesReader instance.
 	 */
 	public PropertiesReader() {
 		super();
@@ -148,20 +147,6 @@ public class PropertiesReader extends Properties {
 		double x = Double.parseDouble(st.nextToken());
 		double y = Double.parseDouble(st.nextToken());
 		return new Point2D.Double(x, y);
-	}
-
-	public Dimension getDimension(String key) {
-		StringTokenizer st = new StringTokenizer((String)getProperty(key), ",");
-		int width = (int)Double.parseDouble(st.nextToken());
-		int height = (int)Double.parseDouble(st.nextToken());
-		return new Dimension(width,height);
-	}
-
-	public DoubleDimension getDoubleDimension(String key) {
-		StringTokenizer st = new StringTokenizer((String)getProperty(key), ",");
-		double width =  Double.parseDouble(st.nextToken());
-		double height = Double.parseDouble(st.nextToken());
-		return new DoubleDimension(width,height);	
 	}
 
 	public boolean getBoolean(String key) {

@@ -2,12 +2,11 @@ package symap.mapper;
 
 import java.util.Vector;
 
-import dotplot.FilterData;
-
 /**
  * Class HitFilter a hit filter stores all the data used to communicate
  * between the filter and the mapper.
  * CAS520 remove or makes stubs of all FPC stuff. Change for new hit filter.
+ * CAS533 removed reference to the Dotplot hitfilter
  */
 public class HitFilter {
 	private static final double ANY_PCTID  = 0;
@@ -115,16 +114,6 @@ public class HitFilter {
 		return changed;
 	}
 
-	public boolean set(FilterData fd) { // DrawingPanel DotPlot
-		boolean changed = false;
-		if (setBlock(fd.isShowBlockHits(),false))           changed = true;
-		if (set2Gene(fd.isShowContainedGeneHits(),false))	changed = true;   
-		if (set0Gene(fd.isShowNonGeneHits(),false))			changed = true;
-		if (setPctid(fd.getPctid(),false))           	changed = true;
-		if (changed) updateListeners();
-		return changed;
-	}
-	
 	public interface HitFilterListener {public void update(HitFilter hf);}
 	
 	/*******************************************************/

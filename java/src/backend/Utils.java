@@ -195,8 +195,9 @@ public class Utils
 	static void dumpStats() {
 		if (mStats == null) return;
 		for (String key : mKeyOrder) {
-			Float val = mStats.get(key);
-			System.out.println(key + " = " + val);
+			double val = mStats.get(key);
+			if (Math.floor(val)==val) System.out.format("%6d %s\n", (int)val, key);
+			else					  System.out.format("%6.2f %s\n", val, key);
 		}
 	}
 	static void uploadStats(UpdatePool db, int pair_idx, int pidx1, int pidx2) throws Exception
@@ -413,28 +414,5 @@ public class Utils
 		in = in.replace('C', 'g');
 		in = in.replace('T', 'a');
 		return in.toLowerCase();
-	}
-	
-	public static void updateGeneFractions(UpdatePool db, int pair_idx) throws Exception
-	{
-		db.executeUpdate("update blocks set ngene1 = (select count(*) from pseudo_annot as pa " +
-				"where pa.grp_idx=grp1_idx  and greatest(pa.start,start1) < least(pa.end,end1) " +
-				"  and pa.type='gene') where pair_idx=" + pair_idx);
-		db.executeUpdate("update blocks set ngene2 = (select count(*) from pseudo_annot as pa " +
-		"where pa.grp_idx=grp2_idx  and greatest(pa.start,start2) < least(pa.end,end2) " +
-		"  and pa.type='gene') where pair_idx=" + pair_idx);
-
-		db.executeUpdate("update blocks set genef1=(select count(distinct annot_idx) from  " +
-				" pseudo_hits_annot as pha " +
-				" join pseudo_block_hits as pbh on pbh.hit_idx=pha.hit_idx " +
-				" join pseudo_annot as pa on pa.idx=pha.annot_idx " +
-				" where pbh.block_idx=blocks.idx and pa.grp_idx=blocks.grp1_idx)/ngene1 " +
-				" where ngene1 > 0 and pair_idx=" + pair_idx);
-		db.executeUpdate("update blocks set genef2=(select count(distinct annot_idx) from  " +
-				" pseudo_hits_annot as pha " +
-				" join pseudo_block_hits as pbh on pbh.hit_idx=pha.hit_idx " +
-				" join pseudo_annot as pa on pa.idx=pha.annot_idx " +
-				" where pbh.block_idx=blocks.idx and pa.grp_idx=blocks.grp2_idx)/ngene2 " +
-				" where ngene2 > 0 and pair_idx=" + pair_idx);
 	}
 }
