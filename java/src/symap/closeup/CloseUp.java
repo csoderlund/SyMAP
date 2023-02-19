@@ -3,6 +3,7 @@ package symap.closeup;
 import java.sql.SQLException;
 import java.util.Vector;
 
+import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import symap.mapper.HitData;
 import symap.sequence.Sequence;
@@ -16,7 +17,7 @@ import util.ErrorReport;
  * would correspond to sequence coordinates - now the gaps are there, so the coords will be a little off
  */
 public class CloseUp  {
-	public static final int MAX_CLOSEUP_BP=30000;
+	private static final int MAX_CLOSEUP_BP= Globals.MAX_CLOSEUP_BP;
 	private DrawingPanel dp;
 	private ColorDialogHandler cdh;
 

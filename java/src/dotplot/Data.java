@@ -6,14 +6,13 @@ import java.awt.Color;
 import java.awt.geom.Rectangle2D;
 import java.util.Vector;
 
-import symap.SyMAP;
-import symap.SyMAPConstants;
+import database.DBconn;
+import props.ProjectPair;
+import props.ProjectPool;
+import symap.Globals;
+import symap.frame.SyMAP2d;
 import symap.mapper.HitFilter;
-import symap.pool.ProjectProperties;
-import symap.pool.ProjectPair;
-
 import symap.sequence.Sequence;
-import util.DatabaseReader;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -24,7 +23,7 @@ import util.Utilities;
 public class Data  {
 	public static final double DEFAULT_ZOOM = 0.99;
 	public static final int X  = 0, Y   = 1;
-	private final String dbStr = SyMAPConstants.DB_CONNECTION_DOTPLOT_2D;
+	private final String dbStr = Globals.DB_CONN_DOTPLOT;
 	
 	private Project projects[]; // loaded data
 	private Tile[] tiles;
@@ -33,8 +32,9 @@ public class Data  {
 	private Project currentProjY; 
 	private int maxGrps=0;
 	
-	private SyMAP symap;
-	private ProjectProperties projProps;
+	private SyMAP2d symap;
+	private ProjectPool projProps;
+	private DBconn dbReader;
 	private FilterData filtData;
 	
 	private double sX1, sX2, sY1, sY2;
@@ -65,11 +65,11 @@ public class Data  {
 		scaleFactor  = 1;
 
 		try { // ugh - symap is used in different contexts, so needs to be active
-			DatabaseReader dr = DatabaseReader.getInstance(dbStr, dbUser.getDatabaseReader());
-			symap = new SyMAP(dr, null);
+			dbReader = DBconn.getInstance(dbStr, dbUser.getDBconn());
+			symap = new SyMAP2d(dbReader, null);
 		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 		
-		projProps = symap.getDrawingPanel().getPools().getProjectProperties(); // ugh
+		projProps = symap.getDrawingPanel().getPools().getProjectPropPool(); // ugh
 	}
 	/*************************************************************
 	 *  DotPlotFrame (genome), SyMAPFrameCommon (groups), Data.setReference (change ref)
@@ -85,7 +85,7 @@ public class Data  {
 		Vector<Project> newProjects = new Vector<Project>(projIDs.length);
 		for (int i = 0;  i < projIDs.length;  i++) {// 1 -> 0
 			Project p = Project.getProject(projects, 1, projIDs[i]);
-			if (p == null) p = new Project(projIDs[i], projProps);
+			if (p == null) p = new Project(projIDs[i], dbReader);
 			newProjects.add( p );
 		}
 		projects = newProjects.toArray(new Project[0]);
@@ -150,8 +150,8 @@ public class Data  {
 			hd.setForDP(true, false);
 			
 			try { // CAS531 need to recreate since I changed the Hits code; bonus, allows multiple 2d displays
-				DatabaseReader dr = DatabaseReader.getInstance(dbStr, dbUser.getDatabaseReader());
-				symap = new SyMAP(dr, null);
+				DBconn dr = DBconn.getInstance(dbStr, dbUser.getDBconn());
+				symap = new SyMAP2d(dr, null);
 			} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 			
 			symap.getDrawingPanel().setHitFilter(1,hd);
@@ -184,8 +184,8 @@ public class Data  {
 		}
 		
 		try {
-			DatabaseReader dr = DatabaseReader.getInstance(dbStr, dbUser.getDatabaseReader());
-			symap = new SyMAP(dr, null);
+			DBconn dr = DBconn.getInstance(dbStr, dbUser.getDBconn());
+			symap = new SyMAP2d(dr, null);
 		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 		
 		symap.getDrawingPanel().setMaps(1);
@@ -207,7 +207,7 @@ public class Data  {
 	/*****************************************
 	 * DotPlotFrame
 	 */
-	public SyMAP getSyMAP() { return symap; }
+	public SyMAP2d getSyMAP() { return symap; }
 	public Project[] getProjects() { return projects; }
 	public void kill() {
 		clear();
@@ -221,7 +221,7 @@ public class Data  {
 			symap.getDatabaseReader().close();
 			symap = null; 
 		}
-		dbUser.getDatabaseReader().close();
+		dbUser.getDBconn().close();
 	}
 
 	/*****************************************
@@ -431,6 +431,6 @@ public class Data  {
 	}
 	
 	private void prt (String msg) {
-		if (SyMAP.DEBUG) System.out.println("Data: " + msg);
+		if (Globals.DEBUG) System.out.println("Data: " + msg);
 	}
 }

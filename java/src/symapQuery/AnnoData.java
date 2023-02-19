@@ -7,7 +7,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Vector;
 
-import symap.projectmanager.common.Project;
+import symap.Globals;
+import symap.manager.Mproject;
 import util.ErrorReport;
 
 /**********************************************************
@@ -24,10 +25,10 @@ public class AnnoData {
 	public AnnoData() { // Created by static method AnnoData.loadProjAnnoKeywords 
 		theAnnos = new Vector<AnnoSp> ();
 	}
-	private void addAnnoKeyForSpecies(Project p, String annoID) { // CAS519 changed to use project instead of project ID
+	private void addAnnoKeyForSpecies(Mproject p, String annoID) { // CAS519 changed to use project instead of project ID
 		int speciesID = p.getID();
 		if (getSpeciesPosition(speciesID) < 0) {
-			theAnnos.add(new AnnoSp(p.getDisplayName(), p.getAbbrevName(), speciesID));
+			theAnnos.add(new AnnoSp(p.getDisplayName(), p.getdbAbbrev(), speciesID));
 			Collections.sort(theAnnos);
 		}
 		int pos = getSpeciesPosition(speciesID);
@@ -159,7 +160,7 @@ public class AnnoData {
 	 * Called by TableDataPanel for every new table
 	 */
 	public static AnnoData loadProjAnnoKeywords(SyMAPQueryFrame theParentFrame) {
-		Vector<Project> projs = theParentFrame.getProjects();
+		Vector<Mproject> projs = theParentFrame.getProjects();
 		
 		try {
 			Connection conn = theParentFrame.getDatabase().getConnection();
@@ -167,19 +168,21 @@ public class AnnoData {
 			
 			AnnoData theAnnos = new AnnoData();
 			
-			for (Project p : projs) { 
+			for (Mproject p : projs) { 
 				if (!p.hasGenes()) continue; // CAS505 add hasGenes check
 				
 				// CAS513 check for # of genes with keyword
+				Mproject tProj = new Mproject();
 				int annot_kw_mincount=0;
 				ResultSet rset = stmt.executeQuery("select value from proj_props "
-						+ "where proj_idx=" + p.getID() + " and name='annot_kw_mincount'");
-				
+						+ "where proj_idx=" + p.getID() + " and name='" + tProj.getKey(tProj.sANkeyCnt) + "'");
+			
 				if (rset.next()) {
 					String val = rset.getString(1);
 					try {annot_kw_mincount=Integer.parseInt(val); }
 					catch (Exception e) {} // ok to default to 0 if blank
 				}
+				if (Globals.TRACE) System.out.println("Min keyword count " + annot_kw_mincount);
 				
 				// use count in query
 				String query = 	"SELECT keyname FROM annot_key " +

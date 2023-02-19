@@ -75,6 +75,7 @@ the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
 <li>Please send bug reports and suggestions to <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>.
 </ol>
 
+<!------ See SyMAP code util.Jhtml for refs in code; see all 'ref in code' -->
 <b>Contents</b>
 <table>
 <tr><td style="width: 400px;">
@@ -97,7 +98,7 @@ the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
 		<li><a href="#alignment_display_dot">Dot Plot #2</a>
 		<li><a href="#alignment_display_2d">2D Display</a> <!-- # ref in code -->
 			<ul>
-			<li><a href="#view">View a region</a>
+			<li><a href="#view2D">View a region</a>
 			<li><a href="#control">Control Panel and Navigation</a> <!-- # ref in code -->
 			<li><a href="#sequence_filter">Filters</a>
 			<li><a href="#base">Align (Base View)</a>
@@ -172,6 +173,7 @@ The display in the image on the lower right is shown when the following is execu
 <pre>   ./viewSymap</pre>
 Is it also available from <tt>./symap</tt>, which will include the alignment commands.
 <p>
+<a id="views"></a> <!-- # ref in code -->
 <table>
 <tr><td>
 <p>&nbsp;
@@ -185,15 +187,23 @@ a window with the loaded information about the project.
 
 <td>
 <center><i>Click on any image in this document to see the closeup.</i></center>
-<br><a href="img/viewRosid.png"><img src="img/viewRosid.png"  alt="viewRosid" style="border: 1px solid black; width: 550px"></a>
+<br><a href="img/viewPlants.png"><img src="img/viewPlants.png"  alt="viewPlants" style="border: 1px solid black; width: 550px"></a>
 </table>
-<p><ttl>Display for Selected Pair</ttl>: By selecting a cell with synteny, these views are activated for the
-selected synteny.
-<p><ttl>Display for All Pairs</ttl>: These views will be applied to all checked syntenies.
+
+<table class="ty">
+<tr><td style="white-space: nowrap;vertical-align: text-top;"><ttl>Display for Selected Pair</ttl>
+	<td>By selecting a cell with synteny, these views are activated for the
+selected synteny. Views <a href="#circle">Circle</a>, <a href="#dotplot_display">Dot Plot</a>, <a href="#block">Block</a>,
+and <a href="#sum">Summary</a>.
+<tr><td style="white-space: nowrap;vertical-align: text-top;"><ttl>Display for All Pairs</ttl>
+	<td>These views will be applied to all checked syntenies. Views <a href="#explorer">Chromosome Explorer</a>,
+	<a href="#dot3">Dot Plot</a> and <a href="#queries">Queries</a>.
+</table>
 
 <a id="pair"></a>
 <h1>Displays for Selected Pair</h1>
-The buttons beside this label are "whole genome" displays for the selected pair (highlighted yellow).
+Select a cell in the <ttl>Available Syntenies</ttl> table; it will turn yellow and
+the buttons beside the <ttl>Display for Selected Pair</ttl> will be enabled. This are whole genome display.
 <!------------------------------------------------->
 <a id="circle"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -266,7 +276,7 @@ Clicking a cell will replace the whole genome view with the dotplot for the chro
 <ul>
 <li>Click a block to view the 2D display of the block.
 <li>Or, use the mouse to define a region, which will put a box around it. Then click the box to view the 2D display.
-<li>This is illustrated in the <a href="#alignment_display_dot">Chromosome Dotplot</a>.
+<li>This is illustrated in the <a href="#alignment_display_dot">Chromosome Dot Plot</a>.
 </ul>
 
 <td><a href="img/dotplot-2g.png"><img src="img/dotplot-2g.png"  alt="dotplot-2g" style="border: 1px solid black; width: 550px"></a>
@@ -305,7 +315,7 @@ accessed until one of the following buttons is clicked, which will close the <tt
 <table class="ty">
 <tr><td><ttl>Apply</ttl><td>Keep the current settings.
 <tr><td><ttl>Cancel</ttl><td>Revert back to the settings used when the <ttb>Filter</ttb> window was opened.
-<tr><td><ttl>Defaults</ttl><td>Apply the defaults, which are shown in the image above.
+<tr><td><ttl>Defaults</ttl><td>Apply the defaults, which are shown in the image on the right.
 </table>
 <td><a href="img/dotplot-filter.png">
 <img src="img/dotplot-filter.png" alt="dotplot filter" style="border: 1px solid black; width: 300px"></a>
@@ -382,7 +392,7 @@ a block displays its 2D view.
 <h2>Summary (Two Genome)</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The <ttb>Help</ttb> button on this view explains the different columns.
+The <ttb>Explain</ttb> button on this view explains the different columns.
 <p><a href="img/sum-2g.png">
 	<img src="img/sum-2g.png" alt="sum-two-genome" style="border: 1px solid black; width: 650px"></a>
 <!--------------------------------------------------------------------------------------->
@@ -482,7 +492,7 @@ on the right. Clicking on a synteny block (or selected region) brings up the 2D 
 <table>
 <tr><td><u>Contents</u>:&nbsp;&nbsp;&nbsp;
 <td><a href="#2dfull">Full display</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<td><a href="#view">View a region</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<td><a href="#view2D">View a region</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#control">Control Panel</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#sequence_filter">Sequence Filter</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#hitfilter">Hit Filter</a>&nbsp;&nbsp;&nbsp;
@@ -532,7 +542,7 @@ The tracks and hits can be filtered; see
 </table>
 <br>The display colors can be changed using the Color Icon in the upper right; see <a href="#control">Controls</a>.
 <!------------------------------------------------------->
-<a id="view"></a>
+<a id="view2D"></a> <!-- used in SystemHelp -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>View a region</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
@@ -947,11 +957,8 @@ Most displays shown have a <img src="img/print.png" alt="print" style="border: 1
 use the system "Screen Capture" (all the images in this
 document were created with screen capture, along with the images in the SyMAP publications).
 
-<p>The right icon brings up this web page, typically to the correct section (obviously, there needs
+<p>The right icon (?) brings up this web page, typically to the correct section (obviously, there needs
 to be an internet connection).
-<p><ttl>Help</ttl> versus <ttl><big>?</big></ttl>: In SyMAP, a <ttl>Help</ttl> button
-will bring up a help panel (no internet necessary). A <ttl><big>?</big></ttl> requires an
-internet connection and will link to a region of this guide.
 
 <!-------------------------- this link is in SyMap--------------------------------------->
 <a id="alignment_display_3d"></a>

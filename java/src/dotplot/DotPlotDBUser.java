@@ -2,39 +2,40 @@ package dotplot;
 
 import java.util.List;
 import java.util.Vector;
+
+import database.DBconn;
+import database.DBAbsUser;
+import props.ProjectPool;
+
 import java.util.ArrayList;
 
 import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import util.DatabaseReader;
 import util.ErrorReport;
 import util.Utilities;
-import symap.pool.DatabaseUser;
-import symap.SyMAPConstants;
-import symap.pool.ProjectProperties;
 
 /****************************************************
  * Loads data for the plot
  * CAS531 removed cache and dead code; CAS533 removed some Loader stuff, dead code, a little rewrite
  */
-public class DotPlotDBUser extends DatabaseUser implements SyMAPConstants {
+public class DotPlotDBUser extends DBAbsUser {
 	private final int X = Data.X, Y = Data.Y;
 	private double minPctid=100;
 	
-	public DotPlotDBUser(DatabaseReader dr) {
+	public DotPlotDBUser(DBconn dr) {
 		super(dr);
 	}
 	public void clear() { minPctid=100;}
 	public double getMinPctID() { return minPctid;}
-	public DatabaseReader getDatabaseReader() {return super.getDatabaseReader();}
+	public DBconn getDBconn() {return super.getDBconn();}
 	
 	/***************************************************
 	 *  For all projects; add groups to projects, and blocks to groups
 	 *  CAS533 renamed from setGroups
 	 */
-	public void setGrpPerProj(Project[] projects, int[] xGroupIDs, int[] yGroupIDs, ProjectProperties pp) {
+	public void setGrpPerProj(Project[] projects, int[] xGroupIDs, int[] yGroupIDs, ProjectPool pp) {
 	try {
 		Vector<Group> list = new Vector<Group>();
 		Statement stat = createStatement();

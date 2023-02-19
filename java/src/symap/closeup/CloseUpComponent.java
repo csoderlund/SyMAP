@@ -12,12 +12,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JComponent;
 
+import props.PropertiesReader;
+import symap.frame.SyMAP2d;
+
 import java.util.Vector;
 import java.util.Arrays;
 import java.util.TreeMap;
-
-import util.PropertiesReader;
-import symap.SyMAP;
 
 /***************************************************************
  * Displays the graphical portion of the Closeup Align
@@ -239,7 +239,7 @@ public class CloseUpComponent extends JComponent {
 	public static Color exonColor, intronColor;
 	
 	static {
-		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/closeup.properties"));
+		PropertiesReader props = new PropertiesReader(SyMAP2d.class.getResource("/properties/closeup.properties"));
 		backgroundColor = props.getColor("backgroundColor");
 		rulerColor = props.getColor("rulerColor");
 		hitColor = props.getColor("hitColor");

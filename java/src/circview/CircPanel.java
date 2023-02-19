@@ -1,5 +1,8 @@
 package circview;
 import javax.swing.*;
+
+import database.DBconn;
+
 import java.awt.*;
 import java.sql.*;
 
@@ -16,7 +19,7 @@ import java.awt.event.MouseMotionListener;
 
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
-import util.DatabaseReader;
+import symap.manager.Mproject;
 import util.ErrorReport;
 
 /**************************************************************
@@ -32,7 +35,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
     public int invChoice = 0;
     public boolean bShowSelf = false, bRotateText = false, bRevRef = false;
     
-	private DatabaseReader mDB;
+	private DBconn mDB;
 	private Vector<Integer> colorVec;
 	
 	private Vector<Project> allProjVec;
@@ -64,7 +67,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
     private HelpBar helpPanel = null;
     private Dimension dim;
     
-	public CircPanel(DatabaseReader dbReader, int[] projIdxList, TreeSet<Integer> selGrpSet, int refIdx,
+	public CircPanel(DBconn dbReader, int[] projIdxList, TreeSet<Integer> selGrpSet, int refIdx,
 							HelpBar hb, Vector <Integer> mCol) {
 		mDB = dbReader;
 		helpPanel = hb;
@@ -81,8 +84,9 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	}
 	
 	private void init() {
-		setPreferredSize(new Dimension(CircFrame.pWidth,CircFrame.pHeight));
-		setMinimumSize(new Dimension(CircFrame.pWidth,CircFrame.pHeight));
+		//setPreferredSize(new Dimension(pWidth,pHeight)); CAS534 doesn't do anything, was 900,700
+		//setMinimumSize(new Dimension(pWidth, pHeight));
+		
 		dim  = new Dimension();
 		scroller = new JScrollPane(this);
 		setBackground(FAR_BACKGROUND);
@@ -671,9 +675,11 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 				Group g = new Group(rs.getInt(3), rs.getInt(1), idx, rs.getString(2), name);
 				grps.add(g);
 			}
+			Mproject tProj = new Mproject();
+			String display_name = tProj.getKey(tProj.sDisplay);
 			
 			displayName = name;
-			rs = s.executeQuery("select value from proj_props where name='display_name' and proj_idx=" + idx);
+			rs = s.executeQuery("select value from proj_props where name='"+display_name+"' and proj_idx=" + idx);
 			if (rs.first()) {
 				displayName = rs.getString(1);
 				name2DisMap.put(name, displayName); // CAS517

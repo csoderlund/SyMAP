@@ -5,7 +5,6 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Window;
-import java.awt.event.ActionListener;
 import java.awt.GraphicsConfiguration;
 import java.awt.Rectangle;
 import java.awt.Insets;
@@ -14,11 +13,7 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Container;
 
-import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.Icon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
@@ -41,8 +36,6 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 
 import backend.Constants;
-import symap.frame.HelpBar;
-import symap.frame.HelpListener;
 
 /**
  * Class <code>Utilities</code> class for doing some miscelaneous things that 
@@ -67,39 +60,6 @@ public class Utilities {
 	/************************************************************
 	 * XXX Random interface 
 	 */
-	// someday i will break this into createImageButton, createButton and createCheckBox; takes more lines to overload...
-	public static AbstractButton createButton(HelpListener parent, String path, String tip, HelpBar bar, 
-			 ActionListener listener, boolean isCheckbox, boolean bSelected) {
-		AbstractButton button;
-		
-		Icon icon = ImageViewer.getImageIcon(path); 
-		if (icon != null) {
-		    if (isCheckbox)
-		    	button = new JCheckBox(icon);
-		    else
-		    	button = new JButton(icon);
-		    	button.setMargin(new Insets(0,0,0,0));
-		}
-		else {
-		    if (isCheckbox)
-		    	button = new JCheckBox(path);
-		    else
-		    	button = new JButton(path);
-		    	button.setMargin(new Insets(1,3,1,3));
-		}
-		if (isCheckbox) button.setSelected(bSelected); // CAS521 add
-		
-		if (listener != null) 
-		    button.addActionListener(listener);
-
-		button.setToolTipText(tip);
-		
-		button.setName(tip); 
-		if (bar != null) bar.addHelpListener(button,parent);
-		
-		return button;
-	}
-	
 	//  attempts to find the screen bounds from the screen insets.  
 	public static Rectangle getScreenBounds(Window window) {
 		GraphicsConfiguration config = window.getGraphicsConfiguration();
@@ -155,17 +115,14 @@ public class Utilities {
  		catch (InterruptedException e) { }
 	}
 
-	public static boolean isRunning(String processName)
-	{
+	public static boolean isRunning(String processName) {
 		boolean running = false;
 		try  {
 	        	String line;
 	        	Process p = Runtime.getRuntime().exec("ps -ef");
 	        	BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	        	while ((line = input.readLine()) != null) 
-	        	{
-	            	if (line.contains(processName))
-	            	{
+	        	while ((line = input.readLine()) != null)  {
+	            	if (line.contains(processName)){
 	            		running = true;	
 	            		break;
 	            	}
@@ -179,8 +136,7 @@ public class Utilities {
 	/*******************************************************************
 	 * XXX basic array and string ops
 	 */
-	 public static String pad(String s, int width)
-	 {
+	 public static String pad(String s, int width){
 	    width -= s.length();
 	    while (width-- > 0) s += " ";
 	    return s;
@@ -206,7 +162,7 @@ public class Utilities {
 			int x = Integer.parseInt(i);
 			return x;
 		}
-		catch (Exception e) {return 0;}
+		catch (Exception e) {return -1;}
 	}
 
 	public static int[] getIntArray(Collection<Integer> ints) throws ClassCastException {
@@ -217,7 +173,7 @@ public class Utilities {
 		return ret;
 	}
 
-	public static boolean isStringEmpty(String s) {
+	public static boolean isEmpty(String s) {
 		return (s == null || s.length() == 0);
 	}
 	
@@ -233,29 +189,20 @@ public class Utilities {
 			try {
 				dir = System.getProperty("user.home");
 			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
+			catch (Exception e) {ErrorReport.print(e, "Get file from users's directory");}
 			return new File(dir,name);
 		}
 		return new File(name);
 	}
-
-
-	public static void deleteFile ( String strPath )
-	{
+	public static void deleteFile ( String strPath ){
 		File theFile = new File ( strPath );
 		theFile.delete();
 	}
 
-	public static void clearAllDir(File d)
-	{
-		if (d.isDirectory())
-		{
-			for (File f : d.listFiles())
-			{
-				if (f.isDirectory() && !f.getName().equals(".") && !f.getName().equals("..")) 
-				{
+	public static void clearAllDir(File d){ // does not remove top directory d
+		if (d.isDirectory()){
+			for (File f : d.listFiles()){
+				if (f.isDirectory() && !f.getName().equals(".") && !f.getName().equals("..")) {
 					clearAllDir(f);
 				}
 				f.delete();
@@ -263,50 +210,57 @@ public class Utilities {
 		}
 		if (TRACE) System.out.println("XYZ clear all directory " + d);
 	}
-	
-    public static boolean fileExists(String filepath)
-    {
+	public static boolean deleteDir(File dir) { // CAS534 moved from ManagerFrame;
+        if (dir.isDirectory()) {
+            String[] subdir = dir.list();
+            
+            if (subdir != null) {
+	            for (int i = 0;  i < subdir.length;  i++) {
+	                boolean success = deleteDir(new File(dir, subdir[i]));
+	                if (!success) {
+	                	System.err.println("Error deleting " + dir.getAbsolutePath());
+	                    return false;
+	                }
+	            }
+            }
+        } 
+        System.gc(); // closes any file streams that were left open to ensure delete() succeeds
+        return dir.delete();
+    }
+    public static boolean fileExists(String filepath) {
     	if (filepath == null) return false;
     	File f = new File(filepath);
     	return f.exists() && f.isFile();
     }
-    public static boolean dirExists(String filepath)
-    {
+    public static boolean dirExists(String filepath){
     	if (filepath == null) return false;
     	File f = new File(filepath);
     	return f.exists() && f.isDirectory();
     }
-    public static boolean pathExists(String path)
-    {
+    public static boolean pathExists(String path) {
 		if (path == null) return false;
 		File f = new File(path);
 		return f.exists();
     }
-    public static int dirNumFiles(File d)
-	{
+    public static int dirNumFiles(File d){
 		int numFiles = 0;
-		for (File f : d.listFiles())
-		{
+		for (File f : d.listFiles()){
 			if (f.isFile() && !f.isHidden()) numFiles++;	
 		}
 		return numFiles;
 	}
     
-	public static File checkCreateDir(String dir, boolean bPrt)
-	{
+	public static File checkCreateDir(String dir, boolean bPrt) {
 		try {
 			File f = new File(dir);
 			if (f.exists() && f.isFile()) {
-				System.out.println("Please remove file " + f.getName()
-						+ " as SyMAP needs to create a directory at this path");
-				System.exit(0);
+				ErrorReport.die("Please remove file " + f.getName()
+					+ " as SyMAP needs to create a directory at this path");
 			}
-			
 			if (!f.exists()) {
 				f.mkdir();
 				if (bPrt) System.out.println("Create directory " + dir); // CAS511
 			}
-	
 			return f;
 		}
 		catch (Exception e) {
@@ -314,9 +268,7 @@ public class Utilities {
 			return null;
 		}
 	}
-	
-	public static void checkCreateFile(String path, String trace)
-	{
+	public static void checkCreateFile(String path, String trace){
 		File f = new File(path);
 		if (f.exists()) {
 			if (TRACE) System.out.println(trace + ": XYZ delete existing file: " + path);
@@ -331,8 +283,7 @@ public class Utilities {
 		}
 	}
 	
-	public static File checkCreateFile(File path, String name, String trace)
-	{
+	public static File checkCreateFile(File path, String name, String trace){
 		File f = new File(path, name);
 		if (f.exists()) {
 			if (TRACE) System.out.println(trace + ": XYZ delete existing file: " + f.getName());
@@ -352,34 +303,9 @@ public class Utilities {
 	public static String fileOnly(String path) {
 		return path.substring(path.lastIndexOf("/")+1, path.length());
 	}
-    
-	public static boolean hasCommandLineOption(String[] args, String name)
-	{
-		for (int i = 0;  i < args.length;  i++)
-			if (args[i].startsWith(name)) 
-				return true;
-		return false;
-	}
 	
-	public static String getCommandLineOption(String[] args, String name)
-	{
-		for (int i = 0;  i < args.length;  i++)
-		{
-			if (args[i].startsWith(name) && !args[i].equals(name))
-			{
-				String ret = args[i];
-				ret = ret.replaceFirst(name,"");
-				return ret;
-			}
-			else if (args[i].equals(name) && i+1 < args.length) 
-			{
-				return args[i+1];
-			}
-		}
 
-		return null;
-	} 	
-   
+	
     /**********************************************************
      * XXX Time methods
      */
@@ -402,6 +328,21 @@ public class Utilities {
 		else if (m==11) ms="Oct";
 		else if (m==12) ms="Dec";
 		return tok[2] + "-" + ms + "-" + tok[0];
+	}
+	
+	public static String reformatDate(String load) { // For Project - show on left of manager
+		try {
+			String dt;
+			if (load.indexOf(" ")>0) dt = load.substring(0, load.indexOf(" "));
+			else if (load.startsWith("20")) dt = load;
+			else return "loaded";
+			
+			SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd"); 
+	        Date d = sdf.parse(dt);
+	        sdf = new SimpleDateFormat("ddMMMyy"); 
+	        return sdf.format(d);
+		}
+		catch (Exception e) {return "loaded";}
 	}
 	public static String getDateStr(long l) {
 		DateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
@@ -564,7 +505,22 @@ public class Utilities {
 		showErrorMessage(msg);
 		exit(exitStatus);
 	}
-	
+	// CAS42 1/4/18 confirm any action that removes things; CAS534 move these 2 from ManagerFrame to here
+	public static boolean showConfirm2(String title, String msg) {
+			String [] options = {"Cancel", "Continue"};
+			int ret = JOptionPane.showOptionDialog(null, 
+					msg, title, JOptionPane.YES_NO_OPTION, 
+					JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+			if (ret == 0) return false;
+			else return true;
+		}
+		// CAS500 this is when there is two possible actions
+	public static int showConfirm3(String title, String msg) {
+			String [] options = {"Cancel", "Only", "All"};
+			return JOptionPane.showOptionDialog(null, 
+					msg, title, JOptionPane.YES_NO_OPTION, 
+					JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
+		}
 	public static void showOutOfMemoryMessage(Component parent) {
 		System.err.println("Not enough memory.");
 		JOptionPane optionPane = new JOptionPane("Not enough memory - increase $maxmem in symap script.", JOptionPane.ERROR_MESSAGE);

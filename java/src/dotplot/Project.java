@@ -1,38 +1,31 @@
 package dotplot;
 
 import java.util.Vector;
-
-import symap.pool.ProjectProperties;
+import database.DBconn;
+import database.DBuser;
+import props.ProjectPool;
+import symap.manager.Mproject;
 
 public class Project {
 	private int id;
 	private String displayName;
-	private String name;
 	private String grpPrefix;
 	private String grpType;
 	private Group[] groups;
 	private int minGrpSize = 0;
 
-	public Project(int id, ProjectProperties pp) {
-		this(id, pp.getName(id), 
-				 pp.getDisplayName(id), 
-				 pp.getStringProperty(id,"grp_prefix",""), 
-				 pp.getStringProperty(id,"grp_type",""),
-				 pp.getIntProperty(id, "min_display_size_bp",0)
-			);
+	public Project(int id, DBconn dbReader) { // CAS534 changed from properties to dbReader
+		DBuser tuser = new DBuser(dbReader);
+		Mproject tProj = new Mproject(tuser, id, "", "");
+		tProj.loadParamsFromDB();
+		
+		this.id          = id;
+		this.displayName = tProj.getDisplayName();
+		this.grpPrefix   = tProj.getGrpPrefix();
+		this.grpType     = tProj.getdbGrpName();
+		this.minGrpSize	 = tProj.getdbDPsize(); // CAS534 this is disable as does not seem to work
 	}
 
-	private Project(int id, String name, String displayName, 
-			String grpPrefix, String grpType, int minGrpSize) 
-	{
-		this.id          = id;
-		this.name        = name;
-		this.displayName = displayName == null ? "" : displayName;
-		this.grpPrefix   = grpPrefix   == null ? "" : grpPrefix;
-		this.grpType     = grpType     == null ? "" : grpType;
-		this.minGrpSize  = minGrpSize;
-	}
-	
 	public void setGroups(Group[] grps) {
 		if (grps != null) {
 			Group.setScaleFactors(grps, minGrpSize);
@@ -74,7 +67,6 @@ public class Project {
 	public String getGrpPrefix() { return grpPrefix; }
 	public String getGrpType() { return grpType; }
 	public String getDisplayName() { return displayName; }
-	public String getName() { return name; }
 	public String toString() { return displayName; } 
 
 	public boolean equals(Object obj) {
@@ -83,7 +75,7 @@ public class Project {
 	/*****************************************************
 	 * Called in data.initialize to set up tiles
 	 */
-	public static Tile[] createTiles(Project[] projects, Tile[] tiles, ProjectProperties pp) {
+	public static Tile[] createTiles(Project[] projects, Tile[] tiles, ProjectPool pp) {
 		Vector<Tile> out = new Vector<Tile>(tiles.length);
 		Project pX = projects[0];
 		for (int i = 1;  i < projects.length;  i++) {

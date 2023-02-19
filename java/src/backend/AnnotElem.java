@@ -12,8 +12,7 @@ public class AnnotElem implements Comparable <AnnotElem> // CAS500 added <type>;
 	
 	private static int NEXTID = 0;
 	
-	AnnotElem(int start, int end,  GeneType gt, int idx)
-	{
+	AnnotElem(int start, int end,  GeneType gt, int idx){
 		this.start = start;
 		this.end   = end;
 		this.idx   = idx;
@@ -28,12 +27,10 @@ public class AnnotElem implements Comparable <AnnotElem> // CAS500 added <type>;
 	
 	public int getLength() { return Math.abs(end-start)+1; }
 	
-	public boolean isGene()
-	{
+	public boolean isGene(){
 		return (mGT == GeneType.Gene);	
 	}
-	public int compareTo(AnnotElem _a2)
-	{
+	public int compareTo(AnnotElem _a2) {
 		AnnotElem a2 = (AnnotElem)_a2;
 		if (mID < a2.mID) return -1;
 		if (mID > a2.mID) return 1;

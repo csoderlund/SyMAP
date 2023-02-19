@@ -11,30 +11,31 @@ import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
 import props.PersistentProps;
-import symap.SyMAP;
-import symap.SyMAPConstants;
+import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import symap.drawingpanel.DrawingPanelListener;
 import util.Utilities;
-import util.SizedJFrame;
 
+/***********************************************************
+ * SyMAP2d creates the components of 2D display, and this puts them together
+ * CAS534 renamed from SyMAPFrame=> Frame2d
+ */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener
+public class Frame2d extends FSized2d implements DrawingPanelListener
 {	
 	private static final String DISPLAY_SIZE_COOKIE = "SyMAPDisplaySize";
 	private static final String DISPLAY_POSITION_COOKIE = "SyMAPDispayPosition";
 
 	private ControlPanel cp;
 	private DrawingPanel dp;
-	private HelpBar hb;
-
-	public SyMAPFrame(ControlPanel cp, DrawingPanel dp, HelpBar hb, 
+	
+	public Frame2d(ControlPanel cp, DrawingPanel dp, HelpBar hb, 
 			boolean showHelpBar, PersistentProps persistentProps) {
-		super("SyMAP "+SyMAP.VERSION);
+		super("SyMAP "+ Globals.VERSION);
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		this.cp = cp;
 		this.dp = dp;
-		this.hb = hb;
+		
 		if (persistentProps != null) {  // CAS517 was checking for null DISPLAY_ values
 			setSizeProp(persistentProps.copy(DISPLAY_SIZE_COOKIE));
 			setLocationProp(persistentProps.copy(DISPLAY_POSITION_COOKIE));
@@ -83,11 +84,11 @@ public class SyMAPFrame extends SizedJFrame implements DrawingPanelListener
 
 	public void setFrameEnabled(boolean enable) {
 		if (enable) {
-			dp.getParent().setCursor(SyMAPConstants.DEFAULT_CURSOR); 
+			dp.getParent().setCursor(Globals.DEFAULT_CURSOR); 
 			// CAS521 does nothing if (hb != null) hb.setBusy(false, this);
 		}
 		else {
-			dp.getParent().setCursor(SyMAPConstants.WAIT_CURSOR); 
+			dp.getParent().setCursor(Globals.WAIT_CURSOR); 
 			// CAS521 does nothing  if (hb != null) hb.setBusy(true, this);
 		}
 		if (cp != null) cp.setPanelEnabled(enable);

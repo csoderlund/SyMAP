@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SyMAP System Help</title>
+<style>
+	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
+	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
+	ttp  {font-family: 'Lucida Console', monospace; font-size: 16px; font-weight: 500; font-variant: small-caps;}
+	hev  {font-family: Arial; font-size: 14px;}
+	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
+	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
+	a.ext {font-weight: bold;}
+	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+	.tx td {padding: 5px;}
+	.ty    {border: 1px  solid black; border-spacing: 1px;  border-collapse: collapse;}
+    .ty td {border: 1px  solid black; padding: 4px; }
+    tt {font-size:13px}
+	pre {font-size:13px}
+	.center {margin-left: auto; margin-right: auto;}
+	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
+</style>
+</head>
+
+<body>
+<a id="top"></a>
+<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
+	<tr><td>
+		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
+			<tr>
+				<td style="text-align: left; vertical-align: top; padding: 0">
+					<a href="http://www.agcol.arizona.edu">
+						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
+
+				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
+					System Quick Guide
+					<br>and Parameters
+
+				<td style="text-align: right; vertical-align: top; padding: 0">
+					<a href="http://www.arizona.edu">
+						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+					<br>
+					<a href="http://www.bio5.org">
+						<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+			<tr>
+				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
+				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
+					<tr>
+						<td style="background-color: #666666; padding-bottom:4px;">
+						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
+						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
+						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./SystemGuide.html" class="current">System Guide</a> <mark class="white">|</mark>
+						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="./Tour.html" class="white">Tour</a>
+				</table>
+		</table>
+	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+	<!---- START BODY -->
+
+<table class="tx">
+<tr><td style="vertical-align: text-top;">
+<b>Contents:</b>
+<ul>
+<li><a href="#build">Build database</a>
+<p>
+<li><a href="#projParams">Project Parameters</a>
+<p>
+<li><a href="#pairParams">Pair Parameters</a>
+</ul>
+<p>&nbsp;<p>
+&#9656; <hev>SyMAP makes it easy to experiment with different parameters, as will be described.</hev>
+<td>&nbsp;
+<td><small>Project Manager</small>
+<br><a href="img/symapPlants.png">
+	<img src="img/symapPlants.png" alt="manager" style="border: 1px solid black; width: 530px"></a>
+</table>
+
+<!---------------------------------------------------------------------------->
+<a id="build"></a> <!-- # ref in code -->
+<h2>Build database</h2>
+
+This provides a quick summary of the build functions.
+See <a href="SystemGuide.html" class="ext" target="_blank">System Guide</a> for details.
+<p>
+<table class="ty">
+<tr>
+<td>Sections&nbsp;&nbsp;
+<td><a href="#selLoad">Selected</a>
+<td><a href="#avail">Available Synteny</a>
+<td><a href="#fun">Function buttons</a>
+</table>
+
+<a id="selLoad"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Selected</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<p>The projects selected from the <ttb>Projects</ttb> in
+the left panel are listed in the <ttl>Selected</ttl> section.
+The possible functions vary with the state, as listed below:
+
+<table class="ty">
+<tr><td colspan=2>&diams; <i>If there is any project not loaded to the database, you will see:</i>
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;
+		<ttl>Load All Projects
+    <td style="white-space: nowrap;">Load all projects that have not been loaded yet.
+<tr><td colspan=2>&diams; <i>If a project <b>is not</b> loaded to the database, you will see:</i>
+<tr><td style="vertical-align: text-top;">&nbsp;&nbsp;
+		<ttl>Remove from disk</ttl>
+    <td>Remove your files from disk. The project will no longer be shown on the left.
+<tr><td style="white-space: nowrap;vertical-align: text-top;">&nbsp;&nbsp;
+	<ttl>Load project</ttl>
+    <td>Loads the sequence and optional annotations to the database.
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;
+		<ttl>Parameters</ttl>
+    <td>This brings up a panel of parameters, see <a href="#projParams">Project Parameters</a>.
+After the project is loaded, you can still change the <ttl>Display</ttl> parameters.
+
+<tr><td colspan=2>&diams; <i>If a project <b>is</b> loaded into the database, you will see:</i>
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;
+		<ttl>Remove from database</ttl>
+    <td>The sequences and annotation will be removed, but the files stay on disk.
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;
+		<ttl>Reload project</ttl>
+    <td>Executes <ttl>Remove from database</ttl> followed by <ttl>Load project</ttl>.
+		<br>If there are alignment files, you will be asked if you want them removed;
+		see <a href="#start">parameters</a> to determine whether they should be removed.
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;
+		<ttl>Reload annotation</ttl>
+    <td>Removes the annotation from the database then load the annotations.
+		<br>The <ttl>Alignment&amp;Synteny</ttl> commands will
+		recognize if there is an existing alignment
+		and will only perform the synteny computation.
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;
+		<ttl>Parameters</ttl>
+    <td>This brings up the project parameters panel.
+
+</table>
+<p>
+
+<a id="avail"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Available Synteny Section</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+Sequence alignments are performed with
+<a href="http://mummer.sourceforge.net/manual" class="ext" target="_blank">MUMmer3</a>,
+but can be changed to use
+<a href="https://mummer4.github.io"  class="ext" target="_blank">MUMmer4</a> (see SyMAP
+<a href="./MUMmer.html" class="ext" target="_blank">MUMmer</a>).
+
+<p>
+This section shows a table with the status of alignments between
+the selected <i>loaded</i> projects.
+Each cell in the table represents a pair of projects and the cell contains a status code showing
+ whether or not that pair has been aligned (codes are listed below). Note that the table
+shows each pair cell twice, but only the lower cells are activated.
+<p>
+Clicking on a cell selects that pair of projects (the cell will be highlighted in yellow).
+<ttl>Alignment&amp;Synteny</ttl> may then be computed or viewed for the selected pair using
+the <a href="#fun">function</a> buttons.
+<p>
+<table class="ty">
+<tr><td><i>Code</i>
+	<td><i>Description</i>
+<tr><td>
+		&#10004;
+	<td>Synteny for this project pair is ready to view.
+<tr><td>
+		<b>A</b>
+	<td>
+		The MUMmer alignment has been performed but the anchors have not been
+		loaded and the synteny computation has not been run. This status occurs if
+		a pair is completed but then annotations are re-loaded for one of the projects,
+		or if the MUMmer files have been added by the user.
+<tr><td>
+		<b>?</b>
+	<td>
+		The alignment have not been completed. In this case, select <ttl>Selected Pair (Redo)</ttl> and the
+		alignments will be completed followed by the synteny algorithm.
+<tr><td>
+		&nbsp;
+	<td>The alignment has not been started.
+</table>
+<p>
+<ttl>CPUs:</ttl> Enter the maximum number of CPUs to use for an alignment. SyMAP will use
+up to that number (but may use fewer, depending on the number of sequences being aligned). Alternatively,
+the number of CPUs may be entered in the <tt>symap.config</tt> file or
+entered as a command line argument (-p N).
+<p><ttl> Concat:</ttl>The chromosomes (and/or scaffolds) are concatenated together for one genome
+and searched against the chromosomes of the 2nd genome. If this is unchecked, then each chromosome
+of the first genome is searched against each chromosome of the 2nd genome; this is useful when
+there is limited memory. If chromosomes or scaffolds are small, multiple sequences
+will still be concatenated into a file of &lt;60M.
+
+<a id="fun"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Function Buttons</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<table class="ty">
+<tr><td colspan=2><i>Alignment&amp;Synteny (A&ampS)</i>
+<tr><td style="white-space: nowrap;vertical-align: text-top;">
+		<ttl>All Pairs
+	<td>
+		Run (or complete) the synteny computation for all pairs in the <ttb>Available Syntenies</ttb> table.
+		However, this will not run 'self-syntenies'; those need to be done individually by selecting
+		the pair. Also, a draft sequence that are to be ordered can only be aligned to
+		one complete sequence, so those should also be done individually.
+<tr><td style="white-space: nowrap;vertical-align: text-top;">
+		<ttl>Selected Pair</ttl>
+		<br><ttl>Selected Pair (Redo)</ttl>
+	<td>
+		Run (or complete) the <ttl>A&amp;S</ttl> computation for the selected project pair.
+		<br>If the pair is already complete, the button label changes to <ttl>Redo</ttl>, and
+		only the synteny computation will be rerun.
+		<br>If you wish to rerun the MUMmer alignment, first use the <ttb>Clear Pair</ttb> function.
+<tr><td style="white-space: nowrap;vertical-align: text-top;">
+		<ttl>Clear Pair</ttl>
+	<td>
+		You will be prompt whether you want:
+		<br>(1) remove synteny from the database only, or
+		<br>(2) remove synteny from the database and remove alignments.
+<tr><td style="white-space: nowrap;vertical-align: text-top;">
+		<ttl>Parameters</ttl>
+	<td>
+		Set the <a href="#pairParams">pair parameters</a> for the selected pair cell .
+</table>
+
+<p>For the remaining display buttons, see <a href="UserGuide.html#views" class="ext" target="_blank">User Guide</a>.
+<hr>
+<!---------------------------------------------------------------------->
+<!---------------------------------------------------------------------->
+<!---------------------------------------------------------------------->
+<a id="projParams"></a> <!-- # ref in code -->
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Project Parameters</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<table class="ty">
+<tr>
+<td>Sections&nbsp;&nbsp;
+<td><a href="#start">Overview</a>
+<td><a href="#display">Display</a>
+<td><a href="#project">Load project</a>
+<td><a href="#anno">Load annotation</a>
+<td><a href="#align">Alignment&amp;Synteny (A&amp;S)</a>
+<td><a href="#save1">Save</a>
+<td><a href="#annot">Annotation</a>
+</table>
+
+<a id="start"></a>
+<h3>Overview</h3>
+
+<table>
+<tr>
+<td style="vertical-align: text-top;">
+Click the <u>Parameters</u> link to open the Parameters window shown on the lower right.
+
+<p>&nbsp;
+<p>&rarr; <font color=green>Make sure the following parameters are set
+correctly before running the Alignment&amp;Synteny (A&amp;S) step</font>.
+<p><i><b>Load project:</b></i>
+<ttl>Group prefix</ttl>, <ttl>Minimum length</ttl>,
+<ttl>Sequence files</ttl>
+
+<br><i><b>Alignment&Syteny:</b></i> <ttl>Mask non-genes</ttl>.
+
+<p>If any of these need to be changed after <ttl>A&amp;S</ttl>, then the alignment needs to be run again (note, the
+alignment can take a long time!!).
+<p>&nbsp;
+<p>&rarr;<ttl>Sequence</ttl> and <ttl>Anno</ttl> (annotation) files:
+<br>If the files are put in the default locations, nothing needs to be entered for them.
+<p>Default locations:
+<br><tt>data/seq/&lt;project-name&gt/sequence</tt>
+<br><tt>data/seq/&lt;project-name&gt/annotation</tt>
+
+<td>
+<a href="img/lineLoad.png"><img src="img/lineLoad.png" alt="Project options" style="border: 1px solid black; width: 430px"></a>
+<p><a href="img/parameters1.png"><img src="img/parameters1.png" alt="parameters1" style="border: 1px solid black; width: 430px"></a>
+</table>
+
+<!--------------------------------------------------------------->
+<a id="display"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Display</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+For the following parameters, new values take immediate effect.
+
+<table class="ty">
+<tr><td><b>Parameter</b><td><b>Description</b><td><b>Default Value</b>
+
+<tr><td>&nbsp;&nbsp;<ttl>Category</ttl>
+	<td style="width: 450px;">
+		Category label for the project. This is only used to group project on the
+		left side of the <ttb>Project Manager</ttb> window.
+	<td>Uncategorized
+<tr><td>&nbsp;&nbsp;<ttl>Display name</ttl>
+	<td>A user-friendly name for the project. Use any combination of letters, digits and dash.
+		Shorter names will work better in the displays. It must be unique for the category.
+	<td>The project directory name.
+<tr><td>&nbsp;&nbsp;<ttl>Abbreviation</ttl>
+	<td>A name (must be exactly 4 characters) to be used in the column headings for <ttb>Queries</ttb>.
+	<td>Last 4 characters of <ttl>Display name</ttl>.
+<tr><td>&nbsp;&nbsp;<ttl>Description</ttl>
+	<td>Description of the project. This is only shown in the <ttb>Selected</ttb> section.
+	Do NOT use quotes, backslash or #.
+	<td>&nbsp;
+<tr><td>&nbsp;&nbsp;<ttl>Group type</ttl>
+	<td>How to refer to the sequences. This is shown on the <ttb>Selected</ttb> section.
+	<td>Chromosome
+
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Anno key count</ttl>
+	<td>This applies to the annotation attributes columns shown in the <ttb>Queries</ttb> results table. See the
+		<a href="#annot">Annotation</a> section below.
+	<td>50
+</table>
+
+<a id="project"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Load project</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<ttl><big>Group prefix</big></ttl>
+<br>The term "Group" is used for any sequence type, e.g. chromosome, scaffold, contig.
+
+<table class="tx">
+<tr><td style="vertical-align: text-top;">1.
+<td>The parameter effects the display, and is applied during the loading of the sequences.
+If provided, this allows SyMAP to remove the prefix from the chromosome
+names and use the remaining part as a shorter name (e.g. "01" instead of "Chr01").
+<tr><td style="vertical-align: text-top;">2.
+<td>All sequences in the FASTA file must have this prefix. If the sequences have a mix of prefixes, leave this blank.
+<tr><td  style="vertical-align: text-top;">3.
+<td><i>Long names really clutter the display</i>; it is best to use a consistent prefix that SyMAP can remove,
+otherwise, use really short prefixes, e.g. 's' for scaffold, 'c' for chromosome.
+<tr><td style="vertical-align: text-top;">4.
+<td><i>You may remove the prefix after the project is loaded</i>. For example, if your sequences had
+names "Scaf1", "Scaf2", etc, and "Scaf" was NOT entered as the <ttl>Group prefix</ttl> before load, you may
+enter it later and it will be removed from all sequence names. However, this is not reversible
+and a prefix cannot be added to the sequence names.
+</table>
+This parameter is finicky; after loading project, check <ttl>View</ttl> and the output to the terminal
+to make sure the annotation was loaded right.
+
+<p><ttl><big>Minimum length</big></ttl>
+<br>Minimum length of a group sequence to load; smaller sequences will be ignored. Note that annotations
+for ignored sequences will also be ignored, but some error messages will be printed to the terminal.
+
+<p><ttl><big>Sequence files</big></ttl>
+<br>
+Select the input FASTA sequence file(s), or directories of sequence files.
+For formatting, see <a href="SystemGuide.html#seqprep" class="ext" target="_blank">Sequence files</a>.
+Default location: <tt>data/seq/&lt;project-name&gt/sequence</tt>
+
+<p>If any of the above 3 are changed:
+<br>&#9656; If the project has already been loaded, <ttl>Reload Project</ttl>.
+<br>&#9656; If <ttl>A&amp;S</ttl> has previously been run,
+select <ttl>Clear pair</ttl> and remove the alignment files, then run <ttl>A&amp;S</ttl>.
+
+<!----------------------------------------------->
+<a id="anno"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Load annotation</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<ttl><big>Anno keywords</big></ttl>
+<br>A comma separated list of keywords. This can be used to reduce the annotation attribute keywords shown in the <ttb>2D display</ttb> and <ttb>Queries</ttb> table.
+	See the <a href="#annot">Annotation</a> section below.
+<p>
+<ttl><big>Anno files</big></ttl>
+<br>
+Select the input GFF3-formatted annotation files corresponding to your sequences. Note, using
+a GFF3 file directly can cause problems; see
+<a href="SystemGuide.html#annot" class="ext" target="_blank">Annotation files</a>.
+Annotation is optional but highly recommended. Default location: <tt>data/seq/&lt;project-name&gt/annotation</tt>
+
+<p>If either of the above are changed:
+<br>&#9656; If the annotation has already been loaded, <ttl>Reload Annotation</ttl>.
+<br>&#9656; If <ttl>A&amp;S</ttl> has been previously run, re-run <ttl>A&amp;S</ttl> (the existing alignments files will be reused).
+
+<!----------------------------------------------->
+<a id="align"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Alignment&amp;Synteny (A&amp;S)</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<ttl><big>Mask non-genes</big></ttl>
+<br>Mask out all non-genic parts of the sequences before running MUMmer (gene annotation must
+be provided). This can save time but prevents non-annotated anchors from being found.
+<p>&#9656; If this is changed after <ttl>A&amp;S</ttl>, the alignment files need to be
+removed with <ttl>Clear pair</ttl> and <ttl>A&amp;S</ttl> run again.
+
+<p><ttl><big>Order against</big></ttl>
+<br>For draft contig sets, this allows you to order them using synteny to
+one of the other projects.
+See <a href="./SystemGuide.html#draft2" class="ext" target="_blank">Ordering details</a>.
+<p>&#9656; If the draft has been aligned to the <ttl>Order against</ttl> sequence, but this parameter
+was not set, it can be set and the <ttl>A&amp;S</ttl> run with the existing alignment files.
+
+<!----------------------------------------------->
+<a id="save1"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Rules for saving project parameters</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+Before the project is loaded, the parameters are saved to the file
+<pre>  data/seq/&lt;project-name&gt/params</pre>
+When the project is loaded, all parameters are saved to the database except the <ttl>A&amp;S</ttl> parameters.
+<br>When the <ttl>A&amp;S</ttl> is executed, then the corresponding parameters are saved to the database.
+
+<p>Any parameter not the defaults will be shown on the <ttb>View</ttb> popup.
+<p>The <tt>params</tt> file parameters are shown on the <u>Parameters</u> window. These can only be
+viewed and changed using <ttp>symap</ttp> (not <ttp>viewSymap</ttp>).
+
+<!----------------------------------------------->
+<a id="annot"></a>
+<h3>Annotation</h3>
+The gene annotation is shown on the
+<a href="UserGuide.html#view2D" class="ext" target="_blank">2D display</a> and as columns in the
+<a href="Query.html#result" class="ext" target="_blank">Queries</a> results table. The annotation
+comes from the last column, called attributes, for each gene in the GFF file. The attributes is a keyword=value list,
+e.g.
+<pre>
+   ID=gene-AT1G01010;Name=NAC001;ID=rna-NM_099983.2;product=NAC domain containing protein 1
+</pre>
+Defaults: Generally, all genes in a file have the same keywords, in which case, use the defaults.
+This will cause the entire attribute to be shown for the gene in the <ttb>2D display</ttb>, and the
+<ttb>Queries</ttb> table will have columns for each keyword that has over 50 occurrences.
+In the example above, the columns will be ID, Name and product (the second ID will be ignored).
+<p>
+If there are many different keywords in the attribute list, this causes too many columns in the <ttb>Queries</ttb> table.
+This can be reduced by one (or both) of the following:
+<p>
+<ttl>Anno key count</ttl>: If there are many different keywords in the attribute list,
+set this count N to filter out all keywords with &lt;N occurrences.
+<p>
+<ttl>Anno keywords</ttl>: The <tt>keyword=value</tt> pairs to be saved for each gene can be limited by listing
+the desired keywords separated by commas.  Using this approach, it will also reduce
+annotation description per gene in the <ttb>2D display</ttb>.
+For example, if the string "<tt>ID, product</tt>" was entered,
+the <tt>Name=value</tt> would not be part of any gene annotation.
+<hr>
+<!----------------------------------------------------------------------->
+<!----------------------------------------------------------------------->
+<!----------------------------------------------------------------------->
+
+<a id="pairParams"></a> <!-- # ref in code -->
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Pair Parameters</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<table class="ty">
+<tr><td>Sections<td><a href="#over2">Overview</a><td><a href="#parms2">Parameter description</a>
+<td><a href="#save2">Save</a><td><a href="#mum">MUMmer parameters</a>
+</table>
+
+<a id="over2"></a>
+<h3>Overview</h3>
+
+<table>
+<tr>
+
+<td style="vertical-align: text-top;">
+<a href="img/lineAlign.png"><img src="img/lineAlign.png" alt="alignLine" style="border: 1px solid black; width: 400px"></a>
+<p>Select a pair cell in the <ttl>Available Syntenies</ttl> table followed by the <ttb>Parameters</ttb>
+button, which will popup the window shown on the right.
+
+<p>These parameters generally do not need to be changed.
+The exception is the <ttl>Block Merge</ttl>, which may be beneficial when there are
+many small blocks. Below shows
+an example where the first image does not have merged blocks and the second does (the blue dots are hits that
+belong to the block).
+<p>
+<a href="img/demoNotMerge.png"><img src="img/demoNotMerge.png" alt="demo Not Merge" style="border: 1px solid black; width:  210px"></a>
+<a href="img/demoMerge.png"><img src="img/demoMerge.png" alt="demoMerge" style="border: 1px solid black; width:  220px"></a>
+<td>
+<a href="img/parameters2.png"><img src="img/parameters2.png" alt="parameters2" style="border: 1px solid black; width: 300px"></a>
+</table>
+
+<a id="param2"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Parameter description</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<p>The following provides details:
+<table class="ty">
+<tr>
+<td><b>Parameter</b><td><b>Description</b><td><b>Default</b>
+<tr><td colspan=3>&diams; <i>Alignment</i>
+
+<tr>
+	<td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>PROmer Args</ttl>
+	<td>Arguments for PROmer<sup>1</sup>
+	<td>&nbsp;
+<tr>
+	<td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>NUCmer Args</ttl>
+	<td>Arguments for NUCmer<sup>1</sup>
+	<td>&nbsp;
+<tr>
+	<td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Self Args</ttl>
+	<td>Arguments to use when aligning a chromosome to itself.<sup>2</sup>
+	<td>&nbsp;
+<tr>
+	<td>&nbsp;&nbsp;<ttl>PROmer Only</ttl>
+	<td>Use PROmer for all alignments.<sup>3</sup>
+	<td>Off
+<tr>
+	<td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>NUCmer Only</ttl>
+	<td>Use NUCmer for all alignments.<sup>3</sup>
+	<td>Off
+
+<tr><td colspan=3>&diams; <i>Synteny</i>
+<tr>
+	<td>&nbsp;&nbsp;<ttl>Min Dots</ttl>
+	<td>Minimum number of anchors required to define a synteny block.
+	<td>7
+<tr>
+	<td>&nbsp;&nbsp;<ttl>Top N</ttl>  <!-- this is really anchor load, but user only needs to know synteny-->
+	<td>When loading the anchors, retain the top N hits for every sequence region (as
+		well as all hits with score at least 80% of the Nth).
+	<td>2
+<tr>
+	<td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Merge Blocks</ttl>
+	<td>Merge overlapping (or nearby) synteny blocks into larger blocks.
+	<td>Off
+</table>
+
+
+<p><sup>1</sup>BEWARE: Entered PROmer and NUCmer arguments are <b>NOT</b> checked for correctness.
+<p><sup>2</sup> When self-alignment is performed, standard arguments are used
+when comparing different chromosomes. However, additional arguments may be desired
+when a chromosome sequence is run against itself, e.g. <tt>--nosimplify</tt> or <tt>--maxmatch</tt>,
+though the latter can take a very long time.
+<p><sup>3</sup> By default, PROmer is used for alignments between different
+projects, while NUCmer is used for self alignments.
+
+<p>Changed <i>Alignment</i> parameters:
+<br>&#9656; If an alignment for the pair exists (&#10004; or <b>A</b> in pair cell),
+use <ttb>Clear pair</ttb> before <ttl>A&amp;S</ttl>.
+<p>Changed <i>Synteny</i> parameters:
+<br>&#9656; An existing alignment for the pair can be used.
+
+<a id="save2"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Rules for saving pairs parameters</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+Before the <ttl>A&amp;S</ttl> is executed, the parameters are saved in
+<pre>  data/seq_results/&lt;proj1-to-proj2&gt;/params</pre>
+Once the <ttl>A&amp;S</ttl> is executed, the parameters are stored in the database.
+
+<p>The file parameters are shown on the pair <ttb>Parameter</ttb> window. These can only be
+viewed and changed using <ttp>symap</ttp> (not <ttp>viewSymap</ttp>).
+
+<p>Any parameter not the default will be shown on the <ttb>Summary</ttb> page.
+
+<p>BEWARE: If you run <ttl>A&S</ttl>, then change the PROmer or NUCmer settings, but forget to <ttl>Clear Pair</ttl>
+before running <ttl>A&S</ttl> again, the parameters
+on the <ttb>Summary</ttb> page will be wrong (SyMAP does not check for this situation).
+<!------------------------------------------------------------------------>
+<a id="mum"></a>
+<h3>MUMmer parameters</h3>
+The arguments for MUMmer are <b>NOT</b> checked for correctness.
+<p>
+To see the parameters for the default MUMmer V3 on MacOS, from the <tt>symap</tt> directory:
+<pre>
+./ext/mummer/mac/mummer -h
+./ext/mummer/mac/promer -h
+./ext/mummer/mac/nucmer -h
+</pre>
+To see the parameters for the default MUMmer V3 on Linux:
+<pre>
+./ext/mummer/linux/mummer -h
+./ext/mummer/linux/promer -h
+./ext/mummer/linux/nucmer -h
+</pre>
+
+If  you compiled V4 in the /ext directory:
+<pre>
+./ext/mummer4/m4/bin/mummer -h
+./ext/mummer4/m4/bin/promer -h
+./ext/mummer4/m4/bin/nucmer -h
+</pre>
+For a detail discussion of MUMmer running in SyMAP,
+see <a href="./MUMmer.html" class="ext" target="_blank">MUMmer</a>.
+
+<p><a href="#top">Go to top</a>
+<!---- END BODY -->
+
+<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+
+</table>
+</body>
+</html>
+

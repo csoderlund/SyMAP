@@ -1,9 +1,5 @@
-package symapCE;
+package symap.frame;
 
-/*********************************************************
- * 2D for Chromosome Explorer
- * CAS521 remove FPC
- */
 import java.beans.PropertyChangeEvent;  // CAS521 replaced Depreciated Observer with this
 import java.beans.PropertyChangeListener;
 
@@ -12,34 +8,35 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Vector;
 
-import util.DatabaseReader;
 import util.ErrorReport;
-import backend.UpdatePool;
-import symap.projectmanager.common.Block;
-import symap.projectmanager.common.Project;
-import symap.projectmanager.common.SyMAPFrameCommon;
-import symap.projectmanager.common.TrackCom;
-import symap.projectmanager.common.Mapper;
+import database.DBuser;
+import database.DBconn;
+import symap.manager.Mproject;
 
-public class SyMAPExp implements PropertyChangeListener { 
-	
-	private SyMAPFrameCommon frame;
-	private DatabaseReader databaseReader;
-	private Vector<Project> projects;
-	Vector<TrackCom> tracks;
-	Mapper mapper;
-	public static final Color[] projectColors = { Color.cyan, Color.green, new Color(0.8f, 0.5f, 1.0f),
+/*********************************************************
+ * Chromosome Explorer setup; loads projects, tracks, blocks and initializes track
+ * CAS521 remove FPC
+ * CAS534 symapCE.SyMAPExp=> frame.ChrExpInit
+ */
+
+public class ChrExpInit implements PropertyChangeListener { 
+	private ChrExpFrame frame;
+	private DBconn dbc;
+	private Vector<Mproject> projects;
+	private Vector<TrackCom> tracks;
+	private Mapper mapper;
+	private static final Color[] projectColors = { Color.cyan, Color.green, new Color(0.8f, 0.5f, 1.0f),
 		Color.yellow, Color.orange };
 
-	public SyMAPExp(DatabaseReader dr) throws SQLException {
-		databaseReader = dr;
+	public ChrExpInit(DBconn dr) throws SQLException {
+		dbc = dr;
 		
-		projects = new Vector<Project>();
+		projects = new Vector<Mproject>();
 		tracks =   new Vector<TrackCom>();
 		
 		mapper =   new Mapper();
 		
-		frame =    new SyMAPFrameCommon(databaseReader, mapper);
+		frame =    new ChrExpFrame(dbc, mapper);
 	}
 	public void propertyChange(PropertyChangeEvent evt) {
 		if (frame != null) frame.repaint();
@@ -48,7 +45,7 @@ public class SyMAPExp implements PropertyChangeListener {
 	// symapCE.SyMAPmanager.showExplorer
 	public boolean addProject(String strName) {
 		try {
-			Project p = loadProject(strName);
+			Mproject p = loadProject(strName);
 			if ( p != null ) {
 				p.setColor( projectColors[projects.size() % (projectColors.length)] );				
 				tracks.addAll( loadProjectTracks(p) );
@@ -64,7 +61,7 @@ public class SyMAPExp implements PropertyChangeListener {
 		try {
 			Vector<Block> blocks = loadAllBlocks(tracks);
 			
-			mapper.setProjects(projects.toArray(new Project[0]));
+			mapper.setProjects(projects.toArray(new Mproject[0]));
 			mapper.setTracks(tracks.toArray(new TrackCom[0]));
 			mapper.setBlocks(blocks.toArray(new Block[0]));
 			projects = null;
@@ -75,26 +72,21 @@ public class SyMAPExp implements PropertyChangeListener {
 		return false;
 	}
 	// symapCE.SyMAPmanager.showExplorer
-	public SyMAPFrameCommon getFrame() {
+	public ChrExpFrame getFrame() {
 		return frame;
 	}
 	
-	private Project loadProject(String strProjName) throws SQLException{
+	private Mproject loadProject(String strProjName) throws SQLException{
 	     int nProjIdx = -1;
-	     String strDisplayName = null;
 	     String loaddate=""; // CAS513 to put on left side by name
 	
-	     UpdatePool pool = new UpdatePool(databaseReader);
-	     ResultSet rs = pool.executeQuery("SELECT p.idx, p.loaddate, pp.value " +
-	     		"FROM projects AS p " +
-	     		"JOIN proj_props AS pp ON (p.idx=pp.proj_idx) " +
-	     		"WHERE pp.name='display_name' " +
-	     		"AND p.name='"+strProjName+"'");
+	     DBuser pool = new DBuser(dbc);
+	     ResultSet rs = pool.executeQuery("SELECT p.idx, p.loaddate " +
+	     		"FROM projects AS p  where p.name='"+strProjName+"'");
 	     
 	     if ( rs.next() ) {
+	    	nProjIdx = rs.getInt("p.idx");
 	    	loaddate = rs.getString("p.loaddate");
-	     	nProjIdx = rs.getInt("p.idx");
-	     	strDisplayName = rs.getString("pp.value");
 	     }
 	     rs.close();
 	     
@@ -103,15 +95,17 @@ public class SyMAPExp implements PropertyChangeListener {
 	     	return null;
 	     }
 	     
-	     return new Project(nProjIdx, strProjName,  strDisplayName, loaddate);
+	     Mproject p = new Mproject(new DBuser(dbc), nProjIdx, strProjName,  loaddate);
+	     p.loadDataFromDB();
+	     p.loadParamsFromDB();
+	     return p;
 	}
 	
-	private Vector<TrackCom> loadProjectTracks(Project p) throws SQLException
-	{
+	private Vector<TrackCom> loadProjectTracks(Mproject p) throws SQLException {
 		Vector<TrackCom> projTracks = new Vector<TrackCom>();
      
 	     // Get group(s) and create track(s)
-	     UpdatePool pool = new UpdatePool(databaseReader);
+	     DBuser pool = new DBuser(dbc);
 	     String qry = "SELECT idx,name FROM xgroups WHERE proj_idx=" + p.getID() +
 	     				" AND sort_order > 0 " + // make consistent with full dotplot for FPC projects
 	     				"ORDER BY sort_order";
@@ -139,19 +133,10 @@ public class SyMAPExp implements PropertyChangeListener {
 	     return projTracks;
 	}
 	
-	private static String getGroupList(Vector<TrackCom> tracks) {
-		String s = "";
-		for (TrackCom t : tracks)
-			s += t.getGroupIdx() + (t == tracks.lastElement() ? "" : ",");
-		return s;
-	}
-	
-	private Vector<Block> loadAllBlocks(Vector<TrackCom> tracks) 
-	throws SQLException
-	{
+	private Vector<Block> loadAllBlocks(Vector<TrackCom> tracks) throws SQLException {
 		Vector<Block> blocks = new Vector<Block>();
 		
-		UpdatePool pool = new UpdatePool(databaseReader);
+		DBuser pool = new DBuser(dbc);
 		
 		/* CAS512 is added, See if we have the corr field - CAS was probably added to schema long ago
 		 boolean haveCorr = true;
@@ -187,6 +172,12 @@ public class SyMAPExp implements PropertyChangeListener {
 	     }
 	     rs.close();
 	     return blocks;
+	}
+	private static String getGroupList(Vector<TrackCom> tracks) {
+		String s = "";
+		for (TrackCom t : tracks)
+			s += t.getGroupIdx() + (t == tracks.lastElement() ? "" : ",");
+		return s;
 	}
 }
 

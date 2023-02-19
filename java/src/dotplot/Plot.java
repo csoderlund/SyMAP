@@ -173,6 +173,7 @@ public class Plot extends JPanel implements HelpListener {
 		for (Group grp : yGroups) {
 			int y1 = MARGIN +   (int)(grp.getOffset() * yPixelBP );
 			int y2 = y1 + (int)((int)(grp.getGrpLenBP() * grp.getScale())*yPixelBP) ;
+		
 			drawCentered(g, grp.getName(), MARGIN/2, y1, MARGIN, y2, HORZ);
 			
 			if (grp != yGroups[yGroups.length-1]) 

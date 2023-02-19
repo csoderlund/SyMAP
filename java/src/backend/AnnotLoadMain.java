@@ -1,42 +1,39 @@
 package backend;
 
-/***********************************************
- * Load gff files for sequence projects
- */
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.File;
-
 import java.util.Collections;
-import java.util.Properties;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.Comparator;
-
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-import symap.SyMAP;
-import symap.pool.DatabaseUser;
+import symap.manager.Mproject;
+import symap.Globals;
 import util.Cancelled;
 import util.ErrorCount;
 import util.Logger;
 import util.Utilities;
 import util.ErrorReport;
 
+/***********************************************
+ * Load gff files for sequence projects
+ */
+
 public class AnnotLoadMain {
-	static public boolean GENEN_ONLY=SyMAP.GENEN_ONLY; 	// -z CAS519b to update the gene# without having to redo synteny
+	static public boolean GENEN_ONLY=Globals.GENEN_ONLY; // -z CAS519b to update the gene# without having to redo synteny
 	
 	private Logger log;
 	private UpdatePool pool;
-	private Project project;
+	private SyProj syProj;
+	private Mproject mProj;
 
 	private final String defaultTypes = 			"gene,exon,frame,gap,centromere";
 	private TreeMap<String,Integer> typeCounts = 	new TreeMap<String,Integer>();;
 	private TreeSet<String> typesToLoad = 			new TreeSet<String>();
-	private static Properties mDBProps = null;
 	
 	// init
 	private Vector<File> annotFiles = 				new Vector<File>();
@@ -51,23 +48,25 @@ public class AnnotLoadMain {
 	private boolean success=true;
 	private int cntGeneIdx=0;
 	
-	public AnnotLoadMain(UpdatePool pool, Logger log, Properties props) {
+	public AnnotLoadMain(UpdatePool pool, Logger log, Mproject proj) throws Exception {
 		this.log = log;
 		this.pool = pool;
-		if (props != null) mDBProps = props;
+		this.mProj = proj;
+		
+		syProj = 	new SyProj(pool, log, mProj, proj.getDBName(), -1, QueryType.Either);
 	}
 	
-	public boolean run(String projName) throws Exception {
+	public boolean run(String projDBName) throws Exception {
 		long startTime = System.currentTimeMillis();
 		
 		if (GENEN_ONLY) { // CAS519b
-			geneNOnly(projName);
+			geneNOnly(projDBName);
 			return success;
 		}
 		
-		log.msg("Loading annotation for " + projName);
+		log.msg("Loading annotation for " + projDBName);
 		
-		initFromParams(projName);	if (!success) return false;
+		initFromParams(projDBName);	if (!success) return false;
 		deleteCurrentAnnotations();	if (!success) return false;
 		
 /*** LOAD FILE ***/
@@ -80,19 +79,21 @@ public class AnnotLoadMain {
 			loadFile(af);	if (!success) return false;
 		}
 		pool.executeUpdate("update projects set hasannot=1," // CAS520 add version
-				+ " annotdate=NOW(), syver='" + SyMAP.VERSION + "' where idx=" + project.getIdx());
+				+ " annotdate=NOW(), syver='" + Globals.VERSION + "' where idx=" + mProj.getIdx());
 		Utils.timeMsg(log, time, nFiles + " file(s) loaded");
 		
 /** Compute gene order **/
-		log.msg("Computations " + projName);
+		log.msg("Computations " + projDBName);
 		time = System.currentTimeMillis();
-		AnnotLoadPost alp = new AnnotLoadPost(project, pool, log);
+		
+		AnnotLoadPost alp = new AnnotLoadPost(syProj, pool, log);
+		
 		success = alp.run(cntGeneIdx); 	if (!success) return false;
 		Utils.timeMsg(log, time, "Computations");
 
 /** Wrap up **/
 		summary();		if (!success) return false;
-		Utils.timeMsg(log, startTime, "Load Anno for " + projName);
+		Utils.timeMsg(log, startTime, "Load Anno for " + projDBName);
 		
 		return true;
 	}
@@ -172,7 +173,7 @@ public class AnnotLoadMain {
 			
 	/** Process for write **/
 			/** Chromosome **/
-			int grpIdx = project.grpIdxFromQuery(chr);
+			int grpIdx = syProj.grpIdxFromQuery(chr);
 			if (grpIdx < 0) {// ErrorCount.inc(); CAS502 this is not an error; can happen if scaffolds have been filtered out
 				if (numGrpErrors++ < MAX_ERROR_MESSAGES) {
 					log.msg("Warn: No loaded sequence (e.g. chr) for " + chr + " on line " + lineNum);
@@ -299,17 +300,13 @@ public class AnnotLoadMain {
 	private void initFromParams(String projName) {
 		try {		
 			String projDir = 	Constants.seqDataDir + projName;
-			SyProps props =		new SyProps(log, new File(projDir + Constants.paramsFile), mDBProps); // read parms from file
-			project = 			new Project(pool, log, props, projName, QueryType.Either);
 			
 		// Files init
-			if (!props.containsKey("anno_files")) props.setProperty("anno_files", "");
-
+			String annoFiles = mProj.getAnnoFile();
 			String saveAnnoDir="";
 			long modDirDate=0;
 			
-			if (props.getProperty("anno_files").equals("")) {
-				// Check for annotation directory
+			if (annoFiles.equals("")) {// Check for annotation directory
 				String annotDir = 	projDir + Constants.seqAnnoDataDir;
 				log.msg("   Anno_files not specified - use " + annotDir);
 				File ad = new File(annotDir);
@@ -326,9 +323,9 @@ public class AnnotLoadMain {
 				saveAnnoDir=annotDir;
 			}
 			else {
-				String userFiles = props.getProperty("anno_files");
-				String[] fileList = userFiles.split(",");
-				log.msg("   User specified annotation files - " + userFiles);
+				String[] fileList = annoFiles.split(",");
+				String xxx = (fileList.length>1) ? (fileList.length + " files ") : annoFiles;
+				log.msg("   User specified annotation files - " + xxx);
 				
 				for (String filstr : fileList) {
 					if (filstr == null) continue;
@@ -354,12 +351,13 @@ public class AnnotLoadMain {
 			}
 			if (saveAnnoDir!="") {// CAS532 add these to print on View
 				modDirDate = new File(saveAnnoDir).lastModified();
-				SyProps.setProjProp(project.getIdx(),"proj_anno_date", Utils.getDateStr(modDirDate),pool);
-				SyProps.setProjProp(project.getIdx(),"proj_anno_dir", saveAnnoDir,pool);
+				mProj.saveProjParam("proj_anno_date", Utils.getDateStr(modDirDate));
+				mProj.saveProjParam("proj_anno_dir", saveAnnoDir);
 			}
 			
 			// Types: if no types specified then limit to types we render
-			String annot_types = 	props.getProperty("annot_types"); // not a parameter
+			String annot_types =  mProj.getAnnoType(); // not a parameter
+			
 			if (annot_types == null || annot_types.length() == 0) 
 				annot_types = defaultTypes;
 			
@@ -374,9 +372,9 @@ public class AnnotLoadMain {
 			// the database unless they are in the list (if there is a list).
 			
 			// Parse user-specified types
-			userSetMinKeywordCnt = props.getInt("annot_kw_mincount");
-			String attrKW = props.getString("annot_keywords");
-			if (!attrKW.contentEquals("")) log.msg("   annot_keywords: " + attrKW);
+			userSetMinKeywordCnt = mProj.getdbMinKey();
+			String attrKW = mProj.getKeywords();
+			if (!attrKW.contentEquals("")) log.msg("  " + mProj.getLab(mProj.sANkeyCnt) + " " + attrKW);
 			
 			// if ID is not included, it all still works...
 			bUserSetKeywords = (attrKW.equals("")) ? false : true;
@@ -412,7 +410,7 @@ public class AnnotLoadMain {
 			if (bUserSetKeywords) log.msg("User specified attribute keywords: ");
 			else log.msg("Best attribute keywords:");
 		
-			pool.executeUpdate("delete from annot_key where proj_idx=" + project.getIdx());
+			pool.executeUpdate("delete from annot_key where proj_idx=" + syProj.getIdx());
 	        for (String key : sortedKeys) {
 	        	cntSav++;
 	        	if (cntSav>savAtLeastKeywords) {
@@ -423,7 +421,7 @@ public class AnnotLoadMain {
 	        	
 	        	log.msg(String.format("   %-15s %d", key,count)); 
 	        	pool.executeUpdate("insert into annot_key (proj_idx,keyname,count) values (" + 
-	        			project.getIdx() + ",'" + key + "'," + count + ")");
+	        			syProj.getIdx() + ",'" + key + "'," + count + ")");
 	        }
 	        if (ignoreAttr.size()>0)  {
 				log.msg("Ignored attribute keywords: ");
@@ -440,11 +438,10 @@ public class AnnotLoadMain {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Compute gene order"); success=false;}
 	}
-	private void deleteCurrentAnnotations() throws SQLException
-	{
+	private void deleteCurrentAnnotations() throws SQLException {
 		try {
 			String st = "DELETE FROM pseudo_annot USING pseudo_annot, xgroups " +
-						" WHERE xgroups.proj_idx='" + project.getIdx() + 
+						" WHERE xgroups.proj_idx='" + syProj.getIdx() + 
 						"' AND pseudo_annot.grp_idx=xgroups.idx";
 			pool.executeUpdate(st);
 
@@ -452,24 +449,20 @@ public class AnnotLoadMain {
 			
 			
 			pool.executeUpdate("delete from pairs " +
-						" where proj1_idx=" + project.getIdx() + " or proj2_idx=" + project.getIdx());
+						" where proj1_idx=" + syProj.getIdx() + " or proj2_idx=" + syProj.getIdx());
 			pool.resetIdx("idx", "pairs");
 		}
 		catch (Exception e) {ErrorReport.print(e, "Delete current annotations"); success=false;}
 	}
 	private boolean geneNOnly(String projName) { // CAS519b
 		try {
-			String projDir = 	Constants.seqDataDir + projName;
-			SyProps props =		new SyProps(log, new File(projDir + Constants.paramsFile), mDBProps); // read parms from file
-			project = 			new Project(pool, log, props, projName, QueryType.Either);
-			
-			ResultSet rs = pool.executeQuery("select hasannot from projects where idx=" + project.getIdx());
+			ResultSet rs = pool.executeQuery("select hasannot from projects where idx=" + syProj.getIdx());
 			int cnt=0;
 			if (rs.next()) cnt=rs.getInt(1);
 			if (cnt>0) {
 				rs = pool.executeQuery("select count(*) from pseudo_annot " + 
 						"join xgroups on pseudo_annot.grp_idx = xgroups.idx " + 
-						"WHERE pseudo_annot.type = 'gene' and xgroups.proj_idx = " + project.getIdx());
+						"WHERE pseudo_annot.type = 'gene' and xgroups.proj_idx = " + syProj.getIdx());
 				if (rs.next()) cnt=rs.getInt(1);
 			}
 			rs.close();
@@ -478,10 +471,10 @@ public class AnnotLoadMain {
 				return true;
 			}
 				
-			log.msg("Run Gene# assignment algorithm for " + project.getName());
+			log.msg("Run Gene# assignment algorithm for " + syProj.getName());
 			long time = System.currentTimeMillis();
 			
-			AnnotLoadPost alp = new AnnotLoadPost(project, pool, log);
+			AnnotLoadPost alp = new AnnotLoadPost(syProj, pool, log);
 			success = alp.run(cnt); 	if (!success) return false;
 			
 			Utils.timeMsg(log, time, "Computations");
@@ -489,33 +482,4 @@ public class AnnotLoadMain {
 		catch (Exception e) {ErrorReport.print(e, "checking for annnotations"); }
 		return false;
 	}
-	/*****************************************************
-	 * Not used
-	 */
-	public static void main(String[] args) 
-	{
-		try {
-			if (args.length < 1) {
-				System.out.println("Usage:  annotation <project>\n");
-				System.exit(-1);
-			}
-			
-			FileInputStream propFH = new FileInputStream(Utils.getParamsName());
-			mDBProps = new Properties();
-			mDBProps.load(propFH);
-	
-			String dbstr = DatabaseUser.getDatabaseURL(mDBProps.getProperty("db_server"), mDBProps.getProperty("db_name"));
-			UpdatePool pool = new UpdatePool(dbstr,
-					mDBProps.getProperty("db_adminuser"),
-					mDBProps.getProperty("db_adminpasswd"));
-	
-			AnnotLoadMain annot = new AnnotLoadMain(pool, new Log("symap.log"), null);
-			annot.run(args[0]);
-			DatabaseUser.shutdown();
-		}
-		catch (Exception e) {
-			DatabaseUser.shutdown();
-			ErrorReport.die(e, "Loading annotation files");
-		}
-	}	
 }

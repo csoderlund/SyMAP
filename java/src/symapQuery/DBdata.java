@@ -7,7 +7,8 @@ import java.util.HashMap;
 
 import javax.swing.JTextField;
 
-import symap.projectmanager.common.Project;
+import symap.Globals;
+import symap.manager.Mproject;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -23,7 +24,7 @@ import util.Utilities;
  * CAS504 this file replaced the previous approach to parsing the sql results
  */
 public class DBdata {
-	private static boolean debug = symap.SyMAP.DEBUG;
+	private static boolean debug = Globals.DEBUG;
 	
 	private static String [] spNameList; 				// species Names
 	private static int [] 	spIdxList; 					// species spIdx in same order
@@ -40,7 +41,7 @@ public class DBdata {
 	
 	public static Vector <DBdata> loadRowsFromDB(
 			ResultSet rs, 
-			Vector<Project> projList,	// species in order displayed
+			Vector<Mproject> projList,	// species in order displayed
 			QueryPanel theQueryPanel,  	// for species information	
 			String [] annoColumns, 		// Species\nkeyword array in order displayed
 			JTextField loadTextField,   // write progress
@@ -172,7 +173,7 @@ public class DBdata {
 	/*****************************************************
 	 * Species columns in order of projects
 	 */
-	private static void makeSpLists(Vector <Project> projList) {
+	private static void makeSpLists(Vector <Mproject> projList) {
 		try {
 			int numSp = projList.size();
 			spNameList = new String [numSp];

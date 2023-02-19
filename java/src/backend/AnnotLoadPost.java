@@ -1,5 +1,14 @@
 package backend;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Vector;
+import java.util.HashMap;
+
+import util.ErrorReport;
+import util.Logger;
+import util.Utilities;
+
 /******************************************************
  * CAS512 added for post-processing of annotation
 v5.1.2 	Exons pseudo_annot.gene_idx and tag to map exon to gene in AnnotLoadMain (was doing here too, but removed 518)
@@ -13,20 +22,12 @@ v5.1.9	Gene # This computes the Gene#, and was allowing a gap of 3 without calli
 AnchorsPost uses genenum for collinear computation 
 The 2D gene placement algorithm uses the pseudo_annot.genenum but not the suffix from the pseudo_annot.tag 
  */
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.Vector;
-import java.util.HashMap;
-
-import util.ErrorReport;
-import util.Logger;
-import util.Utilities;
 
 public class AnnotLoadPost {
 	private final int MAX_GAP=0; // CAS519 changed from 3
 	private Logger log;
 	private UpdatePool pool;
-	private Project project;
+	private SyProj syProj;
 	
 	private HashMap <Integer, GeneData> geneMap = new HashMap <Integer, GeneData> (); 
 	private Vector <Integer> geneOrder = new Vector <Integer> ();
@@ -34,8 +35,8 @@ public class AnnotLoadPost {
 	private boolean isSuccess=true;
 	private int totexonUpdate=0, totgeneUpdate=0, totOverlap=0, totContained=0, totGeneNum=0;
 	
-	public AnnotLoadPost(Project project, UpdatePool pool, Logger log) {
-		this.project = project;
+	public AnnotLoadPost(SyProj project, UpdatePool pool, Logger log) {
+		this.syProj = project;
 		this.pool = pool;
 		this.log = log;
 	}
@@ -48,10 +49,10 @@ public class AnnotLoadPost {
 			log.msg("  Assign #exons and tags to genes");
 			
 			pool.executeUpdate("update pseudo_annot, xgroups set pseudo_annot.genenum=0 "
-					+ "where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + project.idx);
+					+ "where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + syProj.idx);
 			
 			
-			for (Group g : project.getGroups()){
+			for (Group g : syProj.getGroups()){
 				System.err.print("Process " + g.getName() + "                \r");
 				computeGeneNum(g); if (!isSuccess) return isSuccess;	// CAS512 moved from SyntenyMain
 				computeTags(g);    if (!isSuccess) return isSuccess;	
@@ -177,7 +178,7 @@ public class AnnotLoadPost {
 				}
 			}
 			rs.close();
-			if (err>5 && symap.SyMAP.GENEN_ONLY) {
+			if (err>5 && symap.Globals.GENEN_ONLY) {
 				Utilities.showWarningMessage("This SyMAP database was built with an old version.\n"
 					+ "The -z will not work with it. You will need to reload.");
 				isSuccess=false;

@@ -8,12 +8,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Vector;
 
-import symap.pool.DatabaseUser;
-import symap.SyMAP;
+import database.DBconn;
+import database.DBAbsUser;
+import props.ProjectPool;
+import symap.Globals;
 import symap.mapper.HitData;
-
-import symap.pool.ProjectProperties;
-import util.DatabaseReader;
 import util.ErrorReport;
 
 /******************************************
@@ -28,16 +27,16 @@ import util.ErrorReport;
  * 2. Select and Other are from the user selected sequence
  * 3. isQuery determines whether the Select=Query or Select=Target
  */
-public class AlignPool extends DatabaseUser {
+public class AlignPool extends DBAbsUser {
 	public static final boolean CDEBUG = false;
 	private static final boolean toUpper = false;
-	private static final boolean bTrim=SyMAP.bTrim;
+	private static final boolean bTrim=Globals.bTrim;
 	
 	private final int CHUNK_SZ = backend.Constants.CHUNK_SIZE; // CAS504 was hardcoded below; 1000000
 	private HitAlignResults curHit; // hqr for the whole current hit
 	
 	/*****************************************************************/
-	public AlignPool(DatabaseReader dr, ProjectProperties pp){
+	public AlignPool(DBconn dr, ProjectPool pp){
 		super(dr);
 	}
 	// Called from CloseUpDialog.setview 
@@ -152,7 +151,7 @@ public class AlignPool extends DatabaseUser {
 	    /** Align **/
 		int type = (isNT) ? AlignData.NT : AlignData.AA;
 		AlignData ad = new AlignData();
-		String tmsg = (symap.SyMAP.TRACE) ? "Hit #" + curHit.hitnum + "." + (i+1) + "  " 
+		String tmsg = (Globals.TRACE) ? "Hit #" + curHit.hitnum + "." + (i+1) + "  " 
 					+ SeqData.coordsStr(!curHit.isSelNeg, subHit.selectStart, subHit.selectEnd) + "  "
 					+ SeqData.coordsStr(!curHit.isOthNeg, subHit.otherStart, subHit.otherEnd) : "";
 		if (!ad.align(type, subHit.selectSeq, subHit.otherSeq, bTrim, tmsg)) return null;
@@ -185,7 +184,7 @@ public class AlignPool extends DatabaseUser {
 		    /** Align **/
 			int type = AlignData.NT;
 			AlignData ad = new AlignData();
-			String tmsg = (symap.SyMAP.TRACE) ? ha.getSubHitName() + "  Reverse" : "";
+			String tmsg = (Globals.TRACE) ? ha.getSubHitName() + "  Reverse" : "";
 			if (!ad.align(type, subSelect, subOther, bTrim, tmsg)) return null;
 			
 			// Get results

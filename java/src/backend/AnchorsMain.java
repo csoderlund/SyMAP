@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 import java.util.TreeSet;
 import java.util.Vector;
 
-import java.util.Properties;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Collections;
@@ -20,6 +19,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.lang.Math;
 
+import symap.manager.Mpair;
+import symap.manager.Mproject;
 import util.Cancelled;
 import util.ErrorCount;
 import util.ErrorReport;
@@ -29,11 +30,12 @@ import util.Utilities;
 enum HitStatus   { In, Out, Undecided };
 enum QueryType   { Query, Target, Either };
 
-public class AnchorsMain
-{
+public class AnchorsMain {
+	private static int max_cluster_gap = 1000; //CAS534 was set in SyProps
+	private static int max_cluster_size = 50000;
+	
 	private static final int HIT_VEC_INC = 1000;
 	private static final int maxHitLength = 10000;
-	private static SyProps mProps = null;
 	private UpdatePool pool;
 	private Logger log;
 	private int pairIdx = -1;
@@ -41,45 +43,48 @@ public class AnchorsMain
 	private Vector<Hit> diagHits;
 
 	private boolean bInterrupt = false;
-	private Project p1, p2;
 	private int mTotalHits=0, mTotalLargeHits=0, mTotalBrokenHits=0;
 	private boolean isSelf = false, isNucmer=false, doClust = true;
 	private String resultDir=null;
+	
+	private SyProj syProj1, syProj2;
+	private Mpair mp;
 
-	public AnchorsMain(int idx, UpdatePool pool, Logger log,Properties props, SyProps pairProps) {
-		this.pairIdx = idx;
+	public AnchorsMain(UpdatePool pool, Logger log,  Mpair mp) {	
 		this.pool = pool;
 		this.log = log;
-		
-		assert(pairProps != null);
-		mProps = pairProps;
+		this.mp = mp;
+		this.pairIdx = mp.getPairIdx();
 		
 		doClust = true; // always true
 		if (!doClust) log.msg("Clustering is dis-abled");
 	}
 	
-	public boolean run(String proj1Name, String proj2Name) throws Exception
-	{
+	public boolean run(Mproject pj1, Mproject pj2) throws Exception {
 		try {
 			long startTime = System.currentTimeMillis();
 			
+			String proj1Name = pj1.getDBName(), proj2Name = pj2.getDBName();
+			
 			log.msg("Loading alignments for " + proj1Name + " and " + proj2Name);
 			
-			Utils.initStats();
+			Utils.initStats(); 
 
 			isSelf = proj1Name.equals(proj2Name); 
 			
-			p1 = new Project(pool, log, mProps, proj1Name,  QueryType.Query);
+			int topN = mp.getTopN(Mpair.FILE);
+			
+			syProj1 = new SyProj(pool, log, pj1, proj1Name, topN, QueryType.Query);
 			
 			// make new object even if it is a self alignment - or filtering gets confused
-			p2 = new Project(pool, log, mProps, proj2Name, QueryType.Target);
+			syProj2 = new SyProj(pool, log, pj2, proj2Name, topN, QueryType.Target);
 	
 		/** assignments **/
 			
 			if (Cancelled.isCancelled()) return false; // CAS500 all cancelled returned true
 			
-			p1.loadAnnotation(pool);
-			p2.loadAnnotation(pool);
+			syProj1.loadAnnotation(pool);
+			syProj2.loadAnnotation(pool);
 			
 			// renewPairIdx(p1, p2); CAS501
 			
@@ -103,8 +108,8 @@ public class AnchorsMain
 			if (!rc) return false;
 			
 			if (Constants.TRACE || Constants.PRT_STATS) {
-				p1.printBinStats();  
-				p2.printBinStats(); 
+				syProj1.printBinStats();  
+				syProj2.printBinStats(); 
 			}
 	
 	/** Filter hits ***/	
@@ -113,24 +118,23 @@ public class AnchorsMain
 			// Do the final TopN filtering, and collect all the hits
 			// which pass on at least one side into the set "hits"
 			hits = new HashSet<Hit>(); 
-			p1.filterHits(hits); 
-			p2.filterHits(hits);
+			syProj1.filterHits(hits); 
+			syProj2.filterHits(hits);
 			
 			int nQueryIn = 0, nTargetIn = 0, nBothIn=0;
-			boolean bAnd = mProps.getBoolean("topn_and"); // true
 			
 			for (Hit h : hits) {	
 				if (h.target.status == HitStatus.In) nTargetIn++;
 				if (h.query.status ==  HitStatus.In) nQueryIn++;
 				
-				if (bAnd) {
+				//if (bAnd) {CAS534 bAnd always true
 					if (h.query.status == HitStatus.In && h.target.status == HitStatus.In)
 						h.status = HitStatus.In;
-				}
+				/* }
 				else {
 					if (h.query.status == HitStatus.In || h.target.status == HitStatus.In)					
 						h.status = HitStatus.In;
-				}
+				}*/
 			}
 			Utils.prtNumMsg(log, nQueryIn, "Query filtered hits");
 			Utils.prtNumMsg(log, nTargetIn,"Target filtered hits");
@@ -163,7 +167,7 @@ public class AnchorsMain
 				if (hit.status == HitStatus.In) {
 					if (bInterrupt) return false;
 					
-					uploadHit(hit, p1, p2); // enters hit into database
+					uploadHit(hit, syProj1, syProj2); // enters hit into database
 					if (++numLoaded % 5000 == 0)
 						System.err.print(numLoaded + " loaded...\r"); // CAS42 1/1/18 was log.msg
 				}
@@ -176,7 +180,7 @@ public class AnchorsMain
 			if (isSelf) {
 				addMirroredHits();	
 			}
-			hitAnnotations(p1,p2);
+			hitAnnotations(syProj1,syProj2);
 			
 			// Lastly flip the anchor coordinates if the first project is draft that has been ordered
 			// against another project
@@ -189,16 +193,16 @@ public class AnchorsMain
 			}
 			***/
 		
-			Utils.uploadStats(pool, pairIdx, p1.idx, p2.idx);
+			Utils.uploadStats(pool, pairIdx, syProj1.idx, syProj2.idx);
 			
 			// CAS532 add for Pair Summary with 'use existing files'
 			long modDirDate = new File(resultDir).lastModified();
-			SyProps.setPairProp(pairIdx, p1.getIdx(), p2.getIdx(), "pair_align_date", Utils.getDateStr(modDirDate),pool);
+			mp.setPairProp("pair_align_date", Utils.getDateStr(modDirDate));
 			
 			// CAS517 move from SyntenyMain - CAS520 moved back to SyntenyMain, so hits# are block based
 			
-			pool.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + p1.getIdx());
-			pool.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + p2.getIdx());
+			pool.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + syProj1.getIdx());
+			pool.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + syProj2.getIdx());
 			
 			Utils.timeMsg(log, startTime, "Anchors");
 		}
@@ -208,8 +212,7 @@ public class AnchorsMain
 		}		
 		return true;
 	}
-	public void interrupt()
-	{
+	public void interrupt() {
 		bInterrupt = true;	
 	}
 	
@@ -249,7 +252,7 @@ public class AnchorsMain
 						if (!skipSelf && !fName.startsWith(Constants.selfPrefix)) continue;
 					}
 					
-					int nHits = scanFile1(f, p1, p2, skipSelf); 
+					int nHits = scanFile1(f, syProj1, syProj2, skipSelf); 
 							
 					if (nHits == 0) skipList.add(f.getName());
 					else nHitsScanned += nHits;
@@ -259,8 +262,8 @@ public class AnchorsMain
 					if (Cancelled.isCancelled()) return false; 
 				}
 			}
-			p1.collectPGInfo(); // XXX
-			p2.collectPGInfo();
+			syProj1.collectPGInfo(); // XXX
+			syProj2.collectPGInfo();
 			
 			if (Cancelled.isCancelled()) return false;
 			
@@ -308,11 +311,11 @@ public class AnchorsMain
 						if (i==1 && !fName.startsWith(Constants.selfPrefix)) continue;
 					}
 							
-					int nHits = scanFile2(f, p1, p2, bSelf);
+					int nHits = scanFile2(f, syProj1, syProj2, bSelf);
 					nHitsScanned += nHits;
 							
 					filesScanned++;
-					if (p1.isUnordered()) {
+					if (syProj1.isUnordered()) {
 						if (filesScanned % 100 == 0)
 							Utils.prtNumMsg(log, nHits, "load " + filesScanned + "/" + filesToScan + " files");
 					}
@@ -329,7 +332,7 @@ public class AnchorsMain
 	}
 	
 	// seq to seq - first time through, create the predicted genes
-	private int scanFile1(File mFile, Project p1, Project p2, boolean skipSelf) throws Exception
+	private int scanFile1(File mFile, SyProj p1, SyProj p2, boolean skipSelf) throws Exception
 	{
 		BufferedReader fh = new BufferedReader(new FileReader(mFile));
 		
@@ -435,7 +438,7 @@ public class AnchorsMain
 	}
 	// seq/seq 2nd time through - do the clustering
 	// this is about the same as scanFile1 except for no checks, diagonals, and final processing
-	private int scanFile2(File mFile, Project p1, Project p2, boolean skipSelf) throws Exception
+	private int scanFile2(File mFile, SyProj p1, SyProj p2, boolean skipSelf) throws Exception
 	{
 		BufferedReader fh = new BufferedReader(new FileReader(mFile));
 		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
@@ -617,8 +620,8 @@ public class AnchorsMain
 		// Note that a given annotation can only go to one group
 		for (Hit hit : inHits) 
 		{		
-			Group grp1 = p1.getGrpByIdx(hit.query.grpIdx);
-			Group grp2 = p2.getGrpByIdx(hit.target.grpIdx);
+			Group grp1 = syProj1.getGrpByIdx(hit.query.grpIdx);
+			Group grp2 = syProj2.getGrpByIdx(hit.target.grpIdx);
 			
 			AnnotElem qAnnot = grp1.getMostOverlappingAnnot(hit.query.start, hit.query.end);
 			AnnotElem tAnnot = grp2.getMostOverlappingAnnot(hit.target.start, hit.target.end);
@@ -684,7 +687,7 @@ public class AnchorsMain
 	// Add hits to their topN bins, 
 	// applying the topN criterion immediately when possible to reduce memory
 	// Called from scanBlatFile and scanFile2; hits get transfered to respective project 
-	private void preFilterHits2(Vector<Hit> rawHits, Project p1, Project p2) throws Exception
+	private void preFilterHits2(Vector<Hit> rawHits, SyProj p1, SyProj p2) throws Exception
 	{
 		Vector<Hit> theseDiag = new Vector<Hit>();
 		
@@ -755,7 +758,7 @@ public class AnchorsMain
 		return true;
 	}	
 
-	private void uploadHit(Hit hit, Project p1, Project p2) throws Exception
+	private void uploadHit(Hit hit, SyProj p1, SyProj p2) throws Exception
 	{
 		// Set gene overlap field. For pseudo, we've already got this due to clustering, this is for FPC?
 		int geneOlap = 0;
@@ -805,7 +808,7 @@ public class AnchorsMain
 	// enter the pseudo_hits_annot entry for the gene hits only.
 	// This is kind of ineffecient because we've already found annotation overlaps
 	// in doing the clustering, but it's more complicated to keep track there.
-	private void hitAnnotations(Project p1, Project p2) throws SQLException
+	private void hitAnnotations(SyProj p1, SyProj p2) throws SQLException
 	{
 		Vector<Hit> newHits = getUploadedHits(p1);
 		log.msg("Load hits to gene annotations ");
@@ -814,7 +817,7 @@ public class AnchorsMain
 		HashMap<String,Integer> counts2 = new HashMap<String,Integer>();
 		int count = 0, cntSkip=0;
 		for (Hit h : newHits) {
-			if (h.target.grpIdx == p2.unanchoredGrpIdx) {cntSkip++;continue;}
+			// CAS534 unanch never set; if (h.target.grpIdx == p2.unanchoredGrpIdx) {cntSkip++;continue;}
 			
 			Group g = p2.getGrpByIdx(h.target.grpIdx);
 			g.addAnnotHitOverlaps(h, h.target, pool,counts2);
@@ -841,7 +844,7 @@ public class AnchorsMain
 
 		count = cntSkip= 0;
 		for (Hit h : newHits) {
-			if (h.query.grpIdx == p1.unanchoredGrpIdx) {cntSkip++; continue;}
+			// CAS534 unanch never set; if (h.query.grpIdx == p1.unanchoredGrpIdx) {cntSkip++; continue;}
 			
 			Group g = p1.getGrpByIdx(h.query.grpIdx);
 			g.addAnnotHitOverlaps(h,h.query,pool,counts1);
@@ -864,7 +867,7 @@ public class AnchorsMain
 		pool.finishBulkInserts();
 	}
 	
-	private Vector<Hit> getUploadedHits(Project p1) throws SQLException
+	private Vector<Hit> getUploadedHits(SyProj p1) throws SQLException
 	{
 		Vector<Hit> ret = new Vector<Hit>();
 		
@@ -900,16 +903,14 @@ public class AnchorsMain
 		try {
 		// Obsolete unless default changed in SyProp
 		HitBin.initKeepTypes();
+		/** CAS534 was setting to 0 in SyProps
 		if (mProps.getProperty("keep_gene_gene").equals("1")) // false
-		{
 			HitBin.addKeepTypes(HitType.GeneGene);	
-		}
-		if (mProps.getProperty("keep_gene").equals("1")) // false
-		{
+		if (mProps.getProperty("keep_gene").equals("1")) { // false
 			HitBin.addKeepTypes(HitType.GeneGene);	
 			HitBin.addKeepTypes(HitType.GeneNonGene);	
 		}
-
+		**/
 		Utils.initHist("TopNHist1" + GeneType.Gene, 3,6,10,25,50,100);
 		Utils.initHist("TopNHist1" + GeneType.NonGene, 3,6,10,25,50,100);
 		Utils.initHist("TopNHist1" + GeneType.NA, 3,6,10,25,50,100);
@@ -921,9 +922,9 @@ public class AnchorsMain
 		Utils.initHist("TopNHist2Accept", 3,6,10,25,50,100);
 		Utils.initHist("TopNHistTotal2", 3,6,10,25,50,100);
 		
-		p1.setGrpGeneParams(mProps.getInt("max_cluster_gap"),mProps.getInt("max_cluster_size"));
+		syProj1.setGrpGeneParams(max_cluster_gap, max_cluster_size);
 		
-		p2.setGrpGeneParams(mProps.getInt("max_cluster_gap"),mProps.getInt("max_cluster_size"));
+		syProj2.setGrpGeneParams(max_cluster_gap, max_cluster_size);
 	}
 	catch (Exception e) {ErrorReport.print("adding properties for Anchors");}
 	}

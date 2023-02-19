@@ -53,9 +53,8 @@ import javax.swing.table.TableColumnModel;
 import util.ErrorReport;
 import util.Jhtml;
 import util.Utilities;
-
-import symap.SyMAP;
 import symap.sequence.Sequence;
+import symap.frame.SyMAP2d;
 import symap.mapper.HitFilter;
 
 public class TableDataPanel extends JPanel {
@@ -1105,7 +1104,7 @@ public class TableDataPanel extends JPanel {
 			int grp2Idx = (Integer) rd.chrIdx[1];
 			
 			// create new drawing panel
-			SyMAP symap = new SyMAP(theParentFrame.getDatabase(), getInstance());
+			SyMAP2d symap = new SyMAP2d(theParentFrame.getDatabase(), getInstance());
 		
 			symap.getDrawingPanel().setMaps(1);
 			symap.getHistory().clear(); 

@@ -1,10 +1,5 @@
 package dotplot;
 
-/*****************************************************************
- * Called from the SyMAP manager and Explorer
- * CAS522 from the dotplot package, removed FPC and lots of useless code
- * CAS533 from the dotplot package, removed massive amounts of more useless code
- */
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
@@ -13,25 +8,31 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
-import symap.SyMAP;
+import database.DBconn;
+import symap.Globals;
 import symap.frame.HelpBar;
-import util.DatabaseReader;
+
+/*****************************************************************
+ * Called from the SyMAP manager and Explorer
+ * CAS522 from the dotplot package, removed FPC and lots of useless code
+ * CAS533 from the dotplot package, removed massive amounts of more useless code
+ */
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class DotPlotFrame extends JFrame {
 	Data data;
 	
 	// ProjectManagerFrameCommon
-	public DotPlotFrame(DatabaseReader dbReader, int projXIdx, int projYIdx) {
+	public DotPlotFrame(DBconn dbReader, int projXIdx, int projYIdx) {
 		this(dbReader, new int[] { projXIdx, projYIdx }, null, null, null, true);
 	}
 	// SyMAPFrameCommon, ProjectManagerFrameCommon, above
-	public DotPlotFrame(DatabaseReader dbReader, int[] projIDs,
+	public DotPlotFrame(DBconn dbReader, int[] projIDs,
 			int[] xGroupIDs, int[] yGroupIDs, 	// null if whole genome
 			HelpBar helpBar, 					// not null if from CE
 			boolean hasReferenceSelector)  		// false if from CE
 	{
-		super("SyMAP Dot Plot " + SyMAP.VERSION);
+		super("SyMAP Dot Plot " + Globals.VERSION);
 		if (projIDs==null || projIDs.length==0) System.err.println("No Projects! Email symap@agcol.arizona.edu"); 
 	
 		data = new Data( new DotPlotDBUser(dbReader) ); // created FilterData object

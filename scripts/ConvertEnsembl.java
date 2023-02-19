@@ -17,6 +17,7 @@
  * To determine chromosome vs scaffold, the following rule is used:
  * 		if the ">id" id is numeric, X, Y, Mt, Pt then its chromosome; else its scaffold.
  * CAS 11-Oct-2022 add -u option
+ * CAS 25-Jan-2023 read multiple fasta and gff files
  */
 import java.io.BufferedReader;
 import java.io.File;
@@ -26,6 +27,7 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.TreeMap;
+import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
 public class ConvertEnsembl {
@@ -58,8 +60,8 @@ public class ConvertEnsembl {
 		
 	// input
 	private String projDir = null; // command line input
-	private String inFaFile = null; // must be in projDir, end with fastaSuffix
-	private String inGffFile = null; // must be in projDir, end with annoSuffix
+	private Vector <String> inFaFile = new Vector <String> (); // must be in projDir, end with fastaSuffix
+	private Vector <String> inGffFile = new Vector <String> (); // must be in projDir, end with annoSuffix
 	
 	//output - the projDir gets appended to the front
 	private String seqDir 		=  "sequence";
@@ -111,7 +113,7 @@ public class ConvertEnsembl {
 			char [] base = {'A', 'C', 'G', 'T', 'N', 'a', 'c', 'g', 't', 'n'};
 			for (char b : base) cntBase.put(b, 0);
 			
-			BufferedReader fhIn = openGZIP(inFaFile);
+		
 			PrintWriter fhOut = new PrintWriter(new FileOutputStream(seqDir+outFaFile, false)); 
 			fhOut.println("### Written by SyMAP ConvertEnsembl");
 			PrintWriter ghOut = new PrintWriter(new FileOutputStream(annoDir + outGapFile, false));
@@ -124,93 +126,98 @@ public class ConvertEnsembl {
 			boolean bPrt=false, isChr=false, isScaf=false, isMtPt=false;
 			int baseLoc=0, gapStart=0, gapCnt=1;
 			
-			while ((line = fhIn.readLine()) != null) {
-    			if (line.startsWith(">")) {
-    				if (len>0) {
-    					printTrace(isChr, isScaf, isMtPt, len, idCol1, prtName);
-    					len=0;
-    				}
-    				bPrt=false;
-    				String line1 = line.substring(1);
-    				String [] tok = line1.split("\\s+");
-    				idCol1 = tok[0].trim();
-    				
-    				isMtPt = idCol1.equalsIgnoreCase("Mt") || idCol1.equalsIgnoreCase("Pt"); 
-    				isChr  = isChr(idCol1) || isMtPt; 
-    				isScaf = (!isChr) ? true : false;
-    				
-    				if (isChr && !isMtPt) {
-    					nChr++;
-    					prtName = chrPrefix + padNum(tok[0]); // chr use number except X,Y,Mt,Pt
-    					cntChrGene.put(idCol1, 0);
-    					id2chr.put(idCol1, prtName);
-    					chr2id.put(prtName, idCol1);
-    					
-    					fhOut.println(">" + prtName);
-    					bPrt=true;
-    				}
-    				else if (isMtPt && INCLUDEMtPt) { // just like for numeric chromosome
-    					nMtPt++;
-    					prtName = chrPrefix + tok[0];
-    					cntChrGene.put(idCol1, 0);
-    					id2chr.put(idCol1, prtName);
-    					chr2id.put(prtName, idCol1);
-    					
-    					fhOut.println(">" + prtName + "  " + idCol1);
-    					bPrt=true;
-    				}
-    				else if (isScaf && INCLUDESCAF) {
-    					nScaf++;
-    					if (USENAMES && idCol1.length()<=maxName) prtName = idCol1;
-    					else prtName = scafPrefix + padNum(nScaf+""); // scaf use name
-    					
-	    				id2scaf.put(idCol1, prtName);
-	    				cntScafGene.put(idCol1, 0);
-	    				gapStart=1; gapCnt=0; baseLoc=0;
-	    				
-    					bPrt=true;
-    					fhOut.println(">" + prtName+ "  " + idCol1);
-    				}
-    				else {
-    					prtName="Ignore";
-    					if (isScaf) 		nScaf++;
-    					else if (isMtPt) 	nMtPt++;
-    					else 				nOther++;
-    				}
-    			}
-    			//////////////////////////////////////////////////////////////////
-    			else {
-    				String aline = line.trim();
-    				if (bPrt) {
-	    				char [] bases = aline.toCharArray();
-	    				
-	    				for (int i =0 ; i<bases.length; i++) {
-	    					char b = bases[i];
-	
-	    					if (cntBase.containsKey(b)) cntBase.put(b, cntBase.get(b)+1);// CAS512 add counts
-	    					else 						cntBase.put(b, 1);
-	    					
-	    					baseLoc++;
-	    					if (b=='N' || b=='n') { // CAS512 eval for gaps; ensembl has >30k lower-case n's
-	    						if (gapStart==0) 	gapStart = baseLoc;
-	    						else 				gapCnt++;
-	    					}
-	    					else if (gapStart>0) {						// gaps 
-	    						if (gapCnt>gapLen) {
-	    							nGap++;
-	    							String x = createGap(prtName, gapStart, gapCnt);
-	    							if (bPrt) ghOut.println(x);
-	    						}
-	    						gapStart=0; gapCnt=1;
-	    					}
+			for (String file : inFaFile) {
+				BufferedReader fhIn = openGZIP(file);
+				
+				while ((line = fhIn.readLine()) != null) {
+	    			if (line.startsWith(">")) {
+	    				if (len>0) {
+	    					printTrace(isChr, isScaf, isMtPt, len, idCol1, prtName);
+	    					len=0;
 	    				}
-    				}
-    				len += aline.length();
-    				if (bPrt) fhOut.println(aline);
-    			}
-    		}
+	    				bPrt=false;
+	    				String line1 = line.substring(1);
+	    				String [] tok = line1.split("\\s+");
+	    				idCol1 = tok[0].trim();
+	    				
+	    				isMtPt = idCol1.equalsIgnoreCase("Mt") || idCol1.equalsIgnoreCase("Pt"); 
+	    				isChr  = isChr(idCol1) || isMtPt; 
+	    				isScaf = (!isChr) ? true : false;
+	    				
+	    				if (isChr && !isMtPt) {
+	    					nChr++;
+	    					prtName = chrPrefix + padNum(tok[0]); // chr use number except X,Y,Mt,Pt
+	    					cntChrGene.put(idCol1, 0);
+	    					id2chr.put(idCol1, prtName);
+	    					chr2id.put(prtName, idCol1);
+	    					
+	    					fhOut.println(">" + prtName);
+	    					bPrt=true;
+	    				}
+	    				else if (isMtPt && INCLUDEMtPt) { // just like for numeric chromosome
+	    					nMtPt++;
+	    					prtName = chrPrefix + tok[0];
+	    					cntChrGene.put(idCol1, 0);
+	    					id2chr.put(idCol1, prtName);
+	    					chr2id.put(prtName, idCol1);
+	    					
+	    					fhOut.println(">" + prtName + "  " + idCol1);
+	    					bPrt=true;
+	    				}
+	    				else if (isScaf && INCLUDESCAF) {
+	    					nScaf++;
+	    					if (USENAMES && idCol1.length()<=maxName) prtName = idCol1;
+	    					else prtName = scafPrefix + padNum(nScaf+""); // scaf use name
+	    					
+		    				id2scaf.put(idCol1, prtName);
+		    				cntScafGene.put(idCol1, 0);
+		    				gapStart=1; gapCnt=0; baseLoc=0;
+		    				
+	    					bPrt=true;
+	    					fhOut.println(">" + prtName+ "  " + idCol1);
+	    				}
+	    				else {
+	    					prtName="Ignore";
+	    					if (isScaf) 		nScaf++;
+	    					else if (isMtPt) 	nMtPt++;
+	    					else 				nOther++;
+	    				}
+	    			}
+	    			//////////////////////////////////////////////////////////////////
+	    			else {
+	    				String aline = line.trim();
+	    				if (bPrt) {
+		    				char [] bases = aline.toCharArray();
+		    				
+		    				for (int i =0 ; i<bases.length; i++) {
+		    					char b = bases[i];
+		
+		    					if (cntBase.containsKey(b)) cntBase.put(b, cntBase.get(b)+1);// CAS512 add counts
+		    					else 						cntBase.put(b, 1);
+		    					
+		    					baseLoc++;
+		    					if (b=='N' || b=='n') { // CAS512 eval for gaps; ensembl has >30k lower-case n's
+		    						if (gapStart==0) 	gapStart = baseLoc;
+		    						else 				gapCnt++;
+		    					}
+		    					else if (gapStart>0) {						// gaps 
+		    						if (gapCnt>gapLen) {
+		    							nGap++;
+		    							String x = createGap(prtName, gapStart, gapCnt);
+		    							if (bPrt) ghOut.println(x);
+		    						}
+		    						gapStart=0; gapCnt=1;
+		    					}
+		    				}
+	    				}
+	    				len += aline.length();
+	    				if (bPrt) fhOut.println(aline);
+	    			}
+	    		}
+				fhIn.close();
+			}
 			if (len>0) printTrace(isChr, isScaf, isMtPt, len, idCol1, prtName);
-    		fhIn.close(); fhOut.close(); ghOut.close();
+    		fhOut.close(); ghOut.close();
     		System.err.print("                                            \r");
     		prt("Finish writing " + outFaFile + "                          ");
     		
@@ -292,7 +299,7 @@ public class ConvertEnsembl {
 		try {
 			if (inGffFile==null) return; // CAS513
 			
-			BufferedReader fhIn = openGZIP(inGffFile);
+			
 			PrintWriter fhOut = new PrintWriter(new FileOutputStream(annoDir + outGffFile, false));
 			fhOut.println("### Written by SyMAP ConvertEnsembl");
 			
@@ -300,115 +307,120 @@ public class ConvertEnsembl {
 			String line="", type="";
 			String geneID=null, mrnaID=null;
 			
-			while ((line = fhIn.readLine()) != null) {
-				if (line.startsWith("#")) continue;
-				
-				String [] tok = line.split("\\t");
-				if (tok.length!=9) {
-					badLine("Wrong columns: ", line);
-					continue;
-				}
-				
-				// filtered on type and attributes
-				type = tok[2];
-				String [] attrs = tok[8].split(";");
-				
-				if (!allTypeCnt.containsKey(type)) 	allTypeCnt.put(type,1);
-				else 								allTypeCnt.put(type, allTypeCnt.get(type)+1);
-				
-				boolean isGene = type.equals(geneType);
-				boolean isMRNA = type.equals(mrnaType);
-				boolean isExon = type.equals(exonType);
-				
-				if (isGene) { 
-					cntReadGenes++;
-					if (cntReadGenes%5000==0)	System.err.print("Read " + cntReadGenes + " genes...\r");
+			for (String file : inGffFile) {
+				BufferedReader fhIn = openGZIP(file);
+			
+				while ((line = fhIn.readLine()) != null) {
+					if (line.startsWith("#")) continue;
 					
-					String src  = tok[1];
-					if (!allGeneSrcCnt.containsKey(src))allGeneSrcCnt.put(src,1);
-					else 								allGeneSrcCnt.put(src, allGeneSrcCnt.get(src)+1);
-					
-					String biotype = getVal(biotypeAttrKey, attrs);
-					if (!allGeneBioTypeCnt.containsKey(biotype))allGeneBioTypeCnt.put(biotype,1);
-					else 									    allGeneBioTypeCnt.put(biotype, allGeneBioTypeCnt.get(biotype)+1);
-				
-					geneID=mrnaID=null;
-					
-					biotype = getVal(biotypeAttrKey, attrs);
-					if (!biotype.contentEquals(biotypeAttr)) continue; // not protein-coding
-				}
-				else if (isMRNA) cntReadMRNA++;
-				else if (isExon) cntReadExon++;
-				else continue;
-				
-				boolean isChr=false;
-				String prtName="";
-				String idCol1 =   tok[0];  // chromosome, scaffold, ...
-				if (id2chr.containsKey(idCol1))  { 
-					prtName = id2chr.get(idCol1);
-					isChr=true;
-				}
-				else if (id2scaf.containsKey(idCol1)) {
-					prtName = id2scaf.get(idCol1);
-				}
-				else {
-					if (isGene) cntGeneNotOnSeq++;
-					continue;
-				}
-				
-				/** ready to process **/
-				if (isGene) { 
-					String id = getVal(idAttrKey, attrs);
-					if (id.contentEquals("")) {
-						badLine("No ID: ", line);
+					String [] tok = line.split("\\t");
+					if (tok.length!=9) {
+						badLine("Wrong columns: ", line);
 						continue;
 					}
-					// accept gene 
-					cntGene++;
-					if (isChr) {
-						cntChrGeneAll++; 
-						cntChrGene.put(idCol1, cntChrGene.get(idCol1)+1);
+					
+					// filtered on type and attributes
+					type = tok[2];
+					String [] attrs = tok[8].split(";");
+					
+					if (!allTypeCnt.containsKey(type)) 	allTypeCnt.put(type,1);
+					else 								allTypeCnt.put(type, allTypeCnt.get(type)+1);
+					
+					boolean isGene = type.equals(geneType);
+					boolean isMRNA = type.equals(mrnaType);
+					boolean isExon = type.equals(exonType);
+					
+					if (isGene) { 
+						cntReadGenes++;
+						if (cntReadGenes%5000==0)	System.err.print("Read " + cntReadGenes + " genes...\r");
+						
+						String src  = tok[1];
+						if (!allGeneSrcCnt.containsKey(src))allGeneSrcCnt.put(src,1);
+						else 								allGeneSrcCnt.put(src, allGeneSrcCnt.get(src)+1);
+						
+						String biotype = getVal(biotypeAttrKey, attrs);
+						if (!allGeneBioTypeCnt.containsKey(biotype))allGeneBioTypeCnt.put(biotype,1);
+						else 									    allGeneBioTypeCnt.put(biotype, allGeneBioTypeCnt.get(biotype)+1);
+					
+						geneID=mrnaID=null;
+						
+						biotype = getVal(biotypeAttrKey, attrs);
+						if (!biotype.contentEquals(biotypeAttr)) continue; // not protein-coding
+					}
+					else if (isMRNA) cntReadMRNA++;
+					else if (isExon) cntReadExon++;
+					else continue;
+					
+					boolean isChr=false;
+					String prtName="";
+					String idCol1 =   tok[0];  // chromosome, scaffold, ...
+					if (id2chr.containsKey(idCol1))  { 
+						prtName = id2chr.get(idCol1);
+						isChr=true;
+					}
+					else if (id2scaf.containsKey(idCol1)) {
+						prtName = id2scaf.get(idCol1);
 					}
 					else {
-						cntScafGeneAll++;
-						cntScafGene.put(idCol1, cntScafGene.get(idCol1)+1);	
-					}
-					geneID=id;
-					String nLine = createGeneLine(prtName, line, tok, attrs);
-					fhOut.println(nLine);
-				}
-				else if (isMRNA) {
-					if (geneID==null) 					continue;
-					if (mrnaID!=null) 					continue;
-					
-					String parent = getVal(parentAttrKey, attrs);
-					if (!parent.contentEquals(geneID)) 	continue;
-					
-					String id = getVal(idAttrKey, attrs);
-					if (id.contentEquals("")) {
-						skipLine++;
-						if (skipLine<3) prt("Bad line: " + line);
+						if (isGene) cntGeneNotOnSeq++;
 						continue;
 					}
-					// accept mRNA
-					cntMRNA++;
-					mrnaID = id;
-					String nLine = createMRNALine(prtName, line, tok, attrs);
-					fhOut.println(nLine);
-				}
-				else if (isExon) {
-					if (mrnaID==null) 					continue;
 					
-					String parent = getVal(parentAttrKey, attrs);
-					if (!parent.contentEquals(mrnaID)) 	continue;
-					
-					// accept Exon
-					cntExon++;
-					String nLine = createExonLine(prtName, line, tok, attrs);
-					fhOut.println(nLine);
+					/** ready to process **/
+					if (isGene) { 
+						String id = getVal(idAttrKey, attrs);
+						if (id.contentEquals("")) {
+							badLine("No ID: ", line);
+							continue;
+						}
+						// accept gene 
+						cntGene++;
+						if (isChr) {
+							cntChrGeneAll++; 
+							cntChrGene.put(idCol1, cntChrGene.get(idCol1)+1);
+						}
+						else {
+							cntScafGeneAll++;
+							cntScafGene.put(idCol1, cntScafGene.get(idCol1)+1);	
+						}
+						geneID=id;
+						String nLine = createGeneLine(prtName, line, tok, attrs);
+						fhOut.println(nLine);
+					}
+					else if (isMRNA) {
+						if (geneID==null) 					continue;
+						if (mrnaID!=null) 					continue;
+						
+						String parent = getVal(parentAttrKey, attrs);
+						if (!parent.contentEquals(geneID)) 	continue;
+						
+						String id = getVal(idAttrKey, attrs);
+						if (id.contentEquals("")) {
+							skipLine++;
+							if (skipLine<3) prt("Bad line: " + line);
+							continue;
+						}
+						// accept mRNA
+						cntMRNA++;
+						mrnaID = id;
+						String nLine = createMRNALine(prtName, line, tok, attrs);
+						fhOut.println(nLine);
+					}
+					else if (isExon) {
+						if (mrnaID==null) 					continue;
+						
+						String parent = getVal(parentAttrKey, attrs);
+						if (!parent.contentEquals(mrnaID)) 	continue;
+						
+						// accept Exon
+						cntExon++;
+						String nLine = createExonLine(prtName, line, tok, attrs);
+						fhOut.println(nLine);
+					}
 				}
+				fhIn.close();
 			}
-			fhIn.close(); fhOut.close();
+			fhOut.close();
 			prt(String.format("   Use Genes %,d from %,d              ", cntGene, cntReadGenes));
 			prt(String.format("   Use mRNAs %,d from %,d ", cntMRNA, cntReadMRNA));
 			prt(String.format("   Use Exons %,d from %,d ", cntExon, cntReadExon));
@@ -546,9 +558,9 @@ public class ConvertEnsembl {
 				if (f.isFile()) { // CAS512 allow file not be have .gz
 			       String fname = f.getName();
 			     
-			       if (fname.endsWith(".fa.gz") || fname.endsWith(".fa")) 			inFaFile= projDir + "/" + fname;
-			       else if (fname.endsWith(".gff3.gz") || fname.endsWith(".gff3"))	inGffFile= projDir + "/" +fname; 	
-			       else if (fname.endsWith(".gff.gz") || fname.endsWith(".gff"))	inGffFile= projDir + "/" +fname; 			
+			       if (fname.endsWith(".fa.gz") || fname.endsWith(".fa")) 		inFaFile.add(projDir + "/" + fname);
+			       else if (fname.endsWith(".gff3.gz") || fname.endsWith(".gff3"))	inGffFile.add(projDir + "/" +fname); 	
+			       else if (fname.endsWith(".gff.gz") || fname.endsWith(".gff")) inGffFile.add(projDir + "/" +fname); 			
 				} 
 			}
 		}
@@ -609,6 +621,7 @@ public class ConvertEnsembl {
 					"       FASTA file ending with .fa   or .fa.gz   e.g. Oryza_sativa.IRGSP-1.0.dna_sm.toplevel.fa.gz\n" +
 					"       GFF   file ending with .gff3 or .gff3.gz e.g. Oryza_sativa.IRGSP-1.0.45.chr.gff3.gz\n" +  
 					"   Options:\n" +
+					"   -p [prefix] use this prefix in place of 'Chr'.\n" +
 					"   -s  include any sequence not labeled 'chromosome'.\n" +
 					"   -u  use sequence names from FASTA file when less than 5 characters (remaining will be scaffolds)\n" +
 					"   -m  include Mt and Pt chromosomes.\n" +

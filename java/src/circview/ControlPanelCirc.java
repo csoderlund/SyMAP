@@ -18,7 +18,7 @@ import javax.swing.JComboBox;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import util.ImageViewer;
-import util.Utilities;
+import util.Jcomp;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ControlPanelCirc extends JPanel implements HelpListener  {
@@ -35,19 +35,19 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
     	circPanel.bShowSelf = isSelf;
     	
     	// createButton: HelpListener parent, String path, String tip, HelpBar bar, ActionListener listener, boolean isCheckbox
-		minusButton   = (JButton)  Utilities.createButton(null,"/images/minus.gif",
+		minusButton   = (JButton)  Jcomp.createButton(null,"/images/minus.gif",
 							"Shrink: Decrease the scale.", helpPanel, buttonListener, false, false);
-		plusButton    = (JButton)  Utilities.createButton(null,"/images/plus.gif",
+		plusButton    = (JButton)  Jcomp.createButton(null,"/images/plus.gif",
 							"Grow: Increase the scale.", helpPanel, buttonListener, false, false);
-		rotateButton  = (JButton)  Utilities.createButton(null,"/images/rotate.gif",
+		rotateButton  = (JButton)  Jcomp.createButton(null,"/images/rotate.gif",
 							"Rotate the image.", helpPanel, buttonListener, false, false);
-		scaleCheckbox = (JCheckBox)Utilities.createButton(null,"Scale",
+		scaleCheckbox = (JCheckBox)Jcomp.createButton(null,"Scale",
 							"Scale to genome and chromosome sizes in bp", helpPanel, buttonListener, true, false); 
-		selfCheckbox = (JCheckBox)  Utilities.createButton(null,"Self-align",
+		selfCheckbox = (JCheckBox)  Jcomp.createButton(null,"Self-align",
 				"Show self-alignment synteny blocks", helpPanel, buttonListener, true, isSelf); 
-		rotCheckbox = (JCheckBox)  Utilities.createButton(null,"Rotate text", 
+		rotCheckbox = (JCheckBox)  Jcomp.createButton(null,"Rotate text", 
 				"Draw with labels rotated", helpPanel,buttonListener,true, false); 
-		revCheckbox = (JCheckBox)  Utilities.createButton(null,"Reverse",
+		revCheckbox = (JCheckBox)  Jcomp.createButton(null,"Reverse",
 				"Reverse reference",helpPanel,buttonListener,true, false); 
 		
 		String[] invOptions = {"All blocks","Inverted","Non-inverted","Two-color"};
@@ -59,9 +59,9 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 		invChooser.addActionListener(buttonListener);
 		
 
-		saveButton = (JButton) Utilities.createButton(this,"/images/print.gif",
+		saveButton = (JButton) Jcomp.createButton(this,"/images/print.gif",
 				"Save image" ,helpPanel,buttonListener,false, false);
-		helpButton = (JButton) Utilities.createButton(this,"/images/help.gif",
+		helpButton = (JButton) Jcomp.createButton(this,"/images/help.gif",
 				"Help: Online documentation." ,helpPanel,null,false, false);
 		
 		helpButton = util.Jhtml.createHelpIconUserLg(util.Jhtml.circle);

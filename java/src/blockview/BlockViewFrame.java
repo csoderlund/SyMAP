@@ -1,8 +1,5 @@
 package blockview;
 
-/************************************************
- * Draws the blocks for a synteny pair
- */
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
@@ -13,14 +10,18 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import javax.swing.event.*;
 
-import symap.SyMAP;
+import database.DBconn;
 
 import javax.swing.*;
 
-import util.DatabaseReader;
+import symap.Globals;
+import symap.manager.Mproject;
 import util.ImageViewer;
 import util.ErrorReport;
 
+/************************************************
+ * Draws the blocks for a synteny pair
+ */
 // CAS42 12/27/17 Seq-FPC has crashes from multiple problem. 
 // They are fixed, but Seq-FPC reverse leaves a blank page of blocks
 // CAS515 rearranged, made a little smaller
@@ -36,7 +37,7 @@ public class BlockViewFrame extends JFrame{
 	
 	private int mRefIdx, mIdx2;
 	private String refName, refType, name2, type2;
-	private DatabaseReader mDB;
+	private DBconn mDB;
 	private Vector<Integer> mColors;
 	
 	private TreeMap<Integer,TreeMap<Integer,Vector<Block>>> mLayout;
@@ -62,8 +63,8 @@ public class BlockViewFrame extends JFrame{
 	private JPanel mainPane = null;
 	private JScrollPane scroller = null;
 
-	public BlockViewFrame(DatabaseReader dbReader, int projXIdx, int projYIdx) throws Exception {
-		super("SyMAP Block View " + SyMAP.VERSION);
+	public BlockViewFrame(DBconn dbReader, int projXIdx, int projYIdx) throws Exception {
+		super("SyMAP Block View " + Globals.VERSION);
 		mRefIdx = projXIdx;
 		mIdx2 = projYIdx;
 		mDB = dbReader;
@@ -114,7 +115,7 @@ public class BlockViewFrame extends JFrame{
 			else { // CAS42 12/6/17 - there was NO message if this happened
 				System.out.println("Warning: one of the genomes has >" + MAX_GRPS + " sequences");
 				System.out.println("   this causes the 'reverse' option to not work on the block view");
-				System.out.println("   use scripts/lenFasta.pl to find cutoff length for min_size.");
+				System.out.println("   use scripts/lenFasta.pl to find cutoff length for Minimum Length.");
 				System.out.println("   email symap@agcol.arizona.edu if you would like further instructions");
 			}
 			cRow.gridx++;
@@ -235,22 +236,23 @@ public class BlockViewFrame extends JFrame{
 				unGrp2 = rs.getInt("idx");
 			}
 			
-			rs = s.executeQuery("select value from proj_props where name='display_name' and proj_idx=" + mRefIdx);
+			Mproject tProj = new Mproject();
+			String display_name = tProj.getKey(tProj.sDisplay);
+			String grp_type = tProj.getKey(tProj.sGrpType);
+			
+			rs = s.executeQuery("select value from proj_props where name='"+display_name+"' and proj_idx=" + mRefIdx);
 			rs.first();
 			refName = rs.getString("value");
-			rs = s.executeQuery("select value from proj_props where name='grp_type' and proj_idx=" + mRefIdx);
+			rs = s.executeQuery("select value from proj_props where name='"+ grp_type +"' and proj_idx=" + mRefIdx);
 			rs.first();
-			refType = rs.getString("value");
-			if (refType.equals("")) refType="Chromosomes";
+			refType = rs.first() ? rs.getString("value") : "Chromosomes"; // CAS534 should be loaded, but if not...
 			
-			rs = s.executeQuery("select value from proj_props where name='display_name' and proj_idx=" + mIdx2);
+			rs = s.executeQuery("select value from proj_props where name='"+ display_name+"' and proj_idx=" + mIdx2);
 			rs.first();
 			name2 = rs.getString("value");
-			rs = s.executeQuery("select value from proj_props where name='grp_type' and proj_idx=" + mIdx2);
-			rs.first();
-			type2 = rs.getString("value");
-			if (type2.equals("")) type2="Chromosomes";
-	
+			rs = s.executeQuery("select value from proj_props where name='"+grp_type+"' and proj_idx=" + mIdx2);
+			type2 = rs.first() ? rs.getString("value") : "Chromosomes";
+			
 			rs.close();
 			return true;
 		}

@@ -1,5 +1,6 @@
 package util;
 
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -13,9 +14,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
@@ -31,12 +34,17 @@ public class Jhtml {
 	public static final String BASE_HELP_URL = 	"https://csoderlund.github.io/SyMAP/"; // CAS510
 	public static final String TROUBLE_GUIDE_URL = BASE_HELP_URL + "TroubleShoot.html";
 	
-	public static final String QUERY_GUIDE_URL =   BASE_HELP_URL + "Query.html";
-	public static final String query = 	"#query";
-	public static final String result = "#result";
+	public static final String SYS_GUIDE_URL =    BASE_HELP_URL + "SystemGuide.html"; 
+	public static final String create = "#create";
 	
-	public static final String USER_GUIDE_URL =    BASE_HELP_URL + "UserGuide.html"; 
-	public static final String circle =  	"#circle";		// appended to USER_GUIDE_URL;		
+	public static final String SYS_HELP_URL =    BASE_HELP_URL + "SystemHelp.html"; // CAS534 moved from popups
+	public static final String build = 	"#build";
+	public static final String param1 = "#projParams";
+	public static final String param2 = "#pairParams";
+	
+	public static final String USER_GUIDE_URL =  BASE_HELP_URL + "UserGuide.html"; 
+	public static final String view =  		"#views";	
+	public static final String circle =  	"#circle";				
 	public static final String dotplot = 	"#dotplot_display";
 	public static final String align2d = 	"#alignment_display_2d";
 	public static final String colorIcon =  "#wheel";
@@ -44,6 +52,14 @@ public class Jhtml {
 	public static final String hitfilter =  "#hitfilter";
 	public static final String seqfilter =  "#sequence_filter";
 	public static final String dotfilter =	"#dotplot_filter";
+	
+	public static final String QUERY_GUIDE_URL =  BASE_HELP_URL + "Query.html";
+	public static final String query = 	"#query";
+	public static final String result = "#result";
+	
+	public static JButton createHelpIconSysSm(String main, String id) { // CAS534
+		return createHelpIcon("/images/helpSm.png", main + id);
+	}
 	
 	public static JButton createHelpIconUserLg(String id) {
 		return createHelpIcon("/images/help.gif", USER_GUIDE_URL + id);
@@ -57,6 +73,7 @@ public class Jhtml {
 	private static JButton createHelpIcon(String img, String url) { 
 		Icon icon = ImageViewer.getImageIcon(img);
 		JButton button = new JButton(icon);
+
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (!tryOpenURL(url) )
@@ -212,5 +229,41 @@ public class Jhtml {
 	
 	public static boolean is64Bit() {
 		return System.getProperty("os.arch").toLowerCase().contains("64");
+	}
+	// ManagerFrame initial view
+	public static JComponent createInstructionsPanel(InputStream str, Color background) {
+		StringBuffer sb = new StringBuffer();
+		try {
+			//InputStream str = this.getClass().getResourceAsStream(HTML);
+			
+			int ci = str.read();
+			while (ci != -1) {
+				sb.append((char)ci);
+				ci = str.read();
+			}
+		}
+		catch(Exception e){ErrorReport.print(e, "Show instructions");}
+		
+		JEditorPane editorPane = new JEditorPane();
+		editorPane.setEditable(false);
+		editorPane.setBackground(background);
+		editorPane.setContentType("text/html");
+		editorPane.setText(sb.toString());
+
+		JScrollPane scrollPane = new JScrollPane(editorPane);
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		scrollPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+		scrollPane.setBackground(background);
+		
+		editorPane.addHyperlinkListener(new HyperlinkListener() {
+			public void hyperlinkUpdate(HyperlinkEvent e) {
+				if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+					if ( !Jhtml.tryOpenURL(e.getURL().toString()) ) 
+						System.err.println("Error opening URL: " + e.getURL().toString());
+				}
+			}
+		});
+		
+		return scrollPane;
 	}
 }

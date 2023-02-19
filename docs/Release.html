@@ -67,8 +67,33 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 <tr><td><a href="#v530">v5.3.1</a><td>(6-Jan-23)<td>Improved <a href="UserGuide.html#base">hit alignment</a> features.
 <tr><td><a href="#v530">v5.3.0</a><td>(10-Dec-22)<td>Updated database schema to remove all FPC tables.
 <tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="Collinear.html">viewing</a>
-<tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view"> 2D gene placement</a>
+<tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view2D"> 2D gene placement</a>
 </table>
+
+<a id="v534"></a>
+<h3>Release: v5.3.4 (19-Feb-23)</h3>
+Existing SyMAP databases: if the project parameters seem wrong, bring up the <u>Parameters</u> window
+and <ttl>Save</ttl>.
+<ul>
+<li>All "Help" in the SyMAP <ttb>Project Manager</ttb> has changed to <big>?</big> for online help.
+The online has been improved for the parameters explanation;
+see <a href="./SystemHelp.html" class="ext" target="_blank">Quick Guide and Parameters</a>.
+<p>
+<li>The <ttb>Project Parameters</ttb> window is clearer;
+see <a href="./SystemHelp.html#projParams" class="ext" target="_blank">Project Parameters</a>.
+Since parameters are written to file and database, they can get out of sync; this problem is reduced.
+The popup messages are more concise.
+<li>The <ttb>Pair Parameters</ttb> window is clearer;
+see <a href="./SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parameters</a>.
+The parameters used to only be applied if A&S was run right after setting them; now they are
+maintained across symap sessions.
+<p>
+<li>
+Developers: There has been a lot of renaming and restructuring. For example, the symap.projectmanager.common package has been shortened to symap.manager,
+and a few of the classes in this package were renamed for clarity. All ChrExp and 2d display
+classes have been renamed and moved to the frame package. A database package has been
+created for the database specific classes. The project and pair parameter code has been redesigned.
+</ul>
 
 <a id="v533"></a>
 <h3>Release: v5.3.3 (24-Jan-23)</h3>

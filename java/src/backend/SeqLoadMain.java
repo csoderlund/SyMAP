@@ -1,14 +1,7 @@
 package backend;
 
-/*****************************************
- * Load chromosome/draft/LG sequences to SyMAP database.
- * Also fix bad chars if any
- */
-
 import java.io.File;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.util.Properties;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.Collections;
@@ -16,7 +9,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.sql.ResultSet;
 
-import symap.pool.DatabaseUser;
+import symap.Globals;
+import symap.manager.Mproject;
 import util.Cancelled;
 import util.ErrorCount;
 import util.ErrorReport;
@@ -24,63 +18,42 @@ import util.Logger;
 import util.Utilities;
 import blockview.BlockViewFrame;
 
-public class SeqLoadMain 
-{
+/*****************************************
+ * Load chromosome/draft/LG sequences to SyMAP database.
+ * Also fix bad chars if any
+ * CAS534 changed from props to Project; removed static on everything
+ */
+
+public class SeqLoadMain {
 	static int projIdx = 0;
 	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE;
-	private static final int MAX_GRPS = BlockViewFrame.MAX_GRPS; // CAS42 12/6/17 - for message
+	private static final int MAX_GRPS =   BlockViewFrame.MAX_GRPS; 	// CAS42 12/6/17 - for message
 	private static final int MAX_COLORS = BlockViewFrame.maxColors; // CAS42 12/6/17 - for message
-	private static boolean TRACE = symap.SyMAP.TRACE; // CAS519 add for Guillermo hang problem
+	private static boolean TRACE = Globals.TRACE; 					// CAS519 add for Guillermo hang problem
+	private Mproject mProj;
 	
-	public static boolean run(UpdatePool pool, Logger log, String projName) throws Exception {
+	public boolean run(UpdatePool pool, Logger log, Mproject proj) throws Exception {
 		try {
+			mProj = proj;
+			String projName = mProj.getDBName();
+			projIdx = mProj.getIdx();
+			
 			long startTime = System.currentTimeMillis();
 			log.msg("Loading sequences for " + projName);
 			if (TRACE) log.msg("Tracing each step....");
 			
-	// Params: Load project params file and set defaults for unspecified fields
-			String projDir = Constants.seqDataDir + projName;
-			SyProps props = new SyProps(log, new File(projDir +  Constants.paramsFile));
-			
-			if (props.getProperty("display_name") == null) 	props.setProperty("display_name", projName);
-			if (props.getProperty("name") == null) 			props.setProperty("name", projName);
-			if (props.getProperty("abbrev_name") == null) 	props.setProperty("abbrev_name", projName.substring(0,4));// CAS532 add
-			//CAS532 if (props.getProperty("category") == null) props.setProperty("category", "Uncategorized");			
-			//if (props.getProperty("description") == null) 	props.setProperty("description", "");
-	
-	// Create project in DB
-			if (TRACE) log.msg("Checking database");
-			
-			projIdx = pool.getProjIdx(projName);
-			if (projIdx > 0) 
-				pool.deleteProject(projIdx);
-			
-			if (pool.projectExists(projName)) {
-				log.msg("A project with the same exists, please remove it first\n" +
-						"or select a different name for this project.");
-				return false;
-			}
-			log.msg("Create project in database ");
-			pool.createProject(projName); 
-			
-			if (TRACE) log.msg("Processing properties");
-			projIdx = pool.getProjIdx(projName);
-			props.uploadProjProps(pool, projIdx, new String[] { "name","display_name", "description", 
-				"category", "grp_prefix", "grp_sort", "grp_type","order_against",
-				"min_display_size_bp","mask_all_but_genes", "min_size","sequence_files", "anno_files",
-				"annot_keywords", "annot_kw_mincount",// CAS511 added these two, do not know why they were missing
-				"abbrev_name", 						// CAS519 added
-				"proj_seq_dir", "proj_seq_date", "proj_anno_dir", "proj_anno_date"}); // CAS532 added files params
+	// Create project in DB; CAS534 project created in ManagerFrame/Mproject
 			
 	// Check Sequence files 
 			if (TRACE) log.msg("Processing files");
 			
 			Vector<File> seqFiles = new Vector<File>();	
-			if (!props.containsKey("sequence_files")) props.setProperty("sequence_files", "");
 			
 			String saveSeqDir="";
 			long modDirDate=0;
-			if (props.getProperty("sequence_files").equals("")) {
+			String projDir = Constants.seqDataDir + projName;
+			String seqFileName = mProj.getSequenceFile();
+			if (seqFileName.equals("")) {
 				String seqDir = projDir + Constants.seqSeqDataDir; // created with Add Project
 				log.msg("   Sequence_files not specified - use " + seqDir);
 				
@@ -100,9 +73,9 @@ public class SeqLoadMain
 				}
 			}
 			else {
-				String userFiles = props.getProperty("sequence_files");
-				String[] fileList = userFiles.split(",");
-				log.msg("   User specified sequence files - " + userFiles);
+				String[] fileList = seqFileName.split(",");
+				String xxx = (fileList.length>1) ? (fileList.length + " files ") : seqFileName;
+				log.msg("   User specified sequence files - " + xxx);
 				for (String filstr : fileList) {
 					if (filstr == null) continue;
 					if (filstr.trim().equals("")) continue;
@@ -132,15 +105,13 @@ public class SeqLoadMain
 			
 	// Scan and upload the sequences
 			log.msg("Checking sequence files....");
-			String prefix = props.getProperty("grp_prefix");
+			String prefix = mProj.getGrpPrefix();
 			Vector<String> grpList = new Vector<String>();
 			int nSeqs = 0, seqIgnore=0, cntFile=0;
 			long totalSize = 0;
 			
-			int minSize = 0;
-			try {minSize = Integer.parseInt(props.getProperty("min_size"));} // CAS507 catch blank input
-			catch (Exception e) {};
-			log.msg("+++ Sequences < " + minSize + "bp will be ignored ('min_size' project parameter).");
+			int minSize = mProj.getMinSize();
+			log.msg("+++ Sequences < " + minSize + "bp will be ignored ('Minimum length' project parameter).");
 	
 			TreeSet<String> grpNamesSeen = new TreeSet<String>();
 			TreeSet<String> grpFullNamesSeen = new TreeSet<String>();
@@ -230,15 +201,15 @@ public class SeqLoadMain
 				if (nBadCharLines > 0)
 					log.msg("+++ " + nBadCharLines + " lines contained characters other than AGCT; these will be replaced by N");
 			
-				SyProps.setProjProp(projIdx,"badCharLines","" + nBadCharLines,pool);	
+				if (nBadCharLines>0) mProj.saveProjParam("badCharLines","" + nBadCharLines);	
 			} // end loop through files
 			
 			if (nSeqs == 0) {
 				return rtError(pool, log, projIdx, "No sequences were loaded! Check for problems with the sequence files and re-load.");
 			}
 			// CAS532 add these to print on View
-			SyProps.setProjProp(projIdx,"proj_seq_date", Utils.getDateStr(modDirDate),pool);
-			SyProps.setProjProp(projIdx,"proj_seq_dir", saveSeqDir,pool);
+			mProj.saveProjParam("proj_seq_date", Utils.getDateStr(modDirDate));
+			mProj.saveProjParam("proj_seq_dir", saveSeqDir);
 			
 			if (cntFile>1) {
 				log.msg("Total:");
@@ -252,11 +223,11 @@ public class SeqLoadMain
 			if (nSeqs >= MAX_GRPS){
 				log.msg("+++ More than " + MAX_GRPS + " sequences loaded!");
 				log.msg("  Unless you are ordering draft contigs,");
-				log.msg("    It is recommended to reload with a higher min_size setting, before proceeding");
-				log.msg("    Use script/lenFasta.pl to determine 'min_size' to use to reduce number of loaded sequences");
+				log.msg("    It is recommended to reload with a higher Minimum Length setting, before proceeding");
+				log.msg("    Use script/lenFasta.pl to determine Minimum Length to use to reduce number of loaded sequences");
 				//ErrorCount.inc(); CAS505 
 			}
-			updateSortOrder(grpList,pool,props,log);
+			updateSortOrder(grpList,pool, log);
 					
 			log.msg("Done:  " + Utilities.getDurationString(System.currentTimeMillis()-startTime) + "\n");
 		}
@@ -269,12 +240,12 @@ public class SeqLoadMain
 		return true;
 	}
 	// CAS518 when there is errors and nothing is loaded, it still shows it is; remove project
-	static boolean rtError(UpdatePool pool, Logger log, int projIdx, String msg) {
+	private boolean rtError(UpdatePool pool, Logger log, int projIdx, String msg) {
 		Utilities.showWarningMessage("*** " + msg); // prints to stdout
 		ErrorCount.inc();
 		try {
 			if (projIdx > 0) {
-				pool.deleteProject(projIdx);
+				mProj.removeProjectFromDB();
 				log.msg("Remove project from database");
 			}
 		}
@@ -284,8 +255,7 @@ public class SeqLoadMain
 	}
 	// The prefix must be present. if no prefix, just use the given name.
 	// Note, expects the starting ">" as well
-	static String parseGrpName(String in, String prefix)
-	{
+	private String parseGrpName(String in, String prefix){
 		in = in + " "; // hack, otherwise we need two cases in the regex
 		String regx = ">\\s*(" + prefix + ")(\\w+)\\s?.*";
 		Pattern pat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
@@ -294,8 +264,7 @@ public class SeqLoadMain
 			return m.group(2);
 		return parseGrpFullName(in);
 	}
-	static String parseGrpFullName(String in)
-	{
+	private String parseGrpFullName(String in){
 		String regx = ">\\s*(\\w+)\\s?.*";
 		Pattern pat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
 		Matcher m = pat.matcher(in);
@@ -304,7 +273,7 @@ public class SeqLoadMain
 		System.err.println("Unable to parse group name from:" + in);
 		return null;
 	}
-	public static void updateSortOrder(Vector<String> grpList,UpdatePool pool,SyProps props,Logger log) throws Exception
+	private void updateSortOrder(Vector<String> grpList,UpdatePool pool, Logger log) throws Exception
 	{
 		// First, just set it to the idx order
 		int minIdx;
@@ -314,54 +283,29 @@ public class SeqLoadMain
 		pool.executeUpdate("update xgroups set sort_order = idx+1-" + minIdx + " where proj_idx=" + projIdx);
 		//pool.executeUpdate("update xgroups set sort_order = 1 where proj_idx=" + projIdx);
 		
-		//if (!props.getProperty("grp_sort").equals("file"))
-		//{
-			// Order the xgroups based on the param file settings
-			GroupSorter gs = null;
-			if (!props.getProperty("grp_order").equals("")) {
-				String[] grpOrder = props.getProperty("grp_order").split(",");
-				gs = new GroupSorter(grpOrder);
+		// CAS534 removed a bunch of code because SyProps had grp_order and grp_sort that never changed
+		GroupSorter gs = new GroupSorter(GrpSortType.Alpha); 
+
+		String undef = "";
+		for (String grp : grpList) {
+			if (!gs.orderCheck(grp)) {
+				undef += grp + ", ";
 			}
-			else if (props.getProperty("grp_sort").equals("numeric")) {
-				for (String grp : grpList){
-					try {
-						Integer.parseInt(grp);
-					}
-					catch(Exception e){
-						log.msg("Group name " + grp + " is not a number; groups will not be sorted.");
-						ErrorCount.inc();
-						return;
-					}
-				}
-				
-				gs = new GroupSorter(GrpSortType.Numeric);
-			}
-			else if (props.getProperty("grp_sort").startsWith("alpha")) {
-				gs = new GroupSorter(GrpSortType.Alpha);
-			}
-	
-			if (gs != null) {
-				String undef = "";
-				for (String grp : grpList) {
-					if (!gs.orderCheck(grp)) {
-						undef += grp + ", ";
-					}
-				}
-				if (undef.length() > 0)  {
-					log.msg("Group order not defined for: " + undef.substring(0, undef.length()-2));
-					ErrorCount.inc();
-					return;
-				}
-				Collections.sort(grpList,gs);
-			}
-			for (int i = 1; i <= grpList.size(); i++) {
-				String grp = grpList.get(i-1);
-				pool.executeUpdate("update xgroups set sort_order=" + i + " where proj_idx=" + projIdx + 
-						" and name='" + grp + "'");
-			}
-		//}
+		}
+		if (undef.length() > 0)  {
+			log.msg("Group order not defined for: " + undef.substring(0, undef.length()-2));
+			ErrorCount.inc();
+			return;
+		}
+		Collections.sort(grpList,gs);
+		
+		for (int i = 1; i <= grpList.size(); i++) {
+			String grp = grpList.get(i-1);
+			pool.executeUpdate("update xgroups set sort_order=" + i + " where proj_idx=" + projIdx + 
+					" and name='" + grp + "'");
+		}
 	}
-	public static void uploadSequence(String grp, String fullname, String seq, String file,
+	private void uploadSequence(String grp, String fullname, String seq, String file,
 			UpdatePool pool,int order) throws Exception
 	{
 		// First, create the group
@@ -383,31 +327,6 @@ public class SeqLoadMain
 			String cseq = seq.substring(start,start + len );
 			String st = "INSERT INTO pseudo_seq2 VALUES('" + grpIdx + "','" + chunk + "','" + cseq + "')";
 			pool.executeUpdate(st);
-		}
-	}
-
-	// This is not run from the command line
-	public static void main(String[] args) {	
-		if (args.length < 1) {
-			System.out.println("Usage: ..."); 
-			return;
-		}
-		
-		try {
-			FileInputStream propFH = new FileInputStream(Utils.getParamsName());
-			Properties mDBProps = new Properties();
-			mDBProps.load(propFH);
-			
-			String dbstr = DatabaseUser.getDatabaseURL(mDBProps.getProperty("db_server"), mDBProps.getProperty("db_name"));
-			UpdatePool pool = new UpdatePool(dbstr, 
-					mDBProps.getProperty("db_adminuser"), 
-					mDBProps.getProperty("db_adminpasswd"));
-			run( pool, new Log("symap.log"), args[0] );
-			DatabaseUser.shutdown();
-		}
-		catch (Exception e) {
-			DatabaseUser.shutdown();
-			ErrorReport.die(e, "Load seq");
 		}
 	}
 }

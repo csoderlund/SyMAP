@@ -28,7 +28,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
-import symap.projectmanager.common.Project;
+import symap.manager.Mproject;
 import util.ErrorReport;
 import util.Jhtml;
 import util.Utilities;
@@ -748,7 +748,7 @@ public class QueryPanel extends JPanel {
 		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		panel.setBackground(Color.WHITE);
 
-		Vector<Project> theProjects = theParentFrame.getProjects();
+		Vector<Mproject> theProjects = theParentFrame.getProjects();
 		
 		chkPgeneF = new JCheckBox("Compute PgeneF");	
 		chkPgeneF.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -778,8 +778,8 @@ public class QueryPanel extends JPanel {
 		
 		Vector<String> sortedGroups = new Vector<String> ();
 		for(int x=0; x<theProjects.size(); x++) {
-			if(!sortedGroups.contains(theProjects.get(x).getCategory())) 
-				sortedGroups.add(theProjects.get(x).getCategory());
+			if(!sortedGroups.contains(theProjects.get(x).getdbCat())) 
+				sortedGroups.add(theProjects.get(x).getdbCat());
 		}
 		Collections.sort(sortedGroups);
 		
@@ -794,7 +794,7 @@ public class QueryPanel extends JPanel {
 			
 			row.add(new JLabel("Include: "));
 			for(int x=0; x<incSpecies.length; x++) {
-				if(catName.equals(theProjects.get(x).getCategory())) {
+				if(catName.equals(theProjects.get(x).getdbCat())) {
 					if(firstOne) {
 						panel.add(Box.createVerticalStrut(10));
 						if(sortedGroups.size() > 1)
@@ -814,7 +814,7 @@ public class QueryPanel extends JPanel {
 	
 			row.add(new JLabel("Exclude: "));
 			for(int x=0; x<exSpecies.length; x++) {
-				if(catName.equals(theProjects.get(x).getCategory())) {
+				if(catName.equals(theProjects.get(x).getdbCat())) {
 					if(firstOne) {
 						panel.add(Box.createVerticalStrut(10));
 						if(sortedGroups.size() > 1)

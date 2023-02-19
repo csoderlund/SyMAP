@@ -1,6 +1,10 @@
-package util;
+package database;
 
 import java.util.Map;
+
+import symap.Globals;
+import util.ErrorReport;
+
 import java.util.HashMap;
 import java.lang.ref.WeakReference;
 import java.sql.Connection;
@@ -17,38 +21,37 @@ import java.sql.SQLException;
  * CAS506 rearranged into logical order - no changes (removed kill())
  * CAS511 removed deadcode
  */
-public class DatabaseReader {
-	private static Map<DatabaseReader,WeakReference<Connection>> 
-		databaseReaders = new HashMap<DatabaseReader,WeakReference<Connection>>();
+public class DBconn {
+	private static HashMap<DBconn,WeakReference<Connection>> dbReaders = new HashMap<DBconn,WeakReference<Connection>>();
 
 	private String name, url, user, password, driver;
 
-	/**
-	 * returns a database reader instance with passed in properties.
-	 */
-	public static DatabaseReader getInstance(String name, String url, String user, String password, String driver) 
+	public static DBconn getInstance(String name, DBconn dr) {
+		DBconn dbc = null;
+		try {
+			dbc = getInstance(name,dr.url,dr.user,dr.password,dr.driver);
+		} catch (ClassNotFoundException e) { }
+		return dbc;
+	}
+		
+	public static DBconn getInstance(String name, String url, String user, String password, String driver) 
 	throws ClassNotFoundException {
-		synchronized (databaseReaders) {
+		synchronized (dbReaders) {
+			if (Globals.TRACE) System.out.println("DBconn " + url + " " + user + " " + name);	
 			
-			DatabaseReader dr = new DatabaseReader(name,url,user,password,driver);
-			for (DatabaseReader temp : databaseReaders.keySet())
-				if (dr.equals(temp)) return temp;
-			
-			databaseReaders.put(dr,new WeakReference<Connection>(null));
-			return dr;
+			DBconn dbc = new DBconn(name,url,user,password,driver);
+			for (DBconn temp : dbReaders.keySet()) {
+				if (dbc.equals(temp)) {
+					dbc.close(); // CAS534
+					return temp;
+				}
+			}
+			dbReaders.put(dbc,new WeakReference<Connection>(null));
+			return dbc;
 		}
 	}
 
-	 // Calls the above getInstance with the dr properties
-	public static DatabaseReader getInstance(String name, DatabaseReader dr) {
-		DatabaseReader r = null;
-		try {
-			r = getInstance(name,dr.url,dr.user,dr.password,dr.driver);
-		} catch (ClassNotFoundException e) { }
-		return r;
-	}
-
-	private DatabaseReader(String name, String url, String user, String password, String driver) throws ClassNotFoundException {
+	private DBconn(String name, String url, String user, String password, String driver) throws ClassNotFoundException {
 		this.name = name;
 		this.url = url;
 		this.user = user;
@@ -64,39 +67,36 @@ public class DatabaseReader {
 		return getConnection(this);
 	}
 
-	private static Connection getConnection(DatabaseReader dr) throws SQLException {
+	private static Connection getConnection(DBconn dbc) throws SQLException {
 		Connection con = null;
-		synchronized (databaseReaders) {
-			WeakReference<Connection> wr = (WeakReference<Connection>) databaseReaders.get(dr);
+		synchronized (dbReaders) {
+			WeakReference<Connection> wr = (WeakReference<Connection>) dbReaders.get(dbc);
 			if (wr != null) {
 				con = (Connection)wr.get();
 				if (con == null || con.isClosed()) {
 					wr.clear();
 					try {
-						con = DriverManager.getConnection(dr.url,dr.user,dr.password);
+						con = DriverManager.getConnection(dbc.url,dbc.user,dbc.password);
 					} catch (SQLException e) {
 						String msg = "SQLException while establishing a connection to "+
-									dr.url+"\nError Code: "+e.getErrorCode();
+									dbc.url+"\nError Code: "+e.getErrorCode();
 						ErrorReport.die(e, msg); // CAS511 change from print to die
 						throw e;
 					}
-					databaseReaders.put(dr,new WeakReference<Connection>(con));
+					dbReaders.put(dbc,new WeakReference<Connection>(con));
 				}
 			}
-			else throw new SQLException("Connection for "+dr+" has been killed!");
+			else throw new SQLException("Connection for "+dbc+" has been killed!");
 		}
 		return con;
 	}
 
-	/**
-	 * closes the connection corresponding to this database reader if available.
-	 */
 	public void close() {
 		close(this,false);
 	}
-	private static void close(DatabaseReader dr, boolean forGood) {
-		synchronized (databaseReaders) {
-			WeakReference<Connection> wr = (WeakReference<Connection>)databaseReaders.get(dr);
+	private static void close(DBconn dr, boolean forGood) {
+		synchronized (dbReaders) {
+			WeakReference<Connection> wr = (WeakReference<Connection>)dbReaders.get(dr);
 			if (wr != null) {
 				Connection con = (Connection)wr.get();		
 				if (con != null) 
@@ -104,18 +104,14 @@ public class DatabaseReader {
 					con = null;
 					wr.clear();
 					if (forGood)
-						databaseReaders.remove(dr);
+						dbReaders.remove(dr);
 			}
 		}
 	}
 
-
-	/**
-	 * Method returns true if obj is an instance of DatabaseReader and has the same name, url, user, password, and driver.
-	 */
 	public boolean equals(Object obj) {
-		if (obj instanceof DatabaseReader) {
-			DatabaseReader dr = (DatabaseReader)obj;
+		if (obj instanceof DBconn) {
+			DBconn dr = (DBconn)obj;
 			return url.equals(dr.url) && 
 			(name == null ? dr.name == null : name.equals(dr.name)) &&
 			(user == null ? dr.user == null : user.equals(dr.user)) &&
@@ -125,9 +121,6 @@ public class DatabaseReader {
 		return false;
 	}
 
-	public String getName() {
-		return name;
-	}
 	public String toString() {
 		return "["+name+" Url = "+url+"]";
 	}

@@ -36,8 +36,9 @@ public class Group
 	private int hitBinSize, annotBinSize, topN = 0;
 	private int avgGeneLength, minGeneLength, maxGeneLength, maxGap;
 	
-	public Group(SyProps props, String name, String fullname, int idx, QueryType qt)
+	public Group(int topN, String name, String fullname, int idx, QueryType qt)
 	{
+		this.topN = topN;
 		this.name = name;
 		this.fullname = fullname;
 		this.idx = idx;
@@ -49,9 +50,8 @@ public class Group
 		hitBinMap = 	new TreeMap<Integer,Vector<HitBin>>();
 		
 		if (qt != QueryType.Either) {
-			hitBinSize = 	props.getInt("hit_bin");  	// 10000 - SyProps
-			annotBinSize = 	props.getInt("annot_bin"); 	// 30000 - SyProps
-			topN = 			props.getInt("topn"); 		// default 2; change in interface
+			hitBinSize = 	10000;  // bp size of annotation bin; CAS534 was setting props
+			annotBinSize = 	30000; 	// # hits per hit bin;     CAS534 was props
 		}
 	}
 	
@@ -71,15 +71,13 @@ public class Group
 		return x;
 	}
 	// created during loadAnnotation and added to during testHitForAnnotOverlapAndUpdate2
-	private void updateAnnotBins(AnnotElem a)
-	{
+	private void updateAnnotBins(AnnotElem a){
 		int bs = a.start/annotBinSize;
 		int be = a.end/annotBinSize;
 		
 		allAnnot.add(a);
 		
-		for (int b = bs; b <= be; b++) 
-		{
+		for (int b = bs; b <= be; b++) {
 			AnnotList l;
 			if (!annotMap.containsKey(b) ) {
 				l = new AnnotList();
@@ -91,15 +89,13 @@ public class Group
 		}
 	}
 	// removed during testHitForAnnotOverlapAndUpdate2
-	private void removeAnnotation(AnnotElem a)
-	{
+	private void removeAnnotation(AnnotElem a){
 		int bs = a.start/annotBinSize;
 		int be = a.end/annotBinSize;
 		
 		allAnnot.remove(a);
 		
-		for (int b = bs; b <= be; b++) 
-		{
+		for (int b = bs; b <= be; b++) {
 			if (annotMap.containsKey(b) ) {
 				AnnotList l = annotMap.get(b);
 				l.remove(a);
@@ -107,12 +103,10 @@ public class Group
 		}
 	}	
 	
-	public void collectPGInfo(String proj)
-	{
+	public void collectPGInfo(String proj){
 		int gene = 0, ng = 0;
 		
-		for (AnnotElem ae : allAnnot)
-		{
+		for (AnnotElem ae : allAnnot){
 			if (!ae.isGene()) ng++;	
 			else gene++;	
 			
@@ -122,8 +116,7 @@ public class Group
 			int bs = ae.start/hitBinSize;
 			int be = ae.end/hitBinSize;
 			
-			for (int b = bs; b <= be; b++)
-			{
+			for (int b = bs; b <= be; b++){
 				if (!hitBinMap.containsKey(b))
 					hitBinMap.put(b, new Vector<HitBin>());
 				hitBinMap.get(b).add(hb);
@@ -148,8 +141,7 @@ public class Group
 		minGeneLength  = Integer.MAX_VALUE;
 		int totalGenes = 0; 
 		
-		while (rs.next())
-		{
+		while (rs.next()){
 			int s = rs.getInt(1);
 			int e = rs.getInt(2);
 			int annotIdx = rs.getInt(3);
@@ -175,22 +167,17 @@ public class Group
 		return totalGenes;
 	}
 	
-	private HashMap<AnnotElem,Integer> getAllOverlappingAnnots(int start, int end)
-	{
+	private HashMap<AnnotElem,Integer> getAllOverlappingAnnots(int start, int end){
 		int bs = start/annotBinSize;
 		int be = 1 + end/annotBinSize;
 		
 		HashMap<AnnotElem,Integer> ret = new HashMap<AnnotElem,Integer>();
 		
-		for (int b = bs; b <= be; b++) 
-		{
-			for (AnnotElem ae : getBinList(b)) 
-			{
+		for (int b = bs; b <= be; b++) {
+			for (AnnotElem ae : getBinList(b)) {
 				int overlap = Utils.intervalsOverlap(start,end,ae.start,ae.end);
-				if (overlap >= 0) 
-				{
-					if (!ret.containsKey(ae) || overlap > ret.get(ae))
-					{
+				if (overlap >= 0) {
+					if (!ret.containsKey(ae) || overlap > ret.get(ae)){
 						ret.put(ae, overlap);
 					}
 				}
@@ -199,45 +186,35 @@ public class Group
 		
 		return ret;
 	}
-	public String idStr()
-	{
+	public String idStr(){
 		return "" + idx + "(" + name + ")";	
 	}
 	//called from AnchorMain while clustering
-	public AnnotElem getMostOverlappingAnnot(int start, int end)
-	{
+	public AnnotElem getMostOverlappingAnnot(int start, int end){
 		HashMap<AnnotElem,Integer> annots = getAllOverlappingAnnots(start, end);
 		AnnotElem ret = null;
 
-		for (AnnotElem a : annots.keySet()) 
-		{
+		for (AnnotElem a : annots.keySet()) {
 			// prefer merging with real genes
-			if (ret == null )					
+			if (ret == null )	
 				ret = a;
-			else 
-			{
-				if (!a.isGene()) 
-				{
-					if (!ret.isGene() )
-					{
-						if (annots.get(a) > annots.get(ret))
+			else {
+				if (!a.isGene()) {
+					if (!ret.isGene() ){
+						if (annots.get(a) > annots.get(ret)) 
 							ret = a;
-						else if (annots.get(a) == annots.get(ret) )
-						{
+						else if (annots.get(a) == annots.get(ret) ){
 							if (a.getLength() > ret.getLength())
 								ret = a;
-							else if (a.getLength() == ret.getLength())
-							{
+							else if (a.getLength() == ret.getLength()){
 								if (a.start < ret.start)
 									ret = a;
 							}
 						}
 					}
 				}
-				else // we're looking at a real gene
-				{
-					if (ret.isGene()) 
-					{
+				else { // we're looking at a real gene
+					if (ret.isGene()) {
 						int olapnew = annots.get(a);
 						int olapold = annots.get(ret);
 						
@@ -272,15 +249,13 @@ public class Group
 					return true;
 			}
 		}
-		
 		return false;
 	}
 	
 	// If it hits a gene, skip it. 
 	// If hits a non-gene, either grow that annotation or break it up.
 	// Otherwise, make a new annotation.
-	public void testHitForAnnotOverlapAndUpdate2(int start, int end) 
-	{
+	public void testHitForAnnotOverlapAndUpdate2(int start, int end) {
 		int newStart = start;
 		int newEnd = end;
 
@@ -289,20 +264,15 @@ public class Group
 						
 		TreeSet<AnnotElem> ngOlaps = new TreeSet<AnnotElem>();
 
-		for (int b = bs; b <= be; b++) 
-		{
-			for (AnnotElem ae : getBinList(b)) 
-			{
+		for (int b = bs; b <= be; b++) {
+			for (AnnotElem ae : getBinList(b)) {
 				int olap = Utils.intervalsOverlap(start,end,ae.start,ae.end);
-				if (ae.isGene())
-				{
+				if (ae.isGene()){
 					if (olap > 0)
 						return; // Hits a gene - no need to inquire further
 				}
-				else
-				{
-					if (olap > -maxGap)
-					{
+				else {
+					if (olap > -maxGap) {
 						ngOlaps.add(ae);	
 						newStart = Math.min(newStart,ae.start);
 						newEnd = Math.max(newEnd,ae.end);
@@ -312,20 +282,17 @@ public class Group
 		}
 
 		// if it already covers the whole hit then do nothing
-		if (ngOlaps.size() == 1 )
-		{
+		if (ngOlaps.size() == 1 ){
 			if (ngOlaps.first().start <= start && ngOlaps.first().end >= end) return;
 		}
 
 		// remove all the affected annots
-		for (AnnotElem ae : ngOlaps)
-		{
+		for (AnnotElem ae : ngOlaps){
 			removeAnnotation(ae);
 		}
 		
 		// add one or more new ones spanning the region
-		for (int s = newStart; s < newEnd; s += maxGeneLength)
-		{
+		for (int s = newStart; s < newEnd; s += maxGeneLength){
 			int e = Math.min(newEnd, s + maxGeneLength - 1);
 			AnnotElem ae = new AnnotElem(s,e,GeneType.NonGene,0);
 			updateAnnotBins(ae);
@@ -338,8 +305,7 @@ public class Group
 		// each type, not the total number of annotations which are overlapped. 
 		TreeSet<GeneType> usedTypes = new TreeSet<GeneType>(); 
 		
-		for (AnnotElem ae : getAllOverlappingAnnots(sh.start, sh.end).keySet())
-		{
+		for (AnnotElem ae : getAllOverlappingAnnots(sh.start, sh.end).keySet()) {
 			if (ae.idx == 0) continue;
 			
 			Vector<String> vals = new Vector<String>();
@@ -362,37 +328,29 @@ public class Group
 	// PreFilter hits
 	// Called from Project; add to hitBinMap for prefilter step
 	// Add to existing hit bin, if not already ruled out by TopN; or, start a new bin
-	public void checkAddToHitBin2(Hit hit, SubHit sh) throws Exception
-	{
+	public void checkAddToHitBin2(Hit hit, SubHit sh) throws Exception {
 		int bs = sh.start/hitBinSize;
 		int be = sh.end/hitBinSize;
 
 		HitBin hb = null;
 		int bestOlap = 0;
-		for (int b = bs; b <= be; b++) 
-		{
+		for (int b = bs; b <= be; b++) {
 			if (!hitBinMap.containsKey(b)) continue;
 			
-			for (HitBin hbcheck : hitBinMap.get(b)) 
-			{
+			for (HitBin hbcheck : hitBinMap.get(b)) {
 				int olap = Utils.intervalsOverlap(hbcheck.start, hbcheck.end, sh.start, sh.end);
 				if (olap <= 0) continue;
-				if (olap > bestOlap)
-				{
+				if (olap > bestOlap){
 					hb = hbcheck;
 					bestOlap = olap;
 				}
-				else if (olap == bestOlap)
-				{
-					if (hbcheck.start < hb.start)
-					{
+				else if (olap == bestOlap){
+					if (hbcheck.start < hb.start){
 						hb = hbcheck;
 						bestOlap = olap;						
 					}
-					else if (hbcheck.start == hb.start)
-					{
-						if (hbcheck.end > hb.end)
-						{
+					else if (hbcheck.start == hb.start){
+						if (hbcheck.end > hb.end){
 							hb = hbcheck;
 							bestOlap = olap;														
 						}
@@ -400,14 +358,12 @@ public class Group
 				}
 			}
 		}
-		if (hb == null)
-		{
+		if (hb == null){
 			if (mPreClust) // seq-seq; bins are initialized with annotation
 				// If the bins came from annotation, we expect each hit to find at least one
 				throw(new Exception("No bin for hit!"));	
 		}
-		else
-		{
+		else {
 			hb.checkAddHit2(hit, sh); // XXX
 			return;
 		}
@@ -416,25 +372,21 @@ public class Group
 		hb = new HitBin(hit,sh,topN,qType);
 		
 		hitBins.add(hb);
-		for (int b = bs; b <= be; b++)
-		{
+		for (int b = bs; b <= be; b++){
 			if (!hitBinMap.containsKey(b))
 				hitBinMap.put(b, new Vector<HitBin>());
 			hitBinMap.get(b).add(hb);
 		}
 	}
-	public void setGeneParams(int maxGapDef, int maxGeneDef)
-	{
+	public void setGeneParams(int maxGapDef, int maxGeneDef){
 		if (avgGeneLength > 0) maxGap = avgGeneLength;
 		else maxGap = maxGapDef;
 		
 		if (maxGeneLength == 0) maxGeneLength = maxGeneDef;
 	}
-	public void collectBinStats(BinStats bs)
-	{
+	public void collectBinStats(BinStats bs){
 		bs.mNBins += hitBins.size();
-		for (HitBin hb : hitBins)
-		{
+		for (HitBin hb : hitBins){
 			bs.mTotalSize += Math.abs(hb.end - hb.start);
 			bs.mTotalHits += hb.mHitsConsidered;
 			bs.mHitsRm += hb.nHitsRemoved;
@@ -442,20 +394,15 @@ public class Group
 	}
 	
 	// Called from Project for SEQ
-	public void filterHits(Set<Hit> hits) throws Exception // CAS500 Set -> HashSet
-	{
-		for (HitBin hb : hitBins)
-		{
-			if (hb.mGT != null) // null for fpc->seq, !null for seq->seq
-			{
+	public void filterHits(Set<Hit> hits) throws Exception { // CAS500 Set -> HashSet
+		for (HitBin hb : hitBins){
+			if (hb.mGT != null) { // null for fpc->seq, !null for seq->seq
 				int n = hb.mHitsConsidered;
-				if (qType == QueryType.Query)
-				{
+				if (qType == QueryType.Query){
 					Utils.incHist("TopNHist1" + hb.mGT.toString(), n, n);
 					Utils.incHist("TopNHistTotal1", n, n);
 				}
-				else
-				{
+				else{
 					Utils.incHist("TopNHist2"  + hb.mGT.toString(), n, n);
 					Utils.incHist("TopNHistTotal2", n, n);
 				}

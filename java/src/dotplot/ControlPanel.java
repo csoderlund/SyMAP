@@ -18,7 +18,7 @@ import javax.swing.JComboBox;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import util.ImageViewer;
-import util.Utilities;
+import util.Jcomp;
 
 /**********************************************************
  * The upper row for the DotPlot
@@ -44,17 +44,17 @@ public class ControlPanel extends JPanel implements HelpListener {
 	
 		helpButton = util.Jhtml.createHelpIconUserLg(util.Jhtml.dotplot);
 		
-		homeButton       = (JButton)  Utilities.createButton(this,"/images/home.gif",
+		homeButton       = (JButton)  Jcomp.createButton(this,"/images/home.gif",
 				"Home: Go back to full view.",hb,buttonListener,false, data.isTileView());
-		filterButton     = (JButton)  Utilities.createButton(this,"Filters",
+		filterButton     = (JButton)  Jcomp.createButton(this,"Filters",
 				"Filters: Change filter settings.",hb,buttonListener,false, false);
-		minusButton      = (JButton)  Utilities.createButton(this,"/images/minus.gif",
+		minusButton      = (JButton)  Jcomp.createButton(this,"/images/minus.gif",
 				"Shrink: Decrease the scale.",hb,buttonListener,false, false);
-		plusButton       = (JButton)  Utilities.createButton(this,"/images/plus.gif",
+		plusButton       = (JButton)  Jcomp.createButton(this,"/images/plus.gif",
 				"Grow: Increase the scale.",hb,buttonListener,false, false);
-		showImageButton  = (JButton)  Utilities.createButton(this,"/images/print.gif",
+		showImageButton  = (JButton)  Jcomp.createButton(this,"/images/print.gif",
 				"Save: Save as image.", hb,buttonListener,false, false);
-		scaleCheckbox = (JCheckBox) Utilities.createButton(this,"Scale",
+		scaleCheckbox = (JCheckBox) Jcomp.createButton(this,"Scale",
 				"Scale: Draw to BP scale.",hb,buttonListener,true, false); 
 		scaleCheckbox.setBackground(getBackground()); 
 		

@@ -1,6 +1,7 @@
 package symap.mapper;
 
 import java.util.Comparator;
+import symap.Globals;
 import symap.closeup.SeqData;
 import util.Utilities;
 
@@ -64,7 +65,7 @@ public class HitData {
 			this.isPosOrient2 = (strand.charAt(2) == '+');
 		}
 		else {
-			if (symap.SyMAP.TRACE) System.err.println("HitData: Invalid strand value '"+strand+"' for hit id="+id);
+			if (Globals.TRACE) System.err.println("HitData: Invalid strand value '"+strand+"' for hit id="+id);
 			this.isSameOrient = true;
 		}
 	}

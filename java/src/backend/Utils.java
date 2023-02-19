@@ -16,18 +16,16 @@ import java.io.InputStreamReader;
 import java.util.Comparator;
 import java.util.zip.GZIPInputStream;
 
-import symap.projectmanager.common.ProjectManagerFrameCommon;
 import util.ErrorReport;
 import util.ProgressDialog;
 import util.Logger;
 import util.Utilities;
+import symap.manager.Mpair;
 
-public class Utils 
-{
-	static TreeMap<String,Float> mStats;
-	static Vector<String> mKeyOrder;
-	static TreeMap<String,Vector<Integer>> mHistLevels;
-	static TreeMap<String,TreeMap<Integer,Integer>> mHist;
+public class Utils {
+	static public TreeMap<String,Float> mStats;
+	static private Vector<String> mKeyOrder;
+	static private TreeMap<String,TreeMap<Integer,Integer>> mHist;
 	
 	public static void prt(Logger log, String msg) { // CAS520 add
 		log.msg(msg);
@@ -88,8 +86,7 @@ public class Utils
 	/********************************************************
 	 * DONE 
 	 */
-	public static boolean checkDoneFile(String dir) 
-	{
+	public static boolean checkDoneFile(String dir)  {
 		File d = new File(dir);
 		if (!d.exists() || d.isFile()) return false;
 		
@@ -129,8 +126,9 @@ public class Utils
 		DateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
 		return sdf.format(l);
 	}
+	/****************************************************************************/
 	/*****************************************************
-	 * Hists stats
+	 * Hists stats; CAS534 the Hists and Stats use to always be run, but now only if -s
 	 */
 	static void initStats() {
 		mStats = new TreeMap<String,Float>();	
@@ -138,6 +136,7 @@ public class Utils
 		mHist = new TreeMap<String,TreeMap<Integer,Integer>>();
 	}
 	static void initHist(String key, Integer... levels) {
+		if (mHist==null) return;
 		mHist.put(key, new TreeMap<Integer,Integer>());
 		for (Integer i : levels) {
 			mHist.get(key).put(i,0);
@@ -145,6 +144,7 @@ public class Utils
 		mHist.get(key).put(Integer.MAX_VALUE,0);
 	}
 	static void incHist(String key, int val) throws Exception {
+		if (mHist==null) return;
 		int l = -1;
 		for (int lvl : mHist.get(key).keySet()) {
 			l = lvl;
@@ -157,8 +157,8 @@ public class Utils
 		curval++;
 		mHist.get(key).put(l,curval);
 	}
-	static void incHist(String key, int val, int inc) throws Exception
-	{
+	static void incHist(String key, int val, int inc) throws Exception {
+		if (mHist==null) return;
 		int l = -1;
 		for (int lvl : mHist.get(key).keySet()) {
 			l = lvl;
@@ -172,6 +172,7 @@ public class Utils
 		mHist.get(key).put(l,curval);
 	}	
 	static void dumpHist() {
+		if (mHist==null) return;
 		for (String name : mHist.keySet()) {
 			System.out.println("Histogram: " + name);	
 			for (int lvl : mHist.get(name).keySet()) {
@@ -200,16 +201,26 @@ public class Utils
 			else					  System.out.format("%6.2f %s\n", val, key);
 		}
 	}
-	static void uploadStats(UpdatePool db, int pair_idx, int pidx1, int pidx2) throws Exception
-	{
+	// CAS534 no reason to load these, only do it on -s; then remove the next time run.
+	static void uploadStats(UpdatePool db, int pair_idx, int pidx1, int pidx2) throws Exception {
 		if (mStats == null) return;
+		
+		ResultSet rs = null;
 		for (String key : mKeyOrder) {
 			Integer val = mStats.get(key).intValue();
-			
-			db.executeUpdate("replace into pair_props (pair_idx,proj1_idx,proj2_idx,name,value) values(" + pair_idx + 
-					"," + pidx1 + "," + pidx2 + ",'" + key + "','" + val + "')");			
+			if (Constants.PRT_STATS)
+				db.executeUpdate("replace into pair_props (pair_idx,proj1_idx,proj2_idx,name,value) values(" + pair_idx + 
+					"," + pidx1 + "," + pidx2 + ",'" + key + "','" + val + "')");	
+			else {
+				String st = "SELECT value FROM pair_props  WHERE pair_idx='" + pair_idx + "' AND name='" + key +"'";
+				rs = db.executeQuery(st);
+				if (rs.next()) 
+					db.executeUpdate("delete from pair_props where key='" + key + "' and pair_idx=" + pair_idx);
+			}
 		}
+		if (rs!=null) rs.close();
 	}
+	/**********************************************************************/
 	/**********************************************************/
 	static int[] strArrayToInt(String[] sa) {
 		int[] ia = new int[sa.length];
@@ -243,8 +254,7 @@ public class Utils
 	
 	static String strVectorJoin(java.util.Vector<String> sa, String delim) {
 		String out = "";
-		for (int i = 0; i < sa.size(); i++)
-		{
+		for (int i = 0; i < sa.size(); i++) {
 			out += sa.get(i);
 			if (i < sa.size() -1)
 				out += delim;
@@ -266,8 +276,7 @@ public class Utils
 		int gap = Math.max(s1,s2) - Math.min(e1,e2);
 		return -gap;
 	}	
-	static boolean intervalContained(int s1,int e1, int s2, int e2)
-	{
+	static boolean intervalContained(int s1,int e1, int s2, int e2){
 		return ( (s1 >= s2 && e1 <= e2) || (s2 >= s1 && e2 <= e1));
 	}	
 	
@@ -300,50 +309,6 @@ public class Utils
 		return idx;
 	}
 
-	public static boolean yesNo(String question) {
-		BufferedReader inLine = new BufferedReader(new InputStreamReader(System.in));
-
-		System.err.print(question + " (y/n)? "); // CAS42 SOP no newline; easy to miss otherwise
-		try {
-			String resp = inLine.readLine();
-			if (resp.equals("y"))
-				return true;
-			else if (resp.equals("n"))
-				return false;
-			else {
-				System.err.println("Sorry, could not understand the response, please try again:");
-				System.err.print(question + " (y/n)? "); // CAS42 SOP no newline; easy to miss otherwise
-				resp = inLine.readLine();
-				if (resp.equals("y"))
-					return true;
-				else if (resp.equals("n"))
-					return false;
-				else {
-					System.err.println("Sorry, could not understand the response, exiting.");
-					System.exit(0);
-					// Have to just exit since returning "n" won't necessarily cause an exit
-					return false;
-				}
-			}
-
-		} catch (Exception e){return false;}
-	}
-	
-	public static String getParamsName()
-	{
-		String s1 = ProjectManagerFrameCommon.MAIN_PARAMS;
-		String s2 = Constants.paramsFile;
-		File f = new File(s1);
-		if (f.isFile()) {
-			return s1;	
-		}
-		f = new File(s2);
-		if (f.isFile()) {
-			return s2;	
-		}
-		System.err.println("Parameters file " + s1 + " not found");
-		return s1;
-	}
 	// Sort the Comparable array, and apply the same sorting to the Object array,
 	// so they stay parallel.
 	// The purpose of cmp is to sort nulls to one end.
@@ -389,25 +354,20 @@ public class Utils
             aa[f] = vv;
         }
     }	
-	public static class ObjCmp implements Comparator<Comparable>
-	{
-		public int compare(Comparable a, Comparable b)
-		{
-			if (a == null)
-			{
+	public static class ObjCmp implements Comparator<Comparable> {
+		public int compare(Comparable a, Comparable b) {
+			if (a == null){
 				if (b == null) return 0;
 				else return +1;
 			}
-			else if (b == null)
-			{
+			else if (b == null) {
 				return -1;
 			}
 			else return a.compareTo(b);
 		}
 	}
 	
-	public static String reverseComplement(String in)
-	{
+	public static String reverseComplement(String in){
 		in = (new StringBuffer(in)).reverse().toString().toUpperCase();
 		in = in.replace('A', 't');
 		in = in.replace('G', 'c');

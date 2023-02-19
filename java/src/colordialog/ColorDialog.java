@@ -19,9 +19,9 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
 import props.PersistentProps;
-import symap.SyMAP;
+import props.PropertiesReader;
+import symap.frame.SyMAP2d;
 import util.ErrorReport;
-import util.PropertiesReader;
 
 /**
  * Class ColorDialog is used for editing the colors in a dialog box.
@@ -117,7 +117,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 		int nOrder=0;
 		
 		// Read /properties file, symap lines - does not retain input order
-		PropertiesReader defaultProps = new PropertiesReader(SyMAP.class.getResource(propsFile));
+		PropertiesReader defaultProps = new PropertiesReader(SyMAP2d.class.getResource(propsFile));
 		
 		Enumeration <?> propertyNames = defaultProps.propertyNames();
 		while (propertyNames.hasMoreElements()) {
@@ -196,7 +196,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 	try {
 		for (String f : pFiles) {
 			String file = "/properties/" + f + ".properties";
-			PropertiesReader defProps = new PropertiesReader(SyMAP.class.getResource(file));
+			PropertiesReader defProps = new PropertiesReader(SyMAP2d.class.getResource(file));
 			
 			Enumeration <?> propertyNames = defProps.propertyNames();
 			while (propertyNames.hasMoreElements()) {

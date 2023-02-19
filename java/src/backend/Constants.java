@@ -44,7 +44,7 @@ public static final String dataDir =    	"data/"; // top level
 public static final String seqDataDir = 	"data/seq/";
 public static final String seqSeqDataDir = 	"/sequence/"; 
 public static final String seqAnnoDataDir = "/annotation/"; 
-public static final String paramsFile = 	"/params"; // in both fpcDataDir and seqDataDir
+public static final String paramsFile = 	"/params"; // in both seq/proj and seq_results/proj1_to_proj2
 
 // directories for results
 public static final String seqRunDir =  	"data/seq_results/";
@@ -70,7 +70,7 @@ private static String mummer4Path=null;
 
 /*************************************************************************/
 	// default data directory
-	public  static String getNameDataDir(Project p1) {
+	public  static String getNameDataDir(SyProj p1) {
 		String name = p1.getName();
 		return seqDataDir + name;
 	}
@@ -82,9 +82,7 @@ private static String mummer4Path=null;
 	//   1. Cannot use "Project p" as argument as two Project.java
 	//   2  see ProjectManagerFrameCommon.orderProjects
 	public  static String getNameResultsDir(String n1, String n2) {
-		String name = n1 + projTo + n2;
-		String typeDir = seqRunDir;
-		return typeDir + name;
+		return seqRunDir +  n1 + projTo + n2;
 	}
 	
 	public  static  String getNameAlignDir(String n1, String n2) {
@@ -239,5 +237,14 @@ private static String mummer4Path=null;
 			return true;
 		}
 		catch (Exception e) {ErrorReport.print(e, "Checking file " + fileName);	return false;}
+	}
+	/**********************************************************
+	 * CAS534 added for Params
+	 ******************************************************/
+	static public File getProjParamsFile(String projName) {
+		return new File(seqDataDir+projName+paramsFile);
+	}
+	static public String getProjParamsName(String projName) {
+		return seqDataDir+projName+paramsFile;
 	}
 }

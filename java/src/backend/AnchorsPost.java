@@ -1,5 +1,17 @@
 package backend;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.TreeSet;
+import java.util.TreeMap;
+import java.util.Vector;
+
+import symap.Globals;
+import util.ErrorReport;
+import util.Logger;
+import util.Utilities;
+
 /**************************************************
  * Computes the collinear sets (pseudo_hits.runsize, runnum) and 
  * 		number hits per gene (pseudo_annot.numHits) and hitnum and block (pseudo_hits)
@@ -9,30 +21,19 @@ package backend;
  * CAS520 added setAnnot, setHit and rewrote collinearSets
  * the term 'run' is used here for collinear (run/set)
  */
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.HashMap;
-import java.util.TreeSet;
-import java.util.TreeMap;
-import java.util.Vector;
-
-import symap.SyMAP;
-import util.ErrorReport;
-import util.Logger;
-import util.Utilities;
 
 public class AnchorsPost {
-	private boolean debug = SyMAP.DEBUG;
+	private boolean debug = Globals.DEBUG;
 	private boolean test = true;
 	
 	private int mPairIdx; // project pair 
 	private Logger mLog;
 	private UpdatePool pool;
-	private Project mProj1, mProj2;
-	private int countUpdate=0, totalMult=0, totalMerge=0;
+	private SyProj mProj1, mProj2;
+	private int countUpdate=0, totalMerge=0, totalMult=0;
 	private int [] cntSizeSet = {0,0,0,0,0};
 	
-	public AnchorsPost(int pairIdx, Project proj1, Project proj2, UpdatePool xpool, Logger log) {
+	public AnchorsPost(int pairIdx, SyProj proj1, SyProj proj2, UpdatePool xpool, Logger log) {
 		mPairIdx = pairIdx;
 		mProj1 = proj1;
 		mProj2 = proj2;
@@ -50,12 +51,6 @@ public class AnchorsPost {
 			mLog.msg("Finding Collinear sets");
 			long time = System.currentTimeMillis();
 			
-			/** CAS521 this isn't being used, so wait until it is
-			System.err.print("   setting gene counts...        \r");
-			for (Group g1 : mProj1.getGroups()) if (!setAnnotHits(g1)) return;
-			for (Group g2 : mProj2.getGroups()) if (!setAnnotHits(g2)) return;
-			**/
-			
 			for (Group g1 : mProj1.getGroups()) {
 				for (Group g2: mProj2.getGroups()) {
 					System.err.print(num2go + " pairs remaining...            \r");
@@ -69,57 +64,13 @@ public class AnchorsPost {
 					debug=false;
 				}
 			}
+			if (debug) Utils.prtNumMsg(mLog, totalMult, "Total multi hits");
 			Utils.prtNumMsg(mLog, countUpdate, "Updates                          ");
-			
-			/** these are wrong
-		    Utils.prtNumMsg(mLog, totalMerge,"Overlapped genes with same hits");
-		    Utils.prtNumMsg(mLog, totalMult,"Gene has + and - hits"); 
-			String size = "     Summary:     =2: " +cntSizeSet[0];
-			size +=       "    =3: " + cntSizeSet[1];
-			size +=       "   <=5: " + cntSizeSet[2];
-			size += 	  "  <=10: " + cntSizeSet[3];
-			size +=       "   >10: " + cntSizeSet[4];
-			Utils.prt(mLog, size);
-			**/
 			Utils.timeMsg(mLog, time, "Collinear");
-			
 		}
 		catch (Exception e) {ErrorReport.print(e, "Compute colinear genes"); }
 	}
-	/*****************************************************
-	 * CAS520 add pseudo_annot.numhits; but not used yet
-	 */
-	private boolean setAnnotHits(Group g1 ) {
-		try {
-			pool.executeUpdate("update pseudo_annot set numhits=0 where grp_idx=" + g1.idx);
-			ResultSet rs = pool.executeQuery("select count(*) from pseudo_annot where grp_idx=" + g1.idx);
-			int cnt = (rs.next()) ? rs.getInt(1) : 0;
-			if (cnt==0) return true; // CAS521 this is not a failure 
-			
-			HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> ();
-			
-			rs = pool.executeQuery("select pha.annot_idx from pseudo_hits_annot as pha"
-					+ " join pseudo_annot as pa on pha.annot_idx=pa.idx "
-					+ " where pa.grp_idx=" + g1.idx);
-			while (rs.next()) {
-				int aidx = rs.getInt(1);
-				if (geneCntMap.containsKey(aidx)) geneCntMap.put(aidx,geneCntMap.get(aidx)+1);
-				else geneCntMap.put(aidx, 1);
-			}
-			rs.close();
-			
-			PreparedStatement ps = pool.prepareStatement("update pseudo_annot set numhits=? where idx=?");
-			for (int idx : geneCntMap.keySet()) {
-				int num = geneCntMap.get(idx);
-				ps.setInt(1, num);
-				ps.setInt(2, idx);
-				ps.addBatch();
-			}
-			ps.executeBatch();
-			return true;
-		}
-		catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); return false;}
-	}
+	
 	/***************************************************************
 	 * CAS520 creates a hitnum to use for display, which is sequential and does not change on reload
 	 * CAS520 add block to pseudo_hits, as it saves painful joins
@@ -523,7 +474,7 @@ public class AnchorsPost {
 	 * annot_hit:  idx  annot1_hit annot2_hit  (best two overlaps)
 	 */
 	private class Hit {
-		public Hit(boolean inv, int idx, int hitnum, int gidx1, int gidx2, int blocknum) {
+		private Hit(boolean inv, int idx, int hitnum, int gidx1, int gidx2, int blocknum) {
 			this.bInv = inv; 
 			this.hidx = idx;
 			this.hitnum=hitnum;
@@ -531,36 +482,25 @@ public class AnchorsPost {
 			this.gidx2= gidx2;
 			this.blocknum=blocknum;
 		}
-		
-		public void addGeneIdx(boolean is1st, int idx) {
+		private void addGeneIdx(boolean is1st, int idx) {
 			if (is1st) 	geneSet1.add(idx);
 			else 		geneSet2.add(idx);
 		}
-		public String prtStr() {
-			String x = (bInv) ? "Inv" : "   ";
-			String y = String.format("%6d #%-5d %s  trun %4d  frun %4d, %4d  gidx %d:%d ",
-					hidx, hitnum, x, runnum, frunnum, frunsize, gidx1, gidx2);
-			String z = "Set1 ";
-			for (int g : geneSet1) z += " " + g;
-			z += "  set2 ";
-			for (int g : geneSet2) z += " " + g;
-			
-			return y + z;
-		}
-		boolean bInv=false;
-		int hidx, hitnum, blocknum;
-		int gidx1=-1, gidx2=-1;     // best
-		TreeSet <Integer> geneSet1 = new TreeSet <Integer> ();
-		TreeSet <Integer> geneSet2 = new TreeSet <Integer> ();
 		
-		int frunsize=0, frunnum=0;	// to be saved to db
-		int runnum=0;				// working...
-		boolean skip=false;
+		private boolean bInv=false;
+		private int hidx, hitnum, blocknum;
+		private int gidx1=-1, gidx2=-1;     // best
+		private TreeSet <Integer> geneSet1 = new TreeSet <Integer> ();
+		private TreeSet <Integer> geneSet2 = new TreeSet <Integer> ();
+		
+		private int frunsize=0, frunnum=0;	// to be saved to db
+		private int runnum=0;				// working...
+		private boolean skip=false;
 	}
 	
 	/******************************************************/
 	private class Gene {
-		public Gene(int idx,  int tnum, String tag, int start, int end, int genenum, String strand) {
+		private Gene(int idx,  int tnum, String tag, int start, int end, int genenum, String strand) {
 			this.idx = idx;
 			this.tnum = tnum;
 			this.start = start;
@@ -578,8 +518,9 @@ public class AnchorsPost {
 			vSize = gObj2Vec.size();
 			return (vSize>1);
 		}
+		
 		// keep block and remove non-block; this got rid of problem of only having N hits for collinear set of size N+1
-		public void removeHits() {
+		private void removeHits() {
 			if (vSize==1) return;
 				
 			Vector <Gene> gObj2Tmp = new Vector <Gene> ();
@@ -599,7 +540,7 @@ public class AnchorsPost {
 			vSize = gObj2Vec.size();
 		}
 		// if it is contained, and has exact same hits as main overlap, it is removed
-		public void setMerge(Gene mainObj, TreeSet <Integer> hitSet) {
+		private void setMerge(Gene mainObj, TreeSet <Integer> hitSet) {
 			if (hitSet.size()!=hitIdxSet.size()) return;
 			if (!(start>=mainObj.start && end<=mainObj.end)) return;
 			
@@ -610,7 +551,7 @@ public class AnchorsPost {
 		}
 		
 		// if multiple hits-gene2, find the one that is last or closest
-		public int setGeneIndex(boolean inv, int last) {
+		private int setGeneIndex(boolean inv, int last) {
 			vSize=gObj2Vec.size();
 			if (vSize==1) {vIdx=0; return 0;};
 			
@@ -630,10 +571,10 @@ public class AnchorsPost {
 			if (debug) System.out.println("best " + vIdx + " " + bestdiff + " " + tag + " hit#" + hObjVec.get(vIdx).hitnum);
 			return vIdx;
 		}
-		public Hit getHitObj()   { return hObjVec.get(vIdx);}
-		public Gene getGeneObj() { return gObj2Vec.get(vIdx);}
+		private Hit getHitObj()   { return hObjVec.get(vIdx);}
+		private Gene getGeneObj() { return gObj2Vec.get(vIdx);}
 		
-		public void prt(String msg) {
+		private void prt(String msg) {
 			if (gObj2Vec.size()<=0) {
 				System.out.println(msg + " " + tag + " TmpGN " + tnum + " idx " + idx + " " + bPosStrand);
 				return;
@@ -657,20 +598,60 @@ public class AnchorsPost {
 		}
 		
 		// gObj2Vec and hObjVec go together.
-		Vector <Gene> gObj2Vec = new Vector <Gene> ();
-		Vector <Hit> hObjVec =  new Vector <Hit> ();
+		private Vector <Gene> gObj2Vec = new Vector <Gene> ();
+		private Vector <Hit> hObjVec =  new Vector <Hit> ();
 		
-		TreeSet <Integer> hitIdxSet = new TreeSet <Integer>();
-		boolean isMerge=false; // if hits are the same as another
-		boolean isMain=false;  // pseudo_hits.annot1_idx or anno2_idx
+		private TreeSet <Integer> hitIdxSet = new TreeSet <Integer>();
+		private boolean isMerge=false; // if hits are the same as another
+		private boolean isMain=false;  // pseudo_hits.annot1_idx or anno2_idx
 		
-		int vSize=0, vIdx=0;
-		int tnum=0;  // set in runLoadFromDB
-		int rtnum=0; // set in runCreateFR for R
+		private int vSize=0, vIdx=0;
+		private int tnum=0;  // set in runLoadFromDB
+		private int rtnum=0; // set in runCreateFR for R
 		
-		String tag="";	// // e.g. Gene #999 (4 1,128bp) 
-		int idx, genenum, start, end;
-		boolean isOlap=false, bPosStrand=true;
+		private String tag="";	// // e.g. Gene #999 (4 1,128bp) 
+		private int idx, genenum, start, end;
+		private boolean isOlap=false, bPosStrand=true;
 	}
+/*****************************************************
+	 * CAS520 add pseudo_annot.numhits; but not used yet
+	 * 
+	 called in collinearSet method 
+			System.err.print("   setting gene counts...        \r");
+			for (Group g1 : mProj1.getGroups()) if (!setAnnotHits(g1)) return;
+			for (Group g2 : mProj2.getGroups()) if (!setAnnotHits(g2)) return;
+			
+	private boolean setAnnotHits(Group g1 ) {
+		try {
+			pool.executeUpdate("update pseudo_annot set numhits=0 where grp_idx=" + g1.idx);
+			ResultSet rs = pool.executeQuery("select count(*) from pseudo_annot where grp_idx=" + g1.idx);
+			int cnt = (rs.next()) ? rs.getInt(1) : 0;
+			if (cnt==0) return true; // CAS521 this is not a failure 
+			
+			HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> ();
+			
+			rs = pool.executeQuery("select pha.annot_idx from pseudo_hits_annot as pha"
+					+ " join pseudo_annot as pa on pha.annot_idx=pa.idx "
+					+ " where pa.grp_idx=" + g1.idx);
+			while (rs.next()) {
+				int aidx = rs.getInt(1);
+				if (geneCntMap.containsKey(aidx)) geneCntMap.put(aidx,geneCntMap.get(aidx)+1);
+				else geneCntMap.put(aidx, 1);
+			}
+			rs.close();
+			
+			PreparedStatement ps = pool.prepareStatement("update pseudo_annot set numhits=? where idx=?");
+			for (int idx : geneCntMap.keySet()) {
+				int num = geneCntMap.get(idx);
+				ps.setInt(1, num);
+				ps.setInt(2, idx);
+				ps.addBatch();
+			}
+			ps.executeBatch();
+			return true;
+		}
+		catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); return false;}
+	}
+	**/
 }
 

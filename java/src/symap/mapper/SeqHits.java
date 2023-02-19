@@ -24,11 +24,10 @@ import java.util.Vector;
 import symap.closeup.TextShowInfo;
 import symap.closeup.SeqData;
 import symap.sequence.Sequence;
-import symap.SyMAP;
-import symap.SyMAPConstants;
+import symap.Globals;
 
-public class SeqHits implements SyMAPConstants {
-	private static boolean debug = SyMAP.DEBUG;
+public class SeqHits  {
+	private static boolean debug = Globals.DEBUG;
 	
 	private static final int MOUSE_PADDING = 3;
 	
@@ -371,7 +370,7 @@ public class SeqHits implements SyMAPConstants {
 			 		
 			 int pctid = (int)hitDataObj.getPctid();
 			 int lineLength = Math.max(1, 30*(pctid+1)/(100+1)); // CAS517 was only set if getShowScoreLine
-			 if (trackPos1 == RIGHT_ORIENT) lineLength = 0 - lineLength; 
+			 if (trackPos1 == Globals.RIGHT_ORIENT) lineLength = 0 - lineLength; 
 			 
 			 /* %id line: paint in seq1/2 rectangle the %id length */
 			 if (seqObj1.getShowScoreLine()) { // gets turned back on with redraws
@@ -531,7 +530,7 @@ public class SeqHits implements SyMAPConstants {
 				
 				msg +=  st1LTst2 ? (msg1+msg2) : (msg2+msg1);
 			}
-			if (SyMAP.TRACE) 
+			if (Globals.TRACE) 
 				msg += "\nDB-index " + hitDataObj.getID(); // CAS520 puts at bottom, useful for debugging and out of way 
 			
 			boolean isQuery1 = seqObj1.isQuery();

@@ -10,7 +10,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JEditorPane;
 import javax.swing.JPanel;
 
-import symap.projectmanager.common.Project;
+import symap.manager.Mproject;
 
 public class OverviewPanel extends JPanel {
 	private static final long serialVersionUID = 6074102283606563987L;
@@ -36,13 +36,13 @@ public class OverviewPanel extends JPanel {
 				"<TH ALIGN=LEFT>Abbrev</TH><TH>&nbsp;&nbsp;&nbsp;&nbsp;</TH>" +		// CAS519 add
 					"<TH ALIGN=LEFT>Category</TH><TH>&nbsp;&nbsp;&nbsp;&nbsp;</TH>" +
 					"<TH ALIGN=LEFT>Description</TH></TR>";
-		Iterator<Project> iter = theParentFrame.getProjects().iterator();
+		Iterator<Mproject> iter = theParentFrame.getProjects().iterator();
 		while(iter.hasNext()) {
-			Project temp = iter.next();
+			Mproject temp = iter.next();
 			overView += "<TR><TD>" + temp.getDisplayName() + "</TD><TD>&nbsp;</TD>";
-			overView += "<TD>" + temp.getAbbrevName() + "</TD><TD>&nbsp;</TD>";
-			overView += "<TD>" + temp.getCategory() + "</TD><TD>&nbsp;</TD>";
-			overView += "<TD>" + temp.getDescription() + "</TD>";
+			overView += "<TD>" + temp.getdbAbbrev() + "</TD><TD>&nbsp;</TD>";
+			overView += "<TD>" + temp.getdbCat() + "</TD><TD>&nbsp;</TD>";
+			overView += "<TD>" + temp.getdbDesc() + "</TD>";
 			overView += "</TR>";
 		}
 		overView += "</TABLE>";

@@ -1,6 +1,7 @@
 package symap.closeup;
 
 import util.ErrorReport;
+import symap.Globals;
 
 /********************************************
  * Input 2 seqs and a type (NT, AA, AAframe)
@@ -87,7 +88,7 @@ public class AlignData {
 			startOffset=start;
 			
 			if (start>0 || end<len) {
-				if (symap.SyMAP.TRACE) {
+				if (Globals.TRACE) {
 					trimMsg = String.format("Trim: %2d (%d,%d) %2d (%d,%d) %4d", 
 							cntTrimS, gapS1, gapS2, cntTrimE, gapE1, gapE2, len);
 				}
@@ -114,7 +115,7 @@ public class AlignData {
 		}
 		matchSeq = new String(ret);
 		
-		if (symap.SyMAP.TRACE && trimMsg!=null) {
+		if (Globals.TRACE && trimMsg!=null) {
 			System.out.format("%-32s %-80s %s\n", trimMsg, traceMsg, getScore());
 		}
 	 }

@@ -5,7 +5,6 @@ import java.io.FileWriter;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.Comparator;
@@ -13,7 +12,8 @@ import java.util.Collections;
 import java.util.TreeSet;
 import java.util.HashSet;
 
-import symap.pool.Version;
+import symap.manager.Mpair;
+import symap.manager.Mproject;
 import util.ErrorCount;
 import util.ErrorReport;
 import util.Logger;
@@ -22,6 +22,7 @@ import util.Logger;
  * CAS500 1/2020 change all MySQl Gets to digits.
  * CAS522 removed FPC
  * CAS533 overlapping blocks was not working right; rearranged some
+ * CAS534 the parameters from SyProps that never changed are hard-coded here now
  */
 
 public class SyntenyMain {
@@ -30,8 +31,8 @@ public class SyntenyMain {
 	
 	private Logger mLog;
 	private UpdatePool pool;	
-	private Project mProj1, mProj2;
-	private SyProps mProps;
+	private SyProj syProj1, syProj2;
+	private Mpair mp;
 	private int mPairIdx;
 	private String resultDir;
 	
@@ -48,19 +49,18 @@ public class SyntenyMain {
 	private long startTime;
 	private boolean bInterrupt = false;
 
-	public SyntenyMain(UpdatePool pool, Logger log, Properties props, SyProps pairProps) {
+	public SyntenyMain(UpdatePool pool, Logger log, Mpair mp) {
 		this.pool = pool;
 		this.mLog = log;
-		
-		assert(pairProps != null);
-		mProps = pairProps;
-		new Version(pool, true); // CAS533 for testing
+		this.mp = mp;
 	}
 	/******************************************************************/
-	public boolean run(String proj1Name, String proj2Name) {
+	public boolean run(Mproject pj1, Mproject pj2) {
 	try {
+		String proj1Name = pj1.getDBName(), proj2Name = pj2.getDBName();
+		
 		startTime = System.currentTimeMillis();
-		mLog.msg("Finding synteny for " + proj1Name + " and " + proj2Name);
+		mLog.msg("Finding synteny for " + proj1Name + " and " + proj2Name + mp.getChangedSynteny());
 		
 		mBlksByCase = new TreeMap<BCase,Integer>(); // used by cullChains
 		
@@ -73,17 +73,18 @@ public class SyntenyMain {
 			ErrorCount.inc();
 			return false;
 		}
-			
-		mProj1 = new Project(pool, mLog, mProps,proj1Name, QueryType.Query);
-		mProj2 = new Project(pool, mLog, mProps,proj2Name, QueryType.Target);
+		int topN = mp.getTopN(Mpair.FILE); 
+		
+		syProj1 = new SyProj(pool, mLog, pj1, proj1Name, topN, QueryType.Query);
+		syProj2 = new SyProj(pool, mLog, pj2, proj2Name, topN, QueryType.Target);
 		
 		setBlockTestProps();
 
-		mSelf = (mProj1.getIdx() == mProj2.getIdx());
+		mSelf = (syProj1.getIdx() == syProj2.getIdx());
 
-		mPairIdx = Utils.getPairIdx(mProj1.getIdx(), mProj2.getIdx(), pool);
+		mPairIdx = Utils.getPairIdx(syProj1.getIdx(), syProj2.getIdx(), pool);
 		if (mPairIdx == 0) {
-			mLog.msg("Cannot find project pair in database for " + mProj1.getName() + "," + mProj2.getName());
+			mLog.msg("Cannot find project pair in database for " + syProj1.getName() + "," + syProj2.getName());
 			ErrorCount.inc();
 			return false;
 		}
@@ -95,11 +96,11 @@ public class SyntenyMain {
 		clearBlocks();
 		
 		/*********** Main loop **********************/
-		int nGrpGrp = mProj1.getGroups().size() * mProj2.getGroups().size();
+		int nGrpGrp = syProj1.getGroups().size() * syProj2.getGroups().size();
 		Utils.prtNumMsg(mLog, nGrpGrp, "group-x-group pairs to analyze");
 		
-		for (Group grp1 : mProj1.getGroups()) {
-			for (Group grp2 : mProj2.getGroups()) {
+		for (Group grp1 : syProj1.getGroups()) {
+			for (Group grp2 : syProj2.getGroups()) {
 				if (!mSelf) {
 					doSeqGrpGrpSynteny(grp1,grp2);
 					if (bInterrupt) return false;
@@ -120,7 +121,7 @@ public class SyntenyMain {
 		
 		// CAS517 move from SyntenyMain - CAS520 moved it back Synteny, so hits# are block based
 		// CAS520 let self do collinear && p1.idx != p2.idx 
-		AnchorsPost collinear = new AnchorsPost(mPairIdx, mProj1, mProj2, pool, mLog);
+		AnchorsPost collinear = new AnchorsPost(mPairIdx, syProj1, syProj2, pool, mLog);
 		collinear.collinearSets();
 		
 		if (mSelf) symmetrizeBlocks();	
@@ -130,18 +131,18 @@ public class SyntenyMain {
 		if (bInterrupt) return false;
 		
 		/*********************************************************/ 
-		if (mProj1.orderedAgainst()) {
-			String orderBy = pool.getProjProp(mProj1.idx, "order_against");
-			if (orderBy != null && orderBy.equals(mProj2.getName())) {
-				OrderAgainst obj = new OrderAgainst(mProj1, mProj2, mLog, pool); // CAS505 in new file
+		if (syProj1.hasOrderAgainst()) {
+			String orderBy = syProj1.getOrderAgainst();
+			if (orderBy != null && orderBy.equals(syProj2.getName())) {
+				OrderAgainst obj = new OrderAgainst(syProj1.mProj, syProj2.mProj, mLog, pool); // CAS505 in new file
 				if (bNewOrder) obj.orderGroupsV2(false);	
 				else obj.orderGroups(false);	
 			}	
 		}
-		else if (mProj2.orderedAgainst()){
-			String orderBy = pool.getProjProp(mProj2.idx, "order_against");
-			if (orderBy != null && orderBy.equals(mProj1.getName())) {
-				OrderAgainst obj = new OrderAgainst(mProj1, mProj2, mLog, pool);
+		else if (syProj2.hasOrderAgainst()){
+			String orderBy = syProj2.getOrderAgainst();
+			if (orderBy != null && orderBy.equals(syProj1.getName())) {
+				OrderAgainst obj = new OrderAgainst(syProj1.mProj, syProj2.mProj, mLog, pool);
 				if (bNewOrder) obj.orderGroupsV2(true);
 				else obj.orderGroups(true);
 			}	
@@ -166,8 +167,8 @@ public class SyntenyMain {
 		
       	String st = "SELECT h.idx, h.start1, h.end1, h.start2, h.end2, h.pctid,h.gene_overlap" +
             " FROM pseudo_hits as h " +  
-            " WHERE h.proj1_idx='" + mProj1.getIdx() + "'" + 
-            " AND h.proj2_idx='" +  mProj2.getIdx() + "'" +  
+            " WHERE h.proj1_idx='" + syProj1.getIdx() + "'" + 
+            " AND h.proj2_idx='" +  syProj2.getIdx() + "'" +  
             " AND h.grp1_idx='" + grp1.getIdx() + "'" + 
             " AND h.grp2_idx='" + grp2.getIdx() + "'" ;
       	
@@ -310,7 +311,7 @@ public class SyntenyMain {
 	}
 	
 	private void cullChains(int gap1,int gap2, Vector<SyHit> hits, Vector<Block> blocks){
-		Block blk = new Block(mPairIdx,mProj1,mProj2);
+		Block blk = new Block(mPairIdx,syProj1.mProj,syProj2.mProj);
 		while(longestChain(gap1,gap2,mMindots_keepbest,hits,blk)){
 			if (goodBlock(blk, hits)){
 				blocks.add(blk);
@@ -318,19 +319,19 @@ public class SyntenyMain {
 					h.mDPUsedFinal = true;
 				mBlksByCase.put(blk.mCase,mBlksByCase.get(blk.mCase)+1);
 			}
-			blk = new Block(mPairIdx,mProj1,mProj2); 
+			blk = new Block(mPairIdx, syProj1.mProj, syProj2.mProj); 
 		}
 		resetDPUsed(hits);
 	}
 	
 	private boolean goodChainsExist(int gap1,int gap2, Vector<SyHit> hits){
-		Block blk = new Block(mPairIdx,mProj1,mProj2);
+		Block blk = new Block(mPairIdx, syProj1.mProj, syProj2.mProj);
 		while(longestChain(gap1,gap2,mMindots_keepbest,hits,blk)){
 			if (goodBlock(blk, hits)){
 				resetDPUsed(hits);
 				return true;
 			}
-			blk = new Block(mPairIdx,mProj1,mProj2);
+			blk = new Block(mPairIdx, syProj1.mProj, syProj2.mProj);
 		}
 		resetDPUsed(hits);
 		return false;
@@ -521,15 +522,15 @@ public class SyntenyMain {
 	
 	private Vector<Block> mergeBlocksSingleRound(Vector<Block> blocks) {
 		if (blocks.size() <= 1) return blocks;
-		boolean doMerge = (mProps.getInt("merge_blocks")==1);
+		boolean doMerge = mp.isMerge(Mpair.FILE);
 		int maxjoin1 = 0, maxjoin2 = 0;
 		float joinfact = 0;
 		int cntMerge=0;
 		
-		if (doMerge) {		
-			maxjoin1 = mProps.getInt("maxjoin_bp");
-			maxjoin2 = mProps.getInt("maxjoin_bp");
-			joinfact = mProps.getFloat("joinfact");
+		if (doMerge) {// CAS534 was set in SyProps		
+			maxjoin1 = 1000000000;
+			maxjoin2 = 1000000000;
+			joinfact = 0.25f;
 		}
 		
 		SyGraph graph = new SyGraph(blocks.size());
@@ -603,9 +604,9 @@ public class SyntenyMain {
 			pool.executeUpdate("insert into pseudo_block_hits (select pseudo_hits.refidx," + newIdx + " from pseudo_block_hits " +
 					" join pseudo_hits on pseudo_hits.idx=pseudo_block_hits.hit_idx where block_idx=" + idx + ")");
 		}
-		assert(mProj1.idx == mProj2.idx);
+		assert(syProj1.idx == syProj2.idx);
 		Vector<Integer> grps = new Vector<Integer>();
-		rs = pool.executeQuery("select idx from xgroups where proj_idx=" + mProj1.idx);
+		rs = pool.executeQuery("select idx from xgroups where proj_idx=" + syProj1.idx);
 		while (rs.next()){
 			grps.add(rs.getInt(1));
 		}
@@ -634,10 +635,7 @@ public class SyntenyMain {
 		mLog.msg("Write final results");
 		ResultSet rs = null;
 		
-		String idField1 = SyProps.getProjProp(mProj1.idx, "annot_id_field", pool);
-		String idField2 = SyProps.getProjProp(mProj2.idx, "annot_id_field", pool);
-		if (idField1 == null) idField1="ID";
-		if (idField2 == null) idField2="ID";
+		String idField1 = "ID", idField2 = "ID";
 		
 		File resDir = new File(resultDir,Constants.finalDir);
 		if (!resDir.exists()) resDir.mkdir();	
@@ -812,25 +810,25 @@ public class SyntenyMain {
 				" where ngene2 > 0 and pair_idx=" + mPairIdx);
 	}
 	/***************************************************************/
-	private void setBlockTestProps() throws Exception {
-		mMindots = mProps.getInt("mindots");
-		mMindots_keepbest = mProps.getInt("mindots_keepbest");
-		mMingap1 = mProps.getInt("mingap1");
-		mMingap2 = mProps.getInt("mingap2");
+	private void setBlockTestProps() throws Exception { // CAS534 move constants from SyProps
+		mMindots = mp.getMinDots(Mpair.FILE);
+		mMindots_keepbest = 3;
+		mMingap1 = 1000; // minimum gap param considered in binary search
+		mMingap2 = 1000;
 		mMindotsA = mMindots;
 		mMindotsB = mMindots;
 		mMindotsC = 3*mMindots/2; 
 		mMindotsD = 2*mMindots; 
 
-		mCorr1A = mProps.getFloat("corr1_A"); 
-		mCorr1B = mProps.getFloat("corr1_B"); 
-		mCorr1C = mProps.getFloat("corr1_C"); 
-		mCorr1D = mProps.getFloat("corr1_D"); 
+		mCorr1A = 0.8f; 
+		mCorr1B = 0.98f; 
+		mCorr1C = 0.96f; 
+		mCorr1D = 0.94f; 
 
-		mCorr2A = mProps.getFloat("corr2_A"); 
-		mCorr2B = mProps.getFloat("corr2_B"); 
-		mCorr2C = mProps.getFloat("corr2_C"); 
-		mCorr2D = mProps.getFloat("corr2_D"); 
+		mCorr2A = 0.7f; 
+		mCorr2B = 0.9f; 
+		mCorr2C = 0.8f; 
+		mCorr2D = 0.7f; 
 
 		if (mMindots <= 0 || mMindotsA <= 0 || mMindotsB <= 0 
 				|| mMindotsC <= 0 || mMindotsD <= 0 || mMindots_keepbest <= 0)
@@ -843,8 +841,8 @@ public class SyntenyMain {
 		
 		int nHits = 0;
 		
-		String st = "select count(*) as nhits from pseudo_hits where proj1_idx='" + mProj1.getIdx() + "'" + 
-								" and proj2_idx='" + mProj2.getIdx() + "'";
+		String st = "select count(*) as nhits from pseudo_hits where proj1_idx='" + syProj1.getIdx() + "'" + 
+								" and proj2_idx='" + syProj2.getIdx() + "'";
 		ResultSet rs = pool.executeQuery(st);
 		if (rs.next())
 			nHits = rs.getInt("nhits");
@@ -854,20 +852,18 @@ public class SyntenyMain {
 		if (nHits == 0)
 			throw(new Exception("No anchors loaded!"));
 		
-		mMaxgap1 = mProps.getInt("maxgap1");
-		mMaxgap2 = mProps.getInt("maxgap1");
-		mAvg1A = mProps.getFloat("avg1_A");
-		mAvg2A = mProps.getFloat("avg2_A");
+		// CAS534 was getting defaults of 0; then writing back to mProps.setProperty
+		mMaxgap1 = (int)( ((float)syProj1.getSizeBP())/(Math.sqrt(nHits)));
+		mMaxgap2 = (int)( ((float)syProj2.getSizeBP())/(Math.sqrt(nHits)));
+		mAvg1A = ((float)mMaxgap1)/15;
+		mAvg2A = ((float)mMaxgap2)/15;
 		
-		if (mMaxgap1 == 0) 	mMaxgap1 = (int)( ((float)mProj1.getSizeBP())/(Math.sqrt(nHits)));
-		if (mMaxgap2 == 0) 	mMaxgap2 = (int)( ((float)mProj2.getSizeBP())/(Math.sqrt(nHits)));
-		if (mAvg1A == 0)	mAvg1A = ((float)mMaxgap1)/15;
-		if (mAvg2A == 0)	mAvg2A = ((float)mMaxgap2)/15;
-		
+		/**
 		mProps.setProperty("maxgap1", String.valueOf(mMaxgap1));
 		mProps.setProperty("maxgap2", String.valueOf(mMaxgap2));
 		mProps.setProperty("avg1_A", String.valueOf(mAvg1A));
 		mProps.setProperty("avg2_A", String.valueOf(mAvg2A));
+		**/
 	}
 	private void processStats()  throws Exception {
 		for (HitType bt : HitType.values()) {
@@ -882,7 +878,7 @@ public class SyntenyMain {
 			}
 		}	
 		
-		Utils.uploadStats(pool, mPairIdx, mProj1.idx, mProj2.idx);
+		Utils.uploadStats(pool, mPairIdx, syProj1.idx, syProj2.idx);
 		
 		if (Constants.PRT_STATS) {// CAS500
 			//Utils.dumpHist();

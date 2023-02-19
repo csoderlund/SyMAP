@@ -1,6 +1,4 @@
-package util;
-
-// Only used by symap.frame.SyMAPFrame.java
+package symap.frame;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -16,12 +14,15 @@ import java.awt.event.ContainerListener;
 import javax.swing.JFrame;
 import props.PersistentProps;
 
+/**************************************************
+ * CAS534 renamed util.SizedJFrame=> frame.FSized2d
+ */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class SizedJFrame extends JFrame implements KeyListener, ContainerListener {
+public class FSized2d extends JFrame implements KeyListener, ContainerListener {
 
 	private PersistentProps sizeProp, positionProp;
 
-	public SizedJFrame(String title) {
+	public FSized2d(String title) {
 		super(title);
 		addComponentListener(new CompListener());
 	}

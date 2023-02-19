@@ -1,32 +1,32 @@
 package symap.mapper;
 
 import java.util.Vector;
+
+import database.DBconn;
+import database.DBAbsUser;
+import props.ProjectPair;
+import props.ProjectPool;
+
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.ResultSet;
 
-import symap.SyMAP;
-import symap.SyMAPConstants;
+import symap.Globals;
 import symap.sequence.Sequence;
 import symap.track.Track;
-import symap.pool.DatabaseUser;
-import symap.pool.ProjectProperties;
-import symap.pool.ProjectPair;
-
 import util.ErrorReport;
-import util.DatabaseReader;
 
 /**
  * The pool of Mapper hits.
  * The pool utilizes a ListCache.
  * CAS520 FPC is partially removed; FPC521 more FPC removed
  */
-public class MapperPool extends DatabaseUser implements SyMAPConstants {
-	private ProjectProperties projectProperties;
+public class MapperPool extends DBAbsUser {
+	private ProjectPool projectProperties;
 	// private ListCache pseudoPseudoCache; CAS531 dead
-	private boolean TRACE=SyMAP.DEBUG;
+	private boolean TRACE=Globals.DEBUG;
 
-	public MapperPool(DatabaseReader dr, ProjectProperties pp) {  
+	public MapperPool(DBconn dr, ProjectPool pp) {  
 		super(dr);
 		this.projectProperties = pp;
 	}

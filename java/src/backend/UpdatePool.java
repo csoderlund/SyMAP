@@ -1,36 +1,31 @@
 package backend;
 
-/*********************************************************************
- * This is used everywhere to get a connection.
- * Methods are only used with backend.
- * 
- * CAS506 remove hasTables, getMaxID; a little rearrangement
- * CAS522 removed FPC
- */
 import java.sql.SQLException;
-import java.sql.ResultSet;
 import java.sql.PreparedStatement;
-
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-import symap.SyMAP;
-import symap.SyMAPConstants;
-import symap.pool.DatabaseUser;
-import util.DatabaseReader;
+import database.DBconn;
+import database.DBAbsUser;
 
-public class UpdatePool extends DatabaseUser
-{
+/*********************************************************************
+ * This is used everywhere to get a connection (even when it does not need mBulk).
+ * Bulk methods are only used with backend.
+ * 
+ * CAS506 remove hasTables, getMaxID; a little rearrangement
+ * CAS522 removed FPC
+ */
+
+public class UpdatePool extends DBAbsUser {
 	private static TreeMap<String,Vector<String>> mBulkData;
 	private static TreeMap<String,String> mBulkStmt;
 	private static int mBulkSize = 100;
 	static Pattern mpQUOT = Pattern.compile("[\'\"]");;
 	public String mBadStrMsg = "Quotes not permitted";
 
-	public UpdatePool(DatabaseReader dr)
-	{
+	public UpdatePool(DBconn dr) {
 		super(dr);
 		
 		mBulkData = new TreeMap<String,Vector<String>>();
@@ -38,55 +33,30 @@ public class UpdatePool extends DatabaseUser
 		initBulk();
 	}
 	
-	public UpdatePool(String dbstr, String user, String pass) 
-	{
-		this( getDatabaseReader(SyMAPConstants.DB_CONNECTION_BACKEND, dbstr, user, pass, null) );
-	}
-	
-	public void singleInsert(String tbl, Vector<String> vals) throws SQLException
-	{
-		String valStr = "('" + Utils.join(vals,"','") + "')";
-		String stmt = "INSERT INTO " + tbl + " VALUES\n" + valStr;
-		executeUpdate(stmt);
-	}
-	
-	// Eliminate all quotes in strings before DB insertion,
-	// a better option is PreparedStatement.
-	public String sqlSanitize(String in)
-	{
+	// Eliminate all quotes in strings before DB insertion, a better option is PreparedStatement.
+	public String sqlSanitize(String in) {
 		Matcher m = mpQUOT.matcher(in);
 		return m.replaceAll("");
-	}
-	
-	public boolean isSQLSafe(String in)
-	{
-		Matcher m = mpQUOT.matcher(in);
-		return !m.matches();
 	}	
 	
-	public void bulkInsertAdd(String key, Vector<String> vals) throws SQLException
-	{
+	public void bulkInsertAdd(String key, Vector<String> vals) throws SQLException {
 		String valStr = "('" + Utils.join(vals,"','") + "')";
 		mBulkData.get(key).add(valStr);
 		if (mBulkData.get(key).size() == mBulkSize)
 			bulkInsert(key);
 	}
 
-
-	public void finishBulkInserts() throws SQLException
-	{
+	public void finishBulkInserts() throws SQLException {
 		for (String key : mBulkStmt.keySet())
 			bulkInsert(key);
 	}
 	
-	private void bulkSetup(String key, String stmt)
-	{
+	private void bulkSetup(String key, String stmt) {
 		mBulkStmt.put(key,stmt);
 		mBulkData.put(key, new Vector<String>());
 	}
 	
-	private void bulkInsert(String key) throws SQLException
-	{
+	private void bulkInsert(String key) throws SQLException {
 		if (mBulkData.get(key).isEmpty()) return;
 		
 		String stmt = mBulkStmt.get(key);
@@ -100,8 +70,7 @@ public class UpdatePool extends DatabaseUser
 	// (use function sqlSanitize, or use the batch mode of PreparedStatement instead -
 	// but note that PreparedStatement is slower)
 
-	private void initBulk()
-	{
+	private void initBulk(){
 		String stmt;
 
 		// AnchorsMain.uploadHit
@@ -120,66 +89,39 @@ public class UpdatePool extends DatabaseUser
 		bulkSetup("pseudo_annot",stmt);	
 	}
 	
-	public PreparedStatement prepareStatement(String st) throws SQLException
-	{
-		return getDatabaseReader().getConnection().prepareStatement(st);
+	public PreparedStatement prepareStatement(String st) throws SQLException{
+		return getDBconn().getConnection().prepareStatement(st);
 	}
-	
-	public void createProject(String name) throws SQLException
-	{
+	/* CAS534 - moved all to Mproject
+	public void createProject(String name) throws SQLException {
 		executeUpdate("INSERT INTO projects (name,type,loaddate, syver) " + // CAS520 add version
-				"VALUES('" + name + "','pseudo',NOW(),'" + SyMAP.VERSION + "')");
+				"VALUES('" + name + "','pseudo',NOW(),'" + Globals.VERSION + "')");
 	}
-	
-	public void deleteProject(int idx) throws SQLException
-	{
+	public void deleteProject(int idx) throws SQLException {
 		executeUpdate("DELETE FROM projects WHERE idx='" + idx + "' LIMIT 1");	
 		resetIdx("idx", "projects"); // CAS520 add
 	}
-	
-	public int getProjIdx(String name) throws SQLException
-	{
+	public int getProjIdx(String name) throws SQLException {
 		int idx = -1;
-	
-		ResultSet rs = executeQuery(
-				"SELECT idx FROM projects WHERE name='" + name + "'");
-		
-		if (rs.next())
-			idx = rs.getInt("idx");
-	
+		ResultSet rs = executeQuery("SELECT idx FROM projects WHERE name='" + name + "'");
+		if (rs.next()) idx = rs.getInt("idx");
 		rs.close();
-		
 		return idx;
 	}
-	
-	public boolean projectExists(String name) throws SQLException
-	{
+	public boolean projectExists(String name) throws SQLException {
 		ResultSet rs = executeQuery("SELECT idx FROM projects WHERE name='" + name + "'");
 		boolean exists = rs.next();
 		rs.close();
 		return exists;
 	}
-	
-	public String getProjProp(int nProjIdx, String name) throws SQLException
-	{
+	public String getProjProp(int nProjIdx, String name) throws SQLException {
 		String val = "";
-		
 		ResultSet rs = executeQuery(
 				"SELECT value FROM proj_props WHERE proj_idx='" + nProjIdx + "' " +
 				"AND name='" + name + "'");
-		if (rs.next())
-			val = rs.getString("value");
+		if (rs.next()) val = rs.getString("value");
 		rs.close();
-
 		return val;
 	}
-	
-	public boolean tableHasColumn(String table, String column) throws Exception
-	{
-		boolean ret = false;
-		ResultSet rs = executeQuery("show columns from " + table + " where field='" + column + "'");
-		if (rs.first()) ret = true;
-		rs.close();
-		return ret;
-	}
+	*/
 }

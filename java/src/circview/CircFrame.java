@@ -1,13 +1,15 @@
 package circview;
 
 import javax.swing.*;
+
+import database.DBconn;
+
 import java.awt.*;
 import java.util.TreeSet;
 import java.util.Vector;
 
-import symap.SyMAP;
+import symap.Globals;
 import symap.frame.HelpBar;
-import util.DatabaseReader;
 import util.ErrorReport;
 
 /*********************************************************
@@ -22,8 +24,6 @@ import util.ErrorReport;
 public class CircFrame extends JFrame {
 	private static final long serialVersionUID = 2371747762964367253L;
 
-	public static final int pWidth=900, pHeight=700;
-	
 	private CircPanel circPanel;
 	private HelpBar  helpPanel;
 	private boolean  bIsWG = false;
@@ -31,22 +31,22 @@ public class CircFrame extends JFrame {
 	private Vector<Integer> mColors;
 	
     // This one is called from the project manager; 2-WG
-	public CircFrame(DatabaseReader dbReader, int projXIdx, int projYIdx) {
-		super("SyMAP Circle " + SyMAP.VERSION);
+	public CircFrame(DBconn dbReader, int projXIdx, int projYIdx) {
+		super("SyMAP Circle " + Globals.VERSION);
 		int[] pidxList = {projXIdx, projYIdx};
 		
 		bIsWG=true;
 		doConstruct(dbReader, pidxList, null, null, pidxList[0]);
 	}
 	// Called by the chromosome explorer; selected chromosomes 
-	public CircFrame(DatabaseReader dbReader, int[] pidxList, TreeSet<Integer> selGrps, HelpBar hb, int refIdx) {
-		super("SyMAP Circle " + SyMAP.VERSION);
+	public CircFrame(DBconn dbReader, int[] pidxList, TreeSet<Integer> selGrps, HelpBar hb, int refIdx) {
+		super("SyMAP Circle " + Globals.VERSION);
 		
 		bIsWG=false;
 		doConstruct(dbReader, pidxList, selGrps, hb, refIdx);
 	}
 
-	private void doConstruct(DatabaseReader dbReader, int[] projIdxList, TreeSet<Integer> selGrps, HelpBar hb, int ref){
+	private void doConstruct(DBconn dbReader, int[] projIdxList, TreeSet<Integer> selGrps, HelpBar hb, int ref){
 		if (projIdxList.length == 0) {
 			System.out.println("Circle view called with no projects!"); 
 			return;
@@ -69,7 +69,7 @@ public class CircFrame extends JFrame {
 	}	
 	private void init() {		
 		try {
-			setPreferredSize(new Dimension(pWidth,pHeight)); // CAS521 was 1000,900
+			//setPreferredSize(new Dimension(pWidth,pHeight)); // CAS534 doesn't do anything
 			//setMinimumSize(new Dimension(900,800));	CAS521 allows to resize without this
 
 			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -78,7 +78,10 @@ public class CircFrame extends JFrame {
 			add( circPanel.getScrollPane(),BorderLayout.CENTER );
 			if (bIsWG) {
 				add( helpPanel, BorderLayout.SOUTH );
-			}				
+			}	
+			
+			Dimension dim = getToolkit().getScreenSize(); // CAS534
+			setLocation(dim.width / 4,dim.height / 4);
 		}
 		catch(Exception e){ ErrorReport.print(e, "Init panel");}	
 	}

@@ -17,6 +17,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
 
+import symap.manager.Mproject;
 import util.ErrorReport;
 import util.Logger;
 import util.Utilities;
@@ -33,9 +34,9 @@ public class OrderAgainst {
 	
 	private Logger mLog;
 	private UpdatePool pool;	
-	private Project mProj1, mProj2;
+	private Mproject mProj1, mProj2;
 	
-	public OrderAgainst(Project mProj1, Project mProj2, Logger mLog, UpdatePool pool) {
+	public OrderAgainst(Mproject mProj1, Mproject mProj2, Logger mLog, UpdatePool pool) {
 		this.mProj1 = mProj1;
 		this.mProj2 = mProj2;
 		this.mLog = mLog;
@@ -50,26 +51,26 @@ public class OrderAgainst {
 	 */
 	public void orderGroups(boolean bSwitch) throws Exception {
 	try {
-		Project pDraft =  (bSwitch ? mProj2 : mProj1); 
-		Project pTarget = (bSwitch ? mProj1 : mProj2); 
+		Mproject pDraft =  (bSwitch ? mProj2 : mProj1); 
+		Mproject pTarget = (bSwitch ? mProj1 : mProj2); 
 	
-		File ordFile = new File(Constants.seqDataDir + pDraft.name + anchorCSVFile);
+		File ordFile = new File(Constants.seqDataDir + pDraft.getDBName() + anchorCSVFile);
 		if (ordFile.exists()) ordFile.delete();
 		FileWriter ordFileW = new FileWriter(ordFile);
 		
-		mLog.msg("\nOrdering " + pDraft.getName() + " contigs against " + pTarget.getName());
+		mLog.msg("\nOrdering " + pDraft.getDBName() + " contigs against " + pTarget.getDBName());
 		mLog.msg("   Original ordering algorithm - flips contigs in database.");
 		
 		ResultSet rs;
 		TreeSet<Integer> alreadyFlipped = new TreeSet<Integer>();
 	
-		rs = pool.executeQuery("select idx, flipped from xgroups where proj_idx=" + pDraft.idx);
+		rs = pool.executeQuery("select idx, flipped from xgroups where proj_idx=" + pDraft.getIdx());
 		while (rs.next()) {
 			int idx = rs.getInt(1);
 			boolean flipped = rs.getBoolean(2);
 			if (flipped) alreadyFlipped.add(idx);
 		}
-		pool.executeUpdate("update xgroups set flipped=0, sort_order=idx where proj_idx=" + pDraft.idx);
+		pool.executeUpdate("update xgroups set flipped=0, sort_order=idx where proj_idx=" + pDraft.getIdx());
 				
 		// Order the grp1 by finding the grp2 that they have the most synteny
 		// hits with, and taking the start point of those hits.
@@ -87,8 +88,7 @@ public class OrderAgainst {
 		Vector<Integer> grp2Order = new Vector<Integer>(); 
 		rs = pool.executeQuery("select idx from xgroups where proj_idx=" + pTarget.getIdx() + 
 						" order by sort_order asc");
-		while (rs.next())
-		{
+		while (rs.next()) {
 			grp2Order.add(rs.getInt(1));
 		}
 		mLog.msg("   " + grp2Order.size() + " xgroups to order against ");
@@ -106,8 +106,7 @@ public class OrderAgainst {
 				" where proj1_idx=" + mProj1.getIdx() + " and proj2_idx=" + mProj2.getIdx() + 
 				" by score desc, grp1_idx, grp2_idx, blocknum" );
 				// CAS506 " group by blocks.grp1_idx, blocks.grp2_idx, blocks.blocknum order by score desc" );
-		while (rs.next())
-		{
+		while (rs.next()) {
 			int grp1Idx = (bSwitch ? rs.getInt("grp2_idx") : rs.getInt("grp1_idx"));
 			int grp2Idx = (bSwitch ? rs.getInt("grp1_idx") : rs.getInt("grp2_idx"));
 			int pos =     (bSwitch ? rs.getInt("start1")   : rs.getInt("start2"));
@@ -117,12 +116,10 @@ public class OrderAgainst {
 			String grp2Name = (bSwitch ? rs.getString("grp1.fullname") : rs.getString("grp2.fullname"));
 			String grp1Name = (bSwitch ? rs.getString("grp2.fullname") : rs.getString("grp1.fullname"));
 		
-			if (grp1Seen.contains(grp1Idx))
-			{
+			if (grp1Seen.contains(grp1Idx)){
 				continue; // if seen this group before then already got its best block	
 			}
-			if (!grpMaps.containsKey(grp2Idx))
-			{
+			if (!grpMaps.containsKey(grp2Idx)) {
 				grpMaps.put(grp2Idx, new Vector<Integer>());	
 			}
 			grpMaps.get(grp2Idx).add(grp1Idx);
@@ -145,45 +142,39 @@ public class OrderAgainst {
 		int curOrd = 1;
 		TreeMap<Integer,Integer> grp2ord = new TreeMap<Integer,Integer>();
 		Vector<Integer> grp1_ordered = new Vector<Integer>();
-		for (int grp2Idx : grp2Order)
-		{
+		for (int grp2Idx : grp2Order) {
 			if (!grpMaps.containsKey(grp2Idx)) continue;
 			Integer[] grp1s = grpMaps.get(grp2Idx).toArray(new Integer[1]);
 			Integer[] pos = new Integer[grp1s.length];
-			for (int i = 0; i < grp1s.length; i++)
-			{
+			for (int i = 0; i < grp1s.length; i++) {
 				pos[i] = grp1pos.get(grp1s[i]);
 			}
 			// We have parallel arrays of grp and pos, so sort the pos and apply this sort to the grp
 			Utils.HeapDoubleSort(pos, grp1s, new Utils.ObjCmp());
-			for (int i = 0; i < grp1s.length; i++)
-			{
+			for (int i = 0; i < grp1s.length; i++){
 				grp2ord.put(grp1s[i], curOrd);
 				grp1_ordered.add(grp1s[i]);
 				curOrd++;
 			}
 		}
 		
-		String ordPfx =  SyProps.getProjProp(pDraft.idx,  "grp_prefix", pool);
-		String targPfx = SyProps.getProjProp(pTarget.idx, "grp_prefix", pool);
+		String ordPfx =  pDraft.getGrpPrefix(); // SyProps.getProjProp(pDraft.idx,  "grp_prefix", pool);
+		String targPfx = pTarget.getGrpPrefix(); // SyProps.getProjProp(pTarget.idx, "grp_prefix", pool);
 
 		// Chr0; assign the ones that didn't align anywhere
 		Vector<Integer> allGrpIdx = new Vector<Integer>();
-		rs = pool.executeQuery("select idx from xgroups where proj_idx=" + pDraft.idx);
-		while (rs.next())
-		{
+		rs = pool.executeQuery("select idx from xgroups where proj_idx=" + pDraft.getIdx());
+		while (rs.next()) {
 			int idx = rs.getInt(1);
 			allGrpIdx.add(idx);
-			if (!grp2ord.containsKey(idx))
-			{
+			if (!grp2ord.containsKey(idx)) {
 				grp2ord.put(idx, curOrd);
 				curOrd++;
 			}	
 		}
-		ordFileW.write(pDraft.name + "-" + ordPfx + "," + pTarget.name + "-" + targPfx + ",pos,F/R,#anchors," + pDraft.name + "-length\n");
+		ordFileW.write(pDraft.getDBName() + "-" + ordPfx + "," + pTarget.getDBName() + "-" + targPfx + ",pos,F/R,#anchors," + pDraft.getDBName() + "-length\n");
 		
-		for (int idx : grp1_ordered)
-		{
+		for (int idx : grp1_ordered){
 			int ord = grp2ord.get(idx);
 			int pos = grp1pos.get(idx);
 			int len = grp1len.get(idx);
@@ -246,10 +237,10 @@ public class OrderAgainst {
 		if (cnt>0) mLog.msg("   Flipped " + cnt);
 		
 		// Lastly, print out the two ordered projects
-		mLog.msg("Creating anchored project from " + pDraft.getName());
+		mLog.msg("Creating anchored project from " + pDraft.getDBName());
 		mLog.msg("Wrote " + ordFile.getAbsolutePath());
 	
-		String groupedName = pDraft.getName() + anchorSuffix;	
+		String groupedName = pDraft.getDBName() + anchorSuffix;	
 		String groupFileName = Constants.seqDataDir + groupedName;
 	
 		File groupedDir = new File(groupFileName);
@@ -279,7 +270,7 @@ public class OrderAgainst {
 		Vector<String> grpOrder = new Vector<String>();
 		rs = pool.executeQuery("select xgroups.fullname, xgroups.idx, pseudo_seq2.seq " +
 				" from xgroups " +
-				" join pseudo_seq2 on pseudo_seq2.grp_idx=xgroups.idx where xgroups.proj_idx=" + pDraft.idx + 
+				" join pseudo_seq2 on pseudo_seq2.grp_idx=xgroups.idx where xgroups.proj_idx=" + pDraft.getIdx() + 
 				" order by xgroups.sort_order asc, pseudo_seq2.chunk asc");
 		int curGrpIdx = -1, groupedPos = 0, count=0;
 		String curNewGrp = "", curNewGrpName = "", curGrpName = "", prevGrpName = "";
@@ -366,9 +357,9 @@ public class OrderAgainst {
 		groupedGFFW.close();
 		String dispName;
 
-		dispName = pDraft.displayName + anchorSuffix;
-		grpParamW.write("category = " + pDraft.category + "\ndisplay_name=" + dispName + "\n");
-		grpParamW.write("grp_prefix=" + pTarget.grpPrefix + "\n");
+		dispName = pDraft.getDisplayName() + anchorSuffix;
+		grpParamW.write("category = " + pDraft.getdbCat() + "\ndisplay_name=" + dispName + "\n");
+		grpParamW.write("grp_prefix=" + pTarget.getGrpPrefix() + "\n");
 		grpParamW.close();
 	}
 	catch (Exception e) {ErrorReport.print(e, "Ordering sequence"); }
@@ -386,16 +377,15 @@ public class OrderAgainst {
 	****************************************************************/
 	public void orderGroupsV2(boolean bSwitch)  {
 	try {
-		
 		if (!bSwitch) {pDraft = mProj1; pTarget = mProj2; }
 		else          {pDraft = mProj2; pTarget = mProj1; }
 		
-		String ordPfx =  SyProps.getProjProp(pDraft.idx,  "grp_prefix", pool);
-		String targPfx = SyProps.getProjProp(pTarget.idx, "grp_prefix", pool);
+		String ordPfx =  pDraft.getGrpPrefix();
+		String targPfx = pTarget.getGrpPrefix();
 		String chr0 = targPfx + "UNK";
 		int chr0Idx = 99999;
 		
-		mLog.msg("\nOrdering " + pDraft.getName() + " contigs against " + pTarget.getName());
+		mLog.msg("\nOrdering " + pDraft.getDBName() + " contigs against " + pTarget.getDBName());
 
 		if (!s1LoadDataDB(bSwitch, chr0, chr0Idx)) return;
 	
@@ -416,7 +406,7 @@ public class OrderAgainst {
 			ResultSet rs = pool.executeQuery("select idx, fullname, p.length " +
 					" from xgroups as g " +
 					" join pseudos as p on p.grp_idx=g.idx " +
-					" where proj_idx=" + pDraft.idx);
+					" where proj_idx=" + pDraft.getIdx());
 			while (rs.next()) {
 				Draft o = new Draft();
 				o.gidx =     rs.getInt(1);
@@ -426,7 +416,7 @@ public class OrderAgainst {
 			}
 				
 			rs = pool.executeQuery("select idx, fullname from xgroups " +
-					" where proj_idx=" + pTarget.idx);
+					" where proj_idx=" + pTarget.getIdx());
 			while (rs.next()) {
 				Target o = new Target();
 				o.gidx = rs.getInt(1);
@@ -502,11 +492,11 @@ public class OrderAgainst {
 			
 		/** Write Ordered file and update DB order **/
 			
-			File ordFile = new File(Constants.seqDataDir + pDraft.name + orderCSVFile);
+			File ordFile = new File(Constants.seqDataDir + pDraft.getDBName() + orderCSVFile);
 			if (ordFile.exists()) ordFile.delete();
 			FileWriter ordFileW = new FileWriter(ordFile);
 			
-			ordFileW.write(pDraft.name + "-" + ordPfx + "," + pTarget.name + "-" + targPfx + ",pos,F/R,#anchors," + pDraft.name + "-length\n");
+			ordFileW.write(pDraft.getDBName() + "-" + ordPfx + "," + pTarget.getDBName() + "-" + targPfx + ",pos,F/R,#anchors," + pDraft.getDBName() + "-length\n");
 			
 			int nOrd=1; // new order of contigs in database; only place database changes for V2
 			for (Draft d : orderedDraft) {
@@ -531,9 +521,9 @@ public class OrderAgainst {
 	 ***/
 	private void s3WriteNewProj() {
 		try {
-			mLog.msg("   Creating new ordered project from " + pDraft.getName());
+			mLog.msg("   Creating new ordered project from " + pDraft.getDBName());
 			
-			String ordProjName = pDraft.getName() + orderSuffix;	
+			String ordProjName = pDraft.getDBName() + orderSuffix;	
 			String ordDirName = Constants.seqDataDir + ordProjName;
 			File   ordDir = new File(ordDirName);
 			if (ordDir.exists()) {
@@ -616,9 +606,9 @@ public class OrderAgainst {
 			
 			File ordParam =   Utilities.checkCreateFile(ordDir, Constants.paramsFile, "SM params");
 			FileWriter ordParamsFH = 	new FileWriter(ordParam);
-			ordParamsFH.write("category = " + pDraft.category + "\n");
-			ordParamsFH.write("display_name=" + pDraft.displayName + orderSuffix + "\n");
-			ordParamsFH.write("grp_prefix=" + pTarget.grpPrefix + "\n");
+			ordParamsFH.write("category = " + pDraft.getdbCat() + "\n");
+			ordParamsFH.write("display_name=" + pDraft.getDisplayName() + orderSuffix + "\n");
+			ordParamsFH.write("grp_prefix=" + pTarget.getGrpPrefix() + "\n");
 			ordParamsFH.close();
 			
 			ordParamsFH.close();
@@ -654,7 +644,7 @@ public class OrderAgainst {
 		String chrName;		    // group.fullname
 		int bLen=0, nLen=0, tLen=0;
 	}
-	private Project pDraft, pTarget;
+	private Mproject pDraft, pTarget;
 	private TreeMap <Integer, Target> idxTargetMap = new TreeMap <Integer, Target> ();
 	private TreeMap <Integer, Draft>  idxDraftMap = new TreeMap <Integer, Draft> ();
 	private Vector <Draft> orderedDraft = new Vector <Draft> ();

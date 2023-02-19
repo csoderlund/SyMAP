@@ -27,7 +27,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import symap.projectmanager.common.Project;
+import symap.manager.Mproject;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -214,14 +214,14 @@ public class SpeciesSelectPanel extends JPanel {
 	/**************************************************************/
 	private void loadPanelsFromDB() {
 		try {
-			Vector<Project> theProjects = theParentFrame.getProjects();
+			Vector<Mproject> theProjects = theParentFrame.getProjects();
 			int [] spidx = new int [theProjects.size()];
 			int x=0;
 			
 			Connection conn = theParentFrame.getDatabase().getConnection();
 			Statement stmt = conn.createStatement();
 			
-			for(Project proj : theProjects) {
+			for(Mproject proj : theProjects) {
 				String chrNumStr="", chrIdxStr="";
 				
 				String strQ = "SELECT xgroups.name, xgroups.idx FROM xgroups " +
@@ -240,7 +240,7 @@ public class SpeciesSelectPanel extends JPanel {
 				rs.close();
 				
 				SpeciesSelect ssp = new SpeciesSelect(this, proj.getDisplayName(),
-						proj.getID(), proj.getCategory(), chrNumStr, chrIdxStr);
+						proj.getID(), proj.getdbCat(), chrNumStr, chrIdxStr);
 				
 				spPanels.add(ssp);
 				spName2spIdx.put(proj.getDisplayName(), proj.getID());

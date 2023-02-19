@@ -23,8 +23,7 @@ import javax.swing.event.PopupMenuListener;
 import javax.swing.JPopupMenu; 				
 import javax.swing.JMenuItem; 				
 
-import symap.SyMAP;
-import symap.SyMAPConstants;
+import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import symap.frame.HelpBar;
 import util.Jhtml;
@@ -35,7 +34,7 @@ import util.Utilities;
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public abstract class Filter extends JDialog implements ActionListener,
-		ChangeListener, SyMAPConstants, PopupMenuListener 
+		ChangeListener, PopupMenuListener 
 {
 	private JButton okButton, cancelButton, defaultButton, helpButton;
 	protected DrawingPanel drawingPanel;
@@ -94,7 +93,7 @@ public abstract class Filter extends JDialog implements ActionListener,
 	protected boolean refresh() {
 		boolean ret = true;
 		if (isShowing()) { 
-			if (SyMAP.DEBUG) System.out.println("Refreshing from Filter");
+			if (Globals.DEBUG) System.out.println("Refreshing from Filter");
 			if (drawingPanel != null) ret = drawingPanel.smake();
 		}
 		return ret;

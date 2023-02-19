@@ -18,7 +18,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 
-import symap.SyMAPConstants;
+import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import symap.filter.Filter;
 import util.Jhtml;
@@ -90,14 +90,14 @@ public class MapperFilter extends Filter {
 				if (mapper != null && !nochange) {
 					javax.swing.SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							setCursor(SyMAPConstants.WAIT_CURSOR);
+							setCursor(Globals.WAIT_CURSOR);
 							
 							if (hitfilter.set(getCopyHitFilter())) {
 								setSliderMaxMin();
 								mapper.clearTrackBuild();
 								refresh();
 							}
-							setCursor(SyMAPConstants.DEFAULT_CURSOR);
+							setCursor(Globals.DEFAULT_CURSOR);
 						}
 					});
 				}
@@ -139,7 +139,7 @@ public class MapperFilter extends Filter {
 		ActionListener prbl = new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				if (mapper != null) {				
-					setCursor(SyMAPConstants.WAIT_CURSOR);
+					setCursor(Globals.WAIT_CURSOR);
 					// transfer from popup to menu
 					if (event.getSource() == blockPopRadio) 		blockRadio.setSelected(blockPopRadio.isSelected());
 					else if (event.getSource() == setPopRadio) 		setRadio.setSelected(setPopRadio.isSelected()); // CAS520 add
@@ -152,7 +152,7 @@ public class MapperFilter extends Filter {
 						mapper.clearTrackBuild();
 						if (drawingPanel != null) drawingPanel.smake();
 					}
-					setCursor(SyMAPConstants.DEFAULT_CURSOR);
+					setCursor(Globals.DEFAULT_CURSOR);
 				}
 			}
 		};

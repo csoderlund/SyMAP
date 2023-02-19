@@ -6,7 +6,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.RenderingHints;
+//import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.font.FontRenderContext;
@@ -21,8 +21,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 
 import number.GenomicsNumber;
-import symap.SyMAP;
-import symap.closeup.CloseUp;
+import props.PropertiesReader;
+import symap.Globals;
 import symap.closeup.TextShowSeq;
 import symap.track.Track;
 import symap.track.TrackData;
@@ -30,7 +30,6 @@ import symap.track.TrackHolder;
 import symap.drawingpanel.DrawingPanel;
 import symap.mapper.HitData;
 import symap.mapper.SeqHits;
-import util.PropertiesReader;
 import util.TextBox;
 import util.Utilities;
 import util.ErrorReport;
@@ -47,7 +46,7 @@ public class Sequence extends Track {
 	protected boolean showGap, showCentromere;
 	protected boolean showFullGene;
 	protected boolean showHitLen; 	// CAS512 renamed Ribbon to HitLen everywhere; show Hit Graphics on Sequence rect
-	protected String name;			// e.g. Chr01
+	protected String chrName;			// e.g. Chr01
 	
 	private SeqHits seqHitsObj; 	// CAS517 added so can get to hits 
 	private boolean isQuery;	    // CAS517 added; CAS531 renamed to be clear that it is pairs.proj1_idx and first in hits
@@ -75,8 +74,8 @@ public class Sequence extends Track {
 		headerPoint = new Point2D.Float();
 		footerPoint = new Point2D.Float();
 
-		group   = NO_VALUE;
-		projIdx = NO_VALUE;
+		group   = Globals.NO_VALUE;
+		projIdx = Globals.NO_VALUE;
 		centGeneRect = new Rectangle2D.Double();
 	}
 	// CAS517 add in order to have access to hits 
@@ -93,7 +92,7 @@ public class Sequence extends Track {
 		if (this.group != group || this.projIdx != project || this.otherProjIdx != otherProject) { 
 			reset(project,otherProject);
 			this.group = group;
-			if (this.otherProjIdx != NO_VALUE) init();
+			if (this.otherProjIdx != Globals.NO_VALUE) init();
 		}
 		else reset();
 		
@@ -146,8 +145,10 @@ public class Sequence extends Track {
 	public int getGroup() {return group;}
 
 	public String getName() {
-		return drawingPanel.getPools().getProjectProperties().getProperty(getProject(),"grp_prefix") +
-			(name == null ? "" : name);
+		String prefix =  drawingPanel.getPools().getProjectPropPool().getProperty(getProject(),"grp_prefix");
+		if (prefix==null) prefix = "";
+		String grp = (chrName==null) ? "" : chrName;
+		return prefix + grp;
 	}
 
 	/*** @see Track#getPadding() */
@@ -300,7 +301,7 @@ public class Sequence extends Track {
 		if (projIdx < 1 || group < 1 || otherProjIdx < 1) return false;
 
 		try {
-			name = psePool.setSequence(this, size, allAnnoVec);	
+			chrName = psePool.setSequence(this, size, allAnnoVec);	
 			if (allAnnoVec.size() == 0) showAnnot = false; 
 		} catch (SQLException s1) {
 			ErrorReport.print(s1, "Initializing Sequence failed.");
@@ -326,7 +327,7 @@ public class Sequence extends Track {
 		
 		if (allAnnoVec.size() == 0) showAnnot = false;
 		
-		if (width == NO_VALUE) width = DEFAULT_WIDTH;
+		if (width == Globals.NO_VALUE) width = DEFAULT_WIDTH;
 
 		setFullBpPerPixel();
 
@@ -357,10 +358,10 @@ public class Sequence extends Track {
 		 */
 		ruleList.clear();
 		if (showRuler) {
-			if (orient == LEFT_ORIENT) {
+			if (orient == Globals.LEFT_ORIENT) {
 				x1 = rect.x - OFFSET_SMALL;
 				x2 = x1 - RULER_LINE_LENGTH;
-			} else if (orient == RIGHT_ORIENT) {
+			} else if (orient == Globals.RIGHT_ORIENT) {
 				x1 = rect.x + rect.width + OFFSET_SMALL;
 				x2 = x1 + RULER_LINE_LENGTH;
 			} else { // center
@@ -383,7 +384,7 @@ public class Sequence extends Track {
 				ty = y + (bounds.getHeight() / 2.0);
 				totalRect.height = Math.max(totalRect.height, ty);
 				totalRect.y = Math.min(totalRect.y, ty);
-				if (orient == RIGHT_ORIENT) {
+				if (orient == Globals.RIGHT_ORIENT) {
 					tx = x2 + OFFSET_SMALL;
 					totalRect.width = Math.max(totalRect.width, bounds.getWidth() + bounds.getX() + tx);
 				} 
@@ -399,14 +400,14 @@ public class Sequence extends Track {
 		/* 
 		 * Setup the annotations
 		 */
-		boolean isRight = (orient == RIGHT_ORIENT);
+		boolean isRight = (orient == Globals.RIGHT_ORIENT);
 		double lastStart=0;
 		
 		getHolder().removeAll(); 
 		Rectangle2D centRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
 		centGeneRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
 		
-		if (SyMAP.DEBUG) System.err.println("SEQ: " + allAnnoVec.size() + " " + getHolder().getTrackNum() + " " + toString());
+		if (Globals.DEBUG) System.err.println("SEQ: " + allAnnoVec.size() + " " + getHolder().getTrackNum() + " " + toString());
 		
 		buildOlap(); // builds first time only
 			
@@ -572,7 +573,7 @@ public class Sequence extends Track {
 					public int compare(GeneData a1, GeneData a2) { 
 						if (a1.start!=a2.start) return (a1.start - a2.start); // it does not always catch =start
 						
-						if (SyMAP.DEBUG) System.out.println("Seq cmp: a1 " + a1.annot.getGeneNumStr() + " s1: " + a1.start + " l1: " + a1.len + " l2: " + a2.len + " l2-l1: " + (a2.len - a1.len));
+						if (Globals.DEBUG) System.out.println("Seq cmp: a1 " + a1.annot.getGeneNumStr() + " s1: " + a1.start + " l1: " + a1.len + " l2: " + a2.len + " l2-l1: " + (a2.len - a1.len));
 						return (a2.len - a1.len);
 					}
 				});
@@ -637,7 +638,7 @@ public class Sequence extends Track {
 	public Point2D getPoint(long bpPos, int trackPos) {
 		if (bpPos < start.getValue()) bpPos = start.getValue(); 
 		if (bpPos > end.getValue())   bpPos = end.getValue(); 	
-		double x = (trackPos == LEFT_ORIENT ? rect.x+rect.width : rect.x);			
+		double x = (trackPos == Globals.LEFT_ORIENT ? rect.x+rect.width : rect.x);			
 		double y = rect.y + GenomicsNumber.getPixelValue(bpPerCb,bpPos-start.getValue(),bpPerPixel);
 		
 		if (flipped) y = rect.y + rect.y + rect.height - y;	
@@ -652,10 +653,7 @@ public class Sequence extends Track {
 	public void paintComponent(Graphics g) {
 		if (hasBuilt()) {
 			Graphics2D g2 = (Graphics2D) g;
-			// CAS533 add so text is better in ImageViewer
-			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-	                            RenderingHints.VALUE_ANTIALIAS_ON);
-
+			
 			g2.setPaint((position % 2 == 0 ? bgColor1 : bgColor2)); 
 			g2.fill(rect);
 			g2.setPaint(border);
@@ -820,16 +818,16 @@ public class Sequence extends Track {
 				dragRect.height = 0;
 
 			if (happened != 0) {
-				int mh = (int)Math.round(CloseUp.MAX_CLOSEUP_BP / bpPerPixel);		
+				int mh = (int)Math.round(Globals.MAX_CLOSEUP_BP / bpPerPixel);		
 				if (happened == 1) {
-					if (dragRect.height * bpPerPixel > CloseUp.MAX_CLOSEUP_BP) {
+					if (dragRect.height * bpPerPixel > Globals.MAX_CLOSEUP_BP) {
 						dragRect.height = mh;
 						if (dragRect.height+dragRect.y < dragPoint.y)
 							dragPoint.y = dragRect.height+dragRect.y;
 					}
 				}
 				else { 
-					if (dragRect.height * bpPerPixel > CloseUp.MAX_CLOSEUP_BP) {
+					if (dragRect.height * bpPerPixel > Globals.MAX_CLOSEUP_BP) {
 						dragRect.y += dragRect.height - mh;
 						dragRect.height = mh;
 						if (dragPoint.y < dragRect.y)
@@ -918,8 +916,8 @@ public class Sequence extends Track {
 		if (drawingPanel == null || drawingPanel.getCloseUp() == null) return;
 
 		try {// The CloseUp panel created at startup and reused.
-			if (end-start>CloseUp.MAX_CLOSEUP_BP) {// CAS531 add this check
-				Utilities.showWarningMessage("Region greater than " + CloseUp.MAX_CLOSEUP_BP + ". Cannot align.");
+			if (end-start>Globals.MAX_CLOSEUP_BP) {// CAS531 add this check
+				Utilities.showWarningMessage("Region greater than " + Globals.MAX_CLOSEUP_BP + ". Cannot align.");
 				return;
 			}
 			Vector <HitData> hitList = new Vector <HitData> ();
@@ -1042,7 +1040,7 @@ public class Sequence extends Track {
 	public static Color bgColor2; 
 	
 	static { // CAS532 remove everything except colors that can be set by user
-		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/sequence.properties"));
+		PropertiesReader props = new PropertiesReader(Globals.class.getResource("/properties/sequence.properties"));
 	
 		unitColor                  = props.getColor("unitColor");
 		bgColor1            	   = props.getColor("bgColor1");

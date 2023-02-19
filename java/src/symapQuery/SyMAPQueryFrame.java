@@ -1,8 +1,5 @@
 package symapQuery;
 
-/**************************************************
- * The main query frame
- */
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -20,16 +17,19 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
+import database.DBconn;
 import props.PersistentProps;
-import util.DatabaseReader;
 import util.Utilities;
 
 import util.ErrorReport;
-import symap.SyMAP;
-import symap.pool.PoolManager;
-import symap.pool.Pools;
-import symap.projectmanager.common.Project;
+import symap.Globals;
+import symap.manager.Mproject;
+import symap.manager.Pools;
 import symapMultiAlign.AlignmentViewPanel;
+
+/**************************************************
+ * The main query frame
+ */
 
 public class SyMAPQueryFrame extends JFrame {
 	private static final String [] MENU_ITEMS = { "> Instructions", "> Query Setup", "> Results" }; 
@@ -37,16 +37,13 @@ public class SyMAPQueryFrame extends JFrame {
 	static private String propNameSingle="SyMapColumns2"; 
 	
 	// ProjectManager creates this object, add the projects, then calls build.
-	public SyMAPQueryFrame(DatabaseReader dr, Vector <Project> pVec) {
-		setTitle("SyMAP Query " + SyMAP.VERSION); // CAS514 add version
+	public SyMAPQueryFrame(DBconn dr, Vector <Mproject> pVec) {
+		setTitle("SyMAP Query " + Globals.VERSION); // CAS514 add version
 		theReader = dr;
 		
-		theProjects = new Vector<Project> ();			// CAS532 change to pass project in (needed for column saving)
-		for (Project p: pVec) {
-			theProjects.add(p);
-			if (!p.hasAbbrev()) 						// CAS519 need to let user know that it can be set
-				System.err.println(p.getDisplayName() + " does not have abbrev set in Parameters: using " + p.getAbbrevName());
-		}
+		theProjects = new Vector<Mproject> ();			// CAS532 change to pass project in (needed for column saving)
+		for (Mproject p: pVec) theProjects.add(p);
+		
 		// CAS532 add the following for column saving, including cookies
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
@@ -312,24 +309,25 @@ public class SyMAPQueryFrame extends JFrame {
 		String [] retVal = new String[theProjects.size()];
 		
 		for(int x=0; x<retVal.length; x++) {
-			retVal[x] = theProjects.get(x).getAbbrevName();
+			retVal[x] = theProjects.get(x).getdbAbbrev();
 		}
 		return retVal;
 	}
 	public String getDisplayFromAbbrev(String aname) { // CA519 added for loadRow used by Show Synteny 
-		for (Project p : theProjects) {
-			if (aname.contentEquals(p.getAbbrevName())) return p.getDisplayName();
+		for (Mproject p : theProjects) {
+			if (aname.contentEquals(p.getdbAbbrev())) return p.getDisplayName();
 		}
 		return null;
 	}
-	public DatabaseReader getDatabase() { return theReader; }
+	public DBconn getDatabase() { return theReader; }
 	
-	public Vector<Project> getProjects() { return theProjects; }
+	public Vector<Mproject> getProjects() { return theProjects; }
 	
 	public String getSequence(int start, int stop, int groupIdx) {
 		Pools p = null;
 		try {
-			p = PoolManager.getInstance().getPools(theReader);	
+			//p = PoolManager.getInstance().getPools(theReader);
+			p = new Pools(theReader);
 			return p.getAlignPool().loadPseudoSeq(start + ":" + stop, groupIdx);
 		} catch (SQLException e) {
 			ErrorReport.print(e, "Get sequence");
@@ -345,8 +343,8 @@ public class SyMAPQueryFrame extends JFrame {
 	public SyMAPQueryFrame getInstance() { return this; }
 	public QueryPanel getQueryPanel() {return queryPanel;}
 		
-	private DatabaseReader theReader = null;
-	private Vector<Project> theProjects = null;
+	private DBconn theReader = null;
+	private Vector<Mproject> theProjects = null;
 	
 	private int screenWidth, screenHeight;
 	private JSplitPane splitPane = null;

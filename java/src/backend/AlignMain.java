@@ -1,5 +1,20 @@
 package backend;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.util.Vector;
+import java.util.TreeMap;
+import java.util.Queue;
+import java.util.LinkedList;
+import java.sql.ResultSet;
+
+import symap.manager.Mpair;
+import symap.manager.Mproject;
+import util.Cancelled;
+import util.ErrorReport;
+import util.Logger;
+import util.Utilities;
+
 /*******************************************************
  * Run mummer for alignments
  * CAS500 1/2020 this has been almost totally rewritten, but results are the same,
@@ -7,31 +22,15 @@ package backend;
  *  which can make a difference
  * CAS522 remove FPC
  */
-import java.io.File;
-import java.io.FileWriter;
-import java.util.Properties;
-import java.util.Vector;
-import java.util.TreeMap;
-import java.util.Queue;
-import java.util.LinkedList;
-
-import java.sql.ResultSet;
-
-import util.Cancelled;
-import util.ErrorReport;
-import util.Logger;
-import util.Utilities;
-
-public class AlignMain 
-{
+public class AlignMain {
 	public boolean mCancelled = false;
 	
 	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE; 
 	private static final int maxFileSize = 60000000; // CAS508 was 7M (changed so 'Concat' parameter works for demo)
 	
 	private Logger log;
-	private String proj1Name, proj2Name;
-	private int proj1Idx, proj2Idx;
+	private String proj1Dir, proj2Dir; // also dbName
+	private Mproject mProj1, mProj2;
 	
 	private String alignLogDirName;
 	private Vector<ProgSpec> allAlignments;
@@ -39,7 +38,7 @@ public class AlignMain
 	private Vector<Thread> threads;
 	private int nMaxCPUs;
 	
-	private SyProps mMainProps = null;
+	private Mpair mp = null;
 	private UpdatePool pool = null;
 	
 	private boolean bDoCat = true; // CAS508
@@ -47,33 +46,27 @@ public class AlignMain
 	private boolean interrupted = false;
 	private boolean error = false;
 	
-	private String resultDir, alignParams;
-	private String usePrevious = "Use previous alignment";
+	private String resultDir;
+	private String alignParams, usePrevious = "Use previous alignment";
 	
-	public AlignMain(UpdatePool pool, Logger log, 
-			String proj1Name, String proj2Name,
-			int nMaxThreads, boolean bDoCat, Properties props, 
-			SyProps pairProps, String alignLogDirName)
+	public AlignMain(UpdatePool pool, Logger log, Mpair mp,
+			int nMaxThreads, boolean bDoCat, String alignLogDirName)
 	{
 		this.log = log; // diaLog and syLog
 		this.nMaxCPUs = nMaxThreads;
 		this.bDoCat = bDoCat;
-		this.mMainProps = pairProps;
+		this.mp = mp;
 		this.pool = pool;
-		
-		this.proj1Name = proj1Name;
-		this.proj2Name = proj2Name;
+		this.mProj1 = mp.mProj1;
+		this.mProj2 = mp.mProj2;
 		this.alignLogDirName = alignLogDirName;
+		
+		proj1Dir = mProj1.getDBName();
+		proj2Dir = mProj2.getDBName();
 		
 		threads = 		new Vector<Thread>();
 		allAlignments = new Vector<ProgSpec>();
 		toDoList = 		new LinkedList<ProgSpec>();
-			
-		try {
-			proj1Idx =  pool.getProjIdx(proj1Name);
-			proj2Idx =  pool.getProjIdx(proj2Name);	
-		}
-		catch (Exception e) { ErrorReport.print(e, "Align Main");}
 	}
 	public String getParams() {// CAS511 add to save to DB pairs.params; CAS533 remove project params (in View)
 		 return alignParams;
@@ -82,12 +75,11 @@ public class AlignMain
 	/*******************************************************
 	 * Run all alignments for p1-p2 
 	 */
-	public boolean run() // CAS508 remove throw Exception
-	{
+	public boolean run() {
 		try {
 			long startTime = System.currentTimeMillis();
 	
-			System.gc(); // free unused heap for blat/mummer to use (Java treats this as a suggestion)
+			System.gc(); // free unused heap for mummer to use (Java treats this as a suggestion)
 			
 			if (alignExists()) {
 				alignParams = usePrevious; 
@@ -112,8 +104,7 @@ public class AlignMain
 					if (toDoList.size()==0 && threads.size() == 0)
 						break;
 					
-					while (toDoList.size()>0 && threads.size() < nMaxCPUs) {
-						// Start another alignment thread
+					while (toDoList.size()>0 && threads.size() < nMaxCPUs) {// Start another alignment thread
 						final ProgSpec p = toDoList.remove();
 						alignNum++;
 						p.alignNum = alignNum;
@@ -144,7 +135,7 @@ public class AlignMain
 					log.msg("Alignments:  success " + getNumCompleted());
 					
 					// CAS500 only delete tmp files if successful
-					String tmpDir = Constants.getNameTmpDir(proj1Name, proj2Name);
+					String tmpDir = Constants.getNameTmpDir(proj1Dir, proj2Dir);
 					if (Constants.PRT_STATS) {
 						System.out.println("Do not delete " + tmpDir);
 					}
@@ -166,12 +157,12 @@ public class AlignMain
 	/****************************************************
 	 * Create preprocessed files and run alignment
 	 */
-	private void buildAlignments()  // CAS508 remove throw Exception
-	{
+	private void buildAlignments()  {
 		try {
-			String cat = (bDoCat) ? "" : "  (No Concat)";
-			log.msg("\nAligning " + proj1Name + " and " + proj2Name + cat);
-			SyProps.setProjProp(proj1Idx,"concatenated","0",pool);
+			String cat = (bDoCat) ? "  " : " (No Concat) ";
+			log.msg("\nAligning " + proj1Dir + " and " + proj2Dir + cat + mp.getChangedAlign());
+			
+			mp.setPairProp("concatenated", cat);
 			
 		/* create directories */
 			
@@ -179,18 +170,18 @@ public class AlignMain
 			Utilities.checkCreateDir(resultDir, true /* bPrt */);
 					
 			// temporary directories to put data for alignment
-			String tmpDir =  Constants.getNameTmpDir(proj1Name, proj2Name);
+			String tmpDir =  Constants.getNameTmpDir(proj1Dir, proj2Dir);
 			Utilities.checkCreateDir(tmpDir, false);
 			
-			boolean isSelf = (proj1Name.equals(proj2Name));
-			String tmpDir1 = Constants.getNameTmpPreDir(proj1Name,  proj2Name, proj1Name);
+			boolean isSelf = (proj1Dir.equals(proj2Dir));
+			String tmpDir1 = Constants.getNameTmpPreDir(proj1Dir,  proj2Dir, proj1Dir);
 			String tmpDir2 = (isSelf) ? tmpDir1 :
-				Constants.getNameTmpPreDir(proj1Name, proj2Name, proj2Name);
+				Constants.getNameTmpPreDir(proj1Dir, proj2Dir, proj2Dir);
 			File fh_tDir1 = Utilities.checkCreateDir(tmpDir1, false);
 			File fh_tDir2 = Utilities.checkCreateDir(tmpDir2, false);
 			
 		// Preprocessing for proj1
-			if (!writePreprocSeq(fh_tDir1, proj1Idx, proj1Name, pool, bDoCat, isSelf)) { // concat=true
+			if (!writePreprocSeq(pool, fh_tDir1, mProj1,  bDoCat, isSelf)) { // concat=true
 				mCancelled = true;
 				Cancelled.cancel();
 				System.out.println("Cancelling");
@@ -198,7 +189,7 @@ public class AlignMain
 			}
 			
 		// Preprocessing for proj2	
-			if (!writePreprocSeq(fh_tDir2, proj2Idx, proj2Name, pool, false, isSelf)) { // concat=false
+			if (!writePreprocSeq(pool, fh_tDir2, mProj2,  false, isSelf)) { // concat=false
 				mCancelled = true;
 				Cancelled.cancel();
 				System.out.println("Cancelling");
@@ -211,25 +202,17 @@ public class AlignMain
 			
 			// user over-rides
 			alignParams = "";
-			if (program.equals("promer") && mMainProps.getProperty("nucmer_only").equals("1")) {
-				program = "nucmer";
-				alignParams = "nucmer; "; // CAS516 show override on Summary page
-			}
-			else if (program.equals("nucmer") && mMainProps.getProperty("promer_only").equals("1")) {
-				program = "promer";
-				alignParams = "promer; "; // CAS516 ditto
-			}
-			String args = getProgramArgs(program, mMainProps);
-			String self = (isSelf) ? (" " + mMainProps.getProperty("self_args")) : ""; // CAS511 moved out of loop
+			if      (program.equals("promer") && mp.isNucmer(Mpair.FILE)) program = "nucmer";
+			else if (program.equals("nucmer") && mp.isPromer(Mpair.FILE)) program = "promer";
+				
+			String args = (program.contentEquals("promer")) ? mp.getPromerArgs(Mpair.FILE) : mp.getNucmerArgs(Mpair.FILE);
+			String self = (isSelf) ? (" " + mp.getSelfArgs(Mpair.FILE)) : ""; // CAS511 moved out of loop
 			
-			// CAS511 to be saved to DB pairs.params
-			if (!bDoCat)                  alignParams += "No Concat; ";
-			if (Constants.isMummerPath()) alignParams += Constants.getProgramPath("mummer") + "; ";
-			if (!args.contentEquals(""))  alignParams += args + "; ";
-			if (!self.contentEquals(""))  alignParams += "Self:" + self;
-			
-			if (alignParams.length() >= 128)   alignParams = alignParams.substring(0, 114) + "..."; // 128 max-12-2
-			alignParams = "CPUs " + nMaxCPUs + "; " + alignParams;
+			// pair.params; CAS511 to be saved; CAS534 only those that are not parameters
+			alignParams = "CPUs: " + nMaxCPUs + "  ";
+			if (!bDoCat)                     alignParams += " No Concat  ";
+			if (Constants.isMummerPath())    alignParams += Constants.getProgramPath("mummer") + " ";
+			if (alignParams.length() >= 128) alignParams = alignParams.substring(0, 114) + "..."; // 128 max-12-2
 			
 		/** create list of comparisons to run **/
 			String platform = Constants.getPlatformPath();
@@ -271,10 +254,13 @@ public class AlignMain
 	/**************************************
 	 *  Write sequences to file; first is concatenated, second is not. Apply gene masking if requested.
 	 */
-	private boolean writePreprocSeq(File dir, int projIdx, String projName, UpdatePool pool, 
-			boolean concat, boolean isSelf) // CAS508 remove throw exception
+	private boolean writePreprocSeq(UpdatePool pool, File dir, Mproject mProj,  
+			boolean concat, boolean isSelf) 
 	{
 		try {
+			int projIdx = mProj.getIdx();
+			String projName = mProj.getDBName();
+			
 			if (concat && isSelf) return true; // all get written as originals
 			
 			if (Cancelled.isCancelled()) return false;
@@ -285,13 +271,12 @@ public class AlignMain
 			rs.first();
 			int nSeqs = rs.getInt(1);
 			if (nSeqs == 0) {
-				log.msg("No sequences are loaded for " + projName + "!!");
+				log.msg("No sequences are loaded for " + projName + "!! (idx " + projIdx + ")");
 				return false;
 			}
-			
-			String gmprop = SyProps.getProjProp(projIdx, "mask_all_but_genes", pool);
-			boolean geneMask = (gmprop != null && gmprop.equals("1"));	
-			gmprop = (geneMask) ? "Masking non-genic sequence; " : "";
+		
+			boolean geneMask = mProj.isMasked();	
+			String gmprop = (geneMask) ? "Masking non-genic sequence; " : "";
 			if (geneMask) log.msg(projName + ": " + gmprop);
 				
 			if (Utilities.dirNumFiles(dir) > 0)
@@ -312,8 +297,7 @@ public class AlignMain
 			groups.add(new Vector<Integer>());
 			long curSize = 0, totSize = 0;
 			int nOrigGrp = 0, nGrp = 0;
-			while (!interrupted && rs.next())
-			{
+			while (!interrupted && rs.next()) {
 				nOrigGrp++;
 				int grp_idx = rs.getInt(1);
 				long chrLen = rs.getLong(2);
@@ -377,8 +361,7 @@ public class AlignMain
 			// Go through each grouping, write the preprocess file, with masking if called for.
 			// Note that sequences are stored in chunks of size CHUNK_SIZE (1,000,000).
 			
-			for (int i = 0; i < groups.size(); i++)
-			{
+			for (int i = 0; i < groups.size(); i++) {
 				if (groups.get(i).size() == 0) break; // last one can come up empty
 				
 				String fileName = (concat) ? ("_cc") : ("_f" + (i+1)); 
@@ -391,8 +374,7 @@ public class AlignMain
 				File f = Utilities.checkCreateFile(dir,fileName, "AM WritePreprocSeq");
 				FileWriter fw = new FileWriter(f);
 				
-				for (int gIdx : groups.get(i))
-				{
+				for (int gIdx : groups.get(i)) {
 					if (interrupted) break;
 	
 					rs = pool.executeQuery("select fullname from xgroups where idx=" + gIdx);
@@ -441,8 +423,7 @@ public class AlignMain
 								seq = seqMask.toString();
 							}				
 						}
-						for (int j = 0; j < seq.length(); j += 50)
-						{
+						for (int j = 0; j < seq.length(); j += 50) {
 							int endw = Math.min(j+50,seq.length());
 							String x = seq.substring(j, endw);
 							fileSize += x.length();
@@ -466,9 +447,9 @@ public class AlignMain
 	
 	private boolean alignExists() {
 		try {
-			resultDir = Constants.getNameResultsDir(proj1Name, proj2Name);
+			resultDir = Constants.getNameResultsDir(proj1Dir, proj2Dir);
 			
-			String alignDir = Constants.getNameResultsDir(proj1Name, proj2Name);
+			String alignDir = Constants.getNameResultsDir(proj1Dir, proj2Dir);
 			alignDir += Constants.alignDir;
 			File f = new File(alignDir);
 			if (!f.exists()) return false;
@@ -488,14 +469,6 @@ public class AlignMain
 		}
 		catch (Exception e) {ErrorReport.print(e, "Trying to see if alignment exists");}
 		return false;
-	}
-	private String getProgramArgs(String prog, Properties props)
-	{
-		String prop = prog + "_args";
-		if (props.containsKey(prop)) {
-			return props.getProperty(prop);
-		}
-		return "";
 	}
 	
 	public String getStatusSummary() {
@@ -556,8 +529,7 @@ public class AlignMain
 	private class Range {
 		int s;
 		int e;
-		Range(int start, int end)
-		{
+		Range(int start, int end) {
 			s = start; e = end;
 		}
 	}

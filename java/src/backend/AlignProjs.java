@@ -1,9 +1,5 @@
-package backend;
+ package backend;
 
-/**********************************************************
- * Computes alignment and synteny for two projects
- * // CAS508 moved all the following from PMFC
- */
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -11,71 +7,69 @@ import java.io.FileWriter;
 import java.sql.ResultSet;
 import java.util.Date;
 import java.util.TreeMap;
-
 import javax.swing.JFrame;
 
-import symap.SyMAP;
-import symap.projectmanager.common.Project;
-import symap.projectmanager.common.ProjectManagerFrameCommon;
+import database.DBconn;
+import symap.Globals;
+import symap.manager.Mpair;
+import symap.manager.Mproject;
+import symap.manager.ManagerFrame;
 import util.Cancelled;
-import util.DatabaseReader;
 import util.ErrorReport;
-import util.Logger;
 import util.ProgressDialog;
-import util.PropertiesReader;
 import util.Utilities;
+
+/**********************************************************
+ * Computes alignment and synteny for two projects
+ * CAS508 moved all the following from ManagerFrame
+ */
 
 public class AlignProjs extends JFrame {
 	private static final long serialVersionUID = 1L;
-	private DatabaseReader dbReader;
-	private PropertiesReader mProps;
-	private ProjectManagerFrameCommon frame;
+	private DBconn dbConn;
+	private Mpair mp;
 	
-	public void run(ProjectManagerFrameCommon frame, final Project p1, final Project p2, 
-			boolean closeWhenDone, DatabaseReader dbReader, PropertiesReader mProps, int maxCPUs, boolean bDoCat) {
+	public void run(ManagerFrame frame, DBconn dbConn, Mpair mp,  
+			boolean closeWhenDone,  int maxCPUs, boolean bDoCat) {
 
-		this.frame = frame;
-		this.dbReader = dbReader;
-		this.mProps = mProps;
+		this.dbConn = dbConn;
+		this.mp = mp;
 		
-		FileWriter syFW =    symapLog(p1,p2);
-		String alignLogDir = frame.buildLogAlignDir(p1,p2);
+		Mproject mProj1 = mp.mProj1;
+		Mproject mProj2 = mp.mProj2;
+		
+		FileWriter syFW =   symapLog(mProj1,mProj2);
+		String alignLogDir = buildLogAlignDir(mProj1,mProj2);
 
-		System.out.println("\n>>Starting " + p1 + " and " + p2 + "     " + Utilities.getDateTime());
-	
+		System.out.println("\n>>Starting " + mProj1 + " and " + mProj2 + "     " + Utilities.getDateTime());
+		if (Globals.TRACE) System.out.println("Trace pair " + mp.getPairIdx() + " p1 " + mProj1.getIdx() + " p2 " + mProj2.getIdx());
+		
 		try {
 			syFW.write("\n---------------------------------------------------------\n");
 		} catch (Exception e){}
 		
-		String msg = (p1 == p2) ? 
-				"Aligning project "  + p1.getDisplayName() + " to itself ..." :
-				"Aligning projects " + p1.getDisplayName() + " and " + p2.getDisplayName() + " ...";
+		String msg = (mProj1 == mProj2) ? 
+				"Aligning project "  + mProj1.getDisplayName() + " to itself ..." :
+				"Aligning projects " + mProj1.getDisplayName() + " and " + mProj2.getDisplayName() + " ...";
 		
-		final ProgressDialog diaLog = new ProgressDialog(this, 
-				"Aligning Projects", msg, false, true, syFW);
+		final ProgressDialog diaLog = new ProgressDialog(this, "Aligning Projects", msg, false, true, syFW);
 		
 		if (closeWhenDone) 	diaLog.closeWhenDone();	
 		else 				diaLog.closeIfNoErrors();
 		
-		// getting existing pair props
-		int id1=p1.getID(), id2=p2.getID();
-		SyProps pairProps = frame.getPairPropsFromDB(id1, id2);
-		
-		// remove existing pair stuff and reassign pair props 
-		int pairIdx = pairIdxRenew(p1, p2);
-		Logger syLog = diaLog;
-		savePairProps(pairProps, pairIdx, p1, p2, syLog);
+		mp.saveParams();
+		mProj1.saveParams(mProj1.xAlign);
+		mProj2.saveParams(mProj2.xAlign);
 		
 		final AlignMain aligner = 
-			new AlignMain(new UpdatePool(dbReader), diaLog, 
-				p1.getDBName(), p2.getDBName(), maxCPUs, bDoCat, mProps, pairProps, alignLogDir);
+			new AlignMain(new UpdatePool(dbConn), diaLog, mp,  maxCPUs, bDoCat, alignLogDir);
 		if (aligner.mCancelled) return;
 		
 		final AnchorsMain anchors = 
-			new AnchorsMain(pairIdx, new UpdatePool(dbReader), diaLog, mProps, pairProps );
+			new AnchorsMain(new UpdatePool(dbConn), diaLog, mp );
 		
 		final SyntenyMain synteny = 
-			new SyntenyMain( new UpdatePool(dbReader), diaLog, mProps, pairProps );
+			new SyntenyMain( new UpdatePool(dbConn), diaLog, mp );
 		
 		final Thread statusThread = new Thread() {
 			public void run() {
@@ -141,14 +135,14 @@ public class AlignProjs extends JFrame {
 					
 					if (Cancelled.isCancelled()) return;
 					
-					success &= anchors.run( p1.getDBName(), p2.getDBName() );
+					success &= anchors.run( mProj1, mProj2);
 					if (!success) {
 						diaLog.finish(false);
 						return;
 					}
 					if (Cancelled.isCancelled()) return;
 					
-					success &= synteny.run( p1.getDBName(), p2.getDBName() );
+					success &= synteny.run( mProj1, mProj2);
 					if (!success) {
 						diaLog.finish(false);
 						return;
@@ -158,18 +152,18 @@ public class AlignProjs extends JFrame {
 					timeEnd = System.currentTimeMillis();
 					diff = timeEnd - timeStart;
 					timeMsg = Utilities.getDurationString(diff);
-					diaLog.appendText(">> Summary for " + p1.getDisplayName() + " and " + p2.getDisplayName() + "\n");
-					printStats(diaLog, p1, p2);
+					diaLog.appendText(">> Summary for " + mProj1.getDisplayName() + " and " + mProj2.getDisplayName() + "\n");
+					printStats(diaLog, mProj1, mProj2);
 					diaLog.appendText("\nFinished in " + timeMsg + "\n\n");
 					
 					// CAS511 add params column (not schema update) to save args, mummer5, noCat	
-					UpdatePool pool = new UpdatePool(dbReader);
+					UpdatePool pool = new UpdatePool(dbConn);
 					pool.tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null); 
 					
 					pool.executeUpdate("update pairs set aligned=1, aligndate=NOW(), "
-						+ "syver='" + SyMAP.VERSION + "', params='" + params + "'" // CAS520 add syver
-						+ " where (proj1_idx=" + p1.getID() + " and proj2_idx=" + p2.getID() 
-						+ ") or   (proj1_idx=" + p2.getID() + " and proj2_idx=" + p1.getID() + ")"); 
+						+ "syver='" + Globals.VERSION + "', params='" + params + "'" // CAS520 add syver
+						+ " where (proj1_idx=" + mProj1.getID() + " and proj2_idx=" + mProj2.getID() 
+						+ ") or   (proj1_idx=" + mProj2.getID() + " and proj2_idx=" + mProj1.getID() + ")"); 
 				}
 				catch (OutOfMemoryError e) {
 					success = false;
@@ -204,8 +198,7 @@ public class AlignProjs extends JFrame {
 				
 				// Close dialog
 				diaLog.setVisible(false);
-				if (e.getActionCommand().equals("Cancel"))
-				{
+				if (e.getActionCommand().equals("Cancel")) {
 					diaLog.setCancelled();
 					Cancelled.cancel();
 				}
@@ -221,7 +214,7 @@ public class AlignProjs extends JFrame {
 			try {
 				Thread.sleep(1000);
 				System.out.println("Cancel alignment (removing alignment from DB)");
-				frame.removeAlignmentFromDB(p1, p2);
+				mp.removePairFromDB(); // CAS534 
 				System.out.println("Removal complete");
 			}
 			catch (Exception e) { 
@@ -247,7 +240,7 @@ public class AlignProjs extends JFrame {
 	// CAS500 was putting log in data/pseudo_pseudo/seq1_to_seq2/symap.log
 	// changed to put in logs/seq1_to_seq2/symap.log
 	
-	private FileWriter symapLog(Project p1, Project p2) {
+	private FileWriter symapLog(Mproject p1, Mproject p2) {
 		FileWriter ret = null;
 		try
 		{
@@ -266,32 +259,10 @@ public class AlignProjs extends JFrame {
 		catch (Exception e) {ErrorReport.print(e, "Creating log file");}
 		return ret;
 	}
-	private int pairIdxRenew(Project p1, Project p2) {
-		try {
-			/** CAS517 use main remove
-			int idx = frame.getPairIdx(id1, id2);
-			UpdatePool pool = new UpdatePool(dbReader);
-			if (idx>0) pool.executeUpdate("DELETE FROM pairs WHERE idx=" + idx);
-			**/
-			frame.removeAlignmentFromDB(p1, p2);
-			UpdatePool pool = new UpdatePool(dbReader);
-			return frame.pairIdxCreate(p1.getID(), p2.getID(), pool);
-		}
-		catch (Exception e) {ErrorReport.die(e, "SyMAP error renewing pairidx");}
-		return 0;
-	}
-	private void savePairProps(SyProps props, int pairIdx, Project p1, Project p2, Logger log) {
-		try {
-			String n1 = p1.getDBName(), n2=p2.getDBName();
-			String dir = Constants.getNameResultsDir(p1.strDBName,  p2.strDBName);
-			props.saveNonDefaulted(log, dir, p1.getID(), p2.getID(), pairIdx, n1, n2, new UpdatePool(dbReader));
-		} 
-		catch (Exception e){ErrorReport.print(e, "Save pair parameters");}
-	}
-	private void printStats(ProgressDialog prog, Project p1, Project p2) throws Exception
-	{
-		int pairIdx = frame.getPairIdx(p1.getID(),p2.getID());
-		if (pairIdx==0) return;
+
+	private void printStats(ProgressDialog prog, Mproject p1, Mproject p2) throws Exception {
+		int pairIdx = mp.getPairIdx();
+		if (pairIdx<=0) return;
 
 		TreeMap<String,Integer> counts = new TreeMap<String,Integer>();
 		getPseudoCounts(counts,pairIdx);
@@ -300,9 +271,8 @@ public class AlignProjs extends JFrame {
 		Utils.prtNumMsg(prog, counts.get("genehits"), "gene hits");
 		Utils.prtNumMsg(prog, counts.get("blkhits"), "synteny hits");
 	}
-	private void getPseudoCounts(TreeMap<String,Integer> hitCounts, int pidx) throws Exception
-	{
-		UpdatePool db = new UpdatePool(dbReader);
+	private void getPseudoCounts(TreeMap<String,Integer> hitCounts, int pidx) throws Exception {
+		UpdatePool db = new UpdatePool(dbConn);
 	
 		ResultSet rs = db.executeQuery("select count(*) as nhits from pseudo_hits where pair_idx=" + pidx);	
 		rs.first();
@@ -325,5 +295,17 @@ public class AlignProjs extends JFrame {
 		hitCounts.put("blocks", rs.getInt("n"));
 		rs.close();
 
+	}
+	// CAS500 was putting log in data/pseudo_pseudo/seq1_to_seq2/symap.log
+	// changed to put in logs/seq1_to_seq2/symap.log; 
+	private String buildLogAlignDir(Mproject p1, Mproject p2) {
+		try {
+			String logName = Constants.logDir + p1.getDBName() + Constants.projTo + p2.getDBName();
+			if (Utilities.dirExists(logName)) System.out.println("Log alignments in directory: " + logName);
+			else Utilities.checkCreateDir(logName, true /* bPrt */);
+			return logName + "/";
+		}
+		catch (Exception e){ErrorReport.print(e, "Creating log file");}
+		return null;
 	}
 }

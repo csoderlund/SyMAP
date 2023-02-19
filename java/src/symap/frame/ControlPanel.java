@@ -7,75 +7,64 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
 import javax.swing.JComboBox;
-import javax.swing.SwingConstants;
 
 import colordialog.ColorDialogHandler;
 import history.HistoryControl;
-import symap.SyMAPConstants;
-import symap.closeup.CloseUp;
+import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import util.ImageViewer;
+import util.Jcomp;
 import util.Jhtml;
-import util.Utilities;
 
 /**
  * The top panel containing things such as the forward/back buttons, reset button, etc...
  * Handles the actions of those buttons through the arguments passed into the constructor.
+ * CAS534 squash buttons so can view all from popup
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class ControlPanel extends JPanel implements SyMAPConstants,
-	HelpListener 
-{								
-	private JButton scaleButton;
+public class ControlPanel extends JPanel implements HelpListener {	
+	private static final String HELP					    = "? Online Help"; // CAS532 add
+	public static final String MOUSE_FUNCTION_SEQ 			= "Show Seq Options";
+	public static final String MOUSE_FUNCTION_CLOSEUP 		= "Align (Max " + Globals.MAX_CLOSEUP_BP + ")";
+	public static final String MOUSE_FUNCTION_ZOOM_SINGLE 	= "Zoom Select Track";
+	public static final String MOUSE_FUNCTION_ZOOM_ALL 		= "Zoom All Tracks";
 	
-	private JButton upButton, downButton;
+	private JButton scaleButton, upButton, downButton;
 	private JButton showImageButton, editColorsButton;
 	private JComboBox <String> mouseFunction; // CAS531 added so can reset
 	
 	private DrawingPanel dp;
 	private HistoryControl hc;
-	
 	private ColorDialogHandler cdh;
 
-	/**
-	 * Creates a new ControlPanel instance. 
-	 * @param dp a DrawingPanel value of the drawing panel which the control panel will use when certain buttons are pressed.
-	 * @param hc a HistoryControl value of the history control in which the control panel will register the appropriate buttons with.
-	 * @param iv an ImageViewer value of the image viewer used in acquiring the icons and printing image
-	 * @param cdh a ColorDialogHandler value of the color dialog handler which will be shown when the corresponding button is pressed.
-	 * @param bar a HelpBar value of the HelpBar if there is an associated help bar to register the button tips with (optional).
-	 */
-	public ControlPanel(DrawingPanel dp, HistoryControl hc, ColorDialogHandler cdh, HelpBar bar)
-	{
+	public ControlPanel(DrawingPanel dp, HistoryControl hc, ColorDialogHandler cdh, HelpBar bar){
 		super();
 		this.dp = dp;
 		this.hc = hc;
 		this.cdh = cdh;
 
-		JButton homeButton       = (JButton) Utilities.createButton(this,"/images/home.gif",
+		JButton homeButton       = (JButton) Jcomp.createButton(this,"/images/home.gif",
 				"Home: Go back in history to the first view",bar,null,false, false);
-		JButton backButton       = (JButton) Utilities.createButton(this,"/images/back.gif",
+		JButton backButton       = (JButton) Jcomp.createButton(this,"/images/back.gif",
 				"Back: Go back in history",bar,null,false, false);
-		JButton forwardButton    = (JButton) Utilities.createButton(this,"/images/forward.gif",
+		JButton forwardButton    = (JButton) Jcomp.createButton(this,"/images/forward.gif",
 				"Forward: Go forward in history",bar,null,false, false);
 
 		if (hc != null) hc.setButtons(homeButton,null/*resetButton*/,null/*doubleBackButton*/,backButton,forwardButton,null/*exitButton*/);
 
-		downButton       = (JButton) Utilities.createButton(this,"/images/minus.gif",
-				"Shrink the alignment region",bar,buttonListener,false, false);
-		upButton         = (JButton) Utilities.createButton(this,"/images/plus.gif",
-				"Grow the alignment region",bar,buttonListener,false, false);
-		scaleButton      = (JButton) Utilities.createButton(this,"/images/scale.gif",
-				"Scale: Draw all of the tracks to BP scale",bar,buttonListener,false, false);
-		showImageButton  = (JButton) Utilities.createButton(this,"/images/print.gif",
+		downButton       = (JButton) Jcomp.createButton(this,"/images/minus.gif",
+				"Shrink the view (less bp)",bar,buttonListener,false, false);
+		upButton         = (JButton) Jcomp.createButton(this,"/images/plus.gif",
+				"Grow the view (more bp)",bar,buttonListener,false, false);
+		scaleButton      = (JButton) Jcomp.createButton(this,"/images/scale.gif",
+				"Scale: Draw all of the tracks to bp scale",bar,buttonListener,false, false);
+		showImageButton  = (JButton) Jcomp.createButton(this,"/images/print.gif",
 				"Save: Save as image.", bar,buttonListener,false, false);
-		editColorsButton = (JButton) Utilities.createButton(this,"/images/colorchooser.gif",
+		editColorsButton = (JButton) Jcomp.createButton(this,"/images/colorchooser.gif",
 				"Colors: Edit the color settings",bar,buttonListener,false, false);
 		
 		JButton helpButton = Jhtml.createHelpIconUserLg(Jhtml.align2d);
@@ -90,27 +79,20 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 
 		if (hc != null) {
 			addToGrid(this, gridbag, constraints, homeButton, 1);
-			
-			addToGrid(this, gridbag, constraints, new JLabel(), 1);
-			addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
-			
 			addToGrid(this, gridbag, constraints, backButton, 1);
 			addToGrid(this, gridbag, constraints, forwardButton, 1);
-
-			addToGrid(this, gridbag, constraints, new JLabel(), 1);
-			addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
+			addToGrid(this, gridbag, constraints, new JLabel(" "), 1); 
+			//addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1); // CAS534 remove 4 of these
 		}	
 		addToGrid(this, gridbag, constraints, downButton, 1);
 		addToGrid(this, gridbag, constraints, upButton, 1);		
 		addToGrid(this, gridbag, constraints, scaleButton, 1);
-		addToGrid(this, gridbag, constraints, new JLabel(), 1);
-		addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
+		addToGrid(this, gridbag, constraints, new JLabel(" "), 1);
 			
 		addToGrid(this, gridbag, constraints, new JLabel("Selected:"), 1);
 		mouseFunction = createMouseFunctionSelector(bar);
 		addToGrid(this, gridbag, constraints, mouseFunction, 1);
-		addToGrid(this, gridbag, constraints, new JLabel(), 1);
-		addToGrid(this, gridbag, constraints, new JSeparator(SwingConstants.VERTICAL), 1);
+		addToGrid(this, gridbag, constraints, new JLabel(" "), 1);
 		
 		if (cdh != null) addToGrid(this,gridbag,constraints,editColorsButton,1); // CAS517 put before Print
 		addToGrid(this, gridbag, constraints, showImageButton, 1);
@@ -129,7 +111,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 			else if (source == showImageButton)  ImageViewer.showImage("Exp_2D", (JPanel)dp); // CAS507 made static
 		}
 	};
-	/*** Enables/disables all of the buttons on the panel except for the help button. */
+	
 	public void setPanelEnabled(boolean enable) {
 		scaleButton.setEnabled(enable);
 		showImageButton.setEnabled(enable);
@@ -154,11 +136,7 @@ public class ControlPanel extends JPanel implements SyMAPConstants,
 		Component comp = (Component)event.getSource();
 		return comp.getName();
 	}
-	private static final String HELP					    = "? Online Help"; // CAS532 add
-	public static final String MOUSE_FUNCTION_SEQ 			= "Show Seq Options";
-	public static final String MOUSE_FUNCTION_CLOSEUP 		= "Align (Max " + CloseUp.MAX_CLOSEUP_BP + "bp)";
-	public static final String MOUSE_FUNCTION_ZOOM_SINGLE 	= "Zoom Selected Track";
-	public static final String MOUSE_FUNCTION_ZOOM_ALL 		= "Zoom All Tracks";
+	
 	private JComboBox <String> createMouseFunctionSelector(HelpBar bar) {
 		String [] labels = { // CAS504 change order and add _SEQ
 				MOUSE_FUNCTION_ZOOM_ALL,

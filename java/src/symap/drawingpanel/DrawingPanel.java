@@ -6,11 +6,10 @@ import java.awt.*;
 import javax.swing.*;
 import java.sql.SQLException;
 
-import symap.SyMAP;
-import symap.SyMAPConstants;
+import symap.Globals;
 import symap.frame.ControlPanel;
 import symap.frame.HelpBar;
-import symap.pool.Pools;
+import symap.manager.Pools;
 import symap.mapper.HitData;
 import symap.mapper.Mapper;
 import symap.mapper.MapperData;
@@ -31,10 +30,9 @@ import util.Utilities;
  * CAS521 totally removed all FPC (CAS517 had added stuff to not show FPC if no /fpc)
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class DrawingPanel extends JPanel 
-	implements ColorListener, HistoryListener, SyMAPConstants
+public class DrawingPanel extends JPanel implements ColorListener, HistoryListener
 { 
-	private static boolean DEBUG = symap.SyMAP.DEBUG;
+	private static boolean DEBUG = Globals.DEBUG;
 		
 	public static Color backgroundColor = Color.white;
 	public static final int MAX_TRACKS = 100;
@@ -82,7 +80,7 @@ public class DrawingPanel extends JPanel
 		trackHolders = new TrackHolder[MAX_TRACKS];
 		for (int i = 0; i < trackHolders.length; i++) {
 			trackHolders[i] = new TrackHolder(this,bar, (i+1)); // CAS517 add trackNum
-			trackHolders[i].setOrientation( i == 0 ? LEFT_ORIENT : RIGHT_ORIENT );
+			trackHolders[i].setOrientation( i == 0 ? Globals.LEFT_ORIENT : Globals.RIGHT_ORIENT );
 			add(trackHolders[i]);
 		}
 
@@ -174,7 +172,7 @@ public class DrawingPanel extends JPanel
 		setFrameEnabled(false);
 		pools.clearPools();
 		try {
-			pools.getProjectProperties().reset();
+			pools.getProjectPropPool().reset();
 		} catch (SQLException e) { }
 		for (int i = 0; i <  numMaps; ++i) mappers[i].clearData();
 		for (int i = 0; i <= numMaps; ++i) {
@@ -186,9 +184,8 @@ public class DrawingPanel extends JPanel
 	// clear caches/data but don't re-init tracks
 	public void clearData() {
 		pools.clearPools();
-		try {
-			pools.getProjectProperties().reset();
-		} catch (SQLException e) { }
+		//CAS534 clearPools does this; try {pools.getProjectProperties().reset();
+		//} catch (SQLException e) { }
 		
 		for (int i = 0; i <  numMaps; ++i) mappers[i].clearData();
 		for (int i = 0; i <= numMaps; ++i) {
@@ -249,7 +246,7 @@ public class DrawingPanel extends JPanel
 		Track opposite = null;
 		if (position-1 >= 0) opposite = trackHolders[position-1].getTrack();
 		if (opposite == null && position+1 < trackHolders.length) opposite = trackHolders[position+1].getTrack();
-		return opposite == null ? NO_VALUE : opposite.getProject();
+		return opposite == null ? Globals.NO_VALUE : opposite.getProject();
 	}
 	
 	public int[] getMinMax(Track src, Track dest, int start, int end) {
@@ -270,10 +267,10 @@ public class DrawingPanel extends JPanel
 			Track t1 = mappers[i].getTrack1(); // left
 			Track t2 = mappers[i].getTrack2(); // right
 
-			if (t1 == src && orientation == RIGHT_ORIENT) 		return t2;
-			else if (t2 == src && orientation == LEFT_ORIENT) 	return t1;
+			if (t1 == src && orientation == Globals.RIGHT_ORIENT) 		return t2;
+			else if (t2 == src && orientation == Globals.LEFT_ORIENT) 	return t1;
 		}
-		if (SyMAP.DEBUG) System.out.println("getOpposingTrack is null " + orientation + " " + src.toString());
+		if (Globals.DEBUG) System.out.println("getOpposingTrack is null " + orientation + " " + src.toString());
 		return null;
 	}
 
@@ -293,8 +290,8 @@ public class DrawingPanel extends JPanel
 	}
 	
 	public void zoomAllTracks(Track src, int start, int end) {
-		zoomTracks(src, start, end, LEFT_ORIENT);
-		zoomTracks(src, start, end, RIGHT_ORIENT);
+		zoomTracks(src, start, end, Globals.LEFT_ORIENT);
+		zoomTracks(src, start, end, Globals.RIGHT_ORIENT);
 	}
 	
 	// "zoom all tracks" mouse function

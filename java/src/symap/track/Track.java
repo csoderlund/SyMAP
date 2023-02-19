@@ -20,21 +20,21 @@ import java.awt.font.TextLayout;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import javax.swing.JComponent;
+
 import number.BPNumber;
 import number.GenomicsNumber;
 import number.GenomicsNumberHolder;
-import symap.SyMAPConstants;
+import props.ProjectPool;
+import symap.Globals;
 import symap.frame.HelpListener;
-import symap.pool.ProjectProperties;
 import symap.drawingpanel.DrawingPanel;
 import util.ErrorReport;
 import util.Utilities;
 
 /**
- * Class Track contains the base track information. 
+ * Class Track contains the base track information. CAS534 remove SyMAPConstants
  */
-public abstract class Track implements GenomicsNumberHolder, HelpListener,
-		SyMAPConstants, KeyListener,
+public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyListener,
 		MouseListener, MouseMotionListener, MouseWheelListener
 {	
 	public static final int MAX_PIXEL_HEIGHT = 10000;
@@ -90,7 +90,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	{
 		this.drawingPanel = dp;
 		this.holder = holder;
-		otherProjIdx = projIdx = NO_VALUE;
+		otherProjIdx = projIdx = Globals.NO_VALUE;
 		titlePoint = new Point2D.Float();
 		rect = new Rectangle2D.Double();
 		trackOffset = new Point();
@@ -100,7 +100,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		dragRect = new Rectangle();
 		dragPoint = new Point();
 		dimension = new Dimension();
-		orient = LEFT_ORIENT;
+		orient = Globals.LEFT_ORIENT;
 		start = new GenomicsNumber(this,0);
 		end = new GenomicsNumber(this,0);
 		size = new GenomicsNumber(this,0);
@@ -122,10 +122,15 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			this.projIdx = project;
 			this.otherProjIdx = otherProject;
 
-			ProjectProperties pp = drawingPanel.getPools().getProjectProperties();
+			ProjectPool pp = drawingPanel.getPools().getProjectPropPool();
+			
 			displayName = pp.getDisplayName(project);
 			projectName = pp.getName(project);
+			if (Utilities.isEmpty(displayName)) displayName=projectName; // CAS534 need for new projects
+			
 			otherProjName = pp.getDisplayName(otherProject);
+			if (Utilities.isEmpty(otherProjName)) otherProjName=pp.getName(otherProject);
+			
 			bpPerCb     = pp.getIntProperty(project,"cbsize",1);
 
 			if (bpPerCb == 1) {
@@ -163,13 +168,13 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		clear(startMoveOffset);
 		clear(adjustMoveOffset);
 		moveOffset.setLocation(0,0);
-		startResizeBpPerPixel = NO_VALUE;
+		startResizeBpPerPixel = Globals.NO_VALUE;
 		clear(dragRect);
 		dragPoint.setLocation(0,0);
 		titlePoint.setLocation(0,0);
 
 		dimension.setSize(0,0);
-		height = width = NO_VALUE;
+		height = width = Globals.NO_VALUE;
 		defaultBpPerPixel = bpPerPixel = minDefaultBpPerPixel;
 
 		clearTrackBuild();
@@ -181,13 +186,13 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		clear(startMoveOffset);
 		clear(adjustMoveOffset);
 		moveOffset.setLocation(0,0);
-		startResizeBpPerPixel = NO_VALUE;
+		startResizeBpPerPixel = Globals.NO_VALUE;
 		clear(dragRect);
 		dragPoint.setLocation(0,0);
 		titlePoint.setLocation(0,0);
 
 		dimension.setSize(0,0);
-		height = width = NO_VALUE;
+		height = width = Globals.NO_VALUE;
 		defaultBpPerPixel = bpPerPixel = minDefaultBpPerPixel;
 		clearInit();
 	}
@@ -289,7 +294,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	 */
 	public void setBpPerPixel(double bp) {
 		if (bp > 0) {
-			height = NO_VALUE;
+			height = Globals.NO_VALUE;
 
 			if (bp != bpPerPixel) {
 				bpPerPixel = bp;
@@ -320,21 +325,21 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	}
 	/*** Sets the height to not be considered on the next build. */
 	public void clearHeight() {
-		if (height != NO_VALUE) {
-			height = NO_VALUE;
+		if (height != Globals.NO_VALUE) {
+			height = Globals.NO_VALUE;
 			clearTrackBuild();
 		}
 	}
 	/*** Sets the width to not be considered on the next build. */
 	public void clearWidth() {
-		if (width != NO_VALUE) {
-			width = NO_VALUE;
+		if (width != Globals.NO_VALUE) {
+			width = Globals.NO_VALUE;
 			clearTrackBuild();
 		}
 	}
 	/*** Some track implementations may only accept RIGHT_ORIENT and LEFT_ORIENT.*/
 	protected void setOrientation(int orientation) {
-		if (orientation != RIGHT_ORIENT && orientation != CENTER_ORIENT) orientation = LEFT_ORIENT;
+		if (orientation != Globals.RIGHT_ORIENT && orientation != Globals.CENTER_ORIENT) orientation = Globals.LEFT_ORIENT;
 		if (orientation != orient) {
 			orient = orientation;
 			clearTrackBuild();
@@ -577,7 +582,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			dif = end.getPixelValue() - start.getPixelValue();
 		}	    
 		if (dif > MAX_PIXEL_HEIGHT) {
-			if (height == NO_VALUE) height = getAvailPixels();
+			if (height == Globals.NO_VALUE) height = getAvailPixels();
 			bpPerPixel = (end.getBPValue()-start.getBPValue())/height; 
 			// CAS501 System.out.println("Adjusting track size");
 		}
@@ -608,7 +613,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 	}
 	protected void setCursor(Cursor c) {
 		if (c == null)
-			/*holder*/drawingPanel.setCursor(SyMAPConstants.DEFAULT_CURSOR); 
+			/*holder*/drawingPanel.setCursor(Globals.DEFAULT_CURSOR); 
 		else
 			/*holder*/drawingPanel.setCursor(c); 
 	}
@@ -648,7 +653,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		if (cursor.getType() == Cursor.S_RESIZE_CURSOR) {
 			double height = p.getY() - rect.getY();
 			if (height > 0 && height < MAX_PIXEL_HEIGHT) {
-				if (startResizeBpPerPixel == NO_VALUE) startResizeBpPerPixel = bpPerPixel;
+				if (startResizeBpPerPixel == Globals.NO_VALUE) startResizeBpPerPixel = bpPerPixel;
 				setHeight(height);
 				if (build()) layout();
 			}
@@ -710,7 +715,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		else if (cursor.getType() == Cursor.S_RESIZE_CURSOR) { // Resize
 		}
 		else { //(e.isControlDown()) { // Zoom
-			setCursor(CROSSHAIR_CURSOR);
+			setCursor(Globals.CROSSHAIR_CURSOR);
 			if (isCleared(dragRect)) {
 				dragPoint.setLocation(point);
 				if (dragPoint.getX() < rect.x)
@@ -733,12 +738,12 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 			Point p = e.getPoint();
 			
 			if (e.isControlDown()) 							// Zoom
-				setCursor(CROSSHAIR_CURSOR);
+				setCursor(Globals.CROSSHAIR_CURSOR);
 			else if (isSouthResizePoint(p)) 				// Resize
-				setCursor(S_RESIZE_CURSOR);
+				setCursor(Globals.S_RESIZE_CURSOR);
 			else {
 				if (drawingPanel.isMouseFunction())
-					setCursor(CROSSHAIR_CURSOR);
+					setCursor(Globals.CROSSHAIR_CURSOR);
 				else {
 					setCursor(null);
 					clearMouseSettings();
@@ -777,7 +782,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 					}
 				} catch (Exception ex) {ErrorReport.print(ex, "Exception resizing track!");}
 			}
-			if (needUpdate  || (startResizeBpPerPixel != NO_VALUE && startResizeBpPerPixel != bpPerPixel) 
+			if (needUpdate  || (startResizeBpPerPixel != Globals.NO_VALUE && startResizeBpPerPixel != bpPerPixel) 
 							|| (!isCleared(startMoveOffset) && !startMoveOffset.equals(moveOffset))) {
 				drawingPanel.setImmediateUpdateHistory();
 				clearMouseSettings();
@@ -793,19 +798,19 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener,
 		clear(startMoveOffset);
 		clear(adjustMoveOffset);
 		clear(dragPoint);
-		startResizeBpPerPixel = NO_VALUE;
+		startResizeBpPerPixel = Globals.NO_VALUE;
 	}
 	protected boolean isCleared(Point p) {
-		return p.x == NO_VALUE && p.y == NO_VALUE;
+		return p.x == Globals.NO_VALUE && p.y == Globals.NO_VALUE;
 	}
 	protected boolean isCleared(Rectangle r) {
-		return r.x == 0 && r.y == 0 && r.width == NO_VALUE && r.height == NO_VALUE;
+		return r.x == 0 && r.y == 0 && r.width == Globals.NO_VALUE && r.height == Globals.NO_VALUE;
 	}
 	protected void clear(Point p) {
-		p.setLocation(NO_VALUE,NO_VALUE);
+		p.setLocation(Globals.NO_VALUE,Globals.NO_VALUE);
 	}
 	protected void clear(Rectangle r) {
-		r.setRect(0,0,NO_VALUE,NO_VALUE);
+		r.setRect(0,0,Globals.NO_VALUE,Globals.NO_VALUE);
 	}
 	public void mouseClicked(MouseEvent e) { }
 	public void mouseEntered(MouseEvent e) { 

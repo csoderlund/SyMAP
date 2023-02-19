@@ -5,15 +5,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Vector;
 
+import database.DBconn;
+import database.DBAbsUser;
 import number.GenomicsNumber;
-import symap.pool.DatabaseUser;
-import util.DatabaseReader;
 import util.ErrorReport;
 
 /**
  * The PseudoPool handles the cache of data for the Sequence Track.
  */
-public class PseudoPool extends DatabaseUser {	
+public class PseudoPool extends DBAbsUser {	
 	protected static final String SIZE_QUERY = 
 		"SELECT (SELECT length FROM pseudos WHERE grp_idx=?) as size, "+
 		"       (SELECT name FROM xgroups WHERE idx=?) as name; ";
@@ -24,7 +24,7 @@ public class PseudoPool extends DatabaseUser {
 	
 	//private ListCache pseudoCache; CAS531 removed dead cache
 
-	public PseudoPool(DatabaseReader dr) { 
+	public PseudoPool(DBconn dr) { 
 		super(dr);
 	}
 

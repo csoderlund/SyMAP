@@ -72,7 +72,7 @@ public class Group implements Comparable<Group> {
 			groups[0].offset = 0;
 			for (int i = 1; i < groups.length; i++) {
 				groups[i].offset = groups[i-1].offset 
-						+ (int)(((float)groups[i-1].cLenBP)*groups[i-1].scaleFactor);
+						+ (int)(((float)groups[i-1].cLenBP) * groups[i-1].scaleFactor);
 			}
 		}
 	}

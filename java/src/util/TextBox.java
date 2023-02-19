@@ -12,7 +12,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.Point;
-import java.awt.Dimension;
 import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JLabel;

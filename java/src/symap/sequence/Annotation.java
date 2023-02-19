@@ -8,14 +8,16 @@ import java.awt.Point;
 import java.awt.Stroke;
 import java.awt.geom.Rectangle2D;
 import java.util.Vector;
+
+import props.PropertiesReader;
+
 import java.util.Comparator;
 import java.util.TreeMap;
 
-import symap.SyMAP;
+import symap.Globals;
 import symap.closeup.TextShowInfo;
 import symap.closeup.SeqData;
 import util.ErrorReport;
-import util.PropertiesReader;
 import util.TextBox;
 
 /**
@@ -24,7 +26,7 @@ import util.TextBox;
  * Drawing the annotation requires calling setRectangle() first.
  */
 public class Annotation {
-	private static boolean DEBUG = symap.SyMAP.DEBUG;
+	private static boolean DEBUG = Globals.DEBUG;
 	
 	// colors at bottom
 
@@ -429,7 +431,7 @@ public class Annotation {
 	public static Color sygeneColor = Color.yellow; // CAS503 not used
 	
 	static {
-		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/annotation.properties"));
+		PropertiesReader props = new PropertiesReader(Globals.class.getResource("/properties/annotation.properties"));
 		geneColor = props.getColor("geneColor");
 		gapColor = props.getColor("gapColor");
 		centromereColor = props.getColor("centromereColor");

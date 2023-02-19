@@ -1,9 +1,5 @@
 package blockview;
 
-/********************************************
- * Block view for a single selected chromosome
- * CAS515 rearranged; made smaller; tried to get scrollbar and resize to work...
- */
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -13,12 +9,18 @@ import java.util.TreeMap;
 import java.awt.geom.Rectangle2D;
 import javax.swing.event.*;
 
-import symap.SyMAP;
-import util.DatabaseReader;
+import database.DBconn;
+import symap.manager.Mproject;
+import symap.Globals;
+import symap.frame.SyMAP2d;
 import util.ErrorReport;
 import util.ImageViewer;
 import util.Utilities;
 
+/********************************************
+ * Block view for a single selected chromosome
+ * CAS515 rearranged; made smaller; tried to get scrollbar and resize to work...
+ */
 public class Block2Frame extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private final int fBlockMaxHeight = 800; // CAS515 was 900
@@ -30,7 +32,7 @@ public class Block2Frame extends JFrame {
 	private int mRefIdx;
 	private String refName, tarName, grpPfx;
 	private int mIdx2, mGrpIdx, mPairIdx;
-	private DatabaseReader mDB;
+	private DBconn mDB;
 	private Vector<Integer> mColors;
 	private boolean unorderedRef, unordered2, mReversed;
 	private int unGrp2;
@@ -46,8 +48,8 @@ public class Block2Frame extends JFrame {
 	private JPanel mainPane; // CAS533 changed from Container to JPanel for ImageViewer
 	private int farL, farR;
 	
-	public Block2Frame(DatabaseReader dbReader, int refIdx, int idx2, int grpIdx, int pairIdx, boolean reversed) {
-		super("SyMAP Block Detail View " + symap.SyMAP.VERSION);
+	public Block2Frame(DBconn dbReader, int refIdx, int idx2, int grpIdx, int pairIdx, boolean reversed) {
+		super("SyMAP Block Detail View " + Globals.VERSION);
 		mRefIdx = refIdx;
 		mIdx2 = idx2;
 		mGrpIdx = grpIdx;
@@ -82,7 +84,7 @@ public class Block2Frame extends JFrame {
 			topRow.setBackground(Color.white);
 			topRow.setLayout(new GridBagLayout());	
 			
-			JLabel title = new JLabel(tarName+ " synteny to " + refName + " " + grpPfx + mRefChr); 
+			JLabel title = new JLabel(tarName+ " to " + refName + " " + grpPfx + mRefChr); 
 			title.setFont(new Font("Verdana",Font.BOLD,18));
 			GridBagConstraints cRow = new GridBagConstraints();
 			cRow.gridx = cRow.gridy = 0;
@@ -147,6 +149,7 @@ public class Block2Frame extends JFrame {
 			ResultSet rs;
 			Statement s = mDB.getConnection().createStatement();
 	
+		// xgroups
 			rs = s.executeQuery("select count(*) as ngrps from xgroups where proj_idx=" + mRefIdx);
 			rs.first();
 			unorderedRef = (rs.getInt("ngrps") > fTooManySeqs);
@@ -161,14 +164,8 @@ public class Block2Frame extends JFrame {
 			}
 			
 			rs = s.executeQuery("select idx from xgroups where name='0' and proj_idx=" + mIdx2);
-			if (rs.first()) {
-				unGrp2 = rs.getInt("idx");
-			}
-
-			rs = s.executeQuery("select value from proj_props where name='grp_prefix' and proj_idx=" + mRefIdx);
-			rs.first();
-			grpPfx = rs.getString("value");
-
+			if (rs.first()) unGrp2 = rs.getInt("idx");
+			
 			rs = s.executeQuery("select name,length from xgroups join pseudos on pseudos.grp_idx=xgroups.idx " +
 					" where xgroups.idx=" + mGrpIdx);
 			if (!rs.first()) {
@@ -198,7 +195,7 @@ public class Block2Frame extends JFrame {
 				}
 			}
 
-			rs = s.executeQuery("select name,idx from xgroups where proj_idx=" + mIdx2 + " and name != '0' order by sort_order asc");
+			rs = s.executeQuery("select name, idx from xgroups where proj_idx=" + mIdx2 + " and name != '0' order by sort_order asc");
 			int i = mGrp2Names.size();
 			while (rs.next()) {
 				int idx = rs.getInt("idx");
@@ -208,13 +205,20 @@ public class Block2Frame extends JFrame {
 			}
 			
 			// CAS515 was using 'names from projects' which is directory
-			rs = s.executeQuery("select value from proj_props where name='display_name' and proj_idx=" + mRefIdx);
+			Mproject tProj = new Mproject();
+			String grp_prefix = tProj.getKey(tProj.lGrpPrefix);
+			
+			rs = s.executeQuery("select value from proj_props where name='" + grp_prefix + "' and proj_idx=" + mRefIdx);
+			grpPfx = rs.first() ? rs.getString("value") : "Chr"; // CAS534 should be loaded, but if not...
+
+			String display_name = tProj.getKey(tProj.sDisplay);
+			rs = s.executeQuery("select value from proj_props where name='"+display_name+"' and proj_idx=" + mRefIdx);
 			rs.first();
 			refName = rs.getString("value");
-			rs = s.executeQuery("select value from proj_props where name='display_name' and proj_idx=" + mIdx2);
+			rs = s.executeQuery("select value from proj_props where name='"+display_name+"' and proj_idx=" + mIdx2);
 			rs.first();
 			tarName = rs.getString("value");
-						
+
 			rs.close();
 			return true;
 		}
@@ -551,7 +555,7 @@ public class Block2Frame extends JFrame {
 	}			
 	private void showDetailView(Block b) {
 		try {
-			SyMAP symap = new SyMAP(mDB, null);
+			SyMAP2d symap = new SyMAP2d(mDB, null);
 			
 			symap.getDrawingPanel().setSequenceTrack(1,mRefIdx,mGrpIdx,Color.CYAN);
 			symap.getDrawingPanel().setSequenceTrack(2,mIdx2,b.mGrp2,Color.GREEN);

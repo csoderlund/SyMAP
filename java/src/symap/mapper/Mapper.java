@@ -4,23 +4,23 @@ import java.util.Vector;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;	
 import java.awt.event.MouseListener; 	
 import java.awt.event.MouseWheelListener; 	
 import javax.swing.JComponent;
+
+import props.PropertiesReader;
+
 import javax.swing.AbstractButton;
 import symap.filter.FilterHandler;
-import symap.SyMAP;
-import symap.SyMAPConstants;
+import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import symap.track.*;
 import symap.frame.HelpBar; 		
 import symap.frame.HelpListener; 	
 import symapQuery.TableDataPanel;
-import util.PropertiesReader;
 import util.ErrorReport;
 
 /**
@@ -30,7 +30,7 @@ import util.ErrorReport;
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Mapper extends JComponent 
-	implements  HitFilter.HitFilterListener, SyMAPConstants, // CAS521 remove Filtered Interface
+	implements  HitFilter.HitFilterListener,  // CAS521 remove Filtered Interface
 		MouseMotionListener, MouseListener, MouseWheelListener, HelpListener 		
 {
 	// ColorDialog colors at bottom
@@ -116,7 +116,7 @@ public class Mapper extends JComponent
 	}
 
 	private boolean myInit(HitFilter hf) {
-		if (SyMAP.DEBUG) System.out.println("Init hits from mapper");
+		if (Globals.DEBUG) System.out.println("Init hits from mapper");
 		
 		Track t1 = trackHolders[0].getTrack();
 		Track t2 = trackHolders[1].getTrack();
@@ -158,8 +158,8 @@ public class Mapper extends JComponent
 	public Track getTrack(int trackNum) {return trackHolders[trackNum].getTrack();}
 	
 	protected int getTrackPosition(Track t) {
-		if (trackHolders[0].getTrack() == t)	return LEFT_ORIENT;
-		else									return RIGHT_ORIENT;
+		if (trackHolders[0].getTrack() == t)	return Globals.LEFT_ORIENT;
+		else									return Globals.RIGHT_ORIENT;
 	}
 	// closeup align
 	public Vector <HitData> getHitsInRange(Track src, int start, int end) {
@@ -190,7 +190,7 @@ public class Mapper extends JComponent
 		if (t2==null) System.out.println("Mapper Error: NULL TRACK 2");
 		
 		if (t1.getProject() == t2.getProject()) { // isSelf
-			if (t1==src && getTrackPosition(t1)==LEFT_ORIENT) return true;
+			if (t1==src && getTrackPosition(t1)==Globals.LEFT_ORIENT) return true;
 			else return false;
 		}
 		if (t1 == src && mapPool.hasPair(t1, t2)) return true; 
@@ -211,7 +211,7 @@ public class Mapper extends JComponent
 		// CAS533 this makes hit lines thicker, but drawing is slower on Linux 
 		// g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
-		if (initing && SyMAP.DEBUG) System.out.println("********* initing " + initing);
+		if (initing && Globals.DEBUG) System.out.println("********* initing " + initing);
 
 		if (!initing) 
 			seqHitObj.paintComponent(g2);
@@ -276,7 +276,7 @@ public class Mapper extends JComponent
 	public static Color hitRibbonBackgroundColor;	
 	public static int 	hitRibbonWidth=3; 			
 	static {
-		PropertiesReader props = new PropertiesReader(SyMAP.class.getResource("/properties/mapper.properties"));
+		PropertiesReader props = new PropertiesReader(Globals.class.getResource("/properties/mapper.properties"));
 		posOrientLineColor = 		props.getColor("posOrientLineColor");
 		negOrientLineColor = 		props.getColor("negOrientLineColor");
 		pseudoLineColorPP = 		props.getColor("pseudoLineColorPP"); 

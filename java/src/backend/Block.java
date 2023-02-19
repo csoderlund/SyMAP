@@ -3,6 +3,7 @@ package backend;
 import java.util.Vector;
 import java.util.TreeSet;
 
+import symap.manager.Mproject;
 import util.Logger;
 
 /**************************************
@@ -19,14 +20,14 @@ public class Block
 	
 	protected int mGrpIdx1, mGrpIdx2;
 	protected int mPairIdx = 0;
-	protected Project mProj1, mProj2;
+	protected Mproject mProj1, mProj2;
 	
 	protected int mIdx, mNum=0;
 	protected Vector<SyHit> mHits;
 	
 	private TreeSet<Integer> mHitIdxSet; // quick search for mHits
 	
-	public Block(int pidx, Project proj1, Project proj2) {
+	public Block(int pidx, Mproject proj1, Mproject proj2) {
 		mHits = new Vector<SyHit>();
 		mHitIdxSet = new TreeSet<Integer>();
 		mPairIdx = pidx;
