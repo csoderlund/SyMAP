@@ -74,7 +74,7 @@ public class SeqData implements Comparable <SeqData> {
 	}
 	// these two are used by all methods that display coords
 	public static String coordsStr(int start, int end) {
-		return String.format("(%,d - %,d) %dbp", start, end, (end-start+1)) ;
+		return String.format("%,d - %,d %dbp", start, end, (end-start+1)) ;
 	}
 	public static String coordsStr(char o, int start, int end) {
 		return String.format("%c(%,d - %,d) %dbp", o, start, end, (end-start+1)) ;
@@ -171,7 +171,7 @@ public class SeqData implements Comparable <SeqData> {
     		
 			rows[r][c++] =  o+""; 
 			rows[r][c++] =  String.format("%,d - %,d", x1, x2);
-			rows[r][c++] =  String.format("%,d", (x2-x1+1)); // len
+			rows[r][c++] =  String.format("%,d", Math.abs(x2-x1+1)); // CAS535 add abs
 			
 			if (lastx2>0) {
 				dist = x1-lastx2; 
@@ -194,7 +194,7 @@ public class SeqData implements Comparable <SeqData> {
     		this.order=order; this.start=start; this.end=end;
     	}
     	public int compareTo(Hit a){
-    		return start - a.start;
+    		return start - a.start; 
     	}
     }
 	// these 3 methods are used to closeup.HitAlignment

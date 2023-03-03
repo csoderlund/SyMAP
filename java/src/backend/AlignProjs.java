@@ -10,7 +10,6 @@ import java.util.TreeMap;
 import javax.swing.JFrame;
 
 import database.DBconn;
-import symap.Globals;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
 import symap.manager.ManagerFrame;
@@ -37,39 +36,31 @@ public class AlignProjs extends JFrame {
 		
 		Mproject mProj1 = mp.mProj1;
 		Mproject mProj2 = mp.mProj2;
+		String dbName1 = mProj1.getDBName();
+		String dbName2 = mProj2.getDBName();
+		String toName =  (mProj1 == mProj2) ? dbName1 + " to self" : dbName1 + " to " + dbName2;
+		
 		
 		FileWriter syFW =   symapLog(mProj1,mProj2);
 		String alignLogDir = buildLogAlignDir(mProj1,mProj2);
 
-		System.out.println("\n>>Starting " + mProj1 + " and " + mProj2 + "     " + Utilities.getDateTime());
-		if (Globals.TRACE) System.out.println("Trace pair " + mp.getPairIdx() + " p1 " + mProj1.getIdx() + " p2 " + mProj2.getIdx());
-		
-		try {
-			syFW.write("\n---------------------------------------------------------\n");
-		} catch (Exception e){}
-		
 		String msg = (mProj1 == mProj2) ? 
-				"Aligning project "  + mProj1.getDisplayName() + " to itself ..." :
-				"Aligning projects " + mProj1.getDisplayName() + " and " + mProj2.getDisplayName() + " ...";
+				"Aligning project "  + dbName1 + " to itself ..." :
+				"Aligning projects " + toName + " ...";
 		
-		final ProgressDialog diaLog = new ProgressDialog(this, "Aligning Projects", msg, false, true, syFW);
+		final ProgressDialog diaLog = new ProgressDialog(this, "Aligning Projects", msg, true, syFW); // write version and date
+		diaLog.msgToFileOnly(">>> " + toName);
+		System.out.println("\n>>> Starting " + toName + "     " + Utilities.getDateTime());
 		
-		if (closeWhenDone) 	diaLog.closeWhenDone();	
-		else 				diaLog.closeIfNoErrors();
+		// CAS535 always just close if (!closeWhenDone) diaLog.closeIfNoErrors();	
+		diaLog.closeWhenDone();					
 		
-		mp.saveParams();
-		mProj1.saveParams(mProj1.xAlign);
-		mProj2.saveParams(mProj2.xAlign);
-		
-		final AlignMain aligner = 
-			new AlignMain(new UpdatePool(dbConn), diaLog, mp,  maxCPUs, bDoCat, alignLogDir);
+		final AlignMain aligner = new AlignMain(new UpdatePool(dbConn), diaLog, mp,  maxCPUs, bDoCat, alignLogDir);
 		if (aligner.mCancelled) return;
 		
-		final AnchorsMain anchors = 
-			new AnchorsMain(new UpdatePool(dbConn), diaLog, mp );
+		final AnchorsMain anchors = new AnchorsMain(new UpdatePool(dbConn), diaLog, mp );
 		
-		final SyntenyMain synteny = 
-			new SyntenyMain( new UpdatePool(dbConn), diaLog, mp );
+		final SyntenyMain synteny = new SyntenyMain( new UpdatePool(dbConn), diaLog, mp );
 		
 		final Thread statusThread = new Thread() {
 			public void run() {
@@ -78,11 +69,8 @@ public class AlignProjs extends JFrame {
 				if (aligner.getNumRemaining() == 0 && aligner.getNumRunning() == 0) return;
 				if (Cancelled.isCancelled()) return;
 				
-				// CAS506 reworded progress message
-				String msg = "\nAlignments:  running " + aligner.getNumRunning()   + 
-						               ", completed " + aligner.getNumCompleted();
-				if (aligner.getNumRemaining()>0) 
-					            msg += ", queued " + aligner.getNumRemaining();
+				String msg = "\nAlignments:  running " + aligner.getNumRunning() + ", completed " + aligner.getNumCompleted();
+				if (aligner.getNumRemaining()>0) msg += ", queued " + aligner.getNumRemaining();
 				
 				diaLog.updateText("\nRunning alignments:\n", aligner.getStatusSummary() + msg + "\n");
 
@@ -91,26 +79,23 @@ public class AlignProjs extends JFrame {
 					Utilities.sleep(10000);
 					if (Cancelled.isCancelled()) return;
 					
-					msg = "\nAlignments:  running " + aligner.getNumRunning()   + 
-							                  ", completed " + aligner.getNumCompleted();
-					if (aligner.getNumRemaining()>0) 
-			            msg += ", queued " + aligner.getNumRemaining();
+					msg = "\nAlignments:  running " + aligner.getNumRunning() + ", completed " + aligner.getNumCompleted();
+					if (aligner.getNumRemaining()>0) msg += ", queued " + aligner.getNumRemaining();
 					
-					diaLog.updateText("\nRunning alignments:\n",
-							aligner.getStatusSummary() + msg + "\n");
+					diaLog.updateText("\nRunning alignments:\n", aligner.getStatusSummary() + msg + "\n");
 				}
 				diaLog.updateText("Alignments:" ,  "Completed " + aligner.getNumCompleted() + "\n\n");
 			}
 		};
 		
-		// Perform alignment, load anchors and compute synteny
+		// Perform alignment, load anchors and compute synteny; cancel and success like original
 		final Thread alignThread = new Thread() {
 			public void run() {
 				boolean success = true;
 				
 				try {
 					long timeStart = System.currentTimeMillis();
-
+					
 					/** Align **/
 					success &= aligner.run(); 
 					String params = aligner.getParams();
@@ -123,47 +108,42 @@ public class AlignProjs extends JFrame {
 					if (!success) {
 						diaLog.finish(false);
 						return;
-					}
-							
+					}	
+					
 					long timeEnd = System.currentTimeMillis();
 					long diff = timeEnd - timeStart;
 					String timeMsg = Utilities.getDurationString(diff);
-					
-					// CAS501 - guess deleted so anchor could add, removed anchor add
-					//pool.executeUpdate("delete from pairs where (" + 
-					//	"	proj1_idx=" + p1.getID() + " and proj2_idx=" + p2.getID() + ") or (proj1_idx=" + p2.getID() + " and proj2_idx=" + p1.getID() + ")"); 
-					
 					if (Cancelled.isCancelled()) return;
 					
+					/** Anchors **/
 					success &= anchors.run( mProj1, mProj2);
-					if (!success) {
-						diaLog.finish(false);
-						return;
-					}
-					if (Cancelled.isCancelled()) return;
 					
-					success &= synteny.run( mProj1, mProj2);
+					if (Cancelled.isCancelled()) return;
 					if (!success) {
 						diaLog.finish(false);
 						return;
 					}
+					
+					/** Synteny **/
+					success &= synteny.run( mProj1, mProj2);
+					
 					if (Cancelled.isCancelled()) return;
-											
+					if (!success) {
+						diaLog.finish(false);
+						return;
+					}
+					
+					/** Finish **/
+					mp.saveParams(params);
+					mProj1.saveParams(mProj1.xAlign);
+					mProj2.saveParams(mProj2.xAlign);
+					
 					timeEnd = System.currentTimeMillis();
 					diff = timeEnd - timeStart;
 					timeMsg = Utilities.getDurationString(diff);
-					diaLog.appendText(">> Summary for " + mProj1.getDisplayName() + " and " + mProj2.getDisplayName() + "\n");
+					diaLog.appendText(">> Summary for " + toName + "\n");
 					printStats(diaLog, mProj1, mProj2);
 					diaLog.appendText("\nFinished in " + timeMsg + "\n\n");
-					
-					// CAS511 add params column (not schema update) to save args, mummer5, noCat	
-					UpdatePool pool = new UpdatePool(dbConn);
-					pool.tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null); 
-					
-					pool.executeUpdate("update pairs set aligned=1, aligndate=NOW(), "
-						+ "syver='" + Globals.VERSION + "', params='" + params + "'" // CAS520 add syver
-						+ " where (proj1_idx=" + mProj1.getID() + " and proj2_idx=" + mProj2.getID() 
-						+ ") or   (proj1_idx=" + mProj2.getID() + " and proj2_idx=" + mProj1.getID() + ")"); 
 				}
 				catch (OutOfMemoryError e) {
 					success = false;
@@ -176,7 +156,7 @@ public class AlignProjs extends JFrame {
 					ErrorReport.print(e,"Running alignment");
 					statusThread.interrupt();
 				}
-				diaLog.finish(success);
+				diaLog.finish(success); 
 			}
 		};
 		
@@ -209,41 +189,35 @@ public class AlignProjs extends JFrame {
 		statusThread.start();
 		diaLog.start(); // blocks until thread finishes or user cancels
 		
-		if (diaLog.wasCancelled()) {
-			// Remove partially-loaded alignment
+		if (diaLog.wasCancelled()) { // Remove partially-loaded alignment
 			try {
 				Thread.sleep(1000);
 				System.out.println("Cancel alignment (removing alignment from DB)");
 				mp.removePairFromDB(); // CAS534 
 				System.out.println("Removal complete");
 			}
-			catch (Exception e) { 
-				ErrorReport.print(e, "Removing alignment");
-			}
+			catch (Exception e) { ErrorReport.print(e, "Removing alignment");}
 		}
 		else if (closeWhenDone) {
 			diaLog.dispose();	
 		}
 		
-		//System.gc(); // cleanup memory after AlignMain, AnchorsMain, SyntenyMain
 		System.out.println("--------------------------------------------------");
 		frame.refreshMenu();
 		try {
 			if (syFW != null) {
+				if (Cancelled.isCancelled())  syFW.write("Cancelled");
 				Date date = new Date();
 				syFW.write("\n-------------- done " + date.toString() + " --------------------\n");
 				syFW.close();
 			}
 		}
 		catch (Exception e) {}
-	}
-	// CAS500 was putting log in data/pseudo_pseudo/seq1_to_seq2/symap.log
-	// changed to put in logs/seq1_to_seq2/symap.log
+	} // end of run
 	
 	private FileWriter symapLog(Mproject p1, Mproject p2) {
 		FileWriter ret = null;
-		try
-		{
+		try {
 			File pd = new File(Constants.logDir);
 			if (!pd.isDirectory()) pd.mkdir();
 			

@@ -18,8 +18,9 @@ import java.util.TreeSet;
 import java.util.Vector;
 
 import symap.manager.Mproject;
+import util.Cancelled;
 import util.ErrorReport;
-import util.Logger;
+import util.ProgressDialog;
 import util.Utilities;
 
 public class OrderAgainst {
@@ -32,11 +33,11 @@ public class OrderAgainst {
 	public static final String orderSuffix 		=  "_ordered"; // CAS505 for ordering V2
 	private static final String orderCSVFile	=  "/ordered.csv";
 	
-	private Logger mLog;
+	private ProgressDialog mLog;
 	private UpdatePool pool;	
 	private Mproject mProj1, mProj2;
 	
-	public OrderAgainst(Mproject mProj1, Mproject mProj2, Logger mLog, UpdatePool pool) {
+	public OrderAgainst(Mproject mProj1, Mproject mProj2, ProgressDialog mLog, UpdatePool pool) {
 		this.mProj1 = mProj1;
 		this.mProj2 = mProj2;
 		this.mLog = mLog;
@@ -56,11 +57,11 @@ public class OrderAgainst {
 	
 		File ordFile = new File(Constants.seqDataDir + pDraft.getDBName() + anchorCSVFile);
 		if (ordFile.exists()) ordFile.delete();
-		FileWriter ordFileW = new FileWriter(ordFile);
 		
 		mLog.msg("\nOrdering " + pDraft.getDBName() + " contigs against " + pTarget.getDBName());
 		mLog.msg("   Original ordering algorithm - flips contigs in database.");
 		
+		long startTime = System.currentTimeMillis();
 		ResultSet rs;
 		TreeSet<Integer> alreadyFlipped = new TreeSet<Integer>();
 	
@@ -137,6 +138,7 @@ public class OrderAgainst {
 		}
 		rs.close();
 		mLog.msg("   " + grp1Seen.size() + " groups to order ");
+		if (Cancelled.isCancelled()) return; // CAS535 there was no checks
 		
 		// Order contigs. It seems like there should be an easier way to do this...
 		int curOrd = 1;
@@ -156,6 +158,7 @@ public class OrderAgainst {
 				grp1_ordered.add(grp1s[i]);
 				curOrd++;
 			}
+			if (Cancelled.isCancelled()) return;
 		}
 		
 		String ordPfx =  pDraft.getGrpPrefix(); // SyProps.getProjProp(pDraft.idx,  "grp_prefix", pool);
@@ -172,8 +175,12 @@ public class OrderAgainst {
 				curOrd++;
 			}	
 		}
-		ordFileW.write(pDraft.getDBName() + "-" + ordPfx + "," + pTarget.getDBName() + "-" + targPfx + ",pos,F/R,#anchors," + pDraft.getDBName() + "-length\n");
 		
+		if (Cancelled.isCancelled()) return;
+		
+		FileWriter ordFileW = new FileWriter(ordFile);
+		ordFileW.write(pDraft.getDBName() + "-" + ordPfx + "," + pTarget.getDBName() + "-" + targPfx + ",pos,F/R,#anchors," + pDraft.getDBName() + "-length\n");
+	
 		for (int idx : grp1_ordered){
 			int ord = grp2ord.get(idx);
 			int pos = grp1pos.get(idx);
@@ -189,6 +196,7 @@ public class OrderAgainst {
 			ordFileW.write(grp1name.get(idx) + "," + newGrp.get(idx) + "," + pos + "," + RC + "," + grp1score.get(idx) + "," + len + "\n"); 
 		}
 		ordFileW.close();
+		if (Cancelled.isCancelled()) return;
 		
 		// Now, update the newly flipped/unflipped xgroups and the anchors and synteny blocks containing them
 		int cnt=0;
@@ -233,6 +241,7 @@ public class OrderAgainst {
 						" set b.start2=p.length-b.end2, b.end2=p.length-b.start2, b.corr=-b.corr " +
 						"where b.grp2_idx=" + idx + " and p.grp_idx=" + idx );
 			}
+			if (Cancelled.isCancelled()) return;
 		}
 		if (cnt>0) mLog.msg("   Flipped " + cnt);
 		
@@ -262,7 +271,7 @@ public class OrderAgainst {
 
 		FileWriter grpFastaW = 	new FileWriter(groupedFasta);
 		FileWriter grpParamW = 	new FileWriter(grpParam);
-		FileWriter groupedGFFW = new FileWriter(groupedGFF);
+		FileWriter grpGFFW = new FileWriter(groupedGFF);
 		
 		String separator = "NNNNNNNNNN" + "NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +
 				           "NNNNNNNNNN" + "NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN";
@@ -308,7 +317,7 @@ public class OrderAgainst {
 						// still in the same anchor section, wrote a prior contig to it, hence need a separator
 						lenNewCtg += separator.length();
 						grpFastaW.write(separator); grpFastaW.write("\n");	
-						groupedGFFW.write(curNewGrpName + "\tconsensus\tgap\t" + groupedPos + "\t" + (groupedPos+separator.length()) + 
+						grpGFFW.write(curNewGrpName + "\tconsensus\tgap\t" + groupedPos + "\t" + (groupedPos+separator.length()) + 
 								"\t.\t+\t.\tName \"GAP:" + prevGrpName + "-" + curGrpName + "\"\n");
 						groupedPos += separator.length();
 					}
@@ -330,7 +339,7 @@ public class OrderAgainst {
 					else
 					{
 						grpFastaW.write(separator);	 grpFastaW.write("\n");
-						groupedGFFW.write(curNewGrpName + "\tconsensus\tgap\t" + groupedPos + "\t" + (groupedPos+separator.length()) + 
+						grpGFFW.write(curNewGrpName + "\tconsensus\tgap\t" + groupedPos + "\t" + (groupedPos+separator.length()) + 
 								"\t.\t+\t.\tName \"GAP:" + prevGrpName + "-" + curGrpName + "\"\n");
 						groupedPos += separator.length();
 					}
@@ -354,13 +363,14 @@ public class OrderAgainst {
 		mLog.msg(lenMsg);
 		mLog.msg("   Wrote " + groupedFasta + "                               ");
 		grpFastaW.close();
-		groupedGFFW.close();
+		grpGFFW.close();
 		String dispName;
 
 		dispName = pDraft.getDisplayName() + anchorSuffix;
 		grpParamW.write("category = " + pDraft.getdbCat() + "\ndisplay_name=" + dispName + "\n");
 		grpParamW.write("grp_prefix=" + pTarget.getGrpPrefix() + "\n");
 		grpParamW.close();
+		Utils.timeDoneMsg(mLog, startTime, "Order"); // CAS520 add time
 	}
 	catch (Exception e) {ErrorReport.print(e, "Ordering sequence"); }
 	}

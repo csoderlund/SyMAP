@@ -4,10 +4,8 @@ import java.sql.ResultSet;
 import java.util.Vector;
 import java.util.TreeSet;
 import java.util.HashMap;
-
 import javax.swing.JTextField;
 
-import symap.Globals;
 import symap.manager.Mproject;
 import util.ErrorReport;
 import util.Utilities;
@@ -24,8 +22,6 @@ import util.Utilities;
  * CAS504 this file replaced the previous approach to parsing the sql results
  */
 public class DBdata {
-	private static boolean debug = Globals.DEBUG;
-	
 	private static String [] spNameList; 				// species Names
 	private static int [] 	spIdxList; 					// species spIdx in same order
 	private static HashMap <Integer, String[]> annoKeys; // spIdx, keys in order
@@ -242,10 +238,6 @@ public class DBdata {
 				
 				grpStart.put(gidx, s);
 				grpEnd.put(gidx, e);
-			}
-			if (debug) {
-				for (int idx : grpStart.keySet())
-					System.out.format("%3d %,10d %,10d\n", idx, grpStart.get(idx), grpEnd.get(idx));
 			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "make location list");}

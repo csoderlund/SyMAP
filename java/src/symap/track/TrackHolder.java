@@ -16,8 +16,6 @@ import util.ErrorReport;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class TrackHolder extends JComponent  {	
-	private static boolean TRACE = symap.Globals.DEBUG; // CAS519 changed from ProjectManager...TEST_TRACE
-	
 	private DrawingPanel dp;
 	private HelpBar hb;
 	private int orientation;
@@ -45,8 +43,6 @@ public class TrackHolder extends JComponent  {
 	public int getTrackNum() {return trackNum;}
 	
 	public void setTrack(Track t) { // Called by DrawingPanel and TrackHolder
-		if (TRACE && t!=null) System.out.println("TrackHolder.setTrack: " + t + " " + toString());
-		
 		if (t == track) return ;
 
 		if (track != null) {
@@ -80,7 +76,6 @@ public class TrackHolder extends JComponent  {
 		if (td == null) setTrack(null);
 		else {
 			if (track == null || td.getTrackClass() != track.getClass()) {
-				if (TRACE) System.out.println("Creating a new Track");
 				Track t = null;
 				try { // CAS512 this was one big statement
 					Class <?> [] x = new Class[]{dp.getClass(),getClass()};

@@ -1,15 +1,12 @@
 package database;
 
-import java.util.Map;
-
-import symap.Globals;
-import util.ErrorReport;
-
 import java.util.HashMap;
 import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+
+import util.ErrorReport;
 
 /**
  * The DatabaseReader handles the establishment of connections to the database.
@@ -37,8 +34,6 @@ public class DBconn {
 	public static DBconn getInstance(String name, String url, String user, String password, String driver) 
 	throws ClassNotFoundException {
 		synchronized (dbReaders) {
-			if (Globals.TRACE) System.out.println("DBconn " + url + " " + user + " " + name);	
-			
 			DBconn dbc = new DBconn(name,url,user,password,driver);
 			for (DBconn temp : dbReaders.keySet()) {
 				if (dbc.equals(temp)) {

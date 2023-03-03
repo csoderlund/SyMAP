@@ -93,7 +93,7 @@ public class HitAlignment implements Comparable<HitAlignment> {
 		String sSeq = selectData.toString(), nSeq = otherData.toString();
 		String mSeq = matchData.toString();
 		
-		String sCoord = SeqData.coordsStr(selectData.getStrand(), sStart, sEnd);// CAS504 format
+		String sCoord = SeqData.coordsStr(selectData.getStrand(), sStart, sEnd);// CAS504 format 
 		String nCoord = SeqData.coordsStr(otherData.getStrand(), oStart, oEnd);
 		String hitN = hitDataObj.getName() + "." + numSubHit;
 		
@@ -230,13 +230,13 @@ public class HitAlignment implements Comparable<HitAlignment> {
 		}
 
 		double xOffset = hbX - CloseUpComponent.INSERT_DIM.width/2.0;
-		Arrow arrow = new Arrow(CloseUpComponent.INSERT_DIM);
+		InsIcon arrow = new InsIcon(CloseUpComponent.INSERT_DIM);
 		line.y1 = hb.getY() + (hb.getHeight()/2.0) - CloseUpComponent.INSERT_OFFSET - CloseUpComponent.INSERT_DIM.height;
 		if (!selected) 	g2.setPaint(CloseUpComponent.insertColor.darker());
 		else 			g2.setPaint(CloseUpComponent.insertColor);
 		for (int i = 0; i < inserts.length; i++) {
 			line.x1 = inserts[i] * hbWidth + xOffset;
-			arrow.paint(g2,line.x1,line.y1,Arrow.POINT_DOWN);
+			arrow.paint(g2,line.x1,line.y1,InsIcon.POINT_DOWN);
 		}
 	}
 	// Get starting x of the arrowed line.
@@ -280,12 +280,12 @@ public class HitAlignment implements Comparable<HitAlignment> {
 	/****************************************************************
 	 * Insert Icon; Arrow down, CAS533 was a separate file in util
 	 */
-	public class Arrow implements Icon {
+	public class InsIcon implements Icon {
 	    public static final double POINT_DOWN  = 0;
 	    private Dimension2D dim;
 	    private Line2D line = new Line2D.Double();
 
-	    public Arrow(Dimension2D dim) {this.dim = dim;}
+	    public InsIcon(Dimension2D dim) {this.dim = dim;}
 	    
 	    public int getIconHeight() {return (int)dim.getHeight();}
 

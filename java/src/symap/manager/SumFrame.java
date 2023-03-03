@@ -194,10 +194,8 @@ public class SumFrame extends JFrame
 			TreeMap<Integer,Integer> lens1 = new TreeMap<Integer,Integer>();
 			TreeMap<Integer,Integer> lens2 = new TreeMap<Integer,Integer>();
 			
-			String q = "select count(*) as cnt," +
-					"round(sum(length)/1000,1), " +
-					"round(max(length)/1000,1), " +
-					"round(min(length)/1000,1) " + 
+			String q = "select count(*)," +
+					"round(sum(length)/1000,1), round(max(length)/1000,1), round(min(length)/1000,1) " + 
 					"from pseudos as p join xgroups as g on p.grp_idx=g.idx " +
 					"where g.proj_idx=";
 			ResultSet rs = s.executeQuery(q + pidx1);
@@ -214,9 +212,9 @@ public class SumFrame extends JFrame
 				maxlen2 = rs.getInt(3);
 				minlen2 = rs.getInt(4);
 			}
-			q = "select floor(log10(length)) as llen, " +
-					"count(*) as cnt " +
-					"from pseudos as p join xgroups as g on p.grp_idx=g.idx " + 
+			q = "select floor(log10(length)) as llen, count(*)  " +
+					"from pseudos as p " + 
+					"join xgroups as g on p.grp_idx=g.idx " + 
 					"where g.proj_idx=";
 			rs = s.executeQuery(q + pidx1 + " and length > 0 group by llen");
 			while (rs.next()) {
@@ -245,10 +243,9 @@ public class SumFrame extends JFrame
 			c31 = (lens1.containsKey(6) ? lens1.get(6) : 0);
 			c31 = (lens2.containsKey(6) ? lens2.get(6) : 0);
 			
-			q = "select count(*) as cnt," +
-				"sum(end-start) as len " +
+			q = "select count(*), sum(end-start) " +
 				"from pseudo_annot as pa " +
-				"join xgroups as g on pa.grp_idx=g.idx " + 
+				"join xgroups      as g on pa.grp_idx=g.idx " + 
 				"where pa.type='gene' and g.proj_idx=";
 			long ngenes1=0, glen1=0,ngenes2=0,glen2=0;
 			rs = s.executeQuery(q + pidx1);
@@ -259,11 +256,11 @@ public class SumFrame extends JFrame
 			rs = s.executeQuery(q + pidx2);
 			if (rs.first()){
 				ngenes2 = rs.getInt(1);
-				glen2 = rs.getInt(2);
+				glen2   = rs.getInt(2);
 			}
 			int pctAnnot1 = Math.round((100*glen1)/(1000*lenKb1)); // note we want a %, and lens are in kb
 			int pctAnnot2 = Math.round((100*glen2)/(1000*lenKb2));
-			
+		
 			String[] cnames1 = {"Species","#Seqs","Total Kb","#Genes","%Genes","Max Kb","Min Kb","<100kb","100kb-1Mb","1Mb-10Mb",">10Mb"};
 			if (pidx1!=pidx2) {
 				Object data1[][] = { 
@@ -455,11 +452,10 @@ public class SumFrame extends JFrame
 			int g2 = 		rs.getInt(10); // ngene2
 			ng1 += g1; 
 			ng2 += g2;
-			float gf1 = 		rs.getFloat(9);  // genef1
-			float gf2 = 		rs.getFloat(11); // genef2
+			float gf1 = 	rs.getFloat(9);  // genef1
+			float gf2 = 	rs.getFloat(11); // genef2
 			nblkgene1 += 	(g1*gf1);
-			nblkgene2 += 	(g2*gf2);
-			
+			nblkgene2 += 	(g2*gf2);			
 			if (!bins2.containsKey(idx))
 				bins2.put(idx, new TreeMap<Integer,Integer>());
 

@@ -12,7 +12,7 @@ import symap.manager.Mpair;
 import symap.manager.Mproject;
 import util.Cancelled;
 import util.ErrorReport;
-import util.Logger;
+import util.ProgressDialog;
 import util.Utilities;
 
 /*******************************************************
@@ -28,7 +28,7 @@ public class AlignMain {
 	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE; 
 	private static final int maxFileSize = 60000000; // CAS508 was 7M (changed so 'Concat' parameter works for demo)
 	
-	private Logger log;
+	private ProgressDialog plog;
 	private String proj1Dir, proj2Dir; // also dbName
 	private Mproject mProj1, mProj2;
 	
@@ -49,10 +49,10 @@ public class AlignMain {
 	private String resultDir;
 	private String alignParams, usePrevious = "Use previous alignment";
 	
-	public AlignMain(UpdatePool pool, Logger log, Mpair mp,
+	public AlignMain(UpdatePool pool, ProgressDialog log, Mpair mp,
 			int nMaxThreads, boolean bDoCat, String alignLogDirName)
 	{
-		this.log = log; // diaLog and syLog
+		this.plog = log; // diaLog and syLog
 		this.nMaxCPUs = nMaxThreads;
 		this.bDoCat = bDoCat;
 		this.mp = mp;
@@ -93,9 +93,9 @@ public class AlignMain {
 			
 			if (toDoList.size() > 0) {
 				String program = toDoList.peek().program.toUpperCase();
-				log.msg("\nRunning " + program + ": " + toDoList.size() +" alignments to perform, using up to "
+				plog.msg("\nRunning " + program + ": " + toDoList.size() +" alignments to perform, using up to "
 						+ nMaxCPUs + " CPUs");
-				log.msg("Use: " + Constants.getProgramPath("mummer"));
+				plog.msg("Use: " + Constants.getProgramPath("mummer"));
 			}
 			
 			int alignNum = 0;
@@ -132,7 +132,7 @@ public class AlignMain {
 			if (getNumErrors() == 0) {
 				if (!mCancelled) {
 					Utils.writeDoneFile(resultDir + Constants.alignDir);
-					log.msg("Alignments:  success " + getNumCompleted());
+					plog.msg("Alignments:  success " + getNumCompleted());
 					
 					// CAS500 only delete tmp files if successful
 					String tmpDir = Constants.getNameTmpDir(proj1Dir, proj2Dir);
@@ -147,9 +147,9 @@ public class AlignMain {
 				}
 			}
 			else { // CAS508 add numbers failed...
-				log.msg("Alignments:  success " + getNumCompleted() + "   failed " + getNumErrors());
+				plog.msg("Alignments:  success " + getNumCompleted() + "   failed " + getNumErrors());
 			}
-			Utils.timeMsg(log, startTime, "Align"); // Align done: time
+			Utils.timeDoneMsg(plog, startTime, "Alignments"); // Align done: time
 		} catch (Exception e) {ErrorReport.print(e, "Run alignment"); }
 		
 		return (getNumErrors() == 0);
@@ -160,7 +160,7 @@ public class AlignMain {
 	private void buildAlignments()  {
 		try {
 			String cat = (bDoCat) ? "  " : " (No Concat) ";
-			log.msg("\nAligning " + proj1Dir + " and " + proj2Dir + cat + mp.getChangedAlign());
+			plog.msg("\nAligning " + proj1Dir + " and " + proj2Dir + cat + mp.getChangedAlign());
 			
 			mp.setPairProp("concatenated", cat);
 			
@@ -245,7 +245,7 @@ public class AlignMain {
 				}
 			}
 			if ( allAlignments.size() == 0  && !Cancelled.isCancelled()) {
-				log.msg("Warning: no alignments between projects");
+				plog.msg("Warning: no alignments between projects");
 				error = true;
 			}
 		} catch (Exception e) {ErrorReport.print(e, "Build alignments"); error=true;}
@@ -271,13 +271,13 @@ public class AlignMain {
 			rs.first();
 			int nSeqs = rs.getInt(1);
 			if (nSeqs == 0) {
-				log.msg("No sequences are loaded for " + projName + "!! (idx " + projIdx + ")");
+				plog.msg("No sequences are loaded for " + projName + "!! (idx " + projIdx + ")");
 				return false;
 			}
 		
 			boolean geneMask = mProj.isMasked();	
 			String gmprop = (geneMask) ? "Masking non-genic sequence; " : "";
-			if (geneMask) log.msg(projName + ": " + gmprop);
+			if (geneMask) plog.msg(projName + ": " + gmprop);
 				
 			if (Utilities.dirNumFiles(dir) > 0)
 				Utilities.clearAllDir(dir); // leaves directory, just removes files
@@ -319,7 +319,7 @@ public class AlignMain {
 					curSize += chrLen;
 				}
 			}
-			log.msg(msg + " (" + Utilities.kMText(totSize) + ")"); // CAS508 write total length here first
+			plog.msg(msg + " (" + Utilities.kMText(totSize) + ")"); // CAS508 write total length here first
 			
 			TreeMap<Integer,TreeMap<Integer,Vector<Range>>> geneMap = new TreeMap<Integer,TreeMap<Integer,Vector<Range>>>();
 			int cSize = 100000;
@@ -433,7 +433,7 @@ public class AlignMain {
 						cNum++;
 					}
 				}
-				log.msg(msg + String.format(": length %,d", fileSize)); // CAS513 add comma
+				plog.msg(msg + String.format(": length %,d", fileSize)); // CAS513 add comma
 				fw.close();
 			}
 			return true;
@@ -457,13 +457,13 @@ public class AlignMain {
 			boolean done = Utils.checkDoneFile(alignDir);
 			int n = Utils.checkDoneMaybe(alignDir);
 			if (done && n>0) {
-				log.msg("Warning: " + n + " alignment files exist - using existing files ...");
-				log.msg("   If not correct, remove " + resultDir + " and re-align.");
+				plog.msg("Warning: " + n + " alignment files exist - using existing files ...");
+				plog.msg("   If not correct, remove " + resultDir + " and re-align.");
 				usePrevious += "  " + Utils.getDateStr(f.lastModified()); 
 				return true;
 			}			
 			if (n>0) 
-				log.msg("WARNING: No 'align/all.done' file, alignment may have ended before done.");
+				plog.msg("WARNING: No 'align/all.done' file, alignment may have ended before done.");
 
 			return false;
 		}

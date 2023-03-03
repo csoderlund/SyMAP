@@ -64,7 +64,7 @@ public class Ruler {
 						(tDim == null ? 0 : tDim.getHeight()/2.0) - TICK_TEXT_OFFSET);
 				for (int i = 0; i < points.length; ++i) {
 					g2.rotate(-Math.PI/4.0,(float)points[i],y);
-					String x = String.format("%d", getUnit(points[i],unitPerPixel)); // CAS520 Integer toString
+					String x = String.format("%,d", getUnit(points[i],unitPerPixel)); // CAS535 add comma
 					g2.drawString(x.toString(),(float)points[i]-fontOffset,y);
 					g2.setTransform(saveAt);
 				}

@@ -100,6 +100,7 @@ The following discusses building a SyMAP v5 database.
 			</ul>
 			<li><a href="#draft2">Draft alignment and ordering</a>
 			<li><a href="#self">Self alignment</a>
+			<li><a href="#cancel">Cancel</a>
 		</ul>
 	<li>General
 	<ul>
@@ -615,7 +616,7 @@ Annotation files should be in
 The first column (seqid) must exactly match the sequence names in
 the FASTA files. The third column (type) determines how SyMAP
 uses the entry. Types "gene", "exon", "centromere", and "gap"
-are recognized (other entries are ignored).
+are recognized (other entries are ignored). Exons are entered in the order they are found.
 <p>
 The last column (attributes) contains "keyword=value" pairs describing
 the annotation.
@@ -708,6 +709,22 @@ To overcome this problem, individual chromosome self-alignments can use the MUMm
 which removes the uniqueness requirement at the cost of greatly increased noise. The extra noise is then
 filtered to a large extent by the default SyMAP filters, but the diagonal squares of the dot plot will
 still have more noise visible than the off-diagonal.
+<a id="cancel"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Cancel</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></table>
+<table class="tx">
+<tr>
+<td>The <ttl>Load</ttl> and <ttl>A&S</ttl> methods have a popup progress window, as shown on
+the right. There is a <ttl>Cancel</ttl> button on the bottom that can be clicked to cancel the execution;
+it will remove the results from the database and exit.
+<p>Occasionally, the <ttl>Cancel</ttl> will cause it to create an error, writing to the <tt>error.log</tt>
+or to the terminal. This is not a problem, though you may need to remove the results yourself.
+<p>If MUMmer is running when you <ttl>Cancel</ttl>, make sure there is "Error: Failed command:" line
+to terminal for each MUMmer alignment that was running; if there is not, use the "top" linux command to
+view the running processes and stop any MUMmers still running.
+<td><a href="img/cancel.png"><img src="img/cancel.png" alt="self" style="border: 1px solid black; width: 350px"></a>
+</table>
 
 <!---------------------------------------------------------->
 <!---------------------------------------------------------->

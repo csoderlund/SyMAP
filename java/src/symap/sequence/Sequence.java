@@ -6,7 +6,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-//import java.awt.RenderingHints;
+import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.font.FontRenderContext;
@@ -197,11 +197,20 @@ public class Sequence extends Track {
 	public Vector<Annotation> getAnnotations() {return allAnnoVec;}
 	
 	// Called by CloseUpDialog; type is Gene or Exon
-	public Vector<Annotation> getAnnotations(int type, int start, int end) {
+	public Vector<Annotation> getAnnoGene(int start, int end) {// CAS535 gene only
 		Vector<Annotation> out = new Vector<Annotation>();
 		
 		for (Annotation a : allAnnoVec) {
-			if (a.getType() == type && isOverlapping(start, end, a.getStart(), a.getEnd()))
+			if (a.isGene() && isOverlapping(start, end, a.getStart(), a.getEnd()))
+				out.add(a);
+		}	
+		return out;
+	}
+	public Vector<Annotation> getAnnoExon(int gene_idx) {// CAS535 was getting exons from other genes
+		Vector<Annotation> out = new Vector<Annotation>();
+		
+		for (Annotation a : allAnnoVec) {
+			if (a.getGeneIdx()==gene_idx)
 				out.add(a);
 		}	
 		return out;
@@ -407,8 +416,6 @@ public class Sequence extends Track {
 		Rectangle2D centRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
 		centGeneRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
 		
-		if (Globals.DEBUG) System.err.println("SEQ: " + allAnnoVec.size() + " " + getHolder().getTrackNum() + " " + toString());
-		
 		buildOlap(); // builds first time only
 			
 		// XXX Sorted by genes (genenum, start), then exons (see PseudoData.setAnnotations)
@@ -572,8 +579,6 @@ public class Sequence extends Track {
 				new Comparator<GeneData>() {
 					public int compare(GeneData a1, GeneData a2) { 
 						if (a1.start!=a2.start) return (a1.start - a2.start); // it does not always catch =start
-						
-						if (Globals.DEBUG) System.out.println("Seq cmp: a1 " + a1.annot.getGeneNumStr() + " s1: " + a1.start + " l1: " + a1.len + " l2: " + a2.len + " l2-l1: " + (a2.len - a1.len));
 						return (a2.len - a1.len);
 					}
 				});
@@ -653,7 +658,8 @@ public class Sequence extends Track {
 	public void paintComponent(Graphics g) {
 		if (hasBuilt()) {
 			Graphics2D g2 = (Graphics2D) g;
-			
+	        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON); // CAS535
+	        
 			g2.setPaint((position % 2 == 0 ? bgColor1 : bgColor2)); 
 			g2.fill(rect);
 			g2.setPaint(border);

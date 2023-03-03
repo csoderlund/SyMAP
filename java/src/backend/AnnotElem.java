@@ -4,10 +4,9 @@ package backend;
  * Either gene, nongene or n/a
  * Created in Group, accessed in AnchorMain as mostOverlappingAnnot
  */
-public class AnnotElem implements Comparable <AnnotElem> // CAS500 added <type>; comparable so can be used in TreeMap
-{
+public class AnnotElem implements Comparable <AnnotElem> {// CAS500 added <type>; comparable so can be used in TreeMap
 	public int start, end, idx;
-	public GeneType mGT = GeneType.NA;
+	public GeneType mGT = GeneType.NA; // HitBin {Gene, NonGene, NA}
 	public int mID;
 	
 	private static int NEXTID = 0;
@@ -22,7 +21,7 @@ public class AnnotElem implements Comparable <AnnotElem> // CAS500 added <type>;
 	}
 	
 	public String toString() {
-		return "idx=" + idx + " start=" + start + " end=" + end + " length=" + (end-start+1) + " type=" + mGT.toString();
+		return mID + " idx=" + idx + " start=" + start + " end=" + end + " length=" + (end-start+1) + " type=" + mGT.toString();
 	}
 	
 	public int getLength() { return Math.abs(end-start)+1; }

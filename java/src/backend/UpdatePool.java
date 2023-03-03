@@ -73,18 +73,19 @@ public class UpdatePool extends DBAbsUser {
 	private void initBulk(){
 		String stmt;
 
-		// AnchorsMain.uploadHit
+		// AnchorsMain.uploadHit - may use alternative prepareStatements
 		stmt = "insert into pseudo_hits (pair_idx,proj1_idx,proj2_idx," +
 			"grp1_idx,grp2_idx,evalue,pctid,score,strand,start1,end1,start2,end2,query_seq," +
 			"target_seq,gene_overlap,countpct,cvgpct,annot1_idx,annot2_idx)";
 		bulkSetup("pseudo",stmt);
-
-		stmt = "insert into pseudo_block_hits (hit_idx,block_idx)"; 
-		bulkSetup("pseudo_block_hits",stmt);								
-		
+		// AnchorsMain.uploadHit - 
 		stmt = "insert ignore into pseudo_hits_annot (hit_idx,annot_idx,olap)"; // ignore is to prevent double insertions
 		bulkSetup("pseudo_hits_annot",stmt);									// for self alignments
 
+		// may be dead
+		stmt = "insert into pseudo_block_hits (hit_idx,block_idx)"; 
+		bulkSetup("pseudo_block_hits",stmt);								
+		
 		stmt = "insert into pseudo_annot (grp_idx,type,name,start,end,strand,text)";
 		bulkSetup("pseudo_annot",stmt);	
 	}

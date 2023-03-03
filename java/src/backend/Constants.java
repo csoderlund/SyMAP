@@ -5,16 +5,18 @@ import java.io.File;
 import util.ErrorReport;
 
 public class Constants {
-////////////////////////////////////////////////////////
+/***********************************************************
 // CAS500 v5 moved hard-coded constants for build to here
 // CAS522 removed FPC
-
+// AnchorsMain: enum HitStatus, QueryType, HitType, GeneType
+*****************************************************/
+	
 /**********************************************
  * Command line arguments
  */
-// Set in ProjectManagerFrameCommon
-public static boolean TRACE =     false; 		// -t not shown in help
-public static boolean NEW_ORDER = true;	 		// -o not shown in help; may not work anymore
+// Set in SymapCE.SyMAPmanager
+public static boolean TRACE =     false; 		// -tt not shown in help
+public static boolean NEW_ORDER = true;	 		// -oo not shown in help; may not work anymore
 public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block coords
 public static boolean PRT_STATS=  false; 		// -s
 

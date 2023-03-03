@@ -70,6 +70,37 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 <tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view2D"> 2D gene placement</a>
 </table>
 
+<a id="v535"></a>
+<h3>Release: v5.3.5 (3-Mar-23)</h3>
+
+<ul>
+<li><ttl>Cancel</ttl>
+<ul>
+<li>The <ttl>Cancel</ttl> button did not always work well, now it does.
+See <a href="SystemGuide.html#cancel" class="ext" target="_blank">Cancel</a>.
+<li>From v5.3.4, if the <ttl>A&S</ttl> was cancelled or interrupted, it was not possible to restart the <ttl>A&S</ttl>
+without reloading the projects.
+</ul>
+<li><ttl>Load project</ttl>
+<ul>
+<li>Any sequences that do not have the <ttl>Group prefix</ttl> will be ignored.
+<li>The <ttl>Group prefix</ttl> is case-insensitive.
+</ul>
+
+<li><ttl>Align (Max 30000)</ttl>
+<ul>
+<li>The selected region was extended to the whole genes within it; now it just extends to the ends of the last overlapping exon of the selected region.
+<li>The exons are labeled, e.g. Exon #11. If the end of the gene is not shown, a left or right arrow will be displayed
+indicating that it continues. See <a href="UserGuide.html#base" class="ext" target="_blank">Align</a>.
+<li>The color icons now has Exon+ and Exon-, where the default colors correspond to the 2d display.
+<li>Bug fix: when there were overlapping genes, the exons could be wrong for one of them.
+</ul>
+<li>Developer: The Logger interface has been removed.
+In the ManagerFrame, the load methods have been moved to LoadProj, and the remove methods have
+been moved to RemoveProj. The AnchorsMain methods has been reworked for clarity, but provide same answer.
+The debug statements were cleaned up.
+</ul>
+
 <a id="v534"></a>
 <h3>Release: v5.3.4 (19-Feb-23)</h3>
 Existing SyMAP databases: if the project parameters seem wrong, bring up the <u>Parameters</u> window

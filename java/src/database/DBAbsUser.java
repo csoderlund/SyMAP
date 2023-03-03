@@ -188,6 +188,18 @@ public abstract class DBAbsUser {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Get Int " + strQuery); return 0;}
 	}
+	public void resetAllIdx() { // CAS535 add, this is easier
+		try {
+			resetIdx("idx", "annot_key");
+			resetIdx("idx", "blocks");
+			resetIdx("idx", "pairs"); 
+			resetIdx("idx", "projects"); 
+			resetIdx("idx", "pseudo_annot");   
+			resetIdx("idx", "pseudo_hits");
+	        resetIdx("idx", "xgroups");    
+		}
+		catch (Exception e) {ErrorReport.print(e, "Reset auto-crement for all tables");}
+	}
 	public void resetIdx(String idx, String table) { // CAS511 add, CAS512 add max
 		try {
 			int cnt = getIdx("select count(*) from " + table);

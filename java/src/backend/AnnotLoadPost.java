@@ -5,8 +5,9 @@ import java.sql.ResultSet;
 import java.util.Vector;
 import java.util.HashMap;
 
+import util.Cancelled;
 import util.ErrorReport;
-import util.Logger;
+import util.ProgressDialog;
 import util.Utilities;
 
 /******************************************************
@@ -25,7 +26,7 @@ The 2D gene placement algorithm uses the pseudo_annot.genenum but not the suffix
 
 public class AnnotLoadPost {
 	private final int MAX_GAP=0; // CAS519 changed from 3
-	private Logger log;
+	private ProgressDialog plog;
 	private UpdatePool pool;
 	private SyProj syProj;
 	
@@ -35,18 +36,18 @@ public class AnnotLoadPost {
 	private boolean isSuccess=true;
 	private int totexonUpdate=0, totgeneUpdate=0, totOverlap=0, totContained=0, totGeneNum=0;
 	
-	public AnnotLoadPost(SyProj project, UpdatePool pool, Logger log) {
+	public AnnotLoadPost(SyProj project, UpdatePool pool, ProgressDialog log) {
 		this.syProj = project;
 		this.pool = pool;
-		this.log = log;
+		this.plog = log;
 	}
 	public boolean run(int assigned) {
 		try {
 			if (assigned==0) {
-				log.msg("  No assignment of #exons and tags to genes");
+				plog.msg("  No assignment of #exons and tags to genes");
 				return true;
 			}
-			log.msg("  Assign #exons and tags to genes");
+			plog.msg("  Assign #exons and tags to genes");
 			
 			pool.executeUpdate("update pseudo_annot, xgroups set pseudo_annot.genenum=0 "
 					+ "where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + syProj.idx);
@@ -58,12 +59,12 @@ public class AnnotLoadPost {
 				computeTags(g);    if (!isSuccess) return isSuccess;	
 			}
 			System.err.print("                                                 \r");
-			Utils.prtNumMsg(log, totGeneNum,      "Unique gene numbers");
-			Utils.prtNumMsg(log, totOverlap,   "Overlapping genes");
-			Utils.prtNumMsg(log, totContained, "Contained genes");
+			Utils.prtNumMsg(plog, totGeneNum,      "Unique gene numbers");
+			Utils.prtNumMsg(plog, totOverlap,   "Overlapping genes");
+			Utils.prtNumMsg(plog, totContained, "Contained genes");
 			
-			Utils.prtNumMsg(log, totgeneUpdate, "Gene update");
-			Utils.prtNumMsg(log, totexonUpdate, "Exon update (avg " +  
+			Utils.prtNumMsg(plog, totgeneUpdate, "Gene update");
+			Utils.prtNumMsg(plog, totexonUpdate, "Exon update (avg " +  
 						String.format("%.3f", (float) totexonUpdate/(float)totgeneUpdate) + ")");
 			
 			return true;				
@@ -87,6 +88,7 @@ public class AnnotLoadPost {
 				geneMap.put(gd.idx, gd);
 				geneOrder.add(gd.idx);
 			}
+			if (Cancelled.isCancelled()) {isSuccess=false;return;}
 			
 			Vector <GeneData> numList = new Vector <GeneData> ();
 			for (int idx : geneOrder) {
@@ -184,6 +186,7 @@ public class AnnotLoadPost {
 				isSuccess=false;
 				return;
 			}
+			if (Cancelled.isCancelled()) {isSuccess=false;return;}
 				
 		// WRITE write to db; names parsed in Annotation.java getLongDescription
 			PreparedStatement ps = pool.prepareStatement(
@@ -219,6 +222,7 @@ public class AnnotLoadPost {
 					cntBatch++; exonUpdate++;
 				}
 				if (cntBatch>5000) {
+					if (Cancelled.isCancelled()) {isSuccess=false;return;}
 					ps.executeBatch();
 					cntBatch=0;
 					System.err.print("   " + grp.getFullName() + " count " + exonUpdate + " exons for "  + geneUpdate + " genes        \r");

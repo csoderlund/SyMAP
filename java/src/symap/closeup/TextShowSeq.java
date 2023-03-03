@@ -62,8 +62,6 @@ public class TextShowSeq extends JDialog implements ActionListener {
 		setModal(false);
 		setResizable(true);
 		
-		if (AlignPool.CDEBUG) 
-			System.out.println("Show " + project + " " + grpID + " " + isQuery + " " + SeqData.coordsStr(start, end));
 		alignPool = dp.getPools().getAlignPool();
 		drawPanel = dp;
 		this.seqObj = sequence;
@@ -134,7 +132,7 @@ public class TextShowSeq extends JDialog implements ActionListener {
 	// if no genes in region, disable gene/exon. If no hits in region, disable hit/full hit.
 	private void init() {
 		hitList = drawPanel.getHitsInRange(seqObj,rStart,rEnd);
-		geneList = seqObj.getAnnotations(Annotation.GENE_INT, rStart, rEnd); // EXON_INT if select Exon
+		geneList = seqObj.getAnnoGene(rStart, rEnd); // EXON_INT if select Exon
 		if (hitList.size()==0) {
 			hitButton.setEnabled(false);      revHitButton.setEnabled(false);
 			transHitButton.setEnabled(false); fullHitButton.setEnabled(false);
@@ -276,7 +274,8 @@ public class TextShowSeq extends JDialog implements ActionListener {
 	private Vector <SeqData> showExons(boolean bTrans) {
 		try {
 			type = "Exons";
-			Vector<Annotation> exonList = seqObj.getAnnotations(Annotation.EXON_INT, rStart, rEnd);
+			int geneIdx = seqObj.getAnnoGene(rStart, rEnd).get(0).getAnnoIdx(); 
+			Vector<Annotation> exonList = seqObj.getAnnoExon(geneIdx);
 			Annotation [] annoArr = new Annotation [exonList.size()];
 			for (int i=0; i<exonList.size(); i++) annoArr[i] = exonList.get(i);
 			Comparator <Annotation> comp = Annotation.getExonStartComparator();
@@ -327,7 +326,8 @@ public class TextShowSeq extends JDialog implements ActionListener {
 	private Vector <SeqData> showSepExons() {
 		try {
 			type = "Exons";
-			Vector<Annotation> exonList = seqObj.getAnnotations(Annotation.EXON_INT, rStart, rEnd);
+			int geneIdx = seqObj.getAnnoGene(rStart, rEnd).get(0).getAnnoIdx(); 
+			Vector<Annotation> exonList = seqObj.getAnnoExon(geneIdx);
 			Annotation [] annoArr = new Annotation [exonList.size()];
 			for (int i=0; i<exonList.size(); i++) annoArr[i] = exonList.get(i);
 			Comparator <Annotation> comp = Annotation.getExonStartComparator();

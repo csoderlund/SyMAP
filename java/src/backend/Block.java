@@ -4,7 +4,6 @@ import java.util.Vector;
 import java.util.TreeSet;
 
 import symap.manager.Mproject;
-import util.Logger;
 
 /**************************************
  * Used by SyntenyMain: represent blocks
@@ -99,8 +98,5 @@ public class Block
 				" AND start2=" + mS2 +
 				" AND end2=" + mE2;
 		return st;
-	}
-	public void print(Logger log, String prefix){
-		log.msg(prefix + " score:" + mHits.size() + " corr:" + mCorr1 + " corr2:" + mCorr2 + " s1:" + mS1 + " e1:" + mE1 + " s2:" + mS2 + " e2:" + mE2);
 	}
 }

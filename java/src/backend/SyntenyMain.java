@@ -14,9 +14,10 @@ import java.util.HashSet;
 
 import symap.manager.Mpair;
 import symap.manager.Mproject;
+import util.Cancelled;
 import util.ErrorCount;
 import util.ErrorReport;
-import util.Logger;
+import util.ProgressDialog;
 
 /**************************************************
  * CAS500 1/2020 change all MySQl Gets to digits.
@@ -29,7 +30,7 @@ public class SyntenyMain {
 	private boolean bNewOrder = Constants.NEW_ORDER;
 	private boolean bNewBlockCoords = Constants.NEW_BLOCK_COORDS;
 	
-	private Logger mLog;
+	private ProgressDialog mLog;
 	private UpdatePool pool;	
 	private SyProj syProj1, syProj2;
 	private Mpair mp;
@@ -49,7 +50,7 @@ public class SyntenyMain {
 	private long startTime;
 	private boolean bInterrupt = false;
 
-	public SyntenyMain(UpdatePool pool, Logger log, Mpair mp) {
+	public SyntenyMain(UpdatePool pool, ProgressDialog log, Mpair mp) {
 		this.pool = pool;
 		this.mLog = log;
 		this.mp = mp;
@@ -69,7 +70,7 @@ public class SyntenyMain {
 		
 		resultDir = Constants.getNameResultsDir(proj1Name, proj2Name);	
 		if (!(new File(resultDir)).exists()) {
-			mLog.msg("Cannot find pair directory " + resultDir);
+			mLog.msg("Cannot find result directory " + resultDir);
 			ErrorCount.inc();
 			return false;
 		}
@@ -77,9 +78,12 @@ public class SyntenyMain {
 		
 		syProj1 = new SyProj(pool, mLog, pj1, proj1Name, topN, QueryType.Query);
 		syProj2 = new SyProj(pool, mLog, pj2, proj2Name, topN, QueryType.Target);
+		if (syProj1.hasOrderAgainst()) mLog.msg("Order against " + syProj1.getOrderAgainst());
+		else if (syProj2.hasOrderAgainst()) mLog.msg("Order against " + syProj2.getOrderAgainst());
 		
 		setBlockTestProps();
-
+		if (Cancelled.isCancelled()) return false; // CAS535 there was no checks
+			
 		mSelf = (syProj1.getIdx() == syProj2.getIdx());
 
 		mPairIdx = Utils.getPairIdx(syProj1.getIdx(), syProj2.getIdx(), pool);
@@ -89,8 +93,8 @@ public class SyntenyMain {
 			return false;
 		}
 		
-		pool.executeUpdate("delete from blocks where pair_idx='" + mPairIdx + "'");
-		pool.resetIdx("idx", "blocks"); //CAS533 add
+		//CAS535 deleted in MF: pool.executeUpdate("delete from blocks where pair_idx='" + mPairIdx + "'");
+		//pool.resetIdx("idx", "blocks"); //CAS533 add
 
 		setGapProperties();
 		clearBlocks();
@@ -103,32 +107,33 @@ public class SyntenyMain {
 			for (Group grp2 : syProj2.getGroups()) {
 				if (!mSelf) {
 					doSeqGrpGrpSynteny(grp1,grp2);
-					if (bInterrupt) return false;
+					if (Cancelled.isCancelled() || bInterrupt) return false;
 				}
 				else if (grp1.getIdx() <= grp2.getIdx()) {
 					doSeqGrpGrpSynteny(grp1,grp2);
-					if (bInterrupt) return false;
+					if (Cancelled.isCancelled() || bInterrupt) return false;
 				}
 				nGrpGrp--;
 				System.err.print(nGrpGrp + " pairs remaining...\r"); // CAS42 1/1/8 was mLog
 			}
 		}
 		System.err.print("                                          \r"); 
-		Utils.timeMsg(mLog, startTime, "Synteny"); // CAS520 add time
+		Utils.timeDoneMsg(mLog, startTime, "Synteny"); // CAS520 add time
 		
-		if (bInterrupt) return false;
+		if (Cancelled.isCancelled() || bInterrupt) return false;
 		/****************************************************/
 		
 		// CAS517 move from SyntenyMain - CAS520 moved it back Synteny, so hits# are block based
 		// CAS520 let self do collinear && p1.idx != p2.idx 
 		AnchorsPost collinear = new AnchorsPost(mPairIdx, syProj1, syProj2, pool, mLog);
 		collinear.collinearSets();
+		if (Cancelled.isCancelled() || bInterrupt) return false;
 		
 		if (mSelf) symmetrizeBlocks();	
 		
 		processStats();
 		
-		if (bInterrupt) return false;
+		if (Cancelled.isCancelled() || bInterrupt) return false;
 		
 		/*********************************************************/ 
 		if (syProj1.hasOrderAgainst()) {
@@ -146,7 +151,9 @@ public class SyntenyMain {
 				if (bNewOrder) obj.orderGroupsV2(true);
 				else obj.orderGroups(true);
 			}	
-		}		
+		}	
+		if (Cancelled.isCancelled() || bInterrupt) return false;
+		
 		writeResultsToFile();
 		
 		// CAS521 has a finished elsewhere Utils.timeMsg(mLog, startTime, "Synteny");
@@ -196,10 +203,10 @@ public class SyntenyMain {
 			}	
 			hits.add(new SyHit(start1, end1, start2, end2,id,pctid,gene));
 			
-			Utils.incStat("SyntenyHitsTotal", 1);
-			if (gene == 0)		Utils.incStat("RawSyHits" + HitType.NonGene.toString(), 1);
-			else if (gene == 1)	Utils.incStat("RawSyHits" + HitType.GeneNonGene.toString(), 1);
-			if (gene == 2)		Utils.incStat("RawSyHits" + HitType.GeneGene.toString(), 1);
+			BinStats.incStat("SyntenyHitsTotal", 1);
+			if (gene == 0)		BinStats.incStat("RawSyHits" + HitType.NonGene.toString(), 1);
+			else if (gene == 1)	BinStats.incStat("RawSyHits" + HitType.GeneNonGene.toString(), 1);
+			if (gene == 2)		BinStats.incStat("RawSyHits" + HitType.GeneGene.toString(), 1);
 		}
 		rs.close();
 		
@@ -568,7 +575,7 @@ public class SyntenyMain {
 				}
 			}
 		}
-		Utils.incStat("Merge Blocks", cntMerge);
+		BinStats.incStat("Merge Blocks", cntMerge);
 		HashSet<TreeSet<Integer>> blockSets = graph.transitiveClosure();
 		
 		Vector<Block> mergedBlocks = new Vector<Block>();
@@ -870,19 +877,19 @@ public class SyntenyMain {
 			String rlbl = "RawSyHits" + bt.toString();
 			String blbl = "BlockHits" + bt.toString();
 			
-			if (Utils.mStats != null && Utils.mStats.containsKey(rlbl) && Utils.mStats.containsKey(blbl)) {
-				float rnum = Utils.mStats.get(rlbl);
-				float bnum = Utils.mStats.get(blbl);
+			if (BinStats.mStats != null && BinStats.mStats.containsKey(rlbl) && BinStats.mStats.containsKey(blbl)) {
+				float rnum = BinStats.mStats.get(rlbl);
+				float bnum = BinStats.mStats.get(blbl);
 				float pct = (100*bnum)/rnum;
-				Utils.incStat("BlockPercent" + bt.toString(), pct);
+				BinStats.incStat("BlockPercent" + bt.toString(), pct);
 			}
 		}	
 		
-		Utils.uploadStats(pool, mPairIdx, syProj1.idx, syProj2.idx);
+		BinStats.uploadStats(pool, mPairIdx, syProj1.idx, syProj2.idx);
 		
 		if (Constants.PRT_STATS) {// CAS500
-			//Utils.dumpHist();
-			Utils.dumpStats();
+			BinStats.dumpHist();
+			BinStats.dumpStats();
 		}
 	}
 	

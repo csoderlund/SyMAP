@@ -27,8 +27,6 @@ import symap.sequence.Sequence;
 import symap.Globals;
 
 public class SeqHits  {
-	private static boolean debug = Globals.DEBUG;
-	
 	private static final int MOUSE_PADDING = 3;
 	
 	private int hitContent;
@@ -114,11 +112,9 @@ public class SeqHits  {
 		// allHitArray sorted by start1; this does not correspond to sequential blocks (sorted sets).
 		// start1 corresponds to grp1_idx; sorted by start1 does not correspond to sequence sets
 		if (bHi) {
-			if (debug) System.out.println("highlight ");
 			for (PseudoHit h : allHitsArray) {
 				int set = (bHiSet) ?  h.getCollinearSet() : h.getBlock();
 				if (set!=0 && !highMap.containsKey(set)) {
-					if (debug) System.out.println("set " + set + " " +toggle + " "+ h.getHitData().getStart1() + " " +  h.getHitData().getStart2());
 					highMap.put(set, toggle);
 					toggle = !toggle;
 				}
@@ -518,7 +514,7 @@ public class SeqHits  {
 		public void popupDesc(double x, double y) { 
 			String title="Hit #" + hitDataObj.getHitNum(); // CAS520 changed from hit idx to hitnum
 			
-			String msg = hitDataObj.createHover(st1LTst2) + "\n"; 
+			String theInfo = hitDataObj.createHover(st1LTst2) + "\n"; 
 			
 			String qHits = hitDataObj.getQueryBounds(); // list of subhits x:y, etc
 			
@@ -528,13 +524,13 @@ public class SeqHits  {
 				String msg1 = "\n" + SeqData.formatHit(name1 + "\n" + qHits);
 				String msg2 = "\n" + SeqData.formatHit(name2 + "\n" + hitDataObj.getTargetBounds());
 				
-				msg +=  st1LTst2 ? (msg1+msg2) : (msg2+msg1);
+				theInfo +=  st1LTst2 ? (msg1+msg2) : (msg2+msg1);
 			}
 			if (Globals.TRACE) 
-				msg += "\nDB-index " + hitDataObj.getID(); // CAS520 puts at bottom, useful for debugging and out of way 
+				theInfo += "\nDB-index " + hitDataObj.getID(); // CAS520 puts at bottom, useful for debugging and out of way 
 			
 			boolean isQuery1 = seqObj1.isQuery();
-			new TextShowInfo(mapper, title, msg, mapper.getDrawingPanel(), hitDataObj, 
+			new TextShowInfo(mapper, title, theInfo, mapper.getDrawingPanel(), hitDataObj, 
 				seqObj1.getTitle(), seqObj2.getTitle(), // title is Proj Chr
 				seqObj1.getProjectDisplayName(), seqObj2.getProjectDisplayName(), isQuery1); 
 		}

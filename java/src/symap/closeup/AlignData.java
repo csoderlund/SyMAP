@@ -1,13 +1,13 @@
 package symap.closeup;
 
 import util.ErrorReport;
-import symap.Globals;
 
 /********************************************
  * Input 2 seqs and a type (NT, AA, AAframe)
  * The caller may get: getAlignSeq1, getAlignSeq2, matchSeq 
  */
 public class AlignData {
+	public static boolean TRACE=false;
 	public static final int NT=0;
 	public static final int AA=1;
 	public static final int AAframe=2;
@@ -88,7 +88,7 @@ public class AlignData {
 			startOffset=start;
 			
 			if (start>0 || end<len) {
-				if (Globals.TRACE) {
+				if (TRACE) {
 					trimMsg = String.format("Trim: %2d (%d,%d) %2d (%d,%d) %4d", 
 							cntTrimS, gapS1, gapS2, cntTrimE, gapE1, gapE2, len);
 				}
@@ -115,7 +115,7 @@ public class AlignData {
 		}
 		matchSeq = new String(ret);
 		
-		if (Globals.TRACE && trimMsg!=null) {
+		if (TRACE && trimMsg!=null) {
 			System.out.format("%-32s %-80s %s\n", trimMsg, traceMsg, getScore());
 		}
 	 }

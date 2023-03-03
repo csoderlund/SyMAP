@@ -24,10 +24,16 @@ import javax.swing.JDialog;
 import javax.swing.JButton;
 import javax.swing.text.DefaultCaret;
 
+import symap.Globals;
+
 import java.io.FileWriter;
 
+/***************************************************************
+ * Used by ManagerFrame for popup dialog tracking progress
+ * CAS535 removed Logger interface
+ */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class ProgressDialog extends JDialog implements Logger {
+public class ProgressDialog extends JDialog  {
 	private static final int MIN_DISPLAY_TIME = 1500; // milliseconds
 	
 	private JProgressBar progressBar;
@@ -36,24 +42,20 @@ public class ProgressDialog extends JDialog implements Logger {
 	private JButton button;
 	private long startTime;
 	private Thread userThread = null;
-	private boolean bCancelled = false;
-	private boolean bCloseWhenDone = false;
-	private boolean bCloseIfNoErrors = false;
-	private boolean bDone = false;
+	private boolean bCancelled = false, bCloseWhenDone = false, bCloseIfNoErrors = false, bDone = false;
 	private FileWriter logFileW = null;
 	
 	public ProgressDialog(final Frame owner, String strTitle, String strMessage, 
-			boolean isDeterminate, 
 			boolean hasCancel, // CAS511 Removes has this as false, cause Hangs if Cancel
 			FileWriter logW)   // LOAD.log or symap.log (2nd also written to by backend.Log)
 	{
 		super(owner, strTitle, true);
 		Cancelled.init();
 		logFileW = logW;
-		
-		msgToFile("\n>>>> " + ErrorReport.getDate() + " <<<<\n");
-		
-		//setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // interferes with cancel() somehow
+		boolean isDeterminate=false; // CAS535 was parameter, but always false
+	
+		msgToFileOnly("-----------------------------------------------------------------");
+		msgToFileOnly(">>> " + Globals.VERDATE + "   " + ErrorReport.getDate() + " <<<");
 		
 		// Label
 		JLabel label = new JLabel(strMessage);
@@ -111,8 +113,7 @@ public class ProgressDialog extends JDialog implements Logger {
 		
 		addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent we) {
-		    	if (!bDone)
-		    		cancel();
+		    	if (!bDone) cancel();
 		    }
 		});
 		
@@ -130,11 +131,6 @@ public class ProgressDialog extends JDialog implements Logger {
 		
 		startTime = System.currentTimeMillis(); // must be here and not in start() for some reason
 	}
-	public void closeIfNoErrors()
-	{
-		ErrorCount.init();
-		bCloseIfNoErrors = true;
-	}
 	public void start(Thread thread) {
 		this.userThread = thread;
 		
@@ -146,52 +142,13 @@ public class ProgressDialog extends JDialog implements Logger {
 	public void start() {
 		setVisible(true); // blocking
 	}
-	public void closeWhenDone()
-	{
+	public void closeIfNoErrors(){
+		ErrorCount.init();
+		bCloseIfNoErrors = true;
+	}
+
+	public void closeWhenDone(){
 		bCloseWhenDone = true;	
-	}
-	public synchronized void increment(int n) { 
-		progressBar.setValue( progressBar.getValue() + n );
-	}
-	
-	public synchronized void increment() {
-		increment(1);
-	}
-	
-	public synchronized void setText(String s) {
-		if (textArea!=null) textArea.setText(s);
-	}
-	
-	public synchronized void appendText(String s) {
-		if (textArea==null) return;
-		if (!s.endsWith("\n")) s += "\n";
-		textArea.append(s);
-		System.out.print(s);
-		if (logFileW != null)
-		{
-			try
-			{
-				logFileW.write(s);
-				logFileW.flush();
-			}
-			catch (Exception e) {}
-		}
-	}
-	
-	public synchronized void updateText(String search, String newText) {
-		if (textArea==null) return;
-		String text = textArea.getText();
-		int pos = text.lastIndexOf(search);
-		if (pos < 0)
-			textArea.append(search + newText);
-		else {
-			text = text.substring(0, pos) + search + newText;
-			textArea.setText(text);
-		}	
-	}
-	
-	public void finish() {
-		finish(true);
 	}
 	
 	public void finish(boolean success) {
@@ -246,27 +203,30 @@ public class ProgressDialog extends JDialog implements Logger {
 			setCursor( Cursor.getDefaultCursor() );
 			dispose(); // Close this dialog
 		}
-		catch (Exception e) {} // CAS508 Cancel causes stacktrace on dispose
+		catch (Exception e) {} // CAS508 Cancel causes stacktrace on dispose; crashes anyway on dispose
 		
 		if (logFileW != null) // CAS500
-			try {logFileW.close();}
-		catch (Exception e) {ErrorReport.print("Cannot close file");} // CAS500
+			try {
+				logFileW.close(); 
+				logFileW=null;}
+			catch (Exception e) {} // CAS500
 	}	
-	public void setCancelled()
-	{
-		bCancelled = true;	
+	public void setCancelled() {
+		try {
+			if (logFileW!=null) logFileW.append("Cancel"); // CAS535
+			bCancelled = true;	
+		}
+		catch (Exception e) {}
 	}
 	private void cancel() {
 		bCancelled = true;
 		Cancelled.cancel();
 		if (userThread != null)
 			userThread.interrupt();
-		while (userThread != null && userThread.isAlive())
-		{
+		while (userThread != null && userThread.isAlive()) {
 			try{Thread.sleep(100);} catch(Exception e){}
 		}
 	}
-	
 	public boolean wasCancelled() { return bCancelled; }
 	
 	public void addActionListener(ActionListener listener) {
@@ -281,12 +241,42 @@ public class ProgressDialog extends JDialog implements Logger {
 			ProgressDialog.this.setVisible(false);//ProgressDialog.this.dispose();
 		}
 	};
+	/************************************************************/
 	
-	// Logger interface
-	public void msg(String msg) {
-		appendText(msg + "\n");
+	public synchronized void updateText(String search, String newText) {
+		if (textArea==null) return;
+		String text = textArea.getText();
+		
+		int pos = text.lastIndexOf(search);
+		if (pos < 0)
+			textArea.append(search + newText);
+		else {
+			text = text.substring(0, pos) + search + newText;
+			textArea.setText(text);
+		}	
 	}
+
+	public synchronized void appendText(String s) {
+		if (!s.endsWith("\n")) s += "\n";
+		
+		msgToFile(s);
+		
+		if (textArea!=null) textArea.append(s);
+	}
+	
+	public void msg(String msg) {
+		appendText(msg);
+	}
+	
 	public void msgToFile(String s) {
+		if (!s.endsWith("\n")) s += "\n";
+		System.out.print(s);
+		
+		msgToFileOnly(s);
+	}	
+	
+	public void msgToFileOnly(String s) {
+		if (!s.endsWith("\n")) s += "\n";
 		if (logFileW != null) {
 			try {
 				logFileW.write(s);
@@ -294,8 +284,5 @@ public class ProgressDialog extends JDialog implements Logger {
 			}
 			catch (Exception e) {}
 		}
-	}	
-	public void write(char c) {
-		appendText(new String(new char[] { c }));
 	}
 }

@@ -431,6 +431,6 @@ public class Data  {
 	}
 	
 	private void prt (String msg) {
-		if (Globals.DEBUG) System.out.println("Data: " + msg);
+		//if (Globals.DEBUG) System.out.println("Data: " + msg);
 	}
 }

@@ -9,12 +9,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.sql.ResultSet;
 
-import symap.Globals;
 import symap.manager.Mproject;
 import util.Cancelled;
 import util.ErrorCount;
 import util.ErrorReport;
-import util.Logger;
+import util.ProgressDialog;
 import util.Utilities;
 import blockview.BlockViewFrame;
 
@@ -22,6 +21,7 @@ import blockview.BlockViewFrame;
  * Load chromosome/draft/LG sequences to SyMAP database.
  * Also fix bad chars if any
  * CAS534 changed from props to Project; removed static on everything
+ * CAS535 ignore sequences without prefixes
  */
 
 public class SeqLoadMain {
@@ -29,36 +29,31 @@ public class SeqLoadMain {
 	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE;
 	private static final int MAX_GRPS =   BlockViewFrame.MAX_GRPS; 	// CAS42 12/6/17 - for message
 	private static final int MAX_COLORS = BlockViewFrame.maxColors; // CAS42 12/6/17 - for message
-	private static boolean TRACE = Globals.TRACE; 					// CAS519 add for Guillermo hang problem
 	private Mproject mProj;
 	
-	public boolean run(UpdatePool pool, Logger log, Mproject proj) throws Exception {
+	public boolean run(UpdatePool pool, ProgressDialog plog, Mproject proj) throws Exception {
 		try {
 			mProj = proj;
 			String projName = mProj.getDBName();
 			projIdx = mProj.getIdx();
 			
 			long startTime = System.currentTimeMillis();
-			log.msg("Loading sequences for " + projName);
-			if (TRACE) log.msg("Tracing each step....");
+			plog.msg("Loading sequences for " + projName);
 			
-	// Create project in DB; CAS534 project created in ManagerFrame/Mproject
-			
-	// Check Sequence files 
-			if (TRACE) log.msg("Processing files");
-			
+	// Check Sequence files; CAS534 project created in ManagerFrame/Mproject
 			Vector<File> seqFiles = new Vector<File>();	
-			
 			String saveSeqDir="";
 			long modDirDate=0;
+			
 			String projDir = Constants.seqDataDir + projName;
 			String seqFileName = mProj.getSequenceFile();
+			
 			if (seqFileName.equals("")) {
 				String seqDir = projDir + Constants.seqSeqDataDir; // created with Add Project
-				log.msg("   Sequence_files not specified - use " + seqDir);
+				plog.msg("   Sequence_files not specified - use " + seqDir);
 				
 				if (!Utilities.pathExists(seqDir)) {
-					return rtError(pool, log, projIdx, "Sequence files not found in " + seqDir);
+					return rtError(pool, plog, projIdx, "Sequence files not found in " + seqDir);
 				}			
 				File sdf = new File(seqDir);
 				if (sdf.exists() && sdf.isDirectory()) {
@@ -69,20 +64,20 @@ public class SeqLoadMain {
 						seqFiles.add(f2);
 				}
 				else {
-					return rtError(pool, log, projIdx, "Cannot find sequence directory " + seqDir);
+					return rtError(pool, plog, projIdx, "Cannot find sequence directory " + seqDir);
 				}
 			}
 			else {
 				String[] fileList = seqFileName.split(",");
 				String xxx = (fileList.length>1) ? (fileList.length + " files ") : seqFileName;
-				log.msg("   User specified sequence files - " + xxx);
+				plog.msg("   User specified sequence files - " + xxx);
 				for (String filstr : fileList) {
 					if (filstr == null) continue;
 					if (filstr.trim().equals("")) continue;
 					File f = new File(filstr);
 					
 					if (!f.exists()) {
-						log.msg("*** Cannot find sequence file " + filstr + " - try to continue...");
+						plog.msg("*** Cannot find sequence file " + filstr + " - try to continue...");
 					}
 					else if (f.isDirectory()) {
 						saveSeqDir = f.getAbsolutePath();
@@ -99,80 +94,84 @@ public class SeqLoadMain {
 					}
 				}
 			}
-			if (seqFiles.size()==0) { // CAS500
-				return rtError(pool, log, projIdx, "No sequence files!!");
-			}
-			
-	// Scan and upload the sequences
-			log.msg("Checking sequence files....");
+			if (seqFiles.size()==0)  // CAS500
+				return rtError(pool, plog, projIdx, "No sequence files!!");
+		
 			String prefix = mProj.getGrpPrefix();
-			Vector<String> grpList = new Vector<String>();
-			int nSeqs = 0, seqIgnore=0, cntFile=0;
-			long totalSize = 0;
-			
+			if (prefix.contentEquals("")) plog.msg("   No sequence prefix supplied (See Parameters - Group prefix)");
+			else plog.msg("   Load sequences with '" + prefix + "' prefix (See Parameters - Group prefix)");
 			int minSize = mProj.getMinSize();
-			log.msg("+++ Sequences < " + minSize + "bp will be ignored ('Minimum length' project parameter).");
-	
+			plog.msg("   Load sequences > " + minSize + "bp (See Parameters - Minimum length)");
+			
+			Vector<String> grpList = new Vector<String>();
+			int totalnSeqs = 0, totalSeqIgnore=0, cntFile=0;
+			long totalBasesWritten = 0;
+			
 			TreeSet<String> grpNamesSeen = new TreeSet<String>();
 			TreeSet<String> grpFullNamesSeen = new TreeSet<String>();
 			
+			if (Cancelled.isCancelled()) {
+				plog.msg("User cancelled");
+				return false;
+			}	
+			
+		// For all files, Scan and upload the sequences		
 			for (File f : seqFiles) {
-				int nBadCharLines = 0, fileIgnore = 0;
-				long fileSize = 0;
+				int nBadCharLines = 0, seqIgnore = -1,  seqPrefixIgnore=0, nSeqs=0;
+				long basesWritten = 0;
 				if (!f.isFile() || f.isHidden()) continue; // CAS511 macos add ._ files in tar
 				
 				cntFile++;
-				log.msg("Reading " + f.getName());
+				plog.msg("Reading " + f.getName());
 				BufferedReader fh = Utils.openGZIP(f.getAbsolutePath()); // CAS500
 	
-				int n = 0;
 				StringBuffer curSeq = new StringBuffer();
-				String grpName = null;
-				String grpFullName = null;
+				String grpName = null, grpFullName = null;
 				
-				while (fh.ready()){
+				while (fh.ready()) {
 					String line = fh.readLine();
-					if (Cancelled.isCancelled()) break;
+					if (Cancelled.isCancelled()) {
+						plog.msg("User cancelled"); fh.close();
+						return false;
+					}	
+				
 					if (line.startsWith("#")) continue; // CAS512 add
 					
 					if (line.startsWith(">")) {
-						if (grpName != null) {
-							if (curSeq.length() >= minSize) {
-								if (!grpNamesSeen.contains(grpName) &&  !grpFullNamesSeen.contains(grpFullName)){
-									grpList.add(grpName);
-									grpNamesSeen.add(grpName);
-									grpFullNamesSeen.add(grpFullName);
-									
-									// load sequence
-									System.out.print(grpName + ": " + curSeq.length() + "               \r");
-									uploadSequence(grpName,grpFullName,curSeq.toString(),f.getName(),pool,nSeqs+1);	
-									
-									nSeqs++; n++;
-									totalSize += curSeq.length();
-									fileSize += curSeq.length();
-								}
-								else {
-									System.out.println("+++ Duplicate sequence name: " + grpFullName + " (" + grpName + ") skipping...");
-								}
+						if (grpName != null && curSeq.length() >= minSize) {
+							if (!grpNamesSeen.contains(grpName) &&  !grpFullNamesSeen.contains(grpFullName)){
+								grpList.add(grpName);
+								grpNamesSeen.add(grpName);
+								grpFullNamesSeen.add(grpFullName);
+								
+								// load sequence
+								System.out.print(grpName + ": " + curSeq.length() + "               \r");
+								uploadSequence(grpName,grpFullName,curSeq.toString(),f.getName(),pool,totalnSeqs+1);	
+								
+								nSeqs++; 
+								basesWritten += curSeq.length();
 							}
-							else {seqIgnore++; fileIgnore++;} 
-						}
+							else {
+								plog.msgToFile("+++ Duplicate sequence name: " + grpFullName + " (" + grpName + ") skipping...");
+							}
+						} else seqIgnore++;
+						
 						grpName = null;
 						curSeq.setLength(0);
 						
-						if (!prefix.equals("") && !line.startsWith(">" + prefix)){
-							String msg = "*** Invalid sequence name " + line + 
-									"\n    Name should start with the prefix " + prefix + " (see Parameter Help)." +
-									"\n    To change this, set the 'grp_prefix' project parameter to the proper value, or leave it blank.";
-							return rtError(pool, log, projIdx, msg);
+						if (!parseHasPrefix(line, prefix)){
+							seqPrefixIgnore++;
+							if (seqPrefixIgnore<=3) plog.msgToFile("+++ Invalid prefix, ignore: " + line);
+							if (seqPrefixIgnore==3) plog.msgToFile("+++ Surpressing further invalid prefix ");
+							continue;
 						}
-						grpName = parseGrpName(line,prefix);
+						grpName     = parseGrpName(line,prefix);
 						grpFullName = parseGrpFullName(line);
 						if (grpName==null || grpFullName==null || grpName.equals("") || grpFullName.equals("")){	
-							return rtError(pool, log, projIdx, "Unable to parse group name from:" + line);
+							return rtError(pool, plog, projIdx, "Unable to parse group name from:" + line);
 						}
-					}	
-					else {
+					} 	
+					else if (grpName!=null) {
 						line = line.replaceAll("\\s+",""); 
 
 						if (line.matches(".*[^agctnAGCTN].*")) {
@@ -182,106 +181,117 @@ public class SeqLoadMain {
 						curSeq.append(line);
 					}
 				} // end reading file
-			
-		// load last sequence
-				if (grpName != null) {
-					if (curSeq.length() >= minSize) {
-						grpList.add(grpName);
-						uploadSequence(grpName, grpFullName, curSeq.toString(), f.getName(), pool, nSeqs+1);	
-						nSeqs++; n++;
-						totalSize += curSeq.length();
-						fileSize += curSeq.length();
-					}
-					else {seqIgnore++; fileIgnore++;}
-				}
-				if (fileIgnore>0)
-					 log.msg(String.format("%,10d sequences   %,10d bases   %,4d sequences ignore", n, fileSize, fileIgnore));
-				else log.msg(String.format("%,10d sequences   %,10d bases", n, fileSize));
+				fh.close(); // CAS535 add
 				
-				if (nBadCharLines > 0)
-					log.msg("+++ " + nBadCharLines + " lines contained characters other than AGCT; these will be replaced by N");
-			
-				if (nBadCharLines>0) mProj.saveProjParam("badCharLines","" + nBadCharLines);	
+				if (grpName != null &&  curSeq.length() >= minSize) {// load last sequence
+					grpList.add(grpName);
+					uploadSequence(grpName, grpFullName, curSeq.toString(), f.getName(), pool, totalnSeqs+1);	
+					nSeqs++;
+					basesWritten += curSeq.length();
+				}
+				else if (curSeq.length()>0) seqIgnore++; 
+				
+				if (seqIgnore==0) plog.msg(String.format("%,5d sequences   %,10d bases", nSeqs, basesWritten));
+				else plog.msg(String.format("%,5d sequences   %,10d bases   %,4d sequences ignore", nSeqs, basesWritten, seqIgnore));
+				
+				if (nBadCharLines > 0) {
+					plog.msg("+++ " + nBadCharLines + " lines contain characters that are not AGCT; replaced by N");
+					mProj.saveProjParam("badCharLines","" + nBadCharLines);	
+				}
+				totalSeqIgnore += seqIgnore;
+				totalBasesWritten += basesWritten;
+				totalnSeqs += nSeqs;
 			} // end loop through files
 			
-			if (nSeqs == 0) {
-				return rtError(pool, log, projIdx, "No sequences were loaded! Check for problems with the sequence files and re-load.");
+			/* ************************************************************ */
+			if (totalnSeqs == 0) {
+				mProj.removeProjectFromDB(); // CAS535 add
+				return rtError(pool, plog, projIdx, "No sequences were loaded! Check for problems with the sequence files and re-load.");
 			}
 			// CAS532 add these to print on View
 			mProj.saveProjParam("proj_seq_date", Utils.getDateStr(modDirDate));
 			mProj.saveProjParam("proj_seq_dir", saveSeqDir);
 			
 			if (cntFile>1) {
-				log.msg("Total:");
-				if (seqIgnore>0)
-					 log.msg(String.format("%,10d sequences   %,10d bases   %,4d sequences ignored", nSeqs, totalSize, seqIgnore));
-				else log.msg(String.format("%,10d sequences   %,10d bases ", nSeqs, totalSize));
+				plog.msg("Total:");
+				if (totalSeqIgnore>0)
+					 plog.msg(String.format("%,5d sequences   %,10d bases   %,4d sequences ignored", totalnSeqs, totalBasesWritten, totalSeqIgnore));
+				else plog.msg(String.format("%,5d sequences   %,10d bases ", totalnSeqs, totalBasesWritten));
 			}
-			if (nSeqs >= MAX_COLORS)
-				log.msg("+++ There are " + MAX_COLORS + " distinct colors for blocks -- there will be duplicates");
+			if (totalnSeqs >= MAX_COLORS)
+				plog.msg("+++ There are " + MAX_COLORS + " distinct colors for blocks -- there will be duplicates");
 			
-			if (nSeqs >= MAX_GRPS){
-				log.msg("+++ More than " + MAX_GRPS + " sequences loaded!");
-				log.msg("  Unless you are ordering draft contigs,");
-				log.msg("    It is recommended to reload with a higher Minimum Length setting, before proceeding");
-				log.msg("    Use script/lenFasta.pl to determine Minimum Length to use to reduce number of loaded sequences");
+			if (totalnSeqs >= MAX_GRPS){
+				plog.msg("+++ More than " + MAX_GRPS + " sequences loaded!");
+				plog.msg("  Unless you are ordering draft contigs,");
+				plog.msg("    It is recommended to reload with a higher Minimum Length setting, before proceeding");
+				plog.msg("    Use script/lenFasta.pl to determine Minimum Length to use to reduce number of loaded sequences");
 				//ErrorCount.inc(); CAS505 
 			}
-			updateSortOrder(grpList,pool, log);
+			updateSortOrder(grpList, pool, plog);
 					
-			log.msg("Done:  " + Utilities.getDurationString(System.currentTimeMillis()-startTime) + "\n");
+			Utils.timeDoneMsg(plog, startTime, "Load sequences");
 		}
 		catch (OutOfMemoryError e){
-			log.msg("\n\nOut of memory! To fix, \nA)Make sure you are using a 64-bit computer\nB)Launch SyMAP using the -m option to specify higher memory.\n\n");
-			System.out.println("\n\nOut of memory! To fix, \nA)Make sure you are using a 64-bit computer\nB)Launch SyMAP using the -m option to specify higher memory.\n\n");
+			plog.msg("\n\nOut of memory! To fix, \nA)Make sure you are using a 64-bit computer\nB)Modify symap script 'mem=' line to specify higher memory.\n\n");
 			System.exit(0);
 			return false;
 		}
 		return true;
 	}
+	/**************************************************************************/
 	// CAS518 when there is errors and nothing is loaded, it still shows it is; remove project
-	private boolean rtError(UpdatePool pool, Logger log, int projIdx, String msg) {
+	private boolean rtError(UpdatePool pool, ProgressDialog log, int projIdx, String msg) {
+		log.msgToFileOnly("*** " + msg);
 		Utilities.showWarningMessage("*** " + msg); // prints to stdout
 		ErrorCount.inc();
+		
 		try {
 			if (projIdx > 0) {
 				mProj.removeProjectFromDB();
-				log.msg("Remove project from database");
+				log.msg("Remove partially loaded project from database");
 			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Removing project due to load failure");}
 		
 		return false;
 	}
-	// The prefix must be present. if no prefix, just use the given name.
-	// Note, expects the starting ">" as well
-	private String parseGrpName(String in, String prefix){
-		in = in + " "; // hack, otherwise we need two cases in the regex
+	private boolean parseHasPrefix(String name, String prefix){
+		if (prefix.equals("")) return true;
 		String regx = ">\\s*(" + prefix + ")(\\w+)\\s?.*";
 		Pattern pat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
-		Matcher m = pat.matcher(in);
-		if (m.matches())
-			return m.group(2);
-		return parseGrpFullName(in);
+		Matcher m = pat.matcher(name);
+		if (m.matches()) return true;
+		return false;
+	}
+	// The prefix must be present. if no prefix, just use the given name.
+	private String parseGrpName(String name, String prefix){
+		name = name + " "; // hack, otherwise we need two cases in the regex
+		
+		String regx = ">\\s*(" + prefix + ")(\\w+)\\s?.*";
+		Pattern pat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
+		Matcher m = pat.matcher(name);
+		if (m.matches()) return m.group(2);
+		
+		return parseGrpFullName(name);
 	}
 	private String parseGrpFullName(String in){
 		String regx = ">\\s*(\\w+)\\s?.*";
 		Pattern pat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
 		Matcher m = pat.matcher(in);
-		if (m.matches())
-			return m.group(1);
-		System.err.println("Unable to parse group name from:" + in);
+		if (m.matches()) return m.group(1);
+		
 		return null;
 	}
-	private void updateSortOrder(Vector<String> grpList,UpdatePool pool, Logger log) throws Exception
-	{
+	/***********************************************************************/
+	private void updateSortOrder(Vector<String> grpList,UpdatePool pool, ProgressDialog log)  {
+	try {
 		// First, just set it to the idx order
 		int minIdx;
 		ResultSet rs = pool.executeQuery("select min(idx) as minidx from xgroups where proj_idx=" + projIdx);
 		rs.first();
 		minIdx = rs.getInt("minidx");
 		pool.executeUpdate("update xgroups set sort_order = idx+1-" + minIdx + " where proj_idx=" + projIdx);
-		//pool.executeUpdate("update xgroups set sort_order = 1 where proj_idx=" + projIdx);
 		
 		// CAS534 removed a bunch of code because SyProps had grp_order and grp_sort that never changed
 		GroupSorter gs = new GroupSorter(GrpSortType.Alpha); 
@@ -305,9 +315,11 @@ public class SeqLoadMain {
 					" and name='" + grp + "'");
 		}
 	}
-	private void uploadSequence(String grp, String fullname, String seq, String file,
-			UpdatePool pool,int order) throws Exception
-	{
+	catch (Exception e) {ErrorReport.print(e, "Loading sequence - fail ordering them"); };
+	}
+	/***********************************************************************/
+	private void uploadSequence(String grp, String fullname, String seq, String file, UpdatePool pool,int order)  {
+	try {
 		// First, create the group
 		pool.executeUpdate("INSERT INTO xgroups VALUES('0','" + projIdx + "','" + 
 				grp + "','" + fullname + "'," + order + ",'0')" );
@@ -315,8 +327,7 @@ public class SeqLoadMain {
 		ResultSet rs = pool.executeQuery(sql);
 		rs.first();
 		int grpIdx = rs.getInt("maxidx");
-		
-		// Now, create the pseudos entry		
+			
 		pool.executeUpdate("insert into pseudos (grp_idx,file,length) values(" + grpIdx + ",'" + file + "'," + seq.length() + ")");
 		
 		// Finally, upload the sequence in chunks
@@ -328,5 +339,7 @@ public class SeqLoadMain {
 			String st = "INSERT INTO pseudo_seq2 VALUES('" + grpIdx + "','" + chunk + "','" + cseq + "')";
 			pool.executeUpdate(st);
 		}
+	}
+	catch (Exception e) {ErrorReport.print(e, "Loading sequence - fail loading to database "); };
 	}
 }

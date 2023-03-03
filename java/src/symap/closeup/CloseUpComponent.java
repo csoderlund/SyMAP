@@ -28,7 +28,7 @@ public class CloseUpComponent extends JComponent {
 	// colors and finals are at the bottom
 	private HitAlignment[] hitAlign;
 	private GeneAlignment[] geneAlign;
-	private int startG, endG;			// start and end of graphics
+	private int startGr, endGr;			// start and end of graphics
 	private Ruler ruler;
 	private Vector<CloseUpListener> listeners;
 
@@ -51,10 +51,10 @@ public class CloseUpComponent extends JComponent {
 	public void addCloseUpListener(CloseUpListener cl) {if (!listeners.contains(cl))listeners.add(cl);}
 	public void removeCloseUpListener(CloseUpListener cl) {listeners.remove(cl);}
 
-	// start = min(start_gene, start_hit), end=max(end_gene, end_hit)
-	public void setData(int start, int end, GeneAlignment[] ga, HitAlignment[] ha) {
-		this.startG = start;
-		this.endG = end;
+	// start = min(start_exon, start_subhit), end=max(end_exon, end_subhit)
+	public void setData(int startG, int endG, GeneAlignment[] ga, HitAlignment[] ha) {
+		this.startGr = startG;
+		this.endGr = endG;
 		this.geneAlign = ga;
 		this.hitAlign = ha;
 		
@@ -66,7 +66,7 @@ public class CloseUpComponent extends JComponent {
 
 	public int getNumberOfHits() { return (hitAlign == null ? 0 : hitAlign.length); }
 	
-	private int getLengthG() { return Math.abs(endG - startG) + 1; }
+	private int getLengthG() { return Math.abs(endGr - startGr) + 1; }
 
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
@@ -81,7 +81,7 @@ public class CloseUpComponent extends JComponent {
 		// Paint the hit segments
 		for (int i = 0; i < hitAlign.length; ++i) {
 			hitAlign[i].paintName(g2, fm, hitFontColor, FONT_SPACE, bpPerPixel);
-			hitAlign[i].paintLine(g2, bpPerPixel, startG, HORZ_BORDER);
+			hitAlign[i].paintLine(g2, bpPerPixel, startGr, HORZ_BORDER);
 			hitAlign[i].paint(g2);
 		}
 		
@@ -90,68 +90,77 @@ public class CloseUpComponent extends JComponent {
 		for (int i = 0; i < geneAlign.length; ++i) 
 			geneAlign[i].paint(g2, fm, geneFontColor, FONT_SPACE);
 	}
-
+	/****************************************************************************/
 	public void setPreferredSize(Dimension d) {
 		setPreferredSize(d.width);
 	}
 
-	public void setPreferredSize(double width) {
+	private void setPreferredSize(double width) {
+		// CAS534 would not have done hit overlaps if no genes; if (hitAlign != null && geneAlign != null) {
+		
+		double grLen = getLengthG();
+		
+		double lenBP = grLen/(width-2 * HORZ_BORDER);
+		
+		double bpPerPixel = Math.max(1, lenBP);
+		
+		ruler.setBounds(startGr, endGr, HORZ_BORDER, VERT_BORDER, bpPerPixel, getFontMetrics(rulerFont));
+		
+		// height
+		double ht = ruler.getBounds().getX() + ruler.getBounds().getHeight()+ RULER_OFFSET;
+		ht = buildHitLayers(ht, bpPerPixel);
+		if (geneAlign!=null) 
+			ht = buildGeneLayers(ht, bpPerPixel);
+		
 		Dimension d = new Dimension();
-		if (hitAlign != null && geneAlign != null) {
-			double lenBP = getLengthG()/ (width - 2 * HORZ_BORDER);
-			double bpPerPixel = Math.max(MIN_BP_PER_PIXEL, lenBP);
-			ruler.setBounds(startG, endG, HORZ_BORDER, VERT_BORDER, bpPerPixel, getFontMetrics(rulerFont));
-			double h = ruler.getBounds().getX() + ruler.getBounds().getHeight()+ RULER_OFFSET;
-
-			d.width = (int) Math.ceil(getLengthG() / bpPerPixel + 2 * HORZ_BORDER);
-			h = setHitLayers(h, bpPerPixel);
-			h = setGeneLayers(h, bpPerPixel);
-			d.height = (int) Math.ceil(h + VERT_BORDER);
-		}
+		d.width  = (int) Math.ceil(grLen/bpPerPixel + 2*HORZ_BORDER);
+		d.height = (int) Math.ceil(ht + VERT_BORDER);
+		
 		super.setPreferredSize(d);
 	}
 
-	private double setGeneLayers(double y, double bpPerPixel) {
-		int[] layers = getGeneLayers(bpPerPixel);
+	private double buildGeneLayers(double y, double bpPerPixel) {
+		int [] layers = assignGeneLayers(bpPerPixel);
+		
 		double layerSize = GENE_HEIGHT + VERT_GENE_SPACE + getFontHeight(geneFont) + FONT_SPACE;
 		int max = -1;
 		
 		for (int i = 0; i < geneAlign.length; ++i) {
-			if (layers[i] > max)
-				max = layers[i];
-			geneAlign[i].setBounds(startG, HORZ_BORDER, bpPerPixel, layers[i] * layerSize + y, startG, endG);
+			if (layers[i] > max) max = layers[i];
+			
+			geneAlign[i].setBounds(startGr, endGr, HORZ_BORDER, bpPerPixel, layers[i] * layerSize + y);
 		}
 		return ((max + 1) * layerSize) + y;
 	}
 
-	private int[] getGeneLayers(double bpPerPixel) {
+	private int[] assignGeneLayers(double bpPerPixel) {
 		if (geneAlign == null || geneAlign.length == 0) return new int[0];
 
-		int[] layers = new int[geneAlign.length];
+		int[] layers  = new int[geneAlign.length];
 		double[] ends = new double[geneAlign.length];
 		Arrays.fill(layers, -1);
 		Arrays.fill(ends, Double.NEGATIVE_INFINITY);
 		
 		for (int i = 0; i < geneAlign.length; ++i) {
-			double x = geneAlign[i].getX(startG, 0, bpPerPixel, startG);
+			double x = geneAlign[i].getX(startGr, 0, bpPerPixel);
 			for (int j = 0; j < ends.length; ++j) {
 				if (ends[j] <= x || ends[j] < 0) {
 					layers[i] = j;
 					break;
 				}
 			}
-			ends[layers[i]] = x + geneAlign[i].getWidth(bpPerPixel, startG, endG) + HORZ_GENE_SPACE;
+			ends[layers[i]] = x + geneAlign[i].getWidth(bpPerPixel, startGr, endGr) + HORZ_GENE_SPACE;
 		}
 		return layers;
 	}
 
-	private double setHitLayers(double y, double bpPerPixel) {
+	private double buildHitLayers(double y, double bpPerPixel) {
 		final double layerHeight = HIT_HEIGHT + VERT_HIT_SPACE + getFontHeight(hitFont) + FONT_SPACE;
 		
 		int numLayers = assignHitLayers(); 
 		
 		for (HitAlignment h : hitAlign)
-			h.setBounds(startG, HORZ_BORDER, bpPerPixel, h.getLayer() * layerHeight + y);
+			h.setBounds(startGr, HORZ_BORDER, bpPerPixel, h.getLayer() * layerHeight + y);
 
 		return ((numLayers + 1) * layerHeight) + y;
 	}
@@ -184,7 +193,7 @@ public class CloseUpComponent extends JComponent {
 		}
 		return maxLayer;
 	}
-	
+	/*******************************************************************/
 	private HitAlignment getHitAlignment(Point p) {
 		if (hitAlign != null) {
 			for (HitAlignment h : hitAlign)
@@ -214,7 +223,6 @@ public class CloseUpComponent extends JComponent {
 	private static final double VERT_HIT_SPACE=2; // CAS531 3->2, no diff
 	private static final double VERT_GENE_SPACE=5, HORZ_GENE_SPACE=8;
 	private static final int 	VERT_BORDER=12, HORZ_BORDER=15; // CAS531 VERT 15->12
-	private static final double MIN_BP_PER_PIXEL=1;
 	private static final double RULER_TICK_SPACE=60, RULER_LINE_THICKNESS=3, RULER_OFFSET=12; // CAS531 30->12 - no diff
 	private static final double FONT_SPACE = 3;
 	
@@ -227,6 +235,7 @@ public class CloseUpComponent extends JComponent {
 	public static final double HIT_HEIGHT = 15; // CAS531 was a complicated equation that always gave 18
 	
 	// Gene Alignment
+	public static final DoubleDimension GARROW_DIM = new DoubleDimension(10,15); //w,h
 	public static final double EXON_HEIGHT=12, INTRON_HEIGHT=2;
 	private static final double GENE_HEIGHT = Math.max(EXON_HEIGHT, INTRON_HEIGHT);
 
@@ -236,7 +245,7 @@ public class CloseUpComponent extends JComponent {
 	// Set by user in color wheel; defaults in closeup.properties
 	public static Color backgroundColor, rulerColor, hitColor;
 	public static Color missColor, deleteColor, insertColor;
-	public static Color exonColor, intronColor;
+	public static Color intronColor, exonColorP, exonColorN; // CAS535 split exon into p/n
 	
 	static {
 		PropertiesReader props = new PropertiesReader(SyMAP2d.class.getResource("/properties/closeup.properties"));
@@ -246,7 +255,8 @@ public class CloseUpComponent extends JComponent {
 		missColor = props.getColor("missColor");
 		deleteColor = props.getColor("deleteColor");
 		insertColor = props.getColor("insertColor");
-		exonColor = props.getColor("exonColor");
+		exonColorP = props.getColor("exonColorP");
+		exonColorN = props.getColor("exonColorN");
 		intronColor = props.getColor("intronColor");
 		
 		// CAS531 removed all the constants from closeup.properties, e.g. below, except those that user can change

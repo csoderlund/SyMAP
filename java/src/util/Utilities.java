@@ -177,6 +177,12 @@ public class Utilities {
 		return (s == null || s.length() == 0);
 	}
 	
+	public static boolean isOverlap(int start1, int end1, int start2, int end2) {
+		if ((start1 >= start2 && start1 <= end2) || (end1  >= start2 && end1 <= end2)
+		 || (start2 >= start1 && start2 <= end1) || (end2  >= start1 && end2 <= end1)) return true;
+		
+		return false;
+	}
 	/********************************************************************
 	 * XXX File ops
 	 */
@@ -330,19 +336,19 @@ public class Utilities {
 		return tok[2] + "-" + ms + "-" + tok[0];
 	}
 	
-	public static String reformatDate(String load) { // For Project - show on left of manager
+	public static String reformatAnnotDate(String adate) { // For Project - show on left of manager (see DB project.annotdate)
 		try {
 			String dt;
-			if (load.indexOf(" ")>0) dt = load.substring(0, load.indexOf(" "));
-			else if (load.startsWith("20")) dt = load;
-			else return "loaded";
+			if (adate.indexOf(" ")>0) dt = adate.substring(0, adate.indexOf(" "));
+			else if (adate.startsWith("20")) dt = adate;
+			else return "???";
 			
 			SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd"); 
 	        Date d = sdf.parse(dt);
 	        sdf = new SimpleDateFormat("ddMMMyy"); 
 	        return sdf.format(d);
 		}
-		catch (Exception e) {return "loaded";}
+		catch (Exception e) {return "???";}
 	}
 	public static String getDateStr(long l) {
 		DateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
@@ -538,6 +544,19 @@ public class Utilities {
 	}
 	
 	public static void showOutOfMemoryMessage() { showOutOfMemoryMessage(null); }
+	
+	/*****************************************************************************/
+	// these 3 are also in SeqData
+	public static String coordsStr(int start, int end) {
+		return String.format("%,d - %,d %dbp", start, end, (end-start+1)) ;
+	}
+	public static String coordsStr(char o, int start, int end) {
+		return String.format("%c(%,d - %,d) %dbp", o, start, end, (end-start+1)) ;
+	}
+	public static String coordsStr(boolean isStrandPos, int start, int end) {
+		String o = (isStrandPos) ? "+" : "-";
+		return String.format("%s(%,d - %,d) %dbp", o, start, end, (end-start+1)) ;
+	}
 	
     // CAS508 - for writing to log
     static public String kMText(long len) {

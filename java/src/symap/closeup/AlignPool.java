@@ -14,6 +14,7 @@ import props.ProjectPool;
 import symap.Globals;
 import symap.mapper.HitData;
 import util.ErrorReport;
+import util.Utilities;
 
 /******************************************
  * This is used by: Align (Closeup), and the Hit Info 'Align Hit', and the Show Sequence for extracting sequence
@@ -28,7 +29,7 @@ import util.ErrorReport;
  * 3. isQuery determines whether the Select=Query or Select=Target
  */
 public class AlignPool extends DBAbsUser {
-	public static final boolean CDEBUG = false;
+	private static final boolean TRACE = false; 
 	private static final boolean toUpper = false;
 	private static final boolean bTrim=Globals.bTrim;
 	
@@ -40,14 +41,15 @@ public class AlignPool extends DBAbsUser {
 		super(dr);
 	}
 	// Called from CloseUpDialog.setview 
-	public synchronized HitAlignment[] getHitAlignments(Vector <HitData> hitList, boolean isQuery, String projS, String projO) 
+	public synchronized HitAlignment[] buildHitAlignments(Vector <HitData> hitList, 
+			boolean isQuery, String projS, String projO, int selStart, int selEnd) 
 	{	
-		return computeHitAlignments(hitList, isQuery, projS, projO, true);
+		return computeHitAlignments(hitList, isQuery, projS, projO, true, selStart, selEnd);
 	}
 	// Called from TextPopup
-	public synchronized HitAlignment[] getHitAlignments(Vector <HitData> hitList, boolean isNT, boolean isQuery) 
+	public synchronized HitAlignment[] buildHitAlignments(Vector <HitData> hitList, boolean isNT, boolean isQuery) 
 	{
-		return computeHitAlignments(hitList, isQuery, "", "", isNT);
+		return computeHitAlignments(hitList, isQuery, "", "", isNT, -1, -1);
 	}
 	// Called from TextPopup 
 	public synchronized HitAlignment[] getHitReverse(HitAlignment [] halign) 
@@ -66,7 +68,7 @@ public class AlignPool extends DBAbsUser {
 	 * Computations 
 	 */
 	private HitAlignment[] computeHitAlignments(Vector <HitData> hitList, 
-			boolean isSwap, String projS, String projO, boolean isNT) {
+			boolean isSwap, String projS, String projO, boolean isNT, int sStart, int sEnd) {
 	try {
 		// make sorted hitArr from hitList
 		HitData[] hitArr = new HitData [hitList.size()];
@@ -75,17 +77,22 @@ public class AlignPool extends DBAbsUser {
 		Arrays.sort(hitArr, comp);
 			
 		// for each hit from selected region
-		Vector <HitAlignment> alignments = new Vector <HitAlignment>();
+		Vector <HitAlignment> hitAlign = new Vector <HitAlignment>();
 		
 		for (HitData hitObj : hitArr) { 
 			curHit = loadHitForAlign(hitObj, isSwap);
+			
 			if (curHit==null) return null;
 			
-			// for each subhit
+			// for each subhit; 
 			int num=curHit.selectIndices.length;
 			for (int i = 0;  i < num;  i++) {
-				
-				HitAlignResults subHit = alignSubHit(i, isNT);
+				int subStart = extractStart(curHit.selectIndices[i]);
+				int subEnd = extractEnd(curHit.selectIndices[i]);
+				if (sStart!=-1 && sEnd != -1) { //CAS535 only subhits that overlap the selected coords
+					if (!Utilities.isOverlap(sStart, sEnd, subStart, subEnd)) continue;	
+				}
+				HitAlignResults subHit = alignSubHit(i, isNT, subStart, subEnd);
 				
 				HitAlignment ha = new HitAlignment(hitObj, projS, projO, 
 						new SeqData(subHit.selectSeq, subHit.selectAlign, curHit.strand.charAt(0)), 
@@ -96,10 +103,10 @@ public class AlignPool extends DBAbsUser {
 						subHit.alignLength, subHit.offset,
 						subHit.scoreStr, (i+1)+"/"+num);
 				 
-				alignments.add(ha);
+				hitAlign.add(ha);
 			}
 		}
-		return (HitAlignment[]) alignments.toArray(new HitAlignment[0]);
+		return (HitAlignment[]) hitAlign.toArray(new HitAlignment[0]);
 	} catch (Exception e) {ErrorReport.print(e, "getHitAlignments"); return null; }
 	}
 	/******************************************************************************/
@@ -124,13 +131,13 @@ public class AlignPool extends DBAbsUser {
 	}
 	/*********************************************************************
 	 */
-	private HitAlignResults alignSubHit(int i, boolean isNT) {
+	private HitAlignResults alignSubHit(int i, boolean isNT, int subStart, int subEnd) {
 	try {
 		HitAlignResults subHit = new HitAlignResults();
 		
 		// make select sub-sequence
-		subHit.selectStart = extractStart(curHit.selectIndices[i]); // [0] s1:e1 [1] s2:e2, etc; get i[0]
-		subHit.selectEnd   = extractEnd(curHit.selectIndices[i]);
+		subHit.selectStart = subStart; // [0] s1:e1 [1] s2:e2, etc; get i[0]
+		subHit.selectEnd   = subEnd;
 		
 		int startOfs = subHit.selectStart - curHit.selectStart; // relative to beginning
 		int endOfs   = subHit.selectEnd   - curHit.selectStart;
@@ -151,7 +158,7 @@ public class AlignPool extends DBAbsUser {
 	    /** Align **/
 		int type = (isNT) ? AlignData.NT : AlignData.AA;
 		AlignData ad = new AlignData();
-		String tmsg = (Globals.TRACE) ? "Hit #" + curHit.hitnum + "." + (i+1) + "  " 
+		String tmsg = (TRACE) ? "Hit #" + curHit.hitnum + "." + (i+1) + "  " 
 					+ SeqData.coordsStr(!curHit.isSelNeg, subHit.selectStart, subHit.selectEnd) + "  "
 					+ SeqData.coordsStr(!curHit.isOthNeg, subHit.otherStart, subHit.otherEnd) : "";
 		if (!ad.align(type, subHit.selectSeq, subHit.otherSeq, bTrim, tmsg)) return null;
@@ -184,7 +191,7 @@ public class AlignPool extends DBAbsUser {
 		    /** Align **/
 			int type = AlignData.NT;
 			AlignData ad = new AlignData();
-			String tmsg = (Globals.TRACE) ? ha.getSubHitName() + "  Reverse" : "";
+			String tmsg = (TRACE) ? ha.getSubHitName() + "  Reverse" : "";
 			if (!ad.align(type, subSelect, subOther, bTrim, tmsg)) return null;
 			
 			// Get results
@@ -290,11 +297,11 @@ public class AlignPool extends DBAbsUser {
 				curHit.strand = "+/+";
 			}
 			
-			String query_seq  = rs.getString(2);  // string list of sub-block start/end values
-			String target_seq =   rs.getString(3);  // string list of sub-block start/end values
-			int grp1_idx = rs.getInt(4);
-			int grp2_idx = rs.getInt(5);
-			curHit.hitnum = rs.getInt(6);
+			String query_seq  	= rs.getString(2);  // string list of sub-block start/end values
+			String target_seq 	= rs.getString(3);  // string list of sub-block start/end values
+			int grp1_idx 		= rs.getInt(4);
+			int grp2_idx 		= rs.getInt(5);
+			curHit.hitnum 		= rs.getInt(6);
 			
 			int start1 = (isQuery) ? hitData.getStart1() : hitData.getStart2();
 			int end1   = (isQuery) ? hitData.getEnd1()   : hitData.getEnd2();

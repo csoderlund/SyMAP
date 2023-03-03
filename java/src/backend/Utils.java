@@ -5,8 +5,6 @@ import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.TreeMap;
-import java.util.Vector;
 import java.util.Iterator;
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,25 +16,31 @@ import java.util.zip.GZIPInputStream;
 
 import util.ErrorReport;
 import util.ProgressDialog;
-import util.Logger;
 import util.Utilities;
-import symap.manager.Mpair;
 
 public class Utils {
-	static public TreeMap<String,Float> mStats;
-	static private Vector<String> mKeyOrder;
-	static private TreeMap<String,TreeMap<Integer,Integer>> mHist;
-	
-	public static void prt(Logger log, String msg) { // CAS520 add
-		log.msg(msg);
+	// For stdout and file only
+	public static void prt(ProgressDialog prog, String msg) { // CAS520 add
+		prog.msgToFile(msg);
 	}
+	public static void prtNumMsgFile(ProgressDialog prog, int num, String msg) {
+		prog.msgToFile(String.format("%9d %s         ", num, msg));
+	}
+	public static void prtMsgTimeFile(ProgressDialog prog, long startTime, String msg) {
+		String t = Utilities.getDurationString(System.currentTimeMillis()-startTime);
+		prt(prog,  String.format("%-20s %s\n", msg, t));	
+	}
+	// For dialog, stdout and file
 	public static void prtNumMsg(ProgressDialog prog, int num, String msg) {
 		prog.appendText(String.format("%9d %s           ", num, msg));
 	}
-	public static void prtNumMsg(Logger log, int num, String msg) {
-		log.msg(String.format("%9d %s         ", num, msg));
+	
+	public static void prtMsgTime(ProgressDialog prog, long startTime, String msg) {
+		String t = Utilities.getDurationString(System.currentTimeMillis()-startTime);
+		prog.msg(String.format("%-20s %s", msg, t));	
 	}
-	public static void prtNumMsg(Logger log, long num, String msg) {
+	
+	public static void prtNumMsg(ProgressDialog log, long num, String msg) {
 		log.msg(String.format("%9d %s          ", num, msg));
 	}
 	public static void prtNumMsg(int num, String msg) {
@@ -45,11 +49,15 @@ public class Utils {
 	public static void prtNumMsgNZ(int num, String msg) {
 		if (num>0) System.out.format("%9d %s              \n", num, msg);
 	}
+	public static void prtNumMsgNZx(int num, String msg) {// indent
+		if (num>0) System.out.format("      %9d %s              \n", num, msg);
+	}
+
 	
-	public static void timeMsg(Logger log, long startTime, String msg) {
-		log.msg(msg + " done:  " 
-				+ Utilities.getDurationString(System.currentTimeMillis()-startTime) 
-				+ "                    \n");		
+	public static void timeDoneMsg(ProgressDialog log, long startTime, String msg) {
+		String t = Utilities.getDurationString(System.currentTimeMillis()-startTime);
+		String m = String.format("%-30s done: %s                           \n\n", msg, t);
+		log.msg(m);		
 	}
 	public static void die(String msg) {
 		System.err.println("Fatal error: " + msg);
@@ -57,7 +65,7 @@ public class Utils {
 	public static String fileFromPath(String path) {
 		int i = path.lastIndexOf("/");
 		if (i<=0) return path;
-		return path.substring(i);
+		return path.substring(i+1);
 	}
 	public static String pathOnly(String path) {
 		int i = path.lastIndexOf("/");
@@ -91,7 +99,7 @@ public class Utils {
 		if (!d.exists() || d.isFile()) return false;
 		
 		File f = new File(d,"all.done");
-		if (Constants.TRACE) System.out.println(" Trace: all.done " + dir + " " + d.exists());
+
 		if (f.exists()) return true;
 		
 		return false;
@@ -127,99 +135,7 @@ public class Utils {
 		return sdf.format(l);
 	}
 	/****************************************************************************/
-	/*****************************************************
-	 * Hists stats; CAS534 the Hists and Stats use to always be run, but now only if -s
-	 */
-	static void initStats() {
-		mStats = new TreeMap<String,Float>();	
-		mKeyOrder= new Vector<String>();
-		mHist = new TreeMap<String,TreeMap<Integer,Integer>>();
-	}
-	static void initHist(String key, Integer... levels) {
-		if (mHist==null) return;
-		mHist.put(key, new TreeMap<Integer,Integer>());
-		for (Integer i : levels) {
-			mHist.get(key).put(i,0);
-		}
-		mHist.get(key).put(Integer.MAX_VALUE,0);
-	}
-	static void incHist(String key, int val) throws Exception {
-		if (mHist==null) return;
-		int l = -1;
-		for (int lvl : mHist.get(key).keySet()) {
-			l = lvl;
-			if (val < lvl) break;
-		}
-		if (l == -1) {
-			throw(new Exception("Bad level: " + val));	
-		}
-		int curval = mHist.get(key).get(l);
-		curval++;
-		mHist.get(key).put(l,curval);
-	}
-	static void incHist(String key, int val, int inc) throws Exception {
-		if (mHist==null) return;
-		int l = -1;
-		for (int lvl : mHist.get(key).keySet()) {
-			l = lvl;
-			if (val < lvl) break;
-		}
-		if (l == -1) {
-			throw(new Exception("Bad level: " + val));	
-		}
-		int curval = mHist.get(key).get(l);
-		curval += inc;
-		mHist.get(key).put(l,curval);
-	}	
-	static void dumpHist() {
-		if (mHist==null) return;
-		for (String name : mHist.keySet()) {
-			System.out.println("Histogram: " + name);	
-			for (int lvl : mHist.get(name).keySet()) {
-				int val = mHist.get(name).get(lvl);
-				System.out.println("<" + lvl + ":" + val);
-			}
-		}
-	}
-	/************************************************
-	 * Keyword stats
-	 */
-	static void incStat(String key, float inc){
-		if (mStats != null) {
-			if (!mStats.containsKey(key)) {
-				mStats.put(key, 0.0F);	
-				mKeyOrder.add(key);
-			}
-			mStats.put(key, inc + mStats.get(key));
-		}
-	}
-	static void dumpStats() {
-		if (mStats == null) return;
-		for (String key : mKeyOrder) {
-			double val = mStats.get(key);
-			if (Math.floor(val)==val) System.out.format("%6d %s\n", (int)val, key);
-			else					  System.out.format("%6.2f %s\n", val, key);
-		}
-	}
-	// CAS534 no reason to load these, only do it on -s; then remove the next time run.
-	static void uploadStats(UpdatePool db, int pair_idx, int pidx1, int pidx2) throws Exception {
-		if (mStats == null) return;
-		
-		ResultSet rs = null;
-		for (String key : mKeyOrder) {
-			Integer val = mStats.get(key).intValue();
-			if (Constants.PRT_STATS)
-				db.executeUpdate("replace into pair_props (pair_idx,proj1_idx,proj2_idx,name,value) values(" + pair_idx + 
-					"," + pidx1 + "," + pidx2 + ",'" + key + "','" + val + "')");	
-			else {
-				String st = "SELECT value FROM pair_props  WHERE pair_idx='" + pair_idx + "' AND name='" + key +"'";
-				rs = db.executeQuery(st);
-				if (rs.next()) 
-					db.executeUpdate("delete from pair_props where key='" + key + "' and pair_idx=" + pair_idx);
-			}
-		}
-		if (rs!=null) rs.close();
-	}
+	
 	/**********************************************************************/
 	/**********************************************************/
 	static int[] strArrayToInt(String[] sa) {

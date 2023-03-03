@@ -182,7 +182,6 @@ public class AnnoData {
 					try {annot_kw_mincount=Integer.parseInt(val); }
 					catch (Exception e) {} // ok to default to 0 if blank
 				}
-				if (Globals.TRACE) System.out.println("Min keyword count " + annot_kw_mincount);
 				
 				// use count in query
 				String query = 	"SELECT keyname FROM annot_key " +

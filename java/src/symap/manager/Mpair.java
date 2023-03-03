@@ -8,6 +8,7 @@ import java.util.HashMap;
 import backend.Constants;
 import database.DBuser;
 import props.PropertiesReader;
+import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -147,29 +148,30 @@ public class Mpair {
 	public HashMap <String, String> getDefaults() { return defMap;}
 	
 	public int renewIdx() {
-		if (pairIdx != -1) removePairFromDB();
+		removePairFromDB(); // CAS535 interrupt does not clear it
 		
 		try { 
 			dbUser.executeUpdate("INSERT INTO pairs (proj1_idx,proj2_idx) " +
-						" VALUES('" + proj1Idx + "','" + proj2Idx + "')");
-				
+					" VALUES('" + proj1Idx + "','" + proj2Idx + "')");
+			
 			pairIdx = dbUser.getIdx("SELECT idx FROM pairs " +
-					"WHERE proj1_idx=" + proj1Idx + " AND proj2_idx=" + proj2Idx);
+				"WHERE proj1_idx=" + proj1Idx + " AND proj2_idx=" + proj2Idx);
+			
 			return pairIdx;
 		}
 		catch (Exception e) {ErrorReport.die(e, "SyMAP error getting pair idx");return -1;}
 	}
 	public int removePairFromDB() {
 	try {
-		int x = dbUser.getIdx("select idx from pairs where idx=" + pairIdx);
+		
+		int x = dbUser.getIdx("select idx from pairs where proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx);
 		if (x!= -1) {
-			 dbUser.executeUpdate("DELETE from pairs WHERE idx="+pairIdx);
-		     dbUser.resetIdx("idx", "pairs"); // CAS512
-		     dbUser.resetIdx("idx", "pseudo_hits"); // CAS515
+			 dbUser.executeUpdate("DELETE from pairs WHERE idx="+ x);
+			 dbUser.resetAllIdx(); // CAS535 check all, even though some are not relevant
 		}
 	    pairIdx = -1;
 	}
-	catch (Exception e) {ErrorReport.die(e, "SyMAP error deleting pair");}
+	catch (Exception e) {ErrorReport.print(e, "Error removing pair from database - you may need to Clear Pair (leave alignments)");}
 	return -1;
 	}
 	// called by PairParams on save
@@ -191,9 +193,16 @@ public class Mpair {
 			out.close();
 		} catch(Exception e) {ErrorReport.print(e, "Creating params file");}
 	}
-	// called by AlignProj on A&S
-	public void saveParams() {
+	// called by AlignProj on A&S; CAS535 move update date from AlignProjs to here
+	public void saveParams(String params) {
 		try {
+			dbUser.tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null); // CAS511 add params column (not schema update)
+			
+			dbUser.executeUpdate("update pairs set aligned=1, aligndate=NOW(), "
+					+ "syver='" + Globals.VERSION + "', params='" + params + "'" // CAS520 add syver
+					+ " where (proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx 
+					+ ") or   (proj1_idx=" + proj2Idx + " and proj2_idx=" + proj1Idx + ")"); 
+			
 			String st = "DELETE FROM pair_props WHERE pair_idx=" + pairIdx;
 			dbUser.executeUpdate(st);
 			

@@ -13,7 +13,7 @@ import util.Utilities;
 public class Version {
 	public int dbVer = Globals.DBVER; 
 	public String strVer = Globals.DBVERSTR; // db4
-	public boolean debug = Globals.DEBUG;
+	public boolean debug = Globals.DBDEBUG;  // -dbd
 	
 	public Version (DBuser pool) {
 		this.pool = pool;
@@ -211,10 +211,13 @@ public class Version {
 	private void removeDEBUG() {
 		try {
 			if (!tableColumnExists("blocks", "proj_names")) return;
+			
+			tableCheckDropColumn("pairs",  "proj_names");
+			tableCheckDropColumn("xgroups","proj_name");			
 			tableCheckDropColumn("blocks", "proj_names");
 			tableCheckDropColumn("blocks", "grp1");
 			tableCheckDropColumn("blocks", "grp2");
-			System.out.println("Remove blocks.grps");
+			System.out.println("Remove blocks.grp1/2, and blocks/pairs/xgroups proj_names");
 		}catch (Exception e) {ErrorReport.print(e, "Could not remove debug");}
 	}
 	/***************************************************************

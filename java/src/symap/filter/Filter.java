@@ -93,7 +93,6 @@ public abstract class Filter extends JDialog implements ActionListener,
 	protected boolean refresh() {
 		boolean ret = true;
 		if (isShowing()) { 
-			if (Globals.DEBUG) System.out.println("Refreshing from Filter");
 			if (drawingPanel != null) ret = drawingPanel.smake();
 		}
 		return ret;

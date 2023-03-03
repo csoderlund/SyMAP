@@ -329,21 +329,33 @@ For the following parameters, new values take immediate effect.
 <br>The term "Group" is used for any sequence type, e.g. chromosome, scaffold, contig.
 
 <table class="tx">
-<tr><td style="vertical-align: text-top;">1.
-<td>The parameter effects the display, and is applied during the loading of the sequences.
-If provided, this allows SyMAP to remove the prefix from the chromosome
-names and use the remaining part as a shorter name (e.g. "01" instead of "Chr01").
-<tr><td style="vertical-align: text-top;">2.
-<td>All sequences in the FASTA file must have this prefix. If the sequences have a mix of prefixes, leave this blank.
-<tr><td  style="vertical-align: text-top;">3.
-<td><i>Long names really clutter the display</i>; it is best to use a consistent prefix that SyMAP can remove,
+<tr><td style="vertical-align: text-top;">
+<ul>
+<li>When a <ttl>Group prefix</ttl> is entered, it allows SyMAP to remove the prefix from the chromosome
+names and use the remaining part as a shorter name (e.g. '1' instead of 'chr1', as shown on the lower right).
+
+<br>&nbsp;
+<li>If the sequence file has a mix of prefixes (e.g. Chr01, Scaf2345):
+<ul>
+<li>If a <ttl>Group prefix</ttl> is entered, only sequences with that prefix will be loaded.
+<li>Leave the <ttl>Group prefix</ttl> blank will load all sequences; their prefix will not be removed
+(e.g. the 'chr3' on the upper right).
+</ul>
+
+<br>&nbsp;
+<li><i>Long names really clutter the display</i>; it is best to use a consistent prefix that SyMAP can remove,
 otherwise, use really short prefixes, e.g. 's' for scaffold, 'c' for chromosome.
-<tr><td style="vertical-align: text-top;">4.
-<td><i>You may remove the prefix after the project is loaded</i>. For example, if your sequences had
+
+
+</ul>
+<td><a href="img/demoPrefix.png"><img src="img/demoPrefix.png" alt="Demo prefix" style="border: 1px solid black; width: 80px"></a>
+</table>
+<ul>
+<li><i>You may remove the prefix after the project is loaded</i>. For example, if your sequences had
 names "Scaf1", "Scaf2", etc, and "Scaf" was NOT entered as the <ttl>Group prefix</ttl> before load, you may
 enter it later and it will be removed from all sequence names. However, this is not reversible
 and a prefix cannot be added to the sequence names.
-</table>
+</ul>
 This parameter is finicky; after loading project, check <ttl>View</ttl> and the output to the terminal
 to make sure the annotation was loaded right.
 

@@ -1,36 +1,34 @@
 package backend;
 
-// Stores the query/target side of hit data
-public class SubHit 
-{
-	// IF CHANGED, ADD TO COPY CONSTRUCTOR
+/****************************************************
+ *  AnchorMain: Stores the query/target side of hit data
+ */
+public class SubHit  {
 	public int start, end, grpIdx = 0;		
 	public String name; 		
-	public int[] blocks; // array of sub-block start/end coordinates
-	public HitStatus status = HitStatus.Undecided;
+	public int[] subHits; // array of sub-hits start/end coordinates; CAS535 [blocks]
+	public HitStatus status = HitStatus.Undecided; // AnchorsMain {In, Out, Undecided };
 	
-	public SubHit(SubHit h)
-	{
+	public SubHit(SubHit h) {
 		end =      h.end;
 		start =    h.start;
 		grpIdx =   h.grpIdx;
 		name = 	   new String(h.name);
 		status =   h.status;
-		blocks =   new int[h.blocks.length];
-		for (int i = 0; i < blocks.length; i++)
-		{
-			blocks[i] = h.blocks[i];
+		subHits =   new int[h.subHits.length];
+		for (int i = 0; i < subHits.length; i++) {
+			subHits[i] = h.subHits[i];
 		}
 	}
 	
 	public SubHit(int numBlocks) {
-		blocks = new int[numBlocks];
+		subHits = new int[numBlocks];
 	}
 	
 	public String toString() {
 		String s = "";
-		for (int i = 0;  i < blocks.length - 1;  i+=2)
-			s += blocks[i] + ":" + blocks[i+1] + ",";
+		for (int i = 0;  i < subHits.length - 1;  i+=2)
+			s += subHits[i] + ":" + subHits[i+1] + ",";
 		return s;
 	}
 	

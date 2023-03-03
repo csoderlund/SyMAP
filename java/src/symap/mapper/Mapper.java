@@ -116,8 +116,6 @@ public class Mapper extends JComponent
 	}
 
 	private boolean myInit(HitFilter hf) {
-		if (Globals.DEBUG) System.out.println("Init hits from mapper");
-		
 		Track t1 = trackHolders[0].getTrack();
 		Track t2 = trackHolders[1].getTrack();
 		if (t1 == null || t2 == null) return false;
@@ -211,8 +209,6 @@ public class Mapper extends JComponent
 		// CAS533 this makes hit lines thicker, but drawing is slower on Linux 
 		// g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
-		if (initing && Globals.DEBUG) System.out.println("********* initing " + initing);
-
 		if (!initing) 
 			seqHitObj.paintComponent(g2);
 	}

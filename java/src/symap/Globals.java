@@ -6,8 +6,9 @@ import java.awt.Cursor;
  * CAS534 added in order to move globals from SyMAP2d, SyMAPConstants and Manager
  */
 public class Globals {
-	public static final String 	VERSION = "v5.3.4"; // pre-v530 code can not read post-dbs
-	public static final String 	DATE = " (19-Feb-23)";
+	public static final String 	VERSION = "v5.3.5"; // pre-v530 code can not read post-dbs
+	public static final String 	DATE = " (3-Mar-23)";
+	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER =  5; 	 	// CAS512 v3, CAS520 v4, CAS522 v5
 	public static final String  DBVERSTR = "db" + DBVER;
 	
@@ -15,8 +16,9 @@ public class Globals {
 	
 	public static final  String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // under user's directory; see props.PersistenProps
 
-	public static boolean TRACE=false; 		// set in ProjectManagerFrameCommon on -t
-	public static boolean DEBUG=false; 		// CAS519 set in ProjectManagerFrameCommon on -d
+	public static boolean TRACE=false; 		// set in SyMAPmanager on -tt; 			use to add info
+	public static boolean DEBUG=false; 		// CAS519 set in SyMAPmanager on -dd; 	use for possible error
+	public static boolean DBDEBUG=false;	// CAS535 set in SyMAPmanger on -dbd	adds fields to DB
 	public static boolean GENEN_ONLY=false; // -z CAS519b to update the gene# without having to redo synteny
 	public static boolean bTrim=true;		// CAS531 do not trim 2D alignments; see closeup.AlignPool
 	

@@ -31,9 +31,7 @@ import util.Utilities;
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class DrawingPanel extends JPanel implements ColorListener, HistoryListener
-{ 
-	private static boolean DEBUG = Globals.DEBUG;
-		
+{ 	
 	public static Color backgroundColor = Color.white;
 	public static final int MAX_TRACKS = 100;
 
@@ -204,8 +202,6 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 					list.addAll(m.getHitsInRange(seqObjTrack,start,end));
 			}
 		}
-		if (DEBUG) System.out.println("getHitData: " + list.size() + " hits");
-		
 		return list;
 	}
 	
@@ -438,7 +434,6 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		trackHolders[position].setTrack(track);
 		setOtherTracksOtherProject(track,position);
 		if (position > numMaps) {
-			if (DEBUG) System.out.println("DrawingPanel.setTrack: increasing numMaps " + position);
 			numMaps = position; 
 		}
 	}
@@ -568,8 +563,6 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	}
 
 	private void firstViewBuild() {
-		if (DEBUG) System.out.println("DrawingPanel.firstViewBuild");
-		
 		int i;
 		for (i = 0; i <= numMaps; i++) {
 			if (trackHolders[i].getTrack() instanceof Sequence) {
@@ -644,9 +637,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	 * @see #setMaps(int)
 	 */
 	public boolean tracksSet() {
-		if (DEBUG) System.out.println("DrawingPanel.tracksSet: numMaps = " + numMaps);
 		for (int i = 0; i <= numMaps; i++) {
-			if (DEBUG) System.out.println("DrawingPanel.tracksSet: track " + i + " is " + trackHolders[i].getTrack());
 			if (trackHolders[i].getTrack() == null) return false;
 		} 
 		return true;
@@ -657,8 +648,6 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	}
 
 	public void setMaps(int numberOfMaps) {
-		if (DEBUG) System.out.println("DrawingPanel.setMaps("+numberOfMaps+")");
-		
 		if (numberOfMaps < 1) numberOfMaps = 1;
 		else if (numberOfMaps > MAX_TRACKS - 1) numberOfMaps = MAX_TRACKS - 1;
 
@@ -693,15 +682,12 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		new Thread(new MapMaker((DrawingPanelData)obj)).start();
 	}
 	public void setUpdateHistory() {
-		if (DEBUG) System.out.println("DrawingPanel.setUpdateHistory()");
 		doUpdateHistory = true;
 	}
 	public void setImmediateUpdateHistory() {
-		if (DEBUG) System.out.println("DrawingPanel.setImmediateUpdateHistory()");
 		updateHistory();
 	}
 	public void doConditionalUpdateHistory() {
-		if (DEBUG) System.out.println("DrawingPanel.doConditionalUpdateHistory()");
 		if (doUpdateHistory) {
 			updateHistory();
 			doUpdateHistory = false;
@@ -711,7 +697,6 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		resetResetIndex = true;
 	}
 	private void updateHistory() {
-		if (DEBUG) System.out.println("DrawingPanel.updateHistory()");
 		historyControl.add(getData(),resetResetIndex);
 		resetResetIndex = false;
 	}

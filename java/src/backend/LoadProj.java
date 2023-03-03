@@ -1,0 +1,152 @@
+package backend;
+
+import java.io.FileWriter;
+import java.util.Vector;
+
+import database.DBconn;
+import symap.manager.ManagerFrame;
+import symap.manager.Mproject;
+import util.Cancelled;
+import util.ErrorCount;
+import util.ErrorReport;
+import util.ProgressDialog;
+
+/********************************************************************************
+ * Called from ManagerFrame for all loads and reloads; CAS535 moves this from MF listeners to here.
+ * All ProgressDialog must call finish in order to close fw
+ *******************************************************************************/
+public class LoadProj {
+	private DBconn dbc;
+	private ManagerFrame frame;
+	private FileWriter fw;
+	
+	public LoadProj(ManagerFrame frame, DBconn dbConn, FileWriter fw) {
+		this.dbc = dbConn;
+		this.frame = frame;
+		this.fw = fw;
+	}
+	/********************************************************************/
+	public void loadAllProjects(Vector <Mproject> selectedProjVec) {
+		ErrorCount.init();
+		
+		final ProgressDialog progress = new ProgressDialog(frame, 
+				"Loading All Projects", "Loading all projects" ,  true, fw); // Writes version and date to file
+		progress.closeIfNoErrors();
+	
+		Thread loadThread = new Thread() {
+			public void run() {
+				boolean success = true;
+				progress.appendText(">>> Load all projects (" + selectedProjVec.size() + ")"); 
+				
+				for (Mproject mProj : selectedProjVec) {
+					if (mProj.getStatus() != Mproject.STATUS_ON_DISK) continue;
+					
+					try {
+						UpdatePool pool = new UpdatePool(dbc);
+						
+						progress.appendText(">>> Load " + mProj.getDBName()); 
+						mProj.createProject();
+						success = new SeqLoadMain().run( pool, progress, mProj);
+					
+						if (success && !Cancelled.isCancelled())  {
+							AnnotLoadMain annot = new AnnotLoadMain(pool, progress, mProj);
+							success = annot.run( mProj.getDBName());
+						}
+						
+						if (!success || Cancelled.isCancelled()) {
+							System.out.println("Removing project from database " + mProj.getDBName());
+							mProj.removeProjectFromDB(); // CAS535 add
+						}
+						else mProj.saveParams(mProj.xLoad);
+						
+						if (Cancelled.isCancelled()) break;
+					}
+					catch (Exception e) {
+						success = false;
+						ErrorReport.print(e, "Loading all projects");
+					}
+				}
+				if (!progress.wasCancelled()) progress.finish(success);
+			}
+		};	
+		progress.start( loadThread ); // blocks until thread finishes or user cancels
+	}
+	/********************************************************************************/
+	public void loadProject(final Mproject mProj) { // Reload Project deletes project before calling
+		ErrorCount.init();
+		
+		final ProgressDialog progress = new ProgressDialog(frame, 
+				"Loading Project", "Loading project " + mProj.getDBName() + " ...",  true, fw);
+		progress.closeIfNoErrors();
+		
+		Thread loadThread = new Thread() {
+			public void run() {
+				boolean success = true;
+				
+				try {
+					UpdatePool pool = new UpdatePool(dbc);
+					progress.appendText(">>> Load " + mProj.getDBName()); 
+					
+					mProj.createProject();		
+					success = new SeqLoadMain().run( pool, progress, mProj);	
+					
+					if (success && !Cancelled.isCancelled())  {
+						AnnotLoadMain annot = new AnnotLoadMain(pool, progress, mProj);
+						success = annot.run( mProj.getDBName());
+					}
+					
+					if (!success || Cancelled.isCancelled()) {
+						System.out.println("Removing project from database " + mProj.getDBName());
+						mProj.removeProjectFromDB(); // CAS535 add
+					}
+					else mProj.saveParams(mProj.xLoad);
+				}
+				catch (Exception e) {
+					success = false;
+					ErrorReport.print(e, "Loading project");
+				}
+				finally {
+					if (!progress.wasCancelled()) progress.finish(success);
+				}
+			}
+		};
+		progress.start( loadThread ); // blocks until thread finishes or user cancels	
+	}
+	/********************************************************************************/
+	public void reloadAnno(final Mproject mProj) {
+		String title = "Reload annotation";
+		String msg = "Reloading annotation " + mProj.getDBName();
+		final ProgressDialog progress = new ProgressDialog(frame, title, msg + " ...", true, fw);
+		progress.closeIfNoErrors();
+		
+		Thread loadThread = new Thread() {
+			public void run() {
+				boolean success = true;
+				progress.appendText(msg); 
+				
+				try {
+					progress.appendText(">>> ReLoad annotation " + mProj.getDBName()); 
+					mProj.removeAnnoFromDB(); // CAS535 remove from here instead of AnnotLoadMain
+					
+					UpdatePool pool = new UpdatePool(dbc);
+					AnnotLoadMain annot = new AnnotLoadMain(pool, progress, mProj);
+					success = annot.run(mProj.getDBName()); 
+				
+					if (!success || Cancelled.isCancelled()) {
+						System.out.println("Removing annotation from database " + mProj.getDBName());
+						mProj.removeAnnoFromDB(); // CAS535 add
+					}
+					else mProj.saveParams(mProj.xLoad);
+				}
+				catch (Exception e) {
+					success = false;
+					ErrorReport.print(e, "Run Reload");
+				}
+				finally {
+					if (!progress.wasCancelled()) progress.finish(success); // CAS512 add check
+				}
+			}
+		};	
+		progress.start( loadThread ); // blocks until thread finishes or user cancels
+	}
+}

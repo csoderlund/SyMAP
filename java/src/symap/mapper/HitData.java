@@ -2,7 +2,6 @@ package symap.mapper;
 
 import java.util.Comparator;
 import symap.Globals;
-import symap.closeup.SeqData;
 import util.Utilities;
 
 /**
@@ -18,7 +17,7 @@ public class HitData {
 	private int nMerge;
 	private double corr;			// CAS516 add
 	private String tag;				// CAS516 gNbN see MapperPool; CAS520 g(gene_overlap) [c(runnum.runsize)]
-	private int collinearSet;	// CAS520 [c(runnum.runsize)] need to toggle highlight
+	private int collinearSet;		// CAS520 [c(runnum.runsize)] need to toggle highlight
 	private int start1, end1; 
 	private int start2, end2;
 	private boolean isSameOrient; 	// CAS517 if the same
@@ -65,7 +64,7 @@ public class HitData {
 			this.isPosOrient2 = (strand.charAt(2) == '+');
 		}
 		else {
-			if (Globals.TRACE) System.err.println("HitData: Invalid strand value '"+strand+"' for hit id="+id);
+			if (Globals.DEBUG) System.err.println("HitData: Invalid strand value '"+strand+"' for hit id="+id);
 			this.isSameOrient = true;
 		}
 	}
@@ -178,8 +177,8 @@ public class HitData {
 		if (pctsim>0) msg += " %Sim=" + pctsim;
 		if (nMerge>0) msg += " of " + nMerge + " sub-hits";
 		
-		String msg1 = chr1 + " " + SeqData.coordsStr(isPosOrient1, start1, end1);
-		String msg2 = chr2 + " " + SeqData.coordsStr(isPosOrient2, start2, end2);
+		String msg1 = String.format("%-3s %s", chr1, Utilities.coordsStr(isPosOrient1, start1, end1)); 
+		String msg2 = String.format("%-3s %s", chr2, Utilities.coordsStr(isPosOrient2, start2, end2)); 
 		String coords = s1LTs2 ? (msg1+"\n"+msg2) : (msg2+"\n"+msg1);
 		
 		return  msg + "\n\n" + coords;

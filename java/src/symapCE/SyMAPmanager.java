@@ -143,7 +143,11 @@ public class SyMAPmanager extends ManagerFrame
 			if (hasCommandLineOption(args, "-dd")) {// not shown in -h help
 				System.out.println("-dd Debug (developer only)");// CAS533 changed to -dd 
 				Globals.DEBUG = true;
-				Q.TEST_TRACE = true;
+				//Q.TEST_TRACE = true; // for query
+			}
+			if (hasCommandLineOption(args, "-dbd")) {// not shown in -h help
+				System.out.println("-dbd Database (developer only)");
+				Globals.DBDEBUG = true;
 			}
 			if (hasCommandLineOption(args, "-tt")) {
 				System.out.println("-tt Trace output");

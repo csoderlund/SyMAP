@@ -7,9 +7,9 @@ import java.util.TreeSet;
 import java.util.TreeMap;
 import java.util.Vector;
 
-import symap.Globals;
+import util.Cancelled;
 import util.ErrorReport;
-import util.Logger;
+import util.ProgressDialog;
 import util.Utilities;
 
 /**************************************************
@@ -23,17 +23,17 @@ import util.Utilities;
  */
 
 public class AnchorsPost {
-	private boolean debug = Globals.DEBUG;
+	private boolean debug = false; // Globals.DEBUG;
 	private boolean test = true;
 	
 	private int mPairIdx; // project pair 
-	private Logger mLog;
+	private ProgressDialog mLog;
 	private UpdatePool pool;
 	private SyProj mProj1, mProj2;
 	private int countUpdate=0, totalMerge=0, totalMult=0;
 	private int [] cntSizeSet = {0,0,0,0,0};
 	
-	public AnchorsPost(int pairIdx, SyProj proj1, SyProj proj2, UpdatePool xpool, Logger log) {
+	public AnchorsPost(int pairIdx, SyProj proj1, SyProj proj2, UpdatePool xpool, ProgressDialog log) {
 		mPairIdx = pairIdx;
 		mProj1 = proj1;
 		mProj2 = proj2;
@@ -63,10 +63,11 @@ public class AnchorsPost {
 				
 					debug=false;
 				}
+				if (Cancelled.isCancelled()) return; // CAS535 there was no checks
 			}
 			if (debug) Utils.prtNumMsg(mLog, totalMult, "Total multi hits");
 			Utils.prtNumMsg(mLog, countUpdate, "Updates                          ");
-			Utils.timeMsg(mLog, time, "Collinear");
+			Utils.timeDoneMsg(mLog, time, "Collinear");
 		}
 		catch (Exception e) {ErrorReport.print(e, "Compute colinear genes"); }
 	}

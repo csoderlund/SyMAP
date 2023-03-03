@@ -17,24 +17,24 @@ import javax.swing.table.*;
 import javax.swing.event.*;
 
 import backend.*;
+import blockview.*;
+import circview.*;
 import dotplot.DotPlotFrame;
 import props.PropertiesReader;
 import symap.Globals;
-import util.Cancelled;
-import util.ErrorCount;
-import util.ErrorReport;
-import util.Utilities;
-import util.Jhtml;
-import util.Jcomp;
-import util.ProgressDialog;
-import util.LinkLabel;
-import blockview.*;
-import circview.*;
+import symapQuery.SyMAPQueryFrame;
+
 import database.DBconn;
 import database.DBAbsUser;
 import database.DBuser;
 import database.Version;
-import symapQuery.SyMAPQueryFrame;
+
+import util.Cancelled;
+import util.ErrorReport;
+import util.Utilities;
+import util.Jhtml;
+import util.Jcomp;
+import util.LinkLabel;
 
 /*****************************************************
  * The manager main frame and provides all the high level functions for it.
@@ -46,6 +46,7 @@ import symapQuery.SyMAPQueryFrame;
  * 		  package renamed from symap.projectmanager.common to manager
  * 		  moved out utilities stuff to reduce this file; rearranged
  * 		  use Mproject and Mpair as shared class for build
+ * CAS535 moved Loads to backend.LoadProj and the Removes to RemoveProj.
  */
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
@@ -53,6 +54,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	/************************************************
 	 * Command line arguments; set in symapCE.SyMAPmanager main 
 	 */
+	private static boolean TRACE = false;
 	protected static boolean inReadOnlyMode = false;// set from viewSymap script with -r
 	protected static int     maxCPUs = -1;			// arg -p
 	protected static boolean bCheckVersion = false; // arg -v
@@ -70,6 +72,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	
 	// If changed - don't make one a substring of another!!
 	private final String TBL_DONE = "\u2713", TBL_ADONE = "A", TBL_QDONE = "?";
+	
 	private final String symapLegend = "Table Legend:\n"
 			+ TBL_DONE 	+ " : synteny has been computed, ready to view.\n"
 			+ TBL_ADONE + " : alignment is done, synteny needs to be computed.\n"
@@ -89,7 +92,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	
 	private PairParams ppFrame = null; // only !null if opened
 	private PropertiesReader dbProps;
-	private Mproject curProj = null; // used only in the load-all-projects function
 	private String dbName = null; // CAS508 append to LOAD.log
 	
 	private int totalCPUs=0;
@@ -145,8 +147,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	 */
 	private void initialize(boolean checkSQL) {
 		try {
-			if (Globals.TRACE) System.out.println("Initialize ManagerFrame");
-			
 			if (dbc == null) {
 				dbc = makeDBconn();
 				mfUser = new DBuser(dbc);
@@ -159,10 +159,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			Jhtml.setResClass(this.getClass());
 			Jhtml.setHelpParentFrame(this);
 			
-			loadProjectsFromDB();
+			loadPanelProjsFromDB();
 			loadProjectPairsFromDB(); // used results of loadProjectsFromDB
 			if (pairIdxMap==null || projVec==null) ErrorReport.die("Major SyMAP problem");
-			if (Globals.TRACE) dumpPairs();
+			if (TRACE) dumpPairs();
 			
 			if (!inReadOnlyMode) { 											// CAS500; read remaining projects from disk
 				String strDataPath = Constants.dataDir;
@@ -170,8 +170,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				if (Utilities.dirExists(strDataPath)) { 					// CAS511 quit creating data/seq, /data can be missing
 					Utilities.checkCreateDir(Constants.logDir,true/*bPrt*/);// CAS534 removed /pseudo check and message
 					
-					loadProjectsFromDisk(strDataPath,  Constants.seqType); 	// must come after loadFromDB
-					loadProjectsFromDisk(strDataPath,  "fpc"); 				// CAS520 gives message on fpc
+					loadPanelProjsFromDisk(strDataPath,  Constants.seqType); 	// must come after loadFromDB
+					loadPanelProjsFromDisk(strDataPath,  "fpc"); 				// CAS520 gives message on fpc
 				}
 			}
 			sortProjDisplay(projVec);
@@ -456,7 +456,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				public void actionPerformed(ActionEvent e) {
 					Mproject[] projects = getSelectedPairProjects();
 					if (projects==null) return;
-					removePair(projects[0], projects[1]);
+					
+					Mpair mp = getMpair(projects[0].getIdx(),projects[1].getIdx());
+					new RemoveProj(getInstance(), buildLogLoad()).removeClearPair(mp, projects[0], projects[1]);
+					refreshMenu();
 				}
 			} );	
 			
@@ -795,7 +798,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		return count;
 	}
 	
-	
 	/************* XXX Listeners ********************/
 	private ItemListener checkboxListener = new ItemListener() { // left panel change
 		public void itemStateChanged(ItemEvent e) {
@@ -838,75 +840,43 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 	};
 		
-	private MouseListener doLoad = new MouseAdapter() {
-		public void mouseClicked(MouseEvent e) {
-			loadProjectLog( ((ProjectLinkLabel)e.getSource()).getProject() );
-		}
-	};
-	
 	private MouseListener doLoadAllProj = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
-			loadAllProjectsLog(  );
+			loadAllProjects();
 		}
 	};
-	private MouseListener doRemove = new MouseAdapter() {
+	private MouseListener doLoad = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
-			Mproject p = ((ProjectLinkLabel)e.getSource()).getProject();
-			String msg = "Remove " + p.getDisplayName() + " from database"; // CAS513 add dbname
-			if (!p.hasExistingAlignments()) {
-				if (!Utilities.showConfirm2(msg,msg)) return;
-				removeProjectLog(0, p );
-			}
-			else {
-				int rc = Utilities.showConfirm3(msg,msg +
-					"\n\nOnly: remove project" +
-					"\nAll: remove project and alignments from disk");
-				if (rc==0) return;
-				removeProjectLog(rc, p );
-			}
-		}
-	};
-	private MouseListener doRemoveDisk = new MouseAdapter() {
-		public void mouseClicked(MouseEvent e) {
-			if (!Utilities.showConfirm2("Remove project from disk","Remove project from disk")) return;
-			
-			removeProjectFromDiskLog( ((ProjectLinkLabel)e.getSource()).getProject() );
+			Mproject mproj = ((ProjectLinkLabel)e.getSource()).getProject();
+			loadProject(mproj);
 		}
 	};
 	private MouseListener doReloadSeq = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
-			Mproject p = ((ProjectLinkLabel)e.getSource()).getProject();
-			String msg = "Reload project " + p.getDisplayName();
-			if (!p.hasExistingAlignments()) {
-				if (!Utilities.showConfirm2("Reload project",msg)) return;
-				reloadProjectLog(p, false ); // no alignments to remove
-			}
-			else {
-				int rc = Utilities.showConfirm3("Reload project",msg +
-					"\n\nOnly: reload project only" +
-					"\nAll: reload project and remove alignments from disk");
-				if (rc==0) return;
-				reloadProjectLog( p, rc==2 ); // remove if All selected
-			}
+			Mproject mproj = ((ProjectLinkLabel)e.getSource()).getProject();
+			reloadProject(mproj);		
 		}
 	};
 	private MouseListener doReloadAnnot = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
-			Mproject p = ((ProjectLinkLabel)e.getSource()).getProject();
-			String msg = "Reload annotation " + p.getDisplayName();
-			if (!Globals.GENEN_ONLY) { 
-				if (!Utilities.showConfirm2("Reload annotation", msg +
-						"\n\nYou will need to re-run the synteny computations for this project," +      // CAS520 do not remove synteny
-						"\nany existing alignment files will be used.")) return; // CAS512 remove MUMmer and BLAT
-			}
-			else { // CAS519
-				if (!Utilities.showConfirm2("Reload annotation", msg +
-						"\n\nThe -z flag is set. Only the Gene# assignment algorithm will be run. " +
-						"\nNo further action will be necessary.")) return; 
-			}
-			reloadAnnoLog( p );
+			Mproject mproj = ((ProjectLinkLabel)e.getSource()).getProject();
+			reloadAnno(mproj);	
 		}
 	};	
+	
+	private MouseListener doRemove = new MouseAdapter() {
+		public void mouseClicked(MouseEvent e) {
+			Mproject p = ((ProjectLinkLabel)e.getSource()).getProject();
+			new RemoveProj(getInstance(), buildLogLoad()).removeProjectFromDB(p );
+			refreshMenu();
+		}
+	};
+	private MouseListener doRemoveDisk = new MouseAdapter() {
+		public void mouseClicked(MouseEvent e) {
+			new RemoveProj(getInstance(), buildLogLoad()).removeProjectFromDisk( ((ProjectLinkLabel)e.getSource()).getProject() );
+			refreshMenu();
+		}
+	};
 	
 	private MouseListener doViewProj = new MouseAdapter() { // CAS521 add
 		public void mouseClicked(MouseEvent e) {
@@ -940,9 +910,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}		
 	};
 		
-	
-	
-	
 	// CAS521 an error report on the strColProjName line getting null. Added error checks in all calling methods.
 	private Mproject[] getSelectedPairProjects() {
 		int nRow=-1, nCol=-1;
@@ -1012,7 +979,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	
 	private ManagerFrame getInstance() { return this; }
-	
 	
 	/*******************************************************************/
 	private Mpair getMpair(int n1, int n2) {
@@ -1280,207 +1246,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			throw e;
 		}
 	}
-	/*****************************************************************/
-	/***************************************************************
-	 * Load
-	 */
-	private void loadProjectLog(final Mproject mProj) {
-		ErrorCount.init();
-		FileWriter fw = buildLogLoad(); // CAS500 
-		final ProgressDialog progress = new ProgressDialog(this, 
-				"Loading Project",
-				"Loading project '" + mProj.getDBName() + "' ...", 
-				false, true, fw);
-		progress.closeIfNoErrors();
-		
-		Thread loadThread = new Thread() {
-			public void run() {
-				boolean success = true;
-				
-				// Load project sequence and annotation data
-				try {
-					UpdatePool pool = new UpdatePool(dbc);
-			
-					mProj.createProject();		
-					success = new SeqLoadMain().run( pool, progress, mProj);			
-					if (success && !Cancelled.isCancelled())  {
-						AnnotLoadMain annot = new AnnotLoadMain(pool, progress, mProj);
-						success = annot.run( mProj.getDBName());
-					}
-					else { // CAS500
-						System.err.println("Cancel load");
-						mProj.removeProjectFromDB( );
-						return;
-					}
-
-					mProj.saveParams(mProj.xLoad);
-				}
-				catch (Exception e) {
-					success = false;
-					ErrorReport.print(e, "Loading project");
-				}
-				finally {
-					if (!progress.wasCancelled())
-						progress.finish(success);
-				}
-			}
-		};
-		progress.start( loadThread ); // blocks until thread finishes or user cancels
-		
-		if (progress.wasCancelled()) {// Remove partially-loaded project
-			try {
-				System.out.println("Cancel loading - " + mProj.getDisplayName() + " (removing project)");
-				mProj.removeProjectFromDB( );
-			}
-			catch (Exception e) { 
-				ErrorReport.print(e, "Remove partially loaded project");
-			}
-		}	
-		refreshMenu();
-	}
-
-	private void loadAllProjectsLog() {
-		ErrorCount.init();
-		FileWriter fw = buildLogLoad(); // CAS500
-		final ProgressDialog progress = new ProgressDialog(this, 
-				"Loading All Projects",
-				"Loading all projects" , 
-				false, true, fw);
-		progress.closeIfNoErrors();
-		Thread loadThread = new Thread() {
-			public void run() {
-				boolean success = true;
-				progress.appendText("\n>>> Load all projects <<<"); 
-				
-				for (Mproject mProj : selectedProjVec) {
-					if (mProj.getStatus() != Mproject.STATUS_ON_DISK) continue;
-				
-					curProj = mProj;
-					try {
-						UpdatePool pool = new UpdatePool(dbc);
-						
-						mProj.createProject();
-						success = new SeqLoadMain().run( pool, progress, mProj);
-					
-						if (success && !Cancelled.isCancelled())  {
-							AnnotLoadMain annot = new AnnotLoadMain(pool, progress, curProj);
-							success = annot.run( mProj.getDBName());
-						}
-						mProj.saveParams(mProj.xLoad);
-					}
-					catch (Exception e) {
-						success = false;
-						ErrorReport.print(e, "Loading all projects");
-					}
-				}
-				if (!progress.wasCancelled())
-					progress.finish(success);
-			}
-		};	
-		progress.start( loadThread ); // blocks until thread finishes or user cancels
-		
-		if (progress.wasCancelled() && curProj != null) {// Remove partially-loaded project		
-			try {
-				System.out.println("Cancel removing " + curProj.strDBName + " (removing project)"); 
-				curProj.removeProjectFromDB(); 
-			}
-			catch (Exception e) { 
-				ErrorReport.print(e, "Remove partially loaded project");
-			}
-		}
-		refreshMenu();
-	}
-	private void reloadProjectLog(final Mproject mProj, final boolean bRmAlign) {
-		ErrorCount.init();
-		FileWriter fw = buildLogLoad(); // CAS500
-		final ProgressDialog progress = new ProgressDialog(this, 
-				"Reloading "  + mProj.getDBName() ,
-				"Reloading '" + mProj.getDBName() + "' ...", 
-				false, true, fw);
-		progress.closeIfNoErrors();
-		
-		Thread rmThread = new Thread() {
-			public void run() {
-				boolean success = true;
-				progress.appendText("Removing project from database - " + mProj.getDBName());
-				
-				// Load project sequence and annotation data
-				try {
-					UpdatePool pool = new UpdatePool(dbc);
-					String projName = mProj.getDBName();
-					
-					mProj.removeProjectFromDB();
-					mProj.createProject();
-					
-					if (bRmAlign) removeAllAlignFromDisk(mProj, false, progress); 
-					
-					success = new SeqLoadMain().run( pool, progress, mProj );
-					
-					if (success && !Cancelled.isCancelled()) {
-						AnnotLoadMain annot = new AnnotLoadMain(pool, progress, mProj);
-						success = annot.run( projName);
-					}
-					mProj.saveParams(mProj.xLoad);
-				}
-				catch (Exception e) {
-					success = false;
-					ErrorReport.print(e, "Remove sequences");
-				}
-				finally {
-					progress.finish(success);
-				}
-			}
-		};
-		progress.start( rmThread ); 
-		
-		refreshMenu();
-	}
-	private void reloadAnnoLog(final Mproject mProj) {
-		FileWriter fw = buildLogLoad(); // CAS500
-		final ProgressDialog progress = new ProgressDialog(this, 
-				"Loading Annotation",
-				"Loading Annotation '" + mProj.getDBName() + "' ...", 
-				false, true, fw);
-		progress.closeIfNoErrors();
-		
-		Thread loadThread = new Thread() {
-			public void run() {
-				boolean success = true;
-				progress.appendText("Reload annotation - " + mProj.getDBName()); 
-				
-				try {
-					UpdatePool pool = new UpdatePool(dbc);
-					String projName = mProj.getDBName();
-					
-					AnnotLoadMain annot = new AnnotLoadMain(pool, progress, mProj);
-					success = annot.run(projName);
-					
-					mProj.saveParams(mProj.xLoad);
-				}
-				catch (Exception e) {
-					success = false;
-					ErrorReport.print(e, "Run Reload");
-				}
-				finally {
-					if (!progress.wasCancelled()) // CAS512 add check
-						progress.finish(success);
-				}
-			}
-		};	
-		progress.start( loadThread ); // blocks until thread finishes or user cancels
-		
-		if (progress.wasCancelled()) {
-			try {
-				System.out.println("Cancel reload annotation - " + mProj + " (removing annotation)");
-				mProj.removeProjectAnnoFromDB(); 
-			}
-			catch (Exception e) { 
-				ErrorReport.print(e, "Cancel load annotation");
-			}
-		}
-		
-		refreshMenu();
-	}
+	
+	/*******************************************************************************
+	 * load projects for interface
+	 ******************************************************************/
 	private void loadProjectPairsFromDB() {
 	try {
 		pairIdxMap = new HashMap<Integer,Vector<Integer>>();
@@ -1515,7 +1284,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	
 	/*****************************************************************/
-	private void loadProjectsFromDB() { 
+	private void loadPanelProjsFromDB() { 
 	try {
 		projVec.clear();
 		projObjMap.clear();
@@ -1542,7 +1311,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	catch (Exception e) {ErrorReport.print(e,"Load projects"); }
 	}
 	
-	private void loadProjectsFromDisk(String strDataPath, String dirName) {
+	private void loadPanelProjsFromDisk(String strDataPath, String dirName) {
 		File root = new File(strDataPath + dirName); 
 		if (root == null || !root.isDirectory()) return;
 		
@@ -1568,11 +1337,68 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			}
 		}
 	}
+	/*****************************************************************/
+	/***************************************************************
+	 * XXX Load: CAS535 the load was all in listeners; now its in LoadProj via these methods
+	 */
+	private void loadAllProjects() {
+		try {
+			new LoadProj(this, dbc, buildLogLoad()).loadAllProjects(selectedProjVec); 
+			refreshMenu();
+		}
+		catch (Exception e) {ErrorReport.print(e, "load all project");}
+	}
+	private void loadProject(Mproject mProj) {
+		try {
+			new LoadProj(this, dbc, buildLogLoad()).loadProject(mProj);
+			refreshMenu();
+		}
+		catch (Exception e) {ErrorReport.print(e, "load project");}
+		}
+	private void reloadProject(Mproject mProj) {
+	try {
+		String msg = "Reload project " + mProj.getDisplayName();
+		if (!mProj.hasExistingAlignments()) {
+			if (!Utilities.showConfirm2("Reload project",msg)) return;
+		}
+		else {
+			int rc = Utilities.showConfirm3("Reload project",msg +
+				"\n\nOnly: reload project only" +
+				"\nAll: reload project and remove alignments from disk");
+			if (rc==0) return;
+			if (rc==2) // 
+				new RemoveProj().removeAllAlignFromDisk(mProj);
+		}
+		mProj.removeProjectFromDB();
+		new LoadProj(this, dbc, buildLogLoad()).loadProject(mProj); 
+		
+		refreshMenu();
+	}
+	catch (Exception e) {ErrorReport.print(e, "reload project");}
+	}
+	private void reloadAnno(Mproject mProj) {
+	try {
+		String msg = "Reload annotation " + mProj.getDisplayName();
+		if (!Globals.GENEN_ONLY) { 
+			if (!Utilities.showConfirm2("Reload annotation", msg +
+					"\n\nYou will need to re-run the synteny computations for this project," +      // CAS520 do not remove synteny
+					"\nany existing alignment files will be used.")) return; // CAS512 remove MUMmer and BLAT
+		}
+		else { // CAS519
+			if (!Utilities.showConfirm2("Reload annotation", msg +
+					"\n\nThe -z flag is set. Only the Gene# assignment algorithm will be run. " +
+					"\nNo further action will be necessary.")) return; 
+		}
+		mProj.removeAnnoFromDB();
+		new LoadProj(this, dbc, buildLogLoad()).reloadAnno(mProj);
+		refreshMenu();
+	}
+	catch (Exception e) {ErrorReport.print(e, "reload project");}
+	}
 	/***************************************************
 	 * Align
 	 */
-	 //All Pairs is selected; CAS506 added checkPairs logic
-	private void alignAllPairs() {
+	private void alignAllPairs() { //All Pairs is selected; CAS506 added checkPairs logic
 		Cancelled.init();
 		if (pairTable == null) return;
 		
@@ -1622,7 +1448,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		System.out.println("\n---- Start all pairs: processing " + todoList.size() + " project pairs ---");
 		for (Mpair mp : todoList) {
-			mp.renewIdx();
+			mp.renewIdx(); // Removed existing
 			new AlignProjs().run(this, dbc, mp, true,  maxCPUs, checkCat.isSelected());
 		}
 		System.out.println("All Pairs complete. ");
@@ -1639,7 +1465,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			Mpair mp = getMpair(mProjs[0].getIdx(), mProjs[1].getIdx());
 			if (mp==null) return;
 			
-			mp.renewIdx();
+			mp.renewIdx(); // Remove existing and restart
 			new AlignProjs().run(getInstance(), dbc, mp, false, nCPU, checkCat.isSelected());
 		}
 	}
@@ -1697,185 +1523,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Checking order against"); return false;}
 	}
-	/******************************************************************
-	 * Removes
-	 */
-	private void removePair(final Mproject p1, final Mproject p2) {
-		// CAS515 add option to only clear from database
-		String msg = "Clear pair " + p1.getDBName() + " to " + p2.getDBName();
-		int rc = Utilities.showConfirm3("Clear project", msg +
-				"\n\nOnly: remove synteny from database only" +
-				"\nAll: remove synteny from database and alignments from disk");
-		if (rc==0) return;
-		
-		ErrorCount.init();
-		FileWriter fw = buildLogLoad(); // CAS500
-		final ProgressDialog progress = new ProgressDialog(this, 
-				"Clearing alignment pair",
-				"Clearing alignment: " + p1.getDBName() + " to " + p2.getDBName(), 
-				false, true, fw);
-		progress.closeIfNoErrors();
-		
-		Thread clearThread = new Thread() {
-			public void run() {
-				boolean success = true;
-				progress.appendText("Clearing alignment: " + p1.getDBName() + " to " + p2.getDBName());
-				
-				try {
-					try {
-						Thread.sleep(1000);
-					}
-					catch(Exception e){}
-					
-					Mpair mp = getMpair(p1.getIdx(),p2.getIdx());
-					mp.removePairFromDB();
-					if (rc==2) removeAlignFromDisk(p1,p2);
-				}
-				catch (Exception e) {
-					success = false;
-					ErrorReport.print(e, "Clearing alignment");
-				}
-				finally {
-					progress.finish(success);
-				}
-			}
-		};
-		
-		progress.start( clearThread ); 
-		
-		refreshMenu();
-	}
-	private void removeProjectLog(final int rc, final Mproject project) {
-		ErrorCount.init();
-		FileWriter fw = buildLogLoad(); // CAS500
-		final ProgressDialog progress = new ProgressDialog(this, 
-				"Removing Project From database",
-				"Removing project from database '" + project.getDBName() + "' ...", 
-				false, false, fw);
-		progress.closeIfNoErrors();
-		
-		Thread rmThread = new Thread() {
-			public void run() {
-				boolean success = true;
-				progress.appendText("Remove project from database - " + project.getDBName());
-				
-				try {
-					project.removeProjectFromDB();
-					if (rc==2) removeAllAlignFromDisk(project, false, progress); 
-				}
-				catch (Exception e) {
-					success = false;
-					ErrorReport.print(e, "Remove project");
-				}
-				finally {
-					progress.finish(success);
-				}
-			}
-		};	
-		progress.start( rmThread ); 
-		
-		refreshMenu();
-	}
-	private void removeProjectFromDiskLog(final Mproject mProj) {
-		ErrorCount.init();
-		FileWriter fw = buildLogLoad(); // CAS500
-		
-		final ProgressDialog progress = new ProgressDialog(this, 
-				"Removing Project From Disk",
-				"Removing project from disk '" + mProj.getDBName() + "' ...", 
-				false, false, fw);
-		progress.closeIfNoErrors();
-		
-		Thread rmThread = new Thread() {
-			public void run() {
-				boolean success = true;
-				progress.appendText("Remove project from disk - " + mProj.getDBName());
-				
-				try {
-					try { // CAS505 see if this stops it from crashing on Linux in progress.start
-						Thread.sleep(1000);
-					}
-					catch(Exception e){}
-
-					removeAllAlignFromDisk(mProj, true, null); // CAS500 in case not earlier removed; CAS534 remove top dir
-					
-					String path = Constants.seqDataDir + mProj.getDBName();
-					
-					File f = new File(path);
-					Utilities.deleteDir(f);
-					if (f.exists()) f.delete();// CAS505 not removing topdir on Linux, so try again
-				}
-				catch (Exception e) {
-					success = false;
-					ErrorReport.print(e, "Remove project from disk");
-				}
-				finally {
-					progress.finish(success);
-				}
-			}
-		};
-		progress.start( rmThread ); // crashed on linux
-		
-		refreshMenu();
-	}
 	
-    // called on Remove Project From DB (true) and Reload Project (false)
-	private boolean removeAllAlignFromDisk(Mproject p, boolean rmTopDir, ProgressDialog progress) {
-		try {
-			String msg = (rmTopDir) ? "Remove directory " : "Removing alignments ";
-			if (progress!=null)
-				progress.appendText(msg + "from disk - " + p.getDBName());		
-			
-			File top = new File(Constants.getNameResultsDir()); // check seq_results
-			
-			boolean success = true;
-			String projTo = Constants.projTo;
-			
-			if (top == null  || !top.exists()) return true;
-			
-			Vector<File> alignDirs = new Vector<File>();
-			
-			for (File f : top.listFiles()) {
-				if (f.isDirectory()) {
-					if	(f.getName().startsWith(p.getDBName() + projTo) ||
-						 f.getName().endsWith(projTo + p.getDBName())) {
-						alignDirs.add(f);
-					}
-				}
-			}
-			if (alignDirs.size() == 0) return true;
-			
-			for (File f : alignDirs) {
-				removeAlignFromDisk(f, rmTopDir);
-			}
-			return success;
-		} catch (Exception e) {ErrorReport.print(e, "Remove all alignment files"); return false;}
-	}
-	private void removeAlignFromDisk(File f, boolean rmTopDir) { // For project
-		if (rmTopDir) { // only happens on remove project from disk
-			System.out.println("    remove " + f.getName());
-			Utilities.deleteDir(f);
-			if (f.exists()) f.delete();
-		}
-		else { // leave params file
-			File f1 = new File(f.getAbsoluteFile() + "/" + Constants.alignDir);
-			if (f1.exists()) {
-				System.out.println("    remove " + f.getName());
-				Utilities.deleteDir(f1);
-				if (f1.exists()) f1.delete();
-			}
-			File f2 = new File(f.getAbsoluteFile() + "/" + Constants.finalDir);
-			Utilities.deleteDir(f2);
-			if (f1.exists()) f2.delete();
-		}
-	}
-	// Called on clear pair
-	private void removeAlignFromDisk(Mproject p1, Mproject p2) { // clear pair
-		String path = Constants.getNameResultsDir(p1.getDBName(),  p2.getDBName());
-		System.out.println("Remove alignments from " + path);
-		File f = new File(path);
-		removeAlignFromDisk(f, false);
-	}
 	/**************************************************************************/
     private void addNewProjectFromUI(String name) {
     	if (projNameMap.containsKey(name)) {
@@ -1887,7 +1535,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
     }
     /***********************************************************************/
     private void dumpPairs() {
-    	if (!Globals.TRACE) return;
+    	if (TRACE) return;
     	System.out.println("Pairs: " + pairObjMap.size());
     	for (String key : pairObjMap.keySet()) {
     		Mpair mp = pairObjMap.get(key);
@@ -2134,3 +1782,4 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		public Mproject getProject() { return project; }
 	}
 }
+

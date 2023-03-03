@@ -109,9 +109,8 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		boolean isNT = ntCheckBox.isSelected();
 		Vector <HitData> hitList = new Vector <HitData> ();
 		hitList.add(hitDataObj);
-		if (AlignPool.CDEBUG) System.out.println(proj1 + " " + proj2 + " " + isQuery);
 		
-		hitAlignArr = alignPool.getHitAlignments(hitList, isNT, isQuery);
+		hitAlignArr = alignPool.buildHitAlignments(hitList, isNT, isQuery);
 		
 		int cnt=0;
 		Vector <String> lines = new Vector <String> ();

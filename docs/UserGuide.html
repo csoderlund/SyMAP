@@ -657,7 +657,9 @@ This drop-down selector assigns a function to the mouse's left button
 click and drag actions:
 
 <table class="ty" style="font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
-<tr><td style="white-space: nowrap; vertical-align: text-top;">Zoom All Tracks<td>Zoom the track to the selected region and all other tracks with hits in the region.
+<tr><td style="white-space: nowrap; vertical-align: text-top;">Zoom All Tracks
+	<td>Zoom the track to the selected region and all other tracks with hits in the region.
+	<br>When zoomed in, if the hit-wire is not displayed, none of the hit will be displayed.
 <tr><td style="white-space: nowrap; vertical-align: text-top;">Zoom Selected Track<td>Zoom to the selected region on the selected track; all other tracks do not change.
 <tr><td style="white-space: nowrap; vertical-align: text-top;">Align (Max 30000)<td>
 Open the base alignment view for the selected region (see <a href="#base">Base View</a>).
@@ -840,8 +842,8 @@ Select <ttl>Align (Max 30000bp)</ttl> from the <ttb>Selected:</ttb> drop-down, t
 To select a region,  drag the
 mouse along the sequence and release when the desired range is highlighted.
 <p>
-<a href="img/baseview.png">
-	<img src="img/baseview.png" alt="baseview" style="border: 1px solid black; width: 750px"></a>
+<a href="img/baseview2.png">
+	<img src="img/baseview2.png" alt="baseview" style="border: 1px solid black; width: 750px"></a>
 <p>
 The aligned base view of the hits will
 appears in a new window.  This view consists of a ruler along the top showing the area
@@ -856,8 +858,8 @@ sequence was soft-masked, the masking is retained in the alignment.
 For details of alignment, see <a href="Align.html" class="ext"  target="_blank">Alignment</a>.
 <p>
 <u>Genes</u><br>
-Annotated genes are displayed below the hits. The system attempts to expand the view to show the full gene that has
-hits. Genes that overlap this gene will be partially shown.
+Annotated genes are displayed below the hits. Blue exons are on one strand and burgundy on the other.
+If only part of the gene is selected, an arrow on the left or right indicates that the full gene is not shown.
 <a id="abase"></a>
 <h4>Align Text View</h4>
 <table>

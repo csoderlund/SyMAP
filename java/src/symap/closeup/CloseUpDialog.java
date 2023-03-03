@@ -12,12 +12,16 @@ import colordialog.ColorListener;
 import symap.sequence.Sequence;
 import symap.sequence.Annotation;
 import symap.mapper.HitData;
+import symap.Globals;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
+import util.ErrorReport;
 import util.Utilities;
 
 /*************************************************
- * Displays the alignment; called from CloseUp, which is called by SyMAP
+ * The panel for displaying the alignment, with CloseupComponent on top and TextComponent on bottom;
+ * called from CloseUp, which is called by SyMAP2d
+ * Gets hits and genes in region, and builds the HitAlignment and GeneAlignment for display
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class CloseUpDialog extends JDialog implements CloseUpListener, ColorListener, HelpListener 
@@ -31,15 +35,16 @@ public class CloseUpDialog extends JDialog implements CloseUpListener, ColorList
 	private final int MAX_WIDTH=1500;
 	private String projS, projO; // selected and other
 
-	public CloseUpDialog(CloseUp closeup, Vector <HitData> hitList, Sequence seqObj, int start, int end, String otherProject, boolean isProj1) throws SQLException {
+	// hitList will have at least ONE hit
+	public CloseUpDialog(CloseUp closeup, Vector <HitData> hitList, Sequence seqObj, int selStart, int selEnd, String otherProject, boolean isProj1) throws SQLException {
 		alignPool = closeup.getDrawingPanel().getPools().getAlignPool();
 		projS = seqObj.getProjectDisplayName();
 		projO = seqObj.getOtherProjectName();
 		initView();
 		
-		setView(seqObj, hitList, start, end, isProj1);
+		setView(seqObj, hitList, selStart, selEnd, isProj1);
 		
-		String d = SeqData.coordsStr(start, end);
+		String d = SeqData.coordsStr(selStart, selEnd);
 		String other = seqObj.getOtherProjectName() + " " + seqObj.getSeqHits().getOtherName(seqObj);
 		String x = String.format("Selected Region: %s  %s  %s to %s", projS, seqObj.getName(), d, other); // CAS504, CAS531
 		setTitle(x);
@@ -80,50 +85,58 @@ public class CloseUpDialog extends JDialog implements CloseUpListener, ColorList
 		cp.add(helpBar, BorderLayout.SOUTH); 
 	}
 	
-	public void setView(Sequence src, Vector <HitData> hitList, int start, int end,  boolean isProj1_idx) throws SQLException 
+	// CAS535 the subhits and exons are only shown if they are within or overlap the selected boundary
+	public void setView(Sequence src, Vector <HitData> hitList, int sstart, int send, boolean isProj1) throws SQLException 
 	{
-		HitAlignment[] hitAlignArr = alignPool.getHitAlignments(hitList, isProj1_idx, projS, projO);
-		if (hitAlignArr==null || hitAlignArr.length==0) return;
+	try {
+		HitAlignment[] hitAlignArr = alignPool.buildHitAlignments(hitList, isProj1, projS, projO, sstart, send);
 		
-		GeneAlignment[] geneAlignArr = getGeneAlignments(src, start, end);
+		GeneAlignment[] geneAlignArr = buildGeneAlignments(src, sstart, send);
 		
-		// find boundary of hits
-		int startG = Integer.MAX_VALUE;
-		int endG = Integer.MIN_VALUE;
+		// compute the start and end of graphics; all hits within sstart/send
+		int sHit = Integer.MAX_VALUE;
+		int eHit = Integer.MIN_VALUE;
 		for (HitAlignment h : hitAlignArr) {
-			startG = Math.min(startG, h.getSstart());
-			endG =   Math.max(endG, h.getAend());
+			sHit = Math.min(sHit, h.getSstart());
+			eHit = Math.max(eHit, h.getAend()); // start+width
 		}
-		int startH=startG, endH=endG;
 		
-		// Expand the reduced region to show full gene	
+		int sEx = Integer.MAX_VALUE;
+		int eEx = Integer.MIN_VALUE;
 		for (GeneAlignment gn : geneAlignArr) {
-			if (gn.getMax() < startH || gn.getMin()>endH) continue; // no hits on this gene so don't show
+			if (gn.getGmax() < sHit || gn.getGmin()>eHit) {
+				gn.setNoShow();
+				continue; 
+			}
 			
-			startG = Math.min(startG, gn.getMin());
-			endG =   Math.max(endG, gn.getMax());
-		}		
-		viewComp.setData(startG, endG, geneAlignArr, hitAlignArr);
+			gn.setDisplayExons(sstart, send); // CAS535 set exons within selected
+			
+			sEx = Math.min(sEx, gn.getEmin());
+			eEx = Math.max(eEx, gn.getEmax());
+		}	
+		int startGr = Math.min(sHit, sEx) - 10; // a little padding
+		int endGr  =  Math.max(eHit, eEx) + 10;
+		
+//System.out.format("CLOSEUPx: hit %,d %,d  exon %,d %,d  final %,d %,d  sel %,d %,d\n", sHit, eHit, sEx, eEx, startGr, endGr, sstart, send);
+
+		viewComp.setData(startGr, endGr, geneAlignArr, hitAlignArr);
 		
 		selectedHa = hitAlignArr[0]; 
 		hitAlignArr[0].setSelected(true);
 		hitClicked(hitAlignArr[0]);
 	}
+	catch (Exception e) {ErrorReport.print(e, "Closeup: determining hits and exons to show");}
+	}
 	
-	private GeneAlignment[] getGeneAlignments(Sequence seq, int start, int end) {
-		Vector<Annotation> annoVec = 
-				seq.getAnnotations(Annotation.GENE_INT, start, end);
+	private GeneAlignment[] buildGeneAlignments(Sequence seq, int sstart, int send) {
+		Vector<Annotation> annoVec =  seq.getAnnoGene(sstart, send);
 		
 		Vector<GeneAlignment> alignments = new Vector<GeneAlignment>();
 		for (Annotation a : annoVec) {
-			GeneAlignment ga = new GeneAlignment(a.getShortDescription(), a.getStart(), a.getEnd(), a.isStrandPos());
+			Vector<Annotation> exons = seq.getAnnoExon(a.getAnnoIdx()); // CAS535 get specific exons
 			
-			Vector<Annotation> exons = seq.getAnnotations(Annotation.EXON_INT, a.getStart(), a.getEnd());
-			Exon[] exonArray = (exons.isEmpty() ? null : new Exon[exons.size()]);
-		
-			for (int i = 0;  i < exons.size();  i++)
-				exonArray[i] = new Exon(exons.get(i).getStart(), exons.get(i).getEnd(), exons.get(i).getTag());
-			ga.setExons(exonArray);
+			GeneAlignment ga = new GeneAlignment(
+					a.getShortDescription(), a.getStart(), a.getEnd(), a.isStrandPos(), exons);
 			
 			if (!alignments.contains(ga)) // in case database has redundant entries (as with Rice)
 				alignments.add(ga);

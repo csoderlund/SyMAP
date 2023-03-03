@@ -4,14 +4,12 @@ import java.util.Vector;
 
 import database.DBconn;
 import database.DBAbsUser;
-import props.ProjectPair;
 import props.ProjectPool;
 
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.ResultSet;
 
-import symap.Globals;
 import symap.sequence.Sequence;
 import symap.track.Track;
 import util.ErrorReport;
@@ -24,8 +22,7 @@ import util.ErrorReport;
 public class MapperPool extends DBAbsUser {
 	private ProjectPool projectProperties;
 	// private ListCache pseudoPseudoCache; CAS531 dead
-	private boolean TRACE=Globals.DEBUG;
-
+	
 	public MapperPool(DBconn dr, ProjectPool pp) {  
 		super(dr);
 		this.projectProperties = pp;
@@ -72,9 +69,6 @@ public class MapperPool extends DBAbsUser {
 		int group2 = st2.getGroup();
 		String chr1="?", chr2="?";
 
-		ProjectPair pp = projectProperties.getProjectPair(stProject1,stProject2);
-
-		if (TRACE) System.out.println("Looking for the Hits for Pseudos: p1="+stProject1+" p2="+stProject2+" pair="+pp.getPair()+" g1="+group1+" g2="+group2);
 		Vector <HitData> hitList = new Vector <HitData>();
 		Statement statement;
 		ResultSet rs;

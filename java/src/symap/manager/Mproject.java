@@ -34,6 +34,7 @@ import backend.Constants;
  */
 
 public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sort
+	private boolean TRACE = false;
 	public String strDBName; 	// This is SQL project.name, and seq/dirName
 	public String strDisplayName;
 	
@@ -51,10 +52,10 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public static final short STATUS_IN_DB   = 0x0002; 
 	
 	// ManagerFrame and ChrExpInit
-	public Mproject(DBuser pool, int nIdx, String strName, String loaddate) { 
+	public Mproject(DBuser pool, int nIdx, String strName, String annotdate) { 
 		this.projIdx = nIdx;
 		this.strDBName = strName;
-		this.strDate = loaddate;	
+		this.strDate = annotdate;	
 		this.dbUser = pool;
 		
 		makeParams();
@@ -65,8 +66,11 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		}
 		else {
 			nStatus = STATUS_IN_DB;
-			if (loaddate!="")  // CAS513 add loaddate Manager left side Projects
-				strDate = Utilities.reformatDate(loaddate); 
+			if (annotdate!="")  {// CAS513 add loaddate Manager left side Projects
+				strDate = Utilities.reformatAnnotDate(annotdate);
+				if (strDate.contentEquals("???")) 
+					System.out.println("Warning: " + strName + " interrupted on load - reload");
+			}
 		}
 	}
 	public Mproject() { // for display packages querying proj_props 
@@ -98,6 +102,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	}
 	public boolean hasSynteny() {return numSynteny>0;}
 	public boolean hasGenes() {return numGene>0;}
+	public boolean hasCat()   {return !Utilities.isEmpty(getDBVal(sCategory));} // CAS535 not finished
 	public long getLength() {return length;}
 	public Color getColor() { return color; }
 	public void setColor( Color c ) { color = c; }
@@ -298,8 +303,13 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public void saveParams(int type) {
 		if (projIdx == -1) return; // not loaded yet
 		try {
-			if (Globals.TRACE) System.out.println("Save params to DB " + type + " for " + strDisplayName + " " + projIdx);
-			
+			if (type==xLoad) {//CAS535 moved date updates here
+				dbUser.executeUpdate("update projects set hasannot=1," // CAS520 add version
+						+ " annotdate=NOW(), syver='" + Globals.VERSION + "' where idx=" + projIdx);
+			}
+			else if (type==xAlign) {//Load date is for loading anchors/synteny
+				dbUser.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + projIdx);
+			}
 			for (Params p : pKeysMap.values()) { 
 				boolean b=false;
 				if (p.isSum) b=true;
@@ -341,18 +351,30 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 					"VALUES('" + strDBName + "','pseudo',NOW(),'" + Globals.VERSION + "')");
 			projIdx = dbUser.getIdx("select idx from projects where name='" + strDBName + "'");
 			
-			System.out.println("Create " + strDBName + " (" + projIdx + ")");
+			System.out.println("Create project in database - " + strDBName);
 		}
 		else System.out.println("SyMAP warning: project " + strDBName + " exists");
 	} 
 	catch (Exception e) {ErrorReport.print(e, "Createproject from DB"); }
 	}
 	
+	public void removeAnnoFromDB() {
+	try {
+		dbUser.executeUpdate("DELETE FROM pseudo_annot USING pseudo_annot, xgroups " +
+				" WHERE xgroups.proj_idx='" + projIdx + 
+				"' AND pseudo_annot.grp_idx=xgroups.idx");
+
+		dbUser.executeUpdate("delete from pairs " +
+					" where proj1_idx=" + projIdx + " or proj2_idx=" + projIdx);
+		
+		dbUser.resetAllIdx();
+	}
+	catch (Exception e) {ErrorReport.print(e, "Remove annotations"); }
+	}
 	public void removeProjectFromDB() {
 	try {
         dbUser.executeUpdate("DELETE from projects WHERE name='"+ strDBName+"'");
-        dbUser.resetIdx("idx", "projects"); // CAS512 thought is was a problem, but wasn't
-        dbUser.resetIdx("idx", "xgroups");  // only resets if empty, otherwise, set auto-inc to max(idx)
+        dbUser.resetAllIdx(); // CAS535 changed from individual
         nStatus = STATUS_ON_DISK; 
         projIdx = -1; 
 	} 
@@ -384,12 +406,16 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	        	}
 	        }
 	        rs.close();
-	        finishParams();
+	        if (!Utilities.isEmpty(getDBVal(sCategory))) loadParamsFromDisk(); // CAS535 not finished
+	        else finishParams();
 		}
 		catch (Exception e) {ErrorReport.print(e,"Load projects properties"); }
 	}
 	public void loadParamsFromDisk() {
-		if (!Utilities.dirExists(Constants.dataDir)) return;
+		if (!Utilities.dirExists(Constants.dataDir)) {
+			finishParams(); // CAS535 but if there is no data directory
+			return;
+		}
 		
 		String dir = Constants.seqDataDir + strDBName;
 		loadParamsFromDisk(new File(dir));
@@ -478,6 +504,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		rs.close();
 	}
 	private void writeNewParamsFile() { // CAS534 add
+		if (Utilities.isEmpty(strDBName)) return; // OrderAgainst writes the file, but not with Mproject
 		String dir = Constants.seqDataDir + strDBName;
 		Utilities.checkCreateDir(dir, true); // CAS500 
 		
@@ -616,7 +643,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		}
 		
 		private void prtDiff() {
-			if (Globals.TRACE && !projVal.contentEquals(dbVal))
+			if (TRACE && !projVal.contentEquals(dbVal))
 				System.out.format("Param file != DB: %-10s %-10s %-10s  File=%s  DB=%s  Default=%s\n", 
 						strDBName, strDisplayName, label, projVal, dbVal, defVal);
 		}

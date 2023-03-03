@@ -355,11 +355,8 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 						JOptionPane.YES_NO_OPTION,JOptionPane.ERROR_MESSAGE) != JOptionPane.YES_OPTION) 
 				return false;
 			
-			if (Globals.DEBUG) System.out.println("*****Regenerate 2d " + selectedTracks.length);
-			
 			if (symap2D == null) { // CAS517 move after get tracks 
 				symap2D = new SyMAP2d(dbReader, helpBar, null);
-			
 				// CAS521 totally remove FPC CAS517 to add include FPC colors and Frame Markers if FPC true 
 			}
 			Frame2d frame = symap2D.getFrame();

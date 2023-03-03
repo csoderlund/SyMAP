@@ -4,20 +4,22 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Vector;
 
-public class Hit implements Comparable <Hit> // CAS500 added <Hit>
-{
+/*****************************************************
+ * Used for AnchorsMain clustering
+ */
+public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	public int matchLen, pctid, pctsim, idx; // pctid=%ID, pctsim=%sim
 	public String strand;
-	public HitStatus status = HitStatus.Undecided;
+	public HitStatus status = HitStatus.Undecided;	// AnchorsMain {In, Out, Undecided };
 	public SubHit query, target;
-	public HitType mBT = null;
+	public HitType mHT = null;				// AnchorsMain {GeneGene, GeneNonGene, NonGene}
 	public int annotIdx1 = 0, annotIdx2 = 0;
 	public int origHits = 0; 
 	public int binsize1=0, binsize2=0; // store topN bin sizes for stats
 	
-	public Hit() {
-		this(0);
-	}
+	// Called in AnchorMain, then used with merge()
+	public Hit() {this(0);}
+	
 	public Hit(int subblocks) {
 		query =  new SubHit(subblocks);
 		target = new SubHit(subblocks);
@@ -31,18 +33,16 @@ public class Hit implements Comparable <Hit> // CAS500 added <Hit>
 		pctid        = 0;
 		pctsim		 = 0;
 	}
-	// COPY CONSTRUCTOR - MAY NEED UPDATE IF MEMBER VARIABLES ARE CHANGED
-	// Used by Break hit - if hitlengt
-	public Hit(Hit h)
-	{ 
+	// Used by Break hit 
+	public Hit(Hit h, int qstart, int qend, int tstart, int tend, int tmp_idx) { 
 		matchLen = h.matchLen;
 		pctid = h.pctid;
 		pctsim = h.pctsim; // CAS515 add
 		strand = h.strand;
 		status = h.status;
-		idx = h.idx;
+		idx 	= h.idx;
 		origHits = h.origHits;
-		mBT = h.mBT;
+		mHT = h.mHT;
 		annotIdx1 = h.annotIdx1;
 		annotIdx2 = h.annotIdx2;
 		binsize1 = h.binsize1;
@@ -50,19 +50,21 @@ public class Hit implements Comparable <Hit> // CAS500 added <Hit>
 		
 		query =  new SubHit(h.query);
 		target = new SubHit(h.target);
+		query.start = qstart;
+		query.end = qend;
+		target.start = tstart;
+		target.end = tend;
+		idx = tmp_idx; 
 	}
 	
-	public boolean fullAnnot()
-	{
+	public boolean fullAnnot() {
 		return (annotIdx1 > 0 && annotIdx2 > 0);
 	}
-	public boolean reversed()
-	{
+	public boolean reversed() {
 		return (((query.end < query.start) && (target.end > target.start)) ||
 				((query.end > query.start) && (target.end < target.start)) );
 	}
-	public void orderEnds()
-	{
+	public void orderEnds() {
 		int s = query.start; int e = query.end;
 		query.start  = (s <= e ? s : e); 
 		query.end    = (s <= e ? e : s); 
@@ -71,8 +73,7 @@ public class Hit implements Comparable <Hit> // CAS500 added <Hit>
 		target.start  = (s <= e ? s : e); 
 		target.end    = (s <= e ? e : s); 
 	}
-	public int compareTo(Hit h2) // CAS500 changed Object to Hit
-	{
+	public int compareTo(Hit h2) {// CAS500 changed Object to Hit
 		if      (query.start < h2.query.start) 	return 1;	
 		else if (query.start > h2.query.start)	return -1;
 	
@@ -81,9 +82,11 @@ public class Hit implements Comparable <Hit> // CAS500 added <Hit>
 	
 		return 0;
 	}
-	public int maxLength()
-	{
+	public int maxLength() {
 		return Math.max(query.length(), target.length());
+	}
+	public boolean isDiagHit() { // CAS535 add: was doing full check in multiple places
+		return query.grpIdx == target.grpIdx && query.start == target.start && query.end == target.end;
 	}
 	// for debug
 	public String toString() {
@@ -136,8 +139,12 @@ public class Hit implements Comparable <Hit> // CAS500 added <Hit>
 		this.pctsim = (this.pctsim == 0 ? h.pctsim : (this.pctsim + h.pctsim) / 2); // CAS515 add
 	}
 	
-	// called in AnchorsMain.clusterGeneHits2 and preFilterHits2
-	// not a complete merge b/c doesn't ever merge two clusters
+	/******************************************************************
+	 * STATIC - to merge hit lists
+	 * called in AnchorsMain.clusterGeneHits2 and preFilterHits2
+	 * not a complete merge b/c doesn't ever merge two clusters
+	 */
+	// ZZZ add length limit
 	public static void mergeOverlappingHits(Vector<Hit> hits) {
 		if (hits.size() <= 1) return;
 		
@@ -164,52 +171,52 @@ public class Hit implements Comparable <Hit> // CAS500 added <Hit>
 		}
 	}
 	// called in AnchorsMain.clusterGeneHits2
-	public static Hit clusterHits(Vector<Hit> hits, HitType bt)  throws Exception
-	{
+	public static Hit clusterHits(Vector<Hit> hits, HitType ht)  throws Exception {
 		int numHits = hits.size();
 		
-		if (numHits > 1) {
-			Hit h2 = new Hit( numHits*2 );
-			h2.origHits = 0;
-			
-			for (Hit h : hits) {
-				if (h.origHits > 1) System.err.println("SyMAP error clusterhits1 ");
-				h2.merge(h);
-			}
-			if (h2.origHits > numHits)System.err.println("SyMAP error clusterhits2 ");
-						
-			h2.matchLen = 0;
-			h2.mBT = bt;
-			int i = 0;
-			long avgPctID = 0;
-			h2.origHits = 0;
-			// average the pctid, weighted by matchlen
-			for (Hit h : hits) {
-				h2.query.blocks[i]  = h.query.start;
-				h2.target.blocks[i] = h.target.start;
-				i++;
-				h2.query.blocks[i]  = h.query.end;
-				h2.target.blocks[i] = h.target.end;
-				i++;
-				h2.matchLen += h.matchLen;
-				avgPctID += h.pctid*h.matchLen;
-				h2.origHits += h.origHits;
-			}
-			
-			h2.pctid = (int)(avgPctID/h2.matchLen);
-			h2.strand = hits.get(0).strand; 
-			
-			if (h2.origHits != numHits) System.err.println("SyMAP error clusterhits 3 ");
-			
-			return h2;
-		}
-		else if (numHits == 1)
-		{
-			hits.firstElement().mBT = bt;
+		if (numHits==0) return null;
+		
+		if (numHits == 1) {
+			hits.firstElement().mHT = ht;
 			if (hits.firstElement().origHits != 1) System.err.println("SyMAP error clusterhits 4 ");
 			return hits.firstElement();
 		}
 		
-		return null;
+		Hit h2 = new Hit( numHits*2 );
+		h2.origHits = 0;
+		
+		for (Hit h : hits) {
+			if (h.origHits > 1) System.err.println("SyMAP error clusterhits1 ");
+			h2.merge(h);
+		}
+		if (h2.origHits > numHits)System.err.println("SyMAP error clusterhits2 ");
+					
+		h2.matchLen = 0;
+		h2.mHT = ht;
+		int i = 0;
+		long avgPctID = 0;
+		h2.origHits = 0;
+		
+		// average the pctid, weighted by matchlen
+		for (Hit h : hits) {
+			h2.query.subHits[i]  = h.query.start;
+			h2.target.subHits[i] = h.target.start;
+			i++;
+			
+			h2.query.subHits[i]  = h.query.end;
+			h2.target.subHits[i] = h.target.end;
+			i++;
+			
+			h2.matchLen += h.matchLen;
+			avgPctID += h.pctid*h.matchLen;
+			h2.origHits += h.origHits;
+		}
+		
+		h2.pctid = (int)(avgPctID/h2.matchLen);
+		h2.strand = hits.get(0).strand; 
+		
+		if (h2.origHits != numHits) System.err.println("SyMAP error clusterhits 3 ");
+		
+		return h2;
 	}
 }

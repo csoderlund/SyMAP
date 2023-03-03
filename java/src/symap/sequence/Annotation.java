@@ -26,24 +26,20 @@ import util.TextBox;
  * Drawing the annotation requires calling setRectangle() first.
  */
 public class Annotation {
-	private static boolean DEBUG = Globals.DEBUG;
-	
-	// colors at bottom
-
 	private int type;
 	private int start, end;						
 	private String description, tag, tagGeneN;	
 	private boolean bStrandPos;
-	private int gene_idx=0;  // If this is an exon, it is the gene_idx (pseudo_annot.idx) that it belongs to
-	private int annot_idx=0; // pseudo_annot.idx
+	private int gene_idx=0;  	// If this is an exon, it is the gene_idx (pseudo_annot.idx) that it belongs to
+	private int annot_idx=0; 	// pseudo_annot.idx
 	private int genenum=0;	 	// CAS517 for sorting in PseudoData
 	
 	private Rectangle2D.Double rect;
-	private Rectangle2D.Double hoverGeneRect; // CAS515 so hover cover for gene covers full width of exon
-	private TextBox descBox=null; // CAS503
-	private String exonList=null; // CAS512 add ExonList to popup
-	private String hitList=null;  // CAS517 add HitList to popup
-	private boolean bGeneLineOpt=false; // CAS520 show line at start of gene option
+	private Rectangle2D.Double hoverGeneRect; 	// CAS515 so hover cover for gene covers full width of exon
+	private TextBox descBox=null; 				// CAS503
+	private String exonList=null; 				// CAS512 add ExonList to popup
+	private String hitList=null;  				// CAS517 add HitList to popup
+	private boolean bGeneLineOpt=false; 		// CAS520 show line at start of gene option
 	
 	/**
 	 * Creates a new Annotation instance setting the description values, color, and draw method based on type.
@@ -246,8 +242,6 @@ public class Annotation {
 	}
 	
 	public boolean hasShortDescription() {
-		if (type==EXON_INT && !DEBUG) return false; // CAS512 do not want exons on "Show Annotations"
-
 		return description != null && description.length() > 0;
 	}
 

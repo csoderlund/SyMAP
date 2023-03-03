@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 
 import util.ErrorReport;
-import util.Logger;
 import util.Utilities;
 
 public class ProgSpec implements Comparable<ProgSpec> 
@@ -113,7 +112,7 @@ public class ProgSpec implements Comparable<ProgSpec>
 			// CAS500 move log file to log directory
 			String runLogName  = alignLogDirName + outRoot + ".log";
 			FileWriter runFW = new FileWriter(runLogName);
-			Logger runLog = new Log(runFW);  
+			Log runLog = new Log(runFW);  
 			
 			if (program.equals("promer") || program.equals("nucmer"))//(type == ProgType.mummer)
 			{
@@ -185,7 +184,7 @@ public class ProgSpec implements Comparable<ProgSpec>
 		cleanup();
 	}
 	
-    public int runCommand ( String strCommand, Writer runFW, Logger runLog ) {// runFW and runLog go to same file
+    public int runCommand ( String strCommand, Writer runFW, Log runLog ) {// runFW and runLog go to same file
     	try {
 	        boolean bDone = false;
 	        System.err.println("#" + alignNum + " " + strCommand);
