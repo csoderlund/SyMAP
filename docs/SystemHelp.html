@@ -473,23 +473,27 @@ the <tt>Name=value</tt> would not be part of any gene annotation.
 
 <a id="over2"></a>
 <h3>Overview</h3>
-
+<a href="img/lineAlign.png"><img src="img/lineAlign.png" alt="alignLine" style="border: 1px solid black; width: 400px"></a>
 <table>
 <tr>
-
 <td style="vertical-align: text-top;">
-<a href="img/lineAlign.png"><img src="img/lineAlign.png" alt="alignLine" style="border: 1px solid black; width: 400px"></a>
+
 <p>Select a pair cell in the <ttl>Available Syntenies</ttl> table followed by the <ttb>Parameters</ttb>
 button, which will popup the window shown on the right.
 
-<p>These parameters generally do not need to be changed.
-The exception is the <ttl>Block Merge</ttl>, which may be beneficial when there are
+<p>There are two parameters that may be beneficial to experiment with: <ttl>Top N</ttl> and <ttl>Block Merge</ttl>.
+<p>Increasing <ttl>Top N</ttl> sometimes identifies more gene homology, but will also get more bogus hits.
+See <i>Anchor Filtering</i> in <a href="SystemGuide.html#alg" class="ext" target="_blank">How SyMAP works</a>.
+
+<p>
+Selecting <ttl>Block Merge</ttl> may be beneficial when there are
 many small blocks. Below shows
 an example where the first image does not have merged blocks and the second does (the blue dots are hits that
 belong to the block).
 <p>
 <a href="img/demoNotMerge.png"><img src="img/demoNotMerge.png" alt="demo Not Merge" style="border: 1px solid black; width:  210px"></a>
 <a href="img/demoMerge.png"><img src="img/demoMerge.png" alt="demoMerge" style="border: 1px solid black; width:  220px"></a>
+
 <td>
 <a href="img/parameters2.png"><img src="img/parameters2.png" alt="parameters2" style="border: 1px solid black; width: 300px"></a>
 </table>
