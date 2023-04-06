@@ -1,26 +1,28 @@
 package symapQuery;
 
-/*************************************************
- * The columns for the query result table
- * Added in TableDataPanel. Database query in DBdata
- */
 import java.util.Iterator;
 import java.util.Vector;
+
+/*************************************************
+ * The columns for the query result table
+ * Added in TableDataPanel. Database query in DBdata. 
+ * Any changes to columns need to be changed in DBdata too.
+ */
 
 public class FieldData {
  	// type is all Integer, included Block, see Column Comparator, which sorts it correctly
 	// leave Q.rowCol for placement, the actual row is computed in DBdata (CAS514 HitIdx->Hit#, #Gene->Gene#)
-	// TableDataPanel.createGeneralSelectPanel expects 5 hit columns and the Pg prefix
+	// TableDataPanel.createGeneralSelectPanel expects 6 hit columns
 	private static final String [] GENERAL_COLUMNS =	 
 		{Q.rowCol, Q.blockCol, "Block\nScore",Q.runCol,"PgeneF", "PgFSize",
-		Q.hitCol,    "Hit\n%Id", "Hit\n%Sim","Hit\n#Sub", "Hit\nSt"}; // CAS516 add these 4; CAS520 add st
+		Q.hitCol,    "Hit\n%Id", "Hit\n%Sim","Hit\n#Sub", "Hit\nSt", "Hit\nCov"}; // CAS516 add these 4; CAS520 add st; CAS540 add Len
 	
 	private static final Class <?> []  GENERAL_TYPES = 					// CAS520 had to add for String
 		{Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,
-				Integer.class,Integer.class,Integer.class,Integer.class, String.class};
+		 Integer.class,Integer.class,Integer.class,Integer.class, String.class, Integer.class};
 	
 	private static final boolean [] GENERAL_COLUMN_DEF =  
-		{true, true, true, true, false, false, true, false, false, false, false}; // CAS513 HitID=f, Score=t
+		{true, true, true, true, false, false, true, false, false, false, false, false}; // CAS513 HitID=f, Score=t
 	
 	private static final String [] GENERAL_COLUMN_DESC = 
 		{"Row number", 
@@ -30,13 +32,14 @@ public class FieldData {
 		 "PgeneF: (Compute PgeneF only) putative gene family number", 
 		 "PgFSize: (Compute PgeneF only) putative gene family size",
 		 "Hit#: Number representing the hit", 
-		 "Hit %Id: Percent identity from the MUMmer file",
-		 "Hit %Sim: Percent similarity from the MUMmer file", 
-		 "Hit #Sub: Number of clustered sub-hits, where 1 is a single hit",
-		 "Hit St: '=' is both hit ends are to the same strand, '!=' otherwise" 
+		 "Hit %Id: Approximate percent identity (exact if one hit)",
+		 "Hit %Sim: Approximate percent similarity (exact if one hit)", 
+		 "Hit #Sub: Number of subhits in the cluster, where 1 is a single hit",
+		 "Hit St: '=' is both hit ends are to the same strand, '!=' otherwise",
+		 "Hit Cov: The largest summed subhit lengths of the two species."
 		};
 	
-	// Prefixed with Species: CAS519 have hit and gene start/end/len; and add gene strand
+/* Prefixed with Species: CAS519 have hit and gene start/end/len; and add gene strand */
 	private static final String []     SPECIES_COLUMNS = 
 		{Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol, Q.gNCol, Q.hStartCol, Q.hEndCol, Q.hLenCol,};
 	
@@ -53,8 +56,9 @@ public class FieldData {
 		"Glen: Length of gene", 
 		"Gst: Gene strand", 
 		"Gene#: Sequential. Overlap genes have same number (chr.#.{a-z})", 
-		"Hstart: Start coordinate of clustered sub-hits", 
-		"Hend: End coordinate of clustered sub-hits", "Hlen: Length of clustered sub-hits"
+		"Hstart: Start coordinate of clustered hits", 
+		"Hend: End coordinate of clustered hits", 
+		"Hlen: Hend-Hstart+1"
 	};
 	
 	//****************************************************************************
@@ -63,12 +67,12 @@ public class FieldData {
 	public static String [] getGeneralColHead() 	 {return GENERAL_COLUMNS; }
 	public static Class <?> [] getGeneralColType() 	 {return GENERAL_TYPES; }
 	public static String [] getGeneralColDesc() 	 {return GENERAL_COLUMN_DESC; }
-	public static boolean [] getGeneralColDefaults() 	{return GENERAL_COLUMN_DEF; }
+	public static boolean [] getGeneralColDefaults() {return GENERAL_COLUMN_DEF; }
 	
 	public static String [] getSpeciesColHead() 	 {return SPECIES_COLUMNS; }
 	public static Class <?> [] getSpeciesColType() 	 {return SPECIES_TYPES; }
 	public static String [] getSpeciesColDesc() 	 {return SPECIES_COLUMN_DESC; }
-	public static boolean [] getSpeciesColDefaults() 	{return SPECIES_COLUMN_DEF; }
+	public static boolean [] getSpeciesColDefaults() {return SPECIES_COLUMN_DEF; }
 	
 	// XXX If change this, change number in Q.java, as they are the numeric index into ResultSet
 	// Columns loaded from database, do not correspond to query table columns
@@ -110,6 +114,7 @@ public class FieldData {
 		fd.addField(String.class, Q.PH, "cvgpct",   Q.PSIM,      "Hit Average %Similarity");
 		fd.addField(String.class, Q.PH, "countpct", Q.HCNT,      "Clustered hits");
 		fd.addField(String.class, Q.PH, "strand",   Q.HST,       "Strand +/-, /-, etc");
+		fd.addField(String.class, Q.PH, "score",    Q.HSCORE,    "Summed clustered hits");
 		fd.addField(String.class, Q.PH, "runsize",  Q.COSIZE,    "Collinear run size");
 		fd.addField(String.class, Q.PH, "runnum",   Q.CONUM,     "Collinear number"); // CAS520 add
 

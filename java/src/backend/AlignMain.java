@@ -77,7 +77,7 @@ public class AlignMain {
 	 */
 	public boolean run() {
 		try {
-			long startTime = System.currentTimeMillis();
+			long startTime = Utils.getTime();
 	
 			System.gc(); // free unused heap for mummer to use (Java treats this as a suggestion)
 			
@@ -149,7 +149,7 @@ public class AlignMain {
 			else { // CAS508 add numbers failed...
 				plog.msg("Alignments:  success " + getNumCompleted() + "   failed " + getNumErrors());
 			}
-			Utils.timeDoneMsg(plog, startTime, "Alignments"); // Align done: time
+			Utils.timeDoneMsg(plog, "Alignments", startTime); // Align done: time
 		} catch (Exception e) {ErrorReport.print(e, "Run alignment"); }
 		
 		return (getNumErrors() == 0);

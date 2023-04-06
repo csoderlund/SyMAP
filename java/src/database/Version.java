@@ -5,7 +5,9 @@ package database;
  */
 import java.sql.ResultSet;
 import java.util.HashMap;
+import java.util.HashSet;
 
+import backend.Utils;
 import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
@@ -144,67 +146,124 @@ public class Version {
 		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
 	}
 	/****************************************************
-	 * 
+	 * -dbd
 	 */
 	private void updateDEBUG() {
 	try {
+		if (tableColumnExists("pairs", "proj_names")) return;
+		
+		long time = Utils.getTime();
 		System.out.println("Update DB debug");
-// projs.(idx,name)	
-		HashMap <Integer, String> projs = new HashMap <Integer, String> ();
+		
+// projs <idx, proj_name>	
+		HashMap <Integer, String> projIdxName = new HashMap <Integer, String> ();
 		ResultSet rs = pool.executeQuery("select idx, name from projects");
-		while (rs.next()) projs.put(rs.getInt(1), rs.getString(2));
-// grps.(idx,name)
-		HashMap <Integer, String> grps = new HashMap <Integer, String> ();
-		rs = pool.executeQuery("select idx, name from xgroups");
-		while (rs.next()) grps.put(rs.getInt(1), rs.getString(2));
-// pairs.(idx,proj1_idx, proj2_idx)	
-		HashMap <Integer, String> pairs = new HashMap <Integer, String> ();
+		while (rs.next()) projIdxName.put(rs.getInt(1), rs.getString(2));
+		
+// grps <idx, grpname>   <idx, proj_idx>
+		HashMap <Integer, String> grpIdxName = new HashMap <Integer, String> ();
+		rs = pool.executeQuery("select idx, name, proj_idx from xgroups");
+		while (rs.next()) grpIdxName.put(rs.getInt(1), rs.getString(2));
+
+// pairs <idx, proj1_idx:proj2_idx)	
+		HashMap <Integer, String> pairsProjs = new HashMap <Integer, String> ();
 		rs = pool.executeQuery("select idx, proj1_idx, proj2_idx from pairs");
 		while (rs.next()) {
 			int idx1 = rs.getInt(2);
 			int idx2 = rs.getInt(3);
-			String key = projs.get(idx1) + ":" + projs.get(idx2);
-			pairs.put(rs.getInt(1), key);
+			String key = projIdxName.get(idx1) + ":" + projIdxName.get(idx2);
+			pairsProjs.put(rs.getInt(1), key);
 		}
 		
-   // pairs.proj_names	
+   // add pairs.proj_names	
 		if (!tableColumnExists("pairs", "proj_names")) {
 			tableCheckAddColumn("pairs",  "proj_names",  "tinytext", "proj2_idx");
-			for (int pidx : pairs.keySet()) {
-				pool.executeUpdate("update pairs set proj_names='" + pairs.get(pidx) 
-					+ "' where idx=" + pidx);
+			for (int pidx : pairsProjs.keySet()) {
+				pool.executeUpdate("update pairs set proj_names='" + pairsProjs.get(pidx) + "' where idx=" + pidx);
 			}
 			System.out.println("Update pairs");
 		}
-	// xgroups.proj_name	
+	// add xgroups.proj_name	
 		if (!tableColumnExists("xgroups", "proj_name")) {
 			tableCheckAddColumn("xgroups",  "proj_name",  "tinytext", "fullname");
-			for (int pidx : projs.keySet()) {
-				pool.executeUpdate("update xgroups set proj_name='" + projs.get(pidx) 
-					+ "' where proj_idx=" + pidx);
+			for (int pidx : projIdxName.keySet()) {
+				pool.executeUpdate("update xgroups set proj_name='" + projIdxName.get(pidx) + "' where proj_idx=" + pidx);
 			}
 			System.out.println("Update xgroups");
 		}
-	// blocks.proj_names
+	// add blocks.proj_names, grp1name, grp2name
 		if (!tableColumnExists("blocks", "proj_names")) {
 			tableCheckAddColumn("blocks",  "proj_names", "tinytext", "pair_idx");
-			for (int pidx : pairs.keySet()) {
-				pool.executeUpdate("update blocks set proj_names='" + pairs.get(pidx) 
-				+ "' where pair_idx=" + pidx);
+			for (int pidx : pairsProjs.keySet()) {
+				pool.executeUpdate("update blocks set proj_names='" + pairsProjs.get(pidx) + "' where pair_idx=" + pidx);
 			}
 			System.out.println("Update blocks.pairs");
 		}
 		if (!tableColumnExists("blocks", "grp1")) {
 			tableCheckAddColumn("blocks",  "grp1",  "tinytext", "proj_names");	
 			tableCheckAddColumn("blocks",  "grp2",  "tinytext", "grp1");	
-			for (int gidx : grps.keySet()) {
-				pool.executeUpdate("update blocks set grp1='" + grps.get(gidx) 
-					+ "' where grp1_idx=" +gidx);
-				pool.executeUpdate("update blocks set grp2='" + grps.get(gidx) 
-					+ "' where grp2_idx=" +gidx);
+			for (int gidx : grpIdxName.keySet()) {
+				pool.executeUpdate("update blocks set grp1='" + grpIdxName.get(gidx) + "' where grp1_idx=" +gidx);
+				pool.executeUpdate("update blocks set grp2='" + grpIdxName.get(gidx) + "' where grp2_idx=" +gidx);
 			}
 			System.out.println("Update blocks.grps");
 		}
+		
+	// CAS540x -dbd add pseudo_annot_hit.pair_idx	THIS IS SLOW
+		HashSet <Integer> annotSet = new HashSet <Integer> ();
+		HashSet <Integer> hitSet = new HashSet <Integer> ();
+		rs = pool.executeQuery("select hit_idx, annot_idx from pseudo_hits_annot");
+		while (rs.next()) {
+			hitSet.add(rs.getInt(1));
+			annotSet.add(rs.getInt(2));
+		}
+		System.out.println("hits to genes: " + hitSet.size() + " " + annotSet.size());
+		
+		HashMap <Integer, Integer> hitPairMap = new HashMap <Integer, Integer> ();
+		rs = pool.executeQuery("select idx, pair_idx from pseudo_hits");
+		while (rs.next()) {
+			int idx = rs.getInt(1);
+			if (hitSet.contains(idx))
+				hitPairMap.put(idx, rs.getInt(2));
+		}
+		System.out.println("Hits to process for xpair_idx: " + hitPairMap.size());
+		
+		tableCheckAddColumn("pseudo_hits_annot",  "xpair_idx",  "integer", null);
+		int cnt=0;
+		for (int hidx : hitPairMap.keySet()) {
+			cnt++;
+			if (cnt%5000==0) System.out.print("   added " + cnt + " ....");
+			pool.executeUpdate("update pseudo_hits_annot set xpair_idx=" + hitPairMap.get(hidx) + " where hit_idx=" +hidx);
+		}
+		hitPairMap.clear(); hitSet.clear();
+		System.out.println("Update pseudo_hits_annot.pair_idx                \r");
+		
+	// CAS540x -dbd add pseudo_annot_hit.grp_idx and proj_idx
+	
+		HashMap <Integer, Integer> annotGrpMap = new HashMap <Integer, Integer> (); // annot_idx, grp_idx
+		
+		rs = pool.executeQuery("select idx, grp_idx from pseudo_annot");
+		while (rs.next()) {
+			int idx = rs.getInt(1);
+			if (annotSet.contains(idx))
+				annotGrpMap.put(idx, rs.getInt(2));
+		}
+		System.out.println("Annot to process for xgrp_idx: " + annotGrpMap.size());
+		
+		tableCheckAddColumn("pseudo_hits_annot",  "xgrp_idx",  "integer", null);	
+		
+		cnt=0;
+		for (int aidx : annotGrpMap.keySet()) {
+			cnt++;
+			if (cnt%5000==0) System.out.print("   added " + cnt + " ....\r");
+			int gidx = annotGrpMap.get(aidx);
+			pool.executeUpdate("update pseudo_hits_annot set xgrp_idx=" + gidx + " where annot_idx=" +aidx);
+		}
+		annotGrpMap.clear();
+		
+		rs.close();
+		System.out.println("Update pseudo_hits_annot.grp_idx");
+		Utils.timeDoneMsg(null, "Update ", time );
 		
 	}catch (Exception e) {ErrorReport.print(e, "Could not update database for debug");}
 	}
@@ -217,7 +276,9 @@ public class Version {
 			tableCheckDropColumn("blocks", "proj_names");
 			tableCheckDropColumn("blocks", "grp1");
 			tableCheckDropColumn("blocks", "grp2");
-			System.out.println("Remove blocks.grp1/2, and blocks/pairs/xgroups proj_names");
+			tableCheckDropColumn("pseudo_hits_annot", "xpair_idx");
+			tableCheckDropColumn("pseudo_hits_annot", "xgrp_idx");
+			System.out.println("Remove blocks.grp1/2, and blocks/pairs/xgroups proj_names, and pseudo_hits_annot proj/pair_idx");
 		}catch (Exception e) {ErrorReport.print(e, "Could not remove debug");}
 	}
 	/***************************************************************

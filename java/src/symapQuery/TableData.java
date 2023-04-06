@@ -200,7 +200,7 @@ public class TableData implements Serializable {
 
     public int getNumColumns() {
 		if(arrHeaders!=null) return arrHeaders.length;
-		if (vHeaders!=null) vHeaders.size();
+		if (vHeaders!=null) return vHeaders.size(); // CAS540 there was no 'return'
 		return 0;
     }
 
@@ -209,7 +209,17 @@ public class TableData implements Serializable {
 		if (vData!=null)	return vData.size();
 		return 0;
     }
-
+    public void clear() {
+    	arrHeaders = null;
+    	if(arrData != null) {
+    		for(int x=0; x<arrData.length; x++) arrData[x] = null;
+    		arrData = null;
+    	}
+    	vHeaders.clear();
+    	for(int x=0; x<vData.size(); x++) vData.get(x).clear();
+    	vData.clear();
+    }
+    
     public void sortByColumn(int column, boolean ascending) {
 		if (column == -1) return; // CAS504
 		arrHeaders[column].setAscending(ascending);
@@ -231,19 +241,6 @@ public class TableData implements Serializable {
 		}
 		catch (Exception e) {System.out.println(e.getMessage());};
     }
-
-    public void clear() {
-    	arrHeaders = null;
-    	if(arrData != null) {
-    		for(int x=0; x<arrData.length; x++) 
-    			arrData[x] = null;
-    		arrData = null;
-    	}
-    	vHeaders.clear();
-    	for(int x=0; x<vData.size(); x++)
-    		vData.get(x).clear();
-    	vData.clear();
-    }
     // XXX
     private class ColumnComparator implements Comparator<Object []> {
     	public ColumnComparator(int column) {
@@ -254,7 +251,7 @@ public class TableData implements Serializable {
     		if (nColumn == -1) return 0;
     		
     		String colHeader = arrHeaders[nColumn].getColumnName();
-    		
+ 		
 			if (colHeader.equals(Q.rowCol)) {
 				return 0;
 			}
@@ -369,10 +366,6 @@ public class TableData implements Serializable {
 		}
 		return line;
     }
-    
-    //attributes
-    //private boolean bReadOnly = false;  // CAS504 DELETE
-    //private String cashe something...   // CAS504 DELETE
     
     //Static data structures
     private TableDataHeader [] arrHeaders = null;

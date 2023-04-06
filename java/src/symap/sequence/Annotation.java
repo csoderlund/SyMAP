@@ -347,7 +347,7 @@ public class Annotation {
 		return descBox.containsP(p);
 	}
 	
-	// CAS516 popup from clicking gene or yellow box, CAS517 add hitList
+	// CAS516 popup from clicking gene, CAS517 add hitList
 	public void popupDesc(Component parentFrame, String name, String chr) { 
 	try {
 		if (!tag.contains("(")) return;
@@ -370,6 +370,8 @@ public class Annotation {
 			String [] hitWires = hitList.split(";");
 			for (String h : hitWires) msg += SeqData.formatHit(h);
 		}
+		if (Globals.TRACE) msg += "Idx=" + annot_idx + "\n"; // CAS540
+		
 		String title =  name + "; " + tagGeneN;
 		
 		if (parentFrame!=null) {

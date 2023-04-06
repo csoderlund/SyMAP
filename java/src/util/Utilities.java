@@ -51,7 +51,6 @@ import backend.Constants;
  * PopUps
  */
 public class Utilities {
-	private static boolean FULL_INT = true;
 	private static boolean TRACE = Constants.TRACE;
 	public static final Color HELP_PROMPT = new Color(0xEEFFEE); // CAS504 moved from dead file - for Help
 
@@ -366,7 +365,7 @@ public class Utilities {
         SimpleDateFormat sdf=new SimpleDateFormat("dd-MMM-yy"); 
         return sdf.format(date);
     }
-	       
+	// System.currentTimeMillis()     
 	public static String getDurationString(long duration) { // milliseconds
     	duration /= 1000;
     	long min = duration / 60; 
@@ -376,20 +375,17 @@ public class Utilities {
     	long day = hr / 24;
     	hr = hr % 24;
     	
-    	return (day > 0 ? day+" days " : "") + (hr > 0 ? hr+" hr " : "") + (min > 0 ? min+" min " : "") 
-    			+ sec + " sec";
+    	return (day > 0 ? day+"d:" : "") + (hr > 0 ? hr+"h:" : "") + (min > 0 ? min+"m:" : "") + sec + "s";
 	}
 	public static void timerStr(String msg, Date timeStart) {
 		Date now = new Date();
 		Long elapsed = now.getTime() - timeStart.getTime();
 		elapsed /= 1000;
 		String x = String.format("%-8s  ", msg);
-		if (elapsed <= 60)
-		{
+		if (elapsed <= 60) {
 			System.out.println(x + elapsed + "s");
 		}
-		else
-		{
+		else {
 			elapsed /= 60;
 			long sec = elapsed%60;
 			System.out.println(x + elapsed + "m:" + sec + "s");
@@ -399,7 +395,7 @@ public class Utilities {
 	static public long getNanoTime () {
  		return System.nanoTime(); 
 	}
-	static public String getTimeStr(long startTime) { // CAS533
+	static public String getNanoTimeStr(long startTime) { // CAS533
 		long et = System.nanoTime()-startTime;
 		long sec = et /1000000000;
 		return timerStr2(sec);
@@ -408,7 +404,7 @@ public class Utilities {
 		long et = System.nanoTime()-startTime;
 		long sec = et /1000000000;
 		String t = timerStr2(sec);
-		System.out.format("%-8s  %s\n", msg, t);
+		System.out.format("%-20s  %s\n", msg, t);
 		
 	}
 	
@@ -479,6 +475,15 @@ public class Utilities {
 		
 		return pane;
 	}
+	static public boolean showYesNo (String title, String msg) { // CAS540 add
+		String [] options = {"Yes", "No"};
+		int ret = JOptionPane.showOptionDialog(null, 
+				msg,
+				title, JOptionPane.YES_NO_OPTION, 
+				JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+		if (ret == JOptionPane.NO_OPTION) return false;
+		return true;
+	}
 	static public boolean showContinue (String title, String msg) {
 		String [] options = {"Continue", "Cancel"};
 		int ret = JOptionPane.showOptionDialog(null, 
@@ -546,16 +551,16 @@ public class Utilities {
 	public static void showOutOfMemoryMessage() { showOutOfMemoryMessage(null); }
 	
 	/*****************************************************************************/
-	// these 3 are also in SeqData
+	// these 3 are also in SeqData; CAS540 add , for dbp
 	public static String coordsStr(int start, int end) {
-		return String.format("%,d - %,d %dbp", start, end, (end-start+1)) ;
+		return String.format("%,d - %,d %,dbp", start, end, (end-start+1)) ;
 	}
 	public static String coordsStr(char o, int start, int end) {
-		return String.format("%c(%,d - %,d) %dbp", o, start, end, (end-start+1)) ;
+		return String.format("%c(%,d - %,d) %,dbp", o, start, end, (end-start+1)) ;
 	}
 	public static String coordsStr(boolean isStrandPos, int start, int end) {
 		String o = (isStrandPos) ? "+" : "-";
-		return String.format("%s(%,d - %,d) %dbp", o, start, end, (end-start+1)) ;
+		return String.format("%s(%,d - %,d) %,dbp", o, start, end, (end-start+1)) ;
 	}
 	
     // CAS508 - for writing to log
@@ -564,11 +569,11 @@ public class Utilities {
 		String x = len+"";
 		if (len>=1000000000) {
 			d = d/1000000000.0;
-			x = String.format("%.1fB", d);
+			x = String.format("%.2fB", d);
 		}
 		else if (len>=1000000) {
 			d = d/1000000.0;
-			x = String.format("%.1fM", d);
+			x = String.format("%.2fM", d);
 		}
 		else if (len>=1000)  {
 			d = d/1000.0;
@@ -578,7 +583,6 @@ public class Utilities {
 	}
   
     static public String kText(int len) { // CAS513 change to use NumberFormat
-    	if (FULL_INT) return String.format("%,d", len);
     	if (len>=10000) {
     		NumberFormat nf = NumberFormat.getNumberInstance();
     		nf.setMaximumFractionDigits(2);
@@ -716,8 +720,7 @@ public class Utilities {
         }
 	}
 	
-    private static String pad(String s, int width, int o)
-    {
+    private static String pad(String s, int width, int o){
 		if (s == null) return " ";
         if (s.length() > width) {
             String t = s.substring(0, width-1);

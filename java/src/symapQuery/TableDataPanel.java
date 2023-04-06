@@ -372,7 +372,7 @@ public class TableDataPanel extends JPanel {
     	boolean [] genColDef = FieldData.getGeneralColDefaults();
     	String [] genDesc= FieldData.getGeneralColDesc();
     	int nCol = FieldData.getGenColumnCount(isSingle);
-    	int newRow = (nCol>1) ? genCols.length-5 : 1; // CAS520 add a hit column
+    	int newRow = (nCol>1) ? genCols.length-6 : 1; // CAS520 add a hit column, CAS540 add hit score column
     	
     	JPanel row=null;
     	chkGeneralFields = new JCheckBox[nCol];
@@ -385,6 +385,11 @@ public class TableDataPanel extends JPanel {
     	    	row.setBackground(Color.WHITE);
     	    	row.setAlignmentX(Component.LEFT_ALIGNMENT);
     		}
+    		else {
+    			int width = GEN_COLUMN_WIDTH - chkGeneralFields[x-1].getPreferredSize().width;
+        		if (width > 0) row.add(Box.createHorizontalStrut(width));	
+        		row.add(Box.createHorizontalStrut(3)); 
+    		}
     		chkGeneralFields[x] = new JCheckBox(genCols[x]);
     		chkGeneralFields[x].setAlignmentX(Component.LEFT_ALIGNMENT);
     		chkGeneralFields[x].setBackground(Color.WHITE);
@@ -395,14 +400,11 @@ public class TableDataPanel extends JPanel {
         		public void mouseExited(MouseEvent e)  {setStatus("");}
         	});
     		chkGeneralFields[x].setSelected(genColDef[x]);
-    		if (x==0)chkGeneralFields[x].setEnabled(false); // CAS520 cannot remove because doesn't work to
-    		row.add(chkGeneralFields[x]);
-    		
-    		if (!genCols[x].startsWith("Pg")) {
-    			int width = GEN_COLUMN_WIDTH - chkGeneralFields[x].getPreferredSize().width;
-    			if (width > 0) row.add(Box.createHorizontalStrut(width));	
+    		if (x==0) {// CAS540x i was able to uncheck the row, don't know how...
+    			chkGeneralFields[x].setSelected(true);
+    			chkGeneralFields[x].setEnabled(false); // CAS520 cannot remove because doesn't work to
     		}
-    		row.add(Box.createHorizontalStrut(5));
+    		row.add(chkGeneralFields[x]);
     	}
     	retVal.add(row);
     	
@@ -812,6 +814,8 @@ public class TableDataPanel extends JPanel {
 		JFileChooser chooser = new JFileChooser(saveDir);
 		if (chooser.showSaveDialog(theParentFrame) != JFileChooser.APPROVE_OPTION) return;
 		if (chooser.getSelectedFile() == null)  return;
+		
+		boolean incRow = util.Utilities.showYesNo("Export CSV", "Include row number"); // CAS540 add check
 			
 		String saveFileName = chooser.getSelectedFile().getAbsolutePath();
 		if(!saveFileName.endsWith(".csv")) saveFileName += ".csv";
@@ -828,12 +832,16 @@ public class TableDataPanel extends JPanel {
 		
 		PrintWriter out = new PrintWriter(new FileWriter(new File(saveFileName)));
 		for(int x=0; x<theTable.getColumnCount()-1; x++) {
+			if (!incRow && x==0) continue; // CAS540 for row check
+			
 			out.print(reloadCleanString(theTable.getColumnName(x)) + ",");
 		}
 		out.println(reloadCleanString(theTable.getColumnName(theTable.getColumnCount()-1)));
 		
 		for(int x=0; x<selRows.length; x++) {
 			for(int y=0; y<theTable.getColumnCount()-1; y++) {
+				if (!incRow && y==0) continue; // CAS540 for row check
+				
 				out.print(reloadCleanString(theTable.getValueAt(selRows[x], y)) + ",");
 			}
 			out.println(reloadCleanString(theTable.getValueAt(selRows[x], theTable.getColumnCount()-1)));
@@ -850,10 +858,13 @@ public class TableDataPanel extends JPanel {
     }
     private static String reloadCleanString(Object obj) {
     	if(obj != null) {
-    		String val = obj.toString();
+    		String val = obj.toString().trim();
+    		if (val.equals("")) return "''";
+    		
     		val = val.replaceAll("[\'\"]", "");
     		val = val.replaceAll("\\n", " ");
-    		return "'" + val + "'";
+    		val = val.replaceAll(",", ";"); // CAS540 quit returning with ''; just replace comma
+    		return val;
     	}
     	else return "''";
 	}
@@ -1030,7 +1041,7 @@ public class TableDataPanel extends JPanel {
      */
     private void showRow() {
 		try{
-			if (isSingle) return;
+			//if (isSingle) return; // CAS540 it works for singles
 			if (theTable.getSelectedRowCount() != 1)  return;
 			
 			int row = theTable.getSelectedRows()[0];

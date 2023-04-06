@@ -65,10 +65,9 @@
 <h2>Details of 2D Alignment</h2>
 
 <p><u>SyMAP clusters hits as follows</u>:
-The raw anchor set consists of the hits found by MUMmer. When possible, multiple hits are clustered
-into a single hit. Clustering is by gene if the hits overlap annotation, otherwise, it uses a max separation 1kb,
-creating "putative gene" regions. The hits in a cluster are called <i>sub-hits</i>;
-all sub-hits of a cluster are on the same strand.
+The raw anchor set consists of the hits found by MUMmer. When hits are 'close', multiple hits are clustered
+into a single hit. The hits in a cluster are called <i>subhits</i>; the subhits of a cluster are either
+all in opposite strands or the same strands.
 
 <p><u>Alignment:</u> SyMAP uses Promer by default for analysis of two different genomes.
 Promer translates sequences, uses a fast suffix tree alignment algorithm, then converts the coordinates back to
@@ -85,14 +84,14 @@ if the gene strands are different, the hit strands will be different (!=).
 <!-------------------------------------------------------------->
 <a id="olap"></a>
 <h3>Overlap hits</h3>
-The Hit Information image on the lower left titled "Hit #28" shows the coordinates of the sub-hits. Some rules:
+The Hit Information image on the lower left titled "Hit #28" shows the coordinates of the subhits. Some rules:
 	<ol>
-	<li>The sub-hit column '#' in Track #1 corresponds to the column '#' in Track #2
+	<li>The subhit column '#' in Track #1 corresponds to the column '#' in Track #2
 	(e.g. the rows #2 align to each other).
-	<li>The sub-hit order is always relative to the alphabetically greater project name (e.g. Cabbage&gt;A.thal).
+	<li>The subhit order is always relative to the alphabetically greater project name (e.g. Cabbage&gt;A.thal).
 	<li>The coordinates are relative to the input genome sequences.
 	<li>Both lists are sorted by start coordinate, where the start is always listed before the end.
-	<li>Though two sub-hits may overlap (negative gap), they will not align to the same region on the opposite chromosome.
+	<li>Though two subhits may overlap (negative gap), they will not align to the same region on the opposite chromosome.
 	</ol>
 <table><tr>
 <td valign="top">
@@ -119,9 +118,9 @@ Viewing Track #2 on the right, #29.2 and #29.3 overlap but they do not overlap o
 <td>&nbsp;
 <td>
 	The <ttl>Hit Info</ttl> image on the left shows Track #1 has the hits all mixed up, whereas Track #2 has the hits all overlapping (negative gap).
-	<p>The first image below shows a partial view of the Track #1 non-overlapping dis-ordered sub-hits.
+	<p>The first image below shows a partial view of the Track #1 non-overlapping dis-ordered subhits.
 	The second image
-	shows Track #2 overlapping sub-hits, where they are piled on top of each other. It is better to use the text align to view Track #2.
+	shows Track #2 overlapping subhits, where they are piled on top of each other. It is better to use the text align to view Track #2.
 	<p>
 
 <small>Track #1 partial A.thal view</small>
@@ -140,21 +139,23 @@ Viewing Track #2 on the right, #29.2 and #29.3 overlap but they do not overlap o
 <h3>Trimmed alignments</h3>
 SyMAP extracts the sequence between the coordinates provided by MUMmer and aligns the sequence.
 When the sequences do not align fully, the alignment is trimmed.
-For example, Hit #6 has 7 sub-hits, of which 3 have some trimming:
+For example, Hit #6 has 7 subhits, of which 3 have some trimming:
 <table class="ty">
 <tr><td>&nbsp;<td colspan="2" style="text-align: center">Lengths<td colspan="2" style="text-align: center">Trimmed  (gaps)
-<tr><td>Sub-hit<td style="text-align: center">Input<td>Aligned<td style="text-align: center">Start<td style="text-align: center">End
+<tr><td>subhit<td style="text-align: center">Input<td>Aligned<td style="text-align: center">Start<td style="text-align: center">End
 <tr><td>#218.4<td>357, 351<td>368<td>0 (0,0)<td>5 (5,0)
 <tr><td>#218.5<td>366, 369<td>374<td>0 (0,0)<td>1 (0,0)
 <tr><td>#218.6<td>165, 165<td>165<td>1 (0,0)<td>7 (0,7)
 </table>
-<p>The MUMmer hit for sub-hit #6 is:
+<p>The MUMmer hit for subhit #6 is:
 <pre>
 [S1]     [E1]     [S2]    [E2]   [LEN 1][LEN 2][% IDY] [% SIM] [% STP] [FRM]   [TAGS]
 16505269 16505427 8884782 8884618 159   165     80.00   87.27	0.00    1 -1	Chr01 Chr04
 </pre>
+The MUMmer %identity is 80.00, whereas the alignment shows 86.7; MUMmer is a translated heuristic alignment whereas the
+SyMAP is a nucleotide dynamic programming alignment.
 <table>
-<tr><td>On the right is the sub-hit #6 alignment. The Start coordinate
+<tr><td>On the right is the subhit #6 alignment. The Start coordinate
 is 8884618 but the image shows 8884619, indicating the first base was trimmed, i.e.
 without trimming, it would display the start as shown below:
 <br><a href="img/alignStartTrim.png">

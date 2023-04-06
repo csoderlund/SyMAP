@@ -32,7 +32,6 @@ public static final String dbSeqType = 	"pseudo"; 	// name in database
 public static final String geneType = 	"gene";	  	// is this used?
 
 public static final int CHUNK_SIZE = 1000000;
-public static final double perBin = 0.8; // keep hits within 80% score of the topN hit
 
 // Write to logs:  	ProgSpec for program alignment output
 //					ProjectManagerFrameCommon.buildLog for SyMAP alignment output

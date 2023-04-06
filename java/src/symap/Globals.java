@@ -6,8 +6,8 @@ import java.awt.Cursor;
  * CAS534 added in order to move globals from SyMAP2d, SyMAPConstants and Manager
  */
 public class Globals {
-	public static final String 	VERSION = "v5.3.5"; // pre-v530 code can not read post-dbs
-	public static final String 	DATE = " (3-Mar-23)";
+	public static final String 	VERSION = "v5.4.0"; // was v536
+	public static final String 	DATE = " (6-Apr-23)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER =  5; 	 	// CAS512 v3, CAS520 v4, CAS522 v5
 	public static final String  DBVERSTR = "db" + DBVER;

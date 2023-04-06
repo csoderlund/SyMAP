@@ -14,6 +14,7 @@ public class HitData {
 	private boolean isBlock;
 	private boolean isCollinear;	// CAS520 add
 	private byte pctid, pctsim; 	// CAS515 add pctsim and nMerge
+	private int covScore;			// CAS540 best coverage
 	private int nMerge;
 	private double corr;			// CAS516 add
 	private String tag;				// CAS516 gNbN see MapperPool; CAS520 g(gene_overlap) [c(runnum.runsize)]
@@ -30,7 +31,7 @@ public class HitData {
 	// Update HitData PseudoHitData 
 	protected HitData(long id, int hitnum, String strand, int block,  double pctid, 
 			int start1, int end1, int start2, int end2, int overlap,
-			String query_seq, String target_seq, int pctsim, int nMerge, double corr, 
+			String query_seq, String target_seq, int pctsim, int nMerge, double corr, int covScore,
 			String tag, String chr1, String chr2)
 	{
 		this.id = id;
@@ -38,15 +39,17 @@ public class HitData {
 		this.blocknum = block;
 		this.isBlock = (blocknum>0) ? true : false;
 		this.pctid = (byte)pctid;
+		this.pctsim = (byte) pctsim;
+		this.covScore = covScore;
+		this.nMerge = nMerge;
+		this.corr = corr;
+		this.tag = tag;		// Set in MapperPool.setPseudoPseudoData as g(gene_overlap) c(runsize).(runnum)
 		this.start2 = start2;
 		this.end2 = end2;
 		this.query_seq = query_seq; 	// start1, end1
 		this.target_seq = target_seq;	// start2, end2
 		this.overlap = overlap;
-		this.pctsim = (byte) pctsim;
-		this.nMerge = nMerge;
-		this.corr = corr;
-		this.tag = tag;		// Set in MapperPool.setPseudoPseudoData as g(gene_overlap) c(runsize).(runnum)
+		
 		this.collinearSet = Utilities.getCollinear(tag); // CAS520
 		this.isCollinear = (collinearSet==0) ? false : true; // CAS520
 		
@@ -144,24 +147,16 @@ public class HitData {
 		String y = (isPosOrient2) ? "+" : "-";
 		return x+y;
 	}
-	/* hit data for Closeup (via PseudoPseudoData.toString() */
-	public String getHitData() {
-		String msg =  " Hit #" + hitnum + "\n";
 	
-		if (nMerge>0) msg += "Avg";
+	public String toString() 	{ // not used anywhere 
+		String msg =  " Hit #" + hitnum + "\n";
+		
+		if (nMerge>0) msg += "Approx";
 		msg += " %Id=" + pctid;
 		if (pctsim>0) msg += " %Sim=" + pctsim;
+		if (covScore>0) msg += " " + String.format("Cov=%,d", covScore);
 		if (nMerge>0) msg += " of " + nMerge + " hits ";
 		return msg;
-	}
-	// called for CloseUp Align
-	public String toString() 	{ 
-		String msg="";
-		if (nMerge>0) msg += " Avg";
-		msg += " %Id=" + pctid;
-		if (pctsim>0) msg += " %Sim=" + pctsim;
-		if (nMerge>0) msg += " of " + nMerge + " sub-hits";
-		return "Hit #" + hitnum + msg; 
 	}
 	public String getName()		{ return "Hit #" + hitnum;}
 	/********************************************************
@@ -172,10 +167,12 @@ public class HitData {
 		String o = (isPosOrient1==isPosOrient2) ? "(=)" : "(!=)"; // CAS517x
 		String msg =  "Block #" + getBlock() + x + "    Hit #" + hitnum + " " + o + " " + tag + "\n"; 
 		
-		if (nMerge>0) msg += "Avg";
-		msg += " %Id=" + pctid;
-		if (pctsim>0) msg += " %Sim=" + pctsim;
-		if (nMerge>0) msg += " of " + nMerge + " sub-hits";
+		String n = (nMerge>0) ? "Subhit=" + nMerge + "  " : "Subhit=1  ";
+		msg += n;
+		String op = (nMerge>0) ? "~" : "";
+		msg +=  "Id=" + op + pctid  + "%  ";
+		msg +=  "Sim="+ op + pctsim + "%  ";
+		msg +=  String.format("Cov=%s%,d", op, covScore);
 		
 		String msg1 = String.format("%-3s %s", chr1, Utilities.coordsStr(isPosOrient1, start1, end1)); 
 		String msg2 = String.format("%-3s %s", chr2, Utilities.coordsStr(isPosOrient2, start2, end2)); 

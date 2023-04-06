@@ -72,7 +72,7 @@ public class SyProj  {
             String name = rs.getString(2);
             String fullname = rs.getString(3);
             
-            Group grp = new Group(topN,name,fullname,idx,qt); 
+            Group grp = new Group(topN,name, displayName + "." + fullname,idx,qt); 
           	groupVec.add(grp);
           
             idx2Grp.put(idx,grp);
@@ -111,21 +111,18 @@ public class SyProj  {
 	// CAS535 public void checkPreFilter2(Hit hit, SubHit sh) {Group grp = idx2Grp.get(sh.grpIdx);grp.checkAddToHitBin2(hit,sh);}
 	
 	public void printBinStats(){
-		BinStats bs = new BinStats(); // this class is only used for printing 
+		BinStats bs = new BinStats();  
 
-		plog.msg("Stats:");
+		plog.msgToFile("Stats for " + name);
 		for (Group g : groupVec) {
 			g.collectBinStats(bs);
 			plog.msg(g.debugInfo());
 		}
-		if (bs.mNBins == 0) return;
-		
-		int avgSize =   Math.round(bs.mTotalSize/bs.mNBins);
-		float avgHits = Utils.simpleRatio(bs.mTotalHits, bs.mNBins);
-		
-		plog.msg(name + ": Seq: " + 
-				bs.mNBins + " bins, avg size " + avgSize + ", avg binned hits " + avgHits
-				+ ", hitsConsidered " + bs.mTotalHits  + ", removed " + bs.mHitsRm);
-		plog.msg("Complete Stats");
+		if (bs.mNBins == 0) {
+			plog.msgToFile("No Stats");
+			return;
+		}
+		plog.msgToFile(bs.debugInfoAS());
+		plog.msgToFile(bs.debugInfoHB());
 	}
 }

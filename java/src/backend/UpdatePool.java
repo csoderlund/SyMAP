@@ -16,6 +16,9 @@ import database.DBAbsUser;
  * 
  * CAS506 remove hasTables, getMaxID; a little rearrangement
  * CAS522 removed FPC
+ * CAS534 moved createProject, deleteProject, getProjIdx, etc  to Mproject 
+ * CAS535 saveAnnoHits used methods in multiple files including here; now all in AnchorsMain with PreparedStatement
+ *        old way is faster than PreparedStatement if innodb_flush_log_at_trx_commit=1;
  */
 
 public class UpdatePool extends DBAbsUser {
@@ -93,36 +96,4 @@ public class UpdatePool extends DBAbsUser {
 	public PreparedStatement prepareStatement(String st) throws SQLException{
 		return getDBconn().getConnection().prepareStatement(st);
 	}
-	/* CAS534 - moved all to Mproject
-	public void createProject(String name) throws SQLException {
-		executeUpdate("INSERT INTO projects (name,type,loaddate, syver) " + // CAS520 add version
-				"VALUES('" + name + "','pseudo',NOW(),'" + Globals.VERSION + "')");
-	}
-	public void deleteProject(int idx) throws SQLException {
-		executeUpdate("DELETE FROM projects WHERE idx='" + idx + "' LIMIT 1");	
-		resetIdx("idx", "projects"); // CAS520 add
-	}
-	public int getProjIdx(String name) throws SQLException {
-		int idx = -1;
-		ResultSet rs = executeQuery("SELECT idx FROM projects WHERE name='" + name + "'");
-		if (rs.next()) idx = rs.getInt("idx");
-		rs.close();
-		return idx;
-	}
-	public boolean projectExists(String name) throws SQLException {
-		ResultSet rs = executeQuery("SELECT idx FROM projects WHERE name='" + name + "'");
-		boolean exists = rs.next();
-		rs.close();
-		return exists;
-	}
-	public String getProjProp(int nProjIdx, String name) throws SQLException {
-		String val = "";
-		ResultSet rs = executeQuery(
-				"SELECT value FROM proj_props WHERE proj_idx='" + nProjIdx + "' " +
-				"AND name='" + name + "'");
-		if (rs.next()) val = rs.getString("value");
-		rs.close();
-		return val;
-	}
-	*/
 }

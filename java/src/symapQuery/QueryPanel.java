@@ -45,9 +45,10 @@ public class QueryPanel extends JPanel {
 
 		createQueryPanel();
 	}
-	public  boolean isOneAnno() { return annoOptRow.isEnabled() && annoOptRow.isOne(); }
-	public  boolean isTwoAnno() { return annoOptRow.isEnabled() && annoOptRow.isTwo(); }
-	private boolean isNoAnno() 	{ return annoOptRow.isEnabled() && annoOptRow.isThree(); }
+	public  boolean isEitherAnno() 	{ return annoOptRow.isEnabled() && annoOptRow.isOne(); }
+	public  boolean isOneAnno() 	{ return annoOptRow.isEnabled() && annoOptRow.isTwo(); }
+	public  boolean isBothAnno() 	{ return annoOptRow.isEnabled() && annoOptRow.isThree(); }
+	private boolean isNoAnno() 		{ return annoOptRow.isEnabled() && annoOptRow.isFour(); }
 	
 	private boolean isBlock() 	{ return blockOptRow.isEnabled() && blockOptRow.isOne(); }
 	private boolean isNotBlock(){ return blockOptRow.isEnabled() && blockOptRow.isTwo(); }
@@ -123,7 +124,6 @@ public class QueryPanel extends JPanel {
 		whereClause = joinBool(whereClause, anno, AND);
 	
 	// Selected project -
-		
 		String locSQL = makeSpChrWhere(); 
 		if (!locSQL.contentEquals("")) {
 			whereClause = joinBool(whereClause, locSQL, AND); // Specifies grp_idx
@@ -186,7 +186,10 @@ public class QueryPanel extends JPanel {
 					"(PH.annot1_idx=0 and PH.annot2_idx=0) AND PA.idx is null", AND); // 'is null' is necessary. 
 			
 			int n = isCollinearSize(true);
-			if (n>0) whereClause = joinBool(whereClause, "PH.runsize>=" + n, AND); // CAS517 was >
+			String op = "PH.runsize>=" + n;
+			if (coEQ.isSelected()) op = "PH.runsize=" + n;
+			else if (coLE.isSelected()) op = "PH.runsize>0 and PH.runsize<=" + n;
+			if (n>0) whereClause = joinBool(whereClause, op, AND); // CAS517 was >
 		}
 		return " FROM pseudo_hits AS " + Q.PH + join + " " + whereClause + "  ORDER BY PH.hitnum  asc"; // CAS520 was PH.idx
 	}	
@@ -372,18 +375,24 @@ public class QueryPanel extends JPanel {
 			retVal = joinStr(retVal, "Collinear set "+txtCollinearSet.getText().trim(), ";  ");
 		}
 		else if (isGeneNum()) {
-			retVal = joinStr(retVal, "Gene# "+txtGeneNum.getText().trim() + " (one side of hit)", ";  ");
+			retVal = joinStr(retVal, "Gene# "+txtGeneNum.getText().trim() + " (one side of hit only)", ";  ");
 		}
 		else {
 			if (isBlock())			retVal = joinStr(retVal, "Block hits", ";  ");
 			else if (isNotBlock()) 	retVal = joinStr(retVal, "No Block hits", ";  ");
 			
-			if (isOneAnno())		retVal = joinStr(retVal, "One Gene hit", ";  ");
-			else if (isTwoAnno())	retVal = joinStr(retVal, "Both Gene hits", ";  ");
+			if (isEitherAnno())		retVal = joinStr(retVal, "Either Gene hit", ";  ");
+			else if (isOneAnno())	retVal = joinStr(retVal, "One Gene hit", ";  ");
+			else if (isBothAnno())	retVal = joinStr(retVal, "Both Gene hits", ";  ");
 			else if (isNoAnno()) 	retVal = joinStr(retVal, "No Gene hits", ";  ");
 			
 			int n=isCollinearSize(false);
-			if (n>0)				retVal = joinStr(retVal, "Collinear size>= " + n, ";  ");
+			if (n>0) {
+				String op = ">=";
+				if (coEQ.isSelected()) op = "=";
+				else if (coLE.isSelected()) op = "<=";
+				retVal = joinStr(retVal, "Collinear size " + op + n, ";  ");
+			}
 			
 			if (isPgeneF()) {
 				retVal = joinStr(retVal, "Run PgeneF", ";  ");
@@ -562,25 +571,37 @@ public class QueryPanel extends JPanel {
 		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		panel.setBackground(Color.WHITE);
 		
-		blockOptRow = new OptionsRow("In Block (Synteny hit)", "Yes", "No", "", "All", 4, 150);
+		blockOptRow = new OptionsRow("In Block (Synteny hit)", "Yes", "No", "", "", "All", 5, 150);
 		blockOptRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 		panel.add(blockOptRow); panel.add(Box.createVerticalStrut(5));
 		
-		annoOptRow = new OptionsRow("Annotated (Gene hit)", "One", "Both", "None", "All", 4, 150);
+		annoOptRow = new OptionsRow("Annotated (Gene hit)", "Either", "One", "Both", "None", "All", 5, 150);
 		annoOptRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 		panel.add(annoOptRow); panel.add(Box.createVerticalStrut(5));
 		
-		JPanel row = new JPanel();
-		row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-		row.setAlignmentX(Component.LEFT_ALIGNMENT);
-		row.setBackground(Color.WHITE);
+		JPanel crow = new JPanel();
+		crow.setLayout(new BoxLayout(crow, BoxLayout.LINE_AXIS));
+		crow.setAlignmentX(Component.LEFT_ALIGNMENT);
+		crow.setBackground(Color.WHITE);
 		
-		lblCollinearN = new JLabel("Collinear size >=");
-		row.add(lblCollinearN); row.add(Box.createHorizontalStrut(3));
-		txtCollinearN = new JTextField(4); txtCollinearN.setBackground(Color.WHITE);
+		lblCollinearN = new JLabel("Collinear size ");
+		crow.add(lblCollinearN); crow.add(Box.createHorizontalStrut(3));
+		
+		txtCollinearN = new JTextField(3); txtCollinearN.setBackground(Color.WHITE);
 		txtCollinearN.setText("0"); txtCollinearN.setMaximumSize(txtCollinearN.getPreferredSize());
-		row.add(txtCollinearN);
-		panel.add(row); 
+		crow.add(txtCollinearN); crow.add(Box.createHorizontalStrut(15));
+		
+		coGE = new JRadioButton(">="); coGE.setBackground(Color.WHITE);
+		coEQ = new JRadioButton("=");  coEQ.setBackground(Color.WHITE);
+		coLE = new JRadioButton("<="); coLE.setBackground(Color.WHITE);
+		ButtonGroup g = new ButtonGroup();
+		g.add(coGE); g.add(coEQ); g.add(coLE);
+		coGE.setSelected(true);
+		crow.add(coGE); crow.add(Box.createHorizontalStrut(1));
+		crow.add(coEQ); crow.add(Box.createHorizontalStrut(1));
+		crow.add(coLE); crow.add(Box.createHorizontalStrut(1));
+		
+		panel.add(crow); 
 		
 		return panel;
 	}
@@ -852,12 +873,14 @@ public class QueryPanel extends JPanel {
 		setAllEnabled(true);
 		
 		txtAnno.setText("");
-		blockOptRow.setValue(4); // options
-		annoOptRow.setValue(4);  
+		blockOptRow.setValue(5); // options
+		annoOptRow.setValue(5);  
+		
 		txtCollinearN.setText("");
 		
 		txtBlock.setText(""); 			txtBlock.setEnabled(false);	chkBlock.setSelected(false);
 		txtCollinearSet.setText(""); 	txtCollinearSet.setEnabled(false);	chkCollinearSet.setSelected(false);
+		coGE.setSelected(true);
 		txtHitIdx.setText(""); 			txtHitIdx.setEnabled(false);   chkHitIdx.setSelected(false);
 		txtGeneNum.setText(""); 		txtGeneNum.setEnabled(false);  chkGeneNum.setSelected(false);
 		
@@ -877,7 +900,7 @@ public class QueryPanel extends JPanel {
 		blockOptRow.setEnabled(b); 
 		annoOptRow.setEnabled(b); 
 	
-		lblCollinearN.setEnabled(b); txtCollinearN.setEnabled(b);
+		lblCollinearN.setEnabled(b); txtCollinearN.setEnabled(b); coGE.setEnabled(b);coEQ.setEnabled(b);coLE.setEnabled(b);
 		
 		chkBlock.setEnabled(b);  		txtBlock.setEnabled(false); 		// only chkBlock enables
 		chkCollinearSet.setEnabled(b);  txtCollinearSet.setEnabled(false); 	// only chkColinear enables
@@ -909,22 +932,24 @@ public class QueryPanel extends JPanel {
 		private static final long serialVersionUID = -8714286499322636798L;
 		
 		private JLabel titleLabel;
-		private JRadioButton case1Button, case2Button, case3Button, ignButton;
+		private JRadioButton case1Button, case2Button, case3Button, case4Button, ignButton; // CAS540 add case4
 		private ButtonGroup group;
 		private Vector<ItemListener> listeners;
 		
-		public OptionsRow ( String titleText, String strCase1Text, 
-								String strCase2Text, String strCase3Text, String strIgnText, 
-										int nInitialValue, int width )
+		public OptionsRow ( String titleText, String strCase1Text, String strCase2Text, 
+						    String strCase3Text, String strCase4Text, String strIgnText, 
+							int nInitialValue, int width )
 		{
 			titleLabel    = new JLabel(titleText);
 			case1Button = 	new JRadioButton(strCase1Text);
 			case2Button = 	new JRadioButton(strCase2Text);
 			case3Button = 	new JRadioButton(strCase3Text);
+			case4Button = 	new JRadioButton(strCase4Text);
 			ignButton  = 	new JRadioButton(strIgnText);
 			
 		    group = new ButtonGroup();
-		    group.add(case1Button); group.add(case2Button); group.add(case3Button); group.add(ignButton);
+		    group.add(case1Button); group.add(case2Button); group.add(case3Button); 
+		    group.add(case4Button);group.add(ignButton);
 			
 			setLayout( new BoxLayout ( this, BoxLayout.X_AXIS ) );
 			super.setBackground(Color.WHITE);
@@ -934,12 +959,14 @@ public class QueryPanel extends JPanel {
 			if (!strCase1Text.equals(""))  	{ case1Button.setBackground(Color.WHITE);	add(case1Button); }
 			if (!strCase2Text.equals(""))	{ case2Button.setBackground(Color.WHITE);	add(case2Button); }
 			if (!strCase3Text.equals(""))	{ case3Button.setBackground(Color.WHITE);	add(case3Button); }
+			if (!strCase4Text.equals(""))	{ case4Button.setBackground(Color.WHITE);	add(case4Button); }
 			if (!strIgnText.equals(""))		{ ignButton.setBackground(Color.WHITE);		add(ignButton); }
 			
 			listeners = new Vector<ItemListener>();
 			case1Button.addItemListener(this);
 			case2Button.addItemListener(this);
 			case3Button.addItemListener(this);
+			case4Button.addItemListener(this);
 			ignButton.addItemListener(this);
 
 			setValue ( nInitialValue );
@@ -950,6 +977,7 @@ public class QueryPanel extends JPanel {
 			case1Button.setEnabled(enabled);
 			case2Button.setEnabled(enabled);
 			case3Button.setEnabled(enabled);
+			case4Button.setEnabled(enabled);
 			ignButton.setEnabled(enabled);
 		}
 		public boolean isEnabled() {return titleLabel.isEnabled();} // CAS514
@@ -964,19 +992,22 @@ public class QueryPanel extends JPanel {
 		public boolean isOne() 		{return case1Button.isSelected();}
 		public boolean isTwo()  	{return case2Button.isSelected();}
 		public boolean isThree()  	{return case3Button.isSelected();}
+		public boolean isFour()  	{return case4Button.isSelected();}
 		
 		public int getValue() {
 			if (case1Button.isSelected()) return 1;
 			if (case2Button.isSelected()) return 2;
 			if (case3Button.isSelected()) return 3;
-			return 4;
+			if (case4Button.isSelected()) return 4;
+			return 5;
 		}
 		public void setValue( int nVal ) {
 			switch ( nVal ) {
 			case 1: group.setSelected(case1Button.getModel(), true); break;
 			case 2:	group.setSelected(case2Button.getModel(), true); break;		
 			case 3:	group.setSelected(case3Button.getModel(), true); break;	
-			case 4:	group.setSelected(ignButton.getModel(), true); break;
+			case 4:	group.setSelected(case4Button.getModel(), true); break;	
+			case 5:	group.setSelected(ignButton.getModel(), true); break;
 			}
 		}
 		public void addItemListener(ItemListener l) {
@@ -989,10 +1020,11 @@ public class QueryPanel extends JPanel {
 			listeners.remove(l);
 		}
 		public String toString() {
-			if (case1Button.isSelected()) return titleLabel.getText() + " " + case1Button.getText();
+			if      (case1Button.isSelected()) return titleLabel.getText() + " " + case1Button.getText();
 			else if (case2Button.isSelected()) return titleLabel.getText() + " " + case2Button.getText();
 			else if (case3Button.isSelected()) return titleLabel.getText() + " " + case3Button.getText();
-			else if (ignButton.isSelected()) return titleLabel.getText() + " " + ignButton.getText();
+			else if (case4Button.isSelected()) return titleLabel.getText() + " " + case4Button.getText();
+			else if (ignButton.isSelected())   return titleLabel.getText() + " " + ignButton.getText();
 			else return "<blank>";
 		}
 	} // end Options class
@@ -1015,6 +1047,7 @@ public class QueryPanel extends JPanel {
 	private OptionsRow blockOptRow = null, annoOptRow=null;
 	private JTextField txtCollinearN = null;
 	private JLabel     lblCollinearN = null;
+	private JRadioButton coGE, coEQ, coLE;
 	
 	private JComboBox <String> cmbSingleOpt = null;
 	private JComboBox <String> cmbSingleSpecies = null;

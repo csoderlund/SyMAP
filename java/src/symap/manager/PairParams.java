@@ -18,6 +18,7 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 
 import util.Jhtml;
+import util.Utilities;
 
 /**********************************************
  * The parameter window for Alignment&Synteny
@@ -60,6 +61,9 @@ public class PairParams extends JDialog {
 			setValue(SYMBOLS[x], valMap.get(SYMBOLS[x]));
 	}
 	private void save() {
+		if (!checkInt("Min Dots", txtMinDots.getText())) return; // CAS540 add check
+		if (!checkInt("Top N", txtTopN.getText())) return;		 // CAS540 add check
+		
 		HashMap <String, String> fileMap = mp.getFileParams();
 		
 		for (String key : SYMBOLS) {
@@ -80,10 +84,20 @@ public class PairParams extends JDialog {
 		else if(symbol.equals(SYMBOLS[x++]))	return chkProOnly.isSelected()?"1":"0";
 		else return "";
 	}
-	
+	private boolean checkInt(String label, String x) {
+		int i = Utilities.getInt(x);
+		if (i==-1 || i==0) {
+			Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect integer. Must be >0.");
+			return false;
+		}
+		if (label.startsWith("Top") && i>4) {
+			return Utilities.showContinue("Top N", "Top N > 4 may produce worse results and take significantly longer.");
+		}
+		return true;
+	}
 	private void setValue(String symbol, String value) {
 		int x=0;
-		if(symbol.equals(SYMBOLS[x++]))		txtMinDots.setText(value);
+		if(symbol.equals(SYMBOLS[x++]))		    txtMinDots.setText(value);
 		else if(symbol.equals(SYMBOLS[x++]))	txtTopN.setText(value);
 		else if(symbol.equals(SYMBOLS[x++]))	chkMergeBlocks.setSelected(value.equals("1"));
 		else if(symbol.equals(SYMBOLS[x++]))	txtNucMerArgs.setText(value);

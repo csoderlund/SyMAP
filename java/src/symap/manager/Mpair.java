@@ -105,36 +105,47 @@ public class Mpair {
 	public boolean isReverse() { return bReverse;}
 	/***********************************************************************************
 	 */
-	public String getChangedParams(int type) {
+	public String getChangedParams(int type) {// AlignProjs and SumFrame
 		String msg="";
-		if (isChg(type, "self_args")) 	msg += "\nSelf args: "   + getSelfArgs(type);
-		if (isChg(type,"promer_args")) 	msg += "\nPROmer args: " + getPromerArgs(type);
-		if (isChg(type,"nucmer_args")) 	msg += "\nNUCmer args: " + getNucmerArgs(type);
-		if (isChg(type,"promer_only")) 	msg += "\nPROmer only";
-		if (isChg(type,"nucmer_only")) 	msg += "\nNUCmer only";
+		if (isChg(type, "self_args")) 	msg += "\n   Self args: "   + getSelfArgs(type);
+		if (isChg(type,"promer_args")) 	msg += "\n   PROmer args: " + getPromerArgs(type);
+		if (isChg(type,"nucmer_args")) 	msg += "\n   NUCmer args: " + getNucmerArgs(type);
+		if (isChg(type,"promer_only")) 	msg += "\n   PROmer only";
+		if (isChg(type,"nucmer_only")) 	msg += "\n   NUCmer only";
 		
-		if (isChg(type,"topn")) 		msg += "\nTop N: "    + getTopN(type);
-		if (isChg(type,"mindots")) 		msg += "\nMin dots: " + getMinDots(type);
-		if (isChg(type,"merge_blocks")) msg += "\nMerge blocks";
-		return msg;
+		if (isChg(type,"topn")) 		msg += "\n   Top N="    + getTopN(type);
+		if (isChg(type,"mindots")) 		msg += "\n   Min dots=" + getMinDots(type);
+		if (isChg(type,"merge_blocks")) msg += "\n   Merge blocks";
+		String p1 = mProj1.getAlignParams();
+		if (p1!="")						msg += "\n   " + p1; // CAS540 added projects params
+		String p2 = mProj2.getAlignParams();
+		if (p2!="")						msg += "\n   " + p2;
+		String fmsg = (msg=="") ? "Use default parameters" : "Non-default parameters: " + msg;
+		return fmsg + "\n";
 	}
-	public String getChangedAlign() {
+	public String getChangedAlign() {// AlignMain only
 		int type = FILE;
 		String msg="";
-		if (isChg(type, "self_args")) 	msg += "\nSelf args: "   + getSelfArgs(type);
-		if (isChg(type,"promer_args")) 	msg += "\nPROmer args: " + getPromerArgs(type);
-		if (isChg(type,"nucmer_args")) 	msg += "\nNUCmer args: " + getNucmerArgs(type);
-		if (isChg(type,"promer_only")) 	msg += "\nPROmer only";
-		if (isChg(type,"nucmer_only")) 	msg += "\nNUCmer only";
-		return msg;
+		if (isChg(type, "self_args")) 	msg += "\n   Self args: "   + getSelfArgs(type);
+		if (isChg(type,"promer_args")) 	msg += "\n   PROmer args: " + getPromerArgs(type);
+		if (isChg(type,"nucmer_args")) 	msg += "\n   NUCmer args: " + getNucmerArgs(type);
+		if (isChg(type,"promer_only")) 	msg += "\n   PROmer only";
+		if (isChg(type,"nucmer_only")) 	msg += "\n   NUCmer only";
+		String p1 = mProj1.getAlignParams();
+		if (p1!="")						msg += "\n   " + p1; // CAS540 added projects params
+		String p2 = mProj2.getAlignParams();
+		if (p2!="")						msg += "\n   " + p2;
+		String fmsg = (msg=="") ? "" : "\nNon-default parameters: " + msg;
+		return fmsg;
 	}
-	public String getChangedSynteny() {
+	
+	public String getChangedSynteny() { // SyntenyMain only
 		int type = FILE;
 		String msg="";
-		if (isChg(type,"topn")) 		msg += "\nTop N: "    + getTopN(type);
-		if (isChg(type,"mindots")) 		msg += "\nMin dots: " + getMinDots(type);
-		if (isChg(type,"merge_blocks")) msg += "\nMerge blocks";
-		return msg;
+		if (isChg(type,"mindots")) 		msg += "Min dots=" + getMinDots(type) + "  ";
+		if (isChg(type,"merge_blocks")) msg += "Merge blocks" + "  ";
+		String fmsg = (msg=="") ? "" : "\nNon-default parameters: " + msg;
+		return fmsg;
 	}
 	private boolean isChg(int type, String field) {
 		String db = (type==FILE) ? fileMap.get(field) : dbMap.get(field);

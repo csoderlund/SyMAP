@@ -64,12 +64,73 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 
 <h3>Summary of recent major releases</h3>
 <table class="tx">
+<tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved the detection of gene homology in the <ttb>Synteny</ttb> computation.
 <tr><td><a href="#v530">v5.3.1</a><td>(6-Jan-23)<td>Improved <a href="UserGuide.html#base">hit alignment</a> features.
 <tr><td><a href="#v530">v5.3.0</a><td>(10-Dec-22)<td>Updated database schema to remove all FPC tables.
 <tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="Collinear.html">viewing</a>
 <tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view2D"> 2D gene placement</a>
 </table>
 
+<a id="v540"></a>
+<h3>Release: v5.4.0 (6-Apr-23)</h3>
+This release focuses on improving the detection of gene homology in the <ttb>Synteny</ttb> computation.
+<br>For existing databases, re-run <ttl>Alignment&Synteny</ttl> using existing MUMmer files.
+<ul>
+<li><ttb>Synteny</ttb>:
+<ul>
+<li>Creating clustered hits has been improved for long genes.
+<li>Filtering hits has been updated to give preference when at least one end is a gene.
+<li>Details of changes:
+<small>
+<br>&rarr; Long genes with embedded genes are split, which helps detect hits to the embedded genes.
+<br>&rarr; When a candidate gene is created from hits, it is checked that it does not span a gene with no hits.
+Candidate genes used to be created using the maximum length of the annotated genes; this is now maximum size 100k.
+<br>&rarr; For finding the top N hits, the Max of query and target(summed subhits (minus overlaps)) of a clustered hit are used
+instead of summed query subhits.
+<br>&rarr; A clustered hit could have a mix of subhits that were on opposite strands and the same strand; this does not
+happen anymore. (This is rare.)
+<br>&rarr; %Identity was just using the query match; now it is Max(pct(query), pct(target)) where pct
+is the approximate average %identity of the subhits.
+<br>&rarr; %Similarity was the value of the first subhit of a clustered hit;
+now it is computed like the %Identity.
+<br>&rarr; Pair Parameters: The TopN and MinDots parameters are checked for integer and &gt;0.
+When A&amp;S is executed, the non-default parameters are printed to the terminal immediately.
+</small>
+<li>These changes increased the number of gene homology hits for Humans to Mouse (Chrs 5,17,X) from
+(68.6%, 57.0%) to (79.9%,66.3%), and for Humans to Chimpanzee (Chrs 5, X) from (53.9%, 54.6%) to
+(69.9%, 56.7%).
+<li>Note, these changes cause more hits to be saved, and hence, the synteny takes
+a little longer. It may also remove or add small blocks due to additional intervening hits.
+</ul>
+<li><ttb>Summary</ttb>: See <a href="UserGuide.html#sum" class="ext" target="_blank">Summary</a>.
+<ul>
+<li>The summary has been rewritten in a textual format which can be copied with copy & paste.
+<li>All hit and block statistics were computed in terms of <i>clustered hits</i>, which may have
+gaps and overlaps between the subhits. Now many of the statistics are in terms of the subhits, and it is
+clear as to whether clustered hits or their subhits are being used.
+<li>Collinear sets have been added to the summary.
+<li>The Project summary has exon stats, which have been removed from the <ttl>View</ttl>; the gene size ranges have
+been removed.
+<li>It states whether either input project had <ttl>Order Against</ttl> or <ttl>Mask genes</ttl> set.
+</ul>
+
+<li><ttb>Query</ttb>:
+<ul>
+<li><ttl>Hit Cov</ttl> is a new hit column, which is the maximum subhit coverage
+between the two species connected by the clustered hit. The <ttl>Hit Cov</ttl> is computed by summing
+the subhits and removing any overlap.
+<li><ttl>Annotated (Gene Hit)</ttl> has an additional option of <ttl>Either</ttl>.
+<li><ttl>Collinear size</ttl> now has the options of <ttl>&gt;=</ttl>, <ttl>=</ttl>, <ttl>&lt;=</ttl>.
+<li><ttl>Export CSV</ttl> has an option to not include row number column. This is useful for comparing two
+lists, where the row number can cause most rows to appear different. The quotes around columns have been
+removed; any comma's in the descriptions are replaced with ";".
+
+<li>The <ttl>Show</ttl> was disabled for singles; it has been enabled.
+</ul>
+<li><ttb>Chromosome Explorer</ttb>: The text of the Hit popup has been slightly changed and the Subhit
+coverage has been added (see <a href="UserGuide.html#popup" class="ext" target="_blank">Hit Popup</a>).
+<li>Developer: the Hit assignment algorithm has been restructured.
+</ul>
 <a id="v535"></a>
 <h3>Release: v5.3.5 (3-Mar-23)</h3>
 

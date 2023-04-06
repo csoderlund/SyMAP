@@ -4,73 +4,87 @@ import java.sql.ResultSet;
 import java.util.TreeMap;
 import java.util.Vector;
 
+import util.ProgressDialog;
+
 /**************************************
  * shared by SyProj and Groups for bins
+ * -s keys are recorded and printed
+ * -tt histograms are recorded and printed
  */
 public class BinStats {
-	int mNBins = 0;
-	long mTotalSize = 0;
-	int mTotalHits = 0;
-	int mHitsRm=0;
+	long mTotalLen = 0;
+	int mNBins = 0, mTotalHits = 0, mHitsRm = 0;
+	int nABins = 0, nAcnt=0, nArm=0, nAmix=0, nAmax=0;
 	
 	public BinStats(){}
 	
+	public String debugInfoAS() { // CAS540x
+		String avgSize =   String.format("%.2f", ((double)nAcnt/(double)nABins));
+
+		return String.format("#AnnoSets %-,5d  AvgAnno %-5s   Max %-,5d  Mix %-,5d   Removed %-,5d",
+				nABins, avgSize,  nAmax, nAmix, nArm);
+	}
+	public String debugInfoHB() { // CAS540x
+		int avgLen =   Math.round(mTotalLen/mNBins);
+		
+		String avgHits =   String.format("%.2f", Utils.simpleRatio(mTotalHits, mNBins));
+		
+		return String.format("#HitBins  %-,5d  AvgHits %-5s   AvgLen %-,5d    HitsConsidered %-,5d Removed %-,5d",
+				mNBins, avgHits, avgLen,  mTotalHits, mHitsRm);
+	}
 	/*****************************************************
-	 * Hists stats; CAS534 the Hists and Stats use to always be run, but now only if -s
+	 * Hists stats; CAS534 the Hists and Stats use to always be run, but now only if -s/-tt
 	 * CAS535 moved from Utils to BinStat as it only has the above few lines
 	 */
-	public  static TreeMap<String,Float> mStats;
-	private static Vector<String> mKeyOrder;
-	private static TreeMap<String,TreeMap<Integer,Integer>> mHist;
+	public  static TreeMap<String,Float> mStats = null;
+	private static Vector<String> mKeyOrder = null;
+	private static TreeMap<String,TreeMap<Integer,Integer>> mHist = null;
 		
 	public static void initStats() {
-		mStats = new TreeMap<String,Float>();	
-		mKeyOrder= new Vector<String>();
-		mHist = new TreeMap<String,TreeMap<Integer,Integer>>();
+		if (Constants.PRT_STATS) {
+			mStats = new TreeMap<String,Float>();	
+			mKeyOrder= new Vector<String>();
+		}
+		if (Constants.TRACE) 
+			mHist = new TreeMap<String,TreeMap<Integer,Integer>>();
 	}
-	public static void initHist(String key, Integer... levels) {
+	
+	public static void initHist(String key, Integer... levels) {//3,6,10,25,50,100
 		if (mHist==null) return;
+		
 		mHist.put(key, new TreeMap<Integer,Integer>());
 		for (Integer i : levels) {
 			mHist.get(key).put(i,0);
 		}
 		mHist.get(key).put(Integer.MAX_VALUE,0);
 	}
-	public static void incHist(String key, int val) throws Exception {
+	public static void incHist(String key, int num) throws Exception {
 		if (mHist==null) return;
-		int l = -1;
+		
+		int l = -1, last=0;
 		for (int lvl : mHist.get(key).keySet()) {
 			l = lvl;
-			if (val < lvl) break;
+			if (num < lvl) break;
+			last = lvl;
 		}
-		if (l == -1) {
-			throw(new Exception("Bad level: " + val));	
-		}
+		if (l == -1) l=last;	
+		
 		int curval = mHist.get(key).get(l);
 		curval++;
 		mHist.get(key).put(l,curval);
 	}
-	public static void incHist(String key, int val, int inc) throws Exception {
+	
+	public static void dumpHist(ProgressDialog log) { // CAS540 add log
 		if (mHist==null) return;
-		int l = -1;
-		for (int lvl : mHist.get(key).keySet()) {
-			l = lvl;
-			if (val < lvl) break;
-		}
-		if (l == -1) {
-			throw(new Exception("Bad level: " + val));	
-		}
-		int curval = mHist.get(key).get(l);
-		curval += inc;
-		mHist.get(key).put(l,curval);
-	}	
-	public static void dumpHist() {
-		if (mHist==null) return;
+		
 		for (String name : mHist.keySet()) {
-			System.out.println("Histogram: " + name);	
+			log.msgToFile("Histogram: " + name);	
 			for (int lvl : mHist.get(name).keySet()) {
 				int val = mHist.get(name).get(lvl);
-				if (val>0) System.out.println("<" + lvl + ":" + val);
+				if (val>0) {
+					if (lvl==Integer.MAX_VALUE) log.msgToFile(String.format(">=100: %5d", val));
+					else log.msgToFile(String.format("<%-3d: %5d", lvl, val));
+				}
 			}
 		}
 	}
@@ -78,23 +92,26 @@ public class BinStats {
 	 * Keyword stats
 	 */
 	public static void incStat(String key, float inc){
-		if (mStats != null) {
-			if (!mStats.containsKey(key)) {
-				mStats.put(key, 0.0F);	
-				mKeyOrder.add(key);
-			}
-			mStats.put(key, inc + mStats.get(key));
-		}
-	}
-	public static void dumpStats() {
 		if (mStats == null) return;
+		
+		if (!mStats.containsKey(key)) {
+			mStats.put(key, 0.0F);	
+			mKeyOrder.add(key);
+		}
+		mStats.put(key, inc + mStats.get(key));
+	}
+	public static void dumpStats(ProgressDialog log) {// CAS540 add log
+		if (mStats == null) return;
+		
 		for (String key : mKeyOrder) {
 			double val = mStats.get(key);
-			if (Math.floor(val)==val) System.out.format("%6d %s\n", (int)val, key);
-			else					  System.out.format("%6.2f %s\n", val, key);
+			if (Math.floor(val)==val) log.msgToFile(String.format("%6d %s\n", (int)val, key));
+			else					  log.msgToFile(String.format("%6.2f %s\n", val, key));
 		}
 	}
 	// CAS534 no reason to load these, only do it on -s; then remove the next time run.
+	// CAS540 (now dead) writes to symap.log now; never used from database so this is not currently called
+	//        was called in AnchorMain and SyntenyMain at end of processing
 	public static void uploadStats(UpdatePool db, int pair_idx, int pidx1, int pidx2) throws Exception {
 		if (mStats == null) return;
 		

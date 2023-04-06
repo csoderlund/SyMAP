@@ -56,7 +56,7 @@ public class DBdata {
 		makeSpLists(projList);
 		makeAnnoKeys(annoColumns);
 		makeGrpLoc(qPanel.getGrpCoords());
-		boolean isFilter = (qPanel.isOneAnno() || qPanel.isTwoAnno() || grpStart.size()>0); 
+		boolean isFilter = (qPanel.isEitherAnno() || qPanel.isOneAnno() || qPanel.isBothAnno() || grpStart.size()>0); 
 		
 		Vector <DBdata> rows = new Vector <DBdata> ();
 		HashMap <Integer, DBdata> hitMap = new HashMap <Integer, DBdata> ();
@@ -99,7 +99,7 @@ public class DBdata {
 			
 		// Filter
 			if (isFilter) {
-				if (Q.TEST_TRACE) System.err.println("Fil: " + qPanel.isOneAnno() + qPanel.isTwoAnno() + (grpStart.size()>0));
+				if (Q.TEST_TRACE) System.err.println("Fil: " + qPanel.isEitherAnno() + qPanel.isOneAnno() + qPanel.isBothAnno() + (grpStart.size()>0));
 				rowNum=0;
 				Vector <DBdata> filterRows = new Vector <DBdata> ();
 				for (DBdata dd : rows) {
@@ -359,6 +359,7 @@ public class DBdata {
 			if (hcnt==0) hcnt=1;				// CAS519 makes more sense to be 1 merge instead of empty
 			String s	=	rs.getString(Q.HST);
 			hst = (s.contains("+") && s.contains("-")) ? "!=" : "=";
+			hscore	=		rs.getInt(Q.HSCORE);
 			
 			// from anno table - first half of hit
 			int annoGrpIdx = rs.getInt(Q.AGIDX);	// grpIdx, so unique; same as chrIdx[0|1]
@@ -510,13 +511,16 @@ public class DBdata {
 				}
 				return found; // should always be true since some chr selected
 			}
-			
-			if (qPanel.isOneAnno()) {
+			// 'none' occurs in QueryPanel
+			if (qPanel.isEitherAnno()) {
+				if (annoSet0.size()==0 && annoSet1.size()==0) return false; // not either anno
+			}
+			else if (qPanel.isOneAnno()) {
 				if (annoSet0.size() >0 && annoSet1.size() >0) return false; // both anno
 				if (annoSet0.size()<=0 && annoSet1.size()<=0) return false; // both not anno
 			}
-			else if (qPanel.isTwoAnno()) {
-				if (annoSet0.size()<=0 || annoSet1.size()<=0) return false; // both anno
+			else if (qPanel.isBothAnno()) {
+				if (annoSet0.size()<=0 || annoSet1.size()<=0) return false; // not both anno
 			}
 			
 			if (grpStart.size()==0) return true;
@@ -575,7 +579,8 @@ public class DBdata {
 			if (pid<=0)			row.add(Q.empty);  else row.add(pid);
 			if (psim<=0)		row.add(Q.empty);  else row.add(psim);
 			if (hcnt<=0)		row.add(Q.empty);  else row.add(hcnt);
-			if (hst.contentEquals(""))		row.add(Q.empty);  else row.add(hst); // CAS520 add column
+			if (hst.contentEquals(""))	row.add(Q.empty);  else row.add(hst); // CAS520 add column
+			if (hscore<=0)		row.add(Q.empty);  else row.add(hscore); // CAS540 add column
 		}
 		// chr, start, end; CAS519 add gene&hit for pairs
 		int cntCol = FieldData.getSpColumnCount(isSingle);
@@ -662,6 +667,7 @@ public class DBdata {
 	private int hitIdx = -1, hitNum = -1;
 	private int pid = -1, psim = -1, hcnt=-1; 	// CAS516 add; 
 	private String hst="";						// CAS520 add column
+	private int hscore = -1;						// CAS540 add column
 	private int [] spIdx =  {Q.iNoVal, Q.iNoVal};	
 	private int [] chrIdx = {Q.iNoVal, Q.iNoVal};		
 	private int [] gstart = {Q.iNoVal, Q.iNoVal};  // CAS519 add all g-fields. 

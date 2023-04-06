@@ -166,6 +166,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		} catch (Exception e) {ErrorReport.print(e, "Check existing alignment files");} // CAS511 add try-catch
 		return false;
 	}
+	
 	/*********************************************************
 	 * Special method to remove GrpPrefix
 	 */
@@ -198,8 +199,19 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		}
 		catch (Exception e){ErrorReport.print(e, "Failed to update parameters");}
 	}
+	/*******************************************************
+	 * For Summary and AlignProg
+	 */
+	public String getAlignParams() { // CAS540
+		String msg="";
+		if (hasOrderAgainst()) msg = "Order against " + getOrderAgainst() + " ";
+		if (isMasked()) msg += "Mask genes ";
+		if (msg!="")    msg = strDisplayName + ": " + msg + "  ";
+		return msg;
+	}
 	/*************************************************************************
 	 * The View button on MF
+	 * CAS540 remove Average (in Summary now); change %Exon to #Exon
 	 */
 	public String loadProjectForView() { // CAS521 add to can see what was loaded
 	try {
@@ -218,11 +230,9 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 			chrLenMap.put(idx, len);
 		}
 		
-		long totGeneLen=0;
-		int totGenes=0, totExons=0;
 		String info="Project " + strDisplayName + "\n\n";
 		
-		String [] fields = {"Chr", "Length" ,"#Genes", "%Exons"}; // CAS534 add Exon columns
+		String [] fields = {"Chr", "Length" ,"#Genes", "#Exons"}; // CAS534 add Exon columns; 
 		int [] justify =   {1,    0,    0, 0};
 		int nRow = chrNameMap.size();
 	    int nCol=  fields.length;
@@ -233,33 +243,17 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	    	int idx = chrNameMap.get(name);
 	    	rs = dbUser.executeQuery("select count(*) from pseudo_annot where type='gene' and grp_idx=" + idx);
 	    	int geneCnt = (rs.next()) ? rs.getInt(1) : 0;
-	    	totGenes += geneCnt;
 	    	
 	    	rs = dbUser.executeQuery("select count(*) from pseudo_annot where type='exon' and grp_idx=" + idx);
 	    	int exonCnt = (rs.next()) ? rs.getInt(1) : 0;
-	    	totExons += exonCnt;
-	    	
-	    	rs = dbUser.executeQuery("select sum(end-start) from pseudo_annot where type='gene' and grp_idx=" + idx);
-	    	int geneLen = (rs.next()) ? rs.getInt(1) : 0;
-	    	totGeneLen += (long) geneLen;
-	    	
-	    	rs = dbUser.executeQuery("select sum(end-start) from pseudo_annot where type='exon' and grp_idx=" + idx);
-	    	int exonLen = (rs.next()) ? rs.getInt(1) : 0;
 	    	
 	    	rows[r][c++] = name;
 	    	rows[r][c++] = String.format("%,d",chrLenMap.get(idx));
 	    	rows[r][c++] = String.format("%,d",geneCnt);
-	    	rows[r][c++] = String.format("%.2f",((double)exonLen/(double)chrLenMap.get(idx))*100.0);
+	    	rows[r][c++] = String.format("%,d",exonCnt);
 	    	r++; c=0;
 	    }
 	    info += Utilities.makeTable(nCol, nRow, fields, justify, rows);
-	    
-	    // CAS534 add the following
-	    if (totGeneLen>0) {
-	    	info += String.format("\nAverage Gene Length:     %.2f", (double)totGeneLen/(double)totGenes);
-	    	info += String.format("\nAverage #Exons per Gene: %.2f", (double)totExons/(double)totGenes);
-	    }
-	    info += "\n";
 	    
 	    // get file dates CAS532 add the following; these are saved in proj_props
 	    String file="", fdate=null;

@@ -37,8 +37,8 @@ public class SyMAPQueryFrame extends JFrame {
 	static private String propNameSingle="SyMapColumns2"; 
 	
 	// ProjectManager creates this object, add the projects, then calls build.
-	public SyMAPQueryFrame(DBconn dr, Vector <Mproject> pVec) {
-		setTitle("SyMAP Query " + Globals.VERSION); // CAS514 add version
+	public SyMAPQueryFrame(String db, DBconn dr, Vector <Mproject> pVec) {
+		setTitle("SyMAP Query " + Globals.VERSION + " - " + db); // CAS514 add version; CAS540 add db
 		theReader = dr;
 		
 		theProjects = new Vector<Mproject> ();			// CAS532 change to pass project in (needed for column saving)
@@ -134,7 +134,7 @@ public class SyMAPQueryFrame extends JFrame {
 		}
 		if (saveLastColumns==null) saveLastColumns = makeColumnDefaults(bSingle);
 		
-		return saveLastColumns;
+		return saveLastColumns; // if this is null, TableDataPanel will use defaults
 	} catch (Exception e) {ErrorReport.print(e, "get last columns"); return null;}
 	}
 	// will be called when first table is created; CAS532 new for column saving
@@ -143,10 +143,10 @@ public class SyMAPQueryFrame extends JFrame {
 	try {
 		PersistentProps cookies = new PersistentProps(); 
 		String which = (bSingle) ? propNameSingle : propNameAll;
-		String propSelections = cookies.copy(which).getProp();
-		if (propSelections==null || propSelections.length()<5) return null;
+		String propSaved = cookies.copy(which).getProp();
+		if (propSaved==null || propSaved.length()<5) return null;
 	
-		String [] tok = propSelections.split(":");
+		String [] tok = propSaved.split(":");
 		if (tok.length!=2) return null;
 		int nSaveSp = Utilities.getInt(tok[0]);
 		if (nSaveSp<=1) return null;
@@ -194,26 +194,28 @@ public class SyMAPQueryFrame extends JFrame {
 	private void saveColumnDefaults() {
 	try {
 		String [] abbrev = getAbbrevNames();
-		boolean [] defs1 = getLastColumns(false);
 		
 		PersistentProps cookies = new PersistentProps();
 		PersistentProps allCook = cookies.copy(propNameAll);
 		
-		String d1 = abbrev.length + ":";
-		for (boolean b : defs1) {
-			d1 += (b) ? "1" : "0";
+		boolean [] defs1 = getLastColumns(false);
+		if (defs1!=null) { // CAS540 add check - .symap_saved_props may have been removed
+			String d1 = abbrev.length + ":";
+			for (boolean b : defs1) {
+				d1 += (b) ? "1" : "0";
+			}
+			allCook.setProp(d1);
 		}
-		allCook.setProp(d1);
-		
 		boolean [] defs2 = getLastColumns(true);
 		PersistentProps sngCook = cookies.copy(propNameSingle);
 		
-		String d2 = abbrev.length + ":";
-		for (boolean b : defs2) {
-			d2 += (b) ? "1" : "0";
-		}
-		sngCook.setProp(d2);
-		
+		if (defs2!=null) { // CAS540 add check
+			String d2 = abbrev.length + ":";
+			for (boolean b : defs2) {
+				d2 += (b) ? "1" : "0";
+			}
+			sngCook.setProp(d2);
+		}	
 	} catch (Exception e) {ErrorReport.print(e, "save columns");};
 	}
 	/*************************************************************/

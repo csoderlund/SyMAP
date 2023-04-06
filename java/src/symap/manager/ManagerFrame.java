@@ -1026,7 +1026,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				if (p.isLoaded()) pVec.add( p );
 			}
 			DBconn dr = DBconn.getInstance(Globals.DB_CONN_SYMAP, dbc);
-			SyMAPQueryFrame qFrame = new SyMAPQueryFrame(dr, pVec);
+			SyMAPQueryFrame qFrame = new SyMAPQueryFrame(dbName, dr, pVec);
 			qFrame.build();
 			qFrame.setVisible(true);
 		} 
@@ -1084,23 +1084,17 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (p==null) return;
 		
 		int projXIdx = p[0].getIdx();
-		int projYIdx = projXIdx; // default to self-alignment
-		if (p.length > 1)
-			projYIdx = p[1].getIdx();
+		int projYIdx = (p.length>1) ? p[1].getIdx() : projXIdx; 
 		
 		Mpair mp = getMpair(projXIdx, projYIdx);
 		if (mp==null) return;
 		
 		/* Swap x and y projects to match database - no longer necessary after #206; CAS534 no reason for this
 		if (pairMap.containsKey(projXIdx) && pairMap.get(projXIdx).contains(projYIdx)) {
-			int temp = projXIdx;projXIdx = projYIdx;projYIdx = temp;}
-		*/
+			int temp = projXIdx;projXIdx = projYIdx;projYIdx = temp;} */
 		// if (projYIdx == projXIdx) projYIdx = 0; // CAS500 allows self summary
 				
-		SumFrame frame = new SumFrame(dbc, projXIdx, projYIdx, mp);
-		frame.setSize( new Dimension(MIN_CWIDTH, MIN_HEIGHT) );
-		frame.setLocationRelativeTo(this); // CAS534 center
-		frame.setVisible(true);
+		new SumFrame(mfUser, mp, inReadOnlyMode, dbName); // CAS540 dialog made visible in SumFrame
 		
 		Utilities.setCursorBusy(this, false);		
 	}
@@ -1446,7 +1440,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (maxCPUs==-1) return;
 		if (!alignCheckProj()) return;
 		
-		System.out.println("\n---- Start all pairs: processing " + todoList.size() + " project pairs ---");
+		System.out.println("\n>>> Start all pairs: processing " + todoList.size() + " project pairs");
 		for (Mpair mp : todoList) {
 			mp.renewIdx(); // Removed existing
 			new AlignProjs().run(this, dbc, mp, true,  maxCPUs, checkCat.isSelected());
@@ -1465,6 +1459,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			Mpair mp = getMpair(mProjs[0].getIdx(), mProjs[1].getIdx());
 			if (mp==null) return;
 			
+			System.out.println("\n>>> Start Alignment&Synteny");
 			mp.renewIdx(); // Remove existing and restart
 			new AlignProjs().run(getInstance(), dbc, mp, false, nCPU, checkCat.isSelected());
 		}

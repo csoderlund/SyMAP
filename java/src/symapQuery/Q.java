@@ -60,13 +60,14 @@ public class Q {
 	static final int PSIM = 19;			// PH.cvgpct
 	static final int HCNT = 20;			// PH.countpct
 	static final int HST = 21;			// PH.strand
-	static final int COSIZE = 22;		// PH.runsize
-	static final int CONUM = 23;		// PH.runnum, CAS520 add
+	static final int HSCORE = 22;		// PH.score, CAS540 add
+	static final int COSIZE = 23;		// PH.runsize
+	static final int CONUM = 24;		// PH.runnum, CAS520 add
 	
-	static final int BNUM = 24;			// B.blocknum
-	static final int BSCORE = 25;		// B.blockscore
-	static final int ANNOT1IDX = 26;	// PH.annot1_idx
-	static final int ANNOT2IDX = 27;	// PH.annot2_idx
+	static final int BNUM = 25;			// B.blocknum
+	static final int BSCORE = 26;		// B.blockscore
+	static final int ANNOT1IDX = 27;	// PH.annot1_idx
+	static final int ANNOT2IDX = 28;	// PH.annot2_idx
 	
 	static final String ANNO = "ANNO";	// populated by keyword 
 	static final String GSIZE = "GSIZE";// computed PgFsize
@@ -100,6 +101,7 @@ public class Q {
 			"pctid               TINYINT UNSIGNED NOT NULL," +    // Col6, Avg %ID CAS515 
 			"countpct			INTEGER UNSIGNED default 0," +  // unused 0; CAS515 number of merged, tinyint->integer
 		    "cvgpct				TINYINT UNSIGNED NOT NULL," +  //was unused 0 -> CAS515 Col7 %sim
+		    "score				 INTEGER default 0,"
 			
 			
 	 * pseudo_block_hits

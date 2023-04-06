@@ -7,17 +7,16 @@ import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
 
+/********************************************
+ * CAS504 moved from scripts/symap.sql to here. Called in DatabaseUser.createDatabase
+ * Put it here now so I can add comments and I moved some tables...
+ * CAS506 MySQL v8 uses groups as a keyword, so changed ALL groups to xgroups
+ * The update schema code was all over the place. So added mysql version and update
+ * CAS522 remove FPC
+ */
 public class Schema {
 
 	public Schema(Connection conn) {
-		/********************************************
-		 * CAS504 moved from scripts/symap.sql to here. Called in DatabaseUser.createDatabase
-		 * Put it here now so I can add comments and I moved some tables...
-		 * CAS506 MySQL v8 uses groups as a keyword, so changed ALL groups to xgroups
-		 * The update schema code was all over the place. So added mysql version and update
-		 * CAS522 remove FPC
-		 */
-		
 		mConn = conn;
 // Projects
 		String sql = "CREATE TABLE props (" +
@@ -55,7 +54,7 @@ public class Schema {
 		    "name                    VARCHAR(40) NOT NULL," +
 		    "fullname                VARCHAR(40) NOT NULL," +
 		    "sort_order              INTEGER UNSIGNED NOT NULL," +
-			"flipped					 BOOLEAN default 0," +
+			"flipped				 BOOLEAN default 0," +
 		    "PRIMARY KEY (idx)," +
 		    "UNIQUE INDEX (proj_idx,name)," +
 		    "FOREIGN KEY (proj_idx) REFERENCES projects (idx) ON DELETE CASCADE" +
@@ -68,8 +67,9 @@ public class Schema {
 		    "proj2_idx               INTEGER NOT NULL," +
 			"aligned				BOOLEAN default 0," +
 		    "aligndate				datetime," +
-		    "syver			tinytext," +	// CAS520 version of load sequence and/or annotation
+		    "syver					tinytext," +	// CAS520 version of load sequence and/or annotation
 			"params					VARCHAR (128)," +	// CAS511
+		    "summary				text, " +		// CAS540 (no DB update, will create in SumFrame)
 		    "UNIQUE INDEX (proj1_idx,proj2_idx)," +
 		    "FOREIGN KEY (proj1_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj2_idx) REFERENCES projects (idx) ON DELETE CASCADE" +

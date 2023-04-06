@@ -247,8 +247,7 @@ you are performing queries on more than 4-5 genomes at once.
 <a id="installation"></a>
 <h3>Installation</h3>
 
-Installation consists of unzipping the download package, using
-the command
+Installation consists of unzipping the download tarball using the command
 <pre>     &gt; tar -xf symap_5.tar.gz</pre>
 This can be done anywhere and it creates a directory called <tt>symap_5</tt>. You can
 move this directory later if desired. The contents are:
@@ -256,11 +255,19 @@ move this directory later if desired. The contents are:
    LICENSE   README   data/   ext/   java/
    scripts/  symap    symap.config   viewSymap
 </pre>
-The <tt>data/</tt> directory contains a <tt>/seq</tt> sub-directory,
+<b>Data</b>: The <tt>data/</tt> directory contains a <tt>/seq</tt> sub-directory,
 which contains the demo files, and is the default location for all input sequence files.
 
-<p>The <tt>ext/</tt> directory contains the external programs MUMmer<sup>1,2</sup> (sequence alignment)
-and MUSCLE<sup>7</sup> (<a href="./Query.html#but" class="ext" target="_blank">Queries</a>).
+<p><b>Externals</b>: The <tt>ext/</tt> directory contains the external programs MUMmer<sup>1,2</sup> (for sequence alignment)
+and MUSCLE<sup>7</sup> (for <a href="./Query.html#but" class="ext" target="_blank">Queries</a>).
+
+The directory contains:
+<pre>
+	README		mummer/		mummer4/	muscle/
+</pre>
+For MUMmer, see <a href="MUMmer.html#ext" class="ext" target="_blank">Executables</a>
+and <a href="MUMmer.html#mum4" class="ext" target="_blank">Using MUMmer4</a>.
+On MacOS, you may also need <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS externals</a>.
 
 <!---------------------------------------------------------->
 <!---------------------------------------------------------->
@@ -288,8 +295,8 @@ Creating database 'symapDemo' (jdbc:mysql://localhost/symapDemo?characterEncodin
 see <a href="TroubleShoot.html#msqslow" class="ext" target="_blank">Trouble Shoot MySQL</a>.
 <p>It will also
 check that the provided external programs (e.g. MUMmer) are executable; if it shows any problems,
-see <a href="MUMmer.html#ext" class="ext" target="_blank">MUMmer Executables</a>.
-For MacOS, you may also need <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS and external programs</a>.
+see <a href="MUMmer.html#ext" class="ext" target="_blank">Executables</a>.
+For MacOS, you may also need <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS externals</a>.
 <p>
 <a id="demoseq"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -306,7 +313,7 @@ Check <ttl>Demo-Seq</ttl> and <ttl>Demo-Seq2</ttl>.
 
 <tr><td style="vertical-align: text-top;">
 
-A link <ttb>Load All Projects</ttb> will be displayed in the top of the right panel; select it to
+A link <ttb>Load All Projects</ttb> will be displayed at the top of the right panel; select it to
 load the projects, which will take several minutes.
 <p>If loading the "Demo-Seq" takes
 <i>more than a few minutes</i>, you may need to adjust the MySQL parameters, see
@@ -777,14 +784,11 @@ MUMmer files will be used, which <i><b>saves a lot of time</b></i>.
 
 <a id="exe"></a>
 <h4>External programs</h4>
-The alignment programs are provided in the <tt>symap/ext</tt> directory. There are
-executables for 64-bit Linux and 64-bit MacOS. SyMAP will
-select the correct directory for the machine you are running from, i.e. you
-do not need to do anything.
+See <a href="#installation">Installation</a>.
 
 <a id="mum"></a>
 <h4>MUMmer with SyMAP details</h4>
-As of SyMAP v5.0.8, all MUMmer details have been put in a separate document,
+All MUMmer details are in a separate document,
 see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 This includes trouble shooting when MUMmer fails, and running MUMmer outside of SyMAP.
 
@@ -836,8 +840,8 @@ done by clustering the hit regions on each sequence, and then defining new "gene
 hits which connect these regions. For example if three separate
 exons hit between two genes, they will be clustered into one "gene"
 hit having a combined score equal to the sum of the raw hit scores.
-Clustering is by gene if the hits overlap annotation, otherwise, it uses
-a max separation 1kb, creating "putative gene" regions.
+Clustering is by gene if the hits overlap annotation, otherwise, it creates
+"candidate genes" from hits that do no overlap annotation.
 <p>
 <i>Anchor Filtering:</i><br>
 The clustered "gene anchors" are now filtered using a version of
@@ -848,7 +852,7 @@ connected by a clustered anchor, the retained anchors must be among
 ancestral whole-genome duplication). An anchor will also be retained if its
 score is at least 80% of that of the 2nd-best anchor on each side (this
 allows for retention of gene family anchors). These filter parameters
-may be adjusted through the Alignment &amp; Synteny Parameters window.
+may be adjusted through the Alignment&amp;Synteny Parameters window.
 <p>
 <i>Synteny Block Detection:</i><br>
 After the clustered anchors are loaded into the database,  the synteny
@@ -888,6 +892,7 @@ see if there are any <tt>/scripts</tt> or <tt>/ext</tt> changes that need to als
 <p>The following table shows what versions require action by the user.
 <table class=ty>
 <tr><td><b>Release</b><td><b>Changed files</b><sup>1</sup><td><b>Action by User</b>
+<tr><td>v5.4.0 <td>Only the <tt>symap.jar</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
 <tr><td>v5.2.0 <td><tt>symap</tt>, <tt>viewSymap</tt>, <tt>scripts/ConvertNCBI.*</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
 <tr><td>v5.1.9 to v5.1.7<td>Only the <tt>symap.jar</tt><td>See <sup>3</sup>. If you have customized hit or gene colors, you will need to reset them.
 </table>

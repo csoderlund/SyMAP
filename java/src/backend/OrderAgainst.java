@@ -61,7 +61,7 @@ public class OrderAgainst {
 		mLog.msg("\nOrdering " + pDraft.getDBName() + " contigs against " + pTarget.getDBName());
 		mLog.msg("   Original ordering algorithm - flips contigs in database.");
 		
-		long startTime = System.currentTimeMillis();
+		long startTime = Utils.getTime();
 		ResultSet rs;
 		TreeSet<Integer> alreadyFlipped = new TreeSet<Integer>();
 	
@@ -370,7 +370,7 @@ public class OrderAgainst {
 		grpParamW.write("category = " + pDraft.getdbCat() + "\ndisplay_name=" + dispName + "\n");
 		grpParamW.write("grp_prefix=" + pTarget.getGrpPrefix() + "\n");
 		grpParamW.close();
-		Utils.timeDoneMsg(mLog, startTime, "Order"); // CAS520 add time
+		Utils.timeDoneMsg(mLog, "Order", startTime); // CAS520 add time
 	}
 	catch (Exception e) {ErrorReport.print(e, "Ordering sequence"); }
 	}

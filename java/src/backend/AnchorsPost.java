@@ -14,25 +14,38 @@ import util.Utilities;
 
 /**************************************************
  * Computes the collinear sets (pseudo_hits.runsize, runnum) and 
- * 		number hits per gene (pseudo_annot.numHits) and hitnum and block (pseudo_hits)
+ * 	the term 'run' is used here for collinear (run/set)
  * 9/21/22 move setGeneNumCounts from SyntenyMain
  * CAS512 MOVED compute genenum from SyntenyMain to AnnotLoadMain
- * CAS517 started updating, but got side-tracked
- * CAS520 added setAnnot, setHit and rewrote collinearSets
- * the term 'run' is used here for collinear (run/set)
+ * CAS520 added setAnnot, setHitNum and rewrote collinearSets
+ * CAS540 moved setHitNum to AnchorsMain
  */
 
 public class AnchorsPost {
-	private boolean debug = false; // Globals.DEBUG;
+	private boolean debug = false; 
 	private boolean test = true;
+	private boolean bSetHitCnts = false; // Collinear not called if either has 0 annot
 	
 	private int mPairIdx; // project pair 
 	private ProgressDialog mLog;
 	private UpdatePool pool;
 	private SyProj mProj1, mProj2;
-	private int countUpdate=0, totalMerge=0, totalMult=0;
+	private int totalMerge=0, totalMult=0, finalRunNum=0;
 	private int [] cntSizeSet = {0,0,0,0,0};
 	
+	// initial
+	private TreeMap<Integer,Hit> hitMap = new TreeMap<Integer,Hit>(); 	
+
+	private TreeMap <Integer, Gene> geneMap1 = new TreeMap <Integer, Gene> (); // gnum, gene
+	private TreeMap <Integer, Gene> geneMap2 = new TreeMap <Integer, Gene> (); // gnum, gene
+	private HashMap <Integer, Integer> gidxtnumA = new HashMap <Integer, Integer> (); // idx, gnum for 1st numbering
+	private HashMap <Integer, Integer> gidxtnumB = new HashMap <Integer, Integer> (); // idx, gnum for collapse numbering
+	
+	// geneMap1 and geneMap2 are transferred to geneMapF and geneMapR
+	private TreeMap <Integer, Gene> geneMapF = new TreeMap <Integer, Gene> (); // gnum, gene with =
+	private TreeMap <Integer, Gene> geneMapR = new TreeMap <Integer, Gene> (); // gnum, gene with !=
+	private String chrs;
+		
 	public AnchorsPost(int pairIdx, SyProj proj1, SyProj proj2, UpdatePool xpool, ProgressDialog log) {
 		mPairIdx = pairIdx;
 		mProj1 = proj1;
@@ -45,18 +58,22 @@ public class AnchorsPost {
 	 */
 	public void collinearSets() {
 		try {
+			if (bSetHitCnts) { 
+				mLog.msg("Setting gene-hit counts    ");
+				for (Group g1 : mProj1.getGroups()) if (!setAnnotHits(g1)) return;
+				for (Group g2 : mProj2.getGroups()) if (!setAnnotHits(g2)) return;
+			}
 			pool.executeUpdate("update pseudo_hits set runsize=0, runnum=0 where pair_idx=" + mPairIdx);
 			
 			int num2go = mProj1.getGroups().size() * mProj2.getGroups().size();
 			mLog.msg("Finding Collinear sets");
-			long time = System.currentTimeMillis();
+			long time = Utils.getTime();
 			
 			for (Group g1 : mProj1.getGroups()) {
 				for (Group g2: mProj2.getGroups()) {
 					System.err.print(num2go + " pairs remaining...            \r");
 					num2go--;
 					
-					if (!setPseudoHits(g1, g2)) continue;
 					if (g1.idx==g2.idx) continue; 		// CAS521 can crash on self-chr
 					
 					if (!step0BuildSets(g1, g2)) return;
@@ -66,65 +83,19 @@ public class AnchorsPost {
 				if (Cancelled.isCancelled()) return; // CAS535 there was no checks
 			}
 			if (debug) Utils.prtNumMsg(mLog, totalMult, "Total multi hits");
-			Utils.prtNumMsg(mLog, countUpdate, "Updates                          ");
-			Utils.timeDoneMsg(mLog, time, "Collinear");
+			// CAS540 computed counts are not right; just get from db
+			int nsets = pool.getInt("SELECT count(DISTINCT(runnum)) FROM pseudo_hits WHERE runnum>0 and pair_idx=" + mPairIdx);
+			int nhits = pool.getInt("SELECT count(*) FROM pseudo_hits WHERE runnum>0 and pair_idx=" + mPairIdx);
+			Utils.prtNumMsg(mLog, nsets, "Collinear sets                          ");
+			Utils.prtNumMsg(mLog, nhits, "Updates                          ");
+			Utils.timeDoneMsg(mLog, "Collinear", time);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Compute colinear genes"); }
 	}
-	
-	/***************************************************************
-	 * CAS520 creates a hitnum to use for display, which is sequential and does not change on reload
-	 * CAS520 add block to pseudo_hits, as it saves painful joins
-	 * The code is here because it was the easiest place to put it.
-	 */
-	private boolean setPseudoHits(Group g1 , Group g2) {
-		try {
-			pool.executeUpdate("update pseudo_hits set hitnum=0, runnum=0, runsize=0 "
-					+ " where grp1_idx= " + g1.idx + " and grp2_idx=" + g2.idx);
-			
-			HashMap <Integer, Integer> hitNumMap = new HashMap <Integer, Integer> ();
-		// assign
-			int hitcnt=1;
-			ResultSet rs = pool.executeQuery("select idx, (end1-start1) as len from pseudo_hits "
-					+ " where grp1_idx= " + g1.idx + " and grp2_idx=" + g2.idx
-					+ " order by start1 ASC, len DESC");
-			while (rs.next()) {
-				int hidx = rs.getInt(1);
-				hitNumMap.put(hidx, hitcnt);
-				hitcnt++;
-			}
-			rs.close();
-			
-		// save	
-			PreparedStatement ps = pool.prepareStatement("update pseudo_hits set hitnum=? where idx=?");
-			for (int idx : hitNumMap.keySet()) {
-				int num = hitNumMap.get(idx);
-				ps.setInt(1, num);
-				ps.setInt(2, idx);
-				ps.addBatch();
-			}
-			ps.executeBatch();
-			return true;
-		}
-		catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); return false;}
-	}
-	
+		
 /*****************************************************************************************************
  *                    COLLINEAR SETS between two chromosomes
  */	
-	// initial
-	private TreeMap<Integer,Hit> hitMap = new TreeMap<Integer,Hit>(); 	
-
-	private TreeMap <Integer, Gene> geneMap1 = new TreeMap <Integer, Gene> (); // gnum, gene
-	private TreeMap <Integer, Gene> geneMap2 = new TreeMap <Integer, Gene> (); // gnum, gene
-	private HashMap <Integer, Integer> gidxtnumA = new HashMap <Integer, Integer> (); // idx, gnum for 1st numbering
-	private HashMap <Integer, Integer> gidxtnumB = new HashMap <Integer, Integer> (); // idx, gnum for collapse numbering
-	
-	// geneMap1 and geneMap2 are transferred to geneMapF and geneMapR
-	private TreeMap <Integer, Gene> geneMapF = new TreeMap <Integer, Gene> (); // gnum, gene with =
-	private TreeMap <Integer, Gene> geneMapR = new TreeMap <Integer, Gene> (); // gnum, gene with !=
-	private int finalRunNum=0;
-	private String chrs;
 	
 	private boolean step0BuildSets(Group g1, Group g2) {
 	chrs = g1.fullname + ":" + g2.fullname;
@@ -191,7 +162,7 @@ public class AnchorsPost {
 					hObj = new Hit(inv, hidx, hitnum, gidx1, gidx2, blocknum);
 					hitMap.put(hitnum, hObj);
 				}
-				else if (test) System.out.println("SyMAP error: two " + hitnum); 
+				else if (test) System.out.println("SyMAP error: two hitnum=" + hitnum); 
 			}
 			// only returns one side of hit; this is to find where a hit aligns to overlapping genes
 			rs = pool.executeQuery(
@@ -449,7 +420,6 @@ public class AnchorsPost {
 				ps.setInt(2, hObj.frunnum);
 				ps.setInt(3, hObj.hidx);
 				ps.addBatch();
-				countUpdate++;
 			}
 		}
 		ps.executeBatch();
@@ -614,14 +584,7 @@ public class AnchorsPost {
 		private int idx, genenum, start, end;
 		private boolean isOlap=false, bPosStrand=true;
 	}
-/*****************************************************
-	 * CAS520 add pseudo_annot.numhits; but not used yet
-	 * 
-	 called in collinearSet method 
-			System.err.print("   setting gene counts...        \r");
-			for (Group g1 : mProj1.getGroups()) if (!setAnnotHits(g1)) return;
-			for (Group g2 : mProj2.getGroups()) if (!setAnnotHits(g2)) return;
-			
+	// Wrote in CAS520,  is for all projects; need p1xp2 columns
 	private boolean setAnnotHits(Group g1 ) {
 		try {
 			pool.executeUpdate("update pseudo_annot set numhits=0 where grp_idx=" + g1.idx);
@@ -653,6 +616,5 @@ public class AnchorsPost {
 		}
 		catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); return false;}
 	}
-	**/
 }
 

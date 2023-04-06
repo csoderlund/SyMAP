@@ -115,7 +115,7 @@ public class LoadProj {
 	/********************************************************************************/
 	public void reloadAnno(final Mproject mProj) {
 		String title = "Reload annotation";
-		String msg = "Reloading annotation " + mProj.getDBName();
+		String msg = ">>>Reloading annotation " + mProj.getDBName();
 		final ProgressDialog progress = new ProgressDialog(frame, title, msg + " ...", true, fw);
 		progress.closeIfNoErrors();
 		
@@ -124,8 +124,7 @@ public class LoadProj {
 				boolean success = true;
 				progress.appendText(msg); 
 				
-				try {
-					progress.appendText(">>> ReLoad annotation " + mProj.getDBName()); 
+				try { 
 					mProj.removeAnnoFromDB(); // CAS535 remove from here instead of AnnotLoadMain
 					
 					UpdatePool pool = new UpdatePool(dbc);

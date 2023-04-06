@@ -109,7 +109,7 @@ public class Data  {
 				dbUser.setHits(tObj, bSwap);
 			}
 		}
-		prt("Load dotplot: " + Utilities.getTimeStr(time));
+		prt("Load dotplot: " + Utilities.getNanoTimeStr(time));
 
 		filtData = new FilterData(); 
 		minPctId = dbUser.getMinPctID();

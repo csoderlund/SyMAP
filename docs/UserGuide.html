@@ -154,7 +154,9 @@ if you use SyMAP in a paper, poster, or presentation.
 <h4>Terminology</h4>
 <table class="ty">
 <tr><td>Chromosome<td>For simplicity, sequence groups will be referred to as "Chromosome", though they may be scaffolds, linkage groups, etc.
-<tr><td style="white-space: nowrap;"><i>Hit (or anchor)</i><td>A matched sequence between two chromosomes.
+<tr><td style="white-space: nowrap;"><i>Hit (or anchor)</i><td>A matched sequence between two chromosomes from MUMmer.
+<tr><td style="white-space: nowrap;"><i>Clustered Hits</i><td>SyMAP clusters near or overlapping hits into a single hit
+for display; the MUMmer hits within the clustered hits are referred to as <i>subhits</i>.
 <tr><td style="white-space: nowrap;"><i>Paired genes</i><td>Two genes joined by a hit.
 <tr><td><i>Synteny block</i><td>An approximately-collinear sequences of anchors; a block can
 have intervening genes which do not align. There may be small inverted regions within
@@ -570,26 +572,32 @@ Hits: The brown or green <i>hit wires</i> connects two regions on the two sequen
 length of the hit located on the track at the end of a hit wire (i.e. the green and gray
 vertical line near the chromosome edge).
 <i>Clustered hits</i> are multiple hits clustered together with gaps in between, where the gaps are represented by
-a grey area. (The hits in a cluster are referred to as <i>sub-hits</i>).
+a grey area. (The hits in a cluster are referred to as <i>subhits</i>).
 
 <p><u>Hit Information</u>: Hovering the mouse over a hit wire will show its information in the <ttl>Information</ttl> box.
 
 <table class="tx">
 <tr>
 <td>
-<ul>
+<ul style="margin: 2px;padding: 2px;">
 <li><ttl>Block #</ttl> is the block number (0 indicates it is not in a block).
 <li><ttl>Inv</ttl> indicates that it is part of an inverted block.
 <li><ttl>Hit #</ttl> is the number representing the hit for the chromosome pair.
 <li><ttl>(!=)</ttl> indicates the hit ends are on two different strands; <ttl>(=)</ttl> indicates the same strand.
-<li><ttl>gN</ttl> (<ttl>N={0,1,2}</ttl>) indicates that the hit overlaps an exon on one side, or two sides
+<li><ttl>gN</ttl> (<ttl>N={0,1,2}</ttl>) indicates that the hit overlaps a gene on one side, or two sides
 or none.
-<li><ttl>cN.M</ttl> (<ttl>N&ge;0</ttl>) indicates that it is part of a collinear set of size N;
+<li><ttl>cN.M</ttl> (<ttl>N&ge;2</ttl>) indicates that it is part of a collinear set of size N;
 M is the unique set number for the chromosome pair.
 The collinear sets can be queried using <a href="#queries">Queries</a>.
+<li><ttl>Subhits</ttl> (<ttl>N&ge;1</ttl>) are the MUMmer hits clustered into one hit, where there may be gaps
+or overlaps between hits. If
+<ttl>Subhits&gt;1</ttl> the values of <ttl>Id</ttl>, <ttl>Sim</ttl>, and <ttl>Cov</ttl> are approximate.
 </ul>
 <td style="width:240px;">
-<a href="img/2d-hit.png"><img src="img/2d-hit.png" alt="2d-hit" style="border: 1px solid black; width: 240px"></a>
+<a href="img/2d-hit.png"><img src="img/2d-hit.png" alt="2d-hit" style="border: 1px solid black; width: 260px"></a>
+<ul>
+<li><ttl>Cov</ttl> is the largest coverage of clustered hits between the two species (for V5.4.0 and later).
+</ul>
 </table>
 
 <u>Gene Information</u>: Hovering the mouse over a gene will show its information in the <ttl>Information</ttl> box.
@@ -597,7 +605,7 @@ The collinear sets can be queried using <a href="#queries">Queries</a>.
 <table class="tx">
 <tr>
 <td>
-<ul>
+<ul  style="margin: 2px;padding: 2px;">
 <li><ttl>Gene #</ttl> is a sequential number along the chromosome. If genes overlap, they will have the same number
 but a different suffix (e.g. a, b,...).
 <li><ttl>#Exon=</ttl> is the number of exons followed by their summed sizes.
@@ -609,6 +617,7 @@ but a different suffix (e.g. a, b,...).
 <a href="img/2d-gene.png"><img src="img/2d-gene.png" alt="2d-gene" style="border: 1px solid black; width: 240px"></a>
 </table>
 
+<a id="popup"></a>
 <u>More detailed information:</u> Popups of a gene or hit wire provides more detailed information.
 To view the popup of the gene description, right-click on the gene in the track.
 To view the popup of a hit wire, right click on it (the hit wire must be highlighted in red from hovering over it to be clickable).
@@ -667,11 +676,11 @@ No more than 30000 bases can be selected. There MUST be hits in the region to al
 <tr><td style="white-space: nowrap; vertical-align: text-top;">Show Seq Options<td>
 A sequence must first be selected, then a popup menu will have the options:
 <table class="ty">
-<tr><td>Hit<td>Show the sequences of the clustered sub-hits; if the hit is on the negative strand, it will be reverse
+<tr><td>Hit<td>Show the sequences of the clustered subhits; if the hit is on the negative strand, it will be reverse
 complemented (RC).
-<tr><td>Reverse Hit<td>Show the sequences of the sub-hits; however, RC the sequences if the hit was on a positive strand,
+<tr><td>Reverse Hit<td>Show the sequences of the subhits; however, RC the sequences if the hit was on a positive strand,
 and do not RC if the hit is on the negative strand.
-<tr><td>Full Hit<td>Show the sequence from the start of the first cluster sub-hit to the end of the last cluster sub-hit (this is
+<tr><td>Full Hit<td>Show the sequence from the start of the first cluster hit to the end of the last cluster sub-hit (this is
 not relevant if there are no clustered hits).
 <tr><td>Region<td>Show the sequence from the region selected.
 </table>
@@ -845,12 +854,12 @@ mouse along the sequence and release when the desired range is highlighted.
 <a href="img/baseview2.png">
 	<img src="img/baseview2.png" alt="baseview" style="border: 1px solid black; width: 750px"></a>
 <p>
-The aligned base view of the hits will
+The aligned base view of the clustered subhits will
 appears in a new window.  This view consists of a ruler along the top showing the area
 of the sequence covered, the hits, and the genes.
 <p>
-<u>Hits</u><br>
-Hits (and sub-hits) are displayed as lines, where red horizontal lines are mismatches,
+<u>Subhits</u><br>
+Subhits are displayed as lines, where red horizontal lines are mismatches,
 forest green is deletion and a downward arrow is insertion.
 When two hits overlap, one will be shown above the other.
 Clicking on a hit line brings up the its base alignment view in the bottom of the dialog; if the input genome
@@ -941,7 +950,7 @@ Species1  Species2  Chr1  Chr2  BlkNum Start1 End1  Start2 End2 #Hits   Genes1  
 </small>
 <p>The <ttl>Genes1</ttl> column is the number of genes from <ttl>Species1</ttl> in the block and <ttl>%Genes1</ttl>
 is the percentage of genes that have a hit.
-The <ttl>PearsonR</ttl> is the is the approximate linearity of the hits in the chain as measured
+The <ttl>PearsonR</ttl> is the approximate linearity of the hits in the chain as measured
 by the Pearson correlation coefficient; a negative PCC is an inverted block.
 
 <li><a href="#queries">Queries</a>: The results of a query are shown in a table,

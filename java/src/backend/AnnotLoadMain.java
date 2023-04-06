@@ -57,7 +57,7 @@ public class AnnotLoadMain {
 	}
 	
 	public boolean run(String projDBName) throws Exception {
-		long startTime = System.currentTimeMillis();
+		long startTime = Utils.getTime();
 		
 		if (GENEN_ONLY) { // CAS519b Run Gene# assignment algorithm only
 			geneNOnly(projDBName);
@@ -72,26 +72,26 @@ public class AnnotLoadMain {
 /*** LOAD FILE ***/
 		int nFiles = 0;
 		
-		long time = System.currentTimeMillis();
+		long time = Utils.getTimeMem();
 		
 		for (File af : annotFiles) {
 			nFiles++;
 			loadFile(af);	if (!success) return false;
 		}
-		Utils.timeDoneMsg(plog, time, nFiles + " file(s) loaded");
+		Utils.prtMemUsage(plog, (nFiles + " file(s) loaded"), time);
 		
 /** Compute gene order **/
 		plog.msg("Computations for " + projDBName);
-		time = System.currentTimeMillis();
+		time = Utils.getTimeMem();
 		
 		AnnotLoadPost alp = new AnnotLoadPost(syProj, pool, plog);
 		
 		success = alp.run(cntGeneIdx); 	if (!success) return false;
-		Utils.timeDoneMsg(plog, time, "Computations");
+		Utils.prtMemUsage(plog, "Computations", time);
 
 /** Wrap up **/
 		summary();		if (!success) return false;
-		Utils.timeDoneMsg(plog, startTime, "Load Anno for " + projDBName);
+		Utils.timeDoneMsg(plog, "All load Anno for " + projDBName, startTime);
 		
 		return true;
 	}
@@ -454,12 +454,12 @@ public class AnnotLoadMain {
 			}
 				
 			plog.msg("Run Gene# assignment algorithm for " + syProj.getName());
-			long time = System.currentTimeMillis();
+			long time = Utils.getTime();
 			
 			AnnotLoadPost alp = new AnnotLoadPost(syProj, pool, plog);
 			success = alp.run(cnt); 	if (!success) return false;
 			
-			Utils.timeDoneMsg(plog, time, "Computations");
+			Utils.timeDoneMsg(plog, "Computations", time);
 		}
 		catch (Exception e) {ErrorReport.print(e, "checking for annnotations"); }
 		return false;

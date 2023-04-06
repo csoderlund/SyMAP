@@ -5,11 +5,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import backend.Constants;
+import backend.Group;
+import backend.Hit;
 import database.DBconn;
 import symap.Globals;
 import symap.frame.ChrExpInit;
 import symap.manager.Mproject;
-import symapQuery.Q;
 import symap.manager.ManagerFrame;
 import util.Utilities;
 import util.ErrorReport;
@@ -19,8 +20,7 @@ import util.ErrorReport;
  * ManagerFrame displays interface, SyMAPFrame calls showExplorer
  */
 
-public class SyMAPmanager extends ManagerFrame
-{
+public class SyMAPmanager extends ManagerFrame {
 	private static final long serialVersionUID = 1L;
 	
 	public static void main(String args[])  {	
@@ -88,12 +88,16 @@ public class SyMAPmanager extends ManagerFrame
 			System.out.println("  -h        : show help to terminal and exit");
 	
 			System.out.println("\nReload Annotation:");
-			System.out.println("  -z        : Reload Annotatin will only run the Gene# assignment algorithm");
+			System.out.println("  -z        : Reload Annotation will only run the Gene# assignment algorithm");
 			
 			System.out.println("\nSynteny&Alignment:");
 			System.out.println("  -p N      : number of CPUs to use");
-			System.out.println("  -b        : use original block coordinates");
-			System.out.println("  -s        : print stats for debugging or information");
+			System.out.println("  -s        : print stats for A&S, or recreate the Summary on display");
+			
+			if (hasCommandLineOption(args, "-s")) {
+				System.out.println("  -ug N      : 0 ignore annot, 1 either annot, 2 both annot");
+				System.out.println("  -nsg       : do not split genes");
+			}
 		}
 	}
 	// these are listed to terminal in the 'symap' perl script.
@@ -134,26 +138,27 @@ public class SyMAPmanager extends ManagerFrame
 				System.out.println("-s Print Stats");
 				Constants.PRT_STATS = true;
 			}
-			if (hasCommandLineOption(args, "-b")) {
-				System.out.println("-b Original block coordinates");
-				Constants.NEW_BLOCK_COORDS = false;
-			}
-			// not shown in -h help - hence, the double character so user does not use by mistable
-			// the -dd and -tt are not well differentiated
-			if (hasCommandLineOption(args, "-dd")) {// not shown in -h help
+			
+			/** not shown in -h help - hence, the double character so user does not use by mistake **/
+			if (hasCommandLineOption(args, "-dd")) {
 				System.out.println("-dd Debug (developer only)");// CAS533 changed to -dd 
 				Globals.DEBUG = true;
 				//Q.TEST_TRACE = true; // for query
 			}
-			if (hasCommandLineOption(args, "-dbd")) {// not shown in -h help
+			if (hasCommandLineOption(args, "-dbd")) {
 				System.out.println("-dbd Database (developer only)");
 				Globals.DBDEBUG = true;
 			}
 			if (hasCommandLineOption(args, "-tt")) {
 				System.out.println("-tt Trace output");
 				Constants.TRACE = true; // in backend
-				Globals.TRACE = true; // CAS517 
+				Globals.TRACE = true;   // CAS517; used to add info
 			}
+			if (hasCommandLineOption(args, "-nsg")) { // CAS540
+				System.out.println("-nsg split genes !" + Group.bSplitGene);
+				Group.bSplitGene= !Group.bSplitGene;
+			}
+			
 			// old tests
 			if (hasCommandLineOption(args, "-oo")) {// CAS505 not shown in -h help
 				System.out.println("-oo Use the original version of draft ordering");
@@ -162,6 +167,10 @@ public class SyMAPmanager extends ManagerFrame
 			if (hasCommandLineOption(args, "-aa")) { // CAS531 change
 				System.out.println("-aa Align largest project to smallest");
 				lgProj1st = true;
+			}
+			if (hasCommandLineOption(args, "-bb")) { // CAS533 change; orig used midpoints
+				System.out.println("-bb Original block coordinates");
+				Constants.NEW_BLOCK_COORDS = false;
 			}
 		}
 	}
@@ -182,7 +191,6 @@ public class SyMAPmanager extends ManagerFrame
 				return args[i+1];
 			}
 		}
-
 		return null;
 	} 	
 	/********************************************************************/

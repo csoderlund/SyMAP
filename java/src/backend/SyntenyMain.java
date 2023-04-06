@@ -60,7 +60,7 @@ public class SyntenyMain {
 	try {
 		String proj1Name = pj1.getDBName(), proj2Name = pj2.getDBName();
 		
-		startTime = System.currentTimeMillis();
+		startTime = Utils.getTime();
 		mLog.msg("Finding synteny for " + proj1Name + " and " + proj2Name + mp.getChangedSynteny());
 		
 		mBlksByCase = new TreeMap<BCase,Integer>(); // used by cullChains
@@ -118,17 +118,17 @@ public class SyntenyMain {
 			}
 		}
 		System.err.print("                                          \r"); 
-		Utils.timeDoneMsg(mLog, startTime, "Synteny"); // CAS520 add time
+		Utils.timeDoneMsg(mLog, "Synteny", startTime); // CAS520 add time
 		
 		if (Cancelled.isCancelled() || bInterrupt) return false;
 		/****************************************************/
 		
-		// CAS517 move from SyntenyMain - CAS520 moved it back Synteny, so hits# are block based
 		// CAS520 let self do collinear && p1.idx != p2.idx 
-		AnchorsPost collinear = new AnchorsPost(mPairIdx, syProj1, syProj2, pool, mLog);
-		collinear.collinearSets();
-		if (Cancelled.isCancelled() || bInterrupt) return false;
-		
+		if (syProj1.hasAnnot() && syProj2.hasAnnot()) { // CAS540 add check; hit# moved to AnchorMain 
+			AnchorsPost collinear = new AnchorsPost(mPairIdx, syProj1, syProj2, pool, mLog);
+			collinear.collinearSets();
+			if (Cancelled.isCancelled() || bInterrupt) return false;
+		}
 		if (mSelf) symmetrizeBlocks();	
 		
 		processStats();
@@ -885,11 +885,9 @@ public class SyntenyMain {
 			}
 		}	
 		
-		BinStats.uploadStats(pool, mPairIdx, syProj1.idx, syProj2.idx);
-		
 		if (Constants.PRT_STATS) {// CAS500
-			BinStats.dumpHist();
-			BinStats.dumpStats();
+			BinStats.dumpHist(mLog);
+			BinStats.dumpStats(mLog);
 		}
 	}
 	

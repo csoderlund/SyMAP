@@ -52,9 +52,9 @@ public class MapperPool extends DBAbsUser {
 	private static final String PSEUDO_HITS_QUERY = 
 			"SELECT h.idx, h.hitnum, h.pctid, h.start1, h.end1, h.start2, h.end2, h.strand," + // CAS520 change evalue to hitnum
 			"h.gene_overlap, h.query_seq, h.target_seq, " +
-			"h.cvgpct, h.countpct, " +    	// CAS515 add cvgpct, countpct,
-			"h.runsize, h.runnum, " +		// CAS520 add runnum
-			"b.corr, b.blocknum " +  	  	// CAS516 add corr; CAS504 bh.block_idx -> b.blocknum
+			"h.cvgpct, h.countpct, " +    		// CAS515 add cvgpct, countpct,
+			"h.runsize, h.runnum, h.score, " +	// CAS520 add runnum, CAS540 add score
+			"b.corr, b.blocknum " +  	  		// CAS516 add corr; CAS504 bh.block_idx -> b.blocknum
 			"FROM pseudo_hits AS h "+
 			"LEFT JOIN pseudo_block_hits AS bh ON (bh.hit_idx=h.idx) "+
 			"LEFT JOIN blocks as b on (b.idx=bh.block_idx) " + // CAS505 added for blocknum
@@ -89,7 +89,7 @@ public class MapperPool extends DBAbsUser {
 			/*
 		  	1 h.idx, 2 h.hitnum, 3 h.pctid, 4 h.start1, 5 h.end1, 6 h.start2, 7 h.end2, 8 h.strand,
 		 	9 h.gene_overlap, 10 h.query_seq, 11 h.target_seq, 12 h.cvgpct, 13 h.countpct, 
-			14 h.runsize, 15 h.runnum, 16 b.corr, 17 b.blocknum 
+			14 h.runsize, 15 h.runnum, 16 h.score 17 b.corr, 18 b.blocknum 
 			 */
 			while (rs.next()) {
 				tag    = "g" + rs.getInt(9); // CAS516 gene_overlap, runsize; 
@@ -102,7 +102,7 @@ public class MapperPool extends DBAbsUser {
 						rs.getLong(1),		/* long id 		*/
 						rs.getInt(2),		/* int hitnum 	*/
 						rs.getString(8),	/* String strand*/
-						rs.getInt(17),		/* int block	*/
+						rs.getInt(18),		/* int b.block	*/
 						rs.getDouble(3),	/* double pctid	*/
 						rs.getInt(4),		/* int start1	*/
 						rs.getInt(5),		/* int end1		*/
@@ -113,8 +113,10 @@ public class MapperPool extends DBAbsUser {
 						rs.getString(11),	/* String target_seq */	
 						rs.getInt(12),		/* int cvgpct->avg %sim */
 						rs.getInt(13),      /* int countpct -> nMergedHits */
-						rs.getDouble(16),	/* CAS516 b.corr */
-						tag, chr1, chr2		/* CAS517 add chr1, chr2 */
+						rs.getDouble(17),	/* CAS516 b.corr */
+						rs.getInt(16),		/* CAS540 h.score */
+						tag, chr1, chr2	/* CAS517 add chr1, chr2 */
+						
 						);		
 				hitList.add(temp);
 			}

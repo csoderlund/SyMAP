@@ -10,8 +10,10 @@ import java.util.TreeMap;
 import javax.swing.JFrame;
 
 import database.DBconn;
+import database.DBuser;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
+import symap.manager.SumFrame;
 import symap.manager.ManagerFrame;
 import util.Cancelled;
 import util.ErrorReport;
@@ -51,6 +53,8 @@ public class AlignProjs extends JFrame {
 		final ProgressDialog diaLog = new ProgressDialog(this, "Aligning Projects", msg, true, syFW); // write version and date
 		diaLog.msgToFileOnly(">>> " + toName);
 		System.out.println("\n>>> Starting " + toName + "     " + Utilities.getDateTime());
+		String chgMsg = mp.getChangedParams(Mpair.FILE);  
+		diaLog.msg(chgMsg);
 		
 		// CAS535 always just close if (!closeWhenDone) diaLog.closeIfNoErrors();	
 		diaLog.closeWhenDone();					
@@ -94,7 +98,7 @@ public class AlignProjs extends JFrame {
 				boolean success = true;
 				
 				try {
-					long timeStart = System.currentTimeMillis();
+					long timeStart = Utils.getTime();
 					
 					/** Align **/
 					success &= aligner.run(); 
@@ -110,9 +114,6 @@ public class AlignProjs extends JFrame {
 						return;
 					}	
 					
-					long timeEnd = System.currentTimeMillis();
-					long diff = timeEnd - timeStart;
-					String timeMsg = Utilities.getDurationString(diff);
 					if (Cancelled.isCancelled()) return;
 					
 					/** Anchors **/
@@ -137,13 +138,13 @@ public class AlignProjs extends JFrame {
 					mp.saveParams(params);
 					mProj1.saveParams(mProj1.xAlign);
 					mProj2.saveParams(mProj2.xAlign);
+				
+					new SumFrame(new DBuser(dbConn), mp);// CAS540
 					
-					timeEnd = System.currentTimeMillis();
-					diff = timeEnd - timeStart;
-					timeMsg = Utilities.getDurationString(diff);
 					diaLog.appendText(">> Summary for " + toName + "\n");
 					printStats(diaLog, mProj1, mProj2);
-					diaLog.appendText("\nFinished in " + timeMsg + "\n\n");
+					
+					Utils.timeDoneMsg(diaLog, "Complete Alignment&Synteny", timeStart);
 				}
 				catch (OutOfMemoryError e) {
 					success = false;

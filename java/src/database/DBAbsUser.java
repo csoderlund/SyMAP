@@ -188,6 +188,17 @@ public abstract class DBAbsUser {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Get Int " + strQuery); return 0;}
 	}
+	public long getLong(String strQuery) { // CAS540 add
+		try {
+			long lnum= -1;
+			ResultSet rs = executeQuery(strQuery);
+			if (rs.next())
+				lnum = rs.getInt(1);
+			rs.close();
+			return lnum;
+		}
+		catch (Exception e) {ErrorReport.print(e, "Get Int " + strQuery); return 0;}
+	}
 	public void resetAllIdx() { // CAS535 add, this is easier
 		try {
 			resetIdx("idx", "annot_key");

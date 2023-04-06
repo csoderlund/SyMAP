@@ -72,16 +72,16 @@ public class SeqData implements Comparable <SeqData> {
 			if (seq[i] != DASH) ++r;
 		return r;
 	}
-	// these two are used by all methods that display coords
+	// these two are used by all methods that display coords; CAS540 add , for dbp
 	public static String coordsStr(int start, int end) {
-		return String.format("%,d - %,d %dbp", start, end, (end-start+1)) ;
+		return String.format("%,d - %,d %,dbp", start, end, (end-start+1)) ;
 	}
 	public static String coordsStr(char o, int start, int end) {
-		return String.format("%c(%,d - %,d) %dbp", o, start, end, (end-start+1)) ;
+		return String.format("%c(%,d - %,d) %,dbp", o, start, end, (end-start+1)) ;
 	}
 	public static String coordsStr(boolean isStrandPos, int start, int end) {
 		String o = (isStrandPos) ? "+" : "-";
-		return String.format("%s(%,d - %,d) %dbp", o, start, end, (end-start+1)) ;
+		return String.format("%s(%,d - %,d) %,dbp", o, start, end, (end-start+1)) ;
 	}
 	  // CAS517 - format exon list (e.g. Exon #1:20:50,Exon #1:20:50); CAS531 moved from Utilities
     static public String formatExon(String exonList) {	

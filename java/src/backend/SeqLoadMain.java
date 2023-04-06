@@ -37,7 +37,7 @@ public class SeqLoadMain {
 			String projName = mProj.getDBName();
 			projIdx = mProj.getIdx();
 			
-			long startTime = System.currentTimeMillis();
+			long startTime = Utils.getTime();
 			plog.msg("Loading sequences for " + projName);
 			
 	// Check Sequence files; CAS534 project created in ManagerFrame/Mproject
@@ -230,7 +230,7 @@ public class SeqLoadMain {
 			}
 			updateSortOrder(grpList, pool, plog);
 					
-			Utils.timeDoneMsg(plog, startTime, "Load sequences");
+			Utils.timeDoneMsg(plog, "Load sequences", startTime);
 		}
 		catch (OutOfMemoryError e){
 			plog.msg("\n\nOut of memory! To fix, \nA)Make sure you are using a 64-bit computer\nB)Modify symap script 'mem=' line to specify higher memory.\n\n");

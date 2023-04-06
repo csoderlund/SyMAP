@@ -19,49 +19,66 @@ import util.ProgressDialog;
 import util.Utilities;
 
 public class Utils {
-	// For stdout and file only
+	// msgToFile prints to file and terminal, but not ProgressDialog
+	// msg and appendText     prints to file, terminal, ProgressDialog
+	
+	// time only
+	public static long getTime() { return System.currentTimeMillis();}
+	
+	public static void prtMsgTimeFile(ProgressDialog prog, String msg, long startTime) {
+		String t = Utilities.getDurationString(getTime()-startTime);
+		prog.msgToFile(String.format("%-30s %s", msg, t));	
+	}
+	public static void prtMsgTime(ProgressDialog prog, String msg, long startTime) {
+		String t = Utilities.getDurationString(getTime()-startTime);
+		prog.msg(String.format("%-30s %s", msg, t));	
+	}
+	public static void timeDoneMsg(ProgressDialog prog, String msg, long startTime) {
+		String t = Utilities.getDurationString(getTime()-startTime);
+		String m = String.format("%-35s  %s                           \n\n", msg, t);
+		if (prog!=null) prog.msg(m);	
+		else System.out.println(m);
+	}
+	
+	// Memory and time
+	public static long getTimeMem() { System.gc(); return System.currentTimeMillis();}
+	
+	public static void prtMemUsage(ProgressDialog prog, String title, long startTime) {
+		prog.msgToFile(getMemUsage(title, startTime));
+	}
+	public static void prtMemUsage(String title, long startTime) {
+		System.out.print(getMemUsage(title, startTime));
+	}
+	public static String getMemUsage(String title, long startTime) {
+		Runtime rt = Runtime.getRuntime();
+		long total_mem = rt.totalMemory();
+		long free_mem =  rt.freeMemory();
+		long used_mem = total_mem - free_mem;
+		String mem = String.format("%,dk", (int) Math.round(used_mem/1000));
+		
+		String str = Utilities.getDurationString(getTime() - startTime);
+		return String.format("%-30s Memory %-20s %20s\n\n", title, mem, str);
+	}
+	/************** assorted others  **/
 	public static void prt(ProgressDialog prog, String msg) { // CAS520 add
 		prog.msgToFile(msg);
 	}
 	public static void prtNumMsgFile(ProgressDialog prog, int num, String msg) {
-		prog.msgToFile(String.format("%9d %s         ", num, msg));
+		prog.msgToFile(String.format("%,9d %s         ", num, msg));
 	}
-	public static void prtMsgTimeFile(ProgressDialog prog, long startTime, String msg) {
-		String t = Utilities.getDurationString(System.currentTimeMillis()-startTime);
-		prt(prog,  String.format("%-20s %s\n", msg, t));	
-	}
-	// For dialog, stdout and file
+	
 	public static void prtNumMsg(ProgressDialog prog, int num, String msg) {
 		prog.appendText(String.format("%9d %s           ", num, msg));
 	}
 	
-	public static void prtMsgTime(ProgressDialog prog, long startTime, String msg) {
-		String t = Utilities.getDurationString(System.currentTimeMillis()-startTime);
-		prog.msg(String.format("%-20s %s", msg, t));	
-	}
-	
-	public static void prtNumMsg(ProgressDialog log, long num, String msg) {
-		log.msg(String.format("%9d %s          ", num, msg));
-	}
-	public static void prtNumMsg(int num, String msg) {
-		System.out.format("%9d %s              \n", num, msg);
-	}
-	public static void prtNumMsgNZ(int num, String msg) {
-		if (num>0) System.out.format("%9d %s              \n", num, msg);
-	}
 	public static void prtNumMsgNZx(int num, String msg) {// indent
 		if (num>0) System.out.format("      %9d %s              \n", num, msg);
 	}
 
-	
-	public static void timeDoneMsg(ProgressDialog log, long startTime, String msg) {
-		String t = Utilities.getDurationString(System.currentTimeMillis()-startTime);
-		String m = String.format("%-30s done: %s                           \n\n", msg, t);
-		log.msg(m);		
-	}
 	public static void die(String msg) {
 		System.err.println("Fatal error: " + msg);
 	}
+	/***************************************************************************/
 	public static String fileFromPath(String path) {
 		int i = path.lastIndexOf("/");
 		if (i<=0) return path;
@@ -194,7 +211,10 @@ public class Utils {
 	}	
 	static boolean intervalContained(int s1,int e1, int s2, int e2){
 		return ( (s1 >= s2 && e1 <= e2) || (s2 >= s1 && e2 <= e1));
-	}	
+	}
+	static boolean isContained(int s1,int e1, int s2, int e2){
+		return (s2 >= s1 && e2 <= e1);
+	}
 	
 	static float simpleRatio(int top, int bot) {
 		float ratio = (float)(.1*Math.round(10.0*(float)top/(float)bot));
