@@ -9,11 +9,9 @@ import java.util.HashSet;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import javax.swing.event.*;
-
-import database.DBconn;
-
 import javax.swing.*;
 
+import database.DBconn2;
 import symap.Globals;
 import symap.manager.Mproject;
 import util.ImageViewer;
@@ -37,7 +35,7 @@ public class BlockViewFrame extends JFrame{
 	
 	private int mRefIdx, mIdx2;
 	private String refName, refType, name2, type2;
-	private DBconn mDB;
+	private DBconn2 tdbc2;
 	private Vector<Integer> mColors;
 	
 	private TreeMap<Integer,TreeMap<Integer,Vector<Block>>> mLayout;
@@ -63,11 +61,12 @@ public class BlockViewFrame extends JFrame{
 	private JPanel mainPane = null;
 	private JScrollPane scroller = null;
 
-	public BlockViewFrame(DBconn dbReader, int projXIdx, int projYIdx) throws Exception {
+	public BlockViewFrame(DBconn2 dbc2, int projXIdx, int projYIdx) throws Exception {
 		super("SyMAP Block View " + Globals.VERSION);
 		mRefIdx = projXIdx;
 		mIdx2 = projYIdx;
-		mDB = dbReader;
+		
+		this.tdbc2 = new DBconn2("BlocksG-" + DBconn2.getNumConn(), dbc2);
 		init();
 	}
 	private void init() {		
@@ -190,19 +189,18 @@ public class BlockViewFrame extends JFrame{
 		}
 		catch(Exception e){ErrorReport.print(e, "Initializing panel for blocks");}
 	}
-
+	public void dispose() { // override; CAS541 add
+		setVisible(false); // necessary?
+		tdbc2.close();
+		super.dispose();
+	}
 	private boolean initFromDB() {
 		try {
-			ResultSet rs;
-			Statement s = mDB.getConnection().createStatement();
-	
-			rs = s.executeQuery("select count(*) as ngrps from xgroups where proj_idx=" + mRefIdx);
-			rs.first();
-			bGtMaxGrpsRef = (rs.getInt("ngrps") > MAX_GRPS);
+			int cnt = tdbc2.executeCount("select count(*) as ngrps from xgroups where proj_idx=" + mRefIdx);
+			bGtMaxGrpsRef = (cnt > MAX_GRPS);
 
-			rs = s.executeQuery("select count(*) as ngrps from xgroups where proj_idx=" + mIdx2);
-			rs.first();
-			bGtMaxGrps2 = (rs.getInt("ngrps") > MAX_GRPS);
+			cnt = tdbc2.executeCount("select count(*) as ngrps from xgroups where proj_idx=" + mIdx2);
+			bGtMaxGrps2 = (cnt > MAX_GRPS);
 			
 			if (bGtMaxGrpsRef && bGtMaxGrps2) {
 				System.out.println("Genomes have too many chromosomes/contigs to show in block view");
@@ -216,44 +214,30 @@ public class BlockViewFrame extends JFrame{
 				bGtMaxGrpsRef = false;
 			}
 			reversed = false;
-			rs = s.executeQuery("select idx from pairs where proj1_idx=" + mIdx2 + " and proj2_idx=" + mRefIdx);
-			if (rs.first()) {
-				mPairIdx = rs.getInt("idx");
-			}
-			else{
-				rs = s.executeQuery("select idx from pairs where proj2_idx=" + mIdx2 + " and proj1_idx=" + mRefIdx);
-				if (rs.first()){
-					mPairIdx = rs.getInt("idx");
-					reversed = true;
-				}
-				else{
+			mPairIdx = tdbc2.executeInteger("select idx from pairs where proj1_idx=" + mIdx2 + " and proj2_idx=" + mRefIdx);
+			
+			if (mPairIdx<0) {
+				mPairIdx = tdbc2.executeInteger("select idx from pairs where proj2_idx=" + mIdx2 + " and proj1_idx=" + mRefIdx);
+				reversed = true;
+				if (mPairIdx<0) {
 					System.out.println("Unable to find project pair");
 					return false;
 				}
 			}
-			rs = s.executeQuery("select idx from xgroups where name='0' and proj_idx=" + mIdx2);
-			if (rs.first()){
-				unGrp2 = rs.getInt("idx");
-			}
+			unGrp2 = tdbc2.executeInteger("select idx from xgroups where name='0' and proj_idx=" + mIdx2);
 			
 			Mproject tProj = new Mproject();
 			String display_name = tProj.getKey(tProj.sDisplay);
 			String grp_type = tProj.getKey(tProj.sGrpType);
 			
-			rs = s.executeQuery("select value from proj_props where name='"+display_name+"' and proj_idx=" + mRefIdx);
-			rs.first();
-			refName = rs.getString("value");
-			rs = s.executeQuery("select value from proj_props where name='"+ grp_type +"' and proj_idx=" + mRefIdx);
-			rs.first();
-			refType = rs.first() ? rs.getString("value") : "Chromosomes"; // CAS534 should be loaded, but if not...
+			refName = tdbc2.executeString("select value from proj_props where name='"+display_name+"' and proj_idx=" + mRefIdx);
+			refType = tdbc2.executeString("select value from proj_props where name='"+ grp_type +"' and proj_idx=" + mRefIdx);
+			if (refType == null) refType = "Chromosomes"; // CAS534 should be loaded, but if not...
 			
-			rs = s.executeQuery("select value from proj_props where name='"+ display_name+"' and proj_idx=" + mIdx2);
-			rs.first();
-			name2 = rs.getString("value");
-			rs = s.executeQuery("select value from proj_props where name='"+grp_type+"' and proj_idx=" + mIdx2);
-			type2 = rs.first() ? rs.getString("value") : "Chromosomes";
+			name2 = tdbc2.executeString("select value from proj_props where name='"+ display_name+"' and proj_idx=" + mIdx2);
+			type2 = tdbc2.executeString("select value from proj_props where name='"+grp_type+"' and proj_idx=" + mIdx2);
+			if (type2 == null) type2 = "Chromosomes"; 
 			
-			rs.close();
 			return true;
 		}
 		catch(Exception e){ErrorReport.print(e, "Init from DB"); return false;}
@@ -282,13 +266,12 @@ public class BlockViewFrame extends JFrame{
 	private boolean layoutBlocks() {
 	try {
 		ResultSet rs;
-		Statement s = mDB.getConnection().createStatement();
-
+		
 		HashSet <Integer> chrBlocks = new HashSet <Integer> (); // CAS516 add 
 		String sql1="";
 		if (!reversed) sql1 = "select grp2_idx from blocks where pair_idx=" + mPairIdx;
 		else 		   sql1 = "select grp1_idx from blocks where pair_idx=" + mPairIdx;
-		rs = s.executeQuery(sql1);
+		rs = tdbc2.executeQuery(sql1);
 		while (rs.next()) {
 			int idx = rs.getInt(1);
 			if (!chrBlocks.contains(idx)) chrBlocks.add(idx);
@@ -301,7 +284,7 @@ public class BlockViewFrame extends JFrame{
 		int maxChrLen = 0;
 		
 		// Get chr names and sizes
-		rs = s.executeQuery("select idx,name,length from xgroups " +
+		rs = tdbc2.executeQuery("select idx,name,length from xgroups " +
 				" join pseudos on pseudos.grp_idx=xgroups.idx " + 
 				" where proj_idx=" + mRefIdx + " order by sort_order asc");
 		while (rs.next()){
@@ -339,7 +322,7 @@ public class BlockViewFrame extends JFrame{
 			sql = "select grp2_idx as grp2, grp1_idx as grpRef, start1 as start,end1 as end from blocks "
 				+ " where pair_idx=" + mPairIdx + " order by (end1 - start1) desc";		
 		}
-		rs = s.executeQuery(sql);
+		rs = tdbc2.executeQuery(sql);
 		while (rs.next()) {
 			int grp2 = (bGtMaxGrps2 ? unGrp2 : rs.getInt("grp2"));
 			int grpRef = rs.getInt("grpRef");
@@ -410,7 +393,7 @@ public class BlockViewFrame extends JFrame{
 			Rectangle blockRect = mBlockRects.get(i);
 			if (blockRect.contains(m.getPoint())) {
 				int grpIdx = mRefOrder.get(i);
-				Block2Frame frame = new Block2Frame(mDB, mRefIdx, mIdx2,grpIdx,mPairIdx,reversed);
+				Block2Frame frame = new Block2Frame(tdbc2, mRefIdx, mIdx2,grpIdx,mPairIdx,reversed);
 				frame.setVisible(true);
 				
 			}
@@ -490,7 +473,6 @@ public class BlockViewFrame extends JFrame{
 	}
 	private void drawLegend(JPanel pane) throws Exception {
 		grpColorOrder = new TreeMap<Integer,Integer>();
-		Statement r = mDB.getConnection().createStatement();
 		ResultSet rs;
 		mGrps2 = new Vector<Integer>();
 		mGrp2Names = new TreeMap<Integer,String>();
@@ -512,7 +494,7 @@ public class BlockViewFrame extends JFrame{
 		}
 	    // Proceed with drawing	
 		// unanchored blocks have grp_idx=0 (unGrp2=0)
-		rs = r.executeQuery("select count(*) as count from blocks where pair_idx=" + mPairIdx + 
+		rs = tdbc2.executeQuery("select count(*) as count from blocks where pair_idx=" + mPairIdx + 
 				" and (grp1_idx=" + unGrp2 +  " or grp2_idx=" + unGrp2 + ")");
 		rs.first();
 		if (rs.getInt("count") > 0) {
@@ -522,7 +504,7 @@ public class BlockViewFrame extends JFrame{
 			mColors.add(0, 0);
 		}
 		// get all chromosomes for second species
-		rs = r.executeQuery("select name,idx from xgroups where name != '0' and proj_idx=" + mIdx2 + 
+		rs = tdbc2.executeQuery("select name,idx from xgroups where name != '0' and proj_idx=" + mIdx2 + 
 				" order by sort_order asc"); // sort_order is by name unless 'ordered_against'
 		int i = mGrps2.size();
 		while (rs.next() ) {

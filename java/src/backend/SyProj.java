@@ -8,6 +8,7 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
+import database.DBconn2;
 import symap.manager.Mproject;
 import util.ErrorReport;
 import util.ProgressDialog;
@@ -30,7 +31,7 @@ public class SyProj  {
 	private TreeMap<String,Integer> grpName2Idx;
 	private boolean hasAnnot = true;
 	
-	private UpdatePool conn;
+	private DBconn2 dbc2;
 	private Pattern namePat;
 	
 	private long totalSize = 0;
@@ -41,8 +42,8 @@ public class SyProj  {
 	 * QueryType: AnnotLoadMain - Either; 
 	 * 			  AnchorMain, SyntenyMain - Target, query
 	 */
-	public SyProj(UpdatePool pool, ProgressDialog log, Mproject proj, String name, int topN, QueryType qt) throws Exception {
-		this.conn = pool;
+	public SyProj(DBconn2 dbc2, ProgressDialog log, Mproject proj, String name, int topN, QueryType qt) throws Exception {
+		this.dbc2 = dbc2;
 		this.plog = log;
 		this.mProj = proj;
 		this.name = name;
@@ -64,9 +65,9 @@ public class SyProj  {
 		
 		loadGroups(qt);
 	}
-	private void loadGroups(QueryType qt) throws SQLException {	
+	private void loadGroups(QueryType qt) throws Exception {	
 	try { 
-		ResultSet rs = conn.executeQuery("SELECT idx, name, fullname FROM xgroups WHERE proj_idx=" + idx);
+		ResultSet rs = dbc2.executeQuery("SELECT idx, name, fullname FROM xgroups WHERE proj_idx=" + idx);
         while(rs.next())  {
             int idx= rs.getInt(1);
             String name = rs.getString(2);

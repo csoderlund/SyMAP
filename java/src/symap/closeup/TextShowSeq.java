@@ -62,7 +62,7 @@ public class TextShowSeq extends JDialog implements ActionListener {
 		setModal(false);
 		setResizable(true);
 		
-		alignPool = dp.getPools().getAlignPool();
+		alignPool = new AlignPool(dp.getDBC());
 		drawPanel = dp;
 		this.seqObj = sequence;
 		this.projectName = project;

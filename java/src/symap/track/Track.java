@@ -42,11 +42,11 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 
 	protected static final double MOUSE_PADDING = 2;
 
-	private static final  Color REFNAME = new Color(0,0,200); // CAS530 change from red to deep blue
+	private static final Color REFNAME = new Color(0,0,200); // CAS530 change from red to deep blue
 	private static final Color titleColor = Color.black;
 	private static final Color dragColor = new Color(255,255,255,120);
 	private static final Color dragBorder = Color.black;
-	private static final Font titleFont = new Font("Ariel", 1, 14);
+	private static final Font titleFont = new Font("Arial", 1, 14);
 
 	protected Color bgColor = new Color(247,233,213); 
 	
@@ -82,6 +82,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 
 	protected TrackHolder holder;
 	protected DrawingPanel drawingPanel;
+	protected ProjectPool projPool;
 	
 	protected long curCenter=0, curWidth=0; // for +/- buttons
 
@@ -90,6 +91,8 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	{
 		this.drawingPanel = dp;
 		this.holder = holder;
+		projPool = dp.getProjPool();
+		
 		otherProjIdx = projIdx = Globals.NO_VALUE;
 		titlePoint = new Point2D.Float();
 		rect = new Rectangle2D.Double();
@@ -122,16 +125,14 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 			this.projIdx = project;
 			this.otherProjIdx = otherProject;
 
-			ProjectPool pp = drawingPanel.getPools().getProjectPropPool();
-			
-			displayName = pp.getDisplayName(project);
-			projectName = pp.getName(project);
+			displayName = projPool.getDisplayName(project);
+			projectName = projPool.getName(project);
 			if (Utilities.isEmpty(displayName)) displayName=projectName; // CAS534 need for new projects
 			
-			otherProjName = pp.getDisplayName(otherProject);
-			if (Utilities.isEmpty(otherProjName)) otherProjName=pp.getName(otherProject);
+			otherProjName = projPool.getDisplayName(otherProject);
+			if (Utilities.isEmpty(otherProjName)) otherProjName=projPool.getName(otherProject);
 			
-			bpPerCb     = pp.getIntProperty(project,"cbsize",1);
+			bpPerCb     = projPool.getIntProperty(project,"cbsize",1); // always 1 now
 
 			if (bpPerCb == 1) {
 				if (start instanceof BPNumber) {
@@ -220,7 +221,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	/*** getLocation returns the location of the holder or a point at location 0,0 if holder is not set.*/
 	public Point getLocation() {
 		if (holder != null) return holder.getLocation();
-		else return new Point();
+		else 				return new Point();
 	}
 
 	/*** getMidX returns the viewable middle as determined by the track.*/
@@ -252,8 +253,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	// Implements the +/- buttons. 
 	// It stores the current region width and center so that (-) can exactly undo (+) even
 	// when the (+) expands beyond the bounds of one sequence.
-	public void changeAlignRegion(double factor) 
-	{
+	public void changeAlignRegion(double factor)  {
 		long s = getStart();
 		long e = getEnd();
 		long mid = (s + e)/2;
@@ -277,20 +277,19 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		
 		double displayedWidth = (eNew - sNew)/2;
 		double effectiveFactor = displayedWidth/width;
+		
 		setBpPerPixel( getBpPerPixel() * ( 1.0 / effectiveFactor ) );
 		
 	}
-	public boolean fullyExpanded() 
-	{
+	public boolean fullyExpanded()  {
 		long s = getStart();
 		long e = getEnd();
 		if (s > 1 || e < getTrackSize()) return false;	
 		return true;
 	}
 	/**
-	 * Sets the bp/pixel of the track, setting the track to need to be built on 
-	 * the next make.  If bp is less than or equal to zero, nothing is done.
-	 * @param bp New bp/pixel
+	 * Sets the bp/pixel of the track, setting the track to need to be built on the next make
+	 * Used with +/- buttons; drawToScale; 
 	 */
 	public void setBpPerPixel(double bp) {
 		if (bp > 0) {
@@ -589,33 +588,25 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	}
 	protected int getBP(double y) {
 		y -= rect.getY();
-		if (y < 0)
-			y = 0;
-		else if (y > rect.getHeight())
-			y = rect.getHeight();
+		if (y < 0)						y = 0;
+		else if (y > rect.getHeight())	y = rect.getHeight();
 		y *= bpPerPixel;
 		y += start.getBPValue();
 
-		if (y != Math.round(y)) {
-			y = Math.round(y);
-		}
+		if (y != Math.round(y)) 		y = Math.round(y);
 
-		if (y < start.getBPValue())
-			y = start.getBPValue();
-		else if (y > end.getBPValue())
-			y = end.getBPValue();
+		if (y < start.getBPValue())		y = start.getBPValue();
+		else if (y > end.getBPValue())	y = end.getBPValue();
 
 		return (int)Math.round(y);
 	}
 	protected Cursor getCursor() {
-		return /*holder*/drawingPanel.getCursor(); 
+		return drawingPanel.getCursor(); 
 		
 	}
 	protected void setCursor(Cursor c) {
-		if (c == null)
-			/*holder*/drawingPanel.setCursor(Globals.DEFAULT_CURSOR); 
-		else
-			/*holder*/drawingPanel.setCursor(c); 
+		if (c == null) 	drawingPanel.setCursor(Globals.DEFAULT_CURSOR); 
+		else			drawingPanel.setCursor(c); 
 	}
 	protected void repaint() {
 		if (drawingPanel != null) drawingPanel.repaint();
@@ -661,14 +652,10 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		else if (drawingPanel.isMouseFunction()){ 
 			if (isCleared(dragRect)) {
 				dragPoint.setLocation(p);
-				if (dragPoint.getX() < rect.x)
-					dragPoint.setLocation(rect.x, dragPoint.getY());
-				else if (dragPoint.getX() > rect.x + rect.width)
-					dragPoint.setLocation(rect.x + rect.width, dragPoint.getY());
-				if (dragPoint.getY() < rect.y)
-					dragPoint.setLocation(dragPoint.getX(), rect.y);
-				else if (dragPoint.getY() > rect.y + rect.height)
-					dragPoint.setLocation(dragPoint.getX(), rect.y + rect.height);
+				if (dragPoint.getX() < rect.x)					 dragPoint.setLocation(rect.x, dragPoint.getY());
+				else if (dragPoint.getX() > rect.x + rect.width) dragPoint.setLocation(rect.x + rect.width, dragPoint.getY());
+				if (dragPoint.getY() < rect.y)					 dragPoint.setLocation(dragPoint.getX(), rect.y);
+				else if (dragPoint.getY() > rect.y + rect.height)dragPoint.setLocation(dragPoint.getX(), rect.y + rect.height);
 				dragRect.setLocation(dragPoint);
 				dragRect.setSize(0, 0);
 			} else {
@@ -692,14 +679,10 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 				dragRect.height = (int) (dragRect.height + dragRect.y - rect.y);
 				dragRect.y = (int) rect.y;
 			}
-			if (dragRect.height > 0
-					&& dragRect.getY() + dragRect.getHeight() > rect.y
-					+ rect.height) 
-			{
+			if (dragRect.height > 0 && dragRect.getY() + dragRect.getHeight() > rect.y + rect.height) 
 				dragRect.height = (int) (rect.height + rect.y - dragRect.getY());
-			}
-			if (dragRect.height < 0)
-				dragRect.height = 0;
+			
+			if (dragRect.height < 0) dragRect.height = 0;
 		}
 
 		repaint();
@@ -718,14 +701,10 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 			setCursor(Globals.CROSSHAIR_CURSOR);
 			if (isCleared(dragRect)) {
 				dragPoint.setLocation(point);
-				if (dragPoint.getX() < rect.x)
-					dragPoint.setLocation(rect.x, dragPoint.getY());
-				else if (dragPoint.getX() > rect.x + rect.width)
-					dragPoint.setLocation(rect.x + rect.width, dragPoint.getY());
-				if (dragPoint.getY() < rect.y)
-					dragPoint.setLocation(dragPoint.getX(), rect.y);
-				else if (dragPoint.getY() > rect.y + rect.height)
-					dragPoint.setLocation(dragPoint.getX(), rect.y + rect.height);
+				if (dragPoint.getX() < rect.x)					 dragPoint.setLocation(rect.x, dragPoint.getY());
+				else if (dragPoint.getX() > rect.x + rect.width) dragPoint.setLocation(rect.x + rect.width, dragPoint.getY());
+				if (dragPoint.getY() < rect.y)					 dragPoint.setLocation(dragPoint.getX(), rect.y);
+				else if (dragPoint.getY() > rect.y + rect.height)dragPoint.setLocation(dragPoint.getX(), rect.y + rect.height);
 				dragRect.setLocation(dragPoint);
 				dragRect.setSize(0, 0);
 			}
@@ -824,20 +803,5 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
     public void keyTyped(KeyEvent e) { } 
     public void keyPressed(KeyEvent e) { } 
     public void keyReleased(KeyEvent e) { } 
-	
-	protected static String convertToRegex(String str) {
-		if (str == null) str = new String();
-		else str = str.trim();
-		if (str.length() == 0)
-			return ".*";
-		return str.replaceAll("\\*", "(.*)");
-	}
-	protected static String addAsterics(String str) {
-		if (str == null) str = new String();
-		else str = str.trim();
-		if (str.length() == 0)
-			return ".*";
-		return "(.*)".concat(str).concat("(.*)");
-	}
 }
 

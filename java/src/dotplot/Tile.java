@@ -55,13 +55,13 @@ public class Tile  {
 	
 	public int getProjID(int axis) {return group[axis].getProjID(); }// or proj.getID()
 	
-	public Project getProject(int axis) {return proj[axis];}
+	public Project getProject(int axis) {return proj[axis];} // DBload
 	
-	public Group getGroup(int axis) { return group[axis]; }
+	public Group getGroup(int axis) { return group[axis]; } // Plot, ABlock, DBload
 	
-	public boolean hasHits() {return (hits!=null && hits.length>0);}
+	public boolean hasHits() {return (hits!=null && hits.length>0);} // Data.initialize
 	
-	public void swap(int pid1, int pid2) { // CAS533 add
+	public void swap(int pid1, int pid2) { // Data.initialize CAS533 add
 		if (pid1==proj[X].getID() && pid2==proj[Y].getID()) return;
 		
 		Group tg = group[0]; group[0]=group[1]; group[1]=tg;
@@ -76,11 +76,7 @@ public class Tile  {
 				+ " Blocks " + ablocks.size() + " Hits " + h
 				+ "   " + proj[Y].getDisplayName() +"," + proj[X].getDisplayName();
 	}
-	public String toBlocks() {
-		String msg = "#" + ablocks.size();
-		for (ABlock bk : ablocks) msg += " " + bk.getName();
-		return msg;
-	}
+	
 	/****************************************************************/
 	// Called by Plot, Tile, Project
 	public static Tile getTile(Tile[] tiles, Group grpX, Group grpY) {

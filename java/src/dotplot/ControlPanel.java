@@ -13,6 +13,9 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JSeparator;
+
+import colordialog.ColorDialogHandler;
+
 import javax.swing.JComboBox;
 
 import symap.frame.HelpBar;
@@ -27,19 +30,25 @@ import util.Jcomp;
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ControlPanel extends JPanel implements HelpListener {
+	public static int pINFO=0, pPRINT=1, pHELP=2; // order of stats
+	
     private Data data; 		// changes to zoom, etc set in data
     private Plot plot; 		// for show image and repaint
     private Filter filter=null; 	// CAS533 add; was recreating every time 
     
     private JButton homeButton, minusButton, plusButton;
-    private JButton filterButton, helpButton, showImageButton;
+    private JButton filterButton, helpButton, showImageButton, editColorsButton;
     private JCheckBox scaleCheckbox; 	
-    private JLabel referenceLabel;      
+    private JLabel referenceLabel, statsLabel;      
     private JComboBox <Project> referenceSelector;
+    private JComboBox <String> statsOpts;
+    private ColorDialogHandler cdh;
   
-    public ControlPanel(Data d, Plot p, HelpBar hb) {
+    public ControlPanel(Data d, Plot p, HelpBar hb, ColorDialogHandler cdh) {
 		this.data = d;
 		this.plot = p;
+		this.cdh = cdh;
+		
 		filter = new Filter(d, this);
 	
 		helpButton = util.Jhtml.createHelpIconUserLg(util.Jhtml.dotplot);
@@ -57,11 +66,23 @@ public class ControlPanel extends JPanel implements HelpListener {
 		scaleCheckbox = (JCheckBox) Jcomp.createButton(this,"Scale",
 				"Scale: Draw to BP scale.",hb,buttonListener,true, false); 
 		scaleCheckbox.setBackground(getBackground()); 
+		editColorsButton = (JButton) Jcomp.createButton(this,"/images/colorchooser.gif",
+				"Colors: Edit the color settings",hb,buttonListener,false, false);
 		
+		referenceLabel = new JLabel("Reference:");
 		referenceSelector = new JComboBox <Project> ();
 		referenceSelector.addActionListener(buttonListener);
 		referenceSelector.setName("Reference: Change reference (x-axis) project.");
-		hb.addHelpListener(referenceSelector,this);
+		referenceSelector.setToolTipText("Reference: Change reference (x-axis) project.");
+		
+		statsLabel = new JLabel("Info:");
+		statsOpts = new JComboBox <String> ();
+		statsOpts.addItem("Stats"); // if change, change constants above
+		statsOpts.addItem("Print");
+		statsOpts.addItem("Help");
+		statsOpts.addActionListener(buttonListener);
+		statsOpts.setName("Show display statistics.");
+		statsOpts.setToolTipText("Show display statistics.");
 		
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -70,13 +91,12 @@ public class ControlPanel extends JPanel implements HelpListener {
 		gbc.gridheight = 1;
 		gbc.ipadx = 5;
 		gbc.ipady = 8;
-		addToGrid(gbl,gbc,homeButton,1,2);
-		addToGrid(gbl,gbc,minusButton,1,1);
-		addToGrid(gbl,gbc,plusButton,1,1);
+		addToGrid(gbl,gbc,homeButton,1,2);	addToGrid(gbl,gbc,minusButton,1,1);	addToGrid(gbl,gbc,plusButton,1,1);
 		addToGrid(gbl,gbc,scaleCheckbox,1,2); 	
-		addToGrid(gbl,gbc,referenceLabel = new JLabel("Reference:"),1,0);
-		addToGrid(gbl,gbc,referenceSelector,1,1); 		
+		addToGrid(gbl,gbc,referenceLabel,1,0);	addToGrid(gbl,gbc,referenceSelector,1,1); 
+		addToGrid(gbl,gbc,statsLabel,1,0);		addToGrid(gbl,gbc,statsOpts,1,1); 	
 		addToGrid(gbl,gbc,filterButton,1,2);
+		addToGrid(gbl,gbc,editColorsButton,1,1); 
 		addToGrid(gbl,gbc,showImageButton,1,1);
 		addToGrid(gbl,gbc,helpButton,GridBagConstraints.REMAINDER,0);
     }
@@ -94,6 +114,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 			    else if (src == minusButton)      data.factorZoom(0.95);
 			    else if (src == plusButton)       data.factorZoom(1/0.95);
 			    else if (src == showImageButton)  ImageViewer.showImage("DotPlot", plot); // CAS532 data.getSyMAP().getImageViewer().showImage(plot);
+			    else if (src == editColorsButton) cdh.showX();
 			    else if (src == scaleCheckbox) { 
 			    	if (scaleCheckbox.isSelected())
 			    		data.setScale(true);
@@ -104,6 +125,10 @@ public class ControlPanel extends JPanel implements HelpListener {
 			    }
 			    else if (src == referenceSelector) {
 			    	data.setReference((Project)referenceSelector.getSelectedItem());
+			    }
+			    else if (src == statsOpts) { // CAS541 add
+			    	data.setStatOpts(statsOpts.getSelectedIndex());
+			    	plot.prtCnts();
 			    }
 			    plot.repaint();
 			}

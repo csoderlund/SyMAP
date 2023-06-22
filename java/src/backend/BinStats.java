@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.util.TreeMap;
 import java.util.Vector;
 
+import database.DBconn2;
 import util.ProgressDialog;
 
 /**************************************
@@ -112,20 +113,20 @@ public class BinStats {
 	// CAS534 no reason to load these, only do it on -s; then remove the next time run.
 	// CAS540 (now dead) writes to symap.log now; never used from database so this is not currently called
 	//        was called in AnchorMain and SyntenyMain at end of processing
-	public static void uploadStats(UpdatePool db, int pair_idx, int pidx1, int pidx2) throws Exception {
+	public static void uploadStats(DBconn2 dbc2, int pair_idx, int pidx1, int pidx2) throws Exception {
 		if (mStats == null) return;
 		
 		ResultSet rs = null;
 		for (String key : mKeyOrder) {
 			Integer val = mStats.get(key).intValue();
 			if (Constants.PRT_STATS)
-				db.executeUpdate("replace into pair_props (pair_idx,proj1_idx,proj2_idx,name,value) values(" + pair_idx + 
+				dbc2.executeUpdate("replace into pair_props (pair_idx,proj1_idx,proj2_idx,name,value) values(" + pair_idx + 
 					"," + pidx1 + "," + pidx2 + ",'" + key + "','" + val + "')");	
 			else {
 				String st = "SELECT value FROM pair_props  WHERE pair_idx='" + pair_idx + "' AND name='" + key +"'";
-				rs = db.executeQuery(st);
+				rs = dbc2.executeQuery(st);
 				if (rs.next()) 
-					db.executeUpdate("delete from pair_props where key='" + key + "' and pair_idx=" + pair_idx);
+					dbc2.executeUpdate("delete from pair_props where key='" + key + "' and pair_idx=" + pair_idx);
 			}
 		}
 		if (rs!=null) rs.close();

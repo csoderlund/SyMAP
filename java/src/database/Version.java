@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import backend.AnchorsMain;
 import backend.Utils;
 import symap.Globals;
 import util.ErrorReport;
@@ -17,18 +18,23 @@ public class Version {
 	public String strVer = Globals.DBVERSTR; // db4
 	public boolean debug = Globals.DBDEBUG;  // -dbd
 	
-	public Version (DBuser pool) {
-		this.pool = pool;
+	private DBconn2 dbc2=null;
+	
+	public Version (DBconn2 dbc2) {
+		this.dbc2 = dbc2;
 		checkForUpdate();
+		
 		if (debug) 	updateDEBUG();
 		else 		removeDEBUG();
+		
+		if (Globals.HITCNT_ONLY) updateHitCnt();
 	}
 	
 	// if first run from viewSymap, updates anyway (so if no write permission, crashes)
 	private void checkForUpdate() {
 		try {
 			String strDBver = "db1";
-			ResultSet rs = pool.executeQuery("select value from props where name='DBVER'");
+			ResultSet rs = dbc2.executeQuery("select value from props where name='DBVER'");
 			if (rs.next()) strDBver=rs.getString(1);
 			
 			int idb = 1;
@@ -90,7 +96,7 @@ public class Version {
 	// v5.20.0
 	private void updateVer3() {
 		try {
-			pool.executeUpdate("alter table pseudo_hits modify countpct integer");  // Remove from AnchorsMain, 169
+			dbc2.executeUpdate("alter table pseudo_hits modify countpct integer");  // Remove from AnchorsMain, 169
 			tableCheckAddColumn("pseudo_hits",  "runnum",  "integer default 0", null);
 			tableCheckAddColumn("pseudo_hits",  "hitnum",  "integer default 0", null);
 			tableCheckAddColumn("pseudo_annot", "numhits", "tinyint unsigned default 0", null);
@@ -157,17 +163,17 @@ public class Version {
 		
 // projs <idx, proj_name>	
 		HashMap <Integer, String> projIdxName = new HashMap <Integer, String> ();
-		ResultSet rs = pool.executeQuery("select idx, name from projects");
+		ResultSet rs = dbc2.executeQuery("select idx, name from projects");
 		while (rs.next()) projIdxName.put(rs.getInt(1), rs.getString(2));
 		
 // grps <idx, grpname>   <idx, proj_idx>
 		HashMap <Integer, String> grpIdxName = new HashMap <Integer, String> ();
-		rs = pool.executeQuery("select idx, name, proj_idx from xgroups");
+		rs = dbc2.executeQuery("select idx, name, proj_idx from xgroups");
 		while (rs.next()) grpIdxName.put(rs.getInt(1), rs.getString(2));
 
 // pairs <idx, proj1_idx:proj2_idx)	
 		HashMap <Integer, String> pairsProjs = new HashMap <Integer, String> ();
-		rs = pool.executeQuery("select idx, proj1_idx, proj2_idx from pairs");
+		rs = dbc2.executeQuery("select idx, proj1_idx, proj2_idx from pairs");
 		while (rs.next()) {
 			int idx1 = rs.getInt(2);
 			int idx2 = rs.getInt(3);
@@ -179,7 +185,7 @@ public class Version {
 		if (!tableColumnExists("pairs", "proj_names")) {
 			tableCheckAddColumn("pairs",  "proj_names",  "tinytext", "proj2_idx");
 			for (int pidx : pairsProjs.keySet()) {
-				pool.executeUpdate("update pairs set proj_names='" + pairsProjs.get(pidx) + "' where idx=" + pidx);
+				dbc2.executeUpdate("update pairs set proj_names='" + pairsProjs.get(pidx) + "' where idx=" + pidx);
 			}
 			System.out.println("Update pairs");
 		}
@@ -187,7 +193,7 @@ public class Version {
 		if (!tableColumnExists("xgroups", "proj_name")) {
 			tableCheckAddColumn("xgroups",  "proj_name",  "tinytext", "fullname");
 			for (int pidx : projIdxName.keySet()) {
-				pool.executeUpdate("update xgroups set proj_name='" + projIdxName.get(pidx) + "' where proj_idx=" + pidx);
+				dbc2.executeUpdate("update xgroups set proj_name='" + projIdxName.get(pidx) + "' where proj_idx=" + pidx);
 			}
 			System.out.println("Update xgroups");
 		}
@@ -195,7 +201,7 @@ public class Version {
 		if (!tableColumnExists("blocks", "proj_names")) {
 			tableCheckAddColumn("blocks",  "proj_names", "tinytext", "pair_idx");
 			for (int pidx : pairsProjs.keySet()) {
-				pool.executeUpdate("update blocks set proj_names='" + pairsProjs.get(pidx) + "' where pair_idx=" + pidx);
+				dbc2.executeUpdate("update blocks set proj_names='" + pairsProjs.get(pidx) + "' where pair_idx=" + pidx);
 			}
 			System.out.println("Update blocks.pairs");
 		}
@@ -203,8 +209,8 @@ public class Version {
 			tableCheckAddColumn("blocks",  "grp1",  "tinytext", "proj_names");	
 			tableCheckAddColumn("blocks",  "grp2",  "tinytext", "grp1");	
 			for (int gidx : grpIdxName.keySet()) {
-				pool.executeUpdate("update blocks set grp1='" + grpIdxName.get(gidx) + "' where grp1_idx=" +gidx);
-				pool.executeUpdate("update blocks set grp2='" + grpIdxName.get(gidx) + "' where grp2_idx=" +gidx);
+				dbc2.executeUpdate("update blocks set grp1='" + grpIdxName.get(gidx) + "' where grp1_idx=" +gidx);
+				dbc2.executeUpdate("update blocks set grp2='" + grpIdxName.get(gidx) + "' where grp2_idx=" +gidx);
 			}
 			System.out.println("Update blocks.grps");
 		}
@@ -212,7 +218,7 @@ public class Version {
 	// CAS540x -dbd add pseudo_annot_hit.pair_idx	THIS IS SLOW
 		HashSet <Integer> annotSet = new HashSet <Integer> ();
 		HashSet <Integer> hitSet = new HashSet <Integer> ();
-		rs = pool.executeQuery("select hit_idx, annot_idx from pseudo_hits_annot");
+		rs = dbc2.executeQuery("select hit_idx, annot_idx from pseudo_hits_annot");
 		while (rs.next()) {
 			hitSet.add(rs.getInt(1));
 			annotSet.add(rs.getInt(2));
@@ -220,7 +226,7 @@ public class Version {
 		System.out.println("hits to genes: " + hitSet.size() + " " + annotSet.size());
 		
 		HashMap <Integer, Integer> hitPairMap = new HashMap <Integer, Integer> ();
-		rs = pool.executeQuery("select idx, pair_idx from pseudo_hits");
+		rs = dbc2.executeQuery("select idx, pair_idx from pseudo_hits");
 		while (rs.next()) {
 			int idx = rs.getInt(1);
 			if (hitSet.contains(idx))
@@ -233,7 +239,7 @@ public class Version {
 		for (int hidx : hitPairMap.keySet()) {
 			cnt++;
 			if (cnt%5000==0) System.out.print("   added " + cnt + " ....");
-			pool.executeUpdate("update pseudo_hits_annot set xpair_idx=" + hitPairMap.get(hidx) + " where hit_idx=" +hidx);
+			dbc2.executeUpdate("update pseudo_hits_annot set xpair_idx=" + hitPairMap.get(hidx) + " where hit_idx=" +hidx);
 		}
 		hitPairMap.clear(); hitSet.clear();
 		System.out.println("Update pseudo_hits_annot.pair_idx                \r");
@@ -242,7 +248,7 @@ public class Version {
 	
 		HashMap <Integer, Integer> annotGrpMap = new HashMap <Integer, Integer> (); // annot_idx, grp_idx
 		
-		rs = pool.executeQuery("select idx, grp_idx from pseudo_annot");
+		rs = dbc2.executeQuery("select idx, grp_idx from pseudo_annot");
 		while (rs.next()) {
 			int idx = rs.getInt(1);
 			if (annotSet.contains(idx))
@@ -257,7 +263,7 @@ public class Version {
 			cnt++;
 			if (cnt%5000==0) System.out.print("   added " + cnt + " ....\r");
 			int gidx = annotGrpMap.get(aidx);
-			pool.executeUpdate("update pseudo_hits_annot set xgrp_idx=" + gidx + " where annot_idx=" +aidx);
+			dbc2.executeUpdate("update pseudo_hits_annot set xgrp_idx=" + gidx + " where annot_idx=" +aidx);
 		}
 		annotGrpMap.clear();
 		
@@ -307,6 +313,27 @@ public class Version {
 		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
 	}
 	
+	private void updateHitCnt() {
+		try {
+			System.out.println("Starting update of gene hit counts");
+			HashSet <Integer> grpIdx = new HashSet <Integer> ();
+			ResultSet rs = dbc2.executeQuery("select idx from xgroups");
+			while (rs.next()) grpIdx.add(rs.getInt(1));
+			
+			AnchorsMain am = new AnchorsMain(dbc2);
+			int cnt=1;
+			for (int idx : grpIdx)  {
+				System.out.print("   Update " + cnt + " of " + grpIdx.size() + "\r");
+				am.setAnnotHits(idx);
+				cnt++;
+			}
+			dbc2.close();
+			System.out.println("Complete update of gene hit counts");
+			System.out.println("Restart symap without the -y");
+			System.exit(0);
+		}
+		catch (Exception e) {ErrorReport.print(e, "Update hit count");}
+	}
 	/****************************************************************************/
 	/***************************************************************************
 	 * Methods to modify the MySQL database.
@@ -315,14 +342,14 @@ public class Version {
 	private void replaceProps(String name, String value) {
 		String sql="";
 		try {
-			ResultSet rs = pool.executeQuery("select value from props where name='" + name + "'");
+			ResultSet rs = dbc2.executeQuery("select value from props where name='" + name + "'");
 			if (rs.next()) {
 				sql = "UPDATE props set value='" + value + "' where name='" + name + "'; ";
 			}
 			else {
 				sql = "INSERT INTO props (name,value) VALUES " + "('" + name + "','" +  value + "'); ";	
 			}
-			pool.executeUpdate(sql);
+			dbc2.executeUpdate(sql);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Replace props: " + sql);}
 	}
@@ -333,7 +360,7 @@ public class Version {
 		
 		try {
 			if (tableExists(oldTable))
-				pool.executeUpdate(sql);
+				dbc2.executeUpdate(sql);
 			return true;
 		}
 		catch (Exception e) {ErrorReport.print(e, sql); return false;}
@@ -343,7 +370,7 @@ public class Version {
 		try {
 			if (!tableColumnExists(table,col)){
 				if (aft!=null && !aft.trim().equals("")) cmd += " after " + aft;
-				pool.executeUpdate(cmd);
+				dbc2.executeUpdate(cmd);
 				return true;
 			}
 			return false;
@@ -355,7 +382,7 @@ public class Version {
 	private void tableCheckDropColumn(String table, String col) throws Exception {
 		if (tableColumnExists(table,col)) {
 			String cmd = "alter table " + table + " drop " + col;
-			pool.executeUpdate(cmd);
+			dbc2.executeUpdate(cmd);
 		}
 	}
 	private boolean tableDrop(String table) {
@@ -363,14 +390,14 @@ public class Version {
 		
 		try {
 			if (tableExists(table))
-				pool.executeUpdate(sql);
+				dbc2.executeUpdate(sql);
 			return true;
 		}
 		catch (Exception e) {ErrorReport.print(e, sql); return false;}
 	}
 	
 	private boolean tableExists(String name) throws Exception {
-		ResultSet rs = pool.executeQuery("show tables");
+		ResultSet rs = dbc2.executeQuery("show tables");
 		while (rs.next()) {
 			if (rs.getString(1).equals(name)) {
 				rs.close();
@@ -381,7 +408,7 @@ public class Version {
 		return false;
 	}
 	private boolean tableColumnExists(String table, String column) throws Exception {
-		ResultSet rs = pool.executeQuery("show columns from " + table);
+		ResultSet rs = dbc2.executeQuery("show columns from " + table);
 		while (rs.next()) {
 			if (rs.getString(1).equals(column)) {
 				rs.close();
@@ -428,6 +455,4 @@ public class Version {
 		return ret;
 	}
 	*/
-	// class variable
-	private DBuser pool=null;
 }

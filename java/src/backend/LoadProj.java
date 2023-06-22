@@ -3,7 +3,7 @@ package backend;
 import java.io.FileWriter;
 import java.util.Vector;
 
-import database.DBconn;
+import database.DBconn2;
 import symap.manager.ManagerFrame;
 import symap.manager.Mproject;
 import util.Cancelled;
@@ -16,12 +16,12 @@ import util.ProgressDialog;
  * All ProgressDialog must call finish in order to close fw
  *******************************************************************************/
 public class LoadProj {
-	private DBconn dbc;
+	private DBconn2 dbc2;
 	private ManagerFrame frame;
 	private FileWriter fw;
 	
-	public LoadProj(ManagerFrame frame, DBconn dbConn, FileWriter fw) {
-		this.dbc = dbConn;
+	public LoadProj(ManagerFrame frame, DBconn2 dbc2, FileWriter fw) {
+		this.dbc2 = dbc2;
 		this.frame = frame;
 		this.fw = fw;
 	}
@@ -42,14 +42,12 @@ public class LoadProj {
 					if (mProj.getStatus() != Mproject.STATUS_ON_DISK) continue;
 					
 					try {
-						UpdatePool pool = new UpdatePool(dbc);
-						
 						progress.appendText(">>> Load " + mProj.getDBName()); 
 						mProj.createProject();
-						success = new SeqLoadMain().run( pool, progress, mProj);
+						success = new SeqLoadMain().run(dbc2, progress, mProj);
 					
 						if (success && !Cancelled.isCancelled())  {
-							AnnotLoadMain annot = new AnnotLoadMain(pool, progress, mProj);
+							AnnotLoadMain annot = new AnnotLoadMain(dbc2, progress, mProj);
 							success = annot.run( mProj.getDBName());
 						}
 						
@@ -84,14 +82,13 @@ public class LoadProj {
 				boolean success = true;
 				
 				try {
-					UpdatePool pool = new UpdatePool(dbc);
 					progress.appendText(">>> Load " + mProj.getDBName()); 
 					
 					mProj.createProject();		
-					success = new SeqLoadMain().run( pool, progress, mProj);	
+					success = new SeqLoadMain().run(dbc2, progress, mProj);	
 					
 					if (success && !Cancelled.isCancelled())  {
-						AnnotLoadMain annot = new AnnotLoadMain(pool, progress, mProj);
+						AnnotLoadMain annot = new AnnotLoadMain(dbc2, progress, mProj);
 						success = annot.run( mProj.getDBName());
 					}
 					
@@ -127,8 +124,7 @@ public class LoadProj {
 				try { 
 					mProj.removeAnnoFromDB(); // CAS535 remove from here instead of AnnotLoadMain
 					
-					UpdatePool pool = new UpdatePool(dbc);
-					AnnotLoadMain annot = new AnnotLoadMain(pool, progress, mProj);
+					AnnotLoadMain annot = new AnnotLoadMain(dbc2, progress, mProj);
 					success = annot.run(mProj.getDBName()); 
 				
 					if (!success || Cancelled.isCancelled()) {

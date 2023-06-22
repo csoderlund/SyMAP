@@ -47,6 +47,7 @@ public class SummaryPanel  extends JPanel {
 		HashMap<String,String> chrStrMap = new HashMap<String, String>();
 		HashSet<Integer> gidxSet = new HashSet<Integer> ();
 		
+		// Create Chr: x of x
     	for (DBdata dd : rowsFromDB) {
     		if (!gidxSet.contains(dd.getChrIdx(0))) gidxSet.add(dd.getChrIdx(0));
     		if (!gidxSet.contains(dd.getChrIdx(1))) gidxSet.add(dd.getChrIdx(1));
@@ -57,12 +58,12 @@ public class SummaryPanel  extends JPanel {
     		String projName = spPanel.getSpName(p);
     		order.add(spPanel.getSpIdx(p));
     		
-    		String [] gidx =  spPanel.getChrIdxList(p);
+    		String [] gidxList =  spPanel.getChrIdxList(p);
     		HashSet <Integer> spGidx = new HashSet <Integer> ();
-    		for (String c : gidx) 
+    		for (String c : gidxList) 
     			spGidx.add(Integer.parseInt(c));
     		
-    		int nchrs =       gidx.length;
+    		int nchrs =       gidxList.length;
     		int xchr = 0;
     		for (int idx : gidxSet) 
     			if (spGidx.contains(idx)) xchr++;
@@ -73,16 +74,17 @@ public class SummaryPanel  extends JPanel {
     	gidxSet.clear();
 	    	
 		if (qPanel.isSingle()) 	createSingle(chrStrMap);
-		else 					createHits(chrStrMap, geneCntMap, proj2regions, order);
+		else 					createPairHits(chrStrMap, geneCntMap, proj2regions, order);
 	}
 	/*****************************************************
 	 * Has Gene:  Either %d Both %d  None %d      Has Block: Yes %d  No %d 
 	 * 
 	 * Sp1  Hits: %d   Annotated: %d   Chr: %d  Regions: %d
 	 */
-	private void createHits(HashMap <String, String>  chrStrMap, 
+	private void createPairHits(HashMap <String, String>  chrStrMap, 
 							HashMap <Integer, Integer> annoCntMap,
-							HashMap <String, Integer> proj2regions, Vector <Integer> order) {
+							HashMap <String, Integer> proj2regions, 
+							Vector <Integer> order) {
 		try {
 			int either=0, both=0, none=0, block=0;
 			HashMap <Integer, Integer> proj2hits =  new HashMap <Integer, Integer> ();
@@ -106,19 +108,18 @@ public class SummaryPanel  extends JPanel {
 				
 				if (dd.hasBlock()) block++;
 			}
-			String label = String.format("Has Gene:  Either %,d   Both %,d   None %,d     Has Block: %,d", 
-							either, both, none, block);
+			String label = String.format("Has Gene:  Both %,d   One %,d   None %,d     Has Block: %,d", 
+							 both, either, none, block); // CAS541 changed text to match dotplot summary
 			JLabel theLabel = new JLabel(label);
 			theLabel.setFont(new Font("Monospaced", Font.PLAIN, 12));
 			statsPanel.add(theLabel);
 			statsPanel.add(Box.createVerticalStrut(5));
 			
-			for (int spIdx : order )
-			{
+			for (int spIdx : order ) {
 				String pName = spPanel.getSpNameFromSpIdx(spIdx);
 				int nReg =  proj2regions.containsKey(pName) ? proj2regions.get(pName) : 0;
-				int nHit =  proj2hits.containsKey(spIdx) ? proj2hits.get(spIdx) : 0;
-				int nAnno = proj2annot.containsKey(spIdx) ? proj2annot.get(spIdx) : 0;
+				int nHit =  proj2hits.containsKey(spIdx)    ? proj2hits.get(spIdx)    : 0;
+				int nAnno = proj2annot.containsKey(spIdx)   ? proj2annot.get(spIdx)   : 0;
 				
 				String chrStr =  chrStrMap.containsKey(pName)  ? chrStrMap.get(pName) : "Unk";
 				int nUnq =       annoCntMap.containsKey(spIdx) ? annoCntMap.get(spIdx) : 0;
@@ -127,7 +128,7 @@ public class SummaryPanel  extends JPanel {
 				
 				if (qPanel.isPgeneF()) 
 					label = String.format("%-13s  Hits: %,6d    Annotated: %,6d   Genes: %,5d    Chr: %s     Regions: %,7d", 
-							pName, nHit, nAnno, nUnq, chrStr, nReg);
+							              pName,  nHit,         nAnno,     nUnq,        chrStr, nReg);
 				else
 					label = String.format("%-13s  Hits: %,6d    Annotated: %,6d   Genes: %,5d   Chr: %s", 
 							pName, nHit, nAnno, nUnq, chrStr);

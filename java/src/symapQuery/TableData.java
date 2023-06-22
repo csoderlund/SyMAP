@@ -93,8 +93,8 @@ public class TableData implements Serializable {
     		addColumnHeader(genColNames[x], genColType[x]);
     	
     	// Loc headers and type
-    	String [] spColNames =	  FieldData.getSpeciesColHead();
-    	Class <?> [] spColType =  FieldData.getSpeciesColType();
+    	String [] spColNames =	  FieldData.getSpeciesColHead(isSingle);
+    	Class <?> [] spColType =  FieldData.getSpeciesColType(isSingle);
     	int spColCnt = FieldData.getSpColumnCount(isSingle);	// CAS519 less columns for single
     	
     	for(int x=0; x < species.length; x++) {

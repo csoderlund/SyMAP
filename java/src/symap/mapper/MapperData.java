@@ -6,9 +6,9 @@ package symap.mapper;
  */
 public class MapperData {
 
-    private HitFilter hf;
+    private HfilterData hf;
 
-    public MapperData(HitFilter hf) {
+    public MapperData(HfilterData hf) {
     	this.hf = hf.copy();
     }
     

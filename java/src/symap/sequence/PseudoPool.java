@@ -1,58 +1,41 @@
 package symap.sequence;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Vector;
 
-import database.DBconn;
-import database.DBAbsUser;
+import database.DBconn2;
 import number.GenomicsNumber;
 import util.ErrorReport;
 
 /**
  * The PseudoPool handles the cache of data for the Sequence Track.
+ * CAS531 removed dead cache
+ * CAS541 removed DBAbsUser
  */
-public class PseudoPool extends DBAbsUser {	
-	protected static final String SIZE_QUERY = 
-		"SELECT (SELECT length FROM pseudos WHERE grp_idx=?) as size, "+
-		"       (SELECT name FROM xgroups WHERE idx=?) as name; ";
-
-	protected static final String ANNOT_QUERY =
-		"SELECT idx, type,name,start,end,strand, genenum, gene_idx, tag, numhits FROM pseudo_annot " // CAS520 add numhits
-		+ " WHERE grp_idx=? ORDER BY type DESC"; 
+public class PseudoPool {	
+	private DBconn2 dbc2;
 	
-	//private ListCache pseudoCache; CAS531 removed dead cache
+	public PseudoPool(DBconn2 dbc2) { this.dbc2 = dbc2;}
 
-	public PseudoPool(DBconn dr) { 
-		super(dr);
-	}
-
-	public synchronized void close() {
-		super.close();
-	}
-
-	public synchronized void clear() {
-		super.close();
-	}
+	public synchronized void close() {}
 
 	/**
 	 * Called by Sequence object
-	 * gnsize - enter setBPsize
-	 * Annotation Vector = enter annotation objects 
+	 * gnsize - enter setBPsize; Annotation Vector = enter annotation objects 
 	 */
-	public synchronized String setSequence(Sequence seqObj, GenomicsNumber gnsize, Vector<Annotation> annotations) throws SQLException {
+	public synchronized String setSequence(Sequence seqObj, GenomicsNumber gnsize, Vector<Annotation> annotations) {
 		int project = seqObj.getProject();
-		int group =   seqObj.getGroup();
-		
+		int group =   seqObj.getGroup();		
 		PseudoData pdata  = new PseudoData(project, group);
 
-		Statement statement = null;
 		ResultSet rs = null;
 		Vector<AnnotationData> annoVec = new Vector<AnnotationData>();
 		try {
-			statement = createStatement();
-			rs = statement.executeQuery(setInt(setInt(SIZE_QUERY,group),group));
+			String size_query = 
+					"SELECT (SELECT length FROM pseudos WHERE grp_idx=" + group + ") as size, "+
+					"       (SELECT name   FROM xgroups WHERE idx="     + group + ") as name; ";
+			
+			rs = dbc2.executeQuery(size_query);
 			rs.next(); // a row no matter what
 			pdata.setSize(rs.getLong(1));
 			if (rs.wasNull()) {
@@ -60,9 +43,12 @@ public class PseudoPool extends DBAbsUser {
 			}
 			else {
 				pdata.setName(rs.getString(2));
-				closeResultSet(rs);
 				
-				rs = statement.executeQuery(setInt(ANNOT_QUERY,group));
+				String annot_query =
+						"SELECT idx, type,name,start,end,strand, genenum, gene_idx, tag, numhits FROM pseudo_annot " // CAS520 add numhits
+						+ " WHERE grp_idx=" + group + " ORDER BY type DESC"; 
+				
+				rs = dbc2.executeQuery(annot_query);
 				while (rs.next()) {
 					if (rs.getString(2).equals("hit")) continue; // ???
 					
@@ -82,18 +68,9 @@ public class PseudoPool extends DBAbsUser {
 					annoVec.add(annot);
 				}
 			}
-			closeResultSet(rs);
-			closeStatement(statement);
-		} catch (SQLException sql) {
-			closeResultSet(rs);
-			closeStatement(statement);
-			close();
-			ErrorReport.print(sql, "SQL exception acquiring sequence data.");
-			throw sql;
-		} finally {
-			rs = null;
-			statement = null;
-		}
+			rs.close();
+			
+		} catch (Exception sql) {ErrorReport.print(sql, "SQL exception acquiring sequence data.");}
 		
 		try {
 			AnnotationData [] annoData = annoVec.toArray(new AnnotationData[annoVec.size()]); // CAS512 simplified
@@ -115,27 +92,15 @@ public class PseudoPool extends DBAbsUser {
 	 * group = group name or group name with prefix, or prefix+0+group.
 	 */
 	public int getGroupID(String group, int projID) {
-		int id = 0;
-		Statement stat = null;
+		int id = -1;
 		ResultSet rs = null;
 		try {
-			stat = createStatement();
-			String query = setInt(
-					setString("SELECT idx FROM xgroups WHERE (name=? AND proj_idx=?)",group),projID);	
-			rs = stat.executeQuery(query);
+			String query = "SELECT idx FROM xgroups WHERE (name='"+ group + "' AND proj_idx=" + projID;
+			rs = dbc2.executeQuery(query);
 			if (rs.next()) id = rs.getInt(1);
+			rs.close();
 		}
-		catch (SQLException e) {
-			id = -1;
-			ErrorReport.print(e, "Failure to obtain id for group="+group+" project="+projID);
-			close();
-		}
-		finally {
-			closeStatement(stat);
-			closeResultSet(rs);
-			stat = null;
-			rs = null;
-		}
+		catch (Exception e) {ErrorReport.print(e, "Failure to obtain id for group="+group+" project="+projID);}
 		return id;
 	}
 }

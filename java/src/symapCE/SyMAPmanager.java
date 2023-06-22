@@ -1,23 +1,16 @@
 package symapCE;
 
 import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import backend.Constants;
 import backend.Group;
-import backend.Hit;
-import database.DBconn;
 import symap.Globals;
-import symap.frame.ChrExpInit;
-import symap.manager.Mproject;
 import symap.manager.ManagerFrame;
-import util.Utilities;
-import util.ErrorReport;
 
 /*********************************************
  * Called by symap and viewSymap scripts
  * ManagerFrame displays interface, SyMAPFrame calls showExplorer
+ * CAS541 showExplorer to ManagerFrame
  */
 
 public class SyMAPmanager extends ManagerFrame {
@@ -41,32 +34,8 @@ public class SyMAPmanager extends ManagerFrame {
 	
 	SyMAPmanager(String args[]) {
 		super(); // Creates ManagerFrame; 
-		
-		explorerListener = new ActionListener() { // explorerListener in ManagerFrame
-			public void actionPerformed(ActionEvent e) { 
-				showExplorer();
-			}
-		};
 	}
-	// Called when Chromosome Explorer clicked in Manager
-	private void showExplorer() {
-		Utilities.setCursorBusy(this, true);
-		try {
-			DBconn dr = DBconn.getInstance(Globals.DB_CONN_SYMAP, dbc);
-			
-			ChrExpInit symapExp = new ChrExpInit(dr);
-			
-			for (Mproject p : selectedProjVec) 
-				symapExp.addProject( p.getDBName() );
-			symapExp.build();
-			symapExp.getFrame().build();
-			symapExp.getFrame().setVisible(true); 
-		}
-		catch (Exception err) {ErrorReport.print(err, "Show SyMAP graphical window");}
-		finally {
-			Utilities.setCursorBusy(this, false);
-		}
-	}
+	
 	/******************************************************************
 	 * CAS511 the perl script was removed, so the parameters need to be written here
 	 * CAS505 moved parse args to ManagerFrame
@@ -93,6 +62,7 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("\nSynteny&Alignment:");
 			System.out.println("  -p N      : number of CPUs to use");
 			System.out.println("  -s        : print stats for A&S, or recreate the Summary on display");
+			System.out.println("  -y        : A&S will only run the hit count algorithm");
 			
 			if (hasCommandLineOption(args, "-s")) {
 				System.out.println("  -ug N      : 0 ignore annot, 1 either annot, 2 both annot");
@@ -132,7 +102,11 @@ public class SyMAPmanager extends ManagerFrame {
 			
 			if (hasCommandLineOption(args, "-z")) {// CAS519b
 				Globals.GENEN_ONLY=true;
-				System.out.println("-z Reload Annotatin will only run the Gene# assignment algorithm");
+				System.out.println("-z Reload Annotation will only run the Gene# assignment algorithm");
+			}
+			if (hasCommandLineOption(args, "-y")) {// CAS519b
+				Globals.HITCNT_ONLY=true;
+				System.out.println("-y the gene hit count will immediately be updated");
 			}
 			if (hasCommandLineOption(args, "-s")) {
 				System.out.println("-s Print Stats");

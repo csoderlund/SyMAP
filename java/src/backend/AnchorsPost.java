@@ -7,6 +7,7 @@ import java.util.TreeSet;
 import java.util.TreeMap;
 import java.util.Vector;
 
+import database.DBconn2;
 import util.Cancelled;
 import util.ErrorReport;
 import util.ProgressDialog;
@@ -17,18 +18,16 @@ import util.Utilities;
  * 	the term 'run' is used here for collinear (run/set)
  * 9/21/22 move setGeneNumCounts from SyntenyMain
  * CAS512 MOVED compute genenum from SyntenyMain to AnnotLoadMain
- * CAS520 added setAnnot, setHitNum and rewrote collinearSets
- * CAS540 moved setHitNum to AnchorsMain
+ * CAS520 added setAnnot, setHitNum and rewrote collinearSets; CAS541 moved setHitNum to AnchorsMain
  */
 
 public class AnchorsPost {
 	private boolean debug = false; 
 	private boolean test = true;
-	private boolean bSetHitCnts = false; // Collinear not called if either has 0 annot
-	
+
 	private int mPairIdx; // project pair 
 	private ProgressDialog mLog;
-	private UpdatePool pool;
+	private DBconn2 dbc2;
 	private SyProj mProj1, mProj2;
 	private int totalMerge=0, totalMult=0, finalRunNum=0;
 	private int [] cntSizeSet = {0,0,0,0,0};
@@ -46,24 +45,20 @@ public class AnchorsPost {
 	private TreeMap <Integer, Gene> geneMapR = new TreeMap <Integer, Gene> (); // gnum, gene with !=
 	private String chrs;
 		
-	public AnchorsPost(int pairIdx, SyProj proj1, SyProj proj2, UpdatePool xpool, ProgressDialog log) {
+	public AnchorsPost(int pairIdx, SyProj proj1, SyProj proj2, DBconn2 dbc2, ProgressDialog log) {
 		mPairIdx = pairIdx;
 		mProj1 = proj1;
 		mProj2 = proj2;
-		pool = xpool;
+		this.dbc2 = dbc2;
 		mLog = log;
 	}
+	
 	/*********************************************************
 	 * Also does pseudo_hits.hitnum and pseudo_annot.numhits
 	 */
 	public void collinearSets() {
 		try {
-			if (bSetHitCnts) { 
-				mLog.msg("Setting gene-hit counts    ");
-				for (Group g1 : mProj1.getGroups()) if (!setAnnotHits(g1)) return;
-				for (Group g2 : mProj2.getGroups()) if (!setAnnotHits(g2)) return;
-			}
-			pool.executeUpdate("update pseudo_hits set runsize=0, runnum=0 where pair_idx=" + mPairIdx);
+			dbc2.executeUpdate("update pseudo_hits set runsize=0, runnum=0 where pair_idx=" + mPairIdx);
 			
 			int num2go = mProj1.getGroups().size() * mProj2.getGroups().size();
 			mLog.msg("Finding Collinear sets");
@@ -71,7 +66,8 @@ public class AnchorsPost {
 			
 			for (Group g1 : mProj1.getGroups()) {
 				for (Group g2: mProj2.getGroups()) {
-					System.err.print(num2go + " pairs remaining...            \r");
+					String t = Utilities.getDurationString(Utils.getTime()-time);
+					System.err.print(num2go + " pairs remaining... (" + t + ")   \r"); // CAS541 add time
 					num2go--;
 					
 					if (g1.idx==g2.idx) continue; 		// CAS521 can crash on self-chr
@@ -84,8 +80,8 @@ public class AnchorsPost {
 			}
 			if (debug) Utils.prtNumMsg(mLog, totalMult, "Total multi hits");
 			// CAS540 computed counts are not right; just get from db
-			int nsets = pool.getInt("SELECT count(DISTINCT(runnum)) FROM pseudo_hits WHERE runnum>0 and pair_idx=" + mPairIdx);
-			int nhits = pool.getInt("SELECT count(*) FROM pseudo_hits WHERE runnum>0 and pair_idx=" + mPairIdx);
+			int nsets = dbc2.executeInteger("SELECT count(DISTINCT(runnum)) FROM pseudo_hits WHERE runnum>0 and pair_idx=" + mPairIdx);
+			int nhits = dbc2.executeInteger("SELECT count(*) FROM pseudo_hits WHERE runnum>0 and pair_idx=" + mPairIdx);
 			Utils.prtNumMsg(mLog, nsets, "Collinear sets                          ");
 			Utils.prtNumMsg(mLog, nhits, "Updates                          ");
 			Utils.timeDoneMsg(mLog, "Collinear", time);
@@ -141,7 +137,7 @@ public class AnchorsPost {
 			ResultSet rs;
 			
 		// Hits to 2 genes - annot1 and annot2 have the best overlap; ignore others
-			rs = pool.executeQuery("select ph.idx, ph.strand, ph.hitnum, ph.annot1_idx, ph.annot2_idx, B.blocknum " +
+			rs = dbc2.executeQuery("select ph.idx, ph.strand, ph.hitnum, ph.annot1_idx, ph.annot2_idx, B.blocknum " +
 				" from pseudo_hits as ph  " +
 				" LEFT JOIN pseudo_block_hits AS PBH ON PBH.hit_idx=ph.idx" +
 				" LEFT JOIN blocks AS B ON B.idx=PBH.block_idx " +
@@ -165,7 +161,7 @@ public class AnchorsPost {
 				else if (test) System.out.println("SyMAP error: two hitnum=" + hitnum); 
 			}
 			// only returns one side of hit; this is to find where a hit aligns to overlapping genes
-			rs = pool.executeQuery(
+			rs = dbc2.executeQuery(
 					"select ph.hitnum, pa.idx, pa.grp_idx  from pseudo_hits       as ph " +
 					" join pseudo_hits_annot as pha on ph.idx = pha.hit_idx" +
 					" join pseudo_annot      as pa  on pa.idx = pha.annot_idx " +
@@ -189,7 +185,7 @@ public class AnchorsPost {
 			String osql = " order by start ASC, len DESC";
 			                        
 			int tnum=0;
-			rs = pool.executeQuery(ssql + g1.idx + osql);
+			rs = dbc2.executeQuery(ssql + g1.idx + osql);
 			while (rs.next()) {
 				int idx = rs.getInt(1);		// tag          start         end            genenum        strand
 				gObj = new Gene(idx, tnum, rs.getString(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getString(6));
@@ -199,7 +195,7 @@ public class AnchorsPost {
 			}
 			
 			tnum=0;
-			rs = pool.executeQuery(ssql + g2.idx + osql);
+			rs = dbc2.executeQuery(ssql + g2.idx + osql);
 			while (rs.next()) {
 				int idx = rs.getInt(1);
 				gObj = new Gene(idx, tnum, rs.getString(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getString(6));
@@ -411,7 +407,7 @@ public class AnchorsPost {
 	/*****************************************************************/
 	private boolean step6SaveToDB(Group g1, Group g2) {
 	try {
-		PreparedStatement ps = pool.prepareStatement("update pseudo_hits set runsize=?, runnum=? where idx=?");
+		PreparedStatement ps = dbc2.prepareStatement("update pseudo_hits set runsize=?, runnum=? where idx=?");
 		for (int hitnum : hitMap.keySet()) {
 			Hit hObj = hitMap.get(hitnum);
 			int rsize = hObj.frunsize;
@@ -583,38 +579,6 @@ public class AnchorsPost {
 		private String tag="";	// // e.g. Gene #999 (4 1,128bp) 
 		private int idx, genenum, start, end;
 		private boolean isOlap=false, bPosStrand=true;
-	}
-	// Wrote in CAS520,  is for all projects; need p1xp2 columns
-	private boolean setAnnotHits(Group g1 ) {
-		try {
-			pool.executeUpdate("update pseudo_annot set numhits=0 where grp_idx=" + g1.idx);
-			ResultSet rs = pool.executeQuery("select count(*) from pseudo_annot where grp_idx=" + g1.idx);
-			int cnt = (rs.next()) ? rs.getInt(1) : 0;
-			if (cnt==0) return true; // CAS521 this is not a failure 
-			
-			HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> ();
-			
-			rs = pool.executeQuery("select pha.annot_idx from pseudo_hits_annot as pha"
-					+ " join pseudo_annot as pa on pha.annot_idx=pa.idx "
-					+ " where pa.grp_idx=" + g1.idx);
-			while (rs.next()) {
-				int aidx = rs.getInt(1);
-				if (geneCntMap.containsKey(aidx)) geneCntMap.put(aidx,geneCntMap.get(aidx)+1);
-				else geneCntMap.put(aidx, 1);
-			}
-			rs.close();
-			
-			PreparedStatement ps = pool.prepareStatement("update pseudo_annot set numhits=? where idx=?");
-			for (int idx : geneCntMap.keySet()) {
-				int num = geneCntMap.get(idx);
-				ps.setInt(1, num);
-				ps.setInt(2, idx);
-				ps.addBatch();
-			}
-			ps.executeBatch();
-			return true;
-		}
-		catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); return false;}
 	}
 }
 

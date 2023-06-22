@@ -23,6 +23,7 @@ public class Q {
 	static final String hStartCol =	 "Hstart";
 	static final String hEndCol =	 "Hend";
 	static final String hLenCol = 	 "Hlen";
+	static final String gHitNumCol = "NumHits"; // CAS541 
 	
 	static final String All_Anno =  "All_Anno";
 	static final String empty    = 	"-";
@@ -45,29 +46,30 @@ public class Q {
 	static final int ASTRAND = 5;		// PA.strand
 	static final int ANAME = 6;			// PA.name (description)
 	static final int AGENE = 7;			// PA.genenum CAS514 added; was computed in DBdata
+	static final int ANUMHITS = 8;		// PA.numhits CAS541 add
 	
-	static final int HITIDX =   8;		// PH.idx
-	static final int HITNUM =   9;		// PH.hitnum
-	static final int PROJ1IDX =  10;	// PH.proj1_idx  (can get from grpIdx, but this is for sanity checking
-	static final int PROJ2IDX =  11;	// PH.proj2_idx
-	static final int GRP1IDX =  12;		// PH.grp1_idx
-	static final int GRP2IDX =  13;		// PH.grp1_idx
-	static final int HIT1START = 14;	// PH.start1
-	static final int HIT2START = 15;	// PH.start2
-	static final int HIT1END = 16;		// PH.end1
-	static final int HIT2END = 17;		// PH.end2
-	static final int PID = 18;			// PH.pctid
-	static final int PSIM = 19;			// PH.cvgpct
-	static final int HCNT = 20;			// PH.countpct
-	static final int HST = 21;			// PH.strand
-	static final int HSCORE = 22;		// PH.score, CAS540 add
-	static final int COSIZE = 23;		// PH.runsize
-	static final int CONUM = 24;		// PH.runnum, CAS520 add
+	static final int HITIDX =   9;		// PH.idx
+	static final int HITNUM =   10;		// PH.hitnum
+	static final int PROJ1IDX =  11;	// PH.proj1_idx  (can get from grpIdx, but this is for sanity checking
+	static final int PROJ2IDX =  12;	// PH.proj2_idx
+	static final int GRP1IDX =  13;		// PH.grp1_idx
+	static final int GRP2IDX =  14;		// PH.grp1_idx
+	static final int HIT1START = 15;	// PH.start1
+	static final int HIT2START = 16;	// PH.start2
+	static final int HIT1END = 17;		// PH.end1
+	static final int HIT2END = 18;		// PH.end2
+	static final int PID = 19;			// PH.pctid
+	static final int PSIM = 20;			// PH.cvgpct
+	static final int HCNT = 21;			// PH.countpct
+	static final int HST = 22;			// PH.strand
+	static final int HSCORE = 23;		// PH.score, CAS540 add
+	static final int COSIZE = 24;		// PH.runsize
+	static final int CONUM = 25;		// PH.runnum, CAS520 add
 	
-	static final int BNUM = 25;			// B.blocknum
-	static final int BSCORE = 26;		// B.blockscore
-	static final int ANNOT1IDX = 27;	// PH.annot1_idx
-	static final int ANNOT2IDX = 28;	// PH.annot2_idx
+	static final int BNUM = 26;			// B.blocknum
+	static final int BSCORE = 27;		// B.blockscore
+	static final int ANNOT1IDX = 28;	// PH.annot1_idx
+	static final int ANNOT2IDX = 29;	// PH.annot2_idx
 	
 	static final String ANNO = "ANNO";	// populated by keyword 
 	static final String GSIZE = "GSIZE";// computed PgFsize

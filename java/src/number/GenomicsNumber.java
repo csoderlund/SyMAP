@@ -7,8 +7,6 @@ import java.util.Map;
 /**
  * Class GenomicsNumber holds a number value.  That it can format 
  * based on the holder of the number.
- *
- * @see GenomicsNumberHolder
  */
 public class GenomicsNumber {
 	public static final int DEFAULT_FRACTION_DIGITS = 2;
@@ -45,34 +43,13 @@ public class GenomicsNumber {
 		this.parent = parent;
 		this.number = number;
 	}
-	public GenomicsNumber(GenomicsNumber src) {
-		this.parent = src.parent;
-		this.number = src.number;
-	}
-	public void setValue(long num) {
-		this.number = num;
-	}
+	
+	public void setValue(long num) {this.number = num;}
+	public long getValue()   {return number;} 
+	
+	public long getBPValue() {return number * parent.getBpPerCb();}
 
-	/**
-	 * Method getValue gets the cb value
-	 */
-	public long getValue() {
-		return number;
-	}
-
-	/**
-	 * Method getBPValue gets the base pair value
-	 */
-	public long getBPValue() {
-		return number * parent.getBpPerCb();
-	}
-
-	/**
-	 * Method setBPValue sets the value based on the bp value and the bp per cb value of the parent
-	 */
-	public void setBPValue(long bpNum) {
-		this.number = bpNum / parent.getBpPerCb();
-	}
+	public void setBPValue(long bpNum) {this.number = bpNum / parent.getBpPerCb();}
 
 	public double getPixelValue() {
 		return (number * parent.getBpPerCb()) / parent.getBpPerPixel();
@@ -86,7 +63,6 @@ public class GenomicsNumber {
 		return ( obj instanceof GenomicsNumber && ((GenomicsNumber)obj).number == number );
 	}
 
-	
 	public String getFormatted() {
 		return getFormatted(parent.getBpPerCb(),number,parent.getBpPerPixel());
 	}
@@ -98,46 +74,28 @@ public class GenomicsNumber {
 	public String toString(int bpPerCb) { 
 		return number +" "+CB+" = "+getFormatted(bpPerCb,number,1);
 	}
-
-	/**
-	 * Method getPixelValue gets the pixel value
-	 */
+	/*********************************************************************************/
 	public static double getPixelValue(int bpPerCb, double cb, double bpPerPixel) {
 		return (cb * bpPerCb) / bpPerPixel;
 	}
 
-	/**
-	 * Method getValue returns the value of cb in units units given the other arguments
-	 */
 	public static double getValue(String units, int bpPerCb, double cb, double bpPerPixel) {
 		double r;
 		double bp = cb * bpPerCb;
-		if (units.equals(PIXEL))
-			r = bp / bpPerPixel;
-		else if (units.equals(CB))
-			r = cb;
-		else
-			r = bp / ((Long)unitConversion.get(units)).doubleValue();
+		if (units.equals(PIXEL))	r = bp / bpPerPixel;
+		else if (units.equals(CB))	r = cb;
+		else						r = bp / ((Long)unitConversion.get(units)).doubleValue();
 		return r;
 	}
 
-	/**
-	 * Method getFormatted gets the formatted string in units
-	 */
 	public static String getFormatted(String units, int bpPerCb, double cb, double bpPerPixel, NumberFormat numFormat) {
 		return numFormat.format(getValue(units,bpPerCb,cb,bpPerPixel))+" "+units;
 	}
 
-	/**
-	 * Method getFormatted gets the formatted string using the default number format
-	 */
 	public static String getFormatted(int bpPerCb, double cb, double bpPerPixel) {
 		return getFormatted(bpPerCb,cb,bpPerPixel,nf);
 	}
 
-	/**
-	 * Method getFormatted gets the formatted string
-	 */
 	public static String getFormatted(int bpPerCb, double cb, double bpPerPixel, NumberFormat numFormat) {
 		String unit = GB;
 		double bp = getValue(BP,bpPerCb,cb,bpPerPixel);
@@ -156,20 +114,11 @@ public class GenomicsNumber {
 		return getFormatted(unit,bpPerCb,cb,bpPerPixel,numFormat);
 	}
 
-	/**
-	 * Method getFormatted returns a formatted string
-	 * insuring that the given formated string will be a different value
-	 * than for a GenomicsNumber with bpSep greater value.
-	 */
+	
 	public static String getFormatted(double bpSep, int bpPerCb, double cb, double bpPerPixel) {
 		return getFormatted(bpSep,bpPerCb,cb,bpPerPixel,nf);
 	}
 
-	/**
-	 * Method getFormatted returns a formatted string
-	 * insuring that the given formated string will be a different value
-	 * than for a GenomicsNumber with bpSep greater value.
-	 */
 	public static String getFormatted(double bpSep, int bpPerCb, double cb, double bpPerPixel, NumberFormat numFormat) {
 		String unit = GB;
 		double bp = getValue(BP,bpPerCb,cb,bpPerPixel);
@@ -188,24 +137,16 @@ public class GenomicsNumber {
 		return getFormatted(unit,bpPerCb,cb,bpPerPixel,numFormat);
 	}
 
-	/**
-	 * Method getBpPerPixel returns the base pair per pixel as determined by
-	 * the given values.
-	 */
 	public static double getBpPerPixel(int bpPerCb, long cb, double pixels) {
 		return (bpPerCb * cb) / pixels;
 	}
 
-	/**
-	 * Method getCbPerPixel
-	 */
 	public static double getCbPerPixel(int bpPerCb, double bpPerPixel, double pixel) {
 		return (1.0 / bpPerCb) * bpPerPixel * pixel;
 	}
 
 	/**
-	 * @param unit GenomicsNumber.BP, GenomicsNumber.KB, 
-	 *             GenomicsNumber.MB, GenomicsNumber.GB.
+	 * @param unit GenomicsNumber.BP, GenomicsNumber.KB,  GenomicsNumber.MB, GenomicsNumber.GB.
 	 * @return the number of BP taken to equal one of unit or 0 if undefined
 	 */
 	public static long getUnitConversion(String unit) {

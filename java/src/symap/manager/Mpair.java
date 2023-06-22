@@ -6,7 +6,7 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 
 import backend.Constants;
-import database.DBuser;
+import database.DBconn2;
 import props.PropertiesReader;
 import symap.Globals;
 import util.ErrorReport;
@@ -28,7 +28,7 @@ public class Mpair {
 	
 	public Mproject mProj1, mProj2;
 	private int pairIdx=-1, proj1Idx=-1, proj2Idx=-1;
-	private DBuser dbUser;
+	private DBconn2 dbc2;
 	private boolean bReverse=false;
 	
 	private String resultDir;
@@ -42,8 +42,8 @@ public class Mpair {
 	private static final String [] paramDef = {
 			"7", "2", "0", "", "", "", "0", "0"};
 	
-	public Mpair (DBuser pool, int pairIdx, Mproject p1, Mproject p2, boolean isReadOnly) {
-		this.dbUser = pool;
+	public Mpair (DBconn2 dbc2, int pairIdx, Mproject p1, Mproject p2, boolean isReadOnly) {
+		this.dbc2 = dbc2;
 		this.mProj1 = p1;
 		this.mProj2 = p2;
 		this.pairIdx = pairIdx;
@@ -162,10 +162,10 @@ public class Mpair {
 		removePairFromDB(); // CAS535 interrupt does not clear it
 		
 		try { 
-			dbUser.executeUpdate("INSERT INTO pairs (proj1_idx,proj2_idx) " +
+			dbc2.executeUpdate("INSERT INTO pairs (proj1_idx,proj2_idx) " +
 					" VALUES('" + proj1Idx + "','" + proj2Idx + "')");
 			
-			pairIdx = dbUser.getIdx("SELECT idx FROM pairs " +
+			pairIdx = dbc2.getIdx("SELECT idx FROM pairs " +
 				"WHERE proj1_idx=" + proj1Idx + " AND proj2_idx=" + proj2Idx);
 			
 			return pairIdx;
@@ -175,10 +175,10 @@ public class Mpair {
 	public int removePairFromDB() {
 	try {
 		
-		int x = dbUser.getIdx("select idx from pairs where proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx);
+		int x = dbc2.getIdx("select idx from pairs where proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx);
 		if (x!= -1) {
-			 dbUser.executeUpdate("DELETE from pairs WHERE idx="+ x);
-			 dbUser.resetAllIdx(); // CAS535 check all, even though some are not relevant
+			 dbc2.executeUpdate("DELETE from pairs WHERE idx="+ x);
+			 dbc2.resetAllIdx(); // CAS535 check all, even though some are not relevant
 		}
 	    pairIdx = -1;
 	}
@@ -207,21 +207,21 @@ public class Mpair {
 	// called by AlignProj on A&S; CAS535 move update date from AlignProjs to here
 	public void saveParams(String params) {
 		try {
-			dbUser.tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null); // CAS511 add params column (not schema update)
+			dbc2.tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null); // CAS511 add params column (not schema update)
 			
-			dbUser.executeUpdate("update pairs set aligned=1, aligndate=NOW(), "
+			dbc2.executeUpdate("update pairs set aligned=1, aligndate=NOW(), "
 					+ "syver='" + Globals.VERSION + "', params='" + params + "'" // CAS520 add syver
 					+ " where (proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx 
 					+ ") or   (proj1_idx=" + proj2Idx + " and proj2_idx=" + proj1Idx + ")"); 
 			
 			String st = "DELETE FROM pair_props WHERE pair_idx=" + pairIdx;
-			dbUser.executeUpdate(st);
+			dbc2.executeUpdate(st);
 			
 			for (String key : fileMap.keySet()) {
 				String val = fileMap.get(key);
 				st = "INSERT INTO pair_props VALUES ('" + 
 						pairIdx + "','" + proj1Idx + "','" + proj2Idx + "','" + key + "','" + val + "')";
-				dbUser.executeUpdate(st);
+				dbc2.executeUpdate(st);
 				dbMap.put(key, val);
 			}
 		}
@@ -230,9 +230,9 @@ public class Mpair {
 
 	// AnchorMain.run
 	public void setPairProp(String name, String val) throws Exception {
-		dbUser.executeUpdate("delete from pair_props where name='" + name + "' and pair_idx=" + pairIdx);
+		dbc2.executeUpdate("delete from pair_props where name='" + name + "' and pair_idx=" + pairIdx);
 		
-		dbUser.executeUpdate("INSERT INTO pair_props VALUES ('" + 
+		dbc2.executeUpdate("INSERT INTO pair_props VALUES ('" + 
 				pairIdx + "','" + proj1Idx + "','" + proj2Idx + "','" + name + "','" + val + "')");	
 	}
 	/***************************************************************************
@@ -257,7 +257,7 @@ public class Mpair {
 	}
 	private void loadFromDB() {
 	try {
-		ResultSet rs = dbUser.executeQuery("select name,value from pair_props where pair_idx=" + pairIdx);
+		ResultSet rs = dbc2.executeQuery("select name,value from pair_props where pair_idx=" + pairIdx);
 		while (rs.next()) {
 			String name = rs.getString(1);
 			String value = rs.getString(2);

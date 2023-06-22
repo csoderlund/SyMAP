@@ -1,13 +1,13 @@
 package circview;
 
 import javax.swing.*;
-
-import database.DBconn;
-
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.TreeSet;
 import java.util.Vector;
 
+import database.DBconn2;
 import symap.Globals;
 import symap.frame.HelpBar;
 import util.ErrorReport;
@@ -29,24 +29,26 @@ public class CircFrame extends JFrame {
 	private boolean  bIsWG = false;
 	private ControlPanelCirc controls;
 	private Vector<Integer> mColors;
+	private DBconn2 tdbc2;
 	
     // This one is called from the project manager; 2-WG
-	public CircFrame(DBconn dbReader, int projXIdx, int projYIdx) {
+	public CircFrame(DBconn2 dbc2, int projXIdx, int projYIdx) {
 		super("SyMAP Circle " + Globals.VERSION);
 		int[] pidxList = {projXIdx, projYIdx};
 		
 		bIsWG=true;
-		doConstruct(dbReader, pidxList, null, null, pidxList[0]);
+		tdbc2 = new DBconn2("CircleG-" + DBconn2.getNumConn(), dbc2);
+		doConstruct(pidxList, null, null, pidxList[0]);
 	}
 	// Called by the chromosome explorer; selected chromosomes 
-	public CircFrame(DBconn dbReader, int[] pidxList, TreeSet<Integer> selGrps, HelpBar hb, int refIdx) {
+	public CircFrame(DBconn2 dbc2, int[] projIdxList, TreeSet<Integer> selGrps, HelpBar hb, int ref) {
 		super("SyMAP Circle " + Globals.VERSION);
 		
 		bIsWG=false;
-		doConstruct(dbReader, pidxList, selGrps, hb, refIdx);
+		this.tdbc2 = dbc2; // created in ChrExpFrame
+		doConstruct(projIdxList, selGrps, hb, ref);
 	}
-
-	private void doConstruct(DBconn dbReader, int[] projIdxList, TreeSet<Integer> selGrps, HelpBar hb, int ref){
+	public void doConstruct(int[] projIdxList, TreeSet<Integer> selGrps, HelpBar hb, int ref){
 		if (projIdxList.length == 0) {
 			System.out.println("Circle view called with no projects!"); 
 			return;
@@ -59,7 +61,7 @@ public class CircFrame extends JFrame {
 			                 // WG											 From CE
 			boolean isSelf = (projIdxList.length==2 && projIdxList[1]==0) || projIdxList.length==1;
 		
-			circPanel = new CircPanel(dbReader, projIdxList, selGrps, ref, helpPanel, mColors);
+			circPanel = new CircPanel(tdbc2, projIdxList, selGrps, ref, helpPanel, mColors);
 			
 			controls =  new ControlPanelCirc(circPanel, helpPanel, bIsWG, isSelf);
 			
@@ -73,6 +75,12 @@ public class CircFrame extends JFrame {
 			//setMinimumSize(new Dimension(900,800));	CAS521 allows to resize without this
 
 			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+			addWindowListener(new WindowAdapter() {
+				public void windowClosed(WindowEvent e) {
+					clear();
+				}
+			});
+			
 			setLayout( new BorderLayout() );
 			add( controls, BorderLayout.NORTH );
 			add( circPanel.getScrollPane(),BorderLayout.CENTER );
@@ -85,6 +93,11 @@ public class CircFrame extends JFrame {
 		}
 		catch(Exception e){ ErrorReport.print(e, "Init panel");}	
 	}
+	public void clear() {// CAS541 for new DBconn2, added circPanel clear
+		tdbc2.close();
+		circPanel.clear();
+	} 
+	
 	/**************************************************************
 	 * CAS521 moved from CirPanel to get it out of the way of the display logic
 	 */

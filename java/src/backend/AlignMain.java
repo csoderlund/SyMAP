@@ -8,6 +8,7 @@ import java.util.Queue;
 import java.util.LinkedList;
 import java.sql.ResultSet;
 
+import database.DBconn2;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
 import util.Cancelled;
@@ -20,7 +21,7 @@ import util.Utilities;
  * CAS500 1/2020 this has been almost totally rewritten, but results are the same,
  * 	except there is intelligence built into setting up the files for alignment,
  *  which can make a difference
- * CAS522 remove FPC
+ * CAS522 remove FPC; CAS541 change UpdatePool to DBconn2
  */
 public class AlignMain {
 	public boolean mCancelled = false;
@@ -39,7 +40,7 @@ public class AlignMain {
 	private int nMaxCPUs;
 	
 	private Mpair mp = null;
-	private UpdatePool pool = null;
+	private DBconn2 dbc2 = null;
 	
 	private boolean bDoCat = true; // CAS508
 	private boolean notStarted = true;
@@ -49,14 +50,14 @@ public class AlignMain {
 	private String resultDir;
 	private String alignParams, usePrevious = "Use previous alignment";
 	
-	public AlignMain(UpdatePool pool, ProgressDialog log, Mpair mp,
+	public AlignMain(DBconn2 dbc2, ProgressDialog log, Mpair mp,
 			int nMaxThreads, boolean bDoCat, String alignLogDirName)
 	{
 		this.plog = log; // diaLog and syLog
 		this.nMaxCPUs = nMaxThreads;
 		this.bDoCat = bDoCat;
 		this.mp = mp;
-		this.pool = pool;
+		this.dbc2 = dbc2;
 		this.mProj1 = mp.mProj1;
 		this.mProj2 = mp.mProj2;
 		this.alignLogDirName = alignLogDirName;
@@ -181,7 +182,7 @@ public class AlignMain {
 			File fh_tDir2 = Utilities.checkCreateDir(tmpDir2, false);
 			
 		// Preprocessing for proj1
-			if (!writePreprocSeq(pool, fh_tDir1, mProj1,  bDoCat, isSelf)) { // concat=true
+			if (!writePreprocSeq(fh_tDir1, mProj1,  bDoCat, isSelf)) { // concat=true
 				mCancelled = true;
 				Cancelled.cancel();
 				System.out.println("Cancelling");
@@ -189,7 +190,7 @@ public class AlignMain {
 			}
 			
 		// Preprocessing for proj2	
-			if (!writePreprocSeq(pool, fh_tDir2, mProj2,  false, isSelf)) { // concat=false
+			if (!writePreprocSeq(fh_tDir2, mProj2,  false, isSelf)) { // concat=false
 				mCancelled = true;
 				Cancelled.cancel();
 				System.out.println("Cancelling");
@@ -254,9 +255,7 @@ public class AlignMain {
 	/**************************************
 	 *  Write sequences to file; first is concatenated, second is not. Apply gene masking if requested.
 	 */
-	private boolean writePreprocSeq(UpdatePool pool, File dir, Mproject mProj,  
-			boolean concat, boolean isSelf) 
-	{
+	private boolean writePreprocSeq(File dir, Mproject mProj,  boolean concat, boolean isSelf) {
 		try {
 			int projIdx = mProj.getIdx();
 			String projName = mProj.getDBName();
@@ -265,11 +264,10 @@ public class AlignMain {
 			
 			if (Cancelled.isCancelled()) return false;
 			
-			ResultSet rs = pool.executeQuery("select count(*) as nseqs from pseudos " +
+			DBconn2 tdbc2 = new DBconn2("WriteAlignFiles-" + DBconn2.getNumConn(), dbc2);
+			int nSeqs = tdbc2.executeCount("select count(*) as nseqs from pseudos " +
 				" join xgroups on xgroups.idx=pseudos.grp_idx " +
 				" where xgroups.proj_idx=" + projIdx);
-			rs.first();
-			int nSeqs = rs.getInt(1);
 			if (nSeqs == 0) {
 				plog.msg("No sequences are loaded for " + projName + "!! (idx " + projIdx + ")");
 				return false;
@@ -291,7 +289,7 @@ public class AlignMain {
 			
 			// pseudos (files): grp_idx, fileName (e.g. chr3.seq), length
 			// xgroups (chrs):  idx, proj_idx, chr#, fullname where grp_idx is xgroups.idx
-			rs = pool.executeQuery("select grp_idx, length from pseudos " +
+			ResultSet rs = tdbc2.executeQuery("select grp_idx, length from pseudos " +
 					" join xgroups on xgroups.idx=pseudos.grp_idx " +
 					" where xgroups.proj_idx=" + projIdx + " order by xgroups.sort_order");
 			groups.add(new Vector<Integer>());
@@ -328,7 +326,7 @@ public class AlignMain {
 			if (geneMask) {
 				// Build a map of the gene annotations that we can use to mask each sequence chunk as we get it.
 				// The map is sorted into 100kb bins for faster searching. 
-				rs = pool.executeQuery("select xgroups.idx, pseudo_annot.start, pseudo_annot.end " +
+				rs = tdbc2.executeQuery("select xgroups.idx, pseudo_annot.start, pseudo_annot.end " +
 						" from pseudo_annot join xgroups on xgroups.idx=pseudo_annot.grp_idx " +
 						" where pseudo_annot.type='gene' and xgroups.proj_idx=" + projIdx);
 				while (!interrupted && rs.next())
@@ -336,14 +334,12 @@ public class AlignMain {
 					int grpIdx = rs.getInt(1);
 					int start = rs.getInt(2);
 					int end = rs.getInt(3);
-					if (!geneMap.containsKey(grpIdx))
-					{
+					if (!geneMap.containsKey(grpIdx)) {
 						geneMap.put(grpIdx, new TreeMap<Integer,Vector<Range>>());
 					}
 					int cStart = (int)Math.floor(start/cSize);
 					int cEnd = (int)Math.ceil(end/cSize);
-					for (int c = cStart; c <= cEnd; c++)
-					{
+					for (int c = cStart; c <= cEnd; c++) {
 						int s = c*cSize;
 						int e = (c+1)*cSize - 1;
 						int r1 = Math.max(s, start);
@@ -355,7 +351,10 @@ public class AlignMain {
 				}
 			} // end mask
 			
-			if (interrupted) return false;
+			if (interrupted) {
+				tdbc2.close();
+				return false;
+			}
 			
 		/** Write files **/
 			// Go through each grouping, write the preprocess file, with masking if called for.
@@ -377,7 +376,7 @@ public class AlignMain {
 				for (int gIdx : groups.get(i)) {
 					if (interrupted) break;
 	
-					rs = pool.executeQuery("select fullname from xgroups where idx=" + gIdx);
+					rs = tdbc2.executeQuery("select fullname from xgroups where idx=" + gIdx);
 					rs.first();
 					String grpFullName = rs.getString(1);
 					fw.write(">" + grpFullName + "\n");
@@ -387,12 +386,12 @@ public class AlignMain {
 					else if (count==4)  msg += "... ";
 					count++;
 					
-					rs = pool.executeQuery("select seq from pseudo_seq2 join xgroups on xgroups.idx=pseudo_seq2.grp_idx " + 
+					rs = tdbc2.executeQuery("select seq from pseudo_seq2 join xgroups on xgroups.idx=pseudo_seq2.grp_idx " + 
 							" where grp_idx=" + gIdx + " order by chunk asc");
 					int cNum = 0;
-					while (!interrupted && rs.next())
-					{
+					while (!interrupted && rs.next()){
 						if (interrupted) break;
+						
 						int start = cNum*CHUNK_SIZE + 1; // use 1-indexed string positions for comparing to annot
 						int end = (1+cNum)*CHUNK_SIZE;
 						String seq = rs.getString(1);
@@ -403,15 +402,12 @@ public class AlignMain {
 								int ce = (int)Math.ceil(end/cSize);
 								TreeMap<Integer,Vector<Range>> map = geneMap.get(gIdx);
 								
-								for (int c = cs; c <= ce; c++) // check the bins covered by this chunk
-								{
+								for (int c = cs; c <= ce; c++) {// check the bins covered by this chunk
 									if (map.containsKey(c)) {
-										for (Range r : map.get(c))
-										{
+										for (Range r : map.get(c)) {
 											int olapS = (int)Math.max(start, r.s);
 											int olapE = (int)Math.min(end, r.e);
-											if (olapE > olapS)
-											{
+											if (olapE > olapS) {
 												olapS -= start; // get the 0-indexed relative coords within this chunk
 												olapE -= start;
 												seqMask.replace(olapS, olapE, seq.substring(olapS, olapE));
@@ -434,12 +430,12 @@ public class AlignMain {
 					}
 				}
 				plog.msg(msg + String.format(": length %,d", fileSize)); // CAS513 add comma
-				fw.close();
+				fw.close(); 
 			}
+			tdbc2.close();
 			return true;
 		}
-		catch (Exception e) {
-			// CAS508 Utilities.clearAllDir(dir); dir.delete();
+		catch (Exception e) { // CAS508 Utilities.clearAllDir(dir); dir.delete();
 			ErrorReport.die(e, "AlignMain.writePreproc");
 		}
 		return false;

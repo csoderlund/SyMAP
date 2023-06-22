@@ -8,7 +8,9 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
-import database.DBconn;
+import colordialog.ColorDialogHandler;
+import database.DBconn2;
+import props.PersistentProps;
 import symap.Globals;
 import symap.frame.HelpBar;
 
@@ -20,32 +22,40 @@ import symap.frame.HelpBar;
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class DotPlotFrame extends JFrame {
-	Data data;
+	private Data data;
+	private PersistentProps    persistentProps;
 	
-	// ProjectManagerFrameCommon
-	public DotPlotFrame(DBconn dbReader, int projXIdx, int projYIdx) {
-		this(dbReader, new int[] { projXIdx, projYIdx }, null, null, null, true);
+	// ManagerFrame for selected genomes
+	public DotPlotFrame(DBconn2 dbc2, int projXIdx, int projYIdx) {
+		this(dbc2, new int[] { projXIdx, projYIdx }, null, null, null, true);
 	}
-	// SyMAPFrameCommon, ProjectManagerFrameCommon, above
-	public DotPlotFrame(DBconn dbReader, int[] projIDs,
+	// ManagerFrame for all genomes, DotPlotFrame for chromosomes, ChrExpFrame for chromosomes; 
+	// after new Data; data.getSyMAP().clear(); // Clear caches - fix bug due to stale pairs data; CAS541 clear on close
+	public DotPlotFrame(DBconn2 dbc2, int[] projIDs,
 			int[] xGroupIDs, int[] yGroupIDs, 	// null if whole genome
 			HelpBar helpBar, 					// not null if from CE
-			boolean hasReferenceSelector)  		// false if from CE
+			boolean hasRefSelector)  		    // false if from CE
 	{
 		super("SyMAP Dot Plot " + Globals.VERSION);
 		if (projIDs==null || projIDs.length==0) System.err.println("No Projects! Email symap@agcol.arizona.edu"); 
 	
-		data = new Data( new DotPlotDBUser(dbReader) ); // created FilterData object
-		data.getSyMAP().clear(); 						// Clear caches - fix bug due to stale pairs data
+		String type =  (hasRefSelector) ? "G" : "E";    // CAS541 add just to mark connections in Data
+		boolean is2D = (hasRefSelector) ? false : true; // CAS541 add for info display
+		
+		data = new Data(dbc2, type); // created FilterData object	
 		data.initialize(projIDs, xGroupIDs, yGroupIDs);
 		
 		HelpBar hb = (helpBar!=null) ?  helpBar : new HelpBar(-1, 17);// CAS521 removed dead args
 		
-		Plot plot = new Plot(data, hb);
+		Plot plot = new Plot(data, hb, is2D);
 		
-		ControlPanel controls = new ControlPanel(data,plot,hb);
+		persistentProps = new PersistentProps(); // does not work unless this is global
+		ColorDialogHandler colorDialogHandler = new ColorDialogHandler(persistentProps); 
+		colorDialogHandler.setDotPlot();
+		
+		ControlPanel controls = new ControlPanel(data, plot, hb, colorDialogHandler);
 		controls.setProjects( data.getProjects() ); 
-		if (!hasReferenceSelector) controls.setProjects(null);
+		if (!hasRefSelector) controls.setProjects(null);
 
 	// Setup frame
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -65,6 +75,9 @@ public class DotPlotFrame extends JFrame {
 		setLocation(dim.width / 4,dim.height / 4);
 		//setLocationRelativeTo(null); this puts in lower corner
 	}
-	
+	public void clear() {// CAS541 need to close connection from ChrExpFrame
+		if (data != null) data.kill();
+		data = null;
+	}
 	public Data getData() { return data; } // SyMAPFrameCommon
 }

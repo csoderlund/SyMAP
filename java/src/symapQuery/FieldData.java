@@ -7,6 +7,7 @@ import java.util.Vector;
  * The columns for the query result table
  * Added in TableDataPanel. Database query in DBdata. 
  * Any changes to columns need to be changed in DBdata too.
+ * The PA.name field contains all the attributes, which is parsed for that section and display
  */
 
 public class FieldData {
@@ -41,7 +42,7 @@ public class FieldData {
 	
 /* Prefixed with Species: CAS519 have hit and gene start/end/len; and add gene strand */
 	private static final String []     SPECIES_COLUMNS = 
-		{Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol, Q.gNCol, Q.hStartCol, Q.hEndCol, Q.hLenCol,};
+		{Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol, Q.gNCol, Q.hStartCol, Q.hEndCol, Q.hLenCol};
 	
 	private static final Class <?> []  SPECIES_TYPES =   
 		{String.class, Integer.class, Integer.class,Integer.class, String.class, String.class, Integer.class, Integer.class,Integer.class};
@@ -61,6 +62,27 @@ public class FieldData {
 		"Hlen: Hend-Hstart+1"
 	};
 	
+	// CAS541 made single columns separate so can add NumHits
+	private static final String []     SSPECIES_COLUMNS = 
+		{Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol, Q.gNCol, Q.gHitNumCol};
+	
+	private static final Class <?> []  SSPECIES_TYPES =   
+		{String.class, Integer.class, Integer.class,Integer.class, String.class, String.class, Integer.class};
+	
+	private static final boolean []    SSPECIES_COLUMN_DEF =  
+		{false, false, false, false , false, true, false};
+	
+	private static String [] SSPECIES_COLUMN_DESC = {
+		"Chr: Chromosome (or Scaffold, etc)", 
+		"Gstart: Start coordinate of gene", 
+		"Gend: End coordinate of gene", 
+		"Glen: Length of gene", 
+		"Gst: Gene strand", 
+		"Gene#: Sequential. Overlap genes have same number (chr.#.{a-z})", 
+		"NumHits: Number of hits for to the gene in the entire database."
+	};
+	
+	
 	//****************************************************************************
 	//* Static methods
 	//****************************************************************************
@@ -69,22 +91,20 @@ public class FieldData {
 	public static String [] getGeneralColDesc() 	 {return GENERAL_COLUMN_DESC; }
 	public static boolean [] getGeneralColDefaults() {return GENERAL_COLUMN_DEF; }
 	
-	public static String [] getSpeciesColHead() 	 {return SPECIES_COLUMNS; }
-	public static Class <?> [] getSpeciesColType() 	 {return SPECIES_TYPES; }
-	public static String [] getSpeciesColDesc() 	 {return SPECIES_COLUMN_DESC; }
-	public static boolean [] getSpeciesColDefaults() {return SPECIES_COLUMN_DEF; }
+	public static String [] getSpeciesColHead(boolean s)     {if (s) return SSPECIES_COLUMNS;  else return SPECIES_COLUMNS;}
+	public static Class <?> [] getSpeciesColType(boolean s)  {if (s) return SSPECIES_TYPES; else return SPECIES_TYPES;}
+	public static String [] getSpeciesColDesc(boolean s) 	 {if (s) return SSPECIES_COLUMN_DESC;  else  return SPECIES_COLUMN_DESC;}
+	public static boolean [] getSpeciesColDefaults(boolean s){if (s) return SSPECIES_COLUMN_DEF; else return SPECIES_COLUMN_DEF;}
 	
 	// XXX If change this, change number in Q.java, as they are the numeric index into ResultSet
 	// Columns loaded from database, do not correspond to query table columns
-	private static int singleGenFields = 1; // CAS519 general headings
-	private static int singleSpFields = 6;  // MySQL columns loaded and displayed for single 
 	
 	public static int getSpColumnCount(boolean isSingle) { // CAS519
-		if (isSingle) return singleSpFields;
+		if (isSingle) return SSPECIES_COLUMNS.length;
 		else return SPECIES_COLUMNS.length;
 	}
 	public static int getGenColumnCount(boolean isSingle) { // CAS519
-		if (isSingle) return singleGenFields;
+		if (isSingle) return 1; // row number only
 		else return GENERAL_COLUMNS.length;
 	}
 	
@@ -97,8 +117,9 @@ public class FieldData {
 		fd.addField(String.class, Q.PA, "start",   Q.ASTART,     "Annotation start");
 		fd.addField(String.class, Q.PA, "end",     Q.AEND,       "Annotation end");
 		fd.addField(String.class, Q.PA, "strand",  Q.ASTRAND,    "Annotation strand");
-		fd.addField(String.class, Q.PA, "name",    Q.ANAME,      "Annotation attributes");
-		fd.addField(String.class, Q.PA, "tag", 	   Q.AGENE,      "Annotation gene#"); // CAS518 changed to String/tag
+		fd.addField(String.class, Q.PA, "name",    Q.ANAME,      "Annotation attributes"); // Split for "Gene Annotation"
+		fd.addField(String.class, Q.PA, "tag", Q.AGENE,      "Annotation gene#"); // CAS518 chg to String/tag; tag is needed to suffix
+		fd.addField(String.class, Q.PA, "numhits", Q.ANUMHITS,   "Annotation numHits");// CAS541 Singles only, ignored for Hits
 		
 		fd.addField(Integer.class,Q.PH, "idx",      Q.HITIDX,    "Hit index"); 
 		fd.addField(Integer.class,Q.PH, "hitnum",   Q.HITNUM,    "Hit number"); // CAS520 add
@@ -177,7 +198,7 @@ public class FieldData {
 			sqlCols += ", " + item.getDBTable() + "." + item.getDBFieldName();
 			
 			cnt++;
-			if (isOrphan && cnt>singleSpFields) break;
+			if (isOrphan && cnt>SSPECIES_COLUMNS.length) break;
 		}	
 		return sqlCols;
 	}

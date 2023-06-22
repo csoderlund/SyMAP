@@ -218,8 +218,8 @@ public class CloseUpComponent extends JComponent {
 	private static Color hitFontColor = Color.black, geneFontColor=Color.black;
 	
 	private static Font rulerFont =  new Font("Courier",0,14);
-	private static Font hitFont =    new Font("Ariel",0,12);
-	private static Font geneFont =   new Font("Ariel",0,12);
+	private static Font hitFont =    new Font("Arial",0,12); // CAS541 Ariel->Arial
+	private static Font geneFont =   new Font("Arial",0,12);
 	private static final double VERT_HIT_SPACE=2; // CAS531 3->2, no diff
 	private static final double VERT_GENE_SPACE=5, HORZ_GENE_SPACE=8;
 	private static final int 	VERT_BORDER=12, HORZ_BORDER=15; // CAS531 VERT 15->12

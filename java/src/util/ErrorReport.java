@@ -11,6 +11,8 @@ import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import database.DBconn2;
+
 public class ErrorReport {
 	static final String strFileName = "error.log";
 	
@@ -41,10 +43,12 @@ public class ErrorReport {
 	}
 	
 	public static void die(Throwable e, String debugInfo) {
+		DBconn2.shutConns(); // CAS541 
 		reportError(e, "Fatal Error: " + debugInfo, false);
 		System.exit(-1);
 	}
 	public static void die(String debugInfo) {
+		DBconn2.shutConns(); // CAS541 
 		reportError(null, "Fatal Error: " + debugInfo, false);
 		System.exit(-1);
 	}
@@ -93,5 +97,11 @@ public class ErrorReport {
         Date date=new Date();
         SimpleDateFormat sdf=new SimpleDateFormat("dd-MMM-yy HH:mm:ss"); 
         return sdf.format(date);
+    }
+	static public void prtMem() {
+		long free = Runtime.getRuntime().freeMemory();
+		long total = Runtime.getRuntime().totalMemory();
+		long max = Runtime.getRuntime().maxMemory();
+		System.out.format("Memory: free %,d  total %,d  max %,d\n", free, total, max);
     }
 }

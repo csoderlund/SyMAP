@@ -9,6 +9,7 @@
 	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
 	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
 	ttp  {font-family: 'Lucida Console', monospace; font-size: 16px; font-weight: 500; font-variant: small-caps;}
+	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
 	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
@@ -178,7 +179,7 @@ Follow the steps below to get started with SyMAP.
 
 <table class="tx">
 	<tr><td style="vertical-align: text-top;">1.
-		<td style="vertical-align: text-top;">Use a Linux or Mac machine.
+		<td style="vertical-align: text-top;">Use a Linux or MacOS machine.
 		<td style="vertical-align: text-top;">It needs to have Java v1.8 or later, and sufficient processing power.
 			See <a href="#machine">system requirements</a>.
 	<tr>
@@ -223,15 +224,24 @@ Follow the steps below to get started with SyMAP.
 <td style="text-align: right"><a href="#top">Go to top</a></table>
 
 SyMAP has been tested on the following:
-<table class="ty">
+<table class="ty" style="font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
 <tr><td><i>Machine</i><td><i>MySQL</i><td><i>Java</i><td><i>Core</i><td><i>Memory</i><td><i>Purchased</i>
-<tr><td>Centos Linux amd64<td>MariaDB v10.4.12<td>1.8<td>2.3 GHz 24-Core<td>128 GB<td>2011
+<tr><td colspan=2><ttl>v5.4.1</ttl>:
+<tr><td>MacOS x86_64 (Monterey 12.6.6)<td>MySQL v8.0.33,<br>MariaDB 11.0.2
+<td>8, 15, 17, 18, 20 from
+<br><a href="https://adoptium.net">Adoptium</a> and <a href="https://www.oracle.com/java/">Oracle</a>
+<td>3.2 GHz 6-Core<td>64 GB<td>2018
+
+<tr><td colspan=2><ttl>v5.4.0 and earlier</ttl>:
+<tr><td>Linux amd64 (Centos)<td>MariaDB v10.4.12<td>1.8<td>2.3 GHz 24-Core<td>128 GB<td>2011
 <tr><td>MacOS x86_64 (Catalina 10.15.4)<td>MySQL v8.0.17<td>17.0<td>3.2 GHz 6-Core<td>64 GB<td>2018
-<tr><td>MacOS x86_64 (Maverick 10.9.5)*<td>MySQL v5.6.21<td>1.8<td>2.4 GHz 5-Core<td>16 GB<td>2011
+<tr><td>MacOS x86_64 (Maverick 10.9.5)**<td>MySQL v5.6.21<td>1.8<td>2.4 GHz 5-Core<td>16 GB<td>2011
+
 </table>
-*<small>This is an old laptop. I could not download from Github, so got v5.0.8 from AGCoL. Then I had to replace
+**<small>This is an old laptop. I could not download from Github, so downloaded v5.0.8 from AGCoL. Then I had to replace
 <tt>/ext/mummer/mac</tt> with <tt>/ext/mummer/mac_pre506</tt>. This machine is fine for viewing a SyMAP database,
-but too small to run MUMmer in an acceptable amount of time.</small>
+but too small to process large input files.</small>
+
 
 <p>The jar file has been compiled with Java 1.8, which is upward compatible.
 <p>
@@ -319,9 +329,12 @@ load the projects, which will take several minutes.
 <i>more than a few minutes</i>, you may need to adjust the MySQL parameters, see
 <a href="TroubleShoot.html#msqslow" class="ext" target="_blank">TroubleShoot MySQL</a>.
 <p>When done, the Manager will look like the image shown on the right.
-<p>In the <ttb>Available Syntenies</ttb> table, click the cell for the "Demo_Seq2" row and the "Demo_Seq" column.
-Then click the <ttb>Selected Pair</ttb> button to start the alignment.
+In the <ttb>Available Syntenies</ttb> table, the cell for  "Demo_Seq2" and "Demo_Seq" will
+automatically be selected.
 
+<p>Click the <ttb>Selected Pair</ttb> button to start the <ttl>Alignment&amp;Synteny</ttl>.
+The <ttb>All Pairs</ttb> button can also be selected, as it will perform <ttl>Alignment&amp;Synteny</ttl> on all pairs
+in the table.
 <td>
 <a href="img/demoMgr.png"><img src="img/demoMgr.png" alt="demoMgr" style="border: 1px solid black; width: 400px"></a>
 
@@ -332,7 +345,6 @@ Then click the <ttb>Selected Pair</ttb> button to start the alignment.
 The <ttl>Alignment&amp;Synteny</ttl> takes less than 5 minutes on the MacOS 10.5 but could take up to 30 minutes
 on a slow machine.
 <p>When done, the table will have a checkbox, signifying that the synteny is available for viewing.
-Click the checked cell, which will enable all viewing buttons.
 
 <td>
 <a href="img/demoTable.png"><img src="img/demoTable.png" alt="demoTable" style="border: 1px solid black; width: 400px"></a>
@@ -340,9 +352,11 @@ Click the checked cell, which will enable all viewing buttons.
 <tr><td style="colspan: 2; height: 40px;">&nbsp;
 <tr>
 <td style="vertical-align: text-top;">
-Click <ttb>Summary</ttb> to view the summary shown on the right; <i>there may be slight differences in the #Anchors
+Click <ttb>Summary</ttb> to view the summary shown on the right;
+<i>there may be slight differences in the #Cluster hits
 because of different numbers of CPUs, MacOS vs Linux, etc (but the #Blocks come out the same)</i>.
 <p>To view the other interfaces, see <a href="Demo.html" class="ext" target="_blank">Demo Results</a>.
+
 <td>
 <a href="img/demoSum.png"><img src="img/demoSum.png" alt="demoSum" style="border: 1px solid black; width: 400px"></a>
 </table>
@@ -693,7 +707,7 @@ so you might want to start with the largest 50, merge them, then repeat.
 <tr>
 <td>To perform self-synteny, select the cell for the same project followed by
 <ttb>Selected Pair</ttb>. The <ttb>All Pairs</ttb> option does not include self-synteny.
-<td><a href="img/self.png"><img src="img/self.png" alt="self" style="border: 1px solid black; width: 230px"></a>
+<td><a href="img/self.png"><img src="img/self.png" alt="self" style="border: 1px solid black; width: 370px"></a>
 </table>
 <p>
 By default, SyMAP uses the MUMmer 'nucmer' program for self-alignments. Each chromosomes
@@ -830,8 +844,8 @@ The query is the one with alphabetically the first name. The query sequences
 are written into one large file, while smaller target sequences are grouped
 into larger FASTA files of size up to 60Mb, for more efficient processing
 in MUMmer. There is an option "Concat" that if unchecked, the query sequences
-are treated the same as the target; this is useful if the query and target are very large
-genomes.
+are treated the same as the target; i.e. generally there will be more sequence file
+pairs processed by MUMmer, but they will be smaller.
 <p>
 <i>Anchor Clustering:</i><br>
 The raw anchor set consists of the hits found by MUMmer.
@@ -892,6 +906,7 @@ see if there are any <tt>/scripts</tt> or <tt>/ext</tt> changes that need to als
 <p>The following table shows what versions require action by the user.
 <table class=ty>
 <tr><td><b>Release</b><td><b>Changed files</b><sup>1</sup><td><b>Action by User</b>
+<tr><td>v5.4.1 <td>Only the <tt>symap.jar</tt><td>Execute <tt>./symap -y</tt>
 <tr><td>v5.4.0 <td>Only the <tt>symap.jar</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
 <tr><td>v5.2.0 <td><tt>symap</tt>, <tt>viewSymap</tt>, <tt>scripts/ConvertNCBI.*</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
 <tr><td>v5.1.9 to v5.1.7<td>Only the <tt>symap.jar</tt><td>See <sup>3</sup>. If you have customized hit or gene colors, you will need to reset them.

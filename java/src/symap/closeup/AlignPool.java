@@ -1,15 +1,12 @@
 package symap.closeup;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Vector;
 
-import database.DBconn;
-import database.DBAbsUser;
+import database.DBconn2;
 import props.ProjectPool;
 import symap.Globals;
 import symap.mapper.HitData;
@@ -27,8 +24,9 @@ import util.Utilities;
  * 1. Query and target are used in the pseudo_hits table
  * 2. Select and Other are from the user selected sequence
  * 3. isQuery determines whether the Select=Query or Select=Target
+ * CAS541 was DBAbsUser
  */
-public class AlignPool extends DBAbsUser {
+public class AlignPool  {
 	private static final boolean TRACE = false; 
 	private static final boolean toUpper = false;
 	private static final boolean bTrim=Globals.bTrim;
@@ -36,9 +34,14 @@ public class AlignPool extends DBAbsUser {
 	private final int CHUNK_SZ = backend.Constants.CHUNK_SIZE; // CAS504 was hardcoded below; 1000000
 	private HitAlignResults curHit; // hqr for the whole current hit
 	
+	private DBconn2 dbc2;
+	
 	/*****************************************************************/
-	public AlignPool(DBconn dr, ProjectPool pp){
-		super(dr);
+	public AlignPool(DBconn2 dbc2, ProjectPool pp){
+		this.dbc2 = dbc2;
+	}
+	public AlignPool(DBconn2 dbc2){ // For SyMAPQueryFrame to use loadPseudoSeq
+		this.dbc2 = dbc2;
 	}
 	// Called from CloseUpDialog.setview 
 	public synchronized HitAlignment[] buildHitAlignments(Vector <HitData> hitList, 
@@ -61,8 +64,6 @@ public class AlignPool extends DBAbsUser {
 	{
 		return createHitSequence(hitList, grpID, isQuery, bRev);
 	}
-	public synchronized void close() {super.close();}
-	public synchronized void clear() {super.close();}
 	
 	/************************************************************************
 	 * Computations 
@@ -277,7 +278,6 @@ public class AlignPool extends DBAbsUser {
 	 * Coords for subhits are relative to forward strand
 	 */
 	private HitAlignResults loadHitForAlign(HitData hitData, boolean isQuery) {
-		Statement stat = null;
 		ResultSet rs = null;
 		curHit = new HitAlignResults();
 		
@@ -285,8 +285,7 @@ public class AlignPool extends DBAbsUser {
 		String query = "SELECT h.strand, h.query_seq, h.target_seq,  h.grp1_idx, h.grp2_idx, h.hitnum "
 				     + "FROM pseudo_hits AS h WHERE h.idx=" +  hitData.getID();		
 		try {
-			stat = createStatement();
-			rs = stat.executeQuery(query);
+			rs = dbc2.executeQuery(query);
 			if (!rs.next()) {
 				System.err.println("Major SyMAP error reading database");
 				return null;
@@ -337,12 +336,7 @@ public class AlignPool extends DBAbsUser {
 			curHit.otherStart =   start2;
 			curHit.otherSeq =     loadPseudoSeq(start2 + ":" + end2, grp2_idx);
 		}
-		catch (SQLException e) {ErrorReport.print(e, "Acquiring alignment"); } 
-		finally {
-			closeStatement(stat);
-			closeResultSet(rs);
-			if (curHit == null) close();
-		}
+		catch (Exception e) {ErrorReport.print(e, "Acquiring alignment"); } 
 		return curHit;
 	}
 	/*********************************
@@ -350,13 +344,10 @@ public class AlignPool extends DBAbsUser {
 	 * indices is start:end
 	 */
 	public String loadPseudoSeq(String indices, long id) {
-		Statement stat = null;
 		ResultSet rs = null;
 		String pseudoSeq = "";
 		
 		try {
-			stat = createStatement();
-			
 			// Java and MUMmer are zero based but mysql is 1 based, add one
 			int start = extractStart(indices) + 1; 
 			int end =   extractEnd(indices) + 1;   
@@ -380,7 +371,7 @@ public class AlignPool extends DBAbsUser {
 				query2 = "SELECT SUBSTRING(seq FROM " + start + " FOR " + count + ") "
 						+ "FROM pseudo_seq2 AS s WHERE s.grp_idx=" + id + " AND s.chunk=" + chunk;	
 	
-				rs = stat.executeQuery(query2);
+				rs = dbc2.executeQuery(query2);
 				if (rs.next()) {
 					seq = rs.getString(1);
 					pseudoSeq += seq;
@@ -398,21 +389,12 @@ public class AlignPool extends DBAbsUser {
 			}
 			return pseudoSeq;
 		}
-		catch (SQLException e) {
-			ErrorReport.print(e, "Getting sequence data");
-			return "";
-		}
-		finally {
-			closeStatement(stat);
-			closeResultSet(rs);
-			if (rs == null) close();
-		}
+		catch (Exception e) {ErrorReport.print(e, "Getting sequence data"); return "";}
 	}
 	/*******************************************************
 	 *  For getSeq Get subhit query only and get isSwap from grpID
 	 */
 	private HitAlignResults loadHitForSeq(HitData hitData, int grpID, boolean isQuery) {
-		Statement stat = null;
 		ResultSet rs = null;
 		curHit = new HitAlignResults();
 		
@@ -421,8 +403,7 @@ public class AlignPool extends DBAbsUser {
 				     + "FROM pseudo_hits AS h WHERE h.idx=" +  hitData.getID();
 		
 		try {
-			stat = createStatement();
-			rs = stat.executeQuery(query);
+			rs = dbc2.executeQuery(query);
 			if (!rs.next()) {
 				System.err.println("Major SyMAP error reading database");
 				return null;
@@ -453,12 +434,8 @@ public class AlignPool extends DBAbsUser {
 			curHit.selectStart =    start1;
 			curHit.selectSeq =      loadPseudoSeq(start1 + ":" + end1, grpID);
 		}
-		catch (SQLException e) {ErrorReport.print(e, "Acquiring alignment"); } 
-		finally {
-			closeStatement(stat);
-			closeResultSet(rs);
-			if (curHit == null) close();
-		}
+		catch (Exception e) {ErrorReport.print(e, "Acquiring alignment"); } 
+		
 		return curHit;
 	}
 

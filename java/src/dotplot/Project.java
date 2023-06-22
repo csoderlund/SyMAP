@@ -1,11 +1,14 @@
 package dotplot;
 
 import java.util.Vector;
-import database.DBconn;
-import database.DBuser;
+import database.DBconn2;
 import props.ProjectPool;
 import symap.manager.Mproject;
 
+/***************************************************************
+ * Called in Data for each selected project
+ * This uses the more global Mproject, but adds a little data and interface
+ */
 public class Project {
 	private int id;
 	private String displayName;
@@ -14,9 +17,8 @@ public class Project {
 	private Group[] groups;
 	private int minGrpSize = 0;
 
-	public Project(int id, DBconn dbReader) { // CAS534 changed from properties to dbReader
-		DBuser tuser = new DBuser(dbReader);
-		Mproject tProj = new Mproject(tuser, id, "", "");
+	public Project(int id, DBconn2 dbc2) { // CAS534 changed from properties to dbReader
+		Mproject tProj = new Mproject(dbc2, id, "", "");
 		tProj.loadParamsFromDB();
 		
 		this.id          = id;
@@ -25,7 +27,7 @@ public class Project {
 		this.grpType     = tProj.getdbGrpName();
 		this.minGrpSize	 = tProj.getdbDPsize(); // CAS534 this is disable as does not seem to work
 	}
-
+	// Data.DBload reads all data
 	public void setGroups(Group[] grps) {
 		if (grps != null) {
 			Group.setScaleFactors(grps, minGrpSize);

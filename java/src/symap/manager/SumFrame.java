@@ -23,7 +23,7 @@ import java.sql.ResultSet;
 import backend.Constants;
 import backend.Utils;
 
-import database.DBuser;
+import database.DBconn2;
 import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
@@ -53,18 +53,18 @@ public class SumFrame extends JDialog implements ActionListener {
 	private int pairIdx=0, proj1Idx=0, proj2Idx=0;
 	private int nHits=0;
 	private Mpair mp;
-	private DBuser dbUser; // CAS540 changed DBconn to DBuser
+	private DBconn2 dbc2; // CAS540 changed DBconn to DBuser
 	
 	private Proj proj1=null, proj2=null; // contains idx and lengths of groups
 	
 	// Called from AlignProjs
-	public SumFrame(DBuser dbUser, Mpair mp) {
+	public SumFrame(DBconn2 dbc2, Mpair mp) {
 		this.mp = mp;
-		this.dbUser = dbUser;
+		this.dbc2 = dbc2;
 		createSummary(false);
 	}
     // Called from the project manager
-	public SumFrame(DBuser dbUser, Mpair mp, boolean isReadOnly, String dbName) {
+	public SumFrame(DBconn2 dbc2, Mpair mp, boolean isReadOnly, String dbName) {
 	super();
 	try {	
 		setModal(false);
@@ -72,7 +72,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		setResizable(true);
 		
 		this.mp = mp;
-		this.dbUser = dbUser;
+		this.dbc2 = dbc2;
 		
 		String theInfo = createSummary(isReadOnly); 
 		JTextArea messageArea = new JTextArea(theInfo);
@@ -115,8 +115,8 @@ public class SumFrame extends JDialog implements ActionListener {
 		proj2Idx = mp.getProj2Idx();
 		
 		ResultSet rs;
-		if (dbUser.tableColumnExists("pairs", "summary")) { // CAS540 exist if called from Summary popup
-			rs = dbUser.executeQuery("select summary from pairs where idx="+ pairIdx);
+		if (dbc2.tableColumnExists("pairs", "summary")) { // CAS540 exist if called from Summary popup
+			rs = dbc2.executeQuery("select summary from pairs where idx="+ pairIdx);
 			String sum = (rs.first()) ? rs.getString(1) : null;
 			if (sum!=null && sum.length()>20 && !bPrtStats) return sum;
 		}
@@ -131,7 +131,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		
 		String alignDate = "Unknown", syver="Unk", params="";
 		
-		rs = dbUser.executeQuery("select aligndate, params, syver from pairs where idx=" + pairIdx);
+		rs = dbc2.executeQuery("select aligndate, params, syver from pairs where idx=" + pairIdx);
 		if (rs.first()) {
 			alignDate = rs.getString(1);
 			params = rs.getString(2);
@@ -158,8 +158,8 @@ public class SumFrame extends JDialog implements ActionListener {
 		info += params;
 	
 		if (!isReadOnly) {
-			dbUser.tableCheckAddColumn("pairs", "summary", "text", null); // CAS540 new, no DB update but in Schema
-			dbUser.executeUpdate("update pairs set summary='" + info + "' where idx=" + pairIdx);
+			dbc2.tableCheckAddColumn("pairs", "summary", "text", null); // CAS540 new, no DB update but in Schema
+			dbc2.executeUpdate("update pairs set summary='" + info + "' where idx=" + pairIdx);
 		}
 		return info;
 	}
@@ -181,14 +181,14 @@ public class SumFrame extends JDialog implements ActionListener {
 			String q = "select count(*), sum(end-start+1), avg(end-start+1), max(end-start+1) from pseudo_annot as pa " +
 				       "join xgroups as g on pa.grp_idx=g.idx where pa.type='gene' and g.proj_idx=";
 			
-			rs = dbUser.executeQuery(q + proj1Idx);
+			rs = dbc2.executeQuery(q + proj1Idx);
 			if (rs.first()){
 				proj1.nGenes = rs.getInt(1);
 				gSum1 = rs.getInt(2);
 				gAvg1 = rs.getInt(3);
 				gMax1 = rs.getInt(4);
 			}
-			rs = dbUser.executeQuery(q + proj2Idx);
+			rs = dbc2.executeQuery(q + proj2Idx);
 			if (rs.first()){
 				proj2.nGenes = rs.getInt(1);
 				gSum2   = rs.getInt(2);
@@ -198,14 +198,14 @@ public class SumFrame extends JDialog implements ActionListener {
 			q = "select count(*), sum(end-start+1), avg(end-start+1), max(end-start+1) from pseudo_annot as pa " +
 				"join xgroups as g on pa.grp_idx=g.idx where pa.type='exon' and g.proj_idx=";
 				
-			rs = dbUser.executeQuery(q + proj1Idx);
+			rs = dbc2.executeQuery(q + proj1Idx);
 			if (rs.first()){
 				nExon1 = rs.getInt(1);
 				eSum1 = rs.getInt(2);
 				eAvg1 = rs.getInt(3);
 				eMax1 = rs.getInt(4);
 			}
-			rs = dbUser.executeQuery(q + proj2Idx);
+			rs = dbc2.executeQuery(q + proj2Idx);
 			if (rs.first()){
 				nExon2 = rs.getInt(1);
 				eSum2   = rs.getInt(2);
@@ -273,7 +273,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		String title = "Cluster Hits";
 		long startTime = Utils.getTime();
 		
-		nHits = dbUser.getInt("select count(*) from pseudo_hits where pair_idx=" + pairIdx); 
+		nHits = dbc2.executeInteger("select count(*) from pseudo_hits where pair_idx=" + pairIdx); 
 		if (nHits<=0) return title + "\n No hits";
 		
 		String sq;
@@ -284,8 +284,8 @@ public class SumFrame extends JDialog implements ActionListener {
 				+ " join pseudo_hits       as ph  on ph.idx = pha.hit_idx  "
 				+ " join xgroups            as xg on xg.idx = pa.grp_idx "
 				+ " where pa.type='gene' and ph.pair_idx=" + pairIdx + " and xg.proj_idx=";
-		int gene1Hit = dbUser.getInt(sq + proj1Idx); // query: gene1Hit = #totGene1-#orphan genes
-		int gene2Hit = dbUser.getInt(sq + proj2Idx);
+		int gene1Hit = dbc2.executeInteger(sq + proj1Idx); // query: gene1Hit = #totGene1-#orphan genes
+		int gene2Hit = dbc2.executeInteger(sq + proj2Idx);
 		
 		// %Hits with genes
 		sq = "select count(distinct ph.idx) "
@@ -294,12 +294,12 @@ public class SumFrame extends JDialog implements ActionListener {
 						+ "join pseudo_annot      as pa  on pa.idx      = pha.annot_idx " 
 						+ "join xgroups           as xg  on xg.idx      = pa.grp_idx "
 						+ "where pair_idx=" + pairIdx;
-		int hitGene1 = dbUser.getInt(sq  + " and ph.annot1_idx>0 and xg.proj_idx=" + proj1Idx); 
-		int hitGene2 = dbUser.getInt(sq  + " and ph.annot2_idx>0 and xg.proj_idx=" + proj2Idx); 
+		int hitGene1 = dbc2.executeInteger(sq  + " and ph.annot1_idx>0 and xg.proj_idx=" + proj1Idx); 
+		int hitGene2 = dbc2.executeInteger(sq  + " and ph.annot2_idx>0 and xg.proj_idx=" + proj2Idx); 
 		
-		int hit2Gene = dbUser.getInt("select count(*) from pseudo_hits where gene_overlap=2 and pair_idx=" + pairIdx);
-		int hit1Gene = dbUser.getInt("select count(*) from pseudo_hits where gene_overlap=1 and pair_idx=" + pairIdx);
-		int hit0Gene = dbUser.getInt("select count(*) from pseudo_hits where gene_overlap=0 and pair_idx=" + pairIdx);
+		int hit2Gene = dbc2.executeInteger("select count(*) from pseudo_hits where gene_overlap=2 and pair_idx=" + pairIdx);
+		int hit1Gene = dbc2.executeInteger("select count(*) from pseudo_hits where gene_overlap=1 and pair_idx=" + pairIdx);
+		int hit0Gene = dbc2.executeInteger("select count(*) from pseudo_hits where gene_overlap=0 and pair_idx=" + pairIdx);
 		String pCHwGN1  = pct((double)hitGene1, (double) nHits);
 		String pCHwGN2  = pct((double)hitGene2, (double) nHits);
 		
@@ -321,7 +321,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			  
 			for (int g2=0; g2<proj2.grpIdx.size(); g2++) {
 				int grp2Idx = proj2.grpIdx.get(g2);	
-				rs = dbUser.executeQuery("select start1, end1, query_seq, strand, gene_overlap " 
+				rs = dbc2.executeQuery("select start1, end1, query_seq, strand, gene_overlap " 
 						+ " from pseudo_hits "
 						+ " where pair_idx=" + pairIdx + " and grp1_idx="+grp1Idx + " and grp2_idx="+grp2Idx);
 				while (rs.next()){
@@ -370,7 +370,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			for (int g1=0; g1<proj1.grpIdx.size(); g1++) {
 				int grp1Idx = proj1.grpIdx.get(g1);
 		
-				rs = dbUser.executeQuery("select start2, end2, target_seq " 
+				rs = dbc2.executeQuery("select start2, end2, target_seq " 
 						+ "from pseudo_hits "
 						+ "where pair_idx=" + pairIdx + " and grp1_idx="+grp1Idx + " and grp2_idx="+grp2Idx);
 				while (rs.next()){
@@ -409,26 +409,21 @@ public class SumFrame extends JDialog implements ActionListener {
 		String pshCov1 = pct((double)shCov1, (double)proj1.genomeLen); 
 		String pshCov2 = pct((double)shCov2, (double)proj2.genomeLen);			
 	
-		int nInBlock = dbUser.getInt("select count(*) "
+		int nInBlock = dbc2.executeInteger("select count(*) "
 				+ "from pseudo_hits as h " 
 				+ "join pseudo_block_hits as pbh on pbh.hit_idx=h.idx " 
 				+ "where pair_idx=" + pairIdx); // Query: block hits/all hits
 		String pInBlock = pct((double)nInBlock, (double)nHits);
 
-	// make cluster only table 
-		String [] field1 = {"", "#Clusters", "#Rev", "CHnBlock", "#CH", "g2", "g1", "g0", " ", "#SubHits", "AvgNum"};
+	// make cluster only table; CAS541 left justify 
+		String [] field1 = {"#Clusters", "#Rev", "CHnBlock", "#CH", "g2", "g1", "g0", " ", "#SubHits", "AvgNum"};
 		int nCol1 = field1.length;
-		int [] justify1 =   new int [nCol1];
-		justify1[0]=1;
-		for (int i=1; i<nCol1; i++) justify1[i]=0;
-		int l = Math.max(proj1.name.length(), proj2.name.length());
-		String sp=" ";
-		for (int i=1; i<l; i++) sp+=" ";
+		int [] justify1 =  new int [nCol1];
+		for (int i=0; i<nCol1; i++) justify1[i]=0;
 		
 		int nRow1 = 1;
 	    String [][] rows1 = new String[nRow1][nCol1];
 	    int r=0, c=0;
-	    rows1[r][c++] = sp;
 	    rows1[r][c++] = String.format("%s", cntK(nHits));
 	    rows1[r][c++] = String.format("%s", cntK(totRev)); 
 	    rows1[r][c++] = String.format("%s",  pInBlock);
@@ -538,8 +533,8 @@ public class SumFrame extends JDialog implements ActionListener {
 			 +" join pseudo_block_hits as pbh on pha.hit_idx=pbh.hit_idx"
 			 +" where pa.type='gene' and g.proj_idx=";
 		
-		int nBlkGenes1 = dbUser.getInt(sq + proj1Idx);
-		int nBlkGenes2 = dbUser.getInt(sq + proj2Idx);
+		int nBlkGenes1 = dbc2.executeInteger(sq + proj1Idx);
+		int nBlkGenes2 = dbc2.executeInteger(sq + proj2Idx);
 				
 		String pBlkGene1 = pct((double)nBlkGenes1, (double)proj1.nGenes); // query: block hits, sort on GeneNum
 		String pBlkGene2 = pct((double)nBlkGenes2, (double)proj2.nGenes);
@@ -549,7 +544,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		TreeMap<Integer,Integer> blks = new TreeMap<Integer,Integer>();
 		int nblks = 0, ninv = 0;
 		
-		rs = dbUser.executeQuery("select grp1_idx,grp2_idx, start1,end1,start2,end2, corr  " +
+		rs = dbc2.executeQuery("select grp1_idx,grp2_idx, start1,end1,start2,end2, corr  " +
 				"from blocks where pair_idx=" + pairIdx);
 		while (rs.next()) {
 			nblks++;
@@ -692,7 +687,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	try {
 		String title = "Collinear Sets";
 		if (nHits==0) return "";
-		int nsets = dbUser.getInt("SELECT count(*) "
+		int nsets = dbc2.executeInteger("SELECT count(*) "
 				+ " FROM pseudo_hits WHERE runnum>0 and pair_idx=" + pairIdx);
 		if (nsets==0) return "Collinear \n   None\n";
 	
@@ -700,7 +695,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		
 		TreeSet <String> setMap = new TreeSet <String>  ();
 		
-		ResultSet rs = dbUser.executeQuery("select grp1_idx, grp2_idx, runnum, runsize from pseudo_hits where runnum>0 and pair_idx=" + pairIdx);
+		ResultSet rs = dbc2.executeQuery("select grp1_idx, grp2_idx, runnum, runsize from pseudo_hits where runnum>0 and pair_idx=" + pairIdx);
 		while (rs.next()) {
 			int grp1 = rs.getInt(1);
 			int grp2 = rs.getInt(2);
@@ -784,7 +779,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			TreeMap<Integer,Integer> hits2 = new TreeMap<Integer,Integer>();
 			
 			// ******************* Alignment lengths
-			ResultSet rs = dbUser.executeQuery("select floor(log10(end1-start1)) as len, " +
+			ResultSet rs = dbc2.executeQuery("select floor(log10(end1-start1)) as len, " +
 					"count(*) as cnt from pseudo_hits " + 
 					"where end1-start1>0 and pair_idx=" + pairIdx + " group by len");
 			while (rs.next()){
@@ -792,7 +787,7 @@ public class SumFrame extends JDialog implements ActionListener {
 				int cnt = rs.getInt(2);
 				hits1.put(len, cnt);
 			}
-			rs = dbUser.executeQuery("select floor(log10(end2-start2)) as len, " +
+			rs = dbc2.executeQuery("select floor(log10(end2-start2)) as len, " +
 					"count(*) as cnt from pseudo_hits " + 
 					"where end2-start2>0 and pair_idx=" + pairIdx + " group by len");
 			while (rs.next()){
@@ -822,7 +817,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			TreeMap<Integer,TreeSet<Integer>> bins = new TreeMap<Integer,TreeSet<Integer>>();
 			
 			// Do the query twice to save memory. With query cache it should not be much slower.
-			rs = dbUser.executeQuery("select grp1_idx,start1,end1 from pseudo_hits where pair_idx=" + pairIdx);
+			rs = dbc2.executeQuery("select grp1_idx,start1,end1 from pseudo_hits where pair_idx=" + pairIdx);
 			while (rs.next()){
 				int idx = rs.getInt(1);
 				long start1 = rs.getInt(2);
@@ -840,7 +835,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			hcov1 /= 10; // to kb
 			
 			// Do the query twice to save memory. With query cache it should not be much slower.
-			rs = dbUser.executeQuery("select grp2_idx,start2,end2 from pseudo_hits where pair_idx=" + pairIdx);
+			rs = dbc2.executeQuery("select grp2_idx,start2,end2 from pseudo_hits where pair_idx=" + pairIdx);
 			bins.clear();
 			
 			while (rs.next()) {
@@ -914,7 +909,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		
 		long startTime = Utils.getTime();
 		ResultSet rs;
-		int nInBlock = dbUser.getInt("select count(*) "
+		int nInBlock = dbc2.executeInteger("select count(*) "
 						+ "from pseudo_hits as h " 
 						+ "join pseudo_block_hits as pbh on pbh.hit_idx=h.idx " 
 						+ "where pair_idx=" + pairIdx); // Query: block hits/all hits
@@ -928,8 +923,8 @@ public class SumFrame extends JDialog implements ActionListener {
 			 +" join pseudo_block_hits as pbh on pha.hit_idx=pbh.hit_idx"
 			 +" where pa.type='gene' and g.proj_idx=";
 		
-		int nBlkGenes1 = dbUser.getInt(sq + proj1Idx);
-		int nBlkGenes2 = dbUser.getInt(sq + proj2Idx);
+		int nBlkGenes1 = dbc2.executeInteger(sq + proj1Idx);
+		int nBlkGenes2 = dbc2.executeInteger(sq + proj2Idx);
 				
 		String pBlkGene1 = pct((double)nBlkGenes1, (double)proj1.nGenes); 
 		String pBlkGene2 = pct((double)nBlkGenes2, (double)proj2.nGenes);
@@ -949,7 +944,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			for (int g2=0; g2<proj2.nGrp; g2++) {
 				int grp2Idx = proj2.grpIdx.get(g2);
 				
-				rs = dbUser.executeQuery("select corr, start1, end1 from blocks "
+				rs = dbc2.executeQuery("select corr, start1, end1 from blocks "
 						+ "where pair_idx=" + pairIdx + " and grp1_idx="+grp1Idx + " and grp2_idx="+grp2Idx);
 				while (rs.next()) {
 					nblks++;
@@ -983,7 +978,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			for (int g1=0; g1<proj1.nGrp; g1++) {
 				int grp1Idx = proj1.grpIdx.get(g1);
 				
-				rs = dbUser.executeQuery("select corr, start2, end2 from blocks "
+				rs = dbc2.executeQuery("select corr, start2, end2 from blocks "
 						+ "where pair_idx=" + pairIdx + " and grp1_idx="+grp1Idx + " and grp2_idx="+grp2Idx);
 				while (rs.next()) {
 					int bstart = 	rs.getInt(2); 
@@ -1064,7 +1059,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	private Proj makeProjObj(int projIdx) {	
 	try {
 		Proj p = new Proj();
-		ResultSet rs = dbUser.executeQuery("select x.idx, p.length "
+		ResultSet rs = dbc2.executeQuery("select x.idx, p.length "
 				+ " from xgroups as x join pseudos as p on x.idx=p.grp_idx where x.proj_idx=" + projIdx);
 		while (rs.next()) {
 			p.grpIdx.add(rs.getInt(1));

@@ -2,67 +2,44 @@ package symap.mapper;
 
 import java.util.Vector;
 
-import database.DBconn;
-import database.DBAbsUser;
-import props.ProjectPool;
-
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.ResultSet;
 
+import database.DBconn2;
+import props.ProjectPool;
 import symap.sequence.Sequence;
 import symap.track.Track;
 import util.ErrorReport;
 
 /**
  * The pool of Mapper hits.
- * The pool utilizes a ListCache.
- * CAS520 FPC is partially removed; FPC521 more FPC removed
+ * CAS520 FPC is partially removed; CAS531 remove cache; CAS521 more FPC removed; CAS541 extends DBAbsUser
  */
-public class MapperPool extends DBAbsUser {
-	private ProjectPool projectProperties;
-	// private ListCache pseudoPseudoCache; CAS531 dead
+public class MapperPool {
+	private DBconn2 dbc2;
+	private ProjectPool projPool; // properties
 	
-	public MapperPool(DBconn dr, ProjectPool pp) {  
-		super(dr);
-		this.projectProperties = pp;
+	public MapperPool(DBconn2 dbc2, ProjectPool projPool) {  
+		this.dbc2 = dbc2;
+		this.projPool = projPool;
 	}
 
-	public synchronized void close() {
-		super.close();
-	}
-
-	public synchronized void clear() {
-		super.close();
-	}
-	
 	public boolean hasPair(Track t1, Track t2) {
-		return projectProperties.hasProjectPair(t1.getProject(),t2.getProject());
+		return projPool.hasProjectPair(t1.getProject(),t2.getProject());
 	}
 
-	public SeqHits setData(Mapper mapper, Track t1, Track t2,MapInfo mapInfo, HitFilter hf) {
+	public SeqHits setData(Mapper mapper, Track t1, Track t2, HfilterData hf) {
 		SeqHits seqHitObj;
 		
-		if (hasPair(t1,t2)) seqHitObj = setSeqHitData(mapper, (Sequence)t1, (Sequence)t2, mapInfo);
-		else                seqHitObj = setSeqHitData(mapper, (Sequence)t2, (Sequence)t1, mapInfo);
+		if (hasPair(t1,t2)) seqHitObj = setSeqHitData(mapper, (Sequence)t1, (Sequence)t2);
+		else                seqHitObj = setSeqHitData(mapper, (Sequence)t2, (Sequence)t1);
 		
 		return seqHitObj;
 	}
 
-	private static final String PSEUDO_HITS_QUERY = 
-			"SELECT h.idx, h.hitnum, h.pctid, h.start1, h.end1, h.start2, h.end2, h.strand," + // CAS520 change evalue to hitnum
-			"h.gene_overlap, h.query_seq, h.target_seq, " +
-			"h.cvgpct, h.countpct, " +    		// CAS515 add cvgpct, countpct,
-			"h.runsize, h.runnum, h.score, " +	// CAS520 add runnum, CAS540 add score
-			"b.corr, b.blocknum " +  	  		// CAS516 add corr; CAS504 bh.block_idx -> b.blocknum
-			"FROM pseudo_hits AS h "+
-			"LEFT JOIN pseudo_block_hits AS bh ON (bh.hit_idx=h.idx) "+
-			"LEFT JOIN blocks as b on (b.idx=bh.block_idx) " + // CAS505 added for blocknum
-			"WHERE h.grp1_idx=? AND h.grp2_idx=? order by h.start1"; // CAS520 add order by
 	/*************************************************************************
 	 * Update HitData
 	 */
-	private SeqHits setSeqHitData(Mapper mapper, Sequence st1, Sequence st2,  MapInfo nmi)  {
+	private SeqHits setSeqHitData(Mapper mapper, Sequence st1, Sequence st2)  {
 		int stProject1 = st1.getProject();
 		int stProject2 = st2.getProject();
 		int group1 = st1.getGroup();
@@ -70,22 +47,23 @@ public class MapperPool extends DBAbsUser {
 		String chr1="?", chr2="?";
 
 		Vector <HitData> hitList = new Vector <HitData>();
-		Statement statement;
 		ResultSet rs;
 		String query, tag;
 		try {
-			statement = createStatement();
+			chr1 = dbc2.executeString("select name from xgroups where idx=" + group1); // CAS517 add chrname for display
+			chr2 = dbc2.executeString("select name from xgroups where idx=" + group2);
 			
-			rs = statement.executeQuery("select name from xgroups where idx=" + group1); // CAS517 add chrname for display
-			if (rs.next()) chr1=rs.getString(1);
-			rs = statement.executeQuery("select name from xgroups where idx=" + group2);
-			if (rs.next()) chr2=rs.getString(1);
+			query = "SELECT h.idx, h.hitnum, h.pctid, h.start1, h.end1, h.start2, h.end2, h.strand," + // CAS520 change evalue to hitnum
+				"h.gene_overlap, h.query_seq, h.target_seq, " +
+				"h.cvgpct, h.countpct, " +    		// CAS515 add cvgpct, countpct,
+				"h.runsize, h.runnum, h.score, " +	// CAS520 add runnum, CAS540 add score
+				"b.corr, b.blocknum " +  	  		// CAS516 add corr; CAS504 bh.block_idx -> b.blocknum
+				"FROM pseudo_hits AS h "+
+				"LEFT JOIN pseudo_block_hits AS bh ON (bh.hit_idx=h.idx) "+
+				"LEFT JOIN blocks as b on (b.idx=bh.block_idx) " + // CAS505 added for blocknum
+				"WHERE h.grp1_idx=" + group1 + " AND h.grp2_idx="+ group2 +" order by h.start1"; // CAS520 add order by;
 			
-			query = PSEUDO_HITS_QUERY;
-			query = setInt(query,group1);	
-			query = setInt(query,group2);
-			
-			rs = statement.executeQuery(query);
+			rs = dbc2.executeQuery(query);
 			/*
 		  	1 h.idx, 2 h.hitnum, 3 h.pctid, 4 h.start1, 5 h.end1, 6 h.start2, 7 h.end2, 8 h.strand,
 		 	9 h.gene_overlap, 10 h.query_seq, 11 h.target_seq, 12 h.cvgpct, 13 h.countpct, 
@@ -115,24 +93,19 @@ public class MapperPool extends DBAbsUser {
 						rs.getInt(13),      /* int countpct -> nMergedHits */
 						rs.getDouble(17),	/* CAS516 b.corr */
 						rs.getInt(16),		/* CAS540 h.score */
-						tag, chr1, chr2	/* CAS517 add chr1, chr2 */
+						tag, chr1, chr2	    /* CAS517 add chr1, chr2 */
 						
 						);		
 				hitList.add(temp);
 			}
-			closeResultSet(rs);
+			rs.close();
 			
 			SeqHits seqHitObj = new SeqHits(stProject1,group1,stProject2,
 					group2, mapper, st1, st2, hitList, false);
 			
 			hitList.clear();
 		
-			closeStatement(statement);
 			return seqHitObj;
-		} catch (SQLException e) {
-			close();
-			ErrorReport.print(e, "Get hit data");
-			return null;
-		}
+		} catch (Exception e) {ErrorReport.print(e, "Get hit data");return null;}
 	}
 }

@@ -1,10 +1,5 @@
 package symapQuery;
-/**************************************************
- * Perform query and display results in table
- * CAS504 many changes for this release, most are not commented
- * CAS513 made panel smaller and columns w/o scroll; the query/summary are passed in 
- * 		  the annoKeywords are checks for annot_kw_mincount
- */
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
@@ -19,9 +14,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
-import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.HashMap;
@@ -50,13 +43,20 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
+import database.DBconn2;
 import util.ErrorReport;
 import util.Jhtml;
 import util.Utilities;
 import symap.sequence.Sequence;
 import symap.frame.SyMAP2d;
-import symap.mapper.HitFilter;
+import symap.mapper.HfilterData;
 
+/**************************************************
+ * Perform query and display results in table
+ * CAS504 many changes for this release, most are not commented
+ * CAS513 made panel smaller and columns w/o scroll; the query/summary are passed in 
+ * 		  the annoKeywords are checks for annot_kw_mincount
+ */
 public class TableDataPanel extends JPanel {
 	private static final long serialVersionUID = -3827610586702639105L;
 	private static final int ANNO_COLUMN_WIDTH = 100, ANNO_PANEL_WIDTH = 900;
@@ -394,11 +394,14 @@ public class TableDataPanel extends JPanel {
     		chkGeneralFields[x].setAlignmentX(Component.LEFT_ALIGNMENT);
     		chkGeneralFields[x].setBackground(Color.WHITE);
     		chkGeneralFields[x].addActionListener(colSelectChange);
+    		chkGeneralFields[x].setToolTipText(genDesc[x]);
+    		/** CAS541 replace with tool tip
     		final String desc = genDesc[x];			
     		chkGeneralFields[x].addMouseListener(new MouseAdapter() {	// CAS519 add
         		public void mouseEntered(MouseEvent e) {setStatus(desc);}
         		public void mouseExited(MouseEvent e)  {setStatus("");}
         	});
+        	**/
     		chkGeneralFields[x].setSelected(genColDef[x]);
     		if (x==0) {// CAS540x i was able to uncheck the row, don't know how...
     			chkGeneralFields[x].setSelected(true);
@@ -425,13 +428,13 @@ public class TableDataPanel extends JPanel {
     	page.setBackground(Color.WHITE);
         	
     	String [] species = theParentFrame.getAbbrevNames();
-    	String [] colHeads = FieldData.getSpeciesColHead();
+    	String [] colHeads = FieldData.getSpeciesColHead(isSingle);
 		
-		String [] colDesc= FieldData.getSpeciesColDesc();
+		String [] colDesc= FieldData.getSpeciesColDesc(isSingle);
 		int cntCol = FieldData.getSpColumnCount(isSingle); // CAS519 add because single/pairs no longer have the same #columns
 		
     	chkSpeciesFields = new JCheckBox[species.length][cntCol];
-    	boolean [] colDefs = FieldData.getSpeciesColDefaults();
+    	boolean [] colDefs = FieldData.getSpeciesColDefaults(isSingle);
     	
     	for(int x=0; x<species.length; x++) {
     		JPanel row = new JPanel();
@@ -451,11 +454,14 @@ public class TableDataPanel extends JPanel {
         		chkSpeciesFields[x][y].setAlignmentX(Component.LEFT_ALIGNMENT);
         		chkSpeciesFields[x][y].setBackground(Color.WHITE);
         		chkSpeciesFields[x][y].addActionListener(colSelectChange);
+        		chkSpeciesFields[x][y].setToolTipText(colDesc[y]);
+        		/** CAS541 replace with tooltip
         		final String desc = colDesc[y];
         		chkSpeciesFields[x][y].addMouseListener(new MouseAdapter() { // CAS519 add
             		public void mouseEntered(MouseEvent e) {setStatus(desc);}
             		public void mouseExited(MouseEvent e)  {setStatus("");}
             	});
+            	**/
         		row.add(chkSpeciesFields[x][y]);
         		
         		row.add(Box.createHorizontalStrut(4));
@@ -464,7 +470,7 @@ public class TableDataPanel extends JPanel {
         	if (x < species.length - 1) page.add(new JSeparator());
     	}
     	String loc = (isSingle) ? "Gene" : "Gene&Hit"; // CAS503, CAS519 Hit->Gene&Hit
-    	page.setBorder(BorderFactory.createTitledBorder(loc + " Location"));
+    	page.setBorder(BorderFactory.createTitledBorder(loc + " Info"));
     	page.setMaximumSize(page.getPreferredSize());
 
     	return page;
@@ -500,11 +506,14 @@ public class TableDataPanel extends JPanel {
     			chkCol.addActionListener(colSelectChange);
     			String d = (annotName.contentEquals(Q.All_Anno)) ? 
     					"All annotation from GFF file" : "Column heading is keyword from GFF file";
+    			chkCol.setToolTipText(d);
+    			/** CAS541 replace with tooltip
     			final String desc = d;
         		chkCol.addMouseListener(new MouseAdapter() { // CAS519 add
             		public void mouseEntered(MouseEvent e) {setStatus(desc);}
             		public void mouseExited(MouseEvent e) {setStatus("");}
             	});
+            	**/
     			/* CAS532 quit setting now that we have save
     			String lc = annotName.toLowerCase(); // CAS513 caseIgnore
     			if (lc.equals("description") || lc.equals("product") || lc.equals("note") || lc.equals("desc"))	{
@@ -571,25 +580,37 @@ public class TableDataPanel extends JPanel {
     	return retVal;
     }
     private JPanel createColumnButtonPanel() {
-    	JPanel buttonPanel = new JPanel();
+    	buttonPanel = new JPanel();
     	buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
     	buttonPanel.setBackground(Color.WHITE);
     	buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
     	
-		showColumnSelect = new JButton("Select Columns");
-		showColumnSelect.setBackground(Color.WHITE);
-		showColumnSelect.addActionListener(new ActionListener() {
+		btnShowColumns = new JButton("Select Columns");
+		btnShowColumns.setBackground(Color.WHITE);
+		btnShowColumns.addActionListener(new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			if(columnPanel.isVisible()) {
-				showColumnSelect.setText("Select Columns");
+				btnShowColumns.setText("Select Columns");
 				columnPanel.setVisible(false);
+				btnClearColumns.setVisible(false);
+				btnShowStats.setVisible(true);
 			}
 			else {
-				showColumnSelect.setText("Hide Columns");
+				btnShowColumns.setText("Hide Columns");
 				columnPanel.setVisible(true);
+				btnClearColumns.setVisible(true);
+				btnShowStats.setVisible(false);
 			}
 			showTable();
 		}});
+		
+		btnClearColumns = new JButton("Clear Columns");
+		btnClearColumns.setBackground(Color.WHITE);
+		btnClearColumns.addActionListener(new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			clearColumns();
+		}});
+		btnClearColumns.setVisible(false);
 	
 		btnShowStats = new JButton("Hide Stats");
 		btnShowStats.setBackground(Color.WHITE);
@@ -605,13 +626,14 @@ public class TableDataPanel extends JPanel {
 			}
 		}});
 
-		txtStatus = new JTextField(400); // CAS519 new 
+		txtStatus = new JTextField(400); // CAS519 new; CAS541 replaced with tooltip
 		txtStatus.setEditable(false);
 		txtStatus.setBorder(BorderFactory.createEmptyBorder());
 		txtStatus.setBackground(Color.WHITE);
 		
-    	buttonPanel.add(showColumnSelect); buttonPanel.add(Box.createHorizontalStrut(10));
-    	buttonPanel.add(btnShowStats); buttonPanel.add(Box.createHorizontalStrut(10)); //So the resized button doesn't get clipped
+    	buttonPanel.add(btnShowColumns);  buttonPanel.add(Box.createHorizontalStrut(10));
+    	buttonPanel.add(btnClearColumns); buttonPanel.add(Box.createHorizontalStrut(10));
+    	buttonPanel.add(btnShowStats);    buttonPanel.add(Box.createHorizontalStrut(10)); //So the resized button doesn't get clipped
     	buttonPanel.add(txtStatus);
     	
     	buttonPanel.setMaximumSize(buttonPanel.getPreferredSize());
@@ -666,6 +688,22 @@ public class TableDataPanel extends JPanel {
     /***********************************************************
      * Column
      */
+    private void clearColumns() {
+    	for (int i=1; i<chkGeneralFields.length; i++) chkGeneralFields[i].setSelected(false);
+    	
+    	int cntCol = FieldData.getSpColumnCount(isSingle);
+    	for (int i=0; i<chkSpeciesFields.length; i++) {
+    		for (int j=0; j<cntCol; j++)
+    			chkSpeciesFields[i][j].setSelected(false);
+    	}
+    	for(int x=0; x<chkAnnoFields.size(); x++) {
+    		for(int y=0; y<chkAnnoFields.get(x).size(); y++) {
+    			chkAnnoFields.get(x).get(y).setSelected(false);
+    		}
+    	}
+    	setTable(true);
+    	showTable();
+    }
 	// Column change
 	private void setTable(boolean isFirst) {
 		if(theTable != null) theTable.removeListeners();
@@ -775,7 +813,7 @@ public class TableDataPanel extends JPanel {
     	btnUnSelectAll.setEnabled(enable);
     	btnSaveFasta.setEnabled(enable);
     	btnShowAlign.setEnabled(enable);
-    	showColumnSelect.setEnabled(enable);
+    	btnShowColumns.setEnabled(enable);
     	btnHelp.setEnabled(enable);
     	
     	for(int x=0; x<chkGeneralFields.length; x++)
@@ -920,7 +958,10 @@ public class TableDataPanel extends JPanel {
 					PrintWriter out = new PrintWriter(new FileWriter(new File(fName)));
 					
 					for(int x=0; x<selNum; x++) {
-						if (!rd.loadRow(x)) return;
+						if (!rd.loadRow(x)) {
+							out.close();
+							return;
+						}
 							
 						int n = (isSingle) ? 1 : 2;
 						for (int i=0; i<n; i++) {
@@ -1115,7 +1156,7 @@ public class TableDataPanel extends JPanel {
 			int grp2Idx = (Integer) rd.chrIdx[1];
 			
 			// create new drawing panel
-			SyMAP2d symap = new SyMAP2d(theParentFrame.getDatabase(), getInstance());
+			SyMAP2d symap = new SyMAP2d(theParentFrame.getDBC(), getInstance());
 		
 			symap.getDrawingPanel().setMaps(1);
 			symap.getHistory().clear(); 
@@ -1123,7 +1164,7 @@ public class TableDataPanel extends JPanel {
 			//FilterData fd2 = new FilterData();
 			//fd2.setShowHits(FilterData.ALL_HITS); 
 			
-			HitFilter hd = new HitFilter (); // CAS520 change from dotplot.FilterData
+			HfilterData hd = new HfilterData (); // CAS520 change from dotplot.FilterData
 			if (item==0 || item==2) Sequence.setDefaultShowAnnotation(true);
 			
 			if (item==0) 		hd.setForQuery(false, false, true);  // block, collinear, all
@@ -1158,19 +1199,15 @@ public class TableDataPanel extends JPanel {
      * XXX Database
      */
 	private ResultSet loadDataFromDatabase(String theQuery) {
-        Connection conn=null;
-        Statement stmt=null;
-        
         try {
-        	conn = theParentFrame.getDatabase().getConnection();
-        	stmt = conn.createStatement();
+        	DBconn2 dbc2 = theParentFrame.getDBC();
         	
         	if(loadStatus.getText().equals("Cancelled")) return null; 
         	loadStatus.setText("Performing database search....");
         	
         	try {
         		/**** EXECUTE ***/
-        		ResultSet rs = stmt.executeQuery(theQuery);  
+        		ResultSet rs = dbc2.executeQuery(theQuery);  
         		if (Q.TEST_TRACE)	loadDataTESTwrite(theQuery, rs, isSingle);
         		return rs;
         	}
@@ -1239,25 +1276,24 @@ public class TableDataPanel extends JPanel {
 	private double [] loadBlockCoords(int block, int idx1, int idx2) {
 		double [] coords = null;
 		try {
-			Connection conn = theParentFrame.getDatabase().getConnection();
-			Statement stmt = conn.createStatement();
-		
-			ResultSet rs = stmt.executeQuery("select start1, end1, start2, end2 from blocks "
+			DBconn2 dbc2 = theParentFrame.getDBC();
+			
+			ResultSet rs = dbc2.executeQuery("select start1, end1, start2, end2 from blocks "
 					+ " where blocknum="+block+ " and grp1_idx=" + idx1 + " and grp2_idx=" + idx2);
 			if (rs.next()) {
 				coords = new double [4];
 				for (int i=0; i<4; i++) coords[i] = rs.getDouble(i+1);
 			}
+
 			if (coords==null) { // try opposite way
-				rs = stmt.executeQuery("select start2, end2, start1, end1 from blocks "
+				rs = dbc2.executeQuery("select start2, end2, start1, end1 from blocks "
 						+ " where blocknum="+block+ " and grp1_idx=" + idx2 + " and grp2_idx=" + idx1);
 				if (rs.next()) {
 					coords = new double [4];
 					for (int i=0; i<4; i++) coords[i] = rs.getDouble(i+1);
 				}
 			}
-			stmt.close();
-			conn.close();
+			rs.close();
 			return coords;
 		}
 		catch(Exception e) {ErrorReport.print(e, "set project annotations"); return null;}
@@ -1268,9 +1304,9 @@ public class TableDataPanel extends JPanel {
 	private double [] loadCollinearCoords(int set, int idx1, int idx2) {
 		double [] coords = null;
 		try {
-			Connection conn = theParentFrame.getDatabase().getConnection();
-			Statement stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery("select start1, end1, start2, end2 from pseudo_hits "
+			DBconn2 dbc2 = theParentFrame.getDBC();
+		
+			ResultSet rs = dbc2.executeQuery("select start1, end1, start2, end2 from pseudo_hits "
 					+ "where runnum=" + set + " and grp1_idx=" + idx1 + " and grp2_idx=" + idx2);
 			double start1=Double.MAX_VALUE, end1=-1, start2=Double.MAX_VALUE, end2=-1, d;
 			while (rs.next()) {
@@ -1281,7 +1317,7 @@ public class TableDataPanel extends JPanel {
 				d = rs.getInt(4);	if (d>end2)   end2 = d;
 			}
 			if (start1==Double.MAX_VALUE) { // try flipping idx1 and idx2
-				rs = stmt.executeQuery("select start1, end1, start2, end2 from pseudo_hits "
+				rs = dbc2.executeQuery("select start1, end1, start2, end2 from pseudo_hits "
 						+ "where runnum=" + set + " and grp1_idx=" + idx2 + " and grp2_idx=" + idx1);
 				while (rs.next()) {
 					d = rs.getInt(1);	if (d<start2) start2 = d;
@@ -1295,8 +1331,7 @@ public class TableDataPanel extends JPanel {
 				coords = new double [4];
 				coords[0]=start1; coords[1]=end1; coords[2]=start2; coords[3]=end2;
 			}
-			stmt.close();
-			conn.close();
+			rs.close();
 			return coords;
 		}
 		catch(Exception e) {ErrorReport.print(e, "set project annotations"); return null;}
@@ -1562,9 +1597,10 @@ public class TableDataPanel extends JPanel {
 	private JPanel tableButtonPanel = null, tableStatusPanel = null;
 	private JPanel generalColSelectPanel = null, spLocColSelectPanel = null;
 	private JPanel spAnnoColSelectPanel = null, statsPanel = null;
+	private JPanel buttonPanel = null;
 	
 	private JPanel columnPanel = null, columnButtonPanel = null;
-	private JButton showColumnSelect = null, btnShowStats = null, btnHelp = null;
+	private JButton btnShowColumns = null, btnClearColumns=null, btnShowStats = null, btnHelp = null;
 	private JTextField txtStatus = null;
     
 	public SyMAPQueryFrame theParentFrame = null;

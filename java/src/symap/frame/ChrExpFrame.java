@@ -45,7 +45,7 @@ import util.LinkLabel;
 import util.Utilities;
 import util.Jhtml;
 import circview.CircFrame;
-import database.DBconn;
+import database.DBconn2;
 import dotplot.DotPlotFrame;
 
 /*****************************************************
@@ -72,7 +72,8 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 	protected Mapper mapper;
 	protected SyMAP2d symap2D = null;
 	protected DotPlotFrame dotplot = null;
-	protected DBconn dbReader;
+	protected CircFrame circframe = null; // CAS541 made global so can close connection
+	protected DBconn2 tdbc2, circdbc=null;
 	
 	protected boolean hasInit = false;
 	// protected boolean isFirst2DView = true; CAS517 not used
@@ -80,15 +81,11 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 	protected int selectedView = 1;
 	protected int screenWidth, screenHeight;
 	
-	// called by symapCE.SyMAPExp
-	public ChrExpFrame(DBconn dbReader, Mapper mapper) {
-		this(dbReader);
-		this.mapper = mapper;
-	}
-	
-	private ChrExpFrame(DBconn dbReader) {
+	// called by symap.frame.ChrExpInit
+	public ChrExpFrame(DBconn2 tdbc2, Mapper mapper) {
 		super("SyMAP "+ Globals.VERSION);
-		this.dbReader = dbReader;
+		this.tdbc2 = tdbc2;
+		this.mapper = mapper;
 		
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		
@@ -118,9 +115,13 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 
 	public void dispose() { // override
 		setVisible(false); // necessary?
-
+		tdbc2.close();
+		circframe.clear();
+		circframe=null;
+		
 		if (symap2D != null) symap2D.clear();
 		symap2D = null;
+		if (dotplot != null) dotplot.clear(); // CAS541 add
 		dotplot = null;
 		super.dispose();
 	}
@@ -150,7 +151,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		btnShowCircle.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Utilities.setCursorBusy(getContentPane(), true);
-				regenerateCircleView();
+				showCircleView();
 				selectedView = viewControlBar.getSelected();
 				Utilities.setCursorBusy(getContentPane(), false);
 			}
@@ -167,7 +168,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		btnShow2D.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Utilities.setCursorBusy(getContentPane(), true);
-				boolean success = regenerate2DView();
+				boolean success = show2DView();
 				if (success)
 					selectedView = viewControlBar.getSelected();
 				else { // revert to previous view
@@ -190,7 +191,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		btnShowDotplot.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Utilities.setCursorBusy(getContentPane(), true);
-				regenerateDotplotView();
+				showDotplotView();
 				selectedView = viewControlBar.getSelected();
 				Utilities.setCursorBusy(getContentPane(), false);
 			}
@@ -216,9 +217,8 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 				btnShow2D.setEnabled( mapper.getNumVisibleTracks() > 0 );
 				btnShowDotplot.setEnabled( mapper.getNumVisibleTracks() > 0 );
 				btnShowCircle.setEnabled( true ); // CAS512 mapper.getNumVisibleTracks() > 0
-				if (viewControlBar.getSelected() == VIEW_CIRC){
-					regenerateCircleView();
-				}
+				
+				if (viewControlBar.getSelected() == VIEW_CIRC) showCircleView();
 			}
 		}
 	};
@@ -290,7 +290,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		// necessary data (tracks/blocks) aren't avail until now.
 		if (!hasInit) {
 			createControlPanel();
-			regenerateCircleView();
+			showCircleView();
 		}
 		
 		if (mapper.getNumTracks() == 0) {
@@ -299,7 +299,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		}
 	}
 	
-	private void regenerateCircleView(){	
+	private void showCircleView(){	
 		int[] pidxList = new int[mapper.getProjects().length];
 		TreeSet<Integer> shownGroups = new TreeSet<Integer>();
 		
@@ -315,13 +315,14 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 				}
 			}
 		}
+		if (circdbc==null) circdbc = new DBconn2("CircleE-" + DBconn2.getNumConn(), tdbc2);
+		circframe = new CircFrame(circdbc, pidxList, shownGroups, helpBar, refIdx); // have to recreate everytime
 		
-		CircFrame circframe = new CircFrame(dbReader,pidxList,shownGroups,helpBar, refIdx);
 		cardPanel.add(circframe.getContentPane(), Integer.toString(VIEW_CIRC)); // ok to add more than once
 		
 		setView(VIEW_CIRC);
 	}
-	private void regenerateDotplotView() {
+	private void showDotplotView() {
 		// Get selected projects/groups
 		int[] projects = mapper.getVisibleProjectIDs();
 		int[] groups = mapper.getVisibleGroupIDs();
@@ -333,10 +334,8 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			yGroups[i-1] = groups[i];
 		
 		// Create dotplot frame
-		if (dotplot == null)
-			dotplot = new DotPlotFrame(dbReader, projects, xGroups, yGroups, helpBar, false);
-		else if (isFirstDotplotView)
-			dotplot.getData().initialize(projects, xGroups, yGroups);
+		if (dotplot == null) dotplot = new DotPlotFrame(tdbc2, projects, xGroups, yGroups, helpBar, false);
+		else if (isFirstDotplotView) dotplot.getData().initialize(projects, xGroups, yGroups);
 
 		// Switch to dotplot display
 		cardPanel.add(dotplot.getContentPane(), Integer.toString(VIEW_DP)); // ok to add more than once
@@ -345,7 +344,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		isFirstDotplotView = false;
 	}
 		
-	private boolean regenerate2DView() {
+	private boolean show2DView() {
 		try {	
 			TrackCom ref = mapper.getReferenceTrack();
 			TrackCom[] selectedTracks = mapper.getVisibleTracks(); // none reference tracks
@@ -355,15 +354,9 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 						JOptionPane.YES_NO_OPTION,JOptionPane.ERROR_MESSAGE) != JOptionPane.YES_OPTION) 
 				return false;
 			
-			if (symap2D == null) { // CAS517 move after get tracks 
-				symap2D = new SyMAP2d(dbReader, helpBar, null);
-				// CAS521 totally remove FPC CAS517 to add include FPC colors and Frame Markers if FPC true 
-			}
-			Frame2d frame = symap2D.getFrame();
-			if (frame == null) {
-				System.err.println("SyMAPFrame3D:  Error creating 2D frame!");
-				return false;
-			}
+			// CAS517 move after get tracks 
+			// CAS521 totally remove FPC CAS517 to add include FPC colors and Frame Markers if FPC true 
+			if (symap2D == null) symap2D = new SyMAP2d(tdbc2, helpBar, null);	
 			
 			DrawingPanel dp = symap2D.getDrawingPanel();
 			dp.setFrameEnabled(false);// Disable 2D rendering
@@ -388,6 +381,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			dp.setMaps( position - 2 );
 			
 			// Enable 2D display
+			Frame2d frame = symap2D.getFrame();
 			cardPanel.add(frame.getContentPane(), Integer.toString(VIEW_2D)); // ok to add more than once
 			setView(VIEW_2D);
 			
@@ -575,11 +569,9 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 					" where p1.idx in (" + projStr + ") and p2.idx in (" + projStr + ") and p1.type='pseudo' and p2.type='pseudo' " +
 					" order by p1.name asc, p2.name asc, g1.idx asc, g2.idx asc, b.blocknum asc";
 					
-					ResultSet rs = dbReader.getConnection().createStatement().executeQuery(query);
-					while (rs.next())
-					{
-						for(int i = 1; i <= row.size(); i++)
-						{
+					ResultSet rs = tdbc2.executeQuery(query);
+					while (rs.next()){
+						for(int i = 1; i <= row.size(); i++){
 							row.set(i-1, rs.getString(i));
 						}
 						out.println(Utils.join(row, "\t"));

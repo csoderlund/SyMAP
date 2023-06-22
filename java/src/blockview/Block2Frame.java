@@ -9,7 +9,7 @@ import java.util.TreeMap;
 import java.awt.geom.Rectangle2D;
 import javax.swing.event.*;
 
-import database.DBconn;
+import database.DBconn2;
 import symap.manager.Mproject;
 import symap.Globals;
 import symap.frame.SyMAP2d;
@@ -28,11 +28,12 @@ public class Block2Frame extends JFrame {
 	private final int fLayerWidth = 90; 		// CAS56 was 100; width of level
 	private final int fTooManySeqs = 75;
 
+	private DBconn2 tdbc2;
+	
 	private int bpPerPx;
 	private int mRefIdx;
 	private String refName, tarName, grpPfx;
 	private int mIdx2, mGrpIdx, mPairIdx;
-	private DBconn mDB;
 	private Vector<Integer> mColors;
 	private boolean unorderedRef, unordered2, mReversed;
 	private int unGrp2;
@@ -48,14 +49,16 @@ public class Block2Frame extends JFrame {
 	private JPanel mainPane; // CAS533 changed from Container to JPanel for ImageViewer
 	private int farL, farR;
 	
-	public Block2Frame(DBconn dbReader, int refIdx, int idx2, int grpIdx, int pairIdx, boolean reversed) {
+	// Called from BlockViewFrame - subwindow
+	public Block2Frame(DBconn2 tdbc2, int refIdx, int idx2, int grpIdx, int pairIdx, boolean reversed) {
 		super("SyMAP Block Detail View " + Globals.VERSION);
 		mRefIdx = refIdx;
 		mIdx2 = idx2;
 		mGrpIdx = grpIdx;
 		mPairIdx = pairIdx;
 		mReversed = reversed;
-		mDB = dbReader;
+		
+		this.tdbc2 = new DBconn2("BlocksC-" + DBconn2.getNumConn(), tdbc2); 
 		
 		setBackground(Color.white);
 		getUniqueColors(100);
@@ -143,30 +146,31 @@ public class Block2Frame extends JFrame {
 		}
 		catch(Exception e){ErrorReport.print(e, "Init for Chromosome Blocks");}
 	}
-
+	// Main Block can be closed separately, so this needs its own tdbc closed
+	public void dispose() { // override; CAS541 add
+		setVisible(false); 
+		tdbc2.close();  
+		super.dispose();
+	}
 	private boolean initFromDB() {
 		try {
 			ResultSet rs;
-			Statement s = mDB.getConnection().createStatement();
-	
+			
 		// xgroups
-			rs = s.executeQuery("select count(*) as ngrps from xgroups where proj_idx=" + mRefIdx);
-			rs.first();
-			unorderedRef = (rs.getInt("ngrps") > fTooManySeqs);
+			int cnt = tdbc2.executeCount("select count(*) as ngrps from xgroups where proj_idx=" + mRefIdx);
+			unorderedRef = (cnt > fTooManySeqs);
 
-			rs = s.executeQuery("select count(*) as ngrps from xgroups where proj_idx=" + mIdx2);
-			rs.first();
-			unordered2 = (rs.getInt("ngrps") > fTooManySeqs);
+			cnt = tdbc2.executeCount("select count(*) as ngrps from xgroups where proj_idx=" + mIdx2);
+			unordered2 = (cnt > fTooManySeqs);
 			
 			if (unorderedRef && unordered2) {
 				System.out.println("Genomes have too many chromosomes/contigs to show in block view");
 				return false;
 			}
 			
-			rs = s.executeQuery("select idx from xgroups where name='0' and proj_idx=" + mIdx2);
-			if (rs.first()) unGrp2 = rs.getInt("idx");
+			unGrp2 = tdbc2.executeInteger("select idx from xgroups where name='0' and proj_idx=" + mIdx2);
 			
-			rs = s.executeQuery("select name,length from xgroups join pseudos on pseudos.grp_idx=xgroups.idx " +
+			rs = tdbc2.executeQuery("select name,length from xgroups join pseudos on pseudos.grp_idx=xgroups.idx " +
 					" where xgroups.idx=" + mGrpIdx);
 			if (!rs.first()) {
 				System.out.println("Unable to find reference group " + mGrpIdx);
@@ -184,10 +188,9 @@ public class Block2Frame extends JFrame {
 			}
 			else {
 				boolean haveUnanch = false;
-				rs = s.executeQuery("select count(*) as count from blocks where pair_idx=" + mPairIdx + 
+				cnt = tdbc2.executeCount("select count(*) as count from blocks where pair_idx=" + mPairIdx + 
 						" and (grp1_idx=" + unGrp2 +  " or grp2_idx=" + unGrp2 + ")");
-				rs.first();
-				haveUnanch = (0 < rs.getInt("count"));
+				haveUnanch = (0 < cnt);
 				if (haveUnanch) {
 					colorOrder.put(unGrp2, 0);
 					mGrp2Names.put(unGrp2,"0");
@@ -195,7 +198,7 @@ public class Block2Frame extends JFrame {
 				}
 			}
 
-			rs = s.executeQuery("select name, idx from xgroups where proj_idx=" + mIdx2 + " and name != '0' order by sort_order asc");
+			rs = tdbc2.executeQuery("select name, idx from xgroups where proj_idx=" + mIdx2 + " and name != '0' order by sort_order asc");
 			int i = mGrp2Names.size();
 			while (rs.next()) {
 				int idx = rs.getInt("idx");
@@ -208,18 +211,14 @@ public class Block2Frame extends JFrame {
 			Mproject tProj = new Mproject();
 			String grp_prefix = tProj.getKey(tProj.lGrpPrefix);
 			
-			rs = s.executeQuery("select value from proj_props where name='" + grp_prefix + "' and proj_idx=" + mRefIdx);
+			rs = tdbc2.executeQuery("select value from proj_props where name='" + grp_prefix + "' and proj_idx=" + mRefIdx);
 			grpPfx = rs.first() ? rs.getString("value") : "Chr"; // CAS534 should be loaded, but if not...
-
-			String display_name = tProj.getKey(tProj.sDisplay);
-			rs = s.executeQuery("select value from proj_props where name='"+display_name+"' and proj_idx=" + mRefIdx);
-			rs.first();
-			refName = rs.getString("value");
-			rs = s.executeQuery("select value from proj_props where name='"+display_name+"' and proj_idx=" + mIdx2);
-			rs.first();
-			tarName = rs.getString("value");
-
 			rs.close();
+			
+			String display_name = tProj.getKey(tProj.sDisplay);
+			refName = tdbc2.executeString("select value from proj_props where name='"+display_name+"' and proj_idx=" + mRefIdx);
+			tarName = tdbc2.executeString("select value from proj_props where name='"+display_name+"' and proj_idx=" + mIdx2);
+			
 			return true;
 		}
 		catch(Exception e){
@@ -345,8 +344,7 @@ public class Block2Frame extends JFrame {
 	private boolean layoutBlocks() {
 	try {
 		ResultSet rs;
-		Statement s = mDB.getConnection().createStatement();
-
+		
 		mLayout = new TreeMap<Integer,Vector<Block>>();
 
 		bpPerPx = mRefSize/fBlockMaxHeight;
@@ -367,7 +365,7 @@ public class Block2Frame extends JFrame {
 			   " from blocks where pair_idx=" + mPairIdx + 
 			   " and grp1_idx=" + mGrpIdx + " order by (end1 - start1) desc";		
 		}
-		rs = s.executeQuery(sql);
+		rs = tdbc2.executeQuery(sql);
 		while (rs.next()) {
 			int grp2 = rs.getInt("grp2"); //(unordered2 ? unGrp2 : rs.getInt("grp2"));
 			int start = rs.getInt("start");
@@ -384,7 +382,8 @@ public class Block2Frame extends JFrame {
 		rs.close();
 		
 		for (Block b : mBlocks) {
-			b.numHits = countBlockHits(b.idx,s);
+			b.numHits = tdbc2.executeCount("select count(*) as count from pseudo_block_hits where block_idx=" + b.idx);
+			
 		}
 		// go through the blocks and make layout; find the first level where this block can fit
 		// similar algorithm as BlockView, so order is basically the same
@@ -500,11 +499,7 @@ public class Block2Frame extends JFrame {
 			mColors.add(c);
 		}
 	}	
-	private int countBlockHits(int idx, Statement s) throws Exception {
-		ResultSet rs = s.executeQuery("select count(*) as count from pseudo_block_hits where block_idx=" + idx);
-		rs.first();
-		return rs.getInt("count");
-	}
+	
 	private class Block {
 		int mS; int mE;   // on the reference, stored in *pixels*, so that the "overlaps"
 		int mS2; int mE2; // on the query, stored as *basepairs*
@@ -555,7 +550,7 @@ public class Block2Frame extends JFrame {
 	}			
 	private void showDetailView(Block b) {
 		try {
-			SyMAP2d symap = new SyMAP2d(mDB, null);
+			SyMAP2d symap = new SyMAP2d(tdbc2, null); // makes new conn
 			
 			symap.getDrawingPanel().setSequenceTrack(1,mRefIdx,mGrpIdx,Color.CYAN);
 			symap.getDrawingPanel().setSequenceTrack(2,mIdx2,b.mGrp2,Color.GREEN);

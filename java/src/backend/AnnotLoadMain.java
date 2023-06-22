@@ -6,11 +6,14 @@ import java.util.Collections;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import database.DBconn2;
 import symap.manager.Mproject;
 import symap.Globals;
 import util.Cancelled;
@@ -27,7 +30,7 @@ public class AnnotLoadMain {
 	static public boolean GENEN_ONLY=Globals.GENEN_ONLY; // -z CAS519b to update the gene# without having to redo synteny
 	
 	private ProgressDialog plog;
-	private UpdatePool pool;
+	private DBconn2 tdbc2;
 	private SyProj syProj;
 	private Mproject mProj;
 
@@ -48,12 +51,12 @@ public class AnnotLoadMain {
 	private boolean success=true;
 	private int cntGeneIdx=0;
 	
-	public AnnotLoadMain(UpdatePool pool, ProgressDialog log, Mproject proj) throws Exception {
+	public AnnotLoadMain(DBconn2 dbc2, ProgressDialog log, Mproject proj) throws Exception {
+		this.tdbc2 = new DBconn2("AnnoLoad-"+ DBconn2.getNumConn(), dbc2);;
 		this.plog = log;
-		this.pool = pool;
 		this.mProj = proj;
 		
-		syProj = 	new SyProj(pool, log, mProj, proj.getDBName(), -1, QueryType.Either);
+		syProj = 	new SyProj(dbc2, log, mProj, proj.getDBName(), -1, QueryType.Either);
 	}
 	
 	public boolean run(String projDBName) throws Exception {
@@ -61,12 +64,13 @@ public class AnnotLoadMain {
 		
 		if (GENEN_ONLY) { // CAS519b Run Gene# assignment algorithm only
 			geneNOnly(projDBName);
+			tdbc2.close();
 			return success;
 		}
 		
 		plog.msg("Loading annotation for " + projDBName);
 		
-		initFromParams(projDBName);	if (!success) return false;
+		initFromParams(projDBName);	if (!success) {tdbc2.close(); return false; };
 		// deleteCurrentAnnotations();	if (!success) return false; CAS535 deleted in ManagerFraem
 		
 /*** LOAD FILE ***/
@@ -76,7 +80,7 @@ public class AnnotLoadMain {
 		
 		for (File af : annotFiles) {
 			nFiles++;
-			loadFile(af);	if (!success) return false;
+			loadFile(af);	if (!success) {tdbc2.close(); return false; }
 		}
 		Utils.prtMemUsage(plog, (nFiles + " file(s) loaded"), time);
 		
@@ -84,15 +88,16 @@ public class AnnotLoadMain {
 		plog.msg("Computations for " + projDBName);
 		time = Utils.getTimeMem();
 		
-		AnnotLoadPost alp = new AnnotLoadPost(syProj, pool, plog);
+		AnnotLoadPost alp = new AnnotLoadPost(syProj, tdbc2, plog);
 		
-		success = alp.run(cntGeneIdx); 	if (!success) return false;
+		success = alp.run(cntGeneIdx); 	if (!success) {tdbc2.close(); return false; }
 		Utils.prtMemUsage(plog, "Computations", time);
 
 /** Wrap up **/
-		summary();		if (!success) return false;
+		summary();		if (!success) {tdbc2.close(); return false; }
 		Utils.timeDoneMsg(plog, "All load Anno for " + projDBName, startTime);
 		
+		tdbc2.close();
 		return true;
 	}
 	/************************************************************************8
@@ -110,10 +115,10 @@ public class AnnotLoadMain {
 		boolean bSkipExons=false; // only use Exons from first mRNA
 		int cntMRNA=0, cntSkipMRNA=0, cntSkipGeneAttr=0, cntGene=0, cntExon=0;
 		
-		int lastGeneIdx=-1; // keep track of the last gene idx to be inserted
-		int lastIdx=pool.getIdx("select max(idx) from pseudo_annot");
+		int lastGeneIdx = -1; // keep track of the last gene idx to be inserted
+		int lastIdx = tdbc2.getIdx("select max(idx) from pseudo_annot");
 		
-		PreparedStatement ps = pool.prepareStatement("insert into pseudo_annot " +
+		PreparedStatement ps = tdbc2.prepareStatement("insert into pseudo_annot " +
 				"(grp_idx,type,name,start,end,strand,gene_idx, genenum,tag) "
 				+ "values (?,?,?,?,?,?,?,0,'')"); // CAS512 remove 'text' field, added gene_idx, tag
 		while ((line = fh.readLine()) != null) {
@@ -137,11 +142,11 @@ public class AnnotLoadMain {
 			}
 			String chr 		= fs[0];
 			//String source = fs[1];	// ignored
-			String type 	= pool.sqlSanitize(fs[2]);
+			String type 	= sqlSanitize(fs[2]);
 			int start		= Integer.parseInt(fs[3]);
 			int end 		= Integer.parseInt(fs[4]);
 			String strand	= fs[6];
-			String attr		= pool.sqlSanitize(fs[8]); // CAS512 remove quotes
+			String attr		= sqlSanitize(fs[8]); // CAS512 remove quotes
 			
 			boolean isGene = (type.contentEquals("gene")) ? true : false;
 			boolean isExon = (type.contentEquals("exon")) ? true : false;
@@ -293,7 +298,13 @@ public class AnnotLoadMain {
 	}
 	catch (Exception e) {ErrorReport.print(e, "Load file"); success=false;}
 	}
-	
+	// CAS541 moved from UpdatePool
+	// Eliminate all quotes in strings before DB insertion, a better option is PreparedStatement.
+	static Pattern mpQUOT = Pattern.compile("[\'\"]");;
+	public String sqlSanitize(String in) {
+		Matcher m = mpQUOT.matcher(in);
+		return m.replaceAll("");
+	}	
 	/************* Initialize local data *****************/
 	private void initFromParams(String projName) {
 		try {		
@@ -408,7 +419,7 @@ public class AnnotLoadMain {
 			if (bUserSetKeywords) plog.msg("User specified attribute keywords: ");
 			else plog.msg("Best attribute keywords:");
 		
-			pool.executeUpdate("delete from annot_key where proj_idx=" + syProj.getIdx());
+			tdbc2.executeUpdate("delete from annot_key where proj_idx=" + syProj.getIdx());
 	        for (String key : sortedKeys) {
 	        	cntSav++;
 	        	if (cntSav>savAtLeastKeywords) {
@@ -418,7 +429,7 @@ public class AnnotLoadMain {
 	        	int count = userAttr.get(key);
 	        	
 	        	plog.msg(String.format("   %-15s %d", key,count)); 
-	        	pool.executeUpdate("insert into annot_key (proj_idx,keyname,count) values (" + 
+	        	tdbc2.executeUpdate("insert into annot_key (proj_idx,keyname,count) values (" + 
 	        			syProj.getIdx() + ",'" + key + "'," + count + ")");
 	        }
 	        if (ignoreAttr.size()>0)  {
@@ -438,11 +449,11 @@ public class AnnotLoadMain {
 	}
 	private boolean geneNOnly(String projName) { // CAS519b
 		try {
-			ResultSet rs = pool.executeQuery("select hasannot from projects where idx=" + syProj.getIdx());
+			ResultSet rs = tdbc2.executeQuery("select hasannot from projects where idx=" + syProj.getIdx());
 			int cnt=0;
 			if (rs.next()) cnt=rs.getInt(1);
 			if (cnt>0) {
-				rs = pool.executeQuery("select count(*) from pseudo_annot " + 
+				rs = tdbc2.executeQuery("select count(*) from pseudo_annot " + 
 						"join xgroups on pseudo_annot.grp_idx = xgroups.idx " + 
 						"WHERE pseudo_annot.type = 'gene' and xgroups.proj_idx = " + syProj.getIdx());
 				if (rs.next()) cnt=rs.getInt(1);
@@ -456,7 +467,7 @@ public class AnnotLoadMain {
 			plog.msg("Run Gene# assignment algorithm for " + syProj.getName());
 			long time = Utils.getTime();
 			
-			AnnotLoadPost alp = new AnnotLoadPost(syProj, pool, plog);
+			AnnotLoadPost alp = new AnnotLoadPost(syProj, tdbc2, plog);
 			success = alp.run(cnt); 	if (!success) return false;
 			
 			Utils.timeDoneMsg(plog, "Computations", time);

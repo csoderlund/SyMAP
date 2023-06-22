@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.Comparator;
@@ -12,12 +11,14 @@ import java.util.Collections;
 import java.util.TreeSet;
 import java.util.HashSet;
 
+import database.DBconn2;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
 import util.Cancelled;
 import util.ErrorCount;
 import util.ErrorReport;
 import util.ProgressDialog;
+import util.Utilities;
 
 /**************************************************
  * CAS500 1/2020 change all MySQl Gets to digits.
@@ -31,7 +32,7 @@ public class SyntenyMain {
 	private boolean bNewBlockCoords = Constants.NEW_BLOCK_COORDS;
 	
 	private ProgressDialog mLog;
-	private UpdatePool pool;	
+	private DBconn2 dbc2, tdbc2;	
 	private SyProj syProj1, syProj2;
 	private Mpair mp;
 	private int mPairIdx;
@@ -50,8 +51,8 @@ public class SyntenyMain {
 	private long startTime;
 	private boolean bInterrupt = false;
 
-	public SyntenyMain(UpdatePool pool, ProgressDialog log, Mpair mp) {
-		this.pool = pool;
+	public SyntenyMain(DBconn2 dbc2, ProgressDialog log, Mpair mp) {
+		this.dbc2 = dbc2;
 		this.mLog = log;
 		this.mp = mp;
 	}
@@ -76,23 +77,25 @@ public class SyntenyMain {
 		}
 		int topN = mp.getTopN(Mpair.FILE); 
 		
-		syProj1 = new SyProj(pool, mLog, pj1, proj1Name, topN, QueryType.Query);
-		syProj2 = new SyProj(pool, mLog, pj2, proj2Name, topN, QueryType.Target);
+		tdbc2 = new DBconn2("Synteny-" + DBconn2.getNumConn(), dbc2);
+		
+		syProj1 = new SyProj(tdbc2, mLog, pj1, proj1Name, topN, QueryType.Query);
+		syProj2 = new SyProj(tdbc2, mLog, pj2, proj2Name, topN, QueryType.Target);
 		if (syProj1.hasOrderAgainst()) mLog.msg("Order against " + syProj1.getOrderAgainst());
 		else if (syProj2.hasOrderAgainst()) mLog.msg("Order against " + syProj2.getOrderAgainst());
 		
 		setBlockTestProps();
-		if (Cancelled.isCancelled()) return false; // CAS535 there was no checks
+		if (Cancelled.isCancelled()) {tdbc2.close(); return false;} // CAS535 there was no checks
 			
 		mSelf = (syProj1.getIdx() == syProj2.getIdx());
 
-		mPairIdx = Utils.getPairIdx(syProj1.getIdx(), syProj2.getIdx(), pool);
+		mPairIdx = Utils.getPairIdx(syProj1.getIdx(), syProj2.getIdx(), tdbc2);
 		if (mPairIdx == 0) {
 			mLog.msg("Cannot find project pair in database for " + syProj1.getName() + "," + syProj2.getName());
-			ErrorCount.inc();
+			ErrorCount.inc(); tdbc2.close();
 			return false;
 		}
-		
+				
 		//CAS535 deleted in MF: pool.executeUpdate("delete from blocks where pair_idx='" + mPairIdx + "'");
 		//pool.resetIdx("idx", "blocks"); //CAS533 add
 
@@ -114,32 +117,33 @@ public class SyntenyMain {
 					if (Cancelled.isCancelled() || bInterrupt) return false;
 				}
 				nGrpGrp--;
-				System.err.print(nGrpGrp + " pairs remaining...\r"); // CAS42 1/1/8 was mLog
+				String t = Utilities.getDurationString(Utils.getTime()-startTime);
+				System.err.print(nGrpGrp + " pairs remaining... (" + t + ")   \r"); // CAS541 add time
 			}
 		}
 		System.err.print("                                          \r"); 
 		Utils.timeDoneMsg(mLog, "Synteny", startTime); // CAS520 add time
 		
-		if (Cancelled.isCancelled() || bInterrupt) return false;
+		if (Cancelled.isCancelled() || bInterrupt) {tdbc2.close();return false;}
 		/****************************************************/
-		
 		// CAS520 let self do collinear && p1.idx != p2.idx 
 		if (syProj1.hasAnnot() && syProj2.hasAnnot()) { // CAS540 add check; hit# moved to AnchorMain 
-			AnchorsPost collinear = new AnchorsPost(mPairIdx, syProj1, syProj2, pool, mLog);
+			AnchorsPost collinear = new AnchorsPost(mPairIdx, syProj1, syProj2, tdbc2, mLog);
 			collinear.collinearSets();
-			if (Cancelled.isCancelled() || bInterrupt) return false;
+			
+			if (Cancelled.isCancelled() || bInterrupt) {tdbc2.close();return false;}
 		}
 		if (mSelf) symmetrizeBlocks();	
 		
 		processStats();
 		
-		if (Cancelled.isCancelled() || bInterrupt) return false;
+		if (Cancelled.isCancelled() || bInterrupt) {tdbc2.close();return false;}
 		
 		/*********************************************************/ 
 		if (syProj1.hasOrderAgainst()) {
 			String orderBy = syProj1.getOrderAgainst();
 			if (orderBy != null && orderBy.equals(syProj2.getName())) {
-				OrderAgainst obj = new OrderAgainst(syProj1.mProj, syProj2.mProj, mLog, pool); // CAS505 in new file
+				OrderAgainst obj = new OrderAgainst(syProj1.mProj, syProj2.mProj, mLog, tdbc2); // CAS505 in new file
 				if (bNewOrder) obj.orderGroupsV2(false);	
 				else obj.orderGroups(false);	
 			}	
@@ -147,14 +151,15 @@ public class SyntenyMain {
 		else if (syProj2.hasOrderAgainst()){
 			String orderBy = syProj2.getOrderAgainst();
 			if (orderBy != null && orderBy.equals(syProj1.getName())) {
-				OrderAgainst obj = new OrderAgainst(syProj1.mProj, syProj2.mProj, mLog, pool);
+				OrderAgainst obj = new OrderAgainst(syProj1.mProj, syProj2.mProj, mLog, tdbc2);
 				if (bNewOrder) obj.orderGroupsV2(true);
 				else obj.orderGroups(true);
 			}	
 		}	
-		if (Cancelled.isCancelled() || bInterrupt) return false;
+		if (Cancelled.isCancelled() || bInterrupt) {tdbc2.close(); return false;}
 		
 		writeResultsToFile();
+		tdbc2.close();
 		
 		// CAS521 has a finished elsewhere Utils.timeMsg(mLog, startTime, "Synteny");
 		return true;
@@ -182,7 +187,7 @@ public class SyntenyMain {
       	if (isSelf) {
       		st += " AND h.start1 < h.start2 "; // do blocks in one triangle, mirror later
       	}
-		ResultSet rs = pool.executeQuery(st);
+		ResultSet rs = tdbc2.executeQuery(st);
 		while (rs.next()) {
 			int id = rs.getInt(1);
 			int start1 = rs.getInt(2);
@@ -512,9 +517,11 @@ public class SyntenyMain {
 		return true;
 	}
 		
-	private void clearBlocks() throws SQLException{	
-		String stmt = "DELETE FROM blocks WHERE pair_idx=" + mPairIdx;
-		pool.executeUpdate(stmt);
+	private void clearBlocks() {	
+		try {
+			String stmt = "DELETE FROM blocks WHERE pair_idx=" + mPairIdx;
+			tdbc2.executeUpdate(stmt);
+		} catch (Exception e) {ErrorReport.print(e, "clear blocks");}
 	}
 	
 	private Vector<Block> mergeBlocks(Vector<Block> blocks){
@@ -596,42 +603,42 @@ public class SyntenyMain {
 	/** Add the mirror reflected blocks for self alignments */ 
 	private void symmetrizeBlocks() throws Exception {
 		Vector<Integer> idxlist = new Vector<Integer>();
-		ResultSet rs = pool.executeQuery("select idx from blocks where pair_idx=" + mPairIdx + " and grp1_idx != grp2_idx ");
+		ResultSet rs = tdbc2.executeQuery("select idx from blocks where pair_idx=" + mPairIdx + " and grp1_idx != grp2_idx ");
 		while (rs.next()){
 			idxlist.add(rs.getInt(1));
 		}
 		rs.close();
 		for (int idx : idxlist) {
-			pool.executeUpdate("insert into blocks (select 0,pair_idx,blocknum,proj2_idx,grp2_idx,start2,end2,proj1_idx,grp1_idx,start1,end1," +
+			tdbc2.executeUpdate("insert into blocks (select 0,pair_idx,blocknum,proj2_idx,grp2_idx,start2,end2,proj1_idx,grp1_idx,start1,end1," +
 					"comment,corr,score,0,0,0,0 from blocks where idx=" + idx + ")");
 			
-			rs = pool.executeQuery("select max(idx) as maxidx from blocks");
+			rs = tdbc2.executeQuery("select max(idx) as maxidx from blocks");
 			rs.first();
 			int newIdx = rs.getInt("maxidx");
-			pool.executeUpdate("insert into pseudo_block_hits (select pseudo_hits.refidx," + newIdx + " from pseudo_block_hits " +
+			tdbc2.executeUpdate("insert into pseudo_block_hits (select pseudo_hits.refidx," + newIdx + " from pseudo_block_hits " +
 					" join pseudo_hits on pseudo_hits.idx=pseudo_block_hits.hit_idx where block_idx=" + idx + ")");
 		}
 		assert(syProj1.idx == syProj2.idx);
 		Vector<Integer> grps = new Vector<Integer>();
-		rs = pool.executeQuery("select idx from xgroups where proj_idx=" + syProj1.idx);
+		rs = tdbc2.executeQuery("select idx from xgroups where proj_idx=" + syProj1.idx);
 		while (rs.next()){
 			grps.add(rs.getInt(1));
 		}
 		for (int gidx : grps){
 			// The self-self blocks
 			int maxBlkNum = 0;
-			rs = pool.executeQuery("select max(blocknum) as bnum from blocks where grp1_idx=" + gidx + " and grp1_idx=grp2_idx");
+			rs = tdbc2.executeQuery("select max(blocknum) as bnum from blocks where grp1_idx=" + gidx + " and grp1_idx=grp2_idx");
 			rs.first();
 			maxBlkNum = rs.getInt(1);
 			int newMaxBlkNum = 2*maxBlkNum + 1;
 			
 			// For each old block, make a new block with reflected coordinates, and blocknum computed as in the query
-			pool.executeUpdate("insert into blocks (select 0,pair_idx," + newMaxBlkNum + "-blocknum,proj2_idx,grp2_idx,start2,end2,proj1_idx,grp1_idx,start1,end1," +
+			tdbc2.executeUpdate("insert into blocks (select 0,pair_idx," + newMaxBlkNum + "-blocknum,proj2_idx,grp2_idx,start2,end2,proj1_idx,grp1_idx,start1,end1," +
 					"comment,corr,score,0,0,0,0 from blocks where grp1_idx=grp2_idx and grp1_idx=" + gidx + " and blocknum <= " + maxBlkNum + ")"); // last clause prob not needed
 			
 			// Lastly add the reflected block hits. For each original block hit, get its original block, get the new block (known
 			// by its blocknum), get the reflected hit (from refidx), and add the reflected hit as a block hit for the new block.
-			pool.executeUpdate("insert into pseudo_block_hits (select ph.refidx,b.idx from pseudo_block_hits as pbh " +
+			tdbc2.executeUpdate("insert into pseudo_block_hits (select ph.refidx,b.idx from pseudo_block_hits as pbh " +
 					" join blocks as b1 on b1.idx=pbh.block_idx " +
 					" join blocks as b on b.grp1_idx=" + gidx + " and b.grp2_idx=" + gidx + " and b.blocknum=" + newMaxBlkNum + "-b1.blocknum " +
 					" join pseudo_hits as ph on ph.idx=pbh.hit_idx where b1.blocknum<=" + maxBlkNum +" and ph.grp1_idx=" + gidx + " and ph.grp2_idx=" + gidx + ")");
@@ -656,7 +663,7 @@ public class SyntenyMain {
 		FileWriter fw = new FileWriter(blockFile);
 		fw.write("grp1\tgrp2\tblock\tstart1\tend1\tstart2\tend2\t#hits\t#gene1\t#gene2\t%gene1\t%gene2\n");
 		
-		rs = pool.executeQuery("select blocknum, grp1.name, grp2.name, " +
+		rs = tdbc2.executeQuery("select blocknum, grp1.name, grp2.name, " +
 			" start1,end1,start2,end2,score,ngene1,ngene2,genef1,genef2 " +
 			" from blocks " +
 			" join xgroups as grp1 on grp1.idx=blocks.grp1_idx " + 
@@ -687,7 +694,7 @@ public class SyntenyMain {
 		
 		fw = new FileWriter(anchFile);
 		fw.write("block\tstart1\tend1\tstart2\tend2\tannot1\tannot2\n");
-		rs = pool.executeQuery("select blocknum, grp1.name, grp2.name, " +
+		rs = tdbc2.executeQuery("select blocknum, grp1.name, grp2.name, " +
 			" ph.start1, ph.end1, ph.start2, ph.end2, a1.name, a2.name " +
 			" from blocks " +
 			" join xgroups            as grp1 on grp1.idx=blocks.grp1_idx " + 
@@ -739,7 +746,7 @@ public class SyntenyMain {
 	// Gives SQL syntax error the ps.executeBatch() but not ps.addBatch() 
 	 *************************************************************/
 	private void saveBlocksToDB(Vector<Block> blocks) throws Exception {
-		PreparedStatement ps = pool.prepareStatement("insert into blocks "
+		PreparedStatement ps = tdbc2.prepareStatement("insert into blocks "
 			+ "(pair_idx, blocknum, proj1_idx, grp1_idx, start1, end1, "
 			+ "proj2_idx, grp2_idx, start2, end2, comment, corr, score, "
 			+ "ngene1, ngene2, genef1, genef2) "
@@ -769,12 +776,12 @@ public class SyntenyMain {
 		
 		ResultSet rs;
 		for (Block b : blocks) {
-			rs = pool.executeQuery(b.getBlockSql());
+			rs = tdbc2.executeQuery(b.getBlockSql());
 			if (rs.next()) b.mIdx = rs.getInt(1);
 			else ErrorReport.die("SyMAP error, cannot get block idx \n" + b.getBlockSql());
 		}
 		
-		PreparedStatement ps2 = pool.prepareStatement("insert into pseudo_block_hits"
+		PreparedStatement ps2 = tdbc2.prepareStatement("insert into pseudo_block_hits"
 				+ "(hit_idx, block_idx) values (?,?)");
 		for (Block b : blocks) {
 			for (SyHit h : b.mHits){
@@ -789,18 +796,18 @@ public class SyntenyMain {
 	}
 	private void computeFinalBlockFields() throws Exception {// CAS533 moved from Util
 		// count genes1 with start1 and end2 of block
-		pool.executeUpdate("update blocks set "
+		tdbc2.executeUpdate("update blocks set "
 				+ "ngene1 = (select count(*) from pseudo_annot as pa " +
 				  "where pa.grp_idx=grp1_idx and greatest(pa.start,start1) < least(pa.end,end1) " +
 				"  and pa.type='gene') where pair_idx=" + mPairIdx);
 		
-		pool.executeUpdate("update blocks set "
+		tdbc2.executeUpdate("update blocks set "
 				+ "ngene2 = (select count(*) from pseudo_annot as pa " +
 				" where pa.grp_idx=grp2_idx  and greatest(pa.start,start2) < least(pa.end,end2) " +
 				" and pa.type='gene') where pair_idx=" + mPairIdx);
 
 		// compute gene1 in grp1 that have hit, and divide by ngene1
-		pool.executeUpdate("update blocks set "
+		tdbc2.executeUpdate("update blocks set "
 				+ "genef1=(select count(distinct annot_idx) from  " +
 				" pseudo_hits_annot      as pha " +
 				" join pseudo_block_hits as pbh on pbh.hit_idx=pha.hit_idx " +
@@ -808,7 +815,7 @@ public class SyntenyMain {
 				" where pbh.block_idx=blocks.idx and pa.grp_idx=blocks.grp1_idx)/ngene1 " +
 				" where ngene1 > 0 and pair_idx=" + mPairIdx);
 		
-		pool.executeUpdate("update blocks set "
+		tdbc2.executeUpdate("update blocks set "
 				+ "genef2=(select count(distinct annot_idx) from  " +
 				" pseudo_hits_annot as pha " +
 				" join pseudo_block_hits as pbh on pbh.hit_idx=pha.hit_idx " +
@@ -850,7 +857,7 @@ public class SyntenyMain {
 		
 		String st = "select count(*) as nhits from pseudo_hits where proj1_idx='" + syProj1.getIdx() + "'" + 
 								" and proj2_idx='" + syProj2.getIdx() + "'";
-		ResultSet rs = pool.executeQuery(st);
+		ResultSet rs = tdbc2.executeQuery(st);
 		if (rs.next())
 			nHits = rs.getInt("nhits");
 		rs.close();

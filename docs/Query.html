@@ -80,8 +80,12 @@ Content:
 <td>&nbsp;
 <td><a href="#result"><u>Results</u></a>
 <br><a href="#tab">Result table</a>
-<br><a href="#col">Columns</a>
-<br><a href="#but">Button functions</a>
+<br><a href="#pairCol">Pair hits columns</a>
+<br><a href="#singleCol">Single gene columns</a>
+<br><a href="#save">Auto-save columns</a>
+
+<td valign="top">&nbsp;
+<br><a href="#but">Top button functions</a>
 <br><a href="#stat">Statistics</a>
 </table>
 See <a href="./UserGuide.html#term" class="ext" target="_blank">Terminology</a> in the User Guide.
@@ -114,10 +118,9 @@ When the query is complete, the <a href="#result">table of results</a> will be d
 <li>All <ttl>Pair hits</ttl> queries return a row per <i>hit pair</i>, i.e.
 aligned region between to two chromosomes from two projects.
 <li>A hit can align to multiple genes on either or both chromosome, however, <i>only ONE</i>
-gene per project is listed for each hit row; there is currently no query to determine all genes that align to a given hit.
-However, by entering a
-<ttl>Gene#</ttl>, all hits will be listed to that gene number (for all chromosome pairs).
-<li>Most filters can be used in conjunction with other
+gene per project is listed for each hit row.
+<li>In order to see all hits for a given gene, enter the <ttx>Gene#</ttx> and select its chromosome.
+ <li>Most filters can be used in conjunction with other
 filters; options will be disabled if they cannot be used with a selected filter.
 </ul>
 
@@ -196,7 +199,7 @@ block will be returned. No hits will have a value for the <ttx>Block</ttx> colum
 <p><ttl>Annotated (Gene Hit)</ttl>
 <table class="tx">
 <tr><td style="vertical-align: text-top;">Either<td><td>&nbsp;<td>Only hits that are annotated for EITHER side of the
-pair will be shown. The <ttx>Gene#</ttx> columns will have a value for one side of each hit.
+pair will be shown. The <ttx>Gene#</ttx> columns will have a value for one or both sides of each hit.
 <tr><td style="vertical-align: text-top;">One<td><td>&nbsp;<td>Only hits that are annotated for ONE side of the
 pair will be shown. The <ttx>Gene#</ttx> columns will have a value for one side of each hit.
 <tr><td style="vertical-align: text-top;">Both<td><td>&nbsp;<td>Only hits that are annotated for BOTH sides of the
@@ -206,17 +209,18 @@ pair will be shown. The <ttx>Gene#</ttx> columns will not have a value for eithe
 </table>
 
 <p><ttl>Collinear size &gt;= N</ttl>
-<br>List all hits in collinear sets that have size &gt;= N (the <ttx>Collinear</ttx> column is formated Chr.Chr.Size.Set#).
+<br>List all hits in collinear sets that have size &gt;= N.
 See <a href="Query.html" target="_blank" class="ext">Collinear</a>, which explains
 the SyMAP collinear sets. There are also options to select for collinear sets with size = N or &lt;= N.
 
 <p><ttl>Block#</ttl>
-<br>This is a single block number. Use it in conjunction with the chromosome pull-downs. For example,
+<br>Enter a single block number (<u>the <ttx>Block</ttx> column is formatted
+Chr.Chr.Block#</u>). Use it in conjunction with the chromosome pull-downs. For example,
 if you select Chr 1 from the first project, Chr 2 from a second project, and enter block=3, you will see
 hits in block 1.2.3 from the two project chromosomes you selected.
 
 <p><ttl>Collinear Set#</ttl>
-<br>All hits in a collinear set have the same Set#, which is the last number of the <ttx>Collinear</ttx> column.
+<br>Enter a set number (<u>the <ttx>Collinear</ttx> column is formatted Chr.Chr.Size.Set#</u>). All hits in a collinear set have the same Set#, which is the last number of the <ttx>Collinear</ttx> column.
 This can be used in conjunction with the chromosome pull-downs (as for blocks).
 
 <p><ttl>Hit#</ttl>
@@ -225,13 +229,12 @@ has hits. The hit can align to multiple genes on either chromosome; but it will 
 This can be used in conjunction with the chromosome pull-downs (as for blocks).
 
 <p><ttl>Gene#</ttl>
-<br>The Gene# column is formatted Chr.Gene#.suffix where the suffix may be blank; <i>only</i> enter
-the Gene#. This cannot be used with any other filters. The results of this query are a bit strange, but gets you close to the gene of interest:
+<br>Enter a <ttx>Gene#</ttx> number (<u>the <ttx>Gene#</ttx> column is formatted Chr.Gene#.suffix</u> where the suffix may be blank); <i>only</i> enter
+the <ttx>Gene#</ttx>. This can only be used with one chromosome filter.
 <ul>
-<li>It will return all genes from all species <i>that have a hit</i> with the <ttx>Gene#</ttx>.
-<li>It will return all hits to the <ttx>Gene#</ttx>.
-<li>If there are overlapping genes with the <ttx>Gene#</ttx> (e.g. 1.a, 1.b), it only returns one of the genes.
-<li>It will only return annotation for one side of the hit pair, the side that corresponds to the <ttx>Gene#</ttx>.
+<li>It will return all hits to the <ttx>Gene#</ttx> either: (1) if a chromosome is selected, for that chromosome,
+(2) else for all species and chromosomes.
+<li>If there are overlapping genes with the <ttx>Gene#</ttx> (e.g. 1.a, 1.b), it will return all of them.
 </ul>
 <!--------------------------------------------------->
 <a id="pfs"></a>
@@ -312,22 +315,26 @@ listing the gene with the greatest overlap with the hit.
 species, but each hit only connects two species, and the other species columns are empty.
 <li><ttx>Single genes</ttx>: If the query specified <ttl>Single</ttl> genes, then each row represents one gene and shows data only
 for one species.
-<li><ttx>Gene#</ttx>: If the search is on a <ttl>Gene#</ttl>, the resulting hit for the gene will be shown, but only the species
-columns corresponding to the gene will be shown.
 </ul>
 
 <a id="col"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>Columns</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+Sections:
+<a href=#pairCol> Pair hits columns</a>&nbsp;&nbsp;&nbsp;
+<a href=#singleCol> Single gene columns</a>&nbsp;&nbsp;&nbsp;
+<a href=#save> Auto-save columns</a>
+<p>You can sort the columns by clicking on them, and rearrange them by dragging the header
+boxes. You can add/remove columns using the <ttb>Select Columns</ttb> button at the bottom.
 
-You can sort the columns by clicking on them, and rearrange them by dragging the header
-boxes. You can add/remove columns using the <ttb>Select Columns</ttb> button at the bottom. Following
-are the meanings of the columns:
-<p>The <a href="img/query_single_result.png">Single genes</a> tables only have the Gene Location and Annotation columns.
+<p>In the columns panel, <i>hover</i> over a column name to see its brief description. Following
+are the full descriptions of the columns:
+<a id="pairCol">
+<h4>Pair hits columns</h4>
 <table class="tx">
 <tr>
-	<td colspan=3><i>General</i>
+	<td colspan=3><ttl>General</ttl>
 <tr>
 	<td style="vertical-align: text-top;"><ttx>Row</ttx><td>&nbsp;
 	<td>Row number within the table
@@ -371,7 +378,7 @@ are the meanings of the columns:
 	of both sides is shown. See <i>Clustered Hits</i> in <a href="UserGuide.html#term" class="ext" target="_blank">Terminology</a>.
 <tr>
 	<td colspan=3>
-		<i>Location: one row for each species</i>
+		<ttl>Gene&Hit Info</ttl>: one row for each species
 <tr>
 	<td style="vertical-align: text-top;"><ttx>Chr</ttx><td>&nbsp;
 	<td>Chromosome of the hit.
@@ -392,7 +399,7 @@ are the meanings of the columns:
 <tr><td style="vertical-align: text-top; white-space: nowrap;"><ttx>Hlen</ttx><td>&nbsp;
 	<td>Hend-Hstart+1
 <tr>
-	<td colspan=3><i>Annotation: one row for each species</i>
+	<td colspan=3><ttl>Annotation</ttl>: one row for each species</i>
 <tr>
 	<td colspan=3>The keywords for the annotations of each species are listed;
 	they can be different for each species.
@@ -400,8 +407,22 @@ are the meanings of the columns:
 	for modifying the keywords shown
 </table>
 
+
+<a id="singleCol">
+<h4>Single genes columns</h4>
+<p>The single genes tables only have the
+<ttl>Gene Info</ttl> and <ttl>Annotation</ttl> columns, with one additional column, as follows.
+<table class="tx">
+<tr><td valign="top"><ttx>NumHits</ttx>
+<td>This is the number of hits to the gene in the ENTIRE databases, except for SELF synteny.
+<br>For example, if X, Y
+and Z species have all been compared for synteny, but only Y and Z are being queried,
+the <ttl>Orphans</ttl> for Y can have <ttx>NumHits</ttx>&gt;0 if it hits X. This
+is illustrated <a href="img/query_single_result.png">Single genes</a>.
+</table>
+
 <a id="save"></a>
-<h4>Save Columns</h4>
+<h4>Auto-save columns</h4>
 The columns selection is saved in a file called <tt>.symap_saved_props</tt> in the user's home directory.
 If you only have one SyMAP database, there is no need to read the following:
 
@@ -409,16 +430,16 @@ If you only have one SyMAP database, there is no need to read the following:
 and the current database D<sub>m</sub> has M species, where D<sub>n</sub> and D<sub>m</sub> are different
 SyMAP databases:
 <ol>
-<li>If N=M: the <ttx>General</ttx> and <ttx>Location</ttx> columns will
-be set according to the previous settings, but the <ttx>Gene Annotation</ttx> columns may be wrong.
+<li>If N=M: the <ttx>General</ttx> and <ttx>Gene&Hit Info</ttx> columns will
+be set according to the previous settings, but the <ttx>Annotation</ttx> columns may be wrong.
 <li>If N&gt;M or N&lt;M: the <ttx>General</ttx> will be according to the previous settings,
-all <tt>Location</tt> columns will be set like the first D<sub>n</sub> species, and no
-<tt>Gene Annotation</tt> columns will be set.
+all <ttx>Gene&Hit Info</ttx> columns will be set like the first D<sub>n</sub> species, and no
+<ttx>Annotation</ttx> columns will be set.
 </ol>
 This feature was implemented in v5.3.2.
 <a id="but"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Button functions</h3>
+<h3>Top button functions</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <a href="img/query_buttons.png"><img src="img/query_buttons.png" alt="query buttons" style="border: 1px solid black; width: 600px"></a>

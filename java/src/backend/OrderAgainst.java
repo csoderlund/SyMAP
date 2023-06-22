@@ -17,6 +17,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
 
+import database.DBconn2;
 import symap.manager.Mproject;
 import util.Cancelled;
 import util.ErrorReport;
@@ -34,14 +35,14 @@ public class OrderAgainst {
 	private static final String orderCSVFile	=  "/ordered.csv";
 	
 	private ProgressDialog mLog;
-	private UpdatePool pool;	
+	private DBconn2 dbc2;	// CAS541 UpdatePool->DBconn2
 	private Mproject mProj1, mProj2;
 	
-	public OrderAgainst(Mproject mProj1, Mproject mProj2, ProgressDialog mLog, UpdatePool pool) {
+	public OrderAgainst(Mproject mProj1, Mproject mProj2, ProgressDialog mLog, DBconn2 dbc2) {
 		this.mProj1 = mProj1;
 		this.mProj2 = mProj2;
 		this.mLog = mLog;
-		this.pool = pool;
+		this.dbc2 = dbc2;
 	}
 	/*****************************************************
 	 * pre-v5.0.5 ordering
@@ -65,13 +66,13 @@ public class OrderAgainst {
 		ResultSet rs;
 		TreeSet<Integer> alreadyFlipped = new TreeSet<Integer>();
 	
-		rs = pool.executeQuery("select idx, flipped from xgroups where proj_idx=" + pDraft.getIdx());
+		rs = dbc2.executeQuery("select idx, flipped from xgroups where proj_idx=" + pDraft.getIdx());
 		while (rs.next()) {
 			int idx = rs.getInt(1);
 			boolean flipped = rs.getBoolean(2);
 			if (flipped) alreadyFlipped.add(idx);
 		}
-		pool.executeUpdate("update xgroups set flipped=0, sort_order=idx where proj_idx=" + pDraft.getIdx());
+		dbc2.executeUpdate("update xgroups set flipped=0, sort_order=idx where proj_idx=" + pDraft.getIdx());
 				
 		// Order the grp1 by finding the grp2 that they have the most synteny
 		// hits with, and taking the start point of those hits.
@@ -87,7 +88,7 @@ public class OrderAgainst {
 		TreeMap<Integer,Vector<Integer>> grpMaps = new TreeMap<Integer,Vector<Integer>>();
 		
 		Vector<Integer> grp2Order = new Vector<Integer>(); 
-		rs = pool.executeQuery("select idx from xgroups where proj_idx=" + pTarget.getIdx() + 
+		rs = dbc2.executeQuery("select idx from xgroups where proj_idx=" + pTarget.getIdx() + 
 						" order by sort_order asc");
 		while (rs.next()) {
 			grp2Order.add(rs.getInt(1));
@@ -95,7 +96,7 @@ public class OrderAgainst {
 		mLog.msg("   " + grp2Order.size() + " xgroups to order against ");
 		
 		// note avg(corr) is necessary because of the grouping, and the grouping is because we don't store the # of hits in the blocks table
-		rs = pool.executeQuery("select grp1_idx, grp2_idx, " +
+		rs = dbc2.executeQuery("select grp1_idx, grp2_idx, " +
 				"grp2.fullname, grp1.fullname, count(*) as score, " +
 				"start1, start2, avg(corr) as corr, " + 
 				" ps1.length as len1, ps2.length as len2  from blocks " + 
@@ -166,7 +167,7 @@ public class OrderAgainst {
 
 		// Chr0; assign the ones that didn't align anywhere
 		Vector<Integer> allGrpIdx = new Vector<Integer>();
-		rs = pool.executeQuery("select idx from xgroups where proj_idx=" + pDraft.getIdx());
+		rs = dbc2.executeQuery("select idx from xgroups where proj_idx=" + pDraft.getIdx());
 		while (rs.next()) {
 			int idx = rs.getInt(1);
 			allGrpIdx.add(idx);
@@ -187,11 +188,11 @@ public class OrderAgainst {
 			int len = grp1len.get(idx);
 			String RC = "F";
 			if (grp1flip.contains(idx)) { // XXX block.corr<0
-				pool.executeUpdate("update xgroups set sort_order=" + ord + ",flipped=1 where idx=" + idx);
+				dbc2.executeUpdate("update xgroups set sort_order=" + ord + ",flipped=1 where idx=" + idx);
 				RC = "R";
 			}
 			else {
-				pool.executeUpdate("update xgroups set sort_order=" + ord + ",flipped=0 where idx=" + idx);
+				dbc2.executeUpdate("update xgroups set sort_order=" + ord + ",flipped=0 where idx=" + idx);
 			}
 			ordFileW.write(grp1name.get(idx) + "," + newGrp.get(idx) + "," + pos + "," + RC + "," + grp1score.get(idx) + "," + len + "\n"); 
 		}
@@ -209,13 +210,13 @@ public class OrderAgainst {
 				cnt++;
 				// First, reverse-conjugate the group sequence
 				String seq = "";
-				rs = pool.executeQuery("select seq from pseudo_seq2 where grp_idx=" + idx + " order by chunk asc");
+				rs = dbc2.executeQuery("select seq from pseudo_seq2 where grp_idx=" + idx + " order by chunk asc");
 				while (rs.next())
 				{
 					seq += rs.getString(1);
 				}
 				rs.close();
-				pool.executeUpdate("delete from pseudo_seq2 where grp_idx=" + idx);
+				dbc2.executeUpdate("delete from pseudo_seq2 where grp_idx=" + idx);
 				String revSeq = Utils.reverseComplement(seq);
 				// Finally, upload the sequence in chunks
 				for (int chunk = 0; chunk*CHUNK_SIZE < revSeq.length(); chunk++)
@@ -225,19 +226,19 @@ public class OrderAgainst {
 
 					String cseq = revSeq.substring(start,start + len );
 					String st = "INSERT INTO pseudo_seq2 VALUES('" + idx + "','" + chunk + "','" + cseq + "')";
-					pool.executeUpdate(st);
+					dbc2.executeUpdate(st);
 				}
 				// Now, flip coordinates of all anchors and blocks containing this group
-				pool.executeUpdate("update pseudo_hits as ph, pseudos as p  " +
+				dbc2.executeUpdate("update pseudo_hits as ph, pseudos as p  " +
 						" set ph.start1=p.length-ph.end1, ph.end1=p.length-ph.start1 " +
 						"where ph.grp1_idx=" + idx + " and p.grp_idx=" + idx );
-				pool.executeUpdate("update pseudo_hits as ph, pseudos as p  " +
+				dbc2.executeUpdate("update pseudo_hits as ph, pseudos as p  " +
 						" set ph.start2=p.length-ph.end2, ph.end2=p.length-ph.start2 " +
 						"where ph.grp2_idx=" + idx + " and p.grp_idx=" + idx );
-				pool.executeUpdate("update blocks as b, pseudos as p  " +
+				dbc2.executeUpdate("update blocks as b, pseudos as p  " +
 						" set b.start1=p.length-b.end1, b.end1=p.length-b.start1, b.corr=-b.corr " +
 						"where b.grp1_idx=" + idx + " and p.grp_idx=" + idx );
-				pool.executeUpdate("update blocks as b, pseudos as p  " +
+				dbc2.executeUpdate("update blocks as b, pseudos as p  " +
 						" set b.start2=p.length-b.end2, b.end2=p.length-b.start2, b.corr=-b.corr " +
 						"where b.grp2_idx=" + idx + " and p.grp_idx=" + idx );
 			}
@@ -277,7 +278,7 @@ public class OrderAgainst {
 				           "NNNNNNNNNN" + "NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN" +"NNNNNNNNNN";
 		
 		Vector<String> grpOrder = new Vector<String>();
-		rs = pool.executeQuery("select xgroups.fullname, xgroups.idx, pseudo_seq2.seq " +
+		rs = dbc2.executeQuery("select xgroups.fullname, xgroups.idx, pseudo_seq2.seq " +
 				" from xgroups " +
 				" join pseudo_seq2 on pseudo_seq2.grp_idx=xgroups.idx where xgroups.proj_idx=" + pDraft.getIdx() + 
 				" order by xgroups.sort_order asc, pseudo_seq2.chunk asc");
@@ -413,7 +414,7 @@ public class OrderAgainst {
 	private boolean s1LoadDataDB(boolean bSwitch, String chr0, int chr0Idx) {
 		try {
 			/** Get Draft and Target groups **/
-			ResultSet rs = pool.executeQuery("select idx, fullname, p.length " +
+			ResultSet rs = dbc2.executeQuery("select idx, fullname, p.length " +
 					" from xgroups as g " +
 					" join pseudos as p on p.grp_idx=g.idx " +
 					" where proj_idx=" + pDraft.getIdx());
@@ -425,7 +426,7 @@ public class OrderAgainst {
 				idxDraftMap.put(o.gidx, o);
 			}
 				
-			rs = pool.executeQuery("select idx, fullname from xgroups " +
+			rs = dbc2.executeQuery("select idx, fullname from xgroups " +
 					" where proj_idx=" + pTarget.getIdx());
 			while (rs.next()) {
 				Target o = new Target();
@@ -440,12 +441,12 @@ public class OrderAgainst {
 			
 		/** Assign Target chromosome from blocks **/
 			/** CAS506 does not work in mySQL v8: SELECT list is not in GROUP BY clause and contains nonaggregated 
-			rs = pool.executeQuery("select grp1_idx, grp2_idx, start1, start2, score, corr from blocks " +
+			rs = dbc2.executeQuery("select grp1_idx, grp2_idx, start1, start2, score, corr from blocks " +
 				" where proj1_idx=" + mProj1.getIdx() + " and proj2_idx=" + mProj2.getIdx() + 
 				" group by grp1_idx, grp2_idx, blocknum order by score desc" );
 		**/
 			
-			rs = pool.executeQuery("select grp1_idx, grp2_idx, start1, start2, score, corr from blocks " +
+			rs = dbc2.executeQuery("select grp1_idx, grp2_idx, start1, start2, score, corr from blocks " +
 					" where proj1_idx=" + mProj1.getIdx() + " and proj2_idx=" + mProj2.getIdx() + 
 					" order by score desc,  grp1_idx, grp2_idx, blocknum" );
 			
@@ -511,7 +512,7 @@ public class OrderAgainst {
 			int nOrd=1; // new order of contigs in database; only place database changes for V2
 			for (Draft d : orderedDraft) {
 				int f = (d.bDoFlip) ? 1 : 0; // the flipped is not used anywhere
-				pool.executeUpdate("update xgroups set sort_order=" + nOrd + ",flipped=" + f 
+				dbc2.executeUpdate("update xgroups set sort_order=" + nOrd + ",flipped=" + f 
 						+ " where idx=" + d.gidx);
 				nOrd++;
 				
@@ -573,7 +574,7 @@ public class OrderAgainst {
 					curTar.nLen += sepLen;
 					curTar.tLen += sepLen;
 				}
-				ResultSet rs = pool.executeQuery("select ps.seq from pseudo_seq2 as ps " +
+				ResultSet rs = dbc2.executeQuery("select ps.seq from pseudo_seq2 as ps " +
 						" where ps.grp_idx =" + d.gidx + " order by ps.chunk asc");
 				String seq="";
 				while (rs.next()) 

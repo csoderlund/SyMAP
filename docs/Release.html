@@ -71,6 +71,63 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 <tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view2D"> 2D gene placement</a>
 </table>
 
+<a id="v541"></a>
+<h3>Release: v5.4.1 (22-June-23)</h3>
+For existing SyMAP databases: there is a new column in <ttb>Query</ttb> called <ttl>NumHits</ttl>;
+run <tt>symap -y</tt> to update all projects in the database.
+<p>Note: This release has not been tested on Linux, but it has been tested on MacOS with MySQL and MariaDB,
+and different versions of Java.
+<ul>
+<li><ttb>Manager</ttb>
+<ul>
+<li><font color=red>Bad bug fix</font> for v5.4.0: Loading the hits would get a memory crash
+if some chromosomes in a project had genes and other chromosomes did not.
+<li>If only two projects are selected from the left, then their joint cell is automatically selected.
+</ul>
+
+<li><ttb>Dot Plot</ttb>
+<ul>
+<li><ttl>Info</ttl>: (see <a href="UserGuide.html#dotplot_display">Control Panel</a>)
+A new pull down with options:
+(1) <ttl>Stats</ttl>: in the <ttl>Information</ttl> area (short form),
+(2) <ttl>Print</ttl>: printed to the terminal (long form), (3) <ttl>Help</ttl>.
+<li>The dot colors can be changed with the Color Wheel (see <a href="UserGuide.html#image">Color Wheel</a>).
+
+<li>Dotplot can no longer display multiple 2d from the same dotplot display.
+</ul>
+
+<li><ttb>2D</ttb>
+<ul>
+<li><ttl>Info</ttl>: A new pull-down with options:
+(1) <ttl>Stats</ttl>: Hovering in the gene space but not on a gene will
+show summary info; hovering in the hit space but not a on hit will show hit summary
+info. (2) <ttl>Help</ttl> Help will be shown instead of summary information.
+<li>Display bug fix: If the "Show" filter was changed to show more hits, then changed back to show less,
+the right click in hit empty space would keep showing hit-wire information.
+</ul>
+
+<li><ttb>Query</ttb>
+<ul>
+<li><ttl>Gene#</ttl> in the <ttl>Pair Hits</ttl> section: This query now works exactly like the other 3 in this row, i.e. you can set the
+chromosome, and it returns full hits. NOTE: there will be no rows returned if there is no hit to
+the gene.
+<li><ttl>Single NumHits</ttl>: A column has been added to indicate whether there are any hits to the gene
+in the entire database (not just those queried).
+<li>Column Description: This was being shown on the bottom of display; it is now a tool tip.
+<li><ttl>Clear Column</ttl>: This button has been added. It replaces the <ttl>Show Stats</ttl> button
+when the columns are being shown.
+</ul>
+
+
+
+<li>Developer:
+<ul>
+<li>The MySQL connection has been rewritten to be more straight-forward and confirm that connections
+are correctly closed. There is a new dedicated connection for any each of the displays (e.g. DotPlot, 2D, etc).
+This removed 4 java files and replaced one.
+</ul>
+</ul>
+
 <a id="v540"></a>
 <h3>Release: v5.4.0 (6-Apr-23)</h3>
 This release focuses on improving the detection of gene homology in the <ttb>Synteny</ttb> computation.
@@ -82,7 +139,7 @@ This release focuses on improving the detection of gene homology in the <ttb>Syn
 <li>Filtering hits has been updated to give preference when at least one end is a gene.
 <li>Details of changes:
 <small>
-<br>&rarr; Long genes with embedded genes are split, which helps detect hits to the embedded genes.
+<br>&rarr; Long hits with embedded genes are split, which helps detect hits to the embedded genes.
 <br>&rarr; When a candidate gene is created from hits, it is checked that it does not span a gene with no hits.
 Candidate genes used to be created using the maximum length of the annotated genes; this is now maximum size 100k.
 <br>&rarr; For finding the top N hits, the Max of query and target(summed subhits (minus overlaps)) of a clustered hit are used

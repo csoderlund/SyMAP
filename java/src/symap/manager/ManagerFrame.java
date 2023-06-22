@@ -22,11 +22,10 @@ import circview.*;
 import dotplot.DotPlotFrame;
 import props.PropertiesReader;
 import symap.Globals;
+import symap.frame.ChrExpInit;
 import symapQuery.SyMAPQueryFrame;
 
-import database.DBconn;
-import database.DBAbsUser;
-import database.DBuser;
+import database.DBconn2;
 import database.Version;
 
 import util.Cancelled;
@@ -47,6 +46,7 @@ import util.LinkLabel;
  * 		  moved out utilities stuff to reduce this file; rearranged
  * 		  use Mproject and Mpair as shared class for build
  * CAS535 moved Loads to backend.LoadProj and the Removes to RemoveProj.
+ * CAS541 replace DBconn/DBAbsUser/DBuser with DBconn2
  */
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
@@ -60,6 +60,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	protected static boolean bCheckVersion = false; // arg -v
 	protected static boolean lgProj1st = false; 	// For Mummer; false sort on name; true sort on length
 	private static boolean isCat = true;
+	private final Color cellColor = new Color(85,200,100,85); // CAS541 new color for selected box 0,100,0,85
+	private final Color textColor = new Color(0,0,170,255); // CAS541 new color for selected text
+	//                                     Click a lower diagonal cell to select the project pair.
+	private final String selectPairText = "Select a Pair by clicking\ntheir shared table cell.";
 	
 	/************************************************/
 	private static final String HTML = "/html/ProjMgrInstruct.html";
@@ -78,8 +82,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			+ TBL_ADONE + " : alignment is done, synteny needs to be computed.\n"
 			+ TBL_QDONE + "  : alignment is partially done.";
 	
-	protected DBconn dbc = null;
-	private DBuser mfUser = null; // holds dbc 
+	protected DBconn2  dbc2 = null; // master, used for local loads, and used as template for processes
 	
 	private HashMap <String, Mproject> projObjMap = new HashMap <String, Mproject> (); // displayName, same set as projVec
 	private HashMap <String, String> projNameMap = new HashMap <String, String> ();	   // DBname to displayName
@@ -108,7 +111,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	
 	private JTextField txtCPUs =null;
 	private JCheckBox checkCat=null;
-	protected ActionListener explorerListener = null;
 	
 	/*****************************************************************/
 	public ManagerFrame() {
@@ -147,13 +149,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	 */
 	private void initialize(boolean checkSQL) {
 		try {
-			if (dbc == null) {
-				dbc = makeDBconn();
-				mfUser = new DBuser(dbc);
+			if (dbc2 == null) {
+				dbc2 = makeDBconn();
 				
-				new Version(mfUser);
+				new Version(dbc2);
 				
-				if (checkSQL) DBAbsUser.checkVariables(dbc.getConnection(), true); // CAS511 add
+				if (checkSQL) dbc2.checkVariables(true); // CAS511 add; CAS541 change to DBconn2
 			}
 			
 			Jhtml.setResClass(this.getClass());
@@ -193,7 +194,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private static boolean isShutdown = false;
 	private synchronized void shutdown() {
 		if (!isShutdown) {
-			DBAbsUser.shutdown(); // Shutdown mysqld
+			if (dbc2!=null) dbc2.shutdown(); // Shutdown mysqld
 			isShutdown = true;
 		}
 	}
@@ -436,12 +437,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			text1.setAlignmentX(Component.LEFT_ALIGNMENT);
 			
 			// CAS42 1/5/18
-			JTextArea text2 = new JTextArea("Click a lower diagonal table cell\nto select the project pair.",2,1);
+			JTextArea text2 = new JTextArea(selectPairText,2,1);
 			text2.setBackground( getBackground() );
 			text2.setEditable(false);
 			text2.setLineWrap(false);
 			text2.setAlignmentX(Component.LEFT_ALIGNMENT);
-			text2.setForeground(Color.BLUE);
+			text2.setForeground(textColor); 
 		
 			btnSelAlign = new JButton("Selected Pair");
 			btnSelAlign.setVisible(true);
@@ -500,7 +501,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			});
 			btnAllChrExp = new JButton("Chromosome Explorer");
 			btnAllChrExp.setVisible(true); 
-			btnAllChrExp.addActionListener( explorerListener);
+			//btnAllChrExp.addActionListener( explorerListener); CAS541 moved from SyMAPmanager
+			btnAllChrExp.addActionListener( new ActionListener() {
+				public void actionPerformed(ActionEvent e) { 
+					showChrExp();
+				}
+			});
 			
 			btnAllDotplot = new JButton("Dot Plot");
 			btnAllDotplot.setVisible(true);
@@ -670,7 +676,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				if (!isDone) { // cannot do anything without an mpair
 					String key = ordP[0].getIdx() + ":" + ordP[1].getIdx();
 					if (!pairObjMap.containsKey(key)) {
-						Mpair mp = new Mpair(mfUser, -1, ordP[0], ordP[1], inReadOnlyMode);
+						Mpair mp = new Mpair(dbc2, -1, ordP[0], ordP[1], inReadOnlyMode);
 			        	pairObjMap.put(key, mp);
 					}
 				}
@@ -686,7 +692,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		pairTable.setShowHorizontalLines(true);
 		pairTable.setShowVerticalLines(true);
 		pairTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		pairTable.setSelectionBackground(Color.YELLOW);
+		pairTable.setSelectionBackground(cellColor); // this is the only place this seems to matter
 		pairTable.setSelectionForeground(Color.BLACK);
 		pairTable.setCellSelectionEnabled( true );
 		pairTable.setModel( new ReadOnlyTableModel(rowData, columnNames) );
@@ -727,7 +733,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private void updateEnable() {
 		if (pairTable == null) return;
 		
-		Mproject[] projects = getSelectedPairProjects(); 
+		Mproject[] projects = getSelectedPairProjects();  // null if nothing selected
 		btnPairParams.setEnabled(projects!=null);  // CAS507 must select one 
 		
 		int numProj =  pairTable.getRowCount();
@@ -807,7 +813,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			
 			if ( e.getStateChange() == ItemEvent.SELECTED ) {
 				if ( !selectedProjVec.contains(p) ) selectedProjVec.add(p);
-				cb.setBackground(Color.yellow); // highlight
+				cb.setBackground(cellColor); // highlight
 				changed = true;
 			}
 			else if ( e.getStateChange() == ItemEvent.DESELECTED ) {
@@ -916,13 +922,21 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		try {
 			if (pairTable == null) return null;
 			
-			nRow = pairTable.getSelectedRow();
+			nRow = pairTable.getSelectedRow(); // Row is >=0 Col is >=1
 			nCol = pairTable.getSelectedColumn();
-			if (nRow < 0 || nCol <= 0) return null; // CAS521 change < to <=; this happens on startup
+	
+			if (nRow < 0 || nCol <= 0) {
+				int n = pairTable.getRowCount(); // CAS541 if n=2, automatically make selected
+				if (n!=2) return null; // CAS521 change < to <=; this happens on startup
+				
+				nRow=1; nCol=1;
+				pairTable.setRowSelectionInterval(1,1);
+				pairTable.setColumnSelectionInterval(1,1);
+			}
 				
 			String strRowProjName = pairTable.getValueAt(nRow, 0).toString();
 			String strColProjName = pairTable.getValueAt(nCol-1, 0).toString();
-	
+
 			Mproject p1 = projObjMap.get( strRowProjName );
 			Mproject p2 = projObjMap.get( strColProjName );
 			
@@ -1017,6 +1031,23 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		Utilities.setCursorBusy(this, false);
 	}
+	/***********************************************************************/
+	private void showChrExp() { // CAS541 moved from SyMAP manager
+		Utilities.setCursorBusy(this, true);
+		try {
+			ChrExpInit symapExp = new ChrExpInit(dbc2);
+			
+			for (Mproject p : selectedProjVec) 
+				symapExp.addProject( p.getDBName() );
+			symapExp.build();
+			symapExp.getFrame().build();
+			symapExp.getFrame().setVisible(true); 
+		}
+		catch (Exception err) {ErrorReport.print(err, "Show SyMAP graphical window");}
+		finally {
+			Utilities.setCursorBusy(this, false);
+		}
+	}
 	/*********************************************************************/
 	private void showQuery() {
 		Utilities.setCursorBusy(this, true);
@@ -1025,8 +1056,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			for (Mproject p : selectedProjVec) {
 				if (p.isLoaded()) pVec.add( p );
 			}
-			DBconn dr = DBconn.getInstance(Globals.DB_CONN_SYMAP, dbc);
-			SyMAPQueryFrame qFrame = new SyMAPQueryFrame(dbName, dr, pVec);
+			SyMAPQueryFrame qFrame = new SyMAPQueryFrame(dbName, dbc2, pVec);
 			qFrame.build();
 			qFrame.setVisible(true);
 		} 
@@ -1050,7 +1080,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (pairMap.containsKey(projXIdx) && pairMap.get(projXIdx).contains(projYIdx)) {
 			int temp = projXIdx;projXIdx = projYIdx;projYIdx = temp;}*/
 		
-		DotPlotFrame frame = new DotPlotFrame(dbc, projXIdx, projYIdx);
+		DotPlotFrame frame = new DotPlotFrame(dbc2, projXIdx, projYIdx);
 		frame.setSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
 		frame.setVisible(true);
 		
@@ -1067,7 +1097,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		Mproject p2 = (p.length>1) ? p[1] : p[0];
 		
 		try{
-			BlockViewFrame frame = new BlockViewFrame(dbc, p1.getIdx(), p2.getIdx());
+			BlockViewFrame frame = new BlockViewFrame(dbc2, p1.getIdx(), p2.getIdx());
 			frame.setMinimumSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
 			frame.setVisible(true);
 		}
@@ -1094,7 +1124,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			int temp = projXIdx;projXIdx = projYIdx;projYIdx = temp;} */
 		// if (projYIdx == projXIdx) projYIdx = 0; // CAS500 allows self summary
 				
-		new SumFrame(mfUser, mp, inReadOnlyMode, dbName); // CAS540 dialog made visible in SumFrame
+		new SumFrame(dbc2, mp, inReadOnlyMode, dbName); // CAS540 dialog made visible in SumFrame; CAS541 dbuser->dbc2
 		
 		Utilities.setCursorBusy(this, false);		
 	}
@@ -1115,7 +1145,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			int temp = projXIdx;projXIdx = projYIdx;projYIdx = temp;}*/
 		if (projYIdx == projXIdx)projYIdx = 0;
 		
-		CircFrame frame = new CircFrame(dbc, projXIdx, projYIdx);
+		CircFrame frame = new CircFrame(dbc2, projXIdx, projYIdx);
 		frame.setSize( new Dimension(MIN_CWIDTH, MIN_CHEIGHT) );
 		frame.setVisible(true);
 		
@@ -1137,15 +1167,16 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				i++;
 			}
 		}
-		DotPlotFrame frame = new DotPlotFrame(dbc, pids, null, null, null, true);
+		DotPlotFrame frame = new DotPlotFrame(dbc2, pids, null, null, null, true);
 		frame.setSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
 		frame.setVisible(true);
 	}
 	
 	/***********************************************************************
-	 * Database 
+	 * Database CAS541 change to use DBconn2 instead of DBAbsUser
 	 **************************************************/
-	private DBconn makeDBconn() throws Exception { 
+	private DBconn2 makeDBconn()  { 
+	// Check variables
 		String paramsfile = Globals.MAIN_PARAMS;
 		
 		if (Utilities.fileExists(paramsfile)) System.out.println("Reading from file " + paramsfile);
@@ -1167,30 +1198,32 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (db_adminpasswd != null) 	db_adminpasswd = db_adminpasswd.trim();
 		if (db_clientuser != null) 		db_clientuser = db_clientuser.trim();
 		if (db_clientpasswd != null) 	db_clientpasswd = db_clientpasswd.trim();
+		
+		if (Utilities.isEmpty(db_server)) db_server = "localhost";
+		if (Utilities.isEmpty(db_name))	  db_name = "symap";
+		
 		dbName = db_name;
+		
+		setTitle(WINDOW_TITLE + " - Database: " + db_name);
+		System.out.println("SyMAP database " + db_name);
 
 		try { // CAS508 stop nested exception on DatabaseUser calls
 			if (inReadOnlyMode) { // CAS500 crashed if config file not present
-				if (db_clientuser==null || db_clientuser.length()==0) {
-					if (db_adminuser==null || db_adminuser.length()==0) 
-						ErrorReport.die("No db_adminuser or db_clientuser in " + paramsfile);
+				if (Utilities.isEmpty(db_clientuser)) {
+					if (Utilities.isEmpty(db_adminuser)) ErrorReport.die("No db_adminuser or db_clientuser in " + paramsfile);
 					else db_clientuser = db_adminuser;
 				}
-				if (db_clientpasswd==null || db_clientpasswd.length()==0) {
-					if (db_adminpasswd==null || db_adminpasswd.length()==0) 
-						ErrorReport.die("No db_adminpasswd or db_clientpasswd in " + paramsfile);
+				if (Utilities.isEmpty(db_clientpasswd)) {
+					if (Utilities.isEmpty(db_adminpasswd)) ErrorReport.die("No db_adminpasswd or db_clientpasswd in " + paramsfile);
 					else db_clientpasswd = db_adminpasswd;
 				}
 			}
 			else {
-				if (db_adminuser==null || db_adminuser.length()==0) 
-					ErrorReport.die("No db_adminuser defined in " + paramsfile);
-				if (db_adminpasswd==null || db_adminpasswd.length()==0) 
-					ErrorReport.die("No db_adminpasswd defined in " + paramsfile);
+				if (Utilities.isEmpty(db_adminuser))   ErrorReport.die("No db_adminuser defined in " + paramsfile);
+				if (Utilities.isEmpty(db_adminpasswd)) ErrorReport.die("No db_adminpasswd defined in " + paramsfile);
 			}
-			if (db_server == null) 	db_server = "";
 			
-			String mummer 			= dbProps.getProperty("mummer_path"); // CAS508 
+			String mummer 	= dbProps.getProperty("mummer_path"); // CAS508 
 			if (mummer!=null && mummer!="") {
 				System.out.println("MUMmer path: " + mummer);
 				Constants.setMummer4Path(mummer);
@@ -1205,40 +1238,23 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				catch (Exception e){ System.err.println("nCPUs: " + cpus + " is not an integer. Ignoring.");}
 			}
 			
-			DBAbsUser.checkDBRunning(db_server);
-			
-			// Check db params and set defaults
-			if (Utilities.isEmpty(db_adminuser))	db_adminuser = "admin";
-			if (Utilities.isEmpty(db_clientuser))	db_clientuser = "admin";
-			if (Utilities.isEmpty(db_name))			db_name = "symap";
-			
-			setTitle(WINDOW_TITLE + " - Database: " + db_name);
-			System.out.println("SyMAP database " + db_name);
-			
-			// Open database connection and create database if it doesn't exist
-	        Class.forName("com.mysql.jdbc.Driver");
-	        DBAbsUser.shutdown(); // in case shutdown at exit didn't work/happen
-	        if (!inReadOnlyMode) {
-		        if (!DBAbsUser.createDatabase(db_server, db_name, db_adminuser, db_adminpasswd)) {
-		        	System.err.println(DB_ERROR_MSG);
-		        	System.exit(-1);
-		        }
+		// Check database exists or create CAS511 add if exist
+	        if (inReadOnlyMode) {
+	        	if (!DBconn2.existDatabase(db_server, db_name, db_clientuser, db_clientpasswd)) 
+		        	ErrorReport.die("*** Database '" + db_name + "' does not exist");
 	        }
-	        else { // CAS511 add if exist
-	        	if (!DBAbsUser.existDatabase(db_server, db_name, db_clientuser, db_clientpasswd)) {
-		        	System.err.println("*** Database '" + db_name + "' does not exist");
-		        	System.exit(-1);
-		        }
+	        else { 
+	        	if (!DBconn2.createDatabase(db_server, db_name, db_adminuser, db_adminpasswd)) 
+		        	ErrorReport.die(DB_ERROR_MSG);
 	        }
-	        String url = DBAbsUser.getDatabaseURL(db_server, db_name);
-	        String user = (inReadOnlyMode ? db_clientuser : db_adminuser);
+	     
+	        String user = (inReadOnlyMode ? db_clientuser   : db_adminuser);
 	        String pw   = (inReadOnlyMode ? db_clientpasswd : db_adminpasswd);
-	        return DBAbsUser.getDBconn(Globals.DB_CONN_PROJMAN, url, user, pw);
+	        
+	        return new DBconn2("Manager", db_server, db_name, user, pw);
 		}
-		catch (Exception e) {
-			ErrorReport.print("Error getting connection"); 
-			throw e;
-		}
+		catch (Exception e) {ErrorReport.die("Error getting connection"); }
+		return null;
 	}
 	
 	/*******************************************************************************
@@ -1249,31 +1265,39 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		pairIdxMap = new HashMap<Integer,Vector<Integer>>();
 		pairObjMap.clear();
 		
-        ResultSet rs = mfUser.executeQuery("SELECT idx, proj1_idx, proj2_idx FROM pairs " + 
-        		// CAS534 rm " join projects as p1 on p1.idx=pairs.proj1_idx join projects as p2 on p2.idx=pairs.proj2_idx "  +
-        				" where aligned=1 ");
-        
-        while ( rs.next() ) {
-        	int pairIdx = rs.getInt("idx");
-        	int proj1Idx = rs.getInt("proj1_idx");
-        	int proj2Idx = rs.getInt("proj2_idx");
-        	
-        	if (!pairIdxMap.containsKey(proj1Idx)) pairIdxMap.put( proj1Idx, new Vector<Integer>() );
+		HashMap <Integer, String> pairs = new HashMap <Integer, String> ();
+		
+		// CAS534 rm " join projects as p1 on p1.idx=pairs.proj1_idx join projects as p2 on p2.idx=pairs.proj2_idx "  +
+        ResultSet rs = dbc2.executeQuery("SELECT idx, proj1_idx, proj2_idx FROM pairs where aligned=1");
+              
+        while (rs.next()) {
+        	int pairIdx =  rs.getInt(1);
+        	int proj1Idx = rs.getInt(2);
+        	int proj2Idx = rs.getInt(3); 
+  
+        	if (!pairIdxMap.containsKey(proj1Idx)) pairIdxMap.put(proj1Idx, new Vector<Integer>() );
         	pairIdxMap.get(proj1Idx).add(proj2Idx);
+        	
+        	pairs.put(pairIdx, proj1Idx + ":" + proj2Idx);
+        }
+        rs.close();
+        
+        for (int pidx : pairs.keySet()) {
+        	String [] tmp = pairs.get(pidx).split(":");
+        	int proj1Idx = Utilities.getInt(tmp[0]);
+        	int proj2Idx = Utilities.getInt(tmp[1]);
         	
         	Mproject mp1=null, mp2=null;
         	for (Mproject mp : projVec) {
         		if (mp.getIdx() == proj1Idx) mp1 = mp;
         		if (mp.getIdx() == proj2Idx) mp2 = mp;
         	}
-        	if (mp1==null || mp2==null) System.out.println("SYMAP error: no " + pairIdx + " projects");
+        	if (mp1==null || mp2==null) System.out.println("SYMAP error: no " + pidx + " projects");
         	else {
-	        	Mpair mp = new Mpair(mfUser, pairIdx, mp1, mp2, inReadOnlyMode);
+	        	Mpair mp = new Mpair(dbc2, pidx, mp1, mp2, inReadOnlyMode); // reads database
 	        	pairObjMap.put(proj1Idx + ":" + proj2Idx, mp);
         	}
         }
-        rs.close();
-
 	}catch (Exception e) {ErrorReport.print(e,"Load projects pairs"); }
 	}
 	
@@ -1284,17 +1308,17 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		projObjMap.clear();
 		projNameMap.clear();
 		
-        ResultSet rs = mfUser.executeQuery("SELECT idx, name, annotdate FROM projects");
+        ResultSet rs = dbc2.executeQuery("SELECT idx, name, annotdate FROM projects");
         while ( rs.next() ) {
         	int nIdx = rs.getInt(1);
         	String dbName = rs.getString(2);
         	String strDate = rs.getString(3);       // CAS513 add
         	
-    		Mproject mp = new Mproject(mfUser, nIdx, dbName, strDate);
+    		Mproject mp = new Mproject(dbc2, nIdx, dbName, strDate);
     		projVec.add(mp);
         }
         rs.close();
-        
+  
         for (Mproject mp : projVec) {
         	mp.loadParamsFromDB(); 
         	mp.loadDataFromDB();
@@ -1322,7 +1346,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 					mp = projObjMap.get(display);
 				}
 				else {
-					mp = new Mproject(mfUser, -1, f.getName(), ""); 
+					mp = new Mproject(dbc2, -1, f.getName(), ""); 
 					projVec.add( mp );
 					projObjMap.put(mp.strDisplayName, mp);
 		        	projNameMap.put(mp.strDBName, mp.strDisplayName);
@@ -1337,14 +1361,14 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	 */
 	private void loadAllProjects() {
 		try {
-			new LoadProj(this, dbc, buildLogLoad()).loadAllProjects(selectedProjVec); 
+			new LoadProj(this, dbc2, buildLogLoad()).loadAllProjects(selectedProjVec); 
 			refreshMenu();
 		}
 		catch (Exception e) {ErrorReport.print(e, "load all project");}
 	}
 	private void loadProject(Mproject mProj) {
 		try {
-			new LoadProj(this, dbc, buildLogLoad()).loadProject(mProj);
+			new LoadProj(this, dbc2, buildLogLoad()).loadProject(mProj);
 			refreshMenu();
 		}
 		catch (Exception e) {ErrorReport.print(e, "load project");}
@@ -1360,11 +1384,15 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				"\n\nOnly: reload project only" +
 				"\nAll: reload project and remove alignments from disk");
 			if (rc==0) return;
-			if (rc==2) // 
+			
+			if (rc==2) {
+				System.out.println("Removing " +  mProj.getDisplayName() + " alignments from disk...."); // CAS541 add
 				new RemoveProj().removeAllAlignFromDisk(mProj);
+			}
 		}
+		System.out.println("Removing " +  mProj.getDisplayName() + " from database...."); // CAS541 add
 		mProj.removeProjectFromDB();
-		new LoadProj(this, dbc, buildLogLoad()).loadProject(mProj); 
+		new LoadProj(this, dbc2, buildLogLoad()).loadProject(mProj); 
 		
 		refreshMenu();
 	}
@@ -1383,8 +1411,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 					"\n\nThe -z flag is set. Only the Gene# assignment algorithm will be run. " +
 					"\nNo further action will be necessary.")) return; 
 		}
+		System.out.println("Removing " +  mProj.getDisplayName() + " annotation from database...."); // CAS541 add
 		mProj.removeAnnoFromDB();
-		new LoadProj(this, dbc, buildLogLoad()).reloadAnno(mProj);
+		new LoadProj(this, dbc2, buildLogLoad()).reloadAnno(mProj);
 		refreshMenu();
 	}
 	catch (Exception e) {ErrorReport.print(e, "reload project");}
@@ -1443,7 +1472,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		System.out.println("\n>>> Start all pairs: processing " + todoList.size() + " project pairs");
 		for (Mpair mp : todoList) {
 			mp.renewIdx(); // Removed existing
-			new AlignProjs().run(this, dbc, mp, true,  maxCPUs, checkCat.isSelected());
+			
+			// AlignProj open/close new dbc2 for each thread of align
+			new AlignProjs().run(this, dbc2, mp, true,  maxCPUs, checkCat.isSelected());
 		}
 		System.out.println("All Pairs complete. ");
 	}
@@ -1461,7 +1492,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			
 			System.out.println("\n>>> Start Alignment&Synteny");
 			mp.renewIdx(); // Remove existing and restart
-			new AlignProjs().run(getInstance(), dbc, mp, false, nCPU, checkCat.isSelected());
+			
+			new AlignProjs().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
 		}
 	}
 	// CAS511 create directories if alignment is initiated
@@ -1768,7 +1800,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			setFocusPainted(false);
 			if (selectedProjVec.contains(p)) {
 				setSelected(true);
-				setBackground( Color.yellow );
+				setBackground( cellColor); // this doesn't seem to do anything, see createPairTable
 			}
 			else
 				setBackground( Color.white );

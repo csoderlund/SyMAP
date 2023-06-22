@@ -1,9 +1,5 @@
 package dotplot;
 
-/*********************************************
- * Filter popup - see FilterData
- * CAS533 removed 'extends Observable' and SBObserable; made Filter object in ControlPanel once
- */
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.ActionEvent;
@@ -17,6 +13,7 @@ import java.awt.Insets;
 import java.awt.Dimension;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -26,6 +23,12 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
+
+/*********************************************
+ * Filter popup - see FilterData
+ * CAS533 removed 'extends Observable' and SBObserable; made Filter object in ControlPanel once
+ * CAS541 change filter to add Color Wheel and gene filters
+ */
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Filter extends JDialog  {
@@ -41,8 +44,8 @@ public class Filter extends JDialog  {
 	private JLabel  pctidLabel, dotSizeLabel; 
 	
 	private JRadioButton bPctScale,  bLenScale,  bNoScale;
-	private JRadioButton bBlueHigh,  bGreenHigh, bBlackHigh;
-	private JRadioButton bBlockHits, bAllHits,   bMixHits;
+	private JRadioButton bBlockHits, bMixHits, bAllHits;
+	private JRadioButton bGeneHits, b2GeneHits, b1GeneHits, b0GeneHits;
 	
 	private JCheckBox showBlocksBox,  showBlkNumBox;
 	private JCheckBox showEmptyBox; 
@@ -76,7 +79,7 @@ public class Filter extends JDialog  {
 		jpanel.add(helpButton);
 		buttonPanel.add(jpanel, "Center");
 
-		int id = (int) data.getFilterData().getPctid();
+		int id = (int) data.getPctid();
 		pctidSlider = new JSlider(id, 100, id);
 		pctidSlider.setMajorTickSpacing(10);
 		pctidSlider.setMinorTickSpacing(5);
@@ -107,35 +110,40 @@ public class Filter extends JDialog  {
 		sgroup.add(bNoScale);
 		bLenScale.setSelected(true);
 		
-		bBlueHigh = new JRadioButton("Blue");
-		bBlueHigh.addItemListener(listener);
-		
-		bGreenHigh = new JRadioButton("Green");
-		bGreenHigh.addItemListener(listener);
-		
-		bBlackHigh = new JRadioButton("Black");
-		bBlackHigh.addItemListener(listener);
-
-		ButtonGroup hgroup = new ButtonGroup();
-		hgroup.add(bBlueHigh);
-		hgroup.add(bGreenHigh);
-		hgroup.add(bBlackHigh);
-		bBlackHigh.setSelected(true);
-		
-		bBlockHits = new JRadioButton("Block");
-		bBlockHits.addItemListener(listener);
-
 		bAllHits = new JRadioButton("All");
 		bAllHits.addItemListener(listener);
 		
 		bMixHits = new JRadioButton("Mix");
 		bMixHits.addItemListener(listener);
 
+		bBlockHits = new JRadioButton("Block");
+		bBlockHits.addItemListener(listener);
+
 		ButtonGroup group = new ButtonGroup();
-		group.add(bBlockHits);
 		group.add(bAllHits);
 		group.add(bMixHits);
+		group.add(bBlockHits);
 		bAllHits.setSelected(true);
+		
+		bGeneHits = new JRadioButton("Ignore");
+		bGeneHits.addItemListener(listener);
+		
+		b2GeneHits = new JRadioButton("Both");
+		b2GeneHits.addItemListener(listener);
+		
+		b1GeneHits = new JRadioButton("One");
+		b1GeneHits.addItemListener(listener);
+		
+		b0GeneHits = new JRadioButton("None");
+		b0GeneHits.addItemListener(listener);
+
+
+		ButtonGroup group2 = new ButtonGroup();
+		group2.add(bGeneHits);
+		group2.add(b2GeneHits);
+		group2.add(b1GeneHits);
+		group2.add(b0GeneHits);
+		bGeneHits.setSelected(true);
 		
 		showBlkNumBox = new JCheckBox("Show Block Numbers");
 		showBlkNumBox.addItemListener(listener);
@@ -167,15 +175,16 @@ public class Filter extends JDialog  {
 		addToGrid(cp,gbl,gbc,bPctScale,1);
 		addToGrid(cp,gbl,gbc,bNoScale,rem);
 		
-		addToGrid(cp,gbl,gbc,new JLabel(" Block Hits"),1);
-		addToGrid(cp,gbl,gbc,bBlackHigh,1);
-		addToGrid(cp,gbl,gbc,bBlueHigh,1);
-		addToGrid(cp,gbl,gbc,bGreenHigh,rem);
-		
 		addToGrid(cp,gbl,gbc,new JLabel(" Show Hits"),1);
 		addToGrid(cp,gbl,gbc,bAllHits,1);
 		addToGrid(cp,gbl,gbc,bMixHits,1);
 		addToGrid(cp,gbl,gbc,bBlockHits,rem);
+		
+		addToGrid(cp,gbl,gbc,new JLabel(" Only Genes"),1);
+		addToGrid(cp,gbl,gbc,bGeneHits,1);
+		addToGrid(cp,gbl,gbc,b2GeneHits,1);
+		addToGrid(cp,gbl,gbc,b1GeneHits,1);
+		addToGrid(cp,gbl,gbc,b0GeneHits,rem);
 		
 		addToGrid(cp,gbl,gbc,new JSeparator(),rem);
 		
@@ -221,12 +230,14 @@ public class Filter extends JDialog  {
 		bPctScale.setSelected(fd.isPctScale());
 		bLenScale.setSelected(fd.isLenScale());
 		
-		bBlueHigh.setSelected(fd.isHighBlue());
-		bGreenHigh.setSelected(fd.isHighGreen());
-		bBlackHigh.setSelected(!fd.isHighBlockHits());
-		
-		bBlockHits.setSelected(fd.isShowBlockHits());
 		bAllHits.setSelected(fd.isShowAllHits());
+		bMixHits.setSelected(fd.isShowMixHits());
+		bBlockHits.setSelected(fd.isShowBlockHits());
+		
+		bGeneHits.setSelected(fd.isShowGeneIgn()); 
+		b2GeneHits.setSelected(fd.isShowGene2());  
+		b1GeneHits.setSelected(fd.isShowGene1()); 
+		b0GeneHits.setSelected(fd.isShowGene0()); 
 		
 		showBlocksBox.setSelected(fd.isShowBlocks());
 		showBlkNumBox.setEnabled(fd.isShowBlocks());
@@ -296,8 +307,8 @@ public class Filter extends JDialog  {
 			if (src == bBlockHits || src == bAllHits || src == bMixHits) {
 				b = fd.setShowHits(bBlockHits.isSelected(), bAllHits.isSelected());
 			}
-			else if (src == bBlueHigh || src == bGreenHigh || src == bBlackHigh) {
-				b = fd.setHighHits(bBlueHigh.isSelected(), bGreenHigh.isSelected());
+			else if (src == bGeneHits || src == b1GeneHits || src == b2GeneHits || src == b0GeneHits) {
+				b = fd.setGeneHits(b2GeneHits.isSelected(), b1GeneHits.isSelected(), b0GeneHits.isSelected());
 			}
 			else if (src == bPctScale || src==bLenScale || src==bNoScale) {
 				b = fd.setDotScale(bLenScale.isSelected(), bPctScale.isSelected());
@@ -314,5 +325,5 @@ public class Filter extends JDialog  {
 			}
 			if (b) cntl.update();
 		}
-	}
+	} // end listener
 }

@@ -12,7 +12,6 @@ import colordialog.ColorListener;
 import symap.sequence.Sequence;
 import symap.sequence.Annotation;
 import symap.mapper.HitData;
-import symap.Globals;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import util.ErrorReport;
@@ -37,7 +36,7 @@ public class CloseUpDialog extends JDialog implements CloseUpListener, ColorList
 
 	// hitList will have at least ONE hit
 	public CloseUpDialog(CloseUp closeup, Vector <HitData> hitList, Sequence seqObj, int selStart, int selEnd, String otherProject, boolean isProj1) throws SQLException {
-		alignPool = closeup.getDrawingPanel().getPools().getAlignPool();
+		alignPool = new AlignPool(closeup.getDrawingPanel().getDBC()); //closeup.getDrawingPanel().getPools().getAlignPool();
 		projS = seqObj.getProjectDisplayName();
 		projO = seqObj.getOtherProjectName();
 		initView();

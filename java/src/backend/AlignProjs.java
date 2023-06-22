@@ -9,8 +9,7 @@ import java.util.Date;
 import java.util.TreeMap;
 import javax.swing.JFrame;
 
-import database.DBconn;
-import database.DBuser;
+import database.DBconn2;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
 import symap.manager.SumFrame;
@@ -27,13 +26,13 @@ import util.Utilities;
 
 public class AlignProjs extends JFrame {
 	private static final long serialVersionUID = 1L;
-	private DBconn dbConn;
+	private DBconn2 dbc2;
 	private Mpair mp;
 	
-	public void run(ManagerFrame frame, DBconn dbConn, Mpair mp,  
+	public void run(ManagerFrame frame, DBconn2 dbc2, Mpair mp,  
 			boolean closeWhenDone,  int maxCPUs, boolean bDoCat) {
 
-		this.dbConn = dbConn;
+		this.dbc2 = dbc2;
 		this.mp = mp;
 		
 		Mproject mProj1 = mp.mProj1;
@@ -41,7 +40,6 @@ public class AlignProjs extends JFrame {
 		String dbName1 = mProj1.getDBName();
 		String dbName2 = mProj2.getDBName();
 		String toName =  (mProj1 == mProj2) ? dbName1 + " to self" : dbName1 + " to " + dbName2;
-		
 		
 		FileWriter syFW =   symapLog(mProj1,mProj2);
 		String alignLogDir = buildLogAlignDir(mProj1,mProj2);
@@ -59,12 +57,12 @@ public class AlignProjs extends JFrame {
 		// CAS535 always just close if (!closeWhenDone) diaLog.closeIfNoErrors();	
 		diaLog.closeWhenDone();					
 		
-		final AlignMain aligner = new AlignMain(new UpdatePool(dbConn), diaLog, mp,  maxCPUs, bDoCat, alignLogDir);
+		final AlignMain aligner = new AlignMain(dbc2, diaLog, mp,  maxCPUs, bDoCat, alignLogDir);
 		if (aligner.mCancelled) return;
 		
-		final AnchorsMain anchors = new AnchorsMain(new UpdatePool(dbConn), diaLog, mp );
+		final AnchorsMain anchors = new AnchorsMain(dbc2, diaLog, mp );
 		
-		final SyntenyMain synteny = new SyntenyMain( new UpdatePool(dbConn), diaLog, mp );
+		final SyntenyMain synteny = new SyntenyMain(dbc2, diaLog, mp );
 		
 		final Thread statusThread = new Thread() {
 			public void run() {
@@ -93,6 +91,7 @@ public class AlignProjs extends JFrame {
 		};
 		
 		// Perform alignment, load anchors and compute synteny; cancel and success like original
+		// each 'run' makes a new connection from dbc2
 		final Thread alignThread = new Thread() {
 			public void run() {
 				boolean success = true;
@@ -139,7 +138,7 @@ public class AlignProjs extends JFrame {
 					mProj1.saveParams(mProj1.xAlign);
 					mProj2.saveParams(mProj2.xAlign);
 				
-					new SumFrame(new DBuser(dbConn), mp);// CAS540
+					new SumFrame(dbc2, mp);// CAS540
 					
 					diaLog.appendText(">> Summary for " + toName + "\n");
 					printStats(diaLog, mProj1, mProj2);
@@ -208,8 +207,7 @@ public class AlignProjs extends JFrame {
 		try {
 			if (syFW != null) {
 				if (Cancelled.isCancelled())  syFW.write("Cancelled");
-				Date date = new Date();
-				syFW.write("\n-------------- done " + date.toString() + " --------------------\n");
+				syFW.write("\n-------------- done " + new Date().toString() + " --------------------\n");
 				syFW.close();
 			}
 		}
@@ -247,29 +245,19 @@ public class AlignProjs extends JFrame {
 		Utils.prtNumMsg(prog, counts.get("blkhits"), "synteny hits");
 	}
 	private void getPseudoCounts(TreeMap<String,Integer> hitCounts, int pidx) throws Exception {
-		UpdatePool db = new UpdatePool(dbConn);
-	
-		ResultSet rs = db.executeQuery("select count(*) as nhits from pseudo_hits where pair_idx=" + pidx);	
-		rs.first();
-		hitCounts.put("nhits", rs.getInt("nhits"));
-		rs.close();
 		
-		rs = db.executeQuery("select count(*) as nhits from pseudo_block_hits as pbh join pseudo_hits as ph on pbh.hit_idx=ph.idx " +
+		int cnt = dbc2.executeCount("select count(*) from pseudo_hits where pair_idx=" + pidx);	
+		hitCounts.put("nhits", cnt);
+		
+		cnt = dbc2.executeCount("select count(*) from pseudo_block_hits as pbh join pseudo_hits as ph on pbh.hit_idx=ph.idx " +
 								" where ph.pair_idx=" + pidx);
-		rs.first();
-		hitCounts.put("blkhits", rs.getInt("nhits"));
-		rs.close();
+		hitCounts.put("blkhits", cnt);
 
-		rs =  db.executeQuery("select count(*) as nhits from pseudo_hits where gene_overlap > 0 and pair_idx=" + pidx);	
-		rs.first();
-		hitCounts.put("genehits", rs.getInt("nhits"));
-		rs.close();
+		cnt =  dbc2.executeCount("select count(*) from pseudo_hits where gene_overlap > 0 and pair_idx=" + pidx);	
+		hitCounts.put("genehits", cnt);
 
-		rs = db.executeQuery("select count(*) as n from blocks where pair_idx=" + pidx);	
-		rs.first();
-		hitCounts.put("blocks", rs.getInt("n"));
-		rs.close();
-
+		cnt = dbc2.executeCount("select count(*)  from blocks where pair_idx=" + pidx);	
+		hitCounts.put("blocks", cnt);
 	}
 	// CAS500 was putting log in data/pseudo_pseudo/seq1_to_seq2/symap.log
 	// changed to put in logs/seq1_to_seq2/symap.log; 

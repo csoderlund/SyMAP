@@ -1,24 +1,29 @@
 package dotplot;
 
+import java.awt.Color;
+
+import props.PropertiesReader;
+import symap.Globals;
+
 /************************************************************
  * Filter Data; Data class contains FilterData object, which gets passed to Filter
  * CAS533 removed 'extends Observable'; moved update to Filter
  */
 public class FilterData  {
+	private static int DOT_LEN = 0,  DOT_PCT = 1,   DOT_NO = 2;
 	private static int BLOCK_HITS = 0, ALL_HITS = 1,  MIX_HITS = 2;
-	private static int HIGH_BLACK = 0, HIGH_BLUE = 1, HIGH_GREEN = 2;
-	private static int DOT_LEN = 0,    DOT_PCT = 1,   DOT_NO = 2;
+	private static int GENE_IGN = 0, GENE_1 = 1, GENE_2 = 2, GENE_0=3;
 	
 	private double dPctid = 0, defaultPctid=0;
 	private int iDotSize=1; 			 // CAS533 add; moved from controls
 	
-	private int nShowHits = ALL_HITS;
-	private int nHighHits = HIGH_BLACK; 
 	private int nDotScale = DOT_LEN;
+	private int nShowHits = ALL_HITS;
+	private int nGeneHits = GENE_IGN; 
 	
 	private boolean bShowBlocks     = true;
 	private boolean bShowBlkNum	 	= false;
-	private boolean bShowEmpty      = true; // hide groups with no blocks
+	private boolean bShowEmpty      = true; // hide groups with no blocks; only when >20 chrs
 	
 	public FilterData() {} // Data
 	
@@ -30,7 +35,7 @@ public class FilterData  {
 		
 		fd.nDotScale	= nDotScale;
 		fd.nShowHits 	= nShowHits;
-		fd.nHighHits	= nHighHits;
+		fd.nGeneHits	= nGeneHits;
 		
 		fd.bShowBlocks 	= bShowBlocks;
 		fd.bShowBlkNum	= bShowBlkNum;
@@ -45,7 +50,7 @@ public class FilterData  {
 		
 		nDotScale		= fd.nDotScale;
 		nShowHits 		= fd.nShowHits;
-		nHighHits 		= fd.nHighHits;
+		nGeneHits 		= fd.nGeneHits;
 		
 		bShowBlocks 	= fd.bShowBlocks;
 		bShowBlkNum		= fd.bShowBlkNum;
@@ -57,7 +62,7 @@ public class FilterData  {
 		
 		nDotScale	= DOT_LEN;
 		nShowHits 	= ALL_HITS;
-		nHighHits 	= HIGH_BLACK;
+		nGeneHits 	= GENE_IGN;
 		
 		bShowBlocks = true;
 		bShowBlkNum = false;
@@ -72,7 +77,7 @@ public class FilterData  {
 			FilterData fd = (FilterData)obj;
 			
 			return fd.dPctid==dPctid && fd.iDotSize==iDotSize 
-				&& fd.nDotScale==nDotScale && fd.nShowHits==nShowHits && fd.nHighHits==nHighHits
+				&& fd.nDotScale==nDotScale && fd.nShowHits==nShowHits && fd.nGeneHits==nGeneHits
 				&& fd.bShowBlocks == bShowBlocks && fd.bShowBlkNum == bShowBlkNum
 				&& fd.bShowEmpty == bShowEmpty;
 		}
@@ -85,9 +90,10 @@ public class FilterData  {
 	public boolean isPctScale()				{ return nDotScale==DOT_PCT; }
 	public boolean isLenScale()				{ return nDotScale==DOT_LEN; }
 	
-	public boolean isHighBlockHits() 		{ return nHighHits!=HIGH_BLACK;}
-	public boolean isHighGreen()			{ return nHighHits==HIGH_GREEN;}
-	public boolean isHighBlue()				{ return nHighHits==HIGH_BLUE;}
+	public boolean isShowGeneIgn() 			{ return nGeneHits==GENE_IGN;}
+	public boolean isShowGene2()			{ return nGeneHits==GENE_2;}
+	public boolean isShowGene1()			{ return nGeneHits==GENE_1;}
+	public boolean isShowGene0()			{ return nGeneHits==GENE_0;}
 	
 	public boolean isShowBlockHits() 		{ return nShowHits == BLOCK_HITS; }
 	public boolean isShowAllHits() 			{ return nShowHits == ALL_HITS; }
@@ -123,14 +129,14 @@ public class FilterData  {
 		else 			nShowHits = MIX_HITS;
 		return (x!=nShowHits);
 	}
-	public boolean setHighHits(boolean blue, boolean green) {
-		int x = nHighHits;
-		if (green) 		nHighHits = HIGH_GREEN;
-		else if (blue)  nHighHits = HIGH_BLUE;
-		else 			nHighHits = HIGH_BLACK;
-		return (x!=nShowHits);
+	public boolean setGeneHits(boolean gene2, boolean gene1, boolean gene0) {
+		int x = nGeneHits;
+		if (gene2) 		nGeneHits = GENE_2;
+		else if (gene1) nGeneHits = GENE_1;
+		else if (gene0) nGeneHits = GENE_0;
+		else 			nGeneHits = GENE_IGN;
+		return (x!=nGeneHits);
 	}
-	
 	public boolean setShowBlocks(boolean showBlocks) {
 		boolean b = bShowBlocks;
 		bShowBlocks = showBlocks;
@@ -145,5 +151,37 @@ public class FilterData  {
 		boolean b = bShowEmpty;
 		bShowEmpty = showEmpty;
 		return (b!=bShowEmpty);
+	}
+	public Color getRectColor() {return blockRectColor;}
+	public Color getColor(DPHit hd) {
+		if (hd.isBlock()) {
+			if (hd.bothGene()) return blockGeneBothColor;
+			if (hd.oneGene()) return blockGeneOneColor;
+			return blockColor;
+		}
+		if (hd.bothGene()) return geneBothColor;
+		if (hd.oneGene()) return geneOneColor;
+		return nonBlockColor;
+	}
+	
+	// accessed and changed by ColorDialog - do not change
+	public static Color blockColor;
+	public static Color nonBlockColor;
+	public static Color blockRectColor; 
+	public static Color blockGeneBothColor;
+	public static Color blockGeneOneColor;
+	public static Color geneBothColor; 				
+	public static Color geneOneColor;
+	
+	static {
+		PropertiesReader props = new PropertiesReader(Globals.class.getResource("/properties/dotplot.properties"));
+	
+		blockColor 			= props.getColor("blockColor");
+		nonBlockColor 		= props.getColor("nonBlockColor");
+		blockRectColor 		= props.getColor("blockRectColor"); 
+		blockGeneBothColor 	= props.getColor("blockGeneBothColor");
+		blockGeneOneColor 	= props.getColor("blockGeneOneColor");
+		geneBothColor 		= props.getColor("geneBothColor");
+		geneOneColor 		= props.getColor("geneOneColor"); 
 	}
 }

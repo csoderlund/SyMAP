@@ -10,14 +10,16 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseListener; 	
 import java.awt.event.MouseWheelListener; 	
 import javax.swing.JComponent;
-
-import props.PropertiesReader;
-
 import javax.swing.AbstractButton;
+
+import props.ProjectPool;
+import props.PropertiesReader;
+import database.DBconn2;
 import symap.filter.FilterHandler;
 import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import symap.track.*;
+import symap.frame.ControlPanel;
 import symap.frame.HelpBar; 		
 import symap.frame.HelpListener; 	
 import symapQuery.TableDataPanel;
@@ -30,7 +32,7 @@ import util.ErrorReport;
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Mapper extends JComponent 
-	implements  HitFilter.HitFilterListener,  // CAS521 remove Filtered Interface
+	implements  HfilterData.HitFilterListener,  // CAS521 remove Filtered Interface
 		MouseMotionListener, MouseListener, MouseWheelListener, HelpListener 		
 {
 	// ColorDialog colors at bottom
@@ -40,29 +42,29 @@ public class Mapper extends JComponent
 	private TableDataPanel theTablePanel;
 	private SeqHits seqHitObj; // CAS531 was List, but actually only one object
 	private MapperPool mapPool;
-	private HitFilter hitFilter;
-	private MapInfo mapinfo;
+	private HfilterData hitFilter;
 	private volatile boolean initing;
-	private String helpText, hoverText=""; // CAS520 add hover
+	private String helpText, filterText=""; // CAS520 add hover
 	
 	private static final String HOVER_MESSAGE = 
 			"\nHit-wire information: Hover on hit-wire or " 
 			+ "right-click on hit-wire for popup of full information.\n";
-		
+	
+	// Created in DrawingPanel
 	// is starts out making 100 mappers with trackholders but no tracks
 	public Mapper(DrawingPanel drawingPanel, TrackHolder th1, TrackHolder th2,
-			FilterHandler fh, MapperPool pool, HelpBar hb, TableDataPanel listPanel) 
+			FilterHandler fh, DBconn2 dbc2, ProjectPool projPool, HelpBar hb, TableDataPanel listPanel) 
 	{
 		super();
-		
-		this.mapPool = pool;
+	
+		this.mapPool = new MapperPool(dbc2, projPool); // CAS541 create here instead of passing as arg
 		this.drawingPanel = drawingPanel; 
 		this.fh = fh;
+		
 		initing = true;
-		hitFilter = new HitFilter(this);
-		hoverText = hitFilter.getHover(); // CAS520 add
+		hitFilter = new HfilterData(this);
+		filterText = hitFilter.getFilterText(); // CAS520 add
 		theTablePanel = listPanel;
-		mapinfo = new MapInfo();
 		fh.set(this);
 		trackHolders = new TrackHolder[2];
 		trackHolders[0] = th1;
@@ -79,43 +81,35 @@ public class Mapper extends JComponent
 	
 	public void clearData() {
 		seqHitObj = null;
-		mapinfo = new MapInfo();
 	}
-
-	public void update(HitFilter hf) { // HitFilterListener interface
-		if (!mapinfo.hasHitContent(hf.isBlock(), false)) // CAS531 hf.isRepeat which was always false
-			init();
-		hoverText = hf.getHover(); // CAS520 add
+	// called from HitFilter
+	public void update(HfilterData hf) {
+		// CAS541 dead code; if (!mapinfo.hasHitContent(hf.isBlock(), false)) // CAS531 hf.isRepeat which was always false
+		init();
+		filterText = hf.getFilterText(); // CAS520 add
 	}
+	public String getFilterText() {return filterText;} // Called from SeqHits 
 
 	/** Method closeFilter closes this mappers filter window @see FilterHandler#hide() */
 	public void closeFilter() {fh.hide();}
 	
 	public void clearTrackBuild() {
-		if (trackHolders[0].getTrack() != null)
-			trackHolders[0].getTrack().clearTrackBuild();
-		if (trackHolders[1].getTrack() != null)
-			trackHolders[1].getTrack().clearTrackBuild();
+		if (trackHolders[0].getTrack() != null) trackHolders[0].getTrack().clearTrackBuild();
+		if (trackHolders[1].getTrack() != null) trackHolders[1].getTrack().clearTrackBuild();
 	}
 
-	/** Method initAllHits initializes the mapper downloading all hits. */
+	/** initializes the mapper downloading all hits. */
 	public boolean initAllHits() {
-		HitFilter hf = hitFilter.copy();
+		HfilterData hf = hitFilter.copy();
 		hf.setBlock(false);
 		return myInit(hf);
 	}
 
-	/**
-	 * Method init gathers the needed data from the database and
-	 * creates the those hit objects, clearing the hits that are not needed. If
-	 * there is filter data to commit, it is committed for this Mapper and for the associated tracks.
-	 * @see MapperPool#setData
-	 */
 	public boolean init() {
 		return myInit(hitFilter);
 	}
 
-	private boolean myInit(HitFilter hf) {
+	private boolean myInit(HfilterData hf) {
 		Track t1 = trackHolders[0].getTrack();
 		Track t2 = trackHolders[1].getTrack();
 		if (t1 == null || t2 == null) return false;
@@ -123,7 +117,7 @@ public class Mapper extends JComponent
 		if (seqHitObj!=null) return true;
 		
 		initing = true;
-		seqHitObj = mapPool.setData(this, t1, t2, mapinfo, hf); 
+		seqHitObj = mapPool.setData(this, t1, t2, hf); 
 		seqHitObj.setMinMax(hitFilter);	
 		initing = false;
 		
@@ -145,7 +139,7 @@ public class Mapper extends JComponent
 	
 	public DrawingPanel getDrawingPanel() { return drawingPanel;}
 	
-	public HitFilter getHitFilter() {return hitFilter;}
+	public HfilterData getHitFilter() {return hitFilter;}
 	
 	public AbstractButton getFilterButton() {return fh.getFilterButton();}
 	
@@ -233,7 +227,7 @@ public class Mapper extends JComponent
 		for (int i = 0;  i < trackHolders.length;  i++)
 			trackHolders[i].getTrack().mouseWheelMoved(e, length);
 	}
-	// CAS517 add for popup hit wire description; see PseudoPseudoHits.PseudoHits.doPopupDesc
+	// CAS517 add for popup hit wire description; see SeqHits.PseudoHits.doPopupDesc
 	public void mousePressed(MouseEvent e) {
 		if (e.isPopupTrigger()) {
 			if (seqHitObj.doPopupDesc(e)) return;
@@ -250,13 +244,16 @@ public class Mapper extends JComponent
 	}
 	// called by HelpBar
 	public String getHelpText(MouseEvent e) { 
-		if (helpText == null)	return hoverText + HOVER_MESSAGE;
-		else					return helpText; 
+		int n = drawingPanel.getStatOpts();
+		if (n==ControlPanel.pHELP) return HOVER_MESSAGE;
+		
+		if (helpText == null) return filterText + "    \n" + seqHitObj.getInfo();
+		
+		return helpText; 
 	}
 	// set in SeqHits.PseudoHits
 	public void setHelpText(String text) {
-		if (text == null)		helpText = hoverText + HOVER_MESSAGE  ;
-		else					helpText = text;
+		helpText = text;
 	}
 	/******************************************************************/
 	// drawing methods directly access these, and ColorDialog can change them

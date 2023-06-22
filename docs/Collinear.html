@@ -14,6 +14,7 @@
     mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
     ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
 	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
+	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
     tt {font-size:13px}
 	pre {font-size:13px}
 	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
@@ -63,23 +64,26 @@
 
 
 <h2>Details of Collinear sets</h2>
-
+Using the <ttb>Hit Filter</ttb>, or right click in the hit region, set the highlighting for <ttl>Collinear Sets</ttl>.
+As shown below, the number of highlighted collinear hits and number of collinear sets will be shown in
+the <ttl>Information</ttl> box.
+<br>
+<a href="img/colHigh.png">
+<img src="img/colHigh.png" alt="Collinear Sets" style="border: 1px solid black; width: 650px"></a>
+<p>
 <table>
 <tr><td  style="vertical-align: text-top;">
 In the image on the right, two different sets are shown (green highlighted hits is the 1st set,
 pink is the 2nd). They were broken up by a gene on each chromosome
 that do not have a hit.
-
-<p>The highlighting should include the collinear genes since
-the collinearity is on the genes, not the hits. A future release will include highlighting the genes.
-
 <p><ttl>Forward (=) vs reverse (!=) sets</ttl>:
-All hits in a set are either on the same strand (=) or opposite (!=).
-In the image on the right, all genes
-in both sets are on the same strand.
-Negative (-/-) and positive (+/+) strand gene pairs can be mixed.
+<br>a <ttl>=</ttl> hit is to the strands (+/+) or (-/-),
+<br>a <ttl>!=</ttl> hit is to the strands (+/-) or (-/+).
+<br>All hits in a set are either to the same strand (=) or opposite (!=).
 
-<p>In the image below, all genes are on opposite strands. The gene pairs can be +/- or -/+.
+<p>In the image on the right, all genes in both sets are on the same strand.
+
+<p>In the image below, all genes are on opposite strands.
 <br><a href="img/colRHits.png"><img src="img/colRHits.png" alt="Reverse hits" style="border: 1px solid black; width: 270px"></a>
 <p>&nbsp;
 <p>The collinear set algorithm does not consider the amount of overlap of the hit to a gene, or the similarity
@@ -88,6 +92,7 @@ of the hit sequences.
 <td><a href="img/colSet2.png">
 <img src="img/colSet2.png" alt="2 Collinear Sets" style="border: 1px solid black; width: 450px"></a>
 </table>
+
 <p>The following are examples of interpreting the 2D view:
 <table>
 <tr><td>

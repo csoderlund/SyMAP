@@ -12,6 +12,7 @@
 	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
 	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
 	ttp  {font-family: Helvetica, monospace; font-size: 14px; font-weight: 600;}
+	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
 	.tx td {padding: 5px;}
 	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
@@ -70,7 +71,6 @@ This guide is for the <ttp>viewSymap</ttp> user interface.
 
 <li>For detailed information on installation, see
 the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
-<li>For a quick visual introduction, see the <a href="Tour.html" class="ext" target="_blank">Tour</a>.
 <li>For FPC-to-Seq view,  see <a href="./fpc/UserGuideFPC.html" class="ext" target="_blank">FPC specific</a>.
 <li>Please send bug reports and suggestions to <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>.
 </ol>
@@ -80,6 +80,7 @@ the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
 <table>
 <tr><td style="width: 400px;">
 <ul>
+<li><a href="#term">Terminology</a>
 <li><a href="#mgr">Project Manager</a>
 <li><a href="#pair"><i>Displays for Selected Pair (Two-Genome Views)</i></a>
 	<ul>
@@ -109,7 +110,7 @@ the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
 	</ul>
 <li><a href="#self">Self-synteny Displays</a>
 <li><a href="#data_download">Data Download</a>
-<li><a href="#image">Print and Help</a>
+<li><a href="#image">Color Wheel, Print and Help (?) Icons</a> <!-- # ref 'wheel' in code -->
 <li>Details
 <ul>
 <li><a href="Collinear.html" target="_blank" class="ext">Collinear Sets</a> <font color=green>New v5.2.0</font>
@@ -124,23 +125,23 @@ the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
 <tr><td>
 <small>Project Manager</small>
 <br><a href="./img/view1.png">
-		<img src="./img/view1.png" alt="Dots and Circle" title="Dots and Circle"  style="width: 340px; border:1px solid black"></a>
+		<img src="./img/view1.png" alt="Dots and Circle" title="Dots and Circle"  style="width: 350px; border:1px solid black"></a>
 <tr><td>&nbsp;
 <tr><td>&nbsp;
 <tr><td>
 <small>Chromosome Explorer</small>
 <br>
 <a href="./img/view2.png">
-	<img src="./img/view2.png" alt="Dots and Circle" title="Dots and Circle" style="width: 160px; border:1px solid black"></a>
+	<img src="./img/view2.png" alt="Dots and Circle" title="Dots and Circle" style="width: 170px; border:1px solid black"></a>
 <tr><td>&nbsp;
 <tr><td>&nbsp;
 <tr><td><i><small>Click on any image in this document to see the closeup.</small></i>
 </table>
 </table>
 
-<h4>Citations</h4>
+<p><b>Citation</b>:
 The SyMAP User Agreement requires you to cite the following publication
-if you use SyMAP in a paper, poster, or presentation.
+if you use SyMAP results in a paper, poster, or presentation.
 <pre>
 	C. Soderlund, M. Bomhoff, and W. Nelson (2010)
 	SyMAP: A turnkey synteny system with application to plant genomes.
@@ -151,7 +152,7 @@ if you use SyMAP in a paper, poster, or presentation.
 </pre>
 
 <a id="term"></a>
-<h4>Terminology</h4>
+<h1>Terminology</h1>
 <table class="ty">
 <tr><td>Chromosome<td>For simplicity, sequence groups will be referred to as "Chromosome", though they may be scaffolds, linkage groups, etc.
 <tr><td style="white-space: nowrap;"><i>Hit (or anchor)</i><td>A matched sequence between two chromosomes from MUMmer.
@@ -161,8 +162,13 @@ for display; the MUMmer hits within the clustered hits are referred to as <i>sub
 <tr><td><i>Synteny block</i><td>An approximately-collinear sequences of anchors; a block can
 have intervening genes which do not align. There may be small inverted regions within
 a block.  By default, blocks have at least 7 anchors.
+
 <tr><td><i>Collinear set</i><td>A sequence of paired aligned genes with no intervening non-paired genes or inverted gene
 pairs. A set can consist of 2 or more genes. See <a href="Collinear.html" target="_blank" class="ext">details</a>.
+<tr><td><i>Block and !Block</i><td>Hits that are in a block and hits that are not within a block, respectively.
+<tr><td><i>g2, g1, g0</i><td>A hit overlaps a gene on <i>both</i> sides,
+a hit overlaps a gene on <i>one</i> side, a hit overlaps <i>no</i> genes, respectively.
+
 </table>
 
 <!---------------------------------------------------------->
@@ -274,7 +280,7 @@ Dots represent anchors (<i>hits</i>). A blue box indicates a
 <i>Synteny Block</i>. A chromosome pair is represented by a <i>cell</i>.
 <p>
 Clicking a cell will replace the whole genome view with the dotplot for the chromosome pair.
-<p>Within the cell dotplot:
+<br><u>Within the cell dotplot</u>:
 <ul>
 <li>Click a block to view the 2D display of the block.
 <li>Or, use the mouse to define a region, which will put a box around it. Then click the box to view the 2D display.
@@ -290,25 +296,46 @@ Clicking a cell will replace the whole genome view with the dotplot for the chro
 <h4>Control Panel</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<a href="img/dotplot-control.png"><img src="img/dotplot-control.png"  alt="dotplot controls" style="border: 1px solid black;width: 600px"></a>
+<a href="img/dotplot-control.png"><img src="img/dotplot-control.png"  alt="dotplot controls" style="border: 1px solid black;width: 650px"></a>
 <p>
-<ttl>Home</ttl> Resets the zoom selection to the whole genome dot plot.
+<ttl>Home</ttl>: Resets the zoom selection to the whole genome dot plot.
 <p>
-<ttl>Zoom</ttl> The plus (<ttl><big>+</big></ttl>) and minus (<ttl><big>-</big></ttl>) buttons shrink or grow the display.
+<ttl>Zoom</ttl>: The plus (<ttl><big>+</big></ttl>) and minus (<ttl><big>-</big></ttl>) buttons shrink or grow the display.
 <p>
-<ttl>Scale</ttl> The check box resizes the species displayed on the y-axis according to the current scale of
+<ttl>Scale</ttl>: The check box resizes the species displayed on the y-axis according to the current scale of
 the species displayed on the x-axis.
 <p>
-<ttl>Reference</ttl> The drop-down menu allows the reference species on the x-axis to be changed.
+<ttl>Reference</ttl>: The drop-down menu allows the reference species on the x-axis to be changed.
+<p>
+<ttl>Info</ttl>: The options are:
+<ul>
+<li><ttx>Stats</ttx>: As shown at the bottom of the dotplot display above,
+there are statistics listed along the bottom.
+<li><ttx>Print</ttx>: A more detailed statistics will be printed to the terminal, e.g.
+<pre>
+>> B.rapa  Cabbage     (%Id=31)
+   All Hits   86,680         Annotated  Both 58,440               One 19,299               None 8,941
+   Block Hits 61,062 ( 70%)             Both 46,568 ( 80%,  76%)  One  8,094 ( 42%,  13%)  None 6,400 ( 72%,  10%)
+  !Block Hits 25,618 ( 30%)             Both 11,872 ( 20%,  46%)  One 11,205 ( 58%,  44%)  None 2,541 ( 28%,  10%)
+</pre>
+The <tt>(%Id=31)</tt> is what the filtered percent identity of the hits are, which can be changed in <ttl>Hit Filter</ttl>.
+The two percentages in parenthesis are the column (gene) percent and row (hit) percent.
+<li><ttx>Help</ttx>: One line help is printed in place of the statistics.
+</ul>
+
+<ttl>Filter</ttl>: See below.
+<p>
+<ttl>Color Wheel, Print and Help Icons</ttl>: See <a href=#image>Color Wheel, Print and Help</a>.
 
 <!------------------------------------------------------------>
 <a id="dotplot_filter"></a> <!-- # ref in code -->
 <table style="width: 95%"><tr><td style="text-align: left">
-<h4>DotPlot Filter</h4>
+<h4>Filter</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
+The <ttl>Filter</ttl> settings are used for the duration of the given dotplot display. The <ttl>Color Icon</ttl> settings
+are stored for every dotplot display.
+<p>
 <table>
-
 <table>
 <tr><td  style="vertical-align: text-top;">
 As soon as a <ttb>Filter</ttb> option is changed, it will be reflected on the dotplot. However, no other panel can be
@@ -320,7 +347,7 @@ accessed until one of the following buttons is clicked, which will close the <tt
 <tr><td><ttl>Defaults</ttl><td>Apply the defaults, which are shown in the image on the right.
 </table>
 <td><a href="img/dotplot-filter.png">
-<img src="img/dotplot-filter.png" alt="dotplot filter" style="border: 1px solid black; width: 300px"></a>
+<img src="img/dotplot-filter.png" alt="dotplot filter" style="border: 1px solid black; width: 350px"></a>
 </table>
 <table>
 <tr><td>
@@ -335,14 +362,17 @@ accessed until one of the following buttons is clicked, which will close the <tt
 	<ttl>Length</ttl> &nbsp;The dot is a rectangle relative to the hit's length.
 	<br><ttl>%Id</ttl>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The dot is scaled by the hit's %Id (Identity).
 	<br><ttl>None</ttl> &nbsp;&nbsp;&nbsp;&nbsp;All dots are the same size.
-<tr><td style="vertical-align: text-top;"><ttl>Block Hits</ttl>
-	<td>Color the block dots <ttl>Black</ttl>, <ttl>Blue</ttl> or <ttl>Green</ttl>.
+
 <tr><td><ttl>Show Hits</ttl>
 	<td>
 	<ttl>All</ttl>  &nbsp;&nbsp;&nbsp;&nbsp;Show all hits.
 	<br><ttl>Mix</ttl>    &nbsp;&nbsp;&nbsp;&nbsp;Show all hits, but non-blocks hits will be displayed with size=1 and no scale.
 	<br><ttl>Block</ttl>  &nbsp;Show only show hits assigned to blocks.
-
+<tr><td style="vertical-align: text-top;"><ttl>Gene Only</ttl>
+	<td><ttl>Ignore</ttl>&nbsp;&nbsp;This setting does nothing.
+	<br><ttl>Both</ttl>  &nbsp;&nbsp;&nbsp;&nbsp;Only show hits that has a gene on both ends to the hit.
+	<br><ttl>One</ttl>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Only show hits that has a gene on one end of hit.
+	<br><ttl>None</ttl>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Only show hits that does not have a gene on either end.
 <tr><td style="vertical-align: text-top;"><ttl>Show Blocks</ttl>
 	<td>Draw a blue rectangle around each block of hits.
 <tr><td style="vertical-align: text-top;"><ttl>Show Block Numbers</ttl>
@@ -358,13 +388,12 @@ if at least one of the genomes displayed has &gt;=20 chromosomes or scaffolds; t
 when one genome is draft sequence, as there can be rows or columns with no blocks.
 When the option is deselected, it hides rows or columns that do not contain any synteny blocks.
 
-<p><u>DotPlot Filtered Display</u>
+<p><u>Size of dots</u>
 <table><tr><td>
-When the dots are all the same size and are scaled to 1, they fit inside or on their respective block. However,
-when they are changed to rectangles or their sizes increase, they can overlap the border of their block. In this
-case, the <ttl>Block Hits Blue</ttl> make the block hits clear.
-<p>This is illustrated on the right, where the filters are set the <ttl>Length</ttl>, <ttl>Dot Size</ttl>=3, and
-<ttl>Blue Block Hits</ttl>. Some of the blue block hits are on the border of the block blue box.
+When the dots are all the same size and are scaled to 1, they fit inside of their respective block. However,
+when they are changed to rectangles or their sizes increase, they can overlap the border of their block.
+<p>This is illustrated on the right, where the filters are set the <ttl>Length</ttl>, <ttl>Dot Size</ttl>=3.
+The black and grey dots are non-block hits. Some of the blue block hits are on the border of the block blue box.
 <td><a href="img/dotplot-block.png">
 <img src="img/dotplot-block.png" alt="dotplot filter" style="border: 1px solid black; width: 200px"></a>
 </table>
@@ -396,7 +425,7 @@ a block displays its 2D view.
 
 The <ttb>Explain</ttb> button on this view explains the different columns.
 <p><a href="img/sum-2g.png">
-	<img src="img/sum-2g.png" alt="sum-two-genome" style="border: 1px solid black; width: 650px"></a>
+	<img src="img/sum-2g.png" alt="sum-two-genome" style="border: 1px solid black; width: 600px"></a>
 <!--------------------------------------------------------------------------------------->
 <!------------------------------------------------------------------------------------->
 <!------------------------------------------------------------------------------------->
@@ -476,11 +505,12 @@ except it is chromosome-based instead of genome-based.
 
 All features are described in the first <a href="#dotplot_display">dot plot section</a>,
 except that it is chromosome-based instead of genome-based.
-Selecting a chromosome pair (cell) from the image on the left will replace it with the dotplot for the cell
-on the right. Clicking on a synteny block (or selected region) brings up the 2D view shown furthest right below.
+Selecting a chromosome pair (cell) from the image on the left will replace it with the
+dotplot for the cell on the right. Clicking on a synteny block (or selected region)
+highlights it beige, clicking it again brings up the 2D view.
 <table>
 <tr><td><a href="img/dotplot-3chr.png">
-	<img src="img/dotplot-3chr.png" alt="dotplot 3chr" style="border: 1px solid black; width: 350px"></a>
+	<img src="img/dotplot-3chr.png" alt="dotplot 3chr" style="border: 1px solid black; width: 400px"></a>
 <td><a href="img/dotplot-chr-2d.png">
 	<img src="img/dotplot-chr-2d.png" alt="dotplot-chr-2d" style="border: 1px solid black; width: 360px"></a>
 </table>
@@ -584,8 +614,8 @@ a grey area. (The hits in a cluster are referred to as <i>subhits</i>).
 <li><ttl>Inv</ttl> indicates that it is part of an inverted block.
 <li><ttl>Hit #</ttl> is the number representing the hit for the chromosome pair.
 <li><ttl>(!=)</ttl> indicates the hit ends are on two different strands; <ttl>(=)</ttl> indicates the same strand.
-<li><ttl>gN</ttl> (<ttl>N={0,1,2}</ttl>) indicates that the hit overlaps a gene on one side, or two sides
-or none.
+<li><ttl>gN</ttl> (<ttl>N={0,1,2}</ttl>) indicates that the hit does not overlap a gene or
+overlaps a gene on one side or overlaps a gene on both sides.
 <li><ttl>cN.M</ttl> (<ttl>N&ge;2</ttl>) indicates that it is part of a collinear set of size N;
 M is the unique set number for the chromosome pair.
 The collinear sets can be queried using <a href="#queries">Queries</a>.
@@ -638,7 +668,7 @@ clicking the hit wire between the first two tracks will show the hit information
 
 <a id="control"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h4>Control Panel and Navigation</h4>
+<h4>Control Panel</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <a href="img/2d-control.png"><img src="img/2d-control.png" alt="2d controlpanel"></a>
@@ -685,26 +715,44 @@ not relevant if there are no clustered hits).
 <tr><td>Region<td>Show the sequence from the region selected.
 </table>
 </table>
-<p><ttl>Print, <big>?</big> Icons</ttl>  see <a href="#image">Help and Print</a>.
 
-<a id="wheel"></a> <!-- # ref in code -->
-<p><u><ttl>Color Icon</ttl></u>
-Opens a menu for customizing colors, as shown below.
+
+<br><ttl>Info:</ttl> (Chromosome Explorer only)
+This drop-down selector controls what is shown in the <ttl>Information</ttl> box.
+<table class="ty" style="font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
+<tr><td><tt>Help</tt><td>Provides information on viewing the gene or hit information.
+<tr><td><tt>Stats</tt><td>When the mouse is over a sequence track:
 <ul>
-<li>Click a tab (e.g. Hit) to view the associated colors.
-<li>Click a color box and a color chooser will popup
-that lets you change the color; the change will be saved for subsequent SyMAP sessions.
-<li><ttl>Ok</ttl>: Instantiate all changes and close the menu.
-<li><ttl>Cancel</ttl>: Cancel any changes and close the menu.
-<li><ttl>Default</ttl>: For the selected tab, changes all colors back to the default colors.
+<li>If the mouse is over a gene, the gene description will be shown.
+<li>If the mouse is in the track but not over a gene, it will
+state how many genes are shown.
 </ul>
-<table class="tx">
+When the mouse is over the hit area:
+<ul>
+<li>If the mouse is over a hit, the hit description will be shown.
+<li>If the mouse is in the hit area but not over a hit,  it will
+state how many hits are shown.
+<br>If any highlighting option is selected, it will
+also state how many hits are highlighted.
+<br>If blocks or collinear sets are highlighted,
+it will also state how many blocks/sets are shown, e.g.
+<table>
 <tr><td>
-<tr>
-<td><a href="img/2d-color.png"><img src="img/2d-color.png" alt="Track Colors" style="border: 1px solid black; width: 240px"></a>
-<td><a href="img/2d-color2.png"><img src="img/2d-color2.png" alt="Hit Colors" style="border: 1px solid black; width: 240px"></a>
-<td><a href="img/2d-color3.png"><img src="img/2d-color3.png" alt="Change Colors" style="border: 1px solid black; width: 180px"></a>
+<pre>
+High Sets. Show All.
+
+Hits: 4,526
+High: 2,121
+Sets: 642
+</pre>
+<td>The example on the left indicates there are 4,526 hits
+<br>of which 2,121 are highlighted,
+and belong to 642 collinear sets.
 </table>
+</table>
+<p><ttl>Color, Print, <big>?</big> Icons</ttl>  see <a href="#image">Color Wheel, Help and Print</a>.
+
+
 
 <p>
 <u>Additional navigation</u>:
@@ -822,6 +870,8 @@ conjunction with any of the <ttl>Show</ttl> options.
 to one chromosome of the pair.
 
 <p>A subset of the highlight filters are available by right clicking in the hit white space.
+<br>KNOWN BUG: If a "region" in the dotplot is selected, then highlight it set, it changes from <ttl>Show All</ttl>
+to <ttl>Show Block</ttl>.
 
 <!-------------------------------------------------------------------->
 <a id="ex2d"></a>
@@ -960,16 +1010,57 @@ be written to the file.
 
 <a id="image"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h2>Print and Help</h2>
+<h2>Color Wheel, Print and Help (?) Icons</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-Most displays shown have a <img src="img/print.png" alt="print" style="border: 1px solid black; width: 50px"> set of icons.
-<p>The left icon is for printing the image. If this does not provide the view you want,
+Most displays have one of more of the following icons (Color, Print, Help, respectively):
+<br><img src="img/icons.png" alt="icons" style="border: 1px solid black; width: 150px">.
+
+<p><u>Print</u> The print icon is for printing the image. If this does not provide the view you want,
 use the system "Screen Capture" (all the images in this
 document were created with screen capture, along with the images in the SyMAP publications).
 
-<p>The right icon (?) brings up this web page, typically to the correct section (obviously, there needs
+<p><u>Help</u> The right icon (?) brings up this web page, typically to the correct section (obviously, there needs
 to be an internet connection).
+
+<a id="wheel"></a> <!-- # ref in code -->
+<p><u>Color Wheel</u>
+This icon opens a menu for customizing colors; the colors changes are saved in a file
+called <tt>.symap_saved_props</tt> which resides in the user's home directory. Hence, the
+changes are preserved between sessions and for different SyMAP databases. In contrast, <ttl>Filters</ttl>
+changes only exist for the duration of the display.
+<ul>
+<li>Click a tab (e.g. Hit) to view the associated colors.
+<li>Click a color box and a color chooser (far right image) will popup
+that lets you change the color.
+<li><ttl>Ok</ttl>: Instantiate all changes and close the menu.
+<li><ttl>Cancel</ttl>: Cancel any changes and close the menu.
+<li><ttl>Default</ttl>: For the selected tab, changes all colors back to the default colors.
+</ul>
+<table class="tx">
+<tr><td>
+<tr>
+<td><a href="img/2d-color.png"><img src="img/2d-color.png" alt="Track Colors" style="border: 1px solid black; width: 270px"></a>
+<td><a href="img/2d-color2.png"><img src="img/2d-color2.png" alt="Hit Colors" style="border: 1px solid black; width: 260px"></a>
+<td><a href="img/2d-color3.png"><img src="img/2d-color3.png" alt="Change Colors" style="border: 1px solid black; width: 200px"></a>
+</table>
+
+<p><b>DotPlot tab</b>:
+<table>
+<tr><td>
+<table  class=ty>
+<tr><td><ttl>!Block g0</ttl><td>Non-block hit to 0 genes
+<tr><td><ttl>!Block g1</ttl><td>Non-block hit to 1 gene
+<tr><td><ttl>!Block g2</ttl><td>Non-block hit to 2 genes
+<tr><td><ttl>Block g0</ttl><td>Block hit to 0 genes
+<tr><td><ttl>Block g1</ttl><td>Block hit to 1 gene
+<tr><td><ttl>Block g2</ttl><td>Block hit to 2 genes
+<tr><td><ttl>Block Rect</ttl><td>Rectangle around block
+</table>
+<td>&nbsp;
+<td><a href="img/dotplot-color.png">
+<img src="img/dotplot-color.png" alt="dotplot color" style="border: 1px solid black; width: 320px"></a>
+</table>
 
 <!-------------------------- this link is in SyMap--------------------------------------->
 <a id="alignment_display_3d"></a>

@@ -7,7 +7,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Vector;
 
@@ -17,14 +16,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
-import database.DBconn;
+import database.DBconn2;
 import props.PersistentProps;
 import util.Utilities;
-
 import util.ErrorReport;
+
+import symap.closeup.AlignPool; // CAS541 to get sequence
 import symap.Globals;
 import symap.manager.Mproject;
-import symap.manager.Pools;
 import symapMultiAlign.AlignmentViewPanel;
 
 /**************************************************
@@ -37,9 +36,10 @@ public class SyMAPQueryFrame extends JFrame {
 	static private String propNameSingle="SyMapColumns2"; 
 	
 	// ProjectManager creates this object, add the projects, then calls build.
-	public SyMAPQueryFrame(String db, DBconn dr, Vector <Mproject> pVec) {
+	public SyMAPQueryFrame(String db, DBconn2 dbc2, Vector <Mproject> pVec) {
 		setTitle("SyMAP Query " + Globals.VERSION + " - " + db); // CAS514 add version; CAS540 add db
-		theReader = dr;
+		
+		this.tdbc2= new DBconn2("Query-" + DBconn2.getNumConn(), dbc2);
 		
 		theProjects = new Vector<Mproject> ();			// CAS532 change to pass project in (needed for column saving)
 		for (Mproject p: pVec) theProjects.add(p);
@@ -48,6 +48,7 @@ public class SyMAPQueryFrame extends JFrame {
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent e) {
+		    	tdbc2.close();
 		        saveColumnDefaults();
 		        dispose();
 		    }
@@ -321,19 +322,14 @@ public class SyMAPQueryFrame extends JFrame {
 		}
 		return null;
 	}
-	public DBconn getDatabase() { return theReader; }
+	public DBconn2 getDBC() { return tdbc2; }
 	
 	public Vector<Mproject> getProjects() { return theProjects; }
 	
 	public String getSequence(int start, int stop, int groupIdx) {
-		Pools p = null;
 		try {
-			//p = PoolManager.getInstance().getPools(theReader);
-			p = new Pools(theReader);
-			return p.getAlignPool().loadPseudoSeq(start + ":" + stop, groupIdx);
-		} catch (SQLException e) {
-			ErrorReport.print(e, "Get sequence");
-		}
+			return new AlignPool(tdbc2).loadPseudoSeq(start + ":" + stop, groupIdx);
+		} catch (Exception e) {ErrorReport.print(e, "Get sequence");}
 		return "";
 	}
 	
@@ -345,7 +341,7 @@ public class SyMAPQueryFrame extends JFrame {
 	public SyMAPQueryFrame getInstance() { return this; }
 	public QueryPanel getQueryPanel() {return queryPanel;}
 		
-	private DBconn theReader = null;
+	private DBconn2 tdbc2 = null;
 	private Vector<Mproject> theProjects = null;
 	
 	private int screenWidth, screenHeight;

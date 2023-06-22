@@ -4,24 +4,28 @@ import java.util.Vector;
 
 import java.awt.*;
 import javax.swing.*;
-import java.sql.SQLException;
 
-import symap.Globals;
-import symap.frame.ControlPanel;
-import symap.frame.HelpBar;
-import symap.manager.Pools;
-import symap.mapper.HitData;
-import symap.mapper.Mapper;
-import symap.mapper.MapperData;
-import symap.filter.FilterHandler;
-import symap.track.*;
+import database.DBconn2;
 import colordialog.ColorListener;
 import history.HistoryControl;
 import history.HistoryListener;
+import props.ProjectPool;
+import symap.Globals;
+import symap.frame.ControlPanel;
+import symap.frame.HelpBar;
+
+import symap.mapper.HitData;
+import symap.mapper.HfilterData;
+import symap.mapper.Mapper;
+import symap.mapper.MapperData;
+
+import symap.filter.FilterHandler;
+import symap.track.*;
 import symap.sequence.Sequence;
 import symap.closeup.CloseUp;
-import symap.mapper.HitFilter;
+
 import symapQuery.TableDataPanel;
+
 import util.ErrorReport;
 import util.Utilities;
 
@@ -39,12 +43,13 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	private TrackHolder[] trackHolders;
 	private HistoryControl historyControl;
 	private DrawingPanelListener drawingPanelListener;
+	private ProjectPool projPool = null;
 	
 	private CloseUp closeup;
 
 	private boolean doUpdateHistory = true, resetResetIndex = true;
 
-	private Pools pools;
+	private DBconn2 dbc2;
 
 	private boolean firstView = true;
 
@@ -52,14 +57,16 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	private JScrollPane scrollPane = null;
 
 	private int numMaps = 1;
+	private int statOpt=0;
 	
 	private String mouseFunction = null; 
 	
-	public DrawingPanel(TableDataPanel listPanel /*notused*/, 
-			Pools pools, HistoryControl hc, HelpBar bar) {
+	public DrawingPanel(TableDataPanel listPanel, DBconn2 dbc2, HistoryControl hc, HelpBar bar) {
 		super();
 		setBackground(backgroundColor);
-		this.pools = pools;
+		
+		this.dbc2 = dbc2; // made copy in SyMAP2d, close there too
+		projPool = new ProjectPool(dbc2);
 		historyControl = hc;
 
 		buttonPanel = new JPanel(null);
@@ -85,7 +92,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		mappers = new Mapper[MAX_TRACKS - 1];
 		for (int i = 0; i < mappers.length; i++) {
 			mappers[i] = new Mapper(this,trackHolders[i],trackHolders[i+1],
-					new FilterHandler(this,bar),pools.getMapperPool(),
+					new FilterHandler(this,bar), dbc2, projPool,
 					bar, listPanel); 
 			add(mappers[i]);
 			mappers[i].setLocation(0,0);
@@ -115,9 +122,8 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		if (drawingPanelListener != null) drawingPanelListener.setFrameEnabled(enabled);
 	}
 
-	public Pools getPools() {
-		return pools;
-	}
+	public ProjectPool getProjPool() 	{return projPool;} // CAS541 was returning pool of pools
+	public DBconn2 getDBC() 			{return dbc2; }		// CAS541 added
 
 	public JComponent getView() {
 		return scrollPane;
@@ -168,10 +174,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 
 	public void resetData() {
 		setFrameEnabled(false);
-		pools.clearPools();
-		try {
-			pools.getProjectPropPool().reset();
-		} catch (SQLException e) { }
+		
 		for (int i = 0; i <  numMaps; ++i) mappers[i].clearData();
 		for (int i = 0; i <= numMaps; ++i) {
 			if (trackHolders[i].getTrack() != null)
@@ -181,7 +184,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	
 	// clear caches/data but don't re-init tracks
 	public void clearData() {
-		pools.clearPools();
+		//pools.clearPools();
 		//CAS534 clearPools does this; try {pools.getProjectProperties().reset();
 		//} catch (SQLException e) { }
 		
@@ -224,7 +227,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		return false;
 	}
 	// symapQuery Show Synteny from table
-	public void setHitFilter(int map, HitFilter hf) {
+	public void setHitFilter(int map, HfilterData hf) {
 		mappers[map-1].getHitFilter().set(hf);
 	}
 
@@ -355,12 +358,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		}).start();
 	}
 
-	/**
-	 * changeZoomFactor: The factor should be non negative and a zero factor does not change the zooms.
-	 *
-	 * @param factor a double value factor by which to change the zooms of all of the tracks
-	 * @return a boolean value of true if all changes are successful
-	 */
+	// The factor should be non negative and a zero factor does not change the zooms.
 	public boolean changeZoomFactor(double factor) {
 		setUpdateHistory();
 		boolean success = true;
@@ -696,6 +694,11 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	public void setResetIndex() {
 		resetResetIndex = true;
 	}
+	
+	// CAS541 Set in ControlPanel, read by Plot
+	public void setStatOpts(int n) {statOpt = n;}
+	public int getStatOpts() {return statOpt;}
+	
 	private void updateHistory() {
 		historyControl.add(getData(),resetResetIndex);
 		resetResetIndex = false;

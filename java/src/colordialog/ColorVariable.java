@@ -41,7 +41,7 @@ public class ColorVariable implements ActionListener {
 		button = new JButton(icon);
 		button.setMargin(new Insets(0,0,0,0));
 		button.addActionListener(this);
-		button.setToolTipText("Click here to edit the color");
+		button.setToolTipText("Click here to edit the color. Hover over label for definition.");
 		label.setToolTipText(description);
 	}
 

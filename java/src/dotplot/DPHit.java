@@ -1,18 +1,19 @@
 package dotplot;
 
 /*****************************************************
- * Represents a hit for DotPlot; populated in DotPlotDBUser
+ * Represents a hit for DotPlot; populated in Data.DBload
  */
 public class DPHit implements Cloneable {
 	private int x, y;
 	private double pctid;
 	private boolean block; // CAS533 was an array; removed altblk stuff
-	private int length; 
+	private int length, geneOlap; 
 
-	public DPHit(int posX, int posY,  double pctid, boolean block, int length) {
+	public DPHit(int posX, int posY,  double pctid, int geneOlap, boolean block, int length) {
 		x = posX;
 		y = posY;
 		this.pctid = pctid;
+		this.geneOlap = geneOlap;
 		this.block = block;
 		this.length = length; 
 	}
@@ -27,7 +28,9 @@ public class DPHit implements Cloneable {
 		double x = (pctid-min)+1;
 		return (int) (x/20.0); 
 	} 
-	
+	public boolean bothGene() {return geneOlap==2;}
+	public boolean oneGene() {return geneOlap==1;}
+	public boolean noGene() {return geneOlap==0;}
 	public int getLength()  {return length; } 
 	public boolean isBlock(){return block; }
 }

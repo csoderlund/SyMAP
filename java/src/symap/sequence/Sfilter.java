@@ -31,7 +31,7 @@ import util.Utilities;
  * The filter dialog for the Sequence view.
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class SequenceFilter extends Filter {	
+public class Sfilter extends Filter {	
 	private static final String DEFAULT_ENDS_UNIT = GenomicsNumber.KB;
 
 	private JLabel startLabel, endLabel;
@@ -69,7 +69,7 @@ public class SequenceFilter extends Filter {
 	private boolean bHitLen; 				
 	private boolean bNoChange = false;
 
-	public SequenceFilter(Frame owner, DrawingPanel dp, AbstractButton helpButton, Sequence sequence) {
+	public Sfilter(Frame owner, DrawingPanel dp, AbstractButton helpButton, Sequence sequence) {
 		super(owner,dp,"Sequence Filter", Jhtml.seqfilter); // CAS532 added help
 		this.sequence = sequence;
 

@@ -23,7 +23,6 @@ import javax.swing.event.PopupMenuListener;
 import javax.swing.JPopupMenu; 				
 import javax.swing.JMenuItem; 				
 
-import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import symap.frame.HelpBar;
 import util.Jhtml;

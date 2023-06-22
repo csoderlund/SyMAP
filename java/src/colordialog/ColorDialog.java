@@ -38,6 +38,8 @@ import util.ErrorReport;
  * Tabs are ordered by giving the variable name tab#, where # starts at 1, with the value of the tab name (i.e. tab1=Title on Tab).
  * @see JDialog, ActionListener, ColorDialogHandler
  * 
+ * Tabs can be added by:
+ * 		Add tab in colors.properties 
  * CAS517 made many changes for readability 
  * CAS520 properties reads in random order. So the alpha in colors.properties was replaced with order number
  * CAS532 fixed bug of defaults not always working by reading pFiles instead of using getColor
@@ -54,7 +56,8 @@ public class ColorDialog extends JDialog implements ActionListener {
 	private JButton okButton, cancelButton, defaultButton;
 	
 	private final String propsFile = "/properties/colors.properties"; // CAS521 moved from SyMAP.java
-	private String [] pFiles = {"annotation", "closeup","mapper", "sequence"}; // CAS532 add to save defaults
+	private String [] pFiles = {"annotation", "closeup","mapper", "sequence", "dotplot"}; // CAS532 add to save defaults; CAS541 add dotplot
+	
 	static private HashMap <String, Color> colorDefs = new HashMap <String, Color> (); // CAS532
 		
 	/**
@@ -105,6 +108,11 @@ public class ColorDialog extends JDialog implements ActionListener {
 		super.show();
 	}
 */
+	public void setDotplot() { // CAS541
+		tabbedPane.setSelectedIndex(3);
+	}
+
+	// read colors.properties
 	private void initPropColors() { // CAS532 moved from constructor and make separate method
 	try {
 		Dimension iconDim = new Dimension(35,20);
@@ -122,7 +130,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 		Enumeration <?> propertyNames = defaultProps.propertyNames();
 		while (propertyNames.hasMoreElements()) {
 			name = (String)propertyNames.nextElement();
-			if (!name.startsWith("symap"))  continue; // e.g. tab1=General
+			if (name.startsWith("tab"))  continue; // e.g. tab1=General
 			
 			pvalue = defaultProps.getString(name);
 
@@ -150,8 +158,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 				}
 				
 				String path = name.substring(0,ind);
-				String var =  name.substring(ind+1);
-				
+				String var =  name.substring(ind+1);				
 				cvarsVec.add(new ColorVariable(path,var,dn,desc,iconDim,nOrder));
 			}
 		}		
@@ -306,7 +313,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 					((ColorTab)comps[i]).setDefault();
 		}
 	}
-
+	
 	/* write change to user.home/.symap_prop; called after any changed colors; called on Ok */
 	private void setCookie() {
 		if (changedProps == null) return;

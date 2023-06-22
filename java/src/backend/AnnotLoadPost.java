@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.util.Vector;
 import java.util.HashMap;
 
+import database.DBconn2;
 import util.Cancelled;
 import util.ErrorReport;
 import util.ProgressDialog;
@@ -27,7 +28,7 @@ The 2D gene placement algorithm uses the pseudo_annot.genenum but not the suffix
 public class AnnotLoadPost {
 	private final int MAX_GAP=0; // CAS519 changed from 3
 	private ProgressDialog plog;
-	private UpdatePool pool;
+	private DBconn2 dbc2;
 	private SyProj syProj;
 	
 	private HashMap <Integer, GeneData> geneMap = new HashMap <Integer, GeneData> (); 
@@ -36,9 +37,9 @@ public class AnnotLoadPost {
 	private boolean isSuccess=true;
 	private int totexonUpdate=0, totgeneUpdate=0, totOverlap=0, totContained=0, totGeneNum=0;
 	
-	public AnnotLoadPost(SyProj project, UpdatePool pool, ProgressDialog log) {
+	public AnnotLoadPost(SyProj project, DBconn2 dbc2, ProgressDialog log) {
 		this.syProj = project;
-		this.pool = pool;
+		this.dbc2 = dbc2;
 		this.plog = log;
 	}
 	public boolean run(int assigned) {
@@ -49,7 +50,7 @@ public class AnnotLoadPost {
 			}
 			plog.msg("  Assign #exons and tags to genes");
 			
-			pool.executeUpdate("update pseudo_annot, xgroups set pseudo_annot.genenum=0 "
+			dbc2.executeUpdate("update pseudo_annot, xgroups set pseudo_annot.genenum=0 "
 					+ "where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + syProj.idx);
 			
 			
@@ -76,7 +77,7 @@ public class AnnotLoadPost {
 	 */
 	private void computeGeneNum(Group g) {
 		try {	
-			ResultSet rs = pool.executeQuery(
+			ResultSet rs = dbc2.executeQuery(
 				"select idx,start,end from pseudo_annot where grp_idx=" + g.idx + 
 				" and type='gene' order by start asc");
 			
@@ -160,7 +161,7 @@ public class AnnotLoadPost {
 	private void computeTags(Group grp) {
 		try {	
 		// Create exon list per gene; provides exon cnt for gene, and exonIdx for tag update
-			ResultSet rs = pool.executeQuery("select idx, gene_idx, start, end from pseudo_annot "
+			ResultSet rs = dbc2.executeQuery("select idx, gene_idx, start, end from pseudo_annot "
 				+ "where grp_idx=" + grp.idx + " and type='exon'"); 
 			
 			int err=0;
@@ -189,7 +190,7 @@ public class AnnotLoadPost {
 			if (Cancelled.isCancelled()) {isSuccess=false;return;}
 				
 		// WRITE write to db; names parsed in Annotation.java getLongDescription
-			PreparedStatement ps = pool.prepareStatement(
+			PreparedStatement ps = dbc2.prepareStatement(
 					"update pseudo_annot set genenum=?, tag=? where idx=?");
 			
 			int exonUpdate=0, geneUpdate=0, cntBatch=0;

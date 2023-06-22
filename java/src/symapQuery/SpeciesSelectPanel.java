@@ -1,20 +1,11 @@
 package symapQuery;
 
-/******************************************************
- * For QueryPanel: 
- *  Load DB data and creates panel for all species
- * 		Species Chr: From To 
- * 
- * CAS504 extend it to provide the project and group MYSQL indices
- */
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Vector;
@@ -27,16 +18,24 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import database.DBconn2;
 import symap.manager.Mproject;
 import util.ErrorReport;
 import util.Utilities;
 
+/******************************************************
+ * For QueryPanel: 
+ *  Load DB data and creates panel for all species
+ * 		Species Chr: From To 
+ * 
+ * CAS504 extend it to provide the project and group MYSQL indices
+ */
 public class SpeciesSelectPanel extends JPanel {
 	private static final long serialVersionUID = -6558974015998509926L;
 	private static final int REFERENCE_SELECT_WIDTH = 60;
 	private static final int SPECIES_NAME_WIDTH = 150;
 
-	public SpeciesSelectPanel(SyMAPQueryFrame parentFrame) {
+	public SpeciesSelectPanel(SyMAPQueryFrame parentFrame, QueryPanel qPanel) {
 		theParentFrame = parentFrame;
 		spPanels = new Vector<SpeciesSelect> ();
 		setBackground(Color.WHITE);
@@ -46,19 +45,10 @@ public class SpeciesSelectPanel extends JPanel {
 		refreshAllPanels();
 	}
 	public void clear() {
+		bIsGene=bIsSingle=false;
 		for (SpeciesSelect p : spPanels) p.clear();
 	}
-	public void setEnabled(boolean b) {
-		for (SpeciesSelect p : spPanels) p.setEnabled(b);
-	}
-	public void setSpEnabled(String spName) { // CAS518 select chr for single
-		for (SpeciesSelect p : spPanels) 
-			if (spName.contentEquals(p.getSpName())) {
-				p.setEnabled(true);
-				return;
-			}
-		System.err.println("Could not find " + spName);
-	}
+	
 	
 	public int getNumSpecies() 				{return spPanels.size();}
 	public int getSpIdx(int p)				{return spPanels.get(p).getSpIdx();}
@@ -123,6 +113,34 @@ public class SpeciesSelectPanel extends JPanel {
 	public String getStartAbbr(int panel) 	{return spPanels.get(panel).getStartAbbr();}
 	public String getStopAbbr(int panel) 	{return spPanels.get(panel).getStopAbbr();}
 	
+	// For Single (only one project/chr/loc) and GeneNum (only one chr)
+	public void setIsGene(boolean isGene) {// CAS541 For GeneNum
+		if (isGene) clear(); // if a chr is set, will allow a 2nd to be selected, which is wrong
+		bIsGene=isGene;
+		setAllEnabled(true); // loc disabled in sp.setEnabled
+	}
+	public void setIsSingle( String spName, boolean isSingle) {// spName goes with Single Project, may be "All" or Null
+		clear();
+		bIsSingle=isSingle;
+		setAllEnabled(!isSingle);
+		if (!isSingle) return;
+		
+		if (!spName.equals("All")) {
+			setAllEnabled(false);
+			setSpEnabled(spName);
+		}
+	}
+	private void setAllEnabled(boolean b) {
+		for (SpeciesSelect p : spPanels) p.setEnabled(b);
+	}
+	private void setSpEnabled(String spName) { // CAS518 select chr for single
+		for (SpeciesSelect p : spPanels) 
+			if (spName.contentEquals(p.getSpName())) {
+				p.setEnabled(true);
+				return;
+			}
+		System.err.println("Could not find " + spName);
+	}
 	private void refreshAllPanels() {
 		if(spPanels == null || spPanels.size() == 0) return;
 		removeAll();
@@ -218,8 +236,7 @@ public class SpeciesSelectPanel extends JPanel {
 			int [] spidx = new int [theProjects.size()];
 			int x=0;
 			
-			Connection conn = theParentFrame.getDatabase().getConnection();
-			Statement stmt = conn.createStatement();
+			DBconn2 dbc2 = theParentFrame.getDBC();
 			
 			for(Mproject proj : theProjects) {
 				String chrNumStr="", chrIdxStr="";
@@ -228,7 +245,7 @@ public class SpeciesSelectPanel extends JPanel {
 							"JOIN projects ON xgroups.proj_idx = projects.idx " +
 							"WHERE projects.name = '" + proj.getDBName() + "' " +
 							"ORDER BY xgroups.sort_order ASC";
-				ResultSet rs = stmt.executeQuery(strQ);
+				ResultSet rs = dbc2.executeQuery(strQ);
 				while (rs.next()) {
 					if (!chrNumStr.equals("")) {
 						chrNumStr += ",";
@@ -257,7 +274,7 @@ public class SpeciesSelectPanel extends JPanel {
 			ResultSet rs=null;
 			for (int i=0; i<spidx.length-1; i++) {
 				for (int j=i+1; j<spidx.length; j++) {	
-					rs = stmt.executeQuery("select idx from pairs " +
+					rs = dbc2.executeQuery("select idx from pairs " +
 								"where proj1_idx=" + spidx[i] + " and proj2_idx=" + spidx[j]);
 					
 					if (rs.next()) {
@@ -265,7 +282,7 @@ public class SpeciesSelectPanel extends JPanel {
 						else idList += "," + rs.getInt(1);
 					}
 					else {
-						rs = stmt.executeQuery("select idx from pairs " +
+						rs = dbc2.executeQuery("select idx from pairs " +
 								"where proj1_idx=" + spidx[j] + " and proj2_idx=" + spidx[i]);
 						if (rs.next()) {
 							if (idList.equals("")) idList = rs.getInt(1)+"";
@@ -275,9 +292,7 @@ public class SpeciesSelectPanel extends JPanel {
 				}
 			}
 			if (rs!=null) rs.close();
-			stmt.close();
-			conn.close();
-		
+			
 			if (idList.equals("")) 		{
 				pairWhere="";
 				Utilities.showErrorMessage("No synteny pairs. Attempts to Run Query will fail.");
@@ -318,10 +333,17 @@ public class SpeciesSelectPanel extends JPanel {
 			cmbChroms.setBackground(Color.WHITE);
 			cmbChroms.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
-					boolean enableRange = !(cmbChroms.getSelectedItem().equals("All"));
-					txtStart.setEnabled(enableRange); txtStop.setEnabled(enableRange);
-					cmbScale.setEnabled(enableRange);
-					lblStart.setEnabled(enableRange); lblStop.setEnabled(enableRange);
+					boolean bSelAll = cmbChroms.getSelectedItem().equals("All");
+					boolean bRange = !bSelAll && !bIsGene;
+					txtStart.setEnabled(bRange); txtStop.setEnabled(bRange);
+					cmbScale.setEnabled(bRange);
+					lblStart.setEnabled(bRange); lblStop.setEnabled(bRange);
+					
+					if (bIsGene && !bSelAll) { // CAS541 
+						setAllEnabled(false);
+						setSpEnabled(spName);
+					}
+					else setAllEnabled(true);
 				}
 			});
 			
@@ -373,12 +395,13 @@ public class SpeciesSelectPanel extends JPanel {
 			txtStart.setText("");
 			txtStop.setText("");
 			cmbChroms.setSelectedIndex(0);
+			setEnabled(true);
 		}
+		// CAS517 add enable for locations; CAS541 add isGene
 		public void setEnabled(boolean b) {
 			cmbChroms.setEnabled(b);
-			// CAS517 add enable for locations
-			boolean x = !(cmbChroms.getSelectedItem().equals("All"));
-			if (b==false) x = false;
+			
+			boolean x =  (cmbChroms.getSelectedItem().equals("All") || bIsGene || !b) ? false : true;
 			
 			txtStart.setEnabled(x); txtStop.setEnabled(x);
 			cmbScale.setEnabled(x);
@@ -486,6 +509,7 @@ public class SpeciesSelectPanel extends JPanel {
 	} // End species row panel
 	
 	private SyMAPQueryFrame theParentFrame = null;
+	
 	private Vector<SpeciesSelect> spPanels = null;
 	
 	// CAS504 - changed 5 arrays to HashMaps with Idxs
@@ -493,4 +517,5 @@ public class SpeciesSelectPanel extends JPanel {
 	private HashMap <Integer, SpeciesSelect> spIdx2panel = new HashMap <Integer, SpeciesSelect> ();
 	private HashMap <String, Integer> spName2spIdx = new HashMap <String, Integer> ();
 	private String pairWhere="";
+	private boolean bIsGene=false, bIsSingle=false;
 } 

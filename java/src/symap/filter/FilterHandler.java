@@ -11,9 +11,9 @@ import javax.swing.JButton;
 import symap.drawingpanel.DrawingPanel;
 import symap.frame.HelpBar;
 import symap.mapper.Mapper;
-import symap.mapper.MapperFilter;
+import symap.mapper.Hfilter;
 import symap.sequence.Sequence;
-import symap.sequence.SequenceFilter;
+import symap.sequence.Sfilter;
 
 public class FilterHandler implements ActionListener { // CAS521 remove Filtered interface
 	protected JButton helpButton;
@@ -77,11 +77,11 @@ public class FilterHandler implements ActionListener { // CAS521 remove Filtered
 	}
 
 	protected Filter createSequenceFilter(Sequence sequence) {
-		return new SequenceFilter(drawingPanel.getFrame(),drawingPanel,helpButton,sequence);
+		return new Sfilter(drawingPanel.getFrame(),drawingPanel,helpButton,sequence);
 	}
 
 	protected Filter createMapperFilter(Mapper mapper) {
-		return new MapperFilter(drawingPanel.getFrame(),drawingPanel,helpButton,mapper);
+		return new Hfilter(drawingPanel.getFrame(),drawingPanel,helpButton,mapper);
 	}
 	
 	public void showPopup(MouseEvent e) {

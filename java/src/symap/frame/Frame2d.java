@@ -28,11 +28,14 @@ public class Frame2d extends FSized2d implements DrawingPanelListener
 
 	private ControlPanel cp;
 	private DrawingPanel dp;
+	private SyMAP2d symap2d;
 	
-	public Frame2d(ControlPanel cp, DrawingPanel dp, HelpBar hb, 
+	public Frame2d(SyMAP2d symap2d, ControlPanel cp, DrawingPanel dp, HelpBar hb, 
 			boolean showHelpBar, PersistentProps persistentProps) {
 		super("SyMAP "+ Globals.VERSION);
+		
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		this.symap2d = symap2d;
 		this.cp = cp;
 		this.dp = dp;
 		
@@ -58,7 +61,11 @@ public class Frame2d extends FSized2d implements DrawingPanelListener
 
 		addKeyAndContainerListenerRecursively(this);
 	}
-
+	// CAS541 add this so can close connection
+	public void dispose() { // override
+		symap2d.clear();
+		super.dispose();
+	}
 	public void showX() {// CAS512 had to rename show() to something different
 		try {
 			if (isShowing()) dp.closeFilters();

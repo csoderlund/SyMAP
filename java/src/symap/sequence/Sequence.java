@@ -13,13 +13,13 @@ import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Vector;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 
+import database.DBconn2;
 import number.GenomicsNumber;
 import props.PropertiesReader;
 import symap.Globals;
@@ -28,6 +28,7 @@ import symap.track.Track;
 import symap.track.TrackData;
 import symap.track.TrackHolder;
 import symap.drawingpanel.DrawingPanel;
+import symap.frame.ControlPanel;
 import symap.mapper.HitData;
 import symap.mapper.SeqHits;
 import util.TextBox;
@@ -40,6 +41,10 @@ import util.ErrorReport;
  */
 public class Sequence extends Track {
 	// moved colors and constants to end
+	private static final String HOVER_MESSAGE =  
+			"\nHover on gene or right-click on gene for popup of full description.\n";
+	private String infoMsg="";
+	
 	protected int group;
 	protected boolean showRuler, showGene, showAnnot, showGeneLine;
 	protected boolean showScoreLine, showScoreValue, showHitNum; // CAS531 add showHitNum
@@ -62,12 +67,12 @@ public class Sequence extends Track {
 	private final int OVERLAP_OFFSET=12;			// CAS517/518 for overlap and yellow text
 	
 	public Sequence(DrawingPanel dp, TrackHolder holder) {
-		this(dp, holder, dp.getPools().getPseudoPool());
+		this(dp, holder, dp.getDBC());
 	}
 
-	private Sequence(DrawingPanel dp, TrackHolder holder, PseudoPool psePool) {
+	private Sequence(DrawingPanel dp, TrackHolder holder, DBconn2 dbc2) {
 		super(dp, holder, MIN_DEFAULT_BP_PER_PIXEL, MAX_DEFAULT_BP_PER_PIXEL, defaultSequenceOffset);
-		this.psePool = psePool;
+		this.psePool = new PseudoPool(dbc2);
 		
 		ruleList = new Vector<Rule>(15,2);
 		allAnnoVec = new Vector<Annotation>(50,1000);
@@ -145,7 +150,7 @@ public class Sequence extends Track {
 	public int getGroup() {return group;}
 
 	public String getName() {
-		String prefix =  drawingPanel.getPools().getProjectPropPool().getProperty(getProject(),"grp_prefix");
+		String prefix =  drawingPanel.getProjPool().getProperty(getProject(),"grp_prefix");
 		if (prefix==null) prefix = "";
 		String grp = (chrName==null) ? "" : chrName;
 		return prefix + grp;
@@ -312,7 +317,7 @@ public class Sequence extends Track {
 		try {
 			chrName = psePool.setSequence(this, size, allAnnoVec);	
 			if (allAnnoVec.size() == 0) showAnnot = false; 
-		} catch (SQLException s1) {
+		} catch (Exception s1) {
 			ErrorReport.print(s1, "Initializing Sequence failed.");
 			psePool.close();
 			return false;
@@ -328,7 +333,7 @@ public class Sequence extends Track {
 	 * XXX Build layout: 
 	 * Sets up the drawing objects for this sequence. Called by DrawingPanel and Track
 	 * Start and end are Track GenomicsNumber variables, stating start/end 
-	 * The Hit Length, Hit %Id Value and Bar are drawn in PseudoPseudoHits.PseudoHits.paintHitLen and its paintComponent
+	 * The Hit Length, Hit %Id Value and Bar are drawn in mapper.SeqHits.PseudoHits.paintHitLen and its paintComponent
 	 */
 	public boolean build() { 
 		if (hasBuilt()) return true;
@@ -414,7 +419,8 @@ public class Sequence extends Track {
 		
 		getHolder().removeAll(); 
 		Rectangle2D centRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
-		centGeneRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
+		double cx = (rect.x - ANNOT_WIDTH)/2;
+		centGeneRect = new Rectangle2D.Double(cx ,rect.y, ANNOT_WIDTH,rect.height); // FIXME CAS541
 		
 		buildOlap(); // builds first time only
 			
@@ -474,7 +480,7 @@ public class Sequence extends Track {
 				}
 			}
 		} // end for loop of (all annotations)
-		
+	
 		/*
 		 * Set header and footer
 		 */
@@ -669,10 +675,14 @@ public class Sequence extends Track {
 				for (Rule rule : ruleList)
 					rule.paintComponent(g2);
 			}
+			int cntShow=0;
 			for (Annotation annot : allAnnoVec)
-				if (annot.isVisible())
+				if (annot.isVisible()) {
 					annot.paintComponent(g2); 
-
+					if (annot.isGene()) cntShow++;
+				}
+			infoMsg= String.format("Genes: %,d", cntShow);
+			
 			g2.setFont(footerFont);
 			g2.setPaint(footerColor);
 
@@ -876,6 +886,9 @@ public class Sequence extends Track {
 	 * Called from symap.frame.HelpBar mouseMoved event
 	 */
 	public String getHelpText(MouseEvent event) {
+		int n = drawingPanel.getStatOpts();
+		if (n==ControlPanel.pHELP) return HOVER_MESSAGE;
+		
 		Point p = event.getPoint();
 		if (rect.contains(p)) { // within blue rectangle of track
 			String x = null;
@@ -889,7 +902,7 @@ public class Sequence extends Track {
 						x = annot.getLongDescription().trim(); 
 						gIdx = annot.getAnnoIdx();
 					}
-					else { // CAS517  inactive - messes up with overlapping genes 
+					else { // CAS517  messes up with overlapping genes 
 						if (annot.isExon() && annot.getGeneIdx()==gIdx) {
 							x += "\n" + annot.getLongDescription().trim(); 	// CAS512 add exon if available
 							return x;
@@ -899,16 +912,8 @@ public class Sequence extends Track {
 			}
 			if (x!=null) return x;
 		}
-		else {					// not within blue rectangle of track
-			if (POPUP_ANNO) {	// CAS503 add - in yellow box; see end of Annotation.java and TextBox.java 
-				for (Annotation annot : allAnnoVec) { 
-					if (annot.boxContains(p)) 
-						return "Right click for popup of description";
-				}
-			}
-		}
-		if (centGeneRect.contains(p)) return "   "; // CAS518 so it will not show any message in gene area
-		return "Sequence Track (" + getTitle() + "):  " + HOVER_MESSAGE; 
+		
+		return getTitle() + " \n\n" + infoMsg; 
 	}
 	public String getFullName() {
 		return "Track #" + getHolder().getTrackNum() + " " + getProjectDisplayName() + " " + getName();
@@ -1025,8 +1030,8 @@ public class Sequence extends Track {
 	
 	private static final Color border = Color.black; 
 	private static Color footerColor = Color.black;
-	private static Font footerFont = new Font("Ariel",0,10);
-	private static Font unitFont = new Font("Ariel",0,10);;
+	private static Font footerFont = new Font("Arial",0,10);
+	private static Font unitFont = new Font("Arial",0,10);
 	private static final Point2D defaultSequenceOffset = new Point2D.Double(20,40); 
 	private static final Point2D titleOffset = new Point2D.Double(1,3); 
 	private static int mouseWheelScrollFactor = 20;	
@@ -1038,8 +1043,7 @@ public class Sequence extends Track {
 	private static final double MAX_DEFAULT_BP_PER_PIXEL =1000000;
 	private static final double PADDING = 100; 
 	private static final double ANNOT_WIDTH = 15.0;
-	private static final String HOVER_MESSAGE =  
-					"\nHover on gene or right-click on gene for popup of full description.\n";
+	
 	
 	public static Color unitColor;
 	public static Color bgColor1; 

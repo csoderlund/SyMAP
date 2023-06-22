@@ -55,7 +55,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		setResizable(true);
 		
 		if (hitDataObj!=null) {
-			alignPool = dp.getPools().getAlignPool();
+			alignPool = new AlignPool(dp.getDBC());
 			this.hitDataObj = hitDataObj;
 			isGene2 = hitDataObj.is2Gene();
 			this.proj1 = proj1;

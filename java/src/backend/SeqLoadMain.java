@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.sql.ResultSet;
 
+import database.DBconn2;
 import symap.manager.Mproject;
 import util.Cancelled;
 import util.ErrorCount;
@@ -22,6 +23,7 @@ import blockview.BlockViewFrame;
  * Also fix bad chars if any
  * CAS534 changed from props to Project; removed static on everything
  * CAS535 ignore sequences without prefixes
+ * CAS541 UpdatePool->DBconn2
  */
 
 public class SeqLoadMain {
@@ -30,9 +32,11 @@ public class SeqLoadMain {
 	private static final int MAX_GRPS =   BlockViewFrame.MAX_GRPS; 	// CAS42 12/6/17 - for message
 	private static final int MAX_COLORS = BlockViewFrame.maxColors; // CAS42 12/6/17 - for message
 	private Mproject mProj;
+	private DBconn2 tdbc2=null;
 	
-	public boolean run(UpdatePool pool, ProgressDialog plog, Mproject proj) throws Exception {
+	public boolean run(DBconn2 dbc2, ProgressDialog plog, Mproject proj) throws Exception {
 		try {
+			tdbc2 = new DBconn2("SeqLoad-"+ DBconn2.getNumConn(), dbc2);
 			mProj = proj;
 			String projName = mProj.getDBName();
 			projIdx = mProj.getIdx();
@@ -53,7 +57,7 @@ public class SeqLoadMain {
 				plog.msg("   Sequence_files not specified - use " + seqDir);
 				
 				if (!Utilities.pathExists(seqDir)) {
-					return rtError(pool, plog, projIdx, "Sequence files not found in " + seqDir);
+					return rtError(plog, projIdx, "Sequence files not found in " + seqDir);
 				}			
 				File sdf = new File(seqDir);
 				if (sdf.exists() && sdf.isDirectory()) {
@@ -64,7 +68,7 @@ public class SeqLoadMain {
 						seqFiles.add(f2);
 				}
 				else {
-					return rtError(pool, plog, projIdx, "Cannot find sequence directory " + seqDir);
+					return rtError(plog, projIdx, "Cannot find sequence directory " + seqDir);
 				}
 			}
 			else {
@@ -95,7 +99,7 @@ public class SeqLoadMain {
 				}
 			}
 			if (seqFiles.size()==0)  // CAS500
-				return rtError(pool, plog, projIdx, "No sequence files!!");
+				return rtError(plog, projIdx, "No sequence files!!");
 		
 			String prefix = mProj.getGrpPrefix();
 			if (prefix.contentEquals("")) plog.msg("   No sequence prefix supplied (See Parameters - Group prefix)");
@@ -112,6 +116,7 @@ public class SeqLoadMain {
 			
 			if (Cancelled.isCancelled()) {
 				plog.msg("User cancelled");
+				tdbc2.close();
 				return false;
 			}	
 			
@@ -131,7 +136,7 @@ public class SeqLoadMain {
 				while (fh.ready()) {
 					String line = fh.readLine();
 					if (Cancelled.isCancelled()) {
-						plog.msg("User cancelled"); fh.close();
+						plog.msg("User cancelled"); fh.close(); tdbc2.close();
 						return false;
 					}	
 				
@@ -146,7 +151,7 @@ public class SeqLoadMain {
 								
 								// load sequence
 								System.out.print(grpName + ": " + curSeq.length() + "               \r");
-								uploadSequence(grpName,grpFullName,curSeq.toString(),f.getName(),pool,totalnSeqs+1);	
+								uploadSequence(grpName,grpFullName,curSeq.toString(),f.getName(),totalnSeqs+1);	
 								
 								nSeqs++; 
 								basesWritten += curSeq.length();
@@ -168,7 +173,7 @@ public class SeqLoadMain {
 						grpName     = parseGrpName(line,prefix);
 						grpFullName = parseGrpFullName(line);
 						if (grpName==null || grpFullName==null || grpName.equals("") || grpFullName.equals("")){	
-							return rtError(pool, plog, projIdx, "Unable to parse group name from:" + line);
+							return rtError(plog, projIdx, "Unable to parse group name from:" + line);
 						}
 					} 	
 					else if (grpName!=null) {
@@ -185,7 +190,7 @@ public class SeqLoadMain {
 				
 				if (grpName != null &&  curSeq.length() >= minSize) {// load last sequence
 					grpList.add(grpName);
-					uploadSequence(grpName, grpFullName, curSeq.toString(), f.getName(), pool, totalnSeqs+1);	
+					uploadSequence(grpName, grpFullName, curSeq.toString(), f.getName(), totalnSeqs+1);	
 					nSeqs++;
 					basesWritten += curSeq.length();
 				}
@@ -206,7 +211,7 @@ public class SeqLoadMain {
 			/* ************************************************************ */
 			if (totalnSeqs == 0) {
 				mProj.removeProjectFromDB(); // CAS535 add
-				return rtError(pool, plog, projIdx, "No sequences were loaded! Check for problems with the sequence files and re-load.");
+				return rtError(plog, projIdx, "No sequences were loaded! Check for problems with the sequence files and re-load.");
 			}
 			// CAS532 add these to print on View
 			mProj.saveProjParam("proj_seq_date", Utils.getDateStr(modDirDate));
@@ -228,12 +233,15 @@ public class SeqLoadMain {
 				plog.msg("    Use script/lenFasta.pl to determine Minimum Length to use to reduce number of loaded sequences");
 				//ErrorCount.inc(); CAS505 
 			}
-			updateSortOrder(grpList, pool, plog);
-					
+			updateSortOrder(grpList, plog);
+			tdbc2.close();
+			
 			Utils.timeDoneMsg(plog, "Load sequences", startTime);
 		}
 		catch (OutOfMemoryError e){
-			plog.msg("\n\nOut of memory! To fix, \nA)Make sure you are using a 64-bit computer\nB)Modify symap script 'mem=' line to specify higher memory.\n\n");
+			tdbc2.shutdown();
+			ErrorReport.prtMem();
+			System.out.println("\n\nOut of memory! Modify the symap script 'mem=' line to specify higher memory.\n\n");
 			System.exit(0);
 			return false;
 		}
@@ -241,10 +249,11 @@ public class SeqLoadMain {
 	}
 	/**************************************************************************/
 	// CAS518 when there is errors and nothing is loaded, it still shows it is; remove project
-	private boolean rtError(UpdatePool pool, ProgressDialog log, int projIdx, String msg) {
+	private boolean rtError(ProgressDialog log, int projIdx, String msg) {
 		log.msgToFileOnly("*** " + msg);
 		Utilities.showWarningMessage("*** " + msg); // prints to stdout
 		ErrorCount.inc();
+		tdbc2.close();
 		
 		try {
 			if (projIdx > 0) {
@@ -284,14 +293,14 @@ public class SeqLoadMain {
 		return null;
 	}
 	/***********************************************************************/
-	private void updateSortOrder(Vector<String> grpList,UpdatePool pool, ProgressDialog log)  {
+	private void updateSortOrder(Vector<String> grpList,  ProgressDialog log)  {
 	try {
 		// First, just set it to the idx order
 		int minIdx;
-		ResultSet rs = pool.executeQuery("select min(idx) as minidx from xgroups where proj_idx=" + projIdx);
+		ResultSet rs = tdbc2.executeQuery("select min(idx) as minidx from xgroups where proj_idx=" + projIdx);
 		rs.first();
 		minIdx = rs.getInt("minidx");
-		pool.executeUpdate("update xgroups set sort_order = idx+1-" + minIdx + " where proj_idx=" + projIdx);
+		tdbc2.executeUpdate("update xgroups set sort_order = idx+1-" + minIdx + " where proj_idx=" + projIdx);
 		
 		// CAS534 removed a bunch of code because SyProps had grp_order and grp_sort that never changed
 		GroupSorter gs = new GroupSorter(GrpSortType.Alpha); 
@@ -311,24 +320,24 @@ public class SeqLoadMain {
 		
 		for (int i = 1; i <= grpList.size(); i++) {
 			String grp = grpList.get(i-1);
-			pool.executeUpdate("update xgroups set sort_order=" + i + " where proj_idx=" + projIdx + 
+			tdbc2.executeUpdate("update xgroups set sort_order=" + i + " where proj_idx=" + projIdx + 
 					" and name='" + grp + "'");
 		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "Loading sequence - fail ordering them"); };
 	}
 	/***********************************************************************/
-	private void uploadSequence(String grp, String fullname, String seq, String file, UpdatePool pool,int order)  {
+	private void uploadSequence(String grp, String fullname, String seq, String file, int order)  {
 	try {
 		// First, create the group
-		pool.executeUpdate("INSERT INTO xgroups VALUES('0','" + projIdx + "','" + 
+		tdbc2.executeUpdate("INSERT INTO xgroups VALUES('0','" + projIdx + "','" + 
 				grp + "','" + fullname + "'," + order + ",'0')" );
 		String sql = "select max(idx) as maxidx from xgroups where proj_idx=" + projIdx;
-		ResultSet rs = pool.executeQuery(sql);
+		ResultSet rs = tdbc2.executeQuery(sql);
 		rs.first();
 		int grpIdx = rs.getInt("maxidx");
 			
-		pool.executeUpdate("insert into pseudos (grp_idx,file,length) values(" + grpIdx + ",'" + file + "'," + seq.length() + ")");
+		tdbc2.executeUpdate("insert into pseudos (grp_idx,file,length) values(" + grpIdx + ",'" + file + "'," + seq.length() + ")");
 		
 		// Finally, upload the sequence in chunks
 		for (int chunk = 0; chunk*CHUNK_SIZE < seq.length(); chunk++) {
@@ -337,7 +346,7 @@ public class SeqLoadMain {
 
 			String cseq = seq.substring(start,start + len );
 			String st = "INSERT INTO pseudo_seq2 VALUES('" + grpIdx + "','" + chunk + "','" + cseq + "')";
-			pool.executeUpdate(st);
+			tdbc2.executeUpdate(st);
 		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "Loading sequence - fail loading to database "); };

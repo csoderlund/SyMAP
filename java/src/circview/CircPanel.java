@@ -1,11 +1,8 @@
 package circview;
+
 import javax.swing.*;
-
-import database.DBconn;
-
 import java.awt.*;
 import java.sql.*;
-
 import java.util.Vector;
 import java.util.TreeMap;
 import java.awt.geom.AffineTransform;
@@ -17,6 +14,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
+import database.DBconn2;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import symap.manager.Mproject;
@@ -35,7 +33,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
     public int invChoice = 0;
     public boolean bShowSelf = false, bRotateText = false, bRevRef = false;
     
-	private DBconn mDB;
+	private DBconn2 dbc2;
 	private Vector<Integer> colorVec;
 	
 	private Vector<Project> allProjVec;
@@ -44,8 +42,6 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	private TreeMap <Integer,Group> idx2GrpMap;
 	
 	private Vector<Integer> priorityVec;
-	
-	private Statement stmt;
 	
 	private String helpText = "Click an arc to bring its blocks to the top.\n" + 
 			"Move mouse near name and click to use its colors.";
@@ -67,22 +63,23 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
     private HelpBar helpPanel = null;
     private Dimension dim;
     
-	public CircPanel(DBconn dbReader, int[] projIdxList, TreeSet<Integer> selGrpSet, int refIdx,
+	public CircPanel(DBconn2 dbReader, int[] projIdxList, TreeSet<Integer> selGrpSet, int refIdx,
 							HelpBar hb, Vector <Integer> mCol) {
-		mDB = dbReader;
+		dbc2 = dbReader;
 		helpPanel = hb;
 		colorVec = mCol;
 		
 		init();
 		
 		try {
-			stmt = mDB.getConnection().createStatement();
 			if (!initDS(projIdxList, selGrpSet, refIdx)) return;
-			stmt.close();
 		}
 		catch(Exception e) {ErrorReport.print(e, "Create CircPanel");}
 	}
-	
+	public void clear() {
+		allProjVec.clear();
+		idx2GrpMap.clear();
+	}
 	private void init() {
 		//setPreferredSize(new Dimension(pWidth,pHeight)); CAS534 doesn't do anything, was 900,700
 		//setMinimumSize(new Dimension(pWidth, pHeight));
@@ -138,13 +135,13 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	private void addProject(int idx)  {
 		try {
 			ResultSet rs;
-			rs = stmt.executeQuery("select name from projects where idx=" + idx);
+			rs = dbc2.executeQuery("select name from projects where idx=" + idx);
 			if (!rs.first()) {
 				System.out.println("Cannot find proj_idx=" + idx);
 				return;
 			}
 
-			Project proj = new Project(idx, rs.getString(1), stmt); // loads groups
+			Project proj = new Project(idx, rs.getString(1), dbc2); // loads groups
 			allProjVec.add(proj);
 			
 			for (Group g : proj.grps) idx2GrpMap.put(g.idx, g);				
@@ -188,13 +185,13 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			for (int i2 = i1; i2 < allProjVec.size(); i2++) {
 				Project p2 = allProjVec.get(i2);
 				
-				rs = stmt.executeQuery(sql +  " where proj1_idx=" + p1.idx + " and proj2_idx=" + p2.idx );
+				rs = dbc2.executeQuery(sql +  " where proj1_idx=" + p1.idx + " and proj2_idx=" + p2.idx );
 				while (rs.next()) {
 					addBlock(rs.getInt(1), rs.getInt(2), rs.getInt(3),rs.getInt(4),rs.getInt(5),rs.getInt(6),(rs.getFloat(7)<0));
 				}
 				
 				if (p1.idx != p2.idx) {
-					rs = stmt.executeQuery(sql + " where proj1_idx=" + p2.idx + " and proj2_idx=" + p1.idx );
+					rs = dbc2.executeQuery(sql + " where proj1_idx=" + p2.idx + " and proj2_idx=" + p1.idx );
 					while (rs.next()) {
 						addBlock(rs.getInt(1), rs.getInt(2), rs.getInt(3),rs.getInt(4),rs.getInt(5),rs.getInt(6),(rs.getFloat(7)<0));
 					}
@@ -629,14 +626,16 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
     	g.setFont (f);
 	}
 	// set from 16 to 14pt for chromosome numbers
+	// CAS541 MacOS Monterery no longer has "Times and Lucida", used by Serif, neither does JDK until v18
+	//  however, removing this only occurance does not get rid of the java message
 	private Font setProjFont(int i, Font f, int pidx) {
 		int x = (i==0) ? 16 : 14;
 		if (priorityVec.get(0) == pidx) 						  
-    		f = new Font ("Serif", Font.BOLD | Font.ITALIC, x);
+    		f = new Font ("Courier", Font.BOLD | Font.ITALIC, x);
     	else if (priorityVec.size()>2 && priorityVec.get(1) == pidx) 
-    		f = new Font ("Serif", Font.ITALIC, x);
+    		f = new Font ("Courier", Font.ITALIC, x);
     	else 														  
-    		f = new Font ("Serif", Font.PLAIN, x);	
+    		f = new Font ("Courier", Font.PLAIN, x);	
 		return f;
 	}
 	private int circX(int cX, int R, double arc){
@@ -663,12 +662,12 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		Vector<Group> grps = new Vector<Group>();
 		int labelR1,labelR2,labelA1,labelA2;
 		
-		private Project(int _idx, String _name, Statement s)  {
+		private Project(int _idx, String _name, DBconn2 dbc2)  {
 		try {
 			idx = _idx;
 			name = _name;
 	
-			ResultSet rs = s.executeQuery("select idx, name, length from xgroups join pseudos " + 
+			ResultSet rs = dbc2.executeQuery("select idx, name, length from xgroups join pseudos " + 
 						" on pseudos.grp_idx=xgroups.idx where xgroups.proj_idx=" + idx + " order by sort_order");
 
 			while (rs.next()){
@@ -679,7 +678,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			String display_name = tProj.getKey(tProj.sDisplay);
 			
 			displayName = name;
-			rs = s.executeQuery("select value from proj_props where name='"+display_name+"' and proj_idx=" + idx);
+			rs = dbc2.executeQuery("select value from proj_props where name='"+display_name+"' and proj_idx=" + idx);
 			if (rs.first()) {
 				displayName = rs.getString(1);
 				name2DisMap.put(name, displayName); // CAS517

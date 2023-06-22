@@ -1,9 +1,5 @@
 package symap.frame;
 
-/******************************************************************
- * Help Box on left side of Chromosome explorer and bottom of other displays
- * CAS521 removed lots of dead code
- */
 import java.awt.Component;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -26,14 +22,19 @@ import javax.swing.BorderFactory;
 
 import colordialog.ColorListener;
 
+/******************************************************************
+ * Help Box on left side of Chromosome explorer and bottom of other displays
+ * CAS521 removed lots of dead code
+ */
+
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class HelpBar extends JPanel 
 					 implements MouseListener, MouseMotionListener, ActionListener, ColorListener 
 {
-	private static final Font helpFont = new Font("Ariel", 0, 14);
+	private static final Font helpFont = new Font("Courier", 0, 12); // CAS541 Courier
 	private static final Color helpColor = Color.black;
 	private static final Color helpBackgroundColor = Color.white;
-	private final String helpText = "Move the mouse over an object for further info.";
+	private final String helpText = "Move the mouse over an object for further information.";
 	
 	private JTextArea helpLabel = null; 
 	private Object currentHelpObj = null;

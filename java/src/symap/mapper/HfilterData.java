@@ -3,12 +3,13 @@ package symap.mapper;
 import java.util.Vector;
 
 /**
- * Class HitFilter a hit filter stores all the data used to communicate
+ * Class MfilterData a hit filter stores all the data used to communicate
  * between the filter and the mapper.
  * CAS520 remove or makes stubs of all FPC stuff. Change for new hit filter.
  * CAS533 removed reference to the Dotplot hitfilter
+ * CAS541 HitFilter=>MfilterData
  */
-public class HitFilter {
+public class HfilterData {
 	private static final double ANY_PCTID  = 0;
 	private static final double NO_PCTID  = 100;
 	
@@ -25,19 +26,20 @@ public class HitFilter {
 
 	private Vector<HitFilterListener> listeners;
 
-	public HitFilter() {
+	public HfilterData() {
 		listeners = null;
 		setDefaults();
 	}
-	public HitFilter(HitFilterListener hfl) {
+	public HfilterData(HitFilterListener hfl) {
 		this();
 		addListener(hfl);
 	}
-	public HitFilter(HitFilter hf) {
+	private HfilterData(HfilterData hf) { // copy
 		listeners = null;
 		set(hf);
 	}
-	public void addListener(HitFilterListener listener) {
+	
+	private void addListener(HitFilterListener listener) {
 		if (listeners == null) listeners = new Vector<HitFilterListener>(1,1);
 		listeners.add(listener);
 	}
@@ -48,23 +50,24 @@ public class HitFilter {
 		}
 	}
 	
-	public String getHover() { // CAS520 So know what is set when hover in whitespace
-		String msg = "";
-		if (bHiBlock) 		msg += "High Blocks. ";
-		else if (bHiSet) 	msg += "High Sets. ";
-		else if (bHi2Gene) 	msg += "High >0 Genes. ";
-		else if (bHi1Gene) 	msg += "High 1 Gene. ";
-		else if (bHi0Gene) 	msg += "High 0 Genes. ";
+	public String getFilterText() { // CAS520 So know what is set when hover in whitespace
+		String msg = "";			// SeqHits expects this to start with High if there is highlightening
+		if (bHiBlock) 		msg += "High Blocks; ";
+		else if (bHiSet) 	msg += "High Sets; ";
+		else if (bHi2Gene) 	msg += "High 2 Genes; ";
+		else if (bHi1Gene) 	msg += "High 1 Gene; ";
+		else if (bHi0Gene) 	msg += "High 0 Genes; ";
 		
 		msg += "Show "; // something always shows
 		if (bBlock) 	msg += "Block, ";
 		if (bSet)	 	msg += "Sets, ";
-		if (b2Gene) 	msg += ">0 Genes, ";
-		if (b0Gene) 	msg += "=0 Genes, ";
+		if (b2Gene) 	msg += "2 Genes, ";
+		if (b1Gene) 	msg += "1 Gene, ";
+		if (b0Gene) 	msg += "0 Genes, ";
 		if (bAllHit) 	msg += "All, ";
 		
 		msg = msg.substring(0, msg.length()-2);
-		hoverText = 	msg + ".  \n";
+		hoverText = 	msg + "\n";
 		return hoverText;
 	}
 	// block, set, region CAS520 add for showing synteny from query; b is blocks by default
@@ -89,10 +92,10 @@ public class HitFilter {
 		pctid=ANY_PCTID;
 	}
 
-	public HitFilter copy() {return new HitFilter(this);}
+	public HfilterData copy() {return new HfilterData(this);}
 
 	// CAS520 was comparing with false for everything instead of the current setting
-	public boolean set(HitFilter hf) {
+	public boolean set(HfilterData hf) {
 		boolean changed = false;
 		if (setHiBlock(hf.bHiBlock, bHiBlock))  	changed = true; 
 		if (setHiSet(hf.bHiSet, bHiSet))    		changed = true;
@@ -114,7 +117,7 @@ public class HitFilter {
 		return changed;
 	}
 
-	public interface HitFilterListener {public void update(HitFilter hf);}
+	public interface HitFilterListener {public void update(HfilterData hf);}
 	
 	/*******************************************************/
 // %id
@@ -160,30 +163,30 @@ public class HitFilter {
 	}
 	
 	public boolean   isHiSet() { return bHiSet;}
-	public boolean  setHiSet(boolean filter) {return setHiSet(filter,true);}
-	private boolean setHiSet(boolean filter, boolean update) { 
-		if (filter != bHiSet) {
-			bHiSet = filter;
+	public boolean  setHiSet(boolean bFilter) {return setHiSet(bFilter,true);}
+	private boolean setHiSet(boolean bFilter, boolean update) { 
+		if (bFilter != bHiSet) {
+			bHiSet = bFilter;
 			if (update) updateListeners();
 			return true;
 		}
 		return false;
 	}  
 	public boolean   isHi2Gene() {return bHi2Gene;}
-	public boolean  setHi2Gene(boolean filter) { return setHi2Gene(filter,true);}
-	private boolean setHi2Gene(boolean filter, boolean update) { 
-		if (filter != bHi2Gene) {
-			bHi2Gene = filter;
+	public boolean  setHi2Gene(boolean bFilter) { return setHi2Gene(bFilter,true);}
+	private boolean setHi2Gene(boolean bFilter, boolean update) { 
+		if (bFilter != bHi2Gene) {
+			bHi2Gene = bFilter;
 			if (update) updateListeners();
 			return true;
 		}
 		return false;
 	}
 	public boolean   isHi1Gene() {return bHi1Gene;}
-	public boolean  setHi1Gene(boolean filter) { return setHi1Gene(filter,true);}
-	private boolean setHi1Gene(boolean filter, boolean update) { 
-		if (filter != bHi1Gene) {
-			bHi1Gene = filter;
+	public boolean  setHi1Gene(boolean bFilter) { return setHi1Gene(bFilter,true);}
+	private boolean setHi1Gene(boolean bFilter, boolean update) { 
+		if (bFilter != bHi1Gene) {
+			bHi1Gene = bFilter;
 			if (update) updateListeners();
 			return true;
 		}
@@ -191,10 +194,10 @@ public class HitFilter {
 	}
 
 	public boolean isHi0Gene() { return bHi0Gene;}
-	public boolean  setHi0Gene(boolean filter) { return setHi0Gene(filter,true);}	
-	private boolean setHi0Gene(boolean filter, boolean update) { 
-		if (filter != bHi0Gene) {
-			bHi0Gene = filter;
+	public boolean  setHi0Gene(boolean bFilter) { return setHi0Gene(bFilter,true);}	
+	private boolean setHi0Gene(boolean bFilter, boolean update) { 
+		if (bFilter != bHi0Gene) {
+			bHi0Gene = bFilter;
 			if (update) updateListeners();
 			return true;
 		}
@@ -202,10 +205,10 @@ public class HitFilter {
 	}
 // shows
 	public boolean isBlock() {return bBlock;}
-	public boolean setBlock(boolean filter) {return setBlock(filter,true);}
-	private boolean setBlock(boolean filter, boolean update) {
-		if (filter != bBlock) {
-			bBlock = filter;
+	public boolean setBlock(boolean bFilter) {return setBlock(bFilter,true);}
+	private boolean setBlock(boolean bFilter, boolean update) {
+		if (bFilter != bBlock) {
+			bBlock = bFilter;
 			if (update) updateListeners();
 			return true;
 		}
@@ -213,10 +216,10 @@ public class HitFilter {
 	}
 	
 	public boolean isSet() { return bSet;}
-	public boolean setSet(boolean filter) {return setSet(filter,true);}
-	private boolean setSet(boolean filter, boolean update) { 
-		if (filter != bSet) {
-			bSet = filter;
+	public boolean setSet(boolean bFilter) {return setSet(bFilter,true);}
+	private boolean setSet(boolean bFilter, boolean update) { 
+		if (bFilter != bSet) {
+			bSet = bFilter;
 			if (update) updateListeners();
 			return true;
 		}
@@ -224,10 +227,10 @@ public class HitFilter {
 	}
 	
 	public boolean is2Gene() {return b2Gene;}
-	public boolean set2Gene(boolean filter) { return set2Gene(filter,true);}
-	private boolean set2Gene(boolean filter, boolean update) { 
-		if (filter != b2Gene) {
-			b2Gene = filter;
+	public boolean set2Gene(boolean bFilter) { return set2Gene(bFilter,true);}
+	private boolean set2Gene(boolean bFilter, boolean update) { 
+		if (bFilter != b2Gene) {
+			b2Gene = bFilter;
 			if (update) updateListeners();
 			return true;
 		}
@@ -235,10 +238,10 @@ public class HitFilter {
 	}
 	
 	public boolean is1Gene() {return b1Gene;}
-	public boolean set1Gene(boolean filter) { return set1Gene(filter,true);}
-	private boolean set1Gene(boolean filter, boolean update) { 
-		if (filter != b1Gene) {
-			b1Gene = filter;
+	public boolean set1Gene(boolean bFilter) { return set1Gene(bFilter,true);}
+	private boolean set1Gene(boolean bFilter, boolean update) { 
+		if (bFilter != b1Gene) {
+			b1Gene = bFilter;
 			if (update) updateListeners();
 			return true;
 		}
@@ -246,10 +249,10 @@ public class HitFilter {
 	}
 
 	public boolean is0Gene() { return b0Gene;}
-	public boolean set0Gene(boolean filter) { return set0Gene(filter,true);}	
-	private boolean set0Gene(boolean filter, boolean update) { 
-		if (filter != b0Gene) {
-			b0Gene = filter;
+	public boolean set0Gene(boolean bFilter) { return set0Gene(bFilter,true);}	
+	private boolean set0Gene(boolean bFilter, boolean update) { 
+		if (bFilter != b0Gene) {
+			b0Gene = bFilter;
 			if (update) updateListeners();
 			return true;
 		}
@@ -257,10 +260,10 @@ public class HitFilter {
 	}
 	
 	public boolean isAllHit() { return bAllHit;}
-	public boolean setAllHit(boolean filter) { return setAllHit(filter,true);}	
-	private boolean setAllHit(boolean filter, boolean update) { 
-		if (filter != bAllHit) {
-			bAllHit = filter;
+	public boolean setAllHit(boolean bFilter) { return setAllHit(bFilter,true);}	
+	private boolean setAllHit(boolean bFilter, boolean update) { 
+		if (bFilter != bAllHit) {
+			bAllHit = bFilter;
 			if (update) updateListeners();
 			return true;
 		}

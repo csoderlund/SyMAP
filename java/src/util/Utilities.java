@@ -35,7 +35,7 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 
-import backend.Constants;
+import symap.Globals;
 
 /**
  * Class <code>Utilities</code> class for doing some miscelaneous things that 
@@ -51,7 +51,7 @@ import backend.Constants;
  * PopUps
  */
 public class Utilities {
-	private static boolean TRACE = Constants.TRACE;
+	private static boolean TRACE = Globals.DEBUG;
 	public static final Color HELP_PROMPT = new Color(0xEEFFEE); // CAS504 moved from dead file - for Help
 
 	private Utilities() { }
@@ -551,6 +551,13 @@ public class Utilities {
 	public static void showOutOfMemoryMessage() { showOutOfMemoryMessage(null); }
 	
 	/*****************************************************************************/
+	// CAS541 add for percents
+	public static String pStr(int top, int bottom) {
+		if (bottom==0) return "  N/A";
+		if (top==0) return    "   0%";
+		double x = (double) top/ (double) bottom;
+		return String.format("%.2f%s", x, "%");
+	}
 	// these 3 are also in SeqData; CAS540 add , for dbp
 	public static String coordsStr(int start, int end) {
 		return String.format("%,d - %,d %,dbp", start, end, (end-start+1)) ;
@@ -612,6 +619,7 @@ public class Utilities {
     	String gn = getGenenumFromTag(tag);
     	return chr + "." + gn;
     }
+    // e.g. Gene #2 (9 1,306bp) or Gene #2b (9 1,306bp)
     static public String getGenenumFromTag(String tag) {
     	Pattern pat1 = Pattern.compile("Gene #(\\d+)([a-z]+[0-9]*)(.*)$");
 		Pattern pat2 = Pattern.compile("Gene #(\\d+)(.*)$");
@@ -630,7 +638,16 @@ public class Utilities {
 			else return tag;
 		}
     }
-  
+    static public String getGenenumOnly(String tag) {
+    	if (tag=="-") return "";
+    	Pattern pat2 = Pattern.compile("Gene #(\\d+)(.*)$");
+    	Matcher m = pat2.matcher(tag);
+		if (m.matches()) return m.group(1);
+		else {
+			System.out.println("SyMAP error getting gene# from: " + tag);
+			return "";
+		}
+    }
     static public String formatAbbrev(String dname) {
     	if (dname==null || dname=="") return "????";
     	if (dname.length()>4) return dname.substring(dname.length()-4);

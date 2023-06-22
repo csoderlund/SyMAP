@@ -7,11 +7,10 @@ import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import util.ErrorReport;
 import util.Utilities;
-import database.DBuser;
+import database.DBconn2;
 import props.PropertiesReader;
 import symap.Globals;
 import backend.Constants;
@@ -30,6 +29,7 @@ import backend.Constants;
  *        
  * 		  All Mproject obj are recreated on every refresh
  * 		  if !viewSymap, the file values have precedence over DB for projVal
+ * CAS541 change dbUser to DBconn
  * THIS IS ONLY PARTIALLY INCORPORATED 
  */
 
@@ -40,7 +40,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	
 	private int projIdx;		// unique database index
 	private String strDate="";
-	private DBuser dbUser;
+	private DBconn2 dbc2;
 	
 	private int numAnnot = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0;;
 	private long length=0;
@@ -51,12 +51,12 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public static final short STATUS_ON_DISK = 0x0001; 
 	public static final short STATUS_IN_DB   = 0x0002; 
 	
-	// ManagerFrame and ChrExpInit
-	public Mproject(DBuser pool, int nIdx, String strName, String annotdate) { 
+	// ManagerFrame, ChrExpInit, DotPlot.Project
+	public Mproject(DBconn2 dbc, int nIdx, String strName, String annotdate) { 
 		this.projIdx = nIdx;
 		this.strDBName = strName;
 		this.strDate = annotdate;	
-		this.dbUser = pool;
+		this.dbc2 = dbc;
 		
 		makeParams();
 		
@@ -177,7 +177,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 			
 			String prefix= getProjVal(lGrpPrefix);
 			
-			ResultSet rs = dbUser.executeQuery("select idx, name from xgroups where proj_idx=" + projIdx);
+			ResultSet rs = dbc2.executeQuery("select idx, name from xgroups where proj_idx=" + projIdx);
 			while (rs.next()) {
 				int ix = rs.getInt(1);
 				String name = rs.getString(2);
@@ -192,7 +192,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 			System.err.println("Change " + idxSet.size() + " group names to remove '" + prefix + "'" );
 			
 			for (int i=0; i<idxSet.size(); i++) {					
-				dbUser.executeUpdate("update xgroups set name='" + nameSet.get(i) + 
+				dbc2.executeUpdate("update xgroups set name='" + nameSet.get(i) + 
 												  "' WHERE idx=" + idxSet.get(i));
 				saveProjParam(getKey(lGrpPrefix), prefix);
 			}
@@ -219,7 +219,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		TreeMap <Integer, Integer> chrLenMap = new TreeMap <Integer, Integer> ();
 		
 	// get chrs and lengths
-		ResultSet rs = dbUser.executeQuery("select xgroups.idx, xgroups.fullname, pseudos.length from pseudos " +
+		ResultSet rs = dbc2.executeQuery("select xgroups.idx, xgroups.fullname, pseudos.length from pseudos " +
 				" join xgroups on xgroups.idx=pseudos.grp_idx " +
 				" where xgroups.proj_idx=" + projIdx);
 		while (rs.next()) {
@@ -241,10 +241,10 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	    
 	    for (String name : chrNameMap.keySet()) {
 	    	int idx = chrNameMap.get(name);
-	    	rs = dbUser.executeQuery("select count(*) from pseudo_annot where type='gene' and grp_idx=" + idx);
+	    	rs = dbc2.executeQuery("select count(*) from pseudo_annot where type='gene' and grp_idx=" + idx);
 	    	int geneCnt = (rs.next()) ? rs.getInt(1) : 0;
 	    	
-	    	rs = dbUser.executeQuery("select count(*) from pseudo_annot where type='exon' and grp_idx=" + idx);
+	    	rs = dbc2.executeQuery("select count(*) from pseudo_annot where type='exon' and grp_idx=" + idx);
 	    	int exonCnt = (rs.next()) ? rs.getInt(1) : 0;
 	    	
 	    	rows[r][c++] = name;
@@ -259,16 +259,16 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	    String file="", fdate=null;
 	    String sql = "SELECT value FROM proj_props WHERE proj_idx='" +  projIdx;
 	    
-	    rs = dbUser.executeQuery(sql + "' AND name='proj_seq_dir'");
+	    rs = dbc2.executeQuery(sql + "' AND name='proj_seq_dir'");
 		file = (rs.next()) ? rs.getString(1) : "";
-		rs = dbUser.executeQuery(sql + "' AND name='proj_seq_date'");
+		rs = dbc2.executeQuery(sql + "' AND name='proj_seq_date'");
 		fdate = (rs.next()) ? rs.getString(1) : "";
 		if (!file.trim().contentEquals("")) info += "\nSeq:  " + file + "\nDate: " + fdate + "\n";
 		
 		file="";
-		rs = dbUser.executeQuery(sql + "' AND name='proj_anno_dir'");
+		rs = dbc2.executeQuery(sql + "' AND name='proj_anno_dir'");
 		file = (rs.next()) ? rs.getString(1) : "";
-		rs = dbUser.executeQuery(sql + "' AND name='proj_anno_date'");
+		rs = dbc2.executeQuery(sql + "' AND name='proj_anno_date'");
 		fdate = (rs.next()) ? rs.getString(1) : "";
 		if (!file.trim().contentEquals("")) info += "\nAnno: " + file + "\nDate: " + fdate + "\n";
 		rs.close();
@@ -298,11 +298,11 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		if (projIdx == -1) return; // not loaded yet
 		try {
 			if (type==xLoad) {//CAS535 moved date updates here
-				dbUser.executeUpdate("update projects set hasannot=1," // CAS520 add version
+				dbc2.executeUpdate("update projects set hasannot=1," // CAS520 add version
 						+ " annotdate=NOW(), syver='" + Globals.VERSION + "' where idx=" + projIdx);
 			}
 			else if (type==xAlign) {//Load date is for loading anchors/synteny
-				dbUser.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + projIdx);
+				dbc2.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + projIdx);
 			}
 			for (Params p : pKeysMap.values()) { 
 				boolean b=false;
@@ -311,10 +311,10 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 				else if (p.isAS   && type==xAlign) b = true;
 		
 				if (b) {
-					dbUser.executeUpdate("delete from proj_props where proj_idx="+ projIdx 
+					dbc2.executeUpdate("delete from proj_props where proj_idx="+ projIdx 
 							+ " and name='" + p.key + "'");
 					
-					dbUser.executeUpdate("insert into proj_props (proj_idx,name,value) "
+					dbc2.executeUpdate("insert into proj_props (proj_idx,name,value) "
 							+ " values(" + projIdx + ",'" + p.key + "','" + p.projVal + "')");	
 					
 					pKeysMap.get(p.key).dbVal = p.projVal;
@@ -329,21 +329,21 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	// the following are saved: "proj_seq_dir", "proj_seq_date", "proj_anno_dir", "proj_anno_date"
 	public void saveProjParam(String name, String val) throws Exception{
 	try {
-		dbUser.executeUpdate("delete from proj_props where name='" + name + "' and proj_idx=" + projIdx);
-		dbUser.executeUpdate("insert into proj_props (name, value, proj_idx) values('" + name + "','" + val + "','" + projIdx + "')");	
+		dbc2.executeUpdate("delete from proj_props where name='" + name + "' and proj_idx=" + projIdx);
+		dbc2.executeUpdate("insert into proj_props (name, value, proj_idx) values('" + name + "','" + val + "','" + projIdx + "')");	
 	} 
 	catch (Exception e) {ErrorReport.print(e, "Save project param " + name + " " + val); }
 	}
 	
 	/**********************************************************/
-	public void createProject() throws SQLException {
+	public void createProject() throws Exception {
 	try {
-		projIdx = dbUser.getIdx("select idx from projects where name='" + strDBName + "'");
+		projIdx = dbc2.getIdx("select idx from projects where name='" + strDBName + "'");
 		
 		if (projIdx == -1) {
-			dbUser.executeUpdate("INSERT INTO projects (name,type,loaddate, syver) " + // CAS520 add version
+			dbc2.executeUpdate("INSERT INTO projects (name,type,loaddate, syver) " + // CAS520 add version
 					"VALUES('" + strDBName + "','pseudo',NOW(),'" + Globals.VERSION + "')");
-			projIdx = dbUser.getIdx("select idx from projects where name='" + strDBName + "'");
+			projIdx = dbc2.getIdx("select idx from projects where name='" + strDBName + "'");
 			
 			System.out.println("Create project in database - " + strDBName);
 		}
@@ -354,21 +354,21 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	
 	public void removeAnnoFromDB() {
 	try {
-		dbUser.executeUpdate("DELETE FROM pseudo_annot USING pseudo_annot, xgroups " +
+		dbc2.executeUpdate("DELETE FROM pseudo_annot USING pseudo_annot, xgroups " +
 				" WHERE xgroups.proj_idx='" + projIdx + 
 				"' AND pseudo_annot.grp_idx=xgroups.idx");
 
-		dbUser.executeUpdate("delete from pairs " +
+		dbc2.executeUpdate("delete from pairs " +
 					" where proj1_idx=" + projIdx + " or proj2_idx=" + projIdx);
 		
-		dbUser.resetAllIdx();
+		dbc2.resetAllIdx();
 	}
 	catch (Exception e) {ErrorReport.print(e, "Remove annotations"); }
 	}
 	public void removeProjectFromDB() {
 	try {
-        dbUser.executeUpdate("DELETE from projects WHERE name='"+ strDBName+"'");
-        dbUser.resetAllIdx(); // CAS535 changed from individual
+        dbc2.executeUpdate("DELETE from projects WHERE name='"+ strDBName+"'");
+        dbc2.resetAllIdx(); // CAS535 changed from individual
         nStatus = STATUS_ON_DISK; 
         projIdx = -1; 
 	} 
@@ -376,8 +376,8 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	}
 	public void removeProjectAnnoFromDB() {
 	try {
-        dbUser.executeUpdate("DELETE pseudo_annot.* from pseudo_annot, xgroups where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + projIdx);
-        dbUser.resetIdx("idx", "pseudo_annot"); // CAS512
+        dbc2.executeUpdate("DELETE pseudo_annot.* from pseudo_annot, xgroups where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + projIdx);
+        dbc2.resetIdx("idx", "pseudo_annot"); // CAS512
 	} 
 	catch (Exception e) {ErrorReport.print(e, "Remove annotation from DB"); }
 	}	
@@ -389,7 +389,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	 */
 	public void loadParamsFromDB() {
 		try {
-	        ResultSet rs = dbUser.executeQuery("SELECT name, value FROM proj_props WHERE proj_idx=" + projIdx);
+	        ResultSet rs = dbc2.executeQuery("SELECT name, value FROM proj_props WHERE proj_idx=" + projIdx);
 	        while ( rs.next() ) {
 	        	String key = rs.getString(1);
 	        	String val = rs.getString(2);
@@ -459,43 +459,32 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		}
 	}
 	
-	public void loadDataFromDB() throws SQLException{// CAS534 moved from ManagerFrame
+	public void loadDataFromDB() throws Exception {// CAS534 moved from ManagerFrame
 		grpIdxList = new Vector<Integer>();
-		ResultSet rs = dbUser.executeQuery("select idx from xgroups where proj_idx=" + projIdx);
-		while (rs.next()) {
-			grpIdxList.add(rs.getInt(1));
-		}
-		rs = dbUser.executeQuery("SELECT count(*) FROM xgroups WHERE proj_idx=" + projIdx);
-        rs.next();
-        numGroups = rs.getInt(1);
-        
-        rs = dbUser.executeQuery("select count(*) from pseudo_annot as pa " +
+		ResultSet rs = dbc2.executeQuery("select idx from xgroups where proj_idx=" + projIdx);
+		while (rs.next()) {grpIdxList.add(rs.getInt(1));}
+		rs.close();
+		
+		numGroups = dbc2.executeCount("SELECT count(*) FROM xgroups WHERE proj_idx=" + projIdx);
+       
+        numAnnot = dbc2.executeCount("select count(*) from pseudo_annot as pa " +
         		" join xgroups as g on g.idx=pa.grp_idx " +
         		" where g.proj_idx=" + projIdx);
-        rs.first();
-        numAnnot = rs.getInt(1);
-        
-        rs = dbUser.executeQuery("select count(*) from pseudo_annot as pa " +
+       
+        numGene = dbc2.executeCount("select count(*) from pseudo_annot as pa " +
         		" join xgroups as g on g.idx=pa.grp_idx " +
         		" where g.proj_idx=" + projIdx + " and type='gene'");
-        rs.first();
-        numGene = rs.getInt(1); // CAS505 add numGene and numGap
         
-        rs = dbUser.executeQuery("select count(*) from pseudo_annot as pa " +
+        numGap = dbc2.executeCount("select count(*) from pseudo_annot as pa " +
         		" join xgroups as g on g.idx=pa.grp_idx " +
         		" where g.proj_idx=" + projIdx + " and type='gap'");
-        rs.first();
-        numGap = rs.getInt(1);
-    
-        rs = dbUser.executeQuery("select sum(length) from pseudos " +
+      
+        length = dbc2.executeLong("select sum(length) from pseudos " +
 				"join xgroups on xgroups.idx=pseudos.grp_idx  " +
-				"where xgroups.proj_idx=" + projIdx);
-		if (rs.next()) length = rs.getLong(1); 	// CAS500 for Summary and for orderProjects
+				"where xgroups.proj_idx=" + projIdx);	// CAS500 for Summary and for orderProjects
 		
-		rs = dbUser.executeQuery("select count(*) from pairs where proj1_idx=" + projIdx +
-				" or proj2_idx=" + projIdx);
-		if (rs.next()) numSynteny = rs.getInt(1); // CAS513 for Project on left, mark those with synteny
-		rs.close();
+		numSynteny = dbc2.executeCount("select count(*) from pairs where proj1_idx=" + projIdx +
+				" or proj2_idx=" + projIdx); // CAS513 for Project on left, mark those with synteny
 	}
 	private void writeNewParamsFile() { // CAS534 add
 		if (Utilities.isEmpty(strDBName)) return; // OrderAgainst writes the file, but not with Mproject

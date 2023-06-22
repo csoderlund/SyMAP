@@ -1,7 +1,6 @@
 package backend;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -14,6 +13,7 @@ import java.io.InputStreamReader;
 import java.util.Comparator;
 import java.util.zip.GZIPInputStream;
 
+import database.DBconn2;
 import util.ErrorReport;
 import util.ProgressDialog;
 import util.Utilities;
@@ -233,11 +233,11 @@ public class Utils {
         return buffer;	
 	} 
 	/*****************************************************/
-	static int getPairIdx(int proj1Idx, int proj2Idx, UpdatePool conn) throws SQLException {
+	static int getPairIdx(int proj1Idx, int proj2Idx, DBconn2 dbc2) throws Exception {
 		int idx = 0;
 		
 		String st = "SELECT idx FROM pairs WHERE proj1_idx='" + proj1Idx + "' AND proj2_idx='" + proj2Idx +"'";
-		ResultSet rs = conn.executeQuery(st);
+		ResultSet rs = dbc2.executeQuery(st);
 		if (rs.next())
 			idx = rs.getInt("idx");
 		rs.close();

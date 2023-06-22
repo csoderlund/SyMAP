@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Vector;
 import java.sql.ResultSet;
 
+import database.DBconn2;
+import symap.Globals;
 import util.ErrorReport;
 
 /**
@@ -17,6 +19,8 @@ import util.ErrorReport;
  * CAS540 changed non-gene default lengths; split large genes
  */
 public class Group {
+	public static boolean DEBUG=Globals.DEBUG;
+	
 	public  static boolean bSplitGene=true;	      // CAS540 split hit/gene if true; -nsg will set !bSplitGene; 
 	public  final static int fSplitLen  = 50000;  // CAS540 10k->50k for mummer hit
 	
@@ -64,13 +68,13 @@ public class Group {
 	 * Called from AnchorsMain.loadAnnoBins [loadAnnotation]
 	 * CAS540 add split large genes that embed other genes
 	 */
-	public int createAnnoFromGenes(UpdatePool pool) {
+	public int createAnnoFromGenes(DBconn2 dbc2) {
 	try {
 		HashSet <Integer> idxSplit = new HashSet <Integer> ();
 		ResultSet rs;
 		
 		if (bSplitGene) {
-			rs = pool.executeQuery("SELECT idx, start, end, genenum, (end-start) as len FROM pseudo_annot "
+			rs = dbc2.executeQuery("SELECT idx, start, end, genenum, (end-start) as len FROM pseudo_annot "
 					+ " WHERE grp_idx=" + idx + " and type ='gene' order by genenum, len DESC");
 			int lastIdx=0, lastStart=0, lastEnd=0, lastGN=-1, lastCnt=0;
 			while (rs.next()) {
@@ -90,7 +94,7 @@ public class Group {
 		avgGeneLen = maxGeneLen = 0;
 		int totalGenes = 0; 
 		
-		rs = pool.executeQuery("SELECT idx, start, end, strand, genenum FROM pseudo_annot "
+		rs = dbc2.executeQuery("SELECT idx, start, end, strand, genenum FROM pseudo_annot "
 				+ " WHERE grp_idx=" + idx + " and type ='gene'");
 		while (rs.next()){
 			int annotIdx = rs.getInt(1);
@@ -132,6 +136,9 @@ public class Group {
 			avgGeneLen /= totalGenes;
 			maxGeneLen = Math.min(maxGeneLen, maxHitAnno); // still need a limit on this; use 100k
 		}
+		if (maxGeneLen==0) maxGeneLen=50000;			// CAS541 can be 0, creating an endless loop
+		if (avgGeneLen==0) avgGeneLen=1000;
+		if (DEBUG) System.out.println("avg: " + avgGeneLen + " max: " + maxGeneLen + " " + fullname);
 		return totalGenes;
 	}
 	catch (Exception e) {ErrorReport.print(e, "load genes and bin them"); return 0;}
@@ -221,7 +228,6 @@ public class Group {
 		
 		int bs = a.start/annotBinSize; // since 30k, start and end usually the same
 		int be = a.end/annotBinSize;
-
 		for (int b = bs; b <= be; b++) {
 			AnnotSet as;
 			if (!annoSetMap.containsKey(b) ) {

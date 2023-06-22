@@ -1,13 +1,11 @@
 package symapQuery;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Vector;
 
-import symap.Globals;
+import database.DBconn2;
 import symap.manager.Mproject;
 import util.ErrorReport;
 
@@ -163,10 +161,8 @@ public class AnnoData {
 		Vector<Mproject> projs = theParentFrame.getProjects();
 		
 		try {
-			Connection conn = theParentFrame.getDatabase().getConnection();
-			Statement stmt = conn.createStatement();
-			
 			AnnoData theAnnos = new AnnoData();
+			DBconn2 dbc2 = theParentFrame.getDBC();
 			
 			for (Mproject p : projs) { 
 				if (!p.hasGenes()) continue; // CAS505 add hasGenes check
@@ -174,7 +170,7 @@ public class AnnoData {
 				// CAS513 check for # of genes with keyword
 				Mproject tProj = new Mproject();
 				int annot_kw_mincount=0;
-				ResultSet rset = stmt.executeQuery("select value from proj_props "
+				ResultSet rset = dbc2.executeQuery("select value from proj_props "
 						+ "where proj_idx=" + p.getID() + " and name='" + tProj.getKey(tProj.sANkeyCnt) + "'");
 			
 				if (rset.next()) {
@@ -188,15 +184,13 @@ public class AnnoData {
 						" WHERE  proj_idx = " + p.getID() + " and count>=" + annot_kw_mincount +
 						" ORDER BY  keyname ASC";
 				
-				rset = stmt.executeQuery(query);
+				rset = dbc2.executeQuery(query);
 				while(rset.next()) {
 					theAnnos.addAnnoKeyForSpecies(p, rset.getString(1));
 				}
 				theAnnos.addAnnoKeyForSpecies(p,  Q.All_Anno);
 				rset.close();	
 			}
-			stmt.close();
-			conn.close();
 			
 			theAnnos.orderKeys();
 			return theAnnos;

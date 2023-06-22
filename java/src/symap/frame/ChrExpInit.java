@@ -9,40 +9,39 @@ import java.sql.SQLException;
 import java.util.Vector;
 
 import util.ErrorReport;
-import database.DBuser;
-import database.DBconn;
+import database.DBconn2;
 import symap.manager.Mproject;
 
 /*********************************************************
  * Chromosome Explorer setup; loads projects, tracks, blocks and initializes track
  * CAS521 remove FPC
  * CAS534 symapCE.SyMAPExp=> frame.ChrExpInit
+ * CAS541 called by ManagerFrame instead of SyMAPmanager
  */
 
 public class ChrExpInit implements PropertyChangeListener { 
 	private ChrExpFrame frame;
-	private DBconn dbc;
+	private DBconn2 tdbc2;
 	private Vector<Mproject> projects;
 	private Vector<TrackCom> tracks;
 	private Mapper mapper;
 	private static final Color[] projectColors = { Color.cyan, Color.green, new Color(0.8f, 0.5f, 1.0f),
 		Color.yellow, Color.orange };
 
-	public ChrExpInit(DBconn dr) throws SQLException {
-		dbc = dr;
+	public ChrExpInit(DBconn2 dbc2) throws SQLException {
+		tdbc2 = new DBconn2("ChrExp-" + DBconn2.getNumConn(), dbc2); // closed in ChrExpFrame
 		
 		projects = new Vector<Mproject>();
 		tracks =   new Vector<TrackCom>();
 		
 		mapper =   new Mapper();
 		
-		frame =    new ChrExpFrame(dbc, mapper);
+		frame =    new ChrExpFrame(tdbc2, mapper);
 	}
 	public void propertyChange(PropertyChangeEvent evt) {
 		if (frame != null) frame.repaint();
 	}
 	
-	// symapCE.SyMAPmanager.showExplorer
 	public boolean addProject(String strName) {
 		try {
 			Mproject p = loadProject(strName);
@@ -56,7 +55,7 @@ public class ChrExpInit implements PropertyChangeListener {
 		catch (Exception e) {ErrorReport.print(e, "Add project for Explorer");}
 		return false;
 	}
-	// symapCE.SyMAPmanager.showExplorer
+	
 	public boolean build() {
 		try {
 			Vector<Block> blocks = loadAllBlocks(tracks);
@@ -71,17 +70,16 @@ public class ChrExpInit implements PropertyChangeListener {
 		catch (Exception e) {ErrorReport.print(e, "Build Explorer");}
 		return false;
 	}
-	// symapCE.SyMAPmanager.showExplorer
+	
 	public ChrExpFrame getFrame() {
 		return frame;
 	}
 	
-	private Mproject loadProject(String strProjName) throws SQLException{
+	private Mproject loadProject(String strProjName) throws Exception{
 	     int nProjIdx = -1;
 	     String loaddate=""; // CAS513 to put on left side by name
 	
-	     DBuser pool = new DBuser(dbc);
-	     ResultSet rs = pool.executeQuery("SELECT p.idx, p.loaddate " +
+	     ResultSet rs = tdbc2.executeQuery("SELECT p.idx, p.loaddate " +
 	     		"FROM projects AS p  where p.name='"+strProjName+"'");
 	     
 	     if ( rs.next() ) {
@@ -95,21 +93,21 @@ public class ChrExpInit implements PropertyChangeListener {
 	     	return null;
 	     }
 	     
-	     Mproject p = new Mproject(new DBuser(dbc), nProjIdx, strProjName,  loaddate);
+	     Mproject p = new Mproject(tdbc2, nProjIdx, strProjName,  loaddate);
 	     p.loadDataFromDB();
 	     p.loadParamsFromDB();
 	     return p;
 	}
 	
-	private Vector<TrackCom> loadProjectTracks(Mproject p) throws SQLException {
+	private Vector<TrackCom> loadProjectTracks(Mproject p)  {
+	try {
 		Vector<TrackCom> projTracks = new Vector<TrackCom>();
      
 	     // Get group(s) and create track(s)
-	     DBuser pool = new DBuser(dbc);
 	     String qry = "SELECT idx,name FROM xgroups WHERE proj_idx=" + p.getID() +
 	     				" AND sort_order > 0 " + // make consistent with full dotplot for FPC projects
 	     				"ORDER BY sort_order";
-	     ResultSet rs = pool.executeQuery(qry);
+	     ResultSet rs = tdbc2.executeQuery(qry);
 	     while( rs.next() ) {
 	     	int nGroupIdx = rs.getInt(1);
 	     	String strGroupName = rs.getString(2);
@@ -124,19 +122,18 @@ public class ChrExpInit implements PropertyChangeListener {
 	     
 	     // Initialize tracks
 	     for (TrackCom t : projTracks) {
-	        rs = pool.executeQuery("SELECT length FROM pseudos WHERE (grp_idx="+t.getGroupIdx()+")");
+	        rs = tdbc2.executeQuery("SELECT length FROM pseudos WHERE (grp_idx="+t.getGroupIdx()+")");
 	        while( rs.next() ) {
 	        	t.setSizeBP( rs.getLong(1) );
 	        }
 	        rs.close();
 	     }
 	     return projTracks;
+	} catch (Exception e) {ErrorReport.print(e, "Load tracks"); return null;}
 	}
 	
-	private Vector<Block> loadAllBlocks(Vector<TrackCom> tracks) throws SQLException {
+	private Vector<Block> loadAllBlocks(Vector<TrackCom> tracks) {
 		Vector<Block> blocks = new Vector<Block>();
-		
-		DBuser pool = new DBuser(dbc);
 		
 		/* CAS512 is added, See if we have the corr field - CAS was probably added to schema long ago
 		 boolean haveCorr = true;
@@ -144,12 +141,13 @@ public class ChrExpInit implements PropertyChangeListener {
 	     catch (Exception e) {haveCorr = false;}
 	     String corrStr = (haveCorr ? ",corr " : "");
 		*/
+		try {
 	     // Load blocks for each track
 	     String strGroupList = "(" + getGroupList(tracks) + ")";
 	     String strQ = "SELECT idx,grp1_idx,grp2_idx,start1,end1,start2,end2, corr FROM blocks " + 
 						"WHERE (grp1_idx IN "+strGroupList+" AND grp2_idx IN "+strGroupList+")";
      
-	     ResultSet rs = pool.executeQuery(strQ);
+	     ResultSet rs = tdbc2.executeQuery(strQ);
 	     while( rs.next() ) {
 	     	int blockIdx = rs.getInt(1); // CAS512 replace fields with numbers
 	     	int grp1_idx = rs.getInt(2);
@@ -172,6 +170,7 @@ public class ChrExpInit implements PropertyChangeListener {
 	     }
 	     rs.close();
 	     return blocks;
+	} catch (Exception e) {ErrorReport.print(e, "Load blocks"); return null;}   
 	}
 	private static String getGroupList(Vector<TrackCom> tracks) {
 		String s = "";

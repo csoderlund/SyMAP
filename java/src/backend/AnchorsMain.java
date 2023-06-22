@@ -13,6 +13,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.lang.Math;
 
+import database.DBconn2;
+import symap.Globals;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
 import util.Cancelled;
@@ -33,6 +35,7 @@ import util.Utilities;
  *      Clusters hits do not have mixed strands, i.e. must be either ++/-- or +-/-; 		 Hit.clusterHits2
  * 		The Hit.matchLen is the Max q&t(summed(subhits)-summed(overlap)) instead of summed(query subhits) 
  * This algorithm is really finicky because of bins, which can obscure good hits; need to rewrite with proper interval tree 
+ * CAS541 change updataPool to dbc2
  */
 enum HitStatus  {In, Out, Undecided }; 
 enum QueryType  {Query, Target, Either };	
@@ -40,10 +43,11 @@ enum HitType 	{GeneGene, GeneNonGene, NonGene} // CAS535 was in HitBin
 enum GeneType 	{Gene, NonGene, NA}				 // ditto
 
 public class AnchorsMain {
+	private static boolean DEBUG = Globals.DEBUG;
 	private static final int HIT_VEC_INC = 1000;
 	private static final int nLOOP = 10000;
 	
-	private UpdatePool pool;
+	private DBconn2 dbc2, tdbc2;
 	private ProgressDialog plog;
 	
 	private boolean bInterrupt = false;
@@ -60,17 +64,22 @@ public class AnchorsMain {
 	private boolean bSuccess=true;
 	private String proj1Name, proj2Name;
 	
-	public AnchorsMain(UpdatePool pool, ProgressDialog log,  Mpair mp) {	
-		this.pool = pool;
+	public AnchorsMain(DBconn2 dbc2, ProgressDialog log,  Mpair mp) {	
+		this.dbc2 = dbc2;
 		this.plog = log;
 		this.mp = mp;
 		this.pairIdx = mp.getPairIdx();
 	}
 	
+	public AnchorsMain(DBconn2 dbc2) { // for Version to update gene hit count on =y
+		this.dbc2 = dbc2;
+	}
+	/**************************************************************************/
 	public boolean run(Mproject pj1, Mproject pj2) throws Exception {
 	try {
 	/** init **/
 		long startTime = Utils.getTime();
+		tdbc2 = new DBconn2("Anchors-"+DBconn2.getNumConn(), dbc2);
 		
 		proj1Name = pj1.getDBName(); proj2Name = pj2.getDBName();
 		isSelf = proj1Name.equals(proj2Name); 
@@ -100,10 +109,14 @@ public class AnchorsMain {
 		long modDirDate = new File(resultDir).lastModified(); // CAS532 add for Pair Summary with 'use existing files'
 		mp.setPairProp("pair_align_date", Utils.getDateStr(modDirDate));
 		
+		tdbc2.close();
 		Utils.timeDoneMsg(plog,  "Find hits", startTime);
 	}
 	catch (OutOfMemoryError e) {
-		System.out.println("\n\nOut of memory! Edit the symap launch script and increase the memory limit (mem=).\n\n");
+		filtHitSet.clear();
+		tdbc2.shutdown();
+		ErrorReport.prtMem();
+		System.out.println("\n\nOut of memory! Edit the symap script and increase the memory limit (mem=).\n\n");
 		System.exit(0);
 	}		
 	return true;
@@ -118,8 +131,8 @@ public class AnchorsMain {
 	try {
 		long memTime = Utils.getTimeMem();
 		int topN = mp.getTopN(Mpair.FILE);
-		syProj1 = new SyProj(pool, plog, pj1, proj1Name, topN, QueryType.Query);  // loads group
-		syProj2 = new SyProj(pool, plog, pj2, proj2Name, topN, QueryType.Target); // make new object even if self or filtering gets confused
+		syProj1 = new SyProj(tdbc2, plog, pj1, proj1Name, topN, QueryType.Query);  // loads group
+		syProj2 = new SyProj(tdbc2, plog, pj2, proj2Name, topN, QueryType.Target); // make new object even if self or filtering gets confused
 		
 		if (!syProj1.hasAnnot() && !syProj2.hasAnnot()) { // CAS540x add check
 			plog.msg("Neither project is annotated");
@@ -132,12 +145,12 @@ public class AnchorsMain {
 		
 		if (syProj1.hasAnnot()) {// CAS540x check
 			int tot1=0;
-			for (Group grp : group1Vec) tot1 += grp.createAnnoFromGenes(pool);
+			for (Group grp : group1Vec) tot1 += grp.createAnnoFromGenes(tdbc2);
 			Utils.prtNumMsg(plog, tot1, proj1Name + " genes ");
 		}
 		if (syProj2.hasAnnot()) {// CAS540x check
 			int tot2=0;
-			for (Group grp : group2Vec) tot2 += grp.createAnnoFromGenes(pool);
+			for (Group grp : group2Vec) tot2 += grp.createAnnoFromGenes(tdbc2);
 			if (!isSelf) Utils.prtNumMsg(plog, tot2,  proj2Name + " genes");	
 		}
 		
@@ -149,7 +162,7 @@ public class AnchorsMain {
 
 	/*******************************************************************
 	 */
-	private boolean scanAlignFiles() {
+	private boolean scanAlignFiles() throws Exception {
 	try {
 		String alignDir = resultDir + Constants.alignDir;
 		
@@ -243,8 +256,9 @@ public class AnchorsMain {
 	 * first time through, create the predicted genes from non-gene hits
 	 */
 	private int scanFile1AnnoBins(File mFile, SyProj p1, SyProj p2, boolean skipSelf) throws Exception {
-	try {
 		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
+	
+	try {	
 		String line, fileType="PROMER";
 		int numErrors = 0, hitNum = 0;
 		int skip1=0, skip2=0;
@@ -299,6 +313,7 @@ public class AnchorsMain {
 				
 			mTotalHits++;
 			if (Group.bSplitGene && hit.maxLength() > Group.fSplitLen) {// CAS540 add splitgene check
+				if (DEBUG) System.out.print(" split hit of size " + hit.maxLength() + "\r");
 				Vector<Hit> brokenHits = Hit.splitMUMmerHit(hit);
 				mTotalLargeHits++;
 				mTotalBrokenHits += brokenHits.size();
@@ -315,7 +330,8 @@ public class AnchorsMain {
 			Utils.prtNumMsgNZx(skip1, "Skip1 - Self with same group (is run separately)");
 			Utils.prtNumMsgNZx(skip2, "Skip2 - Same group   with start1<start2 (mirror later)");
 		}
-		Utils.prtNumMsg(plog, hitNum, "scanned " +  fileType + " " + Utils.fileFromPath(mFile.toString()));
+		
+		Utils.prtNumMsg(plog, hitNum, "scanned "  + fileType + " " + Utils.fileFromPath(mFile.toString() ));
 		if (hitNum==0 || mTotalHits==0) return 0;
 		
 	/** Scan1 processing: all hits get added to each grp; create non-genes (predicted); hit has start<end **/
@@ -326,18 +342,23 @@ public class AnchorsMain {
 			grp1.createAnnoFromHits1(h.queryHits.start, h.queryHits.end, h.isRev);
 			grp2.createAnnoFromHits1(h.targetHits.start, h.targetHits.end, h.isRev);
 		}
+		rawHits.clear();
 		return hitNum;
 	}
-	catch (Exception e) {ErrorReport.print(e, "Reading anchors: scanFile1"); bSuccess=false; return 0;}
+	catch (Exception e) {
+		rawHits.clear();
+		ErrorReport.print(e, "Reading anchors: scanFile1"); 
+		bSuccess=false; 
+		return 0;}
 	}
 	/*********************************************************************
 	 * 2nd time through - do the clustering
 	 * this is about the same as scanFile1 except for no checks, diagonals, and final processing
 	 */
 	private int scanFile2ClusterFilter(File mFile, SyProj p1, SyProj p2, boolean skipSelf) throws Exception {
+		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
 	try {
 		BufferedReader fh = new BufferedReader(new FileReader(mFile));
-		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
 		String line;
 		
 	/** Read file and build rawHits **/
@@ -397,7 +418,11 @@ public class AnchorsMain {
 	
 		return clustHits.size();
 	}
-	catch (Exception e) {ErrorReport.print(e, "Reading anchors: scanFile2"); bSuccess=false; return 0;}
+	catch (Exception e) {
+		rawHits.clear();
+		ErrorReport.print(e, "Reading anchors: scanFile2"); 
+		bSuccess=false; 
+		return 0;}
 	}	
 	
 	/*********************************************************************
@@ -406,8 +431,7 @@ public class AnchorsMain {
 	 * actual length of the hits will be the sum of the subhits that went into them.
 	 * CAS540 it was mixing isRev and !isRev; fixed in Hit.clusterHits
 	 */
-	private Vector<Hit> clusterHits2(Vector<Hit> inHits) {
-	try {
+	private Vector<Hit> clusterHits2(Vector<Hit> inHits) throws Exception {
 		Vector<Hit> outHits = new Vector<Hit>(HIT_VEC_INC, HIT_VEC_INC);
 		
 		// all use key = qAnno.mID + "_" + tAnno.mID;
@@ -416,6 +440,8 @@ public class AnchorsMain {
 		HashMap<String,AnnotElem>   key2tAnno = new HashMap<String,AnnotElem>();
 		HashMap<String,HitType>     pairTypes = new HashMap<String,HitType>(); 
 						
+	try {
+		
 		// Find all hits for each qAnno x tAnno; every hit has a gene or non-gene AnnotElem for q&t
 		for (Hit hit : inHits)  {		
 			Group grp1 = syProj1.getGrpByIdx(hit.queryHits.grpIdx);
@@ -459,7 +485,11 @@ public class AnchorsMain {
 		
 		return outHits;
 	}
-	catch (Exception e) {ErrorReport.print(e, "cluster gene hits"); bSuccess=false; return null;}
+	catch (Exception e) {
+		outHits.clear(); pairMap.clear(); key2qAnno.clear();key2tAnno.clear();  pairTypes.clear();
+		ErrorReport.print(e, "cluster gene hits"); 
+		bSuccess=false; 
+		return null;}
 	}
 	/********************************************************
 	 * Add hits to their topN bins, applying the topN criterion immediately when possible to reduce memory
@@ -599,9 +629,9 @@ public class AnchorsMain {
 		
 		if (isSelf) addMirroredHits();	if (!bSuccess) return;
 		
-		saveAnnoHits();			 		
-	
-		if (!bSuccess) return;
+		saveAnnoHits();			 		if (!bSuccess) return;
+		
+		saveAnnoHitCnt();				if (!bSuccess) return;
 		
 		if (Constants.PRT_STATS) Utils.prtMsgTimeFile(plog, "Complete save", memTime);
 	}
@@ -615,9 +645,9 @@ public class AnchorsMain {
 		try {
 			plog.msg("   Save filtered hits");
 			int numLoaded=0, countBatch=0;
-			pool.executeUpdate("alter table pseudo_hits modify countpct integer");
+			tdbc2.executeUpdate("alter table pseudo_hits modify countpct integer");
 			
-			PreparedStatement ps = pool.prepareStatement("insert into pseudo_hits "
+			PreparedStatement ps = tdbc2.prepareStatement("insert into pseudo_hits "
 					+ "(pair_idx, proj1_idx, proj2_idx, grp1_idx, grp2_idx,"
 					+ "evalue, pctid, score, strand,"
 					+ "start1, end1, start2, end2, query_seq, target_seq,"
@@ -674,16 +704,16 @@ public class AnchorsMain {
 	 */
 	private void saveNumHits() { 
 	try {
-		System.out.println("   Create and save hitNum");
+		System.out.println("   Compute and save hit#");
 		
 		for (Group g1 : syProj1.getGroups()) {
 			for (Group g2: syProj2.getGroups()) {
-				pool.executeUpdate("update pseudo_hits set hitnum=0 where grp1_idx=" + g1.idx + " and grp2_idx=" + g2.idx);
+				tdbc2.executeUpdate("update pseudo_hits set hitnum=0 where grp1_idx=" + g1.idx + " and grp2_idx=" + g2.idx);
 				
 				HashMap <Integer, Integer> hitNumMap = new HashMap <Integer, Integer> ();
 			// assign
 				int hitcnt=1;
-				ResultSet rs = pool.executeQuery("select idx, (end1-start1) as len from pseudo_hits "
+				ResultSet rs = tdbc2.executeQuery("select idx, (end1-start1) as len from pseudo_hits "
 						+ " where grp1_idx= " + g1.idx + " and grp2_idx=" + g2.idx
 						+ " order by start1 ASC, len DESC");
 				while (rs.next()) {
@@ -694,7 +724,7 @@ public class AnchorsMain {
 				rs.close();
 				
 			// save	
-				PreparedStatement ps = pool.prepareStatement("update pseudo_hits set hitnum=? where idx=?");
+				PreparedStatement ps = tdbc2.prepareStatement("update pseudo_hits set hitnum=? where idx=?");
 				for (int idx : hitNumMap.keySet()) {
 					int num = hitNumMap.get(idx);
 					ps.setInt(1, num);
@@ -709,18 +739,18 @@ public class AnchorsMain {
 	}
 	private void addMirroredHits() throws Exception {
 	try { // Create the reflected hits for self-alignment cases; CAS520 add hitnum
-		pool.executeUpdate("insert into pseudo_hits (select 0, hitnum, pair_idx,proj1_idx,proj2_idx,grp2_idx,grp1_idx,evalue,pctid," + 
+		tdbc2.executeUpdate("insert into pseudo_hits (select 0, hitnum, pair_idx,proj1_idx,proj2_idx,grp2_idx,grp1_idx,evalue,pctid," + 
 				"score,strand,start2,end2,start1,end1,target_seq,query_seq,gene_overlap,countpct,cvgpct,idx,annot2_idx,annot1_idx,runnum, runsize " + // CAS520 add  runnum
 				" from pseudo_hits where pair_idx=" + pairIdx + " and refidx=0 and start1 != start2 and end1 != end2)"	
 			);
-		pool.executeUpdate("update pseudo_hits as ph1, pseudo_hits as ph2 set ph1.refidx=ph2.idx where ph1.idx=ph2.refidx " +
+		tdbc2.executeUpdate("update pseudo_hits as ph1, pseudo_hits as ph2 set ph1.refidx=ph2.idx where ph1.idx=ph2.refidx " +
 				" and ph1.refidx=0 and ph2.refidx != 0 and ph1.pair_idx=" + pairIdx + " and ph2.pair_idx=" + pairIdx);
 	}
 	catch (Exception e) {ErrorReport.print(e, "add mirror hits"); bSuccess=false;}
 	}
 	
 	/****************************************************
-	 * CAS535 changed from using UpdatePool via Group to PrepareStatement here [hitAnnotations]
+	 * CAS535 changed from using Updatedbc2 via Group to PrepareStatement here [hitAnnotations]
 	 * This is slower than the old method if innodb_flush_log_at_trx_commit=1; =0, the same
 	 * show variables like 'max_prepared_stmt_count'; 16386 is default
 	 * CAS540 add gene_olap, otherwise, get hits that span genes (which are never used)
@@ -734,7 +764,7 @@ public class AnchorsMain {
 		Vector <Hit> vecHits = new Vector <Hit> (filtHitSet.size()); 
 		String st = "SELECT idx, start1, end1, start2, end2, strand, grp1_idx, grp2_idx" +
       			" FROM pseudo_hits WHERE gene_overlap>0 and pair_idx=" + pairIdx;
-		ResultSet rs = pool.executeQuery(st);
+		ResultSet rs = tdbc2.executeQuery(st);
 		while (rs.next()) {
 			Hit h = new Hit();
 			h.idx 				= rs.getInt(1);
@@ -752,7 +782,7 @@ public class AnchorsMain {
 		if (failCheck()) return;
 		
 	/* save the query annotation hits, which correspond to syProj1 */ /* on self-synteny, get dups;  */
-		PreparedStatement ps = pool.prepareStatement("insert ignore into pseudo_hits_annot "
+		PreparedStatement ps = tdbc2.prepareStatement("insert ignore into pseudo_hits_annot "
 				+ "(hit_idx, annot_idx, olap) values (?,?,?)");
 		
 		int count=0, cntHit=0, cntBatch=0;
@@ -817,7 +847,49 @@ public class AnchorsMain {
 	}
 	catch (Exception e) {ErrorReport.print(e, "save annot hits " + key); bSuccess=false;}
 	}
-	
+	/********************************************************************
+	 * Count number of hits per gene; these include all pairwise projects with except self
+	 * CAS541 Moved from AnchorsPost
+	 */
+	private void saveAnnoHitCnt() {
+		plog.msg("   Compute and save gene numHits    ");
+		for (Group g1 : syProj1.getGroups()) if (!setAnnotHits(g1.idx)) return;
+		for (Group g2 : syProj2.getGroups()) if (!setAnnotHits(g2.idx)) return;
+	}
+	public boolean setAnnotHits(int grpIdx ) { // used in Version on -y also, hence, public
+		try {
+			dbc2.executeUpdate("update pseudo_annot set numhits=0 where grp_idx=" + grpIdx);
+			ResultSet rs = dbc2.executeQuery("select count(*) from pseudo_annot where grp_idx=" + grpIdx);
+			int cnt = (rs.next()) ? rs.getInt(1) : 0;
+			if (cnt==0) return true; // CAS521 this is not a failure 
+			
+			HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> ();
+			
+			rs = dbc2.executeQuery("select pa.idx "
+					+ "from pseudo_annot           as pa "
+					+ "join pseudo_hits_annot      as pha   on pha.annot_idx  = pa.idx "
+					+ "join pseudo_hits			as ph	 on pha.hit_idx    = ph.idx "
+					+ "where pa.type='gene' and ph.proj1_idx != ph.proj2_idx and pa.grp_idx=" + grpIdx);
+			
+			while (rs.next()) {
+				int aidx = rs.getInt(1);
+				if (geneCntMap.containsKey(aidx)) geneCntMap.put(aidx,geneCntMap.get(aidx)+1);
+				else                              geneCntMap.put(aidx, 1);
+			}
+			rs.close();
+			
+			PreparedStatement ps = dbc2.prepareStatement("update pseudo_annot set numhits=? where idx=?");
+			for (int idx : geneCntMap.keySet()) {
+				int num = geneCntMap.get(idx);
+				ps.setInt(1, num);
+				ps.setInt(2, idx);
+				ps.addBatch();
+			}
+			ps.executeBatch();
+			return true;
+		}
+		catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); return false;}
+	}
 	/*************************************************
 	 * CAS500 this was in run(); some of this is obsolete; CAS535 removed addGeneParams,
 	 */

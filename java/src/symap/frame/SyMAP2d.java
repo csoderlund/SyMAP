@@ -1,19 +1,18 @@
 package symap.frame;
 
-import java.sql.SQLException;
 import util.*;
 import colordialog.*;
-import database.DBconn;
+import database.DBconn2;
 import props.*;
 import symap.drawingpanel.DrawingPanel;
-import symap.manager.Pools;
 import history.History;
 import history.HistoryControl;
 import symap.closeup.CloseUp;
 import symapQuery.TableDataPanel;
 
 /**
- * SyMAP sets up the 2D display for:
+ * SyMAP sets up the 2D display for 
+ * 		(see frame.ChrExpFrame for full Chromosome explorer):
  * 	manager.SyMAPFrame.regenerate2DView
  * 	dotplot.Data
  * 	blockview.Block2Frame
@@ -30,7 +29,7 @@ public class SyMAP2d {
 	private ControlPanel       controlPanel;
 	private HelpBar            helpBar;
 	
-	private DBconn     databaseReader;
+	private DBconn2 tdbc2;
 	private HistoryControl     historyControl;
 	private History            history;
 	private ImageViewer        imageViewer;
@@ -39,14 +38,16 @@ public class SyMAP2d {
 	private ColorDialogHandler colorDialogHandler;
 
 	/** Dotplot, Block2Frame, Query **/
-	public SyMAP2d(DBconn dr, TableDataPanel theTablePanel) throws SQLException {
-		this(dr, null, theTablePanel);
+	public SyMAP2d(DBconn2 dbc2, TableDataPanel theTablePanel)  {
+		this(dbc2, null, theTablePanel);
 	}
-	/** Chromosome Explorer **/
-	public SyMAP2d(DBconn dr, HelpBar hb, TableDataPanel theTablePanel) // CAS507 removed applet
-	throws SQLException 
+	/** symap.frame.ChrExpFrame.regenerate2Dview 
+	 * hb==null is from dotplot or blocks display, so not full ChrExp
+	 ***/
+	public SyMAP2d(DBconn2 dbc2, HelpBar hb, TableDataPanel theTablePanel) // CAS507 removed applet
 	{
-		this.databaseReader = dr;
+		String type = (hb==null) ? "P" : "E";
+		this.tdbc2 = new DBconn2("SyMAP2d" + type + "-" + DBconn2.getNumConn(), dbc2);
 
 		persistentProps = new PersistentProps(); // CAS521 changed PersistentProps - it has all args now
 
@@ -57,24 +58,17 @@ public class SyMAP2d {
 
 		historyControl = new HistoryControl(history);
 
-		Pools pool = null; 
-		try { pool = new Pools(dr); // CAS534 removed PoolManager.java
-		} catch (SQLException e) {
-			ErrorReport.print(e, "Getting pool");
-			throw e;
-		}
-
-		drawingPanel = new DrawingPanel(theTablePanel,pool,historyControl,helpBar);
+		drawingPanel = new DrawingPanel(theTablePanel, tdbc2, historyControl, helpBar);
 
 		historyControl.setListener(drawingPanel);
 
 		colorDialogHandler = new ColorDialogHandler(persistentProps); // This sets changed colors; CAS521 moved properties to ColorDialogHandler
 
-		controlPanel = new ControlPanel(drawingPanel,historyControl, colorDialogHandler,helpBar);
+		controlPanel = new ControlPanel(drawingPanel, historyControl, colorDialogHandler, helpBar, (hb!=null));
 
-		frame = new Frame2d(controlPanel,drawingPanel,helpBar,hb==null,persistentProps);
+		frame = new Frame2d(this, controlPanel, drawingPanel, helpBar, hb==null, persistentProps);
 		
-		closeup = new CloseUp(drawingPanel,colorDialogHandler);
+		closeup = new CloseUp(drawingPanel, colorDialogHandler);
 
 		drawingPanel.setCloseUp(closeup);
 
@@ -92,6 +86,7 @@ public class SyMAP2d {
 	**/
 	
 	public void clear() {
+		tdbc2.close(); // CAS541 add
 		getDrawingPanel().clearData(); // clear caches
 		getHistory().clear(); // clear history
 	}
@@ -106,5 +101,5 @@ public class SyMAP2d {
 
 	public ImageViewer getImageViewer() {return imageViewer;}
 
-	public DBconn getDatabaseReader() { return databaseReader;}
+	public DBconn2 getDatabaseReader() { return tdbc2;}
 }

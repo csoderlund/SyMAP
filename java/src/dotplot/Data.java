@@ -4,14 +4,16 @@ import java.awt.Dimension;
 import java.awt.Shape;
 import java.awt.Color;
 import java.awt.geom.Rectangle2D;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
-import database.DBconn;
+import database.DBconn2;
 import props.ProjectPair;
 import props.ProjectPool;
-import symap.Globals;
 import symap.frame.SyMAP2d;
-import symap.mapper.HitFilter;
+import symap.mapper.HfilterData;
 import symap.sequence.Sequence;
 import util.ErrorReport;
 import util.Utilities;
@@ -19,11 +21,11 @@ import util.Utilities;
 /**
  * This contains the arrays of data (Project and Tile) and interface code with Filter
  * CAS533 Removed Observable, removed Loader (was painting tile at time); rearranged 
+ * CAS541 Replace DBAbsUser with new DBconn2
  */
 public class Data  {
 	public static final double DEFAULT_ZOOM = 0.99;
 	public static final int X  = 0, Y   = 1;
-	private final String dbStr = Globals.DB_CONN_DOTPLOT;
 	
 	private Project projects[]; // loaded data
 	private Tile[] tiles;
@@ -34,23 +36,28 @@ public class Data  {
 	
 	private SyMAP2d symap;
 	private ProjectPool projProps;
-	private DBconn dbReader;
 	private FilterData filtData;
 	
 	private double sX1, sX2, sY1, sY2;
 	private Shape selectedBlock;
-	private double zoomFactor;
-	private boolean hasSelectedArea, isTileView;
-	private boolean isScaled;
-	private double scaleFactor = 1;
-	private double minPctId=100;
+	private double zoomFactor, scaleFactor = 1, minPctId=100;
+	private boolean hasSelectedArea, isTileView, isScaled;
 	
-	// CAS533 added this in order to replace the massive Loader.java; it no longer draws tite by tile
-	private DotPlotDBUser dbUser;
+	private DBconn2 tdbc2;
+	private DBload dbLoad;
 	
 	// Called from DotPlotFrame
-	public Data(DotPlotDBUser db) {
-		dbUser = db;
+	public Data(DBconn2 dbc2, String type) {
+		try { 
+			tdbc2 = new DBconn2("Dotplot" + type + "-" + DBconn2.getNumConn(), dbc2);
+			
+			//symap = new SyMAP2d(dbc2, null); 
+			
+			dbLoad = new DBload(tdbc2);
+			
+			projProps = new ProjectPool(dbc2); 
+			
+		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 		
 		projects      = null; 
 		tiles         = new Tile[0];
@@ -62,20 +69,13 @@ public class Data  {
 		selectedBlock = null;
 
 		isScaled = false;
-		scaleFactor  = 1;
-
-		try { // ugh - symap is used in different contexts, so needs to be active
-			dbReader = DBconn.getInstance(dbStr, dbUser.getDBconn());
-			symap = new SyMAP2d(dbReader, null);
-		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
-		
-		projProps = symap.getDrawingPanel().getPools().getProjectPropPool(); // ugh
+		scaleFactor  = 1;		
 	}
 	/*************************************************************
-	 *  DotPlotFrame (genome), SyMAPFrameCommon (groups), Data.setReference (change ref)
-	 * @param xGroupIDs, yGroupIDs null if genome
+	 * Called from: DotPlotFrame (genome), SyMAPFrameCommon (groups), Data.setReference (change ref)
+	 *              xGroupIDs, yGroupIDs null if genome
 	 * CAS533 for blocks and hits:
-	 * 		this was loader.execute(projProps,projects,tiles,sb,true);added swap instead of reading database again
+	 * 	this was loader.execute(projProps,projects,tiles,sb,true); added swap instead of reading database again
 	 */
 	public void initialize(int[] projIDs, int[] xGroupIDs, int[] yGroupIDs) {
 	try {
@@ -85,12 +85,12 @@ public class Data  {
 		Vector<Project> newProjects = new Vector<Project>(projIDs.length);
 		for (int i = 0;  i < projIDs.length;  i++) {// 1 -> 0
 			Project p = Project.getProject(projects, 1, projIDs[i]);
-			if (p == null) p = new Project(projIDs[i], dbReader);
+			if (p == null) p = new Project(projIDs[i], tdbc2);
 			newProjects.add( p );
 		}
 		projects = newProjects.toArray(new Project[0]);
 	
-		dbUser.setGrpPerProj(projects, xGroupIDs, yGroupIDs, projProps); // needs to redone for ref
+		dbLoad.setGrpPerProj(projects, xGroupIDs, yGroupIDs, projProps); // needs to redone for ref
 		for (Project p : projects) 
 			maxGrps = Math.max(p.getNumGroups(), maxGrps);
 		
@@ -104,15 +104,15 @@ public class Data  {
 			boolean bSwap = projProps.isSwapped(tObj.getProjID(X), tObj.getProjID(Y)); // if DB.pairs.proj1_idx=proj(Y)
 			if (tObj.hasHits()) tObj.swap(tObj.getProjID(X), tObj.getProjID(Y));
 			else {
-				dbUser.setBlocks(tObj, bSwap);
+				dbLoad.setBlocks(tObj, bSwap);
 
-				dbUser.setHits(tObj, bSwap);
+				dbLoad.setHits(tObj, bSwap);
 			}
 		}
 		prt("Load dotplot: " + Utilities.getNanoTimeStr(time));
 
 		filtData = new FilterData(); 
-		minPctId = dbUser.getMinPctID();
+		minPctId = dbLoad.getMinPctID();
 		filtData.setBounds(minPctId, 100);
 	
 		if (getNumVisibleGroups() == 2) selectTile(100, 100); // kludge; this sets current...
@@ -136,6 +136,9 @@ public class Data  {
 	private void show2dBlock() {
 		if (selectedBlock==null) return;
 		
+		// CAS531 need to recreate since I changed the Hits code; bonus, allows multiple 2d displays
+		// CAS541 cleaned up connection, no longer can do multiple 2d display
+		if (symap==null) symap = new SyMAP2d(tdbc2, null);
 		symap.getDrawingPanel().setMaps(1);
 		symap.getHistory().clear(); 
 		
@@ -146,13 +149,15 @@ public class Data  {
 			Group gX = ib.getGroup(X);
 			Group gY = ib.getGroup(Y);
 
-			HitFilter hd = new HitFilter (); // CAS530 use 2D filter
+			HfilterData hd = new HfilterData (); // CAS530 use 2D filter
 			hd.setForDP(true, false);
 			
+			/**
 			try { // CAS531 need to recreate since I changed the Hits code; bonus, allows multiple 2d displays
-				DBconn dr = DBconn.getInstance(dbStr, dbUser.getDBconn());
-				symap = new SyMAP2d(dr, null);
+				//DBconn dr = DBconn.getInstance(dbStr, dbLoad.getDBconn());
+				symap = new SyMAP2d(dbc2, null);
 			} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
+			**/
 			
 			symap.getDrawingPanel().setHitFilter(1,hd);
 			
@@ -184,15 +189,15 @@ public class Data  {
 		}
 		
 		try {
-			DBconn dr = DBconn.getInstance(dbStr, dbUser.getDBconn());
-			symap = new SyMAP2d(dr, null);
+			//DBconn dr = DBconn.getInstance(dbStr, dbUser.getDBconn());
+			symap = new SyMAP2d(tdbc2, null);
 		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 		
 		symap.getDrawingPanel().setMaps(1);
 		symap.getHistory().clear(); 
 		
-		HitFilter hd = new HitFilter(); // CAS530 use 2D filter
-		hd.setForDP(false, true);
+		HfilterData hd = new HfilterData(); // CAS530 use 2D filter
+		hd.setForDP(false, true); // set block, set all
 		symap.getDrawingPanel().setHitFilter(1,hd);
 		Sequence.setDefaultShowAnnotation(false); 
 		
@@ -209,6 +214,7 @@ public class Data  {
 	 */
 	public SyMAP2d getSyMAP() { return symap; }
 	public Project[] getProjects() { return projects; }
+	
 	public void kill() {
 		clear();
 		tiles = new Tile[0]; 
@@ -217,11 +223,8 @@ public class Data  {
 				if (p != null) p.setGroups(null);
 		}
 
-		if (symap != null) {
-			symap.getDatabaseReader().close();
-			symap = null; 
-		}
-		dbUser.getDBconn().close();
+		if (symap != null) symap = null; 
+		tdbc2.close();
 	}
 
 	/*****************************************
@@ -392,6 +395,13 @@ public class Data  {
 		return out.toArray(new Group[0]);
 	}
 	/***************************************************************************/
+	public double getPctid() {
+		if (filtData==null) {
+			System.err.println("SYMAP error: null filtdata");
+			return minPctId;
+		}
+		return filtData.getPctid();
+	}
 	public FilterData getFilterData() { return filtData; } // plot and Filter.FilterListener
 	public Project getProject(int axis) { return projects[axis]; } // plot and data
 	public int getNumProjects() { return projects.length; } // plot and data
@@ -416,6 +426,11 @@ public class Data  {
 	public ProjectPair getProjectPair(int x, int y) {
 		return projProps.getProjectPair(projects[x].getID(),projects[y].getID());
 	}
+	// CAS541 Set in ControlPanel, read by Plot
+	private int statOpt=0;
+	public void setStatOpts(int n) {statOpt = n;}
+	public int getStatOpts() {return statOpt;}
+	
 	/******************************************************************/
 	private static Group getGroupByOffset(long offset, Group[] groups) {
 		if (groups != null)
@@ -433,4 +448,163 @@ public class Data  {
 	private void prt (String msg) {
 		//if (Globals.DEBUG) System.out.println("Data: " + msg);
 	}
+	
+	/****************************************************
+	 * Loads data for the plot
+	 * CAS531 removed cache and dead code; CAS533 removed some Loader stuff, dead code, a little rewrite
+	 * CAS541 renamed from DotPlotDBuser to DBload; moved from separate file
+	 */
+	public class DBload {
+		private final int X = Data.X, Y = Data.Y;
+		private double minPctid=100;
+		private DBconn2 tdbc2;
+		public DBload(DBconn2 tdbc2) {
+			this.tdbc2 = tdbc2;
+		}
+		public void clear() { minPctid=100;}
+		public double getMinPctID() { return minPctid;}
+		
+		 // For all projects; add groups to projects, and blocks to groups
+		 // CAS533 renamed from setGroups
+		public void setGrpPerProj(Project[] projects, int[] xGroupIDs, int[] yGroupIDs, ProjectPool pp) {
+		try {
+			Vector<Group> list = new Vector<Group>();
+			String qry;
+			ResultSet rs;
+			String groupList = null;
+			
+		// for each project, add groups
+			for (Project prj : projects) {
+				if (xGroupIDs != null && yGroupIDs != null) { // chromosomes only (from CE)
+					groupList = "(";
+					if (prj == projects[0]) groupList += Utilities.getCommaSepString(xGroupIDs);
+					else					groupList += Utilities.getCommaSepString(yGroupIDs);
+					groupList += ")";
+				}
+				String inGrp =  (groupList == null) ? "" : " AND g.idx IN " + groupList;
+				
+				qry = "SELECT g.idx, g.sort_order, g.name, p.length " +
+					  " FROM xgroups AS g JOIN pseudos AS p ON (p.grp_idx=g.idx) " +
+					  " WHERE g.proj_idx=" + prj.getID() +  inGrp + 
+					  " AND g.sort_order > 0 ORDER BY g.sort_order";
+				
+				rs = tdbc2.executeQuery(qry);
+				while (rs.next()) {
+					int idx = rs.getInt(1);
+					Group g = prj.getGroupByID(idx);
+					if (g == null)
+						g = new Group(idx, rs.getInt(2), rs.getString(3), rs.getInt(4),  prj.getID());
+					list.add(g);
+				}
+				prj.setGroups( list.toArray(new Group[0]) );
+				list.clear();
+				rs.close();
+			}
+			
+			if (xGroupIDs != null && yGroupIDs != null)
+				groupList = "(" + Utilities.getCommaSepString(xGroupIDs) + ", " +
+								  Utilities.getCommaSepString(yGroupIDs) + ")";
+			
+		// does the reference groupN have block with projectI groupM
+			Project pX = projects[X];
+			for (int i = 0;  i < projects.length;  i++) { // start at 0 to include self-alignments
+				Project pY = projects[i];
+				boolean swapped = pp.isSwapped(pX.getID(), pY.getID());
+				String inGrp =  (groupList == null) ? "" : " AND g.idx IN " + groupList;
+				int p1 =  (swapped) ? pX.getID() : pY.getID();
+				int p2 =  (swapped) ? pY.getID() : pX.getID();
+				
+				qry = "SELECT b.grp1_idx, b.grp2_idx " +
+					  " FROM blocks AS b " +
+					  " JOIN xgroups AS g ON (g.idx=b.grp1_idx) " +
+				      " WHERE (b.proj1_idx=" + p1 + " AND b.proj2_idx=" + p2 + inGrp + 
+				      " AND g.sort_order > 0) " +
+				      " GROUP BY b.grp1_idx,b.grp2_idx";
+				rs = tdbc2.executeQuery(qry);
+				while (rs.next()) {
+					int grp1_idx = rs.getInt(swapped ? 2 : 1);
+					int grp2_idx = rs.getInt(swapped ? 1 : 2);
+					Group g1 = pY.getGroupByID(grp1_idx);
+					Group g2 = pX.getGroupByID(grp2_idx);
+					if (g1 != null && g2 != null) {
+						g1.setHasBlocks(g2);
+						g2.setHasBlocks(g1);
+					}
+				}
+				rs.close();
+			}	
+		}
+		catch (Exception e) {ErrorReport.print(e, "Loading projects and groups");}
+		}
+		
+		// For this Tile: Add blocks to a tile (cell)
+		public void setBlocks(Tile tile,  boolean swapped) {
+		try {
+			Group gX = (swapped ? tile.getGroup(Y) : tile.getGroup(X));
+			Group gY = (swapped ? tile.getGroup(X) : tile.getGroup(Y));
+			
+			String qry =  "SELECT blocknum, start2, end2, start1, end1 "+
+				"FROM blocks WHERE grp1_idx="+gY+" AND grp2_idx="+gX;
+			ResultSet rs = tdbc2.executeQuery(qry);
+			tile.clearBlocks();
+			while (rs.next()) {
+				int start2 = rs.getInt(2);
+				int end2   = rs.getInt(3);
+				int start1 = rs.getInt(4);
+				int end1   = rs.getInt(5);
+					
+				tile.addBlock(
+						rs.getInt(1), 				// blocknum 
+						swapped ? start1 : start2, 	// int sX  
+						swapped ? end1 : end2,		// int eX  
+						swapped ? start2 : start1, 	// int sY  
+						swapped ? end2 : end1);		// int eY 
+			}
+			rs.close();
+		}
+		catch (Exception e) {ErrorReport.print(e, "Loading Blocks");}
+		}
+		// For this tile, Add hits 
+		public void setHits(Tile tile, boolean swapped)  {
+		try {
+			List<DPHit> hits = new ArrayList<DPHit>();
+			int xx=X, yy=Y;
+			if (swapped) {xx=Y; yy=X;}
+			Project pX = tile.getProject(xx),  pY = tile.getProject(yy);
+			Group gX   = tile.getGroup(xx), gY = tile.getGroup(yy);
+			
+			String qry =
+				"SELECT (h.start2+h.end2)>>1 as posX, (h.start1+h.end1)>>1 as posY,"
+				+ "h.pctid, h.gene_overlap, b.block_idx, (h.end2-h.start2) as length, h.strand "+
+				"FROM pseudo_hits AS h "+
+				"LEFT JOIN pseudo_block_hits AS b ON (h.idx=b.hit_idx) "+
+				"WHERE (h.proj1_idx="+pY.getID()+" AND h.proj2_idx="+pX.getID()+
+				"       AND h.grp1_idx="+gY.getID()+" AND h.grp2_idx="+gX.getID()+")";
+			ResultSet rs = tdbc2.executeQuery(qry);
+			while (rs.next()) {
+				int posX = 		rs.getInt(1);
+				int posY = 		rs.getInt(2);
+				double pctid = 	rs.getDouble(3);
+				int geneOlap = 	rs.getInt(4);
+				long blockidx = rs.getLong(5);
+				int length = 	rs.getInt(6);
+				String strand = rs.getString(7);
+				if (strand.equals("+/-") || strand.equals("-/+")) length = -length;
+				
+				DPHit hit = new DPHit(
+								swapped ? posY : posX,	
+								swapped ? posX : posY,	 
+								pctid,	geneOlap, blockidx!=0, length);				
+				hits.add(hit);
+				minPctid = Math.min(minPctid, pctid);
+			}
+			rs.close();
+			
+			tile.setHits(hits.toArray(new DPHit[0]));
+			hits.clear();
+		}
+		catch (Exception e) {ErrorReport.print(e, "Loading Blocks"); }
+		}
+	}
+	// End DBload
 }
