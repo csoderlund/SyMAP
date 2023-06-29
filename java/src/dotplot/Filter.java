@@ -33,8 +33,8 @@ import javax.swing.JSlider;
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Filter extends JDialog  {
 	private final int manyGrps=20; // show empty
-	private final String hitLabel = " Hit %Identity ";
-	private final String dotLabel = " Dot Size      ";
+	private final String hitLabel = "   Hit %Identity ";
+	private final String dotLabel = "   Dot Size      ";
 	
 	private Data data;
 	private FilterData cpFiltData;	// CAS533 add
@@ -137,7 +137,6 @@ public class Filter extends JDialog  {
 		b0GeneHits = new JRadioButton("None");
 		b0GeneHits.addItemListener(listener);
 
-
 		ButtonGroup group2 = new ButtonGroup();
 		group2.add(bGeneHits);
 		group2.add(b2GeneHits);
@@ -145,10 +144,10 @@ public class Filter extends JDialog  {
 		group2.add(b0GeneHits);
 		bGeneHits.setSelected(true);
 		
-		showBlkNumBox = new JCheckBox("Show Block Numbers");
+		showBlkNumBox = new JCheckBox("Number");
 		showBlkNumBox.addItemListener(listener);
 
-		showBlocksBox = new JCheckBox("Show Blocks");
+		showBlocksBox = new JCheckBox("Boundary");
 		showBlocksBox.addItemListener(listener);
 
 		showEmptyBox = new JCheckBox("Show Empty Regions");
@@ -170,24 +169,24 @@ public class Filter extends JDialog  {
 		addToGrid(cp,gbl,gbc,dotSizeLabel, 1);
 		addToGrid(cp,gbl,gbc,dotSizeSlider, rem);
 		
-		addToGrid(cp,gbl,gbc,new JLabel(" Scale dot by hit"),1);
+		addToGrid(cp,gbl,gbc,new JLabel("   Scale dot by hit"),1);
 		addToGrid(cp,gbl,gbc,bLenScale,1);
 		addToGrid(cp,gbl,gbc,bPctScale,1);
 		addToGrid(cp,gbl,gbc,bNoScale,rem);
 		
-		addToGrid(cp,gbl,gbc,new JLabel(" Show Hits"),1);
+		addToGrid(cp,gbl,gbc,new JLabel("   Show Hits"),1);
 		addToGrid(cp,gbl,gbc,bAllHits,1);
 		addToGrid(cp,gbl,gbc,bMixHits,1);
 		addToGrid(cp,gbl,gbc,bBlockHits,rem);
 		
-		addToGrid(cp,gbl,gbc,new JLabel(" Only Genes"),1);
+		addToGrid(cp,gbl,gbc,new JLabel("   Only Genes"),1);
 		addToGrid(cp,gbl,gbc,bGeneHits,1);
 		addToGrid(cp,gbl,gbc,b2GeneHits,1);
 		addToGrid(cp,gbl,gbc,b1GeneHits,1);
 		addToGrid(cp,gbl,gbc,b0GeneHits,rem);
 		
 		addToGrid(cp,gbl,gbc,new JSeparator(),rem);
-		
+		addToGrid(cp,gbl,gbc,new JLabel("   Show Block"),1);
 		addToGrid(cp,gbl,gbc,showBlocksBox,1);
 		addToGrid(cp,gbl,gbc,showBlkNumBox,rem);
 		

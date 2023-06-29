@@ -59,35 +59,46 @@
 		</table>
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
+<b>Contents:</b>
 
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
-<b>Contents:</b>
-<ul>
-<li><a href="#build">Build database</a>
-<p>
-<li><a href="#projParams">Project Parameters</a>
-<p>
-<li><a href="#pairParams">Pair Parameters</a>
-</ul>
-<p>&nbsp;<p>
-&#9656; <hev>SyMAP makes it easy to experiment with different parameters, as will be described.</hev>
-<td>&nbsp;
-<td><small>Project Manager</small>
-<br><a href="img/symapPlants.png">
-	<img src="img/symapPlants.png" alt="manager" style="border: 1px solid black; width: 530px"></a>
+<a href="#build"><u>1. Build database</u></a>
+<br><a href="#selLoad">&nbsp;&nbsp;&nbsp;a. Selected</a>
+<br><a href="#avail">&nbsp;&nbsp;&nbsp;b. Available Synteny</a>
+<br><a href="#concat">&nbsp;&nbsp;&nbsp;c. CPU and Concat</a>
+<br><a href="#fun">&nbsp;&nbsp;&nbsp;d. Function buttons</a>
+<td style="vertical-align: text-top;">
+<a href="#projParams"><u>2. Project Parameters</u></a>
+<br><a href="#start">&nbsp;&nbsp;&nbsp;a. Overview</a>
+<br><a href="#display">&nbsp;&nbsp;&nbsp;b. Display</a>
+<br><a href="#project">&nbsp;&nbsp;&nbsp;c. Load project</a>
+<br><a href="#anno">&nbsp;&nbsp;&nbsp;d. Load annotation</a>
+<br><a href="#align">&nbsp;&nbsp;&nbsp;e. Alignment&amp;Synteny (A&amp;S)</a>
+<br><a href="#save1">&nbsp;&nbsp;&nbsp;f. Rules for saving project parameters</a>
+<br><a href="#annot">&nbsp;&nbsp;&nbsp;g. Annotation</a>
+<td style="vertical-align: text-top;">
+<a href="#pairParams"><u>3. Pair Parameters</u></a>
+<br><a href="#over2">&nbsp;&nbsp;&nbsp;a. Overview</a>
+<br><a href="#parms2">&nbsp;&nbsp;&nbsp;b. Parameter description</a>
+<br><a href="#save2">&nbsp;&nbsp;&nbsp;c. Rules for saving pair parameters</a>
+<br><a href="#mum">&nbsp;&nbsp;&nbsp;d. MUMmer parameters</a>
 </table>
+
+<small>Project Manager</small>
+<br><a href="img/symapPlants.png">
+	<img src="img/symapPlants.png" alt="manager" style="border: 1px solid black; width: 580px"></a>
 
 <!---------------------------------------------------------------------------->
 <a id="build"></a> <!-- # ref in code -->
-<h2>Build database</h2>
+<h2>1. Build database</h2>
 
 This provides a quick summary of the build functions.
 See <a href="SystemGuide.html" class="ext" target="_blank">System Guide</a> for details.
 <p>
 <table class="ty">
 <tr>
-<td>Sections&nbsp;&nbsp;
+<td><b>Sections:</b>&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#selLoad">Selected</a>
 <td><a href="#avail">Available Synteny</a>
 <td><a href="#fun">Function buttons</a>
@@ -95,7 +106,7 @@ See <a href="SystemGuide.html" class="ext" target="_blank">System Guide</a> for 
 
 <a id="selLoad"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Selected</h3>
+<h3>1.a Selected</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <p>The projects selected from the <ttb>Projects</ttb> in
@@ -143,7 +154,7 @@ After the project is loaded, you can still change the <ttl>Display</ttl> paramet
 
 <a id="avail"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Available Synteny Section</h3>
+<h3>1.b Available Synteny Section</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Sequence alignments are performed with
@@ -185,20 +196,26 @@ the <a href="#fun">function</a> buttons.
 		&nbsp;
 	<td>The alignment has not been started.
 </table>
-<p>
+
+<a id="concat"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>1.c CPU and Concat</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <ttl>CPUs:</ttl> Enter the maximum number of CPUs to use for an alignment. SyMAP will use
 up to that number (but may use fewer, depending on the number of sequences being aligned). Alternatively,
 the number of CPUs may be entered in the <tt>symap.config</tt> file or
 entered as a command line argument (-p N).
-<p><ttl> Concat:</ttl>The chromosomes (and/or scaffolds) are concatenated together for one genome
-and searched against the chromosomes of the 2nd genome. If this is unchecked, then each chromosome
-of the first genome is searched against each chromosome of the 2nd genome; this is useful when
-there is limited memory. If chromosomes or scaffolds are small, multiple sequences
-will still be concatenated into a file of &lt;60M.
+<p><ttl> Concat:</ttl> By default, all sequences of the 1st genome are concatenated into one file
+and then multiple files are created from the 2nd genome to be searched against the first;
+the multiple files may have two or more sequential chromosomes concatenated together to
+create files that are >60M. To reduce memory usage, you can uncheck <ttl>Concat</ttl> so that
+multiple files are created for each genomes,
+and all files from the 1st genome are searched against the 2nd genome.
+See <a href="MUMmer.html#cat" target="_blank" class="ext">timing difference</a>.
 
 <a id="fun"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Function Buttons</h3>
+<h3>1.d Function Buttons</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="ty">
@@ -237,12 +254,12 @@ will still be concatenated into a file of &lt;60M.
 <!---------------------------------------------------------------------->
 <a id="projParams"></a> <!-- # ref in code -->
 <table style="width: 95%"><tr><td style="text-align: left">
-<h2>Project Parameters</h2>
+<h2>2. Project Parameters</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="ty">
 <tr>
-<td>Sections&nbsp;&nbsp;
+<td><b>Sections:</b>&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#start">Overview</a>
 <td><a href="#display">Display</a>
 <td><a href="#project">Load project</a>
@@ -253,7 +270,7 @@ will still be concatenated into a file of &lt;60M.
 </table>
 
 <a id="start"></a>
-<h3>Overview</h3>
+<h3>2.a Overview</h3>
 
 <table>
 <tr>
@@ -286,7 +303,7 @@ alignment can take a long time!!).
 <!--------------------------------------------------------------->
 <a id="display"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Display</h3>
+<h3>2.b Display</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 For the following parameters, new values take immediate effect.
@@ -322,7 +339,7 @@ For the following parameters, new values take immediate effect.
 
 <a id="project"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Load project</h3>
+<h3>2.c Load project</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <ttl><big>Group prefix</big></ttl>
@@ -377,7 +394,7 @@ select <ttl>Clear pair</ttl> and remove the alignment files, then run <ttl>A&amp
 <!----------------------------------------------->
 <a id="anno"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Load annotation</h3>
+<h3>2.d Load annotation</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <ttl><big>Anno keywords</big></ttl>
@@ -398,7 +415,7 @@ Annotation is optional but highly recommended. Default location: <tt>data/seq/&l
 <!----------------------------------------------->
 <a id="align"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Alignment&amp;Synteny (A&amp;S)</h3>
+<h3>2.e Alignment&amp;Synteny (A&amp;S)</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <ttl><big>Mask non-genes</big></ttl>
@@ -417,7 +434,7 @@ was not set, it can be set and the <ttl>A&amp;S</ttl> run with the existing alig
 <!----------------------------------------------->
 <a id="save1"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Rules for saving project parameters</h3>
+<h3>2.f Rules for saving project parameters</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Before the project is loaded, the parameters are saved to the file
@@ -431,7 +448,7 @@ viewed and changed using <ttp>symap</ttp> (not <ttp>viewSymap</ttp>).
 
 <!----------------------------------------------->
 <a id="annot"></a>
-<h3>Annotation</h3>
+<h3>2.g Annotation</h3>
 The gene annotation is shown on the
 <a href="UserGuide.html#view2D" class="ext" target="_blank">2D display</a> and as columns in the
 <a href="Query.html#result" class="ext" target="_blank">Queries</a> results table. The annotation
@@ -463,16 +480,16 @@ the <tt>Name=value</tt> would not be part of any gene annotation.
 
 <a id="pairParams"></a> <!-- # ref in code -->
 <table style="width: 95%"><tr><td style="text-align: left">
-<h2>Pair Parameters</h2>
+<h2>3. Pair Parameters</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="ty">
-<tr><td>Sections<td><a href="#over2">Overview</a><td><a href="#parms2">Parameter description</a>
+<tr><td><b>Sections:</b>&nbsp;&nbsp;&nbsp;&nbsp;<td><a href="#over2">Overview</a><td><a href="#parms2">Parameter description</a>
 <td><a href="#save2">Save</a><td><a href="#mum">MUMmer parameters</a>
 </table>
 
 <a id="over2"></a>
-<h3>Overview</h3>
+<h3>3.a Overview</h3>
 <a href="img/lineAlign.png"><img src="img/lineAlign.png" alt="alignLine" style="border: 1px solid black; width: 400px"></a>
 <table>
 <tr>
@@ -501,7 +518,7 @@ belong to the block).
 
 <a id="param2"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Parameter description</h3>
+<h3>3.b Parameter description</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <p>The following provides details:
@@ -564,7 +581,7 @@ use <ttb>Clear pair</ttb> before <ttl>A&amp;S</ttl>.
 
 <a id="save2"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Rules for saving pairs parameters</h3>
+<h3>3.c Rules for saving pairs parameters</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Before the <ttl>A&amp;S</ttl> is executed, the parameters are saved in
@@ -581,7 +598,7 @@ before running <ttl>A&S</ttl> again, the parameters
 on the <ttb>Summary</ttb> page will be wrong (SyMAP does not check for this situation).
 <!------------------------------------------------------------------------>
 <a id="mum"></a>
-<h3>MUMmer parameters</h3>
+<h3>3.d MUMmer parameters</h3>
 The arguments for MUMmer are <b>NOT</b> checked for correctness.
 <p>
 To see the parameters for the default MUMmer V3 on MacOS, from the <tt>symap</tt> directory:

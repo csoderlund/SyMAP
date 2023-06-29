@@ -2,25 +2,35 @@ package symap.mapper;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.awt.Frame;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.GridBagConstraints;
 
-import javax.swing.AbstractButton;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JSlider;
 import javax.swing.JRadioButton;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 
-import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
-import symap.filter.Filter;
+import util.Jhtml;
 
 /**
  * Hit Filter Interface: The Mapper filter dialog implementation.
@@ -29,13 +39,13 @@ import symap.filter.Filter;
  * Many filters are created when the drawing panel is initiated
  * 
  * 1. Add filter here
- * 2. Add to HitFilter
+ * 2. Add to HfilterData
  * 3. Add to PseudoPseudoHits.isHighLightHit() and isFiltered()
- * CAS541 MapperFilter=>Mfilter
+ * CAS541 MapperFilter=>Mfilter; CAS542 replace abstract filter with in file methods
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class Hfilter extends Filter {
-
+public class Hfilter extends JDialog {
+	private boolean DEBUG = false; // Globals.DEBUG;
 	private final String SYN = "Synteny Blocks";
 	private final String COL = "Collinear Sets";
 	private final String HIT2 = "Hit =2 Genes";
@@ -43,14 +53,19 @@ public class Hfilter extends Filter {
 	private final String HIT0 = "Hit =0 Genes";
 	private final String ALL =  "All Hits";
 	private final String NONE = "None";
-// On Menu panel
+	
+	// On Menu panel
+	private JButton okButton, cancelButton, defaultButton, helpButton;
+	private JPanel buttonPanel;
+	private JPopupMenu popup; 
+	private JMenuItem popupTitle; 
 	
 	// highlight - only one can be selected
-	private JRadioButton hBlockRadio		= new JRadioButton(SYN);
+	private JRadioButton hBlockRadio	= new JRadioButton(SYN);
 	private JRadioButton hSetRadio		= new JRadioButton(COL); 
 	private JRadioButton hGene2Radio 	= new JRadioButton(HIT2); 
 	private JRadioButton hGene1Radio 	= new JRadioButton(HIT1);
-	private JRadioButton hGene0Radio		= new JRadioButton(HIT0); 
+	private JRadioButton hGene0Radio	= new JRadioButton(HIT0); 
 	private JRadioButton hNoneRadio		= new JRadioButton(NONE);
 	
 	// Show - any number can be selected
@@ -63,109 +78,74 @@ public class Hfilter extends Filter {
 	
 	// Id
 	private JSlider pctidSlider  = new JSlider(JSlider.HORIZONTAL, 0, 100, 0); // 0 to 100, start at 0
-	private JLabel  pctidText  = new JLabel("0%");
+	private JLabel  pctidText    = new JLabel("0%");
 	
 // On popup menu
 	private JRadioButtonMenuItem hBlockPopRadio	= new JRadioButtonMenuItem(SYN);
 	private JRadioButtonMenuItem hSetPopRadio	= new JRadioButtonMenuItem(COL);// CAS520 add
-	private JRadioButtonMenuItem hGene2PopRadio 	= new JRadioButtonMenuItem(HIT2);
+	private JRadioButtonMenuItem hGene2PopRadio = new JRadioButtonMenuItem(HIT2);
 	private JRadioButtonMenuItem hGene1PopRadio	= new JRadioButtonMenuItem(HIT1);
 	private JRadioButtonMenuItem hGene0PopRadio	= new JRadioButtonMenuItem(HIT0);
-	private JRadioButtonMenuItem hGonePopRadio	= new JRadioButtonMenuItem(NONE);
+	private JRadioButtonMenuItem hNonePopRadio	= new JRadioButtonMenuItem(NONE);
 	
 	private Mapper mapper;
-	private HfilterData hitfilter;    // current settings
-	private HfilterData lastHitFilter; // last settings
-
-	private volatile boolean nochange = false;
-
-	public Hfilter(Frame owner, DrawingPanel dp, AbstractButton helpButton, Mapper map) {
-		super(owner,dp,"Hit Filter", util.Jhtml.hitfilter);
+	private HfilterData hitFiltData;    // current settings
+	private HfilterData lastHitFiltData; // last settings
+	protected DrawingPanel drawingPanel;
+	
+	public Hfilter(Frame owner, DrawingPanel dp, Mapper map) {
+		super(owner,"Hit Filter", true); 
+		
+		this.drawingPanel = dp;
 		this.mapper = map;
-		this.hitfilter = mapper.getHitFilter();
+		hitFiltData = mapper.getHitFilter();
+		setInit(hitFiltData);
 		
-	// Menu panel
-		ActionListener rbl = new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (mapper != null && !nochange) {
-					javax.swing.SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							setCursor(Globals.WAIT_CURSOR);
-							
-							if (hitfilter.set(getCopyHitFilter())) {
-								setSliderMaxMin();
-								mapper.clearTrackBuild();
-								refresh();
-							}
-							setCursor(Globals.DEFAULT_CURSOR);
-						}
-					});
-				}
-			}
-		};
-		sBlockCheck.addActionListener(rbl); 
-		sSetCheck.addActionListener(rbl);
-		sGene2Check.addActionListener(rbl);
-		sGene1Check.addActionListener(rbl);
-		sGene0Check.addActionListener(rbl);
-		sAllCheck.addActionListener(rbl);
+		FilterListener listener = new FilterListener();
 		
-		hBlockRadio.addActionListener(rbl);
-		hSetRadio.addActionListener(rbl);
-		hGene2Radio.addActionListener(rbl); 
-		hGene1Radio.addActionListener(rbl); 
-		hGene0Radio.addActionListener(rbl); 
-		hNoneRadio.addActionListener(rbl); 
+	/* Filter dialog */
+		// Buttons
+		okButton = createButton("Apply","Apply changes and close");
+		okButton.addActionListener(listener);
+
+		cancelButton = createButton("Cancel", "Discard changes and close");
+		cancelButton.addActionListener(listener);
+
+		defaultButton = createButton("Defaults", "Reset to defaults");
+		defaultButton.addActionListener(listener);
+		
+		helpButton = Jhtml.createHelpIconUserSm(Jhtml.hitfilter);
+		
+		buttonPanel = new JPanel(new BorderLayout());
+		buttonPanel.add(new JSeparator(),BorderLayout.NORTH);
+		JPanel innerPanel = new JPanel();
+		innerPanel.add(okButton);
+		innerPanel.add(cancelButton);
+		innerPanel.add(defaultButton);
+		innerPanel.add(helpButton);
+		buttonPanel.add(innerPanel,BorderLayout.CENTER);
+		
+		// Check boxes
+		sBlockCheck.addActionListener(listener); 
+		sSetCheck.addActionListener(listener);
+		sGene2Check.addActionListener(listener);
+		sGene1Check.addActionListener(listener);
+		sGene0Check.addActionListener(listener);
+		sAllCheck.addActionListener(listener);
+		
+		hBlockRadio.addActionListener(listener);
+		hSetRadio.addActionListener(listener);
+		hGene2Radio.addActionListener(listener); 
+		hGene1Radio.addActionListener(listener); 
+		hGene0Radio.addActionListener(listener); 
+		hNoneRadio.addActionListener(listener);
+		
+		pctidSlider.addChangeListener(listener); 
 		
 		ButtonGroup highGroup = new ButtonGroup();
-		highGroup.add(hBlockRadio);
-		highGroup.add(hSetRadio); 
-		highGroup.add(hGene2Radio); 
-		highGroup.add(hGene1Radio); 
-		highGroup.add(hGene0Radio); 	
-		highGroup.add(hNoneRadio); 
-		
-		pctidSlider.addChangeListener(this); 
-		
-	// Popup menu
-		popupTitle.setText("Hit Highlight options:"); // CAS503 
-		popup.add(hBlockPopRadio); 
-		popup.add(hSetPopRadio); 			
-		popup.add(hGene2PopRadio); 
-		popup.add(hGene1PopRadio);
-		popup.add(hGene0PopRadio);
-		popup.add(hGonePopRadio);
-		
-		ActionListener prbl = new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				if (mapper != null) {				
-					setCursor(Globals.WAIT_CURSOR);
-					// transfer from popup to menu
-					if (event.getSource() == hBlockPopRadio) 		hBlockRadio.setSelected(hBlockPopRadio.isSelected());
-					else if (event.getSource() == hSetPopRadio) 		hSetRadio.setSelected(hSetPopRadio.isSelected()); // CAS520 add
-					else if (event.getSource() == hGene2PopRadio)	hGene2Radio.setSelected(hGene2PopRadio.isSelected());
-					else if (event.getSource() == hGene1PopRadio)	hGene1Radio.setSelected(hGene1PopRadio.isSelected());
-					else if (event.getSource() == hGene0PopRadio)	hGene0Radio.setSelected(hGene0PopRadio.isSelected());
-					else if (event.getSource() == hGonePopRadio)		hNoneRadio.setSelected(hGonePopRadio.isSelected());
-					
-					if (hitfilter.set(getCopyHitFilter())) {
-						mapper.clearTrackBuild();
-						if (drawingPanel != null) drawingPanel.smake();
-					}
-					setCursor(Globals.DEFAULT_CURSOR);
-				}
-			}
-		};
-		hBlockPopRadio.addActionListener(prbl);
-		hSetPopRadio.addActionListener(prbl);
-		hGene2PopRadio.addActionListener(prbl);
-		hGene1PopRadio.addActionListener(prbl);	
-		hGene0PopRadio.addActionListener(prbl);	
-		hGonePopRadio.addActionListener(prbl);
-	}
-	// Creates panel
-	public void showX() {
-		nochange = true;
+		highGroup.add(hBlockRadio); highGroup.add(hSetRadio); 
+		highGroup.add(hGene2Radio); highGroup.add(hGene1Radio); 
+		highGroup.add(hGene0Radio); highGroup.add(hNoneRadio); 
 		
 		Container contentPane = getContentPane();
 		GridBagLayout gridbag = new GridBagLayout();
@@ -180,94 +160,122 @@ public class Hfilter extends Filter {
 		c1.ipady = 7;
 
 		// highlight
-		addToGrid(contentPane, gridbag, c1, new JLabel("  Highlight"), GridBagConstraints.REMAINDER);
+		int rem=GridBagConstraints.REMAINDER;
+		addToGrid(contentPane, gridbag, c1, new JLabel("  Highlight"), rem);
 		addToGrid(contentPane, gridbag, c1, hBlockRadio, 1);
-		addToGrid(contentPane, gridbag, c1, hSetRadio, GridBagConstraints.REMAINDER); 
+		addToGrid(contentPane, gridbag, c1, hSetRadio,rem); 
 		
 		addToGrid(contentPane, gridbag, c1, hGene2Radio, 1);
-		addToGrid(contentPane, gridbag, c1, hGene1Radio, GridBagConstraints.REMAINDER); 
+		addToGrid(contentPane, gridbag, c1, hGene1Radio,rem); 
 		
 		addToGrid(contentPane, gridbag, c1, hGene0Radio, 1);
-		addToGrid(contentPane, gridbag, c1, hNoneRadio, GridBagConstraints.REMAINDER); 
+		addToGrid(contentPane, gridbag, c1, hNoneRadio,rem); 
 		
-		addToGrid(contentPane, gridbag, c1, new JSeparator(), GridBagConstraints.REMAINDER);
+		addToGrid(contentPane, gridbag, c1, new JSeparator(),rem);
 		
 		// show
-		addToGrid(contentPane, gridbag, c1, new JLabel("  Show"), GridBagConstraints.REMAINDER);
+		addToGrid(contentPane, gridbag, c1, new JLabel("  Show"),rem);
 		addToGrid(contentPane, gridbag, c1, sBlockCheck, 1);
-		addToGrid(contentPane, gridbag, c1, sSetCheck, GridBagConstraints.REMAINDER);
+		addToGrid(contentPane, gridbag, c1, sSetCheck,rem);
 		
 		addToGrid(contentPane, gridbag, c1, sGene2Check, 1); 
-		addToGrid(contentPane, gridbag, c1, sGene1Check, GridBagConstraints.REMAINDER); 
+		addToGrid(contentPane, gridbag, c1, sGene1Check,rem); 
 		
 		addToGrid(contentPane, gridbag, c1, sGene0Check, 1);
-		addToGrid(contentPane, gridbag, c1, sAllCheck, GridBagConstraints.REMAINDER);
-		addToGrid(contentPane, gridbag, c1, new JSeparator(), GridBagConstraints.REMAINDER);
+		addToGrid(contentPane, gridbag, c1, sAllCheck,rem);
+		addToGrid(contentPane, gridbag, c1, new JSeparator(),rem);
 		
 		// %id
-		setSliderMaxMin();
 		addToGrid(contentPane, gridbag, c1, new JLabel("  Identity"), 1);
 		addToGrid(contentPane, gridbag, c1, pctidText, 1);
-		addToGrid(contentPane, gridbag, c1, pctidSlider, GridBagConstraints.REMAINDER);
+		addToGrid(contentPane, gridbag, c1, pctidSlider,rem);
 		
 		// buttons
-		addToGrid(contentPane, gridbag, c1, buttonPanel, GridBagConstraints.REMAINDER);
+		addToGrid(contentPane, gridbag, c1, buttonPanel,rem);
 
 		pack();
 		setResizable(false);
 		setLocationRelativeTo(null); // CAS520
 		
-		lastHitFilter = hitfilter.copy();
-		setInput(lastHitFilter);
-		nochange = false;
-		super.setVisible(true); // CAS512 super.showX();
-	}
+	// Popup menu
+		popup = new JPopupMenu(); 
+		popup.addPopupMenuListener(new MyPopupMenuListener()); 
+		popupTitle = new JMenuItem();
+		popupTitle.setEnabled(false);
+		popup.add(popupTitle);
+		popup.addSeparator();
 		
-	// abstract methods
-	public String getHelpID() {return "sequencefilter";} //Filter.SEQUENCE_FILTER_ID;
+		popupTitle.setText("Hit Highlight options:"); // CAS503 
+		popup.add(hBlockPopRadio); 
+		popup.add(hSetPopRadio); 			
+		popup.add(hGene2PopRadio); 
+		popup.add(hGene1PopRadio);
+		popup.add(hGene0PopRadio);
+		popup.add(hNonePopRadio);
+		
+		hBlockPopRadio.addActionListener(listener);
+		hSetPopRadio.addActionListener(listener);
+		hGene2PopRadio.addActionListener(listener);
+		hGene1PopRadio.addActionListener(listener);	
+		hGene0PopRadio.addActionListener(listener);	
+		hNonePopRadio.addActionListener(listener);
+	}
+	// Creates panel
+	public void showX() {
+		setInit(hitFiltData); // CAS542 fixed display bug; must be before setSliderMaxMin; may have changed since Hfilter created
+		setSliderMaxMin();
+		lastHitFiltData = hitFiltData.copy("Hfilter showX");
+		
+		setVisible(true); // CAS512 super.showX();
+	}
+	public void closeFilter() {
+		if (isShowing()) {
+			cancelAction();
+			setVisible(false); // CAS512 hide();
+		}
+	}
+	public void showPopup(MouseEvent e) { 
+		popup.show(e.getComponent(), e.getX(), e.getY());
+	}
+	public boolean canShow() {return mapper!=null;}
 	
-	public boolean canShow() {return mapper != null;}
-
-	protected boolean okAction() throws Exception {
-		return lastHitFilter.set(getCopyHitFilter());
+	private void addToGrid(Container cp, GridBagLayout layout, GridBagConstraints con, Component comp, int w) {
+		con.gridwidth = w;
+		layout.setConstraints(comp, con);
+		cp.add(comp);
 	}
-	protected void cancelAction() {
-		setInput(lastHitFilter);
-	}
-	protected void setDefault() { 
-		setInput(new HfilterData());
+	private JButton createButton(String s, String t) {
+		JButton jbutton = new JButton(s);
+		jbutton.setMargin(new Insets(1,3,1,3));
+		jbutton.setToolTipText(t);
+		jbutton.setBackground(Color.white);
+		return jbutton;
 	}
 	
-	public void stateChanged(ChangeEvent event) {
-		if (mapper != null && !nochange) {
-			if (hitfilter.set(getCopyHitFilter())) {
-				if (hasSize(pctidSlider)) {
-					String pid = getPctidString(pctidSlider.getValue());
-					pctidText.setText(pid);
-				}
-				nochange = true;
-				//setSliderMaxMin();
-				nochange = false;
-				mapper.clearTrackBuild();
-				refresh();
-			}
+	private boolean okAction() {
+		return lastHitFiltData.setChanged(getCopyHitFilter(), "Hfilter okAction");
+	}
+	private void cancelAction() {
+		setInit(lastHitFiltData);
+	}
+	private void setDefault() { 
+		setInit(new HfilterData());
+	}
+	private void refresh() {
+		if (DEBUG) System.out.print("Refresh: " + hitFiltData.getFilterText());
+		if (hitFiltData.setChanged(getCopyHitFilter(), "Hfilter refresh")) {
+			mapper.clearTrackBuild();
+			drawingPanel.setUpdateHistory();
+			drawingPanel.smake();
+			mapper.update(hitFiltData);
 		}
 	}
 	
-	// Initialize popup radio item values based on filter values	
-	public void popupMenuWillBecomeVisible(PopupMenuEvent event) { 
-		hBlockPopRadio.setSelected(hitfilter.isHiBlock());
-		hSetPopRadio.setSelected(hitfilter.isHiSet());// CAS520 add
-		hGene2PopRadio.setSelected(hitfilter.isHi2Gene());
-		hGene1PopRadio.setSelected(hitfilter.isHi1Gene());
-		hGene0PopRadio.setSelected(hitfilter.isHi0Gene());	
-		hGonePopRadio.setSelected(hitfilter.isHiNone());
-	}
 	/*****************************************
 	 * set current filter values like the input filter; Cancel, Defaults and save lastHitFilter
 	 * CAS520 rewrote because previous not working; FPC removed
 	 */
-	private void setInput(HfilterData hf) {	
+	private void setInit(HfilterData hf) {	
 		pctidSlider.setValue(getSliderPctid(hf.getPctid()));
 		pctidText.setText(getPctidString(pctidSlider.getValue()));
 
@@ -284,13 +292,11 @@ public class Hfilter extends Filter {
 		hGene1Radio.setSelected(hf.isHi1Gene());
 		hGene0Radio.setSelected(hf.isHi0Gene());
 		hNoneRadio.setSelected(hf.isHiNone());
-		
-		stateChanged(new ChangeEvent(hBlockRadio)); // event not used so does not matter
 	}
 
-	private HfilterData getCopyHitFilter() {
+	private HfilterData getCopyHitFilter() { // ok and refresh
 		HfilterData hf = new HfilterData();
-		
+// CAS542 was checking for no selections here		
 		hf.setHiBlock(hBlockRadio.isSelected()); 
 		hf.setHiSet(hSetRadio.isSelected()); 
 		hf.setHi2Gene(hGene2Radio.isSelected());
@@ -298,37 +304,93 @@ public class Hfilter extends Filter {
 		hf.setHi0Gene(hGene0Radio.isSelected()); 
 		hf.setHiNone(hNoneRadio.isSelected()); 
 		
-		// if changed on popup before view, then nothing is set for display
-		if (!sBlockCheck.isSelected() && !sSetCheck.isSelected()   && !sAllCheck.isSelected() &&
-			!sGene2Check.isSelected() && !sGene1Check.isSelected() && !sGene0Check.isSelected()) 
-		{
-			sBlockCheck.setSelected(true); // CAS541 FIXME - does not work right when regions selected
-			hf.setBlock(true);
-		}
-		else {
-			hf.setBlock(sBlockCheck.isSelected());
-			hf.setSet(sSetCheck.isSelected());
-			hf.set2Gene(sGene2Check.isSelected());
-			hf.set1Gene(sGene1Check.isSelected());
-			hf.set0Gene(sGene0Check.isSelected()); 
-			hf.setAllHit(sAllCheck.isSelected()); 
-		}
+		hf.setBlock(sBlockCheck.isSelected());
+		hf.setSet(sSetCheck.isSelected());
+		hf.set2Gene(sGene2Check.isSelected());
+		hf.set1Gene(sGene1Check.isSelected());
+		hf.set0Gene(sGene0Check.isSelected()); 
+		hf.setAllHit(sAllCheck.isSelected()); 
 		
 		hf.setPctid(getPctid(pctidSlider.getValue()));
+		if (DEBUG) System.out.print("Hfilter getCopyHitFilter: " + hf.getFilterText());
 		return hf;
 	}
 
 	private void setSliderMaxMin() {
-		pctidSlider.setMinimum(getMinSliderPctid(hitfilter.getMinPctid()));
-		pctidSlider.setMaximum(getMaxSliderPctid(hitfilter.getMaxPctid()));
+		pctidSlider.setMinimum(getMinSliderPctid(hitFiltData.getMinPctid()));
+		pctidSlider.setMaximum(getMaxSliderPctid(hitFiltData.getMaxPctid()));
 		
 		pctidSlider.setEnabled(true);
 	}
-	private int getSliderPctid(double pctid) {return (int)Math.round(pctid);}
-	private boolean hasSize(JSlider slider) {return slider.getMaximum() > slider.getMinimum();}
-	private double getPctid(int slider) {return (double)slider;}
-	private int getMinSliderPctid(double min) {return (int)Math.floor(min);}
-	private int getMaxSliderPctid(double max) {return (int)Math.ceil(max);}
-	private String getPctidString(int slider) {return slider + "%";} // CAS512 new Integer(slider).toString()+"%";
+	
+	
+	private class FilterListener implements ActionListener,  ChangeListener {
+		private FilterListener() { }
+		public void actionPerformed(ActionEvent event) { 
+			Object src = event.getSource();
+			
+			if (src == okButton) { // changed already made except of for sequence
+				okAction();
+				setVisible(false); 
+			}
+			else if (src == cancelButton) {
+				cancelAction();
+				setVisible(false); 
+			}
+			else if (src == defaultButton) {
+				setDefault();
+			}
+			else if (src == hBlockPopRadio) hBlockRadio.setSelected(hBlockPopRadio.isSelected());
+			else if (src == hSetPopRadio) 	hSetRadio.setSelected(hSetPopRadio.isSelected()); // CAS520 add
+			else if (src == hGene2PopRadio)	hGene2Radio.setSelected(hGene2PopRadio.isSelected());
+			else if (src == hGene1PopRadio)	hGene1Radio.setSelected(hGene1PopRadio.isSelected());
+			else if (src == hGene0PopRadio)	hGene0Radio.setSelected(hGene0PopRadio.isSelected());
+			else if (src == hNonePopRadio)	hNoneRadio.setSelected(hNonePopRadio.isSelected());
+			if (DEBUG) System.out.println("Hfilter actionPerformed " + src.toString());
+			refresh();
+		}
+		
+		public void stateChanged(ChangeEvent event) {
+			if (mapper==null) return;
+			
+			double pctid = hitFiltData.getPctid();
+			
+			if (hasSize(pctidSlider)) {
+				int xpctid = pctidSlider.getValue();
+				
+				if (xpctid != (int) pctid) {
+					if (DEBUG) System.out.println("Hfilter stateChanged " + xpctid + " " + pctid);
+					String pid = getPctidString(xpctid);
+					pctidText.setText(pid);
+					setSliderMaxMin();
+					refresh();
+				}
+			}
+		}
+	} // end listener
+	
+	// called when popup become visible
+	class MyPopupMenuListener implements PopupMenuListener {
+		public void popupMenuCanceled(PopupMenuEvent popupMenuEvent) {}
+
+		public void popupMenuWillBecomeInvisible(PopupMenuEvent popupMenuEvent) {}
+
+		public void popupMenuWillBecomeVisible(PopupMenuEvent event) { 
+			setInit(hitFiltData); // CAS542 fixed DotPlot to 2D bug; may have changed since Hfilter created
+			
+			hBlockPopRadio.setSelected(hitFiltData.isHiBlock());
+			hSetPopRadio.setSelected(hitFiltData.isHiSet());// CAS520 add
+			hGene2PopRadio.setSelected(hitFiltData.isHi2Gene());
+			hGene1PopRadio.setSelected(hitFiltData.isHi1Gene());
+			hGene0PopRadio.setSelected(hitFiltData.isHi0Gene());	
+			hNonePopRadio.setSelected(hitFiltData.isHiNone());
+		}
+	} // end popup listener
+	private int     getSliderPctid(double pctid) 	{return (int)Math.round(pctid);}
+	private boolean hasSize(JSlider slider) 		{return slider.getMaximum() > slider.getMinimum();}
+	private double  getPctid(int slider) 			{return (double)slider;}
+	private int     getMinSliderPctid(double min) 	{return (int)Math.floor(min);}
+	private int     getMaxSliderPctid(double max) 	{return (int)Math.ceil(max);}
+	private String  getPctidString(int slider) 		{return slider + "%";} // CAS512 new Integer(slider).toString()+"%";
 }
 

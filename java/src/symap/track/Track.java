@@ -76,7 +76,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	protected Rectangle2D.Double rect;
 	protected boolean firstBuild = true;
 	
-	protected boolean flipped; 
+	protected boolean bFlipped; 
 	
 	protected int position; 
 
@@ -742,7 +742,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 					long newStart = getBP(dragRect.y);
 					long newEnd   = getBP(dragRect.y+dragRect.height);
 					if (newEnd != newStart) {
-						if (flipped) { 
+						if (bFlipped) { 
 							long temp = newStart;
 							newStart = end.getBPValue() - newEnd + start.getBPValue();
 							newEnd = end.getBPValue() - temp + start.getBPValue();

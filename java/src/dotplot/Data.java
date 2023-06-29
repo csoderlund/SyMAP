@@ -138,7 +138,8 @@ public class Data  {
 		
 		// CAS531 need to recreate since I changed the Hits code; bonus, allows multiple 2d displays
 		// CAS541 cleaned up connection, no longer can do multiple 2d display
-		if (symap==null) symap = new SyMAP2d(tdbc2, null);
+		//if (symap==null) new SyMAP2d(tdbc2, null); CAS542 messes up annotation; its fine allowing many
+		symap = new SyMAP2d(tdbc2, null);
 		symap.getDrawingPanel().setMaps(1);
 		symap.getHistory().clear(); 
 		
@@ -151,6 +152,7 @@ public class Data  {
 
 			HfilterData hd = new HfilterData (); // CAS530 use 2D filter
 			hd.setForDP(true, false);
+			symap.getDrawingPanel().setHitFilter(1,hd); // copy template
 			
 			/**
 			try { // CAS531 need to recreate since I changed the Hits code; bonus, allows multiple 2d displays
@@ -159,11 +161,8 @@ public class Data  {
 			} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 			**/
 			
-			symap.getDrawingPanel().setHitFilter(1,hd);
-			
 			Sequence.setDefaultShowAnnotation(false); 
-			prt("Block#" + ib.getNumber() + " " + ib.getStart(Y) + " " + ib.getEnd(Y)+ " " 
-					+ ib.getStart(X) + " " + ib.getEnd(X));
+			prt("Block#" + ib.getNumber() + " " + ib.getStart(Y) + " " + ib.getEnd(Y)+ " " + ib.getStart(X) + " " + ib.getEnd(X));
 			symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),gY.getID(),Color.CYAN);	
 			symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),gX.getID(),Color.GREEN);
 			symap.getDrawingPanel().setTrackEnds(1,ib.getStart(Y),ib.getEnd(Y));
@@ -195,11 +194,11 @@ public class Data  {
 		
 		symap.getDrawingPanel().setMaps(1);
 		symap.getHistory().clear(); 
-		
-		HfilterData hd = new HfilterData(); // CAS530 use 2D filter
-		hd.setForDP(false, true); // set block, set all
-		symap.getDrawingPanel().setHitFilter(1,hd);
 		Sequence.setDefaultShowAnnotation(false); 
+		
+		HfilterData hd = new HfilterData(); 		// CAS530 use 2D filter
+		hd.setForDP(false, true); 					// set block, set all
+		symap.getDrawingPanel().setHitFilter(1,hd); // template for defaults
 		
 		symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),Integer.parseInt(track[Y]),Color.CYAN);
 		symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),Integer.parseInt(track[X]),Color.GREEN);

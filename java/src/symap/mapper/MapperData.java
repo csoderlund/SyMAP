@@ -1,22 +1,18 @@
 package symap.mapper;
 
 /**
- * Class <code>MapperData</code> holds the data of a mapper which can be
- * used to recreate the same state of a Mapper.
+ * Class MapperData holds the data of a mapper which can be
+ * used to recreate the same state of a Mapper - may be used for History.
  */
 public class MapperData {
 
     private HfilterData hf;
 
-    public MapperData(HfilterData hf) {
-    	this.hf = hf.copy();
-    }
-    
     protected MapperData(Mapper mapper) {
-    	this(mapper.getHitFilter());
+    	this.hf = mapper.getHitFilter().copy("MapperData");
     }
-
+   
     protected void setMapper(Mapper mapper) {
-    	mapper.getHitFilter().set(hf);
+    	mapper.getHitFilter().setChanged(hf, "setMapper");
     }
 }

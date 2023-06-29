@@ -16,6 +16,7 @@ import java.util.HashMap;
 import backend.Constants;
 import symap.Globals;
 import util.ErrorReport;
+import util.Utilities;
 
 // WARNING: Does not work for nested queries (because it uses one Statement for all queries). 
 // To do a query within the read loop of a previous query, use a second DBConn object.
@@ -105,6 +106,15 @@ public class DBconn2 {
 					if (TRACE) prt("Close connection " + n);
 					c.close();
 				}
+			}
+			if (TRACE) {
+				Runtime rt = Runtime.getRuntime();
+				long total_mem = rt.totalMemory();
+				long free_mem =  rt.freeMemory();
+				long used_mem = total_mem - free_mem;
+				String mem = String.format("%,dk", (int) Math.round(used_mem/1000));
+				
+				prt(String.format("Memory %-20s\n\n", mem));
 			}
 		}
 		catch (Exception e) {ErrorReport.print("Closing connections");};

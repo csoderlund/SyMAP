@@ -27,14 +27,18 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JRadioButton;
+import javax.swing.ButtonGroup;
 import javax.swing.ListCellRenderer;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -61,6 +65,7 @@ public class TableDataPanel extends JPanel {
 	private static final long serialVersionUID = -3827610586702639105L;
 	private static final int ANNO_COLUMN_WIDTH = 100, ANNO_PANEL_WIDTH = 900;
 	private static final int GEN_COLUMN_WIDTH = 110;
+	private static final int showREGION=0, showBLOCK=1, showSET=2;
 	
 	// called by SymapQueryFrame
 	public TableDataPanel(SyMAPQueryFrame parentFrame, String resultName,  boolean [] selections,
@@ -262,9 +267,9 @@ public class TableDataPanel extends JPanel {
 	    topRow.add(new JLabel("as"));	topRow.add(Box.createHorizontalStrut(1));
 	    cmbSynOpts = new JComboBox <String> ();
 	    cmbSynOpts.setBackground(Color.WHITE);
-	    cmbSynOpts.addItem("Region (kb)");
-	    cmbSynOpts.addItem("Synteny Block");
-	    cmbSynOpts.addItem("Collinear Set");
+	    cmbSynOpts.addItem("Region (kb)");  // showREGION
+	    cmbSynOpts.addItem("Synteny Block");// showBLOCK
+	    cmbSynOpts.addItem("Collinear Set");// showSET
 	    cmbSynOpts.setSelectedIndex(0);
 	    topRow.add(cmbSynOpts);			topRow.add(Box.createHorizontalStrut(1));
 	    
@@ -301,24 +306,13 @@ public class TableDataPanel extends JPanel {
     	
 		botRow.add(new JLabel("Table (or selected): ")); botRow.add(Box.createHorizontalStrut(2));
 	
-	    btnSaveCSV = new JButton("Export CSV");
-	    btnSaveCSV.setAlignmentX(Component.LEFT_ALIGNMENT);
-	    btnSaveCSV.setBackground(Color.WHITE);
-	    btnSaveCSV.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				writeDelimFile();
+	    btnExport = new JButton("Export...");
+	    btnExport.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				exportPopup();
 			}
-		});       
-	    
-	    btnSaveFasta = new JButton("Export Fasta"); 
-	    btnSaveFasta.setAlignmentX(Component.LEFT_ALIGNMENT);
-	    btnSaveFasta.setBackground(Color.WHITE);
-	    btnSaveFasta.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				writeFASTA();	
-			}
-		});  
-	    
+		});
+	   
 	    btnUnSelectAll = new JButton("Unselect All");
 	    btnUnSelectAll.setAlignmentX(Component.LEFT_ALIGNMENT);
 	    btnUnSelectAll.setBackground(Color.WHITE);
@@ -329,8 +323,7 @@ public class TableDataPanel extends JPanel {
 			}
 		});     
 	   
-	    botRow.add(btnSaveCSV);		botRow.add(Box.createHorizontalStrut(10));
-	    botRow.add(btnSaveFasta);	botRow.add(Box.createHorizontalStrut(10));
+	    botRow.add(btnExport);		botRow.add(Box.createHorizontalStrut(10));
 	    botRow.add(btnUnSelectAll);	botRow.add(Box.createHorizontalStrut(5));
 	   
 		buttonPanel.add(topRow);
@@ -809,9 +802,8 @@ public class TableDataPanel extends JPanel {
     	cmbSynOpts.setEnabled(enable);
     	chkHigh.setEnabled(enable);
     	btnShowRow.setEnabled(enable);
-    	btnSaveCSV.setEnabled(enable);
+    	btnExport.setEnabled(enable);
     	btnUnSelectAll.setEnabled(enable);
-    	btnSaveFasta.setEnabled(enable);
     	btnShowAlign.setEnabled(enable);
     	btnShowColumns.setEnabled(enable);
     	btnHelp.setEnabled(enable);
@@ -838,164 +830,7 @@ public class TableDataPanel extends JPanel {
     	b = (theTable.getSelectedRowCount() >= 1)  ? true : false;
     	btnShowAlign.setEnabled(b);
     }
-    /*********************************************************
-     * Write CSV - works with 504
-     */
-    private void writeDelimFile() {
-    	try {
-		String saveDir = System.getProperty("user.dir") + "/exports/";
-		File temp = new File(saveDir);
-		if(!temp.exists()) {
-			System.out.println("Create " + saveDir);
-			temp.mkdir();
-		}
-		JFileChooser chooser = new JFileChooser(saveDir);
-		if (chooser.showSaveDialog(theParentFrame) != JFileChooser.APPROVE_OPTION) return;
-		if (chooser.getSelectedFile() == null)  return;
-		
-		boolean incRow = util.Utilities.showYesNo("Export CSV", "Include row number"); // CAS540 add check
-			
-		String saveFileName = chooser.getSelectedFile().getAbsolutePath();
-		if(!saveFileName.endsWith(".csv")) saveFileName += ".csv";
-		System.out.println("Exporting CSV to " + saveFileName);
-		
-		// not threaded
-		setPanelEnabled(false);
-		boolean reset = false;
-		if(theTable.getSelectedRowCount() == 0) {
-			theTable.selectAll();
-			reset = true;
-		}
-		int [] selRows = theTable.getSelectedRows();
-		
-		PrintWriter out = new PrintWriter(new FileWriter(new File(saveFileName)));
-		for(int x=0; x<theTable.getColumnCount()-1; x++) {
-			if (!incRow && x==0) continue; // CAS540 for row check
-			
-			out.print(reloadCleanString(theTable.getColumnName(x)) + ",");
-		}
-		out.println(reloadCleanString(theTable.getColumnName(theTable.getColumnCount()-1)));
-		
-		for(int x=0; x<selRows.length; x++) {
-			for(int y=0; y<theTable.getColumnCount()-1; y++) {
-				if (!incRow && y==0) continue; // CAS540 for row check
-				
-				out.print(reloadCleanString(theTable.getValueAt(selRows[x], y)) + ",");
-			}
-			out.println(reloadCleanString(theTable.getValueAt(selRows[x], theTable.getColumnCount()-1)));
-			out.flush();
-		}
-		System.out.println("Wrote " + selRows.length + " rows                  ");
-		out.close();
-		
-		if(reset)
-			theTable.getSelectionModel().clearSelection();
-		setPanelEnabled(true);
-	} 
-    	catch(Exception e) {ErrorReport.print(e, "Write delim file");}
-    }
-    private static String reloadCleanString(Object obj) {
-    	if(obj != null) {
-    		String val = obj.toString().trim();
-    		if (val.equals("")) return "''";
-    		
-    		val = val.replaceAll("[\'\"]", "");
-    		val = val.replaceAll("\\n", " ");
-    		val = val.replaceAll(",", ";"); // CAS540 quit returning with ''; just replace comma
-    		return val;
-    	}
-    	else return "''";
-	}
-    
-    /******************************************************************
-     * Write fasta 
-     */
-    private void writeFASTA() {
-    	try {
-		String saveDir = System.getProperty("user.dir") + "/exports/";
-		File temp = new File(saveDir);
-		if(!temp.exists()) {
-			System.out.println("Create " + saveDir);
-			temp.mkdir();
-		}
-
-		JFileChooser chooser = new JFileChooser(saveDir);
-		if(chooser.showSaveDialog(theParentFrame) != JFileChooser.APPROVE_OPTION) return;
-		if(chooser.getSelectedFile() == null) return;
-		
-		String saveFileName = chooser.getSelectedFile().getAbsolutePath();
-		if(!saveFileName.endsWith(".fasta") && !saveFileName.endsWith(".fa")) saveFileName += ".fa";
-		System.out.println("Exporting Fasta to " + saveFileName);
-		
-		final String fName = saveFileName;
-		
-		Thread inThread = new Thread(new Runnable() {
-			public void run() {
-				try {
-					setPanelEnabled(false);
-					
-					boolean reset = false;
-					if(theTable.getSelectedRowCount() == 0) {
-						theTable.selectAll();
-						reset = true;
-					}
-					long startTime = Utilities.getNanoTime();
-					int [] selRows = theTable.getSelectedRows();
-					int selNum = selRows.length;
-					if (selNum>500) {
-						if (!Utilities.showContinue("Export Fasta", 
-							"Selected " + selNum + " row to export. This is a slow function. \n" +
-							"It may take over a minute to export each 500 rows of sequences.")) 
-						{
-							if(reset)theTable.getSelectionModel().clearSelection();
-							setPanelEnabled(true);
-							return;
-						}
-					}
-					int seqNum = 1, pairNum=1;
-					RowData rd = new RowData();
-						
-					PrintWriter out = new PrintWriter(new FileWriter(new File(fName)));
-					
-					for(int x=0; x<selNum; x++) {
-						if (!rd.loadRow(x)) {
-							out.close();
-							return;
-						}
-							
-						int n = (isSingle) ? 1 : 2;
-						for (int i=0; i<n; i++) {
-							// this getSequence is slow.
-							String seq = theParentFrame.getSequence(rd.start[i], rd.end[i], rd.chrIdx[i]);
-								
-							String outString = ">SEQ" + String.format("%06d  ", seqNum)  
-										+ rd.spName[i] + " Chr " + rd.chrNum[i] 
-										+ " Start " + rd.start[i] + " End " + rd.end[i];
-							if (n==2) outString += " Pair#" + pairNum;
-							out.println(outString);
-							out.println(seq);
-							out.flush();
-							seqNum++;
-						}
-						pairNum++;						
-						System.out.print("Wrote: " + ((int)((((float)x)/selRows.length) * 100)) + "%\r");
-					}
-					out.close();
-					
-					Utilities.printElapsedNanoTime("Wrote " + (seqNum-1) + " sequences", startTime);
-					
-					if(reset)
-						theTable.getSelectionModel().clearSelection();
-					setPanelEnabled(true);
-					invalidate();
-				}
-				catch(Exception e) {ErrorReport.print(e, "Write fasta");}
-			}
-			});
-			inThread.start();
-		}
-		catch(Exception e) {ErrorReport.print(e, "Save as fasta");}
-    }
+  
     /***************************************************************
      * Show alignment
      */
@@ -1112,14 +947,14 @@ public class TableDataPanel extends JPanel {
 				double [] coords;
 				if (item==2) {
 					if (rd.collinear==0) {
-						Utilities.showWarningMessage("The selected row does not belong to a collinear set " + rd.collinear);
+						Utilities.showWarningMessage("The selected row does not belong to a collinear set.");
 						return;
 					}
 					coords = loadCollinearCoords(rd.collinear, rd.chrIdx[0], rd.chrIdx[1]);
 				}
 				else  {
 					if (rd.block==0) {
-						Utilities.showWarningMessage("The selected row does not belong to a synteny block " + rd.block);
+						Utilities.showWarningMessage("The selected row does not belong to a synteny block.");
 						return;
 					}
 					coords = loadBlockCoords(rd.block, rd.chrIdx[0], rd.chrIdx[1]);
@@ -1160,25 +995,19 @@ public class TableDataPanel extends JPanel {
 		
 			symap.getDrawingPanel().setMaps(1);
 			symap.getHistory().clear(); 
-
-			//FilterData fd2 = new FilterData();
-			//fd2.setShowHits(FilterData.ALL_HITS); 
+			Sequence.setDefaultShowAnnotation(true);
 			
 			HfilterData hd = new HfilterData (); // CAS520 change from dotplot.FilterData
-			if (item==0 || item==2) Sequence.setDefaultShowAnnotation(true);
-			
-			if (item==0) 		hd.setForQuery(false, false, true);  // block, collinear, all
-			else if (item==1) 	hd.setForQuery(true, false, false);  
-			else 				hd.setForQuery(false, true, false);
-			
-			symap.getDrawingPanel().setHitFilter(1,hd);
+			if (item==showREGION) 		hd.setForQuery(false, false, true);  // block, set, region
+			else if (item==showBLOCK) 	hd.setForQuery(true, false, false);  
+			else if (item==showSET)		hd.setForQuery(false, true, false);
+			symap.getDrawingPanel().setHitFilter(1,hd); // template for Mapper HfilterData, which is already created
 			
 			symap.getDrawingPanel().setSequenceTrack(1, p2Idx, grp2Idx, Color.CYAN);
 			symap.getDrawingPanel().setSequenceTrack(2, p1Idx, grp1Idx, Color.GREEN);
 			symap.getDrawingPanel().setTrackEnds(1, track2Start, track2End);
 			symap.getDrawingPanel().setTrackEnds(2, track1Start, track1End);
 			symap.getFrame().showX();
-			Sequence.setDefaultShowAnnotation(false);
 		} catch(Exception e) {ErrorReport.print(e, "Create 2D Synteny");}
     }
     /******************************************************
@@ -1570,6 +1399,368 @@ public class TableDataPanel extends JPanel {
 		int block=0;
 		int collinear=0;
     }
+    /***********************************************************************
+     ** Export file
+     *********************************************************************/
+    private void exportPopup() {
+		final ExportFile ex = new ExportFile();
+		ex.setVisible(true);
+		final int mode = ex.getSelection();
+		
+		if (mode == ex.ex_cancel) return;
+		else if (mode==ex.ex_csv) ex.writeCSV();
+		else if (mode==ex.ex_html) ex.writeHTML();
+		else if (mode==ex.ex_fasta) ex.writeFASTA();
+			
+		setPanelSelected();
+	}
+	
+    private class ExportFile extends JDialog {
+		private static final long serialVersionUID = 1L;
+		public final int ex_csv = 0, ex_html = 1, ex_fasta= 2, ex_cancel= 3;
+	   
+    	public ExportFile() {
+    		setModal(true);
+    		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+    		setTitle("Export Table Rows");
+    		
+    	// Files
+    		JRadioButton btnCSV = new JRadioButton("CSV");
+    		btnCSV.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					nMode = ex_csv;
+				}
+			});
+    		JRadioButton btnHTML =  new JRadioButton("HTML");
+    		btnHTML.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					nMode = ex_html;
+				}
+			});
+    		
+    		JPanel rowPanel = createPanel(true);
+            rowPanel.add(Box.createHorizontalStrut(15));
+            rowPanel.add(new JLabel("Include Row column:")); rowPanel.add(Box.createHorizontalStrut(5));
+            
+            btnYes = new JRadioButton("Yes");
+            JRadioButton btnNo = new JRadioButton("No");
+            ButtonGroup inc = new ButtonGroup();
+    		inc.add(btnYes);
+    		inc.add(btnNo);
+    		btnYes.setSelected(true);
+    		rowPanel.add(btnYes); rowPanel.add(Box.createHorizontalStrut(5));
+    		rowPanel.add(btnNo);
+    		
+    		JRadioButton btnFASTA = new JRadioButton("FASTA");
+    		btnFASTA.addActionListener(new ActionListener() {
+    			public void actionPerformed(ActionEvent arg0) {
+    				nMode = ex_fasta;
+    			}
+    		});
+    		if (isSingle) btnFASTA.setEnabled(false);
+	   	  
+    		ButtonGroup grp = new ButtonGroup();
+    		grp.add(btnCSV);
+    		grp.add(btnHTML);
+	        grp.add(btnFASTA);  
+	    	btnCSV.setSelected(true);
+	    	nMode = ex_csv;
+    			
+    		JPanel selectPanel = createPanel(false);
+    		selectPanel.add(new JLabel("Table rows and columns")); selectPanel.add(Box.createVerticalStrut(5));
+    		selectPanel.add(btnCSV); 			selectPanel.add(Box.createVerticalStrut(5));
+    		selectPanel.add(btnHTML);			selectPanel.add(Box.createVerticalStrut(5));
+	        selectPanel.add(rowPanel);
+	        
+	        selectPanel.add(new JSeparator());
+	        selectPanel.add(new JLabel("Table sequence")); selectPanel.add(Box.createVerticalStrut(5));
+	        selectPanel.add(btnFASTA); 
+	        
+	    // buttons
+        	JButton btnOK = new JButton("OK");
+        	btnOK.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					setVisible(false);
+				}
+			});
+    		JButton btnCancel = new JButton("Cancel");
+    		btnCancel.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					nMode = ex_cancel;
+					setVisible(false);
+				}
+			});
+    		btnOK.setPreferredSize(btnCancel.getPreferredSize());
+    		btnOK.setMaximumSize(btnCancel.getPreferredSize());
+    		btnOK.setMinimumSize(btnCancel.getPreferredSize());
+    		
+    		JPanel buttonPanel = createPanel(true);
+    		buttonPanel.add(btnOK);			buttonPanel.add(Box.createHorizontalStrut(5));
+    		buttonPanel.add(btnCancel);		
+  
+	      // Finish 
+    		JPanel mainPanel = createPanel(false);
+    		mainPanel.add(selectPanel); 	mainPanel.add(Box.createVerticalStrut(5));
+    		mainPanel.add(new JSeparator());
+    		mainPanel.add(buttonPanel);
+    		mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    		add(mainPanel);
+    		
+    		pack();
+    		this.setResizable(false);
+    		setLocationRelativeTo(null); 
+        }
+    	private JPanel createPanel(boolean isRow) {
+    		JPanel xPanel = new JPanel();
+    		if (isRow) {
+    			xPanel.setLayout(new BoxLayout(xPanel, BoxLayout.LINE_AXIS));
+    			xPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+    		}
+    		else {
+    			xPanel.setLayout(new BoxLayout(xPanel, BoxLayout.PAGE_AXIS)); 
+    			xPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    			xPanel.setAlignmentY(Component.TOP_ALIGNMENT);
+    		}
+    		xPanel.setBackground(Color.white);
+    		return xPanel;
+    	}
+        public int getSelection() { return nMode; }
+        
+        JRadioButton btnYes;
+        int nMode = -1;
+        
+        /*********************************************************
+         * Write CSV - works with 504
+         */
+        private void writeCSV() {
+        try {
+    		String saveFileName = getFileName(ex_csv);
+    		if (saveFileName==null) return;
+    		
+    		boolean incRow = btnYes.isSelected();
+			
+    		setPanelEnabled(false);
+    		boolean reset = false;
+    		if(theTable.getSelectedRowCount() == 0) {
+    			theTable.selectAll();
+    			reset = true;
+    		}
+    		int [] selRows = theTable.getSelectedRows();
+    		
+    		// Columns names
+    		PrintWriter out = new PrintWriter(new FileWriter(new File(saveFileName)));
+    		for(int x=0; x<theTable.getColumnCount()-1; x++) {
+    			if (!incRow && x==0) continue; // CAS540 for row check
+    			
+    			out.print(reloadCleanString(theTable.getColumnName(x)) + ",");
+    		}
+    		out.println(reloadCleanString(theTable.getColumnName(theTable.getColumnCount()-1)));
+    		
+    		// rows
+    		for(int x=0; x<selRows.length; x++) {
+    			for(int y=0; y<theTable.getColumnCount()-1; y++) {
+    				if (!incRow && y==0) continue; // CAS540 for row check
+    				
+    				out.print(reloadCleanString(theTable.getValueAt(selRows[x], y)) + ",");
+    			}
+    			out.println(reloadCleanString(theTable.getValueAt(selRows[x], theTable.getColumnCount()-1)));
+    			out.flush();
+    		}
+    		System.out.println("Wrote " + selRows.length + " rows                  ");
+    		out.close();
+    		
+    		if(reset)
+    			theTable.getSelectionModel().clearSelection();
+    		setPanelEnabled(true);
+    	} catch(Exception e) {ErrorReport.print(e, "Write delim file");}
+        }
+       
+        private void writeHTML() { // CAS542 add
+        try {
+    		String saveFileName = getFileName(ex_html);
+    		if (saveFileName==null) return;
+    	
+    		boolean incRow = btnYes.isSelected();
+			
+    		setPanelEnabled(false);
+    		boolean reset = false;
+    		if(theTable.getSelectedRowCount() == 0) {
+    			theTable.selectAll();
+    			reset = true;
+    		}
+    		int [] selRows = theTable.getSelectedRows();
+    		
+    		// html header
+    		PrintWriter out = new PrintWriter(new FileWriter(new File(saveFileName)));
+    		out.print("<!DOCTYPE html><html>\n<head>\n"
+    				+ "<title>SyMAP Query Table Results</title>\n"
+    				+ "<style>\n"
+    				+  "body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }\n"
+    				+ ".ty    {border: 1px  solid black; border-spacing: 1px; border-collapse: collapse;margin-left: auto; margin-right: auto;}\n"
+    				+ ".ty td {border: 1px  solid black; padding: 5px; width: 80px; word-wrap: break-word; }" 
+    				+ "</style>\n</head>\n<body>\n"
+    				+ "<a id='top'></a>\n");
+    	 
+    		out.println("<p><center><b><big>SyMAP Results</big></b></center>\n");
+    		out.println("<br><center>Filter: " + theSummary + "</center>\n");
+    		out.print("<p><table class='ty'>\n<tr>");
+    		
+    		// Columns names
+    		for(int x=0; x<theTable.getColumnCount(); x++) {
+    			if (!incRow && x==0) continue; 
+    			String col = reloadCleanString(theTable.getColumnName(x));
+    			col = col.replace(" ","<br>");
+    			out.print("<td><b><center>" + col + "</center></b></th>");
+    		}
+    		
+    		// rows
+    		for(int x=0; x<selRows.length; x++) {
+    			out.print("\n<tr>");
+    			for(int y=0; y<theTable.getColumnCount(); y++) {
+    				if (!incRow && y==0) continue; 
+    				
+    				out.print("<td>" + reloadCleanString(theTable.getValueAt(selRows[x], y)));
+    			}
+    			out.flush();
+    		}
+    		out.print("\n</table>\n");
+    		if (selRows.length>100) out.print("<p><a href='#top'>Go to top</a>\n");
+    		out.print("</body></html>\n");
+    		System.out.println("Wrote " + selRows.length + " rows                  ");
+    		out.close();
+    		
+    		if(reset)
+    			theTable.getSelectionModel().clearSelection();
+    		setPanelEnabled(true);
+    	} catch(Exception e) {ErrorReport.print(e, "Write delim file");}
+        }
+        
+        /******************************************************************
+         * Write fasta 
+         */
+        private void writeFASTA() {
+        try {
+    		String saveFileName = getFileName(ex_fasta);
+    		if (saveFileName==null) return;
+    		
+    		final String fName = saveFileName;
+    		
+    		Thread inThread = new Thread(new Runnable() {
+    			public void run() {
+    				try {
+    					setPanelEnabled(false);
+    					
+    					boolean reset = false;
+    					if(theTable.getSelectedRowCount() == 0) {
+    						theTable.selectAll();
+    						reset = true;
+    					}
+    					long startTime = Utilities.getNanoTime();
+    					int [] selRows = theTable.getSelectedRows();
+    					int selNum = selRows.length;
+    					if (selNum>500) {
+    						if (!Utilities.showContinue("Export FASTA", 
+    							"Selected " + selNum + " row to export. This is a slow function. \n" +
+    							"It may take over a minute to export each 500 rows of sequences.")) 
+    						{
+    							if(reset)theTable.getSelectionModel().clearSelection();
+    							setPanelEnabled(true);
+    							return;
+    						}
+    					}
+    					int seqNum = 1, pairNum=1;
+    					RowData rd = new RowData();
+    						
+    					PrintWriter out = new PrintWriter(new FileWriter(new File(fName)));
+    					
+    					for(int x=0; x<selNum; x++) {
+    						if (!rd.loadRow(x)) {
+    							out.close();
+    							if(reset) theTable.getSelectionModel().clearSelection();
+    	    					setPanelEnabled(true);
+    	    					invalidate();
+    							return;
+    						}
+    							
+    						for (int i=0; i<2; i++) {
+    							// this getSequence is slow.
+    							String seq = theParentFrame.getSequence(rd.start[i], rd.end[i], rd.chrIdx[i]);
+    								
+    							String outString = ">SEQ" + String.format("%06d  ", seqNum)  
+    										+ rd.spName[i] + " Chr " + rd.chrNum[i] 
+    										+ " Start " + rd.start[i] + " End " + rd.end[i];
+    							outString += " Pair#" + pairNum;
+    							out.println(outString);
+    							out.println(seq);
+    							out.flush();
+    							seqNum++;
+    						}
+    						pairNum++;						
+    						System.out.print("Wrote: " + ((int)((((float)x)/selRows.length) * 100)) + "%\r");
+    					}
+    					out.close();
+    					
+    					Utilities.printElapsedNanoTime("Wrote " + (seqNum-1) + " sequences", startTime);
+    					
+    					if(reset)
+    						theTable.getSelectionModel().clearSelection();
+    					setPanelEnabled(true);
+    					invalidate();
+    				}
+    				catch(Exception e) {ErrorReport.print(e, "Write fasta");}
+    			}
+    			});
+    			inThread.start();
+    		}
+    		catch(Exception e) {ErrorReport.print(e, "Save as fasta");}
+        }
+        private String getFileName(int type) {
+        	String saveDir = System.getProperty("user.dir") + "/exports/";
+    		File temp = new File(saveDir);
+    		if(!temp.exists()) {
+    			System.out.println("Create " + saveDir);
+    			temp.mkdir();
+    		}
+
+    		JFileChooser chooser = new JFileChooser(saveDir);
+    		if(chooser.showSaveDialog(theParentFrame) != JFileChooser.APPROVE_OPTION) return null;
+    		if(chooser.getSelectedFile() == null) return null;
+    		
+    		String saveFileName = chooser.getSelectedFile().getAbsolutePath();
+    		if (type==ex_csv) {
+    			if(!saveFileName.endsWith(".csv")) saveFileName += ".csv";
+    			System.out.println("Exporting CSV to " + saveFileName);
+    		}
+    		else if (type==ex_html) {
+    			if(!saveFileName.endsWith(".html")) saveFileName += ".html";
+    			System.out.println("Exporting HTML to " + saveFileName);
+    		}
+    		else {
+        		if(!saveFileName.endsWith(".fasta") && !saveFileName.endsWith(".fa")) saveFileName += ".fa";
+        		System.out.println("Exporting Fasta to " + saveFileName);	
+    		}
+    		if (new File(saveFileName).exists()) {
+    			if (JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(null,"The file '" + saveFileName + "' exists,\ndo you want to overwrite it?", 
+						"File exists",JOptionPane.YES_NO_OPTION)) {
+					return null;
+				}
+    		}
+    		return saveFileName;
+        }
+        private String reloadCleanString(Object obj) {
+        	if(obj != null) {
+        		String val = obj.toString().trim();
+        		if (val.equals("")) return "''";
+        		
+        		val = val.replaceAll("[\'\"]", "");
+        		val = val.replaceAll("\\n", " ");
+        		val = val.replaceAll(",", ";"); // CAS540 quit returning with ''; just replace comma
+        		return val;
+        	}
+        	else return "''";
+    	}
+	} // end exportfile
+	
     /**************************************************************
      * Private variable
      */
@@ -1581,7 +1772,7 @@ public class TableDataPanel extends JPanel {
     private JTextField loadStatus = null, txtMargin = null;
     private JCheckBox chkHigh = null;
     private JButton btnShowSynteny = null, btnShowAlign = null, btnShowRow = null; 
-    private JButton btnUnSelectAll = null, btnSaveFasta = null, btnSaveCSV = null;
+    private JButton btnUnSelectAll = null, btnExport = null;
     private JComboBox <String> cmbSynOpts = null;
     
     private ListSelectionListener selListener = null;

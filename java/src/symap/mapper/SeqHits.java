@@ -400,7 +400,7 @@ public class SeqHits  {
 			 }
 			 
 			 /* %id text: paint in seq1/2 rectangle the %id */
-			 if (seqObj1.getShowScoreValue() || (isHover() && !seqObj1.getShowHitNum())) {  	
+			 if (seqObj1.getShowScoreText() || (isHover() && !seqObj1.getShowHitNumText())) {  	
 				 double textX = x1;
 				 if (x1 < x2) textX += -lineLength-15-(pctid==100 ? -7 : 0);
 				 else 		  textX +=  lineLength;					 
@@ -408,7 +408,7 @@ public class SeqHits  {
 				 g2.setPaint(Color.black);
 				 g2.drawString(""+(int)pctid, (int)textX, (int)y1);
 			 }
-			 if (seqObj2.getShowScoreValue() || (isHover() && !seqObj2.getShowHitNum())) {  	
+			 if (seqObj2.getShowScoreText() || (isHover() && !seqObj2.getShowHitNumText())) {  	
 				 double textX = x2;
 				 if (x2 < x1) 	textX += lineLength-15-(pctid==100 ? -7 : 0);
 				 else 			textX += lineLength;					 
@@ -417,7 +417,7 @@ public class SeqHits  {
 				 g2.drawString(""+(int)pctid, (int)textX, (int)y2);					 
 			 }
 			 /* hitNum CAS531 new */
-			 if (seqObj1.getShowHitNum()) {  	
+			 if (seqObj1.getShowHitNumText()) {  	
 				 double textX = x1;
 				 if (x1 < x2) textX += -lineLength-15-(pctid==100 ? -7 : 0);
 				 else 		  textX +=  lineLength;					 
@@ -425,7 +425,7 @@ public class SeqHits  {
 				 g2.setPaint(Color.black);
 				 g2.drawString(""+(int)hitDataObj.getHitNum(), (int)textX, (int)y1);
 			 }
-			 if (seqObj2.getShowHitNum()) {  	
+			 if (seqObj2.getShowHitNumText()) {  	
 				 double textX = x2;
 				 if (x2 < x1) 	textX += lineLength-15-(pctid==100 ? -7 : 0);
 				 else 			textX += lineLength;					 

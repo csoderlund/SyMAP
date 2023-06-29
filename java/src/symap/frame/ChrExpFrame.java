@@ -349,6 +349,10 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			TrackCom ref = mapper.getReferenceTrack();
 			TrackCom[] selectedTracks = mapper.getVisibleTracks(); // none reference tracks
 			
+			if (selectedTracks.length>=DrawingPanel.MAX_TRACKS) {
+				Utilities.showWarningMessage("Selected " + selectedTracks.length + "tracks.\nExceeded number of tracks (" + DrawingPanel.MAX_TRACKS + ") that can be set");
+				return false;
+			}
 			if (selectedTracks.length > 4 &&
 					JOptionPane.showConfirmDialog(null,"This view may take a while to load and/or cause SyMAP to run out of memory, try anyway?","Warning",
 						JOptionPane.YES_NO_OPTION,JOptionPane.ERROR_MESSAGE) != JOptionPane.YES_OPTION) 

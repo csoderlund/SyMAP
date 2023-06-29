@@ -68,7 +68,6 @@
 
 This guide is for the <ttp>viewSymap</ttp> user interface.
 <ol>
-
 <li>For detailed information on installation, see
 the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
 <li>For FPC-to-Seq view,  see <a href="./fpc/UserGuideFPC.html" class="ext" target="_blank">FPC specific</a>.
@@ -113,19 +112,17 @@ the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
 <li><a href="#image">Color Wheel, Print and Help (?) Icons</a> <!-- # ref 'wheel' in code -->
 <li>Details
 <ul>
-<li><a href="Collinear.html" target="_blank" class="ext">Collinear Sets</a> <font color=green>New v5.2.0</font>
-<li><a href="Align.html" target="_blank" class="ext">Alignments</a> <font color=green>Improved v5.3.1</font>
-<li><a href="Query.html" target="_blank" class="ext">Queries</a>
+	<li><a href="Collinear.html" target="_blank" class="ext">Collinear Sets</a> <font color="green">New v5.2.0</font>
+	<li><a href="Align.html" target="_blank" class="ext">Alignments</a> <font color="green">Improved v5.3.1</font>
+	<li><a href="Query.html" target="_blank" class="ext">Queries</a> </ul>
 </ul>
-</ul>
-
 <td style="vertical-align: text-top;">
 <table>
 <tr><td><br><small><i>The Dot Plot and Circle are available from various places.</i></small>
 <tr><td>
 <small>Project Manager</small>
 <br><a href="./img/view1.png">
-		<img src="./img/view1.png" alt="Dots and Circle" title="Dots and Circle"  style="width: 350px; border:1px solid black"></a>
+		<img src="./img/view1.png" alt="Dots and Circle" title="Dots and Circle"  style="width: 380px; border:1px solid black"></a>
 <tr><td>&nbsp;
 <tr><td>&nbsp;
 <tr><td>
@@ -153,6 +150,7 @@ if you use SyMAP results in a paper, poster, or presentation.
 
 <a id="term"></a>
 <h1>Terminology</h1>
+
 <table class="ty">
 <tr><td>Chromosome<td>For simplicity, sequence groups will be referred to as "Chromosome", though they may be scaffolds, linkage groups, etc.
 <tr><td style="white-space: nowrap;"><i>Hit (or anchor)</i><td>A matched sequence between two chromosomes from MUMmer.
@@ -168,7 +166,6 @@ pairs. A set can consist of 2 or more genes. See <a href="Collinear.html" target
 <tr><td><i>Block and !Block</i><td>Hits that are in a block and hits that are not within a block, respectively.
 <tr><td><i>g2, g1, g0</i><td>A hit overlaps a gene on <i>both</i> sides,
 a hit overlaps a gene on <i>one</i> side, a hit overlaps <i>no</i> genes, respectively.
-
 </table>
 
 <!---------------------------------------------------------->
@@ -308,24 +305,24 @@ the species displayed on the x-axis.
 <ttl>Reference</ttl>: The drop-down menu allows the reference species on the x-axis to be changed.
 <p>
 <ttl>Info</ttl>: The options are:
-<ul>
-<li><ttx>Stats</ttx>: As shown at the bottom of the dotplot display above,
+<table class="ty">
+<tr><td><ttx>Stats</ttx><td>As shown at the bottom of the dotplot display above,
 there are statistics listed along the bottom.
-<li><ttx>Print</ttx>: A more detailed statistics will be printed to the terminal, e.g.
-<pre>
+<tr><td><ttx>Print</ttx><td> A more detailed statistics will be printed to the terminal, e.g.
+<small><pre>
 >> B.rapa  Cabbage     (%Id=31)
-   All Hits   86,680         Annotated  Both 58,440               One 19,299               None 8,941
-   Block Hits 61,062 ( 70%)             Both 46,568 ( 80%,  76%)  One  8,094 ( 42%,  13%)  None 6,400 ( 72%,  10%)
-  !Block Hits 25,618 ( 30%)             Both 11,872 ( 20%,  46%)  One 11,205 ( 58%,  44%)  None 2,541 ( 28%,  10%)
-</pre>
+   All Hits   86,680        Annotated  Both 58,440            One 19,299            None 8,941
+   Block Hits 61,062 (70%)             Both 46,568 (80%,76%)  One  8,094 (42%,13%)  None 6,400 (72%,10%)
+  !Block Hits 25,618 (30%)             Both 11,872 (20%,46%)  One 11,205 (58%,44%)  None 2,541 (28%,10%)
+</pre></small>
 The <tt>(%Id=31)</tt> is what the filtered percent identity of the hits are, which can be changed in <ttl>Hit Filter</ttl>.
 The two percentages in parenthesis are the column (gene) percent and row (hit) percent.
-<li><ttx>Help</ttx>: One line help is printed in place of the statistics.
-</ul>
+<tr><td><ttx>Help</ttx><td> One line help is printed in place of the statistics.
+</table>
 
 <ttl>Filter</ttl>: See below.
 <p>
-<ttl>Color Wheel, Print and Help Icons</ttl>: See <a href=#image>Color Wheel, Print and Help</a>.
+<ttl>Color Wheel, Print and Help Icons</ttl>: See <a href="#image">Color Wheel, Print and Help</a>.
 
 <!------------------------------------------------------------>
 <a id="dotplot_filter"></a> <!-- # ref in code -->
@@ -335,7 +332,6 @@ The two percentages in parenthesis are the column (gene) percent and row (hit) p
 The <ttl>Filter</ttl> settings are used for the duration of the given dotplot display. The <ttl>Color Icon</ttl> settings
 are stored for every dotplot display.
 <p>
-<table>
 <table>
 <tr><td  style="vertical-align: text-top;">
 As soon as a <ttb>Filter</ttb> option is changed, it will be reflected on the dotplot. However, no other panel can be
@@ -349,8 +345,7 @@ accessed until one of the following buttons is clicked, which will close the <tt
 <td><a href="img/dotplot-filter.png">
 <img src="img/dotplot-filter.png" alt="dotplot filter" style="border: 1px solid black; width: 350px"></a>
 </table>
-<table>
-<tr><td>
+
 <table  class="ty">
 <tr><td style="vertical-align: text-top;"><ttl>Hit %Identity</ttl>
     <td>Show all hits that have &gt;N% identity, where the %Identity is from the MUMmer anchor file.
@@ -373,11 +368,11 @@ accessed until one of the following buttons is clicked, which will close the <tt
 	<br><ttl>Both</ttl>  &nbsp;&nbsp;&nbsp;&nbsp;Only show hits that has a gene on both ends to the hit.
 	<br><ttl>One</ttl>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Only show hits that has a gene on one end of hit.
 	<br><ttl>None</ttl>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Only show hits that does not have a gene on either end.
-<tr><td style="vertical-align: text-top;"><ttl>Show Blocks</ttl>
-	<td>Draw a blue rectangle around each block of hits.
-<tr><td style="vertical-align: text-top;"><ttl>Show Block Numbers</ttl>
-	<td>Draw the block number in or near the block; this only works when <ttl>Show Blocks</ttl> is also checked.
-	This works best on the cell view.
+<tr><td style="vertical-align: text-top;"><ttl>Show Block</ttl>
+	<td><ttl>Boundary</ttl>&nbsp;&nbsp;&nbsp;Draw a blue rectangle around each block of hits.
+	<br><ttl>Border</ttl>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Draw the block number in or near the block;
+	this only works when <ttl>Boundary</ttl> is also checked.
+
 </table>
 <small><sup>a</sup> These options can make the dots flow over the borders, see <u>DotPlot Filtered Display</u>.</small>
 <br><small><sup>b</sup> The SyMAP hit loading algorithm removes
@@ -433,7 +428,7 @@ The <ttb>Explain</ttb> button on this view explains the different columns.
 <a id="all"></a>
 <h1>Displays for All Projects</h1>
 From the <a href="#mgr">Project Manager</a>, select two or more projects, which will
-activate the "Chromosome Explorer" and "Dotplot" buttons.
+activate the <ttb>Chromosome Explorer</ttb> and <ttb>Dotplot</ttb> buttons.
 
 <a id="explorer"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -446,8 +441,8 @@ activate the "Chromosome Explorer" and "Dotplot" buttons.
 <td><a href="#alignment_display_dot">Dotplot</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </table>
 <p>
-The Explorer is a two-panel display in which the left panel is used to select specific chromosomes, while the right panel
-shows the synteny for the selected chromosomes.
+The Explorer is a two-panel display in which the left panel is used to select specific chromosomes,
+while the right panel shows the synteny for the selected chromosomes.
 
 <p>Below is a snapshot of the Explorer showing the circle, which is the initial view.
 <p>
@@ -471,7 +466,8 @@ components, instructions or information for that component are shown in the <ttl
 <p>
 <ttl>Views:</ttl> The buttons in the lower-left corner of the window change the synteny view in the right panel.
 <p>
-<ttl>Download Blocks</ttl>: Exports a table of all of the synteny block coordinates for the selected species; see also <a href="#data_download">Data Download</a>.
+<ttl>Download Blocks</ttl>: Exports a table of all of the synteny block coordinates for the selected species;
+see also <a href="#data_download">Data Download</a>.
 <p>
 Click the minus (<ttl><big>-</big></ttl>) button next to a project name or the <ttl>Information</ttl> box,
 and that section will be hidden;
@@ -699,7 +695,8 @@ click and drag actions:
 <tr><td style="white-space: nowrap; vertical-align: text-top;">Zoom All Tracks
 	<td>Zoom the track to the selected region and all other tracks with hits in the region.
 	<br>When zoomed in, if the hit-wire is not displayed, none of the hit will be displayed.
-<tr><td style="white-space: nowrap; vertical-align: text-top;">Zoom Selected Track<td>Zoom to the selected region on the selected track; all other tracks do not change.
+<tr><td style="white-space: nowrap; vertical-align: text-top;">Zoom Selected Track<td>Zoom
+to the selected region on the selected track; all other tracks do not change.
 <tr><td style="white-space: nowrap; vertical-align: text-top;">Align (Max 30000)<td>
 Open the base alignment view for the selected region (see <a href="#base">Base View</a>).
 No more than 30000 bases can be selected. There MUST be hits in the region to align.
@@ -715,7 +712,6 @@ not relevant if there are no clustered hits).
 <tr><td>Region<td>Show the sequence from the region selected.
 </table>
 </table>
-
 
 <br><ttl>Info:</ttl> (Chromosome Explorer only)
 This drop-down selector controls what is shown in the <ttl>Information</ttl> box.
@@ -736,6 +732,7 @@ state how many hits are shown.
 also state how many hits are highlighted.
 <br>If blocks or collinear sets are highlighted,
 it will also state how many blocks/sets are shown, e.g.
+</ul>
 <table>
 <tr><td>
 <pre>
@@ -751,8 +748,6 @@ and belong to 642 collinear sets.
 </table>
 </table>
 <p><ttl>Color, Print, <big>?</big> Icons</ttl>  see <a href="#image">Color Wheel, Help and Print</a>.
-
-
 
 <p>
 <u>Additional navigation</u>:
@@ -783,61 +778,59 @@ and belong to 642 collinear sets.
 
 Select <ttb>Sequence Filter</ttb> button above the sequence track to change the display for the
 respective chromosome. If the sequence track does not have a given annotation (e.g. Gaps), then that item
-will be un-selectable.
-<p>
-<ttl>Start</ttl> and <ttl>End</ttl>
-The positions of the sequence display can be set via the corresponding text boxes.
-The units of the values entered can be selected from the accompanying drop down menus
-(BP, KB, MB, GB).
+will be un-selectable. All checked options occur immediately; a checked box enables the option.
 
 <table>
 <tr><td>
-<ttl>Full Sequence</ttl> Sets the start and end positions of
-the sequence display to encompass the whole chromosome.
-<p>
-<ttl>Flip</ttl> Reverses the orientation of the sequence track.
-<p>
-<ttl>Show Genes</ttl> Enables/disables the display of gene/exon annotations along the sequence.
-<p>
-<ttl>Show Gene Delimiter</ttl> When the zoom is close enough to view the exons, a black line will
-be drawn over the top end of each gene. This helps delimit genes that do not overlap (so are not staggered),
-but are close enough to appear one gene (see <a href="#ex2d">example below</a>).
-<p>
-<ttl>Show Annotation</ttl> Enables/disables the display of the annotation descriptions along the
+<table class="ty">
+<tr><td><ttl>Flip Sequence</ttl><td> Reverses the orientation of the sequence track.
+<tr><td colspan="2"><ttx>Show Graphics</ttx>
+<tr><td><ttl>Ruler</ttl><td> Display of the sequence ruler along the right side
+of the sequence.
+<tr><td style="vertical-align: text-top;"><ttl>Annotation</ttl><td> Display of the annotation descriptions along the
 right side of sequence. NOTE: this only works if you are zoomed in close enough that they can clearly
 be displayed.
-<p>
-<ttl>Show Gaps</ttl> Enables/disables the display of sequence gaps (drawn as solid red
+<tr><td><ttl>Genes</ttl><td> Display of gene/exon annotations along the sequence.
+<tr><td style="vertical-align: text-top;"><ttl>Gene Delimiter</ttl><td> When the zoom is close enough to view the exons, a black line will
+be drawn over the top end of each gene. This helps delimit genes that do not overlap (so are not staggered),
+but are close enough to appear one gene (see <a href="#ex2d">example below</a>).
+<tr><td style="vertical-align: text-top;"><ttl>Gaps</ttl><td> Display of sequence gaps (drawn as solid red
 rectangles) along the sequence.
-<p>
-<ttl>Show Centromere</ttl> Enables/disables the display of the centromere (drawn as a cyan "X") on the sequence.
-
-<td>
-<a href="img/sequencefilter.png">
-	<img src="img/sequencefilter.png" alt="sequencefilter" style="border: 1px solid black; width: 300px"></a>
-</table>
-
-<p>
-<ttl>Show Ruler</ttl> Enables/disables the display of the sequence ruler along the right side
-of the sequence.
-<p>
-<ttl>Show Hit Length</ttl> Enables/disables the display of the hit length line along the
+<tr><td style="vertical-align: text-top;"><ttl>Centromere</ttl><td> Display of the centromere (drawn as a cyan "X") on the sequence.
+<tr><td style="vertical-align: text-top;"><ttl>Hit Length</ttl><td> Display of the hit length line along the
 inner boundary of the sequence.  The hit length line denotes the start and end points of the hits relative
 to the sequence (may not be visible for tiny hits).
-<p>
-<ttl>Show Hit %Id Line</ttl> Enables/disables the display of the %Id line next to each hit along the
+<tr><td style="vertical-align: text-top;"><ttl>Hit %Id Line</ttl><td> Display of the %Id line next to each hit along the
 sequence.  The length of the line represents the magnitude of the % Identity value for
 the hit.
-<p>
-<ttl>Show</ttl>: The first two will show their value along the edge of the sequence track.
-<table class="ty">
-<tr><td><ttl>Hit %Id Value</ttl><td>The score value corresponds to the % Identity value for the hit from the MUMmer anchor file.
-<tr><td><ttl>Hit#</ttl><td>The hit number is shown.
-<tr><td><ttl>Neither</ttl><td>Nothing is shown (default).
 </table>
-<p>A subset of the filters are available by right
-clicking in the light blue area of the chromosome rectangle.
+<td>
+<a href="img/seqFilter.png">
+	<img src="img/seqFilter.png" alt="sequence filter" style="border: 1px solid black; width: 300px"></a>
+</table>
 
+<table class="ty">
+<tr><td><ttx>Show Text</ttx><td> Show the text of the value along the edge of the sequence track.
+<tr><td><ttl>Hit %Id</ttl><td>The score value corresponds to the % Identity value for the hit from the MUMmer anchor file.
+<tr><td><ttl>Hit#</ttl><td>The hit number is shown.
+<tr><td><ttl>None</ttl><td>Nothing is shown (default).
+<tr><td><ttx>Coordinates</ttx><td> All coordinates changes take effect on <ttb>Apply</ttb>.
+<tr><td><ttl>Full Sequence</ttl><td> Sets the start and end positions of the sequence display to encompass the whole chromosome.
+<tr><td>
+<ttl>Start</ttl> and <ttl>End</ttl><td>
+The positions of the sequence display can be set via the corresponding text boxes.
+The units of the values entered can be selected from the accompanying drop down menus
+(BP, KB, MB, GB).
+</table>
+
+<table class="tx">
+<tr><td>A subset of the filters are available
+<br>by right clicking in the empty space
+<br>of the chromosome rectangle.
+<td>
+<a href="img/seqFilterPopup.png">
+	<img src="img/seqFilterPopup.png" alt="sequence filter popup" style="border: 1px solid black; width: 120px"></a>
+</table>
 <!----------------------------------------------------------->
 <!------------->
 <a id="hitfilter"></a> <!-- # ref in code -->
@@ -870,8 +863,7 @@ conjunction with any of the <ttl>Show</ttl> options.
 to one chromosome of the pair.
 
 <p>A subset of the highlight filters are available by right clicking in the hit white space.
-<br>KNOWN BUG: If a "region" in the dotplot is selected, then highlight it set, it changes from <ttl>Show All</ttl>
-to <ttl>Show Block</ttl>.
+
 
 <!-------------------------------------------------------------------->
 <a id="ex2d"></a>
@@ -990,6 +982,10 @@ the 2D view.
 
 There are two ways to download data for SyMAP synteny blocks, individual hit anchors, and annotations:
 <ul>
+<li><a href="#queries">Queries</a>: The results of a query are shown in a table,
+which can be exported as a CSV or HTML file.  The hit sequences can be exported in FASTA format.
+See <a href="Query.html#export">Query Export</a>.
+<p>
 <li><a href="#explorer">Explorer</a>: Select the species of interest,
  open the <ttb>Explorer</ttb>, and click the <ttl>Download Blocks</ttl> button is at the lower left.
  This exports a table of all the computed synteny block coordinates for all the
@@ -1002,10 +998,6 @@ Species1  Species2  Chr1  Chr2  BlkNum Start1 End1  Start2 End2 #Hits   Genes1  
 is the percentage of genes that have a hit.
 The <ttl>PearsonR</ttl> is the approximate linearity of the hits in the chain as measured
 by the Pearson correlation coefficient; a negative PCC is an inverted block.
-
-<li><a href="#queries">Queries</a>: The results of a query are shown in a table,
-which can be exported as a CSV file. Whatever column that have been selected will
-be written to the file.
 </ul>
 
 <a id="image"></a>
@@ -1072,11 +1064,9 @@ The 3D display is obsolete, but if there is a "3D" button on your display,  see 
 
 <p><a href="#top">Go to top</a>
 <!---- END BODY -->
-	</td></tr>
-	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
                         Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
 
-</td></tr>
 </table>
 </body>
 </html>

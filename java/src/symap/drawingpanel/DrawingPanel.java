@@ -12,14 +12,13 @@ import history.HistoryListener;
 import props.ProjectPool;
 import symap.Globals;
 import symap.frame.ControlPanel;
+import symap.frame.FilterHandler;
 import symap.frame.HelpBar;
 
 import symap.mapper.HitData;
 import symap.mapper.HfilterData;
 import symap.mapper.Mapper;
 import symap.mapper.MapperData;
-
-import symap.filter.FilterHandler;
 import symap.track.*;
 import symap.sequence.Sequence;
 import symap.closeup.CloseUp;
@@ -34,10 +33,10 @@ import util.Utilities;
  * CAS521 totally removed all FPC (CAS517 had added stuff to not show FPC if no /fpc)
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class DrawingPanel extends JPanel implements ColorListener, HistoryListener
-{ 	
+public class DrawingPanel extends JPanel implements ColorListener, HistoryListener { 
+	//private boolean DEBUG = Globals.DEBUG;
 	public static Color backgroundColor = Color.white;
-	public static final int MAX_TRACKS = 100;
+	public static final int MAX_TRACKS = 30; // CAS542 was 100; number of side by side tracks in 2D
 
 	private Mapper[] mappers;
 	private TrackHolder[] trackHolders;
@@ -88,12 +87,12 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 			trackHolders[i].setOrientation( i == 0 ? Globals.LEFT_ORIENT : Globals.RIGHT_ORIENT );
 			add(trackHolders[i]);
 		}
-
+		
+		HfilterData.cntHitFilter=1; // CAS542 for debugging
 		mappers = new Mapper[MAX_TRACKS - 1];
 		for (int i = 0; i < mappers.length; i++) {
 			mappers[i] = new Mapper(this,trackHolders[i],trackHolders[i+1],
-					new FilterHandler(this,bar), dbc2, projPool,
-					bar, listPanel); 
+					new FilterHandler(this), dbc2, projPool, bar, listPanel); 
 			add(mappers[i]);
 			mappers[i].setLocation(0,0);
 		}
@@ -226,9 +225,9 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		}
 		return false;
 	}
-	// symapQuery Show Synteny from table
+	// set defaults for: symapQuery Show Synteny from table and dotplot.Data 
 	public void setHitFilter(int map, HfilterData hf) {
-		mappers[map-1].getHitFilter().set(hf);
+		mappers[map-1].getHitFilter().setChanged(hf, "DP setHitFilter");
 	}
 
 	public void downloadAllHits(int map) {
@@ -269,7 +268,6 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 			if (t1 == src && orientation == Globals.RIGHT_ORIENT) 		return t2;
 			else if (t2 == src && orientation == Globals.LEFT_ORIENT) 	return t1;
 		}
-		if (Globals.DEBUG) System.out.println("getOpposingTrack is null " + orientation + " " + src.toString());
 		return null;
 	}
 
@@ -428,12 +426,12 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	}
 
 	protected void setTrack(Track track, int position) throws IndexOutOfBoundsException {
+		if (position>=MAX_TRACKS) 
+			Utilities.showWarningMessage("Selected " + position + " tracks.\nExceeded number of tracks (" + MAX_TRACKS + ") that can be set");
 		position--; 
 		trackHolders[position].setTrack(track);
 		setOtherTracksOtherProject(track,position);
-		if (position > numMaps) {
-			numMaps = position; 
-		}
+		if (position > numMaps) numMaps = position; 
 	}
 
 	/**
@@ -641,14 +639,14 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		return true;
 	}
 
-	public int getNumMaps() {
-		return numMaps;
-	}
+	public int getNumMaps() {return numMaps;}
 
 	public void setMaps(int numberOfMaps) {
 		if (numberOfMaps < 1) numberOfMaps = 1;
-		else if (numberOfMaps > MAX_TRACKS - 1) numberOfMaps = MAX_TRACKS - 1;
-
+		else if (numberOfMaps > MAX_TRACKS - 1) {
+			numberOfMaps = MAX_TRACKS - 1;
+			Utilities.showWarningMessage("Exceeded number of pre-defined tracks (" + MAX_TRACKS + ")");
+		}
 		if (numMaps != numberOfMaps) {
 			closeFilters();
 			setFrameEnabled(false);

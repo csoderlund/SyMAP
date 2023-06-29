@@ -84,7 +84,7 @@ Content:
 <br><a href="#singleCol">Single gene columns</a>
 <br><a href="#save">Auto-save columns</a>
 
-<td valign="top">&nbsp;
+<td style="vertical-align: text-top;">&nbsp;
 <br><a href="#but">Top button functions</a>
 <br><a href="#stat">Statistics</a>
 </table>
@@ -290,7 +290,10 @@ although the PgeneF numbers will reflect groupings created using all hits.
 
 <p>
 <a href="img/query_result.png"><img src="img/query_result.png" alt="query results" style="border: 1px solid black; width: 550px"></a>
-<p>Click <a href="img/query_single_result.png">Single Result Table</a> for example.
+<p>Click <a href="img/query_single_result.png">Single Result Table</a> for example when all three projects
+are being queried versus <a href="img/query_single_result2.png"> Results</a> when two of the three are being
+queried; note that the <ttl>NumHits</ttl> is something &gt;0 because there are hits to <tt>Arab</tt> that are not
+taking into account since it was not part of the query set.
 
 <!----------------------------------------------------->
 <a id="tab"></a>
@@ -322,15 +325,15 @@ for one species.
 <h3>Columns</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 Sections:
-<a href=#pairCol> Pair hits columns</a>&nbsp;&nbsp;&nbsp;
-<a href=#singleCol> Single gene columns</a>&nbsp;&nbsp;&nbsp;
-<a href=#save> Auto-save columns</a>
+<a href="#pairCol"> Pair hits columns</a>&nbsp;&nbsp;&nbsp;
+<a href="#singleCol"> Single gene columns</a>&nbsp;&nbsp;&nbsp;
+<a href="#save"> Auto-save columns</a>
 <p>You can sort the columns by clicking on them, and rearrange them by dragging the header
 boxes. You can add/remove columns using the <ttb>Select Columns</ttb> button at the bottom.
 
 <p>In the columns panel, <i>hover</i> over a column name to see its brief description. Following
 are the full descriptions of the columns:
-<a id="pairCol">
+<a id="pairCol"></a>
 <h4>Pair hits columns</h4>
 <table class="tx">
 <tr>
@@ -399,7 +402,7 @@ are the full descriptions of the columns:
 <tr><td style="vertical-align: text-top; white-space: nowrap;"><ttx>Hlen</ttx><td>&nbsp;
 	<td>Hend-Hstart+1
 <tr>
-	<td colspan=3><ttl>Annotation</ttl>: one row for each species</i>
+	<td colspan=3><ttl>Annotation</ttl>: one row for each species
 <tr>
 	<td colspan=3>The keywords for the annotations of each species are listed;
 	they can be different for each species.
@@ -408,12 +411,12 @@ are the full descriptions of the columns:
 </table>
 
 
-<a id="singleCol">
+<a id="singleCol"></a>
 <h4>Single genes columns</h4>
 <p>The single genes tables only have the
 <ttl>Gene Info</ttl> and <ttl>Annotation</ttl> columns, with one additional column, as follows.
 <table class="tx">
-<tr><td valign="top"><ttx>NumHits</ttx>
+<tr><td style="vertical-align: text-top;"><ttx>NumHits</ttx>
 <td>This is the number of hits to the gene in the ENTIRE databases, except for SELF synteny.
 <br>For example, if X, Y
 and Z species have all been compared for synteny, but only Y and Z are being queried,
@@ -461,13 +464,14 @@ are provided using the drop-down (default <ttl>Region (kb)</ttl>).
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
 
+
 <table class="ty">
 <tr><td style="white-space: nowrap;"><ttl>Region (kb)</ttl>
 <td>The selected hit is padded to each side by the amount indicated (default 50kb).
 The default filter is <ttl>Show all hits</ttl>.
 <tr><td style="white-space: nowrap;"><ttl>Synteny block</ttl>
 <td>The entire block for this hit will be shown. The default filter is <ttl>Show Block Hits</ttl>.
-<tr><td style="white-space: nowrap;"><ttl>Collinear set <td>If the hit is in a collinear set, the set will be shown.
+<tr><td style="white-space: nowrap;"><ttl>Collinear set</ttl> <td>If the hit is in a collinear set, the set will be shown.
 The default filter is <ttl>Highlight Collinear Set; Show Block and Set Hits</ttl>.
 </table>
 
@@ -479,16 +483,25 @@ After the initial display, the <ttp>2D</ttp> view can be changed as described in
 the selected color is the same as the hover color, and can be changed
 in the <a href="UserGuide.html#wheel"  class="ext" target="_blank">Color Icon</a>.
 
-<p><u>Table (or selected):</u> One or more rows can be selected for the following exports,
-or if no rows are selected, the table is exported with either to the following formats:
-
-<p><ttb>Export CSV</ttb>:
-Saves the selected hits (or entire table) using the selected set of columns to a CSV format suitable for import into Excel.
+<a id="export"></a>
+<p><ttb>Export</ttb>: One or more rows can be selected for the following exports;
+or if no rows are selected, the entire table is exported.
+<table class="tx">
+<tr><td>
+<p><ttl>CSV</ttl>:
+Export the rows using the selected set of columns to a CSV format suitable for import into Excel.
+<p><ttl>HTML</ttl>:
+Export the rows using the selected set of columns to a HTML format suitable for viewing on the web
+(e.g. <a href="./img/query_export.html"  class="ext" target="_blank">Example</a>).
 <p>
-<ttb>Save Fasta</ttb>: Sequences from the selected hits (or entire table) are written to a Fasta file. Both sides of each hit
-are written, using the start/end coordinates shown in the table.
-<br>NOTE: this is a very slow function and takes minutes if many rows are selected.
-
+<ttl>FASTA</ttl>: (Pairs Only) Sequences from the rows are written to a FASTA file.
+Both sides of each hit are written using the start/end coordinates shown in the table.
+NOTE: this is a very slow function and takes minutes if many rows are selected.
+<td>
+<a href="img/query_export.png"><img src="img/query_export.png" alt="result export" style="border: 1px solid black; width: 260px"></a>
+</table>
+The <ttl>Include Row column</ttl> option is available because this column is alway present, but
+it may be desirable to not include it in the output.
 
 <a id="stat"></a>
 <table style="width: 95%"><tr><td style="text-align: left">

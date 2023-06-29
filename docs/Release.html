@@ -61,6 +61,8 @@
 	<!---- START BODY -->
 
 If you are using SyMAP and want to update to a new version, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
+<p><font color=green>Releases after v5.4.0 have not been tested on Linux, but have been tested on MacOS with MySQL and MariaDB,
+and different versions of Java.</font>
 
 <h3>Summary of recent major releases</h3>
 <table class="tx">
@@ -71,12 +73,36 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 <tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view2D"> 2D gene placement</a>
 </table>
 
+
+<a id="v542"></a>
+<h3>Release: v5.4.2 (28-June-23)</h3>
+<ul>
+<li><ttb>2D</ttb>
+<ul>
+<li>Redesigned the <ttl>Sequence Filter</ttl>.
+<li>History only kept 10 places, now it keeps 50.
+<li>Fixed bugs:
+<br><small>(1) when the 2D was initiated from the DotPlot or Query, changing highlight
+could change "Show" option. (2) Recent v541 DotPlot to 2d bug:
+If a second block was selected for 2D, the genes would not be shown; with this fix, multiple 2D from Dotplot can be shown again.
+</small>
+</ul>
+<li><ttb>Query</ttb>
+<ul>
+<li>Added an export option of HTML.
+</ul>
+<li>Developer:
+<ul>
+<li>The Abstract Filter file was removed and the Hit and Sequence filter codes rewritten without it.
+<li>Changed number of tracks from 100 to 30.
+</ul>
+</ul>
+
 <a id="v541"></a>
 <h3>Release: v5.4.1 (22-June-23)</h3>
 For existing SyMAP databases: there is a new column in <ttb>Query</ttb> called <ttl>NumHits</ttl>;
 run <tt>symap -y</tt> to update all projects in the database.
-<p>Note: This release has not been tested on Linux, but it has been tested on MacOS with MySQL and MariaDB,
-and different versions of Java.
+
 <ul>
 <li><ttb>Manager</ttb>
 <ul>
@@ -93,7 +119,7 @@ A new pull down with options:
 (2) <ttl>Print</ttl>: printed to the terminal (long form), (3) <ttl>Help</ttl>.
 <li>The dot colors can be changed with the Color Wheel (see <a href="UserGuide.html#image">Color Wheel</a>).
 
-<li>Dotplot can no longer display multiple 2d from the same dotplot display.
+<li>Dotplot can no longer display multiple 2d from the same dotplot display. (v542 allows many again)
 </ul>
 
 <li><ttb>2D</ttb>
@@ -117,8 +143,6 @@ in the entire database (not just those queried).
 <li><ttl>Clear Column</ttl>: This button has been added. It replaces the <ttl>Show Stats</ttl> button
 when the columns are being shown.
 </ul>
-
-
 
 <li>Developer:
 <ul>

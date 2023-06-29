@@ -1,136 +1,187 @@
 package symap.sequence;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.MouseEvent;
 import java.awt.event.ActionEvent;
 
-import javax.swing.AbstractButton;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem; 
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem; 
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.PopupMenuEvent; 
+import javax.swing.event.ChangeListener;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 
 import number.GenomicsNumber;
 import symap.drawingpanel.DrawingPanel;
-import symap.filter.Filter;
+import util.ErrorReport;
 import util.Jhtml;
 import util.Utilities;
 
 /**
  * The filter dialog for the Sequence view.
+ * Also see FilterHandler.java, Sequence.java, SequenceTrackData.java
+ * CAS542 stopped using the abstract Filter, and cleaned up 
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class Sfilter extends Filter {	
+public class Sfilter extends JDialog {	
+	//private static boolean DEBUG = Globals.DEBUG;
 	private static final String DEFAULT_ENDS_UNIT = GenomicsNumber.KB;
+	
+	// CAS542 moved from Sequence to here; current state is in Sequence variables; state on open is in this file.
+	public static       boolean DEFAULT_SHOW_ANNOT  	= false;  // auto changed on small show 2d
+	public static final boolean DEFAULT_SHOW_SCORE_VALUE= false;
+	public static final boolean DEFAULT_SHOW_HIT_NUM = false;
+	public static final boolean DEFAULT_SHOW_GENE_LINE  = false; 
+	public static final boolean DEFAULT_FLIPPED = false;
+	
+	public static final boolean DEFAULT_SHOW_RULER      = true;
+	public static final boolean DEFAULT_SHOW_GENE       = true; 
+	public static final boolean DEFAULT_SHOW_GAP        = true;
+	public static final boolean DEFAULT_SHOW_CENTROMERE = true;
+	public static final boolean DEFAULT_SHOW_GENE_FULL  = true; 
+	public static final boolean DEFAULT_SHOW_SCORE_LINE	= true;  
+	public static final boolean DEFAULT_SHOW_HITLEN		= true;	 
 
+	private JButton okButton, cancelButton, defaultButton, helpButton;
+	private JPanel buttonPanel;
+	private JPopupMenu popup; 
+	private JMenuItem popupTitle; 
+	
+	private JButton fullButton;
 	private JLabel startLabel, endLabel;
 	private JTextField startText, endText;
 	private JComboBox <String> startCombo, endCombo; // CAS514 add type
 	
 	//CAS520 removed geneFullRadio, geneMidRadio, frameCheck (FPC)
-	private JCheckBox geneCheck, geneLineCheck; // CAS520 add line
-	private JCheckBox gapCheck, centromereCheck;
-	private JCheckBox rulerCheck, annotCheck;
-	private JCheckBox scoreLineCheck; 	
-	private JCheckBox hitLenCheck; 						
-	private JCheckBox flippedCheck; 
-	private JRadioButton scoreValueRadio, hitNumRadio, noneRadio; // CAS531 add hitNum
+	private JCheckBox flippedCheck, rulerCheck, annotCheck; 
+	private JCheckBox geneCheck, geneLineCheck, gapCheck, centromereCheck; // CAS520 add line
+	private JCheckBox scoreLineCheck, hitLenCheck; 						
+	private JRadioButton scoreTextRadio, hitNumTextRadio, noneTextRadio; // CAS531 add hitNum
 	
-	private JCheckBoxMenuItem flippedPopupCheck; 						
-	private JCheckBoxMenuItem framePopupCheck, genePopupCheck, geneLinePopupCheck; // CAS520 add line 			
-	private JCheckBoxMenuItem gapPopupCheck, centromerePopupCheck; 		
-	private JCheckBoxMenuItem rulerPopupCheck, annotPopupCheck; 		
-	private JCheckBoxMenuItem scoreLinePopupCheck, scoreValuePopupCheck, hitNumPopupCheck;
-	private JCheckBoxMenuItem hitLenPopupCheck; 						
-	private JMenuItem fullSequencePopupItem; 							
-
-	private JButton fullButton;
+	private JCheckBoxMenuItem flippedPopup, rulerPopup, annotPopup; 						
+	private JCheckBoxMenuItem genePopup, geneLinePopup, gapPopup, centromerePopup; // CAS520 add line 			 			
+	private JCheckBoxMenuItem scoreLinePopup, hitLenPopup;
+	private JCheckBoxMenuItem scoreTextPopup, hitNumTextPopup; 						
+	//private JMenuItem fullSequencePopupItem; 							
 
 	private Sequence sequence;
+	protected DrawingPanel drawingPanel;
 
-	// previous settings
-	private String startStr, endStr;
-	private int startInd, endInd;
-	private boolean bFrame, bGene, bGap, bCentromere, bRuler, bAnnot;
-	private boolean bGeneLine;
-	private boolean bFlipped; 				
-	private boolean bScoreLine, bScoreValue, bHitNum; 	
-	private boolean bHitLen; 				
+	private String savStartStr, savEndStr;
+	private int savStartInd, savEndInd;
+	private boolean bSavFlipped=false, bSavRuler=true, bSavAnnot=true; 
+	private boolean bSavGene=true, bSavGeneLine=false, bSavGap=true, bSavCentromere=true;
+	private boolean bSavScoreLine=true, bSavHitLen=true;
+	private boolean bSavScoreText=false, bSavHitNumText=false; 				
 	private boolean bNoChange = false;
 
-	public Sfilter(Frame owner, DrawingPanel dp, AbstractButton helpButton, Sequence sequence) {
-		super(owner,dp,"Sequence Filter", Jhtml.seqfilter); // CAS532 added help
+	// Created when 2d is displayed, one for each track
+	public Sfilter(Frame owner, DrawingPanel dp,  Sequence sequence) { // CAS542 removed helpBut 
+		super(owner,"Sequence Filter", true); // CAS532 added help
 		this.sequence = sequence;
+		this.drawingPanel = dp;
 
-		Container contentPane = getContentPane();
-		GridBagLayout gridbag = new GridBagLayout();
-		GridBagConstraints constraints = new GridBagConstraints();
+		FilterListener listener = new FilterListener();
+		
+	/* Filter dialog */
+		// Buttons
+		okButton = createButton("Apply","Apply coordinate changes and close");
+		okButton.addActionListener(listener);
 
-		fullButton = new JButton("Full Seq");
+		cancelButton = createButton("Cancel", "Discard changes and close");
+		cancelButton.addActionListener(listener);
+
+		defaultButton = createButton("Defaults", "Reset to defaults");
+		defaultButton.addActionListener(listener);
+		
+		helpButton = Jhtml.createHelpIconUserSm(Jhtml.seqfilter);
+
+		buttonPanel = new JPanel(new BorderLayout());
+		buttonPanel.add(new JSeparator(),BorderLayout.NORTH);
+		JPanel innerPanel = new JPanel();
+		innerPanel.add(okButton);
+		innerPanel.add(cancelButton);
+		innerPanel.add(defaultButton);
+		innerPanel.add(helpButton);
+		buttonPanel.add(innerPanel,BorderLayout.CENTER);
+		
+		// Coordinate options; takes effect on Ok
+		fullButton = new JButton("Full Sequence");
 		fullButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				setFullSequence();
 			}
 		});
+		JPanel fullPanel = new JPanel(); fullPanel.add(fullButton); fullPanel.add(new JLabel("        (Apply)"));
+		fullPanel.setLayout(new BoxLayout(fullPanel, BoxLayout.LINE_AXIS));
+		fullPanel.setMaximumSize(fullPanel.getPreferredSize());
 
-		startLabel = new JLabel("  Start");
-		endLabel =   new JLabel("  End  ");
-
-		startText = new JTextField("",10); // CAS520 was 15
-		endText =   new JTextField("",10);
-
+		startLabel = new JLabel("            Start"); startText = new JTextField("",10); // CAS520 was 15
 		startCombo = new JComboBox <String>(GenomicsNumber.ABS_UNITS);
-		endCombo =   new JComboBox <String>(GenomicsNumber.ABS_UNITS);
-
 		startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
+		JPanel startPanel = new JPanel(); startPanel.add(startText); startPanel.add(startCombo);
+		startPanel.setLayout(new BoxLayout(startPanel, BoxLayout.LINE_AXIS));
+		startPanel.setMaximumSize(startPanel.getPreferredSize());startPanel.setMinimumSize(startPanel.getPreferredSize());
+		
+		endLabel =   new JLabel("            End  "); endText =   new JTextField("",10);
+		endCombo =   new JComboBox <String>(GenomicsNumber.ABS_UNITS);
 		endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
+		JPanel endPanel = new JPanel(); endPanel.add(endText); endPanel.add(endCombo);
+		endPanel.setLayout(new BoxLayout(endPanel, BoxLayout.LINE_AXIS));
+		endPanel.setMaximumSize(endPanel.getPreferredSize());endPanel.setMinimumSize(endPanel.getPreferredSize());
 
-		startInd = startCombo.getSelectedIndex();
-		endInd =   startInd;
+		// Checkbox options; takes effect immediately 
+		flippedCheck = new JCheckBox("Flip Sequence"); 					
+		rulerCheck 		= new JCheckBox("Ruler");	
 		
-		flippedCheck = new JCheckBox("Flip"); 				
-		flippedCheck.setSelected(Sequence.DEFAULT_FLIPPED); 
-		
-		geneCheck 		= new JCheckBox("Show Genes");
-		geneLineCheck 	= new JCheckBox("Show Gene Delimiter");
-		gapCheck 		= new JCheckBox("Show Gaps");
-		centromereCheck = new JCheckBox("Show Centromere");
-		rulerCheck 		= new JCheckBox("Show Ruler");
-		annotCheck 		= new JCheckBox("Show Annotation");
-
-		geneCheck.setSelected(Sequence.DEFAULT_SHOW_GENE && geneCheck.isEnabled());
-		geneLineCheck.setSelected(Sequence.DEFAULT_SHOW_GENE_LINE && geneLineCheck.isEnabled());
-		gapCheck.setSelected(Sequence.DEFAULT_SHOW_GAP && gapCheck.isEnabled());
-		centromereCheck.setSelected(Sequence.DEFAULT_SHOW_CENTROMERE && centromereCheck.isEnabled());
-		rulerCheck.setSelected(Sequence.DEFAULT_SHOW_RULER);
-		annotCheck.setSelected(Sequence.DEFAULT_SHOW_ANNOT  && annotCheck.isEnabled()); 
-		
-		hitLenCheck = new JCheckBox("Show Hit Length");			
-		hitLenCheck.setSelected(Sequence.DEFAULT_SHOW_RIBBON);
-		
-		scoreLineCheck = new JCheckBox("Show Hit %Id Bar");	// CAS515 Score is %Id		
-		scoreLineCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_LINE);	
+		annotCheck 		= new JCheckBox("Annotation");	
+		geneCheck 		= new JCheckBox("Genes");         
+		geneLineCheck 	= new JCheckBox("Gene Delimiter");
+		gapCheck 		= new JCheckBox("Gaps");			
+		centromereCheck = new JCheckBox("Centromere");		
+				
+		hitLenCheck 	= new JCheckBox("Hit Length");		
+		scoreLineCheck 	= new JCheckBox("Hit %Id Bar");	
 			
-		scoreValueRadio = new JRadioButton("Hit %Id Value");
-		hitNumRadio = new  JRadioButton("Hit #");
-		noneRadio = new  JRadioButton("Neither");
+		scoreTextRadio 		= new JRadioButton("Hit %Id");
+		hitNumTextRadio 	= new  JRadioButton("Hit#");
+		noneTextRadio 		= new  JRadioButton("None");
 		ButtonGroup geneBG = new ButtonGroup();
-		geneBG.add(scoreValueRadio);
-		geneBG.add(hitNumRadio);
-		geneBG.add(noneRadio); noneRadio.setSelected(true);
+		geneBG.add(scoreTextRadio);
+		geneBG.add(hitNumTextRadio);
+		geneBG.add(noneTextRadio); noneTextRadio.setSelected(true);
+		JPanel textPanel = new JPanel();
+		textPanel.add(scoreTextRadio);
+		textPanel.add(hitNumTextRadio);
+		textPanel.add(noneTextRadio);
+		textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.LINE_AXIS));
 
-		
+		Container contentPane = getContentPane();
+		GridBagLayout gridbag = new GridBagLayout();
+		GridBagConstraints constraints = new GridBagConstraints();
+
 		contentPane.setLayout(gridbag);
 		constraints.gridheight = 1;
 		constraints.ipadx = 5;
@@ -139,35 +190,35 @@ public class Sfilter extends Filter {
 		constraints.fill = GridBagConstraints.HORIZONTAL;
 
 		int rem = GridBagConstraints.REMAINDER;
-		addToGrid(contentPane, gridbag, constraints, startLabel, 1);
-		addToGrid(contentPane, gridbag, constraints, startText, 1);
-		addToGrid(contentPane, gridbag, constraints, startCombo, 1);
-		addToGrid(contentPane, gridbag, constraints, fullButton, rem);
-		addToGrid(contentPane, gridbag, constraints, new JLabel(), rem);
-		addToGrid(contentPane, gridbag, constraints, endLabel, 1);
-		addToGrid(contentPane, gridbag, constraints, endText, 1);
-		addToGrid(contentPane, gridbag, constraints, endCombo, 1);
 		addToGrid(contentPane, gridbag, constraints, flippedCheck, rem); 
 		
 		addToGrid(contentPane, gridbag, constraints, new JSeparator(), rem);
-		addToGrid(contentPane, gridbag, constraints, geneCheck,  rem);
-		
-		addToGrid(contentPane, gridbag, constraints, geneLineCheck, rem); // CAS520 add
+		addToGrid(contentPane, gridbag, constraints, new JLabel("  Show Graphics"), rem); 
+		addToGrid(contentPane, gridbag, constraints, rulerCheck, 1);
 		addToGrid(contentPane, gridbag, constraints, annotCheck, rem); // CAS503 move
 		
-		addToGrid(contentPane, gridbag, constraints, gapCheck, rem);
+		addToGrid(contentPane, gridbag, constraints, geneCheck,  1);
+		addToGrid(contentPane, gridbag, constraints, geneLineCheck, rem); // CAS520 add
+		
+		addToGrid(contentPane, gridbag, constraints, gapCheck, 1);
 		addToGrid(contentPane, gridbag, constraints, centromereCheck, rem);
 		
-		addToGrid(contentPane, gridbag, constraints, new JSeparator(),rem);
-		
-		addToGrid(contentPane, gridbag, constraints, rulerCheck, rem);
-		addToGrid(contentPane, gridbag, constraints, hitLenCheck, rem);     
+		addToGrid(contentPane, gridbag, constraints, hitLenCheck, 1);     
 		addToGrid(contentPane, gridbag, constraints, scoreLineCheck, rem); 
 		
-		addToGrid(contentPane, gridbag, constraints, new JLabel("  Show "), 1); 
-		addToGrid(contentPane, gridbag, constraints, scoreValueRadio, 1); 
-		addToGrid(contentPane, gridbag, constraints, hitNumRadio, 1);
-		addToGrid(contentPane, gridbag, constraints, noneRadio, rem);
+		addToGrid(contentPane, gridbag, constraints, new JSeparator(), rem);
+		addToGrid(contentPane, gridbag, constraints, new JLabel("  Show Text    "), 1); 
+		addToGrid(contentPane, gridbag, constraints, textPanel, rem);
+		
+		addToGrid(contentPane, gridbag, constraints, new JSeparator(),rem);
+		addToGrid(contentPane, gridbag, constraints, new JLabel("  Coordinates   "), 1);
+		addToGrid(contentPane, gridbag, constraints, fullPanel, rem);
+		
+		addToGrid(contentPane, gridbag, constraints, startLabel, 1);
+		addToGrid(contentPane, gridbag, constraints, startPanel, rem);
+		
+		addToGrid(contentPane, gridbag, constraints, endLabel, 1);
+		addToGrid(contentPane, gridbag, constraints, endPanel, rem);
 
 		addToGrid(contentPane, gridbag, constraints, buttonPanel, rem);
 
@@ -176,359 +227,256 @@ public class Sfilter extends Filter {
 		setLocationRelativeTo(null); // CAS520
 		
 		// All check boxes are applied immediately but the start/end only on Apply
-		flippedCheck.addChangeListener(this);		
-		geneCheck.addChangeListener(this);
-		geneLineCheck.addChangeListener(this);
-		hitLenCheck.addChangeListener(this);		
-		gapCheck.addChangeListener(this);
-		centromereCheck.addChangeListener(this);
-		rulerCheck.addChangeListener(this);
-		annotCheck.addChangeListener(this);
-		scoreLineCheck.addChangeListener(this);		
-		scoreValueRadio.addChangeListener(this);	
-		hitNumRadio.addChangeListener(this);
-		noneRadio.addChangeListener(this);
+		flippedCheck.addChangeListener(listener);
+		rulerCheck.addChangeListener(listener);
+		annotCheck.addChangeListener(listener);
+		geneCheck.addChangeListener(listener);
+		geneLineCheck.addChangeListener(listener);
+		gapCheck.addChangeListener(listener);
+		centromereCheck.addChangeListener(listener);
+		scoreLineCheck.addChangeListener(listener);		
+		hitLenCheck.addChangeListener(listener);	
+		scoreTextRadio.addChangeListener(listener);	
+		hitNumTextRadio.addChangeListener(listener);
+		noneTextRadio.addChangeListener(listener);
 		
-		/** Popup **/
-		fullSequencePopupItem 	= new JMenuItem("Full Sequence");
-		flippedPopupCheck 		= new JCheckBoxMenuItem("Flip Sequence"); 
-		annotPopupCheck			= new JCheckBoxMenuItem("Annotation"); 
-		framePopupCheck 		= new JCheckBoxMenuItem("Framework Markers"); 
-		genePopupCheck 			= new JCheckBoxMenuItem("Genes"); 
-		geneLinePopupCheck 		= new JCheckBoxMenuItem("Genes Delimiter"); 
-		hitLenPopupCheck 		= new JCheckBoxMenuItem("Hit Length"); 
-		gapPopupCheck 			= new JCheckBoxMenuItem("Gaps"); 
-		centromerePopupCheck 	= new JCheckBoxMenuItem("Centromere"); 
-		rulerPopupCheck 		= new JCheckBoxMenuItem("Ruler"); 
-		scoreLinePopupCheck 	= new JCheckBoxMenuItem("Hit %Id Bar");  // CAS515 Score is the %Id		
-		scoreValuePopupCheck 	= new JCheckBoxMenuItem("Hit %Id Value"); 	// ditto
-		hitNumPopupCheck 	= new JCheckBoxMenuItem("Hit #"); 	// CAS531 add
+	/** Popup **/
+		popup = new JPopupMenu(); 
+		popup.addPopupMenuListener(new MyPopupMenuListener()); 
+		popupTitle = new JMenuItem();
+		popupTitle.setEnabled(false);
+		popup.add(popupTitle);
+		popup.addSeparator();
+		
+		//fullSequencePopupItem 	= new JMenuItem("Full Sequence");
+		flippedPopup 		= new JCheckBoxMenuItem("Flip Sequence"); 
+		rulerPopup 			= new JCheckBoxMenuItem("Ruler"); 
+		annotPopup			= new JCheckBoxMenuItem("Annotation"); 
+		genePopup 			= new JCheckBoxMenuItem("Genes"); 
+		geneLinePopup 		= new JCheckBoxMenuItem("Genes Delimiter"); 
+		gapPopup 			= new JCheckBoxMenuItem("Gaps"); 
+		centromerePopup 	= new JCheckBoxMenuItem("Centromere"); 
+		hitLenPopup 		= new JCheckBoxMenuItem("Hit Length"); 
+		scoreLinePopup 		= new JCheckBoxMenuItem("Hit %Id Bar");  // CAS515 Score is the %Id		
+		scoreTextPopup 		= new JCheckBoxMenuItem("Hit %Id Text"); 	// ditto
+		hitNumTextPopup 	= new JCheckBoxMenuItem("Hit# Text"); 	// CAS531 add
 	
-	/** Sequence show options **/
 		popupTitle.setText("Sequence Show Options:"); 
-		popup.add(flippedPopupCheck); 
-		
-		popup.add(annotPopupCheck); // CAS503 move after genes
-		popup.add(genePopupCheck); 
-		popup.add(geneLinePopupCheck);
-			
-		popup.add(gapPopupCheck); 
-		popup.add(centromerePopupCheck); 
-		
-		popup.add(rulerPopupCheck);
-		popup.add(hitLenPopupCheck); 
-		popup.add(scoreLinePopupCheck);
-		popup.add(scoreValuePopupCheck);
-		popup.add(hitNumPopupCheck); 
-		//popup.add(fullSequencePopupItem); not working...
-		
-		fullSequencePopupItem.addActionListener(this);
-		flippedPopupCheck.addActionListener(this); 
-		framePopupCheck.addActionListener(this);
-		genePopupCheck.addActionListener(this);
-		geneLinePopupCheck.addActionListener(this);
-		gapPopupCheck.addActionListener(this);
-		centromerePopupCheck.addActionListener(this);
-		rulerPopupCheck.addActionListener(this);
-		annotPopupCheck.addActionListener(this);
-		scoreLinePopupCheck.addActionListener(this);
-		scoreValuePopupCheck.addActionListener(this);
-		hitNumPopupCheck.addActionListener(this);
-		hitLenPopupCheck.addActionListener(this); 
+		popup.add(flippedPopup); 	flippedPopup.addActionListener(listener);
+		popup.add(annotPopup); 		annotPopup.addActionListener(listener);
+		popup.add(genePopup); 		genePopup.addActionListener(listener);
+		popup.add(geneLinePopup);	geneLinePopup.addActionListener(listener);
+		popup.add(gapPopup); 		gapPopup.addActionListener(listener);
+		popup.add(centromerePopup); centromerePopup.addActionListener(listener);
+		popup.add(rulerPopup);		rulerPopup.addActionListener(listener);
+		popup.add(hitLenPopup);		hitLenPopup.addActionListener(listener); 
+		popup.add(scoreLinePopup);	scoreLinePopup.addActionListener(listener);
+		popup.add(scoreTextPopup);	scoreTextPopup.addActionListener(listener);
+		popup.add(hitNumTextPopup); hitNumTextPopup.addActionListener(listener);
+		//popup.add(fullSequencePopupItem); not working...fullSequencePopupItem.addActionListener(listener);
 	}
-
-	public String getHelpID() {
-		return "sequencefilter";//Filter.SEQUENCE_FILTER_ID;
+	private void addToGrid(Container cp, GridBagLayout layout, GridBagConstraints con, Component comp, int w) {
+		con.gridwidth = w;
+		layout.setConstraints(comp, con);
+		cp.add(comp);
 	}
-
+	private JButton createButton(String s, String t) {
+		JButton jbutton = new JButton(s);
+		jbutton.setMargin(new Insets(1,3,1,3));
+		jbutton.setToolTipText(t);
+		jbutton.setBackground(Color.white);
+		return jbutton;
+	}
+	public void showPopup(MouseEvent e) { 
+		popup.show(e.getComponent(), e.getX(), e.getY());
+	}	
 	public boolean canShow() {
 		if (sequence == null) return false;
 		return sequence.hasInit();
 	}
+	
+	public void closeFilter() {
+		if (isShowing()) {
+			cancelAction();
+			setVisible(false); // CAS512 hide();
+		}
+	}
 
 	/**
-	 * Sets up the sequence dialog based on the current sequence track information before showing then
-	 * shows (super.show()).
+	 * Called when Sequence Filter button clicked
 	 */
 	public void showX() {
-		if (!isShowing()) {
-			bNoChange = true;
-			
-			int[] annotTypeCounts = sequence.getAnnotationTypeCounts(); 
-			if (annotTypeCounts[Annotation.GENE_INT] == 0 && annotTypeCounts[Annotation.EXON_INT] == 0) {
-				geneCheck.setEnabled(false);
-				geneLineCheck.setEnabled(false);
-			}
-			if (annotTypeCounts[Annotation.GAP_INT] == 0) 		gapCheck.setEnabled(false);
-			if (annotTypeCounts[Annotation.CENTROMERE_INT] == 0) centromereCheck.setEnabled(false);
-			if (annotTypeCounts[Annotation.GENE_INT] == 0)		annotCheck.setEnabled(false);
-
-			setStart();
-			setEnd();
-			startStr = startText.getText();
-			endStr = endText.getText();
-
-			bGene = sequence.showGene;
-			bGeneLine = sequence.showGeneLine; 
-			
-			geneCheck.setSelected(bGene && geneCheck.isEnabled());
-			geneLineCheck.setSelected(bGeneLine && geneLineCheck.isEnabled()); // CAS520 add all geneLine lines
-		
-			bCentromere = sequence.showCentromere;
-			bGap = sequence.showGap;
-
-			gapCheck.setSelected(bGap && gapCheck.isEnabled());
-			centromereCheck.setSelected(bCentromere && centromereCheck.isEnabled());
-
-			bRuler = sequence.showRuler;
-			rulerCheck.setSelected(bRuler);
-
-			bAnnot = sequence.showAnnot;
-			annotCheck.setSelected(bAnnot && annotCheck.isEnabled());
-			
-			bScoreLine = sequence.showScoreLine;		
-			scoreLineCheck.setSelected(bScoreLine);	
-			
-			bScoreValue = sequence.showScoreValue;	
-			scoreValueRadio.setSelected(bScoreValue);
-			
-			bHitNum = sequence.showHitNum;	
-			hitNumRadio.setSelected(bHitNum);
-			
-			noneRadio.setSelected(bScoreValue==false && bHitNum==false);
-			
-			bHitLen = sequence.showHitLen;			
-			hitLenCheck.setSelected(bHitLen);		
-
-			bFlipped = sequence.isFlipped(); 
-			flippedCheck.setSelected(bFlipped); 
-
-			bNoChange = false;
+		if (isShowing()) { // always false
+			super.setVisible(true);
+			return;
 		}
+		int[] annotTypeCounts = sequence.getAnnotationTypeCounts(); 
+		if (annotTypeCounts[Annotation.GENE_INT] == 0 && annotTypeCounts[Annotation.EXON_INT] == 0) {
+			geneCheck.setEnabled(false);
+			geneLineCheck.setEnabled(false);
+		}
+		if (annotTypeCounts[Annotation.GAP_INT] == 0) 		 gapCheck.setEnabled(false);
+		if (annotTypeCounts[Annotation.CENTROMERE_INT] == 0) centromereCheck.setEnabled(false);
+		if (annotTypeCounts[Annotation.GENE_INT] == 0)		 annotCheck.setEnabled(false);
+
+		saveSettingsFromSeq();
+		
+		setStart();
+		setEnd();
+		
+		flippedCheck.setSelected(bSavFlipped); 
+		rulerCheck.setSelected(bSavRuler);
+		
+		annotCheck.setSelected(bSavAnnot && annotCheck.isEnabled());
+		geneCheck.setSelected(bSavGene && geneCheck.isEnabled());
+		geneLineCheck.setSelected(bSavGeneLine && geneLineCheck.isEnabled()); // CAS520 add all geneLine lines
+	
+		gapCheck.setSelected(bSavGap && gapCheck.isEnabled());
+		centromereCheck.setSelected(bSavCentromere && centromereCheck.isEnabled());
+
+		scoreLineCheck.setSelected(bSavScoreLine);	
+		hitLenCheck.setSelected(bSavHitLen);	
+		
+		scoreTextRadio.setSelected(bSavScoreText);
+		hitNumTextRadio.setSelected(bSavHitNumText);
+		noneTextRadio.setSelected(bSavScoreText==false && bSavHitNumText==false);		
+			
 		super.setVisible(true); // CAS512 super.show();
 	}
 
-	protected void setDefault() {
-		if (sequence != null) {
-			geneCheck.setSelected(Sequence.DEFAULT_SHOW_GENE && geneCheck.isEnabled());
-			geneLineCheck.setSelected(Sequence.DEFAULT_SHOW_GENE_LINE && geneLineCheck.isEnabled());
-			gapCheck.setSelected(Sequence.DEFAULT_SHOW_GAP && gapCheck.isEnabled());
-			centromereCheck.setSelected(Sequence.DEFAULT_SHOW_CENTROMERE && centromereCheck.isEnabled());
-			rulerCheck.setSelected(Sequence.DEFAULT_SHOW_RULER);
-			annotCheck.setSelected(Sequence.DEFAULT_SHOW_ANNOT && annotCheck.isEnabled());
-			scoreLineCheck.setSelected(Sequence.DEFAULT_SHOW_SCORE_LINE); 	
-			hitLenCheck.setSelected(Sequence.DEFAULT_SHOW_RIBBON); 
-			scoreValueRadio.setSelected(false);
-			hitNumRadio.setSelected(false);
-			noneRadio.setSelected(true);
-			
-			flippedCheck.setSelected(Sequence.DEFAULT_FLIPPED); 			
-
-			startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
-			endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
-			startText.setText("0");
-			long size = sequence.getTrackSize();
-			Object item = endCombo.getSelectedItem();
-			double end  = sequence.getValue(size, item.toString());
-			endText.setText(end + "");
-			//CAS512 unwind endText.setText(new Double(sequence.getValue(sequence.getTrackSize(),endCombo.getSelectedItem().toString())).toString());
+	
+	private void saveSettingsFromSeq() {
+		savStartStr = startText.getText();
+		savEndStr =   endText.getText();
 		
-			genePopupCheck.setState(Sequence.DEFAULT_SHOW_GENE && genePopupCheck.isEnabled());
-			geneLinePopupCheck.setState(Sequence.DEFAULT_SHOW_GENE_LINE && geneLinePopupCheck.isEnabled()); // CAS521 1st no Line
-			gapPopupCheck.setState(Sequence.DEFAULT_SHOW_GAP && gapPopupCheck.isEnabled());
-			centromerePopupCheck.setState(Sequence.DEFAULT_SHOW_CENTROMERE && centromerePopupCheck.isEnabled());
-			rulerPopupCheck.setState(Sequence.DEFAULT_SHOW_RULER);
-			annotPopupCheck.setState(Sequence.DEFAULT_SHOW_ANNOT && annotPopupCheck.isEnabled());
-			scoreLinePopupCheck.setState(Sequence.DEFAULT_SHOW_SCORE_LINE);
-			
-			scoreValuePopupCheck.setState(Sequence.DEFAULT_SHOW_SCORE_VALUE);
-			hitNumPopupCheck.setState(false);
-			
-			flippedPopupCheck.setState(Sequence.DEFAULT_FLIPPED); 
-			hitLenPopupCheck.setState(Sequence.DEFAULT_SHOW_RIBBON); 
-		}
+		savStartInd = startCombo.getSelectedIndex();
+		savEndInd =   endCombo.getSelectedIndex();
+
+		bSavFlipped = 	  sequence.isFlipped();	
+		bSavRuler = 	  sequence.bShowRuler;
+		bSavGene = 	  	  sequence.bShowGene && genePopup.isEnabled();
+		bSavGeneLine =   sequence.bShowGeneLine && geneLinePopup.isEnabled(); // CAS520 add
+		bSavGap = 		  sequence.bShowGap && gapPopup.isEnabled();
+		bSavCentromere = sequence.bShowCentromere && centromerePopup.isEnabled();
+		bSavAnnot = 	  sequence.bShowAnnot && annotPopup.isEnabled();
+		
+		bSavScoreLine =  sequence.bShowScoreLine;
+		bSavHitLen = 	  sequence.bShowHitLen;	
+		bSavScoreText =  sequence.bShowScoreText;
+		bSavHitNumText = sequence.bShowHitNumText;
+	}
+	protected void cancelAction() {
+		startText.setText(savStartStr); startCombo.setSelectedIndex(savStartInd);
+		endText.setText(savEndStr);     endCombo.setSelectedIndex(savEndInd);
+		flippedCheck.setSelected(bSavFlipped); 
+		
+		geneCheck.setSelected(bSavGene);
+		geneLineCheck.setSelected(bSavGeneLine);
+		gapCheck.setSelected(bSavGap);
+		centromereCheck.setSelected(bSavCentromere);
+		rulerCheck.setSelected(bSavRuler);
+		annotCheck.setSelected(bSavAnnot);
+		scoreLineCheck.setSelected(bSavScoreLine); 
+		scoreTextRadio.setSelected(bSavScoreText); 
+		hitNumTextRadio.setSelected(bSavHitNumText);
+		noneTextRadio.setSelected(!bSavScoreText && !bSavHitNumText);
+		hitLenCheck.setSelected(bSavHitLen); 
+	}
+	protected void setDefault() {
+		if (sequence == null) return;
+		
+		startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
+		endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
+		
+		startText.setText("0");
+		
+		long size = sequence.getTrackSize();
+		Object item = endCombo.getSelectedItem();
+		double end  = sequence.getValue(size, item.toString());
+		endText.setText(end + "");
+		
+		flippedCheck.setSelected(false); 	
+		rulerCheck.setSelected(DEFAULT_SHOW_RULER);
+		
+		annotCheck.setSelected(DEFAULT_SHOW_ANNOT && annotCheck.isEnabled());
+		geneCheck.setSelected(DEFAULT_SHOW_GENE && geneCheck.isEnabled());
+		geneLineCheck.setSelected(DEFAULT_SHOW_GENE_LINE);
+		gapCheck.setSelected(DEFAULT_SHOW_GAP && gapCheck.isEnabled());
+		centromereCheck.setSelected(DEFAULT_SHOW_CENTROMERE && centromereCheck.isEnabled());
+		
+		scoreLineCheck.setSelected(DEFAULT_SHOW_SCORE_LINE); 	
+		hitLenCheck.setSelected(DEFAULT_SHOW_HITLEN); 
+		
+		scoreTextRadio.setSelected(false);
+		hitNumTextRadio.setSelected(false);
+		noneTextRadio.setSelected(true);
+		
+		flippedPopup.setState(DEFAULT_FLIPPED);
+		rulerPopup.setState(DEFAULT_SHOW_RULER && rulerPopup.isEnabled());
+		annotPopup.setState(DEFAULT_SHOW_ANNOT && annotPopup.isEnabled());
+		genePopup.setState(DEFAULT_SHOW_GENE && genePopup.isEnabled());
+		geneLinePopup.setState(DEFAULT_SHOW_GENE_LINE); // CAS521 1st no Line
+		gapPopup.setState(DEFAULT_SHOW_GAP && gapPopup.isEnabled());
+		centromerePopup.setState(DEFAULT_SHOW_CENTROMERE && centromerePopup.isEnabled());
+		
+		scoreLinePopup.setState(DEFAULT_SHOW_SCORE_LINE);
+		hitLenPopup.setState(DEFAULT_SHOW_HITLEN); 
+		scoreTextPopup.setState(DEFAULT_SHOW_SCORE_VALUE);
+		hitNumTextPopup.setState(false);
 	}
 
 	private void setStart() {
 		if (sequence == null) return;
 		long start = sequence.getStart();
 		Object item = startCombo.getSelectedItem();
-		double val = sequence.getValue(start, item.toString()); // PseudoPseudoData.PseudoHitData
+		double val = sequence.getValue(start, item.toString()); 
 		startText.setText(val+"");
-		// CAS512 Double startText.setText(new Double(sequence.getValue(sequence.getStart(),startCombo.getSelectedItem().toString())).toString());
 	}
-
 	private void setEnd() {
 		if (sequence == null) return;
 		long size = sequence.getTrackSize();
 		Object item = endCombo.getSelectedItem();
-		double end  = sequence.getValue(size, item.toString()); // PseudoPseudoData.PseudoHitData
+		double end  = sequence.getValue(size, item.toString()); 
 		endText.setText(end + "");
-		// CAS512 Double endText.setText(new Double(sequence.getValue(sequence.getEnd(),endCombo.getSelectedItem().toString())).toString());
 	}
-
-	/**
-	 * stateChanged handles updating the Sequence track when a checkbox changes, but not start/end.
-	 */
-	public void stateChanged(ChangeEvent event) {
-		if (sequence != null && !bNoChange) {
-			boolean changed = false;	
-			if (event.getSource() == gapCheck)				changed = sequence.showGap(gapCheck.isSelected());
-			else if (event.getSource() == centromereCheck)	changed = sequence.showCentromere(centromereCheck.isSelected());
-			else if (event.getSource() == geneCheck) {
-				changed = sequence.showGene(geneCheck.isSelected());
-				geneLineCheck.setEnabled(geneCheck.isSelected()); // CAS520
-			}
-			else if (event.getSource() == geneLineCheck) 	changed = sequence.showGeneLine(geneLineCheck.isSelected());
-			else if (event.getSource() == rulerCheck) 		changed = sequence.showRuler(rulerCheck.isSelected());
-			else if (event.getSource() == annotCheck)		changed = sequence.showAnnotation(annotCheck.isSelected());
-			else if (event.getSource() == scoreLineCheck)	changed = sequence.showScoreLine(scoreLineCheck.isSelected());	
-			else if (event.getSource() == hitLenCheck)		changed = sequence.showHitLen(hitLenCheck.isSelected());		
-			else if (event.getSource() == flippedCheck) 	changed = sequence.flip(flippedCheck.isSelected()); 
-			else if (event.getSource() == scoreValueRadio)	changed = sequence.showScoreValue(scoreValueRadio.isSelected());
-			else if (event.getSource() == hitNumRadio)		changed = sequence.showHitNum(hitNumRadio.isSelected());
-			else if (event.getSource() == noneRadio)		{
-				boolean isSet = noneRadio.isSelected();
-				if (isSet) {
-					changed   = sequence.showScoreValue(false);
-					boolean b = sequence.showHitNum(false);
-					if (!changed) changed=b;
-				} 
-			}
-			
-			if (changed) drawingPanel.smake();
-		}
+	private void setFullSequence() {
+		startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
+		endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
+		startText.setText("0"); 
+		long size = sequence.getTrackSize();
+		Object item = endCombo.getSelectedItem();
+		double end  = sequence.getValue(size, item.toString());
+		endText.setText(end + "");
 	}
 	
-	public void actionPerformed(ActionEvent event) { // only called for popup menu events
-		if (sequence != null) {
-			boolean changed = false;	
-
-			if (event.getSource() == fullSequencePopupItem) {
-				setFullSequence();
-				try { okAction(); } catch (Exception e) { }
-				changed = true;
-			}
-			else if (event.getSource() == flippedPopupCheck) { 
-				bFlipped = flippedPopupCheck.getState();
-				changed = sequence.flip(bFlipped);
-			}
-			else if (event.getSource() == gapPopupCheck) {
-				bGap = gapPopupCheck.getState();
-				changed = sequence.showGap(bGap);
-			}
-			else if (event.getSource() == centromerePopupCheck) {
-				bCentromere = centromerePopupCheck.getState();
-				changed = sequence.showCentromere(bCentromere);
-			}
-			else if (event.getSource() == genePopupCheck) {
-				bGene = genePopupCheck.getState();
-				changed = sequence.showGene(bGene);
-				geneLinePopupCheck.setEnabled(bGene);
-			}
-			else if (event.getSource() == geneLinePopupCheck) {
-				bGeneLine = geneLinePopupCheck.getState();
-				changed = sequence.showGeneLine(bGeneLine);
-			}
-			else if (event.getSource() == rulerPopupCheck) {
-				bRuler = rulerPopupCheck.getState();
-				changed = sequence.showRuler(bRuler);
-			}
-			else if (event.getSource() == annotPopupCheck) {
-				bAnnot = annotPopupCheck.getState();
-				changed = sequence.showAnnotation(bAnnot);
-			}
-			else if (event.getSource() == scoreLinePopupCheck) {
-				bScoreLine = scoreLinePopupCheck.getState();
-				changed = sequence.showScoreLine(bScoreLine);
-			}
-			else if (event.getSource() == scoreValuePopupCheck) {
-				bScoreValue = scoreValuePopupCheck.getState();
-				if (bScoreValue) {
-					sequence.showHitNum(false);
-					hitNumPopupCheck.setSelected(false);
-				}
-				changed = sequence.showScoreValue(bScoreValue);
-			}
-			else if (event.getSource() == hitNumPopupCheck) {
-				bHitNum = hitNumPopupCheck.getState();
-				if (bHitNum) {
-					sequence.showScoreValue(false);
-					scoreValuePopupCheck.setSelected(false);
-				}
-				changed = sequence.showHitNum(bHitNum);
-			}
-			else if (event.getSource() == hitLenPopupCheck) { 
-				bHitLen = hitLenPopupCheck.getState();
-				changed = sequence.showHitLen(bHitLen);
-			}
-				
-			if (changed) {
-				drawingPanel.setUpdateHistory();
-				drawingPanel.smake();	
-			}
-		}
-		super.actionPerformed(event);
-	}
-	
-	public void popupMenuWillBecomeVisible(PopupMenuEvent event) { 
-		int[] annotTypeCounts = sequence.getAnnotationTypeCounts();
-		if (annotTypeCounts[Annotation.FRAMEWORK_INT] == 0) 		framePopupCheck.setEnabled(false);
-		if (annotTypeCounts[Annotation.GENE_INT] == 0 && annotTypeCounts[Annotation.EXON_INT] == 0) 	{
-			genePopupCheck.setEnabled(false);
-			geneLinePopupCheck.setEnabled(false);
-		}
-		if (annotTypeCounts[Annotation.GAP_INT] == 0) 			gapPopupCheck.setEnabled(false);
-		if (annotTypeCounts[Annotation.CENTROMERE_INT] == 0) 	centromerePopupCheck.setEnabled(false);
-		if (annotTypeCounts[Annotation.GENE_INT] == 0) 			annotPopupCheck.setEnabled(false);
-		
-		bGene = 	sequence.showGene && genePopupCheck.isEnabled();
-		bGeneLine = sequence.showGeneLine && geneLinePopupCheck.isEnabled(); // CAS520 add
-		
-		bGap = 		sequence.showGap && gapPopupCheck.isEnabled();
-		bCentromere = sequence.showCentromere && centromerePopupCheck.isEnabled();
-		bAnnot = 	sequence.showAnnot && annotPopupCheck.isEnabled();
-		bRuler = 	sequence.showRuler;
-		bScoreLine = sequence.showScoreLine;
-		bScoreValue = sequence.showScoreValue;
-		bHitNum = sequence.showHitNum;
-		bFlipped = 	sequence.isFlipped();	
-		bHitLen = 	sequence.showHitLen;	
-		
-		framePopupCheck.setState(bFrame);
-		genePopupCheck.setState(bGene);
-		geneLinePopupCheck.setState(bGeneLine);
-		
-		gapPopupCheck.setState(bGap);
-		centromerePopupCheck.setState(bCentromere);
-		annotPopupCheck.setState(bAnnot);
-		rulerPopupCheck.setState(bRuler);
-		scoreLinePopupCheck.setState(bScoreLine); 
-		scoreValuePopupCheck.setState(bScoreValue); 
-		hitNumPopupCheck.setState(bHitNum);
-		hitLenPopupCheck.setState(bHitLen); 	 
-		flippedPopupCheck.setState(bFlipped); 
-	}
 	// CAS514 would throw exception which stopped symap
 	// CAS521 fixed problem where Apply would show the full chromosome, but keep start/end the same
+	// Check boxes are already processed; the change in coords get processed on OK
 	protected boolean okAction()  {
 		if (sequence == null) return false;
 		if (!sequence.hasInit()) return true;
 
-		boolean changed = false;
-		
 	// Start/End  CAS521 evaluate first - rewritten; fixed bug that Apply would set it back if nothing set
-		double tstart=0, tend=0;
 		
 		int eInd = 		endCombo.getSelectedIndex();
 		String eStr = 	endText.getText();
 		int sInd = 		startCombo.getSelectedIndex();
 		String sStr = 	startText.getText();
 		
-		boolean numChgE = (eInd!=endInd || !eStr.contentEquals(endStr));
-		boolean numChgS = (sInd!=startInd || !sStr.contentEquals(startStr));
+		boolean numChgE = (eInd!=savEndInd   || !eStr.contentEquals(savEndStr));
+		boolean numChgS = (sInd!=savStartInd || !sStr.contentEquals(savStartStr));
 		
 		if (numChgS || numChgE) {
+			double tstart=0, tend=0;
+			
+			try {
+				tstart = Double.parseDouble(sStr); // CAS512 (new Double(startText.getText())).doubleValue();
+			} catch (NumberFormatException nfe) {
+				Utilities.showErrorMessage(sStr + " is not a valid start point");
+				return false;
+			}
+			tstart = tstart * GenomicsNumber.getUnitConversion(GenomicsNumber.ABS_UNITS[sInd]);
+		
 			try {
 				tend = Double.parseDouble(eStr); // CAS512 (new Double(endText.getText())).doubleValue();
 			} catch (NumberFormatException nfe) {
@@ -536,107 +484,144 @@ public class Sfilter extends Filter {
 				return false;
 			}
 			tend = tend * GenomicsNumber.getUnitConversion(GenomicsNumber.ABS_UNITS[eInd]);
-		
-			try {
-				tstart = Double.parseDouble(sStr); // CAS512 (new Double(startText.getText())).doubleValue();
-			} catch (NumberFormatException nfe) {
-				Utilities.showErrorMessage(sStr + " is not a valid start point");
-				return changed;
-			}
-			tstart = tstart * GenomicsNumber.getUnitConversion(GenomicsNumber.ABS_UNITS[sInd]);
-		
+			
 			if (tstart>=tend) {
 				Utilities.showErrorMessage("The start (" + tstart + ") must be less than end (" + tend + ")");
 				return false;
 			}
-			endStr = endText.getText();
-			endInd = endCombo.getSelectedIndex();
+			
+			sequence.setStart((long)tstart);// saved in Track
 			sequence.setEnd((long)tend);
 			
-			startStr = startText.getText();
-			startInd = startCombo.getSelectedIndex();
-			sequence.setStart((long)tstart);
+			drawingPanel.setUpdateHistory();
+			drawingPanel.smake();	
+		}
+		return true;
+	}
+	
+	/************************************************************************************/
+	private class FilterListener implements ActionListener, ChangeListener, ItemListener {
+		private FilterListener() { }
+
+		// updating the Sequence track when a checkbox changes, but not start/end.
+		public void stateChanged(ChangeEvent event) {
+			if (sequence == null || bNoChange) return;
 			
-			changed=true;
+			Object src = event.getSource();
+			boolean changed = false;
+			
+			if (src == flippedCheck) 		changed = sequence.flipSeq(flippedCheck.isSelected());
+			else if (src == rulerCheck) 	changed = sequence.showRuler(rulerCheck.isSelected());
+			else if (src == gapCheck)		changed = sequence.showGap(gapCheck.isSelected());
+			else if (src == centromereCheck)changed = sequence.showCentromere(centromereCheck.isSelected());
+			else if (src == geneCheck) {
+				changed = sequence.showGene(geneCheck.isSelected());
+				geneLineCheck.setEnabled(geneCheck.isSelected()); // CAS520
+			}
+			else if (src == geneLineCheck) 	changed = sequence.showGeneLine(geneLineCheck.isSelected());
+			else if (src == annotCheck)		changed = sequence.showAnnotation(annotCheck.isSelected());
+			else if (src == scoreLineCheck)	changed = sequence.showScoreLine(scoreLineCheck.isSelected());	
+			else if (src == hitLenCheck)	changed = sequence.showHitLen(hitLenCheck.isSelected());		
+			 
+			else if (src == scoreTextRadio) changed = sequence.showScoreText(scoreTextRadio.isSelected());
+			else if (src == hitNumTextRadio)changed = sequence.showHitNumText(hitNumTextRadio.isSelected());
+			else if (src == noneTextRadio)		{
+				boolean isSet = noneTextRadio.isSelected();
+				if (isSet) {
+					changed   = sequence.showScoreText(false);
+					boolean b = sequence.showHitNumText(false);
+					if (!changed) changed=b;
+				} 
+			}
+			
+			if (changed) {
+				drawingPanel.setUpdateHistory();
+				drawingPanel.smake();
+			}
 		}
-		
-	// Check boxes
-		if (bFlipped != flippedCheck.isSelected()) { 
-			bFlipped = !bFlipped;
-			changed = true;
-		}
-		if (bGene != geneCheck.isSelected()) {
-			bGene = !bGene;
-			changed = true;
-		}
-		if (bGeneLine != geneLineCheck.isSelected()) {
-			bGeneLine = !bGeneLine;
-			changed = true;
-		}
-		if (bGap != gapCheck.isSelected()) {
-			bGap = !bGap;
-			changed = true;
-		}
-		if (bCentromere != centromereCheck.isSelected()) {
-			bCentromere = !bCentromere;
-			changed = true;
-		}
-		if (bRuler != rulerCheck.isSelected()) {
-			bRuler = !bRuler;
-			changed = true;
-		}
-		if (bAnnot != annotCheck.isSelected()) {
-			bAnnot = !bAnnot;
-			changed = true;
-		}
-		if (bScoreLine != scoreLineCheck.isSelected()) {	
-			bScoreLine = !bScoreLine;						
-			changed = true;								
-		}
-		if (bScoreValue != scoreValueRadio.isSelected()) {	
-			bScoreValue = !bScoreValue;						
-			changed = true;									
-		}
-		if (bHitNum != hitNumRadio.isSelected()) {	
-			bHitNum = !bHitNum;						
-			changed = true;									
-		}
-		if (bHitLen != hitLenCheck.isSelected()) {	
-			bHitLen = !bHitLen;						
-			changed = true;							
-		}
-		
-		return !sequence.hasBuilt() || changed;
-	}
+				
+		// only called for buttons and popup menu events
+		public void actionPerformed(ActionEvent event) { 
+			if (sequence == null) {
+				ErrorReport.print("No sequence with filter");
+				return;
+			}
+			Object src = event.getSource();
+			boolean changed = false;	
 
-	protected void cancelAction() {
-		geneCheck.setSelected(bGene);
-		geneLineCheck.setSelected(bGeneLine);
-		gapCheck.setSelected(bGap);
-		centromereCheck.setSelected(bCentromere);
-		rulerCheck.setSelected(bRuler);
-		annotCheck.setSelected(bAnnot);
-		scoreLineCheck.setSelected(bScoreLine); 
-		scoreValueRadio.setSelected(bScoreValue); 
-		hitNumRadio.setSelected(bHitNum);
-		noneRadio.setSelected(!bScoreValue && !bHitNum);
-		hitLenCheck.setSelected(bHitLen); 
-		startText.setText(startStr);
-		startCombo.setSelectedIndex(startInd);
-		endText.setText(endStr);
-		endCombo.setSelectedIndex(endInd);
-		flippedCheck.setSelected(bFlipped); 
-	}
+			if (src == okButton) { // changed already made except of for sequence
+				okAction();
+				setVisible(false); 
+			}
+			else if (src == cancelButton) {
+				cancelAction();
+				setVisible(false); 
+			}
+			else if (src == defaultButton) {
+				setDefault();
+				changed = true;; 
+			}
+			// popup
+			else if (src == flippedPopup) 		changed = sequence.flipSeq(flippedPopup.getState());
+			else if (src == rulerPopup) 		changed = sequence.showRuler(rulerPopup.getState());
+			else if (src == gapPopup) 			changed = sequence.showGap(gapPopup.getState());
+			else if (src == centromerePopup) 	changed = sequence.showCentromere(centromerePopup.getState());
+			else if (src == genePopup) {
+				changed = sequence.showGene(genePopup.getState());
+				geneLinePopup.setEnabled(genePopup.getState());
+			}
+			else if (src == geneLinePopup) 		changed = sequence.showGeneLine(geneLinePopup.getState());
+			else if (src == annotPopup) 		changed = sequence.showAnnotation(annotPopup.getState());
+			else if (src == scoreLinePopup) 	changed = sequence.showScoreLine(scoreLinePopup.getState());
+			else if (src == hitLenPopup) 		changed = sequence.showHitLen(hitLenPopup.getState());
+			else if (src == scoreTextPopup) {
+				boolean b = scoreTextPopup.getState();
+				changed = sequence.showScoreText(b);
+				if (b) sequence.showHitNumText(false);
+			}
+			else if (src == hitNumTextPopup) {
+				boolean b = hitNumTextPopup.getState();
+				changed = sequence.showHitNumText(b);
+				if (b) sequence.showScoreText(false);
+			}
+			if (changed) {
+				drawingPanel.setUpdateHistory();
+				drawingPanel.smake();	
+			}
+		}
+		public void itemStateChanged(ItemEvent evt) {}
+	} // end listener
+	
+	// called when popup become visible
+	class MyPopupMenuListener implements PopupMenuListener {
+		  public void popupMenuCanceled(PopupMenuEvent popupMenuEvent) {}
 
-	private void setFullSequence() {
-		startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
-		endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
-		startText.setText("0"); // CAS512 new Double(0).toString()
-		long size = sequence.getTrackSize();
-		Object item = endCombo.getSelectedItem();
-		double end  = sequence.getValue(size, item.toString());
-		endText.setText(end + "");
-		// CAS512 endText.setText(new Double(sequence.getValue(sequence.getTrackSize(),endCombo.getSelectedItem().toString())).toString());
-	}
+		  public void popupMenuWillBecomeInvisible(PopupMenuEvent popupMenuEvent) {}
+
+		  public void popupMenuWillBecomeVisible(PopupMenuEvent event) { 
+			int[] annotTypeCounts = sequence.getAnnotationTypeCounts();
+			if (annotTypeCounts[Annotation.GENE_INT] == 0 && annotTypeCounts[Annotation.EXON_INT] == 0) 	{
+				genePopup.setEnabled(false);
+				geneLinePopup.setEnabled(false);
+			}
+			if (annotTypeCounts[Annotation.GAP_INT] == 0) 			gapPopup.setEnabled(false);
+			if (annotTypeCounts[Annotation.CENTROMERE_INT] == 0) 	centromerePopup.setEnabled(false);
+			if (annotTypeCounts[Annotation.GENE_INT] == 0) 			annotPopup.setEnabled(false);
+			
+			saveSettingsFromSeq();
+			
+			flippedPopup.setState(bSavFlipped); 
+			rulerPopup.setState(bSavRuler);
+			genePopup.setState(bSavGene);
+			geneLinePopup.setState(bSavGeneLine);
+			gapPopup.setState(bSavGap);
+			centromerePopup.setState(bSavCentromere);
+			annotPopup.setState(bSavAnnot);
+			scoreLinePopup.setState(bSavScoreLine); 
+			hitLenPopup.setState(bSavHitLen); 
+			scoreTextPopup.setState(bSavScoreText); 
+			hitNumTextPopup.setState(bSavHitNumText);
+		}
+	} // end popup listener
 }
 

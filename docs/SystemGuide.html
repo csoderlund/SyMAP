@@ -66,13 +66,10 @@
 	<!---- START BODY -->
 
 The following discusses building a SyMAP v5 database.
-<ul>
-<li>For release v5.0.8, a document on trouble shooting <a href="MUMmer.html"  class="ext" target="_blank">MUMmer</a> alignment has been added.
-<li>For release v5.2.0,  FPC (fingerprinted contigs) is totally retired from SyMAP. To use FPC, see <a href="#fpc">FPC</a>.
-<li>For release v5.3.4,  SyMAP built-in Help has been moved to
-	<a href="./SystemHelp.html" class="ext" target="_blank">Quick Guide and Parameters</a>.
-</ul>
-<h4>Contents</h4>
+
+<table class="tx">
+<tr><td>
+<b>Contents</b>
 <ul>
 	<li><a href="#overview">Overview and Publications</a>
 	<li>Getting Started
@@ -97,7 +94,7 @@ The following discusses building a SyMAP v5 database.
 			<ul>
 				<li><a href="#params2">SyMAP Parameters</a>
 				<li><a href="#seqprep">Sequences files</a>
-				<li><a href="#annot">Annotation files</a> - convert from NCBI or Ensembl
+				<li><a href="#annot">Annotation files</a>
 			</ul>
 			<li><a href="#draft2">Draft alignment and ordering</a>
 			<li><a href="#self">Self alignment</a>
@@ -112,6 +109,15 @@ The following discusses building a SyMAP v5 database.
 <li><a href="#update">How to update SyMAP with a new release</a>
 <li><a href="#refs">References</a>
 </ul>
+<td style="vertical-align: text-top;">
+<b>Supporting documentation</b>
+<ul>
+<li><a href="./SystemHelp.html" class="ext" target="_blank">Quick Guide and Parameters</a>
+<li><a href="MUMmer.html"  class="ext" target="_blank">MUMmer</a>
+<li><a href="convert/index.html" class="ext" target="_blank">Convert NCBI and Ensembl</a>
+<li><a href=TroubleShoot.html class="ext" target="_blank">Trouble Shooting</a>
+</ul>
+</table>
 
 <a id="overview"></a>
 <h2>Overview and Publications</h2>
@@ -511,10 +517,11 @@ required 1 hour and 3 minutes using 8 CPUs with 2.3Ghz speed.
 The memory usage of MUMmer is typically 5G per CPU, however it can
 be as high as 10G for very long or repetitive chromosomes. If MUMmer fails, it is often due
 to insufficient memory, see the <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a> document, which
-explains how to determine the problem and ways around it.
+explains how to determine the problem and ways around it. It also explains the
+<a href="MUMmer.html#cat" class="ext" target="_blank">CPU and Concat</a> options.
 <!---------------------------------------------------------->
 <!---------------------------------------------------------->
-<br>&nbsp;
+
 <a id="create"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>Creating a New Project</h2>
@@ -560,7 +567,8 @@ See <a href="SystemHelp.html#projParams" class="ext" target="_blank">Project Par
 <td style="vertical-align: text-top;">
 See <a href="SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parameters</a> for details.
 <br><a href="img/lineAlign.png"><img src="img/lineAlign.png" alt="alignLine" style="border: 1px solid black; width: 400px"></a>
-<br><center><a href="img/parameters2.png"><img src="img/parameters2.png" alt="parameters2" style="border: 1px solid black; width: 280px"></a></center>
+<br><center>
+    <a href="img/parameters2.png"><img src="img/parameters2.png" alt="parameters2" style="border: 1px solid black; width: 280px"></a></center>
 </table>
 
 <!-------------------------------------------------------->
@@ -843,7 +851,7 @@ if desired. In the alignment, one species is "query" and the other is
 The query is the one with alphabetically the first name. The query sequences
 are written into one large file, while smaller target sequences are grouped
 into larger FASTA files of size up to 60Mb, for more efficient processing
-in MUMmer. There is an option "Concat" that if unchecked, the query sequences
+in MUMmer. There is an option <ttl>Concat</ttl> that if unchecked, the query sequences
 are treated the same as the target; i.e. generally there will be more sequence file
 pairs processed by MUMmer, but they will be smaller.
 <p>
@@ -866,7 +874,7 @@ connected by a clustered anchor, the retained anchors must be among
 ancestral whole-genome duplication). An anchor will also be retained if its
 score is at least 80% of that of the 2nd-best anchor on each side (this
 allows for retention of gene family anchors). These filter parameters
-may be adjusted through the Alignment&amp;Synteny Parameters window.
+may be adjusted through the <ttl>Alignment&amp;Synteny</ttl> <ttb>Parameters</ttb> window.
 <p>
 <i>Synteny Block Detection:</i><br>
 After the clustered anchors are loaded into the database,  the synteny
@@ -874,7 +882,7 @@ synteny block algorithm runs. This algorithm looks for approximately-collinear
 sequences of anchors, subject to several parameters including (A) Number
 of anchors; (B) Collinearity of the anchors; (C) Amount of "noise" in the
 surrounding region (to help reject false-positive chains). Criterion A can
-be adjusted in the Alignment &amp; Synteny Parameters window.
+be adjusted in the <ttl>Alignment&amp;Synteny</ttl> <ttb>Parameters</ttb> window.
 <p>
 <sup>*</sup> Note that the sequences are re-written from the database to the
 disk for three reasons: (A) To allow re-grouping for efficiency; (B) To ensure elimination

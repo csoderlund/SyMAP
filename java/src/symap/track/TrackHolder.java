@@ -10,7 +10,7 @@ import javax.swing.AbstractButton;
 import javax.swing.JComponent;
 
 import symap.drawingpanel.DrawingPanel;
-import symap.filter.FilterHandler;
+import symap.frame.FilterHandler;
 import symap.frame.HelpBar;
 import util.ErrorReport;
 
@@ -29,7 +29,7 @@ public class TrackHolder extends JComponent  {
 		this.hb = hb;
 		this.trackNum = trackNum;
 		
-		fh = new FilterHandler(dp,hb);
+		fh = new FilterHandler(dp);
 		track = null;
 		
 		setOpaque(false);
@@ -55,7 +55,7 @@ public class TrackHolder extends JComponent  {
 			track.clear();
 		}
 		track = t;
-		fh.set(track);
+		fh.setSfilter(track);
 		if (track != null) {
 			track.setHeld();
 			addMouseListener(track);
@@ -105,7 +105,7 @@ public class TrackHolder extends JComponent  {
 		if (track != null && fh.getFilterButton() != null) fh.getFilterButton().setEnabled(visible);
 		super.setVisible(visible);
 	}
-	public AbstractButton getFilterButton() {
+	public JButton getFilterButton() {
 		if (track != null) return fh.getFilterButton();
 		else return new JButton();
 	}

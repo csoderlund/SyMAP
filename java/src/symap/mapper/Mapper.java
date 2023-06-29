@@ -10,16 +10,16 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseListener; 	
 import java.awt.event.MouseWheelListener; 	
 import javax.swing.JComponent;
-import javax.swing.AbstractButton;
+import javax.swing.JButton;
 
 import props.ProjectPool;
 import props.PropertiesReader;
 import database.DBconn2;
-import symap.filter.FilterHandler;
 import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import symap.track.*;
 import symap.frame.ControlPanel;
+import symap.frame.FilterHandler;
 import symap.frame.HelpBar; 		
 import symap.frame.HelpListener; 	
 import symapQuery.TableDataPanel;
@@ -32,26 +32,26 @@ import util.ErrorReport;
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Mapper extends JComponent 
-	implements  HfilterData.HitFilterListener,  // CAS521 remove Filtered Interface
+	implements   // CAS521 remove Filtered Interface CAS542 remove HfilterData.HitFilterListener, 
 		MouseMotionListener, MouseListener, MouseWheelListener, HelpListener 		
 {
 	// ColorDialog colors at bottom
 	private DrawingPanel drawingPanel; 
 	private TrackHolder trackHolders[];
 	private FilterHandler fh;
+	private HfilterData hitFilData;
 	private TableDataPanel theTablePanel;
 	private SeqHits seqHitObj; // CAS531 was List, but actually only one object
 	private MapperPool mapPool;
-	private HfilterData hitFilter;
+	
 	private volatile boolean initing;
-	private String helpText, filterText=""; // CAS520 add hover
+	private String helpText; // CAS520 add hover
 	
 	private static final String HOVER_MESSAGE = 
 			"\nHit-wire information: Hover on hit-wire or " 
 			+ "right-click on hit-wire for popup of full information.\n";
 	
-	// Created in DrawingPanel
-	// is starts out making 100 mappers with trackholders but no tracks
+	// Created in DrawingPanel; it starts out making 100 mappers with trackholders but no tracks
 	public Mapper(DrawingPanel drawingPanel, TrackHolder th1, TrackHolder th2,
 			FilterHandler fh, DBconn2 dbc2, ProjectPool projPool, HelpBar hb, TableDataPanel listPanel) 
 	{
@@ -60,12 +60,12 @@ public class Mapper extends JComponent
 		this.mapPool = new MapperPool(dbc2, projPool); // CAS541 create here instead of passing as arg
 		this.drawingPanel = drawingPanel; 
 		this.fh = fh;
-		
+		this.theTablePanel = listPanel;
 		initing = true;
-		hitFilter = new HfilterData(this);
-		filterText = hitFilter.getFilterText(); // CAS520 add
-		theTablePanel = listPanel;
-		fh.set(this);
+		
+		hitFilData = new HfilterData(); // CAS542 hitFilter = new HitFilter(this); was a listener
+		fh.setHfilter(this); // creates Hfilter with this hitFilData
+		
 		trackHolders = new TrackHolder[2];
 		trackHolders[0] = th1;
 		trackHolders[1] = th2;
@@ -86,9 +86,8 @@ public class Mapper extends JComponent
 	public void update(HfilterData hf) {
 		// CAS541 dead code; if (!mapinfo.hasHitContent(hf.isBlock(), false)) // CAS531 hf.isRepeat which was always false
 		init();
-		filterText = hf.getFilterText(); // CAS520 add
 	}
-	public String getFilterText() {return filterText;} // Called from SeqHits 
+	public String getFilterText() {return hitFilData.getFilterText();} // Called from SeqHits 
 
 	/** Method closeFilter closes this mappers filter window @see FilterHandler#hide() */
 	public void closeFilter() {fh.hide();}
@@ -100,13 +99,13 @@ public class Mapper extends JComponent
 
 	/** initializes the mapper downloading all hits. */
 	public boolean initAllHits() {
-		HfilterData hf = hitFilter.copy();
-		hf.setBlock(false);
+		HfilterData hf = hitFilData.copy("Mapper initAllHits");
+		//hf.setBlock(false); // CAS542 remove
 		return myInit(hf);
 	}
 
 	public boolean init() {
-		return myInit(hitFilter);
+		return myInit(hitFilData);
 	}
 
 	private boolean myInit(HfilterData hf) {
@@ -118,7 +117,7 @@ public class Mapper extends JComponent
 		
 		initing = true;
 		seqHitObj = mapPool.setData(this, t1, t2, hf); 
-		seqHitObj.setMinMax(hitFilter);	
+		seqHitObj.setMinMax(hitFilData);	
 		initing = false;
 		
 		if (seqHitObj==null) ErrorReport.print("SyMAP internal error getting hits");
@@ -139,9 +138,9 @@ public class Mapper extends JComponent
 	
 	public DrawingPanel getDrawingPanel() { return drawingPanel;}
 	
-	public HfilterData getHitFilter() {return hitFilter;}
+	public HfilterData getHitFilter() {return hitFilData;}
 	
-	public AbstractButton getFilterButton() {return fh.getFilterButton();}
+	public JButton getFilterButton() {return fh.getFilterButton();}
 	
 	public Track getTrack1() {return trackHolders[0].getTrack();}
 	
@@ -247,7 +246,7 @@ public class Mapper extends JComponent
 		int n = drawingPanel.getStatOpts();
 		if (n==ControlPanel.pHELP) return HOVER_MESSAGE;
 		
-		if (helpText == null) return filterText + "    \n" + seqHitObj.getInfo();
+		if (helpText == null) return hitFilData.getFilterText() + "    \n" + seqHitObj.getInfo();
 		
 		return helpText; 
 	}

@@ -7,6 +7,7 @@ import java.awt.LayoutManager;
 import java.awt.Point;
 
 import javax.swing.AbstractButton;
+import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import symap.mapper.Mapper;
@@ -60,7 +61,7 @@ public class TrackLayout implements LayoutManager {
 		Point moveOffset;
 		int x = 0, i;
 
-		AbstractButton button;
+		JButton button;
 		Dimension bpDim = new Dimension(0,0);
 		Dimension bDim;
 

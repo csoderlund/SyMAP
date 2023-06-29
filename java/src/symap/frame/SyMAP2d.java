@@ -22,9 +22,8 @@ import symapQuery.TableDataPanel;
  *  CAS534 renamed from SyMAP=> SyMAP2d; moved all globals to symap.Globals
  */
 public class SyMAP2d {
-	private static final int HISTORY_SIZE = 10;
-
-	private Frame2d         frame;
+	
+	private Frame2d            frame;
 	private DrawingPanel       drawingPanel;
 	private ControlPanel       controlPanel;
 	private HelpBar            helpBar;
@@ -54,7 +53,7 @@ public class SyMAP2d {
 		if (hb == null) helpBar = new HelpBar(-1, 17); // CAS521 removed dead args
 		else			helpBar = hb; // for full explorer
 
-		history = new History(HISTORY_SIZE);
+		history = new History();
 
 		historyControl = new HistoryControl(history);
 

@@ -46,11 +46,11 @@ public class Sequence extends Track {
 	private String infoMsg="";
 	
 	protected int group;
-	protected boolean showRuler, showGene, showAnnot, showGeneLine;
-	protected boolean showScoreLine, showScoreValue, showHitNum; // CAS531 add showHitNum
-	protected boolean showGap, showCentromere;
-	protected boolean showFullGene;
-	protected boolean showHitLen; 	// CAS512 renamed Ribbon to HitLen everywhere; show Hit Graphics on Sequence rect
+	protected boolean bShowRuler, bShowGene, bShowAnnot, bShowGeneLine, bShowFullGene; // bFlipped in Track
+	protected boolean bShowGap, bShowCentromere;
+	protected boolean bShowScoreLine, bShowHitLen; 	// CAS512 renamed Ribbon to HitLen everywhere; show Hit Graphics on Sequence rect
+	protected boolean bShowScoreText, bShowHitNumText; // CAS531 add showHitNum
+	
 	protected String chrName;			// e.g. Chr01
 	
 	private SeqHits seqHitsObj; 	// CAS517 added so can get to hits 
@@ -101,18 +101,21 @@ public class Sequence extends Track {
 		}
 		else reset();
 		
-		showRuler      = DEFAULT_SHOW_RULER;
-		showGene       = DEFAULT_SHOW_GENE;
-		showGeneLine   = DEFAULT_SHOW_GENE_LINE;
-		showAnnot      = DEFAULT_SHOW_ANNOT;
-		showScoreLine  = DEFAULT_SHOW_SCORE_LINE;   
-		showScoreValue = DEFAULT_SHOW_SCORE_VALUE; 	
-		showHitNum 		= false;
-		showHitLen     = DEFAULT_SHOW_RIBBON; 		
-		showGap        = DEFAULT_SHOW_GAP;
-		showCentromere = DEFAULT_SHOW_CENTROMERE;
-		showFullGene   = DEFAULT_SHOW_GENE_FULL;
-		flipped = false; 
+		bShowRuler      = Sfilter.DEFAULT_SHOW_RULER;
+		bShowGene       = Sfilter.DEFAULT_SHOW_GENE;
+		
+		bShowAnnot      = Sfilter.DEFAULT_SHOW_ANNOT;
+		bShowScoreLine  = Sfilter.DEFAULT_SHOW_SCORE_LINE;   
+		bShowScoreText = Sfilter.DEFAULT_SHOW_SCORE_VALUE; 	
+		
+		bShowHitLen     = Sfilter.DEFAULT_SHOW_HITLEN; 		
+		bShowGap        = Sfilter.DEFAULT_SHOW_GAP;
+		bShowCentromere = Sfilter.DEFAULT_SHOW_CENTROMERE;
+		bShowFullGene   = Sfilter.DEFAULT_SHOW_GENE_FULL;
+		
+		bShowHitNumText 	   = Sfilter.DEFAULT_SHOW_HIT_NUM;
+		bShowGeneLine   = Sfilter.DEFAULT_SHOW_GENE_LINE;
+		bFlipped = false; 
 	}
 
 	public void setup(TrackData td) {
@@ -159,27 +162,55 @@ public class Sequence extends Track {
 	/*** @see Track#getPadding() */
 	public double getPadding() {return PADDING;}
 	
-	public static void setDefaultShowAnnotation(boolean b) {DEFAULT_SHOW_ANNOT = b;}
+	public static void setDefaultShowAnnotation(boolean b) {Sfilter.DEFAULT_SHOW_ANNOT = b;}
 
+	/************************************************
+	 *  Called when Sfilter changes
+	 */
+
+	public boolean flipSeq(boolean flip) {
+		if (bFlipped != flip) {
+			bFlipped = flip;
+			clearTrackBuild();
+			return true;
+		}
+		return false;
+	}
 	public boolean showRuler(boolean show) {
-		if (showRuler != show) {
-			showRuler = show;
+		if (bShowRuler != show) {
+			bShowRuler = show;
+			clearTrackBuild();
+			return true;
+		}
+		return false;
+	}
+	public boolean showGene(boolean show) {
+		if (bShowGene != show) {
+			bShowGene = show;
+			clearTrackBuild();
+			return true;
+		}
+		return false;
+	}
+	public boolean showGeneLine(boolean show) {// CAS520 add
+		if (bShowGeneLine != show) {
+			bShowGeneLine = show;
 			clearTrackBuild();
 			return true;
 		}
 		return false;
 	}
 	public boolean showGap(boolean show) {
-		if (showGap != show) {
-			showGap = show;
+		if (bShowGap != show) {
+			bShowGap = show;
 			clearTrackBuild();
 			return true;
 		}
 		return false;
 	}
 	public boolean showCentromere(boolean show) {
-		if (showCentromere != show) {
-			showCentromere = show;
+		if (bShowCentromere != show) {
+			bShowCentromere = show;
 			clearTrackBuild();
 			return true;
 		}
@@ -187,19 +218,63 @@ public class Sequence extends Track {
 	}
 	public boolean showAnnotation(boolean show) {
 		if (allAnnoVec.size() == 0) {
-			showAnnot = false;
+			bShowAnnot = false;
 			return false;
 		}
-		if (showAnnot != show)  {
-			showAnnot = show;
+		if (bShowAnnot != show)  {
+			bShowAnnot = show;
 			clearTrackBuild();
 			return true;
 		}
 		return false;
 	}
-	public boolean getShowAnnot() { return showAnnot;}
+	public boolean showScoreLine(boolean show) { 
+		if (bShowScoreLine != show) {
+			bShowScoreLine = show;
+			clearTrackBuild();
+			return true;
+		}
+		return false;
+	}
+	// drawn SeqHits.PseudoHits.paintHitLen
+	public boolean showHitLen(boolean show) { // hit ribbon - graphics on sequence rectangle
+		if (bShowHitLen != show) {
+			bShowHitLen = show;
+			clearTrackBuild();
+			return true;
+		}
+		return false;
+	}
+	public boolean showScoreText(boolean show) { 
+		if (bShowScoreText != show) {
+			bShowScoreText = show;
+			if (show) showHitNumText(false);
+			clearTrackBuild();
+			return true;
+		}
+		return false;
+	}
+	public boolean showHitNumText(boolean show) { // CAS531 add
+		if (bShowHitNumText != show) {
+			bShowHitNumText = show;
+			if (show) showScoreText(false);
+			clearTrackBuild();
+			return true;
+		}
+		return false;
+	}
 	
+	
+	public boolean getShowAnnot() { return bShowAnnot;}
+	public boolean getShowHitLen() { return bShowHitLen; }
+	public boolean getShowScoreLine() { return bShowScoreLine;}
+	public boolean getShowScoreText() { return bShowScoreText; }
+	public boolean getShowHitNumText() { return bShowHitNumText; }
+	
+	/*****************************************************************************/
 	public Vector<Annotation> getAnnotations() {return allAnnoVec;}
+	
+	public SeqHits getSeqHits() { return seqHitsObj;} // CAS531 add for Closeup title
 	
 	// Called by CloseUpDialog; type is Gene or Exon
 	public Vector<Annotation> getAnnoGene(int start, int end) {// CAS535 gene only
@@ -237,78 +312,8 @@ public class Sequence extends Track {
 		
 		return counts;
 	}
-	public boolean showScoreLine(boolean show) { 
-		if (showScoreLine != show) {
-			showScoreLine = show;
-			clearTrackBuild();
-			return true;
-		}
-		return false;
-	}
 	
-	public SeqHits getSeqHits() { return seqHitsObj;} // CAS531 add for Closeup title
 	
-	public boolean getShowHitLen() { return showHitLen; }
-	
-	public boolean getShowScoreLine() { return showScoreLine;}
-	
-	public boolean getShowScoreValue() { return showScoreValue; }
-	
-	public boolean getShowHitNum() { return showHitNum; }
-	
-	public boolean showScoreValue(boolean show) { 
-		if (showScoreValue != show) {
-			showScoreValue = show;
-			if (show) showHitNum(false);
-			clearTrackBuild();
-			return true;
-		}
-		return false;
-	}
-	public boolean showHitNum(boolean show) { // CAS531 add
-		if (showHitNum != show) {
-			showHitNum = show;
-			if (show) showScoreValue(false);
-			clearTrackBuild();
-			return true;
-		}
-		return false;
-	}
-	// drawn SeqHits.PseudoHits.paintHitLen
-	public boolean showHitLen(boolean show) { // hit ribbon - graphics on sequence rectangle
-		if (showHitLen != show) {
-			showHitLen = show;
-			clearTrackBuild();
-			return true;
-		}
-		return false;
-	}
-	
-	public boolean showGene(boolean show) {
-		if (showGene != show) {
-			showGene = show;
-			clearTrackBuild();
-			return true;
-		}
-		return false;
-	}
-	public boolean showGeneLine(boolean show) {// CAS520 add
-		if (showGeneLine != show) {
-			showGeneLine = show;
-			clearTrackBuild();
-			return true;
-		}
-		return false;
-	}
-	
-	public boolean flip(boolean flip) {
-		if (flipped != flip) {
-			flipped = flip;
-			clearTrackBuild();
-			return true;
-		}
-		return false;
-	}
 	// Set the annotation vector here
 	protected boolean init() {
 		if (hasInit()) return true;
@@ -316,7 +321,7 @@ public class Sequence extends Track {
 
 		try {
 			chrName = psePool.setSequence(this, size, allAnnoVec);	
-			if (allAnnoVec.size() == 0) showAnnot = false; 
+			if (allAnnoVec.size() == 0) bShowAnnot = false; 
 		} catch (Exception s1) {
 			ErrorReport.print(s1, "Initializing Sequence failed.");
 			psePool.close();
@@ -339,7 +344,7 @@ public class Sequence extends Track {
 		if (hasBuilt()) return true;
 		if (!hasInit()) return false;
 		
-		if (allAnnoVec.size() == 0) showAnnot = false;
+		if (allAnnoVec.size() == 0) bShowAnnot = false;
 		
 		if (width == Globals.NO_VALUE) width = DEFAULT_WIDTH;
 
@@ -371,7 +376,7 @@ public class Sequence extends Track {
 		 * Setup the sequence ruler
 		 */
 		ruleList.clear();
-		if (showRuler) {
+		if (bShowRuler) {
 			if (orient == Globals.LEFT_ORIENT) {
 				x1 = rect.x - OFFSET_SMALL;
 				x2 = x1 - RULER_LINE_LENGTH;
@@ -392,7 +397,7 @@ public class Sequence extends Track {
 				Rule r = new Rule(unitColor, unitFont);
 				r.setLine(x1, y, x2, y);
 				
-				cb = GenomicsNumber.getCbPerPixel(bpPerCb,bpPerPixel,(flipped ? h-y : y-rect.y)) + start.getValue(); 
+				cb = GenomicsNumber.getCbPerPixel(bpPerCb,bpPerPixel,(bFlipped ? h-y : y-rect.y)) + start.getValue(); 
 				layout = new TextLayout(GenomicsNumber.getFormatted(bpSep,bpPerCb,cb,bpPerPixel), unitFont, frc);
 				bounds = layout.getBounds();
 				ty = y + (bounds.getHeight() / 2.0);
@@ -426,9 +431,9 @@ public class Sequence extends Track {
 			
 		// XXX Sorted by genes (genenum, start), then exons (see PseudoData.setAnnotations)
 	    for (Annotation annot : allAnnoVec) {
-	    	if (((annot.isGene() || annot.isExon()) && !showGene) 
-	    			|| (annot.isGap() && !showGap)
-	    			|| (annot.isCentromere() && !showCentromere)){
+	    	if (((annot.isGene() || annot.isExon()) && !bShowGene) 
+	    			|| (annot.isGap() && !bShowGap)
+	    			|| (annot.isCentromere() && !bShowCentromere)){
 					annot.clear();
 					continue; // CAS520 v518 bug, does not display track if, return true;
 			}
@@ -438,7 +443,7 @@ public class Sequence extends Track {
 			
 			if (annot.isGene()) {
 				dwidth = hwidth = ANNOT_WIDTH;
-				if (showFullGene) dwidth /= GENE_DIV; // showFullGene always true
+				if (bShowFullGene) dwidth /= GENE_DIV; // showFullGene always true
 				if (olapMap.containsKey(annot.getAnnoIdx())) offset = olapMap.get(annot.getAnnoIdx());
 				
 			}
@@ -450,10 +455,10 @@ public class Sequence extends Track {
 			
 		/****/
 			annot.setRectangle(centRect, start.getBPValue(), end.getBPValue(),
-					bpPerPixel, dwidth, hwidth, flipped, offset, showGeneLine); // CAS520 add showGeneLine
+					bpPerPixel, dwidth, hwidth, bFlipped, offset, bShowGeneLine); // CAS520 add showGeneLine
 			
 			// Setup yellow description
-			if (annot.isGene() && showAnnot && annot.isVisible()) { // CAS517 added isGene
+			if (annot.isGene() && bShowAnnot && annot.isVisible()) { // CAS517 added isGene
 				if (annot.hasShortDescription() && getBpPerPixel() < MIN_BP_FOR_ANNOT_DESC)  { 
 					x1 = isRight ? (rect.x + rect.width + RULER_LINE_LENGTH + 2) : rect.x; 
 					x2 = (isRight ? x1 + RULER_LINE_LENGTH  : x1 - RULER_LINE_LENGTH);
@@ -486,7 +491,7 @@ public class Sequence extends Track {
 		 */
 		bounds = new Rectangle2D.Double(0, 0, 0, 0); 							
 		x = (rect.x + (rect.width / 2.0)) - (bounds.getX() + (bounds.getWidth() / 2.0));
-		if (flipped) 
+		if (bFlipped) 
 			y = rect.y + rect.height + OFFSET_SPACE + bounds.getHeight();
 		else
 			y = rect.y - OFFSET_SPACE;
@@ -499,7 +504,7 @@ public class Sequence extends Track {
 		footerLayout = new TextLayout(new GenomicsNumber(this,end.getValue()-start.getValue()+1).getFormatted()+" of "+size.getFormatted(), footerFont, frc); 
 		bounds = footerLayout.getBounds();
 		x = (rect.x + (rect.width / 2.0)) - (bounds.getX() + (bounds.getWidth() / 2.0));
-		if (flipped) 
+		if (bFlipped) 
 			y = rect.y - OFFSET_SPACE;
 		else
 			y = rect.y + rect.height + OFFSET_SPACE + bounds.getHeight();
@@ -652,7 +657,7 @@ public class Sequence extends Track {
 		double x = (trackPos == Globals.LEFT_ORIENT ? rect.x+rect.width : rect.x);			
 		double y = rect.y + GenomicsNumber.getPixelValue(bpPerCb,bpPos-start.getValue(),bpPerPixel);
 		
-		if (flipped) y = rect.y + rect.y + rect.height - y;	
+		if (bFlipped) y = rect.y + rect.y + rect.height - y;	
 		
 		return new Point2D.Double(x, y); 
 	}
@@ -671,7 +676,7 @@ public class Sequence extends Track {
 			g2.setPaint(border);
 			g2.draw(rect);
 
-			if (showRuler) {
+			if (bShowRuler) {
 				for (Rule rule : ruleList)
 					rule.paintComponent(g2);
 			}
@@ -702,7 +707,7 @@ public class Sequence extends Track {
 				int start = getBP( dragRect.getY() );
 				int end =   getBP( dragRect.getY() + dragRect.getHeight() );
 				
-				if (flipped) {
+				if (bFlipped) {
 					int temp = start;
 					start = (int)getEnd() - end + (int)getStart();
 					end = (int)getEnd() - temp + (int)getStart();
@@ -742,7 +747,7 @@ public class Sequence extends Track {
 	private void zoomRange(int notches, double focus, long length) {
 		double r1 = (focus / rect.height) / mouseWheelZoomFactor;
 		double r2 = ((rect.height - focus) / rect.height) / mouseWheelZoomFactor;
-		if (flipped) {
+		if (bFlipped) {
 			double temp = r1;
 			r1 = r2;
 			r2 = temp;
@@ -854,11 +859,9 @@ public class Sequence extends Track {
 		}
 	}
 
-	
-
 	protected Point2D getTitlePoint(Rectangle2D titleBounds) {	
-		Rectangle2D headerBounds = (flipped ? footerLayout.getBounds() : /*headerLayout.getBounds()*/new Rectangle2D.Double(0, 0, 0, 0)); 
-		Point2D headerP = (flipped ? footerPoint : headerPoint); 
+		Rectangle2D headerBounds = (bFlipped ? footerLayout.getBounds() : /*headerLayout.getBounds()*/new Rectangle2D.Double(0, 0, 0, 0)); 
+		Point2D headerP = (bFlipped ? footerPoint : headerPoint); 
 		Point2D point = new Point2D.Double((rect.getWidth() / 2.0 + rect.x) - (titleBounds.getWidth() / 2.0 + titleBounds.getX()),
 				headerP.getY() - headerBounds.getHeight() - titleOffset.getY());
 
@@ -878,7 +881,7 @@ public class Sequence extends Track {
 				p.getY() <= (rect.y+rect.height) + MOUSE_PADDING);
 	}
 	
-	public boolean isFlipped() { return flipped; }
+	public boolean isFlipped() { return bFlipped; }
 	public boolean isQuery() { return isQuery; } // CAS531 add
 	
 	/**
@@ -982,7 +985,7 @@ public class Sequence extends Track {
 				}
 			}
 			// CAS503 add popUp description; created in Build
-			if (POPUP_ANNO && showAnnot) { 					
+			if (POPUP_ANNO && bShowAnnot) { 					
 				for (Annotation annot : allAnnoVec) { 		
 					if (annot.boxContains(p)) {	// within gene's yellow box
 						setGene(annot);	
@@ -1015,18 +1018,6 @@ public class Sequence extends Track {
 	
 	private static final int GENE_DIV = 4; // Gene is this much narrower than exon
 	private static final int MIN_BP_FOR_ANNOT_DESC = 500; 
-
-	public static final boolean DEFAULT_FLIPPED 		= false; 
-	public static final boolean DEFAULT_SHOW_RULER      = true;
-	public static final boolean DEFAULT_SHOW_GENE       = true;  
-	public static final boolean DEFAULT_SHOW_GENE_LINE  = false;  
-	public static       boolean DEFAULT_SHOW_ANNOT  	= false; 
-	public static final boolean DEFAULT_SHOW_SCORE_LINE	= true;  
-	public static final boolean DEFAULT_SHOW_SCORE_VALUE= false; 
-	public static final boolean DEFAULT_SHOW_RIBBON		= true;	 
-	public static final boolean DEFAULT_SHOW_GAP        = true;
-	public static final boolean DEFAULT_SHOW_CENTROMERE = true;
-	public static final boolean DEFAULT_SHOW_GENE_FULL  = true;  
 	
 	private static final Color border = Color.black; 
 	private static Color footerColor = Color.black;
