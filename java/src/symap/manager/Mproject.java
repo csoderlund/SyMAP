@@ -141,10 +141,17 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		String msg="Parameters: ";
 		if (getProjVal(lSeqFile).contentEquals("")) 	msg += "Default file locations; ";
 		else 											msg += "User file locations; ";
+		
+		msg += " Min len " + getProjVal(lMinLen) + "; ";
+		
+		String prefix = getProjVal(lGrpPrefix); // CAS543 add to summary
+		prefix = (Utilities.isEmpty(prefix)) ? "None" : prefix;
+		msg += " Prefix " + prefix + "; ";
+		
 		String annotKeywords = getProjVal(lANkeyword);
-		if (annotKeywords.equals("")) 	msg += "All anno keywords; ";
-		else 							msg += "Keywords " + annotKeywords + "; ";
-		msg += " Min len " + getProjVal(lMinLen);
+		if (annotKeywords.equals("")) 	msg += " All anno keywords ";
+		else 							msg += " Keywords " + annotKeywords;
+		
 		return msg;
 	}
 	public boolean hasExistingAlignments() {

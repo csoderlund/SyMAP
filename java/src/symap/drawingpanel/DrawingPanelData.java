@@ -2,8 +2,8 @@ package symap.drawingpanel;
 
 import symap.mapper.Mapper;
 import symap.mapper.MapperData;
-import symap.track.TrackData;
-import symap.track.TrackHolder;
+import symap.sequence.TrackData;
+import symap.sequence.TrackHolder;
 
 /**
  * Holds all of the data to draw the map(s) of the drawing panel.

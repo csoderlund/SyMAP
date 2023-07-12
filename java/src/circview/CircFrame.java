@@ -32,8 +32,8 @@ public class CircFrame extends JFrame {
 	private DBconn2 tdbc2;
 	
     // This one is called from the project manager; 2-WG
-	public CircFrame(DBconn2 dbc2, int projXIdx, int projYIdx) {
-		super("SyMAP Circle " + Globals.VERSION);
+	public CircFrame(String title, DBconn2 dbc2, int projXIdx, int projYIdx) {
+		super(title);
 		int[] pidxList = {projXIdx, projYIdx};
 		
 		bIsWG=true;

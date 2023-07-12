@@ -31,7 +31,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 	
 	private static final String HELP					    = "? Online Help"; // CAS532 add
 	public static final String MOUSE_FUNCTION_SEQ 			= "Show Seq Options";
-	public static final String MOUSE_FUNCTION_CLOSEUP 		= "Align (Max " + Globals.MAX_CLOSEUP_BP + ")";
+	public static final String MOUSE_FUNCTION_CLOSEUP 		= "Align (Max " + Globals.MAX_CLOSEUP_K + ")";
 	public static final String MOUSE_FUNCTION_ZOOM_SINGLE 	= "Zoom Select Track";
 	public static final String MOUSE_FUNCTION_ZOOM_ALL 		= "Zoom All Tracks";
 	
@@ -78,8 +78,8 @@ public class ControlPanel extends JPanel implements HelpListener {
 		statsOpts.addItem("Stats"); // if change, change constants above
 		statsOpts.addItem("Help");
 		statsOpts.addActionListener(buttonListener);
-		statsOpts.setName("Show display statistics.");
-		statsOpts.setToolTipText("Show display statistics.");
+		statsOpts.setName("Show in Information box.");
+		statsOpts.setToolTipText("Show in Information box.");
 		
 		GridBagLayout gridbag = new GridBagLayout();
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -89,6 +89,11 @@ public class ControlPanel extends JPanel implements HelpListener {
 		constraints.ipadx = 5;
 		constraints.ipady = 8;
 
+		if (bIsCE) { 							// CAS541 not enough room if !CE; CAS543 put at beginning and remove Info:	
+			addToGrid(this,gridbag, constraints, statsOpts,1); 	
+			addToGrid(this, gridbag, constraints, new JLabel(" "), 1);
+		}
+		
 		if (hc != null) {
 			addToGrid(this, gridbag, constraints, homeButton, 1);
 			addToGrid(this, gridbag, constraints, backButton, 1);
@@ -104,12 +109,6 @@ public class ControlPanel extends JPanel implements HelpListener {
 		addToGrid(this, gridbag, constraints, new JLabel("Selected:"), 1); // CAS541 not enough room if !CE
 		addToGrid(this, gridbag, constraints, mouseFunction, 1);
 		addToGrid(this, gridbag, constraints, new JLabel(" "), 1);
-		
-		if (bIsCE) {														// CAS541 not enough room if !CE
-			addToGrid(this,gridbag, constraints, new JLabel("Info:"),1);	
-			addToGrid(this,gridbag, constraints, statsOpts,1); 	
-			addToGrid(this, gridbag, constraints, new JLabel(" "), 1);
-		}
 		
 		if (cdh != null) addToGrid(this,gridbag,constraints,editColorsButton,1); // CAS517 put before Print
 		addToGrid(this, gridbag, constraints, showImageButton, 1);
@@ -145,9 +144,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 	public void clear() { // CAS531 put back to zoom
 		mouseFunction.setSelectedIndex(0); 
 	}
-	private void addToGrid(Container cp, GridBagLayout layout,
-			GridBagConstraints constraints, Component comp, int width) 
-	{
+	private void addToGrid(Container cp, GridBagLayout layout, GridBagConstraints constraints, Component comp, int width) {
 		constraints.gridwidth = width;
 		layout.setConstraints(comp, constraints);
 		cp.add(comp);
@@ -181,6 +178,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		
 		comboMouseFunctions.setSelectedIndex(0); // default to "zoom all"
 		comboMouseFunctions.setName("Set the function of the left mouse button (click+drag)."); // set help text
+		comboMouseFunctions.setToolTipText("Set the function of the left mouse button (click+drag)."); // CAS543 add
 		if (bar != null) bar.addHelpListener(comboMouseFunctions,this);
 		
 		return comboMouseFunctions;

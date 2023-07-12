@@ -1,4 +1,4 @@
-package symap.track;
+package symap.sequence;
 
 import java.awt.Color;
 import java.awt.Cursor;
@@ -32,71 +32,69 @@ import util.ErrorReport;
 import util.Utilities;
 
 /**
- * Class Track contains the base track information. CAS534 remove SyMAPConstants
+ * Class Track contains the base track information; extended by Sequence. CAS534 remove SyMAPConstants
+ * Note: this used to be shared by Sequence and FPC tracks, so there is probably residual FPC stuff here
  */
 public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyListener,
 		MouseListener, MouseMotionListener, MouseWheelListener
 {	
-	public static final int MAX_PIXEL_HEIGHT = 10000;
-	public static final int MAX_PIXEL_WIDTH = 1000;
-
-	protected static final double MOUSE_PADDING = 2;
-
+	private static final int MAX_PIXEL_HEIGHT = 10000;
+	private static final int MAX_PIXEL_WIDTH = 1000;
 	private static final Color REFNAME = new Color(0,0,200); // CAS530 change from red to deep blue
 	private static final Color titleColor = Color.black;
 	private static final Color dragColor = new Color(255,255,255,120);
 	private static final Color dragBorder = Color.black;
 	private static final Font titleFont = new Font("Arial", 1, 14);
 
-	protected Color bgColor = new Color(247,233,213); 
-	
-	private double startResizeBpPerPixel;
-	private Point startMoveOffset, adjustMoveOffset;
+	protected Rectangle2D.Double rect;
 	protected Rectangle dragRect;
-	protected Point dragPoint;
+	protected Point dragPoint, trackOffset;
 
-	private TextLayout titleLayout;
-	private Point2D.Float titlePoint;
-	private Point2D defaultTrackOffset;
-	protected String projectName, displayName, otherProjName;
-
-	protected int projIdx, otherProjIdx;
-	protected int orient;
+	protected int projIdx, otherProjIdx, orient;
 	protected Point moveOffset;
-	protected double defaultBpPerPixel;
-	protected double bpPerPixel;
+	protected double defaultBpPerPixel, bpPerPixel;
 	protected GenomicsNumber start, end, size;
 	protected double height, width;
-
-	protected boolean hasInit, hasBuild;
-	protected double minDefaultBpPerPixel, maxDefaultBpPerPixel;
 	protected int bpPerCb;
 	protected Dimension dimension;
-	protected Point trackOffset;
-	protected Rectangle2D.Double rect;
-	protected boolean firstBuild = true;
 	
-	protected boolean bFlipped; 
-	
+	protected boolean firstBuild = true, bFlipped; 
 	protected int position; 
 
-	protected TrackHolder holder;
-	protected DrawingPanel drawingPanel;
-	protected ProjectPool projPool;
+	private Point startMoveOffset, adjustMoveOffset;
+	private Point2D.Float titlePoint;
+	private Point2D defaultTrackOffset;
 	
-	protected long curCenter=0, curWidth=0; // for +/- buttons
+	private Color bgColor; 	
+	private TextLayout titleLayout;
+	private String projectName, displayName, otherProjName;
+
+	private boolean hasInit, hasBuild;
+	private double minDefaultBpPerPixel, maxDefaultBpPerPixel, startResizeBpPerPixel;
+	private long curCenter=0, curWidth=0; // for +/- buttons
+	
+	protected DrawingPanel drawingPanel;
+	private TrackHolder holder;
+	private ProjectPool projPool;
 
 	protected Track(DrawingPanel dp, TrackHolder holder, double minBpPerPixel, 
-			double maxBpPerPixel, Point2D defaultTrackOffset) // Called by Sequence and MarkerTrack
+			double maxBpPerPixel, Point2D defaultTrackOffset) // Called by Sequence
 	{
 		this.drawingPanel = dp;
 		this.holder = holder;
+		this.minDefaultBpPerPixel = minBpPerPixel;
+		this.maxDefaultBpPerPixel = maxBpPerPixel;
+		this.defaultTrackOffset = defaultTrackOffset;
+		
+		if (holder.getTrack() != null) this.bgColor = holder.getTrack().bgColor; // maintain color when "back to block view" selected
+		if (holder.getTrack() != null) this.position = holder.getTrack().position; // maintain position when "back to block view" selected
+		
 		projPool = dp.getProjPool();
 		
-		otherProjIdx = projIdx = Globals.NO_VALUE;
-		titlePoint = new Point2D.Float();
-		rect = new Rectangle2D.Double();
-		trackOffset = new Point();
+		otherProjIdx 		= projIdx = Globals.NO_VALUE;
+		titlePoint 			= new Point2D.Float();
+		rect 				= new Rectangle2D.Double();
+		trackOffset 		= new Point();
 		startMoveOffset = new Point();
 		adjustMoveOffset = new Point();
 		moveOffset = new Point();
@@ -107,11 +105,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		start = new GenomicsNumber(this,0);
 		end = new GenomicsNumber(this,0);
 		size = new GenomicsNumber(this,0);
-		this.minDefaultBpPerPixel = minBpPerPixel;
-		this.maxDefaultBpPerPixel = maxBpPerPixel;
-		this.defaultTrackOffset = defaultTrackOffset;
-		if (holder.getTrack() != null) this.bgColor = holder.getTrack().bgColor; // maintain color when "back to block view" selected
-		if (holder.getTrack() != null) this.position = holder.getTrack().position; // maintain position when "back to block view" selected
 	}
 
 	public TrackHolder getHolder() { return holder;}// Called by Sequence and DrawingPanel
@@ -181,7 +174,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		clearTrackBuild();
 	}	
 
-	public void clear() {
+	public void clear() { // Sequence, Track, TrackHolder
 		rect.setRect(0,0,0,0);
 		trackOffset.setLocation((int)defaultTrackOffset.getX(),(int)defaultTrackOffset.getY());
 		clear(startMoveOffset);
@@ -198,44 +191,38 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		clearInit();
 	}
 
-	public void resetData() {
+	public void resetData() { // drawingpanel
 		clearData();
 		clearInit();
 		init();
 	}
 
-	public abstract void clearData();
+	public abstract void clearData(); // drawingpanel, track
 
-	/*** getMoveOffset returns the move offset for the track to be used by the holder/layout manager.*/
-	public Point getMoveOffset() {return moveOffset;}
+	// getMoveOffset returns the move offset for the track to be used by the holder/layout manager.
+	public Point getMoveOffset() {return moveOffset;} // trackholder
 
-	/**
-	 * getGraphics returns the holders graphics object if a holder exists, null otherwise.
-	 * @see javax.swing.JComponent#getGraphics()
-	 */
+	/* getGraphics returns the holders graphics object if a holder exists, null otherwise.
+	 * @see javax.swing.JComponent#getGraphics() */
 	public Graphics getGraphics() {
 		if (holder != null) return holder.getGraphics();
 		return null;
 	}
 
-	/*** getLocation returns the location of the holder or a point at location 0,0 if holder is not set.*/
+	// getLocation returns the location of the holder or a point at location 0,0 if holder is not set.*/
 	public Point getLocation() {
 		if (holder != null) return holder.getLocation();
 		else 				return new Point();
 	}
 
-	/*** getMidX returns the viewable middle as determined by the track.*/
+	/* getMidX returns the viewable middle as determined by the track.*/
 	public double getMidX() {
 		return rect.getX()+(rect.getWidth()/2.0);
 	}
 
 	public int getProject() {return projIdx;}
-
-	public int getOtherProject() {return otherProjIdx;}
 	
 	public String getOtherProjectName() {return otherProjName;}
-
-	public String getProjectName() {return projectName;}
 
 	public String getProjectDisplayName() {return displayName;}
 
@@ -287,10 +274,8 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		if (s > 1 || e < getTrackSize()) return false;	
 		return true;
 	}
-	/**
-	 * Sets the bp/pixel of the track, setting the track to need to be built on the next make
-	 * Used with +/- buttons; drawToScale; 
-	 */
+	/* Sets the bp/pixel of the track, setting the track to need to be built on the next make
+	 * Used with +/- buttons; drawToScale; */
 	public void setBpPerPixel(double bp) {
 		if (bp > 0) {
 			height = Globals.NO_VALUE;
@@ -302,10 +287,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		}
 	}
 
-	/**
-	 * Sets the height in pixels. Height can be used by the individual track during the build. 
-	 * If pixels is less than or equal to 0, 1 is used. 
-	 */
+	// Sets the height in pixels. Height can be used by the individual track during the build. 
 	public void setHeight(double pixels) {
 		pixels = Math.min(Math.max(pixels,1),MAX_PIXEL_HEIGHT);
 		if (height != pixels) {
@@ -314,7 +296,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		}
 	}
 
-	/*** Sets the width in pixels.  Width can be used by the individual implementations of the track during the build. */
+	// Sets the width in pixels.  Width can be used by the individual implementations of the track during the build. 
 	public void setWidth(double pixels) {
 		pixels = Math.min(Math.max(pixels,0),MAX_PIXEL_WIDTH);
 		if (width != pixels) {
@@ -322,21 +304,21 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 			clearTrackBuild();
 		}
 	}
-	/*** Sets the height to not be considered on the next build. */
+	// Sets the height to not be considered on the next build. 
 	public void clearHeight() {
 		if (height != Globals.NO_VALUE) {
 			height = Globals.NO_VALUE;
 			clearTrackBuild();
 		}
 	}
-	/*** Sets the width to not be considered on the next build. */
+	// Sets the width to not be considered on the next build. 
 	public void clearWidth() {
 		if (width != Globals.NO_VALUE) {
 			width = Globals.NO_VALUE;
 			clearTrackBuild();
 		}
 	}
-	/*** Some track implementations may only accept RIGHT_ORIENT and LEFT_ORIENT.*/
+	// Some track implementations may only accept RIGHT_ORIENT and LEFT_ORIENT.
 	protected void setOrientation(int orientation) {
 		if (orientation != Globals.RIGHT_ORIENT && orientation != Globals.CENTER_ORIENT) orientation = Globals.LEFT_ORIENT;
 		if (orientation != orient) {
@@ -344,27 +326,23 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 			clearTrackBuild();
 		}
 	}
-	
-	public int getOrientation() { return orient; }
 
-	/*** Resets the track's end to the size set during initialization, setting the track to be built on the next build on a change.*/
+	// Resets the track's end to the size set during initialization, setting the track to be built on the next build on a change.
 	public void resetEnd() {
 		if (end.getValue() != size.getValue()) {
 			end.setValue(size.getValue());
 			clearAllBuild();
 		}
 	}
-	/*** Resets the tracks start to 0, setting the track to be built on the next build on a change. */
+	// Resets the tracks start to 0, setting the track to be built on the next build on a change. 
 	public void resetStart() {
 		if (start.getValue() != 0) {
 			start.setValue(0);
 			clearAllBuild();
 		}
 	}
-	/**
-	 * Sets the start of the track - startValue start value in CB (BP for tracks where CB is not applicable).
-	 * CAS514 was throwing exception and stopping symap
-	 */
+	// Sets the start of the track - startValue start value in CB (BP for tracks where CB is not applicable).
+	// CAS514 was throwing exception and stopping symap
 	public void setStart(long startValue)  {
 		if (startValue > size.getValue()) {
 			Utilities.showWarningMessage("Start value "+startValue+" is greater than size "+size.getValue()+".");
@@ -382,10 +360,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		}
 	}
 
-	/**
-	 * Sets the end of the track. endValue end point in base pair
-	 * CAS514 was throwing exception and stopping symap
-	 */
+	// Sets the end of the track. endValue end point in base pair; CAS514 was throwing exception and stopping symap
 	public long setEnd(long endValue) {
 		if (endValue < 0) {
 			Utilities.showWarningMessage("End value is less than zero.");
@@ -402,9 +377,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		return endValue;
 	}
 
-	/**
-	 * Sets the start of the track. startBP start point in base pair
-	 */
+	// Sets the start of the track. startBP start point in base pair
 	public void setStartBP(long startBP, boolean resetPlusMinus)  {
 		if (startBP > size.getBPValue()) {
 			Utilities.showWarningMessage("Start value "+startBP+" is greater than size "+size.getBPValue()+".");
@@ -423,10 +396,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		}
 	}
 
-	/**
-	 * Sets the end of the track. endBP end point in base pair
-	 * @return The end amount used (i.e. endBP or size if endBP > size)
-	 */
+	//  Sets the end of the track. endBP end point in base pair;@return The end amount used (i.e. endBP or size if endBP > size)
 	public long setEndBP(long endBP, boolean resetPlusMinus)  {
 		if (endBP < 0) Utilities.showWarningMessage("End value is less than zero.");
 
@@ -446,14 +416,14 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		return num >= start.getValue() && num <= end.getValue();
 	}
 
-	/*** following 3 returns the CB (BP if CB not applicable) value of the start of the Track.*/
+	// following 3 returns the CB (BP if CB not applicable) value of the start of the Track.
 	public long getStart() {return start.getValue();}
 
 	public long getEnd() {return end.getValue(); }
 
 	public long getTrackSize() {return size.getValue();}
 
-	/*** returns the dimension of the track  which corresponds to the preferred size post build.*/
+	// returns the dimension of the track  which corresponds to the preferred size post build.
 	public Dimension getDimension() {return dimension; }
 
 	/**
@@ -486,9 +456,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		}	
 	}
 
-	/**
-	 * Sets the track to be built on the next make
-	 */
+	// Sets the track to be built on the next make
 	protected void clearAllBuild() {
 		if (drawingPanel != null)
 			drawingPanel.clearTrackBuild();
@@ -583,7 +551,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		if (dif > MAX_PIXEL_HEIGHT) {
 			if (height == Globals.NO_VALUE) height = getAvailPixels();
 			bpPerPixel = (end.getBPValue()-start.getBPValue())/height; 
-			// CAS501 System.out.println("Adjusting track size");
 		}
 	}
 	protected int getBP(double y) {
@@ -617,7 +584,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 			return ((Graphics2D)holder.getGraphics()).getFontRenderContext();
 		return null;
 	}
-	public abstract double getPadding();
+
 	public abstract void setOtherProject(int otherProject);
 	public abstract void setup(TrackData track);
 	public abstract TrackData getData();
@@ -631,8 +598,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	public int getPosition() { return position; }
 	
 	public void setBackground(Color c) {
-		if (c != null)
-			bgColor = c;
+		bgColor = c;
 	}
 	public void mouseDragged(MouseEvent e) { 
 		Cursor cursor = getCursor();

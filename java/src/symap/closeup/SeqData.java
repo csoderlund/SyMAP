@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Vector;
 
+import symap.Globals;
 import util.ErrorReport;
 
 public class SeqData implements Comparable <SeqData> { 
@@ -85,24 +86,25 @@ public class SeqData implements Comparable <SeqData> {
 	}
 	  // CAS517 - format exon list (e.g. Exon #1:20:50,Exon #1:20:50); CAS531 moved from Utilities
     static public String formatExon(String exonList) {	
-    	int rm = "Exon #".length();
+    	String exonTag = Globals.exonTag;
+    	int rm = exonTag.length();
     	String list="";
-    	String [] tokc = exonList.split(",");
+    	String [] exons = exonList.split(",");
     	int dist=0, last=0;
     	
     	String [] fields = {"#", "Coords" ,"Len", "Intron"};
 		int [] justify =   {1,    0,    0,     0};
-		int nRow = tokc.length;
+		int nRow = exons.length;
 	    int nCol=  fields.length;
 	    String [][] rows = new String[nRow][nCol];
 	    int r=0, c=0;
 	    
 	    int x1, x2;
-    	for (String x : tokc) {
+    	for (String x : exons) {
     		String [] y = x.split(":");
     		if (y.length!=3) {System.err.println("Parsing y: " + exonList); return exonList;}
     		
-    		if (!y[0].startsWith("Exon #")) System.err.println(y[0]);
+    		if (!y[0].startsWith(exonTag)) System.err.println(exonList + "\n" + y[0]);
     		String n = y[0].substring(rm);
     		try {
     			x1 = Integer.parseInt(y[1]);

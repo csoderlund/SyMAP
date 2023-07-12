@@ -52,8 +52,10 @@ public class Filter extends JDialog  {
 	
 	private JPanel buttonPanel;
 	private JButton cancelButton, defaultButton, okButton;
+	
+	private boolean bIsFirst=true;
 
-	public Filter(Data d, ControlPanel c) {
+	public Filter(Data d, ControlPanel c) { // Created in ControlPanel when CE session starts
 		data = d;
 		cntl = c;
 		
@@ -65,7 +67,7 @@ public class Filter extends JDialog  {
 		cancelButton = createButton("Cancel", "Discard changes and close");
 		cancelButton.addActionListener(listener);
 
-		defaultButton = createButton("Defaults", "Reset to defaults and close");
+		defaultButton = createButton("Defaults", "Reset to defaults");
 		defaultButton.addActionListener(listener);
 
 		JButton helpButton = util.Jhtml.createHelpIconUserSm(util.Jhtml.dotfilter); // CAS533 add
@@ -79,12 +81,12 @@ public class Filter extends JDialog  {
 		jpanel.add(helpButton);
 		buttonPanel.add(jpanel, "Center");
 
-		int id = (int) data.getPctid();
+		int id = data.getInitPctid();	
+		pctidLabel = new JLabel(hitLabel + id); // %identity
 		pctidSlider = new JSlider(id, 100, id);
 		pctidSlider.setMajorTickSpacing(10);
 		pctidSlider.setMinorTickSpacing(5);
 		pctidSlider.setPaintTicks(true);
-		pctidLabel = new JLabel(hitLabel + id); // %identity
 		pctidSlider.addChangeListener(listener);
 		listener.stateChanged(new ChangeEvent(pctidSlider));
 		
@@ -218,7 +220,7 @@ public class Filter extends JDialog  {
 	public void setFromFD() {
 		FilterData fd = data.getFilterData();
 		
-		int id = (int) fd.getPctid();
+		int id = fd.getPctid();	
 		if (id>100) id=100;
 		pctidSlider.setValue(id);
 		String x = (id < 100) ? ((id < 10) ? "  " : " ") : ""; // blanks
@@ -275,7 +277,7 @@ public class Filter extends JDialog  {
 				data.getFilterData().setDefaults();
 				setFromFD();
 				cntl.update();
-				setVisible(false); 
+				//setVisible(false); CAS543 like 2D, don't close
 			}
 		}
 		public void stateChanged(ChangeEvent e) {
@@ -286,9 +288,11 @@ public class Filter extends JDialog  {
 				int s = pctidSlider.getValue();
 				String x = (s < 100) ? ((s < 10) ? "  " : " ") : ""; // blanks
 				pctidLabel.setText(hitLabel + x + s);
-			  
-				boolean b = fd.setPctid(s);
-				if (b) cntl.update();
+				if (bIsFirst) bIsFirst=false; // otherwise, sets to initMinPctid
+				else {
+					boolean b = fd.setPctid(s);
+					if (b) cntl.update();
+				}
 			}
 			else if (src == dotSizeSlider) {
 				int s = dotSizeSlider.getValue();

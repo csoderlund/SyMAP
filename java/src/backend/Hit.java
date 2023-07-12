@@ -10,8 +10,8 @@ import util.ErrorReport;
  * Used for AnchorsMain: a hit may be a MUMmer hit or a clustered hit SubHit>0.
  */
 public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
-	public static boolean bRev = true; // Only cluster hits of the same orientation (--,++) and (+-,+-)
-	public static int haveNSubs=2, haveLen1=300, haveLen2=100;   // >= heuristics; used in HitBin for filtering 
+	public static final boolean bRev = true; // Only cluster hits of the same orientation (--,++) and (+-,+-)
+	public static final int haveNSubs=2, haveLen1=300, haveLen2=100;   // >= heuristics; used in HitBin for filtering 
 	
 	public int hitLen=0;
 	public int matchLen, pctid, pctsim, idx; // pctid=%ID, pctsim=%sim from MUMmer per subhit
@@ -21,6 +21,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	
 	public SubHit queryHits, targetHits;
 	public HitType mHT = null;					    // AnchorsMain {GeneGene, GeneNonGene, NonGene}
+	public int htype=0;								// CAS543 numeric type
 	
 	public HitStatus status = HitStatus.Undecided;	// AnchorsMain {In, Out, Undecided };
 	
@@ -117,6 +118,18 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		}
 		return false;
 	}
+	public boolean useAnnot2() { // CAS543 keep if both genes!
+		if (annotIdx1 > 0 && annotIdx2 > 0) {
+			if (matchLen>haveLen2) return true;
+		}
+		return false;
+	}
+	public boolean useAnnot1() { 
+		if (annotIdx1 > 0 || annotIdx2 > 0) {
+			if (nSubHits>=haveNSubs || matchLen>=haveLen1) return true; 
+		}
+		return false;
+	}
 	
 	public int maxLength() {
 		return Math.max(queryHits.length(), targetHits.length());
@@ -127,9 +140,16 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	// for debug
 	public String getInfo() {
 		String x = (mHT==null) ? "No HT" : mHT.toString();
-		return "idx=" + idx + " " + status + " " + x 
-			+ " len=" + matchLen + " pctid=" + pctid + " pctsim=" + pctsim + " " + strand 
-			+ " q: " + queryHits.start + "/" + queryHits.end + " t: " + targetHits.start + "/" + targetHits.end;
+		String state = (idx>0) ? "idx=" + idx + " " + status : " ";
+		
+		int cnt = 0;
+		if (annotIdx1 > 0 && annotIdx2 > 0) cnt=2;
+		else if (annotIdx1 > 0 || annotIdx2 > 0) cnt=1;
+		String q = "q: " + queryHits.start + "/" + queryHits.end;
+		String t = "t: " + targetHits.start + "/" + targetHits.end;
+		String p = String.format("len=%,5d id=%d", matchLen, pctid);
+		
+		return String.format("Gene %d %s %-30s %-30s %s %s %s", cnt, p, q, t,  strand, state, x);	
 	}
 	/****************************************************************
 	 * mergeOlapDiagHits methods

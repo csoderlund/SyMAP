@@ -7,6 +7,7 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.event.MouseEvent;
 import java.awt.Color;
+import java.awt.Font;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.TreeMap;
@@ -20,7 +21,7 @@ import symap.Globals;
 
 /***********************************************
  * Two ends of a seq-seq hit; internal class PseudoHit has both ends
- * Mapper: Tracks 0-N are in order of display
+ * Mapper: Tracks 0-N are in order of display; Ref is always seqObj1
  * Hit Wire is the line between chromosomes
  * Hit Rect is the hit rectangle in the track, one on each end of wire
  * 
@@ -30,6 +31,7 @@ import symap.Globals;
 
 public class SeqHits  {
 	private static final int MOUSE_PADDING = 3;
+	private static Font textFont = new Font(Font.MONOSPACED,Font.PLAIN,12);
 	
 	private int project1, project2; // project IDs
 	private int group1, group2; // groupIDs: contig or chromosome 
@@ -53,7 +55,7 @@ public class SeqHits  {
 		this.mapper = mapper;
 		this.seqObj1 = st1;
 		this.seqObj2 = st2;
-	
+
 		seqObj1.setSeqHits(this, mapper.isQueryTrack(seqObj1.getHolder().getTrack())); // CAS517 add to get hits 
 		seqObj2.setSeqHits(this, mapper.isQueryTrack(seqObj2.getHolder().getTrack()));
 		
@@ -232,13 +234,13 @@ public class SeqHits  {
 	}
 
 	public String toString() {
-		return "[HitData: project1="+project1+" content1="+group1+
-			   " project2="+project2+" content2="+group2+"]";
+		return "[HitData:    project1="+project1+ " seq1=" + seqObj1.getChrName() + " grp1="+group1+ 
+				        ";   project2="+project2+ " seq2=" + seqObj2.getChrName()+ " grp2="+group2+"]";
 	}
 
-	public String getOtherName(Sequence seqObj) { // CAS531 added for Closeup title
-		if (seqObj==seqObj1) return seqObj2.getName();
-		else return seqObj1.getName();
+	public String getOtherChrName(Sequence seqObj) { // CAS531 added for Closeup title
+		if (seqObj==seqObj1) return seqObj2.getChrName();
+		else return seqObj1.getChrName();
 	}
 	
 	/**********************************************************************/
@@ -282,12 +284,15 @@ public class SeqHits  {
 		private boolean isHover() {return bHover; } // for this hit wire object
 		 
 		private boolean isHighLightHit() { // CAS520 add method
-			 HfilterData hf = mapper.getHitFilter();
+			 HfilterData hf = mapper.getHitFilter(); 
+			
+			 if (hf.isHiPopup() && hitDataObj.isPopup()) return true;
 			 if (hf.isHiBlock() && hitDataObj.isBlock()) return true;
 			 if (hf.isHiSet() 	&& hitDataObj.isSet())   return true;
 			 if (hf.isHi2Gene() && hitDataObj.is2Gene()) return true;
 			 if (hf.isHi1Gene() && hitDataObj.is1Gene()) return true;
 			 if (hf.isHi0Gene() && hitDataObj.is0Gene()) return true;
+			
 			 return false;	// hf.isHiNone default
 		}
 		// XXX
@@ -376,12 +381,13 @@ public class SeqHits  {
 			 if (!isVisible() || isFiltered()) return false;
 			 
 			 cntShowHit++;
+			
 		   /* get border locations of sequence tracks to draw hit stuff to/in */
 			 Point2D sp1 = getSequenceCPoint(seqObj1, hitDataObj.getStart1(), hitDataObj.getEnd1(), trackPos1, stLoc1);
 			 Point2D sp2 = getSequenceCPoint(seqObj2, hitDataObj.getStart2(), hitDataObj.getEnd2(), trackPos2, stLoc2);
 			 int x1=(int)sp1.getX(), y1=(int)sp1.getY();
 			 int x2=(int)sp2.getX(), y2=(int)sp2.getY();
-			 
+
 			/* hitLine: hit connecting seq1/seq2 chromosomes */
 			 g2.setPaint(getCColor(hitDataObj.getOrients(), btoggle, true)); // set color;
 			 hitWire.setLine(sp1,sp2); 
@@ -398,42 +404,65 @@ public class SeqHits  {
 			 if (seqObj2.getShowScoreLine()) {
 				 g2.drawLine(x2,y2,x2+lineLength,y2);
 			 }
-			 
-			 /* %id text: paint in seq1/2 rectangle the %id */
+			
+		/* text */
+			 /* %id text: paint in seq1/2 rectangle the %id; CAS543 always put text on outside rect */
+			 int xr=4, xl=19; 
 			 if (seqObj1.getShowScoreText() || (isHover() && !seqObj1.getShowHitNumText())) {  	
-				 double textX = x1;
-				 if (x1 < x2) textX += -lineLength-15-(pctid==100 ? -7 : 0);
-				 else 		  textX +=  lineLength;					 
+				 double textX = x1; 
+				 if (x1 < x2) textX += xr;
+				 else		  textX -= xl;
+				 //if (x1 < x2) textX -= xl; else	textX += xr; // on inside
+				 //if (x1 < x2) textX += -lineLength-15-(pctid==100 ? -7 : 0);
+				 //else 		textX +=  lineLength;					 
 				 
 				 g2.setPaint(Color.black);
+				 g2.setFont(textFont);
 				 g2.drawString(""+(int)pctid, (int)textX, (int)y1);
 			 }
 			 if (seqObj2.getShowScoreText() || (isHover() && !seqObj2.getShowHitNumText())) {  	
-				 double textX = x2;
-				 if (x2 < x1) 	textX += lineLength-15-(pctid==100 ? -7 : 0);
-				 else 			textX += lineLength;					 
+				 double textX = x2; 
+				 if (x1 < x2) textX -= xl;
+				 else		  textX += xr;
+				 //if (x1 < x2) textX += xr; else		  textX -= xl; // on inside
+				 //if (x2 < x1) 	textX += lineLength-15-(pctid==100 ? -7 : 0);
+				 //else 			textX += lineLength;					 
 				 
 				 g2.setPaint(Color.black);
+				 g2.setFont(textFont);
 				 g2.drawString(""+(int)pctid, (int)textX, (int)y2);					 
 			 }
+			 
 			 /* hitNum CAS531 new */
-			 if (seqObj1.getShowHitNumText()) {  	
+			 if (seqObj1.getShowHitNumText()) {  
+				 int num = (int)hitDataObj.getHitNum();
+				 
 				 double textX = x1;
-				 if (x1 < x2) textX += -lineLength-15-(pctid==100 ? -7 : 0);
-				 else 		  textX +=  lineLength;					 
-				 
+				 if (x1 < x2) textX += xr;
+				 else	{
+					 int nl = String.valueOf(num).length()-1;
+					 textX -= (xl + (nl*4));
+				 }			 
 				 g2.setPaint(Color.black);
-				 g2.drawString(""+(int)hitDataObj.getHitNum(), (int)textX, (int)y1);
+				 g2.setFont(textFont);
+				 g2.drawString(""+num, (int)textX, (int)y1);
 			 }
-			 if (seqObj2.getShowHitNumText()) {  	
-				 double textX = x2;
-				 if (x2 < x1) 	textX += lineLength-15-(pctid==100 ? -7 : 0);
-				 else 			textX += lineLength;					 
+			 if (seqObj2.getShowHitNumText()) {  
+				 int num = (int)hitDataObj.getHitNum();
 				 
+				 double textX = x2;
+				 if (x1 < x2) {
+					 int nl = String.valueOf(num).length()-1;
+					 textX -= (xl + (nl*4)) ;
+				 }
+				 else		  textX += xr;
+				
 				 g2.setPaint(Color.black);
+				 g2.setFont(textFont);
 				 g2.drawString(""+(int)hitDataObj.getHitNum(), (int)textX, (int)y2);					 
 			 }
-			/* hit graphics: paint in seq1/2 rectangle the hit length graphics */
+			 
+		/* hit graphics: paint in seq1/2 rectangle the hit length graphics */
 			 if (seqObj1.getShowHitLen()) { 					
 				 Point2D rp1 = seqObj1.getPoint(hitDataObj.getStart1(), trackPos1);
 				 Point2D rp2 = seqObj1.getPoint(hitDataObj.getEnd1(),   trackPos1);
@@ -539,6 +568,7 @@ public class SeqHits  {
 		}
 		/* CAS516 popup from clicking hit wire; CAS531 change to use TextPopup */
 		private void popupDesc(double x, double y) {
+			hitDataObj.setPopup(true);
 			String title="Hit #" + hitDataObj.getHitNum(); // CAS520 changed from hit idx to hitnum
 			
 			String theInfo = hitDataObj.createHover(st1LTst2) + "\n"; 
@@ -553,9 +583,10 @@ public class SeqHits  {
 				
 				theInfo +=  st1LTst2 ? (msg1+msg2) : (msg2+msg1);
 			}
-			if (Globals.TRACE) 
+			if (Globals.TRACE) {
 				theInfo += "\nDB-index " + hitDataObj.getID(); // CAS520 puts at bottom, useful for debugging and out of way 
-			
+				theInfo += "\nAnnot " + hitDataObj.getAnnots(); // CAS543 add
+			}
 			boolean isQuery1 = seqObj1.isQuery();
 			
 			new TextShowInfo(mapper, title, theInfo, mapper.getDrawingPanel(), hitDataObj, 

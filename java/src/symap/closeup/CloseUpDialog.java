@@ -35,7 +35,8 @@ public class CloseUpDialog extends JDialog implements CloseUpListener, ColorList
 	private String projS, projO; // selected and other
 
 	// hitList will have at least ONE hit
-	public CloseUpDialog(CloseUp closeup, Vector <HitData> hitList, Sequence seqObj, int selStart, int selEnd, String otherProject, boolean isProj1) throws SQLException {
+	public CloseUpDialog(CloseUp closeup, Vector <HitData> hitList, Sequence seqObj, 
+			int selStart, int selEnd, boolean isProj1, String otherChr, int numShow) throws SQLException {
 		alignPool = new AlignPool(closeup.getDrawingPanel().getDBC()); //closeup.getDrawingPanel().getPools().getAlignPool();
 		projS = seqObj.getProjectDisplayName();
 		projO = seqObj.getOtherProjectName();
@@ -44,12 +45,12 @@ public class CloseUpDialog extends JDialog implements CloseUpListener, ColorList
 		setView(seqObj, hitList, selStart, selEnd, isProj1);
 		
 		String d = SeqData.coordsStr(selStart, selEnd);
-		String other = seqObj.getOtherProjectName() + " " + seqObj.getSeqHits().getOtherName(seqObj);
-		String x = String.format("Selected Region: %s  %s  %s to %s", projS, seqObj.getName(), d, other); // CAS504, CAS531
+		String other = projO + " " + otherChr;
+		String x = String.format("Selected Region: %s  %s  %s to %s", projS, seqObj.getChrName(), d, other); // CAS504, CAS531
 		setTitle(x);
 	
 		Utilities.setFullSize(this,viewComp, MAX_WIDTH); // CAS531 makes it less than width of screen
-		setLocationRelativeTo(null);
+		if (numShow==1) setLocationRelativeTo(null);
 	}
 	
 	public int showIfHits() {

@@ -473,7 +473,7 @@ public class AnchorsPost {
 			this.start = start;
 			this.end = end;
 			this.genenum = genenum;
-			this.tag  = Utilities.getGenenumFromTag(tag);
+			this.tag  = Utilities.getGenenumFromDBtag(tag);
 			String [] tok = this.tag.split("\\.");
 			isOlap = (tok.length>1);
 			this.bPosStrand= (strand.contentEquals("+"));

@@ -34,7 +34,7 @@ import util.Utilities;
  *   	Always include geneGene and geneNonGene, but make sure they are responsible hits; 	 HitBin and Hit.useAnnot()
  *      Clusters hits do not have mixed strands, i.e. must be either ++/-- or +-/-; 		 Hit.clusterHits2
  * 		The Hit.matchLen is the Max q&t(summed(subhits)-summed(overlap)) instead of summed(query subhits) 
- * This algorithm is really finicky because of bins, which can obscure good hits; need to rewrite with proper interval tree 
+ * This algorithm is really finicky because of bins, which can obscure good hits
  * CAS541 change updataPool to dbc2
  */
 enum HitStatus  {In, Out, Undecided }; 
@@ -43,7 +43,7 @@ enum HitType 	{GeneGene, GeneNonGene, NonGene} // CAS535 was in HitBin
 enum GeneType 	{Gene, NonGene, NA}				 // ditto
 
 public class AnchorsMain {
-	private static boolean DEBUG = Globals.DEBUG;
+	public static boolean doNewAlgoLen = true;
 	private static final int HIT_VEC_INC = 1000;
 	private static final int nLOOP = 10000;
 	
@@ -63,6 +63,8 @@ public class AnchorsMain {
 	private Mpair mp;
 	private boolean bSuccess=true;
 	private String proj1Name, proj2Name;
+	
+	public static int nAnnot=0; // CAS543 different filter rules based on if 0,1,2 projects annotated
 	
 	public AnchorsMain(DBconn2 dbc2, ProgressDialog log,  Mpair mp) {	
 		this.dbc2 = dbc2;
@@ -134,7 +136,10 @@ public class AnchorsMain {
 		syProj1 = new SyProj(tdbc2, plog, pj1, proj1Name, topN, QueryType.Query);  // loads group
 		syProj2 = new SyProj(tdbc2, plog, pj2, proj2Name, topN, QueryType.Target); // make new object even if self or filtering gets confused
 		
-		if (!syProj1.hasAnnot() && !syProj2.hasAnnot()) { // CAS540x add check
+		nAnnot=0;						// static, make sure its 0
+		if (syProj1.hasAnnot()) nAnnot++;
+		if (syProj2.hasAnnot()) nAnnot++;
+		if (nAnnot==0) { 				// CAS540x add check
 			plog.msg("Neither project is annotated");
 			return;
 		}
@@ -212,7 +217,7 @@ public class AnchorsMain {
 					 															+ mTotalBrokenHits + " Split "); 
 		if (Constants.PRT_STATS) Utils.prtMemUsage(plog, "Complete scan candidate genes", memTime);
 		
-	/** Second scan - to cluster and filer **/	
+	/** Second scan - to cluster and filter **/	
 		plog.msg("Scan files to cluster and filter hits");
 		memTime = Utils.getTimeMem();
 		
@@ -313,7 +318,7 @@ public class AnchorsMain {
 				
 			mTotalHits++;
 			if (Group.bSplitGene && hit.maxLength() > Group.fSplitLen) {// CAS540 add splitgene check
-				if (DEBUG) System.out.print(" split hit of size " + hit.maxLength() + "\r");
+				if (Globals.TRACE) System.out.print(" split hit of size " + hit.maxLength() + "\r");
 				Vector<Hit> brokenHits = Hit.splitMUMmerHit(hit);
 				mTotalLargeHits++;
 				mTotalBrokenHits += brokenHits.size();
@@ -649,7 +654,7 @@ public class AnchorsMain {
 			
 			PreparedStatement ps = tdbc2.prepareStatement("insert into pseudo_hits "
 					+ "(pair_idx, proj1_idx, proj2_idx, grp1_idx, grp2_idx,"
-					+ "evalue, pctid, score, strand,"
+					+ "htype, pctid, score, strand,"
 					+ "start1, end1, start2, end2, query_seq, target_seq,"
 					+ "gene_overlap, countpct, cvgpct,annot1_idx,annot2_idx) "
 					+ "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
@@ -667,7 +672,7 @@ public class AnchorsMain {
 				ps.setInt(i++, syProj2.getIdx());
 				ps.setInt(i++, hit.queryHits.grpIdx);
 				ps.setInt(i++, hit.targetHits.grpIdx);
-				ps.setInt(i++, 0) ;						// evalue, referred to but never has a value
+				ps.setInt(i++, hit.htype) ;						// CAS543 change from evalue to htype
 				ps.setInt(i++, hit.pctid);
 				ps.setInt(i++, hit.matchLen); 		
 				ps.setString(i++, hit.strand);
@@ -738,15 +743,33 @@ public class AnchorsMain {
 	catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); bSuccess=false;}
 	}
 	private void addMirroredHits() throws Exception {
-	try { // Create the reflected hits for self-alignment cases; CAS520 add hitnum
-		tdbc2.executeUpdate("insert into pseudo_hits (select 0, hitnum, pair_idx,proj1_idx,proj2_idx,grp2_idx,grp1_idx,evalue,pctid," + 
-				"score,strand,start2,end2,start1,end1,target_seq,query_seq,gene_overlap,countpct,cvgpct,idx,annot2_idx,annot1_idx,runnum, runsize " + // CAS520 add  runnum
-				" from pseudo_hits where pair_idx=" + pairIdx + " and refidx=0 and start1 != start2 and end1 != end2)"	
-			);
+	try { // Create the reflected hits for self-alignment cases; CAS520 add hitnum, CAS543 evalue->htype and rearranged
+		// NOTE that grp1_idx is swapped with grp2_idx, etc; and refidx->idx; order of columns matches schema
+		tdbc2.executeUpdate("insert into pseudo_hits (select 0, "
+		+ "hitnum,pair_idx,proj1_idx,proj2_idx, grp2_idx, grp1_idx, pctid, "
+		+ "cvgpct, countpct, score, htype, gene_overlap,annot2_idx, annot1_idx, "
+		+ "strand, start2, end2, start1, end1, target_seq, query_seq, runnum, runsize, idx "
+		+ " from pseudo_hits where pair_idx=" + pairIdx + " and refidx=0 and start1 != start2 and end1 != end2)"	
+		);
 		tdbc2.executeUpdate("update pseudo_hits as ph1, pseudo_hits as ph2 set ph1.refidx=ph2.idx where ph1.idx=ph2.refidx " +
 				" and ph1.refidx=0 and ph2.refidx != 0 and ph1.pair_idx=" + pairIdx + " and ph2.pair_idx=" + pairIdx);
 	}
-	catch (Exception e) {ErrorReport.print(e, "add mirror hits"); bSuccess=false;}
+	catch (Exception e) {
+		try {// pre-v543 - the order and fields must be exactly like it is in the database
+			tdbc2.executeUpdate("insert into pseudo_hits (select 0, "
+			+ "hitnum, pair_idx,proj1_idx,proj2_idx,grp2_idx,grp1_idx,htype,pctid," 
+			+ "score,strand,start2,end2,start1,end1,target_seq,query_seq,gene_overlap,"
+			+ "countpct,cvgpct,idx,annot2_idx,annot1_idx,runnum, runsize " + 
+			" from pseudo_hits where pair_idx=" + pairIdx + " and refidx=0 and start1 != start2 and end1 != end2)"	
+			);
+			tdbc2.executeUpdate("update pseudo_hits as ph1, pseudo_hits as ph2 set ph1.refidx=ph2.idx where ph1.idx=ph2.refidx " +
+					" and ph1.refidx=0 and ph2.refidx != 0 and ph1.pair_idx=" + pairIdx + " and ph2.pair_idx=" + pairIdx);
+		}
+		catch (Exception e2) {
+			ErrorReport.print(e2, "add mirror hits"); 
+			bSuccess=false;
+		}
+	}
 	}
 	
 	/****************************************************
@@ -881,6 +904,7 @@ public class AnchorsMain {
 			PreparedStatement ps = dbc2.prepareStatement("update pseudo_annot set numhits=? where idx=?");
 			for (int idx : geneCntMap.keySet()) {
 				int num = geneCntMap.get(idx);
+				if (num>255) num=255; // CAS543 tinyint unsigned max is 255
 				ps.setInt(1, num);
 				ps.setInt(2, idx);
 				ps.addBatch();

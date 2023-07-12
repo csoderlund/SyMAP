@@ -22,7 +22,6 @@ import util.Utilities;
 import util.ErrorReport;
 
 import symap.closeup.AlignPool; // CAS541 to get sequence
-import symap.Globals;
 import symap.manager.Mproject;
 import symapMultiAlign.AlignmentViewPanel;
 
@@ -31,13 +30,16 @@ import symapMultiAlign.AlignmentViewPanel;
  */
 
 public class SyMAPQueryFrame extends JFrame {
+	private final int MIN_WIDTH = 1000, MIN_HEIGHT = 720; // CAS513 changed from 1024
+	private final int MIN_DIVIDER_LOC = 200; // CAS543 was screenWidth * 1/4
+	
 	private static final String [] MENU_ITEMS = { "> Instructions", "> Query Setup", "> Results" }; 
 	static private String propNameAll="SyMapColumns1"; // 0&1's; use if match number of columns in current DB
 	static private String propNameSingle="SyMapColumns2"; 
 	
 	// ProjectManager creates this object, add the projects, then calls build.
-	public SyMAPQueryFrame(String db, DBconn2 dbc2, Vector <Mproject> pVec) {
-		setTitle("SyMAP Query " + Globals.VERSION + " - " + db); // CAS514 add version; CAS540 add db
+	public SyMAPQueryFrame(String title, DBconn2 dbc2, Vector <Mproject> pVec) {
+		setTitle("Query " + title); // CAS514 add version; CAS540 add db
 		
 		this.tdbc2= new DBconn2("Query-" + DBconn2.getNumConn(), dbc2);
 		
@@ -55,8 +57,8 @@ public class SyMAPQueryFrame extends JFrame {
 		});
 		
 		Rectangle screenRect = Utilities.getScreenBounds(this);
-		screenWidth  = Math.min(1000, screenRect.width);
-		screenHeight = Math.min(720, screenRect.height); 	// CAS513 changed from 1024
+		screenWidth  = Math.min( MIN_WIDTH, screenRect.width);
+		screenHeight = Math.min(MIN_HEIGHT, screenRect.height); 	
 		setSize(screenWidth, screenHeight);	
 		setLocationRelativeTo(null); 						// CAS513 center frame
 	}
@@ -66,7 +68,7 @@ public class SyMAPQueryFrame extends JFrame {
 		
 		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setContinuousLayout(true);
-        splitPane.setDividerLocation(screenWidth * 1/4);
+        splitPane.setDividerLocation(MIN_DIVIDER_LOC);
 
         splitPane.setBorder(null);
         splitPane.setRightComponent(mainPanel);

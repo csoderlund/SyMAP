@@ -133,15 +133,15 @@ public class Schema {
 		sql = "CREATE TABLE pseudo_annot (" +
 		    "idx                 INTEGER AUTO_INCREMENT PRIMARY KEY," +  // annot_idx
 		    "grp_idx             INTEGER NOT NULL," +	// xgroups.idx
-		    "type                VARCHAR(20) NOT NULL," +
-		    "name                TEXT  NOT NULL," +
+		    "type                VARCHAR(20) NOT NULL," + // gene, exon, centromere, gap
+		    "genenum             INTEGER default 0," +  //   
+		    "tag				 VARCHAR(30)," +		// CAS512 add - Gene(#exons) or Exon #N; CAS543 suffix or gene# only (30->10)
+		    "gene_idx            INTEGER default 0," +  // CAS512 add - gene idx for exon
+		    "numhits			 tinyint unsigned default 0," +  // CAS520 show in Query; max 255
+		    "name                TEXT  NOT NULL," +				// description, list of keyword=value
+		    "strand              ENUM('+','-') NOT NULL," +
 		    "start               INTEGER NOT NULL," +
 		    "end                 INTEGER NOT NULL," +
-		    "strand              ENUM('+','-') NOT NULL," +
-		    "genenum             INTEGER default 0," +  // was being added in SyntenyMain
-		    "gene_idx            INTEGER default 0," +  // CAS512 add - gene idx for exon
-		    "tag				 VARCHAR(30)," +		// CAS512 add - Gene(#exons) or Exon #N
-		    "numhits			 tinyint unsigned default 0," +  // CAS520 show in Query; max 255
 		    "INDEX (grp_idx,type)," +
 		    "FOREIGN KEY (grp_idx) REFERENCES xgroups (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB; "; 
@@ -166,7 +166,9 @@ public class Schema {
 		    ") ENGINE = InnoDB; ";
 		executeUpdate(sql);	
 		
-// Sequence hits
+// Sequence hits; changes here need to be reflected in AnchorsMain.addMirrorHits
+// hitnum, pair_idx, proj1_idx, proj2_idx, grp1_idx, grp2_idx, pctid, cvgpct, countpct, score, type, gene_overlap
+// annot1_idx, annot2_idx, strand, start1, end1, start2, end2, query_seq, target_seq, runnum, runsize, refidx
 	    sql = "CREATE TABLE pseudo_hits (" +
 		    "idx                 INTEGER AUTO_INCREMENT PRIMARY KEY," + // hit_id
 	    	"hitnum				 INTEGER default 0,"+			// CAS520 relative to location along chr
@@ -175,24 +177,24 @@ public class Schema {
 		    "proj2_idx           INTEGER NOT NULL," + 			 // proj_props.proj_idx
 		    "grp1_idx            INTEGER NOT NULL," + 			 // xgroups.idx
 		    "grp2_idx            INTEGER NOT NULL," + 			 // xgroups.idx
-		    "evalue              DOUBLE NOT NULL," +  			 // No value, though accessed (FPC?)
-		    "pctid               TINYINT UNSIGNED NOT NULL," +   // Col6, Avg %ID CAS515 REAL->TINYINT (rounded percent) 
-		    "score               INTEGER NOT NULL," +            // Col5, queryLen - not used
+		    "pctid               TINYINT UNSIGNED NOT NULL," +   // avg %id Col6       - CAS515 REAL->TINYINT (rounded percent) 
+		    "cvgpct				 TINYINT UNSIGNED NOT NULL," +   // avg %sim  Col7     - add CAS515 
+		    "countpct			 INTEGER UNSIGNED default 0," +  // number of merged   - add CAS515  tinyint->integer
+		    "score               INTEGER NOT NULL," +            // summed length Col5 - displayed in Query
+		    "htype             	 TINYINT UNSIGNED NOT NULL," +   // 0 None, 1 Exon1, 2 Exon2, 3 ExonIntron, 4 Intron1, 5 Intron2 
+		    "gene_overlap		 TINYINT NOT NULL, " +	       	 // number of genes it overlaps (0,1,2)
+		    "annot1_idx			 INTEGER default 0," +
+			"annot2_idx			 INTEGER default 0," +
 		    "strand              TEXT NOT NULL," +
 		    "start1              INTEGER NOT NULL," +
 		    "end1                INTEGER NOT NULL," + 
 		    "start2              INTEGER NOT NULL," +
-		    "end2                INTEGER NOT NULL, " +  
+		    "end2                INTEGER NOT NULL, " +   
 		    "query_seq           MEDIUMTEXT  NOT NULL," +      	// start-end of each merged hit
 		    "target_seq          MEDIUMTEXT  NOT NULL," +
-		    "gene_overlap		TINYINT NOT NULL, " +	       	// number of genes it overlaps
-		    "countpct			INTEGER UNSIGNED default 0," + 	// unused 0; CAS515 number of merged, tinyint->integer
-		    "cvgpct				TINYINT UNSIGNED NOT NULL," +  	// unused 0; CAS515 Col7 %sim
-		    "refidx				INTEGER default 0," +          	// used in self-synteny
-			"annot1_idx			INTEGER default 0," +
-			"annot2_idx			INTEGER default 0," +
-			"runnum				INTEGER default 0," +			// CAS520 number consecutive collinear groups
+			"runnum				INTEGER default 0," +			// CAS520 number for collinear group
 		    "runsize			INTEGER default 0," +			// size of collinear set
+		    "refidx				INTEGER default 0," +          	// used in self-synteny
 		    "INDEX (proj1_idx,proj2_idx,grp1_idx,grp2_idx)," +
 		    "FOREIGN KEY (pair_idx)  REFERENCES pairs (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj1_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
@@ -206,6 +208,7 @@ public class Schema {
 		    "hit_idx             INTEGER NOT NULL," +	// pseudo_hits.idx
 		    "annot_idx           INTEGER NOT NULL," +	// pseudo_annot.idx
 		    "olap	            INTEGER NOT NULL," +
+		    "htype             	 TINYINT UNSIGNED NOT NULL," +   // 0 None, 1 Exon1, 2 Exon2, 3 ExonIntron, 4 Intron1, 5 Intron2 
 		    "UNIQUE (hit_idx, annot_idx)," +
 		    "INDEX (annot_idx)," +
 		    "FOREIGN KEY (hit_idx)  REFERENCES pseudo_hits (idx) ON DELETE CASCADE," +
@@ -226,19 +229,27 @@ public class Schema {
 		 sql = "SET FOREIGN_KEY_CHECKS = 1;";
 		 executeUpdate(sql);
 		    
-		 /** CAS506 add DBVer and UPDATE, change other two **/
+		 /** CAS506 add DBVer and UPDATE, change other two; CAS543 add INITV and INITDB  **/
+		 String date = Utilities.getDateOnly();
+		 
+		// never change
+		 sql = "INSERT INTO props (name,value) VALUES ('INIT', '" + date + "'); ";
+		 executeUpdate(sql);
+		
+		 sql = "INSERT INTO props (name,value) VALUES ('INITV','" +  Globals.VERSION + "'); ";
+		 executeUpdate(sql);
+		 
+		 sql = "INSERT INTO props (name,value) VALUES ('INITDB','" +  Globals.DBVERSTR + "'); ";
+		 executeUpdate(sql);
+				 
+		// updated in Version 
+		 sql = "INSERT INTO props (name,value) VALUES ('UPDATE', '" + date + "'); ";
+		 executeUpdate(sql);
+		 
 		 sql = "INSERT INTO props (name,value) VALUES ('VERSION','" +  Globals.VERSION + "'); ";
 		 executeUpdate(sql);
-		    
-		 // referenced in Version
+		 
 		 sql = "INSERT INTO props (name,value) VALUES ('DBVER','" +  Globals.DBVERSTR + "'); ";
-		 executeUpdate(sql);
-		 
-		 String date = Utilities.getDateOnly();
-		 sql = "INSERT INTO props (name,value) VALUES ('INSTALLED', '" + date + "'); ";
-		 executeUpdate(sql);
-		 
-		 sql = "INSERT INTO props (name,value) VALUES ('UPDATE', '" + date + "'); ";
 		 executeUpdate(sql);
 	}
 	private int executeUpdate(String sql) {

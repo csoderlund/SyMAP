@@ -61,8 +61,8 @@ public class BlockViewFrame extends JFrame{
 	private JPanel mainPane = null;
 	private JScrollPane scroller = null;
 
-	public BlockViewFrame(DBconn2 dbc2, int projXIdx, int projYIdx) throws Exception {
-		super("SyMAP Block View " + Globals.VERSION);
+	public BlockViewFrame(String title, DBconn2 dbc2, int projXIdx, int projYIdx) throws Exception {
+		super(title);
 		mRefIdx = projXIdx;
 		mIdx2 = projYIdx;
 		

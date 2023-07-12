@@ -11,7 +11,6 @@ import javax.swing.WindowConstants;
 import colordialog.ColorDialogHandler;
 import database.DBconn2;
 import props.PersistentProps;
-import symap.Globals;
 import symap.frame.HelpBar;
 
 /*****************************************************************
@@ -26,17 +25,17 @@ public class DotPlotFrame extends JFrame {
 	private PersistentProps    persistentProps;
 	
 	// ManagerFrame for selected genomes
-	public DotPlotFrame(DBconn2 dbc2, int projXIdx, int projYIdx) {
-		this(dbc2, new int[] { projXIdx, projYIdx }, null, null, null, true);
+	public DotPlotFrame(String title, DBconn2 dbc2, int projXIdx, int projYIdx) {
+		this(title, dbc2, new int[] { projXIdx, projYIdx }, null, null, null, true); // CAS543 add title
 	}
 	// ManagerFrame for all genomes, DotPlotFrame for chromosomes, ChrExpFrame for chromosomes; 
 	// after new Data; data.getSyMAP().clear(); // Clear caches - fix bug due to stale pairs data; CAS541 clear on close
-	public DotPlotFrame(DBconn2 dbc2, int[] projIDs,
+	public DotPlotFrame(String title, DBconn2 dbc2, int[] projIDs,
 			int[] xGroupIDs, int[] yGroupIDs, 	// null if whole genome
 			HelpBar helpBar, 					// not null if from CE
 			boolean hasRefSelector)  		    // false if from CE
 	{
-		super("SyMAP Dot Plot " + Globals.VERSION);
+		super(title);
 		if (projIDs==null || projIDs.length==0) System.err.println("No Projects! Email symap@agcol.arizona.edu"); 
 	
 		String type =  (hasRefSelector) ? "G" : "E";    // CAS541 add just to mark connections in Data
@@ -54,8 +53,9 @@ public class DotPlotFrame extends JFrame {
 		colorDialogHandler.setDotPlot();
 		
 		ControlPanel controls = new ControlPanel(data, plot, hb, colorDialogHandler);
-		controls.setProjects( data.getProjects() ); 
-		if (!hasRefSelector) controls.setProjects(null);
+		
+		if (hasRefSelector)	controls.setProjects( data.getProjects() ); // CAS543 was always doing
+		else 				controls.setProjects(null);
 
 	// Setup frame
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);

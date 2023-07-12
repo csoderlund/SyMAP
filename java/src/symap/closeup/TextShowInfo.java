@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.util.Vector;
@@ -15,6 +17,7 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.WindowConstants;
 import javax.swing.JCheckBox;
 
 import symap.drawingpanel.DrawingPanel;
@@ -54,6 +57,12 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		setTitle(title); 
 		setResizable(true);
 		
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // CAS543 add the explicit close 
+		addWindowListener(new WindowAdapter() {
+			public void windowClosed(WindowEvent e) {
+				if (hitDataObj!=null) hitDataObj.setPopup(false);
+			}
+		});
 		if (hitDataObj!=null) {
 			alignPool = new AlignPool(dp.getDBC());
 			this.hitDataObj = hitDataObj;
@@ -96,11 +105,14 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		Dimension d = new Dimension (330, 200); 
 		if (getWidth() >= d.width || getHeight() >= d.height) setSize(d);
 		setLocationRelativeTo(null);	
-		//setAlwaysOnTop(true);
+		setAlwaysOnTop(true); // CAS543
 		setVisible(true);
 	}
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == okButton) setVisible(false); 
+		if (e.getSource() == okButton) {
+			if (hitDataObj!=null) hitDataObj.setPopup(false);
+			setVisible(false); 
+		}
 		else if (e.getSource() == alignHitButton) runAlign(); 
 	}
 	/**************************************************************/

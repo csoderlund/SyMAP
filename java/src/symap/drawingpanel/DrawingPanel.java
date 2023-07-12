@@ -19,8 +19,11 @@ import symap.mapper.HitData;
 import symap.mapper.HfilterData;
 import symap.mapper.Mapper;
 import symap.mapper.MapperData;
-import symap.track.*;
 import symap.sequence.Sequence;
+import symap.sequence.Track;
+import symap.sequence.TrackData;
+import symap.sequence.TrackHolder;
+import symap.sequence.TrackLayout;
 import symap.closeup.CloseUp;
 
 import symapQuery.TableDataPanel;
@@ -60,7 +63,8 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	
 	private String mouseFunction = null; 
 	
-	public DrawingPanel(TableDataPanel listPanel, DBconn2 dbc2, HistoryControl hc, HelpBar bar) {
+	// Called in frame.SyMAP2d; the tracks and mappers are created on startup; then reused as needed
+	public DrawingPanel(TableDataPanel listPanel, DBconn2 dbc2, HistoryControl hc, HelpBar bar) { 
 		super();
 		setBackground(backgroundColor);
 		
@@ -317,7 +321,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	public boolean isMouseFunctionZoomSingle() { return ControlPanel.MOUSE_FUNCTION_ZOOM_SINGLE.equals(mouseFunction); }
 	public boolean isMouseFunctionZoomAll() { return ControlPanel.MOUSE_FUNCTION_ZOOM_ALL.equals(mouseFunction); }
 
-	public boolean setSequenceTrack(int position, int project, int group, Color color) {
+	public Sequence setSequenceTrack(int position, int project, int group, Color color) {
 		closeFilters();
 
 		TrackHolder holder = trackHolders[position-1];
@@ -329,7 +333,9 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		
 		track.setBackground(color); 
 		
-		return initTrack(track,position);
+		initTrack(track,position);
+		
+		return (Sequence) track; // CAS543 for Query.TableDataPanel to set show defaults
 	}
 	
 	private boolean initTrack(Track track, int position) {

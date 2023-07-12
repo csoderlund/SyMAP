@@ -17,6 +17,7 @@ public class HfilterData {
 	
 	private boolean bHiNone=true; // default
 	private boolean bHiBlock=false, bHiSet=false, bHi2Gene=false, bHi0Gene=false, bHi1Gene=false;
+	private boolean bHiPopup=false; // CAS543 add
 	
 	private boolean bBlock=true; // default
 	private boolean bSet=false, b2Gene=false, b1Gene=false, b0Gene=false, bAllHit=false;
@@ -43,6 +44,7 @@ public class HfilterData {
 		else if (bHi2Gene) 	msg += "High 2 Genes; ";
 		else if (bHi1Gene) 	msg += "High 1 Gene; ";
 		else if (bHi0Gene) 	msg += "High 0 Genes; ";
+		else if (bHiPopup) 	msg += "High Popup; ";
 		
 		msg += "Show "; // something always shows
 		if (bBlock) 	msg += "Block, ";
@@ -51,6 +53,7 @@ public class HfilterData {
 		if (b1Gene) 	msg += "1 Gene, ";
 		if (b0Gene) 	msg += "0 Genes, ";
 		if (bAllHit) 	msg += "All, ";
+		if (pctid!=0 && pctid!=minPctid) msg += "Id=" + (int) pctid + "%"; // CAS543 add
 		
 		if (msg.endsWith(", ")) msg = msg.substring(0, msg.length()-2);
 		hoverText = 	msg + "\n";
@@ -70,7 +73,7 @@ public class HfilterData {
 	}
 	
 	public void setDefaults() {
-		bHiBlock  = bHiSet = bHi2Gene = bHi0Gene = bHi1Gene = false;		
+		bHiBlock  = bHiSet = bHi2Gene = bHi0Gene = bHi1Gene = bHiPopup = false;		
 		bHiNone = true;
 		
 		bSet = b2Gene = b0Gene = bAllHit = false; 
@@ -86,8 +89,6 @@ public class HfilterData {
 	// CAS520 was comparing with false for everything instead of the current setting
 	// this changes initial settings for dotplot and query table
 	public boolean setChanged(HfilterData hf, String msg) {
-		if (DEBUG) System.out.print(msg + ": changeTo: " +  hf.getFilterText());
-		
 		boolean changed = false;
 		if (setHiBlock(hf.bHiBlock))  	changed = true; 
 		if (setHiSet(hf.bHiSet))    	changed = true;
@@ -95,6 +96,7 @@ public class HfilterData {
 		if (setHi1Gene(hf.bHi1Gene))	changed = true;
 		if (setHi0Gene(hf.bHi0Gene))	changed = true;
 		if (setHiNone(hf.bHiNone))		changed = true;
+		if (setHiPopup(hf.bHiPopup))	changed = true;
 		
 		if (setBlock(hf.bBlock))        changed = true;
 		if (setSet(hf.bSet))        	changed = true;
@@ -104,7 +106,6 @@ public class HfilterData {
 		if (setAllHit(hf.bAllHit))		changed = true;
 		
 		if (setPctid(hf.pctid))   		changed = true;
-		if (DEBUG) System.out.print(msg + ": isChange: " +  getFilterText());
 		
 		return changed;
 	}
@@ -123,14 +124,20 @@ public class HfilterData {
 	}
 	public double getMinPctid() {return minPctid;}
 	public double getMaxPctid() {return maxPctid;}
-	public void setMinPctid(double d) {minPctid=d;}
-	public void setMaxPctid(double d) {maxPctid=d;}
-	public void condSetPctid(double hitid) {
+	public void condSetPctid(double hitid) { // set when HfilterData is created
 		if (hitid < minPctid) minPctid = hitid;
 		if (hitid > maxPctid) maxPctid = hitid;
 	}
 	
 // highs
+	public boolean   isHiPopup() {return bHiPopup;} // CAS543 new
+	public boolean  setHiPopup(boolean filter) {
+		if (filter != bHiPopup) {
+			bHiPopup = filter;
+			return true;
+		}
+		return false;
+	}
 	public boolean   isHiNone() {return bHiNone;}
 	public boolean  setHiNone(boolean filter) {
 		if (filter != bHiNone) {

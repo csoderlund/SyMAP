@@ -51,9 +51,9 @@ import database.DBconn2;
 import util.ErrorReport;
 import util.Jhtml;
 import util.Utilities;
-import symap.sequence.Sequence;
 import symap.frame.SyMAP2d;
 import symap.mapper.HfilterData;
+import symap.sequence.Sequence;
 
 /**************************************************
  * Perform query and display results in table
@@ -77,8 +77,6 @@ public class TableDataPanel extends JPanel {
 		isSingle		=   bSingle;
 		theQuery =		 	query;
 		theSummary = 		sum;
-		
-		if (Q.TEST_TRACE) System.out.println("\n>" + theSummary + "\n" + query);
 		
 		if(selections != null) {
 			theOldSelections = new boolean[selections.length];
@@ -586,24 +584,34 @@ public class TableDataPanel extends JPanel {
 				btnShowColumns.setText("Select Columns");
 				columnPanel.setVisible(false);
 				btnClearColumns.setVisible(false);
+				btnDefaultColumns.setVisible(false);
 				btnShowStats.setVisible(true);
 			}
 			else {
 				btnShowColumns.setText("Hide Columns");
 				columnPanel.setVisible(true);
 				btnClearColumns.setVisible(true);
+				btnDefaultColumns.setVisible(true);
 				btnShowStats.setVisible(false);
 			}
 			showTable();
 		}});
 		
-		btnClearColumns = new JButton("Clear Columns");
+		btnClearColumns = new JButton("Clear");
 		btnClearColumns.setBackground(Color.WHITE);
 		btnClearColumns.addActionListener(new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
-			clearColumns();
+			public void actionPerformed(ActionEvent e) {
+				clearColumns();
 		}});
 		btnClearColumns.setVisible(false);
+		
+		btnDefaultColumns = new JButton("Defaults");
+		btnDefaultColumns.setBackground(Color.WHITE);
+		btnDefaultColumns.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				defaultColumns();
+		}});
+		btnDefaultColumns.setVisible(false);
 	
 		btnShowStats = new JButton("Hide Stats");
 		btnShowStats.setBackground(Color.WHITE);
@@ -624,15 +632,16 @@ public class TableDataPanel extends JPanel {
 		txtStatus.setBorder(BorderFactory.createEmptyBorder());
 		txtStatus.setBackground(Color.WHITE);
 		
-    	buttonPanel.add(btnShowColumns);  buttonPanel.add(Box.createHorizontalStrut(10));
-    	buttonPanel.add(btnClearColumns); buttonPanel.add(Box.createHorizontalStrut(10));
+    	buttonPanel.add(btnShowColumns);  buttonPanel.add(Box.createHorizontalStrut(5));
+    	buttonPanel.add(btnClearColumns); buttonPanel.add(Box.createHorizontalStrut(5));
+    	buttonPanel.add(btnDefaultColumns); buttonPanel.add(Box.createHorizontalStrut(10));
     	buttonPanel.add(btnShowStats);    buttonPanel.add(Box.createHorizontalStrut(10)); //So the resized button doesn't get clipped
     	buttonPanel.add(txtStatus);
     	
     	buttonPanel.setMaximumSize(buttonPanel.getPreferredSize());
     	return buttonPanel;
     }
-    private void setStatus(String desc) {txtStatus.setText(desc);}
+    //private void setStatus(String desc) {txtStatus.setText(desc);}
     
     private JPanel createTableStatusPanel() {
     	JPanel thePanel = new JPanel();
@@ -697,6 +706,25 @@ public class TableDataPanel extends JPanel {
     	setTable(true);
     	showTable();
     }
+    private void defaultColumns() {// CAS543 add
+    	boolean [] genColDef = FieldData.getGeneralColDefaults();
+    	for (int i=1; i<chkGeneralFields.length; i++) chkGeneralFields[i].setSelected(genColDef[i]);
+    	
+    	boolean [] spColDef = FieldData.getSpeciesColDefaults(isSingle);
+    	int cntCol = FieldData.getSpColumnCount(isSingle);
+    	for (int i=0; i<chkSpeciesFields.length; i++) {
+    		for (int j=0; j<cntCol; j++)
+    			chkSpeciesFields[i][j].setSelected(spColDef[j]);
+    	}
+    	for(int x=0; x<chkAnnoFields.size(); x++) {
+    		for(int y=0; y<chkAnnoFields.get(x).size(); y++) {
+    			chkAnnoFields.get(x).get(y).setSelected(false);
+    		}
+    	}
+    	setTable(true);
+    	showTable();
+    }
+    
 	// Column change
 	private void setTable(boolean isFirst) {
 		if(theTable != null) theTable.removeListeners();
@@ -990,12 +1018,11 @@ public class TableDataPanel extends JPanel {
 			int grp1Idx = (Integer) rd.chrIdx[0];
 			int grp2Idx = (Integer) rd.chrIdx[1];
 			
-			// create new drawing panel
+			// create new drawing panel; CAS543 quit setting Sfilter Show_Annotation because is static
 			SyMAP2d symap = new SyMAP2d(theParentFrame.getDBC(), getInstance());
 		
 			symap.getDrawingPanel().setMaps(1);
 			symap.getHistory().clear(); 
-			Sequence.setDefaultShowAnnotation(true);
 			
 			HfilterData hd = new HfilterData (); // CAS520 change from dotplot.FilterData
 			if (item==showREGION) 		hd.setForQuery(false, false, true);  // block, set, region
@@ -1003,8 +1030,10 @@ public class TableDataPanel extends JPanel {
 			else if (item==showSET)		hd.setForQuery(false, true, false);
 			symap.getDrawingPanel().setHitFilter(1,hd); // template for Mapper HfilterData, which is already created
 			
-			symap.getDrawingPanel().setSequenceTrack(1, p2Idx, grp2Idx, Color.CYAN);
-			symap.getDrawingPanel().setSequenceTrack(2, p1Idx, grp1Idx, Color.GREEN);
+			Sequence s1 = symap.getDrawingPanel().setSequenceTrack(1, p2Idx, grp2Idx, Color.CYAN);
+			Sequence s2 = symap.getDrawingPanel().setSequenceTrack(2, p1Idx, grp1Idx, Color.GREEN);
+			s1.setAnnotation(); s2.setAnnotation(); // CAS543 was changing static; now changes individual object
+			
 			symap.getDrawingPanel().setTrackEnds(1, track2Start, track2End);
 			symap.getDrawingPanel().setTrackEnds(2, track1Start, track1End);
 			symap.getFrame().showX();
@@ -1791,7 +1820,8 @@ public class TableDataPanel extends JPanel {
 	private JPanel buttonPanel = null;
 	
 	private JPanel columnPanel = null, columnButtonPanel = null;
-	private JButton btnShowColumns = null, btnClearColumns=null, btnShowStats = null, btnHelp = null;
+	private JButton btnShowColumns = null, btnClearColumns=null, btnDefaultColumns=null;
+	private JButton btnShowStats = null, btnHelp = null;
 	private JTextField txtStatus = null;
     
 	public SyMAPQueryFrame theParentFrame = null;

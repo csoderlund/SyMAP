@@ -16,7 +16,6 @@ import java.util.HashMap;
 import backend.Constants;
 import symap.Globals;
 import util.ErrorReport;
-import util.Utilities;
 
 // WARNING: Does not work for nested queries (because it uses one Statement for all queries). 
 // To do a query within the read loop of a previous query, use a second DBConn object.
@@ -431,7 +430,6 @@ public class DBconn2 {
 		rs.close();
 		return i;
 	}	
-	
 	
     /***************************************************************************/
     public void resetAllIdx() { // CAS535 add, this is easier

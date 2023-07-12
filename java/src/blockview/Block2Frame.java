@@ -51,7 +51,7 @@ public class Block2Frame extends JFrame {
 	
 	// Called from BlockViewFrame - subwindow
 	public Block2Frame(DBconn2 tdbc2, int refIdx, int idx2, int grpIdx, int pairIdx, boolean reversed) {
-		super("SyMAP Block Detail View " + Globals.VERSION);
+		super("SyMAP " + Globals.VERSION + " - Block Detail View");
 		mRefIdx = refIdx;
 		mIdx2 = idx2;
 		mGrpIdx = grpIdx;

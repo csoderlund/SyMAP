@@ -129,6 +129,7 @@ public class AnnotLoadMain {
 			}	
 			lineNum++;
 			if (line.startsWith("#")) continue; // skip comment
+			if (Utilities.isEmpty(line.trim())) continue; // CAS543
 			
 			String[] fs = line.split("\t");
 			if (fs.length < 9) {

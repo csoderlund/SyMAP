@@ -40,23 +40,24 @@ public class FieldData {
 		 "Hit Cov: The largest summed subhit lengths of the two species."
 		};
 	
-/* Prefixed with Species: CAS519 have hit and gene start/end/len; and add gene strand */
+/* Prefixed with Species: CAS519 add hit and gene start/end/len/strand; CAS543 mv Gene# to start */
+// If change here, change in DBdata.makeRow
 	private static final String []     SPECIES_COLUMNS = 
-		{Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol, Q.gNCol, Q.hStartCol, Q.hEndCol, Q.hLenCol};
+		{Q.gNCol, Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol,  Q.hStartCol, Q.hEndCol, Q.hLenCol};
 	
 	private static final Class <?> []  SPECIES_TYPES =   
-		{String.class, Integer.class, Integer.class,Integer.class, String.class, String.class, Integer.class, Integer.class,Integer.class};
+		{Integer.class, String.class,  Integer.class,Integer.class, String.class, String.class, Integer.class, Integer.class,Integer.class};
 	
 	private static final boolean []    SPECIES_COLUMN_DEF =  
-		{false, false, false, false , false, true, false, false, false};
+		{ true, false, false, false, false , false, false, false, false};
 	
 	private static String [] SPECIES_COLUMN_DESC = {
+		"Gene#: Sequential. Overlap genes have same number (chr.#.{a-z})", 
 		"Chr: Chromosome (or Scaffold, etc)", 
 		"Gstart: Start coordinate of gene", 
 		"Gend: End coordinate of gene", 
 		"Glen: Length of gene", 
 		"Gst: Gene strand", 
-		"Gene#: Sequential. Overlap genes have same number (chr.#.{a-z})", 
 		"Hstart: Start coordinate of clustered hits", 
 		"Hend: End coordinate of clustered hits", 
 		"Hlen: Hend-Hstart+1"
@@ -64,21 +65,22 @@ public class FieldData {
 	
 	// CAS541 made single columns separate so can add NumHits
 	private static final String []     SSPECIES_COLUMNS = 
-		{Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol, Q.gNCol, Q.gHitNumCol};
+		{ Q.gNCol, Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol, Q.gHitNumCol};
 	
 	private static final Class <?> []  SSPECIES_TYPES =   
-		{String.class, Integer.class, Integer.class,Integer.class, String.class, String.class, Integer.class};
+		{Integer.class, String.class,  Integer.class,Integer.class, String.class, String.class, Integer.class};
 	
 	private static final boolean []    SSPECIES_COLUMN_DEF =  
-		{false, false, false, false , false, true, false};
+		{ true, false, false, false, false , false, false};
 	
 	private static String [] SSPECIES_COLUMN_DESC = {
+		"Gene#: Sequential. Overlap genes have same number (chr.#.{a-z})", 
 		"Chr: Chromosome (or Scaffold, etc)", 
 		"Gstart: Start coordinate of gene", 
 		"Gend: End coordinate of gene", 
 		"Glen: Length of gene", 
 		"Gst: Gene strand", 
-		"Gene#: Sequential. Overlap genes have same number (chr.#.{a-z})", 
+		
 		"NumHits: Number of hits for to the gene in the entire database."
 	};
 	
@@ -147,6 +149,7 @@ public class FieldData {
 		
 		// The MySQL LEFT JOIN joins two tables and fetches rows based on a condition, which is matching in both the tables and 
 		// the unmatched rows will also be available from the table written before the JOIN clause.
+		
 		fd.addLeftJoin("pseudo_hits_annot", "PH.idx = PHA.hit_idx", 	 Q.PHA);
 		fd.addLeftJoin("pseudo_annot", 		"PHA.annot_idx = PA.idx", 	 Q.PA);
 		fd.addLeftJoin("pseudo_block_hits", "PBH.hit_idx=PH.idx", 	 	 Q.PBH);
@@ -223,6 +226,7 @@ public class FieldData {
 	private void addLeftJoin(String table, String condition, String strSymbol) {
 		theJoins.add(new JoinItem(table, condition, strSymbol,true)); 
 	}
+	
 	private Vector<FieldItem> theFields = null;
 	private Vector<JoinItem> theJoins = null;
 	

@@ -10,56 +10,47 @@ import util.Utilities;
 public class HitData {	
 	private long id;
 	private int hitnum;				// CAS520 add, newly assigned hitnum
-	private int blocknum; 			// CAS505 add
-	private boolean isBlock;
-	private boolean isCollinear;	// CAS520 add
 	private byte pctid, pctsim; 	// CAS515 add pctsim and nMerge
 	private int covScore;			// CAS540 best coverage
 	private int nMerge;
-	private double corr;			// CAS516 add
-	private String tag;				// CAS516 gNbN see MapperPool; CAS520 g(gene_overlap) [c(runnum.runsize)]
-	private int collinearSet;		// CAS520 [c(runnum.runsize)] need to toggle highlight
-	private int start1, end1; 
-	private int start2, end2;
-	private boolean isSameOrient; 	// CAS517 if the same
-	private boolean isPosOrient1;
-	private boolean isPosOrient2;
-	private String query_seq, target_seq; // coordinates of hit
 	private int overlap = -1; 
+	private int annot1_idx, annot2_idx; // CAS543 add for debugging
+	private int start1, end1, start2, end2;
+	private boolean isSameOrient, isPosOrient1, isPosOrient2; 	// CAS517 if the same
+	private String query_seq, target_seq; // coordinates of hit
+	
+	private int collinearSet;		// CAS520 [c(runnum.runsize)] need to toggle highlight
+	private int blocknum; 			// CAS505 add
+	private double corr;			// CAS516 add
+	
+	private boolean isBlock;
+	private boolean isCollinear;	// CAS520 add
+	private boolean isPopup;		// CAS543 add for when its been selected for popup
+	
+	private String tag;				// CAS516 gNbN see MapperPool; CAS520 g(gene_overlap) [c(runnum.runsize)]
 	private String chr1, chr2; 		// CAS517 add
 	
 	// Update HitData PseudoHitData 
-	protected HitData(long id, int hitnum, String strand, int block,  double pctid, 
-			int start1, int end1, int start2, int end2, int overlap,
-			String query_seq, String target_seq, int pctsim, int nMerge, double corr, int covScore,
-			String tag, String chr1, String chr2)
+	// hitnum,  pctid, cvgpct (pctsim), countpct (nMerge), score, gene_overlap
+	// annot1_idx, annot2_idx, strand, start1, end1, start2, end2, query_seq, target_seq, 
+	// block, bCorr
+	protected HitData(long id, int hitnum, 
+			  double pctid, int pctsim, int nMerge, int covScore,int overlap,
+			  int annot1_idx, int annot2_idx,
+			  String strand, int start1, int end1, int start2, int end2, String query_seq, String target_seq,   
+			  int runnum, int runsize, int block, double corr, String chr1, String chr2)
 	{
 		this.id = id;
 		this.hitnum = hitnum;
-		this.blocknum = block;
-		this.isBlock = (blocknum>0) ? true : false;
+		
 		this.pctid = (byte)pctid;
 		this.pctsim = (byte) pctsim;
-		this.covScore = covScore;
 		this.nMerge = nMerge;
-		this.corr = corr;
-		this.tag = tag;		// Set in MapperPool.setPseudoPseudoData as g(gene_overlap) c(runsize).(runnum)
-		this.start2 = start2;
-		this.end2 = end2;
-		this.query_seq = query_seq; 	// start1, end1
-		this.target_seq = target_seq;	// start2, end2
+		this.covScore = covScore;
 		this.overlap = overlap;
 		
-		this.collinearSet = Utilities.getCollinear(tag); // CAS520
-		this.isCollinear = (collinearSet==0) ? false : true; // CAS520
-		
-		this.start1 = start1;
-		this.end1 = end1;
-		this.overlap = overlap;		
-		this.query_seq = query_seq; 
-		this.target_seq = target_seq;
-		this.chr1 = chr1;
-		this.chr2 = chr2;
+		this.annot1_idx = annot1_idx;
+		this.annot2_idx = annot2_idx;
 		
 		if (strand.length() >= 3) { 
 			this.isSameOrient = strand.charAt(0) == strand.charAt(2);
@@ -70,12 +61,33 @@ public class HitData {
 			if (Globals.DEBUG) System.err.println("HitData: Invalid strand value '"+strand+"' for hit id="+id);
 			this.isSameOrient = true;
 		}
+		this.start1 = start1;
+		this.end1 = end1;
+		this.start2 = start2;
+		this.end2 = end2;
+		this.query_seq = query_seq; 	// start1, end1
+		this.target_seq = target_seq;	// start2, end2
+		
+		this.collinearSet = runnum; // CAS520 add; CAS543 move form MapperPool
+		this.isCollinear = (collinearSet==0) ? false : true; 
+		
+		tag    = "g" + overlap;  
+		if (runsize>0 && runnum>0) tag += " c" + runsize + "." + runnum; 
+		else if (runsize>0)        tag += " c" + runsize;			    // parsed in Utilities.isCollinear
+		
+		this.blocknum = block;
+		this.corr = corr;
+		this.isBlock = (blocknum>0) ? true : false;
+		
+		this.chr1 = chr1;
+		this.chr2 = chr2;	
 	}
 	
 	public boolean isSameOrient()  { return isSameOrient; }
 	public boolean isPosOrient1() { return isPosOrient1; }
 	public boolean isPosOrient2() { return isPosOrient2; }
 	public long getID() 		{ return id; }
+	public String getAnnots()	{ return annot1_idx + " " + annot2_idx;} // CAS543 added for trace
 	public int getHitNum() 		{ return hitnum; }
 	public int getBlock()		{ return blocknum;}
 	public int getStart1() 		{ return start1; } 
@@ -119,11 +131,14 @@ public class HitData {
 	}
 
 	public boolean isBlock() 	{ return isBlock; }
-	public boolean isSet() 		{ return isCollinear; } // CAS520 add these 4 new fo;ters
+	public boolean isSet() 		{ return isCollinear; } // CAS520 add these 4 new filters
 	public boolean isGene() 	{ return (overlap>0); } 
 	public boolean is2Gene() 	{ return (overlap==2); } 
 	public boolean is1Gene() 	{ return (overlap==1); } 
-	public boolean is0Gene()  { return (overlap==0); } 
+	public boolean is0Gene()  	{ return (overlap==0); } 
+	public boolean isPopup()	{ return isPopup;}
+	
+	public void setPopup(boolean b) {isPopup=b;} // CAS543
 	
 	public int getCollinearSet() {return collinearSet;} // CAS520 add 
 	
@@ -180,4 +195,5 @@ public class HitData {
 		
 		return  msg + "\n\n" + coords;
 	}
+
 }

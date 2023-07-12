@@ -24,7 +24,6 @@ import backend.Constants;
 import backend.Utils;
 
 import database.DBconn2;
-import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -64,11 +63,11 @@ public class SumFrame extends JDialog implements ActionListener {
 		createSummary(false);
 	}
     // Called from the project manager
-	public SumFrame(DBconn2 dbc2, Mpair mp, boolean isReadOnly, String dbName) {
+	public SumFrame(String title, DBconn2 dbc2, Mpair mp, boolean isReadOnly) {
 	super();
 	try {	
 		setModal(false);
-		setTitle("SyMAP Summary " + Globals.VERSION + " - " + dbName); 
+		setTitle(title); 
 		setResizable(true);
 		
 		this.mp = mp;

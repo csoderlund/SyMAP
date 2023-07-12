@@ -36,8 +36,6 @@ import javax.swing.border.BevelBorder;
 import java.sql.ResultSet;
 
 import backend.Utils;
-
-import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import symap.manager.Mproject;
 import util.ErrorReport;
@@ -52,19 +50,16 @@ import dotplot.DotPlotFrame;
  * Chromosome Explorer 
  * CAS534 renamed from manager.SyMAPFrameCommon=> frame.ChrExpFrame
  */
-
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ChrExpFrame extends JFrame implements HelpListener {
-	protected int VIEW_CIRC = 1;
-	protected int VIEW_2D = 2;
-	protected int VIEW_DP = 3;
+	private final int MIN_WIDTH = 1100, MIN_HEIGHT = 900; // CAS543 was 1200, 900
 	
-	protected MutexButtonPanel navControlBar;
-	protected MutexButtonPanel viewControlBar;
+	protected int VIEW_CIRC = 1, VIEW_2D = 2, VIEW_DP = 3;
+	
+	protected MutexButtonPanel navControlBar, viewControlBar;
 	protected JSlider sldRotate = null;
 	protected JButton btnShow2D, btnShowDotplot, btnShowCircle;
-	protected JPanel controlPanel;
-	protected JPanel cardPanel;
+	protected JPanel controlPanel, cardPanel;
 	protected JSplitPane splitPane;
 	
 	protected HelpBar helpBar;
@@ -77,23 +72,23 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 	
 	protected boolean hasInit = false;
 	// protected boolean isFirst2DView = true; CAS517 not used
-	protected boolean isFirstDotplotView = true;
+	// protected boolean isFirstDotplotView = true; CAS543 doesn't do anything
 	protected int selectedView = 1;
 	protected int screenWidth, screenHeight;
 	
 	// called by symap.frame.ChrExpInit
-	public ChrExpFrame(DBconn2 tdbc2, Mapper mapper) {
-		super("SyMAP "+ Globals.VERSION);
+	public ChrExpFrame(String title, DBconn2 tdbc2, Mapper mapper) {
+		super(title); // CAS543 add dbname
 		this.tdbc2 = tdbc2;
 		this.mapper = mapper;
 		
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		
 		Rectangle screenRect = Utilities.getScreenBounds(this);
-		screenWidth  = Math.min(1200, screenRect.width);
-		screenHeight = Math.min(900, screenRect.height);
+		screenWidth  = Math.min(MIN_WIDTH, screenRect.width);
+		screenHeight = Math.min(MIN_HEIGHT, screenRect.height);
 		setSize(screenWidth, screenHeight); 
-		setLocationRelativeTo(null); // CAS513 center frame
+		setLocationRelativeTo(null); 						// CAS513 center frame
 		
 		// Using a card layout to switch views fixes the Windows CONTEXT_CREATION_ERROR problem
 		cardPanel = new JPanel();
@@ -101,15 +96,16 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		
         // Create split pane for Control Panel
         splitPane = new MySplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setContinuousLayout(true);
-        splitPane.setDividerLocation(screenWidth * 1/4);
+        splitPane.setContinuousLayout(true); 				// picture redraws continuously
+        //splitPane.setOneTouchExpandable(true); 			// have open/close arrows, but need to show text box
+        splitPane.setDividerLocation(screenWidth * 1/4); 	// behaves best using this instead of fix width
         splitPane.setBorder(null);
         splitPane.setRightComponent(cardPanel);
         
         setLayout(new BorderLayout());
         add(splitPane, BorderLayout.CENTER);
         
-        helpBar = new HelpBar(500, 130); // CAS521 removed dead args
+        helpBar = new HelpBar(425, 130); 					// CAS521 removed dead args; CAS543 was 500,130
         helpBar.setBorder( BorderFactory.createLineBorder(Color.LIGHT_GRAY) );
 	}
 
@@ -121,7 +117,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		
 		if (symap2D != null) symap2D.clear();
 		symap2D = null;
-		if (dotplot != null) dotplot.clear(); // CAS541 add
+		if (dotplot != null) dotplot.clear(); 				// CAS541 add
 		dotplot = null;
 		super.dispose();
 	}
@@ -213,7 +209,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 				controlPanel.repaint();
 				
 				// Regenerate main display
-				isFirstDotplotView = true;
+				//isFirstDotplotView = true;
 				btnShow2D.setEnabled( mapper.getNumVisibleTracks() > 0 );
 				btnShowDotplot.setEnabled( mapper.getNumVisibleTracks() > 0 );
 				btnShowCircle.setEnabled( true ); // CAS512 mapper.getNumVisibleTracks() > 0
@@ -332,16 +328,16 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		int[] yGroups = new int[groups.length-1];
 		for (int i = 1;  i < groups.length;  i++)
 			yGroups[i-1] = groups[i];
-		
+	
 		// Create dotplot frame
-		if (dotplot == null) dotplot = new DotPlotFrame(tdbc2, projects, xGroups, yGroups, helpBar, false);
-		else if (isFirstDotplotView) dotplot.getData().initialize(projects, xGroups, yGroups);
+		if (dotplot == null) dotplot = new DotPlotFrame("", tdbc2, projects, xGroups, yGroups, helpBar, false);
+		else dotplot.getData().initialize(projects, xGroups, yGroups);
 
 		// Switch to dotplot display
 		cardPanel.add(dotplot.getContentPane(), Integer.toString(VIEW_DP)); // ok to add more than once
 		setView(VIEW_DP);
 		
-		isFirstDotplotView = false;
+		// isFirstDotplotView = false; CAS543 always true since set to true in actionPerformed
 	}
 		
 	private boolean show2DView() {
@@ -363,10 +359,10 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			if (symap2D == null) symap2D = new SyMAP2d(tdbc2, helpBar, null);	
 			
 			DrawingPanel dp = symap2D.getDrawingPanel();
-			dp.setFrameEnabled(false);// Disable 2D rendering
-			dp.resetData(); // clear caches
-			symap2D.getHistory().clear(); // clear history
-			symap2D.getControlPanel().clear(); // CAS531 to reset Select:
+			dp.setFrameEnabled(false);				// Disable 2D rendering
+			dp.resetData(); 						// clear caches
+			symap2D.getHistory().clear(); 			// clear history
+			symap2D.getControlPanel().clear(); 		// CAS531 to reset Select:
 			dp.setMaps(0);
 			
 			// Setup 2D
@@ -389,7 +385,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			cardPanel.add(frame.getContentPane(), Integer.toString(VIEW_2D)); // ok to add more than once
 			setView(VIEW_2D);
 			
-			dp.amake(); // redraw and make visible
+			dp.amake(); 						// redraw and make visible
 			return true;
 		}
 		catch (OutOfMemoryError e) { 
@@ -426,8 +422,8 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			button.setMargin(new Insets(0, 0, 0, 0));
 			button.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
 			button.addActionListener(this);
-			if (getComponentCount() == 1) // select first button
-				setSelected(button);//button.doClick();
+			if (getComponentCount() == 1) 		// select first button
+				setSelected(button);			//button.doClick();
 			
 			((GridBagLayout)getLayout()).setConstraints(button, constraints);
 			add(button);
@@ -467,8 +463,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		}
 		
 		public void setSelected(JButton button) {
-			// De-select all buttons
-			for (Component c : getComponents()) {
+			for (Component c : getComponents()) {// De-select all buttons
 				if (c instanceof JButton) {
 					JButton b = (JButton)c;
 					b.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));

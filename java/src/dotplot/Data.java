@@ -14,7 +14,6 @@ import props.ProjectPair;
 import props.ProjectPool;
 import symap.frame.SyMAP2d;
 import symap.mapper.HfilterData;
-import symap.sequence.Sequence;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -26,6 +25,7 @@ import util.Utilities;
 public class Data  {
 	public static final double DEFAULT_ZOOM = 0.99;
 	public static final int X  = 0, Y   = 1;
+	private static int initMinPctid = -1;		// CAS543 find first time
 	
 	private Project projects[]; // loaded data
 	private Tile[] tiles;
@@ -40,22 +40,23 @@ public class Data  {
 	
 	private double sX1, sX2, sY1, sY2;
 	private Shape selectedBlock;
-	private double zoomFactor, scaleFactor = 1, minPctId=100;
+	private double zoomFactor, scaleFactor = 1;
 	private boolean hasSelectedArea, isTileView, isScaled;
 	
 	private DBconn2 tdbc2;
 	private DBload dbLoad;
 	
-	// Called from DotPlotFrame
+	// Called from DotPlotFrame; for ChrExp, called on first time its used
 	public Data(DBconn2 dbc2, String type) {
 		try { 
 			tdbc2 = new DBconn2("Dotplot" + type + "-" + DBconn2.getNumConn(), dbc2);
 			
-			//symap = new SyMAP2d(dbc2, null); 
-			
-			dbLoad = new DBload(tdbc2);
+			dbLoad = new DBload(tdbc2); //symap = new SyMAP2d(dbc2, null); 
 			
 			projProps = new ProjectPool(dbc2); 
+			
+			if (initMinPctid<=0)
+				initMinPctid = tdbc2.executeInteger("select min(pctid) from pseudo_hits"); // CAS543 set for slider
 			
 		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 		
@@ -69,7 +70,9 @@ public class Data  {
 		selectedBlock = null;
 
 		isScaled = false;
-		scaleFactor  = 1;		
+		scaleFactor  = 1;	
+		
+		filtData = new FilterData(); // CAS543 moved from initialized to here to keep settings
 	}
 	/*************************************************************
 	 * Called from: DotPlotFrame (genome), SyMAPFrameCommon (groups), Data.setReference (change ref)
@@ -97,8 +100,6 @@ public class Data  {
 	/* init tiles */
 		tiles = Project.createTiles(projects, tiles, projProps);
 
-		long time = Utilities.getNanoTime();
-		
 	/* add blocks and hits to tiles */
 		for (Tile tObj : tiles) {
 			boolean bSwap = projProps.isSwapped(tObj.getProjID(X), tObj.getProjID(Y)); // if DB.pairs.proj1_idx=proj(Y)
@@ -109,16 +110,13 @@ public class Data  {
 				dbLoad.setHits(tObj, bSwap);
 			}
 		}
-		prt("Load dotplot: " + Utilities.getNanoTimeStr(time));
-
-		filtData = new FilterData(); 
-		minPctId = dbLoad.getMinPctID();
-		filtData.setBounds(minPctId, 100);
-	
+		filtData.setBounds(dbLoad.minPctid, 100);
+		
 		if (getNumVisibleGroups() == 2) selectTile(100, 100); // kludge; this sets current...
+		
 	} catch (Exception e) { ErrorReport.print(e,"Initialize"); }
 	}
-	public double getMinPctid() { return minPctId; }
+	
 	/***************************************************************************/
 	private void clear() { // initialize, kill
 		scaleFactor = 1;
@@ -129,7 +127,12 @@ public class Data  {
 		sX1 = sX2 = sY1 = sY2 = 0;
 		currentGrp[0] = currentGrp[1] = null;
 		currentProjY = null;	
-		maxGrps=0;
+		maxGrps = 0;
+		
+		tiles  = new Tile[0]; // CAS543 add 4 lines
+		projects  = null; 
+		isScaled = false;
+		dbLoad.clear();
 	}
 	/***********************************************************************/
 	// Select for 2D
@@ -161,8 +164,6 @@ public class Data  {
 			} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 			**/
 			
-			Sequence.setDefaultShowAnnotation(false); 
-			prt("Block#" + ib.getNumber() + " " + ib.getStart(Y) + " " + ib.getEnd(Y)+ " " + ib.getStart(X) + " " + ib.getEnd(X));
 			symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),gY.getID(),Color.CYAN);	
 			symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),gX.getID(),Color.GREEN);
 			symap.getDrawingPanel().setTrackEnds(1,ib.getStart(Y),ib.getEnd(Y));
@@ -187,14 +188,12 @@ public class Data  {
 			return;
 		}
 		
-		try {
-			//DBconn dr = DBconn.getInstance(dbStr, dbUser.getDBconn());
+		try { //DBconn dr = DBconn.getInstance(dbStr, dbUser.getDBconn());
 			symap = new SyMAP2d(tdbc2, null);
 		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 		
 		symap.getDrawingPanel().setMaps(1);
 		symap.getHistory().clear(); 
-		Sequence.setDefaultShowAnnotation(false); 
 		
 		HfilterData hd = new HfilterData(); 		// CAS530 use 2D filter
 		hd.setForDP(false, true); 					// set block, set all
@@ -394,12 +393,8 @@ public class Data  {
 		return out.toArray(new Group[0]);
 	}
 	/***************************************************************************/
-	public double getPctid() {
-		if (filtData==null) {
-			System.err.println("SYMAP error: null filtdata");
-			return minPctId;
-		}
-		return filtData.getPctid();
+	public int getInitPctid() { // called from Filter on startup
+		return initMinPctid; // CAS543 get the initial DB value
 	}
 	public FilterData getFilterData() { return filtData; } // plot and Filter.FilterListener
 	public Project getProject(int axis) { return projects[axis]; } // plot and data
@@ -444,10 +439,6 @@ public class Data  {
 		return null;
 	}
 	
-	private void prt (String msg) {
-		//if (Globals.DEBUG) System.out.println("Data: " + msg);
-	}
-	
 	/****************************************************
 	 * Loads data for the plot
 	 * CAS531 removed cache and dead code; CAS533 removed some Loader stuff, dead code, a little rewrite
@@ -455,16 +446,14 @@ public class Data  {
 	 */
 	public class DBload {
 		private final int X = Data.X, Y = Data.Y;
-		private double minPctid=100;
+		private int minPctid;
 		private DBconn2 tdbc2;
 		public DBload(DBconn2 tdbc2) {
 			this.tdbc2 = tdbc2;
 		}
-		public void clear() { minPctid=100;}
-		public double getMinPctID() { return minPctid;}
+		public void clear() {minPctid=100;};
 		
-		 // For all projects; add groups to projects, and blocks to groups
-		 // CAS533 renamed from setGroups
+		 // For all projects; add groups to projects, and blocks to groups; CAS533 renamed from setGroups
 		public void setGrpPerProj(Project[] projects, int[] xGroupIDs, int[] yGroupIDs, ProjectPool pp) {
 		try {
 			Vector<Group> list = new Vector<Group>();
@@ -571,7 +560,7 @@ public class Data  {
 			if (swapped) {xx=Y; yy=X;}
 			Project pX = tile.getProject(xx),  pY = tile.getProject(yy);
 			Group gX   = tile.getGroup(xx), gY = tile.getGroup(yy);
-			
+		
 			String qry =
 				"SELECT (h.start2+h.end2)>>1 as posX, (h.start1+h.end1)>>1 as posY,"
 				+ "h.pctid, h.gene_overlap, b.block_idx, (h.end2-h.start2) as length, h.strand "+
@@ -583,7 +572,7 @@ public class Data  {
 			while (rs.next()) {
 				int posX = 		rs.getInt(1);
 				int posY = 		rs.getInt(2);
-				double pctid = 	rs.getDouble(3);
+				int pctid = 	rs.getInt(3);
 				int geneOlap = 	rs.getInt(4);
 				long blockidx = rs.getLong(5);
 				int length = 	rs.getInt(6);
@@ -595,10 +584,9 @@ public class Data  {
 								swapped ? posX : posY,	 
 								pctid,	geneOlap, blockidx!=0, length);				
 				hits.add(hit);
-				minPctid = Math.min(minPctid, pctid);
+				minPctid = Math.min(minPctid, pctid); 
 			}
-			rs.close();
-			
+			rs.close();	
 			tile.setHits(hits.toArray(new DPHit[0]));
 			hits.clear();
 		}

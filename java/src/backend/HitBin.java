@@ -1,6 +1,9 @@
 package backend;
 
 import java.util.Vector;
+
+import symap.Globals;
+
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Collections;
@@ -48,6 +51,7 @@ public class HitBin  {
 	}
 	/****************************************************************
 	 * Called from Group [checkAddHit2]
+	 * CAS543 need to be more gene-centric
 	 ************************************************************/
 	public void filterAddHit2(Hit hit, int shStart, int shEnd) {
 		mHitsConsidered++;
@@ -57,13 +61,14 @@ public class HitBin  {
 		mHits.add(hit); 
 		start = Math.min(start, shStart);
 		end =   Math.max(end,   shEnd);
-		Collections.sort(mHits, new CompareByMatch()); // ascending matchLen
-
-		if (mHits.size() >= mTopN+2) { 
+		Collections.sort(mHits, new CompareByMatch()); // ascending hasAnnot or matchLen	
 		
-			int topNmatch = mHits.get(mTopN-1).matchLen; // if Top2=2, then 2nd highest length
-			topNmatch     = (int) Math.round(topNmatch * perBin); 
-	
+		int topNmatch=0;
+		
+		if (mHits.size() >= mTopN+2) {
+			topNmatch = mHits.get(mTopN-1).matchLen; // if Top2=2, then 2nd highest length
+			topNmatch = (int) Math.round(topNmatch * perBin); 
+		
 			for (int i = mHits.size()-1; i>=mTopN; i--) { // CAS540 was if; try to remove at least one
 				Hit h = mHits.get(i);
 				
@@ -129,7 +134,7 @@ public class HitBin  {
 			if (h2.matchLen != h1.matchLen) {
 				return h2.matchLen - h1.matchLen;	
 			}
-			else return h1.compareTo(h2); 
+			else return h1.compareTo(h2); // sorts on start
 		}
 	}
 }

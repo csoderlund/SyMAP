@@ -588,7 +588,9 @@ public class Plot extends JPanel implements HelpListener {
 		if (data.getStatOpts()!=ControlPanel.pHELP) return lastInfoMsg; // CAS541 add
 		
 		if (data.isTileView())
-			return "Double-click on a blue (synteny) block, or on a region created by dragging the mouse, for the 2D view.";
+			return "For the 2D view:"
+					+ "\nDouble-click on a synteny block (boundary must be showing), "
+					+ "\nor create a region by dragging the mouse and double-click on it.";
 		else
 			return "Click on a Chr-by-chr cell in the DotPlot to view the cell only.";
 	}

@@ -52,7 +52,8 @@ public class QueryPanel extends JPanel {
 	private boolean isBlock() 	{ return blockOptRow.isEnabled() && blockOptRow.isOne(); }
 	private boolean isNotBlock(){ return blockOptRow.isEnabled() && blockOptRow.isTwo(); }
 	
-	private boolean isAnnoTxt()	{ return txtAnno.isEnabled() && txtAnno.getText().trim().length()>0;}
+	public boolean isAnnoTxt()	{ return txtAnno.isEnabled() && txtAnno.getText().trim().length()>0;}
+	public String getAnnoTxt()	{ return txtAnno.getText().trim();}
 	
 	private boolean isBlockNum(){ // CAS514 was not checking for selected
 		return chkBlock.isEnabled() && chkBlock.isSelected() && txtBlock.getText().trim().length()>0;}
@@ -197,9 +198,12 @@ public class QueryPanel extends JPanel {
 			if (isBlock())         	whereClause = joinBool(whereClause, "PBH.block_idx is not null", AND);
 			else if (isNotBlock()) 	whereClause = joinBool(whereClause, "PBH.block_idx is null", AND);
 			
-			if (isNoAnno())	  // either and both occur in the DBdata filters
-				whereClause = joinBool(whereClause, 
-					"(PH.annot1_idx=0 and PH.annot2_idx=0) AND PA.idx is null", AND); // 'is null' is necessary. 
+			if (isNoAnno())	 
+				whereClause = joinBool(whereClause, "(PH.annot1_idx=0 and PH.annot2_idx=0) AND PA.idx is null", AND); // 'is null' is necessary. 
+			else if (isBothAnno()) 					// CAS543 add search here instead of DBdata
+				whereClause = joinBool(whereClause, "(PH.annot1_idx>0 and PH.annot2_idx>0)", AND); 
+			else if (isOneAnno() || isEitherAnno() || isAnnoTxt())  // isOne is still done in DBdata
+				whereClause = joinBool(whereClause, "(PH.annot1_idx>0 or PH.annot2_idx>0)", AND); 
 			
 			int n = isCollinearSize(true);
 			String op = "PH.runsize>=" + n;
@@ -210,19 +214,20 @@ public class QueryPanel extends JPanel {
 		return " FROM pseudo_hits AS " + Q.PH + join + " " + whereClause + "  ORDER BY PH.hitnum  asc"; // CAS520 was PH.idx
 	}	
 	/****************************************
-	 * If this extra select is not done, then ONLY rows with PA.name with zinc are returned
-	 * and there is no annotation for the other side of the hit
+	 * Filter is done in DBdata, but there must be at least one anno to have a chance of passing
 	 */
 	private String makeAnnoWhere() {
 		if (!isAnnoTxt()) return "";
 		
+		return "";
+		/* CAS543 moved search to DBdata filter as this returns overlapping genes of gene with anno
+		 * If this extra select is not done, then ONLY rows with PA.name with zinc are returned
+		 * and there is no annotation for the other side of the hit; further filtering happens in DBdata
 		String clause = "PA.name LIKE '%" + txtAnno.getText() + "%'";
-		
-		return  "PH.idx in (SELECT  PH.idx " +
-				"FROM      pseudo_hits       AS PH " +
+		return  "PH.idx in (SELECT  PH.idx FROM      pseudo_hits       AS PH " +
 				"LEFT JOIN pseudo_hits_annot AS PHA ON PH.idx = PHA.hit_idx " +
-				"LEFT JOIN pseudo_annot      AS PA  ON PHA.annot_idx = PA.idx " +
-				"WHERE " + clause + ")";
+				"LEFT JOIN pseudo_annot      AS PA  ON PHA.annot_idx = PA.idx WHERE " + clause + ")";
+		*/
 	}
 	/******************************************************** 
 	 * CAS504 added block search; CAS513 didn't always work - changed to just looking for block=N
@@ -280,22 +285,17 @@ public class QueryPanel extends JPanel {
 			return "";
 		}
 	}
-	// this only return one half of hit, then one with genenum
-	private String makeChkGeneNumWhere() {// CAS520 from idx to hitnum
+	// CAS543 allow suffix (was just allowed number)
+	private String makeChkGeneNumWhere() {
 		String gnStr = txtGeneNum.getText().trim();
-		if (gnStr.equals("")) return "";
-		int n;
-		try {
-			n = Integer.parseInt(gnStr);	
-			return " PA.genenum=" + n;
-		}
-		catch (Exception e) {
-			Utilities.showWarningMessage(
-				"The Gene# entered is 'gnStr', which is not a number. \nThe input must be a number with no suffix.\n");
-			txtGeneNum.setText("");
-			bValidQuery=false;
-			return "";
-		}
+		
+		if (Utilities.isValidGenenum(gnStr)) return gnStr;
+		
+		Utilities.showWarningMessage(
+			"The Gene# entered is '" + gnStr + "', which is not a valid Gene#. \nEnter a number, or number.suffix\n");
+		txtGeneNum.setText("");
+		bValidQuery=false;
+		return "";	
 	}
 	/************************************
 	 * The chromosomes are queried in MySQL and the locations in DBdata
@@ -700,7 +700,7 @@ public class QueryPanel extends JPanel {
 				else  speciesPanel.setIsGene(false);
 			}
 		});
-		txtGeneNum = new JTextField(4); txtGeneNum.setEnabled(false);
+		txtGeneNum = new JTextField(6); txtGeneNum.setEnabled(false);
 		row.add(chkGeneNum); row.add(Box.createHorizontalStrut(5));
 		row.add(txtGeneNum); 	
 		
@@ -1022,6 +1022,7 @@ public class QueryPanel extends JPanel {
 		public boolean isTwo()  	{return case2Button.isSelected();}
 		public boolean isThree()  	{return case3Button.isSelected();}
 		public boolean isFour()  	{return case4Button.isSelected();}
+		public boolean isFive()  	{return ignButton.isSelected();}
 		
 		public int getValue() {
 			if (case1Button.isSelected()) return 1;

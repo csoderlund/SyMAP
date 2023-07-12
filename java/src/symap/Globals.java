@@ -6,10 +6,10 @@ import java.awt.Cursor;
  * CAS534 added in order to move globals from SyMAP2d, SyMAPConstants and Manager
  */
 public class Globals {
-	public static final String 	VERSION = "v5.4.2"; 
-	public static final String 	DATE = " (28-June-23)";
+	public static final String 	VERSION = "v5.4.3"; 
+	public static final String 	DATE = " (12-July-23)";
 	public static final String  VERDATE = VERSION + " " + DATE;
-	public static final int 	DBVER =  5; 	 	// CAS512 v3, CAS520 v4, CAS522 v5
+	public static final int 	DBVER =  6; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6
 	public static final String  DBVERSTR = "db" + DBVER;
 	
 	public static String  MAIN_PARAMS =   "symap.config"; 	// default; changed on command line -c
@@ -24,6 +24,9 @@ public class Globals {
 	public static boolean bTrim=true;		// CAS531 do not trim 2D alignments; see closeup.AlignPool
 	
 	public static final int MAX_CLOSEUP_BP=30000;
+	public static final String MAX_CLOSEUP_K = "30kb";
+	public static final String exonTag = "Exon #";
+	public static final String geneTag = "Gene #";
 	
 	// CAS534 start moving constants from SyMAPConstants
 	public static final int NO_VALUE = Integer.MIN_VALUE;

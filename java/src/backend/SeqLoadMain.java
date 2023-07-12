@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.sql.ResultSet;
@@ -233,7 +234,7 @@ public class SeqLoadMain {
 				plog.msg("    Use script/lenFasta.pl to determine Minimum Length to use to reduce number of loaded sequences");
 				//ErrorCount.inc(); CAS505 
 			}
-			updateSortOrder(grpList, plog);
+			updateSortOrder(grpList);
 			tdbc2.close();
 			
 			Utils.timeDoneMsg(plog, "Load sequences", startTime);
@@ -293,29 +294,15 @@ public class SeqLoadMain {
 		return null;
 	}
 	/***********************************************************************/
-	private void updateSortOrder(Vector<String> grpList,  ProgressDialog log)  {
+	private void updateSortOrder(Vector<String> grpList)  {
 	try {
-		// First, just set it to the idx order
-		int minIdx;
-		ResultSet rs = tdbc2.executeQuery("select min(idx) as minidx from xgroups where proj_idx=" + projIdx);
-		rs.first();
-		minIdx = rs.getInt("minidx");
+		int minIdx = tdbc2.executeCount("select min(idx) from xgroups where proj_idx=" + projIdx);
 		tdbc2.executeUpdate("update xgroups set sort_order = idx+1-" + minIdx + " where proj_idx=" + projIdx);
+		GroupSorter gs = new GroupSorter();
 		
 		// CAS534 removed a bunch of code because SyProps had grp_order and grp_sort that never changed
-		GroupSorter gs = new GroupSorter(GrpSortType.Alpha); 
-
-		String undef = "";
-		for (String grp : grpList) {
-			if (!gs.orderCheck(grp)) {
-				undef += grp + ", ";
-			}
-		}
-		if (undef.length() > 0)  {
-			log.msg("Group order not defined for: " + undef.substring(0, undef.length()-2));
-			ErrorCount.inc();
-			return;
-		}
+		// CAS543 does nothing code; for (String grp : grpList) {if (!gs.orderCheck(grp)) undef += grp + ", ";
+		
 		Collections.sort(grpList,gs);
 		
 		for (int i = 1; i <= grpList.size(); i++) {
@@ -350,5 +337,43 @@ public class SeqLoadMain {
 		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "Loading sequence - fail loading to database "); };
+	}
+	// Calculate order to be saved in xgroups
+	public class GroupSorter implements Comparator<String>{ // CAS543 moved from separate file	
+		public GroupSorter(){}
+		
+		// If prefix defined in parameters, it is stripped off already
+		public int compare(String g1, String g2) {
+			
+			if (g1.equals(g2)) return 0;
+			boolean areNumbers = true;
+			try {
+				Integer.parseInt(g1);
+				Integer.parseInt(g2);
+			}
+			catch(Exception e) {areNumbers = false;}
+			
+			if (areNumbers) return Integer.parseInt(g1) - Integer.parseInt(g2);
+		
+			int nMatch = 0;  		// Look for a matching prefix; CAS543 was not checking chars, so useless code
+			while (nMatch < g1.length() && nMatch < g2.length() && g1.charAt(nMatch)==g2.charAt(nMatch)) nMatch++;		
+			if(nMatch == g1.length()) return -1; // all of g1 matched, hence must come before g2 alphabetically 
+			if(nMatch == g2.length()) return 1;
+			
+			String suff1 = g1.substring(nMatch);
+			String suff2 = g2.substring(nMatch);
+			
+			
+			areNumbers = true; 		// are these suffixes numeric??
+			try {
+				Integer.parseInt(suff1);
+				Integer.parseInt(suff2);
+			}
+			catch(Exception e) {areNumbers = false;}
+			
+			if (areNumbers) return Integer.parseInt(suff1) - Integer.parseInt(suff2);
+				
+			return g1.compareTo(g2); 
+		}
 	}
 }

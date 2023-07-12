@@ -1,4 +1,4 @@
-package symap.track;
+package symap.sequence;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -6,7 +6,6 @@ import java.awt.Point;
 import java.awt.event.MouseEvent;
 
 import javax.swing.JButton;
-import javax.swing.AbstractButton;
 import javax.swing.JComponent;
 
 import symap.drawingpanel.DrawingPanel;
@@ -23,7 +22,7 @@ public class TrackHolder extends JComponent  {
 	private FilterHandler fh;
 	private int trackNum;	// CAS517 add for Sequence track 
 
-	public TrackHolder(DrawingPanel dp, HelpBar hb, int trackNum) { // Called by DrawingPanel
+	public TrackHolder(DrawingPanel dp, HelpBar hb, int trackNum) { // Called by DrawingPanel; created on startup
 		super();
 		this.dp = dp;
 		this.hb = hb;
@@ -78,9 +77,10 @@ public class TrackHolder extends JComponent  {
 			if (track == null || td.getTrackClass() != track.getClass()) {
 				Track t = null;
 				try { // CAS512 this was one big statement
-					Class <?> [] x = new Class[]{dp.getClass(),getClass()};
-					Object [] y = new Object[]{dp,this};
-					t = (Track) td.getTrackClass().getConstructor(x).newInstance(y);
+					Class <?> [] x  = new Class[]{dp.getClass(),getClass()};
+					Object [] 	 y  = new Object[]{dp,this};
+					Class <?>    tc = td.getTrackClass();
+					t = (Track)  tc.getConstructor(x).newInstance(y);
 				} catch(Exception e) {
 					ErrorReport.print(e, "setTrackData");
 				}
@@ -89,10 +89,7 @@ public class TrackHolder extends JComponent  {
 			track.setup(td);
 		}
 	}
-	public int getTrackPadding() {
-		if (track != null) return (int)track.getPadding();
-		else return 0;
-	}
+	
 	public Point getOffset() {
 		if (track != null) return track.getMoveOffset();
 		else return new Point();

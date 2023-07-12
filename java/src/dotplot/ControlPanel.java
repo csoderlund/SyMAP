@@ -39,7 +39,7 @@ public class ControlPanel extends JPanel implements HelpListener {
     private JButton homeButton, minusButton, plusButton;
     private JButton filterButton, helpButton, showImageButton, editColorsButton;
     private JCheckBox scaleCheckbox; 	
-    private JLabel referenceLabel, statsLabel;      
+    private JLabel referenceLabel;      
     private JComboBox <Project> referenceSelector;
     private JComboBox <String> statsOpts;
     private ColorDialogHandler cdh;
@@ -75,14 +75,13 @@ public class ControlPanel extends JPanel implements HelpListener {
 		referenceSelector.setName("Reference: Change reference (x-axis) project.");
 		referenceSelector.setToolTipText("Reference: Change reference (x-axis) project.");
 		
-		statsLabel = new JLabel("Info:");
 		statsOpts = new JComboBox <String> ();
 		statsOpts.addItem("Stats"); // if change, change constants above
 		statsOpts.addItem("Print");
 		statsOpts.addItem("Help");
 		statsOpts.addActionListener(buttonListener);
-		statsOpts.setName("Show display statistics.");
-		statsOpts.setToolTipText("Show display statistics.");
+		statsOpts.setName("Show in Information box.");
+		statsOpts.setToolTipText("Show in Information box.");
 		
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -91,11 +90,15 @@ public class ControlPanel extends JPanel implements HelpListener {
 		gbc.gridheight = 1;
 		gbc.ipadx = 5;
 		gbc.ipady = 8;
-		addToGrid(gbl,gbc,homeButton,1,2);	addToGrid(gbl,gbc,minusButton,1,1);	addToGrid(gbl,gbc,plusButton,1,1);
-		addToGrid(gbl,gbc,scaleCheckbox,1,2); 	
+		
+		// 
+		addToGrid(gbl,gbc,statsOpts,1,1); // CAS543 put at beginning so if shrink, lose this instead of home
+		
+		addToGrid(gbl,gbc,homeButton,1,1);		addToGrid(gbl,gbc,minusButton,1,0);	addToGrid(gbl,gbc,plusButton,1,1);
+		addToGrid(gbl,gbc,scaleCheckbox,1,1); 	
 		addToGrid(gbl,gbc,referenceLabel,1,0);	addToGrid(gbl,gbc,referenceSelector,1,1); 
-		addToGrid(gbl,gbc,statsLabel,1,0);		addToGrid(gbl,gbc,statsOpts,1,1); 	
-		addToGrid(gbl,gbc,filterButton,1,2);
+	 	
+		addToGrid(gbl,gbc,filterButton,1,1);
 		addToGrid(gbl,gbc,editColorsButton,1,1); 
 		addToGrid(gbl,gbc,showImageButton,1,1);
 		addToGrid(gbl,gbc,helpButton,GridBagConstraints.REMAINDER,0);

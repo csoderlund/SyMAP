@@ -27,12 +27,12 @@ public class CloseUp  {
 	/**
 	 * Called by Sequence on mouse release; If no hits are found, then no dialog is shown.
 	 */
-	public int showCloseUp(Vector <HitData> hitList, Sequence seqObj, 
-			int start, int end, String otherProject, boolean isQuery) {
+	public int showCloseUp(Vector <HitData> hitList, Sequence seqObj, int start, int end,  
+			boolean isQuery, String otherChr, int numShow) {
 	try {
 		if (dp != null) dp.setFrameEnabled(false);
 	
-		CloseUpDialog cuDialog = new CloseUpDialog(this, hitList, seqObj,start,end, otherProject, isQuery); // CAS531 changed from HitDialogInterface
+		CloseUpDialog cuDialog = new CloseUpDialog(this, hitList, seqObj,start,end, isQuery, otherChr, numShow); // CAS531 changed from HitDialogInterface
 	
 		if (dp != null) dp.setFrameEnabled(true);
 		if (cuDialog != null && cdh != null) cdh.addListener(cuDialog);

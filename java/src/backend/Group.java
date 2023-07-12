@@ -83,7 +83,10 @@ public class Group {
 				int e = rs.getInt(3);
 				int g = rs.getInt(4);
 				if (lastGN!=g) {
-					if (lastCnt>1) idxSplit.add(lastIdx);
+					if (lastCnt>1) {
+						idxSplit.add(lastIdx);
+						//if (Globals.TRACE) System.out.format("GRP: Split GN=%d %,d %,d %,d %,d %d\n", lastGN, lastStart, lastEnd, s, e, lastCnt);
+					}
 					lastIdx=idx; lastStart=s; lastEnd=e; lastGN=g; lastCnt=0;
 				}
 				else if (lastGN==g) {
@@ -138,7 +141,7 @@ public class Group {
 		}
 		if (maxGeneLen==0) maxGeneLen=50000;			// CAS541 can be 0, creating an endless loop
 		if (avgGeneLen==0) avgGeneLen=1000;
-		if (DEBUG) System.out.println("avg: " + avgGeneLen + " max: " + maxGeneLen + " " + fullname);
+		if (Globals.TRACE) System.out.println("avg: " + avgGeneLen + " max: " + maxGeneLen + " " + fullname);
 		return totalGenes;
 	}
 	catch (Exception e) {ErrorReport.print(e, "load genes and bin them"); return 0;}
@@ -262,15 +265,16 @@ public class Group {
 		}
 		return retMap;
 	}
+	
 	/*****************************************************************************
 	 * called from AnchorMain.clusterHits2 while clustering hits into subhits
 	 * CAS540 changed the logic a little, gives slightly different results [getMostOverlappingAnnot]
 	 */
-	public AnnotElem getBestOlapAnno(int start, int end) {
+	public AnnotElem getBestOlapAnno(int hStart, int hEnd) {
 		AnnotElem best = null;
 		int bestOlap=0, curOlap=0;
 
-		HashMap<AnnotElem, Integer> annoMap = getAllOlapAnnos(start, end); 
+		HashMap<AnnotElem, Integer> annoMap = getAllOlapAnnos(hStart, hEnd); 
 		
 		for (AnnotElem cur : annoMap.keySet()) {
 			curOlap = annoMap.get(cur);
@@ -294,16 +298,27 @@ public class Group {
 				best = cur;
 				bestOlap = curOlap;
 			}
-			else if (curOlap == bestOlap) {
-				if (cur.getLength() > best.getLength()) {
-					best = cur;
-					bestOlap = curOlap;
-				}
-				else if (cur.getLength() == best.getLength()){// the following checks are from the original method
-					if (best.isGene()  && cur.idx < best.idx || 
-					   (!best.isGene() && cur.start < best.start)) {
+			else if (curOlap == bestOlap) { 
+				if (AnchorsMain.doNewAlgoLen) {// CAS543 change from choosing on length to least extra; only helps for exact olap
+					//if (Globals.TRACE) System.out.println("Exact " + cur.start + " " +  cur.end +" " +  best.start +" " +  best.end);
+					int curExtra  = Math.abs(hStart-cur.start) + Math.abs(hEnd-cur.end);
+					int bestExtra = Math.abs(hStart-best.start) + Math.abs(hEnd-best.end);
+					if (curExtra<bestExtra) {
 						best = cur;
 						bestOlap = curOlap;
+					}
+				}
+				else { // the following checks are from the original method
+					if (cur.getLength() > best.getLength()) {
+						best = cur;
+						bestOlap = curOlap;
+					}
+					else if (cur.getLength() == best.getLength()){
+						if (best.isGene()  && cur.idx < best.idx || 
+						   (!best.isGene() && cur.start < best.start)) {
+							best = cur;
+							bestOlap = curOlap;
+						}
 					}
 				}
 			}

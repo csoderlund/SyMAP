@@ -17,11 +17,12 @@ import props.PropertiesReader;
 import database.DBconn2;
 import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
-import symap.track.*;
 import symap.frame.ControlPanel;
 import symap.frame.FilterHandler;
 import symap.frame.HelpBar; 		
-import symap.frame.HelpListener; 	
+import symap.frame.HelpListener;
+import symap.sequence.Track;
+import symap.sequence.TrackHolder;
 import symapQuery.TableDataPanel;
 import util.ErrorReport;
 
@@ -48,8 +49,11 @@ public class Mapper extends JComponent
 	private String helpText; // CAS520 add hover
 	
 	private static final String HOVER_MESSAGE = 
-			"\nHit-wire information: Hover on hit-wire or " 
-			+ "right-click on hit-wire for popup of full information.\n";
+			"Hit-wire Information:"
+			+ "\n-Hover on hit-wire for information."
+			+ "\n-Right-click on hit-wire for popup of full information."
+			+ "\n-Right-click in white space of hit area for subset filter popup."
+			+ "\n-Filters are retained between displays of a session.";
 	
 	// Created in DrawingPanel; it starts out making 100 mappers with trackholders but no tracks
 	public Mapper(DrawingPanel drawingPanel, TrackHolder th1, TrackHolder th2,

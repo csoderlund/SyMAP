@@ -1,4 +1,4 @@
-package symap.track;
+package symap.sequence;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -18,8 +18,9 @@ public class TrackLayout implements LayoutManager {
 	private Mapper[] mappers;
 	private JPanel buttonPanel;
 	private static final int buttonPadding = 1;
+	private static final double PADDING = 100; // distance between tracks; CAS543 moved from Sequencd
 
-	public TrackLayout(TrackHolder[] trackHolders, Mapper[] mappers,
+	public TrackLayout(TrackHolder[] trackHolders, Mapper[] mappers,	// Created in DrawingPanel
 			JPanel buttonPanel) 
 	{
 		buttonPanel.setLayout(null);
@@ -40,12 +41,12 @@ public class TrackLayout implements LayoutManager {
 		Point moveOffset;
 		for (int i = 0; i < trackHolders.length; i++) {
 			if (!trackHolders[i].isVisible()) break; // no breaks in maps allowed
-			if (i > 0) dim.width += trackHolders[i-1].getTrackPadding();
+			if (i > 0) dim.width += PADDING;
 			d = trackHolders[i].getPreferredSize();
 			moveOffset = trackHolders[i].getOffset();
 			dim.height = Math.max(dim.height,d.height);
 			dim.width += d.width + moveOffset.x;
-			if (i != 0) dim.width += trackHolders[i].getTrackPadding();
+			if (i != 0) dim.width += PADDING;
 		}
 		
 		return dim;
@@ -66,14 +67,14 @@ public class TrackLayout implements LayoutManager {
 		Dimension bDim;
 
 		if (buttonPanel != null) buttonPanel.removeAll();
-		for (i = 0; i < trackHolders.length; i++) {
+		for (i = 0; i < trackHolders.length; i++) { // All DrawingPanel.MAX_TRACKS (30) 
 			if (!trackHolders[i].isVisible()) break;
 
 			d = trackHolders[i].getPreferredSize();
 			trackHolders[i].setSize(d.width, d.height);
 			moveOffset = trackHolders[i].getOffset();
 			x += moveOffset.x;
-			if (i != 0) x += trackHolders[i].getTrackPadding();
+			if (i != 0) x += PADDING;
 
 			trackHolders[i].setLocation(x,moveOffset.y);
 			if (buttonPanel != null) {
@@ -88,7 +89,7 @@ public class TrackLayout implements LayoutManager {
 
 			bpDim.width = x;
 
-			x += trackHolders[i].getTrackPadding();
+			x += PADDING;
 		}
 
 		if (buttonPanel != null) buttonPanel.setSize(bpDim.width,buttonPanel.getHeight());
@@ -135,8 +136,4 @@ public class TrackLayout implements LayoutManager {
 	private int getMidMap(AbstractButton b1, AbstractButton b2, int bw) {
 		return (int)Math.round( (b1.getX() + b1.getWidth() + b2.getX() - bw) / 2.0);
 	}
-
-	//private int getMidMap(double b1x, double b2x, double b1w, double bw) {
-	//return (int)Math.round((b1x + b1w + b2x) / 2.0 - (bw / 2.0));
-	//}
 }

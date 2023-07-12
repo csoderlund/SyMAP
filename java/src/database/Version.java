@@ -68,6 +68,10 @@ public class Version {
 				updateVer4();
 				idb=5;
 			}
+			if (idb==5) {
+				updateVer5();
+				idb=6;
+			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
 	}
@@ -148,6 +152,19 @@ public class Version {
 			updateProps();
 			System.err.println("FPC tables removed from Schema. No user action necessary.\n"
 					+ "   Older verion SyMAP will not work with this database.");
+		}
+		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
+	}
+	// v5.4.3; however, these updates will be used in v5.4.4
+	private void updateVer5() {
+		try {
+			tableCheckAddColumn("pseudo_hits", "htype", "tinyint unsigned default 0", "evalue");// has to take evalue place
+			tableCheckDropColumn("pseudo_hits",  "evalue");
+			tableCheckAddColumn("pseudo_hits_annot", "htype", "tinyint unsigned default 0", null);
+			
+			updateProps();
+			
+			System.err.println("To use the v5.4.3 hit-gene assignment upgrade, recompute synteny ");
 		}
 		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
 	}
@@ -303,16 +320,23 @@ public class Version {
 					replaceProps("VERSION",SyMAP.VERSION);
 			}
 			**/
-			replaceProps("VERSION",Globals.VERSION);
-			
 			replaceProps("UPDATE", Utilities.getDateOnly());
+			
+			replaceProps("VERSION",Globals.VERSION);
 			
 			replaceProps("DBVER", Globals.DBVERSTR);
 			System.err.println("Complete schema update to " +  Globals.DBVERSTR + " for SyMAP " + Globals.VERSION );
 		}
-		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
+		catch (Exception e) {ErrorReport.print(e, "Error updating props");}
 	}
-	
+	public void updateReplaceProp() { // CAS543 new Version(DBconn2 dbc).updateReplaceProp
+		try {
+			replaceProps("UPDATE", Utilities.getDateOnly());
+			
+			replaceProps("VERSION",Globals.VERSION);
+		}
+		catch (Exception e) {ErrorReport.print(e, "Error replacing props");}
+	}
 	private void updateHitCnt() {
 		try {
 			System.out.println("Starting update of gene hit counts");

@@ -28,7 +28,7 @@ public class ChrExpInit implements PropertyChangeListener {
 	private static final Color[] projectColors = { Color.cyan, Color.green, new Color(0.8f, 0.5f, 1.0f),
 		Color.yellow, Color.orange };
 
-	public ChrExpInit(DBconn2 dbc2) throws SQLException {
+	public ChrExpInit(String title, DBconn2 dbc2) throws SQLException {
 		tdbc2 = new DBconn2("ChrExp-" + DBconn2.getNumConn(), dbc2); // closed in ChrExpFrame
 		
 		projects = new Vector<Mproject>();
@@ -36,7 +36,7 @@ public class ChrExpInit implements PropertyChangeListener {
 		
 		mapper =   new Mapper();
 		
-		frame =    new ChrExpFrame(tdbc2, mapper);
+		frame =    new ChrExpFrame(title, tdbc2, mapper);
 	}
 	public void propertyChange(PropertyChangeEvent evt) {
 		if (frame != null) frame.repaint();

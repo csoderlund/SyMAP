@@ -484,24 +484,7 @@ public class Utilities {
 		if (ret == JOptionPane.NO_OPTION) return false;
 		return true;
 	}
-	static public boolean showContinue (String title, String msg) {
-		String [] options = {"Continue", "Cancel"};
-		int ret = JOptionPane.showOptionDialog(null, 
-				msg + "\nContinue?",
-				title, JOptionPane.YES_NO_OPTION, 
-				JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-		if (ret == JOptionPane.NO_OPTION) return false;
-		return true;
-	}
-	static public boolean showContinue (Component c,String title, String msg) {
-		String [] options = {"Continue", "Cancel"};
-		int ret = JOptionPane.showOptionDialog(c, 
-				msg + "\nContinue?",
-				title, JOptionPane.YES_NO_OPTION, 
-				JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-		if (ret == JOptionPane.NO_OPTION) return false;
-		return true;
-	}
+	
 	public static void showWarningMessage(String msg) {
 		System.out.println(msg);
 		JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
@@ -516,15 +499,26 @@ public class Utilities {
 		showErrorMessage(msg);
 		exit(exitStatus);
 	}
+	static public boolean showContinue (String title, String msg) { // CAS543 the cancel was in diff loc than below
+		String [] options = {"Cancel", "Continue"};
+		int ret = JOptionPane.showOptionDialog(null, 
+				msg + "\nContinue?",
+				title, JOptionPane.YES_NO_OPTION, 
+				JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+		if (ret == 0) return false;
+		return true;
+	}
+	
 	// CAS42 1/4/18 confirm any action that removes things; CAS534 move these 2 from ManagerFrame to here
 	public static boolean showConfirm2(String title, String msg) {
-			String [] options = {"Cancel", "Continue"};
+			String [] options = {"Cancel", "Confirm"};
 			int ret = JOptionPane.showOptionDialog(null, 
 					msg, title, JOptionPane.YES_NO_OPTION, 
 					JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
 			if (ret == 0) return false;
 			else return true;
-		}
+	}
+	
 		// CAS500 this is when there is two possible actions
 	public static int showConfirm3(String title, String msg) {
 			String [] options = {"Cancel", "Only", "All"};
@@ -609,55 +603,116 @@ public class Utilities {
     	String x2 = (c2.startsWith("0") && c2.length()>1) ? c2.substring(1) : c2;
     	return x1 + "." + x2 + "." + block;
     }
-    
-    // CAS518 return genenum.suffix or genenum
-    public static String makeChrGenenum(String c1, String tag) { 	
-    	String chr = (c1.startsWith("0") && c1.length()>1) ? c1.substring(1) : c1;
+    /*****************************************************
+     * The following are to parse the gene tag
+     * v543 DB 992.a (1 746) v542 DB Gene #992a (9 1,306bp), text removed and '.' added
+     * Exon tag created in Annotation class
+     */
+    // Annotation class; create fullTag for hover
+    static public String createFullTagFromDBtag(String tag) {
+    	String [] tok = tag.split("\\(");
     	
-    	if (tag==null || tag=="") return chr +".?."; // older databases do not have tag
-    	
-    	String gn = getGenenumFromTag(tag);
-    	return chr + "." + gn;
+    	if (tok.length!=2) { // this should not happen but maybe very old db
+    		if (tag.startsWith("Gene")) return tag;
+    		else return Globals.geneTag + tag;
+    	}
+ 
+    	tok[1] = "(#Exon=" + tok[1];
+    	if (!tag.startsWith("Gene")) { 
+    		tok[0] = Globals.geneTag + tok[0];
+    		tok[1] = tok[1].replace(")","bp)");
+    	}
+		return tok[0] + " " + tok[1];
     }
-    // e.g. Gene #2 (9 1,306bp) or Gene #2b (9 1,306bp)
-    static public String getGenenumFromTag(String tag) {
-    	Pattern pat1 = Pattern.compile("Gene #(\\d+)([a-z]+[0-9]*)(.*)$");
-		Pattern pat2 = Pattern.compile("Gene #(\\d+)(.*)$");
-		Matcher m = pat1.matcher(tag);
+    // Annotation.popupDesc; return tok[0]=Gene #1563.w and tok[1]=#Exons=15 2,164bp
+    static public String [] getGeneExonFromTag(String tag) {
+    	String [] ret = new String [2];
+    	String [] tok = tag.split("\\(");
+    	
+    	if (tok.length!=2) {
+    		System.out.println("SyMAP Error parsing tag: " + tag);
+    		ret[0] = Globals.geneTag +  tag;
+			ret[1] = Globals.exonTag +  " 0 0";
+			return ret;
+    	}
+    	
+    	ret[0] = tok[0];
+    	tok[1] = tok[1].replace(")","");
+    	ret[1] = Globals.exonTag + tok[1].replace(")","");
+    	
+    	if (!tag.startsWith("Gene")) { // v543 992.a (1 746)
+			ret[0] = Globals.geneTag +  tok[0].trim();
+			ret[1] = ret[1] + "bp";
+		}
+    	return ret;
+    }
+    // backend.AnchorsPost.Gene; return "d.[a]"
+    static public String getGenenumFromDBtag(String tag) {
+		if (!tag.startsWith("Gene")) {// CAS543 '2 (9 1306)' or '2.b (9 1306)'
+			String [] tok = tag.split(" \\(");
+			if (tok.length==2) return tok[0].trim();
+			else return tag; // shouldn't happen
+		}
+		
+		Pattern pat1 = Pattern.compile("Gene #(\\d+)([a-z]+[0-9]*)(.*)$");
+		Matcher m = pat1.matcher(tag); // pre-CAS543 Gene #2 (9 1,306bp) or Gene #2b (9 1,306bp)
 		if (m.matches()) {
 			String y = m.group(1);
 			String z = m.group(2);
 			return y + "." + z;
 		}
-		else { 
-			m = pat2.matcher(tag);
-			if (m.matches()) {
-				String y = m.group(1);
-				return y + ".";
-			}
-			else return tag;
+		
+		Pattern pat2 = Pattern.compile("Gene #(\\d+)(.*)$");
+		m = pat2.matcher(tag);
+		if (m.matches()) {
+			String y = m.group(1);
+			return y + ".";
 		}
+		else return tag;
     }
-    static public String getGenenumOnly(String tag) {
+    // symapQuery.DBdata.finish CAS518 return genenum.suffix or genenum
+    public static String makeChrGenenumFromDBtag(String c1, String tag) { 	
+    	String chr = (c1.startsWith("0") && c1.length()>1) ? c1.substring(1) : c1;
+    	
+    	if (tag==null || tag=="") return chr +".?."; // older databases do not have tag
+    	
+    	String gn = getGenenumFromDBtag(tag);
+    	return chr + "." + gn;
+    }
+    
+    // symapQuery.DBdata.passFilters; return number only
+    static public String getGenenumIntOnly(String tag) {
     	if (tag=="-") return "";
-    	Pattern pat2 = Pattern.compile("Gene #(\\d+)(.*)$");
-    	Matcher m = pat2.matcher(tag);
-		if (m.matches()) return m.group(1);
-		else {
-			System.out.println("SyMAP error getting gene# from: " + tag);
-			return "";
+    	String gn = getGenenumFromDBtag(tag);
+    	String [] tok = gn.split("\\.");
+    	if (tok.length==2) return tok[0];
+    	else return tag;
+    }
+    
+    // symap.QueryPanel
+    public static boolean isValidGenenum(String gn) {
+		String n=gn, s=null;
+		if (gn.contains(".")) {
+			String [] tok = gn.split("\\.");
+			if (tok.length==0 || tok.length>2) return false;
+			n = tok[0];
+			if (tok.length==2) s=tok[1];
+		} 
+		try {
+			Integer.parseInt(n);
 		}
-    }
-    static public String formatAbbrev(String dname) {
-    	if (dname==null || dname=="") return "????";
-    	if (dname.length()>4) return dname.substring(dname.length()-4);
-    	else if (dname.length()<4) {
-    		String n = dname;
-    		while (n.length()<4) n+="0";
-    		return n;
-    	}
-    	else return dname;
-    }
+		catch (Exception e) { return false;}
+		if (s!=null) {
+			try {
+				Integer.parseInt(s);
+				return false;
+			}
+			catch (Exception e) { return true;}
+		}
+		return true;
+	}
+   
+ 
     // parse tag for collinear: CAS520 e.g. g2 c10.5 created in MapperPool.setPseudoPseudoData
     static public int getCollinear(String tag) {
     	try {

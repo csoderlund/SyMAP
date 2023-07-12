@@ -14,7 +14,7 @@ public class FilterData  {
 	private static int BLOCK_HITS = 0, ALL_HITS = 1,  MIX_HITS = 2;
 	private static int GENE_IGN = 0, GENE_1 = 1, GENE_2 = 2, GENE_0=3;
 	
-	private double dPctid = 0, defaultPctid=0;
+	private int iPctid = 0, defaultPctid=0; // CAS543 changed Pctid from double to int
 	private int iDotSize=1; 			 // CAS533 add; moved from controls
 	
 	private int nDotScale = DOT_LEN;
@@ -30,7 +30,7 @@ public class FilterData  {
 	public FilterData copy() {
 		FilterData fd =  new FilterData();
 		fd.defaultPctid = defaultPctid;
-		fd.dPctid 		= dPctid;
+		fd.iPctid 		= iPctid;
 		fd.iDotSize 	= iDotSize;
 		
 		fd.nDotScale	= nDotScale;
@@ -45,7 +45,7 @@ public class FilterData  {
 		
 	public void setFromFD(FilterData fd) {// FilterListener.cancel
 		defaultPctid 	= fd.defaultPctid;
-		dPctid 			= fd.dPctid;
+		iPctid 			= fd.iPctid;
 		iDotSize 		= fd.iDotSize;
 		
 		nDotScale		= fd.nDotScale;
@@ -57,7 +57,7 @@ public class FilterData  {
 		bShowEmpty 		= fd.bShowEmpty;
 	}
 	public void setDefaults() { // Data.resetAll; FilterListener.defaults
-		dPctid 		= defaultPctid;
+		iPctid 		= defaultPctid;
 		iDotSize 	= 1;
 		
 		nDotScale	= DOT_LEN;
@@ -69,14 +69,14 @@ public class FilterData  {
 		bShowEmpty 	= true;
 	}
 	
-	public void setBounds(double min, double max) { // Data
-		dPctid = defaultPctid = min; 
+	public void setBounds(int min, int max) { // Data
+		iPctid = defaultPctid = min; 
 	}
 	public boolean equals(Object obj) {
 		if (obj instanceof FilterData) {
 			FilterData fd = (FilterData)obj;
 			
-			return fd.dPctid==dPctid && fd.iDotSize==iDotSize 
+			return fd.iPctid==iPctid && fd.iDotSize==iDotSize 
 				&& fd.nDotScale==nDotScale && fd.nShowHits==nShowHits && fd.nGeneHits==nGeneHits
 				&& fd.bShowBlocks == bShowBlocks && fd.bShowBlkNum == bShowBlkNum
 				&& fd.bShowEmpty == bShowEmpty;
@@ -84,31 +84,31 @@ public class FilterData  {
 		return false;
 	}
 	
-	public double  getPctid() 				{ return dPctid; } 
-	public int     getDotSize() 			{ return iDotSize; } 
+	public int	   getPctid() 		{ return iPctid; } 
+	public int     getDotSize() 	{ return iDotSize; } 
 	
-	public boolean isPctScale()				{ return nDotScale==DOT_PCT; }
-	public boolean isLenScale()				{ return nDotScale==DOT_LEN; }
+	public boolean isPctScale()		{ return nDotScale==DOT_PCT; }
+	public boolean isLenScale()		{ return nDotScale==DOT_LEN; }
 	
-	public boolean isShowGeneIgn() 			{ return nGeneHits==GENE_IGN;}
-	public boolean isShowGene2()			{ return nGeneHits==GENE_2;}
-	public boolean isShowGene1()			{ return nGeneHits==GENE_1;}
-	public boolean isShowGene0()			{ return nGeneHits==GENE_0;}
+	public boolean isShowGeneIgn() 	{ return nGeneHits==GENE_IGN;}
+	public boolean isShowGene2()	{ return nGeneHits==GENE_2;}
+	public boolean isShowGene1()	{ return nGeneHits==GENE_1;}
+	public boolean isShowGene0()	{ return nGeneHits==GENE_0;}
 	
-	public boolean isShowBlockHits() 		{ return nShowHits == BLOCK_HITS; }
-	public boolean isShowAllHits() 			{ return nShowHits == ALL_HITS; }
-	public boolean isShowMixHits() 			{ return nShowHits == MIX_HITS; }
+	public boolean isShowBlockHits(){ return nShowHits == BLOCK_HITS; }
+	public boolean isShowAllHits() 	{ return nShowHits == ALL_HITS; }
+	public boolean isShowMixHits() 	{ return nShowHits == MIX_HITS; }
 	
-	public boolean isShowBlocks() 			{ return bShowBlocks; }  
-	public boolean isShowBlkNum() 			{ return bShowBlkNum; }  
-	public boolean isShowEmpty() 			{ return bShowEmpty; }
+	public boolean isShowBlocks() 	{ return bShowBlocks; }  
+	public boolean isShowBlkNum() 	{ return bShowBlkNum; }  
+	public boolean isShowEmpty() 	{ return bShowEmpty; }
 	
 	/*******************************************************************/
 	// Filter.FilterListener changes
-	public boolean setPctid(double s) {
-		double x = dPctid;
-		dPctid = s;
-		return (x!=dPctid);
+	public boolean setPctid(int s) {
+		int x = iPctid;
+		iPctid = s;
+		return (x!=iPctid);
 	}
 	public boolean setDotSize(int s) {
 		int x = iDotSize;

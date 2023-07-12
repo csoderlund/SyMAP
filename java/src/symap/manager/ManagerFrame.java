@@ -60,28 +60,27 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	protected static boolean bCheckVersion = false; // arg -v
 	protected static boolean lgProj1st = false; 	// For Mummer; false sort on name; true sort on length
 	private static boolean isCat = true;
-	private final Color cellColor = new Color(85,200,100,85); // CAS541 new color for selected box 0,100,0,85
-	private final Color textColor = new Color(0,0,170,255); // CAS541 new color for selected text
-	//                                     Click a lower diagonal cell to select the project pair.
-	private final String selectPairText = "Select a Pair by clicking\ntheir shared table cell.";
 	
-	/************************************************/
-	private static final String HTML = "/html/ProjMgrInstruct.html";
-	private static final String WINDOW_TITLE = "SyMAP " + Globals.VERSION + " ";
 	private final String DB_ERROR_MSG = "A database error occurred, please see the Troubleshooting Guide at:\n" + Jhtml.TROUBLE_GUIDE_URL;	
 	private final String DATA_PATH = Constants.dataDir;
+	private final int MIN_CWIDTH = 900, MIN_CHEIGHT = 1000; // Circle
+	private final int MIN_WIDTH = 850, MIN_HEIGHT = 600;	// Manager; CAS542 was 900, 600
+	private final int MIN_DIVIDER_LOC = 220; 				// CAS543 was 240
+	private final int LEFT_PANEL = 450;      
 	
-	private final int MIN_WIDTH = 900, MIN_HEIGHT = 600, MIN_CWIDTH = 900, MIN_CHEIGHT = 1000;
-	private final int MIN_DIVIDER_LOC = 240;
+	private static final String HTML = "/html/ProjMgrInstruct.html";
 	
+	private final Color cellColor = new Color(85,200,100,85); // CAS541 new color for selected box 0,100,0,85
+	private final Color textColor = new Color(0,0,170,255); // CAS541 new color for selected text
 	// If changed - don't make one a substring of another!!
 	private final String TBL_DONE = "\u2713", TBL_ADONE = "A", TBL_QDONE = "?";
-	
 	private final String symapLegend = "Table Legend:\n"
 			+ TBL_DONE 	+ " : synteny has been computed, ready to view.\n"
 			+ TBL_ADONE + " : alignment is done, synteny needs to be computed.\n"
 			+ TBL_QDONE + "  : alignment is partially done.";
-	
+	private final String selectPairText = "Select a Pair by clicking\ntheir shared table cell.";// Click a lower diagonal cell to select the project pair.
+		
+	protected String frameTitle="SyMAP " + Globals.VERSION; // CAS543 add so all frames use same title
 	protected DBconn2  dbc2 = null; // master, used for local loads, and used as template for processes
 	
 	private HashMap <String, Mproject> projObjMap = new HashMap <String, Mproject> (); // displayName, same set as projVec
@@ -114,7 +113,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	
 	/*****************************************************************/
 	public ManagerFrame() {
-		super(WINDOW_TITLE);
+		super("SyMAP " + Globals.VERSION);
 		
         // Add window handler to kill mysqld on clean exit
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -203,7 +202,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	    		shutdown();
 	    }
 	}
-	/***********************************************************************/
+	/** Right Panel *********************************************************************/
 	private JPanel createProjectPanel() {
 		addProjectPanel = new AddProjectPanel(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -215,14 +214,14 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		panel.setLayout( new BoxLayout ( panel, BoxLayout.Y_AXIS ) );
 		panel.setBorder( BorderFactory.createEmptyBorder(10, 5, 10, 5) );
 		
-		JPanel tempPnl = new JPanel();
-		tempPnl.setLayout(new BoxLayout(tempPnl, BoxLayout.LINE_AXIS));
-		tempPnl.setAlignmentX(Component.CENTER_ALIGNMENT);
+		JPanel projPanel = new JPanel();
+		projPanel.setLayout(new BoxLayout( projPanel, BoxLayout.LINE_AXIS));
+		projPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 		JLabel lblTitle = Jcomp.createLabel("Projects", Font.BOLD, 18);
 		lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-		tempPnl.add(lblTitle);
-		panel.add(tempPnl);
+		projPanel.add(lblTitle);
+		panel.add(projPanel);
 		panel.add(Box.createVerticalStrut(10));
 		
 		JPanel subPanel = new JPanel();
@@ -230,7 +229,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		subPanel.setBorder( BorderFactory.createEmptyBorder(5, 5, 5, 0) );
 		subPanel.setBackground(Color.white);
 		
-		// CAS513 changed for Vector to TreeSet so alphabetical display
+		// CAS513 changed from Vector to TreeSet so alphabetical display
 		TreeMap<String, TreeSet<Mproject>> cat2Proj = new TreeMap<String, TreeSet<Mproject>>();
 		for (Mproject p : projVec) {
 			String category = p.getdbCat();
@@ -272,17 +271,16 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		
 		JScrollPane scroller = new JScrollPane(subPanel, 
-				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		scroller.getVerticalScrollBar().setUnitIncrement(10);
 		scroller.setAlignmentX(Component.CENTER_ALIGNMENT);
 		
 		panel.add( scroller );
-		
 		panel.add(Box.createVerticalStrut(10));
-		tempPnl = new JPanel();
-		tempPnl.setLayout(new BoxLayout(tempPnl, BoxLayout.LINE_AXIS));
-		tempPnl.setAlignmentX(Component.CENTER_ALIGNMENT);
+		
+		JPanel addPanel = new JPanel();
+		addPanel.setLayout(new BoxLayout(addPanel, BoxLayout.LINE_AXIS));
+		addPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		
 		btnAddProject = new JButton("Add Project");
 		btnAddProject.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -292,16 +290,15 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				addProjectPanel.setVisible(true);
 			}
 		});
+		if (!inReadOnlyMode) addPanel.add(btnAddProject);
 		
-		if (!inReadOnlyMode) tempPnl.add(btnAddProject);
+		panel.add(addPanel);
 		
-		panel.add(tempPnl);
-		
-		panel.setMinimumSize( new Dimension(MIN_DIVIDER_LOC, MIN_HEIGHT) );
+		panel.setMinimumSize( new Dimension(MIN_DIVIDER_LOC-20, MIN_HEIGHT) ); // CAS543 add -20 so can shrink a little
 		
 		return panel;
 	}
-	/***** Right side ***********/
+	/***** Left panel ***********************************************/
 	private JPanel createSelectedPanel() { // CAS534 renamed from createSummaryPanel
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout( new BoxLayout ( mainPanel, BoxLayout.Y_AXIS ) );
@@ -311,12 +308,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	// Top area
 		JLabel lblTitle = Jcomp.createLabel("Selected", Font.BOLD, 18);
 		JButton btnHelp;
-		if (!inReadOnlyMode)btnHelp = Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.build); // CAS534 chg to ?
-		else 				btnHelp = Jhtml.createHelpIconUserSm(Jhtml.view); // CAS534 diff ? for view
-		mainPanel.add( createHorizPanel( new Component[] { lblTitle,btnHelp}, 450));
+		if (!inReadOnlyMode)btnHelp = Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.build); // CAS534 chg to '?'
+		else 				btnHelp = Jhtml.createHelpIconUserSm(Jhtml.view); // CAS534 diff '?' for view
+		mainPanel.add( createHorizPanel( new Component[] { lblTitle,btnHelp}, LEFT_PANEL)); 
 		//mainPanel.add( new JSeparator() );
 		
-		// Add individual project summaries
+	// Add individual project summaries
 		JPanel subPanel = new JPanel();
 		subPanel.setLayout( new BoxLayout ( subPanel, BoxLayout.Y_AXIS ) );
 		subPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -421,7 +418,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		subScroller.setAlignmentX(Component.LEFT_ALIGNMENT);
 		subScroller.getVerticalScrollBar().setUnitIncrement(10);
 		subScroller.setBorder(null);
-		subScroller.setMaximumSize( new Dimension( MIN_WIDTH, 290 ) ); // CAS534 a little bigger for lower scroll bar
+		subScroller.setMaximumSize( new Dimension( MIN_WIDTH, 290 ) ); // CAS534 bigger for lower scroll bar
 		mainPanel.add( subScroller );
 		
 	// Add alignment table; lower part
@@ -545,9 +542,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			JLabel lbl3 = new JLabel("Display for All Pairs");
 			JLabel lbl4 = new JLabel("                     "); // CAS520 change Seq-to-Seq to blank
 			Dimension d = lbl2.getPreferredSize();
-			lbl1.setPreferredSize(d);
-			lbl3.setPreferredSize(d);
-			lbl4.setPreferredSize(d);
+			lbl1.setPreferredSize(d); lbl3.setPreferredSize(d); lbl4.setPreferredSize(d);
 			
 			totalCPUs = Runtime.getRuntime().availableProcessors(); // CAS42 12/6/17
 			if (maxCPUs<=0) maxCPUs = totalCPUs;
@@ -1035,7 +1030,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private void showChrExp() { // CAS541 moved from SyMAP manager
 		Utilities.setCursorBusy(this, true);
 		try {
-			ChrExpInit symapExp = new ChrExpInit(dbc2);
+			ChrExpInit symapExp = new ChrExpInit(frameTitle + " - ChrExp", dbc2);
 			
 			for (Mproject p : selectedProjVec) 
 				symapExp.addProject( p.getDBName() );
@@ -1056,7 +1051,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			for (Mproject p : selectedProjVec) {
 				if (p.isLoaded()) pVec.add( p );
 			}
-			SyMAPQueryFrame qFrame = new SyMAPQueryFrame(dbName, dbc2, pVec);
+			SyMAPQueryFrame qFrame = new SyMAPQueryFrame(frameTitle, dbc2, pVec);
 			qFrame.build();
 			qFrame.setVisible(true);
 		} 
@@ -1080,7 +1075,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (pairMap.containsKey(projXIdx) && pairMap.get(projXIdx).contains(projYIdx)) {
 			int temp = projXIdx;projXIdx = projYIdx;projYIdx = temp;}*/
 		
-		DotPlotFrame frame = new DotPlotFrame(dbc2, projXIdx, projYIdx);
+		DotPlotFrame frame = new DotPlotFrame(frameTitle+ " - Dot Plot", dbc2, projXIdx, projYIdx);
 		frame.setSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
 		frame.setVisible(true);
 		
@@ -1097,7 +1092,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		Mproject p2 = (p.length>1) ? p[1] : p[0];
 		
 		try{
-			BlockViewFrame frame = new BlockViewFrame(dbc2, p1.getIdx(), p2.getIdx());
+			BlockViewFrame frame = new BlockViewFrame(frameTitle + " - Block", dbc2, p1.getIdx(), p2.getIdx());
 			frame.setMinimumSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
 			frame.setVisible(true);
 		}
@@ -1124,7 +1119,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			int temp = projXIdx;projXIdx = projYIdx;projYIdx = temp;} */
 		// if (projYIdx == projXIdx) projYIdx = 0; // CAS500 allows self summary
 				
-		new SumFrame(dbc2, mp, inReadOnlyMode, dbName); // CAS540 dialog made visible in SumFrame; CAS541 dbuser->dbc2
+		new SumFrame(frameTitle + " - Summary", dbc2, mp, inReadOnlyMode); // CAS540 dialog made visible in SumFrame; CAS541 dbuser->dbc2
 		
 		Utilities.setCursorBusy(this, false);		
 	}
@@ -1145,7 +1140,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			int temp = projXIdx;projXIdx = projYIdx;projYIdx = temp;}*/
 		if (projYIdx == projXIdx)projYIdx = 0;
 		
-		CircFrame frame = new CircFrame(dbc2, projXIdx, projYIdx);
+		CircFrame frame = new CircFrame(frameTitle + " - Circle", dbc2, projXIdx, projYIdx);
 		frame.setSize( new Dimension(MIN_CWIDTH, MIN_CHEIGHT) );
 		frame.setVisible(true);
 		
@@ -1167,7 +1162,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				i++;
 			}
 		}
-		DotPlotFrame frame = new DotPlotFrame(dbc2, pids, null, null, null, true);
+		DotPlotFrame frame = new DotPlotFrame(frameTitle + " - Dot Plot", dbc2, pids, null, null, null, true);
 		frame.setSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
 		frame.setVisible(true);
 	}
@@ -1203,8 +1198,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (Utilities.isEmpty(db_name))	  db_name = "symap";
 		
 		dbName = db_name;
-		
-		setTitle(WINDOW_TITLE + " - Database: " + db_name);
+		frameTitle += " - " + db_name;
+		setTitle(frameTitle);
 		System.out.println("SyMAP database " + db_name);
 
 		try { // CAS508 stop nested exception on DatabaseUser calls
@@ -1357,11 +1352,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	/*****************************************************************/
 	/***************************************************************
-	 * XXX Load: CAS535 the load was all in listeners; now its in LoadProj via these methods
+	 * XXX LoadProj: CAS535 the load was all in listeners; now its in LoadProj via these methods
 	 */
 	private void loadAllProjects() {
 		try {
 			new LoadProj(this, dbc2, buildLogLoad()).loadAllProjects(selectedProjVec); 
+			new Version(dbc2).updateReplaceProp();
 			refreshMenu();
 		}
 		catch (Exception e) {ErrorReport.print(e, "load all project");}
@@ -1369,6 +1365,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private void loadProject(Mproject mProj) {
 		try {
 			new LoadProj(this, dbc2, buildLogLoad()).loadProject(mProj);
+			new Version(dbc2).updateReplaceProp();
 			refreshMenu();
 		}
 		catch (Exception e) {ErrorReport.print(e, "load project");}
@@ -1393,11 +1390,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		System.out.println("Removing " +  mProj.getDisplayName() + " from database...."); // CAS541 add
 		mProj.removeProjectFromDB();
 		new LoadProj(this, dbc2, buildLogLoad()).loadProject(mProj); 
-		
+		new Version(dbc2).updateReplaceProp();
 		refreshMenu();
 	}
 	catch (Exception e) {ErrorReport.print(e, "reload project");}
 	}
+	// Reload
 	private void reloadAnno(Mproject mProj) {
 	try {
 		String msg = "Reload annotation " + mProj.getDisplayName();
@@ -1414,12 +1412,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		System.out.println("Removing " +  mProj.getDisplayName() + " annotation from database...."); // CAS541 add
 		mProj.removeAnnoFromDB();
 		new LoadProj(this, dbc2, buildLogLoad()).reloadAnno(mProj);
+		new Version(dbc2).updateReplaceProp();
 		refreshMenu();
 	}
 	catch (Exception e) {ErrorReport.print(e, "reload project");}
 	}
 	/***************************************************
-	 * Align
+	 * AlignProjs
 	 */
 	private void alignAllPairs() { //All Pairs is selected; CAS506 added checkPairs logic
 		Cancelled.init();
@@ -1469,6 +1468,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (maxCPUs==-1) return;
 		if (!alignCheckProj()) return;
 		
+		if (!Utilities.showConfirm2("All Pairs", // CAS543 add check
+				"Align&Synteny for " + todoList.size() + " pairs")) return;
 		System.out.println("\n>>> Start all pairs: processing " + todoList.size() + " project pairs");
 		for (Mpair mp : todoList) {
 			mp.renewIdx(); // Removed existing
@@ -1476,6 +1477,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			// AlignProj open/close new dbc2 for each thread of align
 			new AlignProjs().run(this, dbc2, mp, true,  maxCPUs, checkCat.isSelected());
 		}
+		new Version(dbc2).updateReplaceProp();
 		System.out.println("All Pairs complete. ");
 	}
 	private void alignSelectedPair( ) {
@@ -1484,16 +1486,20 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		if (alignCheckOrderAgainst(mProjs[0], mProjs[1])) {
 			int nCPU = getCPUs();
-			if (nCPU == -1) return;
+			if (nCPU == -1) nCPU=1;;
 			if (!alignCheckProj()) return;
 			
 			Mpair mp = getMpair(mProjs[0].getIdx(), mProjs[1].getIdx());
 			if (mp==null) return;
 			
+			if (!Utilities.showConfirm2("Selected Pair", // CAS543 add check
+					"Align&Synteny for " + mProjs[0].getDisplayName() + " and " + mProjs[1].getDisplayName())) return;
+			
 			System.out.println("\n>>> Start Alignment&Synteny");
 			mp.renewIdx(); // Remove existing and restart
 			
 			new AlignProjs().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
+			new Version(dbc2).updateReplaceProp();
 		}
 	}
 	// CAS511 create directories if alignment is initiated
@@ -1519,7 +1525,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (o1.equals("") && o2.equals("")) return true;
 		
 		if (!o1.equals("") && !o2.equals("")) {
-			String msg = mProj1.getDBName() + " and " + mProj2.getDBName() + " both have 'ordered against'" +
+			String msg = mProj1.getDisplayName() + " and " + mProj2.getDisplayName() + " both have 'ordered against'" +
 					"\nOnly one can have this set";
 			Utilities.showErrorMessage(msg);
 			return false;

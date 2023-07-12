@@ -59,8 +59,8 @@ public class DBdata {
 		makeSpLists(projList);
 		makeAnnoKeys(annoColumns);
 		makeGrpLoc(qPanel.getGrpCoords());
-		boolean isFilter = (qPanel.isEitherAnno() || qPanel.isOneAnno() || qPanel.isBothAnno() 
-				|| grpStart.size()>0 || qPanel.isGeneNum()); 
+		// CAS543 remove isEitherAnno and isBothAnno (can do in QyueryPanel), add isAnnoTxt
+		boolean isFilter = (qPanel.isOneAnno() || grpStart.size()>0 || qPanel.isGeneNum() || qPanel.isAnnoTxt()); 
 		
 		Vector <DBdata> rows = new Vector <DBdata> ();
 		HashMap <Integer, DBdata> hitMap = new HashMap <Integer, DBdata> ();
@@ -448,7 +448,7 @@ public class DBdata {
 				collinearStr = Utilities.blockStr(chrNum[0], chrNum[1], runSize); // CAS517 add chrs;
 				if (runNum>0)  collinearStr += "." + runNum; 					  // CAS520 add runNum
 			}
-			if (geneTag[x]!=Q.empty) geneTag[x] = Utilities.makeChrGenenum(chrNum[x], geneTag[x]); // CAS518 formatted
+			if (geneTag[x]!=Q.empty) geneTag[x] = Utilities.makeChrGenenumFromDBtag(chrNum[x], geneTag[x]); // CAS518 formatted
 			
 			/******* Anno Keys ******************/
 			if (!annoKeys.containsKey(spIdx[x])) continue; // If this is index 0, then still need 1
@@ -515,31 +515,41 @@ public class DBdata {
 				}
 				return false; 
 			}
-			// CAS541 add this check; chromosomes in SQL command - 
+			// GeneNum: Chr is the only other filter, which happened in SQL; CAS541 added gene# only; CAS543 allow suffix
 			String gn = qPanel.getGeneNum();
 			if (gn!=null) {
+				if (gn.endsWith(".")) gn = gn.substring(0, gn.length()-1);
 				int x=-1;
-				if      (geneTag[0]!="-" && Utilities.getGenenumOnly(geneTag[0]).equals(gn))  x=0;
-				else if (geneTag[1]!="-" && Utilities.getGenenumOnly(geneTag[1]).equals(gn))  x=1;
-		
+				if (gn.contains(".")) {
+					if      (geneTag[0]!="-" && Utilities.getGenenumFromDBtag(geneTag[0]).equals(gn))  x=0;
+					else if (geneTag[1]!="-" && Utilities.getGenenumFromDBtag(geneTag[1]).equals(gn))  x=1;
+				}
+				else {
+					if      (geneTag[0]!="-" && Utilities.getGenenumIntOnly(geneTag[0]).equals(gn))  x=0;
+					else if (geneTag[1]!="-" && Utilities.getGenenumIntOnly(geneTag[1]).equals(gn))  x=1;
+				}
 				if (x==-1) return false;
 				
 				if (grpIdxOnly<0 || chrIdx[x]==grpIdxOnly) return true;
 				
 				return false;
 			}
-			// 'none' occurs in QueryPanel
-			if (qPanel.isEitherAnno()) {
-				if (annoSet0.size()==0 && annoSet1.size()==0) return false; // not either anno
-			}
-			else if (qPanel.isOneAnno()) {
+			
+			/* CAS543 moved to SQL
+			else if (qPanel.isEitherAnno()) if (annoSet0.size()==0 && annoSet1.size()==0) return false; // not either anno
+			else if (qPanel.isBothAnno())   if (annoSet0.size()<=0 || annoSet1.size()<=0) return false; // not both anno
+			*/
+			
+			if (qPanel.isOneAnno()) { // Either is done for One, but must further filter
 				if (annoSet0.size() >0 && annoSet1.size() >0) return false; // both anno
 				if (annoSet0.size()<=0 && annoSet1.size()<=0) return false; // both not anno
 			}
-			else if (qPanel.isBothAnno()) {
-				if (annoSet0.size()<=0 || annoSet1.size()<=0) return false; // not both anno
-			}
 			
+			// CAS543 when doing anno search as query, returned hits without anno if they overlap
+			if (qPanel.isAnnoTxt()) { 
+				String anno = qPanel.getAnnoTxt().toLowerCase();
+				if (!annotStr[0].toLowerCase().contains(anno) && !annotStr[1].toLowerCase().contains(anno)) return false;
+			}
 			if (grpStart.size()==0) return true;
 			
 			// if one or more chromosome selected, one of the chr pairs has to be a selected one
@@ -607,12 +617,13 @@ public class DBdata {
 			else if (spIdx[1]==spIdxList[i]) x=1;
 			
 			if (x>=0) {
+				row.add(geneTag[x]); // CAS518 num to string
 				row.add(chrNum[x]); 
 				if (gstart[x]<0)  	row.add(Q.empty); else row.add(gstart[x]); 
 				if (gend[x]<0)  	row.add(Q.empty); else row.add(gend[x]); 
 				if (glen[x]<=0)  	row.add(Q.empty); else row.add(glen[x]);
 				row.add(gstrand[x]);
-				row.add(geneTag[x]); // CAS518 num to string
+				
 				if (!isSingle) {
 					row.add(hstart[x]); 
 					row.add(hend[x]); 
@@ -683,8 +694,8 @@ public class DBdata {
 	
 // hit
 	private int hitIdx = -1, hitNum = -1;
-	private int pid = -1, psim = -1, hcnt=-1; 	// CAS516 add; 
-	private String hst="";						// CAS520 add column
+	private int pid = -1, psim = -1, hcnt=-1; 		// CAS516 add; 
+	private String hst="";							// CAS520 add column
 	private int hscore = -1;						// CAS540 add column
 	private int [] spIdx =  {Q.iNoVal, Q.iNoVal};	
 	private int [] chrIdx = {Q.iNoVal, Q.iNoVal};		
