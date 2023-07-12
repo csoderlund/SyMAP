@@ -130,9 +130,9 @@ filters; options will be disabled if they cannot be used with a selected filter.
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <ttl>Annotation Description</ttl>
-<br>Enter the value for any of the keywords in the annotation string,
-e.g. if there is an 'ID' and 'product' keyword, they both will be searched.
-Hits will be returned which overlap a gene
+<br>Enter a substring: the entire annotation string (i.e. column <ttl>All_Anno</ttl>) will be searched
+for the substring.
+Hits will be returned that overlap a gene
 with the corresponding annotation; the gene can be on either side of the hit.
 
 <p><ttl>Chromosome/location</ttl>
@@ -229,12 +229,13 @@ has hits. The hit can align to multiple genes on either chromosome; but it will 
 This can be used in conjunction with the chromosome pull-downs (as for blocks).
 
 <p><ttl>Gene#</ttl>
-<br>Enter a <ttx>Gene#</ttx> number (<u>the <ttx>Gene#</ttx> column is formatted Chr.Gene#.suffix</u> where the suffix may be blank); <i>only</i> enter
-the <ttx>Gene#</ttx>. This can only be used with one chromosome filter.
+<br>Enter a <ttx>Gene#</ttx> number (<u>the <ttx>Gene#</ttx> column is formatted Chr.Gene#.suffix</u>
+where the suffix may be blank); <i>do not include the 'Chr' number</i>.
+This can be used in conjunction with one chromosome (<ttl>Chr:</ttl>) filter.
 <ul>
-<li>It will return all hits to the <ttx>Gene#</ttx> either: (1) if a chromosome is selected, for that chromosome,
-(2) else for all species and chromosomes.
-<li>If there are overlapping genes with the <ttx>Gene#</ttx> (e.g. 1.a, 1.b), it will return all of them.
+<li>If only a number is entered, all genes with the numeric prefix will be displayed.
+<li>If a number.suffix is entered, the exact gene will be displayed.
+<li>If a <ttl>Chr:</ttl> is selected from the pull-down, the search will be confined to the genes on that specie's chromosome.
 </ul>
 <!--------------------------------------------------->
 <a id="pfs"></a>
@@ -290,7 +291,13 @@ although the PgeneF numbers will reflect groupings created using all hits.
 
 <p>
 <a href="img/query_result.png"><img src="img/query_result.png" alt="query results" style="border: 1px solid black; width: 550px"></a>
-<p>Click <a href="img/query_single_result.png">Single Result Table</a> for example when all three projects
+<table class="tx">
+<tr><td>The buttons on the bottom will be <ttb>Select Columns</ttb> and <ttb>Hide Stats</ttb>. If
+<ttb>Select Columns</ttb> is selected, it changes to <ttb>Hide Columns</ttb> and the
+<ttb>Hide Stats</ttb> is replaced with <ttb>Clear</ttb> and <ttb>Defaults</ttb>.
+<td><a href="img/query_lower_buttons.png"><img src="img/query_lower_buttons.png" alt="query results" style="border: 1px solid black; width: 250px"></a>
+</table>
+<p>Click <a href="img/query_single_result.png">Single Result Table</a> for an example when all three projects
 are being queried versus <a href="img/query_single_result2.png"> Results</a> when two of the three are being
 queried; note that the <ttl>NumHits</ttl> is something &gt;0 because there are hits to <tt>Arab</tt> that are not
 taking into account since it was not part of the query set.

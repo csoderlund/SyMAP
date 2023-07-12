@@ -73,6 +73,69 @@ and different versions of Java.</font>
 <tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view2D"> 2D gene placement</a>
 </table>
 
+<a id="v543"></a>
+<h3>Release: v5.4.3 (12-July-23)</h3>
+There are numerous tiny changes, fixes, and two small new features.
+<p>For existing databases: (1) View the database with <tt>./symap</tt> and okay the database update.
+(2) Though it is not necessary to re-run the <ttb>Synteny</ttb> algorithm, there is a small improvement
+for assigning hits to embedded genes.
+<ul>
+<li><ttb>Manager</ttb>
+<ul>
+<li><ttl>Synteny</ttl> For embedded genes, the algorithm was assigning the hit to the outer gene,
+now it assigns it to the closest fit gene.
+<li><small><i>Minor</i>: When <ttl>All Pairs</ttl> or <ttl>Selected Pair</ttl> is selected, the user will be asked to confirm
+the processing. The panel is a little smaller. All frames show the database name.
+Allow blank lines on annotation input. Add "Prefix" on manager summary.</small>
+</ul>
+
+<li><ttb>Chromosome Explorer 2D</ttb>
+<ul>
+<li><ttl>Hit Filter</ttl>: There is a new option for highlighting a hit-wire called <ttl>Popup</ttl>;
+when this option is on, every time a hit-wire popup window is created, the hit-wire stays selected.
+See <a href="UserGuide.html#popups">Popups</a> and <a href="UserGuide.html#hitfilter">Hit Filters</a>.
+<li>When more than two sequence tracks are shown, the middle one now knows the hits on both
+sides and can list them in the <ttl>Gene Popup</ttl> and <ttl>Align (Max 30kb)</ttl>.
+<li><small><i>Minor</i>: The <ttl>Sequence Filter</ttl> options of <ttl>Show Text</ttl> now shows the
+text on the outside of the sequence track rectangle. The panel is a little smaller.
+The "Id %" is now shown on the <ttl>Hit Information</ttl>. Put <ttl>Info:</ttl> at beginning of controls.
+Text popups stay in front, i.e. will not be buried behind panel. Improve the 2D information help. </small>
+<li><small><i>Tiny bug fixes</i>: The end coordinate on this filter window always showed the end of the sequence
+instead of the displayed end. If the <ttl>Dot Plot</ttl> was changed multiple times during
+a given session of <ttl>ChrExp</ttl>, it sometimes messed up. The <ttl>Dot Plot</ttl> filters
+could not be changed after the first view.</small>
+
+</ul>
+<li><ttb>Query</ttb>
+<ul>
+<li>The <ttl>Gene#</ttl> query option now allows a suffix; i.e. '100' will return all genes with this number
+and any suffix, '100.b' will only return this gene.
+<li><font color=red>Bug fix</font>: if an annotation query was performed that had a hit to a gene with embedded genes,
+the gene and the overlapping genes would be returned.
+<li><small><i>Minor</i>: Has a new button <ttl>Defaults</ttl> which sets the selected columns
+to the defaults. In the result table, the <ttl>Gene#</ttl> is now the
+first column.</small>
+</ul>
+<li><ttb>DotPlot</ttb>: <small><i>Minor</i>: The <ttl>Filters Defaults</ttl> option no longer closes
+the window (behaves like the <ttb>2D</ttb> filters).</small>
+
+<li>Developer
+<ul><small>
+<li>
+The database 'props' table now keeps track of initial database version and updates.
+The file util.Utilities has all the methods for
+parsing the sequence 'tag'; the database tag field has a slightly different format.
+Fix a tiny problem where Query would set a 2D static 'show annot' which would effect other 2D displays.
+ShowContinue put 'Cancel' as the end button. Remove [Uniprot ID: xxx] from demo_seq/annotation/anno.gff.
+
+<li>Moved track/* to sequence directory. Merged SequenceTrackData into TrackData.
+Removed AnnotationData and PseudoData (was just moving data around). Rename PseudoPool to SeqPool.
+Remove GroupSorter (code moved to SeqLoadMain) and improved. Change database field pseudo_hits.evalue to 'htype'
+and rearrange the fields to be more logical.
+</small>
+</ul>
+</ul>
+
 
 <a id="v542"></a>
 <h3>Release: v5.4.2 (28-June-23)</h3>

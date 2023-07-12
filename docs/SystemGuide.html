@@ -724,12 +724,14 @@ is compared to every other chromosome including itself.
 <p>The Alignment&amp;Synteny <a href="#params2">Parameters</a> popup has an option to set "Self Args",
 which only uses the "Self Args" parameter(s) when comparing the chromosome sequence file
 to itself.
-
-<p>The self-synteny of demo_seq shows two tiny blocks. A better demonstration is to download
+<table class="tx">
+<tr><td>
+The self-synteny of demo_seq shows a few tiny blocks. A better demonstration is to download
 Arabidopsis thaliana from NCBI, convert it with the <a href="./convert" target="_blank" class="ext">
 NCBI convert script</a>, and run the self synteny. It took 16 minutes with one processor on a Mac Mini (2018) with
-64GB main memory.
-
+64GB main memory. The dot plot is shown on the right (click on the image for a closeup view).
+<td><a href="img/arabSelf.png"><img src="img/arabSelf.png" alt="arab self" style="border: 1px solid black; width: 250px"></a></center>
+</table>
 <p>The "--maxmatch" parameter was the SyMAP default, but now it is up to the user as to whether
 they want to add it to "Self Args" (it can greatly increase the execution time).
 Reasoning for using "--maxmatch": MUMmer ordinarily seeds its alignments with unique matches,
