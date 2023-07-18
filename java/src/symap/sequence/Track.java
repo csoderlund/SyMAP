@@ -95,16 +95,16 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		titlePoint 			= new Point2D.Float();
 		rect 				= new Rectangle2D.Double();
 		trackOffset 		= new Point();
-		startMoveOffset = new Point();
-		adjustMoveOffset = new Point();
-		moveOffset = new Point();
-		dragRect = new Rectangle();
-		dragPoint = new Point();
-		dimension = new Dimension();
-		orient = Globals.LEFT_ORIENT;
-		start = new GenomicsNumber(this,0);
-		end = new GenomicsNumber(this,0);
-		size = new GenomicsNumber(this,0);
+		startMoveOffset 	= new Point();
+		adjustMoveOffset 	= new Point();
+		moveOffset 			= new Point();
+		dragRect 			= new Rectangle();
+		dragPoint 			= new Point();
+		dimension 			= new Dimension();
+		orient 				= Globals.LEFT_ORIENT;
+		start 				= new GenomicsNumber(this,0);
+		end 				= new GenomicsNumber(this,0);
+		size 				= new GenomicsNumber(this,0);
 	}
 
 	public TrackHolder getHolder() { return holder;}// Called by Sequence and DrawingPanel
@@ -197,7 +197,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		init();
 	}
 
-	public abstract void clearData(); // drawingpanel, track
+	
 
 	// getMoveOffset returns the move offset for the track to be used by the holder/layout manager.
 	public Point getMoveOffset() {return moveOffset;} // trackholder
@@ -426,11 +426,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	// returns the dimension of the track  which corresponds to the preferred size post build.
 	public Dimension getDimension() {return dimension; }
 
-	/**
-	 * getValue is a convenience method for getting the value of a CB number (equivalent to BP when CB is not applicable)
-	 * using this tracks current settings.
-	 * Equivalent to GenomicsNumber.getValue(units,track.getBpPerCB(),cb,track.getBpPerPixel())
-	 */
 	public double getValue(long cb, String units) {
 		return GenomicsNumber.getValue(units,bpPerCb,cb,bpPerPixel);
 	}
@@ -584,15 +579,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 			return ((Graphics2D)holder.getGraphics()).getFontRenderContext();
 		return null;
 	}
-
-	public abstract void setOtherProject(int otherProject);
-	public abstract void setup(TrackData track);
-	public abstract TrackData getData();
-	public abstract boolean build();
-	protected abstract boolean init();
-	protected abstract String getTitle();
-	protected abstract Point2D getTitlePoint(Rectangle2D titleBounds);
-	protected abstract boolean isSouthResizePoint(Point p);
 	
 	public void setPosition(int position) { this.position = position; }
 	public int getPosition() { return position; }
@@ -600,6 +586,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	public void setBackground(Color c) {
 		bgColor = c;
 	}
+	
 	public void mouseDragged(MouseEvent e) { 
 		Cursor cursor = getCursor();
 		if (cursor != null && cursor.getType() == Cursor.WAIT_CURSOR)
@@ -653,16 +640,16 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 
 		repaint();
 	}
-
+	// sequence.mousePressed will bring up popup; else, this is run
 	public void mousePressed(MouseEvent e) { 
 		Cursor cursor = getCursor();
 		Point point = e.getPoint();
-		
+	
 		if (e.isPopupTrigger()) { 
 			holder.showPopupFilter(e);
 		}
-		else if (cursor.getType() == Cursor.S_RESIZE_CURSOR) { // Resize
-		}
+		else if (cursor.getType() == Cursor.S_RESIZE_CURSOR) { } // Resize
+
 		else { //(e.isControlDown()) { // Zoom
 			setCursor(Globals.CROSSHAIR_CURSOR);
 			if (isCleared(dragRect)) {
@@ -757,17 +744,23 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	protected void clear(Rectangle r) {
 		r.setRect(0,0,Globals.NO_VALUE,Globals.NO_VALUE);
 	}
+	public void mouseEntered(MouseEvent e) { holder.requestFocusInWindow();}
 	public void mouseClicked(MouseEvent e) { }
-	public void mouseEntered(MouseEvent e) { 
-		holder.requestFocusInWindow();
-	}
 	public void mouseExited(MouseEvent e) { 	}
-	
 	public void mouseWheelMoved(MouseWheelEvent e) { } 
 	public void mouseWheelMoved(MouseWheelEvent e, long viewSize) { } 
-
     public void keyTyped(KeyEvent e) { } 
     public void keyPressed(KeyEvent e) { } 
     public void keyReleased(KeyEvent e) { } 
+    
+	public abstract void clearData(); // drawingpanel, track
+	public abstract void setOtherProject(int otherProject);
+	public abstract void setup(TrackData track);
+	public abstract TrackData getData();
+	public abstract boolean build();
+	protected abstract boolean init();
+	protected abstract String getTitle();
+	protected abstract Point2D getTitlePoint(Rectangle2D titleBounds);
+	protected abstract boolean isSouthResizePoint(Point p);
 }
 

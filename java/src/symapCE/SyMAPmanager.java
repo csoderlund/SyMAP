@@ -63,11 +63,7 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("  -p N      : number of CPUs to use");
 			System.out.println("  -s        : print stats for A&S, or recreate the Summary on display");
 			System.out.println("  -y        : A&S will only run the hit count algorithm");
-			
-			if (hasCommandLineOption(args, "-s")) {
-				System.out.println("  -ug N      : 0 ignore annot, 1 either annot, 2 both annot");
-				System.out.println("  -nsg       : do not split genes");
-			}
+			System.out.println("  -nsg      : do not split genes on cluster hit creation");
 		}
 	}
 	// these are listed to terminal in the 'symap' perl script.
@@ -100,6 +96,10 @@ public class SyMAPmanager extends ManagerFrame {
 				//lgProj1st = true;
 			}
 			
+			if (hasCommandLineOption(args, "-nsg")) { // CAS540
+				System.out.println("-nsg split genes !" + Group.bSplitGene);
+				Group.bSplitGene= !Group.bSplitGene;
+			}
 			if (hasCommandLineOption(args, "-z")) {// CAS519b
 				Globals.GENEN_ONLY=true;
 				System.out.println("-z Reload Annotation will only run the Gene# assignment algorithm");
@@ -128,10 +128,7 @@ public class SyMAPmanager extends ManagerFrame {
 				Constants.TRACE = true; // in backend
 				Globals.TRACE = true;   // CAS517; used to add info
 			}
-			if (hasCommandLineOption(args, "-nsg")) { // CAS540
-				System.out.println("-nsg split genes !" + Group.bSplitGene);
-				Group.bSplitGene= !Group.bSplitGene;
-			}
+			
 			
 			// old tests
 			if (hasCommandLineOption(args, "-oo")) {// CAS505 not shown in -h help

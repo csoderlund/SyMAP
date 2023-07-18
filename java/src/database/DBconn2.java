@@ -93,7 +93,7 @@ public class DBconn2 {
 			if (mConn!=null && !mConn.isClosed()) mConn.close();
 			mConn = null;
 			
-			if (TRACE) prt("Close connection " + pName);
+			if (TRACE) prt("Close " + pName);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Closing connection");}
 	}
@@ -102,7 +102,7 @@ public class DBconn2 {
 			for (String n : connMap.keySet()) {
 				Connection c = connMap.get(n);
 				if (!c.isClosed()) {
-					if (TRACE) prt("Close connection " + n);
+					if (TRACE) prt("Close " + n);
 					c.close();
 				}
 			}
@@ -123,7 +123,7 @@ public class DBconn2 {
 			for (String n : connMap.keySet()) {
 				Connection c = connMap.get(n);
 				if (!c.isClosed()) {
-					prt("Close connection " + n);
+					prt("Close " + n);
 					c.close();
 				}
 			}
@@ -139,12 +139,10 @@ public class DBconn2 {
 			if (!TRACE) return;
 			
 			ResultSet rs = executeQuery("show status where variable_name='threads_connected'");
-			while (rs.next()) prt(rs.getString(1) + " " + rs.getInt(2) + "   numConn " + numConn);
+			while (rs.next()) prt(rs.getString(1) + " " + rs.getInt(2));
 			rs.close();
 			
-			for (String n : connMap.keySet()) {
-				prt("  " + n + " " + !connMap.get(n).isClosed());
-			}
+			for (String n : connMap.keySet()) prt("  Open " + n);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Closing connection");}
 	}

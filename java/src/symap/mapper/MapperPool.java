@@ -68,7 +68,7 @@ public class MapperPool {
 			// 8 annot1_idx, 9 annot2_idx, 10 strand, 11 start1, 12 end1, 13 start2, 14 end2, 15 query_seq, 16 target_seq, 
 			// 17 runnum, 18 runsize, 19 block, 20 bcorr	
 			while (rs.next()) {
-				HitData temp = 		new HitData(
+				HitData temp = 		new HitData(mapper,
 						rs.getLong(1),		// long id 		
 						rs.getInt(2),		// int hitnum 	
 						rs.getDouble(3),	// double pctid	
@@ -96,7 +96,7 @@ public class MapperPool {
 				hitList.add(temp);
 			}
 			rs.close();
-			if (hitList.size()==0)  System.out.println("SyMAP internal error; not hits ");
+			if (hitList.size()==0)  System.out.println("No hits for " + st1.getTitle() + " to " + st2.getTitle());
 			
 			SeqHits seqHitObj = new SeqHits(stProject1,group1,stProject2, group2, mapper, st1, st2, hitList, false);
 			hitList.clear();

@@ -1,22 +1,20 @@
-package util;
+package symap.sequence;
 
 /******************************************************
  * Draws the yellow annotation description box
  * They stay the same width regular of expand/shrink, instead turns on scroll bar
- * Also used for right click in yellow box and popup of right click on gene.
+ * CAS544 moved from util to sequence - only used for yellow text box; removed rect because not using popup from here
  */
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.Point;
 import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
-import symap.closeup.TextShowInfo;
+import util.LinkLabel;
 
 // a URL-savvy graphical text box
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
@@ -25,7 +23,6 @@ public class TextBox extends JComponent  {
 	private static final int INSET = 5;
 	private static final int startWidth = 600;
 	private int trueWidth = 0;
-	private Rectangle2D.Double rect = new Rectangle2D.Double(); // CAS503 for popup display
 	
 	public TextBox(Vector<String> text, Font font, int x, int y, int wrapLen, int truncLen) {
 		this(text.toArray(new String[0]), font, x, y, wrapLen, truncLen);
@@ -107,7 +104,6 @@ public class TextBox extends JComponent  {
 		}
 		setSize(width, ty + INSET);
 		setLocation(x, y);
-		rect.setRect(getX(), getY(), getWidth(), getHeight()); // CAS503 - for popup of description; CAS517 fixed dimensions
 	}
 	
 	public void paintComponent(Graphics g) {
@@ -122,14 +118,5 @@ public class TextBox extends JComponent  {
 		g2.drawRect(0, 0, width, height);
 		
 		paintComponents(g); // draw text
-	}
-	/*******************************************************
-	 * CAS503 add popup; CAS517 all done in Annotation because popup can be from gene click
-	 */
-	public boolean containsP(Point p) {
-		return rect.contains(p);
-	}
-	public void popupDesc(String title, String msg) { 				// CAS512 add exonList
-		new TextShowInfo(this, title, msg);
 	}
 }

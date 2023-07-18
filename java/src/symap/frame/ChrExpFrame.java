@@ -37,6 +37,8 @@ import java.sql.ResultSet;
 
 import backend.Utils;
 import symap.drawingpanel.DrawingPanel;
+import symap.drawingpanel.Frame2d;
+import symap.drawingpanel.SyMAP2d;
 import symap.manager.Mproject;
 import util.ErrorReport;
 import util.LinkLabel;

@@ -15,11 +15,11 @@ public class HfilterData {
 	private static final double ANY_PCTID  = 0;
 	private static final double NO_PCTID  = 100;
 	
-	private boolean bHiNone=true; // default
+	private boolean bHiPopup=true; // set in setDefaults; CAS543 add, CAS544 change default
+	private boolean bHiNone=false; 
 	private boolean bHiBlock=false, bHiSet=false, bHi2Gene=false, bHi0Gene=false, bHi1Gene=false;
-	private boolean bHiPopup=false; // CAS543 add
 	
-	private boolean bBlock=true; // default
+	private boolean bBlock=true; // set in setDefaults;
 	private boolean bSet=false, b2Gene=false, b1Gene=false, b0Gene=false, bAllHit=false;
 	
 	private double pctid;
@@ -73,8 +73,8 @@ public class HfilterData {
 	}
 	
 	public void setDefaults() {
-		bHiBlock  = bHiSet = bHi2Gene = bHi0Gene = bHi1Gene = bHiPopup = false;		
-		bHiNone = true;
+		bHiBlock  = bHiSet = bHi2Gene = bHi0Gene = bHi1Gene = bHiNone  = false;		
+		bHiPopup = true;
 		
 		bSet = b2Gene = b0Gene = bAllHit = false; 
 		bBlock = true;

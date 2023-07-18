@@ -1,4 +1,4 @@
-package symap.frame;
+package symap.drawingpanel;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -12,16 +12,15 @@ import javax.swing.WindowConstants;
 
 import props.PersistentProps;
 import symap.Globals;
-import symap.drawingpanel.DrawingPanel;
-import symap.drawingpanel.DrawingPanelListener;
+import symap.frame.HelpBar;
 import util.Utilities;
 
 /***********************************************************
  * SyMAP2d creates the components of 2D display, and this puts them together
- * CAS534 renamed from SyMAPFrame=> Frame2d
+ * CAS534 renamed from SyMAPFrame=> Frame2d; remove 'implement DrawingPanelListener'
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class Frame2d extends FSized2d implements DrawingPanelListener
+public class Frame2d extends FSized2d 
 {	
 	private static final String DISPLAY_SIZE_COOKIE = "SyMAPDisplaySize";
 	private static final String DISPLAY_POSITION_COOKIE = "SyMAPDispayPosition";

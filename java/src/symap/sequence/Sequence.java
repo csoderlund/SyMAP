@@ -23,11 +23,10 @@ import number.GenomicsNumber;
 import props.PropertiesReader;
 import symap.Globals;
 import symap.closeup.TextShowSeq;
+import symap.drawingpanel.ControlPanel;
 import symap.drawingpanel.DrawingPanel;
-import symap.frame.ControlPanel;
 import symap.mapper.HitData;
 import symap.mapper.SeqHits;
-import util.TextBox;
 import util.Utilities;
 import util.ErrorReport;
 
@@ -50,6 +49,7 @@ public class Sequence extends Track {
 	protected boolean bShowGap, bShowCentromere;
 	protected boolean bShowScoreLine, bShowHitLen; 	// CAS512 renamed Ribbon to HitLen everywhere; show Hit Graphics on Sequence rect
 	protected boolean bShowScoreText, bShowHitNumText; // CAS531 add showHitNum
+	protected boolean bHighGene;						// CAS544 add
 	
 	protected String chrName;			// e.g. Chr01
 	
@@ -104,21 +104,23 @@ public class Sequence extends Track {
 		}
 		else reset();
 
+		bFlipped = false; 
 		bShowRuler      = Sfilter.DEFAULT_SHOW_RULER;
-		bShowGene       = Sfilter.DEFAULT_SHOW_GENE;
 		
 		bShowAnnot      = Sfilter.DEFAULT_SHOW_ANNOT;
+		bShowGene       = Sfilter.DEFAULT_SHOW_GENE;
+		bShowGeneLine   = Sfilter.DEFAULT_SHOW_GENE_LINE;
+		bHighGene   	= Sfilter.DEFAULT_HIGH_GENE;
+		
 		bShowScoreLine  = Sfilter.DEFAULT_SHOW_SCORE_LINE;   
-		bShowScoreText = Sfilter.DEFAULT_SHOW_SCORE_VALUE; 	
+		bShowScoreText 	= Sfilter.DEFAULT_SHOW_SCORE_VALUE; 	
 		
 		bShowHitLen     = Sfilter.DEFAULT_SHOW_HITLEN; 		
 		bShowGap        = Sfilter.DEFAULT_SHOW_GAP;
 		bShowCentromere = Sfilter.DEFAULT_SHOW_CENTROMERE;
 		bShowFullGene   = Sfilter.DEFAULT_SHOW_GENE_FULL;
 		
-		bShowHitNumText 	   = Sfilter.DEFAULT_SHOW_HIT_NUM;
-		bShowGeneLine   = Sfilter.DEFAULT_SHOW_GENE_LINE;
-		bFlipped = false; 
+		bShowHitNumText = Sfilter.DEFAULT_SHOW_HIT_NUM;
 	}
 
 	public void setup(TrackData td) {
@@ -175,6 +177,7 @@ public class Sequence extends Track {
 		}
 		return false;
 	}
+	
 	public boolean showRuler(boolean show) {
 		if (bShowRuler != show) {
 			bShowRuler = show;
@@ -194,6 +197,15 @@ public class Sequence extends Track {
 	public boolean showGeneLine(boolean show) {// CAS520 add
 		if (bShowGeneLine != show) {
 			bShowGeneLine = show;
+			clearTrackBuild();
+			return true;
+		}
+		return false;
+	}
+	public boolean highGenePopup(boolean high) {
+		if (bHighGene != high) {
+			bHighGene = high;
+			if (!high) clearHigh(); // CAS544 doing this for -tt, which highlights genes of hits
 			clearTrackBuild();
 			return true;
 		}
@@ -263,7 +275,6 @@ public class Sequence extends Track {
 		return false;
 	}
 	
-	
 	public boolean getShowAnnot() { return bShowAnnot;}
 	public boolean getShowHitLen() { return bShowHitLen; }
 	public boolean getShowScoreLine() { return bShowScoreLine;}
@@ -311,8 +322,7 @@ public class Sequence extends Track {
 		
 		return counts;
 	}
-	
-	
+		
 	// Set the annotation vector here
 	protected boolean init() {
 		if (hasInit()) return true;
@@ -339,7 +349,7 @@ public class Sequence extends Track {
 	 * Start and end are Track GenomicsNumber variables, stating start/end 
 	 * The Hit Length, Hit %Id Value and Bar are drawn in mapper.SeqHits.PseudoHits.paintHitLen and its paintComponent
 	 */
-	public boolean build() { 
+	public boolean build() {
 		if (hasBuilt()) return true;
 		if (!hasInit()) return false;
 		
@@ -361,7 +371,7 @@ public class Sequence extends Track {
 		}
 		// this started happening with later Java versions if they click too fast
 		if (!validSize()) { // CAS521 make popup
-			Utilities.showWarningMessage("Unable to size sequence view. Try again - make sure box is highlighted."); 				
+			Utilities.showWarningMessage("Unable to size sequence view. Try again."); 				
 			adjustSize();
 		}
 
@@ -452,7 +462,7 @@ public class Sequence extends Track {
 			
 		/****/
 			annot.setRectangle(centRect, start.getBPValue(), end.getBPValue(),
-					bpPerPixel, dwidth, hwidth, bFlipped, offset, bShowGeneLine); // CAS520 add showGeneLine
+					bpPerPixel, dwidth, hwidth, bFlipped, offset, bShowGeneLine, bHighGene); // CAS520 add showGeneLine; CAS544 add popup
 			
 			// Setup yellow description
 			if (annot.isGene() && bShowAnnot && annot.isVisible()) { // CAS517 added isGene
@@ -465,7 +475,6 @@ public class Sequence extends Track {
 					lastStart=ty;
 					
 					TextBox tb = new TextBox(annot.getVectorDescription(),unitFont, (int)x1, (int)ty, 40, 200);
-					if (POPUP_ANNO) annot.setTextBox(tb); 	// CAS503 right-click (mousePressed)
 					getHolder().add(tb); 					// adds it to the TrackHolder JComponent
 					
 					bounds = tb.getBounds();
@@ -785,72 +794,71 @@ public class Sequence extends Track {
 	public void mouseDragged(MouseEvent e) {	
 		super.mouseDragged(e);
 		
-		if (drawingPanel.isMouseFunctionCloseup() && getCursor().getType() != Cursor.S_RESIZE_CURSOR) 
-		{
-			Point point = e.getPoint();
-			int happened = 0;
-			if (isCleared(dragRect)) {
-				dragPoint.setLocation(point);
-				if (dragPoint.getX() < rect.x) 						
-					dragPoint.setLocation(rect.x, dragPoint.getY());
-				else if (dragPoint.getX() > rect.x + rect.width) 	
-					dragPoint.setLocation(rect.x + rect.width, dragPoint.getY());
-				
-				if (dragPoint.getY() < rect.y)						
-					dragPoint.setLocation(dragPoint.getX(), rect.y);
-				else if (dragPoint.getY() > rect.y + rect.height)	
-					dragPoint.setLocation(dragPoint.getX(), rect.y + rect.height);
-				
-				dragRect.setLocation(dragPoint);
-				dragRect.setSize(0, 0);
+		if (!(drawingPanel.isMouseFunctionCloseup() && getCursor().getType() != Cursor.S_RESIZE_CURSOR)) return;
+		
+		Point point = e.getPoint();
+		int happened = 0;
+		if (isCleared(dragRect)) {
+			dragPoint.setLocation(point);
+			if (dragPoint.getX() < rect.x) 						
+				dragPoint.setLocation(rect.x, dragPoint.getY());
+			else if (dragPoint.getX() > rect.x + rect.width) 	
+				dragPoint.setLocation(rect.x + rect.width, dragPoint.getY());
+			
+			if (dragPoint.getY() < rect.y)						
+				dragPoint.setLocation(dragPoint.getX(), rect.y);
+			else if (dragPoint.getY() > rect.y + rect.height)	
+				dragPoint.setLocation(dragPoint.getX(), rect.y + rect.height);
+			
+			dragRect.setLocation(dragPoint);
+			dragRect.setSize(0, 0);
+		} 
+		else {
+			if (point.getX() < dragPoint.x) {
+				dragRect.width = dragPoint.x - point.x;
+				dragRect.x = point.x;
+			} 
+			else
+				dragRect.width = point.x - dragRect.x;
+
+			if (point.getY() < dragPoint.y) {
+				happened = 1;
+				dragRect.height = dragPoint.y - point.y;
+				dragRect.y = point.y;
 			} 
 			else {
-				if (point.getX() < dragPoint.x) {
-					dragRect.width = dragPoint.x - point.x;
-					dragRect.x = point.x;
-				} 
-				else
-					dragRect.width = point.x - dragRect.x;
+				dragRect.height = point.y - dragRect.y;
+				happened = 2;
+			}
+		}
 
-				if (point.getY() < dragPoint.y) {
-					happened = 1;
-					dragRect.height = dragPoint.y - point.y;
-					dragRect.y = point.y;
-				} 
-				else {
-					dragRect.height = point.y - dragRect.y;
-					happened = 2;
+		// match with rect (do we want this?)
+		dragRect.width = (int) rect.width;
+		dragRect.x = (int) rect.x;
+		if (dragRect.height > 0 && dragRect.getY() < rect.y) {
+			dragRect.height = (int) (dragRect.height + dragRect.y - rect.y);
+			dragRect.y = (int) rect.y;
+		}
+		if (dragRect.height > 0 && dragRect.getY() + dragRect.getHeight() > rect.y + rect.height)
+			dragRect.height = (int) (rect.height + rect.y - dragRect.getY());
+		if (dragRect.height < 0)
+			dragRect.height = 0;
+
+		if (happened != 0) {
+			int mh = (int)Math.round(Globals.MAX_CLOSEUP_BP / bpPerPixel);		
+			if (happened == 1) {
+				if (dragRect.height * bpPerPixel > Globals.MAX_CLOSEUP_BP) {
+					dragRect.height = mh;
+					if (dragRect.height+dragRect.y < dragPoint.y)
+						dragPoint.y = dragRect.height+dragRect.y;
 				}
 			}
-
-			// match with rect (do we want this?)
-			dragRect.width = (int) rect.width;
-			dragRect.x = (int) rect.x;
-			if (dragRect.height > 0 && dragRect.getY() < rect.y) {
-				dragRect.height = (int) (dragRect.height + dragRect.y - rect.y);
-				dragRect.y = (int) rect.y;
-			}
-			if (dragRect.height > 0 && dragRect.getY() + dragRect.getHeight() > rect.y + rect.height)
-				dragRect.height = (int) (rect.height + rect.y - dragRect.getY());
-			if (dragRect.height < 0)
-				dragRect.height = 0;
-
-			if (happened != 0) {
-				int mh = (int)Math.round(Globals.MAX_CLOSEUP_BP / bpPerPixel);		
-				if (happened == 1) {
-					if (dragRect.height * bpPerPixel > Globals.MAX_CLOSEUP_BP) {
-						dragRect.height = mh;
-						if (dragRect.height+dragRect.y < dragPoint.y)
-							dragPoint.y = dragRect.height+dragRect.y;
-					}
-				}
-				else { 
-					if (dragRect.height * bpPerPixel > Globals.MAX_CLOSEUP_BP) {
-						dragRect.y += dragRect.height - mh;
-						dragRect.height = mh;
-						if (dragPoint.y < dragRect.y)
-							dragPoint.y = dragRect.y;
-					}
+			else { 
+				if (dragRect.height * bpPerPixel > Globals.MAX_CLOSEUP_BP) {
+					dragRect.y += dragRect.height - mh;
+					dragRect.height = mh;
+					if (dragPoint.y < dragRect.y)
+						dragPoint.y = dragRect.y;
 				}
 			}
 		}
@@ -964,10 +972,7 @@ public class Sequence extends Track {
 	}
 	
 	/* CAS504 Add Show Sequence; CAS571 compared a pos & neg with TAIR 
-	 * CAS531 add menu with 'hit', 'gene', 'exons', 'region'
-	 * XXX annoVec find contains(start,end)
-	 *     (seqHitsObj
-	 **/
+	 * CAS531 add menu with 'hit', 'gene', 'exons', 'region' */
 	private void showSequence(int start, int end) {
 		try {
 			if (end-start > 1000000) {
@@ -992,18 +997,9 @@ public class Sequence extends Track {
 					if (annot.contains(p)) {	// in this gene annotation
 						setGene(annot);	
 						annot.popupDesc(getHolder(), title, chr);
+						if (bHighGene) drawingPanel.smake(); // CAS544 to highlight
 						return;
 					}
-				}
-			}
-			// CAS503 add popUp description; created in Build
-			if (POPUP_ANNO && bShowAnnot) { 					
-				for (Annotation annot : allAnnoVec) { 		
-					if (annot.boxContains(p)) {	// within gene's yellow box
-						setGene(annot);	
-						annot.popupDesc(null, title, chr); 
-						return;
-					}	
 				}
 			}
 		}
@@ -1029,10 +1025,20 @@ public class Sequence extends Track {
 		String ref = (tn%2==0) ? " REF " : " "; 
 		return "[Sequence "+ getFullName() + " (Grp" + getGroup() + ") " + getOtherProjectName() + ref + "]";
 	}
+	// CAS544 used with -tt to highlight annots on high hit-wire
+	public void geneHigh(int annot_idx, boolean isHigh) {
+		for (Annotation aObj : allAnnoVec) {
+			if (aObj.getAnnoIdx()==annot_idx) {
+				aObj.setIsPopup(isHigh);
+				return;
+			}
+		}
+	}
+	public void clearHigh() {
+		for (Annotation aObj : allAnnoVec) aObj.setIsPopup(false);
+	}
 	
 	/*************************************************************************/
-	public static boolean POPUP_ANNO=false; // not working from Query/dotplot
-	
 	private static final double MOUSE_PADDING = 2;
 
 	private static final double OFFSET_SPACE = 7;

@@ -22,6 +22,7 @@ import javax.swing.JCheckBox;
 
 import symap.drawingpanel.DrawingPanel;
 import symap.mapper.HitData;
+import symap.sequence.Annotation;
 import util.ErrorReport;
 
 /*************************************************************************
@@ -34,7 +35,8 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	private boolean bGene=false; // Fix gene align for next release
 	
 	private AlignPool alignPool;
-	private HitData hitDataObj;
+	private HitData hitDataObj=null;
+	private Annotation annoDataObj=null;
 	private boolean isGene2=false;
 	private String  proj1, proj2, title1, title2;
 	private boolean isQuery=true;
@@ -45,11 +47,17 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	private HitAlignment[] hitAlignArr=null;
 	
 	// For gene - no align
-	public TextShowInfo (Component parentFrame, String title, String theInfo) {
-		new TextShowInfo( parentFrame, title, theInfo, null, null, null, null, null, null, true);
+	public TextShowInfo (Component parentFrame, String title, String theInfo, Annotation annoDataObj) {
+		new TextShowInfo( parentFrame, title, theInfo, annoDataObj, 
+				null, null, null, null, null, null, true);
+	}
+	public TextShowInfo (Component parentFrame, String title, String theInfo,
+			DrawingPanel dp, HitData hitDataObj, String title1, String title2, String proj1, String proj2, boolean isQuery) {
+		new TextShowInfo( parentFrame, title, theInfo, null, 
+				dp, hitDataObj, title1, title2, proj1, proj2, isQuery);
 	}
 	// for hit - with align
-	public TextShowInfo (Component parentFrame, String title, String theInfo,
+	public TextShowInfo (Component parentFrame, String title, String theInfo, Annotation annoDataObj,
 			DrawingPanel dp, HitData hitDataObj, String title1, String title2, String proj1, String proj2, boolean isQuery) {
 		
 		super();
@@ -60,7 +68,8 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // CAS543 add the explicit close 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {
-				if (hitDataObj!=null) hitDataObj.setPopup(false);
+				if (hitDataObj!=null) hitDataObj.setIsPopup(false);
+				else annoDataObj.setIsPopup(false);
 			}
 		});
 		if (hitDataObj!=null) {
@@ -73,6 +82,8 @@ public class TextShowInfo extends JDialog implements ActionListener {
 			this.title2 = title2;
 			this.isQuery = isQuery;
 		}
+		else this.annoDataObj = annoDataObj;
+		
 		JTextArea messageArea = new JTextArea(theInfo);
 		JScrollPane sPane = new JScrollPane(messageArea); 
 		messageArea.setFont(new Font("monospaced", Font.BOLD, 12));
@@ -110,7 +121,8 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	}
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == okButton) {
-			if (hitDataObj!=null) hitDataObj.setPopup(false);
+			if (hitDataObj!=null) hitDataObj.setIsPopup(false);
+			else annoDataObj.setIsPopup(false);
 			setVisible(false); 
 		}
 		else if (e.getSource() == alignHitButton) runAlign(); 

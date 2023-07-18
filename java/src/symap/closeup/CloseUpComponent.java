@@ -13,7 +13,7 @@ import java.awt.event.MouseEvent;
 import javax.swing.JComponent;
 
 import props.PropertiesReader;
-import symap.frame.SyMAP2d;
+import symap.drawingpanel.SyMAP2d;
 
 import java.util.Vector;
 import java.util.Arrays;
@@ -30,7 +30,7 @@ public class CloseUpComponent extends JComponent {
 	private GeneAlignment[] geneAlign;
 	private int startGr, endGr;			// start and end of graphics
 	private Ruler ruler;
-	private Vector<CloseUpListener> listeners;
+	private Vector<CloseUpDialog> listeners;
 
 	/******************************************************
 	 * XXX 
@@ -38,7 +38,7 @@ public class CloseUpComponent extends JComponent {
 	public CloseUpComponent() {
 		super();
 		setBackground(backgroundColor);
-		listeners = new Vector<CloseUpListener>();
+		listeners = new Vector<CloseUpDialog>();
 		addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				notifyListenersOfClick(getHitAlignment(e.getPoint()));
@@ -48,8 +48,8 @@ public class CloseUpComponent extends JComponent {
 				true, RULER_TICK_SPACE, RULER_LINE_THICKNESS);
 	}
 
-	public void addCloseUpListener(CloseUpListener cl) {if (!listeners.contains(cl))listeners.add(cl);}
-	public void removeCloseUpListener(CloseUpListener cl) {listeners.remove(cl);}
+	public void addCloseUpListener(CloseUpDialog cl) {if (!listeners.contains(cl))listeners.add(cl);}
+	public void removeCloseUpListener(CloseUpDialog cl) {listeners.remove(cl);}
 
 	// start = min(start_exon, start_subhit), end=max(end_exon, end_subhit)
 	public void setData(int startG, int endG, GeneAlignment[] ga, HitAlignment[] ha) {
@@ -206,7 +206,7 @@ public class CloseUpComponent extends JComponent {
 	private void notifyListenersOfClick(HitAlignment h) {
 		if (h != null)
 			for (int i = 0; i < listeners.size(); ++i)
-				((CloseUpListener) listeners.get(i)).hitClicked(h);
+				((CloseUpDialog) listeners.get(i)).hitClicked(h);
 	}
 
 	private double getFontHeight(Font font) {

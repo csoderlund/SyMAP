@@ -568,7 +568,7 @@ public class SeqHits  {
 		}
 		/* CAS516 popup from clicking hit wire; CAS531 change to use TextPopup */
 		private void popupDesc(double x, double y) {
-			hitDataObj.setPopup(true);
+			hitDataObj.setIsPopup(true);
 			String title="Hit #" + hitDataObj.getHitNum(); // CAS520 changed from hit idx to hitnum
 			
 			String theInfo = hitDataObj.createHover(st1LTst2) + "\n"; 
@@ -586,6 +586,8 @@ public class SeqHits  {
 			if (Globals.TRACE) {
 				theInfo += "\nDB-index " + hitDataObj.getID(); // CAS520 puts at bottom, useful for debugging and out of way 
 				theInfo += "\nAnnot " + hitDataObj.getAnnots(); // CAS543 add
+				seqObj1.geneHigh(hitDataObj.getAnnot1(), true);
+				seqObj2.geneHigh(hitDataObj.getAnnot2(), true);
 			}
 			boolean isQuery1 = seqObj1.isQuery();
 			

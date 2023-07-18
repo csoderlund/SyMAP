@@ -13,7 +13,7 @@ import util.ErrorReport;
  * The PseudoPool handles the cache of data for the Sequence Track.
  * CAS531 removed dead cache
  * CAS541 removed DBAbsUser
- * CAS543 moved stuff immediately to Annotation; by-pass AnnotationData and PseudoData
+ * CAS543 moved stuff immediately to Annotation; by-pass AnnotationData and PseudoData; CAS544 add seqObj
  */
 public class SeqPool {	
 	private DBconn2 dbc2;
@@ -71,7 +71,7 @@ public class SeqPool {
 					
 				tag = (tag==null || tag.contentEquals("")) ? type : tag; 
 				
-				Annotation aObj = new Annotation(desc,type,start,end,strand, tag, gene_idx, annot_idx, genenum, numhits);
+				Annotation aObj = new Annotation(seqObj, desc,type,start,end,strand, tag, gene_idx, annot_idx, genenum, numhits);
 				annoVec.add(aObj);
 			}
 			rs.close();

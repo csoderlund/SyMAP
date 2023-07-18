@@ -1,4 +1,4 @@
-package symap.frame;
+package symap.drawingpanel;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -15,7 +15,8 @@ import javax.swing.JComboBox;
 import colordialog.ColorDialogHandler;
 import history.HistoryControl;
 import symap.Globals;
-import symap.drawingpanel.DrawingPanel;
+import symap.frame.HelpBar;
+import symap.frame.HelpListener;
 import util.ImageViewer;
 import util.Jcomp;
 import util.Jhtml;

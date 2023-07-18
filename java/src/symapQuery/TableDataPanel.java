@@ -51,7 +51,7 @@ import database.DBconn2;
 import util.ErrorReport;
 import util.Jhtml;
 import util.Utilities;
-import symap.frame.SyMAP2d;
+import symap.drawingpanel.SyMAP2d;
 import symap.mapper.HfilterData;
 import symap.sequence.Sequence;
 

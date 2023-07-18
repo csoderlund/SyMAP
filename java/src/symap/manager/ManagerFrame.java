@@ -1475,7 +1475,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			mp.renewIdx(); // Removed existing
 			
 			// AlignProj open/close new dbc2 for each thread of align
-			new AlignProjs().run(this, dbc2, mp, true,  maxCPUs, checkCat.isSelected());
+			new AlgSynMain().run(this, dbc2, mp, true,  maxCPUs, checkCat.isSelected());
 		}
 		new Version(dbc2).updateReplaceProp();
 		System.out.println("All Pairs complete. ");
@@ -1492,13 +1492,17 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			Mpair mp = getMpair(mProjs[0].getIdx(), mProjs[1].getIdx());
 			if (mp==null) return;
 			
+			Mproject[] ordP = orderProjName(mProjs[0],mProjs[1]); // order indices according to DB pairs table
+			String resultDir = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
+			String msg = Utils.checkDoneFile(resultDir) ? "Synteny for " : "Align&Synteny for "; // CAS544 be specific
+			
 			if (!Utilities.showConfirm2("Selected Pair", // CAS543 add check
-					"Align&Synteny for " + mProjs[0].getDisplayName() + " and " + mProjs[1].getDisplayName())) return;
+					msg + mProjs[0].getDisplayName() + " and " + mProjs[1].getDisplayName())) return;
 			
 			System.out.println("\n>>> Start Alignment&Synteny");
 			mp.renewIdx(); // Remove existing and restart
 			
-			new AlignProjs().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
+			new AlgSynMain().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
 			new Version(dbc2).updateReplaceProp();
 		}
 	}

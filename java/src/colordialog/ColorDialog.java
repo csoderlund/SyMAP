@@ -20,7 +20,7 @@ import javax.swing.JTabbedPane;
 
 import props.PersistentProps;
 import props.PropertiesReader;
-import symap.frame.SyMAP2d;
+import symap.drawingpanel.SyMAP2d;
 import util.ErrorReport;
 
 /**

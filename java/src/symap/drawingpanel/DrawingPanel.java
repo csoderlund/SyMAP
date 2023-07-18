@@ -11,8 +11,6 @@ import history.HistoryControl;
 import history.HistoryListener;
 import props.ProjectPool;
 import symap.Globals;
-import symap.frame.ControlPanel;
-import symap.frame.FilterHandler;
 import symap.frame.HelpBar;
 
 import symap.mapper.HitData;
@@ -44,7 +42,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	private Mapper[] mappers;
 	private TrackHolder[] trackHolders;
 	private HistoryControl historyControl;
-	private DrawingPanelListener drawingPanelListener;
+	private Frame2d drawingPanelListener;
 	private ProjectPool projPool = null;
 	
 	private CloseUp closeup;
@@ -112,7 +110,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		}
 	}
 
-	public void setListener(DrawingPanelListener dpl) {
+	public void setListener(Frame2d dpl) {
 		this.drawingPanelListener = dpl;
 	}
 
@@ -155,9 +153,6 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	 * visible).  This information is all of the filter information and any 
 	 * information needed to acquire the data from the database not the actual  data.
 	 */
-	public DrawingPanelData getData() {
-		return new DrawingPanelData(mappers,trackHolders,numMaps);
-	}
 	
 	public void setCloseUp(CloseUp closeup) {
 		this.closeup = closeup;
@@ -679,6 +674,12 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		return ret;
 	}
 	
+	// CAS541 Set in ControlPanel, read by Plot
+	public void setStatOpts(int n) {statOpt = n;}
+	public int getStatOpts() {return statOpt;}
+	
+	/************* History *********************/
+
 	public void setHistory(Object obj) {
 		setFrameEnabled(false);
 		new Thread(new MapMaker((DrawingPanelData)obj)).start();
@@ -695,17 +696,29 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 			doUpdateHistory = false;
 		}
 	}
-	public void setResetIndex() {
-		resetResetIndex = true;
-	}
-	
-	// CAS541 Set in ControlPanel, read by Plot
-	public void setStatOpts(int n) {statOpt = n;}
-	public int getStatOpts() {return statOpt;}
+	public void setResetIndex() {resetResetIndex = true;}
 	
 	private void updateHistory() {
-		historyControl.add(getData(),resetResetIndex);
+		DrawingPanelData dpd = new DrawingPanelData(mappers,trackHolders,numMaps);
+		historyControl.add(dpd,resetResetIndex);
 		resetResetIndex = false;
+	}
+	// CAS544 moved from separate file because only used by this file
+	// Used for History
+	public class DrawingPanelData {
+		private MapperData[] mapperData;
+		private TrackData[]  trackData;
+
+		protected DrawingPanelData(Mapper[] mappers, TrackHolder[] trackHolders, int numMaps) {
+			mapperData = new MapperData[numMaps];
+			trackData = new TrackData[numMaps+1];
+			for (int i = 0; i < mapperData.length; i++) mapperData[i] = mappers[i].getMapperData();
+			for (int i = 0; i < trackData.length; i++)  trackData[i] = trackHolders[i].getTrackData();
+		}
+
+		protected MapperData[] getMapperData() {return mapperData;}
+
+		protected TrackData[] getTrackData() {return trackData;}
 	}
 }
 

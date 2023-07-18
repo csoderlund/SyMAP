@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
-import java.sql.ResultSet;
 import java.util.Date;
 import java.util.TreeMap;
 import javax.swing.JFrame;
@@ -21,10 +20,10 @@ import util.Utilities;
 
 /**********************************************************
  * Computes alignment and synteny for two projects
- * CAS508 moved all the following from ManagerFrame
+ * CAS508 moved all the following from ManagerFrame; CAS544 AlignProj->AlgSynMain
  */
 
-public class AlignProjs extends JFrame {
+public class AlgSynMain extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private DBconn2 dbc2;
 	private Mpair mp;
@@ -51,7 +50,7 @@ public class AlignProjs extends JFrame {
 		final ProgressDialog diaLog = new ProgressDialog(this, "Aligning Projects", msg, true, syFW); // write version and date
 		diaLog.msgToFileOnly(">>> " + toName);
 		System.out.println("\n>>> Starting " + toName + "     " + Utilities.getDateTime());
-		String chgMsg = mp.getChangedParams(Mpair.FILE);  
+		String chgMsg = mp.getChangedParams(Mpair.FILE);  // Saved to database pairs table in SumFrame
 		diaLog.msg(chgMsg);
 		
 		// CAS535 always just close if (!closeWhenDone) diaLog.closeIfNoErrors();	

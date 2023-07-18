@@ -12,7 +12,7 @@ import javax.swing.event.*;
 import database.DBconn2;
 import symap.manager.Mproject;
 import symap.Globals;
-import symap.frame.SyMAP2d;
+import symap.drawingpanel.SyMAP2d;
 import util.ErrorReport;
 import util.ImageViewer;
 import util.Utilities;

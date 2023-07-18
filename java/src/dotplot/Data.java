@@ -12,7 +12,7 @@ import java.util.Vector;
 import database.DBconn2;
 import props.ProjectPair;
 import props.ProjectPool;
-import symap.frame.SyMAP2d;
+import symap.drawingpanel.SyMAP2d;
 import symap.mapper.HfilterData;
 import util.ErrorReport;
 import util.Utilities;

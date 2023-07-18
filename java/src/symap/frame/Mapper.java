@@ -22,10 +22,8 @@ public class Mapper  { // CAS521 removed 'extend Observer' - wasn't even used
 	
 	private boolean bChanged = false;
 	
-	// Created in symapCE.SyMAPExp
-	public Mapper() { 
-		reference = null;
-	}
+	// Created in frame.ChrExpInit
+	public Mapper() { reference = null;}
 	
 	public void setProjects(Mproject[] projects) {
 		this.projects = projects;
@@ -38,7 +36,10 @@ public class Mapper  { // CAS521 removed 'extend Observer' - wasn't even used
 		for (TrackCom t : tracks)
 			maxBpPerUnit = Math.max(maxBpPerUnit, t.getSizeBP());
 	}
-	// symap.projectmanager.common.SyMAPFrameCommon
+	
+	public void setBlocks(Block[] blocks) {this.blocks = blocks;}
+		
+	// symap.frame.ChrExpFrame
 	public TrackCom[] getTracks(int nProjID) {
 		Vector<TrackCom> out = new Vector<TrackCom>();
 		
@@ -48,7 +49,7 @@ public class Mapper  { // CAS521 removed 'extend Observer' - wasn't even used
 		
 		return out.toArray(new TrackCom[0]);
 	}
-	// symap.projectmanager.common.ProjectPanelCommon
+	// symap.frame.ProjIcons
 	public TrackCom[] getTracks(int nProjID,TreeSet<Integer> grpIdxWithSynteny) {
 		Vector<TrackCom> out = new Vector<TrackCom>();
 		
@@ -61,10 +62,7 @@ public class Mapper  { // CAS521 removed 'extend Observer' - wasn't even used
 		}
 		return out.toArray(new TrackCom[0]);
 	}	
-	// symapCE.SyMAPExp
-	public void setBlocks(Block[] blocks) {
-		this.blocks = blocks;
-	}
+	
 	
 	public Block[] getBlocksForProject(int nProjID) {
 		Vector<Block> out = new Vector<Block>();
@@ -78,21 +76,7 @@ public class Mapper  { // CAS521 removed 'extend Observer' - wasn't even used
 		return out.toArray(new Block[0]);
 	}
 	
-	public Block[] getBlocksForTracks(int nGroup1Idx, int nGroup2Idx) {
-		Vector<Block> out = new Vector<Block>();
-		
-		for (Block b : blocks)
-			if (b.getGroup1Idx() == nGroup1Idx && b.getGroup2Idx() == nGroup2Idx)
-				out.add(b);
-			else if (b.getGroup2Idx() == nGroup1Idx && b.getGroup1Idx() == nGroup1Idx)
-				out.add(b.swap());
-		
-		return out.toArray(new Block[0]);
-	}
-	// CAS521 remove obsolete getContigListForBlocks
-	
 	public Mproject[] getProjects() { return projects; }
-	public int getNumProjects() { return projects.length; }
 	
 	public int[] getVisibleProjectIDs() { // returns reference as first in list
 		Vector<Integer> out = new Vector<Integer>();
@@ -134,7 +118,7 @@ public class Mapper  { // CAS521 removed 'extend Observer' - wasn't even used
 		return n;
 	}
 	
-	public int getNumVisibleTracks(int nProjID) {
+	private int getNumVisibleTracks(int nProjID) {
 		int n = 0;
 		for (TrackCom t : tracks)
 			if (t.isVisible() && t.getProjIdx() == nProjID) n++;
@@ -145,13 +129,6 @@ public class Mapper  { // CAS521 removed 'extend Observer' - wasn't even used
 		Vector<TrackCom> visible = new Vector<TrackCom>();
 		for (TrackCom t : tracks)
 			if (t.isVisible() && t != reference) visible.add(t);
-		return visible.toArray(new TrackCom[0]);
-	}
-	
-	public TrackCom[] getVisibleTracks(int nProjID) {
-		Vector<TrackCom> visible = new Vector<TrackCom>();
-		for (TrackCom t : tracks)
-			if (t.isVisible() && t.getProjIdx() == nProjID) visible.add(t);
 		return visible.toArray(new TrackCom[0]);
 	}
 	

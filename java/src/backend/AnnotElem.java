@@ -5,11 +5,11 @@ import java.util.Comparator;
 import java.util.Vector;
 
 /*****************************************
- * Either gene, nongene or n/a
+ * This is part of finding Cluster Hits (not part of loading annotation from AnnotLoadMain)
  * Created in Group, accessed in AnchorMain as bestOlapAnno
  */
 public class AnnotElem implements Comparable <AnnotElem> {// CAS500 added <type>; comparable so can be used in TreeMap
-	public int start, end, idx, genenum;
+	public int start, end, len, idx, genenum;
 	public boolean isRev;
 	public GeneType mGT = GeneType.NA; // {Gene, NonGene, NA}
 	public int mID;
@@ -20,6 +20,7 @@ public class AnnotElem implements Comparable <AnnotElem> {// CAS500 added <type>
 		this.idx   = idx;
 		this.start = start;
 		this.end   = end;
+		len = Math.abs(end-start)+1;
 		this.isRev = isRev;
 		this.genenum =genenum;
 		this.mGT = gt;
@@ -31,7 +32,7 @@ public class AnnotElem implements Comparable <AnnotElem> {// CAS500 added <type>
 		return String.format("%5d idx=%-5d gn=%5d (%,10d %,10d l=%,5d %5s)  %s", mID, idx, genenum, start, end, (end-start+1), isRev, mGT.toString());
 	}
 	
-	public int getLength() { return Math.abs(end-start)+1; }
+	public int getLength() { return len; }
 	
 	public boolean isGene(){
 		return (mGT == GeneType.Gene);	

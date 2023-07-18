@@ -34,7 +34,6 @@ import util.Utilities;
  *   	Always include geneGene and geneNonGene, but make sure they are responsible hits; 	 HitBin and Hit.useAnnot()
  *      Clusters hits do not have mixed strands, i.e. must be either ++/-- or +-/-; 		 Hit.clusterHits2
  * 		The Hit.matchLen is the Max q&t(summed(subhits)-summed(overlap)) instead of summed(query subhits) 
- * This algorithm is really finicky because of bins, which can obscure good hits
  * CAS541 change updataPool to dbc2
  */
 enum HitStatus  {In, Out, Undecided }; 
@@ -651,12 +650,12 @@ public class AnchorsMain {
 			plog.msg("   Save filtered hits");
 			int numLoaded=0, countBatch=0;
 			tdbc2.executeUpdate("alter table pseudo_hits modify countpct integer");
-			
-			PreparedStatement ps = tdbc2.prepareStatement("insert into pseudo_hits "
+						
+			PreparedStatement ps = tdbc2.prepareStatement("insert into pseudo_hits "	// CAS544 put in correct order
 					+ "(pair_idx, proj1_idx, proj2_idx, grp1_idx, grp2_idx,"
-					+ "htype, pctid, score, strand,"
-					+ "start1, end1, start2, end2, query_seq, target_seq,"
-					+ "gene_overlap, countpct, cvgpct,annot1_idx,annot2_idx) "
+					+ "pctid, cvgpct, countpct, score, htype, gene_overlap,"
+					+ "annot1_idx, annot2_idx, strand, start1, end1, start2, end2,"
+					+ "query_seq, target_seq) "
 					+ "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
 			
 			for (Hit hit : vecHits) {
@@ -672,21 +671,24 @@ public class AnchorsMain {
 				ps.setInt(i++, syProj2.getIdx());
 				ps.setInt(i++, hit.queryHits.grpIdx);
 				ps.setInt(i++, hit.targetHits.grpIdx);
-				ps.setInt(i++, hit.htype) ;						// CAS543 change from evalue to htype
-				ps.setInt(i++, hit.pctid);
-				ps.setInt(i++, hit.matchLen); 		
+				
+				ps.setInt(i++, hit.pctid);							// pctid Avg%Id
+				ps.setInt(i++, hit.pctsim); 				 		//CAS515 cvgpct;   unsigned tiny int; now Avg%Sim
+				ps.setInt(i++, (hit.queryHits.subHits.length/2)); 	//CAS515 countpct; unsigned tiny int; now #SubHits
+				ps.setInt(i++, hit.matchLen); 						// score
+				ps.setInt(i++, hit.htype) ;							// CAS543 change from evalue to htype
+				ps.setInt(i++, geneOlap);							// 0,1,2
+				
+				ps.setInt(i++, hit.annotIdx1);
+				ps.setInt(i++, hit.annotIdx2);
 				ps.setString(i++, hit.strand);
 				ps.setInt(i++, hit.queryHits.start);
 				ps.setInt(i++, hit.queryHits.end);
 				ps.setInt(i++, hit.targetHits.start);
 				ps.setInt(i++, hit.targetHits.end);
+				
 				ps.setString(i++, Utils.intArrayToBlockStr(hit.queryHits.subHits));
 				ps.setString(i++, Utils.intArrayToBlockStr(hit.targetHits.subHits));
-				ps.setInt(i++, geneOlap);
-				ps.setInt(i++, (hit.queryHits.subHits.length/2)); 	//CAS515 countpct; unsigned tiny int; now #SubHits
-				ps.setInt(i++, hit.pctsim); 				 		//CAS515 cvgpct;   unsigned tiny int; now Avg%Sim
-				ps.setInt(i++, hit.annotIdx1);
-				ps.setInt(i++, hit.annotIdx2);
 				
 				ps.addBatch(); 
 				countBatch++; numLoaded++;

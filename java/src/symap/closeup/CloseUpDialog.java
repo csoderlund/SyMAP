@@ -23,7 +23,7 @@ import util.Utilities;
  * Gets hits and genes in region, and builds the HitAlignment and GeneAlignment for display
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class CloseUpDialog extends JDialog implements CloseUpListener, ColorListener, HelpListener 
+public class CloseUpDialog extends JDialog implements  ColorListener, HelpListener 
 {
 	private AlignPool alignPool;
 	private CloseUpComponent viewComp;

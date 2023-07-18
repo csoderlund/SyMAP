@@ -1,4 +1,4 @@
-package symap.frame;
+package symap.drawingpanel;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -15,7 +15,8 @@ import javax.swing.JFrame;
 import props.PersistentProps;
 
 /**************************************************
- * CAS534 renamed util.SizedJFrame=> frame.FSized2d
+ * CAS534 renamed util.SizedJFrame=> frame.FSized2d; CAS544 moved from frame
+ * This is only used by Frame2d
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class FSized2d extends JFrame implements KeyListener, ContainerListener {

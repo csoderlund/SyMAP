@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 
 import backend.Constants;
+import backend.Group;
 import database.DBconn2;
 import props.PropertiesReader;
 import symap.Globals;
@@ -105,8 +106,9 @@ public class Mpair {
 	public boolean isReverse() { return bReverse;}
 	/***********************************************************************************
 	 */
-	public String getChangedParams(int type) {// AlignProjs and SumFrame
+	public String getChangedParams(int type) {// AlgSynMain and SumFrame
 		String msg="";
+		if (!Group.bSplitGene)          msg += "\n   No split gene";
 		if (isChg(type, "self_args")) 	msg += "\n   Self args: "   + getSelfArgs(type);
 		if (isChg(type,"promer_args")) 	msg += "\n   PROmer args: " + getPromerArgs(type);
 		if (isChg(type,"nucmer_args")) 	msg += "\n   NUCmer args: " + getNucmerArgs(type);

@@ -170,12 +170,7 @@ public class QueryPanel extends JPanel {
 	 */
 	private String makePairSQL(String join) {
 		String whereClause= " where " + speciesPanel.getPairWhere(); // PH.pair_idx in (...)
-		/**
-		if (isHitIdx()) { // if hit, no other filters
-			whereClause = joinBool(whereClause, "PH.idx=" + txtHitIdx.getText(), AND);
-			return " FROM pseudo_hits AS " + Q.PH + join + " " + whereClause;
-		}
-		**/
+		
 		whereClause = joinBool(whereClause, makeAnnoWhere(), AND);
 		
 		// Chr, loc

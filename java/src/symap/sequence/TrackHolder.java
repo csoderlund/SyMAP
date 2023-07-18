@@ -9,7 +9,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 
 import symap.drawingpanel.DrawingPanel;
-import symap.frame.FilterHandler;
+import symap.drawingpanel.FilterHandler;
 import symap.frame.HelpBar;
 import util.ErrorReport;
 

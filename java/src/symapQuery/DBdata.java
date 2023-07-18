@@ -516,17 +516,17 @@ public class DBdata {
 				return false; 
 			}
 			// GeneNum: Chr is the only other filter, which happened in SQL; CAS541 added gene# only; CAS543 allow suffix
-			String gn = qPanel.getGeneNum();
-			if (gn!=null) {
-				if (gn.endsWith(".")) gn = gn.substring(0, gn.length()-1);
+			String inputGN = qPanel.getGeneNum();
+			if (inputGN!=null) {
+				if (inputGN.endsWith(".")) inputGN = inputGN.substring(0, inputGN.length()-1);
 				int x=-1;
-				if (gn.contains(".")) {
-					if      (geneTag[0]!="-" && Utilities.getGenenumFromDBtag(geneTag[0]).equals(gn))  x=0;
-					else if (geneTag[1]!="-" && Utilities.getGenenumFromDBtag(geneTag[1]).equals(gn))  x=1;
+				if (inputGN.contains(".")) {
+					if      (geneTag[0]!="-" && Utilities.getGenenumFromDBtag(geneTag[0]).equals(inputGN))  x=0;
+					else if (geneTag[1]!="-" && Utilities.getGenenumFromDBtag(geneTag[1]).equals(inputGN))  x=1;
 				}
 				else {
-					if      (geneTag[0]!="-" && Utilities.getGenenumIntOnly(geneTag[0]).equals(gn))  x=0;
-					else if (geneTag[1]!="-" && Utilities.getGenenumIntOnly(geneTag[1]).equals(gn))  x=1;
+					if      (geneTag[0]!="-" && Utilities.getGenenumIntOnly(geneTag[0]).equals(inputGN))  x=0;
+					else if (geneTag[1]!="-" && Utilities.getGenenumIntOnly(geneTag[1]).equals(inputGN))  x=1;
 				}
 				if (x==-1) return false;
 				

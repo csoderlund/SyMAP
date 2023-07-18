@@ -475,15 +475,7 @@ public class Utilities {
 		
 		return pane;
 	}
-	static public boolean showYesNo (String title, String msg) { // CAS540 add
-		String [] options = {"Yes", "No"};
-		int ret = JOptionPane.showOptionDialog(null, 
-				msg,
-				title, JOptionPane.YES_NO_OPTION, 
-				JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-		if (ret == JOptionPane.NO_OPTION) return false;
-		return true;
-	}
+	
 	
 	public static void showWarningMessage(String msg) {
 		System.out.println(msg);
@@ -499,6 +491,15 @@ public class Utilities {
 		showErrorMessage(msg);
 		exit(exitStatus);
 	}
+	static public boolean showYesNo (String title, String msg) { // CAS540 add; CAS544 reorder yes/no
+		String [] options = {"No", "Yes"};
+		int ret = JOptionPane.showOptionDialog(null, 
+				msg,
+				title, JOptionPane.YES_NO_OPTION, 
+				JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+		if (ret == 0) return false;
+		return true;
+	}
 	static public boolean showContinue (String title, String msg) { // CAS543 the cancel was in diff loc than below
 		String [] options = {"Cancel", "Continue"};
 		int ret = JOptionPane.showOptionDialog(null, 
@@ -513,7 +514,8 @@ public class Utilities {
 	public static boolean showConfirm2(String title, String msg) {
 			String [] options = {"Cancel", "Confirm"};
 			int ret = JOptionPane.showOptionDialog(null, 
-					msg, title, JOptionPane.YES_NO_OPTION, 
+					msg, 
+					title, JOptionPane.YES_NO_OPTION, 
 					JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
 			if (ret == 0) return false;
 			else return true;
@@ -685,8 +687,8 @@ public class Utilities {
     	if (tag=="-") return "";
     	String gn = getGenenumFromDBtag(tag);
     	String [] tok = gn.split("\\.");
-    	if (tok.length==2) return tok[0];
-    	else return tag;
+    	if (tok.length>0) return tok[0]; 
+    	else return gn; // CAS544 bugfix was returning full tag
     }
     
     // symap.QueryPanel

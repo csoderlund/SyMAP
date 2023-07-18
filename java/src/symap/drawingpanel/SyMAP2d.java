@@ -1,18 +1,16 @@
-package symap.frame;
+package symap.drawingpanel;
 
-import util.*;
 import colordialog.*;
 import database.DBconn2;
 import props.*;
-import symap.drawingpanel.DrawingPanel;
 import history.History;
 import history.HistoryControl;
 import symap.closeup.CloseUp;
+import symap.frame.HelpBar;
 import symapQuery.TableDataPanel;
 
 /**
- * SyMAP sets up the 2D display for 
- * 		(see frame.ChrExpFrame for full Chromosome explorer):
+ * SyMAP sets up the 2D display for  (see frame.ChrExpFrame for full Chromosome explorer):
  * 	manager.SyMAPFrame.regenerate2DView
  * 	dotplot.Data
  * 	blockview.Block2Frame
@@ -20,9 +18,9 @@ import symapQuery.TableDataPanel;
  * 
  *	CAS532 moved HTML links to Jhtml
  *  CAS534 renamed from SyMAP=> SyMAP2d; moved all globals to symap.Globals
+ *  CAS544 moved to drawingpanel for 2d stuff
  */
 public class SyMAP2d {
-	
 	private Frame2d            frame;
 	private DrawingPanel       drawingPanel;
 	private ControlPanel       controlPanel;
@@ -31,7 +29,6 @@ public class SyMAP2d {
 	private DBconn2 tdbc2;
 	private HistoryControl     historyControl;
 	private History            history;
-	private ImageViewer        imageViewer;
 	private PersistentProps    persistentProps;
 	private CloseUp            closeup;
 	private ColorDialogHandler colorDialogHandler;
@@ -97,8 +94,4 @@ public class SyMAP2d {
 	public ControlPanel getControlPanel() {return controlPanel;} // CAS531 add for 
 
 	public History getHistory() {return history;}
-
-	public ImageViewer getImageViewer() {return imageViewer;}
-
-	public DBconn2 getDatabaseReader() { return tdbc2;}
 }

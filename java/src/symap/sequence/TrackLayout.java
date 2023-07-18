@@ -12,17 +12,17 @@ import javax.swing.JPanel;
 
 import symap.mapper.Mapper;
 
+/***************************************************
+ * Lays out tracks; called in DrawingPanels
+ */
 public class TrackLayout implements LayoutManager {
-
 	private TrackHolder[] trackHolders;
 	private Mapper[] mappers;
 	private JPanel buttonPanel;
 	private static final int buttonPadding = 1;
 	private static final double PADDING = 100; // distance between tracks; CAS543 moved from Sequencd
 
-	public TrackLayout(TrackHolder[] trackHolders, Mapper[] mappers,	// Created in DrawingPanel
-			JPanel buttonPanel) 
-	{
+	public TrackLayout(TrackHolder[] trackHolders, Mapper[] mappers, JPanel buttonPanel) {
 		buttonPanel.setLayout(null);
 		this.buttonPanel = buttonPanel;
 		this.mappers = mappers;
@@ -41,6 +41,7 @@ public class TrackLayout implements LayoutManager {
 		Point moveOffset;
 		for (int i = 0; i < trackHolders.length; i++) {
 			if (!trackHolders[i].isVisible()) break; // no breaks in maps allowed
+			
 			if (i > 0) dim.width += PADDING;
 			d = trackHolders[i].getPreferredSize();
 			moveOffset = trackHolders[i].getOffset();
@@ -48,7 +49,6 @@ public class TrackLayout implements LayoutManager {
 			dim.width += d.width + moveOffset.x;
 			if (i != 0) dim.width += PADDING;
 		}
-		
 		return dim;
 	}
 

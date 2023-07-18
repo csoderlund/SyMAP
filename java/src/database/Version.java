@@ -47,8 +47,8 @@ public class Version {
 			}
 			if (idb==dbVer) return;
 			
-			if (!Utilities.showContinue("DB update", 
-					"Database schema needs updating from " + strDBver + " to " + strVer)) return;
+			if (!Utilities.showYesNo("DB update", 					// CAS544 change from continue
+					"Database schema needs updating from " + strDBver + " to " + strVer +"\nProceed with update?")) return;
 			
 			System.out.println("Updating schema from " + strDBver + " to " + strVer);
 			

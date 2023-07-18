@@ -188,7 +188,7 @@ public class TextShowSeq extends JDialog implements ActionListener {
 			if (x<len) bfLines.append(seq.substring(x, len) + "\n");
 			bfLines.append("\n");
 		}
-		String title =  "Show " + type + " for region " + projectName + " " + SeqData.coordsStr(rStart, rEnd);
+		String title =  type + ": " + projectName + " " + SeqData.coordsStr(rStart, rEnd);
 		displayInfoMonoSpace(null, title, bfLines.toString(), false /*!isModal*/);
 	}
 	/***********************************************************************************/

@@ -1,4 +1,4 @@
-package symap.frame;
+package symap.drawingpanel;
 
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -6,7 +6,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent; 
 import javax.swing.JButton;
 
-import symap.drawingpanel.DrawingPanel;
 import symap.mapper.Mapper;
 import symap.mapper.Hfilter;
 import symap.sequence.Sequence;
@@ -14,7 +13,7 @@ import symap.sequence.Sfilter;
 
 /********************************************************************
  * Used to open Sfilter and Hfilter
- * CAS542 removed the abstract Filter.java and moved this to symap.frame
+ * CAS542 removed the abstract Filter.java and moved this to symap.frame; CAS544 moved to drawingpanel
  */
 public class FilterHandler implements ActionListener { // CAS521 remove Filtered interface
 	protected DrawingPanel drawingPanel;

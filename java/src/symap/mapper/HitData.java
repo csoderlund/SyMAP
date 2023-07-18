@@ -2,12 +2,14 @@ package symap.mapper;
 
 import java.util.Comparator;
 import symap.Globals;
+import symap.sequence.Sequence;
 import util.Utilities;
 
 /**
  * CAS531 was abstract so the code went through loops to get data into it via PseudoPseudoData, which is removed
  */
 public class HitData {	
+	private Mapper mapper;			// CAS544 add for way back to other data
 	private long id;
 	private int hitnum;				// CAS520 add, newly assigned hitnum
 	private byte pctid, pctsim; 	// CAS515 add pctsim and nMerge
@@ -30,16 +32,14 @@ public class HitData {
 	private String tag;				// CAS516 gNbN see MapperPool; CAS520 g(gene_overlap) [c(runnum.runsize)]
 	private String chr1, chr2; 		// CAS517 add
 	
-	// Update HitData PseudoHitData 
-	// hitnum,  pctid, cvgpct (pctsim), countpct (nMerge), score, gene_overlap
-	// annot1_idx, annot2_idx, strand, start1, end1, start2, end2, query_seq, target_seq, 
-	// block, bCorr
-	protected HitData(long id, int hitnum, 
+	// MapperPool.setSeqHitData
+	protected HitData(Mapper mapper, long id, int hitnum, 
 			  double pctid, int pctsim, int nMerge, int covScore,int overlap,
 			  int annot1_idx, int annot2_idx,
 			  String strand, int start1, int end1, int start2, int end2, String query_seq, String target_seq,   
 			  int runnum, int runsize, int block, double corr, String chr1, String chr2)
 	{
+		this.mapper = mapper;
 		this.id = id;
 		this.hitnum = hitnum;
 		
@@ -88,6 +88,8 @@ public class HitData {
 	public boolean isPosOrient2() { return isPosOrient2; }
 	public long getID() 		{ return id; }
 	public String getAnnots()	{ return annot1_idx + " " + annot2_idx;} // CAS543 added for trace
+	public int getAnnot1() 		{ return annot1_idx;}
+	public int getAnnot2() 		{ return annot2_idx;}
 	public int getHitNum() 		{ return hitnum; }
 	public int getBlock()		{ return blocknum;}
 	public int getStart1() 		{ return start1; } 
@@ -138,7 +140,15 @@ public class HitData {
 	public boolean is0Gene()  	{ return (overlap==0); } 
 	public boolean isPopup()	{ return isPopup;}
 	
-	public void setPopup(boolean b) {isPopup=b;} // CAS543
+	public void setIsPopup(boolean b) {// CAS543 add
+		isPopup=b;
+		if (Globals.TRACE) { // CAS544
+			Sequence s1 = (Sequence) mapper.getTrack1();
+			Sequence s2 = (Sequence) mapper.getTrack2();
+			s1.geneHigh(annot1_idx, false); s1.geneHigh(annot2_idx, false); 
+			s2.geneHigh(annot2_idx, false); s2.geneHigh(annot1_idx, false); 
+		}
+	} 
 	
 	public int getCollinearSet() {return collinearSet;} // CAS520 add 
 	
@@ -176,6 +186,7 @@ public class HitData {
 	public String getName()		{ return "Hit #" + hitnum;}
 	/********************************************************
 	 * CAS512 left/right->start:end; CAS516 add Inv, tag CAS517 puts track1 info before track2
+	 * Called from SeqHits.popupDesc 
 	 */
 	public String createHover(boolean s1LTs2) {
 		String x = (corr<0) ? " Inv" : "";

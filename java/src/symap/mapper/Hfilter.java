@@ -41,7 +41,7 @@ import util.Jhtml;
  * 1. Add filter here
  * 2. Add to HfilterData
  * 3. Add to PseudoPseudoHits.isHighLightHit() and isFiltered()
- * CAS541 MapperFilter=>Mfilter; CAS542 replace abstract filter with in file methods
+ * CAS541 MapperFilter=>Hfilter; CAS542 replace abstract filter with in file methods
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Hfilter extends JDialog {
@@ -301,7 +301,7 @@ public class Hfilter extends JDialog {
 		hGene2Radio.setSelected(hf.isHi2Gene());
 		hGene1Radio.setSelected(hf.isHi1Gene());
 		hGene0Radio.setSelected(hf.isHi0Gene());
-		hPopupRadio.setSelected(hf.isHiNone());
+		hPopupRadio.setSelected(hf.isHiPopup()); // CAS544 had wrong init
 		hNoneRadio.setSelected(hf.isHiNone());
 	}
 

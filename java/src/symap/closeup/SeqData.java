@@ -73,9 +73,9 @@ public class SeqData implements Comparable <SeqData> {
 			if (seq[i] != DASH) ++r;
 		return r;
 	}
-	// these two are used by all methods that display coords; CAS540 add , for dbp
+	// these two are used by all methods that display coords; CAS540 add , for dbp; CAS544 add ()
 	public static String coordsStr(int start, int end) {
-		return String.format("%,d - %,d %,dbp", start, end, (end-start+1)) ;
+		return String.format("%,d - %,d (%,dbp)", start, end, (end-start+1)) ; 
 	}
 	public static String coordsStr(char o, int start, int end) {
 		return String.format("%c(%,d - %,d) %,dbp", o, start, end, (end-start+1)) ;
