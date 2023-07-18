@@ -73,6 +73,31 @@ and different versions of Java.</font>
 <tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view2D"> 2D gene placement</a>
 </table>
 
+<a id="v544"></a>
+<h3>Release: v5.4.4 (18-July-23)</h3>
+<ul>
+<li><ttb>Query</ttb>
+<ul>
+<li><font color=red>Bug fix for v5.4.3</font> The extension to make the <ttl>Gene#</ttl> search work with
+suffixes (e.g. 5.a) had a bug when used without suffixes.
+</ul>
+<li><ttb>Chromosome Explorer 2D</ttb>
+<ul>
+<li><ttl>Sequence Filter</ttl>: There is a new option for highlighting a gene called <ttl>Popup</ttl>;
+when this option is on, every time a gene popup window is created, the gene stays selected. The filter popup has
+reduced number of options.
+See <a href="UserGuide.html#popup">Popups</a> and <a href="UserGuide.html#sequence_filter">Sequence Filters</a>.
+<li>The highlight <ttl>Hit popup</ttl> and <ttl>Gene popup</ttl> options are on by default.
+</ul>
+<li>Developers
+<ul>
+<li><small>Remove CloseupListener and DrawingPanelListener. Remove
+DrawingPanelData (merge with DrawingPanel). Move TextData from util to sequence directory.  Moved frame SyMAP2d,
+Frame2D, FSized2d, ControlPanel to drawingpanel because used exclusively by 2d. Rename AlignMain to AlgSynMain.
+</small>
+</ul>
+</ul>
+
 <a id="v543"></a>
 <h3>Release: v5.4.3 (12-July-23)</h3>
 There are numerous tiny changes, fixes, and two small new features.
@@ -93,7 +118,7 @@ Allow blank lines on annotation input. Add "Prefix" on manager summary.</small>
 <ul>
 <li><ttl>Hit Filter</ttl>: There is a new option for highlighting a hit-wire called <ttl>Popup</ttl>;
 when this option is on, every time a hit-wire popup window is created, the hit-wire stays selected.
-See <a href="UserGuide.html#popups">Popups</a> and <a href="UserGuide.html#hitfilter">Hit Filters</a>.
+See <a href="UserGuide.html#popup">Popups</a> and <a href="UserGuide.html#hitfilter">Hit Filters</a>.
 <li>When more than two sequence tracks are shown, the middle one now knows the hits on both
 sides and can list them in the <ttl>Gene Popup</ttl> and <ttl>Align (Max 30kb)</ttl>.
 <li><small><i>Minor</i>: The <ttl>Sequence Filter</ttl> options of <ttl>Show Text</ttl> now shows the
@@ -156,8 +181,8 @@ If a second block was selected for 2D, the genes would not be shown; with this f
 </ul>
 <li>Developer:
 <ul>
-<li>The Abstract Filter file was removed and the Hit and Sequence filter codes rewritten without it.
-<li>Changed number of tracks from 100 to 30.
+<li><small>The Abstract Filter file was removed and the Hit and Sequence filter codes rewritten without it.
+Changed number of tracks from 100 to 30.</small>
 </ul>
 </ul>
 
@@ -209,9 +234,9 @@ when the columns are being shown.
 
 <li>Developer:
 <ul>
-<li>The MySQL connection has been rewritten to be more straight-forward and confirm that connections
+<li><small>The MySQL connection has been rewritten to be more straight-forward and confirm that connections
 are correctly closed. There is a new dedicated connection for any each of the displays (e.g. DotPlot, 2D, etc).
-This removed 4 java files and replaced one.
+This removed 4 java files and replaced one.</small>
 </ul>
 </ul>
 
@@ -271,9 +296,12 @@ removed; any comma's in the descriptions are replaced with ";".
 
 <li>The <ttl>Show</ttl> was disabled for singles; it has been enabled.
 </ul>
-<li><ttb>Chromosome Explorer</ttb>: The text of the Hit popup has been slightly changed and the Subhit
+<li><ttb>Chromosome Explorer</ttb>:
+<ul><li>The text of the Hit popup has been slightly changed and the Subhit
 coverage has been added (see <a href="UserGuide.html#popup" class="ext" target="_blank">Hit Popup</a>).
-<li>Developer: the Hit assignment algorithm has been restructured.
+</ul>
+<li>Developer:
+<ul><li><small>The Hit assignment algorithm has been restructured.</small></ul>
 </ul>
 <a id="v535"></a>
 <h3>Release: v5.3.5 (3-Mar-23)</h3>
@@ -300,10 +328,12 @@ indicating that it continues. See <a href="UserGuide.html#base" class="ext" targ
 <li>The color icons now has Exon+ and Exon-, where the default colors correspond to the 2d display.
 <li>Bug fix: when there were overlapping genes, the exons could be wrong for one of them.
 </ul>
-<li>Developer: The Logger interface has been removed.
+<li>Developer:
+<ul><li><small>The Logger interface has been removed.
 In the ManagerFrame, the load methods have been moved to LoadProj, and the remove methods have
 been moved to RemoveProj. The AnchorsMain methods has been reworked for clarity, but provide same answer.
 The debug statements were cleaned up.
+</small></ul>
 </ul>
 
 <a id="v534"></a>
@@ -325,10 +355,12 @@ The parameters used to only be applied if A&S was run right after setting them; 
 maintained across symap sessions.
 <p>
 <li>
-Developers: There has been a lot of renaming and restructuring. For example, the symap.projectmanager.common package has been shortened to symap.manager,
+Developers:
+<ul><li><small>There has been a lot of renaming and restructuring. For example, the symap.projectmanager.common package has been shortened to symap.manager,
 and a few of the classes in this package were renamed for clarity. All ChrExp and 2d display
 classes have been renamed and moved to the frame package. A database package has been
 created for the database specific classes. The project and pair parameter code has been redesigned.
+</small></ul>
 </ul>
 
 <a id="v533"></a>

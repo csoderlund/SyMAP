@@ -101,7 +101,8 @@ the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
 			<li><a href="#view2D">View a region</a>
 			<li><a href="#info">Gene and hit information</a>
 			<li><a href="#control">Control panel and navigation</a> <!-- # ref in code -->
-			<li><a href="#sequence_filter">Filters</a>
+			<li><a href="#sequence_filter">Sequence Filter</a>,&nbsp;
+			<a href="#hitfilter">Hit Filter</a>
 			<li><a href="#base">Align (Base View)</a>
 			</ul>
 		</ul>
@@ -785,18 +786,26 @@ and belong to 642 collinear sets.
 
 Select <ttb>Sequence Filter</ttb> button above the sequence track to change the display for the
 respective chromosome. If the sequence track does not have a given annotation (e.g. Gaps), then that item
-will be un-selectable. All checked options occur immediately; a checked box enables the option.
+will be un-selectable. All checked options occur immediately; coordinate changes occur on <ttl>Apply</ttl>.
+<p>
+<table class="ty">
+<tr><td><ttl>Flip sequence</ttl><td>
+Reverses the orientation of the sequence track.
+<tr><td><ttl>Highlight gene popup</ttl>
+<td> Highlight the gene when its <a href="#popup">Information Popup</a> is displayed.
+The highlight color can be changed with the <a href="#image">Color Wheel</a>.
+</table>
 
 <table>
 <tr><td>
 <table class="ty">
-<tr><td><ttl>Flip sequence</ttl><td> Reverses the orientation of the sequence track.
 <tr><td colspan="2"><ttx>Show Graphics</ttx>
-<tr><td><ttl>Ruler</ttl><td> Display of the sequence ruler along the right side
-of the sequence.
-<tr><td style="vertical-align: text-top;"><ttl>Annotation</ttl><td> Display of the annotation descriptions along the
-right side of sequence. NOTE: this only works if you are zoomed in close enough that they can clearly
-be displayed.
+<tr><td><ttl>Ruler</ttl>
+<td>Display of the sequence ruler along the right side of the sequence.
+<tr><td style="vertical-align: text-top;"><ttl>Annotation</ttl>
+<td> Display of the annotation descriptions along the right side of sequence
+(see <a href="img/2d-closeup2.png" alt="2d-closeup">example</a>).
+NOTE: this only works if you are zoomed in close enough that they can clearly be displayed.
 <tr><td><ttl>Genes</ttl><td> Display of gene/exon annotations along the sequence.
 <tr><td style="vertical-align: text-top;"><ttl>Gene delimiter</ttl><td> When the zoom is close enough to view the exons, a black line will
 be drawn over the top end of each gene. This helps delimit genes that do not overlap (so are not staggered),
@@ -831,15 +840,16 @@ The units of the values entered can be selected from the accompanying drop down 
 </table>
 
 <table class="tx">
-<tr><td>A subset of the filters are available
-<br>by right clicking in the empty space
-<br>of the chromosome rectangle.
+<tr><td>A subset of the filters are available by right clicking in the empty space
+of the chromosome rectangle, as shown on the right.
+<p>&nbsp;<p>During a <ttl>Chromosome Explorer</ttl> session,
+<ttl>Sequence Filters</ttl> are reset to defaults between
+different <ttl>2D</ttl> displays.
 <td>
 <a href="img/seqFilterPopup.png">
-	<img src="img/seqFilterPopup.png" alt="sequence filter popup" style="border: 1px solid black; width: 120px"></a>
+	<img src="img/seqFilterPopup.png" alt="sequence filter popup" style="border: 1px solid black; width: 180px"></a>
 </table>
-During a <ttl>Chromosome Explorer</ttl> session, <ttl>Sequence Filters</ttl> are reset to defaults between
-different <ttl>Dot Plot</ttl> displays.
+
 <!----------------------------------------------------------->
 <!------------->
 <a id="hitfilter"></a> <!-- # ref in code -->
@@ -870,14 +880,20 @@ conjunction with any of the <ttl>Show</ttl> options.
 	<img src="img/hitfilterS.png" alt="hitfilterS" style="border: 1px solid black; width: 300px"></a>
 </table>
 
-
 <p>When blocks or collinear sets are highlighted, subsequent blocks/sets will have an alternating color relative
 to one chromosome of the pair.
 
-<p>A subset of the highlight filters are available by right clicking in the hit white space.
+<table class="tx">
+<tr>
+<td>A subset of the highlight filters are available by right clicking in the hit white space,
+as shown on the right.
 
-<p>During a <ttl>Chromosome Explorer</ttl> session, any <ttl>Hit Filter</ttl> settings will remain set between
-different <ttl>Dot Plot</ttl> displays.
+<p>&nbsp;<p>During a <ttl>Chromosome Explorer</ttl> session, any <ttl>Hit Filter</ttl> settings will remain set between
+different <ttl>2D</ttl> displays.
+<td>
+<a href="img/hitFilterPopup.png">
+	<img src="img/hitFilterPopup.png" alt="hit filter popup" style="border: 1px solid black; width: 180px"></a>
+</table>
 
 <!-------------------------------------------------------------------->
 <a id="ex2d"></a>
