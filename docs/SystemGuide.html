@@ -232,21 +232,38 @@ Follow the steps below to get started with SyMAP.
 SyMAP has been tested on the following:
 <table class="ty" style="font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
 <tr><td><i>Machine</i><td><i>MySQL</i><td><i>Java</i><td><i>Core</i><td><i>Memory</i><td><i>Purchased</i>
-<tr><td colspan=2><ttl>v5.4.1</ttl>:
-<tr><td>MacOS x86_64 (Monterey 12.6.6)<td>MySQL v8.0.33,<br>MariaDB 11.0.2
-<td>8, 15, 17, 18, 20 from
+<tr><td colspan=2><ttl>v5.4.1 and later</ttl>:
+
+<tr><td>MacOS x86_64 (Monterey 12.6.6)<sup>1</sup>
+<td>MySQL v8.0.33,<br>MariaDB 11.0.2<td>8, 15, 17, 18, 20 from
 <br><a href="https://adoptium.net">Adoptium</a> and <a href="https://www.oracle.com/java/">Oracle</a>
-<td>3.2 GHz 6-Core<td>64 GB<td>2018
+<td>3.2 GHz 6-Core<td>&nbsp;64 GB<td>2018
+
+<tr><td><a href="http://linode.com">Linode</a> (Ubuntu 22.04.2 LTS)<sup>2</sup><td>MySQL 8.0.33<td>17<td>Nanode<td>&nbsp;&nbsp;1 GB<td>2023
 
 <tr><td colspan=2><ttl>v5.4.0 and earlier</ttl>:
-<tr><td>Linux amd64 (Centos)<td>MariaDB v10.4.12<td>1.8<td>2.3 GHz 24-Core<td>128 GB<td>2011
-<tr><td>MacOS x86_64 (Catalina 10.15.4)<td>MySQL v8.0.17<td>17.0<td>3.2 GHz 6-Core<td>64 GB<td>2018
-<tr><td>MacOS x86_64 (Maverick 10.9.5)**<td>MySQL v5.6.21<td>1.8<td>2.4 GHz 5-Core<td>16 GB<td>2011
-
+<tr><td>Linux amd64 (Centos)<sup>3</sup><td>MariaDB v10.4.12<td>1.8<td>2.3 GHz 24-Core<td>128 GB<td>2011
+<tr><td>MacOS x86_64 (Catalina 10.15.4)<td>MySQL v8.0.17<td>17.0<td>3.2 GHz 6-Core<td>&nbsp;64 GB<td>2018
+<tr><td>MacOS x86_64 (Maverick 10.9.5)<sup>4</sup><td>MySQL v5.6.21<td>1.8<td>2.4 GHz 5-Core<td>&nbsp;16 GB<td>2011
 </table>
-**<small>This is an old laptop. I could not download from Github, so downloaded v5.0.8 from AGCoL. Then I had to replace
+
+<sup>1</sup> <small>MacOS Monterery has been tested with:
+<br>&nbsp;&nbsp;&nbsp;&bull; <i>Arabidopsis thaliana</i> (119GB), <i>Brassica Rapa</i> (297GB) and <i>Brassica oleracea</i> (447GB);
+<br>&nbsp;&nbsp;&nbsp;&bull; <i>Prunus persica</i> (227GB) with draft <i>Prunus yedoensis</i> (449GB);
+<br>&nbsp;&nbsp;&nbsp;&bull; Chromosomes 5,17,X of <i>Homo sapiens</i> (421GB), <i>Mus musculus</i> (412GB) and <i>Pan troglodytes</i> (420GB).
+</small>
+
+<br><sup>2</sup> <small>Linode nanode was too small to run Mummer, so the Mummer demo result files were transfered to the
+<tt>data/seq_results/demo_seq_to_demo_seq2</tt> directory. This allowed all other features to be tested on a small database.
+</small>
+
+<br><sup>3</sup> <small>Linux amd64 was used extensively on plant genome, e.g. maize (2365MB), rice (400MB) and sorghum (730GB).
+</small>
+
+<br><sup>4</sup> <small>MacOS Maverick is an old laptop. I could not download from Github, so downloaded v5.0.8 from AGCoL. Then I had to replace
 <tt>/ext/mummer/mac</tt> with <tt>/ext/mummer/mac_pre506</tt>. This machine is fine for viewing a SyMAP database,
-but too small to process large input files.</small>
+but too small to process large input files.
+</small>
 
 
 <p>The jar file has been compiled with Java 1.8, which is upward compatible.

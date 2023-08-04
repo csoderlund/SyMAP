@@ -61,8 +61,6 @@
 	<!---- START BODY -->
 
 If you are using SyMAP and want to update to a new version, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
-<p><font color=green>Releases after v5.4.0 have not been tested on Linux, but have been tested on MacOS with MySQL and MariaDB,
-and different versions of Java.</font>
 
 <h3>Summary of recent major releases</h3>
 <table class="tx">
@@ -72,6 +70,54 @@ and different versions of Java.</font>
 <tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="Collinear.html">viewing</a>
 <tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view2D"> 2D gene placement</a>
 </table>
+
+<a id="v545"></a>
+<h3>Release: v5.4.5 (4-Aug-23)</h3>
+<ul>
+<li>Tested on <a href="SystemGuide.html#machine">Linode Ubuntu</a>.
+<li><ttb>Chromosome Explorer 2D</ttb>
+<ul>
+<li><ttl>Sequence Filter</ttl>: See <a href="UserGuide.html#sequence_filter">Sequence Filter</a>
+<ul>
+<li><ttl>Gene#</ttl>: A new option of <ttl>Gene#</ttl> has been added, which will set the coordinates
+of a 50kb region around the gene and highlights the gene's introns.
+<li><ttl>Block#</ttl>, <ttl>Collinear#</ttl>: There are new options to show the <ttl>Block#</ttl> or <ttl>Collinear#</ttl> in the same way
+as the  <ttl>Hit#</ttl> and <ttl>Hit %Id</ttl> are shown.
+<li><ttl>Highlight Conserved Genes</ttl>: There is a new option to  <ttl>Highlight Conserved Genes</ttl>.
+See <a href="UserGuide.html#conserved">Conserved</a>.
+</ul>
+<li><ttb>Hit Filter</ttb>
+<ul>
+<li>The <ttl>Highlight hit popup</ttl> can be on all the time (i.e.
+it is not turned off if another highlight is turned on), and is highlighted in the hover color.
+<li>When the hit popup highlights the hit-wire, it will also highlight the genes
+assigned to it.
+<li>The hit popup provides the <ttx>Gene#</ttx> of the genes that are being highlighted.
+</ul>
+</ul>
+
+<li>Minor stuff
+<small>
+<ul>
+<li><ttb>Query Table</ttb> Fixed tiny bug from v5.4.2 where the <ttl>Glen</ttl> column would not sort.
+<li><ttb>Query Align</ttb> with MUSCLE, the <ttl>Cancel Alignment</ttl> button does not work, but now, it
+gives a message on how the user can cancel the alignment.
+<li><ttb>Block View</ttb> A clock shows when bringing up the 2D view (necessary for slow machines).
+<li><ttb>2D Sequence Filter</ttb> (1) The highlighted popup gene now highlights the whole gene
+(it was just the intron area and delimiter). (2) Setting sequence filters could cause consecutive duplicate views in History, i.e.
+forward/back buttons, this has been fixed. (3) Old bug: when a track was reused with a different sequence,
+the conditional checkboxes could be incorrectly disabled (still one problem left but need to rewrite masses of code
+to fix).
+</ul>
+</small>
+
+<li>Developer
+<small>
+<ul>
+<li>Rename frame.TrackCom to frame.TrackInfo;
+</ul>
+</small>
+</ul>
 
 <a id="v544"></a>
 <h3>Release: v5.4.4 (18-July-23)</h3>
