@@ -15,8 +15,8 @@ public class HitData {
 	private byte pctid, pctsim; 	// CAS515 add pctsim and nMerge
 	private int covScore;			// CAS540 best coverage
 	private int nMerge;
-	private int overlap = -1; 
-	private int annot1_idx, annot2_idx; // CAS543 add for debugging
+	private int geneOlp = -1; 
+	private int annot1_idx, annot2_idx; // CAS543 add
 	private int start1, end1, start2, end2;
 	private boolean isSameOrient, isPosOrient1, isPosOrient2; 	// CAS517 if the same
 	private String query_seq, target_seq; // coordinates of hit
@@ -25,14 +25,16 @@ public class HitData {
 	private int blocknum; 			// CAS505 add
 	private double corr;			// CAS516 add
 	
-	private boolean isBlock;
-	private boolean isCollinear;	// CAS520 add
-	private boolean isPopup;		// CAS543 add for when its been selected for popup
+	private boolean isBlock;		// set on init
+	private boolean isCollinear;	// set on init; CAS520 add
 	
-	private String tag;				// CAS516 gNbN see MapperPool; CAS520 g(gene_overlap) [c(runnum.runsize)]
+	private boolean isPopup=false;		// set when popup; CAS543 add
+	private boolean isConserved=false;	// set on conserved seqFilter, same as geneOlap=2 if only 2 tracks; CAS545 add 
+	
+	private String hitTag;			// CAS516 gNbN see MapperPool; CAS520 g(gene_overlap) [c(runnum.runsize)]
 	private String chr1, chr2; 		// CAS517 add
 	
-	// MapperPool.setSeqHitData
+	// MapperPool.setSeqHitData populates, puts in array for SeqHits, where each HitData is associated with a DrawHit
 	protected HitData(Mapper mapper, long id, int hitnum, 
 			  double pctid, int pctsim, int nMerge, int covScore,int overlap,
 			  int annot1_idx, int annot2_idx,
@@ -47,7 +49,7 @@ public class HitData {
 		this.pctsim = (byte) pctsim;
 		this.nMerge = nMerge;
 		this.covScore = covScore;
-		this.overlap = overlap;
+		this.geneOlp = overlap;
 		
 		this.annot1_idx = annot1_idx;
 		this.annot2_idx = annot2_idx;
@@ -71,9 +73,9 @@ public class HitData {
 		this.collinearSet = runnum; // CAS520 add; CAS543 move form MapperPool
 		this.isCollinear = (collinearSet==0) ? false : true; 
 		
-		tag    = "g" + overlap;  
-		if (runsize>0 && runnum>0) tag += " c" + runsize + "." + runnum; 
-		else if (runsize>0)        tag += " c" + runsize;			    // parsed in Utilities.isCollinear
+		hitTag    = "g" + overlap;  
+		if (runsize>0 && runnum>0) hitTag += " c" + runsize + "." + runnum; 
+		else if (runsize>0)        hitTag += " c" + runsize;			    // parsed in Utilities.isCollinear
 		
 		this.blocknum = block;
 		this.corr = corr;
@@ -133,22 +135,31 @@ public class HitData {
 	}
 
 	public boolean isBlock() 	{ return isBlock; }
-	public boolean isSet() 		{ return isCollinear; } // CAS520 add these 4 new filters
-	public boolean isGene() 	{ return (overlap>0); } 
-	public boolean is2Gene() 	{ return (overlap==2); } 
-	public boolean is1Gene() 	{ return (overlap==1); } 
-	public boolean is0Gene()  	{ return (overlap==0); } 
+	public boolean isCset() 	{ return isCollinear; } 
 	public boolean isPopup()	{ return isPopup;}
+	public boolean isConserved(){ return isConserved;}
+	
+	public boolean isGene() 	{ return (geneOlp>0); } 
+	public boolean is2Gene() 	{ return (geneOlp==2); } 
+	public boolean is1Gene() 	{ return (geneOlp==1); } 
+	public boolean is0Gene()  	{ return (geneOlp==0); } 
 	
 	public void setIsPopup(boolean b) {// CAS543 add
 		isPopup=b;
-		if (Globals.TRACE) { // CAS544
-			Sequence s1 = (Sequence) mapper.getTrack1();
-			Sequence s2 = (Sequence) mapper.getTrack2();
-			s1.geneHigh(annot1_idx, false); s1.geneHigh(annot2_idx, false); 
-			s2.geneHigh(annot2_idx, false); s2.geneHigh(annot1_idx, false); 
-		}
+		Sequence s1 = (Sequence) mapper.getTrack1();// CAS545 highlight gene also
+		Sequence s2 = (Sequence) mapper.getTrack2();
+		s1.setHighforHit(annot1_idx, annot2_idx, b); 
+		s2.setHighforHit(annot1_idx, annot2_idx, b); 
 	} 
+	public void setIsConserved(boolean b) {	// CAS545 add; SeqPool sets true, SeqHits sets false
+		isConserved=b;
+	
+		Sequence s1 = (Sequence) mapper.getTrack1();
+		Sequence s2 = (Sequence) mapper.getTrack2();
+			
+		s1.setConservedforHit(annot1_idx, annot2_idx, b); 
+		s2.setConservedforHit(annot1_idx, annot2_idx, b); 
+	}
 	
 	public int getCollinearSet() {return collinearSet;} // CAS520 add 
 	
@@ -191,7 +202,7 @@ public class HitData {
 	public String createHover(boolean s1LTs2) {
 		String x = (corr<0) ? " Inv" : "";
 		String o = (isPosOrient1==isPosOrient2) ? "(=)" : "(!=)"; // CAS517x
-		String msg =  "Block #" + getBlock() + x + "    Hit #" + hitnum + " " + o + " " + tag + "\n"; 
+		String msg =  "Block #" + getBlock() + x + "  Hit #" + hitnum + " " + o + " " + hitTag + "\n"; 
 		
 		String n = (nMerge>0) ? "Subhit=" + nMerge + "  " : "Subhit=1  ";
 		msg += n;

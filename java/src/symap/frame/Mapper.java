@@ -14,9 +14,9 @@ public class Mapper  { // CAS521 removed 'extend Observer' - wasn't even used
 	public static final float JAGGY_FUDGE = 0.95f;
 	
 	protected Mproject[] projects;	
-	public TrackCom[] tracks;
+	public TrackInfo[] tracks;
 	protected Block[] blocks;
-	public TrackCom reference;
+	public TrackInfo reference;
 		
 	protected float maxBpPerUnit = 0;
 	
@@ -29,38 +29,38 @@ public class Mapper  { // CAS521 removed 'extend Observer' - wasn't even used
 		this.projects = projects;
 	}
 	
-	public void setTracks(TrackCom[] tracks) {
+	public void setTracks(TrackInfo[] tracks) {
 		this.tracks = tracks;
 		reference = tracks[0];
 		
-		for (TrackCom t : tracks)
+		for (TrackInfo t : tracks)
 			maxBpPerUnit = Math.max(maxBpPerUnit, t.getSizeBP());
 	}
 	
 	public void setBlocks(Block[] blocks) {this.blocks = blocks;}
 		
 	// symap.frame.ChrExpFrame
-	public TrackCom[] getTracks(int nProjID) {
-		Vector<TrackCom> out = new Vector<TrackCom>();
+	public TrackInfo[] getTracks(int nProjID) {
+		Vector<TrackInfo> out = new Vector<TrackInfo>();
 		
-		for (TrackCom t : tracks)
+		for (TrackInfo t : tracks)
 			if (t.getProjIdx() == nProjID)
 				out.add(t);
 		
-		return out.toArray(new TrackCom[0]);
+		return out.toArray(new TrackInfo[0]);
 	}
 	// symap.frame.ProjIcons
-	public TrackCom[] getTracks(int nProjID,TreeSet<Integer> grpIdxWithSynteny) {
-		Vector<TrackCom> out = new Vector<TrackCom>();
+	public TrackInfo[] getTracks(int nProjID,TreeSet<Integer> grpIdxWithSynteny) {
+		Vector<TrackInfo> out = new Vector<TrackInfo>();
 		
-		for (TrackCom t : tracks){
+		for (TrackInfo t : tracks){
 			if (t.getProjIdx() == nProjID){
 				if (grpIdxWithSynteny.contains(t.getGroupIdx())){
 					out.add(t);
 				}
 			}
 		}
-		return out.toArray(new TrackCom[0]);
+		return out.toArray(new TrackInfo[0]);
 	}	
 	
 	
@@ -97,48 +97,48 @@ public class Mapper  { // CAS521 removed 'extend Observer' - wasn't even used
 		int[] out = new int[getNumVisibleTracks()+1];
 		out[0] = reference.getGroupIdx();
 		int i = 1;
-		for (TrackCom t : getVisibleTracks())
+		for (TrackInfo t : getVisibleTracks())
 			out[i++] = t.getGroupIdx();
 		return out;
 	}
 	
-	public void setReferenceTrack(TrackCom reference) { 
+	public void setReferenceTrack(TrackInfo reference) { 
 		this.reference = reference;
 		bChanged = true;
 	}
 	
-	public TrackCom getReferenceTrack() { return reference; }
-	public boolean isReference(TrackCom t) { return t == reference; }
+	public TrackInfo getReferenceTrack() { return reference; }
+	public boolean isReference(TrackInfo t) { return t == reference; }
 	public int getNumTracks() { return tracks.length; }
 	
 	public int getNumVisibleTracks() { // excluding the reference track
 		int n = 0;
-		for (TrackCom t : tracks)
+		for (TrackInfo t : tracks)
 			if (t.isVisible() && t != reference) n++;
 		return n;
 	}
 	
 	private int getNumVisibleTracks(int nProjID) {
 		int n = 0;
-		for (TrackCom t : tracks)
+		for (TrackInfo t : tracks)
 			if (t.isVisible() && t.getProjIdx() == nProjID) n++;
 		return n;
 	}
 	
-	public TrackCom[] getVisibleTracks() { // excluding the reference track
-		Vector<TrackCom> visible = new Vector<TrackCom>();
-		for (TrackCom t : tracks)
+	public TrackInfo[] getVisibleTracks() { // excluding the reference track
+		Vector<TrackInfo> visible = new Vector<TrackInfo>();
+		for (TrackInfo t : tracks)
 			if (t.isVisible() && t != reference) visible.add(t);
-		return visible.toArray(new TrackCom[0]);
+		return visible.toArray(new TrackInfo[0]);
 	}
 	
 	public void hideVisibleTracks() { // excluding the reference
-		for (TrackCom t : tracks)
+		for (TrackInfo t : tracks)
 			if (t != reference) t.setVisible(false);
 		bChanged = true;
 	}
 	
-	public void setTrackVisible(TrackCom t, boolean visible) {
+	public void setTrackVisible(TrackInfo t, boolean visible) {
 		t.setVisible(visible);
 		bChanged = true;
 	}

@@ -45,8 +45,8 @@ public class FieldData {
 	private static final String []     SPECIES_COLUMNS = 
 		{Q.gNCol, Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol,  Q.hStartCol, Q.hEndCol, Q.hLenCol};
 	
-	private static final Class <?> []  SPECIES_TYPES =   
-		{Integer.class, String.class,  Integer.class,Integer.class, String.class, String.class, Integer.class, Integer.class,Integer.class};
+	private static final Class <?> []  SPECIES_TYPES =   // CAS545 changed 5th to integer to fix 543 bug after moving Gene#
+		{String.class, String.class,  Integer.class,Integer.class, Integer.class, String.class, Integer.class, Integer.class,Integer.class};
 	
 	private static final boolean []    SPECIES_COLUMN_DEF =  
 		{ true, false, false, false, false , false, false, false, false};

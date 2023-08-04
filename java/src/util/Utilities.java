@@ -476,6 +476,10 @@ public class Utilities {
 		return pane;
 	}
 	
+	public static void showInfoMessage(String title, String msg) {
+		System.out.println(msg);
+		JOptionPane.showMessageDialog(null, msg, title, JOptionPane.WARNING_MESSAGE);
+	}
 	
 	public static void showWarningMessage(String msg) {
 		System.out.println(msg);
@@ -606,10 +610,32 @@ public class Utilities {
     	return x1 + "." + x2 + "." + block;
     }
     /*****************************************************
-     * The following are to parse the gene tag
-     * v543 DB 992.a (1 746) v542 DB Gene #992a (9 1,306bp), text removed and '.' added
+     * The following are to parse the gene tag (I made a mess of this)
+     * v544 DB: 992.a (1 746)
+     * v542 DB: Gene #992a (9 1,306bp)
      * Exon tag created in Annotation class
      */
+    public static String convertTag(String tag) {
+    	if (!tag.startsWith("Gene")) return tag;
+    	
+    	String dbtag = tag.replace("bp","");
+    	Pattern pat1 = Pattern.compile("Gene #(\\d+)([a-z]+[0-9]*)(.*)$");
+		Matcher m = pat1.matcher(dbtag); // pre-CAS543 Gene #2 (9 1,306bp) or Gene #2b (9 1,306bp)
+		if (m.matches()) {
+			String d = m.group(1);
+			String s = m.group(2);
+			String p = m.group(3);
+			return d + "." + s + " " + p;
+		}
+		Pattern pat2 = Pattern.compile("Gene #(\\d+)(.*)$");
+		m = pat2.matcher(dbtag);
+		if (m.matches()) {
+			String d = m.group(1);
+			String p = m.group(2);
+			return d + "." + " " + p;
+		}
+		return dbtag;
+    }
     // Annotation class; create fullTag for hover
     static public String createFullTagFromDBtag(String tag) {
     	String [] tok = tag.split("\\(");
@@ -626,7 +652,8 @@ public class Utilities {
     	}
 		return tok[0] + " " + tok[1];
     }
-    // Annotation.popupDesc; return tok[0]=Gene #1563.w and tok[1]=#Exons=15 2,164bp
+    // Annotation.popupDesc; e.g  1563.w (15 2164)
+    // return tok[0]=Gene #1563.w and tok[1]=#Exons=15 2,164bp
     static public String [] getGeneExonFromTag(String tag) {
     	String [] ret = new String [2];
     	String [] tok = tag.split("\\(");
@@ -637,7 +664,7 @@ public class Utilities {
 			ret[1] = Globals.exonTag +  " 0 0";
 			return ret;
     	}
-    	
+    
     	ret[0] = tok[0];
     	tok[1] = tok[1].replace(")","");
     	ret[1] = Globals.exonTag + tok[1].replace(")","");
@@ -648,16 +675,16 @@ public class Utilities {
 		}
     	return ret;
     }
-    // backend.AnchorsPost.Gene; return "d.[a]"
+    // Created in backend.AnchorsPost.Gene; return "d.[a]"
     static public String getGenenumFromDBtag(String tag) {
-		if (!tag.startsWith("Gene")) {// CAS543 '2 (9 1306)' or '2.b (9 1306)'
+		if (!tag.startsWith("Gene")) { // CAS544 '2 (9 1306)' or '2.b (9 1306)'
 			String [] tok = tag.split(" \\(");
 			if (tok.length==2) return tok[0].trim();
 			else return tag; // shouldn't happen
 		}
 		
 		Pattern pat1 = Pattern.compile("Gene #(\\d+)([a-z]+[0-9]*)(.*)$");
-		Matcher m = pat1.matcher(tag); // pre-CAS543 Gene #2 (9 1,306bp) or Gene #2b (9 1,306bp)
+		Matcher m = pat1.matcher(tag); // pre-CAS544 Gene #2 (9 1,306bp) or Gene #2b (9 1,306bp)
 		if (m.matches()) {
 			String y = m.group(1);
 			String z = m.group(2);
@@ -713,8 +740,7 @@ public class Utilities {
 		}
 		return true;
 	}
-   
- 
+    
     // parse tag for collinear: CAS520 e.g. g2 c10.5 created in MapperPool.setPseudoPseudoData
     static public int getCollinear(String tag) {
     	try {

@@ -22,7 +22,7 @@ import util.ErrorReport;
 
 public class DBconn2 {
 	private final int maxTries = 10;
-	private final boolean TRACE = Globals.TRACE;
+	private final boolean TRACE = false; // Globals.TRACE;
 	
 	static private String chrSQL = "characterEncoding=utf8"; // utf8mb4
     static private String driver = "com.mysql.jdbc.Driver";
@@ -136,12 +136,13 @@ public class DBconn2 {
 			if (connMap.size()>100) 
 				System.err.println("Warning: Too many MySQL connections are open. To be safe, restart SyMAP.");
 		
-			if (!TRACE) return;
+			if (!Globals.TRACE) return;
 			
 			ResultSet rs = executeQuery("show status where variable_name='threads_connected'");
 			while (rs.next()) prt(rs.getString(1) + " " + rs.getInt(2));
 			rs.close();
 			
+			if (!TRACE) return;
 			for (String n : connMap.keySet()) prt("  Open " + n);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Closing connection");}

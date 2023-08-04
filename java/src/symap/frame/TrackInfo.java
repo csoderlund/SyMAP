@@ -9,14 +9,14 @@ import java.awt.Color;
 /***********************************************
  * Created in ChrExpInit; used by Mapper, ChrExpInit, ChrExpFrame and ProjIcons 
  */
-public class TrackCom {
+public class TrackInfo {
 	protected Mproject project;
 	private String strGroupName;
 	private int nGroupIdx;
 	private long sizeBP;
 	boolean bVisible = false;
 
-	public TrackCom(Mproject project, String strGroupName, int nGroupIdx) {
+	public TrackInfo(Mproject project, String strGroupName, int nGroupIdx) {
 		this.project = project;
 		this.strGroupName = strGroupName;
 		this.nGroupIdx = nGroupIdx;
@@ -38,8 +38,8 @@ public class TrackCom {
 	public Color getColor() { return project.getColor(); } 					// ChrExpFrame.show2DView
 
 	// Static
-	public static TrackCom getTrackByGroupIdx(Vector<TrackCom> tracks, int grpIdx) { // ChrExpInit.loadAllBlocks
-		for (TrackCom t : tracks) {
+	public static TrackInfo getTrackByGroupIdx(Vector<TrackInfo> tracks, int grpIdx) { // ChrExpInit.loadAllBlocks
+		for (TrackInfo t : tracks) {
 			if (t.getGroupIdx() == grpIdx)
 				return t;
 		}

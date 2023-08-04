@@ -306,7 +306,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			int pid = mapper.getProjects()[i].getID();
 			pidxList[i] = pid;
 			
-			for (TrackCom t : mapper.getTracks(pid)){
+			for (TrackInfo t : mapper.getTracks(pid)){
 				if (t.isVisible() || mapper.getReferenceTrack() == t) {
 					shownGroups.add(t.getGroupIdx());
 					if (mapper.getReferenceTrack() == t) refIdx=pid;
@@ -344,8 +344,8 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		
 	private boolean show2DView() {
 		try {	
-			TrackCom ref = mapper.getReferenceTrack();
-			TrackCom[] selectedTracks = mapper.getVisibleTracks(); // none reference tracks
+			TrackInfo ref = mapper.getReferenceTrack();
+			TrackInfo[] selectedTracks = mapper.getVisibleTracks(); // none reference tracks
 			
 			if (selectedTracks.length>=DrawingPanel.MAX_TRACKS) {
 				Utilities.showWarningMessage("Selected " + selectedTracks.length + "tracks.\nExceeded number of tracks (" + DrawingPanel.MAX_TRACKS + ") that can be set");
@@ -370,7 +370,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			// Setup 2D
 			int position = 1;
 			for (int i = 0;  i < selectedTracks.length;  i++) {
-				TrackCom t = selectedTracks[i];
+				TrackInfo t = selectedTracks[i];
 				
 				// Add track CAS521 remove FPC stuff
 				dp.setSequenceTrack( position++, t.getProjIdx(), t.getGroupIdx(), t.getColor() );

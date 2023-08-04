@@ -5,7 +5,7 @@ package symap.mapper;
  * between the filter and the mapper.
  * CAS520 remove or makes stubs of all FPC stuff. Change for new hit filter.
  * CAS533 removed reference to the Dotplot hitfilter
- * CAS541 HitFilter=>MfilterData; CAS542 remove listeners, that did nothing
+ * CAS541 HitFilter=>HfilterData; CAS542 remove listeners, that did nothing
  */
 public class HfilterData {
 	private boolean DEBUG = false; // Globals.DEBUG;
@@ -17,10 +17,10 @@ public class HfilterData {
 	
 	private boolean bHiPopup=true; // set in setDefaults; CAS543 add, CAS544 change default
 	private boolean bHiNone=false; 
-	private boolean bHiBlock=false, bHiSet=false, bHi2Gene=false, bHi0Gene=false, bHi1Gene=false;
+	private boolean bHiBlock=false, bHiCset=false, bHi2Gene=false, bHi0Gene=false, bHi1Gene=false;
 	
 	private boolean bBlock=true; // set in setDefaults;
-	private boolean bSet=false, b2Gene=false, b1Gene=false, b0Gene=false, bAllHit=false;
+	private boolean bCset=false, b2Gene=false, b1Gene=false, b0Gene=false, bAllHit=false;
 	
 	private double pctid;
 	private double minPctid=NO_PCTID, maxPctid=ANY_PCTID;
@@ -40,15 +40,15 @@ public class HfilterData {
 	public String getFilterText() { // CAS520 So know what is set when hover in whitespace
 		String msg = "";			// SeqHits expects this to start with High if there is highlightening
 		if (bHiBlock) 		msg += "High Blocks; ";
-		else if (bHiSet) 	msg += "High Sets; ";
-		else if (bHi2Gene) 	msg += "High 2 Genes; ";
-		else if (bHi1Gene) 	msg += "High 1 Gene; ";
-		else if (bHi0Gene) 	msg += "High 0 Genes; ";
+		else if (bHiCset) 	msg += "High Sets; ";
+		else if (bHi2Gene) 	msg += "High =2 Genes; ";
+		else if (bHi1Gene) 	msg += "High =1 Gene; ";
+		else if (bHi0Gene) 	msg += "High =0 Genes; ";
 		else if (bHiPopup) 	msg += "High Popup; ";
 		
 		msg += "Show "; // something always shows
 		if (bBlock) 	msg += "Block, ";
-		if (bSet)	 	msg += "Sets, ";
+		if (bCset)	 	msg += "Sets, ";
 		if (b2Gene) 	msg += "2 Genes, ";
 		if (b1Gene) 	msg += "1 Gene, ";
 		if (b0Gene) 	msg += "0 Genes, ";
@@ -62,7 +62,7 @@ public class HfilterData {
 	}
 	// block, set, region CAS520 add for showing synteny from query; b is blocks by default
 	public void setForQuery(boolean b, boolean s, boolean r) { // block, set, region
-		if (s)      {setBlock(true); setSet(true); setHiSet(true); setHiNone(false);}
+		if (s)      {setBlock(true); setCset(true); setHiCset(true); setHiNone(false);}
 		else if (r) {setBlock(false); setAllHit(true);}
 	}
 	// CAS530 dotplot
@@ -73,10 +73,10 @@ public class HfilterData {
 	}
 	
 	public void setDefaults() {
-		bHiBlock  = bHiSet = bHi2Gene = bHi0Gene = bHi1Gene = bHiNone  = false;		
+		bHiBlock  = bHiCset = bHi2Gene = bHi0Gene = bHi1Gene = bHiNone  = false;		
 		bHiPopup = true;
 		
-		bSet = b2Gene = b0Gene = bAllHit = false; 
+		bCset = b2Gene = b0Gene = bAllHit = false; 
 		bBlock = true;
 		
 		pctid=ANY_PCTID;
@@ -91,7 +91,7 @@ public class HfilterData {
 	public boolean setChanged(HfilterData hf, String msg) {
 		boolean changed = false;
 		if (setHiBlock(hf.bHiBlock))  	changed = true; 
-		if (setHiSet(hf.bHiSet))    	changed = true;
+		if (setHiCset(hf.bHiCset))    	changed = true;
 		if (setHi2Gene(hf.bHi2Gene))    changed = true;
 		if (setHi1Gene(hf.bHi1Gene))	changed = true;
 		if (setHi0Gene(hf.bHi0Gene))	changed = true;
@@ -99,7 +99,7 @@ public class HfilterData {
 		if (setHiPopup(hf.bHiPopup))	changed = true;
 		
 		if (setBlock(hf.bBlock))        changed = true;
-		if (setSet(hf.bSet))        	changed = true;
+		if (setCset(hf.bCset))        	changed = true;
 		if (set2Gene(hf.b2Gene)) 		changed = true; 
 		if (set1Gene(hf.b1Gene)) 		changed = true; 
 		if (set0Gene(hf.b0Gene))		changed = true; 
@@ -156,10 +156,10 @@ public class HfilterData {
 		return false;
 	}
 	
-	public boolean   isHiSet() { return bHiSet;}
-	public boolean  setHiSet(boolean bFilter) {
-		if (bFilter != bHiSet) {
-			bHiSet = bFilter;
+	public boolean   isHiCset() { return bHiCset;}
+	public boolean  setHiCset(boolean bFilter) {
+		if (bFilter != bHiCset) {
+			bHiCset = bFilter;
 			return true;
 		}
 		return false;
@@ -199,10 +199,10 @@ public class HfilterData {
 		return false;
 	}
 	
-	public boolean isSet() { return bSet;}
-	public boolean setSet(boolean bFilter) {
-		if (bFilter != bSet) {
-			bSet = bFilter;
+	public boolean isCset() { return bCset;}
+	public boolean setCset(boolean bFilter) {
+		if (bFilter != bCset) {
+			bCset = bFilter;
 			return true;
 		}
 		return false;

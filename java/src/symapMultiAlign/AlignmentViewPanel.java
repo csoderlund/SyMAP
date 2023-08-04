@@ -7,9 +7,6 @@ package symapMultiAlign;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -28,6 +25,7 @@ import javax.swing.JTextField;
 
 import symapQuery.SyMAPQueryFrame;
 import util.ErrorReport;
+import util.Utilities;
 
 public class AlignmentViewPanel extends JPanel {
 	private static final long serialVersionUID = -2090028995232770402L;
@@ -53,7 +51,6 @@ public class AlignmentViewPanel extends JPanel {
 			theThread = new Thread(new Runnable() {
 				public void run() {
 					try {
-						bRunThread = true;
 						setStatus();
 						//Load sequences from the database
 						setMultiSequenceData(theNames, theSequences, theFilename);
@@ -107,7 +104,8 @@ public class AlignmentViewPanel extends JPanel {
 	
 	private void stopThread() {
 		if(theThread != null) {
-			bRunThread = false;
+			Utilities.showInfoMessage("Cancel Alignment", 
+					"Remove this tab from Results\nMUSCLE must be stopped by user from terminal using kill.");
 		}
 	}
 	
@@ -141,7 +139,7 @@ public class AlignmentViewPanel extends JPanel {
 		theRow.setAlignmentX(LEFT_ALIGNMENT);
 		theRow.setBackground(Color.WHITE);
 		
-		menuHorzRatio = new JComboBox ();
+		menuHorzRatio = new JComboBox <MenuMapper> ();
 		menuHorzRatio.addItem( new MenuMapper ( "Horz. Ratio = 1:1", 1 ) );
 		menuHorzRatio.addItem( new MenuMapper ( "Horz. Ratio = 1:2", 2 ) );
 		menuHorzRatio.addItem( new MenuMapper ( "Horz. Ratio = 1:3", 3 ) );
@@ -207,28 +205,6 @@ public class AlignmentViewPanel extends JPanel {
 			btnExport.setEnabled(true);
 		else
 			btnExport.setEnabled(false);
-	}
-	
-	private JPanel getMultiButtonRow() {
-		JPanel theRow = new JPanel();
-		theRow.setLayout(new BoxLayout(theRow, BoxLayout.LINE_AXIS));
-		theRow.setBackground(Color.WHITE);
-		theRow.setAlignmentX(LEFT_ALIGNMENT);
-		
-		btnCopySeq = new JButton("Copy Sequence");
-		btnCopySeq.setEnabled(false);
-		btnCopySeq.setBackground(Color.WHITE);
-		btnCopySeq.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
-				cb.setContents(new StringSelection(theMultiPanel.getSelectedSequence()), null);
-			}
-		});
-
-		theRow.add(btnCopySeq);
-		
-		theRow.setMaximumSize(theRow.getPreferredSize());
-		return theRow;
 	}
 	
 	private void refreshPanels() {
@@ -320,10 +296,7 @@ public class AlignmentViewPanel extends JPanel {
 			//refreshMultiButtons();
 		}
 	}
-	private void refreshMultiButtons() {
-		if(theMultiPanel.getNumSequencesSelected() == 1)btnCopySeq.setEnabled(true);
-		else btnCopySeq.setEnabled(false);
-	}
+	
 	private SyMAPQueryFrame theParentFrame = null;
 	private JScrollPane scroller = null;
 	
@@ -332,9 +305,8 @@ public class AlignmentViewPanel extends JPanel {
 	private JPanel mainPanel = null;
 	
 	//UI controls for the button panel
-	private JComboBox menuHorzRatio = null;
+	private JComboBox <MenuMapper> menuHorzRatio = null;
 	private JButton btnShowType = null;
-	private JButton btnCopySeq = null;
 	private JButton btnExport = null;
 	
 	//Controls for progress/cancelling action
@@ -343,7 +315,6 @@ public class AlignmentViewPanel extends JPanel {
 	
 	//Thread used for building the sequence data
 	private Thread theThread = null;
-	private boolean bRunThread = false;
 	
 	//Multiple alignment dataholders
 	private MultiAlignmentData theMultiAlignmentData = null;

@@ -87,7 +87,7 @@ public class Mapper extends JComponent
 		seqHitObj = null;
 	}
 	// called from HitFilter
-	public void update(HfilterData hf) {
+	public void update() {
 		// CAS541 dead code; if (!mapinfo.hasHitContent(hf.isBlock(), false)) // CAS531 hf.isRepeat which was always false
 		init();
 	}
@@ -101,13 +101,12 @@ public class Mapper extends JComponent
 		if (trackHolders[1].getTrack() != null) trackHolders[1].getTrack().clearTrackBuild();
 	}
 
-	/** initializes the mapper downloading all hits. */
+	/* initializes the mapper downloading all hits. Was called from dead code in drawingPanel
 	public boolean initAllHits() {
 		HfilterData hf = hitFilData.copy("Mapper initAllHits");
 		//hf.setBlock(false); // CAS542 remove
 		return myInit(hf);
-	}
-
+	}*/
 	public boolean init() {
 		return myInit(hitFilData);
 	}
@@ -118,7 +117,6 @@ public class Mapper extends JComponent
 		if (t1 == null || t2 == null) return false;
 
 		if (seqHitObj!=null) return true;
-		
 		initing = true;
 		seqHitObj = mapPool.setData(this, t1, t2, hf); 
 		seqHitObj.setMinMax(hitFilData);	
@@ -195,7 +193,7 @@ public class Mapper extends JComponent
 	}
 	
 	// CAS516 change to one call instead of 4
-	public boolean isHitSelected(int s1, int e1, int s2, int e2) {
+	public boolean isQuerySelHit(int s1, int e1, int s2, int e2) {
 		if(theTablePanel != null)
 			return theTablePanel.isHitSelected(s1, e1, s2, e2);
 		return false;

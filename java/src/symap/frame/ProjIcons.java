@@ -33,7 +33,7 @@ public class ProjIcons extends JComponent
 	protected final static int FONT_HEIGHT = 11;//*fm.getHeight()*/
 	protected Mproject project;
 	protected Block[] blocks;
-	protected TrackCom[] tracks;
+	protected TrackInfo[] tracks;
 	protected Mapper mapper;
 	private ActionListener listener;
 	int lineSize = 15;
@@ -51,7 +51,7 @@ public class ProjIcons extends JComponent
 		this.blocks = mapper.getBlocksForProject(project.getID());
 		
 		int height = 0;
-		for (TrackCom t : tracks)
+		for (TrackInfo t : tracks)
 			height = Math.max(height, (int)(MAX_CHR_HEIGHT * t.getSizeBP() / mapper.getMaxBpPerUnit()));
 		
 		chrHeight = height + 5;
@@ -87,7 +87,7 @@ public class ProjIcons extends JComponent
 		FontMetrics fm = g2.getFontMetrics();
 		int nTrack = 0;
 		int numTracks = 1;
-		for (TrackCom t : tracks) {
+		for (TrackInfo t : tracks) {
 			int height = (int)(MAX_CHR_HEIGHT * t.getSizeBP() / mapper.getMaxBpPerUnit());
 			height = Math.max(height,MIN_CHR_HEIGHT);
 			boolean isVisible = (t.isVisible() || t == mapper.getReferenceTrack());
@@ -153,7 +153,7 @@ public class ProjIcons extends JComponent
 		
 		int nTrack = 0;
 		int numTracks = 0;
-		for (TrackCom t : tracks) {
+		for (TrackInfo t : tracks) {
 			if (!mapper.isReference(t)) {
 				if (xClick >= x && xClick <= x+WIDTH 
 						&& yClick >= y && yClick <= y+chrHeight+6) 

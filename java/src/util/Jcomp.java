@@ -108,4 +108,17 @@ public class Jcomp {
 		
 		return button;
 	}
+	public static JButton createButton(String text, String tip, boolean bSelected) {
+		JButton button;
+		
+		button = new JButton(text);
+		button.setSelected(bSelected); 
+		
+		button.setToolTipText(tip);
+		button.setName(tip); 
+		
+		button.setMaximumSize(button.getPreferredSize());
+		button.setMinimumSize(button.getPreferredSize());
+		return button;
+	}
 }

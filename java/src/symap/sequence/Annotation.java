@@ -16,6 +16,7 @@ import java.util.TreeMap;
 
 import symap.Globals;
 import symap.closeup.TextShowInfo;
+import symap.mapper.Mapper;
 import symap.closeup.SeqData;
 import util.ErrorReport;
 import util.Utilities;
@@ -27,9 +28,10 @@ import util.Utilities;
  */
 public class Annotation {
 	private Sequence seqObj;
-	private int type;
+	private int itype;
 	private int start, end;						
-	private String description, tag, fullTag;	
+	private String description;
+	private String strGeneNum, tag, fullTag; 
 	private boolean bStrandPos;
 	private int gene_idx=0;  	// If this is an exon, it is the gene_idx (pseudo_annot.idx) that it belongs to
 	private int annot_idx=0; 	// pseudo_annot.idx
@@ -38,20 +40,28 @@ public class Annotation {
 	private Rectangle2D.Double rect;
 	private Rectangle2D.Double hoverGeneRect; 	// CAS515 so hover cover for gene covers full width of exon
 	
-	private String exonList=null; 				// CAS512 add ExonList to popup
+	private Vector <Annotation> exonVec = null; // CAS545 determine during SeqPool load
+	private String exonList=null; 				// CAS512 build first time of popup
 	private String hitListStr1=null;  			// CAS517 add HitList to popup
 	private String hitListStr2=null;			// CAS543 add HitList for other side to popup
-	private boolean bGeneLineOpt=false; 		// CAS520 show line at start of gene option
-	private boolean bHighPopup=false, isPopup=false;				// CAS544 if popup
+	
+	private boolean bGeneLineOpt=false; 		// Show line on all genes; CAS520 add
+	
+	private boolean bHighPopup=false;			// Highlight gene if popup; CAS544 add
+	private boolean isPopup=false; 				// Gene has popup - highlight if bHighPopup; CAS544 add
+	private boolean isHitPopup=false;			// Hit Popup highlights gene too, though gene Popup has precedence
+	
+	private boolean isSelectedGene=false; 		// Gene is filtered; CAS545 add
+	private boolean isConserved=false;			// Show all conserved genes; CAS545 add
 	
 	/**
 	 * Creates a new Annotation instance setting the description values, color, and draw method based on type.
 	 * SeqPool.setSequence
 	 */
-	public Annotation(Sequence seqObj, String desc, String annot_type, int start, int end, String strand, 
-			String tag, int gene_idx, int idx, int genenum, int numhits) {
+	public Annotation(Sequence seqObj, String desc, int itype, int start, int end, String strand, 
+			String dbtag, int gene_idx, int idx, int genenum, int numhits) {
 		this.seqObj = seqObj;
-		this.type = getType(annot_type);
+		this.itype = itype;
 		this.start = start;
 		this.end = end;
 		this.bStrandPos = (strand == null || !strand.equals("-"));
@@ -60,25 +70,27 @@ public class Annotation {
 		this.annot_idx = idx;
 		this.genenum = genenum;
 	
-		// see backend.AnnotLoadPost.computeTags for formatting; e.g Gene #500a (N Mbp) where N=#exons and M=exon length
+		// see backend.AnnotLoadPost.computeTags for formatting
 		// CAS512 add pseudo_annot.gene_idx so exon is mapped to the gene; need reload annot
-		// CAS515 merge tag and genenum in a more readable format; 
-		// CAS517 add genenum and suffix to tag in AnnotPost; 
-		// CAS518 add total exon length (no change to parsing)
-		// CAS520 add h numhits, then removed because hard to see in display.
+		// CAS515 merge tag and genenum in a more readable format; CAS517 add genenum and suffix to tag in AnnotPost; 
+		// CAS518 add total exon length (no change to parsing); CAS520 add h numhits, then removed because hard to see in display.
+		// CAS534/4 changed tag again
 		
-		if (genenum==0) { // CAS543 changed the tag again
-			if (!tag.startsWith("Exon")) this.fullTag = this.tag = Globals.exonTag + tag;
-			else this.fullTag = this.tag = tag;
+		if (genenum==0) { 
+			if (!dbtag.startsWith("Exon")) this.fullTag = this.tag = Globals.exonTag + dbtag; // new
+			else 						   this.fullTag = this.tag = dbtag;	// old start with Exon
 		}
 		else {
-			this.tag = tag;
-			this.fullTag = Utilities.createFullTagFromDBtag(tag);
+			tag =  		 Utilities.convertTag(dbtag); 			// coverts old to new DB: geneNum (n exon-len)
+			strGeneNum = Utilities.getGenenumFromDBtag(tag);	// extracts geneNum.suffix only
+			fullTag =    Utilities.createFullTagFromDBtag(tag); // create: 'Gene' geneTag ('#Exons' n exon-len)
+			exonVec = new Vector <Annotation> ();
 		}
 		
 		rect = new Rectangle2D.Double();
 		hoverGeneRect = new Rectangle2D.Double();
 	}
+	public void addExon(Annotation aObj) {exonVec.add(aObj);} // CAS545 determined during SeqPool load of data
 	/**
 	 * DRAW sets up the rectangle; called in Sequence.build(); CAS515 ordered lines to be more logical
 	 */
@@ -163,26 +175,12 @@ public class Annotation {
 		}
 	}
 
-	private Color getColor() {
-		if (type == EXON_INT) {
-			if (bStrandPos) return exonColorP;	
-			else return exonColorN;
-		}
-		if (type == GENE_INT)		{
-			if (isPopup) return geneHighColor;
-			else return geneColor;
-		}
-		if (type == GAP_INT)		return gapColor;
-		if (type == CENTROMERE_INT)	return centromereColor;
-
-		return Color.black; 
-	}
-
-	public int getType() {return type;}
-	public boolean isGene() 	  { return type == GENE_INT; }
-	public boolean isExon() 	  { return type == EXON_INT; }   
-	public boolean isGap() 		  { return type == GAP_INT; }
-	public boolean isCentromere() { return type == CENTROMERE_INT; }
+	public int getType() {return itype;}
+	public boolean isGene() 	  { return itype == GENE_INT; }
+	public boolean isExon() 	  { return itype == EXON_INT; }   
+	public boolean isGap() 		  { return itype == GAP_INT; }
+	public boolean isCentromere() { return itype == CENTROMERE_INT; }
+	public boolean isConserved() {return isConserved;}
 	
 	public int getStart() {return start;}
 	public int getEnd() {return end;}
@@ -190,59 +188,16 @@ public class Annotation {
 	public int getAnnoIdx() { return annot_idx;}			// ditto
 	public int getGeneLen()	{ return Math.abs(end-start)+1;} // ditto
 	public int getGeneNum() { return genenum;}				// CAS517 for sorting in PseudoData
+	public String getFullGeneNum() {return strGeneNum;}     // CAS545 add
 	public String getTag() {return tag;} 					// CAS512 add for HelpBox; CAS543 called for Exons
 	public boolean isStrandPos() {return bStrandPos;}		// for seq-seq closeup
 	
-	public String getShortDescription() {return description;} // For CloseUpDialog - what is in the name field 
-	
-	public boolean hasShortDescription() {
-		return description != null && description.length() > 0;
-	}
-	
-	// XXX determines if the rectangle of this annotation contains the point p. 
-	public boolean contains(Point p) {
-		if (type == GENE_INT) {
-			return hoverGeneRect.contains(p.getX(), p.getY());
-		}
-		return rect.contains(p.getX(), p.getY());
-	}
-	
-	// Display in box beside genes when Show Annotation Description 
-	public Vector<String> getVectorDescription() {
-		Vector<String> out = new Vector<String>();
-		out.add(fullTag);				// CAS512 add tag	
-		out.add(getLocLong(" "));
-		for (String token : description.split(";")) 
-				out.add( token.trim() ); // CAS501 added trim
-		return out;
-	}
-	
-	private String getLocLong(String delim) { // CAS504
-		return SeqData.coordsStr(bStrandPos, start, end); // CAS512 update
-	}
-	// Shown in info text box when mouse over object 
-	public String getLongDescription() {
-		String longDes;
-		
-		if (type == GENE_INT) {
-			String xDesc = description.replaceAll(";", "\n");   	 // CAS503
-			longDes = fullTag +  "\n" + getLocLong("\n") + "\n" + xDesc;	 // CAS512 add tag	
-		}
-		else if (type == EXON_INT)			longDes = tag + " " +getLocLong("\n"); // CAS517 tag +  "\n" + getLocLong("\n") + "\n" + xDesc;
-		else if (type == GAP_INT) 			longDes = "Gap\n" + getLocLong("\n"); // CAS504 add getLoc
-		else if (type == CENTROMERE_INT) 	longDes = "Centromere\n" + getLocLong("\n");
-		else								longDes = "Name " + description;
-		
-		return longDes;
-	}
-	
 	public void paintComponent(Graphics2D g2) {
-		if (type >= numTypes)
-			return;
+		if (itype >= numTypes) return;
 		
 		g2.setPaint(getColor());
 		
-		if (type == CENTROMERE_INT) { 	
+		if (itype == CENTROMERE_INT) { 	
 			Stroke oldstroke = g2.getStroke();
 			g2.setStroke(new BasicStroke(crossWidth)/*crossStroke*/); 
 			
@@ -251,17 +206,14 @@ public class Annotation {
 			
 			g2.setStroke(oldstroke);
 		} 
-		else { // Gene, Exon, Gap: TICK or RECT 
+		else { // (1) Gene, Exon, Gap (2) TICK or RECT 
 			if (rect.height >= 2) { // Only draw full rectangle if it is large enough to see.
 				g2.fillRect((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
 				
-				// black line on top of gene to distinguish closely placed genes; CAS520 add, CAS544 highlight
-				if (type==GENE_INT) {
-					boolean hp = (bHighPopup && isPopup);
-					
-					if (bGeneLineOpt || hp) {
-						if (hp) g2.setColor(geneHighColor);
-						else 	g2.setColor(Color.BLACK);
+				// black line on top of gene to distinguish closely placed genes; CAS520 add, CAS544 highlight.. 
+				if (itype==GENE_INT) {
+					boolean isSel = (isSelectedGene && this==seqObj.selectedGeneObj);
+					if (bGeneLineOpt || isPopup || isSel) {
 						Stroke oldstroke = g2.getStroke();
 						g2.setStroke(new BasicStroke(2)); 
 						
@@ -275,28 +227,67 @@ public class Annotation {
 				g2.drawLine((int)rect.x, (int)rect.y, (int)rect.x + (int)rect.width, (int)rect.y); 
 		}
 	}
-	public String toString() {
-		String x = String.format("%-12s ", seqObj.getFullName());
-		x += String.format("%-8s [Rect %.2f,%.2f,%.2f,%.2f] [Seq: %d,%d]", fullTag,
-				rect.x,rect.y,rect.width, rect.height, start, end);
-		if (type==GENE_INT) 
-			x += String.format(" [HRect %.2f,%.2f,%.2f,%.2f]",
-					hoverGeneRect.x,hoverGeneRect.y,hoverGeneRect.width, hoverGeneRect.height);
-		return x;
-	}
-	public static int getType(String type) {
-		int i = (byte)typeVec.indexOf(type);
-		if (i < 0) {
-			i = (byte)typeVec.size();
-			typeVec.add(type);
+	private Color getColor() {
+		if (itype == EXON_INT) {
+			if (bHighPopup && isPopup)    return geneHighColor; // CAS545 only exon highlighted when Gene Filter
+			if (bHighPopup && isHitPopup) return Mapper.pseudoLineHoverColor; // CAS545 
+			
+			if (isConserved)     		  return geneHighColor; 
+			
+			if (bStrandPos)               return exonColorP;	
+			else                          return exonColorN;
 		}
-		return i;
+		
+		if (itype == GENE_INT)		{
+			if (bHighPopup && isPopup)  	return geneHighColor;
+			if (bHighPopup && isHitPopup) 	return Mapper.pseudoLineHoverColor; // CAS545 
+			
+			if (isSelectedGene && this==seqObj.selectedGeneObj) return geneHighColor;
+			
+			return geneColor;
+		}
+		if (itype == GAP_INT)			return gapColor;
+		if (itype == CENTROMERE_INT)	return centromereColor;
+
+		return Color.black; 
 	}
 	
 	/*******************************************
-	 * CAS503 added so can display popup of description
-	 * Right-click on annotation
+	 * XXX hover and box and closeup info
 	 */
+	public String getShortDescription() {return description;} // For CloseUpDialog - what is in the name field 
+	
+	public boolean hasShortDescription() {	// Sequence.build()
+		return description != null && description.length() > 0;
+	}
+	
+	// Display in box beside genes when Show Annotation Description 
+	public Vector<String> getVectorDescription() {
+		Vector<String> out = new Vector<String>();
+		out.add(fullTag);				// CAS512 add tag	
+		out.add(getLocLong(" "));
+		for (String token : description.split(";")) 
+				out.add( token.trim() ); // CAS501 added trim
+		return out;
+	}
+	public String getLongDescription() {// Shown in info text box when mouse over object 
+		String longDes;
+		
+		if (itype == GENE_INT) {
+			String xDesc = description.replaceAll(";", "\n");   	 // CAS503
+			longDes = fullTag +  "\n" + getLocLong("\n") + "\n" + xDesc;	 // CAS512 add tag	
+		}
+		else if (itype == EXON_INT)			longDes = tag + " " +getLocLong("\n"); // CAS517 tag +  "\n" + getLocLong("\n") + "\n" + xDesc;
+		else if (itype == GAP_INT) 			longDes = "Gap\n" + getLocLong("\n"); // CAS504 add getLoc
+		else if (itype == CENTROMERE_INT) 	longDes = "Centromere\n" + getLocLong("\n");
+		else								longDes = "Name " + description;
+		
+		return longDes;
+	}
+	private String getLocLong(String delim) { // CAS504; used in above two
+		return SeqData.coordsStr(bStrandPos, start, end); // CAS512 update
+	}
+	
 	public boolean hasHitList() {return hitListStr1!=null; } //  CAS517 added this
 	public void setHitList(String hList) {hitListStr1=hList;} 
 	public boolean hasHitList2() {return hitListStr2!=null; } //  CAS543 added this
@@ -328,11 +319,18 @@ public class Annotation {
 		catch (Exception e) {ErrorReport.print(e, "Get exon list for " + gene_idx);}
 	}
 	
-	// popup from clicking gene; CAS516 add, CAS517 add hitList; CAS543 use Utilities for tag
+	// determines if the rectangle of this annotation contains the point p. 
+	public boolean contains(Point p) {
+		if (itype == GENE_INT) {
+			return hoverGeneRect.contains(p.getX(), p.getY());
+		}
+		return rect.contains(p.getX(), p.getY());
+	}
+	// popup from clicking gene; CAS503, CAS516 add, CAS517 add hitList; CAS543 use Utilities for tag
 	public void popupDesc(Component parentFrame, String name, String chr) { 
 	try {
 		if (!tag.contains("(")) return;
-		isPopup=true;
+		setIsPopup(true);
 		
 		String [] tok = Utilities.getGeneExonFromTag(tag); // see backend.AnnotLoadPost.computeTags
 		
@@ -362,7 +360,46 @@ public class Annotation {
 	} 
 	catch (Exception e) {ErrorReport.print(e, "Creating genepopup");}
 	}
-	public void setIsPopup(boolean b) {isPopup=b; }
+	
+	public String toString() {
+		String x = String.format("%-12s ", seqObj.getFullName());
+		x += String.format("%-8s [Rect %.2f,%.2f,%.2f,%.2f] [Seq: %d,%d]", fullTag,
+				rect.x,rect.y,rect.width, rect.height, start, end);
+		if (itype==GENE_INT) 
+			x += String.format(" [HRect %.2f,%.2f,%.2f,%.2f]",
+					hoverGeneRect.x,hoverGeneRect.y,hoverGeneRect.width, hoverGeneRect.height);
+		return x;
+	}
+	
+	/******************************************************************
+	 * XXX settings
+	 */
+	
+	public int isMatchGeneN(String gene) {// CAS545 add for Sequence Filter Gene# search
+		if  (!strGeneNum.equals(gene)) return -1;
+		return start + ((end-start)/2);
+	}
+		
+	public void setIsPopup(boolean b) { // Called for gene only on popup; Annotation=true; Sequence when -tt; TextShowInfo=false
+		isPopup=b; 
+		if (exonVec!=null) 
+			for (Annotation ad : exonVec) ad.isPopup=b; // CAS545
+	}
+	public void setIsHitPopup(boolean b) { // Called for gene when searched on (not turned off)
+		isHitPopup=b; 
+		if (exonVec!=null) 
+			for (Annotation ad : exonVec) ad.isHitPopup=b; // CAS545
+	}
+	public void setIsSelectedGene(boolean b) { // Called for filtered gene (never turned off)
+		isSelectedGene=b; 
+		if (exonVec!=null) 
+			for (Annotation ad : exonVec) ad.isSelectedGene=b; // CAS545
+	}
+	public void setIsConserved(boolean b) { // Called for conserved turned on/off
+		isConserved=b; 
+		if (exonVec!=null) 
+			for (Annotation ad : exonVec) ad.isConserved=b; // CAS545
+	}
 	
 	// CAS531 add for TextShowSeq to sort exons
 	public static Comparator<Annotation> getExonStartComparator() {
@@ -379,23 +416,12 @@ public class Annotation {
 	
 	private static final float crossWidth= (float) 2.0; // the width of the line in the cross
 	
-	public static final String GENE 		= "gene";
-	public static final String EXON 		= "exon"; 
-	public static final String GAP 			= "gap";
-	public static final String CENTROMERE 	= "centromere";
-	
 	public static final int GENE_INT 		= 0;
 	public static final int EXON_INT 		= 1; 
 	public static final int GAP_INT 		= 2;
 	public static final int CENTROMERE_INT 	= 3;
 	public static final int numTypes 		= 4; 
-	public static Vector<String> typeVec = new Vector<String>(numTypes, 1); 
-	static {
-		typeVec.add(GENE);
-		typeVec.add(EXON); 
-		typeVec.add(GAP);
-		typeVec.add(CENTROMERE);  
-	}
+	
 	// accessed and changed by ColorDialog - do not change
 	public static Color geneColor;
 	public static Color gapColor;

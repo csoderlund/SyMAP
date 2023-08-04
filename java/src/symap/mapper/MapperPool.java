@@ -19,7 +19,7 @@ public class MapperPool {
 	private DBconn2 dbc2;
 	private ProjectPool projPool; // properties
 	
-	public MapperPool(DBconn2 dbc2, ProjectPool projPool) {  
+	public MapperPool(DBconn2 dbc2, ProjectPool projPool) {  // Created when Mapper is created
 		this.dbc2 = dbc2;
 		this.projPool = projPool;
 	}
@@ -28,7 +28,7 @@ public class MapperPool {
 		return projPool.hasProjectPair(t1.getProject(),t2.getProject());
 	}
 
-	public SeqHits setData(Mapper mapper, Track t1, Track t2, HfilterData hf) {
+	public SeqHits setData(Mapper mapper, Track t1, Track t2, HfilterData hf) { // Mapper.isInit
 		SeqHits seqHitObj;
 		
 		if (hasPair(t1,t2)) seqHitObj = setSeqHitData(mapper, (Sequence)t1, (Sequence)t2);
@@ -41,16 +41,17 @@ public class MapperPool {
 	 * Update HitData
 	 */
 	private SeqHits setSeqHitData(Mapper mapper, Sequence st1, Sequence st2)  {
-		int stProject1 = st1.getProject();
-		int stProject2 = st2.getProject();
-		int group1 = st1.getGroup();
-		int group2 = st2.getGroup();
+		int grpIdx1 = st1.getGroup();
+		int grpIdx2 = st2.getGroup();
 		String chr1="?", chr2="?";
 
-		Vector <HitData> hitList = new Vector <HitData>();
 		try {
-			chr1 = dbc2.executeString("select name from xgroups where idx=" + group1); // CAS517 add chrname for display
-			chr2 = dbc2.executeString("select name from xgroups where idx=" + group2);
+			chr1 = dbc2.executeString("select name from xgroups where idx=" + grpIdx1); // CAS517 add chrname for display
+			chr2 = dbc2.executeString("select name from xgroups where idx=" + grpIdx2);
+			
+			// CAS545 alloc correct size
+			int n = dbc2.executeCount("select count(*) from pseudo_hits where grp1_idx="+grpIdx1 + " AND grp2_idx="+ grpIdx2);
+			Vector <HitData> hitList = new Vector <HitData>(n);
 			
 			// CAS515 add cvgpct, countpct, CAS516 add corr; CAS504 bh.block_idx->b.blocknum, 
 			// CAS520 change evalue to hitnum, add runnum, CAS540 add score, CAS543 add annot1 and annot2, put in DB order
@@ -60,7 +61,7 @@ public class MapperPool {
 				+ "FROM pseudo_hits AS h "
 				+ "LEFT JOIN pseudo_block_hits AS bh ON (bh.hit_idx=h.idx) "
 				+ "LEFT JOIN blocks as b on (b.idx=bh.block_idx) "  // CAS505 added for blocknum
-				+ "WHERE h.grp1_idx=" + group1 + " AND h.grp2_idx="+ group2 +" order by h.start1"; // CAS520 add order by;
+				+ "WHERE h.grp1_idx=" + grpIdx1 + " AND h.grp2_idx="+ grpIdx2 +" order by h.start1"; // CAS520 add order by;
 			
 			ResultSet rs = dbc2.executeQuery(query);
 			
@@ -98,7 +99,7 @@ public class MapperPool {
 			rs.close();
 			if (hitList.size()==0)  System.out.println("No hits for " + st1.getTitle() + " to " + st2.getTitle());
 			
-			SeqHits seqHitObj = new SeqHits(stProject1,group1,stProject2, group2, mapper, st1, st2, hitList, false);
+			SeqHits seqHitObj = new SeqHits(mapper, st1, st2, hitList);
 			hitList.clear();
 			return seqHitObj;
 		} catch (Exception e) {ErrorReport.print(e, "Get hit data");return null;}

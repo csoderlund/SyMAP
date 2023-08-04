@@ -23,7 +23,7 @@ public class ChrExpInit implements PropertyChangeListener {
 	private ChrExpFrame frame;
 	private DBconn2 tdbc2;
 	private Vector<Mproject> projects;
-	private Vector<TrackCom> tracks;
+	private Vector<TrackInfo> tracks;
 	private Mapper mapper;
 	private static final Color[] projectColors = { Color.cyan, Color.green, new Color(0.8f, 0.5f, 1.0f),
 		Color.yellow, Color.orange };
@@ -32,7 +32,7 @@ public class ChrExpInit implements PropertyChangeListener {
 		tdbc2 = new DBconn2("ChrExp-" + DBconn2.getNumConn(), dbc2); // closed in ChrExpFrame
 		
 		projects = new Vector<Mproject>();
-		tracks =   new Vector<TrackCom>();
+		tracks =   new Vector<TrackInfo>();
 		
 		mapper =   new Mapper();
 		
@@ -61,7 +61,7 @@ public class ChrExpInit implements PropertyChangeListener {
 			Vector<Block> blocks = loadAllBlocks(tracks);
 			
 			mapper.setProjects(projects.toArray(new Mproject[0]));
-			mapper.setTracks(tracks.toArray(new TrackCom[0]));
+			mapper.setTracks(tracks.toArray(new TrackInfo[0]));
 			mapper.setBlocks(blocks.toArray(new Block[0]));
 			projects = null;
 			tracks = null;
@@ -99,9 +99,9 @@ public class ChrExpInit implements PropertyChangeListener {
 	     return p;
 	}
 	
-	private Vector<TrackCom> loadProjectTracks(Mproject p)  {
+	private Vector<TrackInfo> loadProjectTracks(Mproject p)  {
 	try {
-		Vector<TrackCom> projTracks = new Vector<TrackCom>();
+		Vector<TrackInfo> projTracks = new Vector<TrackInfo>();
      
 	     // Get group(s) and create track(s)
 	     String qry = "SELECT idx,name FROM xgroups WHERE proj_idx=" + p.getID() +
@@ -111,7 +111,7 @@ public class ChrExpInit implements PropertyChangeListener {
 	     while( rs.next() ) {
 	     	int nGroupIdx = rs.getInt(1);
 	     	String strGroupName = rs.getString(2);
-	     	projTracks.add(new TrackCom(p, strGroupName, nGroupIdx));
+	     	projTracks.add(new TrackInfo(p, strGroupName, nGroupIdx));
 	     }
 	     rs.close();
 	     
@@ -121,7 +121,7 @@ public class ChrExpInit implements PropertyChangeListener {
 	     }
 	     
 	     // Initialize tracks
-	     for (TrackCom t : projTracks) {
+	     for (TrackInfo t : projTracks) {
 	        rs = tdbc2.executeQuery("SELECT length FROM pseudos WHERE (grp_idx="+t.getGroupIdx()+")");
 	        while( rs.next() ) {
 	        	t.setSizeBP( rs.getLong(1) );
@@ -132,7 +132,7 @@ public class ChrExpInit implements PropertyChangeListener {
 	} catch (Exception e) {ErrorReport.print(e, "Load tracks"); return null;}
 	}
 	
-	private Vector<Block> loadAllBlocks(Vector<TrackCom> tracks) {
+	private Vector<Block> loadAllBlocks(Vector<TrackInfo> tracks) {
 		Vector<Block> blocks = new Vector<Block>();
 		
 		/* CAS512 is added, See if we have the corr field - CAS was probably added to schema long ago
@@ -159,8 +159,8 @@ public class ChrExpInit implements PropertyChangeListener {
 	     	// CAS512 float corr = (haveCorr ? rs.getFloat("corr") : 0.01F); // if no corr field, make sure they are positive
 	     	float corr = rs.getFloat(8);
 	     	
-	     	TrackCom t1 = TrackCom.getTrackByGroupIdx(tracks, grp1_idx);
-	     	TrackCom t2 = TrackCom.getTrackByGroupIdx(tracks, grp2_idx);
+	     	TrackInfo t1 = TrackInfo.getTrackByGroupIdx(tracks, grp1_idx);
+	     	TrackInfo t2 = TrackInfo.getTrackByGroupIdx(tracks, grp2_idx);
 	     	
 	     	Block b = new Block(blockIdx, t1.getProjIdx(), t2.getProjIdx(), 
 	     			t1.getGroupIdx(), t2.getGroupIdx(), start1, end1, start2, end2,  corr);
@@ -172,9 +172,9 @@ public class ChrExpInit implements PropertyChangeListener {
 	     return blocks;
 	} catch (Exception e) {ErrorReport.print(e, "Load blocks"); return null;}   
 	}
-	private static String getGroupList(Vector<TrackCom> tracks) {
+	private static String getGroupList(Vector<TrackInfo> tracks) {
 		String s = "";
-		for (TrackCom t : tracks)
+		for (TrackInfo t : tracks)
 			s += t.getGroupIdx() + (t == tracks.lastElement() ? "" : ",");
 		return s;
 	}

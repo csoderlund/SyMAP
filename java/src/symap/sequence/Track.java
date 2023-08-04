@@ -50,7 +50,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	protected Rectangle dragRect;
 	protected Point dragPoint, trackOffset;
 
-	protected int projIdx, otherProjIdx, orient;
+	protected int projIdx=Globals.NO_VALUE, otherProjIdx=Globals.NO_VALUE, orient;
 	protected Point moveOffset;
 	protected double defaultBpPerPixel, bpPerPixel;
 	protected GenomicsNumber start, end, size;
@@ -59,7 +59,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	protected Dimension dimension;
 	
 	protected boolean firstBuild = true, bFlipped; 
-	protected int position; 
+	protected int position; // track position
 
 	private Point startMoveOffset, adjustMoveOffset;
 	private Point2D.Float titlePoint;
@@ -114,43 +114,28 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	protected void reset(int project, int otherProject) { // Sequence
 		clear();
 		firstBuild = true;
-		if (this.projIdx != project || this.otherProjIdx != otherProject) {
-			this.projIdx = project;
-			this.otherProjIdx = otherProject;
+		if (this.projIdx == project && this.otherProjIdx == otherProject) return;
+		
+		this.projIdx = project;
+		this.otherProjIdx = otherProject;
 
-			displayName = projPool.getDisplayName(project);
-			projectName = projPool.getName(project);
-			if (Utilities.isEmpty(displayName)) displayName=projectName; // CAS534 need for new projects
-			
-			otherProjName = projPool.getDisplayName(otherProject);
-			if (Utilities.isEmpty(otherProjName)) otherProjName=projPool.getName(otherProject);
-			
-			bpPerCb     = projPool.getIntProperty(project,"cbsize",1); // always 1 now
-
-			if (bpPerCb == 1) {
-				if (start instanceof BPNumber) {
-					start.setValue(0);
-					end.setValue(0);
-					size.setValue(0);
-				}
-				else {
-					start = new BPNumber(this,0);
-					end = new BPNumber(this,0);
-					size = new BPNumber(this,0);
-				}
-			}
-			else {
-				if (start instanceof BPNumber) {
-					start = new GenomicsNumber(this,0);
-					end = new GenomicsNumber(this,0);
-					size = new GenomicsNumber(this,0);
-				}
-				else {
-					start.setValue(0);
-					end.setValue(0);
-					size.setValue(0);
-				}
-			}
+		displayName = projPool.getDisplayName(project);
+		projectName = projPool.getName(project);
+		if (Utilities.isEmpty(displayName)) displayName=projectName; // CAS534 need for new projects
+		
+		otherProjName = projPool.getDisplayName(otherProject);
+		if (Utilities.isEmpty(otherProjName)) otherProjName=projPool.getName(otherProject);
+		
+		bpPerCb  = projPool.getIntProperty(project,"cbsize",1); // always 1 now
+		if (start instanceof BPNumber) {
+			start.setValue(0);
+			end.setValue(0);
+			size.setValue(0);
+		}
+		else {
+			start = new BPNumber(this,0);
+			end = new BPNumber(this,0);
+			size = new BPNumber(this,0);
 		}
 	}
 
@@ -197,8 +182,6 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 		init();
 	}
 
-	
-
 	// getMoveOffset returns the move offset for the track to be used by the holder/layout manager.
 	public Point getMoveOffset() {return moveOffset;} // trackholder
 
@@ -216,14 +199,13 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	}
 
 	/* getMidX returns the viewable middle as determined by the track.*/
-	public double getMidX() {
-		return rect.getX()+(rect.getWidth()/2.0);
-	}
+	public double getMidX() {return rect.getX()+(rect.getWidth()/2.0);}
 
 	public int getProject() {return projIdx;}
 	
 	public String getOtherProjectName() {return otherProjName;}
 
+	public String getProjectDbName() {return projectName;}
 	public String getProjectDisplayName() {return displayName;}
 
 	public double getBpPerPixel() { return bpPerPixel;}// GenomicsNumberHolder interface
@@ -582,6 +564,7 @@ public abstract class Track implements GenomicsNumberHolder, HelpListener, KeyLi
 	
 	public void setPosition(int position) { this.position = position; }
 	public int getPosition() { return position; }
+	public boolean isRef() {return (position==2);} // CAS545 add for conserved; (position % 2 == 0)
 	
 	public void setBackground(Color c) {
 		bgColor = c;

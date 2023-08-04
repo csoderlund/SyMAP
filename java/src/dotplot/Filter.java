@@ -61,7 +61,7 @@ public class Filter extends JDialog  {
 		
 		FilterListener listener = new FilterListener();
 		
-		okButton = createButton("Apply","Save changes and close");
+		okButton = createButton("Save","Save changes and close");
 		okButton.addActionListener(listener);
 
 		cancelButton = createButton("Cancel", "Discard changes and close");

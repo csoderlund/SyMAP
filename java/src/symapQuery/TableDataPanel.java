@@ -51,6 +51,7 @@ import database.DBconn2;
 import util.ErrorReport;
 import util.Jhtml;
 import util.Utilities;
+import symap.Globals;
 import symap.drawingpanel.SyMAP2d;
 import symap.mapper.HfilterData;
 import symap.sequence.Sequence;
@@ -272,7 +273,7 @@ public class TableDataPanel extends JPanel {
 	    topRow.add(cmbSynOpts);			topRow.add(Box.createHorizontalStrut(1));
 	    
 		txtMargin = new JTextField(3);
-	    txtMargin.setText("50");
+	    txtMargin.setText((Globals.MAX_RANGE/1000)+"");
 	    txtMargin.setMinimumSize(txtMargin.getPreferredSize());
 	    topRow.add(txtMargin);
 	    topRow.add(new JLabel("kb")); 	topRow.add(Box.createHorizontalStrut(2));

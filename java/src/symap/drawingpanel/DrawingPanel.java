@@ -42,7 +42,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	private Mapper[] mappers;
 	private TrackHolder[] trackHolders;
 	private HistoryControl historyControl;
-	private Frame2d drawingPanelListener;
+	private Frame2d frame2dListener;
 	private ProjectPool projPool = null;
 	
 	private CloseUp closeup;
@@ -111,26 +111,35 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	}
 
 	public void setListener(Frame2d dpl) {
-		this.drawingPanelListener = dpl;
+		this.frame2dListener = dpl;
 	}
 
 	public Frame getFrame() {
-		if (drawingPanelListener != null) return drawingPanelListener.getFrame();
+		if (frame2dListener != null) return frame2dListener.getFrame();
 		else return null;
 	}
 
 	public void setFrameEnabled(boolean enabled) {
-		if (drawingPanelListener != null) drawingPanelListener.setFrameEnabled(enabled);
+		if (frame2dListener != null) frame2dListener.setFrameEnabled(enabled);
 	}
 
 	public ProjectPool getProjPool() 	{return projPool;} // CAS541 was returning pool of pools
 	public DBconn2 getDBC() 			{return dbc2; }		// CAS541 added
+	public JComponent getView() 		{return scrollPane;}
 
-	public JComponent getView() {
-		return scrollPane;
+	public void setCloseUp(CloseUp closeup) {this.closeup = closeup;}
+
+	public CloseUp getCloseUp() {return closeup;}
+
+	public int getViewHeight() { // height of viewable area
+		return scrollPane.getViewport().getHeight();
 	}
 
-	public void resetColors() {
+	public String toString() {
+		return "[ Drawing Panel: {" + java.util.Arrays.asList(mappers).toString() + "} ]";
+	}
+
+	public void resetColors() {// ColorDialogHandler
 		setBackground(backgroundColor);	
 		
 		scrollPane.getViewport().setBackground(backgroundColor);
@@ -142,35 +151,13 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		amake();
 	}
 
-	public void clearTrackBuild() {
+	public void clearTrackBuild() { // resetColor, Track.clearAllBuild
 		for (int i = 0; i <= numMaps; i++)
 			if (trackHolders[i].getTrack() != null)
-				trackHolders[i].getTrack().clearTrackBuild();
+				trackHolders[i].getTrack().clearTrackBuild(); // hasBuild=false
 	}
-
-	/**
-	 * Returns the data needed to recreate the drawing panel (all of the maps 
-	 * visible).  This information is all of the filter information and any 
-	 * information needed to acquire the data from the database not the actual  data.
-	 */
 	
-	public void setCloseUp(CloseUp closeup) {
-		this.closeup = closeup;
-	}
-
-	public CloseUp getCloseUp() {
-		return closeup;
-	}
-
-	public int getViewHeight() { // height of viewable area
-		return scrollPane.getViewport().getHeight();
-	}
-
-	public String toString() {
-		return "[ Drawing Panel: {" + java.util.Arrays.asList(mappers).toString() + "} ]";
-	}
-
-	public void resetData() {
+	public void resetData() { // ChrExpFrame.show2DFrame, Frame2d.keyPressed
 		setFrameEnabled(false);
 		
 		for (int i = 0; i <  numMaps; ++i) mappers[i].clearData();
@@ -180,20 +167,15 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		}
 	}
 	
-	// clear caches/data but don't re-init tracks
-	public void clearData() {
-		//pools.clearPools();
-		//CAS534 clearPools does this; try {pools.getProjectProperties().reset();
-		//} catch (SQLException e) { }
-		
+	public void clearData() {// SyMAP2d.clear(); clear data but don't re-init tracks
 		for (int i = 0; i <  numMaps; ++i) mappers[i].clearData();
 		for (int i = 0; i <= numMaps; ++i) {
 			if (trackHolders[i].getTrack() != null)
 				trackHolders[i].getTrack().clearData();
 		}
 	}
-	// Closeup align 
-	public Vector <HitData> getHitsInRange(Track seqObjTrack, int start, int end) {
+	 
+	public Vector <HitData> getHitsInRange(Track seqObjTrack, int start, int end) {//closeup.TextShowSeq
 		Vector <HitData> list = new Vector <HitData>();
 		for (Mapper m : mappers) {
 			if (m.isActive()) {
@@ -206,13 +188,8 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		return list;
 	}
 	
-	/**
-	 * Sets the tracks start and end (in base pair) to start/end.  Returns true 
-	 * if a track exists at pos.  If the track is not initialized before setting 
-	 * the start/end, it is initialized.
-	 * 
-	 * The ends of the map are locked till the next build if the track at pos is a Sequence.
-	 */
+	/* Called by all functions that display 2d
+	 * The ends of the map are locked till the next build if the track at pos is a Sequence.*/
 	public boolean setTrackEnds(int pos, double startBP, double endBP) throws IllegalArgumentException {
 		Track track = trackHolders[pos-1].getTrack();
 		if (track != null) {
@@ -227,16 +204,6 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	// set defaults for: symapQuery Show Synteny from table and dotplot.Data 
 	public void setHitFilter(int map, HfilterData hf) {
 		mappers[map-1].getHitFilter().setChanged(hf, "DP setHitFilter");
-	}
-
-	public void downloadAllHits(int map) {
-		mappers[map-1].initAllHits();
-	}
-
-	public void downloadAllHits(Track track) {
-		for (int i = 0; i < numMaps; ++i)
-			if (mappers[i].getTrack1() == track || mappers[i].getTrack2() == track) 
-				mappers[i].initAllHits();
 	}
 
 	private int getOpposingTrackProject(int position) {
@@ -294,28 +261,25 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	public void setMouseFunction(String s) { mouseFunction = s; }
 	public String getMouseFunction() { return (mouseFunction == null ? "" : mouseFunction); }
 	public boolean isMouseFunction() { // CAS504
-		return 
-			   ControlPanel.MOUSE_FUNCTION_ZOOM_ALL.equals(mouseFunction) ||
+		return ControlPanel.MOUSE_FUNCTION_ZOOM_ALL.equals(mouseFunction) ||
 			   ControlPanel.MOUSE_FUNCTION_ZOOM_SINGLE.equals(mouseFunction) ||
 			   ControlPanel.MOUSE_FUNCTION_CLOSEUP.equals(mouseFunction) ||
-			   ControlPanel.MOUSE_FUNCTION_SEQ.equals(mouseFunction)
-			   ;
+			   ControlPanel.MOUSE_FUNCTION_SEQ.equals(mouseFunction);
 	}
 	public boolean isMouseFunctionZoom() {// CAS504
-		return 
-				   ControlPanel.MOUSE_FUNCTION_ZOOM_ALL.equals(mouseFunction) ||
-				   ControlPanel.MOUSE_FUNCTION_ZOOM_SINGLE.equals(mouseFunction);
+		return ControlPanel.MOUSE_FUNCTION_ZOOM_ALL.equals(mouseFunction) ||
+			   ControlPanel.MOUSE_FUNCTION_ZOOM_SINGLE.equals(mouseFunction);
 	}
 	public boolean isMouseFunctionPop() {// CAS504
-		return 
-				   ControlPanel.MOUSE_FUNCTION_CLOSEUP.equals(mouseFunction) ||
-				   ControlPanel.MOUSE_FUNCTION_SEQ.equals(mouseFunction);
+		return ControlPanel.MOUSE_FUNCTION_CLOSEUP.equals(mouseFunction) ||
+			   ControlPanel.MOUSE_FUNCTION_SEQ.equals(mouseFunction);
 	}
 	public boolean isMouseFunctionSeq() { return ControlPanel.MOUSE_FUNCTION_SEQ.equals(mouseFunction); }
 	public boolean isMouseFunctionCloseup() { return ControlPanel.MOUSE_FUNCTION_CLOSEUP.equals(mouseFunction); }
 	public boolean isMouseFunctionZoomSingle() { return ControlPanel.MOUSE_FUNCTION_ZOOM_SINGLE.equals(mouseFunction); }
 	public boolean isMouseFunctionZoomAll() { return ControlPanel.MOUSE_FUNCTION_ZOOM_ALL.equals(mouseFunction); }
 
+	// Called by all functions that display 2d
 	public Sequence setSequenceTrack(int position, int project, int group, Color color) {
 		closeFilters();
 
@@ -333,7 +297,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		return (Sequence) track; // CAS543 for Query.TableDataPanel to set show defaults
 	}
 	
-	private boolean initTrack(Track track, int position) {
+	private boolean initTrack(Track track, int position) { // DrawingPanel
 		track.setPosition(position); 
 		setTrack(track, position);
 		setFirstView();
@@ -342,11 +306,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		return track.hasInit();
 	}
 
-	/**
-	 * update - makes the updates based on the parameters passed.
-	 * Finally the reset index is set, the history is updated, and the view is updated
-	 */
-	public void update(final Track track, final Object arg) {
+	public void update(final Track track, final Object arg) { // Track
 		setFrameEnabled(false);
 		new Thread(new Runnable() {
 			public void run() {
@@ -356,20 +316,8 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 			}
 		}).start();
 	}
-
-	// The factor should be non negative and a zero factor does not change the zooms.
-	public boolean changeZoomFactor(double factor) {
-		setUpdateHistory();
-		boolean success = true;
-		for (int i = 0; i <= numMaps; i++)
-			if (trackHolders[i].getTrack() != null)
-				if (!trackHolders[i].getTrack().changeZoomFactor(factor))
-					success = false;
-		smake();
-		return success;
-	}
 	
-	public boolean changeAlignRegion(double factor) {
+	public boolean changeAlignRegion(double factor) { // ControlPanel
 		setUpdateHistory();
 		
 		if (factor > 1) {
@@ -395,11 +343,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		return true;
 	}
 
-	/**
-	 * Sets the bp/pixel of the tracks in every map to the bp/pixel of the 
-	 * last found Sequence track of all of the maps.
-	 */
-	public void drawToScale() {
+	public void drawToScale() {	// ControlPanel
 		setUpdateHistory();
 		
 		double bpPerPixel = 0;
@@ -435,10 +379,6 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		if (position > numMaps) numMaps = position; 
 	}
 
-	/**
-	 * Method closeFilters goes through each Mapper and track calling there respective closeFilter methods
-	 * @see TrackHolder#closeFilter() @see Mapper#closeFilter()
-	 */
 	public void closeFilters() {
 		int i;
 		for (i = 0; i < MAX_TRACKS-1; i++) {
@@ -478,7 +418,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 			System.out.println("     Cause: "+me.getCause());
 			ErrorReport.print(me, "out of memory");
 			Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1); 
-			drawingPanelListener.setFrameEnabled(false);
+			frame2dListener.setFrameEnabled(false);
 			throw me;
 		}
 		return good;
@@ -515,7 +455,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 			} catch (OutOfMemoryError me) {
 				ErrorReport.print(me, "Drawing panel make: " +me.getCause());
 				Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1);
-				drawingPanelListener.setFrameEnabled(false);
+				frame2dListener.setFrameEnabled(false);
 				throw me;
 			}
 		}
@@ -628,11 +568,6 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		getView().repaint();
 	}
 
-	/**
-	 * Returns false if any of the tracks are not set up to the number of maps specified
-	 * @return true if the all the tracks are set
-	 * @see #setMaps(int)
-	 */
 	public boolean tracksSet() {
 		for (int i = 0; i <= numMaps; i++) {
 			if (trackHolders[i].getTrack() == null) return false;
@@ -640,9 +575,9 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		return true;
 	}
 
-	public int getNumMaps() {return numMaps;}
+	public int getNumMaps() {return numMaps;}// Frame2d
 
-	public void setMaps(int numberOfMaps) {
+	public void setMaps(int numberOfMaps) { // dotPlot, ChrExpFrame, TableDataPanel
 		if (numberOfMaps < 1) numberOfMaps = 1;
 		else if (numberOfMaps > MAX_TRACKS - 1) {
 			numberOfMaps = MAX_TRACKS - 1;
@@ -658,7 +593,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 			}
 		}
 	}
-	public int getNumAnnots() {
+	public int getNumAnnots() {// Frame2d
 		int ret = 0;
 		for (int i = 0; i < trackHolders.length; i++) {
 			TrackHolder th = trackHolders[i];

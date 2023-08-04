@@ -549,6 +549,7 @@ public class Block2Frame extends JFrame {
 		}
 	}			
 	private void showDetailView(Block b) {
+		Utilities.setCursorBusy(this, true); // CAS545 add for slow machines
 		try {
 			SyMAP2d symap = new SyMAP2d(tdbc2, null); // makes new conn
 			
@@ -559,10 +560,8 @@ public class Block2Frame extends JFrame {
 									
 			symap.getFrame().showX(); // CAS512
 		}
-		catch (Exception err) {
-			ErrorReport.print(err, "Show Detail View");
-		}
-		finally {}
+		catch (Exception err) {ErrorReport.print(err, "Show 2D View");}
+		finally {Utilities.setCursorBusy(this, false);}
 	}
 	private class BlockPanel extends JPanel implements MouseInputListener {
 		private static final long serialVersionUID = 1L;

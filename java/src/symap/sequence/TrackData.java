@@ -4,6 +4,7 @@ import java.awt.Point;
 
 /**
  * The data for the Track (i.e. project name, display name, orientation, etc...)
+ * It is used for History, i.e back and forth
  */
 public  class TrackData {
 	private Class <?> trackClass;
@@ -15,13 +16,16 @@ public  class TrackData {
 	private long start, end, size;
 	private double height, width;
 	
-	private int group;
+	private int grpIdx;
 	
-	private boolean showGene, showGeneLine, showFullGene;
-	private boolean showGap, showCentromere;
-	private boolean showRuler, showAnnot;
-	private boolean showHitLen, showScoreLine, showScoreValue, showHitNum; 	
-	private boolean flipped; 
+	private boolean bShowRuler, bShowGene, bShowAnnot, bShowGeneLine, bFlipped; 
+	private boolean bShowGap, bShowCentromere;
+	private boolean bShowScoreLine, bShowHitLen; 	
+	private boolean bShowScoreText, bShowHitNumText; 
+	private boolean bShowBlockText, bShowCsetText, bShowNoText;   
+	private boolean bHighPopupGene; 
+	private boolean bHighConserved;
+	private Annotation selectedGeneObj=null;
 
 	protected TrackData(Track track) {
 		trackClass        = track.getClass();
@@ -38,19 +42,27 @@ public  class TrackData {
 		otherProject      = track.otherProjIdx;
 		
 		Sequence seq = (Sequence) track;
-		group          = seq.group;
-		showRuler      = seq.bShowRuler;
-		showGene       = seq.bShowGene;
-		showGeneLine  = seq.bShowGeneLine;
-		showAnnot      = seq.bShowAnnot;
-		showGap        = seq.bShowGap;
-		showCentromere = seq.bShowCentromere;
-		showFullGene   = seq.bShowFullGene;
-		showScoreLine  = seq.bShowScoreLine;	
-		showHitLen 		= seq.bShowHitLen;	
-		showScoreValue = seq.bShowScoreText;	
-		showHitNum 		= seq.bShowHitNumText;	
-		flipped        = seq.isFlipped();		
+		grpIdx          = seq.grpIdx;
+		
+		bShowRuler      = seq.bShowRuler;
+		bShowGene       = seq.bShowGene;
+		bShowGeneLine  	= seq.bShowGeneLine;
+		bShowAnnot      = seq.bShowAnnot;
+		bShowGap        = seq.bShowGap;
+		bShowCentromere = seq.bShowCentromere;
+		bShowScoreLine  = seq.bShowScoreLine;	
+		bShowHitLen 	= seq.bShowHitLen;	
+		
+		bShowNoText  	= seq.bShowNoText;	
+		bShowBlockText  = seq.bShowBlockText;	
+		bShowCsetText 	= seq.bShowCsetText;	
+		bShowScoreText  = seq.bShowScoreText;	
+		bShowHitNumText = seq.bShowHitNumText;	
+		bFlipped        = seq.isFlipped();	
+		
+		bHighPopupGene = seq.bHighGenePopup;
+		bHighConserved = seq.bHighConserved;
+		selectedGeneObj  = seq.selectedGeneObj;
 	}
 
 	protected void setTrack(Track track) {
@@ -65,37 +77,38 @@ public  class TrackData {
 		track.height            = height;
 		track.width             = width;
 		track.otherProjIdx      = otherProject;
-		track.clearAllBuild();
+		track.clearAllBuild(); // set Track.hasBuild = false; for all tracks
 		
 		Sequence seq = (Sequence)track;
-		seq.group          = group;
-		seq.bShowRuler      = showRuler;
-		seq.bShowGene       = showGene;
-		seq.bShowGeneLine   = showGeneLine;
-		seq.bShowAnnot      = showAnnot;
-		seq.bShowGap        = showGap;
-		seq.bShowCentromere = showCentromere;
-		seq.bShowFullGene   = showFullGene;
-		seq.bShowScoreLine  = showScoreLine; 
-		seq.bShowHitLen 		= showHitLen;	
-		seq.bShowScoreText = showScoreValue; 
-		seq.bShowHitNumText = showHitNum; 
-		seq.flipSeq(flipped); 	
+		seq.grpIdx          = grpIdx;
+		seq.bShowRuler      = bShowRuler;
+		seq.bShowGene       = bShowGene;
+		seq.bShowGap        = bShowGap;
+		seq.bShowCentromere = bShowCentromere;
+		
+		seq.bShowGeneLine   = bShowGeneLine;
+		seq.bShowAnnot      = bShowAnnot;
+		
+		seq.bShowScoreLine  = bShowScoreLine; 
+		seq.bShowHitLen 	= bShowHitLen;	
+		
+		seq.bShowNoText  	= bShowNoText;	
+		seq.bShowBlockText  = bShowBlockText;	
+		seq.bShowCsetText 	= bShowCsetText;
+		seq.bShowScoreText 	= bShowScoreText; 
+		seq.bShowHitNumText = bShowHitNumText; 
+		seq.flipSeq(bFlipped); 	
+		
+		seq.bHighGenePopup = bHighPopupGene;
+		seq.bHighConserved = bHighConserved;
+		seq.selectedGeneObj =  selectedGeneObj;
 	}
 
+	public Class <?> getTrackClass() {return trackClass;}
+	
+	public int getProject() {return project;}
 
-	public int getProject() {
-		return project;
-	}
+	public int getOtherProject() {return otherProject;}
 
-	public int getOtherProject() {
-		return otherProject;
-	}
-
-	public Class <?> getTrackClass() {
-		return trackClass;
-	}
-	protected int getGroup() {
-		return group;
-	}
+	protected int getGroup() {return grpIdx;}
 }

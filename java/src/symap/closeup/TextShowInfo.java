@@ -32,19 +32,22 @@ import util.ErrorReport;
  */
 public class TextShowInfo extends JDialog implements ActionListener {
 	private static final long serialVersionUID = 1L;
-	private boolean bGene=false; // Fix gene align for next release
 	
-	private AlignPool alignPool;
+	// For hit popup
 	private HitData hitDataObj=null;
-	private Annotation annoDataObj=null;
-	private boolean isGene2=false;
 	private String  proj1, proj2, title1, title2;
+	
+	private boolean bTmpGene=false; // Fix gene align for next release
+	private AlignPool alignPool;
 	private boolean isQuery=true;
-	
-	private JButton okButton, alignHitButton, alignGeneButton;
-	private JCheckBox ntCheckBox;
-	
 	private HitAlignment[] hitAlignArr=null;
+	private JCheckBox ntCheckBox;
+	private JButton alignHitButton, alignGeneButton;
+	
+	// for Gene popup
+	private Annotation annoDataObj=null;
+	
+	private JButton okButton;
 	
 	// For gene - no align
 	public TextShowInfo (Component parentFrame, String title, String theInfo, Annotation annoDataObj) {
@@ -68,14 +71,13 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // CAS543 add the explicit close 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {
-				if (hitDataObj!=null) hitDataObj.setIsPopup(false);
-				else annoDataObj.setIsPopup(false);
+				if (hitDataObj!=null) 	hitDataObj.setIsPopup(false);
+				else 					annoDataObj.setIsPopup(false);
 			}
 		});
 		if (hitDataObj!=null) {
 			alignPool = new AlignPool(dp.getDBC());
 			this.hitDataObj = hitDataObj;
-			isGene2 = hitDataObj.is2Gene();
 			this.proj1 = proj1;
 			this.proj2 = proj2;
 			this.title1 = title1;
@@ -92,6 +94,8 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		
 		okButton = new JButton("OK"); okButton.setBackground(Color.white);
 		okButton.addActionListener(this);
+		
+		// Hit only
 		alignHitButton = new JButton("Align Hit"); alignHitButton.setBackground(Color.white);
 		alignHitButton.addActionListener(this);
 		alignGeneButton = new JButton("Exon"); alignGeneButton.setBackground(Color.white);
@@ -101,11 +105,13 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		JPanel buttonPanel = new JPanel();
 		if (hitDataObj!=null) {
 			buttonPanel.add(alignHitButton);	
-			if (isGene2 && bGene) {
+			if (hitDataObj.is2Gene() && bTmpGene) {
 				buttonPanel.add(ntCheckBox); // need 6-frame for AA-hit
 				buttonPanel.add(alignGeneButton);
 			}
 		}
+		// hit only done
+		
 		buttonPanel.add(okButton);
 	
 		getContentPane().setLayout(new BorderLayout());
@@ -122,11 +128,12 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == okButton) {
 			if (hitDataObj!=null) hitDataObj.setIsPopup(false);
-			else annoDataObj.setIsPopup(false);
+			else				  annoDataObj.setIsPopup(false);
 			setVisible(false); 
 		}
 		else if (e.getSource() == alignHitButton) runAlign(); 
 	}
+	////////////////////////////////////////////////////////////////
 	/**************************************************************/
 	private void runAlign() {
 	try {
