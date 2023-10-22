@@ -1,8 +1,6 @@
-package backend;
+package backend.anchor1;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.regex.Pattern;
@@ -19,7 +17,7 @@ import util.ProgressDialog;
  * 
  * Contains Mproject object plus groups and annotation
  */
-public class SyProj  {
+public class Proj  {
 	public int idx;
 	public String name, grpPrefix,  category = "", displayName = ""; 
 	public Mproject mProj;
@@ -42,7 +40,7 @@ public class SyProj  {
 	 * QueryType: AnnotLoadMain - Either; 
 	 * 			  AnchorMain, SyntenyMain - Target, query
 	 */
-	public SyProj(DBconn2 dbc2, ProgressDialog log, Mproject proj, String name, int topN, QueryType qt) throws Exception {
+	public Proj(DBconn2 dbc2, ProgressDialog log, Mproject proj, String name, int topN, int qType) throws Exception {
 		this.dbc2 = dbc2;
 		this.plog = log;
 		this.mProj = proj;
@@ -63,9 +61,9 @@ public class SyProj  {
 		idx2Grp = 			new TreeMap<Integer,Group>();
 		grpName2Idx = 		new TreeMap<String,Integer>();
 		
-		loadGroups(qt);
+		loadGroups(qType);
 	}
-	private void loadGroups(QueryType qt) throws Exception {	
+	private void loadGroups(int qType) throws Exception {	
 	try { 
 		ResultSet rs = dbc2.executeQuery("SELECT idx, name, fullname FROM xgroups WHERE proj_idx=" + idx);
         while(rs.next())  {
@@ -73,7 +71,7 @@ public class SyProj  {
             String name = rs.getString(2);
             String fullname = rs.getString(3);
             
-            Group grp = new Group(topN,name, displayName + "." + fullname,idx,qt); 
+            Group grp = new Group(topN,name, displayName + "." + fullname,idx,qType); 
           	groupVec.add(grp);
           
             idx2Grp.put(idx,grp);

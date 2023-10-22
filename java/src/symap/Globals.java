@@ -6,17 +6,17 @@ import java.awt.Cursor;
  * CAS534 added in order to move globals from SyMAP2d, SyMAPConstants and Manager
  */
 public class Globals {
-	public static final String 	VERSION = "v5.4.5"; 
-	public static final String 	DATE = " (4-Aug-23)";
+	public static final String 	VERSION = "v5.4.6"; 
+	public static final String 	DATE = " (22-Oct-23)";
 	public static final String  VERDATE = VERSION + " " + DATE;
-	public static final int 	DBVER =  6; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6
+	public static final int 	DBVER =  7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
 	
 	public static String  MAIN_PARAMS =   "symap.config"; 	// default; changed on command line -c
 	
 	public static final  String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // under user's directory; see props.PersistenProps
 
-	public static boolean TRACE=false; 		// set in SyMAPmanager on -tt; 			use to add info
+	public static boolean TRACE=false; 		// set in SyMAPmanager on -tt; 			use to add info; write anchor2 files
 	public static boolean DEBUG=false; 		// CAS519 set in SyMAPmanager on -dd; 	use for possible error
 	public static boolean DBDEBUG=false;	// CAS535 set in SyMAPmanger on -dbd	adds fields to DB
 	public static boolean GENEN_ONLY=false; // -z CAS519b to update the gene# without having to redo synteny

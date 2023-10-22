@@ -6,29 +6,31 @@ import java.util.Vector;
 /*************************************************
  * The columns for the query result table
  * Added in TableDataPanel. Database query in DBdata. 
- * Any changes to columns need to be changed in DBdata too.
+ * Any changes to columns need to be changed in DBdata too (and Q.java).
  * The PA.name field contains all the attributes, which is parsed for that section and display
  */
 
 public class FieldData {
- 	// type is all Integer, included Block, see Column Comparator, which sorts it correctly
+ 	// see Column Comparator for sorting Block and Collinear
 	// leave Q.rowCol for placement, the actual row is computed in DBdata (CAS514 HitIdx->Hit#, #Gene->Gene#)
-	// TableDataPanel.createGeneralSelectPanel expects 6 hit columns
+	// TableDataPanel.createGeneralSelectPanel expects N_GENERAL columns
+	public static final int N_GEN_HIT=7;
 	private static final String [] GENERAL_COLUMNS =	 
-		{Q.rowCol, Q.blockCol, "Block\nScore",Q.runCol,"PgeneF", "PgFSize",
-		Q.hitCol,    "Hit\n%Id", "Hit\n%Sim","Hit\n#Sub", "Hit\nSt", "Hit\nCov"}; // CAS516 add these 4; CAS520 add st; CAS540 add Len
+		{Q.rowCol, Q.blockCol, "Block\nHits",Q.runCol,"PgeneF", "PgFSize",
+		Q.hitCol,    "Hit\n%Id", "Hit\n%Sim","Hit\n#Sub", "Hit\nSt", "Hit\nCov",
+		"Hit\nType"}; // CAS516 add these 4; CAS520 add st; CAS540 add Len; CAS546 add Hit Type
 	
 	private static final Class <?> []  GENERAL_TYPES = 					// CAS520 had to add for String
 		{Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,
-		 Integer.class,Integer.class,Integer.class,Integer.class, String.class, Integer.class};
+		 Integer.class,Integer.class,Integer.class,Integer.class,String.class, Integer.class, String.class};
 	
 	private static final boolean [] GENERAL_COLUMN_DEF =  
-		{true, true, true, true, false, false, true, false, false, false, false, false}; // CAS513 HitID=f, Score=t
+		{true, true, true, true, false, false, true, false, false, false, false, false, false}; // CAS513 HitID=f, Score=t
 	
 	private static final String [] GENERAL_COLUMN_DESC = 
 		{"Row number", 
 		 "Block: Synteny block number (chr.chr.#)", 
-		 "Block score: Number of hits in the synteny block",
+		 "Block Hits: Number of hits in the synteny block",
 		 "Collinear: Number of adjacent genes and set number (chr.chr.N.#)", 
 		 "PgeneF: (Compute PgeneF only) putative gene family number", 
 		 "PgFSize: (Compute PgeneF only) putative gene family size",
@@ -37,7 +39,8 @@ public class FieldData {
 		 "Hit %Sim: Approximate percent similarity (exact if one hit)", 
 		 "Hit #Sub: Number of subhits in the cluster, where 1 is a single hit",
 		 "Hit St: '=' is both hit ends are to the same strand, '!=' otherwise",
-		 "Hit Cov: The largest summed subhit lengths of the two species."
+		 "Hit Cov: The largest summed subhit lengths of the two species",
+		 "Algo1: g2, g1, g0; Algo2: E is exon, I is intron, n is neither."
 		};
 	
 /* Prefixed with Species: CAS519 add hit and gene start/end/len/strand; CAS543 mv Gene# to start */
@@ -81,7 +84,7 @@ public class FieldData {
 		"Glen: Length of gene", 
 		"Gst: Gene strand", 
 		
-		"NumHits: Number of hits for to the gene in the entire database."
+		"NumHits: Number of hits to the gene in the entire database."
 	};
 	
 	
@@ -138,6 +141,7 @@ public class FieldData {
 		fd.addField(String.class, Q.PH, "countpct", Q.HCNT,      "Clustered hits");
 		fd.addField(String.class, Q.PH, "strand",   Q.HST,       "Strand +/-, /-, etc");
 		fd.addField(String.class, Q.PH, "score",    Q.HSCORE,    "Summed clustered hits");
+		fd.addField(String.class, Q.PH, "htype",    Q.HTYPE,    "Type of Exon (E), Intron(I), neither(n)");
 		fd.addField(String.class, Q.PH, "runsize",  Q.COSIZE,    "Collinear run size");
 		fd.addField(String.class, Q.PH, "runnum",   Q.CONUM,     "Collinear number"); // CAS520 add
 

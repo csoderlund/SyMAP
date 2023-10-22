@@ -1,17 +1,18 @@
-package backend;
+package backend.anchor1;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Vector;
 
+import backend.Utils;
 import util.ErrorReport;
 
 /*****************************************************
  * Used for AnchorsMain: a hit may be a MUMmer hit or a clustered hit SubHit>0.
  */
 public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
-	public static final boolean bRev = true; // Only cluster hits of the same orientation (--,++) and (+-,+-)
-	public static final int haveNSubs=2, haveLen1=300, haveLen2=100;   // >= heuristics; used in HitBin for filtering 
+	public static final boolean FcheckRev = true; // Only cluster hits of the same orientation (--,++) and (+-,+-)
+	public static final int FhaveNSubs=2, FhaveLen1=300, FhaveLen2=100;   // >= heuristics; used in Hit/HitBin for filtering 
 	
 	public int hitLen=0;
 	public int matchLen, pctid, pctsim, idx; // pctid=%ID, pctsim=%sim from MUMmer per subhit
@@ -111,22 +112,22 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	// called by HitBin on filtering clustered hit; if false, they may still be used if topN
 	public boolean useAnnot() { 
 		if (annotIdx1 > 0 && annotIdx2 > 0) {
-			if (matchLen>haveLen2) return true;
+			if (matchLen>FhaveLen2) return true;
 		}
 		if (annotIdx1 > 0 || annotIdx2 > 0) {
-			if (nSubHits>=haveNSubs || matchLen>=haveLen1) return true; 
+			if (nSubHits>=FhaveNSubs || matchLen>=FhaveLen1) return true; 
 		}
 		return false;
 	}
 	public boolean useAnnot2() { // CAS543 keep if both genes!
 		if (annotIdx1 > 0 && annotIdx2 > 0) {
-			if (matchLen>haveLen2) return true;
+			if (matchLen>FhaveLen2) return true;
 		}
 		return false;
 	}
 	public boolean useAnnot1() { 
 		if (annotIdx1 > 0 || annotIdx2 > 0) {
-			if (nSubHits>=haveNSubs || matchLen>=haveLen1) return true; 
+			if (nSubHits>=FhaveNSubs || matchLen>=FhaveLen1) return true; 
 		}
 		return false;
 	}
@@ -179,7 +180,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	}
 	
 	/*******************************************************************
-	 * STATIC - manipulation of hits
+	 * XXX STATIC - manipulation of hits
 	 ********************************************************************/
 	/*******************************************************************
 	 * Break the hit into pieces, taking care to not leave a tiny leftover hit, and for
@@ -188,7 +189,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	 */
 	static public Vector<Hit> splitMUMmerHit(Hit hit) {
 	try {
-		int fSplitLen = Group.fSplitLen;
+		int fSplitLen = Group.FSplitLen;
 		
 		Vector<Hit> ret = new Vector<Hit>();
 	
@@ -286,15 +287,15 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		Vector <Hit> rHits = new Vector <Hit> ();
 		Vector <Hit> sHits = new Vector <Hit> ();
 		for (Hit ht : hitVec) {
-			if (bRev) {
-				boolean hRev = (ht.strand.contains("+") && ht.strand.contains("-"));		
-				if (hRev) rHits.add(ht);
-				else      sHits.add(ht);
+			if (FcheckRev) {		
+				if (ht.isRev) rHits.add(ht);
+				else          sHits.add(ht);
 			}
 			else rHits.add(ht);
 		}
+		// heuristic: if same/diff orient, only make clusters of both if the both have >2 subhits
 		int r=rHits.size(), s=sHits.size();
-		if (r>=s || r>2) retHits.addAll(clusterCreate(rHits, htype, qAnno, tAnno)); // heuristic
+		if (r>=s || r>2) retHits.addAll(clusterCreate(rHits, htype, qAnno, tAnno)); 
 		if (s>=r || s>2) retHits.addAll(clusterCreate(sHits, htype, qAnno, tAnno));
 		if (r>0 && s>0) BinStats.incStat("OppositeDir", 1); 
 		

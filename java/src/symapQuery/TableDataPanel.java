@@ -65,7 +65,7 @@ import symap.sequence.Sequence;
 public class TableDataPanel extends JPanel {
 	private static final long serialVersionUID = -3827610586702639105L;
 	private static final int ANNO_COLUMN_WIDTH = 100, ANNO_PANEL_WIDTH = 900;
-	private static final int GEN_COLUMN_WIDTH = 110;
+	private static final int GEN_COLUMN_WIDTH = 100;
 	private static final int showREGION=0, showBLOCK=1, showSET=2;
 	
 	// called by SymapQueryFrame
@@ -364,7 +364,7 @@ public class TableDataPanel extends JPanel {
     	boolean [] genColDef = FieldData.getGeneralColDefaults();
     	String [] genDesc= FieldData.getGeneralColDesc();
     	int nCol = FieldData.getGenColumnCount(isSingle);
-    	int newRow = (nCol>1) ? genCols.length-6 : 1; // CAS520 add a hit column, CAS540 add hit score column
+    	int newRow = (nCol>1) ? genCols.length-FieldData.N_GEN_HIT : 1; // CAS520, CAS540 hit score, CAS546 N_GENERAL
     	
     	JPanel row=null;
     	chkGeneralFields = new JCheckBox[nCol];
@@ -1077,7 +1077,7 @@ public class TableDataPanel extends JPanel {
 	private void loadDataTESTwrite(String strQuery, ResultSet rs, boolean isOrphan) {
 		if (strQuery!=null) {
 		 	try {
-        		BufferedWriter w = new BufferedWriter(new FileWriter("/tmp/symap_sql.txt"));
+        		BufferedWriter w = new BufferedWriter(new FileWriter("symap_sql.log"));
         		w.write("\n" + strQuery+ "\n\n");
         		w.close();
         	} catch(Exception e){};
@@ -1086,7 +1086,7 @@ public class TableDataPanel extends JPanel {
 		
 		if (isOrphan) {
 			try {
-        		BufferedWriter w = new BufferedWriter(new FileWriter("/tmp/symap_orphan_results.xls"));
+        		BufferedWriter w = new BufferedWriter(new FileWriter("symap_orphan_results.log"));
         		w.write("Row\tAStart\tAnnoIdx\tID\n");
         		int cnt=0;
         		while (rs.next()) {
@@ -1096,7 +1096,8 @@ public class TableDataPanel extends JPanel {
         				if (i>0) n = n.substring(0, i);
         			} else n="--";
         			
-        			w.write(cnt + "\t" + rs.getString(Q.ASTART)   + "\t" +  rs.getString(Q.AIDX)   + "\t" + n  + "\n");
+        			w.write(cnt + "\t" + rs.getString(Q.ASTART) + "\t" +  rs.getString(Q.AIDX) + "\t" + n  
+        					+ "\t" + rs.getInt(Q.ANUMHITS) + "\n");
         			cnt++;
         		}
         		w.close();
@@ -1106,7 +1107,7 @@ public class TableDataPanel extends JPanel {
 		}
 		else {
 		 	try {
-        		BufferedWriter w = new BufferedWriter(new FileWriter("/tmp/symap_results.xls"));
+        		BufferedWriter w = new BufferedWriter(new FileWriter("symap_results.log"));
         		w.write("Row\tblock\tHitIdx\tgrp1\tgrp2\tanno1\tanno2\tAnnoIDX\tAnnoGrp\tAname\tAGene\n");
         		int cnt=0;
         		while (rs.next()) {

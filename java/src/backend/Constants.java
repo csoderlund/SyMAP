@@ -2,6 +2,7 @@ package backend;
 
 import java.io.File;
 
+import backend.anchor1.Proj;
 import util.ErrorReport;
 
 public class Constants {
@@ -19,6 +20,12 @@ public static boolean TRACE =     false; 		// -tt not shown in help
 public static boolean NEW_ORDER = true;	 		// -oo not shown in help; may not work anymore
 public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block coords
 public static boolean PRT_STATS=  false; 		// -s
+
+// CAS546 when anchor1 classes were moved to backend.anchor1, enums broke so make static here
+public static final int TARGET=0, QUERY=1, EITHER=2;
+public static final String GeneGene="GeneGene";
+public static final String GeneNonGene = "GeneNonGene";
+public static final String NonGene = "NonGene";
 
 /*************************************************************/
 
@@ -70,8 +77,12 @@ public static final String tmpRunDir = 		 "/tmp/";
 private static String mummer4Path=null; 
 
 /*************************************************************************/
+	public static boolean rtError(String msg) {
+		System.out.println(msg);
+		return false;
+	}
 	// default data directory
-	public  static String getNameDataDir(SyProj p1) {
+	public  static String getNameDataDir(Proj p1) {
 		String name = p1.getName();
 		return seqDataDir + name;
 	}

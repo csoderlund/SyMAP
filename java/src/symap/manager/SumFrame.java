@@ -46,7 +46,7 @@ import util.Utilities;
 public class SumFrame extends JDialog implements ActionListener {
 	private static final long serialVersionUID = 246739533083628235L;
 	private boolean bPrtStats=Constants.PRT_STATS; // -s; this will regenerate the summary on display
-	private boolean bTrace=Constants.TRACE; // -tt
+	private boolean bTrace=false; 
 	
 	private JButton btnHelp = null, btnOK = null;
 	private int pairIdx=0, proj1Idx=0, proj2Idx=0;
@@ -473,7 +473,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	    }
 	    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
 	    
-	    if (bPrtStats && Constants.TRACE) {
+	    if (bPrtStats && bTrace) {
 	    	String cxCov1 = pct((double)chCov1x, (double)proj1.genomeLen); 
 			String cxCov2 = pct((double)chCov2x, (double)proj2.genomeLen);
 			String sxCov1 = pct((double)shCov1x, (double)proj1.genomeLen); 
@@ -488,7 +488,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	    			
 	    	System.out.format("   Cover 1x: CH %s %s    SH %s %s\n", pchCov1,  pchCov2, pshCov1, pshCov2 ); // in summary
 	    	System.out.format("   Cover 2x: CH %s %s    SH %s %s\n", cxCov1,   cxCov2,  sxCov1,  sxCov2 );
-	    	Utils.prtMemUsage("Anchors: ", startTime); 
+	    	Utils.prtTimeMemUsage("Anchors: ", startTime); 
 	    	
 			createAnchorDelete(); // -tt
 		}
@@ -672,7 +672,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
 	    
 		if (bPrtStats && bTrace) {
-			Utils.prtMemUsage("Blocks: ", startTime); 
+			Utils.prtTimeMemUsage("Blocks: ", startTime); 
 			createBlockDelete();
 		}
 		
@@ -893,7 +893,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		    }
 		    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
 		    System.out.println("Orig Anchors\n" + tab);
-			Utils.prtMemUsage("Orig Anchors: ", startTime); 
+			Utils.prtTimeMemUsage("Orig Anchors: ", startTime); 
 		}
 		catch (Exception e) {ErrorReport.print(e, "Summary anchors");}
 	}
@@ -1044,7 +1044,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	    
 	    if (bPrtStats) {
 	    	System.out.println("New " + title + "\n" + tab);
-	    	Utils.prtMemUsage("New Blocks: ", startTime); 
+	    	Utils.prtTimeMemUsage("New Blocks: ", startTime); 
 		}
 	    return title + "\n" + tab;
 	}

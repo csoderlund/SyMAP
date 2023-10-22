@@ -4,7 +4,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Vector;
 import java.util.HashMap;
+import java.util.TreeMap;
 
+import symap.manager.Mproject;
 import database.DBconn2;
 import util.Cancelled;
 import util.ErrorReport;
@@ -29,7 +31,7 @@ public class AnnotLoadPost {
 	private final int MAX_GAP=0; // CAS519 changed from 3
 	private ProgressDialog plog;
 	private DBconn2 dbc2;
-	private SyProj syProj;
+	private Mproject mProj; // CAS546 was syProj
 	
 	private HashMap <Integer, GeneData> geneMap = new HashMap <Integer, GeneData> (); 
 	private Vector <Integer> geneOrder = new Vector <Integer> ();
@@ -37,8 +39,8 @@ public class AnnotLoadPost {
 	private boolean isSuccess=true;
 	private int totexonUpdate=0, totgeneUpdate=0, totOverlap=0, totContained=0, totGeneNum=0;
 	
-	public AnnotLoadPost(SyProj project, DBconn2 dbc2, ProgressDialog log) {
-		this.syProj = project;
+	public AnnotLoadPost(Mproject project, DBconn2 dbc2, ProgressDialog log) {
+		this.mProj = project;
 		this.dbc2 = dbc2;
 		this.plog = log;
 	}
@@ -51,13 +53,13 @@ public class AnnotLoadPost {
 			plog.msg("  Assign #exons and tags to genes");
 			
 			dbc2.executeUpdate("update pseudo_annot, xgroups set pseudo_annot.genenum=0 "
-					+ "where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + syProj.idx);
+					+ "where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + mProj.getIdx());
 			
-			
-			for (Group g : syProj.getGroups()){
-				System.err.print("Process " + g.getName() + "                \r");
-				computeGeneNum(g); if (!isSuccess) return isSuccess;	// CAS512 moved from SyntenyMain
-				computeTags(g);    if (!isSuccess) return isSuccess;	
+			TreeMap <Integer, String> grpIdxList = mProj.getGrpIdxMap();
+			for (int idx : grpIdxList.keySet()){
+				//System.err.print("Process " + g.getName() + "                \r");
+				computeGeneNum(idx, grpIdxList.get(idx)); if (!isSuccess) return isSuccess;	// CAS512 moved from SyntenyMain
+				computeTags(idx, grpIdxList.get(idx));    if (!isSuccess) return isSuccess;	
 			}
 			System.err.print("                                                 \r");
 			Utils.prtNumMsg(plog, totGeneNum,      "Unique gene numbers");
@@ -75,10 +77,10 @@ public class AnnotLoadPost {
 	/*********************************************************
 	 * Assign Gene#
 	 */
-	private void computeGeneNum(Group g) {
+	private void computeGeneNum(int grpIdx, String grpName) {
 		try {	
 			ResultSet rs = dbc2.executeQuery(
-				"select idx,start,end from pseudo_annot where grp_idx=" + g.idx + 
+				"select idx,start,end from pseudo_annot where grp_idx=" + grpIdx + 
 				" and type='gene' order by start asc");
 			
 			while (rs.next()){
@@ -119,7 +121,7 @@ public class AnnotLoadPost {
 			
 			for (GeneData gd : geneMap.values()) gd.tag = gd.genenum + "." + gd.suffix; // CAS543 "Gene #" + gd.genenum + gd.suffix; 
 			
-			System.err.print("   " + g.getFullName() + " " + genenum + " genes                    \r");
+			System.err.print("   " + grpName + " " + genenum + " genes                    \r");
 			totGeneNum+= genenum;
 			genenum=0;
 		}
@@ -158,11 +160,11 @@ public class AnnotLoadPost {
 	/************************************************************
 	 * Assign tags for Genes and Exons
 	 */
-	private void computeTags(Group grp) {
+	private void computeTags(int grpIdx, String grpName) {
 		try {	
 		// Create exon list per gene; provides exon cnt for gene, and exonIdx for tag update
 			ResultSet rs = dbc2.executeQuery("select idx, gene_idx, start, end from pseudo_annot "
-				+ "where grp_idx=" + grp.idx + " and type='exon'"); 
+				+ "where grp_idx=" + grpIdx + " and type='exon'"); 
 			
 			int err=0;
 			while (rs.next()) {
@@ -226,7 +228,7 @@ public class AnnotLoadPost {
 					if (Cancelled.isCancelled()) {isSuccess=false;return;}
 					ps.executeBatch();
 					cntBatch=0;
-					System.err.print("   " + grp.getFullName() + " count " + exonUpdate + " exons for "  + geneUpdate + " genes        \r");
+					System.err.print("   " + grpName + " count " + exonUpdate + " exons for "  + geneUpdate + " genes        \r");
 				}
 			}
 			System.err.print("                                                                         \r");

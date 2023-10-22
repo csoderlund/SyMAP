@@ -55,7 +55,7 @@ public class MapperPool {
 			
 			// CAS515 add cvgpct, countpct, CAS516 add corr; CAS504 bh.block_idx->b.blocknum, 
 			// CAS520 change evalue to hitnum, add runnum, CAS540 add score, CAS543 add annot1 and annot2, put in DB order
-			String query = "SELECT h.idx, h.hitnum, h.pctid, h.cvgpct, h.countpct, h.score, h.gene_overlap, "
+			String query = "SELECT h.idx, h.hitnum, h.pctid, h.cvgpct, h.countpct, h.score, h.htype, h.gene_overlap, "
 				+ "h.annot1_idx, h.annot2_idx, h.strand, h.start1, h.end1, h.start2, h.end2, h.query_seq, h.target_seq,   " 
 				+ "h.runnum, h.runsize,  b.blocknum, b.corr " 
 				+ "FROM pseudo_hits AS h "
@@ -69,29 +69,31 @@ public class MapperPool {
 			// 8 annot1_idx, 9 annot2_idx, 10 strand, 11 start1, 12 end1, 13 start2, 14 end2, 15 query_seq, 16 target_seq, 
 			// 17 runnum, 18 runsize, 19 block, 20 bcorr	
 			while (rs.next()) {
+				int i=1;
 				HitData temp = 		new HitData(mapper,
-						rs.getLong(1),		// long id 		
-						rs.getInt(2),		// int hitnum 	
-						rs.getDouble(3),	// double pctid	
-						rs.getInt(4),		// int cvgpct->avg %sim 
-						rs.getInt(5),       // int countpct -> nMergedHits 
-						rs.getInt(6),		// CAS540 h.score 
-						rs.getInt(7),		// int gene_overlap   
+						rs.getLong(i++),		// long id 		
+						rs.getInt(i++),		// int hitnum 	
+						rs.getDouble(i++),	// double pctid	
+						rs.getInt(i++),		// int cvgpct->avg %sim 
+						rs.getInt(i++),     // int countpct -> nMergedHits 
+						rs.getInt(i++),		// CAS540 h.score 
+						rs.getString(i++),	// CAS546 h.htype
+						rs.getInt(i++),		// int gene_overlap   
 						
-						rs.getInt(8),		// int annot1_idx 
-						rs.getInt(9),       // int annot2_idx 
-						rs.getString(10),	// String strand
-						rs.getInt(11),		// int start1	
-						rs.getInt(12),		// int end1		
-						rs.getInt(13),		// int start2	
-						rs.getInt(14),		// int end2		
-						rs.getString(15),	// String query_seq 	
-						rs.getString(16),	// String target_seq 	
+						rs.getInt(i++),		// int annot1_idx 
+						rs.getInt(i++),       // int annot2_idx 
+						rs.getString(i++),	// String strand
+						rs.getInt(i++),		// int start1	
+						rs.getInt(i++),		// int end1		
+						rs.getInt(i++),		// int start2	
+						rs.getInt(i++),		// int end2		
+						rs.getString(i++),	// String query_seq 	
+						rs.getString(i++),	// String target_seq 	
 						
-						rs.getInt(17),		// int runnum
-						rs.getInt(18),		// int runsize
-						rs.getInt(19),		// int b.block	
-						rs.getDouble(20),	// int b.corr 
+						rs.getInt(i++),		// int runnum
+						rs.getInt(i++),		// int runsize
+						rs.getInt(i++),		// int b.block	
+						rs.getDouble(i++),	// int b.corr 
 						chr1, chr2	    // CAS517 add chr1, chr2 			
 						);		
 				hitList.add(temp);

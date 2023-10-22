@@ -316,7 +316,7 @@ public class SeqLoadMain {
 	/***********************************************************************/
 	private void uploadSequence(String grp, String fullname, String seq, String file, int order)  {
 	try {
-		// First, create the group
+		// First, create the group; FIXME check for duplicates
 		tdbc2.executeUpdate("INSERT INTO xgroups VALUES('0','" + projIdx + "','" + 
 				grp + "','" + fullname + "'," + order + ",'0')" );
 		String sql = "select max(idx) as maxidx from xgroups where proj_idx=" + projIdx;

@@ -48,7 +48,8 @@ public class AlignMain {
 	private boolean error = false;
 	
 	private String resultDir;
-	private String alignParams, usePrevious = "Use previous alignment";
+	private String alignParams; // Set in pair_props from AlgSynMain; CAS546 add #MUMMer files
+	private int nAlign=0;
 	
 	public AlignMain(DBconn2 dbc2, ProgressDialog log, Mpair mp,
 			int nMaxThreads, boolean bDoCat, String alignLogDirName)
@@ -83,7 +84,6 @@ public class AlignMain {
 			System.gc(); // free unused heap for mummer to use (Java treats this as a suggestion)
 			
 			if (alignExists()) {
-				alignParams = usePrevious; 
 				return true; // must have all.done and at least one .mum file
 			}
 			
@@ -451,14 +451,14 @@ public class AlignMain {
 			if (!f.exists()) return false;
 			
 			boolean done = Utils.checkDoneFile(alignDir);
-			int n = Utils.checkDoneMaybe(alignDir);
-			if (done && n>0) {
-				plog.msg("Warning: " + n + " alignment files exist - using existing files ...");
+			nAlign = Utils.checkDoneMaybe(alignDir);
+			if (done && nAlign>0) {
+				plog.msg("Warning: " + nAlign + " alignment files exist - using existing files ...");
 				plog.msg("   If not correct, remove " + resultDir + " and re-align.");
-				usePrevious += "  " + Utils.getDateStr(f.lastModified()); 
+				alignParams = "Use previous " + nAlign + " MUMmer files " + Utils.getDateStr(f.lastModified()); 
 				return true;
 			}			
-			if (n>0) 
+			if (nAlign>0) 
 				plog.msg("WARNING: No 'align/all.done' file, alignment may have ended before done.");
 
 			return false;

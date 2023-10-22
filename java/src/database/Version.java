@@ -2,21 +2,23 @@ package database;
 
 /*****************************************************
  * CAS506 created to provide an organized why for database updates.
+ * MySQL v8 'groups' is a new special keywords, so the ` is necessary for that particular rename.
+ * CAS546 removed table methods and use DBconn2
  */
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import backend.AnchorsMain;
 import backend.Utils;
+import backend.AnchorMain;
 import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
 
 public class Version {
 	public int dbVer = Globals.DBVER; 
-	public String strVer = Globals.DBVERSTR; // db4
-	public boolean debug = Globals.DBDEBUG;  // -dbd
+	public String strVer = Globals.DBVERSTR; // db7
+	public boolean dbdebug = Globals.DBDEBUG;  // -dbd
 	
 	private DBconn2 dbc2=null;
 	
@@ -24,8 +26,8 @@ public class Version {
 		this.dbc2 = dbc2;
 		checkForUpdate();
 		
-		if (debug) 	updateDEBUG();
-		else 		removeDEBUG();
+		if (dbdebug) 	updateDEBUG();
+		else 			removeDEBUG();
 		
 		if (Globals.HITCNT_ONLY) updateHitCnt();
 	}
@@ -45,7 +47,12 @@ public class Version {
 				}
 				catch (Exception e) {ErrorReport.print(e, "Cannot parse DBVER " + strDBver);};
 			}
-			if (idb==dbVer) return;
+			if (idb==dbVer) return; 
+			if (idb>dbVer) { // CAS546 add
+				Utilities.showWarningMessage("This database schema is " + strDBver + "; this SyMAP version uses " + strVer +
+						"\nThis may not be a problem.....");
+				return;
+			}
 			
 			if (!Utilities.showYesNo("DB update", 					// CAS544 change from continue
 					"Database schema needs updating from " + strDBver + " to " + strVer +"\nProceed with update?")) return;
@@ -72,12 +79,16 @@ public class Version {
 				updateVer5();
 				idb=6;
 			}
+			if (idb==6) {
+				updateVer6();
+				idb=7;
+			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
 	}
 	private void updateVer1() {
 		try {
-			if (tableRename("groups", "xgroups"))
+			if (dbc2.tableRename("groups", "xgroups"))
 				updateProps();
 		}
 		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
@@ -85,13 +96,13 @@ public class Version {
 	// CAS512 gather all columns added with 'alter'
 	private void updateVer2() {
 		try {
-			tableCheckDropColumn("pseudo_annot", "text"); // lose 512
-			tableCheckAddColumn("pseudo_annot", "genenum", "INTEGER default 0", null);  // added in SyntenyMain
-			tableCheckAddColumn("pseudo_annot", "gene_idx", "INTEGER default 0", null); // new 512
-			tableCheckAddColumn("pseudo_annot", "tag", "VARCHAR(30)", null); 			// new 512
-			tableCheckAddColumn("pseudo_hits", "runsize", "INTEGER default 0", null);   // checked in SyntenyMain
-			tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null);				// added 511
-			tableCheckAddColumn("blocks", "corr", "float default 0", null);				// SyMAPExp was checking for
+			dbc2.tableCheckDropColumn("pseudo_annot", "text"); // lose 512
+			dbc2.tableCheckAddColumn("pseudo_annot", "genenum", "INTEGER default 0", null);  // added in SyntenyMain
+			dbc2.tableCheckAddColumn("pseudo_annot", "gene_idx", "INTEGER default 0", null); // new 512
+			dbc2.tableCheckAddColumn("pseudo_annot", "tag", "VARCHAR(30)", null); 			// new 512
+			dbc2.tableCheckAddColumn("pseudo_hits", "runsize", "INTEGER default 0", null);   // checked in SyntenyMain
+			dbc2.tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null);				// added 511
+			dbc2.tableCheckAddColumn("blocks", "corr", "float default 0", null);				// SyMAPExp was checking for
 			
 			updateProps();
 		}
@@ -101,13 +112,13 @@ public class Version {
 	private void updateVer3() {
 		try {
 			dbc2.executeUpdate("alter table pseudo_hits modify countpct integer");  // Remove from AnchorsMain, 169
-			tableCheckAddColumn("pseudo_hits",  "runnum",  "integer default 0", null);
-			tableCheckAddColumn("pseudo_hits",  "hitnum",  "integer default 0", null);
-			tableCheckAddColumn("pseudo_annot", "numhits", "tinyint unsigned default 0", null);
+			dbc2.tableCheckAddColumn("pseudo_hits",  "runnum",  "integer default 0", null);
+			dbc2.tableCheckAddColumn("pseudo_hits",  "hitnum",  "integer default 0", null);
+			dbc2.tableCheckAddColumn("pseudo_annot", "numhits", "tinyint unsigned default 0", null);
 			
-			tableCheckAddColumn("pairs",    "params", "tinytext", null); // added in earlier version, but never checked
-			tableCheckAddColumn("pairs",    "syver", "tinytext", null);
-			tableCheckAddColumn("projects", "syver", "tinytext", null);
+			dbc2.tableCheckAddColumn("pairs",    "params", "tinytext", null); // added in earlier version, but never checked
+			dbc2.tableCheckAddColumn("pairs",    "syver", "tinytext", null);
+			dbc2.tableCheckAddColumn("projects", "syver", "tinytext", null);
 			
 			updateProps();
 			
@@ -119,35 +130,35 @@ public class Version {
 	// v5.3.0 (code has v522, but major change)
 	private void updateVer4() {
 		try {
-			tableDrop("mrk_clone");
-			tableDrop("mrk_ctg"); 
-			tableDrop("clone_remarks_byctg"); 
-			tableDrop("bes_block_hits");
-			tableDrop("mrk_block_hits"); 
-			tableDrop("fp_block_hits");
-			tableDrop("shared_mrk_block_hits");
-			tableDrop("shared_mrk_filter");
+			dbc2.tableDrop("mrk_clone");
+			dbc2.tableDrop("mrk_ctg"); 
+			dbc2.tableDrop("clone_remarks_byctg"); 
+			dbc2.tableDrop("bes_block_hits");
+			dbc2.tableDrop("mrk_block_hits"); 
+			dbc2.tableDrop("fp_block_hits");
+			dbc2.tableDrop("shared_mrk_block_hits");
+			dbc2.tableDrop("shared_mrk_filter");
 			
-			tableDrop("clones"); 
-			tableDrop("markers");  
-			tableDrop("bes_seq"); 
-			tableDrop("mrk_seq");
-			tableDrop("clone_remarks"); 
-			tableDrop("bes_hits"); 
-			tableDrop("mrk_hits");
-			tableDrop("fp_hits"); 
-			tableDrop("ctghits");
-			tableDrop("contigs"); 
+			dbc2.tableDrop("clones"); 
+			dbc2.tableDrop("markers");  
+			dbc2.tableDrop("bes_seq"); 
+			dbc2.tableDrop("mrk_seq");
+			dbc2.tableDrop("clone_remarks"); 
+			dbc2.tableDrop("bes_hits"); 
+			dbc2.tableDrop("mrk_hits");
+			dbc2.tableDrop("fp_hits"); 
+			dbc2.tableDrop("ctghits");
+			dbc2.tableDrop("contigs"); 
 			
-			tableDrop("mrk_filter"); 
-			tableDrop("bes_filter");
-			tableDrop("fp_filter"); 
-			tableDrop("pseudo_filter"); // never used
+			dbc2.tableDrop("mrk_filter"); 
+			dbc2.tableDrop("bes_filter");
+			dbc2.tableDrop("fp_filter"); 
+			dbc2.tableDrop("pseudo_filter"); // never used
 			
-			tableCheckDropColumn("blocks", "level");
-			tableCheckDropColumn("blocks", "contained");
-			tableCheckDropColumn("blocks", "ctgs1");
-			tableCheckDropColumn("blocks", "ctgs2");
+			dbc2.tableCheckDropColumn("blocks", "level");
+			dbc2.tableCheckDropColumn("blocks", "contained");
+			dbc2.tableCheckDropColumn("blocks", "ctgs1");
+			dbc2.tableCheckDropColumn("blocks", "ctgs2");
 				
 			updateProps();
 			System.err.println("FPC tables removed from Schema. No user action necessary.\n"
@@ -158,13 +169,26 @@ public class Version {
 	// v5.4.3; however, these updates will be used in v5.4.4
 	private void updateVer5() {
 		try {
-			tableCheckAddColumn("pseudo_hits", "htype", "tinyint unsigned default 0", "evalue");// has to take evalue place
-			tableCheckDropColumn("pseudo_hits",  "evalue");
-			tableCheckAddColumn("pseudo_hits_annot", "htype", "tinyint unsigned default 0", null);
+			dbc2.tableCheckAddColumn("pseudo_hits", "htype", "tinyint unsigned default 0", "evalue");// has to take evalue place
+			dbc2.tableCheckDropColumn("pseudo_hits",  "evalue");
+			dbc2.tableCheckAddColumn("pseudo_hits_annot", "htype", "tinyint unsigned default 0", null);
 			
 			updateProps();
 			
 			System.err.println("To use the v5.4.3 hit-gene assignment upgrade, recompute synteny ");
+		}
+		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
+	}
+	// v5.4.6; htype was not being used; it is now with anchor2, but used as text
+	private void updateVer6() {
+		try {
+			dbc2.tableCheckModifyColumn("pseudo_hits", "htype", "tinytext");
+			dbc2.tableCheckAddColumn("pseudo_hits_annot", "exlap", "tinyint default 0", null);
+			dbc2.tableCheckAddColumn("pseudo_hits_annot", "annot2_idx", "integer default 0", null);
+			
+			updateProps();
+			
+			System.err.println("To use the v5.4.6 hit-gene assignment upgrade, recompute synteny ");
 		}
 		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
 	}
@@ -173,7 +197,7 @@ public class Version {
 	 */
 	private void updateDEBUG() {
 	try {
-		if (tableColumnExists("pairs", "proj_names")) return;
+		if (dbc2.tableColumnExists("pairs", "proj_names")) return;
 		
 		long time = Utils.getTime();
 		System.out.println("Update DB debug");
@@ -199,32 +223,32 @@ public class Version {
 		}
 		
    // add pairs.proj_names	
-		if (!tableColumnExists("pairs", "proj_names")) {
-			tableCheckAddColumn("pairs",  "proj_names",  "tinytext", "proj2_idx");
+		if (!dbc2.tableColumnExists("pairs", "proj_names")) {
+			dbc2.tableCheckAddColumn("pairs",  "proj_names",  "tinytext", "proj2_idx");
 			for (int pidx : pairsProjs.keySet()) {
 				dbc2.executeUpdate("update pairs set proj_names='" + pairsProjs.get(pidx) + "' where idx=" + pidx);
 			}
 			System.out.println("Update pairs");
 		}
 	// add xgroups.proj_name	
-		if (!tableColumnExists("xgroups", "proj_name")) {
-			tableCheckAddColumn("xgroups",  "proj_name",  "tinytext", "fullname");
+		if (!dbc2.tableColumnExists("xgroups", "proj_name")) {
+			dbc2.tableCheckAddColumn("xgroups",  "proj_name",  "tinytext", "fullname");
 			for (int pidx : projIdxName.keySet()) {
 				dbc2.executeUpdate("update xgroups set proj_name='" + projIdxName.get(pidx) + "' where proj_idx=" + pidx);
 			}
 			System.out.println("Update xgroups");
 		}
 	// add blocks.proj_names, grp1name, grp2name
-		if (!tableColumnExists("blocks", "proj_names")) {
-			tableCheckAddColumn("blocks",  "proj_names", "tinytext", "pair_idx");
+		if (!dbc2.tableColumnExists("blocks", "proj_names")) {
+			dbc2.tableCheckAddColumn("blocks",  "proj_names", "tinytext", "pair_idx");
 			for (int pidx : pairsProjs.keySet()) {
 				dbc2.executeUpdate("update blocks set proj_names='" + pairsProjs.get(pidx) + "' where pair_idx=" + pidx);
 			}
 			System.out.println("Update blocks.pairs");
 		}
-		if (!tableColumnExists("blocks", "grp1")) {
-			tableCheckAddColumn("blocks",  "grp1",  "tinytext", "proj_names");	
-			tableCheckAddColumn("blocks",  "grp2",  "tinytext", "grp1");	
+		if (!dbc2.tableColumnExists("blocks", "grp1")) {
+			dbc2.tableCheckAddColumn("blocks",  "grp1",  "tinytext", "proj_names");	
+			dbc2.tableCheckAddColumn("blocks",  "grp2",  "tinytext", "grp1");	
 			for (int gidx : grpIdxName.keySet()) {
 				dbc2.executeUpdate("update blocks set grp1='" + grpIdxName.get(gidx) + "' where grp1_idx=" +gidx);
 				dbc2.executeUpdate("update blocks set grp2='" + grpIdxName.get(gidx) + "' where grp2_idx=" +gidx);
@@ -251,7 +275,7 @@ public class Version {
 		}
 		System.out.println("Hits to process for xpair_idx: " + hitPairMap.size());
 		
-		tableCheckAddColumn("pseudo_hits_annot",  "xpair_idx",  "integer", null);
+		dbc2.tableCheckAddColumn("pseudo_hits_annot",  "xpair_idx",  "integer", null);
 		int cnt=0;
 		for (int hidx : hitPairMap.keySet()) {
 			cnt++;
@@ -273,7 +297,7 @@ public class Version {
 		}
 		System.out.println("Annot to process for xgrp_idx: " + annotGrpMap.size());
 		
-		tableCheckAddColumn("pseudo_hits_annot",  "xgrp_idx",  "integer", null);	
+		dbc2.tableCheckAddColumn("pseudo_hits_annot",  "xgrp_idx",  "integer", null);	
 		
 		cnt=0;
 		for (int aidx : annotGrpMap.keySet()) {
@@ -292,15 +316,15 @@ public class Version {
 	}
 	private void removeDEBUG() {
 		try {
-			if (!tableColumnExists("blocks", "proj_names")) return;
+			if (!dbc2.tableColumnExists("blocks", "proj_names")) return;
 			
-			tableCheckDropColumn("pairs",  "proj_names");
-			tableCheckDropColumn("xgroups","proj_name");			
-			tableCheckDropColumn("blocks", "proj_names");
-			tableCheckDropColumn("blocks", "grp1");
-			tableCheckDropColumn("blocks", "grp2");
-			tableCheckDropColumn("pseudo_hits_annot", "xpair_idx");
-			tableCheckDropColumn("pseudo_hits_annot", "xgrp_idx");
+			dbc2.tableCheckDropColumn("pairs",  "proj_names");
+			dbc2.tableCheckDropColumn("xgroups","proj_name");			
+			dbc2.tableCheckDropColumn("blocks", "proj_names");
+			dbc2.tableCheckDropColumn("blocks", "grp1");
+			dbc2.tableCheckDropColumn("blocks", "grp2");
+			dbc2.tableCheckDropColumn("pseudo_hits_annot", "xpair_idx");
+			dbc2.tableCheckDropColumn("pseudo_hits_annot", "xgrp_idx");
 			System.out.println("Remove blocks.grp1/2, and blocks/pairs/xgroups proj_names, and pseudo_hits_annot proj/pair_idx");
 		}catch (Exception e) {ErrorReport.print(e, "Could not remove debug");}
 	}
@@ -344,11 +368,11 @@ public class Version {
 			ResultSet rs = dbc2.executeQuery("select idx from xgroups");
 			while (rs.next()) grpIdx.add(rs.getInt(1));
 			
-			AnchorsMain am = new AnchorsMain(dbc2);
+			AnchorMain am = new AnchorMain(dbc2);
 			int cnt=1;
 			for (int idx : grpIdx)  {
-				System.out.print("   Update " + cnt + " of " + grpIdx.size() + "\r");
-				am.setAnnotHits(idx);
+				System.out.print("   Update " + cnt + " of " + grpIdx.size() + " (" + idx + ")\r");
+				am.setAnnotHits(idx, ("GrpIdx"+idx));
 				cnt++;
 			}
 			dbc2.close();
@@ -358,11 +382,7 @@ public class Version {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Update hit count");}
 	}
-	/****************************************************************************/
-	/***************************************************************************
-	 * Methods to modify the MySQL database.
-	 ******************************************************************/
-
+	
 	private void replaceProps(String name, String value) {
 		String sql="";
 		try {
@@ -377,106 +397,4 @@ public class Version {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Replace props: " + sql);}
 	}
-	// MySQL v8 groups is a new special keywords, so the ` is necessary for that particular rename.
-
-	private boolean tableRename(String oldTable, String newTable) {
-		String sql = "RENAME TABLE `" + oldTable + "` TO " + newTable;
-		
-		try {
-			if (tableExists(oldTable))
-				dbc2.executeUpdate(sql);
-			return true;
-		}
-		catch (Exception e) {ErrorReport.print(e, sql); return false;}
-	}
-	private boolean tableCheckAddColumn(String table, String col, String type, String aft) throws Exception {
-		String cmd = "alter table " + table + " add " + col + " " + type ;
-		try {
-			if (!tableColumnExists(table,col)){
-				if (aft!=null && !aft.trim().equals("")) cmd += " after " + aft;
-				dbc2.executeUpdate(cmd);
-				return true;
-			}
-			return false;
-		}
-		catch(Exception e) {ErrorReport.print(e, "MySQL error: " + cmd);}
-		return false;
-	}
-	
-	private void tableCheckDropColumn(String table, String col) throws Exception {
-		if (tableColumnExists(table,col)) {
-			String cmd = "alter table " + table + " drop " + col;
-			dbc2.executeUpdate(cmd);
-		}
-	}
-	private boolean tableDrop(String table) {
-		String sql = "Drop table " + table;
-		
-		try {
-			if (tableExists(table))
-				dbc2.executeUpdate(sql);
-			return true;
-		}
-		catch (Exception e) {ErrorReport.print(e, sql); return false;}
-	}
-	
-	private boolean tableExists(String name) throws Exception {
-		ResultSet rs = dbc2.executeQuery("show tables");
-		while (rs.next()) {
-			if (rs.getString(1).equals(name)) {
-				rs.close();
-				return true;
-			}
-		}
-		if (rs!=null) rs.close();
-		return false;
-	}
-	private boolean tableColumnExists(String table, String column) throws Exception {
-		ResultSet rs = dbc2.executeQuery("show columns from " + table);
-		while (rs.next()) {
-			if (rs.getString(1).equals(column)) {
-				rs.close();
-				return true;
-			}
-		}
-		if (rs!=null) rs.close();
-		return false;
-	}
-	/* Below are not - yet 
-	private void tableCheckRenameColumn(String table, String oldCol, String newCol, String type) throws Exception {
-		if (tableColumnExists(table,oldCol)) {
-			String cmd = "alter table " + table + " change column `" + oldCol + "` " + newCol + " " +  type ;
-			pool.executeUpdate(cmd);
-		}
-	}
-	private void tableCheckModifyColumn(String table, String col, String type) throws Exception {
-		if (tableColumnExists(table,col))
-		{
-			String curDesc = tableGetColDesc(table,col);
-			if (!curDesc.equalsIgnoreCase(type)) {
-				String cmd = "alter table " + table + " modify " + col + " " + type ;
-				pool.executeUpdate(cmd);
-			}
-		}
-		else {
-			System.err.println("Warning: tried to change column " + table + "." + col + ", which does not exist");
-		}
-	}
-	private String tableGetColDesc(String tbl, String col) {
-		String ret = "";
-		try {
-			ResultSet rs = pool.executeQuery("describe " + tbl);
-			while (rs.next()) {
-				String fld = rs.getString("Field");
-				String desc = rs.getString("Type");
-				if (fld.equalsIgnoreCase(col)) {
-					ret = desc;
-					break;
-				}
-			}
-		}
-		catch(Exception e) {ErrorReport.print(e, "checking column description for " + tbl + "." + col);}
-		return ret;
-	}
-	*/
 }

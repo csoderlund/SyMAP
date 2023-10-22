@@ -15,6 +15,7 @@ public class HitData {
 	private byte pctid, pctsim; 	// CAS515 add pctsim and nMerge
 	private int covScore;			// CAS540 best coverage
 	private int nMerge;
+	private String htype;			// CAS546 add htype (EE, EI, etc)
 	private int geneOlp = -1; 
 	private int annot1_idx, annot2_idx; // CAS543 add
 	private int start1, end1, start2, end2;
@@ -36,7 +37,7 @@ public class HitData {
 	
 	// MapperPool.setSeqHitData populates, puts in array for SeqHits, where each HitData is associated with a DrawHit
 	protected HitData(Mapper mapper, long id, int hitnum, 
-			  double pctid, int pctsim, int nMerge, int covScore,int overlap,
+			  double pctid, int pctsim, int nMerge, int covScore, String htype, int overlap,
 			  int annot1_idx, int annot2_idx,
 			  String strand, int start1, int end1, int start2, int end2, String query_seq, String target_seq,   
 			  int runnum, int runsize, int block, double corr, String chr1, String chr2)
@@ -49,6 +50,7 @@ public class HitData {
 		this.pctsim = (byte) pctsim;
 		this.nMerge = nMerge;
 		this.covScore = covScore;
+		this.htype = htype;
 		this.geneOlp = overlap;
 		
 		this.annot1_idx = annot1_idx;
@@ -73,7 +75,7 @@ public class HitData {
 		this.collinearSet = runnum; // CAS520 add; CAS543 move form MapperPool
 		this.isCollinear = (collinearSet==0) ? false : true; 
 		
-		hitTag    = "g" + overlap;  
+		hitTag    = (htype.equals("0") || htype.equals("")) ? ("g" + geneOlp) : htype;  // CAS546 add htype
 		if (runsize>0 && runnum>0) hitTag += " c" + runsize + "." + runnum; 
 		else if (runsize>0)        hitTag += " c" + runsize;			    // parsed in Utilities.isCollinear
 		
@@ -143,6 +145,8 @@ public class HitData {
 	public boolean is2Gene() 	{ return (geneOlp==2); } 
 	public boolean is1Gene() 	{ return (geneOlp==1); } 
 	public boolean is0Gene()  	{ return (geneOlp==0); } 
+	public boolean isExon()		{ return htype.equals("EE");}
+	public boolean isIntron()	{ return htype.contains("I");}
 	
 	public void setIsPopup(boolean b) {// CAS543 add
 		isPopup=b;

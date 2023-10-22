@@ -3,7 +3,7 @@ package symapCE;
 import java.awt.Component;
 
 import backend.Constants;
-import backend.Group;
+import backend.anchor1.Group;
 import symap.Globals;
 import symap.manager.ManagerFrame;
 
@@ -128,7 +128,6 @@ public class SyMAPmanager extends ManagerFrame {
 				Constants.TRACE = true; // in backend
 				Globals.TRACE = true;   // CAS517; used to add info
 			}
-			
 			
 			// old tests
 			if (hasCommandLineOption(args, "-oo")) {// CAS505 not shown in -h help

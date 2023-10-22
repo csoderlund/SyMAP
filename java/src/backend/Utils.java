@@ -39,44 +39,62 @@ public class Utils {
 		if (prog!=null) prog.msg(m);	
 		else System.out.println(m);
 	}
+	public static String getElapsedTime(long startTime) {// CAS546 add
+		return Utilities.getDurationString(getTime()-startTime);
+	}
 	
 	// Memory and time
 	public static long getTimeMem() { System.gc(); return System.currentTimeMillis();}
 	
-	public static void prtMemUsage(ProgressDialog prog, String title, long startTime) {
-		prog.msgToFile(getMemUsage(title, startTime));
+	public static void prtTimeMemUsage(ProgressDialog prog, String title, long startTime) {
+		prog.msgToFile(getTimeMemUsage(title, startTime) + "\n\n");
 	}
-	public static void prtMemUsage(String title, long startTime) {
-		System.out.print(getMemUsage(title, startTime));
+	public static void prtTimeMemUsage(String title, long startTime) {
+		System.out.print(getTimeMemUsage(title, startTime) + "\n\n");
 	}
-	public static String getMemUsage(String title, long startTime) {
+	public static String getTimeMemUsage(String title, long startTime) {
 		Runtime rt = Runtime.getRuntime();
 		long total_mem = rt.totalMemory();
 		long free_mem =  rt.freeMemory();
 		long used_mem = total_mem - free_mem;
-		String mem = String.format("%,dk", (int) Math.round(used_mem/1000));
+		String mem = String.format("%.2fMb", ((double)used_mem/1000000.0));
 		
 		String str = Utilities.getDurationString(getTime() - startTime);
-		return String.format("%-30s Memory %-20s %20s\n\n", title, mem, str);
+		return String.format("%-50s %-8s %10s", title, mem, str);
+	}
+	public static String getMemUsage() { // CAS546 add
+		Runtime rt = Runtime.getRuntime();
+		long total_mem = rt.totalMemory();
+		long free_mem =  rt.freeMemory();
+		long used_mem = total_mem - free_mem;
+		String mem = String.format("%.2fMb", ((double)used_mem/1000000.0));
+		
+		return String.format("Memory %s\n\n", mem);
 	}
 	/************** assorted others  **/
 	public static void prt(ProgressDialog prog, String msg) { // CAS520 add
 		prog.msgToFile(msg);
 	}
+	public static void prtIndentMsgFile(ProgressDialog prog, int indent, String msg) {
+		String x = "";
+		for (int i=0; i<indent; i++) x +="   ";
+		prog.msgToFile(x + msg);
+	}
 	public static void prtNumMsgFile(ProgressDialog prog, int num, String msg) {
-		prog.msgToFile(String.format("%,9d %s         ", num, msg));
+		prog.msgToFile(String.format("%,10d %s         ", num, msg));
 	}
 	
 	public static void prtNumMsg(ProgressDialog prog, int num, String msg) {
-		prog.appendText(String.format("%9d %s           ", num, msg));
+		prog.appendText(String.format("%,10d %s           ", num, msg));
 	}
 	
 	public static void prtNumMsgNZx(int num, String msg) {// indent
-		if (num>0) System.out.format("      %9d %s              \n", num, msg);
+		if (num>0) System.out.format("      %,10d %s              \n", num, msg);
 	}
 
 	public static void die(String msg) {
 		System.err.println("Fatal error: " + msg);
+		System.exit(-1);
 	}
 	/***************************************************************************/
 	public static String fileFromPath(String path) {
@@ -155,7 +173,7 @@ public class Utils {
 	
 	/**********************************************************************/
 	/**********************************************************/
-	static int[] strArrayToInt(String[] sa) {
+	public static int[] strArrayToInt(String[] sa) {
 		int[] ia = new int[sa.length];
 		for (int i = 0; i < sa.length; i++)
 			ia[i] = Integer.parseInt(sa[i]);
@@ -173,7 +191,7 @@ public class Utils {
 		}
 		return out;
 	}	
-	static String intArrayToBlockStr(int[] ia) {
+	public static String intArrayToBlockStr(int[] ia) {
 		String out = "";
 		if (ia != null) {
 			for (int i = 0; i < ia.length; i+=2) {
@@ -185,7 +203,7 @@ public class Utils {
 		return out;
 	}
 	
-	static String strVectorJoin(java.util.Vector<String> sa, String delim) {
+	public static String strVectorJoin(java.util.Vector<String> sa, String delim) {
 		String out = "";
 		for (int i = 0; i < sa.size(); i++) {
 			out += sa.get(i);
@@ -195,7 +213,7 @@ public class Utils {
 		return out;
 	}
 	
-	static boolean intervalsTouch(int s1,int e1, int s2, int e2) {
+	public static boolean intervalsTouch(int s1,int e1, int s2, int e2) {
 		return intervalsOverlap(s1,e1,s2,e2,0);
 	}	
 	
@@ -205,18 +223,15 @@ public class Utils {
 	}
 	
 	// Returns the amount of the overlap (negative for gap)
-	static int intervalsOverlap(int s1,int e1, int s2, int e2) {
+	public static int intervalsOverlap(int s1,int e1, int s2, int e2) {
 		int gap = Math.max(s1,s2) - Math.min(e1,e2);
 		return -gap;
 	}	
-	static boolean intervalContained(int s1,int e1, int s2, int e2){
+	public static boolean intervalContained(int s1,int e1, int s2, int e2){
 		return ( (s1 >= s2 && e1 <= e2) || (s2 >= s1 && e2 <= e1));
 	}
-	static boolean isContained(int s1,int e1, int s2, int e2){
-		return (s2 >= s1 && e2 <= e1);
-	}
 	
-	static float simpleRatio(int top, int bot) {
+	public static float simpleRatio(int top, int bot) {
 		float ratio = (float)(.1*Math.round(10.0*(float)top/(float)bot));
 		return ratio;
 	}
@@ -233,7 +248,7 @@ public class Utils {
         return buffer;	
 	} 
 	/*****************************************************/
-	static int getPairIdx(int proj1Idx, int proj2Idx, DBconn2 dbc2) throws Exception {
+	public static int getPairIdx(int proj1Idx, int proj2Idx, DBconn2 dbc2) throws Exception {
 		int idx = 0;
 		
 		String st = "SELECT idx FROM pairs WHERE proj1_idx='" + proj1Idx + "' AND proj2_idx='" + proj2Idx +"'";

@@ -1,10 +1,13 @@
-package backend;
+package backend.anchor1;
 
 import java.util.TreeSet;
 import java.util.HashSet;
 import java.util.TreeMap;
 import java.util.HashMap;
 import java.util.Vector;
+
+import backend.Constants;
+
 import java.sql.ResultSet;
 
 import database.DBconn2;
@@ -19,17 +22,15 @@ import util.ErrorReport;
  * CAS540 changed non-gene default lengths; split large genes
  */
 public class Group {
-	public static boolean DEBUG=Globals.DEBUG;
-	
 	public  static boolean bSplitGene=true;	      // CAS540 split hit/gene if true; -nsg will set !bSplitGene; 
-	public  final static int fSplitLen  = 50000;  // CAS540 10k->50k for mummer hit
 	
-	private final int maxHitAnno = 100000;	      // CAS540 use max(maxGeneLen,maxHitAnno); reduces obscuring gene hits by a long non-gene
-	public int avgGeneLen =  1000, maxGeneLen = 50000; // only used if no anno for project
+	public  static final int FSplitLen  = 50000;  // CAS540 10k->50k for mummer hit
+	private static final int FAnnotBinSize  = 30000;  // annoSetMap; CAS534 was props
+	private static final int FHitBinSize    = 10000;  // hitBinMap;  CAS534 was props
+	private static final int FMaxHitAnno = 100000;	 // CAS540 use max(maxGeneLen,maxHitAnno); reduces obscuring gene hits by a long non-gene
+	
+	public int avgGeneLen =  1000, maxGeneLen = 50000; // use these defaults if no anno for project
 				  	
-	private static final int annotBinSize  = 30000;  // annoSetMap; CAS534 was props
-	private static final int hitBinSize    = 10000;  // hitBinMap;  CAS534 was props
-	
 	public int idx;
 	public String fullname;	 // displayName + chrName with prefix
 	private String chrName;  // prefix removed
@@ -45,12 +46,15 @@ public class Group {
 	
 	private int topN = 0;
 	
-	public Group(int topN, String name, String fullname, int idx, QueryType qt) {
+	public Group(int topN, String name, String fullname, int idx, int qType) {// CAS546 qType was enum
 		this.topN = topN;
 		this.chrName = name;
 		this.fullname = fullname;
 		this.idx = idx;
-		this.mQT = qt;
+		
+		if (qType==Constants.QUERY)       	this.mQT = QueryType.Query; 
+		else if (qType==Constants.TARGET) 	this.mQT = QueryType.Target;
+		else 								this.mQT = QueryType.Either;
 		
 		annoElemSet = 	new HashSet <AnnotElem> ();
 		annoSetMap = 	new TreeMap<Integer,AnnotSet>();	
@@ -85,12 +89,12 @@ public class Group {
 				if (lastGN!=g) {
 					if (lastCnt>1) {
 						idxSplit.add(lastIdx);
-						//if (Globals.TRACE) System.out.format("GRP: Split GN=%d %,d %,d %,d %,d %d\n", lastGN, lastStart, lastEnd, s, e, lastCnt);
+						if (Globals.DEBUG) System.out.format("GRP: Split GN=%d %,d %,d %,d %,d %d\n", lastGN, lastStart, lastEnd, s, e, lastCnt);
 					}
 					lastIdx=idx; lastStart=s; lastEnd=e; lastGN=g; lastCnt=0;
 				}
 				else if (lastGN==g) {
-					if (Utils.isContained(lastStart, lastEnd, s, e)) lastCnt++;
+					if (isContained(lastStart, lastEnd, s, e)) lastCnt++;
 				}
 			}
 		}
@@ -110,17 +114,17 @@ public class Group {
 			if (idxSplit.contains(annotIdx)) { 
 				BinStats.incStat("SplitGene", 1); 
 				
-				int minLeftover = fSplitLen/10;
-				int left = len%fSplitLen;
-				int parts = (left >= minLeftover ?  (len/fSplitLen +1) : (len/fSplitLen));
+				int minLeftover = FSplitLen/10;
+				int left = len%FSplitLen;
+				int parts = (left >= minLeftover ?  (len/FSplitLen +1) : (len/FSplitLen));
 				
 				for (int i = 1; i < parts; i++) {
-					int start = s + fSplitLen*(i-1);
-					int end = 	start + fSplitLen - 1;
+					int start = s + FSplitLen*(i-1);
+					int end = 	start + FSplitLen - 1;
 					AnnotElem ae = new AnnotElem(annotIdx, start, end, isRev, gn, GeneType.Gene); 
 					updateAnnotBins(ae);
 				}
-				int start = s + fSplitLen * (parts-1);
+				int start = s + FSplitLen * (parts-1);
 				AnnotElem ae = new AnnotElem(annotIdx, start, e, isRev, gn, GeneType.Gene); 
 				updateAnnotBins(ae);
 			}
@@ -137,7 +141,7 @@ public class Group {
 		rs.close();
 		if (totalGenes > 0)  {
 			avgGeneLen /= totalGenes;
-			maxGeneLen = Math.min(maxGeneLen, maxHitAnno); // still need a limit on this; use 100k
+			maxGeneLen = Math.min(maxGeneLen, FMaxHitAnno); // still need a limit on this; use 100k
 		}
 		if (maxGeneLen==0) maxGeneLen=50000;			// CAS541 can be 0, creating an endless loop
 		if (avgGeneLen==0) avgGeneLen=1000;
@@ -151,11 +155,11 @@ public class Group {
 	 * AnchorMain.scanFile1: [testHitForAnnotOverlapAndUpdate2] removed [testHitForAnnotOverlap - never called]
 	 * CAS540 was spanning genes where there were no hits (new tryStart, tryEnd)
 	 */
-	public void createAnnoFromHits1(int start, int end, boolean isRev) {
-		int bs = Math.max((start - avgGeneLen)/annotBinSize, 0);
-		int be =          (end + avgGeneLen)/annotBinSize;
+	public void createAnnoFromHits1(int hstart, int hend, boolean isRev) {
+		int bs = Math.max((hstart - avgGeneLen)/FAnnotBinSize, 0);
+		int be =          (hend + avgGeneLen)/FAnnotBinSize;
 						
-		int newStart = start, newEnd = end;
+		int newStart = hstart, newEnd = hend;
 		TreeSet<AnnotElem> ngOlaps = new TreeSet<AnnotElem>();
 
 		for (int b = bs; b <= be; b++) {
@@ -163,7 +167,7 @@ public class Group {
 			if (list==null) continue;
 		
 			for (AnnotElem ae : list) {
-				int olap = Utils.intervalsOverlap(start, end, ae.start, ae.end);
+				int olap = getOlap(hstart, hend, ae.start, ae.end);
 				if (ae.isGene()){
 					if (olap > 0) return; // Have an anno already from a gene
 				}
@@ -173,8 +177,8 @@ public class Group {
 						int tryEnd =   Math.max(newEnd, ae.end);
 						if (!overlapGene(tryStart, tryEnd)) { 
 							ngOlaps.add(ae);	
-							newStart = Math.min(newStart, ae.start);
-							newEnd =   Math.max(newEnd, ae.end);
+							newStart = tryStart;
+							newEnd =   tryEnd;
 						}
 					}
 				}
@@ -182,7 +186,7 @@ public class Group {
 		}
 
 		if (ngOlaps.size() == 1 ){
-			if (ngOlaps.first().start <= start && ngOlaps.first().end >= end) return;
+			if (ngOlaps.first().start <= hstart && ngOlaps.first().end >= hend) return;
 		}
 
 		// remove all hits that are covered by newStart, newEnd
@@ -196,8 +200,8 @@ public class Group {
 		}
 	}
 	private boolean overlapGene(int hstart, int hend){
-		int bs = hstart/annotBinSize;
-		int be = hend/annotBinSize +1;
+		int bs = hstart/FAnnotBinSize;
+		int be = hend/FAnnotBinSize +1;
 		
 		for (int b = bs; b <= be; b++) {
 			HashSet<AnnotElem> list = getAnnoBinList(b);
@@ -206,7 +210,7 @@ public class Group {
 			for (AnnotElem ae : list) {
 				if (!ae.isGene()) continue;
 				
-				int overlap = Utils.intervalsOverlap(hstart, hend, ae.start, ae.end);
+				int overlap = getOlap(hstart, hend, ae.start, ae.end);
 				if (overlap>=0) return true;
 			}
 		}
@@ -215,13 +219,14 @@ public class Group {
 	private void removeAnnotation(AnnotElem ae){
 		annoElemSet.remove(ae);
 		
-		int bs = ae.start/annotBinSize;
-		int be = ae.end/annotBinSize;
+		int bs = ae.start/FAnnotBinSize;
+		int be = ae.end/FAnnotBinSize;
 		
 		for (int b = bs; b <= be; b++) {
 			if (annoSetMap.containsKey(b) ) {
-				AnnotSet l = annoSetMap.get(b);
-				l.remove(ae);
+				AnnotSet as = annoSetMap.get(b);
+				as.remove(ae);
+				BinStats.incStat("Remove", 1); // CAS546 add
 			}
 		}
 	}	
@@ -229,8 +234,8 @@ public class Group {
 	private void updateAnnotBins(AnnotElem a) {
 		annoElemSet.add(a);
 		
-		int bs = a.start/annotBinSize; // since 30k, start and end usually the same
-		int be = a.end/annotBinSize;
+		int bs = a.start/FAnnotBinSize; // since 30k, start and end usually the same
+		int be = a.end/FAnnotBinSize;
 		for (int b = bs; b <= be; b++) {
 			AnnotSet as;
 			if (!annoSetMap.containsKey(b) ) {
@@ -244,8 +249,8 @@ public class Group {
 	}
 	// For getBestOlapAnno for clustering and getAnnoHitOlapForSave
 	private HashMap<AnnotElem,Integer> getAllOlapAnnos(int hstart, int hend){
-		int bs = hstart/annotBinSize;
-		int be = hend/annotBinSize +1;
+		int bs = hstart/FAnnotBinSize;
+		int be = hend/FAnnotBinSize +1;
 		
 		HashMap<AnnotElem,Integer> retMap = new HashMap<AnnotElem,Integer>();
 		
@@ -255,7 +260,7 @@ public class Group {
 			
 			for (AnnotElem ae : list) {
 				
-				int overlap = Utils.intervalsOverlap(hstart, hend, ae.start, ae.end);
+				int overlap = getOlap(hstart, hend, ae.start, ae.end);
 				
 				if (overlap >= 0) {
 					if (!retMap.containsKey(ae) || overlap > retMap.get(ae))
@@ -299,7 +304,7 @@ public class Group {
 				bestOlap = curOlap;
 			}
 			else if (curOlap == bestOlap) { 
-				if (AnchorsMain.doNewAlgoLen) {// CAS543 change from choosing on length to least extra; only helps for exact olap
+				if (AnchorMain1.doNewAlgoLen) {// CAS543 change from choosing on length to least extra; only helps for exact olap
 					//if (Globals.TRACE) System.out.println("Exact " + cur.start + " " +  cur.end +" " +  best.start +" " +  best.end);
 					int curExtra  = Math.abs(hStart-cur.start) + Math.abs(hEnd-cur.end);
 					int bestExtra = Math.abs(hStart-best.start) + Math.abs(hEnd-best.end);
@@ -357,8 +362,8 @@ public class Group {
 			HitBin hb = new HitBin(ae.start, ae.end, ae.mGT, topN, mQT);
 			hitBins.add(hb);
 			
-			int bs = ae.start/hitBinSize;
-			int be = ae.end/hitBinSize;
+			int bs = ae.start/FHitBinSize;
+			int be = ae.end/FHitBinSize;
 			
 			for (int b = bs; b <= be; b++){
 				if (!hitBinMap.containsKey(b)) hitBinMap.put(b, new Vector<HitBin>());
@@ -373,8 +378,8 @@ public class Group {
 	 * AnchorMain.filterClusterHits2; add to HitBin with best overlap if pass filters [checkAddToHitBin2]
 	 ***************************************************************/
 	public void filterAddToHitBin2(Hit hit, int start, int end) throws Exception { // query/target start end
-		int bs = start/hitBinSize;
-		int be = end/hitBinSize;
+		int bs = start/FHitBinSize;
+		int be = end/FHitBinSize;
 		HitBin hbBest = null;
 		int bestOlap = 0;
 		
@@ -384,7 +389,7 @@ public class Group {
 			if (!hitBinMap.containsKey(b)) continue; // should not happen because all added earlier
 			
 			for (HitBin hbin : hitBinMap.get(b)) {
-				int olap = Utils.intervalsOverlap(hbin.start, hbin.end, start, end);
+				int olap = getOlap(hbin.start, hbin.end, start, end);
 
 				if (olap <= 0) continue; 
 				
@@ -428,7 +433,13 @@ public class Group {
 			else System.out.println("GRP: hb.mGT is null")	;	
 		}
 	}
-	
+	private boolean isContained(int s1,int e1, int s2, int e2){
+		return (s2 >= s1 && e2 <= e1);
+	}
+	private int getOlap(int s1,int e1, int s2, int e2) {
+		int gap = Math.max(s1,s2) - Math.min(e1,e2);
+		return -gap;
+	}	
 	/************************************************/
 	// -s only SyProj.printBinStats() or for debugging
 	public String debugInfo() { 

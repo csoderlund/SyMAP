@@ -59,7 +59,7 @@ public class AlgSynMain extends JFrame {
 		final AlignMain aligner = new AlignMain(dbc2, diaLog, mp,  maxCPUs, bDoCat, alignLogDir);
 		if (aligner.mCancelled) return;
 		
-		final AnchorsMain anchors = new AnchorsMain(dbc2, diaLog, mp );
+		final AnchorMain anchors = new AnchorMain(dbc2, diaLog, mp );
 		
 		final SyntenyMain synteny = new SyntenyMain(dbc2, diaLog, mp );
 		
@@ -98,9 +98,9 @@ public class AlgSynMain extends JFrame {
 				try {
 					long timeStart = Utils.getTime();
 					
+					
 					/** Align **/
 					success &= aligner.run(); 
-					String params = aligner.getParams();
 					
 					if (Cancelled.isCancelled()) {
 						diaLog.setVisible(false);
@@ -133,7 +133,8 @@ public class AlgSynMain extends JFrame {
 					}
 					
 					/** Finish **/
-					mp.saveParams(params);
+					String params = aligner.getParams();
+					mp.saveParams(params);		// deletes all pair_props, then add params
 					mProj1.saveParams(mProj1.xAlign);
 					mProj2.saveParams(mProj2.xAlign);
 				
@@ -191,9 +192,15 @@ public class AlgSynMain extends JFrame {
 		if (diaLog.wasCancelled()) { // Remove partially-loaded alignment
 			try {
 				Thread.sleep(1000);
-				System.out.println("Cancel alignment (removing alignment from DB)");
-				mp.removePairFromDB(); // CAS534 
-				System.out.println("Removal complete");
+				String msgx =  "Confirm: Remove " + mp.toString() + " from database (slow if large database)" + 
+						     "\nCancel:  The user removes the database and starts over";
+				
+				if (Utilities.showConfirm2("Remove pair", msgx)) { // CAS546 can hang
+					System.out.println("Cancel alignment (removing alignment from DB)");
+						mp.removePairFromDB(); // CAS534 
+					System.out.println("Removal complete");
+				} 
+				else System.out.println("Remove database and restart");
 			}
 			catch (Exception e) { ErrorReport.print(e, "Removing alignment");}
 		}

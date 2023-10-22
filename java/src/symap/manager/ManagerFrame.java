@@ -1494,10 +1494,23 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			
 			Mproject[] ordP = orderProjName(mProjs[0],mProjs[1]); // order indices according to DB pairs table
 			String resultDir = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
-			String msg = Utils.checkDoneFile(resultDir) ? "Synteny for " : "Align&Synteny for "; // CAS544 be specific
 			
-			if (!Utilities.showConfirm2("Selected Pair", // CAS543 add check
-					msg + mProjs[0].getDisplayName() + " and " + mProjs[1].getDisplayName())) return;
+			boolean bAlign = Utils.checkDoneFile(resultDir);
+			String msg =  bAlign ? "Synteny for " : "Align&Synteny for "; // CAS544 be specific
+			
+			if (mProjs[0].getDisplayName().equals(mProjs[1].getDisplayName())) { // CAS546 add
+				msg += mProjs[0].getDisplayName() + " to itself";
+				if (mp.isAlgo2(Mpair.FILE)) {
+					util.Utilities.showInfoMessage("Cluster Algo", msg +"\nYou must select Algorithm 1 from Parameters");
+					return;
+				}
+			}
+			else msg += mProjs[0].getDisplayName() + " and " + mProjs[1].getDisplayName();
+			
+			String chgMsg = bAlign ? mp.getChangedSynteny() : mp.getChangedParams(Mpair.FILE);  // CAS546 add params
+			if (chgMsg!="") msg += "\n" + chgMsg;
+			
+			if (!Utilities.showConfirm2("Selected Pair", msg)) return;
 			
 			System.out.println("\n>>> Start Alignment&Synteny");
 			mp.renewIdx(); // Remove existing and restart

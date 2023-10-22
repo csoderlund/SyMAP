@@ -6,6 +6,8 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.sql.ResultSet;
 
 import util.ErrorReport;
@@ -16,7 +18,8 @@ import symap.Globals;
 import backend.Constants;
 
 /****************************************************
- * There is a secondary SyProj in backend; 
+ * This is used by most backend and display stuff. Has project parameters, and loads basic data
+ * 
  * CAS522 remove FPC
  * CAS534 rewrite of project parameters
  * 		  renamed from Project to make unique and pair with Mpair;
@@ -30,7 +33,6 @@ import backend.Constants;
  * 		  All Mproject obj are recreated on every refresh
  * 		  if !viewSymap, the file values have precedence over DB for projVal
  * CAS541 change dbUser to DBconn
- * THIS IS ONLY PARTIALLY INCORPORATED 
  */
 
 public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sort
@@ -44,14 +46,17 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	
 	private int numAnnot = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0;;
 	private long length=0;
-	private Vector<Integer> grpIdxList;
+	
+	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();
+	private TreeMap<String,Integer> grpName2Idx = new TreeMap <String, Integer> ();
+	private Pattern namePat;
+	
 	private Color color;
-		
 	private short nStatus = STATUS_IN_DB; 
 	public static final short STATUS_ON_DISK = 0x0001; 
 	public static final short STATUS_IN_DB   = 0x0002; 
 	
-	// ManagerFrame, ChrExpInit, DotPlot.Project
+	// ManagerFrame, ChrExpInit, DotPlot.Project; one is created for each project shown on Manager left panel
 	public Mproject(DBconn2 dbc, int nIdx, String strName, String annotdate) { 
 		this.projIdx = nIdx;
 		this.strDBName = strName;
@@ -59,7 +64,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		this.dbc2 = dbc;
 		
 		makeParams();
-		
+				
 		if (nIdx == -1) {
 			nStatus = STATUS_ON_DISK;
 			finishParams();
@@ -102,10 +107,11 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	}
 	public boolean hasSynteny() {return numSynteny>0;}
 	public boolean hasGenes() {return numGene>0;}
-	public boolean hasCat()   {return !Utilities.isEmpty(getDBVal(sCategory));} // CAS535 not finished
-	public long getLength() {return length;}
-	public Color getColor() { return color; }
-	public void setColor( Color c ) { color = c; }
+	
+	public boolean hasCat()   	{return !Utilities.isEmpty(getDBVal(sCategory));} // CAS535 not finished
+	public long getLength() 	{return length;}
+	public Color getColor() 	{return color; }
+	public void setColor(Color c) {color = c; }
 	
 	public int getIdx() 		{ return projIdx; }
 	public int getID() 			{ return projIdx; }
@@ -115,7 +121,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public String getLoadDate() {return strDate;}
 	public int getNumGroups() 	{ return numGroups; }
 	
-	public short getStatus() 	{ return nStatus; }
+	public short getStatus() 	{return nStatus; }
 	public boolean isLoaded() 	{return (nStatus==STATUS_IN_DB);}
 	
 	public String getdbDesc() 		{ return getDBVal(sDesc); }
@@ -127,9 +133,8 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	
 	public String getSequenceFile() { return getProjVal(lSeqFile); }
 	public String getAnnoFile()     { return getProjVal(lAnnoFile); }
-	public String getGrpPrefix()    { return getProjVal(lGrpPrefix);}
-		
-	public int getMinSize()  { return Utilities.getInt(getProjVal(lMinLen));}
+	
+	public int getMinSize()  		{ return Utilities.getInt(getProjVal(lMinLen));}
 	public String getKeywords()     { return getProjVal(lANkeyword); }
 	public String getAnnoType()		{ return "";} 
 	
@@ -137,6 +142,29 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public String  getOrderAgainst(){ return getProjVal(aOrderAgainst); }
 	public boolean hasOrderAgainst(){ return !getOrderAgainst().contentEquals("");}
 	
+	// CAS546 Group
+	public String getGrpPrefix()    { return getProjVal(lGrpPrefix);}
+	public int getGrpSize() { return grpIdx2Name.size();}
+	public TreeMap <Integer, String> getGrpIdxMap() {return grpIdx2Name;} // CAS546 add
+	
+	public int getGrpIdxFromName(String name) {// CAS546 add
+		if (grpName2Idx.containsKey(name)) return grpName2Idx.get(name);
+		return getGrpIdxRmPrefix(name);
+	}
+	public int getGrpIdxRmPrefix(String name) {	// grpName2Idx has both w/o prefix
+		String s = name;
+		
+		Matcher m = namePat.matcher(name);
+		if (m.matches()) s = m.group(2);
+		if (grpName2Idx.containsKey(s)) return grpName2Idx.get(s);
+		return -1;
+	}
+	public String getValidGroup() {
+		String msg="";
+		for (String x : grpName2Idx.keySet())  msg += x + ";";
+		return msg;
+	}
+	///////////////////////
 	public String notLoadedInfo() {
 		String msg="Parameters: ";
 		if (getProjVal(lSeqFile).contentEquals("")) 	msg += "Default file locations; ";
@@ -209,12 +237,13 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	/*******************************************************
 	 * For Summary and AlignProg
 	 */
-	public String getAlignParams() { // CAS540
-		String msg="";
-		if (hasOrderAgainst()) msg = "Order against " + getOrderAgainst() + " ";
-		if (isMasked()) msg += "Mask genes ";
-		if (msg!="")    msg = strDisplayName + ": " + msg + "  ";
-		return msg;
+	public String getOrderParam() { // CAS540
+		if (hasOrderAgainst()) return "\n  " + strDisplayName + ": Order against " + getOrderAgainst() ;
+		return "";
+	}
+	public String getMaskedParam() {
+		if (isMasked()) return "\n  " + strDisplayName + ": Masked genes  ";
+		return "";
 	}
 	/*************************************************************************
 	 * The View button on MF
@@ -464,12 +493,17 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 				setProjVal(sAbbrev, abbrev);
 			}
 		}
+		String regx = "(" + getProjVal(lGrpPrefix) + ")?(\\w+).*"; 
+		namePat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
 	}
 	
 	public void loadDataFromDB() throws Exception {// CAS534 moved from ManagerFrame
-		grpIdxList = new Vector<Integer>();
-		ResultSet rs = dbc2.executeQuery("select idx from xgroups where proj_idx=" + projIdx);
-		while (rs.next()) {grpIdxList.add(rs.getInt(1));}
+		ResultSet rs = dbc2.executeQuery("select idx, fullname, name from xgroups where proj_idx=" + projIdx);
+		while (rs.next()) {// CAS546 get name too
+			grpIdx2Name.put(rs.getInt(1), rs.getString(2));
+			grpName2Idx.put(rs.getString(2), rs.getInt(1));
+			grpName2Idx.put(rs.getString(3), rs.getInt(1));
+		} 
 		rs.close();
 		
 		numGroups = dbc2.executeCount("SELECT count(*) FROM xgroups WHERE proj_idx=" + projIdx);

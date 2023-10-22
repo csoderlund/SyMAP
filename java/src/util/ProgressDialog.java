@@ -256,6 +256,10 @@ public class ProgressDialog extends JDialog  {
 		}	
 	}
 
+	public void msg(String msg) {
+		appendText(msg);
+	}
+	
 	public synchronized void appendText(String s) {
 		if (!s.endsWith("\n")) s += "\n";
 		
@@ -264,8 +268,9 @@ public class ProgressDialog extends JDialog  {
 		if (textArea!=null) textArea.append(s);
 	}
 	
-	public void msg(String msg) {
-		appendText(msg);
+	public void msgOnly(String s) {
+		if (!s.endsWith("\n")) s += "\n";
+		if (textArea!=null) textArea.append(s);
 	}
 	
 	public void msgToFile(String s) {

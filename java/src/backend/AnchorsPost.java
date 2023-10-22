@@ -8,6 +8,7 @@ import java.util.TreeMap;
 import java.util.Vector;
 
 import database.DBconn2;
+import symap.manager.Mproject;
 import util.Cancelled;
 import util.ErrorReport;
 import util.ProgressDialog;
@@ -16,8 +17,6 @@ import util.Utilities;
 /**************************************************
  * Computes the collinear sets (pseudo_hits.runsize, runnum) and 
  * 	the term 'run' is used here for collinear (run/set)
- * 9/21/22 move setGeneNumCounts from SyntenyMain
- * CAS512 MOVED compute genenum from SyntenyMain to AnnotLoadMain
  * CAS520 added setAnnot, setHitNum and rewrote collinearSets; CAS541 moved setHitNum to AnchorsMain
  */
 
@@ -28,7 +27,7 @@ public class AnchorsPost {
 	private int mPairIdx; // project pair 
 	private ProgressDialog mLog;
 	private DBconn2 dbc2;
-	private SyProj mProj1, mProj2;
+	private Mproject mProj1, mProj2;		// CAS546 was syProj
 	private int totalMerge=0, totalMult=0, finalRunNum=0;
 	private int [] cntSizeSet = {0,0,0,0,0};
 	
@@ -45,12 +44,12 @@ public class AnchorsPost {
 	private TreeMap <Integer, Gene> geneMapR = new TreeMap <Integer, Gene> (); // gnum, gene with !=
 	private String chrs;
 		
-	public AnchorsPost(int pairIdx, SyProj proj1, SyProj proj2, DBconn2 dbc2, ProgressDialog log) {
-		mPairIdx = pairIdx;
-		mProj1 = proj1;
-		mProj2 = proj2;
+	public AnchorsPost(int pairIdx, Mproject proj1, Mproject proj2, DBconn2 dbc2, ProgressDialog log) {
+		this.mPairIdx = pairIdx;
+		this.mProj1 = proj1;
+		this.mProj2 = proj2;
 		this.dbc2 = dbc2;
-		mLog = log;
+		this.mLog = log;
 	}
 	
 	/*********************************************************
@@ -60,31 +59,36 @@ public class AnchorsPost {
 		try {
 			dbc2.executeUpdate("update pseudo_hits set runsize=0, runnum=0 where pair_idx=" + mPairIdx);
 			
-			int num2go = mProj1.getGroups().size() * mProj2.getGroups().size();
+			int num2go = mProj1.getGrpSize() * mProj2.getGrpSize();
 			mLog.msg("Finding Collinear sets");
 			long time = Utils.getTime();
 			
-			for (Group g1 : mProj1.getGroups()) {
-				for (Group g2: mProj2.getGroups()) {
+			TreeMap <Integer, String> map1 = mProj1.getGrpIdxMap();
+			TreeMap <Integer, String> map2 = mProj2.getGrpIdxMap();
+			
+			for (int grpIdx1 : map1.keySet()) {
+				for (int grpIdx2 : map2.keySet()) {
 					String t = Utilities.getDurationString(Utils.getTime()-time);
 					System.err.print(num2go + " pairs remaining... (" + t + ")   \r"); // CAS541 add time
 					num2go--;
 					
-					if (g1.idx==g2.idx) continue; 		// CAS521 can crash on self-chr
+					if (grpIdx1==grpIdx2) continue; 		// CAS521 can crash on self-chr
 					
-					if (!step0BuildSets(g1, g2)) return;
+					chrs = map1.get(grpIdx1) + ":" + map2.get(grpIdx2);
+					
+					if (!step0BuildSets(grpIdx1, grpIdx2)) return;
 				
 					debug=false;
 				}
 				if (Cancelled.isCancelled()) return; // CAS535 there was no checks
 			}
-			if (debug) Utils.prtNumMsg(mLog, totalMult, "Total multi hits");
 			// CAS540 computed counts are not right; just get from db
 			int nsets = dbc2.executeInteger("SELECT count(DISTINCT(runnum)) FROM pseudo_hits WHERE runnum>0 and pair_idx=" + mPairIdx);
 			int nhits = dbc2.executeInteger("SELECT count(*) FROM pseudo_hits WHERE runnum>0 and pair_idx=" + mPairIdx);
 			Utils.prtNumMsg(mLog, nsets, "Collinear sets                          ");
 			Utils.prtNumMsg(mLog, nhits, "Updates                          ");
 			Utils.timeDoneMsg(mLog, "Collinear", time);
+			if (debug) System.out.println("Total merge " + totalMerge + " total mult " + totalMult);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Compute colinear genes"); }
 	}
@@ -92,13 +96,9 @@ public class AnchorsPost {
 /*****************************************************************************************************
  *                    COLLINEAR SETS between two chromosomes
  */	
-	
-	private boolean step0BuildSets(Group g1, Group g2) {
-	chrs = g1.fullname + ":" + g2.fullname;
+	private boolean step0BuildSets(int grpIdx1, int grpIdx2) {
 	try {
-		if (debug) System.out.println(">>>Compute " + g1.idx + " " + g2.idx + " " + chrs);
-		
-		if (!step1LoadFromDB(g1, g2)) return false;  // hitMap, geneMap1, geneMap2, gidxtnumA
+		if (!step1LoadFromDB(grpIdx1, grpIdx2)) return false;  // hitMap, geneMap1, geneMap2, gidxtnumA
 		if (hitMap.size()==0) return true;			 // CAS521 add
 		
 		if (!step2Hits2Genes()) return false;
@@ -111,10 +111,10 @@ public class AnchorsPost {
 		
 		finalRunNum=0; // restart for each chr-chr
 		if (!step5AssignRunNum(true  /*isR*/ , geneMapR)) return false;
-		if (!step6SaveToDB(g1, g2)) return false;
+		if (!step6SaveToDB()) return false;
 		
 		if (!step5AssignRunNum(false /*!isR*/, geneMapF)) return false;
-		if (!step6SaveToDB(g1, g2)) return false;
+		if (!step6SaveToDB()) return false;
 		
 		geneMap1.clear(); geneMap2.clear(); gidxtnumB.clear();
 		geneMapF.clear(); geneMapR.clear(); hitMap.clear();
@@ -130,7 +130,7 @@ public class AnchorsPost {
 	 *   It can hit on one or both side, and multiple genes on one side (overlapping, contained, or close)
 	 *   Use the two from the pseudo_hits table  
 	 */
-	private boolean step1LoadFromDB(Group g1, Group g2) {
+	private boolean step1LoadFromDB(int grpIdx1, int grpIdx2) {
 		try {
 			Gene gObj;
 			Hit hObj;
@@ -141,7 +141,7 @@ public class AnchorsPost {
 				" from pseudo_hits as ph  " +
 				" LEFT JOIN pseudo_block_hits AS PBH ON PBH.hit_idx=ph.idx" +
 				" LEFT JOIN blocks AS B ON B.idx=PBH.block_idx " +
-				" where ph.grp1_idx=" + g1.idx + " and ph.grp2_idx=" + g2.idx + 
+				" where ph.grp1_idx=" + grpIdx1 + " and ph.grp2_idx=" + grpIdx2 + 
 				" and ph.gene_overlap>1"); 
 			while (rs.next()) {
 				int i=1;
@@ -165,7 +165,7 @@ public class AnchorsPost {
 					"select ph.hitnum, pa.idx, pa.grp_idx  from pseudo_hits       as ph " +
 					" join pseudo_hits_annot as pha on ph.idx = pha.hit_idx" +
 					" join pseudo_annot      as pa  on pa.idx = pha.annot_idx " +
-					" where ph.grp1_idx=" + g1.idx + " and ph.grp2_idx=" + g2.idx + 
+					" where ph.grp1_idx=" + grpIdx1 + " and ph.grp2_idx=" + grpIdx2 + 
 					" and ph.gene_overlap>1 ");
 			while (rs.next()) {
 				int hitnum =	rs.getInt(1);
@@ -174,7 +174,7 @@ public class AnchorsPost {
 				
 				if (hitMap.containsKey(hitnum)) {
 					hObj = hitMap.get(hitnum);
-					hObj.addGeneIdx((chridx==g1.idx), gidx);
+					hObj.addGeneIdx((chridx==grpIdx1), gidx);
 				}
 				else if (test) System.err.println("SyMAP error: no hitnum " + hitnum);
 			}
@@ -184,27 +184,28 @@ public class AnchorsPost {
 								+ "	where type='gene' and grp_idx="; 
 			String osql = " order by start ASC, len DESC";
 			                        
-			int tnum=0;
-			rs = dbc2.executeQuery(ssql + g1.idx + osql);
+			int tnum1=0;
+			rs = dbc2.executeQuery(ssql + grpIdx1 + osql);
 			while (rs.next()) {
 				int idx = rs.getInt(1);		// tag          start         end            genenum        strand
-				gObj = new Gene(idx, tnum, rs.getString(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getString(6));
-				geneMap1.put(tnum, gObj);  // using tnum keeps then ordered by start
-				gidxtnumA.put(idx, tnum);
-				tnum++;
+				gObj = new Gene(idx, tnum1, rs.getString(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getString(6));
+				geneMap1.put(tnum1, gObj);  // using tnum keeps them ordered by start
+				gidxtnumA.put(idx, tnum1);
+				tnum1++;
 			}
 			
-			tnum=0;
-			rs = dbc2.executeQuery(ssql + g2.idx + osql);
+			int tnum2=0;
+			rs = dbc2.executeQuery(ssql + grpIdx2 + osql);
 			while (rs.next()) {
 				int idx = rs.getInt(1);
-				gObj = new Gene(idx, tnum, rs.getString(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getString(6));
-				geneMap2.put(tnum, gObj);	
-				gidxtnumA.put(idx, tnum);
-				tnum++;
+				gObj = new Gene(idx, tnum2, rs.getString(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getString(6));
+				geneMap2.put(tnum2, gObj);	
+				gidxtnumA.put(idx, tnum2);
+				tnum2++;
 			}
 			rs.close();
 	
+			if (debug) System.out.println("Total genes1 tnum: " + tnum1 + " Total genes2 tnum: " + tnum2);
 			return true;
 		}
 		catch (Exception e) {ErrorReport.print(e, "Load from DB " + chrs); return false; }
@@ -227,8 +228,14 @@ public class AnchorsPost {
 		for (int hn : hitMap.keySet()){
 			Hit hObj = hitMap.get(hn);
 		
+			if (!gidxtnumA.containsKey(hObj.gidx1)) return die("no gidx1 " + hObj.gidx1);
+			if (!gidxtnumA.containsKey(hObj.gidx2)) return die("no gidx2 " + hObj.gidx2);
+			
 			int tnum1 = gidxtnumA.get(hObj.gidx1); 
 			int tnum2 = gidxtnumA.get(hObj.gidx2);
+			
+			if (!geneMap1.containsKey(tnum1)) return die("no tnum1 " + tnum1 + " gidx1 " + hObj.gidx1 + " Hit#" + hObj.hitnum);
+			if (!geneMap2.containsKey(tnum2)) return die("no tnum2 " + tnum2 + " gidx2 " + hObj.gidx2 + " Hit#" + hObj.hitnum);
 			
 			Gene gObj1 = geneMap1.get(tnum1);
 			Gene gObj2 = geneMap2.get(tnum2);
@@ -257,16 +264,13 @@ public class AnchorsPost {
 		Vector <Gene> geneVec = new Vector <Gene> ();
 			
 		// Find overlap genes
-		int cntMain=0;
 		for (Gene gObj : geneMap.values()) {
-			if (gObj.isMain) cntMain++;
 			if (!gObj.isOlap) continue;
 			
 			if (!olapSet.containsKey(gObj.genenum)) olapSet.put(gObj.genenum, new Olaps());
 			Olaps og = olapSet.get(gObj.genenum);
 			og.tnum.add(gObj.tnum);
 		}
-		if (debug) System.out.println(">>> Overlaps " + olapSet.size() + " " + cntMain + " of " + geneMap.size());
 		
 		// Collapse overlaps with same hits
 		for (Gene mainObj : geneMap.values()) {
@@ -288,12 +292,8 @@ public class AnchorsPost {
 		
 		for (Gene gObj : geneMap.values()) {
 			if (!gObj.isMerge) geneVec.add(gObj);
-			else {
-				if (debug) gObj.prt("ign ");
-				totalMerge++;
-			}
+			else totalMerge++;
 		}
-		if (debug) System.out.println(">>> Final " + geneVec.size() + " " + totalMerge);
 		
 		// transfer new set back to geneMap and assign new tnums
 		geneMap.clear();
@@ -351,7 +351,6 @@ public class AnchorsPost {
 	 */
 	private boolean step5AssignRunNum(boolean bInv, TreeMap <Integer, Gene> geneMap) {
 	try {
-		if (debug) System.out.println(">>Assign " + chrs + " " + bInv);
 		int lastg1=-1, lastg2=-1;
 		TreeMap <Integer, Integer> runSizeMap = new TreeMap <Integer, Integer> (); // runnum, runsize
 		
@@ -378,8 +377,6 @@ public class AnchorsPost {
 			
 			if (runSizeMap.containsKey(tmpnum)) runSizeMap.put(tmpnum, runSizeMap.get(tmpnum)+1);
 			else 								runSizeMap.put(tmpnum, 1);	
-			
-			if (debug) gObj1.prt("add ");
 		}
 		
 		// reassign final runnums where size>1
@@ -405,7 +402,7 @@ public class AnchorsPost {
 	catch (Exception e) {ErrorReport.print(e, "Build sets " + chrs); return false; }
 	}
 	/*****************************************************************/
-	private boolean step6SaveToDB(Group g1, Group g2) {
+	private boolean step6SaveToDB() {
 	try {
 		PreparedStatement ps = dbc2.prepareStatement("update pseudo_hits set runsize=?, runnum=? where idx=?");
 		for (int hitnum : hitMap.keySet()) {
@@ -535,7 +532,6 @@ public class AnchorsPost {
 					bestdiff=diff;
 				}
 			}	
-			if (debug) System.out.println("best " + vIdx + " " + bestdiff + " " + tag + " hit#" + hObjVec.get(vIdx).hitnum);
 			return vIdx;
 		}
 		private Hit getHitObj()   { return hObjVec.get(vIdx);}
@@ -563,7 +559,7 @@ public class AnchorsPost {
 						" Mg"+isMerge+" A"+isMain+hitIdxSet.size());
 			}
 		}
-		
+	
 		// gObj2Vec and hObjVec go together.
 		private Vector <Gene> gObj2Vec = new Vector <Gene> ();
 		private Vector <Hit> hObjVec =  new Vector <Hit> ();
@@ -579,6 +575,7 @@ public class AnchorsPost {
 		private String tag="";	// // e.g. Gene #999 (4 1,128bp) 
 		private int idx, genenum, start, end;
 		private boolean isOlap=false, bPosStrand=true;
-	}
+	} // end Gene
+	private boolean die(String msg) {System.out.println(msg); return false;}
 }
 

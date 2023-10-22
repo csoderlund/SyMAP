@@ -1,11 +1,12 @@
 package symapQuery;
 
+
 /**
  * Constants for Query and display
  */
 
 public class Q {
-	public static boolean TEST_TRACE=false; // Write to /tmp and other trace output
+	public static boolean TEST_TRACE=false; // Globals.DEBUG; // Write to file and other trace output
 	
 	static final int INC=5000;
 	static final String rowCol   = "Row";
@@ -63,13 +64,14 @@ public class Q {
 	static final int HCNT = 21;			// PH.countpct
 	static final int HST = 22;			// PH.strand
 	static final int HSCORE = 23;		// PH.score, CAS540 add
-	static final int COSIZE = 24;		// PH.runsize
-	static final int CONUM = 25;		// PH.runnum, CAS520 add
+	static final int HTYPE = 24;		// PH.htype, CAS546 add
+	static final int COSIZE = 25;		// PH.runsize
+	static final int CONUM = 26;		// PH.runnum, CAS520 add
 	
-	static final int BNUM = 26;			// B.blocknum
-	static final int BSCORE = 27;		// B.blockscore
-	static final int ANNOT1IDX = 28;	// PH.annot1_idx
-	static final int ANNOT2IDX = 29;	// PH.annot2_idx
+	static final int BNUM = 27;			// B.blocknum
+	static final int BSCORE = 28;		// B.blockscore
+	static final int ANNOT1IDX = 29;	// PH.annot1_idx
+	static final int ANNOT2IDX = 30;	// PH.annot2_idx
 	
 	static final String ANNO = "ANNO";	// populated by keyword 
 	static final String GSIZE = "GSIZE";// computed PgFsize

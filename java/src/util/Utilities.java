@@ -51,7 +51,7 @@ import symap.Globals;
  * PopUps
  */
 public class Utilities {
-	private static boolean TRACE = Globals.DEBUG;
+	private static boolean TRACE = false;
 	public static final Color HELP_PROMPT = new Color(0xEEFFEE); // CAS504 moved from dead file - for Help
 
 	private Utilities() { }
@@ -329,8 +329,8 @@ public class Utilities {
 		else if (m==7) ms="Jul";
 		else if (m==8) ms="Aug";
 		else if (m==9) ms="Sep";
-		else if (m==10) ms="Nov";
-		else if (m==11) ms="Oct";
+		else if (m==10) ms="Oct";		// CAS546 Oct and Nov were swapped!
+		else if (m==11) ms="Nov";
 		else if (m==12) ms="Dec";
 		return tok[2] + "-" + ms + "-" + tok[0];
 	}
@@ -674,6 +674,10 @@ public class Utilities {
 			ret[1] = ret[1] + "bp";
 		}
     	return ret;
+    }
+    static public boolean isEndsWithAlpha(String tag) {
+    	String t = getGenenumFromDBtag(tag);
+    	return (t.contains(".") && !t.endsWith("."));
     }
     // Created in backend.AnchorsPost.Gene; return "d.[a]"
     static public String getGenenumFromDBtag(String tag) {

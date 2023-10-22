@@ -121,8 +121,8 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		
 		Dimension d = new Dimension (330, 200); 
 		if (getWidth() >= d.width || getHeight() >= d.height) setSize(d);
+		setAlwaysOnTop(true); // CAS543; doesn't work on Ubuntu
 		setLocationRelativeTo(null);	
-		setAlwaysOnTop(true); // CAS543
 		setVisible(true);
 	}
 	public void actionPerformed(ActionEvent e) {

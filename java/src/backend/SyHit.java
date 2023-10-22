@@ -12,7 +12,7 @@ public class SyHit
 	
 	protected int mScore = 0;
 	protected int mPos1_alt = 0;
-	protected HitType mBT = HitType.NonGene;
+	//protected HitType mBT = HitType.NonGene;
 	
 	// parameters used during dynamic programming
 	int mDPScore;	// DP score of longest chain terminating here
@@ -37,7 +37,7 @@ public class SyHit
 		mIdx = idx;
 		
 		mPctID = pctid;
-		if (bt == 2) mBT = HitType.GeneGene;
-		else if (bt == 1) mBT = HitType.GeneNonGene;
+		//if (bt == 2) mBT = HitType.GeneGene;
+		//else if (bt == 1) mBT = HitType.GeneNonGene;
 	}
 }

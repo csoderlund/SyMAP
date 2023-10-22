@@ -14,7 +14,6 @@ import java.sql.PreparedStatement;
 import java.util.HashMap;
 
 import backend.Constants;
-import symap.Globals;
 import util.ErrorReport;
 
 // WARNING: Does not work for nested queries (because it uses one Statement for all queries). 
@@ -136,13 +135,12 @@ public class DBconn2 {
 			if (connMap.size()>100) 
 				System.err.println("Warning: Too many MySQL connections are open. To be safe, restart SyMAP.");
 		
-			if (!Globals.TRACE) return;
+			if (!TRACE) return;
 			
 			ResultSet rs = executeQuery("show status where variable_name='threads_connected'");
 			while (rs.next()) prt(rs.getString(1) + " " + rs.getInt(2));
 			rs.close();
 			
-			if (!TRACE) return;
 			for (String n : connMap.keySet()) prt("  Open " + n);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Closing connection");}
@@ -319,19 +317,25 @@ public class DBconn2 {
 		if (rs!=null) rs.close();
 		return false;
 	}
-	public void tableDrop(String table) {
+	public boolean tableDrop(String table) {
 		try {
-			if (tableExists(table))
+			if (tableExists(table)) {
 				executeUpdate ("DROP TABLE " + table);
+				return true;
+			}
+			else return false;
 		}
-		catch (Exception e) {ErrorReport.print(e, "Cannot drop table " + table);}
+		catch (Exception e) {ErrorReport.print(e, "Cannot drop table " + table); return false;}
 	}
-	public void tableRename(String otab, String ntab) { 
+	public boolean tableRename(String otab, String ntab) { 
 		try {
-			if (tableExists(otab))
+			if (tableExists(otab)) {
 				executeUpdate ("RENAME TABLE " + otab + " to " + ntab);
+				return true;
+			}
+			else return false;
 		}
-		catch (Exception e) {ErrorReport.print(e, "Cannot rename table " + otab);}
+		catch (Exception e) {ErrorReport.print(e, "Cannot rename table " + otab); return false;}
 	}
 	public void tableDelete(String table) {
 	   	try { // finding 'status' fails when 'show tables' succeeds (incorrectly)
@@ -400,7 +404,7 @@ public class DBconn2 {
 				executeUpdate(cmd);
 			}
 		}
-		else{PrtWarn("Tried to change column " + table + "." + col + ", which does not exist");}
+		else {PrtWarn("Tried to change column " + table + "." + col + ", which does not exist");}
 	}
 	public String tableGetColDesc(String tbl, String col){
 		String ret = "";

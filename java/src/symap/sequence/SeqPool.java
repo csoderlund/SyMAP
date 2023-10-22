@@ -262,7 +262,7 @@ public class SeqPool {
 			int idx = (isRefSeq1L) ? cg.annot1_idx : cg.annot2_idx;
 			if (geneMap.containsKey(idx)) geneMap.get(idx).mark1=true;
 			else {
-				if (Globals.TRACE && cntNoGene<2) System.out.println("No geneIdx " + idx + " for hit " + cg.hitObj.getHitNum()); 
+				if (Globals.DEBUG && cntNoGene<2) System.out.println("No geneIdx " + idx + " for hit " + cg.hitObj.getHitNum()); 
 				cntNoGene++; continue; 
 			}
 		}
@@ -271,7 +271,7 @@ public class SeqPool {
 			int idx = (isRefSeq1R) ? cg.annot1_idx : cg.annot2_idx;
 			if (geneMap.containsKey(idx)) geneMap.get(idx).mark2=true;
 			else {
-				if (Globals.TRACE && cntNoGene<2) System.out.println("No geneIdx " + idx + " for hit " + cg.hitObj.getHitNum()); 
+				if (Globals.DEBUG && cntNoGene<2) System.out.println("No geneIdx " + idx + " for hit " + cg.hitObj.getHitNum()); 
 				cntNoGene++; continue; 
 			}
 		}

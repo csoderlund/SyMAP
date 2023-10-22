@@ -1,9 +1,6 @@
-package backend;
+package backend.anchor1;
 
 import java.util.Vector;
-
-import symap.Globals;
-
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Collections;
@@ -15,7 +12,7 @@ import java.util.Collections;
 **********************************************************/
 
 public class HitBin  {
-	private final static double perBin=0.8;
+	private final static double FperBin=0.8;
 	public int start, end;  
 	public  GeneType  mGT = GeneType.NA;// AnchorsMain {Gene, NonGene, NA}
 	private QueryType mQT;				// AnchorsMain {Query, Target, Either };
@@ -67,7 +64,7 @@ public class HitBin  {
 		
 		if (mHits.size() >= mTopN+2) {
 			topNmatch = mHits.get(mTopN-1).matchLen; // if Top2=2, then 2nd highest length
-			topNmatch = (int) Math.round(topNmatch * perBin); 
+			topNmatch = (int) Math.round(topNmatch * FperBin); 
 		
 			for (int i = mHits.size()-1; i>=mTopN; i--) { // CAS540 was if; try to remove at least one
 				Hit h = mHits.get(i);
@@ -97,14 +94,14 @@ public class HitBin  {
 		int thresh = 0;
 		if (nHits >= mTopN) {
 			thresh = mHits.get(mTopN-1).matchLen;
-			thresh *= perBin; // 0.8 so keep 80% of mTopN matchLen
+			thresh *= FperBin; // 0.8 so keep 80% of mTopN matchLen
 		}
 	
 		for (int i = 0; i < nHits; i++) {
 			Hit h = mHits.get(i);
 			
 			if (!h.useAnnot()) {
-				if (h.nSubHits==1 && h.matchLen<=Hit.haveLen2) continue; // CAS540 spurious hit
+				if (h.nSubHits==1 && h.matchLen<=Hit.FhaveLen2) continue; // CAS540 spurious hit
 				if (i >= mTopN    && h.matchLen< thresh) continue;
 			}
 		

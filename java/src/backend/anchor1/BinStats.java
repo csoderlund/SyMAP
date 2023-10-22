@@ -1,20 +1,24 @@
-package backend;
+package backend.anchor1;
 
 import java.sql.ResultSet;
 import java.util.TreeMap;
 import java.util.Vector;
 
+import backend.Constants;
+import backend.Utils;
 import database.DBconn2;
 import util.ProgressDialog;
 
 /**************************************
- * shared by SyProj and Groups for bins
+ * shared by Proj and Groups for bins; Static methods also used by SyntenyMain
  * -s keys are recorded and printed
  * -tt histograms are recorded and printed
  */
 public class BinStats {
+	public int mNBins=0;
+	
 	long mTotalLen = 0;
-	int mNBins = 0, mTotalHits = 0, mHitsRm = 0;
+	int mTotalHits = 0, mHitsRm = 0;
 	int nABins = 0, nAcnt=0, nArm=0, nAmix=0, nAmax=0;
 	
 	public BinStats(){}
@@ -88,6 +92,8 @@ public class BinStats {
 				}
 			}
 		}
+		mHist.clear(); // CAS546 add so will not display if algo2 is run next
+		mHist=null;
 	}
 	/************************************************
 	 * Keyword stats
@@ -109,6 +115,8 @@ public class BinStats {
 			if (Math.floor(val)==val) log.msgToFile(String.format("%6d %s\n", (int)val, key));
 			else					  log.msgToFile(String.format("%6.2f %s\n", val, key));
 		}
+		mStats.clear(); // CAS546 add so will not display if algo2 is run next
+		mStats=null;
 	}
 	// CAS534 no reason to load these, only do it on -s; then remove the next time run.
 	// CAS540 (now dead) writes to symap.log now; never used from database so this is not currently called

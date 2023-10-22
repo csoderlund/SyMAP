@@ -181,8 +181,8 @@ public class Schema {
 		    "cvgpct				 TINYINT UNSIGNED NOT NULL," +   // avg %sim  Col7     - add CAS515 
 		    "countpct			 INTEGER UNSIGNED default 0," +  // number of merged   - add CAS515  tinyint->integer
 		    "score               INTEGER NOT NULL," +            // summed length Col5 - displayed in Query
-		    "htype             	 TINYINT UNSIGNED NOT NULL," +   // 0 None, 1 Exon1, 2 Exon2, 3 ExonIntron, 4 Intron1, 5 Intron2 
-		    "gene_overlap		 TINYINT NOT NULL, " +	       	 // number of genes it overlaps (0,1,2)
+		    "htype             	 TINYTEXT," +   				 // CAS546 EE, EI, IE, En, nE, II, In, nI, nn
+		    "gene_overlap		 TINYINT NOT NULL, " +	       	 // 0,1,2
 		    "annot1_idx			 INTEGER default 0," +
 			"annot2_idx			 INTEGER default 0," +
 		    "strand              TEXT NOT NULL," +
@@ -207,8 +207,9 @@ public class Schema {
 		sql = "CREATE TABLE pseudo_hits_annot (" +
 		    "hit_idx             INTEGER NOT NULL," +	// pseudo_hits.idx
 		    "annot_idx           INTEGER NOT NULL," +	// pseudo_annot.idx
-		    "olap	            INTEGER NOT NULL," +
-		    "htype             	 TINYINT UNSIGNED NOT NULL," +   // 0 None, 1 Exon1, 2 Exon2, 3 ExonIntron, 4 Intron1, 5 Intron2 
+		    "olap	             INTEGER default 0," +   // gene overlap; algo1 basepairs; algo2 percent
+		    "exlap	             tinyint default 0," +   // CAS546 added, exon percentoverlap
+		    "annot2_idx			 INTEGER default 0," +   // CAS546 added 
 		    "UNIQUE (hit_idx, annot_idx)," +
 		    "INDEX (annot_idx)," +
 		    "FOREIGN KEY (hit_idx)  REFERENCES pseudo_hits (idx) ON DELETE CASCADE," +

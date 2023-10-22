@@ -52,16 +52,17 @@ public class DBdata {
 		loadStatus = 	loadTextField;
 		isSingle = 		qPanel.isSingle();
 		isOrphan = 		qPanel.isOrphan();
-		if (qPanel.isGeneNum()) grpIdxOnly = qPanel.getGrp();
+		if (qPanel.isGeneNum()) grpIdxOnly = 	qPanel.getGrp();
 		
 		cntDup=0; cntFilter=0; // restart counts
 		
 		makeSpLists(projList);
 		makeAnnoKeys(annoColumns);
 		makeGrpLoc(qPanel.getGrpCoords());
-		// CAS543 remove isEitherAnno and isBothAnno (can do in QyueryPanel), add isAnnoTxt
-		boolean isFilter = (qPanel.isOneAnno() || grpStart.size()>0 || qPanel.isGeneNum() || qPanel.isAnnoTxt()); 
 		
+		// CAS543 remove isEitherAnno and isBothAnno (can do in QyueryPanel), add isAnnoTxt
+		boolean isFilter = (qPanel.isOneAnno() || grpStart.size()>0 ||  qPanel.isAnnoTxt() || qPanel.isGeneNum());
+				
 		Vector <DBdata> rows = new Vector <DBdata> ();
 		HashMap <Integer, DBdata> hitMap = new HashMap <Integer, DBdata> ();
 		int rowNum=1;
@@ -103,7 +104,6 @@ public class DBdata {
 			
 		// Filter
 			if (isFilter) {
-				if (Q.TEST_TRACE) System.err.println("Fil: " + qPanel.isEitherAnno() + qPanel.isOneAnno() + qPanel.isBothAnno() + (grpStart.size()>0));
 				rowNum=0;
 				Vector <DBdata> filterRows = new Vector <DBdata> ();
 				for (DBdata dd : rows) {
@@ -352,6 +352,7 @@ public class DBdata {
 			hstart[1] = 	rs.getInt(Q.HIT2START); 
 			hend[1] = 		rs.getInt(Q.HIT2END);   
 			hlen[1] = 		Math.abs(hend[1]-hstart[1])+1;
+			
 			annotIdx[1]	= 	rs.getInt(Q.ANNOT2IDX);
 			
 			runSize = 		rs.getInt(Q.COSIZE);
@@ -365,6 +366,7 @@ public class DBdata {
 			String s	=	rs.getString(Q.HST);
 			hst = (s.contains("+") && s.contains("-")) ? "!=" : "=";
 			hscore	=		rs.getInt(Q.HSCORE);
+			htype	=		rs.getString(Q.HTYPE);
 			
 			// from anno table - first half of hit
 			int annoGrpIdx = rs.getInt(Q.AGIDX);	// grpIdx, so unique; same as chrIdx[0|1]
@@ -608,6 +610,7 @@ public class DBdata {
 			if (hcnt<=0)		row.add(Q.empty);  else row.add(hcnt);
 			if (hst.contentEquals(""))	row.add(Q.empty);  else row.add(hst); // CAS520 add column
 			if (hscore<=0)		row.add(Q.empty);  else row.add(hscore); // CAS540 add column
+			if (htype.contentEquals("")) row.add(Q.empty);  else row.add(htype); // CAS546 add column
 		}
 		// chr, start, end; CAS519 add gene&hit for pairs
 		int cntCol = FieldData.getSpColumnCount(isSingle);
@@ -697,6 +700,7 @@ public class DBdata {
 	private int pid = -1, psim = -1, hcnt=-1; 		// CAS516 add; 
 	private String hst="";							// CAS520 add column
 	private int hscore = -1;						// CAS540 add column
+	private String htype = "";						// CAS546 add column
 	private int [] spIdx =  {Q.iNoVal, Q.iNoVal};	
 	private int [] chrIdx = {Q.iNoVal, Q.iNoVal};		
 	private int [] gstart = {Q.iNoVal, Q.iNoVal};  // CAS519 add all g-fields. 

@@ -8,6 +8,7 @@ import java.util.TreeSet;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import java.util.Comparator;
 import java.util.HashSet;
 import java.sql.PreparedStatement;
@@ -31,7 +32,7 @@ public class AnnotLoadMain {
 	
 	private ProgressDialog plog;
 	private DBconn2 tdbc2;
-	private SyProj syProj;
+	//private SyProj syProj;
 	private Mproject mProj;
 
 	private final String defaultTypes = 			"gene,exon,gap,centromere";
@@ -55,8 +56,8 @@ public class AnnotLoadMain {
 		this.tdbc2 = new DBconn2("AnnoLoad-"+ DBconn2.getNumConn(), dbc2);;
 		this.plog = log;
 		this.mProj = proj;
-		
-		syProj = 	new SyProj(dbc2, log, mProj, proj.getDBName(), -1, QueryType.Either);
+		proj.loadDataFromDB();
+		//syProj = 	new SyProj(dbc2, log, mProj, proj.getDBName(), -1, Constants.EITHER);
 	}
 	
 	public boolean run(String projDBName) throws Exception {
@@ -82,16 +83,16 @@ public class AnnotLoadMain {
 			nFiles++;
 			loadFile(af);	if (!success) {tdbc2.close(); return false; }
 		}
-		Utils.prtMemUsage(plog, (nFiles + " file(s) loaded"), time);
+		Utils.prtTimeMemUsage(plog, (nFiles + " file(s) loaded"), time);
 		
 /** Compute gene order **/
 		plog.msg("Computations for " + projDBName);
 		time = Utils.getTimeMem();
 		
-		AnnotLoadPost alp = new AnnotLoadPost(syProj, tdbc2, plog);
+		AnnotLoadPost alp = new AnnotLoadPost(mProj, tdbc2, plog);
 		
 		success = alp.run(cntGeneIdx); 	if (!success) {tdbc2.close(); return false; }
-		Utils.prtMemUsage(plog, "Computations", time);
+		Utils.prtTimeMemUsage(plog, "Computations", time);
 
 /** Wrap up **/
 		summary();		if (!success) {tdbc2.close(); return false; }
@@ -177,11 +178,12 @@ public class AnnotLoadMain {
 			
 	/** Process for write **/
 			/** Chromosome **/
-			int grpIdx = syProj.grpIdxFromQuery(chr);
+			int grpIdx = mProj.getGrpIdxRmPrefix(chr); // CAS546 was syProj.grpIdxFromQuery
 			if (grpIdx < 0) {// ErrorCount.inc(); CAS502 this is not an error; can happen if scaffolds have been filtered out
 				if (!noGrpSet.contains(chr)) {
 					if (noGrpSet.size() < 3) plog.msgToFile("+++ No loaded sequence for '" + chr + "' on line " + lineNum);
 					else if (noGrpSet.size() == 3) plog.msgToFile("+++ Suppressing further warnings of no loaded sequence");
+					if (noGrpSet.size()==0) System.out.println("Valid names: " + mProj.getValidGroup());
 					noGrpSet.add(chr);
 				}
 				continue; // skip this annotation
@@ -420,7 +422,7 @@ public class AnnotLoadMain {
 			if (bUserSetKeywords) plog.msg("User specified attribute keywords: ");
 			else plog.msg("Best attribute keywords:");
 		
-			tdbc2.executeUpdate("delete from annot_key where proj_idx=" + syProj.getIdx());
+			tdbc2.executeUpdate("delete from annot_key where proj_idx=" + mProj.getIdx());
 	        for (String key : sortedKeys) {
 	        	cntSav++;
 	        	if (cntSav>savAtLeastKeywords) {
@@ -431,7 +433,7 @@ public class AnnotLoadMain {
 	        	
 	        	plog.msg(String.format("   %-15s %d", key,count)); 
 	        	tdbc2.executeUpdate("insert into annot_key (proj_idx,keyname,count) values (" + 
-	        			syProj.getIdx() + ",'" + key + "'," + count + ")");
+	        			mProj.getIdx() + ",'" + key + "'," + count + ")");
 	        }
 	        if (ignoreAttr.size()>0)  {
 				plog.msg("Ignored attribute keywords: ");
@@ -450,13 +452,13 @@ public class AnnotLoadMain {
 	}
 	private boolean geneNOnly(String projName) { // CAS519b
 		try {
-			ResultSet rs = tdbc2.executeQuery("select hasannot from projects where idx=" + syProj.getIdx());
+			ResultSet rs = tdbc2.executeQuery("select hasannot from projects where idx=" + mProj.getIdx());
 			int cnt=0;
 			if (rs.next()) cnt=rs.getInt(1);
 			if (cnt>0) {
 				rs = tdbc2.executeQuery("select count(*) from pseudo_annot " + 
 						"join xgroups on pseudo_annot.grp_idx = xgroups.idx " + 
-						"WHERE pseudo_annot.type = 'gene' and xgroups.proj_idx = " + syProj.getIdx());
+						"WHERE pseudo_annot.type = 'gene' and xgroups.proj_idx = " + mProj.getIdx());
 				if (rs.next()) cnt=rs.getInt(1);
 			}
 			rs.close();
@@ -465,10 +467,10 @@ public class AnnotLoadMain {
 				return true;
 			}
 				
-			plog.msg("Run Gene# assignment algorithm for " + syProj.getName());
+			plog.msg("Run Gene# assignment algorithm for " + mProj.getDisplayName());
 			long time = Utils.getTime();
 			
-			AnnotLoadPost alp = new AnnotLoadPost(syProj, tdbc2, plog);
+			AnnotLoadPost alp = new AnnotLoadPost(mProj, tdbc2, plog);
 			success = alp.run(cnt); 	if (!success) return false;
 			
 			Utils.timeDoneMsg(plog, "Computations", time);

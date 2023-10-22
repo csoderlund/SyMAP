@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.TreeSet;
 import java.util.HashSet;
 
+import backend.anchor1.BinStats;
 import database.DBconn2;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
@@ -33,7 +34,7 @@ public class SyntenyMain {
 	
 	private ProgressDialog mLog;
 	private DBconn2 dbc2, tdbc2;	
-	private SyProj syProj1, syProj2;
+	private Mproject mProj1, mProj2;
 	private Mpair mp;
 	private int mPairIdx;
 	private String resultDir;
@@ -59,10 +60,12 @@ public class SyntenyMain {
 	/******************************************************************/
 	public boolean run(Mproject pj1, Mproject pj2) {
 	try {
+		mProj1 = pj1;
+		mProj2 = pj2;
 		String proj1Name = pj1.getDBName(), proj2Name = pj2.getDBName();
 		
 		startTime = Utils.getTime();
-		mLog.msg("Finding synteny for " + proj1Name + " and " + proj2Name + mp.getChangedSynteny());
+		mLog.msg("Finding synteny for " + proj1Name + " and " + proj2Name); // CAS546 quit showing params
 		
 		mBlksByCase = new TreeMap<BCase,Integer>(); // used by cullChains
 		
@@ -75,23 +78,20 @@ public class SyntenyMain {
 			ErrorCount.inc();
 			return false;
 		}
-		int topN = mp.getTopN(Mpair.FILE); 
 		
 		tdbc2 = new DBconn2("Synteny-" + DBconn2.getNumConn(), dbc2);
 		
-		syProj1 = new SyProj(tdbc2, mLog, pj1, proj1Name, topN, QueryType.Query);
-		syProj2 = new SyProj(tdbc2, mLog, pj2, proj2Name, topN, QueryType.Target);
-		if (syProj1.hasOrderAgainst()) mLog.msg("Order against " + syProj1.getOrderAgainst());
-		else if (syProj2.hasOrderAgainst()) mLog.msg("Order against " + syProj2.getOrderAgainst());
+		if (mProj1.hasOrderAgainst()) mLog.msg("Order against " + mProj1.getOrderAgainst());
+		else if (mProj2.hasOrderAgainst()) mLog.msg("Order against " + mProj2.getOrderAgainst());
 		
 		setBlockTestProps();
 		if (Cancelled.isCancelled()) {tdbc2.close(); return false;} // CAS535 there was no checks
 			
-		mSelf = (syProj1.getIdx() == syProj2.getIdx());
+		mSelf = (mProj1.getIdx() == mProj2.getIdx());
 
-		mPairIdx = Utils.getPairIdx(syProj1.getIdx(), syProj2.getIdx(), tdbc2);
+		mPairIdx = Utils.getPairIdx(mProj1.getIdx(), mProj2.getIdx(), tdbc2);
 		if (mPairIdx == 0) {
-			mLog.msg("Cannot find project pair in database for " + syProj1.getName() + "," + syProj2.getName());
+			mLog.msg("Cannot find project pair in database for " + mProj1.getDisplayName() + "," + mProj2.getDisplayName());
 			ErrorCount.inc(); tdbc2.close();
 			return false;
 		}
@@ -103,17 +103,17 @@ public class SyntenyMain {
 		clearBlocks();
 		
 		/*********** Main loop **********************/
-		int nGrpGrp = syProj1.getGroups().size() * syProj2.getGroups().size();
+		int nGrpGrp = mProj1.getGrpSize() * mProj2.getGrpSize();
 		Utils.prtNumMsg(mLog, nGrpGrp, "group-x-group pairs to analyze");
 		
-		for (Group grp1 : syProj1.getGroups()) {
-			for (Group grp2 : syProj2.getGroups()) {
+		for (int grpIdx1 : mProj1.getGrpIdxMap().keySet()) {
+			for (int grpIdx2 : mProj2.getGrpIdxMap().keySet()) {
 				if (!mSelf) {
-					doSeqGrpGrpSynteny(grp1,grp2);
+					doSeqGrpGrpSynteny(grpIdx1,grpIdx2);
 					if (Cancelled.isCancelled() || bInterrupt) return false;
 				}
-				else if (grp1.getIdx() <= grp2.getIdx()) {
-					doSeqGrpGrpSynteny(grp1,grp2);
+				else if (grpIdx1 <= grpIdx2) {
+					doSeqGrpGrpSynteny(grpIdx1,grpIdx2);
 					if (Cancelled.isCancelled() || bInterrupt) return false;
 				}
 				nGrpGrp--;
@@ -127,8 +127,8 @@ public class SyntenyMain {
 		if (Cancelled.isCancelled() || bInterrupt) {tdbc2.close();return false;}
 		/****************************************************/
 		// CAS520 let self do collinear && p1.idx != p2.idx 
-		if (syProj1.hasAnnot() && syProj2.hasAnnot()) { // CAS540 add check; hit# moved to AnchorMain 
-			AnchorsPost collinear = new AnchorsPost(mPairIdx, syProj1, syProj2, tdbc2, mLog);
+		if (mProj1.hasGenes() && mProj2.hasGenes()) { // CAS540 add check; hit# moved to AnchorMain 
+			AnchorsPost collinear = new AnchorsPost(mPairIdx, mProj1, mProj2, tdbc2, mLog);
 			collinear.collinearSets();
 			
 			if (Cancelled.isCancelled() || bInterrupt) {tdbc2.close();return false;}
@@ -140,18 +140,18 @@ public class SyntenyMain {
 		if (Cancelled.isCancelled() || bInterrupt) {tdbc2.close();return false;}
 		
 		/*********************************************************/ 
-		if (syProj1.hasOrderAgainst()) {
-			String orderBy = syProj1.getOrderAgainst();
-			if (orderBy != null && orderBy.equals(syProj2.getName())) {
-				OrderAgainst obj = new OrderAgainst(syProj1.mProj, syProj2.mProj, mLog, tdbc2); // CAS505 in new file
+		if (mProj1.hasOrderAgainst()) {
+			String orderBy = mProj1.getOrderAgainst();
+			if (orderBy != null && orderBy.equals(mProj2.getDBName())) {
+				OrderAgainst obj = new OrderAgainst(mProj1, mProj2, mLog, tdbc2); // CAS505 in new file
 				if (bNewOrder) obj.orderGroupsV2(false);	
 				else obj.orderGroups(false);	
 			}	
 		}
-		else if (syProj2.hasOrderAgainst()){
-			String orderBy = syProj2.getOrderAgainst();
-			if (orderBy != null && orderBy.equals(syProj1.getName())) {
-				OrderAgainst obj = new OrderAgainst(syProj1.mProj, syProj2.mProj, mLog, tdbc2);
+		else if (mProj2.hasOrderAgainst()){
+			String orderBy = mProj2.getOrderAgainst();
+			if (orderBy != null && orderBy.equals(mProj1.getDBName())) {
+				OrderAgainst obj = new OrderAgainst(mProj1, mProj2, mLog, tdbc2);
 				if (bNewOrder) obj.orderGroupsV2(true);
 				else obj.orderGroups(true);
 			}	
@@ -172,17 +172,17 @@ public class SyntenyMain {
 	/************************************************************************
 	 * Main synteny method
 	 *******************************************************************/
-	private void doSeqGrpGrpSynteny(Group grp1, Group grp2) throws Exception {
+	private void doSeqGrpGrpSynteny(int grpIdx1, int grpIdx2) throws Exception {
 		Vector<SyHit> hits = new Vector<SyHit>();
 		
-		boolean isSelf = (grp1.getIdx() == grp2.getIdx());
+		boolean isSelf = (grpIdx1 == grpIdx2);
 		
       	String st = "SELECT h.idx, h.start1, h.end1, h.start2, h.end2, h.pctid,h.gene_overlap" +
             " FROM pseudo_hits as h " +  
-            " WHERE h.proj1_idx='" + syProj1.getIdx() + "'" + 
-            " AND h.proj2_idx='" +  syProj2.getIdx() + "'" +  
-            " AND h.grp1_idx='" + grp1.getIdx() + "'" + 
-            " AND h.grp2_idx='" + grp2.getIdx() + "'" ;
+            " WHERE h.proj1_idx='" + mProj1.getIdx() + "'" + 
+            " AND h.proj2_idx='" +  mProj2.getIdx() + "'" +  
+            " AND h.grp1_idx='" + grpIdx1 + "'" + 
+            " AND h.grp2_idx='" + grpIdx2 + "'" ;
       	
       	if (isSelf) {
       		st += " AND h.start1 < h.start2 "; // do blocks in one triangle, mirror later
@@ -209,9 +209,9 @@ public class SyntenyMain {
 			hits.add(new SyHit(start1, end1, start2, end2,id,pctid,gene));
 			
 			BinStats.incStat("SyntenyHitsTotal", 1);
-			if (gene == 0)		BinStats.incStat("RawSyHits" + HitType.NonGene.toString(), 1);
-			else if (gene == 1)	BinStats.incStat("RawSyHits" + HitType.GeneNonGene.toString(), 1);
-			if (gene == 2)		BinStats.incStat("RawSyHits" + HitType.GeneGene.toString(), 1);
+			if (gene == 0)		BinStats.incStat("RawSyHits" + Constants.NonGene, 1);
+			else if (gene == 1)	BinStats.incStat("RawSyHits" + Constants.GeneNonGene, 1);
+			if (gene == 2)		BinStats.incStat("RawSyHits" + Constants.GeneGene, 1);
 		}
 		rs.close();
 		
@@ -219,9 +219,9 @@ public class SyntenyMain {
 		
 		chainFinder(hits,blocks,null);
 		if (isSelf) blocks = removeDiagonalBlocks(blocks);
-		
+	
 		blocks = mergeBlocks(blocks);
-		setBlockGrps(blocks, grp1.getIdx(), grp2.getIdx());
+		setBlockGrps(blocks, grpIdx1, grpIdx2);
 		
 		int num = 1;			
 		for (Block b : blocks) {
@@ -289,7 +289,7 @@ public class SyntenyMain {
 			int high2 = (i > 0 ? gap2list.get(i-1) : low2);
 
 			while (goodChainsExist(low1,low2,hits))
-				binarySearch(low1,high1,low2,high2,mMingap1, mMingap2, hits,blocks);				
+				binarySearch(low1,high1,low2,high2,mMingap1, mMingap2, hits,blocks);	
 		}
 	}
 	
@@ -323,7 +323,7 @@ public class SyntenyMain {
 	}
 	
 	private void cullChains(int gap1,int gap2, Vector<SyHit> hits, Vector<Block> blocks){
-		Block blk = new Block(mPairIdx,syProj1.mProj,syProj2.mProj);
+		Block blk = new Block(mPairIdx,mProj1,mProj2);
 		while(longestChain(gap1,gap2,mMindots_keepbest,hits,blk)){
 			if (goodBlock(blk, hits)){
 				blocks.add(blk);
@@ -331,19 +331,19 @@ public class SyntenyMain {
 					h.mDPUsedFinal = true;
 				mBlksByCase.put(blk.mCase,mBlksByCase.get(blk.mCase)+1);
 			}
-			blk = new Block(mPairIdx, syProj1.mProj, syProj2.mProj); 
+			blk = new Block(mPairIdx, mProj1, mProj2); 
 		}
 		resetDPUsed(hits);
 	}
 	
 	private boolean goodChainsExist(int gap1,int gap2, Vector<SyHit> hits){
-		Block blk = new Block(mPairIdx, syProj1.mProj, syProj2.mProj);
+		Block blk = new Block(mPairIdx, mProj1, mProj2);
 		while(longestChain(gap1,gap2,mMindots_keepbest,hits,blk)){
 			if (goodBlock(blk, hits)){
 				resetDPUsed(hits);
 				return true;
 			}
-			blk = new Block(mPairIdx, syProj1.mProj, syProj2.mProj);
+			blk = new Block(mPairIdx, mProj1, mProj2);
 		}
 		resetDPUsed(hits);
 		return false;
@@ -618,9 +618,9 @@ public class SyntenyMain {
 			tdbc2.executeUpdate("insert into pseudo_block_hits (select pseudo_hits.refidx," + newIdx + " from pseudo_block_hits " +
 					" join pseudo_hits on pseudo_hits.idx=pseudo_block_hits.hit_idx where block_idx=" + idx + ")");
 		}
-		assert(syProj1.idx == syProj2.idx);
+		assert(mProj1.getIdx() == mProj2.getIdx());
 		Vector<Integer> grps = new Vector<Integer>();
-		rs = tdbc2.executeQuery("select idx from xgroups where proj_idx=" + syProj1.idx);
+		rs = tdbc2.executeQuery("select idx from xgroups where proj_idx=" + mProj1.getIdx());
 		while (rs.next()){
 			grps.add(rs.getInt(1));
 		}
@@ -855,8 +855,8 @@ public class SyntenyMain {
 		
 		int nHits = 0;
 		
-		String st = "select count(*) as nhits from pseudo_hits where proj1_idx='" + syProj1.getIdx() + "'" + 
-								" and proj2_idx='" + syProj2.getIdx() + "'";
+		String st = "select count(*) as nhits from pseudo_hits where proj1_idx='" + mProj1.getIdx() + "'" + 
+								" and proj2_idx='" + mProj2.getIdx() + "'";
 		ResultSet rs = tdbc2.executeQuery(st);
 		if (rs.next())
 			nHits = rs.getInt("nhits");
@@ -867,8 +867,8 @@ public class SyntenyMain {
 			throw(new Exception("No anchors loaded!"));
 		
 		// CAS534 was getting defaults of 0; then writing back to mProps.setProperty
-		mMaxgap1 = (int)( ((float)syProj1.getSizeBP())/(Math.sqrt(nHits)));
-		mMaxgap2 = (int)( ((float)syProj2.getSizeBP())/(Math.sqrt(nHits)));
+		mMaxgap1 = (int)( ((float)mProj1.getLength())/(Math.sqrt(nHits)));
+		mMaxgap2 = (int)( ((float)mProj2.getLength())/(Math.sqrt(nHits)));
 		mAvg1A = ((float)mMaxgap1)/15;
 		mAvg2A = ((float)mMaxgap2)/15;
 		
@@ -880,15 +880,16 @@ public class SyntenyMain {
 		**/
 	}
 	private void processStats()  throws Exception {
-		for (HitType bt : HitType.values()) {
-			String rlbl = "RawSyHits" + bt.toString();
-			String blbl = "BlockHits" + bt.toString();
+		String [] arr = {Constants.GeneGene, Constants.GeneNonGene, Constants.NonGene}; // CAS546 was enum
+		for (String bt : arr) {
+			String rlbl = "RawSyHits" + bt;
+			String blbl = "BlockHits" + bt;
 			
 			if (BinStats.mStats != null && BinStats.mStats.containsKey(rlbl) && BinStats.mStats.containsKey(blbl)) {
 				float rnum = BinStats.mStats.get(rlbl);
 				float bnum = BinStats.mStats.get(blbl);
 				float pct = (100*bnum)/rnum;
-				BinStats.incStat("BlockPercent" + bt.toString(), pct);
+				BinStats.incStat("BlockPercent" + bt, pct);
 			}
 		}	
 		

@@ -212,8 +212,7 @@ public class Annotation {
 				
 				// black line on top of gene to distinguish closely placed genes; CAS520 add, CAS544 highlight.. 
 				if (itype==GENE_INT) {
-					boolean isSel = (isSelectedGene && this==seqObj.selectedGeneObj);
-					if (bGeneLineOpt || isPopup || isSel) {
+					if (bGeneLineOpt || isPopup || isSelectedGene) {
 						Stroke oldstroke = g2.getStroke();
 						g2.setStroke(new BasicStroke(2)); 
 						
@@ -229,20 +228,24 @@ public class Annotation {
 	}
 	private Color getColor() {
 		if (itype == EXON_INT) {
-			if (bHighPopup && isPopup)    return geneHighColor; // CAS545 only exon highlighted when Gene Filter
-			if (bHighPopup && isHitPopup) return Mapper.pseudoLineHoverColor; // CAS545 
+			if (bHighPopup) {
+				if (isPopup)    return geneHighColor; // CAS545 only exon highlighted when Gene Filter
+				if (isHitPopup) return Mapper.pseudoLineHoverColor; // CAS545 
+			}
+			if (isSelectedGene) return geneHighColor; // CAS546 add here too
 			
-			if (isConserved)     		  return geneHighColor; 
+			if (isConserved)    return geneHighColor; 
 			
-			if (bStrandPos)               return exonColorP;	
-			else                          return exonColorN;
+			if (bStrandPos)     return exonColorP;	
+			else                return exonColorN;
 		}
 		
 		if (itype == GENE_INT)		{
-			if (bHighPopup && isPopup)  	return geneHighColor;
-			if (bHighPopup && isHitPopup) 	return Mapper.pseudoLineHoverColor; // CAS545 
-			
-			if (isSelectedGene && this==seqObj.selectedGeneObj) return geneHighColor;
+			if (bHighPopup) {
+				if (isPopup)  	return geneHighColor;
+				if (isHitPopup) return Mapper.pseudoLineHoverColor; // CAS545 
+			}	
+			if (isSelectedGene) return geneHighColor;
 			
 			return geneColor;
 		}

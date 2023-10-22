@@ -1,4 +1,12 @@
+<!DOCTYPE html>
 <html>
+<head>
+<title>runSingleTCW</title>
+<style>
+.ty    		{border: 1px; padding: 3px; border-spacing: 3px; }
+.ty td 		{border: 1px; padding: 3px; border-spacing: 3px}
+</style>
+</head>
 <body style="padding:20px;font-family:arial;">
 
 <div style="width:500px;">
@@ -11,12 +19,15 @@
 <p>Abbrev: Gene (GN), Clustered hit (CH), SubHit (SH), Synteny Block (SB), Cluster hit in block (CHB)
 <br>If the second project does not have a value, then it is the same for the two projects.
 
-<table border=1 rules=all cellpadding=5 cellspacing=0>
+<table class="ty">
 	<tr>
 		<td colspan=2 align=left>
-			<b>Genome and Annotation<b>
+			<b>Genome and Annotation</b>
 	<tr>
-		<td align=left valign=top>#Genes<br>~Cover<br>Avg<br>Max
+		<td align=left valign=top>#Genes
+		<br>~Cover
+		<br>Avg
+		<br>Max
 		<td>Number of genes
 		<br>Approximate coverage of genes; it does not take into account overlapping genes
 		<br>Average length of genes
@@ -36,7 +47,7 @@
 <!--------------------------------------------------------->
 	<tr>
 		<td colspan=2 align=left>
-			<b>Clustered hits - table 1<b>
+			<b>Clustered hits - table 1</b>
 	<tr>
 		<td align=left valign=top>#Clusters
 		<td>Number of clustered hits
@@ -64,7 +75,7 @@
 
 	<tr>
 		<td colspan=2 align=left>
-			<b>Clustered hits - table 2<b>
+			<b>Clustered hits - table 2</b>
 	<tr>
 		<td align=left valign=top>GNwCH<br>(CHwGN)
 		<td>Percent of genes with at least one clustered hit aligning to it
@@ -81,7 +92,7 @@
 <!--------------------------------------------------------->
 	<tr>
 		<td colspan=2 align=left>
-			<b>Synteny Blocks<b>
+			<b>Synteny Blocks</b>
 	<tr>
 		<td align=left valign=top>#Blocks
 		<td>Total number of synteny blocks
@@ -102,7 +113,7 @@
 <!--------------------------------------------------------->
 	 <tr>
 		<td colspan=2 align=left>
-			<b>Collinear Sets<b>
+			<b>Collinear Sets</b>
 	<tr>
 		<td align=left valign=top>Size range columns
 		<td>Number of collinear sets within the size range

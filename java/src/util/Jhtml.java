@@ -40,7 +40,9 @@ public class Jhtml {
 	public static final String SYS_HELP_URL =    BASE_HELP_URL + "SystemHelp.html"; // CAS534 moved from popups
 	public static final String build = 	"#build";
 	public static final String param1 = "#projParams";
-	public static final String param2 = "#pairParams";
+	public static final String param2Align = "#align2";
+	public static final String param2Clust = "#clust";
+	public static final String param2Syn = "#syn";
 	
 	public static final String USER_GUIDE_URL =  BASE_HELP_URL + "UserGuide.html"; 
 	public static final String view =  		"#views";	

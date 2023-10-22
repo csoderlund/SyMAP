@@ -6,7 +6,7 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 
 import backend.Constants;
-import backend.Group;
+import backend.anchor1.Group;
 import database.DBconn2;
 import props.PropertiesReader;
 import symap.Globals;
@@ -22,6 +22,7 @@ import util.Utilities;
  * 5. AlignProj  save - save all to db
  * 6. Show file params on PairParams
  * 7. Show db params on Summary
+ * CAS546 add Algo2 params
  */
 public class Mpair {
 	public static final int FILE = 0;
@@ -39,9 +40,19 @@ public class Mpair {
 	
 	private static final String [] paramKey = { // repeated in PairParams
 			"mindots", "topn", "merge_blocks", 
-			"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only" };
+			"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
+			"algo1", "algo2",
+			"g0_match", "gintron_match", "gexon_match",
+			"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
+	};
 	private static final String [] paramDef = {
-			"7", "2", "0", "", "", "", "0", "0"};
+			"7", "2", "0", 
+			"", "", "", "0", "0",
+			"1", "0",				// 1st is algo1, 2nd is algo2
+			"600", "300", "100",	// intergenic, intron, exon
+			"1", "0", "0", "0", "0"	// EE, EI, En, II, In 
+			};
+	private static final String defAlgo = "Cluster Algo1 (original)";
 	
 	public Mpair (DBconn2 dbc2, int pairIdx, Mproject p1, Mproject p2, boolean isReadOnly) {
 		this.dbc2 = dbc2;
@@ -57,6 +68,104 @@ public class Mpair {
 		if (!isReadOnly)  loadFromFile();
 		if (pairIdx!= -1) loadFromDB();
 	}
+	
+	public void reverse() {
+		Mproject t=mProj1;
+		mProj1 = mProj2;
+		mProj2 = t;
+		bReverse = !bReverse;
+	}
+	public boolean isReverse() { return bReverse;}
+	/***********************************************************************************
+	 * CAS546 update params a bit
+	 */
+	public String getChangedParams(int type) {// ManagerFrame for selected when need align; SumFrame (DB type)
+		String amsg = getAlign(type);
+		String smsg = getSynteny(type);
+		
+		String fmsg = (!amsg.equals("")) ? amsg+"\n"+smsg : smsg;
+		
+		return fmsg+"\n";
+	}
+	public String getChangedSynteny() { // ManagerFrame.alignSelectedPair when no align
+		return getSynteny(FILE) + "\n";
+	}
+	
+	public String getChangedAlign() { // AlignMain write to terminal
+		String msg = getAlign(FILE);
+		String fmsg = (msg.trim().equals("")) ? "" : "\nNon-default parameters: " + msg;
+		return fmsg+"\n";
+	}
+	
+	// these all return "" if no change
+	private String getAlign(int type) {
+		String msg="";
+		if (isChg(type,"self_args")) 	msg += "\n  Self args: "   + getSelfArgs(type);
+		if (isChg(type,"promer_args")) 	msg += "\n  PROmer args: " + getPromerArgs(type);
+		if (isChg(type,"nucmer_args")) 	msg += "\n  NUCmer args: " + getNucmerArgs(type);
+		if (isChg(type,"promer_only")) 	msg += "\n  PROmer only";
+		if (isChg(type,"nucmer_only")) 	msg += "\n  NUCmer only";
+		
+		msg += mProj1.getMaskedParam();
+		msg += mProj2.getMaskedParam();
+		return msg;
+	}
+	private String getSynteny(int type) { // SyntenyMain only
+		
+		String msg = getAlgo(type);
+		
+		if (isChg(type,"mindots")) 		msg += "\n  Min dots=" + getMinDots(type) + "  ";
+		if (isChg(type,"merge_blocks")) msg += "\n  Merge blocks" + "  ";
+		
+		String fmsg = (msg.trim().equals("")) ? "Use default parameters with " + defAlgo : 
+            "Non-default parameters: " + msg;
+		
+		fmsg += mProj1.getOrderParam();
+		fmsg += mProj2.getOrderParam();
+		
+		return fmsg;
+	}
+	
+	private String getAlgo(int type) {
+		String msg="";
+		
+		if (isAlgo2(type)) {
+			boolean chg = isChg(type,"g0_match") || isChg(type,"gintron_match") || isChg(type,"gexon_match") 
+			|| isChg(type, "EI_pile") || isChg(type, "En_pile") || isChg(type, "II_pile") || isChg(type, "In_pile");
+			if (chg) {
+				msg = "\n  Cluster Algo2 (gene-centric)";
+				if (isChg(type,"g0_match")) 		msg += "\n    Intergenic base match = " + getG0Match(type);
+				if (isChg(type,"gintron_match")) 	msg += "\n    Intron base match = " + getGintronMatch(type);
+				if (isChg(type,"gexon_match")) 		msg += "\n    Exon base match = " + getGexonMatch(type);
+				
+				if (isChg(type,"EE_pile"))			msg += "\n    Limit Exon-Exon piles";
+				if (isChg(type,"EI_pile"))			msg += "\n    Allow Exon-Intron piles";
+				if (isChg(type,"En_pile"))			msg += "\n    Allow Exon-intergenic piles";
+				if (isChg(type,"II_pile"))			msg += "\n    Allow Intron-Intron piles";
+				if (isChg(type,"In_pile"))			msg += "\n    Allow Intron-intergenic piles";
+			}
+		}
+		else if (isAlgo1(type)) {
+			boolean chg = isChg(type, "topn") || !Group.bSplitGene;
+			if (chg) {
+				msg += "\n  Cluster Algo1 (original)";
+				if (isChg(type,"topn")) msg += "\n    Top N="    + getTopN(type);
+				if (!Group.bSplitGene)  msg += "\n    No split gene";
+			}
+		}
+		if (msg.equals("")) { // so I can change the default without changing this method
+			if (defMap.get("algo2")=="0" && isChg(type, "algo2")) msg = "\n  Cluster Algo2 (gene-centric)";
+			else if (defMap.get("algo1")=="0" && isChg(type, "algo1")) msg = "\n  Cluster Algo1 (original)";
+		}
+		return msg;
+	}
+	
+	private boolean isChg(int type, String field) {
+		String db = (type==FILE) ? fileMap.get(field) : dbMap.get(field);
+		if (db==null) System.out.println("no " + field);
+		String def = defMap.get(field);
+		return !db.contentEquals(def);
+	}
 	/************************************************************************************/
 	public int getPairIdx()   {return pairIdx;}
 	public int getProj1Idx()  { return mProj1.getIdx();}
@@ -65,12 +174,52 @@ public class Mpair {
 	public Mproject getProj1() {return mProj1;}
 	public Mproject getProj2() {return mProj2;}
 	
-	public int getMinDots(int type) {
-		String x = (type==FILE) ? fileMap.get("mindots") : dbMap.get("mindots");
-		return Utilities.getInt(x);
+	public boolean isAlgo1(int type) {
+		String x = (type==FILE) ? fileMap.get("algo1") : dbMap.get("algo1");
+		return x.contentEquals("1");
 	}
 	public int getTopN(int type) {
 		String x = (type==FILE) ? fileMap.get("topn") : dbMap.get("topn");
+		return Utilities.getInt(x);
+	}
+	public boolean isAlgo2(int type) {
+		String x = (type==FILE) ? fileMap.get("algo2") : dbMap.get("algo2");
+		return x.contentEquals("1");
+	}
+	public int getG0Match(int type) {
+		String x = (type==FILE) ? fileMap.get("g0_match") : dbMap.get("g0_match");
+		return Utilities.getInt(x);
+	}
+	public int getGexonMatch(int type) {
+		String x = (type==FILE) ? fileMap.get("gexon_match") : dbMap.get("gexon_match");
+		return Utilities.getInt(x);
+	}
+	public int getGintronMatch(int type) {
+		String x = (type==FILE) ? fileMap.get("gintron_match") : dbMap.get("gintron_match");
+		return Utilities.getInt(x);
+	}
+	public boolean isEEpile(int type) {
+		String x = (type==FILE) ? fileMap.get("EE_pile") : dbMap.get("EE_pile");
+		return x.contentEquals("1");
+	}
+	public boolean isEIpile(int type) {
+		String x = (type==FILE) ? fileMap.get("EI_pile") : dbMap.get("EI_pile");
+		return x.contentEquals("1");
+	}
+	public boolean isEnpile(int type) {
+		String x = (type==FILE) ? fileMap.get("En_pile") : dbMap.get("En_pile");
+		return x.contentEquals("1");
+	}
+	public boolean isIIpile(int type) {
+		String x = (type==FILE) ? fileMap.get("II_pile") : dbMap.get("II_pile");
+		return x.contentEquals("1");
+	}
+	public boolean isInpile(int type) {
+		String x = (type==FILE) ? fileMap.get("In_pile") : dbMap.get("In_pile");
+		return x.contentEquals("1");
+	}
+	public int getMinDots(int type) {
+		String x = (type==FILE) ? fileMap.get("mindots") : dbMap.get("mindots");
 		return Utilities.getInt(x);
 	}
 	public boolean isMerge(int type) {
@@ -97,65 +246,6 @@ public class Mpair {
 		String x = (type==FILE) ? fileMap.get( "self_args") : dbMap.get("self_args");
 		return x;
 	}
-	public void reverse() {
-		Mproject t=mProj1;
-		mProj1 = mProj2;
-		mProj2 = t;
-		bReverse = !bReverse;
-	}
-	public boolean isReverse() { return bReverse;}
-	/***********************************************************************************
-	 */
-	public String getChangedParams(int type) {// AlgSynMain and SumFrame
-		String msg="";
-		if (!Group.bSplitGene)          msg += "\n   No split gene";
-		if (isChg(type, "self_args")) 	msg += "\n   Self args: "   + getSelfArgs(type);
-		if (isChg(type,"promer_args")) 	msg += "\n   PROmer args: " + getPromerArgs(type);
-		if (isChg(type,"nucmer_args")) 	msg += "\n   NUCmer args: " + getNucmerArgs(type);
-		if (isChg(type,"promer_only")) 	msg += "\n   PROmer only";
-		if (isChg(type,"nucmer_only")) 	msg += "\n   NUCmer only";
-		
-		if (isChg(type,"topn")) 		msg += "\n   Top N="    + getTopN(type);
-		if (isChg(type,"mindots")) 		msg += "\n   Min dots=" + getMinDots(type);
-		if (isChg(type,"merge_blocks")) msg += "\n   Merge blocks";
-		String p1 = mProj1.getAlignParams();
-		if (p1!="")						msg += "\n   " + p1; // CAS540 added projects params
-		String p2 = mProj2.getAlignParams();
-		if (p2!="")						msg += "\n   " + p2;
-		String fmsg = (msg=="") ? "Use default parameters" : "Non-default parameters: " + msg;
-		return fmsg + "\n";
-	}
-	public String getChangedAlign() {// AlignMain only
-		int type = FILE;
-		String msg="";
-		if (isChg(type, "self_args")) 	msg += "\n   Self args: "   + getSelfArgs(type);
-		if (isChg(type,"promer_args")) 	msg += "\n   PROmer args: " + getPromerArgs(type);
-		if (isChg(type,"nucmer_args")) 	msg += "\n   NUCmer args: " + getNucmerArgs(type);
-		if (isChg(type,"promer_only")) 	msg += "\n   PROmer only";
-		if (isChg(type,"nucmer_only")) 	msg += "\n   NUCmer only";
-		String p1 = mProj1.getAlignParams();
-		if (p1!="")						msg += "\n   " + p1; // CAS540 added projects params
-		String p2 = mProj2.getAlignParams();
-		if (p2!="")						msg += "\n   " + p2;
-		String fmsg = (msg=="") ? "" : "\nNon-default parameters: " + msg;
-		return fmsg;
-	}
-	
-	public String getChangedSynteny() { // SyntenyMain only
-		int type = FILE;
-		String msg="";
-		if (isChg(type,"mindots")) 		msg += "Min dots=" + getMinDots(type) + "  ";
-		if (isChg(type,"merge_blocks")) msg += "Merge blocks" + "  ";
-		String fmsg = (msg=="") ? "" : "\nNon-default parameters: " + msg;
-		return fmsg;
-	}
-	private boolean isChg(int type, String field) {
-		String db = (type==FILE) ? fileMap.get(field) : dbMap.get(field);
-		if (db==null) System.out.println("no " + field);
-		String def = defMap.get(field);
-		return !db.contentEquals(def);
-	}
-	
 	/************************************************************************************/
 	public HashMap <String, String> getFileParams() { return fileMap;}
 	public HashMap <String, String> getDefaults() { return defMap;}
@@ -275,5 +365,5 @@ public class Mpair {
 			fileMap.put(paramKey[i], paramDef[i]);
 		}
 	}
-	
+	public String toString() {return mProj1.strDisplayName + "-" + mProj2.strDisplayName + " pair";}
 }
