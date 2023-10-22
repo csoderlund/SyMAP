@@ -117,13 +117,15 @@ The following discusses building a SyMAP v5 database.
 <li><a href="convert/index.html" class="ext" target="_blank">Convert NCBI and Ensembl</a>
 <li><a href=TroubleShoot.html class="ext" target="_blank">Trouble Shooting</a>
 </ul>
+<p>For <b>Transcriptome Analysis and Comparative Transcriptomes</b>, see <a href="https://csoderlund.github.io/TCW/" class="ext" target="_blank">TCW</a>.
 </table>
 
 <a id="overview"></a>
 <h2>Overview and Publications</h2>
 SyMAP is a system for computing, displaying, and analyzing syntenic alignments between
-<font color=green>medium-to-high divergent eukaryotic genomes</font>. It does <b>not</b> work well
-for very similar genomes or bacterial genomes.
+<font color=green>medium-to-high divergent eukaryotic genomes</font>. Recent changes have improved
+its performance for less divergent eukaryotic genomes, though it may require experimentation with
+the parameters.
 <p>Its features include the following (for a pictorial introduction, see the
 <a href="Tour.html" class="ext" target="_blank">Tour</a>):
 <p>
@@ -236,10 +238,10 @@ SyMAP has been tested on the following:
 
 <tr><td>MacOS x86_64 (Monterey 12.6.6)<sup>1</sup>
 <td>MySQL v8.0.33,<br>MariaDB 11.0.2<td>8, 15, 17, 18, 20 from
-<br><a href="https://adoptium.net">Adoptium</a> and <a href="https://www.oracle.com/java/">Oracle</a>
+<br><a href="https://adoptium.net" class="ext" target="_blank">Adoptium</a> and <a href="https://www.oracle.com/java/" class="ext" target="_blank">Oracle</a>
 <td>3.2 GHz 6-Core<td>&nbsp;64 GB<td>2018
 
-<tr><td><a href="http://linode.com">Linode</a> (Ubuntu 22.04.2 LTS)<sup>2</sup><td>MySQL 8.0.33<td>17<td>Nanode<td>&nbsp;&nbsp;1 GB<td>2023
+<tr><td><a href="http://linode.com" class="ext" target="_blank">Linode</a> (Ubuntu 22.04.2 LTS)<sup>2</sup><td>MySQL 8.0.33<td>17<td>Nanode<td>&nbsp;&nbsp;1 GB<td>2023
 
 <tr><td colspan=2><ttl>v5.4.0 and earlier</ttl>:
 <tr><td>Linux amd64 (Centos)<sup>3</sup><td>MariaDB v10.4.12<td>1.8<td>2.3 GHz 24-Core<td>128 GB<td>2011
@@ -379,7 +381,14 @@ Click <ttb>Summary</ttb> to view the summary shown on the right;
 <i>there may be slight differences in the #Cluster hits
 because of different numbers of CPUs, MacOS vs Linux, etc (but the #Blocks come out the same)</i>.
 <p>To view the other interfaces, see <a href="Demo.html" class="ext" target="_blank">Demo Results</a>.
-
+<p>&nbsp;<p>
+Once the alignments are computed, the <ttl>Parameters</ttl> can be experimented without
+having to redo the alignments.
+Try using the <ttl>Algorithm 2 (gene-centric)</ttl> for <ttx>Cluster Hits</ttx>;
+see interface
+<a href="SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a>
+and select the <ttx>>Cluster Hits</ttx> section. Using <ttl>Algorithm 2</ttl> with its defaults
+gives a summary similar to <a href="img/demoSumAlgo2.png" class="ext" target="_blank">this</a>.
 <td>
 <a href="img/demoSum.png"><img src="img/demoSum.png" alt="demoSum" style="border: 1px solid black; width: 400px"></a>
 </table>
@@ -406,8 +415,8 @@ Run the <ttl>Alignment&amp;Synteny</ttl>, where the alignment should take less t
 When done, open the <ttb>Summary</ttb> for the pair, as shown on the right; <i>there
 may be slight difference in the number of anchors because the results are
 slightly different when run when different numbers of CPUs.</i>
-
 See the first dot plot in <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>.
+<p>It is recommended that the <ttx>Cluster Hits</ttx> <a href="SystemHelp.html#clust">algorithm 1</a> be used for ordering sequence.
 		<td>
 <a href="img/demoSum2.png"><img src="img/demoSum2.png" alt="demoSum2" style="border: 1px solid black; width: 400px"></a>
 
@@ -433,7 +442,8 @@ load it.
 Running the <ttl>Alignment&amp;Synteny</ttl>
 between the <tt>_ordered</tt> project and Demo_seq2 will provide a more coherent display
 (see the second dot plot for <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>).
-Using the project <a href="#params">Parameters</a> window, the <tt>Demo_Draft-ordered</tt> name can be shortened.
+Using the project <a href="SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a> window,
+the <tt>Demo_Draft-ordered</tt> name can be shortened.
 <td><td>
 <a href="img/demoDraft3.png"><img src="img/demoDraft3.png" alt="demoDraft3" style="border: 1px solid black; width: 400px"></a>
 </table>
@@ -876,6 +886,7 @@ pairs processed by MUMmer, but they will be smaller.
 <p>
 <i>Anchor Clustering:</i><br>
 The raw anchor set consists of the hits found by MUMmer.
+<u>Algorithm 1 (original)</u><br>
 These are first clustered into gene, or putative-gene hits. This is
 done by clustering the hit regions on each sequence, and then defining new "gene"
 hits which connect these regions. For example if three separate
@@ -883,6 +894,8 @@ exons hit between two genes, they will be clustered into one "gene"
 hit having a combined score equal to the sum of the raw hit scores.
 Clustering is by gene if the hits overlap annotation, otherwise, it creates
 "candidate genes" from hits that do no overlap annotation.
+<u>Algorithm 2 (gene-centric)</u><br>
+
 <p>
 <i>Anchor Filtering:</i><br>
 The clustered "gene anchors" are now filtered using a version of

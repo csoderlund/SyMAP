@@ -113,30 +113,31 @@ This guide is for the <ttp>viewSymap</ttp> user interface.
 	<li><a href="#self">Self-synteny Displays</a>
 	<li><a href="#data_download">Data Download</a>
 	<li><a href="#image">Color Wheel, Print and Help (?) Icons</a> <!-- # ref 'wheel' in code -->
-	<li>Details
+
+	</ul>
+
+<td style="vertical-align: text-top;">
+	<table>
+	<tr><td>Details
 		<ul>
 		<li><a href="Collinear.html" target="_blank" class="ext">Collinear Sets</a>
 		<li><a href="Align.html" target="_blank" class="ext">Alignments</a>
 		<li><a href="Query.html" target="_blank" class="ext">Queries</a>
 		<li><a href="#conserved">Highlight conserved genes</a>
 		</ul>
-	</ul>
-
-<td style="vertical-align: text-top;">
-	<table>
 	<tr><td><br><small><i>The Dot Plot and Circle are available from various places.</i></small>
 	<tr><td>
 		<small>Project Manager</small>
 		<br><a href="./img/view1.png">
 				<img src="./img/view1.png" alt="Dots and Circle" title="Dots and Circle"  style="width: 380px; border:1px solid black"></a>
-	<tr><td>&nbsp;
+
 	<tr><td>&nbsp;
 	<tr><td>
 		<small>Chromosome Explorer</small>
 		<br>
 		<a href="./img/view2.png">
 			<img src="./img/view2.png" alt="Dots and Circle" title="Dots and Circle" style="width: 170px; border:1px solid black"></a>
-	<tr><td>&nbsp;
+
 	<tr><td>&nbsp;
 	<tr><td><i><small>Click on any image in this document to see the closeup.</small></i>
 	</table>
@@ -369,7 +370,7 @@ are stored for every dotplot display.
 		<table class="ty txy">
 			<tr><td><ttx>All</ttx><td>Show all hits.
 			<tr><td><ttx>Mix</ttx><td>Show all hits, but non-blocks hits will be displayed with size=1 and no scale.
-			<tr><td><ttx>Block</ttx><td>Show only show hits assigned to blocks.
+			<tr><td><ttx>Block</ttx><td>Show only hits assigned to blocks.
 		</table>
 	<tr><td style="vertical-align: text-top;"><ttl>Gene Only</ttl>
 		<td>
@@ -635,8 +636,12 @@ a grey area. (The hits in a cluster are referred to as <i>subhits</i>).
 <tr><td><ttx>Inv</ttx><td> indicates that it is part of an inverted block.
 <tr><td><ttx>Hit #</ttx><td> is the number representing the hit for the chromosome pair.
 <tr><td><ttx>(!=)</ttx><td> indicates the hit ends are on two different strands; <ttl>(=)</ttl> indicates the same strand.
-<tr><td style="white-space: nowrap; vertical-align: text-top;"><ttx>gN</ttx> (<ttx>N={0,1,2}</ttx>)<td> indicates that the hit does not overlap a gene or
-overlaps a gene on one side or overlaps a gene on both sides.
+<tr><td style="white-space: nowrap; vertical-align: text-top;">
+<ttx>gN</ttx> (<ttx>N={0,1,2}</ttx>)
+<br><ttx>XX</ttx> (<ttx>X={E,I,n}</ttx>)
+<td> (Algo1) indicates whether the hit overlaps two genes (g2), one gene (g1) or no genes (g0).
+<br> (Algo2) indicates whether the hit overlaps an exon (E), intron (I) or intergenic (n).
+<br> If Algo2 was used, it is indicated on the <ttl>Summary</ttl>.
 <tr><td  style="white-space: nowrap; vertical-align: text-top;"><ttx>cN.M</ttx> (<ttx>N&ge;2</ttx>)<td> indicates that it is part of a collinear set of size N;
 M is the unique set number for the chromosome pair.
 The collinear sets can be queried using <a href="#queries">Queries</a>.
@@ -663,7 +668,6 @@ but a different suffix (e.g. a, b,...).
 <tr><td colspan=2>The following lines are the annotation provided by the GFF file.
 <tr><td colspan=2>The last line is the exon that the mouse is over.
 </table>
-
 
 <a id="popup"></a>
 <br><u>Information Popups</u> Popups of a gene or hit-wire provides more detailed information.
@@ -887,9 +891,10 @@ different <ttl>2D</ttl> displays.
 
 <p><i>Highlighting genes summary</i>:
 <table class="tx txy">
-<tr><td>Gene popup<td>The exons, introns and gene delimiter are highlighted.
-<tr><td>Filter <ttx>Gene#</ttx><td>The intron and gene delimiter are highlighted.
-<tr><td>Conserved gene<td>The exons are highlighted
+<tr><td>Conserved<td>The exons are highlighted.
+<tr><td style="white-space: nowrap;">Filter <ttx>Gene#</ttx><td>The exons, introns and gene delimiter are highlighted.
+<tr><td style="white-space: nowrap;">Gene popup<td>The exons, introns and gene delimiter are highlighted.
+<tr><td>Hit popup<td>The exons, introns and gene delimiter are highlighted the hit-wire color.
 </table>
 
 <td>

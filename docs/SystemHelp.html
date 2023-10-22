@@ -6,6 +6,7 @@
 	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
+	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
 	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
 	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
 	ttp  {font-family: 'Lucida Console', monospace; font-size: 16px; font-weight: 500; font-variant: small-caps;}
@@ -65,11 +66,11 @@
 <tr><td style="vertical-align: text-top;">
 <a href="#build"><u>1. Build database</u></a>
 <br><a href="#selLoad">&nbsp;&nbsp;&nbsp;a. Selected</a>
-<br><a href="#avail">&nbsp;&nbsp;&nbsp;b. Available Synteny</a>
+<br><a href="#avail">&nbsp;&nbsp;&nbsp;b. Available Syntenies</a>
 <br><a href="#concat">&nbsp;&nbsp;&nbsp;c. CPU and Concat</a>
 <br><a href="#fun">&nbsp;&nbsp;&nbsp;d. Function buttons</a>
 <td style="vertical-align: text-top;">
-<a href="#projParams"><u>2. Project Parameters</u></a>
+<a href="#projParams"><u>2. Project Parameters</u></a> 			<!-- in code -->
 <br><a href="#start">&nbsp;&nbsp;&nbsp;a. Overview</a>
 <br><a href="#display">&nbsp;&nbsp;&nbsp;b. Display</a>
 <br><a href="#project">&nbsp;&nbsp;&nbsp;c. Load project</a>
@@ -78,14 +79,19 @@
 <br><a href="#save1">&nbsp;&nbsp;&nbsp;f. Rules for saving project parameters</a>
 <br><a href="#annot">&nbsp;&nbsp;&nbsp;g. Annotation</a>
 <td style="vertical-align: text-top;">
-<a href="#pairParams"><u>3. Pair Parameters</u></a>
+<a href="#pairParams"><u>3. Pair Parameters</u></a>  			<!-- in code pre-v546 -->
 <br><a href="#over2">&nbsp;&nbsp;&nbsp;a. Overview</a>
-<br><a href="#parms2">&nbsp;&nbsp;&nbsp;b. Parameter description</a>
-<br><a href="#save2">&nbsp;&nbsp;&nbsp;c. Rules for saving pair parameters</a>
-<br><a href="#mum">&nbsp;&nbsp;&nbsp;d. MUMmer parameters</a>
+<br><a href="#align2">&nbsp;&nbsp;&nbsp;b. Alignment</a>		<!-- in code v546 -->
+<br><a href="#clust">&nbsp;&nbsp;&nbsp;c. Cluster Hits</a>		<!-- in code v546 -->
+<br><a href="#syn">&nbsp;&nbsp;&nbsp;d. Synteny</a>				<!-- in code v546 -->
+<br><a href="#save2">&nbsp;&nbsp;&nbsp;e. Rules for saving pair parameters</a>
+<br><a href="#mum">&nbsp;&nbsp;&nbsp;f. MUMmer parameters</a>
 </table>
 
-<small>Project Manager</small>
+SyMAP was written for diverse plant genomes with short introns, but has recently been modified to work
+for the long introns of mammalian genomes, and less diverse genomes. This is addressed in <a href="#pairParams">Pair Parameters</a>
+
+<p><ttl>Project Manager</ttl>
 <br><a href="img/symapPlants.png">
 	<img src="img/symapPlants.png" alt="manager" style="border: 1px solid black; width: 580px"></a>
 
@@ -154,7 +160,7 @@ After the project is loaded, you can still change the <ttl>Display</ttl> paramet
 
 <a id="avail"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>1.b Available Synteny Section</h3>
+<h3>1.b Available Syntenies</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Sequence alignments are performed with
@@ -363,7 +369,6 @@ names and use the remaining part as a shorter name (e.g. '1' instead of 'chr1', 
 <li><i>Long names really clutter the display</i>; it is best to use a consistent prefix that SyMAP can remove,
 otherwise, use really short prefixes, e.g. 's' for scaffold, 'c' for chromosome.
 
-
 </ul>
 <td><a href="img/demoPrefix.png"><img src="img/demoPrefix.png" alt="Demo prefix" style="border: 1px solid black; width: 80px"></a>
 </table>
@@ -420,7 +425,10 @@ Annotation is optional but highly recommended. Default location: <tt>data/seq/&l
 
 <ttl><big>Mask non-genes</big></ttl>
 <br>Mask out all non-genic parts of the sequences before running MUMmer (gene annotation must
-be provided). This can save time but prevents non-annotated anchors from being found.
+be provided). This can save time but prevents non-annotated anchors from being found. Also,
+this has become less relevant since the <ttx>Cluster Hits</ttx> algorithms have become more
+gene-aware.
+
 <p>&#9656; If this is changed after <ttl>A&amp;S</ttl>, the alignment files need to be
 removed with <ttl>Clear pair</ttl> and <ttl>A&amp;S</ttl> run again.
 
@@ -484,49 +492,58 @@ the <tt>Name=value</tt> would not be part of any gene annotation.
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="ty">
-<tr><td><b>Sections:</b>&nbsp;&nbsp;&nbsp;&nbsp;<td><a href="#over2">Overview</a><td><a href="#parms2">Parameter description</a>
-<td><a href="#save2">Save</a><td><a href="#mum">MUMmer parameters</a>
+<tr><td><b>Sections:</b>&nbsp;&nbsp;&nbsp;&nbsp;
+<td><a href="#over2">Overview</a>
+<td><a href="#align2">Alignment</a>
+<td><a href="#clust">Cluster Hits</a>
+<td><a href="#syn">Synteny</a>
+<td><a href="#save2">Save</a>
+<td><a href="#mum">MUMmer parameters</a>
 </table>
 
 <a id="over2"></a>
 <h3>3.a Overview</h3>
-<a href="img/lineAlign.png"><img src="img/lineAlign.png" alt="alignLine" style="border: 1px solid black; width: 400px"></a>
 <table>
 <tr>
-<td style="vertical-align: text-top;">
-
-<p>Select a pair cell in the <ttl>Available Syntenies</ttl> table followed by the <ttb>Parameters</ttb>
+<td>Select a pair cell in the <ttl>Available Syntenies</ttl> table followed by the <ttb>Parameters</ttb>
 button, which will popup the window shown on the right.
+<td><a href="img/lineAlign.png"><img src="img/lineAlign.png" alt="alignLine" style="border: 1px solid black; width: 550px"></a>
 
-<p>There are two parameters that may be beneficial to experiment with: <ttl>Top N</ttl> and <ttl>Block Merge</ttl>.
-<p>Increasing <ttl>Top N</ttl> to 3 sometimes identifies more gene homology, but will also get more spurious hits.
-To decrease the number of hits, set <ttl>Top N</ttl> to 1 (though this may also reduce the homology gene hits).
-See <i>Anchor Filtering</i> in <a href="SystemGuide.html#alg" class="ext" target="_blank">How SyMAP works</a>.
-
-<p>
-Selecting <ttl>Block Merge</ttl> may be beneficial when there are
-many small blocks. Below shows
-an example where the first image does not have merged blocks and the second does (the blue dots are hits that
-belong to the block).
-<p>
-<a href="img/demoNotMerge.png"><img src="img/demoNotMerge.png" alt="demo Not Merge" style="border: 1px solid black; width:  210px"></a>
-<a href="img/demoMerge.png"><img src="img/demoMerge.png" alt="demoMerge" style="border: 1px solid black; width:  220px"></a>
-
-<td>
-<a href="img/parameters2.png"><img src="img/parameters2.png" alt="parameters2" style="border: 1px solid black; width: 300px"></a>
 </table>
 
-<a id="param2"></a>
+<table>
+<tr>
+<td>
+<a href="img/parameters2.png"><img src="img/parameters2.png" alt="pair parameters" style="border: 1px solid black; width: 320px"></a>
+
+<td>&nbsp;&nbsp;&nbsp;
+<td style="vertical-align: text-top;">
+
+
+
+<p>If a &#10004; or <b>A</b> in pair cell exists, and the parameters are changed, do the following:
+<table class="ty">
+<tr><td><b><i>Alignment</i></b> <td>Select <ttb>Clear Pair</ttb> to remove the existing alignments, then <ttb>Selected Pair (ReDo)</ttb>.
+<tr><td><b><i>Cluster Hits</i></b> or <br><b><i>Synteny</i></b> <td>Use <ttb>Selected Pair (ReDo)</ttb> directly;
+the existing alignments for the pair will be used.
+</table>
+
+<p>&nbsp;
+<p>The parameters are described in the following three sections. The most important parameter is for <ttl>Algo2</ttl>;
+the <tt>Intergenic</tt> parameter must be increased for conserved genomes.
+
+</table>
+
+<a id="align2"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>3.b Parameter description</h3>
+<h3>3.b Alignment</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<p>The following provides details:
+The default MUMmer parameter seems to work fine with SyMAP, so probably do not
+need changing.
 <table class="ty">
 <tr>
-<td><b>Parameter</b><td><b>Description</b><td><b>Default</b>
-<tr><td colspan=3>&diams; <i>Alignment</i>
-
+<td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
 <tr>
 	<td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>PROmer Args</ttl>
 	<td>Arguments for PROmer<sup>1</sup>
@@ -547,41 +564,130 @@ belong to the block).
 	<td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>NUCmer Only</ttl>
 	<td>Use NUCmer for all alignments.<sup>3</sup>
 	<td>Off
+</table>
 
-<tr><td colspan=3>&diams; <i>Synteny</i>
+<br><sup>1</sup><small><font color="red">BEWARE</font>: Entered PROmer and NUCmer arguments are <b>NOT</b> checked for correctness.
+</small>
+<br><sup>2</sup><small>When self-alignment is performed, standard arguments are used
+when comparing different chromosomes. However, additional arguments may be desired
+when a chromosome sequence is run against itself, e.g. <tt>--nosimplify</tt>.
+</small>
+<br><sup>3</sup><small> By default, PROmer is used for alignments between different
+projects, while NUCmer is used for self alignments.
+</small>
+
+<a id="clust"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>3.c Cluster Hits</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<ttl>Algorithm 1 (original)</ttl>:
+<br><u>Pros</u> This is an generic algorithm that has knowledge of genes versus intergenic hits.
+It is recommended for ordering sequence contigs and when there are no gene annotation files.
+It is very good at reducing piles of hits (see below). It has been used on 100's of genome comparisons.
+<br><u>Cons</u> It does not distinguish between exon and intron hits, and cannot guarantee to find all homologous gene pairs.
+<br><u>Parameters</u> It does not need parameter adjustment. However, this gives no control over what hits are filtered.
+
+<p><ttl>Algorithm 2 (gene-centric)</ttl>:
+<br><u>Pros</u> This is a new algorithm that has explicit knowledge of gene-pairs and their exon-intron structure, and shows all gene pairs with
+hits unless filtered by the parameters.
+<br><u>Cons</u> It does not perform self-synteny or take NUCmer files as input.
+It does not work when a given chromosome is split over multiple MUMmer files (this will not happen when SyMAP generates the MUMmer files).
+<br><u>Parameters</u> The parameters generally will need adjusting. However, this gives more control over what gene pairs
+are shown and can surpress the minor intergenic hits. See <u>Hints</u> below the parameter explanation.
+
+<p><ttl>Algorithm 1</ttl> is the default for now; this is because <ttl>Algorithm 2</ttl> generally requires some
+experimenting with the parameters whereas <ttl>Algorithm 1</ttl> does not.
+
+<p>
+<table class="ty">
+<tr>
+<td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
+<tr><td colspan=2><ttl>Algorithm 1 (original)</ttl><td>Yes
+<tr>
+	<td>&nbsp;&nbsp;<ttl>Top N</ttl>
+	<td>When loading the anchors, retain the top N hits for every piled region, as
+		well as all hits with score at least 80% of the Nth.
+	<td>2
+<tr><td colspan=2><ttl>Algorithm 2 (gene-centric)</ttl><td>No
+<tr>
+	<td>&nbsp;&nbsp;<ttl>Intergenic</ttl>
+	<td>Remove all hits that have less than N aligned bases (EQ 1), where the hit is intergenic on both ends.
+	<i>Increase this parameter for conserved genomes.</i>
+	<td>600
+<tr>
+	<td>&nbsp;&nbsp;<ttl>Intron</ttl>
+	<td>Remove all hits that have less than N aligned bases (EQ 1), where the hit is to an intron on at least one end.
+	<td>300
+<tr>
+	<td>&nbsp;&nbsp;<ttl>Exon</ttl>
+	<td>Remove all hits that have less than N aligned bases (EQ 1), where the hit is to an exon on at least one end.
+	<td>100
+<tr>
+	<td>&nbsp;&nbsp;<ttl>Keep piles</ttl>
+	<td><ttl>EE</ttl> (exon-exon), <ttl>EI</ttl> (exon-intron), <ttl>En</ttl> (exon-intergenic), <ttl>II</ttl> (intron-intron),
+	<ttl>In</ttl> (intron-intergenic).
+	<br>This ONLY applies when there is a pile of overlapping hits (see below); it tells the algorithm what cluster hits to retain
+	regardless if its in a pile.
+	<br>Intergenic-intergenic pile hits are automatically filtered down to one or two.
+	<td><ttl>EE</ttl>
+</table>
+<small>
+EQ 1: hit-length*identity, where hit-length is the maximum
+length if the query and target length reported by MUMmer, and identity is the fraction of the percent identity reported by MUMmer.
+For clustered hits, EQ 1 is applied to the summed lengths and identity.
+</small>
+<p><u>Hint for Algorithm 1</u>: Increasing the <ttl>Top N</ttl> parameter can cause too many hits and reduce synteny.
+Decreasing it can remove more gene-pair hits.
+Hence, try <ttl>Algorithm 2</ttl> if you want more gene pairs.
+
+<p><u>Hint for Algorithm 2</u>: On the output to the terminal, if any chromosome pair shows over 10,000 hits, the
+parameters probably need to be made more stringent; too many hits (and piles) confuses the synteny algorithm, which results
+in synteny blocks not being found; it also results in very long execution time.
+For highly similar genomes, it is <i>necessary</i> to increase the <ttl>Intergenic</ttl> parameter, e.g. &gt;1000.
+
+<table>
+<tr><td>
+<u>Piles of hits</u>: The below image shows a pile of hits on the left that link to repetitive genes on the right.
+<p>The left image shows a pile of hits in an intergenic region to multiple other regions.
+There are MANY occurrence of repeats like this in the MUMmer file, which is why these piles
+must be filtered; if they are not, the synteny algorithm does not perform well.
+<br><a href="img/demoPileG2.png"><img src="img/demoPileG2.png" alt="Pile to repetitive gene" style="border: 1px solid black; width:  400px"></a>
+<td><a href="img/demoPileG0.png"><img src="img/demoPileG0.png" alt="Pile to intergenic" style="border: 1px solid black; width:  400px"></a>
+</table>
+
+<p>Running with <tt>./symap -s</tt> provides additional output for both algorithms.
+
+<a id="syn"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>3.d Synteny</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<table class="ty">
+<tr>
+<td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
+
 <tr>
 	<td>&nbsp;&nbsp;<ttl>Min Dots</ttl>
 	<td>Minimum number of anchors required to define a synteny block.
 	<td>7
-<tr>
-	<td>&nbsp;&nbsp;<ttl>Top N</ttl>  <!-- this is really anchor load, but user only needs to know synteny-->
-	<td>When loading the anchors, retain the top N hits for every sequence region (as
-		well as all hits with score at least 80% of the Nth).
-	<td>2
+
 <tr>
 	<td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Merge Blocks</ttl>
 	<td>Merge overlapping (or nearby) synteny blocks into larger blocks.
 	<td>Off
 </table>
-
-
-<p><sup>1</sup>BEWARE: Entered PROmer and NUCmer arguments are <b>NOT</b> checked for correctness.
-<p><sup>2</sup> When self-alignment is performed, standard arguments are used
-when comparing different chromosomes. However, additional arguments may be desired
-when a chromosome sequence is run against itself, e.g. <tt>--nosimplify</tt> or <tt>--maxmatch</tt>,
-though the latter can take a very long time.
-<p><sup>3</sup> By default, PROmer is used for alignments between different
-projects, while NUCmer is used for self alignments.
-
-<p>Changed <i>Alignment</i> parameters:
-<br>&#9656; If an alignment for the pair exists (&#10004; or <b>A</b> in pair cell),
-use <ttb>Clear pair</ttb> before <ttl>A&amp;S</ttl>.
-<p>Changed <i>Synteny</i> parameters:
-<br>&#9656; An existing alignment for the pair can be used.
+<p>Selecting <ttl>Block Merge</ttl> may be beneficial when there are
+many small blocks. Below shows
+an example where the first image does not have merged blocks and the second does (the blue dots are hits that
+belong to the block).
+<p>
+<a href="img/demoNotMerge.png"><img src="img/demoNotMerge.png" alt="demo Not Merge" style="border: 1px solid black; width:  210px"></a>
+<a href="img/demoMerge.png"><img src="img/demoMerge.png" alt="demoMerge" style="border: 1px solid black; width:  220px"></a>
 
 <a id="save2"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>3.c Rules for saving pairs parameters</h3>
+<h3>3.e Rules for saving pairs parameters</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Before the <ttl>A&amp;S</ttl> is executed, the parameters are saved in
@@ -598,7 +704,7 @@ before running <ttl>A&S</ttl> again, the parameters
 on the <ttb>Summary</ttb> page will be wrong (SyMAP does not check for this situation).
 <!------------------------------------------------------------------------>
 <a id="mum"></a>
-<h3>3.d MUMmer parameters</h3>
+<h3>3.f MUMmer parameters</h3>
 The arguments for MUMmer are <b>NOT</b> checked for correctness.
 <p>
 To see the parameters for the default MUMmer V3 on MacOS, from the <tt>symap</tt> directory:

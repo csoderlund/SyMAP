@@ -7,6 +7,7 @@
 	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
+	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
 	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
 	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
@@ -64,12 +65,45 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 
 <h3>Summary of recent major releases</h3>
 <table class="tx">
-<tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved the detection of gene homology in the <ttb>Synteny</ttb> computation.
+<tr><td><a href="#v546">v5.4.6</a><td>(22-Oct-23)<td><a href="SystemHelp.html#pairParams">New algorithm</a> for detection of gene homology in the <ttx>Cluster Hit</ttx> computation.
+<tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved the detection of gene homology in the <ttx>Cluster Hit</ttx> computation.
 <tr><td><a href="#v530">v5.3.1</a><td>(6-Jan-23)<td>Improved <a href="UserGuide.html#base">hit alignment</a> features.
 <tr><td><a href="#v530">v5.3.0</a><td>(10-Dec-22)<td>Updated database schema to remove all FPC tables.
 <tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="Collinear.html">viewing</a>
 <tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view2D"> 2D gene placement</a>
 </table>
+
+<a id="v546"></a>
+<h3>Release: v5.4.6 (22-Oct-23)</h3>
+<p>For existing databases: There will be a small database update on the first viewing.
+For the new cluster hit algorithm, change the <a href="SystemHelp.html#clust">Cluster parameters</a> and rerun then synteny.
+
+<ul>
+<li><ttl>Alignment &amp; Synteny</ttl>: A new <ttx>Cluster Hit</ttx> algorithm has been written to filter and cluster MUMmer hits;
+the improvement over the original algorithm is that it has knowledge of the exon-intron structure and
+identifies all gene pairs. See <a href="SystemHelp.html#clust">Cluster parameters</a>.
+
+<li><ttl>Query</ttl> has a new column that states if a hit is to an exon-exon, exon-intron, etc. This is works
+with the new cluster hit algorithm. This information is also on the <ttx>Hit Information</ttx>.
+<li>Minor stuff
+<ul>
+<li><ttb>2D Sequence Filter</ttb> <ttl>Gene#</ttl> The full gene is highlighted instead of just the introns.
+<li><ttb>Summary</ttb> The <ttx>Explain</ttx> did not format right with Java v20, which has
+been fixed. The date at the top had "Oct" swapped with "Nov".
+<li><ttb>A&S Cancel</ttb>: SyMAP was automatically removing any added hits or blocks, but for big databases, the removal
+can take a long time, hence, there is a popup to request whether the user wants this done; otherwise, they may
+prefer to just remove the database and start over.
+<li><ttb>Summary</ttb> contains the number of MUMmer files read when using previous alignments (this provides a clue
+as to whether <ttx>Concat</ttx> was used).
+<li>The documentation stated that all genes with a hit could be shown in the query, which was not true; the documentation
+has been updated.
+</ul>
+<li>Developers
+<ul>
+<li><small>The original <ttx>Cluster Hit</ttx> code has been moved to backend.anchor1. The SyProj was renamed to backend.anchor1.Proj, and now
+only used by the <ttx>Cluster Hit</ttx> code. The new <ttx>Cluster Hit</ttx> code is in backend.anchor2.</small>
+</ul>
+</ul>
 
 <a id="v545"></a>
 <h3>Release: v5.4.5 (4-Aug-23)</h3>

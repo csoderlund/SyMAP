@@ -112,18 +112,22 @@ When the query is complete, the <a href="#result">table of results</a> will be d
 <p>
 <a id="qresults"></a>
 <a href="img/query_query.png"><img src="img/query_query.png" alt="query_query" style="border: 1px solid black; width: 550px"></a>
-<h4>Rules</h4>
-<ul>
-<li>All queries are on the <ttl>Pair hits</ttl> unless <ttl>Single</ttl> is selected.
-<li>All <ttl>Pair hits</ttl> queries return a row per <i>hit pair</i>, i.e.
-aligned region between to two chromosomes from two projects.
-<li>A hit can align to multiple genes on either or both chromosome, however, <i>only ONE</i>
-gene per project is listed for each hit row.
-<li>In order to see all hits for a given gene, enter the <ttx>Gene#</ttx> and select its chromosome.
- <li>Most filters can be used in conjunction with other
-filters; options will be disabled if they cannot be used with a selected filter.
-</ul>
 
+
+<p><b>Rules</b>
+<table>
+<tr><td style="vertical-align: text-top;">
+1. All queries are on the <ttl>Pair hits</ttl> unless <ttl>Single</ttl> is selected.
+<p>2. All <ttl>Pair hits</ttl> queries return a row per <i>hit pair</i>, i.e.
+aligned region between to two chromosomes from two projects.
+<p>3. A hit can align to multiple genes on either or both chromosome, however, <i><u>only ONE
+gene per project</u></i> is listed for each hit row. Hence, some genes will have hits, but they will
+not be shown on any query, e.g. the purple one in the image on the right.
+<p>4. Most filters can be used in conjunction with other
+filters; options will be disabled if they cannot be used with a selected filter.
+<td>
+<a href="img/queryMultOlap.png"><img src="img/queryMultOlap.png" alt="Hit overlaps two genes" style="border: 1px solid black; width: 35px"></a>
+</table>
 <a id="gen"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>1. General</h3>
@@ -353,7 +357,7 @@ are the full descriptions of the columns:
 	<td>Synteny block containing this hit (if any). The format is Cn.Cm.Block#, where
 		Cn and Cm are the chromosome numbers.
 <tr>
-	<td style="vertical-align: text-top; white-space: nowrap;"><ttx>Block Score</ttx><td>&nbsp;
+	<td style="vertical-align: text-top; white-space: nowrap;"><ttx>Block Hits</ttx><td>&nbsp;
 	<td>The number of hits which comprise the synteny block.
 <tr>
 	<td style="vertical-align: text-top;"><ttx>Collinear</ttx><td>&nbsp;
@@ -386,6 +390,11 @@ are the full descriptions of the columns:
 <tr><td style="vertical-align: text-top;"><ttx>Hit Cov</ttx><td>&nbsp;
 	<td>The length of the subhits within a clustered hit are summed taking into accounts overlaps; the longest summed subhits
 	of both sides is shown. See <i>Clustered Hits</i> in <a href="UserGuide.html#term" class="ext" target="_blank">Terminology</a>.
+<tr><td style="vertical-align: text-top;"><ttx>Hit Type</ttx><td>&nbsp;
+	<td>There are two alternative algorithms for clustering the hits on creation.
+	<br><u>Algo1</u>: g2 (two genes), g1 (one gene), g0 (no genes); exon/intron information is not known.
+	<br><u>Algo2</u>: E is exon, I is Intron, n is intergenic. For example, EE or nI. The two characters refer to the two projects,
+	where the 1st letter goes with the alphabetically lesser project name.
 <tr>
 	<td colspan=3>
 		<ttl>Gene&Hit Info</ttl>: one row for each species
