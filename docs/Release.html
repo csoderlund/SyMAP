@@ -74,9 +74,27 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 </table>
 
 <a id="v546"></a>
+<h3>Release: v5.4.7 (14-Nov-23)</h3>
+For existing databases: if using <ttx>Cluster Hit Algo 2</ttx>, rerun the <ttb>Synteny</ttb>.
+<ul>
+<li><ttl>Query</ttl>: A new <ttx>Every+</ttx> option for databases build with <ttx>Cluster Hit Algo 2</ttx> post-v546.
+It shows all genes with a hit aligned to it, even the overlapping ones.
+This also is used for the <ttx>Annotation</ttx> search.
+<li><ttl>Alignment&amp;Synteny</ttl>: Fixed a bug in the new <ttx>Cluster Hit</ttx> algorithm; the bug did not effect the visible
+results except to have a slight fractional difference in the <ttl>Summary</ttl> <ttx>GNwCH</ttx> statistics,
+and the <ttl>Query</ttl> <ttx>NumHits</ttx> column on a few genes. The new <ttx>Every+</ttx> option is
+disabled for pre-v5.6.7 database, as that shows this problem.
+<li>Developers
+<ul>
+<li><small>Removed deprecated for Java v20: "exec(String) in Runtime has been deprecated" and "URL(String) in URL has been deprecated".
+All export routines call Globals.getExport(). Set some gray buttons to white for linux.</small>
+</ul>
+</ul>
+
+<a id="v546"></a>
 <h3>Release: v5.4.6 (22-Oct-23)</h3>
 <p>For existing databases: There will be a small database update on the first viewing.
-For the new cluster hit algorithm, change the <a href="SystemHelp.html#clust">Cluster parameters</a> and rerun then synteny.
+For the new cluster hit algorithm, change the <a href="SystemHelp.html#clust">Cluster parameters</a> and rerun the <ttb>Synteny</ttb>.
 
 <ul>
 <li><ttl>Alignment &amp; Synteny</ttl>: A new <ttx>Cluster Hit</ttx> algorithm has been written to filter and cluster MUMmer hits;
@@ -182,7 +200,7 @@ Frame2D, FSized2d, ControlPanel to drawingpanel because used exclusively by 2d. 
 <h3>Release: v5.4.3 (12-July-23)</h3>
 There are numerous tiny changes, fixes, and two small new features.
 <p>For existing databases: (1) View the database with <tt>./symap</tt> and okay the database update.
-(2) Though it is not necessary to re-run the <ttb>Synteny</ttb> algorithm, there is a small improvement
+(2) Though it is not necessary to rerun the <ttb>Synteny</ttb> algorithm, there is a small improvement
 for assigning hits to embedded genes.
 <ul>
 <li><ttb>Manager</ttb>
@@ -323,7 +341,7 @@ This removed 4 java files and replaced one.</small>
 <a id="v540"></a>
 <h3>Release: v5.4.0 (6-Apr-23)</h3>
 This release focuses on improving the detection of gene homology in the <ttb>Synteny</ttb> computation.
-<br>For existing databases, re-run <ttl>Alignment&Synteny</ttl> using existing MUMmer files.
+<br>For existing databases, rerun <ttl>Alignment&Synteny</ttl> using existing MUMmer files.
 <ul>
 <li><ttb>Synteny</ttb>:
 <ul>
@@ -614,7 +632,7 @@ Changed 2 Observers to PropertyChangeEvent. Reduce /props from 4 to 1 file.
 <a id=v520></a>
 <h3>Release: v5.2.0 (20-Nov-22)</h3>
 For existing databases, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>; the synteny
-algorithm needs to be re-run to get the collinear changes.
+algorithm needs to be rerun to get the collinear changes.
 <p>This release is concentrated on improving the algorithm and display of <u>collinear sets</u>;
 see <a href="./Collinear.html">details</a>.
 There is new viewing support for Collinear sets: see <a href="./UserGuide.html#hitfilter">2D Hit Filter</a>
@@ -630,7 +648,7 @@ get these new scripts!!
 <li><u>Collinear sets</u>:
 <ul>
 <li>The collinear sets algorithm has been greatly improved for more accurate results.
-The <tt>Alignment&Synteny</tt> needs to be re-run to compute the updated sets.
+The <tt>Alignment&Synteny</tt> needs to be rerun to compute the updated sets.
 <li>Each collinear set has a unique number for the chromosome pair.
 </ul>
 <li>The <ttl>Hit#</ttl> used in Queries and the 2D display was the index into the database and could get very large.
@@ -702,7 +720,7 @@ For existing databases, see <a href="SystemGuide.html#update" class="ext" target
 <p>Release v5.1.7 to v5.1.9 greatly improved the <u>Gene# assignment algorithm</u> and the <u>2D gene placement</u>.
 <p>Added -z option: To execute the latest Gene# assignment algorithm, execute <tt>./symap -z</tt>,
 then select <ttl>Reload Annotation</ttl>; the synteny algorithm does NOT need
-to be re-run.
+to be rerun.
 
 <h4>(25-Oct-22)</h4>
 This release has some interface improvements to SyMAP Query and the 2D gene placement algorithm was improved.

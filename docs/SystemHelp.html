@@ -589,12 +589,12 @@ It is very good at reducing piles of hits (see below). It has been used on 100's
 <br><u>Parameters</u> It does not need parameter adjustment. However, this gives no control over what hits are filtered.
 
 <p><ttl>Algorithm 2 (gene-centric)</ttl>:
-<br><u>Pros</u> This is a new algorithm that has explicit knowledge of gene-pairs and their exon-intron structure, and shows all gene pairs with
+<br><u>Pros</u> This is a new algorithm that has explicit knowledge of gene pairs and their exon-intron structure, and shows all gene pairs with
 hits unless filtered by the parameters.
 <br><u>Cons</u> It does not perform self-synteny or take NUCmer files as input.
 It does not work when a given chromosome is split over multiple MUMmer files (this will not happen when SyMAP generates the MUMmer files).
 <br><u>Parameters</u> The parameters generally will need adjusting. However, this gives more control over what gene pairs
-are shown and can surpress the minor intergenic hits. See <u>Hints</u> below the parameter explanation.
+are shown and can surpress the minor intergenic hits. See <a href=#hint>Hints</a> below the parameter explanation.
 
 <p><ttl>Algorithm 1</ttl> is the default for now; this is because <ttl>Algorithm 2</ttl> generally requires some
 experimenting with the parameters whereas <ttl>Algorithm 1</ttl> does not.
@@ -627,16 +627,18 @@ experimenting with the parameters whereas <ttl>Algorithm 1</ttl> does not.
 	<td>&nbsp;&nbsp;<ttl>Keep piles</ttl>
 	<td><ttl>EE</ttl> (exon-exon), <ttl>EI</ttl> (exon-intron), <ttl>En</ttl> (exon-intergenic), <ttl>II</ttl> (intron-intron),
 	<ttl>In</ttl> (intron-intergenic).
-	<br>This ONLY applies when there is a pile of overlapping hits (see below); it tells the algorithm what cluster hits to retain
-	regardless if its in a pile.
+	<br>This ONLY applies when there is a pile of overlapping hits (see below);
+	it tells the algorithm what cluster hits to retain
+	if they are in a pile.
 	<br>Intergenic-intergenic pile hits are automatically filtered down to one or two.
 	<td><ttl>EE</ttl>
 </table>
 <small>
 EQ 1: hit-length*identity, where hit-length is the maximum
-length if the query and target length reported by MUMmer, and identity is the fraction of the percent identity reported by MUMmer.
+length of the query and target length reported by MUMmer, and identity is the fraction of the percent identity reported by MUMmer.
 For clustered hits, EQ 1 is applied to the summed lengths and identity.
 </small>
+<a id="hint"></a>
 <p><u>Hint for Algorithm 1</u>: Increasing the <ttl>Top N</ttl> parameter can cause too many hits and reduce synteny.
 Decreasing it can remove more gene-pair hits.
 Hence, try <ttl>Algorithm 2</ttl> if you want more gene pairs.
@@ -644,8 +646,10 @@ Hence, try <ttl>Algorithm 2</ttl> if you want more gene pairs.
 <p><u>Hint for Algorithm 2</u>: On the output to the terminal, if any chromosome pair shows over 10,000 hits, the
 parameters probably need to be made more stringent; too many hits (and piles) confuses the synteny algorithm, which results
 in synteny blocks not being found; it also results in very long execution time.
-For highly similar genomes, it is <i>necessary</i> to increase the <ttl>Intergenic</ttl> parameter, e.g. &gt;1000.
-
+For highly similar genomes, it is <i>necessary</i> to increase the <ttx>Intergenic</ttx> parameter, e.g. &gt;1000;
+you may also need to increase the others parameters and uncheck <ttx>EE</ttx> to reduce hits. For distant genomes, decrease the parameters.
+<i>Suggestion</i>: for large
+genomes, experiment with the parameters on just one pair of the chromosomes.
 <table>
 <tr><td>
 <u>Piles of hits</u>: The below image shows a pile of hits on the left that link to repetitive genes on the right.

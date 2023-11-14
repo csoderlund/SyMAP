@@ -122,7 +122,7 @@ When the query is complete, the <a href="#result">table of results</a> will be d
 aligned region between to two chromosomes from two projects.
 <p>3. A hit can align to multiple genes on either or both chromosome, however, <i><u>only ONE
 gene per project</u></i> is listed for each hit row. Hence, some genes will have hits, but they will
-not be shown on any query, e.g. the purple one in the image on the right.
+not be shown on any query except with the <ttx>Every+</ttx> option, e.g. the purple one in the image on the right.
 <p>4. Most filters can be used in conjunction with other
 filters; options will be disabled if they cannot be used with a selected filter.
 <td>
@@ -138,6 +138,7 @@ filters; options will be disabled if they cannot be used with a selected filter.
 for the substring.
 Hits will be returned that overlap a gene
 with the corresponding annotation; the gene can be on either side of the hit.
+If <a href="#genehit">Every+</a> is available, every hit for the gene will be shown.
 
 <p><ttl>Chromosome/location</ttl>
 <table class="tx">
@@ -200,16 +201,28 @@ block will be returned. All hits will have a value for the <ttx>Block</ttx> colu
 block will be returned. No hits will have a value for the <ttx>Block</ttx> column.
 </table>
 
+<a id="genehit"></a>
 <p><ttl>Annotated (Gene Hit)</ttl>
 <table class="tx">
-<tr><td style="vertical-align: text-top;">Either<td><td>&nbsp;<td>Only hits that are annotated for EITHER side of the
-pair will be shown. The <ttx>Gene#</ttx> columns will have a value for one or both sides of each hit.
-<tr><td style="vertical-align: text-top;">One<td><td>&nbsp;<td>Only hits that are annotated for ONE side of the
-pair will be shown. The <ttx>Gene#</ttx> columns will have a value for one side of each hit.
-<tr><td style="vertical-align: text-top;">Both<td><td>&nbsp;<td>Only hits that are annotated for BOTH sides of the
-pair will be shown. The <ttx>Gene#</ttx> columns will have values for both sides of the hit.
-<tr><td style="vertical-align: text-top;">None<td><td>&nbsp;<td>Only hits that are NOT annotated for either side of the
-pair will be shown. The <ttx>Gene#</ttx> columns will not have a value for either side of the hit.
+<tr><td style="vertical-align: text-top;">Every<td><td>&nbsp;
+<td>Only hits that align to a gene on one or both sides of the hit will be shown.
+The <ttx>Gene#</ttx> columns will list the best gene.
+
+<tr><td style="vertical-align: text-top;">Every+<td><td>&nbsp;
+<td>This is like the <ttx>Every</ttx> option, but a hit may be listed multiple times if it aligns
+to overlapping genes; in other words, ALL genes will be shown if they have any alignment.
+The <ttx>Gene#</ttx> for non-best hits will be suffixed with an "+" and the <ttx>Htype</ttx> is
+unknown.
+<br><i>This is only available with database that are build with <ttl>Algo 2</ttl>, post-v5.4.6.</i>
+
+<tr><td style="vertical-align: text-top;">One<td><td>&nbsp;
+<td>Only hits that align to a gene on ONE side of the will be shown.
+The <ttx>Gene#</ttx> columns will show the best gene for the side with the hit.
+<tr><td style="vertical-align: text-top;">Both<td><td>&nbsp;
+<td>Only hits that align to genes on BOTH sides will be shown.
+The <ttx>Gene#</ttx> columns will show the best gene for both sides of the hit.
+<tr><td style="vertical-align: text-top;">None<td><td>&nbsp;<td>Only hits that do NOT align to a gene
+on either side of the will be shown. The <ttx>Gene#</ttx> columns will not have a value for either side of the hit.
 </table>
 
 <p><ttl>Collinear size &gt;= N</ttl>

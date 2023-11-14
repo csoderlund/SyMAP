@@ -113,8 +113,10 @@ The following discusses building a SyMAP v5 database.
 <b>Supporting documentation</b>
 <ul>
 <li><a href="./SystemHelp.html" class="ext" target="_blank">Quick Guide and Parameters</a>
-<li><a href="MUMmer.html"  class="ext" target="_blank">MUMmer</a>
+<li><a href="MUMmer.html"  class="ext" target="_blank">Using MUMmer with SyMAP</a>
+<br>&nbsp;
 <li><a href="convert/index.html" class="ext" target="_blank">Convert NCBI and Ensembl</a>
+<li><a href="Demo.html" class="ext" target="_blank">Demo Results</a>
 <li><a href=TroubleShoot.html class="ext" target="_blank">Trouble Shooting</a>
 </ul>
 <p>For <b>Transcriptome Analysis and Comparative Transcriptomes</b>, see <a href="https://csoderlund.github.io/TCW/" class="ext" target="_blank">TCW</a>.
@@ -341,7 +343,7 @@ For MacOS, you may also need <a href="TroubleShoot.html#macos" class="ext" targe
 <table>
 <tr><td style="vertical-align: text-top;">
 The <ttb>Project Manager</ttb> window opens showing the three demo projects provided with the SyMAP tarball.
-Check <ttl>Demo-Seq</ttl> and <ttl>Demo-Seq2</ttl>.
+Check <tt>Demo-Seq</tt> and <tt>Demo-Seq2</tt>.
 <td><a href="img/demoLoad.png"><img src="img/demoLoad.png" alt="demoLoad" style="border: 1px solid black; width: 400px"></a>
 
 <tr><td style="colspan: 2; height: 40px;">&nbsp;
@@ -350,11 +352,11 @@ Check <ttl>Demo-Seq</ttl> and <ttl>Demo-Seq2</ttl>.
 
 A link <ttb>Load All Projects</ttb> will be displayed at the top of the right panel; select it to
 load the projects, which will take several minutes.
-<p>If loading the "Demo-Seq" takes
+<p>If loading the <tt>Demo-Seq</tt> takes
 <i>more than a few minutes</i>, you may need to adjust the MySQL parameters, see
 <a href="TroubleShoot.html#msqslow" class="ext" target="_blank">TroubleShoot MySQL</a>.
 <p>When done, the Manager will look like the image shown on the right.
-In the <ttb>Available Syntenies</ttb> table, the cell for  "Demo_Seq2" and "Demo_Seq" will
+In the <ttb>Available Syntenies</ttb> table, the cell for  <tt>Demo_Seq2</tt> and <tt>Demo_Seq</tt> will
 automatically be selected.
 
 <p>Click the <ttb>Selected Pair</ttb> button to start the <ttl>Alignment&amp;Synteny</ttl>.
@@ -400,12 +402,12 @@ gives a summary similar to <a href="img/demoSumAlgo2.png" class="ext" target="_b
 
 <table>
 	<tr><td style="vertical-align: text-top;">
-Load the Demo-Draft project, following
+Load the <tt>Demo-Draft</tt> project, following
 the same steps used to load the previous two projects.
 
-<p>Under the Demo-Draft listing, you will see
+<p>Under the <tt>Demo-Draft</tt> listing, you will see
 the parameter "Order against: demo_seq2". With this setting,
-the Demo-Draft contigs will be ordered using synteny to Demo-Seq2.
+the <tt>Demo-Draft</tt> contigs will be ordered using synteny to <tt>Demo-Seq2</tt>.
 		<td>
 <a href="img/demoDraft1.png"><img src="img/demoDraft1.png" alt="demoDraft1" style="border: 1px solid black; width: 400px"></a>
 	<tr><td style="colspan: 2; height: 40px;">&nbsp;
@@ -431,7 +433,7 @@ whether they should be flipped to a file called <tt>/data/seq/Demo_seq2/ordering
 It creates sequence files from the ordered contigs that are flipped when appropriate,
 which are put into a new project
 with the suffix "<tt>_ordered</tt>", as shown in the image below. The chromosome names correspond
-to the order-against project (e.g. Demo_seq2), and the third chromosome is 'chr0'
+to the order-against project (e.g. <tt>Demo_seq2</tt>), and the third chromosome is 'chr0'
 which contains all draft sequences that were not placed.
 <p>
 
@@ -440,7 +442,7 @@ which contains all draft sequences that were not placed.
 As shown in the image on the left, a new project has been added. Click <tt>Demo_Draft-ordered</tt> and
 load it.
 Running the <ttl>Alignment&amp;Synteny</ttl>
-between the <tt>_ordered</tt> project and Demo_seq2 will provide a more coherent display
+between the <tt>_ordered</tt> project and <tt>Demo_seq2</tt> will provide a more coherent display
 (see the second dot plot for <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>).
 Using the project <a href="SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a> window,
 the <tt>Demo_Draft-ordered</tt> name can be shortened.
@@ -451,7 +453,7 @@ the <tt>Demo_Draft-ordered</tt> name can be shortened.
 <a id="demoself"></a>
 <h3>Self alignment</h3>
 
-The section on <a href="#self">Self alignments</a> discusses the select alignment of the Demo_Seq project.
+The section on <a href="#self">Self alignments</a> discusses the select alignment of the <tt>Demo_Seq</tt> project.
 
 <br>
 <!---------------------------------------------------------->
@@ -722,13 +724,12 @@ project and the new <tt>_ordered</tt> project.
 The original draft directory will have a new file called <tt>ordered.csv</tt> that will contain
 the merged contigs and what chromosome number they are mapped to.
 
-<p><u>If you are not ordering the draft sequence</u>,
-and if the draft sequence is in too many sequence pieces,
-then (1) it takes a long time for the MUMmer comparisons, (2)
+<p><i>If the draft sequence is in too many sequence pieces</i>,
+(1) it takes a long time for the MUMmer comparisons, (2)
 the display is very cluttered, and
 (3) the blocks display does not work right. Limit the number of sequence pieces
 by setting <tt>Minimum length</tt> in the project's <a href="#params2">Parameter</a> window to only load the largest 150 sequences;
-there is a script called <tt>scripts/lenFasta.pl</tt> which
+there is a script called <ttx>scripts/lenFasta.pl</ttx> which
 will print out all the lengths; set the <tt>Minimum length</tt> to the 150th length. However, even 150 are a lot of blocks to view
 so you might want to start with the largest 50, merge them, then repeat.
 
@@ -946,6 +947,7 @@ see if there are any <tt>/scripts</tt> or <tt>/ext</tt> changes that need to als
 <p>The following table shows what versions require action by the user.
 <table class=ty>
 <tr><td><b>Release</b><td><b>Changed files</b><sup>1</sup><td><b>Action by User</b>
+<tr><td>v5.4.6 & 5.4.7 <td>Only the <tt>symap.jar</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup> if using <ttx>Cluster Hit Algo 2</ttx>
 <tr><td>v5.4.1 <td>Only the <tt>symap.jar</tt><td>Execute <tt>./symap -y</tt>
 <tr><td>v5.4.0 <td>Only the <tt>symap.jar</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
 <tr><td>v5.2.0 <td><tt>symap</tt>, <tt>viewSymap</tt>, <tt>scripts/ConvertNCBI.*</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
