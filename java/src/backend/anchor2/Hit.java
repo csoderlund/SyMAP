@@ -15,7 +15,8 @@ public class Hit implements Comparable <Hit> {
 	private static final int T=Arg.T, Q=Arg.Q;
 	
 	// Mummer
-	protected int hitNum, id=0, sim=0, blen;
+	protected int hitCnt;							 // order found in Mummer; used as index into hitSets
+	protected int id=0, sim=0, blen;
 	protected int [] start, end, grpIdx, len, frame; // frames do not seem to coincide with hits along a gene
 	protected String sign;
 	protected boolean isHitEQ=true;
@@ -34,15 +35,9 @@ public class Hit implements Comparable <Hit> {
 	protected int bin = 0, clNum=0; 				
 	protected boolean bDead=false; 	// single filtered
 	
-	protected Hit() {
-		start = new int [2];
-		end = new int [2];
-		grpIdx = new int [2];
-	}
-	
-	protected Hit(int hitNum, int id, int sim, int [] start, int [] end, int [] len, 
+	protected Hit(int hitCnt, int id, int sim, int [] start, int [] end, int [] len, 
 			int [] grpIdx, String sign, int [] frame) {
-		this.hitNum=hitNum;
+		this.hitCnt=hitCnt;
 		this.id = id;
 		this.sim=sim;
 		this.start = start;
@@ -172,37 +167,36 @@ public class Hit implements Comparable <Hit> {
 			sdiff1 = (Math.abs(diff1)>=1000000) ? (diff1/1000000) + "M" : sdiff1;
 			sdiff2 = (Math.abs(diff2)>=1000000) ? (diff2/1000000) + "M" : sdiff2;
 		}
-		String coords = String.format("[%,10d %,10d %,5d %6s] [%,10d %,10d %,5d %6s] ", 
-				 start[T], end[T], len[T], sdiff1, 
+		String coords = String.format("%6d [%,10d %,10d %,5d %6s] [%,10d %,10d %,5d %6s] ", 
+				 hitCnt, start[T], end[T], len[T], sdiff1, 
 				 start[Q], end[Q], len[Q], sdiff2);
 		
 		String pre = "b";
 		if (bBothGene()) pre="g";
 		else if (bEitherGene()) pre="e";
-		String sbin = pre + bin;
-		String b = String.format("%5s ", sbin);
+		String sbin = String.format("%5s ", (pre + bin));
 		
-		String p = String.format("CL%-5d ", clNum);
-		String e = isHitEQ ? " EQ "  : " NE ";
-		String d = (bDead) ? " DEAD " : " ";
-		
-		return coords + b + p  + geneStr() + e + d;
-	}
-	
-	protected String toResults() {
-		String pre = "b";
-		if (bBothGene()) pre="g";
-		else if (bEitherGene()) pre="e";
-		String sbin = pre + bin;
-		String b = String.format(" %7s ", sbin);
-		
-		String r = String.format("CL%-5d ", clNum);
-		String c = String.format("%6d T[%,10d %,10d  %,6d] Q[%,10d %,10d  %,6d] [ID %3d %3d]",
-				 hitNum, start[T], end[T], end[T]-start[T], start[Q], end[Q], end[Q]-start[Q], id, sim);
+		String cl = String.format("CL%-5d ", clNum);
 		String e = isHitEQ ? " EQ "  : " NE ";
 		String d = (bDead) ? " SFIL " : " ";
 		
-		return c + b + r + geneStr() + e + d;
+		return coords + sbin + cl  + geneStr() + e + d;
+	}
+	
+	protected String toResults() {
+		String coords = String.format("-%6d T[%,10d %,10d  %,6d] Q[%,10d %,10d  %,6d] [ID %3d %3d]",
+				 hitCnt, start[T], end[T], end[T]-start[T], start[Q], end[Q], end[Q]-start[Q], id, sim);
+		
+		String pre = "b";
+		if (bBothGene()) pre="g";
+		else if (bEitherGene()) pre="e";
+		String sbin = String.format(" %7s ", (pre + bin));
+		
+		String cl = String.format("CL%-5d ", clNum);
+		String e = isHitEQ ? " EQ "  : " NE ";
+		String d = (bDead) ? " SFIL " : " ";
+		
+		return coords + sbin + cl + geneStr() + e + d;
 	}
 	
 	private String geneStr() {

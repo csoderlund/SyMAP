@@ -28,23 +28,25 @@ import symapMultiAlign.AlignmentViewPanel;
 /**************************************************
  * The main query frame
  */
-
 public class SyMAPQueryFrame extends JFrame {
-	private final int MIN_WIDTH = 1000, MIN_HEIGHT = 720; // CAS513 changed from 1024
-	private final int MIN_DIVIDER_LOC = 200; // CAS543 was screenWidth * 1/4
+	private final int MIN_WIDTH = 1000, MIN_HEIGHT = 720; 	// CAS513 changed from 1024
+	private final int MIN_DIVIDER_LOC = 200; 				// CAS543 was screenWidth * 1/4
 	
 	private static final String [] MENU_ITEMS = { "> Instructions", "> Query Setup", "> Results" }; 
 	static private String propNameAll="SyMapColumns1"; // 0&1's; use if match number of columns in current DB
 	static private String propNameSingle="SyMapColumns2"; 
 	
-	// ProjectManager creates this object, add the projects, then calls build.
-	public SyMAPQueryFrame(String title, DBconn2 dbc2, Vector <Mproject> pVec) {
+	/******************************************************
+	 * ManagerFrame creates this object, add the projects, then calls build.
+	 */
+	public SyMAPQueryFrame(String title, DBconn2 dbc2, Vector <Mproject> pVec, boolean useAlgo2) {
 		setTitle("Query " + title); // CAS514 add version; CAS540 add db
 		
 		this.tdbc2= new DBconn2("Query-" + DBconn2.getNumConn(), dbc2);
 		
 		theProjects = new Vector<Mproject> ();			// CAS532 change to pass project in (needed for column saving)
 		for (Mproject p: pVec) theProjects.add(p);
+		this.bUseAlgo2 = useAlgo2; 						// CAS547 add for "All genes with hits"
 		
 		// CAS532 add the following for column saving, including cookies
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -62,7 +64,7 @@ public class SyMAPQueryFrame extends JFrame {
 		setSize(screenWidth, screenHeight);	
 		setLocationRelativeTo(null); 						// CAS513 center frame
 	}
-	public void build() {
+	public void build() { // ManagerFrame
 		buildMenuPanel();
 		buildMainPanel();
 		
@@ -105,12 +107,14 @@ public class SyMAPQueryFrame extends JFrame {
 		
 		updateView();
 	}
-	// called from queryPanel on Run Query
-	public void makeTable(String query, String sum, boolean bSingle) {
-		boolean [] saveLastColumns = getLastColumns(bSingle);
+	/************************************************
+	 * called from queryPanel on Run Query
+	 */
+	protected void makeTable(String query, String sum, boolean isSingle) {
+		boolean [] saveLastColumns = getLastColumns(isSingle);
 		
 		TableDataPanel newTablePanel = new TableDataPanel(getInstance(), getNextResultLabel(), 
-								saveLastColumns, query, sum, bSingle);
+								saveLastColumns, query, sum, isSingle);
 		
 		menuPanel.addResult(newTablePanel.getName()+":");
 		
@@ -120,10 +124,11 @@ public class SyMAPQueryFrame extends JFrame {
 		
 		updateView(); // shows the table with Stop 
 	}
-	/*************************************************
-	 * Column defaults -  Called for new table
-	 * the ColumnSelection is a boolean vector, with no knowledge of species anno's
-	 */
+	private String getNextResultLabel() { return "Result " + (++resultCounter); }
+	private SyMAPQueryFrame getInstance() { return this; }
+	
+	// Column defaults -  Called for new table
+	// the ColumnSelection is a boolean vector, with no knowledge of species anno's
 	private boolean [] getLastColumns(boolean bSingle) {
 	try {
 		boolean [] saveLastColumns = null;
@@ -221,8 +226,10 @@ public class SyMAPQueryFrame extends JFrame {
 		}	
 	} catch (Exception e) {ErrorReport.print(e, "save columns");};
 	}
-	/*************************************************************/
-	public void updateResultCount(TableDataPanel newTablePanel) {
+	/*************************************************************
+	 * TableDataPanel 
+	 */
+	protected void updateResultCount(TableDataPanel newTablePanel) {
 		int numResults = newTablePanel.getNumResults();
 		
 		String res = (numResults == 0) ? ": No results" : ": " + newTablePanel.getNumResults();
@@ -233,7 +240,7 @@ public class SyMAPQueryFrame extends JFrame {
 		
 		updateView();
 	}
-	public void addAlignmentTab(TableDataPanel parent, String [] names, String [] lines, String [] seqs, String sum) {
+	protected void addAlignmentTab(TableDataPanel parent, String [] names, String [] lines, String [] seqs, String sum) {
 		final SyMAPQueryFrame theFrame = this;
 		final TableDataPanel parentCopy = parent;
 		final String [] theNames = names;
@@ -258,7 +265,7 @@ public class SyMAPQueryFrame extends JFrame {
 		thread.start();
 	}
 	// Muscle alignment
-	public void addResultPanel(JPanel parentPanel, JPanel newPanel, String name, String summary) {
+	private void addResultPanel(JPanel parentPanel, JPanel newPanel, String name, String summary) {
 		String [] row = new String[2];
 		row[0] = name;
 		row[1] = summary;
@@ -269,8 +276,32 @@ public class SyMAPQueryFrame extends JFrame {
 		mainPanel.add(newPanel);
 		updateView();
 	}
-
-	public void removeResult(int result) {
+	protected String getSequence(int start, int stop, int groupIdx) {
+		try {
+			return new AlignPool(tdbc2).loadPseudoSeq(start + ":" + stop, groupIdx);
+		} catch (Exception e) {ErrorReport.print(e, "Get sequence");}
+		return "";
+	}
+	protected String [] getAbbrevNames() { // CAS519 added for column headings
+		String [] retVal = new String[theProjects.size()];
+		
+		for(int x=0; x<retVal.length; x++) {
+			retVal[x] = theProjects.get(x).getdbAbbrev();
+		}
+		return retVal;
+	}
+	protected String getDisplayFromAbbrev(String aname) { // CA519 added for loadRow used by Show Synteny 
+		for (Mproject p : theProjects) {
+			if (aname.contentEquals(p.getdbAbbrev())) return p.getDisplayName();
+		}
+		return null;
+	}
+	protected QueryPanel getQueryPanel() {return queryPanel;}
+	
+	/***************************************************
+	 * ResultSummaryPanel
+	 */
+	protected void removeResult(int result) {
 		JPanel temp = allResults.get(result);
 		
 		mainPanel.remove(temp);
@@ -278,9 +309,7 @@ public class SyMAPQueryFrame extends JFrame {
 		menuPanel.removeResult(result);
 		updateView();
 	}
-	
-	public String getNextResultLabel() { return "Result " + (++resultCounter); }
-	public void resetCounter() { resultCounter=0;} // CAS513 for clear all on Results page
+	protected void resetCounter() { resultCounter=0;} // CAS513 for clear all on Results page
 	
 	private void updateView() {
 		overviewPanel.setVisible(false);
@@ -301,50 +330,18 @@ public class SyMAPQueryFrame extends JFrame {
 				allResults.get(selection).setVisible(true);
 		}
 	}
-	
-	public String [] getDisplayNames() {
-		String [] retVal = new String[theProjects.size()];
-		
-		for(int x=0; x<retVal.length; x++) {
-			retVal[x] = theProjects.get(x).getDisplayName();
-		}
-		return retVal;
-	}
-	public String [] getAbbrevNames() { // CAS519 added for column headings
-		String [] retVal = new String[theProjects.size()];
-		
-		for(int x=0; x<retVal.length; x++) {
-			retVal[x] = theProjects.get(x).getdbAbbrev();
-		}
-		return retVal;
-	}
-	public String getDisplayFromAbbrev(String aname) { // CA519 added for loadRow used by Show Synteny 
-		for (Mproject p : theProjects) {
-			if (aname.contentEquals(p.getdbAbbrev())) return p.getDisplayName();
-		}
-		return null;
-	}
-	public DBconn2 getDBC() { return tdbc2; }
-	
-	public Vector<Mproject> getProjects() { return theProjects; }
-	
-	public String getSequence(int start, int stop, int groupIdx) {
-		try {
-			return new AlignPool(tdbc2).loadPseudoSeq(start + ":" + stop, groupIdx);
-		} catch (Exception e) {ErrorReport.print(e, "Get sequence");}
-		return "";
-	}
-	
-	public void selectResult(int position) {
+	protected void selectResult(int position) {
 		menuPanel.setSelection(position + MENU_ITEMS.length);
 		updateView();
 	}
+	/**********************************************************/
+	protected DBconn2 getDBC() { return tdbc2; }
+	protected Vector<Mproject> getProjects() { return theProjects; }
+	protected boolean isAlgo2() {return bUseAlgo2;};
 	
-	public SyMAPQueryFrame getInstance() { return this; }
-	public QueryPanel getQueryPanel() {return queryPanel;}
-		
 	private DBconn2 tdbc2 = null;
 	private Vector<Mproject> theProjects = null;
+	private boolean bUseAlgo2=false;
 	
 	private int screenWidth, screenHeight;
 	private JSplitPane splitPane = null;
@@ -359,7 +356,7 @@ public class SyMAPQueryFrame extends JFrame {
 
 	private QueryPanel queryPanel = null;
 	
-	private int resultCounter = 0; // CAS532 this was static - why? Would be used by all open Queries
-	private int nMultiAlignmentCounter = 0; // CAS532 this was static -
+	private int resultCounter = 0; 				// CAS532 this was static 
+	private int nMultiAlignmentCounter = 0; 	// CAS532 this was static -
 	private static final long serialVersionUID = 9349836385271744L;
 }

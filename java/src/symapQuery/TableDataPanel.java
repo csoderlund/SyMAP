@@ -70,14 +70,14 @@ public class TableDataPanel extends JPanel {
 	
 	// called by SymapQueryFrame
 	public TableDataPanel(SyMAPQueryFrame parentFrame, String resultName,  boolean [] selections,
-			String query, String sum, boolean bSingle) {
-		theParentFrame = parentFrame;
-		theName = 		 resultName;
+			String query, String sum, boolean isSingle) {
+		this.theParentFrame = parentFrame;
+		this.theName 		= resultName;
 		
-		theQueryPanel = 	theParentFrame.getQueryPanel();
-		isSingle		=   bSingle;
-		theQuery =		 	query;
-		theSummary = 		sum;
+		theQueryPanel 		= theParentFrame.getQueryPanel();
+		this.isSingle		= isSingle;
+		this.theQuery 		= query;
+		this.theSummary 	= sum;
 		
 		if(selections != null) {
 			theOldSelections = new boolean[selections.length];
@@ -177,7 +177,6 @@ public class TableDataPanel extends JPanel {
 		 
 		/** CREATE ROWS **/
         if(rs != null) { 
-        	long startTime = Utilities.getNanoTime();
         	HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> (); 
         	HashMap <String,Integer> proj2regions = new HashMap  <String, Integer> (); // ComputePgeneF
         		
@@ -191,7 +190,6 @@ public class TableDataPanel extends JPanel {
             statsPanel = sp.getPanel();
             
             rowsFromDB.clear(); // NOTE: IF want to use later, then the Stats need to be removed from DBdata
-            if (Q.TEST_TRACE) Utilities.printElapsedNanoTime("Create table", startTime);
         }
         	    
         theTableData.setColumnHeaders(theParentFrame.getAbbrevNames(), theAnnoKeys.getColumns(true /*abbrev*/), isSingle);
@@ -202,7 +200,7 @@ public class TableDataPanel extends JPanel {
         theTable.autofitColumns();
         	
         ColumnHeaderToolTip header = new ColumnHeaderToolTip(theTable.getColumnModel());
-        FieldData theFields = FieldData.getFields();
+        FieldData theFields = FieldData.getFields(true);
         header.setToolTips(theFields.getDBFieldDescriptions());
         theTable.setTableHeader(header);
 
@@ -972,7 +970,7 @@ public class TableDataPanel extends JPanel {
 			// for the get statements
 			double track1Start=0, track2Start=0, track2End=0, track1End=0;
 			int item = (cmbSynOpts.getSelectedIndex());
-			if (item>0) { 
+			if (item>0) {
 				double [] coords;
 				if (item==2) {
 					if (rd.collinear==0) {
@@ -1077,7 +1075,8 @@ public class TableDataPanel extends JPanel {
 	private void loadDataTESTwrite(String strQuery, ResultSet rs, boolean isOrphan) {
 		if (strQuery!=null) {
 		 	try {
-        		BufferedWriter w = new BufferedWriter(new FileWriter("symap_sql.log"));
+        		BufferedWriter w = new BufferedWriter(new FileWriter("zTest_sql.log"));
+        		w.write(theSummary + "\n");
         		w.write("\n" + strQuery+ "\n\n");
         		w.close();
         	} catch(Exception e){};
@@ -1086,7 +1085,8 @@ public class TableDataPanel extends JPanel {
 		
 		if (isOrphan) {
 			try {
-        		BufferedWriter w = new BufferedWriter(new FileWriter("symap_orphan_results.log"));
+        		BufferedWriter w = new BufferedWriter(new FileWriter("zTest_orphan_results.log"));
+        		w.write(theSummary + "\n");
         		w.write("Row\tAStart\tAnnoIdx\tID\n");
         		int cnt=0;
         		while (rs.next()) {
@@ -1107,20 +1107,33 @@ public class TableDataPanel extends JPanel {
 		}
 		else {
 		 	try {
-        		BufferedWriter w = new BufferedWriter(new FileWriter("symap_results.log"));
-        		w.write("Row\tblock\tHitIdx\tgrp1\tgrp2\tanno1\tanno2\tAnnoIDX\tAnnoGrp\tAname\tAGene\n");
+        		BufferedWriter w = new BufferedWriter(new FileWriter("zTest_results.log"));
+        		w.write(theSummary + "\n");
+        		String x1 = String.format("%4s  %5s (%5s)   %2s,%2s  %2s,%2s %2s   %6s,%6s %6s  %8s\n",
+        				"Row","Hnum", "Hidx",  "p1", "p2", "g1", "g2", "ag", "Hanno1", "Hanno2",   "Anno", "Gene");
+        		w.write(x1);
         		int cnt=0;
         		while (rs.next()) {
-        			String n = rs.getString(Q.ANAME);
-        			if (n!=null) {
-        				int i = n.indexOf(";");
-        				if (i>0) n = n.substring(0, i);
-        			} else n="--";
-        			w.write(cnt + "\t" + rs.getString(Q.BNUM) + "\t" + rs.getString(Q.HITIDX) + "\t" +
-        			rs.getInt(Q.GRP1IDX) + "\t" + 	rs.getInt(Q.GRP2IDX)   + "\t" + 
-        			rs.getInt(Q.ANNOT1IDX) + "\t" + 	rs.getInt(Q.ANNOT2IDX)   + "\t" + 
-        			rs.getInt(Q.AIDX)   +  "\t" + 	rs.getInt(Q.AGIDX)  + "\t" +
-        			 n  +  "\t" + rs.getString(Q.AGENE) + "\n");
+        			String tag = rs.getString(Q.AGENE);
+        			if (tag==null) tag = "none";
+        			else if (tag.contains("(")) tag = tag.substring(0, tag.indexOf("("));
+        			
+        			String block = rs.getString(Q.BNUM);
+        			if (block==null) block="0";
+        			
+        			int a1=rs.getInt(Q.ANNOT1IDX), a2=rs.getInt(Q.ANNOT2IDX), a=rs.getInt(Q.AIDX);
+        			String star = (a1!=a && a2!=a) ? "***" : "   ";
+        			
+        			int grp1 = rs.getInt(Q.GRP1IDX), grp2 = rs.getInt(Q.GRP2IDX), grp = rs.getInt(Q.AGIDX);
+        			int side = (grp1==grp) ? 1 : 2;
+        			
+        			String x = String.format("%4d  %5d (%5d)   %2d,%2d  %2d,%2d %2d   %6d,%6d %6d  %8s %s%d",
+        					cnt, rs.getInt(Q.HITNUM),   rs.getInt(Q.HITIDX), 
+        					rs.getInt(Q.PROJ1IDX),  rs.getInt(Q.PROJ2IDX),
+        					grp1,  grp2, grp, 
+        					a1, a2, a, tag, star, side);
+        					
+        			w.write(x + "\n");
         			cnt++;
         		}
         		w.close();
@@ -1326,35 +1339,35 @@ public class TableDataPanel extends JPanel {
 		
 		public boolean loadRow(int row) {
 			try {
-    			HashMap <String, Object> colVal = theTableData.getRowLocData(row); // only needed columns are returned
+    			HashMap <String, Object> colHeadVal = theTableData.getRowLocData(row); // only needed columns are returned
     			HashMap <String, Integer> sp2x = new HashMap <String, Integer> ();
     			int isp=0;
     			
-    			for (String head : colVal.keySet()) {
-    				Object o = colVal.get(head);
-    				if (o instanceof String) {
-    					String str = (String) o;
+    			for (String colHead : colHeadVal.keySet()) {
+    				Object colVal = colHeadVal.get(colHead);
+    				if (colVal instanceof String) {
+    					String str = (String) colVal;
     					if (str.equals("") || str.equals(Q.empty)) continue; // the blanks species
     				}  
-    				if (head.contentEquals(Q.blockCol)) { // CAS520 add block and collinear
-    					String x = (String) o;
+    				if (colHead.contentEquals(Q.blockCol)) { // CAS520 add block and collinear
+    					String x = (String) colVal;
     					x =  (x.contains(".")) ? x.substring(x.lastIndexOf(".")+1) : "0";
     					block = Integer.parseInt(x);
     					continue;
     				}
-    				if (head.contentEquals(Q.runCol)) {
-    					String x = (String) o;
+    				if (colHead.contentEquals(Q.runCol)) {
+    					String x = (String) colVal;
     					x =  (x.contains(".")) ? x.substring(x.lastIndexOf(".")+1) : "0";
     					collinear = Integer.parseInt(x);
     					continue;
     				}
-    				if (head.contentEquals(Q.hitCol)) {	// CAS521
-    					String x = String.valueOf(o);
+    				if (colHead.contentEquals(Q.hitCol)) {	// CAS521
+    					String x = String.valueOf(colVal);
     					hitnum = Integer.parseInt(x);
     					continue;
     				}
 				
-    				String [] field = head.split(Q.delim); // speciesName\nChr or Start or End
+    				String [] field = colHead.split(Q.delim); // speciesName\nChr or Start or End
     				if (field.length!=2) continue;
     				String species=field[0];
     				String col=field[1];
@@ -1362,17 +1375,17 @@ public class TableDataPanel extends JPanel {
     				String sVal="";
     				int iVal=0;
     				if (col.equals(Q.chrCol)) {
-    					if (o instanceof Integer) sVal = String.valueOf(o);
-    					else                      sVal = (String) o;
+    					if (colVal instanceof Integer) sVal = String.valueOf(colVal);
+    					else                      sVal = (String) colVal;
     				}
-    				else if (o instanceof Integer) { iVal = (Integer) o; }
-    				else if (o instanceof String)  { sVal = (String)  o; }
+    				else if (colVal instanceof Integer) { iVal = (Integer) colVal; }
+    				else if (colVal instanceof String)  { sVal = (String)  colVal; }
     				else {
-    					System.out.println("Symap error: Row Data " + head + " " + o + " is not type string or integer");
+    					System.out.println("Symap error: Row Data " + colHead + " " + colVal + " is not type string or integer");
     					return false;
     				}
     				
-    				int i0or1=0;						// only two none blank
+    				int i0or1=0;						// only two species, none blank
     				if (sp2x.containsKey(species)) 
     					i0or1 = sp2x.get(species);
     				else {
@@ -1380,7 +1393,7 @@ public class TableDataPanel extends JPanel {
     					spAbbr[isp] = species;
     					i0or1 = isp;
     					isp++;
-    					if (isp>2) break; // should not happen
+    					if (isp>2) {System.err.println("Symap Error: species " + isp); break;} // should not happen
     				}
     				if (col.equals(Q.chrCol)) 		  chrNum[i0or1] = sVal;
     				else if (col.equals(Q.hStartCol)) start[i0or1] = iVal;
@@ -1400,7 +1413,6 @@ public class TableDataPanel extends JPanel {
     				spIdx[isp] =  spPanel.getSpIdxFromSpName(spName[isp]);
     				chrIdx[isp] = spPanel.getChrIdxFromChrNumSpIdx(chrNum[isp], spIdx[isp]);
     			}
-    			prt();
     			return true;
     		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return false;}
 		}
@@ -1410,12 +1422,7 @@ public class TableDataPanel extends JPanel {
     			return outLine;
     		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return "error";}
 		}
-		public void prt() {
-			if (Q.TEST_TRACE) 
-				System.out.println("Trace: " + spName[0] + ": " +chrIdx[0] + ":" + start[0] + ":"+ end[0] + "   " +
-						spName[1] + ": " +chrIdx[1] + ":" + start[1] + ":"+ end[1]);
-
-		}
+		
 		String [] spName = {"",""}; 
 		String [] spAbbr = {"",""}; 
 		int [] spIdx = {0,0};
@@ -1456,13 +1463,13 @@ public class TableDataPanel extends JPanel {
     		setTitle("Export Table Rows");
     		
     	// Files
-    		JRadioButton btnCSV = new JRadioButton("CSV");
+    		JRadioButton btnCSV = new JRadioButton("CSV"); btnCSV.setBackground(Color.white);
     		btnCSV.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
 					nMode = ex_csv;
 				}
 			});
-    		JRadioButton btnHTML =  new JRadioButton("HTML");
+    		JRadioButton btnHTML =  new JRadioButton("HTML");btnHTML.setBackground(Color.white); //CAS547 white for linux
     		btnHTML.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
 					nMode = ex_html;
@@ -1473,8 +1480,8 @@ public class TableDataPanel extends JPanel {
             rowPanel.add(Box.createHorizontalStrut(15));
             rowPanel.add(new JLabel("Include Row column:")); rowPanel.add(Box.createHorizontalStrut(5));
             
-            btnYes = new JRadioButton("Yes");
-            JRadioButton btnNo = new JRadioButton("No");
+            btnYes = new JRadioButton("Yes"); btnYes.setBackground(Color.white);
+            JRadioButton btnNo = new JRadioButton("No");btnNo.setBackground(Color.white);
             ButtonGroup inc = new ButtonGroup();
     		inc.add(btnYes);
     		inc.add(btnNo);
@@ -1482,7 +1489,7 @@ public class TableDataPanel extends JPanel {
     		rowPanel.add(btnYes); rowPanel.add(Box.createHorizontalStrut(5));
     		rowPanel.add(btnNo);
     		
-    		JRadioButton btnFASTA = new JRadioButton("FASTA");
+    		JRadioButton btnFASTA = new JRadioButton("FASTA");btnFASTA.setBackground(Color.white);
     		btnFASTA.addActionListener(new ActionListener() {
     			public void actionPerformed(ActionEvent arg0) {
     				nMode = ex_fasta;
@@ -1746,13 +1753,8 @@ public class TableDataPanel extends JPanel {
     		catch(Exception e) {ErrorReport.print(e, "Save as fasta");}
         }
         private String getFileName(int type) {
-        	String saveDir = System.getProperty("user.dir") + "/exports/";
-    		File temp = new File(saveDir);
-    		if(!temp.exists()) {
-    			System.out.println("Create " + saveDir);
-    			temp.mkdir();
-    		}
-
+        	String saveDir = Globals.getExport(); // CAS547 change to call globals
+    		
     		JFileChooser chooser = new JFileChooser(saveDir);
     		if(chooser.showSaveDialog(theParentFrame) != JFileChooser.APPROVE_OPTION) return null;
     		if(chooser.getSelectedFile() == null) return null;

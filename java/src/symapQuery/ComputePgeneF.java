@@ -74,8 +74,6 @@ public class ComputePgeneF {
 		long startTime = Utilities.getNanoTime();
 		
 		computeGroups();
-		
-		if (Q.TEST_TRACE) Utilities.printElapsedNanoTime("PgeneF", startTime);
 	}
 	/************************************************************/
 	private void computeGroups() 
@@ -461,19 +459,6 @@ public class ComputePgeneF {
 	    			allIncChrBySp.add(incs);
 	    		}       				
 	    	} // end going through chromosomes
-	    	if (Q.TEST_TRACE) {
-	    		System.out.println("Excludes " + allExcChr.size());
-	    		System.out.println("Includes " + allIncChr.size());
-	    		//for (int x : allIncChr) System.out.println("  " + x);
-	    		System.out.println("IncBySp  " + allIncChrBySp.size());
-	    		int cnt=0;
-	    		for (TreeSet <Integer> x : allIncChrBySp) {
-	    			System.out.print(cnt + ":");
-	    			for (int y : x) System.out.print(" " + y);
-	    			System.out.println("");
-	    			cnt++;
-	    		}
-	    	}
 	}
 	private void counterInc(Map<String,Integer> ctr, String key, int inc  )
 	{

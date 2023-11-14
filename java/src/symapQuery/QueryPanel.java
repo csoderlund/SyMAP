@@ -2,13 +2,9 @@ package symapQuery;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.ItemSelectable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Vector;
 import java.util.HashMap;
 
@@ -31,12 +27,36 @@ import util.Utilities;
 /***************************************************************
  * The Filter panel. 
  * CAS504 massive changes to queries
+ * 
+ * DBData filters:
+ * 	isOneAnno  - can only query in SQL for isEitherAnno
+ * 	isAnnoText - otherwise, when doing anno search as query, returned hits without anno if they overlap
+ *  isGeneNum  - have to parse geneTag
+ *  Locations  - hit ends on two lines
+ *  
+ *  Single all genes:
+ *	SELECT PA.idx, PA.grp_idx, PA.start, PA.end, PA.strand, PA.name, PA.tag, PA.numhits 
+ *      FROM pseudo_annot AS PA
+		WHERE  PA.type='gene' AND PA.grp_idx in (1,2,4,3) order by PA.idx
+ *	Pair: 
+ *	SELECT PA.idx, PA.grp_idx, PA.start, PA.end, PA.strand, PA.name, PA.tag, PA.numhits, 
+ *      PH.idx, PH.hitnum, 
+ *      PH.proj1_idx, PH.proj2_idx, PH.grp1_idx, PH.grp2_idx, PH.start1, PH.start2, PH.end1, PH.end2, 
+ *      PH.pctid, PH.cvgpct, PH.countpct, PH.strand, PH.score, PH.htype, PH.runsize, PH.runnum, 
+ *      B.blocknum, B.score, 
+ *      PH.annot1_idx, PH.annot2_idx # not displayed, used to join two rows; allGenes PHA.annot_idx, PHA.annot2_idx
+ *      FROM pseudo_hits AS PH
+		LEFT JOIN pseudo_hits_annot AS PHA ON PH.idx = PHA.hit_idx
+		LEFT JOIN pseudo_annot AS PA ON PHA.annot_idx = PA.idx
+		LEFT JOIN pseudo_block_hits AS PBH ON PBH.hit_idx = PH.idx
+		LEFT JOIN blocks AS B ON B.idx = PBH.block_idx  where PH.pair_idx=1   ORDER BY PH.hitnum  asc
  */
 public class QueryPanel extends JPanel {
 	private static final long serialVersionUID = 2804096298674364175L;
 	private boolean AND=true;
+	private static final int singleOrphan=0, singleGenes=1;
 
-	public QueryPanel(SyMAPQueryFrame parentFrame) {
+	protected QueryPanel(SyMAPQueryFrame parentFrame) {
 		theParentFrame = parentFrame;
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -44,18 +64,27 @@ public class QueryPanel extends JPanel {
 
 		createQueryPanel();
 	}
-	public  boolean isEitherAnno() 	{ return annoOptRow.isEnabled() && annoOptRow.isOne(); }
-	public  boolean isOneAnno() 	{ return annoOptRow.isEnabled() && annoOptRow.isTwo(); }
-	public  boolean isBothAnno() 	{ return annoOptRow.isEnabled() && annoOptRow.isThree(); }
-	private boolean isNoAnno() 		{ return annoOptRow.isEnabled() && annoOptRow.isFour(); }
 	
-	private boolean isBlock() 	{ return blockOptRow.isEnabled() && blockOptRow.isOne(); }
-	private boolean isNotBlock(){ return blockOptRow.isEnabled() && blockOptRow.isTwo(); }
+	// This set the DB query for every hit with a gene; the Every+ and GeneNum are DBdata files
+	protected boolean isEveryAnno() {
+		return (radAnnoEvery.isEnabled() && radAnnoEvery.isSelected())
+			|| isEveryPlusAnno() || isGeneNum();
+	}
+	protected boolean isEveryPlusAnno() {// CAS547 add
+		return (radAnnoEveryPlus.isEnabled() && radAnnoEveryPlus.isSelected())
+				|| isGeneNum();
+	} 
+	protected boolean isOneAnno() 	 {return radAnnoOne.isEnabled() && radAnnoOne.isSelected(); } 	// DBdata filter
+	protected boolean isBothAnno()   {return radAnnoBoth.isEnabled() && radAnnoBoth.isSelected(); } 
+	private   boolean isNoAnno() 	 {return radAnnoNone.isEnabled() && radAnnoNone.isSelected(); } 
 	
-	public boolean isAnnoTxt()	{ return txtAnno.isEnabled() && txtAnno.getText().trim().length()>0;}
-	public String getAnnoTxt()	{ return txtAnno.getText().trim();}
+	private boolean isBlock() 		{return radBlockYes.isEnabled() && radBlockYes.isSelected(); }
+	private boolean isNotBlock() 	{return radBlockNo.isEnabled() && radBlockNo.isSelected(); }
 	
-	private boolean isBlockNum(){ // CAS514 was not checking for selected
+	protected boolean isAnnoTxt()	{return txtAnno.isEnabled() && txtAnno.getText().trim().length()>0;}// DBdata filter;
+	protected String getAnnoTxt()	{return txtAnno.getText().trim();}
+	
+	private boolean isBlockNum(){     // CAS514 was not checking for selected
 		return chkBlock.isEnabled() && chkBlock.isSelected() && txtBlock.getText().trim().length()>0;}
 	
 	private boolean isCollinearSet(){ // CAS514 was not checking for selected
@@ -64,29 +93,30 @@ public class QueryPanel extends JPanel {
 	private boolean isHitIdx()	{ 
 		return chkHitIdx.isEnabled() && chkHitIdx.isSelected() && txtHitIdx.getText().trim().length()>0;}
 	
-	public boolean isGeneNum()	{  
+	protected boolean isGeneNum()	{  
 		return chkGeneNum.isEnabled() && chkGeneNum.isSelected() && txtGeneNum.getText().trim().length()>0;}
 	
-	public String getGeneNum() {
+	protected String getGeneNum() { // DBdata filter
 		if (!isGeneNum()) return null;
 		return txtGeneNum.getText().trim();
 	}
 	
 	// these are only good for the last query, so should only be used for building the tables
-	public boolean isSingle() 		{ return chkSingle.isEnabled() && chkSingle.isSelected(); }
-	public boolean isOrphan()		{ return chkSingle.isEnabled() && cmbSingleOpt.getSelectedIndex()==0;}
+	protected boolean isSingle() 		{ return chkSingle.isEnabled() && chkSingle.isSelected(); }
+	protected boolean isSingleOrphan()	{ return isSingle() && cmbSingleOpt.getSelectedIndex()==singleOrphan;}
+	protected boolean isSingleGenes()	{ return isSingle() && cmbSingleOpt.getSelectedIndex()==singleGenes;}
 	
-	public boolean isPgeneF()    	{ return chkPgeneF.isEnabled() 		&& chkPgeneF.isSelected(); }
-	public boolean isLinkageInc() 	{ return chkLinkageInc.isEnabled() 	&& chkLinkageInc.isSelected(); }
-	public boolean isUnannotInc() 	{ return chkUnannotInc.isEnabled() 	&& chkUnannotInc.isSelected(); }
-	public boolean isOnlyInc()    	{ return chkOnlyInc.isEnabled() 	&& chkOnlyInc.isSelected(); }
-	public boolean isInclude(int sp) {return incSpecies[sp].isEnabled() && incSpecies[sp].isSelected(); }
-	public boolean isExclude(int sp) {return exSpecies[sp].isEnabled() 	&& exSpecies[sp].isSelected();}
+	protected boolean isPgeneF()    	{ return chkPgeneF.isEnabled() 		&& chkPgeneF.isSelected(); }
+	protected boolean isLinkageInc() 	{ return chkLinkageInc.isEnabled() 	&& chkLinkageInc.isSelected(); }
+	protected boolean isUnannotInc() 	{ return chkUnannotInc.isEnabled() 	&& chkUnannotInc.isSelected(); }
+	protected boolean isOnlyInc()    	{ return chkOnlyInc.isEnabled() 	&& chkOnlyInc.isSelected(); }
+	protected boolean isInclude(int sp) { return incSpecies[sp].isEnabled() && incSpecies[sp].isSelected(); }
+	protected boolean isExclude(int sp) { return exSpecies[sp].isEnabled() 	&& exSpecies[sp].isSelected();}
 	
-	public SpeciesSelectPanel getSpeciesPanel() {return speciesPanel;}
-	public HashMap <Integer, String> getGrpCoords() { return grpCoords;}
+	protected SpeciesSelectPanel getSpeciesPanel() {return speciesPanel;}
+	protected HashMap <Integer, String> getGrpCoords() { return grpCoords;} // DBdata filter
 	
-	public int getGrp() {// geneNum needs just
+	protected int getGrp() {// geneNum needs just
 		for (int p=0; p<nSpecies; p++) {
 			int index = speciesPanel.getSelChrIdx(p); 
 			if(index > 0) return index;
@@ -96,14 +126,14 @@ public class QueryPanel extends JPanel {
 	/****************************************************
 	 * Make query
 	 **************************************************/
-	public String makeSQLquery() {
+	protected String makeSQLquery() {
 		grpCoords.clear(); // CAS514 in case makeSpChrWhere is not called
 		
 		bValidQuery=true;
-		boolean bSingle = isSingle();
 		
-		FieldData theFields = FieldData.getFields();
+		FieldData theFields = FieldData.getFields(isEveryPlusAnno()); // CAS547 add isAllHits
    	 
+		boolean bSingle = isSingle();
 		String sql;
 		if (bSingle) sql = "SELECT " + theFields.getDBFieldList(bSingle) + makeSingleSQL();
 		else         sql = "SELECT " + theFields.getDBFieldList(bSingle) + makePairSQL(theFields.getJoins());
@@ -115,9 +145,10 @@ public class QueryPanel extends JPanel {
 	 *  CAS514 add pairs to orphan queries e.g. getPairWhere() = PH.pair_idx IN (1,2,3)
 	 *  	   without the pairs, it will select all orphans in DB
 	 *  	   Add the Genes Only - this is all genes regardless of pairs
+	 *  CAS547 Add Gene with hits, which displays all hit
 	 */
 	private String makeSingleSQL() {
-		boolean bOrphan = isOrphan();
+		boolean bOrphan = isSingleOrphan();
 		
 		String from = " FROM pseudo_annot AS " + Q.PA;
 		
@@ -164,66 +195,46 @@ public class QueryPanel extends JPanel {
 	}
 	/*********************************************************
 	 * Hit SELECT " + getDBFieldList() + " FROM pseudo_hits AS " + Q.PH + whereClause
-	 * isOneAnno requires postprocessing
-	 * isTwoAnno needs postprocessing only because there are a few cases where (PH.annot1_idx>0 and PH.annot2_idx>0)
-	 *    is not true but it really  is true. It needs to be fixed in AnchorMain, which will take some work....
+	 * isOneAnno and annotatin requires postprocessing, though anno exists is checked below
 	 */
 	private String makePairSQL(String join) {
 		String whereClause= " where " + speciesPanel.getPairWhere(); // PH.pair_idx in (...)
 		
-		whereClause = joinBool(whereClause, makeAnnoWhere(), AND);
-		
-		// Chr, loc
+		// Chr, loc;
 		whereClause = joinBool(whereClause, makeSpChrWhere(), AND);
 		
-		if (isHitIdx()) { // CAS520 changed from idx to hitnum, which needs chrs
+		if (isHitIdx()) { 					// CAS520 changed from idx to hitnum, which needs chrs
 			whereClause = joinBool(whereClause, makeChkHitWhere(), AND);
 		}
-		else if (isGeneNum()) { // CAS541 check in DBdata.passFilters
-			makeChkGeneNumWhere(); // just check for valid Gene# here
-			//whereClause = joinBool(whereClause, makeChkGeneNumWhere(whereClause), AND);
+		else if (isGeneNum()) {    			// CAS541 check in DBdata.passFilters
+			makeChkGeneNumWhere(); 			// just check for valid Gene# here
 		}
-		else if (isBlockNum()) { // if block, only anno filter and chromosome (CAS513 add chromosome)
+		else if (isBlockNum()) { 			// if block, only anno filter and chromosome (CAS513 add chromosome)
 			whereClause = joinBool(whereClause, makeChkBlockWhere(), AND);
 		}
-		else if (isCollinearSet()) { // if collinear, only anno filter and chromosome (CAS513 add chromosome)
+		else if (isCollinearSet()) { 		// if collinear, only anno filter and chromosome (CAS513 add chromosome)
 			whereClause = joinBool(whereClause, makeChkCollinearWhere(), AND);
 		}
-		else {// isSynteny, isAnno, isColinear; isOneAnno, isTwoAnno use post-processing
+		else {// isSynteny, isAnno, isCollinear
 			if (isBlock())         	whereClause = joinBool(whereClause, "PBH.block_idx is not null", AND);
 			else if (isNotBlock()) 	whereClause = joinBool(whereClause, "PBH.block_idx is null", AND);
 			
 			if (isNoAnno())	 
 				whereClause = joinBool(whereClause, "(PH.annot1_idx=0 and PH.annot2_idx=0) AND PA.idx is null", AND); // 'is null' is necessary. 
-			else if (isBothAnno()) 					// CAS543 add search here instead of DBdata
+			else if (isBothAnno()) 	// CAS543 add search here instead of DBdata (apparently did not work on some cases, but my rewrite must have fixed it)
 				whereClause = joinBool(whereClause, "(PH.annot1_idx>0 and PH.annot2_idx>0)", AND); 
-			else if (isOneAnno() || isEitherAnno() || isAnnoTxt())  // isOne is still done in DBdata
+			else if (isOneAnno() || isEveryAnno() || isAnnoTxt())  // isOne is still done in DBdata
 				whereClause = joinBool(whereClause, "(PH.annot1_idx>0 or PH.annot2_idx>0)", AND); 
 			
 			int n = isCollinearSize(true);
 			String op = "PH.runsize>=" + n;
-			if (coEQ.isSelected()) op = "PH.runsize=" + n;
-			else if (coLE.isSelected()) op = "PH.runsize>0 and PH.runsize<=" + n;
+			if      (radCoEQ.isSelected()) op = "PH.runsize=" + n;
+			else if (radCoLE.isSelected()) op = "PH.runsize>0 and PH.runsize<=" + n;
 			if (n>0) whereClause = joinBool(whereClause, op, AND); // CAS517 was >
 		}
 		return " FROM pseudo_hits AS " + Q.PH + join + " " + whereClause + "  ORDER BY PH.hitnum  asc"; // CAS520 was PH.idx
 	}	
-	/****************************************
-	 * Filter is done in DBdata, but there must be at least one anno to have a chance of passing
-	 */
-	private String makeAnnoWhere() {
-		if (!isAnnoTxt()) return "";
-		
-		return "";
-		/* CAS543 moved search to DBdata filter as this returns overlapping genes of gene with anno
-		 * If this extra select is not done, then ONLY rows with PA.name with zinc are returned
-		 * and there is no annotation for the other side of the hit; further filtering happens in DBdata
-		String clause = "PA.name LIKE '%" + txtAnno.getText() + "%'";
-		return  "PH.idx in (SELECT  PH.idx FROM      pseudo_hits       AS PH " +
-				"LEFT JOIN pseudo_hits_annot AS PHA ON PH.idx = PHA.hit_idx " +
-				"LEFT JOIN pseudo_annot      AS PA  ON PHA.annot_idx = PA.idx WHERE " + clause + ")";
-		*/
-	}
+	
 	/******************************************************** 
 	 * CAS504 added block search; CAS513 didn't always work - changed to just looking for block=N
 	 * Convert block string to where statement 
@@ -263,8 +274,8 @@ public class QueryPanel extends JPanel {
 			return "";
 		}
 	}
-	// this only return one occurrence
-	private String makeChkHitWhere() {// CAS520 from idx to hitnum
+	// this only return one occurrence  CAS520 from idx to hitnum
+	private String makeChkHitWhere() {
 		String run = txtHitIdx.getText().trim();
 		if (run.equals("")) return "";
 		
@@ -292,10 +303,8 @@ public class QueryPanel extends JPanel {
 		bValidQuery=false;
 		return "";	
 	}
-	/************************************
-	 * The chromosomes are queried in MySQL and the locations in DBdata
-	 * Works for both orphan and hit
-	 */
+	
+	// The chromosomes are queried in MySQL and the locations in DBdata; Works for both orphan and hit
 	private String makeSpChrWhere() {
 		String grpList="", where="";
 		grpCoords.clear();
@@ -354,10 +363,9 @@ public class QueryPanel extends JPanel {
 		return left + " OR " + right;
 	}	
 	/*******************************************************
-	 * Summary  CAS503 made this a complete list of filters
-	 * CAS514 reorder again
+	 * Summary  CAS503 made this a complete list of filters; CAS514 reorder again
 	 */
-	public String makeSummary() { 
+	protected String makeSummary() { 
 		int numSpecies = speciesPanel.getNumSpecies();
 		if(numSpecies ==0) return "No species"; // not possible?
 		
@@ -366,7 +374,7 @@ public class QueryPanel extends JPanel {
 		String retVal="";
 		
 		if(isSingle()) {
-			retVal = (isOrphan()) ? "Orphan genes" : "All genes";
+			retVal = (isSingleOrphan()) ? "Orphan genes" : "All genes";
 			retVal = joinStr(retVal, anno, ";  ");
 			
 			String selSingSp = (String) cmbSingleSpecies.getSelectedItem();
@@ -391,16 +399,17 @@ public class QueryPanel extends JPanel {
 			if (isBlock())			retVal = joinStr(retVal, "Block hits", ";  ");
 			else if (isNotBlock()) 	retVal = joinStr(retVal, "No Block hits", ";  ");
 			
-			if (isEitherAnno())		retVal = joinStr(retVal, "Either Gene hit", ";  ");
-			else if (isOneAnno())	retVal = joinStr(retVal, "One Gene hit", ";  ");
-			else if (isBothAnno())	retVal = joinStr(retVal, "Both Gene hits", ";  ");
+			if (isEveryPlusAnno())		retVal = joinStr(retVal, "Every Gene with ANY hit", ";  "); // must be before next if
+			else if (isEveryAnno())retVal = joinStr(retVal, "Every Gene with best hit", ";  ");
+			else if (isOneAnno())	retVal = joinStr(retVal, "One Gene best hit", ";  ");
+			else if (isBothAnno())	retVal = joinStr(retVal, "Both Gene best hits", ";  ");
 			else if (isNoAnno()) 	retVal = joinStr(retVal, "No Gene hits", ";  ");
 			
 			int n=isCollinearSize(false);
 			if (n>0) {
 				String op = ">=";
-				if (coEQ.isSelected()) op = "=";
-				else if (coLE.isSelected()) op = "<=";
+				if (radCoEQ.isSelected()) op = "=";
+				else if (radCoLE.isSelected()) op = "<=";
 				retVal = joinStr(retVal, "Collinear size " + op + n, ";  ");
 			}
 			
@@ -420,7 +429,7 @@ public class QueryPanel extends JPanel {
 				if(isOnlyInc())		retVal = joinStr(retVal, "Only included", ";  ");
 			}
 		}
-		if (retVal.equals("")) retVal="Pair hits"; 
+		if (retVal.equals("")) retVal= "Pair Hits"; 
 		retVal = joinStr(retVal, anno, ";  ");
 		retVal = joinStr(retVal, loc, ";  "); 
 	
@@ -582,36 +591,80 @@ public class QueryPanel extends JPanel {
 		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		panel.setBackground(Color.WHITE);
+		int width=140;
 		
-		blockOptRow = new OptionsRow("In Block (Synteny hit)", "Yes", "No", "", "", "All", 5, 150);
-		blockOptRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-		panel.add(blockOptRow); panel.add(Box.createVerticalStrut(5));
+		// block
+		JPanel brow = createRow();
+		lblBlockOpts = 		new JLabel("In Block (Synteny hit)");
+		radBlockYes = 		new JRadioButton("Yes"); 	radBlockYes.setBackground(Color.WHITE); 
+		radBlockNo = 		new JRadioButton("No"); 	radBlockNo.setBackground(Color.WHITE);
+		radBlockIgnore = 	new JRadioButton("Ignore"); radBlockIgnore.setBackground(Color.WHITE);
+		radBlockIgnore.setToolTipText("Does not matter if hit is in a block or not");
 		
-		annoOptRow = new OptionsRow("Annotated (Gene hit)", "Either", "One", "Both", "None", "All", 5, 150);
-		annoOptRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-		panel.add(annoOptRow); panel.add(Box.createVerticalStrut(5));
+		brow.add(lblBlockOpts); 	
+		if (width>0 && width > lblBlockOpts.getPreferredSize().width) 
+			brow.add(Box.createHorizontalStrut(width-lblBlockOpts.getPreferredSize().width));
+		brow.add(radBlockYes);		brow.add(Box.createHorizontalStrut(1));
+		brow.add(radBlockNo);		brow.add(Box.createHorizontalStrut(1));
+		brow.add(radBlockIgnore);	brow.add(Box.createHorizontalStrut(1));
+		ButtonGroup bg = new ButtonGroup();
+		bg.add(radBlockYes); bg.add(radBlockNo); bg.add(radBlockIgnore);
+		radBlockIgnore.setSelected(true);
+		panel.add(brow); panel.add(Box.createVerticalStrut(5));
 		
-		JPanel crow = new JPanel();
-		crow.setLayout(new BoxLayout(crow, BoxLayout.LINE_AXIS));
-		crow.setAlignmentX(Component.LEFT_ALIGNMENT);
-		crow.setBackground(Color.WHITE);
+		// anno
+		JPanel arow = createRow();
+		lblAnnoOpts 		= new JLabel("Annotated (Gene hit)");
+		radAnnoEvery 		= new JRadioButton("Every"); 	radAnnoEvery.setBackground(Color.WHITE); 
+		radAnnoEvery.setToolTipText("Every hit aligned to at least one gene - best gene listed");
+		radAnnoEveryPlus 	= new JRadioButton("Every+"); 	radAnnoEveryPlus.setBackground(Color.WHITE); 
+		radAnnoEveryPlus.setToolTipText("Every hit aligned to at least one gene - ALL genes listed");
+		radAnnoOne 			= new JRadioButton("One"); 		radAnnoOne.setBackground(Color.WHITE); 
+		radAnnoOne.setToolTipText("Every hit aligned to only one gene - best gene listed");
+		radAnnoBoth 		= new JRadioButton("Both"); 	radAnnoBoth.setBackground(Color.WHITE); 
+		radAnnoBoth.setToolTipText("Every hit aligned to two genes - best genes listed");
+		radAnnoNone 		= new JRadioButton("None"); 	radAnnoNone.setBackground(Color.WHITE); 
+		radAnnoNone.setToolTipText("Every hit aligned to no genes");
+		radAnnoIgnore 		= new JRadioButton("Ignore"); 	radAnnoIgnore.setBackground(Color.WHITE); 
+		radAnnoIgnore.setToolTipText("Does not matter if hit aligned to gene or not");
+		arow.add(lblAnnoOpts); 			
+		if (width>0 && width > lblAnnoOpts.getPreferredSize().width) 
+			arow.add(Box.createHorizontalStrut(width-lblAnnoOpts.getPreferredSize().width));
+		arow.add(radAnnoEvery);		brow.add(Box.createHorizontalStrut(1));
+		if (theParentFrame.isAlgo2()) {
+			arow.add(radAnnoEveryPlus);	brow.add(Box.createHorizontalStrut(1));
+		}
+		arow.add(radAnnoOne);			brow.add(Box.createHorizontalStrut(1));
+		arow.add(radAnnoBoth);			brow.add(Box.createHorizontalStrut(1));
+		arow.add(radAnnoNone);			brow.add(Box.createHorizontalStrut(1));
+		arow.add(radAnnoIgnore);		brow.add(Box.createHorizontalStrut(1));
+		ButtonGroup ag = new ButtonGroup();
+		ag.add(radAnnoEvery);ag.add(radAnnoEveryPlus);ag.add(radAnnoOne);ag.add(radAnnoBoth);
+		ag.add(radAnnoNone);ag.add(radAnnoIgnore);
+		radAnnoIgnore.setSelected(true);
+		panel.add(arow);
+		panel.add(Box.createVerticalStrut(5));
 		
+		// collinear
+		JPanel crow = createRow();
 		lblCollinearN = new JLabel("Collinear size ");
 		crow.add(lblCollinearN); crow.add(Box.createHorizontalStrut(3));
 		
 		txtCollinearN = new JTextField(3); txtCollinearN.setBackground(Color.WHITE);
 		txtCollinearN.setText("0"); txtCollinearN.setMaximumSize(txtCollinearN.getPreferredSize());
-		crow.add(txtCollinearN); crow.add(Box.createHorizontalStrut(15));
+		crow.add(txtCollinearN); 
+		int w = (int) (lblCollinearN.getPreferredSize().getWidth()+txtCollinearN.getPreferredSize().getWidth()+1);
+		if (width>0 && width > w) arow.add(Box.createHorizontalStrut(width-w));
 		
-		coGE = new JRadioButton(">="); coGE.setBackground(Color.WHITE);
-		coEQ = new JRadioButton("=");  coEQ.setBackground(Color.WHITE);
-		coLE = new JRadioButton("<="); coLE.setBackground(Color.WHITE);
+		radCoGE = new JRadioButton(">="); radCoGE.setBackground(Color.WHITE);
+		radCoEQ = new JRadioButton("=");  radCoEQ.setBackground(Color.WHITE);
+		radCoLE = new JRadioButton("<="); radCoLE.setBackground(Color.WHITE);
 		ButtonGroup g = new ButtonGroup();
-		g.add(coGE); g.add(coEQ); g.add(coLE);
-		coGE.setSelected(true);
-		crow.add(coGE); crow.add(Box.createHorizontalStrut(1));
-		crow.add(coEQ); crow.add(Box.createHorizontalStrut(1));
-		crow.add(coLE); crow.add(Box.createHorizontalStrut(1));
+		g.add(radCoGE); g.add(radCoEQ); g.add(radCoLE);
+		radCoGE.setSelected(true);
+		crow.add(radCoGE); crow.add(Box.createHorizontalStrut(1));
+		crow.add(radCoEQ); crow.add(Box.createHorizontalStrut(1));
+		crow.add(radCoLE); crow.add(Box.createHorizontalStrut(1));
 		
 		panel.add(crow); 
 		
@@ -624,9 +677,7 @@ public class QueryPanel extends JPanel {
 		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		panel.setBackground(Color.WHITE);
 		
-		JPanel row = new JPanel();
-		row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-		row.setBackground(Color.WHITE);
+		JPanel row = createRow();
 		
 		chkBlock = new JCheckBox("Block#");
 		chkBlock.setBackground(Color.WHITE);
@@ -713,10 +764,7 @@ public class QueryPanel extends JPanel {
 		panel.setBackground(Color.WHITE);
 		
 		// orphan row
-		JPanel	row = new JPanel();
-		row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-		row.setAlignmentX(Component.LEFT_ALIGNMENT);
-		row.setBackground(Color.WHITE);
+		JPanel	row = createRow();
 		
 		chkSingle = new JCheckBox("Single");	
 		chkSingle.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -745,6 +793,7 @@ public class QueryPanel extends JPanel {
 		
 		cmbSingleOpt = new JComboBox <String> (); // CAS514 add for all genes
 		cmbSingleOpt.setBackground(Color.WHITE);
+		
 		cmbSingleOpt.addItem("Orphan genes (no hits)");
 		cmbSingleOpt.addItem("All genes (w/o hits)");
 		cmbSingleOpt.addActionListener(new ActionListener() { 
@@ -825,11 +874,7 @@ public class QueryPanel extends JPanel {
 			String catName = sortedGroups.get(grpIdx);
 			boolean firstOne = true;
 
-			JPanel row = new JPanel();
-			row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-			row.setBackground(Color.WHITE);
-			row.setAlignmentX(Component.LEFT_ALIGNMENT);
-			
+			JPanel row = createRow();
 			row.add(new JLabel("Include: "));
 			for(int x=0; x<incSpecies.length; x++) {
 				if(catName.equals(theProjects.get(x).getdbCat())) {
@@ -845,11 +890,7 @@ public class QueryPanel extends JPanel {
 			}
 			panel.add(row);
 	
-			row = new JPanel();
-			row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-			row.setBackground(Color.WHITE);
-			row.setAlignmentX(Component.LEFT_ALIGNMENT);
-	
+			row = createRow();
 			row.add(new JLabel("Exclude: "));
 			for(int x=0; x<exSpecies.length; x++) {
 				if(catName.equals(theProjects.get(x).getdbCat())) {
@@ -889,15 +930,16 @@ public class QueryPanel extends JPanel {
 	private void setClearFilters() {
 		setAllEnabled(true);
 		
-		txtAnno.setText("");
-		blockOptRow.setValue(5); // options
-		annoOptRow.setValue(5);  
+		radBlockIgnore.setSelected(true);
+		radAnnoIgnore.setSelected(true);
+		radCoGE.setSelected(true);
 		
+		txtAnno.setText("");
 		txtCollinearN.setText("");
 		
 		txtBlock.setText(""); 			txtBlock.setEnabled(false);	chkBlock.setSelected(false);
 		txtCollinearSet.setText(""); 	txtCollinearSet.setEnabled(false);	chkCollinearSet.setSelected(false);
-		coGE.setSelected(true);
+		
 		txtHitIdx.setText(""); 			txtHitIdx.setEnabled(false);   chkHitIdx.setSelected(false);
 		txtGeneNum.setText(""); 		txtGeneNum.setEnabled(false);  chkGeneNum.setSelected(false);
 		
@@ -918,10 +960,12 @@ public class QueryPanel extends JPanel {
 	private void setAllEnabled(boolean b) { // everything
 		if (b) setAnnoEnabled(b);
 		
-		blockOptRow.setEnabled(b); 
-		annoOptRow.setEnabled(b); 
-	
-		lblCollinearN.setEnabled(b); txtCollinearN.setEnabled(b); coGE.setEnabled(b);coEQ.setEnabled(b);coLE.setEnabled(b);
+		lblBlockOpts.setEnabled(b); radBlockYes.setEnabled(b);radBlockNo.setEnabled(b);radBlockIgnore.setEnabled(b);
+		
+		lblAnnoOpts.setEnabled(b); radAnnoEvery.setEnabled(b);radAnnoEveryPlus.setEnabled(b);
+		radAnnoOne.setEnabled(b); radAnnoBoth.setEnabled(b);radAnnoNone.setEnabled(b);radAnnoIgnore.setEnabled(b);
+		
+		lblCollinearN.setEnabled(b); txtCollinearN.setEnabled(b); radCoGE.setEnabled(b);radCoEQ.setEnabled(b);radCoLE.setEnabled(b);
 		
 		chkBlock.setEnabled(b);  		txtBlock.setEnabled(false); 		// only chkBlock enables
 		chkCollinearSet.setEnabled(b);  txtCollinearSet.setEnabled(false); 	// only chkColinear enables
@@ -943,116 +987,19 @@ public class QueryPanel extends JPanel {
 		for(int x=0; x<exSpecies.length; x++)  exSpecies[x].setEnabled(b);
 		for(int x=0; x<incSpecies.length; x++) incSpecies[x].setEnabled(b);
 	}
-
+	private JPanel createRow() {
+		JPanel arow = new JPanel();
+		arow.setLayout(new BoxLayout(arow, BoxLayout.LINE_AXIS));
+		arow.setAlignmentX(Component.LEFT_ALIGNMENT);
+		arow.setBackground(Color.WHITE);
+		return arow;
+	}
 	public  boolean isValidQuery() 	{ 
 		boolean b = bValidQuery;
 		bValidQuery=true;
 		return b;
 	}
 	
-	
-	/************************************************************************/
-	public class OptionsRow extends JPanel implements ItemSelectable, ItemListener {
-		private static final long serialVersionUID = -8714286499322636798L;
-		
-		private JLabel titleLabel;
-		private JRadioButton case1Button, case2Button, case3Button, case4Button, ignButton; // CAS540 add case4
-		private ButtonGroup group;
-		private Vector<ItemListener> listeners;
-		
-		public OptionsRow ( String titleText, String strCase1Text, String strCase2Text, 
-						    String strCase3Text, String strCase4Text, String strIgnText, 
-							int nInitialValue, int width )
-		{
-			titleLabel    = new JLabel(titleText);
-			case1Button = 	new JRadioButton(strCase1Text);
-			case2Button = 	new JRadioButton(strCase2Text);
-			case3Button = 	new JRadioButton(strCase3Text);
-			case4Button = 	new JRadioButton(strCase4Text);
-			ignButton  = 	new JRadioButton(strIgnText);
-			
-		    group = new ButtonGroup();
-		    group.add(case1Button); group.add(case2Button); group.add(case3Button); 
-		    group.add(case4Button);group.add(ignButton);
-			
-			setLayout( new BoxLayout ( this, BoxLayout.X_AXIS ) );
-			super.setBackground(Color.WHITE);
-			add(titleLabel);
-			if (width>0 && width > titleLabel.getPreferredSize().width) 
-				add(Box.createHorizontalStrut(width-titleLabel.getPreferredSize().width));
-			if (!strCase1Text.equals(""))  	{ case1Button.setBackground(Color.WHITE);	add(case1Button); }
-			if (!strCase2Text.equals(""))	{ case2Button.setBackground(Color.WHITE);	add(case2Button); }
-			if (!strCase3Text.equals(""))	{ case3Button.setBackground(Color.WHITE);	add(case3Button); }
-			if (!strCase4Text.equals(""))	{ case4Button.setBackground(Color.WHITE);	add(case4Button); }
-			if (!strIgnText.equals(""))		{ ignButton.setBackground(Color.WHITE);		add(ignButton); }
-			
-			listeners = new Vector<ItemListener>();
-			case1Button.addItemListener(this);
-			case2Button.addItemListener(this);
-			case3Button.addItemListener(this);
-			case4Button.addItemListener(this);
-			ignButton.addItemListener(this);
-
-			setValue ( nInitialValue );
-		}
-		
-		public void setEnabled(boolean enabled) {
-			titleLabel.setEnabled(enabled);
-			case1Button.setEnabled(enabled);
-			case2Button.setEnabled(enabled);
-			case3Button.setEnabled(enabled);
-			case4Button.setEnabled(enabled);
-			ignButton.setEnabled(enabled);
-		}
-		public boolean isEnabled() {return titleLabel.isEnabled();} // CAS514
-		
-		public void itemStateChanged(ItemEvent e) {
-	    	Iterator<ItemListener> iter = listeners.iterator();
-	    	while ( iter.hasNext() ) {
-	    		JRadioButton b = (JRadioButton)e.getItem();
-	    		iter.next().itemStateChanged(new ItemEvent(this, e.getID(), b.getText(), e.getStateChange()));
-	    	}
-		}
-		public boolean isOne() 		{return case1Button.isSelected();}
-		public boolean isTwo()  	{return case2Button.isSelected();}
-		public boolean isThree()  	{return case3Button.isSelected();}
-		public boolean isFour()  	{return case4Button.isSelected();}
-		public boolean isFive()  	{return ignButton.isSelected();}
-		
-		public int getValue() {
-			if (case1Button.isSelected()) return 1;
-			if (case2Button.isSelected()) return 2;
-			if (case3Button.isSelected()) return 3;
-			if (case4Button.isSelected()) return 4;
-			return 5;
-		}
-		public void setValue( int nVal ) {
-			switch ( nVal ) {
-			case 1: group.setSelected(case1Button.getModel(), true); break;
-			case 2:	group.setSelected(case2Button.getModel(), true); break;		
-			case 3:	group.setSelected(case3Button.getModel(), true); break;	
-			case 4:	group.setSelected(case4Button.getModel(), true); break;	
-			case 5:	group.setSelected(ignButton.getModel(), true); break;
-			}
-		}
-		public void addItemListener(ItemListener l) {
-			listeners.add(l);
-		}
-		public Object[] getSelectedObjects() {
-			return null;
-		}
-		public void removeItemListener(ItemListener l) {
-			listeners.remove(l);
-		}
-		public String toString() {
-			if      (case1Button.isSelected()) return titleLabel.getText() + " " + case1Button.getText();
-			else if (case2Button.isSelected()) return titleLabel.getText() + " " + case2Button.getText();
-			else if (case3Button.isSelected()) return titleLabel.getText() + " " + case3Button.getText();
-			else if (case4Button.isSelected()) return titleLabel.getText() + " " + case4Button.getText();
-			else if (ignButton.isSelected())   return titleLabel.getText() + " " + ignButton.getText();
-			else return "<blank>";
-		}
-	} // end Options class
     /************************************************************/
 	private SyMAPQueryFrame theParentFrame = null;
 	
@@ -1066,14 +1013,17 @@ public class QueryPanel extends JPanel {
 	private JCheckBox [] incSpecies = null, exSpecies = null;
 	private String [] speciesName = null;
 	
-	private JCheckBox chkSingle = null,
-			chkOnlyInc = null, chkUnannotInc = null, chkLinkageInc = null;
+	private JCheckBox chkSingle = null, chkOnlyInc = null, chkUnannotInc = null, chkLinkageInc = null;
 	
-	// CAS504 add
-	private OptionsRow blockOptRow = null, annoOptRow=null;
+	private JLabel lblBlockOpts = null;	// CAS547 removed OptionRow class to create explicitly
+	private JRadioButton radBlockYes, radBlockNo, radBlockIgnore;
+	
+	private JLabel lblAnnoOpts = null;
+	private JRadioButton radAnnoEvery, radAnnoEveryPlus, radAnnoOne, radAnnoBoth, radAnnoNone, radAnnoIgnore;
+	
 	private JTextField txtCollinearN = null;
 	private JLabel     lblCollinearN = null;
-	private JRadioButton coGE, coEQ, coLE;
+	private JRadioButton radCoGE, radCoEQ, radCoLE;
 	
 	private JLabel singleProjLabel=null;
 	private JComboBox <String> cmbSingleOpt = null;

@@ -36,6 +36,7 @@ import javax.swing.border.BevelBorder;
 import java.sql.ResultSet;
 
 import backend.Utils;
+import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import symap.drawingpanel.Frame2d;
 import symap.drawingpanel.SyMAP2d;
@@ -523,7 +524,8 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 	}
     private void downloadBlocks() {
     	try { // CAS533 add /exports
-			JFileChooser chooser = new JFileChooser(System.getProperty("user.dir") + "/exports/");
+    		String filename = Globals.getExport(); // CAS547 add
+			JFileChooser chooser = new JFileChooser(filename);
 			chooser.setSelectedFile(new File("blocks.tsv"));
 			
 			if(chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -579,6 +581,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 					}
 					out.close();
 				}
+				System.out.println("Wrote to " + filename);
 			}
 		} catch(Exception e) {ErrorReport.print(e, "Generate blocks");}
     }

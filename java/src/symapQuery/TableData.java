@@ -145,8 +145,6 @@ public class TableData implements Serializable {
     				else progress.setText("Displaying " + vData.size() + " rows");
     			}
     		}
-    		
-    		if (Q.TEST_TRACE) System.out.println("Final Results " + getNumRows());
     		progress.setText("");  	
     	} 
     	catch (Exception e) {ErrorReport.print(e, "add Rows With Progress");}

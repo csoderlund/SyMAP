@@ -101,7 +101,7 @@ public class HitCluster implements Comparable <HitCluster> {
 		bEitherGene = (tgene!=null || qgene!=null);
 		
 		HashSet <Integer> hitSet = new HashSet <Integer> ();
-		for (Hit ht : clHitList) hitSet.add(ht.hitNum);  // this hit list to get score
+		for (Hit ht : clHitList) hitSet.add(ht.hitCnt);  // this hit list to get score
 		
 		if (tgene!=null) {
 			exonScore[T] = tgene.scoreExons(hitSet); 

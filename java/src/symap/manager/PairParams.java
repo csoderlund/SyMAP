@@ -223,11 +223,13 @@ public class PairParams extends JDialog {
 		txtExon.setMinimumSize(txtExon.getPreferredSize());
 		
 		chkEEpile = new JCheckBox(LABELS[x++]); chkEEpile.setSelected(true); 
-		chkEIpile = new JCheckBox(LABELS[x++]); chkEIpile.setSelected(true);
-		chkEnpile = new JCheckBox(LABELS[x++]); chkEnpile.setSelected(true);
+		chkEIpile = new JCheckBox(LABELS[x++]); chkEIpile.setSelected(true); 
+		chkEnpile = new JCheckBox(LABELS[x++]); chkEnpile.setSelected(true); 
 		chkIIpile = new JCheckBox(LABELS[x++]); chkIIpile.setSelected(false);
 		chkInpile = new JCheckBox(LABELS[x++]); chkInpile.setSelected(false);
-	
+		chkEEpile.setBackground(Color.WHITE); chkEIpile.setBackground(Color.WHITE);//CAS547 add for linux
+		chkEnpile.setBackground(Color.WHITE); chkIIpile.setBackground(Color.WHITE);chkInpile.setBackground(Color.WHITE);
+		
 		btnKeep = new JButton("Save");
 		btnKeep.setBackground(Color.WHITE);
 		btnKeep.addActionListener(new ActionListener() {

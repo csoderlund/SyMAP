@@ -86,9 +86,9 @@ public class Gene implements Comparable <Gene> {
 		
 		if (idx>=0) {
 			int olap = Math.min(ht.end[ix], exonList.get(idx).eend) -  Math.max(ht.start[ix], exonList.get(idx).estart);
-			hitExonOlapMap.put(ht.hitNum, olap);
+			hitExonOlapMap.put(ht.hitCnt, olap);
 		}
-		else hitExonOlapMap.put(ht.hitNum, 0);
+		else hitExonOlapMap.put(ht.hitCnt, 0);
 		
 		return bHitExon;
 	}
@@ -118,8 +118,8 @@ public class Gene implements Comparable <Gene> {
 	try {
 		double score=0.0;
 		for (Hit ht : gnHitList) {
-			if (hitSet.contains(ht.hitNum)) 
-				score += hitExonOlapMap.get(ht.hitNum); // YYY remove overlap between hit
+			if (hitSet.contains(ht.hitCnt)) 
+				score += hitExonOlapMap.get(ht.hitCnt); // YYY remove overlap between hit
 		}
 		score = (score/exonLen)*100.0;
 		return score;
@@ -130,7 +130,7 @@ public class Gene implements Comparable <Gene> {
 		try {
 			double score=0.0;
 			for (Hit ht : gnHitList) {
-				if (hitSet.contains(ht.hitNum)) 
+				if (hitSet.contains(ht.hitCnt)) 
 					score += ht.len[ix];  // YYY remove overlap between hit
 			}
 			score = (score/glen)*100.0; 
@@ -164,9 +164,9 @@ public class Gene implements Comparable <Gene> {
 			if (ht.bin>0 || ht.bDead) continue;
 			
 			if (bestHit==null) bestHit = ht;
-			else if (hitExonOlapMap.get(ht.hitNum)>bscore) {
+			else if (hitExonOlapMap.get(ht.hitCnt)>bscore) {
 				bestHit = ht; 
-				bscore = hitExonOlapMap.get(ht.hitNum);
+				bscore = hitExonOlapMap.get(ht.hitCnt);
 			}
 			else if (bscore==0.0 && ht.blen>bestHit.blen) bestHit = ht;
 		}
@@ -175,7 +175,7 @@ public class Gene implements Comparable <Gene> {
 	protected HashSet <Integer> getHitSet(HashSet <Integer> clSet) {
 		HashSet <Integer> set = new HashSet <Integer> ();
 		for (Hit ht : gnHitList) {
-			if (clSet.contains(ht.hitNum)) set.add(ht.hitNum);
+			if (clSet.contains(ht.hitCnt)) set.add(ht.hitCnt);
 		}
 		return set;
 	}
@@ -219,7 +219,7 @@ public class Gene implements Comparable <Gene> {
 		if (gnHitList.size()>0) { 
 			Hit last=null;
 			for (Hit ht : gnHitList) {
-				Boolean be = hitExonOlapMap.get(ht.hitNum)>0;
+				Boolean be = hitExonOlapMap.get(ht.hitCnt)>0;
 				String   e = (be) ? " E " : " I ";
 				hits += e + ht.toDiff(last) + "\n";
 				last = ht;

@@ -102,7 +102,10 @@ public class GrpPairGene {
 	protected boolean setClBin(HashMap <Integer, HitCluster> clMap) {
 	try {
 		for (PairHits ph : genePairList) { 
-			if (ph.bin==0) ph.setBin(); // overlap, so bin was assigned to another pair
+			if (ph.bin==0) {
+				ph.setBin(); // overlap, so bin was assigned to another pair
+				if (ph.bin==0) continue;
+			}
 			
 			if (clMap.containsKey(ph.bin)) 
 				ph.clBin = clMap.get(ph.bin).cHitNum;
@@ -269,7 +272,7 @@ public class GrpPairGene {
 				else            lenNE+=ht.blen;
 				if (ht.bin>0)   cntBin++;
 			}
-			if (cntBin==hitSize) continue; 		// totally overlapping gene
+			if (cntBin==hitSize) continue; 		// totally overlapping gene; will inherit parent CLnum
 			
 			boolean isEQ = (lenEQ>lenNE);
 		
@@ -289,6 +292,7 @@ public class GrpPairGene {
 				createNewBinG2(tidx, qidx);
 				continue;
 			}
+			ph.bin = lastHt.bin = 0; // CAS547 had a bin that was being used
 			
 		// Single hit - filter	
 			Gene tgene = tGeneMap.get(tidx);	
@@ -451,11 +455,13 @@ public class GrpPairGene {
 		}
 		private void addHit(Hit ht) {
 			hitList.add(ht);
-			hitSet.add(ht.hitNum);
+			hitSet.add(ht.hitCnt);
 		}
-		private void setBin() {
-			bin = hitList.get(0).bin;
-			flag='*';
+		private void setBin() { 
+			if (!hitList.get(0).bDead) {
+				bin = hitList.get(0).bin;
+				flag='*';
+			}
 		}
 		private void clear() {
 			hitList.clear();

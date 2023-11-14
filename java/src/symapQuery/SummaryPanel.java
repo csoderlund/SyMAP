@@ -152,7 +152,7 @@ public class SummaryPanel  extends JPanel {
 		/* create summary */
 			
 			statsPanel.add(Box.createVerticalStrut(5));
-			String type = (qPanel.isOrphan()) ? "Orphans" : "Genes"; // CAS514
+			String type = (qPanel.isSingleOrphan()) ? "Orphans" : "Genes"; // CAS514
 			
 			for (int spIdx : proj2orphs.keySet() )
 			{

@@ -9,10 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -97,10 +95,10 @@ public class Jhtml {
 	   	if (theLink == null) return false;
 	   	
 	   	try {
-	   		new URL(theLink); // make sure it works
+	   		new URI(theLink); // CAS547 was URL which is depleted; just changed to URI and exception change
 	   	}
-	   	catch (MalformedURLException e) {
-	   		System.out.println("Malformed URL: " + theLink);
+		catch (URISyntaxException e) {
+			ErrorReport.print(e, "URI Syntax: " + theLink);
 	   		return false;
 	   	}
 	   	if (isMac()) 	return tryOpenMac(theLink);
@@ -110,13 +108,13 @@ public class Jhtml {
 	private static boolean tryOpenMac(String theLink) { 
 		Desktop desktop = java.awt.Desktop.getDesktop();
 	   	URI oURL;
-	   	try {
-			oURL = new URI(theLink);
-	   	} catch (URISyntaxException e) {
-	   		ErrorReport.print(e, "URI syntax error on Mac: " + theLink);
+		try {
+	   		oURL = new URI(theLink);
+	   	}
+		catch (URISyntaxException e) {
+	   		ErrorReport.print(e, "URI Syntax: " + theLink);
 	   		return false;
 	   	}
-  	
 		try {
 			desktop.browse(oURL);
 			return true;
@@ -130,7 +128,8 @@ public class Jhtml {
 		// Copied this from: http://www.centerkey.com/java/browser/   CAS507 added all listed browsers from this site
 	   	try { 
 	   		if (isWindows()) {
-	   			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + theLink); // no idea if this works
+	   			String [] x = {"rundll32 url.dll,FileProtocolHandler", theLink}; // CAS547 single string depreciated
+	   			Runtime.getRuntime().exec(x); // no idea if this works on Windows
 	   			return true;
 	   		}
 	   		else { 

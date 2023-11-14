@@ -118,7 +118,8 @@ public class Utilities {
 		boolean running = false;
 		try  {
 	        	String line;
-	        	Process p = Runtime.getRuntime().exec("ps -ef");
+	        	String [] x = {"ps", "-ef"};
+	        	Process p = Runtime.getRuntime().exec(x); // CAS547 single string depreciated
 	        	BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	        	while ((line = input.readLine()) != null)  {
 	            	if (line.contains(processName)){

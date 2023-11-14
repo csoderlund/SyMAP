@@ -10,6 +10,7 @@ import backend.anchor1.Group;
 import database.DBconn2;
 import props.PropertiesReader;
 import symap.Globals;
+import symapQuery.Q;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -32,6 +33,7 @@ public class Mpair {
 	private int pairIdx=-1, proj1Idx=-1, proj2Idx=-1;
 	private DBconn2 dbc2;
 	private boolean bReverse=false;
+	private String syVer="";
 	
 	private String resultDir;
 	private HashMap <String, String> fileMap = new HashMap <String, String> ();
@@ -67,6 +69,7 @@ public class Mpair {
 		makeParams();
 		if (!isReadOnly)  loadFromFile();
 		if (pairIdx!= -1) loadFromDB();
+		loadSyVer();
 	}
 	
 	public void reverse() {
@@ -76,6 +79,7 @@ public class Mpair {
 		bReverse = !bReverse;
 	}
 	public boolean isReverse() { return bReverse;}
+	protected boolean isSynteny() {return pairIdx>0;} // CAS547 add
 	/***********************************************************************************
 	 * CAS546 update params a bit
 	 */
@@ -355,6 +359,7 @@ public class Mpair {
 			String value = rs.getString(2);
 			dbMap.put(name, value);
 		}
+		rs.close();
 	}
 	catch (Exception e) {ErrorReport.print(e, "load from db"); }
 	}
@@ -364,6 +369,28 @@ public class Mpair {
 			dbMap.put(paramKey[i], paramDef[i]);
 			fileMap.put(paramKey[i], paramDef[i]);
 		}
+	}
+	///// CAS547 add ////////////////////////////////////////////////
+	private void loadSyVer() {
+	try {
+		ResultSet rs = dbc2.executeQuery("select syver from pairs where idx=" + pairIdx);
+		if (rs.next()) syVer = rs.getString(1);
+		rs.close();
+	}
+	catch (Exception e) {ErrorReport.print(e, "load syVer"); }
+	}
+	public boolean isPostV546() { //v546 had bug that added bad pseudo_hit_annot, which only shows up in Every+
+	try {
+		if (syVer.equals("")) return false;
+		
+		String x = syVer.substring(1, syVer.length());
+		x = x.replaceAll("\\.", "");
+		int y = Utilities.getInt(x);
+		if (y>=547) return true;
+		
+		return false;
+	}
+	catch (Exception e) {ErrorReport.print(e, "post v546"); return false;}
 	}
 	public String toString() {return mProj1.strDisplayName + "-" + mProj2.strDisplayName + " pair";}
 }

@@ -16,7 +16,6 @@ import java.util.Vector;
 
 import javax.swing.JTextField;
 
-import symapQuery.Q;
 import util.ErrorReport;
 import util.Utilities;
 import backend.Constants;
@@ -52,10 +51,10 @@ public class MultiAlignmentData {
 			writeFASTA(DEFAULT_SOURCE_FILE_NAME);
 			
 			progressField.setText("Running MUSCLE in /muscle directory, please be patient....");
-			String cmd = path + " -in " + DEFAULT_SOURCE_FILE_NAME + " -out " + DEFAULT_TARGET_FILE_NAME;
-			if (Q.TEST_TRACE) System.out.println(cmd);
+			//String cmd = path + " -in " + DEFAULT_SOURCE_FILE_NAME + " -out " + DEFAULT_TARGET_FILE_NAME;
 			
-			Process pr = Runtime.getRuntime().exec(cmd);
+			String [] x = {path, "-in", DEFAULT_SOURCE_FILE_NAME, "-out", DEFAULT_TARGET_FILE_NAME}; // CAS567 single string depreciated 
+			Process pr = Runtime.getRuntime().exec(x); // CAS547 single string depreciated
 			pr.waitFor();
 			
 			progressField.setText("Reading results");
@@ -80,7 +79,6 @@ public class MultiAlignmentData {
 	
 	private void writeFASTA(String fname) {
 		try {
-			if (Q.TEST_TRACE) System.out.println("Write sequences to " + fname);
 			PrintWriter out = new PrintWriter(new FileWriter(fname));
 			
 			Iterator<String> nameIter = sequenceNames.iterator();
@@ -98,17 +96,6 @@ public class MultiAlignmentData {
 			out.close();
 		} catch(Exception e) {
 			ErrorReport.print(e, "Write FASTA file " + fname);
-		}
-	}
-	
-	private void deleteFile(String fileName) {
-		try {
-			File f = new File(fileName);
-			if(!f.delete()) {
-				System.out.println("Muscle Alignment failed");
-			}
-		} catch(Exception e) {
-			ErrorReport.print(e, "Delete file " + fileName);
 		}
 	}
 	

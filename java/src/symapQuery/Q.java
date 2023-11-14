@@ -1,12 +1,13 @@
 package symapQuery;
 
+import symap.Globals;
 
 /**
  * Constants for Query and display
  */
 
 public class Q {
-	public static boolean TEST_TRACE=false; // Globals.DEBUG; // Write to file and other trace output
+	public static boolean TEST_TRACE = Globals.DEBUG; // Write to file and other trace output
 	
 	static final int INC=5000;
 	static final String rowCol   = "Row";
@@ -70,13 +71,17 @@ public class Q {
 	
 	static final int BNUM = 27;			// B.blocknum
 	static final int BSCORE = 28;		// B.blockscore
+	
 	static final int ANNOT1IDX = 29;	// PH.annot1_idx
 	static final int ANNOT2IDX = 30;	// PH.annot2_idx
 	
-	static final String ANNO = "ANNO";	// populated by keyword 
+	static final int PHAANNOT1IDX = 31;	// PHA.annot_idx	CAS547 for AllGenes
+	static final int PHAANNOT2IDX = 32;	// PHA.annot2_idx
+	
+	static final String ANNO =  "ANNO";	// populated by keyword 
 	static final String GSIZE = "GSIZE";// computed PgFsize
-	static final String GRP = "GRP";	// computed PgeneF
-	static final String PGF = "PGF";	// Compute
+	static final String GRP =   "GRP";	// computed PgeneF
+	static final String PGF =   "PGF";	// Compute
 	
 	/**************************************************************
 	 * Relations:

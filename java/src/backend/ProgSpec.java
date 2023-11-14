@@ -193,7 +193,8 @@ public class ProgSpec implements Comparable<ProgSpec>
 		        runLog.msgToFile("#" + alignNum + " " + strCommand); // log file for this run
 	        
 	        // Execute command
-	        process = Runtime.getRuntime().exec( strCommand );
+	        String [] x = strCommand.split("\\s+");
+	        process = Runtime.getRuntime().exec(x); // CAS547 single string depreciated
 	        
 	        // Capture stdout and stderr
 	        InputStream    stdout = process.getInputStream();       

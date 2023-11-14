@@ -390,7 +390,7 @@ public class AnchorMain2 {
 	try {
 		if (!Globals.TRACE) return;
 		
-		boolean doHit=false, doGenePair=false, doCluster=true, doGene=true, doPile=true;
+		boolean doHit=true, doGenePair=true, doCluster=true, doGene=true, doPile=true;
 		
 		if (doPile)
 			fhOutRep = new PrintWriter(new FileOutputStream("logs/zPiles.log", false));

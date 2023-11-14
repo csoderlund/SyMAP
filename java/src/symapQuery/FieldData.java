@@ -113,8 +113,8 @@ public class FieldData {
 		else return GENERAL_COLUMNS.length;
 	}
 	
-	// MySQL fields to load
-	public static FieldData getFields() {
+	// MySQL fields to load; this is for pairs
+	public static FieldData getFields(boolean isEveryPlus) {
 		FieldData fd = new FieldData();
 		// type not used, see above       sql.table.field    order#		Description  
 		fd.addField(String.class, Q.PA, "idx",     Q.AIDX,       "Annotation index");
@@ -122,12 +122,12 @@ public class FieldData {
 		fd.addField(String.class, Q.PA, "start",   Q.ASTART,     "Annotation start");
 		fd.addField(String.class, Q.PA, "end",     Q.AEND,       "Annotation end");
 		fd.addField(String.class, Q.PA, "strand",  Q.ASTRAND,    "Annotation strand");
-		fd.addField(String.class, Q.PA, "name",    Q.ANAME,      "Annotation attributes"); // Split for "Gene Annotation"
-		fd.addField(String.class, Q.PA, "tag", Q.AGENE,      "Annotation gene#"); // CAS518 chg to String/tag; tag is needed to suffix
-		fd.addField(String.class, Q.PA, "numhits", Q.ANUMHITS,   "Annotation numHits");// CAS541 Singles only, ignored for Hits
+		fd.addField(String.class, Q.PA, "name",    Q.ANAME,      "Annotation attributes"); 	// Split for "Gene Annotation"
+		fd.addField(String.class, Q.PA, "tag", 	   Q.AGENE,      "Annotation gene#"); 		// CAS518 chg to String/tag; tag is needed to suffix
+		fd.addField(String.class, Q.PA, "numhits", Q.ANUMHITS,   "Annotation numHits");		// CAS541 Singles only, ignored for Hits
 		
 		fd.addField(Integer.class,Q.PH, "idx",      Q.HITIDX,    "Hit index"); 
-		fd.addField(Integer.class,Q.PH, "hitnum",   Q.HITNUM,    "Hit number"); // CAS520 add
+		fd.addField(Integer.class,Q.PH, "hitnum",   Q.HITNUM,    "Hit number"); 			// CAS520 add
 		fd.addField(Integer.class,Q.PH, "proj1_idx",Q.PROJ1IDX,  "1st species index");
 		fd.addField(Integer.class,Q.PH, "proj2_idx",Q.PROJ2IDX,  "2nd species index");
 		fd.addField(Integer.class,Q.PH, "grp1_idx", Q.GRP1IDX,   "1st chromosome index");
@@ -136,28 +136,30 @@ public class FieldData {
 		fd.addField(Integer.class,Q.PH, "start2",   Q.HIT2START, "2nd hit start");
 		fd.addField(Integer.class,Q.PH, "end1",     Q.HIT1END,   "1st hit end");
 		fd.addField(Integer.class,Q.PH, "end2",     Q.HIT2END,   "2nd hit end");
-		fd.addField(String.class, Q.PH, "pctid",    Q.PID,     	 "Hit Average %Identity"); // CAS516 add these 3
+		fd.addField(String.class, Q.PH, "pctid",    Q.PID,     	 "Hit Average %Identity"); 	// CAS516 add these 3
 		fd.addField(String.class, Q.PH, "cvgpct",   Q.PSIM,      "Hit Average %Similarity");
 		fd.addField(String.class, Q.PH, "countpct", Q.HCNT,      "Clustered hits");
 		fd.addField(String.class, Q.PH, "strand",   Q.HST,       "Strand +/-, /-, etc");
 		fd.addField(String.class, Q.PH, "score",    Q.HSCORE,    "Summed clustered hits");
-		fd.addField(String.class, Q.PH, "htype",    Q.HTYPE,    "Type of Exon (E), Intron(I), neither(n)");
+		fd.addField(String.class, Q.PH, "htype",    Q.HTYPE,     "Type of Exon (E), Intron(I), neither(n)");
 		fd.addField(String.class, Q.PH, "runsize",  Q.COSIZE,    "Collinear run size");
-		fd.addField(String.class, Q.PH, "runnum",   Q.CONUM,     "Collinear number"); // CAS520 add
-
+		fd.addField(String.class, Q.PH, "runnum",   Q.CONUM,     "Collinear number"); 		// CAS520 add
+		
 		fd.addField(String.class, Q.B, "blocknum",  Q.BNUM,      "Block Number");
 		fd.addField(String.class, Q.B, "score",     Q.BSCORE,    "Block Score (#Anchors)");
 		
-		fd.addField(Integer.class,Q.PH, "annot1_idx",Q.ANNOT1IDX,"Index of 1st anno");
-		fd.addField(Integer.class,Q.PH, "annot2_idx",Q.ANNOT2IDX,"Index of 2nd anno");
+		fd.addField(Integer.class,Q.PH, "annot1_idx",Q.ANNOT1IDX,"Index of 1st anno");  	// Not for display
+		fd.addField(Integer.class,Q.PH, "annot2_idx",Q.ANNOT2IDX,"Index of 2nd anno");  	// matched with PA.idx in DBdata
 		
-		// The MySQL LEFT JOIN joins two tables and fetches rows based on a condition, which is matching in both the tables and 
-		// the unmatched rows will also be available from the table written before the JOIN clause.
+		if (isEveryPlus) { // CAS547 used for key in DBdata for uniqueness
+			fd.addField(Integer.class,Q.PHA, "annot_idx",Q.PHAANNOT1IDX,"Index of 1st anno");  	// Not for display
+			fd.addField(Integer.class,Q.PHA, "annot2_idx",Q.PHAANNOT2IDX,"Index of 2nd anno");  	// matched with PA.idx in DBdata
+		}
 		
-		fd.addLeftJoin("pseudo_hits_annot", "PH.idx = PHA.hit_idx", 	 Q.PHA);
-		fd.addLeftJoin("pseudo_annot", 		"PHA.annot_idx = PA.idx", 	 Q.PA);
-		fd.addLeftJoin("pseudo_block_hits", "PBH.hit_idx=PH.idx", 	 	 Q.PBH);
-		fd.addLeftJoin("blocks", 			"B.idx=PBH.block_idx", 	 	 Q.B);
+		fd.addLeftJoin("pseudo_hits_annot", "PH.idx = PHA.hit_idx",  Q.PHA); 
+		fd.addLeftJoin("pseudo_annot", 		"PHA.annot_idx = PA.idx", Q.PA);
+		fd.addLeftJoin("pseudo_block_hits", "PBH.hit_idx = PH.idx",  Q.PBH);
+		fd.addLeftJoin("blocks", 			"B.idx = PBH.block_idx", Q.B);
 
 		return fd;
 	}
@@ -230,9 +232,12 @@ public class FieldData {
 	private void addLeftJoin(String table, String condition, String strSymbol) {
 		theJoins.add(new JoinItem(table, condition, strSymbol,true)); 
 	}
+	private void addJoin(String table, String condition, String strSymbol) {// CAS547 add for isAllHits
+		theJoins.add(new JoinItem(table, condition, strSymbol, false)); 
+	}
 	
 	private Vector<FieldItem> theFields = null;
-	private Vector<JoinItem> theJoins = null;
+	private Vector<JoinItem>  theJoins = null;
 	
 	private class JoinItem {
 		public JoinItem(String table, String condition, String symbol, boolean left) {

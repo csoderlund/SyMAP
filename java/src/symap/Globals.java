@@ -1,13 +1,14 @@
 package symap;
 
 import java.awt.Cursor;
+import java.io.File;
 
 /******************************************
  * CAS534 added in order to move globals from SyMAP2d, SyMAPConstants and Manager
  */
 public class Globals {
-	public static final String 	VERSION = "v5.4.6"; 
-	public static final String 	DATE = " (22-Oct-23)";
+	public static final String 	VERSION = "v5.4.7"; 
+	public static final String 	DATE = " (14-Nov-23)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER =  7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
@@ -44,4 +45,13 @@ public class Globals {
     public static final Cursor MOVE_CURSOR      = Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR);
     public static final Cursor CROSSHAIR_CURSOR = Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR);
   
+    public static String getExport() { // CAS547 add for 3 uses
+    	String saveDir = System.getProperty("user.dir") + "/exports/";
+		File temp = new File(saveDir);
+		if(!temp.exists()) {
+			System.out.println("Create " + saveDir);
+			temp.mkdir();
+		}
+		return saveDir;
+    }
 }

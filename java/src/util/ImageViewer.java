@@ -12,6 +12,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import symap.Globals;
+
 /*************************************************
  * Write image - used from the Printer Icon
  * CAS533 it was using org.freehep for images, which did not work past Java v8.
@@ -44,12 +46,7 @@ public class ImageViewer extends JDialog {
 	
     private static String getFile(String fname) {
 		try {	
-			String saveDir = System.getProperty("user.dir") + "/exports/";
-			File temp = new File(saveDir);
-			if(!temp.exists()) {
-				System.out.println("Create " + saveDir);
-				temp.mkdir();
-			}
+			String saveDir = Globals.getExport(); // CAS547 change to call globals
 			
 			JFileChooser fc = new JFileChooser(saveDir);
 			FileNameExtensionFilter filter = new FileNameExtensionFilter(typeStr, typeExt);

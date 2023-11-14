@@ -994,6 +994,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		String key = n1 + ":" + n2;
 		if (pairObjMap.containsKey(key)) return pairObjMap.get(key);
 		
+		key = n2 + ":" + n1; // CAS547 they can be entered n1>n2
+		if (pairObjMap.containsKey(key)) return pairObjMap.get(key);
+		
 		System.out.println("SyMAP error on " + key);
 		for (String keys : pairObjMap.keySet()) {
 			System.out.print(keys + " ");
@@ -1048,10 +1051,21 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		Utilities.setCursorBusy(this, true);
 		try { // CAS532 send project vector 
 			Vector <Mproject> pVec = new Vector <Mproject> ();
-			for (Mproject p : selectedProjVec) {
-				if (p.isLoaded()) pVec.add( p );
+			for (Mproject p : selectedProjVec) if (p.isLoaded()) pVec.add( p );
+			
+			boolean useAlgo2=true; // CAS547 add for new "EveryPlus"
+			for (int i=0; i<pVec.size()-1; i++) {
+				for (int j=i+1; j<pVec.size(); j++) {
+					Mpair mp = getMpair(pVec.get(i).getIdx(), pVec.get(j).getIdx());
+					if (mp.isSynteny()) {
+						if (!mp.isAlgo2(Mpair.DB) || !mp.isPostV546()) {
+							useAlgo2=false;
+							break;
+						}
+					}
+				}
 			}
-			SyMAPQueryFrame qFrame = new SyMAPQueryFrame(frameTitle, dbc2, pVec);
+			SyMAPQueryFrame qFrame = new SyMAPQueryFrame(frameTitle, dbc2, pVec, useAlgo2);
 			qFrame.build();
 			qFrame.setVisible(true);
 		} 
