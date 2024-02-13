@@ -15,7 +15,7 @@
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-	.tx td {padding: 5px;}
+	.tx td {padding: 5px; border: 0px}
 	.ty    {border: 1px  solid black; border-spacing: 1px;  border-collapse: collapse;}
     .ty td {border: 1px  solid black; padding: 4px; }
     tt {font-size:13px}
@@ -60,7 +60,13 @@
 		</table>
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
-<b>Contents:</b>
+
+SyMAP was written for diverse plant genomes with short introns, but has recently been modified to work
+for the long introns of mammalian genomes, and less diverse genomes. This is addressed in <a href="#pairParams">Pair Parameters</a>.
+<p>For the first time user of SyMAP, read the <a href="SystemGuide.html" class="ext" target="_blank">System Guide</a> to try the demo and learn details
+of the input files. This document provide details of parameters and functions.
+
+<p><b>Contents:</b>
 
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
@@ -88,8 +94,7 @@
 <br><a href="#mum">&nbsp;&nbsp;&nbsp;f. MUMmer parameters</a>
 </table>
 
-SyMAP was written for diverse plant genomes with short introns, but has recently been modified to work
-for the long introns of mammalian genomes, and less diverse genomes. This is addressed in <a href="#pairParams">Pair Parameters</a>
+
 
 <p><ttl>Project Manager</ttl>
 <br><a href="img/symapPlants.png">
@@ -115,8 +120,8 @@ See <a href="SystemGuide.html" class="ext" target="_blank">System Guide</a> for 
 <h3>1.a Selected</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<p>The projects selected from the <ttb>Projects</ttb> in
-the left panel are listed in the <ttl>Selected</ttl> section.
+<p>The projects selected from the <ttl>Projects</ttl> label in
+the left panel are listed in the <ttl>Selected</ttl> section on the right.
 The possible functions vary with the state, as listed below:
 
 <table class="ty">
@@ -176,7 +181,7 @@ Each cell in the table represents a pair of projects and the cell contains a sta
  whether or not that pair has been aligned (codes are listed below). Note that the table
 shows each pair cell twice, but only the lower cells are activated.
 <p>
-Clicking on a cell selects that pair of projects (the cell will be highlighted in yellow).
+Clicking on a cell selects that pair of projects (the cell will be highlighted in green).
 <ttl>Alignment&amp;Synteny</ttl> may then be computed or viewed for the selected pair using
 the <a href="#fun">function</a> buttons.
 <p>
@@ -189,9 +194,8 @@ the <a href="#fun">function</a> buttons.
 <tr><td>
 		<b>A</b>
 	<td>
-		The MUMmer alignment has been performed but the anchors have not been
-		loaded and the synteny computation has not been run. This status occurs if
-		a pair is completed but then annotations are re-loaded for one of the projects,
+		The MUMmer alignment has been performed but the synteny computation has not been run.
+		This status occurs if a pair is completed but then annotations are re-loaded for one of the projects,
 		or if the MUMmer files have been added by the user.
 <tr><td>
 		<b>?</b>
@@ -231,8 +235,8 @@ See <a href="MUMmer.html#cat" target="_blank" class="ext">timing difference</a>.
 	<td>
 		Run (or complete) the synteny computation for all pairs in the <ttb>Available Syntenies</ttb> table.
 		However, this will not run 'self-syntenies'; those need to be done individually by selecting
-		the pair. Also, a draft sequence that are to be ordered can only be aligned to
-		one complete sequence, so those should also be done individually.
+		the pair. Also, a draft sequence that is to be ordered can only be aligned to
+		one complete sequence, so that should also be done individually.
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<ttl>Selected Pair</ttl>
 		<br><ttl>Selected Pair (Redo)</ttl>
@@ -284,18 +288,18 @@ See <a href="MUMmer.html#cat" target="_blank" class="ext">timing difference</a>.
 Click the <u>Parameters</u> link to open the Parameters window shown on the lower right.
 
 <p>&nbsp;
-<p>&rarr; <font color=green>Make sure the following parameters are set
+<p><font color=green>Make sure the following parameters are set
 correctly before running the Alignment&amp;Synteny (A&amp;S) step</font>.
 <p><i><b>Load project:</b></i>
 <ttl>Group prefix</ttl>, <ttl>Minimum length</ttl>,
 <ttl>Sequence files</ttl>
 
-<br><i><b>Alignment&Syteny:</b></i> <ttl>Mask non-genes</ttl>.
+<br><i><b>Alignment&Synteny:</b></i> <ttl>Mask non-genes</ttl>.
 
 <p>If any of these need to be changed after <ttl>A&amp;S</ttl>, then the alignment needs to be run again (note, the
 alignment can take a long time!!).
 <p>&nbsp;
-<p>&rarr;<ttl>Sequence</ttl> and <ttl>Anno</ttl> (annotation) files:
+<p><ttl>Sequence</ttl> and <ttl>Anno</ttl> (annotation) <ttl>files</ttl>:
 <br>If the files are put in the default locations, nothing needs to be entered for them.
 <p>Default locations:
 <br><tt>data/seq/&lt;project-name&gt/sequence</tt>
@@ -519,8 +523,6 @@ button, which will popup the window shown on the right.
 <td>&nbsp;&nbsp;&nbsp;
 <td style="vertical-align: text-top;">
 
-
-
 <p>If a &#10004; or <b>A</b> in pair cell exists, and the parameters are changed, do the following:
 <table class="ty">
 <tr><td><b><i>Alignment</i></b> <td>Select <ttb>Clear Pair</ttb> to remove the existing alignments, then <ttb>Selected Pair (ReDo)</ttb>.
@@ -581,20 +583,24 @@ projects, while NUCmer is used for self alignments.
 <h3>3.c Cluster Hits</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<ttl>Algorithm 1 (original)</ttl>:
+<ttl>Algorithm 1 (original, abbreviated Algo1)</ttl>:
 <br><u>Pros</u> This is an generic algorithm that has knowledge of genes versus intergenic hits.
-It is recommended for ordering sequence contigs and when there are no gene annotation files.
-It is very good at reducing piles of hits (see below). It has been used on 100's of genome comparisons.
-<br><u>Cons</u> It does not distinguish between exon and intron hits, and cannot guarantee to find all homologous gene pairs.
+It is recommended for ordering sequence contigs and when there are little or no gene annotation.
+It must be used for self-synteny. It has been used on 100's of genome comparisons.
+<br><u>Cons</u> It does not distinguish between exon and intron hits, but it can miss good homologous gene pairs.
 <br><u>Parameters</u> It does not need parameter adjustment. However, this gives no control over what hits are filtered.
 
-<p><ttl>Algorithm 2 (gene-centric)</ttl>:
+<p><ttl>Algorithm 2 (gene-centric, abbreviated Algo2)</ttl>:
 <br><u>Pros</u> This is a new algorithm that has explicit knowledge of gene pairs and their exon-intron structure, and shows all gene pairs with
-hits unless filtered by the parameters.
+hits unless filtered by the parameters (and a few internal filters).
+It has better filtering for small intergenic and intron-only hits.
 <br><u>Cons</u> It does not perform self-synteny or take NUCmer files as input.
-It does not work when a given chromosome is split over multiple MUMmer files (this will not happen when SyMAP generates the MUMmer files).
+It does not work when a given chromosome is split over multiple MUMmer files
+(this will not happen when SyMAP generates the MUMmer files).
+It does not split large hits.
 <br><u>Parameters</u> The parameters generally will need adjusting. However, this gives more control over what gene pairs
-are shown and can surpress the minor intergenic hits. See <a href=#hint>Hints</a> below the parameter explanation.
+are shown and can surpress the minor intergenic hits. See <a href="#hint">Hints</a>
+below the parameter explanation.
 
 <p><ttl>Algorithm 1</ttl> is the default for now; this is because <ttl>Algorithm 2</ttl> generally requires some
 experimenting with the parameters whereas <ttl>Algorithm 1</ttl> does not.
@@ -605,38 +611,59 @@ experimenting with the parameters whereas <ttl>Algorithm 1</ttl> does not.
 <td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
 <tr><td colspan=2><ttl>Algorithm 1 (original)</ttl><td>Yes
 <tr>
-	<td>&nbsp;&nbsp;<ttl>Top N</ttl>
-	<td>When loading the anchors, retain the top N hits for every piled region, as
-		well as all hits with score at least 80% of the Nth.
+	<td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Top N piles</ttl>
+	<td>It will retain the top N hits of a piled region, as
+		well as all hits with score at least 80% of the Nth hit.
 	<td>2
-<tr><td colspan=2><ttl>Algorithm 2 (gene-centric)</ttl><td>No
-<tr>
-	<td>&nbsp;&nbsp;<ttl>Intergenic</ttl>
-	<td>Remove all hits that have less than N aligned bases (EQ 1), where the hit is intergenic on both ends.
-	<i>Increase this parameter for conserved genomes.</i>
-	<td>600
-<tr>
-	<td>&nbsp;&nbsp;<ttl>Intron</ttl>
-	<td>Remove all hits that have less than N aligned bases (EQ 1), where the hit is to an intron on at least one end.
-	<td>300
+<tr><td colspan=2><ttl>Algorithm 2 (gene-centric)</ttl>
+
+<table style="border: none; padding: 0px; border-spacing: 0px;">
+<tr><td style="border: none">&nbsp;&nbsp;&nbsp;<i>Categories</i>:<td style="border: none"><ttx>EE</ttx><td style="border: none">Exon-Exon
+    <td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>EI</ttx><td style="border: none">Exon-Intron
+    <td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>En</ttx><td style="border: none">Exon-intergenic
+<tr><td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>II</ttx><td style="border: none">Intron-Intron
+    <td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>In</ttx><td style="border: none">Intron-intergenic
+    <td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>nn</ttx><td style="border: none">intergenic-intergenic
+</table>
+<td>No
 <tr>
 	<td>&nbsp;&nbsp;<ttl>Exon</ttl>
-	<td>Remove all hits that have less than N aligned bases (EQ 1), where the hit is to an exon on at least one end.
+	<td>If the hit is <ttx>EE</ttx> or <ttx>EI</ttx>, remove all hits that have less than N aligned bases (EQ 1).
+	<br>If the hit is <ttx>En</ttx> with multiple subhits, it uses this rule; otherwise,
+	it uses the <ttl>Intergenic</ttl> cutoff.
 	<td>100
 <tr>
+	<td>&nbsp;&nbsp;<ttl>Intron</ttl>
+	<td>If the hit is <ttx>EI</ttx> or <ttx>II</ttx>, remove all hits that have less than N aligned bases (EQ 1).
+	<br>If the hit is <ttx>In</ttx> with multiple subhits, it uses this rule; otherwise,
+	it uses the <ttl>Intergenic</ttl> cutoff.
+	<td>300
+<tr>
+	<td>&nbsp;&nbsp;<ttl>Intergenic</ttl>
+	<td>If the hit is <ttx>nn</ttx>, remove all hits that have less than N aligned bases (EQ 1).
+	<br><i>Increase this parameter for conserved genomes.</i>
+	<td>600
+<tr>
 	<td>&nbsp;&nbsp;<ttl>Keep piles</ttl>
-	<td><ttl>EE</ttl> (exon-exon), <ttl>EI</ttl> (exon-intron), <ttl>En</ttl> (exon-intergenic), <ttl>II</ttl> (intron-intron),
-	<ttl>In</ttl> (intron-intergenic).
-	<br>This ONLY applies when there is a pile of overlapping hits (see below);
-	it tells the algorithm what cluster hits to retain
-	if they are in a pile.
-	<br>Intergenic-intergenic pile hits are automatically filtered down to one or two.
-	<td><ttl>EE</ttl>
+	<td><ttl>EE</ttl>, <ttl>EI</ttl>, <ttl>En</ttl>, <ttl>II</ttl>, <ttl>In</ttl>
+	<br>&bullet;This ONLY applies when there is a pile of overlapping hits (<a href=#pileOfHits>Pile of Hits</a>);
+	it tells the algorithm what type of cluster hits to retain if they are in a pile.
+	<br>&bullet;Hits are filtered before pile analysis.
+	<br>&bullet;Intergenic-intergenic pile hits, and any unchecked categories, are filtered
+	as described in the next row..
+	<td><ttl>EE, EI, En</ttl>
+<tr>
+	<td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Top N piles</ttl>
+	<td><ttx>Algo2</ttx> uses <ttx>Algo1</ttx> parameter
+for any uncheck categories, but in a more conservative way. It will retain the <ttx>Top N</ttx> hits of a piled region that are within
+80% of the length of the longest hit.
+	<td>2
 </table>
 <small>
-EQ 1: hit-length*identity, where hit-length is the maximum
-length of the query and target length reported by MUMmer, and identity is the fraction of the percent identity reported by MUMmer.
-For clustered hits, EQ 1 is applied to the summed lengths and identity.
+EQ 1. <tt>Minimum matched bases = hit-length*identity</tt>, where <tt>hit-length</tt> is the maximum
+length of the query and target length reported by MUMmer, and <tt>identity</tt>
+is the percent identity reported by MUMmer.
+For clustered hits, EQ 1 is applied to the summed <tt>lengths</tt> and <tt>identity</tt>.
 </small>
 <a id="hint"></a>
 <p><u>Hint for Algorithm 1</u>: Increasing the <ttl>Top N</ttl> parameter can cause too many hits and reduce synteny.
@@ -647,11 +674,12 @@ Hence, try <ttl>Algorithm 2</ttl> if you want more gene pairs.
 parameters probably need to be made more stringent; too many hits (and piles) confuses the synteny algorithm, which results
 in synteny blocks not being found; it also results in very long execution time.
 For highly similar genomes, it is <i>necessary</i> to increase the <ttx>Intergenic</ttx> parameter, e.g. &gt;1000;
-you may also need to increase the others parameters and uncheck <ttx>EE</ttx> to reduce hits. For distant genomes, decrease the parameters.
+you may also need to increase the others parameters and uncheck <ttx>EI</ttx> and <ttx>En</ttx> to reduce hits. For distant genomes, decrease the parameters.
 <i>Suggestion</i>: for large
 genomes, experiment with the parameters on just one pair of the chromosomes.
 <table>
 <tr><td>
+<a id="pileOfHits">
 <u>Piles of hits</u>: The below image shows a pile of hits on the left that link to repetitive genes on the right.
 <p>The left image shows a pile of hits in an intergenic region to multiple other regions.
 There are MANY occurrence of repeats like this in the MUMmer file, which is why these piles
@@ -661,6 +689,21 @@ must be filtered; if they are not, the synteny algorithm does not perform well.
 </table>
 
 <p>Running with <tt>./symap -s</tt> provides additional output for both algorithms.
+<h4>Wrong orientation</h4>
+It can happen that all hits in a cluster can have the same strand (+/+ or -/-), yet the cluster aligns to
+a positive and negative gene (or vice versa). By default, <tt>Algo2</tt> includes these hits and writes the count
+to the terminal, e.g.
+<pre>
+6,736 Both Genes - cluster strands differ from gene (Multi 1,425, Single 5,311)
+</pre>
+If you would like to have them excluded or printed, use one of the following.
+<table>
+<tr><td><tt>./symap -wse	<td># exclude
+<tr><td><tt>./symap -wsp <td># print to terminal
+<tr><td><tt>./symap -wsp &gt;ws.log&nbsp;&nbsp;&nbsp;<td># print to file ws.log
+</table>
+<p>You can view them in
+the <ttb>Query</ttb> where the <ttx>Hit St</ttx> column will be "=" but the gene <ttx>Gst</ttx> are not equal, or the other way around.
 
 <a id="syn"></a>
 <table style="width: 95%"><tr><td style="text-align: left">

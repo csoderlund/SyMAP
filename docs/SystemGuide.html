@@ -125,9 +125,8 @@ The following discusses building a SyMAP v5 database.
 <a id="overview"></a>
 <h2>Overview and Publications</h2>
 SyMAP is a system for computing, displaying, and analyzing syntenic alignments between
-<font color=green>medium-to-high divergent eukaryotic genomes</font>. Recent changes have improved
-its performance for less divergent eukaryotic genomes, though it may require experimentation with
-the parameters.
+medium-to-high divergent eukaryotic genomes. Recent changes have improved
+its performance for less divergent eukaryotic genomes (use <a href="#params2">Cluster Hit Algo2</a>).
 <p>Its features include the following (for a pictorial introduction, see the
 <a href="Tour.html" class="ext" target="_blank">Tour</a>):
 <p>
@@ -135,9 +134,9 @@ the parameters.
 	<tr>
 		<td style="vertical-align: text-top;">
 		<table class="tx">
-		<tr><td>Find synteny between two sequenced genomes with optional annotation.
+		<tr><td>Find synteny between two sequenced eukaryotic genomes with optional annotation.
 		<tr><td>Draft sequence ordering by synteny, i.e.
-				<font color=green>align a draft genome to a fully sequence (not draft-to-draft</font>).
+			align a draft genome to a fully sequence (not draft-to-draft).
 		<tr><td>For multiple selected synteny pairs, display using dot plot, circular, and side-by-side.
 		<tr><td>Complete queries on annotation, collinear genes, cross-species gene families, etc.
 		</table>
@@ -146,7 +145,7 @@ the parameters.
 		<table class="tx">
 			<tr><td><a href="img/symapPlants.png"><img src="img/symapPlants.png" alt="viewPlants" style="width:120px;border: 1px solid black;"></a>
 				<td><a href="img/2d-3chr.png"><img src="img/2d-3chr.png" alt="2d-3chr"       style="width:110px;border: 1px solid black;"></a>
-				<td><a href="img/querySetup.png"><img src="img/querySetup.png" alt="querySetup" style="width:100px; border: 1px solid black;"></a>
+				<td><a href="img/query_query.png"><img src="img/query_query.png" alt="querySetup" style="width:100px; border: 1px solid black;"></a>
 			<tr><td><a href="img/dotplot-3g.png"><img src="img/dotplot-3g.png" alt="dotplot-3-genome"     style="width:120px; border: 1px solid black;"></a>
 				<td><a href="img/block.png"><img src="img/block.png" alt="block-2-genome" style="width:110px; border: 1px solid black;"></a>
 				<td><a href="img/circle-2g.png"><img src="img/circle-2g.png" alt="circle-2-genome"   style="width:90px; border: 1px solid black;"></a>
@@ -159,7 +158,7 @@ the parameters.
 
 The back-end processing of SyMAP runs MUMmer<sup>1,2</sup> for the alignments (included in the tarball) and computes
 the synteny block from the alignment results. The SyMAP synteny algorithm is described in the following
-two publications. A sketch of the algorithms is also provided <a href="#alg">here</a>.
+two publications (though some unpublished updates have occurred since). A sketch of the algorithms is also provided <a href="#alg">here</a>.
 
 <pre>
         C. Soderlund, M. Bomhoff, and W. Nelson (2011)
@@ -174,8 +173,8 @@ two publications. A sketch of the algorithms is also provided <a href="#alg">her
 </pre>
 
 SyMAP is freely distributed software, however
-<font color=green><i>if you use SyMAP results in published research, you must cite one
-or both of the above articles along with the external program MUMmer<sup>1,2</sup></i></font>.
+<font color=green><b><i>if you use SyMAP results in published research, you must cite one
+or both of the above articles along with the external program MUMmer<sup>1,2</sup></i></b></font>.
 
 <br>&nbsp;
 <a id=start></a>
@@ -257,11 +256,11 @@ SyMAP has been tested on the following:
 <br>&nbsp;&nbsp;&nbsp;&bull; Chromosomes 5,17,X of <i>Homo sapiens</i> (421GB), <i>Mus musculus</i> (412GB) and <i>Pan troglodytes</i> (420GB).
 </small>
 
-<br><sup>2</sup> <small>Linode nanode was too small to run Mummer, so the Mummer demo result files were transfered to the
+<br><sup>2</sup> <small>Linode nanode was too small to run MUMmer, so the MUMmer demo result files were transfered to the
 <tt>data/seq_results/demo_seq_to_demo_seq2</tt> directory. This allowed all other features to be tested on a small database.
 </small>
 
-<br><sup>3</sup> <small>Linux amd64 was used extensively on plant genome, e.g. maize (2365MB), rice (400MB) and sorghum (730GB).
+<br><sup>3</sup> <small>Linux amd64 was used extensively on large plant genomes, e.g. maize (2365MB), rice (400MB) and sorghum (730GB).
 </small>
 
 <br><sup>4</sup> <small>MacOS Maverick is an old laptop. I could not download from Github, so downloaded v5.0.8 from AGCoL. Then I had to replace
@@ -387,10 +386,10 @@ because of different numbers of CPUs, MacOS vs Linux, etc (but the #Blocks come 
 Once the alignments are computed, the <ttl>Parameters</ttl> can be experimented without
 having to redo the alignments.
 Try using the <ttl>Algorithm 2 (gene-centric)</ttl> for <ttx>Cluster Hits</ttx>;
-see interface
-<a href="SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a>
-and select the <ttx>>Cluster Hits</ttx> section. Using <ttl>Algorithm 2</ttl> with its defaults
-gives a summary similar to <a href="img/demoSumAlgo2.png" class="ext" target="_blank">this</a>.
+bring up the
+<a href="SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a> window
+and select <ttl>Algorithm 2</ttl> with its defaults. This
+gives a summary similar to <a href="img/demoSum2.png" class="ext" target="_blank">this</a>.
 <td>
 <a href="img/demoSum.png"><img src="img/demoSum.png" alt="demoSum" style="border: 1px solid black; width: 400px"></a>
 </table>
@@ -402,38 +401,34 @@ gives a summary similar to <a href="img/demoSumAlgo2.png" class="ext" target="_b
 
 <table>
 	<tr><td style="vertical-align: text-top;">
-Load the <tt>Demo-Draft</tt> project, following
-the same steps used to load the previous two projects.
-
-<p>Under the <tt>Demo-Draft</tt> listing, you will see
+Load the <tt>Demo-Draft</tt> project. Under the <tt>Demo-Draft</tt> listing, you will see
 the parameter "Order against: demo_seq2". With this setting,
-the <tt>Demo-Draft</tt> contigs will be ordered using synteny to <tt>Demo-Seq2</tt>.
+the <tt>Demo-Draft</tt> contigs will be ordered using synteny to <tt>Demo-Seq2</tt>; this was set in the <a href="#params2">Project Parameters</a> window.
 		<td>
 <a href="img/demoDraft1.png"><img src="img/demoDraft1.png" alt="demoDraft1" style="border: 1px solid black; width: 400px"></a>
 	<tr><td style="colspan: 2; height: 40px;">&nbsp;
 	<tr>
 		<td style="vertical-align: text-top;">
 Run the <ttl>Alignment&amp;Synteny</ttl>, where the alignment should take less than 30 minutes with one CPU.
-When done, open the <ttb>Summary</ttb> for the pair, as shown on the right; <i>there
-may be slight difference in the number of anchors because the results are
-slightly different when run when different numbers of CPUs.</i>
+When done, open the <ttb>Summary</ttb> for the pair, as shown on the right; <i>as mentioned above, there
+may be slight difference in the number of anchors.</i>
 See the first dot plot in <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>.
 <p>It is recommended that the <ttx>Cluster Hits</ttx> <a href="SystemHelp.html#clust">algorithm 1</a> be used for ordering sequence.
 		<td>
-<a href="img/demoSum2.png"><img src="img/demoSum2.png" alt="demoSum2" style="border: 1px solid black; width: 400px"></a>
+<a href="img/demoSumDraft.png"><img src="img/demoSumDraft.png" alt="demo Sum Draft" style="border: 1px solid black; width: 400px"></a>
 
 </table>
 
 <p>The ordering algorithm changes the order of the draft contigs in the database, but does
 not change the sequence files on disk. However, it writes the following files:
 <p>1. <i>File of ordered contigs:</i> It writes the order of the contigs along with
-whether they should be flipped to a file called <tt>/data/seq/Demo_seq2/ordering.csv</tt>.
+whether they should be flipped to a file called <tt>/data/seq/demo_draft/ordered.csv</tt>.
 
 <p>2. <i>Fasta files of ordered sequences: </i>
 It creates sequence files from the ordered contigs that are flipped when appropriate,
 which are put into a new project
 with the suffix "<tt>_ordered</tt>", as shown in the image below. The chromosome names correspond
-to the order-against project (e.g. <tt>Demo_seq2</tt>), and the third chromosome is 'chr0'
+to the order-against project (e.g. <tt>demo_seq2</tt>), and the third chromosome is 'chr0'
 which contains all draft sequences that were not placed.
 <p>
 
@@ -453,7 +448,7 @@ the <tt>Demo_Draft-ordered</tt> name can be shortened.
 <a id="demoself"></a>
 <h3>Self alignment</h3>
 
-The section on <a href="#self">Self alignments</a> discusses the select alignment of the <tt>Demo_Seq</tt> project.
+The section on <a href="#self">Self alignments</a> discusses the self-alignment of the <tt>Demo_Seq</tt> project.
 
 <br>
 <!---------------------------------------------------------->
@@ -500,8 +495,8 @@ should be set in the <tt>symap.config</tt> file in the main symap directory, as 
 	<tr>
 		<td style="vertical-align: text-top;"><tt>db_adminuser</tt>
 		<td>
-			MySQL username of a user with sufficient privileges to create a database. Needed for
-			creating and updating alignments.
+			MySQL username of a user with sufficient privileges to create a database. It is also
+			necessary for loading, deleting and running synteny.
 	<tr>
 		<td style="vertical-align: text-top;"><tt>db_adminpasswd</tt>
 		<td>
@@ -510,7 +505,7 @@ should be set in the <tt>symap.config</tt> file in the main symap directory, as 
 		<td style="vertical-align: text-top;"><tt>db_clientuser</tt>
 		<td>
 			MySQL username of a user with read-only access. This is only necessary if you
-			want a machine to run SyMAP as read-only.
+			want a machine to run <tt>viewSymap</tt> as read-only.
 	<tr>
 		<td style="vertical-align: text-top;"><tt>db_clientpasswd</tt>
 		<td>
@@ -547,7 +542,8 @@ The memory usage of MUMmer is typically 5G per CPU, however it can
 be as high as 10G for very long or repetitive chromosomes. If MUMmer fails, it is often due
 to insufficient memory, see the <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a> document, which
 explains how to determine the problem and ways around it. It also explains the
-<a href="MUMmer.html#cat" class="ext" target="_blank">CPU and Concat</a> options.
+<a href="MUMmer.html#cat" class="ext" target="_blank">CPU and Concat</a> options. It also explains how
+to <a href="MUMmer.html#cmd"  class="ext" target="_blank">run MUMmer on a different machine</a> and port the results to the <tt>symap_5/data/seq_results</tt> directory.
 <!---------------------------------------------------------->
 <!---------------------------------------------------------->
 
@@ -567,7 +563,7 @@ To create a new project via the SyMAP interface, press the <ttb>Add Project</ttb
 at the lower left. Enter the project name beside <ttl>Name:</ttl>.
 This is the directory name for the project. It should be a short and unique name containing only letters,
 numbers, and underscores.
-In the Project <ttl>parameters</ttl>, you will be able to add a more descriptive display name.
+In the Project <a href="#params2">parameters</a>, you will be able to add a more descriptive display name.
 <p>&nbsp;
 <td>
 <a href="img/projNew.png"><img src="img/projNew.png" alt="projNew" style="border: 1px solid black; width: 270px"></a>
@@ -588,16 +584,15 @@ Check its box and it will appear in the <ttl>Selected</ttl> section (right hand 
 
 <table>
 <tr>
-<td>
+<td  style="vertical-align: text-top;">
 See <a href="SystemHelp.html#projParams" class="ext" target="_blank">Project Parameters</a> for details.
-<br><a href="img/lineLoad.png"><img src="img/lineLoad.png" alt="alignLine" style="border: 1px solid black; width: 400px"></a>
+<br><a href="img/lineLoad.png"><img src="img/lineLoad.png" alt="alignLine" style="border: 1px solid black; width: 420px"></a>
 <br><a href="img/parameters1.png"><img src="img/parameters1.png" alt="parameters1" style="border: 1px solid black; width: 420px"></a>
 
 <td style="vertical-align: text-top;">
 See <a href="SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parameters</a> for details.
 <br><a href="img/lineAlign.png"><img src="img/lineAlign.png" alt="alignLine" style="border: 1px solid black; width: 400px"></a>
-<br><center>
-    <a href="img/parameters2.png"><img src="img/parameters2.png" alt="parameters2" style="border: 1px solid black; width: 280px"></a></center>
+<br><center><a href="img/parameters2.png"><img src="img/parameters2.png" alt="parameters2" style="border: 1px solid black; width: 270px"></a></center>
 </table>
 
 <!-------------------------------------------------------->
@@ -606,7 +601,7 @@ See <a href="SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parame
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>Sequence files</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></table>
-The sequence file(s) must be FASTA format with at least one sequence file; a file can contain multiple sequences.
+The sequence file(s) must be FASTA format with one or more sequences.
 For the FASTA format, the name of a sequence is the string immediately following the "&gt;", e.g.
 <pre>
 &gt;Chr3  Oryza Sativa
@@ -638,11 +633,11 @@ for known reasons for failure).
 <p>
 Another masking option which is available if you have gene
 annotation is to mask out everything but the annotated genes. You
-can enable the "mask_all_but_genes" option on the project's <a href="#params2">Parameter</a> window;
+can enable the <ttx>mask_all_but_genes</ttx> option on the project's <a href="#params2">Parameter</a> window;
 turn it on <i>before</i> doing the alignments.
 
 <p>
-<font color=green>Important points in naming sequences for SyMAP</font>:
+<i>Important points in naming sequences for SyMAP</i>:
 <table style="margin-left:10px;margin-top:5px;padding:5px">
 	<tr><td style="vertical-align: text-top;">A.
 		<td style="vertical-align: text-top;">
@@ -680,7 +675,7 @@ The last column (attributes) contains "keyword=value" pairs describing
 the annotation.
 <ul><li>For genes, all attributes are saved in the database for viewing.
 You can set which attributes keywords to save; open the
-project's <a href="#params2">Parameter</a> window, look for parameter "Anno keywords".
+project's <a href="#params2">Parameter</a> window, look for parameter <ttx>Anno keywords</ttx>.
 <li>For exons, the "parent" keyword=value is saved for viewing.
 </ul>
 Note: As of v5.1.8, the genes and exons must be in one file.
@@ -746,22 +741,22 @@ so you might want to start with the largest 50, merge them, then repeat.
 <td><a href="img/self.png"><img src="img/self.png" alt="self" style="border: 1px solid black; width: 370px"></a>
 </table>
 <p>
-By default, SyMAP uses the MUMmer 'nucmer' program for self-alignments. Each chromosomes
+By default, SyMAP uses the MUMmer 'NUCmer' program for self-alignments. Each chromosomes
 is compared to every other chromosome including itself.
 
-<p>The Alignment&amp;Synteny <a href="#params2">Parameters</a> popup has an option to set "Self Args",
-which only uses the "Self Args" parameter(s) when comparing the chromosome sequence file
-to itself.
+<p>The Alignment&amp;Synteny <a href="#params2">Parameters</a> window has an option to set <ttx>Self Args</ttx>,
+which is only used when comparing the chromosome sequence file
+to itself. Make sure that the <ttx>Algorithm 1</ttx> option is selected.
 <table class="tx">
 <tr><td>
 The self-synteny of demo_seq shows a few tiny blocks. A better demonstration is to download
 Arabidopsis thaliana from NCBI, convert it with the <a href="./convert" target="_blank" class="ext">
 NCBI convert script</a>, and run the self synteny. It took 16 minutes with one processor on a Mac Mini (2018) with
 64GB main memory. The dot plot is shown on the right (click on the image for a closeup view).
-<td><a href="img/arabSelf.png"><img src="img/arabSelf.png" alt="arab self" style="border: 1px solid black; width: 250px"></a></center>
+<td><a href="img/arabSelf.png"><img src="img/arabSelf.png" alt="arab self" style="border: 1px solid black; width: 250px"></a>
 </table>
 <p>The "--maxmatch" parameter was the SyMAP default, but now it is up to the user as to whether
-they want to add it to "Self Args" (it can greatly increase the execution time).
+they want to add it to <ttx>Self Args</ttx> (it can greatly increase the execution time).
 Reasoning for using "--maxmatch": MUMmer ordinarily seeds its alignments with unique matches,
 which eliminates the possibility of off-diagonal seeds in the alignment of a chromosome to itself.
 To overcome this problem, individual chromosome self-alignments can use the MUMmer parameter -maxmatch,
@@ -882,24 +877,20 @@ The query is the one with alphabetically the first name. The query sequences
 are written into one large file, while smaller target sequences are grouped
 into larger FASTA files of size up to 60Mb, for more efficient processing
 in MUMmer. There is an option <ttl>Concat</ttl> that if unchecked, the query sequences
-are treated the same as the target; i.e. generally there will be more sequence file
-pairs processed by MUMmer, but they will be smaller.
+are treated the same as the target; i.e. generally there will be more sequence files to
+ processed, but they will be smaller.
 <p>
-<i>Anchor Clustering:</i><br>
-The raw anchor set consists of the hits found by MUMmer.
-<u>Algorithm 1 (original)</u><br>
-These are first clustered into gene, or putative-gene hits. This is
+<i>Anchor Clustering and Filtering:</i><br>
+The raw anchor set consists of the hits found by MUMmer, which are filtered and clustered for input to the synteny algorithm.
+<p><u>Algorithm 1 (original)</u> is good for medium-to-high divergent genomes, aligning draft sequence, self-synteny, and genomes with little or no annotation.
+The MUMmer hits are first clustered into gene, or putative-gene hits. This is
 done by clustering the hit regions on each sequence, and then defining new "gene"
 hits which connect these regions. For example if three separate
 exons hit between two genes, they will be clustered into one "gene"
 hit having a combined score equal to the sum of the raw hit scores.
 Clustering is by gene if the hits overlap annotation, otherwise, it creates
 "candidate genes" from hits that do no overlap annotation.
-<u>Algorithm 2 (gene-centric)</u><br>
-
-<p>
-<i>Anchor Filtering:</i><br>
-The clustered "gene anchors" are now filtered using a version of
+<p>The clustered "gene anchors" are then filtered using a version of
 reciprocal-best filtering which is adapted for retaining duplications and
 gene families. For each pair of genes (or putative genes) which is
 connected by a clustered anchor, the retained anchors must be among
@@ -908,6 +899,11 @@ ancestral whole-genome duplication). An anchor will also be retained if its
 score is at least 80% of that of the 2nd-best anchor on each side (this
 allows for retention of gene family anchors). These filter parameters
 may be adjusted through the <ttl>Alignment&amp;Synteny</ttl> <ttb>Parameters</ttb> window.
+<p><u>Algorithm 2 (gene-centric)</u> is good for low-to-high divergent genomes with good annotation. It directly maps hits
+to the exons and introns. Hits aligning to un-annotated regions are clustered separately. There are many more parameters for
+this approach, as the hits are filtered based on the parameter values.
+<br>
+
 <p>
 <i>Synteny Block Detection:</i><br>
 After the clustered anchors are loaded into the database,  the synteny
@@ -947,7 +943,7 @@ see if there are any <tt>/scripts</tt> or <tt>/ext</tt> changes that need to als
 <p>The following table shows what versions require action by the user.
 <table class=ty>
 <tr><td><b>Release</b><td><b>Changed files</b><sup>1</sup><td><b>Action by User</b>
-<tr><td>v5.4.6 & 5.4.7 <td>Only the <tt>symap.jar</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup> if using <ttx>Cluster Hit Algo 2</ttx>
+<tr><td>v5.4.6-5.4.8<td>Only the <tt>symap.jar</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
 <tr><td>v5.4.1 <td>Only the <tt>symap.jar</tt><td>Execute <tt>./symap -y</tt>
 <tr><td>v5.4.0 <td>Only the <tt>symap.jar</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
 <tr><td>v5.2.0 <td><tt>symap</tt>, <tt>viewSymap</tt>, <tt>scripts/ConvertNCBI.*</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>

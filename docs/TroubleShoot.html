@@ -95,6 +95,7 @@
 <li>MacOS
 <ul>
 <li><a href="#macos">Running external programs
+<li><a href="#font">Fonts for MacOS Monterey
 </ul>
 </ul>
 
@@ -317,6 +318,21 @@ or the program will just fail. Do the following:
 </ul>
 After that, you will be able to run it via SyMAP.
 
+<a id="font"></a>
+<h3>MacOS Monterey</h3>
+Since SyMAP is compiled with v8 to be upward compatible, it produces the following warning on
+MacOS Monterey:
+<pre>
+Warning: the fonts "Times" and "Lucida Bright" are not available for the Java logical font "Serif",
+ which may have unexpected appearance or behavior. Re-enable the "Times" font to remove this warning.
+</pre>
+It does not hurt anything, but its tiresome. Do the following:
+<ul>
+<li>Download <tt>Lucida Bright.zip</tt> and <tt>Times.zip</tt> from <a href="http://legionfonts.com">LengionFonts</a>.
+<li>Double click to unzip into <tt>Times.tff</tt>. Double click <tt>Times.tff</tt>, which brings up the <ttb>FontBook</ttb>, then install.
+<li>Do the same for <tt>Lucida Bright.zip</tt>.
+<li>Note: after OS updates, you may have to install again.
+</ul>
 
 <p><a href="#top">Go to top</a>
 <!---- END BODY -->

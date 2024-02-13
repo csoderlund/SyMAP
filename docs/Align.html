@@ -7,13 +7,16 @@
 	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
     a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
+
     a.ext {font-weight: bold;}
     .tx td {padding: 5px;}
 	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
     .ty td {border: 1px  solid black; padding: 5px; text-align: right}
     mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-    ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
-	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
+	ttp  {font-family: Helvetica, monospace; font-size: 14px; font-weight: 600;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
+	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
     tt {font-size:13px}
 	pre {font-size:13px}
 	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
@@ -65,49 +68,60 @@
 <h2>Details of 2D Alignment</h2>
 
 <p><u>SyMAP clusters hits as follows</u>:
-The raw anchor set consists of the hits found by MUMmer. When hits are 'close', multiple hits are clustered
-into a single hit. The hits in a cluster are called <i>subhits</i>; the subhits of a cluster are either
-all in opposite strands or the same strands.
+The raw anchor set are the hits found by MUMmer. Multiple hits are clustered
+into a single hit when the hits are close together.
+The hits in a cluster are called <i>subhits</i>; the subhits of a cluster are either
+all on opposite strands or the same strands.
 
-<p><u>Alignment:</u> SyMAP uses Promer by default for analysis of two different genomes.
+<p><u>Alignment:</u> To build the synteny, SyMAP uses Promer by default for analysis of two different genomes.
 Promer translates sequences, uses a fast suffix tree alignment algorithm, then converts the coordinates back to
-nucleotide. SyMAP alignments use a semi-global dynamic programming (DP) algorithm on the nucleotide sequences using the MUMmer coordinates,
-which can produce a slightly different alignment. The following oddities can happen:
+nucleotide. To display the alignment in SyMAP, SyMAP performs a semi-global dynamic programming (DP) algorithm on the nucleotide sequences using the MUMmer coordinates,
+which can produce a slightly different alignment. This document discusses the following:
 <ul>
 <li><a href="#olap">Overlap</a>: The hits can overlap.
-<li><a href="#trim">Trim</a>: There can be non-matching sequence at the beginning or end of the DP alignment. SyMAP trims this sequence before display.
-<li><a href="#strand">Strand</a>: Two genes can be connected by a hit, where the genes are on strands +/- but the hits are on strands -/+,
-and vice versa. However, if the the gene strands are the same, the hit strands will be the same (=); likewise
-if the gene strands are different, the hit strands will be different (!=).
+<li><a href="#trim">Trim</a>: There can be non-matching sequence at the beginning or end of the DP alignment.
+SyMAP trims this sequence before display.
+<li><a href="#strand">Strand</a>: If the gene strands are the same, the hit strands will be the same (=); likewise
+if the gene strands are different, the hit strands will be different (!=). See <a href="#strand">Strand</a> for
+more information on when they are different.
 </ul>
+
 <i>Click on any image to view a closeup of it.</i>
 <!-------------------------------------------------------------->
 <a id="olap"></a>
 <h3>Overlap hits</h3>
-The Hit Information image on the lower left titled "Hit #28" shows the coordinates of the subhits. Some rules:
+
+<table>
+<tr><td>
+<a href="img/align2D.png">
+<img src="img/align2D.png" alt="2D" style="border: 1px solid black; width: 300px"></a>
+<p>The <ttx>Hit Information</ttx> image on the right titled "Hit #662" shows the coordinates of the subhits for
+the hit shown in the 2D image above.
 	<ol>
-	<li>The subhit column '#' in Track #1 corresponds to the column '#' in Track #2
-	(e.g. the rows #2 align to each other).
-	<li>The subhit order is always relative to the alphabetically greater project name (e.g. Cabbage&gt;A.thal).
+	<li>The "L" and "R" correspond to the 2D left track and right track, as shown in the 2D image above.
 	<li>The coordinates are relative to the input genome sequences.
-	<li>Both lists are sorted by start coordinate, where the start is always listed before the end.
+	<li>Both lists are sorted by start coordinate.
+	<li>The subhit columns # in the two table of subhits align to each, e.g. the rows #2 align to each other.
+	The sequence name that is alphabetically lower (e.g. arab&lt;cabb) is numbered 1-N; the opposite sequence
+	is ordered to match the first.
+
 	<li>Though two subhits may overlap (negative gap), they will not align to the same region on the opposite chromosome.
 	</ol>
+<td>
+<p><a href="img/alignHitInfo1.png">
+<img src="img/alignHitInfo1.png" alt="hitInfo" style="border: 1px solid black; width: 200px"></a>
+</table>
+Cabbage shows the distance between #7 and #6 as -16.
+Viewing the Cabbage alignment, #662.7 and #662.6 overlap but they do not overlap for A.thal.
+
 <table><tr>
 <td valign="top">
-The <ttl>Hit Info</ttl> for Hit #29 is shown below.
-Track #2  shows the distance between #3 and #2 as -68.
-Viewing Track #2 on the right, #29.2 and #29.3 overlap but they do not overlap on Track #1.
-<p><a href="img/alignHitInfo1.png">
-<img src="img/alignHitInfo1.png" alt="hitInfo" style="border: 1px solid black; width: 220px"></a>
-
-<td valign="top">
-<small>Track #2 Selected Cabbage</small>
+<small>Selected A.thal alignment</small>
 <br><a href="img/baseview.png">
-<img src="img/baseview.png" alt="Align graphics" style="border: 1px solid black; width: 500px"></a>
-<br><small>Track #1 Selected A.thal</small>
-<br><a href="img/baseviewOther.png">
-<img src="img/baseviewOther.png" alt="Align graphics" style="border: 1px solid black; width: 500px"></a>
+<img src="img/baseview.png" alt="Align graphics" style="border: 1px solid black; width: 360px"></a>
+<td><small>Selected Cabbage alignment</small>
+<br><a href="img/baseview1.png">
+<img src="img/baseview1.png" alt="Align graphics" style="border: 1px solid black; width: 360px"></a>
 </table>
 
 <p><b>Extreme example:</b>
@@ -117,19 +131,13 @@ Viewing Track #2 on the right, #29.2 and #29.3 overlap but they do not overlap o
 	<img src="img/alignHitInfo2.png" alt="hitInfo2" style="border: 1px solid black; width: 220px"></a>
 <td>&nbsp;
 <td>
-	The <ttl>Hit Info</ttl> image on the left shows Track #1 has the hits all mixed up, whereas Track #2 has the hits all overlapping (negative gap).
-	<p>The first image below shows a partial view of the Track #1 non-overlapping dis-ordered subhits.
-	The second image
-	shows Track #2 overlapping subhits, where they are piled on top of each other. It is better to use the text align to view Track #2.
+	The <ttl>Hit Info</ttl> image on the left shows that A.thal has its hit # in sequential order
+	whereas Cabbage has its hit # in non-sequential order; as mentioned earlier, the two hit #1 align, etc.
+	For both, the coordinates are listed
+	in descending order, though Cabbage has many of its hits overlapping.
 	<p>
 
-<small>Track #1 partial A.thal view</small>
-	<br><a href="img/alignGrOlap2.png">
-	<img src="img/alignGrOlap2.png" alt="Align graphics" style="border: 1px solid black; width: 520px"></a>
 
-<br><small>Track #2 full Cabbage view</small>
-<br><a href="img/alignGrOlap.png">
-		<img src="img/alignGrOlap.png" alt="Align graphics" style="border: 1px solid black; width: 220px"></a>
 </table>
 
 <p><a href="#top">Go to Top</a>
@@ -139,65 +147,37 @@ Viewing Track #2 on the right, #29.2 and #29.3 overlap but they do not overlap o
 <h3>Trimmed alignments</h3>
 SyMAP extracts the sequence between the coordinates provided by MUMmer and aligns the sequence.
 When the sequences do not align fully, the alignment is trimmed.
-For example, Hit #6 has 7 subhits, of which 3 have some trimming:
-<table class="ty">
-<tr><td>&nbsp;<td colspan="2" style="text-align: center">Lengths<td colspan="2" style="text-align: center">Trimmed  (gaps)
-<tr><td>subhit<td style="text-align: center">Input<td>Aligned<td style="text-align: center">Start<td style="text-align: center">End
-<tr><td>#218.4<td>357, 351<td>368<td>0 (0,0)<td>5 (5,0)
-<tr><td>#218.5<td>366, 369<td>374<td>0 (0,0)<td>1 (0,0)
-<tr><td>#218.6<td>165, 165<td>165<td>1 (0,0)<td>7 (0,7)
-</table>
-<p>The MUMmer hit for subhit #6 is:
+The left side of the image below required some trimming for Hit #1.6 but not for Hit #1.5. The right
+image shows Hit #1.6 without trimming.
+
+<p><a href="img/alignTrim.png">
+<img src="img/alignTrim.png" alt="Trimmed align" style="border: 1px solid black; width: 750px"></a>
+<p>
+The MUMmer results for Hit #1.6 are:
 <pre>
-[S1]     [E1]     [S2]    [E2]   [LEN 1][LEN 2][% IDY] [% SIM] [% STP] [FRM]   [TAGS]
-16505269 16505427 8884782 8884618 159   165     80.00   87.27	0.00    1 -1	Chr01 Chr04
+[S1]    [E1]    [S2]    [E2]   [LEN 1][LEN 2][% IDY] [% SIM]
+77766	77939   4268    4095   174     174    91.38   94.83
 </pre>
-The MUMmer %identity is 80.00, whereas the alignment shows 86.7; MUMmer is a translated heuristic alignment whereas the
-SyMAP is a nucleotide dynamic programming alignment.
-<table>
-<tr><td>On the right is the subhit #6 alignment. The Start coordinate
-is 8884618 but the image shows 8884619, indicating the first base was trimmed, i.e.
-without trimming, it would display the start as shown below:
-<br><a href="img/alignStartTrim.png">
-<img src="img/alignStartTrim.png" alt="Start trimmed align" style="border: 1px solid black; width: 120px"></a>
-<p>The end has 7 extra bases on the lower strand that have been trimmed; the following shows the end
-without trimming:
-<br><a href="img/alignEndTrim.png">
-<img src="img/alignEndTrim.png" alt="Start trimmed align" style="border: 1px solid black; width: 125px"></a>
+Note the the %Id for MUMmer is 91.38, and is 92.9 for the trimmed SyMAP dynamic programming result. These differences
+are a natural results of the variation in algorithms. Most hits do not need trimming, or only 1 base at the beginning or
+end.
 
-<td><a href="img/alignTrim.png">
-<img src="img/alignTrim.png" alt="Trimmed align" style="border: 1px solid black; width: 500px"></a>
-</table>
-
-<p>If you want to view the amount trimmed, you can run <ttb>viewSyMAP</ttb> with the "-a" flag,
-and it will not trim the results.
+<p>If you want to view the alignment without trimming, you can run <ttb>viewSyMAP</ttb> with the "-a" flag.
 
 <p><a href="#top">Go to Top</a>
-
 <a id="strand"></a>
-<h3>Gene strand vs hit strands</h3>
+<h3>Strand</h3>
+<u>Detail of <ttx>Algo1</ttx></u>. When the synteny is created, the hits are clustered and assigned to genes by a
+<a href="SystemHelp.html#clust" class="ext" target="_blank">clustering algorithm</a>, either using
+<ttx>Algo1</ttx> or <ttx>Algo2</ttx>.
+For <ttx>Algo1</ttx>, occasionally the strand is wrong, which only effects the <ttb>Align</ttb> view, as shown below:
 <table>
-<tr>
-<td valign="top">The image on the right shows a gene on the positive strand of A.thal and a gene on the negative strand
-of Cabbage. However, the hit joining the genes is negative to the A.thal gene and positive to the Cabbage gene.
-<td><a href="img/alignOpStrand.png">
-<img src="img/alignOpStrand.png" alt="Align opposite strands" style="border: 1px solid black; width: 500px"></a>
-
-<tr><td  valign="top">To see the alignment on the reverse strands, use the <ttl>Align Hit</ttl>, which results
-in the top image on the right; at the bottom of this window is a button <ttl>Reverse</ttl>.
-
-<p>&nbsp;
-<p>&nbsp;
-<p>&nbsp;
-<p>Select <ttl>Reverse</ttl> to get the alignment with both sequences reversed complimented, as shown on the
-right.
-
-<td>
-<a href="img/alignTextRev.png">
-<img src="img/alignTextRev.png" alt="Align text" style="border: 1px solid black; width: 500px"></a>
+<tr><td><a href="img/alignStrand.png">
+<img src="img/alignStrand.png" alt="Align strand" style="border: 1px solid black; width: 400px">
+<td><ttx>Algo1</ttx> only: The A.thal gene is on the negative strand, but its aligned hit is shown on the postive strand. Most of these
+occurrences have been fixed in v5.4.8, but a few will have slipped through.
 </table>
 
-<p><a href="#top">Go to Top</a>
 <!---- END BODY -->
 	</td></tr>
 	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">

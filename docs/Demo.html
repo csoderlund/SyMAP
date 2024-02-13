@@ -67,6 +67,7 @@
 <li><a href="#draft">Demo-draft to Demo-Seq2</a>
 </ul>
 The demo was created from real data &gt;15 years ago, and is VERY obsolete - it is strictly for demonstration.
+<p>Click any image to view an enlarged image.
 <a id="reg"></a>
 <h3>Demo-Seq to Demo-Seq2</h3>
 <table>
@@ -75,8 +76,8 @@ The demo was created from real data &gt;15 years ago, and is VERY obsolete - it 
 	<td style="vertical-align: text-top;">
 	This document shows the different views for the <tt>Demo-Seq</tt> to <tt>Demo-Seq2</tt> alignment.
 When synteny has been computed for the demo, the table will have a checkbox, signifying that
-the synteny is available for viewing. Click the cell
-again which will enable the viewing buttons, e.g <ttb>Dot Plot</ttb>.
+the synteny is available for viewing. The cell will be highlighted green,
+which will enable the viewing buttons, e.g <ttb>Dot Plot</ttb>.
 	</td>
 	<td>
 
@@ -116,7 +117,7 @@ The ribbons represent synteny blocks.
 <tr>
 	<td style="vertical-align: text-top;">
 Click the <ttb>2D</ttb> button to see a side-by-side view ofthe same chromosomes. Note that the reference is in the middle.
-The lines between chromosomes indicate the individual anchors.
+The lines between chromosomes indicate the individual clustered hits.
 	</td>
 	<td>
 	<a href="img/demo2d.png"><img src="img/demo2d.png" alt="demo2d" style="border: 1px solid black; width: 400px"></a>
@@ -132,7 +133,7 @@ The exons for individual genes can be seen
 in the center of each sequence track. The length of the hit is shown on the inner boundary
 of the each chromosome segment.
 <p>
-There is a sequence filter for <tt>Show Annotations</tt>. This will show the annotation as shown
+There is a sequence filter for <ttl>Annotations</ttl>. This will show the annotation as shown
 on the right, but it must be zoomed in close enough. Alternatively, as long as the view is zoomed enough to see
 the individual exons, right-click on a gene for a popup of the annotation.
 </td>
@@ -159,7 +160,13 @@ Using the query setting from above results in this table, where columns can be c
 </tr>
 
 </table>
-
+<h4>Algo1 versus Algo2</h4>
+The following show the summary when the <ttl>Synteny Clustering</ttl> was run with <ttx>Algo1</ttx> versus <ttx>Algo2</ttx>.
+<table>
+<tr>
+<td><a href="img/demoSum.png"><img src="img/demoSum.png" alt="demo Sum algo1" style="border: 1px solid black; width: 375px"></a>
+<td><a href="img/demoSum2.png"><img src="img/demoSum2.png" alt="demo Sum algo2" style="border: 1px solid black; width: 375px"></a>
+</table>
 
 <a id="self"></a>
 <h3>Self-synteny of Demo-Seq</h3>
@@ -168,7 +175,7 @@ Using the query setting from above results in this table, where columns can be c
 <tt>Demo-Seq</tt> has been run against itself, resulting in the <ttb>Dot Plot</ttb> shown on the right.
 There are a few off-diagonal blocks, which may indicate repetitive-ness (but these blocks are probably
 too small to be meaningful).
-</td>
+<p><small>Click to view summary</small><br><a href="img/demoSumSelf.png"><img src="img/demoSumSelf.png" alt="demo Sum Self" style="border: 1px solid black; width: 200px"></a>
 <td>
 <a href="img/demoSelf.png"><img src="img/demoSelf.png" alt="demoSelf" style="border: 1px solid black; width: 400px"></a>
 	</td>
@@ -178,22 +185,23 @@ too small to be meaningful).
 <a id="draft"></a>
 <h3>Demo-Draft to Demo-Seq2</h3>
 <table>
-<tr> <td style="vertical-align: text-top;">
+<tr>
+<td style="vertical-align: text-top;">
 The <tt>Demo-draft</tt> was run against the <tt>Demo-Seq2</tt> with its <ttx>order_against</ttx> parameter set to <tt>Demo_Seq2</tt>.
 The resulting dot plot is shown on the right. Note that the 43 contigs
 are ordered, but still fragmented.
-	</td>
-	<td>
+<p><small>Click to view summary</small><br><a href="img/demoSumDraft.png"><img src="img/demoSumDraft.png" alt="demoSumDraft" style="border: 1px solid black; width: 200px"></a>
+<td>
 <a href="img/demoDraft2.png"><img src="img/demoDraft2.png" alt="demoDraft2" style="border: 1px solid black; width: 400px"></a>
-	</td>
-</tr>
 <tr><td>&nbsp;</td></tr>
-<tr> <td style="vertical-align: text-top;">
-When the ordering algorithm is run, it creates a new project called <tt>Demo-Draft_ordered</tt>,
+<tr><td colspan=2>When the ordering algorithm is run, it creates a new project called <tt>Demo-Draft_ordered</tt>,
 where the 43 contigs are written into three chromosomes; the first two correspond
 to chr1 and chr3 of <tt>Demo_Seq2</tt>, and chr0 contains the contigs that do not align.
+<tr> <td style="vertical-align: text-top;">
+
 <p>The new project <tt>Demo-Draft_ordered</tt>
 was aligned with <tt>Demo_Seq2</tt>, resulting in the dot plot shown on the right.
+<p><small>Click to view summary</small><br><a href="img/demoSumOrd.png"><img src="img/demoSumOrd.png" alt="demoSumOrd" style="border: 1px solid black; width: 200px"></a>
 	</td>
 	<td>
 <a href="img/demoDraftOrd.png"><img src="img/demoDraftOrd.png" alt="demoDraftOrd" style="border: 1px solid black; width: 400px"></a>
@@ -203,7 +211,7 @@ was aligned with <tt>Demo_Seq2</tt>, resulting in the dot plot shown on the righ
 
 <tr> <td style="vertical-align: text-top;">
 The <tt>Demo_Draft</tt> was created from the <tt>Demo_Seq</tt> with sequence reversal and some other changes.
-In the snapshot on the right, the blocks of the <tt>Demo_Seq</tt>-to-<tt>Demo_Seq2</tt> is shown next to
+In the snapshot on the right, the blocks of the <tt>Demo_Seq</tt>-to-<tt>Demo_Seq2</tt> are shown next to
 the blocks of <tt>Demo_Draft_ordered</tt>-to-<tt>Demo_Seq2</tt> is shown on the right.
 <p>Note that they major blocks are the same, as they should be.
 	</td>

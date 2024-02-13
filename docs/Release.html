@@ -65,7 +65,9 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 
 <h3>Summary of recent major releases</h3>
 <table class="tx">
-<tr><td><a href="#v546">v5.4.6</a><td>(22-Oct-23)<td><a href="SystemHelp.html#pairParams">New algorithm</a> for detection of gene homology in the <ttx>Cluster Hit</ttx> computation.
+<tr><td><a href="#v548">v5.4.8</a><td>(13-Feb-24)<td>Has has improvements to the
+<a href="SystemHelp.html#pairParams"><ttx>Cluster Hit</ttx> computation</a> for detection of gene homology.
+<br>
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved the detection of gene homology in the <ttx>Cluster Hit</ttx> computation.
 <tr><td><a href="#v530">v5.3.1</a><td>(6-Jan-23)<td>Improved <a href="UserGuide.html#base">hit alignment</a> features.
 <tr><td><a href="#v530">v5.3.0</a><td>(10-Dec-22)<td>Updated database schema to remove all FPC tables.
@@ -73,7 +75,78 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 <tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view2D"> 2D gene placement</a>
 </table>
 
-<a id="v546"></a>
+<a id="v548"></a>
+<h3>Release: v5.4.8 (13-Feb-24)</h3>
+<p>This release fine tuned the <ttx>Cluster Hit Algo2</ttx> (first released in <a href="#v546">v5.4.6</a>)
+and made some adjustments to <ttx>Cluster Hit Algo1</ttx> for new interface feature.
+For existing databases, rerun the <ttb>Synteny</ttb> algorithm.
+
+<ul>
+<li><ttb>Synteny Clustering Algo2</ttb>:  See <a href="SystemHelp.html#clust">Cluster hits</a>.
+<ol>
+<li>The algorithm better differentiates between overlapping genes which have the same aligned hits;
+one will be the <tt><u>major</u></tt> assignment and displayed for the hit,
+and others will be <tt><u>minor</u></tt> assignments.
+There is slight improvements to the assignments of clustered gene hits.
+<li>The <ttx>Cluster Hit Algo2 Parameter</ttx> defaults check EI and En, along with EE.
+<li>The g1 (one gene) and g0 (no genes) have improved assignments.
+The rules for filtering have been fine-tuned.
+<li>The algorithm for finding piles and selecting what clusters to retain has been improved.
+<li>Two scores are computed, which are the percent of the clustered hit that aligns to exons and to the genes.
+
+<li>The hit strands could be different from the two gene strands; these can be printed out with <tt>symap -wsp</tt>
+or excluded with <tt>symap -wse</tt> .
+<li>Previously, the hit strands could be assign "+/-" when it should be "-/+" and vice versa;
+this resulted in the wrong sequence being
+reversed in the <a href="UserGuide.html#base">2D-Align</a>; this has been fixed.
+</ol>
+<li><ttb>Synteny Clustering Algo1</ttb>:
+<ol>
+<li>Compute the percent of the clustered hit that aligns to the gene.
+<li>Make an addition so that it works with the <ttl>Query</ttl> <ttx>Multi</ttx> command (otherwise,
+all results will be shown twice).
+<li>The same problem as shown in 7 above happens with <ttx>Algo1</ttx>. It is mostly fixed, though a few
+slip through. See <a href="Align.html#strand">Strand</a>.
+</ol>
+<li><ttl>2d-display</ttl>:
+<ul>
+<li>The <ttx>Annotation</ttx> (yellow boxes of text) have less information so more boxes can be viewed at a time.
+<li>The gene popup text shows the start/end of each hit on the opposite chromosome in place of the subhits; it shows ALL hits
+for the gene between the two chromosomes even if they are not visible;
+it shows the gene overlap (and exon overlap for <ttx>Cluster Hit Algo2</ttx>). Both the hit and gene popups have some minor formatting changes for clarity.
+See <a href="UserGuide.html#info">Gene and Hit Information</a>.
+<li>The <ttl>Align</ttl> display has the <ttx>Gene#</ttx> along with the <ttx>Id</ttx> and <ttx>product (Desc)</ttx>.
+</ul>
+
+<li><ttl>Query</ttl>:
+<ul>
+<li>Add a column to show the percent exon overlap of the hit (<ttx>Cluster Hit Algo2</ttx>) or
+the percent gene overlap (<ttx>Cluster Hit Algo1</ttx>).
+<li>Search changes:
+<ul>
+<li>A new <ttx>Multi</ttx> gene annotation option has been added, which lists all genes with multiple hits.
+<li>The <ttx>Every*</ttx> now works for both <ttx>Algo1</ttx> and <ttx>Algo2</ttx>, and the '+' was replaced with a '*' (so would
+not be confused with strand).
+<li>The <ttx>Hit#</ttx> query option shows all major and minor genes that overlap the hit, where the minor are suffixed
+with an '*'.
+<li>The <ttx>Gene#</ttx> query now allows a chromosome to be selected for each species, and shows
+all major and minor hits.
+<li>The <ttx>Annotation</ttx> search with one chromosome selected has been changed so that the annotation has to be on that chromosome
+(it was allowing the annotation to be on the paired chromosome).
+<li>The <ttx>Export</ttx> for .csv and .fasta allow appending to an existing file.
+</ul>
+</ul>
+
+<li><ttl>ConvertEnsembl</ttl>: Was not replacing special characters, which has been added.
+<li>Developers
+<ul>
+<li><small>The formatter for the yellow annotation box was re-written.</small>
+<li><small>The Synteny clustering Algo2 was rewritten to be clearer.
+The amount that a cluster hit overlaps the exon of a gene was an approximation, now it takes into account overlapping
+subhits and removes the overlap from the calculation.</small>
+</ul>
+</ul>
+<a id="v547"></a>
 <h3>Release: v5.4.7 (14-Nov-23)</h3>
 For existing databases: if using <ttx>Cluster Hit Algo 2</ttx>, rerun the <ttb>Synteny</ttb>.
 <ul>

@@ -68,12 +68,11 @@
 	<!---- START BODY -->
 
 This guide is for the <ttp>viewSymap</ttp> user interface.
-<ol>
+<ul>
 	<li>For detailed information on installation, see
 	the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
-	<li>For FPC-to-Seq view,  see <a href="./fpc/UserGuideFPC.html" class="ext" target="_blank">FPC specific</a>.
 	<li>Please send bug reports and suggestions to <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>.
-</ol>
+</ul>
 
 <!------ See SyMAP code util.Jhtml for refs in code; see all 'ref in code' -->
 <b>Contents</b>
@@ -160,20 +159,50 @@ if you use SyMAP results in a paper, poster, or presentation.
 
 <table class="ty">
 	<tr><td>Chromosome<td>For simplicity, sequence groups will be referred to as "Chromosome", though they may be scaffolds, linkage groups, etc.
-	<tr><td style="white-space: nowrap;"><i>Hit (or anchor)</i><td>A matched sequence between two chromosomes from MUMmer.
-	<tr><td style="white-space: nowrap;"><i>Clustered Hits</i><td>SyMAP clusters near or overlapping hits into a single hit
+	<tr><td style="white-space: nowrap;">Hit (or anchor)<td>
+	A matched sequence between two chromosomes, computed by MUMmer.
+	<tr><td style="white-space: nowrap;">Clustered hits<td>
+	SyMAP clusters hits that are close or overlapping hits into a single hit
 	for display; the MUMmer hits within the clustered hits are referred to as <i>subhits</i>.
-	<tr><td style="white-space: nowrap;"><i>Paired genes</i><td>Two genes joined by a hit.
-	<tr><td><i>Synteny block</i><td>An approximately-collinear sequences of anchors; a block can
+	<tr><td style="white-space: nowrap;">Paired genes<td>Two genes joined by a hit.
+	<tr><td>Synteny block<td>An approximately-collinear sequences of anchors; a block can
 	have intervening genes which do not align. There may be small inverted regions within
 	a block.  By default, blocks have at least 7 anchors.
-
-	<tr><td><i>Collinear set</i><td>A sequence of paired aligned genes with no intervening non-paired genes or inverted gene
+	<tr><td>Collinear set<td>A sequence of paired aligned genes with no intervening non-paired genes or inverted gene
 	pairs. A set can consist of 2 or more genes. See <a href="Collinear.html" target="_blank" class="ext">details</a>.
-	<tr><td><i>Block and !Block</i><td>Hits that are in a block and hits that are not within a block, respectively.
-	<tr><td><i>g2, g1, g0</i><td>A hit overlaps a gene on <i>both</i> sides,
-	a hit overlaps a gene on <i>one</i> side, a hit overlaps <i>no</i> genes, respectively.
 </table>
+
+<a id="term2"></a>
+<p>The following are more detailed terminology:
+<table class="ty">
+
+	<tr><td style="white-space: nowrap;">Cluster Hit Algorithm:
+		<br><ttx>Algo1</ttx> or <ttx>Algo2</ttx><small><sup>1</sup></small>
+		<td>During the synteny computation, the clustering could have been done using the original <ttx>Algo1</ttx> or the
+		gene-centric <ttx>Algo2</ttx> (see <a href="SystemHelp.html#pairParams" class=ext target="_blank">System Help</a> for details).
+		The <a href="#sum">Summary</a> specifies which was used.
+		There are statistics in SyMAP that
+		have different values based on which algorithm was run.
+	<tr><td><ttx>Major</ttx> or <ttx>minor</ttx> assigned hit<small><sup>2</sup></small>
+		<td>A hit may align to a gene on one or both ends.
+		If the hit aligns to more than one gene on one end,
+		it is assigned to one of the genes which is the <ttx>major</ttx> assignment;
+		any others are <ttx>minor</ttx>
+		assignments and have an '*' beside them, e.g. in the gene information popup.
+	<tr><td>Block and !Block
+		<td>Hits that are in a block and hits that are not within a block, respectively.
+	<tr><td><ttx>Algo1</ttx>:
+		<br>g2, g1, g0
+		<td>A hit overlaps a gene on <i>both</i> sides,a hit overlaps a gene on <i>one</i> side,
+		a hit overlaps <i>no</i> genes, respectively. This is mainly used for <ttx>Algo1</ttx>.
+	<tr><td><ttx>Algo2</ttx>:
+		<br>EE, EI, En, In, nn
+		<td>E is exon, I is intron, n is intergenic. So a EE is a hit that at least partially aligns to an exon on both ends, etc.
+
+</table>
+<small><sup>1</sup><ttx>Algo2</ttx> became available v5.4.6 and updated v5.4.8</small>.
+<br><small><sup>2</sup>The options described in this documentation must use v5.4.8, and the database should be updated to v5.4.8 (check the
+<a href="#sum">Summary</a>) in order to have correct values for the gene overlap.</small>
 
 <!---------------------------------------------------------->
 <a id="mgr"></a>
@@ -225,7 +254,7 @@ the buttons beside the <ttl>Display for Selected Pair</ttl> will be enabled. Thi
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 The two-genome and multi-chromosome Circle displays work the same;
-see <a href="file:///Users/cari/Sites/symap/docs/UserGuide.html#explorer">Explorer</a>
+see <a href="UserGuide.html#explorer">Explorer</a>
 for the chromosome display.
 <p>
 <table>
@@ -597,26 +626,29 @@ was displayed by right-clicking
 near the top of the chromosome, dragging the mouse and releasing it in order to view the selected region.
 The <ttb>Sequence Filter</ttb> was set to display <ttl>Annotations</ttl>.
 
-<p>
+
 <table>
 <tr><td  style="vertical-align:text-top;">
-Gene annotations: The introns are shown as thinner black rectangles. The exons are drawn as thicker rectangles,
+Gene annotations:
+The introns are drawn as thinner black rectangles. The exons are drawn as thicker rectangles,
 colored dark blue (positive strand) or purple (negative strand).
-A solid thick bar indicates the absence of introns in the annotation.
 <p>The staggered genes, where one is
-further out then the other, indicate overlapping and contained genes; they have the same gene# with a different suffix.
-There can only be 3 layers (the image on the right has 2 layers) of overlapping genes, so if there is more than that, then
-they may not be distinguishable and you will need to set the <ttl>Annotation</ttl> filter to determine the distinct genes.
+further out then the other, indicate overlapping genes; they have the same gene# with a different suffix.
+<p>Hits: The <i>hit-wires</i> connects the aligned regions on the two sequences.
+The aligned region graphics, located on the track at the end of the hit-wire, extends the length of the hit.
+<p><i>Clustered hits</i> are multiple <i>subhits</i> clustered together with gaps in between,
+where the gaps are represented by a grey area.
 
 <td><a href="img/2d-closeup2.png">
 	<img src="img/2d-closeup2.png" alt="2d-closeup" style="border: 1px solid black; width: 550px"></a>
 </table>
-Hits: The brown or green <i>hit-wires</i> connects two regions on the two sequences. <i>Hit lengths</i> show the
-length of the hit located on the track at the end of a hit-wire (i.e. the green and gray
-vertical line near the chromosome edge).
-<i>Clustered hits</i> are multiple hits clustered together with gaps in between, where the gaps are represented by
-a grey area. (The hits in a cluster are referred to as <i>subhits</i>).
-
+<i>Major and Minor genes</i> If one end of the hit-wires aligns to overlapping genes, only one is assigned to
+it, which is called the <ttx>major</ttx> genes. The other overlappings genes are the <ttx>minor</ttx> genes.
+In the above example, gene 1910.b is the major gene for the top hit-wire and gene 1910.a is the minor gene;
+see <a href="#popup">Popup</a>.
+<p><font color=red>Problematic</font>: When zooming into a region, if the hit-wire is not in the region, none of the hit is shown. This
+is confusing for large hits. This will be fixed in a near-future release.
+<p>
 <a id="info"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>Gene and hit information</h3>
@@ -629,34 +661,46 @@ a grey area. (The hits in a cluster are referred to as <i>subhits</i>).
 <a href="img/2d-hit.png"><img src="img/2d-hit.png" alt="2d-hit" style="border: 1px solid black; width: 260px"></a>
 </table>
 <table class="txy">
-<tr><td><ttx>Block #</ttx><td>is the block number (0 indicates it is not in a block).
-<tr><td><ttx>Inv</ttx><td> indicates that it is part of an inverted block.
-<tr><td><ttx>Hit #</ttx><td> is the number representing the hit for the chromosome pair.
-<tr><td><ttx>Block #</ttx><td>is the block number (0 indicates it is not in a block).
-<tr><td><ttx>Inv</ttx><td> indicates that it is part of an inverted block.
-<tr><td><ttx>Hit #</ttx><td> is the number representing the hit for the chromosome pair.
-<tr><td><ttx>(!=)</ttx><td> indicates the hit ends are on two different strands; <ttl>(=)</ttl> indicates the same strand.
+<tr><td><ttx>Block #</ttx><td>The block number (0 indicates it is not in a block).
+<tr><td><ttx>Inv</ttx><td> Indicates that it is part of an inverted block.
+<tr><td><ttx>Hit #</ttx><td> The number representing the hit for the chromosome pair.
+<tr><td><ttx>(!=)</ttx><td> The hit ends are on two different strands; <ttl>(=)</ttl> indicates the same strand.
+
 <tr><td style="white-space: nowrap; vertical-align: text-top;">
 <ttx>gN</ttx> (<ttx>N={0,1,2}</ttx>)
 <br><ttx>XX</ttx> (<ttx>X={E,I,n}</ttx>)
-<td> (Algo1) indicates whether the hit overlaps two genes (g2), one gene (g1) or no genes (g0).
-<br> (Algo2) indicates whether the hit overlaps an exon (E), intron (I) or intergenic (n).
-<br> If Algo2 was used, it is indicated on the <ttl>Summary</ttl>.
-<tr><td  style="white-space: nowrap; vertical-align: text-top;"><ttx>cN.M</ttx> (<ttx>N&ge;2</ttx>)<td> indicates that it is part of a collinear set of size N;
+<td> (<ttx>Algo1</ttx>) The hit overlaps two genes (g2), one gene (g1) or no genes (g0).
+<br> (<ttx>Algo2</ttx>) The hit overlaps an exon (E), intron (I) or intergenic (n).
+<br> See <a href="#term">Terminology</a> for an explanation of <ttx>Algo1</ttx> versus <ttx>Algo2</ttx>.
+
+<tr><td  style="white-space: nowrap; vertical-align: text-top;"><ttx>cN.M</ttx> (<ttx>N&ge;2</ttx>)
+<td> It is part of a collinear set of size N;
 M is the unique set number for the chromosome pair.
 The collinear sets can be queried using <a href="#queries">Queries</a>.
+
 <tr><td  style="white-space: nowrap; vertical-align: text-top;">
-<ttx>Subhits</ttx> (<ttx>N&ge;1</ttx>)<td> are the MUMmer hits clustered into one hit, where there may be gaps
-or overlaps between hits. If
-<ttx>Subhits&gt;1</ttx> the values of <ttx>Id</ttx>, <ttx>Sim</ttx>, and <ttx>Cov</ttx> are approximate.
-<ttx>Cov</ttx> is the largest coverage of clustered hits between the two species (for V5.4.0 and later).
+<ttx>Subhits</ttx> (<ttx>N&ge;1</ttx>)
+<td> The number of MUMmer hits clustered into one hit, where there may be gaps
+or overlaps between hits.
+
+<tr><td  style="white-space: nowrap; vertical-align: text-top;">
+<ttx>Id</ttx>, <ttx>Sim</ttx>
+<td>These values are from the MUMmer file.
+For <ttx>Subhits&gt;1</ttx> the values are approximate.
+
+<tr><td><ttx>Cov</ttx>
+<td>The largest length/coverage of the two species.
+For <ttx>Algo1</ttx>, this is the full length of the subhits (end-start+1).
+For <ttx>Algo1</ttx>, this is the sum of the merged subhits.
+
+<tr><td><ttx>L</ttx> and <ttx>R</ttx><td>This shows the coordinates for the hit on the left and right, respectively.
 </table>
 
 <table  style="width: 70%;">
 <tr><td>
 <u>Gene Information</u>: Hovering the mouse over a gene will show its information in the <ttl>Information</ttl> box.
 <td>
-<a href="img/2d-gene.png"><img src="img/2d-gene.png" alt="2d-gene" style="border: 1px solid black; width: 240px"></a>
+<a href="img/2d-gene.png"><img src="img/2d-gene.png" alt="2d-gene" style="border: 1px solid black; width: 260px"></a>
 </table>
 
 <table class="txy">
@@ -664,24 +708,43 @@ or overlaps between hits. If
 <td>is a sequential number along the chromosome. If genes overlap, they will have the same number
 but a different suffix (e.g. a, b,...).
 <tr><td><ttx>#Exon=</ttx><td>is the number of exons followed by their summed sizes.
-<tr><td colspan=2>The next line is the location followed by its total length.
-<tr><td colspan=2>The following lines are the annotation provided by the GFF file.
-<tr><td colspan=2>The last line is the exon that the mouse is over.
+<tr><td colspan=2>The next line is (<ttx>-(12,280,413</ttx>...) the location followed by its total length.
+<tr><td colspan=2>The following lines (<ttx>ID, product</ttx>...) are the annotation provided by the GFF file.
+<tr><td colspan=2>The last line (<tt>Exon #12</tt>) is the exon that the mouse is over.
 </table>
 
 <a id="popup"></a>
 <br><u>Information Popups</u> Popups of a gene or hit-wire provides more detailed information.
-To view the popup of the gene description, right-click on the gene in the track.
-To view the popup of a hit-wire, right click on it (the hit-wire must be highlighted in red from hovering over it to be clickable).
+To view the popup of the gene description, right-click on the gene in the track; the selected gene will turn cyan.
+To view the popup of a hit-wire, right click on it
+(the hit-wire must be highlighted in red from hovering over it to be clickable); the <ttx>major</ttx> genes
+will turn red. In the following example, 1910.b is the <ttx>major</ttx> gene and 1910.a is the <ttx>minor</ttx> gene for A.thal.
+<p><a href="img/2d-popup.png"><img src="img/2d-popup.png" alt="2d with popups" style="border: 1px solid black; width: 750px"></a>
+
 <p>The information in a popup can be copied by dragging the mouse over it followed by the copy command. The popup does not
-go away until the <ttb>OK</ttb> button is selected, or the <ttl>Explorer</ttl> is exited. Any number of gene popups can be present.
-<p>The example below shows the two genes that are connected by the hit-wire shown. For the hit information,
-the Hit subhits in Cabbage Chr01 align with A.thal Chr04; the coords are always sorted by the start coordinate.
-<p><a href="img/2d-desc.png"><img src="img/2d-desc.png" alt="2d-desc" style="border: 1px solid black; width: 750px"></a>
-<p>Caveat:
+go away until the <ttb>OK</ttb> button is selected or the <ttl>Explorer</ttl> is exited. Any number of gene popups can be present.
+
+<p>The example below shows the two genes that are connected by the hit-wire shown.
 <ul>
-<li>As shown in the gene popup, the hit(s) are listed; <i><u>however</u>, only displayed hits for the gene are shown</i>; i.e.
-there could be a hit to the gene where the other end is not shown due to zooming or filtering.
+<li>For the <u>hit popup</u>, the subhits in A.thal align with the subhits in Cabbage;
+the # column indicate which hits align, e.g. #1 of A.thal aligns with #1 of Cabbage.
+<ul>
+<li>See <a href="Align.html#olap" class="ext" target="_blank">Align</a> for more details.
+</ul>
+</ul>
+<p><a href="img/2d-desc.png"><img src="img/2d-desc.png" alt="2d-desc" style="border: 1px solid black; width: 750px"></a>
+<ul>
+<li>For the <u>gene popup</u>, all hits to the gene for the chromosome pair are shown along with the exons.
+<ul>
+<li>The (Gene N% Exon N%) represent the amount of gene and exon overlapped by the hit, respectively.
+The information is different as to whether <a href="#term2">Algo1 or Algo2</a> was used.
+If <ttx>Algo1</ttx> was used, only the gene score will be shown,
+and its score numerator uses the clustered hit end minus clustered hit start.
+If <ttx>Algo2</ttx> was used, its score numerator uses the length of the merged subhits.
+<li> Though both the A.thal and the Cabbage genes are on
+the negative strand, the exons are numbered differently;
+this is due to differences between NCBI and Ensembl annotation files.
+</ul>
 </ul>
 <!----->
 <!----------------------------------------------------------->
@@ -982,7 +1045,7 @@ To select a region,  drag the
 mouse along the sequence and release when the desired range is highlighted.
 <p>
 <a href="img/baseview2.png">
-	<img src="img/baseview2.png" alt="baseview" style="border: 1px solid black; width: 750px"></a>
+	<img src="img/baseview2.png" alt="baseview" style="border: 1px solid black; width: 700px"></a>
 <p>
 The aligned base view of the clustered subhits will
 appears in a new window.  This view consists of a ruler along the top showing the area
@@ -997,18 +1060,17 @@ sequence was soft-masked, the masking is retained in the alignment.
 For details of alignment, see <a href="Align.html" class="ext"  target="_blank">Alignment</a>.
 <p>
 <u>Genes</u><br>
-Annotated genes are displayed below the hits. Blue exons are on one strand and burgundy on the other.
-If only part of the gene is selected, an arrow on the left or right indicates that the full gene is not shown.
+Annotated genes are displayed below the hits. Blue exons are on + strand and burgundy are on the - strand.
 <a id="abase"></a>
 <h4>Align Text View</h4>
 <table>
 <tr><td><a href="img/hitInfo.png">
-	<img src="img/hitInfo.png" alt="Hit Information" style="border: 1px solid black; width: 200px"></a>
+	<img src="img/hitInfo.png" alt="Hit Information" style="border: 1px solid black; width: 230px"></a>
 <br>Hover over a hit-wire and right click for the information popup shown above. The <ttl>Align Hit</ttl>
 option aligns the hit as shown on the right. Use the <ttl>Reverse</ttl> button to view the reverse complement
 alignment.
 <td><a href="img/basetext.png">
-	<img src="img/basetext.png" alt="Text view of alignment" style="border: 1px solid black; width: 400px"></a>
+	<img src="img/basetext.png" alt="Text view of alignment" style="border: 1px solid black; width: 430px"></a>
 </table>
 For details of alignment, see <a href="Align.html" class="ext"  target="_blank">Alignment</a>.
 
@@ -1190,7 +1252,7 @@ it does recompute when using the history <big>&lt;</big> and <big>&gt;</big> but
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>3D Display (if available)</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-The 3D display is obsolete, but if there is a "3D" button on your display,  see <a href="./3D.html">3D</a>.
+The 3D display is obsolete since v5.2.1, but if there is a "3D" button on your display,  see <a href="./3D.html">3D</a>.
 
 
 <p><a href="#top">Go to top</a>

@@ -7,7 +7,9 @@
 	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
 	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
-	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
+	ttp  {font-family: 'Lucida Console', monospace; font-size: 16px; font-weight: 500; font-variant: small-caps;}
+	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
     a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
     a.ext {font-weight: bold;}
     mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
@@ -133,7 +135,12 @@ of the alignment files.
 <p>
 If the error is not found in the log files or it is not clear, try the following:
 <ul>
-<li>Copy the command from the terminal, and past it on a new terminal line to execute.
+<li>Copy the command from the terminal (or log file), and paste it on a new terminal line to execute, e.g.
+<pre>
+ext/mummer/mac/promer  -p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_cc.demo_seq2_f2.promer
+data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa
+data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
+</pre>
 This shows <tt>promer</tt> output directly on the terminal.
 </ul>
 
@@ -195,7 +202,7 @@ Finished in 1 hr 34 min 29 sec
 <a id="mask"></a>
 <h3>Not-masked or Soft-masked</h3>
 A memory problem can occur if the genome sequence is not masked or only soft-masked.
-Either: (1) change the sequence to hard-masked, or (2) set the SyMAP parameter 'mask_all_but_genes' to yes.
+Either: (1) change the sequence to hard-masked, or (2) set the SyMAP parameter <ttx>mask_all_but_genes</ttx> to yes.
 <p>
 
 <a id="fail1"></a>
@@ -254,10 +261,11 @@ but less time than MUMmer v3.
 
 If you need to run MUMmer using the command line from some other machine, do the following:
 <ul>
-<li>Proj-name1 must be alphanumerically less than proj-name2.
-Proj-name1 must be the query and proj-name2 the reference, e.g.
+<li><tt>Proj-name1</tt> must be alphanumerically less than <tt>proj-name2</tt>.
+<tt>Proj-name1</tt> must be the query and <tt>proj-name2</tt> the reference, e.g.
 <pre>
 USAGE: promer  [options]  &lt;Reference&gt;  &lt;Query&gt;
+e.g.
 promer proj-name2 proj-name1
 </pre>
 <li>Distant genomes:
@@ -267,7 +275,7 @@ promer proj-name2 proj-name1
 </ul>
 <li>Self synteny:
 <ul>
-<li>Use nucmer. For the same chromosome against itself, use the parameter "--maxmatch".
+<li>Use nucmer.
 <li>The output of nucmer is input to "show-coords -dlTH".
 </ul>
 <li>Result files:
@@ -309,7 +317,7 @@ in a script). The resulting <tt>align</tt> directory will have:
 all.done	chr1chr3.mum	chr1chr5.mum	chr3chr3.mum	chr3chr5.mum
 </pre>
 When symap is started and  demo_seq and demo_seq2 selected, there will be a "A" in their cell; select it followed by
-"Selected Pairs" and it will load the alignments and compute the synteny.
+<ttb>Selected Pair</ttb> and it will load the alignments and compute the synteny.
 <p>
 
 <a id="help"></a>
