@@ -1,6 +1,7 @@
 package backend.anchor1;
 
 import java.util.Vector;
+
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Collections;
@@ -12,19 +13,19 @@ import java.util.Collections;
 **********************************************************/
 
 public class HitBin  {
-	private final static double FperBin=0.8;
-	public int start, end;  
-	public  GeneType  mGT = GeneType.NA;// AnchorsMain {Gene, NonGene, NA}
-	private QueryType mQT;				// AnchorsMain {Query, Target, Either };
+	private final static double FperBin=backend.Constants.FperBin; // 0.8*matchLen top piles to save
+	protected int start, end;  
+	protected  GeneType  mGT = GeneType.NA;// AnchorsMain {Gene, NonGene, NA}
+	private QueryType mQT;				   // AnchorsMain {Query, Target, Either };
 	private int mTopN=0;
 	
-	public int mHitsConsidered = 0, nHitsRemoved = 0;
+	protected int mHitsConsidered = 0, nHitsRemoved = 0;
 	
 	private Vector<Hit> mHits;
 	private int mMinMatch = 0; // lowest matchLen of mHits; will not consider anything lower
 	
 	// Group.createHitBin1; place holders
-	public HitBin(int start, int end, GeneType mGT, int topn, QueryType qt) {
+	protected HitBin(int start, int end, GeneType mGT, int topn, QueryType qt) {
 		this.start = start;
 		this.end   = end;
 		this.mGT = mGT;
@@ -34,7 +35,7 @@ public class HitBin  {
 		mHits = new Vector<Hit>(topn,2); 
 	}
 	// Group.filterAddToHitBin2
-	public HitBin(Hit h, int start, int end, int topn, QueryType qt) {
+	protected HitBin(Hit h, int start, int end, int topn, QueryType qt) {
 		this.mMinMatch = h.matchLen;
 		this.start = start;
 		this.end   = end;
@@ -50,7 +51,7 @@ public class HitBin  {
 	 * Called from Group [checkAddHit2]
 	 * CAS543 need to be more gene-centric
 	 ************************************************************/
-	public void filterAddHit2(Hit hit, int shStart, int shEnd) {
+	protected void filterAddHit2(Hit hit, int shStart, int shEnd) {
 		mHitsConsidered++;
 		
 		if (mHits.size() >= mTopN && hit.matchLen < mMinMatch && !hit.useAnnot()) return;
@@ -78,14 +79,14 @@ public class HitBin  {
 		}
 		mMinMatch = mHits.get(mHits.size()-1).matchLen; 
 	}
-	public int getnHits() { if (mHits==null) return -1; return mHits.size();}
+	protected int getnHits() { if (mHits==null) return -1; return mHits.size();}
 	
 	/******************************************************************
 	 * AnchorMain.filterHitsFinal -> Group.filterAddHits -> add to HashSet hits
 	 * The mHits were filtered above during 2nd scan; they are further filtered here with same filters
 	 * Keep mTopN by length, fullAnnot regardless, 80% of length
 	 ****************************************************************/
-	public void filterFinalAddHits(HashSet<Hit> addToHits) {
+	protected void filterFinalAddHits(HashSet<Hit> addToHits) {
 		int nHits = mHits.size();
 		if (nHits==0) return; // CAS500 
 		
@@ -124,7 +125,7 @@ public class HitBin  {
 		}
 		mHits.clear();
 	}
-	public String getInfo() {return String.format("Hit bin  %,10d %,10d  %4d", start, end, mHits.size());}
+	protected String getInfo() {return String.format("Hit bin  %,10d %,10d  %4d", start, end, mHits.size());}
 	
 	private static class CompareByMatch implements Comparator<Hit> {
 		public int compare(Hit h1, Hit h2) {	

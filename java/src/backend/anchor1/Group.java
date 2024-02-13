@@ -24,15 +24,15 @@ import util.ErrorReport;
 public class Group {
 	public  static boolean bSplitGene=true;	      // CAS540 split hit/gene if true; -nsg will set !bSplitGene; 
 	
-	public  static final int FSplitLen  = 50000;  // CAS540 10k->50k for mummer hit
+	protected  static final int FSplitLen  = 50000;  // CAS540 10k->50k for mummer hit
 	private static final int FAnnotBinSize  = 30000;  // annoSetMap; CAS534 was props
 	private static final int FHitBinSize    = 10000;  // hitBinMap;  CAS534 was props
 	private static final int FMaxHitAnno = 100000;	 // CAS540 use max(maxGeneLen,maxHitAnno); reduces obscuring gene hits by a long non-gene
 	
-	public int avgGeneLen =  1000, maxGeneLen = 50000; // use these defaults if no anno for project
+	protected int avgGeneLen =  1000, maxGeneLen = 50000; // use these defaults if no anno for project
 				  	
-	public int idx;
-	public String fullname;	 // displayName + chrName with prefix
+	protected int idx;
+	protected String fullname;	 // displayName + chrName with prefix
 	private String chrName;  // prefix removed
 	private QueryType mQT;   // AnchorsMain { Query, Target, Either };
 	
@@ -46,7 +46,7 @@ public class Group {
 	
 	private int topN = 0;
 	
-	public Group(int topN, String name, String fullname, int idx, int qType) {// CAS546 qType was enum
+	protected Group(int topN, String name, String fullname, int idx, int qType) {// CAS546 qType was enum
 		this.topN = topN;
 		this.chrName = name;
 		this.fullname = fullname;
@@ -62,17 +62,17 @@ public class Group {
 		hitBinMap = 	new TreeMap<Integer, Vector<HitBin>>();
 	}
 	
-	public String getName()     { return chrName; } 	// AnnoLoadPost
-	public String getFullName() { return fullname; } 	// CAS512 add for AnnotLoadMain terminal output
-	public int getIdx()         { return idx; } 		// SyntenyMain
-	public String idStr()		{ return "" + idx + "(" + chrName + ")";} // AnchorMain
+	protected String getName()     { return chrName; } 	// AnnoLoadPost
+	protected String getFullName() { return fullname; } 	// CAS512 add for AnnotLoadMain terminal output
+	protected int getIdx()         { return idx; } 		// SyntenyMain
+	protected String idStr()		{ return "" + idx + "(" + chrName + ")";} // AnchorMain
 	
 	/******************* ANNO BINS ******************************/
 	/************************************************************
 	 * Called from AnchorsMain.loadAnnoBins [loadAnnotation]
 	 * CAS540 add split large genes that embed other genes
 	 */
-	public int createAnnoFromGenes(DBconn2 dbc2) {
+	protected int createAnnoFromGenes(DBconn2 dbc2) {
 	try {
 		HashSet <Integer> idxSplit = new HashSet <Integer> ();
 		ResultSet rs;
@@ -155,7 +155,7 @@ public class Group {
 	 * AnchorMain.scanFile1: [testHitForAnnotOverlapAndUpdate2] removed [testHitForAnnotOverlap - never called]
 	 * CAS540 was spanning genes where there were no hits (new tryStart, tryEnd)
 	 */
-	public void createAnnoFromHits1(int hstart, int hend, boolean isRev) {
+	protected void createAnnoFromHits1(int hstart, int hend, boolean isRev) {
 		int bs = Math.max((hstart - avgGeneLen)/FAnnotBinSize, 0);
 		int be =          (hend + avgGeneLen)/FAnnotBinSize;
 						
@@ -275,7 +275,7 @@ public class Group {
 	 * called from AnchorMain.clusterHits2 while clustering hits into subhits
 	 * CAS540 changed the logic a little, gives slightly different results [getMostOverlappingAnnot]
 	 */
-	public AnnotElem getBestOlapAnno(int hStart, int hEnd) {
+	protected AnnotElem getBestOlapAnno(int hStart, int hEnd) {
 		AnnotElem best = null;
 		int bestOlap=0, curOlap=0;
 
@@ -331,16 +331,22 @@ public class Group {
 		return best;
 	}
 	
-	// CAS535 AnchorsMain - get hits to save
-	public int [][] getAnnoHitOlapForSave(Hit h, int start, int end) throws Exception {
+	// CAS535 AnchorsMain - get hits to save to pseudo_hits_anno; the hits were just read from the db
+	protected int [][] getAnnoHitOlapForSave(Hit ht, int start, int end) throws Exception {
 	try {
 		HashMap<AnnotElem,Integer> vals = getAllOlapAnnos(start, end);
-		int [][] retVals = new int [vals.size()][3];
+		int [][] retVals = new int [vals.size()][4];
 		int i=0;
 		for (AnnotElem ae : vals.keySet()) {
-			retVals[i][0] = h.idx;
+			retVals[i][0] = ht.idx;
 			retVals[i][1] = ae.idx;
-			retVals[i][2] = vals.get(ae);
+			
+			double dolap = (double) vals.get(ae);
+			dolap = (dolap/(double)(ae.end-ae.start)) *100.0; // CAS548 change to %
+			retVals[i][2] = (int) Math.round(dolap);
+				
+			if (ht.annotIdx1==ae.idx) retVals[i][3]=ht.annotIdx2; // CAS548 add annot2
+			else if (ht.annotIdx2==ae.idx) retVals[i][3]=ht.annotIdx1;
 			i++;
 		}
 		return retVals;
@@ -352,7 +358,7 @@ public class Group {
 	 * called after scanFile1 [collectPGInfo]; CAS535 was via SyProj, now direct
 	 * AnnotElem 1-to-1 with HitBin; then HitBin is put in hitBinMap, which has more entries than HitBin
 	 */
-	public void createHitBinFromAnno2(String proj){
+	protected void createHitBinFromAnno2(String proj){
 		int gene = 0, ng = 0;
 
 		for (AnnotElem ae : annoElemSet) {
@@ -377,7 +383,7 @@ public class Group {
 	/***********************************************************************
 	 * AnchorMain.filterClusterHits2; add to HitBin with best overlap if pass filters [checkAddToHitBin2]
 	 ***************************************************************/
-	public void filterAddToHitBin2(Hit hit, int start, int end) throws Exception { // query/target start end
+	protected void filterAddToHitBin2(Hit hit, int start, int end) throws Exception { // query/target start end
 		int bs = start/FHitBinSize;
 		int be = end/FHitBinSize;
 		HitBin hbBest = null;
@@ -415,7 +421,7 @@ public class Group {
 	}
 	
 	// Called from AnchorMain to add this groups filtered hits to the main hashset
-	public void filterFinalAddHits(HashSet<Hit> finalHits) throws Exception { 
+	protected void filterFinalAddHits(HashSet<Hit> finalHits) throws Exception { 
 		for (HitBin hb : hitBins){
 			hb.filterFinalAddHits(finalHits);
 			
@@ -442,7 +448,7 @@ public class Group {
 	}	
 	/************************************************/
 	// -s only SyProj.printBinStats() or for debugging
-	public String debugInfo() { 
+	protected String debugInfo() { 
 		int cnt=0;
 		for (HitBin h : hitBins) if (h.getnHits()>0) cnt++;
 		String x = String.format("%3s %6s  AnnotMap %-,5d  hitBin %-,5d (%-,4d addedhits) hitBinMap %-,5d    AE=hB %b  %,d %,d",
@@ -451,7 +457,7 @@ public class Group {
 				(annoElemSet.size()==hitBins.size()), avgGeneLen, maxGeneLen);
 		return x;
 	}
-	public void collectBinStats(BinStats bs){ 
+	protected void collectBinStats(BinStats bs){ 
 		bs.mNBins += hitBins.size();
 		for (HitBin hb : hitBins){
 			bs.mTotalLen 	+= Math.abs(hb.end - hb.start);
@@ -466,7 +472,7 @@ public class Group {
 			bs.nAmax = Math.max(bs.nAmax, as.mList.size());
 		}
 	}
-	public void prtAnnotBinStats() {
+	protected void prtAnnotBinStats() {
 		for (int b : annoSetMap.keySet()) {
 			AnnotSet as = annoSetMap.get(b);
 			System.out.println("Bin " + b + " " + as.getInfo());
@@ -477,7 +483,7 @@ public class Group {
 					System.out.println(ae.toString());
 		}
 	}
-	public void prtHitBinStats() {
+	protected void prtHitBinStats() {
 		System.out.println("HitBins " + hitBins.size());
 		for (HitBin b : hitBins) {System.out.println(b.getInfo());}
 	}
@@ -496,7 +502,7 @@ public class Group {
 		private void add(AnnotElem ae) 	 {mList.add(ae);    if (ae.mGT==GeneType.Gene) cntG++; else cntNG++;}
 		private void remove(AnnotElem ae){mList.remove(ae); cntRm++;}	
 		
-		public String getInfo() {
+		protected String getInfo() {
 			return String.format("Size %3d  gene %3d  non-gene %3d  remove %3d", mList.size(), cntG, cntNG, cntRm);
 		}
 	}

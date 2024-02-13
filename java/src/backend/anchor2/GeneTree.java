@@ -61,18 +61,18 @@ public class GeneTree {
 	   private Node left, right;
 	   
 	   private Node (Gene itv) {
-		  this.start = itv.gstart;
-		  this.end   = itv.gend;
+		  this.start = itv.gStart;
+		  this.end   = itv.gEnd;
 		  itvObj = itv;
 		  maxEnd = end;
 	   }
 	   private void add(Gene gn) {
 		  if (startSet==null) startSet = new  TreeSet <Gene> ();
 		  
-		  if (gn.gend > end) {
+		  if (gn.gEnd > end) {
 			  startSet.add(itvObj);
 			  itvObj = gn;
-			  maxEnd = end = gn.gend;
+			  maxEnd = end = gn.gEnd;
 		  }
 		  else startSet.add(gn);
 	   }
@@ -102,10 +102,10 @@ public class GeneTree {
 		   protected Node insertNode(Node node, Gene gn) {
 		      if (node == null) return new Node(gn);
 		      
-		      int hStart = gn.gstart;
+		      int hStart = gn.gStart;
 		      if (hStart < node.start)      node.left =  insertNode (node.left, gn);
 		      else if (hStart > node.start) node.right = insertNode (node.right, gn);
-		      else die("Duplicate start " + gn.gstart);
+		      else die("Duplicate start " + gn.gStart);
 		    
 		      node.height = 1 + Math.max(iHeight(node.left), iHeight(node.right));
 		      
@@ -201,7 +201,7 @@ public class GeneTree {
 		            annoSet.add(tmpNode.itvObj);
 		            if (checkAll && tmpNode.startSet!=null) 
 		            	for (Gene ad : tmpNode.startSet) {
-		            		if ( !(ad.gstart > hend || ad.gend < hstart) )  
+		            		if ( !(ad.gStart > hend || ad.gEnd < hstart) )  
 		            			annoSet.add(ad);
 		            	}
 		        }

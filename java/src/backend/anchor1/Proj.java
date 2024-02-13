@@ -18,9 +18,9 @@ import util.ProgressDialog;
  * Contains Mproject object plus groups and annotation
  */
 public class Proj  {
-	public int idx;
-	public String name, grpPrefix,  category = "", displayName = ""; 
-	public Mproject mProj;
+	protected int idx;
+	protected String name, grpPrefix,  category = "", displayName = ""; 
+	protected Mproject mProj;
 	
 	private String orderAgainst = "";
 	
@@ -40,7 +40,7 @@ public class Proj  {
 	 * QueryType: AnnotLoadMain - Either; 
 	 * 			  AnchorMain, SyntenyMain - Target, query
 	 */
-	public Proj(DBconn2 dbc2, ProgressDialog log, Mproject proj, String name, int topN, int qType) throws Exception {
+	protected Proj(DBconn2 dbc2, ProgressDialog log, Mproject proj, String name, int topN, int qType) throws Exception {
 		this.dbc2 = dbc2;
 		this.plog = log;
 		this.mProj = proj;
@@ -84,16 +84,16 @@ public class Proj  {
 	}
 	/**********************************************************************/
 	public String getName() { return name; }
-	public int getIdx() { return idx; }
-	public String getOrderAgainst() { return orderAgainst; }
-	public boolean hasOrderAgainst() {return !getOrderAgainst().contentEquals("");}
-	public boolean hasAnnot() {return hasAnnot;}
+	protected int getIdx() { return idx; }
+	protected String getOrderAgainst() { return orderAgainst; }
+	protected boolean hasOrderAgainst() {return !getOrderAgainst().contentEquals("");}
+	protected boolean hasAnnot() {return hasAnnot;}
 	
-	public Vector<Group> getGroups() { return groupVec; }
-	public Group getGrpByIdx(int idx) {return idx2Grp.get(idx);}
-	public long getSizeBP() { return totalSize; } 
+	protected Vector<Group> getGroups() { return groupVec; }
+	protected Group getGrpByIdx(int idx) {return idx2Grp.get(idx);}
+	protected long getSizeBP() { return totalSize; } 
 	
-	public int grpIdxFromQuery(String name) {	
+	protected int grpIdxFromQuery(String name) {	
 		String s = name;
 		
 		Matcher m = namePat.matcher(name);
@@ -105,11 +105,11 @@ public class Proj  {
 	
 	/**************** AnchorMain ****************************/
 	
-	// CAS535 public void collectPGInfo() {for (Group g : groupVec) {g.collectPGInfo(name);}}
-	// CAS535 public void filterHits(Set<Hit> hits) for (Group g : groupVec) g.filterHits(hits);
-	// CAS535 public void checkPreFilter2(Hit hit, SubHit sh) {Group grp = idx2Grp.get(sh.grpIdx);grp.checkAddToHitBin2(hit,sh);}
+	// CAS535 protected void collectPGInfo() {for (Group g : groupVec) {g.collectPGInfo(name);}}
+	// CAS535 protected void filterHits(Set<Hit> hits) for (Group g : groupVec) g.filterHits(hits);
+	// CAS535 protected void checkPreFilter2(Hit hit, SubHit sh) {Group grp = idx2Grp.get(sh.grpIdx);grp.checkAddToHitBin2(hit,sh);}
 	
-	public void printBinStats(){
+	protected void printBinStats(){
 		BinStats bs = new BinStats();  
 
 		plog.msgToFile("Stats for " + name);

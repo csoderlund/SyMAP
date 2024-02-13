@@ -15,21 +15,21 @@ import util.ProgressDialog;
  * -tt histograms are recorded and printed
  */
 public class BinStats {
-	public int mNBins=0;
+	protected int mNBins=0;
 	
 	long mTotalLen = 0;
 	int mTotalHits = 0, mHitsRm = 0;
 	int nABins = 0, nAcnt=0, nArm=0, nAmix=0, nAmax=0;
 	
-	public BinStats(){}
+	protected BinStats(){}
 	
-	public String debugInfoAS() { // CAS540x
+	protected String debugInfoAS() { // CAS540x
 		String avgSize =   String.format("%.2f", ((double)nAcnt/(double)nABins));
 
 		return String.format("#AnnoSets %-,5d  AvgAnno %-5s   Max %-,5d  Mix %-,5d   Removed %-,5d",
 				nABins, avgSize,  nAmax, nAmix, nArm);
 	}
-	public String debugInfoHB() { // CAS540x
+	protected String debugInfoHB() { // CAS540x
 		int avgLen =   Math.round(mTotalLen/mNBins);
 		
 		String avgHits =   String.format("%.2f", Utils.simpleRatio(mTotalHits, mNBins));
@@ -45,7 +45,7 @@ public class BinStats {
 	private static Vector<String> mKeyOrder = null;
 	private static TreeMap<String,TreeMap<Integer,Integer>> mHist = null;
 		
-	public static void initStats() {
+	protected static void initStats() {
 		if (Constants.PRT_STATS) {
 			mStats = new TreeMap<String,Float>();	
 			mKeyOrder= new Vector<String>();
@@ -54,7 +54,7 @@ public class BinStats {
 			mHist = new TreeMap<String,TreeMap<Integer,Integer>>();
 	}
 	
-	public static void initHist(String key, Integer... levels) {//3,6,10,25,50,100
+	protected static void initHist(String key, Integer... levels) {//3,6,10,25,50,100
 		if (mHist==null) return;
 		
 		mHist.put(key, new TreeMap<Integer,Integer>());
@@ -63,7 +63,7 @@ public class BinStats {
 		}
 		mHist.get(key).put(Integer.MAX_VALUE,0);
 	}
-	public static void incHist(String key, int num) throws Exception {
+	protected static void incHist(String key, int num) throws Exception {
 		if (mHist==null) return;
 		
 		int l = -1, last=0;
@@ -121,7 +121,7 @@ public class BinStats {
 	// CAS534 no reason to load these, only do it on -s; then remove the next time run.
 	// CAS540 (now dead) writes to symap.log now; never used from database so this is not currently called
 	//        was called in AnchorMain and SyntenyMain at end of processing
-	public static void uploadStats(DBconn2 dbc2, int pair_idx, int pidx1, int pidx2) throws Exception {
+	protected static void uploadStats(DBconn2 dbc2, int pair_idx, int pidx1, int pidx2) throws Exception {
 		if (mStats == null) return;
 		
 		ResultSet rs = null;

@@ -4,7 +4,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.TreeMap;
 
 import backend.Utils;
@@ -12,65 +11,63 @@ import util.ErrorReport;
 import util.ProgressDialog;
 
 /*************************************************************
- * After creating gene clusters, this processes non-gene hits to remove pile of hits
+ * Find overlapping HitPairs; mark Pile
  */
 public class GrpPairPile {
 	static private final int T=Arg.T, Q=Arg.Q;
-	static private final double bigOlap = 0.4; 
-	static private final double fudgeScore = 70.0;
-	static private final int    fudgeLen = 5000; 
+	static private final double FperBin=backend.Constants.FperBin; // 0.8*matchLen top piles to save
 	
-	private ArrayList <HitCluster> clHitList = null; 
-	private int clArrLen;
-	
+	// from GrpPair
 	private GrpPair grpPairObj;
 	private ProgressDialog plog;
+	private ArrayList <HitPair> clustList = null; 
+	private int clArrLen;
 	
-	// Working - discarded pile hits are marked bDead
-	private ArrayList <PileClHits> pileList = new ArrayList <PileClHits> (); 
+	// Working - discarded pile hits are Pile
+	private ArrayList <Pile> pileList = new ArrayList <Pile> (); 
 	
-	private HashSet <Integer> htNumSet = new HashSet <Integer> ();	// key: hitNum
 	private boolean bSuccess=true;
 	
 	protected GrpPairPile (GrpPair grpPairObj) {
 		this.grpPairObj = grpPairObj;
 		plog = grpPairObj.plog;
 		
-		clHitList = grpPairObj.gpClHitList;
+		clustList = grpPairObj.gxPairList;
 	
-		clArrLen = clHitList.size();
+		clArrLen = clustList.size();
 	}
 	protected boolean run() {
+		Arg.tprt("Find piles from " + clArrLen);
+		if (symap.Globals.DEBUG) return true;
 		identifyPiles();	if (!bSuccess) return false;
 		createPiles();		if (!bSuccess) return false;
 		filterPiles();		if (!bSuccess) return false;
-			
-		prtToFile();
 		return bSuccess;
 	}
 	
-	///////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
 	private void identifyPiles() {
 	try {
-		// set hitcluster pileNum 
-		int [] cPile = {0,0};
-		
-		for (int X=1; X>=0; X--) { 				// Q piles, then T piles
-			HitCluster.sortByX(X, clHitList); 	// sorts by T/Q; eq/ne mixed
+		for (int X=0; X<2; X++) { 			// T piles, then Q piles (correct for saveDB)
+			HitPair.sortByX(X, clustList); 	// sorts by T/Q start; eq/ne mixed
 			
-			for (int r=0; r<clArrLen-1; r++) {
-				HitCluster ht0 = clHitList.get(r);
-				if (ht0.bBaseFilter) continue;	   
+			int cBin=1;
+			
+			for (int r1=0; r1<clArrLen-1; r1++) {
+				HitPair hpr1 = clustList.get(r1);
+				if (hpr1.flag!=Arg.MAJOR || hpr1.bin==0) continue;	   
 				
-				for (int r1=r+1; r1<clArrLen; r1++) {
-					HitCluster ht1 = clHitList.get(r1);
-					if (ht1.bBaseFilter) continue;	
+				for (int r2=r1+1; r2<clArrLen; r2++) {
+					HitPair hpr2 = clustList.get(r2);
+					if (hpr1.end[X]<hpr2.start[X]) break; 
 					
-					if (ht0.cend[X]<ht1.cstart[X]) break;
+					if (hpr2.pile[X]!=0 ||hpr2.flag!=Arg.MAJOR || hpr2.bin==0) continue;	
 					
-					if (bBigOlap(ht0.cstart[X], ht0.cend[X], ht1.cstart[X], ht1.cend[X])) {
-						if (ht0.pile[X]==0) ht0.pile[X] = ++cPile[X];  // first of group
-						ht1.pile[X] = ht0.pile[X];
+					if (bBigOlap(hpr1.start[X], hpr1.end[X], hpr2.start[X], hpr2.end[X])) {
+						if (hpr1.pile[X]==0) {
+							hpr1.pile[X] = cBin++;  // first of pile
+						}
+						hpr2.pile[X] = hpr1.pile[X];
 					}
 				}
 			}
@@ -80,205 +77,169 @@ public class GrpPairPile {
 	}
 	
 	private boolean bBigOlap(int start0, int end0, int start1, int end1) {
-		if (start1>=start0 && end1<=end0) return true;
+		int olap = Arg.olapOrGap(start0, end0, start1, end1);
+		if (olap<0) return false;						// Gap
 		
-		int olap = Math.min(end1,end0) - Math.max(start1, start0); 
-		int len1 = end1-start1;
 		int len0 = end0-start0;
+		int len1 = end1-start1;
 		
-		double x1 = (double) olap/(double)len1;
-		if (x1>bigOlap) return true;
+		double x1 = (double) olap/(double)len0;
+		if (x1>Arg.bigOlap) return true;
 		
-		double x2 = (double) olap/(double)len0;
-		if (x2>bigOlap) return true;
+		double x2 = (double) olap/(double)len1;
+		if (x2>Arg.bigOlap) return true;
 		
 		return false;
 	}
+	
 	/////////////////////////////////////////////////////////////////////////////////
 	private void createPiles() {
 	try {
 		// create cluster pile sets; pile# is Key
-		TreeMap <Integer, PileClHits> tPileMap = new TreeMap <Integer, PileClHits> (); // key: pile[T]
-		TreeMap <Integer, PileClHits> qPileMap = new TreeMap <Integer, PileClHits> (); // key: pile[Q]
+		TreeMap <Integer, Pile> tPileMap = new TreeMap <Integer, Pile> (); // key: pile[T]
+		TreeMap <Integer, Pile> qPileMap = new TreeMap <Integer, Pile> (); // key: pile[Q]
 		
-		PileClHits pHt;
-		for (HitCluster ht : clHitList) {
-			if (ht.pile[T]>0) {
-				if (!tPileMap.containsKey(ht.pile[T])) {
-					pHt = new PileClHits(T, ht.pile[T]);
-					tPileMap.put(ht.pile[T], pHt);
+		Pile pHt;
+		for (HitPair hpr : clustList) {
+			if (hpr.pile[T]>0) {
+				if (!tPileMap.containsKey(hpr.pile[T])) {
+					pHt = new Pile(T, hpr.pile[T]);
+					tPileMap.put(hpr.pile[T], pHt);
 				}
-				else pHt = tPileMap.get(ht.pile[T]);
-				pHt.addHit(ht);
+				else pHt = tPileMap.get(hpr.pile[T]);
+				pHt.addHit(hpr);
 			}
-			if (ht.pile[Q]>0) {
-				if (!qPileMap.containsKey(ht.pile[Q])) {
-					pHt = new PileClHits(Q, ht.pile[Q]);
-					qPileMap.put(ht.pile[Q], pHt);
+			if (hpr.pile[Q]>0) {
+				if (!qPileMap.containsKey(hpr.pile[Q])) {
+					pHt = new Pile(Q, hpr.pile[Q]);
+					qPileMap.put(hpr.pile[Q], pHt);
 				}
-				else pHt = qPileMap.get(ht.pile[Q]);
-				pHt.addHit(ht);
+				else pHt = qPileMap.get(hpr.pile[Q]);
+				pHt.addHit(hpr);
 			}
-			if (ht.pile[T]>0 && ht.pile[Q]>0) htNumSet.add(ht.cHitNum);
 		}
 		
 		// finalize
-		for (PileClHits ph : tPileMap.values()) {
-			pileList.add(ph);
-			ph.setGene();  // for sortByGene
-		}
-		for (PileClHits ph : qPileMap.values()) {
-			pileList.add(ph);
-			ph.setGene();
-		}
-		sortByGene(pileList);
-		
+		for (Pile pile : tPileMap.values()) pileList.add(pile);
+	
+		for (Pile pile : qPileMap.values()) pileList.add(pile);
+	
+		Arg.tprt(tPileMap.size(), "Piles for T");
+		Arg.tprt(qPileMap.size(), "Piles for Q");
 		tPileMap.clear(); qPileMap.clear();
 	}
 	catch (Exception e) {ErrorReport.print(e, "Creating piles"); bSuccess=false;}		
 	}
 		
-	///////////////////////////////////////////////////////////////////////
+	/**********************************************
+	 * Keep all Arg.isGoodPileHit and the 1st topN !Arg.isGoodPileHit && hpr.xMaxCov>thresh
+	 * Heuristic using anchor1 Top N and 0.8
+	 */
 	private void filterPiles() {
 	try {
-		int cntNoShow=0, cntInPile=0, cntFil1=0, cntFil2=0;
-		for (PileClHits ph : pileList) { 
-			
-			cntInPile += ph.pHitList.size();
+		int cntInPile=0, cntFil1=0, cntFil2=0;
 		
-			// Check gene parameters
-			boolean isOnly=false;
-			for (HitCluster cht : ph.pHitList) {
-				if (Arg.isGoodHit(cht)) {
-					isOnly=true;
-					break;
-				}
-			}
-			if (isOnly) {
-				for (HitCluster cht : ph.pHitList) {
-	
-					if (!Arg.isGoodHit(cht)) {
-						cht.bPile = true; 
-						cntNoShow++; cntFil1++;
-					}
-					else cht.bPile = false;
-				}
-				continue;
-			}
-			// Serious heuristics to find the best of the pile and only set from bPile=T to F is good
-			HitCluster bestL=null, bestG=null;
-			for (HitCluster cht : ph.pHitList) {
-				if (bestL==null) 				bestL = cht;
-				else if (cht.bLen > bestL.bLen) bestL = cht; 
-				
-				if (cht.exonScore[T]>fudgeScore || cht.exonScore[Q]>fudgeScore) { 
-					if (bestG==null) 				bestG = cht;
-					else if (cht.bLen > bestG.bLen) bestG = cht; 
-				}
-			}
+		sortPiles(pileList); // by maxCov
+		
+		for (Pile pile : pileList) { 
+			cntInPile += pile.hprList.size();
+		
+			sortForPileTopN(pile.hprList);	// sort by xMaxCov
+						
+			int thresh = pile.hprList.get(0).xMaxCov;
+			thresh *= FperBin; // 0.8 so keep 80% of mTopN matchLen
 			
-			if (bestL!=null || bestG!=null) {
-				if (bestL!=null && bestL.bPile) {
-					if (bestL.pId>fudgeScore && Arg.baseScore(bestL)>fudgeLen) bestL.bPile = false; // if set T, only make F if good
-				}
-				if (bestG!=null && bestG.bPile) bestG.bPile = false;	// already checked for fudgeScore
+			int tn=0;
+			for (HitPair hpr : pile.hprList) {
+				if (Arg.isGoodPileHit(hpr)) continue;
 				
-				for (HitCluster cht : ph.pHitList) {
-					if (cht!=bestL && cht!=bestG) {
-						cht.bPile = true; 
-						cntNoShow++; cntFil2++;
-					}
+				if (hpr.xMaxCov<thresh || tn>=Arg.topN) {
+					hpr.flag = Arg.PILE;
+					cntFil2++;
 				}
-			}	
+				tn++;	// accept TopN that are !Arg.isGoodPileHit(hpr)
+			}
 		}	
-		grpPairObj.anchorObj.cntPileFilter += cntNoShow;
+		grpPairObj.cntPileFil += (cntFil1+cntFil2);
 		if (Arg.PRT_STATS) {
 			Utils.prtIndentMsgFile(plog, 1, String.format("%,10d Piles    Hits in piles %,d", 
 				pileList.size(), cntInPile));
 			Utils.prtIndentMsgFile(plog, 1, String.format("%,10d Filtered pile hits   Gene %,d  Length %,d", 
-				cntNoShow, cntFil1, cntFil2));
+					(cntFil1+cntFil2), cntFil1, cntFil2));
 		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "Prune clusters"); bSuccess=false;}	
 	}
 	////////////////////////////////////////////////////////////////
-	private void prtToFile() {
+	protected void prtToFile(PrintWriter fhOutRep, String chrs) {
 	try {
-		PrintWriter fhOutRep = grpPairObj.anchorObj.fhOutRep;
-		if (fhOutRep==null) return ;
+		fhOutRep.println("Repetitive clusters for " + chrs);
 		
-		fhOutRep.println(grpPairObj.anchorObj.fileName);
-		fhOutRep.println("Repetitive clusters for " + grpPairObj.qChr + " (Q) and " + grpPairObj.tChr + " (T)");
-		fhOutRep.println(grpPairObj.mPair.getChangedSynteny());
-		
-		String chrs = grpPairObj.tChr+":"+grpPairObj.qChr;
-		for (PileClHits ph : pileList) { 
-			fhOutRep.println(ph.toResults());
+		for (Pile ph : pileList) { 
+			fhOutRep.println("\n" + ph.toResults());
 			
-			int X = (ph.X==T) ? Q : T;
-			HitCluster.sortByPile(X, ph.pHitList);
-			
-			for (HitCluster cht : ph.pHitList) 
-				fhOutRep.println(" " + cht.toResults(chrs));
+			for (HitPair cht : ph.hprList) 
+				fhOutRep.println(" " + cht.toPileResults());
 		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "Write reps to file"); bSuccess=false;}	
 	}
-	////////////////////////////////////////////////////////////////
-	protected static void sortByGene(ArrayList<PileClHits> hits) { 
-		Collections.sort(hits, 
-			new Comparator<PileClHits>() {
-				public int compare(PileClHits h1, PileClHits h2) {
-					if (h1.cntGene==0 && h2.cntGene==0) 
-						return  h2.pHitList.size()-h1.pHitList.size(); 
+	protected static void sortForPileTopN(ArrayList <HitPair> gpList) { // GrpPairPile heuristic topN
+		Collections.sort(gpList, 
+			new Comparator<HitPair>() {
+				public int compare(HitPair h1, HitPair h2) {
+					if (h1.xMaxCov>h2.xMaxCov) return -1; 	
+					if (h1.xMaxCov<h2.xMaxCov) return  1; 
 					
-					if (h1.cntEE>h2.cntEE) return -1;
-					if (h1.cntEE<h2.cntEE) return 1;
+					if (h1.bBothGene && !h2.bBothGene) return -1; 
+					if (!h1.bBothGene && h2.bBothGene) return  1;
 					
-					if (h1.cntGene>h2.cntGene) return -1;
-					if (h1.cntGene<h2.cntGene) return 1;
+					if (h1.bEitherGene && !h2.bEitherGene) return -1; 
+					if (!h1.bEitherGene && h2.bEitherGene) return  1;
 					
-					return  h2.pHitList.size()-h1.pHitList.size();
+					if (h1.hitList.size()>h2.hitList.size()) return -1; 
+					if (h1.hitList.size()<h2.hitList.size()) return 1;
+					
+					return 0;	
 				}
 			}
 		);
 	}
-	
+	protected static void sortPiles(ArrayList <Pile> gpList) { // GrpPairPile heuristic topN
+		Collections.sort(gpList, 
+			new Comparator<Pile>() {
+				public int compare(Pile h1, Pile h2) {
+					if (h1.xMaxCov>h2.xMaxCov) return -1;
+					if (h1.xMaxCov<h2.xMaxCov) return  1;
+					if (h1.hprList.size()>h2.hprList.size()) return -1;
+					if (h1.hprList.size()<h2.hprList.size()) return 1;
+					return 0;
+				}
+		});
+	}
 	/////////////////////////////////
-	private class PileClHits {
+	private class Pile {
 		private int X, pnum;
-		private int cntGene=0, cntEE=0;
-		private int tmin=Integer.MAX_VALUE, tmax=0;
-		private int qmin=Integer.MAX_VALUE, qmax=0;
-		private ArrayList <HitCluster> pHitList = new ArrayList <HitCluster> ();
 		
-		private PileClHits(int X, int pnum) {this.X = X; this.pnum=pnum;}
+		private int tmin=Integer.MAX_VALUE, tmax=0, qmin=Integer.MAX_VALUE, qmax=0; // for trace
+		private int xMaxCov=0;
+		private ArrayList <HitPair> hprList = new ArrayList <HitPair> ();
 		
-		private void addHit(HitCluster ht) {
-			pHitList.add(ht);
-			tmin = Math.min(ht.cstart[T], tmin);
-			qmin = Math.min(ht.cstart[Q], qmin);
-			tmax = Math.max(ht.cend[T], tmax);
-			qmax = Math.max(ht.cend[Q], qmax);
-			
+		private Pile(int X, int pnum) {this.X = X; this.pnum=pnum;}
+		
+		private void addHit(HitPair ht) {
+			hprList.add(ht);
+			tmin = Math.min(ht.start[T], tmin);
+			qmin = Math.min(ht.start[Q], qmin);
+			tmax = Math.max(ht.end[T], tmax);
+			qmax = Math.max(ht.end[Q], qmax);
+			xMaxCov = Math.max(ht.xMaxCov, xMaxCov);
 		}
-		private void setGene() { // cntPass and cntEE are used in sorting Piles, to process them first
-			HitCluster.sortByGene(pHitList);
-			
-			for (HitCluster cht : pHitList) { 
-				if (cht.bnn) continue;
-				
-				if (!Arg.isGoodHit(cht)) continue;
-				
-				cntGene++;
-					
-				if (cht.bEE) cntEE++;	
-			}
-		}
-		
+	
 		private String toResults() {
-			return String.format("%s%-5d >>>>>>>>>> h%d T[%,d] Q[%,d] Count: G[%,d]E[%,d] >>>>>>>>>>>>>>>>>>>>>>>>",
-					Arg.side[X], pnum, pHitList.size(), (tmax-tmin), (qmax-qmin), cntGene, cntEE);
+			String msg = String.format("%s%-5d #%3d T[%,10d %,10d %,6d] Q[%,10d %,10d %,d]  >>>>>>>>>>>>>>>>>>>>>>>>",
+					Arg.side[X], pnum, hprList.size(),  tmin, tmax, (tmax-tmin), qmin, qmax, (qmax-qmin));
+			return msg;
 		}
 	}
 }

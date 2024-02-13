@@ -20,13 +20,17 @@ public static boolean TRACE =     false; 		// -tt not shown in help
 public static boolean NEW_ORDER = true;	 		// -oo not shown in help; may not work anymore
 public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block coords
 public static boolean PRT_STATS=  false; 		// -s
+public static boolean WRONG_STRAND_EXC = false; // -wse  exclude wrong strand hits for algo2 
+public static boolean WRONG_STRAND_PRT = false; // -wsp  print wrong strand hits for algo2 
 
+// Anchor1 constants; Anchor2 constants are in Anchor2.Arg
 // CAS546 when anchor1 classes were moved to backend.anchor1, enums broke so make static here
 public static final int TARGET=0, QUERY=1, EITHER=2;
 public static final String GeneGene="GeneGene";
 public static final String GeneNonGene = "GeneNonGene";
 public static final String NonGene = "NonGene";
 
+public static final double FperBin=0.8; // HitBin.filter piles FperBin*matchLen
 /*************************************************************/
 
 // getPlatformPath() gets subdirectory under /ext

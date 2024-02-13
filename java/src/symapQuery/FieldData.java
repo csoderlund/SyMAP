@@ -17,12 +17,12 @@ public class FieldData {
 	public static final int N_GEN_HIT=7;
 	private static final String [] GENERAL_COLUMNS =	 
 		{Q.rowCol, Q.blockCol, "Block\nHits",Q.runCol,"PgeneF", "PgFSize",
-		Q.hitCol,    "Hit\n%Id", "Hit\n%Sim","Hit\n#Sub", "Hit\nSt", "Hit\nCov",
-		"Hit\nType"}; // CAS516 add these 4; CAS520 add st; CAS540 add Len; CAS546 add Hit Type
+		Q.hitCol,   "Hit\nCov", "Hit\n%Id", "Hit\n%Sim","Hit\n#Sub", "Hit\nSt", 
+		"Hit\nType"}; // CAS516 add these 4; CAS520 add st; CAS540 add Len; CAS546 add Hit Type; CAS548 mv hitCov
 	
 	private static final Class <?> []  GENERAL_TYPES = 					// CAS520 had to add for String
 		{Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,
-		 Integer.class,Integer.class,Integer.class,Integer.class,String.class, Integer.class, String.class};
+		 Integer.class,Integer.class,Integer.class,Integer.class,Integer.class, String.class, String.class};
 	
 	private static final boolean [] GENERAL_COLUMN_DEF =  
 		{true, true, true, true, false, false, true, false, false, false, false, false, false}; // CAS513 HitID=f, Score=t
@@ -35,27 +35,32 @@ public class FieldData {
 		 "PgeneF: (Compute PgeneF only) putative gene family number", 
 		 "PgFSize: (Compute PgeneF only) putative gene family size",
 		 "Hit#: Number representing the hit", 
+		 "Hit Cov: The largest summed subhit lengths of the two species",
 		 "Hit %Id: Approximate percent identity (exact if one hit)",
 		 "Hit %Sim: Approximate percent similarity (exact if one hit)", 
 		 "Hit #Sub: Number of subhits in the cluster, where 1 is a single hit",
 		 "Hit St: '=' is both hit ends are to the same strand, '!=' otherwise",
-		 "Hit Cov: The largest summed subhit lengths of the two species",
 		 "Algo1: g2, g1, g0; Algo2: E is exon, I is intron, n is neither."
 		};
 	
 /* Prefixed with Species: CAS519 add hit and gene start/end/len/strand; CAS543 mv Gene# to start */
 // If change here, change in DBdata.makeRow
 	private static final String []     SPECIES_COLUMNS = 
-		{Q.gNCol, Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol,  Q.hStartCol, Q.hEndCol, Q.hLenCol};
+		{Q.gNCol, Q.gOlap, Q.chrCol, 
+		 Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol,  
+		 Q.hStartCol, Q.hEndCol, Q.hLenCol};
 	
 	private static final Class <?> []  SPECIES_TYPES =   // CAS545 changed 5th to integer to fix 543 bug after moving Gene#
-		{String.class, String.class,  Integer.class,Integer.class, Integer.class, String.class, Integer.class, Integer.class,Integer.class};
+		{String.class, Integer.class, String.class,  
+		 Integer.class,Integer.class, Integer.class, String.class, 
+		 Integer.class, Integer.class, Integer.class};
 	
 	private static final boolean []    SPECIES_COLUMN_DEF =  
-		{ true, false, false, false, false , false, false, false, false};
+		{ true, false, false, false, false , false, false, false, false, false};
 	
 	private static String [] SPECIES_COLUMN_DESC = {
 		"Gene#: Sequential. Overlap genes have same number (chr.#.{a-z})", 
+		"Olap: Algo1 percent gene overlap, Algo2 percent exon overlap",
 		"Chr: Chromosome (or Scaffold, etc)", 
 		"Gstart: Start coordinate of gene", 
 		"Gend: End coordinate of gene", 
@@ -113,8 +118,8 @@ public class FieldData {
 		else return GENERAL_COLUMNS.length;
 	}
 	
-	// MySQL fields to load; this is for pairs
-	public static FieldData getFields(boolean isEveryPlus) {
+	// MySQL fields to load; this is for pairs; order must be same as Q numbers
+	public static FieldData getFields(boolean isIncludeMinor, boolean isAlgo2) {
 		FieldData fd = new FieldData();
 		// type not used, see above       sql.table.field    order#		Description  
 		fd.addField(String.class, Q.PA, "idx",     Q.AIDX,       "Annotation index");
@@ -148,14 +153,19 @@ public class FieldData {
 		fd.addField(String.class, Q.B, "blocknum",  Q.BNUM,      "Block Number");
 		fd.addField(String.class, Q.B, "score",     Q.BSCORE,    "Block Score (#Anchors)");
 		
+		if (isAlgo2)
+			fd.addField(Integer.class,Q.PHA, "exlap",Q.AOLAP, "Exon overlap"); 
+		else 
+			fd.addField(Integer.class,Q.PHA, "olap",Q.AOLAP, "Gene overlap");
+		
 		fd.addField(Integer.class,Q.PH, "annot1_idx",Q.ANNOT1IDX,"Index of 1st anno");  	// Not for display
 		fd.addField(Integer.class,Q.PH, "annot2_idx",Q.ANNOT2IDX,"Index of 2nd anno");  	// matched with PA.idx in DBdata
 		
-		if (isEveryPlus) { // CAS547 used for key in DBdata for uniqueness
+		if (isIncludeMinor) { // CAS547 used for key in DBdata for uniqueness	
 			fd.addField(Integer.class,Q.PHA, "annot_idx",Q.PHAANNOT1IDX,"Index of 1st anno");  	// Not for display
-			fd.addField(Integer.class,Q.PHA, "annot2_idx",Q.PHAANNOT2IDX,"Index of 2nd anno");  	// matched with PA.idx in DBdata
+			fd.addField(Integer.class,Q.PHA, "annot2_idx",Q.PHAANNOT2IDX,"Index of 2nd anno");  // matched with PA.idx in DBdata
 		}
-		
+			
 		fd.addLeftJoin("pseudo_hits_annot", "PH.idx = PHA.hit_idx",  Q.PHA); 
 		fd.addLeftJoin("pseudo_annot", 		"PHA.annot_idx = PA.idx", Q.PA);
 		fd.addLeftJoin("pseudo_block_hits", "PBH.hit_idx = PH.idx",  Q.PBH);
@@ -188,8 +198,8 @@ public class FieldData {
         FieldItem item = null;
 
         while(iter.hasNext()) {
-        		item = iter.next();
-        		retVal[x++] = item.getDescription();
+        	item = iter.next();
+        	retVal[x++] = item.getDescription();
         }
         return retVal;
 	}
@@ -231,9 +241,6 @@ public class FieldData {
 	}
 	private void addLeftJoin(String table, String condition, String strSymbol) {
 		theJoins.add(new JoinItem(table, condition, strSymbol,true)); 
-	}
-	private void addJoin(String table, String condition, String strSymbol) {// CAS547 add for isAllHits
-		theJoins.add(new JoinItem(table, condition, strSymbol, false)); 
 	}
 	
 	private Vector<FieldItem> theFields = null;

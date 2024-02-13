@@ -517,22 +517,30 @@ public class Utilities {
 	
 	// CAS42 1/4/18 confirm any action that removes things; CAS534 move these 2 from ManagerFrame to here
 	public static boolean showConfirm2(String title, String msg) {
-			String [] options = {"Cancel", "Confirm"};
-			int ret = JOptionPane.showOptionDialog(null, 
-					msg, 
-					title, JOptionPane.YES_NO_OPTION, 
-					JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
-			if (ret == 0) return false;
-			else return true;
+		String [] options = {"Cancel", "Confirm"};
+		int ret = JOptionPane.showOptionDialog(null, 
+				msg, 
+				title, JOptionPane.YES_NO_OPTION, 
+				JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+		if (ret == 0) return false;
+		else return true;
 	}
 	
 		// CAS500 this is when there is two possible actions
 	public static int showConfirm3(String title, String msg) {
-			String [] options = {"Cancel", "Only", "All"};
-			return JOptionPane.showOptionDialog(null, 
-					msg, title, JOptionPane.YES_NO_OPTION, 
-					JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
-		}
+		String [] options = {"Cancel", "Only", "All"};
+		return JOptionPane.showOptionDialog(null, 
+				msg, title, JOptionPane.YES_NO_OPTION, 
+				JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
+	}
+	public static int showConfirmFile(String filename) {
+		String [] options = {"Cancel", "Overwrite", "Append"};
+		String title = "File exists";
+		String msg = "File '" + filename + "' exists.\nDo you want to overwrite it or append to it?";
+		return JOptionPane.showOptionDialog(null, 
+				msg, title, JOptionPane.YES_NO_OPTION, 
+				JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
+	}
 	public static void showOutOfMemoryMessage(Component parent) {
 		System.err.println("Not enough memory.");
 		JOptionPane optionPane = new JOptionPane("Not enough memory - increase $maxmem in symap script.", JOptionPane.ERROR_MESSAGE);
@@ -668,9 +676,9 @@ public class Utilities {
     
     	ret[0] = tok[0];
     	tok[1] = tok[1].replace(")","");
-    	ret[1] = Globals.exonTag + tok[1].replace(")","");
+    	ret[1] = Globals.exonNum() + tok[1].replace(")",""); // CAS548 changed format - was Exon #
     	
-    	if (!tag.startsWith("Gene")) { // v543 992.a (1 746)
+    	if (!tag.startsWith("Gene")) { // v543 992.a (1 746)  old version started with Gene
 			ret[0] = Globals.geneTag +  tok[0].trim();
 			ret[1] = ret[1] + "bp";
 		}

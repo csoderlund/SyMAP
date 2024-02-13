@@ -1058,7 +1058,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				for (int j=i+1; j<pVec.size(); j++) {
 					Mpair mp = getMpair(pVec.get(i).getIdx(), pVec.get(j).getIdx());
 					if (mp.isSynteny()) {
-						if (!mp.isAlgo2(Mpair.DB) || !mp.isPostV546()) {
+						if (!mp.isAlgo2(Mpair.DB)) 	{
 							useAlgo2=false;
 							break;
 						}

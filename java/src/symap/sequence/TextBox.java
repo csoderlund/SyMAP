@@ -16,21 +16,82 @@ import javax.swing.JLabel;
 
 import util.LinkLabel;
 
-// a URL-savvy graphical text box
+
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class TextBox extends JComponent  {
 	private static final Color bgColor = new Color(255,255,153); // CAS503
 	private static final int INSET = 5;
 	private static final int startWidth = 600;
-	private int trueWidth = 0;
 	
+	private int width=0, trueWidth = 0, tx = INSET, ty = INSET;
+	private Font theFont;
+	
+	// CAS548 Specific for yellow box called from Sequence; two lines input
+	// greedy algorithm 
+	public TextBox(Vector<String> lines, Font font, int x, int y) {
+		if (lines.size()!=3) return;
+		
+		int wrapLen=40, wrapMaxLen=50, wrapShortLen=10, maxLines=3;
+		theFont=font;
+		
+		setLabel(lines.get(0));
+		if (lines.get(1).length()>1) setLabel(lines.get(1));
+		String desc=lines.get(2);
+		
+		if (desc.length() <= wrapLen) {
+			if (desc.length()>1) setLabel(desc);
+		}
+		else {
+			int curLen=0, totLines=0;
+			String[] words = desc.split("\\s+");
+			
+			StringBuffer curLine = new StringBuffer();
+			
+			for (int i = 0; i < words.length; i++) {
+				curLen += words[i].length()+1;
+				
+				if (curLen>wrapLen) {
+					boolean bNoWrap = curLine.length()< wrapShortLen && curLen<wrapMaxLen;
+					boolean bNoWrap2 = words[i].length()<3 && (i==words.length-1);
+					if (!bNoWrap && !bNoWrap2) {
+						totLines++;
+						if (totLines>=maxLines) {
+							setLabel(curLine.toString() + "...");
+							break;
+						}
+						setLabel(curLine.toString());
+						curLen = words[i].length()+1;
+						curLine = new StringBuffer();
+					}
+				}
+				if (curLine.length()>0) curLine.append(" ");
+				curLine.append(words[i]);
+				if (i==words.length-1) setLabel(curLine.toString());
+			}
+		}
+		setSize(width, ty + INSET);
+		setLocation(x, y);
+	}
+	private void setLabel(String line) {
+		JLabel label = new JLabel(line);
+		
+		label.setLocation(tx, ty);
+		label.setFont(theFont);
+		label.setSize(label.getMinimumSize());
+		add(label);
+		
+		ty += label.getHeight();
+		width = Math.max(width, label.getWidth() + INSET*2);
+		trueWidth = Math.max(trueWidth, label.getWidth() + INSET*2);
+		if (width > startWidth) width = startWidth;
+	}
+		
+	
+	/// // a URL-savvy graphical text box Previous
 	public TextBox(Vector<String> text, Font font, int x, int y, int wrapLen, int truncLen) {
 		this(text.toArray(new String[0]), font, x, y, wrapLen, truncLen);
 	}
-	public TextBox(String text, Font font, int x, int y, int wrapLen, int truncLen) { // Popup saying need zooming
-		this(text.split("\n"), font, x, y, wrapLen, truncLen);
-	}
-
+	
 	private TextBox(String[] text, Font font, int x, int y,int wrapLen, int truncLen) {
 		int width = 0;
 		int tx = INSET;
@@ -71,13 +132,14 @@ public class TextBox extends JComponent  {
 					StringBuffer curLine = new StringBuffer();
 					int totalLen = 0;
 					for (int i = 0; i < words.length; i++) {
-						curLine.append(" ");
-						curLine.append(words[i]);
-						totalLen += 1 + words[i].length();
+						curLine.append(words[i]+" ");
+						
+						totalLen += words[i].length()+1;
 						int curLen = curLine.length();
+						
 						if (curLen >= wrapLen || i == words.length - 1) {
-							// done with this line, but add "..." if being truncated
-							if (i < words.length - 1 && totalLen >= truncLen) {
+							
+							if (i < words.length - 1 && totalLen >= truncLen) {// done with this line, but add "..." if being truncated
 								curLine.append("...");
 							}
 							if (curLine.length() > 1.25*wrapLen) {

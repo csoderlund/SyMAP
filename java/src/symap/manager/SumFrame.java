@@ -146,7 +146,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		String d = Utilities.getNormalizedDate(alignDate);
 		String v = (syver!=null) ? ("  " + syver) : "";
 		
-		String info = (proj1.name + " vs. " + proj2.name + "   Created " + d + v) + "\n\n";
+		String info = (proj1.name + " vs. " + proj2.name + "   Updated " + d + v) + "\n\n"; // CAS548 was 'Created'
 		info += createProject() + "\n";
 		info += createAnchor()  + "\n";
 		info += createBlock()  + "\n";

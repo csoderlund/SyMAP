@@ -1,6 +1,9 @@
 package database;
 
 /*****************************************************
+ * Schema update: select value from props where name='DBVER'
+ * Pair update:   select idx, syVer from pairs
+ * 
  * CAS506 created to provide an organized why for database updates.
  * MySQL v8 'groups' is a new special keywords, so the ` is necessary for that particular rename.
  * CAS546 removed table methods and use DBconn2
@@ -24,7 +27,8 @@ public class Version {
 	
 	public Version (DBconn2 dbc2) {
 		this.dbc2 = dbc2;
-		checkForUpdate();
+		checkForSchemaUpdate();
+		checkForContentUpdate();
 		
 		if (dbdebug) 	updateDEBUG();
 		else 			removeDEBUG();
@@ -33,7 +37,7 @@ public class Version {
 	}
 	
 	// if first run from viewSymap, updates anyway (so if no write permission, crashes)
-	private void checkForUpdate() {
+	private void checkForSchemaUpdate() {
 		try {
 			String strDBver = "db1";
 			ResultSet rs = dbc2.executeQuery("select value from props where name='DBVER'");
@@ -48,6 +52,7 @@ public class Version {
 				catch (Exception e) {ErrorReport.print(e, "Cannot parse DBVER " + strDBver);};
 			}
 			if (idb==dbVer) return; 
+			
 			if (idb>dbVer) { // CAS546 add
 				Utilities.showWarningMessage("This database schema is " + strDBver + "; this SyMAP version uses " + strVer +
 						"\nThis may not be a problem.....");
@@ -187,11 +192,10 @@ public class Version {
 			dbc2.tableCheckAddColumn("pseudo_hits_annot", "annot2_idx", "integer default 0", null);
 			
 			updateProps();
-			
-			System.err.println("To use the v5.4.6 hit-gene assignment upgrade, recompute synteny ");
 		}
 		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
 	}
+	
 	/****************************************************
 	 * -dbd
 	 */
@@ -328,40 +332,44 @@ public class Version {
 			System.out.println("Remove blocks.grp1/2, and blocks/pairs/xgroups proj_names, and pseudo_hits_annot proj/pair_idx");
 		}catch (Exception e) {ErrorReport.print(e, "Could not remove debug");}
 	}
-	/***************************************************************
-	 * Run after every version update.
-	 * The props table values of DBVER and UPDATE are hardcoded in Schema.
-	 * 
-	 * if screw up, force update: update props set value=1 where name="DBVER" 
+	
+	/************************************************************************
+	 * CAS548 if only DB content needs updating per project, do it here
 	 */
-	private void updateProps() {
-		try {
-			/** CAS520 why check
-			ResultSet rs = pool.executeQuery("select value from props where name='VERSION'");
-			if (rs.next()) {
-				String v = rs.getString(1);
-				if (v.contentEquals("3.0")) // value before v5.0.6
-					replaceProps("VERSION",SyMAP.VERSION);
+	private void checkForContentUpdate() {
+	try {
+		// can only check version by making it intege
+		HashMap <Integer, Integer> pairVer = new HashMap <Integer, Integer> ();
+		ResultSet rs = dbc2.executeQuery("select idx, syVer from pairs");
+		while (rs.next()) {
+			int idx = rs.getInt(1);
+			String ver = rs.getString(2);
+			if (ver!=null) {
+				String x = ver.substring(1, ver.length());
+				x = x.replaceAll("\\.", "");
+				int y = Utilities.getInt(x);
+				pairVer.put(idx, y);
 			}
-			**/
-			replaceProps("UPDATE", Utilities.getDateOnly());
-			
-			replaceProps("VERSION",Globals.VERSION);
-			
-			replaceProps("DBVER", Globals.DBVERSTR);
-			System.err.println("Complete schema update to " +  Globals.DBVERSTR + " for SyMAP " + Globals.VERSION );
 		}
-		catch (Exception e) {ErrorReport.print(e, "Error updating props");}
-	}
-	public void updateReplaceProp() { // CAS543 new Version(DBconn2 dbc).updateReplaceProp
-		try {
-			replaceProps("UPDATE", Utilities.getDateOnly());
+		// Update for v548
+		int b1=0, b2=0;
+		for (int idx : pairVer.keySet()) {
+			int ver = pairVer.get(idx);
+			if (ver>=548) continue;
 			
-			replaceProps("VERSION",Globals.VERSION);
+			int algo1 = dbc2.executeCount("select value from pair_props where name='algo1' and pair_idx=" + idx);
+			
+			if (algo1==1) b1++;// gene_overlap% and pseudo_hits_annot.annot2_idx (for multi query)
+			else          b2++;// gene and exon overlap, plus improved assignments			
 		}
-		catch (Exception e) {ErrorReport.print(e, "Error replacing props");}
+		if (b1>0) System.out.println("Warning: Synteny needs to be rerun for Algo1 for v548 new features for " + b1 + " pair");
+		if (b2>0) System.out.println("Warning: Synteny needs to be rerun for Algo2 for v548 new features for " + b2 + " pair");
 	}
-	private void updateHitCnt() {
+	catch (Exception e) {ErrorReport.print(e, "Check For Content update");}
+	}
+	
+	/***********************************************************************/
+	private void updateHitCnt() { // v5.4.1 (22-June-23)
 		try {
 			System.out.println("Starting update of gene hit counts");
 			HashSet <Integer> grpIdx = new HashSet <Integer> ();
@@ -382,7 +390,34 @@ public class Version {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Update hit count");}
 	}
-	
+	/***************************************************************
+	 * Run after every version update.
+	 * The props table values of DBVER and UPDATE are hardcoded in Schema.
+	 * 
+	 * if screw up, force update: update props set value=1 where name="DBVER" 
+	 */
+	private void updateProps() {
+		try {
+			replaceProps("UPDATE", Utilities.getDateOnly());
+			
+			replaceProps("VERSION",Globals.VERSION);
+			
+			replaceProps("DBVER", Globals.DBVERSTR);
+			System.err.println("Complete schema update to " +  Globals.DBVERSTR + " for SyMAP " + Globals.VERSION );
+		}
+		catch (Exception e) {ErrorReport.print(e, "Error updating props");}
+	}
+	/*************************************************************
+	 * Any update from ManagerFrame calls this
+	 */
+	public void updateReplaceProp() { // CAS543 new Version(DBconn2 dbc).updateReplaceProp
+		try {
+			replaceProps("UPDATE", Utilities.getDateOnly());
+			
+			replaceProps("VERSION",Globals.VERSION);
+		}
+		catch (Exception e) {ErrorReport.print(e, "Error replacing props");}
+	}
 	private void replaceProps(String name, String value) {
 		String sql="";
 		try {

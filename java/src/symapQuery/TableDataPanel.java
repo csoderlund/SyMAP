@@ -9,6 +9,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -200,7 +201,7 @@ public class TableDataPanel extends JPanel {
         theTable.autofitColumns();
         	
         ColumnHeaderToolTip header = new ColumnHeaderToolTip(theTable.getColumnModel());
-        FieldData theFields = FieldData.getFields(true);
+        FieldData theFields = FieldData.getFields(true, true); // flags do not matter here
         header.setToolTips(theFields.getDBFieldDescriptions());
         theTable.setTableHeader(header);
 
@@ -271,7 +272,7 @@ public class TableDataPanel extends JPanel {
 	    topRow.add(cmbSynOpts);			topRow.add(Box.createHorizontalStrut(1));
 	    
 		txtMargin = new JTextField(3);
-	    txtMargin.setText((Globals.MAX_RANGE/1000)+"");
+	    txtMargin.setText((Globals.MAX_CLOSEUP_BP/1000)+""); // CAS548 changed from MAX_RANGE
 	    txtMargin.setMinimumSize(txtMargin.getPreferredSize());
 	    topRow.add(txtMargin);
 	    topRow.add(new JLabel("kb")); 	topRow.add(Box.createHorizontalStrut(2));
@@ -1572,8 +1573,8 @@ public class TableDataPanel extends JPanel {
          */
         private void writeCSV() {
         try {
-    		String saveFileName = getFileName(ex_csv);
-    		if (saveFileName==null) return;
+    		PrintWriter outFH = getFileHandle(ex_csv, "query.csv", true);
+    		if (outFH==null) return;
     		
     		boolean incRow = btnYes.isSelected();
 			
@@ -1586,26 +1587,25 @@ public class TableDataPanel extends JPanel {
     		int [] selRows = theTable.getSelectedRows();
     		
     		// Columns names
-    		PrintWriter out = new PrintWriter(new FileWriter(new File(saveFileName)));
     		for(int x=0; x<theTable.getColumnCount()-1; x++) {
     			if (!incRow && x==0) continue; // CAS540 for row check
     			
-    			out.print(reloadCleanString(theTable.getColumnName(x)) + ",");
+    			outFH.print(reloadCleanString(theTable.getColumnName(x)) + ",");
     		}
-    		out.println(reloadCleanString(theTable.getColumnName(theTable.getColumnCount()-1)));
+    		outFH.println(reloadCleanString(theTable.getColumnName(theTable.getColumnCount()-1)));
     		
     		// rows
     		for(int x=0; x<selRows.length; x++) {
     			for(int y=0; y<theTable.getColumnCount()-1; y++) {
     				if (!incRow && y==0) continue; // CAS540 for row check
     				
-    				out.print(reloadCleanString(theTable.getValueAt(selRows[x], y)) + ",");
+    				outFH.print(reloadCleanString(theTable.getValueAt(selRows[x], y)) + ",");
     			}
-    			out.println(reloadCleanString(theTable.getValueAt(selRows[x], theTable.getColumnCount()-1)));
-    			out.flush();
+    			outFH.println(reloadCleanString(theTable.getValueAt(selRows[x], theTable.getColumnCount()-1)));
+    			outFH.flush();
     		}
     		System.out.println("Wrote " + selRows.length + " rows                  ");
-    		out.close();
+    		outFH.close();
     		
     		if(reset)
     			theTable.getSelectionModel().clearSelection();
@@ -1615,8 +1615,8 @@ public class TableDataPanel extends JPanel {
        
         private void writeHTML() { // CAS542 add
         try {
-    		String saveFileName = getFileName(ex_html);
-    		if (saveFileName==null) return;
+        	PrintWriter outFH = getFileHandle(ex_html, "query.html", false);
+    		if (outFH==null) return;
     	
     		boolean incRow = btnYes.isSelected();
 			
@@ -1629,8 +1629,7 @@ public class TableDataPanel extends JPanel {
     		int [] selRows = theTable.getSelectedRows();
     		
     		// html header
-    		PrintWriter out = new PrintWriter(new FileWriter(new File(saveFileName)));
-    		out.print("<!DOCTYPE html><html>\n<head>\n"
+    		outFH.print("<!DOCTYPE html><html>\n<head>\n"
     				+ "<title>SyMAP Query Table Results</title>\n"
     				+ "<style>\n"
     				+  "body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }\n"
@@ -1639,33 +1638,33 @@ public class TableDataPanel extends JPanel {
     				+ "</style>\n</head>\n<body>\n"
     				+ "<a id='top'></a>\n");
     	 
-    		out.println("<p><center><b><big>SyMAP Results</big></b></center>\n");
-    		out.println("<br><center>Filter: " + theSummary + "</center>\n");
-    		out.print("<p><table class='ty'>\n<tr>");
+    		outFH.println("<p><center><b><big>SyMAP Results</big></b></center>\n");
+    		outFH.println("<br><center>Filter: " + theSummary + "</center>\n");
+    		outFH.print("<p><table class='ty'>\n<tr>");
     		
     		// Columns names
     		for(int x=0; x<theTable.getColumnCount(); x++) {
     			if (!incRow && x==0) continue; 
     			String col = reloadCleanString(theTable.getColumnName(x));
     			col = col.replace(" ","<br>");
-    			out.print("<td><b><center>" + col + "</center></b></th>");
+    			outFH.print("<td><b><center>" + col + "</center></b></th>");
     		}
     		
     		// rows
     		for(int x=0; x<selRows.length; x++) {
-    			out.print("\n<tr>");
+    			outFH.print("\n<tr>");
     			for(int y=0; y<theTable.getColumnCount(); y++) {
     				if (!incRow && y==0) continue; 
     				
-    				out.print("<td>" + reloadCleanString(theTable.getValueAt(selRows[x], y)));
+    				outFH.print("<td>" + reloadCleanString(theTable.getValueAt(selRows[x], y)));
     			}
-    			out.flush();
+    			outFH.flush();
     		}
-    		out.print("\n</table>\n");
-    		if (selRows.length>100) out.print("<p><a href='#top'>Go to top</a>\n");
-    		out.print("</body></html>\n");
+    		outFH.print("\n</table>\n");
+    		if (selRows.length>100) outFH.print("<p><a href='#top'>Go to top</a>\n");
+    		outFH.print("</body></html>\n");
     		System.out.println("Wrote " + selRows.length + " rows                  ");
-    		out.close();
+    		outFH.close();
     		
     		if(reset)
     			theTable.getSelectionModel().clearSelection();
@@ -1678,10 +1677,8 @@ public class TableDataPanel extends JPanel {
          */
         private void writeFASTA() {
         try {
-    		String saveFileName = getFileName(ex_fasta);
-    		if (saveFileName==null) return;
-    		
-    		final String fName = saveFileName;
+        	PrintWriter outFH = getFileHandle(ex_fasta, "query.fa", true);
+    		if (outFH==null) return;
     		
     		Thread inThread = new Thread(new Runnable() {
     			public void run() {
@@ -1709,11 +1706,9 @@ public class TableDataPanel extends JPanel {
     					int seqNum = 1, pairNum=1;
     					RowData rd = new RowData();
     						
-    					PrintWriter out = new PrintWriter(new FileWriter(new File(fName)));
-    					
     					for(int x=0; x<selNum; x++) {
     						if (!rd.loadRow(x)) {
-    							out.close();
+    							outFH.close();
     							if(reset) theTable.getSelectionModel().clearSelection();
     	    					setPanelEnabled(true);
     	    					invalidate();
@@ -1728,15 +1723,15 @@ public class TableDataPanel extends JPanel {
     										+ rd.spName[i] + " Chr " + rd.chrNum[i] 
     										+ " Start " + rd.start[i] + " End " + rd.end[i];
     							outString += " Pair#" + pairNum;
-    							out.println(outString);
-    							out.println(seq);
-    							out.flush();
+    							outFH.println(outString);
+    							outFH.println(seq);
+    							outFH.flush();
     							seqNum++;
     						}
     						pairNum++;						
     						System.out.print("Wrote: " + ((int)((((float)x)/selRows.length) * 100)) + "%\r");
     					}
-    					out.close();
+    					outFH.close();
     					
     					Utilities.printElapsedNanoTime("Wrote " + (seqNum-1) + " sequences", startTime);
     					
@@ -1752,10 +1747,12 @@ public class TableDataPanel extends JPanel {
     		}
     		catch(Exception e) {ErrorReport.print(e, "Save as fasta");}
         }
-        private String getFileName(int type) {
+        // CAS548 add append
+        private PrintWriter getFileHandle(int type, String fname, boolean bAppend) {
         	String saveDir = Globals.getExport(); // CAS547 change to call globals
     		
     		JFileChooser chooser = new JFileChooser(saveDir);
+    		chooser.setSelectedFile(new File(fname));
     		if(chooser.showSaveDialog(theParentFrame) != JFileChooser.APPROVE_OPTION) return null;
     		if(chooser.getSelectedFile() == null) return null;
     		
@@ -1772,13 +1769,25 @@ public class TableDataPanel extends JPanel {
         		if(!saveFileName.endsWith(".fasta") && !saveFileName.endsWith(".fa")) saveFileName += ".fa";
         		System.out.println("Exporting Fasta to " + saveFileName);	
     		}
+    		boolean append=true;
     		if (new File(saveFileName).exists()) {
-    			if (JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(null,"The file '" + saveFileName + "' exists,\ndo you want to overwrite it?", 
-						"File exists",JOptionPane.YES_NO_OPTION)) {
-					return null;
-				}
+    			if (bAppend) {
+    				int rc = Utilities.showConfirmFile(saveFileName);
+    				if (rc==0) return null;
+    				if (rc==1) append=false;
+    			}
+    			else {
+    				if (!Utilities.showConfirm2("File exists","File '" + saveFileName + "' exists.\nOverwrite?")) return null;
+    				append=false;
+    			}
     		}
-    		return saveFileName;
+    		
+    		PrintWriter out=null;
+    		try {
+    			out = new PrintWriter(new FileOutputStream(saveFileName, append));
+    		}
+    		catch (Exception e) {ErrorReport.print(e, "Cannot open file - " + saveFileName);}
+    		return out;
         }
         private String reloadCleanString(Object obj) {
         	if(obj != null) {

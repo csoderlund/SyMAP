@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Vector;
 import java.util.HashMap;
+import java.util.TreeMap;
 
 import database.DBconn2;
 import number.GenomicsNumber;
@@ -22,21 +23,14 @@ import util.ErrorReport;
 public class SeqPool {	
 	private DBconn2 dbc2;
 	
-	public SeqPool(DBconn2 dbc2) { this.dbc2 = dbc2;}
+	protected SeqPool(DBconn2 dbc2) { this.dbc2 = dbc2;} // called from Sequence when it is created
 
-	public synchronized void close() {}
-
-	public int getNumAllocs(int grpIdx) { // CAS545 added so can exactly alloc correct size for Sequence.allAnnoVec
-		try {
-			return dbc2.executeCount("select count(*) from pseudo_annot where grp_idx=" + grpIdx);
-		}
-		catch (Exception e) {ErrorReport.print(e, "Getting number of annotations for " + grpIdx); return 0;}
-	}
+	
 	/**
 	 * Called by Sequence object in init
 	 * gnsize - enter setBPsize; Annotation Vector = enter annotation objects 
 	 */
-	public synchronized String loadSeqData(Sequence seqObj, GenomicsNumber gnsize, Vector<Annotation> annoVec) {
+	protected synchronized String loadSeqData(Sequence seqObj, GenomicsNumber gnsize, Vector<Annotation> annoVec) {
 		int grpIdx =   seqObj.getGroup();		
 		
 		String name=null, type, desc;
@@ -121,11 +115,39 @@ public class SeqPool {
 		
 		return name;
 	}
+	protected synchronized void close() {}
+
+	protected int getNumAllocs(int grpIdx) { // CAS545 added so can exactly alloc correct size for Sequence.allAnnoVec
+		try {
+			return dbc2.executeCount("select count(*) from pseudo_annot where grp_idx=" + grpIdx);
+		}
+		catch (Exception e) {ErrorReport.print(e, "Getting number of annotations for " + grpIdx); return 0;}
+	}
+	// CAS548 for popup
+	protected TreeMap<Integer, String> getGeneHits(int geneIdx, int grpIdx) {
+		TreeMap <Integer, String> hitMap = new TreeMap <Integer, String> ();
+		try {
+			ResultSet rs = dbc2.executeQuery("select pha.hit_idx, pha.olap, pha.exlap "
+					+ " from pseudo_hits_annot as pha "
+					+ " join pseudo_annot as pa on pa.idx=pha.annot_idx "
+					+ " where pha.annot_idx=" + geneIdx + " and pa.grp_idx=" + grpIdx);
+			while (rs.next()) {
+				int hitIdx = rs.getInt(1);
+				int olap = rs.getInt(2);
+				int exlap = rs.getInt(3);
+				String scores = "Gene " + olap + "%";
+				if (exlap>=0) scores += " Exon " + exlap + "%";
+				hitMap.put(hitIdx, scores);
+			}
+			return hitMap;
+		}
+		catch (Exception e) {ErrorReport.print(e, "Getting number of annotations for " + geneIdx); return hitMap;}
+	}
 	/*******************************************************
 	 * CAS518 added: Called during init(); used in build()
 	 */
 	private final int OVERLAP_OFFSET=12;			// CAS517/518 for overlap and yellow text
-	public void buildOlap(HashMap <Integer, Integer> olapMap, Vector <Annotation> geneVec) {
+	protected void buildOlap(HashMap <Integer, Integer> olapMap, Vector <Annotation> geneVec) {
 		int lastGeneNum=-1;
 		Vector <Annotation> numList = new Vector <Annotation> ();
 		
@@ -234,7 +256,7 @@ public class SeqPool {
 	 *  On a back History (i.e. forceConserved), the hits have been updated but not the Sequence tracks
 	 *  	this works because it just uses the hits (there could still be a sync problem...)
 	 ***/
-	public void flagConserved(SeqHits leftHitsObj, SeqHits rightHitsObj, Sequence refSeq) {
+	protected void flagConserved(SeqHits leftHitsObj, SeqHits rightHitsObj, Sequence refSeq) {
 	try {	
 		Vector <GeneHitGene> dualSet1 = createConservedPair(leftHitsObj);
 		if (dualSet1.size()==0) return;

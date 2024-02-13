@@ -15,6 +15,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Vector;
 import java.util.HashMap;
+import java.util.TreeMap;
 
 import number.GenomicsNumber;
 import props.PropertiesReader;
@@ -47,8 +48,7 @@ public class Sequence extends Track {
 	protected boolean bShowScoreLine, bShowHitLen; 	   // CAS512 renamed Ribbon to HitLen; show Hit on Seq rect
 	protected boolean bShowScoreText, bShowHitNumText; // CAS531 add showHitNum
 	protected boolean bShowBlockText, bShowCsetText, bShowNoText;   // CAS545 add
-	protected boolean bHighGenePopup; 								// CAS544 add 
-	protected boolean bHighConserved; 								// CAS545 add 
+	protected boolean bHighGenePopup,bHighConserved; 				// CAS544 add 
 	protected Annotation selectedGeneObj=null;						// CAS545 add
 	
 	protected int grpIdx=Globals.NO_VALUE;
@@ -59,13 +59,13 @@ public class Sequence extends Track {
 	
 	private SeqPool seqPool;
 	private Vector <Rule> ruleList; 	// CAS545 was List
-	private Vector <Annotation> allAnnoVec;
+	private Vector <Annotation> allAnnoVec;	// includes exons
 	private Vector <Annotation> geneVec; // CAS545 for faster searching
 	private TextLayout headerLayout, footerLayout;
 	private Point2D.Float headerPoint, footerPoint;
 	
 	private HashMap <Integer, Integer> olapMap = new HashMap <Integer, Integer> (); // CAS517 added for overlapping genes; CAS518 global
-	private final int OVERLAP_OFFSET=12;			// CAS517/518 for overlap and yellow text
+	private final int OVERLAP_OFFSET=18;			// CAS517/518 for overlap and yellow text; CAS548 was 12
 	
 	/** the Sequence object is created on first use, but then reused to all data can change
 	 * on reuse, clear and reset is called 
@@ -141,13 +141,13 @@ public class Sequence extends Track {
 
 		return true;
 	}
-	// CAS517 add in order to have access to hits 
+	// CAS517 add in order to have access to hits; called once for each sequence
 	public void setSeqHits(SeqHits pObj, boolean isSwapped) { 
 		if (hitsObj1==null) {
 			hitsObj1 = pObj;
 			isQuery1 = isSwapped;
 		}
-		else {
+		else { // if a track is on both sides, this is the other side
 			hitsObj2 = pObj;
 			isQuery2 = isSwapped;
 		}
@@ -282,6 +282,7 @@ public class Sequence extends Track {
 	// Setup the annotations
 		boolean isRight = (orient == Globals.RIGHT_ORIENT);
 		double lastStart=0;
+		int lastInc=1;
 		
 		getHolder().removeAll(); 
 		Rectangle2D centRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
@@ -318,15 +319,20 @@ public class Sequence extends Track {
 			
 		// Setup yellow description
 			if (annot.isGene() && bShowAnnot && annot.isVisible()) { // CAS517 added isGene
-				if (annot.hasShortDescription() && getBpPerPixel() < MIN_BP_FOR_ANNOT_DESC)  { 
+				if (annot.hasDesc() && getBpPerPixel() < MIN_BP_FOR_ANNOT_DESC)  { 
 					x1 = isRight ? (rect.x + rect.width + RULER_LINE_LENGTH + 2) : rect.x; 
 					x2 = (isRight ? x1 + RULER_LINE_LENGTH  : x1 - RULER_LINE_LENGTH);
 					
 					ty = annot.getY1();
-					if (lastStart==ty) ty = ty+OVERLAP_OFFSET;
+					if (lastStart+OVERLAP_OFFSET>ty) {//CAS548; was incrementing y, now increment x so still line up
+						x1 = x1 + (lastInc*OVERLAP_OFFSET); 
+						lastInc++;
+						if (lastInc>=4) lastInc=1;
+					}
+					else lastInc=1;
 					lastStart=ty;
 					
-					TextBox tb = new TextBox(annot.getVectorDescription(),unitFont, (int)x1, (int)ty, 40, 200);
+					TextBox tb = new TextBox(annot.getYellowBoxDesc(),unitFont, (int)x1, (int)ty); // CAS548 use new TextBox
 					getHolder().add(tb); 					// adds it to the TrackHolder JComponent
 					
 					bounds = tb.getBounds();
@@ -651,7 +657,7 @@ public class Sequence extends Track {
 						isQuery1, hitsObj1.getOtherChrName(this), numShow++);
 				if (rc < 0) Utilities.showWarningMessage("Error showing close up view."); 
 			}
-			// possible other side CAS543 add
+			// if a track has a track on both sides (e.g. 2 track shown), this is the otherside CAS543 add
 			if (hitsObj2!=null) { 
 				hitsObj2.getHitsInRange(hitList2, start, end, isQuery2);
 				if (hitList2.size()>0) {
@@ -699,15 +705,15 @@ public class Sequence extends Track {
 			for (Annotation annot : allAnnoVec) {
 				if (annot.contains(p)) {
 					if (x==null) {
-						if (annot.isGap()) 			return annot.getLongDescription().trim();
-						if (annot.isCentromere()) 	return annot.getLongDescription().trim();
+						if (annot.isGap()) 			return annot.getHoverDesc().trim();
+						if (annot.isCentromere()) 	return annot.getHoverDesc().trim();
 						
-						x = annot.getLongDescription().trim(); 
+						x = annot.getHoverDesc().trim(); 
 						gIdx = annot.getAnnoIdx();
 					}
 					else { // CAS517  messes up with overlapping genes 
 						if (annot.isExon() && annot.getGeneIdx()==gIdx) {
-							x += "\n" + annot.getLongDescription().trim(); 	// CAS512 add exon if available
+							x += "\n" + annot.getHoverDesc().trim(); 	// CAS512 add exon if available
 							return x;
 						}
 					}
@@ -750,14 +756,20 @@ public class Sequence extends Track {
 	public String getGeneNumFromIdx(int idx1, int idx2) { // CAS545 called from HitData for its popup
 		if (idx1>0) {
 			for (Annotation aObj : geneVec) {
-				if (aObj.getAnnoIdx()==idx1) return " (# " + aObj.getFullGeneNum() + ")";
+				if (aObj.getAnnoIdx()==idx1) return " (#" + aObj.getFullGeneNum() + ")"; // CAS548 remove space
 			}
 		}
 		if (idx2>0) {
 			for (Annotation aObj : geneVec) {
-				if (aObj.getAnnoIdx()==idx2) return " (# " + aObj.getFullGeneNum() + ")";;
+				if (aObj.getAnnoIdx()==idx2) return " (#" + aObj.getFullGeneNum() + ")";
 			}
 		}
+		return "";
+	}
+	public String getGeneNumFromIdx(int idx1) { // CAS548 called from HitData for its popup
+		for (Annotation aObj : geneVec) {
+			if (aObj.getAnnoIdx()==idx1) return aObj.getFullGeneNum(); 
+		}	
 		return "";
 	}
 	/*************************************************
@@ -768,9 +780,9 @@ public class Sequence extends Track {
 			String title = getTitle(); // DisplayName Chr
 			Point p = e.getPoint();
 			if (rect.contains(p)) { // within blue rectangle of track
-				for (Annotation annot : allAnnoVec) { 
+				for (Annotation annot : geneVec) { // CAS548x was allAnnoVec
 					if (annot.contains(p)) {	// in this gene annotation
-						setExonList(annot);	
+						setForGenePopup(annot);	
 						annot.popupDesc(getHolder(), title, title);
 						if (bHighGenePopup) drawingPanel.smake(); // CAS544 to highlight
 						return;
@@ -780,20 +792,28 @@ public class Sequence extends Track {
 		}
 		super.mousePressed(e);					// right click - blue area for menu
 	}
-	private void setExonList(Annotation annot) { // Called above on mousePressed
-		if (hitsObj1!=null) {// CAS517 added
+	// called from above on mousePressed for Gene Popup
+	private void setForGenePopup(Annotation annot) { 
+		annot.setExonList(); // CAS548 was sending full exonList when annot already has its own
+		
+		if (hitsObj1!=null) {// CAS517 added; CAS548 change format to start:end[+], add score
 			if (!annot.hasHitList()) { 
-				String hits = hitsObj1.getHitsStr(this, annot.getStart(), annot.getEnd());
-				annot.setHitList(hits);
+				TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx);
+				if (scoreMap.size()>0) {
+					String hits = hitsObj1.getHitsForGenePopup(this, annot, scoreMap);
+					annot.setHitList(hits);
+				}
 			}
 		}
-		if (hitsObj2!=null) {// CAS543 added
+		if (hitsObj2!=null) {// CAS543 added for 3-track
 			if (!annot.hasHitList2()) { 
-				String hits = hitsObj2.getHitsStr(this, annot.getStart(), annot.getEnd());
-				annot.setHitList2(hits);
+				TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx);
+				if (scoreMap.size()>0) {
+					String hits = hitsObj2.getHitsForGenePopup(this, annot, scoreMap);
+					annot.setHitList2(hits);
+				}
 			}
 		}
-		annot.setExonList(allAnnoVec);
 	}
 	public String getFullName() {
 		return "Track #" + getHolder().getTrackNum() + " " + getProjectDisplayName() + " " + getChrName();

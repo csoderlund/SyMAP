@@ -23,13 +23,12 @@ import util.ProgressDialog;
 import util.Utilities;
 
 /*******************************************************
- * Reads a Mummer files, create cluster hits and save.
- * -Reads and process one file at a time, so it is important that no chromosome gets split over multiple files!!!
- * -All database load/save are from here. Everything else is GrpPair based.
+ * -Reads and process one MUMmer file at a time, so it is important that no chromosome gets split over multiple files!!!
+ * -For each chr-chr pair, creates a GrpPair object which performs on processing and DB saves
+ * 		each GrpPair has genes and hits for the pair; a X gene will be in multiple pairs, but a hit will only be in one
  * 
  * -s created output per file
- * -tt outputs files of results
- * -dd for other
+ * -tt outputs files of results and extended results to terminal
  */
 public class AnchorMain2 {
 	private static final int T=Arg.T, Q=Arg.Q;
@@ -41,11 +40,13 @@ public class AnchorMain2 {
 	protected ProgressDialog plog;
 	protected Mpair mPair;
 	protected Mproject mProj1, mProj2;
+	protected int topN=0;
 	
 	protected int cntG2=0, cntG1=0, cntG0=0, cntClusters=0; // GrpPair.saveClusterHits
-	protected int cntG2Filter=0, cntG1Filter=0, cntG0Filter=0, cntPileFilter=0;   // GrpPair,GrpPairGene,GrpPairPrune
+	protected int cntG2Fil=0, cntG1Fil=0, cntG0Fil=0, cntPileFil=0;   // GrpPair.createClusters
+	protected int cntWSMulti=0, cntWSSingle=0;
 	
-	protected PrintWriter fhOutHit=null, fhOutCl=null, fhOutGene=null, fhOutGP=null, fhOutRep=null;
+	protected PrintWriter fhOutHit=null, fhOutCl=null, fhOutGene=null, fhOutGP=null, fhOutPile=null;
 	protected String fileName="";
 	
 	// Main data structures; all genes; the ChrT-ChrQ genes with hits are transferred to GrpPair.
@@ -57,13 +58,15 @@ public class AnchorMain2 {
 	private boolean bSuccess=true;
 	
 	// created and processed per file
-	private TreeMap <String, GrpPair>  pairMap = new TreeMap <String, GrpPair> ();  // key chrT-chrQ
+	private TreeMap <String, GrpPair>  grpPairMap = new TreeMap <String, GrpPair> ();  // key chrT-chrQ
 
 	/*********************************/
 	public AnchorMain2(AnchorMain mainObj) {
 		this.mainObj = mainObj;
 		this.plog = mainObj.plog;
 		this.mPair = mainObj.mp;
+		
+		Arg.topN = mPair.getTopN(Mpair.FILE); 
 		
 		Arg.g0MinBases = mPair.getG0Match(Mpair.FILE);
 		Arg.gnMinExon = mPair.getGexonMatch(Mpair.FILE);
@@ -74,6 +77,7 @@ public class AnchorMain2 {
 		Arg.II = mPair.isIIpile(Mpair.FILE);
 		Arg.In = mPair.isInpile(Mpair.FILE);
 		
+		if (Arg.TRACE) Arg.PRT_STATS = true;
 		tdbc2 = new DBconn2("Anchors-"+DBconn2.getNumConn(), mainObj.dbc2);
 	}
 	/*********************************/
@@ -100,16 +104,22 @@ public class AnchorMain2 {
 		
 		Utils.prtIndentMsgFile(plog, 1, "Final totals:                                                   ");	
 		
-		String msg1 = String.format("%,12d Clusters  Both genes %,8d   One gene %,8d   No gene %,8d",
+		String msg1 = String.format("%,10d Clusters  Both genes %,8d   One gene %,8d   No gene %,8d",
 				cntClusters, cntG2, cntG1, cntG0);
 		Utils.prtIndentMsgFile(plog, 1, msg1);	
 		plog.msgOnly(String.format("%,10d Clusters", cntClusters));
 		
-		int total = cntG2Filter+cntG1Filter+cntG0Filter+cntPileFilter;
+		int total = cntG2Fil+cntG1Fil+cntG0Fil+cntPileFil;
 		
-		String msg2 = String.format("%,12d Filtered  Both genes %,8d   One gene %,8d   No gene %,8d   Pile hits %,d",
-				total, cntG2Filter, cntG1Filter, cntG0Filter, cntPileFilter);
+		String msg2 = String.format("%,10d Filtered  Both genes %,8d   One gene %,8d   No gene %,8d   Pile hits %,d",
+				total, cntG2Fil, cntG1Fil, cntG0Fil, cntPileFil);
 		Utils.prtIndentMsgFile(plog, 1, msg2);	
+		
+		if (cntWSMulti>0 || cntWSSingle>0) {
+			String msg3 = String.format("%,10d Both genes - cluster strands differ from genes (Multi %,d, Single %,d)",
+					(cntWSMulti+cntWSSingle), cntWSMulti, cntWSSingle);
+			Utils.prtIndentMsgFile(plog, 1, msg3);	
+		}
 		
 		if (Arg.PRT_STATS) Utils.prtTimeMemUsage(plog, "   Finish ", totTime); // also writes in AnchorMain after a few more comps
 		
@@ -198,19 +208,14 @@ public class AnchorMain2 {
 			rs.close();
 			
 			// g0 cluster hits are easier to understand if fixed sizes; defaults are set based on test plants and hsa
-			avgGeneLen /= geneMap.size();
-			if (avgGeneLen>Arg.minGeneLen) { // mammal
-				Arg.useGeneLen[X]   = Arg.maxGeneLen;
-				Arg.useIntronLen[X] = Arg.maxIntronLen;
-			}
-			else {							 // plant
-				Arg.useGeneLen[X]   = Arg.minGeneLen;
-				Arg.useIntronLen[X] = Arg.minIntronLen;
-			}
+			avgGeneLen /= geneMap.size(); // if mix genomes with greatly different introns, the last will take precedence
+			if (avgGeneLen>Arg.plantGeneLen) Arg.setLen(Arg.mamIntronLen, Arg.mamGeneLen);
+			else 							 Arg.setLen(Arg.plantIntronLen, Arg.plantGeneLen);// plant
+			
 			if (Arg.PRT_STATS) {
 				String msg = String.format("%-10s Chrs %d   Genes %,d   AvgLen %,d   MaxLen %,d  (Use intron %,d  gene %,d)",
 					mProj.getDisplayName(), grpGeneMap.size(), geneMap.size(), avgGeneLen, maxGeneLen, 
-					Arg.useIntronLen[X], Arg.useGeneLen[X]);
+					Arg.useIntronLen, Arg.useGeneLen);
 				Utils.prtIndentMsgFile(plog, 1, msg); 
 			}
 			
@@ -243,12 +248,11 @@ public class AnchorMain2 {
 			long time = Utils.getTime();
 		
 		// load hits into grpPairs
-			readMummer(f);							if (!bSuccess) return;
+			readMummer(f);							
 			
 		// process all group pairs from file
-			int nBin=0; 					// Can be multiple GrpPairs, all nBins need to be unique
-			for (GrpPair gp : pairMap.values()) {	
-				nBin = gp.run(nBin+1); 	if (nBin<0) {bSuccess=false; return;}
+			for (GrpPair gp : grpPairMap.values()) {	
+				bSuccess = gp.buildClusters(); 	if (!bSuccess) return;
 			}
 			
 			if (failCheck()) return;
@@ -316,19 +320,19 @@ public class AnchorMain2 {
 		// Add hit to pairObj 
 			String grp2grpkey=grpIdx2+"-"+grpIdx1;
 				
-			if (!pairMap.containsKey(grp2grpkey)) {
+			if (!grpPairMap.containsKey(grp2grpkey)) {
 				if (donePair.contains(grp2grpkey)) die(chrQ + " and " + chrT + " occurs in multiple files");
 				donePair.add(grp2grpkey);
 				
 				pairObj = new GrpPair(this, grpIdx2, chrT, grpIdx1, chrQ, plog);
-				pairMap.put(grp2grpkey, pairObj);
+				grpPairMap.put(grp2grpkey, pairObj);
 			}
-			else pairObj = pairMap.get(grp2grpkey);
+			else pairObj = grpPairMap.get(grp2grpkey);
 			
 		// Create hit
 			hitNum++;
 			Hit ht = new Hit(hitNum, id, sim, start, end, len, grpIdx, strand, f); 
-			if (len[T]>Arg.maxGeneLen || len[Q]>Arg.maxGeneLen) cntLongHit++;
+			if (len[T]>Arg.mamGeneLen || len[Q]>Arg.mamGeneLen) cntLongHit++;
 			pairObj.addHit(ht);
 			
 		// add hit to gene and vice versa
@@ -353,10 +357,10 @@ public class AnchorMain2 {
 		}
 		reader.close();
 		
-		plog.msg(String.format("%,10d Load %s", hitNum, fileName));
+		plog.msg("Load " + fileName + "               ");
 		if (Arg.PRT_STATS) {
-			String msg = String.format("%,10d Hits  %d PairMap    Gene Hits:  %s %,d   %s %,d   Long hits %,d", 
-					hitNum,  pairMap.size(), proj2Name, cntHitGeneT, proj1Name,  cntHitGeneQ, cntLongHit);
+			String msg = String.format("%,10d Hits  %d Chr-Pairs    Gene Hits:  %s %,d   %s %,d   Long hits %,d", 
+					hitNum,  grpPairMap.size(), proj2Name, cntHitGeneT, proj1Name,  cntHitGeneQ, cntLongHit);
 			Utils.prtIndentMsgFile(plog, 1, msg); 
 		}
 	}
@@ -365,11 +369,11 @@ public class AnchorMain2 {
 	
 	////////////////////////////////////////////////////////////////////////
 	private void clearFileSpecific() {
-		for (GrpPair p : pairMap.values()) {
+		for (GrpPair p : grpPairMap.values()) {
 			p.clear();
 			p=null;
 		}
-		pairMap.clear();
+		grpPairMap.clear();
 		System.gc();
 	}
 	private void clearTree() {
@@ -380,6 +384,7 @@ public class AnchorMain2 {
 	}
 	protected boolean failCheck() {
 		if (Cancelled.isCancelled() || mainObj.bInterrupt || !bSuccess) {
+			Arg.prt("Cancelling operation");
 			bSuccess=false;
 			return true; 
 		}
@@ -393,7 +398,7 @@ public class AnchorMain2 {
 		boolean doHit=true, doGenePair=true, doCluster=true, doGene=true, doPile=true;
 		
 		if (doPile)
-			fhOutRep = new PrintWriter(new FileOutputStream("logs/zPiles.log", false));
+			fhOutPile = new PrintWriter(new FileOutputStream("logs/zPiles.log", false));
 		if (doHit) 
 			fhOutHit = new PrintWriter(new FileOutputStream("logs/zHits.log", false));
 		if (doCluster) 
@@ -401,7 +406,7 @@ public class AnchorMain2 {
 		if (doGene) 
 			fhOutGene = new PrintWriter(new FileOutputStream("logs/zGene.log", false));	
 		if (doGenePair) 
-			fhOutGP = new PrintWriter(new FileOutputStream("logs/zGenePair.log", false));
+			fhOutGP = new PrintWriter(new FileOutputStream("logs/zPairGx.log", false));
 	}
 	catch (Exception e) {ErrorReport.print(e, "save to file"); bSuccess=false;}
 	}
@@ -411,13 +416,13 @@ public class AnchorMain2 {
 		if (fhOutCl!=null)   fhOutCl.close();
 		if (fhOutGene!=null) fhOutGene.close();
 		if (fhOutGP!=null)   fhOutGP.close();
-		if (fhOutRep!=null) fhOutRep.close();
+		if (fhOutPile!=null) fhOutPile.close();
 	}
 	catch (Exception e) {ErrorReport.print(e, "file close"); bSuccess=false;}
 	}
 	public String toResults() {
 		String msg = "";
-		for (GrpPair gp : pairMap.values()) msg += "\n" + gp.toResults();
+		for (GrpPair gp : grpPairMap.values()) msg += "\n" + gp.toResults();
 		return "!!!AnchorMain " + msg + "\n";
 	}
 	public String toString() {return toResults();}

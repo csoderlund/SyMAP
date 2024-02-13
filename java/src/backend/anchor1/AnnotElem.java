@@ -9,14 +9,14 @@ import java.util.Vector;
  * Created in Group, accessed in AnchorMain as bestOlapAnno
  */
 public class AnnotElem implements Comparable <AnnotElem> {// CAS500 added <type>; comparable so can be used in TreeMap
-	public int start, end, len, idx, genenum;
-	public boolean isRev;
-	public GeneType mGT = GeneType.NA; // {Gene, NonGene, NA}
-	public int mID;
+	protected int start, end, len, idx, genenum;
+	protected boolean isRev;
+	protected GeneType mGT = GeneType.NA; // {Gene, NonGene, NA}
+	protected int mID;
 	
 	private static int NEXTID = 0;
 	
-	AnnotElem( int idx, int start, int end, boolean isRev, int genenum, GeneType gt){
+	protected AnnotElem( int idx, int start, int end, boolean isRev, int genenum, GeneType gt){
 		this.idx   = idx;
 		this.start = start;
 		this.end   = end;
@@ -28,13 +28,13 @@ public class AnnotElem implements Comparable <AnnotElem> {// CAS500 added <type>
 		NEXTID++;
 	}
 	
-	public String getInfo() {
+	protected String getInfo() {
 		return String.format("%5d idx=%-5d gn=%5d (%,10d %,10d l=%,5d %5s)  %s", mID, idx, genenum, start, end, (end-start+1), isRev, mGT.toString());
 	}
 	
-	public int getLength() { return len; }
+	protected int getLength() { return len; }
 	
-	public boolean isGene(){
+	protected boolean isGene(){
 		return (mGT == GeneType.Gene);	
 	}
 	public int compareTo(AnnotElem _a2) { // needed for HashSet in AnchorMain

@@ -56,14 +56,12 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("  -v        : check MySQL for important settings");
 			System.out.println("  -h        : show help to terminal and exit");
 	
-			System.out.println("\nReload Annotation:");
-			System.out.println("  -z        : Reload Annotation will only run the Gene# assignment algorithm");
-			
 			System.out.println("\nSynteny&Alignment:");
 			System.out.println("  -p N      : number of CPUs to use");
 			System.out.println("  -s        : print stats for A&S, or recreate the Summary on display");
-			System.out.println("  -y        : A&S will only run the hit count algorithm");
-			System.out.println("  -nsg      : do not split genes on cluster hit creation");
+			System.out.println("  -wse      : for g2, exclude MUMmer hits that differ from gene strand (v5.4.8 Algo2)");
+			System.out.println("  -wsp      : for g2, print MUMmer hits that differ from gene strand (v5.4.8 Algo2)");
+			System.out.println("  -nsg      : do not split genes on cluster hit creation (Cluster Algo1)");
 		}
 	}
 	// these are listed to terminal in the 'symap' perl script.
@@ -97,8 +95,8 @@ public class SyMAPmanager extends ManagerFrame {
 			}
 			
 			if (hasCommandLineOption(args, "-nsg")) { // CAS540
-				System.out.println("-nsg split genes !" + Group.bSplitGene);
-				Group.bSplitGene= !Group.bSplitGene;
+				System.out.println("-nsg do not split genes (Algo1)");
+				Group.bSplitGene= false;
 			}
 			if (hasCommandLineOption(args, "-z")) {// CAS519b
 				Globals.GENEN_ONLY=true;
@@ -111,6 +109,14 @@ public class SyMAPmanager extends ManagerFrame {
 			if (hasCommandLineOption(args, "-s")) {
 				System.out.println("-s Print Stats");
 				Constants.PRT_STATS = true;
+			}
+			if (hasCommandLineOption(args, "-wsp")) { // CAS548
+				System.out.println("-wsp print g2 hits where the hit strands differ from the genes (Algo2)");
+				Constants.WRONG_STRAND_PRT = true;
+			}
+			if (hasCommandLineOption(args, "-wse")) { // CAS548
+				System.out.println("-wse exclude g2 hits where the hit strands differ from the genes (Algo2)");
+				Constants.WRONG_STRAND_EXC = true;
 			}
 			
 			/** not shown in -h help - hence, the double character so user does not use by mistake **/
@@ -168,9 +174,9 @@ public class SyMAPmanager extends ManagerFrame {
 	public static void printVersion() {
 		String url = util.Jhtml.BASE_HELP_URL;
 		String base = url.substring(0, url.length()-1);
-		String d = (Runtime.getRuntime().maxMemory() / (1024*1024)) + "m";
-		System.out.println("\nSyMAP " + Globals.VERSION + Globals.DATE + "   " + base
-			+ "   Java v" + System.getProperty("java.version") + " (" + d + ")");
+		//String d = (Runtime.getRuntime().maxMemory() / (1024*1024)) + "m";
+		System.out.println("\nSyMAP " + Globals.VERSION + Globals.DATE + "  " + base
+			+ "  Compiled Java v" + System.getProperty("java.version")); // CAS548 add 'Compiled', remove mem
 	}
 	
 	public static boolean checkJavaSupported(Component frame) {	

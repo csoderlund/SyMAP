@@ -9,6 +9,10 @@ import java.util.Vector;
 import symap.Globals;
 import util.ErrorReport;
 
+/***************************************************************
+ * This is a minor class for displaying aligned text data,
+ * manipulating data and formatting text
+ */
 public class SeqData implements Comparable <SeqData> { 
 	public static final byte DASH = AlignData.gapCh;
 	
@@ -84,6 +88,16 @@ public class SeqData implements Comparable <SeqData> {
 		String o = (isStrandPos) ? "+" : "-";
 		return String.format("%s(%,d - %,d) %,dbp", o, start, end, (end-start+1)) ;
 	}
+	public static String coordsStrKb(boolean isStrandPos, int start, int end) {
+		String o 	= (isStrandPos) ? "+" : "-";
+		double s 	= (start<1000000) ? start : Math.round(start/1000);
+		String xs 	= (start<1000000) ? "" : "KB";
+		int len 	= (end-start+1);
+		double l 	= (len<1000) ? len : Math.round(len/1000);
+		String xl 	= (len<1000) ? "bp" : "KB";
+		
+		return String.format("%s%,d%s for %,d%s", o, (int) s, xs, (int)l, xl) ;
+	}
 	  // CAS517 - format exon list (e.g. Exon #1:20:50,Exon #1:20:50); CAS531 moved from Utilities
     static public String formatExon(String exonList) {	
     	String exonTag = Globals.exonTag;
@@ -92,7 +106,8 @@ public class SeqData implements Comparable <SeqData> {
     	String [] exons = exonList.split(",");
     	int dist=0, last=0;
     	
-    	String [] fields = {"#", "Coords" ,"Len", "Intron"};
+    	String exCol = Globals.exonTag.substring(0, Globals.exonTag.indexOf(" "));
+    	String [] fields = {"#", exCol ,"Len", "Intron"}; // CAS548 was Coords
 		int [] justify =   {1,    0,    0,     0};
 		int nRow = exons.length;
 	    int nCol=  fields.length;
@@ -132,15 +147,15 @@ public class SeqData implements Comparable <SeqData> {
     }
     // CAS517 - format a merged hit (e.g. 100:200,300:400); CAS531 moved from Utilities
     // CAS531 sorted by start so easier to read and determine overlap or gap
-    static public String formatHit(String hList) {
-    	String [] tok = hList.split("\n"); // name\nlist
-    	if (tok.length!=2) return hList;
-    	String name = tok[0];
-    	String hitListStr = tok[1];
-    			
-    	String list="";
+    // CAS548 only called by SeqHits.popupDesc to draw hit popup
+    // always sorted ascending by Q, even if negative strand
+    static public String formatHit(String name, String hitListStr, boolean isPos) {
+    	if (hitListStr==null || hitListStr.equals("")) return "Error";
+    	
     	String [] tokc = hitListStr.split(",");
+    	
     	int dist=0, lastx2=0,  x1=0, x2=0, nOrder=0;
+    	String list="";
     	
     	Vector <Hit> hitSort = new Vector <Hit> (tokc.length);
     	for (String coords : tokc) {
@@ -159,7 +174,7 @@ public class SeqData implements Comparable <SeqData> {
     	}
     	Collections.sort(hitSort);
     	
-    	String [] fields = {"#", "Coords" ,"Len", "Gap"};
+    	String [] fields = {"#", "Subhit" ,"Len", "Gap"}; // CAS548 was Coords 
 		int [] justify =   {1,    0,    0,     0};
 		int nRow = tokc.length;
 	    int nCol=  fields.length;

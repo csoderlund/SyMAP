@@ -4,9 +4,11 @@ import java.sql.ResultSet;
 import java.util.Vector;
 import java.util.TreeSet;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import javax.swing.JTextField;
 
+import symap.Globals;
 import symap.manager.Mproject;
 import util.ErrorReport;
 import util.Utilities;
@@ -20,8 +22,10 @@ import util.Utilities;
  * They are ordered by hit_idx so the identical hits will be consecutive.
  * The code merges each hit_idx  into a single row.
  * 
+ * if change column: loadHit, loadHitMerge, makeRow
+ * 
  * CAS504 this file replaced the previous approach to parsing the sql results
- * CAS547 add EveryPlus
+ * CAS547 add EveryPlus; CAS548 add Olap 
  */
 public class DBdata {
 	private static String [] spNameList; 				// species Names
@@ -29,12 +33,12 @@ public class DBdata {
 	private static HashMap <Integer, String[]> annoKeys;// spIdx, keys in order
 	private static HashMap <Integer, Integer> grpStart; // grpIdx, start,end
 	private static HashMap <Integer, Integer> grpEnd;   // grpIdx, start,end
-	private static int grpIdxOnly;						// grpIdx, geneNum only
 	
 	private static QueryPanel qPanel;
 	private static SpeciesSelectPanel spPanel;
 	private static JTextField loadStatus;
-	private static boolean isSingle=false, isSingleGenes = false, isEveryPlus = true; // CAS547 
+	private static boolean isSingle=false, isSingleGenes = false, isIncludeMinor = true; // CAS547 
+	private static HashSet <Integer> grpIdxOnly;
 	
 	private static int cntDup=0, cntFilter=0, cntPgeneF=0; // TEST_TRACE
 	private static int cntPlus2=0;	// CAS547 check for possible pre-v547
@@ -46,7 +50,7 @@ public class DBdata {
 			String [] annoColumns, 					// Species\nkeyword array in order displayed
 			JTextField loadTextField,   			// write progress
 			HashMap <Integer, Integer> geneCntMap, 	// output variable of spIdx annotidx counts
-			HashMap<String,Integer> proj2regions)  	// PgeneF ouput
+			HashMap<String,Integer> proj2regions)  	// PgeneF output
 	{
 		clear();
 		qPanel = 		theQueryPanel;
@@ -55,14 +59,10 @@ public class DBdata {
 		
 		isSingle 		= qPanel.isSingle();
 		isSingleGenes 	= qPanel.isSingleGenes();
-		isEveryPlus 		= qPanel.isEveryPlusAnno();
+		isIncludeMinor 	= qPanel.isIncludeMinor(); // Every*, Gene (except if has provided suffix), HitNum, Anno
 		
-		if (qPanel.isGeneNum()) grpIdxOnly = qPanel.getGrp();
-		
-		if (Q.TEST_TRACE) {
-			System.out.println(projList.get(0).getIdx() + " " + projList.get(0).getDBName() + "     "
-					+ projList.get(1).getIdx() + " " + projList.get(1).getDBName());
-		}
+		if (qPanel.isGeneNum() || qPanel.isAnnoTxt() || qPanel.isMultiAnno()) 
+					grpIdxOnly = qPanel.getGrp(); // will get selected chr, but geneNum on its pair w/o this
 		
 		cntPlus2=0; cntPgeneF=0;
 		cntDup=0; cntFilter=0; // restart TEST_TRACE counts
@@ -71,8 +71,9 @@ public class DBdata {
 		makeAnnoKeys(annoColumns);
 		makeGrpLoc(qPanel.getGrpCoords());
 		
-		// CAS543 remove isEitherAnno and isBothAnno (can do in QueryPanel), add isAnnoTxt
-		boolean isFilter = (qPanel.isOneAnno() || grpStart.size()>0 ||  qPanel.isAnnoTxt() || qPanel.isGeneNum());
+		// CAS543 remove isEitherAnno and isBothAnno (can do in QueryPanel), add isAnnoTxt; CAS548 add multiAnno
+		boolean isFilter = (qPanel.isOneAnno() || qPanel.isMultiAnno() || 
+				     grpStart.size()>0 ||  qPanel.isAnnoTxt() || qPanel.isGeneNum());
 				
 		Vector <DBdata> rows = new Vector <DBdata> ();
 	
@@ -89,7 +90,7 @@ public class DBdata {
          				loadStatus.setText("Processed " + rowNum + " rows");
 				}
 			}
-			else if (isEveryPlus) {
+			else if (isIncludeMinor) {
 				HashMap <String, DBdata> hitMap = new HashMap <String, DBdata> ();
 				
 	         	while (rs.next()) {
@@ -186,7 +187,11 @@ public class DBdata {
 				if (rowNum%1000 ==0) 
      				loadStatus.setText("Finished " + rowNum + " rows");
          	}
-        
+        // Multi - may remove rows and renumber
+         	if (qPanel.isMultiAnno()) {
+         		loadStatus.setText("Compute multi-hit genes");
+         		rows = runMultiGene(rows);
+         	}
          // PgeneF - may remove rows and renumber
          	if (qPanel.isPgeneF()) {
          		loadStatus.setText("Compute PgeneF and filter");
@@ -246,6 +251,7 @@ public class DBdata {
 				dObj.gend[x] =		cpObj.gend[x];
 				dObj.glen[x] = 		cpObj.glen[x];
 				dObj.gstrand[x] = 	cpObj.gstrand[x];
+				dObj.golap[x] = 	cpObj.golap[x];
 				dObj.annotStr[x] =	cpObj.annotStr[x];
 				
 				if (x==0) {
@@ -356,41 +362,91 @@ public class DBdata {
 		}
 		catch (Exception e) {ErrorReport.print(e, "make location list");}
 	}
+	/************************************
+	 * return multi-hits >=n; added CAS548
+	 */
+	private static Vector <DBdata> runMultiGene(Vector <DBdata> rows) {
+	try {
+		Vector <DBdata> rowsForDisplay = new Vector <DBdata> ();
+		HashMap<Integer,Integer> gene1Cnt = new HashMap<Integer,Integer>(); 
+		HashMap<Integer,Integer> gene2Cnt = new HashMap<Integer,Integer>(); 
+		
+		// build sets of genes and their counts
+		for (DBdata dObj : rows) {
+			int idx1 = dObj.annotIdx[0];
+			if (idx1>0) {
+				if (gene1Cnt.containsKey(idx1)) gene1Cnt.put(idx1, gene1Cnt.get(idx1)+1);
+				else gene1Cnt.put(idx1, 1);
+			}
+			int idx2 = dObj.annotIdx[1];
+			if (idx2>0) {
+				if (gene2Cnt.containsKey(idx2)) gene2Cnt.put(idx2, gene2Cnt.get(idx2)+1);
+				else gene2Cnt.put(idx2, 1);
+			}
+		}
+		// recreate rows with only the filtered set
+		int n = qPanel.getMultiN();
+		int rowNum=1;
+		for (DBdata dObj : rows) {
+			int idx1 = dObj.annotIdx[0];
+			if (idx1>0 && gene1Cnt.get(idx1)>n) {
+				if (grpIdxOnly.size()==0 || grpIdxOnly.contains(dObj.chrIdx[0])) {
+					dObj.rowNum = rowNum;
+	    			rowNum++;
+					rowsForDisplay.add(dObj);
+				}
+			}
+			else {
+				int idx2 = dObj.annotIdx[1];
+				if (idx2>0 && gene2Cnt.get(idx2)>=n) {
+					if (grpIdxOnly.size()==0 || grpIdxOnly.contains(dObj.chrIdx[1])) {
+						dObj.rowNum = rowNum;
+		    			rowNum++;
+						rowsForDisplay.add(dObj);
+					}
+				}
+			}
+		}
+		return rowsForDisplay;
+	}
+	catch (Exception e) {ErrorReport.print(e, "make multi-hit genes"); return null;}
+	}
+	////////////////////////////////////////////////////////////////////////////
 	private static Vector <DBdata> runPgeneF(Vector <DBdata> rows, HashMap<String,Integer> proj2regions ) {
 		try {
 			HashMap<Integer,Integer> hitIdx2Grp = new HashMap<Integer,Integer>(); // PgeneF
-    			HashMap<Integer,Integer> grpSizes = new HashMap<Integer,Integer>();   // PgFSize
+    		HashMap<Integer,Integer> grpSizes = new HashMap<Integer,Integer>();   // PgFSize
     		
-    			new ComputePgeneF(rows,  qPanel, loadStatus,
-    				hitIdx2Grp,  grpSizes, proj2regions); // output data structures
-    		    		 	
-    			hitIdx2Grp.put(0, 0); // for the annots that didn't go into a group
-        		grpSizes.put(0, 0);
-        		
-        		int rowNum=1;
-        		Vector <DBdata> rowsForDisplay = new Vector <DBdata> ();
-        		for (DBdata dd : rows) {
-        			if (!hitIdx2Grp.containsKey(dd.hitIdx)) {
-        				cntPgeneF++;
-        				if (cntPgeneF<3 && Q.TEST_TRACE) 
-        					System.out.println("Not in hitIdx2Grp: " + dd.hitIdx);
-        				continue;
-        			}
-        			
-        			dd.rowNum = rowNum;
-        			rowNum++;
-        			
-        			int pgenef = hitIdx2Grp.get(dd.hitIdx);
-        			int pgfsize = grpSizes.get(pgenef);
-        			dd.setPgeneF(pgenef, pgfsize);
-        			
-        			rowsForDisplay.add(dd);
-        			
-        			if (rowNum%Q.INC ==0) 
-         				loadStatus.setText("Filtered " + rowNum + " rows");
-        		}
-    			rows.clear();
-    			return rowsForDisplay;
+			new ComputePgeneF(rows,  qPanel, loadStatus,
+				hitIdx2Grp,  grpSizes, proj2regions); // output data structures
+		    		 	
+			hitIdx2Grp.put(0, 0); // for the annots that didn't go into a group
+    		grpSizes.put(0, 0);
+    		
+    		int rowNum=1;
+    		Vector <DBdata> rowsForDisplay = new Vector <DBdata> ();
+    		for (DBdata dd : rows) {
+    			if (!hitIdx2Grp.containsKey(dd.hitIdx)) {
+    				cntPgeneF++;
+    				if (cntPgeneF<3 && Q.TEST_TRACE) 
+    					System.out.println("Not in hitIdx2Grp: " + dd.hitIdx);
+    				continue;
+    			}
+    			
+    			dd.rowNum = rowNum;
+    			rowNum++;
+    			
+    			int pgenef = hitIdx2Grp.get(dd.hitIdx);
+    			int pgfsize = grpSizes.get(pgenef);
+    			dd.setPgeneF(pgenef, pgfsize);
+    			
+    			rowsForDisplay.add(dd);
+    			
+    			if (rowNum%Q.INC ==0) 
+     				loadStatus.setText("Filtered " + rowNum + " rows");
+    		}
+			rows.clear();
+			return rowsForDisplay;
 		}
 		catch (Exception e) {ErrorReport.print(e, "run pgenef"); return null;}
 	}
@@ -459,9 +515,10 @@ public class DBdata {
 			pid	=			rs.getInt(Q.PID);
 			psim	=		rs.getInt(Q.PSIM);
 			hcnt	=		rs.getInt(Q.HCNT);
+			
 			if (hcnt==0) 	hcnt=1;				// CAS519 makes more sense to be 1 merge instead of empty
 			String s =		rs.getString(Q.HST);
-			hst = 			(s.contains("+") && s.contains("-")) ? "!=" : "=";
+			hst = 			(s.contains("+") && s.contains("-")) ? "!=" : "="; // NOTE: use 's' to show the actual value
 			hscore	=		rs.getInt(Q.HSCORE);
 			htype	=		rs.getString(Q.HTYPE);
 			
@@ -474,10 +531,10 @@ public class DBdata {
 			int annoIdx  = rs.getInt(Q.AIDX);
 			
 			if (annoIdx!=annotIdx[0] && annoIdx!=annotIdx[1]) {// CAS520 all annot_idx,hit_idx loaded; make sure best
-				if (isEveryPlus) {							// CAS547 add
+				if (isIncludeMinor) {							// CAS547 add
 					annotIdx[x] = annoIdx;					// replace best
 					htype = "--";							// otherwise, inherits best-best assignment
-					tag = tag + "+";						// + indicates best replaced
+					tag = tag + " " + Globals.minorAnno;			// + indicates best replaced
 				}
 				else return; // The correct annotation will be added in merged to THIS record
 			}
@@ -486,6 +543,7 @@ public class DBdata {
 			gend[x] =		rs.getInt(Q.AEND);
 			glen[x] = 		Math.abs(gend[x]-gstart[x])+1;
 			gstrand[x] = 	rs.getString(Q.ASTRAND); 
+			golap[x] = 		rs.getInt(Q.AOLAP);
 			
 			annotStr[x] =	rs.getString(Q.ANAME);
 			geneTag[x] = 	tag; 		// CAS514 add geneTag; CAS518 chg genenum to tag
@@ -493,7 +551,7 @@ public class DBdata {
 			if (x==0) annoSet0.add(annoIdx); // multiple anno's for same hit
 			else      annoSet1.add(annoIdx);
 		}
-		catch (Exception e) {ErrorReport.print(e, "Read hit record");}
+		catch (Exception e) {ErrorReport.die(e, "Read hit record");}
 	}
 	/***************************************
 	 * If there is no anno for one side of the hit, there will be no merged record
@@ -507,11 +565,10 @@ public class DBdata {
 			
 			int annoIdx = rs.getInt(Q.AIDX);
 			if (annoIdx!=annotIdx[0] && annoIdx!=annotIdx[1]) { 
-				if (isEveryPlus) {						// CAS547 add
+				if (isIncludeMinor) {						// CAS547 add
 					annotIdx[x] = rs.getInt(Q.AGIDX);	// hit overlaps at least two genes on both sides
 					tag = tag + "++";					// indicate 2nd non-best
 					cntPlus2++;
-					if (Q.TEST_TRACE && cntPlus2<3) System.out.println("Double Plus (" + x + ") " + tag);
 				}
 				else return;
 			}
@@ -520,6 +577,7 @@ public class DBdata {
 			gend[x] =		rs.getInt(Q.AEND);
 			glen[x] = 		Math.abs(gend[x]-gstart[x])+1;
 			gstrand[x] = 	rs.getString(Q.ASTRAND); 
+			golap[x] = 		rs.getInt(Q.AOLAP);
 			geneTag[x] = 	tag; 					// CAS514
 			
 			int sz = (x==0) ? annoSet0.size() : annoSet1.size();
@@ -639,41 +697,48 @@ public class DBdata {
 				}
 				return false; 
 			}
-			// GeneNum: Chr is the only other filter, which happened in SQL; CAS541 added gene# only; CAS543 allow suffix
+			// GeneNum: Chr is the only other filter, which happened in SQL; but need to make sure geneNum on correct chr
+			// CAS541 added gene# only; CAS543 allow suffix; CAS548 allow 2 chr selected, but must have correct genenum
 			String inputGN = qPanel.getGeneNum();
 			if (inputGN!=null) {
 				if (inputGN.endsWith(".")) inputGN = inputGN.substring(0, inputGN.length()-1);
-				int x=-1;
-				if (inputGN.contains(".")) {
-					if      (geneTag[0]!="-" && geneTag[0].equals(inputGN))  x=0;
-					else if (geneTag[1]!="-" && geneTag[1].equals(inputGN))  x=1;
-				}
-				else {
-					if      (geneTag[0]!="-" && Utilities.getGenenumIntOnly(geneTag[0]).equals(inputGN))  x=0;
-					else if (geneTag[1]!="-" && Utilities.getGenenumIntOnly(geneTag[1]).equals(inputGN))  x=1;
-				}
-				if (x==-1) return false;
 				
-				if (grpIdxOnly<0 || chrIdx[x]==grpIdxOnly) return true;
+				String tag0 = geneTag[0], tag1 = geneTag[1];
+				if (!inputGN.contains(".")) { // e.g. 16.a and 16.b will match if no specific suffix
+					tag0 = Utilities.getGenenumIntOnly(tag0);
+					tag1 = Utilities.getGenenumIntOnly(tag1);
+				}
+				
+				if (tag0!="-" && tag0.equals(inputGN)) {
+					if (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[0])) return true;
+				}
+				else if (tag1!="-" && tag1.equals(inputGN))  {
+					if (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[1])) return true;
+				}
 				
 				return false;
 			}
-			
-			/* CAS543 moved to SQL
-			else if (qPanel.isEitherAnno()) if (annoSet0.size()==0 && annoSet1.size()==0) return false; // not either anno
-			else if (qPanel.isBothAnno())   if (annoSet0.size()<=0 || annoSet1.size()<=0) return false; // not both anno
-			*/
-			
-			if (qPanel.isOneAnno()) { // Either is done for One, but must further filter
-				if (annotIdx[0] <= 0 && annotIdx[1] <= 0) return false; // both !anno; CAS547 was annoSet0/1.size()>0
-				if (annotIdx[0] > 0  && annotIdx[1] > 0)  return false; // both anno; CAS547 was annoSet0/1.size()<=0
-			}
-			
 			// CAS543 when doing anno search as query, returned hits without anno if they overlap
+			// CAS548 add check to make sure anno is on the selected chr-only; put before one
 			if (qPanel.isAnnoTxt()) { 
 				String anno = qPanel.getAnnoTxt().toLowerCase();
-				if (!annotStr[0].toLowerCase().contains(anno) && !annotStr[1].toLowerCase().contains(anno)) return false;
+				
+				if (annotStr[0].toLowerCase().contains(anno)) {
+					if (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[0])) return true;
+				}
+				if (annotStr[1].toLowerCase().contains(anno)) {
+					if (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[1])) return true;
+				}
+				
+				return false;
 			}
+			// CAS543 moved to SQL (qPanel.isEitherAnno()) (qPanel.isBothAnno()) 
+			
+			if (qPanel.isOneAnno()) { // Either is done for One, but must further filter
+				if (annotIdx[0] <= 0 && annotIdx[1] <= 0) return false; // CAS547 was annoSet0/1.size()>0
+				if (annotIdx[0] > 0  && annotIdx[1] > 0)  return false; // CAS547 was annoSet0/1.size()<=0
+			}
+			
 			if (grpStart.size()==0) return true;
 			
 			// if one or more chromosome selected, one of the chr pairs has to be a selected one
@@ -727,11 +792,11 @@ public class DBdata {
 			if (pgfsize<=0)     row.add(Q.empty);  else row.add(pgfsize);
 			
 			if (hitNum<=0)      row.add(hitIdx);   else row.add(hitNum);
+			if (hscore<=0)		row.add(Q.empty);  else row.add(hscore); // CAS540 add column; CAS548 mv column
 			if (pid<=0)			row.add(Q.empty);  else row.add(pid);
 			if (psim<=0)		row.add(Q.empty);  else row.add(psim);
 			if (hcnt<=0)		row.add(Q.empty);  else row.add(hcnt);
 			if (hst.contentEquals(""))	row.add(Q.empty);  else row.add(hst); // CAS520 add column
-			if (hscore<=0)		row.add(Q.empty);  else row.add(hscore); // CAS540 add column
 			if (htype.contentEquals("")) row.add(Q.empty);  else row.add(htype); // CAS546 add column
 		}
 		// chr, start, end; CAS519 add gene&hit for pairs
@@ -743,6 +808,8 @@ public class DBdata {
 			
 			if (x>=0) {
 				row.add(geneTag[x]); // CAS518 num to string
+				if (!isSingle)
+					if (golap[x]<0)  	row.add(Q.empty); else row.add(golap[x]); // zero is okay
 				row.add(chrNum[x]); 
 				if (gstart[x]<0)  	row.add(Q.empty); else row.add(gstart[x]); 
 				if (gend[x]<0)  	row.add(Q.empty); else row.add(gend[x]); 
@@ -752,7 +819,7 @@ public class DBdata {
 				if (!isSingle) {
 					row.add(hstart[x]); 
 					row.add(hend[x]); 
-					row.add(hlen[x]);
+					row.add(hlen[x]);	
 				}
 				else row.add(numHits[x]); // CAS541
 			}
@@ -831,6 +898,7 @@ public class DBdata {
 	private int [] hstart = {Q.iNoVal, Q.iNoVal};  
 	private int [] hend = 	{Q.iNoVal, Q.iNoVal}; 
 	private int [] hlen = 	{Q.iNoVal, Q.iNoVal};  // CAS516 add
+	private int [] golap =   {Q.iNoVal, Q.iNoVal};  // CAS548 add
 	private String [] geneTag = {Q.empty, Q.empty}; // CAS514 add; CAS518 chr.gene#.suffix
 	private int [] annotIdx = {Q.iNoVal, Q.iNoVal}; // CAS520 add because was not getting annot1_idx and annot2_idx
 	private int [] numHits = {Q.iNoVal, Q.iNoVal}; // CAS541 add

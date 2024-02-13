@@ -136,7 +136,7 @@ public class CloseUpDialog extends JDialog implements  ColorListener, HelpListen
 			Vector<Annotation> exons = seq.getAnnoExon(a.getAnnoIdx()); // CAS535 get specific exons
 			
 			GeneAlignment ga = new GeneAlignment(
-					a.getShortDescription(), a.getStart(), a.getEnd(), a.isStrandPos(), exons);
+					a.getCloseUpDesc(), a.getStart(), a.getEnd(), a.isStrandPos(), exons);
 			
 			if (!alignments.contains(ga)) // in case database has redundant entries (as with Rice)
 				alignments.add(ga);

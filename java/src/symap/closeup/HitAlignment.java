@@ -19,8 +19,8 @@ import symap.mapper.HitData;
  * Display Hit Alignments; created in AlignPool; drawn from CloseUpComponent
  */
 public class HitAlignment implements Comparable<HitAlignment> { 
-	public static final String tokS="S",     tokO="N";
-	private final       String tokpS="(S) ", tokpO="(N) ";
+	public static final String tokS=" ",     tokO=" "; // CAS548 was S and N (selected and not-selected?_
+	private final       String tokpS=" ", tokpO=" ";
 	private final boolean drawLine=false;
 	
 	private HitData hitDataObj;
@@ -98,23 +98,22 @@ public class HitAlignment implements Comparable<HitAlignment> {
 		String hitN = hitDataObj.getName() + "." + numSubHit;
 		
 		if (isClose) {
-			int max = hitN.length();
-			max = Math.max(max, (p1 + tokpS).length());
-			max = Math.max(max, (p2 + tokpO).length());
+			int max = Math.max(p2.length(), p1.length());
+			//max = Math.max(max, p2.length()); // was max(hitN.length(), p2.length(),p1.length())
 			max += 1;
 			String format =  "%-" + max + "s "; 
 			
 			String desc = String.format(format, hitN) + scoreStr;
-			String sName = String.format(format, p1 + tokpS);
-			String nName = String.format(format, p2 + tokpO);
+			String sName = String.format(format, p1);
+			String nName = String.format(format, p2);
 			
 			return "\n " + desc  + 
-				   "\n " + sName + sCoord  + 
+				   "\n " + sName + sCoord + 
 				   "\n " + nName + nCoord + 
 				   "\n" +
-				   "\n " + tokS + " " + sSeq + 
-				   "\n   " + mSeq + 
-				   "\n " + tokO + " " + nSeq + " \n"; 
+				   "\n " + sSeq + 
+				   "\n " + mSeq + 
+				   "\n " + nSeq + " \n"; 
 		}
 		else { // the text formatter puts the S and N before each align name
 			String sName = String.format("%s", p1 + tokpS);

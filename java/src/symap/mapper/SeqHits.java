@@ -16,6 +16,7 @@ import java.util.Vector;
 
 import symap.closeup.TextShowInfo;
 import symap.closeup.SeqData;
+import symap.sequence.Annotation;
 import symap.sequence.Sequence;
 import symap.Globals;
 
@@ -55,7 +56,7 @@ public class SeqHits  {
 		for (int i = 0; i < allHitsArray.length; i++) {
 			HitData hd = hitList.get(i);
 			boolean isSelected = mapper.isQuerySelHit(hd.getStart1(), hd.getEnd1(), hd.getStart2(),hd.getEnd2());	
-			allHitsArray[i] = new DrawHit(hitList.get(i));
+			allHitsArray[i] = new DrawHit(hd);
 			allHitsArray[i].set(isSelected);
 		}
 		
@@ -187,13 +188,27 @@ public class SeqHits  {
 	 * Hover and popups
 	 */
 	// CAS517 For sequence object - hits aligned to a gene; Annotation.popDesc expects this format
-	public String getHitsStr(Sequence seqObj, int start, int end) {
-		String list= "";
-		for (int i = 0; i < allHitsArray.length; i++) {
-			 String x = allHitsArray[i].getIfHit(seqObj,start,end);
-			 if (x!=null) list+= x + ";";
+	// CAS548 replace getHitStr, which displayed all subs; add score; change format 
+	public String getHitsForGenePopup(Sequence seqObj, Annotation annoObj, TreeMap <Integer, String> hitScores) {
+		String listVis= "";
+		
+		for (DrawHit drObj : allHitsArray) {
+			HitData hdObj = drObj.hitDataObj;
+			if (!hitScores.containsKey((int) hdObj.getID())) continue;
+			
+			boolean isQuery = mapper.isQueryTrack(seqObj);
+			
+			String score = "("+hitScores.get((int) hdObj.getID())+")";			
+			String star = hdObj.getMinorForGenePopup(isQuery, annoObj.getAnnoIdx());
+
+			if (!star.equals("*")) { // minor gets the wrong opposite gene 
+				String hit = String.format("Hit #%d %-19s\n", hdObj.getHitNum(), score);
+				hit += hdObj.getCoordsForGenePopup(isQuery, annoObj.getFullGeneNum()) + "\n";
+			
+				listVis += hit + ";";
+			}
 		}
-		return list;
+		return listVis;
 	}
 	
 	public void mouseMoved(MouseEvent e) {
@@ -221,7 +236,6 @@ public class SeqHits  {
 		return false;
 	}
 	
-	/***************** Static stuff ***********************/
 	 private boolean isSequenceVisible(Sequence st, int start, int end) {
 		 return st.isInRange( (start+end)>>1 );
 	 }
@@ -230,6 +244,7 @@ public class SeqHits  {
 		 p.setLocation(p.getX()+loc.getX(),p.getY()+loc.getY());
 		 return p;
 	 }
+	 /***************** Static stuff ***********************/
 	// CAS512 moved from Utilities because this is the only class to use it
 	// adjust rectangle coordinates for negative width or height - on flipped
 	private static void fixRect(Rectangle2D rect) {
@@ -554,17 +569,8 @@ public class SeqHits  {
 			 if (isHover(e.getPoint()))
 				 mapper.getDrawingPanel().repaint();
 		 }
-		 /* CAS517 called for gene annotation from Sequence.java */
-		private String getIfHit(Sequence st, int start, int end) {
-			boolean isQuery = mapper.isQueryTrack(st);
-			if (!isContained(start, end, isQuery)) return null;
-			
-			//boolean isPos = (isQuery) ? hitDataObj.isPosOrient1() : hitDataObj.isPosOrient2();
-			String hit = "Hit #" + hitDataObj.getHitNum() + "\n"; // CAS520 changed from hit idx to hitnum
-			
-			if (isQuery) 	return hit + hitDataObj.getQueryBounds();
-			else 			return hit + hitDataObj.getTargetBounds();
-		}
+		 /* CAS548 removed getIfHit called from getHitStr, which has been removed (was showing all subhits) **/
+		 
 		/* CAS516 popup from clicking hit wire; CAS531 change to use TextPopup */
 		private void popupDesc(double x, double y) {
 			hitDataObj.setIsPopup(true);
@@ -572,18 +578,15 @@ public class SeqHits  {
 			
 			String theInfo = hitDataObj.createHover(st1LTst2) + "\n"; 
 			
-			String qHits = hitDataObj.getQueryBounds(); // list of subhits x:y, etc
-			
-			if (qHits!=null && qHits.length()>0) {
-				String name1 = seqObj1.getTitle(); 
-				String name2 = seqObj2.getTitle(); 
-				name1 += seqObj1.getGeneNumFromIdx(hitDataObj.getAnnot1(), hitDataObj.getAnnot2()); // CAS545 add gene#
-				name2 += seqObj2.getGeneNumFromIdx(hitDataObj.getAnnot1(), hitDataObj.getAnnot2()); 
-				String msg1 = "\n" + SeqData.formatHit(name1 + "\n" + qHits);
-				String msg2 = "\n" + SeqData.formatHit(name2 + "\n" + hitDataObj.getTargetBounds());
+			String name1 = seqObj1.getTitle(); 
+			String name2 = seqObj2.getTitle(); 
+			name1 += seqObj1.getGeneNumFromIdx(hitDataObj.getAnnot1(), hitDataObj.getAnnot2()); // CAS545 add gene#
+			name2 += seqObj2.getGeneNumFromIdx(hitDataObj.getAnnot1(), hitDataObj.getAnnot2()); 
+			String msg1 = SeqData.formatHit(name1, hitDataObj.getQuerySubhits(), hitDataObj.isPosOrient1());
+			String msg2 = SeqData.formatHit(name2, hitDataObj.getTargetSubhits(), hitDataObj.isPosOrient2());
 				
-				theInfo +=  st1LTst2 ? (msg1+msg2) : (msg2+msg1);
-			}
+			theInfo +=  st1LTst2 ? ("\nL " + msg1+ "\nR " + msg2) : ("\nL " + msg2+"\nR " + msg1);
+			
 			if (Globals.TRACE) {
 				theInfo += "\nDB-index " + hitDataObj.getID();  // CAS520 useful for debugging
 				theInfo += "\nAnnot " + hitDataObj.getAnnots(); // CAS543 add

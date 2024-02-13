@@ -142,6 +142,10 @@ public class Mapper extends JComponent
 	
 	public HfilterData getHitFilter() {return hitFilData;}
 	
+	// CAS548 add for HitData.getCoordsForGenePopup
+	public String getGeneNum1(int annoIdx) { return seqHitObj.getSeqObj1().getGeneNumFromIdx(annoIdx);}
+	public String getGeneNum2(int annoIdx) { return seqHitObj.getSeqObj2().getGeneNumFromIdx(annoIdx);}
+	
 	public JButton getFilterButton() {return fh.getFilterButton();}
 	
 	public Track getTrack1() {return trackHolders[0].getTrack();}

@@ -185,7 +185,7 @@ public class Schema {
 		    "gene_overlap		 TINYINT NOT NULL, " +	       	 // 0,1,2
 		    "annot1_idx			 INTEGER default 0," +
 			"annot2_idx			 INTEGER default 0," +
-		    "strand              TEXT NOT NULL," +
+		    "strand              TINYTEXT NOT NULL," +			// CAS548 was TEXT; q/t sign (+/+,-/-,+/-,-/+)
 		    "start1              INTEGER NOT NULL," +
 		    "end1                INTEGER NOT NULL," + 
 		    "start2              INTEGER NOT NULL," +
@@ -207,13 +207,13 @@ public class Schema {
 		sql = "CREATE TABLE pseudo_hits_annot (" +
 		    "hit_idx             INTEGER NOT NULL," +	// pseudo_hits.idx
 		    "annot_idx           INTEGER NOT NULL," +	// pseudo_annot.idx
-		    "olap	             INTEGER default 0," +   // gene overlap; algo1 basepairs; algo2 percent
-		    "exlap	             tinyint default 0," +   // CAS546 added, exon percentoverlap
-		    "annot2_idx			 INTEGER default 0," +   // CAS546 added 
-		    "UNIQUE (hit_idx, annot_idx)," +
+		    "olap	             tinyint default 0," +  // %gene overlap; CAS568 was Integer, changed to percent
+		    "exlap	             tinyint default 0," +  // %exon overlap; CAS546 added
+		    "annot2_idx			 INTEGER default 0," +  // CAS546 added 
+		    "UNIQUE hitpair (hit_idx, annot_idx)," + 	// CAS548 named unique (cannot add annot2 because may be zero
 		    "INDEX (annot_idx)," +
-		    "FOREIGN KEY (hit_idx)  REFERENCES pseudo_hits (idx) ON DELETE CASCADE," +
-		    "FOREIGN KEY (annot_idx) REFERENCES pseudo_annot (idx) ON DELETE CASCADE" +
+		    "FOREIGN KEY (hit_idx)    REFERENCES pseudo_hits (idx)  ON DELETE CASCADE," +
+		    "FOREIGN KEY (annot_idx)  REFERENCES pseudo_annot (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB; ";
 		 executeUpdate(sql);
 		 

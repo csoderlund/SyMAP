@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
@@ -85,12 +86,18 @@ public class ConvertEnsembl {
 	private int nChr=0, nScaf=0, nMtPt=0, nOther=0, nGap=0, cntChrGeneAll=0, cntScafGeneAll=0;
 	private long chrLen=0, scafLen=0, mtptLen=0, otherLen=0;
 	
+	private HashMap <String, String> hexMap = new HashMap <String, String> (); // CAS548 add
 	/************************************************************************/
 	public static void main(String[] args) {
 		new ConvertEnsembl(args);
 	}
 	private ConvertEnsembl(String[] args) {
 		System.out.println(">>>> ConvertEnsembl <<<<");
+		
+		hexMap.put("%2C", ",");
+		hexMap.put("%25", "%");
+		hexMap.put("%3B", ";");
+		
 		checkArgs(args);
 		checkFiles();
 		
@@ -112,7 +119,6 @@ public class ConvertEnsembl {
 			TreeMap <Character, Integer> cntBase = new TreeMap <Character, Integer> ();
 			char [] base = {'A', 'C', 'G', 'T', 'N', 'a', 'c', 'g', 't', 'n'};
 			for (char b : base) cntBase.put(b, 0);
-			
 		
 			PrintWriter fhOut = new PrintWriter(new FileOutputStream(seqDir+outFaFile, false)); 
 			fhOut.println("### Written by SyMAP ConvertEnsembl");
@@ -297,8 +303,7 @@ public class ConvertEnsembl {
 	private int skipLine=0;
 	private void rwAnno() {
 		try {
-			if (inGffFile==null) return; // CAS513
-			
+			if (inGffFile==null) return; 
 			
 			PrintWriter fhOut = new PrintWriter(new FileOutputStream(annoDir + outGffFile, false));
 			fhOut.println("### Written by SyMAP ConvertEnsembl");
@@ -439,6 +444,13 @@ public class ConvertEnsembl {
 		String desc = getVal(descAttrKey, attrs);
 		if (desc!=null) {
 			if (desc.contains("[")) desc = desc.substring(0, desc.indexOf("["));
+			
+			if (desc.contains("%")) { // CAS548 add
+				for (String hex : hexMap.keySet()) {
+					if (desc.contains(hex)) desc = desc.replace(hex, hexMap.get(hex));
+				}
+			}
+			
 			attr += ";Desc=" + desc;
 		}
 		else cntNoDesc++;
@@ -528,19 +540,26 @@ public class ConvertEnsembl {
 		System.out.format("   %-20s %,8d\n", "mRNA ", cntMRNA);
 		System.out.format("   %-20s %,8d\n", "Exons ", cntExon);
 		
-		prt(String.format(">>Chromosome gene count %s ", String.format("%,d", cntChrGeneAll)));
+		System.out.format(">>Chromosome gene count %,d\n", cntChrGeneAll);
+		
 		for (String prt : chr2id.keySet()) {
-			String id =   chr2id.get(prt); // sorted on prtName
-			prt(String.format("   %-10s %-20s %,8d", prt, id, cntChrGene.get(id)));
+			String id = chr2id.get(prt); // sorted on prtName
+			int cnt   = cntChrGene.get(id);
+			System.out.format("   %-10s %-20s %,8d\n", prt, id, cnt);
 		}
+		
 		if (INCLUDESCAF) {
-			prt(String.format(">>Scaffold gene count %s  (>=0)        ", String.format("(%,d)", cntScafGeneAll)));
-			for (String key : cntScafGene.keySet()) 
-				if (cntScafGene.get(key)>0) // sorted on idCol1, which is not scaffold order
-					System.out.format("   %-7s %-15s %,8d\n", id2scaf.get(key), key, cntScafGene.get(key));
-			System.out.format("   %s %,8d\n", "Genes not included", cntGeneNotOnSeq);
+			System.out.format(">>Scaffold gene count %,d", cntScafGeneAll);
+			int cntOne=0;
+			for (String key : cntScafGene.keySet()) { // sorted on idCol1, which is not scaffold order
+				int cnt = cntScafGene.get(key);
+				if (cnt>1) System.out.format("   %-7s %-15s %,8d\n", id2scaf.get(key), key, cnt);
+				else cntOne++;
+			}
+			 System.out.format("   Genes not included %,8d\n",  cntGeneNotOnSeq);
+			 System.out.format("   Scaffolds with 1 gene (not listed) %,8d\n",  cntOne);
 		}
-		else System.out.format("   %s %,8d\n", "Genes not on Chromosome", cntGeneNotOnSeq);
+		else System.out.format("   Genes not on Chromosome %,8d\n",  cntGeneNotOnSeq);
 	}
 	/************************************************************
 	 * File stuff
@@ -621,7 +640,7 @@ public class ConvertEnsembl {
 					"       FASTA file ending with .fa   or .fa.gz   e.g. Oryza_sativa.IRGSP-1.0.dna_sm.toplevel.fa.gz\n" +
 					"       GFF   file ending with .gff3 or .gff3.gz e.g. Oryza_sativa.IRGSP-1.0.45.chr.gff3.gz\n" +  
 					"   Options:\n" +
-					"   -p [prefix] use this prefix in place of 'Chr'.\n" +
+					//"   -p [prefix] use this prefix in place of 'Chr'.\n" + CAS548 not used
 					"   -s  include any sequence not labeled 'chromosome'.\n" +
 					"   -u  use sequence names from FASTA file when less than 5 characters (remaining will be scaffolds)\n" +
 					"   -m  include Mt and Pt chromosomes.\n" +
@@ -645,14 +664,14 @@ public class ConvertEnsembl {
 					chrPrefix = "C";
 					prt("   Use FASTA file labels if <=" + maxName);
 					prt("      Others will be called Scaffold with prefix '" + scafPrefix + "'");
-					prt("      IMPORTANT: SyMAP Project Parameters - set grp_prefix to blank!! (unless all sequences start with same prefix)");
+					prt("      IMPORTANT: SyMAP Project Parameters - see grp_prefix in https://csoderlund.github.io/SyMAP/SystemHelp.html#projParams");
 				}
 				else if (args[i].equals("-s")) {
 					INCLUDESCAF=true;
 					chrPrefix = "C";
 					prt("   Include any sequence not labeled 'chromosome'");
 					prt("      Uses prefixes Chr '" + chrPrefix + "' and Scaffold '" + scafPrefix );
-					prt("      IMPORTANT: SyMAP Project Parameters - set grp_prefix to blank ");
+					prt("      IMPORTANT: SyMAP Project Parameters - see grp_prefix in https://csoderlund.github.io/SyMAP/SystemHelp.html#projParams");
 				}
 				else if (args[i].equals("-m")) {
 					INCLUDEMtPt=true;

@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.Vector;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -20,6 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
+import symap.Globals;
 import symap.manager.Mproject;
 import util.Jhtml;
 import util.Utilities;
@@ -65,15 +67,16 @@ public class QueryPanel extends JPanel {
 		createQueryPanel();
 	}
 	
-	// This set the DB query for every hit with a gene; the Every+ and GeneNum are DBdata files
-	protected boolean isEveryAnno() {
-		return (radAnnoEvery.isEnabled() && radAnnoEvery.isSelected())
-			|| isEveryPlusAnno() || isGeneNum();
+	protected boolean isIncludeMinor() { // CAS548 add; all show minor; multi
+		return isEveryStarAnno() || (isMultiAnno() && chkMultiN.isSelected()) 
+				|| isGeneNum() || isHitNum() || isAnnoTxt();
 	}
-	protected boolean isEveryPlusAnno() {// CAS547 add
-		return (radAnnoEveryPlus.isEnabled() && radAnnoEveryPlus.isSelected())
-				|| isGeneNum();
+	protected boolean isEveryStarAnno() {// CAS547 add
+		return (radAnnoEveryStar.isEnabled() && radAnnoEveryStar.isSelected()); 
 	} 
+	protected boolean isEveryAnno() {
+		return (radAnnoEvery.isEnabled() && radAnnoEvery.isSelected()); 
+	}
 	protected boolean isOneAnno() 	 {return radAnnoOne.isEnabled() && radAnnoOne.isSelected(); } 	// DBdata filter
 	protected boolean isBothAnno()   {return radAnnoBoth.isEnabled() && radAnnoBoth.isSelected(); } 
 	private   boolean isNoAnno() 	 {return radAnnoNone.isEnabled() && radAnnoNone.isSelected(); } 
@@ -90,8 +93,8 @@ public class QueryPanel extends JPanel {
 	private boolean isCollinearSet(){ // CAS514 was not checking for selected
 		return chkCollinearSet.isEnabled() && chkCollinearSet.isSelected() && txtCollinearSet.getText().trim().length()>0;}
 	
-	private boolean isHitIdx()	{ 
-		return chkHitIdx.isEnabled() && chkHitIdx.isSelected() && txtHitIdx.getText().trim().length()>0;}
+	protected boolean isHitNum()	{ // CAS548 renamed from isHitIdx
+		return chkHitNum.isEnabled() && chkHitNum.isSelected() && txtHitNum.getText().trim().length()>0;}
 	
 	protected boolean isGeneNum()	{  
 		return chkGeneNum.isEnabled() && chkGeneNum.isSelected() && txtGeneNum.getText().trim().length()>0;}
@@ -99,6 +102,29 @@ public class QueryPanel extends JPanel {
 	protected String getGeneNum() { // DBdata filter
 		if (!isGeneNum()) return null;
 		return txtGeneNum.getText().trim();
+	}
+	
+	protected boolean isMultiAnno()  {
+		String txt = txtMultiN.getText().trim();
+		return txtMultiN.isEnabled() && txt.length()>0 && !txt.equals("0"); } // DBdata filter
+	
+	protected int getMultiN() {
+		if (!txtMultiN.isEnabled()) return 0;
+		String ntext = txtMultiN.getText();
+		if (ntext.length()==0) return 0;
+		try {
+			int n = Integer.parseInt(ntext);
+			if (n<0) {
+				Utilities.showWarningMessage("Invalid Multi size (" + ntext + "), must be positive.");
+				bValidQuery=false;
+				return 0;
+			}
+			return n;
+		} catch (Exception e) { 
+			Utilities.showWarningMessage("Invalid Multi integer ("+ ntext + ")" );
+			bValidQuery=false;
+		}; 
+		return 0;
 	}
 	
 	// these are only good for the last query, so should only be used for building the tables
@@ -116,12 +142,14 @@ public class QueryPanel extends JPanel {
 	protected SpeciesSelectPanel getSpeciesPanel() {return speciesPanel;}
 	protected HashMap <Integer, String> getGrpCoords() { return grpCoords;} // DBdata filter
 	
-	protected int getGrp() {// geneNum needs just
+	// geneNum and Anno will show correct chrs but genenum/anno on opposite; CAS548 provide set instead of one
+	protected HashSet<Integer> getGrp() {
+		HashSet <Integer> idxSet = new HashSet <Integer> ();
 		for (int p=0; p<nSpecies; p++) {
 			int index = speciesPanel.getSelChrIdx(p); 
-			if(index > 0) return index;
+			if(index > 0) idxSet.add(index);
 		} 
-		return -1;
+		return idxSet;
 	}
 	/****************************************************
 	 * Make query
@@ -131,7 +159,7 @@ public class QueryPanel extends JPanel {
 		
 		bValidQuery=true;
 		
-		FieldData theFields = FieldData.getFields(isEveryPlusAnno()); // CAS547 add isAllHits
+		FieldData theFields = FieldData.getFields(isIncludeMinor(), theParentFrame.isAlgo2()); // CAS547 Every+, CAS548 add v547 for olap
    	 
 		boolean bSingle = isSingle();
 		String sql;
@@ -203,11 +231,11 @@ public class QueryPanel extends JPanel {
 		// Chr, loc;
 		whereClause = joinBool(whereClause, makeSpChrWhere(), AND);
 		
-		if (isHitIdx()) { 					// CAS520 changed from idx to hitnum, which needs chrs
+		if (isHitNum()) { 					// CAS520 changed from idx to hitnum, which needs chrs
 			whereClause = joinBool(whereClause, makeChkHitWhere(), AND);
 		}
 		else if (isGeneNum()) {    			// CAS541 check in DBdata.passFilters
-			makeChkGeneNumWhere(); 			// just check for valid Gene# here
+			whereClause = joinBool(whereClause, makeChkGeneNumWhere(), AND); // CAS548 add either gene 
 		}
 		else if (isBlockNum()) { 			// if block, only anno filter and chromosome (CAS513 add chromosome)
 			whereClause = joinBool(whereClause, makeChkBlockWhere(), AND);
@@ -221,9 +249,9 @@ public class QueryPanel extends JPanel {
 			
 			if (isNoAnno())	 
 				whereClause = joinBool(whereClause, "(PH.annot1_idx=0 and PH.annot2_idx=0) AND PA.idx is null", AND); // 'is null' is necessary. 
-			else if (isBothAnno()) 	// CAS543 add search here instead of DBdata (apparently did not work on some cases, but my rewrite must have fixed it)
+			else if (isBothAnno()) 														// CAS543 add search here instead of DBdata
 				whereClause = joinBool(whereClause, "(PH.annot1_idx>0 and PH.annot2_idx>0)", AND); 
-			else if (isOneAnno() || isEveryAnno() || isAnnoTxt())  // isOne is still done in DBdata
+			else if (isOneAnno() || isMultiAnno() || isEveryAnno() || isEveryStarAnno() || isAnnoTxt())  // isOne&isMulti finished in DBdata
 				whereClause = joinBool(whereClause, "(PH.annot1_idx>0 or PH.annot2_idx>0)", AND); 
 			
 			int n = isCollinearSize(true);
@@ -276,7 +304,7 @@ public class QueryPanel extends JPanel {
 	}
 	// this only return one occurrence  CAS520 from idx to hitnum
 	private String makeChkHitWhere() {
-		String run = txtHitIdx.getText().trim();
+		String run = txtHitNum.getText().trim();
 		if (run.equals("")) return "";
 		
 		try {
@@ -286,7 +314,7 @@ public class QueryPanel extends JPanel {
 		catch (Exception e) {
 			Utilities.showWarningMessage(
 				"Invalid hit# (" + run + "). Should be single number.\n");
-			txtHitIdx.setText("");
+			txtHitNum.setText("");
 			bValidQuery=false;
 			return "";
 		}
@@ -295,7 +323,7 @@ public class QueryPanel extends JPanel {
 	private String makeChkGeneNumWhere() {
 		String gnStr = txtGeneNum.getText().trim();
 		
-		if (Utilities.isValidGenenum(gnStr)) return gnStr;
+		if (Utilities.isValidGenenum(gnStr)) return "(PH.annot1_idx>0 or PH.annot2_idx>0)";
 		
 		Utilities.showWarningMessage(
 			"The Gene# entered is '" + gnStr + "', which is not a valid Gene#. \nEnter a number, or number.suffix\n");
@@ -341,7 +369,7 @@ public class QueryPanel extends JPanel {
 			if (grpList.contains(",")) 	where  = "(PA.grp_idx IN (" + grpList + ")) ";
 			else 						where  = "(PA.grp_idx = " + grpList + ") ";
 		}
-		else {
+		else { // grp_idx is unique to one species one chromosome
 			if (grpList.contains(",")) {
 				where  = "( (PH.grp1_idx IN (" + grpList + ")) ";
 				where += " AND ";
@@ -383,8 +411,8 @@ public class QueryPanel extends JPanel {
 				
 			return retVal;
 		}
-		if (isHitIdx()) {
-			retVal = joinStr(retVal,  "Hit#="+txtHitIdx.getText().trim() + " (may hit overlapped genes)", ";  ");
+		if (isHitNum()) {
+			retVal = joinStr(retVal,  "Hit#="+txtHitNum.getText().trim(), ";  "); // CAS548 remove "(may overlap..."
 		}
 		else if (isBlockNum()) {
 			retVal = joinStr(retVal, "Block="+txtBlock.getText().trim(), ";  ");
@@ -399,8 +427,8 @@ public class QueryPanel extends JPanel {
 			if (isBlock())			retVal = joinStr(retVal, "Block hits", ";  ");
 			else if (isNotBlock()) 	retVal = joinStr(retVal, "No Block hits", ";  ");
 			
-			if (isEveryPlusAnno())		retVal = joinStr(retVal, "Every Gene with ANY hit", ";  "); // must be before next if
-			else if (isEveryAnno())retVal = joinStr(retVal, "Every Gene with best hit", ";  ");
+			if (isEveryStarAnno())  retVal = joinStr(retVal, "Every Gene with ANY hit", ";  "); // must be before next if
+			else if (isEveryAnno()) retVal = joinStr(retVal, "Every Gene with best hit", ";  ");
 			else if (isOneAnno())	retVal = joinStr(retVal, "One Gene best hit", ";  ");
 			else if (isBothAnno())	retVal = joinStr(retVal, "Both Gene best hits", ";  ");
 			else if (isNoAnno()) 	retVal = joinStr(retVal, "No Gene hits", ";  ");
@@ -411,6 +439,13 @@ public class QueryPanel extends JPanel {
 				if (radCoEQ.isSelected()) op = "=";
 				else if (radCoLE.isSelected()) op = "<=";
 				retVal = joinStr(retVal, "Collinear size " + op + n, ";  ");
+			}
+			
+			if (isMultiAnno())	{
+				if (chkMultiN.isSelected())
+					retVal = joinStr(retVal, "Genes with multiple hits>=" + getMultiN() + "*", ";  ");
+				else 
+					retVal = joinStr(retVal, "Genes with multiple hits>=" + getMultiN(), ";  ");
 			}
 			
 			if (isPgeneF()) {
@@ -478,6 +513,7 @@ public class QueryPanel extends JPanel {
 				if (prt) 
 					Utilities.showWarningMessage("Invalid Colliner size (" + ntext + "), must be positive."
 							+ "\ne.g. Collinear 2.3.100.3 - the size is 3.");
+				bValidQuery=false; 
 				return 0;
 			}
 			return n;
@@ -617,8 +653,8 @@ public class QueryPanel extends JPanel {
 		lblAnnoOpts 		= new JLabel("Annotated (Gene hit)");
 		radAnnoEvery 		= new JRadioButton("Every"); 	radAnnoEvery.setBackground(Color.WHITE); 
 		radAnnoEvery.setToolTipText("Every hit aligned to at least one gene - best gene listed");
-		radAnnoEveryPlus 	= new JRadioButton("Every+"); 	radAnnoEveryPlus.setBackground(Color.WHITE); 
-		radAnnoEveryPlus.setToolTipText("Every hit aligned to at least one gene - ALL genes listed");
+		radAnnoEveryStar 	= new JRadioButton("Every" + Globals.minorAnno); radAnnoEveryStar.setBackground(Color.WHITE); 
+		radAnnoEveryStar.setToolTipText("Every hit aligned to at least one gene - ALL genes listed");
 		radAnnoOne 			= new JRadioButton("One"); 		radAnnoOne.setBackground(Color.WHITE); 
 		radAnnoOne.setToolTipText("Every hit aligned to only one gene - best gene listed");
 		radAnnoBoth 		= new JRadioButton("Both"); 	radAnnoBoth.setBackground(Color.WHITE); 
@@ -631,15 +667,15 @@ public class QueryPanel extends JPanel {
 		if (width>0 && width > lblAnnoOpts.getPreferredSize().width) 
 			arow.add(Box.createHorizontalStrut(width-lblAnnoOpts.getPreferredSize().width));
 		arow.add(radAnnoEvery);		brow.add(Box.createHorizontalStrut(1));
-		if (theParentFrame.isAlgo2()) {
-			arow.add(radAnnoEveryPlus);	brow.add(Box.createHorizontalStrut(1));
+		if (theParentFrame.isAlgo2() || Q.TEST_TRACE) { // gets double on algo1 since no annot2_idx
+			arow.add(radAnnoEveryStar);	brow.add(Box.createHorizontalStrut(1));
 		}
 		arow.add(radAnnoOne);			brow.add(Box.createHorizontalStrut(1));
 		arow.add(radAnnoBoth);			brow.add(Box.createHorizontalStrut(1));
 		arow.add(radAnnoNone);			brow.add(Box.createHorizontalStrut(1));
 		arow.add(radAnnoIgnore);		brow.add(Box.createHorizontalStrut(1));
 		ButtonGroup ag = new ButtonGroup();
-		ag.add(radAnnoEvery);ag.add(radAnnoEveryPlus);ag.add(radAnnoOne);ag.add(radAnnoBoth);
+		ag.add(radAnnoEvery);ag.add(radAnnoEveryStar);ag.add(radAnnoOne);ag.add(radAnnoBoth);
 		ag.add(radAnnoNone);ag.add(radAnnoIgnore);
 		radAnnoIgnore.setSelected(true);
 		panel.add(arow);
@@ -664,7 +700,16 @@ public class QueryPanel extends JPanel {
 		radCoGE.setSelected(true);
 		crow.add(radCoGE); crow.add(Box.createHorizontalStrut(1));
 		crow.add(radCoEQ); crow.add(Box.createHorizontalStrut(1));
-		crow.add(radCoLE); crow.add(Box.createHorizontalStrut(1));
+		crow.add(radCoLE); crow.add(Box.createHorizontalStrut(30));
+		
+		lblMultiN = new JLabel("Multi-hit >="); // CAS548 add
+		crow.add(lblMultiN); crow.add(Box.createHorizontalStrut(3));
+		txtMultiN = new JTextField(3); txtMultiN.setBackground(Color.WHITE);
+		txtMultiN.setText("0"); txtMultiN.setMaximumSize(txtCollinearN.getPreferredSize());
+		crow.add(txtMultiN); crow.add(Box.createHorizontalStrut(1));
+		chkMultiN = new JCheckBox("Minor*"); chkMultiN.setBackground(Color.WHITE); chkMultiN.setSelected(false);
+		chkMultiN.setToolTipText("If checked, include minor gene hits");
+		crow.add(chkMultiN);
 		
 		panel.add(crow); 
 		
@@ -713,23 +758,23 @@ public class QueryPanel extends JPanel {
 		row.add(chkCollinearSet); row.add(Box.createHorizontalStrut(5));
 		row.add(txtCollinearSet); row.add(Box.createHorizontalStrut(15));
 		
-		chkHitIdx = new JCheckBox("Hit#");
-		chkHitIdx.setBackground(Color.WHITE);
-		chkHitIdx.addActionListener(new ActionListener() { 
+		chkHitNum = new JCheckBox("Hit#");
+		chkHitNum.setBackground(Color.WHITE);
+		chkHitNum.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) {
-				boolean bSel = chkHitIdx.isSelected();
+				boolean bSel = chkHitNum.isSelected();
 				setAllEnabled(!bSel); // turn all off
 				if (bSel) {
-					chkHitIdx.setEnabled(true);
-					txtHitIdx.setEnabled(true);
+					chkHitNum.setEnabled(true);
+					txtHitNum.setEnabled(true);
 					speciesPanel.setEnabled(true); 
 					setAnnoEnabled(false);
 				}
 			}
 		});
-		txtHitIdx = new JTextField(4); txtHitIdx.setEnabled(false);
-		row.add(chkHitIdx); row.add(Box.createHorizontalStrut(5));
-		row.add(txtHitIdx); row.add(Box.createHorizontalStrut(15));
+		txtHitNum = new JTextField(4); txtHitNum.setEnabled(false);
+		row.add(chkHitNum); row.add(Box.createHorizontalStrut(5));
+		row.add(txtHitNum); row.add(Box.createHorizontalStrut(15));
 		
 		chkGeneNum = new JCheckBox("Gene#");
 		chkGeneNum.setBackground(Color.WHITE);
@@ -740,10 +785,10 @@ public class QueryPanel extends JPanel {
 				if (bSel) {
 					chkGeneNum.setEnabled(true);
 					txtGeneNum.setEnabled(true); 
-					speciesPanel.setIsGene(true);// CAS541
+					//speciesPanel.setIsGene(true);// CAS541
 					setAnnoEnabled(false);
 				}
-				else  speciesPanel.setIsGene(false);
+				//else  speciesPanel.setIsGene(false);
 			}
 		});
 		txtGeneNum = new JTextField(6); txtGeneNum.setEnabled(false);
@@ -936,11 +981,13 @@ public class QueryPanel extends JPanel {
 		
 		txtAnno.setText("");
 		txtCollinearN.setText("");
+		txtMultiN.setText("");
+		chkMultiN.setSelected(false);
 		
 		txtBlock.setText(""); 			txtBlock.setEnabled(false);	chkBlock.setSelected(false);
 		txtCollinearSet.setText(""); 	txtCollinearSet.setEnabled(false);	chkCollinearSet.setSelected(false);
 		
-		txtHitIdx.setText(""); 			txtHitIdx.setEnabled(false);   chkHitIdx.setSelected(false);
+		txtHitNum.setText(""); 			txtHitNum.setEnabled(false);   chkHitNum.setSelected(false);
 		txtGeneNum.setText(""); 		txtGeneNum.setEnabled(false);  chkGeneNum.setSelected(false);
 		
 		chkSingle.setSelected(false);
@@ -962,14 +1009,16 @@ public class QueryPanel extends JPanel {
 		
 		lblBlockOpts.setEnabled(b); radBlockYes.setEnabled(b);radBlockNo.setEnabled(b);radBlockIgnore.setEnabled(b);
 		
-		lblAnnoOpts.setEnabled(b); radAnnoEvery.setEnabled(b);radAnnoEveryPlus.setEnabled(b);
-		radAnnoOne.setEnabled(b); radAnnoBoth.setEnabled(b);radAnnoNone.setEnabled(b);radAnnoIgnore.setEnabled(b);
+		lblAnnoOpts.setEnabled(b); radAnnoEvery.setEnabled(b);radAnnoEveryStar.setEnabled(b);
+		radAnnoOne.setEnabled(b);  radAnnoBoth.setEnabled(b); 
+		radAnnoNone.setEnabled(b); radAnnoIgnore.setEnabled(b);
 		
+		lblMultiN.setEnabled(b); txtMultiN.setEnabled(b); chkMultiN.setEnabled(b);
 		lblCollinearN.setEnabled(b); txtCollinearN.setEnabled(b); radCoGE.setEnabled(b);radCoEQ.setEnabled(b);radCoLE.setEnabled(b);
 		
 		chkBlock.setEnabled(b);  		txtBlock.setEnabled(false); 		// only chkBlock enables
 		chkCollinearSet.setEnabled(b);  txtCollinearSet.setEnabled(false); 	// only chkColinear enables
-		chkHitIdx.setEnabled(b); 		txtHitIdx.setEnabled(false);		// only chkHitIdx enables
+		chkHitNum.setEnabled(b); 		txtHitNum.setEnabled(false);		// only chkHitIdx enables
 		chkGeneNum.setEnabled(b); 		txtGeneNum.setEnabled(false);		// only chkHitIdx enables
 	
 		speciesPanel.setEnabled(b); // All chr, start, end
@@ -999,8 +1048,9 @@ public class QueryPanel extends JPanel {
 		bValidQuery=true;
 		return b;
 	}
+	public boolean isAlgo2() {return theParentFrame.isAlgo2();}
 	
-    /************************************************************/
+     /************************************************************/
 	private SyMAPQueryFrame theParentFrame = null;
 	
 	// Not big enough to bother adding buttons to pnlStepOne.expand(); pnlStepOne.collapse()
@@ -1019,7 +1069,12 @@ public class QueryPanel extends JPanel {
 	private JRadioButton radBlockYes, radBlockNo, radBlockIgnore;
 	
 	private JLabel lblAnnoOpts = null;
-	private JRadioButton radAnnoEvery, radAnnoEveryPlus, radAnnoOne, radAnnoBoth, radAnnoNone, radAnnoIgnore;
+	private JRadioButton radAnnoEvery, radAnnoEveryStar, radAnnoOne, radAnnoBoth, 
+						 radAnnoNone, radAnnoIgnore;	
+	
+	private JTextField txtMultiN = null;// CAS548 add multi
+	private JLabel     lblMultiN = null;
+	private JCheckBox  chkMultiN = null;
 	
 	private JTextField txtCollinearN = null;
 	private JLabel     lblCollinearN = null;
@@ -1030,8 +1085,8 @@ public class QueryPanel extends JPanel {
 	private JComboBox <String> cmbSingleSpecies = null;
 	
 	private JCheckBox chkPgeneF = null;
-	private JCheckBox  chkBlock = null, chkCollinearSet = null, chkHitIdx = null, chkGeneNum = null;
-	private JTextField txtBlock = null, txtCollinearSet = null, txtHitIdx = null, txtGeneNum = null;
+	private JCheckBox  chkBlock = null, chkCollinearSet = null, chkHitNum = null, chkGeneNum = null;
+	private JTextField txtBlock = null, txtCollinearSet = null, txtHitNum = null, txtGeneNum = null;
 	
 	private JButton btnExecute = null;
 	

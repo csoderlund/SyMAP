@@ -169,14 +169,10 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	try {
 		int nStart1=coords[0], nStart2=coords[2], nEnd=aSeq1.length();
 		
-		// create info for left label
-		String tokS = HitAlignment.tokS;
-		String tokO = HitAlignment.tokO;
-		
 		int maxC = Math.max(coords[1], coords[3]);
 		int sz = (maxC+"").length();
-		String formatC =  "%s " + "%" + sz + "d  "; // S Coord
-		String formatM =  "%s " + "%" + sz + "s  ";
+		String formatC =  "%" + sz + "d  "; // S Coord CAS548 remove S and N
+		String formatM =  "%" + sz + "s  ";
 		
 		int inc = 60; // output in rows of 60
 		int x;
@@ -184,7 +180,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		
 		for (int offset=0; offset<nEnd; offset+=inc) {
 			lines.add("");
-			sb.append(String.format(formatC, tokS, nStart1)); 
+			sb.append(String.format(formatC, nStart1)); 
 			for (x=0; x<inc && (x+offset)<nEnd; x++) sb.append(aSeq1.charAt(x+offset));
 			sb.append("  " + (nStart1+x));
 			lines.add(sb.toString());
@@ -195,7 +191,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 			lines.add(sb.toString());
 			sb.delete(0, sb.length());
 			
-			sb.append(String.format(formatC, tokO, nStart2));
+			sb.append(String.format(formatC, nStart2));
 			for (x=0; x<inc && (x+offset)<nEnd; x++) sb.append(aSeq2.charAt(x+offset));
 			sb.append("  " + (nStart2+x));
 			lines.add(sb.toString());

@@ -5,10 +5,13 @@ import java.io.File;
 
 /******************************************
  * CAS534 added in order to move globals from SyMAP2d, SyMAPConstants and Manager
+ * See util:Jhtml.java for more constants for Help pages
+ * See SyMAPmanager:printVerions() for banner including java version
+ * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.4.7"; 
-	public static final String 	DATE = " (14-Nov-23)";
+	public static final String 	VERSION = "v5.4.8"; 
+	public static final String 	DATE = " (13-Feb-24)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER =  7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
@@ -24,11 +27,13 @@ public class Globals {
 	public static boolean HITCNT_ONLY=false;// -y CAS541 to update the hitcnt without having to redo synteny
 	public static boolean bTrim=true;		// CAS531 do not trim 2D alignments; see closeup.AlignPool
 	
-	public static final int MAX_CLOSEUP_BP=30000;
+	public static final int MAX_CLOSEUP_BP=30000;	// Used in CloseUp and Query
 	public static final String MAX_CLOSEUP_K = "30kb";
 	public static final String exonTag = "Exon #";
 	public static final String geneTag = "Gene #";
-	public static final int MAX_RANGE=50000; // CAS545 used in SeqFilter and Query
+	public static final int MAX_RANGE=50000; 		// used in SeqFilter for drawing yellow boxes
+	
+	public static final String minorAnno = "*"; // CAS548 used in Query and Anno popup for hit to non-assigned anno
 	
 	// CAS534 start moving constants from SyMAPConstants
 	public static final int NO_VALUE = Integer.MIN_VALUE;
@@ -54,4 +59,10 @@ public class Globals {
 		}
 		return saveDir;
     }
+    public static String exonNum() { // CAS548 removes "#"
+    	return "#" + Globals.exonTag.substring(0, Globals.exonTag.indexOf(" ")) + "s=";
+    }
+    public static void prt(String msg)  {System.out.println(msg);}
+    public static void tprt(String msg) {if (TRACE) System.out.println(msg);}
+    public static void dprt(String msg) {if (DEBUG) System.out.println(msg);}
 }

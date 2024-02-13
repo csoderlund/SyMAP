@@ -75,9 +75,6 @@ public class AnchorMain1 {
 		this.pairIdx = mp.getPairIdx();			
 	}
 	
-	public AnchorMain1(DBconn2 dbc2) { // for Version to update gene hit count on =y
-		this.dbc2 = dbc2;
-	}
 	/**************************************************************************/
 	public boolean run(Mproject pj1, Mproject pj2, File dh) throws Exception {
 	try {
@@ -728,7 +725,7 @@ public class AnchorMain1 {
 		
 		/* Load hits from database, getting their new idx;  */
 		Vector <Hit> vecHits = new Vector <Hit> (filtHitSet.size()); 
-		String st = "SELECT idx, start1, end1, start2, end2, strand, grp1_idx, grp2_idx" +
+		String st = "SELECT idx, start1, end1, start2, end2, strand, grp1_idx, grp2_idx, annot1_idx, annot2_idx" +
       			" FROM pseudo_hits WHERE gene_overlap>0 and pair_idx=" + pairIdx;
 		ResultSet rs = tdbc2.executeQuery(st);
 		while (rs.next()) {
@@ -741,6 +738,8 @@ public class AnchorMain1 {
 			h.strand 			= rs.getString(6);
 			h.queryHits.grpIdx 	= rs.getInt(7);					
 			h.targetHits.grpIdx = rs.getInt(8);	
+			h.annotIdx1			= rs.getInt(9);
+			h.annotIdx2			= rs.getInt(10);
 			h.isRev = (h.strand.contains("-") && h.strand.contains("+"));
 			vecHits.add(h);
 		}
@@ -749,27 +748,28 @@ public class AnchorMain1 {
 		
 	/* save the query annotation hits, which correspond to syProj1 */ /* on self-synteny, get dups;  */
 		PreparedStatement ps = tdbc2.prepareStatement("insert ignore into pseudo_hits_annot "
-				+ "(hit_idx, annot_idx, olap) values (?,?,?)");
+				+ "(hit_idx, annot_idx, olap, exlap, annot2_idx) values (?,?,?,?,?)");
 		
 		int count=0, cntHit=0, cntBatch=0;
 		int [][] vals;
 	
-		for (Hit ht : vecHits) {// CAS534 unanch never set; if (h.target.grpIdx == p2.unanchoredGrpIdx) {cntSkip++;continue;}
+		for (Hit ht : vecHits) {// FIRST LOOP for Q
 			Group grp = syProj1.getGrpByIdx(ht.queryHits.grpIdx);
 			vals = grp.getAnnoHitOlapForSave(ht, ht.queryHits.start, ht.queryHits.end); 
-			boolean bSave=false;
+			if (vals.length>0) cntHit++;
 			
-			for (int i=0; i<vals.length; i++) {
+			for (int i=0; i<vals.length; i++) { // loop is repeated below
 				if (vals[i][1]==0) continue; // not a gene
-				if (!bSave) {cntHit++; bSave=true;}
-				
+					
 				ps.setInt(1,vals[i][0]); // hitid
 				ps.setInt(2,vals[i][1]); // annot_idx
-				ps.setInt(3,vals[i][2]); // olap
+				ps.setInt(3,vals[i][2]); // CAS548 %olap
+				ps.setInt(4, 0); 		 // CAS548 does not know exon overlap; -1 indicates no value
+				ps.setInt(5,vals[i][3]); // CAS548 annot2
 				ps.addBatch();
 				count++; cntBatch++;
 				if (cntBatch==nLOOP) {
-					if (failCheck()) return;
+					if (failCheck()) {System.err.println("Failure during load hit"); return;}
 					cntBatch=0;
 					ps.executeBatch();
 					System.out.print("   " + count + " loaded hit annotations...\r"); 
@@ -777,25 +777,26 @@ public class AnchorMain1 {
 			}	
 		}
 		if (cntBatch> 0) ps.executeBatch();
-		if (cntHit>0) Utils.prtNumMsg(plog, cntHit, "for " + proj1Name + "                        ");
+		if (cntHit>0) Utils.prtNumMsg(plog, cntHit, "(" + count + ") for " + proj1Name + "                        ");
 		if (failCheck()) return;
 		
 	/* save the target annotation hits */
-		count=cntHit=cntBatch=0;
-		for (Hit ht : vecHits) {// CAS534 unanch never set; if (h.target.grpIdx == p2.unanchoredGrpIdx) {cntSkip++;continue;}
+		cntHit=cntBatch=0;
+		for (Hit ht : vecHits) { // SECOND LOOP for T
 			Group grp = syProj2.getGrpByIdx(ht.targetHits.grpIdx);
 			
 			vals = grp.getAnnoHitOlapForSave(ht, ht.targetHits.start, ht.targetHits.end);
-			boolean bSave=false;
+			if (vals.length>0) cntHit++;
 			
 			for (int i=0; i<vals.length; i++) {
 				if (vals[i][1]==0) continue;
 				
-				if (!bSave) {cntHit++; bSave=true;}
-		
-				ps.setInt(1,vals[i][0]);
-				ps.setInt(2,vals[i][1]);
-				ps.setInt(3,vals[i][2]);
+				ps.setInt(1,vals[i][0]); // hit_idx
+				ps.setInt(2,vals[i][1]); // annot_idx
+				ps.setInt(3,vals[i][2]); // olap
+				ps.setInt(4, 0); 		 // exlap
+				ps.setInt(5, vals[i][3]); //annot2_idx
+				
 				ps.addBatch();
 				count++; cntBatch++;
 				if (cntBatch==nLOOP) {
@@ -808,7 +809,7 @@ public class AnchorMain1 {
 		}
 		if (cntBatch>0) ps.executeBatch();
 		ps.close();	
-		if (!isSelf) Utils.prtNumMsg(plog, cntHit, "for " + proj2Name + "                       ");
+		if (!isSelf && cntHit>0) Utils.prtNumMsg(plog, cntHit, "(" + count + ") for " + proj2Name + "                        ");
 		if (failCheck()) return;
 	}
 	catch (Exception e) {ErrorReport.print(e, "save annot hits " + key); bSuccess=false;}

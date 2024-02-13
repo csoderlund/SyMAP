@@ -52,7 +52,7 @@ public class Mpair {
 			"", "", "", "0", "0",
 			"1", "0",				// 1st is algo1, 2nd is algo2
 			"600", "300", "100",	// intergenic, intron, exon
-			"1", "0", "0", "0", "0"	// EE, EI, En, II, In 
+			"1", "1", "1", "0", "0"	// EE, EI, En, II, In CAS548 change EI and En to 1
 			};
 	private static final String defAlgo = "Cluster Algo1 (original)";
 	
@@ -135,7 +135,8 @@ public class Mpair {
 		
 		if (isAlgo2(type)) {
 			boolean chg = isChg(type,"g0_match") || isChg(type,"gintron_match") || isChg(type,"gexon_match") 
-			|| isChg(type, "EI_pile") || isChg(type, "En_pile") || isChg(type, "II_pile") || isChg(type, "In_pile");
+			|| isChg(type, "EI_pile") || isChg(type, "En_pile") || isChg(type, "II_pile") 
+			|| isChg(type, "In_pile") || isChg(type,"topn") || backend.Constants.WRONG_STRAND_EXC;
 			if (chg) {
 				msg = "\n  Cluster Algo2 (gene-centric)";
 				if (isChg(type,"g0_match")) 		msg += "\n    Intergenic base match = " + getG0Match(type);
@@ -147,13 +148,15 @@ public class Mpair {
 				if (isChg(type,"En_pile"))			msg += "\n    Allow Exon-intergenic piles";
 				if (isChg(type,"II_pile"))			msg += "\n    Allow Intron-Intron piles";
 				if (isChg(type,"In_pile"))			msg += "\n    Allow Intron-intergenic piles";
+				if (isChg(type,"topn")) 			msg += "\n    Top N piles ="    + getTopN(type);
+				if (backend.Constants.WRONG_STRAND_EXC) msg += "\n    Exclude g2 wrong strand hits";
 			}
 		}
 		else if (isAlgo1(type)) {
 			boolean chg = isChg(type, "topn") || !Group.bSplitGene;
 			if (chg) {
 				msg += "\n  Cluster Algo1 (original)";
-				if (isChg(type,"topn")) msg += "\n    Top N="    + getTopN(type);
+				if (isChg(type,"topn")) msg += "\n    Top N piles ="    + getTopN(type);
 				if (!Group.bSplitGene)  msg += "\n    No split gene";
 			}
 		}
@@ -252,6 +255,13 @@ public class Mpair {
 	}
 	/************************************************************************************/
 	public HashMap <String, String> getFileParams() { return fileMap;}
+	public String getFileParamsStr() {
+		String msg="";
+		for (String x : fileMap.keySet()) {
+			msg += String.format("%15s %s\n", x, fileMap.get(x));
+		}
+		return msg;
+	}
 	public HashMap <String, String> getDefaults() { return defMap;}
 	
 	public int renewIdx() {
@@ -379,14 +389,15 @@ public class Mpair {
 	}
 	catch (Exception e) {ErrorReport.print(e, "load syVer"); }
 	}
-	public boolean isPostV546() { //v546 had bug that added bad pseudo_hit_annot, which only shows up in Every+
+	// v should be number like 547, so anything version >547
+	public boolean isPostVn(int v) { //v546 had bug that added bad pseudo_hit_annot, which only shows up in Every+
 	try {
 		if (syVer.equals("")) return false;
 		
 		String x = syVer.substring(1, syVer.length());
 		x = x.replaceAll("\\.", "");
 		int y = Utilities.getInt(x);
-		if (y>=547) return true;
+		if (y>v) return true;
 		
 		return false;
 	}

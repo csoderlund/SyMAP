@@ -33,9 +33,9 @@ import util.Utilities;
 public class PairParams extends JDialog {
 	private static final long serialVersionUID = 1L;
 	
-	// Order must be same in createMainPanel and setValue and getValue
+	// Order must be same in createMainPanel and setValue and getValue; defaults are in Mpair
 	private static final String [] LABELS = { // Order must be same as createMainPanel
-		"Min Dots", "Top N", "Merge Blocks", 
+		"Min Dots", "Top N piles", "Merge Blocks", 		// CAS548 add 'piles'
 		"NUCmer Args", "PROmer Args", "Self Args", "NUCmer Only","PROmer Only",
 		"Algorithm 1 (original)", "Algorithm 2 (gene-centric)", 
 		"Intergenic", "Intron", "Exon",
@@ -69,7 +69,7 @@ public class PairParams extends JDialog {
 	}
 	private void save() {
 		if (!checkInt("Min Dots", txtMinDots.getText(), 1)) return; // CAS540 add check
-		if (!checkInt("Top N", txtTopN.getText(), 1)) return;		 // CAS540 add check
+		if (!checkInt("Top N piles", txtTopN.getText(), 1)) return;		 // CAS540 add check
 		if (!checkInt("Intergenic", txtNoGene.getText(), 0)) return;		 
 		if (!checkInt("Intron", txtIntron.getText(), 0)) return;	
 		if (!checkInt("Exon", txtExon.getText(), 0)) return;	
@@ -120,7 +120,7 @@ public class PairParams extends JDialog {
 			return false;
 		}
 		if (label.startsWith("Top") && i>4) {
-			return Utilities.showContinue("Top N", "Top N > 4 may produce worse results and take significantly longer.");
+			return Utilities.showContinue("Top N piles", "Top N > 4 may produce worse results and take significantly longer.");
 		}
 		return true;
 	}
@@ -330,9 +330,10 @@ public class PairParams extends JDialog {
 		mainPanel.add(new JLabel("Minimum matched bases:")); mainPanel.add(Box.createVerticalStrut(5));
 		
 		row = createRowPanel(); row.add(Box.createHorizontalStrut(10));
-		row.add(lblNoGene);  row.add(txtNoGene);   row.add(Box.createHorizontalStrut(5));
+		row.add(lblExon);    row.add(txtExon); row.add(Box.createHorizontalStrut(5)); // CAS548 swapped order
 		row.add(lblIntron);  row.add(txtIntron);  row.add(Box.createHorizontalStrut(5));
-		row.add(lblExon);    row.add(txtExon); row.add(Box.createHorizontalStrut(5));
+		row.add(lblNoGene);  row.add(txtNoGene);   row.add(Box.createHorizontalStrut(5));
+		
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
 		
 		row = createRowPanel();

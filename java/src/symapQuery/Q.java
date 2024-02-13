@@ -26,6 +26,7 @@ public class Q {
 	static final String hEndCol =	 "Hend";
 	static final String hLenCol = 	 "Hlen";
 	static final String gHitNumCol = "NumHits"; // CAS541 
+	static final String gOlap = 	 "%Olap"; // CAS548
 	
 	static final String All_Anno =  "All_Anno";
 	static final String empty    = 	"-";
@@ -72,11 +73,13 @@ public class Q {
 	static final int BNUM = 27;			// B.blocknum
 	static final int BSCORE = 28;		// B.blockscore
 	
-	static final int ANNOT1IDX = 29;	// PH.annot1_idx
-	static final int ANNOT2IDX = 30;	// PH.annot2_idx
+	static final int AOLAP = 29;		// PHA.olap or exlap CAS548 add
 	
-	static final int PHAANNOT1IDX = 31;	// PHA.annot_idx	CAS547 for AllGenes
-	static final int PHAANNOT2IDX = 32;	// PHA.annot2_idx
+	static final int ANNOT1IDX = 30;	// PH.annot1_idx
+	static final int ANNOT2IDX = 31;	// PH.annot2_idx
+	
+	static final int PHAANNOT1IDX = 32;	// PHA.annot_idx	CAS547 for AllGenes
+	static final int PHAANNOT2IDX = 33;	// PHA.annot2_idx
 	
 	static final String ANNO =  "ANNO";	// populated by keyword 
 	static final String GSIZE = "GSIZE";// computed PgFsize

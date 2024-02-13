@@ -11,7 +11,8 @@ import symap.sequence.Track;
 import util.ErrorReport;
 
 /**
- * The pool of Mapper hits.
+ * Create an array of Hits from the DB and passes them to a SeqHit object
+ * 
  * CAS520 FPC is partially removed; CAS531 remove cache; CAS521 more FPC removed; CAS541 extends DBAbsUser
  * CAS543 reorder HitData and expand
  */

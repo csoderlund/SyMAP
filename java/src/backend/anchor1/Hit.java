@@ -5,39 +5,40 @@ import java.util.Comparator;
 import java.util.Vector;
 
 import backend.Utils;
+import symap.Globals;
 import util.ErrorReport;
 
 /*****************************************************
  * Used for AnchorsMain: a hit may be a MUMmer hit or a clustered hit SubHit>0.
  */
 public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
-	public static final boolean FcheckRev = true; // Only cluster hits of the same orientation (--,++) and (+-,+-)
-	public static final int FhaveNSubs=2, FhaveLen1=300, FhaveLen2=100;   // >= heuristics; used in Hit/HitBin for filtering 
+	protected static final boolean FcheckRev = true; // Only cluster hits of the same orientation (--,++) and (+-,+-)
+	protected static final int FhaveNSubs=2, FhaveLen1=300, FhaveLen2=100;   // >= heuristics; used in Hit/HitBin for filtering 
 	
-	public int hitLen=0;
-	public int matchLen, pctid, pctsim, idx; // pctid=%ID, pctsim=%sim from MUMmer per subhit
-	public String strand;
-	public int annotIdx1 = 0, annotIdx2 = 0;
-	public int nSubHits=0;
+	protected int hitLen=0;
+	protected int matchLen, pctid, pctsim, idx; // bestLen(T,Q), pctid=%ID, pctsim=%sim from MUMmer per subhit
+	protected String strand;
+	protected int annotIdx1 = 0, annotIdx2 = 0;
+	protected int nSubHits=0;
 	
-	public SubHit queryHits, targetHits;
-	public HitType mHT = null;					    // AnchorsMain {GeneGene, GeneNonGene, NonGene}
-	public int htype=0;								// CAS543 numeric type
+	protected SubHit queryHits, targetHits;
+	protected HitType mHT = null;					    // AnchorsMain {GeneGene, GeneNonGene, NonGene}
+	protected int htype=0;								// CAS543 numeric type
 	
-	public HitStatus status = HitStatus.Undecided;	// AnchorsMain {In, Out, Undecided };
+	protected HitStatus status = HitStatus.Undecided;	// AnchorsMain {In, Out, Undecided };
 	
-	public int origHits = 0; 
-	public int binsize1=0, binsize2=0; // store topN bin sizes for stats
+	protected int origHits = 0; 
+	protected int binsize1=0, binsize2=0; // store topN bin sizes for stats
 	
-	public boolean isRev=false;
+	protected boolean isRev=false;
 	
 	// Called in AnchorMain
-	public Hit() {
+	protected Hit() {
 		this(0); // single hit, i.e. not clustered
 	}
 	
 	// Called in AnchorMain.scanNextMummerHit CAS540x was setting values in anchorMain
-	public void setHit(String query, String target, int qstart, int qend, int tstart, int tend, int match,
+	protected void setHit(String query, String target, int qstart, int qend, int tstart, int tend, int match,
 			int pctid, int pctsim, String strand) { 
 		this.queryHits.name  = query.intern();	
 		this.queryHits.start = qstart;
@@ -47,7 +48,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		this.targetHits.start = tstart;
 		this.targetHits.end = tend;
 		
-		this.matchLen = match;
+		this.matchLen = match; // best of T and Q mummer reported length
 		this.pctid = pctid;
 		this.pctsim = pctsim;
 		this.strand = strand.intern(); // reduce hit memory footprint
@@ -110,7 +111,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		return 0;
 	}
 	// called by HitBin on filtering clustered hit; if false, they may still be used if topN
-	public boolean useAnnot() { 
+	protected boolean useAnnot() { 
 		if (annotIdx1 > 0 && annotIdx2 > 0) {
 			if (matchLen>FhaveLen2) return true;
 		}
@@ -119,27 +120,27 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		}
 		return false;
 	}
-	public boolean useAnnot2() { // CAS543 keep if both genes!
+	protected boolean useAnnot2() { // CAS543 keep if both genes!
 		if (annotIdx1 > 0 && annotIdx2 > 0) {
 			if (matchLen>FhaveLen2) return true;
 		}
 		return false;
 	}
-	public boolean useAnnot1() { 
+	protected boolean useAnnot1() { 
 		if (annotIdx1 > 0 || annotIdx2 > 0) {
 			if (nSubHits>=FhaveNSubs || matchLen>=FhaveLen1) return true; 
 		}
 		return false;
 	}
 	
-	public int maxLength() {
+	protected int maxLength() {
 		return Math.max(queryHits.length(), targetHits.length());
 	}
-	public boolean isDiagHit() { // CAS535 add: was doing full check in multiple places
+	protected boolean isDiagHit() { // CAS535 add: was doing full check in multiple places
 		return queryHits.grpIdx == targetHits.grpIdx && queryHits.start == targetHits.start && queryHits.end == targetHits.end;
 	}
 	// for debug
-	public String getInfo() {
+	protected String getInfo() {
 		String x = (mHT==null) ? "No HT" : mHT.toString();
 		String state = (idx>0) ? "idx=" + idx + " " + status : " ";
 		
@@ -187,7 +188,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	 * cases where query and target are different lengths (maybe not possible with mummer).
 	 * Note, hits have been previously fixed so start < end. [AnchorMain.breakHit]
 	 */
-	static public Vector<Hit> splitMUMmerHit(Hit hit) {
+	static protected Vector<Hit> splitMUMmerHit(Hit hit) {
 	try {
 		int fSplitLen = Group.FSplitLen;
 		
@@ -251,7 +252,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	 * called in AnchorsMain.preFilterHits2
 	 * not a complete merge b/c doesn't ever merge two clusters
 	 */
-	public static void mergeOlapDiagHits(Vector<Hit> hits) {
+	protected static void mergeOlapDiagHits(Vector<Hit> hits) {
 		if (hits.size() <= 1) return;
 		
 		Vector<Hit> mergedHits = new Vector<Hit>();
@@ -280,7 +281,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	* called in AnchorsMain.clusterHits2 
 	* CAS540 check for isRev and !isRev, was mixing ++/-- with +-/-+
 	*/
-	public static Vector <Hit> clusterHits2(Vector<Hit> hitVec, HitType htype, AnnotElem qAnno, AnnotElem tAnno)  throws Exception {
+	protected static Vector <Hit> clusterHits2(Vector<Hit> hitVec, HitType htype, AnnotElem qAnno, AnnotElem tAnno)  throws Exception {
 		Vector <Hit> retHits = new Vector <Hit> ();
 		if (hitVec.size()==0) return retHits;
 		
@@ -313,6 +314,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 			h.nSubHits = 1;
 			if (qAnno.isGene()) h.annotIdx1 = qAnno.idx;	
 			if (tAnno.isGene()) h.annotIdx2 = tAnno.idx;
+			setStrand(h, qAnno, tAnno, 1);
 			retHits.add(h);
 			return retHits;
 		}
@@ -322,14 +324,14 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		clHit.mHT = htype;
 		if (qAnno.isGene()) clHit.annotIdx1 = qAnno.idx;	
 		if (tAnno.isGene()) clHit.annotIdx2 = tAnno.idx;
-		
+ 
 		clHit.nSubHits=numHits;
 		clHit.queryHits.grpIdx  = hitVec.get(0).queryHits.grpIdx;
 		clHit.targetHits.grpIdx = hitVec.get(0).targetHits.grpIdx;
 		clHit.strand =   hitVec.get(0).strand; 
-		clHit.isRev =    clHit.strand.contains("+") && clHit.strand.contains("-");
-		clHit.matchLen = clHit.origHits = 0;
+		setStrand(clHit, qAnno, tAnno, numHits);
 		
+		clHit.matchLen = clHit.origHits = 0;
 		int i = 0;
 		double sumPctID = 0, sumPctSim = 0, sumMatch=0; // CAS540 was not computing sim, so using first
 		int qSlast=0, qElast=0, tSlast=0, tElast=0, tMatch=0, qMatch=0;
@@ -384,9 +386,45 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		retHits.add(clHit);
 		return retHits;
 	}
-	
+	/*****************************************************
+	 *  CAS548 make hit strands correspond to genes
+	 *  ht.isRev us +/- or -/+;  anno.isRev is -
+	 */
+	private static void setStrand(Hit ht, AnnotElem qAnno, AnnotElem tAnno, int numHits) {
+		ht.isRev =    ht.strand.contains("+") && ht.strand.contains("-");
+		if (!qAnno.isGene() && !tAnno.isGene()) return;
+		
+		boolean bHtEQ = !ht.isRev;
+		
+		if (qAnno.isGene() && tAnno.isGene()) {
+			String ts = (tAnno.isRev) ? "-" : "+";
+			String qs = (qAnno.isRev) ? "-" : "+";
+			boolean isGnEQ = ts.equals(qs);
+			
+			if (bHtEQ!=isGnEQ) {// this is still processed
+				if (Globals.TRACE && numHits>1) {
+					String msg = String.format("%2d hit cluster (%s) for Q gene %6d (%s) and T %6d (%s)",
+						numHits, ht.strand, qAnno.genenum, qs, tAnno.genenum, ts);
+					System.out.println(msg);
+				}
+			}
+			else ht.strand = qs + "/" + ts;
+		}
+		else if (qAnno.isGene()) {
+			String qs = (qAnno.isRev) ? "-" : "+";
+			if (!bHtEQ) 			 ht.strand = qs + "/" + qs;
+			else if (qs.equals("+")) ht.strand = "+/-";
+			else                     ht.strand = "-/+";
+		}
+		else if (tAnno.isGene()) {
+			String ts = (tAnno.isRev) ? "-" : "+";
+			if (!bHtEQ) 			 ht.strand = ts + "/" + ts;
+			else if (ts.equals("+")) ht.strand = "-/+";
+			else                     ht.strand = "+/-";
+		}
+	}
 	/*********************************************************/
-	public static void sortByTarget(Vector<Hit> hits) { // AnchorMain saveResults
+	protected static void sortByTarget(Vector<Hit> hits) { // AnchorMain saveResults
 		Collections.sort(hits, 
 			new Comparator<Hit>() {
 				public int compare(Hit h1, Hit h2) {
@@ -395,7 +433,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 			}
 		);
 	}
-	public static void sortByQuery(Vector<Hit> hits) { // clusterHits2
+	protected static void sortByQuery(Vector<Hit> hits) { // clusterHits2
 		Collections.sort(hits, 
 			new Comparator<Hit>() {
 				public int compare(Hit h1, Hit h2) {
@@ -407,13 +445,13 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	/***************************************************************
 	 * CAS540 moved from separate file; changed from using subhit as an parameter to using start/end
 	 ***************************************************************/
-	public class SubHit  {
-		public int start, end, score, grpIdx = 0;		
-		public String name; 		
-		public int[] subHits;       // set in clusterHits; array of sub-hits start/end coordinates; CAS535 [blocks]
-		public HitStatus status = HitStatus.Undecided; // AnchorsMain {In, Out, Undecided };
+	protected class SubHit  {
+		protected int start, end, score, grpIdx = 0;		
+		protected String name; 		
+		protected int[] subHits;       // set in clusterHits; array of sub-hits start/end coordinates; CAS535 [blocks]
+		protected HitStatus status = HitStatus.Undecided; // AnchorsMain {In, Out, Undecided };
 		
-		public SubHit(SubHit h) {
+		protected SubHit(SubHit h) {
 			end =      h.end;
 			start =    h.start;
 			grpIdx =   h.grpIdx;
@@ -423,7 +461,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 			for (int i = 0; i < subHits.length; i++) subHits[i] = h.subHits[i];
 		}
 		
-		public SubHit(int numSubs) {
+		protected SubHit(int numSubs) {
 			subHits = new int[numSubs];
 		}
 		
@@ -434,9 +472,9 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 			return s;
 		}
 		
-		public int length() { return (Math.abs(end-start)+1); }
+		protected int length() { return (Math.abs(end-start)+1); }
 		
-		public boolean isOverlapping(SubHit h) {
+		protected boolean isOverlapping(SubHit h) {
 			return Utils.intervalsTouch(this.start, this.end, h.start, h.end);
 		}
 	}

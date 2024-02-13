@@ -6,11 +6,12 @@ import symap.sequence.Sequence;
 import util.Utilities;
 
 /**
+ * Represents one Hit
  * CAS531 was abstract so the code went through loops to get data into it via PseudoPseudoData, which is removed
  */
 public class HitData {	
 	private Mapper mapper;			// CAS544 add for way back to other data
-	private long id;
+	private long idx;
 	private int hitnum;				// CAS520 add, newly assigned hitnum
 	private byte pctid, pctsim; 	// CAS515 add pctsim and nMerge
 	private int covScore;			// CAS540 best coverage
@@ -43,7 +44,7 @@ public class HitData {
 			  int runnum, int runsize, int block, double corr, String chr1, String chr2)
 	{
 		this.mapper = mapper;
-		this.id = id;
+		this.idx = id;
 		this.hitnum = hitnum;
 		
 		this.pctid = (byte)pctid;
@@ -90,7 +91,7 @@ public class HitData {
 	public boolean isSameOrient()  { return isSameOrient; }
 	public boolean isPosOrient1() { return isPosOrient1; }
 	public boolean isPosOrient2() { return isPosOrient2; }
-	public long getID() 		{ return id; }
+	public long getID() 		{ return idx; }
 	public String getAnnots()	{ return annot1_idx + " " + annot2_idx;} // CAS543 added for trace
 	public int getAnnot1() 		{ return annot1_idx;}
 	public int getAnnot2() 		{ return annot2_idx;}
@@ -108,15 +109,37 @@ public class HitData {
 	public String getTargetSeq(){ return target_seq; } 
 	public String getQuerySeq() { return query_seq; }  
 	
-	// CAS517 the query and target seq have subhits, and are blank if just one hit
-	public String getQueryBounds(){ 
+	// for hit popup: the query and target seq have subhits, and are blank if just one hit; CAS517 add
+	public String getQuerySubhits(){ 
 		if (query_seq!=null && query_seq.length()>0) return query_seq; 
 		return start1 + ":" + end1;
 	} 
-	public String getTargetBounds(){ 
+	public String getTargetSubhits(){ 
 		if (target_seq!=null && target_seq.length()>0) return target_seq; 
 		return start2 + ":" + end2;
+	}
+	// for annotation popup: CAS548 was full list of subhits; now coords for both sides
+	public String getCoordsForGenePopup(boolean isQuery, String tag) { 
+		
+		String tag1 = mapper.getGeneNum1(annot1_idx);
+		String tag2 = mapper.getGeneNum2(annot2_idx);
+		String otherTag = (tag.equals(tag1)) ? tag2 : tag1;
+		
+		int l = Math.max(tag1.length(), tag2.length());
+		String fmt = "%-" + l + "s" + " %s";
+		String xtag1 = (isQuery)  ? tag : otherTag;
+		String xtag2 = (!isQuery) ? tag : otherTag;
+		
+		String msg1 = String.format(fmt, xtag1, Utilities.coordsStr(isPosOrient1, start1, end1)); 
+		String msg2 = String.format(fmt, xtag2, Utilities.coordsStr(isPosOrient2, start2, end2)); 
+	
+		String coords = isQuery ? (msg1+"\n" + msg2) : (msg2+ "\n"+ msg1);
+		return coords;
 	} 
+	public String getMinorForGenePopup(boolean isQuery, int annotIdx) {
+		String d = (annotIdx!=annot1_idx && annotIdx!=annot2_idx) ? Globals.minorAnno : "";
+		return d;
+	}
 
 	public int getStart1(boolean swap) { return (swap ? start2 : start1); }
 	public int getEnd1(boolean swap)   { return (swap ? end2 : end1); }
@@ -168,7 +191,7 @@ public class HitData {
 	public int getCollinearSet() {return collinearSet;} // CAS520 add 
 	
 	public boolean equals(Object obj) {
-		return (obj instanceof HitData && ((HitData)obj).id == id);
+		return (obj instanceof HitData && ((HitData)obj).idx == idx);
 	}
 
 	public static Comparator<HitData> getPseudoPositionComparator() {
@@ -201,25 +224,26 @@ public class HitData {
 	public String getName()		{ return "Hit #" + hitnum;}
 	/********************************************************
 	 * CAS512 left/right->start:end; CAS516 add Inv, tag CAS517 puts track1 info before track2
-	 * Called from SeqHits.popupDesc 
+	 * Called from SeqHits.popupDesc (top of popup) and SeqHits.DrawHit (Hover)
 	 */
 	public String createHover(boolean s1LTs2) {
 		String x = (corr<0) ? " Inv" : "";
 		String o = (isPosOrient1==isPosOrient2) ? "(=)" : "(!=)"; // CAS517x
 		String msg =  "Block #" + getBlock() + x + "  Hit #" + hitnum + " " + o + " " + hitTag + "\n"; 
 		
-		String n = (nMerge>0) ? "Subhit=" + nMerge + "  " : "Subhit=1  ";
+		String n = (nMerge>0) ? "#Subhits=" + nMerge + "  " : "#Subhit=1  "; // CAS548 added '#'
 		msg += n;
 		String op = (nMerge>0) ? "~" : "";
 		msg +=  "Id=" + op + pctid  + "%  ";
 		msg +=  "Sim="+ op + pctsim + "%  ";
-		msg +=  String.format("Cov=%s%,d", op, covScore);
+		msg +=  String.format("Cov=%,dbp", covScore); // CAS548 add bp; Cov is merged hits, remove ~
 		
-		String msg1 = String.format("%-3s %s", chr1, Utilities.coordsStr(isPosOrient1, start1, end1)); 
-		String msg2 = String.format("%-3s %s", chr2, Utilities.coordsStr(isPosOrient2, start2, end2)); 
-		String coords = s1LTs2 ? (msg1+"\n"+msg2) : (msg2+"\n"+msg1);
+		String msg1 =  Utilities.coordsStr(isPosOrient1, start1, end1);  // CAS548 rm chr
+		String msg2 =  Utilities.coordsStr(isPosOrient2, start2, end2); 
+		String L="L ", R="R ";
+		String coords = s1LTs2 ? (L + msg1+"\n"+R+ msg2) : (L +msg2+ "\n"+ R + msg1);// CAS548 add L/R
 		
 		return  msg + "\n\n" + coords;
 	}
-
+	
 }
