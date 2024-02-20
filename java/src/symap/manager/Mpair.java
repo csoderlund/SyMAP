@@ -10,7 +10,6 @@ import backend.anchor1.Group;
 import database.DBconn2;
 import props.PropertiesReader;
 import symap.Globals;
-import symapQuery.Q;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -144,8 +143,8 @@ public class Mpair {
 				if (isChg(type,"gexon_match")) 		msg += "\n    Exon base match = " + getGexonMatch(type);
 				
 				if (isChg(type,"EE_pile"))			msg += "\n    Limit Exon-Exon piles";
-				if (isChg(type,"EI_pile"))			msg += "\n    Allow Exon-Intron piles";
-				if (isChg(type,"En_pile"))			msg += "\n    Allow Exon-intergenic piles";
+				if (isChg(type,"EI_pile"))			msg += "\n    Limit Exon-Intron piles"; // CAS549 did not chg msg
+				if (isChg(type,"En_pile"))			msg += "\n    Limit Exon-intergenic piles";
 				if (isChg(type,"II_pile"))			msg += "\n    Allow Intron-Intron piles";
 				if (isChg(type,"In_pile"))			msg += "\n    Allow Intron-intergenic piles";
 				if (isChg(type,"topn")) 			msg += "\n    Top N piles ="    + getTopN(type);

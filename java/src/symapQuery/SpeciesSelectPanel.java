@@ -408,11 +408,11 @@ public class SpeciesSelectPanel extends JPanel {
 			lblStart.setEnabled(x); lblStop.setEnabled(x);
 		}
 		private String getStartFullNum() { // CAS513 add error message and return null
-			String text = txtStart.getText();
+			String text = txtStart.getText().trim();
 			if (text.contentEquals("")) return "";
 			
 			try {
-				long temp = Long.parseLong(txtStart.getText());
+				long temp = Long.parseLong(text);
 				if(temp < 0) {
 					Utilities.showWarningMessage("Invalid From (start) coordinate '" + text + "'");
 					return null;
@@ -426,17 +426,33 @@ public class SpeciesSelectPanel extends JPanel {
 		}
 		
 		private String getStopFullNum() {
-			String text = txtStop.getText();
-			if (text.contentEquals("")) return "";
+			String etext = txtStop.getText().trim();
+			if (etext.contentEquals("")) return "";
+			if (etext.contentEquals("0") || etext.contentEquals("-")) {// CAS549 add
+				txtStop.setText("");
+				return "";
+			}
+				
 			try {
-				long temp = Long.parseLong(txtStop.getText());
-				if(temp <= 0) {
-					Utilities.showWarningMessage("Invalid To (end) coordinate '" + text + "'");
+				long end = Long.parseLong(etext);
+				if (end <= 0) {
+					Utilities.showWarningMessage("Invalid To (end) coordinate '" + etext + "'");
 					return null;
 				}
-				return temp + getScaleDigits();
-			} catch(NumberFormatException e) {
-				Utilities.showWarningMessage("Invalid To (end) coordinate '" + text + "'");
+				
+				String stext = txtStart.getText().trim(); // CAS549 add check (start is checked first, so this is fine)
+				if (!stext.contentEquals("")) {
+					long start = Long.parseLong(stext);
+					if (start>=end) {
+						Utilities.showWarningMessage("Invalid From (start) '" + stext + "' > To (end) '" + etext + "'");
+						return null;
+					}
+				}
+				
+				return end + getScaleDigits();
+			} 
+			catch(NumberFormatException e) {
+				Utilities.showWarningMessage("Invalid To (end) coordinate '" + etext + "'");
 				return null;
 			}
 		}

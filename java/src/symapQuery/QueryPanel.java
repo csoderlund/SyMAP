@@ -489,8 +489,8 @@ public class QueryPanel extends JPanel {
 			if(!chroms.equals("All")) {
 				String loc = " Chr " + chroms;
 				if (!start.equals("") && !end.equals("")) loc += type + start + "-" + end; 
-				else if (!start.equals("")) loc += type + start; 
-				else if (!end.equals(""))   loc += type + end; // CAS513 was 1
+				else if (!start.equals("")) loc += type + start + "-end"; // CAS549 add -end
+				else if (!end.equals(""))   loc += type + "0-" + end; // CAS513 was 1; CAS549 add 0-
 				retVal = joinStr(retVal, species + loc , ", ");
 			}
 		}		
@@ -667,9 +667,7 @@ public class QueryPanel extends JPanel {
 		if (width>0 && width > lblAnnoOpts.getPreferredSize().width) 
 			arow.add(Box.createHorizontalStrut(width-lblAnnoOpts.getPreferredSize().width));
 		arow.add(radAnnoEvery);		brow.add(Box.createHorizontalStrut(1));
-		if (theParentFrame.isAlgo2() || Q.TEST_TRACE) { // gets double on algo1 since no annot2_idx
-			arow.add(radAnnoEveryStar);	brow.add(Box.createHorizontalStrut(1));
-		}
+		arow.add(radAnnoEveryStar);	brow.add(Box.createHorizontalStrut(1)); // CAS549 works for algo1 now too
 		arow.add(radAnnoOne);			brow.add(Box.createHorizontalStrut(1));
 		arow.add(radAnnoBoth);			brow.add(Box.createHorizontalStrut(1));
 		arow.add(radAnnoNone);			brow.add(Box.createHorizontalStrut(1));

@@ -65,18 +65,29 @@ If you are using SyMAP and want to update to a new version, see <a href="SystemG
 
 <h3>Summary of recent major releases</h3>
 <table class="tx">
-<tr><td><a href="#v548">v5.4.8</a><td>(13-Feb-24)<td>Has has improvements to the
-<a href="SystemHelp.html#pairParams"><ttx>Cluster Hit</ttx> computation</a> for detection of gene homology.
-<br>
-<tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved the detection of gene homology in the <ttx>Cluster Hit</ttx> computation.
-<tr><td><a href="#v530">v5.3.1</a><td>(6-Jan-23)<td>Improved <a href="UserGuide.html#base">hit alignment</a> features.
+<tr>
+<td><a href="#v548">v5.4.8</a><td>(13-Feb-24)<td>New <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>, which is aware of the
+exon-intron structure.
+<tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
+<tr><td><a href="#v530">v5.3.1</a><td>(6-Jan-23)<td>Improved <a href="UserGuide.html#align">hit alignment</a> features.
 <tr><td><a href="#v530">v5.3.0</a><td>(10-Dec-22)<td>Updated database schema to remove all FPC tables.
 <tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="Collinear.html">viewing</a>
-<tr><td><a href="#v519">v5.1.9</a><td>(26-Oct-22)<td>Gene# assignment and <a href="UserGuide.html#view2D"> 2D gene placement</a>
 </table>
+
+<a id="v549"></a>
+<h3>Release: v5.4.9 (20-Feb-24)</h3>
+<ul>
+<li>v5.4.8 little fixes: (1) The new <ttl>Query</ttl> <ttx>Multi</ttx> option had a small bug due to it using ">" instead of ">=".
+(2) The <ttl>Query</ttl> <ttx>Every*</ttx> option works for <ttx>Algo1</ttx> as of v5.4.8, but was still disabled.
+(3) The <ttl>Summary</ttl> gave wrong message if <ttl>EI</ttl> or <ttl>En</ttl> were unchecked.
+<li>The <ttl>Query</ttl> for selected chromosomes and locations was confusing. It is now consistent
+and properly documented.
+<li>Improved documentation.
+</ul>
 
 <a id="v548"></a>
 <h3>Release: v5.4.8 (13-Feb-24)</h3>
+
 <p>This release fine tuned the <ttx>Cluster Hit Algo2</ttx> (first released in <a href="#v546">v5.4.6</a>)
 and made some adjustments to <ttx>Cluster Hit Algo1</ttx> for new interface feature.
 For existing databases, rerun the <ttb>Synteny</ttb> algorithm.
@@ -98,7 +109,7 @@ The rules for filtering have been fine-tuned.
 or excluded with <tt>symap -wse</tt> .
 <li>Previously, the hit strands could be assign "+/-" when it should be "-/+" and vice versa;
 this resulted in the wrong sequence being
-reversed in the <a href="UserGuide.html#base">2D-Align</a>; this has been fixed.
+reversed in the <a href="UserGuide.html#align">2D-Align</a>; this has been fixed.
 </ol>
 <li><ttb>Synteny Clustering Algo1</ttb>:
 <ol>
@@ -106,7 +117,7 @@ reversed in the <a href="UserGuide.html#base">2D-Align</a>; this has been fixed.
 <li>Make an addition so that it works with the <ttl>Query</ttl> <ttx>Multi</ttx> command (otherwise,
 all results will be shown twice).
 <li>The same problem as shown in 7 above happens with <ttx>Algo1</ttx>. It is mostly fixed, though a few
-slip through. See <a href="Align.html#strand">Strand</a>.
+slip through. See <a href="UserGuide.html#strand">Strand</a>.
 </ol>
 <li><ttl>2d-display</ttl>:
 <ul>
@@ -495,7 +506,7 @@ without reloading the projects.
 <ul>
 <li>The selected region was extended to the whole genes within it; now it just extends to the ends of the last overlapping exon of the selected region.
 <li>The exons are labeled, e.g. Exon #11. If the end of the gene is not shown, a left or right arrow will be displayed
-indicating that it continues. See <a href="UserGuide.html#base" class="ext" target="_blank">Align</a>.
+indicating that it continues. See <a href="UserGuide.html#align">Align</a>.
 <li>The color icons now has Exon+ and Exon-, where the default colors correspond to the 2d display.
 <li>Bug fix: when there were overlapping genes, the exons could be wrong for one of them.
 </ul>
@@ -607,8 +618,7 @@ only contains colors and mainly those that can be changed by user.
 
 <a id="v531"></a>
 <h3>Release: v5.3.1 (6-Jan-23)</h3>
-Improvements to viewing the alignments of hits; see <a href="UserGuide.html#base">Align (Base View)</a> and
-<a href="Align.html">Alignment Details</a>.
+Improvements to viewing the alignments of hits; see <a href="UserGuide.html#align">Alignment</a>.
 <ol>
 <li>2D
 <ul>

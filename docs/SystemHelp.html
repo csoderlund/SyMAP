@@ -70,28 +70,38 @@ of the input files. This document provide details of parameters and functions.
 
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
-<a href="#build"><u>1. Build database</u></a>
-<br><a href="#selLoad">&nbsp;&nbsp;&nbsp;a. Selected</a>
-<br><a href="#avail">&nbsp;&nbsp;&nbsp;b. Available Syntenies</a>
-<br><a href="#concat">&nbsp;&nbsp;&nbsp;c. CPU and Concat</a>
-<br><a href="#fun">&nbsp;&nbsp;&nbsp;d. Function buttons</a>
+1. <a href="#build"><u>Build database</u></a>
+<ol type="a">
+<li style="margin: 0.4em 0;"><a href="#selLoad">Selected</a>
+<li style="margin: 0.4em 0;"><a href="#avail">Available Syntenies</a>
+<li style="margin: 0.4em 0;"><a href="#concat">CPU and Concat</a>
+<li style="margin: 0.4em 0;"><a href="#fun">Function buttons</a>
+</ol>
+</td>
+
 <td style="vertical-align: text-top;">
-<a href="#projParams"><u>2. Project Parameters</u></a> 			<!-- in code -->
-<br><a href="#start">&nbsp;&nbsp;&nbsp;a. Overview</a>
-<br><a href="#display">&nbsp;&nbsp;&nbsp;b. Display</a>
-<br><a href="#project">&nbsp;&nbsp;&nbsp;c. Load project</a>
-<br><a href="#anno">&nbsp;&nbsp;&nbsp;d. Load annotation</a>
-<br><a href="#align">&nbsp;&nbsp;&nbsp;e. Alignment&amp;Synteny (A&amp;S)</a>
-<br><a href="#save1">&nbsp;&nbsp;&nbsp;f. Rules for saving project parameters</a>
-<br><a href="#annot">&nbsp;&nbsp;&nbsp;g. Annotation</a>
+2. <a href="#projParams"><u>Project Parameters</u></a> 			<!-- in code -->
+<ol type="a">
+<li style="margin: 0.4em 0;"><a href="#start">Overview</a>
+<li style="margin: 0.4em 0;"><a href="#display">Display</a>
+<li style="margin: 0.4em 0;"><a href="#project">Load project</a>
+<li style="margin: 0.4em 0;"><a href="#anno">Load annotation</a>
+<li style="margin: 0.4em 0;"><a href="#align">Alignment&amp;Synteny (A&amp;S)</a>
+<li style="margin: 0.4em 0;"><a href="#save1">Rules for saving project parameters</a>
+<li style="margin: 0.4em 0;"><a href="#annot">Annotation</a>
+</ol>
+</td>
 <td style="vertical-align: text-top;">
-<a href="#pairParams"><u>3. Pair Parameters</u></a>  			<!-- in code pre-v546 -->
-<br><a href="#over2">&nbsp;&nbsp;&nbsp;a. Overview</a>
-<br><a href="#align2">&nbsp;&nbsp;&nbsp;b. Alignment</a>		<!-- in code v546 -->
-<br><a href="#clust">&nbsp;&nbsp;&nbsp;c. Cluster Hits</a>		<!-- in code v546 -->
-<br><a href="#syn">&nbsp;&nbsp;&nbsp;d. Synteny</a>				<!-- in code v546 -->
-<br><a href="#save2">&nbsp;&nbsp;&nbsp;e. Rules for saving pair parameters</a>
-<br><a href="#mum">&nbsp;&nbsp;&nbsp;f. MUMmer parameters</a>
+3. <a href="#pairParams"><u>Pair Parameters</u></a>  			<!-- in code pre-v546 -->
+<ol type="a">
+<li style="margin: 0.4em 0;"><a href="#over2">Overview</a>
+<li style="margin: 0.4em 0;"><a href="#align2">Alignment</a>		<!-- in code v546 -->
+<li style="margin: 0.4em 0;"><a href="#clust">Cluster Hits</a>		<!-- in code v546 -->
+<li style="margin: 0.4em 0;"><a href="#syn">Synteny</a>				<!-- in code v546 -->
+<li style="margin: 0.4em 0;"><a href="#save2">Rules for saving pair parameters</a>
+<li style="margin: 0.4em 0;"><a href="#mum">MUMmer parameters</a>
+</ol>
+</td>
 </table>
 
 
@@ -479,12 +489,13 @@ This can be reduced by one (or both) of the following:
 <p>
 <ttl>Anno key count</ttl>: If there are many different keywords in the attribute list,
 set this count N to filter out all keywords with &lt;N occurrences.
+The <ttx>Anno Key Count</ttx> can be modified at any time using <tt>symap</tt> (not <tt>viewSymap</tt>).
 <p>
 <ttl>Anno keywords</ttl>: The <tt>keyword=value</tt> pairs to be saved for each gene can be limited by listing
 the desired keywords separated by commas.  Using this approach, it will also reduce
 annotation description per gene in the <ttb>2D display</ttb>.
 For example, if the string "<tt>ID, product</tt>" was entered,
-the <tt>Name=value</tt> would not be part of any gene annotation.
+the <tt>Name=value</tt> would not be part of any gene annotation. This must be set on <ttb>Load</ttb>.
 <hr>
 <!----------------------------------------------------------------------->
 <!----------------------------------------------------------------------->
@@ -628,15 +639,11 @@ experimenting with the parameters whereas <ttl>Algorithm 1</ttl> does not.
 <td>No
 <tr>
 	<td>&nbsp;&nbsp;<ttl>Exon</ttl>
-	<td>If the hit is <ttx>EE</ttx> or <ttx>EI</ttx>, remove all hits that have less than N aligned bases (EQ 1).
-	<br>If the hit is <ttx>En</ttx> with multiple subhits, it uses this rule; otherwise,
-	it uses the <ttl>Intergenic</ttl> cutoff.
+	<td>If the hit is <ttx>EE</ttx>, remove all hits that have less than N aligned bases (EQ 1).
 	<td>100
 <tr>
 	<td>&nbsp;&nbsp;<ttl>Intron</ttl>
-	<td>If the hit is <ttx>EI</ttx> or <ttx>II</ttx>, remove all hits that have less than N aligned bases (EQ 1).
-	<br>If the hit is <ttx>In</ttx> with multiple subhits, it uses this rule; otherwise,
-	it uses the <ttl>Intergenic</ttl> cutoff.
+	<td>If the hit is <ttx>EI</ttx>, <ttx>II</ttx>,  <ttx>En</ttx> or <ttx>In</ttx> remove all hits that have less than N aligned bases (EQ 1).
 	<td>300
 <tr>
 	<td>&nbsp;&nbsp;<ttl>Intergenic</ttl>
@@ -646,7 +653,7 @@ experimenting with the parameters whereas <ttl>Algorithm 1</ttl> does not.
 <tr>
 	<td>&nbsp;&nbsp;<ttl>Keep piles</ttl>
 	<td><ttl>EE</ttl>, <ttl>EI</ttl>, <ttl>En</ttl>, <ttl>II</ttl>, <ttl>In</ttl>
-	<br>&bullet;This ONLY applies when there is a pile of overlapping hits (<a href=#pileOfHits>Pile of Hits</a>);
+	<br>&bullet;This ONLY applies when there is a pile of overlapping hits (<a href="#pileOfHits">Pile of Hits</a>);
 	it tells the algorithm what type of cluster hits to retain if they are in a pile.
 	<br>&bullet;Hits are filtered before pile analysis.
 	<br>&bullet;Intergenic-intergenic pile hits, and any unchecked categories, are filtered
@@ -679,7 +686,7 @@ you may also need to increase the others parameters and uncheck <ttx>EI</ttx> an
 genomes, experiment with the parameters on just one pair of the chromosomes.
 <table>
 <tr><td>
-<a id="pileOfHits">
+<a id="pileOfHits"></a>
 <u>Piles of hits</u>: The below image shows a pile of hits on the left that link to repetitive genes on the right.
 <p>The left image shows a pile of hits in an intergenic region to multiple other regions.
 There are MANY occurrence of repeats like this in the MUMmer file, which is why these piles
@@ -700,7 +707,7 @@ If you would like to have them excluded or printed, use one of the following.
 <table>
 <tr><td><tt>./symap -wse	<td># exclude
 <tr><td><tt>./symap -wsp <td># print to terminal
-<tr><td><tt>./symap -wsp &gt;ws.log&nbsp;&nbsp;&nbsp;<td># print to file ws.log
+<tr><td><tt>./symap -wsp &gt;ws.log</tt>&nbsp;&nbsp;&nbsp;<td># print to file ws.log
 </table>
 <p>You can view them in
 the <ttb>Query</ttb> where the <ttx>Hit St</ttx> column will be "=" but the gene <ttx>Gst</ttx> are not equal, or the other way around.

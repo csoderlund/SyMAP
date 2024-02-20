@@ -59,22 +59,19 @@ public class DBdata {
 		
 		isSingle 		= qPanel.isSingle();
 		isSingleGenes 	= qPanel.isSingleGenes();
-		isIncludeMinor 	= qPanel.isIncludeMinor(); // Every*, Gene (except if has provided suffix), HitNum, Anno
-		
-		if (qPanel.isGeneNum() || qPanel.isAnnoTxt() || qPanel.isMultiAnno()) 
-					grpIdxOnly = qPanel.getGrp(); // will get selected chr, but geneNum on its pair w/o this
+		isIncludeMinor 	= qPanel.isIncludeMinor(); // See loadHit; loadMergeHit
 		
 		cntPlus2=0; cntPgeneF=0;
 		cntDup=0; cntFilter=0; // restart TEST_TRACE counts
 		
 		makeSpLists(projList);
 		makeAnnoKeys(annoColumns);
-		makeGrpLoc(qPanel.getGrpCoords());
+		makeGrpLoc(qPanel.getGrpCoords()); // gStart and gEnd
+		grpIdxOnly = qPanel.getGrp();      // Chr is filtered, but may want one gene, anno, multi to just be on the selected
 		
-		// CAS543 remove isEitherAnno and isBothAnno (can do in QueryPanel), add isAnnoTxt; CAS548 add multiAnno
-		boolean isFilter = (qPanel.isOneAnno() || qPanel.isMultiAnno() || 
-				     grpStart.size()>0 ||  qPanel.isAnnoTxt() || qPanel.isGeneNum());
-				
+		// CAS543 remove isEitherAnno and isBothAnno (can do in QueryPanel), add isAnnoTxt; CAS549 all use grpIdxOnly
+		boolean isFilter = (grpStart.size()>0  || qPanel.isAnnoTxt() || qPanel.isGeneNum() || qPanel.isOneAnno());
+			
 		Vector <DBdata> rows = new Vector <DBdata> ();
 	
 		int rowNum=1;
@@ -363,7 +360,7 @@ public class DBdata {
 		catch (Exception e) {ErrorReport.print(e, "make location list");}
 	}
 	/************************************
-	 * return multi-hits >=n; added CAS548
+	 * return multi-hits >=n; added CAS548; filtering on location has already been done; but still need to 
 	 */
 	private static Vector <DBdata> runMultiGene(Vector <DBdata> rows) {
 	try {
@@ -387,23 +384,24 @@ public class DBdata {
 		// recreate rows with only the filtered set
 		int n = qPanel.getMultiN();
 		int rowNum=1;
+		
 		for (DBdata dObj : rows) {
+			boolean bChr0= (grpIdxOnly.size()==0 || grpIdxOnly.contains(dObj.chrIdx[0]));
 			int idx1 = dObj.annotIdx[0];
-			if (idx1>0 && gene1Cnt.get(idx1)>n) {
-				if (grpIdxOnly.size()==0 || grpIdxOnly.contains(dObj.chrIdx[0])) {
+			
+			if (bChr0 && idx1>0 && gene1Cnt.get(idx1)>=n) {// CAS549 no =
+				dObj.rowNum = rowNum;
+    			rowNum++;
+				rowsForDisplay.add(dObj);
+			}
+			else {		
+				boolean bChr1= (grpIdxOnly.size()==0 || grpIdxOnly.contains(dObj.chrIdx[1]));
+				int idx2 = dObj.annotIdx[1];
+				
+				if (bChr1 && idx2>0 && gene2Cnt.get(idx2)>=n) {
 					dObj.rowNum = rowNum;
 	    			rowNum++;
 					rowsForDisplay.add(dObj);
-				}
-			}
-			else {
-				int idx2 = dObj.annotIdx[1];
-				if (idx2>0 && gene2Cnt.get(idx2)>=n) {
-					if (grpIdxOnly.size()==0 || grpIdxOnly.contains(dObj.chrIdx[1])) {
-						dObj.rowNum = rowNum;
-		    			rowNum++;
-						rowsForDisplay.add(dObj);
-					}
 				}
 			}
 		}
@@ -530,11 +528,11 @@ public class DBdata {
 			String tag = Utilities.getGenenumFromDBtag(rs.getString(Q.AGENE));// CAS547 convert here for AllGenes
 			int annoIdx  = rs.getInt(Q.AIDX);
 			
-			if (annoIdx!=annotIdx[0] && annoIdx!=annotIdx[1]) {// CAS520 all annot_idx,hit_idx loaded; make sure best
+			if (annoIdx!=annotIdx[0] && annoIdx!=annotIdx[1]) { // CAS520 all annot_idx,hit_idx loaded; make sure best
 				if (isIncludeMinor) {							// CAS547 add
-					annotIdx[x] = annoIdx;					// replace best
-					htype = "--";							// otherwise, inherits best-best assignment
-					tag = tag + " " + Globals.minorAnno;			// + indicates best replaced
+					annotIdx[x] = annoIdx;						// replace best
+					htype = "--";								// otherwise, inherits best-best assignment
+					tag = tag + " " + Globals.minorAnno;		// + indicates best replaced
 				}
 				else return; // The correct annotation will be added in merged to THIS record
 			}
@@ -682,7 +680,7 @@ public class DBdata {
 	 */
 	private boolean passFilters() {
 		try {
-			if (isSingle) {
+			if (isSingle) { // anno check is in query; see below why it needs to be done here for !isSingle
 				if (grpStart.size()==0) return true;
 				
 				for (int gidx : grpStart.keySet()) { // only one selected
@@ -690,7 +688,7 @@ public class DBdata {
 					int ef = grpEnd.get(gidx); 	
 					
 					if (chrIdx[0]==gidx) {
-						if (sf > 0 && gstart[0] < sf) return false; 
+						if (sf > 0 && gstart[0] < sf) return false;  // note gene start (not hit as used below)
 						if (ef > 0 && gend[0]   > ef) return false;
 						return true;
 					}
@@ -699,6 +697,43 @@ public class DBdata {
 			}
 			// GeneNum: Chr is the only other filter, which happened in SQL; but need to make sure geneNum on correct chr
 			// CAS541 added gene# only; CAS543 allow suffix; CAS548 allow 2 chr selected, but must have correct genenum
+			
+			if (grpStart.size()>0) { // CAS549 move from end so work for following 3
+				for (int gidx : grpStart.keySet()) {
+					int sf = grpStart.get(gidx); 
+					int ef = grpEnd.get(gidx);
+					
+					for (int x=0; x<2; x++) { // using hit coords
+						if (chrIdx[x]==gidx) {
+							if (sf > 0 && hstart[x] < sf)return false;  
+							if (ef > 0 && hend[x] > ef)  return false; // CAS522 was a <e since v519
+						}
+					}
+				}
+			}
+						
+			// CAS549 only show if selected chr or no selection
+			boolean bChr0 = (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[0]));
+			boolean bChr1 = (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[1]));
+				
+			// CAS543 when doing anno search as query, returned hits without anno if they overlap
+			// CAS549 add check to make sure anno is on the selected chr-only; put before one
+			if (qPanel.isAnnoTxt()) { 
+				String anno = qPanel.getAnnoTxt().toLowerCase();
+				
+				if (bChr0 && annotStr[0].toLowerCase().contains(anno)) return true;
+				if (bChr1 && annotStr[1].toLowerCase().contains(anno)) return true;
+					
+				return false;
+			}
+						
+			// After ANNO: CAS543 moved to SQL 
+			if (qPanel.isOneAnno()) { // Either is done for One, but must further filter
+				if (annotIdx[0] > 0   && annotIdx[1] <= 0) return true;
+				if (annotIdx[0] <= 0  && annotIdx[1] > 0)  return true;
+				return false;
+			}
+						
 			String inputGN = qPanel.getGeneNum();
 			if (inputGN!=null) {
 				if (inputGN.endsWith(".")) inputGN = inputGN.substring(0, inputGN.length()-1);
@@ -709,54 +744,12 @@ public class DBdata {
 					tag1 = Utilities.getGenenumIntOnly(tag1);
 				}
 				
-				if (tag0!="-" && tag0.equals(inputGN)) {
-					if (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[0])) return true;
-				}
-				else if (tag1!="-" && tag1.equals(inputGN))  {
-					if (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[1])) return true;
-				}
-				
+				if (bChr0 && tag0!="-" && tag0.equals(inputGN)) return true;	
+				if (bChr1 && tag1!="-" && tag1.equals(inputGN))  return true;
+					
 				return false;
 			}
-			// CAS543 when doing anno search as query, returned hits without anno if they overlap
-			// CAS548 add check to make sure anno is on the selected chr-only; put before one
-			if (qPanel.isAnnoTxt()) { 
-				String anno = qPanel.getAnnoTxt().toLowerCase();
-				
-				if (annotStr[0].toLowerCase().contains(anno)) {
-					if (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[0])) return true;
-				}
-				if (annotStr[1].toLowerCase().contains(anno)) {
-					if (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[1])) return true;
-				}
-				
-				return false;
-			}
-			// CAS543 moved to SQL (qPanel.isEitherAnno()) (qPanel.isBothAnno()) 
-			
-			if (qPanel.isOneAnno()) { // Either is done for One, but must further filter
-				if (annotIdx[0] <= 0 && annotIdx[1] <= 0) return false; // CAS547 was annoSet0/1.size()>0
-				if (annotIdx[0] > 0  && annotIdx[1] > 0)  return false; // CAS547 was annoSet0/1.size()<=0
-			}
-			
-			if (grpStart.size()==0) return true;
-			
-			// if one or more chromosome selected, one of the chr pairs has to be a selected one
-			boolean found=false;
-			for (int gidx : grpStart.keySet()) {
-				int sf = grpStart.get(gidx); 
-				int ef = grpEnd.get(gidx);
-				
-				for (int x=0; x<2; x++) { // using hit coords
-					if (chrIdx[x]==gidx) {
-						found = true;	  // its a selected
-						
-						if (sf > 0 && hstart[x] < sf)return false;  
-						if (ef > 0 && hend[x] > ef)  return false; // CAS522 was a <e since v519
-					}
-				}
-			}
-			return found;
+			return true;
 			
 		} catch (Exception e) {ErrorReport.print(e, "Reading rows"); return false;}
 	}

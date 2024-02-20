@@ -10,8 +10,8 @@ import java.io.File;
  * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.4.8"; 
-	public static final String 	DATE = " (13-Feb-24)";
+	public static final String 	VERSION = "v5.4.9"; 
+	public static final String 	DATE = " (20-Feb-24)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER =  7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
