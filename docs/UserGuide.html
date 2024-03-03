@@ -184,9 +184,13 @@ if you use SyMAP results in a paper, poster, or presentation.</font>
 
 	<tr><td style="white-space: nowrap;">Cluster Hit Algorithm:
 		<br><ttx>Algo1</ttx> or <ttx>Algo2</ttx><small><sup>1</sup></small>
-		<td>During the synteny computation, the clustering could have been done using the original <ttx>Algo1</ttx> or the
-		gene-centric <ttx>Algo2</ttx> (see <a href="SystemHelp.html#pairParams" class=ext target="_blank">System Help</a> for details).
-		The <a href="#sum">Summary</a> specifies which was used.
+		<td>During the synteny computation, either the <ttx>Algo1</ttx> or <ttx>Algo2</ttx> algorithm could have
+		been selected to cluster hits.
+		<br>&bull;The original <ttx>Algo1</ttx> was updated v5.4.0 to be more gene-aware but does not know exon-intron structure.
+		The new v5.4.8 <ttx>Algo2</ttx> knows exon-intron structure.
+		 See <a href="SystemHelp.html#clust" class=ext target="_blank">System Help</a> for details.
+
+		<br>&bull;The <a href="#sum">Summary</a> specifies which was used.
 		There are statistics in SyMAP that
 		have different values based on which algorithm was run.
 	<tr><td><ttx>Major</ttx> or <ttx>minor</ttx> assigned hit<small><sup>2</sup></small>
@@ -626,9 +630,8 @@ The tracks and hits can be filtered; see
 <h3>View a region</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The example below was derived from a two chromosome display of A.thal Chr04 and Cabbage Chr01. The region
-was displayed by right-clicking
-near the top of the chromosome, dragging the mouse and releasing it in order to view the selected region.
+The selected region shown in the image below was created by left-clicking
+on one chromosome near the top coordinate shown (e.g. 11,638.48kb), dragging the mouse and releasing.
 The <ttb>Sequence Filter</ttb> was set to display <ttl>Annotations</ttl>.
 
 <p>
@@ -650,8 +653,6 @@ where the gaps are represented by a grey area.
 <i>Major and Minor genes</i> If one end of the hit-wires aligns to multiple genes, only one gene is assigned to
 it, which is called the <ttx>major</ttx> gene. The other genes are the <ttx>minor</ttx> genes.
 In the above example, gene 1910.b is the major gene for the top hit-wire and gene 1910.a is the minor gene.
-<p><font color=red>Problematic</font>: When zooming into a region, if the hit-wire is not in the region, none of the hit is shown. This
-is confusing for large hits. This will be fixed in a near-future release.
 
 <!------------------------------------------------------------------>
 <!------------------------------------------------------------------>
@@ -672,7 +673,6 @@ go away until the <ttb>OK</ttb> button is selected or the <ttl>Explorer</ttl> is
 <table style="width: 95%"><tr><td style="text-align: left">
 <h4>Hit Details</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
 
 <u>Information:</u> Hovering the mouse over a hit-wire will show its information in the <ttl>Information</ttl> box.
 <p>
@@ -842,19 +842,28 @@ The Scale button
 (base pairs per pixel) as the reference sequence track in the view.
 <p>
 <a id="mouse_function_selector"></a>
-<ttl>Selected:</ttl>
-This drop-down selector assigns a function to the mouse's left button
-click and drag actions:
+<ttl>Selected:</ttl> This drop-down assigns a function to the selected region, which
+is selected by clicking the mouse left button on a location of the chromosome, drag and release.
 
 <table class="ty txy">
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Zoom All Tracks</ttl>
-	<td>Zoom the track to the selected region and all other tracks with hits in the region.
-	<br>When zoomed in, if the hit-wire is not displayed, none of the hit will be displayed.
+	<td>
+	<table>
+	<tr><td>
+	Zoom into the selected region and all other tracks with hits in the region.
+	<p>If the selection clips part of the hit, the hit-wire will be shown at the top or bottom of
+	the chromosome track. The hit-wire of the clipped hit can be highlighted just like a fully shown hit.
+	This feature was added for release v5.5.0 and also applies to <ttl>Zoom Selected Track</ttl>.
+	<td><a href="img/2d-clip-hitwire.png">
+	<img src="img/2d-clip-hitwire.png" alt="2d clip hitwire" style="border: 1px solid black; width: 150px"></a>
+	</table>
+
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Zoom Selected Track</ttl>
-	<td>Zoom to the selected region on the selected track; all other tracks do not change.
+	<td>Zoom into the selected region; all other tracks do not change.
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Align (Max 30kb)</ttl>
 	<td>Open the base alignment view for the selected region (see <a href="#base">Base Align</a>).
-There MUST be hits in the region to align.
+There MUST be at least a partial hit in the region to align.
+
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Show Seq Options</ttl>
 <td>The allows viewing the actual basepair sequence in a track.
 A sequence must first be selected, then a popup menu will have the options:
@@ -867,6 +876,7 @@ If the hit is on the positive strand, it will be reverse complemented.
 cluster hit to the end of the last cluster subhit.
 <tr><td><ttx>Region</ttx><td>Show the sequence from the region selected.
 </table>
+
 </table>
 
 <br><ttl>Stats</ttl>
@@ -906,8 +916,14 @@ and belong to 642 collinear sets.
 <p><ttl>Color, Print, <big>?</big> Icons</ttl>  see <a href="#image">Color Wheel, Help and Print</a>.
 
 <p>
-<u>Additional navigation</u>:
+<u>Mouse navigation</u>:
 <table  class="ty txy">
+<tr>
+	<td style="white-space: nowrap; vertical-align: text-top;">View region&nbsp;
+	<td>Drag left mouse button
+	<td>Press down on the left mouse button on a chromosome track, drag the mouse and release it. By default, this will
+	zoom into the selected region for both chromosomes. This action can be changed with the <ttl>Selected:</ttl> control
+	pull-down as discussed above.
 <tr>
 	<td style="white-space: nowrap; vertical-align: text-top;">Resize Track&nbsp;</td>
 	<td>Drag bottom of track</td>

@@ -74,23 +74,59 @@ exon-intron structure.
 <tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="Collinear.html">viewing</a>
 </table>
 
+<a id="v550"></a>
+<h3>Release: v5.5.0 (3-Mar-24)</h3>
+For existing databases, there are no changes (though there are for <a href=#v548>v5.4.8</a>).
+<br>To use SyMAP v5.5.0, you must have Java v17 or later.
+<p>
+<ul>
+<li>The <tt>symap.jar</tt> was compiled with Java version 1.8 (8); it is now compiled with Java 17, which
+is more secure, faster and was released Sept 2021.
+<li><ttb>2D display</ttb>
+<ol>
+<li>This display is much faster (really noticeable on slow machines or big chromosomes).
+<li>The <ttl>Hit Length</ttl> line was only shown if the hit-wire
+was shown; this is no longer the case.
+<li>The <ttl>Stats</ttl> button was removed, and the <ttl>Help</ttl> was moved to a little "i" button,
+which provides a popup of quick information.
+</ol>
+<li><ttb>Cluster Hits Algo1</ttb>
+<ol>
+<li>It no longer splits large genes since #2 above handles them better.
+<li>The <ttl>Summary</ttl> now refers to this algorithm as <ttx>Algo1 (modified original)</ttx> and the alternative
+as <ttx>Algo2 (exon-intron)</ttx>.
+</ol>
+<li>Developers: Lots of cleanup to remove OO spagetti code in 2d.
+<small>
+<ul>
+<li>Recreate tracks on new display instead of trying to reuse.
+<li>Move number.GenomeNumber to Sequence; remove the number class.
+Changed all numbers in DrawingPanel from objects to long.
+<li>Merge History class with HistoryControl, and remove HistoryObject.java.
+	Move HistoryControl and HistoryListener to symap.drawingpanel; remove history class.
+<li>Merge abstract Track.java with Sequence.java. Merge FSized2d.java with Frame2d.java.
+Rename frame.TrackInfo to ChrInfo and frame.Mapper to LeftMap
+</ul>
+</small>
+</ul>
+
 <a id="v549"></a>
 <h3>Release: v5.4.9 (20-Feb-24)</h3>
+For existing databases, there are no changes (though there are for <a href=#v548>v5.4.8</a>).
 <ul>
 <li>v5.4.8 little fixes: (1) The new <ttl>Query</ttl> <ttx>Multi</ttx> option had a small bug due to it using ">" instead of ">=".
 (2) The <ttl>Query</ttl> <ttx>Every*</ttx> option works for <ttx>Algo1</ttx> as of v5.4.8, but was still disabled.
 (3) The <ttl>Summary</ttl> gave wrong message if <ttl>EI</ttl> or <ttl>En</ttl> were unchecked.
-<li>The <ttl>Query</ttl> for selected chromosomes and locations was confusing. It is now consistent
-and properly documented.
+<li>The <ttl>Query</ttl> for selected chromosomes and locations was confusing. It is now consistent and properly documented.
 <li>Improved documentation.
 </ul>
 
 <a id="v548"></a>
 <h3>Release: v5.4.8 (13-Feb-24)</h3>
+For existing databases, rerun the <ttb>Synteny</ttb> algorithm.
 
 <p>This release fine tuned the <ttx>Cluster Hit Algo2</ttx> (first released in <a href="#v546">v5.4.6</a>)
 and made some adjustments to <ttx>Cluster Hit Algo1</ttx> for new interface feature.
-For existing databases, rerun the <ttb>Synteny</ttb> algorithm.
 
 <ul>
 <li><ttb>Synteny Clustering Algo2</ttb>:  See <a href="SystemHelp.html#clust">Cluster hits</a>.
