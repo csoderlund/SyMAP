@@ -1,6 +1,7 @@
-#JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home
+#JAVA_PATH=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
 #JAVA_PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
-JAVA_PATH=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
+JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home
+#JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-20.jdk/Contents/Home
 #JAVA_PATH=/usr
 
 JAVAC_FLAGS = -g -Xlint:deprecation #,vars #-Xlint:deprecation 

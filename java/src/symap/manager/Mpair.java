@@ -27,6 +27,9 @@ import util.Utilities;
 public class Mpair {
 	public static final int FILE = 0;
 	public static final int DB = 1;
+	private static final String algo1 = "Cluster Algo1 (modified original)";
+	private static final String algo2 = "Cluster Algo2 (exon-intron)";
+	private static final String defAlgo = algo1;
 	
 	public Mproject mProj1, mProj2;
 	private int pairIdx=-1, proj1Idx=-1, proj2Idx=-1;
@@ -53,7 +56,7 @@ public class Mpair {
 			"600", "300", "100",	// intergenic, intron, exon
 			"1", "1", "1", "0", "0"	// EE, EI, En, II, In CAS548 change EI and En to 1
 			};
-	private static final String defAlgo = "Cluster Algo1 (original)";
+	
 	
 	public Mpair (DBconn2 dbc2, int pairIdx, Mproject p1, Mproject p2, boolean isReadOnly) {
 		this.dbc2 = dbc2;
@@ -137,7 +140,7 @@ public class Mpair {
 			|| isChg(type, "EI_pile") || isChg(type, "En_pile") || isChg(type, "II_pile") 
 			|| isChg(type, "In_pile") || isChg(type,"topn") || backend.Constants.WRONG_STRAND_EXC;
 			if (chg) {
-				msg = "\n  Cluster Algo2 (gene-centric)";
+				msg = "\n" + algo2;
 				if (isChg(type,"g0_match")) 		msg += "\n    Intergenic base match = " + getG0Match(type);
 				if (isChg(type,"gintron_match")) 	msg += "\n    Intron base match = " + getGintronMatch(type);
 				if (isChg(type,"gexon_match")) 		msg += "\n    Exon base match = " + getGexonMatch(type);
@@ -152,16 +155,16 @@ public class Mpair {
 			}
 		}
 		else if (isAlgo1(type)) {
-			boolean chg = isChg(type, "topn") || !Group.bSplitGene;
+			boolean chg = isChg(type, "topn") || Group.bSplitGene;
 			if (chg) {
-				msg += "\n  Cluster Algo1 (original)";
+				msg += "\n" + algo1;
 				if (isChg(type,"topn")) msg += "\n    Top N piles ="    + getTopN(type);
-				if (!Group.bSplitGene)  msg += "\n    No split gene";
+				if (Group.bSplitGene)   msg += "\n    Split gene";
 			}
 		}
 		if (msg.equals("")) { // so I can change the default without changing this method
-			if (defMap.get("algo2")=="0" && isChg(type, "algo2")) msg = "\n  Cluster Algo2 (gene-centric)";
-			else if (defMap.get("algo1")=="0" && isChg(type, "algo1")) msg = "\n  Cluster Algo1 (original)";
+			if (defMap.get("algo2")=="0" && isChg(type, "algo2")) msg = "\n" + algo2;
+			else if (defMap.get("algo1")=="0" && isChg(type, "algo1")) msg = "\n" + algo1;
 		}
 		return msg;
 	}

@@ -27,21 +27,20 @@ public  class TrackData {
 	private boolean bHighConserved;
 	private Annotation selectedGeneObj=null;
 
-	protected TrackData(Track track) {
-		trackClass        = track.getClass();
-		project           = track.projIdx;
-		start             = track.start.getValue();
-		end               = track.end.getValue();
-		size              = track.size.getValue();
-		orient            = track.orient;
-		moveOffset        = new Point(track.moveOffset);
-		defaultBpPerPixel = track.defaultBpPerPixel;
-		bpPerPixel        = track.bpPerPixel;
-		height            = track.height;
-		width             = track.width;
-		otherProject      = track.otherProjIdx;
+	protected TrackData(Sequence seq) {
+		trackClass        = seq.getClass();
+		project           = seq.projIdx;
+		start             = seq.gnDstart;
+		end               = seq.gnDend;
+		size              = seq.gnSize;
+		orient            = seq.orient;
+		moveOffset        = new Point(seq.moveOffset);
+		defaultBpPerPixel = seq.defaultBpPerPixel;
+		bpPerPixel        = seq.bpPerPixel;
+		height            = seq.height;
+		width             = seq.width;
+		otherProject      = seq.otherProjIdx;
 		
-		Sequence seq = (Sequence) track;
 		grpIdx          = seq.grpIdx;
 		
 		bShowRuler      = seq.bShowRuler;
@@ -65,21 +64,20 @@ public  class TrackData {
 		selectedGeneObj  = seq.selectedGeneObj;
 	}
 
-	protected void setTrack(Track track) {
-		track.start.setValue(start);
-		track.end.setValue(end);
-		track.size.setValue(size);
-		track.projIdx           = project;
-		track.orient            = orient;
-		track.moveOffset.setLocation(moveOffset);
-		track.defaultBpPerPixel = defaultBpPerPixel;
-		track.bpPerPixel        = bpPerPixel;
-		track.height            = height;
-		track.width             = width;
-		track.otherProjIdx      = otherProject;
-		track.clearAllBuild(); // set Track.hasBuild = false; for all tracks
+	protected void setTrack(Sequence seq) {
+		seq.gnDstart = start;
+		seq.gnDend = end;
+		seq.gnSize = size;
+		seq.projIdx           = project;
+		seq.orient            = orient;
+		seq.moveOffset.setLocation(moveOffset);
+		seq.defaultBpPerPixel = defaultBpPerPixel;
+		seq.bpPerPixel        = bpPerPixel;
+		seq.height            = height;
+		seq.width             = width;
+		seq.otherProjIdx      = otherProject;
+		seq.setAllBuild(); // set Track.hasBuild = false; for all seqs
 		
-		Sequence seq = (Sequence)track;
 		seq.grpIdx          = grpIdx;
 		seq.bShowRuler      = bShowRuler;
 		seq.bShowGene       = bShowGene;

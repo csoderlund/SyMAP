@@ -16,12 +16,11 @@ import props.ProjectPool;
 import props.PropertiesReader;
 import database.DBconn2;
 import symap.Globals;
-import symap.drawingpanel.ControlPanel;
 import symap.drawingpanel.DrawingPanel;
 import symap.drawingpanel.FilterHandler;
 import symap.frame.HelpBar; 		
 import symap.frame.HelpListener;
-import symap.sequence.Track;
+import symap.sequence.Sequence;
 import symap.sequence.TrackHolder;
 import symapQuery.TableDataPanel;
 import util.ErrorReport;
@@ -29,12 +28,12 @@ import util.ErrorReport;
 /**
  * The Mapper that holds two tracks (overlaying them when drawn) and all of the hits.
  * Called from DrawingPanel
+ * // CAS521 remove Filtered Interface CAS542 remove HfilterData.HitFilterListener, 
  * CAS531 major changes as there was a List that was actually only one Object, major red-herring code
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Mapper extends JComponent 
-	implements   // CAS521 remove Filtered Interface CAS542 remove HfilterData.HitFilterListener, 
-		MouseMotionListener, MouseListener, MouseWheelListener, HelpListener 		
+	implements  MouseMotionListener, MouseListener, MouseWheelListener, HelpListener 		
 {
 	// ColorDialog colors at bottom
 	private DrawingPanel drawingPanel; 
@@ -48,19 +47,13 @@ public class Mapper extends JComponent
 	private volatile boolean initing;
 	private String helpText; // CAS520 add hover
 	
-	private static final String HOVER_MESSAGE = 
-			"Hit-wire Information:"
-			+ "\n-Hover on hit-wire for information."
-			+ "\n-Right-click on hit-wire for popup of full information."
-			+ "\n-Right-click in white space of hit area for subset filter popup."
-			+ "\n-Filters are retained between displays of a session.";
+	private void dprt(String msg) {symap.Globals.dprt("MP " + msg);}
 	
-	// Created in DrawingPanel; it starts out making 100 mappers with trackholders but no tracks
+	// Created in DrawingPanel for display
 	public Mapper(DrawingPanel drawingPanel, TrackHolder th1, TrackHolder th2,
 			FilterHandler fh, DBconn2 dbc2, ProjectPool projPool, HelpBar hb, TableDataPanel listPanel) 
 	{
 		super();
-	
 		this.mapPool = new MapperPool(dbc2, projPool); // CAS541 create here instead of passing as arg
 		this.drawingPanel = drawingPanel; 
 		this.fh = fh;
@@ -68,7 +61,7 @@ public class Mapper extends JComponent
 		initing = true;
 		
 		hitFilData = new HfilterData(); // CAS542 hitFilter = new HitFilter(this); was a listener
-		fh.setHfilter(this); // creates Hfilter with this hitFilData
+		fh.setHfilter(this); 			// creates Hfilter with this hitFilData
 		
 		trackHolders = new TrackHolder[2];
 		trackHolders[0] = th1;
@@ -82,64 +75,41 @@ public class Mapper extends JComponent
 		
 		if (hb != null) hb.addHelpListener(this,this); 
 	}
-	
-	public void clearData() {
-		seqHitObj = null;
-	}
-	// called from HitFilter
-	public void update() {
-		// CAS541 dead code; if (!mapinfo.hasHitContent(hf.isBlock(), false)) // CAS531 hf.isRepeat which was always false
-		init();
-	}
-	public String getFilterText() {return hitFilData.getFilterText();} // Called from SeqHits 
-
-	/** Method closeFilter closes this mappers filter window @see FilterHandler#hide() */
-	public void closeFilter() {fh.hide();}
-	
-	public void clearTrackBuild() {
-		if (trackHolders[0].getTrack() != null) trackHolders[0].getTrack().clearTrackBuild();
-		if (trackHolders[1].getTrack() != null) trackHolders[1].getTrack().clearTrackBuild();
-	}
-
-	/* initializes the mapper downloading all hits. Was called from dead code in drawingPanel
-	public boolean initAllHits() {
-		HfilterData hf = hitFilData.copy("Mapper initAllHits");
-		//hf.setBlock(false); // CAS542 remove
-		return myInit(hf);
-	}*/
-	public boolean init() {
-		return myInit(hitFilData);
-	}
-
-	private boolean myInit(HfilterData hf) {
-		Track t1 = trackHolders[0].getTrack();
-		Track t2 = trackHolders[1].getTrack();
+	public boolean initHits() { // DrawingPanel.make and above
+		Sequence t1 = trackHolders[0].getTrack();
+		Sequence t2 = trackHolders[1].getTrack();
+		dprt("initHits TF seqHitObj==null " + (seqHitObj==null) + " track1==null " + (t1==null));
+		
 		if (t1 == null || t2 == null) return false;
 
 		if (seqHitObj!=null) return true;
+		
 		initing = true;
-		seqHitObj = mapPool.setData(this, t1, t2, hf); 
+		seqHitObj = mapPool.setData(this, t1, t2); 
 		seqHitObj.setMinMax(hitFilData);	
 		initing = false;
 		
 		if (seqHitObj==null) ErrorReport.print("SyMAP internal error getting hits");
 		return (seqHitObj!=null);
 	}
-	public void setMapperData(MapperData md) {
-		if (md != null) {
-			md.setMapper(this);
-			init();
-		}
-	}
 	public void setVisible(boolean visible) {
 		fh.getFilterButton().setEnabled(visible);
 		super.setVisible(visible);
 	}
 
+	public String getFilterText() {return hitFilData.getFilterText();} // Called from SeqHits 
+
+	public void update() {} // HitFilter; CAS550 was reloading
+	
+	public void setMapperData(MapperData md) { // DrawingPanel.setMaps for history
+		if (md != null) {
+			md.setMapper(this);
+			initHits();
+		}
+	}
+	
 	public MapperData getMapperData() {return new MapperData(this);}
-	
 	public DrawingPanel getDrawingPanel() { return drawingPanel;}
-	
 	public HfilterData getHitFilter() {return hitFilData;}
 	
 	// CAS548 add for HitData.getCoordsForGenePopup
@@ -147,25 +117,22 @@ public class Mapper extends JComponent
 	public String getGeneNum2(int annoIdx) { return seqHitObj.getSeqObj2().getGeneNumFromIdx(annoIdx);}
 	
 	public JButton getFilterButton() {return fh.getFilterButton();}
+	public Sequence getTrack1() {return trackHolders[0].getTrack();}
+	public Sequence getTrack2() {return trackHolders[1].getTrack();}
+	public Sequence getTrack(int trackNum) {return trackHolders[trackNum].getTrack();}
 	
-	public Track getTrack1() {return trackHolders[0].getTrack();}
-	
-	public Track getTrack2() {return trackHolders[1].getTrack();}
-	
-	public Track getTrack(int trackNum) {return trackHolders[trackNum].getTrack();}
-	
-	protected int getTrackPosition(Track t) {
+	protected int getTrackPosition(Sequence t) {
 		if (trackHolders[0].getTrack() == t)	return Globals.LEFT_ORIENT;
 		else									return Globals.RIGHT_ORIENT;
 	}
 	// closeup align
-	public Vector <HitData> getHitsInRange(Track src, int start, int end) {
+	public Vector <HitData> getHitsInRange(Sequence src, int start, int end) {
 		Vector <HitData> retHits = new Vector<HitData>();
 		seqHitObj.getHitsInRange(retHits, start, end, isQueryTrack(src));  
 		return retHits;
 	}
 
-	public int[] getMinMax(Track src, int start, int end) {
+	public int[] getMinMax(Sequence src, int start, int end) {
 		int[] minMax = new int[] { Integer.MAX_VALUE, Integer.MIN_VALUE };
 		
 		seqHitObj.getMinMax(minMax, start, end, isQueryTrack(src));
@@ -180,9 +147,9 @@ public class Mapper extends JComponent
 	 * hasPair is always (query,target);  CAS517 rearranged and renamed from isSwapped 
 	 * return (t1 == src && !pool.hasPair(t2, t1)) || (t2 == src && !pool.hasPair(t1, t2))|| (isSelf() && src == t1); 
 	 */
-	public boolean isQueryTrack(Track src) {
-		Track t1 = getTrack1(); 
-		Track t2 = getTrack2();
+	public boolean isQueryTrack(Sequence src) {
+		Sequence t1 = getTrack1(); 
+		Sequence t2 = getTrack2();
 		
 		if (t2==null) System.out.println("Mapper Error: NULL TRACK 2");
 		
@@ -207,8 +174,7 @@ public class Mapper extends JComponent
 		Graphics2D g2 = (Graphics2D) g;
 		// CAS533 this makes hit lines thicker, but drawing is slower on Linux 
 		// g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		
-		if (!initing) 
+		if (!initing && seqHitObj!=null) 
 			seqHitObj.paintComponent(g2);
 	}
 	
@@ -232,8 +198,7 @@ public class Mapper extends JComponent
 		for (int i = 0;  i < trackHolders.length;  i++)
 			trackHolders[i].getTrack().mouseWheelMoved(e, length);
 	}
-	// CAS517 add for popup hit wire description; see SeqHits.PseudoHits.doPopupDesc
-	public void mousePressed(MouseEvent e) {
+	public void mousePressed(MouseEvent e) {// CAS517 popup hit wire description; see SeqHits.DrawHits.doPopupDesc
 		if (e.isPopupTrigger()) {
 			if (seqHitObj.doPopupDesc(e)) return;
 			fh.showPopup(e);
@@ -243,22 +208,30 @@ public class Mapper extends JComponent
 		return (trackHolders[0].getTrack()!=null && trackHolders[1].getTrack()!=null);
 	}
 	/******************************************************************/
-	public String toString() {
-		return "[Mapper (Track1: " + trackHolders[0].toString() + " "+ trackHolders[0].getTrack() + 
-				     ") (Track2: " +  trackHolders[1].toString() + " "+ trackHolders[1].getTrack() + ")]";
-	}
 	// called by HelpBar
 	public String getHelpText(MouseEvent e) { 
-		int n = drawingPanel.getStatOpts();
-		if (n==ControlPanel.pHELP) return HOVER_MESSAGE;
-		
 		if (helpText == null) return hitFilData.getFilterText() + "    \n" + seqHitObj.getInfo();
 		
 		return helpText; 
 	}
-	// set in SeqHits.PseudoHits
-	public void setHelpText(String text) {
-		helpText = text;
+	protected void setHelpText(String text) {helpText = text;}// set in SeqHits.DrawHits
+		
+	////////////////////////////////////////////////
+	public String toString() {
+		return "[Mapper (Track1: " + trackHolders[0].toString() + " "+ trackHolders[0].getTrack() + 
+				     ") (Track2: " +  trackHolders[1].toString() + " "+ trackHolders[1].getTrack() + ")]";
+	}
+	public void clearData() {
+		if (seqHitObj!=null) {
+			seqHitObj.clearData();
+			seqHitObj = null;
+		}
+	}
+	public void closeFilter() {fh.hide();} // closes this mappers filter window @see FilterHandler#hide() 
+	
+	public void setTrackBuild() {
+		if (trackHolders[0].getTrack() != null) trackHolders[0].getTrack().setTrackBuild();
+		if (trackHolders[1].getTrack() != null) trackHolders[1].getTrack().setTrackBuild();
 	}
 	/******************************************************************/
 	// drawing methods directly access these, and ColorDialog can change them

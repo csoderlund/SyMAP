@@ -14,40 +14,40 @@ import symap.manager.Mproject;
 
 /*********************************************************
  * Chromosome Explorer setup; loads projects, tracks, blocks and initializes track
- * CAS521 remove FPC
- * CAS534 symapCE.SyMAPExp=> frame.ChrExpInit
- * CAS541 called by ManagerFrame instead of SyMAPmanager
+ * ChrExpFrame does the actual drawing of the icons on left using the mapper created here.
+ * 
+ * CAS521 remove FPC, CAS534 symapCE.SyMAPExp=> frame.ChrExpInit, CAS541 called by ManagerFrame instead of SyMAPmanager
  */
 
 public class ChrExpInit implements PropertyChangeListener { 
-	private ChrExpFrame frame;
+	private ChrExpFrame expFrame;
 	private DBconn2 tdbc2;
-	private Vector<Mproject> projects;
-	private Vector<TrackInfo> tracks;
-	private Mapper mapper;
+	
+	private Vector<Mproject> projects  = new Vector<Mproject>();
+	private Vector<ChrInfo> allChrs = new Vector<ChrInfo>();
+	private MapLeft mapper =   new MapLeft();
+	
 	private static final Color[] projectColors = { Color.cyan, Color.green, new Color(0.8f, 0.5f, 1.0f),
 		Color.yellow, Color.orange };
 
-	public ChrExpInit(String title, DBconn2 dbc2) throws SQLException {
+	public ChrExpInit(String title, DBconn2 dbc2, Vector<Mproject> selectedProjVec) throws SQLException { // Called by ManagerFrame
 		tdbc2 = new DBconn2("ChrExp-" + DBconn2.getNumConn(), dbc2); // closed in ChrExpFrame
 		
-		projects = new Vector<Mproject>();
-		tracks =   new Vector<TrackInfo>();
+		for (Mproject p : selectedProjVec) addProject( p.getDBName() ); // CAS550 mv from ManagerFrame
+		makeDS();
 		
-		mapper =   new Mapper();
-		
-		frame =    new ChrExpFrame(title, tdbc2, mapper);
+		expFrame = new ChrExpFrame(title, tdbc2, mapper); 	// CAS550 finish mapper before this call, so it can be directly used
 	}
-	public void propertyChange(PropertyChangeEvent evt) {
-		if (frame != null) frame.repaint();
-	}
+	public ChrExpFrame getExpFrame() {return expFrame;} // managerFrame setVisible
 	
-	public boolean addProject(String strName) {
+	public void propertyChange(PropertyChangeEvent evt) {if (expFrame != null) expFrame.repaint();}
+	
+	private boolean addProject(String strName) {
 		try {
 			Mproject p = loadProject(strName);
 			if ( p != null ) {
 				p.setColor( projectColors[projects.size() % (projectColors.length)] );				
-				tracks.addAll( loadProjectTracks(p) );
+				allChrs.addAll( loadProjectTracks(p) );
 				projects.add( p );
 				return true;
 			}
@@ -56,25 +56,22 @@ public class ChrExpInit implements PropertyChangeListener {
 		return false;
 	}
 	
-	public boolean build() {
+	private boolean makeDS() { // called after all projects are added
 		try {
-			Vector<Block> blocks = loadAllBlocks(tracks);
+			Vector<Block> blocks = loadAllBlocks(allChrs);
 			
 			mapper.setProjects(projects.toArray(new Mproject[0]));
-			mapper.setTracks(tracks.toArray(new TrackInfo[0]));
+			mapper.setChrs(allChrs.toArray(new ChrInfo[0]));
 			mapper.setBlocks(blocks.toArray(new Block[0]));
+			
 			projects = null;
-			tracks = null;
+			allChrs = null;
 			return true;
 		}
 		catch (Exception e) {ErrorReport.print(e, "Build Explorer");}
 		return false;
 	}
-	
-	public ChrExpFrame getFrame() {
-		return frame;
-	}
-	
+		
 	private Mproject loadProject(String strProjName) throws Exception{
 	     int nProjIdx = -1;
 	     String loaddate=""; // CAS513 to put on left side by name
@@ -99,9 +96,9 @@ public class ChrExpInit implements PropertyChangeListener {
 	     return p;
 	}
 	
-	private Vector<TrackInfo> loadProjectTracks(Mproject p)  {
+	private Vector<ChrInfo> loadProjectTracks(Mproject p)  {
 	try {
-		Vector<TrackInfo> projTracks = new Vector<TrackInfo>();
+		Vector<ChrInfo> projTracks = new Vector<ChrInfo>();
      
 	     // Get group(s) and create track(s)
 	     String qry = "SELECT idx,name FROM xgroups WHERE proj_idx=" + p.getID() +
@@ -111,7 +108,7 @@ public class ChrExpInit implements PropertyChangeListener {
 	     while( rs.next() ) {
 	     	int nGroupIdx = rs.getInt(1);
 	     	String strGroupName = rs.getString(2);
-	     	projTracks.add(new TrackInfo(p, strGroupName, nGroupIdx));
+	     	projTracks.add(new ChrInfo(p, strGroupName, nGroupIdx));
 	     }
 	     rs.close();
 	     
@@ -121,7 +118,7 @@ public class ChrExpInit implements PropertyChangeListener {
 	     }
 	     
 	     // Initialize tracks
-	     for (TrackInfo t : projTracks) {
+	     for (ChrInfo t : projTracks) {
 	        rs = tdbc2.executeQuery("SELECT length FROM pseudos WHERE (grp_idx="+t.getGroupIdx()+")");
 	        while( rs.next() ) {
 	        	t.setSizeBP( rs.getLong(1) );
@@ -132,18 +129,15 @@ public class ChrExpInit implements PropertyChangeListener {
 	} catch (Exception e) {ErrorReport.print(e, "Load tracks"); return null;}
 	}
 	
-	private Vector<Block> loadAllBlocks(Vector<TrackInfo> tracks) {
+	private Vector<Block> loadAllBlocks(Vector<ChrInfo> tracks) {
 		Vector<Block> blocks = new Vector<Block>();
 		
-		/* CAS512 is added, See if we have the corr field - CAS was probably added to schema long ago
-		 boolean haveCorr = true;
-	     try {pool.executeQuery("select corr from blocks limit 1");}
-	     catch (Exception e) {haveCorr = false;}
-	     String corrStr = (haveCorr ? ",corr " : "");
-		*/
 		try {
 	     // Load blocks for each track
-	     String strGroupList = "(" + getGroupList(tracks) + ")";
+		String s = "";
+		for (ChrInfo t : tracks)
+				s += t.getGroupIdx() + (t == tracks.lastElement() ? "" : ",");
+	     String strGroupList = "(" + s + ")";
 	     String strQ = "SELECT idx,grp1_idx,grp2_idx,start1,end1,start2,end2, corr FROM blocks " + 
 						"WHERE (grp1_idx IN "+strGroupList+" AND grp2_idx IN "+strGroupList+")";
      
@@ -159,8 +153,8 @@ public class ChrExpInit implements PropertyChangeListener {
 	     	// CAS512 float corr = (haveCorr ? rs.getFloat("corr") : 0.01F); // if no corr field, make sure they are positive
 	     	float corr = rs.getFloat(8);
 	     	
-	     	TrackInfo t1 = TrackInfo.getTrackByGroupIdx(tracks, grp1_idx);
-	     	TrackInfo t2 = TrackInfo.getTrackByGroupIdx(tracks, grp2_idx);
+	     	ChrInfo t1 = ChrInfo.getChrByGroupIdx(tracks, grp1_idx);
+	     	ChrInfo t2 = ChrInfo.getChrByGroupIdx(tracks, grp2_idx);
 	     	
 	     	Block b = new Block(blockIdx, t1.getProjIdx(), t2.getProjIdx(), 
 	     			t1.getGroupIdx(), t2.getGroupIdx(), start1, end1, start2, end2,  corr);
@@ -171,12 +165,6 @@ public class ChrExpInit implements PropertyChangeListener {
 	     rs.close();
 	     return blocks;
 	} catch (Exception e) {ErrorReport.print(e, "Load blocks"); return null;}   
-	}
-	private static String getGroupList(Vector<TrackInfo> tracks) {
-		String s = "";
-		for (TrackInfo t : tracks)
-			s += t.getGroupIdx() + (t == tracks.lastElement() ? "" : ",");
-		return s;
 	}
 }
 

@@ -6,7 +6,6 @@ import java.awt.Dimension;
 import java.awt.LayoutManager;
 import java.awt.Point;
 
-import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
@@ -16,11 +15,11 @@ import symap.mapper.Mapper;
  * Lays out tracks; called in DrawingPanels
  */
 public class TrackLayout implements LayoutManager {
-	private TrackHolder[] trackHolders;
-	private Mapper[] mappers;
-	private JPanel buttonPanel;
+	private TrackHolder[] trackHolders; // N sequence
+	private Mapper[] mappers;			// N-1 hits joining 2 sequence
+	private JPanel buttonPanel;			// to contain Filter buttons
 	private static final int buttonPadding = 1;
-	private static final double PADDING = 100; // distance between tracks; CAS543 moved from Sequencd
+	private static final double PADDING = 100; // distance between tracks; CAS543 moved from Sequence
 
 	public TrackLayout(TrackHolder[] trackHolders, Mapper[] mappers, JPanel buttonPanel) {
 		buttonPanel.setLayout(null);
@@ -28,10 +27,6 @@ public class TrackLayout implements LayoutManager {
 		this.mappers = mappers;
 		this.trackHolders = trackHolders;
 	}
-
-	public void addLayoutComponent(String name, Component comp) { }
-
-	public void removeLayoutComponent(Component comp) { }
 
 	public Dimension preferredLayoutSize(Container target) {
 		if (!trackHolders[0].isVisible()) return target.getSize();
@@ -52,10 +47,6 @@ public class TrackLayout implements LayoutManager {
 		return dim;
 	}
 
-	public Dimension minimumLayoutSize(Container target) {
-		return preferredLayoutSize(target);
-	}
-
 	public void layoutContainer(Container target) {
 		Point p1, p2;
 		Dimension dim1, dim2, dim, d;
@@ -66,7 +57,8 @@ public class TrackLayout implements LayoutManager {
 		Dimension bpDim = new Dimension(0,0);
 		Dimension bDim;
 
-		if (buttonPanel != null) buttonPanel.removeAll();
+		if (buttonPanel != null) buttonPanel.removeAll(); // buttonPanel never null
+		
 		for (i = 0; i < trackHolders.length; i++) { // All DrawingPanel.MAX_TRACKS (30) 
 			if (!trackHolders[i].isVisible()) break;
 
@@ -82,7 +74,8 @@ public class TrackLayout implements LayoutManager {
 				buttonPanel.add(button);
 				bDim = button.getPreferredSize();
 				button.setSize(bDim);
-				button.setLocation(getMidTrack(trackHolders[i].getTrack(),x,bDim.width),buttonPadding);
+				int mid = getMidTrack(trackHolders[i].getTrack(),x,bDim.width);
+				button.setLocation(mid,buttonPadding);
 				bpDim.height = Math.max(bpDim.height,button.getHeight());
 			}
 			x += d.width;
@@ -113,9 +106,8 @@ public class TrackLayout implements LayoutManager {
 				buttonPanel.add(button);
 				bDim = button.getPreferredSize();
 				button.setSize(bDim);
-				button.setLocation(getMidMap(trackHolders[i].getFilterButton(),
-						trackHolders[i+1].getFilterButton(),bDim.width),
-						buttonPadding);
+				int mid = getMidMap(trackHolders[i].getFilterButton(), trackHolders[i+1].getFilterButton(),bDim.width);
+				button.setLocation(mid, buttonPadding);
 				bpDim.height = Math.max(bpDim.height,button.getHeight());
 			}
 		}
@@ -129,11 +121,18 @@ public class TrackLayout implements LayoutManager {
 		}
 	}
 
-	private int getMidTrack(Track track, double x, double bw) {
+	private int getMidTrack(Sequence track, double x, double bw) {
 		return (int)Math.round(x+track.getMidX() - (bw/2.0));
 	}
 
-	private int getMidMap(AbstractButton b1, AbstractButton b2, int bw) {
+	private int getMidMap(JButton b1, JButton b2, int bw) {
 		return (int)Math.round( (b1.getX() + b1.getWidth() + b2.getX() - bw) / 2.0);
 	}
+	
+	public Dimension minimumLayoutSize(Container target) {
+		return preferredLayoutSize(target);
+	}
+	public void addLayoutComponent(String name, Component comp) { }
+
+	public void removeLayoutComponent(Component comp) { }
 }

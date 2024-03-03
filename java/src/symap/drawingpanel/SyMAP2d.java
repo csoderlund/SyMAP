@@ -3,8 +3,6 @@ package symap.drawingpanel;
 import colordialog.*;
 import database.DBconn2;
 import props.*;
-import history.History;
-import history.HistoryControl;
 import symap.closeup.CloseUp;
 import symap.frame.HelpBar;
 import symapQuery.TableDataPanel;
@@ -16,7 +14,7 @@ import symapQuery.TableDataPanel;
  * 	blockview.Block2Frame
  * 	symapQuery.tableDataPanel.showSynteny
  * 
- *	CAS532 moved HTML links to Jhtml
+ *  CAS521 remove FPC; CAS532 moved HTML links to Jhtml
  *  CAS534 renamed from SyMAP=> SyMAP2d; moved all globals to symap.Globals
  *  CAS544 moved to drawingpanel for 2d stuff
  */
@@ -28,7 +26,6 @@ public class SyMAP2d {
 	
 	private DBconn2 tdbc2;
 	private HistoryControl     historyControl;
-	private History            history;
 	private PersistentProps    persistentProps;
 	private CloseUp            closeup;
 	private ColorDialogHandler colorDialogHandler;
@@ -41,18 +38,19 @@ public class SyMAP2d {
 	 * hb==null is from dotplot or blocks display, so not full ChrExp
 	 ***/
 	public SyMAP2d(DBconn2 dbc2, HelpBar hb, TableDataPanel theTablePanel) // CAS507 removed applet
-	{
+	{	
 		String type = (hb==null) ? "P" : "E";
 		this.tdbc2 = new DBconn2("SyMAP2d" + type + "-" + DBconn2.getNumConn(), dbc2);
 
+		symap.Globals.dprt("");
+		symap.Globals.dprt("Start SyMAP2d " + type);
+		
 		persistentProps = new PersistentProps(); // CAS521 changed PersistentProps - it has all args now
 
 		if (hb == null) helpBar = new HelpBar(-1, 17); // CAS521 removed dead args
 		else			helpBar = hb; // for full explorer
 
-		history = new History();
-
-		historyControl = new HistoryControl(history);
+		historyControl = new HistoryControl(); // CAS550 the history object is now created in HistoryControl
 
 		drawingPanel = new DrawingPanel(theTablePanel, tdbc2, historyControl, helpBar);
 
@@ -70,28 +68,19 @@ public class SyMAP2d {
 
 		colorDialogHandler.addListener((ColorListener)drawingPanel);
 	}
-	/** added in CAS517, then totally removed in CAS521 
-	public void setHasFPC(boolean hasFPC) {
-		colorDialogHandler.setHasFPC(hasFPC);
-		colorDialogHandler.setColors();   
-	}
-	private boolean showDatabaseErrorMessage(String msg) { // CAS534 removed PoolManager
-		return JOptionPane.showConfirmDialog(null,msg,"Database error occurred, try again?",
-				JOptionPane.YES_NO_OPTION,JOptionPane.ERROR_MESSAGE) == JOptionPane.YES_OPTION;
-	}
-	**/
 	
-	public void clear() {
-		tdbc2.close(); // CAS541 add
-		getDrawingPanel().clearData(); // clear caches
-		getHistory().clear(); // clear history
+	public void clear() { // Frame2d.displose() called for non-Explorer 2d
+		tdbc2.close(); 	  // CAS541 add
+		clearLast();
+	} 
+	public void clearLast() { // ChrExpFrame when creating a new 2d; do no close tdc2
+		drawingPanel.clearData(); 	// clear caches
+		historyControl.clear(); 			// clear history
+		controlPanel.clear();
 	}
-
 	public Frame2d getFrame() {return frame;}
 
 	public DrawingPanel getDrawingPanel() {return drawingPanel;}
 	
-	public ControlPanel getControlPanel() {return controlPanel;} // CAS531 add for 
-
-	public History getHistory() {return history;}
+	public ControlPanel getControlPanel() {return controlPanel;} // CAS531 add for clear()
 }

@@ -552,6 +552,7 @@ public class Block2Frame extends JFrame {
 		Utilities.setCursorBusy(this, true); // CAS545 add for slow machines
 		try {
 			SyMAP2d symap = new SyMAP2d(tdbc2, null); // makes new conn
+			symap.getDrawingPanel().setTracks(2); // CAS550 set exact number
 			
 			symap.getDrawingPanel().setSequenceTrack(1,mRefIdx,mGrpIdx,Color.CYAN);
 			symap.getDrawingPanel().setSequenceTrack(2,mIdx2,b.mGrp2,Color.GREEN);

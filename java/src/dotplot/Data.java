@@ -143,8 +143,7 @@ public class Data  {
 		// CAS541 cleaned up connection, no longer can do multiple 2d display
 		//if (symap==null) new SyMAP2d(tdbc2, null); CAS542 messes up annotation; its fine allowing many
 		symap = new SyMAP2d(tdbc2, null);
-		symap.getDrawingPanel().setMaps(1);
-		symap.getHistory().clear(); 
+		symap.getDrawingPanel().setTracks(2); // CAS550 set exact number
 		
 		if (selectedBlock instanceof ABlock) {
 			ABlock ib = (ABlock)selectedBlock;
@@ -156,13 +155,6 @@ public class Data  {
 			HfilterData hd = new HfilterData (); // CAS530 use 2D filter
 			hd.setForDP(true, false);
 			symap.getDrawingPanel().setHitFilter(1,hd); // copy template
-			
-			/**
-			try { // CAS531 need to recreate since I changed the Hits code; bonus, allows multiple 2d displays
-				//DBconn dr = DBconn.getInstance(dbStr, dbLoad.getDBconn());
-				symap = new SyMAP2d(dbc2, null);
-			} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
-			**/
 			
 			symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),gY.getID(),Color.CYAN);	
 			symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),gX.getID(),Color.GREEN);
@@ -192,8 +184,7 @@ public class Data  {
 			symap = new SyMAP2d(tdbc2, null);
 		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 		
-		symap.getDrawingPanel().setMaps(1);
-		symap.getHistory().clear(); 
+		symap.getDrawingPanel().setTracks(2);
 		
 		HfilterData hd = new HfilterData(); 		// CAS530 use 2D filter
 		hd.setForDP(false, true); 					// set block, set all

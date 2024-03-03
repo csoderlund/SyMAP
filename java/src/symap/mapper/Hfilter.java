@@ -277,7 +277,7 @@ public class Hfilter extends JDialog {
 	}
 	private void refresh() {
 		if (hitFiltData.setChanged(getCopyHitFilter(), "Hfilter refresh")) {
-			mapper.clearTrackBuild();
+			mapper.setTrackBuild();
 			drawingPanel.setUpdateHistory();
 			drawingPanel.smake();
 			mapper.update();

@@ -7,8 +7,6 @@ import javax.swing.*;
 
 import database.DBconn2;
 import colordialog.ColorListener;
-import history.HistoryControl;
-import history.HistoryListener;
 import props.ProjectPool;
 import symap.Globals;
 import symap.frame.HelpBar;
@@ -18,7 +16,6 @@ import symap.mapper.HfilterData;
 import symap.mapper.Mapper;
 import symap.mapper.MapperData;
 import symap.sequence.Sequence;
-import symap.sequence.Track;
 import symap.sequence.TrackData;
 import symap.sequence.TrackHolder;
 import symap.sequence.TrackLayout;
@@ -30,38 +27,41 @@ import util.ErrorReport;
 import util.Utilities;
 
 /**
- * The DrawingPanel is the area that the maps are drawn onto.
+ * The DrawingPanel is the area that the maps are drawn onto. 
+ * Used by Explorer for 2D right hand side, and for DotPlot, Query and Blocks for popup 2D
+ * 
+ * 1. Create frame. 2. Assign trackholders. 3. Assign Sequence. 
+ * 
  * CAS521 totally removed all FPC (CAS517 had added stuff to not show FPC if no /fpc)
+ * CAS550 removed the pre-allocation of MAX_TRACKS tracks and massive logic that went with it
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class DrawingPanel extends JPanel implements ColorListener, HistoryListener { 
-	//private boolean DEBUG = Globals.DEBUG;
-	public static Color backgroundColor = Color.white;
-	public static final int MAX_TRACKS = 30; // CAS542 was 100; number of side by side tracks in 2D
+	private static Color backgroundColor = Color.white;
 
 	private Mapper[] mappers;
 	private TrackHolder[] trackHolders;
 	private HistoryControl historyControl;
 	private Frame2d frame2dListener;
 	private ProjectPool projPool = null;
-	
 	private CloseUp closeup;
-
-	private boolean doUpdateHistory = true, resetResetIndex = true;
 
 	private DBconn2 dbc2;
 
-	private boolean firstView = true;
-
-	private JPanel buttonPanel = null;
+	private JPanel buttonPanel = null; 			// Filter buttons added in TrackLayout
 	private JScrollPane scrollPane = null;
-
-	private int numMaps = 1;
-	private int statOpt=0;
+	private HelpBar helpbar = null;				// if non-explorer, helpbar goes at bottom
+	private TableDataPanel queryPanel = null;	// special for Query
 	
+	private int numTracks = 0, numMaps=0;
+	
+	private boolean doUpdateHistory = true;
+
 	private String mouseFunction = null; 
 	
-	// Called in frame.SyMAP2d; the tracks and mappers are created on startup; then reused as needed
+	private void dprt(String msg) {symap.Globals.dprt("DP: " + msg);}
+	
+	// Called in frame.SyMAP2d; the explorer reuses the drawing panel, non-explorers do not.
 	public DrawingPanel(TableDataPanel listPanel, DBconn2 dbc2, HistoryControl hc, HelpBar bar) { 
 		super();
 		setBackground(backgroundColor);
@@ -69,6 +69,8 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		this.dbc2 = dbc2; // made copy in SyMAP2d, close there too
 		projPool = new ProjectPool(dbc2);
 		historyControl = hc;
+		helpbar = bar;			
+		queryPanel = listPanel;	
 
 		buttonPanel = new JPanel(null);
 		buttonPanel.setOpaque(false);
@@ -82,62 +84,81 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 
 		scrollPane.setColumnHeaderView(buttonPanel);
 		scrollPane.getColumnHeader().setBackground(backgroundColor);
-			
-		trackHolders = new TrackHolder[MAX_TRACKS];
+	}
+	// Initialized tracks; CAS550 move from above and make exact number of needed tracks
+	public void setTracks(int num) {
+		numTracks = num; ; 
+		if (num>3) numTracks = num + (num-3); // after 3, ref is duplicated,e.g 1R3R4 num=4+1
+		numMaps=numTracks-1;
+		
+		dprt(">>> New Set Tracks " + numTracks + " Maps " + numMaps);
+		
+		trackHolders = new TrackHolder[numTracks]; // assign seqObj in setSequenceTrack below
 		for (int i = 0; i < trackHolders.length; i++) {
-			trackHolders[i] = new TrackHolder(this,bar, (i+1)); // CAS517 add trackNum
-			trackHolders[i].setOrientation( i == 0 ? Globals.LEFT_ORIENT : Globals.RIGHT_ORIENT );
+			int o =  (i == 0) ? Globals.LEFT_ORIENT : Globals.RIGHT_ORIENT ;
+			trackHolders[i] = new TrackHolder(this, helpbar, (i+1), o); // CAS517 add trackNum; CAS550 make o argument
 			add(trackHolders[i]);
 		}
 		
 		HfilterData.cntHitFilter=1; // CAS542 for debugging
-		mappers = new Mapper[MAX_TRACKS - 1];
+		mappers = new Mapper[numMaps];
 		for (int i = 0; i < mappers.length; i++) {
-			mappers[i] = new Mapper(this,trackHolders[i],trackHolders[i+1],
-					new FilterHandler(this), dbc2, projPool, bar, listPanel); 
+			FilterHandler fh = new FilterHandler(this);
+			mappers[i] = new Mapper(this,trackHolders[i],trackHolders[i+1], fh, dbc2, projPool, helpbar, queryPanel); 
 			add(mappers[i]);
 			mappers[i].setLocation(0,0);
 		}
 		setLayout(new TrackLayout(trackHolders,mappers,buttonPanel)); 
 	}
+
+	// Called by all functions that display 2d; assigns sequence to a track
+	public Sequence setSequenceTrack(int position, int projIdx, int grpIdx, Color color) {// position starts at 1
+		TrackHolder holder = trackHolders[position-1];	
+		Sequence track = new Sequence(this,holder); 
+		
+		track.setup(projIdx, grpIdx); // sets all necessary in Sequence, read DB for anno
+		
+		track.setBackground(color); 
+		track.setPosition(position);
+		
+		trackHolders[position-1].setTrack(track);
+		if (position>1) { 
+			Sequence otrack = trackHolders[position-2].getTrack();
+			track.setOtherProject(otrack.getProject());
+			otrack.setOtherProject(track.getProject());
+		}
+		
+		doUpdateHistory = true;  // 1st history of stack
+		return (Sequence) track; // CAS543 for Query.TableDataPanel to set show defaults
+	}
 	
 	public void paint(Graphics g) {
 		super.paint(g);
-		
 		for (Mapper m : mappers) {
-			if (m.isActive()) // CAS531 since Mapper.List->Mapper.seqHitObj, there was a timing bug until this was added
-				m.paint(g);
+			if (m.isActive()) 		 // CAS531 since Mapper.List->Mapper.seqHitObj, there was a timing bug until this was added
+				m.paintComponent(g); // CAS550 added component - not painting otherwise
+			else dprt("mapper timing problem");
 		}
 	}
 
-	public void setListener(Frame2d dpl) {
-		this.frame2dListener = dpl;
-	}
+	protected void setListener(Frame2d dpl) { this.frame2dListener = dpl;} // Frame2d
 
-	public Frame getFrame() {
+	protected Frame getFrame() { // FilterHandler
 		if (frame2dListener != null) return frame2dListener.getFrame();
 		else return null;
 	}
-
 	public void setFrameEnabled(boolean enabled) {
 		if (frame2dListener != null) frame2dListener.setFrameEnabled(enabled);
 	}
 
-	public ProjectPool getProjPool() 	{return projPool;} // CAS541 was returning pool of pools
-	public DBconn2 getDBC() 			{return dbc2; }		// CAS541 added
-	public JComponent getView() 		{return scrollPane;}
-
-	public void setCloseUp(CloseUp closeup) {this.closeup = closeup;}
-
+	public ProjectPool getProjPool() 	{return projPool;} // Sequence; Track CAS541 was returning pool of pools
+	public DBconn2 getDBC() 			{return dbc2; }		// CloseUpDialog, Sequence, TextShowSeq; CAS541 added
+	protected JComponent getView() 		{return scrollPane;}
+	protected void setCloseUp(CloseUp closeup) {this.closeup = closeup;}
+	
 	public CloseUp getCloseUp() {return closeup;}
 
-	public int getViewHeight() { // height of viewable area
-		return scrollPane.getViewport().getHeight();
-	}
-
-	public String toString() {
-		return "[ Drawing Panel: {" + java.util.Arrays.asList(mappers).toString() + "} ]";
-	}
+	public int getViewHeight() { return scrollPane.getViewport().getHeight();}
 
 	public void resetColors() {// ColorDialogHandler
 		setBackground(backgroundColor);	
@@ -147,42 +168,20 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		scrollPane.getColumnHeader().setBackground(backgroundColor);
 		 
 		buttonPanel.setBackground(backgroundColor);
-		clearTrackBuild();
+		setTrackBuild();
+		
 		amake();
 	}
-
-	public void clearTrackBuild() { // resetColor, Track.clearAllBuild
-		for (int i = 0; i <= numMaps; i++)
-			if (trackHolders[i].getTrack() != null)
-				trackHolders[i].getTrack().clearTrackBuild(); // hasBuild=false
-	}
 	
-	public void resetData() { // ChrExpFrame.show2DFrame, Frame2d.keyPressed
-		setFrameEnabled(false);
-		
-		for (int i = 0; i <  numMaps; ++i) mappers[i].clearData();
-		for (int i = 0; i <= numMaps; ++i) {
-			if (trackHolders[i].getTrack() != null)
-				trackHolders[i].getTrack().resetData();
-		}
-	}
-	
-	public void clearData() {// SyMAP2d.clear(); clear data but don't re-init tracks
-		for (int i = 0; i <  numMaps; ++i) mappers[i].clearData();
-		for (int i = 0; i <= numMaps; ++i) {
-			if (trackHolders[i].getTrack() != null)
-				trackHolders[i].getTrack().clearData();
-		}
-	}
-	 
-	public Vector <HitData> getHitsInRange(Track seqObjTrack, int start, int end) {//closeup.TextShowSeq
+	/////////////////////////////////////
+	public Vector <HitData> getHitsInRange(Sequence seqObj, int start, int end) {//closeup.TextShowSeq
 		Vector <HitData> list = new Vector <HitData>();
 		for (Mapper m : mappers) {
 			if (m.isActive()) {
-				Track t1 = m.getTrack1(); // left
-				Track t2 = m.getTrack2(); // right
-				if (t1 == seqObjTrack || t2 == seqObjTrack)  
-					list.addAll(m.getHitsInRange(seqObjTrack,start,end));
+				Sequence t1 = m.getTrack1(); // left
+				Sequence t2 = m.getTrack2(); // right
+				if (t1 == seqObj || t2 == seqObj)  
+					list.addAll(m.getHitsInRange(seqObj,start,end));
 			}
 		}
 		return list;
@@ -191,11 +190,10 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	/* Called by all functions that display 2d
 	 * The ends of the map are locked till the next build if the track at pos is a Sequence.*/
 	public boolean setTrackEnds(int pos, double startBP, double endBP) throws IllegalArgumentException {
-		Track track = trackHolders[pos-1].getTrack();
+		Sequence track = trackHolders[pos-1].getTrack();
 		if (track != null) {
 			track.setStartBP((long)Math.round(startBP),true);
 			track.setEndBP((long)Math.round(endBP),true);
-			firstView = false;
 			setUpdateHistory();
 			return true;
 		}
@@ -206,42 +204,29 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		mappers[map-1].getHitFilter().setChanged(hf, "DP setHitFilter");
 	}
 
-	private int getOpposingTrackProject(int position) {
-		Track opposite = null;
-		if (position-1 >= 0) opposite = trackHolders[position-1].getTrack();
-		if (opposite == null && position+1 < trackHolders.length) opposite = trackHolders[position+1].getTrack();
-		return opposite == null ? Globals.NO_VALUE : opposite.getProject();
-	}
-	
-	public int[] getMinMax(Track src, Track dest, int start, int end) {
-		int[] minMax = null;
-		
-		for (Mapper m : mappers) {
-			Track t1 = m.getTrack1(); // left
-			Track t2 = m.getTrack2(); // right
-			if ((t1 == src && t2 == dest) || (t1 == dest && t2 == src))
-				minMax = m.getMinMax(src, start, end);
-		}
-
-		return minMax;
-	}
-	
-	private Track getOpposingTrack(Track src, int orientation) {
+	private Sequence getOpposingTrack(Sequence src, int orientation) {
 		for (int i = 0; i < numMaps; i++) {
-			Track t1 = mappers[i].getTrack1(); // left
-			Track t2 = mappers[i].getTrack2(); // right
+			Sequence t1 = mappers[i].getTrack1(); // left
+			Sequence t2 = mappers[i].getTrack2(); // right
 
 			if (t1 == src && orientation == Globals.RIGHT_ORIENT) 		return t2;
 			else if (t2 == src && orientation == Globals.LEFT_ORIENT) 	return t1;
 		}
 		return null;
 	}
-
-	private void zoomTracks(Track src, int start, int end, int orientation ) {
-		Track t = getOpposingTrack(src, orientation);
+	///// Zoom ////////////////////
+	private void zoomTracks(Sequence src, int start, int end, int orientation ) {
+		Sequence t = getOpposingTrack(src, orientation);
 		if (t==null) return; // CAS531 needed after changing Mapper.seqHits to one object from List;
 		
-		int[] minMax = getMinMax(src, t, start, end);
+		int[] minMax = null;
+		for (Mapper m : mappers) {
+			Sequence t1 = m.getTrack1(); // left
+			Sequence t2 = m.getTrack2(); // right
+			if ((t1 == src && t2 == t) || (t1 == t && t2 == src))
+				minMax = m.getMinMax(src, start, end);
+		}
+		
 		if (minMax != null) {
 			int pad = (minMax[1] - minMax[0]) / 20; // 5%
 			minMax[0] = Math.max(0, minMax[0]-pad);
@@ -252,12 +237,11 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		}
 	}
 	
-	public void zoomAllTracks(Track src, int start, int end) {
+	public void zoomAllTracks(Sequence src, int start, int end) {
 		zoomTracks(src, start, end, Globals.LEFT_ORIENT);
 		zoomTracks(src, start, end, Globals.RIGHT_ORIENT);
 	}
 	
-	// "zoom all tracks" mouse function
 	public void setMouseFunction(String s) { mouseFunction = s; }
 	public String getMouseFunction() { return (mouseFunction == null ? "" : mouseFunction); }
 	public boolean isMouseFunction() { // CAS504
@@ -279,288 +263,50 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	public boolean isMouseFunctionZoomSingle() { return ControlPanel.MOUSE_FUNCTION_ZOOM_SINGLE.equals(mouseFunction); }
 	public boolean isMouseFunctionZoomAll() { return ControlPanel.MOUSE_FUNCTION_ZOOM_ALL.equals(mouseFunction); }
 
-	// Called by all functions that display 2d
-	public Sequence setSequenceTrack(int position, int project, int group, Color color) {
-		closeFilters();
-
-		TrackHolder holder = trackHolders[position-1];
-		Track track = holder.getTrack();
-
-		if ( !(track instanceof Sequence) ) track = new Sequence(this,holder);
-		
-		((Sequence)track).setup(project,group,getOpposingTrackProject(position-1));
-		
-		track.setBackground(color); 
-		
-		initTrack(track,position);
-		
-		return (Sequence) track; // CAS543 for Query.TableDataPanel to set show defaults
-	}
-	
-	private boolean initTrack(Track track, int position) { // DrawingPanel
-		track.setPosition(position); 
-		setTrack(track, position);
-		setFirstView();
-		setResetIndex();
-		setUpdateHistory();
-		return track.hasInit();
-	}
-
-	public void update(final Track track, final Object arg) { // Track
-		setFrameEnabled(false);
-		new Thread(new Runnable() {
-			public void run() {
-				setResetIndex();
-				setUpdateHistory();
-				smake();
-			}
-		}).start();
-	}
-	
-	public boolean changeAlignRegion(double factor) { // ControlPanel
+	// ControlPanel: + up 2, - down 0.5 FIXME ControlPanel and Sequence
+	protected boolean changeAlignRegion(double factor) { 
 		setUpdateHistory();
 		
 		if (factor > 1) {
 			boolean fullyExpanded = true;
 	
-			for (int i = 0; i <= numMaps; i++) {
-				if (trackHolders[i].getTrack() != null) {
-					if (!trackHolders[i].getTrack().fullyExpanded()) {
-						fullyExpanded = false;
-						break;
-					}
+			for (int i = 0; i < numTracks; i++) {
+				if (!trackHolders[i].getTrack().fullyExpanded()) {
+					fullyExpanded = false;
+					break;
 				}
 			}
 			if (fullyExpanded) return true;
 		}
-		for (int i = 0; i <= numMaps; i++) {
-			if (trackHolders[i].getTrack() != null) {
-				trackHolders[i].getTrack().changeAlignRegion(factor);
-			}
-		}
-	
+		for (int i = 0; i < numTracks; i++) trackHolders[i].getTrack().changeAlignRegion(factor);
+		
 		smake();
 		return true;
 	}
 
-	public void drawToScale() {	// ControlPanel
+	protected void drawToScale() {	// ControlPanel
 		setUpdateHistory();
 		
 		double bpPerPixel = 0;
-		Track track = null;
-		for (int i = 0; i <= numMaps; i++) {
+		Sequence track = null;
+		for (int i = 0; i < numTracks; i++) {
 			if (trackHolders[i].getTrack() != null) {
 				track = trackHolders[i].getTrack();
-				if (track instanceof Sequence)
-					bpPerPixel = Math.max(bpPerPixel,track.getBpPerPixel()); 
+				bpPerPixel = Math.max(bpPerPixel,track.getBpPerPixel()); 
 			}
 		}
 		if (bpPerPixel == 0 && track != null) bpPerPixel = track.getBpPerPixel();
-		for (int i = 0; i <= numMaps; i++)
+		for (int i = 0; i < numTracks; i++)
 			if (trackHolders[i].getTrack() != null) 
 				trackHolders[i].getTrack().setBpPerPixel(bpPerPixel);
 		
 		smake();
 	}
 	
-	private void setOtherTracksOtherProject(Track track, int position) {
-		if (position-1 >= 0 && trackHolders[position-1].getTrack() != null)
-			trackHolders[position-1].getTrack().setOtherProject(track.getProject());
-		else if (position+1 < trackHolders.length && trackHolders[position+1].getTrack() != null)
-			trackHolders[position+1].getTrack().setOtherProject(track.getProject());
-	}
-
-	protected void setTrack(Track track, int position) throws IndexOutOfBoundsException {
-		if (position>=MAX_TRACKS) 
-			Utilities.showWarningMessage("Selected " + position + " tracks.\nExceeded number of tracks (" + MAX_TRACKS + ") that can be set");
-		position--; 
-		trackHolders[position].setTrack(track);
-		setOtherTracksOtherProject(track,position);
-		if (position > numMaps) numMaps = position; 
-	}
-
-	public void closeFilters() {
-		int i;
-		for (i = 0; i < MAX_TRACKS-1; i++) {
-			mappers[i].closeFilter();
-			trackHolders[i].closeFilter();
-		}
-		trackHolders[i].closeFilter();
-	}
-
-	/**
-	 * setMaps - sets the drawing panel to correspond to the DrawingPanelData
-	 */
-	public synchronized boolean setMaps(DrawingPanelData dpd) {
-		boolean good = false;
-		int i;
-		MapperData[] mapperData = dpd.getMapperData();
-		TrackData[] trackData  = dpd.getTrackData();
-		try {
-			setMaps(mapperData.length);
-			for (i = 0; i <= numMaps; i++)
-				trackHolders[i].setTrackData(trackData[i]);
-			for (i = 0; i < numMaps; i++)
-				mappers[i].setMapperData(mapperData[i]);
-			firstView = false;
-			good = true;
-		} catch (IllegalArgumentException iae) {
-			ErrorReport.print(iae, "Drawing panel setmaps: illegal argument");
-			Utilities.showErrorMessage(iae.getMessage(), -1); 	
-		} catch (IllegalStateException ise) {
-			ErrorReport.print(ise, "Drawing panel setmaps: illegal state");
-			Utilities.showErrorMessage(ise.getMessage(), -1); 	
-		} catch (Exception exc) {
-			ErrorReport.print(exc, "Drawing panel setmaps: Unable to make map");
-			Utilities.showErrorMessage("Unable to make map", -1); 
-		} catch (OutOfMemoryError me) {
-			System.out.println("Caught OutOfMemoryError in SyMAP::setMaps() - "+me);
-			System.out.println("     Cause: "+me.getCause());
-			ErrorReport.print(me, "out of memory");
-			Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1); 
-			frame2dListener.setFrameEnabled(false);
-			throw me;
-		}
-		return good;
-	}
-
-	public void amake() { // asynchronous call to make()
-		new Thread(new MapMaker()).start();
-	}
-
-	public boolean smake() { // synchronizes private calls to make()
-		return make();
-	}
-
-	private synchronized boolean make() {
-		boolean status = false;
-		if (tracksSet()) {
-			setFrameEnabled(false);
-			try {
-				initAll();
-				buildAll();
-				doConditionalUpdateHistory();
-				setFrameEnabled(true);
-				repaint();
-				status = true;
-			} catch (IllegalArgumentException iae) {
-				ErrorReport.print(iae, "Drawing panel make: illegal argument");
-				Utilities.showErrorMessage(iae.getMessage(), -1); 	
-			} catch (IllegalStateException ise) {
-				ErrorReport.print(ise, "Drawing panel make: illegal state");
-				Utilities.showErrorMessage(ise.getMessage(), -1); 	
-			} catch (Exception exc) {
-				ErrorReport.print(exc, "Drawing panel make: exception");
-				Utilities.showErrorMessage("Unable to make map", -1); 
-			} catch (OutOfMemoryError me) {
-				ErrorReport.print(me, "Drawing panel make: " +me.getCause());
-				Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1);
-				frame2dListener.setFrameEnabled(false);
-				throw me;
-			}
-		}
-		return status;
-	}
-
-	private class MapMaker implements Runnable {
-		DrawingPanelData data = null;
-
-		public MapMaker() {
-			data = null;
-		}
-		public MapMaker(DrawingPanelData data) {
-			this.data = data;
-		}
-		public void run() {
-			if (data == null || setMaps(data)) {
-				make(); 
-			}
-		}
-	}
-
-	/**
-	 * Sets this drawing panel to first view.  This is used in setting the size of the Sequences to
-	 * fit to the hits shown by the Mapper's.
-	 */
-	public void setFirstView() {
-		firstView = true;
-	}
-
-	private void initAll() { 
-		int i;
-		for (i = 0; i <= numMaps; i++) {
-			if (trackHolders[i].getTrack() == null) 
-				Utilities.showWarningMessage("Track at position "+(i+1)+" is not set."); 
-			if (!trackHolders[i].getTrack().hasInit()) 
-				Utilities.showWarningMessage("Track at Position "+(i+1)+" is unable to initialize."); 
-		}
-		for (i = 0; i < numMaps; i++)
-			if (!mappers[i].init()) 
-				Utilities.showWarningMessage("The "+(i+1)+" map is unable to initialize."); 
-	}
-
-	private void firstViewBuild() {
-		int i;
-		for (i = 0; i <= numMaps; i++) {
-			if (trackHolders[i].getTrack() instanceof Sequence) {
-				trackHolders[i].getTrack().resetStart();
-				trackHolders[i].getTrack().resetEnd();
-			}
-		}
-		for (i = 0; i <= numMaps; i++)
-			trackHolders[i].getTrack().build();
-
-		Sequence seq = null;
-		int[] mm = {Integer.MAX_VALUE,Integer.MIN_VALUE};
-		for (i = 0; i < numMaps; i++) {
-			if (seq != null) {
-				for (int j = 0; j < 2; j++) {
-					if (seq == mappers[i].getTrack(j)) {
-						if (mm[0] != Integer.MAX_VALUE) seq.setStartBP(mm[0],true);
-						if (mm[1] != Integer.MIN_VALUE) seq.setEndBP(mm[1],true);
-						break;
-					}
-				}
-				mm[0] = Integer.MAX_VALUE;
-				mm[1] = Integer.MIN_VALUE;
-			}
-			if (mappers[i].getTrack1() instanceof Sequence && mappers[i].getTrack1() != seq) {
-				seq = (Sequence)mappers[i].getTrack1();
-			}
-			else if (mappers[i].getTrack2() instanceof Sequence && mappers[i].getTrack2() != seq) {
-				seq = (Sequence)mappers[i].getTrack2();
-			}
-			else {
-				seq = null;
-				mm[0] = Integer.MAX_VALUE;
-				mm[1] = Integer.MIN_VALUE;
-			}
-		}
-
-		if (seq != null) {
-			if (mm[0] != Integer.MAX_VALUE) seq.setStartBP(mm[0],true);
-			if (mm[1] != Integer.MIN_VALUE) seq.setEndBP(mm[1],true);
-		}
-	}
-
-	private void buildAll() {
-		if (firstView) {
-			firstViewBuild();
-			firstView = false;
-		}
-		
-		for (int i = 0; i <= numMaps; i++)
-			trackHolders[i].getTrack().build();
-	}
-
 	public void setVisible(boolean visible) {
-		int i;
-		for (i = 0; i < numMaps; i++) {
-			mappers[i].setVisible(visible);
-			trackHolders[i].setVisible(visible);
-		}
-		trackHolders[i].setVisible(visible);
-
+		for (int i = 0; i < numMaps; i++) mappers[i].setVisible(visible);
+		for (int i = 0; i < numTracks; i++) trackHolders[i].setVisible(visible);
+		
 		if (visible) doLayout();
 		
 		super.setVisible(visible); 
@@ -568,85 +314,161 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		getView().repaint();
 	}
 
-	public boolean tracksSet() {
-		for (int i = 0; i <= numMaps; i++) {
-			if (trackHolders[i].getTrack() == null) return false;
-		} 
-		return true;
-	}
+	protected int getNumMaps() {return numMaps;}// Frame2d
 
-	public int getNumMaps() {return numMaps;}// Frame2d
-
-	public void setMaps(int numberOfMaps) { // dotPlot, ChrExpFrame, TableDataPanel
-		if (numberOfMaps < 1) numberOfMaps = 1;
-		else if (numberOfMaps > MAX_TRACKS - 1) {
-			numberOfMaps = MAX_TRACKS - 1;
-			Utilities.showWarningMessage("Exceeded number of pre-defined tracks (" + MAX_TRACKS + ")");
-		}
-		if (numMaps != numberOfMaps) {
-			closeFilters();
-			setFrameEnabled(false);
-
-			numMaps = numberOfMaps;
-			for (int i = numMaps + 1; i < trackHolders.length; i++) {
-				trackHolders[i].setTrack(null);
-			}
-		}
-	}
-	public int getNumAnnots() {// Frame2d
+	public int getNumAnnots() {// Frame2d; for query, the annotation filter is turned on; make room
 		int ret = 0;
 		for (int i = 0; i < trackHolders.length; i++) {
 			TrackHolder th = trackHolders[i];
 			if (th != null) {
-				Track t = th.getTrack();
-				if (t instanceof symap.sequence.Sequence) {
-					if (((Sequence)t).getShowAnnot()) {
-						ret++;
-					}
-				}
+				Sequence t = th.getTrack();
+				if (t.getShowAnnot()) ret++;
 			}
 		}
 		return ret;
 	}
 	
-	// CAS541 Set in ControlPanel, read by Plot
-	public void setStatOpts(int n) {statOpt = n;}
-	public int getStatOpts() {return statOpt;}
+	public String toString() {
+		return "[ Drawing Panel: {" + java.util.Arrays.asList(mappers).toString() + "} ]";
+	}
 	
-	/************* History *********************/
+	//////////Clears ////////////////// 
+	
+	public void setTrackBuild() { // resetColor, Sequence.clearAllBuild
+		for (int i = 0; i < numTracks; i++)
+			if (trackHolders[i].getTrack() != null)
+				trackHolders[i].getTrack().setTrackBuild(); // hasBuild=false
+	}
+	
+	protected void clearData() {
+		if (numMaps==0) return;
+		
+		closeFilters();
+		
+		for (int i = 0; i < trackHolders.length; i++) trackHolders[i].getTrack().clearData();
+		trackHolders = null;
+		for (int i=0; i<mappers.length; i++)  mappers[i].clearData();
+		mappers = null;
+		numMaps=numTracks=0;
+	}
+	
+	protected void closeFilters() {
+		if (numMaps==0) return;
+		
+		for (int i = 0; i < mappers.length; i++) mappers[i].closeFilter();
+		for (int i = 0; i < trackHolders.length; i++)trackHolders[i].closeFilter();
+	}
+	
+	///////////////////////////////////////////////////////////////
+	// CAS550 remove private void firstViewBuild() {
+	
+	public void amake() { // called on 1st view, or resetColors; 
+		dprt("amake - create MapMaker");
+		new Thread(new MapMaker()).start();
+	}	
+	public boolean smake() { // called when graphics changes: Sfilter, Sequence.mousePress, DrawingPanel.changeRegions
+		dprt("smake");
+		return make();
+	}
+	
+	private synchronized boolean make() { // CAS550 merge all 
+		if (trackHolders==null || trackHolders.length==0) {
+			dprt("no tracks");
+			return false;
+		}
+		
+		boolean status = false;
+		
+		setFrameEnabled(false);
+		try {
+			for (int i = 0; i < numMaps; i++)
+				mappers[i].initHits(); 			// only init the first time called
+			
+			for (int i = 0; i < numTracks; i++)
+				trackHolders[i].getTrack().build(); // build graphics for painting in repaint
+			
+			if (doUpdateHistory) {
+				updateHistory();
+				doUpdateHistory = false;
+			}
+			
+			setFrameEnabled(true);
+			repaint();
+			status = true;
+		} 
+		catch (IllegalArgumentException iae) {ErrorReport.print(iae, "Drawing panel make: illegal argument");} 
+		catch (IllegalStateException ise) {ErrorReport.print(ise, "Drawing panel make: illegal state");} 
+		catch (Exception exc) {ErrorReport.print(exc, "Drawing panel make: exception");} 
+		catch (OutOfMemoryError me) {
+			ErrorReport.print(me, "Drawing panel make: " +me.getCause());
+			Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1);
+			frame2dListener.setFrameEnabled(false);
+			throw me;
+		}
+		return status;
+	}
+	private class MapMaker implements Runnable {
+		DrawingPanelData data = null;
 
-	public void setHistory(Object obj) {
+		public MapMaker() { // amake; colors or 1st view
+			data = null;
+		}
+		public MapMaker(DrawingPanelData data) { // setHistory called by history.HistoryControl when button click; show data
+			this.data = data;
+		}
+		public void run() {
+			if (data == null || setMaps(data)) {
+				dprt("MapMaker run data==null " + (data==null));
+				make(); 
+			}
+		}
+	}
+	/****************************************************************
+	 * History
+	 */
+	public void setHistory(Object obj) { // HistoryControl.actionPerformed because button clicked 
 		setFrameEnabled(false);
 		new Thread(new MapMaker((DrawingPanelData)obj)).start();
 	}
-	public void setUpdateHistory() {
-		doUpdateHistory = true;
-	}
-	public void setImmediateUpdateHistory() {
-		updateHistory();
-	}
-	public void doConditionalUpdateHistory() {
-		if (doUpdateHistory) {
-			updateHistory();
-			doUpdateHistory = false;
-		}
-	}
-	public void setResetIndex() {resetResetIndex = true;}
+	public void setUpdateHistory() {doUpdateHistory = true;} // Filters, changeAlignRegion, setSequencTrack, setTrackEnds
 	
-	private void updateHistory() {
-		DrawingPanelData dpd = new DrawingPanelData(mappers,trackHolders,numMaps);
-		historyControl.add(dpd,resetResetIndex);
-		resetResetIndex = false;
+	public void updateHistory() { // make when doUpdateHistory; Sequence.mouseRelease changes map
+		DrawingPanelData dpd = new DrawingPanelData(mappers,trackHolders);
+		historyControl.add(dpd);
 	}
-	// CAS544 moved from separate file because only used by this file
-	// Used for History
-	public class DrawingPanelData {
+	// Show History: setMaps in MapMaker sets the drawing panel to correspond to the DrawingPanelData
+	private synchronized boolean setMaps(DrawingPanelData dpd) {
+		dprt("Show history from drawingpaneldata");
+		boolean good = false;
+		MapperData[] mapperData = dpd.getMapperData();
+		TrackData[] trackData  = dpd.getTrackData();
+		try {
+			for (int i = 0; i < numTracks; i++) trackHolders[i].setTrackData(trackData[i]);
+			for (int i = 0; i < numMaps; i++)   mappers[i].setMapperData(mapperData[i]);
+			good = true;
+		} 
+		catch (IllegalArgumentException iae) {ErrorReport.print(iae, "Drawing panel setmaps: illegal argument");} 
+		catch (IllegalStateException ise) {ErrorReport.print(ise, "Drawing panel setmaps: illegal state");} 
+		catch (Exception exc) {ErrorReport.print(exc, "Drawing panel setmaps: Unable to make map");} 
+		catch (OutOfMemoryError me) {
+			System.out.println("Caught OutOfMemoryError in SyMAP::setMaps() - "+me.getCause());
+			ErrorReport.print(me, "out of memory");
+			Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1); 
+			frame2dListener.setFrameEnabled(false);
+			throw me;
+		}
+		return good;
+	}
+	
+	// Create History: CAS544 moved from separate file because only used by this file
+	private class DrawingPanelData {
 		private MapperData[] mapperData;
 		private TrackData[]  trackData;
 
-		protected DrawingPanelData(Mapper[] mappers, TrackHolder[] trackHolders, int numMaps) {
-			mapperData = new MapperData[numMaps];
-			trackData = new TrackData[numMaps+1];
+		protected DrawingPanelData(Mapper[] mappers, TrackHolder[] trackHolders) {
+			dprt("Make history");
+			mapperData = new MapperData[mappers.length];
+			trackData = new TrackData[trackHolders.length];
 			for (int i = 0; i < mapperData.length; i++) mapperData[i] = mappers[i].getMapperData();
 			for (int i = 0; i < trackData.length; i++)  trackData[i] = trackHolders[i].getTrackData();
 		}

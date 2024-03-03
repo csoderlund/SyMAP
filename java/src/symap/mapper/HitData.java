@@ -19,7 +19,7 @@ public class HitData {
 	private String htype;			// CAS546 add htype (EE, EI, etc)
 	private int geneOlp = -1; 
 	private int annot1_idx, annot2_idx; // CAS543 add
-	private int start1, end1, start2, end2;
+	protected int start1, end1, mid1, start2, end2, mid2;		// CAS550 add mid for paintComponent
 	private boolean isSameOrient, isPosOrient1, isPosOrient2; 	// CAS517 if the same
 	private String query_seq, target_seq; // coordinates of hit
 	
@@ -34,14 +34,13 @@ public class HitData {
 	private boolean isConserved=false;	// set on conserved seqFilter, same as geneOlap=2 if only 2 tracks; CAS545 add 
 	
 	private String hitTag;			// CAS516 gNbN see MapperPool; CAS520 g(gene_overlap) [c(runnum.runsize)]
-	private String chr1, chr2; 		// CAS517 add
 	
 	// MapperPool.setSeqHitData populates, puts in array for SeqHits, where each HitData is associated with a DrawHit
 	protected HitData(Mapper mapper, long id, int hitnum, 
 			  double pctid, int pctsim, int nMerge, int covScore, String htype, int overlap,
 			  int annot1_idx, int annot2_idx,
 			  String strand, int start1, int end1, int start2, int end2, String query_seq, String target_seq,   
-			  int runnum, int runsize, int block, double corr, String chr1, String chr2)
+			  int runnum, int runsize, int block, double corr, String chr1, String chr2) // chr1/2 not used
 	{
 		this.mapper = mapper;
 		this.idx = id;
@@ -70,6 +69,9 @@ public class HitData {
 		this.end1 = end1;
 		this.start2 = start2;
 		this.end2 = end2;
+		this.mid1 = (start1+end1) >>1;
+		this.mid2 = (start2+end2) >>1;
+		
 		this.query_seq = query_seq; 	// start1, end1
 		this.target_seq = target_seq;	// start2, end2
 		
@@ -83,9 +85,6 @@ public class HitData {
 		this.blocknum = block;
 		this.corr = corr;
 		this.isBlock = (blocknum>0) ? true : false;
-		
-		this.chr1 = chr1;
-		this.chr2 = chr2;	
 	}
 	
 	public boolean isSameOrient()  { return isSameOrient; }

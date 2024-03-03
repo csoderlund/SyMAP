@@ -32,7 +32,6 @@ import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
@@ -969,9 +968,9 @@ public class TableDataPanel extends JPanel {
 			if (!rd.loadRow(row)) return;
 				
 			// for the get statements
-			double track1Start=0, track2Start=0, track2End=0, track1End=0;
+			double track1Start=0, track2Start=0, track2End=0, track1End=0, padding=0;
 			int item = (cmbSynOpts.getSelectedIndex());
-			if (item>0) {
+			if (item>0) { // block or collinear
 				double [] coords;
 				if (item==2) {
 					if (rd.collinear==0) {
@@ -998,7 +997,7 @@ public class TableDataPanel extends JPanel {
 				track2End   = coords[3] + pad;
 			}
 			else { // region
-				double padding = Double.parseDouble(txtMargin.getText()) * 1000;
+				padding = Double.parseDouble(txtMargin.getText()) * 1000;
 				
 				track1Start = (Integer) rd.start[0];
 				track1Start = Math.max(0, track1Start - padding);
@@ -1020,9 +1019,7 @@ public class TableDataPanel extends JPanel {
 			
 			// create new drawing panel; CAS543 quit setting Sfilter Show_Annotation because is static
 			SyMAP2d symap = new SyMAP2d(theParentFrame.getDBC(), getInstance());
-		
-			symap.getDrawingPanel().setMaps(1);
-			symap.getHistory().clear(); 
+			symap.getDrawingPanel().setTracks(2); // CAS550 set exact number
 			
 			HfilterData hd = new HfilterData (); // CAS520 change from dotplot.FilterData
 			if (item==showREGION) 		hd.setForQuery(false, false, true);  // block, set, region

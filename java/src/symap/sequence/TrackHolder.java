@@ -1,5 +1,8 @@
 package symap.sequence;
 
+/*************************************************************
+ * Holds a sequence track
+ */
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
@@ -18,15 +21,16 @@ public class TrackHolder extends JComponent  {
 	private DrawingPanel dp;
 	private HelpBar hb;
 	private int orientation;
-	private Track track;
+	private Sequence track;	// CAS550 track->sequence
 	private FilterHandler fh;
 	private int trackNum;	// CAS517 add for Sequence track 
 
-	public TrackHolder(DrawingPanel dp, HelpBar hb, int trackNum) { // Called by DrawingPanel; created on startup
+	public TrackHolder(DrawingPanel dp, HelpBar hb, int trackNum, int side) { // Called by DrawingPanel; created on startup
 		super();
 		this.dp = dp;
 		this.hb = hb;
 		this.trackNum = trackNum;
+		this.orientation = side;
 		
 		fh = new FilterHandler(dp);
 		track = null;
@@ -35,13 +39,11 @@ public class TrackHolder extends JComponent  {
 		setVisible(false);
 	}
 
-	public void setOrientation(int orient) { orientation = orient;}// Called by DrawingPanel
-
-	public Track getTrack() {return track;}// Called by DrawingPanel, Mapper
+	public Sequence getTrack() {return track;}// Called by DrawingPanel, Mapper - CAS550 return Sequence
 	
 	public int getTrackNum() {return trackNum;}
 	
-	public void setTrack(Track t) { // Called by DrawingPanel and TrackHolder
+	public void setTrack(Sequence t) { // Called by DrawingPanel.setMaps, setTracks and TrackHolder 
 		if (t == track) return ;
 
 		if (track != null) {
@@ -51,12 +53,12 @@ public class TrackHolder extends JComponent  {
 			removeMouseWheelListener(track); 	
 			removeKeyListener(track); 			
 			if (hb != null) hb.removeHelpListener(this);	    
-			track.clear();
+			track.clearSeq();
 		}
 		track = t;
 		fh.setSfilter(track);
+		
 		if (track != null) {
-			track.setHeld();
 			addMouseListener(track);
 			addMouseMotionListener(track);
 			addMouseWheelListener(track); 	
@@ -65,59 +67,59 @@ public class TrackHolder extends JComponent  {
 			track.setOrientation(orientation);
 		}
 	}
-
-	public TrackData getTrackData() { // called by DrawingPanelData
-		if (track != null) return track.getData();
-		else return null;
-	}
-
-	public void setTrackData(TrackData td) { // called by DrawingPanel
+	public void setTrackData(TrackData td) { // called by DrawingPanel.setMaps for History
 		if (td == null) setTrack(null);
 		else {
-			if (track == null || td.getTrackClass() != track.getClass()) {
-				Track t = null;
+			if (track == null) {
+				Sequence t = null;
 				try { // CAS512 this was one big statement
 					Class <?> [] x  = new Class[]{dp.getClass(),getClass()};
 					Object [] 	 y  = new Object[]{dp,this};
 					Class <?>    tc = td.getTrackClass();
-					t = (Track)  tc.getConstructor(x).newInstance(y);
-				} catch(Exception e) {
-					ErrorReport.print(e, "setTrackData");
-				}
+					t = (Sequence)  tc.getConstructor(x).newInstance(y);
+				} 
+				catch(Exception e) {ErrorReport.print(e, "setTrackData");}
+				
 				setTrack(t);
 			}
 			track.setup(td);
 		}
 	}
+	public TrackData getTrackData() { // called by DrawingPanelData for History; 
+		if (track != null) return track.getData(); // copy of TrackData filter and graphic settings
+		else return null;
+	}
+
 	
-	public Point getOffset() {
+	protected void showPopupFilter(MouseEvent e) { // Sequence.mousePressed
+		fh.showPopup(e);
+	}
+	protected Point getOffset() { // TrackLayout
 		if (track != null) return track.getMoveOffset();
 		else return new Point();
 	}
+	protected JButton getFilterButton() { // TrackLayout
+		if (track != null) return fh.getFilterButton();
+		else return new JButton();
+	}
+	public void closeFilter() { // DrawingPanel
+		fh.closeFilter();
+	}
+	
 	public Dimension getPreferredSize() {
 		if (track != null) return track.getDimension();
 		else return new Dimension(0,0);
 	}
-	public void setVisible(boolean visible) {
+	public void setVisible(boolean visible) { 
 		if (track != null && fh.getFilterButton() != null) fh.getFilterButton().setEnabled(visible);
 		super.setVisible(visible);
-	}
-	public JButton getFilterButton() {
-		if (track != null) return fh.getFilterButton();
-		else return new JButton();
-	}
-	public void closeFilter() {
-		fh.closeFilter();
 	}
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		if (track != null) track.paintComponent(g);
 	}
-	public void showPopupFilter(MouseEvent e) {
-		fh.showPopup(e);
-	}
 	public String toString() {
-		String x = String.format("%2d", orientation);
-		return "TH " + x + " #" + trackNum;
+		String seq = (track==null) ? "null" : track.toString();
+		return String.format("TrackHolder side=%2d #%d %s", orientation, trackNum, seq);
 	}
 }

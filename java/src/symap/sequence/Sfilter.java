@@ -34,7 +34,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
-import number.GenomicsNumber;
 import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import util.ErrorReport;
@@ -50,7 +49,7 @@ import util.Utilities;
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Sfilter extends JDialog {	
-	private static final String DEFAULT_ENDS_UNIT = GenomicsNumber.KB;
+	private static final String DEFAULT_ENDS_UNIT = BpNumber.KB;
 	
 	// CAS542 moved from Sequence to here; current state is in Sequence variables; state on open is in this file.
 	// CAS543 after rewrite; was being changed from Query, but applied to all 2D displays so just quit doing
@@ -131,14 +130,14 @@ public class Sfilter extends JDialog {
 		geneLabel =    		new JLabel("         or Gene#"); 
 		
 		startText = new JTextField("",10); // CAS520 was 15
-		startCombo = new JComboBox <String>(GenomicsNumber.ABS_UNITS);
+		startCombo = new JComboBox <String>(BpNumber.ABS_UNITS);
 		startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
 		JPanel startPanel = new JPanel(); startPanel.add(startText); startPanel.add(startCombo);
 		startPanel.setLayout(new BoxLayout(startPanel, BoxLayout.LINE_AXIS));
 		startPanel.setMaximumSize(startPanel.getPreferredSize());startPanel.setMinimumSize(startPanel.getPreferredSize());
 				 
 		endText =   new JTextField("",10);
-		endCombo =  new JComboBox <String>(GenomicsNumber.ABS_UNITS);
+		endCombo =  new JComboBox <String>(BpNumber.ABS_UNITS);
 		endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
 		JPanel endPanel = new JPanel(); endPanel.add(endText); endPanel.add(endCombo);
 		endPanel.setLayout(new BoxLayout(endPanel, BoxLayout.LINE_AXIS));
@@ -320,7 +319,7 @@ public class Sfilter extends JDialog {
 	}	
 	public boolean canShow() {
 		if (seqObj == null) return false;
-		return seqObj.hasInit();
+		return seqObj.hasLoad();
 	}
 	
 	public void closeFilter() {
@@ -515,7 +514,7 @@ public class Sfilter extends JDialog {
 	// Check boxes are already processed; the change in coords get processed on OK
 	protected boolean saveAction()  {
 		if (seqObj == null) return false;
-		if (!seqObj.hasInit()) return true;
+		if (!seqObj.hasLoad()) return true;
 		double tstart=0, tend=0;
 		boolean bChg=false;
 		
@@ -534,8 +533,8 @@ public class Sfilter extends JDialog {
 			tstart = Math.max(0,mid-Globals.MAX_RANGE);
 			tend   = Math.min(seqObj.getTrackSize(), mid+Globals.MAX_RANGE);
 
-			startText.setText((tstart/1000)+"");startCombo.setSelectedItem(GenomicsNumber.KB);
-			endText.setText((tend/1000)+"");    endCombo.setSelectedItem(GenomicsNumber.KB);
+			startText.setText((tstart/1000)+"");startCombo.setSelectedItem(BpNumber.KB);
+			endText.setText((tend/1000)+"");    endCombo.setSelectedItem(BpNumber.KB);
 			
 			bChg=true;
 		}
@@ -558,7 +557,7 @@ public class Sfilter extends JDialog {
 					Utilities.showErrorMessage(sStr + " is not a valid start point");
 					return false;
 				}
-				tstart = tstart * GenomicsNumber.getUnitConversion(GenomicsNumber.ABS_UNITS[sInd]);
+				tstart = tstart * BpNumber.getUnitConversion(BpNumber.ABS_UNITS[sInd]);
 			
 				try {
 					tend = Double.parseDouble(eStr); // CAS512 (new Double(endText.getText())).doubleValue();
@@ -566,7 +565,7 @@ public class Sfilter extends JDialog {
 					Utilities.showErrorMessage(eStr + " is not a valid end point");
 					return false;
 				}
-				tend = tend * GenomicsNumber.getUnitConversion(GenomicsNumber.ABS_UNITS[eInd]);
+				tend = tend * BpNumber.getUnitConversion(BpNumber.ABS_UNITS[eInd]);
 				
 				if (tstart>=tend) {
 					Utilities.showErrorMessage("The start (" + tstart + ") must be less than end (" + tend + ")");

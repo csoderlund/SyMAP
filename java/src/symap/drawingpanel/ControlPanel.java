@@ -13,7 +13,6 @@ import javax.swing.JPanel;
 import javax.swing.JComboBox;
 
 import colordialog.ColorDialogHandler;
-import history.HistoryControl;
 import symap.Globals;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
@@ -24,26 +23,42 @@ import util.Jhtml;
 /**
  * The top panel containing things such as the forward/back buttons, reset button, etc...
  * Handles the actions of those buttons through the arguments passed into the constructor.
- * CAS534 squash buttons so can view all from popup
+ * CAS534 squash buttons so can view all from popup; 
+ * CAS550 remove Stats button that I added in 541; I added little ? instead
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ControlPanel extends JPanel implements HelpListener {	
-	public static int pINFO=0, pHELP=1; // order of stats
-	
 	private static final String HELP					    = "? Online Help"; // CAS532 add
 	public static final String MOUSE_FUNCTION_SEQ 			= "Show Seq Options";
 	public static final String MOUSE_FUNCTION_CLOSEUP 		= "Align (Max " + Globals.MAX_CLOSEUP_K + ")";
 	public static final String MOUSE_FUNCTION_ZOOM_SINGLE 	= "Zoom Select Track";
 	public static final String MOUSE_FUNCTION_ZOOM_ALL 		= "Zoom All Tracks";
 	
-	private JComboBox <String> statsOpts; // CAS541 add, works like the Dotplot to show info or help
 	private JButton scaleButton, upButton, downButton;
 	private JButton showImageButton, editColorsButton;
+	private JButton helpButtonLg, helpButtonSm;
 	private JComboBox <String> mouseFunction; // CAS531 added so can reset
 	
 	private DrawingPanel dp;
 	private HistoryControl hc;
 	private ColorDialogHandler cdh;
+	
+	private static final String SEQ_help = 
+			"Track Information:"
+			+ "\n Hover on gene for information."
+			+ "\n Right-click on gene for popup of full description."
+			+ "\n Right-click in non-gene track space for subset filter popup.";
+	
+	private static final String HIT_help = 
+			"Hit-wire Information:"
+			+ "\n Hover on hit-wire for information."
+			+ "\n Right-click on hit-wire for popup of full information."
+			+ "\n Right-click in white space of hit area for subset filter popup.";
+	
+	private static final String FIL_help =
+			"Filter Information:" 
+			+ "\n Changing filters are retained in subsequent displays."
+			+ "\n Any filter change is a History event.";
 
 	public ControlPanel(DrawingPanel dp, HistoryControl hc, ColorDialogHandler cdh, HelpBar bar, boolean bIsCE){
 		super();
@@ -58,7 +73,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		JButton forwardButton    = (JButton) Jcomp.createButton(this,"/images/forward.gif",
 				"Forward: Go forward in history",bar,null,false, false);
 
-		if (hc != null) hc.setButtons(homeButton,null/*resetButton*/,null/*doubleBackButton*/,backButton,forwardButton,null/*exitButton*/);
+		if (hc != null) hc.setButtons(homeButton,backButton,forwardButton);
 
 		downButton       = (JButton) Jcomp.createButton(this,"/images/minus.gif",
 				"Shrink the view (less bp)",bar,buttonListener,false, false);
@@ -71,16 +86,13 @@ public class ControlPanel extends JPanel implements HelpListener {
 		editColorsButton = (JButton) Jcomp.createButton(this,"/images/colorchooser.gif",
 				"Colors: Edit the color settings",bar,buttonListener,false, false);
 		
-		JButton helpButton = Jhtml.createHelpIconUserLg(Jhtml.align2d);
+		helpButtonLg = Jhtml.createHelpIconUserLg(Jhtml.align2d);
+		
+		// icon from https://icons8.com/icons/set/info
+		helpButtonSm= (JButton) Jcomp.createButton(this,"/images/info.png",
+				"Quick Help Popup",bar,buttonListener,false, false);
 		
 		mouseFunction = createMouseFunctionSelector(bar);
-		
-		statsOpts = new JComboBox <String> ();
-		statsOpts.addItem("Stats"); // if change, change constants above
-		statsOpts.addItem("Help");
-		statsOpts.addActionListener(buttonListener);
-		statsOpts.setName("Show in Information box.");
-		statsOpts.setToolTipText("Show in Information box.");
 		
 		GridBagLayout gridbag = new GridBagLayout();
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -90,11 +102,6 @@ public class ControlPanel extends JPanel implements HelpListener {
 		constraints.ipadx = 5;
 		constraints.ipady = 8;
 
-		if (bIsCE) { 							// CAS541 not enough room if !CE; CAS543 put at beginning and remove Info:	
-			addToGrid(this,gridbag, constraints, statsOpts,1); 	
-			addToGrid(this, gridbag, constraints, new JLabel(" "), 1);
-		}
-		
 		if (hc != null) {
 			addToGrid(this, gridbag, constraints, homeButton, 1);
 			addToGrid(this, gridbag, constraints, backButton, 1);
@@ -113,7 +120,8 @@ public class ControlPanel extends JPanel implements HelpListener {
 		
 		if (cdh != null) addToGrid(this,gridbag,constraints,editColorsButton,1); // CAS517 put before Print
 		addToGrid(this, gridbag, constraints, showImageButton, 1);
-		if (helpButton != null) addToGrid(this,gridbag,constraints, helpButton,1);
+		addToGrid(this,gridbag,constraints, helpButtonLg,1);
+		addToGrid(this,gridbag,constraints, helpButtonSm,1);
 	}
 	
 	private ActionListener buttonListener = new ActionListener() {
@@ -122,14 +130,11 @@ public class ControlPanel extends JPanel implements HelpListener {
 			if (source == scaleButton)           dp.drawToScale();
 	
 			else if (source == downButton)       dp.changeAlignRegion(0.5);
-			else if (source == upButton)         dp.changeAlignRegion(2.0);
-			
-			else if (source == statsOpts) { // CAS541 add
-			    dp.setStatOpts(statsOpts.getSelectedIndex());
-			}
+			else if (source == upButton)         dp.changeAlignRegion(2.0); // CAS550
 			
 			else if (source == editColorsButton) cdh.showX();
 			else if (source == showImageButton)  ImageViewer.showImage("Exp_2D", (JPanel)dp); // CAS507 made static
+			else if (source == helpButtonSm) popupHelp();
 		}
 	};
 	
@@ -142,9 +147,8 @@ public class ControlPanel extends JPanel implements HelpListener {
 		upButton.setEnabled(enable);
 		if (hc != null) hc.setEnabled(enable);	 
 	}
-	public void clear() { // CAS531 put back to zoom
-		mouseFunction.setSelectedIndex(0); 
-	}
+	public void clear() { mouseFunction.setSelectedIndex(0);  }// CAS531 put back to zoom
+		
 	private void addToGrid(Container cp, GridBagLayout layout, GridBagConstraints constraints, Component comp, int width) {
 		constraints.gridwidth = width;
 		layout.setConstraints(comp, constraints);
@@ -156,6 +160,9 @@ public class ControlPanel extends JPanel implements HelpListener {
 		return comp.getName();
 	}
 	
+	private void popupHelp() {
+		util.Utilities.displayInfoMonoSpace(this, "2d Quick Help", SEQ_help+"\n\n"+HIT_help+"\n\n"+FIL_help, false);
+	}
 	private JComboBox <String> createMouseFunctionSelector(HelpBar bar) {
 		String [] labels = { // CAS504 change order and add _SEQ
 				MOUSE_FUNCTION_ZOOM_ALL,

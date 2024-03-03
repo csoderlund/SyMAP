@@ -61,7 +61,7 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("  -s        : print stats for A&S, or recreate the Summary on display");
 			System.out.println("  -wse      : for g2, exclude MUMmer hits that differ from gene strand (v5.4.8 Algo2)");
 			System.out.println("  -wsp      : for g2, print MUMmer hits that differ from gene strand (v5.4.8 Algo2)");
-			System.out.println("  -nsg      : do not split genes on cluster hit creation (Cluster Algo1)");
+			System.out.println("  -sg       : split genes on cluster hit creation (Cluster Algo1)");
 		}
 	}
 	// these are listed to terminal in the 'symap' perl script.
@@ -94,9 +94,9 @@ public class SyMAPmanager extends ManagerFrame {
 				//lgProj1st = true;
 			}
 			
-			if (hasCommandLineOption(args, "-nsg")) { // CAS540
-				System.out.println("-nsg do not split genes (Algo1)");
-				Group.bSplitGene= false;
+			if (hasCommandLineOption(args, "-sg")) { // CAS540
+				System.out.println("-sg split genes (Algo1)");
+				Group.bSplitGene= true;
 			}
 			if (hasCommandLineOption(args, "-z")) {// CAS519b
 				Globals.GENEN_ONLY=true;
@@ -176,7 +176,7 @@ public class SyMAPmanager extends ManagerFrame {
 		String base = url.substring(0, url.length()-1);
 		//String d = (Runtime.getRuntime().maxMemory() / (1024*1024)) + "m";
 		System.out.println("\nSyMAP " + Globals.VERSION + Globals.DATE + "  " + base
-			+ "  Compiled Java v" + System.getProperty("java.version")); // CAS548 add 'Compiled', remove mem
+			+ " Run Java v" + System.getProperty("java.version")); // CAS548 add 'Compiled', remove mem; CAS550 was Run, no compile 
 	}
 	
 	public static boolean checkJavaSupported(Component frame) {	

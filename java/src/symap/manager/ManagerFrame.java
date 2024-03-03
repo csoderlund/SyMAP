@@ -1030,16 +1030,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		Utilities.setCursorBusy(this, false);
 	}
 	/***********************************************************************/
-	private void showChrExp() { // CAS541 moved from SyMAP manager
+	private void showChrExp() { // CAS541 moved from SyMAP manager; CAS550 moved build logic to ChrExpInit
 		Utilities.setCursorBusy(this, true);
 		try {
-			ChrExpInit symapExp = new ChrExpInit(frameTitle + " - ChrExp", dbc2);
+			ChrExpInit symapExp = new ChrExpInit(frameTitle + " - ChrExp", dbc2, selectedProjVec);
 			
-			for (Mproject p : selectedProjVec) 
-				symapExp.addProject( p.getDBName() );
-			symapExp.build();
-			symapExp.getFrame().build();
-			symapExp.getFrame().setVisible(true); 
+			symapExp.getExpFrame().setVisible(true); 
 		}
 		catch (Exception err) {ErrorReport.print(err, "Show SyMAP graphical window");}
 		finally {

@@ -22,7 +22,7 @@ import util.ErrorReport;
  * CAS540 changed non-gene default lengths; split large genes
  */
 public class Group {
-	public  static boolean bSplitGene=true;	      // CAS540 split hit/gene if true; -nsg will set !bSplitGene; 
+	public  static boolean bSplitGene=false;// CAS540 split hit/gene if true;  CAS550 reversed -sg will split
 	
 	protected  static final int FSplitLen  = 50000;  // CAS540 10k->50k for mummer hit
 	private static final int FAnnotBinSize  = 30000;  // annoSetMap; CAS534 was props

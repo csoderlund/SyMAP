@@ -7,7 +7,6 @@ import java.sql.ResultSet;
 import database.DBconn2;
 import props.ProjectPool;
 import symap.sequence.Sequence;
-import symap.sequence.Track;
 import util.ErrorReport;
 
 /**
@@ -25,11 +24,11 @@ public class MapperPool {
 		this.projPool = projPool;
 	}
 
-	public boolean hasPair(Track t1, Track t2) {
+	public boolean hasPair(Sequence t1, Sequence t2) {
 		return projPool.hasProjectPair(t1.getProject(),t2.getProject());
 	}
 
-	public SeqHits setData(Mapper mapper, Track t1, Track t2, HfilterData hf) { // Mapper.isInit
+	public SeqHits setData(Mapper mapper, Sequence t1, Sequence t2) { // Mapper.isInit
 		SeqHits seqHitObj;
 		
 		if (hasPair(t1,t2)) seqHitObj = setSeqHitData(mapper, (Sequence)t1, (Sequence)t2);

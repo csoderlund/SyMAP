@@ -1,4 +1,4 @@
-package history;
+package symap.drawingpanel;
 
 /**
  * Interface <code>HistoryListener</code> is used by the HistoryControl as the object
@@ -8,10 +8,7 @@ package history;
 public interface HistoryListener {
     
     /**
-     * Method <code>setHistory</code> should be implemented to change the history based on
-     * obj.
-     *
-     * @param obj an <code>Object</code> value
+     * Method <code>setHistory</code> should be implemented to change the history based on obj.
      */
     public void setHistory(Object obj);
 }

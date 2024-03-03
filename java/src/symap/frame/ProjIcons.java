@@ -26,32 +26,32 @@ import symap.manager.Mproject;
 public class ProjIcons extends JComponent 
 	implements MouseListener, MouseMotionListener
 {
-	protected final static double MAX_CHR_HEIGHT = 80;
-	protected final static int MIN_CHR_HEIGHT = 15;
-	protected final static int WIDTH = 12;
-	protected final static int GAP = 5;
-	protected final static int FONT_HEIGHT = 11;//*fm.getHeight()*/
-	protected Mproject project;
-	protected Block[] blocks;
-	protected TrackInfo[] tracks;
-	protected Mapper mapper;
+	private final static double MAX_CHR_HEIGHT = 80;
+	private final static int MIN_CHR_HEIGHT = 15;
+	private final static int WIDTH = 12;
+	private final static int GAP = 5;
+	private final static int FONT_HEIGHT = 11;//*fm.getHeight()*/
+	private Mproject project;
+	private Block[] blocks;		
+	private ChrInfo[] tracks; // chromosome
+	private MapLeft mapper;
 	private ActionListener listener;
-	int lineSize = 15;
-	int chrHeight = 0;
-	int maxTracks = lineSize*30;
+	private int lineSize = 15;
+	private int chrHeight = 0;
+	private int maxTracks = lineSize*30;
 
-	public ProjIcons(Mapper mapper, Mproject project, ActionListener listener,
+	protected ProjIcons(MapLeft mapper, Mproject project, ActionListener listener,
 			TreeSet<Integer> grpIdxWithSynteny) {
 		super();
 		
 		this.mapper = mapper;
 		this.project = project;
 		this.listener = listener;
-		this.tracks = mapper.getTracks(project.getID(),grpIdxWithSynteny);
+		this.tracks = mapper.getChrs(project.getID(),grpIdxWithSynteny);
 		this.blocks = mapper.getBlocksForProject(project.getID());
 		
 		int height = 0;
-		for (TrackInfo t : tracks)
+		for (ChrInfo t : tracks)
 			height = Math.max(height, (int)(MAX_CHR_HEIGHT * t.getSizeBP() / mapper.getMaxBpPerUnit()));
 		
 		chrHeight = height + 5;
@@ -87,13 +87,13 @@ public class ProjIcons extends JComponent
 		FontMetrics fm = g2.getFontMetrics();
 		int nTrack = 0;
 		int numTracks = 1;
-		for (TrackInfo t : tracks) {
+		for (ChrInfo t : tracks) {
 			int height = (int)(MAX_CHR_HEIGHT * t.getSizeBP() / mapper.getMaxBpPerUnit());
 			height = Math.max(height,MIN_CHR_HEIGHT);
-			boolean isVisible = (t.isVisible() || t == mapper.getReferenceTrack());
+			boolean isVisible = (t.isVisible() || t == mapper.getRefChr());
 			
 			int strWidth = fm.stringWidth(t.getGroupName());
-			if (t == mapper.getReferenceTrack()) {
+			if (t == mapper.getRefChr()) {
 				g2.setColor(Color.RED);
 				g2.drawRect(x-1, y-FONT_HEIGHT/*fm.getHeight()*/, WIDTH+1, FONT_HEIGHT/*fm.getHeight()*/+3);
 			}
@@ -118,7 +118,7 @@ public class ProjIcons extends JComponent
 				if (b.isTarget(project.getID()))
 					b = b.swap(); 
 				
-				if ((b.getGroup2Idx() == mapper.getReferenceTrack().getGroupIdx() || mapper.isReference(t))
+				if ((b.getGroup2Idx() == mapper.getRefChr().getGroupIdx() || mapper.isRefChr(t))
 						&& b.getGroup1Idx() == t.getGroupIdx())
 				{
 					long startBP = b.getStart1();
@@ -153,20 +153,20 @@ public class ProjIcons extends JComponent
 		
 		int nTrack = 0;
 		int numTracks = 0;
-		for (TrackInfo t : tracks) {
-			if (!mapper.isReference(t)) {
+		for (ChrInfo t : tracks) {
+			if (!mapper.isRefChr(t)) {
 				if (xClick >= x && xClick <= x+WIDTH 
 						&& yClick >= y && yClick <= y+chrHeight+6) 
 				{ // Rectangle clicked: add/remove track
-					mapper.setTrackVisible(t, !t.isVisible());
+					mapper.setVisibleChr(t, !t.isVisible());
 					bChanged = true;
 					break;
 				}
 				else if (xClick >= x && xClick <= x+WIDTH 
 						&& yClick >= y-19 && yClick < y) 
 				{ // Number clicked: change reference
-					mapper.setReferenceTrack(t);
-					mapper.hideVisibleTracks(); // clear selection (excluding reference)
+					mapper.setRefChr(t);
+					mapper.hideVisibleChrs(); // clear selection (excluding reference)
 					bChanged = true;
 					break;
 				}

@@ -1,7 +1,9 @@
 package symap.frame;
 
+/*********************************************************
+ * Represents blocks for the ProjIcons on the left side of the explorer
+ */
 public class Block {
-	//private int nBlockNum;
 	private int nBlockIdx;
 	private int nProj1Idx, nProj2Idx;
 	private int nGroup1Idx, nGroup2Idx;
@@ -9,7 +11,7 @@ public class Block {
 	private long start2, end2;
 	private float corr;
 	
-	public Block(int nBlockIdx, int nProj1Idx, int nProj2Idx, int nGroup1Idx, int nGroup2Idx, 
+	protected Block(int nBlockIdx, int nProj1Idx, int nProj2Idx, int nGroup1Idx, int nGroup2Idx, 
 			long start1, long end1, long start2, long end2,  float corr)
 	{
 		this.nBlockIdx = nBlockIdx;
@@ -28,21 +30,18 @@ public class Block {
 		return ( nBlockIdx == ((Block)obj).nBlockIdx );
 	}
 	
-	public boolean isTarget(int nProjIdx) { return nProj2Idx == nProjIdx; }
+	protected boolean isTarget(int nProjIdx) { return nProj2Idx == nProjIdx; } // projIdxon
 	
-	public Block swap() {
+	protected Block swap() { 
 		return new Block(nBlockIdx, nProj2Idx, nProj1Idx, nGroup2Idx, nGroup1Idx, start2, end2, start1, end1, corr);
 	}
 	
-	public long getStart1() { return start1; }
-	public long getEnd1() { return end1; }
-	public long getStart2() { return start2; }
-	public long getEnd2() { return end2; }
-	public int getProj1Idx() { return nProj1Idx; }
-	public int getProj2Idx() { return nProj2Idx; }
-	public int getGroup1Idx() { return nGroup1Idx; }
-	public int getGroup2Idx() { return nGroup2Idx; }
-	
-	public float getCorr() { return corr; }
-	public boolean inverted() { return (corr < 0);}
+	protected long getStart1() { return start1; }
+	protected long getEnd1() { return end1; }
+	protected long getStart2() { return start2; }
+	protected long getEnd2() { return end2; }
+	protected int getProj1Idx() { return nProj1Idx; }
+	protected int getProj2Idx() { return nProj2Idx; }
+	protected int getGroup1Idx() { return nGroup1Idx; }
+	protected int getGroup2Idx() { return nGroup2Idx; }
 }

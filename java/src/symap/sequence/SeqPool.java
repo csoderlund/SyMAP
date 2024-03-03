@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.TreeMap;
 
 import database.DBconn2;
-import number.GenomicsNumber;
 import symap.Globals;
 import symap.mapper.HitData;
 import symap.mapper.SeqHits;
@@ -25,12 +24,24 @@ public class SeqPool {
 	
 	protected SeqPool(DBconn2 dbc2) { this.dbc2 = dbc2;} // called from Sequence when it is created
 
-	
+	// CAS550 separate method to get size
+	protected long loadGenomeSize(Sequence seqObj) {
+	try {
+		int grpIdx =   seqObj.getGroup();
+		String size_query = 
+				"SELECT (SELECT length FROM pseudos WHERE grp_idx=" + grpIdx + ") as size, "+
+				"       (SELECT name   FROM xgroups WHERE idx="     + grpIdx + ") as name; ";
+		
+		long size = dbc2.executeLong(size_query);
+		return size;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Cannot get genome size"); return 0;}
+	}
 	/**
 	 * Called by Sequence object in init
-	 * gnsize - enter setBPsize; Annotation Vector = enter annotation objects 
+	 * Annotation Vector = enter annotation objects 
 	 */
-	protected synchronized String loadSeqData(Sequence seqObj, GenomicsNumber gnsize, Vector<Annotation> annoVec) {
+	protected synchronized String loadSeqData(Sequence seqObj,  Vector<Annotation> annoVec) {
 		int grpIdx =   seqObj.getGroup();		
 		
 		String name=null, type, desc;
@@ -51,7 +62,6 @@ public class SeqPool {
 				System.err.println("No information in db found for Sequence with group id "+grpIdx);
 				return null;
 			}
-			gnsize.setBPValue(rs.getLong(1));
 			name = rs.getString(2);
 			
 			HashMap <Integer, Annotation> geneMap = new HashMap <Integer, Annotation>  ();

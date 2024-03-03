@@ -28,7 +28,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
@@ -50,37 +49,36 @@ import database.DBconn2;
 import dotplot.DotPlotFrame;
 
 /*****************************************************
- * Chromosome Explorer 
+ * Chromosome Explorer: Displays left side and controls right (circle, 2d, dotplot)
  * CAS534 renamed from manager.SyMAPFrameCommon=> frame.ChrExpFrame
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ChrExpFrame extends JFrame implements HelpListener {
 	private final int MIN_WIDTH = 1100, MIN_HEIGHT = 900; // CAS543 was 1200, 900
 	
-	protected int VIEW_CIRC = 1, VIEW_2D = 2, VIEW_DP = 3;
+	private int VIEW_CIRC = 1, VIEW_2D = 2, VIEW_DP = 3;
 	
-	protected MutexButtonPanel navControlBar, viewControlBar;
-	protected JSlider sldRotate = null;
-	protected JButton btnShow2D, btnShowDotplot, btnShowCircle;
-	protected JPanel controlPanel, cardPanel;
-	protected JSplitPane splitPane;
+	private MutexButtonPanel viewControlBar;
+	private JButton btnShow2D, btnShowDotplot, btnShowCircle;
+	private JPanel controlPanel, cardPanel;
+	private JSplitPane splitPane;
 	
-	protected HelpBar helpBar;
+	private HelpBar helpBar;
 
-	protected Mapper mapper;
-	protected SyMAP2d symap2D = null;
-	protected DotPlotFrame dotplot = null;
-	protected CircFrame circframe = null; // CAS541 made global so can close connection
-	protected DBconn2 tdbc2, circdbc=null;
+	private MapLeft mapper;
+	private SyMAP2d symap2D = null;
+	private DotPlotFrame dotplot = null;
+	private CircFrame circframe = null; // CAS541 made global so can close connection
+	private DBconn2 tdbc2, circdbc=null;
 	
-	protected boolean hasInit = false;
-	// protected boolean isFirst2DView = true; CAS517 not used
-	// protected boolean isFirstDotplotView = true; CAS543 doesn't do anything
-	protected int selectedView = 1;
-	protected int screenWidth, screenHeight;
+	private int selectedView = 1;
+	private int screenWidth, screenHeight;
+	
+	private ChrInfo[] lastSelectedTracks=null; // CAS550 for 2d so not to recreate if same
+	private ChrInfo lastRef=null;
 	
 	// called by symap.frame.ChrExpInit
-	public ChrExpFrame(String title, DBconn2 tdbc2, Mapper mapper) {
+	protected ChrExpFrame(String title, DBconn2 tdbc2, MapLeft mapper) {
 		super(title); // CAS543 add dbname
 		this.tdbc2 = tdbc2;
 		this.mapper = mapper;
@@ -100,7 +98,6 @@ public class ChrExpFrame extends JFrame implements HelpListener {
         // Create split pane for Control Panel
         splitPane = new MySplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setContinuousLayout(true); 				// picture redraws continuously
-        //splitPane.setOneTouchExpandable(true); 			// have open/close arrows, but need to show text box
         splitPane.setDividerLocation(screenWidth * 1/4); 	// behaves best using this instead of fix width
         splitPane.setBorder(null);
         splitPane.setRightComponent(cardPanel);
@@ -110,12 +107,15 @@ public class ChrExpFrame extends JFrame implements HelpListener {
         
         helpBar = new HelpBar(425, 130); 					// CAS521 removed dead args; CAS543 was 500,130
         helpBar.setBorder( BorderFactory.createLineBorder(Color.LIGHT_GRAY) );
+        
+        createControlPanel(); // CAS550 was called separately to deleted method (build) from ManagerFrame
+		showCircleView();
 	}
 
 	public void dispose() { // override
-		setVisible(false); // necessary?
+		setVisible(false); 
 		tdbc2.close();
-		circframe.clear();
+		if (circframe!=null) circframe.clear();
 		circframe=null;
 		
 		if (symap2D != null) symap2D.clear();
@@ -125,18 +125,6 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		super.dispose();
 	}
 	
-	private void setView(int viewNum) {
-		if (viewNum == VIEW_2D) {
-			((CardLayout)cardPanel.getLayout()).show(cardPanel, Integer.toString(VIEW_2D));
-		}
-		else if (viewNum == VIEW_DP) {
-			((CardLayout)cardPanel.getLayout()).show(cardPanel, Integer.toString(VIEW_DP));
-		}
-		else if (viewNum == VIEW_CIRC) {
-			((CardLayout)cardPanel.getLayout()).show(cardPanel, Integer.toString(VIEW_CIRC));
-		}
-	}
-
 	private JPanel createViewControlBar() {
 		viewControlBar = new MutexButtonPanel("Views:", 5);
 		viewControlBar.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -208,13 +196,11 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 	private ActionListener projectChange = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			if (mapper.hasChanged()) {
-				// Repaint project panels
-				controlPanel.repaint();
+				controlPanel.repaint();// Repaint project panels
 				
 				// Regenerate main display
-				//isFirstDotplotView = true;
-				btnShow2D.setEnabled( mapper.getNumVisibleTracks() > 0 );
-				btnShowDotplot.setEnabled( mapper.getNumVisibleTracks() > 0 );
+				btnShow2D.setEnabled( mapper.getNumVisibleChrs() > 0 );
+				btnShowDotplot.setEnabled( mapper.getNumVisibleChrs() > 0 );
 				btnShowCircle.setEnabled( true ); // CAS512 mapper.getNumVisibleTracks() > 0
 				
 				if (viewControlBar.getSelected() == VIEW_CIRC) showCircleView();
@@ -280,24 +266,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		
 		splitPane.setLeftComponent(controlPanel);
 	}
-	
-	public void build() { // can't be named "show()" because of override
-		if (mapper == null)
-			return;
-		
-		// Initialization is done here and not in constructor because the 
-		// necessary data (tracks/blocks) aren't avail until now.
-		if (!hasInit) {
-			createControlPanel();
-			showCircleView();
-		}
-		
-		if (mapper.getNumTracks() == 0) {
-			System.err.println("No tracks to display!");
-			return;
-		}
-	}
-	
+	///////////////////////////////////////////////////////////////////
 	private void showCircleView(){	
 		int[] pidxList = new int[mapper.getProjects().length];
 		TreeSet<Integer> shownGroups = new TreeSet<Integer>();
@@ -307,10 +276,10 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			int pid = mapper.getProjects()[i].getID();
 			pidxList[i] = pid;
 			
-			for (TrackInfo t : mapper.getTracks(pid)){
-				if (t.isVisible() || mapper.getReferenceTrack() == t) {
+			for (ChrInfo t : mapper.getChrs(pid)){
+				if (t.isVisible() || mapper.getRefChr() == t) {
 					shownGroups.add(t.getGroupIdx());
-					if (mapper.getReferenceTrack() == t) refIdx=pid;
+					if (mapper.getRefChr() == t) refIdx=pid;
 				}
 			}
 		}
@@ -318,9 +287,9 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		circframe = new CircFrame(circdbc, pidxList, shownGroups, helpBar, refIdx); // have to recreate everytime
 		
 		cardPanel.add(circframe.getContentPane(), Integer.toString(VIEW_CIRC)); // ok to add more than once
-		
-		setView(VIEW_CIRC);
+		((CardLayout)cardPanel.getLayout()).show(cardPanel, Integer.toString(VIEW_CIRC));
 	}
+	///////////////////////////////////////////////////////////////////
 	private void showDotplotView() {
 		// Get selected projects/groups
 		int[] projects = mapper.getVisibleProjectIDs();
@@ -338,57 +307,54 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 
 		// Switch to dotplot display
 		cardPanel.add(dotplot.getContentPane(), Integer.toString(VIEW_DP)); // ok to add more than once
-		setView(VIEW_DP);
-		
-		// isFirstDotplotView = false; CAS543 always true since set to true in actionPerformed
+		((CardLayout)cardPanel.getLayout()).show(cardPanel, Integer.toString(VIEW_DP));
 	}
-		
+	///////////////////////////////////////////////////////////////////////////////
 	private boolean show2DView() {
 		try {	
-			TrackInfo ref = mapper.getReferenceTrack();
-			TrackInfo[] selectedTracks = mapper.getVisibleTracks(); // none reference tracks
+			ChrInfo ref = mapper.getRefChr();
+			ChrInfo[] selectedTracks = mapper.getVisibleChrs(); // no reference tracks
 			
-			if (selectedTracks.length>=DrawingPanel.MAX_TRACKS) {
-				Utilities.showWarningMessage("Selected " + selectedTracks.length + "tracks.\nExceeded number of tracks (" + DrawingPanel.MAX_TRACKS + ") that can be set");
-				return false;
-			}
 			if (selectedTracks.length > 4 &&
 					JOptionPane.showConfirmDialog(null,"This view may take a while to load and/or cause SyMAP to run out of memory, try anyway?","Warning",
 						JOptionPane.YES_NO_OPTION,JOptionPane.ERROR_MESSAGE) != JOptionPane.YES_OPTION) 
 				return false;
 			
-			// CAS517 move after get tracks 
-			// CAS521 totally remove FPC CAS517 to add include FPC colors and Frame Markers if FPC true 
-			if (symap2D == null) symap2D = new SyMAP2d(tdbc2, helpBar, null);	
-			
-			DrawingPanel dp = symap2D.getDrawingPanel();
-			dp.setFrameEnabled(false);				// Disable 2D rendering
-			dp.resetData(); 						// clear caches
-			symap2D.getHistory().clear(); 			// clear history
-			symap2D.getControlPanel().clear(); 		// CAS531 to reset Select:
-			dp.setMaps(0);
-			
-			// Setup 2D
-			int position = 1;
-			for (int i = 0;  i < selectedTracks.length;  i++) {
-				TrackInfo t = selectedTracks[i];
+			DrawingPanel dp;
+			boolean noRedo= (lastRef!=null && ref == lastRef && selectedTracks.length==lastSelectedTracks.length);
+			if (noRedo) { 								// CAS550 just do not redo if exact same, otherwise, totally redo 
+				for (int i=0; i<selectedTracks.length && noRedo; i++) 
+					if (selectedTracks[i]!=lastSelectedTracks[i]) noRedo=false;
+			}
+			if (!noRedo) {
+				if (symap2D != null) symap2D.clearLast();
+				symap2D = new SyMAP2d(tdbc2, helpBar, null); // start fresh
+				dp = symap2D.getDrawingPanel();
+						
+				lastRef=ref;
+				lastSelectedTracks = selectedTracks;
 				
-				// Add track CAS521 remove FPC stuff
-				dp.setSequenceTrack( position++, t.getProjIdx(), t.getGroupIdx(), t.getColor() );
+				dp.setTracks(selectedTracks.length+1);		// CAS550 sets exact number of tracks instead of pre-allocate
 				
-				// Add alternating reference track
-				if (selectedTracks.length == 1 || selectedTracks.length-1 != i) { // middle tracks
-					dp.setSequenceTrack( position++, ref.getProjIdx(), ref.getGroupIdx(), ref.getColor() );
+				// Setup 2D
+				int position = 1;
+				for (int i = 0;  i < selectedTracks.length;  i++) {
+					ChrInfo t = selectedTracks[i];
+					
+					dp.setSequenceTrack(position++, t.getProjIdx(), t.getGroupIdx(), t.getColor());
+					if (selectedTracks.length == 1 || selectedTracks.length-1 != i) // Add alternating reference track
+					  dp.setSequenceTrack(position++, ref.getProjIdx(), ref.getGroupIdx(), ref.getColor()); 
 				}
 			}
-			dp.setMaps( position - 2 );
-			
+			else {
+				dp = symap2D.getDrawingPanel();
+			}
 			// Enable 2D display
 			Frame2d frame = symap2D.getFrame();
 			cardPanel.add(frame.getContentPane(), Integer.toString(VIEW_2D)); // ok to add more than once
-			setView(VIEW_2D);
+			((CardLayout)cardPanel.getLayout()).show(cardPanel, Integer.toString(VIEW_2D));
 			
-			dp.amake(); 						// redraw and make visible
+			dp.amake(); 						// draw and make visible
 			return true;
 		}
 		catch (OutOfMemoryError e) { 
@@ -475,13 +441,10 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 				}
 			}
 			
-			// kludge:
-			if (btnShow2D != null) 		btnShow2D.setEnabled( mapper.getNumVisibleTracks() > 0 );
-			if (btnShowDotplot != null) btnShowDotplot.setEnabled( mapper.getNumVisibleTracks() > 0 );
-			//if (btnShowCircle != null) btnShowCircle.setEnabled( mapper.getNumVisibleTracks() > 0 );
+			if (btnShow2D != null) 		btnShow2D.setEnabled( mapper.getNumVisibleChrs() > 0 );
+			if (btnShowDotplot != null) btnShowDotplot.setEnabled( mapper.getNumVisibleChrs() > 0 );
 			if (btnShowCircle != null) 	btnShowCircle.setEnabled(true); // CAS512 - if click blocks on right, can reduce tracks
 			
-			// Select this button
 			button.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 			button.setSelected(true);
 			button.setEnabled(false);
@@ -508,7 +471,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		
 		return null;
 	}
-	//
+	
 	private JPanel createDownloadBar() {
 		JPanel pnl = new JPanel();
 		pnl.setLayout( new BoxLayout(pnl, BoxLayout.LINE_AXIS) );
