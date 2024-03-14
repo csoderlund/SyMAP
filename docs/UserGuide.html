@@ -179,7 +179,7 @@ if you use SyMAP results in a paper, poster, or presentation.</font>
 </table>
 
 <a id="term2"></a>
-<p>The following are more detailed terminology:
+<p>The following is more detailed terminology:
 <table class="ty">
 
 	<tr><td style="white-space: nowrap;">Cluster Hit Algorithm:
@@ -191,15 +191,7 @@ if you use SyMAP results in a paper, poster, or presentation.</font>
 		 See <a href="SystemHelp.html#clust" class=ext target="_blank">System Help</a> for details.
 
 		<br>&bull;The <a href="#sum">Summary</a> specifies which was used.
-		There are statistics in SyMAP that
-		have different values based on which algorithm was run.
-	<tr><td><ttx>Major</ttx> or <ttx>minor</ttx> assigned hit<small><sup>2</sup></small>
-		<td>A hit may align to a gene on one or both ends.
-		If the hit aligns to more than one gene on one end,
-		it is assigned to one of the genes which is the <ttx>major</ttx> assignment;
-		any others are <ttx>minor</ttx> assignments and have an '*' beside them.
-	<tr><td>Block and !Block
-		<td>Hits that are in a block and hits that are not within a block, respectively.
+		There are statistics in SyMAP that have different values based on which algorithm was run.
 	<tr><td><ttx>Algo1</ttx>:
 		<br>g2, g1, g0
 		<td>A hit overlaps a gene on <i>both</i> sides (g2), a hit overlaps a gene on <i>one</i> side (g1),
@@ -208,6 +200,17 @@ if you use SyMAP results in a paper, poster, or presentation.</font>
 		<br>EE, EI, En, In, nn
 		<td>E is exon, I is intron, n is intergenic. So a EI is a hit that at least partially aligns to an exon on one end and
 		an intron on the other, etc.
+	<tr><td><ttx>Gene#</ttx><td>This is the SyMAP assigned number representing the order of the gene.
+	When genes overlap, they are given the same gene number with different suffixes.
+	See <a href="#view2D">View a regions</a>. Gene numbering starts at 1 for each chromosome.
+	<tr><td><ttx>Major</ttx> or <ttx>minor</ttx><br> assigned gene<small><sup>2</sup></small>
+		<td>A hit may align to a gene on one or both ends.
+		If the hit aligns to more than one gene on one end,
+		it is assigned to one of the genes which is the <ttx>major</ttx> assignment;
+		any others are <ttx>minor</ttx> assignments and have an '*' beside them.
+	<tr><td>Block and !Block
+		<td>Hits that are in a block and hits that are not within a block, respectively.
+
 
 </table>
 <small><sup>1</sup><ttx>Algo2</ttx> became available v5.4.6 and updated v5.4.8</small>.
@@ -346,21 +349,6 @@ Dots represent anchors (<i>hits</i>). A blue box indicates a
 
 <a href="img/dotplot-control.png"><img src="img/dotplot-control.png"  alt="dotplot controls" style="border: 1px solid black;width: 650px"></a>
 <p>
-<ttl>Stats</ttl> drop-down: The options are:
-<table class="ty">
-	<tr><td><ttl>Stats</ttl><td>As shown at the bottom of the <ttp>Dot Plot</ttp> display above,
-	there are statistics listed along the bottom.
-	<tr><td><ttl>Print</ttl><td> A more detailed statistics will be printed to the terminal, e.g.
-	<pre><small>
-	>> A.thal  Cabbage     (%Id=23)
-   	All Hits    89,738         Annotated  Both 81,044               One 3,306               None 5,388
-   	Block Hits  48,613 ( 54%)             Both 47,192 ( 58%,  97%)  One 1,327 ( 40%,   3%)  None    94 (  2%,   0%)
-  	!Block Hits 41,125 ( 46%)             Both 33,852 ( 42%,  82%)  One 1,979 ( 60%,   5%)  None 5,294 ( 98%,  13%)
-	</small></pre>
-	The <tt>(%Id=23)</tt> is what the filtered percent identity of the hits are, which can be changed in <ttl>Hit Filter</ttl>.
-	For the 3 <tt>Annotated</tt> columns, the two percentages in parenthesis are the column (Annotated) percent and row (Block Hits) percent.
-	<tr><td><ttl>Help</ttl><td> One line help is printed in place of the statistics.
-</table>
 
 <p><ttl>Home</ttl>: Resets the zoom selection to the whole genome <ttp>Dot Plot</ttp>.
 <p><ttl>Zoom</ttl>: The plus (<ttl><big>+</big></ttl>) and minus (<ttl><big>-</big></ttl>) buttons shrink or grow the display.
@@ -369,7 +357,13 @@ the species displayed on the x-axis.
 <p><ttl>Reference</ttl>: The drop-down menu allows the reference species on the x-axis to be changed.
 <p><ttl>Filter</ttl>: See below.
 <p><ttl>Color Wheel, Print and Help Icons</ttl>: See <a href="#image">Color Wheel, Print and Help</a>.
-
+<p><ttl>i</ttl>: Popup of quick help.
+<p><ttl>s</ttl>: Popup with more detailed statistics, i.e. more detail than shown at the bottom
+of the display above. This text can be copied. An example popup is as follows:
+<table><tr><td>
+<a href="img/dotplot-stats.png"><img src="img/dotplot-stats.png"  alt="dotplot stats" style="border: 1px solid black;width: 550px"></a>
+<td>The (%Id=23) is what the filtered percent identity of the hits are, which can be changed in the <ttx>Hit Filter</ttx>. For the 3 Annotated columns, the two percentages in parenthesis are the column (Annotated) percent and row (Block Hits) percent.
+</table>
 <!------------------------------------------------------------>
 <a id="dotplot_filter"></a> <!-- # ref in code -->
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -588,7 +582,7 @@ different <ttp>Dot Plot</ttp> displays.
 The <ttp>2D</ttp> display is activated from the <a href="#explorer">Explorer</a> by
 clicking the <ttb>2D</ttb> button (or by selecting a region or block from a <ttp>Dot Plot</ttp>).
 <p>
-Below is an image depicting an alignment from A.thal Chr4 to Cabbage Chr1 to B.rapa Chr2.
+Below is an image depicting an alignment from A.thal Chr04 to Cabbage Chr01 to B.rapa Chr02.
 Note that Cabbage Chr1 is the <i>reference</i>
 chromosome, hence is placed in between the others.
 <p>Each chromosome is drawn as a light-blue rectangle, called <i>tracks</i>.
@@ -788,8 +782,10 @@ but a different suffix (e.g. a, b,...).
    <ul>
    <li style="margin: 1em 0;">The top text is the same as shown in the gene information.
    <li  style="margin: 1em 0;">All hits for the gene for the chromosome pair will be listed. In this case, the gene only has one hit.
-   <li  style="margin: 1em 0;"><ttx>Algo2</ttx>: The (Gene N% Exon N%) represent the amount of gene and exon overlapped by the hit, respectively.
-   <br><ttx>Algo1</ttx>: Only has (Gene N%).
+   <li  style="margin: 1em 0;"><ttx>Algo1</ttx>: Only has (Gene N%).
+   <br><ttx>Algo2</ttx>: The (Gene N% Exon N%) represent the amount of gene and exon overlapped by the hit, respectively (if no Exon
+   percent, then it has zero coverage).
+
    </ul>
 
   <td><a href="img/2Dgenepopup.png"><img src="img/2Dgenepopup.png" alt="2d gene popup" style="border: 1px solid black; width: 260px"></a>
@@ -822,6 +818,7 @@ this is due to differences between NCBI and Ensembl annotation files.
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <a href="img/2d-control.png"><img src="img/2d-control.png" alt="2d controlpanel"></a>
+<p>The buttons are described in the order found in the control panel image above.
 <p>
 <ttl>History (Home, &lt;, &gt;)</ttl> SyMAP retains a record of the prior views (like a web browser).
 The history navigation back (<ttl><big>&lt;</big></ttl>) and
@@ -836,15 +833,17 @@ The zoom buttons allow for quickly expanding and narrowing the view region.
 the same center, while the plus (<ttl><big>+</big></ttl>) button doubles the view region,
 again keeping the same center.
 <p>
+<ttl>Shrink Button</ttl> The shrink button reduces the space between tracks. This is useful
+when viewing more than two tracks, e.g see <a href="img/Exp_2D_B02.png">Exp_2D</a>.
+<p>
 <ttl>Scale Icon Button</ttl>
-The Scale button
-(right of <ttl><big>+</big></ttl>) resizes the tracks so that they are in the same scale
+The scale button resizes the tracks so that they are in the same scale
 (base pairs per pixel) as the reference sequence track in the view.
 <p>
 <a id="mouse_function_selector"></a>
 <ttl>Selected:</ttl> This drop-down assigns a function to the selected region, which
 is selected by clicking the mouse left button on a location of the chromosome, drag and release.
-
+(The <ttl>Selected:</ttl> is not shown in the popup 2D from the <ttb>Dot plot</ttb>).
 <table class="ty txy">
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Zoom All Tracks</ttl>
 	<td>
@@ -860,7 +859,7 @@ is selected by clicking the mouse left button on a location of the chromosome, d
 
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Zoom Selected Track</ttl>
 	<td>Zoom into the selected region; all other tracks do not change.
-<tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Align (Max 30kb)</ttl>
+<tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Align (Max 50kb)</ttl>
 	<td>Open the base alignment view for the selected region (see <a href="#base">Base Align</a>).
 There MUST be at least a partial hit in the region to align.
 
@@ -876,57 +875,25 @@ If the hit is on the positive strand, it will be reverse complemented.
 cluster hit to the end of the last cluster subhit.
 <tr><td><ttx>Region</ttx><td>Show the sequence from the region selected.
 </table>
-
 </table>
 
-<br><ttl>Stats</ttl>
-This drop-down selector controls what is shown in the <ttl>Information</ttl> box.
-<table class="ty txy">
-<tr><td><ttl>Help</ttl><td>Provides information on viewing the gene or hit information.
-<tr><td><ttl>Stats</ttl><td>When the mouse is over a sequence track:
-<ul>
-<li>If the mouse is over a gene, the gene description will be shown.
-<li>If the mouse is in the track but not over a gene, it will
-state how many genes are shown.
-</ul>
-When the mouse is over the hit area:
-<ul>
-<li>If the mouse is over a hit, the hit description will be shown.
-<li>If the mouse is in the hit area but not over a hit,  it will
-state how many hits are shown.
-<br>If any highlighting option is selected, it will
-also state how many hits are highlighted.
-<br>If blocks or collinear sets are highlighted,
-it will also state how many blocks/sets are shown, e.g.
-</ul>
-<table>
-<tr><td>
-<pre>
-High Sets. Show All.
+<p><ttl>Color, Print, <big>?</big> Icons</ttl>  See <a href="#image">Color Wheel, Help and Print</a>.
+<p><big><ttl>i</ttl></big> Provides a popup of quick help for the gene or hit information.
+<big>?</big> provides online detailed help (internet connection needed).
 
-Hits: 4,526
-High: 2,121
-Sets: 642
-</pre>
-<td>The example on the left indicates there are 4,526 hits
-<br>of which 2,121 are highlighted,
-and belong to 642 collinear sets.
-</table>
-</table>
-<p><ttl>Color, Print, <big>?</big> Icons</ttl>  see <a href="#image">Color Wheel, Help and Print</a>.
 
 <p>
 <u>Mouse navigation</u>:
 <table  class="ty txy">
 <tr>
 	<td style="white-space: nowrap; vertical-align: text-top;">View region&nbsp;
-	<td>Drag left mouse button
+	<td style="white-space: nowrap; vertical-align: text-top;">Drag left mouse button
 	<td>Press down on the left mouse button on a chromosome track, drag the mouse and release it. By default, this will
 	zoom into the selected region for both chromosomes. This action can be changed with the <ttl>Selected:</ttl> control
 	pull-down as discussed above.
 <tr>
 	<td style="white-space: nowrap; vertical-align: text-top;">Resize Track&nbsp;</td>
-	<td>Drag bottom of track</td>
+	<td style="white-space: nowrap; vertical-align: text-top;">Drag bottom of track</td>
 	<td>Position mouse at bottom of track (resize cursor appears), hold down left
 	mouse button, and move mouse.</td></tr>
 <tr>
@@ -936,8 +903,8 @@ and belong to 642 collinear sets.
 	<br>Position mouse in the hit space to scroll up/down both tracks.
 	</td></tr>
 <tr>
-	<td>Filter&nbsp;</td>
-	<td>Right mouse button</td>
+	<td style="vertical-align: text-top;">Popup of partial set of filters&nbsp;</td>
+	<td style="white-space: nowrap; vertical-align: text-top;">Right mouse button</td>
 	<td>Position mouse over track (for sequence filter) or white space between tracks (for hit filter), and click right mouse button.</td></tr>
 </table>
 
@@ -952,7 +919,6 @@ Select <ttb>Sequence Filter</ttb> button above the sequence track to change the 
 respective chromosome. If the sequence track does not have a given annotation (e.g. Gaps), then that item
 will be un-selectable. All checked options occur immediately; coordinate changes occur on <ttl>Save</ttl>.
 <p>
-
 <table>
 <tr><td>
 <table class="ty txy">
@@ -961,45 +927,64 @@ will be un-selectable. All checked options occur immediately; coordinate changes
 <td> Highlight the gene when its <a href="#ginfo">Gene Popup</a> is displayed.
 The highlight color can be changed with the <a href="#wheel">Color Wheel</a>.
 
-<tr><td colspan="2"><ttl>Show Graphics</ttl>
-<tr><td><ttx>Ruler</ttx>
-<td>Display of the sequence ruler along the right side of the sequence.
+<tr><td colspan="2"><ttl>Show</ttl>
 <tr><td style="vertical-align: text-top;"><ttx>Annotation</ttx>
 <td> Display of the annotation descriptions along the right side of sequence
 (see <a href="img/2d-closeup2.png">example</a>).
 NOTE: this only works if you are zoomed in close enough that they can clearly be displayed.
-<tr><td><ttx>Genes</ttx><td> Display of gene/exon annotations along the sequence. (If this is turned off,
-the other gene options stay valid but do not work).
+
+<tr><td style="vertical-align: text-top;"><ttx>Gene#</ttx><td>Display the <ttx>Gene#</ttx>
+beside each gene. This is the SyMAP assigned number;
+see <a href="#term2">Terminology</a> for more details.
+
 <tr><td style="vertical-align: text-top;"><ttx>Gene delimiter</ttx><td> When the zoom is close enough to view the exons, a black line will
 be drawn over the top end of each gene. This helps delimit genes that do not overlap (so are not staggered),
 but are close enough to appear one gene (see <a href="#ex2d">example below</a>).
-<tr><td style="vertical-align: text-top;"><ttx>Gaps</ttx><td> Display of sequence gaps (drawn as solid red
-rectangles) along the sequence.
-<tr><td style="vertical-align: text-top;"><ttx>Centromere</ttx><td> Display of the centromere (drawn as a cyan "X") on the sequence.
-<tr><td style="vertical-align: text-top;"><ttx>Hit length</ttx><td> Display the hit length line along the
-inner boundary of the sequence.  Referring to <a href="img/2d-closeup2.png">example</a>, the arrows pointing to a brown-gray line
-indicate the subhits of a clustered hit, which is the <ttx>Hit length</ttx>.
-<tr><td style="vertical-align: text-top;"><ttx>Hit %Id bar</ttx><td> Display of the %Id line next to each hit along the
-sequence.  The length of the line represents the magnitude of the %Identity value for
-the hit.
 </table>
-
 <td>
 <a href="img/seqFilter.png">
-	<img src="img/seqFilter.png" alt="sequence filter" style="border: 1px solid black; width: 300px"></a>
+	<img src="img/seqFilter.png" alt="sequence filter" style="border: 1px solid black; width: 350px"></a>
 </table>
+<p>
+<table class="ty txy">
+<tr><td colspan="2"><ttl>Graphics</ttl>
+<tr><td><ttx>Ruler</ttx>
+  <td>Display of the sequence ruler along the right side of the sequence.
+<tr><td><ttx>Genes</ttx>
+  <td> Display of the gene with exons along the sequence. (If unchecked,
+the other gene options are disabled).
+<tr><td style="vertical-align: text-top;"><ttx>Gaps</ttx>
+   <td>Display of sequence gaps (drawn as solid red rectangles) along the sequence.
+<tr><td style="vertical-align: text-top;"><ttx>Centromere</ttx>
+   <td> Display of the centromere (drawn as a cyan "X") on the sequence.
+<tr><td style="vertical-align: text-top;"><ttx>Hit length</ttx>
+   <td> Display the hit length line along the inner boundary of the sequence.
+Referring to <a href="img/2d-closeup2.png">example</a>, the arrows pointing to a brown-gray line
+indicate the subhits of a clustered hit, which is the <ttx>Hit length</ttx>.
+<tr><td style="vertical-align: text-top;"><ttx>Hit %Id bar</ttx>
+   <td> Display a vertical line from the edge of the sequence track inwards.
+   <br>&bull; The horizontal <ttx>Hit length</ttx> is at the end of if. If the <ttx>Hit length</ttx>
+   is not shown, this line is not shown.
+   <br>&bull; If this is off, the horizontal line is a constant length, taking into account overlapping hits.
+   <br>&bull; If this is on, the length of the line represents the magnitude of the %Identity value for
+the hit.
+</table>
+The gaps and centromere options are disabled in the image above, as there are none for the chromosome.
+<p>
 
 <table class="ty txy">
-<tr><td><ttl>Show Text</ttl><td> Show the text of the value along the edge of the sequence track.
+<tr><td><ttl>Hit Text</ttl><td> Show the text of the value along the edge of the sequence track over
+the hit lin
 <tr><td><ttx>Block#</ttx><td>If the hit is in a block, its block number will be shown.
 <tr><td><ttx>Collinear#</ttx><td>If the gene-hit is assigned to a collinear set, its collinear set number will be shown.
 <tr><td><ttx>Hit#</ttx><td>The number assigned by SyMAP for the hit.
 <tr><td><ttx>Hit %Id</ttx><td>The score value corresponds to the %Identity value for the hit from the MUMmer anchor file.
 <tr><td><ttx>None</ttx><td>Nothing is shown (default).
 </table>
+
 <br>
 <table class="ty txy">
-<tr><td><ttl>Coordinates</ttl><td> All coordinates changes, except <ttx>Flip</ttx>, take effect on <ttb>Save</ttb>.
+<tr><td><ttl>Coordinates</ttl><td> All coordinates changes, except <ttx>Flip sequence</ttx>, take effect on <ttb>Save</ttb>.
 <tr><td><ttx>Flip sequence</ttx><td>Reverses the orientation of the sequence track.
 <tr><td><ttx>Full</ttx><td> Sets the start and end positions of the sequence display to encompass the whole chromosome.
 <tr><td>
@@ -1010,9 +995,8 @@ The units of the values entered can be selected from the accompanying drop down 
 <tr><td><ttx>Gene#</ttx><td>
 &bull; Enter a <ttx>Gene#</ttx> assigned by SyMAP. It
 must be exact, i.e. if it has a suffix, the suffix must be included (e.g. 1234.b).
-<br>&bull; If the <ttx>Gene#</ttx> entry box
-has a value, it takes precedence over any coordinates changes.
-<br>&bull; When <ttb>Save</ttb> is selected, the 50kb region around the gene will be shown and
+<br>&bull; If the <ttx>Gene#</ttx> entry box has a value, it takes precedence over any coordinates changes.
+<br>&bull; When <ttb>Save</ttb> is selected, the 30kb region around the gene will be shown and
 the exons of the <ttx>Gene#</ttx> will be highlighted.
 <br>&bull; BEWARE: if the filter is not on <ttx>All hits</ttx>, you may not see the corresponding gene hits; turn
 on the <a href="#hitfilter">Hit Filter</a> for it.
@@ -1137,8 +1121,8 @@ which can produce a slightly different alignment.
 <a id="base"></a>
 <h4>Graphical Align (from pull-down)</h4>
 
-Select <ttl>Align (Max 30kb)</ttl> from the <ttb>Selected:</ttb> drop-down on the <a href="#control">2D control bar</a>,
-then select a region of maximum 30kb,
+Select <ttl>Align (Max 50kb)</ttl> from the <ttb>Selected:</ttb> drop-down on the <a href="#control">2D control bar</a>,
+then select a region of maximum 50kb,
 <i>which must have hits</i>. To select a region,  drag the
 mouse along the sequence and release when the desired range is highlighted.
 <p><a href="img/baseview2.png">
@@ -1222,7 +1206,7 @@ or <a href="https://www.ezbiocloud.net/tools/pairAlign" class="ext" target=_blan
 <!-------------------------------------------------------------------->
 <a id="dot3"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h2><ttp>Dot Plot</ttp> #3 (Multi-genome)</h2>
+<h2>Dot Plot #3 (Multi-genome)</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 All selected projects will be shown in the <ttp>Dot Plot</ttp>. The interface is the same as
@@ -1278,7 +1262,8 @@ by the Pearson correlation coefficient; a negative PCC is an inverted block.
 Most displays have one of more of the following icons (Color, Print, Help, respectively):
 <br><img src="img/icons.png" alt="icons" style="border: 1px solid black; width: 150px">.
 
-<p><u>Print</u> The print icon is for printing the image. If this does not provide the view you want,
+<p><u>Print</u> The print icon is for printing the image, which only saves the graphics area
+(not control buttons). If this does not provide the view you want,
 use the system "Screen Capture" (all the images in this
 document were created with screen capture, along with the images in the SyMAP publications).
 

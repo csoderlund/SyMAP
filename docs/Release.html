@@ -74,6 +74,60 @@ exon-intron structure.
 <tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="Collinear.html">viewing</a>
 </table>
 
+<a id="v551"></a>
+<h3>Release: v5.5.1 (14-Mar-24)</h3>
+For existing databases, there are no changes since <a href=#v548>v5.4.8</a>.
+<br>This will no longer run on 32-bit machines, starting with v5.5.1.
+<br>You must have Java v17 or later, starting with SyMAP v5.5.0.
+<p>This release has multiple small interface changes, as follows:
+<ul>
+<li><ttb>2D-display</ttb>
+<ul>
+<li><ttl>Control panel</ttl>: Has a new option to shrink the area between the tracks.
+<li><ttl>Sequence Filter</ttl>:
+<ol>
+
+<li><ttx>Gene#</ttx>: There is a new filter to show the <ttx>Gene#</ttx> beside each gene.
+<li><ttx>Hit %Id</ttx>: When the <ttx>Hit %Id</ttx> option is off, the length of the vertical
+line is constant; when it is on, it is proportional to the %ID. When the <ttx>Hit Length</ttx>
+is off, this line is not shown.
+
+<li>(1) The filter window has been re-organized and the track number has been added to the title.
+(2) Fixed a bug in setting the start and end coordinates, which occasionally did not work.
+(3) If there was more than 3 tracks, the <ttx>Conserved</ttx> option was only available
+for the first occurrence of the reference track; it is now present for all occurrences.
+(4)
+</ol>
+<li>Small changes and fixes:
+(1) When a 2D display was initiated from the dotplot, one track could be longer than the other;
+this has been fixed (problem introduced in v5.5.0).
+(2) The <ttl>Hit Filter</ttl> <ttx>Highlight Hit popup</ttx>, when turned off,
+was still highlighting the hit gene(s); it no longer does.
+
+</ul>
+<br>
+<li><ttb>Dot plot</ttb>
+<ul>
+<li>The <ttl>Stats</ttl> pull-down has been changed to an "i" icon button for the help, and
+an "s" icon button for the statistics. Instead of writing the statistics to the terminal,
+they are written to a popup (where the text can be copied).
+</ul>
+<br>
+<li>Developer
+<small>
+<ul>
+<li>Changed most 'long' to integers (there were still 32-bit machines when this was 1st developed).
+<li>2D merge overlapping hits for display; it smooths out the hit length display a little for
+highly conserved genomes.
+<li>2D Control Panel changed Select pulldown to popup menu. Add space between control buttons
+(was squashed on linux). Less space is used between tracks when there are &gt;2 tracks.
+The display from the Dot plot is back to pre-v550 length. On gene popup, was not suppose to
+show exon score for Algo1, but was showing 0.
+</ul>
+</small>
+
+</ul>
+
 <a id="v550"></a>
 <h3>Release: v5.5.0 (3-Mar-24)</h3>
 For existing databases, there are no changes (though there are for <a href=#v548>v5.4.8</a>).
