@@ -8,10 +8,6 @@ package symap.mapper;
  * CAS541 HitFilter=>HfilterData; CAS542 remove listeners, that did nothing
  */
 public class HfilterData {
-	private boolean DEBUG = false; // Globals.DEBUG;
-	public static int cntHitFilter=1; // for debugging
-	private int myCntHitFilter=0;
-	
 	private static final double ANY_PCTID  = 0;
 	private static final double NO_PCTID  = 100;
 	
@@ -28,12 +24,10 @@ public class HfilterData {
 	private String hoverText=""; // CAS520 add
 
 	public HfilterData() {
-		myCntHitFilter = cntHitFilter++;
 		setDefaults();
 	}
 	
 	private HfilterData(HfilterData hf) { // copy
-		myCntHitFilter = cntHitFilter++;
 		setChanged(hf, "HfilterData from hf");
 	}
 	
@@ -57,7 +51,6 @@ public class HfilterData {
 		
 		if (msg.endsWith(", ")) msg = msg.substring(0, msg.length()-2);
 		hoverText = 	msg + "\n";
-		if (DEBUG) hoverText = myCntHitFilter + ": " + hoverText;
 		return hoverText;
 	}
 	// block, set, region CAS520 add for showing synteny from query; b is blocks by default

@@ -7,12 +7,12 @@ public class Block {
 	private int nBlockIdx;
 	private int nProj1Idx, nProj2Idx;
 	private int nGroup1Idx, nGroup2Idx;
-	private long start1, end1;
-	private long start2, end2;
+	private int start1, end1;
+	private int start2, end2;
 	private float corr;
 	
 	protected Block(int nBlockIdx, int nProj1Idx, int nProj2Idx, int nGroup1Idx, int nGroup2Idx, 
-			long start1, long end1, long start2, long end2,  float corr)
+			int start1, int end1, int start2, int end2,  float corr)
 	{
 		this.nBlockIdx = nBlockIdx;
 		this.nProj1Idx = nProj1Idx;
@@ -36,10 +36,10 @@ public class Block {
 		return new Block(nBlockIdx, nProj2Idx, nProj1Idx, nGroup2Idx, nGroup1Idx, start2, end2, start1, end1, corr);
 	}
 	
-	protected long getStart1() { return start1; }
-	protected long getEnd1() { return end1; }
-	protected long getStart2() { return start2; }
-	protected long getEnd2() { return end2; }
+	protected int getStart1() { return start1; }
+	protected int getEnd1() { return end1; }
+	protected int getStart2() { return start2; }
+	protected int getEnd2() { return end2; }
 	protected int getProj1Idx() { return nProj1Idx; }
 	protected int getProj2Idx() { return nProj2Idx; }
 	protected int getGroup1Idx() { return nGroup1Idx; }

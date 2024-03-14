@@ -45,7 +45,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	private DBconn2 dbc2;
 	
 	private int numAnnot = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0;;
-	private long length=0;
+	private int length=0;
 	
 	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();
 	private TreeMap<String,Integer> grpName2Idx = new TreeMap <String, Integer> ();
@@ -109,7 +109,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public boolean hasGenes() {return numGene>0;}
 	
 	public boolean hasCat()   	{return !Utilities.isEmpty(getDBVal(sCategory));} // CAS535 not finished
-	public long getLength() 	{return length;}
+	public int getLength() 	{return length;}
 	public Color getColor() 	{return color; }
 	public void setColor(Color c) {color = c; }
 	
@@ -520,7 +520,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
         		" join xgroups as g on g.idx=pa.grp_idx " +
         		" where g.proj_idx=" + projIdx + " and type='gap'");
       
-        length = dbc2.executeLong("select sum(length) from pseudos " +
+        length = dbc2.executeInteger("select sum(length) from pseudos " +
 				"join xgroups on xgroups.idx=pseudos.grp_idx  " +
 				"where xgroups.proj_idx=" + projIdx);	// CAS500 for Summary and for orderProjects
 		

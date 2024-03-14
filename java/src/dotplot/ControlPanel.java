@@ -30,28 +30,31 @@ import util.Jcomp;
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ControlPanel extends JPanel implements HelpListener {
-	public static int pINFO=0, pPRINT=1, pHELP=2; // order of stats
-	
     private Data data; 		// changes to zoom, etc set in data
     private Plot plot; 		// for show image and repaint
     private Filter filter=null; 	// CAS533 add; was recreating every time 
     
     private JButton homeButton, minusButton, plusButton;
-    private JButton filterButton, helpButton, showImageButton, editColorsButton;
+    private JButton filterButton, showImageButton, editColorsButton;
+    private JButton helpButtonLg, helpButtonSm, statsButton;	// CAS551 add Info & Stats button to replace statsOpt pull-down
     private JCheckBox scaleCheckbox; 	
     private JLabel referenceLabel;      
     private JComboBox <Project> referenceSelector;
-    private JComboBox <String> statsOpts;
     private ColorDialogHandler cdh;
+   
   
-    public ControlPanel(Data d, Plot p, HelpBar hb, ColorDialogHandler cdh) {
+    protected ControlPanel(Data d, Plot p, HelpBar hb, ColorDialogHandler cdh) {
 		this.data = d;
 		this.plot = p;
 		this.cdh = cdh;
 		
 		filter = new Filter(d, this);
 	
-		helpButton = util.Jhtml.createHelpIconUserLg(util.Jhtml.dotplot);
+		helpButtonLg = util.Jhtml.createHelpIconUserLg(util.Jhtml.dotplot);
+		helpButtonSm= (JButton) Jcomp.createButton(this,"/images/info.png",
+				"Quick Help Popup",hb,buttonListener,false, false);
+		statsButton = (JButton) Jcomp.createButton(this,"/images/s.png",
+				"Stats Popup",hb,buttonListener,false, false);
 		
 		homeButton       = (JButton)  Jcomp.createButton(this,"/images/home.gif",
 				"Home: Go back to full view.",hb,buttonListener,false, data.isTileView());
@@ -75,14 +78,6 @@ public class ControlPanel extends JPanel implements HelpListener {
 		referenceSelector.setName("Reference: Change reference (x-axis) project.");
 		referenceSelector.setToolTipText("Reference: Change reference (x-axis) project.");
 		
-		statsOpts = new JComboBox <String> ();
-		statsOpts.addItem("Stats"); // if change, change constants above
-		statsOpts.addItem("Print");
-		statsOpts.addItem("Help");
-		statsOpts.addActionListener(buttonListener);
-		statsOpts.setName("Show in Information box.");
-		statsOpts.setToolTipText("Show in Information box.");
-		
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
 		setLayout(gbl);
@@ -92,8 +87,6 @@ public class ControlPanel extends JPanel implements HelpListener {
 		gbc.ipady = 8;
 		
 		// 
-		addToGrid(gbl,gbc,statsOpts,1,1); // CAS543 put at beginning so if shrink, lose this instead of home
-		
 		addToGrid(gbl,gbc,homeButton,1,1);		addToGrid(gbl,gbc,minusButton,1,0);	addToGrid(gbl,gbc,plusButton,1,1);
 		addToGrid(gbl,gbc,scaleCheckbox,1,1); 	
 		addToGrid(gbl,gbc,referenceLabel,1,0);	addToGrid(gbl,gbc,referenceSelector,1,1); 
@@ -101,10 +94,12 @@ public class ControlPanel extends JPanel implements HelpListener {
 		addToGrid(gbl,gbc,filterButton,1,1);
 		addToGrid(gbl,gbc,editColorsButton,1,1); 
 		addToGrid(gbl,gbc,showImageButton,1,1);
-		addToGrid(gbl,gbc,helpButton,GridBagConstraints.REMAINDER,0);
+		addToGrid(gbl,gbc,helpButtonLg,1,1);
+		addToGrid(gbl,gbc,helpButtonSm,1,1);
+		addToGrid(gbl,gbc,statsButton,GridBagConstraints.REMAINDER,0);
     }
-    public void kill() {filter.setVisible(false);} // DotPlotFrame on shutdown; only needed if !modal
-    public void update() {plot.repaint();} // Filter change
+    protected void kill() {filter.setVisible(false);} // DotPlotFrame on shutdown; only needed if !modal
+    protected void update() {plot.repaint();} // Filter change
     
     private ActionListener buttonListener = new ActionListener() {
 	    public void actionPerformed(ActionEvent evt) {
@@ -129,10 +124,8 @@ public class ControlPanel extends JPanel implements HelpListener {
 			    else if (src == referenceSelector) {
 			    	data.setReference((Project)referenceSelector.getSelectedItem());
 			    }
-			    else if (src == statsOpts) { // CAS541 add
-			    	data.setStatOpts(statsOpts.getSelectedIndex());
-			    	plot.prtCnts();
-			    }
+			    else if (src == helpButtonSm) popupHelp();
+			    else if (src == statsButton) popupStats();
 			    plot.repaint();
 			}
 	    }
@@ -145,12 +138,12 @@ public class ControlPanel extends JPanel implements HelpListener {
 		if (sep > 1) addToGrid(gbl,gbc,new JSeparator(JSeparator.VERTICAL),1,0);
     }
     
-	public String getHelpText(MouseEvent event) { 
+	public String getHelpText(MouseEvent event) {  // symap.frame.Helpbar
 		Component comp = (Component)event.getSource();
 		return comp.getName();
 	}
 	
-	public void setProjects(Project[] projects) { // DotPlotFrame
+	protected void setProjects(Project[] projects) { // DotPlotFrame
 		if (projects == null) {
 			referenceLabel.setVisible(false);
 			referenceSelector.setVisible(false);
@@ -163,5 +156,19 @@ public class ControlPanel extends JPanel implements HelpListener {
 		// Disable if self-alignment
 		if (projects.length == 2 && projects[0].getID() == projects[1].getID())
 			referenceSelector.setEnabled(false);
+	}
+	private void popupHelp() {
+		String msg = 
+				"If multiple chr-by-chr cells are shown, click on a cell to view the cell only.\n\n";
+		msg +=  "For the chr-by-chr cell view only:"
+				+ "\n   Double-click on a synteny block (boundary must be showing), "
+				+ "\n   or create a region by dragging the mouse and double-click on it."
+				+ "\nThe first click will turn the region beige, the second click will bring up"
+				+ "\nthe 2D display of the region.";
+		util.Utilities.displayInfoMonoSpace(this, "Quick Help", msg, false);
+	}
+	private void popupStats() {
+		String msg = plot.getStats();
+		util.Utilities.displayInfoMonoSpace(this, "Dot plot stats", msg, false);
 	}
 }

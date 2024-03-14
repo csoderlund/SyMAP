@@ -121,8 +121,8 @@ public class ProjIcons extends JComponent
 				if ((b.getGroup2Idx() == mapper.getRefChr().getGroupIdx() || mapper.isRefChr(t))
 						&& b.getGroup1Idx() == t.getGroupIdx())
 				{
-					long startBP = b.getStart1();
-					long endBP = b.getEnd1();
+					long startBP = (long) b.getStart1(); // CAS551 this does not work right unless long
+					long endBP = (long) b.getEnd1();
 				
 					int startY = (int)(height * startBP / t.getSizeBP());
 					int endY = (int)(height * endBP / t.getSizeBP());

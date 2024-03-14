@@ -412,7 +412,7 @@ public class SpeciesSelectPanel extends JPanel {
 			if (text.contentEquals("")) return "";
 			
 			try {
-				long temp = Long.parseLong(text);
+				int temp = Integer.parseInt(text); // CAS551 was long
 				if(temp < 0) {
 					Utilities.showWarningMessage("Invalid From (start) coordinate '" + text + "'");
 					return null;
@@ -434,7 +434,7 @@ public class SpeciesSelectPanel extends JPanel {
 			}
 				
 			try {
-				long end = Long.parseLong(etext);
+				int end = Integer.parseInt(etext);
 				if (end <= 0) {
 					Utilities.showWarningMessage("Invalid To (end) coordinate '" + etext + "'");
 					return null;
@@ -442,7 +442,7 @@ public class SpeciesSelectPanel extends JPanel {
 				
 				String stext = txtStart.getText().trim(); // CAS549 add check (start is checked first, so this is fine)
 				if (!stext.contentEquals("")) {
-					long start = Long.parseLong(stext);
+					int start = Integer.parseInt(stext);
 					if (start>=end) {
 						Utilities.showWarningMessage("Invalid From (start) '" + stext + "' > To (end) '" + etext + "'");
 						return null;

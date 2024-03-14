@@ -13,7 +13,7 @@ public class ChrInfo {
 	protected Mproject project;
 	private String strGroupName;
 	private int nGroupIdx;
-	private long sizeBP;
+	private int sizeBP;
 	private boolean bVisible = false;
 
 	protected ChrInfo(Mproject project, String strGroupName, int nGroupIdx) {
@@ -31,8 +31,8 @@ public class ChrInfo {
 	protected int getProjIdx() { return project.getID(); } 					// Mapper, ChrExpInit, ChrExpFrame
 	protected int getGroupIdx() { return nGroupIdx; } 							// Mapper, ChrExpInit, ChrExpFrame, ProjIcons
 	
-	protected long getSizeBP() { return sizeBP; } // ProjIcons, Mapper
-	protected void setSizeBP( long sizeBP ) { this.sizeBP = sizeBP; } 			// ChrExpInit; length of chromosome
+	protected int getSizeBP() { return sizeBP; } // ProjIcons, Mapper
+	protected void setSizeBP( int sizeBP ) { this.sizeBP = sizeBP; } 			// ChrExpInit; length of chromosome
 		
 	protected Color getColor() { return project.getColor(); } 					// ChrExpFrame.show2DView
 

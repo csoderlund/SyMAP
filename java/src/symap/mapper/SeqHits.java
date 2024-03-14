@@ -28,10 +28,12 @@ import symap.Globals;
  * 
  * CAS531 renamed from PseudoPseudoHits and removed extends AbstractHitData; CAS545 PseudoHit->DrawHit
  */
-
 public class SeqHits  {
 	private static final int MOUSE_PADDING = 3;
-	private static Font textFont = new Font(Font.MONOSPACED,Font.PLAIN,12);
+	private static final int HIT_OFFSET = 15, HIT_MIN_OFFSET=6; // CAS551 amount line enters track; 15, 12,9,6
+	private static final int HIT_INC = 3, HIT_OVERLAP = 75; // default minimum match bases is 100, so hits should be more
+	
+	public static Font textFont = Globals.textFont;
 	
 	private int projIdx1, projIdx2; // project IDs
 	private int grpIdx1, grpIdx2; // groupIDs: contig or chromosome 
@@ -52,12 +54,47 @@ public class SeqHits  {
 		this.seqObj1 = st1;
 		this.seqObj2 = st2;
 		
-		allHitsArray = new DrawHit[hitList.size()];
+		int off1 = HIT_OFFSET, off2 = HIT_OFFSET;
+		HitData lasthd = null;
+		TreeMap <Integer, Integer> s2Map = new TreeMap <Integer, Integer>  (); // order by start2
+		
+		allHitsArray = new DrawHit[hitList.size()]; // transfer hitList to allHitsArray; ordered by start1
 		for (int i = 0; i < allHitsArray.length; i++) {
 			HitData hd = hitList.get(i);
-			boolean isSelected = mapper.isQuerySelHit(hd.getStart1(), hd.getEnd1(), hd.getStart2(),hd.getEnd2());	
 			allHitsArray[i] = new DrawHit(hd);
+			
+			boolean isSelected = mapper.isQuerySelHit(hd.getStart1(), hd.getEnd1(), hd.getStart2(),hd.getEnd2());	
 			allHitsArray[i].set(isSelected);
+			
+			// Calc offset for display for seq1
+			int olap = (lasthd!=null) ?  Math.min(lasthd.end1,hd.end1) - Math.max(lasthd.start1,hd.start1) : 0;
+			if (olap > HIT_OVERLAP) { 
+				off1 -= HIT_INC;
+				if (off1 < HIT_MIN_OFFSET) off1 = HIT_OFFSET;
+			}
+			else  off1 = HIT_OFFSET;
+			allHitsArray[i].off1 = off1;
+			
+			if (lasthd==null) lasthd = hd;
+			else if (hd.end1>lasthd.end1) lasthd = hd; // otherwise, contained
+			
+			if (s2Map.containsKey(hd.start2)) s2Map.put(hd.start2+1, i); 
+			else s2Map.put(hd.start2, i);
+		}
+		// Calc offset for display for seq2
+		lasthd = null;
+		for (int i : s2Map.values()) {
+			HitData hd = hitList.get(i);
+			int olap = (lasthd!=null) ?  Math.min(lasthd.end2,hd.end2) - Math.max(lasthd.start2,hd.start2) : 0;
+			if (olap > HIT_OVERLAP) {
+				off2 -= HIT_INC;
+				if (off2 < HIT_MIN_OFFSET) off2 = HIT_OFFSET;
+			}
+			else off2 = HIT_OFFSET;
+			allHitsArray[i].off2 = off2;
+			
+			if (lasthd==null) lasthd = hd;
+			else if (hd.end2>lasthd.end2) lasthd = hd;
 		}
 		
 		projIdx1 = st1.getProject();
@@ -73,6 +110,11 @@ public class SeqHits  {
 		int t2 = seqObj2.getHolder().getTrackNum(); 
 		st1LTst2 = (t1<t2);
 	}
+	// Returns the amount of the overlap (negative for gap); copied fro
+		public static int intervalsOverlap(int s1,int e1, int s2, int e2) {
+			int gap = Math.min(e1,e2) - Math.max(s1,s2) - Math.min(e1,e2);
+			return -gap;
+		}	
 	public String getInfo() { return infoMsg;}; // CAS541 called in Mapper
 	
 	// called from mapper.myinit sets for the Hit Filter %id slider
@@ -279,6 +321,7 @@ public class SeqHits  {
 		private boolean isHover;		 // set on hover; 
 		private boolean isQuerySelHit;   // set on Query select row; From TableDataPanel
 		private boolean isDisplayed;     // isNotFiltered; CAS541 add.
+		public int off1 = HIT_OFFSET, off2 = HIT_OFFSET;
 		
 		public DrawHit(HitData hd) {
 			hitDataObj = hd;
@@ -349,11 +392,6 @@ public class SeqHits  {
  			 return Mapper.pseudoLineColorPP;
 		 }
 		 ////////////////////////////////////////////////////////////////////
-		 private boolean isVisHitWire() {
-			 boolean seq1 = seqObj1.isHitInRange(hitDataObj.mid1);
-			 boolean seq2 = seqObj2.isHitInRange(hitDataObj.mid2);
-			 return seq1 && seq2;
-		 }
 		 private boolean isOlapHit() {	// CAS550 add so partial hit can be viewed
 			 boolean seq1 = seqObj1.isHitOlap(hitDataObj.start1, hitDataObj.end1);
 			 boolean seq2 = seqObj2.isHitOlap(hitDataObj.start2, hitDataObj.end2);
@@ -415,7 +453,7 @@ public class SeqHits  {
 		  */
 		 private boolean paintComponent(Graphics2D g2, int trackPos1, int trackPos2, Point stLoc1, Point stLoc2, boolean btoggle) {  		 
 			 if (!isOlapHit() || isFiltered()) return false; // CAS550 chg hit-wire visible to hit length visible
-			 
+			
 			 cntShowHit++;
 			
 		   // get border locations of sequence tracks to draw hit stuff to it and along it
@@ -435,40 +473,47 @@ public class SeqHits  {
 			 hitWire.setLine(hw1,hw2); 
 			 g2.draw(hitWire); 
 			 
-			 /* %id line: paint in seq1/2 rectangle the %id length */
+			 /* %id line: paint in seq1/2 rectangle the %id length;  */
+			 // id=19 is 5 outside rect, id=23 is 7 inside rect; id=100 is 30 far in rect
 			 int pctid = (int)hitDataObj.getPctid();
 			 int lineScoreLen = Math.max(1, 30*(pctid+1)/(100+1)); // CAS517 was only set if getShowScoreLine
-			 if (trackPos1 == Globals.RIGHT_ORIENT) lineScoreLen = 0 - lineScoreLen; 
-		
-			 if (seqObj1.getShowScoreLine()) { // gets turned back on with redraws
-				 g2.drawLine(x1,y1,x1-lineScoreLen,y1);
+			 int len1=off1, len2 = off2;
+			 if (trackPos1 == Globals.RIGHT_ORIENT) {
+				 lineScoreLen = 0 - lineScoreLen; 
+				 len1 = 0 - len1;
+				 len2 = 0 - len2;
 			 }
-			 if (seqObj2.getShowScoreLine()) {
-				 g2.drawLine(x2,y2,x2+lineScoreLen,y2);
-			 }
-			// Hit length: paint in sequence objects the rectangle for the hit length graphics 
-			 if (seqObj1.getShowHitLen()) { 					
+			
+			// Hit length: paint in sequence objects the rectangle for the hit length graphics ; 	
+			// CAS551 if no hitLen, then no scoreLine either. If no scoreLine, use LINE_W
+			 if (seqObj1.getShowHitLen()) {
+				 int wlen1 = seqObj1.getShowScoreLine() ? lineScoreLen : len1;
+				 g2.drawLine(x1, y1, x1-wlen1, y1);
+				 
 				 Point2D rp1 = seqObj1.getPointForHit(hitDataObj.getStart1(), trackPos1);
 				 Point2D rp2 = seqObj1.getPointForHit(hitDataObj.getEnd1(),   trackPos1);
 				 
 				 if (Math.abs(rp2.getY()-rp1.getY()) > 3) { 		// only draw if it will be visible
-					 rp1.setLocation(x1-lineScoreLen,rp1.getY());				 
-					 rp2.setLocation(x1-lineScoreLen,rp2.getY());
+					 rp1.setLocation(x1-wlen1, rp1.getY());				 
+					 rp2.setLocation(x1-wlen1, rp2.getY());
 					 
 					 paintHitLen(g2, seqObj1, rp1, rp2, trackPos1, hitDataObj.isPosOrient1(), btoggle);
 				 }
 			 }
 			 if (seqObj2.getShowHitLen()) {
+				 int wlen2 = seqObj2.getShowScoreLine() ? lineScoreLen : len2;
+				 g2.drawLine(x2, y2, x2+wlen2, y2);
+				 
 				 Point2D rp3 = seqObj2.getPointForHit(hitDataObj.getStart2(), trackPos2);
 				 Point2D rp4 = seqObj2.getPointForHit(hitDataObj.getEnd2(),   trackPos2);
+				
 				 if (Math.abs(rp4.getY()-rp3.getY()) > 3) { 		// only draw if it will be visible
-					 rp3.setLocation(x2+lineScoreLen,rp3.getY());				 
-					 rp4.setLocation(x2+lineScoreLen,rp4.getY());
+					 rp3.setLocation(x2+wlen2, rp3.getY());				 
+					 rp4.setLocation(x2+wlen2, rp4.getY());
 					 
 					 paintHitLen(g2, seqObj2, rp3, rp4, trackPos2, hitDataObj.isPosOrient2(), btoggle);
 				 }
 			 }
-			 
 		/* text */
 			 // CAS531 add hitNum; CAS543 always put text on outside rect; CAS545 compress code and add block/cset
 			 int xr=4, xl=19; 
@@ -530,9 +575,9 @@ public class SeqHits  {
 			 Rectangle2D.Double rect;
 			 
 			 if (mapper.isQueryTrack(st)) // CAS517 check isSelf in isQuery || (trackPos == LEFT_ORIENT && mapper.isSelf() ))
-				 subHits = hitDataObj.getQuerySeq();
+				 subHits = hitDataObj.getQueryMerge(); // CAS551 merged when HitData created
 			 else
-				 subHits = hitDataObj.getTargetSeq();
+				 subHits = hitDataObj.getTargetMerge();
 
 			 if (subHits == null || subHits.length() == 0) {// CAS512 long time bug when flipped and one hit
 				 g2.setPaint(getCColor(hitDataObj.getOrients(), toggle, false));
@@ -555,8 +600,8 @@ public class SeqHits  {
 				 String[] subseq = subHits.split(",");
 				 for (int i = 0;  i < subseq.length;  i++) {
 					 String[] pos = subseq[i].split(":");
-					 long start = Long.parseLong(pos[0]);
-					 long end =   Long.parseLong(pos[1]);
+					 int start = Integer.parseInt(pos[0]); // CAS551 was long
+					 int end =   Integer.parseInt(pos[1]);
 					 
 					 Point2D p1 = st.getPointForHit(start, trackPos);
 					 p1.setLocation( pStart.getX(), p1.getY() );
@@ -577,7 +622,7 @@ public class SeqHits  {
 		 
 		/* CAS516 popup from clicking hit wire; CAS531 change to use TextPopup */
 		private void popupDesc(double x, double y) {
-			hitDataObj.setIsPopup(true);
+			if (mapper.getHitFilter().isHiPopup()) hitDataObj.setIsPopup(true); // CAS551 
 			String title="Hit #" + hitDataObj.getHitNum(); // CAS520 changed from hit idx to hitnum
 			
 			String theInfo = hitDataObj.createHover(st1LTst2) + "\n"; 

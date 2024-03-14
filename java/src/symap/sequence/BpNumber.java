@@ -2,13 +2,13 @@ package symap.sequence;
 
 import java.text.NumberFormat;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * CAS550 This was in a separate class called number, along with 2 other files.
  * It was moved to Sequence and all references to getBpPerCb() removed since it was always 1.
  * Then removed all BpNumber objects from Sequence, and this is what is left.
  * This originally was written for FPC CB units and Seq BP units.
+ * CAS551 changed longs to ints
  */
 public class BpNumber {
 	public static final int DEFAULT_FRACTION_DIGITS = 2;
@@ -22,12 +22,12 @@ public class BpNumber {
 
 	public static final String PIXEL = "pixel";
 
-	protected static final Map<String,Long> unitConversion = new HashMap<String,Long>();
+	protected static final HashMap<String,Integer> unitConversion = new HashMap<String,Integer>();
 	static {
-		unitConversion.put(BP, 1L); // CAS512 new Long(1)
-		unitConversion.put(KB, 1000L);
-		unitConversion.put(MB, 1000000L);
-		unitConversion.put(GB, 1000000000L);
+		unitConversion.put(BP, 1); // CAS512 new Long(1); CAS551 changed to int
+		unitConversion.put(KB, 1000);
+		unitConversion.put(MB, 1000000);
+		unitConversion.put(GB, 1000000000);
 	}
 
 	private static final NumberFormat nf = NumberFormat.getNumberInstance();
@@ -42,7 +42,7 @@ public class BpNumber {
 	protected static double getValue(String units, double bp, double bpPerPixel) {
 		double r;
 		if (units.equals(PIXEL))	r = bp / bpPerPixel;
-		else						r = bp / ((Long)unitConversion.get(units)).doubleValue();
+		else						r = bp / (unitConversion.get(units)).doubleValue();
 		return r;
 	}
 
@@ -57,13 +57,13 @@ public class BpNumber {
 	protected static String getFormatted(double bp0, double bpPerPixel, NumberFormat numFormat) {
 		String unit = GB;
 		double bp = getValue(BP, bp0,bpPerPixel);
-		long mult = ((Long) unitConversion.get(unit)).longValue();
+		int mult = unitConversion.get(unit);
 		if (bp < mult) {
 			unit = MB;
-			mult = ((Long) unitConversion.get(unit)).longValue();
+			mult = unitConversion.get(unit);
 			if (bp < mult) {
 				unit = KB;
-				mult = ((Long) unitConversion.get(unit)).longValue();
+				mult = unitConversion.get(unit);
 				if (bp < mult) unit = BP;
 			}
 		}
@@ -78,13 +78,13 @@ public class BpNumber {
 	protected static String getFormatted(double bpSep, double cb, double bpPerPixel, NumberFormat numFormat) {
 		String unit = GB;
 		double bp = getValue(BP, cb,bpPerPixel);
-		long mult = ((Long) unitConversion.get(unit)).longValue();
+		int mult = unitConversion.get(unit);
 		if (bp < mult || bpSep < mult/100.0) {
 			unit = MB;
-			mult = ((Long) unitConversion.get(unit)).longValue();
+			mult = unitConversion.get(unit);
 			if (bp < mult || bpSep < mult/100.0) {
 				unit = KB;
-				mult = ((Long) unitConversion.get(unit)).longValue();
+				mult = unitConversion.get(unit);
 				if (bp < mult || bpSep < mult/100.0) {
 					unit = BP;
 				}
@@ -93,10 +93,6 @@ public class BpNumber {
 		return getFormatted(unit, cb,bpPerPixel,numFormat);
 	}
 
-	protected static double getBpPerPixel(long cb, double pixels) {return cb / pixels;}
-	protected static long getUnitConversion(String unit) {
-		Object obj = unitConversion.get(unit);
-		if (obj == null) return 0;
-		return ((Long) obj).longValue();
-	}
+	protected static double getBpPerPixel(int bp, double pixels) {return bp / pixels;}
+	protected static int getUnitConversion(String unit) {return unitConversion.get(unit);}
 }

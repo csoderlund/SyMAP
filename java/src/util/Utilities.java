@@ -183,6 +183,7 @@ public class Utilities {
 		
 		return false;
 	}
+	
 	/********************************************************************
 	 * XXX File ops
 	 */
@@ -729,6 +730,20 @@ public class Utilities {
     	String [] tok = gn.split("\\.");
     	if (tok.length>0) return tok[0]; 
     	else return gn; // CAS544 bugfix was returning full tag
+    }
+    // For Annotation
+    static public int getGenenumSuffixInt(String gn) {
+    	if (gn=="-") return -1;
+    	if (!gn.contains(".")) return -1;
+    	if (gn.endsWith(".")) return -1;
+ 
+    	String [] tok = gn.split("\\.");
+    	if (tok.length>0) {
+    		char [] x = tok[1].toCharArray(); 
+    		int i = (int) x[0];
+    		if (i>=97 || i<=122) return  i-97;
+    	}
+    	return 0; 
     }
     
     // symap.QueryPanel

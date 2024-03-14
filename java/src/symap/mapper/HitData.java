@@ -1,27 +1,32 @@
 package symap.mapper;
 
 import java.util.Comparator;
+
 import symap.Globals;
 import symap.sequence.Sequence;
+import util.ErrorReport;
 import util.Utilities;
 
 /**
- * Represents one Hit
+ * Represents one Clustered Hit
  * CAS531 was abstract so the code went through loops to get data into it via PseudoPseudoData, which is removed
  */
 public class HitData {	
+	public static int cntMerge=0, cntTotal=0, cntMergeSH=0, cntTotalSH=0; // CAS551 -dd see reduction in subhits
+	
 	private Mapper mapper;			// CAS544 add for way back to other data
-	private long idx;
+	private int idx;				// CAS551 was long
 	private int hitnum;				// CAS520 add, newly assigned hitnum
 	private byte pctid, pctsim; 	// CAS515 add pctsim and nMerge
 	private int covScore;			// CAS540 best coverage
 	private int nMerge;
-	private String htype;			// CAS546 add htype (EE, EI, etc)
 	private int geneOlp = -1; 
 	private int annot1_idx, annot2_idx; // CAS543 add
-	protected int start1, end1, mid1, start2, end2, mid2;		// CAS550 add mid for paintComponent
-	private boolean isSameOrient, isPosOrient1, isPosOrient2; 	// CAS517 if the same
+	private boolean isPosOrient1, isPosOrient2; 	// CAS517 if the same
 	private String query_seq, target_seq; // coordinates of hit
+	
+	protected int start1, end1, mid1, start2, end2, mid2;	// 1=q, 2=t; CAS550 add mid for paintComponent
+	protected String qMergeSH, tMergeSH;					// CAS551 merged for faster drawing in SeqHits.DrawHit
 	
 	private int collinearSet;		// CAS520 [c(runnum.runsize)] need to toggle highlight
 	private int blocknum; 			// CAS505 add
@@ -33,10 +38,10 @@ public class HitData {
 	private boolean isPopup=false;		// set when popup; CAS543 add
 	private boolean isConserved=false;	// set on conserved seqFilter, same as geneOlap=2 if only 2 tracks; CAS545 add 
 	
-	private String hitTag;			// CAS516 gNbN see MapperPool; CAS520 g(gene_overlap) [c(runnum.runsize)]
+	private String hitTag;			// g(gene_overlap) or htype (EE) [c(runnum.runsize)]; CAS516 gNbN see MapperPool; 
 	
 	// MapperPool.setSeqHitData populates, puts in array for SeqHits, where each HitData is associated with a DrawHit
-	protected HitData(Mapper mapper, long id, int hitnum, 
+	protected HitData(Mapper mapper, int id, int hitnum, 
 			  double pctid, int pctsim, int nMerge, int covScore, String htype, int overlap,
 			  int annot1_idx, int annot2_idx,
 			  String strand, int start1, int end1, int start2, int end2, String query_seq, String target_seq,   
@@ -50,21 +55,17 @@ public class HitData {
 		this.pctsim = (byte) pctsim;
 		this.nMerge = nMerge;
 		this.covScore = covScore;
-		this.htype = htype;
 		this.geneOlp = overlap;
 		
 		this.annot1_idx = annot1_idx;
 		this.annot2_idx = annot2_idx;
 		
 		if (strand.length() >= 3) { 
-			this.isSameOrient = strand.charAt(0) == strand.charAt(2);
 			this.isPosOrient1 = (strand.charAt(0) == '+');
 			this.isPosOrient2 = (strand.charAt(2) == '+');
 		}
-		else {
-			if (Globals.DEBUG) System.err.println("HitData: Invalid strand value '"+strand+"' for hit id="+id);
-			this.isSameOrient = true;
-		}
+		else if (Globals.DEBUG) System.err.println("HitData: Invalid strand value '"+strand+"' for hit id="+id);
+			
 		this.start1 = start1;
 		this.end1 = end1;
 		this.start2 = start2;
@@ -72,8 +73,10 @@ public class HitData {
 		this.mid1 = (start1+end1) >>1;
 		this.mid2 = (start2+end2) >>1;
 		
-		this.query_seq = query_seq; 	// start1, end1
-		this.target_seq = target_seq;	// start2, end2
+		this.query_seq = query_seq; 	// start1: end1, ...
+		this.target_seq = target_seq;	// start2: end2
+		qMergeSH = calcMergeHits(query_seq, start1, end1);
+		tMergeSH = calcMergeHits(target_seq, start2, end2);
 		
 		this.collinearSet = runnum; // CAS520 add; CAS543 move form MapperPool
 		this.isCollinear = (collinearSet==0) ? false : true; 
@@ -86,40 +89,94 @@ public class HitData {
 		this.corr = corr;
 		this.isBlock = (blocknum>0) ? true : false;
 	}
+	/* The hits overlap, so merge the overlapping ones; similar to the one in anchor2.HitPair 
+	 * For similar sequences, there can be many merges - I thought this would smooth on the display more... */
+	protected String calcMergeHits(String subHits, int start, int end) {
+	try {
+		if (subHits == null || subHits.length() == 0) return ""; // 1 sh; uses start,end
+			
+		String[] subseq = subHits.split(",");
+		int nsh=0, osh=subseq.length;
+		
+		int [] shstart = new int [osh];
+		int [] shend = new int [osh];
+		
+		for (int k = 0;  k < osh;  k++) {
+			String[] pos = subseq[k].split(":");
+			int s = Integer.parseInt(pos[0]);
+			int e = Integer.parseInt(pos[1]);
+			 
+			boolean found=false;
+			for (int i=0; i<nsh; i++) {
+				int olap = Math.min(e, shend[i]) - Math.max(s,shstart[i]); 
+				if (olap<0) continue;
+				
+				found=true;
+				if (e>shend[i])   shend[i] = e;
+				if (s<shstart[i]) shstart[i] = s;
+				break;
+			}
+			if (!found) {
+				shstart[nsh] = s;
+				shend[nsh] = e;
+				nsh++;
+			}
+		}
+		cntTotalSH+=osh; cntTotal++;
+		if (nsh != osh) {cntMerge++; cntMergeSH += (osh-nsh);}
+		else return subHits; // no change
+		
+		if (nsh==1) return ""; // use start, end; was osh>1
 	
-	public boolean isSameOrient()  { return isSameOrient; }
-	public boolean isPosOrient1() { return isPosOrient1; }
-	public boolean isPosOrient2() { return isPosOrient2; }
-	public long getID() 		{ return idx; }
-	public String getAnnots()	{ return annot1_idx + " " + annot2_idx;} // CAS543 added for trace
+		StringBuffer sb = new StringBuffer();
+		for (int i=0; i<nsh; i++) {
+			if (sb.length()==0) sb.append(shstart[i] + ":" + shend[i]);
+			else sb.append("," + shstart[i] + ":" + shend[i]);
+		}
+		return sb.toString();
+	}
+	catch (Exception e) {ErrorReport.print(e, "merge hits"); return null;}	
+	}
+	
+	protected String getQueryMerge() { return qMergeSH;}
+	protected String getTargetMerge() { return tMergeSH;}
+	
+	protected boolean isPosOrient1() { return isPosOrient1; }
+	protected boolean isPosOrient2() { return isPosOrient2; }
+	protected String getAnnots()	{ return annot1_idx + " " + annot2_idx;} // CAS543 added for trace
+	
+	public int getID() 		{ return idx; }
 	public int getAnnot1() 		{ return annot1_idx;}
 	public int getAnnot2() 		{ return annot2_idx;}
 	public int getHitNum() 		{ return hitnum; }
 	public int getBlock()		{ return blocknum;}
+	public int getPos2() 		{ return (start2+end2)>>1; }
+	
 	public int getStart1() 		{ return start1; } 
 	public int getEnd1() 		{ return end1; }   
-	public int getLength1() 	{ return Math.abs(end1-start1)+1; } // CAS516 add +1
 	public int getStart2() 		{ return start2; }
 	public int getEnd2() 		{ return end2; }
-	public int getPos2() 		{ return (start2+end2)>>1; }
-	public int getLength2() 	{ return Math.abs(end2-start2)+1; } // CAS516 add +1
+	
+	protected int getStart1(boolean swap) { return (swap ? start2 : start1); }
+	protected int getEnd1(boolean swap)   { return (swap ? end2 : end1); }
+	protected int getStart2(boolean swap) { return (swap ? start1 : start2); }
+	protected int getEnd2(boolean swap)   { return (swap ? end1 : end2); }
 
-	public double getPctid() 	{ return (double)pctid; }
-	public String getTargetSeq(){ return target_seq; } 
-	public String getQuerySeq() { return query_seq; }  
+	protected double getPctid() 	{ return (double)pctid; }
+	protected String getTargetSeq() { return target_seq; } 
+	protected String getQuerySeq()  { return query_seq; }  
 	
 	// for hit popup: the query and target seq have subhits, and are blank if just one hit; CAS517 add
-	public String getQuerySubhits(){ 
+	protected String getQuerySubhits(){ 
 		if (query_seq!=null && query_seq.length()>0) return query_seq; 
 		return start1 + ":" + end1;
 	} 
-	public String getTargetSubhits(){ 
+	protected String getTargetSubhits(){ 
 		if (target_seq!=null && target_seq.length()>0) return target_seq; 
 		return start2 + ":" + end2;
 	}
 	// for annotation popup: CAS548 was full list of subhits; now coords for both sides
-	public String getCoordsForGenePopup(boolean isQuery, String tag) { 
-		
+	protected String getCoordsForGenePopup(boolean isQuery, String tag) { 
 		String tag1 = mapper.getGeneNum1(annot1_idx);
 		String tag2 = mapper.getGeneNum2(annot2_idx);
 		String otherTag = (tag.equals(tag1)) ? tag2 : tag1;
@@ -135,42 +192,20 @@ public class HitData {
 		String coords = isQuery ? (msg1+"\n" + msg2) : (msg2+ "\n"+ msg1);
 		return coords;
 	} 
-	public String getMinorForGenePopup(boolean isQuery, int annotIdx) {
+	protected String getMinorForGenePopup(boolean isQuery, int annotIdx) {
 		String d = (annotIdx!=annot1_idx && annotIdx!=annot2_idx) ? Globals.minorAnno : "";
 		return d;
 	}
 
-	public int getStart1(boolean swap) { return (swap ? start2 : start1); }
-	public int getEnd1(boolean swap)   { return (swap ? end2 : end1); }
-	public int getStart2(boolean swap) { return (swap ? start1 : start2); }
-	public int getEnd2(boolean swap)   { return (swap ? end1 : end2); }
-	
-	public void normalizeCoords() {
-		if (end1 < start1) {
-			int temp = end1;
-			end1 = start1;
-			start1 = temp;
-		}
-		if (end2 < start2) {
-			int temp = end2;
-			end2 = start2;
-			start2 = temp;
-		}
-	}
-
-	public boolean isBlock() 	{ return isBlock; }
-	public boolean isCset() 	{ return isCollinear; } 
-	public boolean isPopup()	{ return isPopup;}
-	public boolean isConserved(){ return isConserved;}
-	
-	public boolean isGene() 	{ return (geneOlp>0); } 
+	protected boolean isBlock() 	{ return isBlock; }
+	protected boolean isCset() 		{ return isCollinear; } 
+	protected boolean isPopup()		{ return isPopup;}
+	protected boolean isConserved()	{ return isConserved;}
 	public boolean is2Gene() 	{ return (geneOlp==2); } 
-	public boolean is1Gene() 	{ return (geneOlp==1); } 
-	public boolean is0Gene()  	{ return (geneOlp==0); } 
-	public boolean isExon()		{ return htype.equals("EE");}
-	public boolean isIntron()	{ return htype.contains("I");}
+	protected boolean is1Gene() 	{ return (geneOlp==1); } 
+	protected boolean is0Gene()  	{ return (geneOlp==0); } 
 	
-	public void setIsPopup(boolean b) {// CAS543 add
+	public void setIsPopup(boolean b) {// CAS543 add; SeqHits, closeup.TextShowInfo
 		isPopup=b;
 		Sequence s1 = (Sequence) mapper.getTrack1();// CAS545 highlight gene also
 		Sequence s2 = (Sequence) mapper.getTrack2();
@@ -187,7 +222,7 @@ public class HitData {
 		s2.setConservedforHit(annot1_idx, annot2_idx, b); 
 	}
 	
-	public int getCollinearSet() {return collinearSet;} // CAS520 add 
+	protected int getCollinearSet() {return collinearSet;} // CAS520 add 
 	
 	public boolean equals(Object obj) {
 		return (obj instanceof HitData && ((HitData)obj).idx == idx);
@@ -204,7 +239,7 @@ public class HitData {
 		};
 	}
 	// CAS517 add for coloring hit line according to directions
-	public String getOrients() { 
+	protected String getOrients() { 
 		String x = (isPosOrient1) ? "+" : "-";
 		String y = (isPosOrient2) ? "+" : "-";
 		return x+y;
@@ -225,7 +260,7 @@ public class HitData {
 	 * CAS512 left/right->start:end; CAS516 add Inv, tag CAS517 puts track1 info before track2
 	 * Called from SeqHits.popupDesc (top of popup) and SeqHits.DrawHit (Hover)
 	 */
-	public String createHover(boolean s1LTs2) {
+	protected String createHover(boolean s1LTs2) {
 		String x = (corr<0) ? " Inv" : "";
 		String o = (isPosOrient1==isPosOrient2) ? "(=)" : "(!=)"; // CAS517x
 		String msg =  "Block #" + getBlock() + x + "  Hit #" + hitnum + " " + o + " " + hitTag + "\n"; 
@@ -244,5 +279,4 @@ public class HitData {
 		
 		return  msg + "\n\n" + coords;
 	}
-	
 }

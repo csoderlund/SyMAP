@@ -46,6 +46,7 @@ import util.Utilities;
  * Known problem: if Save, then change assignments of tracks, it gets Checks from track; problem since beginning...
  * Also see FilterHandler.java, Sequence.java, TrackData.java
  * CAS542 stopped using the abstract Filter, and cleaned up 
+ * CAS551 Add Gene# and rearrange 
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Sfilter extends JDialog {	
@@ -55,48 +56,50 @@ public class Sfilter extends JDialog {
 	// CAS543 after rewrite; was being changed from Query, but applied to all 2D displays so just quit doing
 	// CAS545 add selectGene and Conserved, both are special cases because they highlight genes (and hits) 
 	// WHEN ALTER these, alter in Sequence and TrackData!
-	static public final boolean bDefRuler=true, bDefGene=true, bDefGap=true, bDefCentromere=true;
-	static public final boolean bDefScoreLine=true, bDefHitLen=true, bDefGeneHigh=true, bDefNoText=true;
-	static public final boolean bDefScoreText=false, bDefHitNumText=false, bDefBlockText=false, bDefCsetText=false;
-	static public final boolean bDefFlipped=false,  bDefAnnot=false, bDefGeneLine=false;
-	static public final boolean bDefSelectGene=false, bDefConserved=false;
+	static protected final boolean bDefRuler=true, bDefGap=true, bDefCentromere=true;
+	static protected final boolean bDefGene=true, bDefScoreLine=false, bDefHitLen=true;
+	
+	static protected final boolean bDefGeneNum=false, bDefAnnot=false, bDefGeneLine=false;
+	static protected final boolean bDefConserved=false, bDefGeneHigh=true;
+	
+	static protected final boolean bDefScoreText=false, bDefHitNumText=false, bDefBlockText=false, 
+			                       bDefCsetText=false, bDefNoText=true;
+	static protected final boolean bDefFlipped=false;
 	
 	private JButton okButton, cancelButton, defaultButton, helpButton;
 	private JPanel buttonPanel;
 	private JPopupMenu popup=null; 
 	private JMenuItem popupTitle; 
 	
+	private JCheckBox flippedCheck;
 	private JButton fullButton;
 	private JLabel geneLabel;
 	private JTextField startText, endText, geneText;
 	private JComboBox <String> startCombo, endCombo; // CAS514 add type
 	
-	//CAS520 removed geneFullRadio, geneMidRadio, frameCheck (FPC)
-	private JCheckBox flippedCheck, rulerCheck, annotCheck, geneHighCheck, conservedCheck; 
-	private JCheckBox geneCheck, geneLineCheck, gapCheck, centromereCheck; // CAS520 add line
-	private JCheckBox scoreLineCheck, hitLenCheck; 						
+	//CAS520 removed geneFullRadio, geneMidRadio, frameCheck (FPC) CAS520 add line CAS551 change Gene Graphics to Gene#
+	private JCheckBox rulerCheck, gapCheck, centromereCheck, geneCheck, scoreLineCheck, hitLenCheck;
+	private JCheckBox geneNumCheck, geneLineCheck, annotCheck, geneHighCheck, conservedCheck; 						
+	
 	private JRadioButton scoreTextRadio, hitNumTextRadio, blockTextRadio, csetTextRadio, noTextRadio; // CAS531 add hitNum
 	
-	private JCheckBoxMenuItem flippedPopup, rulerPopup, annotPopup; 						
-	private JCheckBoxMenuItem geneLinePopup, geneHighPopup; // CAS520 add line ; CAS544 rm gap, cent, lines; add highPopup			 			
-	private JRadioButtonMenuItem scoreTextPopup, hitNumTextPopup, blockTextPopup, csetTextPopup, noTextPopup; 						
-	//private JMenuItem fullSequencePopupItem; 							
+	// Popup  CAS520 add line ; CAS544 rm gap, cent, lines; add highPopup	
+	private JCheckBoxMenuItem flippedPopup, annotPopup,  geneNumPopup, geneLinePopup; 						 		 			
+	private JRadioButtonMenuItem scoreTextPopup, hitNumTextPopup, blockTextPopup, csetTextPopup, noTextPopup; 												
 
+	private boolean	bSavRuler, bSavGap, bSavCentromere, bSavGene, bSavScoreLine, bSavHitLen;
+	private boolean bSavGeneNum, bSavGeneLine, bSavAnnot, bSavGeneHigh, bSavConserved;
+	private boolean bSavScoreText, bSavHitNumText, bSavBlockText, bSavCsetText, bSavNoText;
+	private boolean	bSavFlipped;
+	private String savStartStr, savEndStr, savGeneStr;
+	private int savStartInd, savEndInd;
+	
 	private Sequence seqObj;
 	private DrawingPanel drawingPanel;
 
-	private String savStartStr, savEndStr, savGeneStr;
-	private int savStartInd, savEndInd;
-	private boolean	bSavFlipped, bSavRuler, bSavAnnot, bSavGeneHigh; 
-	private boolean bSavGene, bSavGeneLine, bSavGap, bSavCentromere;
-	private boolean bSavScoreLine, bSavHitLen;
-	private boolean bSavScoreText, bSavHitNumText; 	
-	private boolean bSavBlockText, bSavCsetText, bSavNoText;
-	private boolean bSavConserved;
-	
 	// Created when 2d is displayed, one for each sequence; its associated with the track, but the track can change...
 	public Sfilter(Frame owner, DrawingPanel dp,  Sequence sequence) { // CAS542 removed helpBut 
-		super(owner,"Sequence Filter", true); // CAS532 added help
+		super(owner,"Sequence Filter #" + sequence.position, true); // CAS532 added help
 		this.seqObj = sequence;
 		this.drawingPanel = dp;		
 		FilterListener listener = new FilterListener();
@@ -123,32 +126,37 @@ public class Sfilter extends JDialog {
 		innerPanel.add(helpButton);
 		buttonPanel.add(innerPanel,BorderLayout.CENTER);
 		
-		// Coordinate options; takes effect on Apply
-		JLabel applyLabel = new JLabel("        Save to apply changes");
-		JLabel startLabel = new JLabel("            Start"); 
-		JLabel endLabel =   new JLabel("            End  ");
-		geneLabel =    		new JLabel("         or Gene#"); 
+		String b1="   ", b2="      ";
+		int textLen=7;
 		
-		startText = new JTextField("",10); // CAS520 was 15
+		// Coordinate options; takes effect on Apply
+		startText = new JTextField("",textLen); // CAS520 was 15
+		startText.setMaximumSize(startText.getPreferredSize()); startText.setMinimumSize(startText.getPreferredSize()); // CAS551 add
 		startCombo = new JComboBox <String>(BpNumber.ABS_UNITS);
 		startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
-		JPanel startPanel = new JPanel(); startPanel.add(startText); startPanel.add(startCombo);
-		startPanel.setLayout(new BoxLayout(startPanel, BoxLayout.LINE_AXIS));
-		startPanel.setMaximumSize(startPanel.getPreferredSize());startPanel.setMinimumSize(startPanel.getPreferredSize());
-				 
-		endText =   new JTextField("",10);
+
+		endText =   new JTextField("",textLen);
+		endText.setMaximumSize(endText.getPreferredSize()); endText.setMinimumSize(endText.getPreferredSize());
 		endCombo =  new JComboBox <String>(BpNumber.ABS_UNITS);
 		endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
-		JPanel endPanel = new JPanel(); endPanel.add(endText); endPanel.add(endCombo);
-		endPanel.setLayout(new BoxLayout(endPanel, BoxLayout.LINE_AXIS));
-		endPanel.setMaximumSize(endPanel.getPreferredSize());endPanel.setMinimumSize(endPanel.getPreferredSize());
+		
+		JPanel coordPanel = new JPanel(); 
+		coordPanel.add(new JLabel(b2+"Start")); coordPanel.add(startText); coordPanel.add(startCombo);
+		coordPanel.add(new JLabel(b1+"End"));   coordPanel.add(endText); coordPanel.add(endCombo);
+		
+		coordPanel.setLayout(new BoxLayout(coordPanel, BoxLayout.LINE_AXIS));
+		coordPanel.setMaximumSize(coordPanel.getPreferredSize()); 
+		coordPanel.setMinimumSize(coordPanel.getPreferredSize());
 
-		geneText =   new JTextField("",10); // CAS545 add
-		JLabel x = new JLabel(" Region " + Globals.MAX_RANGE/1000 + "KB  ");
 		JPanel genePanel = new JPanel(); 
-		genePanel.add(geneText); genePanel.add(x);
+		geneLabel =  new JLabel(b2+"or Gene#"); 
+		geneText =   new JTextField("",7); 
+		geneText.setMaximumSize(geneText.getPreferredSize()); geneText.setMinimumSize(geneText.getPreferredSize());
+		JLabel x = new JLabel(" Region " + Globals.MAX_2D_DISPLAY_K + "  "); // CAS551 change from yellow/1000
+		genePanel.add(geneLabel); genePanel.add(geneText); genePanel.add(x);
 		genePanel.setLayout(new BoxLayout(genePanel, BoxLayout.LINE_AXIS));
-		genePanel.setMaximumSize(genePanel.getPreferredSize());genePanel.setMinimumSize(genePanel.getPreferredSize());
+		genePanel.setMaximumSize(genePanel.getPreferredSize());
+		genePanel.setMinimumSize(genePanel.getPreferredSize());
 		
 		// Checkbox options; takes effect immediately 
 		flippedCheck = new JCheckBox("Flip sequence    "); 			flippedCheck.addChangeListener(listener);
@@ -161,25 +169,25 @@ public class Sfilter extends JDialog {
 		JPanel flipPanel = new JPanel(); flipPanel.add(flippedCheck); flipPanel.add(fullButton);
 		flipPanel.setLayout(new BoxLayout(flipPanel, BoxLayout.LINE_AXIS));
 		flipPanel.setMaximumSize(flipPanel.getPreferredSize());flipPanel.setMinimumSize(flipPanel.getPreferredSize());
-				
-		annotCheck 		= new JCheckBox("Annotation (zoom in)");	annotCheck.addChangeListener(listener);
-		geneCheck 		= new JCheckBox("Genes");    				geneCheck.addChangeListener(listener);     
-		geneLineCheck 	= new JCheckBox("Gene delimiter");			geneLineCheck.addChangeListener(listener);
-		geneHighCheck 	= new JCheckBox("Gene popup"); 				geneHighCheck.addChangeListener(listener);
-		conservedCheck 	= new JCheckBox("Conserved genes"); 		conservedCheck.addChangeListener(listener);
+			
+		rulerCheck 		= new JCheckBox("Ruler");				rulerCheck.addChangeListener(listener);
+		gapCheck 		= new JCheckBox("Gaps");				gapCheck.addChangeListener(listener);		
+		centromereCheck = new JCheckBox("Centromere");			centromereCheck.addChangeListener(listener);	
+		geneCheck 		= new JCheckBox("Genes");    			geneCheck.addChangeListener(listener);    
+		hitLenCheck 	= new JCheckBox("Hit length");			hitLenCheck.addChangeListener(listener);		
+		scoreLineCheck 	= new JCheckBox("Hit %Id bar");			scoreLineCheck.addChangeListener(listener);
 		
-		rulerCheck 		= new JCheckBox("Ruler");					rulerCheck.addChangeListener(listener);
-		gapCheck 		= new JCheckBox("Gaps");					gapCheck.addChangeListener(listener);		
-		centromereCheck = new JCheckBox("Centromere");				centromereCheck.addChangeListener(listener);	
+		geneHighCheck 	= new JCheckBox("Gene popup"); 			geneHighCheck.addChangeListener(listener);
+		conservedCheck 	= new JCheckBox("Conserved genes"); 	conservedCheck.addChangeListener(listener);
+		annotCheck 		= new JCheckBox("Annotation");			annotCheck.addChangeListener(listener);
+		geneNumCheck 	= new JCheckBox("Gene#");    			geneNumCheck.addChangeListener(listener);     
+		geneLineCheck 	= new JCheckBox("Gene delimiter");		geneLineCheck.addChangeListener(listener);
 				
-		hitLenCheck 	= new JCheckBox("Hit length");				hitLenCheck.addChangeListener(listener);		
-		scoreLineCheck 	= new JCheckBox("Hit %Id bar");				scoreLineCheck.addChangeListener(listener);	
-		
-		blockTextRadio 		= new JRadioButton("Block#");			blockTextRadio.addChangeListener(listener);	
-		csetTextRadio 		= new JRadioButton("Collinear#");		csetTextRadio.addChangeListener(listener);
-		scoreTextRadio 		= new JRadioButton("Hit %Id");			scoreTextRadio.addChangeListener(listener);
-		hitNumTextRadio 	= new JRadioButton("Hit#");				hitNumTextRadio.addChangeListener(listener);
-		noTextRadio 		= new JRadioButton("None");				noTextRadio.addChangeListener(listener);
+		blockTextRadio 	= new JRadioButton("Block#");			blockTextRadio.addChangeListener(listener);	
+		csetTextRadio 	= new JRadioButton("Collinear#");		csetTextRadio.addChangeListener(listener);
+		scoreTextRadio 	= new JRadioButton("Hit %Id");			scoreTextRadio.addChangeListener(listener);
+		hitNumTextRadio = new JRadioButton("Hit#");				hitNumTextRadio.addChangeListener(listener);
+		noTextRadio 	= new JRadioButton("None");				noTextRadio.addChangeListener(listener);
 		ButtonGroup geneBG = new ButtonGroup();
 		geneBG.add(scoreTextRadio);
 		geneBG.add(hitNumTextRadio);
@@ -198,6 +206,7 @@ public class Sfilter extends JDialog {
 		text2Panel.add(noTextRadio);
 		text2Panel.setLayout(new BoxLayout(text2Panel, BoxLayout.LINE_AXIS));		
 		
+	/// Gridbag
 		Container contentPane = getContentPane();
 		GridBagLayout gridbag = new GridBagLayout();
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -210,50 +219,48 @@ public class Sfilter extends JDialog {
 		constraints.fill = GridBagConstraints.HORIZONTAL;
 		int rem = GridBagConstraints.REMAINDER;
 		 
+		// section 1
+		addToGrid(contentPane, gridbag, constraints, new JLabel(b1+"Highlight"), 1); 
 		if (seqObj.isRef()) { // this only know the location of the track
-			addToGrid(contentPane, gridbag, constraints, new JLabel("  Highlight"), rem); 
 			addToGrid(contentPane, gridbag, constraints, geneHighCheck, 1); 
 			addToGrid(contentPane, gridbag, constraints, conservedCheck, rem); 
 		}
 		else {
-			addToGrid(contentPane, gridbag, constraints, new JLabel("  Highlight"), 1); 
 			addToGrid(contentPane, gridbag, constraints, geneHighCheck, rem); 
 		}
-		
-		addToGrid(contentPane, gridbag, constraints, new JSeparator(), rem);
-		addToGrid(contentPane, gridbag, constraints, new JLabel("  Show Graphics"), rem); 
-		addToGrid(contentPane, gridbag, constraints, rulerCheck, 1);
-		addToGrid(contentPane, gridbag, constraints, annotCheck, rem); // CAS503 move
-		
-		addToGrid(contentPane, gridbag, constraints, geneCheck,  1);
+		addToGrid(contentPane, gridbag, constraints, new JLabel(b1+"Show"), 1); 
+		addToGrid(contentPane, gridbag, constraints, annotCheck, 1); 
+		addToGrid(contentPane, gridbag, constraints, geneNumCheck,  1); // CAS551 add
 		addToGrid(contentPane, gridbag, constraints, geneLineCheck, rem); // CAS520 add
 		
+		// section 2
+		addToGrid(contentPane, gridbag, constraints, new JSeparator(), rem);
+		addToGrid(contentPane, gridbag, constraints, new JLabel(b1+"Graphics"), 1); 
+		addToGrid(contentPane, gridbag, constraints, rulerCheck, 1);
 		addToGrid(contentPane, gridbag, constraints, gapCheck, 1);
 		addToGrid(contentPane, gridbag, constraints, centromereCheck, rem);
 		
-		addToGrid(contentPane, gridbag, constraints, hitLenCheck, 1);     
-		addToGrid(contentPane, gridbag, constraints, scoreLineCheck, rem); 
+		addToGrid(contentPane, gridbag, constraints, new JLabel("   "), 1); 
+		addToGrid(contentPane, gridbag, constraints, geneCheck, 1);
+		addToGrid(contentPane, gridbag, constraints, hitLenCheck, 1);
+		addToGrid(contentPane, gridbag, constraints, scoreLineCheck, rem);
 		
+		// section 3
 		addToGrid(contentPane, gridbag, constraints, new JSeparator(), rem);
-		addToGrid(contentPane, gridbag, constraints, new JLabel("  Show Text    "), 1); 
-		addToGrid(contentPane, gridbag, constraints, text1Panel, rem);
+		addToGrid(contentPane, gridbag, constraints, new JLabel(b1+"Hit Text"), 1); 
+		addToGrid(contentPane, gridbag, constraints, blockTextRadio, 1);
+		addToGrid(contentPane, gridbag, constraints, csetTextRadio, rem);
 		addToGrid(contentPane, gridbag, constraints, new JLabel("               "), 1); 
-		addToGrid(contentPane, gridbag, constraints, text2Panel, rem);
+		addToGrid(contentPane, gridbag, constraints, scoreTextRadio, 1);
+		addToGrid(contentPane, gridbag, constraints, hitNumTextRadio, 1);
+		addToGrid(contentPane, gridbag, constraints, noTextRadio, rem);
 		
+		// section 4
 		addToGrid(contentPane, gridbag, constraints, new JSeparator(),rem);
-		
-		addToGrid(contentPane, gridbag, constraints, new JLabel("  Coordinates   "), 1);
+		addToGrid(contentPane, gridbag, constraints, new JLabel(b1+"Coordinates   "), 1);
 		addToGrid(contentPane, gridbag, constraints, flipPanel, rem);
-		
-		addToGrid(contentPane, gridbag, constraints, applyLabel, rem);
-		
-		addToGrid(contentPane, gridbag, constraints, startLabel, 1);
-		addToGrid(contentPane, gridbag, constraints, startPanel, rem);
-		
-		addToGrid(contentPane, gridbag, constraints, endLabel, 1);
-		addToGrid(contentPane, gridbag, constraints, endPanel, rem);
-		
-		addToGrid(contentPane, gridbag, constraints, geneLabel, 1);
+		addToGrid(contentPane, gridbag, constraints, new JLabel(b1+"Save to apply changes"), rem);
+		addToGrid(contentPane, gridbag, constraints, coordPanel, rem);
 		addToGrid(contentPane, gridbag, constraints, genePanel, rem);
 
 		addToGrid(contentPane, gridbag, constraints, buttonPanel, rem);
@@ -273,34 +280,33 @@ public class Sfilter extends JDialog {
 		
 		//fullSequencePopupItem 	= new JMenuItem("Full Sequence");
 		flippedPopup 		= new JCheckBoxMenuItem("Flip sequence"); 
-		rulerPopup 			= new JCheckBoxMenuItem("Ruler"); 
 		annotPopup			= new JCheckBoxMenuItem("Annotation (zoom in)"); 
+		geneNumPopup 		= new JCheckBoxMenuItem("Gene#"); 
 		geneLinePopup 		= new JCheckBoxMenuItem("Gene delimiter"); 
-		geneHighPopup 		= new JCheckBoxMenuItem("Highlight gene popup"); 
 		
 		scoreTextPopup 		= new JRadioButtonMenuItem("Hit %Id"); 	// ditto
 		hitNumTextPopup 	= new JRadioButtonMenuItem("Hit# "); 	// CAS531 add
 		blockTextPopup 		= new JRadioButtonMenuItem("Block# "); 	// CAS545 add
 		csetTextPopup 		= new JRadioButtonMenuItem("Collinear# "); 	
 		noTextPopup 		= new JRadioButtonMenuItem("None"); 
-		JLabel text = new JLabel("   Show Text"); text.setEnabled(false);
 		
-		popupTitle.setText("Sequence Show Options"); 
+		popupTitle.setText("Sequence Options"); 
 		popup.add(flippedPopup); 	flippedPopup.addActionListener(listener);
-		popup.add(rulerPopup);		rulerPopup.addActionListener(listener);
+		
+		JLabel gtext = new JLabel("   Show gene"); gtext.setEnabled(false);
+		popup.add(new JSeparator()); popup.add(gtext);
 		popup.add(annotPopup); 		annotPopup.addActionListener(listener);
+		popup.add(geneNumPopup); 	geneNumPopup.addActionListener(listener);
 		popup.add(geneLinePopup);	geneLinePopup.addActionListener(listener);	
 		
+		
+		JLabel text = new JLabel("   Show Hit"); text.setEnabled(false);
 		popup.add(new JSeparator()); popup.add(text);
 		popup.add(blockTextPopup);  blockTextPopup.addActionListener(listener);
 		popup.add(csetTextPopup);   csetTextPopup.addActionListener(listener);
 		popup.add(hitNumTextPopup); hitNumTextPopup.addActionListener(listener);
 		popup.add(scoreTextPopup);	scoreTextPopup.addActionListener(listener);
 		popup.add(noTextPopup);     noTextPopup.addActionListener(listener);
-		
-		popup.add(new JSeparator());
-		popup.add(geneHighPopup); 	geneHighPopup.addActionListener(listener);
-		//popup.add(fullSequencePopupItem); not working...fullSequencePopupItem.addActionListener(listener);
 	}
 	private void addToGrid(Container cp, GridBagLayout layout, GridBagConstraints con, Component comp, int w) {
 		con.gridwidth = w;
@@ -342,38 +348,38 @@ public class Sfilter extends JDialog {
 		boolean b=true; // CAS545 old bug: when track is reused, disabled checks stay 
 		b = !(annotTypeCounts[Annotation.GAP_INT] == 0);			gapCheck.setEnabled(b);
 		b = !(annotTypeCounts[Annotation.CENTROMERE_INT] == 0); 	centromereCheck.setEnabled(b);
-		b = !(annotTypeCounts[Annotation.GENE_INT] == 0);		 	annotCheck.setEnabled(b);
 		b = (seqObj.isRef()); 										conservedCheck.setEnabled(b);	
 		
 		b = !(annotTypeCounts[Annotation.GENE_INT] == 0 && annotTypeCounts[Annotation.EXON_INT] == 0);
 		geneCheck.setEnabled(b);
+		geneNumCheck.setEnabled(b);
 		geneLineCheck.setEnabled(b);
-		geneHighCheck.setEnabled(b); 
 		annotCheck.setEnabled(b);
+		conservedCheck.setEnabled(b);
+		geneHighCheck.setEnabled(b); 
+		
 		geneLabel.setEnabled(b);
 		geneText.setEnabled(b);
-		conservedCheck.setEnabled(b);
 		
  		saveSettingsFromSeq();
 		
- 		geneText.setText("");
+ 		geneText.setText(savGeneStr);
 		setStart();
 		setEnd();
 		
 		flippedCheck.setSelected(bSavFlipped); 
 		rulerCheck.setSelected(bSavRuler);
-		
-		annotCheck.setSelected(bSavAnnot && annotCheck.isEnabled());
-		geneCheck.setSelected(bSavGene 	&& geneCheck.isEnabled());
-		geneLineCheck.setSelected(bSavGeneLine && geneLineCheck.isEnabled()); // CAS520 add all geneLine lines
-		geneHighCheck.setSelected(bSavGeneHigh && geneHighCheck.isEnabled()); 
-		conservedCheck.setSelected(bSavConserved && conservedCheck.isEnabled()); 
-		
 		gapCheck.setSelected(bSavGap && gapCheck.isEnabled());
 		centromereCheck.setSelected(bSavCentromere && centromereCheck.isEnabled());
-
-		scoreLineCheck.setSelected(bSavScoreLine);	
-		hitLenCheck.setSelected(bSavHitLen);	
+		geneCheck.setSelected(bSavGene   && geneCheck.isEnabled());
+		hitLenCheck.setSelected(bSavHitLen);
+		scoreLineCheck.setSelected(bSavScoreLine);
+		
+		geneNumCheck.setSelected(bSavGeneNum   && geneNumCheck.isEnabled());
+		geneLineCheck.setSelected(bSavGeneLine && geneLineCheck.isEnabled()); // CAS520 add all geneLine lines
+		annotCheck.setSelected(bSavAnnot && annotCheck.isEnabled());
+		geneHighCheck.setSelected(bSavGeneHigh && geneHighCheck.isEnabled()); 
+		conservedCheck.setSelected(bSavConserved && conservedCheck.isEnabled()); 
 		
 		blockTextRadio.setSelected(bSavBlockText);
 		csetTextRadio.setSelected(bSavCsetText);
@@ -384,84 +390,74 @@ public class Sfilter extends JDialog {
 		super.setVisible(true); // CAS512 super.show();
 	}
 	
-	private void saveSettingsFromSeq() {
-		savGeneStr = geneText.getText();	
-		savStartStr = startText.getText();
-		savEndStr =   endText.getText();
-		
-		savStartInd = startCombo.getSelectedIndex();
-		savEndInd =   endCombo.getSelectedIndex();
-
-		bSavFlipped = 	  seqObj.isFlipped();	
-		
+	private void saveSettingsFromSeq() { // showX (Button) and popup
 		bSavRuler = 	  seqObj.bShowRuler;
 		bSavGap = 		  seqObj.bShowGap        && gapCheck.isEnabled();
 		bSavCentromere =  seqObj.bShowCentromere && centromereCheck.isEnabled();
-		bSavGene = 	  	  seqObj.bShowGene       && geneCheck.isEnabled();
-		bSavAnnot = 	  seqObj.bShowAnnot     && annotPopup.isEnabled();
-		bSavGeneLine =    seqObj.bShowGeneLine  && geneLinePopup.isEnabled(); 
-		bSavGeneHigh =    seqObj.bHighGenePopup && geneHighPopup.isEnabled(); 
-		bSavConserved =   seqObj.bHighConserved && conservedCheck.isEnabled(); 
-		
+		bSavGene = 		  seqObj.bShowGene       && geneCheck.isEnabled();
+		bSavHitLen = 	  seqObj.bShowHitLen;
 		bSavScoreLine =   seqObj.bShowScoreLine;
-		bSavHitLen = 	  seqObj.bShowHitLen;	
+		
+		bSavAnnot = 	  seqObj.bShowAnnot     && annotPopup.isEnabled();
+		bSavGeneNum = 	  seqObj.bShowGeneNum   && geneNumCheck.isEnabled();
+		bSavGeneLine =    seqObj.bShowGeneLine  && geneLinePopup.isEnabled(); 
+		bSavConserved =   seqObj.bHighConserved && conservedCheck.isEnabled(); 
+		bSavGeneHigh =    seqObj.bHighGenePopup && geneHighCheck.isEnabled(); 
 		
 		bSavScoreText =   seqObj.bShowScoreText;
 		bSavHitNumText =  seqObj.bShowHitNumText;
 		bSavBlockText =   seqObj.bShowBlockText;
 		bSavCsetText =    seqObj.bShowCsetText;
 		bSavNoText =      seqObj.bShowNoText;
+		
+		bSavFlipped = 	  seqObj.isFlipped();	
+		savGeneStr =  geneText.getText();	
+		savStartStr = startText.getText();
+		savEndStr =   endText.getText();
+		savStartInd = startCombo.getSelectedIndex();
+		savEndInd =   endCombo.getSelectedIndex();
 	}
 	protected void cancelAction() {
-		geneText.setText(savGeneStr);  
-		startText.setText(savStartStr); startCombo.setSelectedIndex(savStartInd);
-		endText.setText(savEndStr);     endCombo.setSelectedIndex(savEndInd);
-		flippedCheck.setSelected(bSavFlipped); 
-		
-		annotCheck.setSelected(bSavAnnot);
-		geneCheck.setSelected(bSavGene);
-		geneLineCheck.setSelected(bSavGeneLine);
-		geneHighCheck.setSelected(bSavGeneHigh);
-		conservedCheck.setSelected(bSavConserved);
-		
 		gapCheck.setSelected(bSavGap);
 		centromereCheck.setSelected(bSavCentromere);
 		rulerCheck.setSelected(bSavRuler);
-		scoreLineCheck.setSelected(bSavScoreLine); 
-		hitLenCheck.setSelected(bSavHitLen); 
+		geneCheck.setSelected(bSavGene);
+		hitLenCheck.setSelected(bSavHitLen);
+		scoreLineCheck.setSelected(bSavScoreLine);
 		
+		annotCheck.setSelected(bSavAnnot);
+		geneNumCheck.setSelected(bSavGeneNum);
+		geneLineCheck.setSelected(bSavGeneLine);
+		geneHighCheck.setSelected(bSavGeneHigh);
+		conservedCheck.setSelected(bSavConserved);
+			
 		blockTextRadio.setSelected(bSavBlockText); 
 		csetTextRadio.setSelected(bSavCsetText); 
 		scoreTextRadio.setSelected(bSavScoreText); 
 		hitNumTextRadio.setSelected(bSavHitNumText);
 		noTextRadio.setSelected(bSavNoText);
-	}
-	protected void setDefault() {
-		if (seqObj == null) return;
 		
-		geneText.setText(""); 
-		startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
-		endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
-		startText.setText("0");
-		long size = seqObj.getTrackSize();
-		Object item = endCombo.getSelectedItem();
-		double end  = seqObj.getValue(size, item.toString());
-		endText.setText(end + "");
+		flippedCheck.setSelected(bSavFlipped);
+		geneText.setText(savGeneStr);  
+		startText.setText(savStartStr); startCombo.setSelectedIndex(savStartInd);
+		endText.setText(savEndStr);     endCombo.setSelectedIndex(savEndInd);
+	}
+	private void setDefault() { // Default button
+		if (seqObj == null) return;
 		
 		// set in Sequence also
 		rulerCheck.setSelected(bDefRuler);
-		geneCheck.setSelected(bDefGene 	&& geneCheck.isEnabled());
-		gapCheck.setSelected(bDefGap 	&& gapCheck.isEnabled());
+		gapCheck.setSelected(bDefGap && gapCheck.isEnabled());
 		centromereCheck.setSelected(bDefCentromere && centromereCheck.isEnabled());
-		 	
-		flippedCheck.setSelected(bDefFlipped); 	
+		geneCheck.setSelected(bDefGene && geneCheck.isEnabled());
+		hitLenCheck.setSelected(bDefHitLen);
+		scoreLineCheck.setSelected(bDefScoreLine);
+		
 		annotCheck.setSelected(bDefAnnot);
+		geneNumCheck.setSelected(bDefGeneNum);
 		geneLineCheck.setSelected(bDefGeneLine);
 		geneHighCheck.setSelected(bDefGeneHigh);
 		conservedCheck.setSelected(bDefConserved);
-		
-		hitLenCheck.setSelected(bDefHitLen); 
-		scoreLineCheck.setSelected(bDefScoreLine);
 		
 		scoreTextRadio.setSelected(bDefScoreText);
 		hitNumTextRadio.setSelected(bDefHitNumText);
@@ -469,10 +465,20 @@ public class Sfilter extends JDialog {
 		csetTextRadio.setSelected(bDefCsetText);
 		noTextRadio.setSelected(bDefNoText);
 		
+		flippedCheck.setSelected(bDefFlipped); 	
+		geneText.setText(""); 
+		startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
+		endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
+		startText.setText("0");
+		int size = seqObj.getTrackSize();
+		Object item = endCombo.getSelectedItem();
+		double end  = seqObj.getValue(size, item.toString());
+		endText.setText(end + "");
+		
 		// popup
 		flippedPopup.setState(bDefFlipped);
-		rulerPopup.setSelected(bDefRuler);
 		annotPopup.setState(bDefAnnot);
+		geneNumPopup.setSelected(bDefGeneNum);
 		geneLinePopup.setState(bDefGeneLine); 								// CAS521 1st no Line
 		
 		scoreTextPopup.setSelected(bDefScoreText);
@@ -480,20 +486,18 @@ public class Sfilter extends JDialog {
 		blockTextPopup.setSelected(bDefBlockText);
 		csetTextPopup.setSelected(bDefCsetText);
 		noTextPopup.setSelected(bDefNoText);
-		
-		geneHighPopup.setState(bDefGeneHigh);
 	}
 
 	private void setStart() {
 		if (seqObj == null) return;
-		long start = seqObj.getStart();
+		int start = seqObj.getStart();
 		Object item = startCombo.getSelectedItem();
 		double val = seqObj.getValue(start, item.toString()); 
 		startText.setText(val+"");
 	}
 	private void setEnd() {
 		if (seqObj == null) return;
-		long end = seqObj.getEnd(); // CAS543 sequence.getTrackSize();
+		int end = seqObj.getEnd(); // CAS543 sequence.getTrackSize();
 		Object item = endCombo.getSelectedItem();
 		double val  = seqObj.getValue(end, item.toString()); 
 		endText.setText(val + "");
@@ -503,7 +507,7 @@ public class Sfilter extends JDialog {
 		startCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
 		endCombo.setSelectedItem(DEFAULT_ENDS_UNIT);
 		startText.setText("0"); 
-		long size = seqObj.getTrackSize();
+		int size = seqObj.getTrackSize();
 		Object item = endCombo.getSelectedItem();
 		double end  = seqObj.getValue(size, item.toString());
 		endText.setText(end + "");
@@ -525,13 +529,15 @@ public class Sfilter extends JDialog {
 				return false;
 			}
 			if (!gStr.contains(".")) gStr += ".";
+			savGeneStr = gStr;
+			
 			int mid = seqObj.getMidCoordForGene(gStr); // highlight if found
 			if (mid<0) {
 				Utilities.showErrorMessage(gStr + " is not found on this chromosome.");
 				return false;
 			}
-			tstart = Math.max(0,mid-Globals.MAX_RANGE);
-			tend   = Math.min(seqObj.getTrackSize(), mid+Globals.MAX_RANGE);
+			tstart = Math.max(0,mid-Globals.MAX_2D_DISPLAY);
+			tend   = Math.min(seqObj.getTrackSize(), mid+Globals.MAX_2D_DISPLAY); // CAS551 was yellow box
 
 			startText.setText((tstart/1000)+"");startCombo.setSelectedItem(BpNumber.KB);
 			endText.setText((tend/1000)+"");    endCombo.setSelectedItem(BpNumber.KB);
@@ -540,6 +546,10 @@ public class Sfilter extends JDialog {
 		}
 		else {
 			seqObj.noSelectedGene();
+			if (savGeneStr!="") {
+				bChg=true;
+				savGeneStr="";
+			}
 			
 			// Start/End  CAS521 evaluate first - rewritten; fixed bug that Apply would set it back if nothing set
 			int eInd = 		endCombo.getSelectedIndex();
@@ -547,7 +557,7 @@ public class Sfilter extends JDialog {
 			int sInd = 		startCombo.getSelectedIndex();
 			String sStr = 	startText.getText();
 			
-			boolean numChgE = (eInd!=savEndInd   || !eStr.contentEquals(savEndStr));
+			boolean numChgE = true; //(eInd!=savEndInd   || !eStr.contentEquals(savEndStr));
 			boolean numChgS = (sInd!=savStartInd || !sStr.contentEquals(savStartStr));
 			
 			if (numChgS || numChgE) {
@@ -575,8 +585,8 @@ public class Sfilter extends JDialog {
 			}
 		}
 		if (bChg) {
-			seqObj.setStart((long)tstart);// saved in Track
-			seqObj.setEnd((long)tend);
+			seqObj.setStart((int)tstart);// saved in Track
+			seqObj.setEnd((int)tend);
 			
 			drawingPanel.setUpdateHistory();
 			drawingPanel.smake();
@@ -596,23 +606,19 @@ public class Sfilter extends JDialog {
 			boolean bDiff = false;
 			
 			if (src == flippedCheck) 		bDiff = seqObj.flipSeq(flippedCheck.isSelected());
-			else if (src == annotCheck)		bDiff = seqObj.showAnnotation(annotCheck.isSelected());
 			else if (src == geneCheck) {
+				bDiff = seqObj.showGene(geneCheck.isSelected());
 				boolean b = geneCheck.isSelected();
-				bDiff = seqObj.showGene(b);
+				geneNumCheck.setEnabled(b);
 				geneLineCheck.setEnabled(b); // CAS520
 				geneHighCheck.setEnabled(b);
 				conservedCheck.setEnabled(b);
 			}
+			else if (src == annotCheck)		bDiff = seqObj.showAnnotation(annotCheck.isSelected());
+			else if (src == geneNumCheck) 	bDiff = seqObj.showGeneNum(geneNumCheck.isSelected());
 			else if (src == geneLineCheck) 	bDiff = seqObj.showGeneLine(geneLineCheck.isSelected());
 			else if (src == geneHighCheck)	bDiff = seqObj.highGenePopup(geneHighCheck.isSelected());
-			
-			else if (src == rulerCheck) 	bDiff = seqObj.showRuler(rulerCheck.isSelected());
-			else if (src == gapCheck)		bDiff = seqObj.showGap(gapCheck.isSelected());
-			else if (src == centromereCheck)bDiff = seqObj.showCentromere(centromereCheck.isSelected());
-			
-			else if (src == scoreLineCheck)	bDiff = seqObj.showScoreLine(scoreLineCheck.isSelected());	
-			else if (src == hitLenCheck)	bDiff = seqObj.showHitLen(hitLenCheck.isSelected());	
+			else if (src == conservedCheck) bDiff = seqObj.highConserved(conservedCheck.isSelected());
 			
 			else if (src == blockTextRadio) bDiff = seqObj.showBlockText(blockTextRadio.isSelected());
 			else if (src == csetTextRadio)  bDiff = seqObj.showCsetText(csetTextRadio.isSelected());
@@ -621,12 +627,13 @@ public class Sfilter extends JDialog {
 			else if (src == hitNumTextRadio)bDiff = seqObj.showHitNumText(hitNumTextRadio.isSelected());
 			else if (src == noTextRadio)	bDiff = seqObj.showNoText(noTextRadio.isSelected());
 			
-			else if (src == conservedCheck) bDiff = seqObj.highConserved(conservedCheck.isSelected());
+			else if (src == rulerCheck) 	bDiff = seqObj.showRuler(rulerCheck.isSelected());
+			else if (src == gapCheck)		bDiff = seqObj.showGap(gapCheck.isSelected());
+			else if (src == centromereCheck)bDiff = seqObj.showCentromere(centromereCheck.isSelected());
+			else if (src == hitLenCheck)	bDiff = seqObj.showHitLen(hitLenCheck.isSelected());
+			else if (src == scoreLineCheck)bDiff = seqObj.showScoreLine(scoreLineCheck.isSelected());
 			
-			if (bDiff) {
-				// sets drawingPanel.setUpdateHistory() on Save
-				drawingPanel.smake();
-			}
+			if (bDiff) drawingPanel.smake();// sets drawingPanel.setUpdateHistory() on Save
 		}
 				
 		// called for panel ok/cancel/default buttons and popup menu events
@@ -653,10 +660,10 @@ public class Sfilter extends JDialog {
 			}
 			// popup
 			else if (src == flippedPopup) 		bDiff = seqObj.flipSeq(flippedPopup.getState());
-			else if (src == geneLinePopup) 		bDiff = seqObj.showGeneLine(geneLinePopup.getState());
-			else if (src == geneHighPopup) 		bDiff = seqObj.highGenePopup(geneHighPopup.getState());
 			else if (src == annotPopup) 		bDiff = seqObj.showAnnotation(annotPopup.getState());
-			else if (src == rulerPopup) 		bDiff = seqObj.showRuler(rulerPopup.getState());
+			else if (src == geneLinePopup) 		bDiff = seqObj.showGeneLine(geneLinePopup.getState());
+			else if (src == geneNumPopup) 		bDiff = seqObj.showGeneNum(geneNumPopup.getState());
+			
 			else if (src == scoreTextPopup) 	bDiff = seqObj.showScoreText(scoreTextPopup.isSelected());
 			else if (src == hitNumTextPopup) 	bDiff = seqObj.showHitNumText(hitNumTextPopup.isSelected());
 			else if (src == blockTextPopup) 	bDiff = seqObj.showBlockText(blockTextPopup.isSelected());
@@ -685,11 +692,10 @@ public class Sfilter extends JDialog {
 			
 			annotPopup.setEnabled(b);
 			geneLinePopup.setEnabled(b);
-			geneHighPopup.setEnabled(b);
+			geneNumPopup.setEnabled(b);
 			
-			flippedPopup.setSelected(bSavFlipped); 
-			rulerPopup.setSelected(bSavRuler);
 			annotPopup.setSelected(bSavAnnot);
+			geneNumPopup.setSelected(bSavGeneNum);
 			geneLinePopup.setSelected(bSavGeneLine);
 			
 			scoreTextPopup.setSelected(bSavScoreText); 
@@ -698,7 +704,7 @@ public class Sfilter extends JDialog {
 			csetTextPopup.setSelected(bSavCsetText);
 			noTextPopup.setSelected(bSavNoText);
 			
-			geneHighPopup.setSelected(bSavGeneHigh);	
+			flippedPopup.setSelected(bSavFlipped); 
 		}
 	} // end popup listener
 }

@@ -121,7 +121,7 @@ public class ChrExpInit implements PropertyChangeListener {
 	     for (ChrInfo t : projTracks) {
 	        rs = tdbc2.executeQuery("SELECT length FROM pseudos WHERE (grp_idx="+t.getGroupIdx()+")");
 	        while( rs.next() ) {
-	        	t.setSizeBP( rs.getLong(1) );
+	        	t.setSizeBP( rs.getInt(1) );
 	        }
 	        rs.close();
 	     }
@@ -146,10 +146,10 @@ public class ChrExpInit implements PropertyChangeListener {
 	     	int blockIdx = rs.getInt(1); // CAS512 replace fields with numbers
 	     	int grp1_idx = rs.getInt(2);
 	     	int grp2_idx = rs.getInt(3);
-	     	long start1  = rs.getLong(4);
-	     	long end1    = rs.getLong(5);
-	     	long start2  = rs.getLong(6);
-	     	long end2    = rs.getLong(7);
+	     	int start1  = rs.getInt(4);
+	     	int end1    = rs.getInt(5);
+	     	int start2  = rs.getInt(6);
+	     	int end2    = rs.getInt(7);
 	     	// CAS512 float corr = (haveCorr ? rs.getFloat("corr") : 0.01F); // if no corr field, make sure they are positive
 	     	float corr = rs.getFloat(8);
 	     	

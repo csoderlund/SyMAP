@@ -551,7 +551,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			if (corr < 0)  	ninv++;
 			int idx = 		rs.getInt(1); 
 			long start = 	rs.getInt(3); // start1
-			long end = 		rs.getInt(4); // end1
+			int end = 		rs.getInt(4); // end1
 			assert(end>start);
 				
 			if (!bins2.containsKey(idx))  bins2.put(idx, new TreeMap<Integer,Integer>());
@@ -588,8 +588,8 @@ public class SumFrame extends JDialog implements ActionListener {
 		rs.beforeFirst();
 		while (rs.next()) {
 			int idx = 		rs.getInt(2);
-			long start = 	rs.getInt(5);
-			long end = 		rs.getInt(6);
+			int start = 	rs.getInt(5);
+			int end = 		rs.getInt(6);
 			assert(end>start);
 			
 			if (!bins2.containsKey(idx)) bins2.put(idx, new TreeMap<Integer,Integer>());
@@ -812,15 +812,15 @@ public class SumFrame extends JDialog implements ActionListener {
 			// This should be accurate enough.
 			// The alternative is to do a full merge of overlapping hit ranges, which is more painful and memory-intensive. 
 			// (There should in fact not be overlapping hits because of our clustering, but we don't want to rely on this.)
-			long hcov1=0,hcov2=0;
+			int hcov1=0,hcov2=0;
 			TreeMap<Integer,TreeSet<Integer>> bins = new TreeMap<Integer,TreeSet<Integer>>();
 			
 			// Do the query twice to save memory. With query cache it should not be much slower.
 			rs = dbc2.executeQuery("select grp1_idx,start1,end1 from pseudo_hits where pair_idx=" + pairIdx);
 			while (rs.next()){
 				int idx = rs.getInt(1);
-				long start1 = rs.getInt(2);
-				long end1 = rs.getInt(3);
+				int start1 = rs.getInt(2);
+				int end1 = rs.getInt(3);
 				if (!bins.containsKey(idx)) bins.put(idx, new TreeSet<Integer>());
 				
 				for (int b = (int)(start1/100); b <= (int)(end1/100); b++){
@@ -839,8 +839,8 @@ public class SumFrame extends JDialog implements ActionListener {
 			
 			while (rs.next()) {
 				int idx = rs.getInt(1);
-				long start2 = rs.getInt(2);
-				long end2 = rs.getInt(3);
+				int start2 = rs.getInt(2);
+				int end2 = rs.getInt(3);
 				if (!bins.containsKey(idx)) bins.put(idx, new TreeSet<Integer>());
 				
 				for (int b = (int)(start2/100); b <= (int)(end2/100); b++){
@@ -1072,7 +1072,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	}
 	private class Proj {
 		String name;
-		long genomeLen=0;
+		int genomeLen=0;
 		int nGenes=0, nGrp=0;
 		Vector <Integer> grpIdx = new Vector <Integer> ();
 		Vector <Integer> grpLen = new Vector <Integer> ();

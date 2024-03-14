@@ -40,7 +40,7 @@ public class Plot extends JPanel implements HelpListener {
 	private FilterData fd=null;			// CAS541 was recreating in different methods
 	private int cnt2GeneBlk, cnt1GeneBlk, cnt0GeneBlk, cntBlk, cntNonBlk, cnt2GeneNB, cnt1GeneNB, cnt0GeneNB;
 	private int cntHitsTot, cnt0GeneTot, cnt1GeneTot, cnt2GeneTot;
-	private String lastInfoMsg="", lastPrtMsg="";
+	private String lastInfoMsg="";
 	private boolean is2D=false;
 	
 	public Plot(Data data, HelpBar hb, boolean is2D) {
@@ -124,7 +124,7 @@ public class Plot extends JPanel implements HelpListener {
 	//draw blocks & hits
 		if (!data.isTileView()) drawAll(g);
 		else	                drawTile(g);
-		prtCnts();
+		prtCnts(false);
 	}
 
 	private void setDims() {
@@ -448,10 +448,7 @@ public class Plot extends JPanel implements HelpListener {
 		return true;
 	}
 	// Stats: Info, Print, Help
-	public void prtCnts() {
-		int n = data.getStatOpts();
-		if (n==ControlPanel.pHELP) return;
-		
+	public String prtCnts(boolean bFull) {
 		boolean p=false;
 		String b = String.format("Block Hits %s  Annotated: Both %s  One %s  None %s   ", 
 				pStr(cntBlk, cntHitsTot,p),  pStr(cnt2GeneBlk, cntBlk,p), 
@@ -464,7 +461,7 @@ public class Plot extends JPanel implements HelpListener {
 		String msg = (is2D) ? b + "\n" + nb :  " " + b + nb;
 		
 		lastInfoMsg=msg;
-		if (n!=ControlPanel.pPRINT) return;
+		if (!bFull) return msg;
 		
 		String  w=">> ", x;
 		if (data.isTileView()) {
@@ -502,11 +499,11 @@ public class Plot extends JPanel implements HelpListener {
 				cnt0GeneNB, pStr(cnt0GeneNB, cnt0GeneTot,cntNonBlk));
 		
 		msg = w + x + b + nb;
-		if (msg.equals(lastPrtMsg)) return;
-		
-		lastPrtMsg = msg;
-		System.out.print(msg);
+		return msg;
+	
 	}
+	protected String getStats() {return prtCnts(true);} // CAS551 add for S icon
+	
 	private String pStr(int top, int bottom, boolean isP) {
 		String ret="";
 		if (bottom==0) ret = " N/A";
@@ -585,14 +582,8 @@ public class Plot extends JPanel implements HelpListener {
 	}
 	
 	public String getHelpText(MouseEvent e) {
-		if (data.getStatOpts()!=ControlPanel.pHELP) return lastInfoMsg; // CAS541 add
-		
-		if (data.isTileView())
-			return "For the 2D view:"
-					+ "\nDouble-click on a synteny block (boundary must be showing), "
-					+ "\nor create a region by dragging the mouse and double-click on it.";
-		else
-			return "Click on a Chr-by-chr cell in the DotPlot to view the cell only.";
+		return lastInfoMsg;
+		//if (data.getStatOpts()!=ControlPanel.pHELP) return lastInfoMsg; // CAS541 add; CAS551 put Help on I button
 	}
 	/***********************************************************************/
 	// CAS533 public void update(Observable obs, Object obj) {repaint();}

@@ -41,7 +41,7 @@ public class FilterHandler implements ActionListener { // CAS521 remove Filtered
 		sFilter = null;
 		if (seqObj != null) {
 			sFilter = new Sfilter(drawingPanel.getFrame(),drawingPanel, (Sequence) seqObj);
-			button.setText(sFilter.getTitle());
+			button.setText("Sequence Filter"); // CAS551 sFilter.getTitle() - added #N, which do not need here
 		}
 	}
 	public void hide() {

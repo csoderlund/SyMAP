@@ -3,6 +3,7 @@ package symap.sequence;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Stroke;
@@ -44,10 +45,11 @@ public class Annotation {
 	private String exonList=null; 				// CAS512 build first time of popup
 	private String hitListStr1=null;  			// CAS517 add to popup; computed in sequence.setExonList using coords 
 	private String hitListStr2=null;			// CAS543 add HitList for other side to popup
+	private double lastY=0.0, lastX=0.0;		// CAS551 if Last gene starts at same Y, then stagger Gene#
 	
 	private boolean bGeneLineOpt=false; 		// Show line on all genes; CAS520 add
-	
 	private boolean bHighPopup=false;			// Highlight gene if popup; CAS544 add
+	private boolean bShowGeneNum=true;			// show text genenum; CAS551 add
 	private boolean isPopup=false; 				// Gene has popup - highlight if bHighPopup; CAS544 add
 	private boolean isHitPopup=false;			// Hit Popup highlights gene too, though gene Popup has precedence
 	
@@ -70,12 +72,7 @@ public class Annotation {
 		this.annot_idx = idx;
 		this.genenum = genenum;
 	
-		// see backend.AnnotLoadPost.computeTags for formatting
-		// CAS512 add pseudo_annot.gene_idx so exon is mapped to the gene; need reload annot
-		// CAS515 merge tag and genenum in a more readable format; CAS517 add genenum and suffix to tag in AnnotPost; 
-		// CAS518 add total exon length (no change to parsing); CAS520 add h numhits, then removed because hard to see in display.
-		// CAS534 changed tag again
-		
+		// see backend.AnnotLoadPost.computeTags for formatting; changed tag CAS512, 515, 517, 518, 534
 		if (genenum==0) { 
 			if (!dbtag.startsWith("Exon")) this.fullTag = this.tag = Globals.exonTag + dbtag; // new
 			else 						   this.fullTag = this.tag = dbtag;	// old start with Exon
@@ -91,23 +88,25 @@ public class Annotation {
 		hoverGeneRect = new Rectangle2D.Double();
 	}
 	protected void addExon(Annotation aObj) {exonVec.add(aObj);} // CAS545 determined during SeqPool load of data
+	
 	/**
 	 * DRAW sets up the rectangle; called in Sequence.build(); CAS515 ordered lines to be more logical
 	 */
 	protected void setRectangle(
 			Rectangle2D boundry,      // center of chromosome rectangle (rect.x+1,rect.y,rect.width-2,rect.height)
-			long startBP, long endBP, // display start and end of chromosome 
-			double bpPerPixel, double dwidth, double hoverWidth, boolean flip, 
-			int offset, boolean bGeneLineOpt, boolean bHighPopup) // CAS517 offset 
+			int startBP, int endBP, // display start and end of chromosome 
+			double bpPerPixel, double dwidth, double hoverWidth, boolean flip, int offset, 
+			boolean bGeneLineOpt, boolean bShowGeneNum, boolean bHighPopup) // CAS517 offset; CAS551 showGeneNum
 	{
-		this.bGeneLineOpt=bGeneLineOpt;
+		this.bGeneLineOpt=bGeneLineOpt; // used these 3 in paintComponent
+		this.bShowGeneNum=bShowGeneNum; 
 		this.bHighPopup=bHighPopup;
 		
 		double x, y, height;
 		double chrX=boundry.getX(), upChrY=boundry.getY(), chrHeight=boundry.getHeight(), chrWidth=boundry.getWidth();
 		double lowChrY = upChrY + chrHeight; // lowest chromosome edge
 		
-		long ts, te;
+		int ts, te;
 		 
 		if (start > end) {
 			ts = end;
@@ -148,13 +147,96 @@ public class Annotation {
 		}									
 	}
 	
+	public void paintComponent(Graphics2D g2) { // called from Sequence.paintComponent
+		if (itype >= numTypes) return;
+		
+		g2.setPaint(getColor());
+		
+		if (itype == CENTROMERE_INT) { 	
+			Stroke oldstroke = g2.getStroke();
+			g2.setStroke(new BasicStroke(crossWidth)/*crossStroke*/); 
+			
+			g2.drawLine((int)rect.x, (int)rect.y, (int)rect.x + (int)rect.width, (int)rect.y + (int)rect.height);
+			g2.drawLine((int)rect.x, (int)rect.y + (int)rect.height, (int)rect.x + (int)rect.width, (int)rect.y);
+			
+			g2.setStroke(oldstroke);
+		} 
+		else { // (1) Gene, Exon, Gap (2) TICK or RECT 
+			if (rect.height >= 2) { // Only draw full rectangle if it is large enough to see.
+				g2.fillRect((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
+				
+				if (itype==GENE_INT) {// Gene Delimiter; CAS520 add, CAS544 highlight.. 
+					if (bGeneLineOpt || isPopup || isSelectedGene) {
+						Stroke oldstroke = g2.getStroke();
+						g2.setStroke(new BasicStroke(2)); 
+						g2.drawLine((int)rect.x-10, (int)rect.y, ((int)rect.x + 13), (int)rect.y);
+						g2.setStroke(oldstroke);
+					}	
+				}
+			}
+			else 	// Else draw as line 
+				g2.drawLine((int)rect.x, (int)rect.y, (int)rect.x + (int)rect.width, (int)rect.y); 
+			
+			if (itype==GENE_INT && bShowGeneNum) { // CAS551 (Yellow box in Sequence.build)
+				 g2.setPaint(Color.black);
+				 g2.setFont(Globals.textFont);
+				 
+				 int x, w=0;
+				 if (seqObj.isRef()) x = (int)rect.x+15;
+				 else {
+					 FontMetrics metrics = g2.getFontMetrics(Globals.textFont);
+					 w = metrics.stringWidth(strGeneNum) + 5; // tested stringWidth of 'a' is 7
+					 x = (int)rect.x-w;
+				 }
+				 int y = (int)rect.y +  (Globals.textHeight/2);
+				 if (Math.abs(lastY-rect.y)<6) {
+					 y+=10; // move it down
+					 if (seqObj.isRef()) x = (int)lastX+15;
+					 else x = (int)lastX-w;
+				 }
+				 
+				 g2.drawString(strGeneNum, x, y);
+			}
+		}
+	}
+	private Color getColor() {
+		if (itype == EXON_INT) {
+			if (bHighPopup) {
+				if (isPopup)    return geneHighColor; // CAS545 only exon highlighted when Gene Filter
+				if (isHitPopup) return Mapper.pseudoLineHoverColor; // CAS545 
+			}
+			if (isSelectedGene) return geneHighColor; // CAS546 add here too
+			
+			if (isConserved)    return geneHighColor; 
+			
+			if (bStrandPos)     return exonColorP;	
+			else                return exonColorN;
+		}
+		
+		if (itype == GENE_INT)		{
+			if (bHighPopup) {
+				if (isPopup)  	return geneHighColor;
+				if (isHitPopup) return Mapper.pseudoLineHoverColor; // CAS545 
+			}	
+			if (isSelectedGene) return geneHighColor;
+			
+			return geneColor;
+		}
+		if (itype == GAP_INT)			return gapColor;
+		if (itype == CENTROMERE_INT)	return centromereColor;
+
+		return Color.black; 
+	}
+	/////////////////////////////////////////////////////////////////////////
 	protected void clear() {// clears the rectangle coordinates so that the annotation will not be painted 
 		rect.setRect(0, 0, 0, 0);
 		hoverGeneRect.setRect(0, 0, 0, 0);
 	}
 	
-	protected double getY1() {return rect.getY();}
-	 
+	protected double getY1() {return rect.getY();} // same as rect.y
+	
+	protected void setLastY(Annotation last) {lastY=last.rect.y; lastX=last.rect.x;}; 
+	
 	protected boolean isVisible() {// true if after calling setRectangle 
 		return rect.getWidth() > 0 && rect.getHeight() > 0;
 	}
@@ -188,69 +270,6 @@ public class Annotation {
 	protected int getGeneLen()	{ return Math.abs(end-start)+1;} // ditto
 	protected int getGeneNum() { return genenum;}				// CAS517 for sorting in SeqPool
 	public String getFullGeneNum() {return strGeneNum;}      // CAS545 has suffix
-	
-	public void paintComponent(Graphics2D g2) {
-		if (itype >= numTypes) return;
-		
-		g2.setPaint(getColor());
-		
-		if (itype == CENTROMERE_INT) { 	
-			Stroke oldstroke = g2.getStroke();
-			g2.setStroke(new BasicStroke(crossWidth)/*crossStroke*/); 
-			
-			g2.drawLine((int)rect.x, (int)rect.y, (int)rect.x + (int)rect.width, (int)rect.y + (int)rect.height);
-			g2.drawLine((int)rect.x, (int)rect.y + (int)rect.height, (int)rect.x + (int)rect.width, (int)rect.y);
-			
-			g2.setStroke(oldstroke);
-		} 
-		else { // (1) Gene, Exon, Gap (2) TICK or RECT 
-			if (rect.height >= 2) { // Only draw full rectangle if it is large enough to see.
-				g2.fillRect((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
-				
-				// black line on top of gene to distinguish closely placed genes; CAS520 add, CAS544 highlight.. 
-				if (itype==GENE_INT) {
-					if (bGeneLineOpt || isPopup || isSelectedGene) {
-						Stroke oldstroke = g2.getStroke();
-						g2.setStroke(new BasicStroke(2)); 
-						
-						int w = 10; // 15=width of exon from sequence.properties
-						g2.drawLine((int)rect.x-w, (int)rect.y, ((int)rect.x + w+3), (int)rect.y);
-						g2.setStroke(oldstroke);
-					}
-				}
-			}
-			else 	// Else draw as line 
-				g2.drawLine((int)rect.x, (int)rect.y, (int)rect.x + (int)rect.width, (int)rect.y); 
-		}
-	}
-	private Color getColor() {
-		if (itype == EXON_INT) {
-			if (bHighPopup) {
-				if (isPopup)    return geneHighColor; // CAS545 only exon highlighted when Gene Filter
-				if (isHitPopup) return Mapper.pseudoLineHoverColor; // CAS545 
-			}
-			if (isSelectedGene) return geneHighColor; // CAS546 add here too
-			
-			if (isConserved)    return geneHighColor; 
-			
-			if (bStrandPos)     return exonColorP;	
-			else                return exonColorN;
-		}
-		
-		if (itype == GENE_INT)		{
-			if (bHighPopup) {
-				if (isPopup)  	return geneHighColor;
-				if (isHitPopup) return Mapper.pseudoLineHoverColor; // CAS545 
-			}	
-			if (isSelectedGene) return geneHighColor;
-			
-			return geneColor;
-		}
-		if (itype == GAP_INT)			return gapColor;
-		if (itype == CENTROMERE_INT)	return centromereColor;
-
-		return Color.black; 
-	}
 	
 	/*******************************************
 	 * XXX hover and box and closeup info

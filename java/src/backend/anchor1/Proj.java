@@ -32,7 +32,7 @@ public class Proj  {
 	private DBconn2 dbc2;
 	private Pattern namePat;
 	
-	private long totalSize = 0;
+	private int totalSize = 0;
 	private ProgressDialog plog;
 	private int topN=2;
 	

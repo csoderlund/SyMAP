@@ -18,7 +18,7 @@ import util.ErrorReport;
 
 public class TableData implements Serializable {
 	private static final long serialVersionUID = 8279185942173639084L;
-    private static final long DISPLAY_INTERVAL = 1000; 
+    private static final int DISPLAY_INTERVAL = 1000; 
     
 	/********************************************
 	 * Called from TableDataPanel in buildTable and setTable

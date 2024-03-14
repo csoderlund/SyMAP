@@ -176,7 +176,7 @@ public class SyMAPmanager extends ManagerFrame {
 		String base = url.substring(0, url.length()-1);
 		//String d = (Runtime.getRuntime().maxMemory() / (1024*1024)) + "m";
 		System.out.println("\nSyMAP " + Globals.VERSION + Globals.DATE + "  " + base
-			+ " Run Java v" + System.getProperty("java.version")); // CAS548 add 'Compiled', remove mem; CAS550 was Run, no compile 
+			+ "\nJava v" + System.getProperty("java.version")); // CAS548 add 'Compiled', remove mem; CAS550 was Run, no compile 
 	}
 	
 	public static boolean checkJavaSupported(Component frame) {	

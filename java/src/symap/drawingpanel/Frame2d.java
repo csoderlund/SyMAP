@@ -89,7 +89,7 @@ public class Frame2d extends JFrame implements KeyListener, ContainerListener
 			int nMaps = dp.getNumMaps();
 			int nAnnots = dp.getNumAnnots();
 			int width = Math.min(1000, 300 + 300*nMaps + 130*nAnnots); // CAS550 was 400*nAnnots
-			d.setSize(width, 980);	 // CAS550 was 900
+			d.setSize(width, 900);	 // CAS550 was 900->980; CAS551 set back
 			setSize(d);
 			super.setVisible(true); // CAS512 super.show();
 			//CAS550 was for null tracks; if (dp.tracksSet())

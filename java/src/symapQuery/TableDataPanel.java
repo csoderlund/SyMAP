@@ -271,7 +271,7 @@ public class TableDataPanel extends JPanel {
 	    topRow.add(cmbSynOpts);			topRow.add(Box.createHorizontalStrut(1));
 	    
 		txtMargin = new JTextField(3);
-	    txtMargin.setText((Globals.MAX_CLOSEUP_BP/1000)+""); // CAS548 changed from MAX_RANGE
+	    txtMargin.setText(((Globals.MAX_2D_DISPLAY/1000)+"")); // CAS548 was MAX_RANGE; CAS551 use new variable
 	    txtMargin.setMinimumSize(txtMargin.getPreferredSize());
 	    topRow.add(txtMargin);
 	    topRow.add(new JLabel("kb")); 	topRow.add(Box.createHorizontalStrut(2));

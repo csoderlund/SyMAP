@@ -1,30 +1,28 @@
 package symap.sequence;
 
-import java.awt.Point;
-
 /**
  * The data for the Track (i.e. project name, display name, orientation, etc...)
  * It is used for History, i.e back and forth
+ * CAS551 remove hitLength and HitLine
  */
 public  class TrackData {
 	private Class <?> trackClass;
 	private int project, otherProject;
 	private int orient;
-	private Point moveOffset;
-	private double defaultBpPerPixel;
-	private double bpPerPixel;
-	private long start, end, size;
+	// CAS551 dead private Point moveOffset;
+	private double defaultBpPerPixel, bpPerPixel;
+	private int start, end, size;
 	private double height, width;
-	
+
 	private int grpIdx;
 	
-	private boolean bShowRuler, bShowGene, bShowAnnot, bShowGeneLine, bFlipped; 
-	private boolean bShowGap, bShowCentromere;
-	private boolean bShowScoreLine, bShowHitLen; 	
-	private boolean bShowScoreText, bShowHitNumText; 
-	private boolean bShowBlockText, bShowCsetText, bShowNoText;   
-	private boolean bHighPopupGene; 
-	private boolean bHighConserved;
+	private boolean bFlipped;
+	private boolean bShowRuler, bShowGap, bShowCentromere, bShowGene, bShowHitLen, bShowScoreLine;
+	
+	private boolean bShowAnnot, bShowGeneNum,  bShowGeneLine, bHighPopupGene, bHighConserved; 
+	
+	private boolean bShowScoreText, bShowHitNumText, bShowBlockText, bShowCsetText, bShowNoText;   
+
 	private Annotation selectedGeneObj=null;
 
 	protected TrackData(Sequence seq) {
@@ -34,7 +32,6 @@ public  class TrackData {
 		end               = seq.gnDend;
 		size              = seq.gnSize;
 		orient            = seq.orient;
-		moveOffset        = new Point(seq.moveOffset);
 		defaultBpPerPixel = seq.defaultBpPerPixel;
 		bpPerPixel        = seq.bpPerPixel;
 		height            = seq.height;
@@ -43,24 +40,26 @@ public  class TrackData {
 		
 		grpIdx          = seq.grpIdx;
 		
+		bFlipped        = seq.isFlipped();	
 		bShowRuler      = seq.bShowRuler;
-		bShowGene       = seq.bShowGene;
-		bShowGeneLine  	= seq.bShowGeneLine;
-		bShowAnnot      = seq.bShowAnnot;
 		bShowGap        = seq.bShowGap;
 		bShowCentromere = seq.bShowCentromere;
-		bShowScoreLine  = seq.bShowScoreLine;	
-		bShowHitLen 	= seq.bShowHitLen;	
+		bShowGene      = seq.bShowGene;
+		bShowHitLen     = seq.bShowHitLen;
+		bShowScoreLine = seq.bShowScoreLine;
+		
+		bShowGeneNum    = seq.bShowGeneNum;
+		bShowGeneLine  	= seq.bShowGeneLine;
+		bShowAnnot      = seq.bShowAnnot;
+		bHighPopupGene = seq.bHighGenePopup;
+		bHighConserved = seq.bHighConserved;
 		
 		bShowNoText  	= seq.bShowNoText;	
 		bShowBlockText  = seq.bShowBlockText;	
 		bShowCsetText 	= seq.bShowCsetText;	
 		bShowScoreText  = seq.bShowScoreText;	
 		bShowHitNumText = seq.bShowHitNumText;	
-		bFlipped        = seq.isFlipped();	
-		
-		bHighPopupGene = seq.bHighGenePopup;
-		bHighConserved = seq.bHighConserved;
+			
 		selectedGeneObj  = seq.selectedGeneObj;
 	}
 
@@ -70,7 +69,6 @@ public  class TrackData {
 		seq.gnSize = size;
 		seq.projIdx           = project;
 		seq.orient            = orient;
-		seq.moveOffset.setLocation(moveOffset);
 		seq.defaultBpPerPixel = defaultBpPerPixel;
 		seq.bpPerPixel        = bpPerPixel;
 		seq.height            = height;
@@ -79,26 +77,26 @@ public  class TrackData {
 		seq.setAllBuild(); // set Track.hasBuild = false; for all seqs
 		
 		seq.grpIdx          = grpIdx;
+		seq.flipSeq(bFlipped); 	
 		seq.bShowRuler      = bShowRuler;
-		seq.bShowGene       = bShowGene;
 		seq.bShowGap        = bShowGap;
 		seq.bShowCentromere = bShowCentromere;
+		seq.bShowGene        = bShowGene;
+		seq.bShowHitLen      = bShowHitLen;
+		seq.bShowScoreLine   = bShowScoreLine;
 		
+		seq.bShowGeneNum    = bShowGeneNum;
 		seq.bShowGeneLine   = bShowGeneLine;
 		seq.bShowAnnot      = bShowAnnot;
-		
-		seq.bShowScoreLine  = bShowScoreLine; 
-		seq.bShowHitLen 	= bShowHitLen;	
+		seq.bHighGenePopup = bHighPopupGene;
+		seq.bHighConserved = bHighConserved;
 		
 		seq.bShowNoText  	= bShowNoText;	
 		seq.bShowBlockText  = bShowBlockText;	
 		seq.bShowCsetText 	= bShowCsetText;
 		seq.bShowScoreText 	= bShowScoreText; 
 		seq.bShowHitNumText = bShowHitNumText; 
-		seq.flipSeq(bFlipped); 	
 		
-		seq.bHighGenePopup = bHighPopupGene;
-		seq.bHighConserved = bHighConserved;
 		seq.selectedGeneObj =  selectedGeneObj;
 	}
 

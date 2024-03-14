@@ -192,7 +192,7 @@ public class Mapper extends JComponent
 			seqHitObj.mouseMoved(e);
 	}
 	public void mouseWheelMoved(MouseWheelEvent e) {
-		long length = trackHolders[0].getTrack().getTrackSize();
+		int length = trackHolders[0].getTrack().getTrackSize();
 		for (int i = 0;  i < trackHolders.length;  i++)
 			length = Math.min(length,trackHolders[i].getTrack().getEnd()-trackHolders[i].getTrack().getStart()+1);
 		for (int i = 0;  i < trackHolders.length;  i++)

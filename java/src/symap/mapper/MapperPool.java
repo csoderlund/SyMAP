@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 
 import database.DBconn2;
 import props.ProjectPool;
+import symap.Globals;
 import symap.sequence.Sequence;
 import util.ErrorReport;
 
@@ -71,7 +72,7 @@ public class MapperPool {
 			while (rs.next()) {
 				int i=1;
 				HitData temp = 		new HitData(mapper,
-						rs.getLong(i++),		// long id 		
+						rs.getInt(i++),		// int id 		CAS551 was long
 						rs.getInt(i++),		// int hitnum 	
 						rs.getDouble(i++),	// double pctid	
 						rs.getInt(i++),		// int cvgpct->avg %sim 
@@ -103,6 +104,12 @@ public class MapperPool {
 			
 			SeqHits seqHitObj = new SeqHits(mapper, st1, st2, hitList);
 			hitList.clear();
+			if (Globals.DEBUG) {
+				String x = String.format("Total>1 hits: %d (%d)  Merged: %d (%d)", 
+						HitData.cntTotal, HitData.cntTotalSH, HitData.cntMerge, HitData.cntMergeSH);
+				symap.Globals.dprt(x);
+			}
+			HitData.cntTotal= HitData.cntMerge = HitData.cntTotalSH= HitData.cntMergeSH = 0;;
 			return seqHitObj;
 		} catch (Exception e) {ErrorReport.print(e, "Get hit data");return null;}
 	}
