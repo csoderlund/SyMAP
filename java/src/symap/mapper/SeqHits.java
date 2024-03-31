@@ -229,26 +229,26 @@ public class SeqHits  {
 	/*************************************************************
 	 * Hover and popups
 	 */
+	// Hit list: each is HitTag\ncoord1\ncoord2
 	// CAS517 For sequence object - hits aligned to a gene; Annotation.popDesc expects this format
-	// CAS548 replace getHitStr, which displayed all subs; add score; change format 
+	// CAS548 replace getHitStr, which displayed all subs; add score; change format; CAS552 add block; add minor hits
 	public String getHitsForGenePopup(Sequence seqObj, Annotation annoObj, TreeMap <Integer, String> hitScores) {
 		String listVis= "";
+		boolean isQuery = mapper.isQueryTrack(seqObj);
 		
 		for (DrawHit drObj : allHitsArray) {
 			HitData hdObj = drObj.hitDataObj;
-			if (!hitScores.containsKey((int) hdObj.getID())) continue;
+			if (!hitScores.containsKey(hdObj.getID())) continue;
 			
-			boolean isQuery = mapper.isQueryTrack(seqObj);
-			
-			String score = "("+hitScores.get((int) hdObj.getID())+")";			
 			String star = hdObj.getMinorForGenePopup(isQuery, annoObj.getAnnoIdx());
-
-			if (!star.equals("*")) { // minor gets the wrong opposite gene 
-				String hit = String.format("Hit #%d %-19s\n", hdObj.getHitNum(), score);
-				hit += hdObj.getCoordsForGenePopup(isQuery, annoObj.getFullGeneNum()) + "\n";
+			String score = "(" + hitScores.get(hdObj.getID()) + ")";	
 			
-				listVis += hit + ";";
-			}
+			String minorTag = (star.equals("*")) ? annoObj.getFullGeneNum() : null;
+			String coords = hdObj.getHitCoordsForGenePopup(isQuery, minorTag) + "\n";
+			
+			String hit = String.format("%s%s %s\n%s", star.trim(), hdObj.hitGeneTag, score, coords); 
+			
+			listVis += hit + ";";
 		}
 		return listVis;
 	}
@@ -517,41 +517,53 @@ public class SeqHits  {
 		/* text */
 			 // CAS531 add hitNum; CAS543 always put text on outside rect; CAS545 compress code and add block/cset
 			 int xr=4, xl=19; 
-			 String num1=null;
-			 if       (seqObj1.getShowScoreText())  num1 = ""+(int)pctid;
-			 else  if (seqObj1.getShowHitNumText()) num1 = ""+hitDataObj.getHitNum();  
-			 else  if (seqObj1.getShowBlockText())  num1 = ""+hitDataObj.getBlock();
-			 else  if (seqObj1.getShowCsetText())   num1 = ""+hitDataObj.getCollinearSet();
+			 String numText1=null; // CAS552 add num indicators of %,#,b,c; add check for 0 on b&c
+			 if       (seqObj1.getShowScoreText())  numText1 = (int)pctid+"%";
+			 else  if (seqObj1.getShowHitNumText()) numText1 = "#" + hitDataObj.getHitNum();  
+			 else  if (seqObj1.getShowBlockText())  {
+				 int n = hitDataObj.getBlock();
+				 if (n>0) numText1 = "b"+n;
+			 }
+			 else  if (seqObj1.getShowCsetText())   {
+				 int n = hitDataObj.getCollinearSet();
+				 if (n>0) numText1 = "c"+n;
+			 }
 			 
-			 if (num1!=null && !num1.equals("0")) {  
+			 if (numText1!=null) {  
 				 double textX = x1;
 				 if (x1 < x2) textX += xr;
 				 else	{
-					 int nl = num1.length()-1;
+					 int nl = numText1.length()-1;
 					 textX -= (xl + (nl*4));
 				 }			 
 				 g2.setPaint(Color.black);
 				 g2.setFont(textFont);
-				 g2.drawString(num1, (int)textX, (int)y1);
+				 g2.drawString(numText1, (int)textX, (int)y1);
 			 }
 			 
-			 String num2=null;
-			 if       (seqObj2.getShowScoreText())  num2 = ""+(int)pctid;
-			 else  if (seqObj2.getShowHitNumText()) num2 = ""+hitDataObj.getHitNum();
-			 else  if (seqObj2.getShowBlockText())  num2 = ""+hitDataObj.getBlock();
-			 else  if (seqObj2.getShowCsetText())   num2 = ""+hitDataObj.getCollinearSet();
+			 String numText2=null;
+			 if       (seqObj2.getShowScoreText())  numText2 = (int)pctid +"%";
+			 else  if (seqObj2.getShowHitNumText()) numText2 = "#"+hitDataObj.getHitNum();
+			 else  if (seqObj2.getShowBlockText())  {
+				 int n = hitDataObj.getBlock();
+				 if (n>0) numText2 = "b"+n;
+			 }
+			 else  if (seqObj2.getShowCsetText())  {
+				 int n = hitDataObj.getCollinearSet();
+				 if (n>0) numText2 = "c"+n;
+			 }
 			
-			 if (num2!=null && !num2.equals("0")) {  
+			 if (numText2!=null) {  
 				 double textX = x2;
 				 if (x1 < x2) {
-					 int nl = num2.length()-1;
+					 int nl = numText2.length()-1;
 					 textX -= (xl + (nl*4)) ;
 				 }
 				 else textX += xr;
 				
 				 g2.setPaint(Color.black);
 				 g2.setFont(textFont);
-				 g2.drawString(num2, (int)textX, (int)y2);					 
+				 g2.drawString(numText2, (int)textX, (int)y2);					 
 			 }
 			 
 			 // Hover over hit line connector; CAS517 move creation to HitData 
@@ -616,8 +628,6 @@ public class SeqHits  {
 				 }
 			 }
 		 }
-		
-		
 		 /* CAS548 removed getIfHit called from getHitStr, which has been removed (was showing all subhits) **/
 		 
 		/* CAS516 popup from clicking hit wire; CAS531 change to use TextPopup */

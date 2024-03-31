@@ -5,7 +5,7 @@ import java.util.Vector;
 import java.sql.ResultSet;
 
 import database.DBconn2;
-import props.ProjectPool;
+import props.PropsDB;
 import symap.Globals;
 import symap.sequence.Sequence;
 import util.ErrorReport;
@@ -18,9 +18,9 @@ import util.ErrorReport;
  */
 public class MapperPool {
 	private DBconn2 dbc2;
-	private ProjectPool projPool; // properties
+	private PropsDB projPool; // properties
 	
-	public MapperPool(DBconn2 dbc2, ProjectPool projPool) {  // Created when Mapper is created
+	public MapperPool(DBconn2 dbc2, PropsDB projPool) {  // Created when Mapper is created
 		this.dbc2 = dbc2;
 		this.projPool = projPool;
 	}
@@ -105,7 +105,7 @@ public class MapperPool {
 			SeqHits seqHitObj = new SeqHits(mapper, st1, st2, hitList);
 			hitList.clear();
 			if (Globals.DEBUG) {
-				String x = String.format("Total>1 hits: %d (%d)  Merged: %d (%d)", 
+				String x = String.format("MP: Total>1 hits: %d (%d)  Merged: %d (%d)", 
 						HitData.cntTotal, HitData.cntTotalSH, HitData.cntMerge, HitData.cntMergeSH);
 				symap.Globals.dprt(x);
 			}

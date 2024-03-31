@@ -21,16 +21,15 @@ public class HitData {
 	private int covScore;			// CAS540 best coverage
 	private int nMerge;
 	private int geneOlp = -1; 
-	private int annot1_idx, annot2_idx; // CAS543 add
-	private boolean isPosOrient1, isPosOrient2; 	// CAS517 if the same
-	private String query_seq, target_seq; // coordinates of hit
+	private boolean isPosOrient1, isPosOrient2; 	
+	private int 	annot1_idx, annot2_idx; // CAS543 add
+	private String 	query_seq, target_seq; // coordinates of hit
 	
 	protected int start1, end1, mid1, start2, end2, mid2;	// 1=q, 2=t; CAS550 add mid for paintComponent
 	protected String qMergeSH, tMergeSH;					// CAS551 merged for faster drawing in SeqHits.DrawHit
 	
 	private int collinearSet;		// CAS520 [c(runnum.runsize)] need to toggle highlight
 	private int blocknum; 			// CAS505 add
-	private double corr;			// CAS516 add
 	
 	private boolean isBlock;		// set on init
 	private boolean isCollinear;	// set on init; CAS520 add
@@ -38,14 +37,16 @@ public class HitData {
 	private boolean isPopup=false;		// set when popup; CAS543 add
 	private boolean isConserved=false;	// set on conserved seqFilter, same as geneOlap=2 if only 2 tracks; CAS545 add 
 	
-	private String hitTag;			// g(gene_overlap) or htype (EE) [c(runnum.runsize)]; CAS516 gNbN see MapperPool; 
+	protected String hitGeneTag;			// g(gene_overlap) or htype (EE) ; CAS516 gNbN see MapperPool; 
+	private String   hitTag; 
 	
 	// MapperPool.setSeqHitData populates, puts in array for SeqHits, where each HitData is associated with a DrawHit
 	protected HitData(Mapper mapper, int id, int hitnum, 
 			  double pctid, int pctsim, int nMerge, int covScore, String htype, int overlap,
 			  int annot1_idx, int annot2_idx,
 			  String strand, int start1, int end1, int start2, int end2, String query_seq, String target_seq,   
-			  int runnum, int runsize, int block, double corr, String chr1, String chr2) // chr1/2 not used
+			  int runnum, int runsize, int block, 
+			  double corr, String chr1, String chr2) // chr1/2 not used
 	{
 		this.mapper = mapper;
 		this.idx = id;
@@ -81,13 +82,15 @@ public class HitData {
 		this.collinearSet = runnum; // CAS520 add; CAS543 move form MapperPool
 		this.isCollinear = (collinearSet==0) ? false : true; 
 		
-		hitTag    = (htype.equals("0") || htype.equals("")) ? ("g" + geneOlp) : htype;  // CAS546 add htype
-		if (runsize>0 && runnum>0) hitTag += " c" + runsize + "." + runnum; 
-		else if (runsize>0)        hitTag += " c" + runsize;			    // parsed in Utilities.isCollinear
-		
 		this.blocknum = block;
-		this.corr = corr;
 		this.isBlock = (blocknum>0) ? true : false;
+		
+		String gg = (htype.equals("0") || htype.equals("")) ? (" g" + geneOlp) : (" " +htype); 
+		String iv = (corr<0) ? " Inv   " : "   "; // Only happens rarely with algo1
+		String co = (runsize>0 && runnum>0) ? (" c" + runsize + "." + runnum) : "";
+		hitTag = "Hit #" + hitnum + gg + "   Block #" + block + iv + co;
+		
+		hitGeneTag = "Hit #" + hitnum  + " Block #" + block;
 	}
 	/* The hits overlap, so merge the overlapping ones; similar to the one in anchor2.HitPair 
 	 * For similar sequences, there can be many merges - I thought this would smooth on the display more... */
@@ -175,33 +178,53 @@ public class HitData {
 		if (target_seq!=null && target_seq.length()>0) return target_seq; 
 		return start2 + ":" + end2;
 	}
-	// for annotation popup: CAS548 was full list of subhits; now coords for both sides
-	protected String getCoordsForGenePopup(boolean isQuery, String tag) { 
-		String tag1 = mapper.getGeneNum1(annot1_idx);
-		String tag2 = mapper.getGeneNum2(annot2_idx);
-		String otherTag = (tag.equals(tag1)) ? tag2 : tag1;
-		
-		int l = Math.max(tag1.length(), tag2.length());
-		String fmt = "%-" + l + "s" + " %s";
-		String xtag1 = (isQuery)  ? tag : otherTag;
-		String xtag2 = (!isQuery) ? tag : otherTag;
-		
-		String msg1 = String.format(fmt, xtag1, Utilities.coordsStr(isPosOrient1, start1, end1)); 
-		String msg2 = String.format(fmt, xtag2, Utilities.coordsStr(isPosOrient2, start2, end2)); 
-	
-		String coords = isQuery ? (msg1+"\n" + msg2) : (msg2+ "\n"+ msg1);
-		return coords;
-	} 
 	protected String getMinorForGenePopup(boolean isQuery, int annotIdx) {
 		String d = (annotIdx!=annot1_idx && annotIdx!=annot2_idx) ? Globals.minorAnno : "";
 		return d;
 	}
-
+	// for annotation popup;  
+	// CAS548 list of subhits -> coords for both sides; CAS552 rm unnecessary lines, add minor
+	protected String getHitCoordsForGenePopup(boolean isQuery, String tag) { 
+		String tag1 = mapper.getGeneNum1(annot1_idx);
+		String tag2 = mapper.getGeneNum2(annot2_idx);
+		
+		if (tag!=null) {
+			if (isQuery) tag1 = tag;
+			else tag2 = tag;
+		}
+		int l = Math.max(tag1.length(), tag2.length());
+		String fmt = "%-" + l + "s" + " %s";
+		
+		String msg1 = String.format(fmt, tag1, Utilities.coordsStr(isPosOrient1, start1, end1)); 
+		String msg2 = String.format(fmt, tag2, Utilities.coordsStr(isPosOrient2, start2, end2)); 
+	
+		String coords = isQuery ? (msg1+"\n" + msg2) : (msg2+ "\n"+ msg1);
+		return coords;
+	} 
+	// Called from SeqHits.popupDesc (top of popup) and SeqHits.DrawHit (Hover)
+	// CAS512 left/right->start:end; CAS516 add Inv, tag CAS517 puts track1 info before track2; CAS552 switch hit&block
+	protected String createHover(boolean isQuery) {
+		String msg = hitTag +  "\n"; 
+		
+		String n = (nMerge>0) ? "#Subhits=" + nMerge + "  " : "#Subhit=1  "; // CAS548 added '#'
+		msg += n;
+		String op = (nMerge>0) ? "~" : "";
+		msg +=  "Id=" + op + pctid  + "%  ";
+		msg +=  "Sim="+ op + pctsim + "%  ";
+		msg +=  String.format("Cov=%,dbp", covScore); // CAS548 add bp; Cov is merged hits, remove ~
+		
+		String msg1 =  Utilities.coordsStr(isPosOrient1, start1, end1);  // CAS548 rm chr
+		String msg2 =  Utilities.coordsStr(isPosOrient2, start2, end2); 
+		String L="L ", R="R ";
+		String coords = isQuery ? (L + msg1+"\n"+R+ msg2) : (L +msg2+ "\n"+ R + msg1);// CAS548 add L/R
+		
+		return  msg + "\n\n" + coords;
+	}
 	protected boolean isBlock() 	{ return isBlock; }
 	protected boolean isCset() 		{ return isCollinear; } 
 	protected boolean isPopup()		{ return isPopup;}
 	protected boolean isConserved()	{ return isConserved;}
-	public boolean is2Gene() 	{ return (geneOlp==2); } 
+	public 	  boolean is2Gene() 	{ return (geneOlp==2); } 
 	protected boolean is1Gene() 	{ return (geneOlp==1); } 
 	protected boolean is0Gene()  	{ return (geneOlp==0); } 
 	
@@ -228,12 +251,11 @@ public class HitData {
 		return (obj instanceof HitData && ((HitData)obj).idx == idx);
 	}
 
-	public static Comparator<HitData> getPseudoPositionComparator() {
+	public static Comparator<HitData> sortByStart2() {
 		return new Comparator<HitData>() {
 			public int compare(HitData hd1, HitData hd2) {
 				int d = hd1.start2 - hd2.start2; 
-				if (d == 0)
-					d = hd1.end2 - hd2.end2; 
+				if (d == 0) d = hd1.end2 - hd2.end2; 
 				return d;
 			}
 		};
@@ -256,27 +278,5 @@ public class HitData {
 		return msg;
 	}
 	public String getName()		{ return "Hit #" + hitnum;}
-	/********************************************************
-	 * CAS512 left/right->start:end; CAS516 add Inv, tag CAS517 puts track1 info before track2
-	 * Called from SeqHits.popupDesc (top of popup) and SeqHits.DrawHit (Hover)
-	 */
-	protected String createHover(boolean s1LTs2) {
-		String x = (corr<0) ? " Inv" : "";
-		String o = (isPosOrient1==isPosOrient2) ? "(=)" : "(!=)"; // CAS517x
-		String msg =  "Block #" + getBlock() + x + "  Hit #" + hitnum + " " + o + " " + hitTag + "\n"; 
-		
-		String n = (nMerge>0) ? "#Subhits=" + nMerge + "  " : "#Subhit=1  "; // CAS548 added '#'
-		msg += n;
-		String op = (nMerge>0) ? "~" : "";
-		msg +=  "Id=" + op + pctid  + "%  ";
-		msg +=  "Sim="+ op + pctsim + "%  ";
-		msg +=  String.format("Cov=%,dbp", covScore); // CAS548 add bp; Cov is merged hits, remove ~
-		
-		String msg1 =  Utilities.coordsStr(isPosOrient1, start1, end1);  // CAS548 rm chr
-		String msg2 =  Utilities.coordsStr(isPosOrient2, start2, end2); 
-		String L="L ", R="R ";
-		String coords = s1LTs2 ? (L + msg1+"\n"+R+ msg2) : (L +msg2+ "\n"+ R + msg1);// CAS548 add L/R
-		
-		return  msg + "\n\n" + coords;
-	}
+	
 }

@@ -3,13 +3,13 @@ package symap.sequence;
 /**
  * The data for the Track (i.e. project name, display name, orientation, etc...)
  * It is used for History, i.e back and forth
- * CAS551 remove hitLength and HitLine
+ * CAS551 remove hitLength and HitLine CAS551 dead private Point moveOffset;
  */
 public  class TrackData {
 	private Class <?> trackClass;
 	private int project, otherProject;
 	private int orient;
-	// CAS551 dead private Point moveOffset;
+	
 	private double defaultBpPerPixel, bpPerPixel;
 	private int start, end, size;
 	private double height, width;
@@ -24,6 +24,7 @@ public  class TrackData {
 	private boolean bShowScoreText, bShowHitNumText, bShowBlockText, bShowCsetText, bShowNoText;   
 
 	private Annotation selectedGeneObj=null;
+	private String geneStr="";
 
 	protected TrackData(Sequence seq) {
 		trackClass        = seq.getClass();
@@ -41,26 +42,27 @@ public  class TrackData {
 		grpIdx          = seq.grpIdx;
 		
 		bFlipped        = seq.isFlipped();	
-		bShowRuler      = seq.bShowRuler;
-		bShowGap        = seq.bShowGap;
-		bShowCentromere = seq.bShowCentromere;
-		bShowGene      = seq.bShowGene;
-		bShowHitLen     = seq.bShowHitLen;
-		bShowScoreLine = seq.bShowScoreLine;
+		bShowRuler      = seq.sfilObj.bShowRuler;
+		bShowGap        = seq.sfilObj.bShowGap;
+		bShowCentromere = seq.sfilObj.bShowCentromere;
+		bShowGene       = seq.sfilObj.bShowGene;
+		bShowHitLen     = seq.sfilObj.bShowHitLen;
+		bShowScoreLine  = seq.sfilObj.bShowScoreLine;
 		
-		bShowGeneNum    = seq.bShowGeneNum;
-		bShowGeneLine  	= seq.bShowGeneLine;
-		bShowAnnot      = seq.bShowAnnot;
-		bHighPopupGene = seq.bHighGenePopup;
-		bHighConserved = seq.bHighConserved;
+		bShowGeneNum    = seq.sfilObj.bShowGeneNum;
+		bShowGeneLine  	= seq.sfilObj.bShowGeneLine;
+		bShowAnnot      = seq.sfilObj.bShowAnnot;
+		bHighPopupGene  = seq.sfilObj.bHighGenePopup;
+		bHighConserved  = seq.sfilObj.bHighConserved;
 		
-		bShowNoText  	= seq.bShowNoText;	
-		bShowBlockText  = seq.bShowBlockText;	
-		bShowCsetText 	= seq.bShowCsetText;	
-		bShowScoreText  = seq.bShowScoreText;	
-		bShowHitNumText = seq.bShowHitNumText;	
+		bShowNoText  	= seq.sfilObj.bShowNoText;	
+		bShowBlockText  = seq.sfilObj.bShowBlockText;	
+		bShowCsetText 	= seq.sfilObj.bShowCsetText;	
+		bShowScoreText  = seq.sfilObj.bShowScoreText;	
+		bShowHitNumText = seq.sfilObj.bShowHitNumText;	
 			
-		selectedGeneObj  = seq.selectedGeneObj;
+		geneStr = seq.sfilObj.savGeneStr.trim();
+		if (!geneStr.equals("")) selectedGeneObj  = seq.selectedGeneObj;
 	}
 
 	protected void setTrack(Sequence seq) {
@@ -76,28 +78,32 @@ public  class TrackData {
 		seq.otherProjIdx      = otherProject;
 		seq.setAllBuild(); // set Track.hasBuild = false; for all seqs
 		
-		seq.grpIdx          = grpIdx;
-		seq.flipSeq(bFlipped); 	
-		seq.bShowRuler      = bShowRuler;
-		seq.bShowGap        = bShowGap;
-		seq.bShowCentromere = bShowCentromere;
-		seq.bShowGene        = bShowGene;
-		seq.bShowHitLen      = bShowHitLen;
-		seq.bShowScoreLine   = bShowScoreLine;
+		seq.grpIdx          		 = grpIdx;
+		seq.sfilObj.xFlipSeq(bFlipped); 	
+		seq.sfilObj.bShowRuler       = bShowRuler;
+		seq.sfilObj.bShowGap         = bShowGap;
+		seq.sfilObj.bShowCentromere  = bShowCentromere;
+		seq.sfilObj.bShowGene        = bShowGene;
+		seq.sfilObj.bShowHitLen      = bShowHitLen;
+		seq.sfilObj.bShowScoreLine   = bShowScoreLine;
 		
-		seq.bShowGeneNum    = bShowGeneNum;
-		seq.bShowGeneLine   = bShowGeneLine;
-		seq.bShowAnnot      = bShowAnnot;
-		seq.bHighGenePopup = bHighPopupGene;
-		seq.bHighConserved = bHighConserved;
+		seq.sfilObj.bShowGeneNum    = bShowGeneNum;
+		seq.sfilObj.bShowGeneLine   = bShowGeneLine;
+		seq.sfilObj.bShowAnnot      = bShowAnnot;
+		seq.sfilObj.bHighGenePopup  = bHighPopupGene;
+		seq.sfilObj.bHighConserved  = bHighConserved;
 		
-		seq.bShowNoText  	= bShowNoText;	
-		seq.bShowBlockText  = bShowBlockText;	
-		seq.bShowCsetText 	= bShowCsetText;
-		seq.bShowScoreText 	= bShowScoreText; 
-		seq.bShowHitNumText = bShowHitNumText; 
+		seq.sfilObj.bShowNoText  	= bShowNoText;	
+		seq.sfilObj.bShowBlockText  = bShowBlockText;	
+		seq.sfilObj.bShowCsetText 	= bShowCsetText;
+		seq.sfilObj.bShowScoreText 	= bShowScoreText; 
+		seq.sfilObj.bShowHitNumText = bShowHitNumText; 
 		
-		seq.selectedGeneObj =  selectedGeneObj;
+		if (!geneStr.equals("")) {
+			seq.setSelectedGene(selectedGeneObj);
+			seq.sfilObj.savGeneStr = geneStr;
+		}
+		else seq.noSelectedGene();
 	}
 
 	public Class <?> getTrackClass() {return trackClass;}

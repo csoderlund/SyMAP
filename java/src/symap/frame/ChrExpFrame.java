@@ -270,11 +270,15 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 	private void showCircleView(){	
 		int[] pidxList = new int[mapper.getProjects().length];
 		TreeSet<Integer> shownGroups = new TreeSet<Integer>();
+		boolean hasSelf = false; // CAS552 add so do not show self-align is this is none
 		
 		int refIdx=-1; // CAS521 add so will have priority colors 
 		for (int i = 0; i < mapper.getProjects().length; i++){
-			int pid = mapper.getProjects()[i].getID();
+			Mproject pg = mapper.getProjects()[i];
+			int pid = pg.getID();
 			pidxList[i] = pid;
+			
+			if (pg.hasSelf()) hasSelf=true;
 			
 			for (ChrInfo t : mapper.getChrs(pid)){
 				if (t.isVisible() || mapper.getRefChr() == t) {
@@ -284,7 +288,8 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			}
 		}
 		if (circdbc==null) circdbc = new DBconn2("CircleE-" + DBconn2.getNumConn(), tdbc2);
-		circframe = new CircFrame(circdbc, pidxList, shownGroups, helpBar, refIdx); // have to recreate everytime
+		
+		circframe = new CircFrame(circdbc, pidxList, shownGroups, helpBar, refIdx, hasSelf); // have to recreate everytime
 		
 		cardPanel.add(circframe.getContentPane(), Integer.toString(VIEW_CIRC)); // ok to add more than once
 		((CardLayout)cardPanel.getLayout()).show(cardPanel, Integer.toString(VIEW_CIRC));

@@ -9,7 +9,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.GridBagConstraints;
 
 import javax.swing.event.ChangeEvent;
@@ -21,6 +20,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -30,17 +30,15 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 
 import symap.drawingpanel.DrawingPanel;
+import util.Jcomp;
 import util.Jhtml;
 
 /**
  * Hit Filter Interface: The Mapper filter dialog implementation.
  * CAS520 remove all FPC stuff; fix bugs; rewrite to add collinear, highlights, and allow multiple shows
- * 
- * Many filters are created when the drawing panel is initiated
- * 
  * 1. Add filter here
  * 2. Add to HfilterData
- * 3. Add to PseudoPseudoHits.isHighLightHit() and isFiltered()
+ * 3. Add to SeqHits.isHighLightHit() and isFiltered()
  * CAS541 MapperFilter=>Hfilter; CAS542 replace abstract filter with in file methods
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
@@ -67,7 +65,7 @@ public class Hfilter extends JDialog {
 	private JRadioButton hGene1Radio 	= new JRadioButton(HIT1);
 	private JRadioButton hGene0Radio	= new JRadioButton(HIT0); 
 	private JRadioButton hNoneRadio		= new JRadioButton(NONE);
-	private JCheckBox sPopupCheck	= new JCheckBox(POPUP); // CAS545 change from Radio
+	private JCheckBox 	 hPopupCheck	= new JCheckBox(POPUP); // CAS545 change from Radio
 	
 	// Show - any number can be selected
 	private JCheckBox sBlockCheck		= new JCheckBox(SYN);
@@ -88,7 +86,8 @@ public class Hfilter extends JDialog {
 	private JRadioButtonMenuItem hGene1PopRadio	= new JRadioButtonMenuItem(HIT1);
 	private JRadioButtonMenuItem hGene0PopRadio	= new JRadioButtonMenuItem(HIT0);
 	private JRadioButtonMenuItem hNonePopRadio	= new JRadioButtonMenuItem(NONE);
-	private JRadioButtonMenuItem hPopupPopRadio	= new JRadioButtonMenuItem(POPUP);
+	private JCheckBoxMenuItem    hPopupPopCheck	= new JCheckBoxMenuItem(POPUP);
+	private JCheckBoxMenuItem    sAllPopCheck   = new JCheckBoxMenuItem(ALL);
 	
 	private Mapper mapper;
 	private HfilterData hitFiltData;    // current settings
@@ -105,15 +104,19 @@ public class Hfilter extends JDialog {
 		
 		FilterListener listener = new FilterListener();
 		
+		createFilterDialog(listener);
+		createPopup(listener);
+	}
 	/* Filter dialog */
+	private void createFilterDialog(FilterListener listener) {
 		// Buttons
-		okButton = createButton("Save","Save changes and close");
+		okButton = Jcomp.createMonoButton("Save","Save changes and close");
 		okButton.addActionListener(listener);
 
-		cancelButton = createButton("Cancel", "Discard changes and close");
+		cancelButton = Jcomp.createMonoButton("Cancel", "Discard changes and close");
 		cancelButton.addActionListener(listener);
 
-		defaultButton = createButton("Defaults", "Reset to defaults");
+		defaultButton = Jcomp.createMonoButton("Defaults", "Reset to defaults");
 		defaultButton.addActionListener(listener);
 		
 		helpButton = Jhtml.createHelpIconUserSm(Jhtml.hitfilter);
@@ -156,7 +159,7 @@ public class Hfilter extends JDialog {
 		highGroup.add(hGene2Radio); highGroup.add(hGene1Radio); 
 		highGroup.add(hGene0Radio); highGroup.add(hNoneRadio); 
 		
-		sPopupCheck.addActionListener(listener);
+		hPopupCheck.addActionListener(listener);
 		
 		Container contentPane = getContentPane();
 		GridBagLayout gridbag = new GridBagLayout();
@@ -182,7 +185,7 @@ public class Hfilter extends JDialog {
 		addToGrid(contentPane, gridbag, c1, hGene0Radio, 1); 
 		addToGrid(contentPane, gridbag, c1, hNoneRadio,rem); 
 		
-		addToGrid(contentPane, gridbag, c1, sPopupCheck, rem);
+		addToGrid(contentPane, gridbag, c1, hPopupCheck, rem);
 		addToGrid(contentPane, gridbag, c1, new JSeparator(),rem);
 		
 		// show
@@ -206,65 +209,74 @@ public class Hfilter extends JDialog {
 		pack();
 		setResizable(false);
 		setLocationRelativeTo(null); // CAS520
-		
+	}
+	private void addToGrid(Container cp, GridBagLayout layout, GridBagConstraints con, Component comp, int w) {
+		con.gridwidth = w;
+		layout.setConstraints(comp, con);
+		cp.add(comp);
+	}
+	
 	// Popup menu
+	private void createPopup(FilterListener listener) {
 		popupMenu = new JPopupMenu(); 
 		popupMenu.setBackground(Color.white);
 		popupMenu.addPopupMenuListener(new MyPopupMenuListener()); 
-		popupTitle = new JMenuItem();
-		popupTitle.setEnabled(false);
-		popupMenu.add(popupTitle);
-		popupMenu.addSeparator();
 		
-		popupTitle.setText("Hit Highlight Options"); // CAS503 
+		popupTitle = new JMenuItem("Hit Options"); popupTitle.setEnabled(false);
+		popupMenu.add(popupTitle);
+		
+		popupMenu.addSeparator();
+		JLabel gtext = new JLabel("   Highlight"); gtext.setEnabled(false);
+		popupMenu.add(gtext);
 		popupMenu.add(hBlockPopRadio); 
 		popupMenu.add(hCsetPopRadio); 			
 		popupMenu.add(hGene2PopRadio); 
 		popupMenu.add(hGene1PopRadio);
 		popupMenu.add(hGene0PopRadio);
-		popupMenu.add(hNonePopRadio);
+		popupMenu.add(hNonePopRadio); 
+		ButtonGroup grp = new ButtonGroup();
+		grp.add(hBlockPopRadio); grp.add(hCsetPopRadio); grp.add(hGene2PopRadio); 
+		grp.add(hGene1PopRadio);  grp.add(hGene0PopRadio);  grp.add(hNonePopRadio); 
+		hNonePopRadio.setSelected(true);
+		
 		popupMenu.add(new JSeparator());
-		popupMenu.add(hPopupPopRadio);
+		popupMenu.add(hPopupPopCheck);
+		
+		popupMenu.addSeparator(); 
+		JLabel stext = new JLabel("   Show"); stext.setEnabled(false); // CAS552 add
+		popupMenu.add(stext);
+		popupMenu.add(sAllPopCheck);
 		
 		hBlockPopRadio.addActionListener(listener);
 		hCsetPopRadio.addActionListener(listener);
 		hGene2PopRadio.addActionListener(listener);
 		hGene1PopRadio.addActionListener(listener);	
 		hGene0PopRadio.addActionListener(listener);	
-		hPopupPopRadio.addActionListener(listener);
 		hNonePopRadio.addActionListener(listener);
+		
+		hPopupPopCheck.addActionListener(listener);
+		sAllPopCheck.addActionListener(listener);
+		
+		popupMenu.setMaximumSize(popupMenu.getPreferredSize()); popupMenu.setMinimumSize(popupMenu.getPreferredSize());
 	}
 	// Creates panel
-	public void showX() {
+	public void showHitFilter() {
 		setInit(hitFiltData); // CAS542 fixed display bug; must be before setSliderMaxMin; may have changed since Hfilter created
 		setSliderMaxMin();
 		lastHitFiltData = hitFiltData.copy("Hfilter showX");
 		
-		setVisible(true); // CAS512 super.showX();
+		setVisible(true); 
 	}
 	public void closeFilter() {
 		if (isShowing()) {
 			cancelAction();
-			setVisible(false); // CAS512 hide();
+			setVisible(false); 
 		}
 	}
 	public void showPopup(MouseEvent e) { 
 		popupMenu.show(e.getComponent(), e.getX(), e.getY());
 	}
 	public boolean canShow() {return mapper!=null;}
-	
-	private void addToGrid(Container cp, GridBagLayout layout, GridBagConstraints con, Component comp, int w) {
-		con.gridwidth = w;
-		layout.setConstraints(comp, con);
-		cp.add(comp);
-	}
-	private JButton createButton(String s, String t) {
-		JButton jbutton = new JButton(s);
-		jbutton.setMargin(new Insets(1,3,1,3));
-		jbutton.setToolTipText(t);
-		jbutton.setBackground(Color.white);
-		return jbutton;
-	}
 	
 	private boolean okAction() {
 		return lastHitFiltData.setChanged(getCopyHitFilter(), "Hfilter okAction");
@@ -278,8 +290,8 @@ public class Hfilter extends JDialog {
 	private void refresh() {
 		if (hitFiltData.setChanged(getCopyHitFilter(), "Hfilter refresh")) {
 			mapper.setTrackBuild();
-			drawingPanel.setUpdateHistory();
-			drawingPanel.smake();
+			drawingPanel.setReplaceHistory(); // CAS552 changed from UpdateHistory
+			drawingPanel.smake("Hf: refresh");
 			mapper.update();
 		}
 	}
@@ -305,19 +317,18 @@ public class Hfilter extends JDialog {
 		hGene1Radio.setSelected(hf.isHi1Gene());
 		hGene0Radio.setSelected(hf.isHi0Gene());
 		hNoneRadio.setSelected(hf.isHiNone());
-		sPopupCheck.setSelected(hf.isHiPopup()); // CAS544 had wrong init
+		hPopupCheck.setSelected(hf.isHiPopup()); // CAS544 had wrong init
 	}
 
 	private HfilterData getCopyHitFilter() { // ok and refresh
-		HfilterData hf = new HfilterData();
-// CAS542 was checking for no selections here		
+		HfilterData hf = new HfilterData();	
 		hf.setHiBlock(hBlockRadio.isSelected()); 
 		hf.setHiCset(hCsetRadio.isSelected()); 
 		hf.setHi2Gene(hGene2Radio.isSelected());
 		hf.setHi1Gene(hGene1Radio.isSelected()); 
 		hf.setHi0Gene(hGene0Radio.isSelected()); 
 		hf.setHiNone(hNoneRadio.isSelected()); 
-		hf.setHiPopup(sPopupCheck.isSelected()); 
+		hf.setHiPopup(hPopupCheck.isSelected()); 
 		
 		hf.setBlock(sBlockCheck.isSelected());
 		hf.setCset(sCsetCheck.isSelected());
@@ -353,16 +364,16 @@ public class Hfilter extends JDialog {
 			}
 			else if (src == defaultButton) {
 				setDefault();
-			}
+			}								// set filter with popup value
 			else if (src == hBlockPopRadio) hBlockRadio.setSelected(hBlockPopRadio.isSelected());
 			else if (src == hCsetPopRadio) 	hCsetRadio.setSelected(hCsetPopRadio.isSelected()); // CAS520 add
 			else if (src == hGene2PopRadio)	hGene2Radio.setSelected(hGene2PopRadio.isSelected());
 			else if (src == hGene1PopRadio)	hGene1Radio.setSelected(hGene1PopRadio.isSelected());
 			else if (src == hGene0PopRadio)	hGene0Radio.setSelected(hGene0PopRadio.isSelected());
 			else if (src == hNonePopRadio)	hNoneRadio.setSelected(hNonePopRadio.isSelected());
-			else if (src == hPopupPopRadio)	sPopupCheck.setSelected(hPopupPopRadio.isSelected());
-			
-			refresh();
+			else if (src == hPopupPopCheck)	hPopupCheck.setSelected(hPopupPopCheck.isSelected()); 
+			else if (src == sAllPopCheck)   sAllCheck.setSelected(sAllPopCheck.isSelected());
+ 			refresh();
 		}
 		
 		public void stateChanged(ChangeEvent event) {
@@ -398,7 +409,8 @@ public class Hfilter extends JDialog {
 			hGene1PopRadio.setSelected(hitFiltData.isHi1Gene());
 			hGene0PopRadio.setSelected(hitFiltData.isHi0Gene());
 			hNonePopRadio.setSelected(hitFiltData.isHiNone());
-			hPopupPopRadio.setSelected(hitFiltData.isHiPopup());
+			hPopupPopCheck.setSelected(hitFiltData.isHiPopup());
+			sAllPopCheck.setSelected(hitFiltData.isAllHit());
 		}
 	} // end popup listener
 	private int     getSliderPctid(double pctid) 	{return (int)Math.round(pctid);}

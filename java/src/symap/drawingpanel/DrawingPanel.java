@@ -7,7 +7,7 @@ import javax.swing.*;
 
 import database.DBconn2;
 import colordialog.ColorListener;
-import props.ProjectPool;
+import props.PropsDB;
 import symap.Globals;
 import symap.frame.HelpBar;
 
@@ -38,15 +38,18 @@ import util.Utilities;
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class DrawingPanel extends JPanel implements ColorListener, HistoryListener { 
 	private static Color backgroundColor = Color.white;
+	
 	public double trackDistance = 100; // distance between tracks, used in TrackLayout; can be changed (was PADDING)
-	public boolean isToScale=false; // CAS551 Tells TrackLayout tracks should be same size.  kludge, once set, not unset.
+	public boolean isToScale=false; // CAS551 Tells TrackLayout tracks should be same size. 
+	public String selectMouseFunction = null; // Set by ControlPanel for Selected Track Region
 	
 	private Mapper[] mappers;
 	private TrackHolder[] trackHolders;
 	private HistoryControl historyControl;
 	private Frame2d frame2dListener;
-	private ProjectPool projPool = null;
+	private PropsDB propDB = null;
 	private CloseUp closeup;
+	private ControlPanel cntlPanel; // CAS552 added to reset
 
 	private DBconn2 dbc2;
 
@@ -57,10 +60,8 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	
 	private int numTracks = 0, numMaps=0;
 	
-	private boolean doUpdateHistory = true;
+	private boolean bUpdateHistory = true, bReplaceHistory = false;
 
-	public String selectMouseFunction = null; // Set by ControlPanel for Selected Track Region
-	
 	private void dprt(String msg) {symap.Globals.dprt("DP: " + msg);}
 	
 	// Called in frame.SyMAP2d; the explorer reuses the drawing panel, non-explorers do not.
@@ -69,7 +70,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		setBackground(backgroundColor);
 		
 		this.dbc2 = dbc2; // made copy in SyMAP2d, close in SyMAP2d
-		projPool = new ProjectPool(dbc2);
+		propDB = new PropsDB(dbc2);
 		historyControl = hc;
 		helpbar = bar;			
 		queryPanel = listPanel;	
@@ -103,7 +104,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		mappers = new Mapper[numMaps];
 		for (int i = 0; i < mappers.length; i++) {
 			FilterHandler fh = new FilterHandler(this);
-			mappers[i] = new Mapper(this,trackHolders[i],trackHolders[i+1], fh, dbc2, projPool, helpbar, queryPanel); 
+			mappers[i] = new Mapper(this,trackHolders[i],trackHolders[i+1], fh, dbc2, propDB, helpbar, queryPanel); 
 			add(mappers[i]);
 			mappers[i].setLocation(0,0);
 		}
@@ -128,7 +129,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 			otrack.setOtherProject(track.getProject());
 		}
 		
-		doUpdateHistory = true;  // 1st history of stack
+		bUpdateHistory = true;  // 1st history of stack
 		
 		return (Sequence) track; // CAS543 for Query.TableDataPanel to set show defaults
 	}
@@ -143,6 +144,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	}
 
 	protected void setListener(Frame2d dpl) { this.frame2dListener = dpl;} // Frame2d
+	protected void setCntl(ControlPanel cp) { this.cntlPanel = cp; } // Frame2d CAS552 add to reset for History
 
 	protected Frame getFrame() { // FilterHandler
 		if (frame2dListener != null) return frame2dListener.getFrame();
@@ -152,9 +154,9 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		if (frame2dListener != null) frame2dListener.setFrameEnabled(enabled);
 	}
 
-	public ProjectPool getProjPool() 	{return projPool;} // Sequence; Track CAS541 was returning pool of pools
-	public DBconn2 getDBC() 			{return dbc2; }		// CloseUpDialog, Sequence, TextShowSeq; CAS541 added
-	protected JComponent getView() 		{return scrollPane;}
+	public PropsDB getPropDB() 	{return propDB;} // Sequence; Track CAS541 was returning pool of pools
+	public DBconn2 getDBC() 		{return dbc2; }		// CloseUpDialog, Sequence, TextShowSeq; CAS541 added
+	protected JComponent getView() 	{return scrollPane;}
 	protected void setCloseUp(CloseUp closeup) {this.closeup = closeup;}
 	
 	public CloseUp getCloseUp() {return closeup;}
@@ -281,29 +283,32 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		}
 		for (int i = 0; i < numTracks; i++) trackHolders[i].getTrack().changeAlignRegion(factor);
 		
-		smake();
+		smake("dp: changedShowRegion");
 		return true;
 	}
 	protected void shrinkSpace() { // CAS551 add
 		if (trackDistance>10) trackDistance-=5;
 		setUpdateHistory();
-		smake();
+		smake("dp: shrinkspace");
 	}
 	protected void drawToScale() {	// ControlPanel
 		setUpdateHistory();
-		isToScale=true;
-		
-		double bpPerPixel = 0;
-		Sequence track = null;
-		for (int i = 0; i < numTracks; i++) {
-			track = trackHolders[i].getTrack();
-			bpPerPixel = Math.max(bpPerPixel,track.getBpPerPixel()); 
+		if (isToScale) {			// CAS552 isToScale is changed from ControlPanel
+			double bpPerPixel = 0;
+			Sequence track = null;
+			for (int i = 0; i < numTracks; i++) {
+				track = trackHolders[i].getTrack();
+				bpPerPixel = Math.max(bpPerPixel,track.getBpPerPixel()); 
+			}
+			if (bpPerPixel == 0 && track != null) bpPerPixel = track.getBpPerPixel();
+			for (int i = 0; i < numTracks; i++)
+				trackHolders[i].getTrack().setBpPerPixel(bpPerPixel);
 		}
-		if (bpPerPixel == 0 && track != null) bpPerPixel = track.getBpPerPixel();
-		for (int i = 0; i < numTracks; i++)
-			trackHolders[i].getTrack().setBpPerPixel(bpPerPixel);
-		
-		smake();
+		else {
+			for (int i = 0; i < numTracks; i++) // CAS552 add
+				trackHolders[i].getTrack().setDefPixel();
+		}
+		smake("dp: drawtoscale");
 	}
 	
 	public void setVisible(boolean visible) {
@@ -363,11 +368,11 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	// CAS550 remove private void firstViewBuild() {
 	
 	public void amake() { // called on 1st view, or resetColors; 
-		dprt("amake ");
+		dprt("amake " + bUpdateHistory + bReplaceHistory);
 		make(); // CAS551 stop using new Thread(new MapMaker()).start(); which stopped having 2D on long track 550 bug
 	}	
-	public boolean smake() { // called when graphics changes: Sfilter, Sequence.mousePress, DrawingPanel.changeRegions
-		dprt("smake");
+	public boolean smake(String msg) { // called when graphics changes: Sfilter, Sequence.mousePress, DrawingPanel.changeRegions
+		dprt("smake "  + msg + " " + bUpdateHistory + bReplaceHistory);
 		return make();
 	}
 	private synchronized boolean make() { // CAS550 merge all 
@@ -385,9 +390,13 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 			for (int i = 0; i < numTracks; i++)
 				if (!trackHolders[i].getTrack().build()) return false; // build graphics for painting in repaint; CAS551 add check
 			
-			if (doUpdateHistory) {
+			if (bUpdateHistory) {
 				updateHistory();
-				doUpdateHistory = false;
+				bUpdateHistory = bReplaceHistory = false;
+			}
+			else if (bReplaceHistory) { // CAS552 add so filters are no longer part of history
+				replaceHistory();
+				bReplaceHistory = false;
 			}
 			
 			setFrameEnabled(true);
@@ -413,19 +422,26 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		setFrameEnabled(false);
 		new Thread(new MapMaker((DrawingPanelData)obj)).start();
 	}
-	public void setUpdateHistory() {doUpdateHistory = true;} // Filters, changeAlignRegion, setSequencTrack, setTrackEnds
+	public void setUpdateHistory() {bUpdateHistory = true;} // Filters, changeAlignRegion, setSequencTrack, setTrackEnds
 	
 	public void updateHistory() { // make when doUpdateHistory; Sequence.mouseRelease changes map
 		DrawingPanelData dpd = new DrawingPanelData(mappers,trackHolders, trackDistance);
 		historyControl.add(dpd);
 	}
+	
+	public void setReplaceHistory() {bReplaceHistory = true; }
+	
+	public void replaceHistory() { // CAS552 instead of update, filter replace
+		DrawingPanelData dpd = new DrawingPanelData(mappers,trackHolders, trackDistance);
+		historyControl.replace(dpd);
+	}
 	// Show History: setMaps in MapMaker sets the drawing panel to correspond to the DrawingPanelData
 	private synchronized boolean setMaps(DrawingPanelData dpd) {
-		dprt("Show history from drawingpaneldata");
 		boolean good = false;
 		MapperData[] mapperData = dpd.getMapperData();
 		TrackData[] trackData  = dpd.getTrackData();
 		trackDistance = dpd.trackDistance;
+		cntlPanel.setHistory(dpd.isScale, dpd.mouseFunction);
 		
 		try {
 			for (int i = 0; i < numTracks; i++) trackHolders[i].setTrackData(trackData[i]);
@@ -452,7 +468,6 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		
 		public void run() {
 			if (data == null || setMaps(data)) {
-				dprt("MapMaker run data==null " + (data==null));
 				make(); 
 			}
 		}
@@ -462,14 +477,17 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		private MapperData[] mapperData;
 		private TrackData[]  trackData;
 		private double trackDistance;
+		private String mouseFunction;
+		private boolean isScale;
 
 		protected DrawingPanelData(Mapper[] mappers, TrackHolder[] trackHolders, double trackDistance) {
-			dprt("Make history");
 			mapperData = new MapperData[mappers.length];
 			trackData = new TrackData[trackHolders.length];
 			for (int i = 0; i < mapperData.length; i++) mapperData[i] = mappers[i].getMapperData();
 			for (int i = 0; i < trackData.length; i++)  trackData[i] = trackHolders[i].getTrackData();
 			this.trackDistance = trackDistance;
+			this.isScale = isToScale;
+			this.mouseFunction = selectMouseFunction;
 		}
 
 		protected MapperData[] getMapperData() {return mapperData;}

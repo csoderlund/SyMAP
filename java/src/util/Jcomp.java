@@ -6,14 +6,16 @@ import java.awt.Font;
 import java.awt.Insets;
 import java.awt.event.ActionListener;
 
-import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
+//import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JToggleButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
 
 import symap.frame.HelpBar;
@@ -21,6 +23,7 @@ import symap.frame.HelpListener;
 
 /***************************************************
  * CAS534 added for static interface components
+ * CAS552 there was one abstract method to cover many possibilities; this is more explicit
  */
 public class Jcomp {
 	public static JLabel createLabel(String text, int fontStyle, int fontSize) {
@@ -57,6 +60,13 @@ public class Jcomp {
 
 		return row;
 	}
+	static public JPanel createGrayRowPanel() {
+		JPanel row = new JPanel();
+		row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS)); // X_AXIS
+		row.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+		return row;
+	}
 	static public JPanel createRowCenterPanel() {
 		JPanel row = new JPanel();
 		row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS)); // X_AXIS
@@ -77,48 +87,165 @@ public class Jcomp {
 		JLabel l = new JLabel(html);
 		return l;
 	}
-	public static AbstractButton createButton(HelpListener parent, String path, String tip, HelpBar bar, 
-			 ActionListener listener, boolean isCheckbox, boolean bSelected) {
-		AbstractButton button;
-		
-		Icon icon = ImageViewer.getImageIcon(path); 
-		if (icon != null) {
-		    if (isCheckbox)
-		    	button = new JCheckBox(icon);
-		    else
-		    	button = new JButton(icon);
-		    	button.setMargin(new Insets(0,0,0,0));
-		}
-		else {
-		    if (isCheckbox)
-		    	button = new JCheckBox(path);
-		    else
-		    	button = new JButton(path);
-		    	button.setMargin(new Insets(1,3,1,3));
-		}
-		if (isCheckbox) button.setSelected(bSelected); // CAS521 add
-		
-		if (listener != null) 
-		    button.addActionListener(listener);
 
-		button.setToolTipText(tip);
+	//////////////////////////////////////////////////////////////
+	public static JButton createButton(HelpListener parent, HelpBar bar, ActionListener listener,
+			String label, String tip) {
 		
+		JButton button = new JButton(label);
+		button.setBackground(Color.white);
+		button.setAlignmentX(Component.LEFT_ALIGNMENT);
+		
+		button.setMinimumSize(button.getPreferredSize());
+		button.setMaximumSize(button.getPreferredSize());
+		//button.setFont(new Font(button.getFont().getName(),Font.PLAIN,11));
+		
+		if (listener != null) button.addActionListener(listener);
+		
+		button.setToolTipText(tip);
 		button.setName(tip); 
 		if (bar != null) bar.addHelpListener(button,parent);
 		
 		return button;
 	}
-	public static JButton createButton(String text, String tip, boolean bSelected) {
-		JButton button;
+	
+	public static JButton createIconButton(HelpListener parent, 
+			HelpBar bar, ActionListener listener, String path, String tip) {
 		
-		button = new JButton(text);
-		button.setSelected(bSelected); 
+		Icon icon = ImageViewer.getImageIcon(path);  
+		JButton button = new JButton(icon);
+		button.setMargin(new Insets(0,0,0,0));
+		
+		if (listener != null) button.addActionListener(listener);
 		
 		button.setToolTipText(tip);
 		button.setName(tip); 
+		if (bar != null) bar.addHelpListener(button,parent);
 		
-		button.setMaximumSize(button.getPreferredSize());
-		button.setMinimumSize(button.getPreferredSize());
 		return button;
+	}
+	// if (isSelected) scaleToggle.setBackground(Color.white);
+	// else            scaleToggle.setBackground(Color.gray);
+	public static JButton createBorderIcon(HelpListener parent, 
+			HelpBar bar, ActionListener listener, String path, String tip) {
+		
+		Icon icon = ImageViewer.getImageIcon(path);  // new ImageIcon(path); works in zTest but not here
+		JButton button = new JButton(icon);
+		button.setBorder(BorderFactory.createRaisedBevelBorder());
+		
+		if (listener != null) button.addActionListener(listener);
+		
+		button.setToolTipText(tip);
+		button.setName(tip); 
+		if (bar != null) bar.addHelpListener(button,parent);
+		
+		return button;
+	}
+	// This is to be used as toggle with getBorderColor! 
+	// This makes smaller button, but the only difference is the Border
+	public static JButton createBorderText(HelpListener parent, 
+			HelpBar bar, ActionListener listener, String label, String tip) {
+		
+			JButton button = new JButton(label);
+			button.setBackground(Color.white);
+			button.setAlignmentX(Component.LEFT_ALIGNMENT);
+			button.setFont(new Font(button.getFont().getName(),Font.PLAIN,11));
+			button.setBorder(BorderFactory.createRaisedBevelBorder());
+			
+			button.setMinimumSize(button.getPreferredSize());
+			button.setMaximumSize(button.getPreferredSize());
+			
+			if (listener != null) button.addActionListener(listener);
+
+			button.setToolTipText(tip);
+			button.setName(tip); 
+			if (bar != null) bar.addHelpListener(button,parent);
+
+			return button;
+	}
+	public static Color getBorderColor(boolean isSelect) {
+		if (isSelect) return Color.gray;
+		else return Color.white;
+	}
+	public static JCheckBox createCheckBox(HelpListener parent, 
+			HelpBar bar, ActionListener listener, String label, String tip) {
+		
+		JCheckBox box = new JCheckBox(label);
+		box.setBackground(Color.white);
+		box.setMinimumSize(box.getPreferredSize());
+		box.setMaximumSize(box.getPreferredSize());
+		
+		if (listener != null) box.addActionListener(listener);
+		
+		box.setToolTipText(tip);
+		box.setName(tip); 
+		if (bar != null) bar.addHelpListener(box,parent);
+		
+		return box;
+	}
+	public static JRadioButton createRadio(HelpListener parent, 
+			HelpBar bar, ActionListener listener, String label, String tip) {
+		
+		JRadioButton button = new JRadioButton(label);
+		button.setMargin(new Insets(0,0,0,0));
+		
+		if (listener != null) button.addActionListener(listener);
+		
+		button.setToolTipText(tip);
+		button.setName(tip); 
+		if (bar != null) bar.addHelpListener(button,parent);
+		
+		return button;
+	}
+	///////////////////////////////////////////////////////////////////////
+	// Not used: this is not distinquishable from other buttons until selected; other problems
+	// with text, this makes BIG button. If border, it is small, but then does not toggle color
+	public static JToggleButton createToggleIcon(HelpListener parent, 
+			HelpBar bar, ActionListener listener, String path, String tip) {
+		
+		Icon icon = ImageViewer.getImageIcon(path);  // new ImageIcon(path); works in zTest but not here
+		JToggleButton button = new JToggleButton(icon);
+		
+		if (listener != null) button.addActionListener(listener);
+		
+		button.setToolTipText(tip);
+		button.setName(tip); 
+		if (bar != null) bar.addHelpListener(button,parent);
+		
+		return button;
+	}
+	static public JButton createButtonPlain(String label, boolean enable) {
+		JButton button = new JButton(label);
+		button.setBackground(Color.white);
+		button.setAlignmentX(Component.LEFT_ALIGNMENT);
+		button.setMargin(new Insets(0, 0, 0, 0));
+		button.setFont(new Font(button.getFont().getName(),Font.PLAIN,10));
+		button.setEnabled(enable);
+		return button;
+	}
+	// CAS552 added for 2D filters
+	static public JButton createMonoButton(String s, String t) {
+		JButton jbutton = new JButton(s);
+		jbutton.setFont(new Font(Font.MONOSPACED,Font.PLAIN,13)); //lab.getFont().getName()
+		jbutton.setMargin(new Insets(1,3,1,3));
+		jbutton.setToolTipText(t);
+		jbutton.setBackground(Color.white);
+		return jbutton;
+	}
+	static public JButton createMonoButtonSm(String s, String t) {
+		JButton jbutton = new JButton(s);
+		jbutton.setFont(new Font(Font.MONOSPACED,Font.PLAIN,11)); //lab.getFont().getName()
+		jbutton.setMargin(new Insets(0,0,0,0));
+		jbutton.setToolTipText(t);
+		jbutton.setBackground(Color.white);
+		return jbutton;
+	}
+	static public JLabel createMonoLabel(String label, String t) {
+		//String html = "<html><b><i>" + label + "</i></b></html>"; // ignores blanks
+		JLabel lab = new JLabel(label);
+		lab.setFont(new Font(Font.MONOSPACED,Font.PLAIN,13)); //lab.getFont().getName()
+		lab.setToolTipText(t);
+		lab.setBackground(Color.white);
+		return lab;
 	}
 }

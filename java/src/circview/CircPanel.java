@@ -29,39 +29,37 @@ import util.ErrorReport;
 public class CircPanel extends JPanel implements HelpListener, MouseListener,MouseMotionListener {
 	private static final long serialVersionUID = -1711255873365895293L;
 	
-	 // set in ControlPanelCirc
-    public int invChoice = 0;
-    public boolean bShowSelf = false, bRotateText = false, bRevRef = false;
+	// ControlPanelCirc has Info popup with this 
+	private final String helpText = "Click an arc to bring its blocks to the top.\n" + 
+			  "Move mouse near name and click to use its colors.";
+	private final String helpName = "Move mouse near name (changes to finger) and click to color by this project.";
+	private final String helpArc =  "Click arc to bring its blocks to top.\nDouble click arc to only show its blocks.";
+	private final double ZOOM_DEFAULT = 1.0; // CAS552 was float
+	private final int ARC_DEFAULT = 0;
+	
+	 // set from ControlPanelCirc
+    protected int invChoice = 0;
+    protected boolean bShowSelf = false, bRotateText = false, bRevRef = false;
+    protected boolean bToScale = false;			// genome size
+    protected double zoom = ZOOM_DEFAULT;		// +/- icons
+    private int arc0 = ARC_DEFAULT;				// rotate icon 
     
 	private DBconn2 dbc2;
 	private Vector<Integer> colorVec;
 	
 	private Vector<Project> allProjVec;
 	private TreeMap<String, String> name2DisMap = new TreeMap<String, String> (); // CAS517 project display name
-	
 	private TreeMap <Integer,Group> idx2GrpMap;
-	
 	private Vector<Integer> priorityVec;
-	
-	private String helpText = "Click an arc to bring its blocks to the top.\n" + 
-			"Move mouse near name and click to use its colors.";
-	private String helpName = "Move mouse near name (changes to finger) and click to color by this project.";
-	private String helpArc = "Click arc to bring its blocks to top.\nDouble click arc to only show its blocks.";
-	
-	private static final Color FAR_BACKGROUND = Color.WHITE;
-	
-	private static int MARGIN     = 20;
-	private static int CIRCMARGIN = 60;
 	
     private int rOuter, rInner, rBlock; // rOuter based on rotateText,; rInner=rOuter*0.933; rBlock=rOuter*0.917;
     private int cX, cY;					// both are rOuter+marginX; set at beginning and do not change
-    private int arc0 = 0;				// rotate icon 
-    private boolean toScale = false;	// genome size
-    private float zoom = 1.0f;			// +/- icons
     
-    private JScrollPane scroller;
+    private JScrollPane scroller;		// this scroll bar never did work; CAS552 does now
     private HelpBar helpPanel = null;
     private Dimension dim;
+    
+    //private void dprt(String msg) {symap.Globals.dprt("CP: " + msg);}
     
 	public CircPanel(DBconn2 dbReader, int[] projIdxList, TreeSet<Integer> selGrpSet, int refIdx,
 							HelpBar hb, Vector <Integer> mCol) {
@@ -69,33 +67,26 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		helpPanel = hb;
 		colorVec = mCol;
 		
-		init();
+		dim  = new Dimension();		// CAS552 moved init() lines here
+		setBackground(Color.white);
+		
+		scroller = new JScrollPane(this);
+		scroller.setBackground(Color.white);
+		scroller.getViewport().setBackground(Color.white);
+		scroller.getVerticalScrollBar().setUnitIncrement(10); 
+		
+		helpPanel.addHelpListener(this); 
+		addMouseListener(this);
+		addMouseMotionListener(this);
 		
 		try {
 			if (!initDS(projIdxList, selGrpSet, refIdx)) return;
 		}
 		catch(Exception e) {ErrorReport.print(e, "Create CircPanel");}
 	}
-	public void clear() {
-		allProjVec.clear();
-		idx2GrpMap.clear();
-	}
-	private void init() {
-		//setPreferredSize(new Dimension(pWidth,pHeight)); CAS534 doesn't do anything, was 900,700
-		//setMinimumSize(new Dimension(pWidth, pHeight));
-		
-		dim  = new Dimension();
-		scroller = new JScrollPane(this);
-		setBackground(FAR_BACKGROUND);
-
-		scroller.setBackground(FAR_BACKGROUND);
-		scroller.getViewport().setBackground(FAR_BACKGROUND);
-		scroller.getVerticalScrollBar().setUnitIncrement(10); 
-		
-		helpPanel.addHelpListener(this); 
-		addMouseListener(this);
-		addMouseMotionListener(this);
-	}
+	/****************************************************************************
+	 * XXX Setup and database load
+	 **************************************************************************/
 	private boolean initDS(int[] projIdxList, TreeSet<Integer> selGrpSet, int refIdx) {
 	try {
 	// Projects and groups
@@ -131,7 +122,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	}
 	catch(Exception e) {ErrorReport.print(e, "Init data structures"); return false;}	
 	}
-	/****************************************************************************/
+	
 	private void addProject(int idx)  {
 		try {
 			ResultSet rs;
@@ -172,8 +163,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		}
 		catch(Exception e) {ErrorReport.print(e, "Set colors");}
 	}
-	/****************************************************************************/
-	// Get the blocks in both directions since we don't know the ordering
+	// Get the blocks in both directions since order is unknown
 	private void loadBlocks()  {
 	try {
 		ResultSet rs;
@@ -207,28 +197,21 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		Group grp = idx2GrpMap.get(gidx1);
 		grp.addBlock(b);
 	}
+	protected JScrollPane getScrollPane() {return scroller;}
 	
-	/*******************************************************************/
-	public JScrollPane getScrollPane() {
-		return scroller;
-	}
-	public void zoom (double f) { // -/= icons
+	/*******************************************************************
+	 * Control - toggles are directly changed from ControlPanel
+	 *****************************************************************/
+	protected void zoom (double f) { // -/= icons
 		zoom *= f;
 	    makeRepaint();  
 	}
-	public void rotate(int da) { // rotate icon; rotate(-10) 
+	protected void rotate(int da) { // rotate icon; rotate(-10) 
 		arc0 += da;
 		if (arc0 > 360) arc0 -= 360;
 		makeRepaint();
 	}
-	public void toggleScaled(boolean scaled) { // scale to genome size
-		if (toScale == scaled) return;
-		
-		toScale = scaled;
-		makeRepaint();
-	}
-	// only available for 2 WG view
-	public void reverse() {
+	protected void reverse() {     // reverse reference; only available for 2 WG view
 	try {
 		Project p1 = allProjVec.get(0);
 		Project p2 = allProjVec.get(1);
@@ -239,11 +222,10 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		setChrColors();
 	}
 	catch (Exception e) {ErrorReport.print(e, "Reverse projects");}
-	}
-	public void makeRepaint() {
-		repaint();
-	}
-
+	}	
+	/***************************************************
+	 * XXX Mouse
+	 */
 	public void handleClick(long x, long y, boolean dbl) {}
 	
 	public void mouseClicked(MouseEvent evt)  {
@@ -276,12 +258,11 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		Project p = overProjName(r,angle);
 		if (p == null) return;
 		
-		priorityVec.add(0,p.idx); // click the project name
+		// click the project name
+		priorityVec.add(0,p.idx); 
 		int i = 1;
 		for (; i < priorityVec.size();i++) {
-			if (priorityVec.get(i) == p.idx) {
-				break;
-			}
+			if (priorityVec.get(i) == p.idx) break;
 		}
 		priorityVec.remove(i);
 		
@@ -292,17 +273,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		}
 		makeRepaint();						
 	}
-
-	public void mousePressed(MouseEvent e) {	}
-	public void mouseReleased(MouseEvent e) {}
-	public void mouseDragged(MouseEvent e) {}
-	public void mouseEntered(MouseEvent e) { }
 	
-	public void mouseExited(MouseEvent e)  {setCursor( Cursor.getDefaultCursor() ); }
-	
-	public String getHelpText(MouseEvent event) { 
-		return helpText;
-	}	
 	public void mouseMoved(MouseEvent e)   { 
 		if (helpPanel == null) return;
 		
@@ -333,9 +304,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	private Group overGroupArc(int r, int angle) { // mouse over arc
 		if (r <= rOuter && r >= rInner) {
 			for (Group g : idx2GrpMap.values()){
-				if (angle >= g.a1 && angle <= g.a2){
-					return g;
-				}
+				if (angle >= g.a1 && angle <= g.a2)return g;
 			}
 		}	
 		return null;
@@ -343,35 +312,50 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	private Project overProjName(int r, int angle){// mouse over name
 		for (Project p : allProjVec){
 			if (r >= p.labelR1 && r <= p.labelR2){
-				if (angle >= p.labelA1 && angle <= p.labelA2) {
-					return p;
-				}
+				if (angle >= p.labelA1 && angle <= p.labelA2) return p;
 			}
 		}
 		return null;
 	}
+	public void mousePressed(MouseEvent e) {}
+	public void mouseReleased(MouseEvent e) {}
+	public void mouseDragged(MouseEvent e) {}
+	public void mouseEntered(MouseEvent e) { }
+	public void mouseExited(MouseEvent e)  {setCursor( Cursor.getDefaultCursor() ); }
+		
+	/************************************************************************************
+	 * XXX Painting methods
+	 ********************************************************************************/
+	protected void makeRepaint() {repaint();} // ControlPanelCirc
 	
-	/************************************************************************************/
 	// Note that circle angles are measured from the middle-right of the circle, going around counterclockwise. 
-	// Hence, the right side of the circle is angle 0-90, plus angle 270-360. 
-	// The overall rotation angle arc0 is added to everything.  
+	// Hence, the right side of the circle is angle 0-90, plus angle 270-360. Arc0 is added to everything.  
 	public void paintComponent(Graphics g)  {
 		super.paintComponent(g); 
-				
-		Dimension d = new Dimension( (int)(scroller.getWidth()*zoom), (int)(scroller.getHeight()*zoom) );
-		dim.width =  (int) (d.width - MARGIN); // so the scroll doesn't show at zoom=1
-		dim.height = (int) (d.height - MARGIN);
-
+		
+		final int projEmptyArc = 20;
+		
+	// Setup 
+		Dimension d = new Dimension( (int)(scroller.getWidth()*zoom), 
+				                     (int)(scroller.getHeight()*zoom) );
+		
+		dim.width =  (int) (d.width - 20); // so the scroll doesn't show at zoom=1
+		dim.height = (int) (d.height - 20);
+		
+		setPreferredSize(dim); // CAS552 added these 3 lines to make scrollbar work
+		revalidate();
+		scroller.getViewport().revalidate();
+	
 	    int maxNameW = 0;
-	    if (!bRotateText) {
+	    if (!bRotateText) { // Rotate does not need it, it causes the Circle to be diff sizes
 	        for (Project p : allProjVec) {
 	            FontMetrics fm = g.getFontMetrics();
 	            int nameW = (int)(fm.getStringBounds(p.displayName,g).getWidth());		
 	            if (nameW > maxNameW) maxNameW = nameW;
-	        }
+	        }  
 	    }
-        int marginX = 50 + Math.max(CIRCMARGIN, maxNameW);
-        
+        int marginX = 50 + Math.max(60, maxNameW); // spacing at top/bottom; 
+	
 	    rOuter = Math.min(dim.width, dim.height)/2 - marginX;
 	    rInner = (int)(rOuter*0.933);
 	    rBlock = (int)(rOuter*0.917);	
@@ -389,16 +373,12 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
         	totalSizeShown += shown;
         	if (shown == 0) nEmpty++;
         }        
-        if (totalSizeShown == 0) {
-        	System.out.println("Nothing to show!");
-        	return;
-        }
-        int projEmptyArc = 20;
-        int curArc = 0;	// increments through projects
-        int curColor = 0;
-        int locLabel = rOuter + 40;
+        if (totalSizeShown == 0) {System.out.println("Nothing to show!");return;}
         
-    /********* Loop through projects draw project name and chromosomes ************/
+        int curArc = 0;				// increments through projects
+        int curColor = 0;
+        
+    // Loop through projects draw project name and chromosomes 
         for (Project prjObj : allProjVec) {
             int projArc = 360/allProjVec.size();
             
@@ -411,7 +391,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
                 		   (int) circX(cX, rOuter,   curArc + projArc - 1),   (int)circY(cY, rOuter,curArc + projArc - 1));
             }
      
-            if (toScale) {
+            if (bToScale) {
             	if (prjObj.totalSizeShown() == 0) {
             		projArc = projEmptyArc;
             	}
@@ -425,7 +405,8 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
         	int midArc = (curArc + nextArc)/2;
         	
         	// Project name
-            paintProjText(g, prjObj, midArc, locLabel);
+        	int sp = (bRotateText) ? 40 : 30; // CAS552 was constant 40;
+            paintProjText(g, prjObj, midArc, rOuter + sp); 
         		
         	if (nextArc > 360) nextArc = 360;
         	prjObj.setArc(curArc, nextArc - 1, curColor); // this makes a 1 degree gap between projects
@@ -479,7 +460,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
         	curArc = nextArc;
         } // end loop through projects
         
-       /******* Paint ribbons *******************/
+      ////////  Paint ribbons /////////
         g.setColor(Color.white);
         g.fillArc(cX - rInner, cY - rInner, 2*rInner, 2*rInner, 0, 360);	
 
@@ -534,6 +515,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
         	}
         }       
 	}
+	// Paint Arc
 	private void paintArc(Graphics g, Graphics2D g2, Group gr1, Group gr2, Block b) {
 		int cidx = (colorFirstPriority(gr1.proj_idx, gr2.proj_idx) ? gr1.cStart : gr2.cStart);
 		if (invChoice != 3) 
@@ -563,32 +545,36 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		gp.closePath();
 		g2.fill(gp);
 	}
-	private void paintProjText(Graphics g, Project prjObj, int midArc, int locLabel) {
+	// Paint project name
+	private void paintProjText(Graphics g, Project prjObj, int midArc, int locLabel) {// locLabel= rOuter + 40);
 		g.setColor(Color.black);
        
 		FontMetrics fm = g.getFontMetrics();
-        int unrotW =  (int) (fm.getStringBounds(prjObj.name,g).getWidth()/2);		
-        int nameH =   (int) (fm.getStringBounds(prjObj.name,g).getHeight());
+        int unrotW =  (int) (fm.getStringBounds(prjObj.displayName,g).getWidth()/2); // CAS552 was prjObj.name; not much diff
+        int nameH =   (int) (fm.getStringBounds(prjObj.displayName,g).getHeight());
       
         int nameArcW = 0;
         if (unrotW > 0 && unrotW < 200) {// exclude pathological values
         	nameArcW = (int)((180/Math.PI) * Math.atan(((double)unrotW/(double)(locLabel))));
-        }
-    	int nameX = (int) circX(cX, locLabel, midArc+arc0+nameArcW);
-    	int nameY = (int) circY(cY, locLabel, midArc+arc0+nameArcW);
+        } 
+        else symap.Globals.dprt("Special case for " + prjObj.displayName + " " + unrotW );
+        
+        int arc = midArc + arc0 + nameArcW;
+    	int nameX = (int) circX(cX, locLabel, arc);
+    	int nameY = (int) circY(cY, locLabel, arc);
 
 		// Put the angle within 0-360 range for texts that do not work mod 360
 		double rotAngle = 90 - midArc - arc0;
 		while (rotAngle > 360) {rotAngle -= 360;} 
 		while (rotAngle < 0)   {rotAngle += 360;}
 
-		// this does not works so well for non-rotated
+		// this does not works so well for non-rotated; these are mouse-over coords
 		prjObj.labelR1 = locLabel - nameH;
 		prjObj.labelR2 = locLabel + nameH;
 		prjObj.labelA1 = midArc - nameArcW - 5;
 		prjObj.labelA2 = midArc + nameArcW + 5;
 		
-    	// CAS521 add font to priority project/chromosomes
+    	// CAS521 add font to reference project/chromosomes
     	Font f = g.getFont();
     	f = setProjFont(0, f, prjObj.idx);
     	g.setFont(f);
@@ -611,7 +597,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			while (vArc < 0)   {vArc += 360;}
 			
     		double strW = fm.getStringBounds(prjObj.displayName,g).getWidth();
-        	nameX = (int) circX(cX,rOuter + 50, correctedArc);            																
+        	nameX = (int) circX(cX,rOuter + 50, correctedArc);         																
         	nameY = (int) circY(cY,rOuter + 50, correctedArc);
 
         	int xOff = (int)(strW*(1-Math.abs(correctedArc-180.0)/180.0)); // 0 at the right, 1 at the left
@@ -625,17 +611,14 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
     	f = setProjFont(1, f, prjObj.idx);
     	g.setFont (f);
 	}
-	// set from 16 to 14pt for chromosome numbers
-	// CAS541 MacOS Monterery no longer has "Times and Lucida", used by Serif, neither does JDK until v18
-	//  however, removing this only occurance does not get rid of the java message
+	// Set font based on priority 
 	private Font setProjFont(int i, Font f, int pidx) {
 		int x = (i==0) ? 16 : 14;
-		if (priorityVec.get(0) == pidx) 						  
-    		f = new Font ("Courier", Font.BOLD | Font.ITALIC, x);
-    	else if (priorityVec.size()>2 && priorityVec.get(1) == pidx) 
-    		f = new Font ("Courier", Font.ITALIC, x);
-    	else 														  
-    		f = new Font ("Courier", Font.PLAIN, x);	
+		
+		if (priorityVec.get(0) == pidx)  							 f = new Font ("Courier", Font.BOLD | Font.ITALIC, x);
+    	else if (priorityVec.size()>2 && priorityVec.get(1) == pidx) f = new Font ("Courier", Font.ITALIC, x);
+    	else 														 f = new Font ("Courier", Font.PLAIN, x);	
+		
 		return f;
 	}
 	private int circX(int cX, int R, double arc){
@@ -652,20 +635,38 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		}
 		return true; 
 	}
+	//////////////////////////////////////////////////////////////
+	protected void clear() {idx2GrpMap.clear();}
 	
-	/*****************************************************************/
+	protected void resetToHome() { // CAS552 for new Home button
+		zoom = ZOOM_DEFAULT;
+		arc0 = ARC_DEFAULT;
+		bToScale =  bRotateText = false;
+		//These are not included:
+		//bShowSelf =bRevRef = false
+		//if (bRevRef) reverse();
+		//invChoice = 0;
+	}
+	protected boolean isHome() { // these checks match above; CAS552 add for Control
+		return zoom==ZOOM_DEFAULT && arc0==ARC_DEFAULT && !bToScale && !bRotateText;
+	}
+	public String getHelpText(MouseEvent event) { return helpText;} // frame.HelpBar
+	/************************************************************************
+	 * Classes
+	 **********************************************************************/
 	private class Project {
-		int idx;
-		String name;
-		String displayName;
-
-		Vector<Group> grps = new Vector<Group>();
-		int labelR1,labelR2,labelA1,labelA2;
+		private int idx;
+		private String name;
 		
-		private Project(int _idx, String _name, DBconn2 dbc2)  {
+		private String displayName;							// load from db
+		private Vector<Group> grps = new Vector<Group>();	// load from db
+		
+		private int labelR1,labelR2,labelA1,labelA2;		// mouse-over coords; set in paintProjText
+		
+		private Project(int idx, String name, DBconn2 dbc2)  {
 		try {
-			idx = _idx;
-			name = _name;
+			this.idx = idx;
+			this.name = name;
 	
 			ResultSet rs = dbc2.executeQuery("select idx, name, length from xgroups join pseudos " + 
 						" on pseudos.grp_idx=xgroups.idx where xgroups.proj_idx=" + idx + " order by sort_order");
@@ -726,20 +727,20 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	}// end project class
 	
 	private class Group {
-		double size;
-		int idx, proj_idx;
-		String name, projName;
-		int a1, a2;
-		int cStart = -1; // index into color vector
-		boolean shown = true, onTop = false, onlyShow = false;
-		Vector <Block> blocks = new Vector <Block> ();
+		private double size;
+		private int idx, proj_idx;
+		private String name, projName;
+		private int a1, a2;
+		private int cStart = -1; // index into color vector
+		private boolean shown = true, onTop = false, onlyShow = false;
+		private Vector <Block> blocks = new Vector <Block> ();
 		
-		private Group(int _size, int _idx, int _proj_idx, String _name, String _pname){
-			size = _size;
-			idx = _idx;
-			proj_idx = _proj_idx;
-			name = _name;
-			projName= _pname;
+		private Group(int size, int idx, int proj_idx, String name, String pname){
+			this.size = size;
+			this.idx = idx;
+			this.proj_idx = proj_idx;
+			this.name = name;
+			this.projName = pname;
 		}
 		private void addBlock(Block b) {blocks.add(b);}
 		
@@ -750,15 +751,15 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		}
 	}
 	private class Block {
-		int s1,e1,s2,e2;
-		int gidx1, gidx2;
-		boolean inverted;
+		private int s1, e1, s2, e2;
+		private int gidx1, gidx2;
+		private boolean inverted;
 		
-		private Block(int _g1, int _g2, int _s1, int _e1, int _s2, int _e2, boolean _inv) {
-			gidx1 = _g1; gidx2 = _g2;
-			s1 = _s1; e1 = _e1;
-			s2 = _s2; e2 = _e2;
-			inverted = _inv;
+		private Block(int gidx1, int gidx2, int s1, int e1, int s2, int e2, boolean inv) {
+			this.gidx1 = gidx1; this.gidx2 = gidx2;
+			this.s1 = s1; 		this.e1 = e1;
+			this.s2 = s2; 		this.e2 = e2;
+			this.inverted = inv;
 		}
 	}
 }

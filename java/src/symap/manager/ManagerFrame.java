@@ -63,15 +63,16 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	
 	private final String DB_ERROR_MSG = "A database error occurred, please see the Troubleshooting Guide at:\n" + Jhtml.TROUBLE_GUIDE_URL;	
 	private final String DATA_PATH = Constants.dataDir;
-	private final int MIN_CWIDTH = 900, MIN_CHEIGHT = 1000; // Circle
+	private final int MIN_CWIDTH = 800, MIN_CHEIGHT = 900;  // Circle; CAS552 was 900, 1000
 	private final int MIN_WIDTH = 850, MIN_HEIGHT = 600;	// Manager; CAS542 was 900, 600
 	private final int MIN_DIVIDER_LOC = 220; 				// CAS543 was 240
 	private final int LEFT_PANEL = 450;      
 	
 	private static final String HTML = "/html/ProjMgrInstruct.html";
 	
-	private final Color cellColor = new Color(85,200,100,85); // CAS541 new color for selected box 0,100,0,85
-	private final Color textColor = new Color(0,0,170,255); // CAS541 new color for selected text
+	private final Color cellColor = new Color(85,200,100,85); // pale green; CAS541 new color for selected box 0,100,0,85
+	private final Color textColor = new Color(0,0,170,255);   // deep blue;  CAS541 new color for selected text
+	
 	// If changed - don't make one a substring of another!!
 	private final String TBL_DONE = "\u2713", TBL_ADONE = "A", TBL_QDONE = "?";
 	private final String symapLegend = "Table Legend:\n"
@@ -452,7 +453,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			btnSelClearPair.setVisible(true);
 			btnSelClearPair.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					Mproject[] projects = getSelectedPairProjects();
+					Mproject[] projects = getSetSelectedPair();
 					if (projects==null) return;
 					
 					Mpair mp = getMpair(projects[0].getIdx(),projects[1].getIdx());
@@ -587,8 +588,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				mainPanel.add( createHorizPanel( new Component[] { lbl1,
 						btnAllPairs, btnSelAlign, btnSelClearPair,  btnPairParams}, 5) ); // CAS507 put allpairs first since btnPair is for select only now
 			}
-			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );
-			mainPanel.add( createHorizPanel( new Component[] {lbl2, btnSelDotplot, btnSelBlockView, btnSelCircView, btnSelSummary }, 5) );
+			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  ); // CAS552 put circle 1st
+			mainPanel.add( createHorizPanel( new Component[] {lbl2, btnSelCircView, btnSelDotplot, btnSelBlockView,  btnSelSummary }, 5) );
 
 			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );
 			mainPanel.add( createHorizPanel( new Component[] {lbl3, btnAllChrExp, btnAllDotplot, btnAllQueryView }, 5) );
@@ -600,7 +601,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			mainPanel.add( Jcomp.createTextArea("",getBackground(), false) ); // kludge to fix layout problem			
 		}
 				
-		updateEnable();
+		updateEnableButtons();
 		
 		return mainPanel;
 	}
@@ -723,23 +724,23 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	
 	/***********************************************************
-	 * CAS505 rewrote
+	 * Enable function buttons; CAS505 rewrote
 	 */
-	private void updateEnable() {
+	private void updateEnableButtons() {
 		if (pairTable == null) return;
 		
-		Mproject[] projects = getSelectedPairProjects();  // null if nothing selected
+		Mproject[] projects = getSetSelectedPair();  // null if nothing selected
 		btnPairParams.setEnabled(projects!=null);  // CAS507 must select one 
 		
 		int numProj =  pairTable.getRowCount();
 		btnAllPairs.setEnabled(numProj>1 && isAlignAllPairs());
 		
-		int numDone = getNumCompleted(false); // do not ignore self
+		int numDone = getNumCompleted(false); // do not ignore self; 
 		btnAllChrExp.setEnabled(numDone>0);
 		
 		numDone = getNumCompleted(true); // ignore selfs
-		btnAllDotplot.setEnabled(numDone>0);
 		btnAllQueryView.setEnabled(numDone>0);
+		btnAllDotplot.setEnabled(numDone>0);   // this does not work for self-align
 		
 		if ((projects!=null)) {
 			int nRow = pairTable.getSelectedRow();
@@ -768,7 +769,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			btnSelBlockView.setEnabled(false);
 		}
 	}
-	private boolean isAlignAllPairs() {
+	private boolean isPair(int id1, int id2) {
+		return pairIdxMap.containsKey(id1) && pairIdxMap.get(id1).contains(id2);
+	}
+	// is there any not done or partial done
+	private boolean isAlignAllPairs() { 
 		for (int row = 0;  row < pairTable.getRowCount();  row++) {
 			for (int col = 0;  col < pairTable.getColumnCount();  col++) {
 				if (col >= (row+1)) continue;
@@ -781,10 +786,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		return false;
 	}
-	private boolean isPair(int id1, int id2) {
-		return pairIdxMap.containsKey(id1) && pairIdxMap.get(id1).contains(id2);
-	}
-	// first column is project names. The top row of project names part of table.
+	// how many are done; first column is project names
 	private int getNumCompleted(boolean ignSelf) {
 		int count = 0;
 		for (int row = 0;  row < pairTable.getRowCount();  row++) {
@@ -831,7 +833,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	};
 	private ActionListener showPairProps = new ActionListener() {
 		public void actionPerformed(ActionEvent arg0) {
-			Mproject[] sel = getSelectedPairProjects();
+			Mproject[] sel = getSetSelectedPair();
 		
 			Mpair p = getMpair(sel[0].getIdx(), sel[1].getIdx());
 			if (p!=null) {
@@ -912,21 +914,22 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	};
 		
 	// CAS521 an error report on the strColProjName line getting null. Added error checks in all calling methods.
-	private Mproject[] getSelectedPairProjects() {
+	private Mproject[] getSetSelectedPair() {
 		int nRow=-1, nCol=-1;
 		try {
 			if (pairTable == null) return null;
 			
 			nRow = pairTable.getSelectedRow(); // Row is >=0 Col is >=1
 			nCol = pairTable.getSelectedColumn();
-	
+			
+			// If none selected, automatically select one if 2 rows (CAS552 does not work with 1 row)
 			if (nRow < 0 || nCol <= 0) {
 				int n = pairTable.getRowCount(); // CAS541 if n=2, automatically make selected
-				if (n!=2) return null; // CAS521 change < to <=; this happens on startup
+				if (n!=2) return null;			 // CAS521 change < to <=; this happens on startup
+				nCol=1; nRow=1;			 
 				
-				nRow=1; nCol=1;
-				pairTable.setRowSelectionInterval(1,1);
-				pairTable.setColumnSelectionInterval(1,1);
+				pairTable.setRowSelectionInterval(nRow, nCol);
+				pairTable.setColumnSelectionInterval(nRow, nCol);
 			}
 				
 			String strRowProjName = pairTable.getValueAt(nRow, 0).toString();
@@ -1074,7 +1077,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private void showDotplot() { 
 		Utilities.setCursorBusy(this, true);
 		
-		Mproject[] p = getSelectedPairProjects();
+		Mproject[] p = getSetSelectedPair();
 		if (p==null) return;
 		
 		int projXIdx = p[0].getID();
@@ -1095,7 +1098,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private void showBlockView()  { 
 		Utilities.setCursorBusy(this, true);
 		
-		Mproject[] p = getSelectedPairProjects();
+		Mproject[] p = getSetSelectedPair();
 		if (p==null) return;
 		
 		Mproject p1=p[0];
@@ -1115,7 +1118,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private void showSummary(){
 		Utilities.setCursorBusy(this, true);
 		
-		Mproject[] p = getSelectedPairProjects();
+		Mproject[] p = getSetSelectedPair();
 		if (p==null) return;
 		
 		int projXIdx = p[0].getIdx();
@@ -1137,20 +1140,19 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private void showCircleView() { 
 		Utilities.setCursorBusy(this, true);
 		
-		Mproject[] p = getSelectedPairProjects();
+		Mproject[] p = getSetSelectedPair();
 		if (p==null) return;
 		
 		int projXIdx = p[0].getID();
-		int projYIdx = projXIdx; // default to self-alignment
-		if (p.length > 1)
-			projYIdx = p[1].getID();
+		int projYIdx = (p.length > 1) ? p[1].getID() : projXIdx; // 2-align : self-align
+		boolean hasSelf = (p[0].hasSelf() || p[1].hasSelf()); // CAS552 add for Self-Align
 		
 		/* Swap x and y projects to match database - no longer necessary after #206; CAS534 remove
 		if (pairMap.containsKey(projXIdx) && pairMap.get(projXIdx).contains(projYIdx)) {
 			int temp = projXIdx;projXIdx = projYIdx;projYIdx = temp;}*/
-		if (projYIdx == projXIdx)projYIdx = 0;
+		if (projYIdx == projXIdx) projYIdx = 0;
 		
-		CircFrame frame = new CircFrame(frameTitle + " - Circle", dbc2, projXIdx, projYIdx);
+		CircFrame frame = new CircFrame(frameTitle + " - Circle", dbc2, projXIdx, projYIdx, hasSelf);
 		frame.setSize( new Dimension(MIN_CWIDTH, MIN_CHEIGHT) );
 		frame.setVisible(true);
 		
@@ -1491,7 +1493,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		System.out.println("All Pairs complete. ");
 	}
 	private void alignSelectedPair( ) {
-		Mproject[] mProjs = getSelectedPairProjects();
+		Mproject[] mProjs = getSetSelectedPair();
 		if (mProjs==null) return;
 		
 		if (alignCheckOrderAgainst(mProjs[0], mProjs[1])) {
@@ -1654,7 +1656,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private ListSelectionListener tableRowListener = new ListSelectionListener() { // called before tableColumnListener
 		public void valueChanged(ListSelectionEvent e) {
 			if (!e.getValueIsAdjusting())
-				updateEnable();
+				updateEnableButtons();
 		}
 	};	
 	private TableColumnModelListener tableColumnListener = new TableColumnModelListener() { // called after tableRowListener
@@ -1664,7 +1666,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		public void columnRemoved(TableColumnModelEvent e) { }
 		public void columnSelectionChanged(ListSelectionEvent e) {
 			if (!e.getValueIsAdjusting())
-				updateEnable(); 
+				updateEnableButtons(); 
 		}
 	
 	};

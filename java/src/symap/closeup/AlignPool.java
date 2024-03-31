@@ -7,7 +7,7 @@ import java.util.Comparator;
 import java.util.Vector;
 
 import database.DBconn2;
-import props.ProjectPool;
+import props.PropsDB;
 import symap.Globals;
 import symap.mapper.HitData;
 import util.ErrorReport;
@@ -37,7 +37,7 @@ public class AlignPool  {
 	private DBconn2 dbc2;
 	
 	/*****************************************************************/
-	public AlignPool(DBconn2 dbc2, ProjectPool pp){
+	public AlignPool(DBconn2 dbc2, PropsDB pp){
 		this.dbc2 = dbc2;
 	}
 	public AlignPool(DBconn2 dbc2){ // For SyMAPQueryFrame to use loadPseudoSeq
@@ -74,7 +74,7 @@ public class AlignPool  {
 		// make sorted hitArr from hitList
 		HitData[] hitArr = new HitData [hitList.size()];
 		for (int i=0; i<hitList.size(); i++) hitArr[i] = hitList.get(i);
-		Comparator<HitData> comp = HitData.getPseudoPositionComparator();
+		Comparator<HitData> comp = HitData.sortByStart2();
 		Arrays.sort(hitArr, comp);
 			
 		// for each hit from selected region
@@ -229,7 +229,7 @@ public class AlignPool  {
 		// make sorted hitArr from hitList
 		HitData[] hitArr = new HitData [hitList.size()];
 		for (int i=0; i<hitList.size(); i++) hitArr[i] = hitList.get(i);
-		Comparator<HitData> comp = HitData.getPseudoPositionComparator();
+		Comparator<HitData> comp = HitData.sortByStart2();
 		Arrays.sort(hitArr, comp);
 			
 		// for each hit from selected region

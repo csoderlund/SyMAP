@@ -3,6 +3,7 @@ package symap.sequence;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -415,7 +416,7 @@ public class Annotation {
 		}
 		
 		if (exonList!=null) {
-			msg += tok[1] + "\n" + SeqData.formatExon(exonList) + "\n";
+			msg += tok[1] + "\n" + SeqData.formatExon(exonList); // CAS522 remove last \n
 		}
 		
 		if (Globals.TRACE) msg += "\nIdx=" + annot_idx + "\n"; // CAS540

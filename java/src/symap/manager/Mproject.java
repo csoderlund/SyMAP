@@ -50,6 +50,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();
 	private TreeMap<String,Integer> grpName2Idx = new TreeMap <String, Integer> ();
 	private Pattern namePat;
+	private boolean bHasSelf=false; // CAS552 do not have Self-Align on circle if no self
 	
 	private Color color;
 	private short nStatus = STATUS_IN_DB; 
@@ -107,6 +108,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	}
 	public boolean hasSynteny() {return numSynteny>0;}
 	public boolean hasGenes() {return numGene>0;}
+	public boolean hasSelf() { return bHasSelf;}
 	
 	public boolean hasCat()   	{return !Utilities.isEmpty(getDBVal(sCategory));} // CAS535 not finished
 	public int getLength() 	{return length;}
@@ -297,6 +299,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	    
 	    rs = dbc2.executeQuery(sql + "' AND name='proj_seq_dir'");
 		file = (rs.next()) ? rs.getString(1) : "";
+		
 		rs = dbc2.executeQuery(sql + "' AND name='proj_seq_date'");
 		fdate = (rs.next()) ? rs.getString(1) : "";
 		if (!file.trim().contentEquals("")) info += "\nSeq:  " + file + "\nDate: " + fdate + "\n";
@@ -304,11 +307,12 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		file="";
 		rs = dbc2.executeQuery(sql + "' AND name='proj_anno_dir'");
 		file = (rs.next()) ? rs.getString(1) : "";
+		
 		rs = dbc2.executeQuery(sql + "' AND name='proj_anno_date'");
 		fdate = (rs.next()) ? rs.getString(1) : "";
 		if (!file.trim().contentEquals("")) info += "\nAnno: " + file + "\nDate: " + fdate + "\n";
 		rs.close();
-		
+				
 		// CAS533 add these 
 		Params paramObj;
 		
@@ -435,6 +439,10 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	        		pKeysMap.get(key).prtDiff();
 	        	}
 	        }
+	        // CAS552 add
+			rs = dbc2.executeQuery("select idx from pairs where proj1_idx=" + projIdx + " and proj2_idx=" + projIdx); 
+			bHasSelf = (rs.next()) ? true : false;
+			
 	        rs.close();
 	        if (!Utilities.isEmpty(getDBVal(sCategory))) loadParamsFromDisk(); // CAS535 not finished
 	        else finishParams();

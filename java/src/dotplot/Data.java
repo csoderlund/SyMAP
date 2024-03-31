@@ -10,8 +10,7 @@ import java.util.List;
 import java.util.Vector;
 
 import database.DBconn2;
-import props.ProjectPair;
-import props.ProjectPool;
+import props.PropsDB;
 import symap.drawingpanel.SyMAP2d;
 import symap.mapper.HfilterData;
 import util.ErrorReport;
@@ -20,11 +19,11 @@ import util.Utilities;
 /**
  * This contains the arrays of data (Project and Tile) and interface code with Filter
  * CAS533 Removed Observable, removed Loader (was painting tile at time); rearranged 
- * CAS541 Replace DBAbsUser with new DBconn2
+ * CAS541 Replace DBAbsUser with new DBconn2; CAS552 remove projectPair (not used), improved response to buttons
  */
 public class Data  {
-	public static final double DEFAULT_ZOOM = 0.99;
-	public static final int X  = 0, Y   = 1;
+	protected static final double DEFAULT_ZOOM = 0.99;
+	protected static final int X  = 0, Y   = 1;
 	private static int initMinPctid = -1;		// CAS543 find first time
 	
 	private Project projects[]; // loaded data
@@ -35,25 +34,29 @@ public class Data  {
 	private int maxGrps=0;
 	
 	private SyMAP2d symap;
-	private ProjectPool projProps;
+	private PropsDB projProps;
 	private FilterData filtData;
+	private ControlPanel cntl=null;
+	private boolean is2D=false;
 	
 	private double sX1, sX2, sY1, sY2;
 	private Shape selectedBlock;
 	private double zoomFactor, scaleFactor = 1;
-	private boolean hasSelectedArea, isTileView, isScaled;
+	private boolean hasSelectedArea, isTileView;
+	protected boolean bIsScaled=false;
 	
 	private DBconn2 tdbc2;
 	private DBload dbLoad;
 	
 	// Called from DotPlotFrame; for ChrExp, called on first time its used
-	public Data(DBconn2 dbc2, String type) {
+	protected Data(DBconn2 dbc2, String type, boolean is2d) {
 		try { 
 			tdbc2 = new DBconn2("Dotplot" + type + "-" + DBconn2.getNumConn(), dbc2);
+			this.is2D = is2d;
 			
 			dbLoad = new DBload(tdbc2); //symap = new SyMAP2d(dbc2, null); 
 			
-			projProps = new ProjectPool(dbc2); 
+			projProps = new PropsDB(dbc2); 
 			
 			if (initMinPctid<=0)
 				initMinPctid = tdbc2.executeInteger("select min(pctid) from pseudo_hits"); // CAS543 set for slider
@@ -62,15 +65,10 @@ public class Data  {
 		
 		projects      = null; 
 		tiles         = new Tile[0];
-		zoomFactor    = DEFAULT_ZOOM;
-		hasSelectedArea = false;
-		isTileView      = false;
 		currentGrp    = new Group[] {null,null};
 		currentProjY  = null; 
-		selectedBlock = null;
-
-		isScaled = false;
-		scaleFactor  = 1;	
+		
+		setHome();
 		
 		filtData = new FilterData(); // CAS543 moved from initialized to here to keep settings
 	}
@@ -116,14 +114,10 @@ public class Data  {
 		
 	} catch (Exception e) { ErrorReport.print(e,"Initialize"); }
 	}
-	
+	protected void setCntl(ControlPanel cntl) {this.cntl = cntl;}
 	/***************************************************************************/
 	private void clear() { // initialize, kill
-		scaleFactor = 1;
-		zoomFactor = DEFAULT_ZOOM;
-		hasSelectedArea = false;
-		isTileView = false;
-		selectedBlock= null;
+		setHome();
 		sX1 = sX2 = sY1 = sY2 = 0;
 		currentGrp[0] = currentGrp[1] = null;
 		currentProjY = null;	
@@ -131,7 +125,6 @@ public class Data  {
 		
 		tiles  = new Tile[0]; // CAS543 add 4 lines
 		projects  = null; 
-		isScaled = false;
 		dbLoad.clear();
 	}
 	/***********************************************************************/
@@ -201,10 +194,9 @@ public class Data  {
 	/*****************************************
 	 * DotPlotFrame
 	 */
-	public SyMAP2d getSyMAP() { return symap; }
-	public Project[] getProjects() { return projects; }
+	protected Project[] getProjects() { return projects; }
 	
-	public void kill() {
+	protected void kill() {
 		clear();
 		tiles = new Tile[0]; 
 		if (projects != null) {
@@ -219,14 +211,29 @@ public class Data  {
 	/*****************************************
 	 * XXX Control
 	 */
-	public void setHome() {
-		isTileView = false;
-		zoomFactor = DEFAULT_ZOOM;
-		selectedBlock = null;
+	protected void setHome() {
+		zoomFactor    	= DEFAULT_ZOOM;
 		hasSelectedArea = false;
+		isTileView      = false;
+		selectedBlock 	= null;
+		bIsScaled 		= false;	// CAS552 add
+		scaleFactor  	= 1;	
 		// filtData.setDefaults();
 	}
-	public void setReference(Project reference) {
+	
+	protected void setZoom(double zoom)    {this.zoomFactor = zoom; }; // Control and Plot
+	protected void factorZoom(double mult) {if (mult != 1) zoomFactor *= mult;}
+	
+	protected boolean isHome() {
+		boolean bAll = zoomFactor==DEFAULT_ZOOM && bIsScaled==false && scaleFactor==1;
+		if (is2D) return bAll;
+		return isTileView==false && bAll;
+	}
+	protected double getZoomFactor() 	{ return zoomFactor;  }
+	protected double getScaleFactor()   { return scaleFactor; }
+	protected boolean isScaled() 		{ return bIsScaled;    } 
+	
+	protected void setReference(Project reference) {
 		if (reference == projects[X])
 			return;
 		
@@ -239,26 +246,17 @@ public class Data  {
 		
 		initialize(newProjects, null, null);
 	}
-	public void setScale(boolean scale) {this.isScaled = scale;}
-	public void setZoom(double zoom)    {this.zoomFactor = zoom; }; // Control and Plot
-
-	public void factorZoom(double mult) {
-		if (mult == 1) return;
-		
-		zoomFactor *= mult;
-	}
-	
 	/***********************************************
 	 * XXX Plot
 	 */
-	public boolean hasSelectedArea()  {return hasSelectedArea;}
-	public ABlock  getSelectedBlock() {return (ABlock) selectedBlock;}
-	public boolean isTileView() 	  {return isTileView;} // plot and Control
+	protected boolean hasSelectedArea()  {return hasSelectedArea;}
+	protected ABlock  getSelectedBlock() {return (ABlock) selectedBlock;}
+	protected boolean isTileView() 	  {return isTileView;} // plot and Control
 	
-	public void    show2dArea() 	  {show2dArea(sX1,sY1,sX2,sY2);}
+	protected void    show2dArea() 	  {show2dArea(sX1,sY1,sX2,sY2);}
 		
 	// Plot.PlotListener mouseClick
-	public boolean selectTile(long xUnits, long yUnits) {
+	protected boolean selectTile(long xUnits, long yUnits) {
 		if (projects[X] == null || projects[Y] == null) return false;
 
 		currentGrp[X] = projects[X].getGroupByOffset(xUnits);
@@ -270,9 +268,10 @@ public class Data  {
 			zoomFactor = DEFAULT_ZOOM;
 			isTileView = true;
 		}
+		if (cntl!=null) cntl.setEnable(); // update home button, null the 1st time from 2D
 		return true;
 	}
-	public boolean selectBlock(double xUnits, double yUnits) {
+	protected boolean selectBlock(double xUnits, double yUnits) {
 		Shape s = null;
 		if (filtData.isShowBlocks() && !hasSelectedArea && isTileView()) {
 			s = Tile.getBlock(tiles,currentGrp[X],currentGrp[Y],xUnits,yUnits);
@@ -285,7 +284,7 @@ public class Data  {
 		selectedBlock = s;
 		return (selectedBlock!=null);
 	}
-	public boolean selectArea(Dimension size, double x1, double y1, double x2, double y2) {
+	protected boolean selectArea(Dimension size, double x1, double y1, double x2, double y2) {
 		double xmax = currentGrp[X].getGrpLenBP();
 		double ymax = currentGrp[Y].getGrpLenBP();
 		double xfactor = size.getWidth() / xmax;
@@ -308,25 +307,25 @@ public class Data  {
 		return hasSelectedArea;
 	}
 	
-	public boolean clearSelectedArea() {
+	protected boolean clearSelectedArea() {
 		boolean rc = hasSelectedArea;
 		hasSelectedArea = false;
 		return rc;
 	}
 	/***************************************************************************/
-	public boolean isGroupVisible(Group g) { // plot and data
+	protected boolean isGroupVisible(Group g) { // plot and data
 		return (g.isVisible() && (g.hasBlocks() || filtData.isShowEmpty()));
 	}
 	private boolean isGroupVisible(Group gY, Group[] gX) { // data
 		return (gY.isVisible() && (gY.hasBlocks(gX) || filtData.isShowEmpty()));
 	}
-	public int getNumVisibleGroups() { // control and data
+	protected int getNumVisibleGroups() { // control and data
 		int count = 0;
 		for (Project p : projects)
 			count += p.getNumVisibleGroups();
 		return count;
 	}
-	public Group[] getVisibleGroups(int axis) { // plot and data
+	protected Group[] getVisibleGroups(int axis) { // plot and data
 		int num = getProject(axis).getNumGroups();
 		Vector<Group> out = new Vector<Group>(num);
 		
@@ -338,7 +337,7 @@ public class Data  {
 		
 		return out.toArray(new Group[0]);
 	}
-	public Group[] getVisibleGroupsY(Group[] xGroups) { // plot and data
+	protected Group[] getVisibleGroupsY(Group[] xGroups) { // plot and data
 		Vector<Group> out = new Vector<Group>();
 		
 		if (isTileView) out.add(currentGrp[Y]);
@@ -354,19 +353,19 @@ public class Data  {
 		}
 		return out.toArray(new Group[0]);
 	}
-	public long getVisibleGroupsSizeY(Group[] xGroups) { // plot.setDims
+	protected long getVisibleGroupsSizeY(Group[] xGroups) { // plot.setDims
 		long size = 0;
 		for (Group g : getVisibleGroupsY(xGroups))
 			size += g.getEffectiveSize();
 		return size;
 	}
-	public long getVisibleGroupsSize(int axis) { // plot.setDims
+	protected long getVisibleGroupsSize(int axis) { // plot.setDims
 		long size = 0;
 		for (Group g : getVisibleGroups(axis))
 			size += g.getEffectiveSize();
 		return size;
 	}
-	public long getVisibleGroupsSize(int yAxis, Group[] xGroups) { // plot.paintComponenet
+	protected long getVisibleGroupsSize(int yAxis, Group[] xGroups) { // plot.paintComponenet
 		long size = 0;
 		for (Group g : getVisibleGroups(yAxis, xGroups))
 			size += g.getEffectiveSize();
@@ -384,37 +383,30 @@ public class Data  {
 		return out.toArray(new Group[0]);
 	}
 	/***************************************************************************/
-	public int getInitPctid() { // called from Filter on startup
-		return initMinPctid; // CAS543 get the initial DB value
-	}
-	public FilterData getFilterData() { return filtData; } // plot and Filter.FilterListener
-	public Project getProject(int axis) { return projects[axis]; } // plot and data
-	public int getNumProjects() { return projects.length; } // plot and data
+	protected int getInitPctid() { return initMinPctid;} // Filter on startup; CAS543 get the initial DB value
 	
-	public Group getCurrentGrp(int axis) 	{return currentGrp[axis];}
-	public Project getCurrentProj() 		{return currentProjY;}
-	public int getCurrentGrpSize(int axis) {
+	protected FilterData getFilterData() { return filtData; } // plot and Filter.FilterListener
+	protected Project getProject(int axis) { return projects[axis]; } // plot and data
+	protected int getNumProjects() { return projects.length; } // plot and data
+	
+	protected Group getCurrentGrp(int axis) 	{return currentGrp[axis];}
+	protected Project getCurrentProj() 		{return currentProjY;}
+	protected int getCurrentGrpSize(int axis) {
 		return currentGrp[axis] == null ? 0 : currentGrp[axis].getGrpLenBP();
 	}
-	public int getMaxGrps() { return maxGrps;}
-	public double getX1() { return sX1; } // plot
-	public double getX2() { return sX2; }
-	public double getY1() { return sY1; }
-	public double getY2() { return sY2; }
-	public Tile[] getTiles()  		{ return tiles;       }
+	protected int getMaxGrps() { return maxGrps;}
+	protected double getX1() { return sX1; } // plot
+	protected double getX2() { return sX2; }
+	protected double getY1() { return sY1; }
+	protected double getY2() { return sY2; }
+	protected Tile[] getTiles()  		{ return tiles;       }
 	
-	public double getZoomFactor() 	{ return zoomFactor;  }
-	public double getScaleFactor()  { return scaleFactor; }
-	public boolean isScaled() 		{ return isScaled;    }
-	public int getDotSize()			{return filtData.getDotSize();}
+	protected int getDotSize()			{return filtData.getDotSize();}
 	
-	public ProjectPair getProjectPair(int x, int y) {
-		return projProps.getProjectPair(projects[x].getID(),projects[y].getID());
-	}
 	// CAS541 Set in ControlPanel, read by Plot
 	private int statOpt=0;
-	public void setStatOpts(int n) {statOpt = n;}
-	public int getStatOpts() {return statOpt;}
+	protected void setStatOpts(int n) {statOpt = n;}
+	protected int getStatOpts() {return statOpt;}
 	
 	/******************************************************************/
 	private static Group getGroupByOffset(long offset, Group[] groups) {
@@ -435,17 +427,17 @@ public class Data  {
 	 * CAS531 removed cache and dead code; CAS533 removed some Loader stuff, dead code, a little rewrite
 	 * CAS541 renamed from DotPlotDBuser to DBload; moved from separate file
 	 */
-	public class DBload {
+	protected class DBload {
 		private final int X = Data.X, Y = Data.Y;
 		private int minPctid;
 		private DBconn2 tdbc2;
-		public DBload(DBconn2 tdbc2) {
+		protected DBload(DBconn2 tdbc2) {
 			this.tdbc2 = tdbc2;
 		}
-		public void clear() {minPctid=100;};
+		protected void clear() {minPctid=100;};
 		
 		 // For all projects; add groups to projects, and blocks to groups; CAS533 renamed from setGroups
-		public void setGrpPerProj(Project[] projects, int[] xGroupIDs, int[] yGroupIDs, ProjectPool pp) {
+		protected void setGrpPerProj(Project[] projects, int[] xGroupIDs, int[] yGroupIDs, PropsDB pp) {
 		try {
 			Vector<Group> list = new Vector<Group>();
 			String qry;
@@ -517,7 +509,7 @@ public class Data  {
 		}
 		
 		// For this Tile: Add blocks to a tile (cell)
-		public void setBlocks(Tile tile,  boolean swapped) {
+		protected void setBlocks(Tile tile,  boolean swapped) {
 		try {
 			Group gX = (swapped ? tile.getGroup(Y) : tile.getGroup(X));
 			Group gY = (swapped ? tile.getGroup(X) : tile.getGroup(Y));
@@ -544,7 +536,7 @@ public class Data  {
 		catch (Exception e) {ErrorReport.print(e, "Loading Blocks");}
 		}
 		// For this tile, Add hits 
-		public void setHits(Tile tile, boolean swapped)  {
+		protected void setHits(Tile tile, boolean swapped)  {
 		try {
 			List<DPHit> hits = new ArrayList<DPHit>();
 			int xx=X, yy=Y;

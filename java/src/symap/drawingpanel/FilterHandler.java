@@ -50,8 +50,8 @@ public class FilterHandler implements ActionListener { // CAS521 remove Filtered
 	}
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == button) {
-			if (hFilter != null && hFilter.canShow()) hFilter.showX(); // CAS512 show()
-			else if (sFilter != null && sFilter.canShow()) sFilter.showX();
+			if (hFilter != null && hFilter.canShow()) hFilter.showHitFilter(); // CAS512 show()
+			else if (sFilter != null && sFilter.canShow()) sFilter.showSeqFilter();
 		}
 	}
 	public void showPopup(MouseEvent e) {

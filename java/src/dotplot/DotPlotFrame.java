@@ -39,9 +39,9 @@ public class DotPlotFrame extends JFrame {
 		if (projIDs==null || projIDs.length==0) System.err.println("No Projects! Email symap@agcol.arizona.edu"); 
 	
 		String type =  (hasRefSelector) ? "G" : "E";    // CAS541 add just to mark connections in Data
-		boolean is2D = (hasRefSelector) ? false : true; // CAS541 add for info display
+		boolean is2D = (hasRefSelector) ? false : true; // CAS541 add for info display; CAS552 and Home
 		
-		data = new Data(dbc2, type); // created FilterData object	
+		data = new Data(dbc2, type, is2D); // created FilterData object	
 		data.initialize(projIDs, xGroupIDs, yGroupIDs);
 		
 		HelpBar hb = (helpBar!=null) ?  helpBar : new HelpBar(-1, 17);// CAS521 removed dead args
@@ -53,6 +53,7 @@ public class DotPlotFrame extends JFrame {
 		colorDialogHandler.setDotPlot();
 		
 		ControlPanel controls = new ControlPanel(data, plot, hb, colorDialogHandler);
+		data.setCntl(controls);
 		
 		if (hasRefSelector)	controls.setProjects( data.getProjects() ); // CAS543 was always doing
 		else 				controls.setProjects(null);

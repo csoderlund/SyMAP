@@ -13,42 +13,36 @@ import symap.frame.HelpBar;
 import util.ErrorReport;
 
 /*********************************************************
-// Draw circle view block display.
-// Considerations:
-// 1. Allow more than two projects
-// 2. Allow subsets of groups from each project
-// 3. Allow self-alignments: assign each group a locally generated id, different from its database idx 
- * 
- * CAS521 remove lots of dead code
+ * Draw circle view. CAS521 remove lots of dead code
  */
 public class CircFrame extends JFrame {
 	private static final long serialVersionUID = 2371747762964367253L;
 
 	private CircPanel circPanel;
 	private HelpBar  helpPanel;
-	private boolean  bIsWG = false;
+	private boolean  bIsWG = false, bHasSelf = false;
 	private ControlPanelCirc controls;
 	private Vector<Integer> mColors;
 	private DBconn2 tdbc2;
 	
-    // This one is called from the project manager; 2-WG
-	public CircFrame(String title, DBconn2 dbc2, int projXIdx, int projYIdx) {
+    /** Called by Manager Frame; 2-WG **/
+	public CircFrame(String title, DBconn2 dbc2, int projXIdx, int projYIdx, boolean hasSelf) {
 		super(title);
 		int[] pidxList = {projXIdx, projYIdx};
-		
+		bHasSelf = hasSelf;
 		bIsWG=true;
 		tdbc2 = new DBconn2("CircleG-" + DBconn2.getNumConn(), dbc2);
-		doConstruct(pidxList, null, null, pidxList[0]);
+		build(pidxList, null, null, pidxList[0]);
 	}
-	// Called by the chromosome explorer; selected chromosomes 
-	public CircFrame(DBconn2 dbc2, int[] projIdxList, TreeSet<Integer> selGrps, HelpBar hb, int ref) {
+	/** Called by ChrExpFrame; N-chromosomes **/
+	public CircFrame(DBconn2 dbc2, int[] projIdxList, TreeSet<Integer> selGrps, HelpBar hb, int ref, boolean hasSelf) {
 		super("SyMAP Circle " + Globals.VERSION);
-		
+		bHasSelf = hasSelf;
 		bIsWG=false;
 		this.tdbc2 = dbc2; // created in ChrExpFrame
-		doConstruct(projIdxList, selGrps, hb, ref);
+		build(projIdxList, selGrps, hb, ref);
 	}
-	public void doConstruct(int[] projIdxList, TreeSet<Integer> selGrps, HelpBar hb, int ref){
+	private void build(int[] projIdxList, TreeSet<Integer> selGrps, HelpBar hb, int ref){
 		if (projIdxList.length == 0) {
 			System.out.println("Circle view called with no projects!"); 
 			return;
@@ -63,36 +57,27 @@ public class CircFrame extends JFrame {
 		
 			circPanel = new CircPanel(tdbc2, projIdxList, selGrps, ref, helpPanel, mColors);
 			
-			controls =  new ControlPanelCirc(circPanel, helpPanel, bIsWG, isSelf);
+			controls =  new ControlPanelCirc(circPanel, helpPanel, bIsWG, isSelf, bHasSelf);
 			
-			init();
-		}
-		catch(Exception e){ ErrorReport.print(e, "Creating circle panel");}
-	}	
-	private void init() {		
-		try {
-			//setPreferredSize(new Dimension(pWidth,pHeight)); // CAS534 doesn't do anything
-			//setMinimumSize(new Dimension(900,800));	CAS521 allows to resize without this
-
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // CAS552 moved init() here
 			addWindowListener(new WindowAdapter() {
-				public void windowClosed(WindowEvent e) {
-					clear();
-				}
+				public void windowClosed(WindowEvent e) {clear();}
 			});
 			
+			// Dimensions are set in calling program; i.e. ManagerFrame (CAS552 changed d) and ChrExpFrame
 			setLayout( new BorderLayout() );
 			add( controls, BorderLayout.NORTH );
 			add( circPanel.getScrollPane(),BorderLayout.CENTER );
-			if (bIsWG) {
-				add( helpPanel, BorderLayout.SOUTH );
-			}	
+			if (bIsWG) add( helpPanel, BorderLayout.SOUTH );
 			
 			Dimension dim = getToolkit().getScreenSize(); // CAS534
 			setLocation(dim.width / 4,dim.height / 4);
+			
+			//setLocationRelativeTo(null); //puts to side of MF
 		}
-		catch(Exception e){ ErrorReport.print(e, "Init panel");}	
-	}
+		catch(Exception e){ ErrorReport.print(e, "Creating circle panel");}
+	}	
+	
 	public void clear() {// CAS541 for new DBconn2, added circPanel clear
 		tdbc2.close();
 		circPanel.clear();

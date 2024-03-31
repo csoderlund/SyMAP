@@ -12,7 +12,7 @@ import java.awt.event.MouseWheelListener;
 import javax.swing.JComponent;
 import javax.swing.JButton;
 
-import props.ProjectPool;
+import props.PropsDB;
 import props.PropertiesReader;
 import database.DBconn2;
 import symap.Globals;
@@ -47,11 +47,11 @@ public class Mapper extends JComponent
 	private volatile boolean initing;
 	private String helpText; // CAS520 add hover
 	
-	private void dprt(String msg) {symap.Globals.dprt("MP " + msg);}
+	//private void dprt(String msg) {symap.Globals.dprt("MP " + msg);}
 	
 	// Created in DrawingPanel for display
 	public Mapper(DrawingPanel drawingPanel, TrackHolder th1, TrackHolder th2,
-			FilterHandler fh, DBconn2 dbc2, ProjectPool projPool, HelpBar hb, TableDataPanel listPanel) 
+			FilterHandler fh, DBconn2 dbc2, PropsDB projPool, HelpBar hb, TableDataPanel listPanel) 
 	{
 		super();
 		this.mapPool = new MapperPool(dbc2, projPool); // CAS541 create here instead of passing as arg
@@ -78,7 +78,6 @@ public class Mapper extends JComponent
 	public boolean initHits() { // DrawingPanel.make and above
 		Sequence t1 = trackHolders[0].getTrack();
 		Sequence t2 = trackHolders[1].getTrack();
-		dprt("initHits TF seqHitObj==null " + (seqHitObj==null) + " track1==null " + (t1==null));
 		
 		if (t1 == null || t2 == null) return false;
 
@@ -144,12 +143,11 @@ public class Mapper extends JComponent
 	}
 	
 	/**********************************************
-	 * hasPair is always (query,target);  CAS517 rearranged and renamed from isSwapped 
-	 * return (t1 == src && !pool.hasPair(t2, t1)) || (t2 == src && !pool.hasPair(t1, t2))|| (isSelf() && src == t1); 
+	 * hasPair is (query,target); query<target alphanumeric; CAS517 rearranged and renamed from isSwapped 
 	 */
 	public boolean isQueryTrack(Sequence src) {
-		Sequence t1 = getTrack1(); 
-		Sequence t2 = getTrack2();
+		Sequence t1 = trackHolders[0].getTrack(); 
+		Sequence t2 = trackHolders[1].getTrack();
 		
 		if (t2==null) System.out.println("Mapper Error: NULL TRACK 2");
 		
@@ -157,10 +155,10 @@ public class Mapper extends JComponent
 			if (t1==src && getTrackPosition(t1)==Globals.LEFT_ORIENT) return true;
 			else return false;
 		}
-		if (t1 == src && mapPool.hasPair(t1, t2)) return true; 
-		if (t2 == src && mapPool.hasPair(t2, t1)) return true;
+		if (t1 == src && mapPool.hasPair(t1, t2)) return true; // query on left
+		if (t2 == src && mapPool.hasPair(t2, t1)) return true; // query on right 
 		
-		return false;
+		return false; // target
 	}
 	
 	// CAS516 change to one call instead of 4

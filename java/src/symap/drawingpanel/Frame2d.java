@@ -58,6 +58,7 @@ public class Frame2d extends JFrame implements KeyListener, ContainerListener
 			positionProp = persistentProps.copy(DISPLAY_POSITION_COOKIE);
 		}
 		dp.setListener(this);
+		dp.setCntl(cp); // CAS552 add so drawing panel has access for history
 
 		Container container = getContentPane();
 		container.setLayout(new BorderLayout());
@@ -91,7 +92,7 @@ public class Frame2d extends JFrame implements KeyListener, ContainerListener
 			int width = Math.min(1000, 300 + 300*nMaps + 130*nAnnots); // CAS550 was 400*nAnnots
 			d.setSize(width, 900);	 // CAS550 was 900->980; CAS551 set back
 			setSize(d);
-			super.setVisible(true); // CAS512 super.show();
+			super.setVisible(true); 
 			//CAS550 was for null tracks; if (dp.tracksSet())
 			dp.amake();
 			//else setFrameEnabled(false);
@@ -101,7 +102,7 @@ public class Frame2d extends JFrame implements KeyListener, ContainerListener
 
 	public void hideX() {
 		dp.closeFilters();
-		super.setVisible(false); // CAS512 super.hide(); 
+		super.setVisible(false); 
 	}
 
 	protected void setFrameEnabled(boolean enable) { // DrawingPanel and Frame2d

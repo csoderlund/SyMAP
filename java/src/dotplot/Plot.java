@@ -28,7 +28,6 @@ import symap.frame.HelpBar;
  **/
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Plot extends JPanel implements HelpListener {
-	//private static final boolean DEBUG = symap.SyMAP.DEBUG;
 	private final int X = Data.X, Y = Data.Y;
 	private final double pctidLow = 30.0; // values don't seem to be lower than this, so use a constant
 	private Data data;
@@ -243,18 +242,6 @@ public class Plot extends JPanel implements HelpListener {
 				}
 			}
 		}
-	/*draw selection 
-		if (isSelectingArea) { // doesn't happen in whole dot plot
-			int x = Math.min(sX1,sX2);
-			int y = Math.min(sY1,sY2);
-			int width = Math.abs(sX1-sX2);
-			int height = Math.abs(sY1-sY2);
-			g.setColor(Color.BLACK);
-			g.drawRect(x, y, width, height);
-			g.setColor(SELECTED);
-			g.fillRect(x+1, y+1, width-2, height-2);
-		}
-	*/
 	}
 	/*************************************************************************/
 	//  draw hit for drawAll (similar in drawGrp)

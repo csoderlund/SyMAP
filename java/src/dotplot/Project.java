@@ -2,7 +2,7 @@ package dotplot;
 
 import java.util.Vector;
 import database.DBconn2;
-import props.ProjectPool;
+import props.PropsDB;
 import symap.manager.Mproject;
 
 /***************************************************************
@@ -77,7 +77,7 @@ public class Project {
 	/*****************************************************
 	 * Called in data.initialize to set up tiles
 	 */
-	public static Tile[] createTiles(Project[] projects, Tile[] tiles, ProjectPool pp) {
+	public static Tile[] createTiles(Project[] projects, Tile[] tiles, PropsDB pp) {
 		Vector<Tile> out = new Vector<Tile>(tiles.length);
 		Project pX = projects[0];
 		for (int i = 1;  i < projects.length;  i++) {

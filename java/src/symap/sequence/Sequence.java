@@ -27,7 +27,7 @@ import javax.swing.JComponent;
 import java.util.HashMap;
 import java.util.TreeMap;
 
-import props.ProjectPool;
+import props.PropsDB;
 import props.PropertiesReader;
 import symap.Globals;
 import symap.closeup.TextShowSeq;
@@ -52,12 +52,6 @@ import util.ErrorReport;
  */
 public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMotionListener,MouseWheelListener {
 	// flags; Sequence filter settings // moved colors and constants to end
-	protected boolean bShowRuler, bShowGap, bShowCentromere, bShowGene, bShowScoreLine, bShowHitLen;
-	protected boolean bShowGeneNum, bShowAnnot, bShowGeneLine; 
-	protected boolean bHighGenePopup,bHighConserved; 				// CAS544 add 
-	protected boolean bShowScoreText, bShowHitNumText; 				// CAS531 add showHitNum
-	protected boolean bShowBlockText, bShowCsetText, bShowNoText;   // CAS545 add
-	
 	protected Annotation selectedGeneObj=null;						// CAS545 add
 	
 	protected int grpIdx=Globals.NO_VALUE;
@@ -75,7 +69,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	
 	private SeqPool seqPool;
 	private Vector <Rule> ruleList=  new Vector<Rule>(15,2); 			// CAS545 was List
-	private Vector <Annotation> allAnnoVec = new Vector<Annotation>(1); // include exons, CAS545 needs initial size; see loadAnnoFromDB
+	protected Vector <Annotation> allAnnoVec = new Vector<Annotation>(1); // include exons, CAS545 needs initial size; see loadAnnoFromDB
 	private Vector <Annotation> geneVec = new Vector <Annotation> (); 	// CAS545 added vector for faster searching
 	private Point2D.Float headerPoint = new Point2D.Float(), footerPoint = new Point2D.Float();
 	private TextLayout headerLayout = null, footerLayout = null;
@@ -99,14 +93,15 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	private double startResizeBpPerPixel=Globals.NO_VALUE;
 	private int curCenter=0, curWidth=0; 						// for +/- buttons
 	
-	private boolean hasLoad, hasBuild, firstBuild = true, bFlipped;
+	private boolean hasLoad, hasBuild, firstBuild = true;
 	
 	private DrawingPanel drawingPanel;
 	private TrackHolder holder;
-	private ProjectPool projPool;
+	private PropsDB propDB;
+	protected Sfilter sfilObj; // CAS552 I finally moved everything to Sfilter, and just access it from here.
 	
 	private String geneCntMsg="";
-	private void dprt(String msg) {symap.Globals.dprt("SEQ " + msg);}
+	//private void dprt(String msg) {symap.Globals.dprt("SQ: " + msg);}
 	
 	/** the Sequence object is created when 2D is started */
 	public Sequence(DrawingPanel dp, TrackHolder holder) {
@@ -116,17 +111,16 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		if (holder.getTrack() != null) this.bgColor = holder.getTrack().bgColor; // maintain color when "back to block view" selected
 		if (holder.getTrack() != null) this.position = holder.getTrack().position; // maintain position when "back to block view" selected
 		
-		projPool = dp.getProjPool();
+		propDB = dp.getPropDB();
 		
 		this.seqPool = 	new SeqPool(dp.getDBC());
 	}
 	
 	public void setup(int projIdx, int grpIdx) { // Sequence, Drawing panel
-		dprt("Setup sequence " + projIdx + " " + grpIdx);
 		this.grpIdx = grpIdx;
 		this.projIdx = projIdx;
-		displayName = projPool.getDisplayName(projIdx);
-		projectName = projPool.getName(projIdx);
+		displayName = propDB.getDisplayName(projIdx);
+		projectName = propDB.getName(projIdx);
 		if (Utilities.isEmpty(displayName)) displayName=projectName; // CAS534 need for new projects
 		
 		loadAnnosFromDB();	
@@ -137,26 +131,6 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		dimension.setSize(0,0);
 		adjustMoveOffset.setLocation(Globals.NO_VALUE,Globals.NO_VALUE);
 		dragRect.setRect(0,0,Globals.NO_VALUE,Globals.NO_VALUE);;
-		
-		bFlipped 		= Sfilter.bDefFlipped; 
-		bShowRuler      = Sfilter.bDefRuler;
-		bShowGap        = Sfilter.bDefGap;
-		bShowCentromere = Sfilter.bDefCentromere;
-		bShowGene 		= Sfilter.bDefGene;
-		bShowHitLen 	= Sfilter.bDefHitLen;
-		bShowScoreLine  = Sfilter.bDefScoreLine;
-	
-		bShowGeneNum    = Sfilter.bDefGeneNum;
-		bShowAnnot      = Sfilter.bDefAnnot;
-		bShowGeneLine   = Sfilter.bDefGeneLine;
-		bHighGenePopup  = Sfilter.bDefGeneHigh;
-		bHighConserved 	= Sfilter.bDefConserved;
-		
-		bShowScoreText 	= Sfilter.bDefScoreText; 	
-		bShowHitNumText = Sfilter.bDefHitNumText;
-		bShowBlockText 	= Sfilter.bDefBlockText;
-		bShowCsetText 	= Sfilter.bDefCsetText;
-		bShowNoText 	= Sfilter.bDefNoText;
 	}
 	
 	// Set the annotation vector here
@@ -167,7 +141,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			
 			gnSize = seqPool.loadGenomeSize(this);
 			chrName = seqPool.loadSeqData(this, allAnnoVec); // Add annotations to allAnnoVec, and gnSize value
-			if (allAnnoVec.size() == 0) bShowAnnot = false; 
+			if (allAnnoVec.size() == 0) sfilObj.bShowAnnot = false; 
 			else {
 				for (Annotation aObj : allAnnoVec)
 					if (aObj.isGene()) geneVec.add(aObj);
@@ -184,9 +158,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		return true;
 	}
 	public void setOtherProject(int otherProjIdx) { // Drawing panel
-		otherProjName = projPool.getDisplayName(otherProjIdx);
+		otherProjName = propDB.getDisplayName(otherProjIdx);
 		this.otherProjIdx = otherProjIdx;
-		if (Utilities.isEmpty(otherProjName)) otherProjName=projPool.getName(otherProjIdx);
+		if (Utilities.isEmpty(otherProjName)) otherProjName=propDB.getName(otherProjIdx);
 	}
 	
 	// CAS517 add in order to have access to hits; called once for each sequence
@@ -200,7 +174,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			isQuery2 = isSwapped;
 		}
 	}
-		
+	
 	protected void setup(TrackData td) { // TrackHolder.setTrackData; This gets called on History back/forward; CAS545 remove dead code
 		TrackData sd = (TrackData)td;
 		
@@ -209,7 +183,14 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		
 		if (isRef()) forceConserved(); 	// CAS545 add
 	}
-
+	protected void setFilter(Sfilter obj) {sfilObj = obj;} // CAS552 added
+	
+	public void setBackground(Color c) {bgColor = c;}
+	
+	public void setPosition(int position) { this.position = position; } // DrawingPanel.initTrack
+	
+	protected boolean isRef() {return (position % REFPOS == 0);} // Sequence.setup, Sfilter; CAS545 add for conserved; (position % 2 == 0)
+	
 	/**
 	 * XXX Build layout: Sets up the drawing objects for this sequence. Called by DrawingPanel and Track
 	 * The Gene boxes are drawn in Annotations.setRectangle and its paintComponent
@@ -219,7 +200,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		if (hasBuild) return true;
 		if (!hasLoad) return false;
 
-		if (allAnnoVec.size() == 0) bShowAnnot = bShowGeneNum = false;
+		if (allAnnoVec.size() == 0) sfilObj.bShowAnnot = sfilObj.bShowGeneNum = false;
 			
 		if (firstBuild) {
 			bpPerPixel = (gnDend - gnDstart) / getAvailPixels();
@@ -255,7 +236,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 
 	// Setup the sequence ruler
 		ruleList.clear();
-		if (bShowRuler) {
+		if (sfilObj.bShowRuler) {
 			if (orient == Globals.LEFT_ORIENT) {
 				x1 = rect.x - OFFSET_SMALL;
 				x2 = x1 - RULER_LINE_LENGTH;
@@ -277,7 +258,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 				Rule rObj = new Rule(unitColor, unitFont);
 				rObj.setLine(x1, y, x2, y);
 				
-				cb = BpNumber.getCbPerPixel(bpPerPixel, (bFlipped ? h-y : y-rect.y)) + gnDstart; 
+				cb = BpNumber.getCbPerPixel(bpPerPixel, (sfilObj.bFlipped ? h-y : y-rect.y)) + gnDstart; 
 				String num = BpNumber.getFormatted(bpSep, cb, bpPerPixel);
 				layout = new TextLayout(num, unitFont, frc);
 				bounds = layout.getBounds();
@@ -311,9 +292,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	// XXX Sorted by genes (genenum, start), then exons (see PseudoData.setAnnotations)
 		Annotation last=null;
 	    for (Annotation annot : allAnnoVec) {
-	    	if ( (annot.isGap() && !bShowGap)
-	    	 ||  (annot.isCentromere() && !bShowCentromere)
-	    	 ||  ((annot.isGene() || annot.isExon()) && !bShowGene) )
+	    	if ( (annot.isGap() && !sfilObj.bShowGap)
+	    	 ||  (annot.isCentromere() && !sfilObj.bShowCentromere)
+	    	 ||  ((annot.isGene() || annot.isExon()) && !sfilObj.bShowGene) )
 			{
 					annot.clear();
 					continue; // CAS520 v518 bug, does not display track if, return true;
@@ -334,13 +315,13 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			}
 			if (offset>0 && isRight) offset = -offset;
 			
-			annot.setRectangle(centRect, gnDstart, gnDend,bpPerPixel, dwidth, hwidth, bFlipped, offset,
-					 bShowGeneLine, bShowGeneNum, bHighGenePopup); // CAS520 showGeneLine; CAS544 popup; CAS551 showGeneNum
+			annot.setRectangle(centRect, gnDstart, gnDend,bpPerPixel, dwidth, hwidth, sfilObj.bFlipped, offset,
+					sfilObj.bShowGeneLine, sfilObj.bShowGeneNum, sfilObj.bHighGenePopup); // CAS520 showGeneLine; CAS544 popup; CAS551 showGeneNum
 			if (last!=null) annot.setLastY(last); // CAS551 so annotation are separated
 			last=annot;
 			
 		// Setup yellow description; CAS551 improve offsets
-			if (annot.isGene() && bShowAnnot && annot.isVisible()) { // CAS517 added isGene
+			if (annot.isGene() && sfilObj.bShowAnnot && annot.isVisible()) { // CAS517 added isGene
 				if (annot.hasDesc() && bpPerPixel < MIN_BP_FOR_ANNOT_DESC)  { 
 					x1 = isRight ? (rect.x + rect.width + RULER_LINE_LENGTH + 2) : rect.x; 
 					x2 = isRight ? x1 + RULER_LINE_LENGTH  						 : x1 - RULER_LINE_LENGTH;
@@ -375,7 +356,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	// Set header and footer
 		bounds = new Rectangle2D.Double(0, 0, 0, 0); 							
 		x = (rect.x + (rect.width / 2.0)) - (bounds.getX() + (bounds.getWidth() / 2.0));
-		if (bFlipped) 	y = rect.y + rect.height + OFFSET_SPACE + bounds.getHeight();
+		if (sfilObj.bFlipped) 	y = rect.y + rect.height + OFFSET_SPACE + bounds.getHeight();
 		else			y = rect.y - OFFSET_SPACE;
 		headerPoint.setLocation((float) x, (float) y);
 
@@ -387,7 +368,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 				               " of "+BpNumber.getFormatted(gnSize, bpPerPixel), footerFont, frc); 
 		bounds = footerLayout.getBounds();
 		x = (rect.x + (rect.width / 2.0)) - (bounds.getX() + (bounds.getWidth() / 2.0));
-		if (bFlipped) 	y = rect.y - OFFSET_SPACE;
+		if (sfilObj.bFlipped) 	y = rect.y - OFFSET_SPACE;
 		else			y = rect.y + rect.height + OFFSET_SPACE + bounds.getHeight();
 		footerPoint.setLocation((float) x, (float) y);
 
@@ -438,8 +419,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			holder.setPreferredSize(dimension);
 	}
 	private Point2D getTitlePoint(Rectangle2D titleBounds) {	
-		Rectangle2D headerBounds = (bFlipped ? footerLayout.getBounds() : /*headerLayout.getBounds()*/new Rectangle2D.Double(0, 0, 0, 0)); 
-		Point2D headerP = (bFlipped ? footerPoint : headerPoint); 
+		Rectangle2D headerBounds = (sfilObj.bFlipped ? footerLayout.getBounds() : /*headerLayout.getBounds()*/new Rectangle2D.Double(0, 0, 0, 0)); 
+		Point2D headerP = (sfilObj.bFlipped ? footerPoint : headerPoint); 
 		Point2D point = new Point2D.Double((rect.getWidth() / 2.0 + rect.x) - (titleBounds.getWidth() / 2.0 + titleBounds.getX()),
 				headerP.getY() - headerBounds.getHeight() - titleOffset.getY());
 
@@ -451,7 +432,11 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 
 		return point;
 	}
-
+	private FontRenderContext getFontRenderContext() {
+		if (holder != null && holder.getGraphics() != null)
+			return ((Graphics2D)holder.getGraphics()).getFontRenderContext();
+		return null;
+	}
 	/***********************************************************************************/
 	public void paintComponent(Graphics g) { // TrackHolder.paintComponent
 		if (!hasBuild) return;
@@ -466,7 +451,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		g2.setPaint(border);
 		g2.draw(rect);
 
-		if (bShowRuler) {
+		if (sfilObj.bShowRuler) {
 			for (Rule rule : ruleList)
 				rule.paintComponent(g2);
 		}
@@ -504,127 +489,510 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}	
 	}
 	
-	public void mouseReleased(MouseEvent e) { 
-		// Sequence
-		if (drawingPanel.isMouseFunctionPop())  {
-			if (dragRect.getHeight() > 0 /*&& rect.contains(p)*/) {
-				int start = getBP( dragRect.getY() );
-				int end =   getBP( dragRect.getY() + dragRect.getHeight() );
-				
-				if (bFlipped) {
-					int temp = start;
-					start = (int)getEnd() - end + (int)getStart();
-					end = (int)getEnd() - temp + (int)getStart();
-				}
-				
-				if (drawingPanel.isMouseFunctionCloseup()) showCloseupAlign(start, end); // XXX
-				else showSequence(start, end); 
+	/* Show Alignment */
+	private void showCloseupAlign(int start, int end) {
+		if (drawingPanel == null || drawingPanel.getCloseUp() == null) return;
+
+		try {// The CloseUp panel created at startup and reused.
+			if (end-start>Globals.MAX_CLOSEUP_BP) {// CAS531 add this check
+				Utilities.showWarningMessage("Region greater than " + Globals.MAX_CLOSEUP_K + ". Cannot align.");
+				return;
 			}
+			Vector <HitData> hitList1 = new Vector <HitData> ();
+			Vector <HitData> hitList2 = new Vector <HitData> ();
+			
+			// one side
+			int numShow=1;
+			hitsObj1.getHitsInRange(hitList1, start, end, isQuery1);
+			if (hitList1.size()>0) {
+				int rc = drawingPanel.getCloseUp().showCloseUp(hitList1, this, start, end, 
+						isQuery1, hitsObj1.getOtherChrName(this), numShow++);
+				if (rc < 0) Utilities.showWarningMessage("Error showing close up view."); 
+			}
+			// if a track has a track on both sides (e.g. 2 track shown), this is the otherside CAS543 add
+			if (hitsObj2!=null) { 
+				hitsObj2.getHitsInRange(hitList2, start, end, isQuery2);
+				if (hitList2.size()>0) {
+					int rc = drawingPanel.getCloseUp().showCloseUp(hitList2, this, start, end, 
+						isQuery2, hitsObj2.getOtherChrName(this), numShow);
+					if (rc < 0) Utilities.showWarningMessage("Error showing close up view."); 
+				}
+			}
+			
+			if (hitList1.size()==0 && hitList2.size()==0) {
+				 Utilities.showWarningMessage("No hits found in region. Cannot align without hits."); 
+				 return;
+			}	
 		}
-		// Track
-		boolean needUpdate = false;
-		
-		if (e.isPopupTrigger()) { 
-			holder.showPopupFilter(e); // this never seems to happen
+		catch (OutOfMemoryError e) { 
+			Utilities.showOutOfMemoryMessage();
+			drawingPanel.smake("seq outofmem"); // redraw after user clicks "ok"
 		}
-		else { // sequence.mouseRelease is first, and checks for Align or Show popup; else, comes here for zoom
-			if (!isCleared(dragRect) && drawingPanel.isMouseFunctionZoom()) {
-				try {
-					int newStart = getBP(dragRect.y);
-					int newEnd   = getBP(dragRect.y+dragRect.height);
-					if (newEnd != newStart) {
-						if (bFlipped) { 
-							int temp = newStart;
-							newStart = gnDend - newEnd + gnDstart;
-							newEnd = gnDend - temp + gnDstart;
-						}
-						setEndBP(newEnd, true);
-						setStartBP(newStart, true);
+	}
+	
+	/* CAS504 Add Show Sequence; CAS571 compared a pos & neg with TAIR 
+	 * CAS531 add menu with 'hit', 'gene', 'exons', 'region' */
+	private void showSequence(int start, int end) {
+		try {
+			if (end-start > 1000000) {
+				String x = "Regions is greater than 1Mbp (" + (end-start+1) + ")";
+				if (!Utilities.showContinue("Show Sequence", x)) return;
+			}
+			new TextShowSeq(drawingPanel, this, getProjectDisplayName(), getGroup(), start, end, isQuery1);
+		}
+		catch (Exception e) {ErrorReport.print(e, "Error showing popup of sequence");}
+	}
+	/**
+	 * XXX returns the desired text for when the mouse is over a certain point.
+	 * Called from symap.frame.HelpBar mouseMoved event
+	 */
+	public String getHelpText(MouseEvent event) {
+		Point p = event.getPoint();
+		if (rect.contains(p)) { // within blue rectangle of track
+			String x = null;
+			int gIdx=0;
+			for (Annotation annot : allAnnoVec) {
+				if (annot.contains(p)) {
+					if (x==null) {
+						if (annot.isGap()) 			return annot.getHoverDesc().trim();
+						if (annot.isCentromere()) 	return annot.getHoverDesc().trim();
 						
-						if (drawingPanel.isMouseFunctionZoomAll())
-							drawingPanel.zoomAllTracks(this, (int)newStart, (int)newEnd);
-						
-						if (!hasBuild) {
-							clearHeight(); // want to resize to screen
-							needUpdate = true;
-							if (drawingPanel != null) drawingPanel.smake();
+						x = annot.getHoverDesc().trim(); 
+						gIdx = annot.getAnnoIdx();
+					}
+					else { // CAS517  messes up with overlapping genes 
+						if (annot.isExon() && annot.getGeneIdx()==gIdx) {
+							x += "\n" + annot.getHoverDesc().trim(); 	// CAS512 add exon if available
+							return x;
 						}
 					}
-				} catch (Exception ex) {ErrorReport.print(ex, "Exception resizing track!");}
-			}
-			if (needUpdate  || (startResizeBpPerPixel != Globals.NO_VALUE && startResizeBpPerPixel != bpPerPixel) 
-							// CAS551 || (!isCleared(startMoveOffset) && !startMoveOffset.equals(moveOffset))
-			) {
-				drawingPanel.updateHistory();
-				clearMouseSettings();
-			}
-			clearMouseSettings();
-		}
-	}
-	
-	public void mouseWheelMoved(MouseWheelEvent e) { 
-		int notches = e.getWheelRotation();
-		int viewSize = getEnd() - getStart() + 1;
-		
-		if (e.isControlDown()) // Zoom 
-			zoomRange(notches, e.getPoint().getY() - rect.y + 1, viewSize);
-		else
-			scrollRange(notches, viewSize);
-	}
-	
-	public void mouseWheelMoved(MouseWheelEvent e, int viewSize) { 
-		int notches = e.getWheelRotation();
-		
-		if (e.isControlDown()) // Zoom - 
-			zoomRange(notches, e.getPoint().getY() - rect.y + 1, viewSize);
-		else
-			scrollRange(notches, viewSize);
-	}
-	private void scrollRange(int notches, int viewSize) {
-		int curViewSize = getEnd() - getStart() + 1;
-		if (curViewSize < getTrackSize()) {
-			int offset = notches*(viewSize/mouseWheelScrollFactor);
-			int newStart, newEnd;
-			
-			newStart = getStart()+offset;
-			if (newStart < 0) {
-				newStart = 0;
-				newEnd = viewSize;
-			}
-			else {
-				newEnd = getEnd()+offset;
-				if (newEnd > getTrackSize()) {
-					newStart = getTrackSize() - viewSize;
-					newEnd = getTrackSize();
 				}
 			}
-			setStartBP(newStart,true);
-			setEndBP(newEnd,true);	
-			if (drawingPanel != null) drawingPanel.smake();
+			if (x!=null) return x;
 		}
-	}
-	private void zoomRange(int notches, double focus, int length) {
-		double r1 = (focus / rect.height) / mouseWheelZoomFactor;
-		double r2 = ((rect.height - focus) / rect.height) / mouseWheelZoomFactor;
-		if (bFlipped) {
-			double temp = r1;
-			r1 = r2;
-			r2 = temp;
-		}
-		int newStart = gnDstart + (int)(length*r1*notches);
-		int newEnd   = gnDend - (int)(length*r2*notches);
-
-		if (newEnd < 0) newEnd = 0; // unnecessary?
-		else if (newEnd > getTrackSize()) newEnd = getTrackSize();
-		if (newStart < 0) newStart = 0;
-		else if (newStart > getTrackSize()) newStart = getTrackSize(); // unnecessary?
-		if (newStart < newEnd) {
-			setEndBP(newEnd,true);
-			setStartBP(newStart,true);
-			if (drawingPanel != null) drawingPanel.smake();
-		}
+		
+		return getTitle() + " \n\n" + geneCntMsg; // + "\n\n" + drawingPanel.mouseFunction; 
 	}
 	
+	public boolean isFlipped() { return sfilObj.bFlipped; } // Sfilter, TrackData
+	public boolean isQuery() { return isQuery1; } // mapper.SeqHits.DrawHit; CAS531 add;
+	
+	/*****************************************************************************/
+	// Called by CloseUpDialog and TextShowSeq (gene only); type is Gene or Exon
+	public Vector<Annotation> getAnnoGene(int start, int end) {// CAS535 gene only;
+		Vector<Annotation> out = new Vector<Annotation>();
+		
+		for (Annotation a : geneVec) {
+			if (isOlap(start, end, a.getStart(), a.getEnd())) // CAS550 was separate dedicated method
+				out.add(a);
+		}	
+		return out;
+	}
+	public Vector<Annotation> getAnnoExon(int gene_idx) {// CAS535 was getting exons from other genes
+		Vector<Annotation> out = new Vector<Annotation>();
+		
+		for (Annotation a : allAnnoVec) {
+			if (a.isExon() && a.getGeneIdx()==gene_idx)
+				out.add(a);
+		}	
+		return out;
+	}
+	
+	public String getGeneNumFromIdx(int idx1, int idx2) { // CAS545 called from HitData for its popup
+		if (idx1>0) {
+			for (Annotation aObj : geneVec) {
+				if (aObj.getAnnoIdx()==idx1) return " (#" + aObj.getFullGeneNum() + ")"; // CAS548 remove space
+			}
+		}
+		if (idx2>0) {
+			for (Annotation aObj : geneVec) {
+				if (aObj.getAnnoIdx()==idx2) return " (#" + aObj.getFullGeneNum() + ")";
+			}
+		}
+		return "";
+	}
+	public String getGeneNumFromIdx(int idx1) { // CAS548 called from HitData for its popup
+		for (Annotation aObj : geneVec) {
+			if (aObj.getAnnoIdx()==idx1) return aObj.getFullGeneNum(); 
+		}	
+		return "";
+	}
+	
+	public int getGroup() {return grpIdx;}
+
+	public String getChrName() {
+		String prefix =  drawingPanel.getPropDB().getProperty(getProject(),"grp_prefix");
+		if (prefix==null) prefix = "";
+		String grp = (chrName==null) ? "" : chrName;
+		return prefix + grp;
+	}	
+
+	public void setAnnotation() {sfilObj.bShowAnnot=true;} // CAS543 changed from setting static from Query.TableDataPanel
+	
+	protected TrackData getData() {return new TrackData(this);} // TrackHolder.getTrackData
+	
+	protected String getFullName() {
+		return "Track #" + getHolder().getTrackNum() + " " + getProjectDisplayName() + " " + getChrName();
+	}
+	public String getTitle() {
+		return getProjectDisplayName()+" "+getChrName();
+	}
+	public String toString() {
+		int tn = getHolder().getTrackNum();
+		String ref = (tn%2==0) ? " REF " : " "; 
+		return "[Sequence "+ getFullName() + " (Grp" + getGroup() + ") " + 
+				getOtherProjectName() + ref + " p" + position + " o" + orient + "] ";
+	}
+	
+	/************************************************
+	 *  XXX Interface between Sfilter and DrawingPanel, etc
+	 */
+	public boolean getShowAnnot() 		{ return sfilObj.bShowAnnot;} 		// drawingpanel
+	
+	//SeqHits.DrawHits
+	public boolean getShowHitLen()		{ return sfilObj.bShowHitLen; }
+	public boolean getShowScoreLine()	{ return sfilObj.bShowScoreLine; }
+	public boolean getShowScoreText() 	{ return sfilObj.bShowScoreText; }	 
+	public boolean getShowHitNumText() 	{ return sfilObj.bShowHitNumText; }
+	public boolean getShowBlockText()  	{ return sfilObj.bShowBlockText; }
+	public boolean getShowCsetText()   	{ return sfilObj.bShowCsetText; }
+
+	public int[] getAnnotationTypeCounts() {
+		int[] counts = new int[Annotation.numTypes];
+		
+		for (Annotation a : allAnnoVec)
+			counts[a.getType()]++;
+		
+		return counts;
+	}
+	
+	protected int getMidCoordForGene(String name) { // Sfilter; CAS545 filter on gene#
+		int mid = -1;
+		for (Annotation aObj : geneVec) {
+			mid = aObj.isMatchGeneN(name);
+			if (mid>0) {
+				selectedGeneObj = aObj;
+				aObj.setIsSelectedGene(true);
+				return mid;
+			}
+		}
+		return mid;
+	}
+	protected void setSelectedGene(Annotation aObj) { // TrackData CAS552 add for history
+		selectedGeneObj = aObj;
+		aObj.setIsSelectedGene(true);
+	}
+	protected void noSelectedGene() { // Sfilter
+		if (selectedGeneObj!=null) {
+			selectedGeneObj.setIsSelectedGene(false);
+			selectedGeneObj=null;
+		}
+	}
+	/******************************************************************/
+	// Hit interface
+	// mapper.HitData used for conserved to highlight genes at ends of hit; CAS545 add
+	public void setConservedforHit(int annot1_idx, int annot2_idx, boolean isHigh) {
+		for (Annotation aObj : geneVec) {
+			int idx = aObj.getAnnoIdx();
+			if (idx==annot1_idx || idx==annot2_idx) {
+				aObj.setIsConserved(isHigh); 
+				return;
+			}
+		}
+	}
+	public Vector <Integer> getGeneIdx() { // seqPool.flagConserved
+		Vector <Integer> idxVec = new Vector <Integer> ();
+		for (Annotation annot : geneVec)  idxVec.add(annot.getAnnoIdx());
+		return idxVec;
+	}
+	
+	private void forceConserved()  {// see reset() for history
+		if (sfilObj.bHighConserved) 
+			seqPool.flagConserved(hitsObj1, hitsObj2, this);
+		else { 
+			if (hitsObj1!=null) hitsObj1.clearConserved(); 
+			if (hitsObj2!=null) hitsObj2.clearConserved();
+		}
+	}
+	// Sfilter.FilterListener;  sets isConserved in HitData and Annotation
+	public boolean highConserved(boolean high) {
+		if (sfilObj.bHighConserved==high) return false;
+		
+		sfilObj.bHighConserved = high;
+		if (high) seqPool.flagConserved(hitsObj1, hitsObj2, this);
+		else { // hit conserve clears its end annos
+			if (hitsObj1!=null) hitsObj1.clearConserved();
+			if (hitsObj2!=null) hitsObj2.clearConserved();
+		}
+		return true;
+	}
+	public void setHighforHit(int annot1_idx, int annot2_idx, boolean isHigh) { // mapper.HitData CAS545 highlight gene of hit
+		for (Annotation aObj : geneVec) {
+			int idx = aObj.getAnnoIdx();
+			if (idx==annot1_idx || idx==annot2_idx) {
+				aObj.setIsHitPopup(isHigh); 
+				return;
+			}
+		}
+	}
+	public Point2D getPointForHit(int hitMidPt, int trackPos) { // mapper.seqHits & DrawHit
+		if (hitMidPt < gnDstart) hitMidPt = gnDstart; 
+		if (hitMidPt > gnDend)   hitMidPt = gnDend; 	
+		
+		double x = (trackPos == Globals.LEFT_ORIENT) ? rect.x + rect.width : rect.x;	
+		
+		double y = rect.y + BpNumber.getPixelValue(hitMidPt-gnDstart ,bpPerPixel);
+		
+		if (sfilObj.bFlipped) y = rect.y + rect.y + rect.height - y;	
+		
+		return new Point2D.Double(x, y); 
+	}
+	
+	public Point getLocation() { // SeqHits.paintComponent
+		if (holder != null) return holder.getLocation();
+		else 				return new Point();
+	}
+
+	public boolean isHitInRange(int num) { // mapper.SeqHits.isVisHitWire
+		return num >= gnDstart && num <= gnDend;
+	}
+	public boolean isHitOlap(int hs, int he) { // mapper.SeqHits.isOlapHit; CAS550 add for partial hit
+		return isOlap(hs, he, (int) gnDstart, (int) gnDend);
+	}
+	private boolean isOlap(int s1, int e1, int s2, int e2) {
+		int olap = Math.min(e1,e2) - Math.max(s1,s2) + 1;
+		return (olap>0);
+	}
+	/************************************************************************
+	 * From Track
+	 */
+	public TrackHolder getHolder() { return holder;}// Called by Sequence and DrawingPanel
+
+	/* getGraphics returns the holders graphics object if a holder exists, null otherwise.
+	 * @see javax.swing.JComponent#getGraphics() */
+	public Graphics getGraphics() {
+		if (holder != null) return holder.getGraphics();
+		return null;
+	}
+
+	protected double getMidX() {return rect.getX()+(rect.getWidth()/2.0);} // trackLayout
+
+	public int getProject() {return projIdx;}
+	
+	public String getOtherProjectName() {return otherProjName;} // Closeup
+
+	public String getProjectDisplayName() {return displayName;}
+
+	public double getBpPerPixel() { return bpPerPixel;} // DrawingPanel.drawToScale
+	
+	protected boolean hasLoad() {return hasLoad;}
+	
+	// Implements the +/- buttons. 
+	// It stores the current region width and center so that (-) can exactly undo (+) even
+	// when the (+) expands beyond the bounds of one sequence.
+	public void changeAlignRegion(double factor)  { // DrawingPanel
+		int s = gnDstart;
+		int e = gnDend;
+		int mid = (s + e)/2;
+		int width = (e - s)/2;
+		boolean showingFull = (2*width > .95*getTrackSize());
+		
+		if (curCenter == 0) {
+			curCenter = mid;
+			curWidth = width;
+		}
+		
+		curWidth *= factor;
+		
+		int sNew = Math.max(1,curCenter - curWidth);
+		int eNew = Math.min(curCenter + curWidth,getTrackSize());
+		
+		setStartBP(sNew, false);
+		setEndBP(eNew, false);
+		
+		if (showingFull && factor > 1) return; // don't scale if already at max
+		
+		double displayedWidth = (eNew - sNew)/2;
+		double effectiveFactor = displayedWidth/width;
+		
+		setBpPerPixel( bpPerPixel * ( 1.0 / effectiveFactor ) );
+	}
+	public boolean fullyExpanded()  { // Drawing panel
+		int s = getStart();
+		int e = getEnd();
+		if (s > 1 || e < getTrackSize()) return false;	
+		return true;
+	}
+	public void setBpPerPixel(double bp) { // DrawingPanel; Used with +/- buttons; drawToScale; 
+		if (bp > 0) {
+			height = Globals.NO_VALUE;
+
+			if (bp != bpPerPixel) {
+				bpPerPixel = bp;
+				setTrackBuild();
+			}
+		}
+	}
+	private void setHeight(double pixels) { // mouseDragged
+		pixels = Math.min(Math.max(pixels,1),MAX_PIXEL_HEIGHT);
+		if (height != pixels) {
+			height = pixels;
+			setTrackBuild();
+		}
+	}
+	private void clearHeight() { // mouseReleased
+		if (height != Globals.NO_VALUE) {
+			height = Globals.NO_VALUE;
+			setTrackBuild();
+		}
+	}	
+	protected void setOrientation(int orientation) { // TrackHolder.setTrack
+		if (orientation != Globals.RIGHT_ORIENT && orientation != Globals.CENTER_ORIENT) orientation = Globals.LEFT_ORIENT;
+		if (orientation != orient) {
+			orient = orientation;
+			setTrackBuild();
+		}
+	}
+	public void resetEnd() { // DrawingPanel, Sequence
+		if (gnDend != gnSize) {
+			gnDend = gnSize;
+			setAllBuild();
+		}
+	}
+	public void resetStart() {// DrawingPanel, Sequence
+		if (gnDstart != 0) {
+			gnDstart = 0;
+			setAllBuild();
+		}
+	}
+	public void setStart(int startValue)  { // DrawingPanel, Sfilter; CAS514 was throwing exception and stopping symap
+		if (startValue > gnSize) {
+			Utilities.showWarningMessage("Start value "+startValue+" is greater than size "+gnSize+".");
+			return;
+		}
+		if (startValue < 0) {
+			Utilities.showWarningMessage("Start value is less than zero.");
+			return;
+		}
+		if (gnDstart != startValue) {
+			firstBuild = true;
+
+			gnDstart = startValue;
+			setAllBuild();
+		}
+	}
+	public int setEnd(int endValue) { // DrawingPanel, Sfilter; CAS514 was throwing exception and stopping symap
+		if (endValue < 0) {
+			Utilities.showWarningMessage("End value is less than zero.");
+			return gnSize;
+		}
+		if (endValue > gnSize) endValue = gnSize;
+
+		if (gnDend != endValue) {
+			firstBuild = true;
+
+			gnDend = endValue;
+			setAllBuild();
+		}
+		return endValue;
+	}
+	public void setStartBP(int startBP, boolean resetPlusMinus)  { // Track, DrawingPanel, Sequence
+		if (startBP > gnSize) {
+			Utilities.showWarningMessage("Start value "+startBP+" is greater than size "+gnSize+".");
+			return;
+		}
+		if (startBP < 0) {
+			Utilities.showWarningMessage("Start value "+startBP+" is less than zero.");
+			return;
+		}
+		if (resetPlusMinus) curCenter = 0;
+		if (gnDstart != startBP) {
+			firstBuild = true;
+			gnDstart = startBP;
+			setAllBuild();
+		}
+	}
+	public int setEndBP(int endBP, boolean resetPlusMinus)  {// Track, DrawingPanel, Sequence
+		if (endBP < 0) Utilities.showWarningMessage("End value is less than zero.");
+
+		if (endBP > gnSize || endBP<0) endBP = gnSize;
+
+		if (resetPlusMinus) curCenter = 0;
+		if (gnDend != endBP) {
+			firstBuild = true;
+			gnDend = endBP;
+			setAllBuild();
+		}
+		return endBP;
+	}
+	public void setDefPixel() {
+		bpPerPixel = (gnDend - gnDstart) / getAvailPixels();
+		if (bpPerPixel < MIN_DEFAULT_BP_PER_PIXEL) 		bpPerPixel = MIN_DEFAULT_BP_PER_PIXEL;
+		else if (bpPerPixel > MAX_DEFAULT_BP_PER_PIXEL) bpPerPixel = MAX_DEFAULT_BP_PER_PIXEL;
+		
+		defaultBpPerPixel = bpPerPixel;
+		setAllBuild();
+	}
+
+	protected void setAllBuild() { // TrackData and all methods that data
+		if (drawingPanel != null)
+			drawingPanel.setTrackBuild(); // sets hasBuild to false on all tracks
+		else setTrackBuild();
+	}
+	public void setTrackBuild() {hasBuild = false; } // DrawingPanel, Sequence	
+	
+	public void setWideWidth(boolean b) {
+		if (b) width = DEFAULT_WIDE_WIDTH;
+		else width =  DEFAULT_WIDTH;
+	}
+	public int getStart() {return gnDstart;} // Track, Sequence, Mapper
+	public int getEnd() {return gnDend; }
+	public int getTrackSize() {return gnSize;}
+
+	protected Dimension getDimension() {return dimension; } // TrackHolder
+
+	protected double getValue(int cb, String units) { return BpNumber.getValue(units, cb,bpPerPixel);} // Sfilter
+	private double getPixelValue(int num) {return (double)num/(double)bpPerPixel;}
+	
+	private double getAvailPixels() {
+		return (drawingPanel.getViewHeight() - (trackOffset.getY() * 2));
+	}
+	
+	private int getBP(double y) {// Sequence mouseReleased
+		y -= rect.getY();
+		if (y < 0)						y = 0;
+		else if (y > rect.getHeight())	y = rect.getHeight();
+		y *= bpPerPixel;
+		y += gnDstart;
+
+		if (y != Math.round(y)) 		y = Math.round(y);
+
+		if (y < gnDstart)		y = gnDstart;
+		else if (y > gnDend)	y = gnDend;
+
+		return (int)Math.round(y);
+	}
+
+	private boolean isSouthResizePoint(Point p) {
+		return (p.getX() >= rect.x &&
+				p.getX() <= rect.x + rect.width && 
+				p.getY() >= (rect.y+rect.height) - MOUSE_PADDING && 
+				p.getY() <= (rect.y+rect.height) + MOUSE_PADDING);
+	}
+	
+	/**** Clear for sequence and track */
+	public void clearData() { // DrawingPanel.clearData, resetData
+		ruleList.clear();
+		allAnnoVec.clear();
+		geneVec.clear();
+		olapMap.clear();
+	}
+
+	private boolean isCleared(Rectangle r) {
+		return r.x == 0 && r.y == 0 && r.width == Globals.NO_VALUE && r.height == Globals.NO_VALUE;
+	}
+
+	/*** XXX Mouse **************************/
 	public void mouseDragged(MouseEvent e) {	
 		// Track first
 		Cursor cursor = getCursor();
@@ -748,148 +1116,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			}
 		}
 	}
-	protected void layout() { // mouseDragged
-		if (holder != null && holder.getParent() instanceof JComponent) {
-			((JComponent)holder.getParent()).doLayout();
-			((JComponent)holder.getParent()).repaint();
-		}
-		else if (drawingPanel != null) {
-			drawingPanel.doLayout();
-			drawingPanel.repaint();
-		}
-	}
-	
-	public boolean isFlipped() { return bFlipped; } // Sfilter, TrackData
-	public boolean isQuery() { return isQuery1; } // mapper.SeqHits.DrawHit; CAS531 add;
-	
-	/* Show Alignment */
-	private void showCloseupAlign(int start, int end) {
-		if (drawingPanel == null || drawingPanel.getCloseUp() == null) return;
-
-		try {// The CloseUp panel created at startup and reused.
-			if (end-start>Globals.MAX_CLOSEUP_BP) {// CAS531 add this check
-				Utilities.showWarningMessage("Region greater than " + Globals.MAX_CLOSEUP_K + ". Cannot align.");
-				return;
-			}
-			Vector <HitData> hitList1 = new Vector <HitData> ();
-			Vector <HitData> hitList2 = new Vector <HitData> ();
-			
-			// one side
-			int numShow=1;
-			hitsObj1.getHitsInRange(hitList1, start, end, isQuery1);
-			if (hitList1.size()>0) {
-				int rc = drawingPanel.getCloseUp().showCloseUp(hitList1, this, start, end, 
-						isQuery1, hitsObj1.getOtherChrName(this), numShow++);
-				if (rc < 0) Utilities.showWarningMessage("Error showing close up view."); 
-			}
-			// if a track has a track on both sides (e.g. 2 track shown), this is the otherside CAS543 add
-			if (hitsObj2!=null) { 
-				hitsObj2.getHitsInRange(hitList2, start, end, isQuery2);
-				if (hitList2.size()>0) {
-					int rc = drawingPanel.getCloseUp().showCloseUp(hitList2, this, start, end, 
-						isQuery2, hitsObj2.getOtherChrName(this), numShow);
-					if (rc < 0) Utilities.showWarningMessage("Error showing close up view."); 
-				}
-			}
-			
-			if (hitList1.size()==0 && hitList2.size()==0) {
-				 Utilities.showWarningMessage("No hits found in region. Cannot align without hits."); 
-				 return;
-			}	
-		}
-		catch (OutOfMemoryError e) { 
-			Utilities.showOutOfMemoryMessage();
-			drawingPanel.smake(); // redraw after user clicks "ok"
-		}
-	}
-	
-	/* CAS504 Add Show Sequence; CAS571 compared a pos & neg with TAIR 
-	 * CAS531 add menu with 'hit', 'gene', 'exons', 'region' */
-	private void showSequence(int start, int end) {
-		try {
-			if (end-start > 1000000) {
-				String x = "Regions is greater than 1Mbp (" + (end-start+1) + ")";
-				if (!Utilities.showContinue("Show Sequence", x)) return;
-			}
-			new TextShowSeq(drawingPanel, this, getProjectDisplayName(), getGroup(), start, end, isQuery1);
-		}
-		catch (Exception e) {ErrorReport.print(e, "Error showing popup of sequence");}
-	}
-	/**
-	 * XXX returns the desired text for when the mouse is over a certain point.
-	 * Called from symap.frame.HelpBar mouseMoved event
-	 */
-	public String getHelpText(MouseEvent event) {
-		Point p = event.getPoint();
-		if (rect.contains(p)) { // within blue rectangle of track
-			String x = null;
-			int gIdx=0;
-			for (Annotation annot : allAnnoVec) {
-				if (annot.contains(p)) {
-					if (x==null) {
-						if (annot.isGap()) 			return annot.getHoverDesc().trim();
-						if (annot.isCentromere()) 	return annot.getHoverDesc().trim();
-						
-						x = annot.getHoverDesc().trim(); 
-						gIdx = annot.getAnnoIdx();
-					}
-					else { // CAS517  messes up with overlapping genes 
-						if (annot.isExon() && annot.getGeneIdx()==gIdx) {
-							x += "\n" + annot.getHoverDesc().trim(); 	// CAS512 add exon if available
-							return x;
-						}
-					}
-				}
-			}
-			if (x!=null) return x;
-		}
-		
-		return getTitle() + " \n\n" + geneCntMsg; // + "\n\n" + drawingPanel.mouseFunction; 
-	}
-	
-	/*****************************************************************************/
-	// Called by CloseUpDialog and TextShowSeq (gene only); type is Gene or Exon
-	public Vector<Annotation> getAnnoGene(int start, int end) {// CAS535 gene only;
-		Vector<Annotation> out = new Vector<Annotation>();
-		
-		for (Annotation a : geneVec) {
-			if (isOlap(start, end, a.getStart(), a.getEnd())) // CAS550 was separate dedicated method
-				out.add(a);
-		}	
-		return out;
-	}
-	public Vector<Annotation> getAnnoExon(int gene_idx) {// CAS535 was getting exons from other genes
-		Vector<Annotation> out = new Vector<Annotation>();
-		
-		for (Annotation a : allAnnoVec) {
-			if (a.isExon() && a.getGeneIdx()==gene_idx)
-				out.add(a);
-		}	
-		return out;
-	}
-	
-	public String getGeneNumFromIdx(int idx1, int idx2) { // CAS545 called from HitData for its popup
-		if (idx1>0) {
-			for (Annotation aObj : geneVec) {
-				if (aObj.getAnnoIdx()==idx1) return " (#" + aObj.getFullGeneNum() + ")"; // CAS548 remove space
-			}
-		}
-		if (idx2>0) {
-			for (Annotation aObj : geneVec) {
-				if (aObj.getAnnoIdx()==idx2) return " (#" + aObj.getFullGeneNum() + ")";
-			}
-		}
-		return "";
-	}
-	public String getGeneNumFromIdx(int idx1) { // CAS548 called from HitData for its popup
-		for (Annotation aObj : geneVec) {
-			if (aObj.getAnnoIdx()==idx1) return aObj.getFullGeneNum(); 
-		}	
-		return "";
-	}
-	/*************************************************
-	 * In click in anno space: if click on gene, popup info; else pass to parent
-	 */
+	// mouseIn click in anno space: if click on gene, popup info; else pass to parent
 	public void mousePressed(MouseEvent e) {
 		// Sequence 1st
 		if (e.isPopupTrigger()) { 					// CAS516 add popup on right click
@@ -900,7 +1127,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 					if (annot.contains(p)) {		// in this gene annotation
 						setForGenePopup(annot);	
 						annot.popupDesc(getHolder(), title, title);
-						if (bHighGenePopup) drawingPanel.smake(); // CAS544 to highlight
+						if (sfilObj.bHighGenePopup) drawingPanel.smake("seq: mousepressed"); // CAS544 to highlight
 						return;
 					}
 				}
@@ -928,468 +1155,83 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			}
 		}
 	}
-	// called from above on mousePressed for Gene Popup
-	private void setForGenePopup(Annotation annot) { 
-		annot.setExonList(); // CAS548 was sending full exonList when annot already has its own
-		
-		if (hitsObj1!=null) {// CAS517 added; CAS548 change format to start:end[+], add score
-			if (!annot.hasHitList()) { 
-				TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx);
-				if (scoreMap.size()>0) {
-					String hits = hitsObj1.getHitsForGenePopup(this, annot, scoreMap);
-					annot.setHitList(hits);
+	public void mouseReleased(MouseEvent e) { 
+		// Sequence
+		if (drawingPanel.isMouseFunctionPop())  {
+			if (dragRect.getHeight() > 0 /*&& rect.contains(p)*/) {
+				int start = getBP( dragRect.getY() );
+				int end =   getBP( dragRect.getY() + dragRect.getHeight() );
+				
+				if (sfilObj.bFlipped) {
+					int temp = start;
+					start = (int)getEnd() - end + (int)getStart();
+					end = (int)getEnd() - temp + (int)getStart();
 				}
+				
+				if (drawingPanel.isMouseFunctionCloseup()) showCloseupAlign(start, end); // XXX
+				else showSequence(start, end); 
 			}
 		}
-		if (hitsObj2!=null) {// CAS543 added for 3-track
-			if (!annot.hasHitList2()) { 
-				TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx);
-				if (scoreMap.size()>0) {
-					String hits = hitsObj2.getHitsForGenePopup(this, annot, scoreMap);
-					annot.setHitList2(hits);
-				}
+		// Track
+		boolean needUpdate = false;
+		
+		if (e.isPopupTrigger()) { 
+			holder.showPopupFilter(e); // this never seems to happen
+		}
+		else { // sequence.mouseRelease is first, and checks for Align or Show popup; else, comes here for zoom
+			if (!isCleared(dragRect) && drawingPanel.isMouseFunctionZoom()) {
+				try {
+					int newStart = getBP(dragRect.y);
+					int newEnd   = getBP(dragRect.y+dragRect.height);
+					if (newEnd != newStart) {
+						if (sfilObj.bFlipped) { 
+							int temp = newStart;
+							newStart = gnDend - newEnd + gnDstart;
+							newEnd = gnDend - temp + gnDstart;
+						}
+						setEndBP(newEnd, true);
+						setStartBP(newStart, true);
+						
+						if (drawingPanel.isMouseFunctionZoomAll())
+							drawingPanel.zoomAllTracks(this, (int)newStart, (int)newEnd);
+						
+						if (!hasBuild) {
+							clearHeight(); // want to resize to screen
+							needUpdate = true;
+							if (drawingPanel != null) drawingPanel.smake("seq: mouse release");
+						}
+					}
+				} catch (Exception ex) {ErrorReport.print(ex, "Exception resizing track!");}
 			}
-		}
-	}
-	public int getGroup() {return grpIdx;}
-
-	public String getChrName() {
-		String prefix =  drawingPanel.getProjPool().getProperty(getProject(),"grp_prefix");
-		if (prefix==null) prefix = "";
-		String grp = (chrName==null) ? "" : chrName;
-		return prefix + grp;
-	}	
-
-	public void setAnnotation() {bShowAnnot=true;} // CAS543 changed from setting static from Query.TableDataPanel
-	
-	protected TrackData getData() {return new TrackData(this);} // TrackHolder.getTrackData
-	
-	protected String getFullName() {
-		return "Track #" + getHolder().getTrackNum() + " " + getProjectDisplayName() + " " + getChrName();
-	}
-	public String getTitle() {
-		return getProjectDisplayName()+" "+getChrName();
-	}
-	public String toString() {
-		int tn = getHolder().getTrackNum();
-		String ref = (tn%2==0) ? " REF " : " "; 
-		return "[Sequence "+ getFullName() + " (Grp" + getGroup() + ") " + 
-				getOtherProjectName() + ref + " p" + position + " o" + orient + "] ";
-	}
-	
-	/************************************************
-	 *  XXX Called when Sfilter changes and DrawingPanel
-	 */
-	public boolean getShowAnnot() 		{ return bShowAnnot;} 		// drawingpanel
-	
-	//SeqHits.DrawHits
-	public boolean getShowHitLen()		{ return bShowHitLen; }
-	public boolean getShowScoreLine()	{ return bShowScoreLine; }
-	public boolean getShowScoreText() 	{ return bShowScoreText; }	 
-	public boolean getShowHitNumText() 	{ return bShowHitNumText; }
-	public boolean getShowBlockText()  	{ return bShowBlockText; }
-	public boolean getShowCsetText()   	{ return bShowCsetText; }
-
-	public int[] getAnnotationTypeCounts() {
-		int[] counts = new int[Annotation.numTypes];
-		
-		for (Annotation a : allAnnoVec)
-			counts[a.getType()]++;
-		
-		return counts;
-	}
-	// Sfilter
-	protected boolean flipSeq(boolean flip) {
-		if (bFlipped != flip) {bFlipped = flip;	setTrackBuild(); return true;}
-		return false;
-	}
-	protected boolean showRuler(boolean show) {
-		if (bShowRuler != show) {bShowRuler = show; setTrackBuild();return true;}
-		return false;
-	}
-	protected boolean showGap(boolean show) {
-		if (bShowGap != show) {bShowGap = show; setTrackBuild();return true;}
-		return false;
-	}
-	protected boolean showCentromere(boolean show) {
-		if (bShowCentromere != show) {bShowCentromere = show;setTrackBuild();return true;}
-		return false;
-	}
-	protected boolean showGene(boolean show) { 
-		if (bShowGene != show) {bShowGene = show; setTrackBuild(); return true;}
-		return false;
-	}
-	protected boolean showHitLen(boolean show) { 
-		if (bShowHitLen != show) {bShowHitLen = show; setTrackBuild(); return true; }
-		return false;
-	}
-	protected boolean showScoreLine(boolean show) { 
-		if (bShowScoreLine != show) {bShowScoreLine = show; setTrackBuild(); return true;}
-		return false;
-	}
-	protected boolean showAnnotation(boolean show) {
-		if (allAnnoVec.size() == 0) {bShowAnnot = false; return false;}
-		if (bShowAnnot != show)  {bShowAnnot = show;setTrackBuild();return true;}
-		return false;
-	}
-	protected boolean showGeneNum(boolean show) {  // CAS551 add
-		if (bShowGeneNum != show) {bShowGeneNum = show;setTrackBuild();return true;}
-		return false;
-	}
-	protected boolean showGeneLine(boolean show) {// CAS520 add
-		if (bShowGeneLine != show) {bShowGeneLine = show; setTrackBuild(); return true;}
-		return false;
-	}
-	protected boolean highGenePopup(boolean high) { 
-		if (bHighGenePopup != high) { bHighGenePopup = high; setTrackBuild();
-			if (!high) 
-				for (Annotation aObj : allAnnoVec) aObj.setIsPopup(false); // exons are highlighted to, so use all
-			return true;
-		}
-		return false;
-	}
-	
-	protected boolean showScoreText(boolean show) { 
-		if (bShowScoreText != show) {setText(false, false, false, show); setTrackBuild(); return true;}
-		return false;
-	}
-	protected boolean showHitNumText(boolean show) { // CAS531 add
-		if (bShowHitNumText != show) {setText(false, false, show, false); setTrackBuild(); return true; }
-		return false;
-	}
-	protected boolean showBlockText(boolean show) { // CAS545 add
-		if (bShowBlockText != show) {setText(show, false, false, false); setTrackBuild(); return true; }
-		return false;
-	}
-	protected boolean showCsetText(boolean show) { // CAS545 add
-		if (bShowCsetText != show) {setText(false, show, false, false); setTrackBuild(); return true;}
-		return false;
-	}
-	protected boolean showNoText(boolean show) { // CAS545 add
-		if (bShowNoText != show) {setText(false, false, false, false); setTrackBuild(); return true; }
-		return false;
-	}
-	private void setText(boolean b, boolean c, boolean h, boolean s) {
-		bShowBlockText	=b;
-		bShowCsetText	=c;
-		bShowHitNumText	=h;
-		bShowScoreText	=s;
-	
-		if (!b&&!c&&!s&&!h) bShowNoText=true;
-		else bShowNoText=false;
-	}
-	protected void noSelectedGene() { // Sfilter
-		if (selectedGeneObj!=null) {
-			selectedGeneObj.setIsSelectedGene(false);
-			selectedGeneObj=null;
-		}
-	}
-	protected int getMidCoordForGene(String name) { // Sfilter; CAS545 filter on gene#
-		int mid = -1;
-		for (Annotation aObj : geneVec) {
-			mid = aObj.isMatchGeneN(name);
-			if (mid>0) {
-				selectedGeneObj = aObj;
-				aObj.setIsSelectedGene(true);
-				return mid;
+			if (needUpdate)
+					// CAS552 || (startResizeBpPerPixel!=Globals.NO_VALUE && startResizeBpPerPixel!=bpPerPixel))
+					// CAS551 || (!isCleared(startMoveOffset) && !startMoveOffset.equals(moveOffset))
+			{
+				drawingPanel.updateHistory();
+				// CAS552 clearMouseSettings();
 			}
+			clearMouseSettings();
 		}
-		return mid;
 	}
 	
-	/******************************************************************/
-	// XXX Hit interface
-	// mapper.HitData used for conserved to highlight genes at ends of hit; CAS545 add
-	public void setConservedforHit(int annot1_idx, int annot2_idx, boolean isHigh) {
-		for (Annotation aObj : geneVec) {
-			int idx = aObj.getAnnoIdx();
-			if (idx==annot1_idx || idx==annot2_idx) {
-				aObj.setIsConserved(isHigh); 
-				return;
-			}
-		}
-	}
-	public Vector <Integer> getGeneIdx() {
-		Vector <Integer> idxVec = new Vector <Integer> ();
-		for (Annotation annot : geneVec)  idxVec.add(annot.getAnnoIdx());
-		return idxVec;
+	public void mouseWheelMoved(MouseWheelEvent e) { 
+		int notches = e.getWheelRotation();
+		int viewSize = getEnd() - getStart() + 1;
+		
+		if (e.isControlDown()) // Zoom 
+			zoomRange(notches, e.getPoint().getY() - rect.y + 1, viewSize);
+		else
+			scrollRange(notches, viewSize);
 	}
 	
-	private void forceConserved()  {// see reset() for history
-		if (bHighConserved) 
-			seqPool.flagConserved(hitsObj1, hitsObj2, this);
-		else { 
-			if (hitsObj1!=null) hitsObj1.clearConserved(); 
-			if (hitsObj2!=null) hitsObj2.clearConserved();
-		}
-	}
-	// Sfilter.FilterListener;  sets isConserved in HitData and Annotation
-	public boolean highConserved(boolean high) {
-		if (bHighConserved==high) return false;
+	public void mouseWheelMoved(MouseWheelEvent e, int viewSize) { 
+		int notches = e.getWheelRotation();
 		
-		bHighConserved = high;
-		if (high) seqPool.flagConserved(hitsObj1, hitsObj2, this);
-		else { // hit conserve clears its end annos
-			if (hitsObj1!=null) hitsObj1.clearConserved();
-			if (hitsObj2!=null) hitsObj2.clearConserved();
-		}
-		return true;
+		if (e.isControlDown()) // Zoom - 
+			zoomRange(notches, e.getPoint().getY() - rect.y + 1, viewSize);
+		else
+			scrollRange(notches, viewSize);
 	}
-	public void setHighforHit(int annot1_idx, int annot2_idx, boolean isHigh) { // mapper.HitData CAS545 highlight gene of hit
-		for (Annotation aObj : geneVec) {
-			int idx = aObj.getAnnoIdx();
-			if (idx==annot1_idx || idx==annot2_idx) {
-				aObj.setIsHitPopup(isHigh); 
-				return;
-			}
-		}
-	}
-	public Point2D getPointForHit(int hitMidPt, int trackPos) { // mapper.seqHits & DrawHit
-		if (hitMidPt < gnDstart) hitMidPt = gnDstart; 
-		if (hitMidPt > gnDend)   hitMidPt = gnDend; 	
-		
-		double x = (trackPos == Globals.LEFT_ORIENT) ? rect.x + rect.width : rect.x;	
-		
-		double y = rect.y + BpNumber.getPixelValue(hitMidPt-gnDstart ,bpPerPixel);
-		
-		if (bFlipped) y = rect.y + rect.y + rect.height - y;	
-		
-		return new Point2D.Double(x, y); 
-	}
-	public Point getLocation() { // SeqHits.paintComponent
-		if (holder != null) return holder.getLocation();
-		else 				return new Point();
-	}
-
-	public boolean isHitInRange(int num) { // mapper.SeqHits.isVisHitWire
-		return num >= gnDstart && num <= gnDend;
-	}
-	public boolean isHitOlap(int hs, int he) { // mapper.SeqHits.isOlapHit; CAS550 add for partial hit
-		return isOlap(hs, he, (int) gnDstart, (int) gnDend);
-	}
-	private boolean isOlap(int s1, int e1, int s2, int e2) {
-		int olap = Math.min(e1,e2) - Math.max(s1,s2) + 1;
-		return (olap>0);
-	}
-	/************************************************************************
-	 * XXX From Track
-	 */
-	public TrackHolder getHolder() { return holder;}// Called by Sequence and DrawingPanel
-
-	/* getGraphics returns the holders graphics object if a holder exists, null otherwise.
-	 * @see javax.swing.JComponent#getGraphics() */
-	public Graphics getGraphics() {
-		if (holder != null) return holder.getGraphics();
-		return null;
-	}
-
-	protected double getMidX() {return rect.getX()+(rect.getWidth()/2.0);} // trackLayout
-
-	public int getProject() {return projIdx;}
-	
-	public String getOtherProjectName() { // Closeup
-		//dprt("set other Proj " + otherProjName + " idx " + otherProjIdx);
-		return otherProjName;
-	}
-
-	public String getProjectDisplayName() {return displayName;}
-
-	public double getBpPerPixel() { return bpPerPixel;} // DrawingPanel.drawToScale
-	
-	protected boolean hasLoad() {return hasLoad;}
-	
-	// Implements the +/- buttons. 
-	// It stores the current region width and center so that (-) can exactly undo (+) even
-	// when the (+) expands beyond the bounds of one sequence.
-	public void changeAlignRegion(double factor)  { // DrawingPanel
-		int s = gnDstart;
-		int e = gnDend;
-		int mid = (s + e)/2;
-		int width = (e - s)/2;
-		boolean showingFull = (2*width > .95*getTrackSize());
-		
-		if (curCenter == 0) {
-			curCenter = mid;
-			curWidth = width;
-		}
-		
-		curWidth *= factor;
-		
-		int sNew = Math.max(1,curCenter - curWidth);
-		int eNew = Math.min(curCenter + curWidth,getTrackSize());
-		
-		setStartBP(sNew, false);
-		setEndBP(eNew, false);
-		
-		if (showingFull && factor > 1) return; // don't scale if already at max
-		
-		double displayedWidth = (eNew - sNew)/2;
-		double effectiveFactor = displayedWidth/width;
-		
-		setBpPerPixel( bpPerPixel * ( 1.0 / effectiveFactor ) );
-		
-	}
-	public boolean fullyExpanded()  { // Drawing panel
-		int s = getStart();
-		int e = getEnd();
-		if (s > 1 || e < getTrackSize()) return false;	
-		return true;
-	}
-	public void setBpPerPixel(double bp) { // DrawingPanel; Used with +/- buttons; drawToScale; 
-		if (bp > 0) {
-			height = Globals.NO_VALUE;
-
-			if (bp != bpPerPixel) {
-				bpPerPixel = bp;
-				setTrackBuild();
-			}
-		}
-	}
-	private void setHeight(double pixels) { // mouseDragged
-		pixels = Math.min(Math.max(pixels,1),MAX_PIXEL_HEIGHT);
-		if (height != pixels) {
-			height = pixels;
-			setTrackBuild();
-		}
-	}
-	private void clearHeight() { // mouseReleased
-		if (height != Globals.NO_VALUE) {
-			height = Globals.NO_VALUE;
-			setTrackBuild();
-		}
-	}	
-	protected void setOrientation(int orientation) { // TrackHolder.setTrack
-		if (orientation != Globals.RIGHT_ORIENT && orientation != Globals.CENTER_ORIENT) orientation = Globals.LEFT_ORIENT;
-		if (orientation != orient) {
-			orient = orientation;
-			setTrackBuild();
-		}
-	}
-	public void resetEnd() { // DrawingPanel, Sequence
-		if (gnDend != gnSize) {
-			gnDend = gnSize;
-			setAllBuild();
-		}
-	}
-	public void resetStart() {// DrawingPanel, Sequence
-		if (gnDstart != 0) {
-			gnDstart = 0;
-			setAllBuild();
-		}
-	}
-	public void setStart(int startValue)  { // DrawingPanel, Sfilter; CAS514 was throwing exception and stopping symap
-		if (startValue > gnSize) {
-			Utilities.showWarningMessage("Start value "+startValue+" is greater than size "+gnSize+".");
-			return;
-		}
-		if (startValue < 0) {
-			Utilities.showWarningMessage("Start value is less than zero.");
-			return;
-		}
-		if (gnDstart != startValue) {
-			firstBuild = true;
-
-			gnDstart = startValue;
-			setAllBuild();
-		}
-	}
-	public int setEnd(int endValue) { // DrawingPanel, Sfilter; CAS514 was throwing exception and stopping symap
-		if (endValue < 0) {
-			Utilities.showWarningMessage("End value is less than zero.");
-			return gnSize;
-		}
-		if (endValue > gnSize) endValue = gnSize;
-
-		if (gnDend != endValue) {
-			firstBuild = true;
-
-			gnDend = endValue;
-			setAllBuild();
-		}
-		return endValue;
-	}
-	public void setStartBP(int startBP, boolean resetPlusMinus)  { // Track, DrawingPanel, Sequence
-		if (startBP > gnSize) {
-			Utilities.showWarningMessage("Start value "+startBP+" is greater than size "+gnSize+".");
-			return;
-		}
-		if (startBP < 0) {
-			Utilities.showWarningMessage("Start value "+startBP+" is less than zero.");
-			return;
-		}
-		if (resetPlusMinus) curCenter = 0;
-		if (gnDstart != startBP) {
-			firstBuild = true;
-			gnDstart = startBP;
-			setAllBuild();
-		}
-	}
-	public int setEndBP(int endBP, boolean resetPlusMinus)  {// Track, DrawingPanel, Sequence
-		if (endBP < 0) Utilities.showWarningMessage("End value is less than zero.");
-
-		if (endBP > gnSize || endBP<0) endBP = gnSize;
-
-		if (resetPlusMinus) curCenter = 0;
-		if (gnDend != endBP) {
-			firstBuild = true;
-			gnDend = endBP;
-			setAllBuild();
-		}
-		return endBP;
-	}
-	public void setWideWidth(boolean b) {
-		if (b) width = DEFAULT_WIDE_WIDTH;
-		else width =  DEFAULT_WIDTH;
-	}
-	public int getStart() {return gnDstart;} // Track, Sequence, Mapper
-	public int getEnd() {return gnDend; }
-	public int getTrackSize() {return gnSize;}
-
-	protected Dimension getDimension() {return dimension; } // TrackHolder
-
-	protected double getValue(int cb, String units) { return BpNumber.getValue(units, cb,bpPerPixel);} // Sfilter
-	private double getPixelValue(int num) {return (double)num/(double)bpPerPixel;}
-	
-	private double getAvailPixels() {
-		return (drawingPanel.getViewHeight() - (trackOffset.getY() * 2));
-	}
-	
-	private int getBP(double y) {// Sequence mouseReleased
-		y -= rect.getY();
-		if (y < 0)						y = 0;
-		else if (y > rect.getHeight())	y = rect.getHeight();
-		y *= bpPerPixel;
-		y += gnDstart;
-
-		if (y != Math.round(y)) 		y = Math.round(y);
-
-		if (y < gnDstart)		y = gnDstart;
-		else if (y > gnDend)	y = gnDend;
-
-		return (int)Math.round(y);
-	}
-	protected Cursor getCursor() {
-		return drawingPanel.getCursor(); 
-		
-	}
-	protected void setCursor(Cursor c) {
-		if (c == null) 	drawingPanel.setCursor(Globals.DEFAULT_CURSOR); 
-		else			drawingPanel.setCursor(c); 
-	}
-	protected void repaint() {
-		if (drawingPanel != null) drawingPanel.repaint();
-		else if (holder != null) holder.repaint();
-	}
-	protected FontRenderContext getFontRenderContext() {
-		if (holder != null && holder.getGraphics() != null)
-			return ((Graphics2D)holder.getGraphics()).getFontRenderContext();
-		return null;
-	}
-	
-	public void setBackground(Color c) {bgColor = c;}
-	public void setPosition(int position) { this.position = position; } // DrawingPanel.initTrack
-	protected boolean isRef() {return (position % REFPOS == 0);} // Sequence.setup, Sfilter; CAS545 add for conserved; (position % 2 == 0)
-	
 	public void mouseMoved(MouseEvent e) {
 		Cursor c = getCursor();
 		if (c == null || c.getType() != Cursor.WAIT_CURSOR) {
@@ -1409,23 +1251,35 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			}
 		}
 	}
-	private boolean isSouthResizePoint(Point p) {
-		return (p.getX() >= rect.x &&
-				p.getX() <= rect.x + rect.width && 
-				p.getY() >= (rect.y+rect.height) - MOUSE_PADDING && 
-				p.getY() <= (rect.y+rect.height) + MOUSE_PADDING);
+	public void mouseEntered(MouseEvent e) { holder.requestFocusInWindow();}
+	public void mouseClicked(MouseEvent e) { }
+	public void mouseExited(MouseEvent e) { 	}
+    public void keyTyped(KeyEvent e) { } 
+    public void keyPressed(KeyEvent e) { } 
+    public void keyReleased(KeyEvent e) { } 
+    
+    //** Mouse methods **/
+    private void repaint() {
+		if (drawingPanel != null) drawingPanel.repaint();
+		else if (holder != null) holder.repaint();
 	}
-	
-	/************************************************************
-	 * Clear for sequence and track
-	 */
-	public void clearData() { // DrawingPanel.clearData, resetData
-		ruleList.clear();
-		allAnnoVec.clear();
-		geneVec.clear();
-		olapMap.clear();
+    private Cursor getCursor() {
+		return drawingPanel.getCursor(); 	
 	}
-
+	private void setCursor(Cursor c) {
+		if (c == null) 	drawingPanel.setCursor(Globals.DEFAULT_CURSOR); 
+		else			drawingPanel.setCursor(c); 
+	}
+	private void layout() { // mouseDragged
+		if (holder != null && holder.getParent() instanceof JComponent) {
+			((JComponent)holder.getParent()).doLayout();
+			((JComponent)holder.getParent()).repaint();
+		}
+		else if (drawingPanel != null) {
+			drawingPanel.doLayout();
+			drawingPanel.repaint();
+		}
+	}
 	private void clearMouseSettings() {
 		if (!isCleared(dragRect)) {
 			dragRect.setRect(0,0,Globals.NO_VALUE,Globals.NO_VALUE);;
@@ -1436,26 +1290,76 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		dragPoint.setLocation(Globals.NO_VALUE,Globals.NO_VALUE);
 		startResizeBpPerPixel = Globals.NO_VALUE;
 	}
-	
-	private boolean isCleared(Rectangle r) {
-		return r.x == 0 && r.y == 0 && r.width == Globals.NO_VALUE && r.height == Globals.NO_VALUE;
+	private void scrollRange(int notches, int viewSize) {
+		int curViewSize = getEnd() - getStart() + 1;
+		if (curViewSize < getTrackSize()) {
+			int offset = notches*(viewSize/mouseWheelScrollFactor);
+			int newStart, newEnd;
+			
+			newStart = getStart()+offset;
+			if (newStart < 0) {
+				newStart = 0;
+				newEnd = viewSize;
+			}
+			else {
+				newEnd = getEnd()+offset;
+				if (newEnd > getTrackSize()) {
+					newStart = getTrackSize() - viewSize;
+					newEnd = getTrackSize();
+				}
+			}
+			setStartBP(newStart,true);
+			setEndBP(newEnd,true);	
+			if (drawingPanel != null) drawingPanel.smake("seq: scrollrange");
+		}
 	}
-	
-	protected void setAllBuild() { // TrackData and all methods that data
-		if (drawingPanel != null)
-			drawingPanel.setTrackBuild(); // sets hasBuild to false on all tracks
-		else setTrackBuild();
-	}
-	public void setTrackBuild() {hasBuild = false; } // DrawingPanel, Sequence	
+	private void zoomRange(int notches, double focus, int length) {
+		double r1 = (focus / rect.height) / mouseWheelZoomFactor;
+		double r2 = ((rect.height - focus) / rect.height) / mouseWheelZoomFactor;
+		if (sfilObj.bFlipped) {
+			double temp = r1;
+			r1 = r2;
+			r2 = temp;
+		}
+		int newStart = gnDstart + (int)(length*r1*notches);
+		int newEnd   = gnDend - (int)(length*r2*notches);
 
-	/////////////////////////////////////////////////////////////////////////
-	public void mouseEntered(MouseEvent e) { holder.requestFocusInWindow();}
-	public void mouseClicked(MouseEvent e) { }
-	public void mouseExited(MouseEvent e) { 	}
-    public void keyTyped(KeyEvent e) { } 
-    public void keyPressed(KeyEvent e) { } 
-    public void keyReleased(KeyEvent e) { } 
-    
+		if (newEnd < 0) newEnd = 0; // unnecessary?
+		else if (newEnd > getTrackSize()) newEnd = getTrackSize();
+		if (newStart < 0) newStart = 0;
+		else if (newStart > getTrackSize()) newStart = getTrackSize(); // unnecessary?
+		if (newStart < newEnd) {
+			setEndBP(newEnd,true);
+			setStartBP(newStart,true);
+			if (drawingPanel != null) drawingPanel.smake("seq: zoom range");
+		}
+	}
+	// called on mousePressed for Gene Popup
+	private void setForGenePopup(Annotation annot) { 
+		annot.setExonList(); // CAS548 was sending full exonList when annot already has its own
+		
+		if (hitsObj1!=null) {// CAS517 added; CAS548 change format to start:end[+], add score
+			if (!annot.hasHitList()) { 
+				boolean isAlgo1 = propDB.isAlgo1(projIdx, otherProjIdx);
+				TreeMap <Integer, String> scoreMap = 
+						seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1);
+				if (scoreMap.size()>0) {
+					String hits = hitsObj1.getHitsForGenePopup(this, annot, scoreMap);
+					annot.setHitList(hits);
+				}
+			}
+		}
+		if (hitsObj2!=null) {// CAS543 added for 3-track
+			if (!annot.hasHitList2()) { 
+				boolean isAlgo1 = propDB.isAlgo1(projIdx, otherProjIdx);
+				TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1);
+				if (scoreMap.size()>0) {
+					String hits = hitsObj2.getHitsForGenePopup(this, annot, scoreMap);
+					annot.setHitList2(hits);
+				}
+			}
+		}
+	}
 	/*************************************************************************/
     // Track
 	private static final int REFPOS=2;

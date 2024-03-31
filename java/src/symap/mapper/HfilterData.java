@@ -1,7 +1,7 @@
 package symap.mapper;
 
 /**
- * Class MfilterData a hit filter stores all the data used to communicate
+ * HfilterData a hit filter stores all the data used to communicate
  * between the filter and the mapper.
  * CAS520 remove or makes stubs of all FPC stuff. Change for new hit filter.
  * CAS533 removed reference to the Dotplot hitfilter
@@ -11,8 +11,7 @@ public class HfilterData {
 	private static final double ANY_PCTID  = 0;
 	private static final double NO_PCTID  = 100;
 	
-	private boolean bHiPopup=true; // set in setDefaults; CAS543 add, CAS544 change default
-	private boolean bHiNone=false; 
+	private boolean bHiPopup=true, bHiNone=true; // set in setDefaults; CAS543 add, CAS544 change default
 	private boolean bHiBlock=false, bHiCset=false, bHi2Gene=false, bHi0Gene=false, bHi1Gene=false;
 	
 	private boolean bBlock=true; // set in setDefaults;
@@ -26,7 +25,9 @@ public class HfilterData {
 	public HfilterData() {
 		setDefaults();
 	}
-	
+	public HfilterData copy(String msg) {
+		return new HfilterData(this);
+	}
 	private HfilterData(HfilterData hf) { // copy
 		setChanged(hf, "HfilterData from hf");
 	}
@@ -38,7 +39,7 @@ public class HfilterData {
 		else if (bHi2Gene) 	msg += "High =2 Genes; ";
 		else if (bHi1Gene) 	msg += "High =1 Gene; ";
 		else if (bHi0Gene) 	msg += "High =0 Genes; ";
-		else if (bHiPopup) 	msg += "High Popup; ";
+		if (!bHiPopup) msg += "No High Popup; "; // CAS552 more meaningful with !; remove else
 		
 		msg += "Show "; // something always shows
 		if (bBlock) 	msg += "Block, ";
@@ -66,17 +67,13 @@ public class HfilterData {
 	}
 	
 	public void setDefaults() {
-		bHiBlock  = bHiCset = bHi2Gene = bHi0Gene = bHi1Gene = bHiNone  = false;		
-		bHiPopup = true;
+		bHiBlock  = bHiCset = bHi2Gene = bHi0Gene = bHi1Gene = false;		
+		bHiPopup = bHiNone = true;
 		
 		bCset = b2Gene = b0Gene = bAllHit = false; 
 		bBlock = true;
 		
 		pctid=ANY_PCTID;
-	}
-
-	public HfilterData copy(String msg) {
-		return new HfilterData(this);
 	}
 
 	// CAS520 was comparing with false for everything instead of the current setting
@@ -103,7 +100,7 @@ public class HfilterData {
 		return changed;
 	}
 
-	public interface HitFilterListener {public void update(HfilterData hf);}
+	//public interface HitFilterListener {public void update(HfilterData hf);}
 	
 	/*******************************************************/
 // %id
