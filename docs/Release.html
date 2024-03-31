@@ -62,7 +62,9 @@
 	<!---- START BODY -->
 
 If you are using SyMAP and want to update to a new version, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
-
+<br> existing databases, there are no changes since <a href=#v548>v5.4.8</a>.
+<br>This will no longer run on 32-bit machines, starting with v5.5.1.
+<br>You must have Java v17 or later, starting with SyMAP v5.5.0.
 <h3>Summary of recent major releases</h3>
 <table class="tx">
 <tr>
@@ -74,11 +76,70 @@ exon-intron structure.
 <tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="Collinear.html">viewing</a>
 </table>
 
+<a id="v552"></a>
+<h3>Release: v5.5.2 (31-Mar-24)</h3>
+The control bars for <ttl>Circle</ttl>, <ttl>DotPlot</ttl> and <ttl>2D</ttl> have been made to
+look and act in similar fashion. There are other small interface changes for clarity and new function.
+<ul>
+
+<li><ttb>Circle</ttb>
+<ul>
+<li><ttl>Control bar</ttl>: new icon buttons for rotate counter-clock-wise, Home
+and <ttx><big>(i)</big></ttx> quick help.
+<li>The scroll bar now works. The initial frame is smaller.
+</ul>
+
+<li><ttb>2D-display</ttb>
+<ul>
+<li><ttl>Control bar</ttl>: <ttx>Zoom</ttx> and <ttx>Show</ttx> buttons with popup menus replaced the
+one <ttx>Selected</ttx> drop-down. The <ttx>Scale</ttx> icon is now a toggle.
+<li><ttl>Sequence Filter and Popup</ttl>
+	<ul>
+	<li>New <ttx>Full</ttx> popup option to show the full sequence.
+	<li>New <ttx>Info (i)</ttx> and gene <ttx>Clear</ttx> filter buttons; and tooltip on mono-texted items.
+	<li>Instead of any change creating a history event, only a change to the coordinates does.
+	</ul>
+<li><ttl>Hit Filter Popup</ttl>: New <ttx>All Hits</ttx> popup option to show all hits.
+<li><ttl>Gene Popup</ttl>: Now lists minor gene hits along with the major; add the block number for the hits.
+</ul>
+<p>
+<li>Small changes:
+<small>
+<ul>
+<li>Put <tt>Circle</tt> first on Manager.
+<li><tt>Circle Control bar</tt>:
+The <tt>Self-synteny</tt>, <tt>Reverse</tt> and <tt>Rotate</tt> are now toggle buttons,
+and <tt>Scale</tt> is a toggle icon.
+The <tt>Self-synteny</tt> option is only displayed if self-synteny has been
+computed for at least one project displayed. The <tt>Rotate</tt> text button is moved next to the
+rotate circle buttons.
+The view drop-down has been changed to a popup menu.
+<li><tt>Dot plot Control bar</tt>: The Scale option is now a toggle icon.
+The Home button now includes scale, and disables when it is home.
+<li><tt>2D</tt>: Information shows number of histories for &gt; and &lt;. The toggle shows on/off status.
+<br>If a <tt>Hit Text</tt> option is selected, a prefix or suffix is added to the displayed number
+indicating its meaning.
+<br><tt>Hit Popup and Information</tt>: The first line has been reordered for clarity.
+<br><tt>Hit filter</tt> did not have default None checked.
+<br><tt>Sequence filter</tt> flipped option now waits until Save to flip (for consistency).
+</ul>
+</small>
+<p>
+<li>Developer
+<small>
+<ul>
+<li>Removed props.ProjectPairs; renamed ProjectPool to be PropsDB and cleaned it up. It returns
+isAlgo1 so that the gene popup knows whether to show the exon score.
+<li><tt>sequence/Sfilter.java</tt> now contains all filter code. The KB drop-down were not sized; hence,
+big on Linux.
+<tt>history/History.java</tt> has all un-used code removed. All control bars are created as a row,
+which makes the delimiter full depth.
+</ul>
+</ul>
+</small>
+
 <a id="v551"></a>
 <h3>Release: v5.5.1 (14-Mar-24)</h3>
-For existing databases, there are no changes since <a href=#v548>v5.4.8</a>.
-<br>This will no longer run on 32-bit machines, starting with v5.5.1.
-<br>You must have Java v17 or later, starting with SyMAP v5.5.0.
 <p>This release has multiple small interface changes, as follows:
 <ul>
 <li><ttb>2D-display</ttb>
@@ -509,6 +570,8 @@ when the columns are being shown.
 <li><small>The MySQL connection has been rewritten to be more straight-forward and confirm that connections
 are correctly closed. There is a new dedicated connection for any each of the displays (e.g. DotPlot, 2D, etc).
 This removed 4 java files and replaced one.</small>
+<li><small>MacOS Monterery no longer has "Times and Lucida", used by Serif, neither does JDK until v18, so
+these were removed. However, removing this only occurrence does not get rid of the Java message.</small>
 </ul>
 </ul>
 

@@ -231,8 +231,21 @@ Follow the steps below to get started with SyMAP.
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>System Requirements</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></table>
-<i>You must have Java version 17 or later, and MySQL or MariaDB. You must also have Perl for MUMmer.</i>
+<i>You must have Java version 17.0.10 or later, and MySQL or MariaDB. You must also have Perl for MUMmer.</i>
 <br>The machine must be a 64-bit machine (32-bit will no longer work starting with v5.5.1).
+
+<p>The released <tt>symap.jar</tt> file has been compiled with Java 17.0.10, which is upward compatible.
+If you need a version compile with Java 1.8, email symap@agcol.arizona.edu.
+<p>
+For performing large alignments (e.g. 1Gb genomes or more) <i>it is essential
+to have multiple CPUs and at least 5Gb of RAM for each CPU that you intend to use</i>. Note that you can set the
+number of CPUs for SyMAP to use.
+See <a href="MUMmer.html#mem" class="ext" target="_blank">MUMmer</a>
+for information on insufficient memory.
+<p>
+For viewing alignments, CPU and memory needs are typically negligible, unless
+you are performing queries on more than 4-5 genomes at once.
+
 
 <p>SyMAP has been tested on the following:
 <table class="ty" style="font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
@@ -271,17 +284,6 @@ but too small to process large input files.
 </small>
 
 
-<p>The jar file has been compiled with Java 17, which is upward compatible. If you need a version compile with Java 1.8,
-email symap@agcol.arizona.edu.
-<p>
-For performing large alignments (e.g. 1Gb genomes or more) <i>it is essential
-to have multiple CPUs and at least 5Gb of RAM for each CPU that you intend to use</i>. Note that you can set the
-number of CPUs for SyMAP to use.
-See <a href="MUMmer.html#mem" class="ext" target="_blank">MUMmer</a>
-for information on insufficient memory.
-<p>
-For viewing alignments, CPU and memory needs are typically negligible, unless
-you are performing queries on more than 4-5 genomes at once.
 
 <a id="installation"></a>
 <h3>Installation</h3>
@@ -595,7 +597,7 @@ See <a href="SystemHelp.html#projParams" class="ext" target="_blank">Project Par
 <td style="vertical-align: text-top;">
 See <a href="SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parameters</a> for details.
 <br><a href="img/lineAlign.png"><img src="img/lineAlign.png" alt="alignLine" style="border: 1px solid black; width: 400px"></a>
-<br><center><a href="img/parameters2.png"><img src="img/parameters2.png" alt="parameters2" style="border: 1px solid black; width: 270px"></a></center>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="img/parameters2.png"><img src="img/parameters2.png" alt="parameters2" style="border: 1px solid black; width: 270px"></a>
 </table>
 
 <!-------------------------------------------------------->
