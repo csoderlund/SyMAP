@@ -141,8 +141,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			
 			gnSize = seqPool.loadGenomeSize(this);
 			chrName = seqPool.loadSeqData(this, allAnnoVec); // Add annotations to allAnnoVec, and gnSize value
-			if (allAnnoVec.size() == 0) sfilObj.bShowAnnot = false; 
-			else {
+			if (allAnnoVec.size() != 0) { // CAS552, bug fix for this release 
 				for (Annotation aObj : allAnnoVec)
 					if (aObj.isGene()) geneVec.add(aObj);
 			}
