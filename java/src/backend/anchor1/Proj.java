@@ -32,7 +32,7 @@ public class Proj  {
 	private DBconn2 dbc2;
 	private Pattern namePat;
 	
-	private int totalSize = 0;
+	private long totalSize = 0; // CAS551 changed to int; CAS552 changed back
 	private ProgressDialog plog;
 	private int topN=2;
 	

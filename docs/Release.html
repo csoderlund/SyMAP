@@ -77,7 +77,13 @@ exon-intron structure.
 </table>
 
 <a id="v552"></a>
-<h3>Release: v5.5.2 (31-Mar-24)</h3>
+<h3>Release: v5.5.2c (22-Apr-24)</h3>
+22-Apr-24 bug fix release: A bug from v5.5.1 where 32-bit machines were no longer
+supported, but I failed to test this on large genomes, which MySQL was not able
+to handle (big thanks to Ricardo for this bug report!).
+<p>15-Apr-24 bug fix release: A bug that caused 2D to crash when displaying
+a sequence track with no annotation. This release still has date 31-Mar-24.
+<p>
 The control bars for <ttl>Circle</ttl>, <ttl>DotPlot</ttl> and <ttl>2D</ttl> have been made to
 look and act in similar fashion. There are other small interface changes for clarity and new function.
 <ul>

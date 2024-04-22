@@ -25,14 +25,14 @@ public class SeqPool {
 	protected SeqPool(DBconn2 dbc2) { this.dbc2 = dbc2;} // called from Sequence when it is created
 
 	// CAS550 separate method to get size; CAS551 chg to int
-	protected int loadGenomeSize(Sequence seqObj) {
+	protected long loadGenomeSize(Sequence seqObj) {
 	try {
 		int grpIdx =   seqObj.getGroup();
 		String size_query = 
 				"SELECT (SELECT length FROM pseudos WHERE grp_idx=" + grpIdx + ") as size, "+
 				"       (SELECT name   FROM xgroups WHERE idx="     + grpIdx + ") as name; ";
 		
-		int size = dbc2.executeInteger(size_query);
+		long size = dbc2.executeLong(size_query);
 		return size;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Cannot get genome size"); return 0;}

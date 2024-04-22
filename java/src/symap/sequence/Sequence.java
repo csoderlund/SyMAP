@@ -139,7 +139,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			int n = seqPool.getNumAllocs(grpIdx);
 			allAnnoVec = new Vector <Annotation>(n); // CAS545 alloc here instead
 			
-			gnSize = seqPool.loadGenomeSize(this);
+			gnSize = (int) seqPool.loadGenomeSize(this);
 			chrName = seqPool.loadSeqData(this, allAnnoVec); // Add annotations to allAnnoVec, and gnSize value
 			if (allAnnoVec.size() != 0) { // CAS552, bug fix for this release 
 				for (Annotation aObj : allAnnoVec)
