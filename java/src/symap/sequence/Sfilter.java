@@ -110,7 +110,7 @@ public class Sfilter extends JDialog {
 	private boolean bReplace=false; // Filter window text change in stateChanged; save in Save
 	private boolean bNoListen=false;
 	
-	private void dprt(String msg) {symap.Globals.dprt("Sf: " + msg);}
+	//private void dprt(String msg) {symap.Globals.dprt("Sf: " + msg);}
 	
 	// Created when 2d is displayed, one for each sequence and track 
 	public Sfilter(Frame owner, DrawingPanel dp,  Sequence sequence) { // CAS542 removed help
@@ -119,7 +119,7 @@ public class Sfilter extends JDialog {
 		this.seqObj = sequence;
 		seqObj.setFilter(this); // CAS552 will access values from here
 		initValues();
-		
+
 		FilterListener listener = new FilterListener();
 		
 		createFilterPanel(listener);
@@ -657,7 +657,6 @@ public class Sfilter extends JDialog {
 			drawingPanel.smake("Sf: saveaction update flip");
 		}
 		else if (bReplace) { // CAS552 add; set in stateChanged
-			dprt("replace ");
 			drawingPanel.setReplaceHistory();
 			drawingPanel.smake("Sf: saveaction replace");
 		}
@@ -689,7 +688,6 @@ public class Sfilter extends JDialog {
 			else if (src == fullSeqPopup) { // CAS552 add
 				setFullSequence();
 				bUp = applyCoordChanges();
-				dprt("full seq " + bUp);
 			}
 			else if (src == flippedPopup) 		bUp =  xFlipSeq(!bSavFlipped);
 			else if (src == annotPopup) 		bRep = xShowAnnotation(annotPopup.getState());

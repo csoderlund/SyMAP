@@ -58,7 +58,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	protected String chrName;					// e.g. Chr01
 	protected int projIdx=Globals.NO_VALUE, otherProjIdx=Globals.NO_VALUE;
 	private String projectName, displayName, otherProjName;
-	protected int gnSize = 0;  					// full chr size, static; CAS551 was long (max int is 9,223,372,036B; longest genome 149B, i.e. 149**9)
+	protected int chrSize = 0;  				// full chr size, static; CAS551 was long
 	protected int position;						// track position
 	protected int orient = Globals.LEFT_ORIENT; // right (-1) center(0) left (1)
 	private Color bgColor; 	
@@ -81,7 +81,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	protected Dimension dimension = new Dimension();
 	protected double height=Globals.NO_VALUE, 					// blue track height, can change
 					 width=DEFAULT_WIDTH;     					// blue track width (w/o ruler or anno), static
-	protected int gnDstart = 0, gnDend = 0;  					// displayed start, end; changes with zoom 
+	protected int chrDisplayStart = 0, chrDisplayEnd = 0;  		// displayed start, end; changes with zoom 
 	
 	private Rectangle dragRect = new Rectangle();
 	private Point dragPoint = new Point(), trackOffset= new Point();
@@ -139,9 +139,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			int n = seqPool.getNumAllocs(grpIdx);
 			allAnnoVec = new Vector <Annotation>(n); // CAS545 alloc here instead
 			
-			gnSize = (int) seqPool.loadGenomeSize(this);
+			chrSize = seqPool.loadChrSize(this);
 			chrName = seqPool.loadSeqData(this, allAnnoVec); // Add annotations to allAnnoVec, and gnSize value
-			if (allAnnoVec.size() != 0) { // CAS552, bug fix for this release 
+			if (allAnnoVec.size() >0) { // CAS553 fix for 552 bug when no annot; was accessing a null filtObj
 				for (Annotation aObj : allAnnoVec)
 					if (aObj.isGene()) geneVec.add(aObj);
 			}
@@ -150,8 +150,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			seqPool.close();
 			return false;
 		}	
-		gnDstart = 0;
-		gnDend = gnSize;
+		chrDisplayStart = 0;
+		chrDisplayEnd = chrSize;
 		hasLoad = true;
 
 		return true;
@@ -202,7 +202,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		if (allAnnoVec.size() == 0) sfilObj.bShowAnnot = sfilObj.bShowGeneNum = false;
 			
 		if (firstBuild) {
-			bpPerPixel = (gnDend - gnDstart) / getAvailPixels();
+			bpPerPixel = (chrDisplayEnd - chrDisplayStart) / getAvailPixels();
 			if (bpPerPixel < MIN_DEFAULT_BP_PER_PIXEL) 		bpPerPixel = MIN_DEFAULT_BP_PER_PIXEL;
 			else if (bpPerPixel > MAX_DEFAULT_BP_PER_PIXEL) bpPerPixel = MAX_DEFAULT_BP_PER_PIXEL;
 			
@@ -216,18 +216,18 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		Rectangle2D.Double totalRect = new Rectangle2D.Double();
 
 		if (height > 0) { // after 1st build
-			int diff = Math.abs(gnDend-gnDstart);
+			int diff = Math.abs(chrDisplayEnd-chrDisplayStart);
 			double bp = BpNumber.getBpPerPixel(diff, height); // diff/height
 			if (bp > 0) bpPerPixel = bp;
 		}
 		// this started happening with later Java versions if they click too fast
-		double dif = getPixelValue(gnDend) - getPixelValue(gnDstart);
+		double dif = getPixelValue(chrDisplayEnd) - getPixelValue(chrDisplayStart);
 		if (!(dif > 0 && dif <= MAX_PIXEL_HEIGHT)) { // CAS521 make popup
-			Utilities.showWarningMessage("Unable to size sequence view. Try again. (" + gnDstart + "," + gnDend + ")"); 				
+			Utilities.showWarningMessage("Unable to size sequence view. Try again. (" + chrDisplayStart + "," + chrDisplayEnd + ")"); 				
 			if (height == Globals.NO_VALUE) height = getAvailPixels();
-			bpPerPixel = (gnDend-gnDstart)/height; 
+			bpPerPixel = (chrDisplayEnd-chrDisplayStart)/height; 
 		}
-		int len = gnDend - gnDstart;
+		int len = chrDisplayEnd - chrDisplayStart;
 		rect.setRect(trackOffset.getX(), trackOffset.getY(), width, getPixelValue(len)); // chr rect
 		
 		totalRect.setRect(0, 0, rect.x + rect.width + 2, rect.y + rect.height + 2);
@@ -257,7 +257,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 				Rule rObj = new Rule(unitColor, unitFont);
 				rObj.setLine(x1, y, x2, y);
 				
-				cb = BpNumber.getCbPerPixel(bpPerPixel, (sfilObj.bFlipped ? h-y : y-rect.y)) + gnDstart; 
+				cb = BpNumber.getCbPerPixel(bpPerPixel, (sfilObj.bFlipped ? h-y : y-rect.y)) + chrDisplayStart; 
 				String num = BpNumber.getFormatted(bpSep, cb, bpPerPixel);
 				layout = new TextLayout(num, unitFont, frc);
 				bounds = layout.getBounds();
@@ -314,7 +314,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			}
 			if (offset>0 && isRight) offset = -offset;
 			
-			annot.setRectangle(centRect, gnDstart, gnDend,bpPerPixel, dwidth, hwidth, sfilObj.bFlipped, offset,
+			annot.setRectangle(centRect, chrDisplayStart, chrDisplayEnd,bpPerPixel, dwidth, hwidth, sfilObj.bFlipped, offset,
 					sfilObj.bShowGeneLine, sfilObj.bShowGeneNum, sfilObj.bHighGenePopup); // CAS520 showGeneLine; CAS544 popup; CAS551 showGeneNum
 			if (last!=null) annot.setLastY(last); // CAS551 so annotation are separated
 			last=annot;
@@ -363,8 +363,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		totalRect.x = Math.min(totalRect.x, x);
 		totalRect.y = Math.min(totalRect.y, y - bounds.getHeight());
 
-		footerLayout = new TextLayout(BpNumber.getFormatted(gnDend-gnDstart+1, bpPerPixel)+
-				               " of "+BpNumber.getFormatted(gnSize, bpPerPixel), footerFont, frc); 
+		footerLayout = new TextLayout(BpNumber.getFormatted(chrDisplayEnd-chrDisplayStart+1, bpPerPixel)+
+				               " of "+BpNumber.getFormatted(chrSize, bpPerPixel), footerFont, frc); 
 		bounds = footerLayout.getBounds();
 		x = (rect.x + (rect.width / 2.0)) - (bounds.getX() + (bounds.getWidth() / 2.0));
 		if (sfilObj.bFlipped) 	y = rect.y - OFFSET_SPACE;
@@ -735,12 +735,12 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}
 	}
 	public Point2D getPointForHit(int hitMidPt, int trackPos) { // mapper.seqHits & DrawHit
-		if (hitMidPt < gnDstart) hitMidPt = gnDstart; 
-		if (hitMidPt > gnDend)   hitMidPt = gnDend; 	
+		if (hitMidPt < chrDisplayStart) hitMidPt = chrDisplayStart; 
+		if (hitMidPt > chrDisplayEnd)   hitMidPt = chrDisplayEnd; 	
 		
 		double x = (trackPos == Globals.LEFT_ORIENT) ? rect.x + rect.width : rect.x;	
 		
-		double y = rect.y + BpNumber.getPixelValue(hitMidPt-gnDstart ,bpPerPixel);
+		double y = rect.y + BpNumber.getPixelValue(hitMidPt-chrDisplayStart ,bpPerPixel);
 		
 		if (sfilObj.bFlipped) y = rect.y + rect.y + rect.height - y;	
 		
@@ -753,10 +753,10 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	}
 
 	public boolean isHitInRange(int num) { // mapper.SeqHits.isVisHitWire
-		return num >= gnDstart && num <= gnDend;
+		return num >= chrDisplayStart && num <= chrDisplayEnd;
 	}
 	public boolean isHitOlap(int hs, int he) { // mapper.SeqHits.isOlapHit; CAS550 add for partial hit
-		return isOlap(hs, he, (int) gnDstart, (int) gnDend);
+		return isOlap(hs, he, (int) chrDisplayStart, (int) chrDisplayEnd);
 	}
 	private boolean isOlap(int s1, int e1, int s2, int e2) {
 		int olap = Math.min(e1,e2) - Math.max(s1,s2) + 1;
@@ -790,8 +790,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	// It stores the current region width and center so that (-) can exactly undo (+) even
 	// when the (+) expands beyond the bounds of one sequence.
 	public void changeAlignRegion(double factor)  { // DrawingPanel
-		int s = gnDstart;
-		int e = gnDend;
+		int s = chrDisplayStart;
+		int e = chrDisplayEnd;
 		int mid = (s + e)/2;
 		int width = (e - s)/2;
 		boolean showingFull = (2*width > .95*getTrackSize());
@@ -853,51 +853,51 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}
 	}
 	public void resetEnd() { // DrawingPanel, Sequence
-		if (gnDend != gnSize) {
-			gnDend = gnSize;
+		if (chrDisplayEnd != chrSize) {
+			chrDisplayEnd = chrSize;
 			setAllBuild();
 		}
 	}
 	public void resetStart() {// DrawingPanel, Sequence
-		if (gnDstart != 0) {
-			gnDstart = 0;
+		if (chrDisplayStart != 0) {
+			chrDisplayStart = 0;
 			setAllBuild();
 		}
 	}
 	public void setStart(int startValue)  { // DrawingPanel, Sfilter; CAS514 was throwing exception and stopping symap
-		if (startValue > gnSize) {
-			Utilities.showWarningMessage("Start value "+startValue+" is greater than size "+gnSize+".");
+		if (startValue > chrSize) {
+			Utilities.showWarningMessage("Start value "+startValue+" is greater than size "+chrSize+".");
 			return;
 		}
 		if (startValue < 0) {
 			Utilities.showWarningMessage("Start value is less than zero.");
 			return;
 		}
-		if (gnDstart != startValue) {
+		if (chrDisplayStart != startValue) {
 			firstBuild = true;
 
-			gnDstart = startValue;
+			chrDisplayStart = startValue;
 			setAllBuild();
 		}
 	}
 	public int setEnd(int endValue) { // DrawingPanel, Sfilter; CAS514 was throwing exception and stopping symap
 		if (endValue < 0) {
 			Utilities.showWarningMessage("End value is less than zero.");
-			return gnSize;
+			return chrSize;
 		}
-		if (endValue > gnSize) endValue = gnSize;
+		if (endValue > chrSize) endValue = chrSize;
 
-		if (gnDend != endValue) {
+		if (chrDisplayEnd != endValue) {
 			firstBuild = true;
 
-			gnDend = endValue;
+			chrDisplayEnd = endValue;
 			setAllBuild();
 		}
 		return endValue;
 	}
 	public void setStartBP(int startBP, boolean resetPlusMinus)  { // Track, DrawingPanel, Sequence
-		if (startBP > gnSize) {
-			Utilities.showWarningMessage("Start value "+startBP+" is greater than size "+gnSize+".");
+		if (startBP > chrSize) {
+			Utilities.showWarningMessage("Start value "+startBP+" is greater than size "+chrSize+".");
 			return;
 		}
 		if (startBP < 0) {
@@ -905,27 +905,27 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			return;
 		}
 		if (resetPlusMinus) curCenter = 0;
-		if (gnDstart != startBP) {
+		if (chrDisplayStart != startBP) {
 			firstBuild = true;
-			gnDstart = startBP;
+			chrDisplayStart = startBP;
 			setAllBuild();
 		}
 	}
 	public int setEndBP(int endBP, boolean resetPlusMinus)  {// Track, DrawingPanel, Sequence
 		if (endBP < 0) Utilities.showWarningMessage("End value is less than zero.");
 
-		if (endBP > gnSize || endBP<0) endBP = gnSize;
+		if (endBP > chrSize || endBP<0) endBP = chrSize;
 
 		if (resetPlusMinus) curCenter = 0;
-		if (gnDend != endBP) {
+		if (chrDisplayEnd != endBP) {
 			firstBuild = true;
-			gnDend = endBP;
+			chrDisplayEnd = endBP;
 			setAllBuild();
 		}
 		return endBP;
 	}
 	public void setDefPixel() {
-		bpPerPixel = (gnDend - gnDstart) / getAvailPixels();
+		bpPerPixel = (chrDisplayEnd - chrDisplayStart) / getAvailPixels();
 		if (bpPerPixel < MIN_DEFAULT_BP_PER_PIXEL) 		bpPerPixel = MIN_DEFAULT_BP_PER_PIXEL;
 		else if (bpPerPixel > MAX_DEFAULT_BP_PER_PIXEL) bpPerPixel = MAX_DEFAULT_BP_PER_PIXEL;
 		
@@ -944,9 +944,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		if (b) width = DEFAULT_WIDE_WIDTH;
 		else width =  DEFAULT_WIDTH;
 	}
-	public int getStart() {return gnDstart;} // Track, Sequence, Mapper
-	public int getEnd() {return gnDend; }
-	public int getTrackSize() {return gnSize;}
+	public int getStart() {return chrDisplayStart;} // Track, Sequence, Mapper
+	public int getEnd() {return chrDisplayEnd; }
+	public int getTrackSize() {return chrSize;}
 
 	protected Dimension getDimension() {return dimension; } // TrackHolder
 
@@ -962,12 +962,12 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		if (y < 0)						y = 0;
 		else if (y > rect.getHeight())	y = rect.getHeight();
 		y *= bpPerPixel;
-		y += gnDstart;
+		y += chrDisplayStart;
 
 		if (y != Math.round(y)) 		y = Math.round(y);
 
-		if (y < gnDstart)		y = gnDstart;
-		else if (y > gnDend)	y = gnDend;
+		if (y < chrDisplayStart)		y = chrDisplayStart;
+		else if (y > chrDisplayEnd)	y = chrDisplayEnd;
 
 		return (int)Math.round(y);
 	}
@@ -1185,8 +1185,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 					if (newEnd != newStart) {
 						if (sfilObj.bFlipped) { 
 							int temp = newStart;
-							newStart = gnDend - newEnd + gnDstart;
-							newEnd = gnDend - temp + gnDstart;
+							newStart = chrDisplayEnd - newEnd + chrDisplayStart;
+							newEnd = chrDisplayEnd - temp + chrDisplayStart;
 						}
 						setEndBP(newEnd, true);
 						setStartBP(newStart, true);
@@ -1320,8 +1320,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			r1 = r2;
 			r2 = temp;
 		}
-		int newStart = gnDstart + (int)(length*r1*notches);
-		int newEnd   = gnDend - (int)(length*r2*notches);
+		int newStart = chrDisplayStart + (int)(length*r1*notches);
+		int newEnd   = chrDisplayEnd - (int)(length*r2*notches);
 
 		if (newEnd < 0) newEnd = 0; // unnecessary?
 		else if (newEnd > getTrackSize()) newEnd = getTrackSize();

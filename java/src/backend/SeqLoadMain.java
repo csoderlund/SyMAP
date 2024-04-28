@@ -323,8 +323,18 @@ public class SeqLoadMain {
 		ResultSet rs = tdbc2.executeQuery(sql);
 		rs.first();
 		int grpIdx = rs.getInt("maxidx");
-			
-		tdbc2.executeUpdate("insert into pseudos (grp_idx,file,length) values(" + grpIdx + ",'" + file + "'," + seq.length() + ")");
+		
+		// CAS553 add this check; max int in java is 2,147,483,647 (max human chr is 249M); can't test, run out of memory trying
+		int seqlen = -1;
+		try {seqlen = seq.length();} // may set to a negative number
+		catch (Exception e) {seqlen = -1;}
+		if (seqlen<0) {
+			String x = String.format("Chromosome sequence from file %s is length %,d", file, seq.length());
+			ErrorReport.print(x);
+			x = String.format("The maximum allowed is %,d", Integer.MAX_VALUE);
+			ErrorReport.die(x);
+		}
+		tdbc2.executeUpdate("insert into pseudos (grp_idx,file,length) values(" + grpIdx + ",'" + file + "'," + seqlen + ")");
 		
 		// Finally, upload the sequence in chunks
 		for (int chunk = 0; chunk*CHUNK_SIZE < seq.length(); chunk++) {

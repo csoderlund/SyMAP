@@ -45,7 +45,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	private DBconn2 dbc2;
 	
 	private int numAnnot = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0;;
-	private long length=0; // CAS551 made int, CAS552 crashes on large genomes in MySQL
+	private long length=0; 		// CAS553 in 551 changed from long to int, but may cause error on getting value
 	
 	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();
 	private TreeMap<String,Integer> grpName2Idx = new TreeMap <String, Integer> ();
@@ -527,7 +527,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
         numGap = dbc2.executeCount("select count(*) from pseudo_annot as pa " +
         		" join xgroups as g on g.idx=pa.grp_idx " +
         		" where g.proj_idx=" + projIdx + " and type='gap'");
-      
+        // CAS551 changed int to long; CAS553 changed it back
         length = dbc2.executeLong("select sum(length) from pseudos " +
 				"join xgroups on xgroups.idx=pseudos.grp_idx  " +
 				"where xgroups.proj_idx=" + projIdx);	// CAS500 for Summary and for orderProjects

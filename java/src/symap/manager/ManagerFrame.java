@@ -63,7 +63,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	
 	private final String DB_ERROR_MSG = "A database error occurred, please see the Troubleshooting Guide at:\n" + Jhtml.TROUBLE_GUIDE_URL;	
 	private final String DATA_PATH = Constants.dataDir;
-	private final int MIN_CWIDTH = 800, MIN_CHEIGHT = 900;  // Circle; CAS552 was 900, 1000
+	private final int MIN_CWIDTH = 825, MIN_CHEIGHT = 900;  // Circle; CAS552 was 900, 1000; CAS553 was 800 (now same as 2D)
 	private final int MIN_WIDTH = 850, MIN_HEIGHT = 600;	// Manager; CAS542 was 900, 600
 	private final int MIN_DIVIDER_LOC = 220; 				// CAS543 was 240
 	private final int LEFT_PANEL = 450;      
@@ -111,6 +111,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	
 	private JTextField txtCPUs =null;
 	private JCheckBox checkCat=null;
+	
+	private void dprt(String msg) {symap.Globals.dprt("MF: " + msg);}
 	
 	/*****************************************************************/
 	public ManagerFrame() {
@@ -1325,10 +1327,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
     		projVec.add(mp);
         }
         rs.close();
-  
+        
+        dprt("Load projects");
         for (Mproject mp : projVec) {
         	mp.loadParamsFromDB(); 
         	mp.loadDataFromDB();
+        	dprt(mp.strDBName + " " + mp.getLength());
         	projObjMap.put(mp.strDisplayName, mp);
         	projNameMap.put(mp.strDBName, mp.strDisplayName);
         }

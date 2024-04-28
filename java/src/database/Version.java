@@ -345,7 +345,7 @@ public class Version {
 			int idx = rs.getInt(1);
 			String ver = rs.getString(2);
 			if (ver!=null) {
-				String x = ver.substring(1, ver.length());
+				String x= ver.replaceAll("([a-z])", ""); // CAS552c remove any chars
 				x = x.replaceAll("\\.", "");
 				int y = Utilities.getInt(x);
 				pairVer.put(idx, y);

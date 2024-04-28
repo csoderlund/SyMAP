@@ -5,6 +5,10 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Window;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.awt.GraphicsConfiguration;
 import java.awt.Rectangle;
 import java.awt.Insets;
@@ -19,6 +23,7 @@ import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.WindowConstants;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,6 +41,7 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 
 import symap.Globals;
+import symap.sequence.Annotation;
 
 /**
  * Class <code>Utilities</code> class for doing some miscelaneous things that 
@@ -156,6 +162,13 @@ public class Utilities {
 		StringBuffer ret = new StringBuffer().append(ints[0]);
 		for (int i = 1; i < ints.length; i++) ret.append(",").append(ints[i]);
 		return ret.toString();
+	}
+	public static double getDouble(String i) { // CAS553 added
+		try {
+			double x = Double.parseDouble(i);
+			return x;
+		}
+		catch (Exception e) {return -1.0;}
 	}
 	public static int getInt(String i) { // CAS532 added
 		try {
@@ -454,7 +467,7 @@ public class Utilities {
 	}
 	// CAS513 add for Gene/hit popup; CAS531 discontinued for gene/hit as moved to Closeup.TextPopup
 	public static JOptionPane displayInfoMonoSpace(Component parentFrame, String title, 
-			String theMessage, Dimension d, double x, double y) 
+			String theMessage, Dimension d, Annotation aObj) 
 	{ 	
 		// scrollable selectable message area
 		JTextArea messageArea = new JTextArea(theMessage);
@@ -464,18 +477,33 @@ public class Utilities {
 		messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		
 		// put scrollable pane in option pane
-		JOptionPane pane = new JOptionPane(sPane, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION);
+		JOptionPane optionPane = new JOptionPane(sPane, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION);
 		
 		// add dialog, which has title
-		JDialog helpDiag = pane.createDialog(parentFrame, title);
+		JDialog helpDiag = optionPane.createDialog(parentFrame, title);
 		helpDiag.setModal(false); // true - freeze other windows
 		helpDiag.setResizable(true);
 		if (helpDiag.getWidth() >= d.width || helpDiag.getHeight() >= d.height) helpDiag.setSize(d);
 		helpDiag.setVisible(true);	
 		helpDiag.setAlwaysOnTop(true);
-		if (x!=0.0 && y!=0.0) helpDiag.setLocation((int) x, (int) y);
 		
-		return pane;
+		helpDiag.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // CAS543 add the explicit close 
+		helpDiag.addWindowListener(new WindowAdapter() {
+			public void windowClosed(WindowEvent e) {
+				aObj.setIsPopup(false);
+			}
+		});
+		
+		 optionPane.addPropertyChangeListener(
+    		new PropertyChangeListener() {
+        		public void propertyChange(PropertyChangeEvent e) {
+        			//String prop = e.getPropertyName();
+        			aObj.setIsPopup(false);
+        		}
+    		}
+    	);
+		 
+		return optionPane;
 	}
 	
 	public static void showInfoMessage(String title, String msg) {

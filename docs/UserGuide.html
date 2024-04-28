@@ -278,22 +278,18 @@ The <ttp>Circle</ttp> display shows the chromosomes arranged in a circle,
 	blocks are orange.
 <table>
 	<tr><td style="vertical-align:text-top;">
-	<i>Project name</i>: Move the mouse close to the project name until the cursor turns to a finger*,
-	then click once. The following will occur:
-	<table>
-	<tr><td style="vertical-align:text-top;">1.<td>The project name with colored blocks will be in shown in bold italics.
-	<tr><td style="vertical-align:text-top;">2.<td>The projects colors will be used for the blocks.
-	<tr><td style="vertical-align:text-top;">3.<td>For example, in the image on the right,
+	<i>Project name</i>: Move the mouse over a project name and click once:
+	The project name will be in shown in bold italics
+	and the projects colors will be used for the blocks.
+	<p>For example, in the image on the right,
 		<i>A.thal</i> is in italics and all the block are colored with its arc colors;
 		click Cabbage and the block will be colored with its arc colors.
-	</table>
-	*Note: it is much easier to click the project name when the <ttl>Reverse</ttl> toggle has been selected.
-	Otherwise, the mouse cursor may not turn to a finger until it is between the arc and the project name.
 
 	<p><i>Chromosome color arc</i>: Move the mouse over an arc, followed by:
 	<table>
-	<tr><td style="vertical-align:text-top;">1.<td>Click once: the blocks from the chromosome will be shown in front.
-	<tr><td style="vertical-align:text-top;">2.<td>Click twice: Only the blocks of the selected chromosome will be shown. Click again to undo.
+	<tr><td style="vertical-align:text-top;">1.<td>Click: The blocks from the chromosome will be shown in front.
+	<tr><td style="vertical-align:text-top;">2.<td>Double-click: Only the blocks of the selected
+	chromosome will be shown. To undo, click an arc or a project name.
 	</table>
 
 	<td><a href="img/circle-2g.png">
@@ -341,12 +337,38 @@ e.g. for two species each one gets exactly half the circle.
 	<td>(Only available for 2-genome display) When toggled,
 	the reference will be reversed, i.e. the bottom project is shown on top and uses the reference colors
 	(you may need to click the top projects name to use its colors).
+
+<tr><td><img src="img/colorPalette.png" alt="Color" style="width: 20px;">
+	<td>Change the colors of the chromosome blocks, as described below.<td>
 <tr><td><img src="img/print.gif" alt="Print" style="width: 20px;">
 	<td>Prints the circle graphics as displayed.<td>
 <tr><td><img src="img/helpSm.png" alt="Help" style="width: 20px;">
 	<td>Displays the online help.<td>
 <tr><td><img src="img/info.png" alt="Info" style="width: 20px;">
 	<td>A popup window of quick help.<td>
+</table>
+
+<a id="circColors">
+<p>Circle Colors <img src="img/colorPalette.png" alt="Color" style="width: 20px;">:
+On <ttl>Save</ttl>, the color settings are saved and will be reused on subsequent circle displays.
+<table class="tx">
+	<tr><td>
+	<table class="tx">
+	<tr><td style="white-space: nowrap; vertical-align:text-top;">
+	   <ttl>Color Set</ttl><td>Choose from two different sets of 100 colors.
+	<tr><td  style="white-space: nowrap; vertical-align:text-top;">
+		<ttl>Scale</ttl><td>Set the scale &gt;0 and &lt;1 to darken the colors,
+		<br>&gt;1 to lighten the colors.
+	<tr><td  style="white-space: nowrap; vertical-align:text-top;">
+		<ttl>Order</ttl><td>Sort the colors so that the blue-green colors take precedence.
+	<tr><td  style="white-space: nowrap; vertical-align:text-top;">
+		<ttl>Reverse</ttl><td>Sort the colors so that the yellow-red colors take precedence.
+	<tr><td  style="white-space: nowrap; vertical-align:text-top;">
+		<ttl>Shuffle</ttl><td>Shuffle the colors. Setting a different integer will produce
+	a different set.
+	</table>
+	<td><a href="img/circle-colors.png">
+		<img src="img/circle-colors.png" alt="circle-colors" style="border: 1px solid black; width: 320px"></a>
 </table>
 
 <!------------------------------------------------------------>
@@ -560,7 +582,7 @@ while the right panel shows the synteny for the selected chromosomes.
 <li>Click a chromosome rectangle to add it to the display in the right panel. Click it again to remove
 it.
 <li>Click the chromosome number above a chromosome to make it the <i>reference</i>. (The
-choice of reference sequence does not matter for the <ttp>Circle</ttp> view,
+choice of reference sequence does not matter much for the <ttp>Circle</ttp> view,
 but it is important for the <ttp>2D</ttp> and <ttp>Dot Plot</ttp> views; see below).
 <li> Adding and removing chromosomes affects the <ttp>Circle</ttp> view instantly.
 To add/remove from the <ttp>2D</ttp> or <ttp>Dot Plot</ttp>

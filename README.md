@@ -4,7 +4,7 @@
 
 **Documentation**: https://csoderlund.github.io/SyMAP
 
-**Requirements**: Java v1.8 or later and MySQL. SyMAP uses [MUMmer](https://mummer4.github.io) for the sequence to sequence alignment, which requires Perl. SyMAP has been tested on Linux and MacOS.
+**Requirements**: Java v17 or later and MySQL. SyMAP uses [MUMmer](https://mummer4.github.io) for the sequence to sequence alignment, which requires Perl. SyMAP has been tested on Linux and MacOS.
 
 **SyMAP github code**: To build, see SyMAP/java/README.
 

@@ -17,6 +17,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
@@ -186,7 +187,7 @@ public class Jcomp {
 	public static JRadioButton createRadio(HelpListener parent, 
 			HelpBar bar, ActionListener listener, String label, String tip) {
 		
-		JRadioButton button = new JRadioButton(label);
+		JRadioButton button = new JRadioButton(label); button.setBackground(Color.white);
 		button.setMargin(new Insets(0,0,0,0));
 		
 		if (listener != null) button.addActionListener(listener);
@@ -223,6 +224,12 @@ public class Jcomp {
 		button.setEnabled(enable);
 		return button;
 	}
+	static public JButton createButton(String s, String t) {
+		JButton jbutton = new JButton(s);
+		jbutton.setMargin(new Insets(1,3,1,3));
+		jbutton.setToolTipText(t);
+		return jbutton;
+	}
 	// CAS552 added for 2D filters
 	static public JButton createMonoButton(String s, String t) {
 		JButton jbutton = new JButton(s);
@@ -247,5 +254,24 @@ public class Jcomp {
 		lab.setToolTipText(t);
 		lab.setBackground(Color.white);
 		return lab;
+	}
+	static public JCheckBox createCheckBox(String label, boolean def) {
+		JCheckBox box = new JCheckBox(label, def);
+		box.setBackground(Color.white);
+		box.setMinimumSize(box.getPreferredSize());
+		box.setMaximumSize(box.getPreferredSize());
+		return box;
+	}
+	public static JRadioButton createRadio(String label) {
+		JRadioButton button = new JRadioButton(label); button.setBackground(Color.white);
+		button.setMargin(new Insets(0,0,0,0));
+		return button;
+	}
+	public static JTextField createTextField(String defVal, int size) {
+		JTextField txt = new JTextField(defVal, size);
+		txt.setBackground(Color.white);
+		txt.setMinimumSize(txt.getPreferredSize());
+		txt.setMaximumSize(txt.getPreferredSize());
+		return txt;
 	}
 }

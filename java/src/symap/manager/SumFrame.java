@@ -1063,7 +1063,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		while (rs.next()) {
 			p.grpIdx.add(rs.getInt(1));
 			p.grpLen.add(rs.getInt(2));
-			p.genomeLen += rs.getInt(2);
+			p.genomeLen += rs.getLong(2);
 		}
 		p.nGrp = p.grpIdx.size();
 		return p;
@@ -1072,7 +1072,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	}
 	private class Proj {
 		String name;
-		int genomeLen=0;
+		long genomeLen=0;
 		int nGenes=0, nGrp=0;
 		Vector <Integer> grpIdx = new Vector <Integer> ();
 		Vector <Integer> grpLen = new Vector <Integer> ();

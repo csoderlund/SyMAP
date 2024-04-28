@@ -29,9 +29,9 @@ public  class TrackData {
 	protected TrackData(Sequence seq) {
 		trackClass        = seq.getClass();
 		project           = seq.projIdx;
-		start             = seq.gnDstart;
-		end               = seq.gnDend;
-		size              = seq.gnSize;
+		start             = seq.chrDisplayStart;
+		end               = seq.chrDisplayEnd;
+		size              = seq.chrSize;
 		orient            = seq.orient;
 		defaultBpPerPixel = seq.defaultBpPerPixel;
 		bpPerPixel        = seq.bpPerPixel;
@@ -66,9 +66,9 @@ public  class TrackData {
 	}
 
 	protected void setTrack(Sequence seq) {
-		seq.gnDstart = start;
-		seq.gnDend = end;
-		seq.gnSize = size;
+		seq.chrDisplayStart   = start;
+		seq.chrDisplayEnd 	  = end;
+		seq.chrSize 		  = size;
 		seq.projIdx           = project;
 		seq.orient            = orient;
 		seq.defaultBpPerPixel = defaultBpPerPixel;

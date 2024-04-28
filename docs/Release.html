@@ -62,7 +62,7 @@
 	<!---- START BODY -->
 
 If you are using SyMAP and want to update to a new version, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
-<br> existing databases, there are no changes since <a href=#v548>v5.4.8</a>.
+<br> existing databases, there are no changes since <a href="#v548">v5.4.8</a>.
 <br>This will no longer run on 32-bit machines, starting with v5.5.1.
 <br>You must have Java v17 or later, starting with SyMAP v5.5.0.
 <h3>Summary of recent major releases</h3>
@@ -76,12 +76,30 @@ exon-intron structure.
 <tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="Collinear.html">viewing</a>
 </table>
 
+<a id="v553"></a>
+<h3>Release: v5.5.3 (28-Apr-24)</h3>
+Interface changes for the <ttb>Circle</ttb> display.
+<br>Previous bug fixes: v5.5.1 had bug in 2D when no annotation. v5.5.2 had bug when genome&gt;2000M.
+<br>This release has been very well tested (using these <a href="./SystemGuide.html#machine">datasets and machines</a>)!
+<p><ttb>Circle</ttb> display
+<ul>
+<li>New color options so that they can be changed; see <a href="./UserGuide.html#circColors">Colors</a>.
+<li>The circle now remains the same size between different datasets and options.
+<li>Minor: (1) The mouse turns to a clickable finger when held over the
+project name (instead of beneath it). (2) The rotate uses smaller increments.
+<li>Minor 2D: (1) As long as the reference chromosome stays the same, chromosomes can be added/removed,
+or a different view can be shown, and the circle display will
+be the same according to the first set of top buttons. (3) A long project name
+may be truncated if shown on the left, but if shown on the right, the full name can be viewed by
+sliding the scroll bar.
+</ul>
+
 <a id="v552"></a>
 <h3>Release: v5.5.2c (22-Apr-24)</h3>
 22-Apr-24 bug fix release: A bug from v5.5.1 where 32-bit machines were no longer
-supported, but I failed to test this on large genomes, which MySQL was not able
-to handle (big thanks to Ricardo for this bug report!).
-<p>15-Apr-24 bug fix release: A bug that caused 2D to crash when displaying
+supported, but I failed to test this on large genomes (big thanks to Ricardo for this bug report!).
+<p>
+15-Apr-24 bug fix release: A bug that caused 2D to crash when displaying
 a sequence track with no annotation. This release still has date 31-Mar-24.
 <p>
 The control bars for <ttl>Circle</ttl>, <ttl>DotPlot</ttl> and <ttl>2D</ttl> have been made to

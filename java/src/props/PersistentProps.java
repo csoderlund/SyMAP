@@ -23,7 +23,7 @@ public class PersistentProps {
     private File file;
     private String name;
     
-    public static final  String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // under user's directory;
+    public static final  String PERSISTENT_PROPS_FILE = symap.Globals.PERSISTENT_PROPS_FILE; // CAS553 access Globals
 	private static final String PP_HEADER = "SyMAP Saved Properties. Do not modify.";
     
 	public PersistentProps(Properties props, File file, String name) {
@@ -76,7 +76,7 @@ public class PersistentProps {
 		    	props.load(new FileInputStream(file));
 		}
 		catch (Exception e) {
-			ErrorReport.print(e, "Reading symap_saved_props");
+			ErrorReport.print(e, "Reading " + PERSISTENT_PROPS_FILE);
 		}
     }
 
@@ -85,7 +85,7 @@ public class PersistentProps {
 		    props.store(new FileOutputStream(file),PP_HEADER);
 		}
 		catch (Exception e) {
-			ErrorReport.print(e, "Writing symap_saved_props");
+			ErrorReport.print(e, "Writing " + PERSISTENT_PROPS_FILE);
 		}
     }
 }

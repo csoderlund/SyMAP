@@ -1,9 +1,12 @@
 package symap.drawingpanel;
 
+import java.awt.Color;
+import java.awt.Frame;
+import java.awt.Graphics;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import java.util.Vector;
-
-import java.awt.*;
-import javax.swing.*;
 
 import database.DBconn2;
 import colordialog.ColorListener;

@@ -54,7 +54,7 @@ import dotplot.DotPlotFrame;
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ChrExpFrame extends JFrame implements HelpListener {
-	private final int MIN_WIDTH = 1100, MIN_HEIGHT = 900; // CAS543 was 1200, 900
+	private final int MIN_WIDTH = 1100, MIN_HEIGHT = 900; // cardPanel will be 825; CAS543 was 1200, 900
 	
 	private int VIEW_CIRC = 1, VIEW_2D = 2, VIEW_DP = 3;
 	
@@ -68,7 +68,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 	private MapLeft mapper;
 	private SyMAP2d symap2D = null;
 	private DotPlotFrame dotplot = null;
-	private CircFrame circframe = null; // CAS541 made global so can close connection
+	private CircFrame circframe = null; 
 	private DBconn2 tdbc2, circdbc=null;
 	
 	private int selectedView = 1;
@@ -91,7 +91,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		setSize(screenWidth, screenHeight); 
 		setLocationRelativeTo(null); 						// CAS513 center frame
 		
-		// Using a card layout to switch views fixes the Windows CONTEXT_CREATION_ERROR problem
+		// Using a card layout to switch views between 2D, Circle, Dotplot
 		cardPanel = new JPanel();
 		cardPanel.setLayout( new CardLayout() );
 		
@@ -108,8 +108,8 @@ public class ChrExpFrame extends JFrame implements HelpListener {
         helpBar = new HelpBar(425, 130); 					// CAS521 removed dead args; CAS543 was 500,130
         helpBar.setBorder( BorderFactory.createLineBorder(Color.LIGHT_GRAY) );
         
-        createControlPanel(); // CAS550 was called separately to deleted method (build) from ManagerFrame
-		showCircleView();
+        createControlPanel(); // adds to Left side of splitPane; CAS550 was called separately to deleted method (build) from ManagerFrame
+		showCircleView();	  // adds to cardPanel, which is on Right side
 	}
 
 	public void dispose() { // override
@@ -267,7 +267,9 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		splitPane.setLeftComponent(controlPanel);
 	}
 	///////////////////////////////////////////////////////////////////
-	private void showCircleView(){	
+	private void showCircleView(){
+		double [] lastParams = (circframe!=null) ? circframe.getLastParams() : null; // CAS552 reuse settings
+	
 		int[] pidxList = new int[mapper.getProjects().length];
 		TreeSet<Integer> shownGroups = new TreeSet<Integer>();
 		boolean hasSelf = false; // CAS552 add so do not show self-align is this is none
@@ -289,7 +291,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		}
 		if (circdbc==null) circdbc = new DBconn2("CircleE-" + DBconn2.getNumConn(), tdbc2);
 		
-		circframe = new CircFrame(circdbc, pidxList, shownGroups, helpBar, refIdx, hasSelf); // have to recreate everytime
+		circframe = new CircFrame(circdbc, pidxList, shownGroups, helpBar, refIdx, hasSelf, lastParams); // have to recreate everytime
 		
 		cardPanel.add(circframe.getContentPane(), Integer.toString(VIEW_CIRC)); // ok to add more than once
 		((CardLayout)cardPanel.getLayout()).show(cardPanel, Integer.toString(VIEW_CIRC));
