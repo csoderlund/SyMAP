@@ -26,6 +26,8 @@ import java.util.TreeSet;
 
 import database.DBconn2;
 import props.PersistentProps;
+import props.PropertiesReader;
+import symap.Globals;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import symap.manager.Mproject;
@@ -475,7 +477,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	    int off = (allProjVec.size()%2==1) ? (maxNameW/2) : 15; // CAS553 1,3,5... will use name
         cX = center + off;		
         cY = center;
-        dprt(String.format("2  rOuter %d  rInner %d cX %d  center %d  maxNameW %d", rOuter, rInner, cX, center, maxNameW));     
+        //dprt(String.format("2  rOuter %d  rInner %d cX %d  center %d  maxNameW %d", rOuter, rInner, cX, center, maxNameW));     
         
         int cXrOuter = cX-rOuter, cYrOuter = cY-rOuter; // CAS553 made variables
         int cXrInner = cX-rInner, cYrInner = cY-rInner;
@@ -646,8 +648,8 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		
 		int cidx = (colorFirstPriority(grp1.proj_idx, grp2.proj_idx) ? grp1.colorIdx : grp2.colorIdx);
 		if (invChoice != 3) g.setColor(new Color(colorVec.get(cidx)));
-		else                g.setColor(blk.inverted ? Color.green.brighter() : Color.red.darker()); // CAS521 for 1st loop, was swapped
-	       		
+		else                g.setColor(blk.inverted ? blockN : blockP); // CAS554 add
+	       		//g.setColor(blk.inverted ? Color.green.brighter() : Color.red.darker()); // CAS521 for 1st loop, was swapped
 		int s1 = grp1.arcLoc(blk.s1);
 		int e1 = grp1.arcLoc(blk.e1);
 		int s2 = grp2.arcLoc(blk.s2);
@@ -885,5 +887,15 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			this.s2 = s2; 		this.e2 = e2;
 			this.inverted = inv;
 		}
+	}
+	/************************************************************
+	 * CAS554 add for Two-color all blocks
+	 */
+	public static Color blockP; 		
+	public static Color blockN;
+	static {
+		PropertiesReader props = new PropertiesReader(Globals.class.getResource("/properties/circle.properties"));
+		blockP = props.getColor("blockP"); 
+		blockN = props.getColor("blockN"); 
 	}
 }

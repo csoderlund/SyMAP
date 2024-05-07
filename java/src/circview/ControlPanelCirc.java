@@ -29,6 +29,8 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
+import colordialog.ColorDialogHandler;
+import props.PersistentProps;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import util.ImageViewer;
@@ -55,6 +57,9 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
     private JRadioButtonMenuItem view3Radio	= new JRadioButtonMenuItem(invOptions[3]);
     
     private JButton colorButton;  						// CAS553 add
+    private ColorDialogHandler cdh;
+	private PersistentProps    persistentProps;
+	
    
     public ControlPanelCirc(CircPanel cp, HelpBar hb, boolean bIsWG, 
     		boolean isSelf, boolean hasSelf) { // isSelf - only self align; hasSelf - at least one project has self aling
@@ -62,6 +67,9 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
     	circPanel = cp;
     	circPanel.bShowSelf = isSelf; // turn on by default since only self align
     	
+    	persistentProps = new PersistentProps(); // does not work unless this is global
+		cdh = new ColorDialogHandler(persistentProps); // needs to be called on creation to init non-default colors
+		
     	homeButton   =  Jcomp.createIconButton(null, helpPanel, buttonListener, "/images/home.gif",
 							"Home: Reset to original size settings.");
     	homeButton.setEnabled(false);
@@ -287,6 +295,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 		private JRadioButton orderRadio, reverseRadio, shuffleRadio, noneRadio;
 		private JCheckBox scaleBox;
 		private JTextField txtScale, txtShuffle;
+		private JButton editColorButton;
 		
 		private ChgColor() {
 			super();
@@ -299,6 +308,15 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 				public void windowClosed(WindowEvent e) {}
 			});
 			JPanel optionPanel = Jcomp.createPagePanel();
+			
+			JPanel row0 = Jcomp.createRowPanel();
+			cdh.setCircle();
+			editColorButton = Jcomp.createIconButton("/images/colorchooser.gif", "Colors: Edit the color settings");
+			editColorButton.addActionListener(this);
+			row0.add(new JLabel("Two-color all blocks: "));
+			row0.add(editColorButton);
+			optionPanel.add(row0);
+			optionPanel.add(new JSeparator());
 			
 			int h=5;
 			JPanel row1 = Jcomp.createRowPanel();
@@ -337,6 +355,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 			else if (circPanel.bShuffle) shuffleRadio.setSelected(true);
 			else noneRadio.setSelected(true);
 			
+			// Save, cancel, Default
 			okButton = Jcomp.createButton("Save", "Save and redisplay"); 
 			okButton.addActionListener(this);
 			
@@ -390,7 +409,10 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 			c.add(comp);
 		}
 		public void actionPerformed(ActionEvent e) {
-			if (e.getSource() == okButton) {
+			if (e.getSource() == editColorButton) {
+				cdh.showX();
+			}
+			else if (e.getSource() == okButton) {
 				circPanel.colorSet = (set1Radio.isSelected()) ? 1 : 2;
 				
 				circPanel.bOrder = orderRadio.isSelected();
@@ -449,12 +471,21 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 			}	
 		}
 		private void popupHelp2() {
-			String msg = "Set 1 and Set 2 are two sets of 100 colors each.\n"
-					+ "Scale < 1 makes the colors darker, >1 makes them lighter.\n"
+			String msg = "The 'Two-color all blocks' pull-down option:\n"
+					+ "   colors the inverted and non-inverted blocks different colors.\n"
+					+ "   Set the colors with the Color Wheel; this uses the Color Wheel 'Save' and\n"
+					+ "   the Circle Color 'Save'. The Wheel must be closed before the Circle Color.\n\n"
+					
+					+ "Set 1 and Set 2 are two sets of 100 colors each.\n\n"
+					
+					+ "Scale < 1 makes the colors darker, >1 makes them lighter.\n\n"
+					
 					+ "Order   sorts the colors so the blue-green colors are shown first.\n"
-					+ "Reverse sorts the colors so the yellow-red colors are shown first.\n"
+					+ "Reverse sorts the colors so the yellow-red colors are shown first.\n\n"
+					
 					+ "Shuffle randomizes the 100 colors, where a different constant\n"
-					+ "   produces a different set.\n"
+					+ "   produces a different set.\n\n"
+					
 					+ "The color settings are saved between sessions.\n"
 					;
 					

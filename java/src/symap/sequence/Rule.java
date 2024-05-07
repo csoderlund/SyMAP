@@ -37,7 +37,8 @@ public class Rule {
 		line.setLine(line.x1 - x, line.y1 - y, line.x2 - x, line.y2 - y);
 		point.setLocation(point.x - x, point.y - y);
 	}
-
+	protected double getY() {return point.y;} // CAS554 for Yellow Anno box
+	
 	public void paintComponent(Graphics2D g2) {
 		if (layout != null) {
 			g2.setPaint(unitColor);

@@ -34,8 +34,12 @@ public class ColorDialogHandler {
 		dialog.setVisible(true); 						// CAS512 dialog.show();
 		notifyListeners();
 	}
+	
 	public void setDotPlot() {
 		dialog.setDotplot();
+	}
+	public void setCircle() {
+		dialog.setCircle();
 	}
 	private void setColors() {
 		if (dialog != null) {

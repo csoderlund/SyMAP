@@ -99,9 +99,11 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	private TrackHolder holder;
 	private PropsDB propDB;
 	protected Sfilter sfilObj; // CAS552 I finally moved everything to Sfilter, and just access it from here.
+
+	private int distance_for_anno = 0;		// CAS554 show anno depend on density of genes
 	
-	private String geneCntMsg="";
-	//private void dprt(String msg) {symap.Globals.dprt("SQ: " + msg);}
+	private String buildCntMsg="", paintCntMsg="";
+	private void dprt(String msg) {symap.Globals.dprt("SQ: " + msg);}
 	
 	/** the Sequence object is created when 2D is started */
 	public Sequence(DrawingPanel dp, TrackHolder holder) {
@@ -142,8 +144,17 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			chrSize = seqPool.loadChrSize(this);
 			chrName = seqPool.loadSeqData(this, allAnnoVec); // Add annotations to allAnnoVec, and gnSize value
 			if (allAnnoVec.size() >0) { // CAS553 fix for 552 bug when no annot; was accessing a null filtObj
-				for (Annotation aObj : allAnnoVec)
-					if (aObj.isGene()) geneVec.add(aObj);
+				int geneLen=0;			// CAS554 add computation
+				for (Annotation aObj : allAnnoVec) {
+					if (aObj.isGene()) {
+						geneVec.add(aObj);
+						geneLen += aObj.getGeneLen();
+					}
+				}
+				int avg_gene = (int)(geneLen/geneVec.size());
+				distance_for_anno = avg_gene/GENES_FOR_ANNOT_DESC; 
+				dprt(String.format("AvgGeneLen %,6d for %s", avg_gene, getFullName()));
+				if (distance_for_anno<MIN_BP_FOR_ANNOT_DESC) distance_for_anno = MIN_BP_FOR_ANNOT_DESC;
 			}
 		} catch (Exception s1) {
 			ErrorReport.print(s1, "Initializing Sequence failed.");
@@ -195,7 +206,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	 * The Gene boxes are drawn in Annotations.setRectangle and its paintComponent
 	 * The Hit Length, Hit %Id Value and Bar are drawn in mapper.SeqHits.DrawHits.paintHitLen and its paintComponent
 	 */
-	public boolean build() { // DrawingPanel.buildAll & firstViewBuild; Sequence.mouseDragged
+	public boolean buildGraphics() { // DrawingPanel.buildAll & firstViewBuild; Sequence.mouseDragged
 		if (hasBuild) return true;
 		if (!hasLoad) return false;
 
@@ -248,7 +259,6 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			}
 			h = rect.y + rect.height;
 			double bpSep = SPACE_BETWEEN_RULES * bpPerPixel;
-			double cb;
 			
 			for (y = rect.y; y < h + SPACE_BETWEEN_RULES; y += SPACE_BETWEEN_RULES) {	
 				if (y < h && y > h - SPACE_BETWEEN_RULES) continue; 
@@ -257,8 +267,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 				Rule rObj = new Rule(unitColor, unitFont);
 				rObj.setLine(x1, y, x2, y);
 				
-				cb = BpNumber.getCbPerPixel(bpPerPixel, (sfilObj.bFlipped ? h-y : y-rect.y)) + chrDisplayStart; 
-				String num = BpNumber.getFormatted(bpSep, cb, bpPerPixel);
+				double bp =  BpNumber.getCbPerPixel(bpPerPixel, (sfilObj.bFlipped ? h-y : y-rect.y)) + chrDisplayStart; 
+				String num = BpNumber.getFormatted(bpSep, bp, bpPerPixel);
 				layout = new TextLayout(num, unitFont, frc);
 				bounds = layout.getBounds();
 				ty = y + (bounds.getHeight() / 2.0);
@@ -287,11 +297,12 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		Rectangle2D centRect = new Rectangle2D.Double(rect.x+1,rect.y,rect.width-2,rect.height);
 		
 		if (olapMap.size()==0) seqPool.buildOlap(olapMap, geneVec); // builds first time only
-			
-	// XXX Sorted by genes (genenum, start), then exons (see PseudoData.setAnnotations)
+		
+		int cntAnno=0;
+	// XXX Sorted by genes (genenum, start), then exons 
 		Annotation last=null;
 	    for (Annotation annot : allAnnoVec) {
-	    	if ( (annot.isGap() && !sfilObj.bShowGap)
+	    	if ( (annot.isGap()        && !sfilObj.bShowGap)
 	    	 ||  (annot.isCentromere() && !sfilObj.bShowCentromere)
 	    	 ||  ((annot.isGene() || annot.isExon()) && !sfilObj.bShowGene) )
 			{
@@ -319,9 +330,23 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			if (last!=null) annot.setLastY(last); // CAS551 so annotation are separated
 			last=annot;
 			
-		// Setup yellow description; CAS551 improve offsets
-			if (annot.isGene() && sfilObj.bShowAnnot && annot.isVisible()) { // CAS517 added isGene
-				if (annot.hasDesc() && bpPerPixel < MIN_BP_FOR_ANNOT_DESC)  { 
+			if (annot.isGene() && annot.isVisible()) cntAnno++; //isVis needs rect set; CAS554 moved from paintComponent
+		} // end for loop of (all annotations)
+	    
+	    buildCntMsg = String.format("Genes: %,d", cntAnno);
+	    
+	    if (sfilObj.bShowAnnot) {
+	    	if (symap.Globals.DEBUG) {
+	    		String bp = Utilities.kText((int) bpPerPixel);
+	    		buildCntMsg += String.format("\nAnnotation: if x(%s)<y(%,d)", bp, (int)distance_for_anno);
+	    	}	
+	    	
+	    	if (((int)bpPerPixel > distance_for_anno)) buildCntMsg += "\nZoom in for annotation";
+	    	else {
+	    		double lastBP=rect.y + rect.height;
+		    	for (Annotation annot : allAnnoVec) {
+		    		if (!(annot.isGene() && annot.hasDesc() && annot.isVisible())) continue;
+		    		
 					x1 = isRight ? (rect.x + rect.width + RULER_LINE_LENGTH + 2) : rect.x; 
 					x2 = isRight ? x1 + RULER_LINE_LENGTH  						 : x1 - RULER_LINE_LENGTH;
 					
@@ -334,8 +359,10 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 					else lastInc=1;
 					lastStart=ty;
 					
-					TextBox tb = new TextBox(annot.getYellowBoxDesc(),unitFont, (int)x1, (int)ty); // CAS548 use new TextBox
-					getHolder().add(tb); 					// adds it to the TrackHolder JComponent
+					TextBox tb = new TextBox(annot.getYellowBoxDesc(),unitFont, (int)x1, (int)ty, annot.getBorderColor()); // CAS548 use new TextBox
+					if (tb.getLowY()>lastBP) continue;    // if flipped, this may be first, so do not break
+					
+					getHolder().add(tb); 				  // adds it to the TrackHolder JComponent
 					
 					bounds = tb.getBounds();
 					totalRect.height = Math.max(totalRect.height, ty); // adjust totalRect for this box
@@ -348,10 +375,10 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 						tx = x2-OFFSET_SMALL-bounds.getWidth()-bounds.getX();
 						totalRect.x = Math.min(totalRect.x, tx);
 					}
-				}
-			}
-		} // end for loop of (all annotations)
-	
+		    	}
+	    	}
+	    }
+	    
 	// Set header and footer
 		bounds = new Rectangle2D.Double(0, 0, 0, 0); 							
 		x = (rect.x + (rect.width / 2.0)) - (bounds.getX() + (bounds.getWidth() / 2.0));
@@ -403,7 +430,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		String title = getTitle(); // CAS512 returned null, but not repeated 
 		if (title==null) {
 			title="bug";
-			System.err.println("no title");
+			dprt("no title for " + chrName);
 		}
 		titleLayout = new TextLayout(title,titleFont,getFontRenderContext());
 		Rectangle2D bounds = titleLayout.getBounds();
@@ -442,7 +469,6 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		
 		Graphics2D g2 = (Graphics2D) g;
 		
-		// Sequence code
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON); // CAS535
         
 		g2.setPaint((position % REFPOS == 0 ? bgColor1 : bgColor2)); 
@@ -454,20 +480,16 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			for (Rule rule : ruleList)
 				rule.paintComponent(g2);
 		}
-		// Paint Annotation and do counts for help
-		int cntShow=0, cntCon=0;
-		for (Annotation annot : allAnnoVec)
+		// Paint Annotation 
+		int cntCon=0; // conserved can be set and build not called, so compute here
+		for (Annotation annot : allAnnoVec) {
 			if (annot.isVisible()) {
-				annot.paintComponent(g2); 
-				
-				if (annot.isGene()) {
-					cntShow++;
-					if (annot.isConserved()) cntCon++;
-				}
+				annot.paintComponent(g2); 	
+				if (annot.isGene() && annot.isConserved()) cntCon++; 
 			}
-		geneCntMsg= String.format("Genes: %,d", cntShow);
-		if (cntCon>0) geneCntMsg += String.format("\nConserved: %,d", cntCon); // CAS545 add; CAS551 rm Global.TRACE
-	
+		}
+		if (cntCon>0) paintCntMsg = String.format("\nConserved: %,d", cntCon);
+		
 		g2.setFont(footerFont);
 		g2.setPaint(footerColor);
 
@@ -570,7 +592,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			if (x!=null) return x;
 		}
 		
-		return getTitle() + " \n\n" + geneCntMsg; // + "\n\n" + drawingPanel.mouseFunction; 
+		return getTitle() + " \n\n" + buildCntMsg + "\n" + paintCntMsg; // + "\n\n" + drawingPanel.mouseFunction; 
 	}
 	
 	public boolean isFlipped() { return sfilObj.bFlipped; } // Sfilter, TrackData
@@ -1004,7 +1026,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			if (height > 0 && height < MAX_PIXEL_HEIGHT) {
 				if (startResizeBpPerPixel == Globals.NO_VALUE) startResizeBpPerPixel = bpPerPixel;
 				setHeight(height);
-				if (build()) layout();
+				if (buildGraphics()) layout();
 			}
 		} 
 		else if (drawingPanel.isMouseFunction()){ 
@@ -1045,7 +1067,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 
 		repaint();
 		
-		// Sequence 2nd
+		// Sequence Close-up
 		if (!(drawingPanel.isMouseFunctionCloseup() && getCursor().getType() != Cursor.S_RESIZE_CURSOR)) return;
 		
 		Point point = e.getPoint();
@@ -1382,7 +1404,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	
 	private static final double EXON_WIDTH = 15.0;
 	private static final int    GENE_DIV = 4; // Gene is this much narrower than exon
-	private static final int    MIN_BP_FOR_ANNOT_DESC = 500; 
+	private static final int MIN_BP_FOR_ANNOT_DESC = 500; // minimum bp for show anno
+	private static final int GENES_FOR_ANNOT_DESC = 20;   // average distance for 20 genes
 	
 	private static final double SPACE_BETWEEN_RULES = 35.0;
 	private static final double RULER_LINE_LENGTH = 3.0;

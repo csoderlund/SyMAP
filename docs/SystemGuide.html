@@ -356,7 +356,9 @@ Check <tt>Demo-Seq</tt> and <tt>Demo-Seq2</tt>.
 <tr><td style="vertical-align: text-top;">
 
 A link <ttb>Load All Projects</ttb> will be displayed at the top of the right panel; select it to
-load the projects, which will take several minutes.
+load the projects, which will take several minutes. Verify the results by selecting
+the <a href="img/view.png">View</a> link.
+
 <p>If loading the <tt>Demo-Seq</tt> takes
 <i>more than a few minutes</i>, you may need to adjust the MySQL parameters, see
 <a href="TroubleShoot.html#msqslow" class="ext" target="_blank">TroubleShoot MySQL</a>.
@@ -600,7 +602,7 @@ See <a href="SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parame
 <br><a href="img/lineAlign.png"><img src="img/lineAlign.png" alt="alignLine" style="border: 1px solid black; width: 400px"></a>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="img/parameters2.png"><img src="img/parameters2.png" alt="parameters2" style="border: 1px solid black; width: 270px"></a>
 </table>
-
+After loading results, always verify them by selecting the <a href="img/view.png">View</a> link.
 <!-------------------------------------------------------->
 <br>
 <a id="seqprep"></a> <!-- used in SystemHelp -->
@@ -931,16 +933,19 @@ moving the source sequences on disk.
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>How to update SyMAP with a new release</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></table>
-If you have been working with SyMAP and have existing projects, you can update to a new SyMAP version by
-downloading SyMAP, and:
+If you have been working with SyMAP and have existing projects:
 <ul>
-<li>Put <tt>symap_5.tar.gz</tt> in a permanent location and untar it.
+<li>If the <tt>symap.jar</tt> is available from the download site and there are only changes to it, download it and replace the one in <tt>symap_5/java/jar</tt>.
+</ul>
+or
+<ul>
+<li>Put the new <tt>symap_5.tar.gz</tt> in a permanent location and untar it.
 <li>Replace the <tt>/data</tt> and <tt>symap.config</tt> from your previous SyMAP location to this new location.
 <li>This approach is safest as it acquires all changes (e.g. scripts) except for changes to the demo files.
 </ul>
 or
 <ul>
-<li>Put <tt>symap_5.tar.gz</tt> in a temporary location and untar it.
+<li>Put the new <tt>symap_5.tar.gz</tt> in a temporary location and untar it.
 <li>Move <tt>symap_5/java/jar/symap.jar</tt> to the <tt>java/jar</tt> location of your permanent SyMAP.
 <li>Check to
 see if there are any <tt>/scripts</tt> or <tt>/ext</tt> changes that need to also be copied over.
@@ -953,19 +958,13 @@ see if there are any <tt>/scripts</tt> or <tt>/ext</tt> changes that need to als
 <tr><td>v5.4.1 <td>Only the <tt>symap.jar</tt><td>Execute <tt>./symap -y</tt>
 <tr><td>v5.4.0 <td>Only the <tt>symap.jar</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
 <tr><td>v5.2.0 <td><tt>symap</tt>, <tt>viewSymap</tt>, <tt>scripts/ConvertNCBI.*</tt><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
-<tr><td>v5.1.9 to v5.1.7<td>Only the <tt>symap.jar</tt><td>See <sup>3</sup>. If you have customized hit or gene colors, you will need to reset them.
+<tr><td>pre-v5.1.9<td>Only the <tt>symap.jar</tt><td>Delete the database, reload and <ttl>Alignment&Synteny</ttl><sup>2</sup>
 </table>
 <ol>
 <li>Always get the new <tt>java/jar/symap.jar</tt>.
 <p>
 <li>The <ttl>Alignment&Synteny</ttl> will use existing MUMmer files if they have not been removed.
-<p>
-<li>To update to the latest Gene# assignment, it depends on what version you have:
-<table class=ty>
-<tr><td>v5.1.2 to v5.1.7<td>Execute <tt>./symap -z</tt>, then select <ttl>Reload Annotation</ttl>; the synteny algorithm does NOT need to be re-run.
-<tr><td>pre-v5.1.2<td>Delete database, <ttl>Load Project</ttl> and run <ttl>Alignment&Synteny</ttl>. The database does not have
-to be deleted, but its cleaner to do so.
-</table>
+
 </ol>
 
 <!---------------------------------------------------------->

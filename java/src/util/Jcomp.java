@@ -125,6 +125,17 @@ public class Jcomp {
 		
 		return button;
 	}
+	public static JButton createIconButton(String path, String tip) {
+		
+		Icon icon = ImageViewer.getImageIcon(path);  
+		JButton button = new JButton(icon);
+		button.setMargin(new Insets(0,0,0,0));
+		
+		button.setToolTipText(tip);
+		button.setName(tip); 
+		
+		return button;
+	}
 	// if (isSelected) scaleToggle.setBackground(Color.white);
 	// else            scaleToggle.setBackground(Color.gray);
 	public static JButton createBorderIcon(HelpListener parent, 

@@ -1,38 +1,40 @@
 package symap.sequence;
 
-/******************************************************
- * Draws the yellow annotation description box
- * They stay the same width regular of expand/shrink, instead turns on scroll bar
- * CAS544 moved from util to sequence - only used for yellow text box; removed rect because not using popup from here
- */
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.BasicStroke;
 import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
 import util.LinkLabel;
 
-
+/******************************************************
+ * Draws the yellow annotation description box
+ * They stay the same width regular of expand/shrink, instead turns on scroll bar
+ * CAS544 moved from util to sequence - only used for yellow text box; removed rect because not using popup from here
+ */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class TextBox extends JComponent  {
-	private static final Color bgColor = new Color(255,255,153); // CAS503
-	private static final int INSET = 5;
-	private static final int startWidth = 600;
+	private Color borderColor = Color.black;				// CAS554 added border color
+	private final Color bgColor = new Color(240,240,240);   // CAS503, CAS554 was yellow, now light gray
+	private float stroke = 3f;								// CAS554 added strong
+	private final int INSET = 5;
+	private final int startWidth = 600;
+	private final int wrapLen=40, wrapMaxLen=50, wrapShortLen=10, maxLines=3; // CAS554 made final
 	
-	private int width=0, trueWidth = 0, tx = INSET, ty = INSET;
+	private int width=0, tx = INSET, ty = INSET;
 	private Font theFont;
 	
 	// CAS548 Specific for yellow box called from Sequence; two lines input
 	// greedy algorithm 
-	public TextBox(Vector<String> lines, Font font, int x, int y) {
+	public TextBox(Vector<String> lines, Font font, int x, int y, Color bgColor) {
 		if (lines.size()!=3) return;
 		
-		int wrapLen=40, wrapMaxLen=50, wrapShortLen=10, maxLines=3;
 		theFont=font;
+		this.borderColor = bgColor;
 		
 		setLabel(lines.get(0));
 		if (lines.get(1).length()>1) setLabel(lines.get(1));
@@ -73,6 +75,7 @@ public class TextBox extends JComponent  {
 		setLocation(x, y);
 	}
 	private void setLabel(String line) {
+		if (line.length()>wrapLen) line = line.substring(0,wrapLen)+"..."; // CAS554 line with no break
 		JLabel label = new JLabel(line);
 		
 		label.setLocation(tx, ty);
@@ -82,12 +85,12 @@ public class TextBox extends JComponent  {
 		
 		ty += label.getHeight();
 		width = Math.max(width, label.getWidth() + INSET*2);
-		trueWidth = Math.max(trueWidth, label.getWidth() + INSET*2);
 		if (width > startWidth) width = startWidth;
 	}
-		
+	protected double getLowY() { return getHeight() + getY();}	
 	
-	/// // a URL-savvy graphical text box Previous
+	/// a URL-savvy graphical text box Previous; not used
+	private int trueWidth=0;
 	public TextBox(Vector<String> text, Font font, int x, int y, int wrapLen, int truncLen) {
 		this(text.toArray(new String[0]), font, x, y, wrapLen, truncLen);
 	}
@@ -176,7 +179,9 @@ public class TextBox extends JComponent  {
 		// Draw rectangle
 		g2.setColor(bgColor);
 		g2.fillRect(0, 0, width, height);
-		g2.setColor(Color.black);
+		BasicStroke s = new BasicStroke(stroke);
+		g2.setStroke(s);
+		g2.setColor(borderColor);
 		g2.drawRect(0, 0, width, height);
 		
 		paintComponents(g); // draw text

@@ -39,7 +39,8 @@ import util.ErrorReport;
  * @see JDialog, ActionListener, ColorDialogHandler
  * 
  * Tabs can be added by:
- * 		Add tab in colors.properties 
+ * 		Add tab in colors.properties and in pFiles below
+ * 
  * CAS517 made many changes for readability 
  * CAS520 properties reads in random order. So the alpha in colors.properties was replaced with order number
  * CAS532 fixed bug of defaults not always working by reading pFiles instead of using getColor
@@ -56,7 +57,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 	private JButton okButton, cancelButton, defaultButton;
 	
 	private final String propsFile = "/properties/colors.properties"; // CAS521 moved from SyMAP.java
-	private String [] pFiles = {"annotation", "closeup","mapper", "sequence", "dotplot"}; // CAS532 add to save defaults; CAS541 add dotplot
+	private String [] pFiles = {"annotation", "closeup","mapper", "sequence", "dotplot", "circle"}; // CAS532 add to save defaults; CAS541 add dotplot
 	
 	static private HashMap <String, Color> colorDefs = new HashMap <String, Color> (); // CAS532
 		
@@ -72,12 +73,12 @@ public class ColorDialog extends JDialog implements ActionListener {
 		if (cookie != null) changedProps = cookie.copy(propName);
 		
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);
-
+		
 		initDefaultProps(); 
 		initPropColors();
 		initCookieColors();
 		
-		okButton = new JButton("Ok");
+		okButton = new JButton("Save");
 		cancelButton = new JButton("Cancel");
 		defaultButton = new JButton("Default");
 		JButton helpButton = util.Jhtml.createHelpIconUserSm(util.Jhtml.colorIcon); // CAS532 add
@@ -97,19 +98,18 @@ public class ColorDialog extends JDialog implements ActionListener {
 		getContentPane().add(buttonPanel,BorderLayout.SOUTH);
 
 		pack();
-		setLocationRelativeTo(null); // CAS520
+		setBackground(Color.white);
+		setAlwaysOnTop(true);
+		Dimension dim = getToolkit().getScreenSize(); // CAS554 so will not go behind the Circle one
+		setLocation(dim.width / 2,dim.height / 5);
+		//setLocationRelativeTo(null); 
 	}
-/* CAS512 depreciated, not called
-	public void show() {
-		 //Cancel other changes that may have happend if the user closes
-		 //the dialog some other way.
-		cancelAction();
 
-		super.show();
-	}
-*/
 	public void setDotplot() { // CAS541
 		tabbedPane.setSelectedIndex(3);
+	}
+	public void setCircle() { // CAS554
+		tabbedPane.setSelectedIndex(4);
 	}
 
 	// read colors.properties

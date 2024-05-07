@@ -343,6 +343,9 @@ public class ControlPanel extends JPanel implements HelpListener {
 			+ "\n Hover on gene for information."
 			+ "\n Right-click on gene for popup with the full description."
 			+ "\n Right-click in non-gene track space for subset filter popup."
+			+ "\n Problem: if there are more than 2 tracks and the sequence 'Annotation' is"
+			+ "\n   shown for the 2nd track, the mouse hover sometimes does not work correctly "
+			+ "\n   in the 3rd track."
 			+ "\n\n";
 
 	static final String HIT_help = "Hit-wire Information:"

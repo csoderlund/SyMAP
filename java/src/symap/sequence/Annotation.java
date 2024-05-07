@@ -3,7 +3,6 @@ package symap.sequence;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -260,6 +259,7 @@ public class Annotation {
 	public int getAnnoIdx() { return annot_idx;}			// ditto
 	public String getTag() {return tag;} 					// CAS512 add for HelpBox; CAS543 called for Exons
 	public boolean isStrandPos() {return bStrandPos;}		// for seq-seq closeup
+	protected Color getBorderColor() { return (bStrandPos) ? exonColorP : exonColorN;} // CAS554 for Annotation Boxes
 	
 	protected int getType() {return itype;}
 	protected boolean isGene() 	  { return itype == GENE_INT; }
@@ -304,7 +304,7 @@ public class Annotation {
 		return "";
 	}
 	private String getDescOnly() {
-		for (String keyVal : description.split(";")) {
+		for (String keyVal : description.split(";")) { // NCBI or Ensembl
 			if (keyVal.contains("=")) {
 				String [] tok = keyVal.split("=");
 				String key = tok[0].toLowerCase();
@@ -314,7 +314,7 @@ public class Annotation {
 				}
 			}
 		}
-		for (String keyVal : description.split(";")) {
+		for (String keyVal : description.split(";")) { // unknown, take a guess
 			if (keyVal.contains("=")) {
 				String [] tok = keyVal.split("=");
 				String key = tok[0].toLowerCase();
@@ -326,6 +326,7 @@ public class Annotation {
 		}
 		return description;
 	}
+
 	private Vector<String> getPopUpDesc() {	// Shown when click on anno; show full descr
 		Vector<String> out = new Vector<String>();
 		out.add(fullTag);				// CAS512 add tag	
@@ -481,7 +482,7 @@ public class Annotation {
 	 * Values used in the database to represent annotation types.
 	 * CAS543 remove framemarker, hit and sygene
 	 */
-	
+		
 	private static final float crossWidth= (float) 2.0; // the width of the line in the cross
 	
 	protected static final int GENE_INT 		= 0;

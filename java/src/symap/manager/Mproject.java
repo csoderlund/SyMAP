@@ -253,8 +253,8 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	 */
 	public String loadProjectForView() { // CAS521 add to can see what was loaded
 	try {
-		TreeMap <String, Integer> chrNameMap = new TreeMap <String, Integer> ();
-		TreeMap <Integer, Integer> chrLenMap = new TreeMap <Integer, Integer> ();
+		TreeMap <String, Integer> chrNameMap = new TreeMap <String, Integer> (); // name, idx
+		TreeMap <Integer, Integer> chrLenMap = new TreeMap <Integer, Integer> ();// idx, chrName
 		
 	// get chrs and lengths
 		ResultSet rs = dbc2.executeQuery("select xgroups.idx, xgroups.fullname, pseudos.length from pseudos " +
@@ -267,11 +267,15 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 			chrNameMap.put(name, idx);
 			chrLenMap.put(idx, len);
 		}
+		String desc = dbc2.executeString("select value from proj_props "
+				+ "where name='description' and proj_idx=" + projIdx); // CAS554 add
 		
-		String info="Project " + strDisplayName + "\n\n";
+		String info="Project " + strDisplayName + "\n";
+		if (!Utilities.isEmpty(desc)) info += desc + "\n";
+		info += "\n";
 		
-		String [] fields = {"Chr", "Length" ,"#Genes", "#Exons"}; // CAS534 add Exon columns; 
-		int [] justify =   {1,    0,    0, 0};
+		String [] fields = {"Chr", "Length", "  ","#Genes", "AvgLen", "  ", "#Exons", "AvgLen"}; // CAS534 add #Exon; CAS554 add avgLen
+		int [] justify =   {1,    0,    0, 0, 0, 0, 0, 0};
 		int nRow = chrNameMap.size();
 	    int nCol=  fields.length;
 	    String [][] rows = new String[nRow][nCol];
@@ -285,10 +289,20 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	    	rs = dbc2.executeQuery("select count(*) from pseudo_annot where type='exon' and grp_idx=" + idx);
 	    	int exonCnt = (rs.next()) ? rs.getInt(1) : 0;
 	    	
+	    	rs = dbc2.executeQuery("select AVG(end-start+1) from pseudo_annot where type='gene' and grp_idx=" + idx);
+	    	double avgglen = (rs.next()) ? rs.getDouble(1) : 0.0;
+	    	
+	    	rs = dbc2.executeQuery("select AVG(end-start+1) from pseudo_annot where type='exon' and grp_idx=" + idx);
+	    	double avgelen = (rs.next()) ? rs.getDouble(1) : 0.0;
+	    	
 	    	rows[r][c++] = name;
 	    	rows[r][c++] = String.format("%,d",chrLenMap.get(idx));
+	    	rows[r][c++] = "  ";
 	    	rows[r][c++] = String.format("%,d",geneCnt);
+	    	rows[r][c++] = String.format("%,d",(int) avgglen);
+	    	rows[r][c++] = "  ";
 	    	rows[r][c++] = String.format("%,d",exonCnt);
+	    	rows[r][c++] = String.format("%,d",(int) avgelen);
 	    	r++; c=0;
 	    }
 	    info += Utilities.makeTable(nCol, nRow, fields, justify, rows);

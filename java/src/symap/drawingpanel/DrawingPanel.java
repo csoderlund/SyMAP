@@ -371,11 +371,10 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	// CAS550 remove private void firstViewBuild() {
 	
 	public void amake() { // called on 1st view, or resetColors; 
-		dprt("amake " + bUpdateHistory + bReplaceHistory);
 		make(); // CAS551 stop using new Thread(new MapMaker()).start(); which stopped having 2D on long track 550 bug
 	}	
 	public boolean smake(String msg) { // called when graphics changes: Sfilter, Sequence.mousePress, DrawingPanel.changeRegions
-		dprt("smake "  + msg + " " + bUpdateHistory + bReplaceHistory);
+		//dprt("smake "  + msg + " " + bUpdateHistory + bReplaceHistory);
 		return make();
 	}
 	private synchronized boolean make() { // CAS550 merge all 
@@ -391,7 +390,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 				mappers[i].initHits(); 			// only init the first time called
 			
 			for (int i = 0; i < numTracks; i++)
-				if (!trackHolders[i].getTrack().build()) return false; // build graphics for painting in repaint; CAS551 add check
+				if (!trackHolders[i].getTrack().buildGraphics()) return false; // build graphics for painting in repaint; CAS551 add check
 			
 			if (bUpdateHistory) {
 				updateHistory();

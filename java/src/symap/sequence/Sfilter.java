@@ -55,15 +55,15 @@ public class Sfilter extends JDialog {
 	private static final String DEFAULT_UNIT_KB = BpNumber.KB;
 	
 	// WHEN ALTER these, alter in initValues and TrackData!
-	static protected final boolean bDefRuler=true, bDefGap=true, bDefCentromere=true;
-	static protected final boolean bDefGene=true, bDefScoreLine=false, bDefHitLen=true;
+	static private final boolean bDefRuler=true, bDefGap=true, bDefCentromere=true;
+	static private final boolean bDefGene=true, bDefScoreLine=false, bDefHitLen=true;
 	
-	static protected final boolean bDefGeneNum=false, bDefAnnot=false, bDefGeneLine=false;
-	static protected final boolean bDefConserved=false, bDefGeneHigh=true;
+	static private final boolean bDefGeneNum=false, bDefAnnot=false, bDefGeneLine=false;
+	static private final boolean bDefConserved=false, bDefGeneHigh=true;
 	
-	static protected final boolean bDefScoreText=false, bDefHitNumText=false, bDefBlockText=false, 
-			                       bDefCsetText=false, bDefNoText=true;
-	static protected final boolean bDefFlipped=false;
+	static private final boolean bDefScoreText=false, bDefHitNumText=false, bDefBlockText=false, 
+			                     bDefCsetText=false, bDefNoText=true;
+	static private final boolean bDefFlipped=false;
 	
 	// Current values - many shared between Filter and Popup (could just always set and read from Filter)
 	protected boolean bShowRuler, bShowGap, bShowCentromere, bShowGene, bShowScoreLine, bShowHitLen;

@@ -60,9 +60,7 @@
 
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
-
-If you are using SyMAP and want to update to a new version, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
-<br> existing databases, there are no changes since <a href="#v548">v5.4.8</a>.
+For existing databases, there are no database or build changes since <a href="#v548">v5.4.8</a>; see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
 <br>This will no longer run on 32-bit machines, starting with v5.5.1.
 <br>You must have Java v17 or later, starting with SyMAP v5.5.0.
 <h3>Summary of recent major releases</h3>
@@ -76,6 +74,31 @@ exon-intron structure.
 <tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="Collinear.html">viewing</a>
 </table>
 
+<a id="v554"></a>
+<h3>Release: v5.5.4 (7-May-24)</h3>
+
+<ul>
+<li><ttb>2D</ttb>
+<ul>
+<li><ttl>Show Annotation</ttl>: (1) This used a constant that was appropriate for
+plant genes, but not mammalian; the constant is now computed based on the average
+length of genes for each chromosome. (2) The boxes now have background light-gray and
+border in the exon +/- color. (3) If the last line of the annotation is long, it
+is now truncated.
+<li>A tiny problem has been identified and documented in the <a href="./UserGuide.html">User Guide</a>;
+search on "KNOWN PROBLEM" (this will be fixed for v5.5.5).
+</ul>
+<li><ttb>Circle</ttb>
+<ul>
+<li>The <ttx>Two-color all blocks</ttx> option, which colors the inverted and non-inverted
+blocks two different colors, can now have its colors changes via the color palette icon.
+</ul>
+<li><ttb>View</ttb>
+<ul>
+<li>Add <ttx>AvgGeneLen</ttx> and <ttx>AvgExonLen</ttx> for the average gene and exon
+length of each chromosome.
+</ul>
+</ul>
 <a id="v553"></a>
 <h3>Release: v5.5.3 (28-Apr-24)</h3>
 Interface changes for the <ttb>Circle</ttb> display.
