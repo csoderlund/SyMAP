@@ -98,7 +98,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	private DrawingPanel drawingPanel;
 	private TrackHolder holder;
 	private PropsDB propDB;
-	protected Sfilter sfilObj; // CAS552 I finally moved everything to Sfilter, and just access it from here.
+	protected Sfilter sfilObj; // CAS552 moved everything to Sfilter, and just access it from here.
 
 	private int distance_for_anno = 0;		// CAS554 show anno depend on density of genes
 	
@@ -151,10 +151,13 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 						geneLen += aObj.getGeneLen();
 					}
 				}
-				int avg_gene = (int)(geneLen/geneVec.size());
-				distance_for_anno = avg_gene/GENES_FOR_ANNOT_DESC; 
-				dprt(String.format("AvgGeneLen %,6d for %s", avg_gene, getFullName()));
-				if (distance_for_anno<MIN_BP_FOR_ANNOT_DESC) distance_for_anno = MIN_BP_FOR_ANNOT_DESC;
+				if (geneVec.size()>0) { // CAS555 bug fix for zero
+					int avg_gene = (geneVec.size()>0) ? (int)(geneLen/geneVec.size()) : 0;
+					distance_for_anno = avg_gene/GENES_FOR_ANNOT_DESC; 
+					dprt(String.format("AvgGeneLen %,6d for %s", avg_gene, getFullName()));
+					if (distance_for_anno<MIN_BP_FOR_ANNOT_DESC) distance_for_anno = MIN_BP_FOR_ANNOT_DESC;
+				}
+				else distance_for_anno = MIN_BP_FOR_ANNOT_DESC;
 			}
 		} catch (Exception s1) {
 			ErrorReport.print(s1, "Initializing Sequence failed.");
@@ -191,7 +194,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		sd.setTrack(this);
 		firstBuild = false;
 		
-		if (isRef()) forceConserved(); 	// CAS545 add
+		if (isRef()) resetHitg2(); 	// CAS545 add
 	}
 	protected void setFilter(Sfilter obj) {sfilObj = obj;} // CAS552 added
 	
@@ -199,8 +202,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	
 	public void setPosition(int position) { this.position = position; } // DrawingPanel.initTrack
 	
-	protected boolean isRef() {return (position % REFPOS == 0);} // Sequence.setup, Sfilter; CAS545 add for conserved; (position % 2 == 0)
+	protected boolean isRef() {return (position % REFPOS == 0);} // Sequence.setup, Sfilter; CAS545 add for 2g2/1g2; (position % 2 == 0)
 	
+	protected boolean is3Track() {return drawingPanel.getNumMaps()>1;} // CAS555 hitObj2 is not known when filter created
 	/**
 	 * XXX Build layout: Sets up the drawing objects for this sequence. Called by DrawingPanel and Track
 	 * The Gene boxes are drawn in Annotations.setRectangle and its paintComponent
@@ -343,7 +347,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	    	
 	    	if (((int)bpPerPixel > distance_for_anno)) buildCntMsg += "\nZoom in for annotation";
 	    	else {
-	    		double lastBP=rect.y + rect.height;
+	    		double lastBP=rect.y + rect.height; // CAS554 
 		    	for (Annotation annot : allAnnoVec) {
 		    		if (!(annot.isGene() && annot.hasDesc() && annot.isVisible())) continue;
 		    		
@@ -485,10 +489,10 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		for (Annotation annot : allAnnoVec) {
 			if (annot.isVisible()) {
 				annot.paintComponent(g2); 	
-				if (annot.isGene() && annot.isConserved()) cntCon++; 
+				if (annot.isGene() && annot.isHitg2()) cntCon++; 
 			}
 		}
-		if (cntCon>0) paintCntMsg = String.format("\nConserved: %,d", cntCon);
+		if (cntCon>0) paintCntMsg = String.format("\n%s %,d", sfilObj.xHitg2(), cntCon);
 		
 		g2.setFont(footerFont);
 		g2.setPaint(footerColor);
@@ -727,23 +731,36 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		return idxVec;
 	}
 	
-	private void forceConserved()  {// see reset() for history
-		if (sfilObj.bHighConserved) 
-			seqPool.flagConserved(hitsObj1, hitsObj2, this);
+	private void resetHitg2()  {// see reset() for history
+		if (sfilObj.bHitHighg2x2 || sfilObj.bHitHighg2x1) {
+			seqPool.setNg2(sfilObj.bHitHighg2x2, hitsObj1, hitsObj2, this);
+		}
 		else { 
-			if (hitsObj1!=null) hitsObj1.clearConserved(); 
-			if (hitsObj2!=null) hitsObj2.clearConserved();
+			if (hitsObj1!=null) hitsObj1.clearHighHitg2(); 
+			if (hitsObj2!=null) hitsObj2.clearHighHitg2();
 		}
 	}
-	// Sfilter.FilterListener;  sets isConserved in HitData and Annotation
-	public boolean highConserved(boolean high) {
-		if (sfilObj.bHighConserved==high) return false;
+	// Sfilter.FilterListener;  sets isHighHitg2x2 in HitData and Annotation
+	public boolean highHitg2x2(boolean high) {
+		if (sfilObj.bHitHighg2x2==high) return false;
 		
-		sfilObj.bHighConserved = high;
-		if (high) seqPool.flagConserved(hitsObj1, hitsObj2, this);
+		sfilObj.bHitHighg2x2 = high;
+		if (high) seqPool.setNg2(true, hitsObj1, hitsObj2, this);
+		else { //  clears hit its end annos
+			if (hitsObj1!=null) hitsObj1.clearHighHitg2();
+			if (hitsObj2!=null) hitsObj2.clearHighHitg2();
+		}
+		return true;
+	}
+	// Sfilter.FilterListener;  sets isHighHitg2x1 in HitData and Annotation
+	public boolean highHitg2x1(boolean high) {
+		if (sfilObj.bHitHighg2x1==high) return false;
+		
+		sfilObj.bHitHighg2x1 = high;
+		if (high) seqPool.setNg2(false, hitsObj1, hitsObj2, this);
 		else { // hit conserve clears its end annos
-			if (hitsObj1!=null) hitsObj1.clearConserved();
-			if (hitsObj2!=null) hitsObj2.clearConserved();
+			if (hitsObj1!=null) hitsObj1.clearHighHitg2();
+			if (hitsObj2!=null) hitsObj2.clearHighHitg2();
 		}
 		return true;
 	}
@@ -789,8 +806,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	 */
 	public TrackHolder getHolder() { return holder;}// Called by Sequence and DrawingPanel
 
-	/* getGraphics returns the holders graphics object if a holder exists, null otherwise.
-	 * @see javax.swing.JComponent#getGraphics() */
+	/* getGraphics returns the holders graphics object if a holder exists, null otherwise.*/
 	public Graphics getGraphics() {
 		if (holder != null) return holder.getGraphics();
 		return null;

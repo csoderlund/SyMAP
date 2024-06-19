@@ -49,7 +49,7 @@ public class Hfilter extends JDialog {
 	private final String HIT1 = "Hit =1 gene";
 	private final String HIT0 = "Hit =0 genes";
 	private final String ALL =  "All hits";
-	private final String POPUP ="Hit popup";	// CAS543 stay selected when the hitwire gets a popup
+	private final String POPUP ="Hit popup (or Query)";	//CAS555 query; CAS543 stay selected when the hitwire gets a popup
 	private final String NONE = "None";
 	
 	// On Menu panel

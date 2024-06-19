@@ -161,10 +161,10 @@ public class Mapper extends JComponent
 		return false; // target
 	}
 	
-	// CAS516 change to one call instead of 4
-	public boolean isQuerySelHit(int s1, int e1, int s2, int e2) {
+	// CAS516 change to one call instead of 4; CAS555 add idx for group highlight
+	public boolean isQuerySelHit(int idx, int s1, int e1, int s2, int e2) {
 		if(theTablePanel != null)
-			return theTablePanel.isHitSelected(s1, e1, s2, e2);
+			return theTablePanel.isHitSelected(idx, s1, e1, s2, e2);
 		return false;
 	}
 	/********************************************************************/
@@ -240,6 +240,7 @@ public class Mapper extends JComponent
 	public static Color pseudoLineColorNP;
 	public static Color pseudoLineColorNN;
 	public static Color pseudoLineHoverColor;		// CAS520 renamed to Hover and use Highlight for Highlight	
+	public static Color pseudoLineGroupColor;		// CAS555 added for Query group and Gene popup	
 	public static Color pseudoLineHighlightColor1;
 	public static Color pseudoLineHighlightColor2;
 	public static Color hitRibbonBackgroundColor;	
@@ -253,6 +254,7 @@ public class Mapper extends JComponent
 		pseudoLineColorNP = 		props.getColor("pseudoLineColorNP"); 
 		pseudoLineColorNN = 		props.getColor("pseudoLineColorNN"); 
 		pseudoLineHoverColor = 		props.getColor("pseudoLineHoverColor");
+		pseudoLineGroupColor = 		props.getColor("pseudoLineGroupColor");
 		pseudoLineHighlightColor1 = props.getColor("pseudoLineHighlightColor1"); 
 		pseudoLineHighlightColor2 = props.getColor("pseudoLineHighlightColor2"); 
 		hitRibbonBackgroundColor = 	props.getColor("hitRibbonBackgroundColor"); 

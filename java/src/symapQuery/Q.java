@@ -11,9 +11,11 @@ public class Q {
 	
 	static final int INC=5000;
 	static final String rowCol   = "Row";
-	static final String blockCol = "Block"; 	// equals TableData.ColumnComparator
-	static final String runCol =   "Collinear"; // CAS517 equals TableData.ColumnComparator
-	static final String hitCol =   "Hit#";		// CAS521 used for Align text
+	static final String blockCol = "Block"; 	// loadRow; equals TableData.ColumnComparator (for sorting)
+	static final String runCol =   "Collinear"; // loadRow; CAS517 equals TableData.ColumnComparator
+	static final String hitCol =   "Hit#";		// loadRow; CAS521 used for Align text
+	static final String grpCol =   "Grp#";		// loadRow; CAS555 show synteny
+	static final String grpSZ =   "Grp\nSize";	// CAS555 show synteny
 	
 	// CAS519 was Gene for Orphan and Hit for Pairs; now it always shows the genes; Chr is always same for hit/gene
 	static final String chrCol =	 "Chr";
@@ -80,11 +82,6 @@ public class Q {
 	
 	static final int PHAANNOT1IDX = 32;	// PHA.annot_idx	CAS547 for AllGenes
 	static final int PHAANNOT2IDX = 33;	// PHA.annot2_idx
-	
-	static final String ANNO =  "ANNO";	// populated by keyword 
-	static final String GSIZE = "GSIZE";// computed PgFsize
-	static final String GRP =   "GRP";	// computed PgeneF
-	static final String PGF =   "PGF";	// Compute
 	
 	/**************************************************************
 	 * Relations:

@@ -25,9 +25,10 @@ public class Arg {
 	protected static final int typeUnk=0, type0=1, type1t=2, type1q=3, type2=4;
 	protected static final String [] strType = {"Unk","G0", "G1t", "G1q", "G2"};
 	
+	// useIntronLen used for G0; nothing else is used
 	protected static final int plantIntronLen =  2500, plantGeneLen =  50000; // plants
 	protected static final int mamIntronLen   =  5000, mamGeneLen   = 100000; // mammalians
-	protected static int useIntronLen = plantIntronLen; // if not annotation, will not ever be set to mammals
+	protected static int useIntronLen = plantIntronLen; // if no annotation, will not ever be set to mammals
 	protected static int useGeneLen =   plantGeneLen;  
 	protected static int maxBigGap = 	(useGeneLen/4), maxHugeGap=(useGeneLen/2);
 	

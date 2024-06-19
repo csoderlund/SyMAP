@@ -37,7 +37,7 @@ public class PairParams extends JDialog {
 	private static final String [] LABELS = { // Order must be same as createMainPanel
 		"Min Dots", "Top N piles", "Merge Blocks", 		// CAS548 add 'piles'
 		"NUCmer Args", "PROmer Args", "Self Args", "NUCmer Only","PROmer Only",
-		"Algorithm 1 (original)", "Algorithm 2 (gene-centric)", 
+		"Algorithm 1 (modified original)", "Algorithm 2 (exon-intron)",  // CAS555 change '()' text 
 		"Intergenic", "Intron", "Exon",
 		 "EE", "EI", "En", "II", "In"
 		};
@@ -65,7 +65,8 @@ public class PairParams extends JDialog {
 	
 	private void setDefaults(HashMap <String, String> valMap) {
 		for(int x=0; x<SYMBOLS.length; x++)
-			setValue(SYMBOLS[x], valMap.get(SYMBOLS[x]));
+			setValue(SYMBOLS[x], valMap.get(SYMBOLS[x]));	
+		chkDef.setSelected(true); // CAS555 not in symbols, so PROmer/NUMmer only do not get reset
 	}
 	private void save() {
 		if (!checkInt("Min Dots", txtMinDots.getText(), 1)) return; // CAS540 add check
@@ -253,8 +254,7 @@ public class PairParams extends JDialog {
 				setVisible(false);
 			}
 		});
-
-		
+	
 		mainPanel = new JPanel();
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
 		mainPanel.setAlignmentX(Component.CENTER_ALIGNMENT);

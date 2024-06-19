@@ -22,14 +22,13 @@ import util.Utilities;
  * 5. AlignProj  save - save all to db
  * 6. Show file params on PairParams
  * 7. Show db params on Summary
- * CAS546 add Algo2 params
+ * CAS546 add Algo2 params; CAS555 improved output
  */
 public class Mpair {
 	public static final int FILE = 0;
 	public static final int DB = 1;
 	private static final String algo1 = "Cluster Algo1 (modified original)";
 	private static final String algo2 = "Cluster Algo2 (exon-intron)";
-	private static final String defAlgo = algo1;
 	
 	public Mproject mProj1, mProj2;
 	private int pairIdx=-1, proj1Idx=-1, proj2Idx=-1;
@@ -85,86 +84,82 @@ public class Mpair {
 	/***********************************************************************************
 	 * CAS546 update params a bit
 	 */
-	public String getChangedParams(int type) {// ManagerFrame for selected when need align; SumFrame (DB type)
-		String amsg = getAlign(type);
-		String smsg = getSynteny(type);
-		
-		String fmsg = (!amsg.equals("")) ? amsg+"\n"+smsg : smsg;
-		
-		return fmsg+"\n";
-	}
 	public String getChangedSynteny() { // ManagerFrame.alignSelectedPair when no align
 		return getSynteny(FILE) + "\n";
 	}
 	
 	public String getChangedAlign() { // AlignMain write to terminal
 		String msg = getAlign(FILE);
-		String fmsg = (msg.trim().equals("")) ? "" : "\nNon-default parameters: " + msg;
-		return fmsg+"\n";
+		if (msg.isEmpty()) return "";
+		return "Non-default parameters: " + msg +"\n";
+	}
+	public String getChangedParams(int type) {// ManagerFrame for selected when need align; SumFrame (DB type)
+		String amsg = getAlign(type);   // could be empty
+		String smsg = getSynteny(type); // never empty
+		return join(amsg, smsg);
 	}
 	
-	// these all return "" if no change
-	private String getAlign(int type) {
+	private String getAlign(int type) {// return "" if no change
 		String msg="";
-		if (isChg(type,"self_args")) 	msg += "\n  Self args: "   + getSelfArgs(type);
-		if (isChg(type,"promer_args")) 	msg += "\n  PROmer args: " + getPromerArgs(type);
-		if (isChg(type,"nucmer_args")) 	msg += "\n  NUCmer args: " + getNucmerArgs(type);
-		if (isChg(type,"promer_only")) 	msg += "\n  PROmer only";
-		if (isChg(type,"nucmer_only")) 	msg += "\n  NUCmer only";
+		if (isChg(type,"self_args")) 		msg = " Self args: "   + getSelfArgs(type); // CAS555 aligned with other params
+		else if (isChg(type,"promer_args")) msg = " PROmer args: " + getPromerArgs(type);
+		else if (isChg(type,"nucmer_args")) msg = " NUCmer args: " + getNucmerArgs(type);
 		
-		msg += mProj1.getMaskedParam();
-		msg += mProj2.getMaskedParam();
+		if (isChg(type,"promer_only")) 		msg = join(msg, " PROmer only");
+		else if (isChg(type,"nucmer_only")) msg = join(msg, " NUCMER only");
+		
+		msg = join(msg, mProj1.getMaskedParam());
+		msg = join(msg, mProj2.getMaskedParam());
+		
+		if (!msg.isEmpty()) msg = "Align\n" + msg;
+		
 		return msg;
 	}
 	private String getSynteny(int type) { // SyntenyMain only
+		String cmsg = getClusterAlgo(type); // never empty
 		
-		String msg = getAlgo(type);
+		String smsg="";
+		if (isChg(type,"mindots")) 		smsg = join(smsg, " Min dots=" + getMinDots(type) + "  ");
+		if (isChg(type,"merge_blocks")) smsg = join(smsg, " Merge blocks" + "  ");
 		
-		if (isChg(type,"mindots")) 		msg += "\n  Min dots=" + getMinDots(type) + "  ";
-		if (isChg(type,"merge_blocks")) msg += "\n  Merge blocks" + "  ";
+		smsg = join(smsg, mProj1.getOrderParam());
+		smsg = join(smsg, mProj2.getOrderParam());
 		
-		String fmsg = (msg.trim().equals("")) ? "Use default parameters with " + defAlgo : 
-            "Non-default parameters: " + msg;
+		if (!smsg.isEmpty()) smsg = "Synteny \n" + smsg;
 		
-		fmsg += mProj1.getOrderParam();
-		fmsg += mProj2.getOrderParam();
-		
-		return fmsg;
+		return join(cmsg, smsg);
 	}
 	
-	private String getAlgo(int type) {
+	private String getClusterAlgo(int type) {
 		String msg="";
 		
 		if (isAlgo2(type)) {
 			boolean chg = isChg(type,"g0_match") || isChg(type,"gintron_match") || isChg(type,"gexon_match") 
 			|| isChg(type, "EI_pile") || isChg(type, "En_pile") || isChg(type, "II_pile") 
 			|| isChg(type, "In_pile") || isChg(type,"topn") || backend.Constants.WRONG_STRAND_EXC;
+			
+			msg = algo2;
 			if (chg) {
-				msg = "\n" + algo2;
-				if (isChg(type,"g0_match")) 		msg += "\n    Intergenic base match = " + getG0Match(type);
-				if (isChg(type,"gintron_match")) 	msg += "\n    Intron base match = " + getGintronMatch(type);
-				if (isChg(type,"gexon_match")) 		msg += "\n    Exon base match = " + getGexonMatch(type);
+				if (isChg(type,"g0_match")) 		msg += "\n Intergenic base match = " + getG0Match(type);
+				if (isChg(type,"gintron_match")) 	msg += "\n Intron base match = " + getGintronMatch(type);
+				if (isChg(type,"gexon_match")) 		msg += "\n Exon base match = " + getGexonMatch(type);
 				
-				if (isChg(type,"EE_pile"))			msg += "\n    Limit Exon-Exon piles";
-				if (isChg(type,"EI_pile"))			msg += "\n    Limit Exon-Intron piles"; // CAS549 did not chg msg
-				if (isChg(type,"En_pile"))			msg += "\n    Limit Exon-intergenic piles";
-				if (isChg(type,"II_pile"))			msg += "\n    Allow Intron-Intron piles";
-				if (isChg(type,"In_pile"))			msg += "\n    Allow Intron-intergenic piles";
-				if (isChg(type,"topn")) 			msg += "\n    Top N piles ="    + getTopN(type);
+				if (isChg(type,"EE_pile"))			msg += "\n Limit Exon-Exon piles";
+				if (isChg(type,"EI_pile"))			msg += "\n Limit Exon-Intron piles"; // CAS549 did not chg msg
+				if (isChg(type,"En_pile"))			msg += "\n Limit Exon-intergenic piles";
+				if (isChg(type,"II_pile"))			msg += "\n Allow Intron-Intron piles";
+				if (isChg(type,"In_pile"))			msg += "\n Allow Intron-intergenic piles";
+				if (isChg(type,"topn")) 			msg += "\n Top N piles ="    + getTopN(type);
 				if (backend.Constants.WRONG_STRAND_EXC) msg += "\n    Exclude g2 wrong strand hits";
 			}
 		}
 		else if (isAlgo1(type)) {
+			msg = algo1; // always list clustering
 			boolean chg = isChg(type, "topn") || Group.bSplitGene;
 			if (chg) {
-				msg += "\n" + algo1;
-				if (isChg(type,"topn")) msg += "\n    Top N piles ="    + getTopN(type);
-				if (Group.bSplitGene)   msg += "\n    Split gene";
+				if (isChg(type,"topn")) msg += "\n Top N piles ="    + getTopN(type);
+				if (Group.bSplitGene)   msg += "\n Split gene";
 			}
-		}
-		if (msg.equals("")) { // so I can change the default without changing this method
-			if (defMap.get("algo2")=="0" && isChg(type, "algo2")) msg = "\n" + algo2;
-			else if (defMap.get("algo1")=="0" && isChg(type, "algo1")) msg = "\n" + algo1;
 		}
 		return msg;
 	}
@@ -406,4 +401,9 @@ public class Mpair {
 	catch (Exception e) {ErrorReport.print(e, "post v546"); return false;}
 	}
 	public String toString() {return mProj1.strDisplayName + "-" + mProj2.strDisplayName + " pair";}
+	private String join(String m1, String m2) {
+		if (m1.isEmpty()) return m2;
+		if (m2.isEmpty()) return m1;
+		return m1 + "\n" + m2;
+	}
 }

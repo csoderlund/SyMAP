@@ -16,7 +16,7 @@ public class FieldData {
 	// TableDataPanel.createGeneralSelectPanel expects N_GENERAL columns
 	public static final int N_GEN_HIT=7;
 	private static final String [] GENERAL_COLUMNS =	 
-		{Q.rowCol, Q.blockCol, "Block\nHits",Q.runCol,"PgeneF", "PgFSize",
+		{Q.rowCol, Q.blockCol, "Block\nHits", Q.runCol, Q.grpCol, Q.grpSZ, // CAS555 was PgeneF and PgfSize
 		Q.hitCol,   "Hit\nCov", "Hit\n%Id", "Hit\n%Sim","Hit\n#Sub", "Hit\nSt", 
 		"Hit\nType"}; // CAS516 add these 4; CAS520 add st; CAS540 add Len; CAS546 add Hit Type; CAS548 mv hitCov
 	
@@ -32,8 +32,8 @@ public class FieldData {
 		 "Block: Synteny block number (chr.chr.#)", 
 		 "Block Hits: Number of hits in the synteny block",
 		 "Collinear: Number of adjacent genes and set number (chr.chr.N.#)", 
-		 "PgeneF: (Compute PgeneF only) putative gene family number", 
-		 "PgFSize: (Compute PgeneF only) putative gene family size",
+		 "Grp#: (Gene#, Multi-hit or PgeneF) group number", 		// computed in ComputeMulti or ComputePgeneF
+		 "GrpSize: (Gene#, Multi-hit or PgeneF) group size",
 		 "Hit#: Number representing the hit", 
 		 "Hit Cov: The largest summed subhit lengths of the two species",
 		 "Hit %Id: Approximate percent identity (exact if one hit)",

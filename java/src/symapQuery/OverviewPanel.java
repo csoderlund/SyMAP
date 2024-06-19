@@ -53,8 +53,9 @@ public class OverviewPanel extends JPanel {
 		overView += "<P>Select <B>Results</B> to view the list of query results, and to remove results.</P>";
 		overView += "<br>The query results are listed under the <b>Results</b> tab, and can be viewed by selecting one.</P>";
 		
-		String algo = "The Olap column is ";
-		algo += theParentFrame.isAlgo2() ? "exon overlap" : "gene overlap";
+		String algo = theParentFrame.isAlgo2() ? "Algo2: " : "Algo1: "; 
+		algo += "The Olap column is ";
+		algo += theParentFrame.isAlgo2() ? "exon overlap" : "gene overlap; no multi-hit exon option";
 		overView += "<P><b>Note:</b> " + algo;	// CAS548
 		
 		overView += "</FONT></div>";

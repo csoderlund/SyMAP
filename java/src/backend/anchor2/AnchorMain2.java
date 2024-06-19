@@ -20,12 +20,11 @@ import symap.Globals;
 import util.Cancelled;
 import util.ErrorReport;
 import util.ProgressDialog;
-import util.Utilities;
 
 /*******************************************************
  * -Reads and process one MUMmer file at a time, so it is important that no chromosome gets split over multiple files!!!
  * -For each chr-chr pair, creates a GrpPair object which performs on processing and DB saves
- * 		each GrpPair has genes and hits for the pair; a X gene will be in multiple pairs, but a hit will only be in one
+ * 		each GrpPair has genes and hits for the pair; a gene can be in multiple GrpPairs, but a hit will only be in one
  * 
  * -s created output per file
  * -tt outputs files of results and extended results to terminal
@@ -278,38 +277,45 @@ public class AnchorMain2 {
 		BufferedReader reader = new BufferedReader ( new FileReader ( fObj ) ); 
 		while ((line = reader.readLine()) != null) {	
 			line = line.trim();
-			if (line.equals("")) continue;
+			if (line.equals("") || !Character.isDigit(line.charAt(0))) continue;
+			/* CAS555 allow nucmer; this was not allowing it
 			if (!Character.isDigit(line.charAt(0))) {
 				if (line.startsWith("NUCMER")) {
 					Utilities.showWarningMessage("Algorithm 2 does not process NUCmer files");
 					reader.close(); bSuccess=false; return;
 				}
 				continue;
-			}
-			
-			String[] tok = line.split("\\s+");
-			if (tok.length < 13) {
+				String[] tok = line.split("\\s+");
+				if (tok.length < 13) {
 				prt("Line: " + line); 
 				Utilities.showWarningMessage("Incorrect MUMmer file - must have 13 columns");
 				reader.close(); bSuccess=false; return;
 			}
+			}
+			*/
+			String[] tok = line.split("\\s+");
+			int poffset = (tok.length > 13 ? 2 : 0); // nucmer vs. promer
+			
 			int [] start = {Integer.parseInt(tok[0]), Integer.parseInt(tok[2])};
 			int [] end =   {Integer.parseInt(tok[1]), Integer.parseInt(tok[3])};
 			int [] len =   {Integer.parseInt(tok[4]), Integer.parseInt(tok[5])};
 			int id =       (int) Math.round(Double.parseDouble(tok[6]));
-			int sim =      (int) Math.round(Double.parseDouble(tok[7]));
+			int sim 	= 	(poffset==0) ? 0 :  Math.round(Float.parseFloat(tok[7]));
 			
-			int tf = Integer.parseInt(tok[11]);
-			int qf = Integer.parseInt(tok[12]);	
-
-			String chrT = tok[13];
-			String chrQ = tok[14];
+			int [] f =  {0, 0}; // not used
+			if (poffset==2) {
+				int tf = Integer.parseInt(tok[11]);
+				int qf = Integer.parseInt(tok[12]);	
+				f[0] = tf; f[1] = qf;
+			}
+			String chrT = tok[11+poffset];
+			String chrQ = tok[12+poffset];
 			
 			String strand = (start[Q] <= end[Q] ? "+" : "-") + "/" + (start[T] <= end[T] ? "+" : "-"); 	// copied from anchor1
 			
 			if (start[T]>end[T]) {int t=start[T]; start[T]=end[T]; end[T]=t;}
 			if (start[Q]>end[Q]) {int t=start[Q]; start[Q]=end[Q]; end[Q]=t;}
-			int [] f =  {tf, qf};
+			
 		
 		// Get grpIdx using name
 			int grpIdx1 = mProj1.getGrpIdxFromName(chrQ); if (grpIdx1==-1) die("No " + chrQ + " for " + proj1Name);
@@ -357,10 +363,10 @@ public class AnchorMain2 {
 		}
 		reader.close();
 		
-		plog.msg("Load " + fileName + "               ");
-		if (Arg.PRT_STATS) {
-			String msg = String.format("%,10d Hits  %d Chr-Pairs    Gene Hits:  %s %,d   %s %,d   Long hits %,d", 
-					hitNum,  grpPairMap.size(), proj2Name, cntHitGeneT, proj1Name,  cntHitGeneQ, cntLongHit);
+		String x =  (cntLongHit>0) ? String.format("Long Hits %,d", cntLongHit) : "";
+		plog.msg(String.format("Load %s  Hits %,d  %s", fileName, hitNum, x)); // CAS555 added Nhits
+		if (Globals.TRACE) {
+			String msg = String.format("%s %,d   %s %,d  ", proj2Name, cntHitGeneT, proj1Name,  cntHitGeneQ);							 
 			Utils.prtIndentMsgFile(plog, 1, msg); 
 		}
 	}

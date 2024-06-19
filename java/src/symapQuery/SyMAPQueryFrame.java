@@ -338,6 +338,12 @@ public class SyMAPQueryFrame extends JFrame {
 	protected DBconn2 getDBC() { return tdbc2; }
 	protected Vector<Mproject> getProjects() { return theProjects; }
 	protected boolean isAlgo2() {return bUseAlgo2;};
+	public boolean isAnno() { // CAS555 add for queryPanel
+		for (Mproject mp : theProjects) {
+			if (!mp.hasGenes()) return false;
+		}
+		return true;
+	}
 	
 	private DBconn2 tdbc2 = null;
 	private Vector<Mproject> theProjects = null;

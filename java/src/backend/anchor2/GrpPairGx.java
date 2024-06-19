@@ -307,6 +307,11 @@ public class GrpPairGx {
 				if (hpr.hitList.size()==1) {
 					singleList.add(hpr);
 				}
+				else {     // CAS555 if g2, just merge them; long genes were not getting hits merged
+					cntG2Multi++;
+					multiList.add(hpr);	
+				}
+				/**
 				else if (hpr.bPassCovG2()) {     // check exon and hit coverage
 					cntG2Multi++;
 					multiList.add(hpr);	
@@ -319,6 +324,7 @@ public class GrpPairGx {
 						nhp.isMfSpl=true;
 					}
 				}
+				**/
 			}
 			genePairMap.clear();
 			
@@ -399,6 +405,7 @@ public class GrpPairGx {
 				
 				Gene tGene = (X==T) ? xgene : null;
 				Gene qGene = (X==Q) ? xgene : null;
+				int glen = (tGene==null) ? qGene.gLen : tGene.gLen;
 				
 				Hit.sortBySignByX(Y, gnHitList); // SORT: assume X is proper distance, check Y
 				
@@ -411,7 +418,7 @@ public class GrpPairGx {
 						if (ht2.bin>0) continue;
 	
 						int yDiff = Math.abs(ht2.start[Y]-ht1.end[Y]);
-						if (yDiff>Arg.useIntronLen) continue;
+						if (yDiff>glen) continue; // CAS555 changed from intronLen
 						
 						HitPair nhp;
 						if (ht1.bin==0) {					

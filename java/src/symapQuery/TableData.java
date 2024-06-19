@@ -339,7 +339,12 @@ public class TableData implements Serializable {
    
     /**********************************************************
      * For TableDataPanel methods that needs the following values for both ends of hit
-     * chrNum, start, end
+     * chrNum, start, end; note the contains gets both values as it starts with the species name
+     * e.g. for 3 species, returns (\n after species, check for '-' for the ignored ones):
+     * Hit# 11	 Block - 	Collinear - 	Grp# 1
+	 * hsap Chr X			Panx Chr -		musm Chr X
+	 * musm Gene# X.520.	Panx Gene# -	hsap Gene# X.23.
+	 * Panx Hstart -	musm Hend 100363922	hsap Hstart 5892760	Panx Hend -	musm Hstart 100363026	hsap Hend 5893665
      */
     public HashMap <String, Object> getRowLocData(int row) {
 		HashMap <String, Object> headVal = new HashMap <String, Object> ();
@@ -348,10 +353,11 @@ public class TableData implements Serializable {
 			if (colName.contains(Q.chrCol)) 		headVal.put(colName, arrData[row][i]);
 			else if (colName.contains(Q.hStartCol)) headVal.put(colName, arrData[row][i]);
 			else if (colName.contains(Q.hEndCol)) 	headVal.put(colName, arrData[row][i]);
-			else if (colName.contains(Q.gNCol)) 	headVal.put(colName, arrData[row][i]);// CAS521
+			else if (colName.contains(Q.gNCol)) 	headVal.put(colName, arrData[row][i]);// CAS521 gene#
 			else if (colName.equals(Q.blockCol)) 	headVal.put(colName, arrData[row][i]);
 			else if (colName.equals(Q.runCol)) 		headVal.put(colName, arrData[row][i]); // CAS520
 			else if (colName.equals(Q.hitCol)) 		headVal.put(colName, arrData[row][i]); // CAS521
+			else if (colName.equals(Q.grpCol)) 		headVal.put(colName, arrData[row][i]); // CAS555
 		}
 		return headVal;
     }

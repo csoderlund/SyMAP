@@ -54,7 +54,7 @@ public class Annotation {
 	private boolean isHitPopup=false;			// Hit Popup highlights gene too, though gene Popup has precedence
 	
 	private boolean isSelectedGene=false; 		// Gene is filtered; CAS545 add
-	private boolean isConserved=false;			// Show all conserved genes; CAS545 add
+	private boolean isHitg2=false;			    // Show all conserved genes; CAS545 add
 	
 	/**
 	 * Creates a new Annotation instance setting the description values, color, and draw method based on type.
@@ -203,11 +203,11 @@ public class Annotation {
 		if (itype == EXON_INT) {
 			if (bHighPopup) {
 				if (isPopup)    return geneHighColor; // CAS545 only exon highlighted when Gene Filter
-				if (isHitPopup) return Mapper.pseudoLineHoverColor; // CAS545 
+				if (isHitPopup) return Mapper.pseudoLineGroupColor; // CAS545; CAS555 change to Group
 			}
 			if (isSelectedGene) return geneHighColor; // CAS546 add here too
 			
-			if (isConserved)    return geneHighColor; 
+			if (isHitg2)    	return geneHighColor; 
 			
 			if (bStrandPos)     return exonColorP;	
 			else                return exonColorN;
@@ -216,7 +216,7 @@ public class Annotation {
 		if (itype == GENE_INT)		{
 			if (bHighPopup) {
 				if (isPopup)  	return geneHighColor;
-				if (isHitPopup) return Mapper.pseudoLineHoverColor; // CAS545 
+				if (isHitPopup) return Mapper.pseudoLineGroupColor; // CAS545, CAS555 change to group 
 			}	
 			if (isSelectedGene) return geneHighColor;
 			
@@ -266,7 +266,7 @@ public class Annotation {
 	protected boolean isExon() 	  { return itype == EXON_INT; }   
 	protected boolean isGap() 		  { return itype == GAP_INT; }
 	protected boolean isCentromere() { return itype == CENTROMERE_INT; }
-	protected boolean isConserved() {return isConserved;}
+	protected boolean isHitg2() {return isHitg2;} // CAS545,555 is g2, hit and gene highlighted
 	
 	protected int getGeneLen()	{ return Math.abs(end-start)+1;} // ditto
 	protected int getGeneNum() { return genenum;}				// CAS517 for sorting in SeqPool
@@ -465,9 +465,9 @@ public class Annotation {
 			for (Annotation ad : exonVec) ad.isSelectedGene=b; // CAS545
 	}
 	protected void setIsConserved(boolean b) { // Called for conserved turned on/off
-		isConserved=b; 
+		isHitg2=b; 
 		if (exonVec!=null) 
-			for (Annotation ad : exonVec) ad.isConserved=b; // CAS545
+			for (Annotation ad : exonVec) ad.isHitg2=b; // CAS545
 	}
 	
 	// CAS531 add for TextShowSeq to sort exons

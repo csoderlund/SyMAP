@@ -66,7 +66,7 @@ public class TableDataPanel extends JPanel {
 	private static final long serialVersionUID = -3827610586702639105L;
 	private static final int ANNO_COLUMN_WIDTH = 100, ANNO_PANEL_WIDTH = 900;
 	private static final int GEN_COLUMN_WIDTH = 100;
-	private static final int showREGION=0, showBLOCK=1, showSET=2;
+	private static final int showBLOCK=1, showSET=2, showGRP=3; // showREGION=0, CAS555 add showGrp
 	
 	// called by SymapQueryFrame
 	public TableDataPanel(SyMAPQueryFrame parentFrame, String resultName,  boolean [] selections,
@@ -178,15 +178,15 @@ public class TableDataPanel extends JPanel {
 		/** CREATE ROWS **/
         if(rs != null) { 
         	HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> (); 
-        	HashMap <String,Integer> proj2regions = new HashMap  <String, Integer> (); // ComputePgeneF
+        	HashMap <String, String> projMap = new HashMap  <String, String> (); // ComputePgeneF & ComputeMulti;; CAS555 int->string
         		
          	Vector  <DBdata> rowsFromDB =  DBdata.loadRowsFromDB(rs, theParentFrame.getProjects(),
          			theParentFrame.getQueryPanel(), theAnnoKeys.getColumns(false /*displayname*/), loadStatus,
-         			geneCntMap, proj2regions); // Inputs for Summary
+         			geneCntMap, projMap); // Inputs for Summary
          				 
         	theTableData.addRowsWithProgress(rowsFromDB, loadStatus);
         		
-            SummaryPanel sp = new SummaryPanel(rowsFromDB, theQueryPanel, proj2regions, geneCntMap);
+            SummaryPanel sp = new SummaryPanel(rowsFromDB, theQueryPanel, projMap, geneCntMap);
             statsPanel = sp.getPanel();
             
             rowsFromDB.clear(); // NOTE: IF want to use later, then the Stats need to be removed from DBdata
@@ -267,6 +267,7 @@ public class TableDataPanel extends JPanel {
 	    cmbSynOpts.addItem("Region (kb)");  // showREGION
 	    cmbSynOpts.addItem("Synteny Block");// showBLOCK
 	    cmbSynOpts.addItem("Collinear Set");// showSET
+	    cmbSynOpts.addItem("Group");        // showGRP
 	    cmbSynOpts.setSelectedIndex(0);
 	    topRow.add(cmbSynOpts);			topRow.add(Box.createHorizontalStrut(1));
 	    
@@ -968,46 +969,49 @@ public class TableDataPanel extends JPanel {
 			if (!rd.loadRow(row)) return;
 				
 			// for the get statements
-			double track1Start=0, track2Start=0, track2End=0, track1End=0, padding=0;
+			grpIdxVec.clear();
+			
+			double track1Start=0, track2Start=0, track2End=0, track1End=0, pad=300.0;
+			double [] coords;
+			HfilterData hd = new HfilterData (); // CAS520 change from dotplot.FilterData
+			
 			int item = (cmbSynOpts.getSelectedIndex());
-			if (item>0) { // block or collinear
-				double [] coords;
-				if (item==2) {
-					if (rd.collinear==0) {
-						Utilities.showWarningMessage("The selected row does not belong to a collinear set.");
-						return;
-					}
-					coords = loadCollinearCoords(rd.collinear, rd.chrIdx[0], rd.chrIdx[1]);
-				}
-				else  {
-					if (rd.block==0) {
-						Utilities.showWarningMessage("The selected row does not belong to a synteny block.");
-						return;
-					}
-					coords = loadBlockCoords(rd.block, rd.chrIdx[0], rd.chrIdx[1]);
-				}
-				if (coords==null) {
-					Utilities.showWarningMessage("SyMAP could not get the coordinates");
+			if (item==showSET) {
+				if (rd.collinearN==0) {
+					Utilities.showWarningMessage("The selected row does not belong to a collinear set.");
 					return;
 				}
-				double pad=20.0;
-				track1Start = coords[0] - pad; if (track1Start<0) track1Start=0;
-				track1End   = coords[1] + pad; 
-				track2Start = coords[2] - pad; if (track2Start<0) track2Start=0;
-				track2End   = coords[3] + pad;
+				coords = loadCollinearCoords(rd.collinearN, rd.chrIdx[0], rd.chrIdx[1]);
+				hd.setForQuery(false, true, false);  // block, set, region
 			}
-			else { // region
-				padding = Double.parseDouble(txtMargin.getText()) * 1000;
-				
-				track1Start = (Integer) rd.start[0];
-				track1Start = Math.max(0, track1Start - padding);
-				
-				track2Start = (Integer) rd.start[1];
-				track2Start = Math.max(0, track2Start - padding);
-				
-				track1End = (Integer) rd.end[0] + padding;
-				track2End = (Integer) rd.end[1] + padding;
+			else if (item==showBLOCK) {
+				if (rd.blockN==0) {
+					Utilities.showWarningMessage("The selected row does not belong to a synteny block.");
+					return;
+				}
+				coords = loadBlockCoords(rd.blockN, rd.chrIdx[0], rd.chrIdx[1]);
+				hd.setForQuery(true, false, false);  // block, set, region
 			}
+			else if (item==showGRP) { // CAS555
+				if (rd.groupN==0) {
+					Utilities.showWarningMessage("The selected row does not belong to a group.");
+					return;
+				}
+				coords = rd.loadGroup(); // assigns hits to grpIdxVec
+				hd.setForQuery(false, false, true);  // block, set, region
+			}
+			else {
+				coords = new double [4];
+				coords[0] = rd.start[0]; coords[1] = rd.end[0];
+				coords[2] = rd.start[1]; coords[3] = rd.end[1];
+				pad = Double.parseDouble(txtMargin.getText()) * 1000;
+				hd.setForQuery(false, false, true);  // block, set, region
+			}
+			track1Start = coords[0] - pad; if (track1Start<0) track1Start=0;
+			track1End   = coords[1] + pad; 
+			track2Start = coords[2] - pad; if (track2Start<0) track2Start=0;
+			track2End   = coords[3] + pad;
+			
 			synStart1 = rd.start[0]; synEnd1 = rd.end[0];
 			synStart2 = rd.start[1]; synEnd2 = rd.end[1]; // CAS516 was synEnd1
 
@@ -1020,11 +1024,6 @@ public class TableDataPanel extends JPanel {
 			// create new drawing panel; CAS543 quit setting Sfilter Show_Annotation because is static
 			SyMAP2d symap = new SyMAP2d(theParentFrame.getDBC(), getInstance());
 			symap.getDrawingPanel().setTracks(2); // CAS550 set exact number
-			
-			HfilterData hd = new HfilterData (); // CAS520 change from dotplot.FilterData
-			if (item==showREGION) 		hd.setForQuery(false, false, true);  // block, set, region
-			else if (item==showBLOCK) 	hd.setForQuery(true, false, false);  
-			else if (item==showSET)		hd.setForQuery(false, true, false);
 			symap.getDrawingPanel().setHitFilter(1,hd); // template for Mapper HfilterData, which is already created
 			
 			Sequence s1 = symap.getDrawingPanel().setSequenceTrack(1, p2Idx, grp2Idx, Color.CYAN);
@@ -1042,14 +1041,16 @@ public class TableDataPanel extends JPanel {
  	 * row at a time
  	 * CAS516 change to one call instead of 4
  	 */
-     public boolean isHitSelected(int s1, int e1, int s2, int e2) {
+     public boolean isHitSelected(int idx, int s1, int e1, int s2, int e2) {
     	 if (!chkHigh.isSelected()) return false;
+ 
+    	 if (grpIdxVec.contains(idx)) return true;	// CAS555 add to highlight all group
     	 if  (s1==synStart1 && e1==synEnd1 && s2==synStart2 && e2==synEnd2) return true;
     	 if  (s2==synStart1 && e2==synEnd1 && s1==synStart2 && e1==synEnd2) return true;
     	 return false;
      }
  	 private int synStart1, synStart2, synEnd1, synEnd2; 
-	    
+ 	 private Vector <Integer> grpIdxVec = new Vector <Integer> (); // CAS555 to highly groups
     /***************************************************************
      * XXX Database
      */
@@ -1264,7 +1265,6 @@ public class TableDataPanel extends JPanel {
    /****************************************************************
     * Classes
     */
-   
     private class ColumnHeaderToolTip extends JTableHeader {
 		private static final long serialVersionUID = -2417422687456468175L;
 		private String [] toolTips = null;
@@ -1333,9 +1333,16 @@ public class TableDataPanel extends JPanel {
      * CAS521 also return hit# and Gene# for Align; use short name for species
      */
     private class RowData {
-		public RowData () {}
+		private RowData () {}
 		
-		public boolean loadRow(int row) {
+		private String loadRowAsString(int row) {
+			try {
+				String outLine = theTableData.getRowData(row); // colName, value
+    			return outLine;
+    		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return "error";}
+		}
+		
+		private boolean loadRow(int row) {
 			try {
     			HashMap <String, Object> colHeadVal = theTableData.getRowLocData(row); // only needed columns are returned
     			HashMap <String, Integer> sp2x = new HashMap <String, Integer> ();
@@ -1343,25 +1350,31 @@ public class TableDataPanel extends JPanel {
     			
     			for (String colHead : colHeadVal.keySet()) {
     				Object colVal = colHeadVal.get(colHead);
-    				if (colVal instanceof String) {
+    				
+    				if (colVal instanceof String) { // if >2 species, ignores ones w/o values, so only get 2
     					String str = (String) colVal;
     					if (str.equals("") || str.equals(Q.empty)) continue; // the blanks species
     				}  
     				if (colHead.contentEquals(Q.blockCol)) { // CAS520 add block and collinear
     					String x = (String) colVal;
     					x =  (x.contains(".")) ? x.substring(x.lastIndexOf(".")+1) : "0";
-    					block = Integer.parseInt(x);
+    					blockN = Integer.parseInt(x);
     					continue;
     				}
     				if (colHead.contentEquals(Q.runCol)) {
     					String x = (String) colVal;
     					x =  (x.contains(".")) ? x.substring(x.lastIndexOf(".")+1) : "0";
-    					collinear = Integer.parseInt(x);
+    					collinearN = Integer.parseInt(x);
     					continue;
     				}
     				if (colHead.contentEquals(Q.hitCol)) {	// CAS521
     					String x = String.valueOf(colVal);
     					hitnum = Integer.parseInt(x);
+    					continue;
+    				}
+    				if (colHead.contentEquals(Q.grpCol)) {	// CAS555
+    					String x = String.valueOf(colVal);
+    					groupN = Integer.parseInt(x);
     					continue;
     				}
 				
@@ -1373,13 +1386,13 @@ public class TableDataPanel extends JPanel {
     				String sVal="";
     				int iVal=0;
     				if (col.equals(Q.chrCol)) {
-    					if (colVal instanceof Integer) sVal = String.valueOf(colVal);
-    					else                      sVal = (String) colVal;
+    					if (colVal instanceof Integer) 	sVal = String.valueOf(colVal);
+    					else                      		sVal = (String) colVal;
     				}
     				else if (colVal instanceof Integer) { iVal = (Integer) colVal; }
     				else if (colVal instanceof String)  { sVal = (String)  colVal; }
     				else {
-    					System.out.println("Symap error: Row Data " + colHead + " " + colVal + " is not type string or integer");
+    					symap.Globals.eprt("Row Data " + colHead + " " + colVal + " is not type string or integer");
     					return false;
     				}
     				
@@ -1391,15 +1404,15 @@ public class TableDataPanel extends JPanel {
     					spAbbr[isp] = species;
     					i0or1 = isp;
     					isp++;
-    					if (isp>2) {System.err.println("Symap Error: species " + isp); break;} // should not happen
+    					if (isp>2) {symap.Globals.eprt("species " + isp); break;} // should not happen
     				}
     				if (col.equals(Q.chrCol)) 		  chrNum[i0or1] = sVal;
     				else if (col.equals(Q.hStartCol)) start[i0or1] = iVal;
     				else if (col.equals(Q.hEndCol))   end[i0or1] = iVal;
     				else if (col.equals(Q.gNCol))	  genenum[i0or1] = sVal;	// CAS521
     			}
-    			SpeciesSelectPanel spPanel = theQueryPanel.getSpeciesPanel();
     			
+    			// get supporting values
     			if (spAbbr[1]==null || spAbbr[1]=="") {
     				Utilities.showWarningMessage("The abbrev_names are the same, cannot continue...");
     				return false;
@@ -1407,6 +1420,7 @@ public class TableDataPanel extends JPanel {
     			spName[0] = theParentFrame.getDisplayFromAbbrev(spAbbr[0]);
     			spName[1] = theParentFrame.getDisplayFromAbbrev(spAbbr[1]);
     			
+    			SpeciesSelectPanel spPanel = theQueryPanel.getSpeciesPanel();
     			for (isp=0; isp<2; isp++) {
     				spIdx[isp] =  spPanel.getSpIdxFromSpName(spName[isp]);
     				chrIdx[isp] = spPanel.getChrIdxFromChrNumSpIdx(chrNum[isp], spIdx[isp]);
@@ -1414,26 +1428,86 @@ public class TableDataPanel extends JPanel {
     			return true;
     		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return false;}
 		}
-		public String loadRowAsString(int row) {
-			try {
-				String outLine = theTableData.getRowData(row); // colName, value
-    			return outLine;
-    		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return "error";}
+		// Show Group
+		// loadRow occurs before this, so the selected row values are known
+		// for each row, if the group, chr[0], chr[1] are the same, get min start and max end
+		private double [] loadGroup() {
+		try {
+			double [] coords = {0.0,0.0,0.0,0.0};
+			coords[0] = start[0]; coords[1] = end[0]; coords[2] = start[1]; coords[3] = end[1];
+			
+			for (int r=0; r<theTableData.getNumRows(); r++) {
+				HashMap <String, Object> colHeadVal = theTableData.getRowLocData(r); 
+				
+				Object val = colHeadVal.get(Q.grpCol);
+				int grp = (Integer) val;
+				if (grp!=groupN) continue;     // only rows with this groupN
+				
+				int idx=0;
+				int [] s = {0,0};
+				int [] e = {0,0};
+				boolean bGoodChr=true;
+				
+				for (String colHead : colHeadVal.keySet()) {
+    				Object colVal = colHeadVal.get(colHead);
+ 
+    				if (colVal instanceof String) {
+    					String str = (String) colVal;
+    					if (str.equals("") || str.equals(Q.empty)) continue; // ignore blank species
+    				}  
+    				
+    				if (colHead.equals(Q.hitCol)) { // see isHitSelected
+    					idx = (Integer) colVal;
+    					continue;
+    				}
+    				
+    				String [] field = colHead.split(Q.delim); // speciesName\nChr or Start or End
+    				if (field.length!=2) continue;
+    				
+    				String species=field[0];
+    				String col=field[1];
+    				int x = (species.equals(spAbbr[0])) ? 0 : 1;
+    				
+    				if (col.equals(Q.chrCol)) { // if SameChr is not checked, make sure on same chrs as selected
+    					String sVal;
+    					if (colVal instanceof Integer) 	sVal = String.valueOf(colVal);
+    					else                      		sVal = (String) colVal;
+    					if (!sVal.equals(chrNum[x])) {
+    						bGoodChr = false;
+    						break; 				// skip rest of row
+    					}
+    				}
+    				else if (colVal instanceof Integer) { 
+    					if (col.equals(Q.hStartCol)) 	  s[x] = (Integer) colVal;
+    					else if (col.equals(Q.hEndCol))   e[x] = (Integer) colVal;
+    				}
+				} // finish row
+				if (bGoodChr) {
+					grpIdxVec.add(idx);
+					coords[0] = Math.min(coords[0], s[0]);
+					coords[1] = Math.max(coords[1], e[0]);
+					coords[2] = Math.min(coords[2], s[1]);
+					coords[3] = Math.max(coords[3], e[1]);
+				}
+			} // finish all rows
+			return coords;
+		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return null;}
 		}
+		// Values for selected row
+		private String [] spName = {"",""}; 
+		private String [] spAbbr = {"",""}; 
+		private int [] spIdx = {0,0};
+		private int [] chrIdx = {0,0};
 		
-		String [] spName = {"",""}; 
-		String [] spAbbr = {"",""}; 
-		int [] spIdx = {0,0};
-		int [] chrIdx = {0,0};
+		private String [] chrNum = {"",""};
+		private int [] start = {0,0};
+		private int [] end = {0,0};
+		private String [] genenum = {"",""};
 		
-		String [] chrNum = {"",""};
-		int [] start = {0,0};
-		int [] end = {0,0};
-		String [] genenum = {"",""};
-		
-		int hitnum=0;				
-		int block=0;
-		int collinear=0;
+		private int hitnum=0;				
+		private int blockN=0;
+		private int collinearN=0;
+		private int groupN=0; // CAS555 add for Show Group
     }
     /***********************************************************************
      ** Export file

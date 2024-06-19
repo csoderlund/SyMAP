@@ -35,7 +35,7 @@ public class HitData {
 	private boolean isCollinear;	// set on init; CAS520 add
 	
 	private boolean isPopup=false;		// set when popup; CAS543 add
-	private boolean isConserved=false;	// set on conserved seqFilter, same as geneOlap=2 if only 2 tracks; CAS545 add 
+	private boolean isHighHitg2=false;	// set on conserved seqFilter, same as geneOlap=2 if only 2 tracks; CAS545 add 
 	
 	protected String hitGeneTag;			// g(gene_overlap) or htype (EE) ; CAS516 gNbN see MapperPool; 
 	private String   hitTag; 
@@ -223,7 +223,7 @@ public class HitData {
 	protected boolean isBlock() 	{ return isBlock; }
 	protected boolean isCset() 		{ return isCollinear; } 
 	protected boolean isPopup()		{ return isPopup;}
-	protected boolean isConserved()	{ return isConserved;}
+	protected boolean isHighHitg2()	{ return isHighHitg2;}
 	public 	  boolean is2Gene() 	{ return (geneOlp==2); } 
 	protected boolean is1Gene() 	{ return (geneOlp==1); } 
 	protected boolean is0Gene()  	{ return (geneOlp==0); } 
@@ -235,8 +235,8 @@ public class HitData {
 		s1.setHighforHit(annot1_idx, annot2_idx, b); 
 		s2.setHighforHit(annot1_idx, annot2_idx, b); 
 	} 
-	public void setIsConserved(boolean b) {	// CAS545 add; SeqPool sets true, SeqHits sets false
-		isConserved=b;
+	public void setIsHighHitg2(boolean b) {	// CAS545 add; SeqPool sets true, SeqHits sets false
+		isHighHitg2=b;
 	
 		Sequence s1 = (Sequence) mapper.getTrack1();
 		Sequence s2 = (Sequence) mapper.getTrack2();

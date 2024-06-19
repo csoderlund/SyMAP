@@ -94,7 +94,7 @@ public class AnchorMain {
 	 */
 	private boolean saveNumHits() { 
 	try {
-		System.out.println("   Compute and save hit#");
+		System.out.println("   Compute and save hit#                   "); // CAS556 added space
 		TreeMap <Integer, String> grpMap1 = mp.mProj1.getGrpIdxMap();
 		TreeMap <Integer, String> grpMap2 = mp.mProj2.getGrpIdxMap();
 		

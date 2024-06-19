@@ -240,11 +240,11 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	 * For Summary and AlignProg
 	 */
 	public String getOrderParam() { // CAS540
-		if (hasOrderAgainst()) return "\n  " + strDisplayName + ": Order against " + getOrderAgainst() ;
+		if (hasOrderAgainst()) return " " + strDisplayName + ": Order against " + getOrderAgainst() ;
 		return "";
 	}
 	public String getMaskedParam() {
-		if (isMasked()) return "\n  " + strDisplayName + ": Masked genes  ";
+		if (isMasked()) return " " + strDisplayName + ": Masked genes  ";
 		return "";
 	}
 	/*************************************************************************

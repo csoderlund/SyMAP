@@ -19,7 +19,7 @@ public  class TrackData {
 	private boolean bFlipped;
 	private boolean bShowRuler, bShowGap, bShowCentromere, bShowGene, bShowHitLen, bShowScoreLine;
 	
-	private boolean bShowAnnot, bShowGeneNum,  bShowGeneLine, bHighPopupGene, bHighConserved; 
+	private boolean bShowAnnot, bShowGeneNum,  bShowGeneLine, bHighPopupGene, bHighHit2g2, bHighHit1g2; 
 	
 	private boolean bShowScoreText, bShowHitNumText, bShowBlockText, bShowCsetText, bShowNoText;   
 
@@ -53,7 +53,8 @@ public  class TrackData {
 		bShowGeneLine  	= seq.sfilObj.bShowGeneLine;
 		bShowAnnot      = seq.sfilObj.bShowAnnot;
 		bHighPopupGene  = seq.sfilObj.bHighGenePopup;
-		bHighConserved  = seq.sfilObj.bHighConserved;
+		bHighHit2g2  	= seq.sfilObj.bHitHighg2x2;
+		bHighHit1g2  	= seq.sfilObj.bHitHighg2x1;
 		
 		bShowNoText  	= seq.sfilObj.bShowNoText;	
 		bShowBlockText  = seq.sfilObj.bShowBlockText;	
@@ -91,7 +92,8 @@ public  class TrackData {
 		seq.sfilObj.bShowGeneLine   = bShowGeneLine;
 		seq.sfilObj.bShowAnnot      = bShowAnnot;
 		seq.sfilObj.bHighGenePopup  = bHighPopupGene;
-		seq.sfilObj.bHighConserved  = bHighConserved;
+		seq.sfilObj.bHitHighg2x2  	= bHighHit2g2;
+		seq.sfilObj.bHitHighg2x1  	= bHighHit1g2;
 		
 		seq.sfilObj.bShowNoText  	= bShowNoText;	
 		seq.sfilObj.bShowBlockText  = bShowBlockText;	

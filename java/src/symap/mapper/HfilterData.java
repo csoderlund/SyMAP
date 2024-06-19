@@ -11,7 +11,7 @@ public class HfilterData {
 	private static final double ANY_PCTID  = 0;
 	private static final double NO_PCTID  = 100;
 	
-	private boolean bHiPopup=true, bHiNone=true; // set in setDefaults; CAS543 add, CAS544 change default
+	private boolean bHiPopup=true, bHiNone=true; // Highlight popup, do not highlight; set in setDefaults; CAS543 add, CAS544 change default
 	private boolean bHiBlock=false, bHiCset=false, bHi2Gene=false, bHi0Gene=false, bHi1Gene=false;
 	
 	private boolean bBlock=true; // set in setDefaults;
@@ -21,25 +21,25 @@ public class HfilterData {
 	private double minPctid=NO_PCTID, maxPctid=ANY_PCTID;
 	
 	private String hoverText=""; // CAS520 add
-
+	
 	public HfilterData() {
 		setDefaults();
 	}
-	public HfilterData copy(String msg) {
+	protected HfilterData copy(String msg) {
 		return new HfilterData(this);
 	}
 	private HfilterData(HfilterData hf) { // copy
 		setChanged(hf, "HfilterData from hf");
 	}
 	
-	public String getFilterText() { // CAS520 So know what is set when hover in whitespace
+	protected String getFilterText() { // CAS520 So know what is set when hover in whitespace
 		String msg = "";			// SeqHits expects this to start with High if there is highlightening
 		if (bHiBlock) 		msg += "High Blocks; ";
 		else if (bHiCset) 	msg += "High Sets; ";
 		else if (bHi2Gene) 	msg += "High =2 Genes; ";
 		else if (bHi1Gene) 	msg += "High =1 Gene; ";
 		else if (bHi0Gene) 	msg += "High =0 Genes; ";
-		if (!bHiPopup) msg += "No High Popup; "; // CAS552 more meaningful with !; remove else
+		if (!bHiPopup) msg += "No High Popup (or Query); "; // CAS555 query; CAS552 more meaningful with !; remove else
 		
 		msg += "Show "; // something always shows
 		if (bBlock) 	msg += "Block, ";
@@ -54,19 +54,19 @@ public class HfilterData {
 		hoverText = 	msg + "\n";
 		return hoverText;
 	}
-	// block, set, region CAS520 add for showing synteny from query; b is blocks by default
-	public void setForQuery(boolean b, boolean s, boolean r) { // block, set, region
+	// Query block, set, region CAS520 add for showing synteny from query; b is blocks by default
+	public void setForQuery(boolean b, boolean s, boolean r) { // block (default), set, region
 		if (s)      {setBlock(true); setCset(true); setHiCset(true); setHiNone(false);}
 		else if (r) {setBlock(false); setAllHit(true);}
 	}
-	// CAS530 dotplot
+	// dotplot CAS530 
 	public void setForDP(boolean b, boolean r) {
 		setBlock(false); setAllHit(false);
 		if (b) setBlock(true);
 		if (r) setAllHit(true);
 	}
 	
-	public void setDefaults() {
+	private void setDefaults() {
 		bHiBlock  = bHiCset = bHi2Gene = bHi0Gene = bHi1Gene = false;		
 		bHiPopup = bHiNone = true;
 		
@@ -104,32 +104,32 @@ public class HfilterData {
 	
 	/*******************************************************/
 // %id
-	public double getPctid() {return pctid;}
-	public boolean setPctid(double score) {
+	protected double getPctid() {return pctid;}
+	protected boolean setPctid(double score) {
 		if (pctid != score) {
 			pctid = score;
 			return true;
 		}
 		return false;
 	}
-	public double getMinPctid() {return minPctid;}
-	public double getMaxPctid() {return maxPctid;}
-	public void condSetPctid(double hitid) { // set when HfilterData is created
+	protected double getMinPctid() {return minPctid;}
+	protected double getMaxPctid() {return maxPctid;}
+	protected void condSetPctid(double hitid) { // set when HfilterData is created
 		if (hitid < minPctid) minPctid = hitid;
 		if (hitid > maxPctid) maxPctid = hitid;
 	}
 	
 // highs
-	public boolean   isHiPopup() {return bHiPopup;} // CAS543 new
-	public boolean  setHiPopup(boolean filter) {
+	protected boolean  isHiPopup() {return bHiPopup;} // CAS543 new
+	protected boolean  setHiPopup(boolean filter) {
 		if (filter != bHiPopup) {
 			bHiPopup = filter;
 			return true;
 		}
 		return false;
 	}
-	public boolean   isHiNone() {return bHiNone;}
-	public boolean  setHiNone(boolean filter) {
+	protected boolean  isHiNone() {return bHiNone;}
+	protected boolean  setHiNone(boolean filter) {
 		if (filter != bHiNone) {
 			bHiNone = filter;
 			return true;
@@ -137,8 +137,8 @@ public class HfilterData {
 		return false;
 	}
 	
-	public boolean  isHiBlock() {return bHiBlock;}
-	public boolean  setHiBlock(boolean filter) { 
+	protected boolean  isHiBlock() {return bHiBlock;}
+	protected boolean  setHiBlock(boolean filter) { 
 		if (filter != bHiBlock) {
 			bHiBlock = filter;
 			return true;
@@ -146,24 +146,24 @@ public class HfilterData {
 		return false;
 	}
 	
-	public boolean   isHiCset() { return bHiCset;}
-	public boolean  setHiCset(boolean bFilter) {
+	protected boolean   isHiCset() { return bHiCset;}
+	protected boolean  setHiCset(boolean bFilter) {
 		if (bFilter != bHiCset) {
 			bHiCset = bFilter;
 			return true;
 		}
 		return false;
 	}  
-	public boolean   isHi2Gene() {return bHi2Gene;}
-	public boolean  setHi2Gene(boolean bFilter) {  
+	protected boolean  isHi2Gene() {return bHi2Gene;}
+	protected boolean  setHi2Gene(boolean bFilter) {  
 		if (bFilter != bHi2Gene) {
 			bHi2Gene = bFilter;
 			return true;
 		}
 		return false;
 	}
-	public boolean   isHi1Gene() {return bHi1Gene;}
-	public boolean  setHi1Gene(boolean bFilter) { 
+	protected boolean  isHi1Gene() {return bHi1Gene;}
+	protected boolean  setHi1Gene(boolean bFilter) { 
 		if (bFilter != bHi1Gene) {
 			bHi1Gene = bFilter;
 			return true;
@@ -171,8 +171,8 @@ public class HfilterData {
 		return false;
 	}
 
-	public boolean isHi0Gene() { return bHi0Gene;}
-	public boolean  setHi0Gene(boolean bFilter) { 
+	protected boolean isHi0Gene() { return bHi0Gene;}
+	protected boolean setHi0Gene(boolean bFilter) { 
 		if (bFilter != bHi0Gene) {
 			bHi0Gene = bFilter;
 			return true;
@@ -180,8 +180,8 @@ public class HfilterData {
 		return false;
 	}
 // shows
-	public boolean isBlock() {return bBlock;}
-	public boolean setBlock(boolean bFilter) {
+	protected boolean isBlock() {return bBlock;}
+	protected boolean setBlock(boolean bFilter) {
 		if (bFilter != bBlock) {
 			bBlock = bFilter;
 			return true;
@@ -189,8 +189,8 @@ public class HfilterData {
 		return false;
 	}
 	
-	public boolean isCset() { return bCset;}
-	public boolean setCset(boolean bFilter) {
+	protected boolean isCset() { return bCset;}
+	protected boolean setCset(boolean bFilter) {
 		if (bFilter != bCset) {
 			bCset = bFilter;
 			return true;
@@ -198,8 +198,8 @@ public class HfilterData {
 		return false;
 	}
 	
-	public boolean is2Gene() {return b2Gene;}
-	public boolean set2Gene(boolean bFilter) {  
+	protected boolean is2Gene() {return b2Gene;}
+	protected boolean set2Gene(boolean bFilter) {  
 		if (bFilter != b2Gene) {
 			b2Gene = bFilter;
 			return true;
@@ -207,8 +207,8 @@ public class HfilterData {
 		return false;
 	}
 	
-	public boolean is1Gene() {return b1Gene;}
-	public boolean set1Gene(boolean bFilter) { 
+	protected boolean is1Gene() {return b1Gene;}
+	protected boolean set1Gene(boolean bFilter) { 
 		if (bFilter != b1Gene) {
 			b1Gene = bFilter;
 			return true;
@@ -216,8 +216,8 @@ public class HfilterData {
 		return false;
 	}
 
-	public boolean is0Gene() { return b0Gene;}
-	public boolean set0Gene(boolean bFilter) { 
+	protected boolean is0Gene() { return b0Gene;}
+	protected boolean set0Gene(boolean bFilter) { 
 		if (bFilter != b0Gene) {
 			b0Gene = bFilter;
 			return true;
@@ -225,8 +225,8 @@ public class HfilterData {
 		return false;
 	}
 	
-	public boolean isAllHit() { return bAllHit;}
-	public boolean setAllHit(boolean bFilter) { 
+	protected boolean isAllHit() { return bAllHit;}
+	protected boolean setAllHit(boolean bFilter) { 
 		if (bFilter != bAllHit) {
 			bAllHit = bFilter;
 			return true;

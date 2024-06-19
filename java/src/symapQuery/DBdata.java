@@ -3,6 +3,8 @@ package symapQuery;
 import java.sql.ResultSet;
 import java.util.Vector;
 import java.util.TreeSet;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -27,12 +29,12 @@ import util.Utilities;
  * CAS504 this file replaced the previous approach to parsing the sql results
  * CAS547 add EveryPlus; CAS548 add Olap 
  */
-public class DBdata {
-	private static String [] spNameList; 				// species Names
+public class DBdata implements Cloneable {
+	protected static String [] spNameList; 				// species Names
 	private static int [] 	spIdxList; 					// species spIdx in same order
 	private static HashMap <Integer, String[]> annoKeys;// spIdx, keys in order
-	private static HashMap <Integer, Integer> grpStart; // grpIdx, start,end
-	private static HashMap <Integer, Integer> grpEnd;   // grpIdx, start,end
+	private static HashMap <Integer, Integer> grpStart; // grpIdx, start
+	private static HashMap <Integer, Integer> grpEnd;   // grpIdx, end
 	
 	private static QueryPanel qPanel;
 	private static SpeciesSelectPanel spPanel;
@@ -50,7 +52,7 @@ public class DBdata {
 			String [] annoColumns, 					// Species\nkeyword array in order displayed
 			JTextField loadTextField,   			// write progress
 			HashMap <Integer, Integer> geneCntMap, 	// output variable of spIdx annotidx counts
-			HashMap<String,Integer> proj2regions)  	// PgeneF output
+			HashMap<String, String> projMap)  		// PgeneF and Multi summary output
 	{
 		clear();
 		qPanel = 		theQueryPanel;
@@ -92,8 +94,8 @@ public class DBdata {
 				
 	         	while (rs.next()) {
 	         		int hitIdx = rs.getInt(Q.HITIDX);
-	         		int anno1 = rs.getInt(Q.PHAANNOT1IDX);
-	         		int anno2 = rs.getInt(Q.PHAANNOT2IDX);
+	         		int anno1 =  rs.getInt(Q.PHAANNOT1IDX);
+	         		int anno2 =  rs.getInt(Q.PHAANNOT2IDX);
 	         		String pidx = (anno1<anno2) ? anno1+":"+anno2 : anno2+":"+anno1;
 	         		String key = hitIdx + ":" + pidx;
 	         		
@@ -184,15 +186,18 @@ public class DBdata {
 				if (rowNum%1000 ==0) 
      				loadStatus.setText("Finished " + rowNum + " rows");
          	}
+         	if (qPanel.isGeneNum()) { // CAS555 - add computation of grpN
+         		runGeneGroups(rows);
+         	}
         // Multi - may remove rows and renumber
          	if (qPanel.isMultiAnno()) {
          		loadStatus.setText("Compute multi-hit genes");
-         		rows = runMultiGene(rows);
+         		rows = runMultiGene(rows, projMap);
          	}
          // PgeneF - may remove rows and renumber
          	if (qPanel.isPgeneF()) {
          		loadStatus.setText("Compute PgeneF and filter");
-         		rows = runPgeneF(rows, proj2regions);
+         		rows = runPgeneF(rows, projMap);
          	}
          	makeGeneCnts(rows, geneCntMap); // CAS514 delete makeGeneCnts, use genenum from DB instead
         	
@@ -359,64 +364,109 @@ public class DBdata {
 		}
 		catch (Exception e) {ErrorReport.print(e, "make location list");}
 	}
-	/************************************
-	 * return multi-hits >=n; added CAS548; filtering on location has already been done; but still need to 
+	/*************************************************
+	 * put results from Gene# in groups; CAS555 add 
 	 */
-	private static Vector <DBdata> runMultiGene(Vector <DBdata> rows) {
+	private static void runGeneGroups(Vector <DBdata> rows) {
 	try {
-		Vector <DBdata> rowsForDisplay = new Vector <DBdata> ();
-		HashMap<Integer,Integer> gene1Cnt = new HashMap<Integer,Integer>(); 
-		HashMap<Integer,Integer> gene2Cnt = new HashMap<Integer,Integer>(); 
-		
-		// build sets of genes and their counts
-		for (DBdata dObj : rows) {
-			int idx1 = dObj.annotIdx[0];
-			if (idx1>0) {
-				if (gene1Cnt.containsKey(idx1)) gene1Cnt.put(idx1, gene1Cnt.get(idx1)+1);
-				else gene1Cnt.put(idx1, 1);
-			}
-			int idx2 = dObj.annotIdx[1];
-			if (idx2>0) {
-				if (gene2Cnt.containsKey(idx2)) gene2Cnt.put(idx2, gene2Cnt.get(idx2)+1);
-				else gene2Cnt.put(idx2, 1);
-			}
-		}
-		// recreate rows with only the filtered set
-		int n = qPanel.getMultiN();
-		int rowNum=1;
-		
-		for (DBdata dObj : rows) {
-			boolean bChr0= (grpIdxOnly.size()==0 || grpIdxOnly.contains(dObj.chrIdx[0]));
-			int idx1 = dObj.annotIdx[0];
-			
-			if (bChr0 && idx1>0 && gene1Cnt.get(idx1)>=n) {// CAS549 no =
-				dObj.rowNum = rowNum;
-    			rowNum++;
-				rowsForDisplay.add(dObj);
-			}
-			else {		
-				boolean bChr1= (grpIdxOnly.size()==0 || grpIdxOnly.contains(dObj.chrIdx[1]));
-				int idx2 = dObj.annotIdx[1];
-				
-				if (bChr1 && idx2>0 && gene2Cnt.get(idx2)>=n) {
-					dObj.rowNum = rowNum;
-	    			rowNum++;
-					rowsForDisplay.add(dObj);
+		Collections.sort(rows, new Comparator<DBdata> () {
+			public int compare(DBdata a, DBdata b) {
+				if (a.chrIdx[0]==b.chrIdx[0]) {
+					if (a.annotIdx[0]==b.annotIdx[0]) return a.annotIdx[1]-b.annotIdx[1];
+					else                              return a.annotIdx[0]-b.annotIdx[0];
 				}
+				return a.chrIdx[0] - b.chrIdx[0];
+			}
+		});
+		
+		String inputGN = qPanel.getGeneNum();
+		if (inputGN.endsWith(".")) inputGN = inputGN.substring(0, inputGN.length()-1);
+		String genestr = Utilities.getGenenumIntOnly(inputGN);
+		genestr = "." + genestr;
+		
+		HashMap <String, Integer> geneTag0 = new HashMap <String, Integer>  ();
+		HashMap <String, Integer> geneTag1 = new HashMap <String, Integer>  ();
+		String [] tok;
+		String [] tag = new String [2];
+		String [] chr = new String [2];
+		String key;
+		
+		for (DBdata dd : rows) {
+			for (int i=0; i<2; i++) {
+				tag[i] = dd.geneTag[i]; 
+				tok = tag[i].split("\\.");  
+				chr[i] = tok[0]; 
+				if (tok.length==3) 				tag[i] = tok[0]+"."+tok[1];
+				else if (tag[i].endsWith("."))  tag[i] = tag[i].substring(0, tag[i].length()-1);
+			}
+		
+			if (tag[0].endsWith(genestr)) {
+				key = tag[0] + ":" + chr[1];
+				if (geneTag0.containsKey(key)) geneTag0.put(key, geneTag0.get(key)+1);
+				else 						   geneTag0.put(key, 1);
+			}
+			if (tag[1].endsWith(genestr)) {
+				key = tag[1] + ":" + chr[0];
+				if (geneTag1.containsKey(key)) geneTag1.put(key, geneTag1.get(key)+1);
+				else 						   geneTag1.put(key, 1);
+			}
+     	}
+		
+		HashMap<String, Integer> grpMap0 = new HashMap<String, Integer>();  // geneTag, grpN
+		HashMap<String, Integer> grpMap1 = new HashMap<String, Integer>();  // geneTag, grpN
+		HashMap<String, Integer> grpMap;
+		HashMap<String, Integer> geneTag;
+		
+		int numFam=1, sz=0;
+		for (DBdata dd : rows) { // valid rows with valid keys and geneCnt entries
+			for (int i=0; i<2; i++) {
+				tag[i] = dd.geneTag[i]; 
+				tok = tag[i].split("\\.");  
+				chr[i] = tok[0]; 
+				if (tok.length==3) 				tag[i] = tok[0]+"."+tok[1];
+				else if (tag[i].endsWith(".")) 	tag[i] = tag[i].substring(0, tag[i].length()-1);
+				
+				if (!tag[i].endsWith(genestr)) continue;
+				
+				int j = (i==0) ? 1 : 0;
+				String chrj = dd.geneTag[j].substring(0, dd.geneTag[j].indexOf("."));
+				key = (tag[i]+ ":" + chrj);
+				
+				grpMap  = (i==0) ? grpMap0 : grpMap1;
+				geneTag = (i==0) ? geneTag0 : geneTag1;
+				
+				if (geneTag.containsKey(key)) {
+					sz = geneTag.get(key);
+					int fn;
+					if (grpMap.containsKey(key)) fn = grpMap.get(key);
+					else {
+						fn = numFam++;
+						grpMap.put(key, fn);
+					}
+					dd.setGroup(fn,sz);
+					break; // if i=0, no need to do i=1
+				}
+				else symap.Globals.eprt("SyMAP error: No entry for " + key);
 			}
 		}
-		return rowsForDisplay;
 	}
-	catch (Exception e) {ErrorReport.print(e, "make multi-hit genes"); return null;}
+	catch (Exception e) {ErrorReport.print(e, "make Gene# groups");}
 	}
+	
+	// CAS555 move code to ComputeMulti; compute does the rows, PgeneF and PgFSize
+	private static Vector <DBdata> runMultiGene(Vector <DBdata> rows, HashMap<String, String> projMap) {
+		ComputeMulti mobj = new ComputeMulti(rows, qPanel, loadStatus, grpIdxOnly, spIdxList, projMap);
+		return mobj.compute();	
+	}
+	
 	////////////////////////////////////////////////////////////////////////////
-	private static Vector <DBdata> runPgeneF(Vector <DBdata> rows, HashMap<String,Integer> proj2regions ) {
+	private static Vector <DBdata> runPgeneF(Vector <DBdata> rows, HashMap<String, String> projMap ) {
 		try {
 			HashMap<Integer,Integer> hitIdx2Grp = new HashMap<Integer,Integer>(); // PgeneF
     		HashMap<Integer,Integer> grpSizes = new HashMap<Integer,Integer>();   // PgFSize
     		
 			new ComputePgeneF(rows,  qPanel, loadStatus,
-				hitIdx2Grp,  grpSizes, proj2regions); // output data structures
+				hitIdx2Grp,  grpSizes, projMap); // output data structures
 		    		 	
 			hitIdx2Grp.put(0, 0); // for the annots that didn't go into a group
     		grpSizes.put(0, 0);
@@ -426,8 +476,7 @@ public class DBdata {
     		for (DBdata dd : rows) {
     			if (!hitIdx2Grp.containsKey(dd.hitIdx)) {
     				cntPgeneF++;
-    				if (cntPgeneF<3 && Q.TEST_TRACE) 
-    					System.out.println("Not in hitIdx2Grp: " + dd.hitIdx);
+    				if (cntPgeneF<3) symap.Globals.dprt("Not in hitIdx2Grp: " + dd.hitIdx);
     				continue;
     			}
     			
@@ -436,7 +485,7 @@ public class DBdata {
     			
     			int pgenef = hitIdx2Grp.get(dd.hitIdx);
     			int pgfsize = grpSizes.get(pgenef);
-    			dd.setPgeneF(pgenef, pgfsize);
+    			dd.setGroup(pgenef, pgfsize);
     			
     			rowsForDisplay.add(dd);
     			
@@ -563,9 +612,9 @@ public class DBdata {
 			
 			int annoIdx = rs.getInt(Q.AIDX);
 			if (annoIdx!=annotIdx[0] && annoIdx!=annotIdx[1]) { 
-				if (isIncludeMinor) {						// CAS547 add
-					annotIdx[x] = rs.getInt(Q.AGIDX);	// hit overlaps at least two genes on both sides
-					tag = tag + "++";					// indicate 2nd non-best
+				if (isIncludeMinor) {		// CAS547 add
+					annotIdx[x] = annoIdx;	// CAS555 bug fix! was setting to grpIdx, hit overlaps at least two genes on both sides
+					tag = tag + "**";		// indicate 2nd non-best; CAS555 was '++'
 					cntPlus2++;
 				}
 				else return;
@@ -623,6 +672,7 @@ public class DBdata {
 
 			String chr = (chrNum[x].startsWith("0") && chrNum[x].length()>1) ? chrNum[x].substring(1) : chrNum[x];
 			if (!geneTag[x].equals(Q.empty)) geneTag[x] = chr +"."+geneTag[x];  // CAS547 was in Utilities, but now remove (...) earlier
+			else geneTag[x] = chr +".-"; // CAS555 if >2 species, helps to know chr if no gene#
 			
 			if (blockNum>0) blockStr = Utilities.blockStr(chrNum[0], chrNum[1], blockNum); // CAS513 use blockStr
 			if (runSize>0)  {
@@ -757,9 +807,9 @@ public class DBdata {
 	/*********************************************************
 	 * Called if ComputePgeneF is run
 	 */
-	protected void setPgeneF(int pgenef, int pgfsize) {
-		this.pgenef = pgenef;
-		this.pgfsize = pgfsize;
+	protected void setGroup(int pgenef, int pgfsize) {
+		this.grpN = pgenef;
+		this.grpSize = pgfsize;
 	}
 	/*************************************************
 	 * TableData.addRowsWithProgress: returns row formated for table.
@@ -781,8 +831,8 @@ public class DBdata {
 			if (blockScore<=0)  row.add(Q.empty);  else row.add(blockScore);
 			if (runSize<0)      row.add(Q.empty);  else row.add(collinearStr);
 			
-			if (pgenef<=0)      row.add(Q.empty);  else row.add(pgenef);
-			if (pgfsize<=0)     row.add(Q.empty);  else row.add(pgfsize);
+			if (grpN<=0)      	row.add(Q.empty);  else row.add(grpN);
+			if (grpSize<=0)     row.add(Q.empty);  else row.add(grpSize);
 			
 			if (hitNum<=0)      row.add(hitIdx);   else row.add(hitNum);
 			if (hscore<=0)		row.add(Q.empty);  else row.add(hscore); // CAS540 add column; CAS548 mv column
@@ -867,7 +917,56 @@ public class DBdata {
 		else      return annoSet1.size()>0;
 	}
 	protected boolean hasBlock() 	{return blockNum>0;}
+	protected boolean hasCollinear() {return !collinearStr.isEmpty() && !collinearStr.equals(Q.empty);} // CAS555
 	
+	protected Object copy() { // clone only copies primitive, might as well just copy
+		DBdata nObj = new DBdata();
+		nObj.hitIdx = hitIdx; nObj.hitNum = hitNum;
+		nObj.pid = pid; nObj.psim = psim; nObj.hcnt=hcnt; 		
+		nObj.hst=hst;	nObj.hscore = hscore; nObj.htype = htype;			
+		nObj.blockNum = blockNum; nObj.runNum = runNum;
+		nObj.blockScore=blockScore; nObj.runSize=runSize; 
+		nObj.blockStr = blockStr; nObj.collinearStr = collinearStr;
+		
+		nObj.annoSet0 = new TreeSet <Integer> ();  for (int x : this.annoSet0) nObj.annoSet0.add(x);
+		nObj.annoSet1 = new TreeSet <Integer> ();  for (int x : this.annoSet0) nObj.annoSet1.add(x);
+		
+		nObj.annotStr = new String [2];	nObj.annotStr[0] = annotStr[0];  nObj.annotStr[1] = annotStr[1];
+		nObj.gstrand = new String [2];	nObj.gstrand[0] = gstrand[0];  	 nObj.gstrand[1] = gstrand[1];
+		nObj.geneTag = new String [2];	nObj.geneTag[0] = geneTag[0];    nObj.geneTag[1] = geneTag[1];
+		nObj.spName = new String [2];	nObj.spName[0] = spName[0];      nObj.spName[1] = spName[1];
+		nObj.chrNum = new String [2];	nObj.chrNum[0] = chrNum[0];      nObj.chrNum[1] = chrNum[1];
+		
+		nObj.spIdx = new int [2];	nObj.spIdx[0] = spIdx[0];    nObj.spIdx[1] =  spIdx[1];
+		nObj.chrIdx = new int [2];	nObj.chrIdx[0] = chrIdx[0];  nObj.chrIdx[1] =  chrIdx[1];
+		nObj.gstart = new int [2];	nObj.gstart[0] = gstart[0];  nObj.gstart[1] =  gstart[1];
+		nObj.gend = new int [2];	nObj.gend[0] = gend[0];      nObj.gend[1] =  gend[1];
+		nObj.glen = new int [2];	nObj.glen[0] = glen[0];      nObj.glen[1] =  glen[1];
+		
+		nObj.hstart = new int [2];	nObj.hstart[0] = hstart[0];  nObj.hstart[1] =  hstart[1];
+		nObj.hend = new int [2];	nObj.hend[0] = hend[0];      nObj.hend[1] =  hend[1];
+		nObj.hlen = new int [2];	nObj.hlen[0] = hlen[0];      nObj.hlen[1] =  hlen[1];
+		
+		nObj.golap = new int [2];	nObj.golap[0] = golap[0];  		nObj.golap[1] =  golap[1];
+		nObj.annotIdx = new int [2];nObj.annotIdx[0] = annotIdx[0]; nObj.annotIdx[1] =  annotIdx[1];
+		nObj.numHits = new int [2];	nObj.numHits[0] = numHits[0];  	nObj.numHits[1] =  numHits[1];
+		
+		nObj.annoVals = new HashMap <Integer, String[]> ();
+		for (int i : annoVals.keySet()) {
+			String [] v = annoVals.get(i);
+			String [] x = new String [v.length];
+			for (int j=0; j<v.length; j++) x[j] = v[j];
+			nObj.annoVals.put(i, x);
+		}
+		nObj.rowNum = nObj.grpN = nObj.grpSize = -1; // set unique
+		
+		return nObj;
+	}
+	public String toString() {
+		return String.format("hit# %,5d   sp %d %d   chr %3s %3s   tag %10s %10s  idx %,6d %,6d  grp# %3d", 
+				hitNum, spIdx[0], spIdx[1], chrNum[0], chrNum[1], geneTag[0], geneTag[1], 
+				annotIdx[0], annotIdx[1], grpN);
+	}
 	/******************************************************
 	 * Class variables -- public -- accessed in ComputePgeneF
 	 */
@@ -877,35 +976,36 @@ public class DBdata {
 	private String [] annotStr =	 {"", ""};
 	
 // hit
-	private int hitIdx = -1, hitNum = -1;
+	protected int hitIdx = -1, hitNum = -1;
 	private int pid = -1, psim = -1, hcnt=-1; 		// CAS516 add; 
 	private String hst="";							// CAS520 add column
 	private int hscore = -1;						// CAS540 add column
-	private String htype = "";						// CAS546 add column
-	private int [] spIdx =  {Q.iNoVal, Q.iNoVal};	
-	private int [] chrIdx = {Q.iNoVal, Q.iNoVal};		
-	private int [] gstart = {Q.iNoVal, Q.iNoVal};  // CAS519 add all g-fields. 
-	private int [] gend = 	{Q.iNoVal, Q.iNoVal}; 
-	private int [] glen = 	{Q.iNoVal, Q.iNoVal};  
+	protected String htype = "";					// CAS546 add column; EE, EI, IE, nn, etc
+	protected int [] spIdx 	= {Q.iNoVal, Q.iNoVal};	
+	protected int [] chrIdx = {Q.iNoVal, Q.iNoVal};		
+	private int [] gstart 	= {Q.iNoVal, Q.iNoVal};  // CAS519 add all g-fields. 
+	private int [] gend 	= {Q.iNoVal, Q.iNoVal}; 
+	private int [] glen 	= {Q.iNoVal, Q.iNoVal};  
 	private String [] gstrand = {Q.empty, Q.empty};
-	private int [] hstart = {Q.iNoVal, Q.iNoVal};  
-	private int [] hend = 	{Q.iNoVal, Q.iNoVal}; 
-	private int [] hlen = 	{Q.iNoVal, Q.iNoVal};  // CAS516 add
-	private int [] golap =   {Q.iNoVal, Q.iNoVal};  // CAS548 add
-	private String [] geneTag = {Q.empty, Q.empty}; // CAS514 add; CAS518 chr.gene#.suffix
-	private int [] annotIdx = {Q.iNoVal, Q.iNoVal}; // CAS520 add because was not getting annot1_idx and annot2_idx
-	private int [] numHits = {Q.iNoVal, Q.iNoVal}; // CAS541 add
+	protected int [] hstart = {Q.iNoVal, Q.iNoVal};  
+	protected int [] hend 	= {Q.iNoVal, Q.iNoVal}; 
+	private int [] hlen 	= {Q.iNoVal, Q.iNoVal};  	// CAS516 add
+	private int [] golap 	= {Q.iNoVal, Q.iNoVal};  	// CAS548 add
+	protected String [] geneTag = {Q.empty, Q.empty}; 	// CAS514 add; CAS518 chr.gene#.suffix
+	protected int [] annotIdx 	= {Q.iNoVal, Q.iNoVal}; // CAS520 add because was not getting annot1_idx and annot2_idx
+	private int [] numHits 	= {Q.iNoVal, Q.iNoVal}; 	// CAS541 add
 	
-// block
-	private int blockNum=-1, blockScore=-1, runSize=-1, runNum=-1;
+// block, collinear
+	protected int blockNum = -1, runNum = -1;// run is for collinear
+	private int blockScore=-1, runSize=-1; 
 	private String blockStr = Q.empty, collinearStr = Q.empty;
 	
 // Other
-	private int rowNum=0;				// this rowNum is not used in table, but is a placeholder and used in debugging
-	private int pgenef=-1, pgfsize=-1;		// ComputePgeneF
+	protected int rowNum=0;				// this rowNum is not used in table, but is a placeholder and used in debugging
+	protected int grpN=-1, grpSize=-1;	// ComputePgeneF && ComputeMulti; CAS555 was PgeneF and PgFSize
 	
 	private String [] spName= {Q.empty, Q.empty};	
-	private String [] chrNum= {Q.empty, Q.empty};
+	protected String [] chrNum= {Q.empty, Q.empty};
 	
 	// AnnoStr broken down into keyword values in finish()
 	private HashMap <Integer, String[]> annoVals = new HashMap <Integer, String[]>  (); // 0,1, values in order

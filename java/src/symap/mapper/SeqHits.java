@@ -21,7 +21,7 @@ import symap.sequence.Sequence;
 import symap.Globals;
 
 /***********************************************
- * Two ends of a seq-seq hit; internal class PseudoHit has both ends
+ * Two ends of a seq-seq hit; internal class DrawHit has both ends
  * Mapper: Tracks 0-N are in order of display; Ref is always seqObj1
  * Hit Wire is the line between chromosomes
  * Hit Rect is the hit rectangle in the track, one on each end of wire
@@ -46,7 +46,7 @@ public class SeqHits  {
 	private boolean st1LTst2=true; 	   // if seqObj1.track# <seqObj2.track#, query is left track, else, right
 	
 	private String infoMsg=""; // CAS541
-	private int cntShowHit=0, cntHighHit=0, cntConserved=0;
+	private int cntShowHit=0, cntHighHit=0, cntHitg2=0;
 
 	// called in MapperPool
 	public SeqHits(Mapper mapper, Sequence st1, Sequence st2, Vector <HitData> hitList) {
@@ -63,7 +63,8 @@ public class SeqHits  {
 			HitData hd = hitList.get(i);
 			allHitsArray[i] = new DrawHit(hd);
 			
-			boolean isSelected = mapper.isQuerySelHit(hd.getStart1(), hd.getEnd1(), hd.getStart2(),hd.getEnd2());	
+			boolean isSelected = mapper.isQuerySelHit(hd.getHitNum(), // CAS555 add idx for group
+					hd.getStart1(), hd.getEnd1(), hd.getStart2(),hd.getEnd2());	
 			allHitsArray[i].set(isSelected);
 			
 			// Calc offset for display for seq1
@@ -110,20 +111,16 @@ public class SeqHits  {
 		int t2 = seqObj2.getHolder().getTrackNum(); 
 		st1LTst2 = (t1<t2);
 	}
-	// Returns the amount of the overlap (negative for gap); copied fro
-		public static int intervalsOverlap(int s1,int e1, int s2, int e2) {
-			int gap = Math.min(e1,e2) - Math.max(s1,s2) - Math.min(e1,e2);
-			return -gap;
-		}	
-	public String getInfo() { return infoMsg;}; // CAS541 called in Mapper
+	
+	protected String getInfo() { return infoMsg;}; // CAS541 called in Mapper
 	
 	// called from mapper.myinit sets for the Hit Filter %id slider
-	public void setMinMax(HfilterData hf) { 
+	protected void setMinMax(HfilterData hf) { 
 		for (DrawHit h : allHitsArray)
 			h.setMinMax(hf);
 	}
 	
-	public void getMinMax(int[] minMax, int start, int end, boolean swap) {
+	protected void getMinMax(int[] minMax, int start, int end, boolean swap) {
 		for (DrawHit h : allHitsArray) {
 			if (h.isContained(start, end, swap)) {
 				minMax[0] = Math.min( minMax[0], h.hitDataObj.getStart1(swap) );
@@ -147,10 +144,10 @@ public class SeqHits  {
 		 }
 		 return hitList;
 	 }
-	 public void clearConserved() { // called from Sequence (SeqPool sets conserved per hit)
+	 public void clearHighHitg2() { // called from Sequence (SeqPool sets conserved per hit)
 		 for (DrawHit hd: allHitsArray) 
 			 if (hd.hitDataObj.is2Gene()) 
-				 hd.hitDataObj.setIsConserved(false);
+				 hd.hitDataObj.setIsHighHitg2(false);
 	 }
 	 public Sequence getSeqObj1() {return seqObj1;}
 	 public Sequence getSeqObj2() {return seqObj2;}
@@ -189,7 +186,7 @@ public class SeqHits  {
 			}
 		}
 	
-		cntShowHit=cntHighHit=cntConserved=0; // counted in paint
+		cntShowHit=cntHighHit=cntHitg2=0; // counted in paint
 		HashSet <Integer> blockSet = new HashSet <Integer> (); // CAS541 add to count blocks/sets shown
 		toggle=true; 
 		for (DrawHit dh : allHitsArray) {
@@ -218,7 +215,7 @@ public class SeqHits  {
 		
 		// Information box on Stats
 		infoMsg = String.format("%s: %,d", "Hits", cntShowHit);
-		if (cntConserved>0) infoMsg += String.format("\n%s: %,d", "Conserved", cntConserved);
+		if (cntHitg2>0) infoMsg += String.format("\n%s: %,d", "Conserved", cntHitg2);
 		if (cntHighHit>0)   infoMsg += String.format("\n%s: %,d", "High", cntHighHit);
 		if (bHi) {
 			String type = (bHiCset) ? "Sets" : "Blocks";
@@ -264,7 +261,7 @@ public class SeqHits  {
 		mapper.getDrawingPanel().repaint();
 	}
 	// CAS517 add popup on right click
-	public boolean doPopupDesc(MouseEvent e) {
+	protected boolean doPopupDesc(MouseEvent e) {
 		if (e.isPopupTrigger()) { 
 			Point p = e.getPoint();
 			
@@ -277,7 +274,7 @@ public class SeqHits  {
 		}	
 		return false;
 	}
-	public void clearData() {
+	protected void clearData() {
 		 allHitsArray=null;
 	}
 	 /***************** Static stuff ***********************/
@@ -363,13 +360,13 @@ public class SeqHits  {
 		 }
 		 private Color getCColor(String orient, boolean toggle, boolean bWire) {
 			 if (isHover)     return Mapper.pseudoLineHoverColor;	// CS520 change Highlight to Hover
-			 if (isQuerySelHit) return Mapper.pseudoLineHoverColor;	// CAS516 different color for query selected
-			 
+			
 			 HfilterData hf = mapper.getHitFilter(); 
-			 if (hf.isHiPopup() && hitDataObj.isPopup()) return Mapper.pseudoLineHoverColor;
+			 if (hf.isHiPopup() && hitDataObj.isPopup()) return Mapper.pseudoLineGroupColor;
+			 if (hf.isHiPopup() && isQuerySelHit) return Mapper.pseudoLineGroupColor;	// CAS555 add; CAS516 different color for query selected 
 			 
-			 if (hitDataObj.isConserved()) { // conserved takes precedence over highlight
-				 if (bWire) cntConserved++;
+			 if (hitDataObj.isHighHitg2()) { // conserved takes precedence over highlight
+				 if (bWire) cntHitg2++;
 				 return Mapper.pseudoLineHighlightColor2;
 			 }
 			
@@ -423,7 +420,7 @@ public class SeqHits  {
 			 return isOlapHit() && lineContains(point);// CAS550 was isVisHitWire
 		 }
 		 private void set(boolean isSelectedHit) { // CAS516 change from setting highlight to bSelected
-			isQuerySelHit = isSelectedHit;
+			 isQuerySelHit = isSelectedHit;
 		 }
 		
 		 // provide hover; called from main mouseMoved

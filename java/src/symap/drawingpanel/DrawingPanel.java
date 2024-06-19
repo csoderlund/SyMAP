@@ -325,7 +325,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		getView().repaint();
 	}
 
-	protected int getNumMaps() {return numMaps;}// Frame2d
+	public int getNumMaps() {return numMaps;}// Frame2d and Sequence 
 
 	public int getNumAnnots() {// Frame2d; for query, the annotation filter is turned on; make room
 		int ret = 0;

@@ -38,7 +38,7 @@ public class GrpPairPile {
 	}
 	protected boolean run() {
 		Arg.tprt("Find piles from " + clArrLen);
-		if (symap.Globals.DEBUG) return true;
+		//if (symap.Globals.DEBUG) return true; CAS555 this results is many hits!
 		identifyPiles();	if (!bSuccess) return false;
 		createPiles();		if (!bSuccess) return false;
 		filterPiles();		if (!bSuccess) return false;

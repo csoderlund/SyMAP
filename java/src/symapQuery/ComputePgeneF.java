@@ -29,7 +29,8 @@ public class ComputePgeneF {
 	private HashMap<Integer,Integer> pgfSizes; 	// PgeneF sizes
 	
 	// Summary counts
-	private HashMap<String,Integer> proj2regions; 
+	private HashMap<String,Integer> proj2regions = new HashMap<String,Integer> (); 
+	private HashMap<String, String> projMap; // CAS555 add to return string 
 	
 	// Input:
 	private QueryPanel qPanel;
@@ -50,7 +51,6 @@ public class ComputePgeneF {
 	private HashMap<Integer, Collection<rhit>> hit2grp = new HashMap<Integer, Collection<rhit>>();	
  	private HashMap<Integer,String>  grp2proj =          new HashMap<Integer,String>();
  	
- 	
 	public ComputePgeneF(
 			Vector <DBdata> rowsFromDB, 
 			QueryPanel lQueryPanel,
@@ -59,7 +59,7 @@ public class ComputePgeneF {
 			HashMap<Integer,Integer> hitIdx2Grp, 
 			HashMap<Integer,Integer> pgfSizes, 
 			
-			HashMap<String,Integer> proj2regions) {
+			HashMap<String,String> projMap) {
 		
 		this.rows = rowsFromDB;
 		this.qPanel = lQueryPanel;
@@ -68,7 +68,7 @@ public class ComputePgeneF {
 		this.hitIdx2Grp = hitIdx2Grp;
 		this.pgfSizes = pgfSizes;
 		
-		this.proj2regions = proj2regions;
+		this.projMap = projMap;
 		
 		computeGroups();
 	}
@@ -232,6 +232,11 @@ public class ComputePgeneF {
     		if (grpNum%100 ==0) 
  				progress.setText("PgeneF " + rowNum + " final groups");
     	} // end for loop
+    	
+    	for (String proj : proj2regions.keySet()) { // CAS555 make string output for summary
+    		String x = String.format("Regions: %,7d", proj2regions.get(proj));
+    		projMap.put(proj, x);
+    	}
 	} 
 	catch (Exception e) {ErrorReport.print(e, "Compute PgeneF"); }
 	} // end computeGroups

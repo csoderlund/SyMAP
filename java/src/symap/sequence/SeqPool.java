@@ -230,7 +230,7 @@ public class SeqPool {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Place overlapping genes");}
 	}
-	private class GeneData {
+	private class GeneData { // for buildPlace
 		Annotation annot;
 		int start, end, len;
 		int level=0;
@@ -262,22 +262,22 @@ public class SeqPool {
 	 * SeqFilter Conserved Genes; add CAS545 These methods are called from the reference track
 	 ****************************************************************************/
 	/**
-	 *  This finds gene->many and gene1/gene2->gene<-gene1/gene2 
+	 *  This finds 3 conserved genes for 3 tracks; gene1/gene2->gene<-gene1/gene2 
 	 *  On a back History (i.e. forceConserved), the hits have been updated but not the Sequence tracks
 	 *  	this works because it just uses the hits (there could still be a sync problem...)
 	 ***/
-	protected void flagConserved(SeqHits leftHitsObj, SeqHits rightHitsObj, Sequence refSeq) {
+	protected void setNg2(boolean isBoth, SeqHits leftHitsObj, SeqHits rightHitsObj, Sequence refSeq) {
 	try {	
-		Vector <GeneHitGene> dualSet1 = createConservedPair(leftHitsObj);
+		Vector <Hitg2> dualSet1 = createG2Pair(leftHitsObj);
 		if (dualSet1.size()==0) return;
 		
 		if (rightHitsObj==null) {
-			for (GeneHitGene g : dualSet1) g.setHigh();
+			for (Hitg2 g : dualSet1) g.setHigh();
 			return;
 		}
 		
 	/*  3 tracks */
-		Vector <GeneHitGene> dualSet2 = createConservedPair(rightHitsObj);
+		Vector <Hitg2> dualSet2 = createG2Pair(rightHitsObj);
 		if (dualSet2.size()==0) return;
 		
 		// Find conserved: get Ref genes; mark found left, mark found right
@@ -290,7 +290,7 @@ public class SeqPool {
 		for (int idx : idxRef) geneMap.put(idx, new Mark());
 		
 		int cntNoGene=0;
-		for (GeneHitGene cg : dualSet1) {
+		for (Hitg2 cg : dualSet1) {
 			int idx = (isRefSeq1L) ? cg.annot1_idx : cg.annot2_idx;
 			if (geneMap.containsKey(idx)) geneMap.get(idx).mark1=true;
 			else {
@@ -299,7 +299,7 @@ public class SeqPool {
 			}
 		}
 		boolean isRefSeq1R = (refSeq==rightHitsObj.getSeqObj1()); // may be different for right
-		for (GeneHitGene cg : dualSet2) {
+		for (Hitg2 cg : dualSet2) {
 			int idx = (isRefSeq1R) ? cg.annot1_idx : cg.annot2_idx;
 			if (geneMap.containsKey(idx)) geneMap.get(idx).mark2=true;
 			else {
@@ -311,25 +311,25 @@ public class SeqPool {
 			System.out.println("Possible sync problem - genes not found: " + cntNoGene);
 		
 		// highlight if left and right are marked
-		for (GeneHitGene cg : dualSet1) {
+		for (Hitg2 cg : dualSet1) {
 			int idx = (isRefSeq1L) ? cg.annot1_idx : cg.annot2_idx;
-			if (geneMap.containsKey(idx) && geneMap.get(idx).isConserved()) cg.setHigh();
+			if (geneMap.containsKey(idx) && geneMap.get(idx).isG2(isBoth)) cg.setHigh();
 		}
-		for (GeneHitGene cg : dualSet2) {
+		for (Hitg2 cg : dualSet2) {
 			int idx = (isRefSeq1R) ? cg.annot1_idx : cg.annot2_idx;
-			if (geneMap.containsKey(idx) && geneMap.get(idx).isConserved()) cg.setHigh();
+			if (geneMap.containsKey(idx) && geneMap.get(idx).isG2(isBoth)) cg.setHigh();
 		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "Finding conserved");}
 	}
 	/**** Make the set of conserved genes for hit set ***/
-	private Vector <GeneHitGene>  createConservedPair(SeqHits hitsObj) {
-		Vector <GeneHitGene> dualSet = new Vector <GeneHitGene> ();
+	private Vector <Hitg2>  createG2Pair(SeqHits hitsObj) {
+		Vector <Hitg2> dualSet = new Vector <Hitg2> ();
 		try {	
 			Vector <HitData> hitList = hitsObj.getVisGene2Hits();// only visible, unfiltered hits with genes at both ends
 			
 			for (HitData hd: hitList) { 
-				GeneHitGene gn = new GeneHitGene(hd);
+				Hitg2 gn = new Hitg2(hd);
 				dualSet.add(gn);
 			}
 			return dualSet;
@@ -338,20 +338,23 @@ public class SeqPool {
 	}
 	
 	// Class
-	private class GeneHitGene {
-		private GeneHitGene(HitData h) {
+	private class Hitg2 { // 2-track, has gene on both sides
+		private Hitg2(HitData h) {
 			hitObj=h;
 			annot1_idx = h.getAnnot1();
 			annot2_idx = h.getAnnot2();
 		}
 		private void setHigh() {
-			hitObj.setIsConserved(true);
+			hitObj.setIsHighHitg2(true);
 		}
 		private HitData hitObj=null;
 		private int annot1_idx, annot2_idx;
 	}
 	private class Mark { // can have N->1 or 1->N, just need to know if marked on both sides
 		boolean mark1=false, mark2=false;
-		private boolean isConserved() {return mark1 && mark2;}
+		private boolean isG2(boolean isBoth) {
+			if (isBoth) return mark1 && mark2;
+			return (mark1 && !mark2) || (!mark1 && mark2);
+		}
 	}
 }
