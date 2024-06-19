@@ -95,7 +95,7 @@
 
 <tr>
 <td>&nbsp;&nbsp;&nbsp;
-<td><a href="#pfs">PgeneFs</a>
+<td><a href="#pfs">Gene Groups</a>
 <td><a href="#but">Top button</a>
 <td>&nbsp;&nbsp;&nbsp;
 
@@ -124,7 +124,6 @@ if all project pairs used <ttx>Algo2</ttx>, it will be exon overlap
 
 <p>Open the <ttl>Query Setup</ttl> window by clicking on its tab in the left panel.
 
-
 <a id="query"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>&gt;Query Setup</h2>
@@ -134,8 +133,7 @@ if all project pairs used <ttx>Algo2</ttx>, it will be exon overlap
 <a href="#gen">1. General</a>&nbsp;&nbsp;&nbsp;
 <a href="#sin">2. Single genes</a>&nbsp;&nbsp;&nbsp;
 <a href="#pair">3. Pair Hits</a>&nbsp;&nbsp;&nbsp;
-<a href="#pfs">4. PgeneF</a>
-
+<a href="#pfs">4. Gene Groups</a>
 
 <p>Set up the desired filters and then select <ttb>Run Search</ttb> to execute it.
 When the query is complete, the <a href="#result">query result panel</a> will be displayed.
@@ -145,6 +143,7 @@ When the query is complete, the <a href="#result">query result panel</a> will be
 
 <a id="rules"></a>
 <p><b>Rules</b>
+
 <table>
 <tr><td style="vertical-align: text-top;">
 1. All queries are on the <ttl>Pair hits</ttl> unless <ttl>Single</ttl> is selected.
@@ -152,31 +151,49 @@ When the query is complete, the <a href="#result">query result panel</a> will be
 <p>2. All <ttl>Pair hits</ttl> queries return a row per <i>hit pair</i>, i.e.
 aligned region between to two chromosomes from two projects.
 
-<p>3. <ttx>Major</ttx> and <ttx>Minor</ttx> genes: A hit can align to multiple genes on either or both chromosomes; it is assigned to the best (<ttx>major</ttx>) gene on each end.
-For example, in the image on the right, the red highlighted gene is the major gene for the highlighted hit, whereas the purple
-single exon gene is the minor gene.
+<td><a href="img/query_table_rows.png"><img src="img/query_table_rows.png" alt="query_table_rows" style="border: 1px solid black; width: 450px"></a>
+</table>
 
-<p>When queries involve genes, only the hits to the major genes will be shown
+<table>
+<tr><td style="vertical-align: text-top;">
+3. All <ttx>Hit#</ttx> are uniquely numbered for a chromosome pair, e.g. there will be a hit #3 on all chromosome pairs
+that have at least 3 hits.
+All <ttx>Gene#</ttx> are sequentially numbered per chromosome, e.g. there will be a
+gene #3 on all chromosomes that have at least 3 non-overlapping genes.
+
+<p>4. <ttx>Major</ttx> and <ttx>Minor</ttx> genes:
+<br>a. A hit can align to multiple genes on either or both chromosomes; it is assigned to the best (<ttx>major</ttx>) gene on each end.
+<br>b. For example, in the image on the right, the burgundy gene is the major gene as the hit (green line)
+fits to it best,
+whereas the blue single exon gene is the minor gene.
+<br>c. When queries involve genes, only the hits to the major genes will be shown
 except for the following queries, which will also list the minor genes:
-<br>&nbsp;&nbsp;&nbsp;<ttx>Annotation</ttx>, <ttx>Every*</ttx>, <ttx>Hit#</ttx>,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<ttx>Every*</ttx>, <ttx>Hit#</ttx>,
 <ttx>Gene#</ttx> when no suffix is provided, and <ttx>Multi</ttx> with <ttx>minor</ttx> checked.
 
-<p>4. Most filters can be used in conjunction with other
+<p>5. Most filters can be used in conjunction with other
 filters; options will be disabled if they cannot be used with a selected filter.
+
 <td>
 <a href="img/queryMultOlap.png">
 <img src="img/queryMultOlap.png" alt="Hit overlaps two genes" style="border: 1px solid black; width: 35px"></a>
 </table>
+
 
 <a id="gen"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>1. General</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<ttl>Annotation Description</ttl>
+<table>
+<tr>
+<td><ttl>Annotation Description</ttl>
 <br>Enter a substring: the entire annotation string (i.e. column <ttl>All_Anno</ttl>) will be searched
-for the substring. Hits will be returned that align to the genes with the corresponding annotation. If a location
-is entered, the annotated gene must be in the location limits.
+for the substring. Hits will be returned that align to the genes with the corresponding annotation.
+<td><a href="img/query_gen.png">
+<img src="img/query_gen.png" alt="General" style="border: 1px solid black; width: 400px"></a>
+</table>
+
 
 <p><ttl>Location</ttl>
 <table class="tx">
@@ -198,10 +215,12 @@ For <ttx>Pair hits</ttx>, the <i>hit</i> coordinates must pass the <ttl>From</tt
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>2. Single gene</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-The <ttl>Single</ttl> queries produces rows of genes; there is no hit or block
+<table><tr>
+<td>The <ttl>Single</ttl> queries produces rows of genes; there is no hit or block
 information since the rows do not represent hits.
-
+<td><a href="img/query_single.png">
+<img src="img/query_single.png" alt="Single" style="border: 1px solid black; width: 400px"></a>
+</table>
 Options:
 <ul>
 <li><ttl>Orphan genes (no hits)</ttl>
@@ -229,8 +248,12 @@ There is always the same set of genes for a project, regardless of synteny.
 <h3>3. Pair hits</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
+<table><tr><td>
 Each hit connects two <i>species (projects)</i> and hence represents a <i>pair</i> of aligned
 regions for two of the selected species. Filters are as follows:
+<td><a href="img/query_pair.png">
+<img src="img/query_pair.png" alt="Pair" style="border: 1px solid black; width: 400px"></a>
+</table>
 
 <p><ttl>In Block (Synteny Hit)</ttl>
 <table class="tx">
@@ -245,35 +268,37 @@ block will be returned. No hits will have a value for the <ttx>Block</ttx> colum
 <table class="tx">
 <tr><td style="vertical-align: text-top;">Every<td><td>&nbsp;
 <td>Only hits that align to a gene on one or both sides of the hit will be shown.
-The <ttx>Gene#</ttx> columns will list the best gene. See <a href="#locgene">Rules for genes/chr</a>
-
-
+The <ttx>Gene#</ttx> columns will list the best gene.
 <tr><td style="vertical-align: text-top;">Every*<td><td>&nbsp;
 <td>This is like the <ttx>Every</ttx> option, but a hit may be listed multiple times if it aligns
 to overlapping genes; in other words, ALL genes will be shown if they have any alignment.
 The <ttx>Gene#</ttx> for non-best hits will be suffixed with an "*" and the <ttx>Htype</ttx> is
-unknown. See <a href="#locgene">Rules for genes/chr</a>
+unknown.
 
 <tr><td style="vertical-align: text-top;">One<td><td>&nbsp;
 <td>Only hits that align to a gene on ONE end will be shown.
-The <ttx>Gene#</ttx> columns will show the best gene for the end with the hit.
-See <a href="#locgene">Rules for genes/chr</a>
+The <ttx>Gene#</ttx> column will show the best gene for the end with the hit.
 
 <tr><td style="vertical-align: text-top;">Both<td><td>&nbsp;
 <td>Only hits that align to genes on BOTH end will be shown.
-The <ttx>Gene#</ttx> columns will show the best gene for both ends of the hit.
+The <ttx>Gene#</ttx> column will show the best gene for both ends of the hit.
 
 <tr><td style="vertical-align: text-top;">None<td><td>&nbsp;<td>Only hits that do NOT align to a gene
-on either end will be shown. The <ttx>Gene#</ttx> columns will not have a value for either end of the hit.
+on either end will be shown. The <ttx>Gene#</ttx> column will not have a value for either end of the hit.
 </table>
+<u>Location</u>: if a chromosome is selected, every hit row must be on the selected chromosome, but the "every" or "one"
+gene may be on the opposite chromosome.
 
-<p><ttl>Collinear size &gt;= N (or = N or &lt;= N)</ttl>
-<br>List all hits in collinear sets that have size &gt;= N.
+<p><ttl>Collinear size</ttl>
+<table class="tx">
+<tr><td style="white-space: nowrap;vertical-align: text-top;"><td>&gt;= [=, &gt;=] N<td>&nbsp;
+<td>List all hits in collinear sets that have size &gt;= N or  = N or &lt;= N, respectively.
+<br>The text box must have an integer &gt;0;
+
+<tr><td style="vertical-align: text-top;"><td>Ignore<td>&nbsp;<td>Do not filter on collinear set sizes.
+</table>
+<br>
 See <a href="Collinear.html">Collinear</a>, which explains the SyMAP collinear sets.
-
-<p><ttl>Multi &gt;= N</ttl>
-<br>List all hits that align to genes on <i>at least one end</i> with &gt;= N hits. Check <ttl>Minor*</ttl> to include minor hits.
-<br>When used with a specified chromosome, restricts genes &gt;= N hits on the specified chromosome; see <a href="#locgene">Rules for genes/chr</a>.
 
 <p><ttl>Block#</ttl>
 <br>Enter a single block number (<u>the <ttx>Block</ttx> column is formatted
@@ -289,38 +314,101 @@ This can be used in conjunction with the chromosome pull-downs (as for blocks).
 <br>The hits are numbered for each chromosome pair, e.g. there will be a Hit#1 for every chromosome pair that
 has hits. If a hit aligns to multiple genes, both major and minor genes will be shown.
 
+<a id="genenum"></a>
 <p><ttl>Gene#</ttl>
 <br>Enter a <ttx>Gene#</ttx> number (<u>the <ttx>Gene#</ttx> column is formatted Chr.Gene#.suffix</u>
 where the suffix may be blank); <i>do not include the 'Chr' number</i>.
 <br>&nbsp;&bull; If only a number is entered, all genes with the numeric prefix will be displayed (including minor hits).
 <br>&nbsp;&bull; If a number.suffix is entered, the exact gene will be displayed (but no minor hits).
-<br>&nbsp;&bull; See <a href="#locgene">Rules for genes/chr</a>
+<br>This query results in values for the <ttx>Grp#</ttx> and <ttx>GrpSize</ttx> columns; this in turn
+allows the <ttl>View 2D</ttl> <a href="#group">Group</a> option to be used.
 
-<a id="locgene"></a>
-<p><u>Rules for genes/chromosome queries</u>: The following queries involve genes and how they respond to a specified <ttl>Chromosome</ttl>.
-All queries first filter on location, but only a "Yes" further restricts the genes to the selected chromosome(s).
-<table>
-<tr><td>
-<table class="ty">
-<tr><td  style="white-space: nowrap;">Selected Chr<td>Option<td>Release
-<tr><td>No<td style="white-space: nowrap;"><ttx>Every</ttx>, <ttx>Every*</ttx>, <ttx>One</ttx><td>v5.4.7
-<tr><td>Yes<td><ttx>Multi</ttx>, <ttx>Gene#</ttx><td>v5.4.9
-</table>
-<td>For example, <ttx>Every</ttx> and <ttx>Multi</ttx> with N=1 give the same results, but when restricted to a chromosome,
-the <ttx>Every</ttx> does not require the gene to be on the specified chromosome whereas the required N=1 does.
-</table>
 <!--------------------------------------------------->
 <a id="pfs"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>4. Filter putative gene families (PgeneFs)</h3>
+<h3>4. Gene Groups</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+These two options are computed on the fly.
+They produce query results with values for the <ttx>Grp#</ttx> and <ttx>GrpSize</ttx> columns; this in turn
+allows the <ttl>View 2D</ttl> <a href="#group">Group</a> option to be used.
+
+<a id="multi"></a>
+<h4>4.1 <ttl>Multi-hit Genes&gt;= N</ttl></h4>
+<a href="img/query_multi.png">
+<img src="img/query_multi.png" alt="Multi" style="border: 1px solid black; width: 450px"></a>
+
+<p>List all hits genes that have &gt;= N hits, where multiple hits can join the same two genes.
+<br>The <u>target</u> gene refers to the gene with &gt;= N hits to the <u>opposite</u> species.
+<br>The options are as follows:
+<p>
+<table style="tx">
+<tr><td>&nbsp;<td><ttl>Exon</ttl>
+	<td>&nbsp;<td>(<tt>Algo2</tt> only) The hits must be to exons in the target gene.
+<tr><td>&nbsp;<td><ttl>Minor*</ttl>
+	<td>&nbsp;<td>Include minor hits on either chromosome.
+<tr><tr><td colspan=2><ttl>Opposite</ttl>
+<tr><td>&nbsp;<td style="white-space: nowrap; vertical-align: text-top;"><ttl>Same Chr</ttl>
+	<td>&nbsp;<td>The &gt;=N hits must all be on the same opposite chromosome.
+<tr><td>&nbsp;<td style="vertical-align: text-top;"><ttl>Tandem</ttl>
+    <td>&nbsp;<td>(Annotated species only): The &gt;=N hits must be to a tandem array of genes.
+	<br><ttl>Same Chr</ttl> is automatic with this option.
+</table>
+
+<p>Good associated filters:
+<table style="tx">
+<tr><td>&nbsp;<td style="white-space: nowrap;vertical-align: text-top;"><ttl>Location <ttx>Chr:</ttx><td>&nbsp;
+     <td>When used with a specified chromosome,
+     restricts the target genes with &gt;= N hits to the specified chromosome.
+     For example:
+     <ul>
+     <li>If species<sup>1</sup> Chr02 is selected, there will only be gene
+     groups shown from Chr02 to any chromosome in species<sup>2</sup>.
+     <li>If both species<sup>1</sup> Chr02
+     and species<sup>2</sup> Chr03 are selected, all gene groups from
+     species<sup>1</sup> Chr02 to species<sup>2</sup> Chr03 will be shown, and
+     vice versa.
+     </ul>
+<tr><td>&nbsp;<td style="white-space: nowrap;vertical-align: text-top;"><ttl>Annotated</ttl> <ttx>Both</ttx>
+    <td>&nbsp;<td>Each target gene must have its N hits to genes on the opposite species (not needed with the
+    <ttl>Tandem</ttl> option).
+</table>
+
+<p>Table can list the same hit multiple times:
+<table>
+<tr><td style="vertical-align: text-top;">For all other queries, a hit will only be listed once for a chromosome pair; however, that is not
+the case for this query. That is because gene X and gene Y may be connected by a hit, where both gene X
+and gene Y have &gt;=N, so both groups need to be shown.
+<p>An example is shown on the right, where the
+two highlighted rows are the same, but in two different groups (grp#1 for gene 5.1458 and grp#4 for gene 3.638).
+<td><a href="img/query_multi_results.png">
+<img src="img/query_multi_results.png" alt="multi-hit results" style="border: 1px solid black; width: 250px"></a>
+</table>
+
+<a id="group_ex"></a>
+<u>View 2D Group Example:</u>
+The image below shows the two groups, where the group hits are highlighted in magenta; these were
+produced using the <ttl>View 2D</ttl> option <a href="#group">Group</a>.
+<br><a href="img/query_multi_2D.png">
+<img src="img/query_multi_2D.png" alt="multi-hit 2D" style="border: 1px solid black; width: 700px"></a>
+
+<h4>4.2 <ttl>PgeneF (putative gene families)</ttl></h4>
 <i>Note</i>: this has not been tested for a long time except superficially (i.e. making sure it has the same results as the previous
 release).
-<p>This is only computed if the <ttl>Computed PgeneF</ttl> is checked.
+
+<table><tr><td>
 Using the hits that pass the other filters, SyMAP constructs putative gene families (PgeneFs)
 spanning the selected species. This is done by grouping hits which overlap on at
-least one genome. <i>Note, if you have more than 6 species selected, this stage can take
+least one genome.
+<td><a href="img/query_pgenef1.png">
+<img src="img/query_pgenef1.png" alt="PgeneF two" style="border: 1px solid black; width: 250px"></a>
+<tr>
+<td>Additional options are provided when &gt;2 species are selected.
+<i>Note, if you have more than 6 species selected, this stage can take
 an hour or more.</i>
+<td><a href="img/query_pgenef.png">
+<img src="img/query_pgenef.png" alt="PgeneF" style="border: 1px solid black; width: 250px"></a>
+</table>
+
 <p>
 Each PgeneF is given a number, which is shown in the Query Results table (column name <ttx>PgeneF</ttx>).
 The size of the PgeneF is also shown (column <ttx>PgFSize</ttx>).
@@ -337,6 +425,7 @@ at least one hit which hits that species.
 <p>
 For &gt;2 species only: If a species is checked to exclude,
 then the PgeneF will be discarded if any of its hits are to that species.
+
 
 <p><ttl>For the included species:</ttl>
 
@@ -440,13 +529,12 @@ are the full descriptions of the columns.
 	<td>Collinear set containing this hit (if any). The format is Cn.Cm.Size.Set# (e.g. 1.2.5.100; there are 5
 		adjacent gene hits in set# 100 on Chr1 to Chr2).
 <tr>
-	<td style="vertical-align: text-top;"><ttx>PgeneF</ttx><td>&nbsp;
-	<td>If <ttl>Compute PgeneF</ttl>: PgeneF number. All hits in a given PgeneF have the same number. Note that
-		the number is generated during the search so will not be the same in a different search. Sort on this column to view the
-		other rows with same PgeneF.
+	<td style="vertical-align: text-top;"><ttx>Grp#</ttx><td>&nbsp;
+	<td>If <ttl>Gene#, Multi-hit gene, PgeneF</ttl>: These three queries produces groups of hits,
+	where each group has a group number. These numbers are generated during the search so will not be the same for different filter settings.
 <tr>
-	<td style="vertical-align: text-top;"><ttx>PgFSize</ttx><td>&nbsp;
-	<td>If <ttl>Compute PgeneF</ttl>: Size of the PgeneF which contains this hit.
+	<td style="vertical-align: text-top;"><ttx>GrpSize</ttx><td>&nbsp;
+	<td>If <ttl>Gene#, Multi-hit gene, PgeneF</ttl>: Size of the group for the corresponding <ttx>Grp#</ttx>.
 <tr>
 	<td style="vertical-align: text-top;"><ttx>Hit#</ttx><td>&nbsp;
 	<td>The hit number, which are sequential numbers for the chromosome pair.
@@ -555,8 +643,6 @@ be set according to the previous settings, but the <ttx>Annotation</ttx> columns
 all <ttx>Gene&Hit Info</ttx> columns will be set like the first D<sub>n</sub> species, and no
 <ttx>Annotation</ttx> columns will be set.
 </ol>
-This feature was implemented in v5.3.2.
-
 
 <a id="but"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -578,29 +664,59 @@ two genes from B.rapa and genes from Cabbage and A.thal.
 <a href="img/query_muscle.png"><img src="img/query_muscle.png" alt="query muscle" style="border: 1px solid black; width: 450px"></a>
 </table>
 
-<ttb>View 2D</ttb>: This displays the <ttp>2D</ttp> view for the selected entry. The following 3 views
-are provided using the drop-down (the image below shows a Collinear set of 5).
+<p>&nbsp;
+
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
+<td style="vertical-align: text-top;">
+<ttb>View 2D</ttb>: This displays the <ttp>2D</ttp> view for the selected entry. The following 4 views
+are provided using the drop-down (the image on the right shows a Collinear set of 5).
 
-<table class="ty">
-<tr><td style="white-space: nowrap;"><ttl>Region (kb)</ttl>
-<td>The selected hit is padded to each side by the amount indicated (default 50kb).
-The default filter is <ttl>Show all hits</ttl>.
-<tr><td style="white-space: nowrap;"><ttl>Synteny block</ttl>
-<td>The entire block for this hit will be shown. The default filter is <ttl>Show Block Hits</ttl>.
-<tr><td style="white-space: nowrap;"><ttl>Collinear set</ttl> <td>If the hit is in a collinear set, the set will be shown.
-The default filter is <ttl>Highlight Collinear Set; Show Block and Set Hits</ttl>.
-</table>
-
+<p>
+<small>Columns for 3 of the 4 options:</small><br><a href="img/query_columns_2D.png"><img src="img/query_columns_2D.png" alt="query 2D columns" style="border: 1px solid black; width: 280px"></a>
 <td><a href="img/query_synteny.png"><img src="img/query_synteny.png" alt="query synteny" style="border: 1px solid black; width: 450px"></a>
 </table>
+<a id="group"></a>
+<table class="ty">
+	<tr><td>Option<td>Column*<td>Selected Hit<td>Display Filter
+	<tr><td style="white-space: nowrap;"><ttl>Region (kb)</ttl>
+	<td>N/A
+	<td>The hit is padded to each side by the amount indicated (default 50kb).
+	<td><ttx>Show all hits</ttx>.
+
+	<tr><td style="white-space: nowrap;"><ttl>Synteny block</ttl>
+	<td><ttx>Block</ttx>
+	<td>The entire block for the hit will be shown.
+	<td><ttx>Show Block Hits</ttx>.
+
+	<tr><td style="white-space: nowrap;"><ttl>Collinear set</ttl>
+	<td><ttx>Collinear</ttx>
+	 <td>The collinear set for the hit will be shown.
+	 <p><ttx>Highlight Collinear Set</ttx> will be automatically selected.
+	<td><ttx> Show Block and Set Hits</ttx>.
+
+	<tr><td style="white-space: nowrap;"><ttl>Group</ttl>
+	<td><ttx>Grp#</ttx>
+	<td>The group for the hit will be shown, where they are required to be on the
+	same chromosome pair as the selected row.
+	<p>The hits are highlighted in the "Special" color, e.g. <a href="#group_ex">Example</a>.
+	See <a href="#high">High</a> below for disabling the highlighting.
+
+	<td><ttx>Show all hits</ttx>
+</table>
+*<small>The selected row must have a value for the column.</small>
+<p>
 After the initial display, the <ttp>2D</ttp> view can be changed as described in the
 <a href="UserGuide.html#control" class="ext" target="_blank">User Guide</a>.
-<p><ttl>High</ttl>: If this is selected, the selected hit is highlighted in red;
-the selected color is the same as the hover color, and can be changed
-in the <a href="UserGuide.html#wheel"  class="ext" target="_blank">Color Icon</a>.
 
+<p><a id="high"></a>
+If the <ttl>High</ttl> checkbox is selected, the selected hit is highlighted in the
+"Special" color (default magenta), and can be changed
+in the <a href="UserGuide.html#wheel"  class="ext" target="_blank">Color Icon</a>.
+The coloring can also be turned off by selecting the <ttl>2D Hit Filter</ttl> <ttx>Hit popop (or Query)</ttx>
+option.
+
+<p>&nbsp;
 <a id="export"></a>
 <p><ttb>Export</ttb>: One or more rows can be selected for the following exports;
 or if no rows are selected, the entire table is exported.
@@ -633,8 +749,11 @@ hidden by selecting <ttl>Hide Stats</ttl>.
 <p><ttx>Annotated</ttx> and <ttx>Genes</ttx>: The first is the number of hits that
 overlap one or more genes, where a gene can have multiple hits.
 The second is the number of Genes with at least one hit.
+<p><ttx>Groups</ttx>: This statistic
+is only shown if <ttl>Multi-hit genes</ttl> was checked, and it is
+the number of distinct groups per species (along with the last <ttx>Grp#</ttx> for the species).
 <p><ttx>Regions</ttx>: This statistic
-is only shown if <ttl>Compute PgeneF</ttl> was checked, and it is
+is only shown if <ttl>PgeneF</ttl> was checked, and it is
 the number of distinct regions covered on that species.
 
 <a id="rtab"></a>

@@ -598,14 +598,14 @@ projects, while NUCmer is used for self alignments.
 <h3>3.c Cluster Hits</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<ttl>Algorithm 1 (original, updated v5.4.0, abbreviated Algo1)</ttl>:
+<ttl>Algorithm 1 (modified original, updated v5.4.0, abbreviated Algo1)</ttl>:
 <br><u>Pros</u> This is an generic algorithm that has knowledge of genes versus intergenic hits.
 It is recommended for ordering sequence contigs and when there are little or no gene annotation.
 It must be used for self-synteny. It has been used on 100's of genome comparisons.
 <br><u>Cons</u> It does not distinguish between exon and intron hits. It is more likely to miss good homologous gene pairs.
 <br><u>Parameters</u> It does not need parameter adjustment. However, this gives no control over what hits are filtered.
 
-<p><ttl>Algorithm 2 (new, last update v5.4.8, abbreviated Algo2)</ttl>:
+<p><ttl>Algorithm 2 (exon-intron, last update v5.4.8, abbreviated Algo2)</ttl>:
 <br><u>Pros</u> This is a new algorithm that has explicit knowledge of gene pairs and their exon-intron structure, and shows all gene pairs with
 hits unless filtered by the parameters (and a few internal filters).
 It has better filtering for small intergenic and intron-only hits.

@@ -799,7 +799,7 @@ For <ttx>Subhits&gt;1</ttx>, the values are approximate.
 <u>Popup</u>: To view the popup of a hit-wire, right click on it;
 the hit-wire must be highlighted in red from hovering over it to be clickable.
 The wire and the major genes (&le;2) will be highlighted
-red as shown on the upper right; the corresponding popup is shown below.
+magenta as shown on the upper right; the corresponding popup is shown below.
 <table>
 <tr><td>
 The <ttx>Hit Information</ttx> image on the right shows the coordinates of the subhits for
@@ -1036,6 +1036,7 @@ will be un-selectable.
 <tr><td colspan="2"><ttl>Highlight</ttl>
 <tr><td><ttx>Gene popup</ttx>
 <td> Highlight the gene when its <a href="#ginfo">Gene Popup</a> is displayed.
+This
 The highlight color can be changed with the <a href="#wheel">Color Wheel</a>.
 
 <tr><td colspan="2"><ttl>Show</ttl>
@@ -1112,20 +1113,23 @@ The units of the values entered can be selected from the accompanying drop down 
 must be exact, i.e. if it has a suffix, the suffix must be included (e.g. 1234.b).
 <br>&bull; If the <ttx>Gene#</ttx> entry box has a value, it takes precedence over any coordinates changes.
 <br>&bull; When <ttb>Save</ttb> is selected, the 30kb region around the gene will be shown and
-the exons of the <ttx>Gene#</ttx> will be highlighted.
-<br>&bull; BEWARE: if the filter is not on <ttx>All hits</ttx>, you may not see the corresponding gene hits; turn
-on the <a href="#hitfilter">Hit Filter</a> for it.
+the exons of the <ttx>Gene#</ttx> will be highlighted (to turn off the highlight, make this text box blank
+and <ttb>Save</ttb> again).
+<br>&bull; BEWARE: if the <a href="#hitfilter">Hit Filter</a> <ttx>All hits</ttx> filter is not turned on,
+you may not see the corresponding gene hits as they may be filtered.
 </table>
 <p>
-<table class="tx txy">
-<tr><td>
-The <ttb>Sequence Filter</ttb> for the <i>reference</i> track has one extra option, as shown on the right.
-When it is selected: (1) If there are 2 tracks, this is equivalent to highlighting the <ttx>Hit =2 genes</ttx>
-(see below), but the gene exons of the conserved genes are also highlighted. (2) If there are 3 tracks,
-the genes conserved across the 3 tracks will be highlighted.
-The usage of this feature is a little complex, so the section <a href="Conserved.html">Conserved</a> provides the details.
+<table>
+<tr><td>The <ttb>Sequence Filter</ttb> has two extra options, <ttx>g2g2</ttx> and <ttx>g2g1</ttx>,
+for the <i>reference</i> track when it has both a left and right track.
 <td><a href="img/seqFilterRefOnly.png">
-	<img src="img/seqFilterRefOnly.png" alt="sequence filter reference" style="border: 1px solid black; width: 250px"></a>
+	<img src="img/seqFilterRefOnly.png" alt="sequence filter reference" style="border: 1px solid black; width: 300px"></a>
+</table>
+
+<table class="ty txy">
+<tr><td style="white-space: nowrap">Hit g2x2<td>The genes conserved across the 3 tracks will be highlighted.
+The usage of this feature is a little complex, so the section <a href="Conserved.html">Conserved</a> provides the details.
+<tr><td>Hit g2x2<td>The genes conserved on ONLY on side are highlighted.
 </table>
 
 <table class="tx" style="width: 95%">
@@ -1137,7 +1141,7 @@ different <ttp>2D</ttp> displays.
 
 <p><i>Highlighting genes summary</i>:
 <table class="tx txy">
-<tr><td>Conserved<td>The exons are highlighted.
+<tr><td>g2x2, g2x1<td>(Reference, 3-track only) The exons are highlighted.
 <tr><td style="white-space: nowrap;">Filter <ttx>Gene#</ttx><td>The exons, introns and gene delimiter are highlighted.
 <tr><td style="white-space: nowrap;">Gene popup<td>The exons, introns and gene delimiter are highlighted.
 <tr><td>Hit popup<td>The exons, introns and gene delimiter are highlighted the same color as the hit-wire color.
@@ -1162,16 +1166,19 @@ Multiple <ttl>Show</ttl> options can be selected, but only one <ttl>Highlight</t
 <table  class="ty txy">
 <tr><td colspan=2><ttl>Highlight</ttl> or <ttl>Show</ttl>
 <tr><td><ttx>Synteny blocks</ttx><td>Hits that are part of a synteny block.
-<tr><td><ttx>Collinear sets</ttx> <td>Hits that are part of a collinear set. See <a href="#ex2d">example below</a>
+<tr><td style="white-space: nowrap; vertical-align: text-top;"><ttx>Collinear sets</ttx> <td>Hits that are part of a collinear set. See <a href="#ex2d">example below</a>
 and <a href="Collinear.html">Details</a>.
 <tr><td><ttx>Hit =2 genes</ttx> <td>Hits that align to a gene on both sides (g2).
 <tr><td><ttx>Hit =1 genes</ttx> <td>Hits that align to a gene on one side only (g1).
 <tr><td><ttx>Hit =0 genes</ttx>   <td>Hits that do not align to any gene (g0).
 <tr><td colspan=2><ttl>Highlight</ttl> only
-<tr><td><ttx>Hit popup</ttx> <td>
-Highlight the hit-wire when its <a href="#hinfo">Hit Popup</a> is displayed.
-If it aligns to gene(s), the major gene will also be highlight.
-The highlight color can be changed with the <a href="#wheel">Color Wheel</a>.
+<tr><td><ttx>Hit popup<br>(or Query)</ttx> <td>
+The Popup-Query highlighting is turned on/off with this option.
+The following two situations are highlighted with the Popup-Query color:
+<br>(1) When a  hit-wire <a href="#hinfo">Hit Popup</a> is displayed, the hit-wire and any aligned major genes are highlighted.
+<br>(2) When the 2D is displayed with <ttb>Query</ttb> <ttl>View 2D</ttl> option, the selected hit
+will be highlighted or group of hits will be highlighted; see <a href="Query.html#group" class="ext" target="_blank">Groups</a>.
+<br>The Popup-Query color can be changed with the <a href="#wheel">Color Wheel</a>.
 <tr><td colspan=2><ttl>Identity</ttl>
 <tr><td><ttx>N%</ttx><td>Move the slider to view only the hits with &gt;= the specified identity. This works in
 conjunction with any of the <ttl>Show</ttl> options.

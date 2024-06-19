@@ -62,7 +62,7 @@
 	<!---- START BODY -->
 For existing databases, there are no database or build changes since <a href="#v548">v5.4.8</a>; see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
 <br>This will no longer run on 32-bit machines, starting with v5.5.1.
-<br>You must have Java v17 or later, starting with SyMAP v5.5.0.
+<br>You must have Java v17.0.11 or later, starting with SyMAP v5.5.0.
 <h3>Summary of recent major releases</h3>
 <table class="tx">
 <tr>
@@ -73,6 +73,78 @@ exon-intron structure.
 <tr><td><a href="#v530">v5.3.0</a><td>(10-Dec-22)<td>Updated database schema to remove all FPC tables.
 <tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="Collinear.html">viewing</a>
 </table>
+
+<a id="v555"></a>
+<h3>Release: v5.5.5 (19-June-24)</h3>
+For existing databases, if you ran <ttx>Algo2</ttx> on mammalian genomes, you may want to re-execute
+the <ttl>Synteny</ttl> step to get better clustering of hits for very long genes.
+<p>This release is mainly with upgrades for <ttb>Query</ttb> with an option to view tandem genes.
+<ul>
+<li><ttl>Alignment & Synteny</ttl>:
+<ul>
+<li><ttx>Algo2</ttx> for gene-to-gene hits, it was keeping hits separate when there was a very long gene with tiny exons;
+it will now cluster them into one. For gene-to-non-gene, it is clustering hits into bigger clusters.
+<li><ttx>Algo2</ttx> can take as input NUCmer files, but still does not do self-alignments. I tried
+humans and chimpansee with PROmer vs NUCmer, and PROmer identified more genes.
+</ul>
+
+<li><ttl>Query</ttl>
+<ul>
+<li>Columns:
+<ul>
+<li>If the hit is not to a gene, the chromosome# will be shown for the <ttx>Gene#</ttx> column instead
+of '-' (e.g. '3.-' indicates the hit is on chromosome 3).
+<li>Columns <ttx>PgeneF</ttx> and <ttx>PgFSize</ttx> have been renamed <ttx>Grp#</ttx> and <ttx>GrpSize</ttx>,
+respectively. These are assigned values by the queries <ttl>Gene#</ttl>,  <ttl>Multi-hit Gene</ttl>
+and <ttl>PgeneF</ttl>.
+</ul>
+
+<li>New:
+<ul>
+<li>The <ttl>Gene#</ttl> filter results have assigned values for the columns <ttx>Grp#</ttx> and <ttx>GrpSize</ttx>,
+where a group is associated with the species+chromosome.
+<li>For the <ttl>Multi-hits</ttl> query (see <a href="Query.html#multi">Mulit-hit</a>):
+<ol><li>New options:
+<br><ttl>Exon</ttl>: only show hits if they overlap an exon in the target gene.
+<br><ttl>Same chr</ttl>: the n hits for the target gene must be to the same opposite chromosome.
+<br><ttl>Tandem</ttl>: the n hits for the target gene must be to tandem genes on the opposite chromosome.
+<br><li>The columns <ttx>Grp#</ttx> and <ttx>GrpSize</ttx> are assigned values.
+<li>Small change: If a chromosome is selected for all species, the hits must be on both chromosome (it was an 'either', now
+its a 'both).
+</ol>
+<li>On the results table, the <ttl>View 2D</ttl> feature has a new option of <ttx>Group</ttx>
+(see <a href="Query.html#group">View 2D</a>).
+<ul>
+<li>When the 2D is shown, all rows with the selected row <ttx>Grp#</ttx> and <ttx>Chr</ttx> will be highlighted.
+<li>The selected hit (and group hits) are highlighted in a new "Special" color; this can be turned off
+by selecting <ttl>High</ttl> on the <ttb>Query</ttb> interface before display; this release added the ability to turn the highlighting off by
+de-selecting the <ttl>Hit Filter</ttl> <ttx>High popup</ttx> option.
+</ul>
+</ul>
+
+<li>Interface:
+<ul>
+<li>The <ttl>Multi-hits</ttl> option has been grouped with the <ttl>PgeneF</ttl> option, and
+now has a check mark in order to run.
+<li><ttl>Collinear size</ttl> now has an <tt>Ignore</tt> so it does not depend on having a number in the
+associated text box set to blank in order to ignore.
+</ul>
+<li>Small change: <ttl>Annotation Description</ttl> no longer automatically includes minor genes since this
+can be used in conjunction with <ttl>Every*</ttl> to get that result.
+<li>Bug fixes:
+<ul>
+<li>If a hit was to two minor genes (<ttx>Every*</ttx> option), the MUSCLE command would not work.
+<li>If one of the genomes was not annotated, the <ttl>View 2D</ttl> did not work.
+</ul>
+</ul>
+<li><ttl>Chromosome Explorer</ttl>:
+<ul><li>New option: The <ttl>2D</ttl> display has a <ttl>Sequence Filter</ttl> of <ttx>Conserved</ttx>
+for the reference chromosome, which was renamed to <ttx>g2x2</ttx> and option <ttx>g2x1</ttx> added, where the first highlights
+all hit-wires and corresponding genes that are conserved across all 3 chromosomes, and the second highlights
+the hit-wires and corresponding genes that are only found on one pair.
+<li>The <ttx>Gene popup</ttx> coloring of the hit-wire has changed from the "hover" color to the
+new "special" color.
+</ul></ul>
 
 <a id="v554"></a>
 <h3>Release: v5.5.4 (7-May-24)</h3>
@@ -238,7 +310,7 @@ show exon score for Algo1, but was showing 0.
 
 <a id="v550"></a>
 <h3>Release: v5.5.0 (3-Mar-24)</h3>
-For existing databases, there are no changes (though there are for <a href=#v548>v5.4.8</a>).
+For existing databases, there are no changes (though there are for <a href="#v548">v5.4.8</a>).
 <br>To use SyMAP v5.5.0, you must have Java v17 or later.
 <p>
 <ul>
@@ -274,7 +346,7 @@ Rename frame.TrackInfo to ChrInfo and frame.Mapper to LeftMap
 
 <a id="v549"></a>
 <h3>Release: v5.4.9 (20-Feb-24)</h3>
-For existing databases, there are no changes (though there are for <a href=#v548>v5.4.8</a>).
+For existing databases, there are no changes (though there are for <a href="#v548">v5.4.8</a>).
 <ul>
 <li>v5.4.8 little fixes: (1) The new <ttl>Query</ttl> <ttx>Multi</ttx> option had a small bug due to it using ">" instead of ">=".
 (2) The <ttl>Query</ttl> <ttx>Every*</ttx> option works for <ttx>Algo1</ttx> as of v5.4.8, but was still disabled.

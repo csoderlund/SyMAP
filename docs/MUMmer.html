@@ -117,22 +117,31 @@ The above shows that the promer code will execute on my MacOS.
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>Finding the problem</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
+If the MUMmer alignment fails, inspect the log files.
 The log files are as follows:
 <pre>
-symap_5
+symap_5/
    error.log   # a SyMAP error will write its trace data into this file and list failed MUMmer
-   /logs
+
+   logs/
       &lt;dbName&gt;_LOAD.log	# this keeps track of data loaded or removed from the database.
-      &lt;project-name1&gt;-to-&lt;project-name2&gt; # one directory per project-to-project alignment
+      &lt;project-name1&gt;-to-&lt;project-name2&gt;/ # one directory per project-to-project alignment
          &lt;alignment&gt;.log	# one file per alignment
          symap.log              # this keeps most of the output shown on the terminal for this alignment
+     e.g.
+       symapDemo_load.log
+       demo_seq_to_demo_seq2/
+         demo_seq_cc.demo_seq2_f1.log
+         demo_seq_cc.demo_seq2_f2.log
+         symap.log
 </pre>
-If an alignment is listed as failed in the <tt>error.log</tt> file,
-the corresponding <tt>&lt;alignment&gt;.log</tt> file will contain the MUMmer error. If there
+<ol>
+<li>If an alignment is listed as failed in the <tt>error.log</tt> file,
+the corresponding <tt>&lt;alignment&gt;.log</tt> file will contain the MUMmer error.
+<li>If there
 is no error listed in the <tt>error.log</tt>, check the <tt>symap.log</tt> and the <b>tail</b>
 of the alignment files.
-<p>
+<li>
 If the error is not found in the log files or it is not clear, try the following:
 <ul>
 <li>Copy the command from the terminal (or log file), and paste it on a new terminal line to execute, e.g.
@@ -141,9 +150,9 @@ ext/mummer/mac/promer  -p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_
 data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa
 data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
 </pre>
-This shows <tt>promer</tt> output directly on the terminal.
+<li>This shows <tt>promer</tt> output directly on the terminal.
 </ul>
-
+</ol>
 <a id="mem"></a>
 <h2>Out of memory</h2>
 A MUMmer failure is typically from insufficient memory.
@@ -202,7 +211,8 @@ Finished in 1 hr 34 min 29 sec
 <a id="mask"></a>
 <h3>Not-masked or Soft-masked</h3>
 A memory problem can occur if the genome sequence is not masked or only soft-masked.
-Either: (1) change the sequence to hard-masked, or (2) set the SyMAP parameter <ttx>mask_all_but_genes</ttx> to yes.
+Either: (1) change the sequence to hard-masked, or (2) set the SyMAP parameter
+<ttx>mask_all_but_genes</ttx> to <tt>yes</tt>.
 <p>
 
 <a id="fail1"></a>
@@ -261,23 +271,26 @@ but less time than MUMmer v3.
 
 If you need to run MUMmer using the command line from some other machine, do the following:
 <ul>
-<li><tt>Proj-name1</tt> must be alphanumerically less than <tt>proj-name2</tt>.
-<tt>Proj-name1</tt> must be the query and <tt>proj-name2</tt> the reference, e.g.
+<li>The query must be alphanumerically less than reference. For the <tt>promer</tt> command:
 <pre>
 USAGE: promer  [options]  &lt;Reference&gt;  &lt;Query&gt;
 e.g.
-promer proj-name2 proj-name1
+promer proj2 proj1
 </pre>
-<li>Distant genomes:
-<ul>
-<li>Use promer
-<li>The output of promer is input to "show-coords -dlkTH".
-</ul>
-<li>Self synteny:
-<ul>
-<li>Use nucmer.
-<li>The output of nucmer is input to "show-coords -dlTH".
-</ul>
+<li>Execute:
+	<ul>
+	<li>For different genomes:
+		<ul>
+		<li>Use promer
+		<li>The output of promer is input to "show-coords -dlkTH".
+		</ul>
+	<li>For Self synteny:
+		<ul>
+		<li>Use nucmer.
+		<li>The output of nucmer is input to "show-coords -dlTH".
+		</ul>
+	</ul>
+<br>
 <li>Result files:
 <ul>
 <li>The result files must have suffix ".mum"
@@ -286,37 +299,38 @@ promer proj-name2 proj-name1
 <pre>touch all.done</pre>
 This creates a file, which indicates to SyMAP that the alignments are done and to process
 the files in the directory ending with ".mum".
-
 </ul>
+<br>
 <li>When you run <ttb>Selected Pair</ttb>, SyMAP will recognize the files and use them to build the synteny blocks.
 </ul>
 
-<p><u>Example of using mummer for loaded projects demo_seq and demo_seq2:</u>
-If you try this with demo_seq and demo_seq2, make sure there is no current alignment in the
+<p><u>Example of using mummer for loaded projects <tt>demo_seq</tt> and <tt>demo_seq2</tt>:</u>
+If you try this with <tt>demo_seq</tt> and <tt>demo_seq2</tt>, make sure there is no current alignment in the
 database or disk for your project (e.g. <ttb>Clear Pair</ttb>).
 
-<p>Demo_seq has chr3 and chr5, demo_seq2 has chr1 and chr3; these will be compared separately against each other.
-Demo_seq is alphanumerically less than demo_seq2, so it is first in the directory name
+<p><tt>Demo_seq</tt> has chr3 and chr5, <tt>demo_seq2</tt>  has chr1 and chr3; these will be compared separately against each other.
+<tt>Demo_seq</tt>  is alphanumerically less than <tt>demo_seq2</tt> , so it is first in the directory name
 but second in the command arguments (this is how SyMAP knows which
-project Chr3 belongs to).
+project Chr3 belongs to). The commands are as follows:
 
 <pre>
-cd data/seq_results
-mkdir demo_seq_to_demo_seq2
-mkdir demo_seq_to_demo_seq2/align
-touch demo_seq_to_demo_seq2/align/all.done
-cd ../..
-ext/mummer/mac/promer data/seq/demo_seq2/sequence/chr1.seq data/seq/demo_seq/sequence/chr3.seq
-ext/mummer/mac/show-coords -dlkTH out.delta >chr1chr3.mum
-mv chr1chr3.mum data/seq_results/demo_seq_to_demo_seq2/align
-rm out.delta
+   cd data/seq_results
+   mkdir demo_seq_to_demo_seq2
+   mkdir demo_seq_to_demo_seq2/align
+   touch demo_seq_to_demo_seq2/align/all.done
+   cd ../..
+   ext/mummer/mac/promer data/seq/demo_seq2/sequence/chr1.seq data/seq/demo_seq/sequence/chr3.seq
+   ext/mummer/mac/show-coords -dlkTH out.delta >chr1chr3.mum
+   mv chr1chr3.mum data/seq_results/demo_seq_to_demo_seq2/align
+   rm out.delta
 </pre>
-This would need to be repeated 3 more times for <tt>chr1chr5.mum, chr3chr3.mum, chr3chr5.mum</tt> (put the commands
+This would need to be repeated 3 more times for <tt>chr1chr5.mum, chr3chr3.mum, chr3chr5.mum</tt>
+(suggestion: put the commands
 in a script). The resulting <tt>align</tt> directory will have:
 <pre>
-all.done	chr1chr3.mum	chr1chr5.mum	chr3chr3.mum	chr3chr5.mum
+   all.done	 chr1chr3.mum	chr1chr5.mum	chr3chr3.mum	chr3chr5.mum
 </pre>
-When symap is started and  demo_seq and demo_seq2 selected, there will be a "A" in their cell; select it followed by
+When symap is started and <tt>demo_seq</tt> and <tt>demo_seq2</tt> selected, there will be a "A" in their cell; select it followed by
 <ttb>Selected Pair</ttb> and it will load the alignments and compute the synteny.
 <p>
 
@@ -326,7 +340,7 @@ When symap is started and  demo_seq and demo_seq2 selected, there will be a "A" 
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 If none of these suggestions fix your problem, email symap@agcol.arizona.edu with the following files
-(refer to the files in <a href="#log">Finding the problem</a>):
+(refer to the files discussed in <a href="#log">Finding the problem</a>):
 <ol>
 <li><tt>error.log</tt>
 <li><tt>logs/&lt;project-name1&gt;-to-&lt;project-name2&gt;/symap.log</tt>

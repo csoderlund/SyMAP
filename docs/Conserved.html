@@ -71,10 +71,8 @@
 
 <table>
 	<tr><td>
-	As stated in <a href="#sequence_filter">Sequence Filters</a>, there is one extra option for the first <i>reference</i> track,
-	as shown on the right.
-	When it is selected: (1) If there are 2 tracks, this is equivalent to  <a href="#hitfilter">Hit Filter</a> highlight <ttx>Hit =2 genes</ttx>,
-	but the gene exons of the conserved genes are also highlighted. (2) If there are 3 tracks,
+	As stated in <a href="#sequence_filter">Sequence Filters</a>, there are two extra option for the first <i>reference</i> track,
+	as shown on the right. Referring to <ttx>Hit g2x2</ttx>, if there are 3 tracks,
 	the genes conserved across the 3 tracks will be highlighted, as shown below.
 	<td><a href="img/seqFilterRefOnly.png">
 		<img src="img/seqFilterRefOnly.png" alt="sequence filter reference" style="border: 1px solid black; width: 250px"></a>
@@ -101,11 +99,6 @@ algorithm marks these as conserved.
 Even with these caveats, I rarely see a pairing that seems 'iffy' with plant genomes, though the overlap patterns
 and long introns of mammalian genomes cause some questionable results. I will be working on improving the hit-to-gene assignment
 for the next release. As always, feedback is welcome!
-
-
-<p>One other point, all other filters are pre-computed; this is computed on the fly.
-It does not recompute when zooming in, but
-it does recompute when using the history <big>&lt;</big> and <big>&gt;</big> buttons.
 
 <!---- END BODY -->
 	</td></tr>
