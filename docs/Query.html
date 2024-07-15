@@ -96,7 +96,7 @@
 <tr>
 <td>&nbsp;&nbsp;&nbsp;
 <td><a href="#pfs">Gene Groups</a>
-<td><a href="#but">Top button</a>
+<td><a href="#but">Top buttons</a>
 <td>&nbsp;&nbsp;&nbsp;
 
 <tr>
@@ -646,10 +646,18 @@ all <ttx>Gene&Hit Info</ttx> columns will be set like the first D<sub>n</sub> sp
 
 <a id="but"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>3. Top button functions</h3>
+<h3>3. Top buttons</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
+<b>Sections</b>&nbsp;&nbsp;&nbsp;
+	<a href="#showRow">Show</a>&nbsp;&nbsp;&nbsp;
+	<a href="#muscle">Align</a>&nbsp;&nbsp;&nbsp;
+	<a href="#view2D">View 2D</a>&nbsp;&nbsp;&nbsp;
+	<a href="#export">Export</a>&nbsp;&nbsp;&nbsp;
+	<a href="#report">Report</a>
+<p>
 <a href="img/query_buttons.png"><img src="img/query_buttons.png" alt="query buttons" style="border: 1px solid black; width: 600px"></a>
+
+<a id="showRow"></a>
 <p><ttb>Show</ttb>: For the selected row, a popup will show all columns and associated information for the hit.
 The text in the popup can be copied.
 
@@ -666,6 +674,7 @@ two genes from B.rapa and genes from Cabbage and A.thal.
 
 <p>&nbsp;
 
+<a id="view2D"></a>
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
 <td style="vertical-align: text-top;">
@@ -718,7 +727,7 @@ option.
 
 <p>&nbsp;
 <a id="export"></a>
-<p><ttb>Export</ttb>: One or more rows can be selected for the following exports;
+<p><ttb>Export...</ttb>: One or more rows can be selected for the following exports;
 or if no rows are selected, the entire table is exported.
 <table class="tx">
 <tr><td>
@@ -736,6 +745,40 @@ NOTE: this is a very slow function and takes minutes if many rows are selected.
 </table>
 The <ttl>Include Row column</ttl> option is available because this column is alway present, but
 it may be desirable to not include it in the output.
+
+<p>&nbsp;
+<a id="report"></a>
+<p><ttb>Report...</ttb>: The report is on the genes in the query table.
+This is most relevant when used with the <ttb>Collinear size</ttb> query with &gt;2 species.
+<p>
+If the table was generated using the <ttb>Collinear size</ttb> query, the report will be on the collinear sets per reference gene,
+else it creates a gene report. In both cases, a reference must be selected and keywords are optional.
+The SyMAP gene names are used in the report (which provide the chromosome number and give order of gene), but
+other names can be shown by entering the appropriate keywords.
+
+<p><ttl>Gene Annotation Keys</ttl>: One or more annotation keywords can be entered in a comma-delimited list (e.g. <tt>product, ID</tt>); the
+keywords must be found in the <tt>All_Anno</tt> keyword column. A column will be created containing the values of all entered keywords.
+SyMAP does <u>not</u> check the supplied keywords for correctness!
+
+<table>
+<tr>
+<td><u>Collinear Report</u>: Collinear sets are grouped to show overlapping sets.
+<br><a href="img/query_report_menu_coset.png"><img src="img/query_report_menu_coset.png" alt="report menu coset" style="border: 1px solid black; width: 220px"></a>
+<td><a href="img/query_report_coset.png"><img src="img/query_report_coset.png" alt="report A.thal ref" style="border: 1px solid black; width: 500px"></a>
+<tr><td colspan=2>For example, in the above report, gene 4.b on Chr01 aligns to B.rapa gene 63.a on Chr01 in collinear set 95 with
+7 members,  cabbage gene 5521 on Chr08 in collinear set 1 with 3 members, and cabbage gene 79 on Chr05 in collinear set 459 with
+9 members.
+<tr><td colspan=2>Uncheck <ttl>Show Collinear Set</ttl> to not include the collinear set information.
+</table>
+<p>
+<table>
+<tr>
+<td>
+<u>Gene Report</u>: The report lists all genes from the reference species, and what genes each aligns to
+for the other species. Only genes listed in the query table will be shown in this report..
+<br><a href="img/query_report_menu_gene.png"><img src="img/query_report_menu_gene.png" alt="report menu gene" style="border: 1px solid black; width: 220px"></a>
+<td><a href="img/query_report_gene.png"><img src="img/query_report_gene.png" alt="report A.thal ref" style="border: 1px solid black; width: 500px"></a>
+</table>
 
 <a id="stat"></a>
 <table style="width: 95%"><tr><td style="text-align: left">

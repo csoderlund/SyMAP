@@ -124,25 +124,29 @@ view these.
 <td><a href="img/colG1Hits.png">
 <img src="img/colG1Hits.png" alt="G1 hits" style="border: 1px solid black; width: 300px"></a>
 </table>
-<h3>Known collinear set problems</h3>
-<table>
-<tr><td>
-<i>Disclaimer: The collinear sets are not always correct</i>. The benefit of the 2D graphics is that the user can
-determine if two sets should be merged or if a set does not appear correct.
-<p>The image on the right shows the two biggest problems.
-<ol>
-<li>Overlapping genes: These often break a set in two, as shown on the right. The red highlighted hit
-is part of the top collinear set, but the next hit should be too. This caused one set to be broken into two.
-<p>
-<li>Convoluted hit pattern: The lower green set has a weird hit pattern, where even visually it is hard
-to tell what is going on.
-</ol>
-<td><a href="img/colError.png">
-<img src="img/colError.png" alt="Collinear problems" style="border: 1px solid black; width: 300px"></a>
+
+<a id="v556"></a>
+<h3>Release v5.5.6</h3>
+The collinear algorithm was improved for release v5.5.6.
+<table><tr><td>
+Pre-v5.5.6 gave obviously wrong results if a gene from the hit numbered project
+(the hits are numbered along the alphabetically lesser project name) was part of two different collinear sets. An example
+is on the right.
+<p>In my test sets, this happened a few times between Arabidopsis, Brassica rapa, and cabbage, but none for my partial
+mammalian test set of humans, chimps, mouse and rabbit.
+<td><a href="img/colSet-two-olap.png">
+	<img src="img/colSet-two-olap.png" alt="Overlapping collinear sets" style="border: 1px solid black; width: 250px"></a>
 </table>
-These are the only two problems I have seen, but with so many combinations of hits and overlapping genes, there
-are probably others. I can fix most of the overlapping hit problems, but that will take rewriting the hit-to-gene
-assignment code; hence, it will be done for another release.
+<p>
+<table><tr><td>Referring to the image on the right (from the demo), pre-v5.5.6 called this one collinear set, ignoring the
+extra embedded gene 4941.b; v5.5.6 breaks it into two sets due to gene 4941.b (as shown in the image).
+<td><a href="img/colSet-extra-gene.png">
+	<img src="img/colSet-extra-gene.png" alt="Overlapping collinear sets" style="border: 1px solid black; width: 250px"></a>
+</table>
+V5.5.6 finds more collinear sets and longer ones. However, since there may be some hit-gene configuration that the algorithm
+did not take into account, it verifies all sets and prints an "Error in set x" to the terminal if there is a problem;
+albeit, it cannot verify that none are missed (but detailed inspection has not shown any missed ones).
+Please email Cari at symap@agcol.arizona.edu if you find any problems.
 <p><a href="#top">Go to Top</a>
 <!---- END BODY -->
 	</td></tr>

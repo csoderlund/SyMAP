@@ -65,14 +65,38 @@ For existing databases, there are no database or build changes since <a href="#v
 <br>You must have Java v17.0.11 or later, starting with SyMAP v5.5.0.
 <h3>Summary of recent major releases</h3>
 <table class="tx">
-<tr>
-<td><a href="#v548">v5.4.8</a><td>(13-Feb-24)<td>New <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>, which is aware of the
+<tr><td><a href="#v556">v5.5.6</a><td>(15-July-24)<td>Improved the collinear set algorithm.</a>
+<tr><td><a href="#v548">v5.4.8</a><td>(13-Feb-24)<td>New <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>, which is aware of the
 exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 <tr><td><a href="#v530">v5.3.1</a><td>(6-Jan-23)<td>Improved <a href="UserGuide.html#align">hit alignment</a> features.
 <tr><td><a href="#v530">v5.3.0</a><td>(10-Dec-22)<td>Updated database schema to remove all FPC tables.
-<tr><td><a href="#v520">v5.2.0</a><td>(20-Nov-22)<td>Updated collinear sets and <a href="Collinear.html">viewing</a>
+
 </table>
+
+<a id="v556"></a>
+<h3>Release: v5.5.6 (15-July-24)</h3>
+For existing databases, re-run the collinear algorithm as follows: Start <ttx>./symap -acs</ttx>, then select the pair and run
+<ttb>Selected Pair (Redo)</ttb>; a popup will have you confirm "Collinear only" indicating that only this algorithm will be run.
+<ul>
+<li><ttl>A&S Collinear algorithm</ttl>: Improved this algorithm; see <a href="Collinear.html#v556" class="ext" target="_blank">Collinear v5.5.6</a>.
+
+<li><ttl>Query</ttl>
+<ul>
+<li>New: A new <ttb>Report</ttb> button is at the top of the results table.
+See <a href="Query.html#report" class="ext" target="_blank">Query Report</a>.
+
+
+
+<li>Bug fix for <ttx>Multi-hit gene</ttx>: it would crash if there was no hits for a pair of
+species.
+<li>The results table was sorted by <ttx>Hit#</ttx>; now it is sorted by <ttx>Block</ttx> or <ttx>Collinear</ttx>
+or <ttx>Chr</ttx>, and by <ttx>Hit#</ttx> within each group.
+</ul>
+<li>Developers: <ttx>TableExport.java</ttx>, <ttx>TableReport.java</ttx>
+and <ttx>TmpRowData.java</ttx> are new files. The output of Load Annotation is clearer if there is
+no annotation files.
+</ul>
 
 <a id="v555"></a>
 <h3>Release: v5.5.5 (19-June-24)</h3>
@@ -144,7 +168,9 @@ all hit-wires and corresponding genes that are conserved across all 3 chromosome
 the hit-wires and corresponding genes that are only found on one pair.
 <li>The <ttx>Gene popup</ttx> coloring of the hit-wire has changed from the "hover" color to the
 new "special" color.
-</ul></ul>
+</ul>
+<li>Developers: <ttx>ComputeMulti.java</ttx> is a new file.
+</ul>
 
 <a id="v554"></a>
 <h3>Release: v5.5.4 (7-May-24)</h3>
