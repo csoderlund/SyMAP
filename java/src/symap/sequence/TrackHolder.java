@@ -23,7 +23,7 @@ public class TrackHolder extends JComponent  {
 	private FilterHandler fh;
 	private int trackNum;	// CAS517 add for Sequence track 
 
-	private void dprt(String msg) {symap.Globals.prt("TH " + msg);}
+	private void dprt(String msg) {symap.Globals.dprt("TH " + msg);}
 	
 	public TrackHolder(DrawingPanel dp, HelpBar hb, int trackNum, int side) { // Called by DrawingPanel; created on startup
 		super();

@@ -149,13 +149,18 @@ public class SeqLoadMain {
 								grpList.add(grpName);
 								grpNamesSeen.add(grpName);
 								grpFullNamesSeen.add(grpFullName);
-								
-								// load sequence
-								System.out.print(grpName + ": " + curSeq.length() + "               \r");
-								uploadSequence(grpName,grpFullName,curSeq.toString(),f.getName(),totalnSeqs+1);	
-								
 								nSeqs++; 
 								basesWritten += curSeq.length();
+								System.out.format("%s: %,d                            \r", grpName,curSeq.length());
+								
+								// load sequence
+								String chrSeq = curSeq.toString(); // CAS556 prevent two copies in memory at once
+								curSeq.setLength(0);
+								
+								uploadSequence(grpName,grpFullName,chrSeq,f.getName(),totalnSeqs+1);	
+			
+								chrSeq = null;
+								System.gc();	
 							}
 							else {
 								plog.msgToFile("+++ Duplicate sequence name: " + grpFullName + " (" + grpName + ") skipping...");
@@ -191,11 +196,17 @@ public class SeqLoadMain {
 				
 				if (grpName != null &&  curSeq.length() >= minSize) {// load last sequence
 					grpList.add(grpName);
-					uploadSequence(grpName, grpFullName, curSeq.toString(), f.getName(), totalnSeqs+1);	
 					nSeqs++;
 					basesWritten += curSeq.length();
+					System.out.format("%s: %,d                            \r", grpName,curSeq.length()); // CAS556 add
+					
+					String chrSeq = curSeq.toString(); // CAS556 
+					curSeq.setLength(0);
+					uploadSequence(grpName, grpFullName, chrSeq, f.getName(), totalnSeqs+1);	
+					chrSeq="";
 				}
 				else if (curSeq.length()>0) seqIgnore++; 
+				curSeq.setLength(0);
 				
 				if (seqIgnore==0) plog.msg(String.format("%,5d sequences   %,10d bases", nSeqs, basesWritten));
 				else plog.msg(String.format("%,5d sequences   %,10d bases   %,4d sequences ignore", nSeqs, basesWritten, seqIgnore));
@@ -237,7 +248,7 @@ public class SeqLoadMain {
 			updateSortOrder(grpList);
 			tdbc2.close();
 			
-			Utils.timeDoneMsg(plog, "Load sequences", startTime);
+			Utils.prtTimeMemUsage(plog, "Finish load sequences", startTime); // CAS556 add finish and mem
 		}
 		catch (OutOfMemoryError e){
 			tdbc2.shutdown();

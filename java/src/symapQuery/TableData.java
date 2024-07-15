@@ -23,7 +23,7 @@ public class TableData implements Serializable {
 	/********************************************
 	 * Called from TableDataPanel in buildTable and setTable
 	 */
-	public static TableData createModel(String [] columns, TableData srcTable, TableDataPanel parent) {
+	protected static TableData createModel(String [] columns, TableData srcTable, TableDataPanel parent) {
 		TableData tabObj = 	new TableData(parent);
 		
 		tabObj.arrData = 	new Object[srcTable.arrData.length][columns.length];
@@ -40,7 +40,7 @@ public class TableData implements Serializable {
 		return tabObj;
 	}
     	
-	public static String [] orderColumns(JTable sourceTable, String [] selectedColumns) {
+	protected static String [] orderColumns(JTable sourceTable, String [] selectedColumns) {
 		String [] retVal = new String[selectedColumns.length];
 		Vector<String> columns = new Vector<String> ();
 		for(int x=selectedColumns.length-1; x>=0; x--)
@@ -67,21 +67,21 @@ public class TableData implements Serializable {
 	/***************************************
 	 * Constructors
 	 */
-    public TableData(TableDataPanel parent) {
+    protected TableData(TableDataPanel parent) {
     	vData = 	new Vector<Vector<Object>>();
     	vHeaders = 	new Vector<TableDataHeader>();
     	theParent = parent;
     }
 
-    public TableData(String unused, TableDataPanel parent) {
+    protected TableData(String unused, TableDataPanel parent) {
     	this(parent);
     }
     /********************************************************/
-    public void sortMasterList(String columnName) {
+    protected void sortMasterList(String columnName) {
     	theParent.sortMasterColumn(columnName);
     }
 
-    public void setColumnHeaders( String [] species, String [] annoKeys, boolean isSingle) {
+    protected void setColumnHeaders( String [] species, String [] annoKeys, boolean isSingle) {
         vHeaders.clear();
         	
         // General
@@ -114,7 +114,7 @@ public class TableData implements Serializable {
     	catch(Exception e) {ErrorReport.print(e, " Add column header " + columnName);}
 	}
     
-    public int getColHeadIdx(String columnName) {
+    protected int getColHeadIdx(String columnName) {
     	int retVal = -1;
   
 		for (int x=0;x<arrHeaders.length && retVal<0;x++) {
@@ -127,7 +127,7 @@ public class TableData implements Serializable {
     /************************************************************
      * XXX Add rows to table
      */
-    public void addRowsWithProgress(Vector <DBdata> rowsFromDB, JTextField progress) {
+    protected void addRowsWithProgress(Vector <DBdata> rowsFromDB, JTextField progress) {
     	try {
     		boolean cancelled = false;
   		
@@ -150,7 +150,7 @@ public class TableData implements Serializable {
     	catch (Exception e) {ErrorReport.print(e, "add Rows With Progress");}
     }
     
-    public void finalizeX() { // CAS533 added X so not deprecated
+    protected void finalizeX() { // CAS533 added X so not deprecated
     	arrHeaders = new TableDataHeader[vHeaders.size()];
     	vHeaders.copyInto(arrHeaders);
     	vHeaders.clear();
@@ -170,25 +170,25 @@ public class TableData implements Serializable {
     	vData.clear();
     }
 
-    public Object getValueAt(int row, int column) {
+    protected Object getValueAt(int row, int column) {
     	try {
     		return arrData[row][column];
     	}
     	catch(Exception e) {ErrorReport.print(e, "get value at row " + row + " col " + column); return null;}
     }
-    public String getColumnName(int column) {
+    protected String getColumnName(int column) {
         try {
         	if (column==-1) return "";
             return arrHeaders[column].getColumnName();
         } catch(Exception e) {ErrorReport.print(e, "get column name at " + column); return null;}
     }
-    public Class<?> getColumnType(int column) {
+    protected Class<?> getColumnType(int column) {
     	try {
     		return arrHeaders[column].getColumnClass();
     	}
     	catch(Exception e) {ErrorReport.print(e, "get column type at " + column);return null;}
     }
-    public boolean isAscending(int column) {
+    protected boolean isAscending(int column) {
     	try {
     		if (column==-1) return true;
     		return arrHeaders[column].isAscending();
@@ -196,18 +196,18 @@ public class TableData implements Serializable {
     	catch(Exception e) {ErrorReport.print(e, "sort ascending");return false;}
     }
 
-    public int getNumColumns() {
+    protected int getNumColumns() {
 		if(arrHeaders!=null) return arrHeaders.length;
 		if (vHeaders!=null) return vHeaders.size(); // CAS540 there was no 'return'
 		return 0;
     }
 
-    public int getNumRows() {
+    protected int getNumRows() {
 		if (arrData!=null) return arrData.length;
 		if (vData!=null)	return vData.size();
 		return 0;
     }
-    public void clear() {
+    protected void clear() {
     	arrHeaders = null;
     	if(arrData != null) {
     		for(int x=0; x<arrData.length; x++) arrData[x] = null;
@@ -218,13 +218,13 @@ public class TableData implements Serializable {
     	vData.clear();
     }
     
-    public void sortByColumn(int column, boolean ascending) {
+    protected void sortByColumn(int column, boolean ascending) {
 		if (column == -1) return; // CAS504
 		arrHeaders[column].setAscending(ascending);
 		sortByColumn(column);
     }
     
-    public void sortByColumn(final int column) {
+    protected void sortByColumn(final int column) {
 		if (column == -1) return; // CAS504
 		try {
         	theParent.setCursor(new Cursor(Cursor.WAIT_CURSOR));
@@ -241,7 +241,7 @@ public class TableData implements Serializable {
     }
     // XXX
     private class ColumnComparator implements Comparator<Object []> {
-    	public ColumnComparator(int column) {
+    	protected ColumnComparator(int column) {
     		nColumn = column;
     	}
     	public int compare(Object [] o1, Object [] o2) { // CAS504 rewrote much of this
@@ -346,14 +346,15 @@ public class TableData implements Serializable {
 	 * musm Gene# X.520.	Panx Gene# -	hsap Gene# X.23.
 	 * Panx Hstart -	musm Hend 100363922	hsap Hstart 5892760	Panx Hend -	musm Hstart 100363026	hsap Hend 5893665
      */
-    public HashMap <String, Object> getRowLocData(int row) {
+    protected HashMap <String, Object> getRowLocData(int row) {
 		HashMap <String, Object> headVal = new HashMap <String, Object> ();
 		for (int i=0; i<arrHeaders.length; i++) {
 			String colName = arrHeaders[i].getColumnName();
-			if (colName.contains(Q.chrCol)) 		headVal.put(colName, arrData[row][i]);
-			else if (colName.contains(Q.hStartCol)) headVal.put(colName, arrData[row][i]);
-			else if (colName.contains(Q.hEndCol)) 	headVal.put(colName, arrData[row][i]);
-			else if (colName.contains(Q.gNCol)) 	headVal.put(colName, arrData[row][i]);// CAS521 gene#
+			// CAS556 changed contains to endsWith because spAbbr could be column name
+			if (colName.endsWith(Q.chrCol)) 		headVal.put(colName, arrData[row][i]);
+			else if (colName.endsWith(Q.hStartCol)) headVal.put(colName, arrData[row][i]);
+			else if (colName.endsWith(Q.hEndCol)) 	headVal.put(colName, arrData[row][i]);
+			else if (colName.endsWith(Q.gNCol)) 	headVal.put(colName, arrData[row][i]);// CAS521 gene#
 			else if (colName.equals(Q.blockCol)) 	headVal.put(colName, arrData[row][i]);
 			else if (colName.equals(Q.runCol)) 		headVal.put(colName, arrData[row][i]); // CAS520
 			else if (colName.equals(Q.hitCol)) 		headVal.put(colName, arrData[row][i]); // CAS521
@@ -362,13 +363,23 @@ public class TableData implements Serializable {
 		return headVal;
     }
     // CAS520 for view row
-    public String getRowData(int row) {
+    protected String getRowData(int row) {
     	String line="";
 		for (int i=0; i<arrHeaders.length; i++) {
-			String colName = arrHeaders[i].getColumnName().replace(Q.delim, "-");
+			String colName = arrHeaders[i].getColumnName().replace(Q.delim, Q.empty);
 			line += String.format("%-15s %s\n", colName, arrData[row][i].toString());
 		}
 		return line;
+    }
+    // CAS556 for TableReport, get set of All_Anno
+    protected HashMap <String, String> getAllAnno(int row) {
+    	HashMap <String, String> rowMap = new HashMap <String, String> ();
+		for (int i=0; i<arrHeaders.length; i++) {
+			String colName = arrHeaders[i].getColumnName();
+			if (colName.endsWith(Q.All_Anno)) 
+				rowMap.put(colName, (String) arrData[row][i]);
+		}
+		return rowMap;
     }
     
     //Static data structures

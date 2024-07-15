@@ -25,10 +25,9 @@ import util.Utilities;
 
 /******************************************************
  * For QueryPanel: 
- *  Load DB data and creates panel for all species
- * 		Species Chr: From To 
+ *  Load DB data and creates SpeciesSelect panel for each species
  * 
- * CAS504 extend it to provide the project and group MYSQL indices
+ * CAS504 extend it to provide the project and group MYSQL indices; CAS556 add spAbbr
  */
 public class SpeciesSelectPanel extends JPanel {
 	private static final long serialVersionUID = -6558974015998509926L;
@@ -37,44 +36,45 @@ public class SpeciesSelectPanel extends JPanel {
 
 	public SpeciesSelectPanel(SyMAPQueryFrame parentFrame, QueryPanel qPanel) {
 		theParentFrame = parentFrame;
-		spPanels = new Vector<SpeciesSelect> ();
+		spPanels = new Vector<SpeciesSelect> (); // Sorted by DisplayName
 		setBackground(Color.WHITE);
 		
 		loadPanelsFromDB(); 
 		
 		refreshAllPanels();
 	}
-	public void clear() {
-		bIsGene=bIsSingle=false;
+	protected void clear() {
+		bIsGene=false;
 		for (SpeciesSelect p : spPanels) p.clear();
 	}
 	
+	protected int getNumSpecies() 				{return spPanels.size();}
+	// i is the index into the array, which is sorted by DisplayName
+	protected int getSpIdx(int i)			{return spPanels.get(i).getSpIdx();}
+	protected String getSpName(int i) 		{return spPanels.get(i).getSpName();}
+	protected String getSpAbbr(int i)		{return spPanels.get(i).getSpAbbr();}
 	
-	public int getNumSpecies() 				{return spPanels.size();}
-	public int getSpIdx(int p)				{return spPanels.get(p).getSpIdx();}
-	public String getSpName(int p) 			{return spPanels.get(p).getSpName();}
+	protected HashMap <String, Integer>  getSpName2spIdx() {return spName2spIdx;}
 	
-	public HashMap <String, Integer>  getSpName2spIdx() 	{return spName2spIdx;}
-	
-	public String getSpNameFromSpIdx(int x) {	
+	protected String getSpNameFromSpIdx(int x) {	
 		SpeciesSelect p = spIdx2panel.get(x);
 		return p.getSpName();
 	}
-	public int getSpIdxFromSpName(String name) {
+	protected int getSpIdxFromSpName(String name) {
 		if (spName2spIdx.containsKey(name))
 			 return spName2spIdx.get(name);
 		else return -1;
 	}
-	public int getSpIdxFromChrIdx(int x) {	
+	protected int getSpIdxFromChrIdx(int x) {	
 		SpeciesSelect p = chrIdx2panel.get(x);
 		return p.getSpIdx();
 	}
-	public String getSpNameFromChrIdx(int x) {	
+	protected String getSpNameFromChrIdx(int x) {	
 		SpeciesSelect p = chrIdx2panel.get(x);
 		return p.getSpName();
 	}
 	
-	public String getChrNameFromChrIdx(int x) {
+	protected String getChrNameFromChrIdx(int x) {
 		SpeciesSelect p = chrIdx2panel.get(x);
 		
 		String [] num = p.getChrNumList();
@@ -85,7 +85,7 @@ public class SpeciesSelectPanel extends JPanel {
 		}
 		return "0";
 	}
-	public int getChrIdxFromChrNumSpIdx(String chrNum, int spIdx) {
+	protected int getChrIdxFromChrNumSpIdx(String chrNum, int spIdx) {
 		for (SpeciesSelect sp : spPanels) {
 			if (spIdx== sp.spIdx) {
 				for (int i=0; i<sp.chrNumList.length; i++) {
@@ -97,31 +97,30 @@ public class SpeciesSelectPanel extends JPanel {
 		}
 		return 0;
 	}
-	public boolean isSpEnabled(int p) 		{return spPanels.get(p).isSpEnabled();} // CAS518 add
-	public String [] getChrIdxList(int p) 	{return spPanels.get(p).getChrIdxList();}
-	public String getChrIdxStr(int p) 		{return spPanels.get(p).getChrIdxStr();}
-	public String [] getChrNumList(int p) 	{return spPanels.get(p).getChrNumList();}
+	protected boolean isSpEnabled(int p) 		{return spPanels.get(p).isSpEnabled();} // CAS518 add
+	protected String [] getChrIdxList(int p) 	{return spPanels.get(p).getChrIdxList();}
+	protected String getChrIdxStr(int p) 		{return spPanels.get(p).getChrIdxStr();}
+	protected String [] getChrNumList(int p) 	{return spPanels.get(p).getChrNumList();}
 	
-	public int getSelChrIdx(int panel)		{return spPanels.get(panel).getSelChrIdx();}
-	public String getSelChrNum(int panel) 	{return spPanels.get(panel).getSelChrNum();}
-	public String getChrStart(int panel) 	{return spPanels.get(panel).getStartFullNum();}
-	public String getChrStop(int panel) 	{return spPanels.get(panel).getStopFullNum();}
+	protected int getSelChrIdx(int p)			{return spPanels.get(p).getSelChrIdx();}
+	protected String getSelChrNum(int p) 		{return spPanels.get(p).getSelChrNum();}
+	protected String getChrStart(int p) 		{return spPanels.get(p).getStartFullNum();}
+	protected String getChrStop(int p) 		{return spPanels.get(p).getStopFullNum();}
 	
-	public String getPairWhere() 			{ return pairWhere;}
+	protected String getPairWhere() 			{ return pairWhere;}
 	
 	// For summary
-	public String getStartAbbr(int panel) 	{return spPanels.get(panel).getStartAbbr();}
-	public String getStopAbbr(int panel) 	{return spPanels.get(panel).getStopAbbr();}
+	protected String getStartkb(int panel) 	{return spPanels.get(panel).getStartkb();}
+	protected String getStopkb(int panel) 	{return spPanels.get(panel).getStopkb();}
 	
 	// For Single (only one project/chr/loc) and GeneNum (only one chr)
-	public void setIsGene(boolean isGene) {// CAS541 For GeneNum
+	protected void setIsGene(boolean isGene) {// CAS541 For GeneNum
 		if (isGene) clear(); // if a chr is set, will allow a 2nd to be selected, which is wrong
 		bIsGene=isGene;
 		setAllEnabled(true); // loc disabled in sp.setEnabled
 	}
-	public void setIsSingle( String spName, boolean isSingle) {// spName goes with Single Project, may be "All" or Null
+	protected void setIsSingle( String spName, boolean isSingle) {// spName goes with Single Project, may be "All" or Null
 		clear();
-		bIsSingle=isSingle;
 		setAllEnabled(!isSingle);
 		if (!isSingle) return;
 		
@@ -232,13 +231,13 @@ public class SpeciesSelectPanel extends JPanel {
 	/**************************************************************/
 	private void loadPanelsFromDB() {
 		try {
-			Vector<Mproject> theProjects = theParentFrame.getProjects();
+			Vector<Mproject> theProjects = theParentFrame.getProjects(); // Sorted by DisplayName
 			int [] spidx = new int [theProjects.size()];
 			int x=0;
 			
 			DBconn2 dbc2 = theParentFrame.getDBC();
 			
-			for(Mproject proj : theProjects) {
+			for (Mproject proj : theProjects) {
 				String chrNumStr="", chrIdxStr="";
 				
 				String strQ = "SELECT xgroups.name, xgroups.idx FROM xgroups " +
@@ -257,7 +256,7 @@ public class SpeciesSelectPanel extends JPanel {
 				rs.close();
 				
 				SpeciesSelect ssp = new SpeciesSelect(this, proj.getDisplayName(),
-						proj.getID(), proj.getdbCat(), chrNumStr, chrIdxStr);
+						proj.getID(), proj.getdbCat(), chrNumStr, chrIdxStr, proj.getdbAbbrev());
 				
 				spPanels.add(ssp);
 				spName2spIdx.put(proj.getDisplayName(), proj.getID());
@@ -309,12 +308,14 @@ public class SpeciesSelectPanel extends JPanel {
 	private class SpeciesSelect extends JPanel {
 		private static final long serialVersionUID = 2963964322257904265L;
 
-		public SpeciesSelect(SpeciesSelectPanel parent, 
-				String spName, int spIdx, String strCategory, String chrNumStr, String chrIdxStr) {
+		protected SpeciesSelect(SpeciesSelectPanel parent, 
+				String spName, int spIdx, String strCategory, String chrNumStr, String chrIdxStr,
+				String spAbbr) {
 			this.theParent = parent;
 			this.spIdx = spIdx;	// projects.idx
 			this.strCategory = strCategory;
 			this.chrIdxStr = chrIdxStr;	
+			this.spAbbr = spAbbr; // CAS556 add for TableReport
 			
 			chrIdxList = chrIdxStr.split(",");	// xgroups.idx for 
 			chrNumList = chrNumStr.split(",");
@@ -391,7 +392,7 @@ public class SpeciesSelectPanel extends JPanel {
 
 			theParent.refreshAllPanels();
 		}
-		public void clear() {
+		protected void clear() {
 			txtStart.setText("");
 			txtStop.setText("");
 			cmbChroms.setSelectedIndex(0);
@@ -463,21 +464,21 @@ public class SpeciesSelectPanel extends JPanel {
 		}
 		
 		// for filter summary string
-		private String getStartAbbr() {
+		private String getStartkb() {
 			String num = txtStart.getText().trim();
 			if (num.equals("")) return num;
 			if(cmbScale.getSelectedIndex() == 1) return num + "kb";
 			if(cmbScale.getSelectedIndex() == 2) return num + "mb";
 			return num + "bp";
 		}
-		private String getStopAbbr() {
+		private String getStopkb() {
 			String num = txtStop.getText().trim();
 			if (num.equals("")) return num;
 			if(cmbScale.getSelectedIndex() == 1) return num + "kb";
 			if(cmbScale.getSelectedIndex() == 2) return num + "mb";
 			return num + "bp";
 		}
-	
+		private String getSpAbbr() { return spAbbr;}
 		private String getSpName() {return lblSpecies.getText();}
 		private String getSelChrNum() {
 			return (String)cmbChroms.getSelectedItem();
@@ -520,6 +521,7 @@ public class SpeciesSelectPanel extends JPanel {
 		private String [] chrIdxList;
 		private String [] chrNumList;
 		private String chrIdxStr;
+		private String spAbbr = ""; // CAS556 add for TableReport
 		
 		private SpeciesSelectPanel theParent = null;
 	} // End species row panel
@@ -533,5 +535,5 @@ public class SpeciesSelectPanel extends JPanel {
 	private HashMap <Integer, SpeciesSelect> spIdx2panel = new HashMap <Integer, SpeciesSelect> ();
 	private HashMap <String, Integer> spName2spIdx = new HashMap <String, Integer> ();
 	private String pairWhere="";
-	private boolean bIsGene=false, bIsSingle=false;
+	private boolean bIsGene=false;
 } 

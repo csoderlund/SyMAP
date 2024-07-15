@@ -95,7 +95,18 @@ public class SyntenyMain {
 			ErrorCount.inc(); tdbc2.close();
 			return false;
 		}
+			
+		if (Constants.CoSET_ONLY) { // CAS556 had to add for tiny collinear bug from collinear 2 regions to 1 region
+			 mLog.msg("Only run collinear set algorithm");
+			if (mProj1.hasGenes() && mProj2.hasGenes()) { // CAS540 add check; hit# moved to AnchorMain 
+				AnchorsPost collinear = new AnchorsPost(mPairIdx, mProj1, mProj2, tdbc2, mLog);
+				collinear.collinearSets();
 				
+				if (Cancelled.isCancelled() || bInterrupt) {tdbc2.close();return false;}
+			}
+			else mLog.msg("Both projects must have genes for the collinear set algorithm");
+			return true;
+		}
 		//CAS535 deleted in MF: pool.executeUpdate("delete from blocks where pair_idx='" + mPairIdx + "'");
 		//pool.resetIdx("idx", "blocks"); //CAS533 add
 

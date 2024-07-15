@@ -22,6 +22,7 @@ public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block co
 public static boolean PRT_STATS=  false; 		// -s
 public static boolean WRONG_STRAND_EXC = false; // -wse  exclude wrong strand hits for algo2 
 public static boolean WRONG_STRAND_PRT = false; // -wsp  print wrong strand hits for algo2 
+public static boolean CoSET_ONLY = false;		// -scs on A&S ONLY execute AnchorPosts
 
 // Anchor1 constants; Anchor2 constants are in Anchor2.Arg
 // CAS546 when anchor1 classes were moved to backend.anchor1, enums broke so make static here

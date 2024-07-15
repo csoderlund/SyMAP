@@ -74,6 +74,13 @@ public class AnnotLoadMain {
 		initFromParams(projDBName);	if (!success) {tdbc2.close(); return false; };
 		// deleteCurrentAnnotations();	if (!success) return false; CAS535 deleted in ManagerFraem
 		
+		if (annotFiles.size()==0) { // CAS556 was going through rest of code
+			Utils.prt(plog, "Finish annotation");
+			tdbc2.executeUpdate("delete from annot_key where proj_idx=" + mProj.getIdx());
+			tdbc2.close();
+			return true;
+		}
+		
 /*** LOAD FILE ***/
 		int nFiles = 0;
 		
@@ -92,11 +99,11 @@ public class AnnotLoadMain {
 		AnnotLoadPost alp = new AnnotLoadPost(mProj, tdbc2, plog);
 		
 		success = alp.run(cntGeneIdx); 	if (!success) {tdbc2.close(); return false; }
-		Utils.prtTimeMemUsage(plog, "Computations", time);
+		Utils.prtTimeMemUsage(plog, "Finish computations", time);
 
 /** Wrap up **/
 		summary();		if (!success) {tdbc2.close(); return false; }
-		Utils.timeDoneMsg(plog, "All load Anno for " + projDBName, startTime);
+		Utils.timeDoneMsg(plog, "Finish annotation for " + projDBName, startTime);
 		
 		tdbc2.close();
 		return true;
@@ -324,13 +331,16 @@ public class AnnotLoadMain {
 				File ad = new File(annotDir);
 				if (!ad.isDirectory()) {
 					plog.msg("   No annotation files provided");
-					plog.msg("");
 					return; 			// this is not considered an error
 				}
 				for (File f2 : ad.listFiles()) {
 					if (!f2.isFile() || f2.isHidden()) continue; // CAS511 macos add ._ files in tar
 					
 					annotFiles.add(f2);
+				}
+				if (annotFiles.size()==0) { // CAS556 add
+					plog.msg("   No annotation files provided");
+					return; 			// this is not considered an error
 				}
 				saveAnnoDir=annotDir;
 			}

@@ -97,6 +97,7 @@ public class ComputeMulti {
 				if (sp==sp2) continue;
 				
 				spIdxOpp = spIdxList[sp2];
+				ii = -1;
 				for (DBdata dObj : inData) { // find if spIdx is first or second
 					if ((spIdx   ==dObj.spIdx[0] || spIdx   ==dObj.spIdx[1]) 
 					 && (spIdxOpp==dObj.spIdx[0] || spIdxOpp==dObj.spIdx[1])) {
@@ -105,7 +106,10 @@ public class ComputeMulti {
 						break;
 					}
 				}
-	
+				if (ii== -1) { // CAS556 this happened when no data for on pair
+					symap.Globals.prt("No multi-hit genes for a species pair...");
+					return finalRows;
+				}
 				dprt(">> " + sp + "," + sp2 + " Idx/ii " + spIdx + "/" + ii + " && " + spIdxOpp + "/" + jj);
 				
 				if (isExon) filterExon(); if (!bSuccess) return finalRows;   	// In: inData  Out: inData; remove non-exon

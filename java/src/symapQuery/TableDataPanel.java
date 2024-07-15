@@ -8,12 +8,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.StringReader;
 import java.sql.ResultSet;
 import java.util.Iterator;
@@ -28,8 +25,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -37,8 +32,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.JRadioButton;
-import javax.swing.ButtonGroup;
 import javax.swing.ListCellRenderer;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -61,6 +54,7 @@ import symap.sequence.Sequence;
  * CAS504 many changes for this release, most are not commented
  * CAS513 made panel smaller and columns w/o scroll; the query/summary are passed in 
  * 		  the annoKeywords are checks for annot_kw_mincount
+ * CAS556 moved ExportFile to TableExport (changed some private to protected for this). Add Report.
  */
 public class TableDataPanel extends JPanel {
 	private static final long serialVersionUID = -3827610586702639105L;
@@ -69,7 +63,7 @@ public class TableDataPanel extends JPanel {
 	private static final int showBLOCK=1, showSET=2, showGRP=3; // showREGION=0, CAS555 add showGrp
 	
 	// called by SymapQueryFrame
-	public TableDataPanel(SyMAPQueryFrame parentFrame, String resultName,  boolean [] selections,
+	protected TableDataPanel(SyMAPQueryFrame parentFrame, String resultName,  boolean [] selections,
 			String query, String sum, boolean isSingle) {
 		this.theParentFrame = parentFrame;
 		this.theName 		= resultName;
@@ -78,6 +72,8 @@ public class TableDataPanel extends JPanel {
 		this.isSingle		= isSingle;
 		this.theQuery 		= query;
 		this.theSummary 	= sum;
+		this.isCollinearSz	= theQueryPanel.isCollinear();
+		this.isGroup		= theQueryPanel.isGroup();
 		
 		if(selections != null) {
 			theOldSelections = new boolean[selections.length];
@@ -307,7 +303,7 @@ public class TableDataPanel extends JPanel {
 	    btnExport = new JButton("Export...");
 	    btnExport.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				exportPopup();
+				popupExport();
 			}
 		});
 	   
@@ -321,9 +317,17 @@ public class TableDataPanel extends JPanel {
 			}
 		});     
 	   
+	    btnReport = new JButton("Report...");
+	    btnReport.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				popupReport();
+			}
+		});     
+	    
 	    botRow.add(btnExport);		botRow.add(Box.createHorizontalStrut(10));
-	    botRow.add(btnUnSelectAll);	botRow.add(Box.createHorizontalStrut(5));
-	   
+	    botRow.add(btnUnSelectAll);	botRow.add(Box.createHorizontalStrut(50));
+	    botRow.add(btnReport);	
+	    
 		buttonPanel.add(topRow);
 		buttonPanel.add(Box.createVerticalStrut(10));
 		buttonPanel.add(botRow);
@@ -821,8 +825,8 @@ public class TableDataPanel extends JPanel {
     	return total;
     }
     
-    private void setPanelEnabled(boolean enable) {
-    	theTable.setEnabled(enable);
+    protected void setPanelEnabled(boolean enable) {
+    	theTable.setEnabled(enable); // does not disabled sorting columns
     	rowCount.setEnabled(enable);
   
     	txtMargin.setEnabled(enable);
@@ -832,6 +836,7 @@ public class TableDataPanel extends JPanel {
     	btnShowRow.setEnabled(enable);
     	btnExport.setEnabled(enable);
     	btnUnSelectAll.setEnabled(enable);
+    	btnReport.setEnabled(enable);
     	btnShowAlign.setEnabled(enable);
     	btnShowColumns.setEnabled(enable);
     	btnHelp.setEnabled(enable);
@@ -844,7 +849,7 @@ public class TableDataPanel extends JPanel {
     			chkSpeciesFields[x][y].setEnabled(enable);
     	}
     }
-    private void setPanelSelected() {
+    protected void setPanelSelected() {
     	boolean b = (theTable.getSelectedRowCount() == 1)  ? true : false;
     	btnShowRow.setEnabled(b);
     	
@@ -899,7 +904,7 @@ public class TableDataPanel extends JPanel {
 				    String [][] rows = new String[nRow][nCol];
 				    int r=0;
 				    
-					RowData rd = new RowData ();
+					TmpRowData rd = new TmpRowData(getInstance());
 					for(int x=0; x<selRows.length; x++) {
 						if (!rd.loadRow(selRows[x])) return; // CAS505 was incorrectly x
 						
@@ -920,7 +925,7 @@ public class TableDataPanel extends JPanel {
 							rows[r][c++]=rd.chrNum[i];
 							rows[r][c++]=String.format("%,d",rd.start[i]);
 							rows[r][c++]=String.format("%,d",rd.end[i]);
-							rows[r][c++]=rd.genenum[i];
+							rows[r][c++]=rd.geneTag[i];
 							r++;
 						}
 					}
@@ -949,7 +954,7 @@ public class TableDataPanel extends JPanel {
 			if (theTable.getSelectedRowCount() != 1)  return;
 			
 			int row = theTable.getSelectedRows()[0];
-			RowData rd = new RowData();
+			TmpRowData rd = new TmpRowData(getInstance());
 			String outLine = rd.loadRowAsString(row);
 			Utilities.displayInfoMonoSpace(this, "Row#" + (row+1), outLine, false);
 		}
@@ -965,7 +970,7 @@ public class TableDataPanel extends JPanel {
 			if (theTable.getSelectedRowCount() != 1)  return;
     			
 			int row = theTable.getSelectedRows()[0];
-			RowData rd = new RowData();
+			TmpRowData rd = new TmpRowData(getInstance());
 			if (!rd.loadRow(row)) return;
 				
 			// for the get statements
@@ -997,7 +1002,7 @@ public class TableDataPanel extends JPanel {
 					Utilities.showWarningMessage("The selected row does not belong to a group.");
 					return;
 				}
-				coords = rd.loadGroup(); // assigns hits to grpIdxVec
+				coords = rd.loadGroup(grpIdxVec); // assigns hits to grpIdxVec
 				hd.setForQuery(false, false, true);  // block, set, region
 			}
 			else {
@@ -1049,8 +1054,7 @@ public class TableDataPanel extends JPanel {
     	 if  (s2==synStart1 && e2==synEnd1 && s1==synStart2 && e1==synEnd2) return true;
     	 return false;
      }
- 	 private int synStart1, synStart2, synEnd1, synEnd2; 
- 	 private Vector <Integer> grpIdxVec = new Vector <Integer> (); // CAS555 to highly groups
+ 	 
     /***************************************************************
      * XXX Database
      */
@@ -1212,26 +1216,26 @@ public class TableDataPanel extends JPanel {
     /****************************************************************
      * Public
      */
-	public void sortMasterColumn(String columnName) {
+	protected void sortMasterColumn(String columnName) {
     	int index = theTableData.getColHeadIdx(columnName);
     	theTableData.sortByColumn(index, !theTableData.isAscending(index));
 	}
    
     public String getName() { return theName; }
     
-    public int getNumResults() {
+    protected int getNumResults() {
 		if(theTableData != null) return theTableData.getNumRows();
 		return 0;
 	}
  
- 	public String [] getSummary() { 
+ 	protected String [] getSummary() { 
  		String [] retVal = new String[2];
  		retVal[0] = theName + ": " + getNumResults(); // CAS513 added #rows (shown on Results Page)
  		retVal[1] = theSummary;
  		return retVal;
  	}
-	public boolean isSingle() {return isSingle;}
- 	public boolean [] getColumnSelections() {
+	protected boolean isSingle() {return isSingle;}
+ 	protected boolean [] getColumnSelections() {
 		try {
 			int genColCnt = FieldData.getGenColumnCount(isSingle); // CAS519 adjust for single/pairs
 			int spColCnt = FieldData.getSpColumnCount(isSingle);
@@ -1262,6 +1266,7 @@ public class TableDataPanel extends JPanel {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Getting columns"); return null;}
  	}
+ 	
    /****************************************************************
     * Classes
     */
@@ -1295,19 +1300,19 @@ public class TableDataPanel extends JPanel {
     	}
     }
     
-    private class MultiLineHeaderRenderer extends JList implements TableCellRenderer {
+    private class MultiLineHeaderRenderer extends JList <Object> implements TableCellRenderer {// CAS555 add <Object>
 		private static final long serialVersionUID = 3118619652018757230L;
 
 		public MultiLineHeaderRenderer() {
     	    setOpaque(true);
     	    setBorder(BorderFactory.createLineBorder(Color.BLACK));
     	    setBackground(Color.WHITE);
-    	    ListCellRenderer renderer = getCellRenderer();
+    	    ListCellRenderer <Object> renderer = getCellRenderer();
     	    ((JLabel)renderer).setHorizontalAlignment(JLabel.CENTER);
     	    setCellRenderer(renderer);
     	}
     	 
-    	  public Component getTableCellRendererComponent(JTable table, Object value,
+    	public Component getTableCellRendererComponent(JTable table, Object value,
     	                   boolean isSelected, boolean hasFocus, int row, int column) {
     	    setFont(table.getFont());
     	    String str = (value == null) ? "" : value.toString();
@@ -1315,205 +1320,27 @@ public class TableDataPanel extends JPanel {
     	    String line;
     	    Vector<String> v = new Vector<String>();
     	    try {
-    	      while ((line = br.readLine()) != null) {
-    	        v.addElement(line);
-    	      }
-    	    } catch (IOException ex) {
-    	       ErrorReport.print(ex, "Render table");
-    	    }
+    	    	while ((line = br.readLine()) != null) {
+    	    		v.addElement(line);
+    	    	}
+    	    } catch (IOException ex) {ErrorReport.print(ex, "Render table");}
     	    setListData(v);
     	    return this;
-    	  }
+    	}
     }
-    /***************************************************
-     * Gets row data for Show Synteny, Align Sequences, or WriteFasta
-     * CAS504 added this class to take the place of using hidden columns to get data
-     * theTableData.getRowData(row) returns the chr,start,end of all species in line,
-     * where some can be blank. CAS520 also return block and collinear
-     * CAS521 also return hit# and Gene# for Align; use short name for species
+    
+    /********************************************************
+     * Report popup and files
      */
-    private class RowData {
-		private RowData () {}
-		
-		private String loadRowAsString(int row) {
-			try {
-				String outLine = theTableData.getRowData(row); // colName, value
-    			return outLine;
-    		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return "error";}
-		}
-		
-		private boolean loadRow(int row) {
-			try {
-    			HashMap <String, Object> colHeadVal = theTableData.getRowLocData(row); // only needed columns are returned
-    			HashMap <String, Integer> sp2x = new HashMap <String, Integer> ();
-    			int isp=0;
-    			
-    			for (String colHead : colHeadVal.keySet()) {
-    				Object colVal = colHeadVal.get(colHead);
-    				
-    				if (colVal instanceof String) { // if >2 species, ignores ones w/o values, so only get 2
-    					String str = (String) colVal;
-    					if (str.equals("") || str.equals(Q.empty)) continue; // the blanks species
-    				}  
-    				if (colHead.contentEquals(Q.blockCol)) { // CAS520 add block and collinear
-    					String x = (String) colVal;
-    					x =  (x.contains(".")) ? x.substring(x.lastIndexOf(".")+1) : "0";
-    					blockN = Integer.parseInt(x);
-    					continue;
-    				}
-    				if (colHead.contentEquals(Q.runCol)) {
-    					String x = (String) colVal;
-    					x =  (x.contains(".")) ? x.substring(x.lastIndexOf(".")+1) : "0";
-    					collinearN = Integer.parseInt(x);
-    					continue;
-    				}
-    				if (colHead.contentEquals(Q.hitCol)) {	// CAS521
-    					String x = String.valueOf(colVal);
-    					hitnum = Integer.parseInt(x);
-    					continue;
-    				}
-    				if (colHead.contentEquals(Q.grpCol)) {	// CAS555
-    					String x = String.valueOf(colVal);
-    					groupN = Integer.parseInt(x);
-    					continue;
-    				}
-				
-    				String [] field = colHead.split(Q.delim); // speciesName\nChr or Start or End
-    				if (field.length!=2) continue;
-    				String species=field[0];
-    				String col=field[1];
-    				
-    				String sVal="";
-    				int iVal=0;
-    				if (col.equals(Q.chrCol)) {
-    					if (colVal instanceof Integer) 	sVal = String.valueOf(colVal);
-    					else                      		sVal = (String) colVal;
-    				}
-    				else if (colVal instanceof Integer) { iVal = (Integer) colVal; }
-    				else if (colVal instanceof String)  { sVal = (String)  colVal; }
-    				else {
-    					symap.Globals.eprt("Row Data " + colHead + " " + colVal + " is not type string or integer");
-    					return false;
-    				}
-    				
-    				int i0or1=0;						// only two species, none blank
-    				if (sp2x.containsKey(species)) 
-    					i0or1 = sp2x.get(species);
-    				else {
-    					sp2x.put(species, isp);
-    					spAbbr[isp] = species;
-    					i0or1 = isp;
-    					isp++;
-    					if (isp>2) {symap.Globals.eprt("species " + isp); break;} // should not happen
-    				}
-    				if (col.equals(Q.chrCol)) 		  chrNum[i0or1] = sVal;
-    				else if (col.equals(Q.hStartCol)) start[i0or1] = iVal;
-    				else if (col.equals(Q.hEndCol))   end[i0or1] = iVal;
-    				else if (col.equals(Q.gNCol))	  genenum[i0or1] = sVal;	// CAS521
-    			}
-    			
-    			// get supporting values
-    			if (spAbbr[1]==null || spAbbr[1]=="") {
-    				Utilities.showWarningMessage("The abbrev_names are the same, cannot continue...");
-    				return false;
-    			}
-    			spName[0] = theParentFrame.getDisplayFromAbbrev(spAbbr[0]);
-    			spName[1] = theParentFrame.getDisplayFromAbbrev(spAbbr[1]);
-    			
-    			SpeciesSelectPanel spPanel = theQueryPanel.getSpeciesPanel();
-    			for (isp=0; isp<2; isp++) {
-    				spIdx[isp] =  spPanel.getSpIdxFromSpName(spName[isp]);
-    				chrIdx[isp] = spPanel.getChrIdxFromChrNumSpIdx(chrNum[isp], spIdx[isp]);
-    			}
-    			return true;
-    		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return false;}
-		}
-		// Show Group
-		// loadRow occurs before this, so the selected row values are known
-		// for each row, if the group, chr[0], chr[1] are the same, get min start and max end
-		private double [] loadGroup() {
-		try {
-			double [] coords = {0.0,0.0,0.0,0.0};
-			coords[0] = start[0]; coords[1] = end[0]; coords[2] = start[1]; coords[3] = end[1];
-			
-			for (int r=0; r<theTableData.getNumRows(); r++) {
-				HashMap <String, Object> colHeadVal = theTableData.getRowLocData(r); 
-				
-				Object val = colHeadVal.get(Q.grpCol);
-				int grp = (Integer) val;
-				if (grp!=groupN) continue;     // only rows with this groupN
-				
-				int idx=0;
-				int [] s = {0,0};
-				int [] e = {0,0};
-				boolean bGoodChr=true;
-				
-				for (String colHead : colHeadVal.keySet()) {
-    				Object colVal = colHeadVal.get(colHead);
- 
-    				if (colVal instanceof String) {
-    					String str = (String) colVal;
-    					if (str.equals("") || str.equals(Q.empty)) continue; // ignore blank species
-    				}  
-    				
-    				if (colHead.equals(Q.hitCol)) { // see isHitSelected
-    					idx = (Integer) colVal;
-    					continue;
-    				}
-    				
-    				String [] field = colHead.split(Q.delim); // speciesName\nChr or Start or End
-    				if (field.length!=2) continue;
-    				
-    				String species=field[0];
-    				String col=field[1];
-    				int x = (species.equals(spAbbr[0])) ? 0 : 1;
-    				
-    				if (col.equals(Q.chrCol)) { // if SameChr is not checked, make sure on same chrs as selected
-    					String sVal;
-    					if (colVal instanceof Integer) 	sVal = String.valueOf(colVal);
-    					else                      		sVal = (String) colVal;
-    					if (!sVal.equals(chrNum[x])) {
-    						bGoodChr = false;
-    						break; 				// skip rest of row
-    					}
-    				}
-    				else if (colVal instanceof Integer) { 
-    					if (col.equals(Q.hStartCol)) 	  s[x] = (Integer) colVal;
-    					else if (col.equals(Q.hEndCol))   e[x] = (Integer) colVal;
-    				}
-				} // finish row
-				if (bGoodChr) {
-					grpIdxVec.add(idx);
-					coords[0] = Math.min(coords[0], s[0]);
-					coords[1] = Math.max(coords[1], e[0]);
-					coords[2] = Math.min(coords[2], s[1]);
-					coords[3] = Math.max(coords[3], e[1]);
-				}
-			} // finish all rows
-			return coords;
-		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return null;}
-		}
-		// Values for selected row
-		private String [] spName = {"",""}; 
-		private String [] spAbbr = {"",""}; 
-		private int [] spIdx = {0,0};
-		private int [] chrIdx = {0,0};
-		
-		private String [] chrNum = {"",""};
-		private int [] start = {0,0};
-		private int [] end = {0,0};
-		private String [] genenum = {"",""};
-		
-		private int hitnum=0;				
-		private int blockN=0;
-		private int collinearN=0;
-		private int groupN=0; // CAS555 add for Show Group
+    private void popupReport() {
+    	TableReport rp = new TableReport(getInstance());
+    	rp.setVisible(true);
     }
     /***********************************************************************
-     ** Export file
+     ** Export file; CAS556 latest modify has been to put in separate file.
      *********************************************************************/
-    private void exportPopup() {
-		final ExportFile ex = new ExportFile();
+    private void popupExport() {
+		final TableExport ex = new TableExport(this);
 		ex.setVisible(true);
 		final int mode = ex.getSelection();
 		
@@ -1525,367 +1352,21 @@ public class TableDataPanel extends JPanel {
 		setPanelSelected();
 	}
 	
-    private class ExportFile extends JDialog {
-		private static final long serialVersionUID = 1L;
-		public final int ex_csv = 0, ex_html = 1, ex_fasta= 2, ex_cancel= 3;
-	   
-    	public ExportFile() {
-    		setModal(true);
-    		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-    		setTitle("Export Table Rows");
-    		
-    	// Files
-    		JRadioButton btnCSV = new JRadioButton("CSV"); btnCSV.setBackground(Color.white);
-    		btnCSV.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent arg0) {
-					nMode = ex_csv;
-				}
-			});
-    		JRadioButton btnHTML =  new JRadioButton("HTML");btnHTML.setBackground(Color.white); //CAS547 white for linux
-    		btnHTML.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent arg0) {
-					nMode = ex_html;
-				}
-			});
-    		
-    		JPanel rowPanel = createPanel(true);
-            rowPanel.add(Box.createHorizontalStrut(15));
-            rowPanel.add(new JLabel("Include Row column:")); rowPanel.add(Box.createHorizontalStrut(5));
-            
-            btnYes = new JRadioButton("Yes"); btnYes.setBackground(Color.white);
-            JRadioButton btnNo = new JRadioButton("No");btnNo.setBackground(Color.white);
-            ButtonGroup inc = new ButtonGroup();
-    		inc.add(btnYes);
-    		inc.add(btnNo);
-    		btnYes.setSelected(true);
-    		rowPanel.add(btnYes); rowPanel.add(Box.createHorizontalStrut(5));
-    		rowPanel.add(btnNo);
-    		
-    		JRadioButton btnFASTA = new JRadioButton("FASTA");btnFASTA.setBackground(Color.white);
-    		btnFASTA.addActionListener(new ActionListener() {
-    			public void actionPerformed(ActionEvent arg0) {
-    				nMode = ex_fasta;
-    			}
-    		});
-    		if (isSingle) btnFASTA.setEnabled(false);
-	   	  
-    		ButtonGroup grp = new ButtonGroup();
-    		grp.add(btnCSV);
-    		grp.add(btnHTML);
-	        grp.add(btnFASTA);  
-	    	btnCSV.setSelected(true);
-	    	nMode = ex_csv;
-    			
-    		JPanel selectPanel = createPanel(false);
-    		selectPanel.add(new JLabel("Table rows and columns")); selectPanel.add(Box.createVerticalStrut(5));
-    		selectPanel.add(btnCSV); 			selectPanel.add(Box.createVerticalStrut(5));
-    		selectPanel.add(btnHTML);			selectPanel.add(Box.createVerticalStrut(5));
-	        selectPanel.add(rowPanel);
-	        
-	        selectPanel.add(new JSeparator());
-	        selectPanel.add(new JLabel("Table sequence")); selectPanel.add(Box.createVerticalStrut(5));
-	        selectPanel.add(btnFASTA); 
-	        
-	    // buttons
-        	JButton btnOK = new JButton("OK");
-        	btnOK.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					setVisible(false);
-				}
-			});
-    		JButton btnCancel = new JButton("Cancel");
-    		btnCancel.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					nMode = ex_cancel;
-					setVisible(false);
-				}
-			});
-    		btnOK.setPreferredSize(btnCancel.getPreferredSize());
-    		btnOK.setMaximumSize(btnCancel.getPreferredSize());
-    		btnOK.setMinimumSize(btnCancel.getPreferredSize());
-    		
-    		JPanel buttonPanel = createPanel(true);
-    		buttonPanel.add(btnOK);			buttonPanel.add(Box.createHorizontalStrut(5));
-    		buttonPanel.add(btnCancel);		
-  
-	      // Finish 
-    		JPanel mainPanel = createPanel(false);
-    		mainPanel.add(selectPanel); 	mainPanel.add(Box.createVerticalStrut(5));
-    		mainPanel.add(new JSeparator());
-    		mainPanel.add(buttonPanel);
-    		mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-    		add(mainPanel);
-    		
-    		pack();
-    		this.setResizable(false);
-    		setLocationRelativeTo(null); 
-        }
-    	private JPanel createPanel(boolean isRow) {
-    		JPanel xPanel = new JPanel();
-    		if (isRow) {
-    			xPanel.setLayout(new BoxLayout(xPanel, BoxLayout.LINE_AXIS));
-    			xPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-    		}
-    		else {
-    			xPanel.setLayout(new BoxLayout(xPanel, BoxLayout.PAGE_AXIS)); 
-    			xPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-    			xPanel.setAlignmentY(Component.TOP_ALIGNMENT);
-    		}
-    		xPanel.setBackground(Color.white);
-    		return xPanel;
-    	}
-        public int getSelection() { return nMode; }
-        
-        JRadioButton btnYes;
-        int nMode = -1;
-        
-        /*********************************************************
-         * Write CSV - works with 504
-         */
-        private void writeCSV() {
-        try {
-    		PrintWriter outFH = getFileHandle(ex_csv, "query.csv", true);
-    		if (outFH==null) return;
-    		
-    		boolean incRow = btnYes.isSelected();
-			
-    		setPanelEnabled(false);
-    		boolean reset = false;
-    		if(theTable.getSelectedRowCount() == 0) {
-    			theTable.selectAll();
-    			reset = true;
-    		}
-    		int [] selRows = theTable.getSelectedRows();
-    		
-    		// Columns names
-    		for(int x=0; x<theTable.getColumnCount()-1; x++) {
-    			if (!incRow && x==0) continue; // CAS540 for row check
-    			
-    			outFH.print(reloadCleanString(theTable.getColumnName(x)) + ",");
-    		}
-    		outFH.println(reloadCleanString(theTable.getColumnName(theTable.getColumnCount()-1)));
-    		
-    		// rows
-    		for(int x=0; x<selRows.length; x++) {
-    			for(int y=0; y<theTable.getColumnCount()-1; y++) {
-    				if (!incRow && y==0) continue; // CAS540 for row check
-    				
-    				outFH.print(reloadCleanString(theTable.getValueAt(selRows[x], y)) + ",");
-    			}
-    			outFH.println(reloadCleanString(theTable.getValueAt(selRows[x], theTable.getColumnCount()-1)));
-    			outFH.flush();
-    		}
-    		System.out.println("Wrote " + selRows.length + " rows                  ");
-    		outFH.close();
-    		
-    		if(reset)
-    			theTable.getSelectionModel().clearSelection();
-    		setPanelEnabled(true);
-    	} catch(Exception e) {ErrorReport.print(e, "Write delim file");}
-        }
-       
-        private void writeHTML() { // CAS542 add
-        try {
-        	PrintWriter outFH = getFileHandle(ex_html, "query.html", false);
-    		if (outFH==null) return;
-    	
-    		boolean incRow = btnYes.isSelected();
-			
-    		setPanelEnabled(false);
-    		boolean reset = false;
-    		if(theTable.getSelectedRowCount() == 0) {
-    			theTable.selectAll();
-    			reset = true;
-    		}
-    		int [] selRows = theTable.getSelectedRows();
-    		
-    		// html header
-    		outFH.print("<!DOCTYPE html><html>\n<head>\n"
-    				+ "<title>SyMAP Query Table Results</title>\n"
-    				+ "<style>\n"
-    				+  "body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }\n"
-    				+ ".ty    {border: 1px  solid black; border-spacing: 1px; border-collapse: collapse;margin-left: auto; margin-right: auto;}\n"
-    				+ ".ty td {border: 1px  solid black; padding: 5px; width: 80px; word-wrap: break-word; }" 
-    				+ "</style>\n</head>\n<body>\n"
-    				+ "<a id='top'></a>\n");
-    	 
-    		outFH.println("<p><center><b><big>SyMAP Results</big></b></center>\n");
-    		outFH.println("<br><center>Filter: " + theSummary + "</center>\n");
-    		outFH.print("<p><table class='ty'>\n<tr>");
-    		
-    		// Columns names
-    		for(int x=0; x<theTable.getColumnCount(); x++) {
-    			if (!incRow && x==0) continue; 
-    			String col = reloadCleanString(theTable.getColumnName(x));
-    			col = col.replace(" ","<br>");
-    			outFH.print("<td><b><center>" + col + "</center></b></th>");
-    		}
-    		
-    		// rows
-    		for(int x=0; x<selRows.length; x++) {
-    			outFH.print("\n<tr>");
-    			for(int y=0; y<theTable.getColumnCount(); y++) {
-    				if (!incRow && y==0) continue; 
-    				
-    				outFH.print("<td>" + reloadCleanString(theTable.getValueAt(selRows[x], y)));
-    			}
-    			outFH.flush();
-    		}
-    		outFH.print("\n</table>\n");
-    		if (selRows.length>100) outFH.print("<p><a href='#top'>Go to top</a>\n");
-    		outFH.print("</body></html>\n");
-    		System.out.println("Wrote " + selRows.length + " rows                  ");
-    		outFH.close();
-    		
-    		if(reset)
-    			theTable.getSelectionModel().clearSelection();
-    		setPanelEnabled(true);
-    	} catch(Exception e) {ErrorReport.print(e, "Write delim file");}
-        }
-        
-        /******************************************************************
-         * Write fasta 
-         */
-        private void writeFASTA() {
-        try {
-        	PrintWriter outFH = getFileHandle(ex_fasta, "query.fa", true);
-    		if (outFH==null) return;
-    		
-    		Thread inThread = new Thread(new Runnable() {
-    			public void run() {
-    				try {
-    					setPanelEnabled(false);
-    					
-    					boolean reset = false;
-    					if(theTable.getSelectedRowCount() == 0) {
-    						theTable.selectAll();
-    						reset = true;
-    					}
-    					long startTime = Utilities.getNanoTime();
-    					int [] selRows = theTable.getSelectedRows();
-    					int selNum = selRows.length;
-    					if (selNum>500) {
-    						if (!Utilities.showContinue("Export FASTA", 
-    							"Selected " + selNum + " row to export. This is a slow function. \n" +
-    							"It may take over a minute to export each 500 rows of sequences.")) 
-    						{
-    							if(reset)theTable.getSelectionModel().clearSelection();
-    							setPanelEnabled(true);
-    							return;
-    						}
-    					}
-    					int seqNum = 1, pairNum=1;
-    					RowData rd = new RowData();
-    						
-    					for(int x=0; x<selNum; x++) {
-    						if (!rd.loadRow(x)) {
-    							outFH.close();
-    							if(reset) theTable.getSelectionModel().clearSelection();
-    	    					setPanelEnabled(true);
-    	    					invalidate();
-    							return;
-    						}
-    							
-    						for (int i=0; i<2; i++) {
-    							// this getSequence is slow.
-    							String seq = theParentFrame.getSequence(rd.start[i], rd.end[i], rd.chrIdx[i]);
-    								
-    							String outString = ">SEQ" + String.format("%06d  ", seqNum)  
-    										+ rd.spName[i] + " Chr " + rd.chrNum[i] 
-    										+ " Start " + rd.start[i] + " End " + rd.end[i];
-    							outString += " Pair#" + pairNum;
-    							outFH.println(outString);
-    							outFH.println(seq);
-    							outFH.flush();
-    							seqNum++;
-    						}
-    						pairNum++;						
-    						System.out.print("Wrote: " + ((int)((((float)x)/selRows.length) * 100)) + "%\r");
-    					}
-    					outFH.close();
-    					
-    					Utilities.printElapsedNanoTime("Wrote " + (seqNum-1) + " sequences", startTime);
-    					
-    					if(reset)
-    						theTable.getSelectionModel().clearSelection();
-    					setPanelEnabled(true);
-    					invalidate();
-    				}
-    				catch(Exception e) {ErrorReport.print(e, "Write fasta");}
-    			}
-    			});
-    			inThread.start();
-    		}
-    		catch(Exception e) {ErrorReport.print(e, "Save as fasta");}
-        }
-        // CAS548 add append
-        private PrintWriter getFileHandle(int type, String fname, boolean bAppend) {
-        	String saveDir = Globals.getExport(); // CAS547 change to call globals
-    		
-    		JFileChooser chooser = new JFileChooser(saveDir);
-    		chooser.setSelectedFile(new File(fname));
-    		if(chooser.showSaveDialog(theParentFrame) != JFileChooser.APPROVE_OPTION) return null;
-    		if(chooser.getSelectedFile() == null) return null;
-    		
-    		String saveFileName = chooser.getSelectedFile().getAbsolutePath();
-    		if (type==ex_csv) {
-    			if(!saveFileName.endsWith(".csv")) saveFileName += ".csv";
-    			System.out.println("Exporting CSV to " + saveFileName);
-    		}
-    		else if (type==ex_html) {
-    			if(!saveFileName.endsWith(".html")) saveFileName += ".html";
-    			System.out.println("Exporting HTML to " + saveFileName);
-    		}
-    		else {
-        		if(!saveFileName.endsWith(".fasta") && !saveFileName.endsWith(".fa")) saveFileName += ".fa";
-        		System.out.println("Exporting Fasta to " + saveFileName);	
-    		}
-    		boolean append=true;
-    		if (new File(saveFileName).exists()) {
-    			if (bAppend) {
-    				int rc = Utilities.showConfirmFile(saveFileName);
-    				if (rc==0) return null;
-    				if (rc==1) append=false;
-    			}
-    			else {
-    				if (!Utilities.showConfirm2("File exists","File '" + saveFileName + "' exists.\nOverwrite?")) return null;
-    				append=false;
-    			}
-    		}
-    		
-    		PrintWriter out=null;
-    		try {
-    			out = new PrintWriter(new FileOutputStream(saveFileName, append));
-    		}
-    		catch (Exception e) {ErrorReport.print(e, "Cannot open file - " + saveFileName);}
-    		return out;
-        }
-        private String reloadCleanString(Object obj) {
-        	if(obj != null) {
-        		String val = obj.toString().trim();
-        		if (val.equals("")) return "''";
-        		
-        		val = val.replaceAll("[\'\"]", "");
-        		val = val.replaceAll("\\n", " ");
-        		val = val.replaceAll(",", ";"); // CAS540 quit returning with ''; just replace comma
-        		return val;
-        	}
-        	else return "''";
-    	}
-	} // end exportfile
-	
     /**************************************************************
      * Private variable
      */
-    private SortTable theTable = null;
-    private TableData theTableData = null;
+    protected SyMAPQueryFrame theParentFrame = null;
+	protected QueryPanel      theQueryPanel = null;
+	
+    protected SortTable theTable = null;
+    protected TableData theTableData = null;
     private JScrollPane sPane = null;
     private JTextField rowCount = null;
     
     private JTextField loadStatus = null, txtMargin = null;
     private JCheckBox chkHigh = null;
     private JButton btnShowSynteny = null, btnShowAlign = null, btnShowRow = null; 
-    private JButton btnUnSelectAll = null, btnExport = null;
+    private JButton btnUnSelectAll = null, btnExport = null, btnReport = null;
     private JComboBox <String> cmbSynOpts = null;
     
     private ListSelectionListener selListener = null;
@@ -1908,13 +1389,15 @@ public class TableDataPanel extends JPanel {
 	private JButton btnShowStats = null, btnHelp = null;
 	private JTextField txtStatus = null;
     
-	public SyMAPQueryFrame theParentFrame = null;
-	public QueryPanel      theQueryPanel = null;
-	
 	private AnnoData theAnnoKeys = null;
   
-	private String theName = "", theSummary = "", theQuery = "";
-	private boolean isSingle = false; // Cannot use theQueryPanel.isOrphan because only good for last query
+	protected String theSummary = "";
+	private String theName = "",  theQuery = "";
+	protected boolean isSingle = false; // Cannot use theQueryPanel.isOrphan because only good for last query
     
 	private static int nTableID = 0;
+	
+	private int synStart1, synStart2, synEnd1, synEnd2; // showSynteny
+	private Vector <Integer> grpIdxVec = new Vector <Integer> (); // CAS555 to highlight groups
+	protected boolean isCollinearSz=false, isGroup=false;	// CAS556 for TableReport; the QueryPanel can change, so need to save this
 }

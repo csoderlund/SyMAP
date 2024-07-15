@@ -67,7 +67,9 @@ public class QueryPanel extends JPanel {
 
 		createQueryPanel();
 	}
-	
+	protected boolean isGroup() { // for TableReport; CAS556 add
+		return isMultiAnno() || isPgeneF() || isGeneNum();
+	}
 	protected boolean isIncludeMinor() { // CAS548 add; all show minor; multi
 		return isEveryStarAnno() || (isMultiAnno() && chkMultiMinor.isSelected()) 
 				|| isGeneNum() || isHitNum(); // CAS555 remove isAnnoTxt()
@@ -86,7 +88,7 @@ public class QueryPanel extends JPanel {
 	} 
 	private   boolean isNoAnno() 	 {return radAnnoNone.isEnabled() && radAnnoNone.isSelected(); } 
 	
-	private boolean isBlock() 		{return radBlockYes.isEnabled() && radBlockYes.isSelected(); }
+	protected boolean isBlock() 		{return radBlockYes.isEnabled() && radBlockYes.isSelected(); }
 	private boolean isNotBlock() 	{return radBlockNo.isEnabled() && radBlockNo.isSelected(); }
 	
 	protected boolean isAnnoTxt()	{return txtAnno.isEnabled() && txtAnno.getText().trim().length()>0;}// DBdata filter;
@@ -109,6 +111,7 @@ public class QueryPanel extends JPanel {
 	private boolean isCollinearNum(){ // CAS514 was not checking for selected;; CAS555 add Ign
 		return chkCollinearNum.isEnabled() && chkCollinearNum.isSelected() 
 				&& txtCollinearNum.getText().trim().length()>0;}
+	
 	
 	// multi
 	protected boolean isMultiAnno()  {
@@ -165,6 +168,7 @@ public class QueryPanel extends JPanel {
 		}; 
 		return 0;
 	}
+	protected boolean isCollinear() {return (isCoSetN(false)>0);} // CAS556 DBdata to sort
 	
 	// these are only good for the last query, so should only be used for building the tables
 	protected boolean isSingle() 		{ return chkSingle.isEnabled() && chkSingle.isSelected(); }
@@ -526,8 +530,8 @@ public class QueryPanel extends JPanel {
 			
 			String species = speciesPanel.getSpName(x);
 			String chroms =  speciesPanel.getSelChrNum(x);
-			String start = 	 speciesPanel.getStartAbbr(x);
-			String end = 	 speciesPanel.getStopAbbr(x);
+			String start = 	 speciesPanel.getStartkb(x);
+			String end = 	 speciesPanel.getStopkb(x);
 			if(!chroms.equals("All")) {
 				String loc = " Chr " + chroms;
 				if (!start.equals("") && !end.equals("")) loc += type + start + "-" + end; 
@@ -915,6 +919,7 @@ public class QueryPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				boolean b = chkMultiN.isSelected();
 				setMultiEnable(b);
+				setCollinearEnabled(!b);
 				
 				if (chkPgeneF.isSelected()) chkPgeneF.setSelected(false);
 				chkPgeneF.setEnabled(!b); setPgenefEnable(false);
@@ -964,16 +969,13 @@ public class QueryPanel extends JPanel {
 		Vector<Mproject> theProjects = theParentFrame.getProjects();
 		chkPgeneF = new JCheckBox("PgeneF (Putative gene families)");	
 		chkPgeneF.setToolTipText("Putative gene families; sets Grp# and GrpSize columns");
-		chkPgeneF.addActionListener(new ActionListener() { 
-			public void actionPerformed(ActionEvent e) {
-				if (chkPgeneF.isSelected()) chkMultiN.setSelected(false);}});
-		
 		chkPgeneF.setAlignmentX(Component.LEFT_ALIGNMENT);
 		chkPgeneF.setBackground(Color.WHITE);
 		chkPgeneF.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) {
 				boolean b = chkPgeneF.isSelected();
 				setPgenefEnable(b);
+				setCollinearEnabled(!b);
 				
 				if (chkMultiN.isSelected()) chkMultiN.setSelected(false);
 				chkMultiN.setEnabled(!b); setMultiEnable(false);
@@ -1100,6 +1102,7 @@ public class QueryPanel extends JPanel {
 	private void setAllEnabled(boolean b) { 
 		if (b) setAnnoEnabled(b);
 		speciesPanel.setEnabled(b); // All chr, start, end
+		setCollinearEnabled(b);
 		
 		chkSingle.setEnabled(b); 
 		cmbSingleSpecies.setEnabled(false); cmbSingleOpt.setEnabled(false); singleProjLabel.setEnabled(false);// only chkSingle enables
@@ -1110,11 +1113,6 @@ public class QueryPanel extends JPanel {
 		radAnnoOne.setEnabled(b);  radAnnoBoth.setEnabled(b); 
 		radAnnoNone.setEnabled(b); radAnnoIgnore.setEnabled(b);
 		
-		radCoSetIgn.setSelected(true);  txtCoSetN.setEnabled(false); 
-		lblCoSetN.setEnabled(b); 		
-		radCoSetGE.setEnabled(b);	radCoSetEQ.setEnabled(b);
-		radCoSetLE.setEnabled(b);   radCoSetIgn.setEnabled(b);
-		
 		chkBlockNum.setEnabled(b);  	txtBlockNum.setEnabled(false); 		// only chkBlock enables
 		chkCollinearNum.setEnabled(b);  txtCollinearNum.setEnabled(false); 	// only chkColinear enables
 		chkHitNum.setEnabled(b); 		txtHitNum.setEnabled(false);		// only chkHitIdx enables
@@ -1123,6 +1121,13 @@ public class QueryPanel extends JPanel {
 		chkMultiN.setSelected(false); chkMultiN.setEnabled(b); setMultiEnable(false); 
 		
 		chkPgeneF.setSelected(false); chkPgeneF.setEnabled(b); setPgenefEnable(false);
+	}
+	// called on Compute gene checks; CAS556 make separate to use below
+	private void setCollinearEnabled(boolean b) { 
+		lblCoSetN.setEnabled(b);  txtCoSetN.setEnabled(b); 	
+		radCoSetGE.setEnabled(b); radCoSetEQ.setEnabled(b);
+		radCoSetLE.setEnabled(b); radCoSetIgn.setEnabled(b);
+		if (radCoSetIgn.isSelected()) txtCoSetN.setEnabled(false); 
 	}
 	private void setMultiEnable(boolean b) {
 		lblMultiN.setEnabled(b); txtMultiN.setEnabled(b); 
@@ -1158,7 +1163,7 @@ public class QueryPanel extends JPanel {
 	
 	private JTextField txtAnno = null; 
 	private JLabel annoLabel = null;
-	private SpeciesSelectPanel speciesPanel = null;	
+	protected SpeciesSelectPanel speciesPanel = null;	
 	
 	// FilterSingle
 	private JCheckBox chkSingle = null; 
@@ -1194,7 +1199,7 @@ public class QueryPanel extends JPanel {
 	
 	private JButton btnExecute = null;
 	
-	private int nSpecies=0;
+	protected int nSpecies=0;
 	private HashMap <Integer, String> grpCoords = new HashMap <Integer, String> ();
 	
 	private boolean bValidQuery=true;

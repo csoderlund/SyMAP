@@ -50,6 +50,18 @@ public class AlgSynMain extends JFrame {
 		final ProgressDialog diaLog = new ProgressDialog(this, "Aligning Projects", msg, true, syFW); // write version and date
 		diaLog.msgToFileOnly(">>> " + toName);
 		System.out.println("\n>>> Starting " + toName + "     " + Utilities.getDateTime());
+		
+		if (Constants.CoSET_ONLY) {// CAS556
+			diaLog.msg("Collinear only");
+			SyntenyMain synteny = new SyntenyMain(dbc2, diaLog, mp );
+			if (synteny.run(mProj1, mProj2))  {
+				mp.saveUpdate();
+				new SumFrame(dbc2, mp);
+			}
+			System.out.println("--------------------------------------------------");
+			return;
+		}
+		
 		String chgMsg = mp.getChangedParams(Mpair.FILE);  // Saved to database pairs table in SumFrame
 		diaLog.msg(chgMsg);
 		
@@ -97,7 +109,6 @@ public class AlgSynMain extends JFrame {
 				
 				try {
 					long timeStart = Utils.getTime();
-					
 					
 					/** Align **/
 					success &= aligner.run(); 

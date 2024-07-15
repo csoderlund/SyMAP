@@ -267,4 +267,57 @@ public class Jhtml {
 		
 		return scrollPane;
 	}
+	// TableReport; CAS556 add for Query report
+	public static void showHtmlPanel(JDialog parent, String title, String html) {
+		JDialog dlgRoot = (parent == null ? new JDialog(helpParentFrame,title,false)
+				: new JDialog(parent,title,false));
+		dlgRoot.setPreferredSize(new Dimension(800,800));
+		Container dlg = dlgRoot.getContentPane();
+		dlg.setLayout(new BoxLayout(dlg,BoxLayout.Y_AXIS));
+	
+		JEditorPane jep = new JEditorPane();
+		jep.setContentType("text/html");
+		jep.setEditable(false);
+	   
+	    jep.addHyperlinkListener(new HyperlinkListener() {
+			public void hyperlinkUpdate(HyperlinkEvent e) {
+				if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+					if (!tryOpenURL(e.getURL().toString()) ) 
+						System.err.println("Error opening URL: " + e.getURL().toString());
+				}
+			}
+		});
+		jep.setText(html);
+		jep.setVisible(true);
+		jep.setCaretPosition(0);
+		JScrollPane jsp = new JScrollPane(jep);
+		dlg.add(jsp);
+	
+		dlgRoot.pack();
+		dlgRoot.setVisible(true);
+		dlgRoot.toFront();
+		dlgRoot.requestFocus();
+	}
+	// CAS556 added for TableReport
+	public static String wrapLine(String line, int lineLength, String lineBreak) {
+	    if (line.length() == 0) return "";
+	    if (line.length() <= lineLength) return line;
+	    
+	    String[] words = line.split(" ");
+	    StringBuilder allLines = new StringBuilder();
+	    StringBuilder trimmedLine = new StringBuilder();
+	    
+	    for (String word : words) {
+	        if (trimmedLine.length()+1+word.length() <= lineLength) {
+	            trimmedLine.append(word).append(" ");
+	        } else {
+	            if (trimmedLine.length()>0) allLines.append(trimmedLine).append(lineBreak);
+	            trimmedLine = new StringBuilder();
+	            if (word.length()>lineLength) word = word.substring(0, lineLength-2) + "...";
+	            trimmedLine.append(word).append(" ");
+	        }
+	    }
+	    if (trimmedLine.length() > 0) allLines.append(trimmedLine);
+	    return allLines.toString().trim();
+	}
 }

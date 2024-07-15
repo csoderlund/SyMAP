@@ -588,7 +588,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			if (!inReadOnlyMode) {
 				mainPanel.add( Box.createRigidArea(new Dimension(0,15)) );	
 				mainPanel.add( createHorizPanel( new Component[] { lbl1,
-						btnAllPairs, btnSelAlign, btnSelClearPair,  btnPairParams}, 5) ); // CAS507 put allpairs first since btnPair is for select only now
+					btnAllPairs, btnSelAlign, btnSelClearPair,  btnPairParams}, 5) ); // CAS507 put allpairs first since btnPair is for select only now
 			}
 			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  ); // CAS552 put circle 1st
 			mainPanel.add( createHorizPanel( new Component[] {lbl2, btnSelCircView, btnSelDotplot, btnSelBlockView,  btnSelSummary }, 5) );
@@ -1434,7 +1434,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	catch (Exception e) {ErrorReport.print(e, "reload project");}
 	}
 	/***************************************************
-	 * AlignProjs
+	 * Align all pairs; CAS556 this is disabled, it is not working and does not seem worth it....
 	 */
 	private void alignAllPairs() { //All Pairs is selected; CAS506 added checkPairs logic
 		Cancelled.init();
@@ -1482,13 +1482,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		int maxCPUs = getCPUs();
 		if (maxCPUs==-1) return;
-		if (!alignCheckProj()) return;
+		if (!alignCheckProjDir()) return;
 		
 		if (!Utilities.showConfirm2("All Pairs", // CAS543 add check
 				"Align&Synteny for " + todoList.size() + " pairs")) return;
 		System.out.println("\n>>> Start all pairs: processing " + todoList.size() + " project pairs");
 		for (Mpair mp : todoList) {
-			mp.renewIdx(); // Removed existing
+			if (!backend.Constants.CoSET_ONLY) mp.renewIdx(); // Removed existing; CAS556 add check
 			
 			// AlignProj open/close new dbc2 for each thread of align
 			new AlgSynMain().run(this, dbc2, mp, true,  maxCPUs, checkCat.isSelected());
@@ -1496,48 +1496,59 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		new Version(dbc2).updateReplaceProp();
 		System.out.println("All Pairs complete. ");
 	}
+	/*****************************************************
+	 * Align selected pair
+	 */
 	private void alignSelectedPair( ) {
 		Mproject[] mProjs = getSetSelectedPair();
 		if (mProjs==null) return;
 		
-		if (alignCheckOrderAgainst(mProjs[0], mProjs[1])) {
-			int nCPU = getCPUs();
-			if (nCPU == -1) nCPU=1;;
-			if (!alignCheckProj()) return;
-			
-			Mpair mp = getMpair(mProjs[0].getIdx(), mProjs[1].getIdx());
-			if (mp==null) return;
-			
-			Mproject[] ordP = orderProjName(mProjs[0],mProjs[1]); // order indices according to DB pairs table
-			String resultDir = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
-			
-			boolean bAlign = Utils.checkDoneFile(resultDir);
-			String msg =  bAlign ? "Synteny for " : "Align&Synteny for "; // CAS544 be specific
-			
-			if (mProjs[0].getDisplayName().equals(mProjs[1].getDisplayName())) { // CAS546 add
-				msg += mProjs[0].getDisplayName() + " to itself";
-				if (mp.isAlgo2(Mpair.FILE)) {
-					util.Utilities.showInfoMessage("Cluster Algo", msg +"\nYou must select Algorithm 1 from Parameters");
-					return;
-				}
-			}
-			else msg += mProjs[0].getDisplayName() + " and " + mProjs[1].getDisplayName();
-			
-			String chgMsg = bAlign ? mp.getChangedSynteny() : mp.getChangedParams(Mpair.FILE);  // CAS546 add params
-			if (chgMsg!="") msg += "\n" + chgMsg;
-			
-			if (!Utilities.showConfirm2("Selected Pair", msg)) return;
-			
-			System.out.println("\n>>> Start Alignment&Synteny");
-			mp.renewIdx(); // Remove existing and restart
-			
+		if (!alignCheckOrderAgainst(mProjs[0], mProjs[1])) return;
+		
+		int nCPU = getCPUs();
+		if (nCPU == -1) nCPU=1;;
+		if (!alignCheckProjDir()) return;
+		
+		Mpair mp = getMpair(mProjs[0].getIdx(), mProjs[1].getIdx());
+		if (mp==null) return;
+		
+		if (backend.Constants.CoSET_ONLY)  { //*** CAS556 ****
+			if (!Utilities.showConfirm2("Selected Pair", "Collinear only")) return;
 			new AlgSynMain().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
 			new Version(dbc2).updateReplaceProp();
+			return;
 		}
+		
+		Mproject[] ordP = orderProjName(mProjs[0],mProjs[1]); // order indices according to DB pairs table
+		String resultDir = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
+		
+		boolean bAlign = Utils.checkDoneFile(resultDir);
+		String msg =  bAlign ? "Synteny for " : "Align&Synteny for "; // CAS544 be specific
+		
+		if (mProjs[0].getDisplayName().equals(mProjs[1].getDisplayName())) { // CAS546 add
+			msg += mProjs[0].getDisplayName() + " to itself";
+			if (mp.isAlgo2(Mpair.FILE)) {
+				util.Utilities.showInfoMessage("Cluster Algo", msg +"\nYou must select Algorithm 1 from Parameters");
+				return;
+			}
+		}
+		else msg += mProjs[0].getDisplayName() + " and " + mProjs[1].getDisplayName();
+		
+		String chgMsg = bAlign ? mp.getChangedSynteny() : mp.getChangedParams(Mpair.FILE);  // CAS546 add params
+		if (chgMsg!="") msg += "\n" + chgMsg;
+		
+		if (!Utilities.showConfirm2("Selected Pair", msg)) return;
+		
+		System.out.println("\n>>> Start Alignment&Synteny");
+		
+		mp.renewIdx(); // Remove existing and restart
+		
+		new AlgSynMain().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
+		new Version(dbc2).updateReplaceProp();
 	}
 	// CAS511 create directories if alignment is initiated
 	// An alignment may be in the database, yet no /data directory. The files will be rewritten, so the directories are needed.
-	private boolean alignCheckProj() { 
+	private boolean alignCheckProjDir() { 
 		try {
 			Utilities.checkCreateDir(DATA_PATH, true);
 			Utilities.checkCreateDir(Constants.seqRunDir,  true);

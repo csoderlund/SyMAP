@@ -307,6 +307,17 @@ public class Mpair {
 			out.close();
 		} catch(Exception e) {ErrorReport.print(e, "Creating params file");}
 	}
+	/** CAS556 when params do not need updating, but there was a change such as collinear 
+	 *  Updates props, but that is for the whole database.
+	 ***/
+	public void saveUpdate() {
+	try {
+		dbc2.executeUpdate("update pairs set aligndate=NOW(), syver='" + Globals.VERSION + "'"
+				+ " where (proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx 
+				+ ") or   (proj1_idx=" + proj2Idx + " and proj2_idx=" + proj1Idx + ")"); 
+	}
+	catch (Exception e) {ErrorReport.print(e, "Update version"); return;}
+	}
 	// called by AlignProj on A&S; CAS535 move update date from AlignProjs to here
 	public void saveParams(String params) {
 		try {
@@ -338,6 +349,7 @@ public class Mpair {
 		dbc2.executeUpdate("INSERT INTO pair_props VALUES ('" + 
 				pairIdx + "','" + proj1Idx + "','" + proj2Idx + "','" + name + "','" + val + "')");	
 	}
+	
 	/***************************************************************************
 	 * private
 	 */

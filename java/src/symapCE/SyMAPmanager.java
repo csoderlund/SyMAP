@@ -19,8 +19,8 @@ public class SyMAPmanager extends ManagerFrame {
 	public static void main(String args[])  {	
 		if (!checkJavaSupported(null)) return;
 		
-		if (hasCommandLineOption(args, "-h") || hasCommandLineOption(args, "-help") 
-			|| hasCommandLineOption(args, "--h")) {
+		if (equalOption(args, "-h") || equalOption(args, "-help") 
+			|| equalOption(args, "--h")) {
 			
 			prtParams(args); // see ManagerFrame for all variable stuff
 			System.exit(0);
@@ -42,7 +42,8 @@ public class SyMAPmanager extends ManagerFrame {
 	 * CAS534 moved back as the 3D was removed, which was causing duplicate args
 	 */
 	public static void prtParams(String args[]) {
-		if (hasCommandLineOption(args, "-r")) {
+		// Do not start new parameters with -c or -p; see startsWith below vs equals
+		if (equalOption(args, "-r")) {
 			System.out.println("Usage:  ./viewSymap [options]");
 			System.out.println("  -c string : filename of config file (to use instead of symap.config)");
 			System.out.println("  -a        : do not trim 2D alignments");
@@ -62,19 +63,20 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("  -wse      : for g2, exclude MUMmer hits that differ from gene strand (v5.4.8 Algo2)");
 			System.out.println("  -wsp      : for g2, print MUMmer hits that differ from gene strand (v5.4.8 Algo2)");
 			System.out.println("  -sg       : split genes on cluster hit creation (Cluster Algo1)");
+			System.out.println("  -acs      : On A&S, ONLY execute the collinear sets computation");
 		}
 	}
 	// these are listed to terminal in the 'symap' perl script.
 	private static void setParams(String args[]) { 
 		if (args.length > 0) {
-			if (hasCommandLineOption(args, "-r")) {// used by viewSymap
+			if (equalOption(args, "-r")) {// used by viewSymap
 				inReadOnlyMode = true; // no message to terminal
 			}
-			if (hasCommandLineOption(args, "-v")) {// check version
+			if (equalOption(args, "-v")) {// check version
 				bCheckVersion = true; // no message to terminal
 				System.out.println("-v Check version ");
 			}
-			if (hasCommandLineOption(args, "-p")) { // #CPU
+			if (startsWithOption(args, "-p")) { // #CPU
 				String x = getCommandLineOption(args, "-p"); //CAS500
 				try {
 					maxCPUs = Integer.parseInt(x);
@@ -83,76 +85,86 @@ public class SyMAPmanager extends ManagerFrame {
 				catch (Exception e){ System.err.println(x + " is not an integer. Ignoring.");}
 			}
 			
-			if (hasCommandLineOption(args, "-c")) {// CAS501
+			if (startsWithOption(args, "-c")) {// CAS501
 				Globals.MAIN_PARAMS = getCommandLineOption(args, "-c");
 				System.out.println("-c Configuration file " + Globals.MAIN_PARAMS);
 			}
-			if (hasCommandLineOption(args, "-a")) { // CAS531 change
+			if (equalOption(args, "-a")) { // CAS531 change
 				Globals.bTrim=false;
 				System.out.println("-a Do not trim 2D alignments");
-				//System.out.println("-a Align largest project to smallest");
-				//lgProj1st = true;
 			}
 			
-			if (hasCommandLineOption(args, "-sg")) { // CAS540
+			if (equalOption(args, "-sg")) { // CAS540
 				System.out.println("-sg split genes (Algo1)");
 				Group.bSplitGene= true;
 			}
-			if (hasCommandLineOption(args, "-z")) {// CAS519b
+			if (equalOption(args, "-z")) {// CAS519b
 				Globals.GENEN_ONLY=true;
 				System.out.println("-z Reload Annotation will only run the Gene# assignment algorithm");
 			}
-			if (hasCommandLineOption(args, "-y")) {// CAS519b
-				Globals.HITCNT_ONLY=true;
-				System.out.println("-y the gene hit count will immediately be updated");
-			}
-			if (hasCommandLineOption(args, "-s")) {
+			
+			if (equalOption(args, "-s")) {
 				System.out.println("-s Print Stats");
 				Constants.PRT_STATS = true;
 			}
-			if (hasCommandLineOption(args, "-wsp")) { // CAS548
+			if (equalOption(args, "-wsp")) { // CAS548
 				System.out.println("-wsp print g2 hits where the hit strands differ from the genes (Algo2)");
 				Constants.WRONG_STRAND_PRT = true;
 			}
-			if (hasCommandLineOption(args, "-wse")) { // CAS548
+			if (equalOption(args, "-wse")) { // CAS548
 				System.out.println("-wse exclude g2 hits where the hit strands differ from the genes (Algo2)");
 				Constants.WRONG_STRAND_EXC = true;
 			}
-			
+			if (equalOption(args, "-acs")) { // CAS556
+				System.out.println("-acs On A&S, ONLY execute the collinear sets computation");
+				Constants.CoSET_ONLY = true;
+			}
+			/*************************************************************************/
 			/** not shown in -h help - hence, the double character so user does not use by mistake **/
-			if (hasCommandLineOption(args, "-dd")) {
+			if (equalOption(args, "-dd")) {
 				System.out.println("-dd Debug (developer only)");// CAS533 changed to -dd 
 				Globals.DEBUG = true;
 				//Q.TEST_TRACE = true; // for query
 			}
-			if (hasCommandLineOption(args, "-dbd")) {
+			if (equalOption(args, "-dbd")) {
 				System.out.println("-dbd Database (developer only)");
 				Globals.DBDEBUG = true;
 			}
-			if (hasCommandLineOption(args, "-tt")) {
+			if (equalOption(args, "-tt")) {
 				System.out.println("-tt Trace output");
 				Constants.TRACE = true; // in backend
 				Globals.TRACE = true;   // CAS517; used to add info
 			}
 			
-			// old tests
-			if (hasCommandLineOption(args, "-oo")) {// CAS505 not shown in -h help
+			// old tests - not shown in -h help
+			if (equalOption(args, "-oo")) {
 				System.out.println("-oo Use the original version of draft ordering");
 				Constants.NEW_ORDER = false;
 			}
-			if (hasCommandLineOption(args, "-aa")) { // CAS531 change
+			if (equalOption(args, "-aa")) { // CAS531 change
 				System.out.println("-aa Align largest project to smallest");
 				lgProj1st = true;
 			}
-			if (hasCommandLineOption(args, "-bb")) { // CAS533 change; orig used midpoints
+			if (equalOption(args, "-bb")) { // CAS533 change; orig used midpoints
 				System.out.println("-bb Original block coordinates");
 				Constants.NEW_BLOCK_COORDS = false;
 			}
+			if (equalOption(args, "-y")) {// CAS519b,  no longer shown
+				Globals.HITCNT_ONLY=true;
+				System.out.println("-y the gene hit count will immediately be updated");
+			}
 		}
 	}
-	private static boolean hasCommandLineOption(String[] args, String name) {// CAS534 moved from Utilites
+	
+	private static boolean equalOption(String[] args, String name) {// CAS534 moved from Utilites
 		for (int i = 0;  i < args.length;  i++)
-			if (args[i].startsWith(name)) 
+			if (args[i].equals(name)) 
+				return true;
+		return false;
+	}
+	private static boolean startsWithOption(String[] args, String name) {
+		for (int i = 0;  i < args.length;  i++)
+			if (args[i].equals(name)) // CAS556 was startsWith
 				return true;
 		return false;
 	}

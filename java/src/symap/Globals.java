@@ -12,8 +12,8 @@ import java.io.File;
  * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.5.5"; 
-	public static final String 	DATE = " (19-June-24)";
+	public static final String 	VERSION = "v5.5.6"; 
+	public static final String 	DATE = " (15-July-24)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER =  7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
@@ -71,10 +71,12 @@ public class Globals {
     public static String exonNum() { // CAS548 removes "#"
     	return "#" + Globals.exonTag.substring(0, Globals.exonTag.indexOf(" ")) + "s=";
     }
-    
-    public static void prt(String msg)  {System.out.println(msg);}
+    public static void prt(String msg)  {System.out.println(msg);} // permanent message
+    public static void xprt(String msg) {System.out.println(msg);} // temp message
     public static void rprt(String msg) {System.out.print("      " + msg + "...                      \r");}
+    public static void eprt(String msg) {System.err.println("***Error: " + msg);}
+    
     public static void tprt(String msg) {if (TRACE) System.out.println(msg);}
     public static void dprt(String msg) {if (DEBUG) System.out.println(msg);}
-    public static void eprt(String msg)  {System.err.println("***Error: " + msg);}
+    public static void deprt(String msg){if (DEBUG) System.err.println(msg);} 
 }

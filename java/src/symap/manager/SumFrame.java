@@ -46,7 +46,7 @@ import util.Utilities;
 public class SumFrame extends JDialog implements ActionListener {
 	private static final long serialVersionUID = 246739533083628235L;
 	private boolean bPrtStats=Constants.PRT_STATS; // -s; this will regenerate the summary on display
-	private boolean bTrace=false; 
+	private boolean bRedo=false; // CAS556 remove bTrace is dead code; add bRedo
 	
 	private JButton btnHelp = null, btnOK = null;
 	private int pairIdx=0, proj1Idx=0, proj2Idx=0;
@@ -56,10 +56,11 @@ public class SumFrame extends JDialog implements ActionListener {
 	
 	private Proj proj1=null, proj2=null; // contains idx and lengths of groups
 	
-	// Called from AlignProjs
-	public SumFrame(DBconn2 dbc2, Mpair mp) {
+	// Called from AlgSynMain; 
+	public SumFrame(DBconn2 dbc2, Mpair mp) { 
 		this.mp = mp;
 		this.dbc2 = dbc2;
+		bRedo=true;			// CAS556 expects the summary to be regenerated if still exists
 		createSummary(false);
 	}
     // Called from the project manager
@@ -117,7 +118,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		if (dbc2.tableColumnExists("pairs", "summary")) { // CAS540 exist if called from Summary popup
 			rs = dbc2.executeQuery("select summary from pairs where idx="+ pairIdx);
 			String sum = (rs.first()) ? rs.getString(1) : null;
-			if (sum!=null && sum.length()>20 && !bPrtStats) return sum;
+			if (sum!=null && sum.length()>20 && !bPrtStats && !bRedo) return sum;
 		}
 		
 		proj1 = makeProjObj(proj1Idx);
@@ -125,8 +126,8 @@ public class SumFrame extends JDialog implements ActionListener {
 		
 		proj1.name = mp.getProj1().getDisplayName();
 		proj2.name = mp.getProj2().getDisplayName();
-		if (isReadOnly) System.out.println("Create Summary for display");
-		else System.out.println("Create Summary and save to database ");
+		if (isReadOnly) System.out.println("Create Summary for display...");
+		else System.out.println("Creating Summary for save to database... ");
 		
 		String alignDate = "Unknown", syver="Unk", params="";
 		
@@ -140,7 +141,7 @@ public class SumFrame extends JDialog implements ActionListener {
 
 		String [] x = params.split("\n");
 		params = "";
-		for (int i=0; i<x.length; i++) params += x[i] + "\n";
+		for (int i=0; i<x.length; i++) if (x[i]!=null) params += x[i] + "\n"; // CAS556 update collinear leaves this null
 		params += mp.getChangedParams(Mpair.DB);
 				
 		String d = Utilities.getNormalizedDate(alignDate);
@@ -155,6 +156,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		info += "Abbrev: Gene (GN), Cluster Hit (CH), SubHit (SH), Synteny Block (SB), CH in Block (CHB)\n";
 		info += "________________________________________________________________________________________\n";
 		info += params;
+		if (proj1Idx == proj2Idx) info += "\nSelf-synteny collinear stats are doubled.";
 	
 		if (!isReadOnly) {
 			dbc2.tableCheckAddColumn("pairs", "summary", "text", null); // CAS540 new, no DB update but in Schema
@@ -473,7 +475,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	    }
 	    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
 	    
-	    if (bPrtStats && bTrace) {
+	    if (bPrtStats) {
 	    	String cxCov1 = pct((double)chCov1x, (double)proj1.genomeLen); 
 			String cxCov2 = pct((double)chCov2x, (double)proj2.genomeLen);
 			String sxCov1 = pct((double)shCov1x, (double)proj1.genomeLen); 
@@ -671,7 +673,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	    }
 	    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
 	    
-		if (bPrtStats && bTrace) {
+		if (bPrtStats) {
 			Utils.prtTimeMemUsage("Blocks: ", startTime); 
 			createBlockDelete();
 		}
