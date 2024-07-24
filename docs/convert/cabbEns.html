@@ -1,0 +1,108 @@
+<html>
+<head>
+<title>ConvertEnsembl Cabbage</title>
+<body>
+<pre>
+>>>> ConvertEnsembl <<<<
+Parameters:
+Directory: cabbE
+   Include any sequence not labeled 'chromosome'
+      Uses prefixes Chr 'C' and Scaffold 's
+      IMPORTANT: SyMAP Project Parameters - see grp_prefix in https://csoderlund.github.io/SyMAP/SystemHelp.html#projParams
+Project directory: cabbE
+Processing [cabbE/Brassica_oleracea.BOL.dna_sm.toplevel.fa.gz]
+s01     C1               43,764,888
+s02     C2               52,886,895
+s03     C3               64,984,695
+s04     C4               53,719,093
+s05     C5               46,902,585
+s06     C6               39,822,476
+s07     C7               48,366,697
+s08     C8               41,758,685
+s09     C9               54,679,868
+s10     Scaffold00285       550,871
+s11     Scaffold00418       360,705
+s12     Scaffold00434       343,593
+s13     Scaffold00452       324,463
+s14     Scaffold00534       246,008
+s15     Scaffold00576       215,938
+s16     Scaffold00578       215,108
+s17     Scaffold00579       214,022
+s18     Scaffold00580       213,535
+s19     Scaffold00581       213,381
+s20     Scaffold00613       193,719
+Suppressing further scaffold outputs
+Finish writing /genomic.fa
+A  73,470,451  a  68,910,477
+T  73,494,796  t  68,874,706
+C  43,441,875  c  36,987,039
+G  43,465,652  g  36,970,246
+N         346  n  43,006,919
+Gaps >= 30000: 39 (using N and n)
+Processing [cabbE/Brassica_oleracea.BOL.59.gff3.gz]
+   Use Genes 59,220 from 59,225
+   Use mRNAs 59,220 from 59,225
+   Use Exons 268,591 from 269,978
+Finish writing /anno.gff
+
+>>Sequences
+       0 Chromosomes of               0 total length
+  32,928 Scaffolds   of     488,622,507 total length (32,327<10,000bp)
+
+>>All Type (col 3)
+   CDS                     268,591
+   RNase_MRP_RNA                 3
+   SRP_RNA                      29
+   chromosome                    9
+   exon                    269,978 *
+   gene                     59,225 *
+   lnc_RNA                      22
+   mRNA                     59,225 *
+   ncRNA_gene                1,361
+   pre_miRNA                   121
+   rRNA                        220
+   scaffold                 32,919
+   snRNA                       174
+   snoRNA                      282
+   tRNA                        510
+>>All Gene Source (col 2)
+   brad                     59,225 *
+>>All gene biotype=
+   nontranslating_CDS            5
+   protein_coding           59,220 *
+>>Written to file
+   Genes                  59,220
+   mRNA                   59,220
+   Exons                 268,591
+>>Chromosome gene count 0
+>>Scaffold gene count 59,220   s01     C1                 5,401
+   s02     C2                 5,842
+   s03     C3                 8,489
+   s04     C4                 6,426
+   s05     C5                 5,849
+   s06     C6                 4,762
+   s07     C7                 5,751
+   s08     C8                 5,599
+   s09     C9                 6,642
+   s10     Scaffold00285         67
+   s11     Scaffold00418         20
+   s12     Scaffold00434         14
+   s13     Scaffold00452         20
+   s14     Scaffold00534         23
+   s15     Scaffold00576         19
+   s16     Scaffold00578         28
+   s17     Scaffold00579         27
+   s18     Scaffold00580         11
+   s19     Scaffold00581         15
+   s20     Scaffold00613         22
+   s21     Scaffold00615         27
+   s22     Scaffold00616         18
+   ...
+    s4381   Scaffold05254          2
+   s8044   Scaffold08917          2
+   Genes not included        0
+   Scaffolds with 1 gene (not listed)   32,493
+ConvertEnsembl completed
+</pre>
+</body>
+</html>

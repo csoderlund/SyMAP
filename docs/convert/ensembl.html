@@ -8,6 +8,9 @@
 	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
+	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
 	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
     .ty td {border: 1px  solid black; padding: 3px; }
@@ -63,26 +66,30 @@ Ensembl supplies FASTA formated files for genome sequence and GFF formated files
 The following provides a simple scheme to produce the correctly formated files for SyMAP.
 It has been tested on these <a href=index.html class="ext" target="_blank">genomes</a>.
 <p>
-<b>Contents</b>
+
 	<table>
+		<tr><td colspan=2><b>Contents</b>
 		<tr>
 		<td style="vertical-align: text-top;">
 			<table>
-			<tr><td>&nbsp;
+			<tr><td>&nbsp;&nbsp;
 				<td> <a href="#dl">Download</a>
-			<tr><td>&nbsp;
+			<tr><td>&nbsp;&nbsp;
 				<td> <a href="#cv">Convert files</a>
-			<tr><td>&nbsp;
-				<td> <a href="#load">Load files into SyMAP</a>
+			<tr><td>&nbsp;&nbsp;
+				<td> <a href="#opts">&nbsp;&nbsp;&nbsp;Options</a>
+			<tr><td>&nbsp;&nbsp;
+				<td> <a href="#scaf">&nbsp;&nbsp;&nbsp;Scaffolds</a>
+
 			</table>
 		</td>
 		<td style="vertical-align: text-top;">
 		<table><tr>
-				<td>&nbsp;&nbsp;&nbsp;
-				<td> <a href="#scaf">Scaffolds</a>
-			<tr><td>&nbsp;&nbsp;&nbsp;</td>
+				<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<td> <a href="#load">Load files into SyMAP</a>
+			<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
 				<td> <a href="#edit">Editing the script</a>
-			<tr><td>&nbsp;&nbsp;&nbsp;
+			<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<td><a href="#what">What the ConvertEnsembl script does</a>
 			</table>
 		</td>
@@ -98,12 +105,13 @@ for which Ensembl has a genome. For plants and fungi,
 see <a href="http://plants.ensembl.org"  class="ext" target="_blank" >EnsemblPlant</a>
 and <a href="http://fungi.ensembl.org"  class="ext" target="_blank">EnsemblFungi</a>.
 <li>Select your species.
-<li>Select <font color=darkblue>Download DNA sequence </font><font color=grey>(FASTA)</font>. This takes you to a FTP site.
+<li>Select <font color=darkblue>Download DNA sequence </font><font color=grey>(FASTA)</font>.
+<br>This takes you to a FTP site.
 It is recommended that you download the <tt>[prefix].dna_sm.toplevel.fa.gz</tt>, as it
 is the soft masked chromosome sequences.
 <li>Select the <font color=darkblue>GFF3</font> from the
-<font color=darkgray>Download genes, cDNAs, ncRNA, proteins - </font><font color=darkblue>FASTA - GFF3</font> line. This takes
-you to an FTP site. Download the <tt>[prefix].gff3.gz</tt> file.
+<font color=gray>Download genes, cDNAs, ncRNA, proteins - </font><font color=darkblue>FASTA - GFF3</font> line.
+<br>This takes you to an FTP site. Download the <tt>[prefix].gff3.gz</tt> file.
 </ol>
 
 <a href="img/ENS-genome.png"><img src="img/ENS-genome.png" alt="" style="border: 1px solid black; width: 800px"></a>
@@ -124,17 +132,50 @@ chmod 755 *.class
 
 <li>Execute
 <pre>java ConvertEnsembl &lt;species&gt;</pre>
-
 </ol>
-<p>
-<i>ConvertEnsembl optional flags</i>:
+
+<h3>Example</h3>
+From the <tt>symap_5</tt> directory:
+<pre>
+cd data/seq
+mkdir cabb
+cd cabb
+mv ~/Download/Brassica_oleracea.BOL.59.gff3.gz .
+mv ~/Download/Brassica_oleracea.BOL.dna_sm.toplevel.fa.gz .
+cd ..
+cp ../../scripts/ConvertEnsembl.class .
+java ConvertEnsembl rice
+</pre>
+This results in the following contents:
+<pre>
+data/seq/cabb/
+      Brassica_oleracea.BOL.59.gff3.gz
+      Brassica_oleracea.BOL.dna_sm.toplevel.fa.gz
+      annotation/
+         anno.gff
+         gaps.gff
+      sequence/
+         genomic.fna
+</pre>
+The output gives useful details of the annotation. For the cabbage Ensembl files, the FASTA line did
+not correspond to rule 1 (see <u><i>Rules</i></u> below), so there was no sequence output; hence, it was necessary to use the "-s"  option, which
+gave this <a href=cabbEns.html class="ext" target="_blank">terminal output</a>).
+By using "s" for the <ttx>Group prefix</ttx> and 600000 for <ttx>Minimum length</ttx> in <a href="../SystemHelp.html#start" class="ext" target="_blank">project parameters</a> window,
+only the chromosomes were loaded.
+
+<a id="opts"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Options</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 <table class="ty">
 <tr><td><b>Flag</b><td><b>Description</b><td><b>Details</b><td><b>Default</b>
-<tr><td>-s<td>Scaffolds<td>Any sequence not labeled a "chromosome" will be written as a scaffold. See <a href="#scaf">Scaffolds</a><td>Chromosomes only
+<tr><td>-s<td>Scaffolds<td>Any sequence not starting with a number, X, Y or roman numeral will be written as a scaffold.
+See <a href="#scaf">Scaffolds</a><td>Chromosomes only
 <tr><td>-m<td>Mt and Pt<td>Include Mt and Pt entries<td>Do not include
 <tr><td>-v<td>Verbose<td>Print out header lines of skipped sequences<td>No print
 </table>
-<p><i><u>Beware</u></i>: There are variations in the text associated with ">" header lines. The rules
+<p><i><u>Rules</u></i>: There are variations in the text associated with ">" header lines. The rules
 used by this script are as follows:
 <ol>
 <li>If the ">" is followed by a number, X, Y, or roman numeral,
@@ -146,53 +187,20 @@ It is a real good idea to execute the following on your fasta file:
 <pre>
    zgrep ">" [species_name].dna_sm.toplevel.fa.gz
 </pre>
-This shows you the lines and confirms that the above rules will work for your species. If not,
-then you will need to edit the script to work (or ask me to at symap@agcol.arizona.edu).
-
-<h3>Example</h3>
-From the <tt>symap_5</tt> directory:
-<pre>
-cd data/seq
-mkdir rice
-cd rice
-mv ~/Download/Oryza_sativa.IRGSP-1.0.45.chr.gff3.gz .
-mv ~/Download/Oryza_sativa.IRGSP-1.0.dna_rm.toplevel.fa.gz .
-cd ..
-cp ../../scripts/ConvertEnsembl.class .
-java ConvertEnsembl rice
-</pre>
-This results in the following contents:
-<pre>
-data/seq/rice/
-      Oryza_sativa.IRGSP-1.0.45.chr.gff3.gz
-      Oryza_sativa.IRGSP-1.0.dna_rm.toplevel.fa.gz
-      annotation/
-         anno.gff
-         gaps.gff
-      sequence/
-         genomic.fna
-</pre>
-The output gives useful details of the annotation (e.g. see rice <a href=riceE.html class="ext" target="_blank">details</a>);
-if the details do not appear right, you may need to <a href="#edit">edit</a> the script for your genomes.
-
-
-<a id="load"></a>
-<h2>Load files into SyMAP</h2>
-The above scenario puts the files in the default SyMAP directories.
-When you start up SyMAP, you will see your projects listed on the left of the panel
-(e.g <a href="../SystemGuide.html#demoseq" class="ext" target="_blank">as shown for demos</a>). Check the projects
-you want to load, which will cause them to be shown on the right of the symap window and continue
-as described in the <a href="../SystemGuide.html" class="ext" target="_blank">System Guide</a>.
-
+This shows you the lines and confirms that the above rules will work for your species.
+If not: you can either:
+<ol>
+<li>You can use the -s option to output all sequences and then set the project parameters as discussed below.
+<li>You will need to edit the script to work (or ask me to at symap@agcol.arizona.edu).
+</ol>
 
 <a id="scaf"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h2>Scaffolds</h2>
+<h3>Scaffolds</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-
 By default, the <tt>ConvertEnsembl</tt> script creates the <tt>genomic.fna</tt> file with only the chromosomes.
-However, you can have it also include the scaffolds by using the "-s" flag, e.g. using Oryza Sativa
+However, you can have it also include the scaffolds by using the "-s" flag, e.g. using Oryza sativa
 <pre>
    java ConvertEnsembl rice -s
 </pre>
@@ -211,8 +219,8 @@ e.g. from the <tt>seq</tt> directory and using rice as an example:
 </pre>
 </ol>
 If <tt>ConvertEnsembl</tt> was run with
-<tt>Oryza_sativa.IRGSP-1.0.dna_sm.toplevel.fa.gz</tt> (downloaded 12-Aug-2022)
-using the "-s -m" flags, the resulting <tt>genomics.fna</tt> would have
+<tt>Oryza_sativa.IRGSP-1.0.dna_sm.toplevel.fa.gz</tt>  (downloaded 12-Aug-2022)
+using the "-s" flags, the resulting <tt>genomics.fna</tt> would have
 12 are chromosomes, 49 are scaffolds and Mt and Pt sequences.
 The script outputs all their
 sorted lengths followed by the following table:
@@ -236,9 +244,30 @@ Values for min_len (assuming no duplicate lengths):
 
 To align the top 30 sequences (12 chromosomes, 18 of the largest scaffolds),
 this says to set <tt>min_size</tt> to 16417.
+<!-------------------------------------------------------------------->
+<a id="load"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Load files into SyMAP</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+
+The above scenario puts the files in the default SyMAP directories.
+When you start up SyMAP, you will see your projects listed on the left of the panel
+(e.g <a href="../SystemGuide.html#demoseq" class="ext" target="_blank">as shown for demos</a>).
+<ol>
+<li>Check the projects
+you want to load, which will cause them to be shown on the right of the symap window.
+<li>For the project you want to load, open the <a href="../SystemHelp.html#start" class="ext" target="_blank">project parameters</a> window
+to enter the appropriate values.
+<li>The select <ttl>Load Project</ttl>.
+</ol>
+
 
 <a id="edit"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Editing the script</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 <p>The <tt>ConvertEnsembl.java</tt> code is supplied in the <tt>scripts</tt> directory.
 It is very simply written, it does not use external libraries
 and only common programming techniques found in all programming languages.
