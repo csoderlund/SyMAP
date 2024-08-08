@@ -10,6 +10,7 @@ public class Constants {
 // CAS500 v5 moved hard-coded constants for build to here
 // CAS522 removed FPC
 // AnchorsMain: enum HitStatus, QueryType, HitType, GeneType
+// CAS557 some constants are used by toSymap
 *****************************************************/
 	
 /**********************************************
@@ -58,6 +59,14 @@ public static final String seqDataDir = 	"data/seq/";
 public static final String seqSeqDataDir = 	"/sequence/"; 
 public static final String seqAnnoDataDir = "/annotation/"; 
 public static final String paramsFile = 	"/params"; // in both seq/proj and seq_results/proj1_to_proj2
+
+//These file types, denoted by the .fas extension, are used by most large curated databases. 
+//Specific extensions exist for nucleic acids (.fna), nucleotide coding regions (.ffn), amino acids (.faa), 
+//and non-coding RNAs (.frn).
+public static final String [] fastaFile = {".fa", ".fna", ".fas", ".fasta",  ".seq"}; // CAS557 add
+public static final String fastaList =    ".fas, .fa, .fna, .fasta, .seq (options .gz)";
+public static final String [] gffFile = {".gff", ".gff3"};
+public static final String gffList  = ".gff, .gff3";
 
 // directories for results
 public static final String seqRunDir =  	"data/seq_results/";

@@ -159,7 +159,7 @@ public class AlgSynMain extends JFrame {
 				catch (OutOfMemoryError e) {
 					success = false;
 					statusThread.interrupt();
-					diaLog.msg( "Not enough memory - increase $maxmem in symap script");
+					diaLog.msg( "Not enough memory - increase 'mem' in symap script");
 					Utilities.showOutOfMemoryMessage(diaLog);
 				}
 				catch (Exception e) {

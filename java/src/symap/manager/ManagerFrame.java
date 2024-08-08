@@ -1372,7 +1372,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	 */
 	private void loadAllProjects() {
 		try {
-			new LoadProj(this, dbc2, buildLogLoad()).loadAllProjects(selectedProjVec); 
+			LoadProj lpObj = new LoadProj(this, dbc2, buildLogLoad());// CAS557 create explicit object
+			lpObj.loadAllProjects(selectedProjVec); 
+			
 			new Version(dbc2).updateReplaceProp();
 			refreshMenu();
 		}
@@ -1380,7 +1382,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	private void loadProject(Mproject mProj) {
 		try {
-			new LoadProj(this, dbc2, buildLogLoad()).loadProject(mProj);
+			LoadProj lpObj = new LoadProj(this, dbc2, buildLogLoad());
+			lpObj.loadProject(mProj);
+			
 			new Version(dbc2).updateReplaceProp();
 			refreshMenu();
 		}
@@ -1405,7 +1409,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		System.out.println("Removing " +  mProj.getDisplayName() + " from database...."); // CAS541 add
 		mProj.removeProjectFromDB();
-		new LoadProj(this, dbc2, buildLogLoad()).loadProject(mProj); 
+		
+		LoadProj lpObj= new LoadProj(this, dbc2, buildLogLoad());
+		lpObj.loadProject(mProj); 
+		
 		new Version(dbc2).updateReplaceProp();
 		refreshMenu();
 	}
@@ -1427,7 +1434,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		System.out.println("Removing " +  mProj.getDisplayName() + " annotation from database...."); // CAS541 add
 		mProj.removeAnnoFromDB();
-		new LoadProj(this, dbc2, buildLogLoad()).reloadAnno(mProj);
+		
+		LoadProj lpObj= new LoadProj(this, dbc2, buildLogLoad());
+		lpObj.reloadAnno(mProj);
+		
 		new Version(dbc2).updateReplaceProp();
 		refreshMenu();
 	}
@@ -1503,8 +1513,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		Mproject[] mProjs = getSetSelectedPair();
 		if (mProjs==null) return;
 		
-		if (!alignCheckOrderAgainst(mProjs[0], mProjs[1])) return;
-		
 		int nCPU = getCPUs();
 		if (nCPU == -1) nCPU=1;;
 		if (!alignCheckProjDir()) return;
@@ -1512,19 +1520,20 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		Mpair mp = getMpair(mProjs[0].getIdx(), mProjs[1].getIdx());
 		if (mp==null) return;
 		
-		if (backend.Constants.CoSET_ONLY)  { //*** CAS556 ****
+		if (!alignCheckOrderAgainst(mProjs[0], mProjs[1])) return; 
+		
+		Mproject[] ordP    = orderProjName(mProjs[0],mProjs[1]); // order indices according to DB pairs table
+		String resultDir   = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
+		boolean bAlignDone = Utils.checkDoneFile(resultDir);
+		
+		if (bAlignDone && backend.Constants.CoSET_ONLY)  { //*** CAS556, CAS557 add bAlign
 			if (!Utilities.showConfirm2("Selected Pair", "Collinear only")) return;
 			new AlgSynMain().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
 			new Version(dbc2).updateReplaceProp();
 			return;
 		}
 		
-		Mproject[] ordP = orderProjName(mProjs[0],mProjs[1]); // order indices according to DB pairs table
-		String resultDir = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
-		
-		boolean bAlign = Utils.checkDoneFile(resultDir);
-		String msg =  bAlign ? "Synteny for " : "Align&Synteny for "; // CAS544 be specific
-		
+		String msg =  bAlignDone ? "Synteny for " : "Align&Synteny for "; // CAS544 be specific
 		if (mProjs[0].getDisplayName().equals(mProjs[1].getDisplayName())) { // CAS546 add
 			msg += mProjs[0].getDisplayName() + " to itself";
 			if (mp.isAlgo2(Mpair.FILE)) {
@@ -1534,19 +1543,19 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		else msg += mProjs[0].getDisplayName() + " and " + mProjs[1].getDisplayName();
 		
-		String chgMsg = bAlign ? mp.getChangedSynteny() : mp.getChangedParams(Mpair.FILE);  // CAS546 add params
+		String chgMsg = bAlignDone ? mp.getChangedSynteny() : mp.getChangedParams(Mpair.FILE);  // CAS546 add params
 		if (chgMsg!="") msg += "\n" + chgMsg;
 		
 		if (!Utilities.showConfirm2("Selected Pair", msg)) return;
 		
-		System.out.println("\n>>> Start Alignment&Synteny");
+		System.out.println("\n>>> " + msg); // CAS557 was saying alignment regardless
 		
 		mp.renewIdx(); // Remove existing and restart
 		
 		new AlgSynMain().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
 		new Version(dbc2).updateReplaceProp();
 	}
-	// CAS511 create directories if alignment is initiated
+	// Create directories if alignment is initiated; CAS511  add
 	// An alignment may be in the database, yet no /data directory. The files will be rewritten, so the directories are needed.
 	private boolean alignCheckProjDir() { 
 		try {
@@ -1558,7 +1567,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		catch (Exception e){return false;}
 	}
-	 //CAS506 - add some checks before starting order against project
+	 // Checks before starting order against project; CAS506 add
 	private boolean alignCheckOrderAgainst(Mproject mProj1, Mproject mProj2) {
 		String n1, n2, o;
 		
@@ -1592,7 +1601,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			File   ordDir = new File(ordDirName);
 	
 			if (ordDir.exists()) {
-				String msg = "Directory exists: " + ordProjName  + "\nIt will be over-written.\n";
+				String msg = "Directory exists: " + ordDirName  + "\nIt will be over-written.\n"; // CAS557 include seq/
 				if (!Utilities.showContinue("Order against", msg)) return false;
 			}	
 			

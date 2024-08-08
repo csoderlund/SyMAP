@@ -324,8 +324,31 @@ public class Utilities {
 		return path.substring(path.lastIndexOf("/")+1, path.length());
 	}
 	
-
-	
+	public static String fileDate(String path) { // CAS557 added for xToSymap
+	try {
+		File f = new File(path);
+		 if (f.exists()) {
+	         long lastModified = f.lastModified();
+	         Date date = new Date(lastModified);
+	         SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm");
+	         String formattedDate = formatter.format(date);
+	         return formattedDate;
+		 }
+	}
+	catch (Exception e) {ErrorReport.print(e, "get file date " + path); }
+	return "";
+	}
+	// return path/file  (not path//file or pathfile path/file/)
+	public static String fileNormalizePath(String path, String file) {
+		String p = path, f = file;
+		
+		if (path.endsWith("/") && file.startsWith("/")) p = p.substring(0, p.length()-1);
+		else if (!path.endsWith("/") && !file.startsWith("/")) f = "/" + f;
+		
+		if (file.endsWith("/")) f  = f.substring(0, f.length()-1); 
+		
+		return p + f;
+	}
     /**********************************************************
      * XXX Time methods
      */
@@ -572,7 +595,7 @@ public class Utilities {
 	}
 	public static void showOutOfMemoryMessage(Component parent) {
 		System.err.println("Not enough memory.");
-		JOptionPane optionPane = new JOptionPane("Not enough memory - increase $maxmem in symap script.", JOptionPane.ERROR_MESSAGE);
+		JOptionPane optionPane = new JOptionPane("Not enough memory - increase 'mem' in symap script.", JOptionPane.ERROR_MESSAGE);
 		
 		LinkLabel label = new LinkLabel("Click to open the Troubleshooting Guide.", Jhtml.TROUBLE_GUIDE_URL); // CAS510
 		label.setAlignmentX(Component.CENTER_ALIGNMENT);

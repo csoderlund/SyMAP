@@ -1,0 +1,4 @@
+#!/bin/sh
+mem="8192m";
+echo ">>>> Input files for SyMAP ($mem)     `date` <<<<";
+java -Xmx$mem -classpath java/jar/symap.jar toSymap.xToSymap  $@

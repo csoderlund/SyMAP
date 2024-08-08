@@ -27,12 +27,7 @@ import symap.frame.HelpListener;
  * CAS552 there was one abstract method to cover many possibilities; this is more explicit
  */
 public class Jcomp {
-	public static JLabel createLabel(String text, int fontStyle, int fontSize) {
-		JLabel label = new JLabel(text);
-		label.setAlignmentX(Component.LEFT_ALIGNMENT);
-		label.setFont( new Font(label.getFont().getName(), fontStyle, fontSize) );
-		return label;
-	}
+	
 	public static JTextArea createTextArea(String text, Color bg, boolean bWrap) {
 		JTextArea textArea = new JTextArea(text);
 		
@@ -76,8 +71,23 @@ public class Jcomp {
 		row.setAlignmentY(Component.TOP_ALIGNMENT);
 		return row;
 	}
+	//////////////////////////////////////////
+	public static JLabel createLabel(String text, int fontStyle, int fontSize) {
+		JLabel label = new JLabel(text);
+		label.setAlignmentX(Component.LEFT_ALIGNMENT);
+		label.setFont( new Font(label.getFont().getName(), fontStyle, fontSize) );
+		return label;
+	}
 	static public JLabel createLabel(String label) {
 		JLabel tmp = new JLabel(label);
+		tmp.setBackground(Color.white);
+		tmp.setOpaque(true);  // allows the color to be changed on Mac
+		tmp.setEnabled(true);
+		return tmp;
+	}
+	static public JLabel createLabel(String label, String tip) {
+		JLabel tmp = new JLabel(label);
+		tmp.setToolTipText(tip);
 		tmp.setBackground(Color.white);
 		tmp.setOpaque(true);  // allows the color to be changed on Mac
 		tmp.setEnabled(true);
@@ -88,7 +98,14 @@ public class Jcomp {
 		JLabel l = new JLabel(html);
 		return l;
 	}
-
+	static public JLabel createMonoLabel(String label, String t) {
+		//String html = "<html><b><i>" + label + "</i></b></html>"; // ignores blanks
+		JLabel lab = new JLabel(label);
+		lab.setFont(new Font(Font.MONOSPACED,Font.PLAIN,13)); //lab.getFont().getName()
+		lab.setToolTipText(t);
+		lab.setBackground(Color.white);
+		return lab;
+	}
 	//////////////////////////////////////////////////////////////
 	public static JButton createButton(HelpListener parent, HelpBar bar, ActionListener listener,
 			String label, String tip) {
@@ -226,13 +243,22 @@ public class Jcomp {
 		
 		return button;
 	}
-	static public JButton createButtonPlain(String label, boolean enable) {
+	static public JButton createPlainButton(String label, boolean enable) {
 		JButton button = new JButton(label);
 		button.setBackground(Color.white);
 		button.setAlignmentX(Component.LEFT_ALIGNMENT);
 		button.setMargin(new Insets(0, 0, 0, 0));
 		button.setFont(new Font(button.getFont().getName(),Font.PLAIN,10));
 		button.setEnabled(enable);
+		return button;
+	}
+	static public JButton createBoldButton(String label, String tip) { // CAS557 add for xToSymap
+		JButton button = new JButton(label);
+		button.setToolTipText(tip);
+		button.setBackground(Color.white);
+		button.setAlignmentX(Component.LEFT_ALIGNMENT);
+		button.setMargin(new Insets(0, 0, 0, 0));
+		button.setFont(new Font(button.getFont().getName(),Font.BOLD,12));
 		return button;
 	}
 	static public JButton createButton(String s, String t) {
@@ -258,13 +284,14 @@ public class Jcomp {
 		jbutton.setBackground(Color.white);
 		return jbutton;
 	}
-	static public JLabel createMonoLabel(String label, String t) {
-		//String html = "<html><b><i>" + label + "</i></b></html>"; // ignores blanks
-		JLabel lab = new JLabel(label);
-		lab.setFont(new Font(Font.MONOSPACED,Font.PLAIN,13)); //lab.getFont().getName()
-		lab.setToolTipText(t);
-		lab.setBackground(Color.white);
-		return lab;
+	//////////////////////////////////////////////
+	static public JCheckBox createCheckBox(String label, String tip, boolean def) {
+		JCheckBox box = new JCheckBox(label, def);
+		box.setToolTipText(tip);
+		box.setBackground(Color.white);
+		box.setMinimumSize(box.getPreferredSize());
+		box.setMaximumSize(box.getPreferredSize());
+		return box;
 	}
 	static public JCheckBox createCheckBox(String label, boolean def) {
 		JCheckBox box = new JCheckBox(label, def);
@@ -273,6 +300,14 @@ public class Jcomp {
 		box.setMaximumSize(box.getPreferredSize());
 		return box;
 	}
+	public static JRadioButton createRadio(String label, String tip) {
+		JRadioButton button = new JRadioButton(label); button.setBackground(Color.white);
+		button.setToolTipText(tip);
+		button.setMargin(new Insets(0,0,0,0));
+		button.setMinimumSize(button.getPreferredSize());
+		button.setMaximumSize(button.getPreferredSize());
+		return button;
+	}
 	public static JRadioButton createRadio(String label) {
 		JRadioButton button = new JRadioButton(label); button.setBackground(Color.white);
 		button.setMargin(new Insets(0,0,0,0));
@@ -280,6 +315,14 @@ public class Jcomp {
 	}
 	public static JTextField createTextField(String defVal, int size) {
 		JTextField txt = new JTextField(defVal, size);
+		txt.setBackground(Color.white);
+		txt.setMinimumSize(txt.getPreferredSize());
+		txt.setMaximumSize(txt.getPreferredSize());
+		return txt;
+	}
+	public static JTextField createTextField(String defVal, String tip, int size) {
+		JTextField txt = new JTextField(defVal, size);
+		txt.setToolTipText(tip);
 		txt.setBackground(Color.white);
 		txt.setMinimumSize(txt.getPreferredSize());
 		txt.setMaximumSize(txt.getPreferredSize());

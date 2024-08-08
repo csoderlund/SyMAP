@@ -21,7 +21,7 @@ import util.ErrorReport;
 
 public class DBconn2 {
 	private final int maxTries = 10;
-	private final boolean TRACE = false; // Globals.TRACE;
+	private final boolean TRACE = symap.Globals.DEBUG;
 	
 	static private String chrSQL = "characterEncoding=utf8"; // utf8mb4
     static private String driver = "com.mysql.jdbc.Driver";

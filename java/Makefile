@@ -8,7 +8,7 @@ JAVAC_FLAGS = -g -Xlint:deprecation #,vars #-Xlint:deprecation
 
 JAVA_FILES= ./src/symapCE/*.java ./src/database/*.java ./src/backend/*.java \
 			./src/symap/*.java ./src/dotplot/*.java ./src/blockview/*.java \
-			./src/circview/*.java  ./src/symapQuery/*.java
+			./src/circview/*.java  ./src/symapQuery/*.java ./src/toSymap/*.java
 
 all: clean build standalone_jars 
 

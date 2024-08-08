@@ -135,10 +135,11 @@ public class Gene implements Comparable <Gene> {
 		Collections.sort(exonList, 
 			new Comparator<Exon>() {
 				public int compare(Exon g1, Exon g2) {
-					if (g1.estart < g2.estart) return -1;
+					if      (g1.estart < g2.estart) return -1;
 					else if (g1.estart > g2.estart) return 1;
 					else if (g1.eend > g2.eend) return -1;
-					else return 1;
+					else if (g1.eend < g2.eend) return 1;  // CAS557 added for violates its general contract!
+					else return 0;
 				}
 			}
 		);

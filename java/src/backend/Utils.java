@@ -5,6 +5,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -122,8 +124,41 @@ public class Utils {
 			}
 		}
 		catch (Exception e) {
-	    		ErrorReport.print("Cannot open file " + file); 
+	    	ErrorReport.print(e, "Cannot open file " + file); // CAS557 add e
 	    }
+		return null;
+	}
+	
+	// CAS557 moved from SeqLoadMain to here so can be shared with toSymap; added check for >
+	public static boolean parseHasPrefix(String name, String prefix){
+		if (prefix.equals("")) return true;
+	
+		String regx = "\\s*(" + prefix + ")(\\w+)\\s?.*";
+		Pattern pat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
+		
+		String n = name + " "; // hack, otherwise we need two cases in the regex
+		if (n.startsWith(">")) n = n.substring(1);
+		Matcher m = pat.matcher(n);
+		if (m.matches()) return true;
+		return false;
+	}
+	// The prefix must be present. if no prefix, just use the given name.
+	public static String parseGrpName(String name, String prefix){
+		name = name + " "; // hack, otherwise we need two cases in the regex
+		
+		String regx = ">\\s*(" + prefix + ")(\\w+)\\s?.*";
+		Pattern pat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
+		Matcher m = pat.matcher(name);
+		if (m.matches()) return m.group(2);
+		
+		return parseGrpFullName(name);
+	}
+	public static String parseGrpFullName(String in){
+		String regx = ">\\s*(\\w+)\\s?.*";
+		Pattern pat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
+		Matcher m = pat.matcher(in);
+		if (m.matches()) return m.group(1);
+		
 		return null;
 	}
 	/********************************************************

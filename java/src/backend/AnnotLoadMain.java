@@ -25,53 +25,55 @@ import util.ErrorReport;
 
 /***********************************************
  * Load gff files for sequence projects
+ * CAS557 made major changes to check mRNA parent with geneID and exon parent with mrnaID.
+ * 		This now allows reading of NCBI and Ensembl files directly.
  */
 
 public class AnnotLoadMain {
 	static public boolean GENEN_ONLY=Globals.GENEN_ONLY; // -z CAS519b to update the gene# without having to redo synteny
+	private final String idKey 		= "ID"; 			// Gene and mRNA
+	private final String parentKey 	= "Parent"; 		// mRNA and Exon
 	
 	private ProgressDialog plog;
 	private DBconn2 tdbc2;
-	//private SyProj syProj;
-	private Mproject mProj;
+	private Mproject mProj;		// contains chromosomes and the grpIdx from reading FASTA
 
-	private final String defaultTypes = 			"gene,exon,gap,centromere";
+	private final String defaultTypes = 			"gene,mRNA,exon, gap, centromere"; // CAS557 remove gap, centromere
 	private TreeMap<String,Integer> typeCounts = 	new TreeMap<String,Integer>();;
 	private TreeSet<String> typesToLoad = 			new TreeSet<String>();
 	
 	// init
 	private Vector<File> annotFiles = 				new Vector<File>();
 	
-	private final String exonAttr = "Parent"; // CAS512 save exon attribute
+	private final String exonAttr = "Parent"; 		// save exon attribute; CAS512 
 	private TreeMap<String,Integer> userAttr = 		new TreeMap <String,Integer>();
 	private TreeMap <String, Integer> ignoreAttr = 	new TreeMap <String,Integer> ();
 	private int userSetMinKeywordCnt=0;
 	private boolean bUserSetKeywords = false;
-	private final int savAtLeastKeywords=10; // These are columns in SyMAP Query
+	private final int savAtLeastKeywords=10; 		// These are columns in SyMAP Query
 	
-	private boolean success=true;
-	private int cntGeneIdx=0;
+	private boolean bSuccess=true;
+	private int cntAllGene=0 , cntNoKey=0;
 	
 	public AnnotLoadMain(DBconn2 dbc2, ProgressDialog log, Mproject proj) throws Exception {
 		this.tdbc2 = new DBconn2("AnnoLoad-"+ DBconn2.getNumConn(), dbc2);;
 		this.plog = log;
 		this.mProj = proj;
 		proj.loadDataFromDB();
-		//syProj = 	new SyProj(dbc2, log, mProj, proj.getDBName(), -1, Constants.EITHER);
 	}
 	
 	public boolean run(String projDBName) throws Exception {
 		long startTime = Utils.getTime();
 		
-		if (GENEN_ONLY) { // CAS519b Run Gene# assignment algorithm only
+		if (GENEN_ONLY) { 			// CAS519b Run Gene# assignment algorithm only
 			geneNOnly(projDBName);
 			tdbc2.close();
-			return success;
+			return bSuccess;
 		}
 		
 		plog.msg("Loading annotation for " + projDBName);
 		
-		initFromParams(projDBName);	if (!success) {tdbc2.close(); return false; };
+		initFromParams(projDBName);	if (!bSuccess) {tdbc2.close(); return false; };
 		// deleteCurrentAnnotations();	if (!success) return false; CAS535 deleted in ManagerFraem
 		
 		if (annotFiles.size()==0) { // CAS556 was going through rest of code
@@ -88,7 +90,7 @@ public class AnnotLoadMain {
 		
 		for (File af : annotFiles) {
 			nFiles++;
-			loadFile(af);	if (!success) {tdbc2.close(); return false; }
+			loadFile(af);	if (!bSuccess) {tdbc2.close(); return false; }
 		}
 		Utils.prtTimeMemUsage(plog, (nFiles + " file(s) loaded"), time);
 		
@@ -98,20 +100,21 @@ public class AnnotLoadMain {
 		
 		AnnotLoadPost alp = new AnnotLoadPost(mProj, tdbc2, plog);
 		
-		success = alp.run(cntGeneIdx); 	if (!success) {tdbc2.close(); return false; }
+		bSuccess = alp.run(cntAllGene>0); 	if (!bSuccess) {tdbc2.close(); return false; }
 		Utils.prtTimeMemUsage(plog, "Finish computations", time);
 
 /** Wrap up **/
-		summary();		if (!success) {tdbc2.close(); return false; }
-		Utils.timeDoneMsg(plog, "Finish annotation for " + projDBName, startTime);
+		summary();		if (!bSuccess) {tdbc2.close(); return false; }
+		Utils.timeDoneMsg(plog, "Finish annotation for " + projDBName + "      ", startTime);
 		
 		tdbc2.close();
 		return true;
 	}
 	/************************************************************************8
-	 * Load file - old method still used for separate gene/exon
+	 * Load file and write to DB
 	 */
 	private void loadFile(File f) throws Exception {
+		int grpIdx=0;
 	try {
 		plog.msg("Loading " + f.getName());
 		BufferedReader fh = Utils.openGZIP(f.getAbsolutePath()); // CAS500
@@ -120,24 +123,25 @@ public class AnnotLoadMain {
 		int lineNum = 0, cntBatch=0, totalLoaded = 0, numParseErrors = 0;
 		HashSet <String> noGrpSet = new HashSet <String> ();
 		
-		boolean bSkipExons=false; // only use Exons from first mRNA
-		int cntMRNA=0, cntSkipMRNA=0, cntSkipGeneAttr=0, cntGene=0, cntExon=0;
+		int cntSkipMRNA=0, cntSkipGeneAttr=0, cntGene=0, cntExon=0;
 		
 		int lastGeneIdx = -1; // keep track of the last gene idx to be inserted
 		int lastIdx = tdbc2.getIdx("select max(idx) from pseudo_annot");
+		String geneID=null, mrnaID=null;
 		
 		PreparedStatement ps = tdbc2.prepareStatement("insert into pseudo_annot " +
 				"(grp_idx,type,name,start,end,strand,gene_idx, genenum,tag) "
-				+ "values (?,?,?,?,?,?,?,0,'')"); // CAS512 remove 'text' field, added gene_idx, tag
+				+ "values (?,?,?,?,?,?,?,0,'')"); 			// CAS512 remove 'text' field, added gene_idx, tag
 		while ((line = fh.readLine()) != null) {
 			if (Cancelled.isCancelled()) {
 				plog.msg("User cancelled");
-				success=false;
+				bSuccess=false;
 				break;
 			}	
+			
 			lineNum++;
-			if (line.startsWith("#")) continue; // skip comment
-			if (Utilities.isEmpty(line.trim())) continue; // CAS543
+			if (line.startsWith("#")) continue; 			// skip comment
+			if (Utilities.isEmpty(line.trim())) continue; 	// CAS543
 			
 			String[] fs = line.split("\t");
 			if (fs.length < 9) {
@@ -157,15 +161,8 @@ public class AnnotLoadMain {
 			String strand	= fs[6];
 			String attr		= sqlSanitize(fs[8]); // CAS512 remove quotes
 			
-			boolean isGene = (type.contentEquals("gene")) ? true : false;
-			boolean isExon = (type.contentEquals("exon")) ? true : false;
-			
-			// if (type.equals("CDS"))   type = "exon"; CAS512 quit using, often same as exon
-			// if (type.contains("RNA") && !type.equals("mRNA")) type = "gene"; // CAS501 added !mRNA; CAS512 why RNA
-			
-			if (strand == null || (!strand.equals("-") && !strand.equals("+")))
-				strand = "+";
-			
+			if (strand == null || (!strand.equals("-") && !strand.equals("+"))) strand = "+";
+		
 			/** Type: After count, discard unsupported types  **/
 			if (type == null || type.length() == 0) type = "unknown";
 			else if (type.length() > 20) type = type.substring(0, 20);
@@ -174,21 +171,43 @@ public class AnnotLoadMain {
 			else typeCounts.put(type, 1 + typeCounts.get(type));
 			
 			/** only use exons from first mRNA **/
-			if (type.equals("mRNA")) {
-				cntMRNA++; 
-				if (cntMRNA>1) 					 {bSkipExons=true; cntSkipMRNA++;}
-			}
-			else if (type.contentEquals("gene")) {bSkipExons=false; cntMRNA=0;}
+			boolean isGene = (type.contentEquals("gene")) ? true : false;
+			boolean isExon = (type.contentEquals("exon")) ? true : false;
+			boolean isMRNA = (type.contentEquals("mRNA")) ? true : false;
+			boolean isGap = (type.contentEquals("gap")) ? true : false;
+			boolean isCent = (type.contentEquals("centromere")) ? true : false;
+			if (!(isGene || isExon || isMRNA || isGap || isCent)) continue;
 			
-			if (typesToLoad.size() > 0 &&  !typesToLoad.contains(type)) continue;   
-			if (bSkipExons) continue; 
+			String[] keyVals = attr.split(";"); 
+			
+			if (isGene)   {
+				mrnaID = null;
+				geneID = getVal(idKey, keyVals);
+			} 
+			else if (isMRNA) {
+				if (geneID!=null && mrnaID==null) {
+					mrnaID = getmRNAid(geneID, keyVals, lineNum, line); 
+					if (!bSuccess) return;
+				}
+				else if (geneID!=null) cntSkipMRNA++;
+				continue;
+			}
+			else if (isExon) {
+				if (mrnaID==null) continue;
+				
+				if (!isGoodExon(mrnaID, keyVals, lineNum, line)) {
+					if (!bSuccess) return;
+					continue;
+				}
+			}
+			// else isGap or isCent
 			
 	/** Process for write **/
-			/** Chromosome **/
-			int grpIdx = mProj.getGrpIdxRmPrefix(chr); // CAS546 was syProj.grpIdxFromQuery
+			// Chromosome idx
+			grpIdx = mProj.getGrpIdxRmPrefix(chr); // CAS546 was syProj.grpIdxFromQuery
 			if (grpIdx < 0) {// ErrorCount.inc(); CAS502 this is not an error; can happen if scaffolds have been filtered out
 				if (!noGrpSet.contains(chr)) {
-					if (noGrpSet.size() < 3) plog.msgToFile("+++ No loaded sequence for '" + chr + "' on line " + lineNum);
+					if (noGrpSet.size() < 3) plog.msgToFile("+++ Gene on sequence '" + chr + "'; sequence is not loaded - ignore");
 					else if (noGrpSet.size() == 3) plog.msgToFile("+++ Suppressing further warnings of no loaded sequence");
 					if (noGrpSet.size()==0) System.out.println("Valid names: " + mProj.getValidGroup());
 					noGrpSet.add(chr);
@@ -201,35 +220,15 @@ public class AnnotLoadMain {
 				start = end;
 				end = tmp;
 			}
-		/** Annotation Keywords **/	
+		    // Annotation Keywords 	
 			String parsedAttr="";	// MySQL text: Can hold up to 65k
 			
-			if (isExon) { // CAS512 was not using any attr; now using parent or first
-				cntExon++;
-				String[] keyValExon = attr.split(";"); 
+			if (isGene) { // create string of only user-supplied keywords; CAS501 changed 
+				cntGene++; 
+				lastGeneIdx = (lastIdx+1); // for exon 
 				
-				for (String keyVal : keyValExon) {
-					String[] words = keyVal.trim().split("=");
-					String key = words[0].trim();
-					if (words.length!=2) continue;
-					if (key.equals("")) continue;
-					
-					if (key.endsWith("="))
-						key = key.substring(0,key.length() - 1);
-					if (key.contentEquals(exonAttr))  {
-						parsedAttr = keyVal.trim() + ";";
-						break;
-					}
-				}
-				if (parsedAttr.contentEquals("") && keyValExon.length>0)
-					parsedAttr = keyValExon[0] + ";";
-			}
-			else if (isGene) { // CAS501 changed to create string of only user-supplied keywords
-				cntGene++;
-				String[] keyValGene = attr.split(";"); // 	IF CHANGED, CHANGE CODE IN QUERY PAGE PARSING ALSO
-				
-				for (String keyVal : keyValGene) {
-					String[] words = keyVal.trim().split("="); // CAS513 if no '=', then no keyword
+				for (String kv : keyVals) {
+					String[] words = kv.trim().split("="); // if no '=', then no keyword; CAS513 
 					if (words.length!=2) {
 						cntSkipGeneAttr++;
 						continue;
@@ -240,7 +239,7 @@ public class AnnotLoadMain {
 					if (bUserSetKeywords) { 
 						if (userAttr.containsKey(key)) {
 							userAttr.put(key, 1 + userAttr.get(key));
-							parsedAttr += keyVal.trim() + ";"; 
+							parsedAttr += kv.trim() + ";"; 
 						}
 						else {
 							if (!ignoreAttr.containsKey(key)) ignoreAttr.put(key, 0);
@@ -252,33 +251,44 @@ public class AnnotLoadMain {
 						userAttr.put(key, 1 + userAttr.get(key));
 					}
 				}
-				
 				if (bUserSetKeywords) {
 					if (parsedAttr.endsWith(";")) 
 						parsedAttr = parsedAttr.substring(0, parsedAttr.length()-1); // remove ; at end
 				}
 				else parsedAttr = attr;						// no keywords excluded
 					
-				if (parsedAttr.equals("") && type.equals("gene")) parsedAttr="[no description]"; // CAS503
+				if (parsedAttr.equals("")) parsedAttr="[no description]"; // CAS503
 			}
-			else parsedAttr = attr;
-			
-			int gene_idx=0;
-			if (isExon) {
-				if (lastGeneIdx>0) {
-					gene_idx=lastGeneIdx;
-					cntGeneIdx++; // for AnnotLoadPost
+			else if (isExon) { // using parent or first; CAS512 added (not used in viewSymap)
+				cntExon++;
+				
+				for (String kv : keyVals) {
+					String[] words = kv.trim().split("=");
+					String key = words[0].trim();
+					if (words.length!=2) continue;
+					if (key.equals("")) continue;
+					
+					if (key.endsWith("="))
+						key = key.substring(0,key.length() - 1);
+					if (key.contentEquals(exonAttr))  {
+						parsedAttr = kv.trim() + ";";
+						break;
+					}
 				}
+				if (parsedAttr.contentEquals("") && keyVals.length>0)
+					parsedAttr = keyVals[0] + ";";
 			}
-	
+			// else isGap or isCent
+			
 		/** Load annotation into database **/
+			int gidx = (isGene) ? 0 : lastGeneIdx;
 			ps.setInt(1,grpIdx);
 			ps.setString(2,type);
 			ps.setString(3,parsedAttr);
 			ps.setInt(4,start);
 			ps.setInt(5,end);
 			ps.setString(6,strand);
-			ps.setInt(7, gene_idx);
+			ps.setInt(7, gidx);
 			
 			ps.addBatch();
 			totalLoaded++; cntBatch++; lastIdx++;
@@ -288,28 +298,85 @@ public class AnnotLoadMain {
 				ps.executeBatch();
 				System.out.print("   " + totalLoaded + " annotations...\r"); // CAS42 1/1/18
 			}
-			if (isGene) {
-				lastGeneIdx=lastIdx;
-			}
 		}
 		if (cntBatch> 0) ps.executeBatch();
 		ps.close();
 		fh.close();
 		
+		cntAllGene+=cntGene;
 		plog.msg("   " + totalLoaded + " annotations loaded from " + f.getName());
-		if (cntGene>0 || cntExon>0) { // CAS518 no longer supporting exons in separate file
+		if (cntGene>0 || cntExon>0) { 				// CAS518 no longer supporting exons in separate file
 			plog.msg("   " + cntGene + " genes; " + cntExon + " exons");
 			if (cntGene==0) plog.msg("Warning: genes and exons must be in the same file for accurate results");
 		}
-		if (cntSkipGeneAttr>0) plog.msg("   " + cntSkipGeneAttr + " skipped gene attribute with no '='");
-		if (cntSkipMRNA>0)	   plog.msg("   " + cntSkipMRNA + " skipped mRNA and exons");
-		if (numParseErrors>0)  plog.msg("   " + numParseErrors + " parse errors - lines discarded");
-		if (noGrpSet.size() >0)   plog.msg("   " + noGrpSet.size() + " sequence names in annotation file not loaded into database");
+		if (cntSkipGeneAttr>0)  plog.msg("   " + cntSkipGeneAttr + " skipped gene attribute with no '='");
+		if (cntSkipMRNA>0)	    plog.msg("   " + cntSkipMRNA + " skipped mRNA and exons");
+		if (numParseErrors>0)   plog.msg("   " + numParseErrors + " parse errors - lines discarded");
+		if (noGrpSet.size() >0) plog.msg("   " + noGrpSet.size() + " sequence names in annotation file not loaded into database");
 	}
-	catch (Exception e) {ErrorReport.print(e, "Load file"); success=false;}
+	catch (Exception e) {
+		System.err.println("*** Database index problem: try Load again");
+		ErrorReport.print(e, "Load file grpIdx " + grpIdx + " - try Load again."); 
+		bSuccess=false;}
 	}
-	// CAS541 moved from UpdatePool
-	// Eliminate all quotes in strings before DB insertion, a better option is PreparedStatement.
+	private String getVal(String key, String [] attrs) {
+		for (String s : attrs) {
+			String [] x = s.split("=");
+			if (x[0].equals(key)) return x[1];
+		}
+		return null;
+	}
+	private String getmRNAid(String geneID, String [] keyVal, int lineNum, String line) {
+		String mrnaID = getVal(idKey, keyVal);
+		if (mrnaID==null) {
+			plog.msgToFile("+++ missing mRNA ID on line " + lineNum);
+			plog.msgToFile("line: " + line);
+			cntNoKey++;
+			if (cntNoKey>5) {
+				bSuccess=false;
+				plog.msgToFile("Fatal error: missing keywords ");
+				return null;
+			}
+			String parent = getVal(parentKey, keyVal);
+			if (parent==null) {
+				plog.msgToFile("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + geneID);
+				plog.msgToFile("line: " + line);
+				cntNoKey++;
+				if (cntNoKey>5) {
+					bSuccess=false;
+					plog.msgToFile("Fatal error: missing keywords ");
+					return null;
+				}
+			}
+			if (!parent.equals(geneID)) {
+				plog.msgToFile("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + geneID);
+				plog.msgToFile("line: " + line);
+				cntNoKey++;
+				if (cntNoKey>5) {
+					bSuccess=false;
+					plog.msgToFile("Fatal error: missing keywords ");
+					return null;
+				}
+			}
+		}
+		return mrnaID;
+	}
+	private boolean isGoodExon(String mrnaID, String [] keyVal, int lineNum, String line) {
+		String parent = getVal(parentKey, keyVal);
+		if (parent==null) {
+			plog.msgToFile("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + mrnaID);
+			plog.msgToFile("line: " + line);
+			cntNoKey++;
+			if (cntNoKey>5) {
+				bSuccess=false;
+				plog.msgToFile("Fatal error: missing keywords ");
+				return false;
+			}
+		}
+		return parent.equals(mrnaID);
+	}
+
+	// Eliminate all quotes in strings before DB insertion, though do not need with PreparedStatement. CAS541 moved from UpdatePool
 	static Pattern mpQUOT = Pattern.compile("[\'\"]");;
 	public String sqlSanitize(String in) {
 		Matcher m = mpQUOT.matcher(in);
@@ -377,11 +444,11 @@ public class AnnotLoadMain {
 				mProj.saveProjParam("proj_anno_dir", saveAnnoDir);
 			}
 			
-			// Types: if no types specified then limit to types we render
-			String annot_types =  mProj.getAnnoType(); // not a parameter
+			// 3rd columns types: 
+			String annot_types =  mProj.getAnnoType(); // this is always blank
 			
 			if (annot_types == null || annot_types.length() == 0) 
-				annot_types = defaultTypes;
+				annot_types = defaultTypes; // "gene,exon,gap,centromere";
 			
 			String [] ats = annot_types.split("\\s*,\\s*");
 			for (String at : ats) {
@@ -408,16 +475,15 @@ public class AnnotLoadMain {
 				else userAttr.put(attrKW.trim(), 0); // CAS502
 			}
 		}
-		catch (Exception e) {ErrorReport.print(e, "load anno init"); success=false;}
+		catch (Exception e) {ErrorReport.print(e, "load anno init"); bSuccess=false;}
 	}
 	/********************** wrap up ***********************/
 	private void summary() {
 		try {
 			// Print type counts
-			plog.msg("GFF Types (* indicates not loaded):");
+			plog.msg("GFF Types:");
 			for (String type : typeCounts.keySet()) {
-				String ast = (!typesToLoad.contains(type) ? "*" : ""); // CAS42 1/1/18 formatted output
-				plog.msg(String.format("   %-15s %d%s", type, typeCounts.get(type), ast));
+				plog.msg(String.format("   %-15s %,d", type, typeCounts.get(type)));
 			}
 			
 			Vector<String> sortedKeys = new Vector<String>();
@@ -441,7 +507,7 @@ public class AnnotLoadMain {
 	        	}
 	        	int count = userAttr.get(key);
 	        	
-	        	plog.msg(String.format("   %-15s %d", key,count)); 
+	        	plog.msg(String.format("   %-15s %,d", key,count)); 
 	        	tdbc2.executeUpdate("insert into annot_key (proj_idx,keyname,count) values (" + 
 	        			mProj.getIdx() + ",'" + key + "'," + count + ")");
 	        }
@@ -450,7 +516,7 @@ public class AnnotLoadMain {
 				for (String key : ignoreAttr.keySet()) {
 					int count = ignoreAttr.get(key);
 					if (count>userSetMinKeywordCnt)
-						plog.msg(String.format("   %-15s %d", key, count));
+						plog.msg(String.format("   %-15s %,d", key, count));
 				}
 	        }
 			// Release data from heap
@@ -458,7 +524,7 @@ public class AnnotLoadMain {
 			typeCounts = null;
 			System.gc(); // Java treats this as a suggestion
 		}
-		catch (Exception e) {ErrorReport.print(e, "Compute gene order"); success=false;}
+		catch (Exception e) {ErrorReport.print(e, "Compute gene order"); bSuccess=false;}
 	}
 	private boolean geneNOnly(String projName) { // CAS519b
 		try {
@@ -481,7 +547,7 @@ public class AnnotLoadMain {
 			long time = Utils.getTime();
 			
 			AnnotLoadPost alp = new AnnotLoadPost(mProj, tdbc2, plog);
-			success = alp.run(cnt); 	if (!success) return false;
+			bSuccess = alp.run(cnt>0); 	if (!bSuccess) return false;
 			
 			Utils.timeDoneMsg(plog, "Computations", time);
 		}

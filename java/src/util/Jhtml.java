@@ -57,6 +57,8 @@ public class Jhtml {
 	public static final String query = 	"#query";
 	public static final String result = "#result";
 	
+	public static final String CONVERT_GUIDE_URL =  BASE_HELP_URL + "input/index.html"; // CAS557
+	
 	public static JButton createHelpIconSysSm(String main, String id) { // CAS534
 		return createHelpIcon("/images/helpSm.png", main + id);
 	}

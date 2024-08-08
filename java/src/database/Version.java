@@ -344,28 +344,50 @@ public class Version {
 		while (rs.next()) {
 			int idx = rs.getInt(1);
 			String ver = rs.getString(2);
-			if (ver!=null) {
-				String x= ver.replaceAll("([a-z])", ""); // CAS552c remove any chars
-				x = x.replaceAll("\\.", "");
+			if (ver!=null) { // v5.5.2c
+				String x= ver.replaceAll("([a-z])", ""); // CAS552c remove any chars 
+				x = x.replaceAll("\\.", ""); 
 				int y = Utilities.getInt(x);
 				pairVer.put(idx, y);
 			}
 		}
-		// Update for v548
-		int b1=0, b2=0;
+		
+		int chg=0;
 		for (int idx : pairVer.keySet()) {
 			int ver = pairVer.get(idx);
-			if (ver>=548) continue;
-			
-			int algo1 = dbc2.executeCount("select value from pair_props where name='algo1' and pair_idx=" + idx);
-			
-			if (algo1==1) b1++;// gene_overlap% and pseudo_hits_annot.annot2_idx (for multi query)
-			else          b2++;// gene and exon overlap, plus improved assignments			
+			if (ver<548) { 			// Update for v548
+				int algo1 = dbc2.executeCount("select value from pair_props where name='algo1' and pair_idx=" + idx);
+				
+				if (algo1==1) {
+					chg++;// gene_overlap% and pseudo_hits_annot.annot2_idx (for multi query)
+					System.err.println(getProjNames(idx) + ": Synteny for  needs to be rerun for v548 Algo1 new features");
+				}
+				else    {
+					chg++;// gene and exon overlap, plus improved assignments	
+					System.err.println(getProjNames(idx) + ": Synteny for needs to be rerun for v548 Algo2 new features");
+				}
+			}
+			else if (ver<556) {	// Update for v556 (added in v557)
+				chg++;
+				System.err.println(getProjNames(idx) + ": Collinear sets for  needs to be rerun for v556 improvements");
+			}
 		}
-		if (b1>0) System.out.println("Warning: Synteny needs to be rerun for Algo1 for v548 new features for " + b1 + " pair");
-		if (b2>0) System.out.println("Warning: Synteny needs to be rerun for Algo2 for v548 new features for " + b2 + " pair");
+		
+		if (chg>0) {
+			System.err.println(" See https://csoderlund.github.io/SyMAP/SystemGuide.html#update for how to update.");
+		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "Check For Content update");}
+	}
+	private String getProjNames(int pairIdx) {
+	try {
+		int p1 =  dbc2.executeCount("select proj1_idx from pairs where idx=" + pairIdx);
+		int p2 =  dbc2.executeCount("select proj2_idx from pairs where idx=" + pairIdx);
+		String n1 = dbc2.executeString("select name from projects where idx=" + p1);
+		String n2 = dbc2.executeString("select name from projects where idx=" + p2);
+		return n1 + " vs " + n2;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Get project name"); return "error";}
 	}
 	
 	/***********************************************************************/

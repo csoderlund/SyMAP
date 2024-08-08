@@ -161,9 +161,17 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		if (grpName2Idx.containsKey(s)) return grpName2Idx.get(s);
 		return -1;
 	}
-	public String getValidGroup() {
-		String msg="";
-		for (String x : grpName2Idx.keySet())  msg += x + ";";
+	public String getValidGroup() { // AnnotLoadMain; CAS557 add cutoff cnt
+		String msg= grpName2Idx.size()+": ";
+		int cnt=0; 
+		for (String x : grpName2Idx.keySet())  {
+			msg += x + ";";
+			cnt++;
+			if (cnt>50) {
+				msg += "...";
+				break;
+			}
+		}
 		return msg;
 	}
 	///////////////////////

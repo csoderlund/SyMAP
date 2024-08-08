@@ -28,10 +28,10 @@ The 2D gene placement algorithm uses the pseudo_annot.genenum but not the suffix
  */
 
 public class AnnotLoadPost {
-	private final int MAX_GAP=0; // CAS519 changed from 3
+	private final int MAX_GAP_FOR_OLAP=0; // CAS519 changed from 3
 	private ProgressDialog plog;
 	private DBconn2 dbc2;
-	private Mproject mProj; // CAS546 was syProj
+	private Mproject mProj;      // CAS546 was syProj
 	
 	private HashMap <Integer, GeneData> geneMap = new HashMap <Integer, GeneData> (); 
 	private Vector <Integer> geneOrder = new Vector <Integer> ();
@@ -44,9 +44,9 @@ public class AnnotLoadPost {
 		this.dbc2 = dbc2;
 		this.plog = log;
 	}
-	public boolean run(int assigned) {
+	public boolean run(boolean hasAnnot) {
 		try {
-			if (assigned==0) {
+			if (!hasAnnot) {
 				plog.msg("  No assignment of #exons and tags to genes");
 				return true;
 			}
@@ -179,7 +179,7 @@ public class AnnotLoadPost {
 				else {
 					err++;
 					if (err>10) break;
-					System.err.println("Internal error: no gene " + gene_idx + " for exon " + idx);
+					System.err.println("Unexpected GFF input: no gene " + gene_idx + " for exon " + idx);
 				}
 			}
 			rs.close();
@@ -260,7 +260,7 @@ public class AnnotLoadPost {
 		}
 		private boolean isOverlap(GeneData gd) {
 			int gap = Math.min(end,gd.end) - Math.max(start,gd.start);
-			if (gap <= MAX_GAP) return false;
+			if (gap <= MAX_GAP_FOR_OLAP) return false;
 			cntOverlap++;
 			gd.cntOverlap++;
 			totOverlap++;
