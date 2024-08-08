@@ -48,6 +48,7 @@
 						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
 						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
 						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./input/index.html" class="white">Input</a> <mark class="white">|</mark>
 						<a href="./SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
 						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
 						<a href="./Tour.html" class="white">Tour</a>
@@ -65,7 +66,7 @@ For existing databases, there are no database or build changes since <a href="#v
 <br>You must have Java v17.0.11 or later, starting with SyMAP v5.5.0.
 <h3>Summary of recent major releases</h3>
 <table class="tx">
-<tr><td><a href="#v556">v5.5.6</a><td>(15-July-24)<td>Improved the collinear set algorithm.</a>
+<tr><td><a href="#v556">v5.5.6</a><td>(14-July-24)<td>Improved the collinear set algorithm.</a>
 <tr><td><a href="#v548">v5.4.8</a><td>(13-Feb-24)<td>New <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>, which is aware of the
 exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
@@ -73,6 +74,33 @@ exon-intron structure.
 <tr><td><a href="#v530">v5.3.0</a><td>(10-Dec-22)<td>Updated database schema to remove all FPC tables.
 
 </table>
+
+<a id="v557"></a>
+<h3>Release: v5.5.7 (8-Aug-24)</h3>
+This release has added clarity and ease to loading the input files.
+<ol>
+<li>NCBI and Ensembl files
+<ul>
+<li><ttl>xToSymap</ttl>: A new <a href="./input/index.html" class="ext" target="_blank">interface</a> for the convert NCBI and Ensembl scripts,
+and to replace the <tt>scripts/getLengths.pl</tt> script.
+<li>The <ttl>Ensembl</ttl> conversion now recognizes a chromosome sequence if the word
+'chromosome' is on the header line. It has different rules on what is output.
+<li>The <ttl>NCBI</ttl> conversion now checks for "NT_", "NW_" and "NC_" prefixes (is
+was just checking for word 'chromosome' or 'scaffold'). It has different rules on what is output.
+</ul>
+<li><ttl>Load Project</ttl>:
+<ul>
+<li>This will now load most NCBI and Ensembl files directly, though it is strongly recommended to convert them with <ttl>xToSymap</ttl>.
+<li>The fasta file(s) are checked for a suffix of .fsa, .fa, .fna, .fasta, or .seq.
+The gff file(s) must have a suffix of .gff or .gff3.
+<li>In the GFF file, there must be a mRNA line for the following exons. The mRNA parent must match the gene ID, and
+the exon parent must match the mRNA ID.
+</ul>
+<li><ttl>A&S</ttl>: <ttx>Algo 2</ttx> would crash on a rare case when sorting exons, which has been fixed.
+<li>Demo: was updated to have correct GFF3 files.
+<li>Documentation: has been improved for the input and build process.
+<li>Developers: a new package called <ttl>toSymap</ttl> has been added.
+</ol>
 
 <a id="v556"></a>
 <h3>Release: v5.5.6 (15-July-24)</h3>

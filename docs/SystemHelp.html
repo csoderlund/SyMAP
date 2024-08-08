@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>SyMAP System Help</title>
+<title>SyMAP Interface</title>
 <style>
 	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
@@ -9,8 +9,7 @@
 	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
 	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
 	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
-	ttp  {font-family: 'Lucida Console', monospace; font-size: 16px; font-weight: 500; font-variant: small-caps;}
-	hev  {font-family: Arial; font-size: 14px;}
+	ttp  {font-family: Arial, monospace; font-size: 15px; font-weight: 500; color: DarkSlateGrey; }
 	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
@@ -36,7 +35,7 @@
 						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
 
 				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
-					System Quick Guide
+					SyMAP Interface
 					<br>and Parameters
 
 				<td style="text-align: right; vertical-align: top; padding: 0">
@@ -53,6 +52,7 @@
 						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
 						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
 						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./input/index.html" class="white">Input</a> <mark class="white">|</mark>
 						<a href="./SystemGuide.html" class="current">System Guide</a> <mark class="white">|</mark>
 						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
 						<a href="./Tour.html" class="white">Tour</a>
@@ -320,10 +320,10 @@ alignment can take a long time!!).
 <br><tt>data/seq/&lt;project-name&gt/annotation</tt>
 
 <p><font color="red">Do NOT use downloaded NCBI or Ensembl files directly.</font>
-See <a href="./convert/index.html" class="_ext" target="_blank">Convert</a> for instructions
-on how to convert these. If you are using files from another source, make sure they conform to the rule for
-<a href="./SystemGuide.html#seqprep" class="_ext" target="_blank">Sequence files</a> and
-<a href="./SystemGuide.html#annot" class="_ext" target="_blank">Annotation files</a>.
+See <a href="./input/index.html" class="ext" target="_blank">toSymap</a> for an interface
+to convert these. If you are using files from another source, make sure they conform to the rule for
+<a href="./input/index.html#seqprep" class="ext" target="_blank">Sequence files</a> and
+<a href="./input/index.html#annot" class="ext" target="_blank">Annotation files</a>.
 <td>
 <a href="img/lineLoad.png"><img src="img/lineLoad.png" alt="Project options" style="border: 1px solid black; width: 430px"></a>
 <p><a href="img/parameters1.png"><img src="img/parameters1.png" alt="parameters1" style="border: 1px solid black; width: 430px"></a>
@@ -411,7 +411,7 @@ for ignored sequences will also be ignored, but some error messages will be prin
 <p><ttl><big>Sequence files</big></ttl>
 <br>
 Select the input FASTA sequence file(s), or directories of sequence files.
-For formatting, see <a href="SystemGuide.html#seqprep" class="ext" target="_blank">Sequence files</a>.
+For formatting, see <a href="./input/index.html#seqprep" class="ext" target="_blank">Sequence files</a>.
 Default location: <tt>data/seq/&lt;project-name&gt/sequence</tt>
 
 <p>If any of the above 3 are changed:

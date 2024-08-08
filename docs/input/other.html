@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SyMAP Other inputs</title>
+<style>
+	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
+	a.ext {font-weight: bold;}
+	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
+	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
+    .ty td {border: 1px  solid black; padding: 3px; }
+    .tx td {padding: 5px;}
+     tt {font-size:13px}
+	pre {font-size:13px}
+    body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
+</style>
+</head>
+
+<body>
+<a id="top"></a>
+<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
+	<tr><td>
+		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
+			<tr>
+				<td style="text-align: left; vertical-align: top; padding: 0">
+					<a href="http://www.agcol.arizona.edu">
+						<img src="../img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
+				</td>
+				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
+					Other input files to SyMAP
+				</td>
+				<td style="text-align: right; vertical-align: top; padding: 0">
+					<a href="http://www.arizona.edu">
+						<img src="../img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+					<br>
+					<a href="http://www.bio5.org">
+						<img src="../img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
+				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
+					<tr>
+						<td style="background-color: #666666; padding-bottom:4px;">
+						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
+						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
+						<a href="../Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./index.html" class="white">Input</a> <mark class="white">|</mark>
+						<a href="../SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
+						<a href="../UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="../Tour.html" class="white">Tour</a>
+					</tr>
+				</table>
+				</td>
+			</tr>
+		</table>
+	</td></tr>
+
+	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+	<!---- START BODY -->
+
+This page covers using FASTA and GFF files from sources other than NCBI or Ensembl.
+<h3>Requirements</h3>
+The requirements are listed in <a href="./index.html#seqprep" class="ext" target="_blank">Sequence files</a> and
+<a href="./index.html#seqprep" class="ext" target="_blank">Annotation files</a>.
+
+<p>Run <a href="./index.html#sf" class="ext" target="_blank">Summarize files</a> to
+make sure your files have the right requirements for input to SyMAP; if they do, you may directly input them to
+SyMAP.
+
+<p>The <ttl>xToSymap</ttl> conversion programs cannot be of aid to you if your GFF file does not meet the
+requirements specified. You will need to write your own conversion program, or you can send email
+to symap@agcol.arizona.edu and I will do it for you.
+<p>
+The main reason for conversion is to provide shorten chromosome/scaffold names. If your sequence names are long,
+it really clutters everything; find a way to edit your files to shorten them.
+You may be able to use one of the <ttl>xToSymap</ttl> conversion programs for your data.
+
+<h3>xToSymap NCBI and Ensembl conversions</h3>
+<p>Some important differences between the NCBI and Ensembl files:
+<ol>
+<li><u>Protein_coding attribute</u>: NCBI uses <ttx>gene_biotype=</ttx> whereas Ensembl uses  <ttx>biotype=</ttx>. Since
+this is the keyword that says whether the gene is "protein_coding", it is <b>VERY</b> important.
+<br>&nbsp;
+<li><u>Description attribute</u>: Early NCBI files did not have a <ttx>description=</ttx> keyword for the gene, and only had <ttx>product=</ttx>
+keywords for the mRNAs (now it has both). In constrast, Ensembl only has the <ttx>description=</ttx> keyword for the gene.
+<br>&nbsp;
+<li><u>File suffix</u>: NCBI uses the suffixes ".fna" and ".gff" whereas Ensembl uses ".fa" and ".gff3". The respective conversions requires
+the correct suffix; this prevent running the wrong conversion.
+</ol>
+When you run <ttl>Summarize files</ttl> on recent files, you will see as its last line:
+<pre>
+Input type: NCBI chromosome prefix
+            NCBI mRNA 'product' keyword; NCBI 'gene_biotype' keyword
+</pre>
+or
+<pre>
+Input type: Ensembl like 'Number, X, Y, Roman'
+            Ensembl gene 'description' keyword; Ensembl 'biotype' keyword
+</pre>
+The NCBI chromosome prefix is precisely "NC_". However, if your file has its own prefix, but otherwise adheres to the NCBI keywords, you can
+enter a <ttl>Only prefix</ttl> with the NCBI convert.
+
+<p>The Ensembl 'Number, X, Y, Roman' is when the FASTA line starts with the chromosome indicates, e.g. '>1' or '>X' or '>XI';
+
+<p>When you run <ttl>Summarize files</ttl>, if your results match NCBI or Ensembl, that will imply you can use one of them.
+<p>For details on the conversion, see
+<a href="./ncbi.html#what" class="ext" target="_blank">NCBI</a> and <a href="./ensembl.html#what" class="ext" target="_blank">Ensembl</a>.
+<p>&nbsp;
+<a href="#top">Go to top</a>
+<!---- END BODY -->
+	</td></tr>
+	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+
+</td></tr>
+</table>
+</body>
+</html>
+
+
+

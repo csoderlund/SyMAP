@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SyMAP Ensembl</title>
+<style>
+	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
+	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
+	a.ext {font-weight: bold;}
+	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
+	ttp  {font-family: Arial, monospace; font-size: 15px; font-weight: 500; color: DarkSlateGrey; }
+	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
+    .ty td {border: 1px  solid black; padding: 3px; }
+     tt {font-size:13px}
+	pre {font-size:13px}
+    body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
+</style>
+</head>
+
+<body>
+<a id="top"></a>
+<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
+	<tr><td>
+		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
+			<tr>
+				<td style="text-align: left; vertical-align: top; padding: 0">
+					<a href="http://www.agcol.arizona.edu">
+						<img src="../img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
+				</td>
+				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
+					Ensembl convert to SyMAP
+				</td>
+				<td style="text-align: right; vertical-align: top; padding: 0">
+					<a href="http://www.arizona.edu">
+						<img src="../img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+					<br>
+					<a href="http://www.bio5.org">
+						<img src="../img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
+				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
+					<tr>
+						<td style="background-color: #666666; padding-bottom:4px;">
+						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
+						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
+						<a href="../Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./index.html" class="white">Input</a> <mark class="white">|</mark>
+						<a href="../SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
+						<a href="../UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="../Tour.html" class="white">Tour</a>
+					</tr>
+				</table>
+				</td>
+			</tr>
+		</table>
+	</td></tr>
+
+	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+	<!---- START BODY -->
+
+Ensembl supplies FASTA formated files for genome sequence and GFF formated files for the annotation
+The following provides a simple scheme to produce the correctly formated files for SyMAP.
+
+<p><b>Contents</b>
+<table>
+	<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;
+	<td style="vertical-align: text-top;">
+		<table>
+		<tr><td><a href="#dl">Download</a>
+		<tr><td><a href="#cv">Convert files</a>
+		<tr><td><a href="#opts">&nbsp;&nbsp;&nbsp;Options</a>
+		<tr><td><a href="#scaf">&nbsp;&nbsp;&nbsp;Scaffolds</a>
+		</table>
+	</td>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;
+	<td style="vertical-align: text-top;">
+	<table><tr><td> <a href="#load">Load files into SyMAP</a>
+		<tr><td> <a href="#edit">Editing the script</a>
+		<tr><td><a href="#what">What the ConvertEnsembl script does</a>
+		</table>
+	</td>
+</table>
+<p><b>Reasons to convert</b>
+<ol>
+<li>Only chromosome and optional scaffold sequences are processed.
+<li>Only the 'protein-coding' genes are processed.
+<li>Gene attributes: Only the gene attributes of 'ID' and 'Name' and 'description' are retained from the gene.
+<li>If it has problems converting the file(s), then <ttp>symap</ttp> will have problems loading them;
+the script can be edited for your particular files. (Note: Ensembl formats are not totally consistent, so
+<ttl>xToSymap</ttl> may not take everything into account).
+</ol>
+
+<a id="dl"></a>
+<h2>Download</h2>
+
+<ol>
+<li>Go to <a href="https://www.ensembl.org/info/about/species.html" class="ext" target="_blank">Ensembl</a>, which shows all species
+for which Ensembl has a genome. For plants and fungi,
+see <a href="http://plants.ensembl.org"  class="ext" target="_blank" >EnsemblPlant</a>
+and <a href="http://fungi.ensembl.org"  class="ext" target="_blank">EnsemblFungi</a>.
+<li>Select your species.
+<li>Select <font color=darkblue>Download DNA sequence </font><font color=grey>(FASTA)</font>.
+<br>This takes you to a FTP site.
+It is recommended that you download the <tt>[prefix].dna_sm.toplevel.fa.gz</tt>, as it
+is the soft masked chromosome sequences.
+<li>Select the <font color=darkblue>GFF3</font> from the
+<font color=gray>Download genes, cDNAs, ncRNA, proteins - </font><font color=darkblue>FASTA - GFF3</font> line.
+<br>This takes you to an FTP site. Download the <tt>[prefix].gff3.gz</tt> file.
+</ol>
+
+<a href="img/ENS-genome.png"><img src="img/ENS-genome.png" alt="" style="border: 1px solid black; width: 800px"></a>
+<!------------------------------------------------------------>
+<a id="cv"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Convert files</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<ol>
+<li>Go to the <tt>symap_5/data/seq</tt> directory.
+<li>Make a subdirectory for your species and move the FASTA and GFF files
+into the directory.
+
+<li>
+Start the <a href="./index.html#if" class="ext" target="_blank">xToSymap</a> program,
+select the appropriate options (described below),
+then select <ttl>Convert</ttl>. The FASTA file must end in ".fa" and the annotation file
+must end in ".gff3" (the Ensembl defaults). They may be zipped, i.e. have a '.gz' suffix.
+</ol>
+
+
+This results in the following contents:
+<pre>
+data/seq/cabb/
+      Brassica_oleracea.BOL.59.gff3.gz
+      Brassica_oleracea.BOL.dna_sm.toplevel.fa.gz
+      annotation/
+         anno.gff
+         gaps.gff
+      sequence/
+         genomic.fna
+</pre>
+The terminal/log output gives useful details of the annotation, see
+ <a href="./logs/cnvCabbE.html" class="ext" target="_blank">log</a>.
+
+<a id="opts"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Options</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<table class="ty">
+<tr><td><b>Option</b><td><b>Description</b><td><b>Default</b>
+<tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Only #,X,Y,I</ttl><sup>2</sup><td>Most Ensembl FASTA header lines specify the chromosome number, X, Y or Roman numeral.
+Only these sequences will be written. <td>Any that have 'chromosome' on their header line.
+
+<tr><td><ttl>Include scaffolds</ttl><sup>1</sup><td>Any sequence with 'scaffold' in the header line
+will be written to the FASTA file. See <a href="#scaf">Scaffolds</a><td>Chromosomes only
+<tr><td><ttl>Include Mt/Pt</ttl>
+    <td>Mt/Pt chromosomes will be included in FASTA and GFF. Only the first occurence will be included.
+    <td>No Mt/Pt
+<tr><td><ttl>Only prefix</ttl><sup>2</sup><td>Only sequences with the specified prefix will be processed. <td>None
+<tr><td><ttl>Verbose</ttl><td>Print extra info, e.g. see
+<a href="./logs/cnvCabbEv.html" class="ext" target="_blank">log</a>
+<td>No print
+</table>
+<sup>1</sup>You may use <ttl>Include scaffold</ttl>, and then limit the input on the <ttp>symap</ttp> <ttl>Load</ttl> by setting
+<br>&nbsp;&nbsp;<ttl>Minimal length</ttl> in the project's <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
+<br><sup>2</sup>For situations needing <ttl>Only #,X,Y,I</ttl> and <ttl>Only prefix</ttl>,
+see <a href="./index.html#except" class="ext" target="_blank">exceptions</a>.
+
+<p><i><u>Rules</u></i>: There are variations in the text associated with <ttx>&gt;seqid</ttx> header lines. The rules
+used by this script are as follows:
+<ol>
+<li>If <ttl>Only prefix</ttl> is not blank, sequences are filtered out if the <ttx>seqid</ttx> does not
+start with the prefix. Then all the following apply to the non-filtered sequences:
+<br>&nbsp;
+<li>Chromosomes: A sequence is considered a chromosome if: (a) the ">" is followed by a number, X, Y, or roman numeral,
+ or (b) the header line contains the word 'chromosome'.
+  <ul>
+ <li>The exception is when the header line starts with '>Mt' or '>Pt', these will not be output unless <ttl>Include Mt/Pt</ttl> is selected.
+ <li>Chromosomes are always output unless <ttl>Only prefix</ttl> is set, and the prefix does not match.
+ <li>Output <ttx>Seqid</ttx>: If the ">" line contains 'chromosome N', where N={number, X, Y or roman numeral}, than this number is used.
+ Otherwise, the word following 'chromosome' is used (e.g. C1).
+ </ul>
+<br>
+<li>Scaffolds: A sequence is considered a scaffold if the header line contains the word 'scaffold'.
+	<ul>
+	<li>They will only be output if <ttl>Include scaffold</ttl> is selected.
+	<li>Output <ttx>Seqid</ttx>: 'Scaf' followed by a consecutive number.
+	</ul>
+<br>
+<li>Unknown: All other ">" entries are considered 'unknown'.
+	<ul>
+	<li>They will only be output if <ttl>Only prefix</ttl> matches the input header line <ttx>seqid</ttx>.
+	<li>Output: <ttx>Seqid</ttx>: 'Unk' followed by a consecutive number.
+	</ul>
+</ol>
+See <a href="./index.html#sf" class="ext" target="_target">Summarize</a> to help determine how to set the options for your input.
+
+<a id="scaf"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Scaffolds</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+By default, the <ttl>Convert</ttl> option creates the <tt>genomic.fna</tt> file with only the chromosomes.
+However, you can have it also include the scaffolds by selecting <ttl>Include Scaffolds</ttl>.
+This will include all chromosomes (prefix 'C') and scaffolds (prefix 's') in the <tt>genomic.fna</tt> file.
+Beware, there can be many tiny scaffolds. If they all aligned in SyMAP, it causes the display to be very cluttered.
+Hence, it is best to just align the largest ones (e.g. the longest 30); merge them if possible, then try
+the smaller ones. You should set the following SyMAP project's
+<a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>:
+<ol>
+<li><tt>Group prefix</tt> needs to be blank as there is no common prefix now.
+<li><tt>Minimum size</tt> should be set to only load the largest scaffolds.
+</ol>
+
+<p>As of 23-July-2024 (Brassica_oleracea.BOL.dna_sm.toplevel.fa.gz),
+cabbage has 9 chromosome sequences and 32,877 scaffolds. This is too many individual sequences
+to load, so just load the largest. You can calculate what to set the minimum size to using
+the <ttl>xToSymap</ttl> <a href="./index.html#ol" class="ext" target="_blank">Lengths</a> button.
+It outputs all their
+sorted lengths followed by a summary table of lengths:
+<pre>
+Read cabb/sequence/genomic.fna and print sorted lengths
+Read 32886 sequences
+   N    Length  Seqid
+   1  64984695  >C03 NC_027750.1
+   2  54679868  >C09 NC_027756.1
+   3  53719093  >C04 NC_027751.1
+   4  52886895  >C02 NC_027749.1
+   5  48366697  >C07 NC_027754.1
+   6  46902585  >C05 NC_027752.1
+   7  43764888  >C01 NC_027748.1
+   8  41758685  >C08 NC_027755.1
+   9  39822476  >C06 NC_027753.1
+  10    550871  >s01  NW_013617415.1
+...(list rest of scaffolds with lengths)
+
+Values for parameter 'Minimal length' (assuming no duplicate lengths):
+#Seqs  min_len
+   10   550871
+   20   213381
+   30   154937
+   40   131235
+   50   101387
+   60    86265
+   70    70649
+   80    65803
+   90    61068
+  100    58362
+</pre>
+
+To align the top 30 sequences (9 chromosomes, 21 of the largest scaffolds),
+this says to set <ttx>Minimum length</ttx> to 154937.
+
+<!-------------------------------------------------------------------->
+<a id="load"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Load files into SyMAP</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The above scenario puts the files in the default SyMAP directories.
+When you start up SyMAP, you will see your projects listed on the left of the panel
+(e.g <a href="../SystemGuide.html#demoseq" class="ext" target="_blank">as shown for demos</a>).
+<ol>
+<li>Check the projects
+you want to load, which will cause them to be shown on the right of the <ttp>symap</ttp> window.
+<li>For the project you want to load, open the <a href="../SystemHelp.html#start" class="ext" target="_blank">project parameters</a> window
+to enter the appropriate values.
+<li>The select <ttl>Load Project</ttl>.
+</ol>
+
+
+<a id="edit"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Editing the script</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The Ensembl files are not consistent in their header lines. Hence, the parsing could
+be incorrect.  If it is not parsing correctly (the summary output should indicate
+if it is correct or not), edit the program
+<a href="./index.html#edit" class="ext" target="_blank">as described  here.</a>
+
+<a id="what"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>What the ConvertEnsembl script does</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+
+<u>FASTA</u>: Reads the file ending in '.fa.gz' and writes a new file called <tt>sequence/genomic.fna</tt> with the following changes:
+	<ol type="a">
+	<li>Sequences are output according to the <a href="#opts">Option</a> rules.
+	<li>Gaps of &gt;30,000 are written to the <tt>annotation/gap.gff</tt> file (this value can be changed
+in the <ttl>xToSymap</ttl> interface).
+	</ol>
+<br>
+
+<u>GFF</u>: Reads the file ending in 'gff3.gz' and writes the file <tt>annotation/anno.gff</tt>. The
+<a href="http://www.sequenceontology.org/gff3.shtml" class="ext" target="_blank">gff3 format</a>
+has 9 columns, where the first is the 'seqid', the third is the 'type' (e.g. feature 'gene'), the
+last column is a semicolon-delimited keyword=value 'attribute' list. The file is processed as follows:
+	<ol  type="a">
+	<li>Only lines with the 'type' (3rd column) equal 'gene', 'mRNA' and 'exon' are read.
+	<li>Genes with "biotype=protein_coding" are written to file, followed by the first mRNA and
+	its exons.
+	<li>All lines have their seqID replaced with that assigned when reading the FASTA file. They all have a modified
+	set of attributes written.
+	</ol>
+
+
+<a href="#top">Go to top</a>
+<!---- END BODY -->
+	</td></tr>
+	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+
+</td></tr>
+</table>
+</body>
+</html>
+
+
+

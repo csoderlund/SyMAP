@@ -9,6 +9,10 @@
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
+	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+   ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+   ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
+    ttp  {font-family: Arial, monospace; font-size: 15px; font-weight: 500; color: DarkSlateGrey; }
 	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
     .ty td {border: 1px  solid black; padding: 3px; }
     tt {font-size:13px}
@@ -46,6 +50,7 @@
 						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
 						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
 						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
+						<a href="./input/index.html" class="white">Input</a> <mark class="white">|</mark>
 						<a href="./SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
 						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
 						<a href="./Tour.html" class="white">Tour</a>
@@ -65,9 +70,14 @@
 <h4>Contents</h4>
 <p>
 <ul>
+<li>Hang
+<ul>
+<li><a href="#hang">Hang on Load</a>
+</ul>
+<br>
 <li>Memory
 <ul>
-<li><a href="#memory">Not enough memory</a></li>
+<li><a href="#memory">Not enough memory</a>
 </ul>
 <br>
 <li>MySQL suggested settings
@@ -94,13 +104,31 @@
 <br>
 <li>MacOS
 <ul>
-<li><a href="#macos">Running external programs
-<li><a href="#apps">Downloaded apps
-<li><a href="#font">Fonts for MacOS Monterey
+<li><a href="#macos">Running external programs</a>
+<li><a href="#font">Fonts for MacOS Monterey</a>
 </ul>
 </ul>
 
 <hr>
+<a id="hang"></a>
+<h2>Hang</h2>
+
+<h3>Hangs on Load</h3>
+
+<p>1. It occasionally hangs for no discernable reason (especially if I have been doing
+testing on MacOS, where I remove projects and reload over and over). If this happens, Cntl-C to
+stop the program (or kill it some other way), start up
+<ttx>symap</ttx> again, <ttl>Remove project from database</ttl> and try <ttl>Load</ttl> again.
+
+<p>2. If in the middle of a <ttl>Load</ttl>, any of the following
+actions: <ttl>Cancel</ttl>, or Cntl-C to stop the program, or killing it from the command line,
+can leave the database in a non-repairable state. Unfortunately, it has
+be removed and rebuilt.
+
+<p>3. <u>Other apps</u> may cause it to hang,
+e.g. on Mac, downloaded apps, such as Bartender may interfere with SyMAP, which causes it to hang.
+When Bartender was removed, SyMAP no longer hung on load.
+
 <h2>Memory</h2>
 <a id="memory"></a>
 <h3>Not enough memory</h3>
@@ -110,8 +138,8 @@ script has the following lines:
 <pre>
 #!/bin/sh
 mem="8192m";
-echo ">>>> SyMAP build, query and view ($mem)     `date` <<<<"
-java -Xmx$mem -classpath java/jar/symap.jar symapCE.ProjectManagerFrame $@
+echo "&gt;&gt;&gt;&gt; SyMAP build, query and view ($mem)     `date` &lt;&lt;&lt;&lt;"
+java -Xmx$mem -classpath /Users/cari/Workspace/github/symap/java/jar/symap.jar symapCE.SyMAPmanager $@
 </pre>
 Change the number after <tt>mem=</tt>. The <tt>viewSyMAP</tt> script also requests 8192m memory,
 which you can also edit.
@@ -309,6 +337,7 @@ to load the anchors. For MUMmer, see <a href="MUMmer.html" class="ext" target="_
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>MacOS and external programs</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 MacOS 10.15 has made it difficult to run programs downloaded from the web
 unless its been authenticated by Apple. Running external programs from SyMAP,
 you will either get popup that states "xxx cannot be opened because developer cannot be verified",
@@ -331,11 +360,6 @@ After that, you should be able to run it via SyMAP. This worked with my previous
 if it does not work for you, see
 <a href="https://support.apple.com/en-us/102445" target="_blank" class="ext">Apple Help</a>, section
 <b>If you want to open an app that has not been notarized or is from an unidentified developer</b>.
-
-<a id="apps"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>Downloaded apps</h3>
-Downloaded apps, such as <ttp>Bartender</ttp> may interfere with SyMAP, which causes it to hang.
 
 <a id="font"></a>
 <h3>MacOS Monterey</h3>
