@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import java.util.HashMap;
 
 import backend.Utils;
+import symap.Globals;
 import util.ErrorReport;
 import util.ProgressDialog;
 
@@ -328,12 +329,12 @@ public class GrpPairGx {
 			}
 			genePairMap.clear();
 			
-			sortForAssign(TQ,multiList);		// sort by score
+			sortForAssignCatch(TQ,multiList);		// sort by score
 			for (HitPair hpr : multiList) gxPairList.add(hpr);
 			multiList.clear();
 		
 		// g2 singles all filtered here; do not need coverage check as that span of hits along cluster
-			sortForAssign(TQ, singleList);
+			sortForAssignCatch(TQ, singleList);
 			for (HitPair hpr : singleList) {
 				hpr.setScores();  			// g2 score single
 				Hit ht = hpr.hitList.get(0);
@@ -466,13 +467,13 @@ public class GrpPairGx {
 			
 		/* finish */
 			// Multi: Do not filter before split - add to main list 
-			sortForAssign(X, multiList);
+			sortForAssignCatch(X, multiList);
 			for (HitPair hpr : multiList) gxPairList.add(hpr); 
 			multiList.clear();
 			
 			// Singles: filter - add to main list - scored in main loop
 			for (HitPair hpr : singleList) hpr.setScores();
-			sortForAssign(X, singleList);
+			sortForAssignCatch(X, singleList);
 			
 			for (HitPair hpr : singleList) {
 				Hit ht = hpr.hitList.get(0);
@@ -596,6 +597,40 @@ public class GrpPairGx {
 		}
 	} // End class G0	
 	
+	// CAS558 added this because had a violates - 
+	protected void sortForAssignCatch(int X, ArrayList <HitPair> gpList) {
+		try {
+			sortForAssign(X, gpList);
+			return;
+		}
+		catch (Exception e) {}	
+		Globals.prt("First sort did not work - try easier one...");
+		
+		try {
+			sortForAssign2(X, gpList);
+			return;
+		}
+		catch (Exception e) {}	
+		
+		Globals.prt("Second sort did not work - try an easier variation...");
+		try {
+			sortForAssign3(X, gpList);
+			return;
+		}
+		catch (Exception e) {}	
+		
+		Globals.prt("Third sort did not work - try an easier variation...");
+		
+		try {
+			sortForAssign4(X, gpList);
+			return;
+		}
+		catch (Exception e) {}	
+		
+		Globals.prt("Fourth sort did not work - Algo2 will not work for this dataset - use Algo1");
+		bSuccess=false;
+	}
+	// This can get a comparison Comparison method violates its general contract!
 	protected static void sortForAssign(int X, ArrayList <HitPair> gpList) { // GrpPairGx g1T, g1Q, g2TQ
 		Collections.sort(gpList, 
 			new Comparator<HitPair>() {
@@ -617,6 +652,54 @@ public class GrpPairGx {
 					
 					if (h1.hitList.size()>h2.hitList.size()) return -1; 
 					if (h1.hitList.size()<h2.hitList.size()) return 1;
+					
+					return 0;	
+				}
+			}
+		);
+	}
+	protected static void sortForAssign2(int X, ArrayList <HitPair> gpList) { // GrpPairGx g1T, g1Q, g2TQ
+		Collections.sort(gpList, 
+			new Comparator<HitPair>() {
+				public int compare(HitPair h1, HitPair h2) {
+					if (h1.isRst && !h2.isRst) return -1; 
+					if (!h1.isRst && h2.isRst) return  1;
+					
+					if (h1.exonScore[X]>h2.exonScore[X]) return -1; 
+					if (h1.exonScore[X]<h2.exonScore[X]) return  1;
+					
+					if (h1.xMaxCov<h2.xMaxCov) return -1; 	// want shorter to be Major
+					if (h1.xMaxCov>h2.xMaxCov) return  1; 
+					
+					return 0;	
+				}
+			}
+		);
+	}
+	protected static void sortForAssign3(int X, ArrayList <HitPair> gpList) { // GrpPairGx g1T, g1Q, g2TQ
+		Collections.sort(gpList, 
+			new Comparator<HitPair>() {
+				public int compare(HitPair h1, HitPair h2) {
+					if (h1.isRst && !h2.isRst) return -1; 
+					if (!h1.isRst && h2.isRst) return  1;
+					
+					if (h1.exonScore[X]>h2.exonScore[X]) return -1; 
+					if (h1.exonScore[X]<h2.exonScore[X]) return  1;
+					
+					return 0;	
+				}
+			}
+		);
+	}
+	protected static void sortForAssign4(int X, ArrayList <HitPair> gpList) { // GrpPairGx g1T, g1Q, g2TQ
+		Collections.sort(gpList, 
+			new Comparator<HitPair>() {
+				public int compare(HitPair h1, HitPair h2) {
+					if (h1.isRst && !h2.isRst) return -1; 
+					if (!h1.isRst && h2.isRst) return  1;
+					
+					if (h1.xMaxCov<h2.xMaxCov) return -1; 	// want shorter to be Major
+					if (h1.xMaxCov>h2.xMaxCov) return  1; 
 					
 					return 0;	
 				}

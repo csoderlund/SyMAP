@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.BufferedReader;
 import java.util.TreeSet;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.Collections;
 import java.util.Comparator;
 import java.sql.ResultSet;
@@ -178,7 +180,7 @@ public class SeqLoadMain {
 		else 						  plog.msg("   Load sequences with '" + prefix + "' prefix (See Parameters - Group prefix)");
 		
 		int minSize = mProj.getMinSize(), readSeq=0;
-		plog.msg("   Load sequences > " + minSize + "bp (See Parameters - Minimum length)");
+		plog.msg(String.format("   Load sequences > %,dbp (See Parameters - Minimum length)", minSize)); // CAS558 add commas
 		
 		TreeSet<String> grpNamesSeen = new TreeSet<String>();
 		TreeSet<String> grpFullNamesSeen = new TreeSet<String>();
@@ -230,7 +232,7 @@ public class SeqLoadMain {
 					grpName = null; firstTok = grpFullName = "";
 					curSeq.setLength(0);
 					
-					if (!Utils.parseHasPrefix(line, prefix)){ // CAS557 moved parse methods to Utils to be shared with toSymap
+					if (!parseHasPrefix(line, prefix)){ 
 						seqPrefixIgnore++;
 						if (seqPrefixIgnore<=3) plog.msgToFile("+++ Invalid prefix, ignore: " + line);
 						if (seqPrefixIgnore==3) plog.msgToFile("+++ Surpressing further invalid prefix ");
@@ -300,7 +302,18 @@ public class SeqLoadMain {
 		return false;
 	}
 	}
+	private boolean parseHasPrefix(String name, String prefix){
+		if (prefix.equals("")) return true;
 	
+		String regx = "\\s*(" + prefix + ")(\\w+)\\s?.*"; 
+		Pattern pat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
+		
+		String n = name + " "; // hack, otherwise we need two cases in the regex
+		if (n.startsWith(">")) n = n.substring(1);
+		Matcher m = pat.matcher(n);
+		if (m.matches()) return true;
+		return false;
+	}
 	/***********************************************************************/
 	private void uploadSequence(String grp, String fullname, String seq, String file, int order)  {
 	try {

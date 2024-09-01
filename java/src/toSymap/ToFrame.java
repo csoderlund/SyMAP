@@ -20,6 +20,7 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
+import backend.Constants;
 import util.ErrorReport;
 import util.Jcomp;
 import util.Jhtml;
@@ -30,11 +31,11 @@ import util.Utilities;
  */
 public class ToFrame extends JDialog implements WindowListener {
 	private static final long serialVersionUID = 1L;
-	private final String rootDir = backend.Constants.seqDataDir; // data/seq/
-	private final String convertDir = backend.Constants.seqSeqDataDir; //sequence
+	private final String rootDir =    Constants.seqDataDir; // data/seq/
+	private final String convertDir = Constants.seqSeqDataDir; //sequence
 	
 	protected final int defGapLen = 30000;
-	protected final int lj_width = 360;
+	protected final int defSeqLen = 10000;
 	
 	public ToFrame() {
 		addWindowListener(this);
@@ -68,7 +69,7 @@ public class ToFrame extends JDialog implements WindowListener {
 		JLabel lbl = Jcomp.createLabel("Project directory");
 		trow.add(lbl);
 		
-		txtDir = Jcomp.createTextField(rootDir, 20);
+		txtDir = Jcomp.createTextField(rootDir, 16);
 		trow.add(txtDir);
 		
 		JButton btnGetFile = Jcomp.createButton("...", "Select the project directory");
@@ -77,15 +78,16 @@ public class ToFrame extends JDialog implements WindowListener {
 				String fname = fileChooser();
 				if (fname!=null && fname!="") {
 					txtDir.setText(fname);
-					
 					setDisable();
-					
+					radDisable();
 				}
+				else setDisable();
 			}
 		});
 		trow.add(btnGetFile);
 		
-		panel.add(trow);   panel.add(Box.createVerticalStrut(5));
+		panel.add(trow);  panel.add(Box.createHorizontalStrut(10)); // linux crowds it w/o this
+		panel.add(Box.createVerticalStrut(5));
 		
 		JPanel crow = Jcomp.createRowPanel();
 		btnSummary = Jcomp.createBoldButton("Summarize", 
@@ -95,6 +97,7 @@ public class ToFrame extends JDialog implements WindowListener {
 				String dir = txtDir.getText().trim();
 				if (dir.equals(rootDir) || dir.isEmpty()) {
 					Utilities.showInfoMessage("Project", "Please select a project directory");
+					setDisable();
 					return;
 				}
 				boolean b = chkSumConvert.isSelected() && chkSumConvert.isEnabled();
@@ -116,9 +119,7 @@ public class ToFrame extends JDialog implements WindowListener {
 	private void createConvert() {
 		JPanel panel = Jcomp.createPagePanel();
 		
-		createParamsBoth(panel);  panel.add(Box.createVerticalStrut(20));
-    	
-    	createParamsShared(panel);   panel.add(Box.createVerticalStrut(20));
+		createConvertOptions(panel);  panel.add(Box.createVerticalStrut(20));
     	
         JPanel row = Jcomp.createRowPanel();
         btnExec = Jcomp.createBoldButton("Convert", "Covert FASTA and GFF to SyMAP input");
@@ -127,101 +128,59 @@ public class ToFrame extends JDialog implements WindowListener {
 				convert();
 			}
 		});
-		row.add(btnExec);	row.add(Box.createHorizontalStrut(5));
+		chkVerbose = Jcomp.createCheckBox("Verbose", "Write extra information to the terminal/log", false);
 		
+		row.add(btnExec);	row.add(Box.createHorizontalStrut(5));
 		lblExec = new JLabel("NCBI files");
 		row.add(lblExec);	
+		row.add(Box.createHorizontalStrut(30));
+		row.add(chkVerbose);
 		
 		panel.add(row);
 		mainPanel.add(panel);
 	}
-	private void createParamsBoth(JPanel cpanel) {
-		JPanel row0 = Jcomp.createRowPanel();
+	private void createConvertOptions(JPanel cpanel) {
 		radNCBI = Jcomp.createRadio("NCBI", "When Convert is selected, the NCBI conversion will be run.");
 		radNCBI.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				radDisable();
 			}
 		});
-		row0.add(radNCBI); 
-		if (lj_width > radNCBI.getPreferredSize().width) 
-			row0.add(Box.createHorizontalStrut(lj_width-radNCBI.getPreferredSize().width));
-		
-		JButton help1 = Jcomp.createIconButton("/images/info.png", "NCBI Quick Help");
-		help1.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				helpNCBI();
-			}
-		});
-		//row0.add(help1, BorderLayout.EAST);
-		cpanel.add(row0); cpanel.add(Box.createVerticalStrut(5));
-		
-		JPanel row1 = Jcomp.createRowPanel(); row1.add(Box.createHorizontalStrut(15));
-		chkNmask = Jcomp.createCheckBox("Hard mask", "Hard mask the sequence when creating the new sequence file.", false);
-		chkNp = Jcomp.createCheckBox("1st protein",  "Create a new gene attribute: protein=1st CDS ID", false);
-		chkNp.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				if (chkNp.isSelected()) chkNpa.setSelected(false);
-			}
-		});
-		chkNpa = Jcomp.createCheckBox("All proteins","Create a new gene attribute: protein=1st CDS ID, 2nd CDS ID....",false);
-		chkNpa.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				if (chkNpa.isSelected()) chkNp.setSelected(false);
-			}
-		});
-		row1.add(chkNmask);    row1.add(Box.createHorizontalStrut(5));
-		row1.add(chkNp);    row1.add(Box.createHorizontalStrut(5));
-		row1.add(chkNpa);   row1.add(Box.createHorizontalStrut(5)); 
-		cpanel.add(row1); cpanel.add(Box.createVerticalStrut(5));
-		
-		////
-		JPanel row2 = Jcomp.createRowPanel();
 		radEns = Jcomp.createRadio("Ensembl", "When Convert is selected, the Ensembl conversion will be run.");
 		radEns.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				radDisable();
 			}
 		});
-		row2.add(radEns); 
-		if (lj_width > radEns.getPreferredSize().width) 
-			row2.add(Box.createHorizontalStrut(lj_width-radEns.getPreferredSize().width));
-		JButton help2 = Jcomp.createIconButton("/images/info.png", "Ensembl Quick Help");
-		help2.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				helpEns();
-			}
-		});
-		//row2.add(help2);
-		
-		cpanel.add(row2); cpanel.add(Box.createVerticalStrut(5));
-		
-		JPanel row3 = Jcomp.createRowPanel(); row3.add(Box.createHorizontalStrut(15));
-		chkEonlyNum = Jcomp.createCheckBox("Only #, X, Y, I", "Only output sequences identified with a number, X, Y, or Roman numerals", false);
-		row3.add(chkEonlyNum);
-		
-		cpanel.add(row3); cpanel.add(Box.createVerticalStrut(5));
-		
 		ButtonGroup grp = new ButtonGroup();
 		grp.add(radNCBI);
         grp.add(radEns); 
-        
 		radNCBI.setSelected(true);
-	}
-	private void createParamsShared(JPanel cpanel) {
-		JPanel row0 = Jcomp.createRowPanel();
 		
-		lblShare = Jcomp.createLabel("NCBI and Ensembl", "Options for both");
-		row0.add(lblShare);
-		cpanel.add(row0); cpanel.add(Box.createVerticalStrut(5));
+		int lj_width = 92;
 		
-		JPanel row1 = Jcomp.createRowPanel(); row1.add(Box.createHorizontalStrut(15));
-		lblInclude = Jcomp.createLabel("Include", "Include scaffolds or Mt/Pt if checked.");
-		row1.add(lblInclude); row1.add(Box.createHorizontalStrut(2));
+		// ncbi
+		chkNmask = Jcomp.createCheckBox("Hard mask", "Hard mask the sequence when creating the new sequence file.", false);
+		
+		JPanel rowN = Jcomp.createRowPanel();
+		rowN.add(radNCBI);  
+		if (lj_width > radNCBI.getPreferredSize().width) 
+			rowN.add(Box.createHorizontalStrut(lj_width-radNCBI.getPreferredSize().width));
+		rowN.add(chkNmask); 
+		
+		// ensembl
+		chkEonlyNum = Jcomp.createCheckBox("Only #, X, Y, I", "Only output sequences identified with a number, X, Y, or Roman numerals", false);
+		
+		JPanel rowE = Jcomp.createRowPanel(); 
+		rowE.add(radEns);		
+		if (lj_width > radEns.getPreferredSize().width) 
+			rowE.add(Box.createHorizontalStrut(lj_width-radEns.getPreferredSize().width));
+		rowE.add(chkEonlyNum);
+		
+		// 2 shared
+		JPanel row3 = Jcomp.createRowPanel(); 
 		chkScaf = Jcomp.createCheckBox("Scaffolds", "Include scaffolds in the output", false);
 		chkMtPt = Jcomp.createCheckBox("Mt/Pt", "Include Mt/Pt in the output", false);
-		row1.add(chkScaf); row1.add(Box.createHorizontalStrut(1));
-		row1.add(chkMtPt); row1.add(Box.createHorizontalStrut(12));
 		
 		chkOnlyPrefix = Jcomp.createCheckBox("Only prefix", "Only output sequences with this prefix", false);
 		chkOnlyPrefix.addActionListener(new ActionListener() {
@@ -230,24 +189,27 @@ public class ToFrame extends JDialog implements WindowListener {
 				txtPrefix.setEnabled(b);
 			}
 		});
-		txtPrefix = Jcomp.createTextField("", 5);
+		txtPrefix = Jcomp.createTextField("", 6);
 		txtPrefix.setEnabled(false);
-		row1.add(chkOnlyPrefix); row1.add(Box.createHorizontalStrut(12));
-		row1.add(txtPrefix);
+		row3.add(chkScaf); row3.add(Box.createHorizontalStrut(2));
+		row3.add(chkMtPt); row3.add(Box.createHorizontalStrut(25));
+		row3.add(chkOnlyPrefix);row3.add(Box.createHorizontalStrut(1));
+		row3.add(txtPrefix);
 		
-		cpanel.add(row1); cpanel.add(Box.createVerticalStrut(5));
-		
-		JPanel row2 = Jcomp.createRowPanel(); row2.add(Box.createHorizontalStrut(20));
+		// 4
+		JPanel row4 = Jcomp.createRowPanel(); row4.add(Box.createHorizontalStrut(7));
 		lblGap = Jcomp.createLabel("Gap size >=", "Consecutive n's of this length will be identified in the gap.gff file."); 
-		row2.add(lblGap);  row2.add(Box.createHorizontalStrut(2)); 
+		txtGap = Jcomp.createTextField(defGapLen+"", 6);
+		chkNp = Jcomp.createCheckBox("Protein-id",  "New gene attribute of: proteinID = 1st CDS protein-id of 1st mRNA", false);
 		
-		txtGap = Jcomp.createTextField(defGapLen+"", 5);
-		row2.add(txtGap); row2.add(Box.createHorizontalStrut(5)); 
+		row4.add(lblGap);  row4.add(Box.createHorizontalStrut(2)); 
+		row4.add(txtGap); row4.add(Box.createHorizontalStrut(15));
+		row4.add(chkNp);
 		
-		chkVerbose = Jcomp.createCheckBox("Verbose", "Write extra information to the terminal/log", false);
-		row2.add(chkVerbose);
-		
-		cpanel.add(row2);
+		cpanel.add(rowN); cpanel.add(Box.createVerticalStrut(5));
+		cpanel.add(rowE); cpanel.add(Box.createVerticalStrut(10));
+		cpanel.add(row3); cpanel.add(Box.createVerticalStrut(5));
+		cpanel.add(row4); cpanel.add(Box.createVerticalStrut(5));
 	}
 	
 	private void createButtonPanel() {
@@ -266,7 +228,20 @@ public class ToFrame extends JDialog implements WindowListener {
 				new Lengths(dir);
 			}
 		});
-		row.add(btnLen);	row.add(Box.createHorizontalStrut(100));	
+		row.add(btnLen);	row.add(Box.createHorizontalStrut(10));	
+		
+		btnSplit = Jcomp.createBoldButton("Split", "Split converted files by chromosome");
+		btnSplit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) { // XXX
+				String dir = txtDir.getText().trim();
+				if (dir.equals(rootDir) || dir.isEmpty()) {
+					Utilities.showInfoMessage("Project", "Please select a project directory");
+					return;
+				}
+				new Split(dir);
+			}
+		});
+		row.add(btnSplit);	row.add(Box.createHorizontalStrut(80));
 		
 		btnExit = Jcomp.createButton("Exit", "Exit xToSyMAP");;
 		btnExit.addActionListener(new ActionListener() {
@@ -275,10 +250,17 @@ public class ToFrame extends JDialog implements WindowListener {
 				System.exit(0);
 			}
 		});
-		row.add(btnExit);		row.add(Box.createHorizontalStrut(20));
+		row.add(btnExit);		row.add(Box.createHorizontalStrut(30));
+		
+		JButton help1 = Jcomp.createIconButton("/images/info.png", "Quick Help"); // not used yet
+		help1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				quickHelp();
+			}
+		});
 		
 		JButton btnHelp = Jhtml.createHelpIconSysSm(Jhtml.CONVERT_GUIDE_URL, ""); 
-		row.add(btnHelp);
+		row.add(btnHelp); row.add(Box.createHorizontalStrut(10));
 		
 		panel.add(row);
 		panel.add(Box.createVerticalStrut(10));
@@ -296,8 +278,9 @@ public class ToFrame extends JDialog implements WindowListener {
 		args.add(dir);
 		
 		String g = txtGap.getText().trim();
-		int gapLen=30000;
+		int gapLen=defGapLen;
 		try {
+			if (g.contains(",")) g = g.replace(",", "");
 			gapLen = Integer.parseInt(g);
 			if (gapLen<100) {
 				Utilities.showInfoMessage("Gap size", "Gap size must at least be 100, i.e. " + g +" is too small. Using 100.");
@@ -321,22 +304,21 @@ public class ToFrame extends JDialog implements WindowListener {
 		if (chkVerbose.isSelected()) args.add("-v");
 		if (chkScaf.isSelected())    args.add("-s");
 		if (chkMtPt.isSelected())    args.add("-t");
+		if (chkNp.isSelected())      args.add("-p"); 
 		
 		if (radNCBI.isSelected()) {
 			if (chkNmask.isSelected())   args.add("-m");
-			if (chkNp.isSelected())      args.add("-p");
-			if (chkNpa.isSelected())     args.add("-pa");
-			
 			String [] s = args.toArray(new String [args.size()]);
+			
 			new ConvertNCBI(s, gapLen, prefix);
 		}	
 		else {
 			if (chkEonlyNum.isSelected() && prefix!=null) {
-				Utilities.showInfoMessage("Only options", 
-						 "Select either 'Only #, X, Y, I' or 'Only prefix', not both.");
+				Utilities.showInfoMessage("Only options", "Select either 'Only #, X, Y, I' or 'Only prefix', not both.");
 				return;
 			}
 			String [] s = args.toArray(new String [args.size()]);
+			
 			new ConvertEnsembl(s, gapLen, prefix, chkEonlyNum.isSelected());
 		}
 		setDisable();
@@ -371,14 +353,11 @@ public class ToFrame extends JDialog implements WindowListener {
 	public void windowOpened(WindowEvent arg0) {}
 	
 	/***************************************************/
-	private void helpNCBI() {
+	private void quickHelp() {
 		String msg="";
-		util.Utilities.displayInfoMonoSpace(this, "NCBI Quick Help", msg, false);
+		util.Utilities.displayInfoMonoSpace(this, "Quick Help", msg, false);
 	}
-	private void helpEns() {
-		String msg="";
-		util.Utilities.displayInfoMonoSpace(this, "Ensembl Quick Help", msg, false);
-	}
+	
 	private void radDisable() {
 		boolean bNCBI = radNCBI.isSelected();
 		
@@ -386,28 +365,30 @@ public class ToFrame extends JDialog implements WindowListener {
 		else       lblExec.setText("Ensembl files");
 		
 		chkNmask.setEnabled(bNCBI);  
-		chkNp.setEnabled(bNCBI); chkNpa.setEnabled(bNCBI); 
 		chkEonlyNum.setEnabled(!bNCBI);
+		repaint();
 	}
 	private void setDisable() {
 		String fname = txtDir.getText().trim();
-		boolean b = !(fname.equals(rootDir));
+		boolean b = !(fname.equals(rootDir)) ;
 		btnSummary.setEnabled(b); chkSumVerbose.setEnabled(b); chkSumConvert.setEnabled(b);
 		 
-		radNCBI.setEnabled(b); chkNp.setEnabled(b); chkNpa.setEnabled(b); chkNmask.setEnabled(b);
+		radNCBI.setEnabled(b); chkNp.setEnabled(b);  chkNmask.setEnabled(b);
 		radEns.setEnabled(b);  chkEonlyNum.setEnabled(b);
 		
-		lblShare.setEnabled(b); lblInclude.setEnabled(b); chkMtPt.setEnabled(b);
- 		chkScaf.setEnabled(b); chkVerbose.setEnabled(b); chkOnlyPrefix.setEnabled(b);
+		chkScaf.setEnabled(b); chkMtPt.setEnabled(b);
+ 		chkVerbose.setEnabled(b); chkOnlyPrefix.setEnabled(b);
 		lblGap.setEnabled(b);  txtGap.setEnabled(b);
 		
-		lblExec.setEnabled(b); btnExec.setEnabled(b); btnLen.setEnabled(b);
+		lblExec.setEnabled(b); btnExec.setEnabled(b); btnLen.setEnabled(b); btnSplit.setEnabled(b);
 		
-		if (b) { // these two need /sequence directory
+		if (b) { // these need /sequence directory
 			b = new File(fname + convertDir).exists();
 			chkSumConvert.setEnabled(b); if (!b) chkSumConvert.setSelected(false);
 			btnLen.setEnabled(b);
+			btnSplit.setEnabled(b);
 		}
+		repaint();
 	}
 	/*************************************************/
 	private JPanel mainPanel = null;
@@ -416,22 +397,22 @@ public class ToFrame extends JDialog implements WindowListener {
 	private JCheckBox chkSumVerbose = null, chkSumConvert = null;
 	
 	private JRadioButton radNCBI = null;
-	private JCheckBox chkNmask = null, chkNp = null, chkNpa = null;
+	private JCheckBox chkNmask = null, chkNp = null;
 	
 	private JRadioButton radEns = null;
 	private JCheckBox chkEonlyNum = null;
 	
 	// shared
-	private JLabel lblShare = null, lblInclude = null;
-	private JCheckBox chkScaf = null,  chkMtPt = null, chkVerbose = null;
+	private JCheckBox chkScaf = null,  chkMtPt = null;
 	private JCheckBox chkOnlyPrefix = null;
 	private JLabel lblGap = null;
 	private JTextField txtGap = null, txtPrefix = null;
+	private JCheckBox  chkVerbose = null;
 	
 	private JLabel lblExec = null ;
 	private JButton btnExec = null;
 	
-	private JButton btnLen = null, btnExit = null;
+	private JButton btnLen = null, btnSplit = null, btnExit = null;
 
 	private ToFrame parent;
 }

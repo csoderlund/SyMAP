@@ -649,7 +649,23 @@ public class Utilities {
 		}
 		return x;
 	}
-  
+    static public String kMText(int len) {// CAS558 added for xToSymap summary
+		double d = (double) len;
+		String x = len+"";
+		if (len>=1000000000) {
+			d = d/1000000000.0;
+			x = String.format("%dB", (int) d);
+		}
+		else if (len>=1000000) {
+			d = d/1000000.0;
+			x = String.format("%dM", (int) d);
+		}
+		else if (len>=1000)  {
+			d = d/1000.0;
+			x = String.format("%dk", (int) d);
+		}
+		return x;
+	}
     static public String kText(int len) { // CAS513 change to use NumberFormat
     	if (len>=10000) {
     		NumberFormat nf = NumberFormat.getNumberInstance();

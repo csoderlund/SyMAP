@@ -53,11 +53,12 @@ public static final String loadLog =    "load.log";  // suffix for load log  (sy
 public static final String syntenyLog = "symap.log"; // suffix for align log (p1_to_p2.log)
 
 // default directories of data ('/' in front indicates after project name
+// these are repeated as constants in xToSymap - don't change
 public static final String dataDir =    	"data/"; // top level
-
 public static final String seqDataDir = 	"data/seq/";
 public static final String seqSeqDataDir = 	"/sequence/"; 
 public static final String seqAnnoDataDir = "/annotation/"; 
+
 public static final String paramsFile = 	"/params"; // in both seq/proj and seq_results/proj1_to_proj2
 
 //These file types, denoted by the .fas extension, are used by most large curated databases. 

@@ -136,7 +136,11 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public String getSequenceFile() { return getProjVal(lSeqFile); }
 	public String getAnnoFile()     { return getProjVal(lAnnoFile); }
 	
-	public int getMinSize()  		{ return Utilities.getInt(getProjVal(lMinLen));}
+	public int getMinSize()  	
+	{	String val =  getProjVal(lMinLen);
+		if (val.contains(",")) val = val.replace(",",""); // CAS558 allow commas
+		return Utilities.getInt(val);
+	}
 	public String getKeywords()     { return getProjVal(lANkeyword); }
 	public String getAnnoType()		{ return "";} 
 	
@@ -339,9 +343,16 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		Params paramObj;
 		
 		paramObj = getParams(lMinLen);
-		if (!paramObj.isDBvalDef() && !paramObj.dbVal.contentEquals("")) // pre-v534 not in db if default
-			info += "\n" + paramObj.getStr();
-		
+		if (!paramObj.isDBvalDef() && !paramObj.dbVal.contentEquals("")) {// pre-v534 not in db if default
+			String strN = paramObj.dbVal;
+			if (!strN.contains(",")) { // CAS558 put a comma in
+				try {
+					int n = Integer.parseInt(strN);
+					strN = String.format("%,d", n);
+				} catch (Exception e) {}
+			}
+			info += "\n" + paramObj.label + ": " + strN;
+		}
 		paramObj = getParams(aMaskNonGenes);
 		if (!paramObj.isDBvalDef()) info += "\n" + paramObj.getStr();
 		

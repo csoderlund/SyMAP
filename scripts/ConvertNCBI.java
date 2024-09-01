@@ -6,20 +6,20 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.zip.GZIPInputStream;
 import java.util.TreeMap;
+import java.util.HashMap;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.zip.GZIPInputStream;
 
 /*************************************************************
  * ConvertNCBI: NCBI genome files formatted for SyMAP
- * See https://csoderlund.github.io/SyMAP/toSymap/ncbi.html
+ * See https://csoderlund.github.io/SyMAP/input/ncbi.html
  * 
  * Called from xToSymap, but can be used stand-alone.
  * 
- * Written by CAS 16/Jan/18; made part of toSymap and other changes for CAS557
+ * Written by CAS 16/Jan/18; made part of toSymap and other changes for CAS557; CAS558 rewrote and simplified
  * This assumes input of the project directory, which has either
  * 1. The ncbi_dataset.zip unzipped, .e.g 
  *    /data/seq/Arab/ncbi_dataset/data/GCF_000001735.4
@@ -28,58 +28,64 @@ import java.util.zip.GZIPInputStream;
  * Note: I am no expert on NCBI GFF format, so I cannot guarantee this is 100% correct mapping for all input.
  * Your sequences/annotations may have other variations.
  * Hence, you may want to edit this to customize it for your needs -- its simply written so easy to modify.
- * See https://csoderlund.github.io/SyMAP/toSymap/ncbi.html#edit
+ * See https://csoderlund.github.io/SyMAP/input/ncbi.html#edit
  * 
  * From NCBI book and confirm by https://ftp.ncbi.nlm.nih.gov/refseq/release/release-notes/RefSeq-release225.txt
  * AC_	Genomic	Complete genomic molecule, usually alternate assembly (or linkage)
- * NC_	Genomic	Complete genomic molecule, usually reference assembly (or linkage) - check this one
+ * NC_	Genomic	Complete genomic molecule, usually reference assembly (or linkage) - use sequence unless Prefix only disqualifies
  * NG_	Genomic	Incomplete genomic region
- * NT_	Genomic	Contig or scaffold, clone-based or WGS			- check this one
- * NW_	Genomic	Contig or scaffold, primarily WGS  				- check this one
+ * NT_	Genomic	Contig or scaffold, clone-based or WGS			- use sequence if scaffold
+ * NW_	Genomic	Contig or scaffold, primarily WGS  				- use sequence if scaffold
  * NZ_	Genomic	Complete genomes and unfinished WGS data
  * 
- * The 'product' description must be in the mRNA product attribute!!
-   Annotation description: 	ID=gene-;Name=(if unique) and ID=rna-;product= and Parent=
-   Types used:   gene, mRNA, exon
-   Attributes:   ID, gene_biotype, parent, product, gene
-   Only process: gene-biotype='protein_coding'
-   For gene product, first mRNA product description and appends remaining mRNA variants
-		e.g. product=phosphate transporter PHO1-1-like%2C transcript variant X1,X2
+   Gene attributes written: ID=geneID; Name=(if not contained in geneID); 
+   			rnaID= first mRNA ID (cnt of number of mRNAs)
+   			desc=gene description or 1st mRNA product
+   			protein-ID=1st CDS for 1st mRNA 
  */
 
 public class ConvertNCBI {
 	static private boolean isToSymap=true;
 	static private int defGapLen=30000;
 	
+	private final String header = "### Written by SyMAP ConvertNCBI"; // Split expects this to be 1st line
 	private String logFileName = "/xConvertNCBI.log";
-	private PrintWriter logFile=null;
+	private final String plus ="+", star="*"; 
 	
-	// flags set by user
-	//private boolean LINKAGE = false; CAS557 remove - RefSeq does not have Accession prefix for it
+	//output - the projDir gets appended to the front
+	private String seqDir =   	"sequence";		// Default sequence directory for symap
+	private String annoDir =  	"annotation";   // Default annotation directory for symap
+	private final String outFaFile =  "/genomic.fna"; // Split expects this name
+	private final String outGffFile = "/anno.gff";	  // Split expects this name
+	private final String outGapFile = "/gap.gff";
+			
+	// downloaded via NCBI Dataset link
+	private final String ncbi_dataset="ncbi_dataset"; 
+	private final String ncbi_data=	"/data"; 
+	private final String faSuffix = ".fna";
+	private final String gffSuffix = ".gff";
+	private String subDir=null;
+	
+	// args (can be set from command line)
 	private boolean INCLUDESCAF = false;
 	private boolean INCLUDEMtPt = false; 
 	private boolean MASKED = false;
 	private boolean ATTRPROT = false;
-	private boolean ATTRPROTALL = false;
 	private boolean VERBOSE = false;
-	private boolean ALLEXON = false; // not documented
 	
-	private int gapMinLen;          // Set from main; Print to gap.gff if #N's is greater than this
-	private String prefixOnly=null; // Set from main; e.g. NC
+	// args  (if running standalone, change in main)
+	private int gapMinLen;          // Print to gap.gff if #N's is greater than this
+	private String prefixOnly=null; // e.g. NC
 	
 	// Changed for specific input; if unknown and prefixOnly, no suffix
-	private String chrPrefix="Chr";	// changed to "c" if scaffolds too
-	private String scafPrefix="s";  // single letter is used because the "Chr" is usually removed to save space
-	private String unkPrefix="Unk";
+	private String chrPrefix="Chr", chrPrefix2="C", chrType="chromosome";	// These are checked in Split
+	private String scafPrefix="s",  scafType="scaffold";  // single letter is used because the "Chr" is usually removed to save space
+	private String unkPrefix="Unk", unkType="unknown";
 	
-	private int traceChrNum=20;
 	private int traceNum=5;	// if verbose, change to 20
-	private final int scafMaxLen=10000;	// All scaffold are printed to fasta file, but only summarized if >scafMax
+	private final int traceScafMaxLen=10000;	// All scaffold are printed to fasta file, but only summarized if >scafMax
+	private final int traceNumGenes=3;  // Only print sequence if at least this many genes
 	
-	// search in .fna files CAS557 using prefixes instead
-	//private final String chrKey		= "chromosome"; 
-	//private final String scafKey	= "scaffold";
-		
 	// types
 	private final String geneType = "gene";
 	private final String mrnaType = "mRNA";
@@ -92,28 +98,21 @@ public class ConvertNCBI {
 	private final String biotypeAttrKey	= "gene_biotype";
 	private final String biotypeAttr 	= "protein_coding";
 	private final String parentAttrKey 	= "Parent";
-	private final String productAttrKey = "product";  
+	private final String productAttrKey = "product"; 
+	private final String descAttrKey 	= "description"; 
 	private final String exonGeneAttrKey = "gene";
-	private final String star = "*";
-	
-	private HashMap <String, String> hexMap = new HashMap <String, String> ();
+	private final String cdsProteinAttrKey = "protein_id";
+
+	private final String PROTEINID = "proteinID="; // CAS558 new keywords for gene attributes
+	private final String MRNAID    = "rnaID="; 	   // ditto
+	private final String DESC	   = "desc=";	   // ditto
+	private final String RMGENE	   = "gene-";
+	private final String RMRNA	   = "rna-";
 	
 	// input 
 	private String projDir = null;
 	private String inFaFile = null;
 	private String inGffFile = null;
-	
-	// downloaded via NCBI Dataset link
-	private String ncbi_dataset="ncbi_dataset"; 
-	private String ncbi_data=	"/data"; 
-	private String subDir=null;
-	 
-	//output - the projDir gets appended to the front
-	private String seqDir =   	"sequence";
-	private String annoDir =  	"annotation";
-	private String outFaFile =  "/genomic.fna";
-	private String outGffFile = "/anno.gff";
-	private String outGapFile = "/gap.gff";
 	
 	// Other global variables
 	private TreeMap <String, String> chr2id = new TreeMap <String, String> ();
@@ -122,27 +121,23 @@ public class ConvertNCBI {
 	private TreeMap <String, Integer> cntChrGene = 	new TreeMap <String, Integer> ();
 	private TreeMap <String, Integer> cntScafGene = new TreeMap <String, Integer> ();
 	
-	private HashMap <String, Gene> geneMap = new HashMap <String, Gene> ();	
-	private HashMap <String, Gene> mrnaMap = new HashMap <String, Gene> ();
-	private int cntExon=0;
-	 
 	// Summary
 	private TreeMap <String, Integer> allTypeCnt = new TreeMap <String, Integer> ();
 	private TreeMap <String, Integer> allGeneBiotypeCnt = new TreeMap <String, Integer> ();
 	private TreeMap <String, Integer> allGeneSrcCnt = new TreeMap <String, Integer> ();
-	private int cntDupProduct=0, cntXProduct=0, cntUniqueProduct=0, cntMultUniqueProduct=0;
 	private int cntChrGeneAll=0, cntScafGeneAll=0, cntGeneNotOnSeq=0, cntScafSmall=0;
 	
 	private int nChr=0, nScaf=0, nMt=0, nUnk=0, nGap=0; // for numbering output seqid and totals 
 	private int cntChr=0, cntScaf=0, cntMtPt=0, cntUnk=0, cntOutSeq=0, cntNoOutSeq=0; 
-	private long chrLen=0, scafLen=0, mtptLen=0, unkLen=0;
+	private long chrLen=0, scafLen=0, mtptLen=0, unkLen=0, totalLen=0;
 	  
-	private int maxProt=0;
-	private String maxGene="";
-	
 	private PrintWriter fhOut, ghOut;
+	private PrintWriter logFile=null;
+	
 	private int cntMask=0;
 	private TreeMap <Character, Integer> cntBase = new TreeMap <Character, Integer> ();
+	private HashMap <String, String> hexMap = new HashMap <String, String> ();
+	
 	
 	private boolean bSuccess=true;
 	private final int PRT = 10000;
@@ -156,26 +151,23 @@ public class ConvertNCBI {
 			checkArgs(args);
 			return;
 		}
-		projDir = args[0];
-		if (projDir==null || projDir.isEmpty()) {
-			System.err.println("No project directory");
-			return;
-		}
-		prt("\n------ ConvertNCBI " + projDir + " ------");
 		gapMinLen = gapLen;
 		prefixOnly = prefix;
 		
-		hexMap.put("%09", " "); // tab
+		projDir = args[0];
+		prt("\n------ ConvertNCBI " + projDir + " ------");
+		if (!checkInitFiles() || !bSuccess) return;
+		
+		//hexMap.put("%09", " "); // tab - break on this
+		hexMap.put("%3D", "-"); // = but cannot have these in attr, so use dash
 		hexMap.put("%0A", " "); // newline
 		hexMap.put("%25", "%"); // %
 		hexMap.put("%2C", ","); // ,
-		hexMap.put("%3B", ";"); // ;
-		hexMap.put("%3D", "="); // =
-		hexMap.put("%26", "="); // &
+		hexMap.put("%3B", ","); // ; but cannot have these in attr, so use comma
+		hexMap.put("%26", "&"); // &
 		
 		createLog(args); if (!bSuccess) return;
 		checkArgs(args); if (!bSuccess) return;
-		checkInitFiles();if (!bSuccess) return;
 		
 		rwFasta();		 if (!bSuccess) return;
 		
@@ -202,7 +194,7 @@ public class ConvertNCBI {
 		
 		if (cntOutSeq==0) prt("Are these NCBI files? Should scaffolds be included? Should 'Prefix only' be set?");
 		else 
-			if (cntOutSeq>30)  prt( "Suggestion: There are " + cntOutSeq + " sequence. "
+			if (cntOutSeq>30)  prt( "Suggestion: There are " + String.format("%,d",cntOutSeq) + " sequences. "
 				+ "Set SyMAP project parameter 'Minimum length' to reduce number loaded.");
 	}
 	
@@ -216,9 +208,9 @@ public class ConvertNCBI {
 	private void rwFasta() {
 		try {
 			fhOut = new PrintWriter(new FileOutputStream(seqDir + outFaFile, false));
-			fhOut.println("### Written by SyMAP ConvertNCBI");
+			fhOut.println(header); 
 			ghOut = new PrintWriter(new FileOutputStream(annoDir + outGapFile, false));
-			ghOut.println("### Written by SyMAP ConvertNCBI");
+			ghOut.println(header); 
 			
 			char [] base = {'A', 'C', 'G', 'T', 'N', 'a', 'c', 'g', 't', 'n'};
 			for (char b : base) cntBase.put(b, 0);
@@ -227,7 +219,10 @@ public class ConvertNCBI {
 			rwFasta(inFaFile); if (!bSuccess) return;
 		
 			fhOut.close(); ghOut.close();
-			prt(String.format("Sequences not output: %,d", cntNoOutSeq));
+			
+			// 1st part of summary
+			String xx = (VERBOSE) ? "(" + star + ")" : "";
+			prt(String.format("Sequences not output: %,d   %s", cntNoOutSeq, xx));
 			prt("Finish writing " + seqDir + outFaFile + "                     ");
 			
 			prt("");
@@ -244,11 +239,12 @@ public class ConvertNCBI {
 			}
 			if (other!="") prt(other);
 			cntBase.clear();
+			prt(String.format("Total %,d", totalLen));
 			
 			if (MASKED) prt(String.format("Hard masked: %,d lower case changed to N", cntMask));
 			
 			prt("");
-			prt(String.format("Gaps >= %d: %d", gapMinLen, nGap));
+			prt(String.format("Gaps >= %,d: %,d", gapMinLen, nGap));
 			prt("Finish writing " + annoDir + outGapFile + "                     ");
 		}
 		catch (Exception e) {e.printStackTrace(); die("rwFasta");}
@@ -266,21 +262,22 @@ public class ConvertNCBI {
 			String line="";
 			int len=0, lineN=0;
 			
-			String idcol1="", prtName="";
+			String idcol1="", prtName="", seqType="";
 			boolean bPrt=false, isChr=false, isScaf=false, isMT=false;
 			boolean bMt=false, bPt=false;
 			int baseLoc=0, gapStart=0, gapCnt=1;
 			
 			while ((line = fhIn.readLine()) != null) {
 				lineN++;
-				if (line.startsWith("!!") || line.startsWith("#") || line.isEmpty()) continue;
+				if (line.startsWith("!") || line.startsWith("#") || line.trim().equals("")) continue;
 				
     			if (line.startsWith(">")) { // id line
     				if (len>0) {
+    					totalLen += len;
     					printTrace(bPrt, isChr, isScaf, isMT, len, idcol1, prtName);
     					len=0;
     				}
-    				String line1 = line.substring(1);
+    				String line1 = line.substring(1).trim();
     				String [] tok = line1.split("\\s+");
     				if (tok.length==0) {
     					die("Header line is blank: line #" + lineN);
@@ -313,6 +310,7 @@ public class ConvertNCBI {
     				bPrt=false; 
     				if (isChr && !isMT) { 
     					nChr++; 
+    					seqType=chrType;
     					prtName = createChrPrtName(line);
 	    				id2chr.put(idcol1, prtName);
 	    				chr2id.put(prtName, idcol1);
@@ -344,6 +342,7 @@ public class ConvertNCBI {
 	    				chr2id.put(prtName, idcol1);
 	    				cntChrGene.put(idcol1, 0);
 	    				
+	    				seqType=chrType;
 	    				bPrt=true;	
     				}
     				else if (isScaf && INCLUDESCAF) {
@@ -352,23 +351,25 @@ public class ConvertNCBI {
 	    				id2scaf.put(idcol1, prtName);
 	    				cntScafGene.put(idcol1, 0);
 	    				
+	    				seqType=scafType;
     					bPrt=true;
     				}
     				else {
-    					if (isScaf) {prtName=scafPrefix;}
-    					else 		{prtName=unkPrefix;}
+    					if (isScaf)    {prtName=scafPrefix;}
+    					else if (isMT) {prtName="Mt/Pt";}
+    					else 		   {prtName=unkPrefix;}
     					
     					if (prefixOnly!=null) {// use chr, don't know what it is
     						nUnk++;
     						prtName = unkPrefix + padNum(nUnk+"");
     						id2chr.put(idcol1, prtName); 
     	    				cntChrGene.put(idcol1, 0);
-    	    				
+    	    				seqType=unkType;
     	    				bPrt=true;
     					}
     				}
     				if (bPrt) {
-    					fhOut.println(">" + prtName + " " + idcol1);
+    					fhOut.println(">" + prtName + " " + idcol1 + " " + seqType);
     					cntOutSeq++;
     				}
     				else cntNoOutSeq++;
@@ -383,8 +384,11 @@ public class ConvertNCBI {
 	    				for (int i =0 ; i<bases.length; i++) {
 	    					char b = bases[i];
 	    					
-	    					if (cntBase.containsKey(b)) cntBase.put(b, cntBase.get(b)+1); // counts
-	    					else 						cntBase.put(b, 1);
+	    					if (cntBase.containsKey(b)) {
+	    						int cnt = cntBase.get(b);
+	    						if (cnt<Integer.MAX_VALUE) cntBase.put(b, cnt+1);
+	    					}
+	    					else  cntBase.put(b, 1);
 	    					
 	    					baseLoc++;
 	    					if (b=='N' || b=='n') { 
@@ -413,7 +417,10 @@ public class ConvertNCBI {
     				if (bPrt) fhOut.println(aline);
     			} // finish seq line
     		}
-			if (len>0) printTrace(bPrt, isChr, isScaf, isMT, len, idcol1, prtName);
+			if (len>0) {
+				totalLen += len;
+				printTrace(bPrt, isChr, isScaf, isMT, len, idcol1, prtName);
+			}
 			System.err.print("                                            \r");
 			fhIn.close(); 	
 		}
@@ -490,68 +497,75 @@ public class ConvertNCBI {
 	// Write to file, or Verbose
 	private void printTrace(boolean bPrt, boolean isChr, boolean isScaf, boolean isMtPt,
 			int len, String id, String prtname) {
-		String x = (bPrt) ? "" : "*";
+		String x = (bPrt) ? "" : star;
+		String msg = String.format("%-7s %-15s %,11d %s", prtname, id, len,x);
+		String msg2 = String.format("   %s %,d %s ....                       ", prtname, len,x);
 		if (isChr && !isMtPt) {
 			chrLen+=len;
 			if (bPrt || VERBOSE) {
-				if (cntChr<traceChrNum) prt(String.format("%-7s %-15s %,11d %s", prtname, id, len,x));
-				else if (cntChr==traceChrNum) prt("Suppressing further chromosome outputs");
+				if (cntChr<=traceNum) prt(msg);
+				else if (cntChr==traceNum+1) prt("Suppressing further chromosome logs");
+				else System.out.print(msg2 + "\r");
 			}
+			else System.out.print(msg2 + "\r");
 		}
 		else if (isMtPt) {
 			mtptLen+=len;
 			if (bPrt || VERBOSE) {
-				if (cntMtPt<traceNum) prt(String.format("%-7s %-15s %,11d %s", prtname, id, len, x));
-				else if (cntMtPt==traceNum+1) prt("Suppressing further Mt/Pt outputs");
+				if (cntMtPt<=traceNum) prt(msg);
+				else if (cntMtPt==traceNum+1) prt("Suppressing further Mt/Pt logs");
+				else System.out.print(msg2 + "\r");
 			}
 		}
 		else if (isScaf) {
 			scafLen+=len;
-			if (len<scafMaxLen) cntScafSmall++;
+			if (len<traceScafMaxLen) cntScafSmall++;
 			if (bPrt || VERBOSE) {
-				if (cntScaf<=traceNum) 	prt(String.format("%-7s %-15s %,11d  %s", prtname, id, len, x));
-				else if (cntScaf==traceNum+1) prt("Suppressing further scaffold outputs");
+				if (cntScaf<=traceNum) 	prt(msg);
+				else if (cntScaf==traceNum+1) prt("Suppressing further scaffold logs");
+				else System.out.print(msg2 + "\r");
 			}
+			else if (len>1000000) System.out.print(msg2 + "\r");
 		}
 		else {
 			unkLen += len;
 			if (bPrt || VERBOSE) {
-				if (cntUnk<traceNum) prt(String.format("%-7s %-15s %,11d  %s", prtname, id, len, x));
-				else if (cntUnk==traceNum+1) 	  prt("Suppressing further unknown outputs");
+				if (cntUnk<=traceNum) prt(msg);
+				else if (cntUnk==traceNum+1) 	  prt("Suppressing further unknown logs");
+				else System.out.print(msg2 + "\r");
 			} 
+			else if (len>1000000) System.out.print(msg2 + "\r");
 		}
 	}
 	/***************************************************************************
-	 * GFF file example:
+	 * XXX GFF file example:
 	 * NC_016131.2     Gnomon  gene    18481   21742   .       +       .       ID=gene3;Dbxref=GeneID:100827252;Name=LOC100827252;gbkey=Gene;gene=LOC100827252;gene_biotype=protein_coding
 	   NC_016131.2     Gnomon  mRNA    18481   21742   .       +       .       ID=rna2;Parent=gene3;Dbxref=GeneID:100827252,Genbank:XM_003563157.3;Name=XM_003563157.3;gbkey=mRNA;gene=LOC100827252;model_evidence=Supporting evidence includes similarity to: 3 Proteins%2C and 78%25 coverage of the annotated genomic feature by RNAseq alignments;product=angio-associated migratory cell protein-like;transcript_id=XM_003563157.3
 	   NC_016131.2     Gnomon  exon    18481   18628   .       +       .       ID=id15;Parent=rna2;Dbxref=GeneID:100827252,Genbank:XM_003563157.3;gbkey=mRNA;gene=LOC100827252;product=angio-associated migratory cell protein-like;transcript_id=XM_003563157.3
 	 */
-	 private void rwAnno() { 
-		 try {
-			if (inGffFile==null) return; // CAS513 
+	// anno per gene
+	private String geneID="",geneLine="", gchr="",  gproteinAt="", gmrnaAt="", gproductAt="";
+	private String mrnaLine="", mrnaID="";
+	private Vector <String> exonVec = new Vector <String> ();
+	private int cntUseGene=0, cntUseMRNA=0, cntUseExon=0, cntThisGeneMRNA=0;
+			  
+	 private void rwAnno() {
+		try {	
+			if (inGffFile==null) return; 
 			prt("");
 			prt("Processing " + inGffFile);
-			rwAnnoGene();	// put genes in geneMap
-			rwAnnoMRNA();   // add product to gene product
-			rwAnnoExon();	// write gene followed by its exons
-		 }
-		 catch (Exception e ) {} 
-	 }
-	/** 
-	 * Reads genes into geneMap, computes summary stats, and verifies input
-	 * The entries are saved so that the mRNA product= can be appended to the gene's
-	 ***/
-	private void rwAnnoGene() { 
-		try {		
+			
+			 int cntReadGene=0, cntReadMRNA=0, cntReadExon=0;
 			 BufferedReader fhIn = openGZIP(inGffFile); if (!bSuccess) return;
+			 PrintWriter fhOutGff = new PrintWriter(new FileOutputStream(annoDir + outGffFile, false)); 
+			 fhOutGff.println(header);
 			 
 			 String line="";
-			 int skipLine=0, cntGene=0;
+			 int skipLine=0;
 			 
 			 while ((line = fhIn.readLine()) != null) {
 				line = line.trim();
-				if (line.startsWith("#") || line.length()==0) continue;
+				if (line.startsWith("#") || line.startsWith("!") || line.trim().length()==0) continue;
 				
 				String [] tok = line.split("\\t");
 				if (tok.length!=9) {
@@ -566,192 +580,176 @@ public class ConvertNCBI {
 				if (!allTypeCnt.containsKey(type))  allTypeCnt.put(type,1);
 				else 								allTypeCnt.put(type, allTypeCnt.get(type)+1);
 				
-				if (!type.equals(geneType)) continue; 
-				
-				cntGene++;
-				if (cntGene%PRT==0) System.err.print("   Process " + cntGene + " genes...\r");
-				
-				// counts for gene
-				String [] typeAttrs = tok[8].trim().split(";"); 
-				String biotype = getVal(biotypeAttrKey, typeAttrs);
-				if (!allGeneBiotypeCnt.containsKey(biotype)) allGeneBiotypeCnt.put(biotype,1);
-				else 										 allGeneBiotypeCnt.put(biotype, allGeneBiotypeCnt.get(biotype)+1);
-				
-				String src  =  tok[1].trim();  // RefSeq, Gnomon..
-				if (src.contains("%2C")) 		src = src.replace("%2C", ","); 
-				
-				if (!allGeneSrcCnt.containsKey(src)) 	allGeneSrcCnt.put(src,1);
-				else 									allGeneSrcCnt.put(src, allGeneSrcCnt.get(src)+1);
-				
-				if (!biotype.equals(biotypeAttr)) continue; // protein-coding
-				
-				String prtName="";
-				String idcol1 =   tok[0];  // chromosome, scaffold, linkage group...
-				if (id2chr.containsKey(idcol1))  { 
-					cntChrGeneAll++;
-					prtName = id2chr.get(idcol1);
-					cntChrGene.put(idcol1, cntChrGene.get(idcol1)+1);
+				if (type.equals(geneType)) {
+					rwAnnoOut(fhOutGff);
+					rwAnnoGene(tok, line);
+					cntReadGene++; cntThisGeneMRNA++;
+					if (cntReadGene%PRT==0) System.err.print("   Process " + cntReadGene + " genes...\r");
 				}
-				else if (id2scaf.containsKey(idcol1)) {
-					cntScafGeneAll++; 
-					prtName = id2scaf.get(idcol1);
-					cntScafGene.put(idcol1, cntScafGene.get(idcol1)+1);
+				else if (type.equals(mrnaType)) {
+					rwAnnoMRNA(tok, line);
+					cntReadMRNA++;
 				}
-				else {
-					cntGeneNotOnSeq++; 
-					continue;
+				else if (type.equals(cdsType)) {
+					rwAnnoCDS(tok, line);
 				}
-				String id =  getVal(idAttrKey, typeAttrs);
-				Gene g = new Gene(prtName, line);
-				geneMap.put(id, g);
+				else if (type.equals(exonType)) {
+					rwAnnoExon(tok, line);
+					cntReadExon++;
+				}	
 			 }
-			 fhIn.close();
-			 prt(String.format("   Use Genes %,d from %,d                ", geneMap.size(), cntGene));
+			 fhIn.close(); fhOutGff.close();
+			 prt(String.format("   Use Gene %,d from %,d                ", cntUseGene, cntReadGene));
+			 prt(String.format("   Use mRNA %,d from %,d                ", cntUseMRNA, cntReadMRNA));
+			 prt(String.format("   Use Exon %,d from %,d                ", cntUseExon, cntReadExon));
+			 prt("Finish writing " + annoDir + outGffFile + "                     ");
+		 }
+		 catch (Exception e) {die(e, "rwAnnoGene");}
+	}
+	
+	private void rwAnnoGene(String [] tok, String line) { 
+		try {	
+			// counts for gene
+			String [] typeAttrs = tok[8].trim().split(";"); 
+			String biotype = getVal(biotypeAttrKey, typeAttrs);
+			if (!allGeneBiotypeCnt.containsKey(biotype)) allGeneBiotypeCnt.put(biotype,1);
+			else 										 allGeneBiotypeCnt.put(biotype, allGeneBiotypeCnt.get(biotype)+1);
+			
+			String src  =  tok[1].trim();  // RefSeq, Gnomon..
+			if (src.contains("%2C")) 		src = src.replace("%2C", ","); 
+			
+			if (!allGeneSrcCnt.containsKey(src)) 	allGeneSrcCnt.put(src,1);
+			else 									allGeneSrcCnt.put(src, allGeneSrcCnt.get(src)+1);
+			
+			if (!biotype.equals(biotypeAttr)) return; // protein-coding
+			
+			String idcol1 =   tok[0];  // chromosome, scaffold, linkage group...
+			if (id2chr.containsKey(idcol1))  { 
+				cntChrGeneAll++;
+				gchr = id2chr.get(idcol1);
+				cntChrGene.put(idcol1, cntChrGene.get(idcol1)+1);
+			}
+			else if (id2scaf.containsKey(idcol1)) {
+				cntScafGeneAll++; 
+				gchr = id2scaf.get(idcol1);
+				cntScafGene.put(idcol1, cntScafGene.get(idcol1)+1);
+			}
+			else {
+				cntGeneNotOnSeq++; 
+				return;
+			}
+			////////////
+			geneID =  getVal(idAttrKey, typeAttrs);
+			geneLine = line;
+			cntUseGene++;
 		 }
 		 catch (Exception e) {die(e, "rwAnnoGene");}
 	 }
-	 /** add product to gene attributes **/
-	 private void rwAnnoMRNA() { 
+	 // mRNA is not loaded into SyMAP, but needed for exon parentID
+	 private void rwAnnoMRNA(String [] tok, String line) { 
 		 try {
-			 BufferedReader fhIn = openGZIP(inGffFile); if (!bSuccess) return;
-			 
-			 String line="", lastGene="";
-			 int cntReadRNA=0;
-			 HashMap <String, Gene> gMrnaMap = new HashMap <String, Gene> (); // mRNA for current gene; to detect all proteins
-			 boolean bPROT = (ATTRPROT || ATTRPROTALL);
-			 
-			 while ((line = fhIn.readLine()) != null) {
-				line = line.trim();
-				if (line.startsWith("#") || line.length()==0) continue;
+			if (!mrnaID.equals("")) return;
+			
+			String [] attrs = tok[8].split(";"); 
+			String pid = getVal(parentAttrKey, attrs);
+			if (!geneID.equals(pid)) return; 
+			
+			////////////////////////
+			mrnaID = getVal(idAttrKey, attrs);
+			
+			String mid = mrnaID.replace(RMRNA,"");
+			gmrnaAt = MRNAID + mid;
+			gproductAt =  DESC + getVal(productAttrKey, attrs);
+			
+			String idStr =   idAttrKey + "=" + mrnaID.replace(RMRNA,"");	
+			String parStr =  parentAttrKey + "=" + geneID.replace(RMGENE,"");
+			String newAttrs = idStr + ";" + parStr + ";" + gproductAt;
+			mrnaLine = gchr + "\t" +  tok[1] + "\t" + tok[2] + "\t" + tok[3] + "\t" + 
+					tok[4] + "\t" + tok[5] + "\t" + tok[6] + "\t" + tok[7] + "\t" + newAttrs;
+		
+			cntUseMRNA++;
+		 }
+		 catch (Exception e) {die(e, "rwAnnoMRNA");}
+	 }
+	 private void rwAnnoCDS(String [] tok, String line) { 
+		 try {
+			if (!ATTRPROT || mrnaID.equals("")) return;
+			
+			String [] attrs = tok[8].split(";"); 
+			String pid = getVal(parentAttrKey, attrs);
 				
-				String [] tok = line.split("\\t");
-				if (tok.length!=9) continue;
-				
-				String type =  tok[2];  // gene, mRNA, exon...
-				if (! (type.equals(mrnaType) || (bPROT && type.equals(cdsType))) ) continue;
-				
-				String [] typeAttrs = tok[8].split(";"); 
-				String pid =   getVal(parentAttrKey, typeAttrs);
-				
-				if (type.contentEquals(cdsType)) { 
-					if (gMrnaMap.containsKey(pid)) {
-						String idKey =  getVal(idAttrKey, typeAttrs);
-						Gene g = gMrnaMap.get(pid);
-						g.mergeProtein(idKey);
-					}
-					continue;
-				}
-				
-				Gene gObj = geneMap.get(pid);
-				if (!geneMap.containsKey(pid)) continue;	// parent gene was excluded
-				
-				if (!lastGene.contentEquals(pid)) {
-					gMrnaMap.clear();
-					lastGene=pid;
-				}
-				cntReadRNA++;
-				if (cntReadRNA%PRT==0) System.err.print("   Process " + cntReadRNA + " mRNA...\r");
-				
-				String productKey = getKeyVal(productAttrKey, typeAttrs);
-				
-				String idKey =  getKeyVal(idAttrKey, typeAttrs);
-				boolean bIs1st = gObj.bNoProduct();
-				if (bIs1st)	     gObj.setProduct(idKey, productKey);
-				else		     gObj.mergeProduct(idKey, productKey);
-	
-				String mID =  getVal(idAttrKey, typeAttrs);
-				if (bIs1st || ALLEXON) mrnaMap.put(mID, gObj);	
-				
-				if (ATTRPROTALL || (ATTRPROT && bIs1st)) gMrnaMap.put(mID, gObj);
-			 }
-			 fhIn.close();
-			 prt(String.format("   Use mRNAs %,d from %,d           ", mrnaMap.size(), cntReadRNA));	
+			if (mrnaID.equals(pid)) {
+				gproteinAt = ";" + PROTEINID + getVal(cdsProteinAttrKey, attrs);
+			}
 		 }
 		 catch (Exception e) {die(e, "rwAnnoMRNA");}
 	 }
 	 /** Write genes and exons to file**/
-	 private void rwAnnoExon() {
+	 private void rwAnnoExon(String [] tok, String line) {
 		 try {
-			 PrintWriter fhOutGff = new PrintWriter(new FileOutputStream(annoDir + outGffFile, false)); 
-			 fhOutGff.println("### Written by SyMAP ConvertNCBI");
-			 
-			 BufferedReader fhIn = openGZIP(inGffFile); if (!bSuccess) return;
-			 
-			 String line="";
-			 String curGeneID=null;
-			 int cntReadExon=0;
-			 
-			 while ((line = fhIn.readLine()) != null) {
-				line = line.trim();
-				if (line.startsWith("#") || line.length()==0) continue;
+			if (mrnaID.equals("")) return;
 				
-				String [] tok = line.split("\\t");
-				if (tok.length!=9) continue;
-				
-				String type =  tok[2];  // gene, mRNA, exon...
-				if (!type.equals(geneType) && !type.equals(exonType) && !type.equals(mrnaType)) continue;
-				
-				if (type.equals(exonType)) { // Count all exons before start filtering
-					cntReadExon++;
-					if (cntReadExon%PRT==0)
-						System.err.print("   Process " + cntReadExon + " exons...\r");
-				}
-				
-				String [] typeAttrs = tok[8].split(";"); 
-				
-				// gene
-				if (type.equals(geneType)) {		// if Gene, if valid, set curGeneID and continue
-					String id =  getVal(idAttrKey, typeAttrs);
-					if (geneMap.containsKey(id)) {
-						curGeneID =  id;
-						Gene g = geneMap.get(curGeneID);
-						String nLine = g.createLine(curGeneID);
-						fhOutGff.println(nLine); 
-					}
-					else curGeneID=null;
-					continue;
-				}
-				if (curGeneID==null) continue; 		// skip all until valid gene
-				
-				if (type.equals(mrnaType)) {		// this will be ignored by SyMAP, but for correct file..
-					String mID =  getVal(idAttrKey, typeAttrs);
-						
-					if (mrnaMap.containsKey(mID)) {
-						String chrName = mrnaMap.get(mID).getChr();
-						String idStr =   idAttrKey + "=" + getVal(idAttrKey, typeAttrs);	// create shortened attribute list
-						String parStr =  parentAttrKey + "=" + getVal(parentAttrKey, typeAttrs);
-						String prodStr = productAttrKey + "=" + getVal(productAttrKey, typeAttrs);
-						String newAttrs = idStr + ";" + parStr + ";" + prodStr;
-						String nline = chrName + "\t" +  tok[1] + "\t" + tok[2] + "\t" + tok[3] + "\t" + 
-								tok[4] + "\t" + tok[5] + "\t" + tok[6] + "\t" + tok[7] + "\t" + newAttrs;
-						fhOutGff.println(nline); 
-					}
-					continue;
-				}
-				
-				// exon
-				String parID = getVal(parentAttrKey, typeAttrs);
-				if (!mrnaMap.containsKey(parID)) continue;	// only write exons if mrna is in map
-				
-				String chrName = mrnaMap.get(parID).getChr(); // the exons chr is same as gene
-				
-				String idStr =   idAttrKey + "=" + getVal(idAttrKey, typeAttrs);	// create shortened attribute list
-				String parStr =  parentAttrKey + "=" + parID;
-				String geneStr = exonGeneAttrKey + "=" + getVal(exonGeneAttrKey, typeAttrs);
-				String newAttrs = idStr + ";" + parStr + ";" + geneStr;
-				String nLine = chrName + "\t" + tok[1] + "\t" + tok[2] + "\t" + tok[3] + "\t" + tok[4]
-							+ "\t" + tok[5] + "\t" + tok[6] + "\t" + tok[7] + "\t" + newAttrs;
-				
-				fhOutGff.println(nLine);
-				cntExon++;	
-			 }
-			 fhIn.close(); fhOutGff.close();
-			 prt(String.format("   Use Exons %,d from %,d            ", cntExon, cntReadExon));
-			 prt("Finish writing " + annoDir + outGffFile + "                          ");
+			String [] attrs = tok[8].split(";"); 
+			String pid = getVal(parentAttrKey, attrs);
+					
+			if (!mrnaID.equals(pid)) return;
+			
+			//////////////
+			String idStr =   idAttrKey + "=" + getVal(idAttrKey, attrs);	// create shortened attribute list
+			String parStr =  parentAttrKey + "=" + mrnaID.replace(RMRNA,"");
+			String geneStr = exonGeneAttrKey + "=" + getVal(exonGeneAttrKey, attrs);	
+			String newAttrs = idStr + ";" + parStr + ";" + geneStr;
+			String nLine = gchr + "\t" + tok[1] + "\t" + tok[2] + "\t" + tok[3] + "\t" + tok[4]
+						+ "\t" + tok[5] + "\t" + tok[6] + "\t" + tok[7] + "\t" + newAttrs;
+			exonVec.add(nLine);
+			cntUseExon++;
 		 }
 		 catch (Exception e) {die(e, "rwAnnoExon");} 
 	 }
-	
+	 private void rwAnnoOut( PrintWriter fhOutGff) {
+	 try {
+		if (geneID.trim().equals("")) return;
+		if (mrnaID.trim().equals("")) return;
+		
+		String [] tok = geneLine.split("\\t");
+		if (tok.length!=9) die("Gene: " + tok.length + " " + geneLine);
+		
+		if (geneID.startsWith(RMGENE)) geneID = geneID.replace(RMGENE,""); // CAS558 remove gene-
+		String idAt = idAttrKey + "=" + geneID + ";";
+		
+		String [] attrs = tok[8].split(";");
+		String val = getVal(nameAttrKey, attrs);
+		String nameAt = (!geneID.contains(val)) ? (nameAttrKey + "=" + val + ";") : ""; // CHANGE here to alter what attributes are saved
+		
+		String desc = getVal(descAttrKey, attrs).trim();
+		if (!desc.equals("")) gproductAt = DESC + desc;
+		else gproductAt="";
+		
+		gmrnaAt += " (" + cntThisGeneMRNA + ");";
+		
+		String allAttrs = idAt + nameAt + gmrnaAt + gproductAt + gproteinAt;
+		
+		String line = gchr + "\t" + tok[1] + "\t" + tok[2] + "\t" + tok[3] + "\t" + tok[4]
+		+ "\t" + tok[5] + "\t" + tok[6] + "\t" + tok[7] + "\t" + allAttrs;
+		
+		if (line.contains("%")) {
+			for (String hex : hexMap.keySet()) {
+				if (line.contains(hex)) line = line.replace(hex, hexMap.get(hex));
+			}
+		}
+		fhOutGff.println("###\n" + line);
+		
+		fhOutGff.println(mrnaLine); 
+		
+		for (String eline : exonVec) fhOutGff.println(eline);
+		
+		cntThisGeneMRNA=0;
+		geneID=geneLine=gchr=gproteinAt=gmrnaAt=gproductAt=mrnaID=mrnaLine="";
+		exonVec.clear();
+	 }
+	 catch (Exception e) {die(e, "rwAnnoOut");} 
+	}
+		
 	 private String getVal(String key, String [] attrs) {
 		for (String s : attrs) {
 			String [] x = s.split("=");
@@ -759,13 +757,7 @@ public class ConvertNCBI {
 		}
 		return "";
 	}
-	 private String getKeyVal(String key, String [] attrs) {
-		for (String s : attrs) {
-			String [] x = s.split("=");
-			if (x[0].equals(key)) return s;
-		}
-		return "";
-	}
+	
 	 /***********************************************************************/
 	 private void printSummary() {
 		prt("                                                      ");
@@ -779,7 +771,7 @@ public class ConvertNCBI {
 			}
 			if (cntScaf>0) {
 				prt(String.format("  %,6d  Output %-,6d %-11s  %,15d (%,d < %,dbp)", 
-						cntScaf,nScaf, "Scaffolds", scafLen, cntScafSmall, scafMaxLen));
+						cntScaf,nScaf, "Scaffolds", scafLen, cntScafSmall, traceScafMaxLen));
 			}
 			if (cntUnk>0) {
 				prt(String.format("  %,6d  Output %-,6d %-11s  %,15d", cntUnk, nUnk, "Unknown", unkLen));
@@ -787,12 +779,13 @@ public class ConvertNCBI {
 			
 			if (inGffFile==null) return;
 			
-			prt("                                         ");
+			////////////////// anno ////////////////
+			prt("                                                       ");
 		
-			prt(">>All Types  (col 3)  (" + star + " are processed keywords)");
+			prt(">>All Types  (col 3)  (" + plus + " are processed keywords)");
 			for (String key : allTypeCnt.keySet()) {
-				boolean bKey = (ATTRPROT || ATTRPROTALL) && key.equals(cdsType);
-				String x = (key.equals(geneType) || key.equals(mrnaType) || key.equals(exonType)) || bKey ? star : "";
+				boolean bKey = ATTRPROT && key.equals(cdsType);
+				String x = (key.equals(geneType) || key.equals(mrnaType) || key.equals(exonType)) || bKey ? plus : "";
 				prt(String.format("   %-22s %,8d %s", key, allTypeCnt.get(key), x));
 			}
 		
@@ -802,20 +795,9 @@ public class ConvertNCBI {
 			}
 			prt(">>All gene_biotype= (col 8)                    ");
 			for (String key : allGeneBiotypeCnt.keySet()) {
-				String x = (key.equals(biotypeAttr)) ? "*" : "";
+				String x = (key.equals(biotypeAttr)) ? plus : "";
 				prt(String.format("   %-22s %,8d %s", key, allGeneBiotypeCnt.get(key), x));
 			}
-	
-			prt(">>Gene product= (col 8)");
-			prt(String.format("   %-22s %,8d %s", "Unique", cntUniqueProduct, star));
-			if (cntMultUniqueProduct>0) prt(String.format("   %-22s %,8d", "Multiple Unique", cntMultUniqueProduct));
-			if (cntDupProduct>0)        prt(String.format("   %-22s %,8d", "Substring (ignored)", cntDupProduct));
-			prt(String.format("   %-22s %,8d", "Variants", cntXProduct));
-			
-			prt(">>Written to file ");
-			prt(String.format("   %-22s %,8d", "Gene", geneMap.size()));
-			prt(String.format("   %-22s %,8d", "mRNA", mrnaMap.size()));
-			prt(String.format("   %-22s %,8d", "Exon", cntExon));
 		}
 		prt(String.format(">>Chromosome gene count %,d                ", cntChrGeneAll));
 		for (String prt : chr2id.keySet()) {
@@ -823,16 +805,17 @@ public class ConvertNCBI {
 			prt(String.format("   %-10s %-20s %,8d", prt, id, cntChrGene.get(id)));
 		}
 		if (INCLUDESCAF) {
-			prt(String.format(">>Scaffold gene count %,d (list scaffolds with #genes>1) ", cntScafGeneAll));
-			for (String id : cntScafGene.keySet()) 
-				if (cntScafGene.get(id)>1)
+			int cntOne=0;
+			prt(String.format(">>Scaffold gene count %,d (list scaffolds with #genes>%d) ", cntScafGeneAll, traceNumGenes));
+			for (String id : cntScafGene.keySet()) {
+				if (cntScafGene.get(id)>traceNumGenes)
 					prt(String.format("   %-10s %-20s %,8d", id2scaf.get(id), id, cntScafGene.get(id)));
+				else cntOne++;
+			}
+			prt(String.format("   Scaffolds with <=%d gene (not listed) %,8d", traceNumGenes, cntOne));
+			prt(String.format("   Genes not included %,8d",  cntGeneNotOnSeq));
 		}
-		
-		if (INCLUDESCAF) prt(String.format("   %s %,8d", "Genes not on Chr/Scaf", cntGeneNotOnSeq));
-		else 			 prt(String.format("   %s %,8d", "Genes not on Chromosome", cntGeneNotOnSeq));
-		
-		if (ATTRPROTALL) prt(String.format("   %s %,8d", "Maximum # of proteins for " + maxGene, maxProt));
+		else 	prt(String.format("   %s %,8d", "Genes not on Chromosome", cntGeneNotOnSeq));
 	 }
 	
 	 /**************************************************************************
@@ -840,6 +823,10 @@ public class ConvertNCBI {
 	  */
 	 private boolean checkInitFiles() {
 		try {
+			if (projDir==null || projDir.trim().equals("")) {
+				die("No project directory");
+				return false;
+			}
 			File[] files;
 			String dsDirName=null;
 			
@@ -888,17 +875,18 @@ public class ConvertNCBI {
 			
 			files = dsDir.listFiles();
 			for (File f : files) {
-				if (!f.isFile()) continue;
+				if (!f.isFile() || f.isHidden()) continue;
 				
 		       String fname = f.getName();
-		       if (fname.endsWith(".fna.gz") || fname.endsWith(".fna")) 		{
+		       
+		       if (fname.endsWith(faSuffix + ".gz") || fname.endsWith(faSuffix)) 		{
 		    	   if (inFaFile!=null) {
 		    		   prt("Multiple fasta files - using " + inFaFile);
 		    		   break;
 		    	   }
 		    	   inFaFile = dsDirName + "/" + fname;
 		       }
-		       else if (fname.endsWith(".gff.gz") || fname.endsWith(".gff"))	{
+		       else if (fname.endsWith(gffSuffix + ".gz") || fname.endsWith(gffSuffix))	{
 		    	   if (inGffFile!=null) {
 		    		   prt("Multiple fasta files - using " + inFaFile);
 		    		   break;
@@ -907,15 +895,16 @@ public class ConvertNCBI {
 		       } 
 			}
 	
-			if (inFaFile==null)   return die(dsDirName + ": no file ending in .fna or .fna.gz (i.e. NCBI files)");
-			if (inGffFile==null)  prt(dsDirName + " does not have a file ending with .gff or .gff.gz");
-		
-			// Create sequence and annotation directories
-			seqDir = projDir + "/" + seqDir;
-			checkDir(seqDir);  if (!bSuccess) return false;
+			if (inFaFile == null)  return die("Project directory " + projDir + ": no file ending with " + faSuffix +  " or "+ faSuffix + ".gz (i.e. Ensembl files)");
+			if (inGffFile == null)        prt("Project directory " + projDir + ": no file ending with " + gffSuffix + " or " + gffSuffix + ".gz");
 			
-			annoDir = projDir + "/" + annoDir;
-			checkDir(annoDir); if (!bSuccess) return false;
+			// Create sequence and annotation directories
+			if (!projDir.endsWith("/")) projDir += "/";
+			seqDir = projDir + seqDir;
+			checkDir(true, seqDir);  if (!bSuccess) return false;
+			
+			annoDir = projDir + annoDir;
+			checkDir(false, annoDir); if (!bSuccess) return false;
 			
 			return true;
 		}
@@ -932,9 +921,12 @@ public class ConvertNCBI {
 		}
 		catch (Exception e) {die("Cannot open " + logFileName); logFile=null;}
 	}
-	 private boolean checkDir(String dir) {
+	 private boolean checkDir(boolean isSeq, String dir) {
 		File nDir = new File(dir);
 		if (nDir.exists()) {
+			String x = (isSeq) ? " .fna and .fa "  : " .gff and .gff3";
+			prt(dir + " exists - remove existing " + x + " files");
+			deleteFilesInDir(isSeq, nDir);
 			return true;
 		}
 		else {
@@ -943,6 +935,26 @@ public class ConvertNCBI {
 		}	
 		return true;
 	}
+	 private void deleteFilesInDir(boolean isSeq, File dir) { 
+		 if (!dir.isDirectory()) return;
+		 
+	     String[] files = dir.list();
+	        
+	     if (files==null) return;
+	     
+	     for (String fn : files) {
+	    	 if (isSeq) {
+	    		 if (fn.endsWith(".fna") || fn.endsWith(".fa")) {
+	    			 new File(dir, fn).delete();
+	    		 }
+	    	 }
+	    	 else {
+	    		 if (fn.endsWith(".gff") || fn.endsWith(".gff3")) {
+	    			 new File(dir, fn).delete();
+	    		 }
+	    	 } 
+	     }
+    }
 	private BufferedReader openGZIP(String file) {
 		try {
 			if (!file.endsWith(".gz")) {
@@ -973,10 +985,9 @@ public class ConvertNCBI {
 					        "\n-m  assuming a soft-masked genome file, convert it to hard-masked." +
 					        "\n-s  include any sequence with NT_ or NW_ prefix'." +
 					        "\n-t  include Mt and Pt chromosomes." +
-					        "\n-p  include the 1st protein name (1st mRNA) in the attribute field." +
-					        "\n-pa  include all protein names in the attribute field." +
-					        "\n-v  write header lines of ignored sequences." +
-							"\n\nSee https://csoderlund.github.io/SyMAP/convert for details.");
+					        "\n-p  include the protein name (1st CDS) in the attribute field." +
+					        "\n-v  write extra information." +
+							"\n\nSee https://csoderlund.github.io/SyMAP/input for details.");
 			System.exit(0);
 		}
 		
@@ -984,30 +995,26 @@ public class ConvertNCBI {
 			for (int i=1; i< args.length; i++)
 				if (args[i].equals("-s")) {
 					INCLUDESCAF=true;
-					chrPrefix = "C";
+					chrPrefix = chrPrefix2;
 				}
 				else if (args[i].equals("-t")) INCLUDEMtPt=true;
 				else if (args[i].equals("-v")) VERBOSE=true;
 				else if (args[i].equals("-m")) MASKED=true;
-				else if (args[i].equals("-e")) ALLEXON=true;
 				else if (args[i].equals("-p")) ATTRPROT=true;
-				else if (args[i].equals("-pa")) ATTRPROTALL=true;
 		}
 		prt("Parameters:");
 		prt("   Project directory: " + projDir);
 		
-		if (gapMinLen!=defGapLen) prt("   Gap minium size: " + gapMinLen); // set in main
+		if (gapMinLen!=defGapLen) prt("   Gap minimum size: " + gapMinLen); // set in main
 		if (prefixOnly!=null)     prt("   Prefix Only: " + prefixOnly); // set in main
 		
-		if (ALLEXON) prt("   Write all exons for each gene to gff file");
 		if (INCLUDESCAF) {
-			prt("   Include any sequence with the 'NT_' or 'NW_' prefix");
-			prt("      Uses prefixes Chr '" + chrPrefix + "' and Scaffold '" + scafPrefix + "'");
+			prt("   Include scaffold sequences ('NT_' or 'NW_' prefix)");
+			prt("      Uses prefixes Chr '" + chrPrefix2 + "' and Scaffold '" + scafPrefix + "'");
 		}
 		if (INCLUDEMtPt)  	prt("   Include Mt and Pt chromosomes");
 		if (MASKED)  		prt("   Hard mask sequence");
-		if (ATTRPROT)  		prt("   Include 1st protein name in attributes");
-		if (ATTRPROTALL)  	prt("   Include all protein names in attributes");
+		if (ATTRPROT)  		prt("   Include protein-id in attributes");
 		if (VERBOSE) 		{traceNum=20; prt("   Verbose");}
 	}
 	 private boolean die(Exception e, String msg) {
@@ -1026,106 +1033,5 @@ public class ConvertNCBI {
 	 private void prt(String msg) {
 		System.out.println(msg);
 		if (logFile!=null) logFile.println(msg);
-	}
-	
-	 /*************************************************************************
-	  * Gene; keeps track of products to merge
-	  */
-	private class Gene {
-		private String chr="", line="", products="", proteins="";
-		private HashSet <String> protSet = new HashSet <String>();
-		
-		private Gene(String chr, String line) {
-			this.chr = chr;
-			this.line = line;
-		}
-		private void mergeProtein(String protein) {
-			String p = protein.replace("cds-","");
-			if (!protSet.contains(protein)) {
-				if (proteins=="") proteins = p;
-				else proteins += "," + p;
-				protSet.add(protein);
-			}
- 		}
-		private boolean bNoProduct() {return products.equals("");}
-		private void setProduct(String idrna, String curProduct) {
-			if (!curProduct.equals("")) cntUniqueProduct++;
-			products = idrna + ";" + curProduct;
-			return;
-		}
-		private void mergeProduct(String idrna, String newProd) {
-			if (!products.equals("") && newProd.equals("")) return;
-			
-			// Multiple mRNA tend to be variants: 
-			// product=probable glutamate carboxypeptidase 2%2C transcript variant X1;
-			// product=probable glutamate carboxypeptidase 2%2C transcript variant X2
-			// so just make subsequent ones be X2; etc
-			int index = newProd.lastIndexOf(" ");
-			String desc = (index>=0) ? newProd.substring(0, index) : newProd;
-			String x =    (index>=0) ? newProd.substring(index) : "";
-			
-			// check this mRNA product with all existing products for gene
-			String [] prevProds = products.split(";"); 
-			
-			for (int j=1; j<prevProds.length; j++) { // variant? X1, X2....
-				if (index>0 && x.startsWith(" X")) {
-					int index2 = prevProds[j].lastIndexOf(" ");
-					if (index2>0) {
-						String desc2 = prevProds[j].substring(0, index2);
-		
-						if (desc2.equals(desc)) { // is family
-							prevProds[j] +=  "," + x.trim(); // get rid of leading blank
-							
-							// rebuild list
-							String newProds=prevProds[0];
-							for (int k=1; k<prevProds.length; k++) {
-								newProds += ";" + prevProds[k];
-							}
-							cntXProduct++;
-							products= newProds;
-							return;
-						}
-					}
-				}
-				if (prevProds[j].startsWith(newProd) || newProd.startsWith(prevProds[j])) {
-					cntDupProduct++;
-					return;
-				}
-			}
-			cntUniqueProduct++;
-			cntMultUniqueProduct++;
-			products += ";" + newProd;
-		}
-		private String createLine(String id) {
-			String [] tok = line.split("\\t");
-			if (tok.length!=9) die("Gene: " + tok.length + " " + line);
-			
-			String [] attrs = tok[8].split(";");
-			String idAt = idAttrKey + "=" + id + ";";
-			
-			String name = getVal(nameAttrKey, attrs);
-			String idAt2 = (!id.contains(name)) ? nameAttrKey + "=" + name + ";" : "";
-			
-			String newAttrs = idAt + idAt2 + products;
-			
-			String line = chr + "\t" + tok[1] + "\t" + tok[2] + "\t" + tok[3] + "\t" + tok[4]
-			+ "\t" + tok[5] + "\t" + tok[6] + "\t" + tok[7] + "\t" + newAttrs;
-			
-			if ((ATTRPROT || ATTRPROTALL) && proteins!="") {
-				line += ";protein=" + proteins; // CAS520 add proteins
-			}
-			if (line.contains("%")) {
-				for (String hex : hexMap.keySet()) {
-					if (line.contains(hex)) line = line.replace(hex, hexMap.get(hex));
-				}
-			}
-			if (protSet.size()>maxProt) {
-				maxProt = protSet.size();
-				maxGene = newAttrs.substring(0, newAttrs.indexOf(";"));
-			}
-			protSet.clear();
-			return line;
-		}
-		private String getChr() { return chr;}
 	}
 }

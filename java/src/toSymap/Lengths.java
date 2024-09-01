@@ -7,32 +7,40 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Vector;
 
-import backend.Constants;
 import backend.Utils;
 import util.ErrorReport;
 import util.Utilities;
 
 /************************************************
- * Print lengths of sequences
+ * Print lengths of sequences from converted files
  */
 public class Lengths {
+	private final String seqSubDir = backend.Constants.seqSeqDataDir;
 	private String logFileName = "/xLengths.log";
-	private PrintWriter logFile=null; 
 	
-	private String seqTopDir="", seqDirName="";
+	private final int [] cutoffs = {10,20,30,40,50,60,70,80,90,100};
+	private final String [] fastaFile = {".fa", ".fna"}; // converted files
+	private final int maxLenForPrt=500;
+	
+	private PrintWriter logFile=null; 
+	private String projDir="", seqDirName="";
+	private Vector <File> seqFiles = new Vector <File> ();
 	
 	private Vector <Integer> lenVec = new Vector <Integer> ();
-	private int [] cutoffs = {10,20,30,40,50,60,70,80,90,100};
-			
-	private Summary checkObj=null;
-	
-	protected Lengths(String dirName) {
-		seqTopDir = dirName;
 		
-		checkObj = new Summary(dirName);
-		seqDirName = checkObj.getSeqDir();
-		if (seqDirName==null) return;
+	protected Lengths(String projDir) {
+		this.projDir = projDir;
 		
+		seqDirName = Utilities.fileNormalizePath(projDir, seqSubDir);
+		if (!Utilities.pathExists(seqDirName)) {
+			Utilities.showWarningMessage("Path for sequence files does not exist: " + seqDirName);
+			return;
+		}	
+		getSeqFiles();
+		if (seqFiles.size()==0) {
+			Utilities.showWarningMessage("No .fa or .fna files in: " + seqDirName);
+			return;
+		}
 		prt("");
 		prt("------ Output lengths for " + seqDirName + " ------");
 		createLog();
@@ -43,30 +51,21 @@ public class Lengths {
 		prt("----- Finish lengths for " + seqDirName + " -------");
 		if (logFile!=null) logFile.close();
 	}
-	private void createLog() {
-		logFileName = seqTopDir + logFileName;
-		prt("Log file to  " + logFileName);	
-		
-		try {
-			logFile = new PrintWriter(new FileOutputStream(logFileName, false)); 
-		}
-		catch (Exception e) {ErrorReport.print("Cannot open " + logFileName); logFile=null;}
-	}
+	/*********************************************************/
 	private void readFasta() {
 	try {
-		Vector <File> seqFiles = checkObj.getSeqFiles();
-		if (seqFiles==null || seqFiles.size()==0) {
-			prt("Cannot find sequence files in " + seqTopDir + "/" + Constants.seqSeqDataDir );
-			return;
-		}
+		if (seqFiles.size()>1) prt("FASTA files " + seqFiles.size());
 		
-		int cntSeq=0;
+		int cntSeq=0, cntLen=0;
 		long total=0;
 		prt(String.format("\n%5s  %-10s  %s", "Seq#", "Length", "Seqid"));
 		
 		for (File f : seqFiles) {
 			BufferedReader fh = Utils.openGZIP(f.getAbsolutePath()); 
-			if (fh==null) return;
+			if (fh==null) {
+				prt("Cannot open " + f.getAbsolutePath());
+				return;
+			}
 			String line, grpFullName="", saveLine="";
 			int len=0;
 			
@@ -76,7 +75,11 @@ public class Lengths {
     			if (line.startsWith(">")) {
     				if (len>0) {
     					cntSeq++;
-    					prt(String.format("%5d  %,10d  %s", cntSeq, len,  saveLine));
+    					if (len>maxLenForPrt) prt(String.format("%5d  %,10d  %s", cntSeq, len,  saveLine));
+    					else {
+    						cntLen++;
+    						if (cntLen%1000==0) System.out.print(cntLen + " short sequences....\r");
+    					}
     					lenVec.add(len);
     					total += len;
     				}
@@ -91,10 +94,22 @@ public class Lengths {
     			}
     			else len += line.length();
 			}
+			if (len>0) {// CAS558 was missing last case
+				cntSeq++;
+				if (len>maxLenForPrt) prt(String.format("%5d  %,10d  %s", cntSeq, len,  saveLine));
+				else {
+					cntLen++;
+					if (cntLen%1000==0) System.out.print(cntLen + " short sequences....\r");
+				}
+				lenVec.add(len);
+				total += len;
+			}
 		}
+		System.out.print("                                                \r");
+		if (cntLen>0) prt(String.format("#Seqs<%d  %,d", maxLenForPrt, cntLen));
 		prt(String.format("Total %,d", total));
 	}
-	catch (Exception e) {ErrorReport.print("Read FASTA ");}
+	catch (Exception e) {ErrorReport.print("Length Read FASTA ");}
 	}
 	/******************************************************/
 	private void findCutoff() {
@@ -116,12 +131,37 @@ public class Lengths {
 			prt(String.format("%,5d %,8d", x, lenVec.get(x-1)));
 		}
 	}
-	catch (Exception e) {ErrorReport.print("Summary ");}
+	catch (Exception e) {ErrorReport.print("Length Summary ");}
 	}
-	private void prt(int cnt, String msg) {
-		String x = String.format("%,5d %s", cnt, msg);
-		System.out.println(x);
-		if (logFile!=null) logFile.println(x);
+	/******************************************************/
+	private void getSeqFiles() { 
+		try {	
+			File sdf = new File(seqDirName);
+			if (!sdf.exists() || !sdf.isDirectory()) {
+				prt("Incorrect directory name: " + seqDirName);
+				return;
+			}
+				
+			for (File f2 : sdf.listFiles()) {
+				String name = f2.getAbsolutePath();
+				for (String suf : fastaFile) { 
+					if (name.endsWith(suf) || name.endsWith(suf+".gz")) {
+						seqFiles.add(f2);
+						break;
+					}
+				}
+			}
+		}
+		catch (Exception e) {ErrorReport.print(e, "Cannot get sequence files");}
+	}
+	private void createLog() {
+		logFileName = projDir + logFileName;
+		prt("Log file to  " + logFileName);	
+		
+		try {
+			logFile = new PrintWriter(new FileOutputStream(logFileName, false)); 
+		}
+		catch (Exception e) {ErrorReport.print("Cannot open " + logFileName); logFile=null;}
 	}
 	private void prt(String msg) {
 		System.out.println(msg);

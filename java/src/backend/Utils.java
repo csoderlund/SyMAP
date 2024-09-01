@@ -128,20 +128,6 @@ public class Utils {
 	    }
 		return null;
 	}
-	
-	// CAS557 moved from SeqLoadMain to here so can be shared with toSymap; added check for >
-	public static boolean parseHasPrefix(String name, String prefix){
-		if (prefix.equals("")) return true;
-	
-		String regx = "\\s*(" + prefix + ")(\\w+)\\s?.*";
-		Pattern pat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
-		
-		String n = name + " "; // hack, otherwise we need two cases in the regex
-		if (n.startsWith(">")) n = n.substring(1);
-		Matcher m = pat.matcher(n);
-		if (m.matches()) return true;
-		return false;
-	}
 	// The prefix must be present. if no prefix, just use the given name.
 	public static String parseGrpName(String name, String prefix){
 		name = name + " "; // hack, otherwise we need two cases in the regex

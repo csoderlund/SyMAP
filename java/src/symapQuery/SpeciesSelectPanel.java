@@ -410,6 +410,7 @@ public class SpeciesSelectPanel extends JPanel {
 		}
 		private String getStartFullNum() { // CAS513 add error message and return null
 			String text = txtStart.getText().trim();
+			if (text.contains(",")) text = text.replace(",",""); // CAS558 allow commas in input
 			if (text.contentEquals("")) return "";
 			
 			try {
@@ -428,6 +429,7 @@ public class SpeciesSelectPanel extends JPanel {
 		
 		private String getStopFullNum() {
 			String etext = txtStop.getText().trim();
+			if (etext.contains(",")) etext = etext.replace(",",""); // CAS558 allow commas in input
 			if (etext.contentEquals("")) return "";
 			if (etext.contentEquals("0") || etext.contentEquals("-")) {// CAS549 add
 				txtStop.setText("");

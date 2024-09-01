@@ -15,6 +15,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 
 import util.ErrorReport;
+import util.Utilities;
 
 public class TableData implements Serializable {
 	private static final long serialVersionUID = 8279185942173639084L;
@@ -367,7 +368,30 @@ public class TableData implements Serializable {
     	String line="";
 		for (int i=0; i<arrHeaders.length; i++) {
 			String colName = arrHeaders[i].getColumnName().replace(Q.delim, Q.empty);
-			line += String.format("%-15s %s\n", colName, arrData[row][i].toString());
+			if (colName.endsWith("start") || colName.endsWith("end") || colName.endsWith("len") // CAS558 add commas
+				|| colName.equals(Q.hitCol) || colName.equals(Q.grpCol))
+			{
+				int dd = Utilities.getInt(arrData[row][i].toString());
+				if (dd == -1) line += String.format("%-15s %s\n", colName, arrData[row][i].toString());
+				else line += String.format("%-15s %,d\n", colName, dd);
+			}
+			else if (!colName.endsWith(Q.All_Anno)) {// CAS558 split; generally in other columns, but not always..
+				String all = arrData[row][i].toString();
+				String [] tok = all.split(";");
+				String prt = "";
+				String head = colName;
+				for (String t : tok) {
+					if (prt.isEmpty()) prt = t;
+					else if (prt.length() + t.length()< 60) prt += "; " + t;
+					else {
+						line += String.format("%-15s %s\n", head, prt);
+						head = " ";
+						prt = t;
+					}
+				}
+				if (!prt.isEmpty()) line += String.format("%-15s %s\n", head, prt);
+			}
+			else line += String.format("%-15s %s\n", colName, arrData[row][i].toString());
 		}
 		return line;
     }

@@ -62,6 +62,7 @@ public class ProjParams extends JDialog {
 	
 	private int idxGrpPrefix=0; 
 	private Mproject mProj;
+	Vector <Mproject> mProjVec;
 	
 	public ProjParams(Frame parentFrame,  Mproject mProj, 
 			Vector <Mproject> projVec, boolean isLoaded, boolean existAlign) {
@@ -69,12 +70,13 @@ public class ProjParams extends JDialog {
 		super(parentFrame, mProj.getDBName() + " params file");
 		
 		this.mProj = mProj;
+		this.mProjVec = projVec;
 		
 		theDisplayName =	mProj.getDisplayName();
 		theDBName =  		mProj.getDBName();
 		bIsLoaded = 		isLoaded;
 		bExistAlign = 		existAlign;
-		theProjectNames = 	getAddNoneSelections(projVec);
+		selectedProjects = 	getAddNoneSelections(projVec);
 		
 		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
 		getContentPane().setBackground(Color.WHITE);
@@ -127,9 +129,8 @@ public class ProjParams extends JDialog {
 		theFields[i++] = new Field(mProj.lAnnoFile, 	 bReload, !bReAlign, false);
 		
 		startAlign = i-1;
-		theFields[i++] = new Field(mProj.aOrderAgainst, theProjectNames, 0,  !bReload, bReAlign);
+		theFields[i++] = new Field(mProj.aOrderAgainst, selectedProjects, 0,  !bReload, bReAlign);
 		theFields[i++] = new Field(mProj.aMaskNonGenes, MASK_GENES, 1,!bReload, bReAlign);
-		
 		
 		JPanel fieldPanel = new JPanel();
 		fieldPanel.setLayout(new BoxLayout(fieldPanel, BoxLayout.PAGE_AXIS));
@@ -190,7 +191,7 @@ public class ProjParams extends JDialog {
 		return retVal.toArray(new String[retVal.size()]);
 	}
 	private JLabel createLabel(String text) {
-		String html = "<html><b><i>" + text + "</i></b></html";
+		String html = "<html><b><i>" + text + "</i></b></html>";
 		JLabel l = new JLabel(html);
 		return l;
 	}
@@ -275,7 +276,6 @@ public class ProjParams extends JDialog {
 			Utilities.showWarningMessage("The /data directory does not exist, cannot save parameters.");
 			return;
 		}
-		
 		if (!saveCheckFields()) return;
 		
 		if (!saveIsRequired())	return;
@@ -293,6 +293,7 @@ public class ProjParams extends JDialog {
 	
 		closeDialog();
 	}
+	/********************************************************************/
 	private boolean saveCheckFields() {
 	try {
 		String msg=null;
@@ -305,6 +306,18 @@ public class ProjParams extends JDialog {
 			// check for values that must exist
 			if(lab.equals(mProj.getLab(mProj.sDisplay))) {	
 				if (len == 0) msg = lab + " must have a value.";
+				else {
+					for (Mproject mp : mProjVec) {// CAS558 add check
+						if (mp!=mProj && val.equalsIgnoreCase(mp.getDisplayName())) {
+							msg = "The display name '" + val + "' has been used. Try another.";
+							break;
+						}
+					}
+				}
+			}
+			else if (lab.equals(mProj.getLab(mProj.sAbbrev))) {
+				if (len!=4) msg = lab + " must be exactly 4 characters. Value '" + val + "' is " + val.length() + ".";
+				/** Cannot check dup Abbrev because if DisplayName is changed, mp!=mProj; and doesn't effect anything **/
 			}
 			else if (lab.equals(mProj.getLab(mProj.sGrpType))) {
 				if (len == 0) msg = lab + " must have a value.";
@@ -312,6 +325,7 @@ public class ProjParams extends JDialog {
 			
 			// check for integers
 			else if (lab.equals(mProj.getLab(mProj.lMinLen))) {
+				if (val.contains(",")) val = val.replace(",", ""); // CAS558 allow comma's
 				msg = checkInt(lab, val);
 			}
 			else if (lab.equals(mProj.getLab(mProj.sDPsize))) {
@@ -321,12 +335,7 @@ public class ProjParams extends JDialog {
 				msg = checkInt(lab, val);
 			}
 			
-			// abbrev
-			else if (lab.equals(mProj.getLab(mProj.sAbbrev))) {
-				if (len!=4) msg = lab + " must be exactly 4 characters.";
-			}
-			
-			if (msg!=null) {
+			if (msg!=null) { // only shows the first warning - returns for user to fix, then test again
 				Utilities.showWarningMessage(msg);
 				return false;
 			}
@@ -826,7 +835,7 @@ public class ProjParams extends JDialog {
 	private boolean bWasSave = false;
 	private Field [] theFields;
 	private String [] prevArr = null;
-	private String [] theProjectNames = null;
+	private String [] selectedProjects = null;
 	private JButton btnSave = null, btnCancel = null;
 	private CaretListener theListener = null;
 }

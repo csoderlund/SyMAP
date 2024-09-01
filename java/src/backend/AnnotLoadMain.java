@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.util.Collections;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,7 +23,7 @@ import util.Utilities;
 import util.ErrorReport;
 
 /***********************************************
- * Load gff files for sequence projects
+ * Load gff files for sequence projects: recognize gene, mRNA, exon, gap, centromere
  * CAS557 made major changes to check mRNA parent with geneID and exon parent with mrnaID.
  * 		This now allows reading of NCBI and Ensembl files directly.
  */
@@ -38,9 +37,7 @@ public class AnnotLoadMain {
 	private DBconn2 tdbc2;
 	private Mproject mProj;		// contains chromosomes and the grpIdx from reading FASTA
 
-	private final String defaultTypes = 			"gene,mRNA,exon, gap, centromere"; // CAS557 remove gap, centromere
 	private TreeMap<String,Integer> typeCounts = 	new TreeMap<String,Integer>();;
-	private TreeSet<String> typesToLoad = 			new TreeSet<String>();
 	
 	// init
 	private Vector<File> annotFiles = 				new Vector<File>();
@@ -174,7 +171,7 @@ public class AnnotLoadMain {
 			boolean isGene = (type.contentEquals("gene")) ? true : false;
 			boolean isExon = (type.contentEquals("exon")) ? true : false;
 			boolean isMRNA = (type.contentEquals("mRNA")) ? true : false;
-			boolean isGap = (type.contentEquals("gap")) ? true : false;
+			boolean isGap =  (type.contentEquals("gap"))  ? true : false;
 			boolean isCent = (type.contentEquals("centromere")) ? true : false;
 			if (!(isGene || isExon || isMRNA || isGap || isCent)) continue;
 			
@@ -230,7 +227,10 @@ public class AnnotLoadMain {
 				for (String kv : keyVals) {
 					String[] words = kv.trim().split("="); // if no '=', then no keyword; CAS513 
 					if (words.length!=2) {
-						cntSkipGeneAttr++;
+						if (!kv.trim().isEmpty()) { // CAS558 happens with convert no desc; two ;;
+							cntSkipGeneAttr++;
+							if (cntSkipGeneAttr<2 && symap.Globals.TRACE) symap.Globals.tprt(line);
+						}
 						continue;
 					}
 					String key = words[0].trim();
@@ -304,18 +304,20 @@ public class AnnotLoadMain {
 		fh.close();
 		
 		cntAllGene+=cntGene;
-		plog.msg("   " + totalLoaded + " annotations loaded from " + f.getName());
+		Utils.prtNumMsg(plog, totalLoaded, "annotations loaded from " + f.getName()); // CAS558 add commas
 		if (cntGene>0 || cntExon>0) { 				// CAS518 no longer supporting exons in separate file
-			plog.msg("   " + cntGene + " genes; " + cntExon + " exons");
+			Utils.prtNumMsg(plog, cntGene, String.format("genes;  %,d exons", cntExon));
 			if (cntGene==0) plog.msg("Warning: genes and exons must be in the same file for accurate results");
 		}
-		if (cntSkipGeneAttr>0)  plog.msg("   " + cntSkipGeneAttr + " skipped gene attribute with no '='");
-		if (cntSkipMRNA>0)	    plog.msg("   " + cntSkipMRNA + " skipped mRNA and exons");
-		if (numParseErrors>0)   plog.msg("   " + numParseErrors + " parse errors - lines discarded");
-		if (noGrpSet.size() >0) plog.msg("   " + noGrpSet.size() + " sequence names in annotation file not loaded into database");
+		if (cntSkipGeneAttr>0)  Utils.prtNumMsg(plog,cntSkipGeneAttr, "skipped gene attribute with no '='");
+		if (cntSkipMRNA>0)	    Utils.prtNumMsg(plog,cntSkipMRNA, "skipped mRNA and exons");
+		if (numParseErrors>0)   Utils.prtNumMsg(plog,numParseErrors, "parse errors - lines discarded");
+		if (noGrpSet.size() >0) Utils.prtNumMsg(plog,noGrpSet.size(), "sequence names in annotation file not loaded into database");
 	}
 	catch (Exception e) {
-		System.err.println("*** Database index problem: try Load again");
+		System.err.println("");
+		System.err.println("*** Database index problem: try Load again (it generally works on 2nd try)");
+		System.err.println("");
 		ErrorReport.print(e, "Load file grpIdx " + grpIdx + " - try Load again."); 
 		bSuccess=false;}
 	}
@@ -444,18 +446,6 @@ public class AnnotLoadMain {
 				mProj.saveProjParam("proj_anno_dir", saveAnnoDir);
 			}
 			
-			// 3rd columns types: 
-			String annot_types =  mProj.getAnnoType(); // this is always blank
-			
-			if (annot_types == null || annot_types.length() == 0) 
-				annot_types = defaultTypes; // "gene,exon,gap,centromere";
-			
-			String [] ats = annot_types.split("\\s*,\\s*");
-			for (String at : ats) {
-				at = at.trim();
-				if (at.length() > 0) typesToLoad.add(at);
-			}
-		
 			// Keywords: CAS501 regardless if Keywords were entered into the Params interface,
 			// they were still be shown on the 2D display. Now they are not entered into
 			// the database unless they are in the list (if there is a list).
@@ -463,7 +453,7 @@ public class AnnotLoadMain {
 			// Parse user-specified types
 			userSetMinKeywordCnt = mProj.getdbMinKey();
 			String attrKW = mProj.getKeywords();
-			if (!attrKW.contentEquals("")) plog.msg("  " + mProj.getLab(mProj.sANkeyCnt) + " " + attrKW);
+			if (!attrKW.contentEquals("")) plog.msg("   " + mProj.getLab(mProj.sANkeyCnt) + " " + attrKW); // CAS558 add space
 			
 			// if ID is not included, it all still works...
 			bUserSetKeywords = (attrKW.equals("")) ? false : true;
@@ -520,7 +510,6 @@ public class AnnotLoadMain {
 				}
 	        }
 			// Release data from heap
-			typesToLoad = null;
 			typeCounts = null;
 			System.gc(); // Java treats this as a suggestion
 		}

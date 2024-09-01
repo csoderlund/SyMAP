@@ -340,7 +340,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			textPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 			
 			// line 1 - CAS500 re-ordered and add Length and Mask; CAS504 add notLoadedInfo
-			String label1 = "Project: " + mProj.getDBName(); // CAS500 was Database Name
+			String label1 = "Directory: " + mProj.getDBName() + "    Abbrev: " + mProj.getdbAbbrev(); // CAS500; CAS558 add abbrev
 			
 			String o = mProj.getOrderAgainst();
 			if (o != null && o.length() > 0) label1 += "    Order against: " + o;
