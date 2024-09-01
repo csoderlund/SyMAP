@@ -376,35 +376,32 @@ For the following parameters, new values take immediate effect.
 
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
-<ul>
-<li>When a <ttl>Group prefix</ttl> is entered, it allows SyMAP to remove the prefix from the chromosome
+	<table>
+	<tr><td style="vertical-align: text-top;">1. <td>When a <ttl>Group prefix</ttl> is entered, it allows SyMAP to remove the prefix from the chromosome
 names and use the remaining part as a shorter name (e.g. '1' instead of 'chr1', as shown on the lower right).
-
-<br>&nbsp;
-<li>If the sequence file has a mix of prefixes (e.g. Chr01, Scaf2345):
-<ul>
-<li>If a <ttl>Group prefix</ttl> is entered, only sequences with that prefix will be loaded.
-<li>Leave the <ttl>Group prefix</ttl> blank will load all sequences; their prefix will not be removed
-(e.g. the 'chr3' on the upper right).
-</ul>
-
-<br>&nbsp;
-<li><i>Long names really clutter the display</i>; it is best to use a consistent prefix that SyMAP can remove,
-otherwise, use really short prefixes, e.g. 's' for scaffold, 'c' for chromosome.
-
-</ul>
-<td><a href="img/demoPrefix.png"><img src="img/demoPrefix.png" alt="Demo prefix" style="border: 1px solid black; width: 80px"></a>
-</table>
-<ul>
-<li><i>You may remove the prefix after the project is loaded</i>. For example, if your sequences had
+	<tr><td style="vertical-align: text-top;">2.<td>If the sequence file has a mix of prefixes (e.g. Chr01, Scaf2345):
+	<ul>
+		<li>If a <ttl>Group prefix</ttl> is entered, only sequences with that prefix will be loaded.
+		<li>Leave the <ttl>Group prefix</ttl> blank will load all sequences; their prefix will not be removed
+		(e.g. the 'chr3' on the upper right).
+	</ul>
+	<tr><td style="vertical-align: text-top;">3.<td><i>Long names really clutter the display</i>; it is best to use a consistent prefix that SyMAP can remove,
+	otherwise, use really short prefixes, e.g. 's' for scaffold, 'c' for chromosome.
+	<tr><td style="vertical-align: text-top;">4.<td><i>You may remove the prefix after the project is loaded</i>. For example, if your sequences had
 names "Scaf1", "Scaf2", etc, and "Scaf" was NOT entered as the <ttl>Group prefix</ttl> before load, you may
 enter it later and it will be removed from all sequence names. However, this is not reversible
 and a prefix cannot be added to the sequence names.
-</ul>
+	</table>
+<td><a href="img/demoPrefix.png"><img src="img/demoPrefix.png" alt="Demo prefix" style="border: 1px solid black; width: 80px"></a>
+</table>
+
 This parameter is finicky; after loading project, check <ttl>View</ttl> and the output to the terminal
-to make sure the annotation was loaded right.
+to make sure the annotation was loaded right. Also, see
+<a href="./input/index.html#convert" class="ext" target="_blank">xToSymap</a>
+as it may help you create the files with good prefixes.
 
 <p><ttl><big>Minimum length</big></ttl>
+<br>This must be an integer, commas are allowed (e.g. 1,000,000).
 <br>Minimum length of a group sequence to load; smaller sequences will be ignored. Note that annotations
 for ignored sequences will also be ignored, but some error messages will be printed to the terminal.
 

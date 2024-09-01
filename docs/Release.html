@@ -8,8 +8,9 @@
 	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
 	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
-	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
+    ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+    ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
+    ttp  {font-family: Arial, monospace; font-size: 15px; font-weight: 500; color: DarkSlateGrey; }
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
@@ -66,7 +67,8 @@ For existing databases, there are no database or build changes since <a href="#v
 <br>You must have Java v17.0.11 or later, starting with SyMAP v5.5.0.
 <h3>Summary of recent major releases</h3>
 <table class="tx">
-<tr><td><a href="#v556">v5.5.6</a><td>(14-July-24)<td>Improved the collinear set algorithm.</a>
+<tr><td><a href="#v557">v5.5.7</a><td>(8-Aug-24)<td>Add <ttl>xToSymap</ttl>.
+<tr><td><a href="#v556">v5.5.6</a><td>(14-July-24)<td>Improved the collinear set algorithm.
 <tr><td><a href="#v548">v5.4.8</a><td>(13-Feb-24)<td>New <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>, which is aware of the
 exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
@@ -75,6 +77,52 @@ exon-intron structure.
 
 </table>
 
+<a id="v558"></a>
+<h3>Release: v5.5.8 (1-Sept-24)</h3>
+Small changes to <ttp>xToSymap</ttp> and some small <ttp>symap</ttp> interfaces changes.
+<ol>
+<li><ttp>xToSymap</ttp>:
+<ol type='a'>
+<li><ttl>Summarize</ttl>: Added output:
+<ul>
+<li>Output all attributes for gene. Compress the summary lengths counts.
+If not <ttl>Verbose</ttl>, remark if the sequence appears to be hard masked.
+<li>If <ttl>Verbose</ttl>, output base count; print header lines of &lt;=10 unique prefixes; print lengths of first 5 input sequences.
+</ul>
+<li><ttl>Split</ttl>: A new feature that will split the converted output into chromosome files.
+<li><ttl>Summary</ttl>: Improved determining ">ID" prefixes.
+<li><ttl>ConvertNCBI</ttl>: The mRNA <ttx>products</ttx> are no longer merged;
+either the gene <ttx>description</ttx> is used or the 1st mRNA  <ttx>product</ttx>.
+The 1st mRNA was a gene attributed with keyword "ID=", now it is a separate keyword "rnaID=".
+The text "gene-" and "rna-" are removed from their respective IDs (to make name shorter).
+The option for assigning a list of protein IDs corresponding to all mRNAs for the gene has been removed;
+now only the 1st protein-id is listed.
+See <a href="input/ncbi.html">NCBI</a> convert.
+<li><ttl>ConvertEnsembl</ttl>: The gene has a new attribute of "rnaID=" with the 1st mRNA ID which
+corresponds to the input exons. It now shares the option of having a gene attribute called "proteinID"
+which is equal to the "protein=id" of the 1st CDS for the 1st mRNA.
+See <a href="input/ensembl.html">Ensembl</a> convert.
+Fixed a rare bug: This script removes the "[Source:..." text, but it would incorrectly remove any brackets.
+
+</ol>
+<br>
+<li><ttp>symap</ttp>: Small interface changes:
+<ul>
+<li><ttl>Project Parameters</ttl>: Allow comma's in minimal length cutoff.
+<li>The display name is checked for duplicates.
+<li>The abbreviation is shown on the <ttl>Selected</ttl> summary and "Project" renamed to "Directory".
+<li>Fixed a rare sort bug in <ttx>Algo2</ttx>.
+</ul>
+<br>
+<li><ttp>viewSymap</ttp>:
+<ul>
+<li><ttl>Query</ttl>: Allow comma's in <ttx>Chr:</ttx> start or end.
+The <ttx>Show</ttx> popup of a row's content has comma's in large numbers,
+and breaks up long <ttx>All-Anno</ttx> lines.
+</ul>
+<br>
+<li>Developers: Most of the <ttp>xToSymap</ttp> methods were simplified.
+</ol>
 <a id="v557"></a>
 <h3>Release: v5.5.7 (8-Aug-24)</h3>
 This release has added clarity and ease to loading the input files.

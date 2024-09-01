@@ -1,10 +1,14 @@
+<!DOCTYPE html>
 <html>
 <head>
 <title>ConvertEnsembl Cabbage</title>
+</head>
 <body>
 <p  style="margin-left:200px; margin-right:50px;">Sequences with "*" are not written to the new FASTA file.
 <pre style="margin-left:200px; margin-right:50px;">
 ------ ConvertEnsembl ./data/seq/cabbE ------
+./data/seq/cabbE/sequence exists - clear existing  .fna and .fa  files
+./data/seq/cabbE/annotation exists - clear existing  .gff and .gff3 files
 Log file to  ./data/seq/cabbE/xConvertENS.log
 Parameters:
    Project Directory: ./data/seq/cabbE
@@ -40,8 +44,8 @@ Scaf    Scaffold00667       159,200  *
 Scaf    Scaffold00671       156,667  *
 Scaf    Scaffold00673       154,937  *
 Suppressing further scaffold outputs
-Finish writing /genomic.fa
-Sequences not output: 32,919
+Sequences not output: 32,919  (*)
+Finish writing ./data/seq/cabbE/sequence/genomic.fna
 
 A  69,247,430  a  61,229,198
 T  69,276,626  t  61,218,908
@@ -49,28 +53,28 @@ C  40,952,680  c  32,332,328
 G  40,973,403  g  32,310,317
 N         305  n  39,344,687
 
-Gaps >= 30000: 39 (using N and n)
-Finish writing /gap.gff
+Gaps &gt;= 30000: 39 (using N and n)
+Finish writing ./data/seq/cabbE/annotation/gap.gff
 
 Processing ./data/seq/cabbE/Brassica_oleracea.BOL.59.gff3.gz
-   Use Genes 54,761 from 59,225
-   Use mRNAs 54,761 from 59,225
-   Use Exons 256,428 from 269,978
-Finish writing /anno.gff
+   Use Gene 59,225 from 59,225
+   Use mRNA 54,761 from 59,225
+   Use Exon 256,428 from 269,978
+Finish writing ./data/seq/cabbE/annotation/anno.gff
 
->>Sequences
+&gt;&gt;Sequences
        9 Output 9      Chromosomes      446,885,882
   32,919 Output 0      Scaffolds         41,736,625 (32,327 < 10,000bp)
 
->>All Type (col 3)
+&gt;&gt;All Types  (col 3)  (+ are processed keywords)
    CDS                     268,591
    RNase_MRP_RNA                 3
    SRP_RNA                      29
    chromosome                    9
-   exon                    269,978
-   gene                     59,225
+   exon                    269,978 +
+   gene                     59,225 +
    lnc_RNA                      22
-   mRNA                     59,225
+   mRNA                     59,225 +
    ncRNA_gene                1,361
    pre_miRNA                   121
    rRNA                        220
@@ -78,16 +82,16 @@ Finish writing /anno.gff
    snRNA                       174
    snoRNA                      282
    tRNA                        510
->>All Gene Source (col 2)
+&gt;&gt;All Gene Source (col 2)
    brad                     59,225
->>All gene biotype= (col 8)
+&gt;&gt;All gene biotype= (col 8)
    nontranslating_CDS            5
-   protein_coding           59,220
->>Written to file
-   Genes                  54,761
-   mRNA                   54,761
-   Exons                 256,428
->>Chromosome gene count 54,761
+   protein_coding           59,220 +
+&gt;&gt;Written to file
+   Genes                    59,225
+   mRNA                     54,761
+   Exons                   256,428
+&gt;&gt;Chromosome gene count 54,761
    C1         C1                      5,401
    C2         C2                      5,842
    C3         C3                      8,489
