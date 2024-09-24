@@ -12,11 +12,12 @@ import java.io.File;
  * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.5.8"; 
-	public static final String 	DATE = " (1-Sept-24)";
+	public static final String 	VERSION = "v5.5.9"; 
+	public static final String 	DATE = " (24-Sept-24)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER =  7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
+	public static final String  JARVERION = "17.0.11"; // verify with 'jar xvf symap.jar META-INF', view META_INF; CAS559 add
 	
 	public static String  MAIN_PARAMS =   "symap.config"; 	// default; changed on command line -c
 	

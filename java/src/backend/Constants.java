@@ -4,6 +4,7 @@ import java.io.File;
 
 import backend.anchor1.Proj;
 import util.ErrorReport;
+import util.Jhtml;
 
 public class Constants {
 /***********************************************************
@@ -18,12 +19,12 @@ public class Constants {
  */
 // Set in SymapCE.SyMAPmanager
 public static boolean TRACE =     false; 		// -tt not shown in help
-public static boolean NEW_ORDER = true;	 		// -oo not shown in help; may not work anymore
 public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block coords
 public static boolean PRT_STATS=  false; 		// -s
 public static boolean WRONG_STRAND_EXC = false; // -wse  exclude wrong strand hits for algo2 
 public static boolean WRONG_STRAND_PRT = false; // -wsp  print wrong strand hits for algo2 
 public static boolean CoSET_ONLY = false;		// -scs on A&S ONLY execute AnchorPosts
+public static boolean MUM_NO_RM = false;		// -mum on A&S ONLY do not remove any mummer files; CAS559 add
 
 // Anchor1 constants; Anchor2 constants are in Anchor2.Arg
 // CAS546 when anchor1 classes were moved to backend.anchor1, enums broke so make static here
@@ -176,6 +177,9 @@ private static String mummer4Path=null;
 	public static boolean is64() {
 		return System.getProperty("os.arch").toLowerCase().contains("64");
 	}
+	public static boolean isMac() {
+		return System.getProperty("os.name").toLowerCase().contains("mac");
+	}
 	public static String getPlatform() {
 		return  System.getProperty("os.name") + ":" + System.getProperty("os.arch");
 	}
@@ -187,7 +191,7 @@ private static String mummer4Path=null;
 		try {
 			if (mummer4Path!=null) return; // already checked
 			
-			System.err.println("\nCheck external programs " + Constants.getPlatform());
+			System.err.println("Check external programs " + Constants.getPlatform());
 			
 			String exDir = Constants.extDir;
 			if (!checkDir(exDir)) {
@@ -217,10 +221,20 @@ private static String mummer4Path=null;
 		checkFile(mpath+ "nucmer");
 		checkFile(mpath+ "promer");
 		checkFile(mpath+ "show-coords");
-		if (mummer4Path==null) { // using supplied mummer v3
+		
+		if (mummer4Path==null) { // using supplied mummer v3; v4 already checked, but to be sure...
 			checkFile(mpath+ "mgaps");
-			checkDir(mpath+"aux_bin");
+			checkDir(mpath+ "aux_bin");
+			checkFile(mpath+ "aux_bin/prepro"); 
+			checkFile(mpath+ "aux_bin/postpro"); // CAS559 only prepro was being checked
+			checkFile(mpath+ "aux_bin/prenuc");
+			checkFile(mpath+ "aux_bin/postnuc");
 			checkDir(mpath+"scripts");
+		}
+		if (isMac()) { // CAS559 add this message
+			String m = 	"  On Mac, MUMmer executables needs to be verified for 1st time use; \n    see ";
+			String u = Jhtml.TROUBLE_GUIDE_URL + Jhtml.macVerify;
+			System.out.println(m+u);
 		}
 		return true;
 	}
@@ -230,15 +244,15 @@ private static String mummer4Path=null;
 			File dir = new File(dirName);
 
 			if (!dir.exists()) {
-				System.err.println("***Error - directory does not exists: " + dirName);
+				System.err.println("*** directory does not exists: " + dirName);
 				return false;
 			}
 			if (!dir.isDirectory()) {
-				System.err.println("***Error - is not a directory: " + dirName);
+				System.err.println("*** is not a directory: " + dirName);
 				return false;
 			}
 			if (!dir.canRead()) {
-				System.err.println("***Error - directory is not readable: " + dirName);
+				System.err.println("*** directory is not readable: " + dirName);
 				return false;
 			}
 			return true;
@@ -247,18 +261,20 @@ private static String mummer4Path=null;
 	}
 	static private boolean checkFile(String fileName) {
 		try {
+			if (symap.Globals.DEBUG) System.out.println("Check " + fileName);
+			
 			File file = new File(fileName);
 
 			if (!file.exists()) {
-				System.err.println("***Error - file does not exists: " + fileName);
+				System.err.println("*** file does not exists: " + fileName);
 				return false;
 			}
 			if (!file.isFile()) {
-				System.err.println("***Error - is not a file: " + fileName);
+				System.err.println("*** is not a file: " + fileName);
 				return false;
 			}
 			if (!file.canExecute()) {
-				System.err.println("***Error - file is not executable: " + fileName);
+				System.err.println("*** file is not executable: " + fileName);
 				return false;
 			}
 			return true;

@@ -55,7 +55,8 @@ public class ProgressDialog extends JDialog  {
 		boolean isDeterminate=false; // CAS535 was parameter, but always false
 	
 		msgToFileOnly("-----------------------------------------------------------------");
-		msgToFileOnly(">>> " + Globals.VERDATE + "   " + ErrorReport.getDate() + " <<<");
+		String x = "    Running Java v" + System.getProperty("java.version") + " on " + ErrorReport.getDate(); // CAS559 add java v to log
+		msgToFileOnly(">>> SyMAP " + Globals.VERDATE + x + " <<<");
 		
 		// Label
 		JLabel label = new JLabel(strMessage);

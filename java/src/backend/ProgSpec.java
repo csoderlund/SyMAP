@@ -108,51 +108,50 @@ public class ProgSpec implements Comparable<ProgSpec>
 			
 			String query = f1.getPath(); // CAS500 getAbsolutePath
 			String targ  = f2.getPath();
-			
-			// CAS500 move log file to log directory
-			String runLogName  = alignLogDirName + outRoot + ".log";
+				
+			String runLogName  = alignLogDirName + outRoot + ".log"; // CAS500 move log file to log directory
 			FileWriter runFW = new FileWriter(runLogName);
 			Log runLog = new Log(runFW);  
 			
-			if (program.equals("promer") || program.equals("nucmer"))//(type == ProgType.mummer)
-			{
-				String intFilePath = resDir + outRoot + "." + program;
-				String deltaFilePath = intFilePath + ".delta";
-				
-				if (Constants.isMummerPath()) { // CAS508 path is set in symap.config
-					query = f1.getAbsolutePath();
-					targ =  f2.getAbsolutePath();
-					intFilePath =   new File(intFilePath).getAbsolutePath();
-					deltaFilePath = new File(deltaFilePath).getAbsolutePath();
-				}
-				
-				String mummerPath = Constants.getProgramPath("mummer"); 
-				if (!mummerPath.equals("") && !mummerPath.endsWith("/")) mummerPath += "/"; 
-				
-				// Run promer or nucmer
-				cmd = mummerPath + program + " " + args + " -p " + intFilePath + " " + targ + " " + query;
-				rc = runCommand(cmd, runFW, runLog); // send output and log messages to same file
-				
-				// Run show-coords
-				if (rc == 0) { // CAS501 nucmer rc=1
-					//CAS515 String parms = (program.equals("promer") ? "-dlkTH" : "-dlTH"); // -k to remove secondary frame hits
-					String parms = (program.equals("promer") ? "-dlkT" : "-dlT"); // -k to remove secondary frame hits
-					cmd = mummerPath + "show-coords " + parms +  " " + deltaFilePath;
-					rc = runCommand(cmd, new FileWriter(outFile), runLog);
-					runLog.msg( "#" + alignNum + " done: " + Utilities.getDurationString(getRunTime()) );
-				}
-				else runLog.msg( "#" + alignNum + " fail: " + Utilities.getDurationString(getRunTime()) );
-				
+			if (!program.equals("promer") && !program.equals("nucmer")) {//(type == ProgType.mummer)
+				System.err.println("SyMAP error: unsupported program: " + program);
+				return false;
 			}
-			else System.err.println("SyMAP error: unsupported program");
 			
+			// Make command
+			String intFilePath = resDir + outRoot + "." + program;
+			String deltaFilePath = intFilePath + ".delta";
+			
+			if (Constants.isMummerPath()) { // CAS508 path is set in symap.config
+				query = f1.getAbsolutePath();
+				targ =  f2.getAbsolutePath();
+				intFilePath =   new File(intFilePath).getAbsolutePath();
+				deltaFilePath = new File(deltaFilePath).getAbsolutePath();
+			}
+			
+			String mummerPath = Constants.getProgramPath("mummer"); 
+			if (!mummerPath.equals("") && !mummerPath.endsWith("/")) mummerPath += "/"; 
+			
+			// Run promer or nucmer
+			cmd = mummerPath + program + " " + args + " -p " + intFilePath + " " + targ + " " + query;
+			rc = runCommand(cmd, runFW, runLog); // send output and log messages to same file
+			
+			// Run show-coords // CAS501 nucmer rc=1
+			if (rc == 0) { 
+				String parms = (program.equals("promer") ? "-dlkT" : "-dlT"); // -k to remove secondary frame hits; CAS515 remove H
+				cmd = mummerPath + "show-coords " + parms +  " " + deltaFilePath;
+				rc = runCommand(cmd, new FileWriter(outFile), runLog);
+				runLog.msg( "#" + alignNum + " done: " + Utilities.getDurationString(getRunTime()) );
+			}
+			else runLog.msg( "#" + alignNum + " fail: " + Utilities.getDurationString(getRunTime()) );
+		
 			if (rc == 0) {
 				cleanup(); // Cleanup intermediate files. CAS500 only if successful
 				Utilities.checkCreateFile(doneFile, "PS done");
 				setStatus(STATUS_DONE);
 			}
 			else {
-				ErrorReport.print("Failed command: " + cmd);
+				ErrorReport.print("#" + alignNum + " rc" + rc + " Failed: " + cmd); // CAS559 add alignum
 				setStatus(STATUS_ERROR);
 			}
 			runFW.close();
@@ -166,6 +165,10 @@ public class ProgSpec implements Comparable<ProgSpec>
 	
 	private void cleanup() {
 		String intFilePath = resDir + outRoot + "." + program;
+		if (Constants.MUM_NO_RM) {// CAS559 new command line argument for the user to keep all args
+			System.out.println("For mummer files, see " + resDir);
+			return; 
+		}
 		Utilities.deleteFile(intFilePath + ".delta");
 		Utilities.deleteFile(intFilePath + ".cluster");
 		Utilities.deleteFile(intFilePath + ".mgaps");

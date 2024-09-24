@@ -17,16 +17,16 @@ import util.ProgressDialog;
 import util.Utilities;
 
 /*******************************************************
- * Run mummer for alignments
+ * Run MUMmer for alignments for one pair of genomes
  * CAS500 1/2020 this has been almost totally rewritten, but results are the same,
  * 	except there is intelligence built into setting up the files for alignment,
  *  which can make a difference
- * CAS522 remove FPC; CAS541 change UpdatePool to DBconn2
+ * CAS522 remove FPC; CAS541 change UpdatePool to DBconn2; CAS559 made non-functional changes looking for user's problem...
  */
 public class AlignMain {
 	public boolean mCancelled = false;
 	
-	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE; 
+	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE; // 1000000
 	private static final int maxFileSize = 60000000; // CAS508 was 7M (changed so 'Concat' parameter works for demo)
 	
 	private ProgressDialog plog;
@@ -135,8 +135,7 @@ public class AlignMain {
 					Utils.writeDoneFile(resultDir + Constants.alignDir);
 					plog.msg("Alignments:  success " + getNumCompleted());
 					
-					// CAS500 only delete tmp files if successful
-					String tmpDir = Constants.getNameTmpDir(proj1Dir, proj2Dir);
+					String tmpDir = Constants.getNameTmpDir(proj1Dir, proj2Dir);// CAS500 only delete tmp files if successful
 					if (Constants.PRT_STATS) {
 						System.out.println("Do not delete " + tmpDir);
 					}
@@ -182,10 +181,10 @@ public class AlignMain {
 			File fh_tDir2 = Utilities.checkCreateDir(tmpDir2, false);
 			
 		// Preprocessing for proj1
-			if (!writePreprocSeq(fh_tDir1, mProj1,  bDoCat, isSelf)) { // concat=true
+			if (!writePreprocSeq(fh_tDir1, mProj1,  bDoCat, isSelf)) { // concat=true if Concat not checked
 				mCancelled = true;
 				Cancelled.cancel();
-				System.out.println("Cancelling");
+				System.out.println("Cancelling"); 
 				return;								
 			}
 			

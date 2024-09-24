@@ -29,7 +29,6 @@ import util.Utilities;
  */
 
 public class SyntenyMain {
-	private boolean bNewOrder = Constants.NEW_ORDER;
 	private boolean bNewBlockCoords = Constants.NEW_BLOCK_COORDS;
 	
 	private ProgressDialog mLog;
@@ -155,16 +154,14 @@ public class SyntenyMain {
 			String orderBy = mProj1.getOrderAgainst();
 			if (orderBy != null && orderBy.equals(mProj2.getDBName())) {
 				OrderAgainst obj = new OrderAgainst(mProj1, mProj2, mLog, tdbc2); // CAS505 in new file
-				if (bNewOrder) obj.orderGroupsV2(false);	
-				else obj.orderGroups(false);	
+				obj.orderGroupsV2(false);	// CAS559 remove the old orderGroups	
 			}	
 		}
 		else if (mProj2.hasOrderAgainst()){
 			String orderBy = mProj2.getOrderAgainst();
 			if (orderBy != null && orderBy.equals(mProj1.getDBName())) {
 				OrderAgainst obj = new OrderAgainst(mProj1, mProj2, mLog, tdbc2);
-				if (bNewOrder) obj.orderGroupsV2(true);
-				else obj.orderGroups(true);
+				obj.orderGroupsV2(true);
 			}	
 		}	
 		if (Cancelled.isCancelled() || bInterrupt) {tdbc2.close(); return false;}

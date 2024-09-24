@@ -475,7 +475,7 @@ public class DBconn2 {
    				if (prt) System.err.println("   max_allowed_packet=" + packet);
    				if (packet<4194304) {
    					cntFlag++;
-   					System.err.println("   Suggest: SET GLOBAL max_allowed_packet=1073741824;");
+   					System.err.println("   Suggest: SET GLOBAL max_allowed_packet=4194304;  # or greater"); // CAS559 chg msg
    				}
    			}
    			
@@ -486,7 +486,7 @@ public class DBconn2 {
    				if (prt) System.err.println("   innodb_buffer_pool_size=" + packet);
    				if (packet< 134217728) {
    					cntFlag++;
-   					System.err.println("   Suggest: set GLOBAL innodb_buffer_pool_size=1073741824;");
+   					System.err.println("   Suggest: set GLOBAL innodb_buffer_pool_size=134217728; # or greater");// CAS559 chg msg
    				}
    			}
    			
@@ -516,10 +516,10 @@ public class DBconn2 {
    	/*************************************************************
 	 * Create database; CAS504 stopped using scripts/symap.sql and added Schema.java
 	 */
-	public static boolean createDatabase(String hostname, String dbname, String username, String password) {
+	public static int createDatabase(String hostname, String dbname, String username, String password) {
 		checkHost(hostname,username,password);
 		
-		boolean success = true;
+		int rc=0; // 0 create, -1 fail, 1 exist CAS559 calling routine needs these 3 states
 		Connection conn;
 		String dburl =   createDBstr(hostname, dbname);
 		String hosturl = createDBstr(hostname, "");
@@ -534,6 +534,7 @@ public class DBconn2 {
 				new Schema(conn);
 			}
 			stmt.close(); rs.close(); conn.close(); 
+			rc=1;
 		}
 		catch (SQLException e) { // Create database
 			try {
@@ -547,13 +548,14 @@ public class DBconn2 {
 	        	conn = DriverManager.getConnection(dburl, username, password);
 				new Schema(conn);
 				conn.close();	
+				rc = 0;
 			}
 			catch (SQLException e2) {
 				ErrorReport.print(e,"Error creating database '" + dbname + "'.");
-				success = false;
+				rc = -1;
 			}
 		}
-		return success;
+		return rc;
 	}
 	/***********************************************************
 	 * Database exists for the read only viewSymap CAS511 add

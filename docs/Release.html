@@ -77,6 +77,15 @@ exon-intron structure.
 
 </table>
 
+<a id="v559"></a>
+<h3>Release: v5.5.9 (24-Sept-24)</h3>
+This is mostly a documentation update, with a few tiny code updates.
+<ul>
+<li>SyMAP can be run with a "-mum" flag, which prevents any MUMmer files from being removed by SyMAP after alignment.
+<li>On creating a database, symap checks the MySQL settings and external programs. It checks java minor version numbers.
+<li><small>Developer: remove some obsolete code for orderAgainst, which removed an 'unchecked' call. Write Java version into symap.log.</small>
+</ul>
+
 <a id="v558"></a>
 <h3>Release: v5.5.8 (1-Sept-24)</h3>
 Small changes to <ttp>xToSymap</ttp> and some small <ttp>symap</ttp> interfaces changes.
@@ -147,7 +156,7 @@ the exon parent must match the mRNA ID.
 <li><ttl>A&S</ttl>: <ttx>Algo 2</ttx> would crash on a rare case when sorting exons, which has been fixed.
 <li>Demo: was updated to have correct GFF3 files.
 <li>Documentation: has been improved for the input and build process.
-<li>Developers: a new package called <ttl>toSymap</ttl> has been added.
+<li>Developers: a new package called <ttl>xToSymap</ttl> has been added.
 </ol>
 
 <a id="v556"></a>

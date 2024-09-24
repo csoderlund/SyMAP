@@ -138,12 +138,16 @@ public class SumFrame extends JDialog implements ActionListener {
 			syver = rs.getString(3);
 		}
 		rs.close();
-
-		String [] x = params.split("\n");
-		params = "";
-		for (int i=0; i<x.length; i++) if (x[i]!=null) params += x[i] + "\n"; // CAS556 update collinear leaves this null
-		params += mp.getChangedParams(Mpair.DB);
-				
+		
+		if (params==null) { // CAS559  if MUMmer fails...
+			params  = "Unknown";
+		}
+		else {
+			String [] x = params.split("\n");
+			params = "";
+			for (int i=0; i<x.length; i++) if (x[i]!=null) params += x[i] + "\n"; // CAS556 update collinear leaves this null
+			params += mp.getChangedParams(Mpair.DB);
+		}
 		String d = Utilities.getNormalizedDate(alignDate);
 		String v = (syver!=null) ? ("  " + syver) : "";
 		

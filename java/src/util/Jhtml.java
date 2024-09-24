@@ -31,6 +31,7 @@ public class Jhtml {
 	public static final String BASE_HELP_URL_prev51 = "http://www.agcol.arizona.edu/software/symap/doc/"; // not used
 	public static final String BASE_HELP_URL = 	"https://csoderlund.github.io/SyMAP/"; // CAS510
 	public static final String TROUBLE_GUIDE_URL = BASE_HELP_URL + "TroubleShoot.html";
+	public static final String macVerify = "#macos"; 									// CAS559
 	
 	public static final String SYS_GUIDE_URL =    BASE_HELP_URL + "SystemGuide.html"; 
 	public static final String create = "#create";

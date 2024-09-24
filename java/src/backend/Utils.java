@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStreamReader;
-import java.util.Comparator;
 import java.util.zip.GZIPInputStream;
 
 import database.DBconn2;
@@ -280,64 +279,7 @@ public class Utils {
 		
 		return idx;
 	}
-
-	// Sort the Comparable array, and apply the same sorting to the Object array,
-	// so they stay parallel.
-	// The purpose of cmp is to sort nulls to one end.
-	public static void HeapDoubleSort(Comparable[] a, Object[] aa, ObjCmp cmp){
-        int i,f,s;
-        for(i=1;i<a.length;i++){
-            Comparable e = a[i];
-            Object ee = aa[i];
-            s = i;
-            f = (s-1)/2;
-            while(s > 0 && cmp.compare(a[f], e) < 0){
-                a[s] = a[f];
-                aa[s] = aa[f];
-                s = f;
-                f = (s-1)/2;
-            }
-            a[s] = e;
-            aa[s] = ee;
-        }
-        for(i=a.length-1;i>0;i--){
-            Comparable value = a[i];
-            Object vv = aa[i];
-            a[i] = a[0];
-            aa[i] = aa[0];
-            f = 0;
-            if(i == 1)
-                s = -1;
-            else
-                s = 1;
-            if(i > 2 && cmp.compare(a[1], a[2]) < 0)
-                s = 2;
-            while(s >= 0 && cmp.compare(value, a[s]) < 0){
-                a[f] = a[s];
-                aa[f] = aa[s];
-                f = s;
-                s = 2*f+1;
-                if(s+1 <= i-1 && cmp.compare(a[s], a[s+1]) < 0)
-                    s = s+1;
-                if(s > i-1)
-                    s = -1;
-            }
-            a[f] = value;
-            aa[f] = vv;
-        }
-    }	
-	public static class ObjCmp implements Comparator<Comparable> {
-		public int compare(Comparable a, Comparable b) {
-			if (a == null){
-				if (b == null) return 0;
-				else return +1;
-			}
-			else if (b == null) {
-				return -1;
-			}
-			else return a.compareTo(b);
-		}
-	}
+	// CAS559 - remove HeapDoubleSort, and ObjCmp implements Comparator<Comparable>; no longer needed for old orderAgainst and has unchecked call
 	
 	public static String reverseComplement(String in){
 		in = (new StringBuffer(in)).reverse().toString().toUpperCase();

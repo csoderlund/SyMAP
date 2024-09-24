@@ -57,9 +57,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private static boolean TRACE = false;
 	protected static boolean inReadOnlyMode = false;// set from viewSymap script with -r
 	protected static int     maxCPUs = -1;			// arg -p
-	protected static boolean bCheckVersion = false; // arg -v
+	protected static boolean bCheckSQL = false;     // arg -v, set in symapCE.SyMAPmanager, which extends this
 	protected static boolean lgProj1st = false; 	// For Mummer; false sort on name; true sort on length
-	private static boolean isCat = true;
+	private static boolean   isCat = true;
 	
 	private final String DB_ERROR_MSG = "A database error occurred, please see the Troubleshooting Guide at:\n" + Jhtml.TROUBLE_GUIDE_URL;	
 	private final String DATA_PATH = Constants.dataDir;
@@ -130,7 +130,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		// Add shutdown handler to kill mysqld on CTRL-C
         Runtime.getRuntime().addShutdownHook( new MyShutdown() );
         
-		initialize(bCheckVersion);
+		initialize(bCheckSQL);
 		
 		instructionsPanel = Jhtml.createInstructionsPanel(this.getClass().getResourceAsStream(HTML), getBackground());
 		JPanel projPanel = createProjectPanel();
@@ -149,14 +149,14 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	/***********************************************************************
 	 * Called at startup and refreshMenu (after any project changes
 	 */
-	private void initialize(boolean checkSQL) {
+	private void initialize(boolean bSQL) {
 		try {
 			if (dbc2 == null) {
 				dbc2 = makeDBconn();
 				
 				new Version(dbc2);
 				
-				if (checkSQL) dbc2.checkVariables(true); // CAS511 add; CAS541 change to DBconn2
+				if (bSQL) dbc2.checkVariables(true); // CAS511 add; CAS541 change to DBconn2
 			}
 			
 			Jhtml.setResClass(this.getClass());
@@ -1024,7 +1024,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	public void refreshMenu() {
 		Utilities.setCursorBusy(this, true);
 		
-		initialize(false); // ZZZ recreates project lists on every refresh; easier to modifing projVec etc
+		initialize(false); // recreates project lists on every refresh; easier then modifing projVec etc
 		
 		splitPane.setLeftComponent( createProjectPanel() );
 		if (selectedProjVec.size() > 0)
@@ -1248,19 +1248,23 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			}
 			
 		// Check database exists or create CAS511 add if exist
+			int rc=1; // 0 create, 1 exists CAS559 was documented that checkVariables, but not being done
 	        if (inReadOnlyMode) {
 	        	if (!DBconn2.existDatabase(db_server, db_name, db_clientuser, db_clientpasswd)) 
 		        	ErrorReport.die("*** Database '" + db_name + "' does not exist");
 	        }
 	        else { 
-	        	if (!DBconn2.createDatabase(db_server, db_name, db_adminuser, db_adminpasswd)) 
-		        	ErrorReport.die(DB_ERROR_MSG);
+	        	rc = DBconn2.createDatabase(db_server, db_name, db_adminuser, db_adminpasswd);
+		        if (rc == -1) ErrorReport.die(DB_ERROR_MSG);
 	        }
 	     
 	        String user = (inReadOnlyMode ? db_clientuser   : db_adminuser);
 	        String pw   = (inReadOnlyMode ? db_clientpasswd : db_adminpasswd);
 	        
-	        return new DBconn2("Manager", db_server, db_name, user, pw);
+	        DBconn2 dbc = new DBconn2("Manager", db_server, db_name, user, pw);
+	        if (rc==0) dbc.checkVariables(true);
+	        
+	        return dbc;
 		}
 		catch (Exception e) {ErrorReport.die("Error getting connection"); }
 		return null;

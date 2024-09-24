@@ -6,6 +6,7 @@ import backend.Constants;
 import backend.anchor1.Group;
 import symap.Globals;
 import symap.manager.ManagerFrame;
+import util.ErrorReport;
 
 /*********************************************
  * Called by symap and viewSymap scripts
@@ -60,6 +61,7 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("\nSynteny&Alignment:");
 			System.out.println("  -p N      : number of CPUs to use");
 			System.out.println("  -s        : print stats for A&S, or recreate the Summary on display");
+			System.out.println("  -mum      : do not remove any mummer files");
 			System.out.println("  -wse      : for g2, exclude MUMmer hits that differ from gene strand (v5.4.8 Algo2)");
 			System.out.println("  -wsp      : for g2, print MUMmer hits that differ from gene strand (v5.4.8 Algo2)");
 			System.out.println("  -sg       : split genes on cluster hit creation (Cluster Algo1)");
@@ -72,52 +74,56 @@ public class SyMAPmanager extends ManagerFrame {
 			if (equalOption(args, "-r")) {// used by viewSymap
 				inReadOnlyMode = true; // no message to terminal
 			}
-			if (equalOption(args, "-v")) {// check version
-				bCheckVersion = true; // no message to terminal
-				System.out.println("-v Check version ");
+			if (equalOption(args, "-v")) {// check MySQL for important settings
+				bCheckSQL = true; 
+				System.out.println("-v  Check MySQL ");
 			}
 			if (startsWithOption(args, "-p")) { // #CPU
 				String x = getCommandLineOption(args, "-p"); //CAS500
 				try {
 					maxCPUs = Integer.parseInt(x);
-					System.out.println("-p Max CPUs " + maxCPUs);
+					System.out.println("-p  Max CPUs " + maxCPUs);
 				}
 				catch (Exception e){ System.err.println(x + " is not an integer. Ignoring.");}
 			}
 			
 			if (startsWithOption(args, "-c")) {// CAS501
 				Globals.MAIN_PARAMS = getCommandLineOption(args, "-c");
-				System.out.println("-c Configuration file " + Globals.MAIN_PARAMS);
+				System.out.println("-c  Configuration file " + Globals.MAIN_PARAMS);
 			}
 			if (equalOption(args, "-a")) { // CAS531 change
 				Globals.bTrim=false;
-				System.out.println("-a Do not trim 2D alignments");
+				System.out.println("-a  Do not trim 2D alignments");
 			}
 			
 			if (equalOption(args, "-sg")) { // CAS540
-				System.out.println("-sg split genes (Algo1)");
+				System.out.println("-sg  Split genes (Algo1)");
 				Group.bSplitGene= true;
 			}
 			if (equalOption(args, "-z")) {// CAS519b
 				Globals.GENEN_ONLY=true;
-				System.out.println("-z Reload Annotation will only run the Gene# assignment algorithm");
+				System.out.println("-z  Reload Annotation will only run the Gene# assignment algorithm");
 			}
 			
 			if (equalOption(args, "-s")) {
-				System.out.println("-s Print Stats");
+				System.out.println("-s  Print Stats");
 				Constants.PRT_STATS = true;
 			}
 			if (equalOption(args, "-wsp")) { // CAS548
-				System.out.println("-wsp print g2 hits where the hit strands differ from the genes (Algo2)");
+				System.out.println("-wsp  Print g2 hits where the hit strands differ from the genes (Algo2)");
 				Constants.WRONG_STRAND_PRT = true;
 			}
 			if (equalOption(args, "-wse")) { // CAS548
-				System.out.println("-wse exclude g2 hits where the hit strands differ from the genes (Algo2)");
+				System.out.println("-wse  Exclude g2 hits where the hit strands differ from the genes (Algo2)");
 				Constants.WRONG_STRAND_EXC = true;
 			}
 			if (equalOption(args, "-acs")) { // CAS556
-				System.out.println("-acs On A&S, ONLY execute the collinear sets computation");
+				System.out.println("-acs  On A&S, ONLY execute the collinear sets computation");
 				Constants.CoSET_ONLY = true;
+			}
+			if (equalOption(args, "-mum")) { // CAS559 add (remove obsolete -oo for old ordering of groups)
+				System.out.println("-mum  Do not remove any mummer result files");
+				Constants.MUM_NO_RM = true;
 			}
 			/*************************************************************************/
 			/** not shown in -h help - hence, the double character so user does not use by mistake **/
@@ -137,10 +143,6 @@ public class SyMAPmanager extends ManagerFrame {
 			}
 			
 			// old tests - not shown in -h help
-			if (equalOption(args, "-oo")) {
-				System.out.println("-oo Use the original version of draft ordering");
-				Constants.NEW_ORDER = false;
-			}
 			if (equalOption(args, "-aa")) { // CAS531 change
 				System.out.println("-aa Align largest project to smallest");
 				lgProj1st = true;
@@ -183,44 +185,44 @@ public class SyMAPmanager extends ManagerFrame {
 	} 	
 	/********************************************************************/
 	// moved from SyMAP2d as was not even used there; only called from Manager
+	// String d = (Runtime.getRuntime().maxMemory() / (1024*1024)) + "m";
+	// This is printed to log file in ProgressDialog
 	public static void printVersion() {
 		String url = util.Jhtml.BASE_HELP_URL;
 		String base = url.substring(0, url.length()-1);
-		//String d = (Runtime.getRuntime().maxMemory() / (1024*1024)) + "m";
 		System.out.println("\nSyMAP " + Globals.VERSION + Globals.DATE + "  " + base
-			+ "\nJava v" + System.getProperty("java.version")); // CAS548 add 'Compiled', remove mem; CAS550 was Run, no compile 
+			+ "\nRunning Java v" + System.getProperty("java.version")); // CAS548 add 'Compiled', remove mem; CAS550 was Run, no compile; CAS559 Running 
 	}
 	
-	public static boolean checkJavaSupported(Component frame) {	
-		/** CAS42 10/16/17 - did not work for Java SE 9 **/
-		int rMajor=1, rMinor=8;
-		String rVersion = rMajor + "." + rMinor;
-		String version = System.getProperty("java.version");
+	public static boolean checkJavaSupported(Component frame) {	// CAS559 update; CAS42 10/16/17 - did not work for Java SE 9
+	try {
+		String relV = Globals.JARVERION;
 		
-		if (version != null) {
-			String[] subs = version.split("\\.");
-			int major = 0;
-			int minor = 0;
-
-			if (subs.length > 0) major  = Integer.valueOf(subs[0]);
-			if (subs.length > 1) minor  = Integer.valueOf(subs[1]);
-			
-			// Java version not less than 1.8
-			if (major == rMajor && minor < rMinor) {
-				System.err.println("Java version " + rVersion + " or later is required.");
-				
-				javax.swing.JOptionPane.showMessageDialog(null,
-					    "The installed Java version is " + version + ".  \n"
-					    + "SyMAP requires version " + rVersion + " or later.  \n"
-					    + "Please visit http://java.com/download/ to upgrade.", "Java Incompatibility",
-					    javax.swing.JOptionPane.ERROR_MESSAGE);
-				return false;
-			}
-			else
-				return true;
+		String userV = System.getProperty("java.version");
+		if (userV==null) {
+			System.err.println("+++ Could not determine Java version - try to continue....");
+			return true;
 		}
-		else 
-			System.err.println("Could not determine Java version.");
+		String [] ua = userV.split("\\.");
+		if (ua.length<=1) {
+			System.out.println("+++ Java version " + userV + "; incorrect format - try to continue....");
+			return true;
+		}
+		
+		String [] rx = relV.split("\\.");
+		int r0 = Integer.valueOf(rx[0]), r1 = Integer.valueOf(rx[1]), r2 = Integer.valueOf(rx[2]);
+		
+		int u0 = Integer.valueOf(ua[0]), u1 = Integer.valueOf(ua[1]);
+		int u2 = (ua.length>2)  ? Integer.valueOf(ua[2]) : -1;
+		
+		// u0<r0 will fail before executions starts
+		if (u0 == r0 && (u1 < r1 || u2 < r2))  { // versions seem to all have u1 as '0' except for v1.8 
+			System.err.println("+++ Java version " + relV + " or later is required. The installed Java version is " + userV + "." );
+			System.err.println("    This will run, but may have issues. Suggest updating your Java version.");
+			return true;
+		}
+		
 		return true;
+	} catch (Exception e) {ErrorReport.print(e, "Getting Java version - try to continue...."); return true;}
 	}
 }

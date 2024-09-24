@@ -104,7 +104,7 @@
 <br>
 <li>MacOS
 <ul>
-<li><a href="#macos">Running external programs</a>
+<li><a href="#macos">Running external programs</a> <!--- ref in symap -->
 <li><a href="#font">Fonts for MacOS Monterey</a>
 </ul>
 </ul>
@@ -136,10 +136,10 @@ When Bartender was removed, SyMAP no longer hung on load.
 If SyMAP gives an out of memory error, you need to increase the memory. The <tt>symap</tt>
 script has the following lines:
 <pre>
-#!/bin/sh
-mem="8192m";
-echo "&gt;&gt;&gt;&gt; SyMAP build, query and view ($mem)     `date` &lt;&lt;&lt;&lt;"
-java -Xmx$mem -classpath /Users/cari/Workspace/github/symap/java/jar/symap.jar symapCE.SyMAPmanager $@
+  #!/bin/sh
+  mem="8192m";
+  echo "&gt;&gt;&gt;&gt; SyMAP build, query and view ($mem)     `date` &lt;&lt;&lt;&lt;"
+  java -Xmx$mem -classpath /Users/cari/Workspace/github/symap/java/jar/symap.jar symapCE.SyMAPmanager $@
 </pre>
 Change the number after <tt>mem=</tt>. The <tt>viewSyMAP</tt> script also requests 8192m memory,
 which you can also edit.
@@ -333,33 +333,47 @@ have to restart <tt>symap</tt> to see the results.
 This message indicates that SyMAP could not parse the MUMmer or BLAT output files
 to load the anchors. For MUMmer, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 
-<a id="macos"></a>
+<a id="macos"></a> <!--- ref in symap -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>MacOS and external programs</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-MacOS 10.15 has made it difficult to run programs downloaded from the web
-unless its been authenticated by Apple. Running external programs from SyMAP,
-you will either get popup that states "xxx cannot be opened because developer cannot be verified",
-or the program will just fail. Do the following:
+MacOS will not run programs downloaded from the web unless its been authenticated by Apple.
+Running external programs (e.g. MUMmer) from SyMAP,
+you will get a popup like the one shown on the lower left image; select "Cancel", then exit <ttx>symap</ttx>.
+Do the following (e.g. <ttx>prepro</ttx>):
 <ul>
-<li>Using the Finder, select the program and Open With "Terminal" or "iTerm".
+<li>Using the Finder, go to the <ttx>symap_5/ext/mummer/mac/aux_bin</ttx> directory.
+<li>Select <ttx>prepro</ttx> and "Open With" &rarr; "Terminal" (see lower right image).
 <li>You will get a pop-up, select "Open".
+<li>A terminal window will popup, you can close it.
 </ul>
-For Promer, perform this on the following:
-<pre>
-mummer
-promer
-mgaps
-show-coords
-aux_bin/postpro
-aux_bin/prepro
-</pre>
+<table class="tx">
+<tr><td><a href="img/macVer.png">
+	<img src="img/macVer.png" alt="Mac Verify" style="border: 1px solid black; width: 150px"></a>
+<td>&nbsp;&nbsp;
+<td><a href="img/macOpen.png">
+	<img src="img/macOpen.png" alt="Mac Open" style="border: 1px solid black; width: 350px"></a>
+</table>
 
-After that, you should be able to run it via SyMAP. This worked with my previous Catalina and current Monterery, but
+For running MUMmer, perform this on the following  in <ttx>symap_5/ext/mummer/mac</ttx>:
+<pre>
+  mummer
+  mgaps
+  show-coords
+  aux_bin/prepro
+  aux_bin/postpro
+  aux_bin/prenuc
+  aux_bin/postnuc
+</pre>
+For running MUSCLE, perform this on <ttx>symap_5/ext/muscle/mac/muscle</ttx>:
+<p>
+After that, you should be able to run these via SyMAP, even if you move the <ttx>symap_5</ttx> directory.
+
+<p>This worked with my previous Catalina, Monterey, and current Sonoma but
 if it does not work for you, see
 <a href="https://support.apple.com/en-us/102445" target="_blank" class="ext">Apple Help</a>, section
-<b>If you want to open an app that has not been notarized or is from an unidentified developer</b>.
+"If you want to open an app that has not been notarized or is from an unidentified developer".
 
 <a id="font"></a>
 <h3>MacOS Monterey</h3>

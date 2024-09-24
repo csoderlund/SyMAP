@@ -101,6 +101,10 @@ public class MultiAlignmentData {
 	
 	private boolean readFASTA(String fname, boolean replaceSequences, boolean createConsensus) {
 		try {
+			if (!Utilities.fileExists(fname)) { // CAS559 added check
+				System.out.println("File '" + fname + "' does not exist");
+				return false;
+			}
 			BufferedReader in = new BufferedReader(new FileReader(fname));
 			
 			if(replaceSequences) {
