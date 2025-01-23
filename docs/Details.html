@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>SyMAP Collinear</title>
+<title>SyMAP Details</title>
 <style>
 	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
@@ -32,7 +32,7 @@
 						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
 				</td>
 				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
-					SyMAP Collinear
+					SyMAP Details
 				</td>
 				<td style="text-align: right; vertical-align: top; padding: 0">
 					<a href="http://www.arizona.edu">
@@ -62,9 +62,18 @@
 
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
-
-
-<h2>Details of Collinear sets</h2>
+<b>Contents</b>
+<table>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;
+<td><a href="#col">Collinear sets</a>
+<td>&nbsp;&nbsp;&nbsp;
+<td><a href="#con">Highlight conserved genes</a>
+<td>&nbsp;&nbsp;&nbsp;
+<td><a href="#hit">Hit popup</a>
+</table>
+<a id="col"></a>
+<h2>Collinear sets</h2>
 Using the <ttb>Hit Filter</ttb>, or right click in the hit region, set the highlighting for <ttl>Collinear Sets</ttl>.
 As shown below, the number of highlighted collinear hits and number of collinear sets will be shown in
 the <ttl>Information</ttl> box.
@@ -98,9 +107,9 @@ of the hit sequences.
 <table>
 <tr><td>
 Sometimes a hit looks like it overlaps a gene, but the gene is actually in the gap, so it is not hit.
-This is illustrated on the right, where the 3 genes at the bottom appear hit by the red hit wire,
+This is illustrated on the right, where the gene at the bottom appears hit by the pink hit wire,
 but in fact are spanned by the gap gray area. Note that the
-hit popup shows it is a g0 hit (hits no genes).
+hit popup shows it is a nn type, which hits no genes.
 <td><a href="img/colG0HitsSpan.png">
 <img src="img/colG0HitsSpan.png" alt="Clustered hit" style="border: 1px solid black; width: 300px"></a>
 <tr><td>&nbsp;<td>&nbsp;
@@ -126,28 +135,84 @@ view these.
 <img src="img/colG1Hits.png" alt="G1 hits" style="border: 1px solid black; width: 300px"></a>
 </table>
 
-<a id="v556"></a>
-<h3>Release v5.5.6</h3>
-The collinear algorithm was improved for release v5.5.6.
-<table><tr><td>
-Pre-v5.5.6 gave obviously wrong results if a gene from the hit numbered project
-(the hits are numbered along the alphabetically lesser project name) was part of two different collinear sets. An example
-is on the right.
-<p>In my test sets, this happened a few times between Arabidopsis, Brassica rapa, and cabbage, but none for my partial
-mammalian test set of humans, chimps, mouse and rabbit.
-<td><a href="img/colSet-two-olap.png">
-	<img src="img/colSet-two-olap.png" alt="Overlapping collinear sets" style="border: 1px solid black; width: 250px"></a>
+<!--------------------------------------------------------------------->
+<a id="con"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Highlight conserved genes</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<table>
+	<tr><td>
+	As stated in <a href="UserGuide.html#sequence_filter" class="ext" target="_blank">Sequence Filters</a>, when there are more than 2 tracks displayed in <ttb>2D</ttb>,
+	there will be two extra options for the first <i>reference</i> track,
+	as shown on the right. Referring to <ttx>Hit g2x2</ttx>, if there are 3 tracks,
+	the genes conserved across the 3 tracks will be highlighted, as shown below.
+	<td><a href="img/seqFilterRefOnly.png">
+		<img src="img/seqFilterRefOnly.png" alt="sequence filter reference" style="border: 1px solid black; width: 250px"></a>
 </table>
-<p>
-<table><tr><td>Referring to the image on the right (from the demo), pre-v5.5.6 called this one collinear set, ignoring the
-extra embedded gene 4941.b; v5.5.6 breaks it into two sets due to gene 4941.b (as shown in the image).
-<td><a href="img/colSet-extra-gene.png">
-	<img src="img/colSet-extra-gene.png" alt="Overlapping collinear sets" style="border: 1px solid black; width: 250px"></a>
+
+<p><a href="img/seqFilterConserved.png">
+	<img src="img/seqFilterConserved.png" alt="sequence filter conserved" style="border: 1px solid black; width: 700px"></a>
+<p>The above image has the settings <ttb>Sequence Filter</ttb> <ttx>Hit g2x2</ttx> and the <ttb>Hit Filter</ttb> <ttx>Hit =2 genes</ttx>.
+Hence, the pink hit-wires and cyan exons indicate the conserved genes, and
+the green hit-wires have genes at both ends but are not conserved across
+the 3 tracks.
+<p><font color=green>Caveats:</font>
+<ol>
+<li>For a 3-chromosome view, say genes A-B-C are conserved. The hit for A-B may not overlap the hit for B-C. The algorithm only
+checks the A-B hit and B-C hit, but not the possible A-C hit.
+<li>There may be different numbers of highlighted genes on the different tracks or hit-wires between tracks. This is because multiple hits can align to a gene, and one gene can align
+to two different genes on the opposing genome.
+<li>When there are overlapping genes, a hit is assigned to just one of them, which
+causes some conserved genes to have incorrect pairing.
+<li>There are occasional tiny hits that just barely overlap genes; the current algorithm marks them as conserved genes.
+<li>Currently, the hits may align strictly in introns (especially for the long introns of mammalian genomes); the current
+algorithm marks these as conserved.
+</ol>
+Even with these caveats, I rarely see a pairing that seems 'iffy' with plant genomes, though the overlap patterns
+and long introns of mammalian genomes cause some questionable results. I will be working on improving the hit-to-gene assignment
+for the next release. As always, feedback is welcome!
+
+<!--------------------------------------------------------------------->
+<a id="hit"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2>Hit popup</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+Default view:
+<ul>
+<li>Both lists are sorted by start coordinate.
+<li>The # column in the two tables align to each, e.g. the rows #2 align to each other.
+<li>The sequence name that is alphabetically lower (e.g. arab&lt;cabb) is the <i>query</i> and
+the other is the <i>target</i>. The query is numbered 1-N; the target
+	is ordered to match the first.
+<li>Two subhits may overlap (Gap&lt;=0) on one chromosome but not the other.
+</ul>
+
+<h3>Merge</h3>
+<table><tr>
+<td><a href="img/2DhitMerge.png">
+		<img src="img/2DhitMerge.png" alt="2D Hit Merge" style="border: 1px solid black; width: 500px"></a>
+<td style="vertical-align: text-top;">In the merge view, hits with gap&lt;=0 are merged with the hit they overlap with.
+<p>The numbered hits  are no longer 1-to-1, i.e. they do not necessarily align to each other like they do in the un-merged view.
+<p><ttx>Totals</ttx> are provided for the <ttx>Len</ttx>, <ttx>Gap</ttx> and total.
+<p>The merge view corresponds better to the visual view on the 2D track.
+<p>The existence of the <ttl>Merge</ttl> is a quick indication that there are overlapping hits.
 </table>
-V5.5.6 finds more collinear sets and longer ones. However, since there may be some hit-gene configuration that the algorithm
-did not take into account, it verifies all sets and prints an "Error in set x" to the terminal if there is a problem;
-albeit, it cannot verify that none are missed (but detailed inspection has not shown any missed ones).
-Please email Cari at symap@agcol.arizona.edu if you find any problems.
+
+<h3>Order</h3>
+<table><tr>
+<td><a href="img/2DhitOrder.png">
+		<img src="img/2DhitOrder.png" alt="2D Hit Order" style="border: 1px solid black; width: 450px"></a>
+<td style="vertical-align: text-top;">
+As stated above, each numbered hit corresponds to the same number in the opposite list,
+e.g. the two #1 aligns. An '#' on the far right implies that the order numbers are not sequential.
+<p>This option produces another popup where the target list is sorted by '#', but then the
+coordinates are no longer sorted.
+<p>The existence of the <ttl>Order</ttl> is a quick indication that there are <i>disordered</i> hits.
+
+</table>
+
 <p><a href="#top">Go to Top</a>
 <!---- END BODY -->
 	</td></tr>

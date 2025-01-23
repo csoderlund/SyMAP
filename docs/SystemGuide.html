@@ -64,12 +64,12 @@
 
 <center>
 <table class="tx">
-<tr><td colspan=2>This document discusses building a SyMAP v5 database.
+<tr><td colspan=2>This document discusses building a SyMAP v5 database. It always applies to the latest release.
 <br>The following external pages are referenced in this document:
 <table class="tx">
 <tr>
 <td><a href="input/index.html" class="ext" target="_blank">Input</a>
-<td>&nbsp;&nbsp;<a href="SystemHelp.html" class="ext" target="_blank">Interface and Parameters</a>
+<td>&nbsp;&nbsp;<a href="SystemHelp.html" class="ext" target="_blank">Parameters and Interface</a>
 <td>&nbsp;&nbsp;<a href="MUMmer.html" class="ext" target="_blank">MUMmer with SyMAP</a>
 <td>&nbsp;<a href="Demo.html" class="ext" target="_blank">Demo</a>
 <td>&nbsp;<a href="TroubleShoot.html" class="ext" target="_blank">Trouble-shoot</a>
@@ -572,8 +572,8 @@ Run the <ttl>Alignment&amp;Synteny</ttl>, where the alignment should take less t
 When done, open the <ttb>Summary</ttb> for the pair, as shown on the right; <i>as mentioned above, there
 may be slight difference in the number of anchors.</i>
 See the first dot plot in <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>.
-<p>It is recommended that the <ttx>Cluster Hits</ttx>
-<a href="SystemHelp.html#clust" class="ext" target="_blank">algorithm 1</a> be used for ordering sequence.
+<p>It is recommended that the
+<a href="SystemHelp.html#clust" class="ext" target="_blank">Cluster Algo1</a> be used for ordering sequence.
 		<td>
 <a href="img/demoSumDraft.png"><img src="img/demoSumDraft.png" alt="demo Sum Draft" style="border: 1px solid black; width: 400px"></a>
 
@@ -895,13 +895,15 @@ see if there are any <ttx>/scripts</ttx> or <ttx>/ext</ttx> changes that need to
 
 <p>The following table shows what versions require action by the user.
 <table class=ty>
+
 <tr><td><b>Release</b><td><b>Changed files</b><sup>1</sup><td><b>Action by User</b>
-<tr><td>v5.5.6 <td>Only the <ttx>symap.jar</ttx><td>Execute <ttx>./symap -acs</ttx>,
-<br>then select the pair and run <ttb>Selected Pair (Redo)</ttb>;
-<br>a popup will have you confirm "Collinear only" indicating
-<br>that only this algorithm will be run.
+<tr><td>v5.6.0<td>Only the <ttx>symap.jar</ttx><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
+<tr><td>v5.5.6
+<td>Only the <ttx>symap.jar</ttx><td>1. Execute <ttx>./symap -acs</ttx>.
+<br>2. Select the pair and run <ttb>Selected Pair (Redo)</ttb>.
+<br>3. A popup will have you confirm "Collinear only" indicating
+that only this algorithm will be run.
 <tr><td>v5.4.6-5.4.8<td>Only the <ttx>symap.jar</ttx><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
-<tr><td>v5.4.1 <td>Only the <ttx>symap.jar</ttx><td>Execute <ttx>./symap -y</ttx>
 <tr><td>v5.4.0 <td>Only the <ttx>symap.jar</ttx><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
 <tr><td>v5.2.0 <td><ttx>symap</ttx>, <ttx>viewSymap</ttx>, <ttx>scripts/ConvertNCBI.*</ttx><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
 <tr><td>pre-v5.1.9<td>Only the <ttx>symap.jar</ttx><td>Delete the database, reload and <ttl>Alignment&Synteny</ttl><sup>2</sup>

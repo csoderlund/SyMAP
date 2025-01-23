@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>SyMAP Interface</title>
+<title>SyMAP System Parameters</title>
 <style>
 	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
@@ -35,8 +35,8 @@
 						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
 
 				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
-					SyMAP Interface
-					<br>and Parameters
+					SyMAP Parameters
+					<br>and Interface
 
 				<td style="text-align: right; vertical-align: top; padding: 0">
 					<a href="http://www.arizona.edu">
@@ -61,9 +61,8 @@
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
 
-SyMAP was written for diverse plant genomes with short introns, but has recently been modified to work
-for the long introns of mammalian genomes, and less diverse genomes. This is addressed in <a href="#pairParams">Pair Parameters</a>.
-
+The original SyMAP was written for diverse plant genomes with short introns, but has been modified to work
+for the long introns of mammalian genomes, and less diverse genomes.
 <p><b>Contents:</b>  <a href="#start"><u>Start SyMAP</u></a>
 
 <table class="tx">
@@ -603,8 +602,7 @@ directly; the existing alignments for the pair will be used.
 </table>
 
 <p>&nbsp;
-<p>The parameters are described in the following three sections. The most important parameter
-is for <ttl>Algo2</ttl>; the <ttx>Intergenic</ttx> parameter must be increased for conserved genomes.
+<p>The parameters are described in the following three sections.
 
 </table>
 
@@ -659,69 +657,79 @@ projects, while NUCmer is used for self alignments.
 
 <ttl>Algorithm 1 (modified original, updated v5.4.0, abbreviated Algo1)</ttl>:
 <br><u>Pros</u> This is an generic algorithm that has knowledge of genes versus intergenic hits.
-It is recommended for ordering sequence contigs and when there are little or no gene annotation.
-It must be used for self-synteny. It has been used on 100's of genome comparisons.
+<br>&nbsp;&nbsp;It is recommended for ordering sequence contigs and when there are little or no gene annotation.
+<br>&nbsp;&nbsp;It must be used for self-synteny.
+<br>&nbsp;&nbsp;It has been used on 100's of genome comparisons.
 <br><u>Cons</u> It does not distinguish between exon and intron hits. It is more likely to miss good homologous gene pairs.
 <br><u>Parameters</u> It does not need parameter adjustment. However, this gives no control over what hits are filtered.
 
-<p><ttl>Algorithm 2 (exon-intron, last update v5.4.8, abbreviated Algo2)</ttl>:
-<br><u>Pros</u> This is a new algorithm that has explicit knowledge of gene pairs and their exon-intron structure, and shows all gene pairs with
-hits unless filtered by the parameters (and a few internal filters).
-It has better filtering for small intergenic and intron-only hits.
+<p><ttl>Algorithm 2 (exon-intron, last update v5.6.0, abbreviated Algo2)</ttl>:
+<br><u>Pros</u> This is a new algorithm that has explicit knowledge of gene pairs and their exon-intron structure.
+<br>&nbsp;&nbsp;When there is good gene annotations for both genomes, this is definitely the superior algorithm.
 <br><u>Cons</u> It does not perform self-synteny or take NUCmer files as input.
-It does not work when a given chromosome is split over multiple MUMmer files
-(this will not happen when SyMAP generates the MUMmer files).
-<br><u>Parameters</u> The parameters generally will need adjusting. However, this gives more control over what gene pairs
-are shown and can surpress the minor intergenic hits. See <a href="#hint">Hints</a>
+<br>&nbsp;&nbsp;It does not work when a given chromosome is split over multiple MUMmer files (this will NOT happen
+<br>&nbsp;&nbsp;&nbsp;&nbsp;when SyMAP generates the MUMmer files).
+<br><u>Parameters</u> As of v5.6.0, the parameters generally do not need adjusting.
+However, it has more parameters, hence, more control over results than <ttl>Algo1</ttl>. See <a href="#hint">Hints</a>
 below the parameter explanation.
 
-<p><ttl>Algorithm 1</ttl> is the default for now; this is because <ttl>Algorithm 2</ttl> generally requires some
-experimenting with the parameters whereas <ttl>Algorithm 1</ttl> does not.
+<p><ttl>Algo1</ttl> is the default since it works for all inputs.
 
 <p>
 <table class="ty">
 <tr>
-<td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
-<tr><td colspan=2><ttl>Algorithm 1 (original)</ttl><td>Yes
+	<td><i>Parameter</i>
+	<td><i>Description</i>
+	<td><i>Default</i>
+
+<tr><td colspan=2><ttl>Algo1 (original)</ttl>
+    <td>Yes
 <tr>
 	<td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Top N piles</ttl>
 	<td>It will retain the top N hits of a pile of overlapping hits (<a href="#pileOfHits">Pile of Hits</a>), as
 		well as all hits with score at least 80% of the Nth hit.
 	<td>2
-<tr><td colspan=2><ttl>Algorithm 2 (gene-centric)</ttl><td>No
 
+<tr><td colspan=2><ttl>Algo2 (gene-centric)</ttl>
+    <td>No
 <tr><td colspan=3>
-<table style="border: none; padding: 0px; border-spacing: 0px;">
-<tr><td style="border: none">&nbsp;&nbsp;&nbsp;<i>Categories</i>:<td style="border: none"><ttx>EE</ttx><td style="border: none">Exon-Exon
-    <td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>EI</ttx><td style="border: none">Exon-Intron
-    <td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>En</ttx><td style="border: none">Exon-intergenic
-<tr><td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>II</ttx><td style="border: none">Intron-Intron
-    <td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>In</ttx><td style="border: none">Intron-intergenic
-    <td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>nn</ttx><td style="border: none">intergenic-intergenic
-</table>
+	<table style="border: none; padding: 0px; border-spacing: 0px;">
+		<tr><td style="border: none">&nbsp;&nbsp;&nbsp;<i>Categories</i>:<td style="border: none"><ttx>EE</ttx><td style="border: none">Exon-Exon
+			<td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>EI</ttx><td style="border: none">Exon-Intron
+			<td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>En</ttx><td style="border: none">Exon-intergenic
+		<tr><td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>II</ttx><td style="border: none">Intron-Intron
+			<td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>In</ttx><td style="border: none">Intron-intergenic
+			<td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>nn</ttx><td style="border: none">intergenic-intergenic
+	</table>
 
-<tr>
-	<td>&nbsp;&nbsp;<ttl>Exon</ttl>
-	<td>If the hit is <ttx>EE</ttx>, remove all hits that have less than N aligned bases (EQ 1).
-	<td>N=100
-<tr>
-	<td>&nbsp;&nbsp;<ttl>Intron</ttl>
-	<td>If the hit is <ttx>EI</ttx>, <ttx>II</ttx>,  <ttx>En</ttx> or <ttx>In</ttx> remove all
-	hits that have less than N aligned bases (EQ 1).
-	<td>N=300
-<tr>
-	<td>&nbsp;&nbsp;<ttl>Intergenic</ttl>
-	<td>If the hit is <ttx>nn</ttx>, remove all hits that have less than N aligned bases (EQ 1).
-	<br><i>Increase this parameter for conserved genomes.</i>
-	<td>N=600
+<tr><td>&nbsp;&nbsp;<ttl>Scale</ttl>
+	<td>
+	Increase a scale to filter out more clustered hits, decrease to filter out less.
+	<br><table class="ty">
+		<tr><td><ttl>Exon</ttl>
+			<td>Determines the percentage of required exon coverage.
+		<tr><td><ttl>Gene</ttl>
+			<td>Determines the percentage of required gene coverage.
+		<tr><td><ttl>Len</ttl>
+			<td>For G2 and G1, minimum size hit unless it covers a gene.
+			<br>Default minimum is 300bp.
+		<tr><td><ttl>G0_Len</ttl>
+			<td>For G0, minimum size hit unless it covers a gene.
+			<br>Default minimum is 1000bp. Suggestion: increase for closely related species.
+		</table>
+	<i>A clustered hit must pass multiple rules regarding coverage</i>.
+	<br>For example, the <ttl>Exon</ttl>
+	coverage parameter may be made more stringent, yet there will still be some low exon scores due to
+	good gene coverage, etc.
+	<td>N=1.0
 <tr>
 	<td>&nbsp;&nbsp;<ttl>Keep piles</ttl>
 	<td><ttl>EE</ttl>, <ttl>EI</ttl>, <ttl>En</ttl>, <ttl>II</ttl>, <ttl>In</ttl>
-	<br>&bullet;This ONLY applies when there is a pile of overlapping hits (<a href="#pileOfHits">Pile of Hits</a>);
-	it tells the algorithm what type of cluster hits to retain if they are in a pile.
-	<br>&bullet;Hits are filtered before pile analysis.
-	<br>&bullet;Intergenic-intergenic pile hits, and any unchecked categories, are filtered
-	as described in the next row.
+		<br>&bullet;&nbsp;This ONLY applies when there is a pile of overlapping hits (<a href="#pileOfHits">Pile of Hits</a>);
+		<br>&nbsp;&nbsp;it tells the algorithm what type of cluster hits to retain if they are in a pile.
+		<br>&bullet;&nbsp;Hits are filtered before pile analysis.
+		<br>&bullet;&nbsp;Intergenic-intergenic pile hits, and any unchecked categories, are filtered
+		<br>&nbsp;&nbsp;as described in the next row.
 	<td><ttl>EE, EI, En</ttl>
 <tr>
 	<td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Top N piles</ttl>
@@ -731,23 +739,22 @@ for any uncheck categories, but in a more conservative way. It will retain the <
 	<td>2
 </table>
 
-<b>EQ 1.</b> <ttx>Minimum matched bases = hit-length*identity</ttx>, where <ttx>hit-length</ttx> is the maximum
-length of the query and target length reported by MUMmer, and <ttx>identity</ttx>
-is the percent identity reported by MUMmer.
-For clustered hits, EQ 1 is applied to the summed <ttx>lengths</ttx> and <ttx>identity</ttx>.
-
 <a id="hint"></a>
-<p><u>Hint for Algorithm 1</u>: Increasing the <ttl>Top N</ttl> parameter can cause too many hits and reduce synteny.
+<p><u>Hint for <ttx>Algo1</ttx></u>: Increasing the <ttl>Top N</ttl> parameter can cause too many hits and reduce synteny.
 Decreasing it can remove more gene-pair hits.
-Hence, try <ttl>Algorithm 2</ttl> if you want more gene pairs.
+Hence, try <ttl>Algo2</ttl> if you want more gene pairs.
 
-<p><u>Hint for Algorithm 2</u>: On the output to the terminal, if any chromosome pair shows over 10,000 hits, the
+<p><u>Hint for <ttx>Algo2</ttx></u>: On the output to the terminal, if any chromosome pair shows over 10,000 hits, the
 parameters probably need to be made more stringent; too many hits (and piles) confuses the synteny algorithm, which results
 in synteny blocks not being found; it also results in very long execution time.
-For highly similar genomes, it is <i>necessary</i> to increase the <ttx>Intergenic</ttx> parameter, e.g. &gt;1000;
-you may also need to increase the others parameters and uncheck <ttx>EI</ttx> and <ttx>En</ttx> to reduce hits. For distant genomes, decrease the parameters.
-<i>Suggestion</i>: for large
-genomes, experiment with the parameters on just one pair of the chromosomes.
+<br>&rarr;&nbsp;<i>Suggestion</i>: for large genomes, experiment with the parameters on just one pair of the chromosomes.
+(You can use <a href="input/index.html" class="ext" target="_blank">xToSymap</a> for the split.)
+<br>&rarr;&nbsp;<i>I have experimented with the datasets</i> (1) human, chimpanzee, mouse (2)
+Arabidopsis, Brassica rapa, Brassica oleracea; neither datasets required a change in
+parameters with the upgraded v5.6.0 algorithm except for B. rapa to B. oleracea.
+For for B. rapa to B. oleracea, the number of G1 hits was over 200k, which is way more than typical;
+by increasing all parameters a small amount, this reduced to just over 100k.
+
 <table>
 <tr><td>
 <a id="pileOfHits"></a>
@@ -760,22 +767,26 @@ must be filtered; if they are not, the synteny algorithm does not perform well.
 <td><a href="img/demoPileG0.png"><img src="img/demoPileG0.png" alt="Pile to intergenic" style="border: 1px solid black; width:  400px"></a>
 </table>
 
-<p>Running with <tt>./symap -s</tt> provides additional output for both algorithms.
-<h4>Wrong orientation</h4>
-It can happen that all hits in a cluster can have the same strand (+/+ or -/-), yet the cluster aligns to
-a positive and negative gene (or vice versa). By default, <tt>Algo2</tt> includes these hits and writes the count
-to the terminal, e.g.
-<pre>
-6,736 Both Genes - cluster strands differ from gene (Multi 1,425, Single 5,311)
-</pre>
-If you would like to have them excluded or printed, use one of the following.
-<table>
-<tr><td><tt>./symap -wse	<td># exclude
-<tr><td><tt>./symap -wsp <td># print to terminal
-<tr><td><tt>./symap -wsp &gt;ws.log</tt>&nbsp;&nbsp;&nbsp;<td># print to file ws.log
-</table>
-<p>You can view them in
-the <ttb>Query</ttb> where the <ttx>Hit St</ttx> column will be "=" but the gene <ttx>Gst</ttx> are not equal, or the other way around.
+<h4>Wrong strand</h4>
+<u>Wrong strand</u>: All hits in a cluster will be to the same strand (=) yet the cluster aligns to
+a positive and negative gene (or vice versa).
+<p><tt>Algo1</tt> does include these hits. You can view them in the <ttb>Query</ttb> where
+the <ttx>Hit St</ttx> column will be "=" but the gene <ttx>Gst</ttx> columns are not equal,
+or the other way around.
+
+<p><tt>Algo2</tt> does NOT include these hits. You can request to view the potential hits
+during the <ttb>A&S</ttb> by running it with the "-wsp" flag, i.e.
+<pre>   ./symap -wsp </pre>
+This will only show gene pairs with (1) multiple hits to exons (in one or multiple gene pairs), (2) at least one is not
+an overlapping gene. It is up to the user to determine what is real.
+Sample output:
+<pre><small>
+#Subhits  Atha     Cabb   Gene Hit  Hit-Location
+EE #3     1521.b   4591.  -/+  =    [Chr02  10,102,716  10,103,438    723bp]   [Chr04 41,818,700 41,819,559    860bp]
+EE #1     3180.a   6029.  -/+  =    [Chr02  17,314,365  17,314,646    282bp]   [Chr04 51,551,640 51,551,897    258bp]
+EE #3     3180.c   242.   -/+  =    [Chr02  17,314,556  17,316,798  2,243bp]   [Chr04  1,756,767  1,758,837  2,071bp]
+EE #2     3180.c   6029.  -/+  =    [Chr02  17,314,575  17,316,810  2,236bp]   [Chr04 51,551,821 51,554,344  2,524bp]
+</small></pre>
 
 <a id="syn"></a>
 <table style="width: 95%"><tr><td style="text-align: left">

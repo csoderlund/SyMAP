@@ -610,28 +610,51 @@ The single genes tables only have the
 <table class="tx">
 <tr><td style="vertical-align: text-top;"><ttx>NumHits</ttx>
 <td>This is the number of hits to the gene in the ENTIRE databases, except for SELF synteny.
-<br>For example, if X, Y
-and Z species have all been compared for synteny, but only Y and Z are being queried,
-the <ttl>Orphans</ttl> for Y can have <ttx>NumHits</ttx>&gt;0 if it hits X.
+<br>For example, if Arab, Brap
+and Cabb species have all been compared for synteny, but only Arab and Cabb are being queried,
+the <ttl>Orphans</ttl> for Arab can have <ttx>NumHits</ttx>&gt;0 if it hits Brap.
 </table>
 
+Results from a database where Arab has been compared with Brap and Cabb, and no other species.
 <table><tr>
-<td><small>Single result from 3 selected species</small>
-<br><a href="img/query_single_result.png">
-<img src="img/query_single_result.png" alt="query single results" style="border: 1px solid black; height: 360px"></a>
-<td><small>Single result from 2 selected species</small>
+<td><small>Single result from Arab-Cabb table</small>
 <br><a href="img/query_single_result2.png">
 <img src="img/query_single_result2.png" alt="query single results2" style="border: 1px solid black; height: 360px"></a>
+<td>&nbsp;
+<td><small>Single result from Arab-Brap table</small>
+<br><a href="img/query_single_result.png">
+<img src="img/query_single_result.png" alt="query single results" style="border: 1px solid black; height: 360px"></a>
+<td>&nbsp;
+<td><small>Single result from Arab-Brap-Cabb table</small>
+<br><a href="img/query_single_result3.png">
+<img src="img/query_single_result3.png" alt="query single results" style="border: 1px solid black; height: 360px"></a>
 </table>
 
-<p>In the above tables, the A.thal gene #2 is the 2-species table because it has not hit to Cabbage; but it is not in
-the 3-species table because it does have a hit to A.thal. The values of <ttx>NumHits</ttx> is the same in both. That is,
-they both are showing orphan genes relative to the selected set, but the <ttx>NumHits</ttx> lets the user know if its
-orphan over all the computed sets.
+<p>In the above tables:
+<ol><li><small>Single results for Atha-Cabb selected species</small>: The Atha gene# 1.2 is this table
+because it does not have a hit to Cabb, but it has <ttx>NumHits</ttx>=1 because it does have a hit to Brap.
+<li><small>Single results for Arab-Brap selected species</small>: The Atha gene# 1.2 is NOT in this table because it has
+a hit to Brap.
+<li><small>Single results for Arab-Brap-Cabb selected species</small>: This shows all genes that are orphaned from both
+Arab-Brap and Arab-Cabb comparisons; i.e. all genes with <ttx>NumHits</ttx>=0.
+</ol>
+That is, they both are showing orphan genes relative to the selected set, but the <ttx>NumHits</ttx> lets the user know if its
+an orphan over all the computed sets, e.g. Arab-Brap-Cabb
+
 <p>The other query on singles is for <ttl>All genes</ttl>, which provides the same columns.
+
 <a id="save"></a>
-<h4>2.3 Auto-save columns</h4>
-The columns selection is saved in a file called <tt>.symap_saved_props</tt> in the user's home directory.
+<table style="width: 95%"><tr><td style="text-align: left">
+<h4>2.3 Columns and order shown</h4>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+When you display a new table, it will use the last table created or modified (add/remove columns)
+to determine the columns and order displayed. The selected columns are saved between sessions (described
+below), but the order is not.
+
+<h4>2.4 Auto-save columns</h4>
+The columns selection is saved in a file called <tt>.symap_saved_props</tt> in the user's home directory so
+that the next time you <ttl>viewSymap</ttl>, the table will show the same column (but in their default order).
 If you only have one SyMAP database, there is no need to read the following:
 
 <p>Say the last database D<sub>n</sub> queried had N species,

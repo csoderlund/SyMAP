@@ -62,20 +62,145 @@
 
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
-For existing databases, there are no database or build changes since <a href="#v548">v5.4.8</a>; see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
+For existing databases, there are no database or build changes since <a href="#v560">v5.6.0</a>; see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
 <br>This will no longer run on 32-bit machines, starting with v5.5.1.
 <br>You must have Java v17.0.11 or later, starting with SyMAP v5.5.0.
 <h3>Summary of recent major releases</h3>
 <table class="tx">
-<tr><td><a href="#v557">v5.5.7</a><td>(8-Aug-24)<td>Add <ttl>xToSymap</ttl>.
+<tr><td><a href="#v548">v5.6.0</a><td>(Dec-24)<td>Improve <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>,
+which is aware of the exon-intron structure.
+<tr><td><a href="#v557">v5.5.7</a><td>(8-Aug-24)<td>Add <ttl>xToSymap</ttl> and improve ease of input.
 <tr><td><a href="#v556">v5.5.6</a><td>(14-July-24)<td>Improved the collinear set algorithm.
-<tr><td><a href="#v548">v5.4.8</a><td>(13-Feb-24)<td>New <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>, which is aware of the
-exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 <tr><td><a href="#v530">v5.3.1</a><td>(6-Jan-23)<td>Improved <a href="UserGuide.html#align">hit alignment</a> features.
 <tr><td><a href="#v530">v5.3.0</a><td>(10-Dec-22)<td>Updated database schema to remove all FPC tables.
 
 </table>
+
+<a id="v560"></a>
+<h3>Release: v5.6.0 (23-Jan-25)</h3>
+There were some major changes made to <ttl>Algo2</ttl> (first released <a href="#v546">v5.4.6</a>) and other minor changes.
+<br>For existing databases, see <i>Update</i> in the items below.
+<ul>
+<li><ttb>A&S</ttb> <ttl>Algo2</ttl>:
+<ul>
+<li>The improved algorithm reduces:
+<ol>
+<li>the number of long clustered hits with huge gaps (happens with mammalian genomes),
+<li>short hits,
+<li>hits with little overlap to connected genes (this last change causes much smaller
+<ttl>Summary</ttl> <ttx>GNwCH</ttx> and <ttx>GNwCHB</ttx> numbers).
+</ol>
+<li>G2 assignments do much better at assigning the hit's genes.
+<br>G2 no longer allows wrong strand hits,
+but the "-wsp" remains to print the wrong strand hits.
+<br>G1 and G0 assignments now require less gaps between hits and a 'Hit len' ratio of &gt; 0.5.
+<br>G1 no longer has minor assignments.
+<li>Internal parameters are mostly set by automatic analysis of the gene models.
+The user parameters have been changed from <ttx>Minimal matched bases</ttx> to <ttx>Scale</ttx>,
+which is more intuitive to change, i.e. increase filters more, decrease filters less.
+See <a href="SystemHelp.html#hint" class="ext" target="_blank">Algo2 Hints</a> for tested datasets and parameter changes.
+<li>The gene overlap score (shown on the Gene popup) has been changed to be the
+overlap between the hit and the gene without subtracting gaps (same as <ttl>Algo1</ttl>).
+<li>The changes do not change the synteny blocks very much, however,
+the reduction in short F+ hits can result in slightly better synteny blocks and less tiny blocks.
+</ul>
+<i>Update</i>: The <ttb>A&S</ttb> needs to be re-run to get this update.
+
+<br>&nbsp;
+<li><ttb>Queries</ttb>:
+<ul>
+<li>If the columns have been re-ordered in the last table that was created or had a column added/removed, the re-ordered
+columns will be applied to the next created table.
+<li>When sorting on <ttl>Gene#</ttl>, hits without a gene annotation will sort to the bottom.
+<li>For a singles table: (1) Bug fix: the gene length (<ttx>glen</ttx>) column would not sort.
+(2) The <ttx>NumHits</ttx> column has been moved to the 2nd column slot.
+<li><ttx>Export</ttx>: Writes the SyMAP version and database name as a comment in the first line of the CSV and FASTA file,
+and the title for the HTML file. The default for CSV and HTML is no row#.
+<li>Start <ttx>viewSymap -q</ttx> to see the gene overlap scores instead of the exon scores for <ttx>Algo2</ttx>.
+</ul>
+
+<br>
+<li><ttb>2D</ttb>
+<ul>
+<li>Scroll wheel: The scroll wheel had to be scrolled in the opposite direction for a flipped sequence.
+Now it scrolls consistently regardless of flipped state.
+<li>The algorithm for placing overlapping genes is slightly improved.
+<li><ttl>Hit Filter</ttl>: An <ttx>And</ttx> and <ttx>Or</ttx> radio button has been added
+next to the <ttx>Synteny Blocks</ttx> (see <a href="UserGuide.html#hitfilter" class="ext" target="_blank">Hit Filter</a>).
+<li><ttl>Download Blocks</ttl>: See <a href="UserGuide.html#data_download" target="_blank" class="ext">Download</a>.
+<ul>
+<li>Has three options: the original <ttl>Blocks with gene info</ttl>, a new <ttl>Blocks only</ttl> and a new <ttl>Blocks summary</ttl>.
+<li>The output is now sorted by the two chromosome numbers followed by the block number.
+
+</ul>
+<li>Hit popup: Two new conditional options have been added. (See <a href="Details.html#hit" class="ext" target="_blank">Hit popup</a>.)
+<ol>
+<li><ttl>Merge</ttl>: If there are negative overlaps, it will merge the hits.
+<li><ttl>Order</ttl>: The target hits are listed by the query sorted order;
+if the target hits are not strictly in sequential order, they will be sorted.
+</ol>
+The gap column was one off, which has been fixed.
+</ul>
+<p>
+<li><ttb>Summary</ttb>: Added <ttx>#Genes</ttx> to the <ttx>Collinear set</ttx> row.
+<br>&nbsp;&nbsp;&nbsp;Bug fix: "GNwCHB" was slightly off when a project is in multiple synteny pairs.
+<br><i>Update</i>: Start up "<tt>symap -s</tt>"", then select <ttl>Summary</ttl>; the -s will cause it to regenerate the summary.
+
+<p>
+<li><ttb>Dotplot</ttb> and its <ttx>Summary</ttx>:
+The stats showed 0% if &lt; 1%, now shows "&lt;1%"; and a few other little adjustments.
+
+<p>
+<li><ttx>Demo_seq</ttx>: 4 duplicates were removed from the <tt>data/seq/demo_seq/annotation/anno.gff</tt> file. SyMAP
+works fine with duplicates, but they can result in non-deterministic results (i.e. sometimes the .a is selected
+as the major gene and other times the .b is selected).
+
+<br>&nbsp;
+<li><ttx>JDBC</ttx>: The java-mySQL interface was updated to the latest v9.1.0. This fixed a bug on
+Ubuntu that only allowed 'root' to be used as the username (db_adminuser).
+
+<br>&nbsp;
+<li>Developer:
+
+<ul>
+<li><small>Algo2 details</small>
+<ul>
+<li><small>It was the case that a hit could only be assigned to one cluster hit, but now it is allowed to
+be assigned to multiple cluster hits when there are overlapping or close genes.
+It is required that Clustered hits connecting two genes have the same orientation as the genes. </small>
+<li><small>Many of the cutoffs are now approximated from the gene models.
+The allowed size intron of a non-gene hit was way too big; now it
+uses an approximation from the input gene introns.</small>
+<li><small>The algorithm code has been largely rewritten and is much easier to follow. All constants are stored in Arg.java.</small>
+<small>The average, max, min gene sizes are printed when genes are loaded,</small>.
+</ul>
+
+<li><small>In backend: (non-functional changes) </small>
+<ul>
+<li><small>Rename ProgSpec to be AlignRun; AnchorsPost to AnchorPost; AlgSynMain to DoAlignSynPair; LoadProj to DoLoadProj.
+All Synteny methods go in the new package backend.synteny; rename Block to SyBlock; create new RWdb.
+Moved collinear calculation from SyntenyMain to DoAlignSynPair. Move RW methods to RWdb.
+Add a check for zero hits in chromosome pair when creating hit# in AnchorMain.</small>
+</ul>
+
+<li><small>Other</small>
+<ul>
+<li><small>Part of file closeup.SeqData was moved to a new file closeup.SeqDataInfo for the 2D popups.</small>
+<li><small>Changed 'set GLOBAL' to 'set global' for database suggestions.</small>
+<li><small>The ".first()" database command did not work with the new JDBC,
+so was replaced with ".next()".</small>
+<li><small>Cleaned up all command line options (created many changed files).
+Remove the -wse to exclude wrong strand hits, as now Algo2 no longer uses them.
+Remove the -y hit count only option, and the -s print stats. The -s now only regenerates the summary.
+Add -ii for Query Overlap genes, 2D popup indices, and hit popup Extend column.</small>
+<li><small>Query: Export: Prompt user if rows have been selected.
+Query Table: cleaned up old code and some rearranging.</small>
+</ul>
+
+</ul>
+</ul>
+
 
 <a id="v559"></a>
 <h3>Release: v5.5.9 (24-Sept-24)</h3>
@@ -164,20 +289,25 @@ the exon parent must match the mRNA ID.
 For existing databases, re-run the collinear algorithm as follows: Start <ttx>./symap -acs</ttx>, then select the pair and run
 <ttb>Selected Pair (Redo)</ttb>; a popup will have you confirm "Collinear only" indicating that only this algorithm will be run.
 <ul>
-<li><ttl>A&S Collinear algorithm</ttl>: Improved this algorithm; see <a href="Collinear.html#v556" class="ext" target="_blank">Collinear v5.5.6</a>.
+<li><ttl>A&S Collinear algorithm</ttl>: V5.5.6 finds more collinear sets and longer ones.
 
+Pre-v5.5.6 gave obviously wrong results if a gene from the hit numbered project
+(the hits are numbered along the alphabetically lesser project name) was part of two different collinear sets.
+In my test sets, this happened a few times between Arabidopsis, Brassica rapa, and cabbage, but none for my partial
+mammalian test set of humans, chimps, mouse and rabbit.
+
+<br>&nbsp;
 <li><ttl>Query</ttl>
 <ul>
 <li>New: A new <ttb>Report</ttb> button is at the top of the results table.
 See <a href="Query.html#report" class="ext" target="_blank">Query Report</a>.
-
-
 
 <li>Bug fix for <ttx>Multi-hit gene</ttx>: it would crash if there was no hits for a pair of
 species.
 <li>The results table was sorted by <ttx>Hit#</ttx>; now it is sorted by <ttx>Block</ttx> or <ttx>Collinear</ttx>
 or <ttx>Chr</ttx>, and by <ttx>Hit#</ttx> within each group.
 </ul>
+<br>
 <li>Developers: <ttx>TableExport.java</ttx>, <ttx>TableReport.java</ttx>
 and <ttx>TmpRowData.java</ttx> are new files. The output of Load Annotation is clearer if there is
 no annotation files.
@@ -816,7 +946,8 @@ This release focuses on improving the detection of gene homology in the <ttb>Syn
 <li>Filtering hits has been updated to give preference when at least one end is a gene.
 <li>Details of changes:
 <small>
-<br>&rarr; Long hits with embedded genes are split, which helps detect hits to the embedded genes.
+<br>&rarr; Long hits with embedded genes are split, which helps detect hits to the embedded genes
+(15Oct24 disabled since graphics was fixed to show these).
 <br>&rarr; When a candidate gene is created from hits, it is checked that it does not span a gene with no hits.
 Candidate genes used to be created using the maximum length of the annotated genes; this is now maximum size 100k.
 <br>&rarr; For finding the top N hits, the Max of query and target(summed subhits (minus overlaps)) of a clustered hit are used
@@ -1184,7 +1315,7 @@ stored in the projects and pairs table. The annotation table contains a new colu
 For existing databases, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
 
 <p>Release v5.1.7 to v5.1.9 greatly improved the <u>Gene# assignment algorithm</u> and the <u>2D gene placement</u>.
-<p>Added -z option: To execute the latest Gene# assignment algorithm, execute <tt>./symap -z</tt>,
+<p>Added -z option (obsolete): To execute the latest Gene# assignment algorithm, execute <tt>./symap -z</tt>,
 then select <ttl>Reload Annotation</ttl>; the synteny algorithm does NOT need
 to be rerun.
 
@@ -1348,7 +1479,7 @@ because the <ttl>data/seq_results</ttl> directory has not been created.
 <li>The Hit information now has %Id and %Sim, plus the number of merged hits.
 </ul>
 <li>Blocks - the chromosome blocks view has a smaller window.
-<li>demo_seq2 - Removed duplicate genes (worked okay, but technically wrong).
+<li>demo_seq2 - Removed duplicate genes.
 <li>Developers
 <ul>
 <li>If all hits are removed (e.g. Clear Pair), the index will be reset so that the next loaded hit will have a HitIdx (Hit #)
