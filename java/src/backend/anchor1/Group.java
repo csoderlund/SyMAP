@@ -87,10 +87,7 @@ public class Group {
 				int e = rs.getInt(3);
 				int g = rs.getInt(4);
 				if (lastGN!=g) {
-					if (lastCnt>1) {
-						idxSplit.add(lastIdx);
-						if (Globals.DEBUG) System.out.format("GRP: Split GN=%d %,d %,d %,d %,d %d\n", lastGN, lastStart, lastEnd, s, e, lastCnt);
-					}
+					if (lastCnt>1) idxSplit.add(lastIdx);
 					lastIdx=idx; lastStart=s; lastEnd=e; lastGN=g; lastCnt=0;
 				}
 				else if (lastGN==g) {

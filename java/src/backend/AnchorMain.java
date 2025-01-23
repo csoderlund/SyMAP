@@ -49,7 +49,7 @@ public class AnchorMain {
 			long startTime = Utils.getTimeMem();
 			
 			String proj1Name = pj1.getDBName(), proj2Name = pj2.getDBName();
-			plog.msg("Finding good hits for " + proj1Name + " and " + proj2Name);
+			plog.msg("Start calculating cluster hits for " + proj1Name + " and " + proj2Name);
 			
 			String resultDir = Constants.getNameResultsDir(proj1Name, proj2Name); // e.g. data/seq_results/p1_to_p2
 			if ( !Utilities.pathExists(resultDir) ) {
@@ -94,12 +94,15 @@ public class AnchorMain {
 	 */
 	private boolean saveNumHits() { 
 	try {
-		System.out.println("   Compute and save hit#                   "); // CAS556 added space
+		System.out.println("   Compute and save hit#                   "); 
 		TreeMap <Integer, String> grpMap1 = mp.mProj1.getGrpIdxMap();
 		TreeMap <Integer, String> grpMap2 = mp.mProj2.getGrpIdxMap();
 		
 		for (int g1 : grpMap1.keySet()) {
 			for (int g2 : grpMap2.keySet()) {
+				int nhits = dbc2.executeCount("select count(*) from pseudo_hits "
+						+ " where grp1_idx="+ g1 + " and grp2_idx=" + g2); 
+				if (nhits==0) continue;										// CAS560 mysql error if 0 in next query
 				
 				dbc2.executeUpdate("update pseudo_hits set hitnum=0 where grp1_idx=" + g1 + " and grp2_idx=" + g2);
 				
@@ -144,7 +147,7 @@ public class AnchorMain {
 		for (int idx : idxList2.keySet()) if (!setAnnotHits(idx, idxList2.get(idx))) return;
 		System.out.print("                                            \r");
 	}
-	public boolean setAnnotHits(int grpIdx, String grpName) { // used in Version on -y also, hence, public
+	private boolean setAnnotHits(int grpIdx, String grpName) { 
 		try {
 			dbc2.executeUpdate("update pseudo_annot set numhits=0 where grp_idx=" + grpIdx);
 			ResultSet rs = dbc2.executeQuery("select count(*) from pseudo_annot where grp_idx=" + grpIdx);

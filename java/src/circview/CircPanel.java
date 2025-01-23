@@ -150,7 +150,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		try {
 			ResultSet rs;
 			rs = dbc2.executeQuery("select name from projects where idx=" + idx);
-			if (!rs.first()) {
+			if (!rs.next()) { // CAS560 was .first() which is not allowed with new JDBC
 				System.out.println("Cannot find proj_idx=" + idx);
 				return;
 			}
@@ -812,7 +812,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			
 			displayName = name;
 			rs = dbc2.executeQuery("select value from proj_props where name='"+display_name+"' and proj_idx=" + idx);
-			if (rs.first()) displayName = rs.getString(1);
+			if (rs.next()) displayName = rs.getString(1); // CAS560 was .first()
 		}
 		catch (Exception e) {ErrorReport.print(e, "Getting project");}
 		}

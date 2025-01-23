@@ -72,7 +72,7 @@ public class SeqPool {
 			
 			for (int i=0; i<2; i++) {
 				String sql = (i==0) ? " type='gene' " : " type!='gene' ";
-				rs = dbc2.executeQuery(annot_query + sql + " order by idx");
+				rs = dbc2.executeQuery(annot_query + sql + " order by start ASC"); // CAS560 add order to be sure
 				while (rs.next()) {
 					annot_idx = rs.getInt(1);		
 					type = rs.getString(2);	
@@ -155,28 +155,26 @@ public class SeqPool {
 	}
 	/*******************************************************
 	 * CAS518 added: Called during init(); used in build()
+	 * adjusts x coord for overlapping genes
 	 */
 	private final int OVERLAP_OFFSET=12;			// CAS517/518 for overlap and yellow text
 	protected void buildOlap(HashMap <Integer, Integer> olapMap, Vector <Annotation> geneVec) {
 		int lastGeneNum=-1;
 		Vector <Annotation> numList = new Vector <Annotation> ();
 		
-		 for (Annotation annot : geneVec) {
-		    	//if (!annot.isGene()) continue; CAS545 change to geneVec
-		    	//if (annot.isExon()) break; // at end
-		    	
-				if (annot.getGeneNum() == lastGeneNum) {
-					numList.add(annot);
-					continue;
-				}
-				
-				buildPlace(olapMap, numList);
-				numList.clear();
-				
-				lastGeneNum = annot.getGeneNum();
+		 for (Annotation annot : geneVec) { 
+			if (annot.getGeneNum() == lastGeneNum) {
 				numList.add(annot);
+				continue;
+			}
+			
+			buildPlace(olapMap, numList, lastGeneNum);
+			numList.clear();
+			
+			lastGeneNum = annot.getGeneNum();
+			numList.add(annot);
 		 }
-		 buildPlace(olapMap, numList); // CAS519 missing last one
+		 buildPlace(olapMap, numList, lastGeneNum); // CAS519 missing last one
 		 
 		 if (olapMap.size()==0) olapMap.put(-1,-1); // need at least one value so will not compute again
 	}
@@ -185,7 +183,7 @@ public class SeqPool {
 	 * CAS519 simplified algo; uses genenum to find set of overlapping, 
 	 * but does not use genenum suffix (uses same overlap check as in AnnoLoadPost.computeGeneNum)
 	 */
-	private void buildPlace(HashMap <Integer, Integer> olapMap, Vector <Annotation> numList) {
+	private void buildPlace(HashMap <Integer, Integer> olapMap, Vector <Annotation> numList, int lastGeneNum) {
 		try {
 			if (numList.size()==1) return;
 			if (numList.size()==2) { // get(0) has no offset
@@ -203,24 +201,27 @@ public class SeqPool {
 						return (a2.len - a1.len);
 					}
 				});
-		
-		// Determine contained and overlap relations AND assign initial level	
-			for (int i=0; i<gdVec.size()-1; i++) {
+			// first is level 0; CAS560 rewrite - slight improvement
+			for (int i=1; i<gdVec.size(); i++) {
 				GeneData gdi = gdVec.get(i);
-				for (int j=i+1; j<gdVec.size(); j++) {
+				int [] lev = {0, 0, 0};
+				
+				for (int j=0; j<i; j++) {
 					GeneData gdj = gdVec.get(j);
-					if (!gdi.isContain(gdj))
-						 gdi.isOverlap(gdj);
+					int olap = Math.min(gdi.end, gdj.end) - Math.max(gdi.start, gdj.start);
+					if (olap >= 0) lev[gdj.level]++;		
+				}
+				
+				if (lev[0]==0)      gdi.level = 0;
+				else if (lev[1]==0) gdi.level = 1;
+				else if (lev[2]==0) gdi.level = 2;
+				else {
+					if (lev[0]<lev[1] && lev[0]<lev[2]) gdi.level = 0;
+					else if (lev[1]<lev[2]) gdi.level = 1;
+					else gdi.level = 2;
 				}
 			}
-			for (GeneData gd : gdVec) {
-				for (GeneData o : gd.olVec) {
-					if (gd.level==o.level)  {
-						o.level = gd.level+1;
-						if (o.level==3) o.level=0;
-					}
-				}
-			}
+			
 			for (GeneData gd : gdVec) {
 				if (gd.level==0) continue;
 				
@@ -234,29 +235,13 @@ public class SeqPool {
 		Annotation annot;
 		int start, end, len;
 		int level=0;
-		Vector <GeneData> olVec = new Vector <GeneData> ();
-		
+	
 		public GeneData(Annotation annot) {
-			this.annot=annot;
+			this.annot = annot;
 			start = annot.getStart();
-			end = annot.getEnd();
-			len = Math.abs(end-start)+1;
-		}
-		boolean isContain(GeneData gd) {
-			if (gd.start >= start && gd.end <= end) {
-				olVec.add(gd);
-				return true;
-			}
-			return false;
-		}
-		private boolean isOverlap(GeneData gd) {
-			int gap = Math.min(end,gd.end) - Math.max(start,gd.start);
-			if (gap > 0) {
-				olVec.add(gd);
-				return true;
-			}
-			return false;
-		}
+			end =   annot.getEnd();
+			len =   Math.abs(end-start)+1;
+		}	
 	}
 	/********************************************************************************
 	 * SeqFilter Conserved Genes; add CAS545 These methods are called from the reference track
@@ -294,7 +279,7 @@ public class SeqPool {
 			int idx = (isRefSeq1L) ? cg.annot1_idx : cg.annot2_idx;
 			if (geneMap.containsKey(idx)) geneMap.get(idx).mark1=true;
 			else {
-				if (Globals.DEBUG && cntNoGene<2) System.out.println("No geneIdx " + idx + " for hit " + cg.hitObj.getHitNum()); 
+				if (cntNoGene<2) Globals.dprt("No geneIdx " + idx + " for hit " + cg.hitObj.getHitNum()); 
 				cntNoGene++; continue; 
 			}
 		}
@@ -303,7 +288,7 @@ public class SeqPool {
 			int idx = (isRefSeq1R) ? cg.annot1_idx : cg.annot2_idx;
 			if (geneMap.containsKey(idx)) geneMap.get(idx).mark2=true;
 			else {
-				if (Globals.DEBUG && cntNoGene<2) System.out.println("No geneIdx " + idx + " for hit " + cg.hitObj.getHitNum()); 
+				if (cntNoGene<2) Globals.dprt("No geneIdx " + idx + " for hit " + cg.hitObj.getHitNum()); 
 				cntNoGene++; continue; 
 			}
 		}

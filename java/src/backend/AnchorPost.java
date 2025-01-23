@@ -29,7 +29,7 @@ import util.Utilities;
  *  using the hitVec instead of gene1Map. This fixed the bug and added some sets.
  */
 
-public class AnchorsPost {
+public class AnchorPost {
 	// parameters
 	private int mPairIdx; 				// project pair 
 	private Mproject mProj1, mProj2;	// two projects
@@ -50,7 +50,7 @@ public class AnchorsPost {
 	private String chrs;					// ErrorReport
 	
 	/** Called from SyntenyMain **/
-	public AnchorsPost(int pairIdx, Mproject proj1, Mproject proj2, DBconn2 dbc2, ProgressDialog log) {
+	public AnchorPost(int pairIdx, Mproject proj1, Mproject proj2, DBconn2 dbc2, ProgressDialog log) {
 		this.mPairIdx = pairIdx;
 		this.mProj1 = proj1;
 		this.mProj2 = proj2;
@@ -208,7 +208,6 @@ public class AnchorsPost {
 		boolean bNewCo=true;
 		int cnt=0, max = xHitVec.size()*100;
 		
-		dprt(">>>>>> " + chrs + " Hits " + nHits + " bInv=" + bInv);
 		while (row1 < nHits-1 && row2 < nHits) {
 			hObj1 = xHitVec.get(row1);
 			if (hObj1.frunnum>0) {
@@ -315,7 +314,7 @@ public class AnchorsPost {
 		for (int rn : csetMap.keySet()) {
 			cs = csetMap.get(rn);
 			int tsz = cs.tnum1.size();
-			if (tsz!=cs.sz) prt("Error in set Size " + chrs + " " + cs.sz + "." + rn + " hits " + tsz);
+			if (tsz!=cs.sz) dprt("Error in set Size " + chrs + " " + cs.sz + "." + rn + " hits " + tsz);
 			
 			for (int i=0; i<tsz-1; i++) {
 				int r1G1 = cs.tnum1.get(i);
@@ -327,7 +326,7 @@ public class AnchorsPost {
 				int d2 = (!bInv) ? r2G2 - r1G2 : r1G2 - r2G2;
 				
 				if (d1!=1 || d2!=1) {
-					prt("Error in set Order "+ chrs +  " " + cs.sz + "." + rn);
+					dprt("Error in set Order "+ chrs +  " " + cs.sz + "." + rn);
 					break;
 				}
 			}
@@ -359,10 +358,10 @@ public class AnchorsPost {
 		int h2 = (hObj2 != null) ? hObj2.hitnum : 0;
 		String s2 = String.format("#%-4d #%-4d; t1 %4d %4d; t2 %4d %4d; gn1 %7s %7s; gn2 %7s %7s", 
 				hObj1.hitnum,  h2, t1G1, t2G1, t1G2, t2G2, t1Tag1,  t2Tag1, t1Tag2,  t2Tag2);	
-		dprt(s1+s2);
+		dprt("AP: " + s1+s2);
 	}
-	private void dprt(String msg) {symap.Globals.dprt(msg);}
-	private void prt(String msg) {symap.Globals.prt(msg);}
+	private void dprt(String msg) {symap.Globals.dprt("AP: " + msg);}
+	
 	/////////////////////////////////////////////////////////////////
 	/*****************************************************************/
 	private boolean step3SaveToDB(Vector <Hit> xHitVec) {

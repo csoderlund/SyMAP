@@ -82,8 +82,6 @@ public class Frame2d extends JFrame implements KeyListener, ContainerListener
 	}
 	public void showX() {// For non-explorer 2d; CAS512 had to rename show() to something different
 		try {
-			symap.Globals.dprt("Frame2d.showX");
-			
 			if (isShowing()) dp.closeFilters();
 			
 			Dimension d = new Dimension();

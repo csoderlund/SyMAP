@@ -11,11 +11,9 @@ import java.util.regex.Pattern;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 import database.DBconn2;
 import symap.manager.Mproject;
-import symap.Globals;
 import util.Cancelled;
 import util.ErrorCount;
 import util.ProgressDialog;
@@ -29,7 +27,7 @@ import util.ErrorReport;
  */
 
 public class AnnotLoadMain {
-	static public boolean GENEN_ONLY=Globals.GENEN_ONLY; // -z CAS519b to update the gene# without having to redo synteny
+	//static public boolean GENEN_ONLY=Globals.GENEN_ONLY; // CAS560 remove; -z CAS519b to update the gene# without having to redo synteny
 	private final String idKey 		= "ID"; 			// Gene and mRNA
 	private final String parentKey 	= "Parent"; 		// mRNA and Exon
 	
@@ -61,12 +59,6 @@ public class AnnotLoadMain {
 	
 	public boolean run(String projDBName) throws Exception {
 		long startTime = Utils.getTime();
-		
-		if (GENEN_ONLY) { 			// CAS519b Run Gene# assignment algorithm only
-			geneNOnly(projDBName);
-			tdbc2.close();
-			return bSuccess;
-		}
 		
 		plog.msg("Loading annotation for " + projDBName);
 		
@@ -229,7 +221,7 @@ public class AnnotLoadMain {
 					if (words.length!=2) {
 						if (!kv.trim().isEmpty()) { // CAS558 happens with convert no desc; two ;;
 							cntSkipGeneAttr++;
-							if (cntSkipGeneAttr<2 && symap.Globals.TRACE) symap.Globals.tprt(line);
+							if (cntSkipGeneAttr<2) symap.Globals.tprt(line);
 						}
 						continue;
 					}
@@ -306,7 +298,7 @@ public class AnnotLoadMain {
 		cntAllGene+=cntGene;
 		Utils.prtNumMsg(plog, totalLoaded, "annotations loaded from " + f.getName()); // CAS558 add commas
 		if (cntGene>0 || cntExon>0) { 				// CAS518 no longer supporting exons in separate file
-			Utils.prtNumMsg(plog, cntGene, String.format("genes;  %,d exons", cntExon));
+			Utils.prtNumMsg(plog, cntGene, String.format("genes  %,d exons", cntExon));
 			if (cntGene==0) plog.msg("Warning: genes and exons must be in the same file for accurate results");
 		}
 		if (cntSkipGeneAttr>0)  Utils.prtNumMsg(plog,cntSkipGeneAttr, "skipped gene attribute with no '='");
@@ -514,33 +506,5 @@ public class AnnotLoadMain {
 			System.gc(); // Java treats this as a suggestion
 		}
 		catch (Exception e) {ErrorReport.print(e, "Compute gene order"); bSuccess=false;}
-	}
-	private boolean geneNOnly(String projName) { // CAS519b
-		try {
-			ResultSet rs = tdbc2.executeQuery("select hasannot from projects where idx=" + mProj.getIdx());
-			int cnt=0;
-			if (rs.next()) cnt=rs.getInt(1);
-			if (cnt>0) {
-				rs = tdbc2.executeQuery("select count(*) from pseudo_annot " + 
-						"join xgroups on pseudo_annot.grp_idx = xgroups.idx " + 
-						"WHERE pseudo_annot.type = 'gene' and xgroups.proj_idx = " + mProj.getIdx());
-				if (rs.next()) cnt=rs.getInt(1);
-			}
-			rs.close();
-			if (cnt==0) {
-				Utilities.showWarningMessage("Project has no annotation, so cannot update Gene#");
-				return true;
-			}
-				
-			plog.msg("Run Gene# assignment algorithm for " + mProj.getDisplayName());
-			long time = Utils.getTime();
-			
-			AnnotLoadPost alp = new AnnotLoadPost(mProj, tdbc2, plog);
-			bSuccess = alp.run(cnt>0); 	if (!bSuccess) return false;
-			
-			Utils.timeDoneMsg(plog, "Computations", time);
-		}
-		catch (Exception e) {ErrorReport.print(e, "checking for annnotations"); }
-		return false;
 	}
 }

@@ -322,7 +322,7 @@ public class SeqLoadMain {
 				grp + "','" + fullname + "'," + order + ",'0')" );
 		String sql = "select max(idx) as maxidx from xgroups where proj_idx=" + projIdx;
 		ResultSet rs = tdbc2.executeQuery(sql);
-		rs.first();
+		rs.next(); // CAS560 was first()
 		int grpIdx = rs.getInt("maxidx");
 		
 		// CAS553 add this check; max int in java is 2,147,483,647 (max human chr is 249M); can't test, run out of memory trying

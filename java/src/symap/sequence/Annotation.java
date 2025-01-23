@@ -16,8 +16,9 @@ import java.util.Comparator;
 import java.util.TreeMap;
 
 import symap.Globals;
-import symap.closeup.TextShowInfo;
 import symap.mapper.Mapper;
+import symap.closeup.TextShowInfo;
+import symap.closeup.SeqDataInfo;
 import symap.closeup.SeqData;
 import util.ErrorReport;
 import util.Utilities;
@@ -89,6 +90,7 @@ public class Annotation {
 	}
 	protected void addExon(Annotation aObj) {exonVec.add(aObj);} // CAS545 determined during SeqPool load of data
 	
+	public Vector <Annotation> getExonVec() { return exonVec;} // CAS560 for closeup.SeqDataInfo hit popup
 	/**
 	 * DRAW sets up the rectangle; called in Sequence.build(); CAS515 ordered lines to be more logical
 	 */
@@ -408,7 +410,7 @@ public class Annotation {
 		msg += "\n";
 		
 		if (hitListStr1!=null && hitListStr1.length()>1) {		
-			String [] hitWires = hitListStr1.split(";"); // Computed in Sequence.setExonList using coords
+			String [] hitWires = hitListStr1.split(";"); // Computed in SeqPool.getGeneHits
 			for (String h : hitWires) msg += h + "\n";	 // CAS548 was list of hits; now boundaries only
 		}
 		if (hitListStr2!=null && hitListStr2.length()>1) {
@@ -417,10 +419,10 @@ public class Annotation {
 		}
 		
 		if (exonList!=null) {
-			msg += tok[1] + "\n" + SeqData.formatExon(exonList); // CAS522 remove last \n
+			msg += tok[1] + "\n" + SeqDataInfo.formatExon(exonList); // CAS522 remove last \n
 		}
 		
-		if (Globals.TRACE) msg += "\nIdx=" + annot_idx + "\n"; // CAS540
+		if (Globals.INFO) msg += "\nIdx=" + annot_idx + "\n"; // CAS540
 		
 		String title =  name + "; " + tok[0];
 		

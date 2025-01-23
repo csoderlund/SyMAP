@@ -15,7 +15,7 @@ import java.util.HashSet;
 import java.util.Vector;
 
 import symap.closeup.TextShowInfo;
-import symap.closeup.SeqData;
+import symap.closeup.AlignPool;
 import symap.sequence.Annotation;
 import symap.sequence.Sequence;
 import symap.Globals;
@@ -341,20 +341,36 @@ public class SeqHits  {
 		private void setMinMax(HfilterData hf) {// CAS520 change for seqHits
 			hf.condSetPctid(hitDataObj.getPctid());
 		}
-		private boolean isFiltered() { // CAS520 rewrite for new filters
+		private boolean isFiltered() { // CAS520 rewrite for new filters; CAS560 and/or
 			 HfilterData hf = mapper.getHitFilter();
 			 
-			 double pctid = hf.getPctid();
-			 boolean bIsPCT = (hitDataObj.getPctid()>=pctid);
-			 
 			 isDisplayed=true;
-			 if (hf.isAllHit() && bIsPCT) return false;
-			 if (hf.isBlock()  && hitDataObj.isBlock()  && bIsPCT) return false;
-			 if (hf.isCset()   && hitDataObj.isCset()   && bIsPCT) return false;
-			 if (hf.is2Gene()  && hitDataObj.is2Gene()  && bIsPCT) return false;
-			 if (hf.is1Gene()  && hitDataObj.is1Gene()  && bIsPCT) return false;
-			 if (hf.is0Gene()  && hitDataObj.is0Gene()  && bIsPCT) return false;
+			 boolean bIsNotPCT = (hitDataObj.getPctid()<hf.getPctid());
+			 if (bIsNotPCT) {
+				 isDisplayed=false;
+				 return true;
+			 }
+			 boolean noNonBlockSet = !hf.isCset() && !hf.is2Gene() && !hf.is1Gene() && !hf.is0Gene();
+			 if (!hf.isBlock() && noNonBlockSet) return false; // all hits
 			 
+			 if (hf.isBlock()) { // block set
+				 boolean isBhit = hitDataObj.isBlock();// block hit
+				 if (isBhit && noNonBlockSet) return false;
+				 
+				 boolean and = (hf.isBlockAnd());
+				 if (!and && isBhit) return false; // or, is block, show
+				 
+				 if (and && !isBhit) {
+					 isDisplayed=false;
+					 return true; 				// and, !block, filter
+				 }
+			 }
+			 if (hitDataObj.isCset()  && hf.isCset())  return false; 
+			 if (hitDataObj.is2Gene() && hf.is2Gene()) return false;
+			 if (hitDataObj.is1Gene() && hf.is1Gene()) return false;
+			 if (hitDataObj.is0Gene() && hf.is0Gene()) return false;
+			 
+			 // not display
 			 isDisplayed=false;
 			 return true; 
 		 }
@@ -627,30 +643,31 @@ public class SeqHits  {
 		 }
 		 /* CAS548 removed getIfHit called from getHitStr, which has been removed (was showing all subhits) **/
 		 
-		/* CAS516 popup from clicking hit wire; CAS531 change to use TextPopup */
-		private void popupDesc(double x, double y) {
+		/* CAS516 popup from clicking hit wire; CAS531 change to use TextPopup; CAS560 moved some code to TextShowInfo */
+		private void popupDesc(double x, double y) { 
 			if (mapper.getHitFilter().isHiPopup()) hitDataObj.setIsPopup(true); // CAS551 
+			
 			String title="Hit #" + hitDataObj.getHitNum(); // CAS520 changed from hit idx to hitnum
 			
 			String theInfo = hitDataObj.createHover(st1LTst2) + "\n"; 
 			
-			String name1 = seqObj1.getTitle(); 
-			String name2 = seqObj2.getTitle(); 
-			name1 += seqObj1.getGeneNumFromIdx(hitDataObj.getAnnot1(), hitDataObj.getAnnot2()); // CAS545 add gene#
-			name2 += seqObj2.getGeneNumFromIdx(hitDataObj.getAnnot1(), hitDataObj.getAnnot2()); 
-			String msg1 = SeqData.formatHit(name1, hitDataObj.getQuerySubhits(), hitDataObj.isPosOrient1());
-			String msg2 = SeqData.formatHit(name2, hitDataObj.getTargetSubhits(), hitDataObj.isPosOrient2());
-				
-			theInfo +=  st1LTst2 ? ("\nL " + msg1+ "\nR " + msg2) : ("\nL " + msg2+"\nR " + msg1);
+			String proj1 = seqObj1.getTitle(); //Proj Chr
+			String proj2 = seqObj2.getTitle(); 
+			Annotation aObj1 = seqObj1.getAnnoObj(hitDataObj.getAnnot1(), hitDataObj.getAnnot2());
+			Annotation aObj2 = seqObj2.getAnnoObj(hitDataObj.getAnnot1(), hitDataObj.getAnnot2());
 			
-			if (Globals.TRACE) {
-				theInfo += "\nDB-index " + hitDataObj.getID();  // CAS520 useful for debugging
-				theInfo += "\nAnnot " + hitDataObj.getAnnots(); // CAS543 add
+			String trailer = "";
+			if (Globals.INFO) {
+				trailer = "\nDB-index " + hitDataObj.getID();   // CAS520 useful for debugging
+				trailer += "\nAnnot " + hitDataObj.getAnnots(); // CAS543 add
 			}
+	
+			AlignPool ap = new AlignPool(mapper.getDrawingPanel().getDBC());
 			
-			new TextShowInfo(mapper, title, theInfo, mapper.getDrawingPanel(), hitDataObj, 
-				seqObj1.getTitle(), seqObj2.getTitle(), 									// title is Proj Chr
-				seqObj1.getProjectDisplayName(), seqObj2.getProjectDisplayName(), seqObj1.isQuery()); 
+			new TextShowInfo(ap, hitDataObj, title, 
+				theInfo, trailer, st1LTst2, proj1, proj2, aObj1, aObj2, 
+				hitDataObj.getQuerySubhits(), hitDataObj.getTargetSubhits(),
+				seqObj1.isQuery(), hitDataObj.isInv(), true /*bsort*/); 	// CAS560 isInv, bsort added; gene1->aObj1, gene2->aObj2
 		}
 		public String toString() {return hitDataObj.createHover(true);}
 	 } // End class DrawHit

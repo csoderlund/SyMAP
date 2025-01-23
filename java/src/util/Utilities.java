@@ -649,7 +649,7 @@ public class Utilities {
 		}
 		return x;
 	}
-    static public String kMText(int len) {// CAS558 added for xToSymap summary
+    static public String kMText(int len) {// CAS558 added for xToSymap summary; 
 		double d = (double) len;
 		String x = len+"";
 		if (len>=1000000000) {
@@ -664,19 +664,15 @@ public class Utilities {
 			d = d/1000.0;
 			x = String.format("%dk", (int) d);
 		}
-		return x;
+		return x; // <1000
 	}
-    static public String kText(int len) { // CAS513 change to use NumberFormat
+    static public String kText(int len) { // CAS513 change to use NumberFormat; CAS560 change back for AnchorMain2
     	if (len>=10000) {
-    		NumberFormat nf = NumberFormat.getNumberInstance();
-    		nf.setMaximumFractionDigits(2);
-    		nf.setMinimumFractionDigits(2);
-    		
-    		double d = ((double) len)/1000.0;
-    		return nf.format(d) + "k";
+    		double d = Math.round(((double) len)/1000.0);
+    		return String.format("%dk", (int) d);
     	}
     	else {
-    		return String.format("%,d", len);
+    		return String.format("%,4d", len); // <10000
     	}
     }
    
@@ -744,13 +740,17 @@ public class Utilities {
     
     	ret[0] = tok[0];
     	tok[1] = tok[1].replace(")","");
-    	ret[1] = Globals.exonNum() + tok[1].replace(")",""); // CAS548 changed format - was Exon #
+    	ret[1] = exonNum() + tok[1].replace(")",""); // CAS548 changed format - was Exon #
     	
     	if (!tag.startsWith("Gene")) { // v543 992.a (1 746)  old version started with Gene
 			ret[0] = Globals.geneTag +  tok[0].trim();
 			ret[1] = ret[1] + "bp";
 		}
     	return ret;
+    }
+    // exonTag = "Exon #"; returns #Exons=
+    public static String exonNum() { // CAS548 removes "#"; CAS560 moved from Globals
+    	return "#" + Globals.exonTag.substring(0, Globals.exonTag.indexOf(" ")) + "s=";
     }
     static public boolean isEndsWithAlpha(String tag) {
     	String t = getGenenumFromDBtag(tag);
@@ -797,6 +797,11 @@ public class Utilities {
     	String [] tok = gn.split("\\.");
     	if (tok.length>0) return tok[0]; 
     	else return gn; // CAS544 bugfix was returning full tag
+    }
+    static public int getGenenumInt(String tag) { // CAS560 add for DBdata overlap only
+    	if (tag=="-") return -1;
+    	String gn = getGenenumIntOnly(tag);
+    	return getInt(gn);
     }
     // For Annotation
     static public int getGenenumSuffixInt(String gn) {

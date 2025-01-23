@@ -263,6 +263,7 @@ public class Jcomp {
 	}
 	static public JButton createButton(String s, String t) {
 		JButton jbutton = new JButton(s);
+		jbutton.setBackground(Color.white); // CAS560 add line
 		jbutton.setMargin(new Insets(1,3,1,3));
 		jbutton.setToolTipText(t);
 		return jbutton;

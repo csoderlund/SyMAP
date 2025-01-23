@@ -8,13 +8,14 @@ import java.util.TreeMap;
 
 import backend.Utils;
 import database.DBconn2;
+import symap.Globals;
 import util.ErrorReport;
 import util.ProgressDialog;
 
 /**************************************************************
  * Performs all processing for a chrT-chrQ; save results to DB; frees memory
  * The genes and hits are specific to the pair; 
- * 		the genes are copies since each gene can align to more than on opposite chr
+ * 		the genes are copies since each gene can align to more than one chr
  * 		the hits are unique to the pair
  */
 public class GrpPair {
@@ -34,10 +35,6 @@ public class GrpPair {
 	// Only hits between tChr-qChr;  built from MUMmer file, used by GrpPairGx
 	protected ArrayList <Hit> grpHitList= new ArrayList <Hit> (); 
 
-	protected int cntG2Fil=0, cntG1Fil=0, cntG0Filt=0; // Singles filtered in GrpPairGx
-	protected int cntPileFil=0;
-	protected int cntWSMulti=0, cntWSSingle=0;
-	
 	// GrpPairGx creates gxPairList, turned into clusters, used for saveAnnoHits for Major and Minor
 	private GrpPairGx gpGxObj;			
 	protected ArrayList <HitPair> gxPairList;	
@@ -47,7 +44,8 @@ public class GrpPair {
 		
 	private boolean bSuccess=true;
 	
-	protected GrpPair(AnchorMain2 anchorObj, int grpIdxT, String chrT, int grpIdxQ, String chrQ, ProgressDialog plog) { // probably change to chr later
+	protected GrpPair(AnchorMain2 anchorObj, int grpIdxT, String projT, String chrT, 
+			                                 int grpIdxQ, String projQ, String chrQ, ProgressDialog plog) {
 		this.mainObj = anchorObj;
 		
 		this.tChr = chrT;
@@ -58,7 +56,7 @@ public class GrpPair {
 		
 		this.plog = plog;
 		
-		traceHeader = tChr + " " + qChr + " " + mainObj.fileName;
+		traceHeader = projT + "-" + chrT + " " + projQ + "-" + chrQ + " " + mainObj.fileName;
 	}
 	
 	/*****************************************
@@ -79,7 +77,7 @@ public class GrpPair {
 		}
 		int exonCov = cpGn.addHit(ht); 
 		
-		ht.addGene(X, cpGn, exonCov);	  
+		ht.addGene(X, cpGn, exonCov);
 	}
 	catch (Exception e) {ErrorReport.print(e, "GrpPair: clone gene, add hit"); System.exit(-1);}	
 	}
@@ -89,28 +87,22 @@ public class GrpPair {
 	 * Each grp-grp pair starts the nBin where the last grp-grp pair left off
 	 */
 	protected boolean buildClusters() {	
-		if (Arg.PRT_STATS) 
+		if (Arg.TRACE) 
 			Utils.prtIndentMsgFile(plog, 1, "Compute clusters for T-" + tChr + " and Q-" + qChr);
 		
 		gpGxObj = new GrpPairGx(this);			// filtered g2,g1,g0 hitpairs;  create gxPairList
-		bSuccess = gpGxObj.run(); 				if (fChk()) return false; 
-		
+		bSuccess   = gpGxObj.run(); 		    if (fChk()) return false; 
 		gxPairList = gpGxObj.getPairList();		
-		mainObj.cntG0Fil += cntG0Filt; mainObj.cntG1Fil += cntG1Fil; mainObj.cntG2Fil += cntG2Fil;
-		mainObj.cntWSMulti += cntWSMulti; mainObj.cntWSSingle += cntWSSingle;
 		
 		gpPileObj = new GrpPairPile(this);		// remove piles
 		bSuccess = gpPileObj.run();				if (fChk()) return false;	
-		
-		mainObj.cntPileFil += cntPileFil;
-		
-		HitPair.sortByX(Q, gxPairList);			// SORT
-		createClusters();  						if (fChk()) return  false; 
+	
+		HitPair.sortByXstart(Q, gxPairList);	// SORT
+		createClustersFromHPR();  				if (fChk()) return  false; 
 		saveClusterHits(); 						if (fChk()) return  false;  
 		saveAnnoHits();							if (fChk()) return  false;  
 		
-		prtStats();
-		prtToFile();
+		prtTrace();
 		
 		return true;
 	}
@@ -120,9 +112,9 @@ public class GrpPair {
 	 * grpClHitList only contains Major non-filtered
 	 * gxPairList contains info to save Minor
 	 */
-	private void createClusters() {
+	private void createClustersFromHPR() {
 	try {
-		Arg.tprt("Create clusters");
+		Globals.tprt(">> Create clusters for " + traceHeader);
 		
 		HashMap <Integer, HitPair> bin2clMap = new HashMap <Integer, HitPair>  (gxPairList.size());
 		
@@ -156,6 +148,8 @@ public class GrpPair {
 		int proj2Idx = mainObj.mProj2.getIdx();
 		
 		int cntG2=0, cntG1=0, cntG0=0, countBatch=0, cntSave=0;
+		int cntDOeq=0, cntDOne=0, cntWS=0;
+		
 		tdbc2.executeUpdate("alter table pseudo_hits modify countpct integer");
 					
 		PreparedStatement ps = tdbc2.prepareStatement("insert into pseudo_hits "	
@@ -168,6 +162,11 @@ public class GrpPair {
 		
 		for (HitPair hpr : gxPairList) {
 			if (hpr.flag!=Arg.MAJOR) continue;
+			
+			if (!hpr.isOrder) {
+				if (hpr.isStEQ) cntDOeq++; else cntDOne++;
+			}
+			if (!hpr.isRst) cntWS++; // shouldn't happen anymore
 			hpr.setSubs();
 			
 			int i=1;
@@ -180,7 +179,7 @@ public class GrpPair {
 			
 			ps.setInt(i++, hpr.xSumId);					// pctid Avg%Id
 			ps.setInt(i++, hpr.xSumSim); 				// cvgpct;  unsigned tiny int; now Avg%Sim
-			ps.setInt(i++, hpr.hitList.size()); 		// countpct; unsigned tiny int; now #SubHits
+			ps.setInt(i++, hpr.nHits); 					// countpct; unsigned tiny int; now #SubHits
 			ps.setInt(i++, hpr.xMaxCov); 				// score; max coverage 
 			ps.setString(i++, hpr.htype) ;				// htype EE, EI, etc
 			ps.setInt(i++, hpr.getGeneOverlap());		// geneOlap 0,1,2
@@ -189,10 +188,10 @@ public class GrpPair {
 			ps.setInt(i++,  hpr.geneIdx[T]); 
 			
 			ps.setString(i++, hpr.sign); 				// Strand
-			ps.setInt(i++, hpr.start[Q]);
-			ps.setInt(i++, hpr.end[Q]);
-			ps.setInt(i++, hpr.start[T]);
-			ps.setInt(i++, hpr.end[T]);
+			ps.setInt(i++, hpr.hpStart[Q]);
+			ps.setInt(i++, hpr.hpEnd[Q]);
+			ps.setInt(i++, hpr.hpStart[T]);
+			ps.setInt(i++, hpr.hpEnd[T]);
 			
 			ps.setString(i++, hpr.querySubHits);
 			ps.setString(i++, hpr.targetSubHits);
@@ -216,9 +215,11 @@ public class GrpPair {
 		mainObj.cntG1 += cntG1;
 		mainObj.cntG0 += cntG0;
 		mainObj.cntClusters += cntSave;
+									
+		String msg1 = String.format("%,10d %s-%s Clusters ", cntSave, qChr, tChr); // CAS560 format better, add cntDO and cntWS
+		String msg2 = (Globals.INFO || Globals.TRACE) ? String.format("Disorder (EQ,NE) %,4d %,4d ", cntDOeq, cntDOne) : "";
 		
-		String msg = String.format("%,10d %6s %6s Clusters   Both genes %,8d   One gene %,8d   No gene %,8d  ",  
-				cntSave, qChr, tChr,  cntG2, cntG1, cntG0);
+		String msg = String.format("%32s   Both genes %,6d   One gene %,6d   No gene %,6d    %s", msg1, cntG2, cntG1, cntG0, msg2);
 		Utils.prtIndentMsgFile(plog, 1, msg);
 	}
 	catch (Exception e) {ErrorReport.print(e, "save to database"); bSuccess=false;}
@@ -231,7 +232,7 @@ public class GrpPair {
 	try {
 		if (tGeneMap.size()==0 && qGeneMap.size()==0) return;
 		
-		if (Arg.PRT_STATS) Utils.prtIndentMsgFile(plog, 1, "Save hits to genes ");
+		if (Arg.TRACE) Utils.prtIndentMsgFile(plog, 1, "Save hits to genes ");
 		DBconn2 tdbc2 = mainObj.tdbc2;
 		
 	// Load hits from database; the clNum was set as the unique hitNum (which will be redone in anchorMain)
@@ -262,8 +263,8 @@ public class GrpPair {
 			if (hpr.qGene!=null && hpr.geneIdx[Q]>0) {
 				ps.setInt(1, dbhitIdx); 
 				ps.setInt(2, hpr.geneIdx[Q]); 
-				ps.setInt(3, intScore(hpr.geneScore[Q])); 
-				ps.setInt(4, intScore(hpr.exonScore[Q])); 
+				ps.setInt(3, intScore(hpr.pGeneHitOlap[Q])); // CAS560 GeneHitCov->GeneHitOlap
+				ps.setInt(4, intScore(hpr.pExonHitCov[Q])); 
 				ps.setInt(5, hpr.geneIdx[T]);
 				ps.addBatch();
 				cntBatch++;
@@ -273,8 +274,8 @@ public class GrpPair {
 			if (hpr.tGene!=null && hpr.geneIdx[T]>0) {
 				ps.setInt(1, dbhitIdx); 
 				ps.setInt(2, hpr.geneIdx[T]); 
-				ps.setInt(3, intScore(hpr.geneScore[T])); 
-				ps.setInt(4, intScore(hpr.exonScore[T])); 
+				ps.setInt(3, intScore(hpr.pGeneHitOlap[T])); 
+				ps.setInt(4, intScore(hpr.pExonHitCov[T])); 
 				ps.setInt(5, hpr.geneIdx[Q]);
 				ps.addBatch();
 				cntBatch++;
@@ -289,7 +290,7 @@ public class GrpPair {
 		}
 		if (cntBatch> 0) ps.executeBatch();
 		
-		if (Arg.PRT_STATS) {
+		if (Arg.TRACE) {
 			String msg = String.format("%,10d for %s;  %,d for %s", count[Q], qChr, count[T], tChr );
 			Utils.prtIndentMsgFile(plog, 1, msg);
 		}
@@ -334,21 +335,24 @@ public class GrpPair {
 				mainObj.fhOutCl.println(">>>>Exon Score; Pair for " + traceHeader);
 				mainObj.fhOutCl.println("   " + Arg.FLAG_DESC);
 				
-				if (gpGxObj==null) mainObj.fhOutGP.println("Error ");
+				if (gpGxObj==null) mainObj.fhOutCl.println("Error ");
 				else  {
 					mainObj.fhOutCl.println("Save order");
 					
-					for (HitPair ph : gxPairList) 
-						mainObj.fhOutCl.println(ph.toResults(chr, true)+"\n");
+					for (HitPair hpr : gxPairList) 
+						if (hpr.flag==Arg.MAJOR || hpr.flag==Arg.MINOR)
+							mainObj.fhOutCl.println(hpr.toResults(chr, true)+"\n");
+					for (HitPair hpr : gxPairList) 
+						if (hpr.flag!=Arg.MAJOR && hpr.flag!=Arg.MINOR)
+							mainObj.fhOutCl.println(hpr.toResults(chr, true)+"\n");
 				}
 			}
 			// Hit
 			if (mainObj.fhOutHit!=null) {
-				mainObj.fhOutHit.println("\n>Bin " + toResults() + " " + traceHeader + 
-						"\nTrace Gap " + Arg.maxBigGap + " Intron " + Arg.useIntronLen);
+				mainObj.fhOutHit.println("\n>Bin " + toResults() + " " + traceHeader); 
 				
-				//Hit.sortBySignByX(Q, grpHitList);
-				mainObj.fhOutHit.println(">>PRT By Last sorted---------------------------------------");
+				Hit.sortBySignByX(Q, grpHitList);
+				mainObj.fhOutHit.println(">>PRT By Sign By X; G0 processed ---------------------------------------");
 				Hit last=null;
 				for (Hit ht : grpHitList) {
 					mainObj.fhOutHit.println(ht.toDiff(last));
@@ -356,11 +360,12 @@ public class GrpPair {
 				}
 			}
 			
-			// Gene
+			// Gene 
 			if (mainObj.fhOutGene!=null) {
 				mainObj.fhOutGene.println("\n>T GENEs with hits " + traceHeader );
 				
 				for (Gene gn : tGeneMap.values()) {
+					Hit.sortBySignByX(Q, gn.gHitList);
 					String x = gn.toResults();
 					if (x!="") mainObj.fhOutGene.println("T" + gn.toResults());
 				}
@@ -368,6 +373,7 @@ public class GrpPair {
 				mainObj.fhOutGene.println("\n>Q GENEs with hits " + traceHeader);
 				
 				for (Gene gn : qGeneMap.values()) {
+					Hit.sortBySignByX(T, gn.gHitList);
 					String x = gn.toResults();
 					if (x!="") mainObj.fhOutGene.println("Q" + gn.toResults());
 				}
@@ -378,10 +384,11 @@ public class GrpPair {
 				gpPileObj.prtToFile(mainObj.fhOutPile, chr);
 			}
 			
-		} catch (Exception e) {e.printStackTrace();	}
+		} catch (Exception e) {ErrorReport.print(e, "Print to file");	}
 	}
-	private void prtStats() {
-		if (!Arg.PRT_STATS && !Arg.TRACE) return;
+	private void prtTrace() {
+		if (!Arg.TRACE) return;
+		prtToFile();
 		
 		int [] limit = {1,3,6,12,10000000};
 		int [] cntG0m = {0,0,0,0,0}; // major only
@@ -390,33 +397,33 @@ public class GrpPair {
 		int [] cntG0t = {0,0,0,0,0}; // totals
 		int [] cntG1t = {0,0,0,0,0};
 		int [] cntG2t = {0,0,0,0,0};
-		int cntM1=0, cntM2=0, cntM0=0, cntF1=0, cntF2=0, cntF0=0;
-		int cntS1=0, cntS2=0, cntS0=0, cntP1=0, cntP2=0, cntP0=0;
-		int cntN1=0, cntN2=0, cntN0=0;
+		int cntMin1=0, cntMin2=0, cntMin0=0, cntF1=0, cntF2=0, cntF0=0;
+		int cntIgn1=0, cntIgn2=0, cntIgn0=0, cntP1=0, cntP2=0, cntP0=0, cntUnk1=0, cntUnk2=0, cntUnk0=0;
+		int cntGgood1=0, cntGood2=0, cntGood0=0, cntDis1=0, cntDis2=0, cntDis0=0, cntDisNE1=0, cntDisNE2=0, cntDisNE0=0;
 		
 		for (HitPair hpr : gxPairList) {
 			// All pairs
-			int nhit = hpr.hitList.size();
+	
 			if (hpr.tGene==null && hpr.qGene==null) {
 				for (int i=0; i<limit.length; i++) {
-					if (nhit<=limit[i]) {cntG0t[i]++; break;}
+					if (hpr.nHits<=limit[i]) {cntG0t[i]++; break;}
 				}
 			}
 			else if (hpr.tGene==null || hpr.qGene==null) {
 				for (int i=0; i<limit.length; i++) {
-					if (nhit<=limit[i]) {cntG1t[i]++; break;}
+					if (hpr.nHits<=limit[i]) {cntG1t[i]++; break;}
 				}
 			}
 			else {
 				for (int i=0; i<limit.length; i++) {
-					if (nhit<=limit[i]) {cntG2t[i]++; break;}
+					if (hpr.nHits<=limit[i]) {cntG2t[i]++; break;}
 				}
 			}
 			// break them down
-			if (hpr.flag==Arg.SPLIT) {
-				if (hpr.gtype==Arg.type0) 		cntS0++;
-				else if (hpr.gtype==Arg.type2) 	cntS2++;
-				else 							cntS1++;
+			if (hpr.flag==Arg.IGN) {
+				if (hpr.gtype==Arg.type0) 		cntIgn0++;
+				else if (hpr.gtype==Arg.type2) 	cntIgn2++;
+				else 							cntIgn1++;
 			}
 			else if (hpr.flag==Arg.PILE) {
 				if (hpr.gtype==Arg.type0) 		cntP0++;
@@ -429,29 +436,39 @@ public class GrpPair {
 				else 							cntF1++;
 			}
 			else if (hpr.flag==Arg.MINOR) {
-				if (hpr.gtype==Arg.type0) 		cntM0++;
-				else if (hpr.gtype==Arg.type2) 	cntM2++;
-				else 							cntM1++;
+				if (hpr.gtype==Arg.type0) 		cntMin0++;
+				else if (hpr.gtype==Arg.type2) 	cntMin2++;
+				else 							cntMin1++;
 			}
-			else {
-				if (hpr.isBnSpl) {
-					if (hpr.gtype==Arg.type0) 		cntN0++;
-					else if (hpr.gtype==Arg.type2) 	cntN2++;
-					else 							cntN1++;
+			else if (hpr.flag==Arg.UNK) {
+				if (hpr.gtype==Arg.type0) 		cntUnk0++;
+				else if (hpr.gtype==Arg.type2) 	cntUnk2++;
+				else 							cntUnk1++;
+			}
+			else { // major
+				if (hpr.note.contains("good+")) {
+					if (hpr.gtype==Arg.type0) 		cntGood0++;
+					else if (hpr.gtype==Arg.type2) 	cntGood2++;
+					else 							cntGgood1++;	
+				}
+				if (!hpr.isOrder) {
+					if (hpr.gtype==Arg.type0) 		{if (!hpr.isStEQ) cntDisNE0++; else cntDis0++;}
+					else if (hpr.gtype==Arg.type2) 	{if (!hpr.isStEQ) cntDisNE2++; else cntDis2++;}
+					else 							{if (!hpr.isStEQ) cntDisNE1++; else cntDis1++;}
 				}
 				if (hpr.tGene==null && hpr.qGene==null) {
 					for (int i=0; i<limit.length; i++) {
-						if (nhit<=limit[i]) {cntG0m[i]++; break;}
+						if (hpr.nHits<=limit[i]) {cntG0m[i]++; break;}
 					}
 				}
 				else if (hpr.tGene==null || hpr.qGene==null) {
 					for (int i=0; i<limit.length; i++) {
-						if (nhit<=limit[i]) {cntG1m[i]++; break;}
+						if (hpr.nHits<=limit[i]) {cntG1m[i]++; break;}
 					}
 				}
 				else {
 					for (int i=0; i<limit.length; i++) {
-						if (nhit<=limit[i]) {cntG2m[i]++; break;}
+						if (hpr.nHits<=limit[i]) {cntG2m[i]++; break;}
 					}
 				}
 			}
@@ -461,54 +478,56 @@ public class GrpPair {
 		int cnt=0;
 		
 		Utils.prtIndentMsgFile(plog, 1, String.format("%10s","Pair Summary             "));
-		msg = String.format("%10s       %6s %6s %6s %6s %6s     %6s  %6s  %6s  %6s   %6s", 
-				"Major", "="+limit[0], "<="+limit[1], "<="+limit[2],"<="+limit[3],">"+limit[3], 
-				"Minor", "Filter", "Split", "new", "Pile");
+		msg = String.format("%10s       %6s %6s %6s %6s %6s   %6s   %9s  %8s  %7s   %6s  %s", 
+				"Major+", "="+limit[0], "<="+limit[1], "<="+limit[2],"<="+limit[3],">"+limit[3], 
+				"Minor*", "Filter",  "Ign Unk",  "Pile", "Good+", "Disorder (EQ,NE)");
 		Utils.prtIndentMsgFile(plog, 1, msg);
 		
 		cnt=0;
 		for (int i=0; i<limit.length; i++) cnt+=cntG2m[i];
-		msg = String.format("%,10d g2    %,6d %,6d %,6d %,6d %,6d     %,6d  %,6d  %,6d  %,6d  %,6d", 
-				cnt, cntG2m[0],  cntG2m[1],  cntG2m[2], cntG2m[3], cntG2m[4],  cntM2, cntF2, cntS2, cntN2, cntP2);
+		msg = String.format("%,10d g2    %,6d %,6d %,6d %,6d %,6d   %,6d    %,9d  %,3d %,3d  %,7d  %,6d    %,d %,d", 
+				cnt, cntG2m[0], cntG2m[1],  cntG2m[2], cntG2m[3], cntG2m[4],  
+				cntMin2,  cntF2, cntIgn2, cntUnk2,  cntP2, cntGood2, cntDis2, cntDisNE2);
 		Utils.prtIndentMsgFile(plog, 1, msg);
 		
 		cnt=0;
 		for (int i=0; i<limit.length; i++) cnt+=cntG1m[i];
-		
-		msg = String.format("%,10d g1    %,6d %,6d %,6d %,6d %,6d     %,6d  %,6d  %,6d  %,6d  %,6d", 
-				cnt, cntG1m[0],  cntG1m[1],  cntG1m[2], cntG1m[3], cntG1m[4], cntM1, cntF1, cntS1, cntN1, cntP1);
+		msg = String.format("%,10d g1    %,6d %,6d %,6d %,6d %,6d   %,6d    %,9d  %,3d %,3d  %,7d  %,6d    %,d %,d", 
+				cnt, cntG1m[0],  cntG1m[1],  cntG1m[2], cntG1m[3], cntG1m[4], 
+				cntMin1, cntF1, cntIgn1, cntUnk1,  cntP1, cntGgood1, cntDis1, cntDisNE1);
 		Utils.prtIndentMsgFile(plog, 1, msg);
 		
 		cnt=0;
 		for (int i=0; i<limit.length; i++) cnt+=cntG0m[i];
-		msg = String.format("%,10d g0    %,6d %,6d %,6d %,6d %,6d     %,6d  %,6d  %,6d  %,6d  %,6d", 
-				cnt, cntG0m[0],  cntG0m[1],  cntG0m[2], cntG0m[3], cntG0m[4], cntM0, cntF0, cntS0, cntN0, cntP0);
+		msg = String.format("%,10d g0    %,6d %,6d %,6d %,6d %,6d   %,6d    %,9d  %,3d %,3d  %,7d  %,6d    %,d %,d", 
+				cnt, cntG0m[0],  cntG0m[1],  cntG0m[2], cntG0m[3], cntG0m[4], 
+				cntMin0,  cntF0, cntIgn0, cntUnk0, cntP0, cntGood0, cntDis0, cntDisNE0);
 		Utils.prtIndentMsgFile(plog, 1, msg);
 		
 		//////
-		if (Arg.TRACE) {
-			msg = String.format("%10s       %6s %6s %6s %6s %6s", 
+		if (Arg.TRACE && Globals.DEBUG) {
+			msg = String.format("%10s       %7s %7s %7s %7s %7s", 
 					"Total", "="+limit[0], "<="+limit[1], "<="+limit[2],"<="+limit[3],">"+limit[3]);
-			Arg.tprt(msg);
+			Globals.tprt(msg);
 			
 			cnt=0;
 			for (int i=0; i<limit.length; i++) cnt+=cntG2t[i];
-			msg = String.format("   %,10d g2    %,6d %,6d %,6d %,6d %,6d ", 
+			msg = String.format("   %,10d g2    %,7d %,7d %,7d %,7d %,7d ", 
 					cnt, cntG2t[0],  cntG2t[1],  cntG2t[2], cntG2t[3], cntG2t[4]);
-			Arg.tprt(msg);
+			Globals.tprt(msg);
 			
 			cnt=0;
 			for (int i=0; i<limit.length; i++) cnt+=cntG1t[i];
-			msg = String.format("   %,10d g1    %,6d %,6d %,6d %,6d %,6d", 
+			msg = String.format("   %,10d g1    %,7d %,7d %,7d %,7d %,7d", 
 					cnt, cntG1t[0],  cntG1t[1],  cntG1t[2], cntG1t[3], cntG1t[4]);
-			Arg.tprt(msg);
+			Globals.tprt(msg);
 			
 			cnt=0;
 			for (int i=0; i<limit.length; i++) cnt+=cntG0t[i];
-			msg = String.format("   %,10d g0    %,6d %,6d %,6d %,6d %,6d ", 
+			msg = String.format("   %,10d g0    %,7d %,7d %,7d %,7d %,7d ", 
 					cnt, cntG0t[0],  cntG0t[1],  cntG0t[2], cntG0t[3], cntG0t[4]);	
+			Globals.tprt(msg);
 		}
-		Arg.tprt(msg);
 	}
 	protected String toResults() {
 		String tg = "    T genes: " + tGeneMap.size();

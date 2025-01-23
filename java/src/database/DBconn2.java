@@ -21,10 +21,10 @@ import util.ErrorReport;
 
 public class DBconn2 {
 	private final int maxTries = 10;
-	private final boolean TRACE = symap.Globals.DEBUG;
+	private final boolean TRACE = symap.Globals.DEBUG && symap.Globals.TRACE; // CAS560 add trace
 	
 	static private String chrSQL = "characterEncoding=utf8"; // utf8mb4
-    static private String driver = "com.mysql.jdbc.Driver";
+    static private String driver = "com.mysql.cj.jdbc.Driver"; // CAS560 add .cj for new driver
     
     // CAS541 
     // 1. Connections are associated with unique panels or view from CE (where dp, circle, 2d are reused). 
@@ -291,7 +291,7 @@ public class DBconn2 {
 	public boolean tablesExist() throws Exception {
 		boolean ret = false;
 		ResultSet rs = executeQuery("show tables");
-		if (rs!=null && rs.first()) ret = true;
+		if (rs!=null && rs.next()) ret = true; // CAS560 was first()
 		if (rs!=null) rs.close();
 		return ret;
 	}
@@ -463,7 +463,7 @@ public class DBconn2 {
     /****************************************************************************
    	 * Check database settings when mysql database is created
    	 */
-   	public void checkVariables(boolean prt) { // CAS501, update CAS505
+   	public void checkVariables(boolean prt) { // CAS501, update CAS505; CAS560 GLOBAL->global uc does not work on mac
    		try{	
    			System.err.println("\nCheck MySQL variables");
    			int cntFlag=0;
@@ -475,7 +475,7 @@ public class DBconn2 {
    				if (prt) System.err.println("   max_allowed_packet=" + packet);
    				if (packet<4194304) {
    					cntFlag++;
-   					System.err.println("   Suggest: SET GLOBAL max_allowed_packet=4194304;  # or greater"); // CAS559 chg msg
+   					System.err.println("   Suggest: set global max_allowed_packet=4194304;  # or greater"); // CAS559 chg msg
    				}
    			}
    			
@@ -486,7 +486,7 @@ public class DBconn2 {
    				if (prt) System.err.println("   innodb_buffer_pool_size=" + packet);
    				if (packet< 134217728) {
    					cntFlag++;
-   					System.err.println("   Suggest: set GLOBAL innodb_buffer_pool_size=134217728; # or greater");// CAS559 chg msg
+   					System.err.println("   Suggest: set global innodb_buffer_pool_size=134217728; # or greater");// CAS559 chg msg
    				}
    			}
    			
@@ -496,7 +496,7 @@ public class DBconn2 {
    				if (prt) System.err.println("   innodb_flush_log_at_trx_commit=" + b);
    				if (b==1) {
    					cntFlag++;
-   					System.err.println("   Suggest: set GLOBAL innodb_flush_log_at_trx_commit=0");
+   					System.err.println("   Suggest: set global innodb_flush_log_at_trx_commit=0");
    				}
    			}
    			
@@ -607,6 +607,7 @@ public class DBconn2 {
 		}
 		catch(Exception e) { 
 			System.err.println("Unable to connect to the mysql database on " + hostname	+ "; are username and password correct?");		
+			System.err.println("   Host: " + hostname + "  Username: " + username + "  Password: " + password);
 			ErrorReport.die(e, "Cannot connect to mysql");
 		}
 		

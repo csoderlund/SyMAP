@@ -19,6 +19,7 @@ import javax.swing.JScrollPane;
 
 import util.Utilities;
 import symap.frame.HelpListener;
+import symap.Globals;
 import symap.frame.HelpBar;
 
 /**
@@ -319,7 +320,7 @@ public class Plot extends JPanel implements HelpListener {
 		for (int i = hits.length-1; i >= 0; --i) {
 			if (hits[i] == null) continue;
 			if (!showHit(fd, hits[i])) continue;
-			
+		
 			Color c = fd.getColor(hits[i]);
 			g.setColor(c);
 			
@@ -465,10 +466,10 @@ public class Plot extends JPanel implements HelpListener {
 		String sz2 = getSize(cnt2GeneTot);
 		String sz3 = getSize(cnt1GeneTot);
 		String sz4 = getSize(cnt0GeneTot);
-		String fmt = "  %-11s " + sz1 + " %s  %-9s  Both " + sz2 + " %12s  One " + sz3 + " %12s  None " + sz4 + " %12s\n";
+		String fmt = "  %-11s " + sz1 + " %s  %-9s  Both " + sz2 + " %14s  One " + sz3 + " %14s  None " + sz4 + " %12s\n";
 		
 		p=true;
-		String blank="      "; //(xxx%)
+		String blank="       "; //(xxx%)
 		x =  String.format(fmt, 
 				" All Hits", cntHitsTot, blank, "Annotated",
 				cnt2GeneTot, blank,cnt1GeneTot, blank, cnt0GeneTot, blank);
@@ -491,16 +492,20 @@ public class Plot extends JPanel implements HelpListener {
 	}
 	protected String getStats() {return prtCnts(true);} // CAS551 add for S icon
 	
-	private String pStr(int top, int bottom, boolean isP) {
+	private String pStr(int top, int bottom, boolean isP) { // isP=true for popup; CAS560 rewrite
 		String ret="";
-		if (bottom==0) ret = " N/A";
-		else if (top==0) ret =  "  0%";
+		if (bottom==0) ret = "n/a";
+		else if (top==0) ret =  "0%";
 		else {
 			double x = ((double)top/(double)bottom)*100.0;
-			String xx = Integer.toString((int) Math.round(x)) + "%";
-		    if (isP) ret = String.format("%4s", xx);
-		    else     ret = String.format("%s", xx);
+			if (isP) ret = String.format("%4.1f%s", x, "%"); 
+			else {
+				if (x>=99.5 && x<100.0) ret = String.format("%4.1f%s", x, "%"); // don't let it round up to 100
+				else if (x<1)   	    ret = "<1%"; 			 
+				else 					ret = String.format("%s", Integer.toString((int) Math.round(x)) + "%");
+			}
 		}
+		if (isP) ret = String.format("%5s", ret); // CAS560 use for all
 		return ret;
 	}
 	private String pStr(int top, int bottom, int bottom2) {

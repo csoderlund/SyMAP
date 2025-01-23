@@ -5,6 +5,10 @@ import java.util.Vector;
 
 import util.ErrorReport;
 
+/**************************************************************
+ * AVL tree of genes per chromosome group
+ * For a hit, return list of genes it overlaps
+ */
 public class GeneTree {	
 	protected Tree tree = new Tree();
 	protected int cntGenes=0;
@@ -13,21 +17,20 @@ public class GeneTree {
 	
 	protected GeneTree(String title) {this.title=title;}
 	
-	protected void addGene(int start, Gene hitObj) {
+	protected void addGene(int start, Gene geneObj) {
 		cntGenes++;
 		
 		Node startNode = tree.findStartNode(tree.root, start);
 		
 		if (startNode!=null) {
 			cntDupStart++;
-			startNode.add(hitObj);
+			startNode.add(geneObj);
 		}
 		else  {
-			tree.root = tree.insertNode(tree.root, hitObj);	
+			tree.root = tree.insertNode(tree.root, geneObj);	
 		}
 	}
 	protected Gene [] getSortedGeneArray() {
-		//tree.printTree();
 		Vector <Gene> inorder = new Vector <Gene> ();
 		
 		tree.tree2array(tree.root, inorder);
@@ -95,7 +98,7 @@ public class GeneTree {
 		   start=end=0;
 	   }
 	}
-	
+	/************************************************************/
 	private class Tree {
 		   protected Node root=null;
 		   		

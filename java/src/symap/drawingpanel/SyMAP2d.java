@@ -41,9 +41,6 @@ public class SyMAP2d {
 	{	
 		String type = (hb==null) ? "P" : "E";
 		this.tdbc2 = new DBconn2("SyMAP2d" + type + "-" + DBconn2.getNumConn(), dbc2);
-
-		symap.Globals.dprt("");
-		symap.Globals.dprt("Start SyMAP2d " + type);
 		
 		persistentProps = new PersistentProps(); // CAS521 changed PersistentProps - it has all args now
 
@@ -59,7 +56,7 @@ public class SyMAP2d {
 		colorDialogHandler = new ColorDialogHandler(persistentProps); // This sets changed colors; CAS521 moved properties to ColorDialogHandler
 
 		controlPanel = new ControlPanel(drawingPanel, historyControl, colorDialogHandler, helpBar, (hb!=null));
-
+		
 		frame = new Frame2d(this, controlPanel, drawingPanel, helpBar, hb==null, persistentProps);
 		
 		closeup = new CloseUp(drawingPanel, colorDialogHandler);

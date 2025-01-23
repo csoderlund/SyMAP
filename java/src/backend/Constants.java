@@ -18,13 +18,11 @@ public class Constants {
  * Command line arguments
  */
 // Set in SymapCE.SyMAPmanager
-public static boolean TRACE =     false; 		// -tt not shown in help
-public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block coords
-public static boolean PRT_STATS=  false; 		// -s
-public static boolean WRONG_STRAND_EXC = false; // -wse  exclude wrong strand hits for algo2 
+public static boolean PRT_STATS=  false; 		// -tt extra output on Anchor1/2; CAS560 was -s, but that removed for public
 public static boolean WRONG_STRAND_PRT = false; // -wsp  print wrong strand hits for algo2 
 public static boolean CoSET_ONLY = false;		// -scs on A&S ONLY execute AnchorPosts
 public static boolean MUM_NO_RM = false;		// -mum on A&S ONLY do not remove any mummer files; CAS559 add
+public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block coords; no longer documented, but still works
 
 // Anchor1 constants; Anchor2 constants are in Anchor2.Arg
 // CAS546 when anchor1 classes were moved to backend.anchor1, enums broke so make static here
@@ -83,6 +81,10 @@ public static final String blockFile = 		"block.txt";
 
 public static final String projTo = 		"_to_";
 public static final String faFile =         ".fa";
+
+public static final String orderSuffix 		=  "_ordered"; // CAS505 for ordering V2; CAS560 move from OrderAgainst
+public static final String orderCSVFile	=  "/ordered.csv";
+
 
 // directory of temporary files written for mummer
 //under runDir/<p1>_to_<p2>/tmp/<px>/ file names.
@@ -261,7 +263,7 @@ private static String mummer4Path=null;
 	}
 	static private boolean checkFile(String fileName) {
 		try {
-			if (symap.Globals.DEBUG) System.out.println("Check " + fileName);
+			//Globals.dprt("Check " + fileName);
 			
 			File file = new File(fileName);
 

@@ -47,6 +47,7 @@ public class SyMAPmanager extends ManagerFrame {
 		if (equalOption(args, "-r")) {
 			System.out.println("Usage:  ./viewSymap [options]");
 			System.out.println("  -c string : filename of config file (to use instead of symap.config)");
+			System.out.println("  -q        : show gene overlap instead of exon for Cluster Algo2");
 			System.out.println("  -a        : do not trim 2D alignments");
 			System.out.println("  -v        : check MySQL for important settings");
 			System.out.println("  -h        : show help to terminal and exit");
@@ -54,16 +55,16 @@ public class SyMAPmanager extends ManagerFrame {
 		else {
 			System.out.println("Usage:  ./symap [options]");
 			System.out.println("  -c string : filename of config file (to use instead of symap.config)");
-			System.out.println("  -a        : do not trim 2D alignments (Explorer only)");
 			System.out.println("  -v        : check MySQL for important settings");
+			System.out.println("  -q        : show gene overlap instead of exon for Cluster Algo2");
+			System.out.println("  -a        : do not trim 2D alignments (Explorer only)");
+			System.out.println("  -s        : recreate Summary on view (only useful new release and summary has changed)");
 			System.out.println("  -h        : show help to terminal and exit");
 	
 			System.out.println("\nSynteny&Alignment:");
 			System.out.println("  -p N      : number of CPUs to use");
-			System.out.println("  -s        : print stats for A&S, or recreate the Summary on display");
 			System.out.println("  -mum      : do not remove any mummer files");
-			System.out.println("  -wse      : for g2, exclude MUMmer hits that differ from gene strand (v5.4.8 Algo2)");
-			System.out.println("  -wsp      : for g2, print MUMmer hits that differ from gene strand (v5.4.8 Algo2)");
+			System.out.println("  -wsp      : for g2, print MUMmer hits that differ from gene strand (v5.4.8 Algo2, v5.6.0 update)");
 			System.out.println("  -sg       : split genes on cluster hit creation (Cluster Algo1)");
 			System.out.println("  -acs      : On A&S, ONLY execute the collinear sets computation");
 		}
@@ -91,32 +92,28 @@ public class SyMAPmanager extends ManagerFrame {
 				Globals.MAIN_PARAMS = getCommandLineOption(args, "-c");
 				System.out.println("-c  Configuration file " + Globals.MAIN_PARAMS);
 			}
+			if (equalOption(args, "-q")) { // CAS531 change
+				Globals.bQueryOlap=true;
+				System.out.println("-q  Show gene overlap instead of exon for Algo2");
+			}
 			if (equalOption(args, "-a")) { // CAS531 change
 				Globals.bTrim=false;
 				System.out.println("-a  Do not trim 2D alignments");
+			}
+			if (equalOption(args, "-s")) {
+				System.out.println("-s  Print Stats");
+				Globals.bRedoSum = true;
 			}
 			
 			if (equalOption(args, "-sg")) { // CAS540
 				System.out.println("-sg  Split genes (Algo1)");
 				Group.bSplitGene= true;
 			}
-			if (equalOption(args, "-z")) {// CAS519b
-				Globals.GENEN_ONLY=true;
-				System.out.println("-z  Reload Annotation will only run the Gene# assignment algorithm");
-			}
-			
-			if (equalOption(args, "-s")) {
-				System.out.println("-s  Print Stats");
-				Constants.PRT_STATS = true;
-			}
 			if (equalOption(args, "-wsp")) { // CAS548
 				System.out.println("-wsp  Print g2 hits where the hit strands differ from the genes (Algo2)");
 				Constants.WRONG_STRAND_PRT = true;
 			}
-			if (equalOption(args, "-wse")) { // CAS548
-				System.out.println("-wse  Exclude g2 hits where the hit strands differ from the genes (Algo2)");
-				Constants.WRONG_STRAND_EXC = true;
-			}
+			
 			if (equalOption(args, "-acs")) { // CAS556
 				System.out.println("-acs  On A&S, ONLY execute the collinear sets computation");
 				Constants.CoSET_ONLY = true;
@@ -125,23 +122,27 @@ public class SyMAPmanager extends ManagerFrame {
 				System.out.println("-mum  Do not remove any mummer result files");
 				Constants.MUM_NO_RM = true;
 			}
+			// CAS560 remove -z; System.out.println("-z  Reload Annotation will only run the Gene# assignment algorithm");
+			// CAS560 remove    System.out.println("-wse  Exclude g2 hits where the hit strands differ from the genes (Algo2)");
 			/*************************************************************************/
 			/** not shown in -h help - hence, the double character so user does not use by mistake **/
+			if (equalOption(args, "-ii")) {
+				System.out.println("-ii Extra info ");// CAS560 - extra info on popups, query overlap
+				Globals.INFO = true;
+			}
+			if (equalOption(args, "-tt")) {
+				System.out.println("-tt Trace output (developer only)");
+				Globals.TRACE = true;   	// CAS560 changed to print all trace 
+				Constants.PRT_STATS = true; // CAS560; got rid of the command line -s except for summary
+			}
 			if (equalOption(args, "-dd")) {
-				System.out.println("-dd Debug (developer only)");// CAS533 changed to -dd 
+				System.out.println("-dd Debug (developer only)");// CAS533 changed to -dd, potential errors
 				Globals.DEBUG = true;
-				//Q.TEST_TRACE = true; // for query
 			}
 			if (equalOption(args, "-dbd")) {
 				System.out.println("-dbd Database (developer only)");
 				Globals.DBDEBUG = true;
 			}
-			if (equalOption(args, "-tt")) {
-				System.out.println("-tt Trace output");
-				Constants.TRACE = true; // in backend
-				Globals.TRACE = true;   // CAS517; used to add info
-			}
-			
 			// old tests - not shown in -h help
 			if (equalOption(args, "-aa")) { // CAS531 change
 				System.out.println("-aa Align largest project to smallest");
@@ -150,10 +151,6 @@ public class SyMAPmanager extends ManagerFrame {
 			if (equalOption(args, "-bb")) { // CAS533 change; orig used midpoints
 				System.out.println("-bb Original block coordinates");
 				Constants.NEW_BLOCK_COORDS = false;
-			}
-			if (equalOption(args, "-y")) {// CAS519b,  no longer shown
-				Globals.HITCNT_ONLY=true;
-				System.out.println("-y the gene hit count will immediately be updated");
 			}
 		}
 	}

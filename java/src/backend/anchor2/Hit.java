@@ -3,38 +3,34 @@ package backend.anchor2;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
-
-import backend.Utils;
 
 /*******************************************************************
  * Hit created when MUMmer read; overlap with genes are calculated at the same time
  * A hit is either GG, Gn, nG, or nn; a hit can be to multiple T and/or Q overlapping genes
  * A second Hit constructor is for merging hits in HitPair
+ * CAS560 moved coverage filters to Arg
  */
 public class Hit {
 	private static final int T=Arg.T, Q=Arg.Q;
-	protected int htype = Arg.typeUnk;
 	
+	protected int bin=0; 	// set in G2,G1,G0;
+	protected int bin2=0;	// G2 when multiple genes overlap, can have a HPR where no ht.bin=hpr.bin, which messes up setMinor
+						    // G1,G0 temporary use
 	// Mummer
-	protected int hitNum;					  // order found in Mummer; trace
+	protected int hitNum;					  // order found in Mummer; used in the final check of sort
 	protected int id=0, sim=0, maxLen;
-	protected int [] start=null, end=null, len, frame; // frames do not seem to coincide with hits along a gene
+	protected int [] hStart, hEnd, hLen; // frames not used; does not seem to coincide with hits along a gene
 	protected String sign;					 // +/+, +/-, etc
 	protected boolean isStEQ=true;			 // same strand (T) diff strand (F)
 	
 	// set during read mummer
-	private ArrayList <Gene>    tGeneList = null, qGeneList = null; // a hit can align to overlapping genes
-	private ArrayList <Integer> tExonList = null, qExonList = null; // 1-to-1 with tGeneList; T if hit aligns to ANY exon in this gene
-
+	protected HashMap <Integer, HitGene> tGeneMap = null, qGeneMap=null; // CAS560 was two arrays
+	
 	// set in GrpPairGx.mkGenePair
 	protected HashSet <String> gxPair = new HashSet <String> ();
-	
-	protected int bin=0;	// used as temporary for GrpPairGx.g0/g1; then used to assign bin in GrpPairGx.assignBin
-	
-    // For clusters
-	protected int clNum=0; 				
-	protected boolean bFilter=false; 	// single filtered or HitPair outlier
+	protected int cntGene=0;
 	
 	/*************************************************
 	 * AnchorMain2.runReadMummer; this is the main hit used everywhere
@@ -44,198 +40,209 @@ public class Hit {
 		this.hitNum=hitCnt;
 		this.id = id;
 		this.sim=sim;
-		this.start = start;
-		this.end = end;
-		this.len = len;
+		this.hStart = start;
+		this.hEnd = end;
+		this.hLen = len;
 		this.maxLen = Math.max(len[T],len[Q]);
 		this.sign = sign;
 		isStEQ = Arg.isEqual(sign);
 	}
-	protected void addGene(int X, Gene gn, int cov) { 
-		if (X==T && tGeneList==null) {
-			tGeneList = new ArrayList <Gene> ();
-			tExonList = new ArrayList <Integer> ();
-		}
-		if (X==Q && qGeneList==null) {
-			qGeneList = new ArrayList <Gene> ();
-			qExonList = new ArrayList <Integer> ();
-		}
-		ArrayList <Gene>     geneList = (X==T) ? tGeneList : qGeneList;
-		ArrayList  <Integer> exonList = (X==T) ? tExonList : qExonList;
+	protected void addGene(int X, Gene gn, int exonCov) { 
+		if (X==T && tGeneMap==null) tGeneMap = new HashMap <Integer, HitGene> ();
+		if (X==Q && qGeneMap==null) qGeneMap = new HashMap <Integer, HitGene> ();
 		
-		geneList.add(gn);
-		exonList.add(cov);
-	}
-
-	protected void setType() { // Called when GrpPair is created for this chr-chr (right after MUMMer finishes)
-		if (bNoGene()) htype=Arg.type0;
-		else if (bTgeneOnly()) htype=Arg.type1t;
-		else if (bQgeneOnly()) htype=Arg.type1q;
-		else htype=Arg.type2;
-	}
-	protected void mkGenePairs() throws Exception { // GrpPairGx.g2PairHits; only G2 pairs at this point
-		if (tGeneList==null || qGeneList==null) return;
-		if (gxPair.size()>0) return; // already made for EQ, now use for NE
+		HashMap <Integer, HitGene> geneMap = (X==T) ? tGeneMap : qGeneMap;
 		
-		for (Gene tgn : tGeneList) {
-			for (Gene qgn : qGeneList) {
-				gxPair.add(tgn.geneIdx + ":" + qgn.geneIdx);
+		HitGene hg = new HitGene(gn, exonCov);
+		geneMap.put(gn.geneIdx, hg);
+	}
+	protected void mkGenePairs() throws Exception { // GrpPairGx.g2PairHits; 
+		if (tGeneMap==null || qGeneMap==null) return;
+		if (gxPair.size()>0) return; 				// already made for EQ, now use for NE
+		
+		for (Integer tgn : tGeneMap.keySet()) {
+			for (Integer qgn : qGeneMap.keySet()) {
+				gxPair.add(tgn + ":" + qgn);
 			}
 		}
 	}
-	protected int getExonCov(int X, Gene gn) { // toResults
-		ArrayList <Gene>    geneList = (X==T) ? tGeneList : qGeneList;
-		ArrayList <Integer> exonList = (X==T) ? tExonList : qExonList;
-		for (int i=0; i<geneList.size(); i++)
-			if (geneList.get(i)==gn) return exonList.get(i);
+	protected void setBin(int hbin) {
+		if (bin>0) bin2= hbin;
+		else       bin = hbin;
+	}
+	protected void addGeneHit(Gene tgene, Gene qgene) {
+		cntGene++;
+		
+		HitGene thg = tGeneMap.get(tgene.geneIdx);
+		thg.cnt++;
+		HitGene qhg = qGeneMap.get(qgene.geneIdx);
+		qhg.cnt++;
+	}
+	protected int getExonCov(int X, Gene gn) { // rmEndHits
+		HashMap <Integer, HitGene> geneMap = (X==T) ? tGeneMap : qGeneMap;
+		if (geneMap==null) return 0;
+		
+		if (geneMap.containsKey(gn.geneIdx)) return geneMap.get(gn.geneIdx).exonCov;
+		
 		return 0;
 	}
-	// G2/G1 singles: the hit overlapping a exon may just be a little...
-	protected boolean bPassCutoff(int X, Gene gn){
-		if (gn==null) return true;
-		ArrayList <Gene>    geneList = (X==T) ? tGeneList : qGeneList;
-		ArrayList <Integer> exonList = (X==T) ? tExonList : qExonList;
-
-		double  bases = len[X]*(id/100.0);	
+	// for G1, ygene is null,
+	protected void rmGeneFromHit(int X, Gene xgene, Gene ygene) { // do not remove from geneMap because may be used by another
+		cntGene--;
 		
-		for (int i=0; i<geneList.size(); i++)  {
-			if (gn==geneList.get(i)) {
-				int exonCov = exonList.get(i);
-				return (exonCov>0) ? (bases>Arg.gnMinExon) : (bases>Arg.gnMinIntron);
+		HashMap <Integer, HitGene> geneMap = (X==T) ? tGeneMap : qGeneMap;
+		if (geneMap!=null) {
+			if (geneMap.containsKey(xgene.geneIdx)) {
+				HitGene hg = geneMap.get(xgene.geneIdx);
+				hg.cnt--;
 			}
+			else symap.Globals.xprt("No gene " + xgene.geneTag + " for hit #" + hitNum);
+		}
+		if (ygene!=null) {
+			geneMap = (X!=T) ? tGeneMap : qGeneMap;
+			if (geneMap.containsKey(ygene.geneIdx)) {
+				HitGene hg = geneMap.get(ygene.geneIdx);
+				hg.cnt--;
+			}
+			else symap.Globals.xprt("No gene " + xgene.geneTag + " for hit #" + hitNum);
+		}
+	}
+	
+	protected boolean bHitsAnotherExon(int X, Gene xgene) { // rmEndHits
+		if (cntGene==1) return false;		      // even if only hits intron, its not overlapping another
+		HashMap <Integer, HitGene> geneMap = (X==T) ? tGeneMap : qGeneMap;
+		
+		if (!geneMap.containsKey(xgene.geneIdx)) {
+			symap.Globals.xprt("****No " + xgene.geneTag);
+			return false;
 		}
 		
-		Utils.die("Fatal error: " + toResults() + "\n" + gn.toResults());
-		return false;
-	}
-	// G0 
-	protected boolean bPassFilter() {
-		double score = Arg.baseScore(this);
+		HitGene xhg = geneMap.get(xgene.geneIdx);
+ 		if (xhg.exonCov==0) return true;		      // this one falls in intron, let other gene use it
 		
-		return (score > Arg.g0MinBases);
+		int bestCov=0;
+		for (HitGene hg : geneMap.values()) {
+			if (hg!=xhg && hg.exonCov>0 && hg.cnt>0) bestCov = Math.max(bestCov, hg.exonCov);
+		}
+		if (bestCov==0) return false;
+		return (xhg.exonCov < bestCov); 	          // this<best=T remove hit, let other gene use it
 	}
-	
-	protected boolean bEitherGene()	 		{return (tGeneList!=null || qGeneList!=null);}
-	protected boolean bBothGene()  	 		{return (tGeneList!=null && qGeneList!=null);}
-	protected boolean bNoGene()  	 		{return (tGeneList==null && qGeneList==null);}
-	protected boolean bTgeneOnly()			{return tGeneList!=null && qGeneList==null;}
-	protected boolean bQgeneOnly()	 		{return qGeneList!=null && tGeneList==null;}
-	protected boolean bTargetGene(Gene gn)  {return tGeneList!=null && tGeneList.contains(gn);}
-	protected boolean bQueryGene(Gene gn) 	{return qGeneList!=null && qGeneList.contains(gn);}
+	protected boolean bEitherGene()	 		{return tGeneMap!=null || qGeneMap!=null;}
+	protected boolean bBothGene()  	 		{return tGeneMap!=null && qGeneMap!=null;}
+	protected boolean bNoGene()  	 		{return tGeneMap==null && qGeneMap==null;}
+	protected boolean bTgeneOnly()			{return tGeneMap!=null && qGeneMap==null;}
+	protected boolean bQgeneOnly()	 		{return qGeneMap!=null && tGeneMap==null;}
+	protected boolean bHasTgene(Gene gn)    {return tGeneMap!=null && tGeneMap.containsKey(gn.geneIdx);}
+	protected boolean bHasQgene(Gene gn) 	{return qGeneMap!=null && qGeneMap.containsKey(gn.geneIdx);}
 	
 	protected void clear() {
-		if (tGeneList!=null) {tGeneList.clear(); tExonList.clear();}
-		if (qGeneList!=null) {qGeneList.clear(); qExonList.clear();}
+		if (tGeneMap!=null) {tGeneMap.clear();}
+		if (qGeneMap!=null) {qGeneMap.clear();}
 		gxPair.clear();
 	}
 	
-	/*********************************************
-	 * HitPair.calcMergeHits
-	 */
+	/****** classes ******************/
+	/** HitPair.calcMergeHits - merges one side at time */
 	protected Hit(int X, int s, int e) {
-		start = new int[2];
-		end = new int[2];
-		start[X] = s;
-		end[X] = e;
+		hStart = new int[2];
+		hEnd = new int[2];
+		hStart[X] = s;
+		hEnd[X] = e;
 	}
-	
-	/////////////////////////////////////////////////////////////
-	protected static void sortBySignByX(int X, ArrayList<Hit> hits) { // qGrpPairList; G1 phr.hitLists; phr.setScores.hitLists
+	private class HitGene {
+		private HitGene(Gene xgene, int cov) {this.xgene=xgene; this.exonCov = cov; }
+		Gene xgene;
+		int exonCov;
+		int cnt=0;
+	}
+	/***  Sorts **********************/
+	protected static void sortBySignByX(int X, ArrayList<Hit> hits) { // Gene.gHitList for toResults
 		Collections.sort(hits, 
 			new Comparator<Hit>() {
 				public int compare(Hit h1, Hit h2) {
 					if (h1.isStEQ && !h2.isStEQ) return -1;
 					if (!h1.isStEQ && h2.isStEQ) return 1;
 					
-					if (h1.start[X] < h2.start[X])  return -1;
-					if (h1.start[X] > h2.start[X])  return  1;
-					if (h1.end[X] > h2.end[X])  return -1;
-					if (h1.end[X] < h2.end[X])  return  1;
+					if (h1.hStart[X] < h2.hStart[X])  return -1;
+					if (h1.hStart[X] > h2.hStart[X])  return  1;
+					if (h1.hEnd[X] > h2.hEnd[X])  return -1;
+					if (h1.hEnd[X] < h2.hEnd[X])  return  1;
 					return 0;
 				}
 			}
 		);
 	}
-	protected static void sortByX(int X, ArrayList<Hit> hits) { // finishSubs
+	// HitPair.hitList: HitPair.setScores, setSubs; GrpPairGx rmEndsHitsG1/G2, runG0
+	protected static void sortXbyStart(int X, ArrayList<Hit> hits) throws Exception { 
 		Collections.sort(hits, 
 			new Comparator<Hit>() {
 				public int compare(Hit h1, Hit h2) {
-					if (h1.start[X] < h2.start[X]) return -1;
-					if (h1.start[X] > h2.start[X]) return 1;
-					if (h1.end[X] > h2.end[X])  return -1;
-					if (h1.end[X] < h2.end[X])  return  1;
+					if (h1.hStart[X] < h2.hStart[X]) return -1;
+					if (h1.hStart[X] > h2.hStart[X]) return 1;
+					if (h1.hEnd[X] > h2.hEnd[X])  return -1;
+					if (h1.hEnd[X] < h2.hEnd[X])  return  1;
+					
+					int Y = (X==Arg.Q) ? Arg.T : Arg.Q;
+					if (h1.hStart[Y] < h2.hStart[Y]) return -1;
+					if (h1.hStart[Y] > h2.hStart[Y]) return 1;
+					if (h1.hEnd[Y] > h2.hEnd[Y])  return -1;
+					if (h1.hEnd[Y] < h2.hEnd[Y])  return  1;
+					
 					return 0;
 				}
 			}
 		);
 	}
 	
-	////////////////////////////////////////////////////////////////////
-	// For file output on -dd
+	/******** For file output on -tt ******************/
 	protected String toDiff(Hit last) {
-		int maxGap = Arg.maxBigGap;
+		int maxGap = Arg.iGmIntronLenRm; 
 		String sdiff1="", sdiff2="", td="", qd="";
 		if (last!=null) {
-			int olap = -Arg.olapOrGap(last.start[T], last.end[T], start[T], end[T]); // Gap -s neg
-			sdiff1 =  Arg.int2Str(olap);
-			if (-olap>maxGap) td = " MFT" + olap;
-			else if (olap>maxGap) td = " MFT+" + olap;
+			int olap = Arg.pGap_nOlap(last.hStart[T], last.hEnd[T], hStart[T], hEnd[T]); // Negative is gap; make Olap neg
+			sdiff1 =   Arg.int2Str(olap);                       // returns string prefixed with - or blank
 			
-			olap = -Arg.olapOrGap(last.start[Q], last.end[Q], start[Q], end[Q]);
+			if (Math.abs(olap)>maxGap) td = " T" + olap;
+		
+			olap =    Arg.pGap_nOlap(last.hStart[Q], last.hEnd[Q], hStart[Q], hEnd[Q]);
 			sdiff2 =  Arg.int2Str(olap);
-			if (-olap>maxGap) qd = " MFQ" + olap;
-			else if (olap>maxGap) qd = " MFQ+" + olap;
-			
+			if (Math.abs(olap)>maxGap) qd = " Q" + olap;
 		}
 		
-		String coords = String.format("#%-6d [%,10d %,10d %5d %5s] [%,10d %,10d %5d %5s]", 
-				 hitNum, start[T], end[T], len[T], sdiff1, 
-				 start[Q], end[Q], len[Q], sdiff2);
-		
-		return coords + extraStr() + td + qd;
-	}
-	
-	protected String toResults() {
-		String coords = String.format("#%-6d %3s T[%,10d %,10d %5s] Q[%,10d %,10d %5s] [ID %3d %3d]",
-				 hitNum, Arg.strType[htype], start[T], end[T], Arg.int2Str(end[T]-start[T]), 
-				         start[Q], end[Q], Arg.int2Str(end[Q]-start[Q]), id, sim);
-		
-		return coords + extraStr();
-	}
-	private String extraStr() {
 		String pre = "n";
 		if (bBothGene()) pre="g";
 		else if (bEitherGene()) pre="e";
 		String sbin = String.format(" %7s ", (pre + bin));
-		
+		if (bin2>0) sbin += "gg" + bin2 + " ";
 		String e = isStEQ ? " EQ"  : " NE";
 		e += sign;
-		String d = (bFilter) ? " Filt " : "  ";
+		String ext = sbin + toGeneStr() + e + " ";
 		
-		return sbin + geneStr() + e + d + " ";
+		String coords = String.format("#%-6d [T %,10d %,10d %,5d %5s] [Q %,10d %,10d %,5d %5s] [ID %3d]", 
+				 hitNum, hStart[T], hEnd[T], hLen[T], sdiff1, hStart[Q], hEnd[Q], hLen[Q], sdiff2, id);
+		
+		return coords + ext + td + qd;
 	}
-	protected String geneStr() {
+	protected String toGeneStr() {
 		String tmsg="", qmsg="";
-		if (tGeneList!=null  && tGeneList.size()>0) {
-			for (int i=0; i< tGeneList.size(); i++) {
-				if (tExonList.get(i)>0) tmsg += " E";
-				else                  tmsg += " I";
-				tmsg += tGeneList.get(i).geneTag + tGeneList.get(i).strand;
+		if (tGeneMap!=null  && tGeneMap.size()>0) {
+			for (HitGene hg : tGeneMap.values()) {
+				if (hg.exonCov>0) tmsg += " Et";
+				else          tmsg += " It";
+				tmsg += hg.xgene.geneTag + hg.xgene.strand + hg.cnt;
 			}
 		}
 		if (tmsg=="") tmsg="t--";
 		
-		if (qGeneList!=null && qGeneList.size()>0) {
-			for (int i=0; i< qGeneList.size(); i++) {
-				if (qExonList.get(i)>0) qmsg += " E";
-				else                  qmsg += " I";
-				qmsg += qGeneList.get(i).geneTag + qGeneList.get(i).strand;
+		if (qGeneMap!=null && qGeneMap.size()>0) {
+			for (HitGene hg : qGeneMap.values()) {
+				if (hg.exonCov>0) qmsg += " Eq";
+				else              qmsg += " Iq";
+				qmsg += hg.xgene.geneTag + hg.xgene.strand + hg.cnt;
 			}
 		}		
 		if (qmsg=="") qmsg="q--";
 		
-		return "[" + tmsg + "][" + qmsg + "]";
+		return "[" + tmsg + "][" + qmsg + "]" + cntGene + " ";
 	}
-	
-	public String toString() {return toResults();}
 }

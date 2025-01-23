@@ -36,12 +36,14 @@ public class SyMAPQueryFrame extends JFrame {
 	static private String propNameAll="SyMapColumns1"; // 0&1's; use if match number of columns in current DB
 	static private String propNameSingle="SyMapColumns2"; 
 	
+	protected String title=""; // CAS560 add for Export
 	/******************************************************
 	 * ManagerFrame creates this object, add the projects, then calls build.
 	 */
 	public SyMAPQueryFrame(String title, DBconn2 dbc2, Vector <Mproject> pVec, boolean useAlgo2) {
 		setTitle("Query " + title); // CAS514 add version; CAS540 add db
 		
+		this.title = title;
 		this.tdbc2= new DBconn2("Query-" + DBconn2.getNumConn(), dbc2);
 		
 		theProjects = new Vector<Mproject> ();			// CAS532 change to pass project in (needed for column saving)
@@ -127,15 +129,20 @@ public class SyMAPQueryFrame extends JFrame {
 	private String getNextResultLabel() { return "Result " + (++resultCounter); }
 	private SyMAPQueryFrame getInstance() { return this; }
 	
-	// Column defaults -  Called for new table
-	// the ColumnSelection is a boolean vector, with no knowledge of species anno's
+	
+	/***********************************************
+	 * Column defaults -  Called for makeTable and shutdown
+	 * the ColumnSelection is a boolean vector, with no knowledge of species anno's
+	 * Read/write from PersistentProps cookies
+	 */
+	// Only knows selections from FieldData, does not know order
 	private boolean [] getLastColumns(boolean bSingle) {
 	try {
 		boolean [] saveLastColumns = null;
 		for(int x=allResults.size()-1; x>=0 && saveLastColumns == null; x--) {
 			if (allResults.get(x) instanceof TableDataPanel) {
-				if (((TableDataPanel)allResults.get(x)).isSingle()==bSingle) { // CAS519 finding last result that is single/!single
-					saveLastColumns = ((TableDataPanel)allResults.get(x)).getColumnSelections();
+				if (((TableDataPanel)allResults.get(x)).isSingle()==bSingle) { // CAS519 last result that is single/!single
+					saveLastColumns = ((TableDataPanel)allResults.get(x)).getColumnSelections(); // from FieldData
 					break;
 				}
 			}

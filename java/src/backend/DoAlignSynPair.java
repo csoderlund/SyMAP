@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.TreeMap;
 import javax.swing.JFrame;
 
+import backend.synteny.SyntenyMain;
 import database.DBconn2;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
@@ -19,11 +20,24 @@ import util.ProgressDialog;
 import util.Utilities;
 
 /**********************************************************
- * Computes alignment and synteny for two projects
- * CAS508 moved all the following from ManagerFrame; CAS544 AlignProj->AlgSynMain
+ * DoAlignSynPair; Calls AlignMain, AnchorMain and SyntenyMain; Called from ManagerFrame
+ * CAS508 moved all the following from ManagerFrame; CAS544 AlignProj->AlgSynMain; CAS560 AlgSynMain->DoAlignSynPair
+ 
+ * When called, DoLoadProj has been executed:
+ * 		the Sequence and Annotation have been loaded 
+ * 		the GeneNum assigned
+ * Calls AlignMain 
+ * Calls AnchorMain
+ * 		calls AnchorMain1 or AnchorMain2, which assign hits to genes
+ * 			Note: Demo1 has many genes with identical coords but diff strands; 
+ * 			both algorithms seem to be inconsistent as to which is assigned as the major hit.
+ * 			It makes a difference to collinear, as only the major are processed.
+ * 		computes hit# and assigns hitcnt to genes (for Query Singles)
+ * Calls SyntenyMain
+ * Calls AnchorPost which creates collinear sets from blocks
  */
 
-public class AlgSynMain extends JFrame {
+public class DoAlignSynPair extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private DBconn2 dbc2;
 	private Mpair mp;
@@ -51,14 +65,8 @@ public class AlgSynMain extends JFrame {
 		diaLog.msgToFileOnly(">>> " + toName);
 		System.out.println("\n>>> Starting " + toName + "     " + Utilities.getDateTime());
 		
-		if (Constants.CoSET_ONLY) {// CAS556
-			diaLog.msg("Collinear only");
-			SyntenyMain synteny = new SyntenyMain(dbc2, diaLog, mp );
-			if (synteny.run(mProj1, mProj2))  {
-				mp.saveUpdate();
-				new SumFrame(dbc2, mp);
-			}
-			System.out.println("--------------------------------------------------");
+		if (Constants.CoSET_ONLY) {// CAS556, CAS560 move to this file at end
+			collinearOnly(diaLog, mProj1, mProj2);
 			return;
 		}
 		
@@ -141,6 +149,15 @@ public class AlgSynMain extends JFrame {
 					if (!success) {
 						diaLog.finish(false);
 						return;
+					}
+					
+					/** Collinear CAS560 moved from SyntenyMain**/
+					if (mProj1.hasGenes() && mProj2.hasGenes()) { // CAS540 add check
+						int mPairIdx = Utils.getPairIdx(mProj1.getIdx(), mProj2.getIdx(), dbc2);
+						AnchorPost collinear = new AnchorPost(mPairIdx, mProj1, mProj2, dbc2, diaLog);
+						collinear.collinearSets();
+						
+						if (Cancelled.isCancelled()) {dbc2.close();}
 					}
 					
 					/** Finish **/
@@ -230,7 +247,7 @@ public class AlgSynMain extends JFrame {
 		}
 		catch (Exception e) {}
 	} // end of run
-	
+	/**********************************************************************/
 	private FileWriter symapLog(Mproject p1, Mproject p2) {
 		FileWriter ret = null;
 		try {
@@ -250,32 +267,34 @@ public class AlgSynMain extends JFrame {
 		return ret;
 	}
 
-	private void printStats(ProgressDialog prog, Mproject p1, Mproject p2) throws Exception {
+	private void printStats(ProgressDialog prog, Mproject p1, Mproject p2)  {
 		int pairIdx = mp.getPairIdx();
 		if (pairIdx<=0) return;
 
 		TreeMap<String,Integer> counts = new TreeMap<String,Integer>();
-		getPseudoCounts(counts,pairIdx);
+		
+		try { // CAS560 was separate method
+			int cnt = dbc2.executeCount("select count(*) from pseudo_hits where pair_idx=" + pairIdx);	
+			counts.put("nhits", cnt);
+			
+			cnt = dbc2.executeCount("select count(*) from pseudo_block_hits as pbh join pseudo_hits as ph on pbh.hit_idx=ph.idx " +
+									" where ph.pair_idx=" + pairIdx);
+			counts.put("blkhits", cnt);
+
+			cnt =  dbc2.executeCount("select count(*) from pseudo_hits where gene_overlap > 0 and pair_idx=" + pairIdx);	
+			counts.put("genehits", cnt);
+
+			cnt = dbc2.executeCount("select count(*)  from blocks where pair_idx=" + pairIdx);	
+			counts.put("blocks", cnt);
+		}
+		catch (Exception e) {ErrorReport.print(e, "Gtting counts"); }
+		
 		Utils.prtNumMsg(prog, counts.get("nhits"), "hits");
 		Utils.prtNumMsg(prog, counts.get("blocks"), "synteny blocks");
 		Utils.prtNumMsg(prog, counts.get("genehits"), "gene hits");
 		Utils.prtNumMsg(prog, counts.get("blkhits"), "synteny hits");
 	}
-	private void getPseudoCounts(TreeMap<String,Integer> hitCounts, int pidx) throws Exception {
-		
-		int cnt = dbc2.executeCount("select count(*) from pseudo_hits where pair_idx=" + pidx);	
-		hitCounts.put("nhits", cnt);
-		
-		cnt = dbc2.executeCount("select count(*) from pseudo_block_hits as pbh join pseudo_hits as ph on pbh.hit_idx=ph.idx " +
-								" where ph.pair_idx=" + pidx);
-		hitCounts.put("blkhits", cnt);
-
-		cnt =  dbc2.executeCount("select count(*) from pseudo_hits where gene_overlap > 0 and pair_idx=" + pidx);	
-		hitCounts.put("genehits", cnt);
-
-		cnt = dbc2.executeCount("select count(*)  from blocks where pair_idx=" + pidx);	
-		hitCounts.put("blocks", cnt);
-	}
+	
 	// CAS500 was putting log in data/pseudo_pseudo/seq1_to_seq2/symap.log
 	// changed to put in logs/seq1_to_seq2/symap.log; 
 	private String buildLogAlignDir(Mproject p1, Mproject p2) {
@@ -287,5 +306,27 @@ public class AlgSynMain extends JFrame {
 		}
 		catch (Exception e){ErrorReport.print(e, "Creating log file");}
 		return null;
+	}
+	// CAS560 move collinear only here
+	private void collinearOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
+	try {
+		mLog.msg("Only run collinear set algorithm");
+		if (!mProj1.hasGenes() || !mProj2.hasGenes()) { 
+			mLog.msg("Both projects must have genes for the collinear set algorithm");
+			dbc2.close(); return;
+		}
+		int mPairIdx = Utils.getPairIdx(mProj1.getIdx(), mProj2.getIdx(), dbc2);
+		if (mPairIdx==0) {
+			mLog.msg("Cannot find project pair in database for " + mProj1.getDisplayName() + "," + mProj2.getDisplayName());
+			dbc2.close(); return;
+		}
+		AnchorPost collinear = new AnchorPost(mPairIdx, mProj1, mProj2, dbc2, mLog);
+		collinear.collinearSets();
+			
+		mp.saveUpdate();
+		new SumFrame(dbc2, mp);
+		System.out.println("--------------------------------------------------");
+	}
+	catch (Exception e){ErrorReport.print(e, "Creating log file"); }
 	}
 }

@@ -4,12 +4,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.Iterator;
-import java.util.Vector;
 
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -21,13 +15,14 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
+/*******************************************************
+ * Called from buildTable and setTable (change to columns)
+ * Referred to as 'theTable' in TableDataPanel
+ */
 public class SortTable extends JTable implements ListSelectionListener {
 	private static final long serialVersionUID = 5088980428070407729L;
 
-    public SortTable(TableData tData) {
-        theClickListeners = new Vector<ActionListener> ();
-        theDoubleClickListeners = new Vector<ActionListener> ();
-        
+    protected SortTable(TableData tData) {
     	theModel = new SortTableModel(tData);
     	
     	setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -41,42 +36,45 @@ public class SortTable extends JTable implements ListSelectionListener {
        	setOpaque(true);
 
        	setModel(theModel);
-       	
-        addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent me) {
-				if(me.getClickCount() > 1) {
-				    ActionEvent e = new ActionEvent ( this, ActionEvent.ACTION_PERFORMED, "DoubleClickSingleRow" );
-				    
-					Iterator<ActionListener> iter = theDoubleClickListeners.iterator();
-					while(iter.hasNext()) {
-						iter.next().actionPerformed(e);
-					}
-				}
-				else {
-				    ActionEvent e = new ActionEvent ( this, ActionEvent.ACTION_PERFORMED, "SinlgeClickRow" );
-					Iterator<ActionListener> iter = theClickListeners.iterator();
-					while(iter.hasNext()) {
-						ActionListener l = iter.next();
-						l.actionPerformed(e);
-					}					
-				}
-			}
-        });
+       	// CAS560 removed listeners, they were inactive
     }  
     
-    public void removeListeners() {
-    	theClickListeners.clear();
-    	theDoubleClickListeners.clear();
-    }
-    public void addSingleClickListener(ActionListener l) {
-    	theClickListeners.add(l);
-    }
-    public void addDoubleClickListener(ActionListener l) {
-    	theDoubleClickListeners.add(l);
-    }
-    public void sortAtColumn(int column) {
+    protected void sortAtColumn(int column) {
     	theModel.sortAtColumn(column);
     }
+    protected void autofitColumns() { 
+        TableModel model = getModel();
+        TableColumn column;
+        Component comp;
+       
+        int cellWidth, maxDef;
+        TableCellRenderer headerRenderer = getTableHeader().getDefaultRenderer();
+      
+        // CAS504 use different max widths, less padding, more iterations
+        for (int i = 0;  i < getModel().getColumnCount();  i++) { // for each column; default order
+            column = getColumnModel().getColumn(i);
+          
+            comp = headerRenderer.getTableCellRendererComponent(this, column.getHeaderValue(), false, false, 0, i); 
+            cellWidth = comp.getPreferredSize().width; // header width 
+            
+            for (int j = 0;  j < getModel().getRowCount();  j++) { // for each row
+	            comp = getDefaultRenderer(model.getColumnClass(i)).
+	               getTableCellRendererComponent(this, model.getValueAt(j, i), false, false, j, i);
+
+	            cellWidth = Math.max(cellWidth, comp.getPreferredSize().width);
+	            
+	            if (j > 1001) break; // only check beginning rows, for performance reasons
+            }
+      
+            String head = (String) column.getHeaderValue();
+            if (head.contains(Q.chrCol)) maxDef = MAX_AUTOFIT_COLUMN_CHR_WIDTH;
+            else if (theModel.getColumnClass(i) == String.class)  
+            							maxDef = MAX_AUTOFIT_COLUMN_STR_WIDTH;
+            else 						maxDef = MAX_AUTOFIT_COLUMN_INT_WIDTH;       
+            column.setPreferredWidth(Math.min(cellWidth, maxDef)+5);
+        }
+    }
+    /* required */
     public Component prepareRenderer(TableCellRenderer renderer,int Index_row, int Index_col) {
     	Component comp = super.prepareRenderer(renderer, Index_row, Index_col);
     	if (comp instanceof JLabel) {
@@ -113,68 +111,29 @@ public class SortTable extends JTable implements ListSelectionListener {
     private static String addCommas(String val) {
     	return val.replaceAll("(\\d)(?=(\\d{3})+$)", "$1,");
     }
-    private Color bgColor = Color.WHITE;
-    private Color bgColorAlt = new Color(240,240,255);
-    private Color bgColorHighlight = Color.GRAY;
-    private Color txtColor = Color.BLACK;
-        
+
+    /**********************************************************/
     private SortTableModel theModel = null;
-    private Vector<ActionListener> theClickListeners = null;
-    private Vector<ActionListener> theDoubleClickListeners = null;
 
-	private static final int MAX_AUTOFIT_COLUMN_STR_WIDTH = 120; // in pixels
-	private static final int MAX_AUTOFIT_COLUMN_INT_WIDTH = 90; // in pixels
-	private static final int MAX_AUTOFIT_COLUMN_CHR_WIDTH = 60; // in pixels
-	
-    public void autofitColumns() {
-        TableModel model = getModel();
-        TableColumn column;
-        Component comp;
-       
-        int cellWidth, maxDef;
-        TableCellRenderer headerRenderer = getTableHeader().getDefaultRenderer();
-        
-        // CAS504 use different max widths, less padding, more iterations
-        for (int i = 0;  i < getModel().getColumnCount();  i++) { // for each column
-            column = getColumnModel().getColumn(i);
-            
-            comp = headerRenderer.getTableCellRendererComponent(
-                    this, column.getHeaderValue(), false, false, 0, i);
-            
-            cellWidth = comp.getPreferredSize().width; // header width 
-            
-            for (int j = 0;  j < getModel().getRowCount();  j++) { // for each row
-	            comp = getDefaultRenderer(model.getColumnClass(i)).
-	               getTableCellRendererComponent(this, model.getValueAt(j, i), false, false, j, i);
-
-	            cellWidth = Math.max(cellWidth, comp.getPreferredSize().width);
-	            
-	            if (j > 1001) break; // only check beginning rows, for performance reasons
-            }  
-            String head = (String) column.getHeaderValue();
-            if (head.contains(Q.chrCol)) maxDef = MAX_AUTOFIT_COLUMN_CHR_WIDTH;
-            else if (theModel.getColumnClass(i) == String.class)  
-            							maxDef = MAX_AUTOFIT_COLUMN_STR_WIDTH;
-            else 						maxDef = MAX_AUTOFIT_COLUMN_INT_WIDTH;
-            
-            column.setPreferredWidth(Math.min(cellWidth, maxDef)+5);
-        }
-    }
+    private final Color bgColor = Color.WHITE;
+    private final Color bgColorAlt = new Color(240,240,255);
+    private final Color bgColorHighlight = Color.GRAY;
+    private final Color txtColor = Color.BLACK;
     
-    public class SortTableModel extends AbstractTableModel {
+	private final int MAX_AUTOFIT_COLUMN_STR_WIDTH = 120; // in pixels
+	private final int MAX_AUTOFIT_COLUMN_INT_WIDTH = 90; // in pixels
+	private final int MAX_AUTOFIT_COLUMN_CHR_WIDTH = 60; // in pixels
+	
+	/*******************************************************************************/
+	protected class SortTableModel extends AbstractTableModel {
 		private static final long serialVersionUID = -2360668369025795459L;
 
-		public SortTableModel(TableData values) {
+		protected SortTableModel(TableData values) {
 			theData = values;
 		}
-		public boolean isCellEditable(int row, int column) { return false; }
-		public Class<?> getColumnClass(int columnIndex) { return theData.getColumnType(columnIndex); }
-		public String getColumnName(int columnIndex) { return theData.getColumnName(columnIndex); }
-		public int getColumnCount() { return theData.getNumColumns(); }
-		public int getRowCount() { return theData.getNumRows(); }
-		public Object getValueAt(int rowIndex, int columnIndex) { return theData.getValueAt(rowIndex, columnIndex); }
-		public void sortAtColumn(final int columnIndex) {
-	    Thread t = new Thread(new Runnable() {
+
+		protected void sortAtColumn(final int columnIndex) {
+			Thread t = new Thread(new Runnable() {
     		public void run() {
             	setCursor(new Cursor(Cursor.WAIT_CURSOR));
         		theData.sortByColumn(columnIndex);
@@ -186,6 +145,15 @@ public class SortTable extends JTable implements ListSelectionListener {
 	    	t.setPriority(Thread.MIN_PRIORITY);
 	    	t.start();
 		}
+		/* required */
+		public boolean isCellEditable(int row, int column) { return false; }
+		public Class<?> getColumnClass(int columnIndex) { return theData.getColumnType(columnIndex); }
+		public String getColumnName(int columnIndex)    { return theData.getColumnName(columnIndex); }
+		public int getColumnCount() { return theData.getNumColumns(); }
+		public int getRowCount()    { return theData.getNumRows(); }
+		public Object getValueAt(int rowIndex, int columnIndex) { return theData.getValueAt(rowIndex, columnIndex); }
+		 
+		/* data */
 		private TableData theData = null;
     }
 }

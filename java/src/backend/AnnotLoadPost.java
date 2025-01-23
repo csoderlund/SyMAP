@@ -6,6 +6,7 @@ import java.util.Vector;
 import java.util.HashMap;
 import java.util.TreeMap;
 
+import symap.Globals;
 import symap.manager.Mproject;
 import database.DBconn2;
 import util.Cancelled;
@@ -142,18 +143,17 @@ public class AnnotLoadPost {
 			if (ialpha>=alpha.length) {
 				if (!isRepeat) {
 					isRepeat=true;
-					if (Constants.TRACE) 
-						System.out.println(numList.size() + " overlapping genes for gene #" + genenum);
+					Globals.tprt(numList.size() + " overlapping genes for gene #" + genenum);
 				}
 				ialpha=0;
 				icnt++;
 			}
-			if (Constants.TRACE) {
+			if (Globals.TRACE) {
 				if (gd.cntHasIn>3 || gd.cntOverlap>3)
-					System.out.println("Gene #" + gd.genenum + gd.suffix 
+					Globals.tprt("Gene #" + gd.genenum + gd.suffix 
 							+ " has contained "  + gd.cntHasIn + " overlap " + gd.cntOverlap);
 				if (gd.cntIsIn>1) 
-					System.out.println("Gene #" + gd.genenum + gd.suffix + " is contained in " + gd.cntIsIn + " genes");
+					Globals.tprt("Gene #" + gd.genenum + gd.suffix + " is contained in " + gd.cntIsIn + " genes");
 			}
 		}
 	}
@@ -183,12 +183,7 @@ public class AnnotLoadPost {
 				}
 			}
 			rs.close();
-			if (err>5 && symap.Globals.GENEN_ONLY) {
-				Utilities.showWarningMessage("This SyMAP database was built with an old version.\n"
-					+ "The -z will not work with it. You will need to reload.");
-				isSuccess=false;
-				return;
-			}
+			// CAS560 remove an old -z flag
 			if (Cancelled.isCancelled()) {isSuccess=false;return;}
 				
 		// WRITE write to db; names parsed in Annotation.java getLongDescription

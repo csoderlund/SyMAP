@@ -35,18 +35,11 @@ public class ComputeMulti {
 	private int numFam = 1, saveNumFam=1; // save is for filterTandem
 	private boolean bSuccess = true;
 	
-	
 	private Vector <DBdata> spData = new Vector <DBdata> (); // intermediate results
 	private int spIdx=-1, spIdxOpp=-1; // species index for current species and opposite
 	private int ii=-1, jj=-1; 		   // The index for the current species and the opposite
 	
 	private int [][] spSummaryCnts;
-	
-	private String strAddRows="";
-	private int cntAdd=0;
-	
-	private void dprt(String msg) {symap.Globals.dprt(msg);}
-	private void tprt(String msg) {symap.Globals.tprt(msg);}
 	
 	private String mkKey(DBdata dObj) {
 		int idx = dObj.annotIdx[ii];
@@ -87,9 +80,6 @@ public class ComputeMulti {
 	protected Vector <DBdata> compute() {
 		Vector <DBdata> finalRows = new Vector <DBdata> (); 
 		
-		dprt("");
-		dprt("Start " + spIdxList.length + " rows " + inData.size());
-		
 		for (int sp=0; sp<spIdxList.length; sp++) { // process this sp against all others
 			spIdx = spIdxList[sp];
 			
@@ -110,7 +100,6 @@ public class ComputeMulti {
 					symap.Globals.prt("No multi-hit genes for a species pair...");
 					return finalRows;
 				}
-				dprt(">> " + sp + "," + sp2 + " Idx/ii " + spIdx + "/" + ii + " && " + spIdxOpp + "/" + jj);
 				
 				if (isExon) filterExon(); if (!bSuccess) return finalRows;   	// In: inData  Out: inData; remove non-exon
 				
@@ -147,7 +136,6 @@ public class ComputeMulti {
 			if (msg.isEmpty()) msg="#0";
 			projMap.put(name, "Groups: " + msg);
 		}
-		if (cntAdd>0) tprt("   Add rows " + cntAdd + " e.g. " + strAddRows);
 		return finalRows;
 	}
 	
@@ -180,11 +168,7 @@ public class ComputeMulti {
 				int num    = (geneCnt.containsKey(key)) ? geneCnt.get(key) : 0;
 				
 				if (num>=nHits) {// is in a N group
-					if (dObj.grpN>0) {
-						spData.add((DBdata) dObj.copy());
-						if (cntAdd++ < 3)  
-							strAddRows += String.format("(#%d %s %s) ", dObj.grpN, dObj.geneTag[ii], dObj.geneTag[jj]);	
-					}
+					if (dObj.grpN>0) spData.add((DBdata) dObj.copy());	
 					else spData.add(dObj);									
 				}
 			}
@@ -208,7 +192,6 @@ public class ComputeMulti {
 			}
 			dObj.setGroup(fn,sz);
 		}		
-		dprt("  Main filter " + inData.size() + " -> " + spData.size() + " for " + spIdx + "," + ii + " numFam: " + numFam);
 	}
 	catch (Exception e) {ErrorReport.print(e, "make multi-hit genes"); bSuccess=false;}
 	}
@@ -224,7 +207,6 @@ public class ComputeMulti {
 			else if (ii==1 && dObj.htype.endsWith("E"))   eeData.add(dObj);
 		}
 		
-		dprt("  EE filter " + inData.size() + " -> " + eeData.size() + " for " + spIdx + "," + ii);
 		inData.clear();
 		for (DBdata eObj : eeData) inData.add(eObj);
 	}
@@ -266,7 +248,6 @@ public class ComputeMulti {
 		filterTandemEval(curGrp, gTagMap, tanData);
 		
 		// finish
-		dprt("  Tandem filter " + spData.size() + " -> " + tanData.size() + " for " + spIdx + "," + ii + " numFam: " + numFam);
 		spData.clear();
 		spData = tanData; 
 		saveNumFam = numFam;
@@ -285,7 +266,6 @@ public class ComputeMulti {
 						dObj.setGroup(numFam, nData.size());
 						tanData.add(dObj);
 					}
-					dprt("    Add: " + ii + " " +numFam+" "+gTagMap.get(tag).geneTag[ii]+" -: "+gTagMap.get(last).geneTag[jj]+" "+gTagMap.get(tag).geneTag[jj]+" Sz: "+nData.size());
 					numFam++;
 				}
 				nData.clear();

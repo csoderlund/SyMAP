@@ -33,11 +33,13 @@ public class TableExport extends JDialog {
 	protected final int ex_csv = 0, ex_html = 1, ex_fasta= 2, ex_cancel= 3; // Referenced in TableDataPanel
    
 	private TableDataPanel tdp;
+	private String title; 			// CAS560 add for 1st line of export
 	private JRadioButton btnYes;
 	private int nMode = -1;    
 	    
-	public TableExport(TableDataPanel tdp) {
+	public TableExport(TableDataPanel tdp, String title) {
 		this.tdp = tdp;
+		this.title = title;
 		
 		setModal(true);
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -73,7 +75,7 @@ public class TableExport extends JDialog {
         ButtonGroup inc = new ButtonGroup();
 		inc.add(btnYes);
 		inc.add(btnNo);
-		btnYes.setSelected(true);
+		btnNo.setSelected(true); // CAS560 changed to no
 		rowPanel.add(btnYes); rowPanel.add(Box.createHorizontalStrut(5));
 		rowPanel.add(btnNo);
 		
@@ -140,18 +142,23 @@ public class TableExport extends JDialog {
      */
     protected void writeCSV() {
     try {
+    	boolean reset = false;
+    	int nSelRows = tdp.theTable.getSelectedRowCount();
+    	if (nSelRows>0) {
+    		if (!Utilities.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
+    	}
 		PrintWriter outFH = getFileHandle(ex_csv, filePrefix + ".csv", true);
 		if (outFH==null) return;
 		
-		boolean incRow = btnYes.isSelected();
-		
-		tdp.setPanelEnabled(false);
-		boolean reset = false;
-		if(tdp.theTable.getSelectedRowCount() == 0) {
+		if(nSelRows == 0) {
 			tdp.theTable.selectAll();
 			reset = true;
 		}
 		int [] selRows = tdp.theTable.getSelectedRows();
+		
+		outFH.println("### " +title);
+		boolean incRow = btnYes.isSelected();
+		tdp.setPanelEnabled(false);
 		
 		// Columns names
 		for(int x=0; x<tdp.theTable.getColumnCount()-1; x++) {
@@ -182,6 +189,11 @@ public class TableExport extends JDialog {
    
     protected void writeHTML() { // CAS542 add
     try {
+    	int nSelRows = tdp.theTable.getSelectedRowCount();
+    	if (nSelRows>0) { // CAS560 add
+    		if (!Utilities.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
+    	}
+    	
     	PrintWriter outFH = getFileHandle(ex_html, filePrefix + ".html", false);
 		if (outFH==null) return;
 	
@@ -189,7 +201,7 @@ public class TableExport extends JDialog {
 		
 		tdp.setPanelEnabled(false);
 		boolean reset = false;
-		if(tdp.theTable.getSelectedRowCount() == 0) {
+		if(nSelRows == 0) {
 			tdp.theTable.selectAll();
 			reset = true;
 		}
@@ -205,7 +217,7 @@ public class TableExport extends JDialog {
 				+ "</style>\n</head>\n<body>\n"
 				+ "<a id='top'></a>\n");
 	 
-		outFH.println("<p><center><b><big>SyMAP Results</big></b></center>\n");
+		outFH.println("<p><center><b><big>" + title + "</big></b></center>\n"); // CAS560 'title' is SyMAP version - dbname
 		outFH.println("<br><center>Filter: " + tdp.theSummary + "</center>\n");
 		outFH.print("<p><table class='ty'>\n<tr>");
 		
@@ -244,6 +256,10 @@ public class TableExport extends JDialog {
      */
     protected void writeFASTA() {
     try {
+    	int nSelRows = tdp.theTable.getSelectedRowCount();
+    	if (nSelRows>0) {
+    		if (!Utilities.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
+    	}
     	PrintWriter outFH = getFileHandle(ex_fasta, filePrefix + ".fa", true);
 		if (outFH==null) return;
 	
@@ -273,6 +289,7 @@ public class TableExport extends JDialog {
 				}
 				int seqNum = 1, pairNum=1;
 					
+				outFH.println("### " + title);
 				for(int x=0; x<selNum; x++) {
 					if (!rd.loadRow(x)) {
 						outFH.close();

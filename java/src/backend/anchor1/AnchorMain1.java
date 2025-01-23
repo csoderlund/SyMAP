@@ -223,12 +223,13 @@ public class AnchorMain1 {
 			}
 		}
 		if (nFile>1) 			 Utils.prtNumMsg(plog, nHitsScanned, "Total cluster hits   ");
-		if (Constants.PRT_STATS) Utils.prtTimeMemUsage(plog, "Complete scan cluster", memTime);
-		
+
 		if (Constants.PRT_STATS) { 
+			Utils.prtTimeMemUsage(plog, "Complete scan cluster", memTime);
 			syProj1.printBinStats();  
 			syProj2.printBinStats(); 
-			plog.msgToFile("Complete stats");
+			BinStats.dumpStats(plog); // CAS560 was not printing
+			plog.msgToFile("Complete stats"); 
 		}
 		return true;
 	}
@@ -296,7 +297,7 @@ public class AnchorMain1 {
 				
 			mTotalHits++;
 			if (Group.bSplitGene && hit.maxLength() > Group.FSplitLen) {// CAS540 add splitgene check
-				if (Globals.DEBUG) System.out.print(" split hit of size " + hit.maxLength() + "\r");
+				Globals.tprt(" split hit of size " + hit.maxLength() + "\r");
 				Vector<Hit> brokenHits = Hit.splitMUMmerHit(hit);
 				mTotalLargeHits++;
 				mTotalBrokenHits += brokenHits.size();
@@ -777,7 +778,10 @@ public class AnchorMain1 {
 			}	
 		}
 		if (cntBatch> 0) ps.executeBatch();
-		if (cntHit>0) Utils.prtNumMsg(plog, cntHit, "(" + count + ") for " + proj1Name + "                        ");
+		if (cntHit>0) {
+			String m = String.format("(%,d) for ", count); // CAS560 add comma
+			Utils.prtNumMsg(plog, cntHit, m + proj1Name + "                        ");
+		}
 		if (failCheck()) return;
 		
 	/* save the target annotation hits */
@@ -809,7 +813,10 @@ public class AnchorMain1 {
 		}
 		if (cntBatch>0) ps.executeBatch();
 		ps.close();	
-		if (!isSelf && cntHit>0) Utils.prtNumMsg(plog, cntHit, "(" + count + ") for " + proj2Name + "                        ");
+		if (!isSelf && cntHit>0) {
+			String m = String.format("(%,d) for ", count); // CAS560 add comma
+			Utils.prtNumMsg(plog, cntHit, m + proj2Name + "                        ");
+		}
 		if (failCheck()) return;
 	}
 	catch (Exception e) {ErrorReport.print(e, "save annot hits " + key); bSuccess=false;}
@@ -826,10 +833,11 @@ public class AnchorMain1 {
 		if (mProps.getProperty("keep_gene").equals("1")) { // false
 			HitBin.addKeepTypes(HitType.GeneGene);	HitBin.addKeepTypes(HitType.GeneNonGene);	}
 		**/
-		if (Constants.PRT_STATS) BinStats.initStats(); 
+		if (!Constants.PRT_STATS) return;
 		
-		if (!Constants.TRACE) return;
+		BinStats.initStats(); 
 		
+		if (!Globals.TRACE) return; // -s -tt for histogram
 		BinStats.initHist("TopNHist1" + GeneType.Gene, 3,6,10,25,50,100);
 		BinStats.initHist("TopNHist1" + GeneType.NonGene, 3,6,10,25,50,100);
 		BinStats.initHist("TopNHist1" + GeneType.NA, 3,6,10,25,50,100);

@@ -9,6 +9,7 @@ import util.Utilities;
 /***************************************************
  * Translates a row from a vector of objects to the correct data types for easy access,
  * plus adds the species and chromosome index
+ * used in TableReport, TableExport writeFasta, and TableDataPanel.showAlignment, showRow, showSynteny
  * 
  * CAS504 added this class to take the place of using hidden columns to get data
  * TheTableData.getRowData(row) returns the chr,start,end of all species in line,

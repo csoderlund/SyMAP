@@ -55,7 +55,7 @@ public class OverviewPanel extends JPanel {
 		
 		String algo = theParentFrame.isAlgo2() ? "Algo2: " : "Algo1: "; 
 		algo += "The Olap column is ";
-		algo += theParentFrame.isAlgo2() ? "exon overlap" : "gene overlap; no multi-hit exon option";
+		algo += theParentFrame.isAlgo2() ? "exon overlap; Olap may be 0 if hits only overlap intron" : "gene overlap; no multi-hit exon option";
 		overView += "<P><b>Note:</b> " + algo;	// CAS548
 		
 		overView += "</FONT></div>";

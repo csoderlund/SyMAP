@@ -496,7 +496,7 @@ public class BlockViewFrame extends JFrame{
 		// unanchored blocks have grp_idx=0 (unGrp2=0)
 		rs = tdbc2.executeQuery("select count(*) as count from blocks where pair_idx=" + mPairIdx + 
 				" and (grp1_idx=" + unGrp2 +  " or grp2_idx=" + unGrp2 + ")");
-		rs.first();
+		rs.next(); // CAS560 was first()
 		if (rs.getInt("count") > 0) {
 			grpColorOrder.put(unGrp2, 0);
 			mGrps2.add(unGrp2);

@@ -3,6 +3,8 @@ package symapQuery;
 import java.util.Iterator;
 import java.util.Vector;
 
+import symap.Globals;
+
 /*************************************************
  * The columns for the query result table
  * Added in TableDataPanel. Database query in DBdata. 
@@ -35,7 +37,7 @@ public class FieldData {
 		 "Grp#: (Gene#, Multi-hit or PgeneF) group number", 		// computed in ComputeMulti or ComputePgeneF
 		 "GrpSize: (Gene#, Multi-hit or PgeneF) group size",
 		 "Hit#: Number representing the hit", 
-		 "Hit Cov: The largest summed subhit lengths of the two species",
+		 "Hit Cov: The largest summed merged subhit lengths of the two species", // CAS560 add merged
 		 "Hit %Id: Approximate percent identity (exact if one hit)",
 		 "Hit %Sim: Approximate percent similarity (exact if one hit)", 
 		 "Hit #Sub: Number of subhits in the cluster, where 1 is a single hit",
@@ -73,25 +75,23 @@ public class FieldData {
 	
 	// CAS541 made single columns separate so can add NumHits
 	private static final String []     SSPECIES_COLUMNS = 
-		{ Q.gNCol, Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol, Q.gHitNumCol};
+		{ Q.gNCol, Q.gHitNumCol, Q.chrCol, Q.gStartCol, Q.gEndCol, Q.gLenCol, Q.gStrandCol}; // CAS560 moved gHitNumCol to where Olap is
 	
 	private static final Class <?> []  SSPECIES_TYPES =   
-		{Integer.class, String.class,  Integer.class,Integer.class, String.class, String.class, Integer.class};
+		{Integer.class, Integer.class, String.class,  Integer.class,Integer.class, Integer.class, String.class}; // CAS560 gLenCol was String
 	
 	private static final boolean []    SSPECIES_COLUMN_DEF =  
 		{ true, false, false, false, false , false, false};
 	
 	private static String [] SSPECIES_COLUMN_DESC = {
 		"Gene#: Sequential. Overlap genes have same number (chr.#.{a-z})", 
+		"NumHits: Number of hits to the gene in the entire database.",
 		"Chr: Chromosome (or Scaffold, etc)", 
 		"Gstart: Start coordinate of gene", 
 		"Gend: End coordinate of gene", 
 		"Glen: Length of gene", 
-		"Gst: Gene strand", 
-		
-		"NumHits: Number of hits to the gene in the entire database."
+		"Gst: Gene strand"
 	};
-	
 	
 	//****************************************************************************
 	//* Static methods
@@ -153,7 +153,7 @@ public class FieldData {
 		fd.addField(String.class, Q.B, "blocknum",  Q.BNUM,      "Block Number");
 		fd.addField(String.class, Q.B, "score",     Q.BSCORE,    "Block Score (#Anchors)");
 		
-		if (isAlgo2)
+		if (isAlgo2 && Globals.bQueryOlap==false)
 			fd.addField(Integer.class,Q.PHA, "exlap",Q.AOLAP, "Exon overlap"); 
 		else 
 			fd.addField(Integer.class,Q.PHA, "olap",Q.AOLAP, "Gene overlap");

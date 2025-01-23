@@ -112,8 +112,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private JTextField txtCPUs =null;
 	private JCheckBox checkCat=null;
 	
-	private void dprt(String msg) {symap.Globals.dprt("MF: " + msg);}
-	
 	/*****************************************************************/
 	public ManagerFrame() {
 		super("SyMAP " + Globals.VERSION);
@@ -1332,11 +1330,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
         }
         rs.close();
         
-        dprt("Load projects");
         for (Mproject mp : projVec) {
         	mp.loadParamsFromDB(); 
         	mp.loadDataFromDB();
-        	dprt(mp.strDBName + " " + mp.getLength());
         	projObjMap.put(mp.strDisplayName, mp);
         	projNameMap.put(mp.strDBName, mp.strDisplayName);
         }
@@ -1376,7 +1372,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	 */
 	private void loadAllProjects() {
 		try {
-			LoadProj lpObj = new LoadProj(this, dbc2, buildLogLoad());// CAS557 create explicit object
+			DoLoadProj lpObj = new DoLoadProj(this, dbc2, buildLogLoad());// CAS557 create explicit object
 			lpObj.loadAllProjects(selectedProjVec); 
 			
 			new Version(dbc2).updateReplaceProp();
@@ -1386,7 +1382,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	private void loadProject(Mproject mProj) {
 		try {
-			LoadProj lpObj = new LoadProj(this, dbc2, buildLogLoad());
+			DoLoadProj lpObj = new DoLoadProj(this, dbc2, buildLogLoad());
 			lpObj.loadProject(mProj);
 			
 			new Version(dbc2).updateReplaceProp();
@@ -1414,7 +1410,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		System.out.println("Removing " +  mProj.getDisplayName() + " from database...."); // CAS541 add
 		mProj.removeProjectFromDB();
 		
-		LoadProj lpObj= new LoadProj(this, dbc2, buildLogLoad());
+		DoLoadProj lpObj= new DoLoadProj(this, dbc2, buildLogLoad());
 		lpObj.loadProject(mProj); 
 		
 		new Version(dbc2).updateReplaceProp();
@@ -1426,20 +1422,15 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private void reloadAnno(Mproject mProj) {
 	try {
 		String msg = "Reload annotation " + mProj.getDisplayName();
-		if (!Globals.GENEN_ONLY) { 
-			if (!Utilities.showConfirm2("Reload annotation", msg +
-					"\n\nYou will need to re-run the synteny computations for this project," +      // CAS520 do not remove synteny
-					"\nany existing alignment files will be used.")) return; // CAS512 remove MUMmer and BLAT
-		}
-		else { // CAS519
-			if (!Utilities.showConfirm2("Reload annotation", msg +
-					"\n\nThe -z flag is set. Only the Gene# assignment algorithm will be run. " +
-					"\nNo further action will be necessary.")) return; 
-		}
+		
+		if (!Utilities.showConfirm2("Reload annotation", msg +							// CAS560 remove -z geneOnly check
+			"\n\nYou will need to re-run the synteny computations for this project," +  // CAS520 do not remove synteny
+			"\nany existing alignment files will be used.")) return; 					// CAS512 remove MUMmer and BLAT
+		
 		System.out.println("Removing " +  mProj.getDisplayName() + " annotation from database...."); // CAS541 add
 		mProj.removeAnnoFromDB();
 		
-		LoadProj lpObj= new LoadProj(this, dbc2, buildLogLoad());
+		DoLoadProj lpObj= new DoLoadProj(this, dbc2, buildLogLoad());
 		lpObj.reloadAnno(mProj);
 		
 		new Version(dbc2).updateReplaceProp();
@@ -1505,7 +1496,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			if (!backend.Constants.CoSET_ONLY) mp.renewIdx(); // Removed existing; CAS556 add check
 			
 			// AlignProj open/close new dbc2 for each thread of align
-			new AlgSynMain().run(this, dbc2, mp, true,  maxCPUs, checkCat.isSelected());
+			new DoAlignSynPair().run(this, dbc2, mp, true,  maxCPUs, checkCat.isSelected());
 		}
 		new Version(dbc2).updateReplaceProp();
 		System.out.println("All Pairs complete. ");
@@ -1532,7 +1523,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		if (bAlignDone && backend.Constants.CoSET_ONLY)  { //*** CAS556, CAS557 add bAlign
 			if (!Utilities.showConfirm2("Selected Pair", "Collinear only")) return;
-			new AlgSynMain().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
+			new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
 			new Version(dbc2).updateReplaceProp();
 			return;
 		}
@@ -1556,7 +1547,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		mp.renewIdx(); // Remove existing and restart
 		
-		new AlgSynMain().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
+		new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
 		new Version(dbc2).updateReplaceProp();
 	}
 	// Create directories if alignment is initiated; CAS511  add
@@ -1600,7 +1591,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				if (!Utilities.showContinue("Order against", msg)) return false;
 			}
 		
-			String ordProjName = n1 + OrderAgainst.orderSuffix; // directory uses dbname, no display name
+			String ordProjName = n1 + Constants.orderSuffix; // directory uses dbname, no display name
 			String ordDirName =  Constants.seqDataDir + ordProjName;
 			File   ordDir = new File(ordDirName);
 	

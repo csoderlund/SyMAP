@@ -1,16 +1,15 @@
 package backend.anchor1;
 
-import java.sql.ResultSet;
 import java.util.TreeMap;
 import java.util.Vector;
 
 import backend.Constants;
 import backend.Utils;
-import database.DBconn2;
+import symap.Globals;
 import util.ProgressDialog;
 
 /**************************************
- * shared by Proj and Groups for bins; Static methods also used by SyntenyMain
+ * shared by Proj and Groups for bins; CAS560 SyntenyMain no longer uses
  * -s keys are recorded and printed
  * -tt histograms are recorded and printed
  */
@@ -50,7 +49,7 @@ public class BinStats {
 			mStats = new TreeMap<String,Float>();	
 			mKeyOrder= new Vector<String>();
 		}
-		if (Constants.TRACE) 
+		if (Globals.TRACE) // need -s -tt to see histogram
 			mHist = new TreeMap<String,TreeMap<Integer,Integer>>();
 	}
 	
@@ -92,7 +91,7 @@ public class BinStats {
 				}
 			}
 		}
-		mHist.clear(); // CAS546 add so will not display if algo2 is run next
+		mHist.clear(); 
 		mHist=null;
 	}
 	/************************************************
@@ -115,28 +114,9 @@ public class BinStats {
 			if (Math.floor(val)==val) log.msgToFile(String.format("%6d %s\n", (int)val, key));
 			else					  log.msgToFile(String.format("%6.2f %s\n", val, key));
 		}
-		mStats.clear(); // CAS546 add so will not display if algo2 is run next
+		mStats.clear(); 
 		mStats=null;
-	}
-	// CAS534 no reason to load these, only do it on -s; then remove the next time run.
-	// CAS540 (now dead) writes to symap.log now; never used from database so this is not currently called
-	//        was called in AnchorMain and SyntenyMain at end of processing
-	protected static void uploadStats(DBconn2 dbc2, int pair_idx, int pidx1, int pidx2) throws Exception {
-		if (mStats == null) return;
 		
-		ResultSet rs = null;
-		for (String key : mKeyOrder) {
-			Integer val = mStats.get(key).intValue();
-			if (Constants.PRT_STATS)
-				dbc2.executeUpdate("replace into pair_props (pair_idx,proj1_idx,proj2_idx,name,value) values(" + pair_idx + 
-					"," + pidx1 + "," + pidx2 + ",'" + key + "','" + val + "')");	
-			else {
-				String st = "SELECT value FROM pair_props  WHERE pair_idx='" + pair_idx + "' AND name='" + key +"'";
-				rs = dbc2.executeQuery(st);
-				if (rs.next()) 
-					dbc2.executeUpdate("delete from pair_props where key='" + key + "' and pair_idx=" + pair_idx);
-			}
-		}
-		if (rs!=null) rs.close();
+		if (Globals.TRACE) dumpHist(log); // CAS560 was not be printed; still does not seem functional...
 	}
 }

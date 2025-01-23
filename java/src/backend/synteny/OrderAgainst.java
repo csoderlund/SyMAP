@@ -1,4 +1,4 @@
-package backend;
+package backend.synteny;
 
 /**************************************************
  * CAS505 
@@ -17,14 +17,14 @@ import java.util.TreeMap;
 import java.util.Vector;
 
 import database.DBconn2;
+import backend.Constants;
+import backend.Utils;
 import symap.manager.Mproject;
 import util.ErrorReport;
 import util.ProgressDialog;
 import util.Utilities;
 
 public class OrderAgainst {
-	public static final String orderSuffix 		=  "_ordered"; // CAS505 for ordering V2
-	private static final String orderCSVFile	=  "/ordered.csv";
 	
 	private ProgressDialog mLog;
 	private DBconn2 dbc2;	// CAS541 UpdatePool->DBconn2
@@ -172,7 +172,7 @@ public class OrderAgainst {
 			
 		/** Write Ordered file and update DB order **/
 			
-			File ordFile = new File(Constants.seqDataDir + pDraft.getDBName() + orderCSVFile);
+			File ordFile = new File(Constants.seqDataDir + pDraft.getDBName() + Constants.orderCSVFile);
 			if (ordFile.exists()) ordFile.delete();
 			FileWriter ordFileW = new FileWriter(ordFile);
 			
@@ -203,7 +203,7 @@ public class OrderAgainst {
 		try {
 			mLog.msg("   Creating new ordered project from " + pDraft.getDBName());
 			
-			String ordProjName = pDraft.getDBName() + orderSuffix;	
+			String ordProjName = pDraft.getDBName() + Constants.orderSuffix;	
 			String ordDirName = Constants.seqDataDir + ordProjName;
 			File   ordDir = new File(ordDirName);
 			if (ordDir.exists()) {
@@ -287,7 +287,7 @@ public class OrderAgainst {
 			File ordParam =   Utilities.checkCreateFile(ordDir, Constants.paramsFile, "SM params");
 			FileWriter ordParamsFH = 	new FileWriter(ordParam);
 			ordParamsFH.write("category = " + pDraft.getdbCat() + "\n");
-			ordParamsFH.write("display_name=" + pDraft.getDisplayName() + orderSuffix + "\n");
+			ordParamsFH.write("display_name=" + pDraft.getDisplayName() + Constants.orderSuffix + "\n");
 			ordParamsFH.write("grp_prefix=" + pTarget.getGrpPrefix() + "\n");
 			ordParamsFH.close();
 			

@@ -12,8 +12,8 @@ import java.io.File;
  * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.5.9"; 
-	public static final String 	DATE = " (24-Sept-24)";
+	public static final String 	VERSION = "v5.6.0"; 
+	public static final String 	DATE = " (23-Jan-25)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER =  7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
@@ -23,12 +23,16 @@ public class Globals {
 	
 	public static final  String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // under user's directory; see props.PersistenProps
 
-	public static boolean TRACE=false; 		// set in SyMAPmanager on -tt; 			use to add info; write anchor2 files
-	public static boolean DEBUG=false; 		// CAS519 set in SyMAPmanager on -dd; 	use for possible error
-	public static boolean DBDEBUG=false;	// CAS535 set in SyMAPmanger on -dbd	adds fields to DB
-	public static boolean GENEN_ONLY=false; // -z CAS519b to update the gene# without having to redo synteny
-	public static boolean HITCNT_ONLY=false;// -y CAS541 to update the hitcnt without having to redo synteny
-	public static boolean bTrim=true;		// CAS531 do not trim 2D alignments; see closeup.AlignPool
+	public static boolean INFO=false;		// SyMAPmanager -ii; popup indices, query overlap; -ii -tt DB output, Hit Sort Popup; CAS560 add; 
+	public static boolean TRACE=false; 		// SyMAPmanager -tt; write files for query and anchor2
+	public static boolean DEBUG=false; 		// SyMAPmanager -dd; use for possible error
+	public static boolean DBDEBUG=false;	// SyMAPmanager -dbd; adds fields to DB
+
+	public static boolean bTrim=true;		  // CAS531 do not trim 2D alignments; see closeup.AlignPool
+	public static boolean bRedoSum=false;	  // CAS560 was part of PRT_STATS, which is removed
+	public static boolean bQueryOlap=false;   // CAS560 show gene olap for algo2 instead of exon
+	//public static boolean HITCNT_ONLY=false;// CAS560 remove; -y CAS541 to update the hitcnt without having to redo synteny
+	//public static boolean GENEN_ONLY=false; // CAS560 remove; -z CAS519b to update the gene# without having to redo synteny
 	
 	public static final String exonTag = "Exon #";
 	public static final String geneTag = "Gene #";
@@ -39,6 +43,8 @@ public class Globals {
 	public static final int MAX_YELLOW_BOX=50000; 	// used in SeqFilter for drawing yellow boxes
 	
 	public static final String minorAnno = "*";     // CAS548 used in Query and Anno popup for hit to non-assigned anno
+	
+	public static final int T=0, Q=1;				// CAS560 for target (2) and query (1); 
 	
 	// CAS534 start moving constants from SyMAPConstants
 	public static final int NO_VALUE = Integer.MIN_VALUE;
@@ -69,15 +75,22 @@ public class Globals {
 		}
 		return saveDir;
     }
-    public static String exonNum() { // CAS548 removes "#"
-    	return "#" + Globals.exonTag.substring(0, Globals.exonTag.indexOf(" ")) + "s=";
-    }
+   
+    // positive is the gap between (s1,e1) and (s2, e2); negative is the overlap
+ 	// works for contained; copied from anchor2.Arg.java on CAS560
+    public static int pGap_nOlap(int s1, int e1, int s2, int e2) {
+		return -(Math.min(e1,e2) - Math.max(s1,s2) + 1); 
+	}
+    
     public static void prt(String msg)  {System.out.println(msg);} // permanent message
     public static void xprt(String msg) {System.out.println(msg);} // temp message
     public static void rprt(String msg) {System.out.print("      " + msg + "...                      \r");}
     public static void eprt(String msg) {System.err.println("***Error: " + msg);}
+    public static void die(String msg)  {eprt(msg); System.exit(-1);}
     
-    public static void tprt(String msg) {if (TRACE) System.out.println(msg);}
-    public static void dprt(String msg) {if (DEBUG) System.out.println(msg);}
-    public static void deprt(String msg){if (DEBUG) System.err.println(msg);} 
+    public static void dtprt(String msg)         {if (TRACE || DEBUG) System.out.println(msg);}
+    public static void tprt(String msg)          {if (TRACE) System.out.println(msg);}
+    public static void tprt(int num, String msg) {if (TRACE) System.out.format("%,10d %s\n",num, msg);}
+    public static void dprt(String msg)          {if (DEBUG) System.out.println(msg);}
+    public static void deprt(String msg)         {if (DEBUG) System.err.println(msg);} 
 }

@@ -20,10 +20,11 @@ import javax.swing.JTextArea;
 import javax.swing.WindowConstants;
 import javax.swing.JCheckBox;
 
-import symap.drawingpanel.DrawingPanel;
+import symap.Globals;
 import symap.mapper.HitData;
 import symap.sequence.Annotation;
 import util.ErrorReport;
+import util.Jcomp;
 
 /*************************************************************************
  * Called from SeqHits.PseudoHit,  Sequence.Annotation, util.TextBox
@@ -33,35 +34,75 @@ import util.ErrorReport;
 public class TextShowInfo extends JDialog implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	
+	// also used by SeqDataInfo
+	protected static final String disOrder = "#"; 		
+	protected static final String titleMerge = "Merged", buttonMerge = "Merge"; 
+	protected static final String titleOrder = "Order", titleRemove = "Remove" + disOrder; // Remove is -ii only, doesn't work
+	protected static final String totalMerge = "Total"; // Merge has total
+	
 	// For hit popup
 	private HitData hitDataObj=null;
-	private String  proj1, proj2, title1, title2;
+	private String  title, theInfo, proj1, proj2,  queryHits, targetHits;
+	private Annotation aObj1, aObj2;
+	private boolean isQuery;    // isQuery for runAlign;
+	private boolean st1LTst2;   // T query on left; F query on right
+	private boolean isInvHit;	// !strands (but the block may be Inv)
 	
-	private boolean bTmpGene=false; // Fix gene align for next release
 	private AlignPool alignPool;
-	private boolean isQuery=true;
 	private HitAlignment[] hitAlignArr=null;
 	private JCheckBox ntCheckBox;
-	private JButton alignHitButton, alignGeneButton;
+	private JButton alignHitButton, orderButton, mergeButton, removeButton;
 	
 	// for Gene popup
 	private Annotation annoDataObj=null;
 	
 	private JButton okButton;
 	
-	// For gene - no align
+	/***************************************************
+	 * Gene info; CAS560 make separate from hit
+	 * Called by Annotation.java
+	 */
 	public TextShowInfo (Component parentFrame, String title, String theInfo, Annotation annoDataObj) {
-		new TextShowInfo( parentFrame, title, theInfo, annoDataObj, 
-				null, null, null, null, null, null, true);
+		super();
+		setModal(false);
+		setTitle(title); 
+		setResizable(true);
+		
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // CAS543 add the explicit close 
+		addWindowListener(new WindowAdapter() {
+			public void windowClosed(WindowEvent e) {annoDataObj.setIsPopup(false);}
+		});
+		this.annoDataObj = annoDataObj;
+		
+		JTextArea messageArea = new JTextArea(theInfo);
+		JScrollPane sPane = new JScrollPane(messageArea); 
+		messageArea.setFont(new Font("monospaced", Font.BOLD, 12));
+		messageArea.setEditable(false);
+		messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		
+		okButton = new JButton("OK"); okButton.setBackground(Color.white);
+		okButton.addActionListener(this);
+		
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.add(okButton);
+	
+		getContentPane().setLayout(new BorderLayout());
+		getContentPane().add(sPane,BorderLayout.CENTER);
+		getContentPane().add(buttonPanel,BorderLayout.SOUTH);
+		pack();
+		
+		Dimension d = new Dimension (330, 200); 
+		if (getWidth() >= d.width || getHeight() >= d.height) setSize(d);
+		setAlwaysOnTop(true); 										// CAS543; doesn't work on Ubuntu
+		setLocationRelativeTo(null);	
+		setVisible(true);
 	}
-	public TextShowInfo (Component parentFrame, String title, String theInfo,
-			DrawingPanel dp, HitData hitDataObj, String title1, String title2, String proj1, String proj2, boolean isQuery) {
-		new TextShowInfo( parentFrame, title, theInfo, null, 
-				dp, hitDataObj, title1, title2, proj1, proj2, isQuery);
-	}
-	// for hit - with align
-	public TextShowInfo (Component parentFrame, String title, String theInfo, Annotation annoDataObj,
-			DrawingPanel dp, HitData hitDataObj, String title1, String title2, String proj1, String proj2, boolean isQuery) {
+	/***************************************************
+	 * Hit info; CAS560 change parameters, add Sort and Merge
+	 */
+	public TextShowInfo (AlignPool alignPool, HitData hitDataObj, String title, String theInfo, String trailer,
+			boolean st1LTst2, String proj1, String proj2, Annotation aObj1, Annotation aObj2, String queryHits, String targetHits, 
+			boolean isQuery, boolean isInv, boolean bSort) {
 		
 		super();
 		setModal(false);
@@ -70,21 +111,45 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // CAS543 add the explicit close 
 		addWindowListener(new WindowAdapter() {
-			public void windowClosed(WindowEvent e) {
-				if (hitDataObj!=null) 	hitDataObj.setIsPopup(false);
-				else 					annoDataObj.setIsPopup(false);
-			}
+			public void windowClosed(WindowEvent e) {hitDataObj.setIsPopup(false);}
 		});
-		if (hitDataObj!=null) {
-			alignPool = new AlignPool(dp.getDBC());
-			this.hitDataObj = hitDataObj;
-			this.proj1 = proj1;
-			this.proj2 = proj2;
-			this.title1 = title1;
-			this.title2 = title2;
-			this.isQuery = isQuery;
+	
+		this.alignPool =  alignPool;	this.hitDataObj = hitDataObj;
+		this.title = title;				this.theInfo = theInfo;
+		this.proj1 = proj1;				this.proj2 = proj2;
+		this.aObj1 = aObj1;				this.aObj2 = aObj2;  // CAS560 change from name to object for coords
+		this.queryHits = queryHits;		this.targetHits = targetHits;
+		this.isQuery = isQuery;			this.st1LTst2 = st1LTst2;	this.isInvHit = isInv; 
+		
+		String gene1 = (aObj1!=null) ? " (#" + aObj1.getFullGeneNum() + ")" : "";	
+		String gene2 = (aObj2!=null) ? " (#" + aObj2.getFullGeneNum() + ")" : "";
+	
+		boolean bMerge = title.startsWith(titleMerge);
+		boolean bOrder = title.startsWith(titleOrder);
+		boolean bRemove = title.startsWith(titleRemove);
+		
+		/** Text - the tables and info **/
+		String table1 = SeqDataInfo.formatHit(Globals.Q, proj1 + gene1, aObj1, queryHits, title, false, false);
+		int cntNegGap = SeqDataInfo.cntMergeNeg;
+		
+		String table2 = SeqDataInfo.formatHit(Globals.T, proj2 + gene2, aObj2, targetHits, title, isInv, bSort);
+		cntNegGap += SeqDataInfo.cntMergeNeg;
+		
+		// theInfo
+		theInfo +=  st1LTst2 ? ("\nL " + table1+ "\nR " + table2) : ("\nL " + table2+"\nR " + table1);
+		theInfo += trailer; // if -ii, contains indices
+		
+		
+		if (bMerge && (table1.contains(totalMerge) || table2.contains(totalMerge)))  // no total in only 1 merged hit
+			theInfo += "\nThe merged hits are not 1-to-1.";
+		
+		boolean bDisorder = (SeqDataInfo.cntDisorder>0);	
+	
+		if (bDisorder) {
+			if (bOrder) theInfo += "\n" + disOrder  + disOrder + " Disordered subhits";
+			else theInfo += "\n Disordered # column (same # subhits align)";
 		}
-		else this.annoDataObj = annoDataObj;
+		/*****/
 		
 		JTextArea messageArea = new JTextArea(theInfo);
 		JScrollPane sPane = new JScrollPane(messageArea); 
@@ -96,21 +161,26 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		okButton.addActionListener(this);
 		
 		// Hit only
-		alignHitButton = new JButton("Align Hit"); alignHitButton.setBackground(Color.white);
+		alignHitButton = Jcomp.createButton("Align", "Popup window of text alignment");
 		alignHitButton.addActionListener(this);
-		alignGeneButton = new JButton("Exon"); alignGeneButton.setBackground(Color.white);
-		alignGeneButton.addActionListener(this);
-		ntCheckBox = new JCheckBox("NT", true);
+		ntCheckBox = new JCheckBox("NT", true); 	// not shown, was going to do AA align...
+		
+		orderButton = Jcomp.createButton(titleOrder, "Order disordered hits(*)");
+		orderButton.addActionListener(this);
+		
+		removeButton = Jcomp.createButton(titleRemove, "Remove disordered hits(*)");
+		removeButton.addActionListener(this);
+		
+		mergeButton = Jcomp.createButton(buttonMerge, "Merge overlapping hits");
+		mergeButton.addActionListener(this);
 		
 		JPanel buttonPanel = new JPanel();
-		if (hitDataObj!=null) {
-			buttonPanel.add(alignHitButton);	
-			if (hitDataObj.is2Gene() && bTmpGene) {
-				buttonPanel.add(ntCheckBox); // need 6-frame for AA-hit
-				buttonPanel.add(alignGeneButton);
-			}
+		if (!bMerge) {
+			if (cntNegGap>0 && bSort) 	buttonPanel.add(mergeButton); 
+			if (bDisorder && !bOrder) 	buttonPanel.add(orderButton); 
+			if (!bSort && !bRemove && Globals.INFO) buttonPanel.add(removeButton); 
+			buttonPanel.add(alignHitButton);
 		}
-		// hit only done
 		
 		buttonPanel.add(okButton);
 	
@@ -119,19 +189,30 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		getContentPane().add(buttonPanel,BorderLayout.SOUTH);
 		pack();
 		
-		Dimension d = new Dimension (330, 200); 
+		Dimension d = new Dimension (350, 200); // w,h
 		if (getWidth() >= d.width || getHeight() >= d.height) setSize(d);
-		setAlwaysOnTop(true); // CAS543; doesn't work on Ubuntu
+		setAlwaysOnTop(true); 						// CAS543; doesn't work on Ubuntu
 		setLocationRelativeTo(null);	
 		setVisible(true);
 	}
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == okButton) {
+		if (e.getSource() == okButton) {		
 			if (hitDataObj!=null) hitDataObj.setIsPopup(false);
 			else				  annoDataObj.setIsPopup(false);
-			setVisible(false); 
+			setVisible(false); 					// close popup
 		}
-		else if (e.getSource() == alignHitButton) runAlign(); 
+		else if (e.getSource() == alignHitButton) {
+			runAlign(); 						     // new align popup
+		}
+		else if (e.getSource() == orderButton) {
+			runOrder(); 							// two hit popups will be shown 
+		}
+		else if (e.getSource() == mergeButton) {
+			runMerge(); 							// two hit popups will be shown 
+		}
+		else if (e.getSource() == removeButton) {
+			runRemove(); 							// two hit popups will be shown 
+		}
 	}
 	////////////////////////////////////////////////////////////////
 	/**************************************************************/
@@ -142,12 +223,14 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		hitList.add(hitDataObj);
 		
 		hitAlignArr = alignPool.buildHitAlignments(hitList, isNT, isQuery);
+		String p1 = proj1.substring(0, proj1.indexOf(" "));
+		String p2 = proj2.substring(0, proj2.indexOf(" "));
 		
 		int cnt=0;
 		Vector <String> lines = new Vector <String> ();
 		for (HitAlignment hs : hitAlignArr) {
 			if (cnt>0) lines.add("_______________________________________________________________________");
-			String desc = (isNT) ? hs.toText(false, proj1, proj2) : hs.toTextAA(proj1, proj2);
+			String desc = (isNT) ? hs.toText(false, p1, p2) : hs.toTextAA(p1, p2);
 			String [] toks = desc.split("\t");
 			lines.add(toks[0]); // Block Hit#
 			lines.add(toks[1]); // %Id
@@ -159,7 +242,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		String msg="";
 		for (String l : lines) msg += l + "\n";
 		 
-		String title =  "Align " + hitDataObj.getName() + "; " + title1 + " to " + title2;
+		String title =  "Align " + hitDataObj.getName() + "; " + proj1 + " to " + proj2;
 		displayAlign(title, msg, true);
 		
 	} catch (Exception e) {ErrorReport.print(e, "run align");}
@@ -252,10 +335,13 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		hitAlignArr = alignPool.getHitReverse(hitAlignArr);
 		
 		int cnt=0;
+		String p1 = proj1.substring(0, proj1.indexOf(" "));
+		String p2 = proj2.substring(0, proj2.indexOf(" "));
+		
 		Vector <String> lines = new Vector <String> ();
 		for (HitAlignment hs : hitAlignArr) {
 			if (cnt>0) lines.add("_______________________________________________________________________");
-			String desc = hs.toText(false, proj1, proj2);
+			String desc = hs.toText(false, p1, p2);
 			String [] toks = desc.split("\t");
 			lines.add(toks[0]); // Block Hit#
 			lines.add(toks[1]); // %Id
@@ -267,7 +353,37 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		String msg="";
 		for (String l : lines) msg += l + "\n";
 		 
-		String title =  "Reverse Align " + hitDataObj.getName() + "; " + title1 + " to " + title2;
+		String title =  "Reverse Align " + hitDataObj.getName() + "; " + proj1 + " to " + proj2;
 		displayAlign(title, msg, false);
 	}
+	/*************************************************************
+	 * CAS560 toggle all hits and merged hits
+	 */
+	private void runMerge() {
+		String queryShow  = SeqDataInfo.calcMergeHits(Globals.Q, queryHits, false);
+		String targetShow = SeqDataInfo.calcMergeHits(Globals.T, targetHits, isInvHit);
+		
+		new TextShowInfo(alignPool, hitDataObj, titleMerge + " " + title, 
+				theInfo, "", st1LTst2, proj1, proj2, aObj1, aObj2, 
+				queryShow, targetShow, isQuery, isInvHit, true); 
+	}
+	/*************************************************************
+	 * CAS560 retain target ordered by query - the '#' will be out-of-order
+	 */
+	private void runOrder() { 	
+		new TextShowInfo(alignPool, hitDataObj, titleOrder + " " + title, 
+				theInfo, "", st1LTst2, proj1, proj2, aObj1, aObj2, 
+				queryHits, targetHits, isQuery, isInvHit, false /* keep order */); 
+	}
+	/*************************************************************
+	 * CAS560 run after runOrder to remove disordered hits
+	 */
+	private void runRemove() {
+		String [] sort = SeqDataInfo.calcRemoveDisorder(queryHits, targetHits, isInvHit);
+		
+		new TextShowInfo(alignPool, hitDataObj, titleRemove + " " + title, 
+				theInfo, "", st1LTst2, proj1, proj2, aObj1, aObj2, 
+				sort[Globals.Q], sort[Globals.T], isQuery, isInvHit, false /* keep order */); 
+	}
+
 }

@@ -32,8 +32,6 @@ public class Version {
 		
 		if (dbdebug) 	updateDEBUG();
 		else 			removeDEBUG();
-		
-		if (Globals.HITCNT_ONLY) updateHitCnt();
 	}
 	
 	// if first run from viewSymap, updates anyway (so if no write permission, crashes)
@@ -390,28 +388,6 @@ public class Version {
 	catch (Exception e) {ErrorReport.print(e, "Get project name"); return "error";}
 	}
 	
-	/***********************************************************************/
-	private void updateHitCnt() { // v5.4.1 (22-June-23)
-		try {
-			System.out.println("Starting update of gene hit counts");
-			HashSet <Integer> grpIdx = new HashSet <Integer> ();
-			ResultSet rs = dbc2.executeQuery("select idx from xgroups");
-			while (rs.next()) grpIdx.add(rs.getInt(1));
-			
-			AnchorMain am = new AnchorMain(dbc2);
-			int cnt=1;
-			for (int idx : grpIdx)  {
-				System.out.print("   Update " + cnt + " of " + grpIdx.size() + " (" + idx + ")\r");
-				am.setAnnotHits(idx, ("GrpIdx"+idx));
-				cnt++;
-			}
-			dbc2.close();
-			System.out.println("Complete update of gene hit counts");
-			System.out.println("Restart symap without the -y");
-			System.exit(0);
-		}
-		catch (Exception e) {ErrorReport.print(e, "Update hit count");}
-	}
 	/***************************************************************
 	 * Run after every version update.
 	 * The props table values of DBVER and UPDATE are hardcoded in Schema.

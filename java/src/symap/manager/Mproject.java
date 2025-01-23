@@ -153,6 +153,11 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public int getGrpSize() { return grpIdx2Name.size();}
 	public TreeMap <Integer, String> getGrpIdxMap() {return grpIdx2Name;} // CAS546 add
 	
+	public String getGrpNameFromIdx(int idx) {// CAS560 add
+		if (grpIdx2Name.containsKey(idx)) return grpIdx2Name.get(idx);
+		return ("Unk" + idx);
+	}
+	
 	public int getGrpIdxFromName(String name) {// CAS546 add
 		if (grpName2Idx.containsKey(name)) return grpName2Idx.get(name);
 		return getGrpIdxRmPrefix(name);

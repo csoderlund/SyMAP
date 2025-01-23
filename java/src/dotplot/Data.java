@@ -146,7 +146,7 @@ public class Data  {
 			Group gY = ib.getGroup(Y);
 
 			HfilterData hd = new HfilterData (); // CAS530 use 2D filter
-			hd.setForDP(true, false);
+			hd.setForDP(true);
 			symap.getDrawingPanel().setHitFilter(1,hd); // copy template
 			
 			symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),gY.getID(),Color.CYAN);	
@@ -180,7 +180,7 @@ public class Data  {
 		symap.getDrawingPanel().setTracks(2);
 		
 		HfilterData hd = new HfilterData(); 		// CAS530 use 2D filter
-		hd.setForDP(false, true); 					// set block, set all
+		hd.setForDP(false); 						// set block, set all
 		symap.getDrawingPanel().setHitFilter(1,hd); // template for defaults
 		
 		symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),Integer.parseInt(track[Y]),Color.CYAN);

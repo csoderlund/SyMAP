@@ -12,15 +12,16 @@ import util.ErrorReport;
 import util.ProgressDialog;
 
 /********************************************************************************
- * Called from ManagerFrame for all loads and reloads; CAS535 moves this from MF listeners to here.
+ * DoLoadProj - calls SeqLoadMain and AnnotLoadMain; Called from ManagerFrame; 
+ * CAS535 moves this from MF listeners to here.
  * All ProgressDialog must call finish in order to close fw
  *******************************************************************************/
-public class LoadProj {
+public class DoLoadProj {
 	private DBconn2 dbc2;
 	private ManagerFrame frame;
 	private FileWriter fw;
 	
-	public LoadProj(ManagerFrame frame, DBconn2 dbc2, FileWriter fw) {
+	public DoLoadProj(ManagerFrame frame, DBconn2 dbc2, FileWriter fw) {
 		this.dbc2 = dbc2;
 		this.frame = frame;
 		this.fw = fw;

@@ -83,7 +83,7 @@ public class SummaryPanel  extends JPanel {
 	 * Sp1  Hits: %d   Annotated: %d   Chr: %d  Regions: %d
 	 */
 	private void createPairHits(HashMap <String, String>  chrStrMap, 
-							HashMap <Integer, Integer> annoCntMap,
+							HashMap <Integer, Integer> geneCntMap,
 							HashMap <String, String> projMap, 
 							Vector <Integer> order) {
 		try {
@@ -135,7 +135,7 @@ public class SummaryPanel  extends JPanel {
 				int nAnno = proj2annot.containsKey(spIdx)   ? proj2annot.get(spIdx)   : 0;
 				
 				String chrStr =  chrStrMap.containsKey(pName)  ? chrStrMap.get(pName) : "Unk";
-				int nUnq =       annoCntMap.containsKey(spIdx) ? annoCntMap.get(spIdx) : 0;
+				int nUnq =       geneCntMap.containsKey(spIdx) ? geneCntMap.get(spIdx) : 0;
 				
 				statsPanel.add(Box.createVerticalStrut(2));
 				

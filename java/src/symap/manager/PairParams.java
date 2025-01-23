@@ -19,6 +19,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 
+import util.Jcomp;
 import util.Jhtml;
 import util.Utilities;
 
@@ -38,7 +39,7 @@ public class PairParams extends JDialog {
 		"Min Dots", "Top N piles", "Merge Blocks", 		// CAS548 add 'piles'
 		"NUCmer Args", "PROmer Args", "Self Args", "NUCmer Only","PROmer Only",
 		"Algorithm 1 (modified original)", "Algorithm 2 (exon-intron)",  // CAS555 change '()' text 
-		"Intergenic", "Intron", "Exon",
+		"G0_Len", "Gene", "Exon", "Len",
 		 "EE", "EI", "En", "II", "In"
 		};
 	
@@ -46,8 +47,8 @@ public class PairParams extends JDialog {
 	private static final String [] SYMBOLS = { 
 		"mindots", "topn", "merge_blocks", 
 		"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only", 
-		"algo1", "algo2",
-		"g0_match", "gintron_match", "gexon_match",
+		"algo1", "algo2",										
+		"g0_scale", "gene_scale", "exon_scale", "len_scale",
 		"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
 		};
 	
@@ -71,9 +72,10 @@ public class PairParams extends JDialog {
 	private void save() {
 		if (!checkInt("Min Dots", txtMinDots.getText(), 1)) return; // CAS540 add check
 		if (!checkInt("Top N piles", txtTopN.getText(), 1)) return;		 // CAS540 add check
-		if (!checkInt("Intergenic", txtNoGene.getText(), 0)) return;		 
-		if (!checkInt("Intron", txtIntron.getText(), 0)) return;	
-		if (!checkInt("Exon", txtExon.getText(), 0)) return;	
+		if (!checkDouble("G0_Len", txtNoGene.getText(), 0)) return;		 
+		if (!checkDouble("Gene", txtGene.getText(), 0)) return;	
+		if (!checkDouble("Exon", txtExon.getText(), 0)) return;	
+		if (!checkDouble("Length", txtLen.getText(), 0)) return;	
 		
 		HashMap <String, String> fileMap = mp.getFileParams();
 		
@@ -97,8 +99,9 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	return chkAlgo1.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkAlgo2.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return txtNoGene.getText();
-		else if (symbol.equals(SYMBOLS[x++]))	return txtIntron.getText();
+		else if (symbol.equals(SYMBOLS[x++]))	return txtGene.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return txtExon.getText();
+		else if (symbol.equals(SYMBOLS[x++]))	return txtLen.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return chkEEpile.isSelected()?"1":"0"; 
 		else if (symbol.equals(SYMBOLS[x++]))	return chkEIpile.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkEnpile.isSelected()?"1":"0";
@@ -125,6 +128,22 @@ public class PairParams extends JDialog {
 		}
 		return true;
 	}
+	private boolean checkDouble(String label, String x, double min) {
+		if (x.trim().equals("")) x="0.0"; // CAS546 
+		double d = Utilities.getDouble(x.trim());
+		if (min==0) {
+			if (d<0) {
+				Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect decimal (" + x + "). Must be >=0.");
+				return false;
+			}
+			return true;
+		}
+		if (d==-1 || d==0) {
+			Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect decimal. Must be >0.");
+			return false;
+		}
+		return true;
+	}
 	private void setValue(String symbol, String value) {
 		int x=0;
 		if (symbol.equals(SYMBOLS[x++]))		txtMinDots.setText(value);
@@ -138,8 +157,9 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo1.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo2.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	txtNoGene.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	txtIntron.setText(value);
+		else if (symbol.equals(SYMBOLS[x++]))	txtGene.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	txtExon.setText(value);
+		else if (symbol.equals(SYMBOLS[x++]))	txtLen.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	chkEEpile.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkEIpile.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkEnpile.setSelected(value.equals("1"));
@@ -148,7 +168,7 @@ public class PairParams extends JDialog {
 	}
 	
 	private void createMainPanel() {
-		int numWidth = 3, textWidth = 15;
+		int numWidth = 3, decWidth = 2, textWidth = 15;
 		
 		int x=0;
 		lblMinDots = new JLabel(LABELS[x++]);
@@ -208,28 +228,23 @@ public class PairParams extends JDialog {
 		agroup.add(chkAlgo1); agroup.add(chkAlgo2);
 		chkAlgo2.setSelected(true);
 		
-		lblNoGene = new JLabel(LABELS[x++]);
-		txtNoGene = new JTextField(numWidth);
-		txtNoGene.setMaximumSize(txtNoGene.getPreferredSize());
-		txtNoGene.setMinimumSize(txtNoGene.getPreferredSize());
+		lblNoGene = Jcomp.createLabel(LABELS[x++],"Scale G0 length");
+		txtNoGene = Jcomp.createTextField("1.0",  "Scale G0 length", decWidth);
 		
-		lblIntron = new JLabel(LABELS[x++]);
-		txtIntron = new JTextField(numWidth);
-		txtIntron.setMaximumSize(txtIntron.getPreferredSize());
-		txtIntron.setMinimumSize(txtIntron.getPreferredSize());
+		lblGene = Jcomp.createLabel(LABELS[x++],"Scale gene parameters");
+		txtGene = Jcomp.createTextField("1.0",  "Scale gene parameters", decWidth);
 		
-		lblExon = new JLabel(LABELS[x++]);
-		txtExon = new JTextField(numWidth);
-		txtExon.setMaximumSize(txtExon.getPreferredSize());
-		txtExon.setMinimumSize(txtExon.getPreferredSize());
+		lblExon = Jcomp.createLabel(LABELS[x++],"Scale exon parameters");
+		txtExon = Jcomp.createTextField("1.0",  "Scale exon parameters", decWidth);
 		
-		chkEEpile = new JCheckBox(LABELS[x++]); chkEEpile.setSelected(true); 
-		chkEIpile = new JCheckBox(LABELS[x++]); chkEIpile.setSelected(true); 
-		chkEnpile = new JCheckBox(LABELS[x++]); chkEnpile.setSelected(true); 
-		chkIIpile = new JCheckBox(LABELS[x++]); chkIIpile.setSelected(false);
-		chkInpile = new JCheckBox(LABELS[x++]); chkInpile.setSelected(false);
-		chkEEpile.setBackground(Color.WHITE); chkEIpile.setBackground(Color.WHITE);//CAS547 add for linux
-		chkEnpile.setBackground(Color.WHITE); chkIIpile.setBackground(Color.WHITE);chkInpile.setBackground(Color.WHITE);
+		lblLen = Jcomp.createLabel(LABELS[x++], "Scale G2 and G1 length");
+		txtLen = Jcomp.createTextField("1.0",   "Scale G2 and G1 length", decWidth);
+		
+		chkEEpile = Jcomp.createCheckBox(LABELS[x++],"Keep EE piles", true);  
+		chkEIpile = Jcomp.createCheckBox(LABELS[x++],"Keep EI and IE piles", true); 
+		chkEnpile = Jcomp.createCheckBox(LABELS[x++],"Keep En and nE piles", true); 
+		chkIIpile = Jcomp.createCheckBox(LABELS[x++],"Keep II piles", false); 
+		chkInpile = Jcomp.createCheckBox(LABELS[x++],"Keep In and nI piles", false); 
 		
 		btnKeep = new JButton("Save");
 		btnKeep.setBackground(Color.WHITE);
@@ -327,13 +342,13 @@ public class PairParams extends JDialog {
 			}
 		});
 		
-		mainPanel.add(new JLabel("Minimum matched bases:")); mainPanel.add(Box.createVerticalStrut(5));
-		
-		row = createRowPanel(); row.add(Box.createHorizontalStrut(10));
-		row.add(lblExon);    row.add(txtExon); row.add(Box.createHorizontalStrut(5)); // CAS548 swapped order
-		row.add(lblIntron);  row.add(txtIntron);  row.add(Box.createHorizontalStrut(5));
-		row.add(lblNoGene);  row.add(txtNoGene);   row.add(Box.createHorizontalStrut(5));
-		
+		row = createRowPanel(); 
+		JLabel j = Jcomp.createLabel("Scale:", "Increase scale creates less hits, decrease creates more hits");
+		row.add(j); row.add(Box.createHorizontalStrut(8)); 
+		row.add(lblExon);    row.add(txtExon);   row.add(Box.createHorizontalStrut(5)); // CAS548 swapped order
+		row.add(lblGene);    row.add(txtGene);   row.add(Box.createHorizontalStrut(5));
+		row.add(lblLen);     row.add(txtLen);    row.add(Box.createHorizontalStrut(5));
+		row.add(lblNoGene);  row.add(txtNoGene); row.add(Box.createHorizontalStrut(5));
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
 		
 		row = createRowPanel();
@@ -411,8 +426,8 @@ public class PairParams extends JDialog {
 	private JLabel lblTopN = null;
 	private JTextField txtTopN = null;
 	
-	private JLabel lblNoGene, lblIntron, lblExon;
-	private JTextField txtNoGene, txtIntron, txtExon;
+	private JLabel lblNoGene, lblGene, lblExon, lblLen;
+	private JTextField txtNoGene, txtGene, txtExon, txtLen;
 	private JCheckBox chkEEpile = null, chkEIpile = null, chkEnpile = null, chkIIpile = null, chkInpile = null;
 	
 	private JLabel lblMinDots = null;

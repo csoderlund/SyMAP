@@ -34,8 +34,8 @@ public class AlignMain {
 	private Mproject mProj1, mProj2;
 	
 	private String alignLogDirName;
-	private Vector<ProgSpec> allAlignments;
-	private Queue<ProgSpec> toDoList;
+	private Vector<AlignRun> allAlignments;
+	private Queue<AlignRun> toDoList;
 	private Vector<Thread> threads;
 	private int nMaxCPUs;
 	
@@ -48,7 +48,7 @@ public class AlignMain {
 	private boolean error = false;
 	
 	private String resultDir;
-	private String alignParams; // Set in pair_props from AlgSynMain; CAS546 add #MUMMer files
+	private String alignParams; // Set in pair_props from DoAlignSynPair; CAS546 add #MUMMer files
 	private int nAlign=0;
 	
 	public AlignMain(DBconn2 dbc2, ProgressDialog log, Mpair mp,
@@ -67,8 +67,8 @@ public class AlignMain {
 		proj2Dir = mProj2.getDBName();
 		
 		threads = 		new Vector<Thread>();
-		allAlignments = new Vector<ProgSpec>();
-		toDoList = 		new LinkedList<ProgSpec>();
+		allAlignments = new Vector<AlignRun>();
+		toDoList = 		new LinkedList<AlignRun>();
 	}
 	public String getParams() {// CAS511 add to save to DB pairs.params; CAS533 remove project params (in View)
 		 return alignParams;
@@ -106,7 +106,7 @@ public class AlignMain {
 						break;
 					
 					while (toDoList.size()>0 && threads.size() < nMaxCPUs) {// Start another alignment thread
-						final ProgSpec p = toDoList.remove();
+						final AlignRun p = toDoList.remove();
 						alignNum++;
 						p.alignNum = alignNum;
 						Thread newThread = new Thread() {
@@ -116,7 +116,7 @@ public class AlignMain {
 								}
 								catch (Exception e) {
 									ErrorReport.print(e, "Alignment thread");
-									p.setStatus(ProgSpec.STATUS_ERROR);
+									p.setStatus(AlignRun.STATUS_ERROR);
 								}
 								synchronized(threads) { threads.remove( this ); }
 							}
@@ -236,11 +236,11 @@ public class AlignMain {
 						else if (f1.getName().compareTo(f2.getName()) < 0)  continue; 
 					}
 			
-					ProgSpec ps = new ProgSpec(program, platform,aArgs, f1, f2, alignDir, alignLogDirName);
+					AlignRun ps = new AlignRun(program, platform,aArgs, f1, f2, alignDir, alignLogDirName);
 					if (ps.isDone()) continue;
 					
 					allAlignments.add(ps);
-					ps.setStatus(ProgSpec.STATUS_QUEUED);
+					ps.setStatus(AlignRun.STATUS_QUEUED);
 					toDoList.add(ps);
 				}
 			}
@@ -376,7 +376,7 @@ public class AlignMain {
 					if (interrupted) break;
 	
 					rs = tdbc2.executeQuery("select fullname from xgroups where idx=" + gIdx);
-					rs.first();
+					rs.next(); // CAS560 was first()
 					String grpFullName = rs.getString(1);
 					fw.write(">" + grpFullName + "\n");
 					
@@ -469,7 +469,7 @@ public class AlignMain {
 	public String getStatusSummary() {
 		String s = "";
 		
-		for (ProgSpec p : allAlignments)
+		for (AlignRun p : allAlignments)
 			if ( p.isRunning() || p.isError() )
 				s += p.toString() + "\n";
 		
@@ -495,7 +495,7 @@ public class AlignMain {
 	private int getNumErrors() {
 		int count = 0;
 		
-		for (ProgSpec p : allAlignments)
+		for (AlignRun p : allAlignments)
 			if (p.isError())
 				count++;
 		
@@ -510,7 +510,7 @@ public class AlignMain {
 		interrupted = true;
 		mCancelled = true;
 		synchronized(threads) {
-			for (ProgSpec p : allAlignments)
+			for (AlignRun p : allAlignments)
 				if (p.isRunning())
 					p.interrupt();
 			

@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import database.DBconn2;
+import symap.Globals;
 
 public class ErrorReport {
 	static final String strFileName = "error.log";
@@ -44,12 +45,12 @@ public class ErrorReport {
 	
 	public static void die(Throwable e, String debugInfo) {
 		DBconn2.shutConns(); // CAS541 
-		reportError(e, "Fatal Error: " + debugInfo, false);
+		reportError(e,    "Fatal Error " + Globals.VERDATE + "\n   " +  debugInfo, false); // CAS560 add version to log file
 		System.exit(-1);
 	}
 	public static void die(String debugInfo) {
 		DBconn2.shutConns(); // CAS541 
-		reportError(null, "Fatal Error: " + debugInfo, false);
+		reportError(null, "Fatal Error " + Globals.VERDATE + "\n   " +  debugInfo, false);
 		System.exit(-1);
 	}
 	public static void reportError(Throwable e, String msg, boolean replaceContents) {
@@ -83,7 +84,7 @@ public class ErrorReport {
 			return;
 		}
 		
-		pWriter.println("\n" + getDate()); 
+		pWriter.println("\n " + Globals.VERDATE + " run on " + getDate()); // CAS560 add verdate
 		pWriter.println(msg + "\n");
 		if (e != null)  {
 			e.printStackTrace(pWriter);

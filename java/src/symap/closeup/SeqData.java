@@ -3,19 +3,18 @@ package symap.closeup;
 import java.awt.Graphics;
 import java.awt.FontMetrics;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Vector;
 
-import symap.Globals;
 import util.ErrorReport;
 
 /***************************************************************
  * This is a minor class for displaying aligned text data,
  * manipulating data and formatting text
+ * CAS560 split off the methods for TextShowInfo to SeqDataInfo
  */
 public class SeqData implements Comparable <SeqData> { 
 	public static final byte DASH = AlignData.gapCh;
-	
+
 	private byte[] alignSeq;
 	private int realLength;
 	private char strand;
@@ -98,123 +97,10 @@ public class SeqData implements Comparable <SeqData> {
 		
 		return String.format("%s%,d%s for %,d%s", o, (int) s, xs, (int)l, xl) ;
 	}
-	  // CAS517 - format exon list (e.g. Exon #1:20:50,Exon #1:20:50); CAS531 moved from Utilities
-    static public String formatExon(String exonList) {	
-    	String exonTag = Globals.exonTag;
-    	int rm = exonTag.length();
-    	String list="";
-    	String [] exons = exonList.split(",");
-    	int dist=0, last=0;
-    	
-    	String exCol = Globals.exonTag.substring(0, Globals.exonTag.indexOf(" "));
-    	String [] fields = {"#", exCol ,"Len", "Intron"}; // CAS548 was Coords
-		int [] justify =   {1,    0,    0,     0};
-		int nRow = exons.length;
-	    int nCol=  fields.length;
-	    String [][] rows = new String[nRow][nCol];
-	    int r=0, c=0;
-	    
-	    int x1, x2;
-    	for (String x : exons) {
-    		String [] y = x.split(":");
-    		if (y.length!=3) {System.err.println("Parsing y: " + exonList); return exonList;}
-    		
-    		if (!y[0].startsWith(exonTag)) System.err.println(exonList + "\n" + y[0]);
-    		String n = y[0].substring(rm);
-    		try {
-    			x1 = Integer.parseInt(y[1]);
-    			x2 = Integer.parseInt(y[2]);
-    		}
-    		catch (Exception e) {System.err.println("Parsing int: " + exonList); return exonList;}
-    		
-			if (x1>x2) System.err.println("ERROR start>end " + x1 + "," + x2);
-		
-			rows[r][c++] = n; 
-			rows[r][c++] =  String.format("%,d - %,d",x1, x2);
-			rows[r][c++] =  String.format("%,d",(x2-x1+1));
-			
-			if (last>0) {
-				dist = Math.abs(last-x1)+1; // CAS531 this was x2-x1+1?
-				rows[r][c] = String.format("%,d",dist); 
-			}
-			else rows[r][c] = "-";
-			last = x2;
-			
-    		r++; c=0;
-    	}
-    	list = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
-    	return list;
-    }
-    // CAS517 - format a merged hit (e.g. 100:200,300:400); CAS531 moved from Utilities
-    // CAS531 sorted by start so easier to read and determine overlap or gap
-    // CAS548 only called by SeqHits.popupDesc to draw hit popup
-    // always sorted ascending by Q, even if negative strand
-    static public String formatHit(String name, String hitListStr, boolean isPos) {
-    	if (hitListStr==null || hitListStr.equals("")) return "Error";
-    	
-    	String [] tokc = hitListStr.split(",");
-    	
-    	int dist=0, lastx2=0,  x1=0, x2=0, nOrder=0;
-    	String list="";
-    	
-    	Vector <Hit> hitSort = new Vector <Hit> (tokc.length);
-    	for (String coords : tokc) {
-    		String [] y = coords.split(":");
-    		if (y.length!=2) {System.err.println("Parsing y: " + hitListStr); return "error";}
-    		try {
-    			x1 = Integer.parseInt(y[0]);
-    			x2 = Integer.parseInt(y[1]);
-    		}
-    		catch (Exception e) {System.err.println("Parsing int: " + coords); return "error";}
-			if (x1>x2) {System.err.println("ERROR start>end " + x1 + "," + x2); return "error";}
-			
-			nOrder++;
-			Hit h = new Hit(nOrder, x1, x2);
-			hitSort.add(h);
-    	}
-    	Collections.sort(hitSort);
-    	
-    	String [] fields = {"#", "Subhit" ,"Len", "Gap"}; // CAS548 was Coords 
-		int [] justify =   {1,    0,    0,     0};
-		int nRow = tokc.length;
-	    int nCol=  fields.length;
-	    String [][] rows = new String[nRow][nCol];
-	    int r=0, c=0, o=0;
-	    
-    	for (Hit h : hitSort) {
-    		o = h.order;
-    		x1 = h.start;
-    		x2 = h.end;
-    		
-			rows[r][c++] =  o+""; 
-			rows[r][c++] =  String.format("%,d - %,d", x1, x2);
-			rows[r][c++] =  String.format("%,d", Math.abs(x2-x1+1)); // CAS535 add abs
-			
-			if (lastx2>0) {
-				dist = x1-lastx2; 
-				if (dist<0 && lastx2<x1) dist = -dist;
-				rows[r][c] = String.format("%,d",dist);
-			}
-			else rows[r][c] = "-";
-			
-			lastx2 = x2;
-			
-    		r++; c=0;
-    	}
-    	list = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
-    	return name + "\n" + list;
-    }
-    static private class Hit implements Comparable <Hit>{
-    	int start, end, order;
-    	
-    	public Hit (int order, int start, int end) {
-    		this.order=order; this.start=start; this.end=end;
-    	}
-    	public int compareTo(Hit a){
-    		return start - a.start; 
-    	}
-    }
+	
+    /**********************************************************
 	// these 3 methods are used to closeup.HitAlignment
+	 **********************************************************/
 	public static double[] getQueryMisses(SeqData qs, SeqData ts) { 
 	try {
 		Vector <Double> miss = new Vector<Double>();
@@ -248,8 +134,7 @@ public class SeqData implements Comparable <SeqData> {
         if (b < 'a' || b > 'z') return b;
         return (byte) (b + UPPER_CASE_OFFSET);
     }
-			 
-
+			
 	public static double[] getQueryInserts(SeqData qs, SeqData ts) { 
 	try {
 		Vector <Double> ins = new Vector <Double>();

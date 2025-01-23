@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.TreeMap;
 
 import backend.Utils;
+import symap.Globals;
 import util.ErrorReport;
 import util.ProgressDialog;
 
@@ -37,8 +38,8 @@ public class GrpPairPile {
 		clArrLen = clustList.size();
 	}
 	protected boolean run() {
-		Arg.tprt("Find piles from " + clArrLen);
-		//if (symap.Globals.DEBUG) return true; CAS555 this results is many hits!
+		Globals.tprt("Find piles from " + clArrLen);
+		
 		identifyPiles();	if (!bSuccess) return false;
 		createPiles();		if (!bSuccess) return false;
 		filterPiles();		if (!bSuccess) return false;
@@ -49,7 +50,7 @@ public class GrpPairPile {
 	private void identifyPiles() {
 	try {
 		for (int X=0; X<2; X++) { 			// T piles, then Q piles (correct for saveDB)
-			HitPair.sortByX(X, clustList); 	// sorts by T/Q start; eq/ne mixed
+			HitPair.sortByXstart(X, clustList); 	// sorts by T/Q start; eq/ne mixed
 			
 			int cBin=1;
 			
@@ -59,11 +60,11 @@ public class GrpPairPile {
 				
 				for (int r2=r1+1; r2<clArrLen; r2++) {
 					HitPair hpr2 = clustList.get(r2);
-					if (hpr1.end[X]<hpr2.start[X]) break; 
+					if (hpr1.hpEnd[X]<hpr2.hpStart[X]) break; 
 					
 					if (hpr2.pile[X]!=0 ||hpr2.flag!=Arg.MAJOR || hpr2.bin==0) continue;	
 					
-					if (bBigOlap(hpr1.start[X], hpr1.end[X], hpr2.start[X], hpr2.end[X])) {
+					if (bBigOlap(hpr1.hpStart[X], hpr1.hpEnd[X], hpr2.hpStart[X], hpr2.hpEnd[X])) {
 						if (hpr1.pile[X]==0) {
 							hpr1.pile[X] = cBin++;  // first of pile
 						}
@@ -77,11 +78,12 @@ public class GrpPairPile {
 	}
 	
 	private boolean bBigOlap(int start0, int end0, int start1, int end1) {
-		int olap = Arg.olapOrGap(start0, end0, start1, end1);
-		if (olap<0) return false;						// Gap
+		int olap = Arg.pGap_nOlap(start0, end0, start1, end1);	
+		if (olap>0) return false;	// Gap
 		
-		int len0 = end0-start0;
-		int len1 = end1-start1;
+		olap = -olap;
+		int len0 = end0-start0+1;
+		int len1 = end1-start1+1;
 		
 		double x1 = (double) olap/(double)len0;
 		if (x1>Arg.bigOlap) return true;
@@ -124,8 +126,8 @@ public class GrpPairPile {
 	
 		for (Pile pile : qPileMap.values()) pileList.add(pile);
 	
-		Arg.tprt(tPileMap.size(), "Piles for T");
-		Arg.tprt(qPileMap.size(), "Piles for Q");
+		Globals.tprt(tPileMap.size(), "Piles for T");
+		Globals.tprt(qPileMap.size(), "Piles for Q");
 		tPileMap.clear(); qPileMap.clear();
 	}
 	catch (Exception e) {ErrorReport.print(e, "Creating piles"); bSuccess=false;}		
@@ -137,7 +139,7 @@ public class GrpPairPile {
 	 */
 	private void filterPiles() {
 	try {
-		int cntInPile=0, cntFil1=0, cntFil2=0;
+		int cntInPile=0, cntFil=0;
 		
 		sortPiles(pileList); // by maxCov
 		
@@ -147,25 +149,23 @@ public class GrpPairPile {
 			sortForPileTopN(pile.hprList);	// sort by xMaxCov
 						
 			int thresh = pile.hprList.get(0).xMaxCov;
-			thresh *= FperBin; // 0.8 so keep 80% of mTopN matchLen
+			thresh *= FperBin; 				// 0.8 so keep 80% of mTopN matchLen
 			
 			int tn=0;
 			for (HitPair hpr : pile.hprList) {
-				if (Arg.isGoodPileHit(hpr)) continue;
+				if (hpr.flag==Arg.PILE || Arg.isGoodPileHit(hpr)) continue;		 // CAS560 add check for already in pile
 				
 				if (hpr.xMaxCov<thresh || tn>=Arg.topN) {
 					hpr.flag = Arg.PILE;
-					cntFil2++;
+					cntFil++;
 				}
-				tn++;	// accept TopN that are !Arg.isGoodPileHit(hpr)
+				tn++;						// accept TopN that are !Arg.isGoodPileHit(hpr)
 			}
 		}	
-		grpPairObj.cntPileFil += (cntFil1+cntFil2);
-		if (Arg.PRT_STATS) {
-			Utils.prtIndentMsgFile(plog, 1, String.format("%,10d Piles    Hits in piles %,d", 
-				pileList.size(), cntInPile));
-			Utils.prtIndentMsgFile(plog, 1, String.format("%,10d Filtered pile hits   Gene %,d  Length %,d", 
-					(cntFil1+cntFil2), cntFil1, cntFil2));
+		grpPairObj.mainObj.cntPileFil += cntFil;
+		if (Arg.TRACE) {
+			Utils.prtIndentMsgFile(plog, 1, String.format("%,10d Piles    Hits in piles %,d   Filtered pile hits %d", 
+				pileList.size(), cntInPile, cntFil));
 		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "Prune clusters"); bSuccess=false;}	
@@ -191,14 +191,14 @@ public class GrpPairPile {
 					if (h1.xMaxCov>h2.xMaxCov) return -1; 	
 					if (h1.xMaxCov<h2.xMaxCov) return  1; 
 					
-					if (h1.bBothGene && !h2.bBothGene) return -1; 
-					if (!h1.bBothGene && h2.bBothGene) return  1;
+					if ( h1.bBothGene && !h2.bBothGene) return -1; 
+					if (!h1.bBothGene &&  h2.bBothGene) return  1;
 					
-					if (h1.bEitherGene && !h2.bEitherGene) return -1; 
-					if (!h1.bEitherGene && h2.bEitherGene) return  1;
+					if (h1.bOneGene && h2.bNoGene) return -1; 
+					if (h1.bNoGene  && h2.bOneGene) return  1;
 					
-					if (h1.hitList.size()>h2.hitList.size()) return -1; 
-					if (h1.hitList.size()<h2.hitList.size()) return 1;
+					if (h1.nHits>h2.nHits) return -1; 
+					if (h1.nHits<h2.nHits) return 1;
 					
 					return 0;	
 				}
@@ -229,10 +229,10 @@ public class GrpPairPile {
 		
 		private void addHit(HitPair ht) {
 			hprList.add(ht);
-			tmin = Math.min(ht.start[T], tmin);
-			qmin = Math.min(ht.start[Q], qmin);
-			tmax = Math.max(ht.end[T], tmax);
-			qmax = Math.max(ht.end[Q], qmax);
+			tmin = Math.min(ht.hpStart[T], tmin);
+			qmin = Math.min(ht.hpStart[Q], qmin);
+			tmax = Math.max(ht.hpEnd[T], tmax);
+			qmax = Math.max(ht.hpEnd[Q], qmax);
 			xMaxCov = Math.max(ht.xMaxCov, xMaxCov);
 		}
 	

@@ -1,14 +1,10 @@
 package symapQuery;
 
-import symap.Globals;
-
 /**
  * Constants for Query and display
  */
 
 public class Q {
-	public static boolean TEST_TRACE = Globals.DEBUG; // Write to file and other trace output
-	
 	static final int INC=5000;
 	static final String rowCol   = "Row";
 	static final String blockCol = "Block"; 	// loadRow; equals TableData.ColumnComparator (for sorting)
@@ -23,7 +19,7 @@ public class Q {
 	static final String gEndCol =	 "Gend";
 	static final String gLenCol = 	 "Glen";
 	static final String gStrandCol = "Gst";		// CAS519 add, endsWith TableData.ColumnComparator
-	static final String gNCol =  	 "Gene#";	// CAS518 endsWith TableData.ColumnComparator
+	static final String gNCol =  	 "Gene#";	// CAS518 endsWith TableData.ColumnComparator; expects chr#.genenum.[suffix]
 	static final String hStartCol =	 "Hstart";
 	static final String hEndCol =	 "Hend";
 	static final String hLenCol = 	 "Hlen";

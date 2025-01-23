@@ -40,6 +40,7 @@ import util.Jhtml;
  * 2. Add to HfilterData
  * 3. Add to SeqHits.isHighLightHit() and isFiltered()
  * CAS541 MapperFilter=>Hfilter; CAS542 replace abstract filter with in file methods
+ * CAS560 Remove popup/filter Show All Hits; add and/or/yes/no for block
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Hfilter extends JDialog {
@@ -69,11 +70,13 @@ public class Hfilter extends JDialog {
 	
 	// Show - any number can be selected
 	private JCheckBox sBlockCheck		= new JCheckBox(SYN);
+	private JRadioButton blockAndRadio	= new JRadioButton("And");
+	private JRadioButton blockOrRadio	= new JRadioButton("Or");
+	
 	private JCheckBox sCsetCheck		= new JCheckBox(COL);
 	private JCheckBox sGene2Check		= new JCheckBox(HIT2);
 	private JCheckBox sGene1Check		= new JCheckBox(HIT1);
 	private JCheckBox sGene0Check		= new JCheckBox(HIT0);
-	private JCheckBox sAllCheck			= new JCheckBox(ALL);
 	
 	// Id
 	private JSlider pctidSlider  = new JSlider(JSlider.HORIZONTAL, 0, 100, 0); // 0 to 100, start at 0
@@ -142,11 +145,16 @@ public class Hfilter extends JDialog {
 		
 		// Check boxes
 		sBlockCheck.addActionListener(listener); 
+		blockAndRadio.addActionListener(listener);
+		blockOrRadio.addActionListener(listener);
+		
+		ButtonGroup b2Group = new ButtonGroup();
+		b2Group.add(blockAndRadio); b2Group.add(blockOrRadio); blockAndRadio.setSelected(true);
+		
 		sCsetCheck.addActionListener(listener);
 		sGene2Check.addActionListener(listener);
 		sGene1Check.addActionListener(listener);
 		sGene0Check.addActionListener(listener);
-		sAllCheck.addActionListener(listener);
 		
 		hBlockRadio.addActionListener(listener);
 		hCsetRadio.addActionListener(listener);
@@ -177,13 +185,14 @@ public class Hfilter extends JDialog {
 		int rem=GridBagConstraints.REMAINDER;
 		addToGrid(contentPane, gridbag, c1, new JLabel("  Highlight"), rem);
 		addToGrid(contentPane, gridbag, c1, hBlockRadio, 1);
-		addToGrid(contentPane, gridbag, c1, hCsetRadio,rem); 
-		
-		addToGrid(contentPane, gridbag, c1, hGene2Radio, 1);
-		addToGrid(contentPane, gridbag, c1, hGene1Radio,rem); 
-		
-		addToGrid(contentPane, gridbag, c1, hGene0Radio, 1); 
 		addToGrid(contentPane, gridbag, c1, hNoneRadio,rem); 
+		
+		addToGrid(contentPane, gridbag, c1, hCsetRadio,1); 
+		addToGrid(contentPane, gridbag, c1, hGene2Radio, rem);
+		
+		addToGrid(contentPane, gridbag, c1, hGene1Radio, 1); 
+		addToGrid(contentPane, gridbag, c1, hGene0Radio, rem); 
+	
 		
 		addToGrid(contentPane, gridbag, c1, hPopupCheck, rem);
 		addToGrid(contentPane, gridbag, c1, new JSeparator(),rem);
@@ -191,13 +200,14 @@ public class Hfilter extends JDialog {
 		// show
 		addToGrid(contentPane, gridbag, c1, new JLabel("  Show"),rem);
 		addToGrid(contentPane, gridbag, c1, sBlockCheck, 1);
-		addToGrid(contentPane, gridbag, c1, sCsetCheck,rem);
+		addToGrid(contentPane, gridbag, c1, blockAndRadio, 2); 
+		addToGrid(contentPane, gridbag, c1, blockOrRadio, rem); 
 		
-		addToGrid(contentPane, gridbag, c1, sGene2Check, 1); 
-		addToGrid(contentPane, gridbag, c1, sGene1Check,rem); 
+		addToGrid(contentPane, gridbag, c1, sCsetCheck, 1);
+		addToGrid(contentPane, gridbag, c1, sGene2Check, rem); 
 		
-		addToGrid(contentPane, gridbag, c1, sGene0Check, 1);
-		addToGrid(contentPane, gridbag, c1, sAllCheck,rem);
+		addToGrid(contentPane, gridbag, c1, sGene1Check,1); 
+		addToGrid(contentPane, gridbag, c1, sGene0Check, rem);
 		
 		// %id
 		addToGrid(contentPane, gridbag, c1, sliderPanel,rem);
@@ -241,11 +251,6 @@ public class Hfilter extends JDialog {
 		
 		popupMenu.add(new JSeparator());
 		popupMenu.add(hPopupPopCheck);
-		
-		popupMenu.addSeparator(); 
-		JLabel stext = new JLabel("   Show"); stext.setEnabled(false); // CAS552 add
-		popupMenu.add(stext);
-		popupMenu.add(sAllPopCheck);
 		
 		hBlockPopRadio.addActionListener(listener);
 		hCsetPopRadio.addActionListener(listener);
@@ -305,11 +310,13 @@ public class Hfilter extends JDialog {
 		pctidText.setText(getPctidString(pctidSlider.getValue()));
 
 		sBlockCheck.setSelected(hf.isBlock());
+		blockAndRadio.setSelected(hf.isBlockAnd());
+		blockOrRadio.setSelected(hf.isBlockOr());
+		
 		sCsetCheck.setSelected(hf.isCset());
 		sGene2Check.setSelected(hf.is2Gene());
 		sGene1Check.setSelected(hf.is1Gene());
 		sGene0Check.setSelected(hf.is0Gene());
-		sAllCheck.setSelected(hf.isAllHit());
 		
 		hBlockRadio.setSelected(hf.isHiBlock());
 		hCsetRadio.setSelected(hf.isHiCset());
@@ -323,6 +330,7 @@ public class Hfilter extends JDialog {
 	private HfilterData getCopyHitFilter() { // ok and refresh
 		HfilterData hf = new HfilterData();	
 		hf.setHiBlock(hBlockRadio.isSelected()); 
+		
 		hf.setHiCset(hCsetRadio.isSelected()); 
 		hf.setHi2Gene(hGene2Radio.isSelected());
 		hf.setHi1Gene(hGene1Radio.isSelected()); 
@@ -331,11 +339,13 @@ public class Hfilter extends JDialog {
 		hf.setHiPopup(hPopupCheck.isSelected()); 
 		
 		hf.setBlock(sBlockCheck.isSelected());
+		hf.setBlockAnd(blockAndRadio.isSelected());
+		hf.setBlockOr(blockOrRadio.isSelected());
+		
 		hf.setCset(sCsetCheck.isSelected());
 		hf.set2Gene(sGene2Check.isSelected());
 		hf.set1Gene(sGene1Check.isSelected());
 		hf.set0Gene(sGene0Check.isSelected()); 
-		hf.setAllHit(sAllCheck.isSelected()); 
 		
 		hf.setPctid(getPctid(pctidSlider.getValue()));
 		
@@ -372,7 +382,6 @@ public class Hfilter extends JDialog {
 			else if (src == hGene0PopRadio)	hGene0Radio.setSelected(hGene0PopRadio.isSelected());
 			else if (src == hNonePopRadio)	hNoneRadio.setSelected(hNonePopRadio.isSelected());
 			else if (src == hPopupPopCheck)	hPopupCheck.setSelected(hPopupPopCheck.isSelected()); 
-			else if (src == sAllPopCheck)   sAllCheck.setSelected(sAllPopCheck.isSelected());
  			refresh();
 		}
 		
@@ -410,7 +419,6 @@ public class Hfilter extends JDialog {
 			hGene0PopRadio.setSelected(hitFiltData.isHi0Gene());
 			hNonePopRadio.setSelected(hitFiltData.isHiNone());
 			hPopupPopCheck.setSelected(hitFiltData.isHiPopup());
-			sAllPopCheck.setSelected(hitFiltData.isAllHit());
 		}
 	} // end popup listener
 	private int     getSliderPctid(double pctid) 	{return (int)Math.round(pctid);}

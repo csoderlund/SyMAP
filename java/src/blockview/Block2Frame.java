@@ -172,7 +172,7 @@ public class Block2Frame extends JFrame {
 			
 			rs = tdbc2.executeQuery("select name,length from xgroups join pseudos on pseudos.grp_idx=xgroups.idx " +
 					" where xgroups.idx=" + mGrpIdx);
-			if (!rs.first()) {
+			if (!rs.next()) { // CAS560 was first()
 				System.out.println("Unable to find reference group " + mGrpIdx);
 				return false;
 			}
@@ -212,7 +212,7 @@ public class Block2Frame extends JFrame {
 			String grp_prefix = tProj.getKey(tProj.lGrpPrefix);
 			
 			rs = tdbc2.executeQuery("select value from proj_props where name='" + grp_prefix + "' and proj_idx=" + mRefIdx);
-			grpPfx = rs.first() ? rs.getString("value") : "Chr"; // CAS534 should be loaded, but if not...
+			grpPfx = rs.next() ? rs.getString("value") : "Chr"; // CAS560 was first(); CAS534 should be loaded, but if not...
 			rs.close();
 			
 			String display_name = tProj.getKey(tProj.sDisplay);

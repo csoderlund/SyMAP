@@ -16,7 +16,7 @@ import java.nio.channels.ClosedByInterruptException;
 import util.ErrorReport;
 import util.Utilities;
 
-public class ProgSpec implements Comparable<ProgSpec> 
+public class AlignRun implements Comparable<AlignRun> 
 {
 	public int alignNum;
 	public String program, args;
@@ -35,7 +35,7 @@ public class ProgSpec implements Comparable<ProgSpec>
 	private Process process;
 	private int status, nExitValue = -1;
 	
-	public ProgSpec(String program, String platpath, String args, 
+	public AlignRun(String program, String platpath, String args, 
 			File f1, File f2, String resdir, String alignLogDirName)
 	{
 		this.program = program; 
@@ -178,7 +178,7 @@ public class ProgSpec implements Comparable<ProgSpec>
 	}
 	
 	public void interrupt() {
-		setStatus(ProgSpec.STATUS_ERROR);
+		setStatus(AlignRun.STATUS_ERROR);
 		process.destroy(); // terminate process
 		try { 
 			process.waitFor(); // wait for process to terminate
@@ -263,7 +263,7 @@ public class ProgSpec implements Comparable<ProgSpec>
     }
     
     // "Comparable" interface for sorting
-    public int compareTo(ProgSpec p) {
+    public int compareTo(AlignRun p) {
 		if (p != null)
 			return p.getDescription().compareTo( getDescription() );
 		return -1;

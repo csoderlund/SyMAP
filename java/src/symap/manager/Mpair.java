@@ -45,14 +45,14 @@ public class Mpair {
 			"mindots", "topn", "merge_blocks", 
 			"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
 			"algo1", "algo2",
-			"g0_match", "gintron_match", "gexon_match",
+			"g0_scale", "gene_scale", "exon_scale",	"len_scale",			// CAS560 was gintron and gexon, add len
 			"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
 	};
 	private static final String [] paramDef = {
 			"7", "2", "0", 
 			"", "", "", "0", "0",
 			"1", "0",				// 1st is algo1, 2nd is algo2
-			"600", "300", "100",	// intergenic, intron, exon
+			"1.0", "1.0", "1.0", "1.0",	// G0_Len, gene, exon, Len	CAS560 changed to double
 			"1", "1", "1", "0", "0"	// EE, EI, En, II, In CAS548 change EI and En to 1
 			};
 	
@@ -134,15 +134,17 @@ public class Mpair {
 		String msg="";
 		
 		if (isAlgo2(type)) {
-			boolean chg = isChg(type,"g0_match") || isChg(type,"gintron_match") || isChg(type,"gexon_match") 
-			|| isChg(type, "EI_pile") || isChg(type, "En_pile") || isChg(type, "II_pile") 
-			|| isChg(type, "In_pile") || isChg(type,"topn") || backend.Constants.WRONG_STRAND_EXC;
+			boolean chg = isChg(type,"g0_scale") || isChg(type,"gene_scale") 
+					   || isChg(type,"exon_scale" ) || isChg(type,"len_scale")
+					   || isChg(type, "EI_pile") || isChg(type, "En_pile") || isChg(type, "II_pile") 
+					   || isChg(type, "In_pile") || isChg(type,"topn");
 			
 			msg = algo2;
 			if (chg) {
-				if (isChg(type,"g0_match")) 		msg += "\n Intergenic base match = " + getG0Match(type);
-				if (isChg(type,"gintron_match")) 	msg += "\n Intron base match = " + getGintronMatch(type);
-				if (isChg(type,"gexon_match")) 		msg += "\n Exon base match = " + getGexonMatch(type);
+				if (isChg(type,"exon_scale")) 		msg += "\n Exon scale = " + getExonScale(type);
+				if (isChg(type,"gene_scale")) 		msg += "\n Gene scale = " + getGeneScale(type);
+				if (isChg(type,"len_scale")) 		msg += "\n Length scale = " + getLenScale(type);
+				if (isChg(type,"g0_scale")) 		msg += "\n G0 length scale = " + getG0Scale(type);
 				
 				if (isChg(type,"EE_pile"))			msg += "\n Limit Exon-Exon piles";
 				if (isChg(type,"EI_pile"))			msg += "\n Limit Exon-Intron piles"; // CAS549 did not chg msg
@@ -150,7 +152,6 @@ public class Mpair {
 				if (isChg(type,"II_pile"))			msg += "\n Allow Intron-Intron piles";
 				if (isChg(type,"In_pile"))			msg += "\n Allow Intron-intergenic piles";
 				if (isChg(type,"topn")) 			msg += "\n Top N piles ="    + getTopN(type);
-				if (backend.Constants.WRONG_STRAND_EXC) msg += "\n    Exclude g2 wrong strand hits";
 			}
 		}
 		else if (isAlgo1(type)) {
@@ -190,17 +191,21 @@ public class Mpair {
 		String x = (type==FILE) ? fileMap.get("algo2") : dbMap.get("algo2");
 		return x.contentEquals("1");
 	}
-	public int getG0Match(int type) {
-		String x = (type==FILE) ? fileMap.get("g0_match") : dbMap.get("g0_match");
-		return Utilities.getInt(x);
+	public double getG0Scale(int type) {
+		String x = (type==FILE) ? fileMap.get("g0_scale") : dbMap.get("g0_scale");
+		return Utilities.getDouble(x);
 	}
-	public int getGexonMatch(int type) {
-		String x = (type==FILE) ? fileMap.get("gexon_match") : dbMap.get("gexon_match");
-		return Utilities.getInt(x);
+	public double getExonScale(int type) {
+		String x = (type==FILE) ? fileMap.get("exon_scale") : dbMap.get("exon_scale");
+		return Utilities.getDouble(x);
 	}
-	public int getGintronMatch(int type) {
-		String x = (type==FILE) ? fileMap.get("gintron_match") : dbMap.get("gintron_match");
-		return Utilities.getInt(x);
+	public double getGeneScale(int type) {
+		String x = (type==FILE) ? fileMap.get("gene_scale") : dbMap.get("gene_scale");
+		return Utilities.getDouble(x);
+	}
+	public double getLenScale(int type) {
+		String x = (type==FILE) ? fileMap.get("len_scale") : dbMap.get("len_scale");
+		return Utilities.getDouble(x);
 	}
 	public boolean isEEpile(int type) {
 		String x = (type==FILE) ? fileMap.get("EE_pile") : dbMap.get("EE_pile");
@@ -277,7 +282,6 @@ public class Mpair {
 	}
 	public int removePairFromDB() {
 	try {
-		
 		int x = dbc2.getIdx("select idx from pairs where proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx);
 		if (x!= -1) {
 			 dbc2.executeUpdate("DELETE from pairs WHERE idx="+ x);
@@ -364,7 +368,12 @@ public class Mpair {
 		for (int i=0; i<paramKey.length; i++) {
 			String name =  paramKey[i];
 			if (props.getProperty(name) != null) {
-				fileMap.put(name, props.getProperty(name));
+				for (String x : paramKey) {
+					if (x.contains(name)) {	// CAS560 in case there are old/incorrect params
+						fileMap.put(name, props.getProperty(name));
+						break;
+					}
+				}
 			}
 		}
 	}

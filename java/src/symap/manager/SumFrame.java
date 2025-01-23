@@ -24,6 +24,7 @@ import backend.Constants;
 import backend.Utils;
 
 import database.DBconn2;
+import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -45,7 +46,7 @@ import util.Utilities;
 
 public class SumFrame extends JDialog implements ActionListener {
 	private static final long serialVersionUID = 246739533083628235L;
-	private boolean bPrtStats=Constants.PRT_STATS; // -s; this will regenerate the summary on display
+	private boolean bArgRedo=Globals.bRedoSum; // -s regenerate summary on display; CAS560 change prints to use Globals.DEBUG, changed flags
 	private boolean bRedo=false; // CAS556 remove bTrace is dead code; add bRedo
 	
 	private JButton btnHelp = null, btnOK = null;
@@ -56,7 +57,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	
 	private Proj proj1=null, proj2=null; // contains idx and lengths of groups
 	
-	// Called from AlgSynMain; 
+	// Called from DoAlignSynPair; 
 	public SumFrame(DBconn2 dbc2, Mpair mp) { 
 		this.mp = mp;
 		this.dbc2 = dbc2;
@@ -117,8 +118,8 @@ public class SumFrame extends JDialog implements ActionListener {
 		ResultSet rs;
 		if (dbc2.tableColumnExists("pairs", "summary")) { // CAS540 exist if called from Summary popup
 			rs = dbc2.executeQuery("select summary from pairs where idx="+ pairIdx);
-			String sum = (rs.first()) ? rs.getString(1) : null;
-			if (sum!=null && sum.length()>20 && !bPrtStats && !bRedo) return sum;
+			String sum = (rs.next()) ? rs.getString(1) : null; // CAS560 was first()
+			if (sum!=null && sum.length()>20 && !bArgRedo && !bRedo) return sum;
 		}
 		
 		proj1 = makeProjObj(proj1Idx);
@@ -132,7 +133,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		String alignDate = "Unknown", syver="Unk", params="";
 		
 		rs = dbc2.executeQuery("select aligndate, params, syver from pairs where idx=" + pairIdx);
-		if (rs.first()) {
+		if (rs.next()) { // CAS560 was first()
 			alignDate = rs.getString(1);
 			params = rs.getString(2);
 			syver = rs.getString(3);
@@ -187,14 +188,14 @@ public class SumFrame extends JDialog implements ActionListener {
 				       "join xgroups as g on pa.grp_idx=g.idx where pa.type='gene' and g.proj_idx=";
 			
 			rs = dbc2.executeQuery(q + proj1Idx);
-			if (rs.first()){
+			if (rs.next()) { // CAS560 was first()
 				proj1.nGenes = rs.getInt(1);
 				gSum1 = rs.getInt(2);
 				gAvg1 = rs.getInt(3);
 				gMax1 = rs.getInt(4);
 			}
 			rs = dbc2.executeQuery(q + proj2Idx);
-			if (rs.first()){
+			if (rs.next()) { // CAS560 was first()
 				proj2.nGenes = rs.getInt(1);
 				gSum2   = rs.getInt(2);
 				gAvg2   = rs.getInt(3);
@@ -204,14 +205,14 @@ public class SumFrame extends JDialog implements ActionListener {
 				"join xgroups as g on pa.grp_idx=g.idx where pa.type='exon' and g.proj_idx=";
 				
 			rs = dbc2.executeQuery(q + proj1Idx);
-			if (rs.first()){
+			if (rs.next()) { // CAS560 was first()
 				nExon1 = rs.getInt(1);
 				eSum1 = rs.getInt(2);
 				eAvg1 = rs.getInt(3);
 				eMax1 = rs.getInt(4);
 			}
 			rs = dbc2.executeQuery(q + proj2Idx);
-			if (rs.first()){
+			if (rs.next()) { // CAS560 was first()
 				nExon2 = rs.getInt(1);
 				eSum2   = rs.getInt(2);
 				eAvg2   = rs.getInt(3);
@@ -248,7 +249,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		    else {
 		    	rows[r][c++] = proj2.name;
 		    	rows[r][c++] = String.format("%,d",  proj2.nGenes);
-		    	rows[r][c++] = String.format("%s",    pct(gSum2,proj2.genomeLen));
+		    	rows[r][c++] = String.format("%s",   pct(gSum2,proj2.genomeLen));
 			    rows[r][c++] = String.format("%s",   cntK(gAvg2));
 			    rows[r][c++] = String.format("%s",   cntK(gMax2));
 				rows[r][c++] = "";
@@ -479,7 +480,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	    }
 	    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
 	    
-	    if (bPrtStats) {
+	    if (Globals.DEBUG) {
 	    	String cxCov1 = pct((double)chCov1x, (double)proj1.genomeLen); 
 			String cxCov2 = pct((double)chCov2x, (double)proj2.genomeLen);
 			String sxCov1 = pct((double)shCov1x, (double)proj1.genomeLen); 
@@ -531,16 +532,18 @@ public class SumFrame extends JDialog implements ActionListener {
 		ResultSet rs=null;
 		
 		// CAS540 was from block loop: String pGene1 = pct(nblkgene1, ng1); String pGene2 = pct(nblkgene2, ng2);
+		// CAS560 bug fix: if g.proj_idx is in another pair, it also was counted here	
 		String sq ="select count(distinct pa.idx)"
 			 +" from pseudo_annot		as pa"
 			 +" join xgroups			as g  on pa.grp_idx=g.idx"
 			 +" join pseudo_hits_annot as pha on pha.annot_idx=pa.idx " 
 			 +" join pseudo_block_hits as pbh on pha.hit_idx=pbh.hit_idx"
-			 +" where pa.type='gene' and g.proj_idx=";
+			 +" join blocks            as b   on b.idx = pbh.block_idx "   // CAS560 add join, with b.pair_idx
+			 +" where pa.type='gene' and b.pair_idx = " + pairIdx + " and g.proj_idx=";
 		
 		int nBlkGenes1 = dbc2.executeInteger(sq + proj1Idx);
 		int nBlkGenes2 = dbc2.executeInteger(sq + proj2Idx);
-				
+			
 		String pBlkGene1 = pct((double)nBlkGenes1, (double)proj1.nGenes); // query: block hits, sort on GeneNum
 		String pBlkGene2 = pct((double)nBlkGenes2, (double)proj2.nGenes);
 		
@@ -591,7 +594,9 @@ public class SumFrame extends JDialog implements ActionListener {
 		blks.clear(); bins2.clear();
 		
 		// start project2
-		rs.beforeFirst();
+		//rs.beforeFirst(); // CAS560 does not work with new JDBC; re-execute search
+		rs = dbc2.executeQuery("select grp1_idx,grp2_idx, start1,end1,start2,end2, corr  " +
+				"from blocks where pair_idx=" + pairIdx);
 		while (rs.next()) {
 			int idx = 		rs.getInt(2);
 			int start = 	rs.getInt(5);
@@ -650,8 +655,8 @@ public class SumFrame extends JDialog implements ActionListener {
 	    
 	    rows[r][c++] = proj1.name;
 	    rows[r][c++] = String.format("%,d",nblks);   // same for both
-	    rows[r][c++] = String.format("%,d",ninv);   // same for both
-	    rows[r][c++] = String.format("%s", pBlkGene1);
+	    rows[r][c++] = String.format("%,d",ninv);    // same for both
+	    rows[r][c++] = String.format("%s", pBlkGene1); 
 	    rows[r][c++] = String.format("%s (%s)",cov1,xcov1);
 	    
 	    rows[r][c++] = String.format("%,d", b11);
@@ -677,7 +682,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	    }
 	    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
 	    
-		if (bPrtStats) {
+		if (Globals.DEBUG) {
 			Utils.prtTimeMemUsage("Blocks: ", startTime); 
 			createBlockDelete();
 		}
@@ -696,11 +701,12 @@ public class SumFrame extends JDialog implements ActionListener {
 				+ " FROM pseudo_hits WHERE runnum>0 and pair_idx=" + pairIdx);
 		if (nsets==0) return "Collinear \n   None\n";
 	
-		int n2=0, n3=0, n4=0, n5=0, n6=0, n7=0, n8=0, n9=0, n14=0,n19=0,n20=0;
+		int n2=0, n3=0, n4=0, n5=0, n6=0, n7=0, n8=0, n9=0, n14=0,n19=0,n20=0, nGenes=0; // CAS560 add nGenes
 		
 		TreeSet <String> setMap = new TreeSet <String>  ();
 		
-		ResultSet rs = dbc2.executeQuery("select grp1_idx, grp2_idx, runnum, runsize from pseudo_hits where runnum>0 and pair_idx=" + pairIdx);
+		ResultSet rs = dbc2.executeQuery("select grp1_idx, grp2_idx, runnum, runsize from pseudo_hits "
+				+ " where runnum>0 and pair_idx=" + pairIdx);
 		while (rs.next()) {
 			int grp1 = rs.getInt(1);
 			int grp2 = rs.getInt(2);
@@ -711,6 +717,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			if (setMap.contains(key)) continue;
 			setMap.add(key);
 			
+			nGenes += sz;
 			if (sz==2) n2++;
 			else if (sz==3) n3++;
 			else if (sz==4) n4++;
@@ -725,7 +732,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		}
 		rs.close();
 		
-		String [] fields = {"Sets","  =2","  =3","  =4", "  =5", "  =6", "  =7", "  =8", "  =9", "10-14", "15-19", " >=20"};
+		String [] fields = {"Sets","  =2","  =3","  =4", "  =5", "  =6", "  =7", "  =8", "  =9", "10-14", "15-19", " >=20", "#Genes"};
 		int [] justify =   new int[fields.length];
 		for (int i=0; i<fields.length; i++) justify[i]=0;
 		int nRow = 1;
@@ -744,6 +751,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	    rows[r][c++] = String.format("%,d", n14);
 	    rows[r][c++] = String.format("%,d", n19);
 	    rows[r][c++] = String.format("%,d", n20);
+	    rows[r][c++] = String.format("%,d", nGenes);
 	    
 	    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
 		return title + "\n" + tab;
@@ -765,11 +773,15 @@ public class SumFrame extends JDialog implements ActionListener {
 		return String.format("%,d", len);
 	}
 	
-	private String pct(double n, double m) {
-		if (n==0 || m==0) return "   0%";
-		double x = (100.0*n)/m;
-		if (x>99.9) return "99.9%";
-		return String.format("%4.1f%s", x, "%");
+	private String pct(double t, double b) { // CAS560 rewrote
+		String ret;
+		if (b==0) 		ret = "n/a";
+		else if (t==0) 	ret = "0%";
+		else {
+			double x = ((double)t/(double)b)*100.0;
+			ret = String.format("%4.1f%s", x, "%");
+		}
+		return String.format("%5s", ret);
 	}
 
 	/** 
@@ -912,7 +924,6 @@ public class SumFrame extends JDialog implements ActionListener {
 		String title = "Synteny Blocks";
 		if (nHits==0) return "";
 		
-		long startTime = Utils.getTime();
 		ResultSet rs;
 		int nInBlock = dbc2.executeInteger("select count(*) "
 						+ "from pseudo_hits as h " 
@@ -1019,8 +1030,8 @@ public class SumFrame extends JDialog implements ActionListener {
 	    int r=0, c=0;
 	    
 	    rows[r][c++] = proj1.name;
-	    rows[r][c++] = String.format("%,d (%,d)",nblks, ninv);   // same for both
-	    rows[r][c++] = String.format("%s", pInBlock);// same for both
+	    rows[r][c++] = String.format("%,d (%,d)",nblks, ninv);   
+	    rows[r][c++] = String.format("%s", pInBlock);			 
 	    
 	    rows[r][c++] = String.format("%s", pBlkGene1);
 	    rows[r][c++] = String.format("%s (%s)",sbCov1,sb2xCov1);
@@ -1048,10 +1059,6 @@ public class SumFrame extends JDialog implements ActionListener {
 	    }
 	    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
 	    
-	    if (bPrtStats) {
-	    	System.out.println("New " + title + "\n" + tab);
-	    	Utils.prtTimeMemUsage("New Blocks: ", startTime); 
-		}
 	    return title + "\n" + tab;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Making blocks summary"); return "error on blocks";}

@@ -38,7 +38,7 @@ public class TableReport extends JDialog {
 	private static final long serialVersionUID = 1L;
 	private static String filePrefix = "ReportExport";
 	private static final int pop_html = 0, ex_html = 1, ex_csv = 2;
-	private static final int run_col = 0, run_grp = 1, run_hit =2;
+	private static final int run_col = 0,  run_hit =2;
 	private static final String splitC = ";"; 	// local delimiter for lists
 	private static final String keyC = ","; 	// input key parameter
 	private static final String semiC = ";"; 	// fixed delimiter
@@ -334,7 +334,6 @@ public class TableReport extends JDialog {
 	 */
 	private void makeHTMLpopup() {
 		String html = buildHTML();
-		symap.Globals.prt("Creating popup....");
 		util.Jhtml.showHtmlPanel(getInstance(), (title+" " + refSp), html);
 	}
 	private void makeHTMLexport() {
@@ -499,7 +498,6 @@ public class TableReport extends JDialog {
 				}
 			}
 		}
-		symap.Globals.prt("Parse " + geneVec.size() + " " + refSp + " genes from " + rdVec.size() + " rows... ");
 		
 		tmpSet.clear();
 		if (geneVec.size()==0) return;
@@ -540,7 +538,6 @@ public class TableReport extends JDialog {
 		}
 		
 		// Add other species
-		int cnt=0;
 		for (int nSp=0; nSp<nSpecies; nSp++) {
 			if (nSp==nRefSp) continue;
 			nAnnoMap = spAnnoMap.get(nSp).nAnnoMap;
@@ -560,7 +557,6 @@ public class TableReport extends JDialog {
 				r = geneRowMap.get(rd.geneTag[ix]);
 				
 				geneVec.get(r).add(spOrd, rd.geneTag[iy], rd.chrNum[iy], rd.collinearSz, rd.collinearN);
-				cnt++;
 				
 				if (hasKey && !spKey[nSp].isEmpty() && !nAnnoMap.containsKey(rd.geneTag[iy])) {
 					nAnnoMap.put(rd.geneTag[iy],""+rd.nRow);
@@ -651,9 +647,6 @@ public class TableReport extends JDialog {
 						
 						String chrs = (nRefSp<nSp) ? gObj.rChr+"."+chrtok[n] : chrtok[n]+"."+gObj.rChr;
 			
-						symap.Globals.dprt(nSp + " to " + refSpAbbr + " RM: " + gnTok[n] + " #"  + costok[n] + 
-								" Row: " + gObj.rChr + "." + gObj.rGnum + " (before: " + gObj.oTag[nSp] + ") #" 
-								+ gnTok.length + " " + chrs + "." + costok[n]);	
 						cntRm++;
 						if (cntRm<8) rmSetStr += chrs + "." + costok[n] + " ";
 						

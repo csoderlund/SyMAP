@@ -55,6 +55,7 @@ import util.Utilities;
  */
 public class QueryPanel extends JPanel {
 	private static final long serialVersionUID = 2804096298674364175L;
+	protected boolean isMinorOlap=true;		// -ii show overlap or minor
 	private boolean AND=true;
 	private static final int singleOrphan=0, singleGenes=1;
 	private String coDefNum = "3", multiDefNum="4";	// CAS555 add defaults
@@ -70,8 +71,8 @@ public class QueryPanel extends JPanel {
 	protected boolean isGroup() { // for TableReport; CAS556 add
 		return isMultiAnno() || isPgeneF() || isGeneNum();
 	}
-	protected boolean isIncludeMinor() { // CAS548 add; all show minor; multi
-		return isEveryStarAnno() || (isMultiAnno() && chkMultiMinor.isSelected()) 
+	protected boolean isIncludeMinor() { // CAS548 add; all show minor; multi; CAS560 add isOlapAnno
+		return isEveryStarAnno() || isOlapAnno() || (isMultiAnno() && chkMultiMinor.isSelected()) 
 				|| isGeneNum() || isHitNum(); // CAS555 remove isAnnoTxt()
 	}
 	protected boolean isEveryStarAnno() {// CAS547 add
@@ -86,6 +87,9 @@ public class QueryPanel extends JPanel {
 	protected boolean isBothAnno()   {
 		return (radAnnoBoth.isEnabled() && radAnnoBoth.isSelected()); 
 	} 
+	protected boolean isOlapAnno()   {
+		return (radAnnoOlap.isEnabled() && radAnnoOlap.isSelected()); 
+	}
 	private   boolean isNoAnno() 	 {return radAnnoNone.isEnabled() && radAnnoNone.isSelected(); } 
 	
 	protected boolean isBlock() 		{return radBlockYes.isEnabled() && radBlockYes.isSelected(); }
@@ -294,7 +298,7 @@ public class QueryPanel extends JPanel {
 				whereClause = joinBool(whereClause, "(PH.annot1_idx=0 and PH.annot2_idx=0) AND PA.idx is null", AND); // 'is null' is necessary. 
 			else if (isBothAnno() || isMultiTandem()) 														// CAS543 add search here instead of DBdata
 				whereClause = joinBool(whereClause, "(PH.annot1_idx>0 and PH.annot2_idx>0)", AND); 
-			else if (isOneAnno() || isMultiAnno() || isEveryAnno() || isEveryStarAnno() || isAnnoTxt())  // isOne&isMulti finished in DBdata
+			else if (isOneAnno() || isMultiAnno() || isEveryAnno() || isEveryStarAnno() || isAnnoTxt() || isOlapAnno())  // isOne&isMulti finished in DBdata
 				whereClause = joinBool(whereClause, "(PH.annot1_idx>0 or PH.annot2_idx>0)", AND); 
 			
 			int n = isCoSetN(true);
@@ -477,6 +481,10 @@ public class QueryPanel extends JPanel {
 			else if (isEveryAnno()) retVal = joinStr(retVal, "Every Gene with best hit", ";  ");
 			else if (isOneAnno())	retVal = joinStr(retVal, "One Gene best hit", ";  ");
 			else if (isBothAnno())	retVal = joinStr(retVal, "Both Gene best hits", ";  ");
+			else if (isOlapAnno()) 	{
+				if (isMinorOlap) retVal = joinStr(retVal, "Minor genes", ";  "); 
+				else retVal = joinStr(retVal, "Overlapping genes with hit", ";  ");
+			}
 			else if (isNoAnno()) 	retVal = joinStr(retVal, "No Gene hits", ";  ");
 			
 			int n = isCoSetN(false);
@@ -696,6 +704,10 @@ public class QueryPanel extends JPanel {
 		radAnnoIgnore 		= new JRadioButton("Ignore"); 	radAnnoIgnore.setBackground(Color.WHITE); 
 		radAnnoIgnore.setToolTipText("Does not matter if hit aligned to gene or not");
 		
+		String olap = (isMinorOlap) ? "Minor" : "Overlap"; // CAS560 -ii only
+		radAnnoOlap 		= new JRadioButton(olap); 	radAnnoOlap.setBackground(Color.WHITE); 
+		radAnnoOlap.setToolTipText("Only " + olap + " genes");
+		
 		arow.add(lblAnnoOpts); 			
 		if (width > lblAnnoOpts.getPreferredSize().width) 
 			arow.add(Box.createHorizontalStrut(width-lblAnnoOpts.getPreferredSize().width));
@@ -703,11 +715,12 @@ public class QueryPanel extends JPanel {
 		arow.add(radAnnoEveryStar);	brow.add(Box.createHorizontalStrut(1)); // CAS549 works for algo1 now too
 		arow.add(radAnnoOne);			brow.add(Box.createHorizontalStrut(1));
 		arow.add(radAnnoBoth);			brow.add(Box.createHorizontalStrut(1));
+		if (Globals.INFO) {arow.add(radAnnoOlap);			brow.add(Box.createHorizontalStrut(1));} // CAS560 -ii
 		arow.add(radAnnoNone);			brow.add(Box.createHorizontalStrut(1));
 		arow.add(radAnnoIgnore);		brow.add(Box.createHorizontalStrut(1));
 		ButtonGroup ag = new ButtonGroup();
 		ag.add(radAnnoEvery);ag.add(radAnnoEveryStar);ag.add(radAnnoOne);ag.add(radAnnoBoth);
-		ag.add(radAnnoNone);ag.add(radAnnoIgnore);
+		ag.add(radAnnoOlap);ag.add(radAnnoNone);ag.add(radAnnoIgnore);
 		radAnnoIgnore.setSelected(true);
 		panel.add(arow);
 		panel.add(Box.createVerticalStrut(5));
@@ -1110,7 +1123,7 @@ public class QueryPanel extends JPanel {
 		lblBlockOpts.setEnabled(b); radBlockYes.setEnabled(b);radBlockNo.setEnabled(b);radBlockIgnore.setEnabled(b);
 		
 		lblAnnoOpts.setEnabled(b); radAnnoEvery.setEnabled(b);radAnnoEveryStar.setEnabled(b);
-		radAnnoOne.setEnabled(b);  radAnnoBoth.setEnabled(b); 
+		radAnnoOne.setEnabled(b);  radAnnoBoth.setEnabled(b); radAnnoOlap.setEnabled(b); 
 		radAnnoNone.setEnabled(b); radAnnoIgnore.setEnabled(b);
 		
 		chkBlockNum.setEnabled(b);  	txtBlockNum.setEnabled(false); 		// only chkBlock enables
@@ -1176,7 +1189,8 @@ public class QueryPanel extends JPanel {
 	private JRadioButton radBlockYes, radBlockNo, radBlockIgnore;
 	
 	private JLabel lblAnnoOpts = null;
-	private JRadioButton radAnnoEvery, radAnnoEveryStar, radAnnoOne, radAnnoBoth,  radAnnoNone, radAnnoIgnore;	
+	private JRadioButton radAnnoEvery, radAnnoEveryStar, radAnnoOne, radAnnoBoth,  radAnnoNone, 
+			radAnnoOlap, radAnnoIgnore;	// CAS560 add Olap for -ii 
 	
 	private JTextField txtCoSetN = null; 
 	private JLabel     lblCoSetN = null;

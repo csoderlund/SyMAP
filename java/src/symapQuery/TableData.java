@@ -1,6 +1,7 @@
 package symapQuery;
 /***************************************************
  * Results table of Query
+ * Has ColumnComparator and sortByColumn
  */
 import java.awt.Cursor;
 
@@ -24,38 +25,42 @@ public class TableData implements Serializable {
 	/********************************************
 	 * Called from TableDataPanel in buildTable and setTable
 	 */
-	protected static TableData createModel(String [] columns, TableData srcTable, TableDataPanel parent) {
-		TableData tabObj = 	new TableData(parent);
+	protected static TableData createData(String [] columns, TableData srcData, TableDataPanel parent) {
+		TableData tabObj = 	new TableData("createData", parent);
 		
-		tabObj.arrData = 	new Object[srcTable.arrData.length][columns.length];
-		tabObj.arrHeaders = 	new TableDataHeader[columns.length];
+		tabObj.arrData = 	new Object[srcData.arrData.length][columns.length];
+		tabObj.arrHeaders = new TableDataHeader[columns.length];
 		
 		for(int x=0; x<columns.length; x++) {
-			int srcColIdx = srcTable.getColHeadIdx(columns[x]);
+			int srcColIdx = srcData.getColHeadIdx(columns[x]);
 			
-			tabObj.arrHeaders[x] = srcTable.arrHeaders[srcColIdx];
+			tabObj.arrHeaders[x] = srcData.arrHeaders[srcColIdx];
 			
-			for(int y=0; y<srcTable.arrData.length; y++) 
-				tabObj.arrData[y][x] = srcTable.arrData[y][srcColIdx];
+			for(int y=0; y<srcData.arrData.length; y++) 
+				tabObj.arrData[y][x] = srcData.arrData[y][srcColIdx];
 		}
 		return tabObj;
 	}
-    	
-	protected static String [] orderColumns(JTable sourceTable, String [] selectedColumns) {
-		String [] retVal = new String[selectedColumns.length];
-		Vector<String> columns = new Vector<String> ();
-		for(int x=selectedColumns.length-1; x>=0; x--)
-			columns.add(selectedColumns[x]);
+    /********************************************
+     * Called from TableDataPanel.setTable, which is called on Build and Change Columns
+     * Puts the selected columns in the order of the srcTable
+     */
+	protected static String [] orderColumns(JTable srcTable, String [] selCols) {
+		String [] retVal = new String[selCols.length];
+		
+		Vector <String> columns = new Vector<String> ();
+		for(int x=selCols.length-1; x>=0; x--) columns.add(selCols[x]);
 		
 		int targetIndex = 0;
-		for(int x=0; x<sourceTable.getColumnCount(); x++) {
-			String columnName = sourceTable.getColumnName(x);
+		for(int x=0; x<srcTable.getColumnCount(); x++) {
+			String colName = srcTable.getColumnName(x);
 			
-			int columnIdx = columns.indexOf(columnName);
-			if(columnIdx >= 0) {
-				retVal[targetIndex] = columnName;
+			int colIdx = columns.indexOf(colName);
+			
+			if(colIdx >= 0) {
+				retVal[targetIndex] = colName;
 				targetIndex++;
-				columns.remove(columnIdx);
+				columns.remove(colIdx);
 			}
 		}
 		while(columns.size() > 0) {
@@ -65,18 +70,17 @@ public class TableData implements Serializable {
 		}
 		return retVal;
 	}
+	/*****************************************************************/
 	/***************************************
-	 * Constructors
+	 * XXX Constructors
 	 */
-    protected TableData(TableDataPanel parent) {
+    protected TableData(String tblID, TableDataPanel parent) { // called from TableDataPanel.buildTable; CAS560 removed other constructor
+    	this.tblId = tblID;
     	vData = 	new Vector<Vector<Object>>();
     	vHeaders = 	new Vector<TableDataHeader>();
     	theParent = parent;
     }
-
-    protected TableData(String unused, TableDataPanel parent) {
-    	this(parent);
-    }
+   
     /********************************************************/
     protected void sortMasterList(String columnName) {
     	theParent.sortMasterColumn(columnName);
@@ -84,7 +88,7 @@ public class TableData implements Serializable {
 
     protected void setColumnHeaders( String [] species, String [] annoKeys, boolean isSingle) {
         vHeaders.clear();
-        	
+     	
         // General
         String [] genColNames = FieldData.getGeneralColHead();
         Class <?> [] genColType =  FieldData.getGeneralColType();// CAS520 
@@ -281,12 +285,22 @@ public class TableData implements Serializable {
 				String [] vals2 = ((String)o2[nColumn]).split("\\.");
 				int n = Math.min(vals1.length, vals2.length);
 				
+				if (n==2) { // gNCol only when no suffix; CAS560 add so 'chr#.-' sorts to bottom
+					boolean t1 = vals1.length==2 && vals1[1].equals("-");
+					boolean t2 = vals2.length==2 && vals2[1].equals("-");
+					if (t1 || t2) {
+						if (t1  && !t2) return 1;
+						if (!t1 &&  t2) return -1;
+						if (t1  &&  t2) return 0;
+					}
+				}
+				
 				for(int x=0; x<n && retval == 0; x++) {
 					boolean valid = true;
 					Integer leftVal = null, rightVal = null;
 					
 					try {
-						leftVal = Integer.parseInt(vals1[x]); // CAS514 new Integer(Integer.parseInt(vals1[x]));
+						leftVal = Integer.parseInt(vals1[x]); 
 						rightVal = Integer.parseInt(vals2[x]);      
 					}
 					catch(Exception e) {valid = false;} // char for gene#
@@ -295,7 +309,6 @@ public class TableData implements Serializable {
 					else       retval = vals1[x].compareTo(vals2[x]);
 				}
 			}
-			/** CAS514 remove special processing for Q.geneNCol **/
 			else if (arrHeaders[nColumn].getColumnClass() == String.class) {
 				boolean bIsIntCompare = false; // Chr is string but can have integer values
 				Integer val1 = -1, val2 = -1;  // CAS514 int->Integer so can use compareTo below
@@ -363,7 +376,7 @@ public class TableData implements Serializable {
 		}
 		return headVal;
     }
-    // CAS520 for view row
+    /* For view row */
     protected String getRowData(int row) {
     	String line="";
 		for (int i=0; i<arrHeaders.length; i++) {
@@ -405,6 +418,7 @@ public class TableData implements Serializable {
 		}
 		return rowMap;
     }
+    protected String tblId="";
     
     //Static data structures
     private TableDataHeader [] arrHeaders = null;

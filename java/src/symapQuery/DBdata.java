@@ -30,6 +30,8 @@ import util.Utilities;
  * CAS547 add EveryPlus; CAS548 add Olap 
  */
 public class DBdata implements Cloneable {
+	private static final String MINOR = Globals.minorAnno;
+	
 	protected static String [] spNameList; 				// species Names
 	private static int [] 	spIdxList; 					// species spIdx in same order
 	private static HashMap <Integer, String[]> annoKeys;// spIdx, keys in order
@@ -42,6 +44,8 @@ public class DBdata implements Cloneable {
 	private static boolean isSingle=false, isSingleGenes = false, isIncludeMinor = true; // CAS547 
 	private static HashSet <Integer> grpIdxOnly;
 	
+	private static HashSet <Integer> geneIdxForOlap = new HashSet <Integer> (); // CAS560 only for isOlapAnno; see qPanel.isMinorOlap
+											
 	private static int cntDup=0, cntFilter=0, cntPgeneF=0; // TEST_TRACE
 	private static int cntPlus2=0;	// CAS547 check for possible pre-v547
 	
@@ -72,8 +76,9 @@ public class DBdata implements Cloneable {
 		grpIdxOnly = qPanel.getGrp();      // Chr is filtered, but may want one gene, anno, multi to just be on the selected
 		
 		// CAS543 remove isEitherAnno and isBothAnno (can do in QueryPanel), add isAnnoTxt; CAS549 all use grpIdxOnly
-		boolean isFilter = (grpStart.size()>0  || qPanel.isAnnoTxt() || qPanel.isGeneNum() || qPanel.isOneAnno());
-			
+		boolean isFilter = (grpStart.size()>0  || qPanel.isAnnoTxt() || qPanel.isGeneNum() 
+				|| qPanel.isOneAnno() || qPanel.isOlapAnno());
+	
 		Vector <DBdata> rows = new Vector <DBdata> ();
 	
 		int rowNum=1;
@@ -109,9 +114,13 @@ public class DBdata implements Cloneable {
 	         			if (rowNum%Q.INC ==0) 
 	         				loadStatus.setText("Processed " + rowNum + " rows");
 	         		}
-	         		else  {							// merge further occurrences of hit
+	         		else  {	// merge further occurrences of hit
 	         			DBdata dd = hitMap.get(key);
 	         			dd.loadHitMerge(rs);
+	         		}
+	         		if (qPanel.isOlapAnno()) { // CAS560 new query, special case
+	         			String tag = Utilities.getGenenumFromDBtag(rs.getString(Q.AGENE));
+	         			if (Utilities.isEndsWithAlpha(tag)) geneIdxForOlap.add(rs.getInt(Q.AIDX));	// PA.idx so unique
 	         		}
 	         	} 	
 	         	finishAllGenes(hitMap);
@@ -202,7 +211,7 @@ public class DBdata implements Cloneable {
          	}
          	makeGeneCnts(rows, geneCntMap); // CAS514 delete makeGeneCnts, use genenum from DB instead
         	
-         	if (Q.TEST_TRACE) {
+         	if (Globals.TRACE) {
          		if (cntDup>0) System.out.format("%6d Dups\n", cntDup);
          		if (cntFilter>0) System.out.format("%6d Filter\n", cntFilter);
          		if (cntPlus2>0) System.out.format("%6d hits with two non-best genes\n", cntPlus2);
@@ -532,37 +541,26 @@ public class DBdata implements Cloneable {
 		}
 		catch (Exception e) {ErrorReport.print(e, "run pgenef"); return null;}
 	}
+	// Create Unique Gene Counts for Stats Gene: CAS560 rewrote (same results, but more obvious code)
 	private static void makeGeneCnts(Vector <DBdata> rows, HashMap <Integer, Integer> geneCntMap) {
 		try {
-			HashMap <Integer, Integer> numPerGene = new HashMap <Integer, Integer>  ();  // AIDX, assigned num
-			HashMap <Integer, Integer> lastNumPerSp = new HashMap <Integer, Integer>  (); // SpIdx, lastNum
-
-         	for (int spIdx : spIdxList) lastNumPerSp.put(spIdx, 0);
+         	for (int spIdx : spIdxList) geneCntMap.put(spIdx, 0);
         
-         	for (DBdata dd : rows) {
-         		for (int x=0; x<2; x++) {
-         	        TreeSet <Integer> anno = (x==0) ? dd.annoSet0 : dd.annoSet1;
-	         		for (int aidx : anno) {
-	         			int num=0;
-	         			int spx = dd.spIdx[x];
-	         			if (!numPerGene.containsKey(aidx)) {
-	         				num=lastNumPerSp.get(spx);   		// new number
-	         				num++;
-	         				lastNumPerSp.put(spx, num);
-	         				numPerGene.put(aidx, num);			// assign number to gene
-	         			}
-	         			else {
-	         				num = numPerGene.get(aidx);
-	         			}
-	         		}
+         	for (int x=0; x<2; x++) {
+         		HashSet <Integer> unqGene = new HashSet <Integer>  ();  // annoIdx
+         		int spIdx=0;
+         		for (DBdata dd : rows) {
+         			if (dd.annotIdx[x]>0) {
+         				spIdx = dd.spIdx[x];
+         				if (!unqGene.contains(dd.annotIdx[x])) unqGene.add(dd.annotIdx[x]);
+         			}
          		}
-         	}
-         	for (int spIdx : lastNumPerSp.keySet()) {
-         		geneCntMap.put(spIdx, lastNumPerSp.get(spIdx));
+         		geneCntMap.put(spIdx, unqGene.size());
          	}
 		}
 		catch (Exception e) {ErrorReport.print(e, "make gene cnt");}
 	}
+	
 	/****************************************************************
 	 * XXX DBdata class - one instance per row
 	 * from hit table - same values added for each side of hit - anno different for both sides
@@ -616,7 +614,7 @@ public class DBdata implements Cloneable {
 				if (isIncludeMinor) {							// CAS547 add
 					annotIdx[x] = annoIdx;						// replace best
 					htype = "--";								// otherwise, inherits best-best assignment
-					tag = tag + " " + Globals.minorAnno;		// + indicates best replaced
+					tag = tag + " " + MINOR;		// + indicates best replaced
 				}
 				else return; // The correct annotation will be added in merged to THIS record
 			}
@@ -649,7 +647,7 @@ public class DBdata implements Cloneable {
 			if (annoIdx!=annotIdx[0] && annoIdx!=annotIdx[1]) { 
 				if (isIncludeMinor) {		// CAS547 add
 					annotIdx[x] = annoIdx;	// CAS555 bug fix! was setting to grpIdx, hit overlaps at least two genes on both sides
-					tag = tag + "**";		// indicate 2nd non-best; CAS555 was '++'
+					tag = tag + MINOR+MINOR;// indicate 2nd non-best; CAS555 was '++'
 					cntPlus2++;
 				}
 				else return;
@@ -761,7 +759,7 @@ public class DBdata implements Cloneable {
 	
 	/*********************************************************
 	 * The locations and hit gene filters are done here instead of MySQL where statement
-	 * This has to be performed after all hits are read for the isOneAnno and isTwoAnno
+	 * This has to be performed after all hits are read for the isOneAnno and isOlapAnno
 	 */
 	private boolean passFilters() {
 		try {
@@ -817,6 +815,11 @@ public class DBdata implements Cloneable {
 				if (annotIdx[0] > 0   && annotIdx[1] <= 0) return true;
 				if (annotIdx[0] <= 0  && annotIdx[1] > 0)  return true;
 				return false;
+			}
+			else if (qPanel.isOlapAnno()) { // CAS560 new query for -ii
+				boolean b = geneIdxForOlap.contains(annotIdx[0]) || geneIdxForOlap.contains(annotIdx[1]);
+				if (qPanel.isMinorOlap) return  b && (geneTag[0].endsWith(MINOR) || geneTag[1].endsWith(MINOR));
+				return b;
 			}
 						
 			String inputGN = qPanel.getGeneNum();
@@ -886,8 +889,11 @@ public class DBdata implements Cloneable {
 			
 			if (x>=0) {
 				row.add(geneTag[x]); // CAS518 num to string
-				if (!isSingle)
+				if (!isSingle) {
 					if (golap[x]<0)  	row.add(Q.empty); else row.add(golap[x]); // zero is okay
+				}
+				else row.add(numHits[x]); // CAS541 add; CAS560 move into olap place
+				
 				row.add(chrNum[x]); 
 				if (gstart[x]<0)  	row.add(Q.empty); else row.add(gstart[x]); 
 				if (gend[x]<0)  	row.add(Q.empty); else row.add(gend[x]); 
@@ -899,7 +905,7 @@ public class DBdata implements Cloneable {
 					row.add(hend[x]); 
 					row.add(hlen[x]);	
 				}
-				else row.add(numHits[x]); // CAS541
+				
 			}
 			else {
 				for (int j=0; j<cntCol; j++) row.add(Q.empty);
@@ -954,7 +960,7 @@ public class DBdata implements Cloneable {
 	protected boolean hasBlock() 	{return blockNum>0;}
 	protected boolean hasCollinear() {return !collinearStr.isEmpty() && !collinearStr.equals(Q.empty);} // CAS555
 	
-	protected Object copy() { // clone only copies primitive, might as well just copy
+	protected Object copy() { // ComputeMulti: clone only copies primitive, might as well just copy
 		DBdata nObj = new DBdata();
 		nObj.hitIdx = hitIdx; nObj.hitNum = hitNum;
 		nObj.pid = pid; nObj.psim = psim; nObj.hcnt=hcnt; 		
@@ -1040,7 +1046,7 @@ public class DBdata implements Cloneable {
 
 // not columns in table, needed for filters
 	protected int hitIdx = -1;
-	protected int [] annotIdx 	= {Q.iNoVal, Q.iNoVal}; // CAS520 add 	
+	protected int [] annotIdx 	= {Q.iNoVal, Q.iNoVal}; // CAS520 add; is PA.idx when isMinor	
 	protected int [] spIdx 	= {Q.iNoVal, Q.iNoVal};	
 	protected int [] chrIdx = {Q.iNoVal, Q.iNoVal};	
 	

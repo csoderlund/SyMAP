@@ -15,7 +15,8 @@ public class HfilterData {
 	private boolean bHiBlock=false, bHiCset=false, bHi2Gene=false, bHi0Gene=false, bHi1Gene=false;
 	
 	private boolean bBlock=true; // set in setDefaults;
-	private boolean bCset=false, b2Gene=false, b1Gene=false, b0Gene=false, bAllHit=false;
+	private boolean bBlockAnd=true,bBlockOr=false; // CAS560 add
+	private boolean bCset=false, b2Gene=false, b1Gene=false, b0Gene=false;
 	
 	private double pctid;
 	private double minPctid=NO_PCTID, maxPctid=ANY_PCTID;
@@ -42,12 +43,15 @@ public class HfilterData {
 		if (!bHiPopup) msg += "No High Popup (or Query); "; // CAS555 query; CAS552 more meaningful with !; remove else
 		
 		msg += "Show "; // something always shows
-		if (bBlock) 	msg += "Block, ";
-		if (bCset)	 	msg += "Sets, ";
-		if (b2Gene) 	msg += "2 Genes, ";
-		if (b1Gene) 	msg += "1 Gene, ";
-		if (b0Gene) 	msg += "0 Genes, ";
-		if (bAllHit) 	msg += "All, ";
+		String x = "";
+		if (bBlock) {
+			msg += "Block ";
+			x = (bBlockAnd) ? " and " : " or ";
+		}
+		if (bCset)	 	msg += x+"Sets, ";
+		if (b2Gene) 	msg += x+"2 Genes, ";
+		if (b1Gene) 	msg += x+"1 Gene, ";
+		if (b0Gene) 	msg += x+"0 Genes, ";
 		if (pctid!=0 && pctid!=minPctid) msg += "Id=" + (int) pctid + "%"; // CAS543 add
 		
 		if (msg.endsWith(", ")) msg = msg.substring(0, msg.length()-2);
@@ -57,21 +61,20 @@ public class HfilterData {
 	// Query block, set, region CAS520 add for showing synteny from query; b is blocks by default
 	public void setForQuery(boolean b, boolean s, boolean r) { // block (default), set, region
 		if (s)      {setBlock(true); setCset(true); setHiCset(true); setHiNone(false);}
-		else if (r) {setBlock(false); setAllHit(true);}
+		else if (r) {setBlock(false);}
 	}
 	// dotplot CAS530 
-	public void setForDP(boolean b, boolean r) {
-		setBlock(false); setAllHit(false);
+	public void setForDP(boolean b) {
 		if (b) setBlock(true);
-		if (r) setAllHit(true);
+		else setBlock(false); 
 	}
 	
 	private void setDefaults() {
 		bHiBlock  = bHiCset = bHi2Gene = bHi0Gene = bHi1Gene = false;		
 		bHiPopup = bHiNone = true;
 		
-		bCset = b2Gene = b0Gene = bAllHit = false; 
-		bBlock = true;
+		bCset = b2Gene = b1Gene = b0Gene =false; 
+		bBlock = true; bBlockAnd = true; bBlockOr = false;
 		
 		pctid=ANY_PCTID;
 	}
@@ -89,11 +92,13 @@ public class HfilterData {
 		if (setHiPopup(hf.bHiPopup))	changed = true;
 		
 		if (setBlock(hf.bBlock))        changed = true;
+		if (setBlockAnd(hf.bBlockAnd))  changed = true;
+		if (setBlockOr(hf.bBlockOr))    changed = true;
+		
 		if (setCset(hf.bCset))        	changed = true;
 		if (set2Gene(hf.b2Gene)) 		changed = true; 
 		if (set1Gene(hf.b1Gene)) 		changed = true; 
 		if (set0Gene(hf.b0Gene))		changed = true; 
-		if (setAllHit(hf.bAllHit))		changed = true;
 		
 		if (setPctid(hf.pctid))   		changed = true;
 		
@@ -189,6 +194,22 @@ public class HfilterData {
 		return false;
 	}
 	
+	protected boolean isBlockAnd() {return bBlockAnd;}
+	protected boolean setBlockAnd(boolean bFilter) {
+		if (bFilter != bBlockAnd) {
+			bBlockAnd = bFilter;
+			return true;
+		}
+		return false;
+	}
+	protected boolean isBlockOr() {return bBlockOr;}
+	protected boolean setBlockOr(boolean bFilter) {
+		if (bFilter != bBlockOr) {
+			bBlockOr = bFilter;
+			return true;
+		}
+		return false;
+	}
 	protected boolean isCset() { return bCset;}
 	protected boolean setCset(boolean bFilter) {
 		if (bFilter != bCset) {
@@ -220,15 +241,6 @@ public class HfilterData {
 	protected boolean set0Gene(boolean bFilter) { 
 		if (bFilter != b0Gene) {
 			b0Gene = bFilter;
-			return true;
-		}
-		return false;
-	}
-	
-	protected boolean isAllHit() { return bAllHit;}
-	protected boolean setAllHit(boolean bFilter) { 
-		if (bFilter != bAllHit) {
-			bAllHit = bFilter;
 			return true;
 		}
 		return false;

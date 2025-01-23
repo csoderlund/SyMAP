@@ -154,7 +154,6 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 				if (geneVec.size()>0) { // CAS555 bug fix for zero
 					int avg_gene = (geneVec.size()>0) ? (int)(geneLen/geneVec.size()) : 0;
 					distance_for_anno = avg_gene/GENES_FOR_ANNOT_DESC; 
-					dprt(String.format("AvgGeneLen %,6d for %s", avg_gene, getFullName()));
 					if (distance_for_anno<MIN_BP_FOR_ANNOT_DESC) distance_for_anno = MIN_BP_FOR_ANNOT_DESC;
 				}
 				else distance_for_anno = MIN_BP_FOR_ANNOT_DESC;
@@ -622,20 +621,20 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}	
 		return out;
 	}
-	
-	public String getGeneNumFromIdx(int idx1, int idx2) { // CAS545 called from HitData for its popup
+	public Annotation getAnnoObj(int idx1, int idx2) { // CAS560 replaced getGeneNumFromIdx with getAnnoObj
 		if (idx1>0) {
 			for (Annotation aObj : geneVec) {
-				if (aObj.getAnnoIdx()==idx1) return " (#" + aObj.getFullGeneNum() + ")"; // CAS548 remove space
+				if (aObj.getAnnoIdx()==idx1) return aObj; 
 			}
 		}
 		if (idx2>0) {
 			for (Annotation aObj : geneVec) {
-				if (aObj.getAnnoIdx()==idx2) return " (#" + aObj.getFullGeneNum() + ")";
+				if (aObj.getAnnoIdx()==idx2) return aObj;
 			}
 		}
-		return "";
+		return null;
 	}
+	
 	public String getGeneNumFromIdx(int idx1) { // CAS548 called from HitData for its popup
 		for (Annotation aObj : geneVec) {
 			if (aObj.getAnnoIdx()==idx1) return aObj.getFullGeneNum(); 
@@ -1327,28 +1326,33 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		dragPoint.setLocation(Globals.NO_VALUE,Globals.NO_VALUE);
 		startResizeBpPerPixel = Globals.NO_VALUE;
 	}
+	// Scroll wheel
+	// Called from mouseWheelMoved, which is called from Mapper.mouseWheelMoved
+	// CAS560 if sequence is flipped, should go negative instead of continued positive
 	private void scrollRange(int notches, int viewSize) {
 		int curViewSize = getEnd() - getStart() + 1;
-		if (curViewSize < getTrackSize()) {
-			int offset = notches*(viewSize/mouseWheelScrollFactor);
-			int newStart, newEnd;
-			
-			newStart = getStart()+offset;
-			if (newStart < 0) {
-				newStart = 0;
-				newEnd = viewSize;
-			}
-			else {
-				newEnd = getEnd()+offset;
-				if (newEnd > getTrackSize()) {
-					newStart = getTrackSize() - viewSize;
-					newEnd = getTrackSize();
-				}
-			}
-			setStartBP(newStart,true);
-			setEndBP(newEnd,true);	
-			if (drawingPanel != null) drawingPanel.smake("seq: scrollrange");
+		
+		if (curViewSize >= getTrackSize()) return;
+
+		int offset = notches*(viewSize/mouseWheelScrollFactor);
+		int newStart, newEnd;
+		
+		newStart = (sfilObj.bFlipped) ? (chrDisplayStart-offset) : (chrDisplayStart+offset);
+		if (newStart < 0) {
+			newStart = 0;
+			newEnd = viewSize;
 		}
+		else {
+			newEnd = (sfilObj.bFlipped) ? (chrDisplayEnd-offset) : (chrDisplayEnd+offset);
+			if (newEnd > getTrackSize()) {
+				newStart = getTrackSize() - viewSize;
+				newEnd = getTrackSize();
+			}
+		}
+		
+		setStartBP(newStart,true);
+		setEndBP(newEnd,true);			
+		if (drawingPanel != null) drawingPanel.smake("seq: scrollrange");
 	}
 	private void zoomRange(int notches, double focus, int length) {
 		double r1 = (focus / rect.height) / mouseWheelZoomFactor;

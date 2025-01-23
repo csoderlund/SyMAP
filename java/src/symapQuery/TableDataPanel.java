@@ -42,6 +42,7 @@ import javax.swing.table.TableColumnModel;
 
 import database.DBconn2;
 import util.ErrorReport;
+import util.Jcomp;
 import util.Jhtml;
 import util.Utilities;
 import symap.Globals;
@@ -62,8 +63,10 @@ public class TableDataPanel extends JPanel {
 	private static final int GEN_COLUMN_WIDTH = 100;
 	private static final int showBLOCK=1, showSET=2, showGRP=3; // showREGION=0, CAS555 add showGrp
 	
+	static protected SortTable theLastTable = null; //  CAS560 add to keep using last order of columns for session
+	
 	// called by SymapQueryFrame
-	protected TableDataPanel(SyMAPQueryFrame parentFrame, String resultName,  boolean [] selections,
+	protected TableDataPanel(SyMAPQueryFrame parentFrame, String resultName,  boolean [] selCols,
 			String query, String sum, boolean isSingle) {
 		this.theParentFrame = parentFrame;
 		this.theName 		= resultName;
@@ -75,13 +78,13 @@ public class TableDataPanel extends JPanel {
 		this.isCollinearSz	= theQueryPanel.isCollinear();
 		this.isGroup		= theQueryPanel.isGroup();
 		
-		if(selections != null) {
-			theOldSelections = new boolean[selections.length];
-			for(int x=0; x<selections.length; x++)
-				theOldSelections[x] = selections[x];
+		if(selCols != null) {
+			theOldSelCols = new boolean[selCols.length];
+			for(int x=0; x<selCols.length; x++)
+				theOldSelCols[x] = selCols[x];
 		}
 		
-		colSelectChange = new ActionListener() {
+		colSelectChange = new ActionListener() { // when a column is selected or deselected
 			public void actionPerformed(ActionEvent arg0) {
 				setTable(false);
 		        showTable();
@@ -89,6 +92,7 @@ public class TableDataPanel extends JPanel {
 		};
 		buildTableStart(theQuery);
 	}
+	/************************************************************/
 	private void buildTableStart(String theQuery) {
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
        
@@ -107,7 +111,7 @@ public class TableDataPanel extends JPanel {
 					else {
 						return;
 					}
-					setColumnSelections();
+					setColFromOldSelect();
 					showTable();
 					finish(); 
 
@@ -191,7 +195,9 @@ public class TableDataPanel extends JPanel {
         theTableData.setColumnHeaders(theParentFrame.getAbbrevNames(), theAnnoKeys.getColumns(true /*abbrev*/), isSingle);
         theTableData.finalizeX();
 
-		theTable = new SortTable(TableData.createModel(getSelectedColumns(), theTableData, this));
+        String [] columns = getSelColsUnordered(); 
+        TableData tData = TableData.createData(columns, theTableData, this);
+		theTable = new SortTable(tData);
         theTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         theTable.autofitColumns();
         	
@@ -211,7 +217,7 @@ public class TableDataPanel extends JPanel {
         Enumeration<TableColumn> en = theTable.getColumnModel().getColumns();
         while (en.hasMoreElements()) {
           ((TableColumn)en.nextElement()).setHeaderRenderer(renderer);
-        }         
+        } 
     }
     private JPanel createTableButtonPanel() {
     	JPanel buttonPanel = new JPanel();
@@ -300,16 +306,14 @@ public class TableDataPanel extends JPanel {
     	
 		botRow.add(new JLabel("Table (or selected): ")); botRow.add(Box.createHorizontalStrut(2));
 	
-	    btnExport = new JButton("Export...");
+	    btnExport = Jcomp.createButton("Export...", "Export selected rows or all rows");
 	    btnExport.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				popupExport();
 			}
 		});
 	   
-	    btnUnSelectAll = new JButton("Unselect All");
-	    btnUnSelectAll.setAlignmentX(Component.LEFT_ALIGNMENT);
-	    btnUnSelectAll.setBackground(Color.WHITE);
+	    btnUnSelectAll = Jcomp.createButton("Unselect All", "Unselect all selected rows");
 	    btnUnSelectAll.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				theTable.getSelectionModel().clearSelection();
@@ -317,7 +321,7 @@ public class TableDataPanel extends JPanel {
 			}
 		});     
 	   
-	    btnReport = new JButton("Report...");
+	    btnReport = Jcomp.createButton("Report...", "Gene Report");
 	    btnReport.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				popupReport();
@@ -389,16 +393,10 @@ public class TableDataPanel extends JPanel {
     		chkGeneralFields[x].setAlignmentX(Component.LEFT_ALIGNMENT);
     		chkGeneralFields[x].setBackground(Color.WHITE);
     		chkGeneralFields[x].addActionListener(colSelectChange);
-    		chkGeneralFields[x].setToolTipText(genDesc[x]);
-    		/** CAS541 replace with tool tip
-    		final String desc = genDesc[x];			
-    		chkGeneralFields[x].addMouseListener(new MouseAdapter() {	// CAS519 add
-        		public void mouseEntered(MouseEvent e) {setStatus(desc);}
-        		public void mouseExited(MouseEvent e)  {setStatus("");}
-        	});
-        	**/
+    		chkGeneralFields[x].setToolTipText(genDesc[x]); // CAS541 replace chkGeneralFields[x].addMouseListener(new MouseAdapter()
+    	
     		chkGeneralFields[x].setSelected(genColDef[x]);
-    		if (x==0) {// CAS540x i was able to uncheck the row, don't know how...
+    		if (x==0) {									// CAS540x i was able to uncheck the row, don't know how...
     			chkGeneralFields[x].setSelected(true);
     			chkGeneralFields[x].setEnabled(false); // CAS520 cannot remove because doesn't work to
     		}
@@ -449,16 +447,9 @@ public class TableDataPanel extends JPanel {
         		chkSpeciesFields[x][y].setAlignmentX(Component.LEFT_ALIGNMENT);
         		chkSpeciesFields[x][y].setBackground(Color.WHITE);
         		chkSpeciesFields[x][y].addActionListener(colSelectChange);
-        		chkSpeciesFields[x][y].setToolTipText(colDesc[y]);
-        		/** CAS541 replace with tooltip
-        		final String desc = colDesc[y];
-        		chkSpeciesFields[x][y].addMouseListener(new MouseAdapter() { // CAS519 add
-            		public void mouseEntered(MouseEvent e) {setStatus(desc);}
-            		public void mouseExited(MouseEvent e)  {setStatus("");}
-            	});
-            	**/
+        		chkSpeciesFields[x][y].setToolTipText(colDesc[y]); /// CAS541 replace addMouseListener with tooltip 
+        
         		row.add(chkSpeciesFields[x][y]);
-        		
         		row.add(Box.createHorizontalStrut(4));
         	}
         	page.add(row);
@@ -502,19 +493,6 @@ public class TableDataPanel extends JPanel {
     			String d = (annotName.contentEquals(Q.All_Anno)) ? 
     					"All annotation from GFF file" : "Column heading is keyword from GFF file";
     			chkCol.setToolTipText(d);
-    			/** CAS541 replace with tooltip
-    			final String desc = d;
-        		chkCol.addMouseListener(new MouseAdapter() { // CAS519 add
-            		public void mouseEntered(MouseEvent e) {setStatus(desc);}
-            		public void mouseExited(MouseEvent e) {setStatus("");}
-            	});
-            	**/
-    			/* CAS532 quit setting now that we have save
-    			String lc = annotName.toLowerCase(); // CAS513 caseIgnore
-    			if (lc.equals("description") || lc.equals("product") || lc.equals("note") || lc.equals("desc"))	{
-    				chkCol.setSelected(true);
-    			}
-    			*/
     			annoCol.add(chkCol);
     		}
     		chkAnnoFields.add(annoCol);
@@ -534,9 +512,6 @@ public class TableDataPanel extends JPanel {
         	row.setBackground(Color.WHITE);
         	
         	// Species name
-        	// CAS519 use abbrev JLabel spLabel = new JLabel(theAnnoKeys.getSpeciesNameByID(speciesIDs[pos]));
-        	//int width = ANNO_COLUMN_WIDTH - spLabel.getPreferredSize().width;
-        	//if(width > 0) row.add(Box.createHorizontalStrut(width));
         	String abbrev = theAnnoKeys.getSpeciesAbbrevByID(speciesIDs[pos]);
         	JLabel spLabel = createSpeciesLabel(abbrev);
         	row.add(spLabel); row.add(Box.createHorizontalStrut(10));
@@ -729,14 +704,22 @@ public class TableDataPanel extends JPanel {
     	showTable();
     }
     
-	// Column change
+	// Build table, clearColumns, defaultColumns, setColFromOldSelect, actionPerformed (on colChange)
 	private void setTable(boolean isFirst) {
-		if(theTable != null) theTable.removeListeners();
+		String [] uoSelCols = getSelColsUnordered(); 	
+		String [] columns;
 		
-		String [] selCols = getSelectedColumns(); // CAS532 orderColumns adds to, so for new table, it was adding to defaults
-		String [] columns = (isFirst) ? selCols : TableData.orderColumns(theTable, selCols);
-		theTable = 	new SortTable(TableData.createModel(columns, theTableData, getInstance()));
-		
+		// CAS560 add using the same order as the last table created or change of columns
+		// theLastTable seems to stay active even when Query is exited and another display is used, but could be GC'ed
+		try { 
+			if (!isSingle && theLastTable!=null) columns = TableData.orderColumns(theLastTable, uoSelCols);
+			else columns = (isFirst) ? uoSelCols :         TableData.orderColumns(theTable, uoSelCols);
+		}
+		catch (Exception e) {
+			columns = uoSelCols;
+		}
+		TableData tData = TableData.createData(columns, theTableData, getInstance());
+		theTable = new SortTable(tData);
         theTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         theTable.autofitColumns();
         	
@@ -749,9 +732,10 @@ public class TableDataPanel extends JPanel {
         while (en.hasMoreElements()) {
           ((TableColumn)en.nextElement()).setHeaderRenderer(renderer);
         } 
+        if (!isSingle) theLastTable = theTable; // saving the single order is not worth it as the species could change, etc
 	}
 
-    private String [] getSelectedColumns() {
+    private String [] getSelColsUnordered() {
 		Vector<String> retVal = new Vector<String> ();
 		
 		for(int x=0; x<chkGeneralFields.length; x++) {
@@ -775,32 +759,32 @@ public class TableDataPanel extends JPanel {
 		return retVal.toArray(new String[retVal.size()]);
 	}
 	
-    private void setColumnSelections() {
-    	if (theOldSelections == null) return; 
+    private void setColFromOldSelect() { // called at buildTableStart 
+    	if (theOldSelCols == null) return; 
     	
-    	int targetPos = 0, oldN=theOldSelections.length;
+    	int targetPos = 0, oldN = theOldSelCols.length;
     	try {
 	    	for(int x=0; x<chkGeneralFields.length  && targetPos<oldN; x++) {
-	    		chkGeneralFields[x].setSelected(theOldSelections[targetPos]);
+	    		chkGeneralFields[x].setSelected(theOldSelCols[targetPos]);
 	    		targetPos++;
 	    	}    	
 		  	for(int x=0; x<chkSpeciesFields.length; x++) {
 	    		for(int y=0; y<chkSpeciesFields[x].length  && targetPos<oldN; y++) {
-	    			chkSpeciesFields[x][y].setSelected(theOldSelections[targetPos]);
+	    			chkSpeciesFields[x][y].setSelected(theOldSelCols[targetPos]);
 	    			targetPos++;
 	    		}
 	    	}
 		   // CAS532 see SyMAPQueryFrame.getLastColumns; add check for targetPos 
 	    	for(int x=0; x<chkAnnoFields.size() && targetPos<oldN; x++) {
 	    		for(int y=0; y<chkAnnoFields.get(x).size() && targetPos<oldN; y++) {
-	    			chkAnnoFields.get(x).get(y).setSelected(theOldSelections[targetPos]);
+	    			chkAnnoFields.get(x).get(y).setSelected(theOldSelCols[targetPos]);
 	    			targetPos++;
 	    		}
 	    	}
     	}
-    	catch (Exception e) {ErrorReport.print(e, "Selections: " + theOldSelections.length + " " + targetPos);}
+    	catch (Exception e) {ErrorReport.print(e, "Selections: " + theOldSelCols.length + " " + targetPos);}
     	
-    	theOldSelections = null;
+    	theOldSelCols = null;
     	setTable(true);
 	}
     private JCheckBox getAnnoCheckBoxAt(int pos) {
@@ -1068,7 +1052,10 @@ public class TableDataPanel extends JPanel {
         	try {
         		/**** EXECUTE ***/
         		ResultSet rs = dbc2.executeQuery(theQuery);  
-        		if (Q.TEST_TRACE)	loadDataTESTwrite(theQuery, rs, isSingle);
+        		if (Globals.TRACE)	{
+        			loadDataTESTwrite(theQuery, rs, isSingle); 
+        			rs = dbc2.executeQuery(theQuery);	// CAS560 can not longer reset to start of search with new JDBC
+        		}
         		return rs;
         	}
         	catch(Exception e)	{ErrorReport.print(e, "Load Data1"); return null;}
@@ -1104,8 +1091,7 @@ public class TableDataPanel extends JPanel {
         			cnt++;
         		}
         		w.close();
-        		rs.beforeFirst();
-        		System.out.println("MySQL Results " + cnt);
+        		System.out.println("MySQL Results to zTest_orphan_results.log " + cnt);
         	} catch(Exception e){ErrorReport.print(e, "results to file");	};
 		}
 		else {
@@ -1140,8 +1126,8 @@ public class TableDataPanel extends JPanel {
         			cnt++;
         		}
         		w.close();
-        		rs.beforeFirst();
-        		System.out.println("MySQL Results " + cnt);
+        		
+        		System.out.println("MySQL Results to zTest_results.log " + cnt);
         	} catch(Exception e){ErrorReport.print(e, "results to file");	};
 		}
 	}
@@ -1311,12 +1297,14 @@ public class TableDataPanel extends JPanel {
     	    ((JLabel)renderer).setHorizontalAlignment(JLabel.CENTER);
     	    setCellRenderer(renderer);
     	}
-    	 
+    	// called repeatedly; when column is moved, changed, etc; once for each column
     	public Component getTableCellRendererComponent(JTable table, Object value,
     	                   boolean isSelected, boolean hasFocus, int row, int column) {
+   
     	    setFont(table.getFont());
     	    String str = (value == null) ? "" : value.toString();
     	    BufferedReader br = new BufferedReader(new StringReader(str));
+    	    
     	    String line;
     	    Vector<String> v = new Vector<String>();
     	    try {
@@ -1337,10 +1325,10 @@ public class TableDataPanel extends JPanel {
     	rp.setVisible(true);
     }
     /***********************************************************************
-     ** Export file; CAS556 latest modify has been to put in separate file.
+     ** Export file; CAS556 export put in separate file.
      *********************************************************************/
     private void popupExport() {
-		final TableExport ex = new TableExport(this);
+		final TableExport ex = new TableExport(this, theParentFrame.title ); // CAS560 add title for 1st line of export
 		ex.setVisible(true);
 		final int mode = ex.getSelection();
 		
@@ -1377,7 +1365,7 @@ public class TableDataPanel extends JPanel {
     private Vector<Vector<JCheckBox>> 	chkAnnoFields = null;
    
     private ActionListener colSelectChange = null;
-    private boolean [] theOldSelections = null; 
+    private boolean [] theOldSelCols = null; 
     
 	private JPanel tableButtonPanel = null, tableStatusPanel = null;
 	private JPanel generalColSelectPanel = null, spLocColSelectPanel = null;

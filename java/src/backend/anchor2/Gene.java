@@ -13,35 +13,40 @@ public class Gene implements Comparable <Gene> {
 	private static final int T=Arg.T, Q=Arg.Q;
 	
 	// Gene input; set at start
-	protected int ix=0; 				// 0 is target, 1 is query
+	protected int ix=0; 				
 	protected int gStart, gEnd, gLen;
 	protected int geneIdx=0;
 	protected String chr="";
-	protected String suffix=".", strand="", geneTag="";
+	protected String strand="", geneTag="";  // geneTag, e.g. 136. or 136.b
 	protected ArrayList <Exon> exonList = new ArrayList <Exon> ();
-	private int exonLen=0;
+	protected int exonSumLen=0; 
 	
-	// read mummer finds overlaps; Pair-specific - clone only
-	protected ArrayList <Hit> gnHitList = new ArrayList <Hit> (); // some will be filtered, or used in two diff clHits
+	protected boolean isOlapGene=false;
 	
-	private int hitsStart=Integer.MAX_VALUE, hitsEnd=0, cntExonHit=0; // trace
+	// read mummer finds overlaps and assign to gene for chr-chr; Pair-specific - clone only
+	protected ArrayList <Hit> gHitList = new ArrayList <Hit> ();          // some will be filtered, or used in two diff clHits
+	protected ArrayList <HitPair> gHprList = new ArrayList <HitPair> ();  // CAS560 add 
+	
+	private int hitsStart=Integer.MAX_VALUE, hitsEnd=0; // trace
 	
 	protected Gene(int ix, int geneIdx, String chr, int gstart, int gend, String strand, String geneTag) {
-		this.ix=ix;
-		this.geneIdx = geneIdx;			// eventually saved with HitCluster
+		this.ix=ix;						// 0 is target, 1 is query
+		this.geneIdx = geneIdx;			// eventually saved with HitPair
 		this.chr = chr;					// trace
 		this.gStart = gstart;			// for calculations
 		this.gEnd = gend;				// for calculations
 		this.strand = strand;			// used to insure strands are consistent with hit
-		this.geneTag = geneTag.trim();	// trace
+		this.geneTag = geneTag.trim();	// trace; up to '('
+		isOlapGene = !this.geneTag.endsWith(".");
 		
 		gLen = (gend-gstart)+1;
 	}
 	protected void addExon(int estart, int eend)  {
 		Exon ex = new Exon(estart, eend);
 		exonList.add(ex);
-		exonLen += (eend-estart)+1;
+		exonSumLen += (eend-estart)+1;
 	}
+	
 	// All genes objects used from GrpPair.addGene are copies so they are chrT-chrQ specific
 	private Gene() {}
 	public Object copy() {
@@ -54,25 +59,26 @@ public class Gene implements Comparable <Gene> {
 		gn.strand = strand;
 		gn.geneTag = geneTag.trim();
 		gn.gLen = gLen;
+		
 		for (Exon ex : exonList) gn.exonList.add(ex);
-		gn.exonLen = exonLen;
+		gn.exonSumLen = exonSumLen;
+		
+		gn.isOlapGene = isOlapGene;
+		
 		return gn;
 	}
 	
 	//////////////////////////////////////////////////
 	protected int addHit(Hit ht) throws Exception { // AnchorMain2.runReadMummer
 	try {
-		hitsStart = Math.min(ht.start[ix], hitsStart);
-		hitsEnd   = Math.max(ht.end[ix], hitsEnd);
-		gnHitList.add(ht);
+		hitsStart = Math.min(ht.hStart[ix], hitsStart);
+		hitsEnd   = Math.max(ht.hEnd[ix], hitsEnd);
+		gHitList.add(ht);
 		
-		int olap=0, allOlap=0;
-		for (Exon ex : exonList) {
-			 olap = Arg.olapOnly(ht.start[ix], ht.end[ix], ex.estart, ex.eend);	
-			 if (olap>0) {
-				 allOlap+=olap;
-				 cntExonHit++;
-			 }
+		int allOlap=0;
+		for (int i=0; i<exonList.size(); i++) {
+			 Exon ex = exonList.get(i);
+			 allOlap += Arg.pOlapOnly(ht.hStart[ix], ht.hEnd[ix], ex.estart, ex.eend);	
 		}
 		return allOlap;
 	}
@@ -80,44 +86,61 @@ public class Gene implements Comparable <Gene> {
 	}
 	
 	/********************************************************************
-	 * Scores exon and genes
+	 * Scores exon and genes; called from HitPair.setScores
 	 * mergeSet has overlapping hits merged
+	 * Return:
+	 * 	%exons with a hit = score[0]
+	 *  %exon with merge hit overlap = score[1]
+	 *  %gene with hit overlap = score[2]
 	 */
-	protected double [] scoreExons(ArrayList <Hit> mergeSet) throws Exception {
-		double [] scores = {-1,-1};
+	protected double [] scoreExonsGene(ArrayList <Hit> mergeSet) throws Exception {
+		double [] scores = {-1,-1, -1, -1};
 		try {
-			int exonCov=0;			// %exon with hit overlap = score[0]
-			for (Exon ex : exonList) {
+			int nExons = exonList.size();	
+			int exonCov=0;
+			double exonFrac=0;
+			
+			for (int i=0; i<nExons; i++) {
+				Exon ex = exonList.get(i);
+				
 				for (Hit mh : mergeSet) {
-					exonCov+= Arg.olapOnly(mh.start[ix], mh.end[ix], ex.estart, ex.eend);
+					int olap = Arg.pOlapOnly(mh.hStart[ix], mh.hEnd[ix], ex.estart, ex.eend);
+					if (olap!=0) {
+						exonCov += olap;
+						exonFrac += (double) olap/(double)(ex.eend-ex.estart+1);
+					}
 				}
 			}
-			scores[0] = ((double) exonCov/ (double) exonLen) * 100.0; // %exons with hit overlap		
-		
-			int geneCov = 0; 		// %gene with hit overlap = score[1]
-			for (Hit mh : mergeSet) 
-				geneCov += Arg.olapOnly(mh.start[ix], mh.end[ix], gStart, gEnd);
-			scores[1] = ((double) geneCov/ (double) gLen) * 100.0; 
-			
+			int geneCov = 0, hitStart=Integer.MAX_VALUE, hitEnd=0; 							
+			for (Hit mh : mergeSet) {
+				hitStart = Math.min(hitStart, mh.hStart[ix]);
+				hitEnd   = Math.max(hitEnd, mh.hEnd[ix]);
+				geneCov += Arg.pOlapOnly(mh.hStart[ix], mh.hEnd[ix], gStart, gEnd);
+			}
+			// exonFrac is often ~exonCov except when the cover is mainly over one exon and the rest are not covered
+			scores[0] = (exonFrac>0 && nExons>0) ?    (exonFrac*100.0/(double)nExons)  : 0.0;
+			scores[1] = (exonCov>0 && exonSumLen>0) ? (((double) exonCov/ (double) exonSumLen) * 100.0) : 0.0; 
+			scores[2] = (geneCov>0 && gLen>0) ?       ((double) geneCov/ (double) gLen) * 100.0 : 0.0; 
+			scores[3] = exonCov;
 			return scores;
 		}
 		catch (Exception e) {ErrorReport.print(e, "Score exons");  throw e;}
 	}
 	
-	////////////////////////////////////////////////////////////
-	protected ArrayList <Hit> get0BinEither(int X, boolean isEQ) throws Exception { // GrpPairGene.createG1
+	// No paired Y gene and bin=0; will be sorted by Y in calling routine
+	protected ArrayList <Hit> getHitsForXgene(int X, int Y, boolean isEQ) throws Exception { // GrpPairGx.runG1
 	try {
-		if (gnHitList.size()==0) return null;
+		if (X!=ix) symap.Globals.dtprt("anchor2.Gene Wrong T/Q ");
+		if (gHitList.size()==0) return null;
 		
 		ArrayList <Hit> binList = new ArrayList <Hit> ();
-		for (Hit ht : gnHitList) 
-			if (ht.bin==0 && !ht.bBothGene() && ht.isStEQ==isEQ) {
-				
-				if      (X==Q && ht.bQueryGene(this))  binList.add(ht);
-				else if (X==T && ht.bTargetGene(this)) binList.add(ht);
+		for (Hit ht : gHitList) {
+			if (ht.bin==0 && ht.isStEQ==isEQ && !ht.bBothGene()) {
+				if      (X==Q && ht.bHasQgene(this))  binList.add(ht);
+				else if (X==T && ht.bHasTgene(this)) binList.add(ht);
+				else symap.Globals.dtprt(geneTag + " has hit that does not have supposed genes");
 			}
-		
-		if (binList.size()==0) return null;
+		}
 		return binList;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Find remaining hits"); return null;}
@@ -144,44 +167,35 @@ public class Gene implements Comparable <Gene> {
 			}
 		);
 	}
-	protected void sortHits(int X) { // GrpPairGx sort hits for genes at beginning 
-		Collections.sort(gnHitList, 
-			new Comparator<Hit>() {
-				public int compare(Hit g1, Hit g2) {
-					if      (g1.start[X] < g2.start[X]) return -1;
-					else if (g1.start[X] > g2.start[X]) return 1;
-					else if (g1.end[X] > g2.end[X]) return -1;
-					else if (g1.end[X] > g2.end[X]) return 1;
-					else return 0;
-				}
-			}
-		);
-	}
 	
 	/////////////////////////////////////////////////////////////////
-	protected String toResults() {
-		String hits="";
-		if (gnHitList.size()>0) { 
-			Hit last=null;
-			for (Hit ht : gnHitList) {
-				int be = ht.getExonCov(ix, this);
-				String   e = (be>0) ? " E " : " I ";
-				hits += e + ht.toDiff(last) + "\n";
-				last = ht;
-			}
-			hits = "\n" + hits;
-		}
-		else return "";
+	protected String toResults() {	
+		if (gHitList.size()==0) return "";  
 		
-		return toBrief()  +  hits;
+		int iy = (ix==Arg.T) ? Arg.Q : Arg.T;
+		Hit.sortBySignByX(iy, gHitList);
+		
+		String hits="";
+		Hit last=null;
+		for (Hit ht : gHitList) {
+			int be = ht.getExonCov(ix, this);
+			String   e = (be>0) ? " E " : " I ";
+			hits +=  e + ht.toDiff(last) + "\n";
+			last = ht;
+		}
+		hits = "\n" + hits;
+		
+		String hprList= " HPR:" + gHprList.size(); // may be clear from prtToFile (unless not crossRefClear run)
+		for (HitPair hpr : gHprList) hprList += "\n" + hpr.toResultsGene() + " " + hpr.note;
+		
+		return toBrief() + hprList + hits + "\n";
 	}
 	protected String toBrief() {
 		String gCoords = String.format("Gene [%s%,d-%,d %5s] #Ex%d ",strand, gStart, gEnd, Arg.int2Str(gEnd-gStart+1), exonList.size());
-		String hCoords = (gnHitList.size()>0) ?
-				String.format("Hits [%,d-%,d %5s] #Ht%d ", hitsStart,hitsEnd, Arg.int2Str(hitsEnd-hitsStart+1), gnHitList.size())
+		String hCoords = (gHitList.size()>0) ?
+				String.format("Hits [%,d-%,d %5s] #Ht%d ", hitsStart,hitsEnd, Arg.int2Str(hitsEnd-hitsStart+1), gHitList.size())
 				: " No hits ";
-		String exon = " To exon: " + cntExonHit;
-		return toName() + gCoords + hCoords + exon;
+		return toName() + gCoords + hCoords;
 	}
 	
 	protected String toName() {return  Arg.side[ix]+ "#" + geneTag + " ("  + geneIdx + ") " + chr + " ";}
@@ -189,12 +203,12 @@ public class Gene implements Comparable <Gene> {
 	public String toString() {return toResults();}
 
 	public void clear() {
-		gnHitList.clear();
+		gHitList.clear();
 		exonList.clear();
+		gHprList.clear();
 		
 		hitsStart=Integer.MAX_VALUE; 
 		hitsEnd=0;
-		cntExonHit=0;
 	}
 	//////////////////////////////////////////////////////////////////
 	protected class Exon {

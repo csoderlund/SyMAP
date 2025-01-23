@@ -13,20 +13,19 @@ import util.Utilities;
  */
 public class HitData {	
 	public static int cntMerge=0, cntTotal=0, cntMergeSH=0, cntTotalSH=0; // CAS551 -dd see reduction in subhits
-	
-	private Mapper mapper;			// CAS544 add for way back to other data
-	private int idx;				// CAS551 was long
-	private int hitnum;				// CAS520 add, newly assigned hitnum
-	private byte pctid, pctsim; 	// CAS515 add pctsim and nMerge
-	private int covScore;			// CAS540 best coverage
+	private Mapper mapper;				// CAS544 add for way back to other data
+	private int idx;					// CAS551 was long
+	private int hitnum;					// CAS520 add, newly assigned hitnum
+	private byte pctid, pctsim; 		// CAS515 add pctsim and nMerge
+	private int covScore;				// CAS540 best coverage
 	private int nMerge;
 	private int geneOlp = -1; 
 	private boolean isPosOrient1, isPosOrient2; 	
 	private int 	annot1_idx, annot2_idx; // CAS543 add
-	private String 	query_seq, target_seq; // coordinates of hit
+	private String 	query_seq, target_seq;  // coordinates of subhits
 	
 	protected int start1, end1, mid1, start2, end2, mid2;	// 1=q, 2=t; CAS550 add mid for paintComponent
-	protected String qMergeSH, tMergeSH;					// CAS551 merged for faster drawing in SeqHits.DrawHit
+	protected String qMergeSH, tMergeSH;					// CAS551 merged subhits for faster drawing in SeqHits.DrawHit
 	
 	private int collinearSet;		// CAS520 [c(runnum.runsize)] need to toggle highlight
 	private int blocknum; 			// CAS505 add
@@ -65,7 +64,7 @@ public class HitData {
 			this.isPosOrient1 = (strand.charAt(0) == '+');
 			this.isPosOrient2 = (strand.charAt(2) == '+');
 		}
-		else if (Globals.DEBUG) System.err.println("HitData: Invalid strand value '"+strand+"' for hit id="+id);
+		else Globals.dprt("HitData: Invalid strand value '"+strand+"' for hit id="+id);
 			
 		this.start1 = start1;
 		this.end1 = end1;
@@ -86,31 +85,32 @@ public class HitData {
 		this.isBlock = (blocknum>0) ? true : false;
 		
 		String gg = (htype.equals("0") || htype.equals("")) ? (" g" + geneOlp) : (" " +htype); 
-		String iv = (corr<0) ? " Inv   " : "   "; // Only happens rarely with algo1
+		String iv = (corr<0) ? " Inv   " : "   "; // Strand may be == when Inv
+	
 		String co = (runsize>0 && runnum>0) ? (" c" + runsize + "." + runnum) : "";
 		hitTag = "Hit #" + hitnum + gg + "   Block #" + block + iv + co;
 		
 		hitGeneTag = "Hit #" + hitnum  + " Block #" + block;
 	}
-	/* The hits overlap, so merge the overlapping ones; similar to the one in anchor2.HitPair 
-	 * For similar sequences, there can be many merges - I thought this would smooth on the display more... */
+	/* The hits overlap, so merge the overlapping ones; similar to the one in anchor2.HitPair and SeqHits
+	 * For similar sequences, there can be many merges */
 	protected String calcMergeHits(String subHits, int start, int end) {
 	try {
 		if (subHits == null || subHits.length() == 0) return ""; // 1 sh; uses start,end
 			
-		String[] subseq = subHits.split(",");
-		int nsh=0, osh=subseq.length;
+		String [] subseq = subHits.split(",");
+		int newSH=0, origSH=subseq.length;
 		
-		int [] shstart = new int [osh];
-		int [] shend = new int [osh];
+		int [] shstart = new int [origSH];
+		int [] shend   = new int [origSH];
 		
-		for (int k = 0;  k < osh;  k++) {
+		for (int k = 0;  k < origSH;  k++) {// go through hits and either create a new one or merge
 			String[] pos = subseq[k].split(":");
 			int s = Integer.parseInt(pos[0]);
 			int e = Integer.parseInt(pos[1]);
 			 
 			boolean found=false;
-			for (int i=0; i<nsh; i++) {
+			for (int i=0; i<newSH; i++) { 
 				int olap = Math.min(e, shend[i]) - Math.max(s,shstart[i]); 
 				if (olap<0) continue;
 				
@@ -120,19 +120,19 @@ public class HitData {
 				break;
 			}
 			if (!found) {
-				shstart[nsh] = s;
-				shend[nsh] = e;
-				nsh++;
+				shstart[newSH] = s;
+				shend[newSH] = e;
+				newSH++;
 			}
 		}
-		cntTotalSH+=osh; cntTotal++;
-		if (nsh != osh) {cntMerge++; cntMergeSH += (osh-nsh);}
-		else return subHits; // no change
+		cntTotalSH+=origSH; cntTotal++;
+		if (newSH == origSH) return subHits; // no change
+		if (newSH==1) return ""; // use start, end; was osh>1
 		
-		if (nsh==1) return ""; // use start, end; was osh>1
-	
+		cntMerge++; cntMergeSH += (origSH-newSH);
+		
 		StringBuffer sb = new StringBuffer();
-		for (int i=0; i<nsh; i++) {
+		for (int i=0; i<newSH; i++) {
 			if (sb.length()==0) sb.append(shstart[i] + ":" + shend[i]);
 			else sb.append("," + shstart[i] + ":" + shend[i]);
 		}
@@ -141,14 +141,14 @@ public class HitData {
 	catch (Exception e) {ErrorReport.print(e, "merge hits"); return null;}	
 	}
 	
-	protected String getQueryMerge() { return qMergeSH;}
+	protected String getQueryMerge()  { return qMergeSH;}  // paintHitLen; expects "" if only one hit
 	protected String getTargetMerge() { return tMergeSH;}
 	
 	protected boolean isPosOrient1() { return isPosOrient1; }
 	protected boolean isPosOrient2() { return isPosOrient2; }
-	protected String getAnnots()	{ return annot1_idx + " " + annot2_idx;} // CAS543 added for trace
+	protected String getAnnots()	 { return annot1_idx + " " + annot2_idx;} // CAS543 added for trace
 	
-	public int getID() 		{ return idx; }
+	public int getID() 		    { return idx; }
 	public int getAnnot1() 		{ return annot1_idx;}
 	public int getAnnot2() 		{ return annot2_idx;}
 	public int getHitNum() 		{ return hitnum; }
@@ -227,6 +227,7 @@ public class HitData {
 	public 	  boolean is2Gene() 	{ return (geneOlp==2); } 
 	protected boolean is1Gene() 	{ return (geneOlp==1); } 
 	protected boolean is0Gene()  	{ return (geneOlp==0); } 
+	protected boolean isInv()		{ return isPosOrient1!=isPosOrient2;} // CAS560 add for TextShowInfo
 	
 	public void setIsPopup(boolean b) {// CAS543 add; SeqHits, closeup.TextShowInfo
 		isPopup=b;
