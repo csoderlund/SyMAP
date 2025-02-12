@@ -25,27 +25,20 @@
 <table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
 	<tr><td>
 		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
-			<tr>
-				<td style="text-align: left; vertical-align: top; padding: 0">
+			<tr><td style="text-align: left; vertical-align: top; padding: 0">
 					<a href="http://www.agcol.arizona.edu">
 						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
-				</td>
 				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
 					SyMAP Release Notes
-				</td>
 				<td style="text-align: right; vertical-align: top; padding: 0">
 					<a href="http://www.arizona.edu">
 						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
-					<br>
-					<a href="http://www.bio5.org">
+					<br><a href="http://www.bio5.org">
 						<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
-				</td>
-			</tr>
 			<tr>
 				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
 				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
-					<tr>
-						<td style="background-color: #666666; padding-bottom:4px;">
+					<tr><td style="background-color: #666666; padding-bottom:4px;">
 						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
 						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
 						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
@@ -53,12 +46,8 @@
 						<a href="./SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
 						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
 						<a href="./Tour.html" class="white">Tour</a>
-					</tr>
 				</table>
-				</td>
-			</tr>
 		</table>
-	</td></tr>
 
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
@@ -67,16 +56,72 @@ For existing databases, there are no database or build changes since <a href="#v
 <br>You must have Java v17.0.11 or later, starting with SyMAP v5.5.0.
 <h3>Summary of recent major releases</h3>
 <table class="tx">
-<tr><td><a href="#v548">v5.6.0</a><td>(Dec-24)<td>Improve <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>,
+<tr><td><a href="#v560">v5.6.0</a><td>(23-Jan-25)<td>Improve <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>,
 which is aware of the exon-intron structure.
 <tr><td><a href="#v557">v5.5.7</a><td>(8-Aug-24)<td>Add <ttl>xToSymap</ttl> and improve ease of input.
 <tr><td><a href="#v556">v5.5.6</a><td>(14-July-24)<td>Improved the collinear set algorithm.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
-<tr><td><a href="#v530">v5.3.1</a><td>(6-Jan-23)<td>Improved <a href="UserGuide.html#align">hit alignment</a> features.
-<tr><td><a href="#v530">v5.3.0</a><td>(10-Dec-22)<td>Updated database schema to remove all FPC tables.
-
 </table>
 
+<a id="v561"></a>
+<h3>Release: v5.6.1 (12-Feb-25)</h3>
+Bug fixes, minor updates to A&S output, and improved <ttl>Queries</ttl>.
+<ul>
+<li><ttp>xToSymap</ttp>:
+<ul><li>Bug fix: <ttl>NCBI convert</ttl>: if the gene did not have a description, it was suppose to use the first mRNA 'product', which
+it was not doing.
+</ul>
+<br>
+<li><ttl>A&S (Alignment&Synteny)</ttl>:
+<ul>
+<li>The default is to surpress output to the terminal and <tt>logs/{proj-to-proj}/symap.log</tt> except final summaries.
+To show the verbose output, use <ttx>./symap -v</ttx> or use the parameters
+<a href="SystemHelp#over2" class="ext" target="_blank">Verbose</a> checkbox.
+See <a href="Demo.html#slog" class="ext" target="_blank">Demo examples</a>.
+<li>Status lines, which repeatedly use the same line, are written to stderr instead of stdout.
+<li>The <ttx>symap</ttx> or <ttx>viewSymap</ttx> flag to show settings for the important MySQL variables is now "-sql".
+<li><ttl>Algo2</ttl> no longer quits if it encounters a sequence name not loaded when reading MUMmer.
+</ul>
+<br>
+
+<li><ttl>Query</ttl>:
+<ul>
+<li>New <ttl>Arrange</ttl> button: When the column panel is being displayed, the new <ttl>Arrange</ttl> button groups similar
+columns, putting the gene columns first.  See <a href="Query.html#col" class="ext" target="_blank">Arrange</a> option.
+<li>The <ttx>Singles</ttx> query allowed a species to be selected; this has been replaced with a species-specific check mark
+beside each species name. This query no longer allows <ttl>From</ttl> and <ttl>To</ttl> to be entered.
+See <a href="Query.html#query" class="ext" target="_blank">Query</a>.
+<li><ttx>Gene#</ttx> search:
+<ul>
+<li>The new species-specific check can be used for this search also.
+<li>Search speedup.
+<li>The search will now match genes with minor hits, e.g. 5.b.
+<li>The <ttx>Grp#</ttx> column computation has been changed as follows: for a given gene that
+hits multiple places on the same opposite chromosome, they are put in a group so that they can all be
+viewed at once with the <a href="Query.html#view2D" class="ext" target="_blank">2D Group</a> option.
+</ul>
+<li><ttx>Multi</ttx>: removed the <ttx>Exon</ttx> option and make the <ttx>Opposite</ttx> options radio buttons.
+<li>Better error checking.
+</ul>
+<li><ttl>2D</ttl>: Better positioning of <ttx>Gene#</ttx> when the <ttl>Gene#</ttl> sequence option is selected.
+
+<br>&nbsp;
+<small>
+<li>Little changes: (1) Query title does not use 'Chr' if number has a prefix. (2) Query Summary replaced Category with #Genes.
+(3) In 2D, 'Set' changed to 'CoSet'. (4) For A&S, rename 'Aligning Projects' to 'Synteny'.
+
+<li>Minor bug fixes:
+<ol>
+<li>If "NUCmer only" had been set, it was not showing in <ttx>Pair Parameters</ttx> on restart.
+<li>For the <ttx>Singles</ttx> <tt>numHits</tt> column, it was not being updated
+if a project was removed from the database.
+<li> The <ttl>Queries</ttl> <ttx>Summary</ttx> had the incorrect <ttx>Genes</ttx> count (error introduced v560)
+</ol>
+<br>
+<li>Developers: Changed TableDataPanel, TableExport, QueryPanel, SpeciesSelectPanel, PairParams to use Jcomp and have button tips.
+</small>
+</ul>
+<!---------------------------------------------------->
 <a id="v560"></a>
 <h3>Release: v5.6.0 (23-Jan-25)</h3>
 There were some major changes made to <ttl>Algo2</ttl> (first released <a href="#v546">v5.4.6</a>) and other minor changes.
