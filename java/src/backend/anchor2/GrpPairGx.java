@@ -26,7 +26,7 @@ import util.ProgressDialog;
  *   Final cluster number assigned in GrpPair after GrpPairPile
  */
 public class GrpPairGx {
-	private static boolean TRC = Arg.TRACE;
+	private static boolean TRC = Globals.TRACE;
 	private static final int T=Arg.T, Q=Arg.Q, TQ=Arg.TQ;
 	private final double pCutoff5 = 0.5, pCutoff8 = 0.8; // to call a major for goodEnough or minor
 	private int  intronLen4xG2rm, intronLen2xG1, intronLenRm, intronLenG0; 
@@ -573,6 +573,7 @@ public class GrpPairGx {
 					if (hpr.nHits==1) cntIgnS++; else cntIgnM++;
 				}
 			}
+		
 			String msg =  String.format("  %s %,d (%,d) g2: M %,d (DO %,d, Rm %,d %,d) S %s", 
 					Arg.isEQstr(isStEQ), g2HprList.size(), numPairsOrig, cntM, cntDis, cntRm1, cntRmN, Arg.int2Str(cntS));
 			

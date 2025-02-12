@@ -8,6 +8,7 @@ import java.util.TreeMap;
 import java.util.Vector;
 
 import database.DBconn2;
+import symap.Globals;
 import symap.manager.Mproject;
 import util.Cancelled;
 import util.ErrorReport;
@@ -77,7 +78,7 @@ public class AnchorPost {
 					
 					chrs = map1.get(grpIdx1) + ":" + map2.get(grpIdx2);
 					String t = Utilities.getDurationString(Utils.getTime()-time);
-					symap.Globals.rprt(num2go + " pairs remaining (" + t + ")"); 
+					Globals.rprt(num2go + " pairs remaining (" + t + ")"); 
 					num2go--;
 					
 					if (grpIdx1==grpIdx2) continue; 		// CAS521 can crash on self-chr
@@ -86,14 +87,14 @@ public class AnchorPost {
 					
 					totalRuns+= (runnum-1);
 				}
-				if (Cancelled.isCancelled()) return; 		// CAS535 there was no checks
+				if (Cancelled.isCancelled()) return; 		
 			}
-			// CAS540 computed counts are not right; just get from db; CAS556 distinct not work across chrs
-			// int nsets = dbc2.executeInteger("SELECT count(DISTINCT(runnum)) FROM pseudo_hits WHERE runnum>0 and pair_idx=" + mPairIdx);
+			Globals.rclear();
+			
 			int nhits = dbc2.executeInteger("SELECT count(*) FROM pseudo_hits WHERE runnum>0 and pair_idx=" + mPairIdx);
 			Utils.prtNumMsg(mLog, totalRuns, "Collinear sets                          ");
-			Utils.prtNumMsg(mLog, nhits, "Updates                          ");
-			Utils.timeDoneMsg(mLog, "Collinear", time);
+			if (Constants.VERBOSE) Utils.prtNumMsg(mLog, nhits, "Updates                          ");
+			Utils.timeDoneMsg(mLog, "Finish Collinear", time);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Compute colinear genes"); }
 	}

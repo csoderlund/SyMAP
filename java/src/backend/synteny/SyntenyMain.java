@@ -9,6 +9,7 @@ import java.util.HashSet;
 import backend.Constants;
 import backend.Utils;
 import database.DBconn2;
+import symap.Globals;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
 import util.Cancelled;
@@ -112,7 +113,8 @@ public class SyntenyMain {
 		
 	/** Main loop ***************************************/
 		int nGrpGrp = mProj1.getGrpSize() * mProj2.getGrpSize();
-		Utils.prtNumMsg(mLog, nGrpGrp, "group-x-group pairs to analyze");
+		if (Constants.VERBOSE) 	Utils.prtNumMsg(mLog, nGrpGrp, "group-x-group pairs to analyze");
+		else 					Globals.rprt("group-x-group pairs to analyze");
 		
 		for (int grpIdx1 : mProj1.getGrpIdxMap().keySet()) {
 			for (int grpIdx2 : mProj2.getGrpIdxMap().keySet()) {
@@ -128,15 +130,12 @@ public class SyntenyMain {
 				}
 				nGrpGrp--;
 				String t = Utilities.getDurationString(Utils.getTime()-startTime);
-				System.err.print(nGrpGrp + " pairs remaining... (" + t + ")   \r"); 
+				Globals.rprt(nGrpGrp + " pairs remaining (" + t + ")"); 
 			}
 		}
-		System.err.print("                                                   \r"); 
-		
 		tprt(tcntMerge, "Merged");
-		
+		Globals.rclear();
 		Utils.prtNumMsg(mLog, totalBlocks, "Blocks");
-		Utils.timeDoneMsg(mLog, "Synteny", startTime); 
 		
 	/** Self **************************************************/
 		if (bIsSelf) rwObj.symmetrizeBlocks();	
@@ -163,6 +162,7 @@ public class SyntenyMain {
 		rwObj.writeResultsToFile(mLog, resultDir);
 		tdbc2.close();
 		
+		Utils.timeDoneMsg(mLog, "Finish Synteny", startTime); 
 		return bSuccess; // Full time in calling routine
 	}
 	catch (Exception e) {ErrorReport.print(e, "Computing Synteny"); return false; }
@@ -584,7 +584,8 @@ public class SyntenyMain {
 		// CAS560 merge method with above; CAS534 was getting defaults of 0; then writing back to mProps.setProperty; 
 		int nHits = tdbc2.executeCount("select count(*) as nhits from pseudo_hits "
 				+ " where proj1_idx='" + mProj1.getIdx() + "' and proj2_idx='" + mProj2.getIdx() + "'");;
-		Utils.prtNumMsg(mLog, nHits, "Total hits");
+		if (Constants.VERBOSE) Utils.prtNumMsg(mLog, nHits, "Total hits"); 
+		else Globals.rprt(String.format("%,10d Total Hits", nHits));
 		
 		mMaxgap1 = (int)( ((float)mProj1.getLength())/(Math.sqrt(nHits)));
 		mMaxgap2 = (int)( ((float)mProj2.getLength())/(Math.sqrt(nHits)));

@@ -23,6 +23,7 @@ public static boolean WRONG_STRAND_PRT = false; // -wsp  print wrong strand hits
 public static boolean CoSET_ONLY = false;		// -scs on A&S ONLY execute AnchorPosts
 public static boolean MUM_NO_RM = false;		// -mum on A&S ONLY do not remove any mummer files; CAS559 add
 public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block coords; no longer documented, but still works
+public static boolean VERBOSE=false;	// SyMAPmanager -v; write verbose cluster output; CAS561 chg from check mysql
 
 // Anchor1 constants; Anchor2 constants are in Anchor2.Arg
 // CAS546 when anchor1 classes were moved to backend.anchor1, enums broke so make static here

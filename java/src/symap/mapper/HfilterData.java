@@ -36,7 +36,7 @@ public class HfilterData {
 	protected String getFilterText() { // CAS520 So know what is set when hover in whitespace
 		String msg = "";			// SeqHits expects this to start with High if there is highlightening
 		if (bHiBlock) 		msg += "High Blocks; ";
-		else if (bHiCset) 	msg += "High Sets; ";
+		else if (bHiCset) 	msg += "High CoSets; "; // CAS561 change Sets to CoSets
 		else if (bHi2Gene) 	msg += "High =2 Genes; ";
 		else if (bHi1Gene) 	msg += "High =1 Gene; ";
 		else if (bHi0Gene) 	msg += "High =0 Genes; ";
@@ -45,13 +45,16 @@ public class HfilterData {
 		msg += "Show "; // something always shows
 		String x = "";
 		if (bBlock) {
-			msg += "Block ";
+			msg += "Block";
 			x = (bBlockAnd) ? " and " : " or ";
 		}
-		if (bCset)	 	msg += x+"Sets, ";
+		if (bCset)	 	msg += x+"CoSet, ";
+		
 		if (b2Gene) 	msg += x+"2 Genes, ";
 		if (b1Gene) 	msg += x+"1 Gene, ";
 		if (b0Gene) 	msg += x+"0 Genes, ";
+		if (msg.endsWith("Show ")) msg += "all";
+		
 		if (pctid!=0 && pctid!=minPctid) msg += "Id=" + (int) pctid + "%"; // CAS543 add
 		
 		if (msg.endsWith(", ")) msg = msg.substring(0, msg.length()-2);

@@ -57,12 +57,12 @@ public class DoAlignSynPair extends JFrame {
 		FileWriter syFW =   symapLog(mProj1,mProj2);
 		String alignLogDir = buildLogAlignDir(mProj1,mProj2);
 
-		String msg = (mProj1 == mProj2) ? 
-				"Aligning project "  + dbName1 + " to itself ..." :
-				"Aligning projects " + toName + " ...";
+		// CAS561 was saying 'aligning projects' 
+		String msg = (mProj1 == mProj2) ? "Synteny "  + dbName1 + " to itself ..." : "Synteny " + toName + " ...";
 		
-		final ProgressDialog diaLog = new ProgressDialog(this, "Aligning Projects", msg, true, syFW); // write version and date
-		diaLog.msgToFileOnly(">>> " + toName);
+		final ProgressDialog diaLog = new ProgressDialog(this, "Running Synteny", msg, true, syFW); // write version and date
+		String v = (Constants.VERBOSE) ? "   Verbose" : "    !Verbose"; // CAS561
+		diaLog.msgToFileOnly(">>> " + toName + v);
 		System.out.println("\n>>> Starting " + toName + "     " + Utilities.getDateTime());
 		
 		if (Constants.CoSET_ONLY) {// CAS556, CAS560 move to this file at end

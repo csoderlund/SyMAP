@@ -1,8 +1,9 @@
 package backend;
 
 /************************************* 
- * Holds information for a given aligment
+ * Holds information for a given alignment
  * Executes the alignment program
+ * v560 renamed from ProgSpec
  */
 import java.io.BufferedReader;
 import java.io.File;

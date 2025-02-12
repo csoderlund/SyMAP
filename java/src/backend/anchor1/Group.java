@@ -300,30 +300,24 @@ public class Group {
 				best = cur;
 				bestOlap = curOlap;
 			}
-			else if (curOlap == bestOlap) { 
-				if (AnchorMain1.doNewAlgoLen) {// CAS543 change from choosing on length to least extra; only helps for exact olap
-					//if (Globals.TRACE) System.out.println("Exact " + cur.start + " " +  cur.end +" " +  best.start +" " +  best.end);
-					int curExtra  = Math.abs(hStart-cur.start) + Math.abs(hEnd-cur.end);
-					int bestExtra = Math.abs(hStart-best.start) + Math.abs(hEnd-best.end);
-					if (curExtra<bestExtra) {
-						best = cur;
-						bestOlap = curOlap;
-					}
+			else if (curOlap == bestOlap) { // CAS543 change from choosing on length to least extra; only helps for exact olap
+				int curExtra  = Math.abs(hStart-cur.start) + Math.abs(hEnd-cur.end);
+				int bestExtra = Math.abs(hStart-best.start) + Math.abs(hEnd-best.end);
+				if (curExtra<bestExtra) {
+					best = cur;
+					bestOlap = curOlap;
 				}
+				/* CAS561 removed, never used
 				else { // the following checks are from the original method
 					if (cur.getLength() > best.getLength()) {
-						best = cur;
-						bestOlap = curOlap;
+						best = cur;bestOlap = curOlap;
 					}
 					else if (cur.getLength() == best.getLength()){
-						if (best.isGene()  && cur.idx < best.idx || 
-						   (!best.isGene() && cur.start < best.start)) {
-							best = cur;
-							bestOlap = curOlap;
-						}
-					}
-				}
-			}
+						if (best.isGene()  && cur.idx < best.idx || (!best.isGene() && cur.start < best.start)) {
+							best = cur; bestOlap = curOlap;
+					}}}
+				*/
+			}		
 		}
 		return best;
 	}

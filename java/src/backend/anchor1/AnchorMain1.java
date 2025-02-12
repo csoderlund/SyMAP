@@ -45,7 +45,7 @@ enum HitType 	{GeneGene, GeneNonGene, NonGene} // CAS535 was in HitBin
 enum GeneType 	{Gene, NonGene, NA}				 // ditto
 
 public class AnchorMain1 {
-	public static boolean doNewAlgoLen = true;
+	private boolean VB = Constants.VERBOSE;
 	private static final int HIT_VEC_INC = 1000;
 	private static final int nLOOP = 10000;
 	
@@ -85,7 +85,6 @@ public class AnchorMain1 {
 		initStats();
 		
 	/** execute **/
-		
 		loadAnnoBins(pj1, pj2); 	if (!bSuccess) return false; // create initial hitbins from genes
 			
 		scanAlignFiles(dh);			if (!bSuccess) return false; // create new hitbins from non-gene hits
@@ -128,19 +127,23 @@ public class AnchorMain1 {
 			return;
 		}
 		
-		plog.msg("Loading annotations");
+		if (VB) plog.msg("Loading annotations"); else Globals.rprt("Loading annotation");
 		Vector <Group> group1Vec = syProj1.getGroups();
 		Vector <Group> group2Vec = syProj2.getGroups();
 		
 		if (syProj1.hasAnnot()) {// CAS540x check
 			int tot1=0;
 			for (Group grp : group1Vec) tot1 += grp.createAnnoFromGenes(tdbc2);
-			Utils.prtNumMsg(plog, tot1, proj1Name + " genes ");
+			if (VB) Utils.prtNumMsg(plog, tot1, proj1Name + " genes "); 
+			else    Globals.rprt(String.format("%,d %s genes", tot1, proj1Name));
 		}
 		if (syProj2.hasAnnot()) {// CAS540x check
 			int tot2=0;
-			for (Group grp : group2Vec) tot2 += grp.createAnnoFromGenes(tdbc2);
-			if (!isSelf) Utils.prtNumMsg(plog, tot2,  proj2Name + " genes");	
+			for (Group grp : group2Vec) tot2 += grp.createAnnoFromGenes(tdbc2);	
+			if (!isSelf) {
+				if (VB) Utils.prtNumMsg(plog, tot2, proj2Name + " genes "); 
+				else    Globals.rprt(String.format("%,d %s genes", tot2, proj2Name));
+			}
 		}
 		
 		failCheck();
@@ -185,13 +188,15 @@ public class AnchorMain1 {
 				if (failCheck()) return false;
 			}
 		}
-		
-		if (nHitsScanned == 0) return rtError("No readable anchors were found - MUMmer probably did not run correctly.");
+		if (nHitsScanned == 0) { // CAS561 add more info 
+			plog.msg("No readable anchors were found - MUMmer may not have run correctly.");
+			return rtError(" Or missing loaded sequences (try Algo2, which allows missing sequences).");
+		}
 		if (mTotalHits == 0)   return rtError("No good anchors were found");
-		
-		if (nFile>1) 					Utils.prtNumMsg(plog, nHitsScanned, "Total scanned hits");
+		Globals.rclear();
+		if (nFile>1 || !VB) 			Utils.prtNumMsg(plog, nHitsScanned, "Total scanned hits");
 		if (nHitsScanned!=mTotalHits) 	Utils.prtNumMsg(plog, mTotalHits, "Total accepted hits");
-		if (mTotalLargeHits > 0)  		Utils.prtNumMsg(plog, mTotalLargeHits, "Large hits (> " + Group.FSplitLen + ")  "
+		if (mTotalLargeHits > 0 && VB)  Utils.prtNumMsg(plog, mTotalLargeHits, "Large hits (> " + Group.FSplitLen + ")  "
 					 															+ mTotalBrokenHits + " Split "); 
 		if (Constants.PRT_STATS) Utils.prtTimeMemUsage(plog, "Complete scan candidate genes", memTime);
 		
@@ -222,7 +227,9 @@ public class AnchorMain1 {
 				if (failCheck()) return false;
 			}
 		}
-		if (nFile>1) 			 Utils.prtNumMsg(plog, nHitsScanned, "Total cluster hits   ");
+		Globals.rclear();
+		if (nFile>1 || !VB) 
+			Utils.prtNumMsg(plog, nHitsScanned, "Total cluster hits   ");
 
 		if (Constants.PRT_STATS) { 
 			Utils.prtTimeMemUsage(plog, "Complete scan cluster", memTime);
@@ -241,8 +248,9 @@ public class AnchorMain1 {
 	 */
 	private int scanFile1AnnoBins(File mFile, Proj p1, Proj p2, boolean skipSelf) throws Exception {
 		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
-	
 	try {	
+		if (!VB) Globals.rprt(String.format("Scan %s",  Utils.fileFromPath(mFile.toString())));
+		
 		String line, fileType="PROMER";
 		int numErrors = 0, hitNum = 0;
 		int skip1=0, skip2=0;
@@ -267,11 +275,11 @@ public class AnchorMain1 {
 			boolean success = scanNextMummerHit(line,hit);
 			if (!success) {
 				if (numErrors < 5){
-					plog.msg("Parse error on line " + hitNum + " in " + mFile.getName());
+					plog.msg("  Error on line " + hitNum + " in " + mFile.getName()); // Will go to symap.log and terminal
 					numErrors++;
 					continue;
 				}
-				else {fh.close(); rtiError("Too many errors in file");}
+				else {fh.close(); Globals.die("Too many errors in file " + mFile.getName());}
 			}
 			hit.queryHits.grpIdx = p1.grpIdxFromQuery(hit.queryHits.name);
 			if (hit.queryHits.grpIdx == -1) {
@@ -297,7 +305,7 @@ public class AnchorMain1 {
 				
 			mTotalHits++;
 			if (Group.bSplitGene && hit.maxLength() > Group.FSplitLen) {// CAS540 add splitgene check
-				Globals.tprt(" split hit of size " + hit.maxLength() + "\r");
+				Globals.tprt(" split hit of size " + hit.maxLength());
 				Vector<Hit> brokenHits = Hit.splitMUMmerHit(hit);
 				mTotalLargeHits++;
 				mTotalBrokenHits += brokenHits.size();
@@ -314,8 +322,10 @@ public class AnchorMain1 {
 			Utils.prtNumMsgNZx(skip1, "Skip1 - Self with same group (is run separately)");
 			Utils.prtNumMsgNZx(skip2, "Skip2 - Same group   with start1<start2 (mirror later)");
 		}
+		// CAS561 there is a lot of output if many chromosome, hence, only Verbose prints them
+		String msg= String.format("%,10d scanned %s %s", hitNum, fileType, Utils.fileFromPath(mFile.toString()));
+		if (VB) plog.msg(msg);  else    Globals.rprt(msg);
 		
-		Utils.prtNumMsg(plog, hitNum, "scanned "  + fileType + " " + Utils.fileFromPath(mFile.toString() ));
 		if (hitNum==0 || mTotalHits==0) return 0;
 		
 	/** Scan1 processing: all hits get added to each grp; create non-genes (predicted); hit has start<end **/
@@ -331,7 +341,7 @@ public class AnchorMain1 {
 	}
 	catch (Exception e) {
 		rawHits.clear();
-		ErrorReport.print(e, "Reading anchors: scanFile1"); 
+		ErrorReport.print(e, "ScanFile1: Reading file for hits"); 
 		bSuccess=false; 
 		return 0;}
 	}
@@ -342,8 +352,11 @@ public class AnchorMain1 {
 	private int scanFile2ClusterFilter(File mFile, Proj p1, Proj p2, boolean skipSelf) throws Exception {
 		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
 	try {
+		if (!VB) Globals.rprt(String.format("Cluster %s",  Utils.fileFromPath(mFile.toString())));
+		
 		BufferedReader fh = new BufferedReader(new FileReader(mFile));
 		String line;
+		int errCnt=0;
 		
 	/** Read file and build rawHits **/
 		int totalLargeHits = 0, totalBrokenHits = 0;
@@ -357,7 +370,12 @@ public class AnchorMain1 {
 			hit.origHits = 1;
 			
 			boolean success = scanNextMummerHit(line,hit);
-			if (!success) Utils.die("SyMAP error - scanNextHummerHit for scan2");
+			if (!success) { // should have already been caught in ScanFile1
+				plog.msg("  Error in file " + Utils.fileFromPath(mFile.toString()));
+				errCnt++;
+				if (errCnt>=5) Utils.die("Too many errors");
+				continue;
+			}
 			
 			hit.queryHits.grpIdx  = p1.grpIdxFromQuery(hit.queryHits.name);
 			hit.targetHits.grpIdx = p2.grpIdxFromQuery(hit.targetHits.name);
@@ -373,7 +391,7 @@ public class AnchorMain1 {
 			}
 			
 			if (hit.maxLength() > Group.FSplitLen){
-				Vector<Hit> brokenHits = Hit.splitMUMmerHit(hit); 
+				Vector<Hit> brokenHits = Hit.splitMUMmerHit(hit); // catches and prints error
 				if (brokenHits==null) {bSuccess=false; fh.close(); return 0;}
 				totalLargeHits++;
 				totalBrokenHits += brokenHits.size();
@@ -398,13 +416,15 @@ public class AnchorMain1 {
 		Collections.sort(clustHits);
 		
 		filterClusterHits2(clustHits, p1, p2);	     			if (!bSuccess) return 0;
-		Utils.prtNumMsg(plog, clustHits.size(), "clustered " + Utils.fileFromPath(mFile.toString()));
+		
+		String msg= String.format("%,10d clustered %s", clustHits.size(), Utils.fileFromPath(mFile.toString()));
+		if (VB) Utils.prt(plog, msg); else Globals.rprt(msg);
 	
 		return clustHits.size();
 	}
 	catch (Exception e) {
 		rawHits.clear();
-		ErrorReport.print(e, "Reading anchors: scanFile2"); 
+		ErrorReport.print(e, "scanFile2: Reading file for hits "); 
 		bSuccess=false; 
 		return 0;}
 	}	
@@ -425,7 +445,6 @@ public class AnchorMain1 {
 		HashMap<String,HitType>     pairTypes = new HashMap<String,HitType>(); 
 						
 	try {
-		
 		// Find all hits for each qAnno x tAnno; every hit has a gene or non-gene AnnotElem for q&t
 		for (Hit hit : inHits)  {		
 			Group grp1 = syProj1.getGrpByIdx(hit.queryHits.grpIdx);
@@ -518,7 +537,7 @@ public class AnchorMain1 {
 	/*****************************************************************/
 	private void filterFinalHits() {
 	try {
-		plog.msg("Filter hits");
+		if (VB) plog.msg("Filter hits"); else Globals.rprt("Filter hits");
 		
 		// final TopN filtering, and collect all the hits that pass on at least one side into the set "hits"
 		Vector <Group> group1Vec = syProj1.getGroups();
@@ -537,8 +556,8 @@ public class AnchorMain1 {
 				nBothIn++;
 			}
 		}
-		Utils.prtNumMsg(plog, nQueryIn,  "for " +  proj1Name );
-		Utils.prtNumMsg(plog, nTargetIn, "for " + proj2Name );
+		if (VB) Utils.prtNumMsg(plog, nQueryIn,  "for " +  proj1Name );
+		if (VB) Utils.prtNumMsg(plog, nTargetIn, "for " + proj2Name );
 		Utils.prtNumMsg(plog, nBothIn, "Filtered hits to save");
 		
 		filtHitSet.addAll(diagHits); // diagHits only for self
@@ -575,8 +594,11 @@ public class AnchorMain1 {
 	 */
 	private boolean scanNextMummerHit(String line, Hit hit) {
 		String[] fs = line.split("\\s+");
-		if (fs.length < 13) return false;
-		
+		if (fs.length < 13) { // CAS561 add more info
+			plog.msg("*** Missing values, only " + fs.length + " must be >=13                       ");
+			plog.msg("  Line: " + line);
+			return false;
+		}	
 		int poffset = (fs.length > 13 ? 2 : 0); // nucmer vs. promer
 		
 		int tstart 	= Integer.parseInt(fs[0]);
@@ -601,7 +623,7 @@ public class AnchorMain1 {
 	 */
 	private void saveAllResults()  throws Exception {
 	try {
-		plog.msg("Save results");
+		if (Constants.VERBOSE) plog.msg("Save results"); else Globals.rprt("Save results");
 		long memTime = Utils.getTimeMem();
 		
 		Vector <Hit> vecHits = new Vector <Hit> (filtHitSet.size());
@@ -624,7 +646,7 @@ public class AnchorMain1 {
 	 */
 	private void saveFilterHits(Vector <Hit> vecHits) throws Exception { 
 		try {
-			plog.msg("   Save filtered hits");
+			if (VB) plog.msg("   Save filtered hits"); else Globals.rprt("Save filtered hits");
 			int numLoaded=0, countBatch=0;
 			tdbc2.executeUpdate("alter table pseudo_hits modify countpct integer");
 						
@@ -674,7 +696,7 @@ public class AnchorMain1 {
 					if (failCheck()) return;
 					countBatch=0;
 					ps.executeBatch();
-					System.err.print("   " + numLoaded + " loaded...\r"); // CAS42 1/1/18 was log.msg
+					Globals.rprt(numLoaded + " loaded"); 
 				}
 			}
 			if (countBatch>0) ps.executeBatch();
@@ -722,7 +744,7 @@ public class AnchorMain1 {
 	private void saveAnnoHits()  { // [hitAnnotations]
 	String key="";
 	try {
-		plog.msg("   Save hit to gene ");
+		if (VB) plog.msg("   Save hit to gene "); else Globals.rprt("   Save hit to gene ");
 		
 		/* Load hits from database, getting their new idx;  */
 		Vector <Hit> vecHits = new Vector <Hit> (filtHitSet.size()); 
@@ -770,17 +792,17 @@ public class AnchorMain1 {
 				ps.addBatch();
 				count++; cntBatch++;
 				if (cntBatch==nLOOP) {
-					if (failCheck()) {System.err.println("Failure during load hit"); return;}
+					if (failCheck()) {Globals.eprt("Failure during load hit"); return;}
 					cntBatch=0;
 					ps.executeBatch();
-					System.out.print("   " + count + " loaded hit annotations...\r"); 
+					Globals.rprt(count + " loaded hit annotations"); 
 				}
 			}	
 		}
 		if (cntBatch> 0) ps.executeBatch();
 		if (cntHit>0) {
-			String m = String.format("(%,d) for ", count); // CAS560 add comma
-			Utils.prtNumMsg(plog, cntHit, m + proj1Name + "                        ");
+			String m = String.format(" (%,d) for %s", count, proj1Name); // CAS560 add comma
+			if (VB) Utils.prtNumMsg(plog, cntHit, m+"          "); else Globals.rprt(cntHit + m);
 		}
 		if (failCheck()) return;
 		
@@ -807,15 +829,15 @@ public class AnchorMain1 {
 					if (failCheck()) return;
 					cntBatch=0;
 					ps.executeBatch();
-					System.out.print("   " + count + " loaded hit annotations...\r"); 
+					Globals.rprt("   " + count + " loaded hit annotations"); 
 				}
 			}	
 		}
 		if (cntBatch>0) ps.executeBatch();
 		ps.close();	
 		if (!isSelf && cntHit>0) {
-			String m = String.format("(%,d) for ", count); // CAS560 add comma
-			Utils.prtNumMsg(plog, cntHit, m + proj2Name + "                        ");
+			String m = String.format(" (%,d) for %s", count,proj2Name); // CAS560 add comma
+			if (VB) Utils.prtNumMsg(plog, cntHit, m+"                 "); else Globals.rprt(cntHit + m);
 		}
 		if (failCheck()) return;
 	}
@@ -827,12 +849,6 @@ public class AnchorMain1 {
 	 */
 	private void initStats() {
 		try {
-		// Obsolete unless default changed in SyProp; CAS535 remove HitBin.initKeepTypes();
-		/** CAS534 was setting to 0 in SyProps, i.e. never 1
-		if (mProps.getProperty("keep_gene_gene").equals("1")) HitBin.addKeepTypes(HitType.GeneGene);	// false
-		if (mProps.getProperty("keep_gene").equals("1")) { // false
-			HitBin.addKeepTypes(HitType.GeneGene);	HitBin.addKeepTypes(HitType.GeneNonGene);	}
-		**/
 		if (!Constants.PRT_STATS) return;
 		
 		BinStats.initStats(); 
@@ -853,6 +869,8 @@ public class AnchorMain1 {
 	}
 	private boolean failCheck() {
 		if (Cancelled.isCancelled() || mainObj.bInterrupt) {
+			if (mainObj.bInterrupt) plog.msg("Process was interrupted");
+			else plog.msg("Process was cancelled");
 			bSuccess=false;
 			return true; 
 		}
@@ -863,11 +881,5 @@ public class AnchorMain1 {
 		ErrorCount.inc();
 		bSuccess=false;
 		return false;
-	}
-	private int rtiError(String msg) {
-		plog.msg(msg);
-		ErrorCount.inc();
-		bSuccess=false;
-		return 0;
 	}
 }

@@ -452,7 +452,7 @@ public class AlignMain {
 			boolean done = Utils.checkDoneFile(alignDir);
 			nAlign = Utils.checkDoneMaybe(alignDir);
 			if (done && nAlign>0) {
-				plog.msg("Warning: " + nAlign + " alignment files exist - using existing files ...");
+				plog.msg("Warning: " + nAlign + " alignment files exist - using existing files");
 				plog.msg("   If not correct, remove " + resultDir + " and re-align.");
 				alignParams = "Use previous " + nAlign + " MUMmer files " + Utils.getDateStr(f.lastModified()); 
 				return true;

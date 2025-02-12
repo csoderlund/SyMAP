@@ -87,8 +87,7 @@ public class GrpPair {
 	 * Each grp-grp pair starts the nBin where the last grp-grp pair left off
 	 */
 	protected boolean buildClusters() {	
-		if (Arg.TRACE) 
-			Utils.prtIndentMsgFile(plog, 1, "Compute clusters for T-" + tChr + " and Q-" + qChr);
+		if (Arg.TRACE) Utils.prtIndentMsgFile(plog, 1, "Compute clusters for T-" + tChr + " and Q-" + qChr);
 		
 		gpGxObj = new GrpPairGx(this);			// filtered g2,g1,g0 hitpairs;  create gxPairList
 		bSuccess   = gpGxObj.run(); 		    if (fChk()) return false; 
@@ -148,7 +147,7 @@ public class GrpPair {
 		int proj2Idx = mainObj.mProj2.getIdx();
 		
 		int cntG2=0, cntG1=0, cntG0=0, countBatch=0, cntSave=0;
-		int cntDOeq=0, cntDOne=0, cntWS=0;
+		int cntDOeq=0, cntDOne=0;
 		
 		tdbc2.executeUpdate("alter table pseudo_hits modify countpct integer");
 					
@@ -166,7 +165,6 @@ public class GrpPair {
 			if (!hpr.isOrder) {
 				if (hpr.isStEQ) cntDOeq++; else cntDOne++;
 			}
-			if (!hpr.isRst) cntWS++; // shouldn't happen anymore
 			hpr.setSubs();
 			
 			int i=1;
@@ -201,7 +199,7 @@ public class GrpPair {
 			if (countBatch==1000) {
 				countBatch=0;
 				ps.executeBatch();
-				System.err.print("   " + cntSave + " loaded...\r"); 
+				Globals.rprt(cntSave + " loaded"); 
 			}
 			
 			if (hpr.geneIdx[Q]>0 && hpr.geneIdx[T]>0) cntG2++;
@@ -215,12 +213,14 @@ public class GrpPair {
 		mainObj.cntG1 += cntG1;
 		mainObj.cntG0 += cntG0;
 		mainObj.cntClusters += cntSave;
-									
+			
 		String msg1 = String.format("%,10d %s-%s Clusters ", cntSave, qChr, tChr); // CAS560 format better, add cntDO and cntWS
-		String msg2 = (Globals.INFO || Globals.TRACE) ? String.format("Disorder (EQ,NE) %,4d %,4d ", cntDOeq, cntDOne) : "";
-		
-		String msg = String.format("%32s   Both genes %,6d   One gene %,6d   No gene %,6d    %s", msg1, cntG2, cntG1, cntG0, msg2);
-		Utils.prtIndentMsgFile(plog, 1, msg);
+		if (Arg.VB) { 
+			String msg2 = (Globals.INFO || Globals.TRACE) ? String.format("Disorder (EQ,NE) %,4d %,4d ", cntDOeq, cntDOne) : "";
+			String msg = String.format("%32s   Both genes %,6d   One gene %,6d   No gene %,6d    %s", msg1, cntG2, cntG1, cntG0, msg2);
+			Utils.prtIndentMsgFile(plog, 1, msg); 
+		}
+		else Globals.rprt(msg1);
 	}
 	catch (Exception e) {ErrorReport.print(e, "save to database"); bSuccess=false;}
 	}
@@ -285,7 +285,7 @@ public class GrpPair {
 			if (cntBatch>=1000) {
 				cntBatch=0;
 				ps.executeBatch();
-				System.out.print("   " + cntAll + " loaded hit annotations...\r"); 
+				Globals.rprt("   " + cntAll + " loaded hit annotations"); 
 			}
 		}
 		if (cntBatch> 0) ps.executeBatch();

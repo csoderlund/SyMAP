@@ -10,15 +10,12 @@ import symap.manager.Mproject;
 import util.ErrorReport;
 
 /**********************************************************
- * The object has a AnnoSp object for each species containing its annotation keywords.
+ * Return AnnoData which has a AnnoSp object for each species containing its annotation keywords.
  * Used by TableDataPanel
- * 
- * CAS532 moved from TableDataPanel to this new class file
- * 		  Made ID and key2 be the first two keywords of panel
  */
 public class AnnoData {
-	private final String [] key1 = {"ID"};  
-	private final String [] key2= {"product", "desc", "description"};
+	protected static final String [] key1 = {"ID"};  // GFF should have an ID, if so, put 1st; used by TableData too
+	protected static final String [] key2 = {"product", "desc", "Desc", "description"}; // GFF NCBI/Ensembl, put 2nd; CAS561 add Desc
 	
 	/******************************************************
 	 * get keywords of project annotations to display as columns
@@ -32,9 +29,8 @@ public class AnnoData {
 			DBconn2 dbc2 = theParentFrame.getDBC();
 			
 			for (Mproject p : projs) { 
-				if (!p.hasGenes()) continue; // CAS505 add hasGenes check
+				if (!p.hasGenes()) continue; 
 				
-				// CAS513 check for # of genes with keyword
 				Mproject tProj = new Mproject();
 				int annot_kw_mincount=0;
 				ResultSet rset = dbc2.executeQuery("select value from proj_props "
@@ -66,7 +62,7 @@ public class AnnoData {
 	private AnnoData() { 
 		theAnnos = new Vector<AnnoSp> ();
 	}
-	private void addAnnoKeyForSpecies(Mproject p, String annoID) { // CAS519 changed to use project instead of project ID
+	private void addAnnoKeyForSpecies(Mproject p, String annoID) { 
 		int speciesID = p.getID();
 		if (getSpeciesPosition(speciesID) < 0) {
 			theAnnos.add(new AnnoSp(p.getDisplayName(), p.getdbAbbrev(), speciesID));
@@ -76,9 +72,7 @@ public class AnnoData {
 		theAnnos.get(pos).addAnnoKey(annoID);
 	}
 	
-	/***********************************************************
-	 * TableDataPanel
-	 */
+	/* methods called by TableDataPanel */
 	protected int getNumberAnnosForSpecies(int speciesID) { 
 		int pos = getSpeciesPosition(speciesID);
 		
@@ -86,12 +80,10 @@ public class AnnoData {
 		
 		return theAnnos.get(pos).getNumAnnoIDs();
 	}
-	
 	protected String getAnnoIDforSpeciesAt(int speciesID, int annoPos) {
 		int pos = getSpeciesPosition(speciesID);
 		return theAnnos.get(pos).getAnnoAt(annoPos);
 	}
-	
 	protected int [] getSpeciesIDList() {
 		int [] retVal = new int[theAnnos.size()];
 		
@@ -102,6 +94,15 @@ public class AnnoData {
 			x++;
 		}
 		return retVal;
+	}
+	protected Vector <String> getSpeciesAbbrList() {// CAS561 add for TableData.group
+		Vector<String> retSet = new Vector <String> ();
+		
+		Iterator<AnnoSp> iter = theAnnos.iterator();
+		while(iter.hasNext()) {
+			retSet.add(iter.next().getAbbrevName());
+		}
+		return retSet;
 	}
 	protected String getSpeciesAbbrevByID(int speciesID) {
 		int pos = getSpeciesPosition(speciesID);
@@ -143,8 +144,10 @@ public class AnnoData {
 			sp.orderKeys();
 		}
 	}
-	private Vector<AnnoSp> theAnnos = null;
-	/*******************************************************************/
+	
+	/*******************************************************************
+	 * XXX Each species has a AnnoSp class held in AnnoData 'theAnnos' vector
+	 ************************************************************/
 	private class AnnoSp implements Comparable<AnnoSp> {
 		private AnnoSp(String speciesName, String abbvName, int speciesID) {
 			theKeys = new Vector<String> ();
@@ -152,14 +155,14 @@ public class AnnoData {
 			theAbbrevName = abbvName;
 			theSpeciesID = speciesID;
 		}
-		
+	
 		private void addAnnoKey(String annoID) {
 			theKeys.add(annoID);
 		}
 		
-		private int getNumAnnoIDs() 			{ return theKeys.size(); }
+		private int getNumAnnoIDs() 		{ return theKeys.size(); }
 		private String getAnnoAt(int pos) 	{ return theKeys.get(pos); }
-		private String getSpeciesName() 		{ return theSpeciesName;}
+		private String getSpeciesName() 	{ return theSpeciesName;}
 		private String getAbbrevName() 		{ return theAbbrevName;}
 		private int getSpeciesID() 			{ return theSpeciesID; }
 		public int compareTo(AnnoSp arg0) {
@@ -197,6 +200,9 @@ public class AnnoData {
 		private String theSpeciesName = "", theAbbrevName = "";
 		private int theSpeciesID = -1; 
 		private Vector<String> theKeys = null;
-	}	
+	}	// end AnnoSp class
+	
+	/* AnnoData private variable */
+	private Vector<AnnoSp> theAnnos = null;
 } // end AnnotData class
 

@@ -218,7 +218,7 @@ public class SeqHits  {
 		if (cntHitg2>0) infoMsg += String.format("\n%s: %,d", "Conserved", cntHitg2);
 		if (cntHighHit>0)   infoMsg += String.format("\n%s: %,d", "High", cntHighHit);
 		if (bHi) {
-			String type = (bHiCset) ? "Sets" : "Blocks";
+			String type = (bHiCset) ? "CoSets" : "Blocks";	// CAS561 Sets=>CoSets
 			infoMsg += String.format("\n%s: %,d\n", type, blockSet.size());
 		}
 	

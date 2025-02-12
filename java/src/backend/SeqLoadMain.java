@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.sql.ResultSet;
 
 import database.DBconn2;
+import symap.Globals;
 import symap.manager.Mproject;
 import util.Cancelled;
 import util.ErrorCount;
@@ -210,7 +211,7 @@ public class SeqLoadMain {
 							grpFullNamesSeen.add(grpFullName);
 							nSeqs++; 
 							basesWritten += curSeq.length();
-							System.out.format("%s: %,d                            \r", grpName,curSeq.length());
+							Globals.rprt(String.format("%s: %,d", grpName,curSeq.length()));
 							
 							// load sequence
 							String chrSeq = curSeq.toString(); // CAS556 prevent two copies in memory at once
@@ -227,7 +228,7 @@ public class SeqLoadMain {
 					} else seqIgnore++;
 					
 					readSeq++;
-					if (readSeq%100 == 0) System.err.print("Read sequences " + readSeq + "....\r"); // CAS557 add
+					if (readSeq%100 == 0) Globals.rprt("Read sequences " + readSeq); // CAS557 add; CAS561 use rprt
 					
 					grpName = null; firstTok = grpFullName = "";
 					curSeq.setLength(0);
@@ -268,7 +269,7 @@ public class SeqLoadMain {
 				grpList.add(grpName);
 				nSeqs++;
 				basesWritten += curSeq.length();
-				System.out.format("%s: %,d                            \r", grpName,curSeq.length()); // CAS556 add
+				Globals.rprt(String.format("%s: %,d", grpName,curSeq.length())); // CAS556 add; CAS561 use rprt
 				
 				String chrSeq = curSeq.toString(); // CAS556 
 				curSeq.setLength(0);

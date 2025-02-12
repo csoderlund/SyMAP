@@ -14,20 +14,20 @@ import symap.Globals;
 
 public class FieldData {
  	// see Column Comparator for sorting Block and Collinear
-	// leave Q.rowCol for placement, the actual row is computed in DBdata (CAS514 HitIdx->Hit#, #Gene->Gene#)
+	// leave Q.rowCol for placement, the actual row is computed in DBdata 
 	// TableDataPanel.createGeneralSelectPanel expects N_GENERAL columns
 	public static final int N_GEN_HIT=7;
 	private static final String [] GENERAL_COLUMNS =	 
 		{Q.rowCol, Q.blockCol, "Block\nHits", Q.runCol, Q.grpCol, Q.grpSZ, // CAS555 was PgeneF and PgfSize
-		Q.hitCol,   "Hit\nCov", "Hit\n%Id", "Hit\n%Sim","Hit\n#Sub", "Hit\nSt", 
-		"Hit\nType"}; // CAS516 add these 4; CAS520 add st; CAS540 add Len; CAS546 add Hit Type; CAS548 mv hitCov
+		Q.hitCol,  Q.hitPrefix+"\nCov", Q.hitPrefix+"\n%Id", Q.hitPrefix+"\n%Sim",
+		Q.hitPrefix+"\n#Sub", Q.hitPrefix+"\nSt", Q.hitPrefix+"\nType"}; // CAS561 use hitPrefix instead of "Hit"
 	
-	private static final Class <?> []  GENERAL_TYPES = 					// CAS520 had to add for String
+	private static final Class <?> []  GENERAL_TYPES = 					
 		{Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,Integer.class,
 		 Integer.class,Integer.class,Integer.class,Integer.class,Integer.class, String.class, String.class};
 	
 	private static final boolean [] GENERAL_COLUMN_DEF =  
-		{true, true, true, true, false, false, true, false, false, false, false, false, false}; // CAS513 HitID=f, Score=t
+		{true, true, true, true, false, false, true, false, false, false, false, false, false}; 
 	
 	private static final String [] GENERAL_COLUMN_DESC = 
 		{"Row number", 
@@ -109,11 +109,11 @@ public class FieldData {
 	// XXX If change this, change number in Q.java, as they are the numeric index into ResultSet
 	// Columns loaded from database, do not correspond to query table columns
 	
-	public static int getSpColumnCount(boolean isSingle) { // CAS519
+	public static int getSpColumnCount(boolean isSingle) { 
 		if (isSingle) return SSPECIES_COLUMNS.length;
 		else return SPECIES_COLUMNS.length;
 	}
-	public static int getGenColumnCount(boolean isSingle) { // CAS519
+	public static int getGenColumnCount(boolean isSingle) { 
 		if (isSingle) return 1; // row number only
 		else return GENERAL_COLUMNS.length;
 	}

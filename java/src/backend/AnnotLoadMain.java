@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.sql.PreparedStatement;
 
 import database.DBconn2;
+import symap.Globals;
 import symap.manager.Mproject;
 import util.Cancelled;
 import util.ErrorCount;
@@ -288,7 +289,7 @@ public class AnnotLoadMain {
 			if (cntBatch==1000) {
 				cntBatch=0;
 				ps.executeBatch();
-				System.out.print("   " + totalLoaded + " annotations...\r"); // CAS42 1/1/18
+				Globals.rprt(totalLoaded + " annotations"); // CAS42 1/1/18; CAS561 use rprt
 			}
 		}
 		if (cntBatch> 0) ps.executeBatch();

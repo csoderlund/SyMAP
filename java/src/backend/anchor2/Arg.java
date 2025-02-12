@@ -12,6 +12,7 @@ import util.ProgressDialog;
  */
 public class Arg {
 	// Command line; all default false
+	protected static boolean VB = (Globals.TRACE || Constants.VERBOSE);
 	protected static boolean TRACE = Globals.TRACE; 						// for developers
 	protected static boolean WRONG_STRAND_PRT = Constants.WRONG_STRAND_PRT; // Print wrong strand
 	
@@ -64,8 +65,10 @@ public class Arg {
 	/*******************************************
 	 * Functions
 	 ******************************************/
+	protected static void setVB() {VB = Globals.TRACE || Constants.VERBOSE;} 
+	
 	/* Set from AnchorMain2 Parameters */
-	protected static String setFromParams(double exonScale, double geneScale,  double g0Scale, double lenScale, ProgressDialog plog) {
+	protected static String setFromParams(double exonScale, double geneScale,  double g0Scale, double lenScale) {
 		pExonScale = exonScale; pGeneScale = geneScale; pG0LenScale = g0Scale; pLenScale = lenScale;
 		
 		for (int i=0; i<fLowExonCov2.length; i++) dPpLowExonCov2[i] = fLowExonCov2[i]  * pExonScale; 
@@ -85,7 +88,7 @@ public class Arg {
 		return "#" + m2+m3 + "\n#" + m4 + "\n"; // remark for trace files and stdout
 	}
 	/* Set from AnchorMain2 loadGenes from run() */
-	protected static String setLenFromGenes(int [] intronAvg, int [] geneAvg, double [] exonGeneCov, ProgressDialog plog) { 
+	protected static String setLenFromGenes(int [] intronAvg, int [] geneAvg, double [] exonGeneCov) { 
 		iGmIntronLen4x = (intronAvg[T]+intronAvg[Q]) * 2 ; // mammals 2x; plants average <500, but often get >1500
 		if (iGmIntronLen4x<plantIntronLen*3) iGmIntronLen4x=plantIntronLen*3;
 		if (iGmIntronLen4x>15000) iGmIntronLen4x = 15000; 

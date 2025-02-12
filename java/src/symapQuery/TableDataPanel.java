@@ -24,7 +24,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -52,10 +51,10 @@ import symap.sequence.Sequence;
 
 /**************************************************
  * Perform query and display results in table
- * CAS504 many changes for this release, most are not commented
- * CAS513 made panel smaller and columns w/o scroll; the query/summary are passed in 
- * 		  the annoKeywords are checks for annot_kw_mincount
- * CAS556 moved ExportFile to TableExport (changed some private to protected for this). Add Report.
+ * SyMAPQueryFrame calls QueryPanel which call this on "Run Search" passing it the query. 
+ *    The loadDataFromDatabase runs the Query, and DBdata creates the rows.
+ *  
+ * CAS560 add theLastTable; CAS561 Jcomp graphics, add Group
  */
 public class TableDataPanel extends JPanel {
 	private static final long serialVersionUID = -3827610586702639105L;
@@ -86,7 +85,7 @@ public class TableDataPanel extends JPanel {
 		
 		colSelectChange = new ActionListener() { // when a column is selected or deselected
 			public void actionPerformed(ActionEvent arg0) {
-				setTable(false);
+				setTable(false, false);
 		        showTable();
 			}
 		};
@@ -220,50 +219,36 @@ public class TableDataPanel extends JPanel {
         } 
     }
     private JPanel createTableButtonPanel() {
-    	JPanel buttonPanel = new JPanel();
-    	buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.PAGE_AXIS));
-    	buttonPanel.setBackground(Color.WHITE);
-    	buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+    	JPanel buttonPanel = Jcomp.createPagePanel();
     	
-    	JPanel topRow = new JPanel();
-    	topRow.setLayout(new BoxLayout(topRow, BoxLayout.LINE_AXIS));
-    	topRow.setBackground(Color.WHITE);
-    	topRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	
-    	topRow.add(new JLabel("Selected: ")); topRow.add(Box.createHorizontalStrut(5));
+    	JPanel topRow = Jcomp.createRowPanel();
+    	topRow.add(Jcomp.createLabel("Selected: ")); topRow.add(Box.createHorizontalStrut(5));
     	
     // Show CAS520
-    	btnShowRow = new JButton("Show"); // CAS520 add to view data in row
- 	    btnShowRow.setAlignmentX(Component.LEFT_ALIGNMENT);
- 	    btnShowRow.setBackground(Color.WHITE);
+    	btnShowRow = Jcomp.createButton("Show", "Popup with every value listed"); // CAS520 add to view data in row
  	    btnShowRow.addActionListener(new ActionListener() {
 	   		public void actionPerformed(ActionEvent arg0) {
 	   			showRow();
 	   		}
 		});  
- 	  
- 	    topRow.add(btnShowRow);	topRow.add(Box.createHorizontalStrut(6));
+ 	    topRow.add(btnShowRow);					topRow.add(Box.createHorizontalStrut(6));
  	    
-    	btnShowAlign = new JButton("Align"); 
- 	    btnShowAlign.setAlignmentX(Component.LEFT_ALIGNMENT);
- 	    btnShowAlign.setBackground(Color.WHITE);
+    	btnShowAlign = Jcomp.createButton("Align", "Align selected sequences using MUSCLE"); 
  	    btnShowAlign.addActionListener(new ActionListener() {
     		public void actionPerformed(ActionEvent arg0) {
     			showAlignment();
     		}
  		});  
- 	    topRow.add(btnShowAlign);			topRow.add(Box.createHorizontalStrut(6));
+ 	    topRow.add(btnShowAlign);				topRow.add(Box.createHorizontalStrut(6));
 	 	    
-	    btnShowSynteny = new JButton("View 2D"); 
-	    btnShowSynteny.setAlignmentX(Component.LEFT_ALIGNMENT);
-	    btnShowSynteny.setBackground(Color.WHITE);
+	    btnShowSynteny = Jcomp.createButton("View 2D", "View in 2D display"); 
 	    btnShowSynteny.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				showSynteny();		
 			}
 		}); 
-	    topRow.add(btnShowSynteny);		topRow.add(Box.createHorizontalStrut(1));
-	    topRow.add(new JLabel("as"));	topRow.add(Box.createHorizontalStrut(1));
+	    topRow.add(btnShowSynteny);				topRow.add(Box.createHorizontalStrut(1));
+	    topRow.add(Jcomp.createLabel("as"));	topRow.add(Box.createHorizontalStrut(1));
 	    cmbSynOpts = new JComboBox <String> ();
 	    cmbSynOpts.setBackground(Color.WHITE);
 	    cmbSynOpts.addItem("Region (kb)");  // showREGION
@@ -271,19 +256,14 @@ public class TableDataPanel extends JPanel {
 	    cmbSynOpts.addItem("Collinear Set");// showSET
 	    cmbSynOpts.addItem("Group");        // showGRP
 	    cmbSynOpts.setSelectedIndex(0);
-	    topRow.add(cmbSynOpts);			topRow.add(Box.createHorizontalStrut(1));
+	    topRow.add(cmbSynOpts);					topRow.add(Box.createHorizontalStrut(1));
 	    
-		txtMargin = new JTextField(3);
-	    txtMargin.setText(((Globals.MAX_2D_DISPLAY/1000)+"")); // CAS548 was MAX_RANGE; CAS551 use new variable
-	    txtMargin.setMinimumSize(txtMargin.getPreferredSize());
+		txtMargin = Jcomp.createTextField((Globals.MAX_2D_DISPLAY/1000)+"", 3);
 	    topRow.add(txtMargin);
-	    topRow.add(new JLabel("kb")); 	topRow.add(Box.createHorizontalStrut(2));
+	    topRow.add(Jcomp.createLabel("kb")); 	topRow.add(Box.createHorizontalStrut(2));
 	    
-	    // CAS521 I wasted 3hrs trying to add Selected to the HitFilter, should have been easy. OO is the worst!
-	    chkHigh = new JCheckBox("High");
-	    chkHigh.setSelected(true);
-	    chkHigh.setBackground(Color.WHITE);
-	    topRow.add(chkHigh); 	topRow.add(Box.createHorizontalStrut(5));
+	    chkHigh = Jcomp.createCheckBox("High", "If checked, highlight hit on 2D", true);
+	    topRow.add(chkHigh); 					topRow.add(Box.createHorizontalStrut(5));
 	    
 	    btnShowAlign.setEnabled(false);
 	    btnShowSynteny.setEnabled(false);
@@ -299,12 +279,8 @@ public class TableDataPanel extends JPanel {
 		topRow.setAlignmentX(LEFT_ALIGNMENT);
 		topRow.setMaximumSize(topRow.getPreferredSize());
 		
-		JPanel botRow = new JPanel();
-		botRow.setLayout(new BoxLayout(botRow, BoxLayout.LINE_AXIS));
-		botRow.setBackground(Color.WHITE);
-		botRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	
-		botRow.add(new JLabel("Table (or selected): ")); botRow.add(Box.createHorizontalStrut(2));
+		JPanel botRow = Jcomp.createRowPanel();
+		botRow.add(Jcomp.createLabel("Table (or selected): ")); botRow.add(Box.createHorizontalStrut(2));
 	
 	    btnExport = Jcomp.createButton("Export...", "Export selected rows or all rows");
 	    btnExport.addActionListener(new ActionListener() {
@@ -340,10 +316,8 @@ public class TableDataPanel extends JPanel {
 	    return buttonPanel;
 	}
     private JPanel createColumnsPanel() {
-    	columnPanel = new JPanel();
-		columnPanel.setLayout(new BoxLayout(columnPanel, BoxLayout.PAGE_AXIS));
-		columnPanel.setBackground(Color.WHITE);
-		columnPanel.setVisible(false);
+    	columnPanel = Jcomp.createPagePanel();
+    	columnPanel.setVisible(false);
 	
 		generalColSelectPanel = 	createGeneralSelectPanel();
 		spLocColSelectPanel = 		createSpLocSelectPanel();
@@ -362,16 +336,13 @@ public class TableDataPanel extends JPanel {
      * General columns pertaining to hits and blocks
      */
     private JPanel createGeneralSelectPanel() {
-    	JPanel retVal = new JPanel();
-    	retVal.setLayout(new BoxLayout(retVal, BoxLayout.PAGE_AXIS));
-    	retVal.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	retVal.setBackground(Color.WHITE);
+    	JPanel retVal = Jcomp.createPagePanel();
     
-    	String [] genCols = FieldData.getGeneralColHead();
+    	String []  genCols   = FieldData.getGeneralColHead();
     	boolean [] genColDef = FieldData.getGeneralColDefaults();
-    	String [] genDesc= FieldData.getGeneralColDesc();
+    	String []  genDesc   = FieldData.getGeneralColDesc();
     	int nCol = FieldData.getGenColumnCount(isSingle);
-    	int newRow = (nCol>1) ? genCols.length-FieldData.N_GEN_HIT : 1; // CAS520, CAS540 hit score, CAS546 N_GENERAL
+    	int newRow = (nCol>1) ? genCols.length-FieldData.N_GEN_HIT : 1; 
     	
     	JPanel row=null;
     	chkGeneralFields = new JCheckBox[nCol];
@@ -379,24 +350,16 @@ public class TableDataPanel extends JPanel {
     		if (x==0 || x==newRow) {
     			if (x==newRow) retVal.add(row);
     			
-    			row = new JPanel();
-    	    	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-    	    	row.setBackground(Color.WHITE);
-    	    	row.setAlignmentX(Component.LEFT_ALIGNMENT);
+    			row = Jcomp.createRowPanel();
     		}
     		else {
     			int width = GEN_COLUMN_WIDTH - chkGeneralFields[x-1].getPreferredSize().width;
         		if (width > 0) row.add(Box.createHorizontalStrut(width));	
         		row.add(Box.createHorizontalStrut(3)); 
     		}
-    		chkGeneralFields[x] = new JCheckBox(genCols[x]);
-    		chkGeneralFields[x].setAlignmentX(Component.LEFT_ALIGNMENT);
-    		chkGeneralFields[x].setBackground(Color.WHITE);
+    		chkGeneralFields[x] = Jcomp.createCheckBox(genCols[x], genDesc[x], genColDef[x]);
     		chkGeneralFields[x].addActionListener(colSelectChange);
-    		chkGeneralFields[x].setToolTipText(genDesc[x]); // CAS541 replace chkGeneralFields[x].addMouseListener(new MouseAdapter()
-    	
-    		chkGeneralFields[x].setSelected(genColDef[x]);
-    		if (x==0) {									// CAS540x i was able to uncheck the row, don't know how...
+    		if (x==0) {									
     			chkGeneralFields[x].setSelected(true);
     			chkGeneralFields[x].setEnabled(false); // CAS520 cannot remove because doesn't work to
     		}
@@ -415,47 +378,33 @@ public class TableDataPanel extends JPanel {
      * 		Pair: 	Chr Gstart Gend Glen GStrand Gene# Hstart Hend Hlen
      */
     private JPanel createSpLocSelectPanel() {
-    	JPanel page = new JPanel();
-    	page.setLayout(new BoxLayout(page, BoxLayout.PAGE_AXIS));
-    	page.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	page.setBackground(Color.WHITE);
-        	
+    	JPanel page = Jcomp.createPagePanel();
+    	
     	String [] species = theParentFrame.getAbbrevNames();
     	String [] colHeads = FieldData.getSpeciesColHead(isSingle);
 		
 		String [] colDesc= FieldData.getSpeciesColDesc(isSingle);
-		int cntCol = FieldData.getSpColumnCount(isSingle); // CAS519 add because single/pairs no longer have the same #columns
+		int cntCol = FieldData.getSpColumnCount(isSingle); // single/pairs do not have the same #columns
 		
     	chkSpeciesFields = new JCheckBox[species.length][cntCol];
     	boolean [] colDefs = FieldData.getSpeciesColDefaults(isSingle);
     	
     	for(int x=0; x<species.length; x++) {
-    		JPanel row = new JPanel();
-        	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-        	row.setAlignmentX(Component.LEFT_ALIGNMENT);
-        	row.setBackground(Color.WHITE);
-    		
+    		JPanel row = Jcomp.createRowPanel();
+        	
     		row.add(createSpeciesLabel(species[x]));
     		row.add(Box.createHorizontalStrut(5));
     		
-    		for (int i=0; i<cntCol; i++) {
-    			chkSpeciesFields[x][i] = new JCheckBox(colHeads[i]);   
-    			chkSpeciesFields[x][i].setSelected(colDefs[i]);
-    		}
-    		
-        	for(int y=0; y<cntCol; y++) {
-        		chkSpeciesFields[x][y].setAlignmentX(Component.LEFT_ALIGNMENT);
-        		chkSpeciesFields[x][y].setBackground(Color.WHITE);
-        		chkSpeciesFields[x][y].addActionListener(colSelectChange);
-        		chkSpeciesFields[x][y].setToolTipText(colDesc[y]); /// CAS541 replace addMouseListener with tooltip 
-        
-        		row.add(chkSpeciesFields[x][y]);
+    		for (int i=0; i<cntCol; i++) { // CAS561 was two loops
+    			chkSpeciesFields[x][i] = Jcomp.createCheckBox(colHeads[i], colDesc[i], colDefs[i]);   
+    			chkSpeciesFields[x][i].addActionListener(colSelectChange);
+    			row.add(chkSpeciesFields[x][i]);
         		row.add(Box.createHorizontalStrut(4));
-        	}
+    		}
         	page.add(row);
         	if (x < species.length - 1) page.add(new JSeparator());
     	}
-    	String loc = (isSingle) ? "Gene" : "Gene&Hit"; // CAS503, CAS519 Hit->Gene&Hit
+    	String loc = (isSingle) ? "Gene" : "Gene&Hit"; 
     	page.setBorder(BorderFactory.createTitledBorder(loc + " Info"));
     	page.setMaximumSize(page.getPreferredSize());
 
@@ -470,11 +419,8 @@ public class TableDataPanel extends JPanel {
      *  Annotation from gff file
      */
     private JPanel createSpAnnoSelectPanel() {
-    	JPanel retVal = new JPanel();
-    	retVal.setLayout(new BoxLayout(retVal, BoxLayout.LINE_AXIS));
-    	retVal.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	retVal.setBackground(Color.WHITE);
-
+    	JPanel retVal = Jcomp.createRowPanel();
+    	
     	chkAnnoFields = new Vector<Vector<JCheckBox>> ();
     	
     	int [] speciesIDs = theAnnoKeys.getSpeciesIDList();
@@ -486,35 +432,27 @@ public class TableDataPanel extends JPanel {
     		for(int y=0; y<theAnnoKeys.getNumberAnnosForSpecies(speciesIDs[x]); y++){
     			
     			String annotName = theAnnoKeys.getAnnoIDforSpeciesAt(speciesIDs[x], y);
-    			
-    			JCheckBox chkCol = new JCheckBox(annotName);
-    			chkCol.setBackground(Color.WHITE);
-    			chkCol.addActionListener(colSelectChange);
     			String d = (annotName.contentEquals(Q.All_Anno)) ? 
     					"All annotation from GFF file" : "Column heading is keyword from GFF file";
-    			chkCol.setToolTipText(d);
+    			JCheckBox chkCol = Jcomp.createCheckBox(annotName, d, false);
+    			
+    			chkCol.addActionListener(colSelectChange);
     			annoCol.add(chkCol);
     		}
     		chkAnnoFields.add(annoCol);
     	}
     	
-    	JPanel colPanel = new JPanel();
-    	colPanel.setLayout(new BoxLayout(colPanel, BoxLayout.PAGE_AXIS));
-    	colPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-    	colPanel.setBackground(Color.WHITE);
+    	JPanel colPanel = Jcomp.createPagePanel();
     	
     	Iterator<Vector<JCheckBox>> spIter = chkAnnoFields.iterator();
     	int pos = 0;
     	while (spIter.hasNext()) {
-        	JPanel row = new JPanel();
-        	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-        	row.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-        	row.setBackground(Color.WHITE);
+        	JPanel row = Jcomp.createRowPanel();
         	
         	// Species name
         	String abbrev = theAnnoKeys.getSpeciesAbbrevByID(speciesIDs[pos]);
         	JLabel spLabel = createSpeciesLabel(abbrev);
-        	row.add(spLabel); row.add(Box.createHorizontalStrut(10));
+        	row.add(spLabel); 		row.add(Box.createHorizontalStrut(10));
         	
         	int curWidth = ANNO_COLUMN_WIDTH;
         	Iterator<JCheckBox> annoIter = spIter.next().iterator();
@@ -523,10 +461,7 @@ public class TableDataPanel extends JPanel {
         		
         		if(curWidth + ANNO_COLUMN_WIDTH > ANNO_PANEL_WIDTH) {
         			colPanel.add(row);
-        	    	row = new JPanel();
-        	    	row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS));
-        	    	row.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-        	    	row.setBackground(Color.WHITE);
+        	    	row = Jcomp.createRowPanel();
         	    	
         	    	row.add(Box.createHorizontalStrut(ANNO_COLUMN_WIDTH + 10));
         	    	curWidth = ANNO_COLUMN_WIDTH + 10;
@@ -534,8 +469,6 @@ public class TableDataPanel extends JPanel {
         		row.add(chkTemp);
         		
         		curWidth += ANNO_COLUMN_WIDTH;
-        		//width = ANNO_COLUMN_WIDTH - chkTemp.getPreferredSize().width;
-        		//if (width > 0) row.add(Box.createHorizontalStrut(width));
         		row.add(Box.createHorizontalStrut(5));
         	}
         	colPanel.add(row);
@@ -550,50 +483,52 @@ public class TableDataPanel extends JPanel {
     	return retVal;
     }
     private JPanel createColumnButtonPanel() {
-    	buttonPanel = new JPanel();
-    	buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
-    	buttonPanel.setBackground(Color.WHITE);
-    	buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+    	buttonPanel = Jcomp.createRowPanel();
     	
-		btnShowColumns = new JButton("Select Columns");
-		btnShowColumns.setBackground(Color.WHITE);
-		btnShowColumns.addActionListener(new ActionListener() {
+		btnShowCols = Jcomp.createButton("Select Columns", "Displays panel of columns to select");
+		btnShowCols.addActionListener(new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			if(columnPanel.isVisible()) {
-				btnShowColumns.setText("Select Columns");
+				btnShowCols.setText("Select Columns");
 				columnPanel.setVisible(false);
-				btnClearColumns.setVisible(false);
-				btnDefaultColumns.setVisible(false);
+				btnClearCols.setVisible(false);
+				btnDefaultCols.setVisible(false);
+				btnGroupCols.setVisible(false);
 				btnShowStats.setVisible(true);
 			}
 			else {
-				btnShowColumns.setText("Hide Columns");
+				btnShowCols.setText("Hide Columns");
 				columnPanel.setVisible(true);
-				btnClearColumns.setVisible(true);
-				btnDefaultColumns.setVisible(true);
+				btnClearCols.setVisible(true);
+				btnDefaultCols.setVisible(true);
+				btnGroupCols.setVisible(true);
 				btnShowStats.setVisible(false);
 			}
 			showTable();
 		}});
 		
-		btnClearColumns = new JButton("Clear");
-		btnClearColumns.setBackground(Color.WHITE);
-		btnClearColumns.addActionListener(new ActionListener() {
+		btnClearCols = Jcomp.createButton("Clear", "Clear all selections");
+		btnClearCols.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				clearColumns();
 		}});
-		btnClearColumns.setVisible(false);
+		btnClearCols.setVisible(false);
 		
-		btnDefaultColumns = new JButton("Defaults");
-		btnDefaultColumns.setBackground(Color.WHITE);
-		btnDefaultColumns.addActionListener(new ActionListener() {
+		btnDefaultCols = Jcomp.createButton("Defaults", "Set default columns");
+		btnDefaultCols.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				defaultColumns();
 		}});
-		btnDefaultColumns.setVisible(false);
+		btnDefaultCols.setVisible(false);
+		
+		btnGroupCols = Jcomp.createButton("Arrange", "Arrange similar columns together with gene columns first");
+		btnGroupCols.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				groupColumns();
+		}});
+		btnGroupCols.setVisible(false);
 	
-		btnShowStats = new JButton("Hide Stats");
-		btnShowStats.setBackground(Color.WHITE);
+		btnShowStats = Jcomp.createButton("Hide Stats", "Do not show statistics panel");
 		btnShowStats.addActionListener(new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			if(statsPanel.isVisible()) {
@@ -606,15 +541,16 @@ public class TableDataPanel extends JPanel {
 			}
 		}});
 
-		txtStatus = new JTextField(400); // CAS519 new; CAS541 replaced with tooltip
+		txtStatus = new JTextField(400); 
 		txtStatus.setEditable(false);
 		txtStatus.setBorder(BorderFactory.createEmptyBorder());
 		txtStatus.setBackground(Color.WHITE);
 		
-    	buttonPanel.add(btnShowColumns);  buttonPanel.add(Box.createHorizontalStrut(5));
-    	buttonPanel.add(btnClearColumns); buttonPanel.add(Box.createHorizontalStrut(5));
-    	buttonPanel.add(btnDefaultColumns); buttonPanel.add(Box.createHorizontalStrut(10));
-    	buttonPanel.add(btnShowStats);    buttonPanel.add(Box.createHorizontalStrut(10)); //So the resized button doesn't get clipped
+    	buttonPanel.add(btnShowCols);    buttonPanel.add(Box.createHorizontalStrut(5));
+    	buttonPanel.add(btnClearCols);   buttonPanel.add(Box.createHorizontalStrut(5));
+    	buttonPanel.add(btnDefaultCols); buttonPanel.add(Box.createHorizontalStrut(5));
+    	buttonPanel.add(btnGroupCols);   buttonPanel.add(Box.createHorizontalStrut(10));
+    	buttonPanel.add(btnShowStats);   buttonPanel.add(Box.createHorizontalStrut(10)); //So the resized button doesn't get clipped
     	buttonPanel.add(txtStatus);
     	
     	buttonPanel.setMaximumSize(buttonPanel.getPreferredSize());
@@ -623,10 +559,8 @@ public class TableDataPanel extends JPanel {
     //private void setStatus(String desc) {txtStatus.setText(desc);}
     
     private JPanel createTableStatusPanel() {
-    	JPanel thePanel = new JPanel();
-    	thePanel.setLayout(new BoxLayout(thePanel, BoxLayout.LINE_AXIS));
-    	thePanel.setBackground(Color.WHITE);
-
+    	JPanel thePanel = Jcomp.createRowPanel();
+    	
     	rowCount = new JTextField(400);
     	rowCount.setBackground(Color.WHITE);
     	rowCount.setBorder(BorderFactory.createEmptyBorder());
@@ -682,7 +616,7 @@ public class TableDataPanel extends JPanel {
     			chkAnnoFields.get(x).get(y).setSelected(false);
     		}
     	}
-    	setTable(true);
+    	setTable(true, false);
     	showTable();
     }
     private void defaultColumns() {// CAS543 add
@@ -700,20 +634,26 @@ public class TableDataPanel extends JPanel {
     			chkAnnoFields.get(x).get(y).setSelected(false);
     		}
     	}
-    	setTable(true);
+    	setTable(true, false);
+    	showTable();
+    }
+    // CAS561 add to group like columns together
+    private void groupColumns() {
+    	setTable(false, true);
     	showTable();
     }
     
 	// Build table, clearColumns, defaultColumns, setColFromOldSelect, actionPerformed (on colChange)
-	private void setTable(boolean isFirst) {
-		String [] uoSelCols = getSelColsUnordered(); 	
+	private void setTable(boolean isFirst, boolean isGroup) {
+		String [] uoSelCols = getSelColsUnordered(); // order found in columns panel	
 		String [] columns;
 		
 		// CAS560 add using the same order as the last table created or change of columns
 		// theLastTable seems to stay active even when Query is exited and another display is used, but could be GC'ed
 		try { 
-			if (!isSingle && theLastTable!=null) columns = TableData.orderColumns(theLastTable, uoSelCols);
-			else columns = (isFirst) ? uoSelCols :         TableData.orderColumns(theTable, uoSelCols);
+			if (isGroup) columns = 								TableData.arrangeColumns(uoSelCols, isSingle, theAnnoKeys);
+			else if (!isSingle && theLastTable!=null) columns = TableData.orderColumns(theLastTable, uoSelCols);
+			else columns = (isFirst) ? uoSelCols :         		TableData.orderColumns(theTable, uoSelCols);
 		}
 		catch (Exception e) {
 			columns = uoSelCols;
@@ -722,7 +662,7 @@ public class TableDataPanel extends JPanel {
 		theTable = new SortTable(tData);
         theTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         theTable.autofitColumns();
-        	
+    
         theTable.getSelectionModel().addListSelectionListener(selListener);
 		
         theTable.setTableHeader(new ColumnHeaderToolTip(theTable.getColumnModel()));
@@ -742,7 +682,7 @@ public class TableDataPanel extends JPanel {
 			if(chkGeneralFields[x].isSelected())
 				retVal.add(chkGeneralFields[x].getText());
 		}
-		String [] species = theParentFrame.getAbbrevNames(); // CAS532 anno was before species
+		String [] species = theParentFrame.getAbbrevNames(); 
 		for(int x=0; x<species.length; x++) {
 			for(int y=0; y<chkSpeciesFields[x].length; y++) {
 				if(chkSpeciesFields[x][y].isSelected()) {
@@ -785,7 +725,7 @@ public class TableDataPanel extends JPanel {
     	catch (Exception e) {ErrorReport.print(e, "Selections: " + theOldSelCols.length + " " + targetPos);}
     	
     	theOldSelCols = null;
-    	setTable(true);
+    	setTable(true, false);
 	}
     private JCheckBox getAnnoCheckBoxAt(int pos) {
     	Iterator <Vector <JCheckBox>> spIter = chkAnnoFields.iterator();
@@ -822,7 +762,7 @@ public class TableDataPanel extends JPanel {
     	btnUnSelectAll.setEnabled(enable);
     	btnReport.setEnabled(enable);
     	btnShowAlign.setEnabled(enable);
-    	btnShowColumns.setEnabled(enable);
+    	btnShowCols.setEnabled(enable);
     	btnHelp.setEnabled(enable);
     	
     	for(int x=0; x<chkGeneralFields.length; x++)
@@ -1026,8 +966,7 @@ public class TableDataPanel extends JPanel {
     }
     /******************************************************
  	 * Next four are called by mapper to display the synteny, which is weird given that
- 	 * the values are already sent. Since only the last row is stored here, can only select one
- 	 * row at a time
+ 	 * the values are already sent. Since only the last row is stored here, can only select one row at a time 
  	 * CAS516 change to one call instead of 4
  	 */
      public boolean isHitSelected(int idx, int s1, int e1, int s2, int e2) {
@@ -1216,14 +1155,14 @@ public class TableDataPanel extends JPanel {
  
  	protected String [] getSummary() { 
  		String [] retVal = new String[2];
- 		retVal[0] = theName + ": " + getNumResults(); // CAS513 added #rows (shown on Results Page)
+ 		retVal[0] = theName + ": " + getNumResults(); // #rows (shown on Results Page)
  		retVal[1] = theSummary;
  		return retVal;
  	}
 	protected boolean isSingle() {return isSingle;}
  	protected boolean [] getColumnSelections() {
 		try {
-			int genColCnt = FieldData.getGenColumnCount(isSingle); // CAS519 adjust for single/pairs
+			int genColCnt = FieldData.getGenColumnCount(isSingle); 
 			int spColCnt = FieldData.getSpColumnCount(isSingle);
 	    	int numCols = genColCnt + (chkSpeciesFields.length * spColCnt);
 	    	for(int x=0; x<chkAnnoFields.size(); x++) {
@@ -1373,7 +1312,7 @@ public class TableDataPanel extends JPanel {
 	private JPanel buttonPanel = null;
 	
 	private JPanel columnPanel = null, columnButtonPanel = null;
-	private JButton btnShowColumns = null, btnClearColumns=null, btnDefaultColumns=null;
+	private JButton btnShowCols = null, btnClearCols=null, btnDefaultCols=null, btnGroupCols=null;
 	private JButton btnShowStats = null, btnHelp = null;
 	private JTextField txtStatus = null;
     

@@ -37,16 +37,16 @@ public class Annotation {
 	private boolean bStrandPos;
 	private int gene_idx=0;  	// If this is an exon, it is the gene_idx (pseudo_annot.idx) that it belongs to
 	private int annot_idx=0; 	// pseudo_annot.idx
-	private int genenum=0;	 	// CAS517 for sorting in PseudoData
+	private int genenum=0;	 	
 	
-	private Rectangle2D.Double rect;
-	private Rectangle2D.Double hoverGeneRect; 	// CAS515 so hover cover for gene covers full width of exon
+	private Rectangle2D.Double rect;			// Gene rectangle
+	private Rectangle2D.Double hoverGeneRect; 	// so hover cover for gene covers full width of exon
+	private Rectangle2D.Double lastR=null;		    // if Last gene starts at same Y, then stagger Gene#; CAS551 
 	
-	private Vector <Annotation> exonVec = null; // CAS545 determine during SeqPool load
-	private String exonList=null; 				// CAS512 build first time of popup
-	private String hitListStr1=null;  			// CAS517 add to popup; computed in sequence.setExonList using coords 
-	private String hitListStr2=null;			// CAS543 add HitList for other side to popup
-	private double lastY=0.0, lastX=0.0;		// CAS551 if Last gene starts at same Y, then stagger Gene#
+	private Vector <Annotation> exonVec = null; // determine during SeqPool load; CAS545 
+	private String exonList=null; 				// build first time of popup
+	private String hitListStr1=null;  			// add to popup; computed in sequence.setExonList using coords 
+	private String hitListStr2=null;			// add HitList for other side to popup; CAS543 
 	
 	private boolean bGeneLineOpt=false; 		// Show line on all genes; CAS520 add
 	private boolean bHighPopup=false;			// Highlight gene if popup; CAS544 add
@@ -92,13 +92,13 @@ public class Annotation {
 	
 	public Vector <Annotation> getExonVec() { return exonVec;} // CAS560 for closeup.SeqDataInfo hit popup
 	/**
-	 * DRAW sets up the rectangle; called in Sequence.build(); CAS515 ordered lines to be more logical
+	 * DRAW sets up the rectangle; called in Sequence.build(); 
 	 */
 	protected void setRectangle(
 			Rectangle2D boundry,      // center of chromosome rectangle (rect.x+1,rect.y,rect.width-2,rect.height)
-			int startBP, int endBP, // display start and end of chromosome 
+			int startBP, int endBP,   // display start and end of chromosome 
 			double bpPerPixel, double dwidth, double hoverWidth, boolean flip, int offset, 
-			boolean bGeneLineOpt, boolean bShowGeneNum, boolean bHighPopup) // CAS517 offset; CAS551 showGeneNum
+			boolean bGeneLineOpt, boolean bShowGeneNum, boolean bHighPopup) // CAS551 showGeneNum
 	{
 		this.bGeneLineOpt=bGeneLineOpt; // used these 3 in paintComponent
 		this.bShowGeneNum=bShowGeneNum; 
@@ -127,7 +127,7 @@ public class Annotation {
 		if (flip) y -= height; 
 		
 		x = chrX + (chrWidth - dwidth)/2; // set x before modify width 
-		if (offset!=0) x = x-offset;	 // CAS517 for overlapping genes, 0 for not
+		if (offset!=0) x = x-offset;	 // for overlapping genes, 0 for not
 		
 		if (chrWidth < dwidth) dwidth = chrWidth;
 		
@@ -140,7 +140,7 @@ public class Annotation {
 		
 		if (hoverWidth!=0) { // gene
 			double xx = chrX + (chrWidth-hoverWidth)/2; // set x before modify width
-			if (offset!=0) xx= xx-offset;				// CAS517 for overlapping genes
+			if (offset!=0) xx= xx-offset;				// for overlapping genes
 			
 			if (chrWidth < hoverWidth) hoverWidth = chrWidth;
 		
@@ -179,24 +179,25 @@ public class Annotation {
 			else 	// Else draw as line 
 				g2.drawLine((int)rect.x, (int)rect.y, (int)rect.x + (int)rect.width, (int)rect.y); 
 			
-			if (itype==GENE_INT && bShowGeneNum) { // CAS551 (Yellow box in Sequence.build)
+			// XXX Gene# LastR is Rect, not text (Yellow box drawn in Sequence.build) CAS551
+			if (itype==GENE_INT && bShowGeneNum) { 
 				 g2.setPaint(Color.black);
 				 g2.setFont(Globals.textFont);
 				 
 				 int x, w=0;
-				 if (seqObj.isRef()) x = (int)rect.x+15;
-				 else {
+				 if (seqObj.isRef()) { 	// right side
+					 if (lastR!=null && lastR.x>rect.x && lastR.y+lastR.height>rect.y) 
+						   x = (int)lastR.x + (int) Sequence.EXON_WIDTH-2;
+					 else  x = (int)rect.x  + (int) Sequence.EXON_WIDTH-2;	// paint on right; CAS561 15->13
+				 }
+				 else { 				// left side
 					 FontMetrics metrics = g2.getFontMetrics(Globals.textFont);
-					 w = metrics.stringWidth(strGeneNum) + 5; // tested stringWidth of 'a' is 7
-					 x = (int)rect.x-w;
+					 w = metrics.stringWidth(strGeneNum) + 6; // tested stringWidth of 'a' is 7; CAS561 5->6
+					 x = (int) rect.x-w;
 				 }
-				 int y = (int)rect.y +  (Globals.textHeight/2);
-				 if (Math.abs(lastY-rect.y)<6) {
-					 y+=10; // move it down
-					 if (seqObj.isRef()) x = (int)lastX+15;
-					 else x = (int)lastX-w;
-				 }
-				 
+				 int y = (int)rect.y + (Globals.textHeight/2);
+				 if (lastR!=null && Math.abs(lastR.y-rect.y)<Globals.textHeight) y+=Globals.textHeight-2;	// move it down; CAS561 6->12, rm x changes; 
+					 
 				 g2.drawString(strGeneNum, x, y);
 			}
 		}
@@ -237,7 +238,7 @@ public class Annotation {
 	
 	protected double getY1() {return rect.getY();} // same as rect.y
 	
-	protected void setLastY(Annotation last) {lastY=last.rect.y; lastX=last.rect.x;}; 
+	protected void setLastY(Annotation last) {lastR=last.rect;}; 
 	
 	protected boolean isVisible() {// true if after calling setRectangle 
 		return rect.getWidth() > 0 && rect.getHeight() > 0;
@@ -257,9 +258,9 @@ public class Annotation {
 
 	public int getStart() {return start;}
 	public int getEnd() {return end;}
-	public int getGeneIdx() { return gene_idx;} 			// CAS517 for Sequence to know if overlap exon
+	public int getGeneIdx() { return gene_idx;} 			// For Sequence to know if overlap exon
 	public int getAnnoIdx() { return annot_idx;}			// ditto
-	public String getTag() {return tag;} 					// CAS512 add for HelpBox; CAS543 called for Exons
+	public String getTag() {return tag;} 					// For HelpBox; CAS543 called for Exons
 	public boolean isStrandPos() {return bStrandPos;}		// for seq-seq closeup
 	protected Color getBorderColor() { return (bStrandPos) ? exonColorP : exonColorN;} // CAS554 for Annotation Boxes
 	
@@ -268,11 +269,11 @@ public class Annotation {
 	protected boolean isExon() 	  { return itype == EXON_INT; }   
 	protected boolean isGap() 		  { return itype == GAP_INT; }
 	protected boolean isCentromere() { return itype == CENTROMERE_INT; }
-	protected boolean isHitg2() {return isHitg2;} // CAS545,555 is g2, hit and gene highlighted
+	protected boolean isHitg2() {return isHitg2;} // CAS555 is g2, hit and gene highlighted
 	
 	protected int getGeneLen()	{ return Math.abs(end-start)+1;} // ditto
-	protected int getGeneNum() { return genenum;}				// CAS517 for sorting in SeqPool
-	public String getFullGeneNum() {return strGeneNum;}      // CAS545 has suffix
+	protected int getGeneNum() { return genenum;}				 // for sorting in SeqPool
+	public String getFullGeneNum() {return strGeneNum;}          // CAS545 has suffix
 	
 	/*******************************************
 	 * XXX hover and box and closeup info
@@ -389,7 +390,7 @@ public class Annotation {
 		return rect.contains(p.getX(), p.getY());
 	}
 	/*
-	 * popup from clicking gene; CAS503, CAS516 add, CAS517 add hitList; CAS543 use Utilities for tag
+	 * popup from clicking gene; CAS543 use Utilities for tag
 	 * called from Sequence.popupDesc, 
 	 * 		if hitListStr and exonList, not set, they are now and reused
 	 * 		calls SeqPool to get list of hits for the gene/chr and scores

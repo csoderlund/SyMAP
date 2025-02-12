@@ -312,7 +312,7 @@ public class TableExport extends JDialog {
 						seqNum++;
 					}
 					pairNum++;						
-					System.out.print("Wrote: " + ((int)((((float)x)/selRows.length) * 100)) + "%\r");
+					Globals.rprt("Wrote: " + ((int)((((float)x)/selRows.length) * 100)) + "%");// CAS561 use rprt
 				}
 				outFH.close();
 				

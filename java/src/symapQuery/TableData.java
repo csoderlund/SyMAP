@@ -11,10 +11,12 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.HashMap;
+import java.util.TreeSet;
 
 import javax.swing.JTable;
 import javax.swing.JTextField;
 
+import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -49,10 +51,10 @@ public class TableData implements Serializable {
 		String [] retVal = new String[selCols.length];
 		
 		Vector <String> columns = new Vector<String> ();
-		for(int x=selCols.length-1; x>=0; x--) columns.add(selCols[x]);
+		for (int x=selCols.length-1; x>=0; x--) columns.add(selCols[x]);
 		
 		int targetIndex = 0;
-		for(int x=0; x<srcTable.getColumnCount(); x++) {
+		for (int x=0; x<srcTable.getColumnCount(); x++) {
 			String colName = srcTable.getColumnName(x);
 			
 			int colIdx = columns.indexOf(colName);
@@ -63,12 +65,129 @@ public class TableData implements Serializable {
 				columns.remove(colIdx);
 			}
 		}
-		while(columns.size() > 0) {
+		while (columns.size() > 0) {
 			retVal[targetIndex] = columns.get(columns.size()-1);
 			columns.remove(columns.size()-1);
 			targetIndex++;
 		}
 		return retVal;
+	}
+	/****************************************************************
+	 * Arrange columns:	CAS561 add
+	 * Group all gene columns with same second part, e.g. Gene#.
+	 * Group Hit columns, then rest of General
+	 */
+	protected static String [] arrangeColumns(String [] selColList, boolean isSingle, AnnoData theAnno) {
+	try {
+		// Group selected columns into sp, hit or general
+		final String HIT = Q.hitPrefix, GEN = "Gen"; 
+		
+		HashMap <String, ArrCol> selColMap = new HashMap <String, ArrCol> ();
+		selColMap.put(HIT, new ArrCol());
+		selColMap.put(GEN, new ArrCol());
+		
+		Vector <String> spSet = theAnno.getSpeciesAbbrList();		    // abbrev for selected set
+		for (String sp : spSet) selColMap.put(sp, new ArrCol());
+		
+		for (String col : selColList) {
+			String prefix="", root="";
+			if (col.contains("\n")) {
+				String [] tok = col.split("\n");
+				prefix = tok[0]; root = tok[1];
+			}
+			else root = col;
+			
+			if (!prefix.isEmpty() && spSet.contains(prefix)) {
+				selColMap.get(prefix).cols.put(root, false);	// prefix removed
+			}
+			else if (root.equals(Q.hitCol) || prefix.equals(HIT)) {
+				selColMap.get(HIT).cols.put(col, false);		// may have "\n"
+			}
+			else {
+				selColMap.get(GEN).cols.put(col, false);       // may have "\n"
+			}
+		}
+		
+	// Build return array from selColMap	
+		String [] retColList = new String[selColList.length];
+		int ix=0;
+		retColList[ix++] = Q.rowCol;
+		
+		// 1. species 1st; add static gene set in Field order but all selected species together
+		String [] spFcolList  = FieldData.getSpeciesColHead(isSingle); 	// static gene columns 
+		
+		for (String col : spFcolList) {
+			for (String sp : spSet) {
+				ArrCol spColObj = selColMap.get(sp);
+				if (spColObj.cols.containsKey(col)) {
+					retColList[ix++] = sp + "\n" + col;		// prefix put back on
+					spColObj.cols.put(col, true); 	
+				}
+			}
+		}
+		
+		// 2. put in GFF species column
+		for (int i=0; i<2; i++) { // 1st ID, 2nd desc, product (1. Only if these not in order. 2. Exact match)
+			String [] kcolList = (i==0) ? AnnoData.key1 : AnnoData.key2;
+			
+			for (String sp : spSet) { // by species order first
+				ArrCol spColObj = selColMap.get(sp);
+				
+				for (String kcol : kcolList) {
+					if (spColObj.cols.containsKey(kcol)) {
+						retColList[ix++] = sp + "\n" + kcol;
+						spColObj.cols.put(kcol, true);
+					}
+				}
+			}
+		}
+		// rest of GFF species columns in order found
+		for (String sp1 : spSet) {
+			ArrCol spColObj1 = selColMap.get(sp1);
+			for (String scol : spColObj1.cols.keySet()) {
+				if (spColObj1.cols.get(scol)) continue; 			// already added
+				
+				retColList[ix++] = sp1 + "\n" + scol;
+				spColObj1.cols.put(scol, true);
+				
+				for (String sp2 : spSet) {						// see if other species have same column
+					if (sp1.equals(sp2)) continue;
+					
+					ArrCol spColObj2 = selColMap.get(sp2);
+					if (spColObj2.cols.containsKey(scol) && !spColObj2.cols.get(scol)) { 
+						retColList[ix++] = sp2 + "\n" + scol;
+						spColObj2.cols.put(scol, true);
+					}	
+				}
+			}
+		}
+	
+		// 3. hit columns in Fields order
+		String [] genFcolList = FieldData.getGeneralColHead(); 	// e.g. Block, Grp#, Hit#, Hit %id, etc
+		
+		ArrCol hitColObj = selColMap.get(HIT);
+		for (String col : genFcolList) {
+			if (col.startsWith(Q.hitPrefix))
+				if (hitColObj.cols.containsKey(col)) retColList[ix++] = col;
+		}
+		
+		// 4. general in Fields order
+		ArrCol genColObj = selColMap.get(GEN);
+		for (String col : genFcolList) {
+			if (!col.equals(Q.rowCol) && !col.startsWith(Q.hitPrefix)) 
+				if (genColObj.cols.containsKey(col)) retColList[ix++] = col;
+		}
+	
+		if (ix==selColList.length) return retColList;
+		
+		Globals.tprt("Error Length " + ix + " " + selColList.length);
+		for (String s : retColList) if (s!=null) Globals.tprt(s.replace("\n", " "));
+		return selColList;  // problem with building new list
+	} 
+	catch (Exception e) {ErrorReport.print(e,"Arrange columns"); return selColList;}
+	}
+	static private class ArrCol { // selColMap.key = SP, HIT, GEN 
+		private HashMap <String, Boolean> cols = new HashMap <String, Boolean> (); // Column name, true if gene put in colMap
 	}
 	/*****************************************************************/
 	/***************************************

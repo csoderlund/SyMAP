@@ -139,7 +139,13 @@ public class ConvertNCBI {
 	private TreeMap <Character, Integer> cntBase = new TreeMap <Character, Integer> ();
 	private HashMap <String, String> hexMap = new HashMap <String, String> ();
 	
-	
+	// anno per gene
+	private String geneLine="";						
+	private String geneID="", gchr="",  gproteinAt="", gmrnaAt="", gproductAt="";
+	private String mrnaLine="", mrnaID="";
+	private Vector <String> exonVec = new Vector <String> ();
+	private int cntUseGene=0, cntUseMRNA=0, cntUseExon=0, cntThisGeneMRNA=0;
+				  	
 	private boolean bSuccess=true;
 	private final int PRT = 10000;
 	
@@ -544,12 +550,7 @@ public class ConvertNCBI {
 	   NC_016131.2     Gnomon  mRNA    18481   21742   .       +       .       ID=rna2;Parent=gene3;Dbxref=GeneID:100827252,Genbank:XM_003563157.3;Name=XM_003563157.3;gbkey=mRNA;gene=LOC100827252;model_evidence=Supporting evidence includes similarity to: 3 Proteins%2C and 78%25 coverage of the annotated genomic feature by RNAseq alignments;product=angio-associated migratory cell protein-like;transcript_id=XM_003563157.3
 	   NC_016131.2     Gnomon  exon    18481   18628   .       +       .       ID=id15;Parent=rna2;Dbxref=GeneID:100827252,Genbank:XM_003563157.3;gbkey=mRNA;gene=LOC100827252;product=angio-associated migratory cell protein-like;transcript_id=XM_003563157.3
 	 */
-	// anno per gene
-	private String geneID="",geneLine="", gchr="",  gproteinAt="", gmrnaAt="", gproductAt="";
-	private String mrnaLine="", mrnaID="";
-	private Vector <String> exonVec = new Vector <String> ();
-	private int cntUseGene=0, cntUseMRNA=0, cntUseExon=0, cntThisGeneMRNA=0;
-			  
+	
 	 private void rwAnno() {
 		try {	
 			if (inGffFile==null) return; 
@@ -582,8 +583,8 @@ public class ConvertNCBI {
 				else 								allTypeCnt.put(type, allTypeCnt.get(type)+1);
 				
 				if (type.equals(geneType)) {
-					rwAnnoOut(fhOutGff);
-					rwAnnoGene(tok, line);
+					rwAnnoOut(fhOutGff);			// Write last record
+					rwAnnoGene(tok, line);			// Start new
 					cntReadGene++; cntThisGeneMRNA++;
 					if (cntReadGene%PRT==0) System.err.print("   Process " + cntReadGene + " genes...\r");
 				}
@@ -724,7 +725,7 @@ public class ConvertNCBI {
 		
 		String desc = getVal(descAttrKey, attrs).trim();
 		if (!desc.equals("")) gproductAt = DESC + desc;
-		else gproductAt="";
+		// else gproductAt=""; CAS561 use mRNA product 
 		
 		gmrnaAt += " (" + cntThisGeneMRNA + ");";
 		

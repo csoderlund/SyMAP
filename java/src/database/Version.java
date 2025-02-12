@@ -285,7 +285,7 @@ public class Version {
 			dbc2.executeUpdate("update pseudo_hits_annot set xpair_idx=" + hitPairMap.get(hidx) + " where hit_idx=" +hidx);
 		}
 		hitPairMap.clear(); hitSet.clear();
-		System.out.println("Update pseudo_hits_annot.pair_idx                \r");
+		Globals.rprt("Update pseudo_hits_annot.pair_idx");
 		
 	// CAS540x -dbd add pseudo_annot_hit.grp_idx and proj_idx
 	
@@ -304,7 +304,7 @@ public class Version {
 		cnt=0;
 		for (int aidx : annotGrpMap.keySet()) {
 			cnt++;
-			if (cnt%5000==0) System.out.print("   added " + cnt + " ....\r");
+			if (cnt%5000==0) Globals.rprt("added " + cnt); // CAS561 use rprt
 			int gidx = annotGrpMap.get(aidx);
 			dbc2.executeUpdate("update pseudo_hits_annot set xgrp_idx=" + gidx + " where annot_idx=" +aidx);
 		}

@@ -37,7 +37,7 @@ import util.Utilities;
 public class TableReport extends JDialog {
 	private static final long serialVersionUID = 1L;
 	private static String filePrefix = "ReportExport";
-	private static final int pop_html = 0, ex_html = 1, ex_csv = 2;
+	private static final int pop_html = 0, ex_html = 1, ex_csv = 2; // ex_csv not implemented
 	private static final int run_col = 0,  run_hit =2;
 	private static final String splitC = ";"; 	// local delimiter for lists
 	private static final String keyC = ","; 	// input key parameter
@@ -154,9 +154,9 @@ public class TableReport extends JDialog {
 		
 		JPanel row = Jcomp.createRowPanel();
 		
-		row.add(new JLabel("Output")); row.add(Box.createHorizontalStrut(5));
+		row.add(Jcomp.createLabel("Output")); row.add(Box.createHorizontalStrut(5));
 		
-		JRadioButton btnPop = new JRadioButton("Popup"); btnPop.setBackground(Color.white);
+		JRadioButton btnPop = Jcomp.createRadio("Popup"); 
 		btnPop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				nModeOut=pop_html;
@@ -164,7 +164,7 @@ public class TableReport extends JDialog {
 		});
 		row.add(btnPop); row.add(Box.createHorizontalStrut(5));
 		
-		JRadioButton btnHTML =  new JRadioButton("HTML File");btnHTML.setBackground(Color.white); //CAS547 white for linux
+		JRadioButton btnHTML =  Jcomp.createRadio("HTML File");
 		btnHTML.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				nModeOut=ex_html;
@@ -181,11 +181,6 @@ public class TableReport extends JDialog {
         
         if (nModeRun==run_col) {
 			JPanel row0 = Jcomp.createRowPanel();
-			//row0.add(new JLabel("Collinear "));
-			//row0.add(Box.createHorizontalStrut(10));
-			//row0.add(new JLabel("Minumum#"));
-			//row0.add(txtNum);
-			//row0.add(Box.createHorizontalStrut(10));
 			row0.add(chkCol); 
 			
 			optPanel.add(Box.createVerticalStrut(5));
@@ -193,21 +188,18 @@ public class TableReport extends JDialog {
 			optPanel.add(Box.createVerticalStrut(5));
 		}
     // buttons
-    	btnOK = new JButton("OK");
+    	btnOK = Jcomp.createButton("OK", "Show output");
     	btnOK.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				okay();
 			}
 		});
-		btnCancel = new JButton("Cancel");
+		btnCancel = Jcomp.createButton("Cancel", "Cancel output");
 		btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				setVisible(false);
 			}
 		});
-		btnOK.setPreferredSize(btnCancel.getPreferredSize());
-		btnOK.setMaximumSize(btnCancel.getPreferredSize());
-		btnOK.setMinimumSize(btnCancel.getPreferredSize());
 		
 		btnInfo = Jcomp.createIconButton("/images/info.png", "Quick Help Popup");
 		btnInfo.addActionListener(new ActionListener() {
@@ -215,9 +207,6 @@ public class TableReport extends JDialog {
 				popupInfo();
 			}
 		});
-		btnInfo.setPreferredSize(btnInfo.getPreferredSize());
-		btnInfo.setMaximumSize(btnInfo.getPreferredSize());
-		btnInfo.setMinimumSize(btnInfo.getPreferredSize());
 		
 		JPanel buttonPanel = Jcomp.createRowPanel();
 		buttonPanel.add(btnOK);			buttonPanel.add(Box.createHorizontalStrut(5));
@@ -232,7 +221,7 @@ public class TableReport extends JDialog {
 	}
 	private void popupInfo() {
 		String msg = 
-				"Reference: All relevant gene matches to the reference gene will be listed.";
+				"Reference: All displayed gene matches to each displayed reference gene will be listed.";
 		msg +=  "\n\nBy default, only the Gene# will be shown."
 				+ "\nEnter a comma-separated list of keyword found in the 'All_Anno' column; "
 				+ "\n   a column in the HTML table will be listed with the values."
@@ -286,6 +275,7 @@ public class TableReport extends JDialog {
 	    });
 	    inThread.start();
 	}
+	/* getFileHandle */
 	private PrintWriter getFileHandle() {
     	String saveDir = Globals.getExport(); // CAS547 change to call globals
 		
@@ -302,11 +292,11 @@ public class TableReport extends JDialog {
 		String saveFileName = chooser.getSelectedFile().getAbsolutePath();
 		if (nModeOut==ex_csv) {
 			if(!saveFileName.endsWith(".csv")) saveFileName += ".csv";
-			symap.Globals.prt("Exporting CSV to " + saveFileName);
+			Globals.prt("Exporting CSV to " + saveFileName);
 		}
 		else if (nModeOut==ex_html) {
 			if(!saveFileName.endsWith(".html")) saveFileName += ".html";
-			symap.Globals.prt("Exporting HTML to " + saveFileName);
+			Globals.prt("Exporting HTML to " + saveFileName);
 		}
 		
 		boolean append=true;
@@ -326,6 +316,7 @@ public class TableReport extends JDialog {
 			out = new PrintWriter(new FileOutputStream(saveFileName, append));
 		}
 		catch (Exception e) {ErrorReport.print(e, "Cannot open file - " + saveFileName);}
+		
 		return out;
     }
     
@@ -397,7 +388,7 @@ public class TableReport extends JDialog {
 		int cnt=0, row=0;
 		
 		for (Gene gObj : geneVec) { // This gene row with associated genes {collinear}
-			if (++cnt%100 == 0) symap.Globals.rprt("Processed " + cnt + " genes");
+			if (++cnt%100 == 0) Globals.rprt("Processed " + cnt + " genes");
 			
 			if (gObj.bBreak) {
 				hBodyStr.append("<tr><td colspan=" + colSpan + ">&nbsp;</td>");
@@ -456,11 +447,12 @@ public class TableReport extends JDialog {
 			}
 			hBodyStr.append("\n");
 		}
-		String out = head + hColStr + hBodyStr.toString() + tail;
-		symap.Globals.prt("Complete " + refSp + " HTML                                ");
 		clear();
-		return out;
-	} catch (Exception e) {ErrorReport.print(e, "Build HTML"); return null;}
+		Globals.rclear();
+		
+		return head + hColStr + hBodyStr.toString() + tail;
+	} 
+	catch (Exception e) {ErrorReport.print(e, "Build HTML"); return null;}
 	}
 	
 	/***********************************************************
@@ -655,21 +647,21 @@ public class TableReport extends JDialog {
 						
 						for (int k=0; k<gnTok.length; k++) { // all but j entries
 							if (k!=n) {
-								gObj.oTag[nSp]+=gnTok[k] + splitC ;
+								gObj.oTag[nSp]+=gnTok[k]  + splitC ;
 								gObj.oCoN[nSp]+=costok[k] + splitC;
 								gObj.oChr[nSp]+=chrtok[k] + splitC;
 							}
 						}
 					}
-					else symap.Globals.dprt("No " + key + " for " + gObj.oTag[n] + " " + gnTok[n]);	
+					else Globals.tprt("No " + key + " for " + gObj.oTag[n] + " " + gnTok[n]);	
 				}
 			}
 			gObj.bBreak = (lastg!=null && (lastg.unObj!=gObj.unObj || noSharedCo(lastg, gObj))); // BREAK
 			lastg = gObj;
 		}
-		if (cntRm>0) { // this does not seem to happen since v556 collinear fix
+		if (cntRm>0) { // this does not seem to happen since v556 collinear fix - CAS561 still does happen
 			if (cntRm>9) rmSetStr += "...";
-			symap.Globals.prt("Remove " + cntRm + ": " + rmSetStr);
+			Globals.tprt("Remove " + cntRm + ": " + rmSetStr);
 		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "Analyze map"); }
@@ -765,7 +757,8 @@ public class TableReport extends JDialog {
 			int gn = Integer.parseInt(tok[1]);
 			gnVec.add(gn);
 		}
-		private int setN=0, setSz=0, spOrd;
+		private String coStr() { return setChr + "." + setSz + "." + setN;}
+		private int setN=0, setSz=0, spOrd=0;
 		private String setChr;
 		private Vector <Integer> gnVec = new Vector <Integer> ();
 	}

@@ -64,17 +64,17 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	private Color bgColor; 	
 	private TextLayout titleLayout;
 	
-	private SeqHits hitsObj1=null,  hitsObj2=null; // CAS517 add; CAS543 add Obj2 for 3-track
-	private boolean isQuery1=false, isQuery2=false;// CAS517 add; CAS545 add 2; True => this sequence is Query (pseudo_hits.annot1_idx)
+	private SeqHits hitsObj1=null,  hitsObj2=null; // Obj2 for 3-track; CAS543 add 
+	private boolean isQuery1=false, isQuery2=false;// True => this sequence is Query (pseudo_hits.annot1_idx); CAS545 add 2
 	
 	private SeqPool seqPool;
-	private Vector <Rule> ruleList=  new Vector<Rule>(15,2); 			// CAS545 was List
+	private Vector <Rule> ruleList=  new Vector<Rule>(15,2); 			  // CAS545 was List
 	protected Vector <Annotation> allAnnoVec = new Vector<Annotation>(1); // include exons, CAS545 needs initial size; see loadAnnoFromDB
-	private Vector <Annotation> geneVec = new Vector <Annotation> (); 	// CAS545 added vector for faster searching
+	private Vector <Annotation> geneVec = new Vector <Annotation> (); 	  // vector for faster searching; CAS545 added 
 	private Point2D.Float headerPoint = new Point2D.Float(), footerPoint = new Point2D.Float();
 	private TextLayout headerLayout = null, footerLayout = null;
 	
-	private HashMap <Integer, Integer> olapMap = new HashMap <Integer, Integer> (); // CAS517 added for overlapping genes; CAS518 global
+	private HashMap <Integer, Integer> olapMap = new HashMap <Integer, Integer> (); // for overlapping genes;
 	
 	/******* Track ************************************/
 	private Rectangle2D.Double rect = new Rectangle2D.Double(); // blue track rectangle
@@ -123,7 +123,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		this.projIdx = projIdx;
 		displayName = propDB.getDisplayName(projIdx);
 		projectName = propDB.getName(projIdx);
-		if (Utilities.isEmpty(displayName)) displayName=projectName; // CAS534 need for new projects
+		if (Utilities.isEmpty(displayName)) displayName=projectName; // need for new projects; CAS534 
 		
 		loadAnnosFromDB();	
 		
@@ -175,7 +175,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		if (Utilities.isEmpty(otherProjName)) otherProjName=propDB.getName(otherProjIdx);
 	}
 	
-	// CAS517 add in order to have access to hits; called once for each sequence
+	// Add in order to have access to hits; called once for each sequence
 	public void setSeqHits(SeqHits pObj, boolean isSwapped) {  // mapper.seqHits
 		if (hitsObj1==null) {
 			hitsObj1 = pObj;
@@ -310,7 +310,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	    	 ||  ((annot.isGene() || annot.isExon()) && !sfilObj.bShowGene) )
 			{
 					annot.clear();
-					continue; // CAS520 v518 bug, does not display track if, return true;
+					continue; 				// Does not display track if, return true;
 			}
 	    	
 	    // Display gene: first Calc displayWidth, hoverWidth and offset for gene
@@ -329,8 +329,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			if (offset>0 && isRight) offset = -offset;
 			
 			annot.setRectangle(centRect, chrDisplayStart, chrDisplayEnd,bpPerPixel, dwidth, hwidth, sfilObj.bFlipped, offset,
-					sfilObj.bShowGeneLine, sfilObj.bShowGeneNum, sfilObj.bHighGenePopup); // CAS520 showGeneLine; CAS544 popup; CAS551 showGeneNum
-			if (last!=null) annot.setLastY(last); // CAS551 so annotation are separated
+					sfilObj.bShowGeneLine, sfilObj.bShowGeneNum, sfilObj.bHighGenePopup); // CAS544 popup; CAS551 showGeneNum
+			if (last!=null) annot.setLastY(last); // annotation are separated, used during paint; CAS551 
 			last=annot;
 			
 			if (annot.isGene() && annot.isVisible()) cntAnno++; //isVis needs rect set; CAS554 moved from paintComponent
@@ -554,8 +554,6 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}
 	}
 	
-	/* CAS504 Add Show Sequence; CAS571 compared a pos & neg with TAIR 
-	 * CAS531 add menu with 'hit', 'gene', 'exons', 'region' */
 	private void showSequence(int start, int end) {
 		try {
 			if (end-start > 1000000) {
@@ -584,9 +582,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 						x = annot.getHoverDesc().trim(); 
 						gIdx = annot.getAnnoIdx();
 					}
-					else { // CAS517  messes up with overlapping genes 
+					else { // Messes up with overlapping genes 
 						if (annot.isExon() && annot.getGeneIdx()==gIdx) {
-							x += "\n" + annot.getHoverDesc().trim(); 	// CAS512 add exon if available
+							x += "\n" + annot.getHoverDesc().trim(); 	
 							return x;
 						}
 					}
@@ -703,6 +701,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		return mid;
 	}
 	protected void setSelectedGene(Annotation aObj) { // TrackData CAS552 add for history
+		if (aObj==null) return; // CAS561 happens
 		selectedGeneObj = aObj;
 		aObj.setIsSelectedGene(true);
 	}
@@ -1422,10 +1421,10 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	private static final double  DEFAULT_WIDTH = 90.0; // Width of track; CAS551 was 100.0
 	private static final double  DEFAULT_WIDE_WIDTH = 100.0;
 	
-	private static final double EXON_WIDTH = 15.0;
-	private static final int    GENE_DIV = 4; // Gene is this much narrower than exon
-	private static final int MIN_BP_FOR_ANNOT_DESC = 500; // minimum bp for show anno
-	private static final int GENES_FOR_ANNOT_DESC = 20;   // average distance for 20 genes
+	protected static final double EXON_WIDTH = 15.0;		// CAS561 used by Annotation too
+	private static final int    GENE_DIV = 4; 				// Gene is this much narrower than exon
+	private static final int MIN_BP_FOR_ANNOT_DESC = 500; 	// minimum bp for show anno
+	private static final int GENES_FOR_ANNOT_DESC = 20;   	// average distance for 20 genes
 	
 	private static final double SPACE_BETWEEN_RULES = 35.0;
 	private static final double RULER_LINE_LENGTH = 3.0;

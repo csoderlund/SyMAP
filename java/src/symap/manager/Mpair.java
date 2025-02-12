@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.util.HashMap;
 
+import backend.AnchorMain;
 import backend.Constants;
 import backend.anchor1.Group;
 import database.DBconn2;
@@ -91,7 +92,7 @@ public class Mpair {
 	public String getChangedAlign() { // AlignMain write to terminal
 		String msg = getAlign(FILE);
 		if (msg.isEmpty()) return "";
-		return "Non-default parameters: " + msg +"\n";
+		return msg;
 	}
 	public String getChangedParams(int type) {// ManagerFrame for selected when need align; SumFrame (DB type)
 		String amsg = getAlign(type);   // could be empty
@@ -101,17 +102,15 @@ public class Mpair {
 	
 	private String getAlign(int type) {// return "" if no change
 		String msg="";
+		if (isChg(type,"promer_only")) 		msg = join(msg, "Align PROmer only  ");
+		else if (isChg(type,"nucmer_only")) msg = join(msg, "Align NUCMER only  ");
+		
 		if (isChg(type,"self_args")) 		msg = " Self args: "   + getSelfArgs(type); // CAS555 aligned with other params
 		else if (isChg(type,"promer_args")) msg = " PROmer args: " + getPromerArgs(type);
 		else if (isChg(type,"nucmer_args")) msg = " NUCmer args: " + getNucmerArgs(type);
 		
-		if (isChg(type,"promer_only")) 		msg = join(msg, " PROmer only");
-		else if (isChg(type,"nucmer_only")) msg = join(msg, " NUCMER only");
-		
 		msg = join(msg, mProj1.getMaskedParam());
 		msg = join(msg, mProj2.getMaskedParam());
-		
-		if (!msg.isEmpty()) msg = "Align\n" + msg;
 		
 		return msg;
 	}
@@ -286,6 +285,8 @@ public class Mpair {
 		if (x!= -1) {
 			 dbc2.executeUpdate("DELETE from pairs WHERE idx="+ x);
 			 dbc2.resetAllIdx(); // CAS535 check all, even though some are not relevant
+			 
+		     new AnchorMain(dbc2, null, this).saveAnnoHitCnt(); // CAS561 add   
 		}
 	    pairIdx = -1;
 	}

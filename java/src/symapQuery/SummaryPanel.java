@@ -1,20 +1,20 @@
 package symapQuery;
-/**************************************************
- * CAS504 new class to compute the summary in one place (except regions)
- * The summary at the bottom of the results table.
- */
-import java.awt.Color;
-import java.awt.Font;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Vector;
 
 import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import util.ErrorReport;
+import util.Jcomp;
+
+/**************************************************
+ * * The summary at the bottom of the results table.
+ * Compute the summary in one place (except regions)
+ */
 
 public class SummaryPanel  extends JPanel {
 	private static final long serialVersionUID = 1L;
@@ -28,9 +28,7 @@ public class SummaryPanel  extends JPanel {
 			HashMap <String, String> projMap, 			// CAS555 changed from integer to string for PgeneF/Multi
 			HashMap <Integer, Integer> geneCntMap) {
 		
-		if (statsPanel == null) statsPanel = new JPanel();
-		statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.PAGE_AXIS));
-		statsPanel.setBackground(Color.WHITE);
+		if (statsPanel == null) statsPanel = Jcomp.createPagePanel();
 		if(rowsFromDB==null || rowsFromDB.size()==0) return;
 		
 		this.rowsFromDB = rowsFromDB;
@@ -45,6 +43,7 @@ public class SummaryPanel  extends JPanel {
 	 * Compute Stats - fills in the rest of panel
 	 */
 	private void computeStats(HashMap <String, String> projMap, HashMap <Integer, Integer> geneCntMap) {
+		
 		HashMap<String,String> chrStrMap = new HashMap<String, String>();
 		HashSet<Integer> gidxSet = new HashSet<Integer> ();
 		
@@ -54,7 +53,7 @@ public class SummaryPanel  extends JPanel {
     		if (!gidxSet.contains(dd.getChrIdx(1))) gidxSet.add(dd.getChrIdx(1));
     	}
    
-    	Vector <Integer> order = new Vector <Integer> (); // CAS522 added so stats are in order
+    	Vector <Integer> order = new Vector <Integer> (); // needed so stats are in order
     	for (int p = 0; p < spPanel.getNumSpecies(); p++) {
     		String projName = spPanel.getSpName(p);
     		order.add(spPanel.getSpIdx(p));
@@ -124,8 +123,7 @@ public class SummaryPanel  extends JPanel {
 			if (collinear>0) label += String.format("  Collinear %,d (#%,d)", collinear, collinearCnt.size());
 			if (maxGrp>0) label += String.format("   Groups: #%,d", maxGrp);
 			
-			JLabel theLabel = new JLabel(label);
-			theLabel.setFont(new Font("Monospaced", Font.PLAIN, 12));
+			JLabel theLabel = Jcomp.createMonoLabel(label);
 			statsPanel.add(theLabel);
 			statsPanel.add(Box.createVerticalStrut(5));
 			
@@ -145,8 +143,7 @@ public class SummaryPanel  extends JPanel {
 				if (projMap.containsKey(pName)) label += "   " + projMap.get(pName);
 				else 							label += "    Chr: " + chrStr;
 				
-				theLabel = new JLabel(label);
-				theLabel.setFont(new Font("Monospaced", Font.PLAIN, 12));
+				theLabel = Jcomp.createMonoLabel(label);
 				statsPanel.add(theLabel);
 			}
 		}
@@ -162,9 +159,8 @@ public class SummaryPanel  extends JPanel {
 				counterInc(proj2orphs, spIdx, 1);
 			}
 		/* create summary */
-			
 			statsPanel.add(Box.createVerticalStrut(5));
-			String type = (qPanel.isSingleOrphan()) ? "Orphans" : "Genes"; // CAS514
+			String type = (qPanel.isSingleOrphan()) ? "Orphans" : "Genes"; 
 			
 			for (int spIdx : proj2orphs.keySet() )
 			{
@@ -175,9 +171,7 @@ public class SummaryPanel  extends JPanel {
 				statsPanel.add(Box.createVerticalStrut(2));
 				String label = String.format("%-13s    %s: %,7d     Chr: %s",pname, type, o, chrStr);
 				
-				JLabel theLabel = new JLabel(label);
-				
-				theLabel.setFont(new Font("Monospaced", Font.PLAIN, 12));
+				JLabel theLabel = Jcomp.createMonoLabel(label);
 				statsPanel.add(theLabel);
 			}
 		}
@@ -189,5 +183,4 @@ public class SummaryPanel  extends JPanel {
 		if (!ctr.containsKey(key))	ctr.put(key, inc);
 		else						ctr.put(key, ctr.get(key)+inc);
     }
-	
 }

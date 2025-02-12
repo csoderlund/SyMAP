@@ -28,7 +28,7 @@ public class ComputeMulti {
 	private HashMap<String,String> projMap;
 	
 	// parameters
-	private boolean isSameChr=false, isExon=false, isTandem=false; // minor is done on query
+	private boolean isSameChr=false, isTandem=false; // minor is done on query
 	private int nHits = 0;
 	
 	// working
@@ -68,7 +68,6 @@ public class ComputeMulti {
 		for (int i=0; i<spIdxList.length; i++)
 			for (int j=0; j<spIdxList.length; j++) spSummaryCnts[i][j]=0;
 		
-		isExon 		= qPanel.isMultiExon();
 		isSameChr   = qPanel.isMultiChr();
 		isTandem 	= qPanel.isMultiTandem();
 		nHits 		= qPanel.getMultiN();
@@ -100,8 +99,6 @@ public class ComputeMulti {
 					symap.Globals.prt("No multi-hit genes for a species pair...");
 					return finalRows;
 				}
-				
-				if (isExon) filterExon(); if (!bSuccess) return finalRows;   	// In: inData  Out: inData; remove non-exon
 				
 				filterNhits(); 		if (!bSuccess) return finalRows;   			// In: inData  Out: spData
 				
@@ -196,22 +193,6 @@ public class ComputeMulti {
 	catch (Exception e) {ErrorReport.print(e, "make multi-hit genes"); bSuccess=false;}
 	}
 	
-	/**************************************************
-	 * Run before filterNhits to reduce the hits to the valid EE ones
-	 */
-	private void filterExon() {
-	try {
-		Vector <DBdata> eeData = new Vector <DBdata> ();
-		for (DBdata dObj : inData) {
-			if      (ii==0 && dObj.htype.startsWith("E")) eeData.add(dObj);
-			else if (ii==1 && dObj.htype.endsWith("E"))   eeData.add(dObj);
-		}
-		
-		inData.clear();
-		for (DBdata eObj : eeData) inData.add(eObj);
-	}
-	catch (Exception e) {ErrorReport.print(e, "filter exon"); bSuccess=false;}
-	}
 	/*************************************************
 	 * Run after filterNhits in order to reduce sets to those with tandem
 	 * In: spData sorted by geneTag/group; both genes  Out: spData;

@@ -11,7 +11,8 @@ public class Q {
 	static final String runCol =   "Collinear"; // loadRow; CAS517 equals TableData.ColumnComparator
 	static final String hitCol =   "Hit#";		// loadRow; CAS521 used for Align text
 	static final String grpCol =   "Grp#";		// loadRow; CAS555 show synteny
-	static final String grpSZ =   "Grp\nSize";	// CAS555 show synteny
+	static final String grpSZ =    "Grp\nSize";	// CAS555 show synteny
+	static final String hitPrefix = "Hit";		// Required prefix
 	
 	// CAS519 was Gene for Orphan and Hit for Pairs; now it always shows the genes; Chr is always same for hit/gene
 	static final String chrCol =	 "Chr";
@@ -46,8 +47,8 @@ public class Q {
 	static final int AEND = 4;			// PA.end
 	static final int ASTRAND = 5;		// PA.strand
 	static final int ANAME = 6;			// PA.name (description)
-	static final int AGENE = 7;			// PA.genenum CAS514 added; was computed in DBdata
-	static final int ANUMHITS = 8;		// PA.numhits CAS541 add
+	static final int AGENE = 7;			// PA.genenum
+	static final int ANUMHITS = 8;		// PA.numhits - For singles
 	
 	static final int HITIDX =   9;		// PH.idx
 	static final int HITNUM =   10;		// PH.hitnum
@@ -63,10 +64,10 @@ public class Q {
 	static final int PSIM = 20;			// PH.cvgpct
 	static final int HCNT = 21;			// PH.countpct
 	static final int HST = 22;			// PH.strand
-	static final int HSCORE = 23;		// PH.score, CAS540 add
-	static final int HTYPE = 24;		// PH.htype, CAS546 add
+	static final int HSCORE = 23;		// PH.score, Hit Cov
+	static final int HTYPE = 24;		// PH.htype, EE, EI, etc
 	static final int COSIZE = 25;		// PH.runsize
-	static final int CONUM = 26;		// PH.runnum, CAS520 add
+	static final int CONUM = 26;		// PH.runnum, 
 	
 	static final int BNUM = 27;			// B.blocknum
 	static final int BSCORE = 28;		// B.blockscore

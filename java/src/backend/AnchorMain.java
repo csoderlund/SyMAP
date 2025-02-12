@@ -5,10 +5,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.TreeMap;
+import java.util.Vector;
 
 import backend.anchor1.AnchorMain1;
 import backend.anchor2.AnchorMain2;
 import database.DBconn2;
+import symap.Globals;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
 import util.ErrorCount;
@@ -29,7 +31,7 @@ public class AnchorMain {
 	
 	// variables may be accessed directly by AnchorMain1 or AnchorMain2
 	public DBconn2 dbc2;
-	public ProgressDialog plog;
+	public ProgressDialog plog=null;
 	public Mpair mp;
 	public int pairIdx;
 	public boolean bInterrupt;
@@ -38,12 +40,13 @@ public class AnchorMain {
 		this.dbc2 = dbc2;
 		this.plog = log;
 		this.mp = mp;
-		this.pairIdx = mp.getPairIdx();
-		doAnchor1 = (mp.isAlgo1(Mpair.FILE));
+		if (mp!=null) {						// Null for Mproject.removeProjectFromDB; CAS561
+			this.pairIdx = mp.getPairIdx(); 
+			doAnchor1 = (mp.isAlgo1(Mpair.FILE));
+		}
 	}
-	public AnchorMain(DBconn2 dbc2) {this.dbc2=dbc2;} // Version.setAnnoHitCnt
 	
-	public boolean run(Mproject pj1, Mproject pj2) throws Exception {
+	protected boolean run(Mproject pj1, Mproject pj2) throws Exception {
 		try {
 		/** setup **/
 			long startTime = Utils.getTimeMem();
@@ -73,13 +76,13 @@ public class AnchorMain {
 				boolean b = an.run(pj1, pj2, dh); if (!b) return false;
 			}
 			
-			saveNumHits();
+			saveHitNum();
 			saveAnnoHitCnt();
 			
 		/** finish **/	
 			long modDirDate = new File(resultDir).lastModified(); // CAS532 add for Pair Summary with 'use existing files'
 			mp.setPairProp("pair_align_date", Utils.getDateStr(modDirDate));
-			
+			if (!Constants.VERBOSE) Globals.rclear();
 			Utils.prtTimeMemUsage(plog,  "Finish load hits", startTime);
 			return true;
 		}
@@ -92,9 +95,10 @@ public class AnchorMain {
 	 * CAS520 creates a hitnum to use for display, which is sequential and does not change on reload
 	 * CAS540x moved from AnchorsPost; 
 	 */
-	private boolean saveNumHits() { 
+	private boolean saveHitNum() { 
 	try {
-		System.out.println("   Compute and save hit#                   "); 
+		if (Constants.VERBOSE) plog.msg("   Compute and save hit#                                         "); 
+		else                   Globals.rprt("Compute and save hit#");
 		TreeMap <Integer, String> grpMap1 = mp.mProj1.getGrpIdxMap();
 		TreeMap <Integer, String> grpMap2 = mp.mProj2.getGrpIdxMap();
 		
@@ -118,7 +122,7 @@ public class AnchorMain {
 					hitcnt++;
 				}
 				rs.close();
-				System.out.print(grpMap1.get(g1) + ":" + grpMap2.get(g2) + " " + hitcnt + "\r");
+				Globals.rprt(grpMap1.get(g1) + ":" + grpMap2.get(g2) + " " + hitcnt);
 				
 			// save	
 				PreparedStatement ps = dbc2.prepareStatement("update pseudo_hits set hitnum=? where idx=?");
@@ -136,23 +140,23 @@ public class AnchorMain {
 	catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); return false;}
 	}
 	/********************************************************************
-	 * Count number of hits per gene; these include all pairwise projects except self
-	 * CAS541 Moved from AnchorsPost
+	 * Count number of hits per gene; these include all pairwise projects except self; CAS541 Moved from AnchorsPost; 
 	 */
-	private void saveAnnoHitCnt() {
-		plog.msg("   Compute and save gene numHits    ");
+	
+	public void saveAnnoHitCnt() { // CAS561 make public for Mpair.removePairFromDB
+		if (Constants.VERBOSE && plog!=null) plog.msg("   Compute and save gene numHits"); else Globals.rprt("Compute and save gene numHits");
 		TreeMap <Integer, String> idxList1 = mp.mProj1.getGrpIdxMap(); // CAS546 was using SyProj.Group
 		TreeMap <Integer, String> idxList2 = mp.mProj2.getGrpIdxMap();
-		for (int idx : idxList1.keySet()) if (!setAnnotHits(idx, idxList1.get(idx))) return;
-		for (int idx : idxList2.keySet()) if (!setAnnotHits(idx, idxList2.get(idx))) return;
-		System.out.print("                                            \r");
+		for (int idx : idxList1.keySet()) if (!saveAnnotHitCnt(idx, idxList1.get(idx))) return;
+		for (int idx : idxList2.keySet()) if (!saveAnnotHitCnt(idx, idxList2.get(idx))) return;
+		if (!Constants.VERBOSE) Globals.rclear();
 	}
-	private boolean setAnnotHits(int grpIdx, String grpName) { 
+	public boolean saveAnnotHitCnt(int grpIdx, String grpName) { // CAS561 make public for Mproject.removeProjectFromDB
 		try {
 			dbc2.executeUpdate("update pseudo_annot set numhits=0 where grp_idx=" + grpIdx);
 			ResultSet rs = dbc2.executeQuery("select count(*) from pseudo_annot where grp_idx=" + grpIdx);
 			int cnt = (rs.next()) ? rs.getInt(1) : 0;
-			if (cnt==0) return true; // CAS521 this is not a failure 
+			if (cnt==0) return true; 							// this is not a failure 
 			
 			HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> ();
 			
@@ -169,7 +173,7 @@ public class AnchorMain {
 			}
 			rs.close();
 
-			System.out.print("Process " + grpName + " Genes " + geneCntMap.size() + "\r");
+			Globals.rprt("Process " + grpName + " Genes " + geneCntMap.size());
 			
 			PreparedStatement ps = dbc2.prepareStatement("update pseudo_annot set numhits=? where idx=?");
 			for (int idx : geneCntMap.keySet()) {
@@ -181,6 +185,8 @@ public class AnchorMain {
 			}
 			ps.executeBatch();
 			ps.close();
+			
+			Globals.rclear();
 			return true;
 		}
 		catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); return false;}

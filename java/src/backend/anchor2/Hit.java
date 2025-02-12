@@ -96,7 +96,7 @@ public class Hit {
 				HitGene hg = geneMap.get(xgene.geneIdx);
 				hg.cnt--;
 			}
-			else symap.Globals.xprt("No gene " + xgene.geneTag + " for hit #" + hitNum);
+			else symap.Globals.tprt("No gene " + xgene.geneTag + " for hit #" + hitNum);
 		}
 		if (ygene!=null) {
 			geneMap = (X!=T) ? tGeneMap : qGeneMap;
@@ -104,7 +104,7 @@ public class Hit {
 				HitGene hg = geneMap.get(ygene.geneIdx);
 				hg.cnt--;
 			}
-			else symap.Globals.xprt("No gene " + xgene.geneTag + " for hit #" + hitNum);
+			else symap.Globals.tprt("No gene " + xgene.geneTag + " for hit #" + hitNum);
 		}
 	}
 	
@@ -113,7 +113,7 @@ public class Hit {
 		HashMap <Integer, HitGene> geneMap = (X==T) ? tGeneMap : qGeneMap;
 		
 		if (!geneMap.containsKey(xgene.geneIdx)) {
-			symap.Globals.xprt("****No " + xgene.geneTag);
+			symap.Globals.tprt("****No " + xgene.geneTag);
 			return false;
 		}
 		

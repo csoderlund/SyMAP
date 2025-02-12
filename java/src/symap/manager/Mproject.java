@@ -15,6 +15,7 @@ import util.Utilities;
 import database.DBconn2;
 import props.PropertiesReader;
 import symap.Globals;
+import backend.AnchorMain;
 import backend.Constants;
 
 /****************************************************
@@ -119,7 +120,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public int getID() 			{ return projIdx; }
 	public String getDBName() 	{ return strDBName; }
 	public String getDisplayName() 	{ return strDisplayName; }// getProjVal(sDisplay); }
-	
+	public int getGeneCnt()		{ return numGene;} // CAS561 add for Query Instructions
 	public String getLoadDate() {return strDate;}
 	public int getNumGroups() 	{ return numGroups; }
 	
@@ -445,10 +446,30 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	}
 	public void removeProjectFromDB() {
 	try {
+		// Setup for update numHits for single Query; CAS561  
+		Vector <Integer> proj2Idx = new Vector <Integer> ();
+		ResultSet rs = dbc2.executeQuery("select proj1_idx, proj2_idx from pairs where proj1_idx=" + projIdx + " or proj2_idx=" + projIdx);
+	    while (rs.next()) {
+	    	int idx1 = rs.getInt(1), idx2 = rs.getInt(2);
+	    	if (idx1==projIdx) proj2Idx.add(idx2); else proj2Idx.add(idx1);
+	    }
+	    
+	    /* Main Delete */
         dbc2.executeUpdate("DELETE from projects WHERE name='"+ strDBName+"'");
         dbc2.resetAllIdx(); // CAS535 changed from individual
+        
         nStatus = STATUS_ON_DISK; 
         projIdx = -1; 
+        
+        // update numHits; CAS561
+        AnchorMain ancObj = new AnchorMain(dbc2, null, null);
+        for (int idx : proj2Idx) {
+        	Vector <Integer> gidxList = new Vector <Integer> ();
+        	rs = dbc2.executeQuery("select idx from xgroups where proj_idx=" + idx);
+        	while (rs.next()) gidxList.add(rs.getInt(1));
+        	
+        	for (int gidx : gidxList) ancObj.saveAnnotHitCnt(gidx,""); // get ResultClose error if not put in vector
+        }
 	} 
 	catch (Exception e) {ErrorReport.print(e, "Remove project from DB"); }
 	}

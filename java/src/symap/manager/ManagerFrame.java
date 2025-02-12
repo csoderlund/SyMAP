@@ -57,7 +57,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private static boolean TRACE = false;
 	protected static boolean inReadOnlyMode = false;// set from viewSymap script with -r
 	protected static int     maxCPUs = -1;			// arg -p
-	protected static boolean bCheckSQL = false;     // arg -v, set in symapCE.SyMAPmanager, which extends this
+	//protected static boolean bCheckSQL = false;    CAS561 mv to Globals // arg -v, set in symapCE.SyMAPmanager, which extends this
 	protected static boolean lgProj1st = false; 	// For Mummer; false sort on name; true sort on length
 	private static boolean   isCat = true;
 	
@@ -128,7 +128,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		// Add shutdown handler to kill mysqld on CTRL-C
         Runtime.getRuntime().addShutdownHook( new MyShutdown() );
         
-		initialize(bCheckSQL);
+		initialize(Globals.bMySQL);
 		
 		instructionsPanel = Jhtml.createInstructionsPanel(this.getClass().getResourceAsStream(HTML), getBackground());
 		JPanel projPanel = createProjectPanel();
@@ -1489,8 +1489,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (maxCPUs==-1) return;
 		if (!alignCheckProjDir()) return;
 		
-		if (!Utilities.showConfirm2("All Pairs", // CAS543 add check
-				"Align&Synteny for " + todoList.size() + " pairs")) return;
+		String msg = "Align&Synteny for " + todoList.size() + " pairs";
+		if (Constants.VERBOSE) msg += "\nVerbose mode: on"; else msg += "\nVerbose mode: off";
+		
+		if (!Utilities.showConfirm2("All Pairs", msg)) return; // CAS543 add check
+				
 		System.out.println("\n>>> Start all pairs: processing " + todoList.size() + " project pairs");
 		for (Mpair mp : todoList) {
 			if (!backend.Constants.CoSET_ONLY) mp.renewIdx(); // Removed existing; CAS556 add check
@@ -1540,6 +1543,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		String chgMsg = bAlignDone ? mp.getChangedSynteny() : mp.getChangedParams(Mpair.FILE);  // CAS546 add params
 		if (chgMsg!="") msg += "\n" + chgMsg;
+		if (Constants.VERBOSE) msg += "\nVerbose mode: on"; // CAS561
+		else msg += "\nVerbose mode: off";
 		
 		if (!Utilities.showConfirm2("Selected Pair", msg)) return;
 		

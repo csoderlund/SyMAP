@@ -12,8 +12,8 @@ import java.io.File;
  * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.6.0"; 
-	public static final String 	DATE = " (23-Jan-25)";
+	public static final String 	VERSION = "v5.6.1"; 
+	public static final String 	DATE = " (12-Feb-25)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER =  7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
@@ -28,6 +28,7 @@ public class Globals {
 	public static boolean DEBUG=false; 		// SyMAPmanager -dd; use for possible error
 	public static boolean DBDEBUG=false;	// SyMAPmanager -dbd; adds fields to DB
 
+	public static boolean bMySQL=false;		// SyMAPmanager -sql; check MySQL CAS561 chg from -v
 	public static boolean bTrim=true;		  // CAS531 do not trim 2D alignments; see closeup.AlignPool
 	public static boolean bRedoSum=false;	  // CAS560 was part of PRT_STATS, which is removed
 	public static boolean bQueryOlap=false;   // CAS560 show gene olap for algo2 instead of exon
@@ -61,10 +62,10 @@ public class Globals {
     public static final Cursor MOVE_CURSOR      = Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR);
     public static final Cursor CROSSHAIR_CURSOR = Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR);
   
-    public static Font textFont = new Font(Font.MONOSPACED,Font.PLAIN,12);
-    public static int textHeight = 12;
+    public static final Font textFont = new Font(Font.MONOSPACED,Font.PLAIN,12);
+    public static final int textHeight = 12;
     
-    public static Color white = Color.white;
+    public static final Color white = Color.white;
     
     public static String getExport() { // CAS547 add for 3 uses
     	String saveDir = System.getProperty("user.dir") + "/exports/";
@@ -84,7 +85,9 @@ public class Globals {
     
     public static void prt(String msg)  {System.out.println(msg);} // permanent message
     public static void xprt(String msg) {System.out.println(msg);} // temp message
-    public static void rprt(String msg) {System.out.print("      " + msg + "...                      \r");}
+    public static void rprt(String msg) {System.err.print("      " + msg + "...                   \r");}// CAS561 to stderr
+    public static void rclear() {
+    	System.err.print("                                                                               \r");} // CAS561 add
     public static void eprt(String msg) {System.err.println("***Error: " + msg);}
     public static void die(String msg)  {eprt(msg); System.exit(-1);}
     

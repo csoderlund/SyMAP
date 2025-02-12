@@ -127,7 +127,6 @@ public class RWdb {
 	 */
 	protected void writeResultsToFile(ProgressDialog mLog, String resultDir)  {
 	try {
-		mLog.msg("Write final results");
 		ResultSet rs = null;
 		
 		String idField1 = "ID", idField2 = "ID";

@@ -793,10 +793,12 @@ public class Utilities {
     // symapQuery.DBdata.passFilters; return number only
     static public String getGenenumIntOnly(String tag) {
     	if (tag=="-") return "";
-    	String gn = getGenenumFromDBtag(tag);
+    	
+    	String gn = tag.contains("(") ? getGenenumFromDBtag(tag) : tag; // CAS561 the () has already been removed
+    	
     	String [] tok = gn.split("\\.");
     	if (tok.length>0) return tok[0]; 
-    	else return gn; // CAS544 bugfix was returning full tag
+    	else return gn; 						// CAS544 bugfix was returning full tag
     }
     static public int getGenenumInt(String tag) { // CAS560 add for DBdata overlap only
     	if (tag=="-") return -1;

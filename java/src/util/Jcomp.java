@@ -7,6 +7,7 @@ import java.awt.Insets;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
 //import javax.swing.ImageIcon;
@@ -46,6 +47,14 @@ public class Jcomp {
 		page.setAlignmentX(Component.LEFT_ALIGNMENT);
 		page.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 0));
 
+		return page;
+	}
+	
+	static public JPanel createPagePanelNB() { // The border adds extra space, so do not want it in Query forms
+		JPanel page = new JPanel();
+		page.setLayout(new BoxLayout(page, BoxLayout.PAGE_AXIS)); // Y_AXIS
+		page.setBackground(Color.white);
+		page.setAlignmentX(Component.LEFT_ALIGNMENT);
 		return page;
 	}
 	static public JPanel createRowPanel() {
@@ -93,6 +102,14 @@ public class Jcomp {
 		tmp.setEnabled(true);
 		return tmp;
 	}
+	static public JLabel createLabel(String label, String tip, boolean enable) {
+		JLabel tmp = new JLabel(label);
+		tmp.setToolTipText(tip);
+		tmp.setBackground(Color.white);
+		tmp.setOpaque(true);  // allows the color to be changed on Mac
+		tmp.setEnabled(enable);
+		return tmp;
+	}
 	static public JLabel createHtmlLabel(String text) {
 		String html = "<html><b><i>" + text + "</i></b></html";
 		JLabel l = new JLabel(html);
@@ -103,6 +120,12 @@ public class Jcomp {
 		JLabel lab = new JLabel(label);
 		lab.setFont(new Font(Font.MONOSPACED,Font.PLAIN,13)); //lab.getFont().getName()
 		lab.setToolTipText(t);
+		lab.setBackground(Color.white);
+		return lab;
+	}
+	static public JLabel createMonoLabel(String label) {
+		JLabel lab = new JLabel(label);
+		lab.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12)); 
 		lab.setBackground(Color.white);
 		return lab;
 	}
@@ -328,5 +351,20 @@ public class Jcomp {
 		txt.setMinimumSize(txt.getPreferredSize());
 		txt.setMaximumSize(txt.getPreferredSize());
 		return txt;
+	}
+	public static JTextField createTextField(String defVal, String tip, int size, boolean def) {
+		JTextField txt = new JTextField(defVal, size);
+		txt.setToolTipText(tip);
+		txt.setEnabled(def);
+		txt.setBackground(Color.white);
+		txt.setMinimumSize(txt.getPreferredSize());
+		txt.setMaximumSize(txt.getPreferredSize());
+		return txt;
+	}
+	public static boolean isWidth(int width, JLabel lab) {// CAS561 add
+		return (width > lab.getPreferredSize().width);
+	}
+	public static int getWidth(int width, JLabel lab) {// use with Box.createHorizontalStrut for spacing
+		return width - lab.getPreferredSize().width;
 	}
 }

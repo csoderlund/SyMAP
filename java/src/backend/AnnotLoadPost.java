@@ -58,11 +58,10 @@ public class AnnotLoadPost {
 			
 			TreeMap <Integer, String> grpIdxList = mProj.getGrpIdxMap();
 			for (int idx : grpIdxList.keySet()){
-				//System.err.print("Process " + g.getName() + "                \r");
 				computeGeneNum(idx, grpIdxList.get(idx)); if (!isSuccess) return isSuccess;	// CAS512 moved from SyntenyMain
 				computeTags(idx, grpIdxList.get(idx));    if (!isSuccess) return isSuccess;	
 			}
-			System.err.print("                                                 \r");
+			Globals.rclear();
 			Utils.prtNumMsg(plog, totGeneNum,      "Unique gene numbers");
 			Utils.prtNumMsg(plog, totOverlap,   "Overlapping genes");
 			Utils.prtNumMsg(plog, totContained, "Contained genes");
@@ -122,7 +121,7 @@ public class AnnotLoadPost {
 			
 			for (GeneData gd : geneMap.values()) gd.tag = gd.genenum + "." + gd.suffix; // CAS543 "Gene #" + gd.genenum + gd.suffix; 
 			
-			System.err.print("   " + grpName + " " + genenum + " genes                    \r");
+			Globals.rprt(grpName + " " + genenum + " genes");
 			totGeneNum+= genenum;
 			genenum=0;
 		}
@@ -223,10 +222,10 @@ public class AnnotLoadPost {
 					if (Cancelled.isCancelled()) {isSuccess=false;return;}
 					ps.executeBatch();
 					cntBatch=0;
-					System.err.print("   " + grpName + " count " + exonUpdate + " exons for "  + geneUpdate + " genes        \r");
+					Globals.rprt(grpName + " count " + exonUpdate + " exons for "  + geneUpdate + " genes");
 				}
 			}
-			System.err.print("                                                                         \r");
+			Globals.rclear();
 			if (cntBatch>0) ps.executeBatch();
 			totexonUpdate += exonUpdate;
 			totgeneUpdate += geneUpdate;

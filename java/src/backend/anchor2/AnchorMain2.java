@@ -41,9 +41,8 @@ public class AnchorMain2 {
 	protected Mproject mProj1, mProj2;
 	protected int topN=0;
 	
-	protected int cntG2=0, cntG1=0, cntG0=0, cntClusters=0; // GrpPair.saveClusterHits
-	protected int cntG2Fil=0, cntG1Fil=0, cntG0Fil=0, cntPileFil=0;   // GrpPair.createClusters
-	protected int cntWSMulti=0, cntWSSingle=0;
+	protected int cntG2=0, cntG1=0, cntG0=0, cntClusters=0; 			// GrpPair.saveClusterHits
+	protected int cntG2Fil=0, cntG1Fil=0, cntG0Fil=0, cntPileFil=0;   	// GrpPair.createClusters
 	
 	protected PrintWriter fhOutHit=null, fhOutCl=null, fhOutGene=null, fhOutPile=null;
 	protected PrintWriter [] fhOutHPR = {null,null,null};
@@ -64,6 +63,8 @@ public class AnchorMain2 {
 
 	/*********************************/
 	public AnchorMain2(AnchorMain mainObj) {
+		Arg.setVB();
+		
 		this.mainObj = mainObj;
 		this.plog = mainObj.plog;
 		this.mPair = mainObj.mp;
@@ -74,7 +75,7 @@ public class AnchorMain2 {
 		double gene = mPair.getGeneScale(Mpair.FILE);
 		double g0   = mPair.getG0Scale(Mpair.FILE);
 		double len   = mPair.getLenScale(Mpair.FILE);
-		argParams += Arg.setFromParams(exon, gene, g0, len, plog);
+		argParams += Arg.setFromParams(exon, gene, g0, len);
 		
 		Arg.pEE = mPair.isEEpile(Mpair.FILE);
 		Arg.pEI = mPair.isEIpile(Mpair.FILE);
@@ -93,11 +94,10 @@ public class AnchorMain2 {
 		long totTime = Utils.getTime();
 		
 	// read anno: create master copies for genes in a TreeMap per chr
-		Utils.prtIndentMsgFile(plog, 0, "Load genes for Algo2");
+		if (Arg.VB) Utils.prtIndentMsgFile(plog, 1, "Load genes for Algo2"); else Globals.rprt("Load genes for Algo2");
 		loadAnno(T, mProj2, tGrpGeneMap); 	if (!bSuccess) return false;
 		loadAnno(Q, mProj1, qGrpGeneMap); 	if (!bSuccess) return false;
-		argParams += Arg.setLenFromGenes(avgIntronLen, avgGeneLen, percentCov, plog);
-		Utils.prtIndentMsgFile(plog, 0, "");
+		argParams += Arg.setLenFromGenes(avgIntronLen, avgGeneLen, percentCov);
 		
 		prtFileOpen();
 		
@@ -108,24 +108,17 @@ public class AnchorMain2 {
 		prtFileClose();
 		clearTree();
 		
-		Utils.prtIndentMsgFile(plog, 1, "Final totals:                                                   ");	
+		Globals.rclear();
+		Utils.prtIndentMsgFile(plog, 1, "Final totals");	
 		
 		String msg1 = String.format("%,10d Clusters  Both genes %,8d   One gene %,8d   No gene %,8d",
 				cntClusters, cntG2, cntG1, cntG0);
 		Utils.prtIndentMsgFile(plog, 1, msg1);	
-		plog.msgOnly(String.format("%,10d Clusters", cntClusters));
 		
 		int total = cntG2Fil+cntG1Fil+cntG0Fil;
-		
 		String msg2 = String.format("%,10d Filtered  Both genes %,8d   One gene %,8d   No gene %,8d   Pile hits %,d",
 				total, cntG2Fil, cntG1Fil, cntG0Fil, cntPileFil);
 		Utils.prtIndentMsgFile(plog, 1, msg2);	
-		
-		if (cntWSMulti>0 || cntWSSingle>0) {
-			String msg3 = String.format("%,10d Both genes - cluster strands differ from genes (Multi %,d, Single %,d)",
-					(cntWSMulti+cntWSSingle), cntWSMulti, cntWSSingle);
-			Utils.prtIndentMsgFile(plog, 1, msg3);	
-		}
 		
 		if (Arg.TRACE) Utils.prtTimeMemUsage(plog, "   Finish ", totTime); // also writes in AnchorMain after a few more comps
 		
@@ -251,12 +244,20 @@ public class AnchorMain2 {
 			avgIntronLen[X] = (int) Math.round((double)sumIntron/(double)nIntron); 
 			percentCov[X] 	= ((double)sumExon/(double)(sumGene))*100.0;
 			
-			String m2 = String.format("   %-12s [Avg Min Max] [Gene %5s %3s %5s] [Intron %5s %3s %5s] [Exon %5s %3s %5s] Exon Cov %4.1f%s",
-				mProj.getDisplayName(),
-				Utilities.kText(avgGeneLen[X]),   Utilities.kText(minGene),   Utilities.kText(maxGene), 
-				Utilities.kText(avgIntronLen[X]), Utilities.kText(minIntron), Utilities.kText(maxIntron),
-				Utilities.kText(avgExonLen[X]),   Utilities.kText(minExon),   Utilities.kText(maxExon),  percentCov[X], "%");
-			Utils.prt(plog,  m2); 
+			if (Arg.VB) {
+				String msg = String.format("%-10s [Avg Min Max] [Gene %5s %3s %5s] [Intron %5s %3s %5s] [Exon %5s %3s %5s] Cov %4.1f%s",
+				  mProj.getDisplayName(),
+				  Utilities.kText(avgGeneLen[X]),   Utilities.kText(minGene),   Utilities.kText(maxGene), 
+				  Utilities.kText(avgIntronLen[X]), Utilities.kText(minIntron), Utilities.kText(maxIntron),
+				  Utilities.kText(avgExonLen[X]),   Utilities.kText(minExon),   Utilities.kText(maxExon),  percentCov[X], "%");
+				Utils.prtIndentMsgFile(plog, 2, msg);
+			}
+			else {
+				String msg = String.format("%-10s [Avg Gene %5s Intron %5s Exon %5s] Cov %4.1f%s",
+					mProj.getDisplayName(), Utilities.kText(avgGeneLen[X]),  
+					Utilities.kText(avgIntronLen[X]), Utilities.kText(avgExonLen[X]), percentCov[X], "%");
+				Globals.rprt(msg);
+			}
 		} 
 		catch (Exception e) {ErrorReport.print(e, "load anno " + Arg.side[X]); bSuccess=false;}
 	}
@@ -302,6 +303,9 @@ public class AnchorMain2 {
 		int [] cntHitGene = {0,0};
 		String line;
 		GrpPair pairObj;
+		int cntErr=0, cnt=0, cntNoChr=0;
+		TreeSet <String> noChrSetQ = new TreeSet <String> ();
+		TreeSet <String> noChrSetT = new TreeSet <String> ();
 		
 		BufferedReader reader = new BufferedReader ( new FileReader ( fObj ) ); 
 		while ((line = reader.readLine()) != null) {	
@@ -309,7 +313,16 @@ public class AnchorMain2 {
 			if (line.equals("") || !Character.isDigit(line.charAt(0))) continue;
 			// CAS555 allow nucmer; removed code here that was not allowing it
 			
+			cnt++;
 			String[] tok = line.split("\\s+");
+			if (tok.length<13) { 								// CAS561 add error check
+				plog.msg("*** Missing values, only " + tok.length + " must be >=13                       ");
+				plog.msg("  Line: " + line);
+				plog.msg("  Line " + cnt + " of file " + fObj.getAbsolutePath());
+				cntErr++;
+				if (cntErr>5) Globals.die("Too many errors in " + fObj.getAbsolutePath());
+				continue;
+			}
 			int poffset = (tok.length > 13 ? 2 : 0); // nucmer vs. promer
 			
 			int [] start = {Integer.parseInt(tok[0]), Integer.parseInt(tok[2])};
@@ -334,8 +347,24 @@ public class AnchorMain2 {
 			if (start[Q]>end[Q]) {int t=start[Q]; start[Q]=end[Q]; end[Q]=t;}
 
 		// Get grpIdx using name
-			int grpIdx1 = mProj1.getGrpIdxFromName(chrQ); if (grpIdx1==-1) die("No " + chrQ + " for " + proj1Name);
-			int grpIdx2 = mProj2.getGrpIdxFromName(chrT); if (grpIdx2==-1) die("No " + chrT + " for " + proj2Name);
+			int grpIdx1 = mProj1.getGrpIdxFromName(chrQ); 
+			if (grpIdx1==-1) { 									// CAS561 allow this 
+				if (!noChrSetQ.contains(chrQ)) {
+					Globals.rprt("No " + chrQ + " for " + proj1Name);
+					noChrSetQ.add(chrQ);
+				}
+				cntNoChr++;
+				continue;
+			}
+			int grpIdx2 = mProj2.getGrpIdxFromName(chrT); 
+			if (grpIdx2==-1) {									// CAS561 allow this 
+				if (!noChrSetT.contains(chrT)) {
+					Globals.rprt("No " + chrT + " for " + proj2Name);
+					noChrSetQ.add(chrT);
+				}
+				cntNoChr++;
+				continue;
+			}
 			
 			int [] grpIdx = {grpIdx2, grpIdx1}; // Query is Mproj1; second set of MUMMER coords
 			
@@ -379,11 +408,26 @@ public class AnchorMain2 {
 		}
 		reader.close();
 		
+		Globals.rclear();
 		String x =  (cntLongHit>0) ? String.format("Long Hits %,d", cntLongHit) : "";
-		plog.msg(String.format("Load %s  Hits %,d (EQ %,d NE %,d) %s", fileName, hitNum, hitEQ, hitNE, x)); // CAS555 added Nhits; CAS560 add EQ/NE
-		if (Globals.TRACE) {
-			String msg = String.format("Hit genes %s %,d   %s %,d  ", proj2Name, cntHitGene[Arg.T], proj1Name,  cntHitGene[Arg.Q]);							 
-			Utils.prtIndentMsgFile(plog, 1, msg); 
+		String msg = String.format("Load %s  Hits %,d (EQ %,d NE %,d) %s", fileName, hitNum, hitEQ, hitNE, x);
+		if (Arg.VB)  Utils.prtIndentMsgFile(plog, 1, msg); else Globals.rprt(msg);	
+		if (cntNoChr>0) { // CAS561 
+			if (noChrSetQ.size()>0) {
+				msg = proj1Name + " (" + noChrSetQ.size() + "): ";
+				for (String c : noChrSetQ) msg += c + " ";
+				Utils.prtNumMsgFile(plog, cntNoChr, "lines without loaded sequence:  " + msg);
+			}
+			if (noChrSetT.size()>0) {
+				msg = proj2Name + " (" + noChrSetT.size() + "): ";
+				for (String c : noChrSetT) msg += c + " ";
+				Utils.prtNumMsgFile(plog, cntNoChr, "lines without loaded sequence:  " + msg);
+			}
+		}
+							
+		if (Arg.TRACE) {
+			msg = String.format("Hit genes %s %,d   %s %,d", proj2Name, cntHitGene[Arg.T], proj1Name,  cntHitGene[Arg.Q]);							 
+			Utils.prtIndentMsgFile(plog, 2, msg); 
 		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "read file"); bSuccess=false;}
