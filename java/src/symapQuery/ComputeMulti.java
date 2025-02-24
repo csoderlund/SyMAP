@@ -68,7 +68,7 @@ public class ComputeMulti {
 		for (int i=0; i<spIdxList.length; i++)
 			for (int j=0; j<spIdxList.length; j++) spSummaryCnts[i][j]=0;
 		
-		isSameChr   = qPanel.isMultiChr();
+		isSameChr   = qPanel.isMultiSame();
 		isTandem 	= qPanel.isMultiTandem();
 		nHits 		= qPanel.getMultiN();
 	}

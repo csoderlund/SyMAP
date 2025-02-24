@@ -138,8 +138,8 @@ Transcriptomes</b>, see <a href="https://csoderlund.github.io/TCW/" class="ext" 
 <td style="text-align: right"><a href="#top">Go to top</a></table>
 
 SyMAP is a system for computing, displaying, and analyzing syntenic alignments between
-medium-to-high divergent eukaryotic genomes. Recent changes have improved
-its performance for less divergent eukaryotic genomes (use <a href="SystemHelp.html#clust" class="ext" target="_blank">Cluster Hit Algo2</a>).
+divergent eukaryotic genomes.  It is designed for the comparison of a few genomes at a time
+(i.e. 2-4) where synteny is computed between each pair.
 Its features include the following:
 <table class="tx">
 <tr><td>
@@ -147,8 +147,7 @@ Its features include the following:
 	<li><i>Compute</i>
 	<ul>
 		<li>Find synteny between two sequenced eukaryotic genomes with optional annotation.
-		<li>Draft sequence ordering by synteny, i.e.
-		align a draft genome to a fully sequence (not draft-to-draft).
+		<li>Draft sequence ordering by synteny, i.e. align a draft genome to a fully sequence (not draft-to-draft).
 		<li>Self-synteny.
 	</ul>
 	<li><i>Query and view</i>
@@ -175,8 +174,6 @@ Its features include the following:
 <!---------------------------------------------------->
 <a id="pubs"></a>
 <h4>Publications</h4>
-
-
 SyMAP is freely distributed software, however <font color=green><b><i>if you use SyMAP results in published
 research, you must cite one or both of the following articles along with the external
 program MUMmer<sup>1,2</sup></i></b></font>.
@@ -185,13 +182,11 @@ program MUMmer<sup>1,2</sup></i></b></font>.
         SyMAP: A turnkey synteny system with application to plant genomes.
         Nucleic Acids Research 39(10):e68.
 </pre>
-<p>
-<pre>
+<p><pre>
         C. Soderlund,  W. Nelson, A. Shoemaker and A. Paterson (2006)
         SyMAP: A System for Discovering and Viewing Syntenic Regions of FPC maps
         Genome Research 16:1159-1168.
 </pre>
-
 The back-end processing of SyMAP runs MUMmer<sup>1,2</sup> for the alignments (included in the tarball)
 and computes the synteny block from the alignment results. The SyMAP synteny algorithm is described
 in the above two publications, though there are many unpublished updates since publication.

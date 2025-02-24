@@ -11,7 +11,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.HashMap;
-import java.util.TreeSet;
 
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -479,23 +478,38 @@ public class TableData implements Serializable {
 	 * musm Gene# X.520.	Panx Gene# -	hsap Gene# X.23.
 	 * Panx Hstart -	musm Hend 100363922	hsap Hstart 5892760	Panx Hend -	musm Hstart 100363026	hsap Hend 5893665
      */
-    protected HashMap <String, Object> getRowLocData(int row) {
+    protected HashMap <String, Object> getRowLocData(int row) { // For Group
 		HashMap <String, Object> headVal = new HashMap <String, Object> ();
 		for (int i=0; i<arrHeaders.length; i++) {
 			String colName = arrHeaders[i].getColumnName();
-			// CAS556 changed contains to endsWith because spAbbr could be column name
+	
+			// endsWith because spAbbr could be column name; CAS556 changed from contains 
 			if (colName.endsWith(Q.chrCol)) 		headVal.put(colName, arrData[row][i]);
 			else if (colName.endsWith(Q.hStartCol)) headVal.put(colName, arrData[row][i]);
 			else if (colName.endsWith(Q.hEndCol)) 	headVal.put(colName, arrData[row][i]);
-			else if (colName.endsWith(Q.gNCol)) 	headVal.put(colName, arrData[row][i]);// CAS521 gene#
+			else if (colName.endsWith(Q.gNCol)) 	headVal.put(colName, arrData[row][i]);
 			else if (colName.equals(Q.blockCol)) 	headVal.put(colName, arrData[row][i]);
-			else if (colName.equals(Q.runCol)) 		headVal.put(colName, arrData[row][i]); // CAS520
-			else if (colName.equals(Q.hitCol)) 		headVal.put(colName, arrData[row][i]); // CAS521
-			else if (colName.equals(Q.grpCol)) 		headVal.put(colName, arrData[row][i]); // CAS555
+			else if (colName.equals(Q.runCol)) 		headVal.put(colName, arrData[row][i]); 
+			else if (colName.equals(Q.hitCol)) 		headVal.put(colName, arrData[row][i]); 
+			else if (colName.equals(Q.grpCol)) 		headVal.put(colName, arrData[row][i]); 
 		}
 		return headVal;
     }
-    /* For view row */
+    protected void getRowLocData(int row, Vector <String> colNames, Vector <Object> colVals) {// For 2D 3track; CAS562 add
+  		for (int i=0; i<arrHeaders.length; i++) {
+  			String colName = arrHeaders[i].getColumnName();
+  	
+  			if (colName.endsWith(Q.chrCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
+  			else if (colName.endsWith(Q.hStartCol)) {colNames.add(colName); colVals.add(arrData[row][i]);}
+  			else if (colName.endsWith(Q.hEndCol)) 	{colNames.add(colName); colVals.add(arrData[row][i]);}
+  			else if (colName.endsWith(Q.gNCol)) 	{colNames.add(colName); colVals.add(arrData[row][i]);}
+  			else if (colName.equals(Q.blockCol)) 	{colNames.add(colName); colVals.add(arrData[row][i]);}
+  			else if (colName.equals(Q.runCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
+  			else if (colName.equals(Q.hitCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
+  			else if (colName.equals(Q.grpCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
+  		}
+     }
+    /* For show row */
     protected String getRowData(int row) {
     	String line="";
 		for (int i=0; i<arrHeaders.length; i++) {

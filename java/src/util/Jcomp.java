@@ -14,6 +14,7 @@ import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JToggleButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -291,6 +292,13 @@ public class Jcomp {
 		jbutton.setToolTipText(t);
 		return jbutton;
 	}
+	static public JButton createButton(String s, boolean b) {
+		JButton jbutton = new JButton(s);
+		jbutton.setBackground(Color.white); 
+		jbutton.setMargin(new Insets(1,3,1,3));
+		jbutton.setEnabled(b);
+		return jbutton;
+	}
 	// CAS552 added for 2D filters
 	static public JButton createMonoButton(String s, String t) {
 		JButton jbutton = new JButton(s);
@@ -365,6 +373,12 @@ public class Jcomp {
 		return (width > lab.getPreferredSize().width);
 	}
 	public static int getWidth(int width, JLabel lab) {// use with Box.createHorizontalStrut for spacing
+		return width - lab.getPreferredSize().width;
+	}
+	public static boolean isWidth(int width, JComponent lab) {// CAS562 add
+		return (width > lab.getPreferredSize().width);
+	}
+	public static int getWidth(int width, JComponent lab) {// use with Box.createHorizontalStrut for spacing
 		return width - lab.getPreferredSize().width;
 	}
 }

@@ -53,6 +53,7 @@ public class SeqHits  {
 		this.mapper = mapper;
 		this.seqObj1 = st1;
 		this.seqObj2 = st2;
+		boolean bHit1 = st1.position==1 || st2.position==1;
 		
 		int off1 = HIT_OFFSET, off2 = HIT_OFFSET;
 		HitData lasthd = null;
@@ -63,8 +64,7 @@ public class SeqHits  {
 			HitData hd = hitList.get(i);
 			allHitsArray[i] = new DrawHit(hd);
 			
-			boolean isSelected = mapper.isQuerySelHit(hd.getHitNum(), // CAS555 add idx for group
-					hd.getStart1(), hd.getEnd1(), hd.getStart2(),hd.getEnd2());	
+			boolean isSelected = mapper.isQuerySelHit(hd.getHitNum(), bHit1); // for group or hit highlight; CAS555, CAS562	
 			allHitsArray[i].set(isSelected);
 			
 			// Calc offset for display for seq1

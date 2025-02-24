@@ -63,6 +63,33 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
+<a id="v562"></a>
+<h3>Release: v5.6.2 (24-Feb-25)</h3>
+New <ttl>Queries</ttl> features for 3 species.
+
+<ul>
+<li><ttl>Queries</ttl>
+	<ul>
+	<li><ttl>View 2D</ttl>:
+		<ul>
+		<li>It will display <ttl>View 2D</ttl> with 3-tracks (chromosomes) if two rows are selected which have a common reference gene,
+		and has 'both' genes in both rows. This works with the <ttx>Region</ttx> or <ttx>Collinear Set</ttx> options.
+		See <a href="Query.html#msp" class="ext" target="_blank">3-chromosome 2D</a>.
+		<li>A new <ttx>Gene#</ttx> checkbox for <ttl>View 2D</ttl> which shows the <ttx>Gene#</ttx> instead of the <ttx>Annotation</ttx>.
+		</ul>
+	<li><ttl>Report...</ttl>:
+		<ul>
+		<li>Add export to TSV.
+		<li>Add <ttl>Row all</ttl> and <ttl>Collinear all</ttl> for when
+		there is &gt;2 species, it requires all species to be present
+		(see <a href="Query.html#report" class="ext" target="_blank">Report...</a>).
+		<li>Many small improvements.
+		</ul>
+	</ul>
+<br>
+<li><small><ttl>Developers:</ttl> (1) Rewrote part of Query.tableReport.java.
+(2) Small changes to the Query Result tab.</small>
+</ul>
 <a id="v561"></a>
 <h3>Release: v5.6.1 (12-Feb-25)</h3>
 Bug fixes, minor updates to A&S output, and improved <ttl>Queries</ttl>.
@@ -242,10 +269,8 @@ Add -ii for Query Overlap genes, 2D popup indices, and hit popup Extend column.<
 <li><small>Query: Export: Prompt user if rows have been selected.
 Query Table: cleaned up old code and some rearranging.</small>
 </ul>
-
 </ul>
 </ul>
-
 
 <a id="v559"></a>
 <h3>Release: v5.5.9 (24-Sept-24)</h3>

@@ -53,6 +53,7 @@ public class SpeciesSelectPanel extends JPanel {
 	}
 	protected void setClear() {
 		for (SpeciesSelect p : spPanels) p.setClear();
+		isNoLoc = false; // CAS562 add bug fix
 	}
 	protected void setChkEnable(boolean isChk, int type) { 
 		isNoLoc = isChk;

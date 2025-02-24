@@ -161,10 +161,9 @@ public class Mapper extends JComponent
 		return false; // target
 	}
 	
-	// CAS516 change to one call instead of 4; CAS555 add idx for group highlight
-	public boolean isQuerySelHit(int idx, int s1, int e1, int s2, int e2) {
-		if(theTablePanel != null)
-			return theTablePanel.isHitSelected(idx, s1, e1, s2, e2);
+	// CAS516 change to one call instead of 4; CAS555 add idx for group highlight; CAS562 change to only hitnum
+	public boolean isQuerySelHit(int idx, boolean bHit1) {
+		if(theTablePanel != null) return theTablePanel.isHitSelected(idx, bHit1);
 		return false;
 	}
 	/********************************************************************/

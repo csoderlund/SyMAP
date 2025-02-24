@@ -59,7 +59,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	protected int projIdx=Globals.NO_VALUE, otherProjIdx=Globals.NO_VALUE;
 	private String projectName, displayName, otherProjName;
 	protected int chrSize = 0;  				// full chr size, static; CAS551 was long
-	protected int position;						// track position
+	public int position;						// track position; CAS562 make public for SeqHits.
 	protected int orient = Globals.LEFT_ORIENT; // right (-1) center(0) left (1)
 	private Color bgColor; 	
 	private TextLayout titleLayout;
@@ -650,6 +650,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	}	
 
 	public void setAnnotation() {sfilObj.bShowAnnot=true;} // CAS543 changed from setting static from Query.TableDataPanel
+	public void setGeneNum()    {sfilObj.bShowGeneNum=true;}  // CAS562 add for 2D-3track query
 	
 	protected TrackData getData() {return new TrackData(this);} // TrackHolder.getTrackData
 	

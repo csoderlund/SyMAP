@@ -134,7 +134,7 @@ public class QueryPanel extends JPanel {
 		return 0;
 	}
 	
-	protected boolean isMultiChr() {return radMultiSame.isEnabled() && radMultiSame.isSelected();} // CAS555
+	protected boolean isMultiSame() {return radMultiSame.isEnabled() && radMultiSame.isSelected();} // CAS555
 	protected boolean isMultiTandem() {return radMultiTandem.isEnabled() && radMultiTandem.isSelected();} // CAS555
 	
 	// collinear

@@ -12,8 +12,8 @@ import java.io.File;
  * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.6.1"; 
-	public static final String 	DATE = " (12-Feb-25)";
+	public static final String 	VERSION = "v5.6.2"; 
+	public static final String 	DATE = " (24-Feb-25)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER =  7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
@@ -29,7 +29,7 @@ public class Globals {
 	public static boolean DBDEBUG=false;	// SyMAPmanager -dbd; adds fields to DB
 
 	public static boolean bMySQL=false;		// SyMAPmanager -sql; check MySQL CAS561 chg from -v
-	public static boolean bTrim=true;		  // CAS531 do not trim 2D alignments; see closeup.AlignPool
+	public static boolean bTrim=true;		  // do not trim 2D alignments; see closeup.AlignPool; CAS531 
 	public static boolean bRedoSum=false;	  // CAS560 was part of PRT_STATS, which is removed
 	public static boolean bQueryOlap=false;   // CAS560 show gene olap for algo2 instead of exon
 	//public static boolean HITCNT_ONLY=false;// CAS560 remove; -y CAS541 to update the hitcnt without having to redo synteny

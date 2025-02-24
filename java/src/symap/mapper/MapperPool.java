@@ -47,22 +47,21 @@ public class MapperPool {
 		String chr1="?", chr2="?";
 
 		try {
-			chr1 = dbc2.executeString("select name from xgroups where idx=" + grpIdx1); // CAS517 add chrname for display
+			chr1 = dbc2.executeString("select name from xgroups where idx=" + grpIdx1); 
 			chr2 = dbc2.executeString("select name from xgroups where idx=" + grpIdx2);
 			
 			// CAS545 alloc correct size
 			int n = dbc2.executeCount("select count(*) from pseudo_hits where grp1_idx="+grpIdx1 + " AND grp2_idx="+ grpIdx2);
 			Vector <HitData> hitList = new Vector <HitData>(n);
 			
-			// CAS515 add cvgpct, countpct, CAS516 add corr; CAS504 bh.block_idx->b.blocknum, 
 			// CAS520 change evalue to hitnum, add runnum, CAS540 add score, CAS543 add annot1 and annot2, put in DB order
 			String query = "SELECT h.idx, h.hitnum, h.pctid, h.cvgpct, h.countpct, h.score, h.htype, h.gene_overlap, "
 				+ "h.annot1_idx, h.annot2_idx, h.strand, h.start1, h.end1, h.start2, h.end2, h.query_seq, h.target_seq,   " 
 				+ "h.runnum, h.runsize,  b.blocknum, b.corr " 
 				+ "FROM pseudo_hits AS h "
 				+ "LEFT JOIN pseudo_block_hits AS bh ON (bh.hit_idx=h.idx) "
-				+ "LEFT JOIN blocks as b on (b.idx=bh.block_idx) "  // CAS505 added for blocknum
-				+ "WHERE h.grp1_idx=" + grpIdx1 + " AND h.grp2_idx="+ grpIdx2 +" order by h.start1"; // CAS520 add order by;
+				+ "LEFT JOIN blocks as b on (b.idx=bh.block_idx) "  
+				+ "WHERE h.grp1_idx=" + grpIdx1 + " AND h.grp2_idx="+ grpIdx2 +" order by h.start1"; 
 			
 			ResultSet rs = dbc2.executeQuery(query);
 			
@@ -82,7 +81,7 @@ public class MapperPool {
 						rs.getInt(i++),		// int gene_overlap   
 						
 						rs.getInt(i++),		// int annot1_idx 
-						rs.getInt(i++),       // int annot2_idx 
+						rs.getInt(i++),     // int annot2_idx 
 						rs.getString(i++),	// String strand
 						rs.getInt(i++),		// int start1	
 						rs.getInt(i++),		// int end1		
@@ -95,21 +94,22 @@ public class MapperPool {
 						rs.getInt(i++),		// int runsize
 						rs.getInt(i++),		// int b.block	
 						rs.getDouble(i++),	// int b.corr 
-						chr1, chr2	    // CAS517 add chr1, chr2 			
+						chr1, chr2	    			
 						);		
 				hitList.add(temp);
 			}
 			rs.close();
-			if (hitList.size()==0)  System.out.println("No hits for " + st1.getTitle() + " to " + st2.getTitle());
+			if (hitList.size()==0) Globals.eprt("No hits for " + st1.getTitle() + " to " + st2.getTitle());
 			
 			SeqHits seqHitObj = new SeqHits(mapper, st1, st2, hitList);
 			hitList.clear();
 			if (Globals.DEBUG) {
-				String x = String.format("MP: Total>1 hits: %d (%d)  Merged: %d (%d)", 
-						HitData.cntTotal, HitData.cntTotalSH, HitData.cntMerge, HitData.cntMergeSH);
-				symap.Globals.dprt(x);
+				String x = String.format("MP: Total>1 hits %,d: %d (%d)  Merged: %d (%d)", 
+						hitList.size(), HitData.cntTotal, HitData.cntTotalSH, HitData.cntMerge, HitData.cntMergeSH);
+				Globals.dprt(x);
+				Globals.dprt(st1.toString() + "\n" + st2.toString());
 			}
-			HitData.cntTotal= HitData.cntMerge = HitData.cntTotalSH= HitData.cntMergeSH = 0;;
+			HitData.cntTotal= HitData.cntMerge = HitData.cntTotalSH= HitData.cntMergeSH = 0;
 			return seqHitObj;
 		} catch (Exception e) {ErrorReport.print(e, "Get hit data");return null;}
 	}

@@ -3,6 +3,7 @@ package symapQuery;
 import java.util.HashMap;
 import java.util.Vector;
 
+import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -31,21 +32,26 @@ public class TmpRowData {
 		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return "error";}
 	}
 	
-	protected boolean loadRow(int row) {// showAlignment, showSynteny, writeFasta, TableReport
+	protected boolean loadRow(int row) {// showAlign, showSynteny, writeFasta, TableReport
 		try {
 			nRow = row;
-			HashMap <String, Object> colHeadVal = tdp.theTableData.getRowLocData(row); // only needed columns are returned
+			
+			Vector <String> colNames = new Vector <String> (); // CAS562 need to be in order for new 2D-3track
+			Vector <Object> colVals = new Vector <Object> ();
+			tdp.theTableData.getRowLocData(row, colNames, colVals); // only needed columns are returned
+			
 			HashMap <String, Integer> sp2x = new HashMap <String, Integer> ();
 			int isp=0;
 			
-			for (String colHead : colHeadVal.keySet()) {
-				Object colVal = colHeadVal.get(colHead);
+			for (int i=0; i<colNames.size(); i++) {
+				String colHead = colNames.get(i);
+				Object colVal = colVals.get(i);	
 				
 				if (colVal instanceof String) { // if >2 species, ignores ones w/o values, so only get 2
 					String str = (String) colVal;
 					if (str.equals("") || str.equals(Q.empty)) continue; // the blanks species
 				}  
-				if (colHead.contentEquals(Q.blockCol)) { // CAS520 add block and collinear
+				if (colHead.contentEquals(Q.blockCol)) { 
 					String x = (String) colVal;
 					x =  (x.contains(".")) ? x.substring(x.lastIndexOf(".")+1) : "0";
 					blockN = Integer.parseInt(x);
@@ -58,10 +64,10 @@ public class TmpRowData {
 						collinearSz = Integer.parseInt(tok[2]); // CAS556 add Sz
 						collinearN = Integer.parseInt(tok[3]);
 					}
-					else symap.Globals.dprt(x + " " + tok.length);
+					else Globals.dprt(x + " " + tok.length);
 					continue;
 				}
-				if (colHead.contentEquals(Q.hitCol)) {	// CAS521
+				if (colHead.contentEquals(Q.hitCol)) {	
 					String x = String.valueOf(colVal);
 					hitnum = Integer.parseInt(x);
 					continue;
@@ -86,7 +92,7 @@ public class TmpRowData {
 				else if (colVal instanceof Integer) { iVal = (Integer) colVal; }
 				else if (colVal instanceof String)  { sVal = (String)  colVal; }
 				else {
-					symap.Globals.eprt("Row Data " + colHead + " " + colVal + " is not type string or integer");
+					Globals.eprt("Row Data " + colHead + " " + colVal + " is not type string or integer");
 					return false;
 				}
 				
@@ -98,12 +104,12 @@ public class TmpRowData {
 					spAbbr[isp] = species;
 					i0or1 = isp;
 					isp++;
-					if (isp>2) {symap.Globals.eprt("species " + isp); break;} // should not happen
+					if (isp>2) {Globals.eprt("species " + isp); break;} // should not happen
 				}
-				if (col.equals(Q.chrCol)) 		  chrNum[i0or1] = sVal;
-				else if (col.equals(Q.hStartCol)) start[i0or1] = iVal;
-				else if (col.equals(Q.hEndCol))   end[i0or1] = iVal;
-				else if (col.equals(Q.gNCol))	  geneTag[i0or1] = sVal; // this will be N.N.[b] or N.-  CAS521  add
+				if (col.equals(Q.chrCol)) 		  chrNum[i0or1]  = sVal;
+				else if (col.equals(Q.hStartCol)) start[i0or1]   = iVal;
+				else if (col.equals(Q.hEndCol))   end[i0or1]     = iVal;
+				else if (col.equals(Q.gNCol))	  geneTag[i0or1] = sVal; // this will be N.N.[b] or N.- 
 			}
 			
 			// get supporting values
@@ -126,9 +132,9 @@ public class TmpRowData {
 	// loadRow occurs before this, so the selected row values are known for each row.
 	// If the group, chr[0], chr[1] are the same, get min start and max end
 	// grpIdxVec is hitNums to highlight for Groups in Show Synteny
-	protected double [] loadGroup(Vector <Integer> grpIdxVec) {
+	protected int [] loadGroup(Vector <Integer> grpIdxVec) {
 	try {
-		double [] coords = {0.0,0.0,0.0,0.0};
+		int [] coords = {0,0,0,0}; // CAS562 was double
 		coords[0] = start[0]; coords[1] = end[0]; coords[2] = start[1]; coords[3] = end[1];
 		
 		for (int r=0; r<tdp.theTableData.getNumRows(); r++) {
@@ -200,7 +206,9 @@ public class TmpRowData {
 		return "***" + spAbbr + row;
 	} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return null;}
 	}
-	
+	public String toString() {
+		return String.format("%4s %4s  %10s %10s  %5s %5s ", spAbbr[0], spAbbr[1], geneTag[0], geneTag[1], chrNum[0], chrNum[1]);
+	}
 	// Values for selected row
 	protected int nRow=0;
 	protected String [] spName = {"",""}; 

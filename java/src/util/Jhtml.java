@@ -298,8 +298,9 @@ public class Jhtml {
 	
 		dlgRoot.pack();
 		dlgRoot.setVisible(true);
-		dlgRoot.toFront();
-		dlgRoot.requestFocus();
+		//dlgRoot.toFront();				 // CAS562 remove, makes it always jump to front, covering Report popup, but still forces to front
+		//dlgRoot.requestFocus();			 // CAS562 keyboard input, no change
+		//dlgRoot.setLocationRelativeTo(null); // CAS562 add, puts on top of dialog
 	}
 	// CAS556 added for TableReport
 	public static String wrapLine(String line, int lineLength, String lineBreak) {
