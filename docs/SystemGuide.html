@@ -384,12 +384,14 @@ move this directory later if desired. The contents are:
 <u>Data</u>: The <ttx>data/</ttx> directory contains a <ttx>/seq</ttx> sub-directory,
 which contains the demo files, and is the default location for all input sequence files.
 
-<p><u>Externals</u>: The <ttx>ext/</ttx> directory contains the external programs MUMmer<sup>1,2</sup> (for sequence alignment)
-and MUSCLE<sup>7</sup> (for <a href="./Query.html#but" class="ext" target="_blank">Queries</a>).
+<p><u>Externals</u>: The <ttx>ext/</ttx> directory contains the external programs
+MUMmer<sup>1,2</sup> for sequence alignment,
+and MAFFT<sup>6</sup> and MUSCLE<sup>7</sup> for
+interactive MSA alignment (for <a href="./Query.html#msaAlign" class="ext" target="_blank">Queries</a>).
 
 The directory contains:
 <pre>
-	README		mummer/		mummer4/	muscle/
+	README		mummer/		mummer4/	muscle/		mafft/
 </pre>
 For MUMmer, see <a href="MUMmer.html#ext" class="ext" target="_blank">Executables</a>
 and <a href="MUMmer.html#mum4" class="ext" target="_blank">Using MUMmer4</a>.
@@ -916,7 +918,7 @@ that only this algorithm will be run.
 <td style="text-align: right"><a href="#top">Go to top</a></table>
 
 This section provides a brief overview of the SyMAP processing steps; for
-more, see the SyMAP published papers<sup>5,6</sup>. The processing
+more, see the SyMAP published papers<sup>4,5</sup>. The processing
 has four phases:
 <div style="padding:10px 0px 0px 20px;">
 <i>Alignment:</i> <br>
@@ -983,7 +985,7 @@ For working with FPC<sup>8,9</sup>, it is suggested you use release v5.0.8 from
 
 <ol>
 <li>It has the FPC demo files.
-<li>It has BLAT<sup>3</sup>  in the <ttx>/ext</ttx> directory.
+<li>It has BLAT<sup>10</sup>  in the <ttx>/ext</ttx> directory.
 <li>It has the tar file <ttx>doc.tar.gz</ttx> of the documentation.
 <li>The AGCoL documentation applies to this release. See AGCoL
 <a href="http://www.agcol.arizona.edu/software/symap/doc/SystemGuide.html#fpc" class="ext" target="_blank">System Guide</a>.
@@ -1003,29 +1005,29 @@ If you run into any problems, please do not hesitate to contact symap@agcol.ariz
 <sup>1</sup>
 Kurtz, S., Phillippy, A., Delcher, A.L., Smoot, M., Shumway, M., Antonescu, C., Salzberg, S.L.
 (2004). Versatile and open software for comparing large genomes, Genome Biology, 5:R12
-
 <p>
 <sup>2</sup>
 Marcais, G., A.L. Delcher, A.M. Phillippy, R. Coston, S.L. Salzberg, A. Zimin (2018).
 MUMmer4: A fast and versatile genome alignment system,  PLoS computational biology, 14(1): e1005944.
-
 <p>
-<sup>3</sup> Kent, J. (2002) BLAT--the BLAST-like alignment tool, Genome Research 12:656-64.
-<p>
-<sup>4</sup>
+<sup>3</sup>
 Krzywinski, M., J. Schein, I. Birol, J. Connors, R. Gascoyne, D. Horsman, S. Jones, M. Marra (2009).
 Circos: An information aesthetic for comparative genomics. Genome Research doi:10.1101/gr.092759.109.
-
 <p>
-<sup>5</sup>
+<sup>4</sup>
 Soderlund, C., Nelson, W., Shoemaker, A., and Paterson, A.(2006).
 SyMAP: A system for discovering and viewing syntenic regions of FPC maps.
 Genome Res. 16:1159-1168.
 <p>
-<sup>6</sup>
+<sup>5</sup>
 Soderlund, C., Bomhoff, M., and Nelson, W. (2011).
 SyMAP: A turnkey synteny system with application to multiple large duplicated plant sequenced genomes.
 Nucleic Acids Res V39, issue 10, e68.
+<p>
+<sup>6</sup>
+Katoh, Standley (2013).
+MAFFT multiple sequence alignment software version 7: improvements in performance and usability.
+Molecular Biology and Evolution 30:772-780.
 <p>
 <sup>7</sup>
 Edgar, R (2004).
@@ -1039,7 +1041,8 @@ Contigs built with fingerprints, markers and FPC V4.7. Genome Research 10:1772-1
 <sup>9</sup>
 Engler, F., J. Hatfield, W. Nelson, and C. Soderlund (2003).
 Locating sequence on FPC maps and selecting a minimal tiling path. Genome Research 13:2152:2163.
-
+<p>
+<sup>10</sup> Kent, J. (2002) BLAT--the BLAST-like alignment tool, Genome Research 12:656-64.
 <!---- END BODY -->
 
 	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">

@@ -63,6 +63,95 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
+<a id="v563"></a>
+<h3>Release: v5.6.3 (5-Apr-25)</h3>
+Improvements to the <ttb>Queries</ttb>: <ttl>MSA Align</ttl>,
+<ttl>Gene Pair Report...</ttl> and replaced <ttl>PgeneF</ttl> with a <ttl>Cluster hits</ttl> algorithm.
+Two bug fixes.
+<p>If you are currently using SyMAP, you only need to download <ttx>symap.jar</ttx>.
+However, if you want to run MAFFT, you need to  download <ttx>symap_5.tar.gz</ttx>, extract the
+<ttx>ext/mafft</ttx> directory and move it to your <ttx>ext</ttx> directory.
+
+<ul>
+
+<li><ttl>Queries</ttl>
+<ul>
+<li>Bug fix on Linux: crashed on searching for a given collinear set.
+<li><ttl>MSA</ttl>: See <a href="Query.html#msaAlign" ext="class" target="_blank">MSA</a>.
+	<ul>
+	<li>MUSCLE is very slow, so MAFFT has been added which is many times faster.
+	<li>Bug fix: negative strand hits were not reversed complemented.
+	<li>There is a popup menu with the options:
+		(1) MUSCLE or MAFFT; for MAFFT, use Auto and enter #CPU.
+		(2) Options for merging overlapping hits, or removing gaps between subhits.
+		(3) Option to trim aligned sequence.
+	<li>The consensus sequences now uses a 'n' if there are multiple different bases in the
+	column and no majority. The consensus is lowercase if there is any mismatch in the column.
+	<li>The source files and resulting alignment are written in sub-directory <tt>queryAlign</tt>.
+	The results are sorted according to the lower table of information. The results are
+	in a split pane.
+	</ul>
+<li><ttl>Cluster genes</ttl>: See <a href="Query.html#clhit" ext="class" target="_blank">Cluster genes</a>.
+	<ul>
+	<li>A new filter called <ttl>Cluster hits</ttl> has replaced <ttl>PgeneF</ttl> (which can still
+	be run using <tt>viewSymap -g</tt>).
+	</ul>
+<li><ttl>Gene Pair Report...</ttl> See <a href="Query.html#report" ext="class" target="_blank">Report</a>.
+<ul>
+	<li><ttl>Multi-Hit Gene Report</ttl>:
+	(1) This was confusing because groups can be created from non-gene hits,
+	but the report only works with gene hits. This has been made more obvious.
+	(2) The report is now sorted by <ttx>Gene#</ttx> instead of <ttx>Group</ttx>.
+	<li><ttl>Cluster Hit Report</ttl>: This works for the <ttl>Cluster Hits</ttl> (formally <ttx>PgeneF</ttx>) query.
+	<li>Values are saved for subsequent uses of a <ttl>Gene Report</ttl> for its respective <ttx>Query Results table</ttx>.
+	This fixed an issue where the last query settings would be used for any report.
+	<li>The length of the <ttx>Gene Annotation Columns</ttx> wrap-around length can be set,
+	or truncated (relevant to <tt>Desc, Product</tt>). There is an option <ttl>Gene#</ttl> to
+	prefix annotation with the Gene#. There is an option to not put borders around each cell.
+	<li>The reference <tt>Gene#</tt> column is in italics for the HTML report.
+	If there are duplicate <tt>Gene#</tt>, the 2nd has is followed by a "+".
+</ul>
+<li>The <ttl>Grp#</ttl> and <ttl>Grp Size</ttl> have been merged into one column:
+<tt>Size-Grp#</tt>.
+<li>Other:<small>
+<ul>
+<li>Rewrote the Instruction page since its HTML was obsolete in Java20.
+Formatted the table Statistics better. If a chromosome was selected, the statistics did not show the Groups counts; it does now.
+<li>The Hit Strand was changed from "=" and "!=" to the actual strands separated by "/".
+The empty row/column value was changed from "-" to "." so as not to be confused with negative strand "-".
+<li>The column <ttx>Defaults</ttx> have changed. <tt>Block</tt> and <tt>Collinear</tt> columns sort in the reverse direction.
+<li>The <ttx>2D Group</ttx> only works for hits on the same two chromosomes as the selected hit; hence, it is renamed <tt>Group(chr)</tt>.
+<ttx>2D 3-chromosomes</ttx>: There was an erroneous popup message if the 2nd of 3 chromosomes has start coordinate close to zero.
+<li>Disabled Collinear when either Multi or Clust is selected.
+</ul>
+</small>
+
+</ul>
+<br>
+<li><small><ttl>Developers:</ttl> Changes to <ttl>Queries</ttl>.
+<ul>
+<li> Removed most hard-coded symbols.
+<li>Gene Pair Report: Allowed various length project names in the Report menu.
+Major changes to UtilReport.java.
+<li>Moved some of the MSA functions to a new file UtilSelect.java and renamed the
+button to MSA. Change the MSA Export to use the file chooser and make directory Globals.
+Add the number of bases aligned to the status panel.
+<li>File name changes:
+<br>&rarr;symapMultiAlign package:
+Delete MultiLineTextPanel and AlignmentData;
+Delete MenuMapper and LegendPanel (moved to MsaMainPanel);
+Delete AlignmentPanelBase (MsaPanel was extend, now merged);
+<br>Rename AlignmentViewPanel->MsaMainPanel; MultiAlignmentData->MsaRun; MultipleAlignmentPanel->MsaPanel.
+symapMultiAlign package deleted and files moved to symap.closeup.
+<br>&rarr;symapQuery package: FieldData->TableColumns; TableDataPanel->TableMainPanel; SortTable->TableSort.
+TableReport->UtilReport; TableExport->UtilExport; SpeciesSelectPanel->SpeciesPanel;
+ResultSummaryPanel->ResultsPanel.
+New UtilSelect, UtilReportNR, ComputeClust.
+
+<li>Non-queries changes: Manager: add extra info if the Display Name has been used.
+
+</ul>
+</ul>
 <a id="v562"></a>
 <h3>Release: v5.6.2 (24-Feb-25)</h3>
 New <ttl>Queries</ttl> features for 3 species.

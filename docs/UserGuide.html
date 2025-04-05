@@ -1214,6 +1214,7 @@ will be highlighted or group of hits will be highlighted; see <a href="Query.htm
 <tr><td><ttx>Hit =2 genes</ttx> <td>Hits that align to a gene on both sides (g2).
 <tr><td><ttx>Hit =1 genes</ttx> <td>Hits that align to a gene on one side only (g1).
 <tr><td><ttx>Hit =0 genes</ttx>   <td>Hits that do not align to any gene (g0).
+<tr><td colspan=2>To show all hits, uncheck everything.
 
 <tr><td colspan=2><ttl>Identity</ttl>
 <tr><td><ttx>N%</ttx><td>Move the slider to view only the hits with &gt;= the specified identity. This works in
@@ -1319,32 +1320,23 @@ occurrences have been fixed in v5.4.8, but a few will have slipped through.
 <h4>Text Align (from hit popup)</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
+Hover over a hit-wire and right click for the information popup shown on the lower left.
+The <ttl>Align Hit</ttl> option aligns the hit as shown on the lower right. Use the <ttl>Reverse</ttl> button to view the reverse complement
+alignment.
 <table>
 <tr>
-<td>
-Hover over a hit-wire and right click for the information popup shown below. The <ttl>Align Hit</ttl>
-option aligns the hit as shown on the right. Use the <ttl>Reverse</ttl> button to view the reverse complement
-alignment.
-<br><a href="img/hitInfo.png">
+<td><a href="img/hitInfo.png">
 <img src="img/hitInfo.png" alt="Hit Information" style="border: 1px solid black; width: 230px"></a>
-
+<td>&nbsp;&nbsp;
 <td><a href="img/basetext.png">
 	<img src="img/basetext.png" alt="Text view of alignment" style="border: 1px solid black; width: 430px"></a>
 </table>
-
 <a id="trim"></a>
-<table>
-<tr><td style="vertical-align: text-top;">
 <u>Trimmed alignments:</u> SyMAP extracts the sequence between the coordinates provided by MUMmer and aligns the sequence.
 When the sequences do not align fully, the alignment is trimmed. This is illustrated above for subhit 5, where
-the <tt>Trim 0,13</tt> indicates that 13 bases were trimmed off the end.
-<p>If you want to view the alignment without trimming, you can run <ttb>viewSyMAP</ttb> with the "-a" flag, as
-shown on the right.
-<td>
-<small>Un-trimmed hit</small>
-<br><a href="img/alignTrim.png">
-<img src="img/alignTrim.png" alt="Trimmed align" style="border: 1px solid black; width: 430px"></a>
-</table>
+the <tt>Trim 0,13</tt> indicates that 13 bases were trimmed off the end. The un-trimmed
+alignment can be viewed by selected <ttl>No trim</ttl>.
+
 
 <!--------------------------------------------------->
 <a id="alt"></a>
