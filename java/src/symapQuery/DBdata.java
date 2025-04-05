@@ -40,14 +40,14 @@ public class DBdata implements Cloneable {
 	private static HashMap <Integer, Integer> grpEnd;   // grpIdx, end
 	
 	private static QueryPanel qPanel;
-	private static SpeciesSelectPanel spPanel;
+	private static SpeciesPanel spPanel;
 	private static JTextField loadStatus;
 	private static boolean isSingle=false, isSingleGenes = false, isIncludeMinor = true, isGeneNum=false; 
 	private static HashSet <Integer> grpIdxOnly;
 	
 	private static HashSet <Integer> geneIdxForOlap = new HashSet <Integer> (); // CAS560 only for isOlapAnno; see qPanel.isMinorOlap
 											
-	private static int cntDup=0, cntFilter=0, cntPgeneF=0; // TEST_TRACE
+	private static int cntDup=0, cntFilter=0; // TEST_TRACE
 	private static int cntPlus2=0;	// CAS547 check for possible pre-v547
 	
 	protected static Vector <DBdata> loadRowsFromDB(
@@ -57,7 +57,7 @@ public class DBdata implements Cloneable {
 			String [] annoColumns, 					// Species\nkeyword array in order displayed
 			JTextField loadTextField,   			// write progress
 			HashMap <Integer, Integer> geneCntMap, 	// output variable of spIdx annotidx counts
-			HashMap<String, String> projMap)  		// PgeneF and Multi summary output
+			HashMap<String, String> projMap)  		// Clust and Multi summary output
 	{
 		clear();
 		qPanel = 		theQueryPanel;
@@ -69,7 +69,7 @@ public class DBdata implements Cloneable {
 		isIncludeMinor 	= qPanel.isIncludeMinor(); // See loadHit; loadMergeHit
 		isGeneNum		= qPanel.isGeneNum();
 		
-		cntPlus2=0; cntPgeneF=0;
+		cntPlus2=0;
 		cntDup=0; cntFilter=0; // restart TEST_TRACE counts
 		
 		makeSpLists(projList);
@@ -207,20 +207,18 @@ public class DBdata implements Cloneable {
          	}
          	
          	if (isGeneNum) { // CAS555 - add computation of grpN; CAS561 mv here to complete rows first
-         		runGeneGroups(rows);
+         		ruMultiGene(rows);
          	}
-         	else if (qPanel.isMultiAnno()) { // Multi - may remove rows and renumber
+         	else if (qPanel.isMultiN()) { // Multi - may remove rows and renumber
          		loadStatus.setText("Compute multi-hit genes");
          		rows = runMultiGene(rows, projMap);
          	}
-         	else if (qPanel.isPgeneF()) { // PgeneF - may remove rows and renumber
-         		loadStatus.setText("Compute PgeneF and filter");
-         		rows = runPgeneF(rows, projMap);
+         	else if (qPanel.isClustN()) { // Clust - may remove rows and renumber
+         		loadStatus.setText("Compute Clust and filter");
+         		rows = runClustHits(rows, projMap);
          	}
-         	else {
-         		sortRows(rows);
-         	}
-         	makeGeneCnts(rows, geneCntMap); // CAS514 delete makeGeneCnts, use genenum from DB instead
+         	sortRows(rows); 	// CAS563 was not sorting for groups, but groups included now
+         	makeGeneCnts(rows, geneCntMap); 
         	
          	if (Globals.TRACE) {
          		if (cntDup>0) System.out.format("%6d Dups\n", cntDup);
@@ -239,22 +237,22 @@ public class DBdata implements Cloneable {
 		if (qPanel.isCollinear() || qPanel.isBlock()) {
 			Collections.sort(rows, new Comparator<DBdata> () {
 				public int compare(DBdata a, DBdata b) {
-					String as = (qPanel.isCollinear()) ? a.collinearStr : a.blockStr;
-					String bs = (qPanel.isCollinear()) ? b.collinearStr : b.blockStr;
+					String as="", bs="";
+					if (qPanel.isBlock()) 	{as=a.blockStr;     bs=b.blockStr;}
+					else 					{as=a.collinearStr; bs=b.collinearStr;}
 					
 					if (as.equals(Q.empty) && !bs.equals(Q.empty)) return 1;
 					if (!as.equals(Q.empty) && bs.equals(Q.empty)) return -1;
 					if (as.equals(bs)) return a.hitNum-b.hitNum;
 					
 					int retval=0;
-					String [] av = as.split("\\."); 
-					String [] bv = bs.split("\\.");
+					String [] av = (qPanel.isBlock()) ? as.split(Q.SDOT) :  as.split(Q.GROUP); 
+					String [] bv = (qPanel.isBlock()) ? bs.split(Q.SDOT) :  bs.split(Q.GROUP); 
 					int n = Math.min(av.length, bv.length);
 					
 					for(int x=0; x<n && retval == 0; x++) { // copied from TableData
 						boolean valid = true;
 						Integer leftVal = -1, rightVal = -1; 
-						
 						try {
 							leftVal  = Integer.parseInt(av[x]); 
 							rightVal = Integer.parseInt(bv[x]);      
@@ -264,10 +262,38 @@ public class DBdata implements Cloneable {
 						if (valid) retval = rightVal.compareTo(leftVal);
 						else       retval = bv[x].compareTo(av[x]);
 					}
-					return retval;
+					return -retval;	// CAS563 reverse sort
 				}
 			});
  		}
+		else if (qPanel.isGroup()) {// CAS563 add group
+			Collections.sort(rows, new Comparator<DBdata> () {
+				public int compare(DBdata a, DBdata b) {
+					String as=a.grpStr, bs=b.grpStr;
+					if (as.equals(Q.empty) && !bs.equals(Q.empty)) return 1;
+					if (!as.equals(Q.empty) && bs.equals(Q.empty)) return -1;
+					if (as.equals(bs)) return a.hitNum-b.hitNum;
+					
+					int retval=0;
+					String [] av = as.split(Q.GROUP); 
+					String [] bv = bs.split(Q.GROUP);
+					
+					for(int x=1; x>=0 && retval == 0; x--) { // copied from TableData
+						boolean valid = true;
+						Integer leftVal = -1, rightVal = -1; 
+						try {
+							leftVal  = Integer.parseInt(av[x]); 
+							rightVal = Integer.parseInt(bv[x]);      
+						}
+						catch(Exception e) {valid = false; } // e.g. chr X
+						
+						if (valid) retval = rightVal.compareTo(leftVal);
+						else       retval = bv[x].compareTo(av[x]);
+					}
+					return -retval;	// CAS563 reverse sort
+				}
+			});
+		}
 		else {
 			Collections.sort(rows, new Comparator<DBdata> () {
 				public int compare(DBdata a, DBdata b) {
@@ -293,7 +319,7 @@ public class DBdata implements Cloneable {
 			HashMap <Integer, DBdata> tagMap = new HashMap <Integer, DBdata> ();
 			for (DBdata dObj : hitMap.values()) {
 				for (int i=0; i<2; i++)
-					if (dObj.annotIdx[i]>0 && !dObj.geneTag[i].equals(Q.empty)) 
+					if (dObj.annotIdx[i]>0 && !dObj.geneTag[i].endsWith(Q.dash)) 
 						tagMap.put(dObj.annotIdx[i], dObj);
 			}
 			// assign 
@@ -301,14 +327,14 @@ public class DBdata implements Cloneable {
 			for (DBdata dObj : hitMap.values()) { 
 				DBdata cpObj=null;
 				int x=0;
-				if (dObj.annotIdx[0]>0 && dObj.geneTag[0].equals(Q.empty)) {
+				if (dObj.annotIdx[0]>0 && dObj.geneTag[0].endsWith(Q.dash)) {
 					if (tagMap.containsKey(dObj.annotIdx[0])) {
 						cpObj = tagMap.get(dObj.annotIdx[0]);
 						x=0;
 					}
 					else noAnno.add(dObj);
 				}
-				else if (dObj.annotIdx[1]>0 && dObj.geneTag[1].equals(Q.empty)) {
+				else if (dObj.annotIdx[1]>0 && dObj.geneTag[1].endsWith(Q.dash)) {
 					if (tagMap.containsKey(dObj.annotIdx[1])) {
 						cpObj = tagMap.get(dObj.annotIdx[1]);
 						x=1;
@@ -422,11 +448,11 @@ public class DBdata implements Cloneable {
 	/*************************************************
 	 * Add other geneTag of query; put results from Gene# in groups; 
 	 */
-	private static void runGeneGroups(Vector <DBdata> rows) {
+	private static void ruMultiGene(Vector <DBdata> rows) {
 	try {
 	/* Compute group . CAS561 - was computing something else */
 		String inputGN = qPanel.getGeneNum();
-		String [] tok = inputGN.split("\\.");
+		String [] tok = inputGN.split(Q.SDOT);
 		int genenum = Utilities.getInt(tok[0]); 
 		
 		HashMap <String, Integer> geneTag = new HashMap <String, Integer>  ();
@@ -435,8 +461,8 @@ public class DBdata implements Cloneable {
 		// Compute sz from: Tag:chrIdx:spIdx counts
 		for (DBdata dd : rows) {
 			for (int i=0; i<2; i++) {
-				tok = dd.geneTag[i].split("\\.");
-				if (tok.length<2 || tok[1].equals("-")) continue;
+				tok = dd.geneTag[i].split(Q.SDOT);
+				if (tok.length<2 || tok[1].equals(Q.dash)) continue;
 				
 				int num = Utilities.getInt(tok[1]); 	// chr.tag.[suffix]
 			
@@ -454,7 +480,7 @@ public class DBdata implements Cloneable {
 		int numFam=1, sz=0;
 		for (DBdata dd : rows) { 
 			for (int i=0; i<2; i++) {
-				tok = dd.geneTag[i].split("\\.");
+				tok = dd.geneTag[i].split(Q.SDOT);
 				if (tok.length<2 || tok[1].equals("-")) continue;
 				
 				int num = Utilities.getInt(tok[1]); 	// chr.tag.[suffix]
@@ -481,44 +507,43 @@ public class DBdata implements Cloneable {
 	catch (Exception e) {ErrorReport.print(e, "make Gene# groups");}
 	}
 	
-	// CAS555 move code to ComputeMulti; compute does the rows, PgeneF and PgFSize
+	// CAS555 move code to ComputeMulti; compute does the rows, Clust and PgFSize
 	private static Vector <DBdata> runMultiGene(Vector <DBdata> rows, HashMap<String, String> projMap) {
 		ComputeMulti mobj = new ComputeMulti(rows, qPanel, loadStatus, grpIdxOnly, spIdxList, projMap);
 		return mobj.compute();	
 	}
 	
 	////////////////////////////////////////////////////////////////////////////
-	private static Vector <DBdata> runPgeneF(Vector <DBdata> rows, HashMap<String, String> projMap ) {
+	private static Vector <DBdata> runClustHits(Vector <DBdata> rows, HashMap<String, String> projMap ) {
 		try {
-			HashMap<Integer,Integer> hitIdx2Grp = new HashMap<Integer,Integer>(); // PgeneF
-    		HashMap<Integer,Integer> grpSizes = new HashMap<Integer,Integer>();   // PgFSize
+			HashMap<Integer,Integer> hitIdx2Grp = new HashMap<Integer,Integer>(); // hitIdx, Clust
+    		HashMap<Integer,Integer> grpSizes = new HashMap<Integer,Integer>();   // Clust, size
     		
-			new ComputePgeneF(rows,  qPanel, loadStatus,
-				hitIdx2Grp,  grpSizes, projMap); // output data structures
-		    		 	
+			if (!Globals.bQueryPgeneF)  
+				new ComputeClust(rows,  qPanel, loadStatus, hitIdx2Grp,  grpSizes, projMap);
+			else {
+				new ComputePgeneF(rows, qPanel, loadStatus, hitIdx2Grp,  grpSizes, projMap); 
+			}	 	              
+			
 			hitIdx2Grp.put(0, 0); // for the annots that didn't go into a group
     		grpSizes.put(0, 0);
     		
+    		// Create new set of rows with groups assigned
     		int rowNum=1;
     		Vector <DBdata> rowsForDisplay = new Vector <DBdata> ();
     		for (DBdata dd : rows) {
-    			if (!hitIdx2Grp.containsKey(dd.hitIdx)) {
-    				cntPgeneF++;
-    				if (cntPgeneF<3) symap.Globals.dprt("Not in hitIdx2Grp: " + dd.hitIdx);
-    				continue;
-    			}
-    			
+    			if (!hitIdx2Grp.containsKey(dd.hitIdx)) continue;
+    		
     			dd.rowNum = rowNum;
     			rowNum++;
     			
-    			int pgenef = hitIdx2Grp.get(dd.hitIdx);
-    			int pgfsize = grpSizes.get(pgenef);
-    			dd.setGroup(pgenef, pgfsize);
+    			int grp  = hitIdx2Grp.get(dd.hitIdx);
+    			int sz   = grpSizes.get(grp);
+    			dd.setGroup(grp, sz);
     			
     			rowsForDisplay.add(dd);
     			
-    			if (rowNum%Q.INC ==0) 
-     				loadStatus.setText("Filtered " + rowNum + " rows");
+    			if (rowNum%Q.INC ==0) loadStatus.setText("Filtered " + rowNum + " rows");
     		}
 			rows.clear();
 			return rowsForDisplay;
@@ -595,7 +620,7 @@ public class DBdata implements Cloneable {
 			
 			if (hcnt==0) 	hcnt=1;				// makes more sense to be 1 merge instead of empty
 			String s =		rs.getString(Q.HST);
-			hst = 			(s.contains("+") && s.contains("-")) ? "!=" : "="; // NOTE: use 's' to show the actual value
+			hst = 			s; // CAS563 need actual values for MSA (s.contains("+") && s.contains("-")) ? "!=" : "="; // NOTE: use 's' to show the actual value
 			hscore	=		rs.getInt(Q.HSCORE);
 			htype	=		rs.getString(Q.HTYPE); 
 			
@@ -675,8 +700,8 @@ public class DBdata implements Cloneable {
 		// In QueryPanel, search for actual genenum; that only returns one half of hit 
 		// 		but is fast and allows the deactivation of a species
 		int idx=-1;
-		if (geneTag[0].endsWith(Q.empty)) idx = 0;
-		else if (geneTag[1].endsWith(Q.empty)) idx = 1;
+		if (geneTag[0].endsWith(Q.dash)||geneTag[0].endsWith(Q.empty)) idx = 0;
+		else if (geneTag[1].endsWith(Q.dash)||geneTag[1].endsWith(Q.empty)) idx = 1;
 		else return true;
 		if (annotIdx[idx]==0) return true; // one side
 		
@@ -732,13 +757,13 @@ public class DBdata implements Cloneable {
 			if (isSingle) spIdx[x] =  spPanel.getSpIdxFromChrIdx(chrIdx[x]); 
 
 			String chr = (chrNum[x].startsWith("0") && chrNum[x].length()>1) ? chrNum[x].substring(1) : chrNum[x];
-			if (!geneTag[x].equals(Q.empty)) geneTag[x] = chr +"."+geneTag[x];  // CAS547 was in Utilities, but now remove (...) earlier
-			else geneTag[x] = chr +".-"; // indicates hit but no gene; parsed in TmpRowData/TableReport; CAS555 add
+			if (!geneTag[x].equals(Q.empty)) geneTag[x] = chr + "." + geneTag[x];  // CAS547 was in Utilities, but now remove (...) earlier
+			else 							 geneTag[x] = chr + "." + Q.dash; // indicates hit but no gene; parsed in TmpRowData/UtilReport; CAS555 add
 			
 			if (blockNum>0) blockStr = Utilities.blockStr(chrNum[0], chrNum[1], blockNum); 
 			if (runSize>0)  {
 				collinearStr = Utilities.blockStr(chrNum[0], chrNum[1], runSize); 
-				if (runNum>0)  collinearStr += "." + runNum; 					  
+				if (runNum>0)  collinearStr += Q.COSET + runNum; 					  
 			}
 			
 			/******* Anno Keys ******************/
@@ -875,18 +900,18 @@ public class DBdata implements Cloneable {
 	}
 	
 	/*********************************************************
-	 * Called if ComputePgeneF or runGeneGroups
+	 * Called if ComputeClust or runGeneGroups
 	 */
-	protected void setGroup(int pgenef, int pgfsize) {
-		this.grpN = pgenef;
-		this.grpSize = pgfsize;
+	protected void setGroup(int grpN, int grpSz) {
+		this.grpStr = grpSz + Q.GROUP + grpN; // CAS563 was two separate numbers
+		this.grpN = grpN;				  // needed for ComputeMulti
 	}
 	
 	/*************************************************
 	 * TableData.addRowsWithProgress: returns row formated for table.
 	 * 
 	 * Values must be enter in order of table columns
-	 * Row, PgeneF, PgFSize, HitIdx, BlockNum, BlockScore, RunSize};
+	 * Row, Clust, PgFSize, HitIdx, BlockNum, BlockScore, RunSize};
 	 * For each species: Chr Start End
 	 * For each species: keywords in order
 	 */
@@ -901,9 +926,7 @@ public class DBdata implements Cloneable {
 			if (blockNum<=0)    row.add(Q.empty);  else row.add(blockStr);
 			if (blockScore<=0)  row.add(Q.empty);  else row.add(blockScore);
 			if (runSize<0)      row.add(Q.empty);  else row.add(collinearStr);
-			
-			if (grpN<=0)      	row.add(Q.empty);  else row.add(grpN);
-			if (grpSize<=0)     row.add(Q.empty);  else row.add(grpSize);
+			row.add(grpStr);	// CAS563 change from 2 ints; will be empty by default
 			
 			if (hitNum<=0)      row.add(hitIdx);   else row.add(hitNum);
 			if (hscore<=0)		row.add(Q.empty);  else row.add(hscore); // CAS540 add column; CAS548 mv column
@@ -913,8 +936,8 @@ public class DBdata implements Cloneable {
 			if (hst.contentEquals(""))	row.add(Q.empty);  else row.add(hst); // CAS520 add column
 			if (htype.contentEquals("")) row.add(Q.empty);  else row.add(htype); // CAS546 add column
 		}
-		// chr, start, end; CAS519 add gene&hit for pairs
-		int cntCol = FieldData.getSpColumnCount(isSingle);
+		// chr, start, end, strand, geneTag per pair i
+		int cntCol = TableColumns.getSpColumnCount(isSingle);
 		for (int i=0; i<spIdxList.length; i++) { // add columns for ALL species
 			int x=-1;
 			if (spIdx[0] == spIdxList[i]) x=0;
@@ -938,7 +961,6 @@ public class DBdata implements Cloneable {
 					row.add(hend[x]); 
 					row.add(hlen[x]);	
 				}
-				
 			}
 			else {
 				for (int j=0; j<cntCol; j++) row.add(Q.empty);
@@ -992,6 +1014,7 @@ public class DBdata implements Cloneable {
 	}
 	protected boolean hasBlock() 	{return blockNum>0;}
 	protected boolean hasCollinear() {return !collinearStr.isEmpty() && !collinearStr.equals(Q.empty);} // CAS555
+	protected boolean hasGroup() {return !grpStr.isEmpty() && !grpStr.equals(Q.empty);} // CAS563 add for GrpSz.Grp#
 	
 	protected Object copy() { // ComputeMulti: clone only copies primitive, might as well just copy
 		DBdata nObj = new DBdata();
@@ -1001,6 +1024,7 @@ public class DBdata implements Cloneable {
 		nObj.blockNum = blockNum; nObj.runNum = runNum;
 		nObj.blockScore=blockScore; nObj.runSize=runSize; 
 		nObj.blockStr = blockStr; nObj.collinearStr = collinearStr;
+		nObj.grpStr = grpStr;
 		
 		nObj.annoSet0 = new TreeSet <Integer> ();  for (int x : this.annoSet0) nObj.annoSet0.add(x);
 		nObj.annoSet1 = new TreeSet <Integer> ();  for (int x : this.annoSet0) nObj.annoSet1.add(x);
@@ -1032,17 +1056,17 @@ public class DBdata implements Cloneable {
 			for (int j=0; j<v.length; j++) x[j] = v[j];
 			nObj.annoVals.put(i, x);
 		}
-		nObj.rowNum = nObj.grpN = nObj.grpSize = -1; // set unique
+		nObj.rowNum = -1; // set unique
 		
 		return nObj;
 	}
 	public String toString() {
-		return String.format("hit# %,5d   sp %d %d   chr %3s %3s   tag %10s %10s  idx %,6d %,6d  grp# %3d", 
+		return String.format("hit# %,5d   sp %d %d   chr %3s %3s   tag %10s %10s  idx %,6d %,6d  grp# %s", 
 				hitNum, spIdx[0], spIdx[1], chrNum[0], chrNum[1], geneTag[0], geneTag[1], 
-				annotIdx[0], annotIdx[1], grpN);
+				annotIdx[0], annotIdx[1], grpStr);
 	}
 	/******************************************************
-	 * Class variables -- protected -- accessed in ComputePgeneF and ComputeMulti
+	 * Class variables -- protected -- accessed in ComputeClust and ComputeMulti
 	 */
 // hit
 	private int hitNum = -1;
@@ -1069,7 +1093,7 @@ public class DBdata implements Cloneable {
 	
 // Other
 	protected int rowNum=0;				// this rowNum is not used in table, but is a placeholder and used in debugging
-	protected int grpN=-1, grpSize=-1;	// ComputePgeneF && ComputeMulti; CAS555 was PgeneF and PgFSize
+	protected String grpStr = Q.empty;	// ComputeClust && ComputeMulti; CAS555 was Clust and PgFSize; CAS563 merged 2 int to str
 	
 	private String [] spName= {Q.empty, Q.empty};	
 	protected String [] chrNum= {Q.empty, Q.empty};
@@ -1086,4 +1110,5 @@ public class DBdata implements Cloneable {
 	private TreeSet <Integer> annoSet0 = new TreeSet <Integer> (); // not same order as annotStr
 	private TreeSet <Integer> annoSet1 = new TreeSet <Integer> (); // just used to count genes
 	private String [] annotStr =	 {"", ""}; 					   // broken down into annoVals columns
+	protected int grpN = -1;									   // used in ComputeMulti 
 }

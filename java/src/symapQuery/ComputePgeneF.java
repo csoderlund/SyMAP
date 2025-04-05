@@ -13,6 +13,7 @@ import javax.swing.JTextField;
 
 import util.ErrorReport;
 import backend.Utils;
+import symap.Globals;
 
 public class ComputePgeneF {
     // Group the hits based on overlap on one side or the other. 
@@ -39,8 +40,8 @@ public class ComputePgeneF {
 	
 	//From query panel
 	private Vector <TreeSet<Integer>> allIncChrBySp =  new Vector<TreeSet<Integer>>(); 
-	private TreeSet<Integer> 		allExcChr = new TreeSet<Integer>();
-	private TreeSet<Integer> 		allIncChr = new TreeSet<Integer>(); 
+	private TreeSet<Integer> allExcChr = new TreeSet<Integer>();
+	private TreeSet<Integer> allIncChr = new TreeSet<Integer>(); 
 	private boolean incOnly, unAnnotOnly, isLinkage;
 	
 	// Working
@@ -71,6 +72,38 @@ public class ComputePgeneF {
 		this.projMap = projMap;
 		
 		computeGroups();
+		
+		// CAS563 add filter on N
+		int n = qPanel.getClustN(), nGrpNum=1;
+		HashMap<Integer,Integer> nhitIdx2Grp = new HashMap<Integer,Integer>(); 
+		HashMap<Integer,Integer> ngrpSizes   = new HashMap<Integer,Integer>(); 
+		HashMap<Integer,Integer> old2new   = new HashMap<Integer,Integer>();   
+		
+		for (int hitIdx : hitIdx2Grp.keySet()) {
+			int oGrpNum = hitIdx2Grp.get(hitIdx);
+			int sz = pgfSizes.get(oGrpNum);
+			if (sz>=n) {
+				int ngrp;
+				if (old2new.containsKey(oGrpNum)) ngrp = old2new.get(oGrpNum);
+				else {
+					ngrp = nGrpNum++;
+					old2new.put(oGrpNum, ngrp);
+				}
+				nhitIdx2Grp.put(hitIdx, ngrp);
+				ngrpSizes.put(ngrp, sz);
+			}
+		}
+		Globals.tprt(String.format("Rows: %,d  Orig: %,d (%,d)  New %,d (%,d)", 
+				rows.size(), hitIdx2Grp.size(), pgfSizes.size(), nhitIdx2Grp.size(), ngrpSizes.size()));
+		old2new.clear();
+		
+		// update in/out structures
+		hitIdx2Grp.clear(); pgfSizes.clear(); 
+		
+		for (int hitIdx : nhitIdx2Grp.keySet()) hitIdx2Grp.put(hitIdx, nhitIdx2Grp.get(hitIdx));
+		for (int grpNum : ngrpSizes.keySet())   pgfSizes.put(grpNum,   ngrpSizes.get(grpNum));
+		
+		if (n>1) projMap.clear(); // incorrect after N removal
 	}
 	/************************************************************/
 	private void computeGroups() {
@@ -405,10 +438,10 @@ public class ComputePgeneF {
     	results[1] = nannot;
 	}
 	private void init() {
-    	incOnly = qPanel.isOnlyInc();
-    	unAnnotOnly = qPanel.isUnannotInc();
-    	isLinkage = qPanel.isLinkageInc();
-    	SpeciesSelectPanel spPanel = qPanel.getSpeciesPanel();
+    	incOnly = qPanel.isIncOne();
+    	unAnnotOnly = qPanel.isIncNoGene();
+    	isLinkage = qPanel.isIncTrans();
+    	SpeciesPanel spPanel = qPanel.getSpeciesPanel();
 
     	for (int i = 0; i < spPanel.getNumSpecies(); i++){
     		boolean incSp = qPanel.isInclude(i);
@@ -437,23 +470,20 @@ public class ComputePgeneF {
     		}       				
     	} // end going through chromosomes
 	}
-	private void counterInc(Map<String,Integer> ctr, String key, int inc  )
-	{
+	private void counterInc(Map<String,Integer> ctr, String key, int inc  ){
 		if (inc == 0) return;
 		if (!ctr.containsKey(key))
 			ctr.put(key, inc);
 		else
 			ctr.put(key, ctr.get(key)+inc);
 	}
-	private class rhit implements Comparable<rhit>
-	{
+	private class rhit implements Comparable<rhit>{
 		int gidx1, gidx2, pidx1, pidx2;
 		int s1, s2, e1, e2, idx;
 		int grpHitIdx; // the index of the group this hit is in
 		boolean annot1 = false, annot2 = false;
 		
-		public int compareTo(rhit h)
-		{
+		public int compareTo(rhit h){
 			if (idx < h.idx) return -1;
 			else if (idx > h.idx) return 1;
 			return 0;

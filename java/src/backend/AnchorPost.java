@@ -133,13 +133,13 @@ public class AnchorPost {
 			Hit hObj;
 			ResultSet rs;
 			
-		// Hits with 2 genes - annot1 and annot2 have the best overlap; ignore others
-			rs = dbc2.executeQuery("select ph.idx, ph.strand, ph.hitnum, ph.annot1_idx, ph.annot2_idx, B.blocknum " +
-				" from pseudo_hits as ph  " +
-				" LEFT JOIN pseudo_block_hits AS PBH ON PBH.hit_idx=ph.idx" +
-				" LEFT JOIN blocks AS B ON B.idx=PBH.block_idx " +
-				" where ph.grp1_idx=" + grpIdx1 + " and ph.grp2_idx=" + grpIdx2 + 
-				" and ph.gene_overlap>1 order by hitnum"); // algo1 does not enter them ordered 
+		// Hits with 2 genes - annot1 and annot2 have the best overlap; ignore others; CAS563 all uc
+			rs = dbc2.executeQuery("select PH.idx, PH.strand, PH.hitnum, PH.annot1_idx, PH.annot2_idx, B.blocknum " +
+				" from pseudo_hits 				AS PH  " +
+				" LEFT JOIN pseudo_block_hits 	AS PBH ON PBH.hit_idx=PH.idx" +
+				" LEFT JOIN blocks 				AS B ON B.idx=PBH.block_idx " +
+				" where PH.grp1_idx=" + grpIdx1 + " and PH.grp2_idx=" + grpIdx2 + 
+				" and PH.gene_overlap>1 order by PH.hitnum"); // algo1 does not enter them ordered 
 			while (rs.next()) {
 				int i=1;
 				int hidx = 		rs.getInt(i++);

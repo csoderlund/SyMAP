@@ -19,7 +19,7 @@ public class AlignData {
 	private static final String AA_NEG = " "; // aa neg sub
 	
 	private String alignSeq1="", alignSeq2="", matchSeq="";
-	private int nEndAlign=0, score=0, startOffset=0, cntGap=0, cntTrimS=0, cntTrimE=0;
+	private int nEndAlign=0, cntMatch=0, startOffset=0, cntGap=0, cntMis=0, cntTrimS=0, cntTrimE=0;
 	private boolean isNT=true;
 	private int alignType=0;
 	private String traceMsg="", trimMsg=null;
@@ -51,11 +51,17 @@ public class AlignData {
 	public String getAlignSeq1() { return alignSeq1;}
 	public String getAlignSeq2() { return alignSeq2;}
 	public String getAlignMatch() { return matchSeq;}
-	public String getScore() 	{
-		double sim = ((double) score/(double) alignSeq1.length())*100.0;
-		String g = (cntGap>0) ? "Gap " + cntGap : "";
+	
+	public String getScore() 	{// CAS563 more informative header
+		double sim = ((double) cntMatch/(double) alignSeq1.length())*100.0;
+		String s =  String.format("%s %.1f", " DP %Id", sim);
+		String m =  String.format("Match %,d", cntMatch);
+		String mm = String.format("Mismatch %,d", cntMis);
+		String g =  String.format("Gap %,d", cntGap);
+		String len =  String.format("Len %,d",  alignSeq1.length());
+		
 		String t = (cntTrimS>0 || cntTrimE>0) ? "Trim " + cntTrimS + "," + cntTrimE : "";
-		return String.format("%s %.1f (%d/%d) %s %s", " DP %Id", sim, score, alignSeq1.length(), t, g);
+		return String.format("%s  %s  %s  %s  %s  %s", s, len, m, mm, g, t);
 	}
 	public int getStartOffset() {return startOffset;}
 	
@@ -104,13 +110,16 @@ public class AlignData {
 		byte [] q = alignSeq1.toUpperCase().getBytes();
 		byte [] t = alignSeq2.toUpperCase().getBytes();
 		char ret[] = new char[q.length];
-		score=0;
+		cntMatch=0;
 		for (int i = 0;  i < q.length;  i++) {
 			if (q[i] == t[i]) {
 				ret[i] = '|';
-				score++;
+				cntMatch++;
 			}
-			else ret[i] = ' ';
+			else {
+				ret[i] = ' ';
+				if (q[i]!=gapCh && t[i] != gapCh) cntMis++;
+			}
 			if (q[i]==gapCh || t[i] == gapCh) cntGap++;
 		}
 		matchSeq = new String(ret);
@@ -180,7 +189,7 @@ public class AlignData {
     			}
     			sb.append(m);
     			isGap=false;
-    			if (i<nEndAlign) score += s;
+    			if (i<nEndAlign) cntMatch += s;
     		}
     	}
     	matchSeq = sb.toString(); 

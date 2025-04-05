@@ -5,6 +5,7 @@ import java.io.File;
 import backend.anchor1.Proj;
 import util.ErrorReport;
 import util.Jhtml;
+import util.Utilities;
 
 public class Constants {
 /***********************************************************
@@ -210,9 +211,37 @@ private static String mummer4Path=null;
 			}
 			checkFile(apath+ "muscle");
 			
+			String mpath = exDir + "mafft" + getPlatformPath(); // CAS563 add for new mafft
+			if (!checkDir(mpath)) {
+				System.err.println("   Will not be able to run MAFFT from SyMAP Queries");
+				return;
+			}
+			checkFile(mpath+ "mafft.bat");
+			
 			System.out.println("Check complete\n");
 		}
 		catch (Exception e) {ErrorReport.print(e, "Checking executables");	}
+	}
+	// Called from symapQuery.TableShow before doing an alignment; CAS563 add for new mafft
+	static public boolean checkFor(String pgm) {
+		String exDir = Constants.extDir;
+		if (pgm.equals("muscle")) {
+			String apath = exDir + "muscle" + getPlatformPath();
+			if (!checkDir(apath)) {
+				Utilities.showWarningMessage("MUSCLE does not exist in the /ext directory.");
+				return false;
+			}
+			return true;
+		}
+		if (pgm.equals("mafft")) {
+			String apath = exDir + "mafft" + getPlatformPath();
+			if (!checkDir(apath)) {
+				Utilities.showWarningMessage("MAFFT does not exist in the /ext directory.");
+				return false;
+			}
+			return true;
+		}
+		return false;
 	}
 	static private boolean checkMUMmer() {
 		String mpath = getProgramPath("mummer");

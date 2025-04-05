@@ -29,10 +29,11 @@ import symap.mapper.HitData;
 import symap.sequence.Annotation;
 import symap.sequence.Sequence;
 import util.ErrorReport;
+import util.Jcomp;
 
 /*****************************************************
- * Show Seq Options pull-down; called when sequence is selected
- * Uses speciallized displayInfoMonoSpace for display
+ * 2D Show Seq Options pull-down; called when sequence is selected
+ * Uses specialized displayInfoMonoSpace for display
  */
 public class TextShowSeq extends JDialog implements ActionListener {
 	private static final long serialVersionUID = 1L;
@@ -87,9 +88,9 @@ public class TextShowSeq extends JDialog implements ActionListener {
 		group.add(exonButton);	 group.add(transExonButton);
 		
 		JPanel buttonPanel = new JPanel();
-		okButton = new JButton("OK"); okButton.setBackground(Color.white);
+		okButton = Jcomp.createButton("Show", "Show Sequence");
 		okButton.addActionListener(this);
-		cancelButton = new JButton("Cancel"); cancelButton.setBackground(Color.white);
+		cancelButton = Jcomp.createButton(Jcomp.cancel, "Cancel action"); 
 		cancelButton.addActionListener(this);
 		buttonPanel.add(okButton); buttonPanel.add(cancelButton);
 		
@@ -362,6 +363,7 @@ public class TextShowSeq extends JDialog implements ActionListener {
 	}
 	/******************************************************
 	 * Copied from util.Utilities.displayInfoMonoSpace to specialize
+	 * Puts ok button in lower right
 	 */
 	public static void displayInfoMonoSpace(Component parentFrame, String title, String theSeq, boolean isModal) {
 		JOptionPane pane = new JOptionPane();

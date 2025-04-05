@@ -42,23 +42,17 @@ public class SyMAPmanager extends ManagerFrame {
 	 */
 	public static void prtParams(String args[]) {
 		// Do not start new parameters with -c or -p; see startsWith below vs equals
-		if (equalOption(args, "-r")) {
-			System.out.println("Usage:  ./viewSymap [options]");
-			System.out.println("  -c string : filename of config file (to use instead of symap.config)");
-			System.out.println("  -sql      : check MySQL for important settings");
-			System.out.println("  -q        : show gene overlap instead of exon for Cluster Algo2");
-			System.out.println("  -a        : do not trim 2D alignments");
-			System.out.println("  -h        : show help to terminal and exit");
-		}
-		else {
-			System.out.println("Usage:  ./symap [options]");
-			System.out.println("  -c string : filename of config file (to use instead of symap.config)");
-			System.out.println("  -sql      : check MySQL for important settings");
-			System.out.println("  -q        : show gene overlap instead of exon for Cluster Algo2");
-			System.out.println("  -a        : do not trim 2D alignments (Explorer only)");
-			System.out.println("  -s        : recreate Summary on view (only needed on new release when the summary has changed)");
-			System.out.println("  -h        : show help to terminal and exit");
-	
+		if (equalOption(args, "-r")) System.out.println("Usage:  ./viewSymap [options]");
+		else 						 System.out.println("Usage:  ./symap [options]");
+		
+		System.out.println("  -c string : filename of config file (to use instead of symap.config)");
+		System.out.println("  -sql      : check MySQL for important settings");
+		System.out.println("  -a        : do not trim 2D alignments");
+		System.out.println("  -q        : Queries: show gene overlap instead of exon for Cluster Algo2");
+		System.out.println("  -g        : Queries: run old PgeneF algorithm instead of the new Cluster algorithm");
+		System.out.println("  -h        : show help to terminal and exit");
+			
+		if (!equalOption(args, "-r")) {
 			System.out.println("\nSynteny&Alignment:");
 			System.out.println("  -p N      : number of CPUs to use");
 			System.out.println("  -v        : A&S verbose output");
@@ -93,6 +87,10 @@ public class SyMAPmanager extends ManagerFrame {
 			if (equalOption(args, "-q")) { // CAS531 change
 				Globals.bQueryOlap=true;
 				System.out.println("-q  Show gene overlap instead of exon for Algo2");
+			}
+			if (equalOption(args, "-g")) { // CAS563 add
+				Globals.bQueryPgeneF=true;
+				System.out.println("-g  Run PgeneF algorithm in place of Cluster algorithm");
 			}
 			if (equalOption(args, "-a")) { // CAS531 change
 				Globals.bTrim=false;

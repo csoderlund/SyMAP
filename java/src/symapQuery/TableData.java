@@ -26,7 +26,7 @@ public class TableData implements Serializable {
 	/********************************************
 	 * Called from TableDataPanel in buildTable and setTable
 	 */
-	protected static TableData createData(String [] columns, TableData srcData, TableDataPanel parent) {
+	protected static TableData createData(String [] columns, TableData srcData, TableMainPanel parent) {
 		TableData tabObj = 	new TableData("createData", parent);
 		
 		tabObj.arrData = 	new Object[srcData.arrData.length][columns.length];
@@ -113,7 +113,7 @@ public class TableData implements Serializable {
 		retColList[ix++] = Q.rowCol;
 		
 		// 1. species 1st; add static gene set in Field order but all selected species together
-		String [] spFcolList  = FieldData.getSpeciesColHead(isSingle); 	// static gene columns 
+		String [] spFcolList  = TableColumns.getSpeciesColHead(isSingle); 	// static gene columns 
 		
 		for (String col : spFcolList) {
 			for (String sp : spSet) {
@@ -162,7 +162,7 @@ public class TableData implements Serializable {
 		}
 	
 		// 3. hit columns in Fields order
-		String [] genFcolList = FieldData.getGeneralColHead(); 	// e.g. Block, Grp#, Hit#, Hit %id, etc
+		String [] genFcolList = TableColumns.getGeneralColHead(); 	// e.g. Block, Grp#, Hit#, Hit %id, etc
 		
 		ArrCol hitColObj = selColMap.get(HIT);
 		for (String col : genFcolList) {
@@ -192,7 +192,7 @@ public class TableData implements Serializable {
 	/***************************************
 	 * XXX Constructors
 	 */
-    protected TableData(String tblID, TableDataPanel parent) { // called from TableDataPanel.buildTable; CAS560 removed other constructor
+    protected TableData(String tblID, TableMainPanel parent) { // called from TableDataPanel.buildTable; CAS560 removed other constructor
     	this.tblId = tblID;
     	vData = 	new Vector<Vector<Object>>();
     	vHeaders = 	new Vector<TableDataHeader>();
@@ -208,17 +208,17 @@ public class TableData implements Serializable {
         vHeaders.clear();
      	
         // General
-        String [] genColNames = FieldData.getGeneralColHead();
-        Class <?> [] genColType =  FieldData.getGeneralColType();// CAS520 
-        int genColCnt = FieldData.getGenColumnCount(isSingle); // CAS519
+        String [] genColNames = TableColumns.getGeneralColHead();
+        Class <?> [] genColType =  TableColumns.getGeneralColType();// CAS520 
+        int genColCnt = TableColumns.getGenColumnCount(isSingle); // CAS519
         
     	for(int x=0; x<genColCnt; x++)
     		addColumnHeader(genColNames[x], genColType[x]);
     	
     	// Loc headers and type
-    	String [] spColNames =	  FieldData.getSpeciesColHead(isSingle);
-    	Class <?> [] spColType =  FieldData.getSpeciesColType(isSingle);
-    	int spColCnt = FieldData.getSpColumnCount(isSingle);	// CAS519 less columns for single
+    	String [] spColNames =	  TableColumns.getSpeciesColHead(isSingle);
+    	Class <?> [] spColType =  TableColumns.getSpeciesColType(isSingle);
+    	int spColCnt = TableColumns.getSpColumnCount(isSingle);	// CAS519 less columns for single
     	
     	for(int x=0; x < species.length; x++) {
     		String sp = species[x]+ Q.delim ;
@@ -360,7 +360,10 @@ public class TableData implements Serializable {
         	arrHeaders[column].flipAscending();
         	theParent.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 		}
-		catch (Exception e) {System.out.println(e.getMessage());};
+		catch (Exception e) {
+			ErrorReport.print(e, "Sort by column");
+			Globals.prt("If the sort problem continues, remove .symap_saved_props and try again.");
+		}
     }
     // XXX
     private class ColumnComparator implements Comparator<Object []> {
@@ -398,14 +401,35 @@ public class TableData implements Serializable {
 				if(arrHeaders[nColumn].isAscending()) retval = -1;
 				else retval = 1;
 			}
-			else if (colHeader.equals(Q.blockCol) || colHeader.endsWith(Q.gNCol) || colHeader.endsWith(Q.runCol)) { // CAS518 add geneNCol
-				String [] vals1 = ((String)o1[nColumn]).split("\\."); 
-				String [] vals2 = ((String)o2[nColumn]).split("\\.");
+			else if (colHeader.equals(Q.grpCol)) { // sort on grp# instead of sz
+				String [] vals1 = ((String)o1[nColumn]).split(Q.GROUP); 
+				String [] vals2 = ((String)o2[nColumn]).split(Q.GROUP);
+				int n = Math.min(vals1.length, vals2.length);
+				
+				for(int x=n-1; x>0 && retval == 0; x--) {
+					boolean valid = true;
+					Integer leftVal = null, rightVal = null;
+					
+					try {
+						leftVal = Integer.parseInt(vals1[x]); 
+						rightVal = Integer.parseInt(vals2[x]);      
+					}
+					catch(Exception e) {valid = false; Globals.prt("not valid " + vals1[x] + " " + vals2[x]);} 
+					
+					if (valid) retval = leftVal.compareTo(rightVal);
+					else       retval = vals1[x].compareTo(vals2[x]);
+				}
+			}
+			// sorts left to right; chr.chr.sz.num
+			else if (colHeader.equals(Q.blockCol) || colHeader.equals(Q.cosetCol) 
+					|| colHeader.endsWith(Q.gNCol) || colHeader.equals(Q.grpCol)) { // CAS518 add geneNCol; 
+				String [] vals1 = ((String)o1[nColumn]).split(Q.SDOT); 
+				String [] vals2 = ((String)o2[nColumn]).split(Q.SDOT);
 				int n = Math.min(vals1.length, vals2.length);
 				
 				if (n==2) { // gNCol only when no suffix; CAS560 add so 'chr#.-' sorts to bottom
-					boolean t1 = vals1.length==2 && vals1[1].equals("-");
-					boolean t2 = vals2.length==2 && vals2[1].equals("-");
+					boolean t1 = vals1.length==2 && vals1[1].equals(Q.dash);
+					boolean t2 = vals2.length==2 && vals2[1].equals(Q.dash);
 					if (t1 || t2) {
 						if (t1  && !t2) return 1;
 						if (!t1 &&  t2) return -1;
@@ -463,7 +487,9 @@ public class TableData implements Serializable {
 			if(arrHeaders[nColumn].isAscending())	return retval;
 			else									return retval * -1;
     	}
-    	catch (Exception e) {ErrorReport.print(e, "Sorting"); return 0;}
+    	catch (Exception e) {
+    		String col = (nColumn>0 && nColumn<arrHeaders.length) ? arrHeaders[nColumn].getColumnName() : "";
+    		ErrorReport.print(e, "Sorting " + col + " (Column " + nColumn + ")"); return 0;}
     	}
     
 		private int nColumn;
@@ -489,22 +515,26 @@ public class TableData implements Serializable {
 			else if (colName.endsWith(Q.hEndCol)) 	headVal.put(colName, arrData[row][i]);
 			else if (colName.endsWith(Q.gNCol)) 	headVal.put(colName, arrData[row][i]);
 			else if (colName.equals(Q.blockCol)) 	headVal.put(colName, arrData[row][i]);
-			else if (colName.equals(Q.runCol)) 		headVal.put(colName, arrData[row][i]); 
+			else if (colName.equals(Q.cosetCol)) 		headVal.put(colName, arrData[row][i]); 
 			else if (colName.equals(Q.hitCol)) 		headVal.put(colName, arrData[row][i]); 
 			else if (colName.equals(Q.grpCol)) 		headVal.put(colName, arrData[row][i]); 
 		}
 		return headVal;
     }
-    protected void getRowLocData(int row, Vector <String> colNames, Vector <Object> colVals) {// For 2D 3track; CAS562 add
+    // For 2D 3track, Report; CAS562 add; CAS563 add strand for Align
+    protected void getRowLocData(int row, Vector <String> colNames, Vector <Object> colVals) {
   		for (int i=0; i<arrHeaders.length; i++) {
   			String colName = arrHeaders[i].getColumnName();
-  	
+  			// Species
   			if (colName.endsWith(Q.chrCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.endsWith(Q.hStartCol)) {colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.endsWith(Q.hEndCol)) 	{colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.endsWith(Q.gNCol)) 	{colNames.add(colName); colVals.add(arrData[row][i]);}
+  			
+  			// general
+  			else if (colName.endsWith(Q.hitSt))		{colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.equals(Q.blockCol)) 	{colNames.add(colName); colVals.add(arrData[row][i]);}
-  			else if (colName.equals(Q.runCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
+  			else if (colName.equals(Q.cosetCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.equals(Q.hitCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.equals(Q.grpCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
   		}
@@ -513,9 +543,9 @@ public class TableData implements Serializable {
     protected String getRowData(int row) {
     	String line="";
 		for (int i=0; i<arrHeaders.length; i++) {
-			String colName = arrHeaders[i].getColumnName().replace(Q.delim, Q.empty);
+			String colName = arrHeaders[i].getColumnName().replace(Q.delim, Q.dash);
 			if (colName.endsWith("start") || colName.endsWith("end") || colName.endsWith("len") // CAS558 add commas
-				|| colName.equals(Q.hitCol) || colName.equals(Q.grpCol))
+				|| colName.equals(Q.hitCol))
 			{
 				int dd = Utilities.getInt(arrData[row][i].toString());
 				if (dd == -1) line += String.format("%-15s %s\n", colName, arrData[row][i].toString());
@@ -541,7 +571,7 @@ public class TableData implements Serializable {
 		}
 		return line;
     }
-    // CAS556 for TableReport, get set of All_Anno
+    // CAS556 for UtilReport, get set of All_Anno
     protected HashMap <String, String> getAllAnno(int row) {
     	HashMap <String, String> rowMap = new HashMap <String, String> ();
 		for (int i=0; i<arrHeaders.length; i++) {
@@ -550,6 +580,20 @@ public class TableData implements Serializable {
 				rowMap.put(colName, (String) arrData[row][i]);
 		}
 		return rowMap;
+    }
+    // For TableShow.align to get gene coordinates; CAS573 add; it would not cast to integer until the calling routine
+    protected Object [] getGeneCoords(String spAbbr, int row) {
+    	Object [] coords = {-1, -1};
+    	
+    	for (int i=0; i<arrHeaders.length; i++) {
+  			String colName = arrHeaders[i].getColumnName().replace("\n", " ");
+  			
+  			if (colName.startsWith(spAbbr)) {
+  				if (colName.endsWith(Q.gStartCol)) coords[0] = arrData[row][i];
+  				else if (colName.endsWith(Q.gEndCol)) coords[1] = arrData[row][i];
+  			}	
+  		}
+    	return coords;
     }
     protected String tblId="";
     
@@ -560,5 +604,5 @@ public class TableData implements Serializable {
     //Dynamic data structures
     private Vector<TableDataHeader> vHeaders = null;
     private Vector<Vector<Object>> vData = null; 
-    private TableDataPanel theParent = null;
+    private TableMainPanel theParent = null;
 }

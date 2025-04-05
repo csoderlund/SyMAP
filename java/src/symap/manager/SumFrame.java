@@ -26,6 +26,7 @@ import backend.Utils;
 import database.DBconn2;
 import symap.Globals;
 import util.ErrorReport;
+import util.Jcomp;
 import util.Utilities;
 
 /**********************************************************
@@ -82,9 +83,9 @@ public class SumFrame extends JDialog implements ActionListener {
 		messageArea.setEditable(false);
 		messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 			
-		btnOK = new JButton("OK"); btnOK.setBackground(Color.white);
+		btnOK = Jcomp.createButton(Jcomp.ok, "Close window");
 		btnOK.addActionListener(this);
-		btnHelp = new JButton("Explain"); btnHelp.setBackground(Color.white);
+		btnHelp = Jcomp.createButton("Explain", "Popup with explanation of statistics");
 		btnHelp.addActionListener(this);
 		JPanel buttonPanel = new JPanel();
 		

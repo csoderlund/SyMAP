@@ -14,45 +14,99 @@ import util.ErrorReport;
 import util.Utilities;
 
 /******************************************
- * This is used by: Align (Closeup), and the Hit Info 'Align Hit', and the Show Sequence for extracting sequence
- * AlignData/AlignPair does the alignment
- * HitAlignment  displays it for Closeup
- * TextShowAlign display is for Align Hit from Hit Info
- * TextShowSeq   displays the sequence for Show Sequence
+ * 2D: CloseUp, Hit-Info AlignHit, Show Sequence, and symapQuery MSA
+ * AlignData/AlignPair does the dynamic programming (DP) alignment.
+ * This file loads the data from the database and sets it all up
  * 
- * CAS531 restructured/renamed for clarity
+ * HitAlignment  DP align for Closeup
+ * TextShowAlign DP align Hit for Hit Info
+ * TextShowSeq   get sequence for Show Sequence
+ * Query MSA 	 get full hit sequence or concatenated subhit for MSA align
+ * 
  * 1. Query and target are used in the pseudo_hits table
  * 2. Select and Other are from the user selected sequence
  * 3. isQuery determines whether the Select=Query or Select=Target
- * CAS541 was DBAbsUser
+ * 
+ * CAS531 restructured/renamed for clarity; CAS541 was DBAbsUser; CAS563 changes for MSA query and add isTrim arg for hitInfo
  */
 public class AlignPool  {
 	private static final boolean TRACE = false; 
 	private static final boolean toUpper = false;
-	private static final boolean bTrim=Globals.bTrim;
+	private static final boolean bTrim=Globals.bTrim; // only used for Closeup; Text align has it passed in
 	
-	private final int CHUNK_SZ = backend.Constants.CHUNK_SIZE; // CAS504 was hardcoded below; 1000000
+	private final int CHUNK_SZ = backend.Constants.CHUNK_SIZE; 
 	private HitAlignResults curHit; // hqr for the whole current hit
 	
 	private DBconn2 dbc2;
 	
-	/*****************************************************************/
-	public AlignPool(DBconn2 dbc2, PropsDB pp){
-		this.dbc2 = dbc2;
-	}
+	/**************************************************************
+	 * Symap query MSA
+	 */
 	public AlignPool(DBconn2 dbc2){ // For SyMAPQueryFrame to use loadPseudoSeq
 		this.dbc2 = dbc2;
 	}
+	public String loadSeq(int pos, String indices, int grpIdx, String gapLess) {
+	try {
+		if (gapLess.equals("")) return loadPseudoSeq(indices, grpIdx); // pseudo_seq2 is index by grpIdx only
+		
+		// process subhits
+		String subhitstr = loadSubHitStr(pos, gapLess);				// reads pseudo_hits - 
+		if (subhitstr==null) return loadPseudoSeq(indices, grpIdx); // shouldn't happen
+		
+		// Merge overlapping subhits
+		String [] subhits = subhitstr.split(",");
+		int [] start = new int [subhits.length];
+		int [] end = new int [subhits.length];
+		for (int i=0; i<subhits.length; i++) start[i]=end[i]=-1;
+		
+		int s2=0, e2=0;
+		for (int i=0; i<subhits.length; i++) {
+			Globals.tprt(subhits[i]);
+			int [] coords = extractInt(subhits[i]);
+			
+			int olap= (e2==0) ? 0 : Math.min(coords[1],e2) - Math.max(coords[0],s2) + 1;
+				
+			if (olap>0) end[i-1] = coords[1]; // merge; start[i] remains -1
+			else {
+				start[i] = coords[0]; 
+				end[i] = coords[1];
+			}
+			s2 = coords[0]; e2 = coords[1];
+		}
+		
+		// load sequence
+		String mgSeq="";
+		for (int i=0; i<subhits.length; i++) {
+			if (start[i]!=-1) {
+				if (!mgSeq.equals("")) mgSeq += "nnnnn"; // too many throws off alignment
+				mgSeq += loadPseudoSeq(start[i]+":"+end[i], grpIdx);
+			}
+		}
+			
+		return mgSeq;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Getting sequence"); return null;}
+	}
+	public String loadSeq(String indices, int grpIdx) { // For query export
+		 return loadPseudoSeq(indices, grpIdx);
+	}
+	/*****************************************************************
+	 * 2D Text popup and closeup
+	 ***********************************************************/
+	public AlignPool(DBconn2 dbc2, PropsDB pp){
+		this.dbc2 = dbc2;
+	}
+	
 	// Called from CloseUpDialog.setview 
 	public synchronized HitAlignment[] buildHitAlignments(Vector <HitData> hitList, 
 			boolean isQuery, String projS, String projO, int selStart, int selEnd) 
 	{	
-		return computeHitAlignments(hitList, isQuery, projS, projO, true, selStart, selEnd);
+		return computeHitAlign(hitList, isQuery, projS, projO, true, selStart, selEnd, bTrim); // use -a trim
 	}
 	// Called from TextPopup
-	public synchronized HitAlignment[] buildHitAlignments(Vector <HitData> hitList, boolean isNT, boolean isQuery) 
+	public synchronized HitAlignment[] buildHitAlignments(Vector <HitData> hitList, boolean isNT, boolean isQuery, boolean isTrim) 
 	{
-		return computeHitAlignments(hitList, isQuery, "", "", isNT, -1, -1);
+		return computeHitAlign(hitList, isQuery, "", "", isNT, -1, -1, isTrim); // CAS563 pass in trim
 	}
 	// Called from TextPopup 
 	public synchronized HitAlignment[] getHitReverse(HitAlignment [] halign) 
@@ -66,10 +120,10 @@ public class AlignPool  {
 	}
 	
 	/************************************************************************
-	 * Computations 
+	 * Computations for CloseUp and TextPopup
 	 */
-	private HitAlignment[] computeHitAlignments(Vector <HitData> hitList, 
-			boolean isSwap, String projS, String projO, boolean isNT, int sStart, int sEnd) {
+	private HitAlignment[] computeHitAlign(Vector <HitData> hitList, 
+			boolean isSwap, String projS, String projO, boolean isNT, int sStart, int sEnd, boolean isTrim) {
 	try {
 		// make sorted hitArr from hitList
 		HitData[] hitArr = new HitData [hitList.size()];
@@ -93,7 +147,8 @@ public class AlignPool  {
 				if (sStart!=-1 && sEnd != -1) { //CAS535 only subhits that overlap the selected coords
 					if (!Utilities.isOverlap(sStart, sEnd, subStart, subEnd)) continue;	
 				}
-				HitAlignResults subHit = alignSubHit(i, isNT, subStart, subEnd);
+				// Do Alignment
+				HitAlignResults subHit = alignSubHit(i, isNT, subStart, subEnd, isTrim);
 				
 				HitAlignment ha = new HitAlignment(hitObj, projS, projO, 
 						new SeqData(subHit.selectSeq, subHit.selectAlign, curHit.strand.charAt(0)), 
@@ -111,7 +166,7 @@ public class AlignPool  {
 	} catch (Exception e) {ErrorReport.print(e, "getHitAlignments"); return null; }
 	}
 	/******************************************************************************/
-	public synchronized HitAlignment[] computeHitReverse(HitAlignment [] halign) {
+	private synchronized HitAlignment[] computeHitReverse(HitAlignment [] halign) {
 		Vector <HitAlignment> alignments = new Vector <HitAlignment>();
 		
 		for (int i=0; i<halign.length; i++) {
@@ -132,7 +187,7 @@ public class AlignPool  {
 	}
 	/*********************************************************************
 	 */
-	private HitAlignResults alignSubHit(int i, boolean isNT, int subStart, int subEnd) {
+	private HitAlignResults alignSubHit(int i, boolean isNT, int subStart, int subEnd, boolean isTrim) {
 	try {
 		HitAlignResults subHit = new HitAlignResults();
 		
@@ -162,7 +217,8 @@ public class AlignPool  {
 		String tmsg = (TRACE) ? "Hit #" + curHit.hitnum + "." + (i+1) + "  " 
 					+ SeqData.coordsStr(!curHit.isSelNeg, subHit.selectStart, subHit.selectEnd) + "  "
 					+ SeqData.coordsStr(!curHit.isOthNeg, subHit.otherStart, subHit.otherEnd) : "";
-		if (!ad.align(type, subHit.selectSeq, subHit.otherSeq, bTrim, tmsg)) return null;
+		
+		if (!ad.align(type, subHit.selectSeq, subHit.otherSeq, isTrim, tmsg)) return null; // CAS563 changed from -a flag to Trim button
 		
 		// Get results
 		subHit.selectAlign = ad.getAlignSeq1();
@@ -340,10 +396,9 @@ public class AlignPool  {
 		return curHit;
 	}
 	/*********************************
-	 * This is called from SyMAPQueryFrame, alignSubHit, and getHitSequence
-	 * indices is start:end
+	 * indices is start:end; also called directly from TextShowSeq
 	 */
-	public String loadPseudoSeq(String indices, long id) {
+	protected String loadPseudoSeq(String indices, int grpIdx) {
 		ResultSet rs = null;
 		String pseudoSeq = "";
 		
@@ -369,7 +424,7 @@ public class AlignPool  {
 			
 			while (count > 0) {
 				query2 = "SELECT SUBSTRING(seq FROM " + start + " FOR " + count + ") "
-						+ "FROM pseudo_seq2 AS s WHERE s.grp_idx=" + id + " AND s.chunk=" + chunk;	
+						+ "FROM pseudo_seq2 AS s WHERE s.grp_idx=" + grpIdx + " AND s.chunk=" + chunk;	
 	
 				rs = dbc2.executeQuery(query2);
 				if (rs.next()) {
@@ -382,7 +437,7 @@ public class AlignPool  {
 				}
 				else break;
 			}	
-			if (pseudoSeq.equals("")) { // CAS5xx check was for null, so no error produced
+			if (pseudoSeq.equals("")) { 
 				String msg="Could not read sequence for " + indices + " may be wrong alignment files loaded.";
 				ErrorReport.print(msg);
 				return "";
@@ -393,6 +448,7 @@ public class AlignPool  {
 	}
 	/*******************************************************
 	 *  For getSeq Get subhit query only and get isSwap from grpID
+	 *  HitData is from Mapper 
 	 */
 	private HitAlignResults loadHitForSeq(HitData hitData, int grpID, boolean isQuery) {
 		ResultSet rs = null;
@@ -438,9 +494,27 @@ public class AlignPool  {
 		
 		return curHit;
 	}
-
+	// Query MSA - CAS563 add -hitIdx is not available, but these 5 numbers are unique; need all!
+	private String loadSubHitStr(int pos, String gapLess) {
+	try {
+		String [] tok = gapLess.split(";");		// pseudo_hits needs all of these to be unique since no hitIdx
+		String where = " FROM pseudo_hits where hitNum=" + tok[0] + " and grp1_idx=" + tok[1] + " and proj1_idx=" + tok[2] 
+				                                 + " and grp2_idx=" + tok[3] + " and proj2_idx=" + tok[4];
+		if (pos==0) {
+			ResultSet rs = dbc2.executeQuery("SELECT query_seq " + where);
+			if (rs.next()) return rs.getString(1);
+		}
+		else {
+			ResultSet rs = dbc2.executeQuery( "SELECT target_seq " +  where);
+			if (rs.next()) return rs.getString(1);
+		}
+		Globals.eprt("Load indices: " + where);
+		return null;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Subhit string"); return "";} 	
+	}
 	/******************************************************************/
-	private String reverseStrand(String s) {
+	private String reverseStrand(String s) { // used to reverse +/- or -/+
 		return new StringBuffer(s).reverse().toString();
 	}
 	private int extractStart(String range) {return extractInt(range)[0];}
@@ -451,8 +525,8 @@ public class AlignPool  {
 		if (tokens.length != 2) return null;
 		
 		int[] out = new int[2];
-		out[0] = Integer.parseInt(tokens[0]); // CAS512 new Integer(tokens[0]).intValue();
-		out[1] = Integer.parseInt(tokens[1]); // new Integer(tokens[1]).intValue();
+		out[0] = Integer.parseInt(tokens[0]); 
+		out[1] = Integer.parseInt(tokens[1]); 
 		return out;
 	}
 	

@@ -8,6 +8,7 @@ import java.util.TreeMap;
 import java.util.Vector;
 import javax.swing.JTextField;
 
+import symap.Globals;
 import util.ErrorReport;
 
 /************************************
@@ -96,8 +97,7 @@ public class ComputeMulti {
 					}
 				}
 				if (ii== -1) { // CAS556 this happened when no data for on pair
-					symap.Globals.prt("No multi-hit genes for a species pair...");
-					return finalRows;
+					continue;  // CAS563 was 'return finalRows' resulting in no projMap statistics; also printed estoric message to terminal
 				}
 				
 				filterNhits(); 		if (!bSuccess) return finalRows;   			// In: inData  Out: spData

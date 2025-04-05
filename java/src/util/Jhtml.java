@@ -272,8 +272,8 @@ public class Jhtml {
 	}
 	// TableReport; CAS556 add for Query report
 	public static void showHtmlPanel(JDialog parent, String title, String html) {
-		JDialog dlgRoot = (parent == null ? new JDialog(helpParentFrame,title,false)
-				: new JDialog(parent,title,false));
+		//JDialog dlgRoot = (parent == null ? new JDialog(helpParentFrame,title,false) : new JDialog(parent,title,false));
+		JDialog dlgRoot = new JDialog(parent,title,false); // CAS563 works if sent null, and does not bounce other frames around
 		dlgRoot.setPreferredSize(new Dimension(800,800));
 		Container dlg = dlgRoot.getContentPane();
 		dlg.setLayout(new BoxLayout(dlg,BoxLayout.Y_AXIS));

@@ -649,6 +649,20 @@ public class Utilities {
 		}
 		return x;
 	}
+    static public String mText(long len) {//CAS563 add for symapQuery
+		double d = (double) len;
+		String x = len+"";
+		if (len>=1000000000) {
+			d = d/1000000000.0;
+			x = String.format("%.1fB", d);
+		}
+		else if (len>=1000000) {
+			d = d/1000000.0;
+			x = String.format("%.21M", d);
+		}
+		else x = String.format("%,d", len);
+		return x;
+	}
     static public String kMText(int len) {// CAS558 added for xToSymap summary; 
 		double d = (double) len;
 		String x = len+"";

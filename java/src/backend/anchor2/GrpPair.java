@@ -289,7 +289,7 @@ public class GrpPair {
 			}
 		}
 		if (cntBatch> 0) ps.executeBatch();
-		
+		Globals.rclear();	// CAS563 add clear
 		if (Arg.TRACE) {
 			String msg = String.format("%,10d for %s;  %,d for %s", count[Q], qChr, count[T], tChr );
 			Utils.prtIndentMsgFile(plog, 1, msg);

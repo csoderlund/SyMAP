@@ -308,8 +308,10 @@ public class ProjParams extends JDialog {
 				if (len == 0) msg = lab + " must have a value.";
 				else {
 					for (Mproject mp : mProjVec) {// CAS558 add check
-						if (mp!=mProj && val.equalsIgnoreCase(mp.getDisplayName())) {
-							msg = "The display name '" + val + "' has been used. Try another.";
+						if (mp!=mProj && val.equalsIgnoreCase(mp.getDisplayName())) { // CAS563 add extra info
+							msg = "The display name '" + val + "' has been used. \n";
+							msg += "Directory:   " + mp.getDBName() + "\n";
+							msg += "Description: " + mp.getdbDesc();
 							break;
 						}
 					}

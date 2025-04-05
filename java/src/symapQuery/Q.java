@@ -6,30 +6,35 @@ package symapQuery;
 
 public class Q {
 	static final int INC=5000;
+	static final String GROUP = "-", COSET = "."; // CAS563 can't change COSET easily
+	static final String DOT = ".",    // dot used between chr.chr.block and chr.chr.CoSz and Chr.gene#; hard-coded everywhere
+			            SDOT = "\\."; // this is for split
+	
 	static final String rowCol   = "Row";
 	static final String blockCol = "Block"; 	// loadRow; equals TableData.ColumnComparator (for sorting)
-	static final String runCol =   "Collinear"; // loadRow; CAS517 equals TableData.ColumnComparator
+	static final String cosetCol = "Collinear"; // loadRow; CAS517 equals TableData.ColumnComparator
 	static final String hitCol =   "Hit#";		// loadRow; CAS521 used for Align text
-	static final String grpCol =   "Grp#";		// loadRow; CAS555 show synteny
-	static final String grpSZ =    "Grp\nSize";	// CAS555 show synteny
+	static final String grpCol =   "Group";		// loadRow; CAS555 show synteny; CAS563 now GrpSize.Grp#.
 	static final String hitPrefix = "Hit";		// Required prefix
+	static final String hitSt	  = "Hit\nSt";  // Leave \n so can search on full column in TableData; CAS563 add for Align
 	
 	// CAS519 was Gene for Orphan and Hit for Pairs; now it always shows the genes; Chr is always same for hit/gene
 	static final String chrCol =	 "Chr";
 	static final String gStartCol =	 "Gstart";
 	static final String gEndCol =	 "Gend";
 	static final String gLenCol = 	 "Glen";
-	static final String gStrandCol = "Gst";		// CAS519 add, endsWith TableData.ColumnComparator
-	static final String gNCol =  	 "Gene#";	// CAS518 endsWith TableData.ColumnComparator; expects chr#.genenum.[suffix]
+	static final String gStrandCol = "Gst";		// endsWith TableData.ColumnComparator; CAS518
+	static final String gNCol =  	 "Gene#";	// endsWith TableData.ColumnComparator; expects chr#.genenum.[suffix]
 	static final String hStartCol =	 "Hstart";
 	static final String hEndCol =	 "Hend";
 	static final String hLenCol = 	 "Hlen";
 	static final String gHitNumCol = "NumHits"; // CAS541 
-	static final String gOlap = 	 "%Olap"; // CAS548
+	static final String gOlap = 	 "%Olap";   // CAS548
 	
 	static final String All_Anno =  "All_Anno";
-	static final String empty    = 	"-";
-	static final int    iNoVal   = -1;  // CAS519 add for gene coord defaults
+	static final String empty    = 	".";		// Changed from "-" because was confused with negative strand; CAS563
+	static final String dash	 =  "-"; 		// this used for geneTag if empty
+	static final int    iNoVal   = -1;          // gene coord defaults
 	
 	static final String delim = "\n";	// uses as delimiter between Species::annoKey, and put annoKey on 2nd column line
 	static final String delim2 = ":";	// used for other keys

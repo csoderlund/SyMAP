@@ -22,7 +22,7 @@ import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import symap.sequence.Sequence;
 import symap.sequence.TrackHolder;
-import symapQuery.TableDataPanel;
+import symapQuery.TableMainPanel;
 import util.ErrorReport;
 
 /**
@@ -40,7 +40,7 @@ public class Mapper extends JComponent
 	private TrackHolder trackHolders[];
 	private FilterHandler fh;
 	private HfilterData hitFilData;
-	private TableDataPanel theTablePanel;
+	private TableMainPanel theTablePanel;
 	private SeqHits seqHitObj; // CAS531 was List, but actually only one object
 	private MapperPool mapPool;
 	
@@ -51,7 +51,7 @@ public class Mapper extends JComponent
 	
 	// Created in DrawingPanel for display
 	public Mapper(DrawingPanel drawingPanel, TrackHolder th1, TrackHolder th2,
-			FilterHandler fh, DBconn2 dbc2, PropsDB projPool, HelpBar hb, TableDataPanel listPanel) 
+			FilterHandler fh, DBconn2 dbc2, PropsDB projPool, HelpBar hb, TableMainPanel listPanel) 
 	{
 		super();
 		this.mapPool = new MapperPool(dbc2, projPool); // CAS541 create here instead of passing as arg

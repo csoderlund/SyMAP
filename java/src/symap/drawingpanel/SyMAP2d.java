@@ -5,7 +5,7 @@ import database.DBconn2;
 import props.*;
 import symap.closeup.CloseUp;
 import symap.frame.HelpBar;
-import symapQuery.TableDataPanel;
+import symapQuery.TableMainPanel;
 
 /**
  * SyMAP sets up the 2D display for  (see frame.ChrExpFrame for full Chromosome explorer):
@@ -31,13 +31,13 @@ public class SyMAP2d {
 	private ColorDialogHandler colorDialogHandler;
 
 	/** Dotplot, Block2Frame, Query **/
-	public SyMAP2d(DBconn2 dbc2, TableDataPanel theTablePanel)  {
+	public SyMAP2d(DBconn2 dbc2, TableMainPanel theTablePanel)  {
 		this(dbc2, null, theTablePanel);
 	}
 	/** symap.frame.ChrExpFrame.regenerate2Dview 
 	 * hb==null is from dotplot or blocks display, so not full ChrExp
 	 ***/
-	public SyMAP2d(DBconn2 dbc2, HelpBar hb, TableDataPanel theTablePanel) // CAS507 removed applet
+	public SyMAP2d(DBconn2 dbc2, HelpBar hb, TableMainPanel theTablePanel) // CAS507 removed applet
 	{	
 		String type = (hb==null) ? "P" : "E";
 		this.tdbc2 = new DBconn2("SyMAP2d" + type + "-" + DBconn2.getNumConn(), dbc2);

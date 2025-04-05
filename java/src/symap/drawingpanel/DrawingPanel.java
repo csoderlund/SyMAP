@@ -24,7 +24,7 @@ import symap.sequence.TrackHolder;
 import symap.sequence.TrackLayout;
 import symap.closeup.CloseUp;
 
-import symapQuery.TableDataPanel;
+import symapQuery.TableMainPanel;
 
 import util.ErrorReport;
 import util.Utilities;
@@ -59,7 +59,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	private JPanel buttonPanel = null; 			// Filter buttons added in TrackLayout
 	private JScrollPane scrollPane = null;
 	private HelpBar helpbar = null;				// if non-explorer, helpbar goes at bottom
-	private TableDataPanel queryPanel = null;	// special for Query
+	private TableMainPanel queryPanel = null;	// special for Query
 	
 	private int numTracks = 0, numMaps=0;
 	
@@ -68,7 +68,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	private void dprt(String msg) {symap.Globals.dprt("DP: " + msg);}
 	
 	// Called in frame.SyMAP2d; the explorer reuses the drawing panel, non-explorers do not.
-	public DrawingPanel(TableDataPanel listPanel, DBconn2 dbc2, HistoryControl hc, HelpBar bar) { 
+	public DrawingPanel(TableMainPanel listPanel, DBconn2 dbc2, HistoryControl hc, HelpBar bar) { 
 		super();
 		setBackground(backgroundColor);
 		

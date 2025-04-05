@@ -6,32 +6,34 @@ import java.awt.Font;
 import java.io.File;
 
 /******************************************
+ * Global constants and prt routines
  * CAS534 added in order to move globals from SyMAP2d, SyMAPConstants and Manager
  * See util:Jhtml.java for more constants for Help pages
  * See SyMAPmanager:printVerions() for banner including java version
  * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.6.2"; 
-	public static final String 	DATE = " (24-Feb-25)";
+	public static final String 	VERSION = "v5.6.3"; 
+	public static final String 	DATE = " (5-Apr-25)";
 	public static final String  VERDATE = VERSION + " " + DATE;
-	public static final int 	DBVER =  7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
+	public static final int 	DBVER = 7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
 	public static final String  JARVERION = "17.0.11"; // verify with 'jar xvf symap.jar META-INF', view META_INF; CAS559 add
 	
 	public static String  MAIN_PARAMS =   "symap.config"; 	// default; changed on command line -c
 	
 	public static final  String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // under user's directory; see props.PersistenProps
-
+	
 	public static boolean INFO=false;		// SyMAPmanager -ii; popup indices, query overlap; -ii -tt DB output, Hit Sort Popup; CAS560 add; 
 	public static boolean TRACE=false; 		// SyMAPmanager -tt; write files for query and anchor2
 	public static boolean DEBUG=false; 		// SyMAPmanager -dd; use for possible error
 	public static boolean DBDEBUG=false;	// SyMAPmanager -dbd; adds fields to DB
 
-	public static boolean bMySQL=false;		// SyMAPmanager -sql; check MySQL CAS561 chg from -v
-	public static boolean bTrim=true;		  // do not trim 2D alignments; see closeup.AlignPool; CAS531 
-	public static boolean bRedoSum=false;	  // CAS560 was part of PRT_STATS, which is removed
-	public static boolean bQueryOlap=false;   // CAS560 show gene olap for algo2 instead of exon
+	public static boolean bMySQL=false;		  // SyMAPmanager -sql; check MySQL CAS561 chg from -v
+	public static boolean bTrim=true;		  // -a do not trim 2D alignments; see closeup.AlignPool; CAS531 
+	public static boolean bRedoSum=false;	  // -s redo summary 
+	public static boolean bQueryOlap=false;   // -q show gene olap for algo2 instead of exon; CAS560
+	public static boolean bQueryPgeneF=false; // CAS563 to run old PgeneF algo instead of new Cluster
 	//public static boolean HITCNT_ONLY=false;// CAS560 remove; -y CAS541 to update the hitcnt without having to redo synteny
 	//public static boolean GENEN_ONLY=false; // CAS560 remove; -z CAS519b to update the gene# without having to redo synteny
 	
@@ -43,11 +45,10 @@ public class Globals {
 	public static final String MAX_2D_DISPLAY_K = "30kb";
 	public static final int MAX_YELLOW_BOX=50000; 	// used in SeqFilter for drawing yellow boxes
 	
-	public static final String minorAnno = "*";     // CAS548 used in Query and Anno popup for hit to non-assigned anno
+	public static final String minorAnno = "*";     // used in Query and Anno popup for hit to non-assigned anno; CAS548 
 	
-	public static final int T=0, Q=1;				// CAS560 for target (2) and query (1); 
+	public static final int T=0, Q=1;				// for target (2) and query (1); CAS560 
 	
-	// CAS534 start moving constants from SyMAPConstants
 	public static final int NO_VALUE = Integer.MIN_VALUE;
 
     public static final int LEFT_ORIENT   = -1;
@@ -64,10 +65,11 @@ public class Globals {
   
     public static final Font textFont = new Font(Font.MONOSPACED,Font.PLAIN,12);
     public static final int textHeight = 12;
-    
     public static final Color white = Color.white;
     
-    public static String getExport() { // CAS547 add for 3 uses
+    // Exports
+    public static String alignDir = "queryMSA";	// CAS563 make global constant
+    public static String getExport() { 			// CAS547 add for 3 uses
     	String saveDir = System.getProperty("user.dir") + "/exports/";
 		File temp = new File(saveDir);
 		if(!temp.exists()) {
@@ -83,6 +85,7 @@ public class Globals {
 		return -(Math.min(e1,e2) - Math.max(s1,s2) + 1); 
 	}
     
+    // outputs
     public static void prt(String msg)  {System.out.println(msg);} // permanent message
     public static void xprt(String msg) {System.out.println(msg);} // temp message
     public static void rprt(String msg) {System.err.print("      " + msg + "...                   \r");}// CAS561 to stderr

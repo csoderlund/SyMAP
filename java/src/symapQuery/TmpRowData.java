@@ -10,18 +10,18 @@ import util.Utilities;
 /***************************************************
  * Translates a row from a vector of objects to the correct data types for easy access,
  * plus adds the species and chromosome index
- * used in TableReport, TableExport writeFasta, and TableDataPanel.showAlignment, showRow, showSynteny
+ * used in UtilReport, UtilExport writeFasta, and TableMainPanel.showAlignment, showRow, showSynteny
  * 
  * CAS504 added this class to take the place of using hidden columns to get data
  * TheTableData.getRowData(row) returns the chr,start,end of all species in line,
  * where some can be blank. CAS520 also return block and collinear
  * CAS521 also return hit# and Gene# for Align; use short name for species
- * CAS556 make separate file cause used in TableExport, TableReport and TableDataPanel
+ * CAS556 make separate file cause used in UtilExport, UtilReport and TableMainPanel (renamed in CAS563)
  */
 public class TmpRowData {
-	private TableDataPanel tdp;
+	private TableMainPanel tdp;
 	
-	protected TmpRowData (TableDataPanel tdp) {
+	protected TmpRowData (TableMainPanel tdp) {
 		this.tdp = tdp;
 	}
 	
@@ -31,13 +31,14 @@ public class TmpRowData {
 			return outLine;
 		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return "error";}
 	}
-	
-	protected boolean loadRow(int row) {// showAlign, showSynteny, writeFasta, TableReport
+	/* LoadRow; if add column, add to getRowLocData also */
+	protected boolean loadRow(int row) {// showAlign, showSynteny, writeFasta, UtilReport
 		try {
 			nRow = row;
 			
 			Vector <String> colNames = new Vector <String> (); // CAS562 need to be in order for new 2D-3track
 			Vector <Object> colVals = new Vector <Object> ();
+			
 			tdp.theTableData.getRowLocData(row, colNames, colVals); // only needed columns are returned
 			
 			HashMap <String, Integer> sp2x = new HashMap <String, Integer> ();
@@ -45,8 +46,7 @@ public class TmpRowData {
 			
 			for (int i=0; i<colNames.size(); i++) {
 				String colHead = colNames.get(i);
-				Object colVal = colVals.get(i);	
-				
+				Object colVal = colVals.get(i);				
 				if (colVal instanceof String) { // if >2 species, ignores ones w/o values, so only get 2
 					String str = (String) colVal;
 					if (str.equals("") || str.equals(Q.empty)) continue; // the blanks species
@@ -57,14 +57,14 @@ public class TmpRowData {
 					blockN = Integer.parseInt(x);
 					continue;
 				}
-				if (colHead.contentEquals(Q.runCol)) { // chr.chr.size.N
+				if (colHead.contentEquals(Q.cosetCol)) { // chr.chr.size.N
 					String x = (String) colVal;
-					String [] tok = x.split("\\.");
+					String [] tok = x.split(Q.SDOT); 
 					if (tok.length==4) {
 						collinearSz = Integer.parseInt(tok[2]); // CAS556 add Sz
 						collinearN = Integer.parseInt(tok[3]);
 					}
-					else Globals.dprt(x + " " + tok.length);
+					else Globals.dprt("collinear " + x + " " + tok.length);
 					continue;
 				}
 				if (colHead.contentEquals(Q.hitCol)) {	
@@ -72,12 +72,23 @@ public class TmpRowData {
 					hitnum = Integer.parseInt(x);
 					continue;
 				}
-				if (colHead.contentEquals(Q.grpCol)) {	// CAS555
-					String x = String.valueOf(colVal);
-					groupN = Integer.parseInt(x);
+				if (colHead.contentEquals(Q.hitSt)) {	
+					hitSt = String.valueOf(colVal);
+					continue;
+				}
+				if (colHead.contentEquals(Q.grpCol)) {	// ends with grpSz-grpN; CAS563 was int
+					String x = (String) colVal;
+					String [] tok = x.split(Q.GROUP);
+					int len = tok.length-1;
+					if (tok.length>=2) {
+						groupSz = Integer.parseInt(tok[len-1]); // CAS556 add Sz
+						groupN  = Integer.parseInt(tok[len]);
+					}
+					else Globals.dprt("group " + x + " " + tok.length);
 					continue;
 				}
 			
+				// Species columns
 				String [] field = colHead.split(Q.delim); // speciesName\nChr or Start or End
 				if (field.length!=2) continue;
 				String species=field[0];
@@ -117,10 +128,10 @@ public class TmpRowData {
 				Utilities.showWarningMessage("The abbrev_names are the same, cannot continue...");
 				return false;
 			}
-			spName[0] = tdp.theParentFrame.getDisplayFromAbbrev(spAbbr[0]);
-			spName[1] = tdp.theParentFrame.getDisplayFromAbbrev(spAbbr[1]);
+			spName[0] = tdp.queryFrame.getDisplayFromAbbrev(spAbbr[0]);
+			spName[1] = tdp.queryFrame.getDisplayFromAbbrev(spAbbr[1]);
 			
-			SpeciesSelectPanel spPanel = tdp.theQueryPanel.getSpeciesPanel();
+			SpeciesPanel spPanel = tdp.queryPanel.getSpeciesPanel();
 			for (isp=0; isp<2; isp++) {
 				spIdx[isp] =  spPanel.getSpIdxFromSpName(spName[isp]);
 				chrIdx[isp] = spPanel.getChrIdxFromChrNumSpIdx(chrNum[isp], spIdx[isp]);
@@ -140,9 +151,10 @@ public class TmpRowData {
 		for (int r=0; r<tdp.theTableData.getNumRows(); r++) {
 			HashMap <String, Object> colHeadVal = tdp.theTableData.getRowLocData(r); 
 			
-			Object val = colHeadVal.get(Q.grpCol);
-			int grp = (Integer) val;
-			if (grp!=groupN) continue;     // only rows with this groupN
+			String val = (String) colHeadVal.get(Q.grpCol);
+			String [] tok = val.split(Q.GROUP);				// Sz.Grp CAS563 change from single number
+			int grp  = Utilities.getInt(tok[tok.length-1]);
+			if (grp!=groupN) continue;     // only rows with this groupN (selected row)
 			
 			int hitNum=0;
 			int [] s = {0,0};
@@ -156,7 +168,6 @@ public class TmpRowData {
 					String str = (String) colVal;
 					if (str.equals("") || str.equals(Q.empty)) continue; // ignore blank species
 				}  
-				
 				if (colHead.equals(Q.hitCol)) { // see isHitSelected
 					hitNum = (Integer) colVal;
 					continue;
@@ -194,7 +205,7 @@ public class TmpRowData {
 		return coords;
 	} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return null;}
 	}
-	/* CAS556 add for TableReport **/
+	/* CAS556 add for UtilReport **/
 	protected String getAnnoFromKey(String spAbbr, int row) {
 	try {
 		HashMap <String, String> annoMap = tdp.theTableData.getAllAnno(row);
@@ -206,10 +217,15 @@ public class TmpRowData {
 		return "***" + spAbbr + row;
 	} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return null;}
 	}
+	
+	// get gene coordinates; CAS563 add - not used
+	protected Object [] getGeneCoords(String spAbbr, int row) {
+		return tdp.theTableData.getGeneCoords(spAbbr, row);
+	}
 	public String toString() {
 		return String.format("%4s %4s  %10s %10s  %5s %5s ", spAbbr[0], spAbbr[1], geneTag[0], geneTag[1], chrNum[0], chrNum[1]);
 	}
-	// Values for selected row
+	// Values for selected row; if add column, ADD in TableData TOO!
 	protected int nRow=0;
 	protected String [] spName = {"",""}; 
 	protected String [] spAbbr = {"",""}; 
@@ -223,7 +239,8 @@ public class TmpRowData {
 	
 	protected String [] geneTag = {"",""};
 	
+	protected String hitSt="";
 	protected int hitnum=0, blockN=0;
 	protected int collinearN=0, collinearSz=0; 	// CAS556 add sz for TableReport
-	protected int groupN=0; 					// CAS555 add for Show Group
+	protected int groupN=0, groupSz=0; 			// CAS555 add for Show Group; set in loadRow, used in loadGroup
 }

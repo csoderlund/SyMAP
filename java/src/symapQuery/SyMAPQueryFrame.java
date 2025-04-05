@@ -21,9 +21,8 @@ import props.PersistentProps;
 import util.Utilities;
 import util.ErrorReport;
 
-import symap.closeup.AlignPool; // CAS541 to get sequence
+import symap.closeup.MsaMainPanel;
 import symap.manager.Mproject;
-import symapMultiAlign.AlignmentViewPanel;
 
 /**************************************************
  * The main query frame
@@ -100,7 +99,7 @@ public class SyMAPQueryFrame extends JFrame {
 		
 		overviewPanel = new OverviewPanel(this);
 		queryPanel = 	new QueryPanel(this);
-		resultsPanel = 	new ResultSummaryPanel(this);
+		resultsPanel = 	new ResultsPanel(this);
 		
 		mainPanel.add(overviewPanel);
 		localQueryPane = new JScrollPane(queryPanel);
@@ -115,7 +114,7 @@ public class SyMAPQueryFrame extends JFrame {
 	protected void makeTable(String query, String sum, boolean isSingle) {
 		boolean [] saveLastColumns = getLastColumns(isSingle);
 		
-		TableDataPanel newTablePanel = new TableDataPanel(getInstance(), getNextResultLabel(), 
+		TableMainPanel newTablePanel = new TableMainPanel(getInstance(), getNextResultLabel(), 
 								saveLastColumns, query, sum, isSingle);
 		
 		menuPanel.addResult(newTablePanel.getName()+":");
@@ -140,9 +139,9 @@ public class SyMAPQueryFrame extends JFrame {
 	try {
 		boolean [] saveLastColumns = null;
 		for(int x=allResults.size()-1; x>=0 && saveLastColumns == null; x--) {
-			if (allResults.get(x) instanceof TableDataPanel) {
-				if (((TableDataPanel)allResults.get(x)).isSingle()==bSingle) { // CAS519 last result that is single/!single
-					saveLastColumns = ((TableDataPanel)allResults.get(x)).getColumnSelections(); // from FieldData
+			if (allResults.get(x) instanceof TableMainPanel) {
+				if (((TableMainPanel)allResults.get(x)).isSingle()==bSingle) { // CAS519 last result that is single/!single
+					saveLastColumns = ((TableMainPanel)allResults.get(x)).getColumnSelections(); // from FieldData
 					break;
 				}
 			}
@@ -168,9 +167,10 @@ public class SyMAPQueryFrame extends JFrame {
 		
 		String saveCols = tok[1];
 		int nCol = saveCols.length();
-		int nGenCol = FieldData.getGenColumnCount(bSingle);
-		int nChrCol = FieldData.getSpColumnCount(bSingle); 
+		int nGenCol = TableColumns.getGenColumnCount(bSingle);
+		int nChrCol = TableColumns.getSpColumnCount(bSingle); 
 		if (nCol < (nGenCol+nChrCol)) return null; 
+		if (saveCols.charAt(0)=='0') return null; // CAS563 indicates a problem if row# not 1
 		
 		int nThisSp=theProjects.size();
 		
@@ -236,7 +236,7 @@ public class SyMAPQueryFrame extends JFrame {
 	/*************************************************************
 	 * TableDataPanel 
 	 */
-	protected void updateResultCount(TableDataPanel newTablePanel) {
+	protected void updateResultCount(TableMainPanel newTablePanel) {
 		int numResults = newTablePanel.getNumResults();
 		
 		String res = (numResults == 0) ? ": No results" : ": " + newTablePanel.getNumResults();
@@ -247,31 +247,36 @@ public class SyMAPQueryFrame extends JFrame {
 		
 		updateView();
 	}
-	protected void addAlignmentTab(TableDataPanel parent, String [] names, String [] lines, String [] seqs, String sum) {
+	/******* MSA Align ***/
+	protected void addAlignTab(TableMainPanel parent, String [] names, String [] seqs, String [] lines, 
+			String pstatus, String tabadd, String resultSum, String msaSum, 
+			boolean bTrim, boolean bAuto, int cpus) 
+	{
 		final SyMAPQueryFrame theFrame = this;
-		final TableDataPanel parentCopy = parent;
+		final TableMainPanel parentCopy = parent;
+		final String theStatus = pstatus;
 		final String [] theNames = names;
 		final String [] theLines = lines;
 		final String [] theSeqs = seqs;
-		final String summary = sum;
+		
 		Thread thread = new Thread(new Runnable() {
 			public void run() {
 				try {
 					String filename = "temp";
 					
-					AlignmentViewPanel newTab = new AlignmentViewPanel(theFrame, theNames, theLines, theSeqs, filename);
-					String tabName = "Align " + (++nMultiAlignmentCounter) + ": " + summary;
+					MsaMainPanel newTab = new MsaMainPanel(theFrame, theNames, theSeqs, theLines, 
+							theStatus, msaSum, bTrim, bAuto, cpus, filename);
+					String tab = "MSA " + (++nMultiAlignCounter) + ": " + tabadd;
 						
-					addResultPanel(parentCopy, newTab, tabName, summary);
-				} catch (Exception e) {
-					ErrorReport.print(e, "Align sequence");
-				}
+					addResultPanel(parentCopy, newTab, tab, resultSum);
+				} 
+				catch (Exception e) {ErrorReport.print(e, "Align sequence");}
 			}
 		});
 		thread.setPriority(Thread.MIN_PRIORITY);
 		thread.start();
 	}
-	// Muscle alignment
+	// Muscle/Mafft alignment
 	private void addResultPanel(JPanel parentPanel, JPanel newPanel, String name, String summary) {
 		String [] row = new String[2];
 		row[0] = name;
@@ -283,12 +288,7 @@ public class SyMAPQueryFrame extends JFrame {
 		mainPanel.add(newPanel);
 		updateView();
 	}
-	protected String getSequence(int start, int stop, int groupIdx) {
-		try {
-			return new AlignPool(tdbc2).loadPseudoSeq(start + ":" + stop, groupIdx);
-		} catch (Exception e) {ErrorReport.print(e, "Get sequence");}
-		return "";
-	}
+	
 	protected String [] getAbbrevNames() { // CAS519 added for column headings
 		String [] retVal = new String[theProjects.size()];
 		
@@ -363,13 +363,13 @@ public class SyMAPQueryFrame extends JFrame {
 	private OverviewPanel overviewPanel = null;
 	
 	private JScrollPane localQueryPane = null;
-	private ResultSummaryPanel resultsPanel = null;
+	private ResultsPanel resultsPanel = null;
 	
 	private Vector<JPanel> allResults = null;
 
 	private QueryPanel queryPanel = null;
 	
 	private int resultCounter = 0; 				// CAS532 this was static 
-	private int nMultiAlignmentCounter = 0; 	// CAS532 this was static -
+	private int nMultiAlignCounter = 0; 	// CAS532 this was static -
 	private static final long serialVersionUID = 9349836385271744L;
 }

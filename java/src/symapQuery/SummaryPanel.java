@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 
 import util.ErrorReport;
 import util.Jcomp;
+import util.Utilities;
 
 /**************************************************
  * * The summary at the bottom of the results table.
@@ -22,7 +23,7 @@ public class SummaryPanel  extends JPanel {
 	
 	private Vector <DBdata> rowsFromDB;
 	private  QueryPanel qPanel;
-	private SpeciesSelectPanel spPanel;
+	private SpeciesPanel spPanel;
 	
 	public SummaryPanel(Vector <DBdata> rowsFromDB, QueryPanel qPanel,  
 			HashMap <String, String> projMap, 			// CAS555 changed from integer to string for PgeneF/Multi
@@ -116,17 +117,28 @@ public class SummaryPanel  extends JPanel {
 					collinear++;
 					counterInc(collinearCnt, dd.runNum, 1);
 				}
-				if (dd.grpN>maxGrp) maxGrp=dd.grpN;
+				if (dd.hasGroup()) { // CAS563 changed from number to string
+					String [] tok = dd.grpStr.split(Q.GROUP);
+					int n = Utilities.getInt(tok[tok.length-1]);
+					if (n>maxGrp) maxGrp=n;
+				}
 			}
-			String label = String.format("Has Block: %,d (#%,d)   Has Gene: Both %,d  One %,d  None %,d", 
+			String label = String.format("Block: %,d (#%,d)   Annotated: Both %,d  One %,d  None %,d", // CAS563 condense; gene->annotated
 							 block, blockCnt.size(), both, either, none); // CAS541 changed text to match dotplot summary
-			if (collinear>0) label += String.format("  Collinear %,d (#%,d)", collinear, collinearCnt.size());
-			if (maxGrp>0) label += String.format("   Groups: #%,d", maxGrp);
+			if (collinear>0) label += String.format("   Collinear: %,d (#%,d)", collinear, collinearCnt.size());
+			if (maxGrp>0)    label += String.format("  Groups: #%,d", maxGrp);
 			
-			JLabel theLabel = Jcomp.createMonoLabel(label);
+			JLabel theLabel = Jcomp.createMonoLabel(label, 12);
 			statsPanel.add(theLabel);
 			statsPanel.add(Box.createVerticalStrut(5));
 			
+			int w=8; // CAS563 find width
+			for (int spIdx : order ) {
+				String pName = spPanel.getSpNameFromSpIdx(spIdx);
+				w = Math.max(w, pName.length());
+			}
+			String nf = String.format("%s%ds", "%-", w);
+				
 			for (int spIdx : order ) {
 				String pName = spPanel.getSpNameFromSpIdx(spIdx);
 				int nHit =  proj2hits.containsKey(spIdx)    ? proj2hits.get(spIdx)    : 0;
@@ -136,14 +148,14 @@ public class SummaryPanel  extends JPanel {
 				int nUnq =       geneCntMap.containsKey(spIdx) ? geneCntMap.get(spIdx) : 0;
 				
 				statsPanel.add(Box.createVerticalStrut(2));
-				
-				label = String.format("%-13s  Hits: %,6d    Annotated: %,6d   Genes: %,5d", 
-						pName, nHit, nAnno, nUnq);
+				label = String.format(nf, pName);
+				label += String.format("    Hits: %,7d    Annotated: %,7d   Genes: %,6d", // CAS563 increase d sizes
+						nHit, nAnno, nUnq);
 				
 				if (projMap.containsKey(pName)) label += "   " + projMap.get(pName);
 				else 							label += "    Chr: " + chrStr;
 				
-				theLabel = Jcomp.createMonoLabel(label);
+				theLabel = Jcomp.createMonoLabel(label, 12);
 				statsPanel.add(theLabel);
 			}
 		}
@@ -171,7 +183,7 @@ public class SummaryPanel  extends JPanel {
 				statsPanel.add(Box.createVerticalStrut(2));
 				String label = String.format("%-13s    %s: %,7d     Chr: %s",pname, type, o, chrStr);
 				
-				JLabel theLabel = Jcomp.createMonoLabel(label);
+				JLabel theLabel = Jcomp.createMonoLabel(label, 12);
 				statsPanel.add(theLabel);
 			}
 		}

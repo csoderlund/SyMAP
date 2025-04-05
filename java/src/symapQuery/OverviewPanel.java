@@ -1,17 +1,17 @@
 package symapQuery;
 
+import java.util.Vector;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+import javax.swing.JLabel;
+
+import symap.manager.Mproject;
+import util.Jcomp;
+
 /******************************************************
  * The Instruction panel on the right side of the query frame
  */
-import java.util.Iterator;
-
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JEditorPane;
-import javax.swing.JPanel;
-
-import symap.manager.Mproject;
-
 public class OverviewPanel extends JPanel {
 	private static final long serialVersionUID = 6074102283606563987L;
 	
@@ -19,58 +19,73 @@ public class OverviewPanel extends JPanel {
 		theParentFrame = parentFrame;
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		
-		mainPanel = new JEditorPane();
-		mainPanel.setEditable(false);
-		mainPanel.setContentType("text/html");
-		mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		
 		buildOverview();
 		add(mainPanel);
 	}
-	
+	// CAS561 change Category to #Genes. Add note if no genes. 
+	// CAS563 Java20 was not formatting html right; this still uses a little html, but should be less resistant to change
 	private void buildOverview() {
-		int cntHasGenes=0;	// CAS561 change Category to #Genes. Add note if no genes. Move things around a little.
-		String overView = "<FONT FACE='arial'><p>&nbsp;"; 
-		overView += "<div style='width:500px;'>"; 
-		overView += "<TABLE >" +
-				"<TR><TH ALIGN=LEFT>Project</TH><TH>&nbsp;&nbsp;&nbsp;&nbsp;</TH>" +
-				"<TH ALIGN=LEFT>Abbrev</TH><TH>&nbsp;&nbsp;&nbsp;&nbsp;</TH>" +		// CAS519 add
-					"<TH ALIGN=LEFT>#Genes</TH><TH>&nbsp;&nbsp;&nbsp;&nbsp;</TH>" +
-					"<TH ALIGN=LEFT>Description</TH></TR>";
-		Iterator<Mproject> iter = theParentFrame.getProjects().iterator();
-		while(iter.hasNext()) {
-			Mproject temp = iter.next();
-			overView += "<TR><TD>&nbsp;&nbsp;" + temp.getDisplayName() + "</TD><TD>&nbsp;</TD>";
-			overView += "<TD>" + temp.getdbAbbrev() + "</TD><TD>&nbsp;</TD>";
-			overView += "<TD>" + String.format("%,d",temp.getGeneCnt()) + "</TD><TD>&nbsp;</TD>";
-			overView += "<TD>" + temp.getdbDesc() + "</TD>";
-			overView += "</TR>";
-			if (temp.getGeneCnt()>0) cntHasGenes++;
-		}
-		overView += "</TABLE>";
+		mainPanel = Jcomp.createPagePanel();
+		mainPanel.add(Box.createVerticalStrut(30));
 		
-		overView += "<P><b>Notes:</b>";
+		// Project table
+		mainPanel.add(Jcomp.createItalicsBoldLabel("Selected projects:", 12)); mainPanel.add(Box.createVerticalStrut(2));
+		Vector<Mproject> projVec = theParentFrame.getProjects();
+		
+		int w=8, cntHasGenes=0;
+		for (Mproject p : projVec) w = Math.max(w, p.getDisplayName().length());
+		String nf = String.format("     %s%ds", "%-", w); // e.g. "%-20s"
+		
+		String headings = String.format(nf, "Name") +
+				      String.format("   %4s   %7s   %s",  "Abbr", "#Genes", "Description");
+		JLabel lblHead = Jcomp.createItalicsLabel(headings, 12);
+		mainPanel.add(lblHead); mainPanel.add(Box.createVerticalStrut(2));
+
+		for (Mproject mp : projVec) {
+			String line= String.format(nf, mp.getDisplayName()) +
+					String.format("   %4s   %,7d   %s", mp.getdbAbbrev() , mp.getGeneCnt(), mp.getdbDesc());
+			mainPanel.add(Jcomp.createMonoLabel(line, 12));
+			mainPanel.add(Box.createVerticalStrut(5));
+			
+			if (mp.getGeneCnt()>0) cntHasGenes++;
+		}
+		mainPanel.add(Box.createVerticalStrut(20));
+		
+		// Notes
+		String head = "<html><body style='font-family: verdana, Times New Roman; font-size: 10px'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		String tail = "</body></html>";
+		
+		mainPanel.add(Jcomp.createItalicsBoldLabel("Notes:", 12)); mainPanel.add(Box.createVerticalStrut(5));
+		String msg = head;
 		if (cntHasGenes>0) {
 			String algo = theParentFrame.isAlgo2() ? "<i>Algo2:</i> " : "<i>Algo1:</i> "; 
 			algo += "The Olap column is ";
 			algo += theParentFrame.isAlgo2() ? "exon overlap; Olap may be 0 if hits only overlap intron." 
 					                         : "gene overlap; at least one project used Algo1 or has no genes.";
-			overView += "<P>&nbsp;&nbsp;" + algo;	// CAS548
+			msg += algo;	
 		}
-		if (cntHasGenes==0) 
-			overView += "<P>&nbsp;&nbsp;<i>No genes in any species</i>. The only relevant filters are on chromosomes and blocks.";
-		else if (cntHasGenes==1) 
-			overView += "<P>&nbsp;&nbsp;<i>Only one species has genes</i>. Some of the filters will not be relevant.";
+		mainPanel.add(Jcomp.createLabel(msg + tail)); mainPanel.add(Box.createVerticalStrut(5));
+		if (cntHasGenes<=1) {
+			msg = head;
+			if (cntHasGenes==0) msg += "<i>No genes in any species</i>. The only relevant filters are on chromosomes and blocks.";
+			else                msg += "<i>Only one species has genes</i>. Some of the filters will not be relevant.";
+			mainPanel.add(Jcomp.createLabel(msg + tail)); 
+		}
+		mainPanel.add(Box.createVerticalStrut(20));
 		
-		overView += "<P><b>Instructions:</b>";
-		overView += "<P>&nbsp;&nbsp;Select <B>Query Setup</B> to set filters on annotation and pairwise hit properties.</P>";
-		overView += "<P>&nbsp;&nbsp;Select <B>Results</B> to view the list of query results, and to remove results.</P>";
-		overView += "<br>&nbsp;&nbsp;The query results are listed under the <b>Results</b> tab, and can be viewed by selecting one.</P>";
+		// instructions
+		mainPanel.add(Jcomp.createItalicsBoldLabel("Instructions:", 12)); mainPanel.add(Box.createVerticalStrut(8));
 		
-		overView += "</FONT></div>";
-		mainPanel.setText(overView);
+		msg =  head + "&gt; Query Setup: click to set filters, followed by search, producing a table of results.";
+		mainPanel.add(Jcomp.createLabel(msg+ tail)); mainPanel.add(Box.createVerticalStrut(8));
+		
+		msg =  head + "&gt; Results: click to view the list of query results, and to remove results.";
+		mainPanel.add(Jcomp.createLabel(msg + tail)); mainPanel.add(Box.createVerticalStrut(8));
+		
+		msg= head + "The query results are listed under the Results tab, and can be viewed by selecting one.</html";
+		mainPanel.add(Jcomp.createLabel(msg + tail));
 	}
 
 	private SyMAPQueryFrame theParentFrame = null;
-	private JEditorPane mainPanel = null;
+	private JPanel mainPanel = null;
 }

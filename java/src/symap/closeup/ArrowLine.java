@@ -13,19 +13,19 @@ import java.awt.geom.Rectangle2D;
  * Hit line and Ruler; CAS533 was a separate file in util
  */
 public class ArrowLine implements Shape {
-	public static final int NO_ARROW    = 0, LEFT_ARROW  = 1, RIGHT_ARROW = 2, BOTH_ARROWS = 3;
+	protected static final int NO_ARROW    = 0, LEFT_ARROW  = 1, RIGHT_ARROW = 2, BOTH_ARROWS = 3;
 	private DoublePolygon poly;
 	private double lineY, arrowLineWidth;
 
-	public ArrowLine() {poly = new DoublePolygon();}
+	protected ArrowLine() {poly = new DoublePolygon();}
 
-	public void setBounds(Rectangle2D bounds, double lineThickness, Dimension2D arrowDimension, int arrow) {
+	protected void setBounds(Rectangle2D bounds, double lineThickness, Dimension2D arrowDimension, int arrow) {
 		if (arrow == NO_ARROW) setBounds(bounds,lineThickness,null,null);
 		else                   setBounds(bounds,lineThickness,
 				arrow == RIGHT_ARROW ? null : arrowDimension,
 				arrow == LEFT_ARROW  ? null : arrowDimension);
 	}
-	public void setBounds(Rectangle2D bounds, double lineThickness, Dimension2D lArrowDim, Dimension2D rArrowDim) {
+	protected void setBounds(Rectangle2D bounds, double lineThickness, Dimension2D lArrowDim, Dimension2D rArrowDim) {
 		poly.reset();
 		if (bounds.getWidth() <= 0) return ;
 

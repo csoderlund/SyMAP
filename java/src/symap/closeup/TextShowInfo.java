@@ -12,6 +12,7 @@ import java.awt.Color;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
@@ -27,7 +28,7 @@ import util.ErrorReport;
 import util.Jcomp;
 
 /*************************************************************************
- * Called from SeqHits.PseudoHit,  Sequence.Annotation, util.TextBox
+ * Called from 2D SeqHits.PseudoHit,  Sequence.Annotation, util.TextBox
  * Show Info:  When a hit-wire or gene is right-clicked, this is called to show its info.
  * Show Align: For hit-wire, it also has an "Align" button
  */
@@ -56,10 +57,10 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	// for Gene popup
 	private Annotation annoDataObj=null;
 	
-	private JButton okButton;
+	private JButton closeButton;
 	
 	/***************************************************
-	 * Gene info; CAS560 make separate from hit
+	 * 2D Gene info; CAS560 make separate from hit
 	 * Called by Annotation.java
 	 */
 	public TextShowInfo (Component parentFrame, String title, String theInfo, Annotation annoDataObj) {
@@ -80,11 +81,11 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		messageArea.setEditable(false);
 		messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		
-		okButton = new JButton("OK"); okButton.setBackground(Color.white);
-		okButton.addActionListener(this);
+		closeButton = Jcomp.createButton(Jcomp.ok, "Close window"); 
+		closeButton.addActionListener(this);
 		
-		JPanel buttonPanel = new JPanel();
-		buttonPanel.add(okButton);
+		JPanel buttonPanel = new JPanel(); buttonPanel.setBackground(Color.white);
+		buttonPanel.add(closeButton);
 	
 		getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(sPane,BorderLayout.CENTER);
@@ -98,7 +99,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		setVisible(true);
 	}
 	/***************************************************
-	 * Hit info; CAS560 change parameters, add Sort and Merge
+	 * 2D Hit info; CAS560 change parameters, add Sort and Merge
 	 */
 	public TextShowInfo (AlignPool alignPool, HitData hitDataObj, String title, String theInfo, String trailer,
 			boolean st1LTst2, String proj1, String proj2, Annotation aObj1, Annotation aObj2, String queryHits, String targetHits, 
@@ -139,7 +140,6 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		theInfo +=  st1LTst2 ? ("\nL " + table1+ "\nR " + table2) : ("\nL " + table2+"\nR " + table1);
 		theInfo += trailer; // if -ii, contains indices
 		
-		
 		if (bMerge && (table1.contains(totalMerge) || table2.contains(totalMerge)))  // no total in only 1 merged hit
 			theInfo += "\nThe merged hits are not 1-to-1.";
 		
@@ -157,8 +157,8 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		messageArea.setEditable(false);
 		messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		
-		okButton = new JButton("OK"); okButton.setBackground(Color.white);
-		okButton.addActionListener(this);
+		closeButton = Jcomp.createButton(Jcomp.ok, "Close window"); 
+		closeButton.addActionListener(this);
 		
 		// Hit only
 		alignHitButton = Jcomp.createButton("Align", "Popup window of text alignment");
@@ -174,15 +174,14 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		mergeButton = Jcomp.createButton(buttonMerge, "Merge overlapping hits");
 		mergeButton.addActionListener(this);
 		
-		JPanel buttonPanel = new JPanel();
+		JPanel buttonPanel = new JPanel(); buttonPanel.setBackground(Color.white);
 		if (!bMerge) {
 			if (cntNegGap>0 && bSort) 	buttonPanel.add(mergeButton); 
 			if (bDisorder && !bOrder) 	buttonPanel.add(orderButton); 
 			if (!bSort && !bRemove && Globals.INFO) buttonPanel.add(removeButton); 
-			buttonPanel.add(alignHitButton);
+			buttonPanel.add(alignHitButton); buttonPanel.add(Box.createHorizontalStrut(5));
 		}
-		
-		buttonPanel.add(okButton);
+		buttonPanel.add(closeButton);
 	
 		getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(sPane,BorderLayout.CENTER);
@@ -196,13 +195,13 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		setVisible(true);
 	}
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == okButton) {		
+		if (e.getSource() == closeButton) {		
 			if (hitDataObj!=null) hitDataObj.setIsPopup(false);
 			else				  annoDataObj.setIsPopup(false);
 			setVisible(false); 					// close popup
 		}
 		else if (e.getSource() == alignHitButton) {
-			runAlign(); 						     // new align popup
+			runAlign(true); 						     // new align popup
 		}
 		else if (e.getSource() == orderButton) {
 			runOrder(); 							// two hit popups will be shown 
@@ -214,39 +213,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 			runRemove(); 							// two hit popups will be shown 
 		}
 	}
-	////////////////////////////////////////////////////////////////
-	/**************************************************************/
-	private void runAlign() {
-	try {
-		boolean isNT = ntCheckBox.isSelected();
-		Vector <HitData> hitList = new Vector <HitData> ();
-		hitList.add(hitDataObj);
-		
-		hitAlignArr = alignPool.buildHitAlignments(hitList, isNT, isQuery);
-		String p1 = proj1.substring(0, proj1.indexOf(" "));
-		String p2 = proj2.substring(0, proj2.indexOf(" "));
-		
-		int cnt=0;
-		Vector <String> lines = new Vector <String> ();
-		for (HitAlignment hs : hitAlignArr) {
-			if (cnt>0) lines.add("_______________________________________________________________________");
-			String desc = (isNT) ? hs.toText(false, p1, p2) : hs.toTextAA(p1, p2);
-			String [] toks = desc.split("\t");
-			lines.add(toks[0]); // Block Hit#
-			lines.add(toks[1]); // %Id
-			
-			addAlign(lines, toks[2], toks[3], toks[4], hs.getCoords());
-			
-			cnt++;
-		}
-		String msg="";
-		for (String l : lines) msg += l + "\n";
-		 
-		String title =  "Align " + hitDataObj.getName() + "; " + proj1 + " to " + proj2;
-		displayAlign(title, msg, true);
-		
-	} catch (Exception e) {ErrorReport.print(e, "run align");}
-	}
+	
 	/**************************************************************/
 	private void addAlign(Vector <String> lines, String aSeq1, String aSeqM, String aSeq2, int [] coords) {
 	try {
@@ -299,21 +266,32 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		messageArea.setEditable(false);
 		messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		
-		JButton okButton = new JButton("OK"); okButton.setBackground(Color.white);
+		JButton okButton = Jcomp.createButton(Jcomp.ok, "Close window"); 
 		okButton.addActionListener(new ActionListener() {
 	   		public void actionPerformed(ActionEvent arg0) {
 	   			diag.setVisible(false);
 	   		}
 		});  
-		JButton revButton = new JButton("Reverse"); okButton.setBackground(Color.white);
+		JButton revButton = Jcomp.createButton("Reverse", "Align the reverse complement sequence"); 
 		revButton.addActionListener(new ActionListener() {
 	   		public void actionPerformed(ActionEvent arg0) {
 	   			revButton.setEnabled(false); // the data structures is reused and changed
 	   			reverseAlign();
 	   		}
 		}); 
-		JPanel buttonPanel = new JPanel(); buttonPanel.setBackground(Color.white);
-		if (isFirst) buttonPanel.add(revButton); 
+		JButton trimButton = Jcomp.createButton("No trim", "Align without trimming"); // CAS563 added this option
+		trimButton.addActionListener(new ActionListener() {
+	   		public void actionPerformed(ActionEvent arg0) {
+	   			trimButton.setEnabled(false); // the data structures is reused and changed
+	   			runAlign(false);
+	   		}
+		}); 
+		
+		JPanel buttonPanel = new JPanel(); buttonPanel.setBackground(Color.white); // will not center if use Jcomp 
+		if (isFirst) {
+			buttonPanel.add(revButton); buttonPanel.add(Box.createHorizontalStrut(5));
+			buttonPanel.add(trimButton); buttonPanel.add(Box.createHorizontalStrut(5));
+		}
 		buttonPanel.add(okButton); 
 		
 		diag.getContentPane().setLayout(new BorderLayout());
@@ -330,7 +308,41 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		//diag.setAlwaysOnTop(true);
 		diag.setVisible(true);	
 	}
-
+	/****************************************************************/
+	private void runAlign(boolean bTrim) {
+		try {
+			boolean isNT = ntCheckBox.isSelected();
+			Vector <HitData> hitList = new Vector <HitData> ();
+			hitList.add(hitDataObj);
+			
+			// Run Align 
+			hitAlignArr = alignPool.buildHitAlignments(hitList, isNT, isQuery, bTrim);
+			
+			String p1 = proj1.substring(0, proj1.indexOf(" "));
+			String p2 = proj2.substring(0, proj2.indexOf(" "));
+			
+			int cnt=0;
+			Vector <String> lines = new Vector <String> ();
+			for (HitAlignment hs : hitAlignArr) {
+				if (cnt>0) lines.add("_______________________________________________________________________");
+				String desc = (isNT) ? hs.toText(false, p1, p2) : hs.toTextAA(p1, p2);
+				String [] toks = desc.split("\t");
+				lines.add(toks[0]); // Block Hit#
+				lines.add(toks[1]); // %Id
+				
+				addAlign(lines, toks[2], toks[3], toks[4], hs.getCoords());
+				
+				cnt++;
+			}
+			String msg="";
+			for (String l : lines) msg += l + "\n";
+			 
+			String x = (bTrim) ? "Align trim " : "Align";
+			String title =  x + hitDataObj.getName() + "; " + proj1 + " to " + proj2;
+			displayAlign(title, msg, bTrim);	// true says put Reverse/Trim buttons on bottom
+		} 
+		catch (Exception e) {ErrorReport.print(e, "run align");}
+	}
 	private void reverseAlign() {
 		hitAlignArr = alignPool.getHitReverse(hitAlignArr);
 		
@@ -356,8 +368,9 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		String title =  "Reverse Align " + hitDataObj.getName() + "; " + proj1 + " to " + proj2;
 		displayAlign(title, msg, false);
 	}
+	
 	/*************************************************************
-	 * CAS560 toggle all hits and merged hits
+	 * toggle all hits and merged hits; CAS560 add
 	 */
 	private void runMerge() {
 		String queryShow  = SeqDataInfo.calcMergeHits(Globals.Q, queryHits, false);
@@ -368,7 +381,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 				queryShow, targetShow, isQuery, isInvHit, true); 
 	}
 	/*************************************************************
-	 * CAS560 retain target ordered by query - the '#' will be out-of-order
+	 * retain target ordered by query - the '#' will be out-of-order; CAS560 add
 	 */
 	private void runOrder() { 	
 		new TextShowInfo(alignPool, hitDataObj, titleOrder + " " + title, 
@@ -376,7 +389,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 				queryHits, targetHits, isQuery, isInvHit, false /* keep order */); 
 	}
 	/*************************************************************
-	 * CAS560 run after runOrder to remove disordered hits
+	 * run after runOrder to remove disordered hits; CAS560 add
 	 */
 	private void runRemove() {
 		String [] sort = SeqDataInfo.calcRemoveDisorder(queryHits, targetHits, isInvHit);
@@ -385,5 +398,4 @@ public class TextShowInfo extends JDialog implements ActionListener {
 				theInfo, "", st1LTst2, proj1, proj2, aObj1, aObj2, 
 				sort[Globals.Q], sort[Globals.T], isQuery, isInvHit, false /* keep order */); 
 	}
-
 }

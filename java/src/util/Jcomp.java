@@ -1,5 +1,6 @@
 package util;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
@@ -7,7 +8,6 @@ import java.awt.Insets;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
 //import javax.swing.ImageIcon;
@@ -25,16 +25,18 @@ import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 
 /***************************************************
- * CAS534 added for static interface components
- * CAS552 there was one abstract method to cover many possibilities; this is more explicit
+ * Common sets of interface commands
+ * CAS552 there was one abstract method to cover many possibilities; 
  */
 public class Jcomp {
-	
+	public static final String ok = "OK", close = "Close", cancel="Cancel"; // for buttons
+	 
 	public static JTextArea createTextArea(String text, Color bg, boolean bWrap) {
 		JTextArea textArea = new JTextArea(text);
 		
 		textArea.setAlignmentX(Component.LEFT_ALIGNMENT);
-		textArea.setBackground(bg);
+		if (bg==null) 	textArea.setBackground(Color.white);	// CAS562 using it for query instructions
+		else 			textArea.setBackground(bg);
 		textArea.setEditable(false);
 		textArea.setLineWrap(bWrap);
 		textArea.setWrapStyleWord(true);
@@ -73,12 +75,17 @@ public class Jcomp {
 
 		return row;
 	}
-	static public JPanel createRowCenterPanel() {
-		JPanel row = new JPanel();
-		row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS)); // X_AXIS
+	// This centers the row
+	// buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+	/*
+	  getContentPane().setLayout(new BorderLayout());
+	  getContentPane().add(sPane,BorderLayout.CENTER);
+	  getContentPane().add(buttonPanel,BorderLayout.SOUTH);
+	  pack();
+	 */
+	static public JPanel createRowCenterPanel() { 
+		JPanel row = new JPanel(new BorderLayout());
 		row.setBackground(Color.white);
-		row.setAlignmentX(Component.CENTER_ALIGNMENT);
-		row.setAlignmentY(Component.TOP_ALIGNMENT);
 		return row;
 	}
 	//////////////////////////////////////////
@@ -117,16 +124,27 @@ public class Jcomp {
 		return l;
 	}
 	static public JLabel createMonoLabel(String label, String t) {
-		//String html = "<html><b><i>" + label + "</i></b></html>"; // ignores blanks
 		JLabel lab = new JLabel(label);
 		lab.setFont(new Font(Font.MONOSPACED,Font.PLAIN,13)); //lab.getFont().getName()
 		lab.setToolTipText(t);
 		lab.setBackground(Color.white);
 		return lab;
 	}
-	static public JLabel createMonoLabel(String label) {
+	static public JLabel createMonoLabel(String label, int sz) { // CAS563 was constant 12
 		JLabel lab = new JLabel(label);
-		lab.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12)); 
+		lab.setFont(new Font(Font.MONOSPACED,Font.PLAIN, sz)); 
+		lab.setBackground(Color.white);
+		return lab;
+	}
+	static public JLabel createItalicsLabel(String label, int sz) {// CAS563 added for Instructions
+		JLabel lab = new JLabel(label);
+		lab.setFont(new Font(Font.MONOSPACED,Font.ITALIC, sz)); 
+		lab.setBackground(Color.white);
+		return lab;
+	}
+	static public JLabel createItalicsBoldLabel(String label, int sz) {// CAS563 added for Instructions
+		JLabel lab = new JLabel(label);
+		lab.setFont(new Font(Font.MONOSPACED,Font.ITALIC | Font.BOLD, sz)); 
 		lab.setBackground(Color.white);
 		return lab;
 	}
@@ -267,13 +285,13 @@ public class Jcomp {
 		
 		return button;
 	}
-	static public JButton createPlainButton(String label, boolean enable) {
+	static public JButton createPlainButton(String label, String tip) { // CAS563 change for TableReport
 		JButton button = new JButton(label);
 		button.setBackground(Color.white);
 		button.setAlignmentX(Component.LEFT_ALIGNMENT);
 		button.setMargin(new Insets(0, 0, 0, 0));
 		button.setFont(new Font(button.getFont().getName(),Font.PLAIN,10));
-		button.setEnabled(enable);
+		button.setToolTipText(tip);
 		return button;
 	}
 	static public JButton createBoldButton(String label, String tip) { // CAS557 add for xToSymap
