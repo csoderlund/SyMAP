@@ -27,8 +27,8 @@ import util.Jcomp;
 public class ResultsPanel extends JPanel {
 	private static final long serialVersionUID = -4532933089334778200L;
 
-	public ResultsPanel(SyMAPQueryFrame parentFrame) {
-		theParentFrame = parentFrame;
+	protected ResultsPanel(QueryFrame parentFrame) {
+		theQueryFrame = parentFrame;
 		setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		setBackground(Color.WHITE);
@@ -52,7 +52,7 @@ public class ResultsPanel extends JPanel {
 				updateButtons();
 				if (e.getClickCount() == 2) {
 					int row = theTable.getSelectedRow();
-					theParentFrame.selectResult(row);
+					theQueryFrame.selectResult(row);		// 
 				}
 			}
 		});
@@ -69,7 +69,7 @@ public class ResultsPanel extends JPanel {
 		add(scroll);
 	}
 	
-	public void addResult(String [] summary) {
+	protected void addResultText(String [] summary) {
 		rows.add(summary);
 		theTable.revalidate();
 		updateButtons();
@@ -77,28 +77,28 @@ public class ResultsPanel extends JPanel {
 	
 	private void removeSelectedSummaries(int [] selections) {
 		for(int x=selections.length-1; x>=0; x--) {
-			theParentFrame.removeResult(selections[x]);
+			theQueryFrame.removeResult(selections[x]);
 			rows.remove(selections[x]);
 		}
 		theTable.clearSelection();
 		theTable.revalidate();
 		updateButtons();
 		
-		if (rows.size()==0) theParentFrame.resetCounter(); // CAS513 add
+		if (rows.size()==0) theQueryFrame.resetCounter(); 
 	}
 	
 	private void removeAllSummaries() {
 		int numResults = rows.size();
 		
 		for(int x=0; x < numResults; x++) 
-			theParentFrame.removeResult(0);
+			theQueryFrame.removeResult(0);
 		rows.clear();
 		
 		theTable.clearSelection();
 		theTable.revalidate();
 		updateButtons();
 		
-		theParentFrame.resetCounter(); // CAS513 add
+		theQueryFrame.resetCounter(); 
 	}
 	
 	private void updateButtons() {
@@ -177,6 +177,6 @@ public class ResultsPanel extends JPanel {
 	private Vector<String []> rows = null;
 	private String [] colNames = { "Result", "Filters" };
 	
-	private SyMAPQueryFrame theParentFrame = null;
+	private QueryFrame theQueryFrame = null;
 }
 

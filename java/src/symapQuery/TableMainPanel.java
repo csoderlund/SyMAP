@@ -7,6 +7,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
@@ -26,7 +28,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
@@ -46,32 +47,30 @@ import util.Jcomp;
 import util.Jhtml;
 import util.Utilities;
 import symap.Globals;
-import symap.drawingpanel.SyMAP2d;
-import symap.mapper.HfilterData;
-import symap.sequence.Sequence;
 
 /**************************************************
  * Perform query and display results in table
- * SyMAPQueryFrame calls QueryPanel which call this on "Run Search" passing it the query. 
+ * QueryFrame calls QueryPanel which call this on "Run Query" passing it the query. 
  *    The loadDataFromDatabase runs the Query, and DBdata creates the rows.
  *  
- * CAS560 add theLastTable; CAS561 Jcomp graphics, add Group
+ * CAS560 add theLastTable; CAS561 Jcomp graphics, add Group; CAS563/4 move Align to UtilSelect; 
+ * CAS564 add Search; move 2D to UtilSelect; implement Stop
  */
 public class TableMainPanel extends JPanel {
 	private static final long serialVersionUID = -3827610586702639105L;
 	private static final int ANNO_COLUMN_WIDTH = 100, ANNO_PANEL_WIDTH = 900;
 	private static final int GEN_COLUMN_WIDTH = 100;
-	private static final int showREGION=0, showSET=1, showBLOCK=2,  showGRP=3; // CAS555 add showGrp
+	protected static final int showREGION=0, showSET=1, showBLOCK=2,  showGRP=3; // CAS555 add showGrp
 	
 	static protected TableSort theLastTable = null; //  CAS560 add to keep using last order of columns for session
 	
-	// called by SymapQueryFrame
-	protected TableMainPanel(SyMAPQueryFrame parentFrame, String resultName,  boolean [] selCols,
+	// called by QueryFrame
+	protected TableMainPanel(QueryFrame parentFrame, String tabName,  boolean [] selCols,
 			String query, String sum, boolean isSingle) {
 		this.queryFrame = parentFrame;
-		this.theName 		= resultName;
+		this.theTabName 	= tabName;
 		
-		queryPanel 		= queryFrame.getQueryPanel();
+		queryPanel 			= queryFrame.getQueryPanel();
 		this.isSingle		= isSingle;
 		this.theQuery 		= query;
 		this.theSummary 	= sum;
@@ -84,87 +83,89 @@ public class TableMainPanel extends JPanel {
 			for(int x=0; x<selCols.length; x++)
 				theOldSelCols[x] = selCols[x];
 		}
-		
 		colSelectChange = new ActionListener() { // when a column is selected or deselected
 			public void actionPerformed(ActionEvent arg0) {
+				searchPanel = null;
+		
+				Point viewPosition = sPane.getViewport().getViewPosition(); // CAS564 add before all setTable
+	            int row = theTable.rowAtPoint(viewPosition);
+	                
 				setTable(false, false);
-		        displayTable();
+		        displayTable(row);
 			}
 		};
-		buildTableStart(theQuery);
+		buildTableThread(theQuery);
 	}
 	/************************************************************/
-	private void buildTableStart(String theQuery) {
+	private void buildTableThread(String theQuery) {
+		
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-       
-        theAnnoKeys = AnnoData.loadProjAnnoKeywords(queryFrame);
-        
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         setAlignmentY(LEFT_ALIGNMENT);
-        displayProgress();
+        
+        createLoadStatus();
+        
+        bStopped = bDone = false;
+        theAnnoKeys = AnnoData.loadProjAnnoKeywords(queryFrame);
+        
 		buildThread = new Thread(new Runnable() {
 			public void run() {
 				try {
-					ResultSet rset = loadDataFromDatabase(theQuery); // closed in DBdata
-					if(rset != null) {
-						buildTable(rset);
-					}
-					else {
-						return;
-					}
+					ResultSet rs = loadDataFromDatabase(theQuery); // closed in DBdata
+					if (rs==null) return;
+					if (bStopped) {rs.close(); return;} // usually rs.close in DBdata load in buildTable
+					
+					buildTable(rs); 				    // calls DBdata which does rs.close	
+					
+					if (bStopped) return;	
+					
 					setColFromOldSelect();
-					displayTable();
-					finish(); 
+					displayTable(-1);		// -1 do not scroll to a rwo
+					buildFinish(); 			
 
-					if(isVisible()) { //Makes the table appear
+					if (isVisible()) { 		//Makes the table appear
 						setVisible(false);
 						setVisible(true);
 					}
-				} catch (Exception e) {ErrorReport.print(e, "Show initial table");}
+				} 
+				catch (Exception e) {ErrorReport.print(e, "Show initial table");}
 			}
 		});
 		buildThread.setPriority(Thread.MIN_PRIORITY);
 		buildThread.start();
 	}
-	private void finish() { // Has to be done from thread, but not in thread
-		queryFrame.updateResultCount(this);
+	/** replace tab: add to result table;  Has to be done from thread, but not in thread **/
+	private void buildFinish() { 					// CAS564 replace table specific with general
+		int numRows =  (theTableData != null) ? theTableData.getNumRows() : 0;
+		
+		String oldTab = theTabName+":"; 			// same as QueryFrame.makeTabTable
+		String newTab = theTabName + ": " + numRows;
+		
+		String [] resultVal = new String[2];
+ 		resultVal[0] = newTab; 						// left of result table panel
+ 		resultVal[1] = theSummary;					// right of result table panel with query filters
+ 		
+		queryFrame.updateTabText(oldTab, newTab, resultVal);
+		
+		queryFrame.getQueryPanel().setQueryButton(true);
 	}
-	private void displayTable() {
-    	removeAll();
-    	repaint();
-    	loadStatus = null;
-    	sPane = new JScrollPane();
-    	sPane.setViewportView(theTable);
-    	theTable.getTableHeader().setBackground(Color.WHITE);
-    	sPane.setColumnHeaderView(theTable.getTableHeader());
-    	
-    	sPane.getViewport().setBackground(Color.WHITE);
-    	sPane.getHorizontalScrollBar().setBackground(Color.WHITE);
-    	sPane.getVerticalScrollBar().setBackground(Color.WHITE);
-    	sPane.getHorizontalScrollBar().setForeground(Color.WHITE);
-    	sPane.getVerticalScrollBar().setForeground(Color.WHITE);
-    	
-    	if (statsPanel == null) statsPanel = new JPanel();
-    	
-    	add(tableButtonPanel);	add(Box.createVerticalStrut(10));
-    	add(tableStatusPanel);
-    	add(sPane);				add(Box.createVerticalStrut(10));
-    	add(statsPanel);		add(Box.createVerticalStrut(10));
-    	add(columnPanel);		add(Box.createVerticalStrut(10));
-    	add(columnButtonPanel);
-    	
-    	if(theTable != null)
-    		if(theTable.getRowCount() > 0)
-    			updateTableStatus(theName + ": " + theTable.getRowCount() + " rows   Filter: "  + theSummary);
-    		else
-    			updateTableStatus(theName + ": No results   Filter: " + theSummary);
-
-    	invalidate();
-    	validateTable();
+	/** Called when User clicks Stop; CAS564 was not doing anything **/
+	private void buildStop() { // 
+			if (buildThread==null || bDone) return;
+		
+			queryPanel.setQueryButton(true);
+			
+			queryFrame.removeResult(this); 		// remove from left side
+	
+			loadStatus.setText(Q.stop); // looks for this word in ComputeClust/Multi
+			bStopped=true;				// others check this variable; set before interrupt
+			
+			try {
+				buildThread.interrupt(); 
+			}
+			catch (Exception e) {};
 	}
 	
-	private TableMainPanel getInstance() { return this; }
-
 	/***************************************************************
 	 * Build table
 	 */
@@ -181,18 +182,23 @@ public class TableMainPanel extends JPanel {
         	HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> (); 
         	HashMap <String, String> projMap = new HashMap  <String, String> (); // ComputePgeneF & ComputeMulti;; CAS555 int->string
         		
-         	Vector  <DBdata> rowsFromDB =  DBdata.loadRowsFromDB(rs, queryFrame.getProjects(),
+         	Vector  <DBdata> rowsFromDB =  DBdata.loadRowsFromDB(getInstance(), rs, queryFrame.getProjects(),
          			queryFrame.getQueryPanel(), theAnnoKeys.getColumns(false /*displayname*/), loadStatus,
-         			geneCntMap, projMap); // Inputs for Summary
-         				 
+         			geneCntMap, projMap); 				// Inputs for Summary
+         
+         	bDone=true; 								// make sure the timing does not let them Stop now (unless too late)
+         	
+         	if (bStopped) {if (rowsFromDB!=null) rowsFromDB.clear(); return;} // may be too late
+         	
         	theTableData.addRowsWithProgress(rowsFromDB, loadStatus);
-        		
+        	
             SummaryPanel sp = new SummaryPanel(rowsFromDB, queryPanel, projMap, geneCntMap);
             statsPanel = sp.getPanel();
             
             rowsFromDB.clear(); // NOTE: IF want to use later, then the Stats need to be removed from DBdata
         }
-        	    
+        if (bStopped) return;
+        
         theTableData.setColumnHeaders(queryFrame.getAbbrevNames(), theAnnoKeys.getColumns(true /*abbrev*/), isSingle);
         theTableData.finalizeX();
 
@@ -220,6 +226,46 @@ public class TableMainPanel extends JPanel {
           ((TableColumn)en.nextElement()).setHeaderRenderer(renderer);
         } 
     }
+    /**********************************************************************/
+	private void displayTable(int rowIndex) {
+    	removeAll();
+    	repaint();
+    	loadStatus = null;
+    	sPane = new JScrollPane();
+    	sPane.setViewportView(theTable);
+    	theTable.getTableHeader().setBackground(Color.WHITE);
+    	sPane.setColumnHeaderView(theTable.getTableHeader());
+    	
+    	sPane.getViewport().setBackground(Color.WHITE);
+    	sPane.getHorizontalScrollBar().setBackground(Color.WHITE);
+    	sPane.getVerticalScrollBar().setBackground(Color.WHITE);
+    	sPane.getHorizontalScrollBar().setForeground(Color.WHITE);
+    	sPane.getVerticalScrollBar().setForeground(Color.WHITE);
+    	
+    	if (statsPanel == null) statsPanel = new JPanel();
+    	
+    	add(tableButtonPanel);	add(Box.createVerticalStrut(10));
+    	add(tableStatusPanel);
+    	add(sPane);				add(Box.createVerticalStrut(10));
+    	add(statsPanel);		add(Box.createVerticalStrut(10));
+    	add(columnPanel);		add(Box.createVerticalStrut(10));
+    	add(columnButtonPanel);
+    	
+		if (theTable.getRowCount() > 0)
+			updateTableStatus(theTabName + ": " + theTable.getRowCount() + " rows   Filter: "  + theSummary);
+		else
+			updateTableStatus(theTabName + ": No results   Filter: " + theSummary);
+    		
+    	if (rowIndex>0) {// CAS564 add retain table position
+    		Rectangle cellRect = theTable.getCellRect(rowIndex, 0, true);       
+    	    theTable.scrollRectToVisible(cellRect);
+    	}
+    	invalidate();
+    	validateTable();
+	}
+	
+	private TableMainPanel getInstance() { return this; }
+
     private JPanel createTopButtonPanel() {
     	JPanel buttonPanel = Jcomp.createPagePanel();
     
@@ -235,13 +281,13 @@ public class TableMainPanel extends JPanel {
 		});  
  	    topRow.add(btnShowRow);					topRow.add(Box.createHorizontalStrut(3));
  	    
-    	btnShowAlign = Jcomp.createButton("MSA...", "Align selected sequences using MUSCLE or MAFFT"); 
- 	    btnShowAlign.addActionListener(new ActionListener() {
+    	btnShowMSA = Jcomp.createButton("MSA... ", "Align selected sequences using MUSCLE or MAFFT"); // setMsaButton
+ 	    btnShowMSA.addActionListener(new ActionListener() {
     		public void actionPerformed(ActionEvent arg0) {
-    			showAlign();
+    			showMSA();
     		}
  		});  
- 	    topRow.add(btnShowAlign);				topRow.add(Box.createHorizontalStrut(8));// CAS563 5->8 for linux
+ 	    topRow.add(btnShowMSA);				topRow.add(Box.createHorizontalStrut(8));// CAS563 5->8 for linux
 	 	 
  	    // View 2D
  	    topRow.add(new JSeparator(JSeparator.VERTICAL)); topRow.add(Box.createHorizontalStrut(2)); // Needs box on Linux
@@ -279,7 +325,7 @@ public class TableMainPanel extends JPanel {
 	    chkSynGn = Jcomp.createCheckBox("Gene#", "If checked, show Gene#, else show Annotation", true);
 	    topRow.add(chkSynGn); 				topRow.add(Box.createHorizontalStrut(3));
 	    
-	    btnShowRow.setEnabled(false); btnShowAlign.setEnabled(false); btnShowSynteny.setEnabled(false);
+	    btnShowRow.setEnabled(false); btnShowMSA.setEnabled(false); btnShowSynteny.setEnabled(false);
 	    cmbSynOpts.setEnabled(false); txtSynRegion.setEnabled(false); chkSynHigh.setEnabled(false); chkSynGn.setEnabled(false);
 	    
 	    topRow.add(new JSeparator(JSeparator.VERTICAL)); topRow.add(Box.createHorizontalStrut(15));
@@ -298,7 +344,7 @@ public class TableMainPanel extends JPanel {
 	    btnExport = Jcomp.createButton("Export...", "Export selected rows or all rows");
 	    btnExport.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				popupExport();
+				showExport();
 			}
 		});   
 	    btnUnSelectAll = Jcomp.createButton("Unselect All", "Unselect all selected rows");
@@ -310,19 +356,27 @@ public class TableMainPanel extends JPanel {
 		});  
 	   
 	    // title repeated in setBtnReport
-	    if (isCollinear)  btnReport = Jcomp.createPlainButton("Collinear Report...", "Create a collinear gene report from the rows. Display a popup or write to file.");
-	    else if (isMultiN)  btnReport = Jcomp.createPlainButton("Multi-hit Report...", "Create a multi-hit gene report from the rows. Display a popup or write to file.");
-	    else if (isClustN)  btnReport = Jcomp.createPlainButton("Cluster Report...", "Create a cluster gene report from the rows. Display a popup or write to file.");
-	    else btnReport = Jcomp.createPlainButton("Gene Report...", "Create a gene pair report from the rows. Display a popup or write to file.");
+	    if (isCollinear)  btnReport = Jcomp.createButton("Collinear Report...", "Create a collinear gene report from the rows. Display a popup or write to file.");
+	    else if (isMultiN)  btnReport = Jcomp.createButton("Multi-hit Report...", "Create a multi-hit gene report from the rows. Display a popup or write to file.");
+	    else if (isClustN)  btnReport = Jcomp.createButton("Cluster Report...", "Create a cluster gene report from the rows. Display a popup or write to file.");
+	    else btnReport = Jcomp.createButton("Gene Report...", "Create a gene pair report from the rows. Display a popup or write to file.");
 	    btnReport.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				showReport();
 			}
 		});     
 	    
-	    botRow.add(btnExport);		botRow.add(Box.createHorizontalStrut(8));
-	    botRow.add(btnUnSelectAll);	botRow.add(Box.createHorizontalStrut(60));
-	    botRow.add(btnReport);	
+	    btnSearch = Jcomp.createButton("Search...", "Search for string and go to that row.");
+	    btnSearch.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				showSearch();
+			}
+		}); 
+	    
+	    botRow.add(btnExport);		botRow.add(Box.createHorizontalStrut(5));
+	    botRow.add(btnUnSelectAll);	botRow.add(Box.createHorizontalStrut(70));
+	    botRow.add(btnReport);		botRow.add(Box.createHorizontalStrut(8));
+	    botRow.add(btnSearch);
 	    
 		buttonPanel.add(topRow);
 		buttonPanel.add(Box.createVerticalStrut(10));
@@ -520,12 +574,13 @@ public class TableMainPanel extends JPanel {
 				btnGroupCols.setVisible(true);
 				btnShowStats.setVisible(false);
 			}
-			displayTable();
+			displayTable(-1);
 		}});
 		
 		btnClearCols = Jcomp.createButton("Clear", "Clear all selections");
 		btnClearCols.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				searchPanel=null;
 				clearColumns();
 		}});
 		btnClearCols.setVisible(false);
@@ -533,6 +588,7 @@ public class TableMainPanel extends JPanel {
 		btnDefaultCols = Jcomp.createButton("Defaults", "Set default columns");
 		btnDefaultCols.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				searchPanel=null;
 				defaultColumns();
 		}});
 		btnDefaultCols.setVisible(false);
@@ -540,6 +596,7 @@ public class TableMainPanel extends JPanel {
 		btnGroupCols = Jcomp.createButton("Arrange", "Arrange similar columns together with gene columns first");
 		btnGroupCols.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				searchPanel=null;
 				groupColumns();
 		}});
 		btnGroupCols.setVisible(false);
@@ -589,7 +646,7 @@ public class TableMainPanel extends JPanel {
 	
     	return thePanel;
     }
-    private void displayProgress() {
+    private void createLoadStatus() {
     	removeAll();
     	repaint();
     	setBackground(Color.WHITE);
@@ -602,20 +659,21 @@ public class TableMainPanel extends JPanel {
     	btnStop.setBackground(Color.WHITE);
     	btnStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if(buildThread != null)
-					loadStatus.setText("Cancelled");
+				buildStop();
 			}
 		});
 	    add(loadStatus);
 	    add(btnStop);
 	    validateTable();
 	}
+  
     private void validateTable() {
 		validate();
     }
     private void updateTableStatus(String status) {
 	    rowCount.setText(status);
     }
+   
     /***********************************************************
      * Column
      */
@@ -633,7 +691,7 @@ public class TableMainPanel extends JPanel {
     		}
     	}
     	setTable(true, false);
-    	displayTable();
+    	displayTable(-1);
     }
     private void defaultColumns() {// CAS543 add
     	boolean [] genColDef = TableColumns.getGeneralColDefaults();
@@ -652,17 +710,29 @@ public class TableMainPanel extends JPanel {
     			chkAnnoFields.get(x).get(y).setSelected(false);
     		}
     	}
+    	int row=-1;
+    	if (sPane!=null) {
+    		Point viewPosition = sPane.getViewport().getViewPosition();
+    		row = theTable.rowAtPoint(viewPosition);
+    	}    
     	setTable(true, false);
-    	displayTable();
+    	displayTable(row);
     }
-    // CAS561 add to group like columns together
+    // group like columns together; CAS561 add
     private void groupColumns() {
+    	int row=-1;
+    	if (sPane!=null) {
+    		Point viewPosition = sPane.getViewport().getViewPosition();
+    		row = theTable.rowAtPoint(viewPosition);
+    	} 
     	setTable(false, true);
-    	displayTable();
+    	displayTable(row);
     }
     
 	// Build table, clearColumns, defaultColumns, setColFromOldSelect, actionPerformed (on colChange)
 	private void setTable(boolean isFirst, boolean isGroup) {
+		if (bStopped) return; // to be sure...
+		
 		String [] uoSelCols = getSelColsUnordered(); // order found in columns panel	
 		String [] columns;
 		
@@ -732,7 +802,7 @@ public class TableMainPanel extends JPanel {
 	    			targetPos++;
 	    		}
 	    	}
-		   // CAS532 see SyMAPQueryFrame.getLastColumns; add check for targetPos 
+		   // see QueryFrame.getLastColumns; add check for targetPos;  CAS532 
 	    	for(int x=0; x<chkAnnoFields.size() && targetPos<oldN; x++) {
 	    		for(int y=0; y<chkAnnoFields.get(x).size() && targetPos<oldN; y++) {
 	    			chkAnnoFields.get(x).get(y).setSelected(theOldSelCols[targetPos]);
@@ -779,7 +849,7 @@ public class TableMainPanel extends JPanel {
     	btnExport.setEnabled(enable);
     	btnUnSelectAll.setEnabled(enable);
     	btnReport.setEnabled(enable);
-    	btnShowAlign.setEnabled(enable);
+    	if (!bMSArun) btnShowMSA.setEnabled(enable);
     	btnShowCols.setEnabled(enable);
     	btnHelp.setEnabled(enable);
     	
@@ -807,7 +877,7 @@ public class TableMainPanel extends JPanel {
 			if (cmbSynOpts.getSelectedIndex()!=showREGION) txtSynRegion.setEnabled(false);
 		}
     	boolean bn = (theTable.getSelectedRowCount() >= 1)  ? true : false;
-    	btnShowAlign.setEnabled(bn);
+    	if (!bMSArun) btnShowMSA.setEnabled(bn);
     	
     	if (b1 && !bn) return;
     	
@@ -823,18 +893,9 @@ public class TableMainPanel extends JPanel {
     	if (cmbSynOpts.getSelectedIndex()!=showREGION) txtSynRegion.setEnabled(false);
     }
    
-    /***************************************************************
-     * Show alignment
-     * Gene:     o Gene coords  o Gene exons  o Merge Hits  o Ignore
-     * Non-gene: o Merge overlapping coords o Ignore
-     */
-    private void showAlign() {
-		if (isSingle) return;
-		int selNum = theTable.getSelectedRowCount();
-		if (selNum == 0)  return;
-		new UtilSelect(this).msaAlign();
-		
-    }
+    /****************************************
+     * Buttons functions and associated methods; CAS564 tried to make them more consistent  
+     **********************************/
     /**************************************************************
      * Show Row in popup
      */
@@ -845,211 +906,51 @@ public class TableMainPanel extends JPanel {
 			int row = theTable.getSelectedRows()[0];
 			TmpRowData rd = new TmpRowData(getInstance());
 			String outLine = rd.loadRowAsString(row);
+			
 			Utilities.displayInfoMonoSpace(this, "Row#" + (row+1), outLine, false);
 		}
     	catch(Exception e) {ErrorReport.print(e, "Show row");}
     }
-   
+    /***************************************************************
+     * Show MSA - threaded; calls setPanelEnabled(false) before comp and setPanelEnabled(true) after;
+     */
+    private void showMSA() { 
+		if (isSingle) return;
+		if (theTable.getSelectedRowCount() == 0)  return;
+		
+		new UtilSelect(this).msaAlign();	
+    }
+    public void setMsaButton(boolean b) {// stops 2 from running at once; set F in UtilSelect, set T in MsaMainPanel.buildFinish
+    	if (b) {btnShowMSA.setText("MSA... "); bMSArun=false; btnShowMSA.setEnabled(true);}
+    	else   {btnShowMSA.setText("Running"); bMSArun=true; btnShowMSA.setEnabled(false);}
+    }
     /**************************************************************
-     * Show 2D 
+     * Show 2D - CAS564 moved most of the methods to UtilSelect
      */
     private void showSynteny() {
 		try{
+			hitNum1 = hitNum2 = 0;
 			grpIdxVec.clear();// for the get statements
 			
 			if (isSingle) return;
 		
-			if (theTable.getSelectedRowCount() == 2)  {
-				showSyntenyfor3();
-				return;
-			}
-			if (theTable.getSelectedRowCount() != 1)  return;
-    		
+			int numRows = theTable.getSelectedRowCount();
+			if (numRows==0 || numRows>2) return;
+			
 			btnShowSynteny.setEnabled(false);		// CAS563 add
 			
-			TmpRowData rd = new TmpRowData(getInstance());
-			if (!rd.loadRow(theTable.getSelectedRows()[0])) {
-				btnShowSynteny.setEnabled(true);
-				return;
-			}
-				
-			int pad=30;
-			int track1Start=0, track2Start=0, track2End=0, track1End=0;
-			int [] coords;
-			HfilterData hd = new HfilterData (); 
+			int selIndex = cmbSynOpts.getSelectedIndex();
+			int pad = (selIndex==showREGION) ? (int) Double.parseDouble(txtSynRegion.getText()) * 1000 : 30;
 			
-			int item = (cmbSynOpts.getSelectedIndex());
-			if (item==showSET) {
-				if (rd.collinearN==0) {
-					Utilities.showWarningMessage("The selected row does not belong to a collinear set.");
-					return;
-				}
-				coords = loadCollinearCoords(rd.collinearN, rd.chrIdx[0], rd.chrIdx[1]);
-				hd.setForQuery(false, true, false);  // block, set, region
-			}
-			else if (item==showBLOCK) {
-				if (rd.blockN==0) {
-					Utilities.showWarningMessage("The selected row does not belong to a synteny block.");
-					return;
-				}
-				coords = loadBlockCoords(rd.blockN, rd.chrIdx[0], rd.chrIdx[1]);
-				hd.setForQuery(true, false, false);  // block, set, region
-			}
-			else if (item==showGRP) { // CAS555
-				if (rd.groupN==0) {
-					Utilities.showWarningMessage("The selected row does not belong to a group.");
-					return;
-				}
-				coords = rd.loadGroup(grpIdxVec); 	 // assigns hits to grpIdxVec
-				hd.setForQuery(false, false, true);  // block, set, region
-			}
-			else {
-				coords = new int [4];
-				coords[0] = rd.start[0]; coords[1] = rd.end[0];
-				coords[2] = rd.start[1]; coords[3] = rd.end[1];
-				pad = (int) Double.parseDouble(txtSynRegion.getText()) * 1000;
-				hd.setForQuery(false, false, true);  // block, set, region
-			}
-			track1Start = coords[0] - pad; if (track1Start<0) track1Start=0;
-			track1End   = coords[1] + pad; 
-			track2Start = coords[2] - pad; if (track2Start<0) track2Start=0;
-			track2End   = coords[3] + pad;
+			UtilSelect uObj = new UtilSelect(this);
+			uObj.synteny2D(numRows, selIndex,  pad, chkSynGn.isSelected(), grpIdxVec); // hitNum1, hitNum2 get set
 			
-			hitNum1 = rd.hitnum; hitNum2 = 0; 			// CAS562 was using start/end
-			
-			int p1Idx = rd.spIdx[0];
-			int p2Idx = rd.spIdx[1];
-
-			int grp1Idx = rd.chrIdx[0];
-			int grp2Idx = rd.chrIdx[1];
-			
-			// create new drawing panel; 				// CAS543 quit setting Sfilter Show_Annotation because is static
-			SyMAP2d symap = new SyMAP2d(queryFrame.getDBC(), getInstance());
-			symap.getDrawingPanel().setTracks(2); 		// CAS550 set exact number
-			symap.getDrawingPanel().setHitFilter(1,hd); 
-			
-			Sequence s1 = symap.getDrawingPanel().setSequenceTrack(1, p2Idx, grp2Idx, Color.CYAN);
-			Sequence s2 = symap.getDrawingPanel().setSequenceTrack(2, p1Idx, grp1Idx, Color.GREEN);
-			if (chkSynGn.isSelected()) {s1.setGeneNum(); s2.setGeneNum();} 			// CAS562 was setAnnotation; CAS543 was changing static; now changes individual object
-			else                       {s1.setAnnotation(); s2.setAnnotation();} 
-			
-			symap.getDrawingPanel().setTrackEnds(1, track2Start, track2End);
-			symap.getDrawingPanel().setTrackEnds(2, track1Start, track1End);
-			symap.getFrame().showX();
 			btnShowSynteny.setEnabled(true);
 		} 
 		catch(Exception e) {ErrorReport.print(e, "Create 2D Synteny");}
     }
-    private void showSyntenyfor3() {// CAS562 add; this is partially redundant with above, but easier...
- 		try{
- 			int [] col = getSharedRef(false); 
- 			if (col == null) return;
- 			
- 			btnShowSynteny.setEnabled(false);		// CAS563 add
- 			TmpRowData [] rd = new TmpRowData [2];
- 			
- 			rd[0] = new TmpRowData(getInstance());
- 			if (!rd[0].loadRow(theTable.getSelectedRows()[0])) {
- 				btnShowSynteny.setEnabled(true); Globals.tprt("No load 0");return;
- 			}
- 			rd[1] = new TmpRowData(getInstance());
- 			if (!rd[1].loadRow(theTable.getSelectedRows()[1])) {
- 				btnShowSynteny.setEnabled(true); Globals.tprt("No load 1");return;
- 			}
- 				
- 			int r0t1 = col[0], r0t2 = col[1],  
- 				               r1t2 = col[2], r1t3 = col[3];
- 			int pad=30;
- 			int sL=0, eL=1, sR=2, eR=3;
- 			int [] coordsRow0 = new int [4]; 
- 			int [] coordsRow1 = new int [4];
- 			HfilterData hd0 = new HfilterData (); 
- 			HfilterData hd1 = new HfilterData (); 
- 			
- 			int item = (cmbSynOpts.getSelectedIndex());
- 			if (item==showSET) {
- 				if (rd[0].collinearN==0 || rd[1].collinearN==0) {
- 					Utilities.showWarningMessage("The selected rows do not belong to a collinear set.");
- 					return;
- 				}
- 				int [] coords0 = loadCollinearCoords(rd[0].collinearN, rd[0].chrIdx[0], rd[0].chrIdx[1]);// ret sL,eL,sR,eR
- 				int [] coords1 = loadCollinearCoords(rd[1].collinearN, rd[1].chrIdx[0], rd[1].chrIdx[1]);
- 				hd0.setForQuery(false, true, false);  // block, set, region
- 				hd1.setForQuery(false, true, false);  // block, set, region
- 				
- 				if (r0t1==0 && r0t2==1) {
- 					coordsRow0[sL] = coords0[0]; coordsRow0[eL] = coords0[1]; // row0
- 					coordsRow0[sR] = coords0[2]; coordsRow0[eR] = coords0[3];
- 				}
- 				else {
- 					coordsRow0[sL] = coords0[2]; coordsRow0[eL] = coords0[3]; 
- 					coordsRow0[sR] = coords0[0]; coordsRow0[eR] = coords0[1];
- 				}
- 				if (r1t2==0 && r1t3==1) {
- 					coordsRow1[sL] = coords1[0]; coordsRow1[eL] = coords1[1]; // row1
- 					coordsRow1[sR] = coords1[2]; coordsRow1[eR] = coords1[3];
- 				}
- 				else {
- 					coordsRow1[sL] = coords1[2]; coordsRow1[eL] = coords1[3]; 
- 					coordsRow1[sR] = coords1[0]; coordsRow1[eR] = coords1[1];
- 				}
- 			}
- 			else if (item==showREGION) {
- 				pad = (int) Double.parseDouble(txtSynRegion.getText()) * 1000;
- 				
- 				coordsRow0[sL] = rd[0].start[r0t1]; coordsRow0[eL] = rd[0].end[r0t1]; // row0
- 				coordsRow0[sR] = rd[0].start[r0t2]; coordsRow0[eR] = rd[0].end[r0t2];
- 				coordsRow1[sL] = rd[1].start[r1t2]; coordsRow1[eL] = rd[1].end[r1t2]; 
- 				coordsRow1[sR] = rd[1].start[r1t3]; coordsRow1[eR] = rd[1].end[r1t3];
-
- 				hd0.setForQuery(false, false, true);  // block, set, region
- 				hd1.setForQuery(false, false, true);  
- 			}
- 			else {// CAS563 not use Utilities since prt to term
- 				JOptionPane.showMessageDialog(null, "3-track display only works with Region or Collinear Set.", 
- 						"Warning", JOptionPane.WARNING_MESSAGE);
-				return;
- 			}
- 			int [] tStart = new int [3]; int [] tEnd   = new int [3]; 
- 			int [] spIdx  = new int [3]; int [] chrIdx = new int [3];
- 		
-			spIdx[0] = rd[0].spIdx[r0t1]; chrIdx[0] = rd[0].chrIdx[r0t1];
-			spIdx[1] = rd[0].spIdx[r0t2]; chrIdx[1] = rd[0].chrIdx[r0t2];	// ref
-			spIdx[2] = rd[1].spIdx[r1t3]; chrIdx[2] = rd[1].chrIdx[r1t3];
-			
-			tStart[0] = coordsRow0[sL] - pad; if (tStart[0]<0) tStart[0]=0;
- 			tEnd[0]   = coordsRow0[eL] + pad; 
- 			
- 			int startRef = (coordsRow0[sR]<coordsRow1[sL]) ? coordsRow0[sR] : coordsRow1[sL];
-			int endRef   = (coordsRow0[eR]>coordsRow1[eL]) ? coordsRow0[eR] : coordsRow1[eL];
-			tStart[1] = startRef - pad; if (tStart[1]<0) tStart[1]=0;	// CAS563 bug fix: the check was on [2]
- 			tEnd[1]   = endRef + pad; 
-			
-			tStart[2] = coordsRow1[sR] - pad; if (tStart[2]<0) tStart[2]=0;
- 			tEnd[2]   = coordsRow1[eR] + pad; 		 
- 			hitNum1 = rd[0].hitnum; hitNum2 = rd[1].hitnum;
- 			
- 			// create new drawing panel; 
- 			SyMAP2d symap = new SyMAP2d(queryFrame.getDBC(), getInstance());
- 			symap.getDrawingPanel().setTracks(3); 
- 			symap.getDrawingPanel().setHitFilter(1,hd0); // template for Mapper HfilterData, which is already created
- 			symap.getDrawingPanel().setHitFilter(2,hd1);
- 			
- 			Sequence s1 = symap.getDrawingPanel().setSequenceTrack(1, spIdx[0], chrIdx[0], Color.CYAN);
- 			Sequence s2 = symap.getDrawingPanel().setSequenceTrack(2, spIdx[1], chrIdx[1], Color.GREEN); // ref
- 			Sequence s3 = symap.getDrawingPanel().setSequenceTrack(3, spIdx[2], chrIdx[2], Color.GREEN);
- 			if (chkSynGn.isSelected()) {s1.setGeneNum(); s2.setGeneNum();s3.setGeneNum();} 			
-			else                       {s1.setAnnotation(); s2.setAnnotation(); s3.setAnnotation();} 
-			
- 			symap.getDrawingPanel().setTrackEnds(1, tStart[0], tEnd[0]);
- 			symap.getDrawingPanel().setTrackEnds(2, tStart[1], tEnd[1]); // ref
- 			symap.getDrawingPanel().setTrackEnds(3, tStart[2], tEnd[2]);
- 			symap.getFrame().showX();
- 			btnShowSynteny.setEnabled(true);		// CAS563 add
- 		} 
- 		catch(Exception e) {ErrorReport.print(e, "Create 2D Synteny");}
-     }
-    protected int [] getSharedRef(boolean bCheck) { // only for 2 rows; CAS562 add
+    /* can 2d-3col be used? if so, what columns;  CAS562 add for synteny */
+    protected int [] getSharedRef(boolean bCheck) { // bCheck=T in setRowSelected; bCheck=F in UtilSelect.2D
     	TmpRowData row0 = new TmpRowData(getInstance());
 		if (!row0.loadRow(theTable.getSelectedRows()[0])) return null;
 	
@@ -1083,22 +984,85 @@ public class TableMainPanel extends JPanel {
 		Globals.tprt("Share ref " + tag);
 		return c;
     }
-    /******************************************************
- 	 * For highlighting View2D hit
- 	 */
+    /* For highlighting View2D hit */
      public boolean isHitSelected(int idx, boolean bHit1) {
     	 if (!chkSynHigh.isSelected()) return false;
  
     	 if (grpIdxVec.contains(idx)) return true;	// highlight all group;  CAS555
-    	 //if  (s1==synStart1 && e1==synEnd1 && s2==synStart2 && e2==synEnd2) return true; // CAS562 chg to hitnum
-    	 //if  (s2==synStart1 && e2==synEnd1 && s1==synStart2 && e1==synEnd2) return true;
-    	 
-    	 if (bHit1 && idx==hitNum1) return true;
+   	 
+    	 if (bHit1  && idx==hitNum1) return true;
     	 if (!bHit1 && idx==hitNum2) return true;
     	 
     	 return false;
      }
+     /***********************************************************************
+      ** Export file; CAS556 export put in separate file.
+      *  calls setPanelEnabled(false) before comp and setPanelEnabled(true) after; FASTA is threaded
+      *********************************************************************/
+     private void showExport() { 
+		final UtilExport ex = new UtilExport(this, queryFrame.title ); // CAS560 add title for 1st line of export
+		ex.setVisible(true);
+		final int mode = ex.getSelection();
+		
+		if (mode != ex.ex_cancel) {
+			if (mode==ex.ex_csv)        ex.writeCSV();
+			else if (mode==ex.ex_html)  ex.writeHTML();
+			else if (mode==ex.ex_fasta) ex.writeFASTA();
+		}	
+ 	}
+   
+     /********************************************************
+      * Report popup and files; re-use last allows using last parameters
+      * calls setBtnReport before/after threaded computation
+      */
+     private void showReport() {
+     	if (isClustN) {							// CAS563 better for clusters to have a non-ref report
+     		if (reportNoRefPanel==null) reportNoRefPanel = new UtilReportNR(getInstance()); 
+ 	    	reportNoRefPanel.setVisible(true); 
+     	}
+     	else {
+ 	    	if (reportRefPanel==null) reportRefPanel = new UtilReport(getInstance()); // CAS563 Saves last values
+ 	    	reportRefPanel.setVisible(true); 	
+     	}
+     }
+     protected void setBtnReport(boolean done) {// Called from UtilReport when computation starts/stops
+     	if (!done) {
+     		btnReport.setText("Computing...");
+         	setPanelEnabled(false); 
+     	}
+     	else {// titles repeated in createTopButtons
+     		String title = "Gene Report...";
+     		if (isCollinear)  title = "Collinear Report...";
+     		else if (isMultiN) title = "Multi-hit Report...";
+     		else if (isClustN) title = "Cluster Report...";
+     		btnReport.setText(title);
+         	setPanelEnabled(true);
+     	}
+     }
+    
+ 	/**********************************************************
+ 	 * Search visible columns for a string
+ 	 * popup of selected valid; ok searches that column and set rowIndex
+ 	 * Gene# for each species; All_anno for each species; Block, Collinear, Hit, Group
+ 	 */
+     private void showSearch() {
+		 btnSearch.setEnabled(false);
+			
+    	 String [] cols = getSelColsUnordered();
+    	 if (searchPanel==null) searchPanel = new UtilSearch(this, cols, theAnnoKeys);
+    	 searchPanel.setVisible(true);	
+    
+    	 int rowIndex = searchPanel.getRowIndex(); 
  	 
+    	 if (rowIndex>=0 && rowIndex<theTable.getRowCount()) {
+     		Rectangle cellRect = theTable.getCellRect(rowIndex, 0, true);       
+     	    theTable.scrollRectToVisible(cellRect);
+     	    theTable.setRowSelectionInterval(rowIndex, rowIndex); 
+     	    
+     	    setRowSelected();
+     	 }
+		 btnSearch.setEnabled(true);
+     }
     /***************************************************************
      * XXX Database
      */
@@ -1106,12 +1070,15 @@ public class TableMainPanel extends JPanel {
         try {
         	DBconn2 dbc2 = queryFrame.getDBC();
         	
-        	if(loadStatus.getText().equals("Cancelled")) return null; 
+        	if (bStopped) return null; 
         	loadStatus.setText("Performing database search....");
         	
         	try {
         		/**** EXECUTE ***/
-        		ResultSet rs = dbc2.executeQuery(theQuery);  
+        		ResultSet rs = dbc2.executeQuery(theQuery); 
+        	
+        		if (bStopped) {rs.close(); return null; }
+        		
         		if (Globals.TRACE)	{
         			loadDataTESTwrite(theQuery, rs, isSingle); 
         			rs = dbc2.executeQuery(theQuery);	// CAS560 can not longer reset to start of search with new JDBC
@@ -1192,77 +1159,6 @@ public class TableMainPanel extends JPanel {
 		}
 	}
 	
-	/*******************************************************************
-	 * 2D-view Block
-	 */
-	private int [] loadBlockCoords(int block, int idx1, int idx2) {
-		int [] coords = null;
-		try {
-			DBconn2 dbc2 = queryFrame.getDBC();
-			
-			ResultSet rs = dbc2.executeQuery("select start1, end1, start2, end2 from blocks "
-					+ " where blocknum="+block+ " and grp1_idx=" + idx1 + " and grp2_idx=" + idx2);
-			if (rs.next()) {
-				coords = new int [4];
-				for (int i=0; i<4; i++) coords[i] = rs.getInt(i+1);
-			}
-
-			if (coords==null) { // try opposite way
-				rs = dbc2.executeQuery("select start2, end2, start1, end1 from blocks "
-						+ " where blocknum="+block+ " and grp1_idx=" + idx2 + " and grp2_idx=" + idx1);
-				if (rs.next()) {
-					coords = new int [4];
-					for (int i=0; i<4; i++) coords[i] = rs.getInt(i+1);
-				}
-			}
-			rs.close();
-			return coords;
-		}
-		catch(Exception e) {ErrorReport.print(e, "set project annotations"); return null;}
-	}
-	/*******************************************************************
-	 * 2D-view Collinear
-	 */
-	private int [] loadCollinearCoords(int set, int idx1, int idx2) {
-		int [] coords = null;		// it was Double CAS562
-		try {
-			DBconn2 dbc2 = queryFrame.getDBC();
-		
-			ResultSet rs = dbc2.executeQuery("select start1, end1, start2, end2 from pseudo_hits "
-					+ "where runnum=" + set + " and grp1_idx=" + idx1 + " and grp2_idx=" + idx2);
-			int start1=Integer.MAX_VALUE, end1=-1, start2=Integer.MAX_VALUE, end2=-1, d;
-			while (rs.next()) {
-				d = rs.getInt(1);	if (d<start1) start1 = d;
-				d = rs.getInt(2);	if (d>end1)   end1 = d;
-				
-				d = rs.getInt(3); 	if (d<start2) start2 = d;
-				d = rs.getInt(4);	if (d>end2)   end2 = d;
-			}
-			if (start1==Integer.MAX_VALUE) { // try flipping idx1 and idx2
-				rs = dbc2.executeQuery("select start1, end1, start2, end2 from pseudo_hits "
-						+ "where runnum=" + set + " and grp1_idx=" + idx2 + " and grp2_idx=" + idx1);
-				while (rs.next()) {
-					d = rs.getInt(1);	if (d<start2) start2 = d;
-					d = rs.getInt(2);	if (d>end2)   end2 = d;
-					
-					d = rs.getInt(3); 	if (d<start1) start1 = d;
-					d = rs.getInt(4);	if (d>end1)   end1 = d;
-				}
-			}
-			if (start1!=Integer.MAX_VALUE) {
-				int pad = 8;				// CAS562 add pad
-				coords = new int [4];
-				coords[0]=start1-pad; if (coords[0]<0) coords[0]=0;
-				coords[1]=end1+pad; 
-				coords[2]=start2-pad; if (coords[3]<0) coords[0]=0;
-				coords[3]=end2+pad;
-			}
-			rs.close();
-			return coords;
-		}
-		catch(Exception e) {ErrorReport.print(e, "set project annotations"); return null;}
-	}
-	
     /****************************************************************
      * Public
      */
@@ -1271,19 +1167,8 @@ public class TableMainPanel extends JPanel {
     	theTableData.sortByColumn(index, !theTableData.isAscending(index));
 	}
    
-    public String getName() { return theName; }
+    protected String getTabName() { return theTabName; } // CAS564 was getName 
     
-    protected int getNumResults() {
-		if(theTableData != null) return theTableData.getNumRows();
-		return 0;
-	}
- 
- 	protected String [] getSummary() { 
- 		String [] retVal = new String[2];
- 		retVal[0] = theName + ": " + getNumResults(); // #rows (shown on Results Page)
- 		retVal[1] = theSummary;
- 		return retVal;
- 	}
 	protected boolean isSingle() {return isSingle;}
  	protected boolean [] getColumnSelections() {
 		try {
@@ -1382,74 +1267,27 @@ public class TableMainPanel extends JPanel {
     	    return this;
     	}
     }
-    
-    /********************************************************
-     * Report popup and files
-     */
-    private void showReport() {
-    	if (isClustN) {// CAS563 better for clusters to have a non-ref report
-    		if (reportnrPanel==null) 
-	    		reportnrPanel = new UtilReportNR(getInstance()); 
-	    	reportnrPanel.setVisible(true); 
-    	}
-    	else {
-	    	if (reportPanel==null) 
-	    		reportPanel = new UtilReport(getInstance()); // CAS563 Saves last values
-	    	reportPanel.setVisible(true); 	
-    	}
-    }
-    protected void setBtnReport(boolean done) {
-    	if (!done) {
-    		btnReport.setText("Computing...");
-        	btnReport.setBackground(Color.BLUE);
-        	setPanelEnabled(false); 
-    	}
-    	else {// titles repeated in createTopButtons
-    		String title = "Gene Report...";
-    		if (isCollinear)  title = "Collinear Report...";
-    		else if (isMultiN) title = "Multi-hit Report...";
-    		else if (isClustN) title = "Cluster Report...";
-    		btnReport.setText(title);
-        	btnReport.setBackground(Color.WHITE);
-        	setPanelEnabled(true);
-    	}
-    }
-    /***********************************************************************
-     ** Export file; CAS556 export put in separate file.
-     *********************************************************************/
-    private void popupExport() {
-		final UtilExport ex = new UtilExport(this, queryFrame.title ); // CAS560 add title for 1st line of export
-		ex.setVisible(true);
-		final int mode = ex.getSelection();
-		
-		if (mode != ex.ex_cancel) {
-			if (mode==ex.ex_csv)        ex.writeCSV();
-			else if (mode==ex.ex_html)  ex.writeHTML();
-			else if (mode==ex.ex_fasta) ex.writeFASTA();
-		}	
-		setRowSelected();
-	}
-	
     /**************************************************************
      * Private variable
      */
-    protected SyMAPQueryFrame queryFrame = null;
-	protected QueryPanel      queryPanel = null;
+    protected QueryFrame queryFrame = null;
+	protected QueryPanel queryPanel = null;
 	
+	private UtilReport reportRefPanel = null;
+	private UtilReportNR reportNoRefPanel = null;
+	private UtilSearch searchPanel = null;
+	   
     protected TableSort theTable = null;
     protected TableData theTableData = null;
     private JScrollPane sPane = null;
-    private JTextField rowCount = null;
-    private UtilReport reportPanel = null;
-    private UtilReportNR reportnrPanel = null;
-   
+    private JTextField rowCount = null; 
     private JTextField loadStatus = null;
     
     private JLabel lblSynAs=null, lblSynKb=null;
     private JTextField txtSynRegion = null;
     private JCheckBox chkSynHigh = null,  chkSynGn = null;
-    private JButton btnShowSynteny = null, btnShowAlign = null, btnShowRow = null; 
-    private JButton btnUnSelectAll = null, btnExport = null, btnReport = null;
+    private JButton btnShowSynteny = null, btnShowMSA = null, btnShowRow = null; 
+    private JButton btnUnSelectAll = null, btnExport = null, btnReport = null, btnSearch = null;
     private JComboBox <String> cmbSynOpts = null;
     
     private ListSelectionListener selListener = null;
@@ -1475,12 +1313,17 @@ public class TableMainPanel extends JPanel {
 	private AnnoData theAnnoKeys = null;
   
 	protected String theSummary = "";
-	private String theName = "",  theQuery = "";
+	private String theTabName = "",  theQuery = "";
 	protected boolean isSingle = false; // Cannot use theQueryPanel.isOrphan because only good for last query
     
 	private static int nTableID = 0;
 	
-	private int hitNum1=0, hitNum2=0; // Highlight 2D; CAS562 change from start/end to hitnum
-	private Vector <Integer> grpIdxVec = new Vector <Integer> (); // CAS555 to highlight groups
+	protected int hitNum1=0, hitNum2=0; // Highlight 2D; set in UtilSelect; CAS562 change from start/end to hitnum
+	private Vector <Integer> grpIdxVec = new Vector <Integer> (); 			// CAS555 to highlight groups
 	protected boolean isCollinear=false, isMultiN=false, isClustN=false;	// CAS556 for UtilReport; the QueryPanel can change, so need to save this
+	
+	// for Stop 
+	private boolean bMSArun=false; 					// MSA can be running, and the rest of the buttons enabled.
+	protected boolean bStopped=false; 				// used locally and DBdata; others search loadStatus.equals(Q.stop)
+	protected boolean bDone=false;					// Will not Stop if bDone
 }

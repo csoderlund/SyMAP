@@ -9,13 +9,14 @@ public class Q {
 	static final String GROUP = "-", COSET = "."; // CAS563 can't change COSET easily
 	static final String DOT = ".",    // dot used between chr.chr.block and chr.chr.CoSz and Chr.gene#; hard-coded everywhere
 			            SDOT = "\\."; // this is for split
+	static final String stop = "Stopped"; // CAS564 set in TableMainPanel, checked in other files
 	
 	static final String rowCol   = "Row";
 	static final String blockCol = "Block"; 	// loadRow; equals TableData.ColumnComparator (for sorting)
 	static final String cosetCol = "Collinear"; // loadRow; CAS517 equals TableData.ColumnComparator
 	static final String hitCol =   "Hit#";		// loadRow; CAS521 used for Align text
 	static final String grpCol =   "Group";		// loadRow; CAS555 show synteny; CAS563 now GrpSize.Grp#.
-	static final String hitPrefix = "Hit";		// Required prefix
+	static final String hitPrefix = "Hit";		// Required prefix; Searches MUST BE for equal, or SpAbbr of "Hitx" would mess up
 	static final String hitSt	  = "Hit\nSt";  // Leave \n so can search on full column in TableData; CAS563 add for Align
 	
 	// CAS519 was Gene for Orphan and Hit for Pairs; now it always shows the genes; Chr is always same for hit/gene

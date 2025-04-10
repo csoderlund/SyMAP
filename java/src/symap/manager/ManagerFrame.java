@@ -23,7 +23,7 @@ import dotplot.DotPlotFrame;
 import props.PropertiesReader;
 import symap.Globals;
 import symap.frame.ChrExpInit;
-import symapQuery.SyMAPQueryFrame;
+import symapQuery.QueryFrame;
 
 import database.DBconn2;
 import database.Version;
@@ -1064,7 +1064,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 					}
 				}
 			}
-			SyMAPQueryFrame qFrame = new SyMAPQueryFrame(frameTitle, dbc2, pVec, useAlgo2);
+			QueryFrame qFrame = new QueryFrame(frameTitle, dbc2, pVec, useAlgo2);
 			qFrame.build();
 			qFrame.setVisible(true);
 		} 

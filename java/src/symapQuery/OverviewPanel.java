@@ -15,7 +15,7 @@ import util.Jcomp;
 public class OverviewPanel extends JPanel {
 	private static final long serialVersionUID = 6074102283606563987L;
 	
-	public OverviewPanel(SyMAPQueryFrame parentFrame) {
+	public OverviewPanel(QueryFrame parentFrame) {
 		theParentFrame = parentFrame;
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		
@@ -86,6 +86,6 @@ public class OverviewPanel extends JPanel {
 		mainPanel.add(Jcomp.createLabel(msg + tail));
 	}
 
-	private SyMAPQueryFrame theParentFrame = null;
+	private QueryFrame theParentFrame = null;
 	private JPanel mainPanel = null;
 }

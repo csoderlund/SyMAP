@@ -20,36 +20,39 @@ import database.DBconn2;
 import props.PersistentProps;
 import util.Utilities;
 import util.ErrorReport;
-
 import symap.closeup.MsaMainPanel;
 import symap.manager.Mproject;
 
 /**************************************************
- * The main query frame
+ * The main query frame: 
+ * 		this build static tabs on the left (MenuPanel), runs query and msa, and add their tabs on the left
+ * 		updateView responds to a tab being click, and it replaces the right panel with the clicked tab panel
+ *  
+ * CAS564 was 'SyMAPQueryFrame; renamed some stuff; made Table tab and MSA tab work the same 
  */
-public class SyMAPQueryFrame extends JFrame {
-	private final int MIN_WIDTH = 1000, MIN_HEIGHT = 720; 	// CAS513 changed from 1024
+public class QueryFrame extends JFrame {
+	private final int MIN_WIDTH = 1000, MIN_HEIGHT = 720; 	
 	private final int MIN_DIVIDER_LOC = 200; 				// CAS543 was screenWidth * 1/4
 	
 	private static final String [] MENU_ITEMS = { "> Instructions", "> Query Setup", "> Results" }; 
-	static private String propNameAll="SyMapColumns1"; // 0&1's; use if match number of columns in current DB
-	static private String propNameSingle="SyMapColumns2"; 
+	static private String propNameAll = "SyMapColumns1"; // 0&1's; use if match number of columns in current DB
+	static private String propNameSingle = "SyMapColumns2"; 
 	
-	protected String title=""; // CAS560 add for Export
+	protected String title=""; 								// CAS560 add for Export
 	/******************************************************
 	 * ManagerFrame creates this object, add the projects, then calls build.
 	 */
-	public SyMAPQueryFrame(String title, DBconn2 dbc2, Vector <Mproject> pVec, boolean useAlgo2) {
-		setTitle("Query " + title); // CAS514 add version; CAS540 add db
+	public QueryFrame(String title, DBconn2 dbc2, Vector <Mproject> pVec, boolean useAlgo2) {
+		setTitle("Query " + title); // title has: SyMAP vN.N.N - dbName
 		
 		this.title = title;
 		this.tdbc2= new DBconn2("Query-" + DBconn2.getNumConn(), dbc2);
 		
-		theProjects = new Vector<Mproject> ();			// CAS532 change to pass project in (needed for column saving)
+		theProjects = new Vector<Mproject> ();			
 		for (Mproject p: pVec) theProjects.add(p);
-		this.bUseAlgo2 = useAlgo2; 						// CAS547 add for "All genes with hits"
+		this.bUseAlgo2 = useAlgo2; 						
 		
-		// CAS532 add the following for column saving, including cookies
+		// for column saving, including cookies
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent e) {
@@ -63,9 +66,9 @@ public class SyMAPQueryFrame extends JFrame {
 		screenWidth  = Math.min( MIN_WIDTH, screenRect.width);
 		screenHeight = Math.min(MIN_HEIGHT, screenRect.height); 	
 		setSize(screenWidth, screenHeight);	
-		setLocationRelativeTo(null); 						// CAS513 center frame
+		setLocationRelativeTo(null); 						
 	}
-	public void build() { // ManagerFrame
+	public void build() { // QueryFrame
 		buildMenuPanel();
 		buildMainPanel();
 		
@@ -95,7 +98,7 @@ public class SyMAPQueryFrame extends JFrame {
 		mainPanel.setLayout( new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS) );
 		mainPanel.setBackground(Color.WHITE);
 
-		allResults = new Vector<JPanel> ();
+		allPanelVec = new Vector<JPanel> ();
 		
 		overviewPanel = new OverviewPanel(this);
 		queryPanel = 	new QueryPanel(this);
@@ -109,25 +112,47 @@ public class SyMAPQueryFrame extends JFrame {
 		updateView();
 	}
 	/************************************************
-	 * called from queryPanel on Run Query
+	 * Make table and add tab: called from queryPanel on Run Query 
 	 */
-	protected void makeTable(String query, String sum, boolean isSingle) {
+	protected void makeTabTable(String query, String sum, boolean isSingle) {
 		boolean [] saveLastColumns = getLastColumns(isSingle);
 		
-		TableMainPanel newTablePanel = new TableMainPanel(getInstance(), getNextResultLabel(), 
+		String tabName = "Result " + (++resultCounter); // DO NOT CHANGE, same as in TableMainPanel.tableFinish
+		TableMainPanel tablePanel = new TableMainPanel(getInstance(), tabName, 
 								saveLastColumns, query, sum, isSingle);
 		
-		menuPanel.addResult(newTablePanel.getName()+":");
-		
-		mainPanel.add(newTablePanel);
-		
-		allResults.add(newTablePanel);
+		menuPanel.addLeftTab(tabName+":"); 
+		mainPanel.add(tablePanel);
+		allPanelVec.add(tablePanel);
 		
 		updateView(); // shows the table with Stop 
 	}
-	private String getNextResultLabel() { return "Result " + (++resultCounter); }
-	private SyMAPQueryFrame getInstance() { return this; }
 	
+	/************************************************ 
+	 * MSA Align; called from UtilSelect/Table MSA...; CAS564 was threaded, but MsaMainPanel is so not needed here 
+	 */
+	protected void makeTabMSA(TableMainPanel tablePanel, String [] names, String [] seqs, String [] tabLines, 
+			String progress, String tabAdd, String resultSum, String msaSum, 
+			boolean bTrim, boolean bAuto, int cpus) 
+	{			
+			String tabName = "MSA " + (++msaCounter) + ":";
+			MsaMainPanel msaPanel = new MsaMainPanel(tablePanel, getInstance(), names, seqs, tabLines, 
+					progress, msaSum, tabName, tabAdd, resultSum, bTrim, bAuto, cpus);
+		
+			menuPanel.addLeftTab(tabName+":");
+			mainPanel.add(msaPanel); 	// set Visible when tab clicked
+			allPanelVec.add(msaPanel);
+			
+			updateView();
+	}
+
+	// Called from TableMainPanel and closeup.MsaMainPanel to finish 
+	public void updateTabText(String oldTab, String newTab, String [] resultsRow) { // CAS564 was Table specific, make general
+		menuPanel.updateLeftTab(oldTab, newTab); 
+		
+		resultsPanel.addResultText(resultsRow); 
+	}
+	private QueryFrame getInstance() { return this; }
 	
 	/***********************************************
 	 * Column defaults -  Called for makeTable and shutdown
@@ -138,10 +163,10 @@ public class SyMAPQueryFrame extends JFrame {
 	private boolean [] getLastColumns(boolean bSingle) {
 	try {
 		boolean [] saveLastColumns = null;
-		for(int x=allResults.size()-1; x>=0 && saveLastColumns == null; x--) {
-			if (allResults.get(x) instanceof TableMainPanel) {
-				if (((TableMainPanel)allResults.get(x)).isSingle()==bSingle) { // CAS519 last result that is single/!single
-					saveLastColumns = ((TableMainPanel)allResults.get(x)).getColumnSelections(); // from FieldData
+		for(int x=allPanelVec.size()-1; x>=0 && saveLastColumns == null; x--) {
+			if (allPanelVec.get(x) instanceof TableMainPanel) {
+				if (((TableMainPanel)allPanelVec.get(x)).isSingle()==bSingle) { // CAS519 last result that is single/!single
+					saveLastColumns = ((TableMainPanel)allPanelVec.get(x)).getColumnSelections(); // from FieldData
 					break;
 				}
 			}
@@ -205,7 +230,7 @@ public class SyMAPQueryFrame extends JFrame {
 		return bcols;
 	} catch (Exception e) {ErrorReport.print(e, "make column defaults"); return null;}	
 	}
-	// CAS532 new for column saving; called on shutdown
+	// for column saving; called on shutdown
 	private void saveColumnDefaults() {
 	try {
 		String [] abbrev = getAbbrevNames();
@@ -214,7 +239,7 @@ public class SyMAPQueryFrame extends JFrame {
 		PersistentProps allCook = cookies.copy(propNameAll);
 		
 		boolean [] defs1 = getLastColumns(false);
-		if (defs1!=null) { // CAS540 add check - .symap_saved_props may have been removed
+		if (defs1!=null) { 						// check - .symap_saved_props may have been removed
 			String d1 = abbrev.length + ":";
 			for (boolean b : defs1) {
 				d1 += (b) ? "1" : "0";
@@ -233,61 +258,6 @@ public class SyMAPQueryFrame extends JFrame {
 		}	
 	} catch (Exception e) {ErrorReport.print(e, "save columns");};
 	}
-	/*************************************************************
-	 * TableDataPanel 
-	 */
-	protected void updateResultCount(TableMainPanel newTablePanel) {
-		int numResults = newTablePanel.getNumResults();
-		
-		String res = (numResults == 0) ? ": No results" : ": " + newTablePanel.getNumResults();
-		
-		menuPanel.updateResultLabel(newTablePanel.getName() + ":", newTablePanel.getName() + res);
-		
-		resultsPanel.addResult(newTablePanel.getSummary()); // CAS513 put here so have row count
-		
-		updateView();
-	}
-	/******* MSA Align ***/
-	protected void addAlignTab(TableMainPanel parent, String [] names, String [] seqs, String [] lines, 
-			String pstatus, String tabadd, String resultSum, String msaSum, 
-			boolean bTrim, boolean bAuto, int cpus) 
-	{
-		final SyMAPQueryFrame theFrame = this;
-		final TableMainPanel parentCopy = parent;
-		final String theStatus = pstatus;
-		final String [] theNames = names;
-		final String [] theLines = lines;
-		final String [] theSeqs = seqs;
-		
-		Thread thread = new Thread(new Runnable() {
-			public void run() {
-				try {
-					String filename = "temp";
-					
-					MsaMainPanel newTab = new MsaMainPanel(theFrame, theNames, theSeqs, theLines, 
-							theStatus, msaSum, bTrim, bAuto, cpus, filename);
-					String tab = "MSA " + (++nMultiAlignCounter) + ": " + tabadd;
-						
-					addResultPanel(parentCopy, newTab, tab, resultSum);
-				} 
-				catch (Exception e) {ErrorReport.print(e, "Align sequence");}
-			}
-		});
-		thread.setPriority(Thread.MIN_PRIORITY);
-		thread.start();
-	}
-	// Muscle/Mafft alignment
-	private void addResultPanel(JPanel parentPanel, JPanel newPanel, String name, String summary) {
-		String [] row = new String[2];
-		row[0] = name;
-		row[1] = summary;
-		
-		resultsPanel.addResult(row);
-		allResults.add(newPanel);
-		menuPanel.addResult(name);
-		mainPanel.add(newPanel);
-		updateView();
-	}
 	
 	protected String [] getAbbrevNames() { // CAS519 added for column headings
 		String [] retVal = new String[theProjects.size()];
@@ -303,55 +273,70 @@ public class SyMAPQueryFrame extends JFrame {
 		}
 		return null;
 	}
-	protected QueryPanel getQueryPanel() {return queryPanel;}
 	
 	/***************************************************
-	 * ResultSummaryPanel
+	 * Left side content
 	 */
-	protected void removeResult(int result) {
-		JPanel temp = allResults.get(result);
+	protected void removeResult(int pos) {
+		if (pos>allPanelVec.size()) return; 	// can happen on Stop
 		
-		mainPanel.remove(temp);
-		allResults.remove(result);
-		menuPanel.removeResult(result);
+		JPanel tPanel = allPanelVec.get(pos);
+		
+		mainPanel.remove(tPanel);   // remove panel from queryFrame
+		
+		allPanelVec.remove(pos); 	// remove panel from list of panels
+		
+		menuPanel.removeResult(pos); // remove from left panel
+		
 		updateView();
 	}
-	protected void resetCounter() { resultCounter=0;} // CAS513 for clear all on Results page
+	public void removeResult(JPanel rmPanel) { // closeup.MsaMainPanel Stop; CAS564  add
+		for (int pos=0; pos<allPanelVec.size(); pos++) {
+			if (allPanelVec.get(pos)==rmPanel) {
+				removeResult(pos);
+				break;
+			}
+		}
+	}
+	protected void resetCounter() { resultCounter=0; msaCounter=0;} // for clear all on Results page; CAS564 add msaCounter
 	
 	private void updateView() {
 		overviewPanel.setVisible(false);
 		localQueryPane.setVisible(false);
 		resultsPanel.setVisible(false);
 		
-		for(int x=0; x<allResults.size(); x++)
-			allResults.get(x).setVisible(false);
+		for(int x=0; x<allPanelVec.size(); x++)
+			allPanelVec.get(x).setVisible(false);
 		
-		int selection = menuPanel.getCurrentSelection();
+		int pos = menuPanel.getCurrentSelection();
 		
-		switch(selection) { 
+		switch(pos) { 
 			case 0: overviewPanel.setVisible(true);		break;
 			case 1: localQueryPane.setVisible(true);	break;
 			case 2: resultsPanel.setVisible(true);		break;
 			default:
-				selection -= MENU_ITEMS.length;
-				allResults.get(selection).setVisible(true);
+				pos -= MENU_ITEMS.length;
+				if (pos<allPanelVec.size())
+					allPanelVec.get(pos).setVisible(true);
 		}
 	}
-	protected void selectResult(int position) {
+	protected void selectResult(int position) { // ResultPanel mouse click
 		menuPanel.setSelection(position + MENU_ITEMS.length);
 		updateView();
 	}
 	/**********************************************************/
-	protected DBconn2 getDBC() { return tdbc2; }
-	protected Vector<Mproject> getProjects() { return theProjects; }
+	protected DBconn2 getDBC() {return tdbc2;}
+	protected QueryPanel getQueryPanel() {return queryPanel;}
+	protected Vector<Mproject> getProjects() {return theProjects;}
 	protected boolean isAlgo2() {return bUseAlgo2;};
-	public boolean isAnno() { // CAS555 add for queryPanel
+	
+	protected boolean isAnno() { // CAS555 add for queryPanel; not being used, but could be to disable gene queries
 		for (Mproject mp : theProjects) {
 			if (!mp.hasGenes()) return false;
 		}
 		return true;
 	}
-	
+	/**********************************************************/
 	private DBconn2 tdbc2 = null;
 	private Vector<Mproject> theProjects = null;
 	private boolean bUseAlgo2=false;
@@ -365,11 +350,11 @@ public class SyMAPQueryFrame extends JFrame {
 	private JScrollPane localQueryPane = null;
 	private ResultsPanel resultsPanel = null;
 	
-	private Vector<JPanel> allResults = null;
+	private Vector<JPanel> allPanelVec = null;
 
 	private QueryPanel queryPanel = null;
 	
-	private int resultCounter = 0; 				// CAS532 this was static 
-	private int nMultiAlignCounter = 0; 	// CAS532 this was static -
+	private int resultCounter = 0; 	// CAS532 this was static 
+	private int msaCounter = 0; 	// CAS532 this was static -
 	private static final long serialVersionUID = 9349836385271744L;
 }

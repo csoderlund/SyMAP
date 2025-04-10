@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.TreeSet;
 
 import database.DBconn2;
 import symap.manager.Mproject;
@@ -21,7 +22,7 @@ public class AnnoData {
 	 * get keywords of project annotations to display as columns
 	 * Called by TableDataPanel for every new table
 	 */
-	protected static AnnoData loadProjAnnoKeywords(SyMAPQueryFrame theParentFrame) {
+	protected static AnnoData loadProjAnnoKeywords(QueryFrame theParentFrame) {
 		Vector<Mproject> projs = theParentFrame.getProjects();
 		
 		try {
@@ -95,8 +96,8 @@ public class AnnoData {
 		}
 		return retVal;
 	}
-	protected Vector <String> getSpeciesAbbrList() {// CAS561 add for TableData.group
-		Vector<String> retSet = new Vector <String> ();
+	protected TreeSet <String> getSpeciesAbbrList() {// CAS561 add for TableData.arrangeColumns; CAS564 change to TreeSet for UtilSearch
+		TreeSet <String> retSet = new TreeSet <String> ();
 		
 		Iterator<AnnoSp> iter = theAnnos.iterator();
 		while(iter.hasNext()) {

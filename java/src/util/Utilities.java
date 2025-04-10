@@ -529,6 +529,13 @@ public class Utilities {
 		return optionPane;
 	}
 	
+	public static void showShowMsg(String title, String msg) {
+		JOptionPane.showMessageDialog(null, msg, title, JOptionPane.WARNING_MESSAGE);
+	}
+	public static void showWarning(String msg) { // CAS564 need one without print to terminal
+		JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
+	}
+	
 	public static void showInfoMessage(String title, String msg) {
 		System.out.println(msg);
 		JOptionPane.showMessageDialog(null, msg, title, JOptionPane.WARNING_MESSAGE);

@@ -27,6 +27,7 @@ public class ComputeMulti {
 	private HashSet <Integer> grpIdxOnly;
 	private int [] spIdxList;
 	private HashMap<String,String> projMap;
+	private JTextField loadStatus;
 	
 	// parameters
 	private boolean isSameChr=false, isTandem=false; // minor is done on query
@@ -55,15 +56,16 @@ public class ComputeMulti {
 	////////////////////////////////////////////////////////////////////
 	public ComputeMulti(Vector <DBdata> dataFromDB, // input data
 			QueryPanel qPanel,						// get parameters
-			JTextField progress,					// write to symap window
+			JTextField loadStatus,					// write to TableMainPanel in loadStatus bar
 			HashSet<Integer> grpIdxOnly,			// groups to process
 			int [] 	spIdxList,						// species to process
 			HashMap<String,String> projMap)			// output counts for summary
 	{
-		this.inData = dataFromDB;
+		this.inData 	= dataFromDB;
 		this.grpIdxOnly = grpIdxOnly;
-		this.spIdxList = spIdxList;
-		this.projMap = projMap;
+		this.spIdxList 	= spIdxList;
+		this.projMap 	= projMap;
+		this.loadStatus = loadStatus;
 		
 		spSummaryCnts = new int [spIdxList.length][spIdxList.length]; 
 		for (int i=0; i<spIdxList.length; i++)
@@ -79,6 +81,7 @@ public class ComputeMulti {
 	 */
 	protected Vector <DBdata> compute() {
 		Vector <DBdata> finalRows = new Vector <DBdata> (); 
+		int rowNum=0;
 		
 		for (int sp=0; sp<spIdxList.length; sp++) { // process this sp against all others
 			spIdx = spIdxList[sp];
@@ -106,14 +109,19 @@ public class ComputeMulti {
 																
 				for (DBdata dObj : spData) finalRows.add(dObj); 	   			// transfer to final vector
 				
-				spSummaryCnts[sp][sp2] = numFam-1;							 
+				spSummaryCnts[sp][sp2] = numFam-1;	
+				
+				if (rowNum++ % Q.INC ==0) {// CAS564 checked stopped
+					if (loadStatus.getText().equals(Q.stop)) {bSuccess=false; return null;}
+					loadStatus.setText("Cluster " + rowNum + " rows...");
+				}
 			}
 		}
 		
 		// finish
 		Collections.sort(finalRows, new SortByGrpByAnno());
 			
-		int rowNum=1;
+		rowNum=1;
 		for (DBdata dObj : finalRows) dObj.rowNum = rowNum++;        
 		
 		// for summary

@@ -1,7 +1,6 @@
 package symapQuery;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -45,11 +44,11 @@ public class UtilExport extends JDialog {
 		this.title = title;
 		
 		setModal(true);
-		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setTitle("Export Table Rows");
 		
 		createDialog();
-		
+	
 		pack();
 		this.setResizable(false);
 		setLocationRelativeTo(null); 
@@ -122,10 +121,10 @@ public class UtilExport extends JDialog {
 			}
 		});
 		
-		JPanel buttonPanel = Jcomp.createRowCenterPanel();
+		JPanel buttonPanel = Jcomp.createRowPanel(); // BUG: CAS564 made center in 563; does not show OK
+		buttonPanel.add(Box.createHorizontalStrut(20));
 		buttonPanel.add(btnOK);			buttonPanel.add(Box.createHorizontalStrut(5));
 		buttonPanel.add(btnCancel);		
-		buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
       // Finish 
 		JPanel mainPanel = Jcomp.createPagePanel();
@@ -134,10 +133,10 @@ public class UtilExport extends JDialog {
 		mainPanel.add(buttonPanel);
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		add(mainPanel);
+		
 	}
     protected int getSelection() { return nMode; }
     
-   
     /*********************************************************
      * Write CSV - works with 504
      */
@@ -270,7 +269,7 @@ public class UtilExport extends JDialog {
 				TmpRowData rd = new TmpRowData(tdp);
 				tdp.setPanelEnabled(false);
 				
-				DBconn2 dbc = tdp.queryPanel.getDBC(); // CAS563 moved from SyMAPQueryFrame; call here
+				DBconn2 dbc = tdp.queryPanel.getDBC(); // CAS563 moved from QueryFrame; call here
 				AlignPool aPool = new AlignPool(dbc);
 				
 				boolean reset = false;
@@ -286,7 +285,7 @@ public class UtilExport extends JDialog {
 						"Selected " + selNum + " row to export. This is a slow function. \n" +
 						"It may take over a minute to export each 500 rows of sequences.")) 
 					{
-						if(reset)tdp.theTable.getSelectionModel().clearSelection();
+						if (reset)tdp.theTable.getSelectionModel().clearSelection();
 						tdp.setPanelEnabled(true);
 						return;
 					}

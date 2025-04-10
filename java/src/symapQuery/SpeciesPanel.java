@@ -40,7 +40,7 @@ public class SpeciesPanel extends JPanel {
 	private boolean isNoLoc=false;
 	private int dnameWidth = 100;  // CAS563 calc spacing; was constant 150
 	
-	public SpeciesPanel(SyMAPQueryFrame parentFrame, QueryPanel qPanel) {
+	public SpeciesPanel(QueryFrame parentFrame, QueryPanel qPanel) {
 		theParentFrame = parentFrame;
 		this.qPanel = qPanel;
 		
@@ -552,7 +552,7 @@ public class SpeciesPanel extends JPanel {
 		private SpeciesPanel theParent = null;
 	} // End species row panel
 	
-	private SyMAPQueryFrame theParentFrame = null;
+	private QueryFrame theParentFrame = null;
 	private QueryPanel qPanel = null;
 	
 	private Vector<SpeciesSelect> spPanels = null;

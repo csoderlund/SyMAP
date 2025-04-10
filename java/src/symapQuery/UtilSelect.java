@@ -8,6 +8,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
@@ -18,9 +19,14 @@ import database.DBconn2;
 import symap.Globals;
 import symap.closeup.AlignPool;
 import symap.closeup.SeqData;
+import symap.drawingpanel.SyMAP2d;
+import symap.mapper.HfilterData;
+import symap.sequence.Sequence;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.ResultSet;
 import java.util.HashMap;
 
 import util.ErrorReport;
@@ -28,29 +34,291 @@ import util.Jcomp;
 import util.Utilities;
 
 /**********************************************************
- * Contains the MSA align; Created CAS563
+ * Selected row(s): Contains the MSA align and 2D display
+ * Added MSA CAS563; added 2D CAS564 - both moved from TableMainPanel
  */
 public class UtilSelect {
-	private TableMainPanel tdp;
-	// saves between usage, but cancel does not restore old except for nCPU
-	private static int nCPU=1; // performed in MsaRun for mafft
-	private static boolean 
-			bMerge=true,    // performed in buildHitVec
-	        bGapLess=false, // performed in loadSeq
-	        bTrim=true,		// performed after align in alignRun
-	        bAuto=true,		// performed in MsaRun for mafft
-			bMAFFT=true;	// run mafft in MsaRun, else muscle
+	private TableMainPanel tablePanel;
 	
 	protected UtilSelect(TableMainPanel tdp) {
-		this.tdp = tdp;
+		this.tablePanel = tdp;
 	}
 	protected void msaAlign() {
 		new MsaAlign();
 	}
-	
+	protected void synteny2D(int numRows, int selIndex, int pad,  boolean isChkNum, Vector <Integer> grpIdxVec) {
+		
+		new Synteny2D(numRows, selIndex, pad, isChkNum, grpIdxVec);
+	}
+	/*******************************************************************************************/
+	protected class Synteny2D { 
+		private int selIndex;				// REGION, SET, BLOCK, GROUP
+		private int pad;					// how much to pad from the selected hit
+		private boolean isChkGene;			// display geneNum, else annotation
+		private Vector <Integer> grpIdxVec; // the group hits to highlight; returns the values
+		
+		protected int [] hitNums = {-1, -1};
+		
+		private Synteny2D(int numRows, int selIndex,  int pad,  boolean isChkNum, Vector <Integer> grpIdxVec) {
+			this.selIndex = selIndex;
+			this.pad = pad;
+			this.isChkGene = isChkNum;
+			this.grpIdxVec = grpIdxVec;
+			
+			if (numRows==2) showSyntenyfor3();
+			else 			showSynteny();
+		}
+		/***************************************/
+		private void showSynteny() {
+		try{
+			TmpRowData rd = new TmpRowData(tablePanel);
+			if (!rd.loadRow(tablePanel.theTable.getSelectedRows()[0])) return;
+						
+			int track1Start=0, track2Start=0, track2End=0, track1End=0;
+			int [] coords;
+			HfilterData hd = new HfilterData (); 
+					
+			if (selIndex==TableMainPanel.showSET) {
+				if (rd.collinearN==0) {
+					Utilities.showWarning("The selected row does not belong to a collinear set.");
+					return;
+				}
+				coords = loadCollinearCoords(rd.collinearN, rd.chrIdx[0], rd.chrIdx[1]);
+				hd.setForQuery(false, true, false);  // block, set, region
+			}
+			else if (selIndex==TableMainPanel.showBLOCK) {
+				if (rd.blockN==0) {
+					Utilities.showWarning("The selected row does not belong to a synteny block.");
+					return;
+				}
+				coords = loadBlockCoords(rd.blockN, rd.chrIdx[0], rd.chrIdx[1]);
+				hd.setForQuery(true, false, false);  // block, set, region
+			}
+			else if (selIndex==TableMainPanel.showGRP) { // CAS555
+				if (rd.groupN==0) {
+					Utilities.showWarning("The selected row does not belong to a group.");
+					return;
+				}
+				coords = rd.loadGroup(grpIdxVec); 	 // assigns hits to grpIdxVec
+				hd.setForQuery(false, false, true);  // block, set, region
+			}
+			else {
+				coords = new int [4];
+				coords[0] = rd.start[0]; coords[1] = rd.end[0];
+				coords[2] = rd.start[1]; coords[3] = rd.end[1];
+				
+				hd.setForQuery(false, false, true);  // block, set, region
+			}
+			track1Start = coords[0] - pad; if (track1Start<0) track1Start=0;
+			track1End   = coords[1] + pad; 
+			track2Start = coords[2] - pad; if (track2Start<0) track2Start=0;
+			track2End   = coords[3] + pad;
+			
+			tablePanel.hitNum1 = rd.hitnum; 			// CAS562 was using start/end
+			
+			int p1Idx = rd.spIdx[0];
+			int p2Idx = rd.spIdx[1];
+
+			int grp1Idx = rd.chrIdx[0];
+			int grp2Idx = rd.chrIdx[1];
+			
+			// create new drawing panel; 				// CAS543 quit setting Sfilter Show_Annotation because is static
+			SyMAP2d symap = new SyMAP2d(tablePanel.queryFrame.getDBC(), tablePanel);
+			symap.getDrawingPanel().setTracks(2); 		// CAS550 set exact number
+			symap.getDrawingPanel().setHitFilter(1,hd); 
+			
+			Sequence s1 = symap.getDrawingPanel().setSequenceTrack(1, p2Idx, grp2Idx, Color.CYAN);
+			Sequence s2 = symap.getDrawingPanel().setSequenceTrack(2, p1Idx, grp1Idx, Color.GREEN);
+			if (isChkGene){s1.setGeneNum(); s2.setGeneNum();} 			// CAS562 was setAnnotation; CAS543 was changing static; now changes individual object
+			else          {s1.setAnnotation(); s2.setAnnotation();} 
+			
+			symap.getDrawingPanel().setTrackEnds(1, track2Start, track2End);
+			symap.getDrawingPanel().setTrackEnds(2, track1Start, track1End);
+			symap.getFrame().showX();
+		} 
+		catch(Exception e) {ErrorReport.print(e, "Create 2D Synteny");}
+	    }
+		/***********************************************************/
+	    private void showSyntenyfor3() {// CAS562 add; this is partially redundant with above, but easier...
+	 		try{
+	 			int [] col = tablePanel.getSharedRef(false); 
+	 			if (col == null) return;
+	 			
+	 			TmpRowData [] rd = new TmpRowData [2];
+	 			
+	 			rd[0] = new TmpRowData(tablePanel);
+	 			if (!rd[0].loadRow(tablePanel.theTable.getSelectedRows()[0])) {Globals.tprt("No load 0");return;}
+	 			rd[1] = new TmpRowData(tablePanel);
+	 			if (!rd[1].loadRow(tablePanel.theTable.getSelectedRows()[1])) {Globals.tprt("No load 1");return;}
+	 				
+	 			int r0t1 = col[0], r0t2 = col[1],  
+	 				               r1t2 = col[2], r1t3 = col[3];
+	 			
+	 			int sL=0, eL=1, sR=2, eR=3;
+	 			int [] coordsRow0 = new int [4]; 
+	 			int [] coordsRow1 = new int [4];
+	 			HfilterData hd0 = new HfilterData (); 
+	 			HfilterData hd1 = new HfilterData (); 
+	 			
+	 			if (selIndex==TableMainPanel.showSET) {
+	 				if (rd[0].collinearN==0 || rd[1].collinearN==0) {
+	 					Utilities.showWarning("The selected rows do not belong to a collinear set.");
+	 					return;
+	 				}
+	 				int [] coords0 = loadCollinearCoords(rd[0].collinearN, rd[0].chrIdx[0], rd[0].chrIdx[1]);// ret sL,eL,sR,eR
+	 				int [] coords1 = loadCollinearCoords(rd[1].collinearN, rd[1].chrIdx[0], rd[1].chrIdx[1]);
+	 				hd0.setForQuery(false, true, false);  // block, set, region
+	 				hd1.setForQuery(false, true, false);  // block, set, region
+	 				
+	 				if (r0t1==0 && r0t2==1) {
+	 					coordsRow0[sL] = coords0[0]; coordsRow0[eL] = coords0[1]; // row0
+	 					coordsRow0[sR] = coords0[2]; coordsRow0[eR] = coords0[3];
+	 				}
+	 				else {
+	 					coordsRow0[sL] = coords0[2]; coordsRow0[eL] = coords0[3]; 
+	 					coordsRow0[sR] = coords0[0]; coordsRow0[eR] = coords0[1];
+	 				}
+	 				if (r1t2==0 && r1t3==1) {
+	 					coordsRow1[sL] = coords1[0]; coordsRow1[eL] = coords1[1]; // row1
+	 					coordsRow1[sR] = coords1[2]; coordsRow1[eR] = coords1[3];
+	 				}
+	 				else {
+	 					coordsRow1[sL] = coords1[2]; coordsRow1[eL] = coords1[3]; 
+	 					coordsRow1[sR] = coords1[0]; coordsRow1[eR] = coords1[1];
+	 				}
+	 			}
+	 			else if (selIndex==TableMainPanel.showREGION) {
+	 				coordsRow0[sL] = rd[0].start[r0t1]; coordsRow0[eL] = rd[0].end[r0t1]; // row0
+	 				coordsRow0[sR] = rd[0].start[r0t2]; coordsRow0[eR] = rd[0].end[r0t2];
+	 				coordsRow1[sL] = rd[1].start[r1t2]; coordsRow1[eL] = rd[1].end[r1t2]; 
+	 				coordsRow1[sR] = rd[1].start[r1t3]; coordsRow1[eR] = rd[1].end[r1t3];
+
+	 				hd0.setForQuery(false, false, true);  // block, set, region
+	 				hd1.setForQuery(false, false, true);  
+	 			}
+	 			else {// CAS563 not use Utilities since prt to term
+	 				JOptionPane.showMessageDialog(null, "3-track display only works with Region or Collinear Set.", 
+	 						"Warning", JOptionPane.WARNING_MESSAGE);
+					return;
+	 			}
+	 			int [] tStart = new int [3]; int [] tEnd   = new int [3]; 
+	 			int [] spIdx  = new int [3]; int [] chrIdx = new int [3];
+	 		
+				spIdx[0] = rd[0].spIdx[r0t1]; chrIdx[0] = rd[0].chrIdx[r0t1];
+				spIdx[1] = rd[0].spIdx[r0t2]; chrIdx[1] = rd[0].chrIdx[r0t2];	// ref
+				spIdx[2] = rd[1].spIdx[r1t3]; chrIdx[2] = rd[1].chrIdx[r1t3];
+				
+				tStart[0] = coordsRow0[sL] - pad; if (tStart[0]<0) tStart[0]=0;
+	 			tEnd[0]   = coordsRow0[eL] + pad; 
+	 			
+	 			int startRef = (coordsRow0[sR]<coordsRow1[sL]) ? coordsRow0[sR] : coordsRow1[sL];
+				int endRef   = (coordsRow0[eR]>coordsRow1[eL]) ? coordsRow0[eR] : coordsRow1[eL];
+				tStart[1] = startRef - pad; if (tStart[1]<0) tStart[1]=0;	// CAS563 bug fix: the check was on [2]
+	 			tEnd[1]   = endRef + pad; 
+				
+				tStart[2] = coordsRow1[sR] - pad; if (tStart[2]<0) tStart[2]=0;
+	 			tEnd[2]   = coordsRow1[eR] + pad; 
+	 			
+	 			tablePanel.hitNum1 = rd[0].hitnum; tablePanel.hitNum2 = rd[1].hitnum;
+				
+	 			// create new drawing panel; 
+	 			SyMAP2d symap = new SyMAP2d(tablePanel.queryFrame.getDBC(), tablePanel);
+	 			symap.getDrawingPanel().setTracks(3); 
+	 			symap.getDrawingPanel().setHitFilter(1,hd0); // template for Mapper HfilterData, which is already created
+	 			symap.getDrawingPanel().setHitFilter(2,hd1);
+	 			
+	 			Sequence s1 = symap.getDrawingPanel().setSequenceTrack(1, spIdx[0], chrIdx[0], Color.CYAN);
+	 			Sequence s2 = symap.getDrawingPanel().setSequenceTrack(2, spIdx[1], chrIdx[1], Color.GREEN); // ref
+	 			Sequence s3 = symap.getDrawingPanel().setSequenceTrack(3, spIdx[2], chrIdx[2], Color.GREEN);
+	 			if (isChkGene){s1.setGeneNum(); s2.setGeneNum();s3.setGeneNum();} 			
+				else          {s1.setAnnotation(); s2.setAnnotation(); s3.setAnnotation();} 
+				
+	 			symap.getDrawingPanel().setTrackEnds(1, tStart[0], tEnd[0]);
+	 			symap.getDrawingPanel().setTrackEnds(2, tStart[1], tEnd[1]); // ref
+	 			symap.getDrawingPanel().setTrackEnds(3, tStart[2], tEnd[2]);
+	 			symap.getFrame().showX();
+	 		} 
+	 		catch(Exception e) {ErrorReport.print(e, "Create 2D Synteny");}
+	    }
+	    /***********************************************************/
+	    private int [] loadCollinearCoords(int set, int idx1, int idx2) {
+			int [] coords = null;		// it was Double CAS562
+			try {
+				DBconn2 dbc2 = tablePanel.queryFrame.getDBC();
+			
+				ResultSet rs = dbc2.executeQuery("select start1, end1, start2, end2 from pseudo_hits "
+						+ "where runnum=" + set + " and grp1_idx=" + idx1 + " and grp2_idx=" + idx2);
+				int start1=Integer.MAX_VALUE, end1=-1, start2=Integer.MAX_VALUE, end2=-1, d;
+				while (rs.next()) {
+					d = rs.getInt(1);	if (d<start1) start1 = d;
+					d = rs.getInt(2);	if (d>end1)   end1 = d;
+					
+					d = rs.getInt(3); 	if (d<start2) start2 = d;
+					d = rs.getInt(4);	if (d>end2)   end2 = d;
+				}
+				if (start1==Integer.MAX_VALUE) { // try flipping idx1 and idx2
+					rs = dbc2.executeQuery("select start1, end1, start2, end2 from pseudo_hits "
+							+ "where runnum=" + set + " and grp1_idx=" + idx2 + " and grp2_idx=" + idx1);
+					while (rs.next()) {
+						d = rs.getInt(1);	if (d<start2) start2 = d;
+						d = rs.getInt(2);	if (d>end2)   end2 = d;
+						
+						d = rs.getInt(3); 	if (d<start1) start1 = d;
+						d = rs.getInt(4);	if (d>end1)   end1 = d;
+					}
+				}
+				if (start1!=Integer.MAX_VALUE) {
+					int pad = 8;				// CAS562 add pad
+					coords = new int [4];
+					coords[0]=start1-pad; if (coords[0]<0) coords[0]=0;
+					coords[1]=end1+pad; 
+					coords[2]=start2-pad; if (coords[3]<0) coords[0]=0;
+					coords[3]=end2+pad;
+				}
+				rs.close();
+				return coords;
+			}
+			catch(Exception e) {ErrorReport.print(e, "get collinear coords"); return null;}
+	    }
+	    /***********************************************************/
+	    private int [] loadBlockCoords(int block, int idx1, int idx2) {
+			int [] coords = null;
+			try {
+				DBconn2 dbc2 = tablePanel.queryFrame.getDBC();
+				
+				ResultSet rs = dbc2.executeQuery("select start1, end1, start2, end2 from blocks "
+						+ " where blocknum="+block+ " and grp1_idx=" + idx1 + " and grp2_idx=" + idx2);
+				if (rs.next()) {
+					coords = new int [4];
+					for (int i=0; i<4; i++) coords[i] = rs.getInt(i+1);
+				}
+
+				if (coords==null) { // try opposite way
+					rs = dbc2.executeQuery("select start2, end2, start1, end1 from blocks "
+							+ " where blocknum="+block+ " and grp1_idx=" + idx2 + " and grp2_idx=" + idx1);
+					if (rs.next()) {
+						coords = new int [4];
+						for (int i=0; i<4; i++) coords[i] = rs.getInt(i+1);
+					}
+				}
+				rs.close();
+				return coords;
+			}
+			catch(Exception e) {ErrorReport.print(e, "set project annotations"); return null;}
+		}
+	}
 	/***************************************************************************/
 	private class MsaAlign  extends JDialog {
 		private static final long serialVersionUID = 1L;
+		
+		// saves between usage, but cancel does not restore old except for nCPU
+		private static int nCPU=1; // performed in MsaRun for mafft
+		private static boolean 
+				bMerge=true,    // performed in buildHitVec
+		        bGapLess=false, // performed in loadSeq
+		        bTrim=true,		// performed after align in alignRun
+		        bAuto=true,		// performed in MsaRun for mafft
+				bMAFFT=true;	// run mafft in MsaRun, else muscle
 		
 		private Vector <HitEnd> hitVec = new Vector <HitEnd> ();
 		private int numRows=0;
@@ -61,21 +329,23 @@ public class UtilSelect {
 		
 		private MsaAlign() {
 		try {						// CAS563 removed the thread, has two more in the alignment and display
-			DBconn2 dbc = tdp.queryPanel.getDBC();
+			DBconn2 dbc = tablePanel.queryPanel.getDBC();
 			aPool = new AlignPool(dbc);
 			
-			tdp.setPanelEnabled(false);
+			tablePanel.setPanelEnabled(false);
 			createMenu();
 			if (bOkay) {
+				tablePanel.setMsaButton(false);
+				
 				buildHitVec();	if (!bSuccess) return;
 				loadSeq();		if (!bSuccess) return;
 				buildTableAndAlign();
 			}
-			tdp.setPanelEnabled(true);
+			tablePanel.setPanelEnabled(true);
 		}
 		catch(Exception e) {ErrorReport.print(e, "Show alignment");}			
 		}
-		private void popupInfo() {
+		private void popupHelp() {
 			String msg = "";
 			msg += "Merge overlap hits: this greatly reduces bases aligned by removing redundant sequence";
 			msg += "\nUse gapless hits: this is good for genes with long introns (e.g. homo sapiens), "
@@ -87,7 +357,7 @@ public class UtilSelect {
 		/********************************************************/
 		private void createMenu() {
 			setModal(true);
-			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 			setTitle("MSA options");
 			
 			JPanel selectPanel = Jcomp.createPagePanel();
@@ -195,7 +465,7 @@ public class UtilSelect {
 	    	JButton btnInfo = Jcomp.createIconButton("/images/info.png", "Quick Help Popup");
 			btnInfo.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					popupInfo();
+					popupHelp();
 				}
 			});
 			row.add(btnInfo); 			row.add(Box.createHorizontalStrut(5));
@@ -223,11 +493,11 @@ public class UtilSelect {
 				if (!Constants.checkFor("muscle")) {bSuccess=false; return;}
 			}
 			alignBase=0;
-			int [] selRows = tdp.theTable.getSelectedRows();
+			int [] selRows = tablePanel.theTable.getSelectedRows();
 			numRows = selRows.length;
 			HashMap<String, HitEnd> tagMap = new HashMap<String, HitEnd> (); 
 			
-			TmpRowData rd = new TmpRowData(tdp);
+			TmpRowData rd = new TmpRowData(tablePanel);
 			if (!bMerge) {
 				for(int x=0; x<numRows; x++) {
 					if (!rd.loadRow(selRows[x])) {bSuccess=false; return;} // Load row data
@@ -339,19 +609,19 @@ public class UtilSelect {
 			nCPU = Utilities.getInt(txtCPUs.getText());
 			if (nCPU<=0) nCPU=1;
 			
-			String tab = "#" + hitVec.get(0).hitNum + " (" + r + ")";	// left hand tab
-			String pgm = (bMAFFT) ? "MAFFT" : "MUSCLE";	// reads for MUS!! 
-			String ab = Utilities.kMText(alignBase);
-			String lb = Utilities.kMText(maxLen);
-			String progress = String.format(" Running %s in directory /%s.  Aligning %s (max hit %s bases)....\n", 
-					pgm, Globals.alignDir, ab, lb);				// If progress line is too long, it blanks panel
+			String tabAdd = "#" + hitVec.get(0).hitNum + " (" + r + ")";	// left hand tab; append after MSA N:
+			String pgm = (bMAFFT) ? "MAFFT" : "MUSCLE";	// MsaMainPanel reads for MUS!! 
+			String progress = String.format(" Run %s in directory /%s.  Align %s (max hit %s bases)....\n", 
+					pgm, Globals.alignDir, Utilities.kMText(alignBase), Utilities.kMText(maxLen));	// If progress line is too long, it blanks panel
 				
-			String resultSum = pgm; 							// for result table
-			if (bMAFFT && bAuto) resultSum += " Auto";
-			if (bMerge) 	resultSum += " Merge";
-			if (bGapLess) 	resultSum += " GapLess";
-			String msaSum = resultSum;							// for MSA panel (trim is added in AlignRun)
-			if (bTrim) 		resultSum += " Trim";
+			String params = pgm;
+			if (bMAFFT && bAuto) params += " Auto";
+			if (bMerge) 	params += " Merge";
+			if (bGapLess) 	params += " GapLess";
+			String msaSum = params;							// for MSA panel (trim # is added in AlignRun)
+			
+			String resultSum = pgm; 						// for result table
+			if (bTrim) 	resultSum += " Trim";
 			resultSum += "; Hit#" + hitVec.get(0).hitNum + " plus " + (r-1) + " more";
 			
 			/*-------------- ALIGN -------------------*/
@@ -360,13 +630,11 @@ public class UtilSelect {
 			String [] seqs = 	theSeqs.toArray(new String[0]);
 			String [] tabLines = theTable.toArray(new String[0]);
 			
-			tdp.queryFrame.addAlignTab(tdp, names, seqs, tabLines, 
-					progress, tab, resultSum, msaSum, 
-					bTrim, bAuto, nCPU);
+			// Add tab and align - QueryFrame calls MsaMainPanel, which is treaded
+			tablePanel.queryFrame.makeTabMSA(tablePanel, names, seqs, tabLines, 
+					progress, tabAdd, resultSum, msaSum, bTrim, bAuto, nCPU);
 			
 			theNames.clear(); theTable.clear(); theSeqs.clear();
-			
-			tdp.setPanelEnabled(true);
 		}	
 		/*--- HitEnd class --*/
 		private class HitEnd {

@@ -63,6 +63,41 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
+<a id="v564"></a>
+<h3>Release: v5.6.4 (10-Apr-25)</h3>
+Minor release for Queries: two new small features, one bug fix (from v563), and few other small things.
+<ul>
+<li><ttl>Queries</ttl>
+	<ul>
+	<li><ttl>Export</ttl>: Bug fix from v5.6.3 - the <ttx>Export</ttx> button on
+	the popup was not visible.
+	<li>When the columns are changed by selection, the table stayed scrolled to the same row.
+	<li><a href="Query.html#search" class="ext" target="_blank">Search</a>.
+	New feature to search on string for a selected column.
+	<li>Table Panel:
+	<ul>
+		<li>The <ttl>Stop</ttl> did nothing; it works now.
+		<li>If multiple queries are running at once, they will fail;
+		see <a href="Query.html#queryMultP" class="ext" target="_blank">Run/Stop Query</a>.
+		<li>If a different table tab was clicked while one was building, it produced an error message though
+		there was no problem.
+	</ul>
+	<li>MSA panel:
+	<ul>
+		<li>The <ttl>Cancel Alignment</ttl> did nothing; it works now and is called <ttl>Stop</ttl>.
+		<li>If multiple MSA are running at once, they will fail;
+		see <a href="Query.html#msaMultP" class="ext" target="_blank">MSA General Notes</a>.
+		<li>It would appear in whatever panel was being shown; now that does not happen.
+		<li>The MSA tab on the left is now incomplete until it is MSA panel is visible.
+
+	</ul>
+	</ul>
+<br>
+<li><small>Developers:
+Rename SyMAPQueryFrame -&gt; QueryFrame; New file UtilSearch. Put 2D methods in UtilSelect.
+</small>
+</ul>
+
 <a id="v563"></a>
 <h3>Release: v5.6.3 (5-Apr-25)</h3>
 Improvements to the <ttb>Queries</ttb>: <ttl>MSA Align</ttl>,
@@ -141,10 +176,10 @@ Add the number of bases aligned to the status panel.
 Delete MultiLineTextPanel and AlignmentData;
 Delete MenuMapper and LegendPanel (moved to MsaMainPanel);
 Delete AlignmentPanelBase (MsaPanel was extend, now merged);
-<br>Rename AlignmentViewPanel->MsaMainPanel; MultiAlignmentData->MsaRun; MultipleAlignmentPanel->MsaPanel.
+<br>Rename AlignmentViewPanel-&gt;MsaMainPanel; MultiAlignmentData-&gt;MsaRun; MultipleAlignmentPanel-&gt;MsaPanel.
 symapMultiAlign package deleted and files moved to symap.closeup.
-<br>&rarr;symapQuery package: FieldData->TableColumns; TableDataPanel->TableMainPanel; SortTable->TableSort.
-TableReport->UtilReport; TableExport->UtilExport; SpeciesSelectPanel->SpeciesPanel;
+<br>&rarr;symapQuery package: FieldData-&gt;TableColumns; TableDataPanel-&gt;TableMainPanel; SortTable-&gt;TableSort.
+TableReport-&gt;UtilReport; TableExport-&gt;UtilExport; SpeciesSelectPanel-&gt;SpeciesPanel;
 ResultSummaryPanel->ResultsPanel.
 New UtilSelect, UtilReportNR, ComputeClust.
 

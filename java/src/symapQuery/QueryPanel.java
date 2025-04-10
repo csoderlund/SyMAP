@@ -63,8 +63,8 @@ public class QueryPanel extends JPanel {
 	// Only one checkbox is allowed to be selected at a time. See setChkEnable. CAS561 add
 	private int nChkNone=0, nChkSingle=1, nChkBlk=2, nChkCoSet=3, nChkHit=4, nChkGene=5, nChkMulti=6, nChkClust=7;
 	
-	protected QueryPanel(SyMAPQueryFrame parentFrame) {
-		theParentFrame = parentFrame;
+	protected QueryPanel(QueryFrame parentFrame) {
+		theQueryFrame = parentFrame;
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		setBackground(Color.WHITE);
@@ -73,8 +73,8 @@ public class QueryPanel extends JPanel {
 
 		setClearDefaults(); // No matter on they get set on create, they all start out cleared
 	}
-	protected DBconn2 getDBC() {return theParentFrame.getDBC();} // DBdata needs this for Gene#
-	protected boolean isAlgo2() {return theParentFrame.isAlgo2();}
+	protected DBconn2 getDBC() {return theQueryFrame.getDBC();} // DBdata needs this for Gene#
+	protected boolean isAlgo2() {return theQueryFrame.isAlgo2();}
 	    
 	/*************************************************************
 	 * XXX State and get
@@ -205,11 +205,11 @@ public class QueryPanel extends JPanel {
 	/****************************************************
 	 * XXX Make query
 	 **************************************************/
-	protected String makeSQLquery() {
+	private String makeSQLquery() {
 		grpCoords.clear(); // in case makeSpChrWhere is not called
 
 		bValidQuery=true;
-		TableColumns theFields = TableColumns.getFields(isIncludeMinor(), theParentFrame.isAlgo2()); // CAS547 Every+, CAS548 add v547 for olap
+		TableColumns theFields = TableColumns.getFields(isIncludeMinor(), theQueryFrame.isAlgo2()); // CAS547 Every+, CAS548 add v547 for olap
 		boolean bSingle = isSingle();
 		
 		String sql = "SELECT " + theFields.getDBFieldList(bSingle);
@@ -431,7 +431,7 @@ public class QueryPanel extends JPanel {
 	/*******************************************************
 	 * Summary  
 	 */
-	protected String makeSummary() { 
+	private String makeSummary() { 
 		int numSpecies = speciesPanel.getNumSpecies();
 		if(numSpecies ==0) return "No species"; // not possible?
 		
@@ -568,7 +568,7 @@ public class QueryPanel extends JPanel {
 	 * XXX Filter panels
 	 ***************************************************************/
 	private void createAllPanels() {
-		speciesPanel = new SpeciesPanel(theParentFrame, this);
+		speciesPanel = new SpeciesPanel(theQueryFrame, this);
 		nSpecies = speciesPanel.getNumSpecies();			
 		
 		buttonPanel   = createButtonPanel();
@@ -610,14 +610,16 @@ public class QueryPanel extends JPanel {
 	private JPanel createButtonPanel() {
 		JPanel panel = Jcomp.createRowPanel();
 		
-		btnExecute = Jcomp.createButton("Run Search","Apply filters and show results table"); 
+		btnExecute = Jcomp.createButton("Run Query","Apply filters and show results table"); // CAS564 Was run search
 		btnExecute.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				setQueryButton(false); // changes to 'Running' and disable; set true in TableMainPanel after table created
+				
 				String query = makeSQLquery();
 				
 				if (query!=null) {
 					String sum = makeSummary();
-					theParentFrame.makeTable(query, sum, isSingle());
+					theQueryFrame.makeTabTable(query, sum, isSingle());
 				}
 			}
 		});
@@ -918,7 +920,7 @@ public class QueryPanel extends JPanel {
 		panel.add(crow);  // Vertical box in if statement 
 		
 		// Include/exclude
-		Vector<Mproject> theProjects = theParentFrame.getProjects();
+		Vector<Mproject> theProjects = theQueryFrame.getProjects();
 		speciesName = new String [nSpecies];
 		incSpecies = new JCheckBox[nSpecies]; // vector of checkboxes
 		for(int x=0; x<nSpecies; x++) {
@@ -1100,6 +1102,12 @@ public class QueryPanel extends JPanel {
 		}
 		catch (Exception e) {return -1;}
 	}
+	protected void setQueryButton(boolean b) {
+		if (b) btnExecute.setText("Run Query");
+		else btnExecute.setText("Running...");
+		btnExecute.setEnabled(b);
+	}
+	
      /************************************************************
       * Rules: chkOn enables some and disables others
       *******************************************************/
@@ -1152,5 +1160,5 @@ public class QueryPanel extends JPanel {
 	
 	// Not big enough to bother adding buttons to pnlStepOne.expand(); pnlStepOne.collapse()
 	private CollapsiblePanel pnlStep1 = null, pnlStep2 = null, pnlStep3 = null, pnlStep4 = null; 
-	private SyMAPQueryFrame theParentFrame = null;
+	private QueryFrame theQueryFrame = null;
 }

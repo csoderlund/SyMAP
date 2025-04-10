@@ -111,7 +111,7 @@ public class UtilReport extends JDialog {
 		this.tdp = tdp;
 		spPanel = tdp.queryPanel.speciesPanel;
 		
-		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
 		if (tdp.isCollinear)   {bIsCoSet2=true; title="Collinear Genes";}
 		else if (tdp.isMultiN) {bIsMulti3=true; title="Multi-hit Genes"; }
@@ -305,7 +305,7 @@ public class UtilReport extends JDialog {
     	btnOK = Jcomp.createButton("Create", "Create gene pair report");
     	btnOK.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				okay();
+				doReport();
 			}
 		});
 		btnCancel = Jcomp.createButton(Jcomp.cancel, "Cancel action");
@@ -319,7 +319,6 @@ public class UtilReport extends JDialog {
 		btnClear.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				clear();
-				
 			}
 		});
 		
@@ -359,7 +358,7 @@ public class UtilReport extends JDialog {
 	/**************************************************************8
 	 * Shared
 	 */
-	private void okay() {
+	private void doReport() {
 	/*-------- Settings ---------*/
 		spInputKey = new String [nSpecies];				// List of input keywords per species
 		for (int i=0; i<nSpecies; i++) spInputKey[i]=""; 

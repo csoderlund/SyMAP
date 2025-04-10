@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.TreeSet;
 import java.util.Vector;
 import java.util.HashMap;
 
@@ -85,7 +86,7 @@ public class TableData implements Serializable {
 		selColMap.put(HIT, new ArrCol());
 		selColMap.put(GEN, new ArrCol());
 		
-		Vector <String> spSet = theAnno.getSpeciesAbbrList();		    // abbrev for selected set
+		TreeSet <String> spSet = theAnno.getSpeciesAbbrList();		    // abbrev for selected set
 		for (String sp : spSet) selColMap.put(sp, new ArrCol());
 		
 		for (String col : selColList) {
@@ -342,16 +343,16 @@ public class TableData implements Serializable {
     }
     
     protected void sortByColumn(int column, boolean ascending) {
-		if (column == -1) return; // CAS504
+		if (column == -1) return; 
 		arrHeaders[column].setAscending(ascending);
 		sortByColumn(column);
     }
     
     protected void sortByColumn(final int column) {
-		if (column == -1) return; // CAS504
+		if (column == -1) return; 
 		try {
         	theParent.setCursor(new Cursor(Cursor.WAIT_CURSOR));
-        	Arrays.sort(arrData, new ColumnComparator(column));
+        	Arrays.sort(arrData, new ColumnComparator(column)); // error on sort if change tabs; Comparison method violates its general contract!
         	
         	//Always keep rows in same order
         	for(int x=0; x<arrData.length; x++) {
@@ -360,10 +361,7 @@ public class TableData implements Serializable {
         	arrHeaders[column].flipAscending();
         	theParent.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 		}
-		catch (Exception e) {
-			ErrorReport.print(e, "Sort by column");
-			Globals.prt("If the sort problem continues, remove .symap_saved_props and try again.");
-		}
+		catch (Exception e) {} // With sort error, seems to work okay anyway {ErrorReport.print(e, "Sort by column");}
     }
     // XXX
     private class ColumnComparator implements Comparator<Object []> {

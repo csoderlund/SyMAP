@@ -83,7 +83,7 @@ public class UtilReportNR  extends JDialog {
 		this.tdp = tdp;
 		spPanel = tdp.queryPanel.speciesPanel;
 		
-		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
 		title="Clustered Genes";
 		
@@ -227,7 +227,7 @@ public class UtilReportNR  extends JDialog {
     	btnOK = Jcomp.createButton("Create", "Create gene pair report");
     	btnOK.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				okay();
+				doReport();
 			}
 		});
 		btnCancel = Jcomp.createButton(Jcomp.cancel, "Cancel action");
@@ -279,7 +279,7 @@ public class UtilReportNR  extends JDialog {
 	/**************************************************************8
 	 * Shared
 	 */
-	private void okay() {
+	private void doReport() {
 	/*-------- Settings ---------*/
 		spInputKey = new String [nSpecies];				// List of input keywords per species
 		for (int i=0; i<nSpecies; i++) spInputKey[i]=""; 

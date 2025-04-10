@@ -28,7 +28,7 @@ import util.Utilities;
  * if change column: loadHit, loadHitMerge, makeRow
  * 
  * CAS504 this file replaced the previous approach to parsing the sql results
- * CAS547 add EveryPlus; CAS548 add Olap 
+ * CAS547 add EveryPlus; CAS548 add Olap; CAS564 check for tablePanel.bStopped 
  */
 public class DBdata implements Cloneable {
 	private static final String MINOR = Globals.minorAnno;
@@ -51,6 +51,7 @@ public class DBdata implements Cloneable {
 	private static int cntPlus2=0;	// CAS547 check for possible pre-v547
 	
 	protected static Vector <DBdata> loadRowsFromDB(
+			TableMainPanel tablePanel,				// to access bStopped; CAS564 add
 			ResultSet rs, 							// Result set, ready to be parsed
 			Vector<Mproject> projList,				// species in order displayed
 			QueryPanel theQueryPanel,  				// for species information	
@@ -92,8 +93,10 @@ public class DBdata implements Cloneable {
 					dd.loadSingle(rs, rowNum);
 					rows.add(dd); 
          			rowNum++;
-         			if (rowNum%Q.INC ==0) 
-         				loadStatus.setText("Processed " + rowNum + " rows");
+         			if (rowNum%Q.INC ==0) {
+         				loadStatus.setText("Processed " + rowNum + " rows...");
+         				if (tablePanel.bStopped) {rs.close(); return null;}
+         			}
 				}
 			}
 			else if (isIncludeMinor) {
@@ -113,8 +116,10 @@ public class DBdata implements Cloneable {
 	         			hitMap.put(key, dd);
 	         			rows.add(dd); 
 	         			rowNum++;
-	         			if (rowNum%Q.INC ==0) 
-	         				loadStatus.setText("Processed " + rowNum + " rows");
+	         			if (rowNum%Q.INC ==0) {
+	         				loadStatus.setText("Processed " + rowNum + " rows...");
+	         				if (tablePanel.bStopped) {rs.close(); return null;}
+	         			}
 	         		}
 	         		else  {	// merge further occurrences of hit
 	         			DBdata dd = hitMap.get(key);
@@ -140,8 +145,10 @@ public class DBdata implements Cloneable {
 	         			hitMap.put(hitIdx, dd);
 	         			rows.add(dd); 
 	         			rowNum++;
-	         			if (rowNum%Q.INC ==0) 
-	         				loadStatus.setText("Processed " + rowNum + " rows");
+	         			if (rowNum%Q.INC ==0) {
+	         				loadStatus.setText("Processed " + rowNum + " rows...");
+	         				if (tablePanel.bStopped) {rs.close(); return null;}
+	         			}
 	         		}
 	         		else  {							// merge further occurrences of hit
 	         			DBdata dd = hitMap.get(hitIdx);
@@ -149,7 +156,8 @@ public class DBdata implements Cloneable {
 	         		}
 	         	} 	
 			}
-			rs.close();
+			rs.close(); 
+			/* ----------Finish reading query - close()-------------------- */
 			
 		// Filter
 			if (isFilter) {
@@ -161,8 +169,10 @@ public class DBdata implements Cloneable {
 						
 						rowNum++;
 						dd.rowNum = rowNum;
-						if (rowNum%Q.INC ==0) 
-	         				loadStatus.setText("Filtered " + rowNum + " rows");
+						if (rowNum%Q.INC ==0) {
+	         				loadStatus.setText("Filtered " + rowNum + " rows...");
+	         				if (tablePanel.bStopped) return null;
+						}
 					}
 					else cntFilter++;
 				}
@@ -181,8 +191,10 @@ public class DBdata implements Cloneable {
 						filterRows.add(dd);	
 						rowNum++;
 						dd.rowNum = rowNum;
-						if (rowNum%Q.INC ==0) 
-							loadStatus.setText("Filtered " + rowNum + " rows");
+						if (rowNum%Q.INC ==0) {
+							loadStatus.setText("Filtered " + rowNum + " rows...");
+							if (tablePanel.bStopped) return null;
+						}
 					}
 				}
 				rows.clear();
@@ -202,21 +214,26 @@ public class DBdata implements Cloneable {
          	for (DBdata dd : rows) {
          		if (!dd.finish()) return rows;
          		rowNum++;
-				if (rowNum%1000 ==0) 
-     				loadStatus.setText("Finished " + rowNum + " rows");
+				if (rowNum%1000 ==0)  {
+     				loadStatus.setText("Finished " + rowNum + " rows...");
+     				if (tablePanel.bStopped) return null;
+				}
          	}
+         	if (tablePanel.bStopped) return null;
          	
          	if (isGeneNum) { // CAS555 - add computation of grpN; CAS561 mv here to complete rows first
-         		ruMultiGene(rows);
+         		runSingleGene(rows);
          	}
          	else if (qPanel.isMultiN()) { // Multi - may remove rows and renumber
-         		loadStatus.setText("Compute multi-hit genes");
+         		loadStatus.setText("Compute multi-hit genes...");
          		rows = runMultiGene(rows, projMap);
          	}
          	else if (qPanel.isClustN()) { // Clust - may remove rows and renumber
-         		loadStatus.setText("Compute Clust and filter");
+         		loadStatus.setText("Compute Clust and filter...");
          		rows = runClustHits(rows, projMap);
          	}
+         	if (tablePanel.bStopped) return null;
+         	
          	sortRows(rows); 	// CAS563 was not sorting for groups, but groups included now
          	makeGeneCnts(rows, geneCntMap); 
         	
@@ -225,7 +242,6 @@ public class DBdata implements Cloneable {
          		if (cntFilter>0) System.out.format("%6d Filter\n", cntFilter);
          		if (cntPlus2>0) System.out.format("%6d hits with two non-best genes\n", cntPlus2);
          	}
-         		
          	return rows;
      	} 
 		catch (Exception e) {ErrorReport.print(e, "Reading rows from db");}
@@ -448,7 +464,7 @@ public class DBdata implements Cloneable {
 	/*************************************************
 	 * Add other geneTag of query; put results from Gene# in groups; 
 	 */
-	private static void ruMultiGene(Vector <DBdata> rows) {
+	private static void runSingleGene(Vector <DBdata> rows) {
 	try {
 	/* Compute group . CAS561 - was computing something else */
 		String inputGN = qPanel.getGeneNum();
@@ -543,7 +559,8 @@ public class DBdata implements Cloneable {
     			
     			rowsForDisplay.add(dd);
     			
-    			if (rowNum%Q.INC ==0) loadStatus.setText("Filtered " + rowNum + " rows");
+    			if (rowNum%Q.INC ==0) 
+    				loadStatus.setText("Load " + rowNum + " rows...");
     		}
 			rows.clear();
 			return rowsForDisplay;

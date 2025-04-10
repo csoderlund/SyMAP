@@ -20,17 +20,18 @@ import symap.Globals;
 
 /***********************************
  * SyMAP Query MSA - align selected set using muscle or mafft
- * Called from AlignmentViewPanel, which adds all sequences and their names, then calls alignMafft or alignMuscle
+ * 
+ * Called from MsaMainPanel, which adds all sequences and their names, then calls alignMafft or alignMuscle
  * Write fasta, run align, read result
  * 
  * CAS563 add MAFFT; was named MultiAlignmentData. This was written for NT or AA, but only used for NT
  */
 public class MsaRun {
-	private final static String TARGET_DIR  = Globals.alignDir;	// CAS563 make global constant called queryAlign
-	private final static String SOURCE_FILE = Globals.alignDir + "/Source.fa"; // CAS516 put in directory and do not delete
+	private final static String TARGET_DIR  = Globals.alignDir;	// CAS563 make global constant called /queryAlign
+	private final static String SOURCE_FILE = Globals.alignDir + "/Source.fa"; // put in directory and do not delete
 	private final static String TARGET_FILE = Globals.alignDir + "/Align.fa";
-	private final static String MUSCLE_DIR  = Constants.extDir + "muscle"; // program to run
-	private final static String MAFFT_DIR   = Constants.extDir + "mafft"; // program to run
+	private final static String MUSCLE_DIR  = Constants.extDir + "muscle"; 		// program to run
+	private final static String MAFFT_DIR   = Constants.extDir + "mafft"; 		// program to run
 	private final static int SEQ_LINE_LEN = 80;
 	protected final static char gapIn='-', gapOut='.', unk='n';
 	
@@ -39,16 +40,18 @@ public class MsaRun {
 	private JTextField progressField; 
 	private Vector<String> seqNames = null;		// input/output
 	private Vector<String> seqSeqs = null;		// input/output
-	protected String finalStats= " ";  			// Used in AlignMainPanel;  CAS563 add
+	protected String finalStats= " ";  			// Used in MsaMainPanel;  CAS563 add
 	private int maxSeq=0;
+	private MsaMainPanel msaMain=null;			// to checked Stopped; CAS564 add
 		
-	protected MsaRun(String name, JTextField progressField) {
+	protected MsaRun(MsaMainPanel msaMain, String name, JTextField progressField) {
+		this.msaMain = msaMain;
 		seqNames = new Vector<String> ();
 		seqSeqs = new Vector<String> ();
 		fileName = name;
 		this.progressField = progressField;
 		
-		Utilities.deleteFile(TARGET_FILE); // if error, could read old one if not removed
+		Utilities.deleteFile(TARGET_FILE); // previous file; if error, could read old one if not removed
 	}
 	protected boolean hasFilename() { return fileName != null; }
 	
@@ -91,6 +94,8 @@ public class MsaRun {
 			
 			int rc = runStdOut(cmd + " " + SOURCE_FILE, TARGET_FILE, traceFile);
 			if (rc!=0) {
+				if (msaMain.bStopped) return false;
+				
 				Globals.eprt("MAFFT failed with rc=" + rc);
 				if (rc==1) Globals.prt("rc=1 may indicate not enought memory");
 				Globals.prt(trace);		
@@ -99,9 +104,10 @@ public class MsaRun {
 			
 			progressField.setText("Reading results");
 			if (!readFASTA(TARGET_FILE)) {
+				if (msaMain.bStopped) return false;
+				
 				Globals.eprt("MAFFT failed reading " + TARGET_FILE);
 				Globals.prt(trace);	
-				Globals.prt(trace);
 				return false;
 			}; 
 			
@@ -111,9 +117,10 @@ public class MsaRun {
 			return true;
 		} 
 		catch(Exception e) {
-			Globals.eprt("Exception occurred when running MAFTA");
-			Globals.prt(trace);
-			ErrorReport.print(e, "Align sequences with mafft"); 
+			if (!msaMain.bStopped) {	
+				ErrorReport.print(e, "Exception occurred when running MAFTA"); 
+				Globals.prt(trace);
+			}
 			return false;
 		}
 	}
@@ -131,15 +138,15 @@ public class MsaRun {
     		return exitVal;
     	}
     	catch (MalformedURLException e) {
-    		ErrorReport.print(e, "MalformedURLException");
+    		if (!msaMain.bStopped) ErrorReport.print(e, "MalformedURLException");
     		exitVal=-3;
     	}
 	    catch (IOException e) {
-    		ErrorReport.print(e, "IOException - check permissions");
+	    	if (!msaMain.bStopped) ErrorReport.print(e, "IOException - check permissions");
     		exitVal=-2;
     	}
     	catch (Exception e) { 
-    		ErrorReport.print(e, "Command failed");
+    		if (!msaMain.bStopped) ErrorReport.print(e, "Command failed");
     		exitVal=-1;
     	}
     	return exitVal;
@@ -168,12 +175,16 @@ public class MsaRun {
 			pr.waitFor();
 			
 			if (pr.exitValue()!=0) {
+				if (msaMain.bStopped) return false;
+				
 				Globals.eprt("MUSCLE failed with rc=" + pr.exitValue());
 				Globals.prt(trace);
 				return false;
 			}
 			progressField.setText("Reading results");
 			if (!readFASTA(TARGET_FILE)) {
+				if (msaMain.bStopped) return false;
+				
 				Globals.eprt("MUSCLE failed reading " + TARGET_FILE);
 				Globals.prt(trace);
 				return false;
@@ -184,7 +195,13 @@ public class MsaRun {
 			progressField.setText("Displaying results"); 
 			return true;
 		} 
-		catch(Exception e) {ErrorReport.print(e, "Align sequences with muscle"); return false;}
+		catch(Exception e) {
+			if (!msaMain.bStopped) {
+				ErrorReport.print(e, "Align sequences with muscle"); 
+				Globals.prt(trace);
+			}
+			return false;
+		}
 	}
 	/***************************************************************/
 	private void trimEnds(boolean bTrim) {// called if Trim checkbox 
@@ -216,7 +233,8 @@ public class MsaRun {
 				seqSeqs = tSeqs;
 			}
 			finalStats += String.format("  Trim %,d", (s+(len0-e)));
-		} catch(Exception e) {ErrorReport.print(e, "Align trim sequences"); }
+		} 
+		catch(Exception e) {ErrorReport.print(e, "Align trim sequences"); }
 	}
 	
 	/******************************************************/
@@ -247,7 +265,8 @@ public class MsaRun {
 				out.println(theSeq.substring(pos));
 			}
 			out.close();
-		} catch(Exception e) {ErrorReport.print(e, "Write FASTA file " + fname);}
+		} 
+		catch(Exception e) {ErrorReport.print(e, "Write FASTA file " + fname);}
 	}
 	/******************************************************/
 	private boolean readFASTA(String fname) {
@@ -319,9 +338,9 @@ public class MsaRun {
 			// Set consensus and put in first location of output vectors
 			setConsensus();
 			
-			return true;
-			
-		} catch(Exception e) {ErrorReport.print(e, "No alignment results " + fname); return false;}
+			return true;	
+		} 
+		catch(Exception e) {ErrorReport.print(e, "No alignment results " + fname); return false;}
 	}
 	/******************************************************
 	 * Create consensus at position 0

@@ -25,7 +25,8 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 
 import symap.Globals;
-import symapQuery.SyMAPQueryFrame;
+import symapQuery.QueryFrame;
+import symapQuery.TableMainPanel;
 import util.ErrorReport;
 import util.Jcomp;
 import util.Utilities;
@@ -41,33 +42,41 @@ public class MsaMainPanel extends JPanel {
 	private static final long serialVersionUID = -2090028995232770402L;
 	private String [] tableLines;
 	private String sumLines=""; 			// created in AlignRun
+	private String tabName, tabAdd, resultSum;
 	
-	public MsaMainPanel(SyMAPQueryFrame parentFrame, String [] names, String [] seqs, String [] tabLines,
-			String pstatus, String msaSum, boolean bTrim, boolean bAuto, int cpu, String fileName){
-		queryFrame = parentFrame;
+	public MsaMainPanel(TableMainPanel tablePanel, QueryFrame parentFrame, String [] names, String [] seqs, String [] tabLines,
+			String progress, String msaSum, String tabName, String tabAdd, String resultSum,
+			boolean bTrim, boolean bAuto, int cpu){
+		
+		this.tablePanel = tablePanel;
+		this.queryFrame = parentFrame;
 		this.tableLines = tabLines;
+		this.tabName = tabName;
+		this.tabAdd = tabAdd;
+		this.resultSum = resultSum;
 		
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		setBackground(Color.WHITE);
 		
-		buildMultiAlign(names, seqs, pstatus, msaSum, bTrim, bAuto, cpu, fileName);
+		buildAlignThread(names, seqs, progress, msaSum, bTrim, bAuto, cpu);
 	}
 	
-	private void buildMultiAlign(String [] names, String [] seqs, String pstatus, String msaSum, 
-			boolean bTrim,  boolean bAuto, int cpu, String fileName) {
+	private void buildAlignThread(String [] names, String [] seqs, String progress, String msaSum, 
+			boolean bTrim,  boolean bAuto, int cpu) {
 		
-		final String theStatus = pstatus;
-		final String [] theNames = names;
-		final String [] theSequences = seqs;
-		final String theFilename = fileName;
-		if(theThread == null){
+		if (theThread == null){
 			theThread = new Thread(new Runnable() {
 				public void run() {
 					try {
-						setStatus();
+						createProgress();
 						
-						boolean rc = runAlign(theNames, theSequences, theStatus, msaSum, bTrim, bAuto, cpu,theFilename);
+						bDone=false;
+					
+						boolean rc = runAlign(names, seqs, progress, msaSum, bTrim, bAuto, cpu);
 						if (!rc) return;	// Tab will still occur, but with progress error shown
+						if (bStopped) return;
+						
+						bDone=true;
 						
 						createButtonPanel();
 						createSplitPane();
@@ -75,9 +84,14 @@ public class MsaMainPanel extends JPanel {
 						add(buttonPanel);
 						add(splitPane);
 						
-						showStatus(false);
+						showProgress(false);
 						updateExportButton();
-						setVisible(false); setVisible(true); 	// sometimes it does not show until click; this fixes it
+						buildFinish();
+						
+						if (isVisible()) { 		//Makes the table appear
+							setVisible(false);
+							setVisible(true);
+						}
 					} 
 					catch (Exception e) {ErrorReport.print(e, "Build Alignment");}
 				}
@@ -86,25 +100,41 @@ public class MsaMainPanel extends JPanel {
 			theThread.start();
 		}		
 	}
-	
+	/* replace tab: add to result table;  Has to be done from thread, but not in thread */
+	private void buildFinish() { 
+		if (bStopped) return;					// if it does not on result table after stop, cannot remove
+		
+		String oldTab = tabName+":"; 			// same as QueryFrame.makeTabMSA
+		String newTab = tabName + " " + tabAdd;
+		
+		String [] resultVal = new String[2];
+ 		resultVal[0] = newTab; 						// left of result table panel
+ 		resultVal[1] = resultSum;					// right of result table panel with query filters
+ 		
+		queryFrame.updateTabText(oldTab,newTab, resultVal);
+		
+		tablePanel.setMsaButton(true);
+	}
 	/*****************************************************/
 	private boolean runAlign(String [] names, String [] sequences, 
-			String status, String msaSum, boolean bTrim, boolean bAuto, int cpu, String fileName) {
+			String status, String msaSum, boolean bTrim, boolean bAuto, int cpu) {
 		
-		msaData = new MsaRun(fileName, progressField);
+		String fileName = "temp";
+		msaData = new MsaRun(this, fileName, progressField);
 		for(int x=0; x<names.length; x++)
 			msaData.addSequence(names[x], sequences[x]);
 		
 		boolean rc=true;
-		updateStatus(status);
+		updateProgress(status);
 		if (msaSum.startsWith("MUS")) rc = msaData.alignMuscle(status, bTrim);
 		else        				  rc = msaData.alignMafft(status, bTrim, bAuto, cpu);
 		
-		if (!rc) {
+		if (bStopped) return false; // message in stopThread
+		else if (!rc) {
 			if (msaSum.startsWith("MUS")) 	Globals.prt("Try running MAFFT");
 			else 							Globals.prt("Try running MAFFT with 'auto' unchecked; or try running MUSCLE");
 			
-			updateStatus("Error running MSA - see terminal");
+			updateProgress("Error running MSA - see terminal");
 			return false;
 		}
 		sumLines = "   " + msaSum + ": " + msaData.finalStats;
@@ -140,7 +170,7 @@ public class MsaMainPanel extends JPanel {
 	
 	/****************************************************/
 	private void createMsaPanel() {
-		msaPanel = new MsaPanel(queryFrame, msaData);
+		msaPanel = new MsaPanel(msaData);
 		
 		msaScroll = new JScrollPane();	// CAS563 add scroll
 		msaScroll.addMouseListener(new MouseAdapter() {
@@ -261,37 +291,53 @@ public class MsaMainPanel extends JPanel {
 	/*************************************************
 	 * Status at top of page while alignment is running
 	 */
-	private void setStatus() {
+	private void createProgress() {
 		progressField = new JTextField(130); // CAS563 was 100
 		progressField.setEditable(false);
 		progressField.setMaximumSize(progressField.getPreferredSize());
 		progressField.setBackground(Color.WHITE);
 		progressField.setBorder(BorderFactory.createEmptyBorder());
-		btnCancel = new JButton("Cancel Alignment");
+		
+		btnCancel = new JButton("Stop");
 		btnCancel.setBackground(Color.WHITE);
 		btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				stopThread();
 			}
 		});
+		
 		add(progressField);
 		add(Box.createVerticalStrut(10));
 		add(btnCancel);
 	}
-	private void showStatus(boolean show) {
+	private void showProgress(boolean show) {
 		btnCancel.setVisible(show);
 		progressField.setVisible(show);
 	}
-	private void updateStatus(String status) {
+	private void updateProgress(String status) {
 		progressField.setText(status);
 		repaint();
 	}
 	private void stopThread() {
-		if(theThread != null) {
-			Utilities.showInfoMessage("Cancel Alignment", 
-					"Remove this tab from Results\n"
-					+ "MUSCLE or MAFFT(distbfast) must be stopped by the user manually.");
+		if (theThread==null) return;
+		
+		if (bDone) {
+			if (!Utilities.showConfirm2("Stop MSA", "MSA complete. Stop displaying results?")) return;
 		}
+		
+		tablePanel.setMsaButton(true); // unfreeze button
+		
+		queryFrame.removeResult(this); // remove from left side
+		
+		Utilities.showInfoMessage("Stop MSA", // writes to terminal
+				"You must stop MAFFT (distbfast) or MUSCLE (muscle) manually; "
+				+ "\n   see the online documentation for help. ");
+		
+		bStopped=true;
+		try {
+			theThread.interrupt(); 	
+		}
+		catch (Exception e) {};
 	}
 	
 	/***********************************************
@@ -339,7 +385,8 @@ public class MsaMainPanel extends JPanel {
 		}
 	}
 	/********************************************************/
-	private SyMAPQueryFrame queryFrame = null;
+	private QueryFrame queryFrame = null;
+	private TableMainPanel tablePanel = null;
 	
 	private JPanel buttonPanel = null;
 	private JSplitPane splitPane = null;
@@ -351,6 +398,8 @@ public class MsaMainPanel extends JPanel {
 	private JButton btnCancel = null;
 	
 	private Thread theThread = null; //Thread used for building the sequence data
+	private boolean bDone=false;	 // If they Stop, but it just finished, this will be true
+	protected boolean bStopped=false;
 	
 	private MsaRun msaData = null;
 	private MsaPanel msaPanel = null;

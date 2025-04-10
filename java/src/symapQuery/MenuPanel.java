@@ -22,9 +22,9 @@ import javax.swing.JPanel;
 public class MenuPanel extends JPanel {
 	private static final long serialVersionUID = 7029184547060500871L;
 	
-	public MenuPanel(String [] menuItems, int selection, ActionListener l) {
+	protected MenuPanel(String [] menuItems, int selection, ActionListener l) {
 		theSelection = selection;
-		theListener = l;
+		theListener = l;			// calls the QueryFrame.updateView
 		
 		theResults = new Vector<JButton> ();
 		theOptions = new JButton[menuItems.length];
@@ -56,7 +56,7 @@ public class MenuPanel extends JPanel {
 		}
 		showSelectedMenu();
 	}
-	public void addResult(String label) {
+	protected void addLeftTab(String label) {
 		JButton newResult = new JButton(label);
 
 		newResult.setBorderPainted(false);
@@ -67,25 +67,28 @@ public class MenuPanel extends JPanel {
 		newResult.setHorizontalAlignment(AbstractButton.LEFT);
 		newResult.addActionListener(theListener);
 		newResult.setBackground(Color.WHITE);
+		
 		theResults.add(newResult);
+		
 		buildPanel();
+		
 		setSelection(theOptions.length + theResults.size() - 1);
 	}
-	public void removeResult(int pos) {
+	protected void removeResult(int pos) {
 		theResults.get(pos).removeActionListener(theListener);
 		theResults.remove(pos);
 		buildPanel();
 		setSelection(theOptions.length - 1);
 	}
 	
-	public int getCurrentSelection() { return theSelection; }
-	public String getCurrentSelectionLabel() { return theOptions[theSelection].getText(); }
+	protected int getCurrentSelection() { return theSelection; }
+	protected String getCurrentSelectionLabel() { return theOptions[theSelection].getText(); }
 	
-	public boolean updateResultLabel(String oldLabel, String newLabel) {
+	protected boolean updateLeftTab(String oldLabel, String newLabel) {
 		Iterator<JButton> iter = theResults.iterator();
 		while(iter.hasNext()) {
 			JButton temp = iter.next();
-			if(temp.getText().startsWith(oldLabel)) {
+			if (temp.getText().equals(oldLabel)) {// CAS564 was startsWith
 				temp.setText(newLabel);
 				buildPanel();
 				return true;
@@ -94,7 +97,7 @@ public class MenuPanel extends JPanel {
 		return false;
 	}
 	
-	public void setSelection(int selection) { 
+	protected void setSelection(int selection) { 
 		theSelection = selection;
 		showSelectedMenu();
 	}

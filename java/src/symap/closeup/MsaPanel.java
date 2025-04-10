@@ -14,8 +14,6 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import javax.swing.JPanel;
 
-import symapQuery.SyMAPQueryFrame;
-
 /**************************************
  * SyMAP query multiple alignment panel; this is the top part of AlignMainPanel, where the key table is the bottom
  * CAS563 remove the extend AlignPanelBase, merged with this, and cleanup; AA align is still here, but would need work...
@@ -29,7 +27,7 @@ public class MsaPanel extends JPanel {
 	private static final int nTopGap = 10, nBottomGap = 10, nRightGap = 10, nLeftGap = 10;
 	private static final int nInsetGap = 5, nRowHeight = 15;
 
-	protected MsaPanel(SyMAPQueryFrame parentFrame, MsaRun alignData) {
+	protected MsaPanel(MsaRun alignData) {
 		setBackground(Color.white);
 		setBorderColor(Color.BLACK);
 		setAlignmentY(Component.LEFT_ALIGNMENT);

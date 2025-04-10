@@ -23,7 +23,7 @@ public class ComputeClust {
 	// Input:
 	private QueryPanel qPanel;
 	private Vector <DBdata> inRows;		// Rows will be removed in DBdata if no hitIdx2Grp entry
-	private JTextField progress;
+	private JTextField loadStatus;
 	private boolean bIncOne, bIncNoGene, bIncTrans, bHasExc=false, bHasInc=false;
 	private int cutoff=0;
 	
@@ -45,7 +45,7 @@ public class ComputeClust {
 		
 		this.inRows = rowsFromDB;
 		this.qPanel = lQueryPanel;
-		this.progress = progress;
+		this.loadStatus = progress;
 		
 		this.hitIdx2Grp = hitIdx2Grp;
 		this.grpSizes = grpSizes;
@@ -76,9 +76,9 @@ public class ComputeClust {
 	try {
 		int rowNum=0;
 		for (DBdata dd : inRows) {
-			if (rowNum++ % Q.INC ==0) {
-				if (progress.getText().equals("Cancelled")) {bSuccess=false; return;}
-				progress.setText("Cluster " + rowNum + " rows");
+			if (rowNum++ % Q.INC ==0) { // CAS564 checked stopped
+				if (loadStatus.getText().equals(Q.stop)) {bSuccess=false; return;} // CAS564 got this working; uses Stopped
+				loadStatus.setText("Cluster " + rowNum + " rows...");
 			}
 			if (dd.annotIdx[0]<=0 || dd.annotIdx[1]<=0) continue;
 			if (filterRow(dd)) continue;
