@@ -23,7 +23,7 @@ import util.Utilities;
  * 5. AlignProj  save - save all to db
  * 6. Show file params on PairParams
  * 7. Show db params on Summary
- * CAS546 add Algo2 params; CAS555 improved output
+ * CAS546 add Algo2 params; CAS555 improved output; CAS565 add Number Pseudo
  */
 public class Mpair {
 	public static final int FILE = 0;
@@ -34,7 +34,6 @@ public class Mpair {
 	public Mproject mProj1, mProj2;
 	private int pairIdx=-1, proj1Idx=-1, proj2Idx=-1;
 	private DBconn2 dbc2;
-	private boolean bReverse=false;
 	private String syVer="";
 	
 	private String resultDir;
@@ -42,21 +41,22 @@ public class Mpair {
 	private HashMap <String, String> dbMap = new HashMap <String, String> ();
 	private HashMap <String, String> defMap = new HashMap <String, String> ();
 	
-	private static final String [] paramKey = { // repeated in PairParams
+	private static final String [] paramKey = { // repeated in PairParams and below
 			"mindots", "topn", "merge_blocks", 
 			"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
+			"number_pseudo",
 			"algo1", "algo2",
-			"g0_scale", "gene_scale", "exon_scale",	"len_scale",			// CAS560 was gintron and gexon, add len
+			"g0_scale", "gene_scale", "exon_scale",	"len_scale",	// CAS560 was gintron and gexon, add len
 			"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
 	};
 	private static final String [] paramDef = {
 			"7", "2", "0", 
 			"", "", "", "0", "0",
+			"0",					// number pseudo
 			"1", "0",				// 1st is algo1, 2nd is algo2
 			"1.0", "1.0", "1.0", "1.0",	// G0_Len, gene, exon, Len	CAS560 changed to double
 			"1", "1", "1", "0", "0"	// EE, EI, En, II, In CAS548 change EI and En to 1
 			};
-	
 	
 	public Mpair (DBconn2 dbc2, int pairIdx, Mproject p1, Mproject p2, boolean isReadOnly) {
 		this.dbc2 = dbc2;
@@ -74,18 +74,11 @@ public class Mpair {
 		loadSyVer();
 	}
 	
-	public void reverse() {
-		Mproject t=mProj1;
-		mProj1 = mProj2;
-		mProj2 = t;
-		bReverse = !bReverse;
-	}
-	public boolean isReverse() { return bReverse;}
 	protected boolean isSynteny() {return pairIdx>0;} // CAS547 add
 	/***********************************************************************************
 	 * CAS546 update params a bit
 	 */
-	public String getChangedSynteny() { // ManagerFrame.alignSelectedPair when no align
+	protected String getChangedSynteny() { // ManagerFrame.alignSelectedPair when no align
 		return getSynteny(FILE) + "\n";
 	}
 	
@@ -131,34 +124,35 @@ public class Mpair {
 	
 	private String getClusterAlgo(int type) {
 		String msg="";
+		if (isChg(type,"number_pseudo"))	msg += "Number pseudo\n"; // algo will come after
 		
 		if (isAlgo2(type)) {
 			boolean chg = isChg(type,"g0_scale") || isChg(type,"gene_scale") 
 					   || isChg(type,"exon_scale" ) || isChg(type,"len_scale")
 					   || isChg(type, "EI_pile") || isChg(type, "En_pile") || isChg(type, "II_pile") 
-					   || isChg(type, "In_pile") || isChg(type,"topn");
+					   || isChg(type, "In_pile") || isChg(type,"topn") || isChg(type,"number_pseudo");
 			
-			msg = algo2;
+			msg += algo2;
 			if (chg) {
-				if (isChg(type,"exon_scale")) 		msg += "\n Exon scale = " + getExonScale(type);
-				if (isChg(type,"gene_scale")) 		msg += "\n Gene scale = " + getGeneScale(type);
-				if (isChg(type,"len_scale")) 		msg += "\n Length scale = " + getLenScale(type);
-				if (isChg(type,"g0_scale")) 		msg += "\n G0 length scale = " + getG0Scale(type);
+				if (isChg(type,"exon_scale")) 	msg += "\n  Exon scale = " + getExonScale(type);
+				if (isChg(type,"gene_scale")) 	msg += "\n  Gene scale = " + getGeneScale(type);
+				if (isChg(type,"len_scale")) 	msg += "\n  Length scale = " + getLenScale(type);
+				if (isChg(type,"g0_scale")) 	msg += "\n  G0 length scale = " + getG0Scale(type);
 				
-				if (isChg(type,"EE_pile"))			msg += "\n Limit Exon-Exon piles";
-				if (isChg(type,"EI_pile"))			msg += "\n Limit Exon-Intron piles"; // CAS549 did not chg msg
-				if (isChg(type,"En_pile"))			msg += "\n Limit Exon-intergenic piles";
-				if (isChg(type,"II_pile"))			msg += "\n Allow Intron-Intron piles";
-				if (isChg(type,"In_pile"))			msg += "\n Allow Intron-intergenic piles";
-				if (isChg(type,"topn")) 			msg += "\n Top N piles ="    + getTopN(type);
+				if (isChg(type,"EE_pile"))		msg += "\n  Limit Exon-Exon piles";
+				if (isChg(type,"EI_pile"))		msg += "\n  Limit Exon-Intron piles"; // CAS549 did not chg msg
+				if (isChg(type,"En_pile"))		msg += "\n  Limit Exon-intergenic piles";
+				if (isChg(type,"II_pile"))		msg += "\n  Allow Intron-Intron piles";
+				if (isChg(type,"In_pile"))		msg += "\n  Allow Intron-intergenic piles";
+				if (isChg(type,"topn")) 		msg += "\n  Top N piles ="    + getTopN(type);
 			}
 		}
 		else if (isAlgo1(type)) {
-			msg = algo1; // always list clustering
-			boolean chg = isChg(type, "topn") || Group.bSplitGene;
+			msg += algo1; 				// always lists clustering
+			boolean chg = isChg(type, "topn") ||  Group.bSplitGene;
 			if (chg) {
-				if (isChg(type,"topn")) msg += "\n Top N piles ="    + getTopN(type);
-				if (Group.bSplitGene)   msg += "\n Split gene";
+				if (isChg(type,"topn")) msg += "\n  Top N piles ="    + getTopN(type);
+				if (Group.bSplitGene)   msg += "\n  Split gene";
 			}
 		}
 		return msg;
@@ -178,6 +172,10 @@ public class Mpair {
 	public Mproject getProj1() {return mProj1;}
 	public Mproject getProj2() {return mProj2;}
 	
+	public boolean isNumPseudo(int type) {
+		String x = (type==FILE) ? fileMap.get("number_pseudo") : dbMap.get("number_pseudo");
+		return x.contentEquals("1");
+	}
 	public boolean isAlgo1(int type) {
 		String x = (type==FILE) ? fileMap.get("algo1") : dbMap.get("algo1");
 		return x.contentEquals("1");
@@ -283,10 +281,13 @@ public class Mpair {
 	try {
 		int x = dbc2.getIdx("select idx from pairs where proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx);
 		if (x!= -1) {
-			 dbc2.executeUpdate("DELETE from pairs WHERE idx="+ x);
-			 dbc2.resetAllIdx(); // CAS535 check all, even though some are not relevant
+			 AnchorMain ancObj = new AnchorMain(dbc2, null, this);
+			 ancObj.removePseudo();   // Remove pseudo where numhits=-pair_idx; do before saveAnno; CAS565 add
 			 
-		     new AnchorMain(dbc2, null, this).saveAnnoHitCnt(); // CAS561 add   
+			 dbc2.executeUpdate("DELETE from pairs WHERE idx="+ x);
+			 dbc2.resetAllIdx(); // check all, even though some are not relevant
+			 
+		     ancObj.saveAnnoHitCnt(); // Remove numhits for this pair; CAS561 add  
 		}
 	    pairIdx = -1;
 	}

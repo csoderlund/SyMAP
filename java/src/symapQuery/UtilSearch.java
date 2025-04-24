@@ -114,7 +114,8 @@ public class UtilSearch  extends JDialog{
 		JButton btnOK = Jcomp.createButton("Search", "Search for string"); 	
     	btnOK.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				doSearch(); // setVisible(false) in doSearch when done
+				setVisible(false);	// CAS565 was in doSearch
+				doSearch(); 
 			}
 		});
     	row.add(Box.createHorizontalStrut(5));
@@ -253,7 +254,6 @@ public class UtilSearch  extends JDialog{
 			String msg = String.format("No %s value in column  %s  of '%s'", op, selColName,  txtSearch.getText().trim());
 			JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
 		}
-		setVisible(false);
 		return rowIndex;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Performing search"); return -1;}

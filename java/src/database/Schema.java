@@ -121,7 +121,7 @@ public class Schema {
 		executeUpdate(sql);
 	
 // Sequence	      
-		sql = "CREATE TABLE pseudos (" +
+		sql = "CREATE TABLE pseudos (" +			// These are chromosome, scaffolds, etc (from pseudomolecule)
 		    "grp_idx             INTEGER NOT NULL," +
 		    "file                TEXT NOT NULL," +
 		    "length              INTEGER NOT NULL," +
@@ -132,13 +132,16 @@ public class Schema {
 		
 		sql = "CREATE TABLE pseudo_annot (" +
 		    "idx                 INTEGER AUTO_INCREMENT PRIMARY KEY," +  // annot_idx
-		    "grp_idx             INTEGER NOT NULL," +	// xgroups.idx
-		    "type                VARCHAR(20) NOT NULL," + // gene, exon, centromere, gap
-		    "genenum             INTEGER default 0," +  //   
-		    "tag				 VARCHAR(30)," +		// CAS512 add - Gene(#exons) or Exon #N; CAS543 suffix or gene# only (30->10)
-		    "gene_idx            INTEGER default 0," +  // CAS512 add - gene idx for exon
-		    "numhits			 tinyint unsigned default 0," +  // CAS520 show in Query; max 255
-		    "name                TEXT  NOT NULL," +				// description, list of keyword=value
+		    "grp_idx             INTEGER NOT NULL," +	  // xgroups.idx
+		    "type                VARCHAR(20) NOT NULL," + // gene, exon, centromere, gap, pseudo; CAS565 pseudo add, no change here    
+		    "genenum             INTEGER default 0," +      
+		    // Gene: genenum.{suffix} (#Exons len); Exon: exon#
+		    "tag				 VARCHAR(30)," +		
+		    "gene_idx            INTEGER default 0," +  // gene idx for exon
+			// numhits for Gene: # of hits across all pairs for Query; Updated in AnchorMain;
+		    // numhits for Pseudo: pairIdx for remove Number Pseudo; Updated in AnchorMain; CAS565 add 
+		    "numhits			 INTEGER unsigned default 0," +  // CAS565 was tinyint (max 255)
+		    "name                TEXT  NOT NULL," +				 // description, list of keyword=value
 		    "strand              ENUM('+','-') NOT NULL," +
 		    "start               INTEGER NOT NULL," +
 		    "end                 INTEGER NOT NULL," +
@@ -209,7 +212,7 @@ public class Schema {
 		    "annot_idx           INTEGER NOT NULL," +	// pseudo_annot.idx
 		    "olap	             INTEGER default 0," +   // gene overlap; algo1 basepairs; algo2 percent
 		    "exlap	             tinyint default 0," +   // CAS546 added, exon percentoverlap
-		    "annot2_idx			 INTEGER default 0," +   // CAS546 added 
+		    "annot2_idx			 INTEGER default 0," +   // CAS546 added; CAS565 not present for type pseudo
 		    "UNIQUE (hit_idx, annot_idx)," +
 		    "INDEX (annot_idx)," +
 		    "FOREIGN KEY (hit_idx)  REFERENCES pseudo_hits (idx) ON DELETE CASCADE," +

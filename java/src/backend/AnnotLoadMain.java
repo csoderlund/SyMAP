@@ -161,11 +161,11 @@ public class AnnotLoadMain {
 			else typeCounts.put(type, 1 + typeCounts.get(type));
 			
 			/** only use exons from first mRNA **/
-			boolean isGene = (type.contentEquals("gene")) ? true : false;
-			boolean isExon = (type.contentEquals("exon")) ? true : false;
-			boolean isMRNA = (type.contentEquals("mRNA")) ? true : false;
-			boolean isGap =  (type.contentEquals("gap"))  ? true : false;
-			boolean isCent = (type.contentEquals("centromere")) ? true : false;
+			boolean isGene = (type.contentEquals(Globals.geneType)) ? true : false; // remove hardcode
+			boolean isExon = (type.contentEquals(Globals.exonType)) ? true : false;
+			boolean isMRNA = (type.contentEquals("mRNA")) ? true : false;			// this is nowhere else
+			boolean isGap =  (type.contentEquals(Globals.gapType))  ? true : false;
+			boolean isCent = (type.contentEquals(Globals.centType)) ? true : false;
 			if (!(isGene || isExon || isMRNA || isGap || isCent)) continue;
 			
 			String[] keyVals = attr.split(";"); 

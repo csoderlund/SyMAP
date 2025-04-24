@@ -304,7 +304,7 @@ public class TableMainPanel extends JPanel {
 	    cmbSynOpts.addItem("Region");  		// showREGION=0
 	    cmbSynOpts.addItem("Collinear");	// showSET=1
 	    cmbSynOpts.addItem("Block");		// showBLOCK=2
-	    cmbSynOpts.addItem("Group(chr)");   // showGRP=3
+	    cmbSynOpts.addItem("Group-chr");    // showGRP=3
 	    cmbSynOpts.setSelectedIndex(0);
 	    topRow.add(cmbSynOpts);					topRow.add(Box.createHorizontalStrut(1));
 	    cmbSynOpts.addActionListener(new ActionListener() {
@@ -1126,7 +1126,7 @@ public class TableMainPanel extends JPanel {
         		BufferedWriter w = new BufferedWriter(new FileWriter("zTest_results.log"));
         		w.write(theSummary + "\n");
         		String x1 = String.format("%4s  %5s (%5s)   %2s,%2s  %2s,%2s %2s   %6s,%6s %6s  %8s\n",
-        				"Row","Hnum", "Hidx",  "p1", "p2", "g1", "g2", "ag", "Hanno1", "Hanno2",   "Anno", "Gene");
+        				"Row","Hnum", "Hidx",  "p1", "p2", "g1", "g2", "ga", "Hanno1", "Hanno2",   "Anno", "Gene");
         		w.write(x1);
         		int cnt=0;
         		while (rs.next()) {
@@ -1138,16 +1138,14 @@ public class TableMainPanel extends JPanel {
         			if (block==null) block="0";
         			
         			int a1=rs.getInt(Q.ANNOT1IDX), a2=rs.getInt(Q.ANNOT2IDX), a=rs.getInt(Q.AIDX);
-        			String star = (a1!=a && a2!=a) ? "***" : "   ";
+        			String star = (a1!=a && a2!=a) ? "* " : "   ";
         			
         			int grp1 = rs.getInt(Q.GRP1IDX), grp2 = rs.getInt(Q.GRP2IDX), grp = rs.getInt(Q.AGIDX);
         			int side = (grp1==grp) ? 1 : 2;
         			
         			String x = String.format("%4d  %5d (%5d)   %2d,%2d  %2d,%2d %2d   %6d,%6d %6d  %8s %s%d",
-        					cnt, rs.getInt(Q.HITNUM),   rs.getInt(Q.HITIDX), 
-        					rs.getInt(Q.PROJ1IDX),  rs.getInt(Q.PROJ2IDX),
-        					grp1,  grp2, grp, 
-        					a1, a2, a, tag, star, side);
+        			cnt, rs.getInt(Q.HITNUM), rs.getInt(Q.HITIDX), rs.getInt(Q.PROJ1IDX), rs.getInt(Q.PROJ2IDX),
+        					grp1,  grp2, grp, a1, a2, a, tag, star, side);
         					
         			w.write(x + "\n");
         			cnt++;

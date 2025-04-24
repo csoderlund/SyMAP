@@ -88,6 +88,7 @@ public class SummaryPanel  extends JPanel {
 							Vector <Integer> order) {
 		try {
 			int either=0, both=0, none=0, block=0, collinear=0, maxGrp=0; // CAS555 added collinear and maxGrp
+			int minor=0; // CAS565 add
 			HashMap <Integer, Integer> proj2hits =  new HashMap <Integer, Integer> ();
 			HashMap <Integer, Integer> proj2annot = new HashMap <Integer, Integer> ();
 			HashMap <Integer, Integer> blockCnt = new HashMap <Integer, Integer> ();
@@ -100,14 +101,17 @@ public class SummaryPanel  extends JPanel {
 				counterInc(proj2hits, spIdx1, 1);
 				counterInc(proj2hits, spIdx2, 1);
 				
-				boolean anno1 = dd.hasAnno(0);
-				boolean anno2 = dd.hasAnno(1);
+				boolean anno1 = dd.hasGene(0);
+				boolean anno2 = dd.hasGene(1);
 				if (anno1) counterInc(proj2annot, spIdx1, 1);
 				if (anno2) counterInc(proj2annot, spIdx2, 1);
 				
 				if (anno1 && anno2) both++;
 				else if (!anno1 && !anno2) none++;
 				else either++;
+				
+				if (dd.geneTag[0].endsWith(Q.minor)) minor++;
+				if (dd.geneTag[1].endsWith(Q.minor)) minor++;
 				
 				if (dd.hasBlock()) {
 					block++;
@@ -125,6 +129,7 @@ public class SummaryPanel  extends JPanel {
 			}
 			String label = String.format("Block: %,d (#%,d)   Annotated: Both %,d  One %,d  None %,d", // CAS563 condense; gene->annotated
 							 block, blockCnt.size(), both, either, none); // CAS541 changed text to match dotplot summary
+			if (minor>0)	 label += String.format("  Minor %,d", minor); // only >0 if Every+
 			if (collinear>0) label += String.format("   Collinear: %,d (#%,d)", collinear, collinearCnt.size());
 			if (maxGrp>0)    label += String.format("  Groups: #%,d", maxGrp);
 			

@@ -16,7 +16,7 @@ public class OverviewPanel extends JPanel {
 	private static final long serialVersionUID = 6074102283606563987L;
 	
 	public OverviewPanel(QueryFrame parentFrame) {
-		theParentFrame = parentFrame;
+		theQueryFrame = parentFrame;
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		
 		buildOverview();
@@ -30,7 +30,7 @@ public class OverviewPanel extends JPanel {
 		
 		// Project table
 		mainPanel.add(Jcomp.createItalicsBoldLabel("Selected projects:", 12)); mainPanel.add(Box.createVerticalStrut(2));
-		Vector<Mproject> projVec = theParentFrame.getProjects();
+		Vector<Mproject> projVec = theQueryFrame.getProjects();
 		
 		int w=8, cntHasGenes=0;
 		for (Mproject p : projVec) w = Math.max(w, p.getDisplayName().length());
@@ -52,19 +52,49 @@ public class OverviewPanel extends JPanel {
 		mainPanel.add(Box.createVerticalStrut(20));
 		
 		// Notes
-		String head = "<html><body style='font-family: verdana, Times New Roman; font-size: 10px'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		String head = "<html><body style='font-family: verdana, Times New Roman; font-size: 10px'>";
 		String tail = "</body></html>";
 		
 		mainPanel.add(Jcomp.createItalicsBoldLabel("Notes:", 12)); mainPanel.add(Box.createVerticalStrut(5));
 		String msg = head;
+		
 		if (cntHasGenes>0) {
-			String algo = theParentFrame.isAlgo2() ? "<i>Algo2:</i> " : "<i>Algo1:</i> "; 
+			String algo = theQueryFrame.isAlgo2() ? "<i>Algo2:</i>  " : "<i>Algo1:</i>  "; 
 			algo += "The Olap column is ";
-			algo += theParentFrame.isAlgo2() ? "exon overlap; Olap may be 0 if hits only overlap intron." 
-					                         : "gene overlap; at least one project used Algo1 or has no genes.";
-			msg += algo;	
+			algo += theQueryFrame.isAlgo2() ? "exon overlap; Olap may be 0 if hits only overlap intron." 
+					                        : "gene overlap; at least one project used Algo1 or has no genes.";
+			msg += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + algo;	
+			
+			msg += "<br>";
+			msg += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Pseudo</i>: "; 
+			int cntPseudo = theQueryFrame.cntUsePseudo; // CAS565 add
+			if (projVec.size()==2) {
+				msg += (cntPseudo==1) ? "Pseudo Gene# for the un-annotated"
+                        			  : "No pseudo Gene# for the un-annotated";	
+			}
+			else {
+				int cntSynteny = theQueryFrame.cntSynteny;
+				int nProjSyn = (projVec.size()*(projVec.size()-1))/2;
+				
+				if (cntPseudo>0 && cntPseudo!=cntSynteny) {
+					String s = (cntPseudo==1) ? "One pair uses " : (cntPseudo + " pairs, ");
+					int cnt = (cntSynteny-cntPseudo);
+					String t = (cnt==1) ? " does not)" : " do not)";
+					msg+= s + " pseudo Gene# for the un-annotated  (" + cnt + t;
+				}
+				else if (cntPseudo>0)	msg += "Pseudo Gene# for the un-annotated";
+				else 					msg += "No pseudo Gene# for the un-annotated";
+				
+				if (nProjSyn!=cntSynteny) {
+					msg+="<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Synteny</i>: ";
+					String s = " (from " + nProjSyn + " possible)";
+					if (cntSynteny==1) msg+="One pair has synteny " + s;
+					else               msg+= cntSynteny + " pairs have synteny " + s;
+				}
+			}
 		}
 		mainPanel.add(Jcomp.createLabel(msg + tail)); mainPanel.add(Box.createVerticalStrut(5));
+		
 		if (cntHasGenes<=1) {
 			msg = head;
 			if (cntHasGenes==0) msg += "<i>No genes in any species</i>. The only relevant filters are on chromosomes and blocks.";
@@ -86,6 +116,6 @@ public class OverviewPanel extends JPanel {
 		mainPanel.add(Jcomp.createLabel(msg + tail));
 	}
 
-	private QueryFrame theParentFrame = null;
+	private QueryFrame theQueryFrame = null;
 	private JPanel mainPanel = null;
 }

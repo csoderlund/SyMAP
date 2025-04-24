@@ -13,8 +13,8 @@ import java.io.File;
  * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.6.4"; 
-	public static final String 	DATE = " (10-Apr-25)";
+	public static final String 	VERSION = "v5.6.5"; 
+	public static final String 	DATE = " (24-Apr-25)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER = 7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
@@ -36,16 +36,26 @@ public class Globals {
 	public static boolean bQueryPgeneF=false; // CAS563 to run old PgeneF algo instead of new Cluster
 	//public static boolean HITCNT_ONLY=false;// CAS560 remove; -y CAS541 to update the hitcnt without having to redo synteny
 	//public static boolean GENEN_ONLY=false; // CAS560 remove; -z CAS519b to update the gene# without having to redo synteny
+
+	public static final String exonTag = "Exon #";	 // type exon
+	public static final String geneTag = "Gene #";   // type gene
 	
-	public static final String exonTag = "Exon #";
-	public static final String geneTag = "Gene #";
+	// These are the pseudo_annot.type values
+	public static final String geneType = "gene";	  // this is hard-coded many places; search 'gene'
+	public static final String exonType = "exon";
+	public static final String pseudoType = "pseudo"; // pseudo type
+	public static final String gapType = "gap";
+	public static final String centType = "centromere";
+	
+	public static final String pseudoChar = "~";	 // pseudo tag; CAS565 add 
+	public static final String minorAnno = "*";      // used in Query and Anno popup for hit to non-assigned anno; CAS548 
+	public static final String DOT = ".", SDOT="\\.";// separates block, collinear, gene#; second is for split
+	
 	public static final int MAX_CLOSEUP_BP=50000;	// Used in CloseUp and Query; CAS551 increase from 30k
 	public static final String MAX_CLOSEUP_K = "50kb";
 	public static final int MAX_2D_DISPLAY=30000;	// Query and Sfilter; CAS551 add
 	public static final String MAX_2D_DISPLAY_K = "30kb";
 	public static final int MAX_YELLOW_BOX=50000; 	// used in SeqFilter for drawing yellow boxes
-	
-	public static final String minorAnno = "*";     // used in Query and Anno popup for hit to non-assigned anno; CAS548 
 	
 	public static final int T=0, Q=1;				// for target (2) and query (1); CAS560 
 	

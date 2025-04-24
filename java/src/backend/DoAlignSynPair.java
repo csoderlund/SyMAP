@@ -69,11 +69,14 @@ public class DoAlignSynPair extends JFrame {
 			collinearOnly(diaLog, mProj1, mProj2);
 			return;
 		}
+		else if (Constants.PSEUDO_ONLY) {// CAS565 add
+			pseudoOnly(diaLog, mProj1, mProj2);
+			return;
+		}
 		
 		String chgMsg = mp.getChangedParams(Mpair.FILE);  // Saved to database pairs table in SumFrame
 		diaLog.msg(chgMsg);
 		
-		// CAS535 always just close if (!closeWhenDone) diaLog.closeIfNoErrors();	
 		diaLog.closeWhenDone();					
 		
 		final AlignMain aligner = new AlignMain(dbc2, diaLog, mp,  maxCPUs, bDoCat, alignLogDir);
@@ -134,7 +137,7 @@ public class DoAlignSynPair extends JFrame {
 					if (Cancelled.isCancelled()) return;
 					
 					/** Anchors **/
-					success &= anchors.run( mProj1, mProj2);
+					success &= anchors.run( mProj1, mProj2); // add anchors, cluster, number, collinear, pseudo
 					
 					if (Cancelled.isCancelled()) return;
 					if (!success) {
@@ -151,14 +154,10 @@ public class DoAlignSynPair extends JFrame {
 						return;
 					}
 					
-					/** Collinear CAS560 moved from SyntenyMain**/
-					if (mProj1.hasGenes() && mProj2.hasGenes()) { // CAS540 add check
-						int mPairIdx = Utils.getPairIdx(mProj1.getIdx(), mProj2.getIdx(), dbc2);
+					/** Collinear CAS560 moved from SyntenyMai; CAS565 moved to AnchorMain as does not use synteny **
 						AnchorPost collinear = new AnchorPost(mPairIdx, mProj1, mProj2, dbc2, diaLog);
 						collinear.collinearSets();
-						
-						if (Cancelled.isCancelled()) {dbc2.close();}
-					}
+					} */ 
 					
 					/** Finish **/
 					String params = aligner.getParams();
@@ -325,6 +324,26 @@ public class DoAlignSynPair extends JFrame {
 			
 		mp.saveUpdate();
 		new SumFrame(dbc2, mp);
+		System.out.println("--------------------------------------------------");
+	}
+	catch (Exception e){ErrorReport.print(e, "Creating log file"); }
+	}
+	/*** Add Pseudo CAS565 ***/ 
+	private void pseudoOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
+	try {
+		mLog.msg("Only add pseudo-genes");
+		int mPairIdx = Utils.getPairIdx(mProj1.getIdx(), mProj2.getIdx(), dbc2);
+		if (mPairIdx==0) {
+			mLog.msg("Cannot find project pair in database for " + mProj1.getDisplayName() + "," + mProj2.getDisplayName());
+			dbc2.close(); return;
+		}
+		AnchorMain anchors = new AnchorMain(dbc2, mLog, mp );
+		anchors.addPseudoFromFlag();
+			
+		String params = dbc2.executeString("select params from pairs where idx=" + mp.getPairIdx());
+		mp.saveParams(params);		// re-enter params and update NOW(), then update pair_props
+		
+		new SumFrame(dbc2, mp); // only so it will show the updated version
 		System.out.println("--------------------------------------------------");
 	}
 	catch (Exception e){ErrorReport.print(e, "Creating log file"); }

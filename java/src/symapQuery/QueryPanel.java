@@ -48,9 +48,9 @@ import util.Utilities;
  *      PH.pctid, PH.cvgpct, PH.countpct, PH.strand, PH.score, PH.htype, PH.runsize, PH.runnum, 
  *      B.blocknum, B.score, 
  *      PH.annot1_idx, PH.annot2_idx # not displayed, used to join two rows; allGenes PHA.annot_idx, PHA.annot2_idx
- *      FROM pseudo_hits AS PH
+ *      FROM 	  pseudo_hits 		AS PH
 		LEFT JOIN pseudo_hits_annot AS PHA ON PH.idx = PHA.hit_idx
-		LEFT JOIN pseudo_annot AS PA ON PHA.annot_idx = PA.idx
+		LEFT JOIN pseudo_annot 		AS PA ON PHA.annot_idx = PA.idx
 		LEFT JOIN pseudo_block_hits AS PBH ON PBH.hit_idx = PH.idx
 		LEFT JOIN blocks AS B ON B.idx = PBH.block_idx  where PH.pair_idx=1   ORDER BY PH.hitnum  asc
  */
@@ -205,7 +205,7 @@ public class QueryPanel extends JPanel {
 	/****************************************************
 	 * XXX Make query
 	 **************************************************/
-	private String makeSQLquery() {
+	private String makeSQLclause() {
 		grpCoords.clear(); // in case makeSpChrWhere is not called
 
 		bValidQuery=true;
@@ -213,8 +213,8 @@ public class QueryPanel extends JPanel {
 		boolean bSingle = isSingle();
 		
 		String sql = "SELECT " + theFields.getDBFieldList(bSingle);
-		if (bSingle) sql += makeSingleSQL();
-		else         sql += makePairSQL(theFields.getJoins());
+		if (bSingle) sql += makeSQLsingle();
+		else         sql += makeSQLpair(theFields.getJoins());
 
 		if (!bValidQuery) return null;
 		return sql;
@@ -226,7 +226,7 @@ public class QueryPanel extends JPanel {
 	 *  	   Add the Genes Only - this is all genes regardless of pairs
 	 *  CAS547 Add Gene with hits, which displays all hit
 	 */
-	private String makeSingleSQL() {
+	private String makeSQLsingle() {
 		if (!speciesPanel.isAtLeastOneSpChecked()) {
 			showWarnMsg("At least one species must be checked (i.e. before Species name).");
 			bValidQuery=false;
@@ -262,13 +262,13 @@ public class QueryPanel extends JPanel {
 	 * Hit SELECT " + getDBFieldList() + " FROM pseudo_hits AS " + Q.PH + whereClause
 	 * isOneAnno and annotatin requires postprocessing, though anno exists is checked below
 	 */
-	private String makePairSQL(String join) {
+	private String makeSQLpair(String join) {
 		if (isMultiN() || isClustN()) { // CAS561 these are the only text boxes not checked until computed
 			getMultiN(); if (!bValidQuery) return "";
 			getClustN(); if (!bValidQuery) return "";
 		}
 		
-		String whereClause = " where " + speciesPanel.getPairIdxWhere(); // PH.pair_idx in (...)
+		String whereClause = "\n where " + speciesPanel.getPairIdxWhere(); // PH.pair_idx in (...)
 		
 		// Chr, loc;
 		whereClause = makeJoinBool(whereClause, makeSpChrLocWhere(), AND);
@@ -293,12 +293,16 @@ public class QueryPanel extends JPanel {
 			if (isBlock())         	whereClause = makeJoinBool(whereClause, "PBH.block_idx is not null", AND);
 			else if (isNotBlock()) 	whereClause = makeJoinBool(whereClause, "PBH.block_idx is null", AND);
 			
+			// CAS565 was using PH.annot1_idx and PH.annot2_idx for =0, >0 and, >0; isOne was finished in DBdata
 			if (isNoAnno())	 
-				whereClause = makeJoinBool(whereClause, "(PH.annot1_idx=0 and PH.annot2_idx=0) AND PA.idx is null", AND); // 'is null' is necessary. 
-			else if (isBothAnno() || isMultiTandem()) 														// CAS543 add search here instead of DBdata
-				whereClause = makeJoinBool(whereClause, "(PH.annot1_idx>0 and PH.annot2_idx>0)", AND); 
-			else if (isOneAnno() || isMultiN() || isEveryAnno() || isEveryStarAnno() || isAnnoTxt() || isOlapAnno())  // isOne&isMulti finished in DBdata
-				whereClause = makeJoinBool(whereClause, "(PH.annot1_idx>0 or PH.annot2_idx>0)", AND); 
+				whereClause = makeJoinBool(whereClause, "PH.gene_overlap=0", AND); 
+			else if (isBothAnno() || isMultiTandem()) 										// CAS543 add search here instead of DBdata
+				whereClause = makeJoinBool(whereClause, "PH.gene_overlap=2", AND); 
+			else if (isOneAnno())  
+				whereClause = makeJoinBool(whereClause, "PH.gene_overlap=1", AND); 
+			else if (isMultiN() || isGeneNum() || 				// isClust not included because pgenef can have all g0
+					 isEveryAnno() || isEveryStarAnno() || isAnnoTxt() || isOlapAnno())  
+				whereClause = makeJoinBool(whereClause, "PH.gene_overlap>0", AND); 
 			
 			int n = isCoSetN(true);
 			String op = "PH.runsize>=" + n;
@@ -306,7 +310,8 @@ public class QueryPanel extends JPanel {
 			else if (radCoSetLE.isSelected()) op = "PH.runsize>0 and PH.runsize<=" + n;
 			if (n>0) whereClause = makeJoinBool(whereClause, op, AND); // CAS517 was >
 		}
-		return " FROM pseudo_hits AS " + Q.PH + join + " " + whereClause + "  ORDER BY PH.hitnum  asc"; // CAS520 was PH.idx
+		String order = "\n  ORDER BY PH.hitnum  asc";
+		return " FROM pseudo_hits AS " + Q.PH + join + " " + whereClause + order; // CAS520 was PH.idx
 	}	
 	
 	/******************************************************** 
@@ -372,7 +377,7 @@ public class QueryPanel extends JPanel {
 		if (gnStr!=null) gnSearch = "and PA.genenum=" + gnStr;
 		else symap.Globals.eprt("Cannot parse " + txtGeneNum.getText().trim());
 		
-		return "(PH.annot1_idx>0 or PH.annot2_idx>0) " + gnSearch;
+		return "(PH.annot1_idx>0 or PH.annot2_idx>0) " + gnSearch; // okay for pseudo
 	}
 	
 	// The chromosomes are queried in MySQL and the locations in DBdata; Works for both orphan and hit
@@ -494,19 +499,27 @@ public class QueryPanel extends JPanel {
 			
 			if (isClustN()) {
 				String clust = "Cluster >=" + getClustN();
-				String inc="", exc="";
-				for (int i=0; i<speciesName.length; i++) {
-					if (isInclude(i)) inc = makeJoinDelim(inc, speciesName[i],  ",");
-					if (isExclude(i)) exc = makeJoinDelim(exc, speciesName[i],  ",");
-				}
-				if (!exc.equals("")) clust += ", Exc(" + exc + ")";
-				if (!inc.equals("")) {	
-					clust += ", Inc(" + inc + ")";
-					
-					if (isPgeneF) {
-						if (isIncNoGene())		clust += " No anno";
-						else if (isIncTrans())	clust += " Transitive";
-						else if (isIncOne())	clust += " At least one";
+				if (nSpecies>2) { 				// CAS565 add check
+					String inc="", exc="";
+					int incCnt=0;
+					for (int i=0; i<speciesName.length; i++) 
+						if (isInclude(i)) incCnt++;
+					if (incCnt==speciesName.length) inc = "All";
+					else {
+						for (int i=0; i<speciesName.length; i++) {
+							if (isInclude(i)) inc = makeJoinDelim(inc, speciesAbbr[i],  ","); // CAS565 change from display name
+							if (isExclude(i)) exc = makeJoinDelim(exc, speciesAbbr[i],  ",");
+						}
+						if (!exc.equals("")) clust += ", Exc(" + exc + ")";
+					}
+					if (!inc.equals("")) {	
+						clust += ", Inc(" + inc + ")";
+						
+						if (isPgeneF) {
+							if (isIncNoGene())		clust += " No anno";
+							else if (isIncTrans())	clust += " Transitive";
+							else if (isIncOne())	clust += " At least one";
+						}
 					}
 				}
 				retVal = makeJoinDelim(retVal, clust, ";  ");
@@ -521,22 +534,22 @@ public class QueryPanel extends JPanel {
 		int numSpecies = speciesPanel.getNumSpecies();
 		
 		String retVal = "";
-		String type = isSingle() ? " Gene Loc " : " Hit Loc "; // CAS541 add type; the locs are checked in DBdata
+		String type = isSingle() ? " Gene Loc " : " Hit Loc "; // the locs are checked in DBdata
 		
 		boolean bAnyNotSel=false;
 		for(int x=0; x<numSpecies; x++) {
-			if (!speciesPanel.isSpEnabled(x)) bAnyNotSel=true; 
+			if (!speciesPanel.isSpEnabled(x)) bAnyNotSel=true;  // if any are not selected
 		}	
 		for(int x=0; x<numSpecies; x++) {
 			if (!speciesPanel.isSpEnabled(x)) continue; 
 				
 			String chroms =  speciesPanel.getSelChrNum(x);
 			if(chroms.equals("All")) {
-				if (bAnyNotSel) retVal = makeJoinDelim(retVal, speciesPanel.getSpName(x), ", ");
+				if (bAnyNotSel) retVal = makeJoinDelim(retVal, speciesPanel.getSpAbbr(x), ", ");// CAS565 change from name
 				continue;
 			}
 			
-			String species = speciesPanel.getSpName(x);
+			String species = speciesPanel.getSpAbbr(x);// CAS565 change from name
 			String start = 	 speciesPanel.getStartkb(x);
 			String end = 	 speciesPanel.getStopkb(x);
 			
@@ -615,12 +628,13 @@ public class QueryPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				setQueryButton(false); // changes to 'Running' and disable; set true in TableMainPanel after table created
 				
-				String query = makeSQLquery();
+				String query = makeSQLclause();
 				
 				if (query!=null) {
 					String sum = makeSummary();
 					theQueryFrame.makeTabTable(query, sum, isSingle());
 				}
+				else setQueryButton(true); // CAS565 was not being reset!
 			}
 		});
 		JButton btnClear = Jcomp.createButton("Clear Filters", "Clear text fields and reset");
@@ -869,7 +883,7 @@ public class QueryPanel extends JPanel {
 	/* Cluster hits */
 		JPanel crow = Jcomp.createRowPanel();
 		if (isPgeneF) chkOnClustN = Jcomp.createCheckBox("PgeneF", "Putative gene families; Sets Group column", false); 
-		else chkOnClustN = Jcomp.createCheckBox("Cluster genes", "Cluster overlapping hits; Sets Group column", false); // CAS563 rename from PgeneF
+		else          chkOnClustN = Jcomp.createCheckBox("Cluster genes", "Cluster overlapping hits; Sets Group column", false); // CAS563 rename from PgeneF
 		
 		chkOnClustN.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) {
@@ -896,13 +910,14 @@ public class QueryPanel extends JPanel {
 		ButtonGroup inc = new ButtonGroup();
 		
 		// PgeneF only; Originally No Annotation, Complete Linkage, At least one checkboxes; now can only select one
-		radIncNoGene = Jcomp.createRadio("No gene","The included species may not have hits that align to genes");
+		lblIncFilters = Jcomp.createLabel("Include: ", "Filters for included species");
 		radIncOne    = Jcomp.createRadio("At least one", "Each group must have at least one of each included species");
-		radIncTrans  = Jcomp.createRadio("Linkage", "For >2 species: for hits A-B and B-C, there must also be hit A-C");
 		radIncIgn    = Jcomp.createRadio("Ignore", "No filters on included species");
-		lblMustHave = Jcomp.createLabel("Include: ", "Filters for included species");
+		radIncNoGene = Jcomp.createRadio("No gene","The included species may not have hits that align to genes");
+		radIncTrans  = Jcomp.createRadio("Linkage", "For >2 species: for hits A-B and B-C, there must also be hit A-C");
+		
 		if (isPgeneF) { // not implemented for Cluster yet
-			crow.add(lblMustHave); 		crow.add(Box.createHorizontalStrut(2));
+			crow.add(lblIncFilters); 	crow.add(Box.createHorizontalStrut(2));
 			crow.add(radIncNoGene); 	crow.add(Box.createHorizontalStrut(2));
 			inc.add(radIncNoGene); 
 			
@@ -910,7 +925,7 @@ public class QueryPanel extends JPanel {
 				crow.add(radIncOne); 		crow.add(Box.createHorizontalStrut(2));
 				crow.add(radIncTrans);  	crow.add(Box.createHorizontalStrut(2));
 				crow.add(radIncIgn);  		crow.add(Box.createHorizontalStrut(2));
-				inc.add(radIncOne); inc.add(radIncTrans); inc.add(radIncIgn); radIncTrans.setSelected(true);
+				inc.add(radIncOne); inc.add(radIncTrans); inc.add(radIncIgn); radIncOne.setSelected(true);
 			}
 			else {
 				crow.add(radIncIgn);  crow.add(Box.createHorizontalStrut(2));
@@ -922,8 +937,10 @@ public class QueryPanel extends JPanel {
 		// Include/exclude
 		Vector<Mproject> theProjects = theQueryFrame.getProjects();
 		speciesName = new String [nSpecies];
+		speciesAbbr = new String [nSpecies];
 		incSpecies = new JCheckBox[nSpecies]; // vector of checkboxes
 		for(int x=0; x<nSpecies; x++) {
+			speciesAbbr[x] = theProjects.get(x).getdbAbbrev();
 			speciesName[x] = theProjects.get(x).getDisplayName();
 			incSpecies[x] = Jcomp.createCheckBox(speciesName[x], true);
 			incSpecies[x].addActionListener(new ActionListener() { // CAS563 add so only inc or ex can be checked
@@ -993,16 +1010,20 @@ public class QueryPanel extends JPanel {
 		// PairRad
 		setRadEnable(true);
 		radBlkIgn.setSelected(true);   radAnnoIgn.setSelected(true);  radCoSetIgn.setSelected(true); 
+		txtCoSetNum.setText(""); txtBlkNum.setText(""); txtHitNum.setText(""); 	txtGeneNum.setText(""); 	
 		if (txtCoSetN.getText().isEmpty()) txtCoSetN.setText(coDefNum); 
 		
-		// PairChk and Group 
-		setChkEnable(nChkNone);
-		txtCoSetNum.setText(""); txtBlkNum.setText(""); txtHitNum.setText(""); 	txtGeneNum.setText(""); 	
+		chkOnMultiN.setSelected(false);
 		if (txtMultiN.getText().isEmpty()) txtMultiN.setText(groupDefNum); 
-		if (txtClustN.getText().isEmpty()) txtClustN.setText(groupDefNum); 
 		radMultiSame.setSelected(true); 
+		setChkEnable(nChkNone);
+		
+		chkOnClustN.setSelected(false);
+		if (txtClustN.getText().isEmpty()) txtClustN.setText(groupDefNum); 
 		if (nSpecies==2) radIncIgn.setSelected(true);
-		else radIncOne.setSelected(true);
+		else 			 radIncOne.setSelected(true);
+		for(int x=0; x<incSpecies.length; x++) incSpecies[x].setSelected(true);
+		for(int x=0; x<exSpecies.length; x++)  exSpecies[x].setSelected(false);
 		
 		setRefresh();
 	}
@@ -1038,7 +1059,7 @@ public class QueryPanel extends JPanel {
 		b = (nChk==nChkClust);
 		chkOnClustN.setEnabled(bn || b);  chkOnClustN.setSelected(b); 
 		lblClustN.setEnabled(b);  txtClustN.setEnabled(b);
-		lblInclude.setEnabled(b); lblExclude.setEnabled(b); lblMustHave.setEnabled(b);
+		lblInclude.setEnabled(b); lblExclude.setEnabled(b); lblIncFilters.setEnabled(b);
 		
 		for(int x=0; x<exSpecies.length; x++)  exSpecies[x].setEnabled(b);
 		
@@ -1084,8 +1105,7 @@ public class QueryPanel extends JPanel {
 		
 		setRefresh();
 	}
-	// CAS561 - I change some stuff around and all of a sudden the panels do not repaint right on enable,
-	// This fixed it, hopefully once and for all.
+	// panels do not repaint right on enable if this is not included
 	private void setRefresh() {
 		searchPanel.revalidate(); searchPanel.repaint();
 		singlePanel.revalidate(); singlePanel.repaint();
@@ -1151,8 +1171,9 @@ public class QueryPanel extends JPanel {
 	private JLabel     lblClustN = null;
 	private JCheckBox [] incSpecies = null, exSpecies = null;
 	private String [] speciesName = null;
+	private String [] speciesAbbr = null;
 	private JRadioButton radIncOne = null, radIncNoGene = null, radIncTrans = null, radIncIgn = null;
-	private JLabel    lblInclude = null, lblExclude = null, lblMustHave = null;
+	private JLabel    lblInclude = null, lblExclude = null, lblIncFilters = null;
 	
 	private boolean bValidQuery=true;
 	

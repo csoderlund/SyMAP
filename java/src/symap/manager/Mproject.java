@@ -446,22 +446,23 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	}
 	public void removeProjectFromDB() {
 	try {
-		// Setup for update numHits for single Query; CAS561  
+		// Setup for update numhits for single Query; CAS561  
 		Vector <Integer> proj2Idx = new Vector <Integer> ();
 		ResultSet rs = dbc2.executeQuery("select proj1_idx, proj2_idx from pairs where proj1_idx=" + projIdx + " or proj2_idx=" + projIdx);
 	    while (rs.next()) {
 	    	int idx1 = rs.getInt(1), idx2 = rs.getInt(2);
-	    	if (idx1==projIdx) proj2Idx.add(idx2); else proj2Idx.add(idx1);
+	    	if (idx1==projIdx) 	proj2Idx.add(idx2); 
+	    	else 				proj2Idx.add(idx1);
 	    }
 	    
 	    /* Main Delete */
         dbc2.executeUpdate("DELETE from projects WHERE name='"+ strDBName+"'");
-        dbc2.resetAllIdx(); // CAS535 changed from individual
+        dbc2.resetAllIdx(); 
         
         nStatus = STATUS_ON_DISK; 
         projIdx = -1; 
         
-        // update numHits; CAS561
+        // update numhits; CAS561
         AnchorMain ancObj = new AnchorMain(dbc2, null, null);
         for (int idx : proj2Idx) {
         	Vector <Integer> gidxList = new Vector <Integer> ();
@@ -476,7 +477,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public void removeProjectAnnoFromDB() {
 	try {
         dbc2.executeUpdate("DELETE pseudo_annot.* from pseudo_annot, xgroups where pseudo_annot.grp_idx=xgroups.idx and xgroups.proj_idx=" + projIdx);
-        dbc2.resetIdx("idx", "pseudo_annot"); // CAS512
+        dbc2.resetIdx("idx", "pseudo_annot"); 
 	} 
 	catch (Exception e) {ErrorReport.print(e, "Remove annotation from DB"); }
 	}	

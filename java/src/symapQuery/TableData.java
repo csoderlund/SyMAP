@@ -1,10 +1,6 @@
 package symapQuery;
-/***************************************************
- * Results table of Query
- * Has ColumnComparator and sortByColumn
- */
-import java.awt.Cursor;
 
+import java.awt.Cursor;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -12,13 +8,17 @@ import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.HashMap;
-
 import javax.swing.JTable;
 import javax.swing.JTextField;
 
 import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
+
+/***************************************************
+ * Results table of Query
+ * Has ColumnComparator and sortByColumn
+ */
 
 public class TableData implements Serializable {
 	private static final long serialVersionUID = 8279185942173639084L;
@@ -210,8 +210,8 @@ public class TableData implements Serializable {
      	
         // General
         String [] genColNames = TableColumns.getGeneralColHead();
-        Class <?> [] genColType =  TableColumns.getGeneralColType();// CAS520 
-        int genColCnt = TableColumns.getGenColumnCount(isSingle); // CAS519
+        Class <?> [] genColType =  TableColumns.getGeneralColType();
+        int genColCnt = TableColumns.getGenColumnCount(isSingle); 
         
     	for(int x=0; x<genColCnt; x++)
     		addColumnHeader(genColNames[x], genColType[x]);
@@ -219,7 +219,7 @@ public class TableData implements Serializable {
     	// Loc headers and type
     	String [] spColNames =	  TableColumns.getSpeciesColHead(isSingle);
     	Class <?> [] spColType =  TableColumns.getSpeciesColType(isSingle);
-    	int spColCnt = TableColumns.getSpColumnCount(isSingle);	// CAS519 less columns for single
+    	int spColCnt = TableColumns.getSpColumnCount(isSingle);	// less columns for single
     	
     	for(int x=0; x < species.length; x++) {
     		String sp = species[x]+ Q.delim ;
@@ -261,7 +261,7 @@ public class TableData implements Serializable {
     				return;
     			}
     			
-    			Vector <Object> row = dd.makeRow();
+    			Vector <Object> row = dd.formatRowForTbl();
     			vData.add(row);
     			
     			if (progress != null && (vData.size() % DISPLAY_INTERVAL == 0)) {
@@ -274,7 +274,7 @@ public class TableData implements Serializable {
     	catch (Exception e) {ErrorReport.print(e, "add Rows With Progress");}
     }
     
-    protected void finalizeX() { // CAS533 added X so not deprecated
+    protected void finalizeX() { // X so not deprecated
     	arrHeaders = new TableDataHeader[vHeaders.size()];
     	vHeaders.copyInto(arrHeaders);
     	vHeaders.clear();
@@ -322,7 +322,7 @@ public class TableData implements Serializable {
 
     protected int getNumColumns() {
 		if(arrHeaders!=null) return arrHeaders.length;
-		if (vHeaders!=null) return vHeaders.size(); // CAS540 there was no 'return'
+		if (vHeaders!=null) return vHeaders.size(); 
 		return 0;
     }
 
@@ -368,7 +368,7 @@ public class TableData implements Serializable {
     	protected ColumnComparator(int column) {
     		nColumn = column;
     	}
-    	public int compare(Object [] o1, Object [] o2) { // CAS504 rewrote much of this
+    	public int compare(Object [] o1, Object [] o2) { 
     	try {
     		if (nColumn == -1) return 0;
     		
@@ -384,7 +384,7 @@ public class TableData implements Serializable {
 		
 			int retval = 0;
 		
-			if (colHeader.endsWith(Q.gStrandCol)) { // CAS519 want '-' to sort normal (not empty)
+			if (colHeader.endsWith(Q.gStrandCol)) { // was separate since strand can be '-', and empty was '-', but now '.'
 				retval = ((String)o1[nColumn]).compareTo((String)o2[nColumn]);
 			}
 			else if (o1[nColumn] instanceof String && ((String)o1[nColumn]).equals(Q.empty) &&
@@ -399,7 +399,7 @@ public class TableData implements Serializable {
 				if(arrHeaders[nColumn].isAscending()) retval = -1;
 				else retval = 1;
 			}
-			else if (colHeader.equals(Q.grpCol)) { // sort on grp# instead of sz
+			else if (colHeader.equals(Q.grpCol)) { // sort on grp# instead of sz; is Sz-Grp (no chr)
 				String [] vals1 = ((String)o1[nColumn]).split(Q.GROUP); 
 				String [] vals2 = ((String)o2[nColumn]).split(Q.GROUP);
 				int n = Math.min(vals1.length, vals2.length);
@@ -418,24 +418,18 @@ public class TableData implements Serializable {
 					else       retval = vals1[x].compareTo(vals2[x]);
 				}
 			}
-			// sorts left to right; chr.chr.sz.num
-			else if (colHeader.equals(Q.blockCol) || colHeader.equals(Q.cosetCol) 
-					|| colHeader.endsWith(Q.gNCol) || colHeader.equals(Q.grpCol)) { // CAS518 add geneNCol; 
+			else if (colHeader.endsWith(Q.gNCol)) { // Sorts left to right (chr.genenum.suffix); CAS565 separate check
 				String [] vals1 = ((String)o1[nColumn]).split(Q.SDOT); 
 				String [] vals2 = ((String)o2[nColumn]).split(Q.SDOT);
+				
+				boolean t1 = (vals1[vals1.length-1].equals(Q.pseudo));
+				boolean t2 = (vals2[vals2.length-1].equals(Q.pseudo));
+				if (t1  && !t2) return 1;
+				if (!t1 &&  t2) return -1;
+				
 				int n = Math.min(vals1.length, vals2.length);
 				
-				if (n==2) { // gNCol only when no suffix; CAS560 add so 'chr#.-' sorts to bottom
-					boolean t1 = vals1.length==2 && vals1[1].equals(Q.dash);
-					boolean t2 = vals2.length==2 && vals2[1].equals(Q.dash);
-					if (t1 || t2) {
-						if (t1  && !t2) return 1;
-						if (!t1 &&  t2) return -1;
-						if (t1  &&  t2) return 0;
-					}
-				}
-				
-				for(int x=0; x<n && retval == 0; x++) {
+				for(int x=0; x<n && retval==0; x++) {
 					boolean valid = true;
 					Integer leftVal = null, rightVal = null;
 					
@@ -445,13 +439,33 @@ public class TableData implements Serializable {
 					}
 					catch(Exception e) {valid = false;} // char for gene#
 					
+					if (valid) retval = leftVal.compareTo(rightVal); // integers
+					else  retval = vals1[x].compareTo(vals2[x]);// geneNum suffix a,b....
+				}
+			}
+			// sorts left to right; chr.chr.sz.num
+			else if (colHeader.equals(Q.blockCol) || colHeader.equals(Q.cosetCol)) {
+				String [] vals1 = ((String)o1[nColumn]).split(Q.SDOT); 
+				String [] vals2 = ((String)o2[nColumn]).split(Q.SDOT);
+				int n = Math.min(vals1.length, vals2.length);
+			
+				for(int x=0; x<n && retval == 0; x++) {
+					boolean valid = true;
+					Integer leftVal = null, rightVal = null;
+					
+					try {
+						leftVal = Integer.parseInt(vals1[x]); 
+						rightVal = Integer.parseInt(vals2[x]);      
+					}
+					catch(Exception e) {valid = false;} 
+					
 					if (valid) retval = leftVal.compareTo(rightVal);
 					else       retval = vals1[x].compareTo(vals2[x]);
 				}
 			}
 			else if (arrHeaders[nColumn].getColumnClass() == String.class) {
 				boolean bIsIntCompare = false; // Chr is string but can have integer values
-				Integer val1 = -1, val2 = -1;  // CAS514 int->Integer so can use compareTo below
+				Integer val1 = -1, val2 = -1;  // Integer so can use compareTo below
 				
 				if (arrHeaders[nColumn].getColumnName().contains(Q.chrCol)) {
 					bIsIntCompare = true;
@@ -464,7 +478,7 @@ public class TableData implements Serializable {
 				}
 				
 				if (bIsIntCompare || o1[nColumn] instanceof Integer)
-					retval = val1.compareTo(val2); //new Integer(val1).compareTo(new Integer(val2));
+					retval = val1.compareTo(val2); 
 				else
 					retval = ((String)o1[nColumn]).compareTo((String)o2[nColumn]);
 			}
@@ -481,7 +495,7 @@ public class TableData implements Serializable {
 			else if( arrHeaders[nColumn].getColumnClass() == Long.class)
 				retval = ((Long)o1[nColumn]).compareTo((Long)o2[nColumn]);
 			
-			if (retval==0) return 0;  // CAS520 add 0 check
+			if (retval==0) return 0; 
 			if(arrHeaders[nColumn].isAscending())	return retval;
 			else									return retval * -1;
     	}
@@ -513,7 +527,7 @@ public class TableData implements Serializable {
 			else if (colName.endsWith(Q.hEndCol)) 	headVal.put(colName, arrData[row][i]);
 			else if (colName.endsWith(Q.gNCol)) 	headVal.put(colName, arrData[row][i]);
 			else if (colName.equals(Q.blockCol)) 	headVal.put(colName, arrData[row][i]);
-			else if (colName.equals(Q.cosetCol)) 		headVal.put(colName, arrData[row][i]); 
+			else if (colName.equals(Q.cosetCol)) 	headVal.put(colName, arrData[row][i]); 
 			else if (colName.equals(Q.hitCol)) 		headVal.put(colName, arrData[row][i]); 
 			else if (colName.equals(Q.grpCol)) 		headVal.put(colName, arrData[row][i]); 
 		}

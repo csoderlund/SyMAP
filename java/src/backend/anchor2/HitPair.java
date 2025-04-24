@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import symap.Globals;
 import util.ErrorReport;
 
 /*************************************************************
@@ -191,7 +192,7 @@ public class HitPair {
 		xSumId  = (int) Math.round(sumHitId[ix]);		
 		xSumSim = (int) Math.round(sumHitSim[ix]);
 		
-		setSign(); // CAS548 make sign agree with gene strands; 
+		setSign(); // make sign agree with gene strands; 
 
 		if (tGene!=null && qGene!=null) { // nHitOlap can be the same for overlapping genes; so use length
 			if (tGene.gLen < qGene.gLen) lenRatio = (double)tGene.gLen/(double)qGene.gLen;
@@ -226,13 +227,13 @@ public class HitPair {
 	}
 	catch (Exception e) {ErrorReport.print(e, "Setting scores"); throw e;}
 	}
-
+	/** is Hit signs same as gene signs; set isRst=false if not **/
 	protected void setSign() {
 	try {
 		sign = hitList.get(0).sign;
-		boolean isEQ = Arg.isEqual(sign); 
+		boolean isHitEQ = Arg.isEqual(sign); 
 		if (gtype==Arg.type0 || gtype==Arg.type2) { // get best order (g2 used for printout)
-			int same=0,diff=0;
+			int same=0, diff=0;
 			for (Hit ht :hitList) {
 				if (ht.sign.equals(sign)) same++;
 				else diff++;
@@ -242,16 +243,16 @@ public class HitPair {
 		// sign - checked in GrpPairGx for consistency
 		if (tGene!=null && qGene!=null) {
 			boolean isGnEQ = tGene.strand.equals(qGene.strand);
-			isRst = (isGnEQ==isEQ);			
+			isRst = (isGnEQ==isHitEQ);	
 			sign = (isRst) ? qGene.strand + "/" + tGene.strand : sign;
 		}
 		else if (qGene!=null) {
-			if (isEQ) sign = qGene.strand + "/" + qGene.strand;
+			if (isHitEQ) sign = qGene.strand + "/" + qGene.strand;
 			else if (qGene.strand.equals("+")) sign = "+/-";
 			else sign =  "-/+";
 		}
 		else if (tGene!=null) {
-			if (isEQ) sign = tGene.strand + "/" + tGene.strand;
+			if (isHitEQ) sign = tGene.strand + "/" + tGene.strand;
 			else if (tGene.strand.equals("+")) sign = "-/+";
 			else sign =  "+/-";
 		}
@@ -347,29 +348,27 @@ public class HitPair {
 		hitList.clear();
 	}
 	// symap -wsp outputs this; documented in SystemHelp under Clusters; see GrpPairGx.runG2.processWS
-	protected String toWSResults(String chrPair) { 
-		String [] chr = chrPair.split(",");
+	protected String toWSResults() { // CAS565 modified output a little
 		String eq = isStEQ ? " =" : "!=";
 		eq = qGene.strand + "/" + tGene.strand + "  " + eq;
 	
 		String locq = String.format("[%5.1f  %5.1f  %,7dbp]", pExonHitCov[Q], pGeneHitCov[Q], (hpEnd[Q]-hpStart[Q]+1));
 		String loct = String.format("[%5.1f  %5.1f  %,7dbp]", pExonHitCov[T], pGeneHitCov[T], (hpEnd[T]-hpStart[T]+1));
 		
-		return String.format("%-5d  %-10s %-10s   %s   %s   [%s %s] %s %s", 
-				 nHits, qGene.geneTag, tGene.geneTag, locq, loct,  htype, eq, chr[Q], chr[T]);
+		return String.format("%-5d  %-8s  %-10s %-10s   %s   %s  ", nHits, eq, qGene.geneTag, tGene.geneTag, locq, loct);
 	}
-	/********* Trace output *************************************************/
+	/********* Trace output; CAS565 put Q before T *************************************************/
 	protected String toResultsGene() {
-		String n1 = (tGene!=null) ? tGene.geneTag : "None"; n1 = String.format("T#%-6s", n1);
-		String n2 = (qGene!=null) ? qGene.geneTag : "None"; n2 = String.format("Q#%-6s", n2);
+		String n1 = (qGene!=null) ? qGene.geneTag : "None"; n1 = String.format("Q#%-6s", n1);
+		String n2 = (tGene!=null) ? tGene.geneTag : "None"; n2 = String.format("T#%-6s", n2);
 		
 		String cb = (cHitNum==0) ?  String.format("[b%-5d]", bin) : String.format("[CL%-5d b%-5d]", cHitNum, bin);
 		
 		String mb = String.format("%s %s %s %s", flag, cb, n1, n2);
-		String me = String.format("[E %5.1f %5.1f | %5.1f %5.1f]", pExonHitCov[T], pExonHitCov[Q], pExonHitFrac[T], pExonHitFrac[Q]);
-		String mg = String.format("[G %5.1f %5.1f | %5.1f %5.1f]", pGeneHitCov[T], pGeneHitCov[Q], pGeneHitOlap[T], pGeneHitOlap[Q]);
-		String mh = String.format("[H %5.1f %5.1f]", pHitGapCov[T], pHitGapCov[Q]);
-		String m4 = String.format("[M %,6d %,6d %,6d %.2f]", xMaxCov, Arg.hprLen(T,this),  Arg.hprLen(Q,this), lenRatio);
+		String me = String.format("[E %5.1f %5.1f | %5.1f %5.1f]", pExonHitCov[Q], pExonHitCov[T], pExonHitFrac[Q], pExonHitFrac[T]);
+		String mg = String.format("[G %5.1f %5.1f | %5.1f %5.1f]", pGeneHitCov[Q], pGeneHitCov[T], pGeneHitOlap[Q], pGeneHitOlap[T]);
+		String mh = String.format("[H %5.1f %5.1f]", pHitGapCov[Q], pHitGapCov[T]);
+		String m4 = String.format("[M %,6d %,6d %,6d %.2f]", xMaxCov, Arg.hprLen(Q,this),  Arg.hprLen(T,this), lenRatio);
 		
 		String eq = (isStEQ) ? "EQ" : "NE";
 		String ws =  (!isRst && tGene!=null && qGene!=null)  ? "WS" +sign : " " + sign;   // hit sign does not agree with gene
@@ -377,17 +376,17 @@ public class HitPair {
 
 		return String.format("%s %s %s %s %s %s", mb, me, mg, mh, m4, m5);
 	}
-	protected String toResults(String chrs, boolean bHits) { 	                                 
-		String pil = (pile[T]>0 || pile[Q]>0) ? String.format("[P%3d P%3d]", pile[T], pile[Q]) : ""; 
+	protected String toResults(String chrs, boolean bHits) {                               
+		String pil = (pile[T]>0 || pile[Q]>0) ? String.format("[P%3d P%3d]", pile[Q], pile[T]) : ""; 
 		String id = String.format("[id %2d]", xSumId);
 		String o  = (!isOrder) ? "DO" : "  ";
 	
 		String msg;
 		if (tGene==null && qGene==null) {
 			String cb = (cHitNum==0) ?  String.format("[b%-5d]", bin) : String.format("[CL%-5d b%-5d]", cHitNum, bin);
-			String ms = String.format("[S %,6d %,6d]", (int) hpStart[T], (int)hpStart[Q]);
-			String mo = String.format("[C %,6d %,6d]", (int) pGeneHitOlap[T], (int)pGeneHitOlap[Q]);
-			String mh = String.format("[H %5.1f %5.1f]", pHitGapCov[T], pHitGapCov[Q]);
+			String ms = String.format("[S %,6d %,6d]", (int) hpStart[Q], (int)hpStart[T]);
+			String mo = String.format("[C %,6d %,6d]", (int) pGeneHitOlap[Q], (int)pGeneHitOlap[T]);
+			String mh = String.format("[H %5.1f %5.1f]", pHitGapCov[Q], pHitGapCov[T]);
 			String ml = String.format("[%.2f]", lenRatio);
 			String m3 = String.format("%s #%d %s %-12s %s %s", pil, nHits, o, note, id, chrs);
 			msg = String.format(">%-3s:%c %s TQ%d %s %s %s %s %s", Arg.strType[gtype], flag, cb, nHpr, ms, mo, mh, ml, m3);
@@ -413,13 +412,13 @@ public class HitPair {
 		return msg;
 	}
 	protected String toPileResults() {
-		String loc = String.format("[T %,10d %,10d][Q %,10d %,10d]", hpStart[T],hpEnd[T], hpStart[Q], hpEnd[Q]);
+		String loc = String.format("[Q %,10d %,10d][T %,10d %,10d]", hpStart[Q],hpEnd[Q], hpStart[T], hpEnd[T]);
 		String s =  (note.contains("Split")) ? "BinSpl " : "";  // created from bin split
 		String n1 = (tGene!=null) ? tGene.geneTag : "None";
 		String n2 = (qGene!=null) ? qGene.geneTag : "None";
 		
 		return String.format(
-			">%-3s:%c %s %,7d T#%-6s Q#%-6s [P %5d %5d] %s #%d %s %s", 
-			Arg.strType[gtype], flag, htype, xMaxCov, n1, n2, pile[T],pile[Q],  loc, nHits, sign, s);
+			">%-3s:%c %s %,7d Q#%-6s T#%-6s [P %5d %5d] %s #%d %s %s", 
+			Arg.strType[gtype], flag, htype, xMaxCov, n1, n2, pile[Q],pile[T],  loc, nHits, sign, s);
 	}
 }

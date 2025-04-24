@@ -9,10 +9,7 @@ import symap.Globals;
 import util.ErrorReport;
 
 /*************************************************************
- * For included species:
- * bIncLink:  each hit overlaps every other hit in cluster
- * bIncAll:   all included species occur at least once in cluster
- * bIncUnAnno: included must not be annotated
+ * Only g2 and g1 as gene based.
  */
 public class ComputeClust {
     // Output: inRows is also outRows, as it is replaced with the filter set
@@ -24,7 +21,9 @@ public class ComputeClust {
 	private QueryPanel qPanel;
 	private Vector <DBdata> inRows;		// Rows will be removed in DBdata if no hitIdx2Grp entry
 	private JTextField loadStatus;
-	private boolean bIncOne, bIncNoGene, bIncTrans, bHasExc=false, bHasInc=false;
+	private boolean bIncOne=true; // always on for included species
+	private boolean bHasExc=false, bHasInc=false;
+	private boolean bIncNoGene=false; // not implemented yet
 	private int cutoff=0;
 	
 	//From query panel
@@ -60,9 +59,6 @@ public class ComputeClust {
 		initFilters();  if (!bSuccess) return;
 		
 		computeG2();	if (!bSuccess) return;
-		computeG1();	if (!bSuccess) return;
-		computeG0();	if (!bSuccess) return;
-		
 		filterClust();	if (!bSuccess) return;
 		makeOutput();
 	} 
@@ -77,10 +73,10 @@ public class ComputeClust {
 		int rowNum=0;
 		for (DBdata dd : inRows) {
 			if (rowNum++ % Q.INC ==0) { // CAS564 checked stopped
-				if (loadStatus.getText().equals(Q.stop)) {bSuccess=false; return;} // CAS564 got this working; uses Stopped
+				if (loadStatus.getText().equals(Q.stop)) {bSuccess=false; return;} // CAS564 uses Stopped
 				loadStatus.setText("Cluster " + rowNum + " rows...");
 			}
-			if (dd.annotIdx[0]<=0 || dd.annotIdx[1]<=0) continue;
+			if (dd.annotIdx[0]<=0 || dd.annotIdx[1]<=0) continue; // pseudo_genes have annotIdx; CAS565 
 			if (filterRow(dd)) continue;
 			
 			Cluster clObj0 = gnClMap.containsKey(dd.annotIdx[0]) ?  gnClMap.get(dd.annotIdx[0]) : null;
@@ -107,19 +103,7 @@ public class ComputeClust {
 	}
 	catch (Exception e) {ErrorReport.print(e, "ParseRowsG2"); bSuccess=false;}
 	}
-	/***********************************************************/
-	private void computeG1() {
-	try {
-
-	}
-	catch (Exception e) {ErrorReport.print(e, "ParseRowsG1"); bSuccess=false;}
-	}
-	/***********************************************************/
-	private void computeG0() {
-	try {
-	}
-	catch (Exception e) {ErrorReport.print(e, "ParseRowsG0"); bSuccess=false;}
-	}
+	
 	/***********************************************************
 	 * If a row has an included annotated species, then do not process at all
 	 *******************************************************/
@@ -163,16 +147,6 @@ public class ComputeClust {
 					}
 				}
 				if (cl.clNum==0) continue;
-			}
-			if (bIncTrans) {
-				boolean bNotTrans=false;
-				
-				for (int i0=0; i0<cl.hitMap.size()-1; i0++) {
-					for (int i1=i0+1; i1<cl.hitMap.size()-1; i1++) {
-						
-					}
-				}
-				
 			}
 		}
 		Globals.tprt(String.format("Filter: N %,d   All: %,d   Exc: %,d", cntNfil, cntAllfil, cntExc));
@@ -239,9 +213,6 @@ public class ComputeClust {
 	 **************************************************/
 	private void initFilters() { 
 	try {
-    	bIncOne 	= qPanel.isIncOne();
-    	bIncNoGene 	= qPanel.isIncNoGene();
-    	bIncTrans 	= qPanel.isIncTrans();
     	cutoff 		= qPanel.getClustN();
     	
     	SpeciesPanel spPanel = qPanel.getSpeciesPanel();
@@ -305,9 +276,6 @@ public class ComputeClust {
 		}  
 		private void mergeCluster(Cluster cObj) {
 			for (DBdata dd : hitMap.values()) addHitG2(dd);
-		}
-		private boolean inCoordsInCluster(DBdata dd) {
-			return true;
 		}
 		public String toString() {
 			String msg= clNum + ". " + hitMap.size() + " Hits: ";

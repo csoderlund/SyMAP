@@ -56,7 +56,7 @@ public class GrpPair {
 		
 		this.plog = plog;
 		
-		traceHeader = projT + "-" + chrT + " " + projQ + "-" + chrQ + " " + mainObj.fileName;
+		traceHeader = projQ + "-" + chrQ + " " + projT + "-" + chrT + " " + mainObj.fileName;
 	}
 	
 	/*****************************************
@@ -87,7 +87,7 @@ public class GrpPair {
 	 * Each grp-grp pair starts the nBin where the last grp-grp pair left off
 	 */
 	protected boolean buildClusters() {	
-		if (Arg.TRACE) Utils.prtIndentMsgFile(plog, 1, "Compute clusters for T-" + tChr + " and Q-" + qChr);
+		if (Arg.TRACE) Utils.prtIndentMsgFile(plog, 1, "Compute clusters for Q-" + qChr + " and T-" + tChr);
 		
 		gpGxObj = new GrpPairGx(this);			// filtered g2,g1,g0 hitpairs;  create gxPairList
 		bSuccess   = gpGxObj.run(); 		    if (fChk()) return false; 

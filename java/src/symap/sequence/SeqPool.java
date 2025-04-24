@@ -71,7 +71,8 @@ public class SeqPool {
 					+ " WHERE grp_idx=" + grpIdx + " and ";  
 			
 			for (int i=0; i<2; i++) {
-				String sql = (i==0) ? " type='gene' " : " type!='gene' ";
+				String sql = (i==0) ? " type='" + Globals.geneType + "'" 
+				: " (type!='" + Globals.geneType + "' && type!='" + Globals.pseudoType + "')"; // CAS565 add pseudo
 				rs = dbc2.executeQuery(annot_query + sql + " order by start ASC"); // CAS560 add order to be sure
 				while (rs.next()) {
 					annot_idx = rs.getInt(1);		
@@ -86,10 +87,10 @@ public class SeqPool {
 					numhits = rs.getInt(10);
 						
 					tag = (tag==null || tag.contentEquals("")) ? type : tag; 
-					if (type.equals("gene")) itype = Annotation.GENE_INT;
-					else if (type.equals("exon")) itype = Annotation.EXON_INT;
-					else if (type.equals("gap")) itype = Annotation.GAP_INT;
-					else if (type.equals("centromere")) itype = Annotation.CENTROMERE_INT;
+					if (type.equals(Globals.geneType)) 		itype = Annotation.GENE_INT;
+					else if (type.equals(Globals.exonType)) itype = Annotation.EXON_INT;
+					else if (type.equals(Globals.gapType)) 	itype = Annotation.GAP_INT;
+					else if (type.equals(Globals.centType)) itype = Annotation.CENTROMERE_INT;
 					else {
 						itype=Annotation.numTypes+1;
 						System.out.println(tag + " unknown type: " + type);

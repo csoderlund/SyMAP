@@ -107,8 +107,10 @@ public class UtilReport extends JDialog {
 	// GroupN: see buildCompute
 	//	tmpRefMap key; a Gene# can be in the table multiple times, hence, the search key is "tag grpN"
 	/***************************************************************************/
-	protected UtilReport(TableMainPanel tdp) { // this is called 1st time for Query
-		this.tdp = tdp;
+	protected UtilReport(TableMainPanel tdp) { // called 1st time for a Table; the report options can change, but not query
+		this.tdp = tdp;			// rows of the table are read for report
+		
+		queryMultiN3 = tdp.queryPanel.getMultiN();	// CAS565 was zero if a diff query was done and then came back to this table
 		spPanel = tdp.queryPanel.speciesPanel;
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -305,7 +307,7 @@ public class UtilReport extends JDialog {
     	btnOK = Jcomp.createButton("Create", "Create gene pair report");
     	btnOK.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				doReport();
+				runReport();
 			}
 		});
 		btnCancel = Jcomp.createButton(Jcomp.cancel, "Cancel action");
@@ -318,7 +320,7 @@ public class UtilReport extends JDialog {
 		btnClear = Jcomp.createButton("Clear", "Clear values and reset defaults");
 		btnClear.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				clear();
+				runClear();
 			}
 		});
 		
@@ -358,7 +360,7 @@ public class UtilReport extends JDialog {
 	/**************************************************************8
 	 * Shared
 	 */
-	private void doReport() {
+	private void runReport() {
 	/*-------- Settings ---------*/
 		spInputKey = new String [nSpecies];				// List of input keywords per species
 		for (int i=0; i<nSpecies; i++) spInputKey[i]=""; 
@@ -398,7 +400,6 @@ public class UtilReport extends JDialog {
 		bAllUnion2   = radAllSpUnion.isSelected(); 
 		bShowNum23   = chkShowNum.isSelected();
 		bShowLink1   = chkShowLinks.isSelected();
-		queryMultiN3 = tdp.queryPanel.getMultiN();
 		
 		brLine = (bExTsv) ? tsvBr : htmlBr;
 			
@@ -428,7 +429,7 @@ public class UtilReport extends JDialog {
 	    });
 	    inThread.start();
 	}
-	private void clear() {
+	private void runClear() {
 		radSpecies[0].setSelected(true);
 		for (int i=0; i<nSpecies; i++) txtSpKey[i].setText("");
 		
@@ -450,17 +451,18 @@ public class UtilReport extends JDialog {
 	private void buildCompute() {
 	try {	
 		note = ""; // may have been used last time
-		// tmpRowVec: Get all rows with both genes and Ref is one of them
+		
+		// tmpRowVec: Get all rows with both genes(or pseudos) and Ref is one of them
 		ArrayList <TmpRowData> rowDataVec = new ArrayList <TmpRowData>  ();
 		for (int row=0; row<tdp.theTableData.getNumRows(); row++) {
 			TmpRowData trd = new TmpRowData(tdp);
 			trd.loadRow(row);
 			
-			if (!trd.geneTag[0].contains(Q.dash) && !trd.geneTag[1].contains(Q.dash)) {
-				if (trd.spIdx[0]==refSpIdx || trd.spIdx[1]==refSpIdx) {
-					rowDataVec.add(trd);	
-				}
-			}
+			if (trd.spIdx[0]!=refSpIdx && trd.spIdx[1]!=refSpIdx) continue;
+			if (trd.geneTag[0].endsWith(Q.pseudo) && trd.geneTag[0].split(Q.SDOT).length<3) continue; //include numbered pseudo; CAS565 
+			if (trd.geneTag[1].endsWith(Q.pseudo) && trd.geneTag[1].split(Q.SDOT).length<3) continue;
+			
+			rowDataVec.add(trd);	
 		}
 		if (rowDataVec.size()==0) return;
 		
@@ -504,7 +506,8 @@ public class UtilReport extends JDialog {
 		// geneVec: sort by chr, by geneNum, by suffix
 		Collections.sort(geneVec, new Comparator<Gene> () {
 			public int compare(Gene a, Gene b) {
-				if (a.rGrpN!=b.rGrpN) return a.rGrpN-b.rGrpN;	// CAS563 stop for groupN, start for groupP
+				if (a.rGrpN!=b.rGrpN) return a.rGrpN-b.rGrpN;	
+				
 				if (!a.rChr.equals(b.rChr)) {
 					int c1=0, c2=0;
 					try {
@@ -562,7 +565,7 @@ public class UtilReport extends JDialog {
 					for (String tag : tagList) {
 						String key = pos + keyDot + tag; 		// sp.chr.gene#
 						Union unObj = (nrTagUnMap.containsKey(key)) ? nrTagUnMap.get(key) : new Union();
-						unObj.ugeneVec.add(refGn); // add refGn to then non-ref gene that it hits
+						unObj.ugeneVec.add(refGn); 				// add refGn to then non-ref gene that it hits
 						
 						if (!nrTagUnMap.containsKey(tag)) nrTagUnMap.put(key, unObj);
 					}
@@ -753,7 +756,7 @@ public class UtilReport extends JDialog {
 			}
 		}
 		else note = String.format("%,d merged rows", cntMerged);
-		
+	
 		tagRowMap.clear();
 		geneVec.clear();
 		geneVec = newGeneVec;
@@ -1258,7 +1261,7 @@ public class UtilReport extends JDialog {
 						else if (bIsMulti3){
 							for (int j=0; j<gnTok.length; j++) {
 								String tag = gnTok[j];
-								if (bShowNum23) {// can be multi Groups for same Species diff chr
+								if (bShowNum23) {			// can be multi Groups for same Species diff chr
 									if (tag.startsWith(isMulti) || tag.startsWith(htmlBr)) 
 										tag = "<b>" + tag + "</b>";
 								}

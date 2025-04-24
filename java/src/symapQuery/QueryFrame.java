@@ -42,7 +42,8 @@ public class QueryFrame extends JFrame {
 	/******************************************************
 	 * ManagerFrame creates this object, add the projects, then calls build.
 	 */
-	public QueryFrame(String title, DBconn2 dbc2, Vector <Mproject> pVec, boolean useAlgo2) {
+	public QueryFrame(String title, DBconn2 dbc2, Vector <Mproject> pVec, 
+			boolean useAlgo2, int cntUsePseudo, int cntSynteny) {
 		setTitle("Query " + title); // title has: SyMAP vN.N.N - dbName
 		
 		this.title = title;
@@ -50,7 +51,9 @@ public class QueryFrame extends JFrame {
 		
 		theProjects = new Vector<Mproject> ();			
 		for (Mproject p: pVec) theProjects.add(p);
-		this.bUseAlgo2 = useAlgo2; 						
+		this.bUseAlgo2 = useAlgo2; 		
+		this.cntUsePseudo = cntUsePseudo;
+		this.cntSynteny = cntSynteny;
 		
 		// for column saving, including cookies
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -339,7 +342,8 @@ public class QueryFrame extends JFrame {
 	/**********************************************************/
 	private DBconn2 tdbc2 = null;
 	private Vector<Mproject> theProjects = null;
-	private boolean bUseAlgo2=false;
+	protected boolean bUseAlgo2=false;
+	protected int cntUsePseudo=0, cntSynteny=0; // CAS565 for instructions
 	
 	private int screenWidth, screenHeight;
 	private JSplitPane splitPane = null;

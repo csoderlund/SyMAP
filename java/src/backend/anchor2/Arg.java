@@ -2,7 +2,6 @@ package backend.anchor2;
 
 import backend.Constants;
 import symap.Globals;
-import util.ProgressDialog;
 
 /***************************************************************
  * Constants and input Parameters for backend.anchor2 only

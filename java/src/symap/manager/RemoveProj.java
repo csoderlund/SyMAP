@@ -40,8 +40,8 @@ public class RemoveProj {
 		}
 		else {
 			rc = Utilities.showConfirm3(title,msg +
-				"\n\nOnly: remove project" +
-				"\nAll: remove project and alignments from disk");
+				"\n\nOnly: Remove project" +
+				  "\nAll:  Remove project and alignments from disk");
 			if (rc==0) return;
 		}
 		
@@ -87,16 +87,17 @@ public class RemoveProj {
 				progress.appendText(msg);
 				
 				try {
-					try { Thread.sleep(1000);}// CAS505 see if this stops it from crashing on Linux in progress.start
+					try { Thread.sleep(1000);}// stops it from crashing on Linux in progress.start
 					catch(Exception e){}
 
-					removeAllAlignFromDisk(mProj, true, progress); // CAS534 remove top dir
+					removeAllAlignFromDisk(mProj, true, progress); 
 					
+					// Remove project
 					String path = Constants.seqDataDir + mProj.getDBName();
 					
 					File f = new File(path);
 					Utilities.deleteDir(f);
-					if (f.exists()) f.delete();// CAS505 not removing topdir on Linux, so try again
+					if (f.exists()) f.delete();// not removing topdir on Linux, so try again
 				}
 				catch (Exception e) {
 					success = false;
@@ -190,10 +191,15 @@ public class RemoveProj {
 			return true;
 		} catch (Exception e) {ErrorReport.print(e, "Remove all alignment files"); return false;}
 	}
-	// clear pair and remove project from disk
-	private void removeAlignFromDisk(File f, boolean rmTopDir) { // For project
+	// Clear Pair and Remove project from disk
+	private void removeAlignFromDisk(File f, boolean rmTopDir) { 
 	try {
-		if (rmTopDir) { // only happens on remove project from disk
+		if (!Utilities.showConfirm2("Remove from disk", "Remove MUMmer " + f.getName())) {// CAS565 add confirm
+			System.out.println("    Cancel removal of " + f.getName());
+			return; 
+		}
+		
+		if (rmTopDir) { // only happens on Remove project from disk
 			System.out.println("    remove " + f.getName());
 			Utilities.deleteDir(f);
 			if (f.exists()) f.delete();
@@ -201,7 +207,7 @@ public class RemoveProj {
 		else { // leave params file
 			File f1 = new File(f.getAbsoluteFile() + "/" + Constants.alignDir);
 			if (f1.exists()) {
-				System.out.println("    remove " + f.getName());
+				System.out.println("    remove MUMmer " + f.getName());
 				Utilities.deleteDir(f1);
 				if (f1.exists()) f1.delete();
 			}

@@ -43,6 +43,7 @@ public class AnchorMain2 {
 	
 	protected int cntG2=0, cntG1=0, cntG0=0, cntClusters=0; 			// GrpPair.saveClusterHits
 	protected int cntG2Fil=0, cntG1Fil=0, cntG0Fil=0, cntPileFil=0;   	// GrpPair.createClusters
+	protected int cntWS=0;												// GrpPair.GrpPairGx 
 	
 	protected PrintWriter fhOutHit=null, fhOutCl=null, fhOutGene=null, fhOutPile=null;
 	protected PrintWriter [] fhOutHPR = {null,null,null};
@@ -118,7 +119,12 @@ public class AnchorMain2 {
 		int total = cntG2Fil+cntG1Fil+cntG0Fil;
 		String msg2 = String.format("%,10d Filtered  Both genes %,8d   One gene %,8d   No gene %,8d   Pile hits %,d",
 				total, cntG2Fil, cntG1Fil, cntG0Fil, cntPileFil);
-		Utils.prtIndentMsgFile(plog, 1, msg2);	
+		Utils.prtIndentMsgFile(plog, 1, msg2);
+		
+		if (Arg.WRONG_STRAND_PRT) { // CAS565 there was no output if there were no WS
+			String msg3 = String.format("%,10d Wrong strand", cntWS);
+			Utils.prtIndentMsgFile(plog, 1, msg3);
+		}
 		
 		if (Arg.TRACE) Utils.prtTimeMemUsage(plog, "   Finish ", totTime); // also writes in AnchorMain after a few more comps
 		
@@ -375,7 +381,7 @@ public class AnchorMain2 {
 				if (donePair.contains(grp2grpkey)) die(chrQ + " and " + chrT + " occurs in multiple files");
 				donePair.add(grp2grpkey);
 				
-				pairObj = new GrpPair(this, grpIdx2, proj1Name, chrT, grpIdx1, proj2Name, chrQ, plog);
+				pairObj = new GrpPair(this, grpIdx2, proj1Name, chrQ, grpIdx1, proj2Name, chrT, plog);
 				grpPairMap.put(grp2grpkey, pairObj);
 			}
 			else pairObj = grpPairMap.get(grp2grpkey);

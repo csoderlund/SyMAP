@@ -63,6 +63,46 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
+<a id="v565"></a>
+<h3>Release: v5.6.5 (24-Apr-25)</h3>
+Updates for Queries: Support for non-annotated hit ends (pseudo genes) bug fixes
+for display of minor genes and a few other little things.
+
+<p>For existing databases: (1) Run <tt>./symap -pseudo</tt>.
+(2) Select the project pair and run A&S.
+<p>Updates:
+<ul>
+<li><ttl>A&S</ttl>
+<ul>
+	<li><ttl>Number Pseudo</ttl>: A new option to number the non-annotated hit ends.
+	This will created 'pseudo genes' that will be numbered sequentially and end with a "~".
+	This is only useful in <ttl>Queries</ttl>.
+	See <a href="SystemHelp.html#pseudo" class="ext" target="_blank">System Help</a>
+	and <a href="Query.html#pseudo" class="ext" target="_blank">Queries</a>.
+	<li>Small change: If '<tt>Remove alignments from disk</tt>' is to be performed, it prompts the user
+	a second time to be sure.
+	<li>The <ttl>Algo2</ttl> -wsp option to print the wrong strand hits had quit working.
+</ul>
+<li><ttl>Queries</ttl>
+<ul>
+	<li><ttl>Cluster Genes:</ttl>
+	If <ttx>Number Pseudo</ttx> was used, un-annotated will be included in the clusters.
+	<br>Updated to make the resulting cluster have at least one gene from each
+	included species.
+	<li><ttl>Gene Report</ttl>: If <ttx>Number Pseudo</ttx> was used, un-annotated  will be included
+	for the non-reference genes.
+	<li>Shorten query summary: Use species abbreviations instead of full display name.
+	The Cluster will use 'Inc(All)' instead of listing all species.
+	<li>Bug fixes for displaying <i>minor</i> genes: Two minor genes could be incorrectly paired in the table.
+	<br>From v5.6.4: (1) A gene could be paired with what appeared
+	to be an unannotated end, i.e. there would be no gene information, but the minor hit information
+	was correct. (2) The <ttx>Every+</ttx> would not work with the <ttx>Multi-hit</ttx> option.
+	<li>Bug fix from v5.6.4: If the user input was incorrect, it was stuck in "Running" mode.
+	The <ttx>Multi-gene</ttx> report would show rows that were not reference if the report was run,
+	another query was done and the user came back to this one.
+</ul>
+</ul>
+
 <a id="v564"></a>
 <h3>Release: v5.6.4 (10-Apr-25)</h3>
 Minor release for Queries: two new small features, one bug fix (from v563), and few other small things.
@@ -78,7 +118,7 @@ Minor release for Queries: two new small features, one bug fix (from v563), and 
 	<ul>
 		<li>The <ttl>Stop</ttl> did nothing; it works now.
 		<li>If multiple queries are running at once, they will fail;
-		see <a href="Query.html#queryMultP" class="ext" target="_blank">Run/Stop Query</a>.
+		see <a href="Query.html#stop" class="ext" target="_blank">Wait/Stop Query</a>.
 		<li>If a different table tab was clicked while one was building, it produced an error message though
 		there was no problem.
 	</ul>

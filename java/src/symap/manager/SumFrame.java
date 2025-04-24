@@ -300,7 +300,7 @@ public class SumFrame extends JDialog implements ActionListener {
 						+ "join pseudo_hits_annot as pha on pha.hit_idx = ph.idx " 
 						+ "join pseudo_annot      as pa  on pa.idx      = pha.annot_idx " 
 						+ "join xgroups           as xg  on xg.idx      = pa.grp_idx "
-						+ "where pair_idx=" + pairIdx;
+						+ "where pair_idx=" + pairIdx + " and gene_overlap>0"; // CAS565 add for pseudo
 		int hitGene1 = dbc2.executeInteger(sq  + " and ph.annot1_idx>0 and xg.proj_idx=" + proj1Idx); 
 		int hitGene2 = dbc2.executeInteger(sq  + " and ph.annot2_idx>0 and xg.proj_idx=" + proj2Idx); 
 		

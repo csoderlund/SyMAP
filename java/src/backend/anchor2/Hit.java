@@ -194,7 +194,7 @@ public class Hit {
 		);
 	}
 	
-	/******** For file output on -tt ******************/
+	/******** For file output on -tt; CAS565 switch T&Q ******************/
 	protected String toDiff(Hit last) {
 		int maxGap = Arg.iGmIntronLenRm; 
 		String sdiff1="", sdiff2="", td="", qd="";
@@ -218,10 +218,10 @@ public class Hit {
 		e += sign;
 		String ext = sbin + toGeneStr() + e + " ";
 		
-		String coords = String.format("#%-6d [T %,10d %,10d %,5d %5s] [Q %,10d %,10d %,5d %5s] [ID %3d]", 
-				 hitNum, hStart[T], hEnd[T], hLen[T], sdiff1, hStart[Q], hEnd[Q], hLen[Q], sdiff2, id);
+		String coords = String.format("#%-6d [Q %,10d %,10d %,5d %5s] [T %,10d %,10d %,5d %5s] [ID %3d]", 
+				 hitNum, hStart[Q], hEnd[Q], hLen[Q], sdiff1, hStart[T], hEnd[T], hLen[T], sdiff2, id);
 		
-		return coords + ext + td + qd;
+		return coords + ext + qd + td;
 	}
 	protected String toGeneStr() {
 		String tmsg="", qmsg="";
@@ -243,6 +243,6 @@ public class Hit {
 		}		
 		if (qmsg=="") qmsg="q--";
 		
-		return "[" + tmsg + "][" + qmsg + "]" + cntGene + " ";
+		return "[" + qmsg + "][" + tmsg + "]" + cntGene + " ";
 	}
 }

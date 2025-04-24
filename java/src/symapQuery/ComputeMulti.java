@@ -8,7 +8,6 @@ import java.util.TreeMap;
 import java.util.Vector;
 import javax.swing.JTextField;
 
-import symap.Globals;
 import util.ErrorReport;
 
 /************************************
@@ -26,7 +25,7 @@ public class ComputeMulti {
 	private Vector <DBdata> inData;	// initial input data (each will be a row); then reused for intermediate results
 	private HashSet <Integer> grpIdxOnly;
 	private int [] spIdxList;
-	private HashMap<String,String> projMap;
+	private HashMap<String,String> sumProjMap;
 	private JTextField loadStatus;
 	
 	// parameters
@@ -38,19 +37,22 @@ public class ComputeMulti {
 	private boolean bSuccess = true;
 	
 	private Vector <DBdata> spData = new Vector <DBdata> (); // intermediate results
-	private int spIdx=-1, spIdxOpp=-1; // species index for current species and opposite
+	private int spIdxCur=-1, spIdxOpp=-1; // species index for current species and opposite
 	private int ii=-1, jj=-1; 		   // The index for the current species and the opposite
 	
 	private int [][] spSummaryCnts;
 	
 	private String mkKey(DBdata dObj) {
-		int idx = dObj.annotIdx[ii];
-		if (idx==0) return null;
-		return isSameChr ? (idx + ":" + dObj.chrIdx[jj]) : (idx + "");
+		if (dObj.annotIdx[ii]==0) return null; 
+		if (dObj.geneTag[ii].endsWith(Q.pseudo)) return null;
+			
+		return isSameChr ? (dObj.annotIdx[ii] + ":" + dObj.chrIdx[jj]) : (dObj.annotIdx[ii] + "");
 	}
-	private boolean wrongRow(DBdata dObj) {
-		if (spIdx!=dObj.spIdx[ii] || spIdxOpp!=dObj.spIdx[jj]) return true;
+	private boolean skipRow(DBdata dObj) {
+		if (spIdxCur!=dObj.spIdx[ii] || spIdxOpp!=dObj.spIdx[jj]) return true;
+		
 		if (grpIdxOnly.size()!=0  && !grpIdxOnly.contains(dObj.chrIdx[ii])) return true;
+		
 		return false;
 	}
 	////////////////////////////////////////////////////////////////////
@@ -64,7 +66,7 @@ public class ComputeMulti {
 		this.inData 	= dataFromDB;
 		this.grpIdxOnly = grpIdxOnly;
 		this.spIdxList 	= spIdxList;
-		this.projMap 	= projMap;
+		this.sumProjMap 	= projMap;
 		this.loadStatus = loadStatus;
 		
 		spSummaryCnts = new int [spIdxList.length][spIdxList.length]; 
@@ -77,25 +79,25 @@ public class ComputeMulti {
 	}
 	/*************************************************************
 	 * Compute: Using inData, keep only the ones that pass the filters and output dataForDisplay
-	 * process species at a time so groups are ordered
+	 * process species one at a time so groups are ordered
 	 */
 	protected Vector <DBdata> compute() {
 		Vector <DBdata> finalRows = new Vector <DBdata> (); 
 		int rowNum=0;
 		
-		for (int sp=0; sp<spIdxList.length; sp++) { // process this sp against all others
-			spIdx = spIdxList[sp];
+		for (int sp1=0; sp1<spIdxList.length; sp1++) { // process this sp against all others
+			spIdxCur = spIdxList[sp1];
 			
 			for (int sp2=0; sp2<spIdxList.length; sp2++) { 
-				if (sp==sp2) continue;
+				if (sp1==sp2) continue;
 				
 				spIdxOpp = spIdxList[sp2];
 				ii = -1;
-				for (DBdata dObj : inData) { // find if spIdx is first or second
-					if ((spIdx   ==dObj.spIdx[0] || spIdx   ==dObj.spIdx[1]) 
+				for (DBdata dObj : inData) { // find if spIdxCur is first or second
+					if ((spIdxCur==dObj.spIdx[0] || spIdxCur==dObj.spIdx[1]) 
 					 && (spIdxOpp==dObj.spIdx[0] || spIdxOpp==dObj.spIdx[1])) {
-						ii = (spIdx==dObj.spIdx[0]) ? 0 : 1;
-						jj = (spIdx==dObj.spIdx[0]) ? 1 : 0;
+						ii = (spIdxCur==dObj.spIdx[0]) ? 0 : 1;
+						jj = (spIdxCur==dObj.spIdx[0]) ? 1 : 0;
 						break;
 					}
 				}
@@ -103,13 +105,13 @@ public class ComputeMulti {
 					continue;  // CAS563 was 'return finalRows' resulting in no projMap statistics; also printed estoric message to terminal
 				}
 				
-				filterNhits(); 		if (!bSuccess) return finalRows;   			// In: inData  Out: spData
+				filterNhits(); 		if (!bSuccess) return finalRows;   			// In: inData  Out: spData; all rows for sp1&sp2
 				
-				if (isTandem) filterTandem(); if (!bSuccess) return finalRows;  // In: spData  Out: spData; remove none-tandem
+				if (isTandem) filterTandem(); if (!bSuccess) return finalRows;  // In: spData  Out: spData; remove non-tandem
 																
 				for (DBdata dObj : spData) finalRows.add(dObj); 	   			// transfer to final vector
 				
-				spSummaryCnts[sp][sp2] = numFam-1;	
+				spSummaryCnts[sp1][sp2] = numFam-1;	
 				
 				if (rowNum++ % Q.INC ==0) {// CAS564 checked stopped
 					if (loadStatus.getText().equals(Q.stop)) {bSuccess=false; return null;}
@@ -139,7 +141,7 @@ public class ComputeMulti {
 				}
 			}
 			if (msg.isEmpty()) msg="#0";
-			projMap.put(name, "Groups: " + msg);
+			sumProjMap.put(name, "Groups: " + msg);
 		}
 		return finalRows;
 	}
@@ -155,25 +157,26 @@ public class ComputeMulti {
 		
 		// build sets of genes and their counts; SameChr is used in the key
 		for (DBdata dObj : inData) {
-			if (wrongRow(dObj)) continue;
+			if (skipRow(dObj)) continue;
 			
 			String key = mkKey(dObj); 
 			if (key!=null) {
 				if (geneCnt.containsKey(key)) geneCnt.put(key, geneCnt.get(key)+1);
 				else 						  geneCnt.put(key, 1);
+				
 			}
 		}
 		
 		// create rows with only the cnt>N row for this species pair
 		for (DBdata dObj : inData) {
-			if (wrongRow(dObj)) continue;
+			if (skipRow(dObj)) continue;
 	
 			String key = mkKey(dObj); 
 			if (key!=null) {
-				int num    = (geneCnt.containsKey(key)) ? geneCnt.get(key) : 0;
+				int num = (geneCnt.containsKey(key)) ? geneCnt.get(key) : 0;
 				
 				if (num>=nHits) {// is in a N group
-					if (dObj.grpN>0) spData.add((DBdata) dObj.copy());	
+					if (dObj.grpN>0) spData.add((DBdata) dObj.copyRow());	// dObj can be in mult groups; already been assigned to one
 					else spData.add(dObj);									
 				}
 			}
@@ -195,7 +198,7 @@ public class ComputeMulti {
 				fn = numFam++;
 				geneGrpMap.put(key, fn);
 			}
-			dObj.setGroup(fn,sz);
+			dObj.setGroup(fn,sz); // dObj.grpN = sz-fn
 		}		
 	}
 	catch (Exception e) {ErrorReport.print(e, "make multi-hit genes"); bSuccess=false;}
@@ -222,7 +225,7 @@ public class ComputeMulti {
 			String [] v = dObj.geneTag[jj].split("\\."); // opposite
 			int g = Integer.parseInt(v[1]); // 0 is chr
 			
-			if (curGrp==dObj.grpN) {
+			if (curGrp==dObj.grpN) {				// will not include pseudo because of numbering
 				gTagMap.put(g, dObj);
 				continue;
 			}
@@ -273,7 +276,7 @@ public class ComputeMulti {
 	}
 	
 	//////////////////////////////////////////
-	private class SortByGrpByAnno implements Comparator <DBdata> { // make sure annos sorted within grop
+	private class SortByGrpByAnno implements Comparator <DBdata> { // make sure annos sorted within group
 		public int compare(DBdata a, DBdata b) {
 			if (a.grpN==b.grpN) {
 				if (a.annotIdx[0]==b.annotIdx[0]) return a.annotIdx[1]-b.annotIdx[1];

@@ -296,8 +296,8 @@ public class ComputePgeneF {
 			nhit.e1 		= coords[1];
 			nhit.s2 		= coords[2];
 			nhit.e2 		= coords[3];
-			nhit.annot1 = dd.hasAnno(0); 
-			nhit.annot2 = dd.hasAnno(1);
+			nhit.annot1 = dd.hasGene(0); 
+			nhit.annot2 = dd.hasGene(1);
 			
 		/** XXX Good hit - Bin for PgeneF **/
 			// Go through the bins this hit is in and see if it overlaps any of the hits in them.

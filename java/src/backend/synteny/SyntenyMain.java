@@ -113,6 +113,8 @@ public class SyntenyMain {
 		
 	/** Main loop ***************************************/
 		int nGrpGrp = mProj1.getGrpSize() * mProj2.getGrpSize();
+		int maxGrp = nGrpGrp;
+		
 		if (Constants.VERBOSE) 	Utils.prtNumMsg(mLog, nGrpGrp, "group-x-group pairs to analyze");
 		else 					Globals.rprt("group-x-group pairs to analyze");
 		
@@ -130,7 +132,7 @@ public class SyntenyMain {
 				}
 				nGrpGrp--;
 				String t = Utilities.getDurationString(Utils.getTime()-startTime);
-				Globals.rprt(nGrpGrp + " pairs remaining (" + t + ")"); 
+				Globals.rprt(nGrpGrp + " of " + maxGrp + " pairs remaining (" + t + ")"); // CAS565 add maxGrp
 			}
 		}
 		tprt(tcntMerge, "Merged");

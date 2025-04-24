@@ -21,9 +21,10 @@ public class Constants {
 // Set in SymapCE.SyMAPmanager
 public static boolean PRT_STATS=  false; 		// -tt extra output on Anchor1/2; CAS560 was -s, but that removed for public
 public static boolean WRONG_STRAND_PRT = false; // -wsp  print wrong strand hits for algo2 
-public static boolean CoSET_ONLY = false;		// -scs on A&S ONLY execute AnchorPosts
+public static boolean CoSET_ONLY = false;		// -scs on A&S ONLY execute AnchorPosts; not on -h, leave for possible updates
+public static boolean PSEUDO_ONLY = false;		// -pseudo on A&S only execute AnchorMain.addPseudo; CAS565
 public static boolean MUM_NO_RM = false;		// -mum on A&S ONLY do not remove any mummer files; CAS559 add
-public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block coords; no longer documented, but still works
+public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block coords; not on -h, but still works
 public static boolean VERBOSE=false;	// SyMAPmanager -v; write verbose cluster output; CAS561 chg from check mysql
 
 // Anchor1 constants; Anchor2 constants are in Anchor2.Arg

@@ -442,7 +442,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			text2.setAlignmentX(Component.LEFT_ALIGNMENT);
 			text2.setForeground(textColor); 
 		
-			btnSelAlign = new JButton("Selected Pair");
+			String l = "Selected Pair";
+			if (Constants.PSEUDO_ONLY) 		l = "Pseudo only"; // CAS565 make specific
+			else if (Constants.CoSET_ONLY) 	l = "Collinear only";
+		
+			btnSelAlign = new JButton(l);
 			btnSelAlign.setVisible(true);
 			btnSelAlign.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -457,7 +461,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 					if (projects==null) return;
 					
 					Mpair mp = getMpair(projects[0].getIdx(),projects[1].getIdx());
-					new RemoveProj(getInstance(), buildLogLoad()).removeClearPair(mp, projects[0], projects[1]);
+					RemoveProj rjObj = new RemoveProj(getInstance(), buildLogLoad());
+					rjObj.removeClearPair(mp, projects[0], projects[1]);
 					refreshMenu();
 				}
 			} );	
@@ -750,8 +755,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			boolean allDone =  (val!=null && val.contains(TBL_DONE));
 			boolean partDone = (val!=null && (!val.contains(TBL_ADONE) || !val.contains(TBL_QDONE)));
 			
-			if (allDone) btnSelAlign.setText("Selected Pair (Redo)");	
-			else 		 btnSelAlign.setText("Selected Pair");	
+			if (Constants.PSEUDO_ONLY) 		btnSelAlign.setText("Pseudo only"); // CAS565 make specific
+			else if (Constants.CoSET_ONLY) 	btnSelAlign.setText("Collinear only");
+			else if (allDone) 				btnSelAlign.setText("Selected Pair (Redo)");	
+			else 							btnSelAlign.setText("Selected Pair");	
 			
 			btnSelAlign.setEnabled(true);
 			btnSelClearPair.setEnabled(allDone || partDone);
@@ -909,11 +916,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 					false, mProj.hasExistingAlignments());
 			propFrame.setVisible(true);
 			
-			if (propFrame.wasSave()) refreshMenu(); // CAS504
+			if (propFrame.wasSave()) refreshMenu(); 
 		}		
 	};
 		
-	// CAS521 an error report on the strColProjName line getting null. Added error checks in all calling methods.
+	// Pair selected in available synteny table
 	private Mproject[] getSetSelectedPair() {
 		int nRow=-1, nCol=-1;
 		try {
@@ -922,10 +929,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			nRow = pairTable.getSelectedRow(); // Row is >=0 Col is >=1
 			nCol = pairTable.getSelectedColumn();
 			
-			// If none selected, automatically select one if 2 rows (CAS552 does not work with 1 row)
+			// If none selected, automatically select one if 2 rows (does not work with 1 row)
 			if (nRow < 0 || nCol <= 0) {
-				int n = pairTable.getRowCount(); // CAS541 if n=2, automatically make selected
-				if (n!=2) return null;			 // CAS521 change < to <=; this happens on startup
+				int n = pairTable.getRowCount(); // if n=2, automatically make selected
+				if (n!=2) return null;			 
 				nCol=1; nRow=1;			 
 				
 				pairTable.setRowSelectionInterval(nRow, nCol);
@@ -950,6 +957,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Could not get row " + nRow + " and column " + nCol); return null;}
 	}
+	
 	// XXX sort for getting pair indices in right order
 	private Mproject[] orderProjName(Mproject p1, Mproject p2){
 		if (p1.strDBName.compareToIgnoreCase(p2.strDBName) > 0) // make alphabetic
@@ -1048,23 +1056,25 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	/*********************************************************************/
 	private void showQuery() {
 		Utilities.setCursorBusy(this, true);
-		try { // CAS532 send project vector 
+		try { 
 			Vector <Mproject> pVec = new Vector <Mproject> ();
 			for (Mproject p : selectedProjVec) if (p.isLoaded()) pVec.add( p );
 			
-			boolean useAlgo2=true; // CAS547 add for new "EveryPlus"
+			boolean useAlgo2=true; //  used for new "EveryPlus"; CAS547
+			int cntUsePseudo=0; // Instructions; CAS565
+			int hasSynteny=0;
+			
 			for (int i=0; i<pVec.size()-1; i++) {
 				for (int j=i+1; j<pVec.size(); j++) {
 					Mpair mp = getMpair(pVec.get(i).getIdx(), pVec.get(j).getIdx());
-					if (mp.isSynteny()) {
-						if (!mp.isAlgo2(Mpair.DB)) 	{
-							useAlgo2=false;
-							break;
-						}
-					}
+					if (!mp.isSynteny()) continue;
+					
+					if (!mp.isAlgo2(Mpair.DB)) 	useAlgo2=false;
+					if (mp.isNumPseudo(Mpair.DB)) cntUsePseudo++;
+					hasSynteny++;
 				}
 			}
-			QueryFrame qFrame = new QueryFrame(frameTitle, dbc2, pVec, useAlgo2);
+			QueryFrame qFrame = new QueryFrame(frameTitle, dbc2, pVec, useAlgo2, cntUsePseudo, hasSynteny);
 			qFrame.build();
 			qFrame.setVisible(true);
 		} 
@@ -1398,8 +1408,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		else {
 			int rc = Utilities.showConfirm3("Reload project",msg +
-				"\n\nOnly: reload project only" +
-				"\nAll: reload project and remove alignments from disk");
+				"\n\nOnly: Reload project only" +
+				  "\nAll:  Reload project and remove alignments from disk");
 			if (rc==0) return;
 			
 			if (rc==2) {
@@ -1496,7 +1506,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				
 		System.out.println("\n>>> Start all pairs: processing " + todoList.size() + " project pairs");
 		for (Mpair mp : todoList) {
-			if (!backend.Constants.CoSET_ONLY) mp.renewIdx(); // Removed existing; CAS556 add check
+			if (!backend.Constants.CoSET_ONLY && !backend.Constants.PSEUDO_ONLY) mp.renewIdx(); // Removed existing; CAS556 add check; CAS565 add pseudo
 			
 			// AlignProj open/close new dbc2 for each thread of align
 			new DoAlignSynPair().run(this, dbc2, mp, true,  maxCPUs, checkCat.isSelected());
@@ -1524,8 +1534,15 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		String resultDir   = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
 		boolean bAlignDone = Utils.checkDoneFile(resultDir);
 		
-		if (bAlignDone && backend.Constants.CoSET_ONLY)  { //*** CAS556, CAS557 add bAlign
-			if (!Utilities.showConfirm2("Selected Pair", "Collinear only")) return;
+		if (backend.Constants.CoSET_ONLY || backend.Constants.PSEUDO_ONLY)  { //*** CAS565 remove bAlignDone; tries to do ONLY anyway
+			if (backend.Constants.PSEUDO_ONLY && !mp.isNumPseudo(Mpair.FILE)) {
+				Utilities.showInfoMsg("Pseudo", "Please  open Parameters and check 'Number Pseudo',\nwhich is under 'Cluster Hits'");
+				return;
+			}
+			String msg = (backend.Constants.CoSET_ONLY) ? "Collinear only" : "Pseudo only";
+			
+			if (!Utilities.showConfirm2("Selected Pair", msg)) return;
+			
 			new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
 			new Version(dbc2).updateReplaceProp();
 			return;

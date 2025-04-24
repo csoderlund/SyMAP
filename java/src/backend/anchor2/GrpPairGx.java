@@ -54,7 +54,7 @@ public class GrpPairGx {
 		qGeneMap   = grpPairObj.qGeneMap;
 		grpHitList = grpPairObj.grpHitList;
 		
-		chrPair = grpPairObj.tChr + "," + grpPairObj.qChr;
+		chrPair = grpPairObj.qChr + "," + grpPairObj.tChr;
 		
 		intronLen2xG1 = Arg.iGmIntronLen2x;	
 		intronLen4xG2rm = Arg.iGmIntronLen4x;	
@@ -178,8 +178,12 @@ public class GrpPairGx {
 			for (HitPair hpr : hprGeneMap.values()) {		
 				hpr.setSign();  		
 				if (hpr.isRst) allHprList.add(hpr); // transfer to allHprList
-				else { 			     				// CAS560 do not allow wrong strand; many singletons; 
-					if (Arg.WRONG_STRAND_PRT) wsPairList.add(hpr);
+				else { 	
+					// CAS565 the WS output has quit working, add checks; CAS560 do not allow wrong strand; many singletons; 
+					if (Arg.WRONG_STRAND_PRT && hpr.qGene!=null && hpr.tGene!=null) {
+						hpr.setScores(); 							// CAS565 need for EE check and to prints scores
+						if (hpr.htype.equals("EE")) wsPairList.add(hpr); 
+					}
 					else hpr.clear();
 					numFilter++;
 				}
@@ -488,20 +492,27 @@ public class GrpPairGx {
 		catch (Exception e) {ErrorReport.print(e,"g2 getMinor"); bSuccess=false; return 0;}
 		}
 	
-		/********************************************************************/
+		/********************************************************************
+		 * if -wsp, output wrong strand; CAS565 did not agree with documentation 
+		 */
 		private void processWS() { // all needed info is in wsPairList
 			if (!Arg.WRONG_STRAND_PRT) return;
-			
+			Globals.rclear();
+			if (wsPairList.size()==0) return; 
+				 
+			final String dot = Globals.DOT;
 			final int cutoff=2;
 			TreeMap <String, Integer> tGeneMap = new TreeMap <String, Integer> ();
 			TreeMap <String, Integer> qGeneMap = new TreeMap <String, Integer> ();
+			
 			HitPair.sortByXstart(Q, wsPairList);
 			
+			// Count genes at each end of cutoff (must have 'cutoff' effected genes)
 			for (HitPair hpr : wsPairList) {
 				if (!hpr.htype.equals("EE")) continue;
 				
 				String tTag = hpr.tGene.geneTag, qTag = hpr.tGene.geneTag;
-				if (!tTag.endsWith(".") && !qTag.endsWith(".")) continue; // probably share hits with isRst overlapped genes
+				if (!tTag.endsWith(dot) && !qTag.endsWith(dot)) continue; // probably share hits with isRst overlapped genes
 				
 				if (tGeneMap.containsKey(tTag)) tGeneMap.put(tTag, tGeneMap.get(tTag)+hpr.nHits);
 				else tGeneMap.put(tTag, hpr.nHits);
@@ -509,30 +520,28 @@ public class GrpPairGx {
 				if (qGeneMap.containsKey(qTag)) qGeneMap.put(qTag, qGeneMap.get(qTag)+hpr.nHits);
 				else qGeneMap.put(qTag, hpr.nHits);
 			}
+			// check if there will be any output
 			int cnt=0;
 			for (int n : tGeneMap.values()) if (n>cutoff) cnt++;
 			for (int n : qGeneMap.values()) if (n>cutoff) cnt++;
-			if (cnt==0) {
-				 Globals.tprt(">> No cluster hits -- must have wrong strand orientation");
-				 return;
-			}
+			if (cnt==0) return;
 			
-			cnt=0;
-			Globals.prt(String.format("#Hits  %-10s %-10s   [Exon   Gene   Length]      [Exon   Gene   Length]      [EE Gene Hit]", 
-					grpPairObj.mainObj.proj1Name, grpPairObj.mainObj.proj2Name));
+			// Output
+			
+			Globals.prt(String.format("#Subs  Gene Hit  %-10s %-10s   [Exon   Gene      Length]    [Exon   Gene     Length]     %s  ", 
+					grpPairObj.mainObj.proj1Name, grpPairObj.mainObj.proj2Name, chrPair));
 			
 			for (HitPair hpr : wsPairList) {
 				if (!hpr.htype.equals("EE")) continue;
 				
 				String tTag = hpr.tGene.geneTag, qTag = hpr.tGene.geneTag;
-				if (!tTag.endsWith(".") && !qTag.endsWith(".")) continue;
+				if (!tTag.endsWith(dot) && !qTag.endsWith(dot)) continue;
 				
 				if (tGeneMap.get(tTag)>cutoff || qGeneMap.get(qTag)>cutoff) { // don't want a lot of little hits
-					Globals.prt(hpr.toWSResults(chrPair));
-					cnt++;
+					Globals.prt(hpr.toWSResults());	
 				}
 			}
-			if (cnt==0) Globals.tprt(">> No cluster hits - must have wrong strand orientation");
+			grpPairObj.mainObj.cntWS += cnt; // CAS565 there was no indication if there was no WS
 		}
 		/**************************************************************
 		 * Counts content of notes from this file, booleans, and single/mult

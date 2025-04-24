@@ -52,106 +52,112 @@ public class SyMAPmanager extends ManagerFrame {
 		System.out.println("  -g        : Queries: run old PgeneF algorithm instead of the new Cluster algorithm");
 		System.out.println("  -h        : show help to terminal and exit");
 			
-		if (!equalOption(args, "-r")) {
+		if (!equalOption(args, "-r")) { // viewSymap - treated as read-only
 			System.out.println("\nSynteny&Alignment:");
 			System.out.println("  -p N      : number of CPUs to use");
 			System.out.println("  -v        : A&S verbose output");
 			System.out.println("  -mum      : do not remove any mummer files");
 			System.out.println("  -wsp      : for g2, print MUMmer hits that differ from gene strand (v5.4.8 Algo2, v5.6.0 update)");
-			System.out.println("  -sg       : split genes on cluster hit creation (Cluster Algo1)");
-			System.out.println("  -acs      : On A&S, ONLY execute the collinear sets computation");
+			System.out.println("  -pseudo   : On A&S, ONLY compute pseudo (v5.6.5 or later)"); // CAS565
+			// CAS565 System.out.println("  -sg       : split genes on cluster hit creation (Cluster Algo1)");
+			// CAS565 System.out.println("  -acs      : On A&S, ONLY execute the collinear sets computation"); // CAS556 July24
 		}
 	}
 	// these are listed to terminal in the 'symap' perl script.
 	private static void setParams(String args[]) { 
-		if (args.length > 0) {
-			if (equalOption(args, "-r")) {// used by viewSymap
-				inReadOnlyMode = true; // no message to terminal
+		if (args.length ==0) return;
+		
+		if (equalOption(args, "-r")) {// used by viewSymap
+			inReadOnlyMode = true; // no message to terminal
+		}
+		if (equalOption(args, "-sql")) {// check MySQL for important settings; CAS561 was -v
+			Globals.bMySQL = true; 
+			System.out.println("-sql  check MySQL settings ");
+		}
+		if (startsWithOption(args, "-p")) { // #CPU
+			String x = getCommandLineOption(args, "-p"); //CAS500
+			try {
+				maxCPUs = Integer.parseInt(x);
+				System.out.println("-p  Max CPUs " + maxCPUs);
 			}
-			if (equalOption(args, "-sql")) {// check MySQL for important settings; CAS561 was -v
-				Globals.bMySQL = true; 
-				System.out.println("-sql  check MySQL settings ");
-			}
-			if (startsWithOption(args, "-p")) { // #CPU
-				String x = getCommandLineOption(args, "-p"); //CAS500
-				try {
-					maxCPUs = Integer.parseInt(x);
-					System.out.println("-p  Max CPUs " + maxCPUs);
-				}
-				catch (Exception e){ System.err.println(x + " is not an integer. Ignoring.");}
-			}
-			if (startsWithOption(args, "-c")) {// CAS501
-				Globals.MAIN_PARAMS = getCommandLineOption(args, "-c");
-				System.out.println("-c  Configuration file " + Globals.MAIN_PARAMS);
-			}
-			if (equalOption(args, "-q")) { // CAS531 change
-				Globals.bQueryOlap=true;
-				System.out.println("-q  Show gene overlap instead of exon for Algo2");
-			}
-			if (equalOption(args, "-g")) { // CAS563 add
-				Globals.bQueryPgeneF=true;
-				System.out.println("-g  Run PgeneF algorithm in place of Cluster algorithm");
-			}
-			if (equalOption(args, "-a")) { // CAS531 change
-				Globals.bTrim=false;
-				System.out.println("-a  Do not trim 2D alignments");
-			}
-			if (equalOption(args, "-s")) {
-				System.out.println("-s  Regenerate summary");
-				Globals.bRedoSum = true;
-			}
-			// A&S
-			if (equalOption(args, "-v")) {// verbose A&S output; CAS561 new option
-				Constants.VERBOSE = true; 
-				if (equalOption(args, "-r")) System.out.println("Warning: -v  Use flag '-sql' to check MySQL settings ");
-				else                         System.out.println("-v A&S verbose output");
-			}
-			if (equalOption(args, "-mum")) { // CAS559 add (remove obsolete -oo for old ordering of groups)
-				System.out.println("-mum  Do not remove any mummer result files");
-				Constants.MUM_NO_RM = true;
-			}
-			if (equalOption(args, "-wsp")) { // CAS548
-				System.out.println("-wsp  Print g2 hits where the hit strands differ from the genes (Algo2)");
-				Constants.WRONG_STRAND_PRT = true;
-			}
-			if (equalOption(args, "-acs")) { // CAS556
-				System.out.println("-acs  On A&S, ONLY execute the collinear sets computation");
-				Constants.CoSET_ONLY = true;
-			}
-			if (equalOption(args, "-sg")) { // CAS540
-				System.out.println("-sg  Split genes (Algo1)");
-				Group.bSplitGene= true;
-			}
-			// CAS560 remove -z; System.out.println("-z  Reload Annotation will only run the Gene# assignment algorithm");
-			// CAS560 remove    System.out.println("-wse  Exclude g2 hits where the hit strands differ from the genes (Algo2)");
-			/*************************************************************************/
-			/** not shown in -h help - hence, the double character so user does not use by mistake **/
-			if (equalOption(args, "-ii")) {
-				System.out.println("-ii Extra info ");// CAS560 - extra info on popups, query overlap
-				Globals.INFO = true;
-			}
-			if (equalOption(args, "-tt")) {
-				System.out.println("-tt Trace output (developer only)");
-				Globals.TRACE = true;   	// CAS560 changed to print all trace 
-				Constants.PRT_STATS = true; // CAS560; got rid of the command line -s except for summary
-			}
-			if (equalOption(args, "-dd")) {
-				System.out.println("-dd Debug (developer only)");// CAS533 changed to -dd, potential errors
-				Globals.DEBUG = true;
-			}
-			if (equalOption(args, "-dbd")) {
-				System.out.println("-dbd Database (developer only)");
-				Globals.DBDEBUG = true;
-			}
-			// old tests - not shown in -h help
-			if (equalOption(args, "-aa")) { // CAS531 change
-				System.out.println("-aa Align largest project to smallest");
-				lgProj1st = true;
-			}
-			if (equalOption(args, "-bb")) { // CAS533 change; orig used midpoints
-				System.out.println("-bb Original block coordinates");
-				Constants.NEW_BLOCK_COORDS = false;
-			}
+			catch (Exception e){ System.err.println(x + " is not an integer. Ignoring.");}
+		}
+		if (startsWithOption(args, "-c")) {// CAS501
+			Globals.MAIN_PARAMS = getCommandLineOption(args, "-c");
+			System.out.println("-c  Configuration file " + Globals.MAIN_PARAMS);
+		}
+		if (equalOption(args, "-q")) { // CAS531 change
+			Globals.bQueryOlap=true;
+			System.out.println("-q  Show gene overlap instead of exon for Algo2");
+		}
+		if (equalOption(args, "-g")) { // CAS563 add
+			Globals.bQueryPgeneF=true;
+			System.out.println("-g  Run PgeneF algorithm in place of Cluster algorithm");
+		}
+		if (equalOption(args, "-a")) { // CAS531 change
+			Globals.bTrim=false;
+			System.out.println("-a  Do not trim 2D alignments");
+		}
+		if (equalOption(args, "-s")) { // not in -h
+			System.out.println("-s  Regenerate summary");
+			Globals.bRedoSum = true;
+		}
+		// A&S
+		if (equalOption(args, "-v")) {// verbose A&S output; CAS561 new option
+			Constants.VERBOSE = true; 
+			if (equalOption(args, "-r")) System.out.println("Warning: -v  Use flag '-sql' to check MySQL settings ");
+			else                         System.out.println("-v A&S verbose output");
+		}
+		if (equalOption(args, "-mum")) { // CAS559 add (remove obsolete -oo for old ordering of groups)
+			System.out.println("-mum  Do not remove any mummer result files");
+			Constants.MUM_NO_RM = true;
+		}
+		if (equalOption(args, "-wsp")) { // CAS548
+			System.out.println("-wsp  Print g2 hits where the hit strands differ from the genes (Algo2)");
+			Constants.WRONG_STRAND_PRT = true;
+		}
+		if (equalOption(args, "-pseudo")) { // CAS565 Apr25
+			System.out.println("-pseudo  On A&S, ONLY compute pseudo (v5.6.5 or later)");
+			Constants.PSEUDO_ONLY = true;
+		}
+		// CAS565 not shown on -h
+		if (equalOption(args, "-acs")) { // CAS556 July24; leave for possible updates
+			System.out.println("-acs  On A&S, ONLY execute the collinear sets computation");
+			Constants.CoSET_ONLY = true;
+		}
+		if (equalOption(args, "-sg")) { // CAS540
+			System.out.println("-sg  Split genes (Algo1)");
+			Group.bSplitGene= true;
+		}
+		// CAS560 remove -z; System.out.println("-z  Reload Annotation will only run the Gene# assignment algorithm");
+		// CAS560 remove    System.out.println("-wse  Exclude g2 hits where the hit strands differ from the genes (Algo2)");
+		/*************************************************************************/
+		/** not shown in -h help - hence, the double character so user does not use by mistake **/
+		if (equalOption(args, "-ii")) {
+			System.out.println("-ii Extra info ");// CAS560 - extra info on popups, query overlap
+			Globals.INFO = true;
+		}
+		if (equalOption(args, "-tt")) {
+			System.out.println("-tt Trace output (developer only)");
+			Globals.TRACE = true;   	// CAS560 changed to print all trace 
+			Constants.PRT_STATS = true; // CAS560; got rid of the command line -s except for summary
+		}
+		if (equalOption(args, "-dd")) {
+			System.out.println("-dd Debug (developer only)");// CAS533 changed to -dd, potential errors
+			Globals.DEBUG = true;
+		}
+		if (equalOption(args, "-dbd")) {
+			System.out.println("-dbd Database (developer only)");
+			Globals.DBDEBUG = true;
+		}
+		// old tests - not shown in -h help
+		if (equalOption(args, "-aa")) { // CAS531 change
+			System.out.println("-aa Align largest project to smallest");
+			lgProj1st = true;
+		}
+		if (equalOption(args, "-bb")) { // CAS533 change; orig used midpoints
+			System.out.println("-bb Original block coordinates");
+			Constants.NEW_BLOCK_COORDS = false;
 		}
 	}
 	

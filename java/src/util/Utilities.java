@@ -529,7 +529,7 @@ public class Utilities {
 		return optionPane;
 	}
 	
-	public static void showShowMsg(String title, String msg) {
+	public static void showInfoMsg(String title, String msg) {
 		JOptionPane.showMessageDialog(null, msg, title, JOptionPane.WARNING_MESSAGE);
 	}
 	public static void showWarning(String msg) { // CAS564 need one without print to terminal
@@ -574,7 +574,7 @@ public class Utilities {
 		return true;
 	}
 	
-	// CAS42 1/4/18 confirm any action that removes things; CAS534 move these 2 from ManagerFrame to here
+	// Cancel is false
 	public static boolean showConfirm2(String title, String msg) {
 		String [] options = {"Cancel", "Confirm"};
 		int ret = JOptionPane.showOptionDialog(null, 
@@ -585,12 +585,12 @@ public class Utilities {
 		else return true;
 	}
 	
-		// CAS500 this is when there is two possible actions
+	// three possible actions; used to (1) remove from database (2) and disk
 	public static int showConfirm3(String title, String msg) {
 		String [] options = {"Cancel", "Only", "All"};
 		return JOptionPane.showOptionDialog(null, 
 				msg, title, JOptionPane.YES_NO_OPTION, 
-				JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
+				JOptionPane.QUESTION_MESSAGE, null, options, options[1]); // CAS565 make default 'Only'
 	}
 	public static int showConfirmFile(String filename) {
 		String [] options = {"Cancel", "Overwrite", "Append"};

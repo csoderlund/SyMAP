@@ -93,8 +93,10 @@ public class AnchorPost {
 			
 			int nhits = dbc2.executeInteger("SELECT count(*) FROM pseudo_hits WHERE runnum>0 and pair_idx=" + mPairIdx);
 			Utils.prtNumMsg(mLog, totalRuns, "Collinear sets                          ");
-			if (Constants.VERBOSE) Utils.prtNumMsg(mLog, nhits, "Updates                          ");
-			Utils.timeDoneMsg(mLog, "Finish Collinear", time);
+			if (Constants.VERBOSE) {
+				Utils.prtNumMsg(mLog, nhits, "Updates                          ");
+				Utils.timeDoneMsg(mLog, "Finish Collinear", time);
+			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Compute colinear genes"); }
 	}
@@ -133,11 +135,10 @@ public class AnchorPost {
 			Hit hObj;
 			ResultSet rs;
 			
-		// Hits with 2 genes - annot1 and annot2 have the best overlap; ignore others; CAS563 all uc
-			rs = dbc2.executeQuery("select PH.idx, PH.strand, PH.hitnum, PH.annot1_idx, PH.annot2_idx, B.blocknum " +
+		// Hits with 2 genes - annot1 and annot2 have the best overlap; ignore others; CAS563 all uc; CAS565 rm block
+			rs = dbc2.executeQuery("select PH.idx, PH.strand, PH.hitnum, PH.annot1_idx, PH.annot2_idx " +
 				" from pseudo_hits 				AS PH  " +
 				" LEFT JOIN pseudo_block_hits 	AS PBH ON PBH.hit_idx=PH.idx" +
-				" LEFT JOIN blocks 				AS B ON B.idx=PBH.block_idx " +
 				" where PH.grp1_idx=" + grpIdx1 + " and PH.grp2_idx=" + grpIdx2 + 
 				" and PH.gene_overlap>1 order by PH.hitnum"); // algo1 does not enter them ordered 
 			while (rs.next()) {
@@ -147,11 +148,10 @@ public class AnchorPost {
 				int hitnum =	rs.getInt(i++);
 				int gidx1= 		rs.getInt(i++);
 				int gidx2 = 	rs.getInt(i++);
-				int blocknum =  rs.getInt(i++);
 				
 				boolean inv = (str.contains("+") && str.contains("-"));
 				
-				hObj = new Hit(hidx, hitnum, gidx1, gidx2, blocknum);
+				hObj = new Hit(hidx, hitnum, gidx1, gidx2);
 				if (inv) rHitVec.add(hObj);
 				else  	 fHitVec.add(hObj);
 			}
@@ -397,7 +397,7 @@ public class AnchorPost {
 	 * annot_hit:  idx  annot1_hit annot2_hit  (best two overlaps)
 	 */
 	private class Hit {
-		private Hit(int idx, int hitnum, int gidx1, int gidx2, int blocknum) { 
+		private Hit(int idx, int hitnum, int gidx1, int gidx2) { 
 			this.hidx = idx;
 			this.hitnum=hitnum;
 			this.gidx1= gidx1;

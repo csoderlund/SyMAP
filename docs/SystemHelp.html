@@ -211,6 +211,7 @@ the buttons that can be selected are activated.
 <tr><td>&nbsp;
 	<td>The alignment has not been started.
 </table>
+<p>See <a href="#over2">Pair Parameters</a> for additional information.
 
 <a id="concat"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -543,42 +544,56 @@ is executed.
 
 <a id="over2"></a>
 <h3>3.a Overview</h3>
+The <a href="#avail">Available Syntenies</a> explains the table in the lower right. The following provides
+more information in the context of the pair parameters.
 <table>
 <tr>
-<td>Select a pair cell in the <ttx>Available Syntenies</ttx> table followed by the <ttb>Parameters</ttb>
-button, which will popup the window shown below.
-<td><a href="img/lineAlign.png"><img src="img/lineAlign.png" alt="alignLine" style="border: 1px solid black; width: 550px"></a>
-</table>
+	<td>
+	The table on the right has cells that have the following completed:
+	<p><table class="ty">
+	<tr><td><i>Value</i><td><i>Alignment</i><td><i>Synteny</i>
+	<tr><td>blank<td>No<td>No
+	<tr><td><b>A</b><td>Yes<td>No
+	<tr><td>&#10004;<td>Yes<td>Yes
+	</table>
 
+	<td><a href="img/lineAlign.png"><img src="img/lineAlign.png" alt="alignLine" style="border: 1px solid black; width: 550px"></a>
+</table>
+Alignment will not be redone if the cell contains an <b>A</b>. This is important because MUMmer
+is very time-consuming, but the A&S is not near so; hence, one can make changes to parameters
+and re-run if needed.
+<p>
+Select a pair cell in the <ttx>Available Syntenies</ttx> table followed by the <ttb>Parameters</ttb>
+button, which will popup the window shown on the lower right.
 <table>
-<tr><td style="vertical-align: text-top;">
-<p>If a &#10004; or <b>A</b> in pair cell exists, and the parameters are changed, do the following (
-'Section' refers to the section in the parameter panel):
+<tr>
+	<td style="vertical-align: text-top;">
+	<p>If a &#10004; or <b>A</b> in pair cell exists and the parameters for a section
+	are changed, do the following:
 
-<table class="ty">
-	<tr><td>Section<td>Action
-	<tr><td><b><i>Alignment</i></b> <td>Select <ttb>Clear Pair</ttb> to remove the existing alignments,
-	then <ttb>Selected Pair (ReDo)</ttb>.
-	<tr><td><b><i>Cluster Hits</i></b> <td>Use <ttb>Selected Pair (ReDo)</ttb>
-	directly; the existing alignments for the pair will be used.
-	<tr><td><b><i>Synteny</i></b> <td>Use <ttb>Selected Pair (ReDo)</ttb>
-	directly; the existing alignments for the pair will be used.
-</table>
-<p>&nbsp;
-<p><ttl>Verbose</ttl> checkbox:
-<br>&rarr; If checked, detailed summary information is written as
-it processes the MUMmer files. The information is written both to the terminal and the <ttx>logs/&lt;proj-to-proj&gt;/symap.log</ttx> file.
-<br>&rarr; If this is not checked, it will write status information repeatedly on the same terminal line.
-<br>&rarr; See <a href="Demo.html#slog" class="ext" target="_blank">Demo examples</a>.
-<br>&rarr; It is not saved as a parameter. This can also be turned using a command line argument:
-<pre>
-    symap -v
-</pre>
+	<table class="ty">
+		<tr><td style="white-space: nowrap;"><i>Changed Section</i><td><i>Action</i>
+		<tr><td><b><i>Alignment</i></b> <td>Select <ttb>Clear Pair</ttb> to remove the existing alignments,
+		then <ttb>Selected Pair (ReDo)</ttb>.
+		<tr><td><b><i>Cluster Hits</i></b> <td>Use <ttb>Selected Pair (ReDo)</ttb>
+		directly; the existing alignments for the pair will be used.
+		<tr><td><b><i>Synteny</i></b> <td>Use <ttb>Selected Pair (ReDo)</ttb>
+		directly; the existing alignments for the pair will be used.
+	</table>
 
-<p>The parameters are described in the following three sections.
-<td>
-<td>&nbsp;&nbsp;&nbsp;
-<a href="img/parameters2.png"><img src="img/parameters2.png" alt="pair parameters" style="border: 1px solid black; width: 340px"></a>
+	<p>&nbsp;
+	<p><ttl>Verbose</ttl> checkbox:
+	<ul><li>If checked, detailed summary information is written as
+	it processes the MUMmer files. The information is written both to the terminal and the <ttx>logs/&lt;proj-to-proj&gt;/symap.log</ttx> file.
+	<li>If this is not checked, it will write status information repeatedly on the same terminal line.
+	<li>See <a href="Demo.html#slog" class="ext" target="_blank">Demo examples</a>.
+	<li>It is not saved as a parameter. This can also be turned using a command line argument:
+	<tt>symap -v</tt>
+	</ul>
+	<p>The parameters are described in the following three sections.
+
+	<td>&nbsp;&nbsp;&nbsp;
+	<a href="img/parameters2.png"><img src="img/parameters2.png" alt="pair parameters" style="border: 1px solid black; width: 340px"></a>
 </table>
 
 <a id="align2"></a>
@@ -618,16 +633,17 @@ when a chromosome sequence is run against itself, e.g. <tt>--nosimplify</tt>.
 projects, while NUCmer is used for self alignments.
 </small>
 
+<!------------------------------------------------------------------------>
 <a id="clust"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>3.c Cluster Hits</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <table class="ty">
 <tr><td><b>Sections:</b>&nbsp;&nbsp;&nbsp;&nbsp;
-<td><a href="a1a2">Algo1 vs Algo2</a>
-<td><a href="clParam">Parameter description</a>
-<td><a href="hint">Hints about parameter settings</a>
-<td><a href="pileOfHits">Pile of hits</a>
+<td><a href="#a1a2">Algo1 vs Algo2</a>
+<td><a href="#clParam">Parameter description</a>
+<td><a href="#hint">Hints about parameter settings</a>
+<td><a href="#pileOfHits">Pile of hits</a>
 </table>
 
 <a id="a1a2"></a>
@@ -657,15 +673,42 @@ below the parameter explanation. (As of v5.6.0, the parameters generally do not 
 </table>
 <p><ttl>Algo1</ttl> is the default since it works for all inputs.
 
+<table style="width: 95%"><tr><td style="text-align: left">
+<b>Wrong strand</b>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+The wrong strand is when all hits in a cluster are to the same strand (++/--)
+yet the cluster aligns to two genes on the different strands (+-/-+), or vice versa.
+
+<p><tt>Algo1</tt> does include these hits. You can view them in the <ttl>Queries</ttl>
+where the <ttx>Hit St</ttx> column will be different than the two gene <ttx>Gst</ttx> columns.
+
+<p><tt>Algo2</tt> does NOT include these hits. You can request to view the potential hits
+during the <ttl>A&S</ttl> by running it with the "-wsp" flag, i.e.
+<pre>   ./symap -wsp </pre>
+This will only show gene pairs with (1) multiple hits to exons (in one or multiple gene pairs), (2) at least one is not
+an overlapping gene. It is up to the user to determine what is real.
+Sample output:
+<pre><small>
+#Subs  Gene Hit  Atha       Cabb         [Exon   Gene      Length]    [Exon   Gene     Length]    Chr04,Chr02
+3      -/+   =   1521.b     4591.        [ 53.6   47.0      723bp]   [  8.4    9.0      860bp]
+2      -/+   =   3180.a     6029.        [ 15.7   12.6      987bp]   [ 39.7   29.0      949bp]
+3      -/+   =   3180.c     242.         [ 71.9   68.5    2,243bp]   [100.0   98.2    2,071bp]
+1      -/+   =   3180.a     242.         [ 15.7    5.3    1,131bp]   [ 47.2   48.4    1,029bp]
+2      -/+   =   3180.c     6029.        [ 54.8   54.0    2,236bp]   [ 92.2   71.0    2,524bp]
+</small></pre>
+
+<!-------------------------------------------------------------------------->
 <a id="clParam"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h4>3.c.II  Parameter description</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="ty">
-<tr><td><i>Parameter</i>
-	<td><i>Description</i>
-	<td><i>Default</i>
+<tr><td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
+<tr><td style="white-space: nowrap;"><ttl>Number Pseudo</ttl><td>If selected, the un-annotated ends of hits will be assigned a
+pseudo number. See <a href=" #pseudo">Pseudo Genes</a>.
+<td>No
 <tr><td colspan=2><ttl>Algo1 (original)</ttl>
     <td>Yes
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Top N piles</ttl>
@@ -718,6 +761,48 @@ for any uncheck categories, but in a more conservative way. It will retain the <
 	<td>2
 </table>
 
+<a id="pseudo">
+<table style="width: 95%"><tr><td style="text-align: left">
+<h4>Pseudo genes</h4>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<table><tr><td>
+The end of a hit may not overlap an annotated gene; by default, this
+will just show a <ttx>Gene#</ttx> of 'N.~' where N is the chromosome number.
+<p>If <ttl>Number Pseudo</ttl> is selected,
+a <i>pseudo</i> <ttx>Gene#</ttx> will be created. The counts start after the annotated
+gene numbers and they are suffixed by "~". For example, if the last <ttx>Gene#</ttx> for
+Chr03 is 5550 (e.g. 3.5550.), the first pseudo gene number will be 6000 (e.g. 3.6000.~).
+
+<td><a href="img/query_pseudo.png"><img src="img/query_pseudo.png" alt="Pseudo genes" style="border: 1px solid black; width:  370px"></a>
+</table>
+<p>If <ttl>A&S</ttl> was run without numbered pseudos, you can add them later by executing:
+<tt>./symap -pseudo</tt>; the <ttl>Selected Pair</ttl> button will be replaced with
+<ttl>Pseudo Only</ttl>, which will just do the numbering (the  <ttl>Number Pseudo</ttl>
+will need to be selected, but it will remind you). <i>This cannot be undone</i>;
+you would need to re-run
+<ttl>A&S</ttl> with the <ttl>Number Pseudo</ttl> unchecked to remove them.
+
+<table class="ty">
+<tr><td>Pros
+<td>
+<ul>
+<li>If you would like the <ttl>Queries</ttl>
+<a href="Query.html#clhit" class="ext" target="_blank">Cluster</a>  and
+<a href="Query.html#report" class="ext" target="_blank">Report</a>
+to include un-annotated hits.
+<li>If you are exploring new candidate genes, numbered pseudos are easier to track.
+<li>If your genome is not annotated, numbered pseudos are easier to track.
+</ul>
+<tr><td>Cons
+<td>
+<ul>
+<li>The <ttl>Queries</ttl> results can be easier to view with the
+'N.~' as it is more distinct from a real <ttx>Gene#</ttx>.
+</ul>
+</table>
+<br>If comparing more than 2 species, it makes the most sense to have them all numbered or not numbered (though a mix
+will work).
 <a id="hint"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h4>3.c.III  Hints about parameter settings</h4>
@@ -751,29 +836,6 @@ must be filtered; if they are not, the synteny algorithm does not perform well.
 <td><a href="img/demoPileG0.png"><img src="img/demoPileG0.png" alt="Pile to intergenic" style="border: 1px solid black; width:  400px"></a>
 </table>
 
-<table style="width: 95%"><tr><td style="text-align: left">
-<h4>Wrong strand</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-<u>Wrong strand</u>: All hits in a cluster will be to the same strand (=) yet the cluster aligns to
-a positive and negative gene (or vice versa).
-<p><tt>Algo1</tt> does include these hits. You can view them in the <ttl>Query</ttl> where
-the <ttx>Hit St</ttx> column will be "=" but the gene <ttx>Gst</ttx> columns are not equal,
-or the other way around.
-
-<p><tt>Algo2</tt> does NOT include these hits. You can request to view the potential hits
-during the <ttl>A&S</ttl> by running it with the "-wsp" flag, i.e.
-<pre>   ./symap -wsp </pre>
-This will only show gene pairs with (1) multiple hits to exons (in one or multiple gene pairs), (2) at least one is not
-an overlapping gene. It is up to the user to determine what is real.
-Sample output:
-<pre><small>
-#Subhits  Atha     Cabb   Gene Hit  Hit-Location
-EE #3     1521.b   4591.  -/+  =    [Chr02  10,102,716  10,103,438    723bp]   [Chr04 41,818,700 41,819,559    860bp]
-EE #1     3180.a   6029.  -/+  =    [Chr02  17,314,365  17,314,646    282bp]   [Chr04 51,551,640 51,551,897    258bp]
-EE #3     3180.c   242.   -/+  =    [Chr02  17,314,556  17,316,798  2,243bp]   [Chr04  1,756,767  1,758,837  2,071bp]
-EE #2     3180.c   6029.  -/+  =    [Chr02  17,314,575  17,316,810  2,236bp]   [Chr04 51,551,821 51,554,344  2,524bp]
-</small></pre>
 
 <a id="syn"></a>
 <table style="width: 95%"><tr><td style="text-align: left">

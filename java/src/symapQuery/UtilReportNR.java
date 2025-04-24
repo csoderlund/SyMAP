@@ -364,8 +364,7 @@ public class UtilReportNR  extends JDialog {
 		
 		for (int row=0; row<tdp.theTableData.getNumRows(); row++) {
 			TmpRowData rd = new TmpRowData(tdp);
-			rd.loadRow(row);
-			if (rd.geneTag[0].contains(Q.dash) || rd.geneTag[1].contains(Q.dash)) continue;
+			rd.loadRow(row);		// only numbered pseudos will be in the clusters, as screened in ComputeClust
 			
 			Clust grpObj;
 			if (grpMap.containsKey(rd.groupN)) grpObj = grpMap.get(rd.groupN); 

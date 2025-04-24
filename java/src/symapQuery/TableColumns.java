@@ -165,11 +165,12 @@ public class TableColumns {
 		fd.addField(Integer.class,Q.PH, "annot1_idx",Q.ANNOT1IDX,"Index of 1st anno");  	// Not for display
 		fd.addField(Integer.class,Q.PH, "annot2_idx",Q.ANNOT2IDX,"Index of 2nd anno");  	// matched with PA.idx in DBdata
 		
+		/* CAS565 found another way
 		if (isIncludeMinor) { // CAS547 used for key in DBdata for uniqueness	
 			fd.addField(Integer.class,Q.PHA, "annot_idx",Q.PHAANNOT1IDX,"Index of 1st anno");  	// Not for display
 			fd.addField(Integer.class,Q.PHA, "annot2_idx",Q.PHAANNOT2IDX,"Index of 2nd anno");  // matched with PA.idx in DBdata
 		}
-			
+		*/
 		fd.addLeftJoin("pseudo_hits_annot", "PH.idx = PHA.hit_idx",  Q.PHA); 
 		fd.addLeftJoin("pseudo_annot", 		"PHA.annot_idx = PA.idx", Q.PA);
 		fd.addLeftJoin("pseudo_block_hits", "PBH.hit_idx = PH.idx",  Q.PBH);

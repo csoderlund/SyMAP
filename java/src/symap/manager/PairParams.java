@@ -34,25 +34,27 @@ import util.Utilities;
 public class PairParams extends JDialog {
 	private static final long serialVersionUID = 1L;
 	
-	// Order must be same in createMainPanel and setValue and getValue; defaults are in Mpair
+	// Order MUST be same in createMainPanel and setValue and getValue; defaults are in Mpair
+	// These are NOT in the order displayed, but do not change without changing access everywhere else
 	private static final String [] LABELS = { // Order must be same as createMainPanel
 		"Min Dots", "Top N piles", "Merge Blocks", 		// CAS548 add 'piles'
 		"NUCmer Args", "PROmer Args", "Self Args", "NUCmer Only","PROmer Only",
+		"Number Pseudo", // CAS565 add
 		"Algorithm 1 (modified original)", "Algorithm 2 (exon-intron)",  // CAS555 change '()' text 
 		"G0_Len", "Gene", "Exon", "Len",
 		 "EE", "EI", "En", "II", "In"
-		};
+	};
 	
-	// if change, change in Mpair too; defaults are in Mpair
+	// if change, change in Mpair too; defaults are in Mpair; written to DB and file
+	// order the same as above; constant strings are repeated multiple times in MPair
 	private static final String [] SYMBOLS = { 
 		"mindots", "topn", "merge_blocks", 
-		"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only", 
+		"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
+		"number_pseudo",
 		"algo1", "algo2",										
 		"g0_scale", "gene_scale", "exon_scale", "len_scale",
 		"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
-		};
-	
-	private Mpair mp;
+	};
 	
 	public PairParams(Mpair mp) {
 		this.mp = mp;
@@ -63,110 +65,7 @@ public class PairParams extends JDialog {
 		setModal(true);
 		setTitle(mp.mProj1.strDBName + "-" + mp.mProj2.strDBName + " params file");
 	}
-	
-	private void setDefaults(HashMap <String, String> valMap, boolean setDef) {
-		for(int x=0; x<SYMBOLS.length; x++)
-			setValue(SYMBOLS[x], valMap.get(SYMBOLS[x]));	
-		if (setDef) chkDef.setSelected(true); // CAS561 Defaults should reset this, but not initial load from file
-	}
-	private void save() {
-		if (!checkInt("Min Dots", txtMinDots.getText(), 1)) return; 
-		if (!checkInt("Top N piles", txtTopN.getText(), 1)) return;		
-		if (!checkDouble("G0_Len", txtNoGene.getText(), 0)) return;		 
-		if (!checkDouble("Gene", txtGene.getText(), 0)) return;	
-		if (!checkDouble("Exon", txtExon.getText(), 0)) return;	
-		if (!checkDouble("Length", txtLen.getText(), 0)) return;	
-		
-		HashMap <String, String> fileMap = mp.getFileParams();
-		
-		for (String key : SYMBOLS) {
-			fileMap.put(key, getValue(key));
-		}
-		mp.writeFile(fileMap);
-		setVisible(false);
-	}
-	
-	private String getValue(String symbol) {
-		int x=0;
-		if (symbol.equals(SYMBOLS[x++])) 		return txtMinDots.getText();
-		else if (symbol.equals(SYMBOLS[x++])) 	return txtTopN.getText();
-		else if (symbol.equals(SYMBOLS[x++]))	return chkMergeBlocks.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++]))	return txtNucMerArgs.getText();
-		else if (symbol.equals(SYMBOLS[x++]))	return txtProMerArgs.getText();
-		else if (symbol.equals(SYMBOLS[x++]))	return txtSelfArgs.getText();
-		else if (symbol.equals(SYMBOLS[x++]))	return chkNucOnly.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++]))	return chkProOnly.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++]))	return chkAlgo1.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++]))	return chkAlgo2.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++]))	return txtNoGene.getText();
-		else if (symbol.equals(SYMBOLS[x++]))	return txtGene.getText();
-		else if (symbol.equals(SYMBOLS[x++]))	return txtExon.getText();
-		else if (symbol.equals(SYMBOLS[x++]))	return txtLen.getText();
-		else if (symbol.equals(SYMBOLS[x++]))	return chkEEpile.isSelected()?"1":"0"; 
-		else if (symbol.equals(SYMBOLS[x++]))	return chkEIpile.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++]))	return chkEnpile.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++]))	return chkIIpile.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++]))	return chkInpile.isSelected()?"1":"0";
-		else return "";
-	}
-	private boolean checkInt(String label, String x, int min) {
-		if (x.trim().equals("")) x="0"; // CAS546 
-		int i = Utilities.getInt(x.trim());
-		if (min==0) {
-			if (i<0) {
-				Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect integer (" + x + "). Must be >=0.");
-				return false;
-			}
-			return true;
-		}
-		if (i==-1 || i==0) {
-			Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect integer. Must be >0.");
-			return false;
-		}
-		if (label.startsWith("Top") && i>4) {
-			return Utilities.showContinue("Top N piles", "Top N > 4 may produce worse results and take significantly longer.");
-		}
-		return true;
-	}
-	private boolean checkDouble(String label, String x, double min) {
-		if (x.trim().equals("")) x="0.0"; // CAS546 
-		double d = Utilities.getDouble(x.trim());
-		if (min==0) {
-			if (d<0) {
-				Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect decimal (" + x + "). Must be >=0.");
-				return false;
-			}
-			return true;
-		}
-		if (d==-1 || d==0) {
-			Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect decimal. Must be >0.");
-			return false;
-		}
-		return true;
-	}
-	private void setValue(String symbol, String value) {
-		int x=0;
-		if (symbol.equals(SYMBOLS[x++]))		txtMinDots.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	txtTopN.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	chkMergeBlocks.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	txtNucMerArgs.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	txtProMerArgs.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	txtSelfArgs.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	chkNucOnly.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	chkProOnly.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo1.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo2.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	txtNoGene.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	txtGene.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	txtExon.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	txtLen.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	chkEEpile.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	chkEIpile.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	chkEnpile.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	chkIIpile.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	chkInpile.setSelected(value.equals("1"));
-	}
-
+	/*********************************************************************/
 	private void createMainPanel() {
 		int numWidth = 3, decWidth = 2, textWidth = 15;
 		
@@ -179,10 +78,11 @@ public class PairParams extends JDialog {
 		});
 		
 		int x=0;
-		lblMinDots = Jcomp.createLabel(LABELS[x++]); txtMinDots = Jcomp.createTextField("7", numWidth);
 		
-		lblTopN = Jcomp.createLabel(LABELS[x++]); txtTopN = Jcomp.createTextField("2", numWidth);
-		chkMergeBlocks =Jcomp.createCheckBox(LABELS[x++], false); 
+		lblMinDots = Jcomp.createLabel(LABELS[x++]); txtMinDots = Jcomp.createTextField("7", "Miniumum hits in a block", numWidth);
+		
+		lblTopN = Jcomp.createLabel(LABELS[x++]); txtTopN = Jcomp.createTextField("2", "Retain the top N hits of a pile of overlapping hits", numWidth);
+		chkMergeBlocks =Jcomp.createCheckBox(LABELS[x++], "Merge overlapping (or nearby) synteny blocks", false); 
 	
 		lblNucMerArgs = Jcomp.createLabel(LABELS[x++]); txtNucMerArgs = Jcomp.createTextField("",textWidth);
 		lblProMerArgs = Jcomp.createLabel(LABELS[x++]); txtProMerArgs = Jcomp.createTextField("",textWidth);
@@ -196,6 +96,8 @@ public class PairParams extends JDialog {
 		chkDef.setSelected(true);
 		
 		// Cluster
+		chkPseudo = Jcomp.createCheckBox(LABELS[x++], "Number pseudo genes (un-annotated hit)", false);
+		
 		chkAlgo1 = Jcomp.createRadio(LABELS[x++]);
 		chkAlgo2 = Jcomp.createRadio(LABELS[x++]);
 		ButtonGroup agroup = new ButtonGroup();
@@ -232,7 +134,7 @@ public class PairParams extends JDialog {
 				setVisible(false);
 			}
 		});
-	
+		/*-------- Create Layout ------------------*/
 		//////////////////////////////////////////////////////////////////////////
 		JPanel row = Jcomp.createRowPanel();
 		JLabel projLabel = Jcomp.createLabel(mp.mProj1.strDisplayName + " & " + mp.mProj2.strDisplayName);
@@ -272,10 +174,16 @@ public class PairParams extends JDialog {
 		row.add(chkDef);     mainPanel.add(row);mainPanel.add(Box.createVerticalStrut(5));
 		
 		// Clusters
+		int indent=25;
 		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(5)); 
+		
 		row = Jcomp.createRowPanel();
 		row.add(Jcomp.createHtmlLabel("Cluster Hits"));  
-		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param2Clust));// CAS534 change from Help; CAS546 added
+		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param2Clust));// CAS546 added
+		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
+		
+		row = Jcomp.createRowPanel(); // CAS565 add
+		row.add(chkPseudo);
 		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
 		
 		row = Jcomp.createRowPanel();
@@ -289,7 +197,7 @@ public class PairParams extends JDialog {
 			}
 		});
 		
-		row = Jcomp.createRowPanel();
+		row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent));
 		row.add(lblTopN); row.add(Box.createHorizontalStrut(5));
 		row.add(txtTopN);
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
@@ -305,7 +213,7 @@ public class PairParams extends JDialog {
 			}
 		});
 		
-		row = Jcomp.createRowPanel(); 
+		row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent));
 		JLabel j = Jcomp.createLabel("Scale:", "Increase scale creates less hits, decrease creates more hits");
 		row.add(j); row.add(Box.createHorizontalStrut(8)); 
 		row.add(lblExon);    row.add(txtExon);   row.add(Box.createHorizontalStrut(5)); // CAS548 swapped order
@@ -314,7 +222,7 @@ public class PairParams extends JDialog {
 		row.add(lblNoGene);  row.add(txtNoGene); row.add(Box.createHorizontalStrut(5));
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
 		
-		row = Jcomp.createRowPanel();
+		row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent));
 		row.add(new JLabel("Keep piles:")); 
 		row.add(chkEEpile);   row.add(Box.createHorizontalStrut(5));
 		row.add(chkEIpile);   row.add(Box.createHorizontalStrut(5));
@@ -327,7 +235,7 @@ public class PairParams extends JDialog {
 		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(5)); 
 		row = Jcomp.createRowPanel();
 		row.add(Jcomp.createHtmlLabel("Synteny"));  row.add(Box.createVerticalStrut(5));
-		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param2Syn));// CAS534 change from Help; CAS546 added
+		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param2Syn));//  CAS546 added
 		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
 		
 		row = Jcomp.createRowPanel();
@@ -361,10 +269,115 @@ public class PairParams extends JDialog {
 		add(mainPanel);
 		pack();
 		setResizable(false);
-		setLocationRelativeTo(null); // CAS532
+		setLocationRelativeTo(null); 
+	}/************************************************************************/
+	private String getValue(String symbol) {
+		int x=0;
+		if (symbol.equals(SYMBOLS[x++])) 		return txtMinDots.getText();
+		else if (symbol.equals(SYMBOLS[x++])) 	return txtTopN.getText();
+		else if (symbol.equals(SYMBOLS[x++]))	return chkMergeBlocks.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++]))	return txtNucMerArgs.getText();
+		else if (symbol.equals(SYMBOLS[x++]))	return txtProMerArgs.getText();
+		else if (symbol.equals(SYMBOLS[x++]))	return txtSelfArgs.getText();
+		else if (symbol.equals(SYMBOLS[x++]))	return chkNucOnly.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++]))	return chkProOnly.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++])) 	return chkPseudo.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++]))	return chkAlgo1.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++]))	return chkAlgo2.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++]))	return txtNoGene.getText();
+		else if (symbol.equals(SYMBOLS[x++]))	return txtGene.getText();
+		else if (symbol.equals(SYMBOLS[x++]))	return txtExon.getText();
+		else if (symbol.equals(SYMBOLS[x++]))	return txtLen.getText();
+		else if (symbol.equals(SYMBOLS[x++]))	return chkEEpile.isSelected()?"1":"0"; 
+		else if (symbol.equals(SYMBOLS[x++]))	return chkEIpile.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++]))	return chkEnpile.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++]))	return chkIIpile.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++]))	return chkInpile.isSelected()?"1":"0";
+		else return "";
 	}
-	
+	private void setValue(String symbol, String value) {
+		int x=0;
+		if (symbol.equals(SYMBOLS[x++]))		txtMinDots.setText(value);
+		else if (symbol.equals(SYMBOLS[x++]))	txtTopN.setText(value);
+		else if (symbol.equals(SYMBOLS[x++]))	chkMergeBlocks.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	txtNucMerArgs.setText(value);
+		else if (symbol.equals(SYMBOLS[x++]))	txtProMerArgs.setText(value);
+		else if (symbol.equals(SYMBOLS[x++]))	txtSelfArgs.setText(value);
+		else if (symbol.equals(SYMBOLS[x++]))	chkNucOnly.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	chkProOnly.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))		chkPseudo.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo1.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo2.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	txtNoGene.setText(value);
+		else if (symbol.equals(SYMBOLS[x++]))	txtGene.setText(value);
+		else if (symbol.equals(SYMBOLS[x++]))	txtExon.setText(value);
+		else if (symbol.equals(SYMBOLS[x++]))	txtLen.setText(value);
+		else if (symbol.equals(SYMBOLS[x++]))	chkEEpile.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	chkEIpile.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	chkEnpile.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	chkIIpile.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	chkInpile.setSelected(value.equals("1"));
+	}
+	/************************************************************************/
+	private void setDefaults(HashMap <String, String> valMap, boolean setDef) {
+		for(int x=0; x<SYMBOLS.length; x++)
+			setValue(SYMBOLS[x], valMap.get(SYMBOLS[x]));	
+		if (setDef) chkDef.setSelected(true); // CAS561 Defaults should reset this, but not initial load from file
+	}
+	private void save() {
+		if (!checkInt("Min Dots", txtMinDots.getText(), 1)) return; 
+		if (!checkInt("Top N piles", txtTopN.getText(), 1)) return;		
+		if (!checkDouble("G0_Len", txtNoGene.getText(), 0)) return;		 
+		if (!checkDouble("Gene", txtGene.getText(), 0)) return;	
+		if (!checkDouble("Exon", txtExon.getText(), 0)) return;	
+		if (!checkDouble("Length", txtLen.getText(), 0)) return;	
+		
+		HashMap <String, String> fileMap = mp.getFileParams();
+		
+		for (String key : SYMBOLS) {
+			fileMap.put(key, getValue(key));
+		}
+		mp.writeFile(fileMap);
+		setVisible(false);
+	}
+	private boolean checkInt(String label, String x, int min) {
+		if (x.trim().equals("")) x="0"; // CAS546 
+		int i = Utilities.getInt(x.trim());
+		if (min==0) {
+			if (i<0) {
+				Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect integer (" + x + "). Must be >=0.");
+				return false;
+			}
+			return true;
+		}
+		if (i==-1 || i==0) {
+			Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect integer. Must be >0.");
+			return false;
+		}
+		if (label.startsWith("Top") && i>4) {
+			return Utilities.showContinue("Top N piles", "Top N > 4 may produce worse results and take significantly longer.");
+		}
+		return true;
+	}
+	private boolean checkDouble(String label, String x, double min) {
+		if (x.trim().equals("")) x="0.0"; // CAS546 
+		double d = Utilities.getDouble(x.trim());
+		if (min==0) {
+			if (d<0) {
+				Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect decimal (" + x + "). Must be >=0.");
+				return false;
+			}
+			return true;
+		}
+		if (d==-1 || d==0) {
+			Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect decimal. Must be >0.");
+			return false;
+		}
+		return true;
+	}
+	/************************************************************************/
 	private JPanel mainPanel = null;
+	private Mpair mp = null;
 	
 	private JLabel lblNucMerArgs = null, lblProMerArgs = null, lblSelfArgs = null;
 	private JTextField txtNucMerArgs = null, txtSelfArgs = null, txtProMerArgs = null;
@@ -379,6 +392,8 @@ public class PairParams extends JDialog {
 	private JLabel lblNoGene, lblGene, lblExon, lblLen;
 	private JTextField txtNoGene, txtGene, txtExon, txtLen;
 	private JCheckBox chkEEpile = null, chkEIpile = null, chkEnpile = null, chkIIpile = null, chkInpile = null;
+	
+	private JCheckBox chkPseudo = null;
 	
 	private JLabel lblMinDots = null;
 	private JTextField txtMinDots = null;

@@ -61,12 +61,15 @@
 <td style="white-space: nowrap; vertical-align: text-top;">
 	<table>
 		<tr><td><a href="#query"><u><small>&gt;</small> Query Setup</u></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<tr><td><a href="#rules">Rules</a>, <a href="#genen">Gene#</a>
 		<tr><td><a href="#gen">General</a>
 		<tr><td><a href="#sin">Single genes</a>
 		<tr><td><a href="#pair">Pair hits</a>
-		<tr><td><a href="#pfs">Groups of hits</a>
+		<tr><td><a href="#pfs">Compute Groups</a>
+		<tr><td>&nbsp;&nbsp;&nbsp;<a href="#multi">Multi-gene</a>, <a href="#clhit">Cluster</a>
 	</table>
-<td  style="white-space: nowrap; vertical-align: text-top;">
+<td>&nbsp;&nbsp;&nbsp;
+<td style="white-space: nowrap; vertical-align: text-top;">
 	<table>
 		<tr><td><a href="#result"><u>Result Panel</u></a>&nbsp;&nbsp;
 		<tr><td><a href="#tab">Result table</a>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -74,19 +77,23 @@
 		<tr><td>&nbsp;&nbsp;&nbsp;<a href="#pairCol">Pair</a>, <a href="#singleCol">Single</a>, <a href="#save">Auto-save</a>&nbsp;&nbsp;&nbsp;&nbsp;
 		<tr><td><a href="#stat">Statistics</a>
 		<tr><td><a href="#but">Top buttons</a>
-		<tr><td>&nbsp;&nbsp;&nbsp;<a href="#view2D">View 2D</a>, <a href="#report">Gene Report</a>...
-		<tr><td><a href="#msp">3-chromosomes</a>
+		<tr><td>&nbsp;&nbsp;&nbsp;<a href="#msaAlign">MSA, <a href="#view2D">View 2D</a>, <a href="#report">Gene Report</a>...
 	</table>
 <td  style="white-space: nowrap; vertical-align: text-top;">
-<a href="#rtab"><u><small>&gt;</small> Results</u></a>
+	<table>
+	<tr><td><a href="#rtab"><u><small>&gt;</small> Results</u></a>
+	<tr><td>&nbsp;
+	<tr><td>&nbsp;
+	<tr><td>Extra topic:
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#msp">3-chromosomes</a>
+	</table>
 </table>
 
-<p>See <a href="Release.html#v562" class="ext" target="_blank">Release</a> for the latest v5.6.1 and v5.6.2 changes.
-<p>See <a href="./UserGuide.html#term" class="ext" target="_blank">Terminology</a> in the User Guide,
-especially the <ttx>Cluster Hit Algo1 versus Algo2</ttx> description.
+<p>See <a href="Release.html#v562" class="ext" target="_blank">Release</a> for the latest v5.6.1-v5.6.5 changes.
+&nbsp;&nbsp;See <a href="./UserGuide.html#term" class="ext" target="_blank">Terminology</a> in the User Guide.
 <!------------------------------------------------------------------------------>
 <hr>
-<a id="intruct"></a>
+<a id="instruct"></a>
 <h2><small>&gt;</small> Instructions</h2>
 To open the query interface, first select two or more sequence projects in the
 <a href="UserGuide.html#mgr" class="ext" target="_blank">Project Manager</a>.
@@ -101,30 +108,27 @@ if all project pairs used <ttx>Algo2</ttx>, it will be exon overlap.
 <td><a href="img/query_oview.png"><img src="img/query_oview.png" alt="query_oview" style="border: 1px solid black; width: 500px"></a>
 </table>
 
-<!---------------------------------------------------------------------->
+<!-------------------QUERY SETUP --------------------------------------------------->
 <a id="query"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2><small>&gt;</small> Query Setup</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Sections:</b>&nbsp;&nbsp;&nbsp;
-<a href="#rules">1. Rules</a>&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#rules">1. Rules</a> (<a href="#genen">Gene#</a>,
+<a href="#pseudo">Pseudo</a>, <a href="#stop">Wait/Stop</a>)&nbsp;&nbsp;&nbsp;
 <a href="#gen">2. General</a>&nbsp;&nbsp;&nbsp;
 <a href="#sin">3. Single genes</a>&nbsp;&nbsp;&nbsp;
 <a href="#pair">4. Pair Hits</a>&nbsp;&nbsp;&nbsp;
-<a href="#pfs">5. Groups of hits</a>
+<a href="#pfs">5. Compute Groups</a>
 <p>
 
 <a id="rules"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>1. Rules</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-Set up the desired filters and then select <ttb>Run Query</ttb> to execute it.
-When the search is complete, the <a href="#result">table result panel</a> will be displayed.
 
 <table>
 <tr><td style="vertical-align: text-top;">
+Set up the desired filters and then select <ttb>Run Query</ttb> to execute it.
+When the search is complete, the <a href="#result">table result panel</a> will be displayed.
 
 <p>1. Most filters can be used in conjunction with other
 	filters; options will be disabled if they cannot be used with a selected filter.
@@ -135,19 +139,26 @@ When the search is complete, the <a href="#result">table result panel</a> will b
 <td><a href="img/query_query.png"><img src="img/query_query.png" alt="query_query" style="border: 1px solid black; width: 550px"></a>
 </table>
 
+<b>Hit#</b>
 <table>
-<tr><td>4. All <ttx>Hit#</ttx> are uniquely numbered for a chromosome pair,
+<tr><td>All <ttx>Hit#</ttx> are uniquely numbered for a chromosome pair,
 	e.g. there will be a <ttx>Hit#</ttx> 3 on all chromosome pairs that have hits.
 
 <td><a href="img/query_table_rows.png"><img src="img/query_table_rows.png" alt="query_table_rows" style="border: 1px solid black; width: 450px"></a>
 </table>
 
+<a id="genen">
+<table style="width: 95%"><tr><td style="text-align: left">
+<b>Gene#</b>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 <table>
 <tr><td style="vertical-align: text-top;">
-	5. All <ttx>Gene#</ttx> are sequentially numbered per chromosome, e.g. there will be a
+	All genes have a <ttx>Gene#</ttx>, which are sequentially numbered per chromosome, e.g. there will be a
 	<ttx>Gene#</ttx> 3 on all chromosomes that have at least 3 non-overlapping genes. Overlapping
 	genes have the same number, but different suffixes, e.g. 4.b.
-	<p>6. <ttx>Major</ttx> and <ttx>Minor</ttx> genes:
+
+	<p><ttl>Major</ttl> and <ttl>Minor</ttl> genes:
 	<ol type='a'>
 	<li>A hit can align to multiple genes on either or both chromosomes; it is assigned to the best (<ttx>major</ttx>) gene on each end.
 	<li>For example, in the image on the right, the pink gene is the major gene as the hit (pink line)
@@ -157,12 +168,32 @@ When the search is complete, the <a href="#result">table result panel</a> will b
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<ttl>Every*</ttl>, <ttl>Hit#</ttl>,
 	<ttl>Gene#</ttl>, and <ttl>Multi</ttl> with <ttl>Minor*</ttl> checked.
 	</ol>
-	<td>
-	<a href="img/queryMultOlap.png">
+	<td><a href="img/queryMultOlap.png">
 	<img src="img/queryMultOlap.png" alt="Hit overlaps two genes" style="border: 1px solid black; width: 35px"></a>
 </table>
-<a id="queryMultP">
-<p><b>Run/Stop Query:</b>
+
+<a id="pseudo">
+<table style="width: 95%"><tr><td style="text-align: left">
+<ttl>Pseudo</ttl>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<ttx>Un-annotated</ttx>:
+A hit that does not overlap a gene (annotated from the .gff file) is un-annotated (<i>pseudo gene</i>). It may be numbered
+or un-numbered, depending on the <a href="SystemHelp.html#pseudo" class="ext" target="_blank">parameter</a> setting when the database was built.
+The <a href="#instruct">Instruction</a> wil say whether they are numbered or not.
+<p>
+<table><tr><td>
+Not numbered: The <ttx>Gene#</ttx> column will show the chromosome followed by ".~".
+<p>Numbered: These are numbered sequentially, where the counts start after the annotated gene numbers.
+For example, if the last Gene# for Chr03 is 5550 (e.g. 3.5550.), the first pseudo gene number will be 6000 and
+the column will show 3.6000.~.
+
+<td><a href="img/query_pseudo.png"><img src="img/query_pseudo.png" alt="Pseudo genes" style="border: 1px solid black; width:  350px"></a>
+</table>
+If numbered, the pseudo genes can be included in <a href="#clhit">Clusters</a> and <a href="#report">Report</a>.
+
+<a id="stop">
+<p><b>Wait/Stop Query:</b>
 <p>&rarr; <i>Wait for the current query to stop running before starting another!</i>
 <br>It is not possible to start a new query from the same panel, but you could start one from a different table;
 <i>they both will fail, so do NOT do this!</i>
@@ -345,11 +376,11 @@ hits in block 1.2.3.
 <!--------------------------------------------------->
 <a id="pfs"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>4. Groups of hits</h3>
+<h3>4. Compute Groups</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 &nbsp;&nbsp;&nbsp;<b>Sections:</b> &nbsp;&nbsp;&nbsp;
 <a href="#multi">1. Multi-hit genes</a>&nbsp;&nbsp;&nbsp;
-<a href="#clhit">2. Cluster genes</a>&nbsp;&nbsp;&nbsp;
+<a href="#clhit">2. Cluster hits</a>&nbsp;&nbsp;&nbsp;
 
 <p>These two options are computed on the fly.
 They produce query results with values for the <ttx>Group</ttx> column; this in turn
@@ -380,7 +411,7 @@ see <a href="#rmulti">Multi-hit gene report</a>.
 <tr><td>&nbsp;<td style="vertical-align: text-top;">
 	<ttl>Tandem</ttl>
     <td>&nbsp;<td>(Annotated species only): The &gt;=N hits must be to a tandem array of genes.
-	<br><ttl>Same Chr</ttl> is automatic with this option.
+	<br><ttl>Same Chr</ttl> is automatic with this option. Numbered pseudos will not be included.
 <tr><td>&nbsp;<td style="white-space: nowrap; vertical-align: text-top;">
 	<ttl>Same Chr</ttl>
 	<td>&nbsp;<td>The &gt;=N hits must all be on the same opposite chromosome.
@@ -408,38 +439,45 @@ same 2D display).
 <br><a href="img/query_multi_2D.png">
 <img src="img/query_multi_2D.png" alt="multi-hit 2D" style="border: 1px solid black; width: 700px"></a>
 
+<!------------ Cluster --------------------->
 <a id="clhit"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h4>4.2. <ttl>Cluster genes</ttl></h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 &rarr;<i>Note: this algorithm was written for v5.6.3.</i>
 <ul>
-<li>This algorithm finds clusters of overlapping genes.
-<li>Each cluster is given a group number, which is shown in the Query Results table
-(column name <ttx>Group</ttx>).
-<li>These can be pre-filtered by species chromosome, etc.
-<li><i>Note, if you have more than 6 species selected, this stage can take an hour or more.</i>
+<li>This algorithm finds clusters overlapping genes. This is, every gene in the cluster aligns to at least one
+other gene in the cluster, and all genes that align to any gene in the cluster are included. For example, for
+a cluster of genes {A,B,C,D} each has a hit with at least one gene in the cluster and no hits to a gene not in the
+cluster.
+<li>Each cluster is given a group number, which is shown in the Query Results table (column name <ttx>Group</ttx>).
+<li>These can be pre-filtered by species chromosome,  etc.
+<li>If the un-annotated are not numbered (see <a href="#pseudo">Pseudo</a>) only hits with both genes will be included.
+<li>If the un-annotated are numbered, the pseudo genes will be included, that is, the default is to consider every
+hit with at least one gene. In this case, the <ttl>One Gene</ttl>
+and <ttl>Both genes</ttl> filters can be used in conjunction with <ttl>Cluster</ttl>.
 </ul>
 
 <table class="tx"><tr><td>
 	<tr>
-	<td>There image on the right shows the filters.
-	<p>The first fitler, &gt;= N hits, is always applied.
-	<br>Then select a second filter from the following:
+	<td>If there are only two species, the only filter will be <ttl>&gt;=N</ttl>.
+	<br>For more than 2 species, the filters are shown on the right.
 	<td>&nbsp;
 	<td><a href="img/query_clust.png">
-	<img src="img/query_clust.png" alt="Cluster3" style="border: 1px solid black; width: 260px"></a>
+	<img src="img/query_clust.png" alt="Cluster3" style="border: 1px solid black; width: 280px"></a>
 </table>
+
 <table class="tx">
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>&gt;=N</ttl>
 	<td>List all clusters that have &gt;= N hits.
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Include</ttl>
-	<td> The resulting clusters must have at least one gene from all included species.
+	<td> The resulting clusters may have at least one gene from all included species.
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Exclude</ttl>
 	<td> The resulting clusters will contain no genes from the excluded species.
 </table>
 
-<p><ttl>PgeneF</ttl>: If you start <ttx>viewSymap</ttx> with the "-g" flag, you will see the
+<p><u>Alternative algorithm</u>:
+<br><ttl>PgeneF</ttl>: If you start <ttx>viewSymap</ttx> with the "-g" flag, you will see the
 filters from the original PgeneF cluster algorithm.
 &rarr;<i>Note: the PgeneF feature has not been tested for a long time except superficially
 (i.e. making sure it has the same results as the previous release)</i>. It remains available
@@ -457,6 +495,7 @@ i.e. for each pair of species A and B in the group, there must be a hit linking 
 <ttl>At least one</ttl>: Only PgeneF hits will be shown if they have
 hits to the included species, although the PgeneF numbers will reflect groupings created
 using all hits.
+<hr>
 <!---------------------------------------------------------------------->
 <!---------------------------------------------------------------------->
 <!---------------------------------------------------------------------->
@@ -470,7 +509,6 @@ using all hits.
 <a href="#col">2. Columns</a>&nbsp;&nbsp;&nbsp;
 <a href="#stat">3. Statistics</a>&nbsp;&nbsp;&nbsp;
 <a href="#but">4. Top buttons</a>&nbsp;&nbsp;&nbsp;
-<a href="#msp">5. 3-chromosomes</a>&nbsp;&nbsp;&nbsp;
 
 <!----------------------------------------------------->
 <a id="tab"></a>
@@ -786,7 +824,7 @@ The region displayed can be specified by the drop-down beside the <ttl>View 2D</
 	<td>The entire synteny block for the selected hit will be shown.
 	<td><ttx>Show Block Hits</ttx>.
 
-	<tr><td style="white-space: nowrap;"><ttl>Group</ttl>
+	<tr><td style="white-space: nowrap;"><ttl>Group-chr</ttl>
 	<td><ttx>Group</ttx>
 	<td>The entire group of hits from the <u>two chromosomes</u> of the selected hit will be shown.
 	<td><ttx>Show all hits</ttx>
@@ -866,7 +904,7 @@ report will be produced.
 the <ttl>Cluster genes</ttl> does not; however <ttl>Cluster genes</ttl> shares most of the same options.
 </ul>
 <a id="rint"></a>
-<h4>4.5.1 Reference-based Interface</h4>
+<h4>Reference-based Interface</h4>
 <p>The menu on the lower-right shows the options that will always exist.
 There may be additional options in between the middle lines,
 depending on the condition used to create the table, as discussed below.
@@ -914,7 +952,7 @@ The following discussion will all apply to results from 3 or 4 species.
 <!--------------------------------------->
 <a id="rgene"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h4>4.5.2 Gene Report</h4>
+<h4>Gene Report</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <table class="ty">
 <tr><td style="white-space: nowrap;" colspan="3"><ttb>Gene</ttb> - additional options for &gt;2 species
@@ -940,7 +978,7 @@ The following discussion will all apply to results from 3 or 4 species.
 <!--------------------------------------->
 <a id="rcoset"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h4>4.5.3 Collinear Report</h4>
+<h4>Collinear Report</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Collinear sets are grouped to show the union of overlapping sets for the reference gene.
@@ -974,7 +1012,7 @@ Collinear sets are grouped to show the union of overlapping sets for the referen
 <!---- Multi-gene Group ---->
 <p><a id="rmulti"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h4>4.5.4 Multi-hit gene report</h4>
+<h4>Multi-hit gene report</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 Shows reference genes that align to at least N genes, where N is the number input on the query panel.
 
@@ -1050,10 +1088,25 @@ the <ttx>Gene Annotation</ttx> of 'desc' or 'product'.
 <td><a href="img/query_search.png"><img src="img/query_search.png" alt="Query search" style="border: 1px solid black; width: 230px"></a>
 </table>
 
+<hr>
+<!--------------------------------------------------------------------------->
+<a id="rtab"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h2><small>&gt;</small> Results</h2>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<a href="img/query_result_tab.png"><img src="img/query_result_tab.png" alt="query results tab" style="border: 1px solid black; width: 600px"></a>
+<p>All query results are listed under the <ttb>&gt; Results</ttb> tab on the left.
+Clicking this tab shows the table of queries illustrated above.
+Query results can be displayed by clicking a result on the left panel,
+or double-clicking it in the list of results table shown above.
+<p>The only way to remove query results from the left tab is by selecting them in this table followed
+by <ttl>Remove Selected</ttl>, all remove all with <ttl>Remove All</ttl>.
+
 <!---------------------------------------------------------------->
 <a id="msp"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>5. 3-chromosomes</h3>
+<h3>3-chromosomes</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 &rarr; <a href="#report">Report</a> is only way to view more than two species in a query row (described
@@ -1078,20 +1131,6 @@ shows how to highlight shared or unique genes in the 2D display of 3 chromosomes
 </table>
 
 
-
-<!--------------------------------------------------------------------------->
-<a id="rtab"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2><small>&gt;</small> Results</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-<a href="img/query_result_tab.png"><img src="img/query_result_tab.png" alt="query results tab" style="border: 1px solid black; width: 600px"></a>
-<p>All query results are listed under the <ttb>&gt; Results</ttb> tab on the left.
-Clicking this tab shows the table of queries illustrated above.
-Query results can be displayed by clicking a result on the left panel,
-or double-clicking it in the list of results table shown above.
-<p>The only way to remove query results from the left tab is by selecting them in this table followed
-by <ttl>Remove Selected</ttl>, all remove all with <ttl>Remove All</ttl>.
 
 
 <table style="width: 95%"><tr><td style="text-align: left">

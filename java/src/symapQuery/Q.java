@@ -1,5 +1,7 @@
 package symapQuery;
 
+import symap.Globals;
+
 /**
  * Constants for Query and display
  */
@@ -7,8 +9,17 @@ package symapQuery;
 public class Q {
 	static final int INC=5000;
 	static final String GROUP = "-", COSET = "."; // CAS563 can't change COSET easily
-	static final String DOT = ".",    // dot used between chr.chr.block and chr.chr.CoSz and Chr.gene#; hard-coded everywhere
-			            SDOT = "\\."; // this is for split
+	static final String DOT = Globals.DOT,    // dot used between chr.chr.block and chr.chr.CoSz and Chr.gene#; hard-coded everywhere
+			            SDOT = Globals.SDOT; // this is for split
+	
+	static final String empty    = 	".";		// Changed from "-" because was confused with negative strand; CAS563
+	static final String dash	 =  "-"; 		// pre-v5.6.5 this used for geneTag if empty
+	static final String pseudo 	= Globals.pseudoChar; // v5.6.5 no annot
+	static final String minor 	= Globals.minorAnno;
+	static final int    iNoVal   = -1;          // gene coord defaults
+	
+	static final String delim = "\n";	// uses as delimiter between Species::annoKey, and put annoKey on 2nd column line
+	static final String delim2 = ":";	// used for other keys
 	static final String stop = "Stopped"; // CAS564 set in TableMainPanel, checked in other files
 	
 	static final String rowCol   = "Row";
@@ -33,12 +44,7 @@ public class Q {
 	static final String gOlap = 	 "%Olap";   // CAS548
 	
 	static final String All_Anno =  "All_Anno";
-	static final String empty    = 	".";		// Changed from "-" because was confused with negative strand; CAS563
-	static final String dash	 =  "-"; 		// this used for geneTag if empty
-	static final int    iNoVal   = -1;          // gene coord defaults
 	
-	static final String delim = "\n";	// uses as delimiter between Species::annoKey, and put annoKey on 2nd column line
-	static final String delim2 = ":";	// used for other keys
 	
 	// for SQL tables - see below for tables and fields used
 	static final String PA = 	"PA"; 	// pseudo_annot
@@ -83,7 +89,7 @@ public class Q {
 	static final int ANNOT1IDX = 30;	// PH.annot1_idx
 	static final int ANNOT2IDX = 31;	// PH.annot2_idx
 	
-	static final int PHAANNOT1IDX = 32;	// PHA.annot_idx	CAS547 for AllGenes
+	static final int PHAANNOT1IDX = 32;	// PHA.annot_idx	CAS565 not used anymore; CAS547 for AllGenes
 	static final int PHAANNOT2IDX = 33;	// PHA.annot2_idx
 	
 	/**************************************************************
