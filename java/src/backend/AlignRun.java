@@ -1,10 +1,5 @@
 package backend;
 
-/************************************* 
- * Holds information for a given alignment
- * Executes the alignment program
- * v560 renamed from ProgSpec
- */
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
@@ -14,29 +9,35 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 
+import symap.Ext;		// all external programs stuff in Ext; CAS566
 import util.ErrorReport;
 import util.Utilities;
 
+/************************************* 
+ * Executes the alignment program for one query_to_target where either may have >1 chromosomes/scaffold
+ * v560 renamed from ProgSpec
+ */
+
 public class AlignRun implements Comparable<AlignRun> 
 {
-	public int alignNum;
-	public String program, args;
+	protected static final int STATUS_UKNOWN  = 0;
+	protected static final int STATUS_QUEUED  = 1;
+	protected static final int STATUS_RUNNING = 2;
+	protected static final int STATUS_ERROR   = 3;
+	protected static final int STATUS_DONE    = 4;
+	
+	protected int alignNum;
+	protected String program, args;
 	
 	private File f1, f2;
 	private String resDir, alignLogDirName;
 	private String outRoot, outFile;
 	private long startTime;	
-	
-	public static final int STATUS_UKNOWN  = 0;
-	public static final int STATUS_QUEUED  = 1;
-	public static final int STATUS_RUNNING = 2;
-	public static final int STATUS_ERROR   = 3;
-	public static final int STATUS_DONE    = 4;
-	
+
 	private Process process;
 	private int status, nExitValue = -1;
 	
-	public AlignRun(String program, String platpath, String args, 
+	protected AlignRun(String program, String args, 
 			File f1, File f2, String resdir, String alignLogDirName)
 	{
 		this.program = program; 
@@ -54,15 +55,21 @@ public class AlignRun implements Comparable<AlignRun>
 		else					this.status = STATUS_QUEUED;
 	}
 	
-	public synchronized int     getStatus() { return status; }
-	public synchronized void    setStatus(int n) { status = n; }
-	public synchronized boolean isQueued() { return status == STATUS_QUEUED; }
-	public synchronized boolean isRunning() { return status == STATUS_RUNNING; }
-	public synchronized boolean isError() { return status == STATUS_ERROR; }
-	public synchronized boolean isDone() { return status == STATUS_DONE; }
+	protected synchronized void    setStatus(int n) {status = n;}
+	protected synchronized int     getStatus() 	{return status;}
+	protected synchronized boolean isQueued() 	{return status == STATUS_QUEUED;}
+	protected synchronized boolean isRunning() 	{return status == STATUS_RUNNING;}
+	protected synchronized boolean isError() 	{return status == STATUS_ERROR;}
+	protected synchronized boolean isDone() 	{return status == STATUS_DONE;}
 	
-	public File getQueryFile() {
-		return f1;	
+	protected String toStatus() {
+		String s = Utilities.pad( getDescription(), 40 ) + "   ";
+		if (isError()) 			s += "Error occurred (" + nExitValue + ")";
+		else if (isRunning()) 	s += Utilities.getDurationString( getRunTime() );
+		else if (isDone())		s += "Finished";
+		else if (isQueued())	s += "Queued";
+		else					s += "Unknown";		
+		return s;
 	}
 	private boolean outputFileExists() {
 		File f1 = new File(outFile + Constants.doneSuffix);
@@ -73,30 +80,15 @@ public class AlignRun implements Comparable<AlignRun>
 		}
 		return false;
 	}
-	
-	public String getOutputFilename() {
-		return outFile;
-	}
-	
-	public String getDescription() {
+	protected String getDescription() {
 		return f1.getName() + " to " + f2.getName();
 	}
 	
-	public String toString() {
-		String s = Utilities.pad( getDescription(), 40 ) + "   ";
-		if (isError()) 			s += "Error occurred (" + nExitValue + ")";
-		else if (isRunning()) 	s += Utilities.getDurationString( getRunTime() );
-		else if (isDone())		s += "Finished";
-		else if (isQueued())	s += "Queued";
-		else					s += "Unknown";		
-		return s;
-	}
-	
-	public long getRunTime() {
+	protected long getRunTime() {
 		return System.currentTimeMillis() - startTime;
 	}
 	
-	public boolean doAlignment()  { // CAS508 remove throw Exception
+	protected boolean doAlignment()  { 
 		int rc = -1;
 		String cmd="";
 		
@@ -114,23 +106,18 @@ public class AlignRun implements Comparable<AlignRun>
 			FileWriter runFW = new FileWriter(runLogName);
 			Log runLog = new Log(runFW);  
 			
-			if (!program.equals("promer") && !program.equals("nucmer")) {//(type == ProgType.mummer)
-				System.err.println("SyMAP error: unsupported program: " + program);
-				return false;
-			}
-			
 			// Make command
 			String intFilePath = resDir + outRoot + "." + program;
 			String deltaFilePath = intFilePath + ".delta";
 			
-			if (Constants.isMummerPath()) { // CAS508 path is set in symap.config
+			if (Ext.isMummer4Path()) { // CAS508 path is set in symap.config
 				query = f1.getAbsolutePath();
 				targ =  f2.getAbsolutePath();
 				intFilePath =   new File(intFilePath).getAbsolutePath();
 				deltaFilePath = new File(deltaFilePath).getAbsolutePath();
 			}
 			
-			String mummerPath = Constants.getProgramPath("mummer"); 
+			String mummerPath = Ext.getMummerPath(); 
 			if (!mummerPath.equals("") && !mummerPath.endsWith("/")) mummerPath += "/"; 
 			
 			// Run promer or nucmer
@@ -139,8 +126,8 @@ public class AlignRun implements Comparable<AlignRun>
 			
 			// Run show-coords // CAS501 nucmer rc=1
 			if (rc == 0) { 
-				String parms = (program.equals("promer") ? "-dlkT" : "-dlT"); // -k to remove secondary frame hits; CAS515 remove H
-				cmd = mummerPath + "show-coords " + parms +  " " + deltaFilePath;
+				String parms = (program.equals(Ext.exPromer) ? "-dlkT" : "-dlT"); // -k to remove secondary frame hits; CAS515 remove H
+				cmd = mummerPath + Ext.exCoords + " " + parms +  " " + deltaFilePath;
 				rc = runCommand(cmd, new FileWriter(outFile), runLog);
 				runLog.msg( "#" + alignNum + " done: " + Utilities.getDurationString(getRunTime()) );
 			}
@@ -178,7 +165,7 @@ public class AlignRun implements Comparable<AlignRun>
 		Utilities.deleteFile(intFilePath + ".ntref"); // nucmer only
 	}
 	
-	public void interrupt() {
+	protected void interrupt() {
 		setStatus(AlignRun.STATUS_ERROR);
 		process.destroy(); // terminate process
 		try { 
@@ -188,7 +175,7 @@ public class AlignRun implements Comparable<AlignRun>
 		cleanup();
 	}
 	
-    public int runCommand ( String strCommand, Writer runFW, Log runLog ) {// runFW and runLog go to same file
+    protected int runCommand (String strCommand, Writer runFW, Log runLog) {// runFW and runLog go to same file
     	try {
 	        boolean bDone = false;
 	        System.err.println("#" + alignNum + " " + strCommand);
@@ -263,10 +250,9 @@ public class AlignRun implements Comparable<AlignRun>
         return nExitValue;  
     }
     
-    // "Comparable" interface for sorting
-    public int compareTo(AlignRun p) {
+    public int compareTo(AlignRun p) {// goes into queue sorted ascending order
 		if (p != null)
-			return p.getDescription().compareTo( getDescription() );
+			return getDescription().compareTo(p.getDescription() );
 		return -1;
     }
 }

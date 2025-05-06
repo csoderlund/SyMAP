@@ -35,7 +35,8 @@ public class Arg {
 	private static double pExonScale=1.0, pGeneScale=1.0, pG0LenScale=1.0, pLenScale=1.0;
 	private static final double [] fLowExonCov2  = {20,25}; // exon coverage and percent fraction of each exon
 	private static final double [] fLowGeneCov2  = {25,35, 50}; // hit-gene overlap/genL
-	private static final int    [] fMinLen    = {300, 1000, 5000, 10000}; // 300 is documented as smallest non-perfect 
+	public static int  iPpMinGxLen= 300; 		// access  in symap.manager.PairParams
+	private static final int    [] fMinLen  = {300, 1000, 5000, 10000}; // 300 is documented as smallest non-perfect 
 	
 	protected static final double  dLenRatio=0.5;				  // g1 and g0;
 	private static final double [] dMinCov = {60.0, 80.0, 97.0};  // used directly with iPpMinMaxCov in g2 and g1 for gene&exon
@@ -44,7 +45,7 @@ public class Arg {
 	// Set in setFromParams using above final values and parameter scale values
 	private static double [] dPpLowExonCov2={0,0}, dPpLowGeneCov2={0,0,0}; // scale * fLow...
 	private static int   []  iPpMinLen= {0,0,0,0}; 						 // fMinLen * lenScale; usually for xMaxLen, but g1 exon
-	private static int  iPpMinG0Len= 1000; 
+	public static int  iPpMinG0Len= 1000; 		// access  in symap.manager.PairParams
 	private static double dMinG0Cov = 40.0;
 	
 	// Set from gene models: see setLenFromGenes

@@ -366,7 +366,8 @@ public class AnchorMain {
 			if (Constants.VERBOSE) {
 				String dn =  (i==0) ? mProj1.getDisplayName() : mProj2.getDisplayName();
 				String chr = (i==0) ? mProj1.getGrpNameFromIdx(grpIdx) : mProj2.getGrpNameFromIdx(grpIdx);
-				String msg = String.format("%10s %s   Genes %,d   Start %,d   Pseudo %,d", dn, chr, genes, geneStart, hitGeneMap.size());
+				String msg = String.format("%-10s %-5s   Genes %,6d   Start %,6d   Pseudo %,6d", 
+								dn, chr, genes, geneStart, hitGeneMap.size()); // CAS566 add 5..
 				plog.msg(msg);
 			}
 			if (hitGeneMap.size()==0) return true;

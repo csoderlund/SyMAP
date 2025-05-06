@@ -16,12 +16,18 @@ import javax.swing.*;
 import javax.swing.table.*;
 import javax.swing.event.*;
 
-import backend.*;
-import blockview.*;
-import circview.*;
+import backend.Constants;	// CAS566 replace .* imports with precise ones 
+import backend.Utils;
+import backend.DoLoadProj;
+import backend.DoAlignSynPair;
+
+import blockview.BlockViewFrame;
+import circview.CircFrame;
 import dotplot.DotPlotFrame;
 import props.PropertiesReader;
+
 import symap.Globals;
+import symap.Ext;			// CAS566 moved external checks from Constants	
 import symap.frame.ChrExpInit;
 import symapQuery.QueryFrame;
 
@@ -1190,16 +1196,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	
 	/***********************************************************************
-	 * Database CAS541 change to use DBconn2 instead of DBAbsUser
+	 * Database CAS541 change to use DBconn2 instead of DBAbsUser; CAS566 moved mummer_path to SymapManager
 	 **************************************************/
 	private DBconn2 makeDBconn()  { 
 	// Check variables
 		String paramsfile = Globals.MAIN_PARAMS;
 		
-		if (Utilities.fileExists(paramsfile)) System.out.println("Reading from file " + paramsfile);
-		else ErrorReport.die("Configuration file not available: " + paramsfile);
-		
-		dbProps = new PropertiesReader(new File(paramsfile));
+		dbProps = new PropertiesReader(new File(paramsfile)); // already checked in SyMAPmanager; CAS556
 		
 		String db_server       = dbProps.getProperty("db_server");
 		String db_name         = dbProps.getProperty("db_name");
@@ -1224,8 +1227,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		setTitle(frameTitle);
 		System.out.println("SyMAP database " + db_name);
 
-		try { // CAS508 stop nested exception on DatabaseUser calls
-			if (inReadOnlyMode) { // CAS500 crashed if config file not present
+		try { 
+			if (inReadOnlyMode) { 
 				if (Utilities.isEmpty(db_clientuser)) {
 					if (Utilities.isEmpty(db_adminuser)) ErrorReport.die("No db_adminuser or db_clientuser in " + paramsfile);
 					else db_clientuser = db_adminuser;
@@ -1240,22 +1243,16 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				if (Utilities.isEmpty(db_adminpasswd)) ErrorReport.die("No db_adminpasswd defined in " + paramsfile);
 			}
 			
-			String mummer 	= dbProps.getProperty("mummer_path"); // CAS508 
-			if (mummer!=null && mummer!="") {
-				System.out.println("MUMmer path: " + mummer);
-				Constants.setMummer4Path(mummer);
-			}
-			
 			if (cpus!=null && maxCPUs<=0) {
 				try {
-					maxCPUs = Integer.parseInt(cpus.trim()); // CAS508 add trim
+					maxCPUs = Integer.parseInt(cpus.trim()); 
 					totalCPUs = Runtime.getRuntime().availableProcessors();
 					System.out.println("Max CPUs " + maxCPUs + " (out of " + totalCPUs + " available)");
 				}
 				catch (Exception e){ System.err.println("nCPUs: " + cpus + " is not an integer. Ignoring.");}
 			}
 			
-		// Check database exists or create CAS511 add if exist
+		// Check database exists or create
 			int rc=1; // 0 create, 1 exists CAS559 was documented that checkVariables, but not being done
 	        if (inReadOnlyMode) {
 	        	if (!DBconn2.existDatabase(db_server, db_name, db_clientuser, db_clientpasswd)) 
@@ -1499,16 +1496,21 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (maxCPUs==-1) return;
 		if (!alignCheckProjDir()) return;
 		
+		// Confirm
 		String msg = "Align&Synteny for " + todoList.size() + " pairs";
 		if (Constants.VERBOSE) msg += "\nVerbose mode: on"; else msg += "\nVerbose mode: off";
 		
 		if (!Utilities.showConfirm2("All Pairs", msg)) return; // CAS543 add check
-				
+		
+	/*-------- Alignment, Clustering, Synteny -----------------*/
 		System.out.println("\n>>> Start all pairs: processing " + todoList.size() + " project pairs");
+		
+		boolean bRenew = !backend.Constants.CoSET_ONLY && !backend.Constants.PSEUDO_ONLY; //CAS556 add check; CAS565 add pseudo; CAS566 make boolean
+		
 		for (Mpair mp : todoList) {
-			if (!backend.Constants.CoSET_ONLY && !backend.Constants.PSEUDO_ONLY) mp.renewIdx(); // Removed existing; CAS556 add check; CAS565 add pseudo
+			if (bRenew) mp.renewIdx(); // Removed existing and reset DB indices 
 			
-			// AlignProj open/close new dbc2 for each thread of align
+			// Open/close new dbc2 for each thread of align
 			new DoAlignSynPair().run(this, dbc2, mp, true,  maxCPUs, checkCat.isSelected());
 		}
 		new Version(dbc2).updateReplaceProp();
@@ -1532,8 +1534,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		Mproject[] ordP    = orderProjName(mProjs[0],mProjs[1]); // order indices according to DB pairs table
 		String resultDir   = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
-		boolean bAlignDone = Utils.checkDoneFile(resultDir);
 		
+		// Special cases
 		if (backend.Constants.CoSET_ONLY || backend.Constants.PSEUDO_ONLY)  { //*** CAS565 remove bAlignDone; tries to do ONLY anyway
 			if (backend.Constants.PSEUDO_ONLY && !mp.isNumPseudo(Mpair.FILE)) {
 				Utilities.showInfoMsg("Pseudo", "Please  open Parameters and check 'Number Pseudo',\nwhich is under 'Cluster Hits'");
@@ -1548,6 +1550,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			return;
 		}
 		
+		// Compose confirm popup
+		boolean bAlignDone = Utils.checkDoneFile(resultDir);
 		String msg =  bAlignDone ? "Synteny for " : "Align&Synteny for "; // CAS544 be specific
 		if (mProjs[0].getDisplayName().equals(mProjs[1].getDisplayName())) { // CAS546 add
 			msg += mProjs[0].getDisplayName() + " to itself";
@@ -1564,12 +1568,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		else msg += "\nVerbose mode: off";
 		
 		if (!Utilities.showConfirm2("Selected Pair", msg)) return;
+		System.out.println("\n>>> " + msg); 
 		
-		System.out.println("\n>>> " + msg); // CAS557 was saying alignment regardless
-		
-		mp.renewIdx(); // Remove existing and restart
+	/*--- Do Alignment, Clustering, Synteny (alignments will not happen if exists) ----*/
+		mp.renewIdx(); 						// Remove existing and restart (not for special cases)
 		
 		new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
+		
 		new Version(dbc2).updateReplaceProp();
 	}
 	// Create directories if alignment is initiated; CAS511  add

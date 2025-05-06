@@ -137,7 +137,7 @@ public class RemoveProj {
 					try {Thread.sleep(1000);}
 					catch(Exception e){}
 					
-					mp.removePairFromDB();
+					mp.removePairFromDB(true); // True = redo numHits; CAS566 add true
 					if (rc==2) {
 						String path = Constants.getNameResultsDir(p1.getDBName(),  p2.getDBName());
 						System.out.println("Remove alignments from " + path);

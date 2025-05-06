@@ -153,13 +153,13 @@ public class Utils {
 		File d = new File(dir);
 		if (!d.exists() || d.isFile()) return false;
 		
-		File f = new File(d,"all.done");
+		File f = new File(d,"all" + Constants.doneSuffix);
 
 		if (f.exists()) return true;
 		
 		return false;
 	}
-	public static int checkDoneMaybe(String dir) {
+	public static int checkDoneMaybe(String dir) { // no all.done file
 		File d = new File(dir);
 		if (!d.exists() || d.isFile()) return 0;
 		
@@ -170,9 +170,8 @@ public class Utils {
 			
 			String path = x.getName();
 			String name = path.substring(path.lastIndexOf("/")+1, path.length());
-			if (name.endsWith(Constants.doneSuffix)) continue;
-			if (name.endsWith(".log")) continue; // pre v5
-			
+			if (name.endsWith(Constants.doneSuffix)) continue; // do not care for Manager; AlignMain further checks
+	
 			if (name.endsWith(Constants.mumSuffix)) numFiles++;			
 		}
 		return numFiles;
@@ -180,7 +179,7 @@ public class Utils {
 	public static void writeDoneFile(String dir)  {
 		try {
 			File f = new File(dir);
-			File d = new File(f,"all.done");
+			File d = new File(f,"all" + Constants.doneSuffix);
 			d.createNewFile();
 		}
 		catch (Exception e) {ErrorReport.print(e, "Cannot write done file to " + dir);}

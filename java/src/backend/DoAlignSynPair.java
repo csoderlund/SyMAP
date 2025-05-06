@@ -57,7 +57,6 @@ public class DoAlignSynPair extends JFrame {
 		FileWriter syFW =   symapLog(mProj1,mProj2);
 		String alignLogDir = buildLogAlignDir(mProj1,mProj2);
 
-		// CAS561 was saying 'aligning projects' 
 		String msg = (mProj1 == mProj2) ? "Synteny "  + dbName1 + " to itself ..." : "Synteny " + toName + " ...";
 		
 		final ProgressDialog diaLog = new ProgressDialog(this, "Running Synteny", msg, true, syFW); // write version and date
@@ -76,7 +75,6 @@ public class DoAlignSynPair extends JFrame {
 		
 		String chgMsg = mp.getChangedParams(Mpair.FILE);  // Saved to database pairs table in SumFrame
 		diaLog.msg(chgMsg);
-		
 		diaLog.closeWhenDone();					
 		
 		final AlignMain aligner = new AlignMain(dbc2, diaLog, mp,  maxCPUs, bDoCat, alignLogDir);
@@ -93,20 +91,24 @@ public class DoAlignSynPair extends JFrame {
 				if (aligner.getNumRemaining() == 0 && aligner.getNumRunning() == 0) return;
 				if (Cancelled.isCancelled()) return;
 				
-				String msg = "\nAlignments:  running " + aligner.getNumRunning() + ", completed " + aligner.getNumCompleted();
-				if (aligner.getNumRemaining()>0) msg += ", queued " + aligner.getNumRemaining();
+				// Alignments\n list errors and current\nStatus
+				String status = "\nAlignments:  running " + aligner.getNumRunning() + ", completed " + aligner.getNumCompleted();
+				if (aligner.getNumRemaining()>0) status += ", queued " + aligner.getNumRemaining();
+				if (aligner.getNumErrors()>0) status += ", errors " + aligner.getNumErrors(); // CAS566 add
 				
-				diaLog.updateText("\nRunning alignments:\n", aligner.getStatusSummary() + msg + "\n");
+				diaLog.updateText("\nRunning alignments:\n", aligner.getStatusSummary() + status + "\n");
 
-				while (aligner.getNumRunning() > 0 || aligner.getNumRemaining() > 0) {
+				while (aligner.getNumRunning()>0 || aligner.getNumRemaining()>0) {
 					if (Cancelled.isCancelled()) return;
 					Utilities.sleep(10000);
 					if (Cancelled.isCancelled()) return;
 					
-					msg = "\nAlignments:  running " + aligner.getNumRunning() + ", completed " + aligner.getNumCompleted();
-					if (aligner.getNumRemaining()>0) msg += ", queued " + aligner.getNumRemaining();
-					
-					diaLog.updateText("\nRunning alignments:\n", aligner.getStatusSummary() + msg + "\n");
+					// same as before loop
+					status = "\nAlignments:  running " + aligner.getNumRunning() + ", completed " + aligner.getNumCompleted();
+					if (aligner.getNumRemaining()>0) status += ", queued " + aligner.getNumRemaining();
+					if (aligner.getNumErrors()>0)    status += ", errors " + aligner.getNumErrors(); // CAS566 add
+				
+					diaLog.updateText("\nRunning alignments:\n", aligner.getStatusSummary() + status + "\n");
 				}
 				diaLog.updateText("Alignments:" ,  "Completed " + aligner.getNumCompleted() + "\n\n");
 			}
@@ -165,7 +167,7 @@ public class DoAlignSynPair extends JFrame {
 					mProj1.saveParams(mProj1.xAlign);
 					mProj2.saveParams(mProj2.xAlign);
 				
-					new SumFrame(dbc2, mp);// CAS540
+					new SumFrame(dbc2, mp);
 					
 					diaLog.appendText(">> Summary for " + toName + "\n");
 					printStats(diaLog, mProj1, mProj2);
@@ -224,7 +226,7 @@ public class DoAlignSynPair extends JFrame {
 				
 				if (Utilities.showConfirm2("Remove pair", msgx)) { // CAS546 can hang
 					System.out.println("Cancel alignment (removing alignment from DB)");
-						mp.removePairFromDB(); // CAS534 
+						mp.removePairFromDB(true); 					// CAS556 redo numHits; CAS534 
 					System.out.println("Removal complete");
 				} 
 				else System.out.println("Remove database and restart");

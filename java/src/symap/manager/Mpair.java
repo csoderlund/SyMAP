@@ -263,8 +263,9 @@ public class Mpair {
 	}
 	public HashMap <String, String> getDefaults() { return defMap;}
 	
-	public int renewIdx() {
-		removePairFromDB(); // CAS535 interrupt does not clear it
+	// ManagerFrame alignAll and alignSelected; remove existing and restart
+	public int renewIdx() { 
+		removePairFromDB(false); // False; do not redo numHits, CAS566 add F; CAS535 interrupt does not clear it
 		
 		try { 
 			dbc2.executeUpdate("INSERT INTO pairs (proj1_idx,proj2_idx) " +
@@ -277,7 +278,8 @@ public class Mpair {
 		}
 		catch (Exception e) {ErrorReport.die(e, "SyMAP error getting pair idx");return -1;}
 	}
-	public int removePairFromDB() {
+	// Above (!bHitCnt), removeProj (bHitCnt), Cancel (bHitCnt)
+	public int removePairFromDB(boolean bHitCnt) {
 	try {
 		int x = dbc2.getIdx("select idx from pairs where proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx);
 		if (x!= -1) {
@@ -285,9 +287,9 @@ public class Mpair {
 			 ancObj.removePseudo();   // Remove pseudo where numhits=-pair_idx; do before saveAnno; CAS565 add
 			 
 			 dbc2.executeUpdate("DELETE from pairs WHERE idx="+ x);
-			 dbc2.resetAllIdx(); // check all, even though some are not relevant
+			 dbc2.resetAllIdx(); 				// check all, even though some are not relevant
 			 
-		     ancObj.saveAnnoHitCnt(); // Remove numhits for this pair; CAS561 add  
+		     if (bHitCnt) ancObj.saveAnnoHitCnt(); // Redo numhits for this pair; CAS561 add; CAS566 not for reDo A&S 
 		}
 	    pairIdx = -1;
 	}

@@ -14,9 +14,9 @@ import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 
-import backend.Constants;
 import database.DBconn2;
 import symap.Globals;
+import symap.Ext;			// CAS566 was backend.Constants
 import symap.closeup.AlignPool;
 import symap.closeup.SeqData;
 import symap.drawingpanel.SyMAP2d;
@@ -395,7 +395,9 @@ public class UtilSelect {
 					bMAFFT = !muscle.isSelected();
 				}
 			});
-			row2.add(muscle); bg.add(muscle);
+			if (!Ext.isMacM4()) {// no MUSCLE for M4 (executable had hard-link and could not compile easily)
+				row2.add(muscle); bg.add(muscle);
+			}
 			selectPanel.add(row2);	selectPanel.add(Box.createVerticalStrut(5));	
 			if (bMAFFT) mafft.setSelected(true); else muscle.setSelected(true);
 			
@@ -487,10 +489,10 @@ public class UtilSelect {
 		private void buildHitVec() {
 		try {
 			if (bMAFFT) {
-				if (!Constants.checkFor("mafft")) {bSuccess=false; return;}
+				if (Ext.getMafftCmd()==null) {bSuccess=false; return;}
 			}
 			else {
-				if (!Constants.checkFor("muscle")) {bSuccess=false; return;}
+				if (Ext.getMafftCmd()==null) {bSuccess=false; return;}
 			}
 			alignBase=0;
 			int [] selRows = tablePanel.theTable.getSelectedRows();

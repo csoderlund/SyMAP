@@ -199,8 +199,8 @@ public class GrpPair {
 			if (countBatch==1000) {
 				countBatch=0;
 				ps.executeBatch();
-				Globals.rprt(cntSave + " loaded"); 
 			}
+			if (cntSave%10000==0) Globals.rprt(cntSave + " loaded"); // CAS566 add %10000
 			
 			if (hpr.geneIdx[Q]>0 && hpr.geneIdx[T]>0) cntG2++;
 			else if (hpr.geneIdx[Q]>0 || hpr.geneIdx[T]>0) cntG1++;
@@ -285,11 +285,11 @@ public class GrpPair {
 			if (cntBatch>=1000) {
 				cntBatch=0;
 				ps.executeBatch();
-				Globals.rprt("   " + cntAll + " loaded hit annotations"); 
 			}
+			if (cntAll%10000 ==0) Globals.rprt("   " + cntAll + " loaded hit annotations"); // CAS566 reduce output
 		}
 		if (cntBatch> 0) ps.executeBatch();
-		Globals.rclear();	// CAS563 add clear
+		Globals.rclear();	
 		if (Arg.TRACE) {
 			String msg = String.format("%,10d for %s;  %,d for %s", count[Q], qChr, count[T], tChr );
 			Utils.prtIndentMsgFile(plog, 1, msg);

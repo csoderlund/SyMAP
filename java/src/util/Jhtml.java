@@ -35,6 +35,7 @@ public class Jhtml {
 	
 	public static final String SYS_GUIDE_URL =    BASE_HELP_URL + "SystemGuide.html"; 
 	public static final String create = "#create";
+	public static final String ext = "#ext";										// CAS566
 	
 	public static final String SYS_HELP_URL =    BASE_HELP_URL + "SystemHelp.html"; // CAS534 moved from popups
 	public static final String build = 	"#build";

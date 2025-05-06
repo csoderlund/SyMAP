@@ -13,7 +13,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.util.HashMap;
 
-import backend.Constants;
+import symap.Ext;		// CAS566 moved checkExt from backend.Constants
 import util.ErrorReport;
 
 // WARNING: Does not work for nested queries (because it uses one Statement for all queries). 
@@ -505,7 +505,7 @@ public class DBconn2 {
    			}
    			else System.err.println("  MySQL variables are okay ");
    			
-   			Constants.checkExt(); // CAS508 moved checkExt from this file to Constants
+   			Ext.checkExt(); // CAS508 moved checkExt from this file to Constants
    		}
         catch (Exception e) {ErrorReport.print(e, "Getting system variables");	}
    	}

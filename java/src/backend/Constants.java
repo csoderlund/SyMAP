@@ -1,11 +1,6 @@
 package backend;
 
-import java.io.File;
-
 import backend.anchor1.Proj;
-import util.ErrorReport;
-import util.Jhtml;
-import util.Utilities;
 
 public class Constants {
 /***********************************************************
@@ -13,6 +8,7 @@ public class Constants {
 // CAS522 removed FPC
 // AnchorsMain: enum HitStatus, QueryType, HitType, GeneType
 // CAS557 some constants are used by toSymap
+ * CAS566 moved architecture and checking external to symap/Ext.java
 *****************************************************/
 	
 /**********************************************
@@ -36,10 +32,6 @@ public static final String NonGene = "NonGene";
 
 public static final double FperBin=0.8; // HitBin.filter piles FperBin*matchLen
 /*************************************************************/
-
-// getPlatformPath() gets subdirectory under /ext
-// ProgSpec.java doAlignments() gets next subdirectory, with mummer and blat stuff hardcoded
-public static final String extDir = 		"ext/";		// directory of external programs
 
 // types
 public static final String seqType = 	"seq";    	// directory name
@@ -88,14 +80,10 @@ public static final String faFile =         ".fa";
 public static final String orderSuffix 		=  "_ordered"; // CAS505 for ordering V2; CAS560 move from OrderAgainst
 public static final String orderCSVFile	=  "/ordered.csv";
 
-
 // directory of temporary files written for mummer
 //under runDir/<p1>_to_<p2>/tmp/<px>/ file names.
 //files in <p1> are aligned with files in <p2>. 
 public static final String tmpRunDir = 		 "/tmp/"; 
-
-//CAS508 can put mummer4 in symap.config
-private static String mummer4Path=null; 
 
 /*************************************************************************/
 	public static boolean rtError(String msg) {
@@ -135,192 +123,4 @@ private static String mummer4Path=null;
 	public  static String getNameTmpPreDir(String n1,  String n2, String n) {
 		return getNameResultsDir(n1, n2) + tmpRunDir + n;
 	}	
-	/**************************************************************
-	 *  CAS508 gathered all paths methods here so in one place; add mummer4 stuff
-	 */
-	public static void setMummer4Path(String mummer) {
-		mummer4Path=mummer;
-		// /m4  /m4/  /m4/bin  /m4/bin/
-		if (!mummer4Path.endsWith("/bin")) mummer4Path += "/bin";
-		if (!mummer4Path.endsWith("/")) mummer4Path += "/";
-		
-		checkDir(mummer4Path);
-		checkFile(mummer4Path+ "nucmer");
-		checkFile(mummer4Path+ "promer");
-		checkFile(mummer4Path+ "show-coords");
-	}
-	public static boolean isMummerPath() {return mummer4Path!=null;}
-	
-	public static String getProgramPath(String program) { // mummer or blat
-		if (program.contentEquals("mummer") && mummer4Path!=null) { // either set in symap.config
-			return mummer4Path;
-		}
-		String path = Constants.extDir + program;
-		if (!checkDir(path)) return "";
-		
-		path += getPlatformPath();
-		if (!checkDir(path)) return "";
-		
-		return path; // as absolute
-	}
-	
-	public static String getPlatformPath() {
-		String plat =  System.getProperty("os.name").toLowerCase();
-		
-		if (plat.contains("linux")) {
-			if (is64()) return "/lintel64/";
-			else 		return "/lintel/";
-		}
-		else if (plat.contains("mac")) {
-			return "/mac/";
-		}
-		else {
-			System.err.println("Unknown platform! Trying /lintel64/");
-			return "/lintel64/";
-		}
-	}
-	public static boolean is64() {
-		return System.getProperty("os.arch").toLowerCase().contains("64");
-	}
-	public static boolean isMac() {
-		return System.getProperty("os.name").toLowerCase().contains("mac");
-	}
-	public static String getPlatform() {
-		return  System.getProperty("os.name") + ":" + System.getProperty("os.arch");
-	}
-	/**************************************************************
-	 * Check ext directory when database is created or opened
-	 * .. not checking blat since that is probably obsolete
-	 */
-	static public void checkExt() { // only called with database is created
-		try {
-			if (mummer4Path!=null) return; // already checked
-			
-			System.err.println("Check external programs " + Constants.getPlatform());
-			
-			String exDir = Constants.extDir;
-			if (!checkDir(exDir)) {
-				System.err.println("       Will not be able to run MUMmer from SyMAP");
-				return;
-			}
-			checkMUMmer();
-			
-			String apath = exDir + "muscle" + getPlatformPath();
-			if (!checkDir(apath)) {
-				System.err.println("   Will not be able to run MUSCLE from SyMAP Queries");
-				return;
-			}
-			checkFile(apath+ "muscle");
-			
-			String mpath = exDir + "mafft" + getPlatformPath(); // CAS563 add for new mafft
-			if (!checkDir(mpath)) {
-				System.err.println("   Will not be able to run MAFFT from SyMAP Queries");
-				return;
-			}
-			checkFile(mpath+ "mafft.bat");
-			
-			System.out.println("Check complete\n");
-		}
-		catch (Exception e) {ErrorReport.print(e, "Checking executables");	}
-	}
-	// Called from symapQuery.TableShow before doing an alignment; CAS563 add for new mafft
-	static public boolean checkFor(String pgm) {
-		String exDir = Constants.extDir;
-		if (pgm.equals("muscle")) {
-			String apath = exDir + "muscle" + getPlatformPath();
-			if (!checkDir(apath)) {
-				Utilities.showWarningMessage("MUSCLE does not exist in the /ext directory.");
-				return false;
-			}
-			return true;
-		}
-		if (pgm.equals("mafft")) {
-			String apath = exDir + "mafft" + getPlatformPath();
-			if (!checkDir(apath)) {
-				Utilities.showWarningMessage("MAFFT does not exist in the /ext directory.");
-				return false;
-			}
-			return true;
-		}
-		return false;
-	}
-	static private boolean checkMUMmer() {
-		String mpath = getProgramPath("mummer");
-		if (!checkDir(mpath)) {
-			System.err.println("   Will not be able to run MUMmer from SyMAP");
-			return false;
-		}
-		checkFile(mpath+ "mummer");
-		checkFile(mpath+ "nucmer");
-		checkFile(mpath+ "promer");
-		checkFile(mpath+ "show-coords");
-		
-		if (mummer4Path==null) { // using supplied mummer v3; v4 already checked, but to be sure...
-			checkFile(mpath+ "mgaps");
-			checkDir(mpath+ "aux_bin");
-			checkFile(mpath+ "aux_bin/prepro"); 
-			checkFile(mpath+ "aux_bin/postpro"); // CAS559 only prepro was being checked
-			checkFile(mpath+ "aux_bin/prenuc");
-			checkFile(mpath+ "aux_bin/postnuc");
-			checkDir(mpath+"scripts");
-		}
-		if (isMac()) { // CAS559 add this message
-			String m = 	"  On Mac, MUMmer executables needs to be verified for 1st time use; \n    see ";
-			String u = Jhtml.TROUBLE_GUIDE_URL + Jhtml.macVerify;
-			System.out.println(m+u);
-		}
-		return true;
-	}
-	static private boolean checkDir(String dirName) {
-		try {
-			//System.out.println("   Check " + dirName);
-			File dir = new File(dirName);
-
-			if (!dir.exists()) {
-				System.err.println("*** directory does not exists: " + dirName);
-				return false;
-			}
-			if (!dir.isDirectory()) {
-				System.err.println("*** is not a directory: " + dirName);
-				return false;
-			}
-			if (!dir.canRead()) {
-				System.err.println("*** directory is not readable: " + dirName);
-				return false;
-			}
-			return true;
-		}
-		catch (Exception e) {ErrorReport.print(e, "Checking directory " + dirName);	return false;}
-	}
-	static private boolean checkFile(String fileName) {
-		try {
-			//Globals.dprt("Check " + fileName);
-			
-			File file = new File(fileName);
-
-			if (!file.exists()) {
-				System.err.println("*** file does not exists: " + fileName);
-				return false;
-			}
-			if (!file.isFile()) {
-				System.err.println("*** is not a file: " + fileName);
-				return false;
-			}
-			if (!file.canExecute()) {
-				System.err.println("*** file is not executable: " + fileName);
-				return false;
-			}
-			return true;
-		}
-		catch (Exception e) {ErrorReport.print(e, "Checking file " + fileName);	return false;}
-	}
-	/**********************************************************
-	 * CAS534 added for Params
-	 ******************************************************/
-	static public File getProjParamsFile(String projName) {
-		return new File(seqDataDir+projName+paramsFile);
-	}
-	static public String getProjParamsName(String projName) {
-		return seqDataDir+projName+paramsFile;
-	}
 }

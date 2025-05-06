@@ -104,10 +104,22 @@ public class PairParams extends JDialog {
 		agroup.add(chkAlgo1); agroup.add(chkAlgo2);
 		chkAlgo2.setSelected(true);
 		
-		lblNoGene = Jcomp.createLabel(LABELS[x++],"Scale G0 length");     txtNoGene = Jcomp.createTextField("1.0","Scale G0 length", decWidth);
-		lblGene = Jcomp.createLabel(LABELS[x++],"Scale gene parameters"); txtGene = Jcomp.createTextField("1.0",  "Scale gene parameters", decWidth);
-		lblExon = Jcomp.createLabel(LABELS[x++],"Scale exon parameters"); txtExon = Jcomp.createTextField("1.0",  "Scale exon parameters", decWidth);
-		lblLen = Jcomp.createLabel(LABELS[x++], "Scale G2 and G1 length"); txtLen = Jcomp.createTextField("1.0",   "Scale G2 and G1 length", decWidth);
+		String lab; // CAS566 better description
+		lab = "Scale gene coverage (larger N requires more coverage)";
+		lblGene = Jcomp.createLabel(LABELS[x++],lab); 
+		txtGene = Jcomp.createTextField("1.0",  lab, decWidth);
+		
+		lab = "Scale exon coverage (larger N requires more coverage)";
+		lblExon = Jcomp.createLabel(LABELS[x++],lab); 
+		txtExon = Jcomp.createTextField("1.0",  lab, decWidth);
+		
+		lab = "Scale G2 and G1 length (Nx" + backend.anchor2.Arg.iPpMinGxLen + ")";
+		lblLen = Jcomp.createLabel(LABELS[x++], lab); txtLen = 
+		Jcomp.createTextField("1.0",  lab, decWidth);
+		
+		lab = "Scale G0 length (Nx" + backend.anchor2.Arg.iPpMinG0Len + ")"; 
+		lblNoGene = Jcomp.createLabel(LABELS[x++],lab);     
+		txtNoGene = Jcomp.createTextField("1.0",lab, decWidth);
 		
 		chkEEpile = Jcomp.createCheckBox(LABELS[x++],"Keep EE piles", true);  
 		chkEIpile = Jcomp.createCheckBox(LABELS[x++],"Keep EI and IE piles", true); 

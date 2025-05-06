@@ -1,12 +1,16 @@
 package symapCE;
 
 import java.awt.Component;
+import java.io.File;
 
 import backend.Constants;
 import backend.anchor1.Group;
+import props.PropertiesReader;
+import symap.Ext;
 import symap.Globals;
 import symap.manager.ManagerFrame;
 import util.ErrorReport;
+import util.Utilities;
 
 /*********************************************
  * Called by symap and viewSymap scripts
@@ -24,8 +28,9 @@ public class SyMAPmanager extends ManagerFrame {
 			prtParams(args); // see ManagerFrame for all variable stuff
 			System.exit(0);
 		}
-		setParams(args);
 		printVersion();
+		setParams(args);
+		if (!setArch()) return; // must go after setParams; reads configuration file
 		
 		SyMAPmanager frame = new SyMAPmanager(args);
 		frame.setVisible(true);
@@ -34,8 +39,15 @@ public class SyMAPmanager extends ManagerFrame {
 	SyMAPmanager(String args[]) {
 		super(); // Creates ManagerFrame; 
 	}
-	
+
+	private static void printVersion() {
+		String url = util.Jhtml.BASE_HELP_URL;
+		String base = url.substring(0, url.length()-1);
+		System.out.println("\nSyMAP " + Globals.VERSION + Globals.DATE + "  " + base);	
+		System.out.println("Running on " + Ext.getPlatform() + " with Java v" + System.getProperty("java.version")); 
+	}
 	/******************************************************************
+	 * Command line parameters
 	 * CAS511 the perl script was removed, so the parameters need to be written here
 	 * CAS505 moved parse args to ManagerFrame
 	 * CAS534 moved back as the 3D was removed, which was causing duplicate args
@@ -46,7 +58,7 @@ public class SyMAPmanager extends ManagerFrame {
 		else 						 System.out.println("Usage:  ./symap [options]");
 		
 		System.out.println("  -c string : filename of config file (to use instead of symap.config)");
-		System.out.println("  -sql      : check MySQL for important settings");
+		System.out.println("  -sql      : check MySQL for important settings and external programs");
 		System.out.println("  -a        : do not trim 2D alignments");
 		System.out.println("  -q        : Queries: show gene overlap instead of exon for Cluster Algo2");
 		System.out.println("  -g        : Queries: run old PgeneF algorithm instead of the new Cluster algorithm");
@@ -63,29 +75,36 @@ public class SyMAPmanager extends ManagerFrame {
 			// CAS565 System.out.println("  -acs      : On A&S, ONLY execute the collinear sets computation"); // CAS556 July24
 		}
 	}
-	// these are listed to terminal in the 'symap' perl script.
+	
 	private static void setParams(String args[]) { 
 		if (args.length ==0) return;
 		
 		if (equalOption(args, "-r")) {// used by viewSymap
 			inReadOnlyMode = true; // no message to terminal
 		}
-		if (equalOption(args, "-sql")) {// check MySQL for important settings; CAS561 was -v
-			Globals.bMySQL = true; 
-			System.out.println("-sql  check MySQL settings ");
+		
+		if (startsWithOption(args, "-c")) {// CAS501
+			Globals.MAIN_PARAMS = getCommandLineOption(args, "-c");
+			if (Globals.MAIN_PARAMS==null) {
+				System.err.println("-c must be followed by the name of a configuration file");
+				System.exit(-1);
+			}
+			System.out.println("-c  Configuration file " + Globals.MAIN_PARAMS);
 		}
-		if (startsWithOption(args, "-p")) { // #CPU
-			String x = getCommandLineOption(args, "-p"); //CAS500
+		if (startsWithOption(args, "-p")) { // #CPU; CAS500
+			String x = getCommandLineOption(args, "-p"); 
 			try {
 				maxCPUs = Integer.parseInt(x);
 				System.out.println("-p  Max CPUs " + maxCPUs);
 			}
 			catch (Exception e){ System.err.println(x + " is not an integer. Ignoring.");}
 		}
-		if (startsWithOption(args, "-c")) {// CAS501
-			Globals.MAIN_PARAMS = getCommandLineOption(args, "-c");
-			System.out.println("-c  Configuration file " + Globals.MAIN_PARAMS);
+		
+		if (equalOption(args, "-sql")) {// check MySQL for important settings; CAS561 was -v
+			Globals.bMySQL = true; 
+			System.out.println("-sql  check MySQL settings ");
 		}
+		
 		if (equalOption(args, "-q")) { // CAS531 change
 			Globals.bQueryOlap=true;
 			System.out.println("-q  Show gene overlap instead of exon for Algo2");
@@ -186,18 +205,36 @@ public class SyMAPmanager extends ManagerFrame {
 		}
 		return null;
 	} 	
-	/********************************************************************/
-	// moved from SyMAP2d as was not even used there; only called from Manager
-	// String d = (Runtime.getRuntime().maxMemory() / (1024*1024)) + "m";
-	// This is printed to log file in ProgressDialog
-	public static void printVersion() {
-		String url = util.Jhtml.BASE_HELP_URL;
-		String base = url.substring(0, url.length()-1);
-		System.out.println("\nSyMAP " + Globals.VERSION + Globals.DATE + "  " + base
-			+ "\nRunning Java v" + System.getProperty("java.version")); // CAS548 add 'Compiled', remove mem; CAS550 was Run, no compile; CAS559 Running 
+	
+	/*************************************************
+	 * Sets architecture (Available linux64, mac, macM4)
+	 * Reads from symap.config
+	 */
+	private static boolean setArch() {
+	try {
+		String paramsfile = Globals.MAIN_PARAMS;
+		
+		if (Utilities.fileExists(paramsfile)) System.out.println("Configuration file " + paramsfile);
+		else ErrorReport.die("Configuration file not available: " + paramsfile);		
+		
+		PropertiesReader dbProps  = new PropertiesReader(new File(paramsfile));
+		
+		// architecture
+		String userArch = dbProps.getProperty("arch");
+		if (userArch!=null) System.out.println("Architecture: " + userArch);
+		Ext.setArch(userArch); // if null, will determine it; prints errors if any found
+		
+		// mummer path
+		String mummer 	= dbProps.getProperty("mummer_path"); // CAS508 
+		if (mummer!=null && mummer!="") {
+			System.out.println("MUMmer path: " + mummer);
+			Ext.setMummer4Path(mummer);
+		}
+		return true;
+	} catch (Exception e) {ErrorReport.print(e, "Setting architecture"); return false;}
 	}
 	
-	public static boolean checkJavaSupported(Component frame) {	// CAS559 update; CAS42 10/16/17 - did not work for Java SE 9
+	private static boolean checkJavaSupported(Component frame) {	// CAS559 update; CAS42 10/16/17 - did not work for Java SE 9
 	try {
 		String relV = Globals.JARVERION;
 		

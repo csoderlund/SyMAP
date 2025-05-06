@@ -15,8 +15,8 @@ import javax.swing.JTextField;
 
 import util.ErrorReport;
 import util.Utilities;
-import backend.Constants;
 import symap.Globals;
+import symap.Ext;		// CAS566 arch/ext/paths are all in Ext
 
 /***********************************
  * SyMAP Query MSA - align selected set using muscle or mafft
@@ -30,8 +30,7 @@ public class MsaRun {
 	private final static String TARGET_DIR  = Globals.alignDir;	// CAS563 make global constant called /queryAlign
 	private final static String SOURCE_FILE = Globals.alignDir + "/Source.fa"; // put in directory and do not delete
 	private final static String TARGET_FILE = Globals.alignDir + "/Align.fa";
-	private final static String MUSCLE_DIR  = Constants.extDir + "muscle"; 		// program to run
-	private final static String MAFFT_DIR   = Constants.extDir + "mafft"; 		// program to run
+	
 	private final static int SEQ_LINE_LEN = 80;
 	protected final static char gapIn='-', gapOut='.', unk='n';
 	
@@ -74,7 +73,8 @@ public class MsaRun {
 	protected boolean alignMafft(String status, boolean bTrim, boolean bAuto, int cpu) {// CAS563 add MAFFT
 		pgmStr = "MAFFT";
 		
-		String cmd = MAFFT_DIR + Constants.getPlatformPath() + "mafft.bat";
+		String cmd  = Ext.getMafftCmd();
+		
 		if (bAuto) cmd += " --auto";
 		if (cpu>1) cmd += " --thread " + cpu;
 		
@@ -157,7 +157,7 @@ public class MsaRun {
 	 ***************************************************************/
 	protected boolean alignMuscle(String status, boolean bTrim) {// CAS563 set status in calling symapQuery.TableShow
 		pgmStr = "MUSCLE";
-		String cmd  = MUSCLE_DIR + Constants.getPlatformPath() + "muscle";
+		String cmd  = Ext.getMuscleCmd();
 		
 		String trace = cmd + " -in " + SOURCE_FILE + " -out " + TARGET_FILE;
 		if (Globals.INFO) Globals.prt(trace);
