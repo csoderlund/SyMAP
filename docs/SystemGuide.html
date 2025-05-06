@@ -93,6 +93,7 @@
 3. <u>Install SyMAP</u>
 <ul>
 <li style="margin: 0.4em 0;"><a href="#installation">Installation</a>
+<li style="margin: 0.4em 0;"><a href="#ext">External executables</a>	<!-- in SyMAP -->
 <li style="margin: 0.4em 0;"><a href="#mysql">MySQL parameters for SyMAP</a>
 </ul>
 
@@ -262,6 +263,12 @@ The machine must be a Linux or MacOS 64-bit machine.
 SyMAP has been tested on the following:
 <table class="ty" style="font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
 <tr><td><i>Machine</i><td><i>MySQL</i><td><i>Java</i><td><i>Core</i><td><i>Memory</i><td><i>Purchased</i>
+<tr><td colspan=2><ttl>v5.6.6 and later</ttl>:
+<tr><td>MacOS M4 (Sequoia)
+	<td>MySQL v8.0.42
+	<td>24 from <a href="https://www.oracle.com/java/" class="ext" target="_blank">Oracle</a>
+	<td>M4 12-Core<td>&nbsp;48 GB<td>2025
+
 <tr><td colspan=2><ttl>v5.4.1 and later</ttl>:
 
 <tr><td>MacOS x86_64 (Sonoma 14.4.1)<sup>1</sup>
@@ -384,7 +391,10 @@ move this directory later if desired. The contents are:
 <u>Data</u>: The <ttx>data/</ttx> directory contains a <ttx>/seq</ttx> sub-directory,
 which contains the demo files, and is the default location for all input sequence files.
 
-<p><u>Externals</u>: The <ttx>ext/</ttx> directory contains the external programs
+<a id="ext"></a><!-- in SyMAP -->
+<h3>External executables</h3>
+
+The <ttx>ext/</ttx> directory contains the external programs
 MUMmer<sup>1,2</sup> for sequence alignment,
 and MAFFT<sup>6</sup> and MUSCLE<sup>7</sup> for
 interactive MSA alignment (for <a href="./Query.html#msaAlign" class="ext" target="_blank">Queries</a>).
@@ -393,7 +403,27 @@ The directory contains:
 <pre>
 	README		mummer/		mummer4/	muscle/		mafft/
 </pre>
-For MUMmer, see <a href="MUMmer.html#ext" class="ext" target="_blank">Executables</a>
+
+Each has subdirectories:
+<table class="ty">
+<tr><td><i>Subdirectory</i><td><i>OS (Architecture)</i><td><i>Note</i>
+<tr><td>lintel64<td>Linux<td>
+<tr><td>mac<td>Mac OS X (x86_64)<td>
+<tr><td>macM4<td>Mac OS X (M4 silicon)<td>No muscle executable
+</table>
+SyMAP will determine which subdirectory to use.
+
+<p>If you compile your own executables for a different architecture, do the following:
+<ol>
+<li>Under mummer and mafft, make a directory with your architecture name (e.g. <tt>mine</tt>).
+<li>Put the executables under this directory in the exact same way as shown for linux64.
+<li>In the symap configuration file (default <tt>symap.config</tt>), add a line <tt>arch={your architecture name}</tt>
+(e.g. <tt>arch=mine</tt>).
+</ol>
+Note that I do not have an alternative machine to try this on, but it should work. Email me
+at symap@agcol.arizona.edu if it does not.
+
+<p>For MUMmer, see <a href="MUMmer.html#ext" class="ext" target="_blank">Executables</a>
 and <a href="MUMmer.html#mum4" class="ext" target="_blank">Using MUMmer4</a>.
 On MacOS, you may also need <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS externals</a>.
 
@@ -736,8 +766,11 @@ See <a href="./SystemHelp.html#selLoad" class="ext" target="_blank">Load</a> for
 <td style="text-align: right"><a href="#top">Go to top</a></table>
 
 <table class="tx">
-<tr><td>See <a href="./SystemHelp.html#pairParams" class="ext" target="_blank">pair parameters</a>
+<tr><td>See <a href="./SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parameters</a>
 on setting the pair parameters for the this step.
+
+<p>See <a href="SystemHelp.html#concat" class="ext" target="_blank">CPU and Concat</a> for a description of these
+two options.
 <p>Then select <ttb>All Pairs</ttb> or <ttb>Selected Pair</ttb>
 to run the Alignment&amp;Synteny.
 <td><a href="img/projAnS.png"><img src="img/projAnS.png" alt="align and synteny" style="border: 1px solid black; width: 450px"></a>
@@ -756,11 +789,27 @@ MUMmer files will be used, which <i><b>saves a lot of time</b></i>.
 <p>The log files are in the <ttx>/logs</ttx> directory, see
 <a href="MUMmer.html#log" class="ext" target="_blank">Running MUMmer</a> for more details.
 
-<p>See <a href="MUMmer.html#cmd"  class="ext" target="_blank">Using MUMmer with SyMAP</a>
+<p>See <a href="MUMmer.html"  class="ext" target="_blank">Using MUMmer with SyMAP</a>
 for a discussion on how it works in SyMAP, trouble-shooting, and running MUMmer externally
 (i.e. if your local machine does not have enough memory or CPUs, you may need to run it on
 a bigger machine).
 
+<p><u>Incomplete alignment</u>
+If SyMAP completed the alignment, e.g. the demo <tt>/align</tt> directory will have the following files:
+<pre>
+-rw-r--r--@ 1 cari  staff     0B Apr 10 10:28 all.done
+-rw-r--r--@ 1 cari  staff   1.2M Apr 10 10:28 demo_seq_cc.demo_seq2_f1.mum
+-rw-r--r--@ 1 cari  staff     0B Apr 10 10:28 demo_seq_cc.demo_seq2_f1.mum.done
+-rw-r--r--@ 1 cari  staff   541K Apr 10 10:27 demo_seq_cc.demo_seq2_f2.mum
+-rw-r--r--@ 1 cari  staff     0B Apr 10 10:27 demo_seq_cc.demo_seq2_f2.mum.done
+</pre>
+<ol>
+<li>The 'all.done' indicates that the all alignments completed.
+<li>If 'all.done' does not exist, SyMAP will perform any alignments that do NOT have a corresponding 'mum.done'.
+If the <ttl>Concat</ttl> setting has been switched between the previous and current run, this will not work correctly.
+<li>If the user supplied the alignments (<a href="MUMmer.html#cmd"  class="ext" target="_blank">Supply MUMmer files</a>),
+there may not be 'mum.done' files but there should be an 'all.done', so it is assumed they are all done.
+</ol>
 <!--------------------------------------------------------------------->
 <a id="draft2"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -928,9 +977,12 @@ if desired. In the alignment, one species is "query" and the other is
 The query is the one with alphabetically the first name. The query sequences
 are written into one large file, while smaller target sequences are grouped
 into larger FASTA files of size up to 60Mb, for more efficient processing
-in MUMmer. There is an option <ttl>Concat</ttl> that if unchecked, the query sequences
+in MUMmer.
+
+There is an option <ttl>Concat</ttl> that if unchecked, the query sequences
 are treated the same as the target; i.e. generally there will be more sequence files to
  processed, but they will be smaller.
+ See <a href="SystemHelp.html#concat" class="ext" target="_blank">Concat</a> for a description and timing results.
 <p>
 <i>Anchor Clustering and Filtering:</i><br>
 The raw anchor set consists of the hits found by MUMmer, which are filtered and clustered for input to the synteny algorithm.

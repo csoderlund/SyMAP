@@ -64,6 +64,26 @@ which is aware of the exon-intron structure.
 </table>
 
 <a id="v565"></a>
+<h3>Release: v5.6.6 (6-May-25)</h3>
+The MacOS M4 silicon executables have been added to the <tt>/ext</tt> directory.
+The code has been updated to use them when running on MacOS M4.
+
+<ul>
+<li><tt>symap.config</tt>: There is a new setting called 'arch' that allows the user to specify
+a different machine architecture to use for the external executables; the user will need to provide
+the executables. See <a href="SystemGuide.html#ext" class="ext" target="_blank">External Executables</a>.
+<li><ttl>A&S</ttl>: MUMmer takes a while and can fail in one or more of the alignments. Its important to be clear
+what is happening, so the following was added:
+<ul>
+<li>If there is a ? in the Manager table cell for a pair, A&S will
+write to the terminal how many were finished and how many it has left to do.
+<li>The 'Alignments:' status now includes how many alignments had errors.
+</ul>
+<br>
+<li><small>Developers: Do not update numHits before A&S. Sort alignments to be processed.</small>
+</ul>
+
+<a id="v565"></a>
 <h3>Release: v5.6.5 (24-Apr-25)</h3>
 Updates for Queries: Support for non-annotated hit ends (pseudo genes) bug fixes
 for display of minor genes and a few other little things.
