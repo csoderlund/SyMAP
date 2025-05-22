@@ -25,18 +25,17 @@ import symap.Globals;
  * Mapper: Tracks 0-N are in order of display; Ref is always seqObj1
  * Hit Wire is the line between chromosomes
  * Hit Rect is the hit rectangle in the track, one on each end of wire
- * 
- * CAS531 renamed from PseudoPseudoHits and removed extends AbstractHitData; CAS545 PseudoHit->DrawHit
+ * DrawHit: draws hit part the occurs on sequence: hit length and text (e.g. block#)
  */
 public class SeqHits  {
 	private static final int MOUSE_PADDING = 3;
-	private static final int HIT_OFFSET = 15, HIT_MIN_OFFSET=6; // CAS551 amount line enters track; 15, 12,9,6
+	private static final int HIT_OFFSET = 15, HIT_MIN_OFFSET=6; // amount line enters track; 15, 12,9,6
 	private static final int HIT_INC = 3, HIT_OVERLAP = 75; // default minimum match bases is 100, so hits should be more
 	
 	public static Font textFont = Globals.textFont;
 	
 	private int projIdx1, projIdx2; // project IDs
-	private int grpIdx1, grpIdx2; // groupIDs: contig or chromosome 
+	private int grpIdx1, grpIdx2; // groupIDs: chromosome 
 	
 	private Mapper mapper;
 	private DrawHit[] allHitsArray;
@@ -45,9 +44,9 @@ public class SeqHits  {
 	private Sequence seqObj1, seqObj2; // query, target; query may be the left or right track
 	private boolean st1LTst2=true; 	   // if seqObj1.track# <seqObj2.track#, query is left track, else, right
 	
-	private String infoMsg=""; // CAS541
+	private String infoMsg=""; 
 	private int cntShowHit=0, cntHighHit=0, cntHitg2=0;
-
+	
 	// called in MapperPool
 	public SeqHits(Mapper mapper, Sequence st1, Sequence st2, Vector <HitData> hitList) {
 		this.mapper = mapper;
@@ -64,7 +63,7 @@ public class SeqHits  {
 			HitData hd = hitList.get(i);
 			allHitsArray[i] = new DrawHit(hd);
 			
-			boolean isSelected = mapper.isQuerySelHit(hd.getHitNum(), bHit1); // for group or hit highlight; CAS555, CAS562	
+			boolean isSelected = mapper.isQuerySelHit(hd.getHitNum(), bHit1); // for group or hit highlight;
 			allHitsArray[i].set(isSelected);
 			
 			// Calc offset for display for seq1
@@ -103,16 +102,16 @@ public class SeqHits  {
 		grpIdx1  = st1.getGroup(); 
 		grpIdx2  = st2.getGroup(); 
 		
-		seqObj1.setSeqHits(this, mapper.isQueryTrack(seqObj1.getHolder().getTrack())); // CAS517 add so seqObj has hits 
+		seqObj1.setSeqHits(this, mapper.isQueryTrack(seqObj1.getHolder().getTrack())); // seqObj has hits 
 		seqObj2.setSeqHits(this, mapper.isQueryTrack(seqObj2.getHolder().getTrack()));
 		
-		// CAS517 add so that the 1st track is listed first on hover and popups
+		// 1st track is listed first on hover and popups
 		int t1 = seqObj1.getHolder().getTrackNum(); 
 		int t2 = seqObj2.getHolder().getTrackNum(); 
 		st1LTst2 = (t1<t2);
 	}
 	
-	protected String getInfo() { return infoMsg;}; // CAS541 called in Mapper
+	protected String getInfo() { return infoMsg;}; // called in Mapper
 	
 	// called from mapper.myinit sets for the Hit Filter %id slider
 	protected void setMinMax(HfilterData hf) { 
@@ -153,7 +152,7 @@ public class SeqHits  {
 	 public Sequence getSeqObj2() {return seqObj2;}
 	 
 	 /*****************************************************
-	  * XXX Paint all hits 	// CAS520 add highlight to block and collinear
+	  * XXX Paint all hits 	
 	  */
 	 public void paintComponent(Graphics2D g2) {
 		Point stLoc1 = seqObj1.getLocation();
@@ -185,11 +184,13 @@ public class SeqHits  {
 				}
 			}
 		}
-	
 		cntShowHit=cntHighHit=cntHitg2=0; // counted in paint
-		HashSet <Integer> blockSet = new HashSet <Integer> (); // CAS541 add to count blocks/sets shown
+		HashSet <Integer> blockSet = new HashSet <Integer> (); // count blocks/sets shown
 		toggle=true; 
+		
 		for (DrawHit dh : allHitsArray) {
+			if (!dh.isOlapHit() || dh.isFiltered()) continue; 
+			
 			if (bHi) {
 				int set = (bHiCset) ?  dh.getCollinearSet() : dh.getBlock();
 				if (set!=0) toggle = highMap.get(set);
@@ -206,6 +207,8 @@ public class SeqHits  {
 		
 		// Draw highlighted hits on top with highlight
 		for (DrawHit dh : hHits) {
+			if (!dh.isOlapHit() || dh.isFiltered()) continue; 
+			
 			boolean show = dh.paintComponent(g2,trackPos1,trackPos2,stLoc1,stLoc2, true);
 			if (bHi && show) {
 				int set = (bHiCset) ?  dh.getCollinearSet() : dh.getBlock();
@@ -218,17 +221,15 @@ public class SeqHits  {
 		if (cntHitg2>0) infoMsg += String.format("\n%s: %,d", "Conserved", cntHitg2);
 		if (cntHighHit>0)   infoMsg += String.format("\n%s: %,d", "High", cntHighHit);
 		if (bHi) {
-			String type = (bHiCset) ? "CoSets" : "Blocks";	// CAS561 Sets=>CoSets
+			String type = (bHiCset) ? "CoSets" : "Blocks";	
 			infoMsg += String.format("\n%s: %,d\n", type, blockSet.size());
 		}
-	
 	}
 	/*************************************************************
 	 * Hover and popups
 	 */
 	// Hit list: each is HitTag\ncoord1\ncoord2
-	// CAS517 For sequence object - hits aligned to a gene; Annotation.popDesc expects this format
-	// CAS548 replace getHitStr, which displayed all subs; add score; change format; CAS552 add block; add minor hits
+	// For sequence object - hits aligned to a gene; Annotation.popDesc expects this format
 	public String getHitsForGenePopup(Sequence seqObj, Annotation annoObj, TreeMap <Integer, String> hitScores) {
 		String listVis= "";
 		boolean isQuery = mapper.isQueryTrack(seqObj);
@@ -257,10 +258,10 @@ public class SeqHits  {
 	// Need to do this otherwise hits will stay highlighted when exited.
 	public void mouseExited(MouseEvent e) { 
 		for (DrawHit h : allHitsArray)
-			h.isHover = false; // CAS550 was calling setHover
+			h.isHover = false; 
 		mapper.getDrawingPanel().repaint();
 	}
-	// CAS517 add popup on right click
+	// popup on right click
 	protected boolean doPopupDesc(MouseEvent e) {
 		if (e.isPopupTrigger()) { 
 			Point p = e.getPoint();
@@ -278,7 +279,6 @@ public class SeqHits  {
 		 allHitsArray=null;
 	}
 	 /***************** Static stuff ***********************/
-	// CAS512 moved from Utilities because this is the only class to use it
 	// adjust rectangle coordinates for negative width or height - on flipped
 	private static void fixRect(Rectangle2D rect) {
 		if (rect.getWidth() < 0)
@@ -298,7 +298,7 @@ public class SeqHits  {
 				        ";   project2="+projIdx2+ " seq2=" + seqObj2.getChrName()+ " grp2="+grpIdx2+"]";
 	}
 
-	public String getOtherChrName(Sequence seqObj) { // CAS531 added for Closeup title
+	public String getOtherChrName(Sequence seqObj) { // for Closeup title
 		if (seqObj==seqObj1) return seqObj2.getChrName();
 		else return seqObj1.getChrName();
 	}
@@ -307,8 +307,6 @@ public class SeqHits  {
 	/**********************************************************************
 	 * XXX
 	 * XXX DrawHit class for drawing, 1-1 with HitData, which has the data and this has the drawing stuff
-	 * CAS531 was accessing PseudoPseudoData.pseudoHits for the abstract HitData, which is no longer abstract
-	 * CAS545 PseudoHit->DrawHit
 	 */
 	private class DrawHit {
 		private HitData hitDataObj;
@@ -317,7 +315,7 @@ public class SeqHits  {
 		// There are also flags in hitDataObj; isBlock, isCollinear, isPopup, isDualGene
 		private boolean isHover;		 // set on hover; 
 		private boolean isQuerySelHit;   // set on Query select row; From TableDataPanel
-		private boolean isDisplayed;     // isNotFiltered; CAS541 add.
+		private boolean isDisplayed;     // isNotFiltered;
 		public int off1 = HIT_OFFSET, off2 = HIT_OFFSET;
 		
 		public DrawHit(HitData hd) {
@@ -326,10 +324,10 @@ public class SeqHits  {
 			isHover = isQuerySelHit = isDisplayed = false;
 		}
 		
-		private int getCollinearSet() { // CAS520 to toggle collinear highlight
+		private int getCollinearSet() { // toggle collinear highlight
 			return hitDataObj.getCollinearSet();
 		}
-		private int getBlock() { // CAS520 to toggle block highlight
+		private int getBlock() { // toggle block highlight
 			return hitDataObj.getBlock();
 		}
 		
@@ -338,29 +336,39 @@ public class SeqHits  {
 				hitList.add(hitDataObj);
 		}
 		
-		private void setMinMax(HfilterData hf) {// CAS520 change for seqHits
+		private void setMinMax(HfilterData hf) {// for seqHits
 			hf.condSetPctid(hitDataObj.getPctid());
 		}
-		private boolean isFiltered() { // CAS520 rewrite for new filters; CAS560 and/or
+		private boolean isFiltered() { 
 			 HfilterData hf = mapper.getHitFilter();
 			 
 			 isDisplayed=true;
+			
+			 // precedence
+			 if (hf.isAll()) return false; // Over-rides everything; CAS567 add
+			 
 			 boolean bIsNotPCT = (hitDataObj.getPctid()<hf.getPctid());
 			 if (bIsNotPCT) {
 				 isDisplayed=false;
 				 return true;
 			 }
-			 boolean noNonBlockSet = !hf.isCset() && !hf.is2Gene() && !hf.is1Gene() && !hf.is0Gene();
-			 if (!hf.isBlock() && noNonBlockSet) return false; // all hits
+			 if (hf.isBlockOnly() && hf.getBlock()>0) {		// CAS567 - 
+				 if (hitDataObj.getBlock() == hf.getBlock()) return false;
+				 isDisplayed=false;
+				 return true;
+			 }
+			
+			 boolean noNoOtherSet = !hf.isCset() && !hf.is2Gene() && !hf.is1Gene() && !hf.is0Gene();
+			 if (!hf.isBlock() && noNoOtherSet) return false; // all hits
 			 
 			 if (hf.isBlock()) { // block set
-				 boolean isBhit = hitDataObj.isBlock();// block hit
-				 if (isBhit && noNonBlockSet) return false;
-				 
+				 boolean bHitIsBlk = hitDataObj.isBlock();// block hit
+				 if (bHitIsBlk && noNoOtherSet) return false; // no other checks, so not filtered
+				
 				 boolean and = (hf.isBlockAnd());
-				 if (!and && isBhit) return false; // or, is block, show
+				 if (!and && bHitIsBlk) return false; // or, is block, show regardless what else
 				 
-				 if (and && !isBhit) {
+				 if (and && !bHitIsBlk) {	
 					 isDisplayed=false;
 					 return true; 				// and, !block, filter
 				 }
@@ -375,11 +383,11 @@ public class SeqHits  {
 			 return true; 
 		 }
 		 private Color getCColor(String orient, boolean toggle, boolean bWire) {
-			 if (isHover)     return Mapper.pseudoLineHoverColor;	// CS520 change Highlight to Hover
+			 if (isHover)     return Mapper.pseudoLineHoverColor;	
 			
 			 HfilterData hf = mapper.getHitFilter(); 
 			 if (hf.isHiPopup() && hitDataObj.isPopup()) return Mapper.pseudoLineGroupColor;
-			 if (hf.isHiPopup() && isQuerySelHit) return Mapper.pseudoLineGroupColor;	// CAS555 add; CAS516 different color for query selected 
+			 if (hf.isHiPopup() && isQuerySelHit) return Mapper.pseudoLineGroupColor;	
 			 
 			 if (hitDataObj.isHighHitg2()) { // conserved takes precedence over highlight
 				 if (bWire) cntHitg2++;
@@ -394,7 +402,7 @@ public class SeqHits  {
 			 else if (hf.isHi0Gene() && hitDataObj.is0Gene()) isHi=true;
 			 if (isHi) {
 				 if (bWire) cntHighHit++;
-				 if (toggle) return Mapper.pseudoLineHighlightColor1;		// CAS520 for new filters for block and co hits
+				 if (toggle) return Mapper.pseudoLineHighlightColor1;		
 				 else 		 return Mapper.pseudoLineHighlightColor2;
 			 }
 			 
@@ -405,15 +413,15 @@ public class SeqHits  {
  			 return Mapper.pseudoLineColorPP;
 		 }
 		 ////////////////////////////////////////////////////////////////////
-		 private boolean isOlapHit() {	// CAS550 add so partial hit can be viewed
+		 private boolean isOlapHit() {	// partial hit can be viewed
 			 boolean seq1 = seqObj1.isHitOlap(hitDataObj.start1, hitDataObj.end1);
 			 boolean seq2 = seqObj2.isHitOlap(hitDataObj.start2, hitDataObj.end2);
 			 return seq1 && seq2;
 		 }
 		 
-		// is Hit Wire contained in hover, or hits for align; CAS531 reordered for clarity
+		// is Hit Wire contained in hover, or hits for align; 
 		private boolean isContained(int start, int end, boolean isQuery) { 
-			if (!isOlapHit()) return false; // CAS550 was isVisHitWire
+			if (!isOlapHit()) return false;
 			if (isFiltered()) return false;
 			
 			int s = (isQuery) ? hitDataObj.start1 : hitDataObj.start2;
@@ -433,9 +441,9 @@ public class SeqHits  {
 			 return (delta >= -MOUSE_PADDING && delta <= MOUSE_PADDING);
 		 }
 		 protected boolean isContained(Point point) {
-			 return isOlapHit() && lineContains(point);// CAS550 was isVisHitWire
+			 return isOlapHit() && lineContains(point);
 		 }
-		 private void set(boolean isSelectedHit) { // CAS516 change from setting highlight to bSelected
+		 private void set(boolean isSelectedHit) { 
 			 isQuerySelHit = isSelectedHit;
 		 }
 		
@@ -458,14 +466,14 @@ public class SeqHits  {
 		 
 		 /***************************************************************************
 		  * Draw hit line connector, and hit info on seq1/seq2 rectangle (%ID, hitLen)
-		  * CAS550 change to draw if any of the hit is visible; if hit wire not visible, draw length that
-		  *        is and put hit-wire at very end
+		  * draw if any of the hit is visible; if hit wire not visible, draw length and put hit-wire at very end
 		  * trackPos1 and trackPos2: 1 or 2 indicating left or right
 		  * stLoc1 and stLoc2: x,y from origin 
-		  * btoggle CAS520 add toggle highlight color for collinear set and blocks 
 		  */
-		 private boolean paintComponent(Graphics2D g2, int trackPos1, int trackPos2, Point stLoc1, Point stLoc2, boolean btoggle) {  		 
-			 if (!isOlapHit() || isFiltered()) return false; // CAS550 chg hit-wire visible to hit length visible
+		 private boolean paintComponent(Graphics2D g2, int trackPos1, int trackPos2, Point stLoc1, Point stLoc2, 
+				 boolean btoggle) {  	
+			 
+			 if (!isOlapHit() || isFiltered()) return false; 
 			
 			 cntShowHit++;
 			
@@ -489,7 +497,7 @@ public class SeqHits  {
 			 /* %id line: paint in seq1/2 rectangle the %id length;  */
 			 // id=19 is 5 outside rect, id=23 is 7 inside rect; id=100 is 30 far in rect
 			 int pctid = (int)hitDataObj.getPctid();
-			 int lineScoreLen = Math.max(1, 30*(pctid+1)/(100+1)); // CAS517 was only set if getShowScoreLine
+			 int lineScoreLen = Math.max(1, 30*(pctid+1)/(100+1)); 
 			 int len1=off1, len2 = off2;
 			 if (trackPos1 == Globals.RIGHT_ORIENT) {
 				 lineScoreLen = 0 - lineScoreLen; 
@@ -498,7 +506,7 @@ public class SeqHits  {
 			 }
 			
 			// Hit length: paint in sequence objects the rectangle for the hit length graphics ; 	
-			// CAS551 if no hitLen, then no scoreLine either. If no scoreLine, use LINE_W
+			// if no hitLen, then no scoreLine either. If no scoreLine, use LINE_W
 			 if (seqObj1.getShowHitLen()) {
 				 int wlen1 = seqObj1.getShowScoreLine() ? lineScoreLen : len1;
 				 g2.drawLine(x1, y1, x1-wlen1, y1);
@@ -528,9 +536,9 @@ public class SeqHits  {
 				 }
 			 }
 		/* text */
-			 // CAS531 add hitNum; CAS543 always put text on outside rect; CAS545 compress code and add block/cset
 			 int xr=4, xl=19; 
-			 String numText1=null; // CAS552 add num indicators of %,#,b,c; add check for 0 on b&c
+			 
+			 String numText1=null;  
 			 if       (seqObj1.getShowScoreText())  numText1 = (int)pctid+"%";
 			 else  if (seqObj1.getShowHitNumText()) numText1 = "#" + hitDataObj.getHitNum();  
 			 else  if (seqObj1.getShowBlockText())  {
@@ -554,7 +562,7 @@ public class SeqHits  {
 				 g2.drawString(numText1, (int)textX, (int)y1);
 			 }
 			 
-			 String numText2=null;
+			 String numText2=null; 
 			 if       (seqObj2.getShowScoreText())  numText2 = (int)pctid +"%";
 			 else  if (seqObj2.getShowHitNumText()) numText2 = "#"+hitDataObj.getHitNum();
 			 else  if (seqObj2.getShowBlockText())  {
@@ -565,7 +573,7 @@ public class SeqHits  {
 				 int n = hitDataObj.getCollinearSet();
 				 if (n>0) numText2 = "c"+n;
 			 }
-			
+			 
 			 if (numText2!=null) {  
 				 double textX = x2;
 				 if (x1 < x2) {
@@ -579,7 +587,7 @@ public class SeqHits  {
 				 g2.drawString(numText2, (int)textX, (int)y2);					 
 			 }
 			 
-			 // Hover over hit line connector; CAS517 move creation to HitData 
+			 // Hover over hit line connector; creation in HitData 
 			 if (isHover) { 						
 				 mapper.setHelpText(hitDataObj.createHover(st1LTst2));
 			 }
@@ -599,8 +607,8 @@ public class SeqHits  {
 			 String subHits;
 			 Rectangle2D.Double rect;
 			 
-			 if (mapper.isQueryTrack(st)) // CAS517 check isSelf in isQuery || (trackPos == LEFT_ORIENT && mapper.isSelf() ))
-				 subHits = hitDataObj.getQueryMerge(); // CAS551 merged when HitData created
+			 if (mapper.isQueryTrack(st)) 
+				 subHits = hitDataObj.getQueryMerge(); 
 			 else
 				 subHits = hitDataObj.getTargetMerge();
 
@@ -625,7 +633,7 @@ public class SeqHits  {
 				 String[] subseq = subHits.split(",");
 				 for (int i = 0;  i < subseq.length;  i++) {
 					 String[] pos = subseq[i].split(":");
-					 int start = Integer.parseInt(pos[0]); // CAS551 was long
+					 int start = Integer.parseInt(pos[0]); 
 					 int end =   Integer.parseInt(pos[1]);
 					 
 					 Point2D p1 = st.getPointForHit(start, trackPos);
@@ -641,13 +649,13 @@ public class SeqHits  {
 				 }
 			 }
 		 }
-		 /* CAS548 removed getIfHit called from getHitStr, which has been removed (was showing all subhits) **/
 		 
-		/* CAS516 popup from clicking hit wire; CAS531 change to use TextPopup; CAS560 moved some code to TextShowInfo */
+		 
+		/* popup from clicking hit wire;  */
 		private void popupDesc(double x, double y) { 
-			if (mapper.getHitFilter().isHiPopup()) hitDataObj.setIsPopup(true); // CAS551 
+			if (mapper.getHitFilter().isHiPopup()) hitDataObj.setIsPopup(true); 
 			
-			String title="Hit #" + hitDataObj.getHitNum(); // CAS520 changed from hit idx to hitnum
+			String title="Hit #" + hitDataObj.getHitNum(); 
 			
 			String theInfo = hitDataObj.createHover(st1LTst2) + "\n"; 
 			
@@ -658,8 +666,8 @@ public class SeqHits  {
 			
 			String trailer = "";
 			if (Globals.INFO) {
-				trailer = "\nDB-index " + hitDataObj.getID();   // CAS520 useful for debugging
-				trailer += "\nAnnot " + hitDataObj.getAnnots(); // CAS543 add
+				trailer = "\nDB-index " + hitDataObj.getID();   // useful for debugging
+				trailer += "\nAnnot " + hitDataObj.getAnnots(); 
 			}
 	
 			AlignPool ap = new AlignPool(mapper.getDrawingPanel().getDBC());
@@ -667,7 +675,7 @@ public class SeqHits  {
 			new TextShowInfo(ap, hitDataObj, title, 
 				theInfo, trailer, st1LTst2, proj1, proj2, aObj1, aObj2, 
 				hitDataObj.getQuerySubhits(), hitDataObj.getTargetSubhits(),
-				seqObj1.isQuery(), hitDataObj.isInv(), true /*bsort*/); 	// CAS560 isInv, bsort added; gene1->aObj1, gene2->aObj2
+				seqObj1.isQuery(), hitDataObj.isInv(), true /*bsort*/); 	
 		}
 		public String toString() {return hitDataObj.createHover(true);}
 	 } // End class DrawHit

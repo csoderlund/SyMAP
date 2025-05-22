@@ -23,16 +23,14 @@ import blockview.BlockViewFrame;
 /*****************************************
  * Load chromosome/draft/LG sequences to SyMAP database.
  * Also fix bad chars if any
- * CAS534 changed from props to Project; removed static on everything
- * CAS535 ignore sequences without prefixes
- * CAS541 UpdatePool->DBconn2
- * CAS557 split into multiple methods 
+ * CAS534 changed from props to Project; removed static on everything; CAS535 ignore sequences without prefixes
+ * CAS541 UpdatePool->DBconn2; CAS557 split into multiple methods 
  */
 public class SeqLoadMain {
 	static int projIdx = 0;
 	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE;
-	private static final int MAX_GRPS =   BlockViewFrame.MAX_GRPS; 	// CAS42 12/6/17 - for message
-	private static final int MAX_COLORS = BlockViewFrame.maxColors; // CAS42 12/6/17 - for message
+	private static final int MAX_GRPS =   BlockViewFrame.MAX_GRPS; 	
+	private static final int MAX_COLORS = BlockViewFrame.maxColors; 
 	private Mproject mProj;
 	private DBconn2 tdbc2=null;
 	private ProgressDialog plog;
@@ -61,7 +59,7 @@ public class SeqLoadMain {
 			if (Cancelled.isCancelled()) return rtError("User cancelled");
 			
 			/* ************************************************************ */
-			// CAS532 add these to print on View
+			// print on View
 			mProj.saveProjParam("proj_seq_date", Utils.getDateStr(modDirDate));
 			mProj.saveProjParam("proj_seq_dir", saveSeqDir);
 			
@@ -84,7 +82,7 @@ public class SeqLoadMain {
 			updateSortOrder(grpList);
 			tdbc2.close();
 			
-			Utils.prtTimeMemUsage(plog, "Finish load sequences", startTime); // CAS556 add finish and mem
+			Utils.prtTimeMemUsage(plog, "Finish load sequences", startTime); 
 		} catch (Exception e) {ErrorReport.print(e, "Seq Load Main"); return false;}	
 		return true;
 	}
@@ -109,9 +107,9 @@ public class SeqLoadMain {
 				modDirDate = sdf.lastModified();
 				
 				for (File f2 : sdf.listFiles()) {
-					if (!f2.isFile() || f2.isHidden()) continue; // CAS511 macos add ._ files in tar
+					if (!f2.isFile() || f2.isHidden()) continue; // macOS add ._ files in tar
 					String name = f2.getAbsolutePath();
-					for (String suf : Constants.fastaFile) { // CAS557 add check
+					for (String suf : Constants.fastaFile) { 
 						if (name.endsWith(suf) || name.endsWith(suf+".gz")) {
 							seqFiles.add(f2);
 							break;
@@ -140,10 +138,10 @@ public class SeqLoadMain {
 					modDirDate = f.lastModified();
 					
 					for (File f2 : f.listFiles()) {
-						if (!f2.isFile() || f2.isHidden()) continue; // CAS511 macos add ._ files in tar
+						if (!f2.isFile() || f2.isHidden()) continue; // macOS add ._ files in tar
 						
 						String name = f2.getAbsolutePath();
-						for (String suf : Constants.fastaFile) { // CAS557 add check
+						for (String suf : Constants.fastaFile) { 
 							if (name.endsWith(suf) || name.endsWith(suf+".gz")) {
 								seqFiles.add(f2);
 								break;
@@ -156,7 +154,7 @@ public class SeqLoadMain {
 					modDirDate = f.lastModified();
 					
 					String name = f.getAbsolutePath();
-					for (String suf : Constants.fastaFile) { // CAS557 add check
+					for (String suf : Constants.fastaFile) { 
 						if (name.endsWith(suf) || name.endsWith(suf+".gz")) {
 							seqFiles.add(f);
 							break;
@@ -165,7 +163,7 @@ public class SeqLoadMain {
 				}
 			}
 		}
-		if (seqFiles.size()==0)  // CAS500
+		if (seqFiles.size()==0)  
 			return rtError("No sequence files ending in " + Constants.fastaList + "!!");
 		return true;
 	}
@@ -181,7 +179,7 @@ public class SeqLoadMain {
 		else 						  plog.msg("   Load sequences with '" + prefix + "' prefix (See Parameters - Group prefix)");
 		
 		int minSize = mProj.getMinSize(), readSeq=0;
-		plog.msg(String.format("   Load sequences > %,dbp (See Parameters - Minimum length)", minSize)); // CAS558 add commas
+		plog.msg(String.format("   Load sequences > %,dbp (See Parameters - Minimum length)", minSize)); 
 		
 		TreeSet<String> grpNamesSeen = new TreeSet<String>();
 		TreeSet<String> grpFullNamesSeen = new TreeSet<String>();
@@ -197,11 +195,11 @@ public class SeqLoadMain {
 			StringBuffer curSeq = new StringBuffer();
 			String grpName = null, grpFullName = null, firstTok=null, line;
 			
-			BufferedReader fh = Utils.openGZIP(f.getAbsolutePath()); // CAS500
+			BufferedReader fh = Utils.openGZIP(f.getAbsolutePath()); 
 
 			while ((line = fh.readLine()) != null) {
 				
-				if (line.startsWith("#") || line.isEmpty()) continue; // CAS512 add
+				if (line.startsWith("#") || line.isEmpty()) continue; 
 				
 				if (line.startsWith(">")) {
 					if (grpName != null && curSeq.length() >= minSize) {
@@ -214,7 +212,7 @@ public class SeqLoadMain {
 							Globals.rprt(String.format("%s: %,d", grpName,curSeq.length()));
 							
 							// load sequence
-							String chrSeq = curSeq.toString(); // CAS556 prevent two copies in memory at once
+							String chrSeq = curSeq.toString(); // prevent two copies in memory at once
 							curSeq.setLength(0);
 							
 							uploadSequence(grpName,grpFullName,chrSeq,f.getName(),totalnSeqs+1);	
@@ -228,7 +226,7 @@ public class SeqLoadMain {
 					} else seqIgnore++;
 					
 					readSeq++;
-					if (readSeq%100 == 0) Globals.rprt("Read sequences " + readSeq); // CAS557 add; CAS561 use rprt
+					if (readSeq%100 == 0) Globals.rprt("Read sequences " + readSeq); 
 					
 					grpName = null; firstTok = grpFullName = "";
 					curSeq.setLength(0);
@@ -263,15 +261,15 @@ public class SeqLoadMain {
 					return rtError("User cancelled");
 				}	
 			} // end reading file
-			fh.close(); // CAS535 add
+			fh.close(); 
 			
 			if (grpName != null &&  curSeq.length() >= minSize) {// load last sequence
 				grpList.add(grpName);
 				nSeqs++;
 				basesWritten += curSeq.length();
-				Globals.rprt(String.format("%s: %,d", grpName,curSeq.length())); // CAS556 add; CAS561 use rprt
+				Globals.rprt(String.format("%s: %,d", grpName,curSeq.length())); 
 				
-				String chrSeq = curSeq.toString(); // CAS556 
+				String chrSeq = curSeq.toString(); 
 				curSeq.setLength(0);
 				uploadSequence(grpName, grpFullName, chrSeq, f.getName(), totalnSeqs+1);	
 				chrSeq="";
@@ -351,10 +349,9 @@ public class SeqLoadMain {
 	catch (Exception e) {ErrorReport.print(e, "Loading sequence - fail loading to database "); };
 	}
 	/**************************************************************************/
-	// CAS518 when there is errors and nothing is loaded, it still shows it is; remove project
 	private boolean rtError(String msg) {
 		plog.msgToFileOnly("*** " + msg);
-		Utilities.showWarningMessage("*** " + msg); // prints to stdout
+		// CAS567 is blank and does stays recorded in DB; Utilities.showWarningMessage("*** " + msg);
 		ErrorCount.inc();
 		tdbc2.close();
 		
@@ -375,9 +372,6 @@ public class SeqLoadMain {
 		tdbc2.executeUpdate("update xgroups set sort_order = idx+1-" + minIdx + " where proj_idx=" + projIdx);
 		GroupSorter gs = new GroupSorter();
 		
-		// CAS534 removed a bunch of code because SyProps had grp_order and grp_sort that never changed
-		// CAS543 does nothing code; for (String grp : grpList) {if (!gs.orderCheck(grp)) undef += grp + ", ";
-		
 		Collections.sort(grpList,gs);
 		
 		for (int i = 1; i <= grpList.size(); i++) {
@@ -389,7 +383,7 @@ public class SeqLoadMain {
 	catch (Exception e) {ErrorReport.print(e, "Loading sequence - fail ordering them"); };
 	}
 	// Calculate order to be saved in xgroups
-	private class GroupSorter implements Comparator<String>{ // CAS543 moved from separate file	
+	private class GroupSorter implements Comparator<String>{ 
 		public GroupSorter(){}
 		
 		// If prefix defined in parameters, it is stripped off already
@@ -405,7 +399,7 @@ public class SeqLoadMain {
 			
 			if (areNumbers) return Integer.parseInt(g1) - Integer.parseInt(g2);
 		
-			int nMatch = 0;  		// Look for a matching prefix; CAS543 was not checking chars, so useless code
+			int nMatch = 0;  		// Look for a matching prefix; 
 			while (nMatch < g1.length() && nMatch < g2.length() && g1.charAt(nMatch)==g2.charAt(nMatch)) nMatch++;		
 			if(nMatch == g1.length()) return -1; // all of g1 matched, hence must come before g2 alphabetically 
 			if(nMatch == g2.length()) return 1;

@@ -75,7 +75,7 @@ public class AnchorMain {
 				AnchorMain2 an = new AnchorMain2(this);
 				boolean b = an.run(pj1, pj2, dh); if (!b) return false;
 			}
-			if (Cancelled.isCancelled()) {dbc2.close();}
+			if (Cancelled.isCancelled()) {dbc2.close(); return false; } // CAS567 missing return!
 			
 			saveHitNum();
 			saveAnnoHitCnt();
@@ -85,7 +85,7 @@ public class AnchorMain {
 				AnchorPost collinear = new AnchorPost(pairIdx, pj1, pj2, dbc2, plog);
 				collinear.collinearSets();	
 			}
-			if (Cancelled.isCancelled()) {dbc2.close();}
+			if (Cancelled.isCancelled()) {dbc2.close(); return false; } // CAS567 missing return!
 			
 			// Numbers pseudo genes; must be after collinear; add CAS565
 			if (mp.isNumPseudo(Mpair.FILE)) new Pseudo().addPseudo(); 

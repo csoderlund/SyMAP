@@ -19,16 +19,12 @@ import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 
-import backend.Constants;
 import util.Jcomp;
 import util.Jhtml;
 import util.Utilities;
 
 /**********************************************
  * The parameter window for Alignment&Synteny
- * CAS501 massive changes to make it a little clearer what parameters apply to a pair
- * CAS532 finished removing fpc; CAS534 changed to use Mpair
- * CAS533 remove: do_synteny, Do Clustering - dead, No Overlapping Blocks - buggy
  */
 
 public class PairParams extends JDialog {
@@ -37,26 +33,27 @@ public class PairParams extends JDialog {
 	// Order MUST be same in createMainPanel and setValue and getValue; defaults are in Mpair
 	// These are NOT in the order displayed, but do not change without changing access everywhere else
 	private static final String [] LABELS = { // Order must be same as createMainPanel
-		"Min Dots", "Top N piles", "Merge Blocks", 		// CAS548 add 'piles'
-		"NUCmer Args", "PROmer Args", "Self Args", "NUCmer Only","PROmer Only",
-		"Number Pseudo", // CAS565 add
-		"Algorithm 1 (modified original)", "Algorithm 2 (exon-intron)",  // CAS555 change '()' text 
+		"Min hits", "Merge", "Same orient",		// synteny CAS567 add Concat, Orient, better order; Dots->hits; lc 2nd word
+		"Concat", "NUCmer args", "PROmer args", "Self args", "NUCmer only","PROmer only", // mummer
+		"Number pseudo", 											// cluster CAS565 add
+		"Algorithm 1 (modified original)", "Algorithm 2 (exon-intron)",  
+		"Top N piles", 
 		"G0_Len", "Gene", "Exon", "Len",
 		 "EE", "EI", "En", "II", "In"
 	};
 	
 	// if change, change in Mpair too; defaults are in Mpair; written to DB and file
 	// order the same as above; constant strings are repeated multiple times in MPair
-	private static final String [] SYMBOLS = { 
-		"mindots", "topn", "merge_blocks", 
-		"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
-		"number_pseudo",
-		"algo1", "algo2",										
+	private static final String [] SYMBOLS = { // Mpairs.paramKey
+		"mindots", "merge_blocks", "same_orient",
+		"concat", "nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
+		"number_pseudo", "algo1", "algo2",
+		 "topn",					
 		"g0_scale", "gene_scale", "exon_scale", "len_scale",
 		"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
 	};
 	
-	public PairParams(Mpair mp) {
+	protected PairParams(Mpair mp) {
 		this.mp = mp;
 		
 		createMainPanel();
@@ -70,24 +67,16 @@ public class PairParams extends JDialog {
 		int numWidth = 3, decWidth = 2, textWidth = 15;
 		
 		mainPanel = Jcomp.createPagePanel();
-		chkVB = Jcomp.createCheckBox("Verbose   ","Verbose output to symap.log & terminal.", Constants.VERBOSE); // not saved
-		chkVB.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				Constants.VERBOSE = chkVB.isSelected();
-			}
-		});
 		
-		int x=0;
-		
+		int x=0;	// SAME ORDER AS array
 		lblMinDots = Jcomp.createLabel(LABELS[x++]); txtMinDots = Jcomp.createTextField("7", "Miniumum hits in a block", numWidth);
-		
-		lblTopN = Jcomp.createLabel(LABELS[x++]); txtTopN = Jcomp.createTextField("2", "Retain the top N hits of a pile of overlapping hits", numWidth);
 		chkMergeBlocks =Jcomp.createCheckBox(LABELS[x++], "Merge overlapping (or nearby) synteny blocks", false); 
-	
+		chkSameOrient =Jcomp.createCheckBox(LABELS[x++], "Blocks must have hits in same orientation", false); 
+		
+		chkConcat = Jcomp.createCheckBox(LABELS[x++], "Concat 1st project sequences into one file", false);
 		lblNucMerArgs = Jcomp.createLabel(LABELS[x++]); txtNucMerArgs = Jcomp.createTextField("",textWidth);
 		lblProMerArgs = Jcomp.createLabel(LABELS[x++]); txtProMerArgs = Jcomp.createTextField("",textWidth);
 		lblSelfArgs = Jcomp.createLabel(LABELS[x++]);   txtSelfArgs = Jcomp.createTextField("",textWidth);
-
 		chkNucOnly = Jcomp.createRadio(LABELS[x++]);
 		chkProOnly = Jcomp.createRadio(LABELS[x++]);
 		chkDef     = Jcomp.createRadio("Defaults");		// not saved
@@ -104,7 +93,9 @@ public class PairParams extends JDialog {
 		agroup.add(chkAlgo1); agroup.add(chkAlgo2);
 		chkAlgo2.setSelected(true);
 		
-		String lab; // CAS566 better description
+		lblTopN = Jcomp.createLabel(LABELS[x++]); txtTopN = Jcomp.createTextField("2", "Retain the top N hits of a pile of overlapping hits", numWidth);
+		
+		String lab; 
 		lab = "Scale gene coverage (larger N requires more coverage)";
 		lblGene = Jcomp.createLabel(LABELS[x++],lab); 
 		txtGene = Jcomp.createTextField("1.0",  lab, decWidth);
@@ -151,17 +142,19 @@ public class PairParams extends JDialog {
 		JPanel row = Jcomp.createRowPanel();
 		JLabel projLabel = Jcomp.createLabel(mp.mProj1.strDisplayName + " & " + mp.mProj2.strDisplayName);
 		row.add(projLabel); row.add(Box.createVerticalStrut(5));
-		row.add(chkVB);  
-		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
+		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5)); // CAS567 moved Verbose to Main
 	
 		// Alignment
 		row = Jcomp.createRowPanel();
 		row.add(Jcomp.createHtmlLabel("Alignment"));  row.add(Box.createVerticalStrut(5)); // vert puts icon at end of line
-		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param2Align));// CAS534 change from Help; CAS546 added
+		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param2Align));
 		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
 		
-		int colWidth = 100;
+		row = Jcomp.createRowPanel();
+		row.add(chkConcat);								// CAS567 moved from Main
+		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
 		
+		int colWidth = 100;
 		row = Jcomp.createRowPanel();
 		row.add(lblProMerArgs);
 		if (lblProMerArgs.getPreferredSize().width < colWidth) row.add(Box.createHorizontalStrut(colWidth - lblProMerArgs.getPreferredSize().width));
@@ -228,7 +221,7 @@ public class PairParams extends JDialog {
 		row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent));
 		JLabel j = Jcomp.createLabel("Scale:", "Increase scale creates less hits, decrease creates more hits");
 		row.add(j); row.add(Box.createHorizontalStrut(8)); 
-		row.add(lblExon);    row.add(txtExon);   row.add(Box.createHorizontalStrut(5)); // CAS548 swapped order
+		row.add(lblExon);    row.add(txtExon);   row.add(Box.createHorizontalStrut(5)); 
 		row.add(lblGene);    row.add(txtGene);   row.add(Box.createHorizontalStrut(5));
 		row.add(lblLen);     row.add(txtLen);    row.add(Box.createHorizontalStrut(5));
 		row.add(lblNoGene);  row.add(txtNoGene); row.add(Box.createHorizontalStrut(5));
@@ -246,14 +239,15 @@ public class PairParams extends JDialog {
 		// Synteny
 		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(5)); 
 		row = Jcomp.createRowPanel();
-		row.add(Jcomp.createHtmlLabel("Synteny"));  row.add(Box.createVerticalStrut(5));
+		row.add(Jcomp.createHtmlLabel("Synteny Blocks"));  row.add(Box.createVerticalStrut(5));
 		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param2Syn));//  CAS546 added
 		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
 		
 		row = Jcomp.createRowPanel();
-		row.add(lblMinDots); row.add(Box.createHorizontalStrut(5));
-		row.add(txtMinDots); row.add(Box.createHorizontalStrut(10));
+		row.add(lblMinDots); row.add(Box.createHorizontalStrut(3));
+		row.add(txtMinDots); row.add(Box.createHorizontalStrut(8));
 		
+		row.add(chkSameOrient);row.add(Box.createHorizontalStrut(8));
 		row.add(chkMergeBlocks);
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
 		
@@ -283,19 +277,24 @@ public class PairParams extends JDialog {
 		setResizable(false);
 		setLocationRelativeTo(null); 
 	}/************************************************************************/
-	private String getValue(String symbol) {
+	private String getValue(String symbol) {// ORDER MUST BE SAME AS array
 		int x=0;
+		
 		if (symbol.equals(SYMBOLS[x++])) 		return txtMinDots.getText();
-		else if (symbol.equals(SYMBOLS[x++])) 	return txtTopN.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return chkMergeBlocks.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++])) 	return chkSameOrient.isSelected()?"1":"0";
+		
+		else if (symbol.equals(SYMBOLS[x++])) 	return chkConcat.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return txtNucMerArgs.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return txtProMerArgs.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return txtSelfArgs.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return chkNucOnly.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkProOnly.isSelected()?"1":"0";
+		
 		else if (symbol.equals(SYMBOLS[x++])) 	return chkPseudo.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkAlgo1.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkAlgo2.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++])) 	return txtTopN.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return txtNoGene.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return txtGene.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return txtExon.getText();
@@ -307,19 +306,24 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	return chkInpile.isSelected()?"1":"0";
 		else return "";
 	}
-	private void setValue(String symbol, String value) {
+	private void setValue(String symbol, String value) {// ORDER MUST BE SAME AS array
 		int x=0;
+		
 		if (symbol.equals(SYMBOLS[x++]))		txtMinDots.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	txtTopN.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	chkMergeBlocks.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	chkSameOrient.setSelected(value.equals("1"));
+		
+		else if (symbol.equals(SYMBOLS[x++]))	chkConcat.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	txtNucMerArgs.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	txtProMerArgs.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	txtSelfArgs.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	chkNucOnly.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkProOnly.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))		chkPseudo.setSelected(value.equals("1"));
+		
+		else if (symbol.equals(SYMBOLS[x++]))	chkPseudo.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo1.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo2.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	txtTopN.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	txtNoGene.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	txtGene.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	txtExon.setText(value);
@@ -331,10 +335,12 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	chkInpile.setSelected(value.equals("1"));
 	}
 	/************************************************************************/
-	private void setDefaults(HashMap <String, String> valMap, boolean setDef) {
+	private void setDefaults(HashMap <String, String> valMap,  boolean setDef) {// File values or default
+		
 		for(int x=0; x<SYMBOLS.length; x++)
 			setValue(SYMBOLS[x], valMap.get(SYMBOLS[x]));	
-		if (setDef) chkDef.setSelected(true); // CAS561 Defaults should reset this, but not initial load from file
+		
+		if (setDef) chkDef.setSelected(true); // Defaults should reset this, but not initial load from file
 	}
 	private void save() {
 		if (!checkInt("Min Dots", txtMinDots.getText(), 1)) return; 
@@ -346,14 +352,14 @@ public class PairParams extends JDialog {
 		
 		HashMap <String, String> fileMap = mp.getFileParams();
 		
-		for (String key : SYMBOLS) {
-			fileMap.put(key, getValue(key));
-		}
-		mp.writeFile(fileMap);
+		for (String key : SYMBOLS) fileMap.put(key, getValue(key));
+		
+		mp.writeFile(fileMap); // saves to DB when run
+		
 		setVisible(false);
 	}
 	private boolean checkInt(String label, String x, int min) {
-		if (x.trim().equals("")) x="0"; // CAS546 
+		if (x.trim().equals("")) x="0"; 
 		int i = Utilities.getInt(x.trim());
 		if (min==0) {
 			if (i<0) {
@@ -372,7 +378,7 @@ public class PairParams extends JDialog {
 		return true;
 	}
 	private boolean checkDouble(String label, String x, double min) {
-		if (x.trim().equals("")) x="0.0"; // CAS546 
+		if (x.trim().equals("")) x="0.0"; 
 		double d = Utilities.getDouble(x.trim());
 		if (min==0) {
 			if (d<0) {
@@ -391,11 +397,11 @@ public class PairParams extends JDialog {
 	private JPanel mainPanel = null;
 	private Mpair mp = null;
 	
+	private JCheckBox chkConcat = null;
 	private JLabel lblNucMerArgs = null, lblProMerArgs = null, lblSelfArgs = null;
 	private JTextField txtNucMerArgs = null, txtSelfArgs = null, txtProMerArgs = null;
 	private JRadioButton chkNucOnly = null, chkProOnly = null, chkDef = null;
 	
-	private JCheckBox chkVB = null;
 	private JRadioButton chkAlgo1,  chkAlgo2;
 	
 	private JLabel lblTopN = null;
@@ -409,7 +415,7 @@ public class PairParams extends JDialog {
 	
 	private JLabel lblMinDots = null;
 	private JTextField txtMinDots = null;
-	private JCheckBox chkMergeBlocks = null;
+	private JCheckBox chkMergeBlocks = null, chkSameOrient = null;
 	
 	private JButton btnKeep = null, btnDiscard = null, btnLoadDef = null;
 }

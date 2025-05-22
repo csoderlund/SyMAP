@@ -12,7 +12,13 @@ import backend.Utils;
 import util.ErrorReport;
 import util.ProgressDialog;
 
+/*********************************************************
+ * This contains the major read/write DB methods
+ */
 public class RWdb {
+	private final String orientSame = SyntenyMain.orientSame;
+	private final String orientDiff = SyntenyMain.orientDiff;
+	
 	private DBconn2 tdbc2;
 	private int mPairIdx, mProj1Idx, mProj2Idx;
 	
@@ -29,21 +35,21 @@ public class RWdb {
 	try {
 		Vector<SyHit> hits = new Vector<SyHit>();
 		
-      	String st = "SELECT h.idx, h.start1, h.end1, h.start2, h.end2, h.pctid, h.gene_overlap" +
+      	String st = "SELECT h.idx, h.start1, h.end1, h.start2, h.end2, h.pctid" +
             " FROM pseudo_hits as h " +  
             " WHERE h.proj1_idx=" + mProj1Idx  + " AND h.proj2_idx=" +  mProj2Idx +
             " AND h.grp1_idx=" + grpIdx1 + " AND h.grp2_idx=" + grpIdx2 ;
       	
-      	if (orient.equals("+/+")) { // CAS560 add orient
+      	if (orient.equals(orientSame)) { // CAS567 add orient
       		st += " AND (h.strand = '+/+' or h.strand = '-/-')";
       	}
-      	else if (orient.equals("+/-")) {
+      	else if (orient.equals(orientDiff)) {
       		st += " AND (h.strand = '+/-' or h.strand = '-/+')";
       	}
       	if (isSelf) {
       		st += " AND h.start1 < h.start2 "; // do blocks in one triangle, mirror later
       	}
-      	
+  	
 		ResultSet rs = tdbc2.executeQuery(st);
 		while (rs.next()) {
 			int id = rs.getInt(1);
@@ -53,7 +59,6 @@ public class RWdb {
 			int start2 = rs.getInt(4);
 			int end2 = rs.getInt(5);
 			int pctid = rs.getInt(6);
-			int gene = rs.getInt(7);
 			
 			// Ignore diagonal hits for self-alignments; This doesn't really work though because tandem gene families create many near-diagonal hits. 
 			if (isSelf ) {
@@ -64,7 +69,7 @@ public class RWdb {
 				if (Utils.intervalsOverlap(start1, end1, start2, end2, 0)) continue;
 			}	
 			
-			hits.add(new SyHit(start1, end1, start2, end2,id,pctid,gene));
+			hits.add(new SyHit(start1, end1, start2, end2,id,pctid));
 		}
 		rs.close();
 
@@ -226,8 +231,6 @@ public class RWdb {
 	}
 	/*************************************************************
 	* Save blocks to DB
-	// CAS533 rewrote to use prepareStatement and make more explicit
-	// Gives SQL syntax error the ps.executeBatch() but not ps.addBatch() 
 	 *************************************************************/
 	protected void saveBlocksToDB(Vector<SyBlock> blocks)  {
 	try {

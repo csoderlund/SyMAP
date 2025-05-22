@@ -42,35 +42,27 @@ import util.ErrorReport;
  * The Sequence track for a chromosome. Called from DrawingPanel
  * Has a vector of annotations, which it also draws. The hit is drawn in this rectangle by PseudoPseudoHits
  * Sequence & TrackHolder are 1-1; get replaced with different sequence unless a current sequence uses. 
- * 
- * CAS550 merge Track Abstract and rearrange; Tract.start and Tract.end renamed gnDstart (genomic number, Displayed)
- * 		Track - all assignments moved to declarations
- * 		DrawingPanel was changed to create new TrackHolders/Sequence for each new draw.
- * 		Changed GenomeNumbers to longs (removed package number, and performed formatting in new BpNumber)
- * 		There is still more cleanup to be done, but...
- * CAS551 dead code; Point startMoveOffset = new Point(), moveOffset = new Point(); 
  */
 public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMotionListener,MouseWheelListener {
-	// flags; Sequence filter settings // moved colors and constants to end
-	protected Annotation selectedGeneObj=null;						// CAS545 add
+	protected Annotation selectedGeneObj=null;						
 	
 	protected int grpIdx=Globals.NO_VALUE;
 	protected String chrName;					// e.g. Chr01
 	protected int projIdx=Globals.NO_VALUE, otherProjIdx=Globals.NO_VALUE;
 	private String projectName, displayName, otherProjName;
-	protected int chrSize = 0;  				// full chr size, static; CAS551 was long
-	public int position;						// track position; CAS562 make public for SeqHits.
+	protected int chrSize = 0;  				// full chr size, static; was long
+	public int position;						// track position; public for SeqHits.
 	protected int orient = Globals.LEFT_ORIENT; // right (-1) center(0) left (1)
 	private Color bgColor; 	
 	private TextLayout titleLayout;
 	
-	private SeqHits hitsObj1=null,  hitsObj2=null; // Obj2 for 3-track; CAS543 add 
-	private boolean isQuery1=false, isQuery2=false;// True => this sequence is Query (pseudo_hits.annot1_idx); CAS545 add 2
+	private SeqHits hitsObj1=null,  hitsObj2=null; // Obj2 for 3-track; 
+	private boolean isQuery1=false, isQuery2=false;// True => this sequence is Query (pseudo_hits.annot1_idx); 
 	
 	private SeqPool seqPool;
-	private Vector <Rule> ruleList=  new Vector<Rule>(15,2); 			  // CAS545 was List
-	protected Vector <Annotation> allAnnoVec = new Vector<Annotation>(1); // include exons, CAS545 needs initial size; see loadAnnoFromDB
-	private Vector <Annotation> geneVec = new Vector <Annotation> (); 	  // vector for faster searching; CAS545 added 
+	private Vector <Rule> ruleList=  new Vector<Rule>(15,2); 			  
+	protected Vector <Annotation> allAnnoVec = new Vector<Annotation>(1); // include exons, needs initial size; see loadAnnoFromDB
+	private Vector <Annotation> geneVec = new Vector <Annotation> (); 	  // vector for faster searching; 
 	private Point2D.Float headerPoint = new Point2D.Float(), footerPoint = new Point2D.Float();
 	private TextLayout headerLayout = null, footerLayout = null;
 	
@@ -98,9 +90,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	private DrawingPanel drawingPanel;
 	private TrackHolder holder;
 	private PropsDB propDB;
-	protected Sfilter sfilObj; // CAS552 moved everything to Sfilter, and just access it from here.
+	protected Sfilter sfilObj; 
 
-	private int distance_for_anno = 0;		// CAS554 show anno depend on density of genes
+	private int distance_for_anno = 0;		
 	
 	private String buildCntMsg="", paintCntMsg="";
 	private void dprt(String msg) {symap.Globals.dprt("SQ: " + msg);}
@@ -123,7 +115,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		this.projIdx = projIdx;
 		displayName = propDB.getDisplayName(projIdx);
 		projectName = propDB.getName(projIdx);
-		if (Utilities.isEmpty(displayName)) displayName=projectName; // need for new projects; CAS534 
+		if (Utilities.isEmpty(displayName)) displayName=projectName; // need for new projects; 
 		
 		loadAnnosFromDB();	
 		
@@ -139,19 +131,19 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	private boolean loadAnnosFromDB() { // resetData, setup
 		try {
 			int n = seqPool.getNumAllocs(grpIdx);
-			allAnnoVec = new Vector <Annotation>(n); // CAS545 alloc here instead
+			allAnnoVec = new Vector <Annotation>(n); 
 			
 			chrSize = seqPool.loadChrSize(this);
 			chrName = seqPool.loadSeqData(this, allAnnoVec); // Add annotations to allAnnoVec, and gnSize value
-			if (allAnnoVec.size() >0) { // CAS553 fix for 552 bug when no annot; was accessing a null filtObj
-				int geneLen=0;			// CAS554 add computation
+			if (allAnnoVec.size() >0) { 
+				int geneLen=0;			
 				for (Annotation aObj : allAnnoVec) {
 					if (aObj.isGene()) {
 						geneVec.add(aObj);
 						geneLen += aObj.getGeneLen();
 					}
 				}
-				if (geneVec.size()>0) { // CAS555 bug fix for zero
+				if (geneVec.size()>0) { 
 					int avg_gene = (geneVec.size()>0) ? (int)(geneLen/geneVec.size()) : 0;
 					distance_for_anno = avg_gene/GENES_FOR_ANNOT_DESC; 
 					if (distance_for_anno<MIN_BP_FOR_ANNOT_DESC) distance_for_anno = MIN_BP_FOR_ANNOT_DESC;
@@ -193,17 +185,17 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		sd.setTrack(this);
 		firstBuild = false;
 		
-		if (isRef()) resetHitg2(); 	// CAS545 add
+		if (isRef()) resetHitg2(); 
 	}
-	protected void setFilter(Sfilter obj) {sfilObj = obj;} // CAS552 added
+	protected void setFilter(Sfilter obj) {sfilObj = obj;} 
 	
 	public void setBackground(Color c) {bgColor = c;}
 	
 	public void setPosition(int position) { this.position = position; } // DrawingPanel.initTrack
 	
-	protected boolean isRef() {return (position % REFPOS == 0);} // Sequence.setup, Sfilter; CAS545 add for 2g2/1g2; (position % 2 == 0)
+	protected boolean isRef() {return (position % REFPOS == 0);} // Sequence.setup, Sfilter; for 2g2/1g2; (position % 2 == 0)
 	
-	protected boolean is3Track() {return drawingPanel.getNumMaps()>1;} // CAS555 hitObj2 is not known when filter created
+	protected boolean is3Track() {return drawingPanel.getNumMaps()>1;} // hitObj2 is not known when filter created
 	/**
 	 * XXX Build layout: Sets up the drawing objects for this sequence. Called by DrawingPanel and Track
 	 * The Gene boxes are drawn in Annotations.setRectangle and its paintComponent
@@ -236,7 +228,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}
 		// this started happening with later Java versions if they click too fast
 		double dif = getPixelValue(chrDisplayEnd) - getPixelValue(chrDisplayStart);
-		if (!(dif > 0 && dif <= MAX_PIXEL_HEIGHT)) { // CAS521 make popup
+		if (!(dif > 0 && dif <= MAX_PIXEL_HEIGHT)) { // make popup
 			Utilities.showWarningMessage("Unable to size sequence view. Try again. (" + chrDisplayStart + "," + chrDisplayEnd + ")"); 				
 			if (height == Globals.NO_VALUE) height = getAvailPixels();
 			bpPerPixel = (chrDisplayEnd-chrDisplayStart)/height; 
@@ -322,18 +314,18 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 				dwidth = EXON_WIDTH/GENE_DIV; 
 				if (olapMap.containsKey(annot.getAnnoIdx())) offset = olapMap.get(annot.getAnnoIdx());
 			}
-			else if (annot.isExon()) { // CAS543 remove || annot.isSyGene()) {
+			else if (annot.isExon()) { 
 				dwidth = EXON_WIDTH;
 				if (olapMap.containsKey(annot.getGeneIdx())) offset = olapMap.get(annot.getGeneIdx());
 			}
 			if (offset>0 && isRight) offset = -offset;
 			
 			annot.setRectangle(centRect, chrDisplayStart, chrDisplayEnd,bpPerPixel, dwidth, hwidth, sfilObj.bFlipped, offset,
-					sfilObj.bShowGeneLine, sfilObj.bShowGeneNum, sfilObj.bHighGenePopup); // CAS544 popup; CAS551 showGeneNum
-			if (last!=null) annot.setLastY(last); // annotation are separated, used during paint; CAS551 
+					sfilObj.bShowGeneLine, sfilObj.bShowGeneNum, sfilObj.bHighGenePopup); 
+			if (last!=null) annot.setLastY(last); // annotation are separated, used during paint;  
 			last=annot;
 			
-			if (annot.isGene() && annot.isVisible()) cntAnno++; //isVis needs rect set; CAS554 moved from paintComponent
+			if (annot.isGene() && annot.isVisible()) cntAnno++; //isVis needs rect set; 
 		} // end for loop of (all annotations)
 	    
 	    buildCntMsg = String.format("Genes: %,d", cntAnno);
@@ -346,7 +338,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	    	
 	    	if (((int)bpPerPixel > distance_for_anno)) buildCntMsg += "\nZoom in for annotation";
 	    	else {
-	    		double lastBP=rect.y + rect.height; // CAS554 
+	    		double lastBP=rect.y + rect.height; 
 		    	for (Annotation annot : allAnnoVec) {
 		    		if (!(annot.isGene() && annot.hasDesc() && annot.isVisible())) continue;
 		    		
@@ -354,7 +346,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 					x2 = isRight ? x1 + RULER_LINE_LENGTH  						 : x1 - RULER_LINE_LENGTH;
 					
 					ty = annot.getY1();
-					if (lastStart+OVERLAP_OFFSET>ty) {//CAS548; was incrementing y, now increment x so still line up
+					if (lastStart+OVERLAP_OFFSET>ty) {
 						x1 = x1 + (lastInc*OVERLAP_OFFSET); 
 						lastInc++;
 						if (lastInc>=4) lastInc=1;
@@ -430,7 +422,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		return true;
 	}
 	protected void setTitle() {// Sequence.build
-		String title = getTitle(); // CAS512 returned null, but not repeated 
+		String title = getTitle(); 
 		if (title==null) {
 			title="bug";
 			dprt("no title for " + chrName);
@@ -472,7 +464,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		
 		Graphics2D g2 = (Graphics2D) g;
 		
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON); // CAS535
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON); 
         
 		g2.setPaint((position % REFPOS == 0 ? bgColor1 : bgColor2)); 
 		g2.fill(rect);
@@ -518,7 +510,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		if (drawingPanel == null || drawingPanel.getCloseUp() == null) return;
 
 		try {// The CloseUp panel created at startup and reused.
-			if (end-start>Globals.MAX_CLOSEUP_BP) {// CAS531 add this check
+			if (end-start>Globals.MAX_CLOSEUP_BP) {
 				Utilities.showWarningMessage("Region greater than " + Globals.MAX_CLOSEUP_K + ". Cannot align.");
 				return;
 			}
@@ -533,7 +525,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 						isQuery1, hitsObj1.getOtherChrName(this), numShow++);
 				if (rc < 0) Utilities.showWarningMessage("Error showing close up view."); 
 			}
-			// if a track has a track on both sides (e.g. 2 track shown), this is the otherside CAS543 add
+			// if a track has a track on both sides (e.g. 2 track shown), this is the otherside 
 			if (hitsObj2!=null) { 
 				hitsObj2.getHitsInRange(hitList2, start, end, isQuery2);
 				if (hitList2.size()>0) {
@@ -597,20 +589,20 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	}
 	
 	public boolean isFlipped() { return sfilObj.bFlipped; } // Sfilter, TrackData
-	public boolean isQuery() { return isQuery1; } // mapper.SeqHits.DrawHit; CAS531 add;
+	public boolean isQuery() { return isQuery1; } // mapper.SeqHits.DrawHit; 
 	
 	/*****************************************************************************/
 	// Called by CloseUpDialog and TextShowSeq (gene only); type is Gene or Exon
-	public Vector<Annotation> getAnnoGene(int start, int end) {// CAS535 gene only;
+	public Vector<Annotation> getAnnoGene(int start, int end) {
 		Vector<Annotation> out = new Vector<Annotation>();
 		
 		for (Annotation a : geneVec) {
-			if (isOlap(start, end, a.getStart(), a.getEnd())) // CAS550 was separate dedicated method
+			if (isOlap(start, end, a.getStart(), a.getEnd())) 
 				out.add(a);
 		}	
 		return out;
 	}
-	public Vector<Annotation> getAnnoExon(int gene_idx) {// CAS535 was getting exons from other genes
+	public Vector<Annotation> getAnnoExon(int gene_idx) {
 		Vector<Annotation> out = new Vector<Annotation>();
 		
 		for (Annotation a : allAnnoVec) {
@@ -619,7 +611,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}	
 		return out;
 	}
-	public Annotation getAnnoObj(int idx1, int idx2) { // CAS560 replaced getGeneNumFromIdx with getAnnoObj
+	public Annotation getAnnoObj(int idx1, int idx2) { 
 		if (idx1>0) {
 			for (Annotation aObj : geneVec) {
 				if (aObj.getAnnoIdx()==idx1) return aObj; 
@@ -633,7 +625,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		return null;
 	}
 	
-	public String getGeneNumFromIdx(int idx1) { // CAS548 called from HitData for its popup
+	public String getGeneNumFromIdx(int idx1) { // called from HitData for its popup
 		for (Annotation aObj : geneVec) {
 			if (aObj.getAnnoIdx()==idx1) return aObj.getFullGeneNum(); 
 		}	
@@ -649,8 +641,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		return prefix + grp;
 	}	
 
-	public void setAnnotation() {sfilObj.bShowAnnot=true;} // CAS543 changed from setting static from Query.TableDataPanel
-	public void setGeneNum()    {sfilObj.bShowGeneNum=true;}  // CAS562 add for 2D-3track query
+	public void setAnnotation() {sfilObj.bShowAnnot=true;}
+	public void setGeneNum()    {sfilObj.bShowGeneNum=true;}  // for 2D-3track query
 	
 	protected TrackData getData() {return new TrackData(this);} // TrackHolder.getTrackData
 	
@@ -689,7 +681,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		return counts;
 	}
 	
-	protected int getMidCoordForGene(String name) { // Sfilter; CAS545 filter on gene#
+	protected int getMidCoordForGene(String name) { // Sfilter;
 		int mid = -1;
 		for (Annotation aObj : geneVec) {
 			mid = aObj.isMatchGeneN(name);
@@ -701,8 +693,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}
 		return mid;
 	}
-	protected void setSelectedGene(Annotation aObj) { // TrackData CAS552 add for history
-		if (aObj==null) return; // CAS561 happens
+	protected void setSelectedGene(Annotation aObj) { // TrackData for history
+		if (aObj==null) return; 
 		selectedGeneObj = aObj;
 		aObj.setIsSelectedGene(true);
 	}
@@ -714,7 +706,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	}
 	/******************************************************************/
 	// Hit interface
-	// mapper.HitData used for conserved to highlight genes at ends of hit; CAS545 add
+	// mapper.HitData used for conserved to highlight genes at ends of hit;
 	public void setConservedforHit(int annot1_idx, int annot2_idx, boolean isHigh) {
 		for (Annotation aObj : geneVec) {
 			int idx = aObj.getAnnoIdx();
@@ -763,7 +755,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}
 		return true;
 	}
-	public void setHighforHit(int annot1_idx, int annot2_idx, boolean isHigh) { // mapper.HitData CAS545 highlight gene of hit
+	public void setHighforHit(int annot1_idx, int annot2_idx, boolean isHigh) { // mapper.HitData; highlight gene of hit
 		for (Annotation aObj : geneVec) {
 			int idx = aObj.getAnnoIdx();
 			if (idx==annot1_idx || idx==annot2_idx) {
@@ -793,7 +785,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	public boolean isHitInRange(int num) { // mapper.SeqHits.isVisHitWire
 		return num >= chrDisplayStart && num <= chrDisplayEnd;
 	}
-	public boolean isHitOlap(int hs, int he) { // mapper.SeqHits.isOlapHit; CAS550 add for partial hit
+	public boolean isHitOlap(int hs, int he) { // mapper.SeqHits.isOlapHit; for partial hit
 		return isOlap(hs, he, (int) chrDisplayStart, (int) chrDisplayEnd);
 	}
 	private boolean isOlap(int s1, int e1, int s2, int e2) {
@@ -901,7 +893,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			setAllBuild();
 		}
 	}
-	public void setStart(int startValue)  { // DrawingPanel, Sfilter; CAS514 was throwing exception and stopping symap
+	public void setStart(int startValue)  { // DrawingPanel, Sfilter; 
 		if (startValue > chrSize) {
 			Utilities.showWarningMessage("Start value "+startValue+" is greater than size "+chrSize+".");
 			return;
@@ -917,7 +909,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			setAllBuild();
 		}
 	}
-	public int setEnd(int endValue) { // DrawingPanel, Sfilter; CAS514 was throwing exception and stopping symap
+	public int setEnd(int endValue) { // DrawingPanel, Sfilter; 
 		if (endValue < 0) {
 			Utilities.showWarningMessage("End value is less than zero.");
 			return chrSize;
@@ -1155,15 +1147,15 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	// mouseIn click in anno space: if click on gene, popup info; else pass to parent
 	public void mousePressed(MouseEvent e) {
 		// Sequence 1st
-		if (e.isPopupTrigger()) { 					// CAS516 add popup on right click
+		if (e.isPopupTrigger()) { 					// popup on right click
 			String title = getTitle(); 				// DisplayName Chr
 			Point p = e.getPoint();
 			if (rect.contains(p)) { 				// within blue rectangle of track
-				for (Annotation annot : geneVec) { 	// CAS548x was allAnnoVec
+				for (Annotation annot : geneVec) { 	// 
 					if (annot.contains(p)) {		// in this gene annotation
 						setForGenePopup(annot);	
 						annot.popupDesc(getHolder(), title, title);
-						if (sfilObj.bHighGenePopup) drawingPanel.smake("seq: mousepressed"); // CAS544 to highlight
+						if (sfilObj.bHighGenePopup) drawingPanel.smake("seq: mousepressed"); // to highlight
 						return;
 					}
 				}
@@ -1239,12 +1231,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 					}
 				} catch (Exception ex) {ErrorReport.print(ex, "Exception resizing track!");}
 			}
-			if (needUpdate)
-					// CAS552 || (startResizeBpPerPixel!=Globals.NO_VALUE && startResizeBpPerPixel!=bpPerPixel))
-					// CAS551 || (!isCleared(startMoveOffset) && !startMoveOffset.equals(moveOffset))
-			{
+			if (needUpdate) {
 				drawingPanel.updateHistory();
-				// CAS552 clearMouseSettings();
 			}
 			clearMouseSettings();
 		}
@@ -1377,9 +1365,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	}
 	// called on mousePressed for Gene Popup
 	private void setForGenePopup(Annotation annot) { 
-		annot.setExonList(); // CAS548 was sending full exonList when annot already has its own
+		annot.setExonList(); 
 		
-		if (hitsObj1!=null) {// CAS517 added; CAS548 change format to start:end[+], add score
+		if (hitsObj1!=null) {
 			if (!annot.hasHitList()) { 
 				boolean isAlgo1 = propDB.isAlgo1(projIdx, otherProjIdx);
 				TreeMap <Integer, String> scoreMap = 
@@ -1390,7 +1378,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 				}
 			}
 		}
-		if (hitsObj2!=null) {// CAS543 added for 3-track
+		if (hitsObj2!=null) {// for 3-track
 			if (!annot.hasHitList2()) { 
 				boolean isAlgo1 = propDB.isAlgo1(projIdx, otherProjIdx);
 				TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1);
@@ -1405,24 +1393,24 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
     // Track
 	private static final int REFPOS=2;
 	private static final int MAX_PIXEL_HEIGHT = 10000;
-	private static final Color REFNAME = new Color(0,0,200); // CAS530 change from red to deep blue
+	private static final Color REFNAME = new Color(0,0,200); 
 	private static final Color titleColor = Color.black;
 	private static final Color dragColor = new Color(255,255,255,120);
 	private static final Color dragBorder = Color.black;
 	private static final Font titleFont = new Font("Arial", 1, 14);
 
 	// Sequence
-	private static final int OVERLAP_OFFSET = 18;	// CAS518 for overlap and yellow text; CAS548 was 12
+	private static final int OVERLAP_OFFSET = 18;	
 	
 	private static final double MOUSE_PADDING = 2;
 
 	private static final double OFFSET_SPACE = 7;	// header/footer
 	private static final double OFFSET_SMALL = 1;
 	
-	private static final double  DEFAULT_WIDTH = 90.0; // Width of track; CAS551 was 100.0
+	private static final double  DEFAULT_WIDTH = 90.0; // Width of track; 
 	private static final double  DEFAULT_WIDE_WIDTH = 100.0;
 	
-	protected static final double EXON_WIDTH = 15.0;		// CAS561 used by Annotation too
+	protected static final double EXON_WIDTH = 15.0;		// used by Annotation too
 	private static final int    GENE_DIV = 4; 				// Gene is this much narrower than exon
 	private static final int MIN_BP_FOR_ANNOT_DESC = 500; 	// minimum bp for show anno
 	private static final int GENES_FOR_ANNOT_DESC = 20;   	// average distance for 20 genes
@@ -1444,7 +1432,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	
 	public static Color unitColor, bgColor1, bgColor2; 
 	
-	static { // CAS532 remove everything except colors that can be set by user
+	static { // colors that can be set by user
 		PropertiesReader props = new PropertiesReader(Globals.class.getResource("/properties/sequence.properties"));
 	
 		unitColor                  = props.getColor("unitColor");

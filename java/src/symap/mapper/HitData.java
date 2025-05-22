@@ -9,34 +9,33 @@ import util.Utilities;
 
 /**
  * Represents one Clustered Hit
- * CAS531 was abstract so the code went through loops to get data into it via PseudoPseudoData, which is removed
  */
 public class HitData {	
-	public static int cntMerge=0, cntTotal=0, cntMergeSH=0, cntTotalSH=0; // CAS551 -dd see reduction in subhits
-	private Mapper mapper;				// CAS544 add for way back to other data
-	private int idx;					// CAS551 was long
-	private int hitnum;					// CAS520 add, newly assigned hitnum
-	private byte pctid, pctsim; 		// CAS515 add pctsim and nMerge
-	private int covScore;				// CAS540 best coverage
+	protected static int cntMerge=0, cntTotal=0, cntMergeSH=0, cntTotalSH=0; 
+	private Mapper mapper;				// for way back to other data
+	private int idx;				
+	private int hitnum;				 
+	private byte pctid, pctsim; 		
+	private int covScore;				
 	private int nMerge;
 	private int geneOlp = -1; 
 	private boolean isPosOrient1, isPosOrient2; 	
-	private int 	annot1_idx, annot2_idx; // CAS543 add
+	private int 	annot1_idx, annot2_idx; 
 	private String 	query_seq, target_seq;  // coordinates of subhits
 	
-	protected int start1, end1, mid1, start2, end2, mid2;	// 1=q, 2=t; CAS550 add mid for paintComponent
-	protected String qMergeSH, tMergeSH;					// CAS551 merged subhits for faster drawing in SeqHits.DrawHit
+	protected int start1, end1, mid1, start2, end2, mid2;	// 1=q, 2=t; mid for paintComponent
+	protected String qMergeSH, tMergeSH;					// merged subhits for faster drawing in SeqHits.DrawHit
 	
-	private int collinearSet;		// CAS520 [c(runnum.runsize)] need to toggle highlight
-	private int blocknum; 			// CAS505 add
+	private int collinearSet;		
+	private int blocknum; 			
 	
 	private boolean isBlock;		// set on init
-	private boolean isCollinear;	// set on init; CAS520 add
+	private boolean isCollinear;	// set on init;
 	
-	private boolean isPopup=false;		// set when popup; CAS543 add
-	private boolean isHighHitg2=false;	// set on conserved seqFilter, same as geneOlap=2 if only 2 tracks; CAS545 add 
+	private boolean isPopup=false;		// set when popup; 
+	private boolean isHighHitg2=false;	// set on conserved seqFilter, same as geneOlap=2 if only 2 tracks; 
 	
-	protected String hitGeneTag;			// g(gene_overlap) or htype (EE) ; CAS516 gNbN see MapperPool; 
+	protected String hitGeneTag;			// g(gene_overlap) or htype (EE) ; gNbN see MapperPool; 
 	private String   hitTag; 
 	
 	// MapperPool.setSeqHitData populates, puts in array for SeqHits, where each HitData is associated with a DrawHit
@@ -78,7 +77,7 @@ public class HitData {
 		qMergeSH = calcMergeHits(query_seq, start1, end1);
 		tMergeSH = calcMergeHits(target_seq, start2, end2);
 		
-		this.collinearSet = runnum; // CAS520 add; CAS543 move form MapperPool
+		this.collinearSet = runnum; 
 		this.isCollinear = (collinearSet==0) ? false : true; 
 		
 		this.blocknum = block;
@@ -146,7 +145,7 @@ public class HitData {
 	
 	protected boolean isPosOrient1() { return isPosOrient1; }
 	protected boolean isPosOrient2() { return isPosOrient2; }
-	protected String getAnnots()	 { return annot1_idx + " " + annot2_idx;} // CAS543 added for trace
+	protected String getAnnots()	 { return annot1_idx + " " + annot2_idx;} // for trace
 	
 	public int getID() 		    { return idx; }
 	public int getAnnot1() 		{ return annot1_idx;}
@@ -169,7 +168,7 @@ public class HitData {
 	protected String getTargetSeq() { return target_seq; } 
 	protected String getQuerySeq()  { return query_seq; }  
 	
-	// for hit popup: the query and target seq have subhits, and are blank if just one hit; CAS517 add
+	// for hit popup: the query and target seq have subhits, and are blank if just one hit; 
 	protected String getQuerySubhits(){ 
 		if (query_seq!=null && query_seq.length()>0) return query_seq; 
 		return start1 + ":" + end1;
@@ -183,7 +182,7 @@ public class HitData {
 		return d;
 	}
 	// for annotation popup;  
-	// CAS548 list of subhits -> coords for both sides; CAS552 rm unnecessary lines, add minor
+	// list of subhits -> coords for both sides; 
 	protected String getHitCoordsForGenePopup(boolean isQuery, String tag) { 
 		String tag1 = mapper.getGeneNum1(annot1_idx);
 		String tag2 = mapper.getGeneNum2(annot2_idx);
@@ -202,21 +201,20 @@ public class HitData {
 		return coords;
 	} 
 	// Called from SeqHits.popupDesc (top of popup) and SeqHits.DrawHit (Hover)
-	// CAS512 left/right->start:end; CAS516 add Inv, tag CAS517 puts track1 info before track2; CAS552 switch hit&block
 	protected String createHover(boolean isQuery) {
 		String msg = hitTag +  "\n"; 
 		
-		String n = (nMerge>0) ? "#Subhits=" + nMerge + "  " : "#Subhit=1  "; // CAS548 added '#'
+		String n = (nMerge>0) ? "#Subhits=" + nMerge + "  " : "#Subhit=1  "; 
 		msg += n;
 		String op = (nMerge>0) ? "~" : "";
 		msg +=  "Id=" + op + pctid  + "%  ";
 		msg +=  "Sim="+ op + pctsim + "%  ";
-		msg +=  String.format("Cov=%,dbp", covScore); // CAS548 add bp; Cov is merged hits, remove ~
+		msg +=  String.format("Cov=%,dbp", covScore); 
 		
-		String msg1 =  Utilities.coordsStr(isPosOrient1, start1, end1);  // CAS548 rm chr
+		String msg1 =  Utilities.coordsStr(isPosOrient1, start1, end1);  
 		String msg2 =  Utilities.coordsStr(isPosOrient2, start2, end2); 
 		String L="L ", R="R ";
-		String coords = isQuery ? (L + msg1+"\n"+R+ msg2) : (L +msg2+ "\n"+ R + msg1);// CAS548 add L/R
+		String coords = isQuery ? (L + msg1+"\n"+R+ msg2) : (L +msg2+ "\n"+ R + msg1);
 		
 		return  msg + "\n\n" + coords;
 	}
@@ -227,16 +225,16 @@ public class HitData {
 	public 	  boolean is2Gene() 	{ return (geneOlp==2); } 
 	protected boolean is1Gene() 	{ return (geneOlp==1); } 
 	protected boolean is0Gene()  	{ return (geneOlp==0); } 
-	protected boolean isInv()		{ return isPosOrient1!=isPosOrient2;} // CAS560 add for TextShowInfo
+	protected boolean isInv()		{ return isPosOrient1!=isPosOrient2;} // for TextShowInfo
 	
-	public void setIsPopup(boolean b) {// CAS543 add; SeqHits, closeup.TextShowInfo
+	public void setIsPopup(boolean b) {// SeqHits, closeup.TextShowInfo
 		isPopup=b;
-		Sequence s1 = (Sequence) mapper.getTrack1();// CAS545 highlight gene also
+		Sequence s1 = (Sequence) mapper.getTrack1();// highlight gene also
 		Sequence s2 = (Sequence) mapper.getTrack2();
 		s1.setHighforHit(annot1_idx, annot2_idx, b); 
 		s2.setHighforHit(annot1_idx, annot2_idx, b); 
 	} 
-	public void setIsHighHitg2(boolean b) {	// CAS545 add; SeqPool sets true, SeqHits sets false
+	public void setIsHighHitg2(boolean b) {	// SeqPool sets true, SeqHits sets false
 		isHighHitg2=b;
 	
 		Sequence s1 = (Sequence) mapper.getTrack1();
@@ -246,7 +244,7 @@ public class HitData {
 		s2.setConservedforHit(annot1_idx, annot2_idx, b); 
 	}
 	
-	protected int getCollinearSet() {return collinearSet;} // CAS520 add 
+	protected int getCollinearSet() {return collinearSet;} 
 	
 	public boolean equals(Object obj) {
 		return (obj instanceof HitData && ((HitData)obj).idx == idx);

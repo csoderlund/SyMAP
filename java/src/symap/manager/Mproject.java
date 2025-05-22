@@ -20,24 +20,18 @@ import backend.Constants;
 
 /****************************************************
  * This is used by most backend and display stuff. Has project parameters, and loads basic data
- * 
- * CAS522 remove FPC
- * CAS534 rewrite of project parameters
- * 		  renamed from Project to make unique and pair with Mpair;
- *        All load/align classes get info from here.
- *        However, project stuff is still all over the place for displays
+ *   All load/align classes get info from here.
+ *   However, project stuff is still all over the place for displays
  *        
- *        Keeps track of changes to file versus what is in database for previous load/align
- *        The load/align parameters are only loaded to DB when the corresponding task is executed
- *        ProjParams show file, View shows DB
+ *   Keeps track of changes to file versus what is in database for previous load/align
+ *   The load/align parameters are only loaded to DB when the corresponding task is executed
+ *   ProjParams show file, View shows DB
  *        
- * 		  All Mproject obj are recreated on every refresh
- * 		  if !viewSymap, the file values have precedence over DB for projVal
- * CAS541 change dbUser to DBconn
+ * 	 All Mproject obj are recreated on every refresh
+ * 	 if !viewSymap, the file values have precedence over DB for projVal
  */
 
-public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sort
-	private boolean TRACE = false;
+public class Mproject implements Comparable <Mproject> {
 	public String strDBName; 	// This is SQL project.name, and seq/dirName
 	public String strDisplayName;
 	
@@ -46,17 +40,22 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	private DBconn2 dbc2;
 	
 	private int numAnnot = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0;;
-	private long length=0; 		// CAS553 in 551 changed from long to int, but may cause error on getting value
+	private long length=0; 		// genome length - must be long
 	
 	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();
-	private TreeMap<String,Integer> grpName2Idx = new TreeMap <String, Integer> ();
+	private TreeMap<String,Integer>   grpName2Idx = new TreeMap <String, Integer> ();
 	private Pattern namePat;
-	private boolean bHasSelf=false; // CAS552 do not have Self-Align on circle if no self
+	private boolean bHasSelf=false; 
+	
+	private HashMap<String, Params> pLabelMap = new HashMap<String, Params> ();
+	private HashMap<String, Params> pKeysMap = new HashMap<String, Params> ();
 	
 	private Color color;
 	private short nStatus = STATUS_IN_DB; 
 	public static final short STATUS_ON_DISK = 0x0001; 
 	public static final short STATUS_IN_DB   = 0x0002; 
+	
+	private boolean bStart=true;
 	
 	// ManagerFrame, ChrExpInit, DotPlot.Project; one is created for each project shown on Manager left panel
 	public Mproject(DBconn2 dbc, int nIdx, String strName, String annotdate) { 
@@ -73,12 +72,13 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		}
 		else {
 			nStatus = STATUS_IN_DB;
-			if (annotdate!="")  {// CAS513 add loaddate Manager left side Projects
+			if (annotdate!="")  {
 				strDate = Utilities.reformatAnnotDate(annotdate);
 				if (strDate.contentEquals("???")) 
 					System.out.println("Warning: " + strName + " interrupted on load - reload");
 			}
 		}
+		bStart = false;
 	}
 	public Mproject() { // for display packages querying proj_props 
 		makeParams();
@@ -93,7 +93,6 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		}
 		return false;
 	}
-	public String toString() { return strDBName; }
 	
 	public String getAnnoStr() {
 		String msg= String.format("Annotations: %,d ", numAnnot);
@@ -111,7 +110,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public boolean hasGenes() {return numGene>0;}
 	public boolean hasSelf() { return bHasSelf;}
 	
-	public boolean hasCat()   	{return !Utilities.isEmpty(getDBVal(sCategory));} // CAS535 not finished
+	public boolean hasCat()   	{return !Utilities.isEmpty(getDBVal(sCategory));} 
 	public long getLength() 	{return length;}
 	public Color getColor() 	{return color; }
 	public void setColor(Color c) {color = c; }
@@ -119,8 +118,8 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public int getIdx() 		{ return projIdx; }
 	public int getID() 			{ return projIdx; }
 	public String getDBName() 	{ return strDBName; }
-	public String getDisplayName() 	{ return strDisplayName; }// getProjVal(sDisplay); }
-	public int getGeneCnt()		{ return numGene;} // CAS561 add for Query Instructions
+	public String getDisplayName() 	{ return strDisplayName; }
+	public int getGeneCnt()		{ return numGene;} // for Query Instructions
 	public String getLoadDate() {return strDate;}
 	public int getNumGroups() 	{ return numGroups; }
 	
@@ -139,27 +138,26 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	
 	public int getMinSize()  	
 	{	String val =  getProjVal(lMinLen);
-		if (val.contains(",")) val = val.replace(",",""); // CAS558 allow commas
+		if (val.contains(",")) val = val.replace(",",""); 
 		return Utilities.getInt(val);
 	}
 	public String getKeywords()     { return getProjVal(lANkeyword); }
 	public String getAnnoType()		{ return "";} 
 	
-	public boolean isMasked()  		{ return getProjVal(aMaskNonGenes).contentEquals("1");} // CAS504
+	public boolean isMasked()  		{ return getProjVal(aMaskNonGenes).contentEquals("1");} 
 	public String  getOrderAgainst(){ return getProjVal(aOrderAgainst); }
 	public boolean hasOrderAgainst(){ return !getOrderAgainst().contentEquals("");}
 	
-	// CAS546 Group
 	public String getGrpPrefix()    { return getProjVal(lGrpPrefix);}
 	public int getGrpSize() { return grpIdx2Name.size();}
-	public TreeMap <Integer, String> getGrpIdxMap() {return grpIdx2Name;} // CAS546 add
+	public TreeMap <Integer, String> getGrpIdxMap() {return grpIdx2Name;} 
 	
-	public String getGrpNameFromIdx(int idx) {// CAS560 add
+	public String getGrpNameFromIdx(int idx) {
 		if (grpIdx2Name.containsKey(idx)) return grpIdx2Name.get(idx);
 		return ("Unk" + idx);
 	}
 	
-	public int getGrpIdxFromName(String name) {// CAS546 add
+	public int getGrpIdxFromName(String name) {
 		if (grpName2Idx.containsKey(name)) return grpName2Idx.get(name);
 		return getGrpIdxRmPrefix(name);
 	}
@@ -171,7 +169,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		if (grpName2Idx.containsKey(s)) return grpName2Idx.get(s);
 		return -1;
 	}
-	public String getValidGroup() { // AnnotLoadMain; CAS557 add cutoff cnt
+	public String getValidGroup() { // AnnotLoadMain; 
 		String msg= grpName2Idx.size()+": ";
 		int cnt=0; 
 		for (String x : grpName2Idx.keySet())  {
@@ -192,7 +190,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		
 		msg += " Min len " + getProjVal(lMinLen) + "; ";
 		
-		String prefix = getProjVal(lGrpPrefix); // CAS543 add to summary
+		String prefix = getProjVal(lGrpPrefix); 
 		prefix = (Utilities.isEmpty(prefix)) ? "None" : prefix;
 		msg += " Prefix " + prefix + "; ";
 		
@@ -206,7 +204,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		try {
 			File top = new File(Constants.getNameResultsDir());
 			
-			if (top == null || !top.exists()) return false; // CAS511 may not have /data/seq_results directory
+			if (top == null || !top.exists()) return false; // may not have /data/seq_results directory
 			Vector<File> alignDirs = new Vector<File>();
 			
 			for (File f : top.listFiles()) {
@@ -218,7 +216,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 				}
 				if (alignDirs.size() > 0) return true;
 			}
-		} catch (Exception e) {ErrorReport.print(e, "Check existing alignment files");} // CAS511 add try-catch
+		} catch (Exception e) {ErrorReport.print(e, "Check existing alignment files");} 
 		return false;
 	}
 	
@@ -257,7 +255,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	/*******************************************************
 	 * For Summary and AlignProg
 	 */
-	public String getOrderParam() { // CAS540
+	public String getOrderParam() { 
 		if (hasOrderAgainst()) return " " + strDisplayName + ": Order against " + getOrderAgainst() ;
 		return "";
 	}
@@ -267,9 +265,8 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	}
 	/*************************************************************************
 	 * The View button on MF
-	 * CAS540 remove Average (in Summary now); change %Exon to #Exon
 	 */
-	public String loadProjectForView() { // CAS521 add to can see what was loaded
+	public String loadProjectForView() { 
 	try {
 		TreeMap <String, Integer> chrNameMap = new TreeMap <String, Integer> (); // name, idx
 		TreeMap <Integer, Integer> chrLenMap = new TreeMap <Integer, Integer> ();// idx, chrName
@@ -286,13 +283,13 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 			chrLenMap.put(idx, len);
 		}
 		String desc = dbc2.executeString("select value from proj_props "
-				+ "where name='description' and proj_idx=" + projIdx); // CAS554 add
+				+ "where name='description' and proj_idx=" + projIdx); 
 		
 		String info="Project " + strDisplayName + "\n";
 		if (!Utilities.isEmpty(desc)) info += desc + "\n";
 		info += "\n";
 		
-		String [] fields = {"Chr", "Length", "  ","#Genes", "AvgLen", "  ", "#Exons", "AvgLen"}; // CAS534 add #Exon; CAS554 add avgLen
+		String [] fields = {"Chr", "Length", "  ","#Genes", "AvgLen", "  ", "#Exons", "AvgLen"}; 
 		int [] justify =   {1,    0,    0, 0, 0, 0, 0, 0};
 		int nRow = chrNameMap.size();
 	    int nCol=  fields.length;
@@ -325,7 +322,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	    }
 	    info += Utilities.makeTable(nCol, nRow, fields, justify, rows);
 	    
-	    // get file dates CAS532 add the following; these are saved in proj_props
+	    // these are saved in proj_props
 	    String file="", fdate=null;
 	    String sql = "SELECT value FROM proj_props WHERE proj_idx='" +  projIdx;
 	    
@@ -345,13 +342,11 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		if (!file.trim().contentEquals("")) info += "\nAnno: " + file + "\nDate: " + fdate + "\n";
 		rs.close();
 				
-		// CAS533 add these 
-		Params paramObj;
 		
-		paramObj = getParams(lMinLen);
-		if (!paramObj.isDBvalDef() && !paramObj.dbVal.contentEquals("")) {// pre-v534 not in db if default
+		Params paramObj = getParams(lMinLen);
+		if (!paramObj.isDBvalDef() && !paramObj.dbVal.contentEquals("")) {
 			String strN = paramObj.dbVal;
-			if (!strN.contains(",")) { // CAS558 put a comma in
+			if (!strN.contains(",")) { 
 				try {
 					int n = Integer.parseInt(strN);
 					strN = String.format("%,d", n);
@@ -376,8 +371,8 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public void saveParams(int type) {
 		if (projIdx == -1) return; // not loaded yet
 		try {
-			if (type==xLoad) {//CAS535 moved date updates here
-				dbc2.executeUpdate("update projects set hasannot=1," // CAS520 add version
+			if (type==xLoad) {
+				dbc2.executeUpdate("update projects set hasannot=1," 
 						+ " annotdate=NOW(), syver='" + Globals.VERSION + "' where idx=" + projIdx);
 			}
 			else if (type==xAlign) {//Load date is for loading anchors/synteny
@@ -420,7 +415,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		projIdx = dbc2.getIdx("select idx from projects where name='" + strDBName + "'");
 		
 		if (projIdx == -1) {
-			dbc2.executeUpdate("INSERT INTO projects (name,type,loaddate, syver) " + // CAS520 add version
+			dbc2.executeUpdate("INSERT INTO projects (name,type,loaddate, syver) " + 
 					"VALUES('" + strDBName + "','pseudo',NOW(),'" + Globals.VERSION + "')");
 			projIdx = dbc2.getIdx("select idx from projects where name='" + strDBName + "'");
 			
@@ -446,7 +441,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	}
 	public void removeProjectFromDB() {
 	try {
-		// Setup for update numhits for single Query; CAS561  
+		// Setup for update numhits for single Query
 		Vector <Integer> proj2Idx = new Vector <Integer> ();
 		ResultSet rs = dbc2.executeQuery("select proj1_idx, proj2_idx from pairs where proj1_idx=" + projIdx + " or proj2_idx=" + projIdx);
 	    while (rs.next()) {
@@ -462,7 +457,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
         nStatus = STATUS_ON_DISK; 
         projIdx = -1; 
         
-        // update numhits; CAS561
+        // update numhits
         AnchorMain ancObj = new AnchorMain(dbc2, null, null);
         for (int idx : proj2Idx) {
         	Vector <Integer> gidxList = new Vector <Integer> ();
@@ -490,28 +485,25 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	public void loadParamsFromDB() {
 		try {
 	        ResultSet rs = dbc2.executeQuery("SELECT name, value FROM proj_props WHERE proj_idx=" + projIdx);
-	        while ( rs.next() ) {
+	        while (rs.next()) {
 	        	String key = rs.getString(1);
 	        	String val = rs.getString(2);
 	        	if (pKeysMap.containsKey(key)) { // there are entries, e.g. proj_anno_date, that are not param
-	        		pKeysMap.get(key).dbVal = val;
+	        		pKeysMap.get(key).dbVal   = val;
 	        		pKeysMap.get(key).projVal = val;
-	        		pKeysMap.get(key).prtDiff();
 	        	}
 	        }
-	        // CAS552 add
 			rs = dbc2.executeQuery("select idx from pairs where proj1_idx=" + projIdx + " and proj2_idx=" + projIdx); 
 			bHasSelf = (rs.next()) ? true : false;
-			
 	        rs.close();
-	        if (!Utilities.isEmpty(getDBVal(sCategory))) loadParamsFromDisk(); // CAS535 not finished
-	        else finishParams();
+	        
+	        loadParamsFromDisk(); 
 		}
 		catch (Exception e) {ErrorReport.print(e,"Load projects properties"); }
 	}
 	public void loadParamsFromDisk() {
 		if (!Utilities.dirExists(Constants.dataDir)) {
-			finishParams(); // CAS535 but if there is no data directory
+			finishParams(); 
 			return;
 		}
 		
@@ -520,19 +512,30 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 	}
 	public void loadParamsFromDisk(File dir){
 		File pfile = new File(dir,Constants.paramsFile); 
-		if (!pfile.isFile()) { // If user created, no params file
+		if (!pfile.isFile()) { 				// If user created, no params file
 			finishParams();
 			writeNewParamsFile();
 			return;
 		}
 	
+		String msg = "";
 		PropertiesReader props = new PropertiesReader( pfile);
 		for (int i=0; i<paramKey.length; i++) {
 			String name =  paramKey[i];
 			if (props.getProperty(name) != null) {
 				Params p = pKeysMap.get(paramKey[i]);
-				p.projVal = props.getProperty(paramKey[i]); // overwrite from DB
+				String fprop = props.getProperty(paramKey[i]);
+				
+				if (p.projVal.length()>0 && !p.projVal.equals(fprop)) { // CAS567 check for changes
+					msg += String.format("%-20s  DB: %-20s  File: %-20s\n", p.label, p.projVal, fprop);
+				}
+				p.projVal = fprop; // overwrite from DB
 			}
+		}
+		// uses params from file; display params can be changed when another database is shown
+		if (msg.length()>0 && nStatus == STATUS_IN_DB && bStart) {// bStart only do when this object is created
+			if (Globals.TRACE) Globals.prt(strDBName + " updating in DataBase:\n" + msg);
+			saveParams(xUpdate);
 		}
 		finishParams();
 	}
@@ -556,7 +559,7 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 				if (len>4) abbrev = strDisplayName.substring(len-4);
 				else {
 					abbrev=strDisplayName;
-					for (int i=len; i<4; i++) abbrev += "x";
+					for (int i=len; i<4; i++) abbrev += "_";
 				}
 				setProjVal(sAbbrev, abbrev);
 			}
@@ -565,9 +568,9 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		namePat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
 	}
 	
-	public void loadDataFromDB() throws Exception {// CAS534 moved from ManagerFrame
+	public void loadDataFromDB() throws Exception {
 		ResultSet rs = dbc2.executeQuery("select idx, fullname, name from xgroups where proj_idx=" + projIdx);
-		while (rs.next()) {// CAS546 get name too
+		while (rs.next()) {
 			grpIdx2Name.put(rs.getInt(1), rs.getString(2));
 			grpName2Idx.put(rs.getString(2), rs.getInt(1));
 			grpName2Idx.put(rs.getString(3), rs.getInt(1));
@@ -587,18 +590,18 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
         numGap = dbc2.executeCount("select count(*) from pseudo_annot as pa " +
         		" join xgroups as g on g.idx=pa.grp_idx " +
         		" where g.proj_idx=" + projIdx + " and type='gap'");
-        // CAS551 changed int to long; CAS553 changed it back
+       
         length = dbc2.executeLong("select sum(length) from pseudos " +
 				"join xgroups on xgroups.idx=pseudos.grp_idx  " +
-				"where xgroups.proj_idx=" + projIdx);	// CAS500 for Summary and for orderProjects
+				"where xgroups.proj_idx=" + projIdx);	
 		
 		numSynteny = dbc2.executeCount("select count(*) from pairs where proj1_idx=" + projIdx +
-				" or proj2_idx=" + projIdx); // CAS513 for Project on left, mark those with synteny
+				" or proj2_idx=" + projIdx); 
 	}
-	private void writeNewParamsFile() { // CAS534 add
+	private void writeNewParamsFile() { 
 		if (Utilities.isEmpty(strDBName)) return; // OrderAgainst writes the file, but not with Mproject
 		String dir = Constants.seqDataDir + strDBName;
-		Utilities.checkCreateDir(dir, true); // CAS500 
+		Utilities.checkCreateDir(dir, true);
 		
 		File pfile = new File(dir,Constants.paramsFile);
 		if (!pfile.exists())
@@ -616,13 +619,22 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 		}
 		catch (Exception e) {ErrorReport.print(e, "Wrie new params file");}
 	}
+	public String toString() { return strDBName + ":" + projIdx; }
 	
+	protected void prtInfo() {
+		Globals.prt(String.format("   %-20s %s index %d", "DBname", strDBName, projIdx));
+		String key = paramLabel[sCategory];
+		Globals.prt(String.format("   %-20s %s", key, pLabelMap.get(key).projVal));
+		key = paramLabel[sDisplay];
+		Globals.prt(String.format("   %-20s %s", key, pLabelMap.get(key).projVal));
+	}
 	/***********************************************************
 	 * ProjParams interface
 	 */
 	public String getLab(int iLabel)  {return paramLabel[iLabel];}
 	public String getKey(int iLabel)  {return paramKey[iLabel];} // used by non mProj packages to get keyword
 	public String getDef(int iLabel)  {return paramDef[iLabel];}
+	public String getDesc(int iLabel)  {return paramDesc[iLabel];}
 	
 	public HashMap <String, String> getParams() {
 		HashMap <String, String> pMap = new HashMap <String, String> ();
@@ -665,12 +677,8 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 			pKeysMap.put(paramKey[i], p);
 		}
 	}
-	private HashMap<String, Params> pLabelMap = new HashMap<String, Params> ();
-	private HashMap<String, Params> pKeysMap = new HashMap<String, Params> ();
 	
-	// CAS534 keep in order; CAS519 added abbrev_name;
-	
-	private final String [] paramKey = { // do NOT change w/o a global search as still hardcoded in many places
+	private final String [] paramKey = { // key for file and db saves
 			"category", "display_name", "abbrev_name", 
 			"grp_type", "description",  "min_display_size_bp", "annot_kw_mincount", 
 			"grp_prefix", "min_size", "annot_keywords",
@@ -691,27 +699,44 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 			"Sequence files", "Anno files",
 			"Mask non-genes", "Order against"
 	};
-	// These are used by ProjParams to display propLabel instead of propKey
-	public final int sCategory =  	0;
+	private String [] paramDesc = { // CAS567 added these for label tooltips on ProjParams
+			"Select a Category from the drop down or enter a new one in the text box.", 
+			"This name will be used for the project everywhere.", 
+			"This must be exactly 4 characters to be used in Queries.", 
+			"Group type is generally 'Chromosome'; this is used as a label on the Selected panel.", 
+			"The description is information to display with the project.", 
+			"DP cell size - not used", 
+			"If there are at least this many occurances of a keyword, it will be a column in Queries",
+			"Only sequences with this group prefix will be loaded; if blank, all will be loaded", 
+			"Only load sequences that have at least this many bases will be loaded", 
+			"Only load this set of keywords; if blank, all will be loaded", 
+			"The directory or file name of the FASTA file(s); if blank, the default location will be used", 
+			"The directory or file name of the GFF file(s); if blank, the default location will be used",
+			"Mask out everything but the genes; there must be a GFF file", 
+			"A list of the loaded projects will be given; select one to order draft sequence against"
+	};
+	// Index into the above three arrays
+	protected final int sCategory =  	0;
 	public final int sDisplay =   	1;
-	public final int sAbbrev =    	2;
+	protected final int sAbbrev =    	2;
 	public final int sGrpType =   	3;
-	public final int sDesc =      	4;
-	public final int sDPsize =    	5;
+	protected final int sDesc =      	4;
+	protected final int sDPsize =    	5;
 	public final int sANkeyCnt =  	6;
 	
 	public final int lGrpPrefix = 	7;
-	public final int lMinLen =   	8;
+	protected final int lMinLen =   	8;
 	public final int lANkeyword = 	9;
-	public final int lSeqFile =   	10;
-	public final int lAnnoFile =  	11;
+	protected final int lSeqFile =   	10;
+	protected final int lAnnoFile =  	11;
 	
-	public final int aMaskNonGenes = 12;
-	public final int aOrderAgainst = 13;	
+	protected final int aMaskNonGenes = 12;
+	protected final int aOrderAgainst = 13;	
 	
 	public final int xDisplay = 1;
 	public final int xLoad = 2;
 	public final int xAlign = 3;
+	private final int xUpdate = 4; // only happens if the params where changes when a different database is shown
 	
 	private class Params {
 		private Params(int index, String label, String key, String defVal) {
@@ -734,11 +759,6 @@ public class Mproject implements Comparable <Mproject> {//CAS513 for TreeSet sor
 			return label + ": " + dbVal;
 		}
 		
-		private void prtDiff() {
-			if (TRACE && !projVal.contentEquals(dbVal))
-				System.out.format("Param file != DB: %-10s %-10s %-10s  File=%s  DB=%s  Default=%s\n", 
-						strDBName, strDisplayName, label, projVal, dbVal, defVal);
-		}
 		int index=-1;
 		String key="", label="";
 		String defVal="", projVal="", dbVal="";

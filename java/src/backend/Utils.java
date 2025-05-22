@@ -40,7 +40,7 @@ public class Utils {
 		if (prog!=null) prog.msg(m);	
 		else System.out.println(m);
 	}
-	public static String getElapsedTime(long startTime) {// CAS546 add
+	public static String getElapsedTime(long startTime) {
 		return Utilities.getDurationString(getTime()-startTime);
 	}
 	
@@ -63,7 +63,7 @@ public class Utils {
 		String str = Utilities.getDurationString(getTime() - startTime);
 		return String.format("%-50s %-8s %10s", title, mem, str);
 	}
-	public static String getMemUsage() { // CAS546 add
+	public static String getMemUsage() { 
 		Runtime rt = Runtime.getRuntime();
 		long total_mem = rt.totalMemory();
 		long free_mem =  rt.freeMemory();
@@ -73,7 +73,7 @@ public class Utils {
 		return String.format("Memory %s\n\n", mem);
 	}
 	/************** assorted others  **/
-	public static void prt(ProgressDialog prog, String msg) { // CAS520 add
+	public static void prt(ProgressDialog prog, String msg) { 
 		prog.msgToFile(msg);
 	}
 	public static void prtIndentMsgFile(ProgressDialog prog, int indent, String msg) {
@@ -83,6 +83,12 @@ public class Utils {
 	}
 	public static void prtNumMsgFile(ProgressDialog prog, int num, String msg) {
 		prog.msgToFile(String.format("%,10d %s         ", num, msg));
+	}
+	
+	public static void prtIndentMsg(ProgressDialog prog, int indent, String msg) { // CAS567 add 
+		String x = "";
+		for (int i=0; i<indent; i++) x +="   ";
+		prog.appendText(x + msg);
 	}
 	
 	public static void prtNumMsg(ProgressDialog prog, int num, String msg) {
@@ -123,7 +129,7 @@ public class Utils {
 			}
 		}
 		catch (Exception e) {
-	    	ErrorReport.print(e, "Cannot open file " + file); // CAS557 add e
+	    	ErrorReport.print(e, "Cannot open file " + file); 
 	    }
 		return null;
 	}
@@ -278,7 +284,6 @@ public class Utils {
 		
 		return idx;
 	}
-	// CAS559 - remove HeapDoubleSort, and ObjCmp implements Comparator<Comparable>; no longer needed for old orderAgainst and has unchecked call
 	
 	public static String reverseComplement(String in){
 		in = (new StringBuffer(in)).reverse().toString().toUpperCase();

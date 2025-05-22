@@ -13,7 +13,6 @@ import util.ProgressDialog;
 
 /********************************************************************************
  * DoLoadProj - calls SeqLoadMain and AnnotLoadMain; Called from ManagerFrame; 
- * CAS535 moves this from MF listeners to here.
  * All ProgressDialog must call finish in order to close fw
  *******************************************************************************/
 public class DoLoadProj {
@@ -54,7 +53,7 @@ public class DoLoadProj {
 						
 						if (!success || Cancelled.isCancelled()) {
 							System.out.println("Removing project from database " + mProj.getDBName());
-							mProj.removeProjectFromDB(); // CAS535 add
+							mProj.removeProjectFromDB(); 
 						}
 						else mProj.saveParams(mProj.xLoad);
 						
@@ -95,7 +94,7 @@ public class DoLoadProj {
 					
 					if (!success || Cancelled.isCancelled()) {
 						System.out.println("Removing project from database " + mProj.getDBName());
-						mProj.removeProjectFromDB(); // CAS535 add
+						mProj.removeProjectFromDB(); 
 					}
 					else mProj.saveParams(mProj.xLoad);
 				}
@@ -123,14 +122,14 @@ public class DoLoadProj {
 				progress.appendText(msg); 
 				
 				try { 
-					mProj.removeAnnoFromDB(); // CAS535 remove from here instead of AnnotLoadMain
+					mProj.removeAnnoFromDB(); 
 					
 					AnnotLoadMain annot = new AnnotLoadMain(dbc2, progress, mProj);
 					success = annot.run(mProj.getDBName()); 
 				
 					if (!success || Cancelled.isCancelled()) {
 						System.out.println("Removing annotation from database " + mProj.getDBName());
-						mProj.removeAnnoFromDB(); // CAS535 add
+						mProj.removeAnnoFromDB(); 
 					}
 					else mProj.saveParams(mProj.xLoad);
 				}
@@ -139,7 +138,7 @@ public class DoLoadProj {
 					ErrorReport.print(e, "Run Reload");
 				}
 				finally {
-					if (!progress.wasCancelled()) progress.finish(success); // CAS512 add check
+					if (!progress.wasCancelled()) progress.finish(success); 
 				}
 			}
 		};	

@@ -1,30 +1,29 @@
 package backend;
 
 import backend.anchor1.Proj;
+import symap.manager.ManagerFrame;
 
 public class Constants {
 /***********************************************************
-// CAS500 v5 moved hard-coded constants for build to here
-// CAS522 removed FPC
-// AnchorsMain: enum HitStatus, QueryType, HitType, GeneType
-// CAS557 some constants are used by toSymap
- * CAS566 moved architecture and checking external to symap/Ext.java
+* CAS500 v5 moved hard-coded constants for build to here; CAS522 removed FPC; 
+* CAS557 some constants are used by toSymap
+* CAS566 moved architecture and checking external to symap/Ext.java
 *****************************************************/
 	
 /**********************************************
  * Command line arguments
  */
 // Set in SymapCE.SyMAPmanager
-public static boolean PRT_STATS=  false; 		// -tt extra output on Anchor1/2; CAS560 was -s, but that removed for public
+public static boolean PRT_STATS=  false; 		// -tt extra output on Anchor1/2; 
 public static boolean WRONG_STRAND_PRT = false; // -wsp  print wrong strand hits for algo2 
 public static boolean CoSET_ONLY = false;		// -scs on A&S ONLY execute AnchorPosts; not on -h, leave for possible updates
 public static boolean PSEUDO_ONLY = false;		// -pseudo on A&S only execute AnchorMain.addPseudo; CAS565
-public static boolean MUM_NO_RM = false;		// -mum on A&S ONLY do not remove any mummer files; CAS559 add
+public static boolean MUM_NO_RM = false;		// -mum on A&S ONLY do not remove any mummer files; 
 public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block coords; not on -h, but still works
-public static boolean VERBOSE=false;	// SyMAPmanager -v; write verbose cluster output; CAS561 chg from check mysql
+
+public static boolean VERBOSE = false; 			// -v on 
 
 // Anchor1 constants; Anchor2 constants are in Anchor2.Arg
-// CAS546 when anchor1 classes were moved to backend.anchor1, enums broke so make static here
 public static final int TARGET=0, QUERY=1, EITHER=2;
 public static final String GeneGene="GeneGene";
 public static final String GeneNonGene = "GeneNonGene";
@@ -58,7 +57,7 @@ public static final String paramsFile = 	"/params"; // in both seq/proj and seq_
 //These file types, denoted by the .fas extension, are used by most large curated databases. 
 //Specific extensions exist for nucleic acids (.fna), nucleotide coding regions (.ffn), amino acids (.faa), 
 //and non-coding RNAs (.frn).
-public static final String [] fastaFile = {".fa", ".fna", ".fas", ".fasta",  ".seq"}; // CAS557 add
+public static final String [] fastaFile = {".fa", ".fna", ".fas", ".fasta",  ".seq"}; 
 public static final String fastaList =    ".fas, .fa, .fna, .fasta, .seq (options .gz)";
 public static final String [] gffFile = {".gff", ".gff3"};
 public static final String gffList  = ".gff, .gff3";
@@ -77,7 +76,7 @@ public static final String blockFile = 		"block.txt";
 public static final String projTo = 		"_to_";
 public static final String faFile =         ".fa";
 
-public static final String orderSuffix 		=  "_ordered"; // CAS505 for ordering V2; CAS560 move from OrderAgainst
+public static final String orderSuffix 		=  "_ordered"; 
 public static final String orderCSVFile	=  "/ordered.csv";
 
 // directory of temporary files written for mummer

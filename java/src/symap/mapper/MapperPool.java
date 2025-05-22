@@ -12,9 +12,6 @@ import util.ErrorReport;
 
 /**
  * Create an array of Hits from the DB and passes them to a SeqHit object
- * 
- * CAS520 FPC is partially removed; CAS531 remove cache; CAS521 more FPC removed; CAS541 extends DBAbsUser
- * CAS543 reorder HitData and expand
  */
 public class MapperPool {
 	private DBconn2 dbc2;
@@ -50,11 +47,9 @@ public class MapperPool {
 			chr1 = dbc2.executeString("select name from xgroups where idx=" + grpIdx1); 
 			chr2 = dbc2.executeString("select name from xgroups where idx=" + grpIdx2);
 			
-			// CAS545 alloc correct size
 			int n = dbc2.executeCount("select count(*) from pseudo_hits where grp1_idx="+grpIdx1 + " AND grp2_idx="+ grpIdx2);
 			Vector <HitData> hitList = new Vector <HitData>(n);
 			
-			// CAS520 change evalue to hitnum, add runnum, CAS540 add score, CAS543 add annot1 and annot2, put in DB order
 			String query = "SELECT h.idx, h.hitnum, h.pctid, h.cvgpct, h.countpct, h.score, h.htype, h.gene_overlap, "
 				+ "h.annot1_idx, h.annot2_idx, h.strand, h.start1, h.end1, h.start2, h.end2, h.query_seq, h.target_seq,   " 
 				+ "h.runnum, h.runsize,  b.blocknum, b.corr " 
@@ -71,13 +66,13 @@ public class MapperPool {
 			while (rs.next()) {
 				int i=1;
 				HitData temp = 		new HitData(mapper,
-						rs.getInt(i++),		// int id 		CAS551 was long
+						rs.getInt(i++),		// int id 		
 						rs.getInt(i++),		// int hitnum 	
 						rs.getDouble(i++),	// double pctid	
 						rs.getInt(i++),		// int cvgpct->avg %sim 
 						rs.getInt(i++),     // int countpct -> nMergedHits 
-						rs.getInt(i++),		// CAS540 h.score 
-						rs.getString(i++),	// CAS546 h.htype
+						rs.getInt(i++),		// h.score 
+						rs.getString(i++),	// h.htype
 						rs.getInt(i++),		// int gene_overlap   
 						
 						rs.getInt(i++),		// int annot1_idx 

@@ -13,10 +13,8 @@ import database.DBconn2;
 import symap.manager.Mproject;
 
 /*********************************************************
- * Chromosome Explorer setup; loads projects, tracks, blocks and initializes track
+ * Called when Chromosome Explorer is selected; loads projects, tracks, blocks and initializes track
  * ChrExpFrame does the actual drawing of the icons on left using the mapper created here.
- * 
- * CAS521 remove FPC, CAS534 symapCE.SyMAPExp=> frame.ChrExpInit, CAS541 called by ManagerFrame instead of SyMAPmanager
  */
 
 public class ChrExpInit implements PropertyChangeListener { 
@@ -30,13 +28,14 @@ public class ChrExpInit implements PropertyChangeListener {
 	private static final Color[] projectColors = { Color.cyan, Color.green, new Color(0.8f, 0.5f, 1.0f),
 		Color.yellow, Color.orange };
 
+	/*************************************************************************/
 	public ChrExpInit(String title, DBconn2 dbc2, Vector<Mproject> selectedProjVec) throws SQLException { // Called by ManagerFrame
 		tdbc2 = new DBconn2("ChrExp-" + DBconn2.getNumConn(), dbc2); // closed in ChrExpFrame
 		
-		for (Mproject p : selectedProjVec) addProject( p.getDBName() ); // CAS550 mv from ManagerFrame
+		for (Mproject p : selectedProjVec) addProject( p.getDBName() ); 
 		makeDS();
 		
-		expFrame = new ChrExpFrame(title, tdbc2, mapper); 	// CAS550 finish mapper before this call, so it can be directly used
+		expFrame = new ChrExpFrame(title, tdbc2, mapper); 	// finish mapper before this call, so it can be directly used
 	}
 	public ChrExpFrame getExpFrame() {return expFrame;} // managerFrame setVisible
 	
@@ -74,14 +73,14 @@ public class ChrExpInit implements PropertyChangeListener {
 		
 	private Mproject loadProject(String strProjName) throws Exception{
 	     int nProjIdx = -1;
-	     String loaddate=""; // CAS513 to put on left side by name
+	     String loaddate=""; // put on left side by name
 	
 	     ResultSet rs = tdbc2.executeQuery("SELECT p.idx, p.loaddate " +
 	     		"FROM projects AS p  where p.name='"+strProjName+"'");
 	     
 	     if ( rs.next() ) {
-	    	nProjIdx = rs.getInt("p.idx");
-	    	loaddate = rs.getString("p.loaddate");
+	    	nProjIdx = rs.getInt(1);
+	    	loaddate = rs.getString(2);
 	     }
 	     rs.close();
 	     
@@ -102,8 +101,7 @@ public class ChrExpInit implements PropertyChangeListener {
      
 	     // Get group(s) and create track(s)
 	     String qry = "SELECT idx,name FROM xgroups WHERE proj_idx=" + p.getID() +
-	     				" AND sort_order > 0 " + // make consistent with full dotplot for FPC projects
-	     				"ORDER BY sort_order";
+	     				" AND sort_order > 0 ORDER BY sort_order";
 	     ResultSet rs = tdbc2.executeQuery(qry);
 	     while( rs.next() ) {
 	     	int nGroupIdx = rs.getInt(1);
@@ -132,8 +130,7 @@ public class ChrExpInit implements PropertyChangeListener {
 	private Vector<Block> loadAllBlocks(Vector<ChrInfo> tracks) {
 		Vector<Block> blocks = new Vector<Block>();
 		
-		try {
-	     // Load blocks for each track
+	try { // Load blocks for each track
 		String s = "";
 		for (ChrInfo t : tracks)
 				s += t.getGroupIdx() + (t == tracks.lastElement() ? "" : ",");
@@ -143,14 +140,13 @@ public class ChrExpInit implements PropertyChangeListener {
      
 	     ResultSet rs = tdbc2.executeQuery(strQ);
 	     while( rs.next() ) {
-	     	int blockIdx = rs.getInt(1); // CAS512 replace fields with numbers
+	     	int blockIdx = rs.getInt(1); 
 	     	int grp1_idx = rs.getInt(2);
 	     	int grp2_idx = rs.getInt(3);
 	     	int start1  = rs.getInt(4);
 	     	int end1    = rs.getInt(5);
 	     	int start2  = rs.getInt(6);
 	     	int end2    = rs.getInt(7);
-	     	// CAS512 float corr = (haveCorr ? rs.getFloat("corr") : 0.01F); // if no corr field, make sure they are positive
 	     	float corr = rs.getFloat(8);
 	     	
 	     	ChrInfo t1 = ChrInfo.getChrByGroupIdx(tracks, grp1_idx);

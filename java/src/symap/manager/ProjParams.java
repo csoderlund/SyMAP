@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -42,41 +44,43 @@ import util.Utilities;
 import util.Jhtml;
 
 /*******************************************
- * Displays the project parameter window and saves them to file 
- * 
- * CAS513 reorder a bunch and some renaming; added grp_prefix update
- * CAS522 removed FPC
- * CAS534 rewrote to work with manager.Project and make all parameter code shared between these 2 files.
+ * Displays the project parameter window and saves them to file
+ * CAS567 add a drop-down of existing categories; shorten text fields
  */
 public class ProjParams extends JDialog {
 	private static final long serialVersionUID = -8007681805846455592L;
-	public static String lastSeqDir=null; // CAS500
+	static public String lastSeqDir=null; 
+	static protected String catUncat = "Uncategorized"; // and puts this as last if there are no occurrences
 	
 	private final String [] MASK_GENES = { "yes", "no" };
 	private final int INITIAL_WIDTH = 610, INITIAL_HEIGHT = 660;
 	
-	private final String selectedHead = 	"Display";
+	private final String displayHead = 	"Display";
 	private final String loadProjectHead =  "Load project";
 	private final String loadAnnoHead = 	"Load annotation";
 	private final String alignHead = 		"Alignment&Synteny";
 	
 	private int idxGrpPrefix=0; 
 	private Mproject mProj;
-	Vector <Mproject> mProjVec;
+	private Vector <Mproject> mProjVec;
+	private String [] catArr;
+	private Pattern pat = Pattern.compile("^[a-zA-Z0-9_\\.\\-]+$");	// category and display name
+	private String patMsg = "\nEntry can only contain letters, digit, '-', '_', '.'";
 	
 	public ProjParams(Frame parentFrame,  Mproject mProj, 
-			Vector <Mproject> projVec, boolean isLoaded, boolean existAlign) {
+			Vector <Mproject> projVec, String [] catArr, boolean isLoaded, boolean existAlign) { 
 		
 		super(parentFrame, mProj.getDBName() + " params file");
 		
 		this.mProj = mProj;
 		this.mProjVec = projVec;
+		this.catArr = catArr;
 		
 		theDisplayName =	mProj.getDisplayName();
 		theDBName =  		mProj.getDBName();
 		bIsLoaded = 		isLoaded;
 		bExistAlign = 		existAlign;
-		selectedProjects = 	getAddNoneSelections(projVec);
+		loadedProjs = 		getLoadedProjs(projVec);
 		
 		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
 		getContentPane().setBackground(Color.WHITE);
@@ -96,7 +100,7 @@ public class ProjParams extends JDialog {
 		
 		setModal(true);
 		
-		setLocationRelativeTo(parentFrame); // CAS513 put on top of parent
+		setLocationRelativeTo(parentFrame); 
 	}
 	public boolean wasSave() {return bWasSave;}
 	
@@ -109,33 +113,31 @@ public class ProjParams extends JDialog {
 		int startAnno=0, startLoad=0, startAlign=0, i=0;
 		boolean bReload=true, bReAlign=true;
 		
-		theFields = new Field[13]; // Change if change fields!
-		theFields[i++] = new Field(mProj.sCategory, 1, 	!bReload, !bReAlign);
+		theFields = new Field[13]; // If change #fields, change 13
+		theFields[i++] = new Field(mProj.sCategory, catArr, 1, 	!bReload, !bReAlign, true);// true -> add text field
+		
 		theFields[i++] = new Field(mProj.sDisplay, 1, 	!bReload, !bReAlign);
-		theFields[i++] = new Field(mProj.sAbbrev, 1, 	!bReload, !bReAlign); // CAS519 add for SyMAP Query
+		theFields[i++] = new Field(mProj.sAbbrev, 1, 	!bReload, !bReAlign); 
 		theFields[i++] = new Field(mProj.sGrpType, 1, 	!bReload, !bReAlign);
-		theFields[i++] = new Field(mProj.sDesc, 2, 		!bReload, !bReAlign);	
-		// theFields[i++] = new Field(mProj.sDPsize, 1, 	!bReload, !bReAlign);	// CAS534 isn't working
-		theFields[i++] = new Field(mProj.sANkeyCnt,  1, !bReload, !bReAlign);	// CAS513 2 lines->1, moved
+		theFields[i++] = new Field(mProj.sDesc, 2, 		!bReload, !bReAlign);	// 2 is multiText
+		theFields[i++] = new Field(mProj.sANkeyCnt,  1, !bReload, !bReAlign);	
 		
 		startLoad = i-1;
-		idxGrpPrefix = i; // special case
-		theFields[i++] = new Field(mProj.lGrpPrefix,  1, !bReload, !bReAlign); // has its own message
+		idxGrpPrefix = i; 								// used for saveGrpPrefix special message
+		theFields[i++] = new Field(mProj.lGrpPrefix,  1, !bReload, !bReAlign); 
 		theFields[i++] = new Field(mProj.lMinLen, 1, 	  bReload,  bReAlign); 
 		theFields[i++] = new Field(mProj.lSeqFile,		  bReload,  bReAlign, false);
 		
 		startAnno=i-1; 
-		theFields[i++] = new Field(mProj.lANkeyword, 1,  bReload, !bReAlign);  // CAS512 was false for Reload		
+		theFields[i++] = new Field(mProj.lANkeyword, 1,  bReload, !bReAlign);  	
 		theFields[i++] = new Field(mProj.lAnnoFile, 	 bReload, !bReAlign, false);
 		
 		startAlign = i-1;
-		theFields[i++] = new Field(mProj.aOrderAgainst, selectedProjects, 0,  !bReload, bReAlign);
-		theFields[i++] = new Field(mProj.aMaskNonGenes, MASK_GENES, 1,!bReload, bReAlign);
+		theFields[i++] = new Field(mProj.aOrderAgainst, loadedProjs, 0, !bReload, bReAlign, false); // false -> no text field
+		theFields[i++] = new Field(mProj.aMaskNonGenes, MASK_GENES, 1,!bReload, bReAlign, false);
 		
-		JPanel fieldPanel = new JPanel();
-		fieldPanel.setLayout(new BoxLayout(fieldPanel, BoxLayout.PAGE_AXIS));
-		fieldPanel.setBackground(Color.WHITE);
-		fieldPanel.add(createLabel(selectedHead)); 
+		JPanel fieldPanel = Jcomp.createPagePanel();
+		fieldPanel.add(Jcomp.createHtmlLabel(displayHead)); 
 	
 		for(int x=0; x<theFields.length; x++) {
 			fieldPanel.add(Box.createVerticalStrut(5));
@@ -146,25 +148,23 @@ public class ProjParams extends JDialog {
 				fieldPanel.add(Box.createVerticalStrut(5));
 				fieldPanel.add(new JSeparator()); // works on linux but not mac; but the createLabel is better on Mac
 				fieldPanel.add(Box.createVerticalStrut(5));
-				fieldPanel.add(createLabel(loadAnnoHead));
+				fieldPanel.add(Jcomp.createHtmlLabel(loadAnnoHead)); // <i><b>
 			}
 			else if (x==startLoad) {
 				fieldPanel.add(Box.createVerticalStrut(5));
-				fieldPanel.add(new JSeparator()); // works on linux but not mac; needs to be on mainPanel
+				fieldPanel.add(new JSeparator()); 
 				fieldPanel.add(Box.createVerticalStrut(5));
-				fieldPanel.add(createLabel(loadProjectHead));
+				fieldPanel.add(Jcomp.createHtmlLabel(loadProjectHead));
 			}
 			else if (x==startAlign) {
 				fieldPanel.add(Box.createVerticalStrut(5));
 				fieldPanel.add(new JSeparator());
 				fieldPanel.add(Box.createVerticalStrut(5));
-				fieldPanel.add(createLabel(alignHead));
+				fieldPanel.add(Jcomp.createHtmlLabel(alignHead));
 			}
 		}
 		
-		JPanel mainPanel = new JPanel();
-		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
-		mainPanel.setBackground(Color.WHITE);
+		JPanel mainPanel = Jcomp.createPagePanel();
 		
 		mainPanel.add(fieldPanel);
 		mainPanel.add(Box.createVerticalStrut(10));
@@ -179,34 +179,25 @@ public class ProjParams extends JDialog {
 		getContentPane().add(mainPanel);
 	}
 	/*******************************************************************/
-	private String [] getAddNoneSelections(Vector <Mproject> projVec) { // adds None
+	private String [] getLoadedProjs(Vector <Mproject> projVec) { // adds None
 		Vector<String> retVal = new Vector<String> ();
-		
 		retVal.add("None");
-		
 		for (Mproject mp : projVec) {
 			if (mp!=mProj && mp.isLoaded()) retVal.add(mp.getDBName());
 		}
-		
 		return retVal.toArray(new String[retVal.size()]);
 	}
-	private JLabel createLabel(String text) {
-		String html = "<html><b><i>" + text + "</i></b></html>";
-		JLabel l = new JLabel(html);
-		return l;
-	}
+	
 	/******************************************************************/
 	private JPanel createButtonPanel() {
-		btnSave = new JButton("Save");
-		btnSave.setBackground(Color.WHITE);
+		btnSave = Jcomp.createButton("Save", "Save parameters to file");
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				bWasSave=true;
 				save();
 			}
 		});
-		btnCancel = new JButton("Cancel");
-		btnCancel.setBackground(Color.WHITE);
+		btnCancel = Jcomp.createButton("Cancel", "Exit window without saving any changes");
 		btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e)  {
 				bWasSave = false;
@@ -214,7 +205,7 @@ public class ProjParams extends JDialog {
 			}
 		});
 		
-		JButton btnHelp = Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param1); // CAS534 change from Help
+		JButton btnHelp = Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param1); 
 		
 		JPanel buttonPanel = Jcomp.createRowPanel();
 		
@@ -261,16 +252,13 @@ public class ProjParams extends JDialog {
 	// The Field values after they have been set from DB or file
 	private void setInitValues() {
 		prevArr = new String[theFields.length];
-		
 		for(int x=0; x<prevArr.length; x++)
 			prevArr[x] = theFields[x].getValue();
 	}
 	
 	/***************************************************************
 	 * XXX Save
-	 * CAS513 changed the logic on this part and added ChgGrpPrefix
 	 */
-	
 	private void save() {
 		if (!Utilities.dirExists(Constants.dataDir)) {
 			Utilities.showWarningMessage("The /data directory does not exist, cannot save parameters.");
@@ -287,28 +275,34 @@ public class ProjParams extends JDialog {
 		mProj.loadParamsFromDisk();
 		mProj.saveParams(mProj.xDisplay);
 		
-		if (bChgGrpPrefix) { // CAS513 add the ability to change GrpPrefix after load
-			mProj.updateGrpPrefix();
-		}
+		if (bChgGrpPrefix) mProj.updateGrpPrefix(); // change grp prefix after load
 	
 		closeDialog();
 	}
 	/********************************************************************/
-	private boolean saveCheckFields() {
+	private boolean saveCheckFields() {// CAS567 expand checks
 	try {
 		String msg=null;
 		
 		for(int x=0; x<theFields.length; x++) {
-			String val = theFields[x].getValue();
+			int index = theFields[x].index;
+			String val = theFields[x].getValue().trim();
 			String lab = theFields[x].getLabel();
-			int len = val.length();
-			
-			// check for values that must exist
-			if(lab.equals(mProj.getLab(mProj.sDisplay))) {	
-				if (len == 0) msg = lab + " must have a value.";
+		
+			if (index == mProj.sCategory) {
+				val = val.trim();				// getValue gets the text or drop-down value
+				Matcher m = pat.matcher(val);
+				if (!m.matches()) msg = lab + " '" + val + "' is illegal." + patMsg;
+			}
+			else if (index == mProj.sDisplay) {	
+				if (val.length() == 0) msg = lab + " must have a value.";
 				else {
-					for (Mproject mp : mProjVec) {// CAS558 add check
-						if (mp!=mProj && val.equalsIgnoreCase(mp.getDisplayName())) { // CAS563 add extra info
+					Matcher m = pat.matcher(val);
+					if (!m.matches()) msg = lab + " '" + val + "' is illegal." + patMsg;
+				}
+				if (msg==null) {
+					for (Mproject mp : mProjVec) {
+						if (mp!=mProj && val.equalsIgnoreCase(mp.getDisplayName())) { 
 							msg = "The display name '" + val + "' has been used. \n";
 							msg += "Directory:   " + mp.getDBName() + "\n";
 							msg += "Description: " + mp.getdbDesc();
@@ -317,28 +311,31 @@ public class ProjParams extends JDialog {
 					}
 				}
 			}
-			else if (lab.equals(mProj.getLab(mProj.sAbbrev))) {
-				if (len!=4) msg = lab + " must be exactly 4 characters. Value '" + val + "' is " + val.length() + ".";
-				/** Cannot check dup Abbrev because if DisplayName is changed, mp!=mProj; and doesn't effect anything **/
+			else if (index == mProj.sDesc) {
+				if (!val.isEmpty() && val.contains("/") || val.contains("#") || val.contains("\"")) 
+					msg = "Description cannot contains backslash, quotes or #";
 			}
-			else if (lab.equals(mProj.getLab(mProj.sGrpType))) {
-				if (len == 0) msg = lab + " must have a value.";
+			else if (index == mProj.sAbbrev) {/* Cannot check dup Abbrev because if DisplayName is changed, mp!=mProj */
+				if (val.length()!=4) {
+					msg = lab + " must be exactly 4 characters. Value '" + val + "' is " + val.length() + ".";
+				}
+				else {
+					Matcher m = pat.matcher(val);
+					if (!m.matches()) msg = lab + " '" + val + "' is illegal." + patMsg;
+				}
 			}
-			
-			// check for integers
-			else if (lab.equals(mProj.getLab(mProj.lMinLen))) {
-				if (val.contains(",")) val = val.replace(",", ""); // CAS558 allow comma's
+			else if (index == mProj.sGrpType) {
+				if (val.length() == 0) msg = lab + " must have a value.";
+			}
+			else if (index == mProj.lMinLen) {
 				msg = checkInt(lab, val);
 			}
-			else if (lab.equals(mProj.getLab(mProj.sDPsize))) {
+			else if (index == mProj.sANkeyCnt) {
 				msg = checkInt(lab, val);
 			}
-			else if (lab.equals(mProj.getLab(mProj.sANkeyCnt))) {
-				msg = checkInt(lab, val);
-			}
-			
-			if (msg!=null) { // only shows the first warning - returns for user to fix, then test again
-				Utilities.showWarningMessage(msg);
+			// only shows the first warning - returns for user to fix, then test again
+			if (msg!=null) { 
+				Utilities.showWarning(msg);
 				return false;
 			}
 		}
@@ -348,6 +345,7 @@ public class ProjParams extends JDialog {
 	}
 	private String checkInt(String lab, String ix) {
 		try {
+			if (ix.contains(",")) ix = ix.replace(",", "");
 			int x = Integer.parseInt(ix);
 			if (x<0) return lab + " must be >0.";
 			return null; 
@@ -447,7 +445,7 @@ public class ProjParams extends JDialog {
 	 */
 	private void writeParamsFile() {	
 		String dir = Constants.seqDataDir + theDBName;
-		Utilities.checkCreateDir(dir, true); // CAS500 
+		Utilities.checkCreateDir(dir, true); 
 		
 		File pfile = new File(dir,Constants.paramsFile);
 		if (!pfile.exists()) // should not happen here because written on startup in Mproject
@@ -462,7 +460,7 @@ public class ProjParams extends JDialog {
 			
 			for(int x=0; x<theFields.length; x++) {
 				String val = theFields[x].getValue();
-				if (val.equals("null")) val=""; // CAS500 this happens for anno_file
+				if (val.equals("null")) val=""; 						// this happens for anno_file
 				String label  = mProj.getParam(theFields[x].getLabel());
 				if (label==null) {
 					System.out.println("SyMAP error on label: " + label);
@@ -477,7 +475,7 @@ public class ProjParams extends JDialog {
 						if (!val.equals("None")) out.println(label + " = " + val);
 						else out.println(label + " = ");
 					}
-					else {
+					else {									// values are checked in saveCheckFields, but to be sure...
 						String v = val.replace('\n', ' ');
 						v = v.replace("\"", " ");
 						v = v.replace("\'", " ");
@@ -486,7 +484,7 @@ public class ProjParams extends JDialog {
 					}
 				}
 				else {
-					out.println(label + " = "); // save empty ones too
+					out.println(label + " = "); 					// save empty ones too
 				}
 			}
 			out.close();
@@ -497,60 +495,67 @@ public class ProjParams extends JDialog {
 		dispose();
 	}
 	
-	/***************************************************************/
+	/***************************************************************
+	 * Each parameter has a field object
+	 ************************************************************/
 	public class Field extends JPanel{
 		private static final long serialVersionUID = -6643140570421332451L;
 		
 		private static final int MODE_TEXT = 0, MODE_COMBO = 1, MODE_MULTI = 2, MODE_FILE = 3;
 		
 		private static final int LABEL_WIDTH = 150;
-		private static final int FIELD_COLUMNS = 10;
+		private static final int FIELD_LEN = 10;
 		
 		//Used for a Add file/directory
 		private Field(int index, boolean needsReload, boolean needsRealign, boolean b) {
+			this.index = index;
 			String label = mProj.getLab(index);
+			String desc = mProj.getLab(index);
 			
 			bdoReload = needsReload;
 			bdoRealign = needsRealign;
 			
 			nMode = MODE_FILE;
 			
-			theComponent = new FileTable(b);
-			theLabel = new JLabel(label);
-			theLabel.setBackground(Color.WHITE);
+			theComp = new FileTable(b);
+			theLabel = Jcomp.createLabel(label, desc);
 
 			setLayout();
 		}
-		//Used for plain text properties
+		// Used for plain text properties
 		private Field(int index, int numLines, boolean needsReload, boolean needsRealign) {
+			this.index = index;
 			String label = mProj.getLab(index);
 			String initValue = mProj.getDef(index);
+			String desc = mProj.getDesc(index);	// CAS567 add
 			
 			bdoReload = needsReload;
 			bdoRealign = needsRealign;
 			
 			if(numLines == 1) {
 				nMode = MODE_TEXT;
-				theComponent = new JTextField(FIELD_COLUMNS);
-				((JTextField)theComponent).setBorder(BorderFactory.createLineBorder(Color.BLACK));
+				theComp = new JTextField(FIELD_LEN);
+				((JTextField)theComp).setBorder(BorderFactory.createLineBorder(Color.BLACK));
 			}
 			else {
 				nMode = MODE_MULTI;
-				theComponent = new JTextArea(numLines, FIELD_COLUMNS);
-				((JTextArea)theComponent).setBorder(BorderFactory.createLineBorder(Color.BLACK));
-				((JTextArea)theComponent).setLineWrap(true);
-				((JTextArea)theComponent).setWrapStyleWord(true);
-				((JTextArea)theComponent).setMinimumSize(((JTextArea)theComponent).getPreferredSize());
+				theComp = new JTextArea(numLines, FIELD_LEN);
+				((JTextArea)theComp).setBorder(BorderFactory.createLineBorder(Color.BLACK));
+				((JTextArea)theComp).setLineWrap(true);
+				((JTextArea)theComp).setWrapStyleWord(true);
+				((JTextArea)theComp).setMinimumSize(((JTextArea)theComp).getPreferredSize());
 			}
-			theLabel = new JLabel(label);
-			theLabel.setBackground(Color.WHITE);
+			theLabel = Jcomp.createLabel(label, desc);
 			setValue(initValue);
 			setLayout();
 		} 
 		
-		//Used for properties that require a combo box
-		private Field(int index, String [] options, int selection, boolean needsReload, boolean needsRealign) {
-			String label = mProj.getLab(index);
+		//Used for properties that require a combo box; CAS567 add optional text field and label descriptions
+		private Field(int index, String [] options, int selection, 
+				boolean needsReload, boolean needsRealign, boolean bHasText) {
+			this.index = index;
+			String label = mProj.getLab(index); 
+			String desc = mProj.getDesc(index);	
 			
 			bdoReload = needsReload;
 			bdoRealign = needsRealign;
@@ -559,50 +564,63 @@ public class ProjParams extends JDialog {
 			comboBox = new JComboBox <String> (options);
 			comboBox.setSelectedIndex(selection);
 			comboBox.setBackground(Color.WHITE);
-			theLabel = new JLabel(label);
-			theLabel.setBackground(Color.WHITE);
-			theComponent = (JComboBox <String>) comboBox;
+			comboBox.setMinimumSize(comboBox.getPreferredSize());
+			comboBox.setMaximumSize(comboBox.getPreferredSize());
+			
+			theLabel = Jcomp.createLabel(label, desc);
+			theComp = (JComboBox <String>) comboBox;
+			
+			if (bHasText) {
+				theComboText = new JTextField(5);
+				((JTextField)theComboText).setBorder(BorderFactory.createLineBorder(Color.BLACK));
+			}
+			else theComboText=null;
+
 			setLayout();
 		}
 		
 		private String getLabel() { return theLabel.getText(); }
 		private String getValue() {
-			if( nMode == MODE_TEXT)  return ((JTextField)theComponent).getText();
-			if (nMode == MODE_MULTI) return ((JTextArea) theComponent).getText();
-			if (nMode == MODE_FILE)  return ((FileTable) theComponent).getValue();
-			if (nMode == MODE_COMBO) return (String) comboBox.getSelectedItem();
+			if( nMode == MODE_TEXT)  return ((JTextField)theComp).getText();
+			if (nMode == MODE_MULTI) return ((JTextArea) theComp).getText();
+			if (nMode == MODE_FILE)  return ((FileTable) theComp).getValue();
+			if (nMode == MODE_COMBO) {
+				if (theComboText!=null) {
+					String val = ((JTextField)theComboText).getText();
+					if (!val.trim().equals("")) return val;
+				}
+				return (String) comboBox.getSelectedItem();
+			}
 			return null;
 		}
 		
 		private void setValue(String value) {
-			if(nMode == MODE_TEXT)       ((JTextField)theComponent).setText(value);
-			else if(nMode == MODE_MULTI) ((JTextArea) theComponent).setText(value);
-			else if(nMode == MODE_FILE)  ((FileTable) theComponent).setValue(value);
-			else { //MODE_COMBO
-				boolean found=false;
+			if(nMode == MODE_TEXT)   ((JTextField)theComp).setText(value);
+			else if(nMode == MODE_MULTI) ((JTextArea) theComp).setText(value);
+			else if(nMode == MODE_FILE) ((FileTable) theComp).setValue(value);
+			else { // MODE_COMBO
 				for (int i=0; i<comboBox.getItemCount(); i++) {
 					String val = comboBox.getItemAt(i);
 					if (val.equalsIgnoreCase(value)) {
 						comboBox.setSelectedIndex(i);
-						found = true;
 						break;
 					}
 				}
-				if (!found && !value.contentEquals("")) // it has to be order against, as its that or yes/no
-					Utilities.showWarningMessage("Order against '" + value + "' is not a loaded project");
 			}
 		}
-		
 	
 		private boolean isAlignField() { return bdoRealign; }
 		private boolean isLoadField()  { return bdoReload; }
 		
 		private void setTextListener(CaretListener l) {
-			if(theComponent instanceof JTextField) {
-				((JTextField)theComponent).addCaretListener(l);
+			if (theComboText!=null && theComboText instanceof JTextField) {
+				((JTextField)theComboText).addCaretListener(l);
 			}
-			else if(theComponent instanceof JTextArea) {
-				((JTextArea)theComponent).addCaretListener(l);
+			else if (theComp instanceof JTextField) {
+				((JTextField)theComp).addCaretListener(l);
+			}
+			else if(theComp instanceof JTextArea) {
+				((JTextArea)theComp).addCaretListener(l);
 			}
 		}
 		
@@ -613,21 +631,26 @@ public class ProjParams extends JDialog {
 			setBackground(Color.WHITE);
 			
 			theLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-			theComponent.setAlignmentX(Component.LEFT_ALIGNMENT);
+			theComp.setAlignmentX(Component.LEFT_ALIGNMENT);
 			
 			Dimension d = theLabel.getPreferredSize();
 			
 			add(theLabel);
-			if(LABEL_WIDTH - d.width > 0)
+			if (LABEL_WIDTH - d.width > 0)
 				add(Box.createHorizontalStrut(LABEL_WIDTH - d.width));
-			add(theComponent);
+			add(theComp);
+			
+			if (theComboText!=null) {
+				add(Box.createHorizontalStrut(3));
+				add(theComboText);
+			}
 		}
 		
-		private JComponent theComponent = null;
-		private JComboBox <String> comboBox = null; // CAS534 added to get rid of comboBox warnings
+		protected int index=0;
+		private JComponent theComp = null, theComboText = null; // CAS567 all refs to theComboText are new
+		private JComboBox <String> comboBox = null; 
 		private JLabel theLabel = null;
 		private boolean bdoReload = false, bdoRealign = false;
-		// private boolean isDefault = true; CAS534 this was always false on getValue
 		private int nMode = -1;
 	} // end Fields class
 	
@@ -635,7 +658,7 @@ public class ProjParams extends JDialog {
 	private class FileTable extends JPanel {
 		private static final long serialVersionUID = 1L;
 
-		public FileTable(boolean singleSelect) {
+		private FileTable(boolean singleSelect) {
 			bSingleSelect = singleSelect;
 			
 			theTable = new JTable();
@@ -667,8 +690,7 @@ public class ProjParams extends JDialog {
 	        column.setMaxWidth(column.getPreferredWidth());
 	        column.setMinWidth(column.getPreferredWidth());
 	        
-	        btnAddFile = new JButton("Add File");
-	        btnAddFile.setBackground(Color.WHITE);
+	        btnAddFile = Jcomp.createButton("Add File", "Add selected file");
 	        btnAddFile.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					String path=null;
@@ -689,8 +711,7 @@ public class ProjParams extends JDialog {
 				}
 			});
 	        
-	        btnAddDir = new JButton("Add Directory");
-	        btnAddDir.setBackground(Color.WHITE);
+	        btnAddDir = Jcomp.createButton("Add Directory", "Add selected directory");
 	        btnAddDir.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					String path=null;
@@ -712,7 +733,7 @@ public class ProjParams extends JDialog {
 				}
 			});
 	        
-	        btnRemove = new JButton("Remove");
+	        btnRemove = Jcomp.createButton("Remove", "Remove selected item");
 	        btnRemove.setBackground(Color.WHITE);
 	        btnRemove.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
@@ -727,10 +748,7 @@ public class ProjParams extends JDialog {
 	        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 	        setBackground(Color.WHITE);
 	        
-	        JPanel buttonRow = new JPanel();
-	        buttonRow.setLayout(new BoxLayout(buttonRow, BoxLayout.LINE_AXIS));
-	        buttonRow.setBackground(Color.WHITE);
-	        
+	        JPanel buttonRow = Jcomp.createRowPanel();
 	        buttonRow.add(btnAddFile);	buttonRow.add(Box.createHorizontalStrut(20));
 	        buttonRow.add(btnAddDir);	buttonRow.add(Box.createHorizontalStrut(20));
 	        buttonRow.add(btnRemove);
@@ -758,7 +776,7 @@ public class ProjParams extends JDialog {
 			
 			lastSeqDir=upPath;
 		}
-		public String getValue() {
+		private String getValue() {
 			String retVal = "";
 			if(theModel.getRowCount() > 0)
 				retVal = (String)theModel.getValueAt(0, 1);
@@ -768,7 +786,7 @@ public class ProjParams extends JDialog {
 			
 			return retVal;
 		}
-		public void setValue(String value) {
+		private void setValue(String value) {
 			String [] vals = value.split(",");
 			theModel.clearAll();
 			for(int x=0; x<vals.length; x++) {
@@ -793,6 +811,7 @@ public class ProjParams extends JDialog {
 		
 		private JButton btnAddFile = null, btnAddDir = null, btnRemove = null; 
 		
+		/**********************************************************************/
 		private class FileTableModel extends AbstractTableModel {
 			private static final long serialVersionUID = 1L;
 			private final static String FILE_HEADER = "File name/directory";
@@ -837,7 +856,7 @@ public class ProjParams extends JDialog {
 	private boolean bWasSave = false;
 	private Field [] theFields;
 	private String [] prevArr = null;
-	private String [] selectedProjects = null;
+	private String [] loadedProjs = null;
 	private JButton btnSave = null, btnCancel = null;
 	private CaretListener theListener = null;
 }

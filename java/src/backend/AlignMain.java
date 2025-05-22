@@ -23,7 +23,7 @@ import util.Utilities;
 
 /*******************************************************
  * Set up to run MUMmer for alignments for one pair of genomes
- * CAS500 1/2020 this has been almost totally rewritten, but results are the same,
+ * CAS500 this has been almost totally rewritten, but results are the same,
  * 	except there is intelligence built into setting up the files for alignment, which can make a difference
  * CAS522 remove FPC; CAS541 change UpdatePool to DBconn2; CAS559 made non-functional changes looking for user's problem...
  */
@@ -31,7 +31,7 @@ public class AlignMain {
 	public boolean mCancelled = false;
 	
 	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE; // 1000000
-	private static final int maxFileSize = 60000000; // CAS508 was 7M (changed so 'Concat' parameter works for demo)
+	private static final int maxFileSize = 60000000; // 'Concat' parameter works for demo using this size
 	
 	private ProgressDialog plog;
 	private String proj1Dir, proj2Dir; // also dbName
@@ -46,21 +46,19 @@ public class AlignMain {
 	private Mpair mp = null;
 	private DBconn2 dbc2 = null;
 	
-	private boolean bDoCat = true; // CAS508
+	private boolean bDoCat = true; 
 	private boolean notStarted = true;
 	private boolean interrupted = false;
 	private boolean error = false;
 	
 	private String resultDir;
-	private String alignParams; // Set in pair_props from DoAlignSynPair; CAS546 add #MUMMer files
+	private String alignParams; // Set in pair_props from DoAlignSynPair;
 	private int nAlignDone=0;
 	
-	protected AlignMain(DBconn2 dbc2, ProgressDialog log, Mpair mp,
-			int nMaxThreads, boolean bDoCat, String alignLogDirName)
+	protected AlignMain(DBconn2 dbc2, ProgressDialog log, Mpair mp, int nMaxThreads, String alignLogDirName)
 	{
 		this.plog = log; // diaLog and syLog
 		this.nMaxCPUs = nMaxThreads;
-		this.bDoCat = bDoCat;
 		this.mp = mp;
 		this.dbc2 = dbc2;
 		this.mProj1 = mp.mProj1;
@@ -69,6 +67,7 @@ public class AlignMain {
 		
 		proj1Dir = mProj1.getDBName();
 		proj2Dir = mProj2.getDBName();
+		bDoCat = mp.isConcat(Mpair.FILE);
 		
 		threads = 		new Vector<Thread>();
 		alignList = new Vector<AlignRun>();
@@ -209,10 +208,7 @@ public class AlignMain {
 	 */
 	private void buildAlignments()  {
 		try {
-			String cat = (bDoCat) ? "  " : " (No Concat) ";
-			plog.msg("\nAligning " + proj1Dir + " and " + proj2Dir + cat + mp.getChangedAlign());
-			
-			mp.setPairProp("concatenated", cat);
+			plog.msg("\nAligning " + proj1Dir + " and " + proj2Dir + mp.getChangedAlign());
 			
 		/* create directories */
 			// result directory (e.g. data/seq_results/demo1_to_demo2)
@@ -371,7 +367,7 @@ public class AlignMain {
 					curSize += chrLen;
 				}
 			}
-			plog.msg(msg + " (" + Utilities.kMText(totSize) + ")"); // CAS508 write total length here first
+			plog.msg(msg + " (" + Utilities.kMText(totSize) + ")"); // write total length here first
 			
 			TreeMap<Integer,TreeMap<Integer,Vector<Range>>> geneMap = new TreeMap<Integer,TreeMap<Integer,Vector<Range>>>();
 			int cSize = 100000;
@@ -421,7 +417,7 @@ public class AlignMain {
 				
 				fileName = projName + fileName + Constants.faFile;
 				msg = "   " + fileName + ": ";
-				long fileSize = 0; // CAS508 was int causing negative numbers
+				long fileSize = 0; // must be long so does not become negative number
 				int count=0;
 				
 				File f = Utilities.checkCreateFile(dir,fileName, "AM WritePreprocSeq");
@@ -483,15 +479,13 @@ public class AlignMain {
 						cNum++;
 					}
 				}
-				plog.msg(msg + String.format(": length %,d", fileSize)); // CAS513 add comma
+				plog.msg(msg + String.format(": length %,d", fileSize)); 
 				fw.close(); 
 			}
 			tdbc2.close();
 			return true;
 		}
-		catch (Exception e) { // CAS508 Utilities.clearAllDir(dir); dir.delete();
-			ErrorReport.die(e, "AlignMain.writePreproc");
-		}
+		catch (Exception e) {ErrorReport.die(e, "AlignMain.writePreproc");}
 		return false;
 	}
 	

@@ -42,8 +42,7 @@ public class DoAlignSynPair extends JFrame {
 	private DBconn2 dbc2;
 	private Mpair mp;
 	
-	public void run(ManagerFrame frame, DBconn2 dbc2, Mpair mp,  
-			boolean closeWhenDone,  int maxCPUs, boolean bDoCat) {
+	public void run(ManagerFrame frame, DBconn2 dbc2, Mpair mp,  boolean closeWhenDone,  int maxCPUs) {
 
 		this.dbc2 = dbc2;
 		this.mp = mp;
@@ -60,11 +59,11 @@ public class DoAlignSynPair extends JFrame {
 		String msg = (mProj1 == mProj2) ? "Synteny "  + dbName1 + " to itself ..." : "Synteny " + toName + " ...";
 		
 		final ProgressDialog diaLog = new ProgressDialog(this, "Running Synteny", msg, true, syFW); // write version and date
-		String v = (Constants.VERBOSE) ? "   Verbose" : "    !Verbose"; // CAS561
+		String v = (Constants.VERBOSE) ? "   Verbose" : "    !Verbose"; 
 		diaLog.msgToFileOnly(">>> " + toName + v);
 		System.out.println("\n>>> Starting " + toName + "     " + Utilities.getDateTime());
 		
-		if (Constants.CoSET_ONLY) {// CAS556, CAS560 move to this file at end
+		if (Constants.CoSET_ONLY) {
 			collinearOnly(diaLog, mProj1, mProj2);
 			return;
 		}
@@ -77,7 +76,7 @@ public class DoAlignSynPair extends JFrame {
 		diaLog.msg(chgMsg);
 		diaLog.closeWhenDone();					
 		
-		final AlignMain aligner = new AlignMain(dbc2, diaLog, mp,  maxCPUs, bDoCat, alignLogDir);
+		final AlignMain aligner = new AlignMain(dbc2, diaLog, mp,  maxCPUs, alignLogDir);
 		if (aligner.mCancelled) return;
 		
 		final AnchorMain anchors = new AnchorMain(dbc2, diaLog, mp );
@@ -156,11 +155,6 @@ public class DoAlignSynPair extends JFrame {
 						return;
 					}
 					
-					/** Collinear CAS560 moved from SyntenyMai; CAS565 moved to AnchorMain as does not use synteny **
-						AnchorPost collinear = new AnchorPost(mPairIdx, mProj1, mProj2, dbc2, diaLog);
-						collinear.collinearSets();
-					} */ 
-					
 					/** Finish **/
 					String params = aligner.getParams();
 					mp.saveParams(params);		// deletes all pair_props, then add params
@@ -224,9 +218,9 @@ public class DoAlignSynPair extends JFrame {
 				String msgx =  "Confirm: Remove " + mp.toString() + " from database (slow if large database)" + 
 						     "\nCancel:  The user removes the database and starts over";
 				
-				if (Utilities.showConfirm2("Remove pair", msgx)) { // CAS546 can hang
+				if (Utilities.showConfirm2("Remove pair", msgx)) { 
 					System.out.println("Cancel alignment (removing alignment from DB)");
-						mp.removePairFromDB(true); 					// CAS556 redo numHits; CAS534 
+						mp.removePairFromDB(true); 					// redo numHits;
 					System.out.println("Removal complete");
 				} 
 				else System.out.println("Remove database and restart");
@@ -274,7 +268,7 @@ public class DoAlignSynPair extends JFrame {
 
 		TreeMap<String,Integer> counts = new TreeMap<String,Integer>();
 		
-		try { // CAS560 was separate method
+		try { 
 			int cnt = dbc2.executeCount("select count(*) from pseudo_hits where pair_idx=" + pairIdx);	
 			counts.put("nhits", cnt);
 			
@@ -296,8 +290,6 @@ public class DoAlignSynPair extends JFrame {
 		Utils.prtNumMsg(prog, counts.get("blkhits"), "synteny hits");
 	}
 	
-	// CAS500 was putting log in data/pseudo_pseudo/seq1_to_seq2/symap.log
-	// changed to put in logs/seq1_to_seq2/symap.log; 
 	private String buildLogAlignDir(Mproject p1, Mproject p2) {
 		try {
 			String logName = Constants.logDir + p1.getDBName() + Constants.projTo + p2.getDBName();
@@ -308,7 +300,7 @@ public class DoAlignSynPair extends JFrame {
 		catch (Exception e){ErrorReport.print(e, "Creating log file");}
 		return null;
 	}
-	// CAS560 move collinear only here
+	/**********************************************************************/
 	private void collinearOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
 	try {
 		mLog.msg("Only run collinear set algorithm");

@@ -27,7 +27,6 @@ import dotplot.DotPlotFrame;
 import props.PropertiesReader;
 
 import symap.Globals;
-import symap.Ext;			// CAS566 moved external checks from Constants	
 import symap.frame.ChrExpInit;
 import symapQuery.QueryFrame;
 
@@ -42,42 +41,37 @@ import util.Jcomp;
 import util.LinkLabel;
 
 /*****************************************************
- * The manager main frame and provides all the high level functions for it.
- * This also has command line help and arguments
+ * The manager main frame that displays the projects on the left and the pair table on the right
  * 
- * CAS508 moved the routines for alignment and synteny to AlignProjs, except for doAllPairs
- * CAS522 removed the last of FPC
- * CAS534 renamed from ProjectManagerFrameCommon; 
- * 		  package renamed from symap.projectmanager.common to manager
- * 		  moved out utilities stuff to reduce this file; rearranged
- * 		  use Mproject and Mpair as shared class for build
- * CAS535 moved Loads to backend.LoadProj and the Removes to RemoveProj.
- * CAS541 replace DBconn/DBAbsUser/DBuser with DBconn2
+ * Mprojects - have proj_idx numbered in the order they are loaded
+ * The left side and pair table has them alphanumerically ordered by Display Name
+ * Mpair - have proj1_idx and proj2_idx ordered according to how they were first entered into DB as a pair
+ * 	hence, getMpair has to check the key=proj1_idx:proj2_idx or proj2_idx:proj1_idx
+ * Note that the Display name can change along with the order; that does not change the DB pairs record.
+ * 
+ * CAS567 ended up moving stuff around and cleaning up more stuff while sorting out DB vs file params
  */
-
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ManagerFrame extends JFrame implements ComponentListener {
 	/************************************************
 	 * Command line arguments; set in symapCE.SyMAPmanager main 
 	 */
-	private static boolean TRACE = false;
 	protected static boolean inReadOnlyMode = false;// set from viewSymap script with -r
-	protected static int     maxCPUs = -1;			// arg -p
-	//protected static boolean bCheckSQL = false;    CAS561 mv to Globals // arg -v, set in symapCE.SyMAPmanager, which extends this
-	protected static boolean lgProj1st = false; 	// For Mummer; false sort on name; true sort on length
-	private static boolean   isCat = true;
+	
+	// On ManagerFrame panel
+	public static int maxCPU=-1;			// SyMAPmanager -p; used in mummer and symapQuery
 	
 	private final String DB_ERROR_MSG = "A database error occurred, please see the Troubleshooting Guide at:\n" + Jhtml.TROUBLE_GUIDE_URL;	
 	private final String DATA_PATH = Constants.dataDir;
-	private final int MIN_CWIDTH = 825, MIN_CHEIGHT = 900;  // Circle; CAS552 was 900, 1000; CAS553 was 800 (now same as 2D)
-	private final int MIN_WIDTH = 850, MIN_HEIGHT = 600;	// Manager; CAS542 was 900, 600
-	private final int MIN_DIVIDER_LOC = 220; 				// CAS543 was 240
+	private final int MIN_CWIDTH = 825, MIN_CHEIGHT = 900;  // Circle; (same as 2D)
+	private final int MIN_WIDTH = 850, MIN_HEIGHT = 600;	// Manager; 
+	private final int MIN_DIVIDER_LOC = 220; 				
 	private final int LEFT_PANEL = 450;      
 	
 	private static final String HTML = "/html/ProjMgrInstruct.html";
 	
-	private final Color cellColor = new Color(85,200,100,85); // pale green; CAS541 new color for selected box 0,100,0,85
-	private final Color textColor = new Color(0,0,170,255);   // deep blue;  CAS541 new color for selected text
+	private final Color cellColor = new Color(85,200,100,85); // pale green; for selected box 
+	private final Color textColor = new Color(0,0,170,255);   // deep blue;  for selected text
 	
 	// If changed - don't make one a substring of another!!
 	private final String TBL_DONE = "\u2713", TBL_ADONE = "A", TBL_QDONE = "?";
@@ -87,21 +81,23 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			+ TBL_QDONE + "  : alignment is partially done.";
 	private final String selectPairText = "Select a Pair by clicking\ntheir shared table cell.";// Click a lower diagonal cell to select the project pair.
 		
-	protected String frameTitle="SyMAP " + Globals.VERSION; // CAS543 add so all frames use same title
+	protected String frameTitle="SyMAP " + Globals.VERSION; // all frames use same title
 	protected DBconn2  dbc2 = null; // master, used for local loads, and used as template for processes
 	
+	// See initProjects
+	private Vector<Mproject>           projVec    = new Vector <Mproject> (); // projects on db and disk (!viewSymap)
 	private HashMap <String, Mproject> projObjMap = new HashMap <String, Mproject> (); // displayName, same set as projVec
-	private HashMap <String, String> projNameMap = new HashMap <String, String> ();	   // DBname to displayName
-	private Vector<Mproject> projVec = new Vector <Mproject> (); // projects on db and disk (!viewSymap)
+	private HashMap <String, String>  projNameMap = new HashMap <String, String> ();   // DBname to displayName
 	
 	protected Vector<Mproject> selectedProjVec = new Vector<Mproject>();
 	
-	private HashMap<Integer,Vector<Integer>> pairIdxMap = null; // project idx mapping from database
-	private HashMap<String, Mpair> pairObjMap = new HashMap <String, Mpair> (); // idx1:idx2 is key
+	private HashMap<String, Mpair> pairObjMap = new HashMap <String, Mpair> (); // proj1_idx:proj2_idx is key 
 	
-	private PairParams ppFrame = null; // only !null if opened
+	// CAS567 use pairObjMap only; private HashMap<Integer,Vector<Integer>> pairIdxMap = null; // project idx mapping from database
+	
+	private PairParams ppFrame = null; 	// only !null if opened
 	private PropertiesReader dbProps;
-	private String dbName = null; // CAS508 append to LOAD.log
+	private String dbName = null; 		// append to LOAD.log
 	
 	private int totalCPUs=0;
 	
@@ -116,7 +112,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private AddProjectPanel addProjectPanel = null;
 	
 	private JTextField txtCPUs =null;
-	private JCheckBox checkCat=null;
+	private JCheckBox checkVB=null; // CAS567 move checkVB from PairParams and checkCat to pairparams
 	
 	/*****************************************************************/
 	public ManagerFrame() {
@@ -134,7 +130,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		// Add shutdown handler to kill mysqld on CTRL-C
         Runtime.getRuntime().addShutdownHook( new MyShutdown() );
         
-		initialize(Globals.bMySQL);
+		initProjects(Globals.bMySQL);
 		
 		instructionsPanel = Jhtml.createInstructionsPanel(this.getClass().getResourceAsStream(HTML), getBackground());
 		JPanel projPanel = createProjectPanel();
@@ -145,40 +141,37 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		add(splitPane);
 		
 		setSize(MIN_WIDTH, MIN_HEIGHT);
-		setLocationRelativeTo(null); // CAS513 center frame
+		setLocationRelativeTo(null); 
 		
 		addComponentListener(this); // hack to enforce minimum frame size
 	}
 		
 	/***********************************************************************
-	 * Called at startup and refreshMenu (after any project changes
+	 * Called at startup and refreshMenu (after any project changes)
 	 */
-	private void initialize(boolean bSQL) {
+	private void initProjects(boolean bSQL) {
 		try {
-			if (dbc2 == null) {
+			if (dbc2 == null) { // 1st init mysql
 				dbc2 = makeDBconn();
 				
 				new Version(dbc2);
 				
-				if (bSQL) dbc2.checkVariables(true); // CAS511 add; CAS541 change to DBconn2
+				if (bSQL) dbc2.checkVariables(true); 
 			}
-			
 			Jhtml.setResClass(this.getClass());
 			Jhtml.setHelpParentFrame(this);
 			
-			loadPanelProjsFromDB();
-			loadProjectPairsFromDB(); // used results of loadProjectsFromDB
-			if (pairIdxMap==null || projVec==null) ErrorReport.die("Major SyMAP problem");
-			if (TRACE) dumpPairs();
+			/*****************************************************/
+			loadProjectsFromDB();
+			loadPairsFromDB(); // used results of loadProjectsFromDB
 			
-			if (!inReadOnlyMode) { 											// CAS500; read remaining projects from disk
+			if (!inReadOnlyMode) { 											// read remaining projects from disk
 				String strDataPath = Constants.dataDir;
 				
-				if (Utilities.dirExists(strDataPath)) { 					// CAS511 quit creating data/seq, /data can be missing
-					Utilities.checkCreateDir(Constants.logDir,true/*bPrt*/);// CAS534 removed /pseudo check and message
+				if (Utilities.dirExists(strDataPath)) { 					
+					Utilities.checkCreateDir(Constants.logDir,true/*bPrt*/);
 					
-					loadPanelProjsFromDisk(strDataPath,  Constants.seqType); 	// must come after loadFromDB
-					loadPanelProjsFromDisk(strDataPath,  "fpc"); 				// CAS520 gives message on fpc
+					loadProjectsFromDisk(strDataPath,  Constants.seqType); 	// must come after loadFromDB
 				}
 			}
 			sortProjDisplay(projVec);
@@ -186,7 +179,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			Vector<Mproject> newSelectedProjects = new Vector<Mproject>();
 			for (Mproject p1 : selectedProjVec) {
 				for (Mproject p2 : projVec) {
-					if ( p1.equals(p2) ) {
+					if (p1.equals(p2)) {
 						newSelectedProjects.add(p2);
 						break;
 					}
@@ -194,7 +187,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			}
 			selectedProjVec = newSelectedProjects;
 		}
-		catch (Exception e) { ErrorReport.die(e, DB_ERROR_MSG);}
+		catch (Exception e) {ErrorReport.die(e, DB_ERROR_MSG);}
 	}
 
 	private static boolean isShutdown = false;
@@ -209,6 +202,21 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	    		shutdown();
 	    }
 	}
+	/*******************************************************************/
+	public void refreshMenu() {
+		Utilities.setCursorBusy(this, true);
+		
+		initProjects(false); // recreates project lists on every refresh; easier then modifing projVec etc
+		
+		splitPane.setLeftComponent( createProjectPanel() );
+		if (selectedProjVec.size() > 0)
+			splitPane.setRightComponent( createSelectedPanel() );
+		else
+			splitPane.setRightComponent( instructionsPanel );
+		
+		Utilities.setCursorBusy(this, false);
+	}
+
 	/** Right Panel *********************************************************************/
 	private JPanel createProjectPanel() {
 		addProjectPanel = new AddProjectPanel(new ActionListener() {
@@ -236,21 +244,21 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		subPanel.setBorder( BorderFactory.createEmptyBorder(5, 5, 5, 0) );
 		subPanel.setBackground(Color.white);
 		
-		// CAS513 changed from Vector to TreeSet so alphabetical display
+		// TreeSet so alphabetical display
 		TreeMap<String, TreeSet<Mproject>> cat2Proj = new TreeMap<String, TreeSet<Mproject>>();
 		for (Mproject p : projVec) {
 			String category = p.getdbCat();
-			if (category == null || category.length() == 0) category = "Uncategorized";
+			if (category == null || category.length() == 0) category = ProjParams.catUncat;
 			if (!cat2Proj.containsKey(category)) cat2Proj.put(category, new TreeSet<Mproject>());
 			cat2Proj.get(category).add(p);
 		}
 		
-		// CAS513 Figure out what to show 
+		// Figure out what to show 
 		Set <String> categories = cat2Proj.keySet();
 		TreeMap <String, Integer> showMap = new TreeMap <String, Integer> ();
 		for (String cat : categories) {
 			for (Mproject p : cat2Proj.get(cat)) {
-				if (inReadOnlyMode && p.getCntSyntenyStr().equals("")) continue; // CAS513 nothing to view
+				if (inReadOnlyMode && p.getCntSyntenyStr().equals("")) continue; // nothing to view
 				
 				if (showMap.containsKey(cat)) showMap.put(cat, showMap.get(cat)+1);
 				else 						  showMap.put(cat, 1);
@@ -262,13 +270,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			subPanel.add( new JLabel(cat) );
 			
 			for (Mproject p : cat2Proj.get(cat)) {
-				if (inReadOnlyMode && p.getCntSyntenyStr().equals("")) continue; // CAS513 nothing to view
+				if (inReadOnlyMode && p.getCntSyntenyStr().equals("")) continue; // nothing to view
 					
 				ProjectCheckBox cb = null;
 				String name = p.getDisplayName();
 				boolean bLoaded = (p.getStatus() != Mproject.STATUS_ON_DISK);
 				if (bLoaded) 
-					name += " (" + p.getLoadDate() + ") " + p.getCntSyntenyStr(); // CAS513 change from (not loaded) 
+					name += " (" + p.getLoadDate() + ") " + p.getCntSyntenyStr(); 
 				cb = new ProjectCheckBox( name, p );
 				Font f = new Font(cb.getFont().getName(), Font.PLAIN, cb.getFont().getSize());
 				cb.setFont(f); 
@@ -301,12 +309,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		panel.add(addPanel);
 		
-		panel.setMinimumSize( new Dimension(MIN_DIVIDER_LOC-20, MIN_HEIGHT) ); // CAS543 add -20 so can shrink a little
+		panel.setMinimumSize( new Dimension(MIN_DIVIDER_LOC-20, MIN_HEIGHT) ); 
 		
 		return panel;
 	}
 	/***** Left panel ***********************************************/
-	private JPanel createSelectedPanel() { // CAS534 renamed from createSummaryPanel
+	private JPanel createSelectedPanel() { 
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout( new BoxLayout ( mainPanel, BoxLayout.Y_AXIS ) );
 		mainPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -315,10 +323,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	// Top area
 		JLabel lblTitle = Jcomp.createLabel("Selected", Font.BOLD, 18);
 		JButton btnHelp;
-		if (!inReadOnlyMode)btnHelp = Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.build); // CAS534 chg to '?'
-		else 				btnHelp = Jhtml.createHelpIconUserSm(Jhtml.view); // CAS534 diff '?' for view
-		mainPanel.add( createHorizPanel( new Component[] { lblTitle,btnHelp}, LEFT_PANEL)); 
-		//mainPanel.add( new JSeparator() );
+		if (!inReadOnlyMode)btnHelp = Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.build); 
+		else 				btnHelp = Jhtml.createHelpIconUserSm(Jhtml.view); 
+		mainPanel.add( Jcomp.createHorizPanel( new Component[] { lblTitle,btnHelp}, LEFT_PANEL)); 
 		
 	// Add individual project summaries
 		JPanel subPanel = new JPanel();
@@ -343,8 +350,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.PAGE_AXIS));
 			textPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 			
-			// line 1 - CAS500 re-ordered and add Length and Mask; CAS504 add notLoadedInfo
-			String label1 = "Directory: " + mProj.getDBName() + "    Abbrev: " + mProj.getdbAbbrev(); // CAS500; CAS558 add abbrev
+			// line 1
+			String label1 = "Directory: " + mProj.getDBName() + "    Abbrev: " + mProj.getdbAbbrev(); 
 			
 			String o = mProj.getOrderAgainst();
 			if (o != null && o.length() > 0) label1 += "    Order against: " + o;
@@ -363,7 +370,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			} 
 			else {
 				String group = mProj.getdbGrpName();
-				if (Utilities.isEmpty(group)) group = "Chromosome"; // CAS534 backward compatible
+				if (Utilities.isEmpty(group)) group = "Chromosome"; 
 				String label2 = String.format("%s: %d    Bases: %,d    %s", 
 						group, mProj.getNumGroups(), mProj.getLength(), mProj.getAnnoStr());
 				
@@ -385,7 +392,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				btnReloadParams = new ProjectLinkLabel("Parameters", mProj, Color.blue);
 				btnReloadParams.addMouseListener( doSetParamsNotLoaded ); 
 			}
-			else { // CAS42 1/1/18 was just "Remove" which is unclear; CAS505 removed 'project'
+			else { 
 				btnLoadOrRemove = new ProjectLinkLabel("Remove from database", mProj, Color.blue);
 				btnLoadOrRemove.addMouseListener( doRemove );
 
@@ -398,21 +405,21 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				btnReloadParams = new ProjectLinkLabel("Parameters", mProj, Color.blue);
 				btnReloadParams.addMouseListener( doReloadParams );
 
-				btnView = new ProjectLinkLabel("View", mProj, Color.blue); // CAS521 add
+				btnView = new ProjectLinkLabel("View", mProj, Color.blue); 
 				btnView.addMouseListener( doViewProj );
 			}
 			if (mProj.getStatus() == Mproject.STATUS_ON_DISK) {
-				if (!inReadOnlyMode) // CAS500
-					subPanel.add( createHorizPanel( new Component[] 
+				if (!inReadOnlyMode) 
+					subPanel.add( Jcomp.createHorizPanel( new Component[] 
 						{ lblTitle, btnRemoveFromDisk, btnLoadOrRemove, btnReloadParams }, 15 ) );				
 			}
 			else {
 				if (!inReadOnlyMode) { 
-					subPanel.add( createHorizPanel( new Component[] 
+					subPanel.add( Jcomp.createHorizPanel( new Component[] 
 					{ lblTitle, btnLoadOrRemove, btnReloadSeq, btnReloadAnnot, btnReloadParams, btnView}, 10 ) );						
 				}
-				else { // CAS500
-					subPanel.add( createHorizPanel( new Component[] { lblTitle, btnView}, 15));
+				else { 
+					subPanel.add( Jcomp.createHorizPanel( new Component[] { lblTitle, btnView}, 15));
 				}
 			}
 			subPanel.add( textPanel );
@@ -425,7 +432,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		subScroller.setAlignmentX(Component.LEFT_ALIGNMENT);
 		subScroller.getVerticalScrollBar().setUnitIncrement(10);
 		subScroller.setBorder(null);
-		subScroller.setMaximumSize( new Dimension( MIN_WIDTH, 290 ) ); // CAS534 bigger for lower scroll bar
+		subScroller.setMaximumSize(new Dimension(MIN_WIDTH, 290)); 
 		mainPanel.add( subScroller );
 		
 	// Add alignment table; lower part
@@ -440,7 +447,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			text1.setLineWrap(false);
 			text1.setAlignmentX(Component.LEFT_ALIGNMENT);
 			
-			// CAS42 1/5/18
 			JTextArea text2 = new JTextArea(selectPairText,2,1);
 			text2.setBackground( getBackground() );
 			text2.setEditable(false);
@@ -463,12 +469,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			btnSelClearPair.setVisible(true);
 			btnSelClearPair.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					Mproject[] projects = getSetSelectedPair();
-					if (projects==null) return;
+					Mproject[] mprojs = getSelectedPair();
+					if (mprojs==null) return;
 					
-					Mpair mp = getMpair(projects[0].getIdx(),projects[1].getIdx());
+					Mpair mp = getMpair(mprojs[0].getIdx(),mprojs[1].getIdx());
 					RemoveProj rjObj = new RemoveProj(getInstance(), buildLogLoad());
-					rjObj.removeClearPair(mp, projects[0], projects[1]);
+					rjObj.removeClearPair(mp, mprojs[0], mprojs[1]);
 					refreshMenu();
 				}
 			} );	
@@ -510,7 +516,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			});
 			btnAllChrExp = new JButton("Chromosome Explorer");
 			btnAllChrExp.setVisible(true); 
-			//btnAllChrExp.addActionListener( explorerListener); CAS541 moved from SyMAPmanager
 			btnAllChrExp.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) { 
 					showChrExp();
@@ -524,7 +529,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 					showAllDotPlot();
 				}
 			});
-			btnAllQueryView = new JButton("Queries"); // CAS520 SyMAP Queries moves up a line
+			btnAllQueryView = new JButton("Queries"); 
 			btnAllQueryView.setVisible(true);
 			btnAllQueryView.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -552,61 +557,54 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			JLabel lbl1 = new JLabel("Alignment & Synteny");
 			JLabel lbl2 = new JLabel("Display for Selected Pair");
 			JLabel lbl3 = new JLabel("Display for All Pairs");
-			JLabel lbl4 = new JLabel("                     "); // CAS520 change Seq-to-Seq to blank
+			JLabel lbl4 = new JLabel("                     "); 
 			Dimension d = lbl2.getPreferredSize();
 			lbl1.setPreferredSize(d); lbl3.setPreferredSize(d); lbl4.setPreferredSize(d);
 			
-			totalCPUs = Runtime.getRuntime().availableProcessors(); // CAS42 12/6/17
-			if (maxCPUs<=0) maxCPUs = totalCPUs;
-			if (txtCPUs != null) {
-				try{
-					maxCPUs = Integer.parseInt(txtCPUs.getText());
-				}
-				catch (Exception e){
-					System.out.println("Error: CPUs must be an integer");
-					maxCPUs = 1;
-				}
-			}
+			totalCPUs = Runtime.getRuntime().availableProcessors(); 
+			if (maxCPU<1) maxCPU = totalCPUs;
+			
 			txtCPUs = new JTextField(2);
 			txtCPUs.setMaximumSize(txtCPUs.getPreferredSize());
 			txtCPUs.setMinimumSize(txtCPUs.getPreferredSize());
-			txtCPUs.setText("" + maxCPUs);
+			txtCPUs.setText("" + maxCPU);
 			
-			checkCat = new JCheckBox("Concat", isCat);
-			checkCat.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					isCat = checkCat.isSelected();
+			checkVB = Jcomp.createCheckBoxGray("Verbose","For A&S, Verbose output to symap.log & terminal."); // not saved
+			checkVB.setSelected(Constants.VERBOSE);
+			checkVB.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					Constants.VERBOSE = checkVB.isSelected();
 				}
 			});
-
+			
 			mainPanel.add( new JSeparator() );
 			mainPanel.add( Box.createVerticalStrut(15) );
 			mainPanel.add(instructText); 
 			mainPanel.add( Box.createVerticalStrut(15) );
 			if (!inReadOnlyMode) {
-				Component cpu = createHorizPanel( new Component[] 
-						{ tableScroll, new JLabel("   CPUs:"), txtCPUs, new JLabel("  "), checkCat},5 );
+				Component cpu = Jcomp.createHorizPanel( new Component[] 
+						{ tableScroll, new JLabel("   CPUs:"), txtCPUs, new JLabel("  "), checkVB},5 );
 				mainPanel.add(cpu);			
 			}
 			else {	
-				mainPanel.add( createHorizPanel( new Component[] { tableScroll, new JLabel(" ")}, 5 ));			
+				mainPanel.add( Jcomp.createHorizPanel( new Component[] { tableScroll, new JLabel(" ")}, 5 ));			
 			}
 			btnPairParams = new JButton("Parameters");
 			btnPairParams.addActionListener(showPairProps);
 			
 			if (!inReadOnlyMode) {
 				mainPanel.add( Box.createRigidArea(new Dimension(0,15)) );	
-				mainPanel.add( createHorizPanel( new Component[] { lbl1,
-					btnAllPairs, btnSelAlign, btnSelClearPair,  btnPairParams}, 5) ); // CAS507 put allpairs first since btnPair is for select only now
+				mainPanel.add( Jcomp.createHorizPanel( new Component[] { lbl1,
+					btnAllPairs, btnSelAlign, btnSelClearPair,  btnPairParams}, 5) ); 
 			}
-			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  ); // CAS552 put circle 1st
-			mainPanel.add( createHorizPanel( new Component[] {lbl2, btnSelCircView, btnSelDotplot, btnSelBlockView,  btnSelSummary }, 5) );
+			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );  
+			mainPanel.add( Jcomp.createHorizPanel( new Component[] {lbl2, btnSelCircView, btnSelDotplot, btnSelBlockView,  btnSelSummary }, 5) );
 
 			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );
-			mainPanel.add( createHorizPanel( new Component[] {lbl3, btnAllChrExp, btnAllDotplot, btnAllQueryView }, 5) );
+			mainPanel.add( Jcomp.createHorizPanel( new Component[] {lbl3, btnAllChrExp, btnAllDotplot, btnAllQueryView }, 5) );
 
 			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );
-			mainPanel.add( createHorizPanel( new Component[] {lbl4 }, 5) );
+			mainPanel.add( Jcomp.createHorizPanel( new Component[] {lbl4 }, 5) );
 		} else {
 			mainPanel.add( Box.createVerticalGlue() );
 			mainPanel.add( Jcomp.createTextArea("",getBackground(), false) ); // kludge to fix layout problem			
@@ -616,22 +614,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		return mainPanel;
 	}
-	private Component createHorizPanel( Component[] comps, int gapWidth ) {
-		JPanel panel = new JPanel();
-		panel.setLayout( new BoxLayout ( panel, BoxLayout.X_AXIS ) );
-		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		
-		for (Component c : comps) {
-			if (c != null) {
-				panel.add( c );
-				if (gapWidth > 0)panel.add( Box.createHorizontalStrut(gapWidth) );
-			}
-		}
-		panel.add( Box.createHorizontalGlue() );
-		
-		return panel;
-	}
-	private JComponent createPairTable() { // CAS534 renamed from createAlignmentTable
+	
+	private JComponent createPairTable() { 
 		if (pairTable != null) {// Clear previous table, disable listeners
 			pairTable.getSelectionModel().removeListSelectionListener(tableRowListener);
 			pairTable.getColumnModel().removeColumnModelListener( tableColumnListener );
@@ -668,7 +652,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				String resultDir = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
 				
 				boolean isDone=false;
-				if (isPair(id1, id2) || isPair(id2, id1)) {	
+				
+				Mpair mp = getMpair(id1, id2);
+				if (mp!=null && mp.pairIdx>0) {	
 					row.add(TBL_DONE); 
 					isDone=true;
 				}
@@ -683,7 +669,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				if (!isDone) { // cannot do anything without an mpair
 					String key = ordP[0].getIdx() + ":" + ordP[1].getIdx();
 					if (!pairObjMap.containsKey(key)) {
-						Mpair mp = new Mpair(dbc2, -1, ordP[0], ordP[1], inReadOnlyMode);
+						mp = new Mpair(dbc2, -1, ordP[0], ordP[1], inReadOnlyMode);
 			        	pairObjMap.put(key, mp);
 					}
 				}
@@ -735,13 +721,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	
 	/***********************************************************
-	 * Enable function buttons; CAS505 rewrote
+	 * Enable function buttons; 
 	 */
 	private void updateEnableButtons() {
 		if (pairTable == null) return;
 		
-		Mproject[] projects = getSetSelectedPair();  // null if nothing selected
-		btnPairParams.setEnabled(projects!=null);  // CAS507 must select one 
+		Mproject[] projects = getSelectedPair();  // null if nothing selected
+		btnPairParams.setEnabled(projects!=null);  
 		
 		int numProj =  pairTable.getRowCount();
 		btnAllPairs.setEnabled(numProj>1 && isAlignAllPairs());
@@ -782,9 +768,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			btnSelBlockView.setEnabled(false);
 		}
 	}
-	private boolean isPair(int id1, int id2) {
-		return pairIdxMap.containsKey(id1) && pairIdxMap.get(id1).contains(id2);
-	}
 	// is there any not done or partial done
 	private boolean isAlignAllPairs() { 
 		for (int row = 0;  row < pairTable.getRowCount();  row++) {
@@ -814,133 +797,135 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		return count;
 	}
 	
-	/************* XXX Listeners ********************/
-	private ItemListener checkboxListener = new ItemListener() { // left panel change
-		public void itemStateChanged(ItemEvent e) {
-			ProjectCheckBox cb = (ProjectCheckBox)e.getSource();
-			Mproject p = cb.getProject();
-			boolean changed = false;
-			
-			if ( e.getStateChange() == ItemEvent.SELECTED ) {
-				if ( !selectedProjVec.contains(p) ) selectedProjVec.add(p);
-				cb.setBackground(cellColor); // highlight
-				changed = true;
+	/*****************************************************************
+	 * Create projVec, projObjMap, projNameMap - from DB and disk
+	 */
+	private void loadProjectsFromDB() { 
+	try {
+		projVec.clear();
+		projObjMap.clear();
+		projNameMap.clear();
+		
+        ResultSet rs = dbc2.executeQuery("SELECT idx, name, annotdate FROM projects");
+        while ( rs.next() ) {
+        	int nIdx = rs.getInt(1);
+        	String dbName = rs.getString(2);
+        	String strDate = rs.getString(3);       
+        	
+    		Mproject mp = new Mproject(dbc2, nIdx, dbName, strDate);
+    		projVec.add(mp);
+        }
+        rs.close();
+        
+        for (Mproject mp : projVec) {
+        	mp.loadParamsFromDB(); 			// load from DB and then overwrites from file
+        	mp.loadDataFromDB();
+        	projObjMap.put(mp.strDisplayName, mp);
+        	projNameMap.put(mp.strDBName, mp.strDisplayName);
+        }
+	}
+	catch (Exception e) {ErrorReport.print(e,"Load projects"); }
+	}
+	private void loadProjectsFromDisk(String strDataPath, String dirName) {
+		File root = new File(strDataPath + dirName); 
+		if (root == null || !root.isDirectory()) return;
+		
+		for (File f : root.listFiles()) {
+			if (f.isDirectory() && !f.getName().startsWith(".")) {
+				String dbname = f.getName();
+				if (projNameMap.containsKey(dbname)) continue; // loaded project
+				
+				Mproject mp = new Mproject(dbc2, -1, dbname, ""); 
+				mp.loadParamsFromDisk(f); 
+				
+				if (!projObjMap.containsKey(mp.strDisplayName))  {
+					 projVec.add(mp);
+					 projObjMap.put(mp.strDisplayName, mp);
+					 projNameMap.put(mp.strDBName, mp.strDisplayName);
+				} 
+				else { // e.g. dbname=Arab, and there is dbname=zarab with Display name = Arab
+					Globals.prt(dbname + ": Display name " + mp.strDisplayName + " exists; cannot not display");
+				}
 			}
-			else if ( e.getStateChange() == ItemEvent.DESELECTED ) {
-				selectedProjVec.remove(p);
-				cb.setBackground(Color.white); // un-highlight
-				changed = true;
+		}
+	}
+	private void loadPairsFromDB() {
+	try {
+		pairObjMap.clear();
+		
+		HashMap <Integer, String> pairs = new HashMap <Integer, String> ();
+		
+		// aligned is always 1; pair is not in database until Synteny step; to see if alignment is one, check file all.done
+        ResultSet rs = dbc2.executeQuery("SELECT idx, proj1_idx, proj2_idx FROM pairs where aligned=1");
+              
+        while (rs.next()) {
+        	int pairIdx =  rs.getInt(1);
+        	int proj1Idx = rs.getInt(2);
+        	int proj2Idx = rs.getInt(3); 
+  
+        	pairs.put(pairIdx, proj1Idx + ":" + proj2Idx);
+        }
+        rs.close();
+        
+        for (int pidx : pairs.keySet()) {
+        	String [] tmp = pairs.get(pidx).split(":");
+        	int proj1Idx = Utilities.getInt(tmp[0]);
+        	int proj2Idx = Utilities.getInt(tmp[1]);
+        	
+        	Mproject mp1=null, mp2=null;
+        	for (Mproject mp : projVec) {
+        		if (mp.getIdx() == proj1Idx) mp1 = mp;
+        		if (mp.getIdx() == proj2Idx) mp2 = mp;
+        	}
+        	if (mp1==null || mp2==null) System.out.println("SYMAP error: no " + pidx + " projects");
+        	else {
+	        	Mpair mp = new Mpair(dbc2, pidx, mp1, mp2, inReadOnlyMode); // reads database
+	        	pairObjMap.put(proj1Idx + ":" + proj2Idx, mp); // do not know if proj1Idx>proj2Idx or proj1Idx<proj2Idx
+        	}
+        }
+	}catch (Exception e) {ErrorReport.print(e,"Load projects pairs"); }
+	}
+	
+	private String [] getCatArr() {
+		TreeSet <String> catSet = new TreeSet<String> ();
+		for (Mproject mp : projVec) {
+			if (mp.hasCat()) {
+				String cat = mp.getdbCat();
+				if (!catSet.contains(cat)) catSet.add(cat);
 			}
-			
-			if (changed) {
-				sortProjDisplay( selectedProjVec );
-				if (pairTable != null) pairTable.clearSelection();	
+		}
+		int len = (!catSet.contains(ProjParams.catUncat)) ? catSet.size()+1 : catSet.size();
+		String [] catArr = new String [len];
+		int i=0;
+		for (String cat : catSet) catArr[i++] = cat;
+		if (!catSet.contains(ProjParams.catUncat)) catArr[i] = ProjParams.catUncat; // default
+		
+		return catArr;
+	}
+	// Get Mpair from two projects
+	private Mpair getMpair(int idx1, int idx2) { // projIdx
+		String key = idx1 + ":" + idx2;
+		if (pairObjMap.containsKey(key)) return pairObjMap.get(key);
+		
+		key = idx2 + ":" + idx1; // order can be either
+		if (pairObjMap.containsKey(key)) return pairObjMap.get(key);
 
-				// Note: recreating each time thrashes heap, but probably negligible performance impact
-				if ( selectedProjVec.size() > 0 )
-					splitPane.setRightComponent( createSelectedPanel() ); // regenerate since changed
-				else
-					splitPane.setRightComponent( instructionsPanel );
-			}
-		}
-	};
-	private ActionListener showPairProps = new ActionListener() {
-		public void actionPerformed(ActionEvent arg0) {
-			Mproject[] sel = getSetSelectedPair();
-		
-			Mpair p = getMpair(sel[0].getIdx(), sel[1].getIdx());
-			if (p!=null) {
-				ppFrame = new PairParams(p);
-				ppFrame.setVisible(true);
-			}
-		}
-	};
-		
-	private MouseListener doLoadAllProj = new MouseAdapter() {
-		public void mouseClicked(MouseEvent e) {
-			loadAllProjects();
-		}
-	};
-	private MouseListener doLoad = new MouseAdapter() {
-		public void mouseClicked(MouseEvent e) {
-			Mproject mproj = ((ProjectLinkLabel)e.getSource()).getProject();
-			loadProject(mproj);
-		}
-	};
-	private MouseListener doReloadSeq = new MouseAdapter() {
-		public void mouseClicked(MouseEvent e) {
-			Mproject mproj = ((ProjectLinkLabel)e.getSource()).getProject();
-			reloadProject(mproj);		
-		}
-	};
-	private MouseListener doReloadAnnot = new MouseAdapter() {
-		public void mouseClicked(MouseEvent e) {
-			Mproject mproj = ((ProjectLinkLabel)e.getSource()).getProject();
-			reloadAnno(mproj);	
-		}
-	};	
-	
-	private MouseListener doRemove = new MouseAdapter() {
-		public void mouseClicked(MouseEvent e) {
-			Mproject p = ((ProjectLinkLabel)e.getSource()).getProject();
-			new RemoveProj(getInstance(), buildLogLoad()).removeProjectFromDB(p );
-			refreshMenu();
-		}
-	};
-	private MouseListener doRemoveDisk = new MouseAdapter() {
-		public void mouseClicked(MouseEvent e) {
-			new RemoveProj(getInstance(), buildLogLoad()).removeProjectFromDisk( ((ProjectLinkLabel)e.getSource()).getProject() );
-			refreshMenu();
-		}
-	};
-	
-	private MouseListener doViewProj = new MouseAdapter() { // CAS521 add
-		public void mouseClicked(MouseEvent e) {
-			Mproject theProject = ((ProjectLinkLabel)e.getSource()).getProject();
-			String info = theProject.loadProjectForView();
-			
-			Utilities.displayInfoMonoSpace(getInstance(), "View " + theProject.getDisplayName(), info, false);	
-		}
-	};
-	
-	private MouseListener doReloadParams = new MouseAdapter() {
-		public void mouseClicked(MouseEvent e) {
-			Mproject mProj = ((ProjectLinkLabel)e.getSource()).getProject();
-			
-			ProjParams propFrame = new ProjParams(getInstance(), mProj, projVec, 
-					true, mProj.hasExistingAlignments());
-			propFrame.setVisible(true);
-			
-			if (propFrame.wasSave()) refreshMenu();		
-		}
-	};
-	private MouseListener doSetParamsNotLoaded = new MouseAdapter() {
-		public void mouseClicked(MouseEvent e) {
-			Mproject mProj = ((ProjectLinkLabel)e.getSource()).getProject();
-			
-			ProjParams propFrame = new ProjParams(getInstance(), mProj, projVec, 
-					false, mProj.hasExistingAlignments());
-			propFrame.setVisible(true);
-			
-			if (propFrame.wasSave()) refreshMenu(); 
-		}		
-	};
-		
+		return null;		// it is okay to be null; n1 and n2 do not have pair in database
+	}
 	// Pair selected in available synteny table
-	private Mproject[] getSetSelectedPair() {
+	private Mproject[] getSelectedPair() {
 		int nRow=-1, nCol=-1;
 		try {
-			if (pairTable == null) return null;
-			
+			if (pairTable == null) return null;		
 			nRow = pairTable.getSelectedRow(); // Row is >=0 Col is >=1
 			nCol = pairTable.getSelectedColumn();
 			
 			// If none selected, automatically select one if 2 rows (does not work with 1 row)
 			if (nRow < 0 || nCol <= 0) {
 				int n = pairTable.getRowCount(); // if n=2, automatically make selected
-				if (n!=2) return null;			 
-				nCol=1; nRow=1;			 
+				if (n!=2) return null;
 				
+				nCol=1; nRow=1;
 				pairTable.setRowSelectionInterval(nRow, nCol);
 				pairTable.setColumnSelectionInterval(nRow, nCol);
 			}
@@ -948,15 +933,17 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			String strRowProjName = pairTable.getValueAt(nRow, 0).toString();
 			String strColProjName = pairTable.getValueAt(nCol-1, 0).toString();
 
-			Mproject p1 = projObjMap.get( strRowProjName );
-			Mproject p2 = projObjMap.get( strColProjName );
+			Mproject p1 = projObjMap.get(strRowProjName);
+			Mproject p2 = projObjMap.get(strColProjName);
 			
-			if (p1==null) {
-				System.out.println(strRowProjName + ": There is an inconsistency with the Display Name; save project params");
+			if (p1==null || p1.getIdx()==-1) {
+				System.out.println(strRowProjName + ": Inconsistency with the Display Name; try save project params");
+				if (p1!=null) p1.prtInfo();
 				return null;
 			}
-			if (p2==null) {
-				System.out.println(strColProjName + ": There is an inconsistency with the Display Name; save project params");
+			if (p2==null || p2.getIdx()==-1) {
+				System.out.println(strColProjName + ": Inconsistency with the Display Name; try save project params");
+				if (p2!=null) p2.prtInfo();
 				return null;
 			}
 			return orderProjName(p1,p2);
@@ -979,13 +966,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		    }
 	    });
 	}
-		
-	// CAS500 New log file for load
+	/***************************************************************/
+	// log file for load
 	private boolean first=true;
 	private FileWriter buildLogLoad() {
 		FileWriter ret = null;
 		try {
-			String name = dbName + "_" + Constants.loadLog; // CAS508 prefix with database name
+			String name = dbName + "_" + Constants.loadLog; 
 			 
 			File pd = new File(Constants.logDir);
 			if (!pd.isDirectory()) pd.mkdir();
@@ -995,7 +982,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				System.out.println("Create log file: " + Constants.logDir + name);
 			else if (first) {
 				System.out.println("Append to log file: " + Constants.logDir + name + 
-						" (Length: " + Utilities.kMText(lf.length()) + ")"); // CAS508 add, CAS511 add prt
+						" (Length: " + Utilities.kMText(lf.length()) + ")"); 
 				first=false;
 			}
 			ret = new FileWriter(lf, true);	
@@ -1006,203 +993,14 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	
 	private ManagerFrame getInstance() { return this; }
 	
-	/*******************************************************************/
-	private Mpair getMpair(int n1, int n2) {
-		String key = n1 + ":" + n2;
-		if (pairObjMap.containsKey(key)) return pairObjMap.get(key);
-		
-		key = n2 + ":" + n1; // CAS547 they can be entered n1>n2
-		if (pairObjMap.containsKey(key)) return pairObjMap.get(key);
-		
-		System.out.println("SyMAP error on " + key);
-		for (String keys : pairObjMap.keySet()) {
-			System.out.print(keys + " ");
-		}
-		System.out.println();
-		
-		return null;
-	}
-	private int getCPUs() {
-		int maxCPUs = 1;
-		try { maxCPUs = Integer.parseInt(txtCPUs.getText());}
-		catch (Exception e) {
-			Utilities.showErrorMessage("Please enter a valid value for number of CPUs to use.");
-			return -1;
-		}
-		if (maxCPUs <= 0) maxCPUs = 1;
-		return maxCPUs;
-	}
-	
-	public void refreshMenu() {
-		Utilities.setCursorBusy(this, true);
-		
-		initialize(false); // recreates project lists on every refresh; easier then modifing projVec etc
-		
-		splitPane.setLeftComponent( createProjectPanel() );
-		if (selectedProjVec.size() > 0)
-			splitPane.setRightComponent( createSelectedPanel() );
-		else
-			splitPane.setRightComponent( instructionsPanel );
-		
-		Utilities.setCursorBusy(this, false);
-	}
-	/***********************************************************************/
-	private void showChrExp() { // CAS541 moved from SyMAP manager; CAS550 moved build logic to ChrExpInit
-		Utilities.setCursorBusy(this, true);
-		try {
-			ChrExpInit symapExp = new ChrExpInit(frameTitle + " - ChrExp", dbc2, selectedProjVec);
-			
-			symapExp.getExpFrame().setVisible(true); 
-		}
-		catch (Exception err) {ErrorReport.print(err, "Show SyMAP graphical window");}
-		finally {
-			Utilities.setCursorBusy(this, false);
-		}
-	}
-	/*********************************************************************/
-	private void showQuery() {
-		Utilities.setCursorBusy(this, true);
-		try { 
-			Vector <Mproject> pVec = new Vector <Mproject> ();
-			for (Mproject p : selectedProjVec) if (p.isLoaded()) pVec.add( p );
-			
-			boolean useAlgo2=true; //  used for new "EveryPlus"; CAS547
-			int cntUsePseudo=0; // Instructions; CAS565
-			int hasSynteny=0;
-			
-			for (int i=0; i<pVec.size()-1; i++) {
-				for (int j=i+1; j<pVec.size(); j++) {
-					Mpair mp = getMpair(pVec.get(i).getIdx(), pVec.get(j).getIdx());
-					if (!mp.isSynteny()) continue;
-					
-					if (!mp.isAlgo2(Mpair.DB)) 	useAlgo2=false;
-					if (mp.isNumPseudo(Mpair.DB)) cntUsePseudo++;
-					hasSynteny++;
-				}
-			}
-			QueryFrame qFrame = new QueryFrame(frameTitle, dbc2, pVec, useAlgo2, cntUsePseudo, hasSynteny);
-			qFrame.build();
-			qFrame.setVisible(true);
-		} 
-		catch(Exception e) {ErrorReport.print(e, "Show Query");}
-		finally {
-			Utilities.setCursorBusy(this, false);
-		}
-	}
-	/*****************************************************************/
-	private void showDotplot() { 
-		Utilities.setCursorBusy(this, true);
-		
-		Mproject[] p = getSetSelectedPair();
-		if (p==null) return;
-		
-		int projXIdx = p[0].getID();
-		int projYIdx = projXIdx; // default to self-alignment
-		if (p.length > 1) projYIdx = p[1].getID();
-		
-		/* Swap x and y projects to match database - no longer necessary after #206
-		if (pairMap.containsKey(projXIdx) && pairMap.get(projXIdx).contains(projYIdx)) {
-			int temp = projXIdx;projXIdx = projYIdx;projYIdx = temp;}*/
-		
-		DotPlotFrame frame = new DotPlotFrame(frameTitle+ " - Dot Plot", dbc2, projXIdx, projYIdx);
-		frame.setSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
-		frame.setVisible(true);
-		
-		Utilities.setCursorBusy(this, false);
-	}
-	/*****************************************************************/
-	private void showBlockView()  { 
-		Utilities.setCursorBusy(this, true);
-		
-		Mproject[] p = getSetSelectedPair();
-		if (p==null) return;
-		
-		Mproject p1=p[0];
-		Mproject p2 = (p.length>1) ? p[1] : p[0];
-		
-		try{
-			BlockViewFrame frame = new BlockViewFrame(frameTitle + " - Block", dbc2, p1.getIdx(), p2.getIdx());
-			frame.setMinimumSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
-			frame.setVisible(true);
-		}
-		catch (Exception e) {ErrorReport.die(e, "Show block view");
-		}
-		
-		Utilities.setCursorBusy(this, false);
-	}
-	/*****************************************************************/
-	private void showSummary(){
-		Utilities.setCursorBusy(this, true);
-		
-		Mproject[] p = getSetSelectedPair();
-		if (p==null) return;
-		
-		int projXIdx = p[0].getIdx();
-		int projYIdx = (p.length>1) ? p[1].getIdx() : projXIdx; 
-		
-		Mpair mp = getMpair(projXIdx, projYIdx);
-		if (mp==null) return;
-		
-		/* Swap x and y projects to match database - no longer necessary after #206; CAS534 no reason for this
-		if (pairMap.containsKey(projXIdx) && pairMap.get(projXIdx).contains(projYIdx)) {
-			int temp = projXIdx;projXIdx = projYIdx;projYIdx = temp;} */
-		// if (projYIdx == projXIdx) projYIdx = 0; // CAS500 allows self summary
-				
-		new SumFrame(frameTitle + " - Summary", dbc2, mp, inReadOnlyMode); // CAS540 dialog made visible in SumFrame; CAS541 dbuser->dbc2
-		
-		Utilities.setCursorBusy(this, false);		
-	}
-	/*****************************************************************/
-	private void showCircleView() { 
-		Utilities.setCursorBusy(this, true);
-		
-		Mproject[] p = getSetSelectedPair();
-		if (p==null) return;
-		
-		int projXIdx = p[0].getID();
-		int projYIdx = (p.length > 1) ? p[1].getID() : projXIdx; // 2-align : self-align
-		boolean hasSelf = (p[0].hasSelf() || p[1].hasSelf()); // CAS552 add for Self-Align
-		
-		/* Swap x and y projects to match database - no longer necessary after #206; CAS534 remove
-		if (pairMap.containsKey(projXIdx) && pairMap.get(projXIdx).contains(projYIdx)) {
-			int temp = projXIdx;projXIdx = projYIdx;projYIdx = temp;}*/
-		if (projYIdx == projXIdx) projYIdx = 0;
-		
-		CircFrame frame = new CircFrame(frameTitle + " - Circle", dbc2, projXIdx, projYIdx, hasSelf);
-		frame.setSize( new Dimension(MIN_CWIDTH, MIN_CHEIGHT) );
-		frame.setVisible(true);
-		
-		Utilities.setCursorBusy(this, false);
-	}
-	/*****************************************************************/
-	private void showAllDotPlot()	{
-		int nProj = 0;
-		for (Mproject p : selectedProjVec) {
-			if (p.getStatus() != Mproject.STATUS_ON_DISK) {
-				nProj++;
-			}
-		}
-		int[] pids = new int[nProj];
-		int i = 0;
-		for (Mproject p : selectedProjVec) {
-			if (p.getStatus() != Mproject.STATUS_ON_DISK) {
-				pids[i] = p.getID();
-				i++;
-			}
-		}
-		DotPlotFrame frame = new DotPlotFrame(frameTitle + " - Dot Plot", dbc2, pids, null, null, null, true);
-		frame.setSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
-		frame.setVisible(true);
-	}
 	
 	/***********************************************************************
-	 * Database CAS541 change to use DBconn2 instead of DBAbsUser; CAS566 moved mummer_path to SymapManager
-	 **************************************************/
+	**************************************************/
 	private DBconn2 makeDBconn()  { 
 	// Check variables
 		String paramsfile = Globals.MAIN_PARAMS;
 		
-		dbProps = new PropertiesReader(new File(paramsfile)); // already checked in SyMAPmanager; CAS556
+		dbProps = new PropertiesReader(new File(paramsfile)); // already checked in SyMAPmanager
 		
 		String db_server       = dbProps.getProperty("db_server");
 		String db_name         = dbProps.getProperty("db_name");
@@ -1243,17 +1041,17 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				if (Utilities.isEmpty(db_adminpasswd)) ErrorReport.die("No db_adminpasswd defined in " + paramsfile);
 			}
 			
-			if (cpus!=null && maxCPUs<=0) {
+			if (cpus!=null && maxCPU<=0) { // -p takes precedence
 				try {
-					maxCPUs = Integer.parseInt(cpus.trim()); 
+					maxCPU = Integer.parseInt(cpus.trim()); 
 					totalCPUs = Runtime.getRuntime().availableProcessors();
-					System.out.println("Max CPUs " + maxCPUs + " (out of " + totalCPUs + " available)");
+					System.out.println("Max CPUs " + maxCPU + " (out of " + totalCPUs + " available)");
 				}
 				catch (Exception e){ System.err.println("nCPUs: " + cpus + " is not an integer. Ignoring.");}
 			}
 			
 		// Check database exists or create
-			int rc=1; // 0 create, 1 exists CAS559 was documented that checkVariables, but not being done
+			int rc=1; // 0 create, 1 exists 
 	        if (inReadOnlyMode) {
 	        	if (!DBconn2.existDatabase(db_server, db_name, db_clientuser, db_clientpasswd)) 
 		        	ErrorReport.die("*** Database '" + db_name + "' does not exist");
@@ -1275,111 +1073,266 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		return null;
 	}
 	
-	/*******************************************************************************
-	 * load projects for interface
-	 ******************************************************************/
-	private void loadProjectPairsFromDB() {
-	try {
-		pairIdxMap = new HashMap<Integer,Vector<Integer>>();
-		pairObjMap.clear();
-		
-		HashMap <Integer, String> pairs = new HashMap <Integer, String> ();
-		
-		// CAS534 rm " join projects as p1 on p1.idx=pairs.proj1_idx join projects as p2 on p2.idx=pairs.proj2_idx "  +
-        ResultSet rs = dbc2.executeQuery("SELECT idx, proj1_idx, proj2_idx FROM pairs where aligned=1");
-              
-        while (rs.next()) {
-        	int pairIdx =  rs.getInt(1);
-        	int proj1Idx = rs.getInt(2);
-        	int proj2Idx = rs.getInt(3); 
-  
-        	if (!pairIdxMap.containsKey(proj1Idx)) pairIdxMap.put(proj1Idx, new Vector<Integer>() );
-        	pairIdxMap.get(proj1Idx).add(proj2Idx);
-        	
-        	pairs.put(pairIdx, proj1Idx + ":" + proj2Idx);
-        }
-        rs.close();
-        
-        for (int pidx : pairs.keySet()) {
-        	String [] tmp = pairs.get(pidx).split(":");
-        	int proj1Idx = Utilities.getInt(tmp[0]);
-        	int proj2Idx = Utilities.getInt(tmp[1]);
-        	
-        	Mproject mp1=null, mp2=null;
-        	for (Mproject mp : projVec) {
-        		if (mp.getIdx() == proj1Idx) mp1 = mp;
-        		if (mp.getIdx() == proj2Idx) mp2 = mp;
-        	}
-        	if (mp1==null || mp2==null) System.out.println("SYMAP error: no " + pidx + " projects");
-        	else {
-	        	Mpair mp = new Mpair(dbc2, pidx, mp1, mp2, inReadOnlyMode); // reads database
-	        	pairObjMap.put(proj1Idx + ":" + proj2Idx, mp);
-        	}
-        }
-	}catch (Exception e) {ErrorReport.print(e,"Load projects pairs"); }
-	}
-	
-	/*****************************************************************/
-	private void loadPanelProjsFromDB() { 
-	try {
-		projVec.clear();
-		projObjMap.clear();
-		projNameMap.clear();
-		
-        ResultSet rs = dbc2.executeQuery("SELECT idx, name, annotdate FROM projects");
-        while ( rs.next() ) {
-        	int nIdx = rs.getInt(1);
-        	String dbName = rs.getString(2);
-        	String strDate = rs.getString(3);       // CAS513 add
-        	
-    		Mproject mp = new Mproject(dbc2, nIdx, dbName, strDate);
-    		projVec.add(mp);
-        }
-        rs.close();
-        
-        for (Mproject mp : projVec) {
-        	mp.loadParamsFromDB(); 
-        	mp.loadDataFromDB();
-        	projObjMap.put(mp.strDisplayName, mp);
-        	projNameMap.put(mp.strDBName, mp.strDisplayName);
-        }
-	}
-	catch (Exception e) {ErrorReport.print(e,"Load projects"); }
-	}
-	
-	private void loadPanelProjsFromDisk(String strDataPath, String dirName) {
-		File root = new File(strDataPath + dirName); 
-		if (root == null || !root.isDirectory()) return;
-		
-		if (dirName.contentEquals("fpc")) { // CAS520
-			System.err.println("FPC is no longer supported starting with v5.2.0; ignore data/fpc directory");
-			return;
+	/***********************************************************************/
+	private void showChrExp() { 
+		Utilities.setCursorBusy(this, true);
+		try {
+			ChrExpInit symapExp = new ChrExpInit(frameTitle + " - ChrExp", dbc2, selectedProjVec);
+			
+			symapExp.getExpFrame().setVisible(true); 
 		}
-		for (File f : root.listFiles()) {
-			if (f.isDirectory() && !f.getName().startsWith(".")) {
-				Mproject mp;
-				String dbname = f.getName();
-				if (projNameMap.containsKey(dbname))  {
-					String display = projNameMap.get(dbname);
-					mp = projObjMap.get(display);
+		catch (Exception err) {ErrorReport.print(err, "Show SyMAP graphical window");}
+		finally {
+			Utilities.setCursorBusy(this, false);
+		}
+	}
+	/*********************************************************************/
+	private void showQuery() {
+		Utilities.setCursorBusy(this, true);
+		try { 
+			Vector <Mproject> pVec = new Vector <Mproject> ();
+			for (Mproject p : selectedProjVec) if (p.isLoaded()) pVec.add( p );
+			
+			boolean useAlgo2=true; //  used for new "EveryPlus"
+			int cntUsePseudo=0; // Instructions; CAS565
+			int hasSynteny=0;
+			
+			Vector <Mproject> synVec = new Vector <Mproject> (); // Only projects with synteny; CAS567 add
+			for (int i=0; i<pVec.size()-1; i++) {
+				for (int j=i+1; j<pVec.size(); j++) {
+					Mpair mp = getMpair(pVec.get(i).getIdx(), pVec.get(j).getIdx());
+					if (mp.pairIdx<0) continue;
+					
+					if (!mp.isAlgo2(Mpair.DB)) 	  useAlgo2=false;
+					if (mp.isNumPseudo(Mpair.DB)) cntUsePseudo++;
+					hasSynteny++;
+					
+					if (!synVec.contains(pVec.get(i))) synVec.add(pVec.get(i));
+					if (!synVec.contains(pVec.get(j))) synVec.add(pVec.get(j));
 				}
-				else {
-					mp = new Mproject(dbc2, -1, f.getName(), ""); 
-					projVec.add( mp );
-					projObjMap.put(mp.strDisplayName, mp);
-		        	projNameMap.put(mp.strDBName, mp.strDisplayName);
-				}
-				mp.loadParamsFromDisk(f);
+			}
+			QueryFrame qFrame = new QueryFrame(frameTitle, dbc2, synVec, useAlgo2, cntUsePseudo, hasSynteny);
+			qFrame.build();
+			qFrame.setVisible(true);
+		} 
+		catch(Exception e) {ErrorReport.print(e, "Show Query");}
+		finally {
+			Utilities.setCursorBusy(this, false);
+		}
+	}
+	/*****************************************************************/
+	private void showDotplot() { 
+		Utilities.setCursorBusy(this, true);
+		
+		Mproject[] p = getSelectedPair();
+		if (p==null) return;
+		
+		int projXIdx = p[0].getID();
+		int projYIdx = projXIdx; // default to self-alignment
+		if (p.length > 1) projYIdx = p[1].getID();
+		
+		DotPlotFrame frame = new DotPlotFrame(frameTitle+ " - Dot Plot", dbc2, projXIdx, projYIdx);
+		frame.setSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
+		frame.setVisible(true);
+		
+		Utilities.setCursorBusy(this, false);
+	}
+	/*****************************************************************/
+	private void showBlockView()  { 
+		Utilities.setCursorBusy(this, true);
+		
+		Mproject[] p = getSelectedPair();
+		if (p==null) return;
+		
+		Mproject p1=p[0];
+		Mproject p2 = (p.length>1) ? p[1] : p[0];
+		
+		try{
+			BlockViewFrame frame = new BlockViewFrame(frameTitle + " - Block", dbc2, p1.getIdx(), p2.getIdx());
+			frame.setMinimumSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
+			frame.setVisible(true);
+		}
+		catch (Exception e) {ErrorReport.die(e, "Show block view");
+		}
+		
+		Utilities.setCursorBusy(this, false);
+	}
+	/*****************************************************************/
+	private void showSummary(){
+		Utilities.setCursorBusy(this, true);
+		
+		Mproject[] p = getSelectedPair();
+		if (p==null) return;
+		
+		int projXIdx = p[0].getIdx();
+		int projYIdx = (p.length>1) ? p[1].getIdx() : projXIdx; 
+		
+		Mpair mp = getMpair(projXIdx, projYIdx);
+		if (mp==null) return;
+				
+		new SumFrame(frameTitle + " - Summary", dbc2, mp, inReadOnlyMode); // dialog made visible in SumFrame; 
+		
+		Utilities.setCursorBusy(this, false);		
+	}
+	/*****************************************************************/
+	private void showCircleView() { 
+		Utilities.setCursorBusy(this, true);
+		
+		Mproject[] p = getSelectedPair();
+		if (p==null) return;
+		
+		int projXIdx = p[0].getID();
+		int projYIdx = (p.length > 1) ? p[1].getID() : projXIdx; // 2-align : self-align
+		boolean hasSelf = (p[0].hasSelf() || p[1].hasSelf()); // CAS552 add for Self-Align
+		
+		if (projYIdx == projXIdx) projYIdx = 0;
+		
+		CircFrame frame = new CircFrame(frameTitle + " - Circle", dbc2, projXIdx, projYIdx, hasSelf);
+		frame.setSize( new Dimension(MIN_CWIDTH, MIN_CHEIGHT) );
+		frame.setVisible(true);
+		
+		Utilities.setCursorBusy(this, false);
+	}
+	/*****************************************************************/
+	private void showAllDotPlot()	{
+		int nProj = 0;
+		for (Mproject p : selectedProjVec) {
+			if (p.getStatus() != Mproject.STATUS_ON_DISK) {
+				nProj++;
 			}
 		}
+		int[] pids = new int[nProj];
+		int i = 0;
+		for (Mproject p : selectedProjVec) {
+			if (p.getStatus() != Mproject.STATUS_ON_DISK) {
+				pids[i] = p.getID();
+				i++;
+			}
+		}
+		DotPlotFrame frame = new DotPlotFrame(frameTitle + " - Dot Plot", dbc2, pids, null, null, null, true);
+		frame.setSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
+		frame.setVisible(true);
 	}
+	
+	/************* XXX Listeners ********************/
+	private ItemListener checkboxListener = new ItemListener() { // left panel change
+		public void itemStateChanged(ItemEvent e) {
+			ProjectCheckBox cb = (ProjectCheckBox)e.getSource();
+			Mproject p = cb.getProject();
+			boolean changed = false;
+			
+			if ( e.getStateChange() == ItemEvent.SELECTED ) {
+				if ( !selectedProjVec.contains(p) ) selectedProjVec.add(p);
+				cb.setBackground(cellColor); // highlight
+				changed = true;
+			}
+			else if ( e.getStateChange() == ItemEvent.DESELECTED ) {
+				selectedProjVec.remove(p);
+				cb.setBackground(Color.white); // un-highlight
+				changed = true;
+			}
+			
+			if (changed) {
+				sortProjDisplay( selectedProjVec );
+				if (pairTable != null) pairTable.clearSelection();	
+
+				// Note: recreating each time thrashes heap, but probably negligible performance impact
+				if ( selectedProjVec.size() > 0 )
+					splitPane.setRightComponent( createSelectedPanel() ); // regenerate since changed
+				else
+					splitPane.setRightComponent( instructionsPanel );
+			}
+		}
+	};
+	private ActionListener showPairProps = new ActionListener() {
+		public void actionPerformed(ActionEvent arg0) {
+			Mproject[] sel = getSelectedPair();
+		
+			Mpair p = getMpair(sel[0].getIdx(), sel[1].getIdx());
+			if (p!=null) {
+				ppFrame = new PairParams(p);
+				ppFrame.setVisible(true);
+			}
+			else Globals.eprt("SyMAP error: cannot get pair " + sel[0].getIdx() + " " + sel[1].getIdx() );
+		}
+	};
+		
+	private MouseListener doLoadAllProj = new MouseAdapter() {
+		public void mouseClicked(MouseEvent e) {
+			loadAllProjects();
+		}
+	};
+	private MouseListener doLoad = new MouseAdapter() {
+		public void mouseClicked(MouseEvent e) {
+			Mproject mproj = ((ProjectLinkLabel)e.getSource()).getProject();
+			loadProject(mproj);
+		}
+	};
+	private MouseListener doReloadSeq = new MouseAdapter() {
+		public void mouseClicked(MouseEvent e) {
+			Mproject mproj = ((ProjectLinkLabel)e.getSource()).getProject();
+			reloadProject(mproj);		
+		}
+	};
+	private MouseListener doReloadAnnot = new MouseAdapter() {
+		public void mouseClicked(MouseEvent e) {
+			Mproject mproj = ((ProjectLinkLabel)e.getSource()).getProject();
+			reloadAnno(mproj);	
+		}
+	};	
+	
+	private MouseListener doRemove = new MouseAdapter() {
+		public void mouseClicked(MouseEvent e) {
+			Mproject mp = ((ProjectLinkLabel)e.getSource()).getProject();
+			new RemoveProj(getInstance(), buildLogLoad()).removeProjectFromDB(mp);
+			refreshMenu();
+		}
+	};
+	private MouseListener doRemoveDisk = new MouseAdapter() {
+		public void mouseClicked(MouseEvent e) {
+			new RemoveProj(getInstance(), buildLogLoad()).removeProjectFromDisk( ((ProjectLinkLabel)e.getSource()).getProject() );
+			refreshMenu();
+		}
+	};
+	
+	private MouseListener doViewProj = new MouseAdapter() { 
+		public void mouseClicked(MouseEvent e) {
+			Mproject theProject = ((ProjectLinkLabel)e.getSource()).getProject();
+			String info = theProject.loadProjectForView();
+			
+			Utilities.displayInfoMonoSpace(getInstance(), "View " + theProject.getDisplayName(), info, false);	
+		}
+	};
+	
+	private MouseListener doReloadParams = new MouseAdapter() {
+		public void mouseClicked(MouseEvent e) {
+			Mproject mProj = ((ProjectLinkLabel)e.getSource()).getProject();
+			
+			ProjParams propFrame = new ProjParams(getInstance(), mProj, projVec, getCatArr(),
+					true, mProj.hasExistingAlignments());
+			propFrame.setVisible(true);
+			
+			if (propFrame.wasSave()) refreshMenu();		
+		}
+	};
+	private MouseListener doSetParamsNotLoaded = new MouseAdapter() {
+		public void mouseClicked(MouseEvent e) {
+			Mproject mProj = ((ProjectLinkLabel)e.getSource()).getProject();
+			
+			ProjParams propFrame = new ProjParams(getInstance(), mProj, projVec, getCatArr(),
+					false, mProj.hasExistingAlignments());
+			propFrame.setVisible(true);
+			
+			if (propFrame.wasSave()) refreshMenu(); 
+		}		
+	};
 	/*****************************************************************/
 	/***************************************************************
-	 * XXX LoadProj: CAS535 the load was all in listeners; now its in LoadProj via these methods
+	 * XXX LoadProj: 
 	 */
 	private void loadAllProjects() {
 		try {
-			DoLoadProj lpObj = new DoLoadProj(this, dbc2, buildLogLoad());// CAS557 create explicit object
+			DoLoadProj lpObj = new DoLoadProj(this, dbc2, buildLogLoad());
 			lpObj.loadAllProjects(selectedProjVec); 
 			
 			new Version(dbc2).updateReplaceProp();
@@ -1410,11 +1363,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			if (rc==0) return;
 			
 			if (rc==2) {
-				System.out.println("Removing " +  mProj.getDisplayName() + " alignments from disk...."); // CAS541 add
+				System.out.println("Removing " +  mProj.getDisplayName() + " alignments from disk...."); 
 				new RemoveProj().removeAllAlignFromDisk(mProj);
 			}
 		}
-		System.out.println("Removing " +  mProj.getDisplayName() + " from database...."); // CAS541 add
+		System.out.println("Removing " +  mProj.getDisplayName() + " from database...."); 
 		mProj.removeProjectFromDB();
 		
 		DoLoadProj lpObj= new DoLoadProj(this, dbc2, buildLogLoad());
@@ -1430,11 +1383,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	try {
 		String msg = "Reload annotation " + mProj.getDisplayName();
 		
-		if (!Utilities.showConfirm2("Reload annotation", msg +							// CAS560 remove -z geneOnly check
-			"\n\nYou will need to re-run the synteny computations for this project," +  // CAS520 do not remove synteny
-			"\nany existing alignment files will be used.")) return; 					// CAS512 remove MUMmer and BLAT
+		if (!Utilities.showConfirm2("Reload annotation", msg +							
+			"\n\nYou will need to re-run the synteny computations for this project," +  
+			"\nany existing alignment files will be used.")) return; 					
 		
-		System.out.println("Removing " +  mProj.getDisplayName() + " annotation from database...."); // CAS541 add
+		System.out.println("Removing " +  mProj.getDisplayName() + " annotation from database...."); 
 		mProj.removeAnnoFromDB();
 		
 		DoLoadProj lpObj= new DoLoadProj(this, dbc2, buildLogLoad());
@@ -1446,9 +1399,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	catch (Exception e) {ErrorReport.print(e, "reload project");}
 	}
 	/***************************************************
-	 * Align all pairs; CAS556 this is disabled, it is not working and does not seem worth it....
+	 * Align all pairs;
 	 */
-	private void alignAllPairs() { //All Pairs is selected; CAS506 added checkPairs logic
+	private void alignAllPairs() { 
 		Cancelled.init();
 		if (pairTable == null) return;
 		
@@ -1480,7 +1433,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 					Mproject[] ordered = orderProjName(p1,p2);
 					p1 = ordered[0]; p2 = ordered[1];
 					if (p1.getIdx() != p2.getIdx()) {
-						if (alignCheckOrderAgainst(p1, p2)) { // CAS506 
+						if (alignCheckOrderAgainst(p1, p2)) { 
 							Mpair mp = getMpair(p1.getIdx(), p2.getIdx());
 							if (mp!=null) todoList.add(mp);
 						}
@@ -1498,9 +1451,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		// Confirm
 		String msg = "Align&Synteny for " + todoList.size() + " pairs";
-		if (Constants.VERBOSE) msg += "\nVerbose mode: on"; else msg += "\nVerbose mode: off";
+		msg += "\nCPUs " + maxCPU + ";  ";						// CAS567 add CPU
+		if (Constants.VERBOSE) msg += "Verbose on;  "; else msg += "Verbose off;  ";
 		
-		if (!Utilities.showConfirm2("All Pairs", msg)) return; // CAS543 add check
+		if (!Utilities.showConfirm2("All Pairs", msg)) return; 
 		
 	/*-------- Alignment, Clustering, Synteny -----------------*/
 		System.out.println("\n>>> Start all pairs: processing " + todoList.size() + " project pairs");
@@ -1511,7 +1465,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			if (bRenew) mp.renewIdx(); // Removed existing and reset DB indices 
 			
 			// Open/close new dbc2 for each thread of align
-			new DoAlignSynPair().run(this, dbc2, mp, true,  maxCPUs, checkCat.isSelected());
+			new DoAlignSynPair().run(this, dbc2, mp, true,  maxCPUs);
 		}
 		new Version(dbc2).updateReplaceProp();
 		System.out.println("All Pairs complete. ");
@@ -1520,18 +1474,18 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	 * Align selected pair
 	 */
 	private void alignSelectedPair( ) {
-		Mproject[] mProjs = getSetSelectedPair();
+		Mproject[] mProjs = getSelectedPair();
 		if (mProjs==null) return;
 		
 		int nCPU = getCPUs();
 		if (nCPU == -1) nCPU=1;;
-		if (!alignCheckProjDir()) return;
-		
+		if (!alignCheckProjDir()) return; // error written in calling routine
+	
 		Mpair mp = getMpair(mProjs[0].getIdx(), mProjs[1].getIdx());
 		if (mp==null) return;
 		
 		if (!alignCheckOrderAgainst(mProjs[0], mProjs[1])) return; 
-		
+			
 		Mproject[] ordP    = orderProjName(mProjs[0],mProjs[1]); // order indices according to DB pairs table
 		String resultDir   = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
 		
@@ -1545,15 +1499,15 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			
 			if (!Utilities.showConfirm2("Selected Pair", msg)) return;
 			
-			new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
+			new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU);
 			new Version(dbc2).updateReplaceProp();
 			return;
 		}
 		
 		// Compose confirm popup
 		boolean bAlignDone = Utils.checkDoneFile(resultDir);
-		String msg =  bAlignDone ? "Synteny for " : "Align&Synteny for "; // CAS544 be specific
-		if (mProjs[0].getDisplayName().equals(mProjs[1].getDisplayName())) { // CAS546 add
+		String msg =  bAlignDone ? "Synteny for " : "Align&Synteny for "; 
+		if (mProjs[0].getDisplayName().equals(mProjs[1].getDisplayName())) { 
 			msg += mProjs[0].getDisplayName() + " to itself";
 			if (mp.isAlgo2(Mpair.FILE)) {
 				util.Utilities.showInfoMessage("Cluster Algo", msg +"\nYou must select Algorithm 1 from Parameters");
@@ -1562,22 +1516,33 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		else msg += mProjs[0].getDisplayName() + " and " + mProjs[1].getDisplayName();
 		
-		String chgMsg = bAlignDone ? mp.getChangedSynteny() : mp.getChangedParams(Mpair.FILE);  // CAS546 add params
+		String chgMsg = bAlignDone ? mp.getChangedSynteny() : mp.getChangedParams(Mpair.FILE);  
 		if (chgMsg!="") msg += "\n" + chgMsg;
-		if (Constants.VERBOSE) msg += "\nVerbose mode: on"; // CAS561
-		else msg += "\nVerbose mode: off";
+		msg += "\nCPUs " + maxCPU + ";  ";						// CAS567 add CPU
+		if (Constants.VERBOSE) msg += "Verbose on"; else msg += "Verbose off";
 		
 		if (!Utilities.showConfirm2("Selected Pair", msg)) return;
 		System.out.println("\n>>> " + msg); 
 		
 	/*--- Do Alignment, Clustering, Synteny (alignments will not happen if exists) ----*/
-		mp.renewIdx(); 						// Remove existing and restart (not for special cases)
+		mp.renewIdx(); 						// Remove existing and restart, sets projIdx
 		
-		new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU, checkCat.isSelected());
+		new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU);
 		
 		new Version(dbc2).updateReplaceProp();
 	}
-	// Create directories if alignment is initiated; CAS511  add
+
+	private int getCPUs() {
+		int maxCPUs = 1;
+		try { maxCPUs = Integer.parseInt(txtCPUs.getText());}
+		catch (Exception e) {
+			Utilities.showErrorMessage("Please enter a valid value for number of CPUs to use.");
+			return -1;
+		}
+		if (maxCPUs <= 0) maxCPUs = 1;
+		return maxCPUs;
+	}
+	// Create directories if alignment is initiated; 
 	// An alignment may be in the database, yet no /data directory. The files will be rewritten, so the directories are needed.
 	private boolean alignCheckProjDir() { 
 		try {
@@ -1589,14 +1554,14 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		catch (Exception e){return false;}
 	}
-	 // Checks before starting order against project; CAS506 add
+	 // Checks before starting order against project; 
 	private boolean alignCheckOrderAgainst(Mproject mProj1, Mproject mProj2) {
 		String n1, n2, o;
 		
 		String o1 = mProj1.getOrderAgainst();
 		String o2 = mProj2.getOrderAgainst();
 		
-		if (o1==null || o2==null) return true; // CAS506 got null on linux
+		if (o1==null || o2==null) return true; // null on linux
 		if (o1.equals("") && o2.equals("")) return true;
 		
 		if (!o1.equals("") && !o2.equals("")) {
@@ -1623,10 +1588,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			File   ordDir = new File(ordDirName);
 	
 			if (ordDir.exists()) {
-				String msg = "Directory exists: " + ordDirName  + "\nIt will be over-written.\n"; // CAS557 include seq/
+				String msg = "Directory exists: " + ordDirName  + "\nIt will be over-written.\n"; 
 				if (!Utilities.showContinue("Order against", msg)) return false;
 			}	
-			
 			return true;
 		}
 		catch (Exception e) {ErrorReport.print(e, "Checking order against"); return false;}
@@ -1641,23 +1605,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
     	String dir = DATA_PATH + Constants.seqType + "/" + name;
 		Utilities.checkCreateDir(dir, true);
     }
-    /***********************************************************************/
-    private void dumpPairs() {
-    	if (TRACE) return;
-    	System.out.println("Pairs: " + pairObjMap.size());
-    	for (String key : pairObjMap.keySet()) {
-    		Mpair mp = pairObjMap.get(key);
-    		System.out.format("key %-5s idx %d p1 %-10s %d p2 %-10s %d\n", 
-    				key, mp.getPairIdx(), 
-    				mp.getProj1().getDBName(), mp.getProj1Idx(), 
-    				mp.getProj2().getDBName(), mp.getProj2Idx());
-    	}
-    	System.out.println("Projects: " + projObjMap.size());
-    	for (String key : projObjMap.keySet()) {
-    		Mproject mp = projObjMap.get(key);
-    		System.out.format("proj %-10s %d \n", mp.getDBName(), mp.getIdx());
-    	}
-    }
+   
 	/**************************************************************************/
 // *** Begin table customizations ******************************************
 	public void autofitColumns(JTable tbl) {
@@ -1690,7 +1638,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
         }
     }
 	private class MyTable extends JTable {
-		public MyTable(Vector <Vector<String>> rowData, Vector <String>columnNames) { // CAS534 add type
+		public MyTable(Vector <Vector<String>> rowData, Vector <String>columnNames) { 
 			super(rowData, columnNames);
 		}
 		
@@ -1731,7 +1679,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				setBackground( UIManager.getColor("TableHeader.background") );
 			}
 			else if (column > row + 1) {
-				// CAS42 1/7/18 can't tell this from white setBackground(new Color(245,245,245));
 				setBackground(new Color(217,217,217));
 			}
 			else if (!isSelected)
@@ -1779,7 +1726,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 						dispose();
 				}
 			});
-			btnAdd.setEnabled(true); // CAS505 was not turning to true on Linux, so check valid on Add
+			btnAdd.setEnabled(true); 
 			
 			btnCancel = new JButton("Cancel");
 			btnCancel.setBackground(Color.WHITE);
@@ -1848,7 +1795,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				Utilities.showErrorMessage("Name must be characters, numbers or underscore");
 				return false;
 			}
-			// CAS511 check/create directories here if Add Project
 			String strDataPath = DATA_PATH;
 			Utilities.checkCreateDir(strDataPath, true);
 			Utilities.checkCreateDir(Constants.seqDataDir, true /* bPrt */); 
@@ -1890,4 +1836,3 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		public Mproject getProject() { return project; }
 	}
 }
-

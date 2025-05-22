@@ -13,8 +13,8 @@ import java.io.File;
  * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.6.6"; 
-	public static final String 	DATE = " (6-May-25)";
+	public static final String 	VERSION = "v5.6.7"; 
+	public static final String 	DATE = " (22-May-25)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER = 7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
@@ -96,6 +96,7 @@ public class Globals {
 	}
     
     // outputs
+    public static String bToStr(boolean b) {return (b) ? "T" : "F";}
     public static void prt(String msg)  {System.out.println(msg);} // permanent message
     public static void prtStdErr(String msg)  {System.err.println(msg);} // permanent message; CAS566
     public static void xprt(String msg) {System.out.println(msg);} // temp message

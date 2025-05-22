@@ -15,6 +15,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -25,6 +26,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JSlider;
+import javax.swing.JTextField;
 import javax.swing.JRadioButton;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
@@ -32,15 +34,14 @@ import javax.swing.JSeparator;
 import symap.drawingpanel.DrawingPanel;
 import util.Jcomp;
 import util.Jhtml;
+import util.Utilities;
 
 /**
  * Hit Filter Interface: The Mapper filter dialog implementation.
- * CAS520 remove all FPC stuff; fix bugs; rewrite to add collinear, highlights, and allow multiple shows
  * 1. Add filter here
  * 2. Add to HfilterData
  * 3. Add to SeqHits.isHighLightHit() and isFiltered()
- * CAS541 MapperFilter=>Hfilter; CAS542 replace abstract filter with in file methods
- * CAS560 Remove popup/filter Show All Hits; add and/or/yes/no for block
+ * CAS567 Add all and Blocks Only []
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Hfilter extends JDialog {
@@ -50,7 +51,7 @@ public class Hfilter extends JDialog {
 	private final String HIT1 = "Hit =1 gene";
 	private final String HIT0 = "Hit =0 genes";
 	private final String ALL =  "All hits";
-	private final String POPUP ="Hit popup (or Query)";	//CAS555 query; CAS543 stay selected when the hitwire gets a popup
+	private final String POPUP ="Hit popup (or Query)";	
 	private final String NONE = "None";
 	
 	// On Menu panel
@@ -66,31 +67,35 @@ public class Hfilter extends JDialog {
 	private JRadioButton hGene1Radio 	= new JRadioButton(HIT1);
 	private JRadioButton hGene0Radio	= new JRadioButton(HIT0); 
 	private JRadioButton hNoneRadio		= new JRadioButton(NONE);
-	private JCheckBox 	 hPopupCheck	= new JCheckBox(POPUP); // CAS545 change from Radio
+	private JCheckBox 	 hPopupCheck	= new JCheckBox(POPUP);
 	
 	// Show - any number can be selected
-	private JCheckBox sBlockCheck		= new JCheckBox(SYN);
-	private JRadioButton blockAndRadio	= new JRadioButton("And");
-	private JRadioButton blockOrRadio	= new JRadioButton("Or");
+	private JCheckBox sBlockCheck		= Jcomp.createCheckBoxGray(SYN, "Show all synteny hits");
+	private JRadioButton blockAndRadio	= Jcomp.createRadioGray("And", "Hits shown must pass all checks");
+	private JRadioButton blockOrRadio	= Jcomp.createRadioGray("Or", "Hits shown must pass any checks");
 	
-	private JCheckBox sCsetCheck		= new JCheckBox(COL);
-	private JCheckBox sGene2Check		= new JCheckBox(HIT2);
-	private JCheckBox sGene1Check		= new JCheckBox(HIT1);
-	private JCheckBox sGene0Check		= new JCheckBox(HIT0);
+	private JCheckBox sCsetCheck	= Jcomp.createCheckBoxGray(COL, "Show all collinear sets");
+	private JCheckBox sGene2Check	= Jcomp.createCheckBoxGray(HIT2, "Show all hits aligning to genes on both sides");
+	private JCheckBox sGene1Check	= Jcomp.createCheckBoxGray(HIT1, "Show all hits aligning to genes on one sides");
+	private JCheckBox sGene0Check	= Jcomp.createCheckBoxGray(HIT0, "Show all hits that do not align to any gene");
+	private JCheckBox sAllCheck		= Jcomp.createCheckBoxGray(ALL, "Show all hits - overrides all but identity"); // CAS567 add
 	
 	// Id
 	private JSlider pctidSlider  = new JSlider(JSlider.HORIZONTAL, 0, 100, 0); // 0 to 100, start at 0
 	private JLabel  pctidText    = new JLabel("0%");
 	
+	private JCheckBox  blockOnlyCheck = Jcomp.createCheckBoxGray("Block #", "Only show this block's hits");  // CAS567 add
+	private JTextField blockOnlyText = Jcomp.createTextField("0", "Block number, hit return for immediate effect", 2);
+	
 // On popup menu
 	private JRadioButtonMenuItem hBlockPopRadio	= new JRadioButtonMenuItem(SYN);
-	private JRadioButtonMenuItem hCsetPopRadio	= new JRadioButtonMenuItem(COL);// CAS520 add
+	private JRadioButtonMenuItem hCsetPopRadio	= new JRadioButtonMenuItem(COL);
 	private JRadioButtonMenuItem hGene2PopRadio = new JRadioButtonMenuItem(HIT2);
 	private JRadioButtonMenuItem hGene1PopRadio	= new JRadioButtonMenuItem(HIT1);
 	private JRadioButtonMenuItem hGene0PopRadio	= new JRadioButtonMenuItem(HIT0);
 	private JRadioButtonMenuItem hNonePopRadio	= new JRadioButtonMenuItem(NONE);
 	private JCheckBoxMenuItem    hPopupPopCheck	= new JCheckBoxMenuItem(POPUP);
-	private JCheckBoxMenuItem    sAllPopCheck   = new JCheckBoxMenuItem(ALL);
+	private JCheckBoxMenuItem    sAllPopCheck   = new JCheckBoxMenuItem("Show " + ALL); // CAS567 add show
 	
 	private Mapper mapper;
 	private HfilterData hitFiltData;    // current settings
@@ -134,16 +139,17 @@ public class Hfilter extends JDialog {
 		buttonPanel.add(innerPanel,BorderLayout.CENTER);
 		
 		// Slider
-		JPanel sliderPanel = new JPanel(new BorderLayout());
-		sliderPanel.add(new JSeparator(),BorderLayout.NORTH);
-		JPanel slider = new JPanel();
-		slider.add(new JLabel("  Identity   "));
-		slider.add(pctidText);
-		slider.add(pctidSlider);
-		sliderPanel.add(slider,BorderLayout.WEST);
+		JPanel sliderRow = Jcomp.createGrayRowPanel();
+		sliderRow.add(new JLabel("  Identity   ")); // want gray background
+		sliderRow.add(pctidText); sliderRow.add(pctidSlider);
 		pctidSlider.addChangeListener(listener); 
 		
-		// Check boxes
+		JPanel rowOnly = Jcomp.createGrayRowPanel();// CAS567 add
+		blockOnlyCheck.addActionListener(listener); 
+		blockOnlyText.addActionListener(listener); 
+		rowOnly.add(blockOnlyCheck); rowOnly.add(Box.createHorizontalStrut(2)); rowOnly.add(blockOnlyText);
+		
+		// Check boxes for menu
 		sBlockCheck.addActionListener(listener); 
 		blockAndRadio.addActionListener(listener);
 		blockOrRadio.addActionListener(listener);
@@ -155,6 +161,7 @@ public class Hfilter extends JDialog {
 		sGene2Check.addActionListener(listener);
 		sGene1Check.addActionListener(listener);
 		sGene0Check.addActionListener(listener);
+		sAllCheck.addActionListener(listener);	// CAS567 add
 		
 		hBlockRadio.addActionListener(listener);
 		hCsetRadio.addActionListener(listener);
@@ -192,7 +199,6 @@ public class Hfilter extends JDialog {
 		
 		addToGrid(contentPane, gridbag, c1, hGene1Radio, 1); 
 		addToGrid(contentPane, gridbag, c1, hGene0Radio, rem); 
-	
 		
 		addToGrid(contentPane, gridbag, c1, hPopupCheck, rem);
 		addToGrid(contentPane, gridbag, c1, new JSeparator(),rem);
@@ -209,8 +215,14 @@ public class Hfilter extends JDialog {
 		addToGrid(contentPane, gridbag, c1, sGene1Check,1); 
 		addToGrid(contentPane, gridbag, c1, sGene0Check, rem);
 		
-		// %id
-		addToGrid(contentPane, gridbag, c1, sliderPanel,rem);
+		addToGrid(contentPane, gridbag, c1, sAllCheck, rem); // CAS567 add
+		
+		// %id & block#
+		addToGrid(contentPane, gridbag, c1, new JSeparator(),rem);
+		addToGrid(contentPane, gridbag, c1, sliderRow,rem);
+		
+		addToGrid(contentPane, gridbag, c1, rowOnly, 1); // CAS567 add
+		addToGrid(contentPane, gridbag, c1, new JLabel(""), rem); // only way to force to right
 		
 		// buttons
 		addToGrid(contentPane, gridbag, c1, buttonPanel,rem);
@@ -218,7 +230,7 @@ public class Hfilter extends JDialog {
 		setBackground(Color.white);
 		pack();
 		setResizable(false);
-		setLocationRelativeTo(null); // CAS520
+		setLocationRelativeTo(null); 
 	}
 	private void addToGrid(Container cp, GridBagLayout layout, GridBagConstraints con, Component comp, int w) {
 		con.gridwidth = w;
@@ -250,6 +262,9 @@ public class Hfilter extends JDialog {
 		hNonePopRadio.setSelected(true);
 		
 		popupMenu.add(new JSeparator());
+		popupMenu.add(sAllPopCheck);		// CAS567 add
+		
+		popupMenu.add(new JSeparator());
 		popupMenu.add(hPopupPopCheck);
 		
 		hBlockPopRadio.addActionListener(listener);
@@ -260,13 +275,13 @@ public class Hfilter extends JDialog {
 		hNonePopRadio.addActionListener(listener);
 		
 		hPopupPopCheck.addActionListener(listener);
-		sAllPopCheck.addActionListener(listener);
+		sAllPopCheck.addActionListener(listener);		// CAS567 add
 		
 		popupMenu.setMaximumSize(popupMenu.getPreferredSize()); popupMenu.setMinimumSize(popupMenu.getPreferredSize());
 	}
 	// Creates panel
 	public void showHitFilter() {
-		setInit(hitFiltData); // CAS542 fixed display bug; must be before setSliderMaxMin; may have changed since Hfilter created
+		setInit(hitFiltData); // must be before setSliderMaxMin; may have changed since Hfilter created
 		setSliderMaxMin();
 		lastHitFiltData = hitFiltData.copy("Hfilter showX");
 		
@@ -295,7 +310,7 @@ public class Hfilter extends JDialog {
 	private void refresh() {
 		if (hitFiltData.setChanged(getCopyHitFilter(), "Hfilter refresh")) {
 			mapper.setTrackBuild();
-			drawingPanel.setReplaceHistory(); // CAS552 changed from UpdateHistory
+			drawingPanel.setReplaceHistory(); 
 			drawingPanel.smake("Hf: refresh");
 			mapper.update();
 		}
@@ -303,7 +318,6 @@ public class Hfilter extends JDialog {
 	
 	/*****************************************
 	 * set current filter values like the input filter; Cancel, Defaults and save lastHitFilter
-	 * CAS520 rewrote because previous not working; FPC removed
 	 */
 	private void setInit(HfilterData hf) {	
 		pctidSlider.setValue(getSliderPctid(hf.getPctid()));
@@ -312,11 +326,14 @@ public class Hfilter extends JDialog {
 		sBlockCheck.setSelected(hf.isBlock());
 		blockAndRadio.setSelected(hf.isBlockAnd());
 		blockOrRadio.setSelected(hf.isBlockOr());
+		blockOnlyCheck.setSelected(hf.isBlockOnly());// CAS567 add
+		blockOnlyText.setText(hf.getBlock()+"");
 		
 		sCsetCheck.setSelected(hf.isCset());
 		sGene2Check.setSelected(hf.is2Gene());
 		sGene1Check.setSelected(hf.is1Gene());
 		sGene0Check.setSelected(hf.is0Gene());
+		sAllCheck.setSelected(hf.isAll()); // CAS567 add
 		
 		hBlockRadio.setSelected(hf.isHiBlock());
 		hCsetRadio.setSelected(hf.isHiCset());
@@ -324,7 +341,7 @@ public class Hfilter extends JDialog {
 		hGene1Radio.setSelected(hf.isHi1Gene());
 		hGene0Radio.setSelected(hf.isHi0Gene());
 		hNoneRadio.setSelected(hf.isHiNone());
-		hPopupCheck.setSelected(hf.isHiPopup()); // CAS544 had wrong init
+		hPopupCheck.setSelected(hf.isHiPopup()); 
 	}
 
 	private HfilterData getCopyHitFilter() { // ok and refresh
@@ -341,11 +358,17 @@ public class Hfilter extends JDialog {
 		hf.setBlock(sBlockCheck.isSelected());
 		hf.setBlockAnd(blockAndRadio.isSelected());
 		hf.setBlockOr(blockOrRadio.isSelected());
+		hf.setBlockOnly(blockOnlyCheck.isSelected()); // CAS567 add
+		int n = Utilities.getInt(blockOnlyText.getText());
+		if (n==-1) n=0;
+		hf.setBlockNum(n);
 		
 		hf.setCset(sCsetCheck.isSelected());
 		hf.set2Gene(sGene2Check.isSelected());
 		hf.set1Gene(sGene1Check.isSelected());
 		hf.set0Gene(sGene0Check.isSelected()); 
+		
+		hf.setAll(sAllCheck.isSelected()); 	// CAS567 add
 		
 		hf.setPctid(getPctid(pctidSlider.getValue()));
 		
@@ -374,14 +397,20 @@ public class Hfilter extends JDialog {
 			}
 			else if (src == defaultButton) {
 				setDefault();
-			}								// set filter with popup value
+			}
+			else if (src == blockOnlyText) {
+				int n = Utilities.getInt(blockOnlyText.getText());
+				if (n>1) blockOnlyCheck.setSelected(true);
+			}
+			// set filter with popup value
 			else if (src == hBlockPopRadio) hBlockRadio.setSelected(hBlockPopRadio.isSelected());
-			else if (src == hCsetPopRadio) 	hCsetRadio.setSelected(hCsetPopRadio.isSelected()); // CAS520 add
+			else if (src == hCsetPopRadio) 	hCsetRadio.setSelected(hCsetPopRadio.isSelected()); 
 			else if (src == hGene2PopRadio)	hGene2Radio.setSelected(hGene2PopRadio.isSelected());
 			else if (src == hGene1PopRadio)	hGene1Radio.setSelected(hGene1PopRadio.isSelected());
 			else if (src == hGene0PopRadio)	hGene0Radio.setSelected(hGene0PopRadio.isSelected());
 			else if (src == hNonePopRadio)	hNoneRadio.setSelected(hNonePopRadio.isSelected());
 			else if (src == hPopupPopCheck)	hPopupCheck.setSelected(hPopupPopCheck.isSelected()); 
+			else if (src == sAllPopCheck)	sAllCheck.setSelected(sAllPopCheck.isSelected()); // CAS567 add
  			refresh();
 		}
 		
@@ -410,15 +439,16 @@ public class Hfilter extends JDialog {
 		public void popupMenuWillBecomeInvisible(PopupMenuEvent popupMenuEvent) {}
 
 		public void popupMenuWillBecomeVisible(PopupMenuEvent event) { 
-			setInit(hitFiltData); // CAS542 fixed DotPlot to 2D bug; may have changed since Hfilter created
+			setInit(hitFiltData); 
 			
 			hBlockPopRadio.setSelected(hitFiltData.isHiBlock());
-			hCsetPopRadio.setSelected(hitFiltData.isHiCset());// CAS520 add
+			hCsetPopRadio.setSelected(hitFiltData.isHiCset());
 			hGene2PopRadio.setSelected(hitFiltData.isHi2Gene());
 			hGene1PopRadio.setSelected(hitFiltData.isHi1Gene());
 			hGene0PopRadio.setSelected(hitFiltData.isHi0Gene());
 			hNonePopRadio.setSelected(hitFiltData.isHiNone());
 			hPopupPopCheck.setSelected(hitFiltData.isHiPopup());
+			sAllPopCheck.setSelected(hitFiltData.isAll());		// CAS567 add
 		}
 	} // end popup listener
 	private int     getSliderPctid(double pctid) 	{return (int)Math.round(pctid);}

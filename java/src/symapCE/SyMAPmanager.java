@@ -94,8 +94,8 @@ public class SyMAPmanager extends ManagerFrame {
 		if (startsWithOption(args, "-p")) { // #CPU; CAS500
 			String x = getCommandLineOption(args, "-p"); 
 			try {
-				maxCPUs = Integer.parseInt(x);
-				System.out.println("-p  Max CPUs " + maxCPUs);
+				maxCPU = Integer.parseInt(x);	
+				System.out.println("-p  Max CPUs " + x);
 			}
 			catch (Exception e){ System.err.println(x + " is not an integer. Ignoring.");}
 		}
@@ -122,10 +122,9 @@ public class SyMAPmanager extends ManagerFrame {
 			Globals.bRedoSum = true;
 		}
 		// A&S
-		if (equalOption(args, "-v")) {// verbose A&S output; CAS561 new option
-			Constants.VERBOSE = true; 
-			if (equalOption(args, "-r")) System.out.println("Warning: -v  Use flag '-sql' to check MySQL settings ");
-			else                         System.out.println("-v A&S verbose output");
+		if (equalOption(args, "-v")) {// also on ManagerFrame; verbose A&S output; CAS561 new option
+			Constants.VERBOSE = true;		
+			System.out.println("-v A&S verbose output");
 		}
 		if (equalOption(args, "-mum")) { // CAS559 add (remove obsolete -oo for old ordering of groups)
 			System.out.println("-mum  Do not remove any mummer result files");
@@ -135,6 +134,7 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("-wsp  Print g2 hits where the hit strands differ from the genes (Algo2)");
 			Constants.WRONG_STRAND_PRT = true;
 		}
+		
 		if (equalOption(args, "-pseudo")) { // CAS565 Apr25
 			System.out.println("-pseudo  On A&S, ONLY compute pseudo (v5.6.5 or later)");
 			Constants.PSEUDO_ONLY = true;
@@ -162,21 +162,22 @@ public class SyMAPmanager extends ManagerFrame {
 			Constants.PRT_STATS = true; // CAS560; got rid of the command line -s except for summary
 		}
 		if (equalOption(args, "-dd")) {
-			System.out.println("-dd Debug (developer only)");// CAS533 changed to -dd, potential errors
+			System.out.println("-dd Debug (developer only)");
 			Globals.DEBUG = true;
 		}
 		if (equalOption(args, "-dbd")) {
 			System.out.println("-dbd Database (developer only)");
 			Globals.DBDEBUG = true;
 		}
-		// old tests - not shown in -h help
-		if (equalOption(args, "-aa")) { // CAS531 change
-			System.out.println("-aa Align largest project to smallest");
-			lgProj1st = true;
+		
+		// experimental synteny tests - not shown in -h help; -brm is above
+		if (equalOption(args, "-bf")) {  // CAS567 experiment
+			System.out.println("-bf Tidy up blocks");
+			backend.synteny.SyntenyMain.bTrim = true;
 		}
-		if (equalOption(args, "-bb")) { // CAS533 change; orig used midpoints
-			System.out.println("-bb Original block coordinates");
-			Constants.NEW_BLOCK_COORDS = false;
+		if (equalOption(args, "-bt")) {  
+			System.out.println("-bt Synteny trace");
+			backend.synteny.SyntenyMain.bTrace = true;
 		}
 	}
 	

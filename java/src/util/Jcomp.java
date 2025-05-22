@@ -8,6 +8,7 @@ import java.awt.Insets;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
 //import javax.swing.ImageIcon;
@@ -75,6 +76,21 @@ public class Jcomp {
 
 		return row;
 	}
+	static public Component createHorizPanel( Component[] comps, int gapWidth ) {//CAS567 moved from ManagerFrame
+		JPanel panel = new JPanel();
+		panel.setLayout( new BoxLayout ( panel, BoxLayout.X_AXIS ) );
+		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		
+		for (Component c : comps) {
+			if (c != null) {
+				panel.add( c );
+				if (gapWidth > 0)panel.add( Box.createHorizontalStrut(gapWidth) );
+			}
+		}
+		panel.add( Box.createHorizontalGlue() );
+		
+		return panel;
+	}
 	// This centers the row
 	// buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 	/*
@@ -119,7 +135,7 @@ public class Jcomp {
 		return tmp;
 	}
 	static public JLabel createHtmlLabel(String text) {
-		String html = "<html><b><i>" + text + "</i></b></html";
+		String html = "<html><b><i>" + text + "</i></b></html>";
 		JLabel l = new JLabel(html);
 		return l;
 	}
@@ -335,6 +351,13 @@ public class Jcomp {
 		return jbutton;
 	}
 	//////////////////////////////////////////////
+	static public JCheckBox createCheckBoxGray(String label, String tip) {
+		JCheckBox box = new JCheckBox(label);
+		box.setToolTipText(tip);
+		box.setMinimumSize(box.getPreferredSize());
+		box.setMaximumSize(box.getPreferredSize());
+		return box;
+	}
 	static public JCheckBox createCheckBox(String label, String tip, boolean def) {
 		JCheckBox box = new JCheckBox(label, def);
 		box.setToolTipText(tip);
@@ -349,6 +372,14 @@ public class Jcomp {
 		box.setMinimumSize(box.getPreferredSize());
 		box.setMaximumSize(box.getPreferredSize());
 		return box;
+	}
+	public static JRadioButton createRadioGray(String label, String tip) {
+		JRadioButton button = new JRadioButton(label); 
+		button.setToolTipText(tip);
+		button.setMargin(new Insets(0,0,0,0));
+		button.setMinimumSize(button.getPreferredSize());
+		button.setMaximumSize(button.getPreferredSize());
+		return button;
 	}
 	public static JRadioButton createRadio(String label, String tip) {
 		JRadioButton button = new JRadioButton(label); button.setBackground(Color.white);

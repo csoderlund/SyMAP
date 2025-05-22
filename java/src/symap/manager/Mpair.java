@@ -15,7 +15,7 @@ import util.ErrorReport;
 import util.Utilities;
 
 /*********************************************************
- * CAS534 pairs stuff is all over the place; this is only used in backend, but will extend...
+ * this is mainly used in backend
  * 1. created when enter the selectedPairTable in ManagerFrame
  * 2. if new, create directory and params file; else read params file
  * 3. if previously A&S, read pair_props
@@ -23,7 +23,7 @@ import util.Utilities;
  * 5. AlignProj  save - save all to db
  * 6. Show file params on PairParams
  * 7. Show db params on Summary
- * CAS546 add Algo2 params; CAS555 improved output; CAS565 add Number Pseudo
+ * CAS546 add Algo2 params; CAS565 add Number Pseudo; CAS567 add Concat, Orient and reorder
  */
 public class Mpair {
 	public static final int FILE = 0;
@@ -32,7 +32,8 @@ public class Mpair {
 	private static final String algo2 = "Cluster Algo2 (exon-intron)";
 	
 	public Mproject mProj1, mProj2;
-	private int pairIdx=-1, proj1Idx=-1, proj2Idx=-1;
+	protected int pairIdx=-1; 		// accessed in ManagerFrame; CAS567	
+	private int proj1Idx=-1, proj2Idx=-1;
 	private DBconn2 dbc2;
 	private String syVer="";
 	
@@ -41,43 +42,43 @@ public class Mpair {
 	private HashMap <String, String> dbMap = new HashMap <String, String> ();
 	private HashMap <String, String> defMap = new HashMap <String, String> ();
 	
+	// These must be in same order as PairParam arrays; the order isn't needed anywhere else in this file
 	private static final String [] paramKey = { // repeated in PairParams and below
-			"mindots", "topn", "merge_blocks", 
-			"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
-			"number_pseudo",
-			"algo1", "algo2",
-			"g0_scale", "gene_scale", "exon_scale",	"len_scale",	// CAS560 was gintron and gexon, add len
+			"mindots", "merge_blocks", "same_orient",
+			"concat", "nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
+			"number_pseudo","algo1", "algo2",
+			"topn", 
+			"g0_scale", "gene_scale", "exon_scale",	"len_scale",	
 			"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
 	};
-	private static final String [] paramDef = {
-			"7", "2", "0", 
-			"", "", "", "0", "0",
-			"0",					// number pseudo
-			"1", "0",				// 1st is algo1, 2nd is algo2
-			"1.0", "1.0", "1.0", "1.0",	// G0_Len, gene, exon, Len	CAS560 changed to double
-			"1", "1", "1", "0", "0"	// EE, EI, En, II, In CAS548 change EI and En to 1
-			};
+	private static final String [] paramDef = { // defMap value
+			"7", "0", "0", 			    // synteny
+			"1", "", "", "", "0", "0",	// mummer
+			"0",					    // cluster, number pseudo
+			"1", "0",				    // 1st is algo1, 2nd is algo2
+			"2", 					    // topn
+			"1.0", "1.0", "1.0", "1.0",	// G0_Len, gene, exon, Len	
+			"1", "1", "1", "0", "0"	    // EE, EI, En, II, In 
+	};
 	
-	public Mpair (DBconn2 dbc2, int pairIdx, Mproject p1, Mproject p2, boolean isReadOnly) {
+	public Mpair(DBconn2 dbc2, int pairIdx, Mproject p1, Mproject p2, boolean isReadOnly) {
 		this.dbc2 = dbc2;
-		this.mProj1 = p1;
+		this.mProj1 = p1;		// order is based on pairs table, or either can come first
 		this.mProj2 = p2;
 		this.pairIdx = pairIdx;
-		
+	
 		proj1Idx=mProj1.getIdx();
 		proj2Idx=mProj2.getIdx();
 		resultDir = "./" + Constants.getNameResultsDir(p1.strDBName, p2.strDBName);
 		
 		makeParams();
-		if (!isReadOnly)  loadFromFile();
-		if (pairIdx!= -1) loadFromDB();
+		if (!isReadOnly)  loadFromFile(); // loads into FileMap
+		if (pairIdx!= -1) loadFromDB();  //  loads into dbMap
+		
 		loadSyVer();
 	}
 	
-	protected boolean isSynteny() {return pairIdx>0;} // CAS547 add
-	/***********************************************************************************
-	 * CAS546 update params a bit
-	 */
+	/************************************************************************************/
 	protected String getChangedSynteny() { // ManagerFrame.alignSelectedPair when no align
 		return getSynteny(FILE) + "\n";
 	}
@@ -95,10 +96,11 @@ public class Mpair {
 	
 	private String getAlign(int type) {// return "" if no change
 		String msg="";
+		if (isChg(type,"concat")) 			msg = join(msg, "No concat");	// CAS567 add
 		if (isChg(type,"promer_only")) 		msg = join(msg, "Align PROmer only  ");
 		else if (isChg(type,"nucmer_only")) msg = join(msg, "Align NUCMER only  ");
 		
-		if (isChg(type,"self_args")) 		msg = " Self args: "   + getSelfArgs(type); // CAS555 aligned with other params
+		if (isChg(type,"self_args")) 		msg = " Self args: "   + getSelfArgs(type); 
 		else if (isChg(type,"promer_args")) msg = " PROmer args: " + getPromerArgs(type);
 		else if (isChg(type,"nucmer_args")) msg = " NUCmer args: " + getNucmerArgs(type);
 		
@@ -111,13 +113,14 @@ public class Mpair {
 		String cmsg = getClusterAlgo(type); // never empty
 		
 		String smsg="";
-		if (isChg(type,"mindots")) 		smsg = join(smsg, " Min dots=" + getMinDots(type) + "  ");
-		if (isChg(type,"merge_blocks")) smsg = join(smsg, " Merge blocks" + "  ");
+		if (isChg(type,"mindots")) 		smsg = join(smsg, " Min hits=" + getMinDots(type));
+		if (isChg(type,"merge_blocks")) smsg = join(smsg, " Merge");
+		if (isChg(type,"same_orient"))  smsg = join(smsg, " Same orient");
 		
 		smsg = join(smsg, mProj1.getOrderParam());
 		smsg = join(smsg, mProj2.getOrderParam());
 		
-		if (!smsg.isEmpty()) smsg = "Synteny \n" + smsg;
+		if (!smsg.isEmpty()) smsg = "Synteny Blocks\n" + smsg;
 		
 		return join(cmsg, smsg);
 	}
@@ -140,7 +143,7 @@ public class Mpair {
 				if (isChg(type,"g0_scale")) 	msg += "\n  G0 length scale = " + getG0Scale(type);
 				
 				if (isChg(type,"EE_pile"))		msg += "\n  Limit Exon-Exon piles";
-				if (isChg(type,"EI_pile"))		msg += "\n  Limit Exon-Intron piles"; // CAS549 did not chg msg
+				if (isChg(type,"EI_pile"))		msg += "\n  Limit Exon-Intron piles"; 
 				if (isChg(type,"En_pile"))		msg += "\n  Limit Exon-intergenic piles";
 				if (isChg(type,"II_pile"))		msg += "\n  Allow Intron-Intron piles";
 				if (isChg(type,"In_pile"))		msg += "\n  Allow Intron-intergenic piles";
@@ -224,12 +227,9 @@ public class Mpair {
 		String x = (type==FILE) ? fileMap.get("In_pile") : dbMap.get("In_pile");
 		return x.contentEquals("1");
 	}
-	public int getMinDots(int type) {
-		String x = (type==FILE) ? fileMap.get("mindots") : dbMap.get("mindots");
-		return Utilities.getInt(x);
-	}
-	public boolean isMerge(int type) {
-		String x = (type==FILE) ? fileMap.get("merge_blocks") : dbMap.get("merge_blocks");
+	
+	public boolean isConcat(int type) {// CAS567 add
+		String x = (type==FILE) ? fileMap.get( "concat") : dbMap.get( "concat");
 		return x.contentEquals("1");
 	}
 	public boolean isNucmer(int type) {
@@ -252,8 +252,21 @@ public class Mpair {
 		String x = (type==FILE) ? fileMap.get( "self_args") : dbMap.get("self_args");
 		return x;
 	}
+	public int getMinDots(int type) {
+		String x = (type==FILE) ? fileMap.get("mindots") : dbMap.get("mindots");
+		return Utilities.getInt(x);
+	}
+	public boolean isMerge(int type) {
+		String x = (type==FILE) ? fileMap.get("merge_blocks") : dbMap.get("merge_blocks");
+		return x.contentEquals("1");
+	}
+	public boolean isOrient(int type) {
+		String x = (type==FILE) ? fileMap.get("same_orient") : dbMap.get("same_orient");
+		return x.contentEquals("1");
+	}
 	/************************************************************************************/
 	public HashMap <String, String> getFileParams() { return fileMap;}
+	
 	public String getFileParamsStr() {
 		String msg="";
 		for (String x : fileMap.keySet()) {
@@ -265,7 +278,7 @@ public class Mpair {
 	
 	// ManagerFrame alignAll and alignSelected; remove existing and restart
 	public int renewIdx() { 
-		removePairFromDB(false); // False; do not redo numHits, CAS566 add F; CAS535 interrupt does not clear it
+		removePairFromDB(false); // False; do not redo numHits, CAS566 add F; interrupt does not clear it
 		
 		try { 
 			dbc2.executeUpdate("INSERT INTO pairs (proj1_idx,proj2_idx) " +
@@ -278,7 +291,9 @@ public class Mpair {
 		}
 		catch (Exception e) {ErrorReport.die(e, "SyMAP error getting pair idx");return -1;}
 	}
-	// Above (!bHitCnt), removeProj (bHitCnt), Cancel (bHitCnt)
+	/************************************************************
+	* Above (!bHitCnt), removeProj (bHitCnt), Cancel (bHitCnt)
+	 */
 	public int removePairFromDB(boolean bHitCnt) {
 	try {
 		int x = dbc2.getIdx("select idx from pairs where proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx);
@@ -296,8 +311,8 @@ public class Mpair {
 	catch (Exception e) {ErrorReport.print(e, "Error removing pair from database - you may need to Clear Pair (leave alignments)");}
 	return -1;
 	}
-	// called by PairParams on save
-	public void writeFile(HashMap <String, String> valMap) { // CAS534 used to only write changed; now writes all
+	/********** called by PairParams on save; write all ***********/
+	public void writeFile(HashMap <String, String> valMap) { 
 		Utilities.checkCreateDir(Constants.seqRunDir, true); 
 		Utilities.checkCreateDir(resultDir, true); 
 		
@@ -309,15 +324,15 @@ public class Mpair {
 			out.println("# Created " + ErrorReport.getDate());
 			out.println("# Note: changes MUST be made in SyMAP parameter window");
 			
-			for (String key : valMap.keySet()) 
+			for (int i=0; i<paramKey.length; i++) {// write in order; CAS567
+				String key = paramKey[i];
 				out.format("%s=%s\n", key, valMap.get(key));
+			}
 	
 			out.close();
 		} catch(Exception e) {ErrorReport.print(e, "Creating params file");}
 	}
-	/** CAS556 when params do not need updating, but there was a change such as collinear 
-	 *  Updates props, but that is for the whole database.
-	 ***/
+	/*********************************************************************/
 	public void saveUpdate() {
 	try {
 		dbc2.executeUpdate("update pairs set aligndate=NOW(), syver='" + Globals.VERSION + "'"
@@ -326,13 +341,13 @@ public class Mpair {
 	}
 	catch (Exception e) {ErrorReport.print(e, "Update version"); return;}
 	}
-	// called by AlignProj on A&S; CAS535 move update date from AlignProjs to here
-	public void saveParams(String params) {
+	/**** called by DoAlignSynPair.run() on A&S ***/
+	public void saveParams(String params) {// params are ones not in pair_props
 		try {
-			dbc2.tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null); // CAS511 add params column (not schema update)
+			dbc2.tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null); 
 			
 			dbc2.executeUpdate("update pairs set aligned=1, aligndate=NOW(), "
-					+ "syver='" + Globals.VERSION + "', params='" + params + "'" // CAS520 add syver
+					+ "syver='" + Globals.VERSION + "', params='" + params + "'" 
 					+ " where (proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx 
 					+ ") or   (proj1_idx=" + proj2Idx + " and proj2_idx=" + proj1Idx + ")"); 
 			
@@ -350,7 +365,7 @@ public class Mpair {
 		catch (Exception e) {ErrorReport.print(e, "Cannot save pair parameters");}
 	}
 
-	// AnchorMain.run
+	/******** AnchorMain.run; update one value ************************/
 	public void setPairProp(String name, String val) throws Exception {
 		dbc2.executeUpdate("delete from pair_props where name='" + name + "' and pair_idx=" + pairIdx);
 		
@@ -358,31 +373,34 @@ public class Mpair {
 				pairIdx + "','" + proj1Idx + "','" + proj2Idx + "','" + name + "','" + val + "')");	
 	}
 	
-	/***************************************************************************
-	 * private
-	 */
-	private void loadFromFile() {
+	/******** If pairs not in DB ***********/
+	private boolean loadFromFile() {
 	try {
-		if (!Utilities.dirExists(resultDir)) return; // ok, created when needed
+		if (!Utilities.dirExists(resultDir)) return false; // ok, created when needed
 		
 		File pfile = new File(resultDir,Constants.paramsFile); 
-		if (!pfile.isFile()) return; 				// ok, uses defaults
+		if (!pfile.isFile()) return false; 				// ok, uses defaults
 		
 		PropertiesReader props = new PropertiesReader( pfile);
 		for (int i=0; i<paramKey.length; i++) {
 			String name =  paramKey[i];
 			if (props.getProperty(name) != null) {
 				for (String x : paramKey) {
-					if (x.contains(name)) {	// CAS560 in case there are old/incorrect params
+					if (x.contains(name)) {	// in case there are old/incorrect params
 						fileMap.put(name, props.getProperty(name));
 						break;
 					}
 				}
 			}
 		}
+		for (int i=0; i<paramKey.length; i++) 	// CAS567 add 'concat' and any other further additions
+			if (!fileMap.containsKey(paramKey[i]))
+				 fileMap.put(paramKey[i], paramDef[i]);
+		return true;
 	}
-	catch (Exception e) {ErrorReport.print(e, "load from file"); }
+	catch (Exception e) {ErrorReport.print(e, "load from file"); return false; }
 	}
+	/***** From last A&S *************************************************/
 	private void loadFromDB() {
 	try {
 		ResultSet rs = dbc2.executeQuery("select name,value from pair_props where pair_idx=" + pairIdx);
@@ -392,17 +410,20 @@ public class Mpair {
 			dbMap.put(name, value);
 		}
 		rs.close();
+		for (int i=0; i<paramKey.length; i++) 	// CAS567 add 'concat' and any other further additions
+			if (!dbMap.containsKey(paramKey[i]))
+				dbMap.put(paramKey[i], paramDef[i]);
 	}
 	catch (Exception e) {ErrorReport.print(e, "load from db"); }
 	}
 	private void makeParams() {
 		for (int i=0; i<paramKey.length; i++) {
-			defMap.put(paramKey[i], paramDef[i]);
-			dbMap.put(paramKey[i], paramDef[i]);
+			defMap.put(paramKey[i],  paramDef[i]);	// never changes
+			dbMap.put(paramKey[i],   paramDef[i]);	// can changes
 			fileMap.put(paramKey[i], paramDef[i]);
 		}
 	}
-	///// CAS547 add ////////////////////////////////////////////////
+	/////////////////////////////////////////////////////
 	private void loadSyVer() {
 	try {
 		ResultSet rs = dbc2.executeQuery("select syver from pairs where idx=" + pairIdx);

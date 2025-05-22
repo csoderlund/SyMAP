@@ -1,38 +1,42 @@
 package backend.synteny;
 
 import java.util.Vector;
+
+import symap.Globals;
+
 import java.util.TreeSet;
 
 /**************************************
- * Used by SyntenyMain: represent blocks
+ * Block class used for the synteny computations
  */
-
-public class SyBlock  {
-	static protected int cntBlk=1; // temporary to figure out how many blocks are create/disposed
-	protected int nBlk=0;
+public class SyBlock  implements Comparable <SyBlock>{
+	static protected int cntBlk=1;  
+	protected int nBlk=0;		   // temporary unique
 	
+	protected String orient="";		  // "", "==", "!=", needed so not merged; CAS567
 	protected int mS1, mE1, mS2, mE2; // mid-point, until ready to save - than exact 
-	protected float mCorr1, mCorr2;
-	protected String mCase = "R";
+	protected float mCorr1, mCorr2;	  // chain hits, all hits in block
+	protected String mCase = "R";	  // R=fail, anything else pass
 	
 	protected int mGrpIdx1, mGrpIdx2, mNum=0; // Finalize
 	protected int mIdx;						  // Save
 	
-	protected Vector<SyHit> mHits;
-	private TreeSet<Integer> mHitIdxSet; // quick search for mHits
-	
-	protected SyBlock() {
+	protected Vector<SyHit> mHits;		 // Block hits
+	private TreeSet<Integer> mHitIdxSet; // quick search for mHits in Merge
+
+	protected SyBlock(String orient) { 
 		mHits = new Vector<SyHit>();
 		mHitIdxSet = new TreeSet<Integer>();
+		this.orient = orient;
 		nBlk = cntBlk++;
 	}
-	protected void clear() { // CAS560 add so can reuse blk 
+	protected void clear() { 
 		mHits.clear();
 		mHitIdxSet.clear();
 		mS1=mE1=mS2=mE2=0;
 		mCorr1=mCorr2=0;
 	}
-	protected void setEnds(int s1, int e1, int s2, int e2) { // CAS533 move assignments from SyntenyMain
+	protected void setEnds(int s1, int e1, int s2, int e2) { 
 		mS1 = s1; mE1 = e1;
 		mS2 = s2; mE2 = e2;
 	}
@@ -48,17 +52,17 @@ public class SyBlock  {
 		mCorr2 = (mHits.size() >= b.mHits.size() ? mCorr2 : b.mCorr2);
 		
 		for (SyHit h : b.mHits) {
-			if (!mHitIdxSet.contains(h.mIdx)) { // CAS533 was separate method
+			if (!mHitIdxSet.contains(h.mIdx)) { 
 				mHitIdxSet.add(h.mIdx);
 				mHits.add(h);
 			}
 		}
 	}
-	protected boolean isContained(int pos1, int pos2) {// CAS533 move check from SyntenyMain
+	protected boolean isContained(int pos1, int pos2) {
 		return (pos1 >= mS1 && pos1 <= mE1 &&
 				pos2 >= mS2 && pos2 <= mE2);
 	}
-	// CAS533 was using mPos1 and mPos2 for block coordinates; call right before saving to DB
+	
 	protected void updateCoords() { 
 		for (SyHit h : mHits) {
 			if (h.s1<mS1) mS1=h.s1;
@@ -73,5 +77,21 @@ public class SyBlock  {
 		avg /= mHits.size();
 		avg = (Math.round(10*avg));
 		return avg/10;
+	}
+	protected int getNum() {
+		int m = (mNum==0) ? nBlk : mNum;
+		return m;
+	}
+	protected void tprt() { // CAS567 add
+		int n=mHits.size();
+		int m = (mNum==0) ? nBlk : mNum;
+		String msg = String.format("Block #%-3d %2s %s  Hits %-4d  %6.3f %6.3f  Avg %,8d  %,8d   Len %,10d   %,10d", 
+				m, orient, mCase, n, mCorr1, mCorr2, 
+				(int)((mE1-mS1)/n),(int)((mE2-mS2)/n), (mE1-mS1), (mE2-mS2));
+		Globals.prt(msg);
+	}
+	public int compareTo (SyBlock b2) {// CAS567 add for orient
+		if (mS1 != b2.mS1) 	return mS1 - b2.mS1;
+		else				return mE1 - b2.mE1;
 	}
 }

@@ -28,7 +28,6 @@ import util.ErrorReport;
  */
 
 public class AnnotLoadMain {
-	//static public boolean GENEN_ONLY=Globals.GENEN_ONLY; // CAS560 remove; -z CAS519b to update the gene# without having to redo synteny
 	private final String idKey 		= "ID"; 			// Gene and mRNA
 	private final String parentKey 	= "Parent"; 		// mRNA and Exon
 	
@@ -41,7 +40,7 @@ public class AnnotLoadMain {
 	// init
 	private Vector<File> annotFiles = 				new Vector<File>();
 	
-	private final String exonAttr = "Parent"; 		// save exon attribute; CAS512 
+	private final String exonAttr = "Parent"; 		// save exon attribute; 
 	private TreeMap<String,Integer> userAttr = 		new TreeMap <String,Integer>();
 	private TreeMap <String, Integer> ignoreAttr = 	new TreeMap <String,Integer> ();
 	private int userSetMinKeywordCnt=0;
@@ -64,9 +63,8 @@ public class AnnotLoadMain {
 		plog.msg("Loading annotation for " + projDBName);
 		
 		initFromParams(projDBName);	if (!bSuccess) {tdbc2.close(); return false; };
-		// deleteCurrentAnnotations();	if (!success) return false; CAS535 deleted in ManagerFraem
 		
-		if (annotFiles.size()==0) { // CAS556 was going through rest of code
+		if (annotFiles.size()==0) { 
 			Utils.prt(plog, "Finish annotation");
 			tdbc2.executeUpdate("delete from annot_key where proj_idx=" + mProj.getIdx());
 			tdbc2.close();
@@ -107,7 +105,7 @@ public class AnnotLoadMain {
 		int grpIdx=0;
 	try {
 		plog.msg("Loading " + f.getName());
-		BufferedReader fh = Utils.openGZIP(f.getAbsolutePath()); // CAS500
+		BufferedReader fh = Utils.openGZIP(f.getAbsolutePath()); 
 		
 		String line;
 		int lineNum = 0, cntBatch=0, totalLoaded = 0, numParseErrors = 0;
@@ -121,7 +119,7 @@ public class AnnotLoadMain {
 		
 		PreparedStatement ps = tdbc2.prepareStatement("insert into pseudo_annot " +
 				"(grp_idx,type,name,start,end,strand,gene_idx, genenum,tag) "
-				+ "values (?,?,?,?,?,?,?,0,'')"); 			// CAS512 remove 'text' field, added gene_idx, tag
+				+ "values (?,?,?,?,?,?,?,0,'')"); 			
 		while ((line = fh.readLine()) != null) {
 			if (Cancelled.isCancelled()) {
 				plog.msg("User cancelled");
@@ -131,7 +129,7 @@ public class AnnotLoadMain {
 			
 			lineNum++;
 			if (line.startsWith("#")) continue; 			// skip comment
-			if (Utilities.isEmpty(line.trim())) continue; 	// CAS543
+			if (Utilities.isEmpty(line.trim())) continue; 	
 			
 			String[] fs = line.split("\t");
 			if (fs.length < 9) {
@@ -149,7 +147,7 @@ public class AnnotLoadMain {
 			int start		= Integer.parseInt(fs[3]);
 			int end 		= Integer.parseInt(fs[4]);
 			String strand	= fs[6];
-			String attr		= sqlSanitize(fs[8]); // CAS512 remove quotes
+			String attr		= sqlSanitize(fs[8]); 
 			
 			if (strand == null || (!strand.equals("-") && !strand.equals("+"))) strand = "+";
 		
@@ -161,7 +159,7 @@ public class AnnotLoadMain {
 			else typeCounts.put(type, 1 + typeCounts.get(type));
 			
 			/** only use exons from first mRNA **/
-			boolean isGene = (type.contentEquals(Globals.geneType)) ? true : false; // remove hardcode
+			boolean isGene = (type.contentEquals(Globals.geneType)) ? true : false; 
 			boolean isExon = (type.contentEquals(Globals.exonType)) ? true : false;
 			boolean isMRNA = (type.contentEquals("mRNA")) ? true : false;			// this is nowhere else
 			boolean isGap =  (type.contentEquals(Globals.gapType))  ? true : false;
@@ -194,8 +192,8 @@ public class AnnotLoadMain {
 			
 	/** Process for write **/
 			// Chromosome idx
-			grpIdx = mProj.getGrpIdxRmPrefix(chr); // CAS546 was syProj.grpIdxFromQuery
-			if (grpIdx < 0) {// ErrorCount.inc(); CAS502 this is not an error; can happen if scaffolds have been filtered out
+			grpIdx = mProj.getGrpIdxRmPrefix(chr); 
+			if (grpIdx < 0) {// this is not an error; can happen if scaffolds have been filtered out
 				if (!noGrpSet.contains(chr)) {
 					if (noGrpSet.size() < 3) plog.msgToFile("+++ Gene on sequence '" + chr + "'; sequence is not loaded - ignore");
 					else if (noGrpSet.size() == 3) plog.msgToFile("+++ Suppressing further warnings of no loaded sequence");
@@ -213,14 +211,14 @@ public class AnnotLoadMain {
 		    // Annotation Keywords 	
 			String parsedAttr="";	// MySQL text: Can hold up to 65k
 			
-			if (isGene) { // create string of only user-supplied keywords; CAS501 changed 
+			if (isGene) { // create string of only user-supplied keywords; 
 				cntGene++; 
 				lastGeneIdx = (lastIdx+1); // for exon 
 				
 				for (String kv : keyVals) {
-					String[] words = kv.trim().split("="); // if no '=', then no keyword; CAS513 
+					String[] words = kv.trim().split("="); // if no '=', then no keyword
 					if (words.length!=2) {
-						if (!kv.trim().isEmpty()) { // CAS558 happens with convert no desc; two ;;
+						if (!kv.trim().isEmpty()) { // happens with convert no desc; two ;;
 							cntSkipGeneAttr++;
 							if (cntSkipGeneAttr<2) symap.Globals.tprt(line);
 						}
@@ -250,9 +248,9 @@ public class AnnotLoadMain {
 				}
 				else parsedAttr = attr;						// no keywords excluded
 					
-				if (parsedAttr.equals("")) parsedAttr="[no description]"; // CAS503
+				if (parsedAttr.equals("")) parsedAttr="[no description]"; 
 			}
-			else if (isExon) { // using parent or first; CAS512 added (not used in viewSymap)
+			else if (isExon) { // using parent or first; 
 				cntExon++;
 				
 				for (String kv : keyVals) {
@@ -289,7 +287,7 @@ public class AnnotLoadMain {
 			if (cntBatch==1000) {
 				cntBatch=0;
 				ps.executeBatch();
-				Globals.rprt(totalLoaded + " annotations"); // CAS42 1/1/18; CAS561 use rprt
+				Globals.rprt(totalLoaded + " annotations"); 
 			}
 		}
 		if (cntBatch> 0) ps.executeBatch();
@@ -297,7 +295,7 @@ public class AnnotLoadMain {
 		fh.close();
 		
 		cntAllGene+=cntGene;
-		Utils.prtNumMsg(plog, totalLoaded, "annotations loaded from " + f.getName()); // CAS558 add commas
+		Utils.prtNumMsg(plog, totalLoaded, "annotations loaded from " + f.getName()); 
 		if (cntGene>0 || cntExon>0) { 				// CAS518 no longer supporting exons in separate file
 			Utils.prtNumMsg(plog, cntGene, String.format("genes  %,d exons", cntExon));
 			if (cntGene==0) plog.msg("Warning: genes and exons must be in the same file for accurate results");
@@ -309,9 +307,9 @@ public class AnnotLoadMain {
 	}
 	catch (Exception e) {
 		System.err.println("");
-		System.err.println("*** Database index problem: try Load again (it generally works on 2nd try)");
+		System.err.println("*** Database index problem: try 'Load' again (it generally works on 2nd try)"); // CAS567 slight alter to message
 		System.err.println("");
-		ErrorReport.print(e, "Load file grpIdx " + grpIdx + " - try Load again."); 
+		ErrorReport.print(e, "Load file (grpIdx=" + grpIdx + ") try 'Load' again (it generally works on 2nd try)."); 
 		bSuccess=false;}
 	}
 	private String getVal(String key, String [] attrs) {
@@ -371,7 +369,7 @@ public class AnnotLoadMain {
 		return parent.equals(mrnaID);
 	}
 
-	// Eliminate all quotes in strings before DB insertion, though do not need with PreparedStatement. CAS541 moved from UpdatePool
+	// Eliminate all quotes in strings before DB insertion, though do not need with PreparedStatement.
 	static Pattern mpQUOT = Pattern.compile("[\'\"]");;
 	public String sqlSanitize(String in) {
 		Matcher m = mpQUOT.matcher(in);
@@ -396,11 +394,11 @@ public class AnnotLoadMain {
 					return; 			// this is not considered an error
 				}
 				for (File f2 : ad.listFiles()) {
-					if (!f2.isFile() || f2.isHidden()) continue; // CAS511 macos add ._ files in tar
+					if (!f2.isFile() || f2.isHidden()) continue; //  macOS add ._ files in tar
 					
 					annotFiles.add(f2);
 				}
-				if (annotFiles.size()==0) { // CAS556 add
+				if (annotFiles.size()==0) { 
 					plog.msg("   No annotation files provided");
 					return; 			// this is not considered an error
 				}
@@ -422,7 +420,7 @@ public class AnnotLoadMain {
 					else if (f.isDirectory()) {
 						saveAnnoDir=filstr;
 						for (File f2 : f.listFiles()) {
-							if (!f2.isFile() || f2.isHidden()) continue; // CAS511 macos add ._ files in tar
+							if (!f2.isFile() || f2.isHidden()) continue; // macOS add ._ files in tar
 							
 							annotFiles.add(f2);
 						}
@@ -433,20 +431,16 @@ public class AnnotLoadMain {
 					}
 				}
 			}
-			if (saveAnnoDir!="") {// CAS532 add these to print on View
+			if (saveAnnoDir!="") {// print on View
 				modDirDate = new File(saveAnnoDir).lastModified();
 				mProj.saveProjParam("proj_anno_date", Utils.getDateStr(modDirDate));
 				mProj.saveProjParam("proj_anno_dir", saveAnnoDir);
 			}
 			
-			// Keywords: CAS501 regardless if Keywords were entered into the Params interface,
-			// they were still be shown on the 2D display. Now they are not entered into
-			// the database unless they are in the list (if there is a list).
-			
 			// Parse user-specified types
 			userSetMinKeywordCnt = mProj.getdbMinKey();
 			String attrKW = mProj.getKeywords();
-			if (!attrKW.contentEquals("")) plog.msg("   " + mProj.getLab(mProj.sANkeyCnt) + " " + attrKW); // CAS558 add space
+			if (!attrKW.contentEquals("")) plog.msg("   " + mProj.getLab(mProj.sANkeyCnt) + " " + attrKW); 
 			
 			// if ID is not included, it all still works...
 			bUserSetKeywords = (attrKW.equals("")) ? false : true;
@@ -455,7 +449,7 @@ public class AnnotLoadMain {
 					String[] kws = attrKW.trim().split(",");
 					for (String key : kws) userAttr.put(key.trim(), 0);
 				}
-				else userAttr.put(attrKW.trim(), 0); // CAS502
+				else userAttr.put(attrKW.trim(), 0);
 			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "load anno init"); bSuccess=false;}

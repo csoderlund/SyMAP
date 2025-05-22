@@ -39,16 +39,7 @@ import util.Jhtml;
 import util.Utilities;
 
 /**
- * The filter dialog for the Sequence view; this has been greatly simplified....
- * Also see FilterHandler.java, Sequence.java, TrackData.java
- * CAS514 would throw exception which stopped symap; 
- * CAS520 add popup line; removed geneFullRadio, geneMidRadio, frameCheck (FPC); 
- * CAS521 fixed problem with Apply CAS531 add hitNum 
- * CAS542 stopped using the abstract Filter, and cleaned up 
- * CAS543 after rewrite; was being changed from Query, but applied to all 2D displays so just quit doing
- * CAS544 rm gap, cent, lines; add highPopup; CAS551 Add Gene# and rearrange 
- * CAS545 add selectGene and Conserved, both are special cases because they highlight genes (and hits) 
- * CAS552 moved all stuff in Sequence to here and just access from Sequence; add replace for text changes
+ * Sequence filter
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Sfilter extends JDialog {	
@@ -68,7 +59,7 @@ public class Sfilter extends JDialog {
 	// Current values - many shared between Filter and Popup (could just always set and read from Filter)
 	protected boolean bShowRuler, bShowGap, bShowCentromere, bShowGene, bShowScoreLine, bShowHitLen;
 	protected boolean bShowGeneNum, bShowAnnot, bShowGeneLine; 
-	protected boolean bHighGenePopup, bHitHighg2x2, bHitHighg2x1; // CAS545 bHighhit2g2, CAS555 bHighHit1g2;		
+	protected boolean bHighGenePopup, bHitHighg2x2, bHitHighg2x1; 	
 	protected boolean bShowScoreText, bShowHitNumText; 				
 	protected boolean bShowBlockText, bShowCsetText, bShowNoText;   
 	protected boolean bFlipped;
@@ -110,14 +101,12 @@ public class Sfilter extends JDialog {
 	private boolean bReplace=false; // Filter window text change in stateChanged; save in Save
 	private boolean bNoListen=false;
 	
-	//private void dprt(String msg) {symap.Globals.dprt("Sf: " + msg);}
-	
 	// Created when 2d is displayed, one for each sequence and track 
-	public Sfilter(Frame owner, DrawingPanel dp,  Sequence sequence) { // CAS542 removed help
-		super(owner,"Sequence Filter #" + sequence.position, true); // CAS532 added help
+	public Sfilter(Frame owner, DrawingPanel dp,  Sequence sequence) { 
+		super(owner,"Sequence Filter #" + sequence.position, true); 
 		this.drawingPanel = dp;	
 		this.seqObj = sequence;
-		seqObj.setFilter(this); // CAS552 will access values from here
+		seqObj.setFilter(this); // access values from here
 		initValues();
 
 		FilterListener listener = new FilterListener();
@@ -202,7 +191,7 @@ public class Sfilter extends JDialog {
 		genePanel.add(geneLabel); genePanel.add(geneText); genePanel.add(reg); 
 		genePanel.add(new JLabel(" ")); genePanel.add(clear);
 		
-		flippedCheck = new JCheckBox("Flip sequence    "); 	//CAS552 remove flippedCheck.addChangeListener(listener);
+		flippedCheck = new JCheckBox("Flip sequence    "); 	
 		
 		fullButton = Jcomp.createMonoButtonSm("Full", "Set start/end to full sequence");
 		fullButton.addActionListener(new ActionListener() {
@@ -334,9 +323,9 @@ public class Sfilter extends JDialog {
 		geneNumPopup 		= new JCheckBoxMenuItem("Gene#"); 
 		geneLinePopup 		= new JCheckBoxMenuItem("Gene delimiter"); 
 		
-		scoreTextPopup 		= new JRadioButtonMenuItem("Hit %Id"); 	// ditto
-		hitNumTextPopup 	= new JRadioButtonMenuItem("Hit# "); 	// CAS531 add
-		blockTextPopup 		= new JRadioButtonMenuItem("Block# "); 	// CAS545 add
+		scoreTextPopup 		= new JRadioButtonMenuItem("Hit %Id"); 	
+		hitNumTextPopup 	= new JRadioButtonMenuItem("Hit# "); 	
+		blockTextPopup 		= new JRadioButtonMenuItem("Block# "); 	
 		csetTextPopup 		= new JRadioButtonMenuItem("Collinear# "); 	
 		noTextPopup 		= new JRadioButtonMenuItem("None"); 
 		ButtonGroup grp = new ButtonGroup();
@@ -581,13 +570,13 @@ public class Sfilter extends JDialog {
 		int sInd = 		startCombo.getSelectedIndex();
 		String sStr = 	startText.getText();
 		
-		boolean numChgE = (eInd!=savEndInd   || !eStr.contentEquals(savEndStr)); // CAS552 was set to true
+		boolean numChgE = (eInd!=savEndInd   || !eStr.contentEquals(savEndStr)); 
 		boolean numChgS = (sInd!=savStartInd || !sStr.contentEquals(savStartStr));
 		
 		if (!numChgS && !numChgE) return false;
 		
 		try {
-			tstart = Double.parseDouble(sStr); // CAS512 (new Double(startText.getText())).doubleValue();
+			tstart = Double.parseDouble(sStr); 
 		} catch (NumberFormatException nfe) {
 			Utilities.showErrorMessage(sStr + " is not a valid start point");
 			return false;
@@ -624,7 +613,7 @@ public class Sfilter extends JDialog {
 				Utilities.showErrorMessage(gStr + " is not a valid Gene#");
 				return false;
 			}
-			if (!gStr.equals(savGeneStr)) { // CAS552 add check
+			if (!gStr.equals(savGeneStr)) { 
 				if (!gStr.contains(".")) gStr += ".";
 				savGeneStr = gStr;
 				
@@ -634,7 +623,7 @@ public class Sfilter extends JDialog {
 					return false;
 				}
 				tstart = Math.max(0,mid-Globals.MAX_2D_DISPLAY);
-				tend   = Math.min(seqObj.getTrackSize(), mid+Globals.MAX_2D_DISPLAY); // CAS551 was yellow box
+				tend   = Math.min(seqObj.getTrackSize(), mid+Globals.MAX_2D_DISPLAY); 
 	
 				startText.setText((tstart/1000)+"");startCombo.setSelectedItem(BpNumber.KB);
 				endText.setText((tend/1000)+"");    endCombo.setSelectedItem(BpNumber.KB);
@@ -657,11 +646,11 @@ public class Sfilter extends JDialog {
 			drawingPanel.setUpdateHistory();
 			drawingPanel.smake("Sf: saveaction update bchg");
 		}
-		else if (xFlipSeq(flippedCheck.isSelected())) { // will do replace too; CAS552 moved from stateChanged;
+		else if (xFlipSeq(flippedCheck.isSelected())) { 
 			drawingPanel.setUpdateHistory();
 			drawingPanel.smake("Sf: saveaction update flip");
 		}
-		else if (bReplace) { // CAS552 add; set in stateChanged
+		else if (bReplace) { 
 			drawingPanel.setReplaceHistory();
 			drawingPanel.smake("Sf: saveaction replace");
 		}
@@ -676,7 +665,7 @@ public class Sfilter extends JDialog {
 		// Action: called for panel ok/cancel/default buttons and popup menu events
 		public void actionPerformed(ActionEvent event) { 
 			Object src = event.getSource();
-			boolean bUp = false, bRep = false;	// CAS552 change to annotation do replace
+			boolean bUp = false, bRep = false;	
 
 			if (src == okButton) { // changed already made except of for sequence
 				saveAction();
@@ -690,7 +679,7 @@ public class Sfilter extends JDialog {
 				setDefault(); 
 			}
 			// popup
-			else if (src == fullSeqPopup) { // CAS552 add
+			else if (src == fullSeqPopup) { 
 				setFullSequence();
 				bUp = applyCoordChanges();
 			}
@@ -722,7 +711,7 @@ public class Sfilter extends JDialog {
 				bDiff = xShowGene(geneCheck.isSelected());
 				boolean b = geneCheck.isSelected();
 				geneNumCheck.setEnabled(b);
-				geneLineCheck.setEnabled(b); // CAS520
+				geneLineCheck.setEnabled(b); 
 				geneHighCheck.setEnabled(b);
 				hitHighg2x2Check.setEnabled(b);
 				hitHighg2x1Check.setEnabled(b);
@@ -761,7 +750,7 @@ public class Sfilter extends JDialog {
 			
 			if (bDiff) {
 				drawingPanel.smake("Sf: filterlistener state changed " + src.hashCode());// sets drawingPanel.setUpdateHistory() on Save
-				bReplace = true;     // CAS552 
+				bReplace = true;     
 			}
 		}
 				
@@ -817,7 +806,7 @@ public class Sfilter extends JDialog {
 		bShowNoText 	= bDefNoText;
 		// Start and end get initialized from seqObj when filter window popups up
 	}
-	protected String xHitg2() { // CAS555 to write toinformation
+	protected String xHitg2() { 
 		return (bHitHighg2x2) ? "Conserved g2x2: " : "Conserved g2x1: ";
 	}
 	protected boolean xFlipSeq(boolean flip) {
@@ -875,19 +864,19 @@ public class Sfilter extends JDialog {
 		if (bShowScoreText != show) {xSetText(false, false, false, show); seqObj.setTrackBuild(); return true;}
 		return false;
 	}
-	protected boolean xShowHitNumText(boolean show) { // CAS531 add
+	protected boolean xShowHitNumText(boolean show) { 
 		if (bShowHitNumText != show) {xSetText(false, false, show, false); seqObj.setTrackBuild(); return true; }
 		return false;
 	}
-	protected boolean xShowBlockText(boolean show) { // CAS545 add
+	protected boolean xShowBlockText(boolean show) { 
 		if (bShowBlockText != show) {xSetText(show, false, false, false); seqObj.setTrackBuild(); return true; }
 		return false;
 	}
-	protected boolean xShowCsetText(boolean show) { // CAS545 add
+	protected boolean xShowCsetText(boolean show) { 
 		if (bShowCsetText != show) {xSetText(false, show, false, false); seqObj.setTrackBuild(); return true;}
 		return false;
 	}
-	protected boolean xShowNoText(boolean show) { // CAS545 add
+	protected boolean xShowNoText(boolean show) { 
 		if (bShowNoText != show) {xSetText(false, false, false, false); seqObj.setTrackBuild(); return true; }
 		return false;
 	}
