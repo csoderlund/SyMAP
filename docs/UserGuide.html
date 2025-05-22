@@ -55,10 +55,11 @@
 						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
 						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
 						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-						<a href="./input/index.html" class="white">Input</a> <mark class="white">|</mark>
-						<a href="./SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
-						<a href="./UserGuide.html" class="current">User Guide</a> <mark class="white">|</mark>
-						<a href="./Query.html" class="white">Query</a> <mark class="white">|</mark>
+						<a href="./input/index.html" class="white">Input</a>&nbsp;
+						<a href="./SystemGuide.html" class="white">System Guide</a>&nbsp;
+						<a href="./SystemHelp.html" class="white">Parameters</a> <mark class="white">|</mark>
+						<a href="./UserGuide.html" class="current">User Guide</a>&nbsp;
+						<a href="./Query.html" class="white">Queries</a> <mark class="white">|</mark>
 						<a href="./Tour.html" class="white">Tour</a>
 					</tr>
 				</table>
@@ -1214,11 +1215,18 @@ will be highlighted or group of hits will be highlighted; see <a href="Query.htm
 <tr><td><ttx>Hit =2 genes</ttx> <td>Hits that align to a gene on both sides (g2).
 <tr><td><ttx>Hit =1 genes</ttx> <td>Hits that align to a gene on one side only (g1).
 <tr><td><ttx>Hit =0 genes</ttx>   <td>Hits that do not align to any gene (g0).
-<tr><td colspan=2>To show all hits, uncheck everything.
+<tr><td><ttx>All hits</ttx>   <td>Show all hits. <i>Precedence:</i> This shows all hits regardless of what else is
+selected.
 
-<tr><td colspan=2><ttl>Identity</ttl>
-<tr><td><ttx>N%</ttx><td>Move the slider to view only the hits with &gt;= the specified identity. This works in
-conjunction with any of the <ttl>Show</ttl> options.
+<tr><td colspan=2><ttl>Other</ttl>
+<tr><td><ttx>Identity</ttx><td>Move the slider to view only the hits with &gt;= the specified identity.
+<i>Precedence:</i> This works in
+conjunction with any of the <ttl>Show</ttl> option except <ttl>All hits</ttl>.
+<tr><td><ttx>Block#</ttx><td>Enter a block number and only hits from that block will be shown.
+<i>Precedence:</i> This takes precedence over everything but the <ttl>Identity</ttl>.
+<p>While the filter window
+is showing, the user can enter a block number following by return to see the block, then try the next one to see the next
+block. If an invalid block number is entered, no hits will be shown.
 </table>
 <td><a href="img/hitfilterS.png">
 	<img src="img/hitfilterS.png" alt="hitfilterS" style="border: 1px solid black; width: 300px"></a>

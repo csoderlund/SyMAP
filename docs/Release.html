@@ -39,12 +39,15 @@
 				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
 				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
 					<tr><td style="background-color: #666666; padding-bottom:4px;">
+					<td style="background-color: #666666; padding-bottom:4px;">
 						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
 						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
 						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-						<a href="./input/index.html" class="white">Input</a> <mark class="white">|</mark>
-						<a href="./SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
-						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="./input/index.html" class="white">Input</a>&nbsp;
+						<a href="./SystemGuide.html" class="white">System Guide</a>&nbsp;
+						<a href="./SystemHelp.html" class="white">Parameters</a> <mark class="white">|</mark>
+						<a href="./UserGuide.html" class="white">User Guide</a>&nbsp;
+						<a href="./Query.html" class="white">Queries</a> <mark class="white">|</mark>
 						<a href="./Tour.html" class="white">Tour</a>
 				</table>
 		</table>
@@ -52,7 +55,6 @@
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
 For existing databases, there are no database or build changes since <a href="#v560">v5.6.0</a>; see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
-<br>This will no longer run on 32-bit machines, starting with v5.5.1.
 <br>You must have Java v17.0.11 or later, starting with SyMAP v5.5.0.
 <h3>Summary of recent major releases</h3>
 <table class="tx">
@@ -63,7 +65,47 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
-<a id="v565"></a>
+<a id="v566"></a>
+<h3>Release: v5.6.7 (22-May-25)</h3>
+The synteny algorithm has a new option that each block must have all hits in the same orientation.
+<ul>
+<li><ttb>Alignment&Synteny</ttb>
+<ul>
+<li>Synteny algorithm:
+<ul>
+<li><ttl>Same orient</ttl>: a new option has been added to the pairs <ttl>Parameter</ttl> window
+to have each block have hits in the same orientation.
+See <a href="SystemHelp.html#syn" class="ext" target="_blank">Synteny parameters</a>.
+<li>The blocks are numbers with ascending start coordinates.
+</ul>
+<li><ttl>Verbose</ttl> has been moved from the pairs parameter window to the main window, and
+<ttl>Concat</ttl> has been moved from the main window to the pairs parameters.
+<li>Project <ttl>Parameters</ttl>:
+<ul>
+<li>A drop-down of existing categories is provided to select from,
+or a new category can be entered.
+<li>All labels have a tooltip description.
+<li>Better error checking and updated documentation.
+</ul>
+</ul>
+<p>
+<li><ttb>Chromosome Explorer</ttb> <ttl>Hit Filter</ttl>: (1) A new filter has been added to show all hits.
+(2) A new filter to shows one block based on an user entered block#.
+See <a href="UserGuide.html#hitfilter" class="ext" target="_blank">Hit filter</a>.
+<p>
+<li>Tiny bug fixes: (1) <ttl>Load Project</ttl> cancel would show blank window and hang.
+(2) <ttl>A&S</ttl> cancel could produce many stack traces.
+(3) Projects would show in <ttl>Queries</ttl> that did not have synteny with any of the other selected projects.
+(4) Project display parameters can be changed regardless of what database is being viewed; it could get out of sync in some weird naming
+situations.
+<p>
+<li><small>Developers: Rename synteny/SyGraph to Merge and move merge routines to it; add orient.
+Any java file I looked at, I took out old CASddd comments.
+</small>
+</ul>
+
+
+<a id="v566"></a>
 <h3>Release: v5.6.6 (6-May-25)</h3>
 The MacOS M4 silicon executables have been added to the <tt>/ext</tt> directory.
 The code has been updated to use them when running on MacOS M4.

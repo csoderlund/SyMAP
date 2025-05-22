@@ -49,9 +49,11 @@
 						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
 						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
 						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-						<a href="./input/index.html" class="white">Input</a> <mark class="white">|</mark>
-						<a href="./SystemGuide.html" class="current">System Guide</a> <mark class="white">|</mark>
-						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="./input/index.html" class="white">Input</a>&nbsp;
+						<a href="./SystemGuide.html" class="white">System Guide</a>&nbsp;
+						<a href="./SystemHelp.html" class="current">Parameters</a> <mark class="white">|</mark>
+						<a href="./UserGuide.html" class="white">User Guide</a>&nbsp;
+						<a href="./Query.html" class="white">Queries</a> <mark class="white">|</mark>
 						<a href="./Tour.html" class="white">Tour</a>
 				</table>
 		</table>
@@ -68,7 +70,7 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <ol type="a">
 <li style="margin: 0.4em 0;"><a href="#selLoad">Selected</a>
 <li style="margin: 0.4em 0;"><a href="#avail">Available Syntenies</a>
-<li style="margin: 0.4em 0;"><a href="#concat">CPU and Concat</a>
+<li style="margin: 0.4em 0;"><a href="#cpu">CPU and Verbose</a>
 <li style="margin: 0.4em 0;"><a href="#fun">Function buttons</a>
 </ol>
 
@@ -172,7 +174,6 @@ After the project is loaded, you can still change the <ttl>Display</ttl> paramet
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;
 		<ttb>Parameters</ttb>
     <td>This brings up the project parameters panel.
-
 </table>
 <p>
 
@@ -213,50 +214,23 @@ the buttons that can be selected are activated.
 </table>
 <p>See <a href="#over2">Pair Parameters</a> for additional information.
 
-<a id="concat"></a>
+<a id="cpu"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>1.c CPU and Concat</h3>
+<h3>1.c CPU and Verbose</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <ttl>CPUs:</ttl> Enter the maximum number of CPUs to use for an alignment. SyMAP will use
 up to that number (but may use fewer, depending on the number of sequences being aligned). Alternatively,
 the number of CPUs may be entered in the <tt>symap.config</tt> file or
 entered as a command line argument (-p N).
 
-<p><ttl>Concat:</ttl> By default, all sequences of the 1st genome are concatenated into one file
-and then multiple files are created from the 2nd genome to be searched against the first.
-For the 2nd genome, sequential short sequences are put into one file until the file length is &gt;60M.
-
-<p><ttl>Concat</ttl> unchecked: To reduce memory usage, you can uncheck <ttl>Concat</ttl> so that
-multiple files are created for each genomes,
-and all files from the 1st genome are searched against the all files from the 2nd genome. For both genomes,
-sequential short sequences are put into one file until the file length is &gt;60M.
-
-<p>The following statistics are from comparing Arabidopsis thaliana (119M) against Brassica rapa (297M)
-on a MacOS using 1 CPU.
-<table>
-<tr><td><u>Concatenated</u>
-<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<td><u>Not concatenated</u>
-<tr><td>
-<pre>
-48819 hits
-  334 synteny blocks
-46319 gene hits
-38334 synteny hits
-
-Finished in 1 hr 7 min 41 sec
-</pre>
-<td>
-<td>
-<pre>
-48846 hits
-  334 synteny blocks
-46348 gene hits
-38345 synteny hits
-
-Finished in 1 hr 34 min 29 sec
-</pre>
-</table>
+	<p><ttl>Verbose</ttl> checkbox:
+	<ul><li>If checked, detailed summary information is written as
+	it processes the MUMmer files. The information is written both to the terminal and the <ttx>logs/&lt;proj-to-proj&gt;/symap.log</ttx> file.
+	<li>If this is not checked, it will write status information repeatedly on the same terminal line.
+	<li>See <a href="Demo.html#slog" class="ext" target="_blank">Demo examples</a>.
+	<li>It is not saved as a parameter. This can also be turned using a command line argument:
+	<tt>symap -v</tt>
+	</ul>
 
 <a id="fun"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -339,8 +313,7 @@ Default locations:
 </pre>
 See <a href="./input/index.html" class="ext" target="_blank">input</a> for a description of the input files.
 <td>
-<a href="img/lineLoad.png"><img src="img/lineLoad.png" alt="Project options" style="border: 1px solid black; width: 430px"></a>
-<p><a href="img/parameters1.png"><img src="img/parameters1.png" alt="parameters1" style="border: 1px solid black; width: 430px"></a>
+<a href="img/parameters1.png"><img src="img/parameters1.png" alt="parameters1" style="border: 1px solid black; width: 430px"></a>
 </table>
 
 <!--------------------------------------------------------------->
@@ -348,36 +321,52 @@ See <a href="./input/index.html" class="ext" target="_blank">input</a> for a des
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>2.b Display</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-For the following parameters, new values take immediate effect.
+<table>
+<tr><td>New values take immediate effect on <ttb>Save</ttb>. Most of the values are shown in the <ttl>Selected</ttl>
+section where an example is shown on the right.
+<td><a href="img/lineLoad.png"><img src="img/lineLoad.png" alt="Project options" style="border: 1px solid black; width: 430px"></a>
+</table>
+<p><b>Note</b>: These values can be changed regardless if they have been loaded into any database. The
+change is saved in the <ttx>symap_5/data/seq/&lt;project-name&gt;/params</ttx> file.
+<p>
 <table class="ty">
-<tr><td><b>Parameter</b><td><b>Description</b><td><b>Default Value</b>
-
+<tr><td><b>Parameter</b><td><b>Description</b><td><b>Default Value</b><td><b>Shown</b>
 <tr><td>&nbsp;&nbsp;<ttl>Category</ttl>
 	<td style="width: 450px;">
 		Category label for the project. This is only used to group project on the
 		left side of the <ttl>Project Manager</ttl> window.
+		<p>Category labels must be composed of only letters, numbers, dash, underscore, or period.
+
+		<p>Either select an existing label from the drop-down or enter a new one in the text box.
+		Do NOT enter the same label with different capitalization -- it may mess-up.
 	<td>Uncategorized
+	<td><ttl>Selected</ttl>
 <tr><td>&nbsp;&nbsp;<ttl>Display name</ttl>
-	<td>A user-friendly name for the project. Use any combination of letters, digits and dash.
-		Shorter names will work better in the displays. It must be unique for the category.
+	<td>A user-friendly name for the project.
+	<p>Shorter names will work better in the displays. <i>It must be unique over all case-insensitive <ttl>Display names</ttl></i>.
+	Names must be composed of only letters, numbers, dash, underscore, period.
 	<td>The project directory name.
+	<td><ttl>Selected</ttl> and all displays.
 <tr><td>&nbsp;&nbsp;<ttl>Abbreviation</ttl>
-	<td>A name (must be exactly 4 characters) to be used in the column headings for <ttb>Queries</ttb>.
+	<td>A name (must be exactly 4 characters).
 	<td>Last 4 characters of <ttl>Display name</ttl>.
+	<td><ttb>Queries</ttb> Column headings
 <tr><td>&nbsp;&nbsp;<ttl>Description</ttl>
-	<td>Description of the project. This is only shown in the <ttl>Selected</ttl> section and <ttb>View</ttb>
-	popup.
-	Do NOT use quotes, backslash or #.
-	<td>&nbsp;
+	<td>Description of the project.
+	<p>Do NOT use quotes, backslash or #.
+	<td>New project
+	<td><ttl>Selected</ttl> and <ttb>View</ttb>
 <tr><td>&nbsp;&nbsp;<ttl>Group type</ttl>
-	<td>How to refer to the sequences. This is shown on the <ttl>Selected</ttl> section.
+	<td>How to refer to the sequences.
 	<td>Chromosome
+	<td><ttl>Selected</ttl>
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Anno key count</ttl>
 	<td>This applies to the annotation attributes columns shown in the <ttb>Queries</ttb> results table. See the
 		<a href="#annot">GFF Attributes</a> section below.
 	<td>50
+	<td>--
 </table>
+
 
 <a id="project"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -557,17 +546,19 @@ more information in the context of the pair parameters.
 	<tr><td>&#10004;<td>Yes<td>Yes
 	</table>
 
-	<td><a href="img/lineAlign.png"><img src="img/lineAlign.png" alt="alignLine" style="border: 1px solid black; width: 550px"></a>
+	<td><a href="img/demoTableA.png"><img src="img/demoTableA.png" alt="demo table with A" style="border: 1px solid black; width: 550px"></a>
 </table>
-Alignment will not be redone if the cell contains an <b>A</b>. This is important because MUMmer
-is very time-consuming, but the A&S is not near so; hence, one can make changes to parameters
-and re-run if needed.
-<p>
-Select a pair cell in the <ttx>Available Syntenies</ttx> table followed by the <ttb>Parameters</ttb>
-button, which will popup the window shown on the lower right.
+
 <table>
 <tr>
 	<td style="vertical-align: text-top;">
+	<p>&nbsp;<p>Alignment will not be redone if the cell contains an <b>A</b>. This is important because MUMmer
+is very time-consuming, but the A&S is not near so; hence, one can make changes to parameters
+and re-run if needed.
+<p>
+Select a pair cell in the <ttx>Available Syntenies</ttx> table followed by the <ttl>Parameters</ttl>
+button, which will popup the window shown on the right.
+
 	<p>If a &#10004; or <b>A</b> in pair cell exists and the parameters for a section
 	are changed, do the following:
 
@@ -580,17 +571,8 @@ button, which will popup the window shown on the lower right.
 		<tr><td><b><i>Synteny</i></b> <td>Use <ttb>Selected Pair (ReDo)</ttb>
 		directly; the existing alignments for the pair will be used.
 	</table>
-
-	<p>&nbsp;
-	<p><ttl>Verbose</ttl> checkbox:
-	<ul><li>If checked, detailed summary information is written as
-	it processes the MUMmer files. The information is written both to the terminal and the <ttx>logs/&lt;proj-to-proj&gt;/symap.log</ttx> file.
-	<li>If this is not checked, it will write status information repeatedly on the same terminal line.
-	<li>See <a href="Demo.html#slog" class="ext" target="_blank">Demo examples</a>.
-	<li>It is not saved as a parameter. This can also be turned using a command line argument:
-	<tt>symap -v</tt>
-	</ul>
-	<p>The parameters are described in the following three sections.
+	<p>&nbsp;<p>The parameters are described in the following 3 sections: <a href="#align2">Alignment</a>,
+	<a href="#clust">Cluster hits</a> and <a href="#syn">Synteny</a>.
 
 	<td>&nbsp;&nbsp;&nbsp;
 	<a href="img/parameters2.png"><img src="img/parameters2.png" alt="pair parameters" style="border: 1px solid black; width: 340px"></a>
@@ -632,6 +614,44 @@ when a chromosome sequence is run against itself, e.g. <tt>--nosimplify</tt>.
 <br><sup>3</sup><small> By default, PROmer is used for alignments between different
 projects, while NUCmer is used for self alignments.
 </small>
+
+<a id="concat"></a>
+<h4>Concat</h4>
+By default, all sequences of the 1st genome are concatenated into one file
+and then multiple files are created from the 2nd genome to be searched against the first.
+For the 2nd genome, sequential short sequences are put into one file until the file length is &gt;60M.
+
+<p><ttl>Concat</ttl> unchecked: To reduce memory usage, you can uncheck <ttl>Concat</ttl> so that
+multiple files are created for each genomes,
+and all files from the 1st genome are searched against the all files from the 2nd genome. For both genomes,
+sequential short sequences are put into one file until the file length is &gt;60M.
+
+<p>The following statistics are from comparing Arabidopsis thaliana (119M) against Brassica rapa (297M)
+on a MacOS using 1 CPU.
+<table>
+<tr><td><u>Concatenated</u>
+<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<td><u>Not concatenated</u>
+<tr><td>
+<pre>
+48819 hits
+  334 synteny blocks
+46319 gene hits
+38334 synteny hits
+
+Finished in 1 hr 7 min 41 sec
+</pre>
+<td>
+<td>
+<pre>
+48846 hits
+  334 synteny blocks
+46348 gene hits
+38345 synteny hits
+
+Finished in 1 hr 34 min 29 sec
+</pre>
+</table>
 
 <!------------------------------------------------------------------------>
 <a id="clust"></a>
@@ -844,19 +864,33 @@ must be filtered; if they are not, the synteny algorithm does not perform well.
 
 <table class="ty">
 <tr><td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
-<tr><td>&nbsp;&nbsp;<ttl>Min Dots</ttl>
+<tr><td>&nbsp;&nbsp;<ttl>Min Hits</ttl>
 	<td>Minimum number of anchors required to define a synteny block.
 	<td>7
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Merge Blocks</ttl>
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Same orient</ttl><sup>1</sup>
+	<td>All hits in a block must have hits of the same orientation ('+/+' or '-/-') or
+	different orientation ('+/-' or '-/+').
+	<td>Off
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Merge</ttl><sup>2</sup>
 	<td>Merge overlapping (or nearby) synteny blocks into larger blocks.
 	<td>Off
 </table>
-<p>Selecting <ttl>Merge Block</ttl> may be beneficial when there are many small blocks. Below shows
+<p><sup>1</sup><ttl>Same orient</ttl> uses the same algorithm as the original except that it evaluates the hits for one
+orientation, than the other. It also adds a constraint that the correlation must be positive for blocks of hits in the same orientation,
+and negative for opposite orientation.
+<p><sup>2</sup>Selecting <ttl>Merge</ttl> may be beneficial when there are many small blocks. Below shows
 an example where the first image does not have merged blocks and the second does (the blue dots are hits that
 belong to the block).
 <p>
+<p>
 <a href="img/demoNotMerge.png"><img src="img/demoNotMerge.png" alt="demo Not Merge" style="border: 1px solid black; width:  210px"></a>
 <a href="img/demoMerge.png"><img src="img/demoMerge.png" alt="demoMerge" style="border: 1px solid black; width:  220px"></a>
+<p>The following three images show the same regions when evaluated with the following 3 parameter sets:
+<br>Default (one block)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<ttl>Same orient</ttl> (three blocks)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<ttl>Same orient</ttl> with <ttl>Merge</ttl> (two blocks).
+<a href="img/pairOrient.png"><img src="img/pairOrient.png" alt="Pair Orient" style="border: 1px solid black; width:  700px"></a>
+<br>In the last image, the reverse orientation block is embedded in another block
 
 <a id="save2"></a>
 <table style="width: 95%"><tr><td style="text-align: left">

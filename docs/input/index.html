@@ -50,9 +50,11 @@
                   <a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
                   <a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
                   <a href="../Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-                  <a href="./index.html" class="current">Input</a> <mark class="white">|</mark>
-                  <a href="../SystemGuide.html" class="white">System Guide</a> <mark class="white">|</mark>
-                  <a href="../UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+                  <a href="./index.html" class="current">Input</a>&nbsp;
+                  <a href="../SystemGuide.html" class="white">System Guide</a>&nbsp;
+                  <a href="../SystemHelp.html" class="white">Parameters</a> <mark class="white">|</mark>
+                  <a href="../UserGuide.html" class="white">User Guide</a>&nbsp;
+                  <a href="../Query.html" class="white">Queries</a> <mark class="white">|</mark>
                   <a href="../Tour.html" class="white">Tour</a>
                </tr>
             </table>
@@ -136,6 +138,18 @@ see <a href="./ncbi.html" class="ext" target="_blank">NCBI</a> and <a href="./en
 <ttp>xToSymap</ttp> was added to the SyMAP tar file in release v5.5.7 and updated in v.5.5.8.
 <tr><td style="vertical-align: text-top;">&#9656;<td>If you are using files from another source, see <a href="./other.html" class="ext" target="_blank">Other</a>.
 </table>
+
+<a id="iloc"></a>
+<h4>Project directory</h4>
+Put your input files in a directory under: <ttx>symap_5/data/seq/&lt;project-name&gt;</ttx>
+<br>where you create <ttx>&lt;project-name&gt;</ttx>.
+<ul>
+<li>The <ttx>project-name</ttx> should be a short descriptive name containing only letters,
+numbers, and underscores.
+<li>The <ttx>project-name</ttx> is used in the MUMmer output file names.
+<li><i>You cannot be rename this directory</i> after the data is loaded into SyMAP, but you can
+define a <a href="SystemHelp.html#display" target="_blank" class="ext">Display Name</a> to be used in the symap displays; it can be change it at any time.
+</ul>
 
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>Sequence files</h3>

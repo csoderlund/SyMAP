@@ -52,9 +52,11 @@
 						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
 						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
 						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-						<a href="./input/index.html" class="white">Input</a> <mark class="white">|</mark>
-						<a href="./SystemGuide.html" class="current">System Guide</a> <mark class="white">|</mark>
-						<a href="./UserGuide.html" class="white">User Guide</a> <mark class="white">|</mark>
+						<a href="./input/index.html" class="white">Input</a>&nbsp;
+						<a href="./SystemGuide.html" class="current">System Guide</a>&nbsp;
+						<a href="./SystemHelp.html" class="white">Parameters</a> <mark class="white">|</mark>
+						<a href="./UserGuide.html" class="white">User Guide</a>&nbsp;
+						<a href="./Query.html" class="white">Queries</a> <mark class="white">|</mark>
 						<a href="./Tour.html" class="white">Tour</a>
 
 				</table>
@@ -65,18 +67,18 @@
 <center>
 <table class="tx">
 <tr><td colspan=2>This document discusses building a SyMAP v5 database. It always applies to the latest release.
-<br>The following external pages are referenced in this document:
-<table class="tx">
-<tr>
-<td><a href="input/index.html" class="ext" target="_blank">Input</a>
-<td>&nbsp;&nbsp;<a href="SystemHelp.html" class="ext" target="_blank">Parameters and Interface</a>
-<td>&nbsp;&nbsp;<a href="MUMmer.html" class="ext" target="_blank">MUMmer with SyMAP</a>
-<td>&nbsp;<a href="Demo.html" class="ext" target="_blank">Demo</a>
-<td>&nbsp;<a href="TroubleShoot.html" class="ext" target="_blank">Trouble-shoot</a>
-</table>
+
 
 <tr><td><b>Contents</b>
 <tr><td style="vertical-align: text-top;">
+<u>Referenced external docs</u>
+<ul>
+<li><a href="input/index.html" class="ext" target="_blank">Input</a>
+<li><a href="SystemHelp.html" class="ext" target="_blank">Parameters and Interface</a>
+<li><a href="MUMmer.html" class="ext" target="_blank">MUMmer with SyMAP</a>
+<li><a href="Demo.html" class="ext" target="_blank">Demo</a>
+<li><a href="TroubleShoot.html" class="ext" target="_blank">Trouble-shoot</a>
+</ul>
 1. <u>Introduction</u>
 <ul>
 <li style="margin: 0.4em 0;"><a href="#overview">Overview and Publications</a>
@@ -97,6 +99,7 @@
 <li style="margin: 0.4em 0;"><a href="#mysql">MySQL parameters for SyMAP</a>
 </ul>
 
+<td style="vertical-align: text-top;">
 4. <u>Demo</u>
 <ul>
 <li style="margin: 0.4em 0;"><a href="#demo">Running the demo</a>
@@ -105,7 +108,6 @@
 <li style="margin: 0.4em 0;"><a href="#demoself">Self alignment</a>
 </ul>
 
-<td style="vertical-align: text-top;">
 5. <u>New project</u> <!-- #create ref in code -->
 <ul>
 <li style="margin: 0.4em 0;"><a href="#create">Creating a new project</a>
@@ -683,10 +685,8 @@ structure.
 
 <p><u>Project-name</u>:
 Each project has a <ttx>project-name</ttx>.
-The <ttx>project-name</ttx> should be a short and unique name containing only letters,
-numbers, and underscores.
-In the project's <a href="SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>,
-you will be able to add a more descriptive <ttx>Display name</ttx>.
+The <ttx>project-name</ttx> should be a short descriptive name containing only letters,
+numbers, and underscores (see <a href="input/index.html#iloc"  class="ext" target="_blank">Project directory</a>).
 The use of the <ttx>project-name</ttx> is shown below.
 
 <p><u>Project directory structure</u>:
@@ -766,14 +766,14 @@ See <a href="./SystemHelp.html#selLoad" class="ext" target="_blank">Load</a> for
 <td style="text-align: right"><a href="#top">Go to top</a></table>
 
 <table class="tx">
-<tr><td>See <a href="./SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parameters</a>
+<tr><td>See <a href="./SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a>
 on setting the pair parameters for the this step.
 
-<p>See <a href="SystemHelp.html#concat" class="ext" target="_blank">CPU and Concat</a> for a description of these
+<p>See <a href="SystemHelp.html#cpu" class="ext" target="_blank">CPU and Verbose</a> for a description of these
 two options.
 <p>Then select <ttb>All Pairs</ttb> or <ttb>Selected Pair</ttb>
 to run the Alignment&amp;Synteny.
-<td><a href="img/projAnS.png"><img src="img/projAnS.png" alt="align and synteny" style="border: 1px solid black; width: 450px"></a>
+<td><a href="img/demoTable.png"><img src="img/demoTable.png" alt="align and synteny" style="border: 1px solid black; width: 450px"></a>
 </table>
 
 <p><u>Alignment&amp;Synteny files</u>:
