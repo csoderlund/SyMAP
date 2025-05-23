@@ -96,9 +96,9 @@ public class Mpair {
 	
 	private String getAlign(int type) {// return "" if no change
 		String msg="";
-		if (isChg(type,"concat")) 			msg = join(msg, "No concat");	// CAS567 add
-		if (isChg(type,"promer_only")) 		msg = join(msg, "Align PROmer only  ");
-		else if (isChg(type,"nucmer_only")) msg = join(msg, "Align NUCMER only  ");
+		if (isChg(type,"concat")) 			msg = join(msg, " No concat");	// CAS567 add
+		if (isChg(type,"promer_only")) 		msg = join(msg, " Align PROmer only  ");
+		else if (isChg(type,"nucmer_only")) msg = join(msg, " Align NUCMER only  ");
 		
 		if (isChg(type,"self_args")) 		msg = " Self args: "   + getSelfArgs(type); 
 		else if (isChg(type,"promer_args")) msg = " PROmer args: " + getPromerArgs(type);

@@ -1451,7 +1451,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		// Confirm
 		String msg = "Align&Synteny for " + todoList.size() + " pairs";
-		msg += "\nCPUs " + maxCPU + ";  ";						// CAS567 add CPU
+		msg += "\nCPUs " + maxCPUs + ";  ";						// CAS567 add CPU
 		if (Constants.VERBOSE) msg += "Verbose on;  "; else msg += "Verbose off;  ";
 		
 		if (!Utilities.showConfirm2("All Pairs", msg)) return; 
@@ -1478,7 +1478,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (mProjs==null) return;
 		
 		int nCPU = getCPUs();
-		if (nCPU == -1) nCPU=1;;
+		if (nCPU == -1) return; // it says to enter valid number in getCPU; CAS567 after 1st submission
 		if (!alignCheckProjDir()) return; // error written in calling routine
 	
 		Mpair mp = getMpair(mProjs[0].getIdx(), mProjs[1].getIdx());
@@ -1518,7 +1518,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		String chgMsg = bAlignDone ? mp.getChangedSynteny() : mp.getChangedParams(Mpair.FILE);  
 		if (chgMsg!="") msg += "\n" + chgMsg;
-		msg += "\nCPUs " + maxCPU + ";  ";						// CAS567 add CPU
+		msg += "\nCPUs " + nCPU + ";  ";						// CAS567 add CPU; was maxCPU - fixed after 1st submission
 		if (Constants.VERBOSE) msg += "Verbose on"; else msg += "Verbose off";
 		
 		if (!Utilities.showConfirm2("Selected Pair", msg)) return;
@@ -1533,14 +1533,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 
 	private int getCPUs() {
-		int maxCPUs = 1;
-		try { maxCPUs = Integer.parseInt(txtCPUs.getText());}
+		try { maxCPU = Integer.parseInt(txtCPUs.getText()); }
 		catch (Exception e) {
 			Utilities.showErrorMessage("Please enter a valid value for number of CPUs to use.");
 			return -1;
 		}
-		if (maxCPUs <= 0) maxCPUs = 1;
-		return maxCPUs;
+		if (maxCPU <= 0) maxCPU = 1;
+		return maxCPU;
 	}
 	// Create directories if alignment is initiated; 
 	// An alignment may be in the database, yet no /data directory. The files will be rewritten, so the directories are needed.
