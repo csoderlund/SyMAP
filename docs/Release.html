@@ -58,6 +58,7 @@ For existing databases, there are no database or build changes since <a href="#v
 <br>You must have Java v17.0.11 or later, starting with SyMAP v5.5.0.
 <h3>Summary of recent major releases</h3>
 <table class="tx">
+<tr><td><a href="#v567">v5.6.7</a><td>(22-May-25)<td>The synteny algorithm has new orientation option.
 <tr><td><a href="#v560">v5.6.0</a><td>(23-Jan-25)<td>Improve <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>,
 which is aware of the exon-intron structure.
 <tr><td><a href="#v557">v5.5.7</a><td>(8-Aug-24)<td>Add <ttl>xToSymap</ttl> and improve ease of input.
@@ -65,7 +66,35 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
-<a id="v566"></a>
+<a id="v568"></a>
+<h3>Release: v5.6.8 (1-June-25)</h3>
+Improvements to the <ttl>Project parameters</ttl> and <ttl>Pair parameters</ttl>, and v567 bug fix for linux /ext access.
+<ul>
+<li><ttl>Aligment&Synteny:</ttl>
+<ul>
+<li><i>Mask genes</i>: The parameter to mask all but the genes in a genome sequence was in the <ttl>Project Parameter</ttl>; but this feature
+occurs right before the alignment, so has been moved to the <ttl>Pair Parameter</ttl> so it can be set per pair.
+See <a href="SystemHelp.html#mask" class="ext" target="_blank">Mask</a>.
+
+<li><i>Order against</i>: The parameter to order one project against another was in <ttl>Project Parameter</ttl>; but this feature
+occurs right after the synteny computation, so has been moved to the <ttl>Pair Parameter</ttl> so it can be set per pair.
+See <a href="SystemHelp.html#order" class="ext" target="_blank">Order against</a>.
+
+<li><ttx>params_align_used</ttx>: This is a new file created by symap in the <ttx>data/seq_results/&lt;project-name&gt;</ttx> directory that tells what parameters were set for the alignment. The
+contents of this file is listed on the <ttl>Summary</ttl>. In this way, if an alignment is reused, this knowledge is kept with it.
+<li>Improved the output to the terminal and <ttx>symap.log</ttx> file. Improved
+the popup that showed the selected parameters.
+<li><i>Remove</i>: The popup questions for removing the project from the database and project/alignments from disk are more accurate now.
+The removal is recorded in the <ttx>logs/&lt;database-name&gt;_load.log</ttx> file.
+<li>Bug fix from v567: The code to find MUMmer was using linux64 instead of lintel64, causing it to not find MUMmer on linux.
+<br>Bug fix: The <ttl>Pair Parameters</ttl> <ttx>Promer_only</ttx> and <ttx>Nucmer_only</ttx>  were not working.
+</ul>
+<p>
+<li><ttb>Docs:</ttb> added timing results.
+<p>
+<li><small>Developers: Standardized the remove methods and removed using threads.</small>
+</ul>
+<a id="v567"></a>
 <h3>Release: v5.6.7 (22-May-25)</h3>
 The synteny algorithm has a new option that each block must have all hits in the same orientation.
 <ul>
@@ -100,7 +129,7 @@ See <a href="UserGuide.html#hitfilter" class="ext" target="_blank">Hit filter</a
 situations.
 <p>
 <li><small>Developers: Rename synteny/SyGraph to Merge and move merge routines to it; add orient.
-Any java file I looked at, I took out old CASddd comments.
+Any java file I looked at, I took out old CASddd comments.</small>
 </small>
 </ul>
 
@@ -286,7 +315,7 @@ ResultSummaryPanel->ResultsPanel.
 New UtilSelect, UtilReportNR, ComputeClust.
 
 <li>Non-queries changes: Manager: add extra info if the Display Name has been used.
-
+</small>
 </ul>
 </ul>
 <a id="v562"></a>

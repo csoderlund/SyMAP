@@ -144,12 +144,21 @@ see <a href="./ncbi.html" class="ext" target="_blank">NCBI</a> and <a href="./en
 Put your input files in a directory under: <ttx>symap_5/data/seq/&lt;project-name&gt;</ttx>
 <br>where you create <ttx>&lt;project-name&gt;</ttx>.
 <ul>
-<li>The <ttx>project-name</ttx> should be a short descriptive name containing only letters,
-numbers, and underscores.
-<li>The <ttx>project-name</ttx> is used in the MUMmer output file names.
-<li><i>You cannot be rename this directory</i> after the data is loaded into SyMAP, but you can
-define a <a href="SystemHelp.html#display" target="_blank" class="ext">Display Name</a> to be used in the symap displays; it can be change it at any time.
+<li>The <ttx>project-name</ttx> should be a short descriptive name
+containing only alphanumeric characters, periods, underscores and hyphens; do not use symbols like %, $, spaces, etc.
+The names are case-sensitive, so you cannot have "Mus" and "mus" for two different projects.
+<p>
+<li>The <ttx>project-name</ttx> is used as part results directory name and  MUMmer output file names. For example,
+the alignments between <tt>demo_seq</tt> and <tt>demo_seq2</tt> are in directory <tt>data/seq_results/demo_seq_to_demo_seq2</tt>
+and one MUMmer results file is named <tt>demo_seq_f2.demo_seq_f1.mum</tt>.
+<p>
+<li><i>You cannot be rename this directory</i> after the data is loaded into SyMAP. However, you can
+define a <a href="../SystemHelp.html#display" target="_blank" class="ext">Parameter Display Name</a> to be used in the symap displays,
+which can be change at any time.
 </ul>
+See the <a href="../SystemGuide.html#dir" target="_blank" class="ext">
+ System Guide's Directory structure</a> for
+more information.
 
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>Sequence files</h3>

@@ -71,7 +71,8 @@
 
 <tr><td><b>Contents</b>
 <tr><td style="vertical-align: text-top;">
-<u>Referenced external docs</u>
+<u>
+Referenced external docs</u>
 <ul>
 <li><a href="input/index.html" class="ext" target="_blank">Input</a>
 <li><a href="SystemHelp.html" class="ext" target="_blank">Parameters and Interface</a>
@@ -84,21 +85,18 @@
 <li style="margin: 0.4em 0;"><a href="#overview">Overview and Publications</a>
 <li style="margin: 0.4em 0;"><a href="#steps">Steps for finding synteny</a>
 </ul>
-
 2. <u>Requirements</u>
 <ul>
 <li style="margin: 0.4em 0;"><a href="#machine">System Requirements</a>
-<li  style="margin: 0.4em 0;"><a href="#run">Runtime and Memory</a>
+<li  style="margin: 0.4em 0;"><a href="#time">Tested platforms and timing results</a>
 <li style="margin: 0.4em 0;"><a href="#java">Perl, Java and MySQL</a>
 </ul>
-
 3. <u>Install SyMAP</u>
 <ul>
 <li style="margin: 0.4em 0;"><a href="#installation">Installation</a>
 <li style="margin: 0.4em 0;"><a href="#ext">External executables</a>	<!-- in SyMAP -->
 <li style="margin: 0.4em 0;"><a href="#mysql">MySQL parameters for SyMAP</a>
 </ul>
-
 <td style="vertical-align: text-top;">
 4. <u>Demo</u>
 <ul>
@@ -107,7 +105,6 @@
 <li style="margin: 0.4em 0;"><a href="#draft">Draft alignment and ordering</a>
 <li style="margin: 0.4em 0;"><a href="#demoself">Self alignment</a>
 </ul>
-
 5. <u>New project</u> <!-- #create ref in code -->
 <ul>
 <li style="margin: 0.4em 0;"><a href="#create">Creating a new project</a>
@@ -118,7 +115,6 @@
 <li style="margin: 0.4em 0;"><a href="#self">Self alignment</a>
 <li style="margin: 0.4em 0;"><a href="#cancel">Cancel</a>
 </ul>
-
 6. <u>General</u>
 <ul>
 	<li style="margin: 0.4em 0;"><a href="#update">How to update SyMAP with a new release</a>
@@ -156,7 +152,7 @@ Its features include the following:
 	<li><i>Query and view</i>
 	<ul>
 		<li>For multiple selected synteny pairs, display using dot plot, circular, and side-by-side.
-		<li>Complete queries on annotation, collinear genes, cross-species gene families, etc.
+		<li>Complete queries on annotation, collinear genes, multi-hit genes, etc.
 	</ul>
 </ul>
 <td><a href="img/symapPlants.png"><img src="img/symapPlants.png" alt="viewPlants"
@@ -233,7 +229,7 @@ The following three scripts are provided in the tar file.
 		<td style="vertical-align: text-top;">5.
 		<td style="vertical-align: text-top;">Prepare input files.
 		<td style="vertical-align: text-top;">FASTA sequence and optional GFF annotation.
-		<br>See <a href="#create">Creating a new project</a>.
+		<br>See <a href="#create">Creating a new project</a> and <a href="input/index.html" class="ext" target="_blank">Input</a>.
 
 	<tr>
 		<td style="vertical-align: text-top;">6.
@@ -260,92 +256,137 @@ The following three scripts are provided in the tar file.
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>System Requirements</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></table>
-
 The machine must be a Linux or MacOS 64-bit machine.
-SyMAP has been tested on the following:
+
+<p>The largest component of SyMAP execution time is running MUMmer<sup>1,2</sup>.
+The time and memory for MUMmer all depends on the genomes sizes, complexity and similarity.
+If MUMmer fails, it is often due to insufficient memory, see the
+<a href="MUMmer.html" class="ext" target="_blank">MUMmer</a> document, which
+explains how to determine the problem and ways around it.  And it explains how
+to <a href="MUMmer.html#cmd"  class="ext" target="_blank">run MUMmer on a different machine</a> and port the
+results to the <ttx>symap_5/data/seq_results</ttx> directory. The next section timing results gives an idea
+of compute times.
+
+<p>If SyMAP runs out of memory, see <a href="TroubleShoot.html#memory" class="ext" target="_blank">Trouble Shoot</a>.
+
+<p> For viewing alignments, CPU and memory needs are typically negligible, unless
+you are performing queries on more than 4-5 genomes at once.
+
+<a id="time"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Tested platforms and timing results</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></table>
+
+SyMAP has been tested on the following,
+where most of the timing results are for the MacOS with 48Gb:
 <table class="ty" style="font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
-<tr><td><i>Machine</i><td><i>MySQL</i><td><i>Java</i><td><i>Core</i><td><i>Memory</i><td><i>Purchased</i>
-<tr><td colspan=2><ttl>v5.6.6 and later</ttl>:
-<tr><td>MacOS M4 (Sequoia)
+<tr><td><i>Machine</i><td><i>MySQL</i><td><i>Java</i><td><i>Core (CPU)</i><td><i>Memory</i><td><i>Purchased</i>
+<tr><td colspan=2><i>v5.6.6 and later</i>:
+<tr><td><ttl>MacOS M4</ttl><sup>1</sup>
 	<td>MySQL v8.0.42
 	<td>24 from <a href="https://www.oracle.com/java/" class="ext" target="_blank">Oracle</a>
-	<td>M4 12-Core<td>&nbsp;48 GB<td>2025
+	<td>M4 12-Core<td>&nbsp;48Gb<td>2025
 
-<tr><td colspan=2><ttl>v5.4.1 and later</ttl>:
+<tr><td colspan=2><i>v5.4.1 and later</i>:
 
-<tr><td>MacOS x86_64 (Sonoma 14.4.1)<sup>1</sup>
+<tr><td><ttl>MacOS x86_64</ttl><sup>2</sup>
 	<td>MySQL v8.0.33,<br>MariaDB 11.0.2
 	<td>8, 15, 17, 18, 20 from
 	<br><a href="https://adoptium.net" class="ext" target="_blank">Adoptium</a> and <a href="https://www.oracle.com/java/" class="ext" target="_blank">Oracle</a>
-	<td>3.2 GHz 6-Core<td>&nbsp;64 GB<td>2018
+	<td>3.2 GHz 6-Core<td>&nbsp;64Gb<td>2018
 
-<tr><td><a href="http://linode.com" class="ext" target="_blank">Linode</a> (Ubuntu 22.04.2 LTS)<sup>2</sup>
-	<td>MySQL 8.0.33<td>17<td>Nanode<td>&nbsp;&nbsp;1 GB<td>2023
+<tr><td><a href="http://linode.com" class="ext" target="_blank"><ttl>Linode</ttl></a> (Ubuntu 22.04.2 LTS)<sup>3</sup>
+	<td>MySQL 8.0.33<td>17<td>Nanode<td>&nbsp;&nbsp;1Gb<td>2023
 
-<tr><td colspan=2><ttl>v5.4.0 and earlier</ttl>:
-<tr><td>Linux amd64 (Centos)<sup>3</sup>
+<tr><td colspan=2><i>v5.4.0 and earlier</i>:
+<tr><td><ttl>Linux amd64</ttl> (Centos)<sup>4</sup>
 	<td>MariaDB v10.4.12
 	<td>1.8
 	<td>2.3 GHz 24-Core
-	<td>128 GB
+	<td>128Gb
 	<td>2011
-<tr><td>MacOS x86_64 (Catalina 10.15.4)
-	<td>MySQL v8.0.17<td>17.0<td>3.2 GHz 6-Core<td>&nbsp;64 GB<td>2018
-<tr><td>MacOS x86_64 (Maverick 10.9.5)<sup>4</sup>
-	<td>MySQL v5.6.21<td>1.8<td>2.4 GHz 5-Core<td>&nbsp;16 GB<td>2011
+</table>
+<p><u>Times</u> are those reported in
+the SyMAP output, which uses the Java system time functions (clock times
+are greater than the Java CPU system times). Repeated execution can result in times
+varying by approximately +/-5secs. In the tables below, the two times by each genome pair
+are:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MUMmer alignment (hour:minute), SyMAP clustering&synteny (minute:second).
+<p>All the following results use 4 CPUs (thread/core).
+
+<ol>
+<li>MacOS M4 with <ttl>48Gb</ttl> has been tested with the following:
+<ol type="i">
+<li>The complete <i>Homo sapiens</i> (24 chrs, 3Gb) with <i>Mus musculus</i> (21 chrs, 2.7Gb).
+<br>To get MUMmer to run successfully, it was necessary to uncheck
+<a href="SystemHelp.html#concat" class="ext" target="_blank">Concat</a>.
+<p><table><tr><td>&nbsp;&nbsp;&nbsp;<td><u>Time</u>&nbsp;&nbsp;
+	<td>Hsa x Mus<td><td>&nbsp;<td><b>30h:45m</b>, 1m:37s<td>&nbsp;&nbsp;&nbsp;<td>24x21 pairs, large genomes</table>
+<p>
+<li><i>Arabidopsis thaliana</i> (5 chr, 119Mb), <i>Brassica rapa</i> (10 chr, 297Mb),
+<i>Brassica oleracea</i> (9 chr, 447Mb).
+<p><table><tr><td>&nbsp;&nbsp;&nbsp;<td><u>Time</u>&nbsp;&nbsp;
+		<td>A.thal x B.rapa<td>&nbsp;<td>0h:11m, 1m:13s<td>&nbsp;&nbsp;&nbsp;<td>5x10 pairs
+<tr><td>&nbsp;&nbsp;&nbsp;<td>
+		<td>A.thal x B.oler<td>&nbsp;<td>0h:31m, 1m:14s<td>&nbsp;&nbsp;&nbsp;<td>5x9 pairs
+<tr><td>&nbsp;&nbsp;&nbsp;<td>
+        <td>B.raba x B.oler<td>&nbsp;<td><b>4h:23m</b>, 4m:12s<td>&nbsp;&nbsp;&nbsp;<td>10x9 pairs, closely related</table>
+<p>
+<li>Chr 5,17,X,Y of <i>Homo sapiens</i> (478Mb) and <i>Pan troglodytes</i> (447Mb);
+<br>Chr 11,13,X,Y of <i>Mus musculus</i> (504Mb); Chr 11,19,X of <i>Oryctolagus cuniculus</i> (257Mb).
+
+<p><table><tr><td>&nbsp;&nbsp;&nbsp;<td><u>Time</u>&nbsp;&nbsp;<td>
+       <td>Hsa x Pan <td>&nbsp;<td><b>16h:40m</b>, 0m:35s<td>&nbsp;&nbsp;closely related&nbsp;&nbsp;&nbsp;
+        <td>Pan x Mus<td>&nbsp;<td>&nbsp;&nbsp;0h:45m, 0m:05s<td>&nbsp;&nbsp;&nbsp;
+        <tr><td>&nbsp;&nbsp;&nbsp;<td>&nbsp;<td>&nbsp;
+       <td>Hsa x Mus <td>&nbsp;<td>&nbsp;&nbsp;0h:55m, 0m:04s<td>&nbsp;&nbsp;&nbsp;
+       <td>Pan x Ory <td>&nbsp;<td>&nbsp;&nbsp;0h:39m, 0m:02s<td>&nbsp;&nbsp;&nbsp;
+       <tr><td>&nbsp;&nbsp;&nbsp;<td>&nbsp;<td>&nbsp;
+        <td>Hsa x Ory<td>&nbsp;<td>&nbsp;&nbsp;0h:34m, 0m:03s<td>&nbsp;&nbsp;&nbsp;
+       <td>Mus x Ory <td>&nbsp;<td>&nbsp;&nbsp;0h:44m, 0m:03s<td>&nbsp;&nbsp;&nbsp;
 </table>
 
-<sup>1</sup> <small>MacOS Sonoma has been tested with:
-<br>&nbsp;&nbsp;&nbsp;&bull; <i>Arabidopsis thaliana</i> (119MB), <i>Brassica Rapa</i> (297MB) and
-<i>Brassica oleracea</i> (447MB);
-<br>&nbsp;&nbsp;&nbsp;&bull; <i>Prunus persica</i> (227MB) with draft <i>Prunus yedoensis</i> (449MB);
-<br>&nbsp;&nbsp;&nbsp;&bull; Chromosomes 5,17,X of <i>Homo sapiens</i> (420MB), <i>Mus musculus</i> (412MB) and <i>Pan troglodytes</i> (420MB)
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;and all chromosomes of <i>Oryctolagus cuniculus</i> (rabbit, 2GB).
-</small>
+<p>
+<li>Peach <i>Prunus persica</i> (8 chr, 227Mb) and draft <i>Prunus yedoensis</i> (250 scaffolds, 408Mb).
+<br>Pyeudo.Peach was the result of ordering Pyedo against peach (8 chr, 270Mb).
+<p><table><tr><td>&nbsp;&nbsp;&nbsp;<td><u>Time</u>&nbsp;&nbsp;
+             <td>Peach x Pyedo<td>&nbsp;<td>0h:44m, 6m:51s<td>&nbsp;&nbsp;Pyedo ordered by peach
+        <tr><td>&nbsp;&nbsp;&nbsp;<td>&nbsp;
+              <td>Peach x Pyedo.Peach<td>&nbsp;<td>0h:40m, 0m:20s<td>
+             </table>
+</ol>
+<p><li> MacOS x86_64 with 64Gb has been tested on 2-4 above. Only a few timings are shown below for smallish more distant
+genomes; note the longer synteny times on this older machine.
+<p><table><tr><td>&nbsp;&nbsp;&nbsp;<td><u>Time</u>&nbsp;&nbsp;
+		<td>A.thal x B.rapa<td>&nbsp;<td>0h:23m, 3m:58s
+<tr><td>&nbsp;&nbsp;&nbsp;<td>
+		<td>A.thal x B.oler<td>&nbsp;<td>0h:33m, 4m:06s
+</table>
 
-<br><sup>2</sup> <small>Linode nanode was too small to run MUMmer, so the MUMmer demo result files were transfered to the
-<ttx>data/seq_results/demo_seq_to_demo_seq2</ttx> directory. This allowed all other features to be tested on a small database.
-</small>
+<p><li> Linode nanode with 1Gb was too small to run MUMmer, so the MUMmer demo result files were transfered to the
+<ttx>data/seq_results/demo_seq_to_demo_seq2</ttx> directory.
+This allowed all other features to be tested on the demo, including running the synteny algorithm
+without the alignment. Also, two tiny input files were used to test MUMmer.
 
-<br><sup>3</sup> <small>Linux amd64 was used extensively on large plant genomes, e.g. maize (2365MB),
-rice (400MB) and sorghum (730GB).
-</small>
-
-<br><sup>4</sup> <small>MacOS Maverick is an old laptop. I could not download from Github,
-so downloaded v5.0.8 from AGCoL. Then I had to replace <ttx>/ext/mummer/mac</ttx> with
-<ttx>/ext/mummer/mac_pre506</ttx>. This machine is fine for viewing a SyMAP database,
-but too small to process large input files.
-</small>
-
-<!---------------------------------------------------------->
-<a id="time"></a>
+<p><li>Linux amd64 with 128Gb was used extensively on large plant genomes.
+<br>To align rice x maize (400Mb x 2365Mb) required a total of <b>1h:3m</b> using 8 CPUs
+</ol>
 <table style="width: 95%"><tr><td style="text-align: left">
-<h3>Runtime and Memory</h3>
+<h4>Disk space</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></table>
 
-For performing large alignments (e.g. 1Gb genomes or more) <i>it is essential
-to have multiple CPUs and at least 5Gb of RAM for each CPU that you intend to use</i>. Note that you can set the
-number of CPUs for SyMAP to use.
-If SyMAP runs out of memory, see <a href="TroubleShoot.html#memory" class="ext" target="_blank">Trouble Shoot</a>.
-If MUMmer runs out of memory, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
+Given the amazing disk space available for all modern computers, disk space should not be a problem.
+MUMmer produces a <tt>.mum</tt> and <tt>.delta</tt> file; SyMAP only uses the <tt>.mum</tt> file
+so it removes the MUMmer alignment <tt>.delta</tt> file. For the full <i>Homo sapiens</i> x <i>Mus musculus</i>,
+the resulting <ttx>data/seq_results/Hsa_to_Mus/align</ttx> directory was 573M.
 
-<p>
-For viewing alignments with <ttx>viewSymap</ttx>, CPU and memory needs are typically negligible, unless
-you are performing queries on more than 4-5 genomes at once.
-
-<p>The largest component of SyMAP execution time is in running
-MUMmer<sup>1,2</sup>. The time and memory for MUMmer all depends on the size
-of the genomes.
-For example, to align rice (12 chromosomes, 370Mb) to maize (10 chromosomes, 2Gb)
-required 1 hour and 3 minutes using 8 CPUs with 2.3Ghz speed.
-<p>
-The memory usage of MUMmer is typically 5G per CPU, however it can
-be as high as 10G for very long or repetitive chromosomes. If MUMmer fails, it is often due
-to insufficient memory, see the <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a> document, which
-explains how to determine the problem and ways around it. It explains the
-<a href="MUMmer.html#cat" class="ext" target="_blank">CPU and Concat</a> options. And it explains how
-to <a href="MUMmer.html#cmd"  class="ext" target="_blank">run MUMmer on a different machine</a> and port the
-results to the <ttx>symap_5/data/seq_results</ttx> directory.
+<p>You can remove the <ttx>data/seq_results/&lt;project1_to_project2&gt;/</ttx> directory after SyMAP has finished the synteny
+computation, but <i><b>it is strongly recommended</b></i> that you leave them if you have the space. There
+are frequent SyMAP updates with improvements to the clustering and synteny computations; if you have
+kept these files, then you can update your database in very little time (note the >30h for MUMmer
+for Hsa x Mus versus 1m:37s for the synteny). Also, you can easily try different parameters for the clustering
+and synteny stages.
+<p>If you do not want SyMAP to remove the  <tt>.delta</tt>, use the "-mum" command line argument.
 
 <!------------------------------------------------>
 <a id="java"></a>
@@ -417,17 +458,17 @@ SyMAP will determine which subdirectory to use.
 
 <p>If you compile your own executables for a different architecture, do the following:
 <ol>
-<li>Under mummer and mafft, make a directory with your architecture name (e.g. <tt>mine</tt>).
-<li>Put the executables under this directory in the exact same way as shown for linux64.
-<li>In the symap configuration file (default <tt>symap.config</tt>), add a line <tt>arch={your architecture name}</tt>
-(e.g. <tt>arch=mine</tt>).
+<li>Under mummer and mafft, make a directory with your architecture name.
+<li>Put the executables under this directory in the exact same way as shown for lintel64.
+<li>In the symap configuration file (default <tt>symap.config</tt>), add a line
+<pre>     arch={your directory architecture name}</pre>
 </ol>
 Note that I do not have an alternative machine to try this on, but it should work. Email me
 at symap@agcol.arizona.edu if it does not.
 
 <p>For MUMmer, see <a href="MUMmer.html#ext" class="ext" target="_blank">Executables</a>
 and <a href="MUMmer.html#mum4" class="ext" target="_blank">Using MUMmer4</a>.
-On MacOS, you may also need <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS externals</a>.
+On MacOS, you may also need to view <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS externals</a>.
 
 <!---------------------------------------------------------->
 <a id="mysql"></a>
@@ -526,7 +567,7 @@ For MacOS, you may also need <a href="TroubleShoot.html#macos" class="ext" targe
 
 <table>
 <tr><td style="vertical-align: text-top;">
-The <ttb>Project Manager</ttb> window will show the three demo projects provided with the SyMAP tarball.
+The <ttb>Project Manager</ttb> panel will show the three demo projects provided with the SyMAP tarball.
 Check <ttx>Demo-Seq</ttx> and <ttx>Demo-Seq2</ttx> and they will be displayed on the right panel.
 <td><a href="img/demoLoad.png"><img src="img/demoLoad.png" alt="demoLoad" style="border: 1px solid black; width: 400px"></a>
 
@@ -543,10 +584,10 @@ the <a href="img/view.png">View</a> link.
 <a href="TroubleShoot.html#msqslow" class="ext" target="_blank">TroubleShoot MySQL</a>.
 <p>When done, the <ttb>Manager</ttb> will look like the image shown on the right.
 In the <ttl>Available Syntenies</ttl> table, the cell for  <ttx>Demo_Seq2</ttx> and <ttx>Demo_Seq</ttx> will
-automatically be selected.
+automatically be selected (green cell).
 
 <p>Click the <ttb>Selected Pair</ttb> button to start the <ttl>Alignment&amp;Synteny</ttl>.
-The <ttb>All Pairs</ttb> button can also be selected, as it will perform <ttl>Alignment&amp;Synteny</ttl> on all pairs
+ <ttb>All Pairs</ttb> button can also be selected, as it will perform <ttl>Alignment&amp;Synteny</ttl> on all pairs
 in the table.
 <td>
 <a href="img/demoMgr.png"><img src="img/demoMgr.png" alt="demoMgr" style="border: 1px solid black; width: 400px"></a>
@@ -566,15 +607,15 @@ on a slow machine.
 <tr>
 <td style="vertical-align: text-top;">
 Click <ttb>Summary</ttb> to view the summary shown on the right;
-<i>there may be slight differences in the #Cluster hits
-because of different numbers of CPUs, MacOS vs Linux, etc (but the #Blocks come out the same)</i>.
+<i>there may be slight differences in the #Cluster hits</i>
+because of different numbers of CPUs, MacOS vs Linux, etc (but the #Blocks come out the same).
 <p>To view the other interfaces, see <a href="Demo.html" class="ext" target="_blank">Demo Results</a>.
 <p>&nbsp;<p>
 Once the alignments are computed, the <ttl>Parameters</ttl> can be experimented without
 having to redo the alignments.
 Try using the <ttl>Algorithm 2 (gene-centric)</ttl> for <ttx>Cluster Hits</ttx>;
 bring up the
-<a href="SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a> window
+<a href="SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a> panel
 and select <ttl>Algorithm 2</ttl> with its defaults. This
 gives a summary similar to <a href="img/demoSum2.png" class="ext" target="_blank">this</a>.
 <td>
@@ -588,18 +629,18 @@ gives a summary similar to <a href="img/demoSum2.png" class="ext" target="_blank
 
 <table>
 	<tr><td style="vertical-align: text-top;">
-Load the <ttx>Demo-Draft</ttx> project. Under the <ttx>Demo-Draft</ttx> listing, you will see
-the parameter "Order against: demo_seq2". With this setting,
-the <ttx>Demo-Draft</ttx> contigs will be ordered using synteny to <ttx>Demo-Seq2</ttx>;
-this was set in the project's <a href="./SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a> window.
+Load the <ttx>Demo-Draft</ttx> project. Select <ttx>Demo-Seq2</ttx> on the left side so it shows in the
+<ttl>Available Syntenies</ttl>. Select the Demo-Draft/Demo-Seq2 cell.
+Open the <a href="./SystemHelp.html#over2" class="ext" target="_blank">Parameters</a> panel;
+at the bottom, select <ttx>Draf->Seq2</ttx>.
 		<td>
-<a href="img/demoDraft1.png"><img src="img/demoDraft1.png" alt="demoDraft1" style="border: 1px solid black; width: 400px"></a>
+<a href="img/parameters2c.png"><img src="img/parameters2c.png" alt="order parameters" style="border: 1px solid black; width: 320px"></a>
 	<tr><td style="colspan: 2; height: 40px;">&nbsp;
-	<tr>
-		<td style="vertical-align: text-top;">
-Run the <ttl>Alignment&amp;Synteny</ttl>, where the alignment should take less than 30 minutes with one CPU.
-When done, open the <ttb>Summary</ttb> for the pair, as shown on the right; <i>as mentioned above, there
-may be slight difference in the number of anchors.</i>
+
+	<tr><td style="vertical-align: text-top;">
+Run the <ttl>Alignment&amp;Synteny</ttl>, where the alignment should take less than 10 minutes with one CPU.
+When done, open the <ttb>Summary</ttb> for the pair, as shown on the right; as mentioned above, <i>there
+may be slight difference in the number of Cluster hits.</i>
 See the first dot plot in <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>.
 <p>It is recommended that the
 <a href="SystemHelp.html#clust" class="ext" target="_blank">Cluster Algo1</a> be used for ordering sequence.
@@ -608,29 +649,31 @@ See the first dot plot in <a href="Demo.html#draft" class="ext" target="_blank">
 
 </table>
 
-<p>The ordering algorithm changes the order of the draft contigs in the database, but does
-not change the sequence files on disk. However, it writes the following files:
+<p>The ordering algorithm creates the following files and directories:
 <p>1. <i>File of ordered contigs:</i> It writes the order of the contigs along with
-whether they should be flipped to a file called <ttx>/data/seq/demo_draft/ordered.csv</ttx>.
+whether they should be flipped to a file called <ttx>/data/seq/demo_draft/demo_seq2_ordered.csv</ttx>.
 
-<p>2. <i>FASTA files of ordered sequences: </i>
-It creates sequence files from the ordered contigs that are flipped when appropriate,
-which are put into a new project
-with the suffix <ttx>_ordered</ttx>, as shown in the image below. The chromosome names correspond
-to the order-against project (e.g. <ttx>demo_seq2</ttx>), and the third chromosome is 'chr0'
-which contains all draft sequences that were not placed.
+<p>2. <i>New project:</i> It creates a new project directory called
+<ttx>data/seq/&lt;draft_demo&gt;..&lt;demo_seq2&gt;</ttx> (the naming allows <tt>demo_draft</tt> to unambiguously
+be ordered against different genomes).
+This directory will contain a sub-directory <ttx>/sequence</ttx> to contain the sequence file.
+
+<p>3. <i>FASTA sequence file of ordered sequences: </i>
+The sequence file will contain the ordered contigs that are flipped when appropriate.
+The chromosome names correspond
+to the order-against project (e.g. <ttx>demo_seq2</ttx>). Chromosome 'chr0'
+contains all draft sequences that were not placed.
 <p>
-
+The new project is shown on the left side of the <ttb>Manager</ttb>.
+The display name is  <ttx>Demo_Draft.Demo_seq2</ttx>, click and load it.
 <table>
 <tr><td style="vertical-align: text-top;">
-As shown in the image on the left, a new project has been added. Click <ttx>Demo_Draft-ordered</ttx> and
-load it.
-Running the <ttl>Alignment&amp;Synteny</ttl>
-between the <ttx>_ordered</ttx> project and <ttx>Demo_seq2</ttx> will provide a more coherent display
-(see the second dot plot for
+
+Running the <ttl>Alignment&amp;Synteny</ttl> between the <ttx>Demo_Draft.Demo_seq2</ttx> project
+and <ttx>Demo_seq2</ttx> will provide a more coherent display (see the second dot plot for
 <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>).
-Using the project's <a href="SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a> window,
-the <ttx>Demo_Draft-ordered</ttx> name can be shortened.
+Using the project's <a href="SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a> panel,
+the <ttx>Demo_Draft.Demo-Seq2</ttx> name can be shortened.
 <td><td>
 <a href="img/demoDraft3.png"><img src="img/demoDraft3.png" alt="demoDraft3" style="border: 1px solid black; width: 400px"></a>
 </table>
@@ -684,9 +727,9 @@ and outputs the best input files for SyMAP, along with automatically creating th
 structure.
 
 <p><u>Project-name</u>:
-Each project has a <ttx>project-name</ttx>.
-The <ttx>project-name</ttx> should be a short descriptive name containing only letters,
-numbers, and underscores (see <a href="input/index.html#iloc"  class="ext" target="_blank">Project directory</a>).
+Each project has a <ttx>project-name</ttx>, which is also the project's directory name.
+The <ttx>project-name</ttx> should be a short descriptive name; see the <a href="input/index.html#iloc" class="ext" target="_blank">
+Input's Project directory</a> for important details.
 The use of the <ttx>project-name</ttx> is shown below.
 
 <p><u>Project directory structure</u>:
@@ -731,23 +774,22 @@ and your optional GFF files(s) to <ttx>data/seq/&lt;project-name&gt;/annotation<
 <li>Use the <ttb>Add project</ttb> button on the <ttx>symap</ttx> interface (lower-left corner) to
 add the project name to the <ttx>data/seq</ttx> directory.
 Use the <a href="SystemHelp.html#projParams" class="ext" target="_blank">project's parameter</a>
-window to enter the location of the sequences and optional annotation files into the <ttx>Sequence files</ttx>
+panel to enter the location of the sequences and optional annotation files into the <ttx>Sequence files</ttx>
 and <ttx>Anno files</ttx> parameters.
 </ol>
-For options 1 and 2, it is not necessary to enter the locations of the files in the
-<a href="SystemHelp.html#projParams" class="ext" target="_blank"> project parameter</a> window since
-both use the default locations. Beware, executing the <ttb>Remove project from disk</ttb> (depending on
-location), can remove the data files also.
+<p>For options 1 and 2, it is not necessary to enter the locations of the files in the
+<a href="SystemHelp.html#projParams" class="ext" target="_blank"> project parameter</a> panel since
+both use the default locations.
 <p>
+All sub-directories in <ttx>data/seq</ttx> are shown on the left-panel of the <ttx>symap</ttx> interface.
 <table>
 <tr><td style="vertical-align: text-top;">
-All sub-directories in <ttx>data/seq</ttx> are shown on the left-panel of the <ttx>symap</ttx> interface.
 <p>Each project is shown with its <ttx>Display name</ttx>, which is set in the project's parameters.
 The <ttx>project-name</ttx> is shown on the right hand image as the <ttx>Directory name</ttx>, as they are the same.
 <td>
 <a href="img/projNew2.png"><img src="img/projNew2.png" alt="projNew2" style="border: 1px solid black; width: 450px"></a>
 </table>
-
+The <ttx>symap</ttx> program requires the directories to be present (and will create them if necessary), <ttx>viewSymap</ttx> does not.
 <!------------ load ----------------------->
 <a id="load"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -771,7 +813,7 @@ on setting the pair parameters for the this step.
 
 <p>See <a href="SystemHelp.html#cpu" class="ext" target="_blank">CPU and Verbose</a> for a description of these
 two options.
-<p>Then select <ttb>All Pairs</ttb> or <ttb>Selected Pair</ttb>
+<p>Then select <ttb>Selected Pair</ttb>
 to run the Alignment&amp;Synteny.
 <td><a href="img/demoTable.png"><img src="img/demoTable.png" alt="align and synteny" style="border: 1px solid black; width: 450px"></a>
 </table>
@@ -821,30 +863,31 @@ see <a href="#draft">demo draft</a> on how to proceed.
 It is strongly suggested you run the demo! In a nutshell, the steps are:
 <ol>
 <li>Load both sequences.
-<li>For the draft, bring up the project's
-<a href="SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a> window. Beside the <ttl>Order against</ttl> row is a
-drop-down of all loaded projects; select your whole genome project.
-<li>Run the <ttl>Alignment&Synteny</ttl>. At the end, you will see a new project with the suffix
-<ttx>_ordered</ttx> in the left panel. It will contain:
+<li>Open the pairs's <a href="SystemHelp.html#over2" class="ext" target="_blank">Parameters</a> panel.
+At the bottom of the panel, select the radio button that indicates ordering your draft against
+a complete sequence (e.g. Draf-&gtSeq2).
+
+<li>Run the <ttl>Alignment&Synteny</ttl>. At the end, you will see a new project with
+the two <ttx>project-names</ttx> separated by ".." in the left panel. It will contain:
+
 <ul>
 <li>A <ttx>sequence</ttx> directory with a ".fa" FASTA file. Any scaffolds matching the <ttx>Order against</ttx>
 genome will be assigned the same chromosome name. All scaffolds aligning to an <ttx>Order against</ttx> chromosome
 will be appended together in order with 100 N's between each scaffold.
 Any extra sequences will be put in ">Chr0".
-<li>An <ttx>annotation</ttx> directory with a ".gff" file that specifies
-where the gaps are.
+<li>An <ttx>annotation</ttx> directory with a ".gff" file that specifies where the gaps are.
 </ul>
-<li>Load the <ttx>_ordered</ttx> project. Then run <ttl>Alignment&Synteny</ttl> between the whole genome
-project and the new <ttx>_ordered</ttx> project.
+<li>Load the new project. Then run <ttl>Alignment&Synteny</ttl> between this new project and the original
+whole genome project.
 </ol>
-The original draft directory will have a new file called <ttx>ordered.csv</ttx> that will contain
+The original draft directory will have a new file with the suffix <ttx>ordered.csv</ttx> that will contain
 the merged contigs and what chromosome number they are mapped to.
 
 <p><i>If the draft sequence is in too many sequence contigs</i>,
 (1) it takes a long time for the MUMmer comparisons, (2)
 the display is very cluttered, and (3) the blocks display does not work right.
 Limit the number of sequence contigs by setting <ttx>Minimum length</ttx> in the project's
-<a href="SystemHelp.html#projParams" class="ext" target="_blank">Parameter</a> window
+<a href="SystemHelp.html#projParams" class="ext" target="_blank">Parameter</a> panel
 to only load the largest 150 sequences.
 To determine the minimal length, use the <ttl>Lengths</ttl> button in the
 <a href="./input/index.html#ol" class="ext" target="_blank">xToSymap</a>
@@ -868,10 +911,9 @@ The <ttb>All Pairs</ttb> option does not include self-synteny.
 By default, SyMAP uses the MUMmer 'NUCmer' program for self-alignments. Each chromosomes
 is compared to every other chromosome including itself.
 <p>The Alignment&amp;Synteny <a href="SystemHelp.html#pairParams" class="ext" target="_blank">
-Parameters</a> window has an option to set <ttx>Self Args</ttx>,
+Parameters</a> panel has an option to set <ttx>Self Args</ttx>,
 which is only used when comparing the chromosome sequence file
 to itself. Make sure that the <i>Cluster Hits</i> <ttx>Algorithm 1</ttx> option is selected.
-
 
 <table class="tx">
 <tr><td>
@@ -879,26 +921,18 @@ A better demonstration than the demo is to download
 Arabidopsis thaliana from NCBI, convert it with the
 <a href="./input/ncbi.html" target="_blank" class="ext">
 NCBI convert script</a>, and run the self synteny. It took 16 minutes with one processor on a Mac Mini (2018) with
-64GB main memory. The dot plot is shown on the right (click on the image for a closeup view).
+64Gb main memory. The dot plot is shown on the right (click on the image for a closeup view).
 <td><a href="img/arabSelf.png"><img src="img/arabSelf.png" alt="arab self"
-style="border: 1px solid black; width: 350px"></a>
+style="border: 1px solid black; width: 370px"></a>
 </table>
 
-<p>Parameter <ttx>Self Args</ttx>: The "--maxmatch" MUMmer parameter was the SyMAP default, but now it is up to the user as to whether
-they want to add it to <ttx>Self Args</ttx> (it can greatly increase the execution time).
-Reasoning for using "--maxmatch": MUMmer ordinarily seeds its alignments with unique matches,
-which eliminates the possibility of off-diagonal seeds in the alignment of a chromosome to itself.
-To overcome this problem, individual chromosome self-alignments can use the MUMmer parameter -maxmatch,
-which removes the uniqueness requirement at the cost of greatly increased noise. The extra noise is then
-filtered to a large extent by the default SyMAP filters, but the diagonal squares of the dot plot will
-still have more noise visible than the off-diagonal.
 <a id="cancel"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>Cancel</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></table>
 <table class="tx">
 <tr>
-<td>The <ttl>Load</ttl> and <ttl>A&S</ttl> methods have a popup progress window, as shown on
+<td>The <ttl>Load</ttl> and <ttl>A&S</ttl> methods have a popup progress panel, as shown on
 the right. There is a <ttl>Cancel</ttl> button on the bottom that can be clicked to cancel the execution;
 it will remove the results from the database and exit.
 <p>Occasionally, the <ttl>Cancel</ttl> will cause it to create an error, writing to the <ttx>error.log</ttx>
@@ -925,7 +959,7 @@ If you have been working with SyMAP and have existing projects:
 <li>If the <ttx>symap.jar</ttx> is available from the download site and there are only changes to it,
 download it and replace the one in <ttx>symap_5/java/jar</ttx>.
 </ul>
-or
+or if there are changes to more than the jar file:
 <ul>
 <li>Put the new <ttx>symap_5.tar.gz</ttx> in a permanent location and untar it.
 <li>Replace the <ttx>/data</ttx> and <ttx>symap.config</ttx> from your previous SyMAP location to this new location.
@@ -939,26 +973,7 @@ or
 see if there are any <ttx>/scripts</ttx> or <ttx>/ext</ttx> changes that need to also be copied over.
 </ul>
 
-<p>The following table shows what versions require action by the user.
-<table class=ty>
-
-<tr><td><b>Release</b><td><b>Changed files</b><sup>1</sup><td><b>Action by User</b>
-<tr><td>v5.6.0<td>Only the <ttx>symap.jar</ttx><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
-<tr><td>v5.5.6
-<td>Only the <ttx>symap.jar</ttx><td>1. Execute <ttx>./symap -acs</ttx>.
-<br>2. Select the pair and run <ttb>Selected Pair (Redo)</ttb>.
-<br>3. A popup will have you confirm "Collinear only" indicating
-that only this algorithm will be run.
-<tr><td>v5.4.6-5.4.8<td>Only the <ttx>symap.jar</ttx><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
-<tr><td>v5.4.0 <td>Only the <ttx>symap.jar</ttx><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
-<tr><td>v5.2.0 <td><ttx>symap</ttx>, <ttx>viewSymap</ttx>, <ttx>scripts/ConvertNCBI.*</ttx><td><ttl>Alignment&Synteny</ttl><sup>2</sup>
-<tr><td>pre-v5.1.9<td>Only the <ttx>symap.jar</ttx><td>Delete the database, reload and <ttl>Alignment&Synteny</ttl><sup>2</sup>
-</table>
-<ol>
-<li>Always get the new <ttx>java/jar/symap.jar</ttx>.
-<p>
-<li>The <ttl>Alignment&Synteny</ttl> will use existing MUMmer files if they have not been removed.
-</ol>
+The <ttl>Alignment&Synteny</ttl> will use existing MUMmer files if they have not been removed.
 
 <!----------------------------------------------------------------------->
 <a id="alg"></a>
@@ -1003,7 +1018,7 @@ connected by a clustered anchor, the retained anchors must be among
 ancestral whole-genome duplication). An anchor will also be retained if its
 score is at least 80% of that of the 2nd-best anchor on each side (this
 allows for retention of gene family anchors). These filter parameters
-may be adjusted through the <ttl>Alignment&amp;Synteny</ttl> <ttb>Parameters</ttb> window.
+may be adjusted through the <ttl>Alignment&amp;Synteny</ttl> <ttb>Parameters</ttb> panel.
 <p><u>Algorithm 2 (gene-centric)</u> is good for low-to-high divergent genomes with good annotation.
 It directly maps hits to the exons and introns. Hits aligning to un-annotated regions are clustered separately.
 There are many more parameters for
@@ -1017,7 +1032,7 @@ synteny block algorithm runs. This algorithm looks for approximately-collinear
 sequences of anchors, subject to several parameters including (A) Number
 of anchors; (B) Collinearity of the anchors; (C) Amount of "noise" in the
 surrounding region (to help reject false-positive chains). Criterion A can
-be adjusted in the <ttl>Alignment&amp;Synteny</ttl> <ttb>Parameters</ttb> window.
+be adjusted in the <ttl>Alignment&amp;Synteny</ttl> <ttb>Parameters</ttb> panel.
 <p>
 <sup>*</sup> Note that the sequences are re-written from the database to the
 disk for three reasons: (A) To allow re-grouping for efficiency; (B) To ensure elimination
