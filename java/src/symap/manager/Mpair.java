@@ -23,13 +23,17 @@ import util.Utilities;
  * 5. AlignProj  save - save all to db
  * 6. Show file params on PairParams
  * 7. Show db params on Summary
- * CAS546 add Algo2 params; CAS565 add Number Pseudo; CAS567 add Concat, Orient and reorder
+ * CAS546 add Algo2 params; CAS565 add Number Pseudo; CAS567 add Concat, Orient and reorder, CAS568 add Mask, Order
  */
 public class Mpair {
-	public static final int FILE = 0;
-	public static final int DB = 1;
-	private static final String algo1 = "Cluster Algo1 (modified original)";
-	private static final String algo2 = "Cluster Algo2 (exon-intron)";
+	public  static final int FILE = 0;
+	public  static final int DB = 1;
+	// sections
+	private static final String ALIGN   = "  Align";
+	private static final String ALGO1   = "  Cluster Algo1 (modified original)";
+	private static final String ALGO2   = "  Cluster Algo2 (exon-intron)";
+	private static final String SYNTENY = "  Synteny";
+	private static final String spp     = "     ";	// space to go before parameters
 	
 	public Mproject mProj1, mProj2;
 	protected int pairIdx=-1; 		// accessed in ManagerFrame; CAS567	
@@ -44,21 +48,24 @@ public class Mpair {
 	
 	// These must be in same order as PairParam arrays; the order isn't needed anywhere else in this file
 	private static final String [] paramKey = { // repeated in PairParams and below
-			"mindots", "merge_blocks", "same_orient",
-			"concat", "nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
+			"mindots", "merge_blocks", "same_orient", 
+			"order_none", "order_proj1", "order_proj2",		// CAS568 add	
+			"concat", "mask1", "mask2", 					// CAS568 add mask
+			"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
 			"number_pseudo","algo1", "algo2",
 			"topn", 
 			"g0_scale", "gene_scale", "exon_scale",	"len_scale",	
 			"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
 	};
-	private static final String [] paramDef = { // defMap value
-			"7", "0", "0", 			    // synteny
-			"1", "", "", "", "0", "0",	// mummer
-			"0",					    // cluster, number pseudo
-			"1", "0",				    // 1st is algo1, 2nd is algo2
-			"2", 					    // topn
-			"1.0", "1.0", "1.0", "1.0",	// G0_Len, gene, exon, Len	
-			"1", "1", "1", "0", "0"	    // EE, EI, En, II, In 
+	private static final String [] paramDef = {  // defMap value
+			"7", "0", "0",  			// synteny:  hits, merge, orient 
+			"1", "0", "0", 				// 	 order against: none, proj1->proj2, proj2->proj1
+			"1",  "0", "0", 			// align: concat, mask1, mask2
+			"", "", "", "0", "0",		//        nucmer, promer, self, only, only
+			"0", "1", "0",				// cluster: number pseudo,  1st is algo1, 2nd is algo2
+			"2", 					    //       topn
+			"1.0", "1.0", "1.0", "1.0",	//       G0_Len, gene, exon, Len	
+			"1", "1", "1", "0", "0" 	//       EE, EI, En, II, In 
 	};
 	
 	public Mpair(DBconn2 dbc2, int pairIdx, Mproject p1, Mproject p2, boolean isReadOnly) {
@@ -79,85 +86,82 @@ public class Mpair {
 	}
 	
 	/************************************************************************************/
-	protected String getChangedSynteny() { // ManagerFrame.alignSelectedPair when no align
-		return getSynteny(FILE) + "\n";
-	}
-	
-	public String getChangedAlign() { // AlignMain write to terminal
-		String msg = getAlign(FILE);
-		if (msg.isEmpty()) return "";
-		return msg;
-	}
-	public String getChangedParams(int type) {// ManagerFrame for selected when need align; SumFrame (DB type)
-		String amsg = getAlign(type);   // could be empty
+	// ManagerFrame.alignSelectPair popop when need align; DoAlignSynPair terminal, dialog, symap.log; SumFrame (DB type)
+	public String getChangedParams(int type) {
+		String amsg = getAlign(type, false);   // could be empty
 		String smsg = getSynteny(type); // never empty
-		return join(amsg, smsg);
+		
+		if (amsg.equals("")) return smsg + "\n";
+		else return amsg + "\n" + smsg + "\n";
+	}
+	public String getChangedSynteny(int type) { // ManagerFrame.alignSelectedPair popup when no align;  DoAlignSynPair terminal, dialog, symap.log
+		return getSynteny(type) + "\n";
 	}
 	
-	private String getAlign(int type) {// return "" if no change
+	public String getAlign(int type, boolean forSum) {// return "" if no change; forSum - do write for summary
 		String msg="";
-		if (isChg(type,"concat")) 			msg = join(msg, " No concat");	// CAS567 add
-		if (isChg(type,"promer_only")) 		msg = join(msg, " Align PROmer only  ");
-		else if (isChg(type,"nucmer_only")) msg = join(msg, " Align NUCMER only  ");
+		if (isChg(type,"concat")) 			msg = pjoin(msg, "No concat");	// CAS567 add
+		if (isChg(type,"mask1")) 			msg = pjoin(msg, "Mask " + mProj1.getDisplayName());	// CAS568 add
+		if (isChg(type,"mask2")) 			msg = pjoin(msg, "Mask " + mProj2.getDisplayName());	// CAS568 add
 		
-		if (isChg(type,"self_args")) 		msg = " Self args: "   + getSelfArgs(type); 
-		else if (isChg(type,"promer_args")) msg = " PROmer args: " + getPromerArgs(type);
-		else if (isChg(type,"nucmer_args")) msg = " NUCmer args: " + getNucmerArgs(type);
+		if (isChg(type,"promer_only")) 		msg = pjoin(msg, "Align PROmer only  ");
+		else if (isChg(type,"nucmer_only")) msg = pjoin(msg, "Align NUCMER only  ");
 		
-		msg = join(msg, mProj1.getMaskedParam());
-		msg = join(msg, mProj2.getMaskedParam());
+		if (isChg(type,"self_args")) 		msg = pjoin(msg, "Self args: "   + getSelfArgs(type)); // CAS568 missing join
+		else if (isChg(type,"promer_args")) msg = pjoin(msg, "PROmer args: " + getPromerArgs(type));
+		else if (isChg(type,"nucmer_args")) msg = pjoin(msg, "NUCmer args: " + getNucmerArgs(type));
 		
-		return msg;
+		// CAS568 msg = pjoin(msg, mProj1.getMaskedParam()); msg = pjoin(msg, mProj2.getMaskedParam());
+		if (!forSum && Constants.MUM_NO_RM) msg = pjoin(msg, "Keep MUMmer .delta file"); // CAS568 add
+		
+		if (!msg.equals("")) return ALIGN + "\n" + msg;
+		return "";
 	}
-	private String getSynteny(int type) { // SyntenyMain only
-		String cmsg = getClusterAlgo(type); // never empty
+	private String getSynteny(int type) {   // SyntenyMain only
+		String cmsg = getClusterAlgo(type); // never empty; always has algo
 		
 		String smsg="";
-		if (isChg(type,"mindots")) 		smsg = join(smsg, " Min hits=" + getMinDots(type));
-		if (isChg(type,"merge_blocks")) smsg = join(smsg, " Merge");
-		if (isChg(type,"same_orient"))  smsg = join(smsg, " Same orient");
+		if (isChg(type,"mindots")) 		smsg = pjoin(smsg, "Min hits=" + getMinDots(type));
+		if (isChg(type,"merge_blocks")) smsg = pjoin(smsg, "Merge");
+		if (isChg(type,"same_orient"))  smsg = pjoin(smsg, "Same orient");
 		
-		smsg = join(smsg, mProj1.getOrderParam());
-		smsg = join(smsg, mProj2.getOrderParam());
+		if (isChg(type, "order_proj1"))	smsg = pjoin(smsg, "Order " + mProj1.getDisplayName() + "->" + mProj2.getDisplayName()); 	// CAS568 add
+		if (isChg(type, "order_proj2"))	smsg = pjoin(smsg, "Order " + mProj2.getDisplayName() + "->" + mProj1.getDisplayName()); 	// CAS568 add
 		
-		if (!smsg.isEmpty()) smsg = "Synteny Blocks\n" + smsg;
+		// CAS568 smsg = pjoin(smsg, mProj1.getOrderParam());smsg = pjoin(smsg, mProj2.getOrderParam());
 		
-		return join(cmsg, smsg);
+		if (!smsg.equals("")) return cmsg +  "\n" + SYNTENY + "\n" + smsg; // do not use join
+		return cmsg;
 	}
 	
 	private String getClusterAlgo(int type) {
 		String msg="";
-		if (isChg(type,"number_pseudo"))	msg += "Number pseudo\n"; // algo will come after
-		
 		if (isAlgo2(type)) {
-			boolean chg = isChg(type,"g0_scale") || isChg(type,"gene_scale") 
-					   || isChg(type,"exon_scale" ) || isChg(type,"len_scale")
-					   || isChg(type, "EI_pile") || isChg(type, "En_pile") || isChg(type, "II_pile") 
-					   || isChg(type, "In_pile") || isChg(type,"topn") || isChg(type,"number_pseudo");
+			if (isChg(type,"exon_scale")) 	msg = pjoin(msg, "Exon scale = " + getExonScale(type)); // CAS568 use join for all
+			if (isChg(type,"gene_scale")) 	msg = pjoin(msg, "Gene scale = " + getGeneScale(type));
+			if (isChg(type,"len_scale")) 	msg = pjoin(msg, "Length scale = " + getLenScale(type));
+			if (isChg(type,"g0_scale")) 	msg = pjoin(msg, "G0 length scale = " + getG0Scale(type));
 			
-			msg += algo2;
-			if (chg) {
-				if (isChg(type,"exon_scale")) 	msg += "\n  Exon scale = " + getExonScale(type);
-				if (isChg(type,"gene_scale")) 	msg += "\n  Gene scale = " + getGeneScale(type);
-				if (isChg(type,"len_scale")) 	msg += "\n  Length scale = " + getLenScale(type);
-				if (isChg(type,"g0_scale")) 	msg += "\n  G0 length scale = " + getG0Scale(type);
-				
-				if (isChg(type,"EE_pile"))		msg += "\n  Limit Exon-Exon piles";
-				if (isChg(type,"EI_pile"))		msg += "\n  Limit Exon-Intron piles"; 
-				if (isChg(type,"En_pile"))		msg += "\n  Limit Exon-intergenic piles";
-				if (isChg(type,"II_pile"))		msg += "\n  Allow Intron-Intron piles";
-				if (isChg(type,"In_pile"))		msg += "\n  Allow Intron-intergenic piles";
-				if (isChg(type,"topn")) 		msg += "\n  Top N piles ="    + getTopN(type);
-			}
+			if (isChg(type,"EE_pile"))		msg = pjoin(msg, "Limit Exon-Exon piles");
+			if (isChg(type,"EI_pile"))		msg = pjoin(msg, "Limit Exon-Intron piles"); 
+			if (isChg(type,"En_pile"))		msg = pjoin(msg, "Limit Exon-intergenic piles");
+			if (isChg(type,"II_pile"))		msg = pjoin(msg, "Allow Intron-Intron piles");
+			if (isChg(type,"In_pile"))		msg = pjoin(msg, "Allow Intron-intergenic piles");
+			if (isChg(type,"topn")) 		msg = pjoin(msg, "Top N piles =" + getTopN(type));
+			if (isChg(type,"number_pseudo")) msg = pjoin(msg, "Number pseudo"); 
+			
+			if (msg.equals("")) msg = ALGO2;
+			else                msg = ALGO2 + "\n" + msg;
 		}
 		else if (isAlgo1(type)) {
-			msg += algo1; 				// always lists clustering
-			boolean chg = isChg(type, "topn") ||  Group.bSplitGene;
-			if (chg) {
-				if (isChg(type,"topn")) msg += "\n  Top N piles ="    + getTopN(type);
-				if (Group.bSplitGene)   msg += "\n  Split gene";
-			}
+			if (isChg(type,"topn")) msg = pjoin(msg,"Top N piles =" + getTopN(type));
+			if (Group.bSplitGene)   msg = pjoin(msg,"Split gene");
+			if (isChg(type,"number_pseudo")) msg = pjoin(msg, "Number pseudo"); // algo will come after
+			
+			if (msg.equals("")) msg = ALGO1;
+			else                msg = ALGO1 +  "\n" + msg; 				
 		}
+		
 		return msg;
 	}
 	
@@ -167,6 +171,13 @@ public class Mpair {
 		String def = defMap.get(field);
 		return !db.contentEquals(def);
 	}
+	private String pjoin(String m1, String m2) {// CAS568 put space here and use for all parameters
+		if (!m1.equals("") && !m1.startsWith(spp)) m1 = spp + m1;
+		if (!m2.equals("") && !m2.startsWith(spp)) m2 = spp + m2;
+		if (m1.equals("")) return m2;
+		if (m2.equals("")) return m1;
+		return m1 + "\n" + m2; 
+	}
 	/************************************************************************************/
 	public int getPairIdx()   {return pairIdx;}
 	public int getProj1Idx()  { return mProj1.getIdx();}
@@ -174,6 +185,8 @@ public class Mpair {
 	
 	public Mproject getProj1() {return mProj1;}
 	public Mproject getProj2() {return mProj2;}
+	
+	protected boolean isPairInDB() { return pairIdx>0;}
 	
 	public boolean isNumPseudo(int type) {
 		String x = (type==FILE) ? fileMap.get("number_pseudo") : dbMap.get("number_pseudo");
@@ -232,6 +245,14 @@ public class Mpair {
 		String x = (type==FILE) ? fileMap.get( "concat") : dbMap.get( "concat");
 		return x.contentEquals("1");
 	}
+	public boolean isMask1(int type) {// CAS568 add
+		String x = (type==FILE) ? fileMap.get( "mask1") : dbMap.get( "mask1");
+		return x.contentEquals("1");
+	}
+	public boolean isMask2(int type) {// CAS568 add
+		String x = (type==FILE) ? fileMap.get( "mask2") : dbMap.get( "mask2");
+		return x.contentEquals("1");
+	}
 	public boolean isNucmer(int type) {
 		String x = (type==FILE) ? fileMap.get( "nucmer_only") : dbMap.get( "nucmer_only");
 		return x.contentEquals("1");
@@ -262,6 +283,14 @@ public class Mpair {
 	}
 	public boolean isOrient(int type) {
 		String x = (type==FILE) ? fileMap.get("same_orient") : dbMap.get("same_orient");
+		return x.contentEquals("1");
+	}
+	public boolean isOrder1(int type) {// CAS568 add
+		String x = (type==FILE) ? fileMap.get("order_proj1") : dbMap.get("order_proj1");
+		return x.contentEquals("1");
+	}
+	public boolean isOrder2(int type) {// CAS568 add
+		String x = (type==FILE) ? fileMap.get("order_proj2") : dbMap.get("order_proj2");
 		return x.contentEquals("1");
 	}
 	/************************************************************************************/
@@ -342,9 +371,14 @@ public class Mpair {
 	catch (Exception e) {ErrorReport.print(e, "Update version"); return;}
 	}
 	/**** called by DoAlignSynPair.run() on A&S ***/
-	public void saveParams(String params) {// params are ones not in pair_props
+	public void saveParamsToDB(String params) {// params are ones not in pair_props
 		try {
-			dbc2.tableCheckAddColumn("pairs", "params", "VARCHAR(128)", null); 
+			if (dbc2.tableColumnExists("pairs", "params"))
+				 dbc2.tableCheckModifyColumn("pairs", "params", "text");// CAS568 changed for VARCHAR(128)
+			else dbc2.tableCheckAddColumn("pairs", "params", "text", null); 
+			
+			dbc2.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + proj1Idx); // CAS568 moved from Mproject
+			dbc2.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + proj2Idx);
 			
 			dbc2.executeUpdate("update pairs set aligned=1, aligndate=NOW(), "
 					+ "syver='" + Globals.VERSION + "', params='" + params + "'" 
@@ -447,9 +481,6 @@ public class Mpair {
 	catch (Exception e) {ErrorReport.print(e, "post v546"); return false;}
 	}
 	public String toString() {return mProj1.strDisplayName + "-" + mProj2.strDisplayName + " pair";}
-	private String join(String m1, String m2) {
-		if (m1.isEmpty()) return m2;
-		if (m2.isEmpty()) return m1;
-		return m1 + "\n" + m2;
-	}
+	
+	
 }

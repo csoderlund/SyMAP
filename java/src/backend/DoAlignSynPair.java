@@ -21,8 +21,7 @@ import util.Utilities;
 
 /**********************************************************
  * DoAlignSynPair; Calls AlignMain, AnchorMain and SyntenyMain; Called from ManagerFrame
- * CAS508 moved all the following from ManagerFrame; CAS544 AlignProj->AlgSynMain; CAS560 AlgSynMain->DoAlignSynPair
- 
+ *
  * When called, DoLoadProj has been executed:
  * 		the Sequence and Annotation have been loaded 
  * 		the GeneNum assigned
@@ -42,7 +41,7 @@ public class DoAlignSynPair extends JFrame {
 	private DBconn2 dbc2;
 	private Mpair mp;
 	
-	public void run(ManagerFrame frame, DBconn2 dbc2, Mpair mp,  boolean closeWhenDone,  int maxCPUs) {
+	public void run(ManagerFrame frame, DBconn2 dbc2, Mpair mp,  boolean closeWhenDone,  int maxCPUs, boolean bAlignDone) {
 
 		this.dbc2 = dbc2;
 		this.mp = mp;
@@ -59,9 +58,9 @@ public class DoAlignSynPair extends JFrame {
 		String msg = (mProj1 == mProj2) ? "Synteny "  + dbName1 + " to itself ..." : "Synteny " + toName + " ...";
 		
 		final ProgressDialog diaLog = new ProgressDialog(this, "Running Synteny", msg, true, syFW); // write version and date
+		
 		String v = (Constants.VERBOSE) ? "   Verbose" : "    !Verbose"; 
 		diaLog.msgToFileOnly(">>> " + toName + v);
-		System.out.println("\n>>> Starting " + toName + "     " + Utilities.getDateTime());
 		
 		if (Constants.CoSET_ONLY) {
 			collinearOnly(diaLog, mProj1, mProj2);
@@ -72,7 +71,9 @@ public class DoAlignSynPair extends JFrame {
 			return;
 		}
 		
-		String chgMsg = mp.getChangedParams(Mpair.FILE);  // Saved to database pairs table in SumFrame
+		mp.renewIdx(); 	// Remove existing and restart, sets projIdx; CAS568 move from ManagerFrame, takes time and want prt 1st
+		
+		String chgMsg = (bAlignDone) ? mp.getChangedSynteny(Mpair.FILE) : mp.getChangedParams(Mpair.FILE);  // Saved to DB in SumFrame; CAS568 bAlignDone
 		diaLog.msg(chgMsg);
 		diaLog.closeWhenDone();					
 		
@@ -138,6 +139,7 @@ public class DoAlignSynPair extends JFrame {
 					if (Cancelled.isCancelled()) return;
 					
 					/** Anchors **/
+					long synStart = Utils.getTime(); // CAS568 need time for symap part only
 					success &= anchors.run( mProj1, mProj2); // add anchors, cluster, number, collinear, pseudo
 					
 					if (Cancelled.isCancelled()) return;
@@ -154,19 +156,20 @@ public class DoAlignSynPair extends JFrame {
 						diaLog.finish(false);
 						return;
 					}
+					Utils.prtMsgTimeDone(diaLog, "Complete Clustering + Synteny", synStart);
 					
 					/** Finish **/
-					String params = aligner.getParams();
-					mp.saveParams(params);		// deletes all pair_props, then add params
-					mProj1.saveParams(mProj1.xAlign);
-					mProj2.saveParams(mProj2.xAlign);
+					String alignParams = aligner.getParams();
+					mp.saveParamsToDB(alignParams);		// deletes all pair_props, then add params
+					
+					// CAS568 mv to saveParams; mProj1.saveParams(mProj1.xAlign); mProj2.saveParams(mProj2.xAlign);
 				
 					new SumFrame(dbc2, mp);
 					
 					diaLog.appendText(">> Summary for " + toName + "\n");
 					printStats(diaLog, mProj1, mProj2);
 					
-					Utils.timeDoneMsg(diaLog, "Complete Alignment&Synteny", timeStart);
+					Utils.prtMsgTimeDone(diaLog, "Complete MUMmer + SyMAP", timeStart);
 				}
 				catch (OutOfMemoryError e) {
 					success = false;
@@ -255,7 +258,7 @@ public class DoAlignSynPair extends JFrame {
 			
 			File lf = new File(pd,Constants.syntenyLog);
 			ret = new FileWriter(lf, true); // append
-			System.out.println("Append to log file: " 
+			System.out.println("\nAppend to log file: " 
 					+ pairDir + "/" + Constants.syntenyLog + " (Length " + Utilities.kMText(lf.length()) + ")");	
 		}
 		catch (Exception e) {ErrorReport.print(e, "Creating log file");}
@@ -335,7 +338,7 @@ public class DoAlignSynPair extends JFrame {
 		anchors.addPseudoFromFlag();
 			
 		String params = dbc2.executeString("select params from pairs where idx=" + mp.getPairIdx());
-		mp.saveParams(params);		// re-enter params and update NOW(), then update pair_props
+		mp.saveParamsToDB(params);		// re-enter params and update NOW(), then update pair_props
 		
 		new SumFrame(dbc2, mp); // only so it will show the updated version
 		System.out.println("--------------------------------------------------");

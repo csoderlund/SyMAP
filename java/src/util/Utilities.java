@@ -37,17 +37,12 @@ import java.io.File;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.text.DateFormat;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 
 import symap.Globals;
 import symap.sequence.Annotation;
 
 /**
- * Class <code>Utilities</code> class for doing some miscelaneous things that 
- * may be useful to others. Requires plugin.jar
- * 
- * CAS506 - remove goobs on unused stuff and rearranged into the following order (marked with X's
  * Interface
  * basic array and string ops
  * Geometry
@@ -58,7 +53,7 @@ import symap.sequence.Annotation;
  */
 public class Utilities {
 	private static boolean TRACE = false;
-	public static final Color HELP_PROMPT = new Color(0xEEFFEE); // CAS504 moved from dead file - for Help
+	public static final Color HELP_PROMPT = new Color(0xEEFFEE); 
 
 	private Utilities() { }
 
@@ -78,7 +73,6 @@ public class Utilities {
 
 	 // sets the window to the full size of the available screen or it's preferred
 	 // size, whichever is smaller, using the other methods in this class.
-	 // CAS531 added a max size for CloseUpDialog as full screen is too big on a big screen
 	public static void setFullSize(Window window, Container view, int max) {
 		window.pack();
 
@@ -125,7 +119,7 @@ public class Utilities {
 		try  {
 	        	String line;
 	        	String [] x = {"ps", "-ef"};
-	        	Process p = Runtime.getRuntime().exec(x); // CAS547 single string depreciated
+	        	Process p = Runtime.getRuntime().exec(x); 
 	        	BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	        	while ((line = input.readLine()) != null)  {
 	            	if (line.contains(processName)){
@@ -163,14 +157,14 @@ public class Utilities {
 		for (int i = 1; i < ints.length; i++) ret.append(",").append(ints[i]);
 		return ret.toString();
 	}
-	public static double getDouble(String i) { // CAS553 added
+	public static double getDouble(String i) { 
 		try {
 			double x = Double.parseDouble(i);
 			return x;
 		}
 		catch (Exception e) {return -1.0;}
 	}
-	public static int getInt(String i) { // CAS532 added
+	public static int getInt(String i) { 
 		try {
 			int x = Integer.parseInt(i);
 			return x;
@@ -230,7 +224,7 @@ public class Utilities {
 		}
 		if (TRACE) System.out.println("XYZ clear all directory " + d);
 	}
-	public static boolean deleteDir(File dir) { // CAS534 moved from ManagerFrame;
+	public static boolean deleteDir(File dir) { 
         if (dir.isDirectory()) {
             String[] subdir = dir.list();
             
@@ -279,7 +273,7 @@ public class Utilities {
 			}
 			if (!f.exists()) {
 				f.mkdir();
-				if (bPrt) System.out.println("Create directory " + dir); // CAS511
+				if (bPrt) System.out.println("Create directory " + dir); 
 			}
 			return f;
 		}
@@ -324,7 +318,7 @@ public class Utilities {
 		return path.substring(path.lastIndexOf("/")+1, path.length());
 	}
 	
-	public static String fileDate(String path) { // CAS557 added for xToSymap
+	public static String fileDate(String path) { 
 	try {
 		File f = new File(path);
 		 if (f.exists()) {
@@ -367,7 +361,7 @@ public class Utilities {
 		else if (m==7) ms="Jul";
 		else if (m==8) ms="Aug";
 		else if (m==9) ms="Sep";
-		else if (m==10) ms="Oct";		// CAS546 Oct and Nov were swapped!
+		else if (m==10) ms="Oct";		
 		else if (m==11) ms="Nov";
 		else if (m==12) ms="Dec";
 		return tok[2] + "-" + ms + "-" + tok[0];
@@ -394,10 +388,10 @@ public class Utilities {
 	 static public String getDateTime ( )
     {
         Date date=new Date();
-        SimpleDateFormat sdf=new SimpleDateFormat("dd-MMM-yy HH:mm:ss"); 
+        SimpleDateFormat sdf=new SimpleDateFormat("dd-MMM-yy HH:mm"); // CAS568 remove seconds
         return sdf.format(date);
     }
-	static public String getDateOnly ( ) // CAS506 day-month-year
+	static public String getDateOnly ( ) 
     {
         Date date=new Date();
         SimpleDateFormat sdf=new SimpleDateFormat("dd-MMM-yy"); 
@@ -433,7 +427,7 @@ public class Utilities {
 	static public long getNanoTime () {
  		return System.nanoTime(); 
 	}
-	static public String getNanoTimeStr(long startTime) { // CAS533
+	static public String getNanoTimeStr(long startTime) { 
 		long et = System.nanoTime()-startTime;
 		long sec = et /1000000000;
 		return timerStr2(sec);
@@ -465,8 +459,6 @@ public class Utilities {
 	/**************************************************************
 	 * XXX Popups
 	 */
-	
-	// CAS504 add
 	// isModal=true means that everything is frozen until the window is closed
 	public static void displayInfoMonoSpace(Component parentFrame, String title, 
 			String theMessage, boolean isModal) {
@@ -488,7 +480,7 @@ public class Utilities {
 		
 		helpDiag.setVisible(true);		
 	}
-	// CAS513 add for Gene/hit popup; CAS531 discontinued for gene/hit as moved to Closeup.TextPopup
+	// not used
 	public static JOptionPane displayInfoMonoSpace(Component parentFrame, String title, 
 			String theMessage, Dimension d, Annotation aObj) 
 	{ 	
@@ -510,7 +502,7 @@ public class Utilities {
 		helpDiag.setVisible(true);	
 		helpDiag.setAlwaysOnTop(true);
 		
-		helpDiag.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // CAS543 add the explicit close 
+		helpDiag.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); 
 		helpDiag.addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {
 				aObj.setIsPopup(false);
@@ -520,7 +512,6 @@ public class Utilities {
 		 optionPane.addPropertyChangeListener(
     		new PropertyChangeListener() {
         		public void propertyChange(PropertyChangeEvent e) {
-        			//String prop = e.getPropertyName();
         			aObj.setIsPopup(false);
         		}
     		}
@@ -555,7 +546,7 @@ public class Utilities {
 		showErrorMessage(msg);
 		exit(exitStatus);
 	}
-	static public boolean showYesNo (String title, String msg) { // CAS540 add; CAS544 reorder yes/no
+	static public boolean showYesNo (String title, String msg) { 
 		String [] options = {"No", "Yes"};
 		int ret = JOptionPane.showOptionDialog(null, 
 				msg,
@@ -564,7 +555,7 @@ public class Utilities {
 		if (ret == 0) return false;
 		return true;
 	}
-	static public boolean showContinue (String title, String msg) { // CAS543 the cancel was in diff loc than below
+	static public boolean showContinue (String title, String msg) { 
 		String [] options = {"Cancel", "Continue"};
 		int ret = JOptionPane.showOptionDialog(null, 
 				msg + "\nContinue?",
@@ -604,7 +595,7 @@ public class Utilities {
 		System.err.println("Not enough memory.");
 		JOptionPane optionPane = new JOptionPane("Not enough memory - increase 'mem' in symap script.", JOptionPane.ERROR_MESSAGE);
 		
-		LinkLabel label = new LinkLabel("Click to open the Troubleshooting Guide.", Jhtml.TROUBLE_GUIDE_URL); // CAS510
+		LinkLabel label = new LinkLabel("Click to open the Troubleshooting Guide.", Jhtml.TROUBLE_GUIDE_URL); 
 		label.setAlignmentX(Component.CENTER_ALIGNMENT);
 		optionPane.add(new JLabel(" "), 1);
 		optionPane.add(label, 2);
@@ -619,14 +610,14 @@ public class Utilities {
 	public static void showOutOfMemoryMessage() { showOutOfMemoryMessage(null); }
 	
 	/*****************************************************************************/
-	// CAS541 add for percents
+	// for percents
 	public static String pStr(int top, int bottom) {
 		if (bottom==0) return "  N/A";
 		if (top==0) return    "   0%";
 		double x = (double) top/ (double) bottom;
 		return String.format("%.2f%s", x, "%");
 	}
-	// these 3 are also in SeqData; CAS540 add , for dbp
+	// these 3 are also in SeqData;
 	public static String coordsStr(int start, int end) {
 		return String.format("%,d - %,d %,dbp", start, end, (end-start+1)) ;
 	}
@@ -638,7 +629,7 @@ public class Utilities {
 		return String.format("%s(%,d - %,d) %,dbp", o, start, end, (end-start+1)) ;
 	}
 	
-    // CAS508 - for writing to log
+    // for writing to log
     static public String kMText(long len) {
 		double d = (double) len;
 		String x = len+"";
@@ -656,7 +647,7 @@ public class Utilities {
 		}
 		return x;
 	}
-    static public String mText(long len) {//CAS563 add for symapQuery
+    static public String mText(long len) {//for symapQuery
 		double d = (double) len;
 		String x = len+"";
 		if (len>=1000000000) {
@@ -670,7 +661,7 @@ public class Utilities {
 		else x = String.format("%,d", len);
 		return x;
 	}
-    static public String kMText(int len) {// CAS558 added for xToSymap summary; 
+    static public String kMText(int len) {// for xToSymap summary; 
 		double d = (double) len;
 		String x = len+"";
 		if (len>=1000000000) {
@@ -687,7 +678,7 @@ public class Utilities {
 		}
 		return x; // <1000
 	}
-    static public String kText(int len) { // CAS513 change to use NumberFormat; CAS560 change back for AnchorMain2
+    static public String kText(int len) { 
     	if (len>=10000) {
     		double d = Math.round(((double) len)/1000.0);
     		return String.format("%dk", (int) d);
@@ -697,7 +688,7 @@ public class Utilities {
     	}
     }
    
-    // CAS513 - to remove leading zeros before making full block name
+    // remove leading zeros before making full block name
     static public String blockStr(String c1, String c2, int block) {
     	String x1 = (c1.startsWith("0") && c1.length()>1) ? c1.substring(1) : c1;
     	String x2 = (c2.startsWith("0") && c2.length()>1) ? c2.substring(1) : c2;
@@ -761,7 +752,7 @@ public class Utilities {
     
     	ret[0] = tok[0];
     	tok[1] = tok[1].replace(")","");
-    	ret[1] = exonNum() + tok[1].replace(")",""); // CAS548 changed format - was Exon #
+    	ret[1] = exonNum() + tok[1].replace(")",""); 
     	
     	if (!tag.startsWith("Gene")) { // v543 992.a (1 746)  old version started with Gene
 			ret[0] = Globals.geneTag +  tok[0].trim();
@@ -770,7 +761,7 @@ public class Utilities {
     	return ret;
     }
     // exonTag = "Exon #"; returns #Exons=
-    public static String exonNum() { // CAS548 removes "#"; CAS560 moved from Globals
+    public static String exonNum() { 
     	return "#" + Globals.exonTag.substring(0, Globals.exonTag.indexOf(" ")) + "s=";
     }
     static public boolean isEndsWithAlpha(String tag) {
@@ -801,7 +792,7 @@ public class Utilities {
 		}
 		else return tag;
     }
-    // symapQuery.DBdata.finish CAS518 return genenum.suffix or genenum
+    // symapQuery.DBdata.finish; return genenum.suffix or genenum
     public static String makeChrGenenumFromDBtag(String c1, String tag) { 	
     	String chr = (c1.startsWith("0") && c1.length()>1) ? c1.substring(1) : c1;
     	
@@ -815,13 +806,13 @@ public class Utilities {
     static public String getGenenumIntOnly(String tag) {
     	if (tag=="-") return "";
     	
-    	String gn = tag.contains("(") ? getGenenumFromDBtag(tag) : tag; // CAS561 the () has already been removed
+    	String gn = tag.contains("(") ? getGenenumFromDBtag(tag) : tag; // the () has already been removed
     	
     	String [] tok = gn.split("\\.");
     	if (tok.length>0) return tok[0]; 
-    	else return gn; 						// CAS544 bugfix was returning full tag
+    	else return gn; 						
     }
-    static public int getGenenumInt(String tag) { // CAS560 add for DBdata overlap only
+    static public int getGenenumInt(String tag) { // for DBdata overlap only
     	if (tag=="-") return -1;
     	String gn = getGenenumIntOnly(tag);
     	return getInt(gn);
@@ -887,7 +878,7 @@ public class Utilities {
     	return 0;
     }
     /*******************************************************
-	 * XXX Table maker CAS517 copied from TCW
+	 * XXX Table maker copied from TCW
 	 */
 	public static String makeTable(
 			int nCol, int nRow, String[] fields, int [] justify, String [][] rows) 

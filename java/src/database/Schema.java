@@ -13,7 +13,17 @@ import util.Utilities;
  * CAS506 MySQL v8 uses groups as a keyword, so changed ALL groups to xgroups
  * The update schema code was all over the place. So added mysql version and update
  * CAS522 remove FPC
+ * 
  */
+/***
+* CHAR: tinytext 1 byte, text 2 byte, mediumtext 2 byte
+* max	256 char			65k char		 16M char
+* 		use VARCHAR for fields that need to be searched
+* INT	tinyint 1 byte, smallint 2 byte,  mediumint 3 byte, int 4 byte, bigint 8 byte
+* max	256               65k                16M				4394M		
+* 		float 4 byte,  double 8 byte
+*****/
+
 public class Schema {
 
 	public Schema(Connection conn) {
@@ -31,8 +41,8 @@ public class Schema {
 		    "name           VARCHAR(40) NOT NULL," +
 			"hasannot		boolean default 0," +
 			"annotdate		datetime," +	// date of load sequence and/or annotation
-			"loaddate		datetime," +	// db create, CAS520 update synteny 
-			"syver			tinytext," +	// CAS520 version of load sequence and/or annotation
+			"loaddate		datetime," +	// db create, update synteny 
+			"syver			tinytext," +	// version of load sequence and/or annotation
 		    "PRIMARY KEY (idx)," +
 		    "UNIQUE INDEX (name)," +
 		    "INDEX (type)" +
@@ -66,10 +76,10 @@ public class Schema {
 		    "proj1_idx               INTEGER NOT NULL," +
 		    "proj2_idx               INTEGER NOT NULL," +
 			"aligned				BOOLEAN default 0," +
-		    "aligndate				datetime," +	// update date; CAS556 used by summary (added Mpairs.saveUpdate)
-		    "syver					tinytext," +	// update version; CAS520 version of load sequence and/or annotation
-			"params					VARCHAR (128)," +	// CAS511
-		    "summary				text, " +		// CAS540 (no DB update, will create in SumFrame)
+		    "aligndate				datetime," +	// update date;  used by summary (added Mpairs.saveUpdate)
+		    "syver					tinytext," +	// update version; version of load sequence and/or annotation
+			"params					text," +	// parameters used for MUMmer; CAS568 VARCHAR(128)->text; checked in Mpair
+		    "summary				text, " +		// full summary
 		    "UNIQUE INDEX (proj1_idx,proj2_idx)," +
 		    "FOREIGN KEY (proj1_idx) REFERENCES projects (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj2_idx) REFERENCES projects (idx) ON DELETE CASCADE" +
@@ -140,7 +150,7 @@ public class Schema {
 		    "gene_idx            INTEGER default 0," +  // gene idx for exon
 			// numhits for Gene: # of hits across all pairs for Query; Updated in AnchorMain;
 		    // numhits for Pseudo: pairIdx for remove Number Pseudo; Updated in AnchorMain; CAS565 add 
-		    "numhits			 INTEGER unsigned default 0," +  // CAS565 was tinyint (max 255)
+		    "numhits			 INTEGER unsigned default 0," +  //used for Pseudo for pairIdx; CAS565 was tinyint (max 255)
 		    "name                TEXT  NOT NULL," +				 // description, list of keyword=value
 		    "strand              ENUM('+','-') NOT NULL," +
 		    "start               INTEGER NOT NULL," +
@@ -174,17 +184,17 @@ public class Schema {
 // annot1_idx, annot2_idx, strand, start1, end1, start2, end2, query_seq, target_seq, runnum, runsize, refidx
 	    sql = "CREATE TABLE pseudo_hits (" +
 		    "idx                 INTEGER AUTO_INCREMENT PRIMARY KEY," + // hit_id
-	    	"hitnum				 INTEGER default 0,"+			// CAS520 relative to location along chr
+	    	"hitnum				 INTEGER default 0,"+			// relative to location along chr
 		    "pair_idx            INTEGER NOT NULL," +
 		    "proj1_idx           INTEGER NOT NULL," + 			 // proj_props.proj_idx
 		    "proj2_idx           INTEGER NOT NULL," + 			 // proj_props.proj_idx
 		    "grp1_idx            INTEGER NOT NULL," + 			 // xgroups.idx
 		    "grp2_idx            INTEGER NOT NULL," + 			 // xgroups.idx
-		    "pctid               TINYINT UNSIGNED NOT NULL," +   // avg %id Col6       - CAS515 REAL->TINYINT (rounded percent) 
-		    "cvgpct				 TINYINT UNSIGNED NOT NULL," +   // avg %sim  Col7     - add CAS515 
-		    "countpct			 INTEGER UNSIGNED default 0," +  // number of merged   - add CAS515  tinyint->integer
+		    "pctid               TINYINT UNSIGNED NOT NULL," +   // avg %id Col6     
+		    "cvgpct				 TINYINT UNSIGNED NOT NULL," +   // avg %sim  Col7     
+		    "countpct			 INTEGER UNSIGNED default 0," +  // number of merged   
 		    "score               INTEGER NOT NULL," +            // summed length Col5 - displayed in Query
-		    "htype             	 TINYTEXT," +   				 // CAS546 EE, EI, IE, En, nE, II, In, nI, nn
+		    "htype             	 TINYTEXT," +   				 // EE, EI, IE, En, nE, II, In, nI, nn
 		    "gene_overlap		 TINYINT NOT NULL, " +	       	 // 0,1,2
 		    "annot1_idx			 INTEGER default 0," +
 			"annot2_idx			 INTEGER default 0," +
@@ -195,7 +205,7 @@ public class Schema {
 		    "end2                INTEGER NOT NULL, " +   
 		    "query_seq           MEDIUMTEXT  NOT NULL," +      	// start-end of each merged hit
 		    "target_seq          MEDIUMTEXT  NOT NULL," +
-			"runnum				INTEGER default 0," +			// CAS520 number for collinear group
+			"runnum				INTEGER default 0," +			// number for collinear group
 		    "runsize			INTEGER default 0," +			// size of collinear set
 		    "refidx				INTEGER default 0," +          	// used in self-synteny
 		    "INDEX (proj1_idx,proj2_idx,grp1_idx,grp2_idx)," +
@@ -211,8 +221,8 @@ public class Schema {
 		    "hit_idx             INTEGER NOT NULL," +	// pseudo_hits.idx
 		    "annot_idx           INTEGER NOT NULL," +	// pseudo_annot.idx
 		    "olap	             INTEGER default 0," +   // gene overlap; algo1 basepairs; algo2 percent
-		    "exlap	             tinyint default 0," +   // CAS546 added, exon percentoverlap
-		    "annot2_idx			 INTEGER default 0," +   // CAS546 added; CAS565 not present for type pseudo
+		    "exlap	             tinyint default 0," +   // exon percentoverlap
+		    "annot2_idx			 INTEGER default 0," +   // not present for type pseudo; CAS565
 		    "UNIQUE (hit_idx, annot_idx)," +
 		    "INDEX (annot_idx)," +
 		    "FOREIGN KEY (hit_idx)  REFERENCES pseudo_hits (idx) ON DELETE CASCADE," +
@@ -233,7 +243,6 @@ public class Schema {
 		 sql = "SET FOREIGN_KEY_CHECKS = 1;";
 		 executeUpdate(sql);
 		    
-		 /** CAS506 add DBVer and UPDATE, change other two; CAS543 add INITV and INITDB  **/
 		 String date = Utilities.getDateOnly();
 		 
 		// never change

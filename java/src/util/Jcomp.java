@@ -15,6 +15,7 @@ import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JToggleButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -417,6 +418,15 @@ public class Jcomp {
 		txt.setMinimumSize(txt.getPreferredSize());
 		txt.setMaximumSize(txt.getPreferredSize());
 		return txt;
+	}
+	public static JComboBox <String> createComboBox(String [] options, String tip,  int def) {
+		JComboBox <String> comboBox = new JComboBox <String> (options);
+		comboBox.setToolTipText(tip);
+		comboBox.setSelectedIndex(def);
+		comboBox.setBackground(Color.WHITE);
+		comboBox.setMinimumSize(comboBox.getPreferredSize());
+		comboBox.setMaximumSize(comboBox.getPreferredSize());
+		return comboBox;
 	}
 	public static boolean isWidth(int width, JLabel lab) {// CAS561 add
 		return (width > lab.getPreferredSize().width);

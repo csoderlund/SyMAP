@@ -13,12 +13,12 @@ import java.io.File;
  * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.6.7"; 
-	public static final String 	DATE = " (22-May-25)";
+	public static final String 	VERSION = "v5.6.8"; 
+	public static final String 	DATE = " (1-June-25)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER = 7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
-	public static final String  JARVERION = "17.0.11"; // verify with 'jar xvf symap.jar META-INF', view META_INF; CAS559 add
+	public static final String  JARVERION = "17.0.11"; // verify with 'jar xvf symap.jar META-INF', view META_INF
 	
 	public static String  MAIN_PARAMS =   "symap.config"; 	// default; changed on command line -c
 	
@@ -30,9 +30,9 @@ public class Globals {
 	public static boolean DBDEBUG=false;	// SyMAPmanager -dbd; adds fields to DB
 
 	public static boolean bMySQL=false;		  // SyMAPmanager -sql; check MySQL CAS561 chg from -v
-	public static boolean bTrim=true;		  // -a do not trim 2D alignments; see closeup.AlignPool; CAS531 
+	public static boolean bTrim=true;		  // -a do not trim 2D alignments; see closeup.AlignPool
 	public static boolean bRedoSum=false;	  // -s redo summary 
-	public static boolean bQueryOlap=false;   // -q show gene olap for algo2 instead of exon; CAS560
+	public static boolean bQueryOlap=false;   // -q show gene olap for algo2 instead of exon
 	public static boolean bQueryPgeneF=false; // CAS563 to run old PgeneF algo instead of new Cluster
 	//public static boolean HITCNT_ONLY=false;// CAS560 remove; -y CAS541 to update the hitcnt without having to redo synteny
 	//public static boolean GENEN_ONLY=false; // CAS560 remove; -z CAS519b to update the gene# without having to redo synteny
@@ -47,17 +47,17 @@ public class Globals {
 	public static final String gapType = "gap";
 	public static final String centType = "centromere";
 	
-	public static final String pseudoChar = "~";	 // pseudo tag; CAS565 add 
-	public static final String minorAnno = "*";      // used in Query and Anno popup for hit to non-assigned anno; CAS548 
+	public static final String pseudoChar = "~";	 // pseudo tag;
+	public static final String minorAnno = "*";      // used in Query and Anno popup for hit to non-assigned anno
 	public static final String DOT = ".", SDOT="\\.";// separates block, collinear, gene#; second is for split
 	
-	public static final int MAX_CLOSEUP_BP=50000;	// Used in CloseUp and Query; CAS551 increase from 30k
+	public static final int MAX_CLOSEUP_BP=50000;	// Used in CloseUp and Query; 
 	public static final String MAX_CLOSEUP_K = "50kb";
-	public static final int MAX_2D_DISPLAY=30000;	// Query and Sfilter; CAS551 add
+	public static final int MAX_2D_DISPLAY=30000;	// Query and Sfilter; 
 	public static final String MAX_2D_DISPLAY_K = "30kb";
 	public static final int MAX_YELLOW_BOX=50000; 	// used in SeqFilter for drawing yellow boxes
 	
-	public static final int T=0, Q=1;				// for target (2) and query (1); CAS560 
+	public static final int T=0, Q=1;				// for target (2) and query (1); 
 	
 	public static final int NO_VALUE = Integer.MIN_VALUE;
 
@@ -78,8 +78,8 @@ public class Globals {
     public static final Color white = Color.white;
     
     // Exports
-    public static String alignDir = "queryMSA";	// CAS563 make global constant
-    public static String getExport() { 			// CAS547 add for 3 uses
+    public static String alignDir = "queryMSA";	
+    public static String getExport() { 			
     	String saveDir = System.getProperty("user.dir") + "/exports/";
 		File temp = new File(saveDir);
 		if(!temp.exists()) {
@@ -90,7 +90,7 @@ public class Globals {
     }
    
     // positive is the gap between (s1,e1) and (s2, e2); negative is the overlap
- 	// works for contained; copied from anchor2.Arg.java on CAS560
+ 	// works for contained; copied from anchor2.Arg.java 
     public static int pGap_nOlap(int s1, int e1, int s2, int e2) {
 		return -(Math.min(e1,e2) - Math.max(s1,s2) + 1); 
 	}
@@ -98,11 +98,11 @@ public class Globals {
     // outputs
     public static String bToStr(boolean b) {return (b) ? "T" : "F";}
     public static void prt(String msg)  {System.out.println(msg);} // permanent message
-    public static void prtStdErr(String msg)  {System.err.println(msg);} // permanent message; CAS566
+    public static void prtStdErr(String msg)  {System.err.println(msg);} // permanent message; 
     public static void xprt(String msg) {System.out.println(msg);} // temp message
-    public static void rprt(String msg) {System.err.print("      " + msg + "...                   \r");}// CAS561 to stderr
+    public static void rprt(String msg) {System.err.print("      " + msg + "...                   \r");}// to stderr
     public static void rclear() {
-    	System.err.print("                                                                               \r");} // CAS561 add
+    	System.err.print("                                                                               \r");} 
     public static void eprt(String msg) {System.err.println("***Error: " + msg);}
     public static void die(String msg)  {eprt(msg); System.exit(-1);}
     

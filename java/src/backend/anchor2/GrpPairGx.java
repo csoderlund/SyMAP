@@ -13,7 +13,7 @@ import util.ProgressDialog;
 
 /******************************************************
  * Computes bins for g2, g1, g0 for this GrpPair
- * CAS560 all filters are in Arg. 
+ * All filters are in Arg. 
  * It was the case that any subhit could only be part of one cluster, and it was assigned to minor genes if more than one.
  * Now it is the case that a subhit can be assigned to multiple clusters overlapping multiple genes,
  * but can only be assigned once to a single gene. This gets rid of the need for the 'split'.
@@ -124,7 +124,7 @@ public class GrpPairGx {
 		private void runG2(boolean isStEQ) {
 			if (tGeneMap.size()==0 || qGeneMap.size()==0) return;
 			
-			Globals.rprt("Find G2 hits for " + Arg.isEQstr(isStEQ));
+			// CAS568 Globals.rprt("Find G2 hits for " + Arg.isEQstr(isStEQ));
 			
 			step1MkPairAndFilter(isStEQ); if (!bSuccess) return; // create g2HprList and filter
 			
@@ -626,7 +626,7 @@ public class GrpPairGx {
 		}
 		private void runG1(int X, int Y, TreeMap <Integer, Gene> xGeneMap, boolean isStEQ) {
 			try {
-				Globals.rprt("Find G1 hits for " + Arg.isEQstr(isStEQ) + " side " + Arg.side[X]);
+				// CAS568 Globals.rprt("Find G1 hits for " + Arg.isEQstr(isStEQ) + " side " + Arg.side[X]);
 				
 			// Process
 				stepMkPairs(X, Y, xGeneMap, isStEQ);
@@ -882,7 +882,7 @@ public class GrpPairGx {
 				if (ht.isStEQ==isStEQ && ht.bNoGene()) g0HitList.add(ht); 
 			}
 			Hit.sortXbyStart(Q, g0HitList);
-			Globals.rprt("G0 hits " + String.format("%,d", g0HitList.size()) + " for " + Arg.isEQstr(isStEQ));
+			// CAS568 Globals.rprt("G0 hits " + String.format("%,d", g0HitList.size()) + " for " + Arg.isEQstr(isStEQ));
 			
 		// Multi: Loop thru g0 hits to create multi hprs
 			int tBin=1, nG0Hits=g0HitList.size();		

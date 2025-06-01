@@ -27,7 +27,7 @@ import util.Utilities;
  * Mproj1 (arab) is query and Mproj2 (cabb) is target; target coords (cabb) comes before query (arab)
  */
 public class AnchorMain {
-	public boolean doAlgo1=false; // CAS546 new parameter
+	public boolean doAlgo1=false; 
 	
 	// variables may be accessed directly by AnchorMain1 or AnchorMain2
 	public DBconn2 dbc2;
@@ -40,7 +40,7 @@ public class AnchorMain {
 		this.dbc2 = dbc2;
 		this.plog = log;
 		this.mp = mp;
-		if (mp!=null) {						// Null for Mproject.removeProjectFromDB; CAS561
+		if (mp!=null) {						// Null for Mproject.removeProjectFromDB;
 			this.pairIdx = mp.getPairIdx(); 
 			doAlgo1 = (mp.isAlgo1(Mpair.FILE));
 		}
@@ -52,7 +52,7 @@ public class AnchorMain {
 			long startTime = Utils.getTimeMem();
 			
 			String proj1Name = pj1.getDBName(), proj2Name = pj2.getDBName();
-			plog.msg("Start calculating cluster hits for " + proj1Name + " and " + proj2Name);
+			plog.msg("\nStart calculating cluster hits for " + proj1Name + " and " + proj2Name);// CAS568 nl
 			
 			String resultDir = Constants.getNameResultsDir(proj1Name, proj2Name); // e.g. data/seq_results/p1_to_p2
 			if ( !Utilities.pathExists(resultDir) ) {
@@ -94,7 +94,7 @@ public class AnchorMain {
 			long modDirDate = new File(resultDir).lastModified(); // add for Pair Summary with 'use existing files'
 			mp.setPairProp("pair_align_date", Utils.getDateStr(modDirDate));
 			if (!Constants.VERBOSE) Globals.rclear();
-			Utils.prtTimeMemUsage(plog,  "Finish load hits", startTime);
+			Utils.prtMsgTimeDone(plog,  "Finish clustering hits", startTime); // CAS568 change from mem output
 			return true;
 		}
 		catch (Exception e) {ErrorReport.print(e, "Run load anchors"); return false;}		
@@ -103,13 +103,10 @@ public class AnchorMain {
 	
 	/***************************************************************
 	 * Assign hitnum, with them ordered by start1 ASC, len DESC
-	 * CAS520 creates a hitnum to use for display, which is sequential and does not change on reload
-	 * CAS540x moved from AnchorsPost; 
 	 */
 	private boolean saveHitNum() { 
 	try {
-		if (Constants.VERBOSE) plog.msg("   Compute and save hit#                                         "); 
-		else                   Globals.rprt("Compute and save hit#");
+		Globals.rprt("Compute and save hit#"); // CAS568 do not need for Verbose
 		TreeMap <Integer, String> grpMap1 = mp.mProj1.getGrpIdxMap();
 		TreeMap <Integer, String> grpMap2 = mp.mProj2.getGrpIdxMap();
 		
@@ -117,7 +114,7 @@ public class AnchorMain {
 			for (int g2 : grpMap2.keySet()) {
 				int nhits = dbc2.executeCount("select count(*) from pseudo_hits "
 						+ " where grp1_idx="+ g1 + " and grp2_idx=" + g2); 
-				if (nhits==0) continue;										// CAS560 mysql error if 0 in next query
+				if (nhits==0) continue;										// mysql error if 0 in next query
 				
 				dbc2.executeUpdate("update pseudo_hits set hitnum=0 where grp1_idx=" + g1 + " and grp2_idx=" + g2);
 				
@@ -146,6 +143,7 @@ public class AnchorMain {
 				ps.executeBatch();
 			}
 		}
+		Globals.rclear();
 		return true;
 	}
 	catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); return false;}
@@ -153,8 +151,8 @@ public class AnchorMain {
 	/********************************************************************
 	 * Count number of hits per gene; these include all pairwise projects except self; 
 	 */
-	public void saveAnnoHitCnt() { // CAS561 make public for Mpair.removePairFromDB
-		if (Constants.VERBOSE && plog!=null) plog.msg("   Compute and save gene numHits"); else Globals.rprt("Compute and save gene numHits");
+	public void saveAnnoHitCnt() { // public for Mpair.removePairFromDB
+		Globals.rprt("Compute and save gene numHits"); // CAS568 do not need for Verbose
 		
 		TreeMap <Integer, String> idxList1 = mp.mProj1.getGrpIdxMap(); // CAS546 was using SyProj.Group
 		TreeMap <Integer, String> idxList2 = mp.mProj2.getGrpIdxMap();
@@ -162,12 +160,12 @@ public class AnchorMain {
 		for (int idx : idxList1.keySet()) if (!saveAnnotHitCnt(idx, idxList1.get(idx))) return;
 		for (int idx : idxList2.keySet()) if (!saveAnnotHitCnt(idx, idxList2.get(idx))) return;
 		
-		if (!Constants.VERBOSE) Globals.rclear();
+		Globals.rclear();
 	}
-	public boolean saveAnnotHitCnt(int grpIdx, String grpName) { // CAS561 make public for Mproject.removeProjectFromDB
+	public boolean saveAnnotHitCnt(int grpIdx, String grpName) { // public for Mproject.removeProjectFromDB
 		try {
 			dbc2.executeUpdate("update pseudo_annot set numhits=0 "
-					+ " where grp_idx=" + grpIdx + " and type='gene'"); // numhits is used by pseudo too; CAS565
+					+ " where grp_idx=" + grpIdx + " and type='gene'"); // numhits is used by pseudo too; 
 			ResultSet rs = dbc2.executeQuery("select count(*) from pseudo_annot where grp_idx=" + grpIdx);
 			int cnt = (rs.next()) ? rs.getInt(1) : 0;
 			if (cnt==0) return true; 							// this is not a failure 
@@ -187,12 +185,12 @@ public class AnchorMain {
 			}
 			rs.close();
 
-			Globals.rprt("Process " + grpName + " Genes " + geneCntMap.size());
+			// CAS568 put in calling Globals.rprt(grpName + " Genes " + geneCntMap.size());
 			
 			PreparedStatement ps = dbc2.prepareStatement("update pseudo_annot set numhits=? where idx=?");
 			for (int idx : geneCntMap.keySet()) {
 				int num = geneCntMap.get(idx);
-				if (num>255) num=255; // CAS543 tinyint unsigned max is 255
+				if (num>255) num=255; // tinyint unsigned max is 255
 				ps.setInt(1, num);
 				ps.setInt(2, idx);
 				ps.addBatch();
@@ -265,7 +263,7 @@ public class AnchorMain {
 			this.mProj1 = mp.mProj1;
 			this.mProj2 = mp.mProj2;
 			
-			try { // Use same Desc/Product as used by the project .gff file
+			try { // Give pseudo desc=Not annotated; Use same Desc/Product as used by the project .gff file
 				for (int i=0; i<2; i++) {
 					int idx = (i==0) ? mProj1.getID() : mProj2.getID();
 					ResultSet rs =	dbc2.executeQuery("SELECT keyname, count FROM annot_key " +
@@ -287,7 +285,7 @@ public class AnchorMain {
 		/*****************************************************/
 		private boolean addPseudo() {
 		try {
-			plog.msg("Assign pseudo genes");
+			plog.msg("   Assign pseudo genes");
 			
 			TreeMap <Integer, String> grpMap1 = mp.mProj1.getGrpIdxMap();
 			String grpList1 = "";
@@ -302,24 +300,25 @@ public class AnchorMain {
 				else                     grpList2 += "," + g2; 
 			}
 			
+			int cnt=1;
 			for (int g1 : grpMap1.keySet()) {
 				chrPair = mProj1.getDisplayName() + " " + mProj1.getGrpNameFromIdx(g1);
 				
 				String where = " where grp1_idx= " + g1 + " and grp2_idx IN (" + grpList2 + ") and annot1_idx=0 "; 
 				
-				if (!addPseudoGrpGrp(g1, where, "annot1_idx", 0)) return false;
+				if (!addPseudoGrpGrp(g1, where, "annot1_idx", 0, cnt++, grpMap1.size())) return false;
 			}
-			
+			cnt=1;
 			for (int g2 : grpMap2.keySet()) {
 				chrPair = mProj2.getDisplayName() + " " + mProj2.getGrpNameFromIdx(g2);
 				
 				String where = " where grp1_idx IN (" + grpList1  + ") and grp2_idx=" + g2 + " and annot2_idx=0 "; 
 				
-				if (!addPseudoGrpGrp(g2, where, "annot2_idx", 1)) return false;
+				if (!addPseudoGrpGrp(g2, where, "annot2_idx", 1, cnt++, grpMap2.size())) return false;
 			}
 			
 			Utils.prtNumMsg(plog, cntPseudo[0], 
-					String.format(" %s   %,d %s", mProj1.getDisplayName(), cntPseudo[1], mProj2.getDisplayName()));
+					String.format("Pseudo %s     %,d Pseudo %s ", mProj1.getDisplayName(), cntPseudo[1], mProj2.getDisplayName()));
 			return true;
 		}
 		catch (Exception e) {Globals.prt(""); ErrorReport.print(e, "add pseudos"); return false;}
@@ -327,7 +326,7 @@ public class AnchorMain {
 		/*******************************************************
 		 * Assign one side at a time; find all that have annotN_idx=0 and update
 		 */
-		private boolean addPseudoGrpGrp(int grpIdx, String where, String annoStr, int i) {
+		private boolean addPseudoGrpGrp(int grpIdx, String where, String annoStr, int i, int cntGrp, int maxGrp) {
 		try {
 			String type = Globals.pseudoType;
 			
@@ -363,14 +362,19 @@ public class AnchorMain {
 			}
 			rs.close();
 			
-			if (Constants.VERBOSE) {
-				String dn =  (i==0) ? mProj1.getDisplayName() : mProj2.getDisplayName();
-				String chr = (i==0) ? mProj1.getGrpNameFromIdx(grpIdx) : mProj2.getGrpNameFromIdx(grpIdx);
-				String msg = String.format("%-10s %-5s   Genes %,6d   Start %,6d   Pseudo %,6d", 
-								dn, chr, genes, geneStart, hitGeneMap.size()); // CAS566 add 5..
-				plog.msg(msg);
+			String dn =  (i==0) ? mProj1.getDisplayName() : mProj2.getDisplayName();
+			String chr = (i==0) ? mProj1.getGrpNameFromIdx(grpIdx) : mProj2.getGrpNameFromIdx(grpIdx);
+		
+			String msg = String.format("Pseudo %-15s   Genes %,6d   Start %,6d ", (dn+" "+chr), genes, geneStart); 
+			if (Constants.VERBOSE && cntGrp==1) Utils.prtIndentNumMsgFile(plog, 1, hitGeneMap.size(), msg);  // CAS568 reduce output
+			if (Constants.VERBOSE && cntGrp==2) {
+				if (maxGrp>2) msg += "...";
+				Utils.prtIndentNumMsgFile(plog, 1, hitGeneMap.size(), msg);  
 			}
+			else Globals.rprt(String.format("%,5d %s", hitGeneMap.size(),msg));
+			
 			if (hitGeneMap.size()==0) return true;
+			
 			cntPseudo[i] += hitGeneMap.size();
 			
 		// pseudo_annot

@@ -17,7 +17,6 @@ import util.Utilities;
  * Executes the alignment program for one query_to_target where either may have >1 chromosomes/scaffold
  * v560 renamed from ProgSpec
  */
-
 public class AlignRun implements Comparable<AlignRun> 
 {
 	protected static final int STATUS_UKNOWN  = 0;
@@ -99,10 +98,10 @@ public class AlignRun implements Comparable<AlignRun>
 			String doneFile = outFile + Constants.doneSuffix;
 			Utilities.deleteFile(doneFile);
 			
-			String query = f1.getPath(); // CAS500 getAbsolutePath
+			String query = f1.getPath(); 
 			String targ  = f2.getPath();
 				
-			String runLogName  = alignLogDirName + outRoot + ".log"; // CAS500 move log file to log directory
+			String runLogName  = alignLogDirName + outRoot + ".log"; 
 			FileWriter runFW = new FileWriter(runLogName);
 			Log runLog = new Log(runFW);  
 			
@@ -110,7 +109,7 @@ public class AlignRun implements Comparable<AlignRun>
 			String intFilePath = resDir + outRoot + "." + program;
 			String deltaFilePath = intFilePath + ".delta";
 			
-			if (Ext.isMummer4Path()) { // CAS508 path is set in symap.config
+			if (Ext.isMummer4Path()) { 
 				query = f1.getAbsolutePath();
 				targ =  f2.getAbsolutePath();
 				intFilePath =   new File(intFilePath).getAbsolutePath();
@@ -124,9 +123,9 @@ public class AlignRun implements Comparable<AlignRun>
 			cmd = mummerPath + program + " " + args + " -p " + intFilePath + " " + targ + " " + query;
 			rc = runCommand(cmd, runFW, runLog); // send output and log messages to same file
 			
-			// Run show-coords // CAS501 nucmer rc=1
+			// Run show-coords // nucmer rc=1
 			if (rc == 0) { 
-				String parms = (program.equals(Ext.exPromer) ? "-dlkT" : "-dlT"); // -k to remove secondary frame hits; CAS515 remove H
+				String parms = (program.equals(Ext.exPromer) ? "-dlkT" : "-dlT"); // -k to remove secondary frame hits
 				cmd = mummerPath + Ext.exCoords + " " + parms +  " " + deltaFilePath;
 				rc = runCommand(cmd, new FileWriter(outFile), runLog);
 				runLog.msg( "#" + alignNum + " done: " + Utilities.getDurationString(getRunTime()) );
@@ -134,12 +133,12 @@ public class AlignRun implements Comparable<AlignRun>
 			else runLog.msg( "#" + alignNum + " fail: " + Utilities.getDurationString(getRunTime()) );
 		
 			if (rc == 0) {
-				cleanup(); // Cleanup intermediate files. CAS500 only if successful
+				cleanup(); // Cleanup intermediate files. 
 				Utilities.checkCreateFile(doneFile, "PS done");
 				setStatus(STATUS_DONE);
 			}
 			else {
-				ErrorReport.print("#" + alignNum + " rc" + rc + " Failed: " + cmd); // CAS559 add alignum
+				ErrorReport.print("#" + alignNum + " rc" + rc + " Failed: " + cmd); 
 				setStatus(STATUS_ERROR);
 			}
 			runFW.close();
@@ -153,11 +152,11 @@ public class AlignRun implements Comparable<AlignRun>
 	
 	private void cleanup() {
 		String intFilePath = resDir + outRoot + "." + program;
-		if (Constants.MUM_NO_RM) {// CAS559 new command line argument for the user to keep all args
+		if (Constants.MUM_NO_RM) {// command line -mum; user to keep all args
 			System.out.println("For mummer files, see " + resDir);
 			return; 
 		}
-		Utilities.deleteFile(intFilePath + ".delta");
+		Utilities.deleteFile(intFilePath + ".delta"); // appears to be the only one MUMmer keeps if successfully completes
 		Utilities.deleteFile(intFilePath + ".cluster");
 		Utilities.deleteFile(intFilePath + ".mgaps");
 		Utilities.deleteFile(intFilePath + ".aaqry"); // promer only

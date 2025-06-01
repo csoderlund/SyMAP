@@ -23,11 +23,6 @@ import util.Utilities;
  * - The annot_idx are sequential for sequential genes, but have gaps for exons. The temporary tnum is sequential.
  * - The hits for collinear may not be sequential when a gene has two hits.
  * - Only hits to two genes are downloaded from DB, hence, if a gene has a g1 and g2 hit, the g1 hit is ignored.
- * 
- * CAS520 added setAnnot, setHitNum and rewrote collinearSets; CAS541 moved setHitNum to AnchorsMain
- * CAS556 fixed bug which only happened when one gene in projectA was in two different collinear sets; this
- *  only happens when the chromosome has duplications within itself. I changed the whole logic to number
- *  using the hitVec instead of gene1Map. This fixed the bug and added some sets.
  */
 
 public class AnchorPost {
@@ -67,7 +62,7 @@ public class AnchorPost {
 			dbc2.executeUpdate("update pseudo_hits set runsize=0, runnum=0 where pair_idx=" + mPairIdx);
 			
 			int num2go = mProj1.getGrpSize() * mProj2.getGrpSize();
-			mLog.msg("Finding Collinear sets");
+			Utils.prtMsgFile(mLog, "   Finding Collinear sets"); // CAS568 add indent
 			long time = Utils.getTime();
 			
 			TreeMap <Integer, String> map1 = mProj1.getGrpIdxMap();
@@ -81,7 +76,7 @@ public class AnchorPost {
 					Globals.rprt(num2go + " pairs remaining (" + t + ")"); 
 					num2go--;
 					
-					if (grpIdx1==grpIdx2) continue; 		// CAS521 can crash on self-chr
+					if (grpIdx1==grpIdx2) continue; 		
 					
 					if (!step0BuildSets(grpIdx1, grpIdx2)) return;
 					
@@ -95,7 +90,7 @@ public class AnchorPost {
 			Utils.prtNumMsg(mLog, totalRuns, "Collinear sets                          ");
 			if (Constants.VERBOSE) {
 				Utils.prtNumMsg(mLog, nhits, "Updates                          ");
-				Utils.timeDoneMsg(mLog, "Finish Collinear", time);
+				Utils.prtMsgTime(mLog, "   Finish Collinear", time);
 			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Compute colinear genes"); }
@@ -135,7 +130,7 @@ public class AnchorPost {
 			Hit hObj;
 			ResultSet rs;
 			
-		// Hits with 2 genes - annot1 and annot2 have the best overlap; ignore others; CAS563 all uc; CAS565 rm block
+		// Hits with 2 genes - annot1 and annot2 have the best overlap; ignore others; 
 			rs = dbc2.executeQuery("select PH.idx, PH.strand, PH.hitnum, PH.annot1_idx, PH.annot2_idx " +
 				" from pseudo_hits 				AS PH  " +
 				" LEFT JOIN pseudo_block_hits 	AS PBH ON PBH.hit_idx=PH.idx" +
@@ -369,7 +364,7 @@ public class AnchorPost {
 	try {
 		PreparedStatement ps = dbc2.prepareStatement("update pseudo_hits set runsize=?, runnum=? where idx=?");
 		for (Hit hObj : xHitVec) {
-			if (hObj.frunnum!=0 && hObj.frunsize>1) { // CAS521 was 0
+			if (hObj.frunnum!=0 && hObj.frunsize>1) { 
 				ps.setInt(1, hObj.frunsize);
 				ps.setInt(2, hObj.frunnum);
 				ps.setInt(3, hObj.hidx);

@@ -46,19 +46,18 @@ import util.Jhtml;
 /*******************************************
  * Displays the project parameter window and saves them to file
  * CAS567 add a drop-down of existing categories; shorten text fields
+ * CAS568 move mask and order-against to pairs; add directory name
  */
 public class ProjParams extends JDialog {
 	private static final long serialVersionUID = -8007681805846455592L;
 	static public String lastSeqDir=null; 
 	static protected String catUncat = "Uncategorized"; // and puts this as last if there are no occurrences
 	
-	private final String [] MASK_GENES = { "yes", "no" };
 	private final int INITIAL_WIDTH = 610, INITIAL_HEIGHT = 660;
 	
 	private final String displayHead = 	"Display";
 	private final String loadProjectHead =  "Load project";
 	private final String loadAnnoHead = 	"Load annotation";
-	private final String alignHead = 		"Alignment&Synteny";
 	
 	private int idxGrpPrefix=0; 
 	private Mproject mProj;
@@ -70,7 +69,7 @@ public class ProjParams extends JDialog {
 	public ProjParams(Frame parentFrame,  Mproject mProj, 
 			Vector <Mproject> projVec, String [] catArr, boolean isLoaded, boolean existAlign) { 
 		
-		super(parentFrame, mProj.getDBName() + " params file");
+		super(parentFrame, Constants.seqDataDir + mProj.getDBName() + "/params file"); // title
 		
 		this.mProj = mProj;
 		this.mProjVec = projVec;
@@ -80,7 +79,6 @@ public class ProjParams extends JDialog {
 		theDBName =  		mProj.getDBName();
 		bIsLoaded = 		isLoaded;
 		bExistAlign = 		existAlign;
-		loadedProjs = 		getLoadedProjs(projVec);
 		
 		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
 		getContentPane().setBackground(Color.WHITE);
@@ -110,10 +108,10 @@ public class ProjParams extends JDialog {
 	 * If any parameters are changed, change also in manager.Project and SyProps
 	 */
 	private void createMainPanel() {
-		int startAnno=0, startLoad=0, startAlign=0, i=0;
+		int startAnno=0, startLoad=0, i=0;
 		boolean bReload=true, bReAlign=true;
 		
-		theFields = new Field[13]; // If change #fields, change 13
+		theFields = new Field[11]; // If change #fields, change!; CAS568 removed 2 fields
 		theFields[i++] = new Field(mProj.sCategory, catArr, 1, 	!bReload, !bReAlign, true);// true -> add text field
 		
 		theFields[i++] = new Field(mProj.sDisplay, 1, 	!bReload, !bReAlign);
@@ -132,9 +130,7 @@ public class ProjParams extends JDialog {
 		theFields[i++] = new Field(mProj.lANkeyword, 1,  bReload, !bReAlign);  	
 		theFields[i++] = new Field(mProj.lAnnoFile, 	 bReload, !bReAlign, false);
 		
-		startAlign = i-1;
-		theFields[i++] = new Field(mProj.aOrderAgainst, loadedProjs, 0, !bReload, bReAlign, false); // false -> no text field
-		theFields[i++] = new Field(mProj.aMaskNonGenes, MASK_GENES, 1,!bReload, bReAlign, false);
+		// CAS568 remove adding synteny mask and order here
 		
 		JPanel fieldPanel = Jcomp.createPagePanel();
 		fieldPanel.add(Jcomp.createHtmlLabel(displayHead)); 
@@ -156,12 +152,6 @@ public class ProjParams extends JDialog {
 				fieldPanel.add(Box.createVerticalStrut(5));
 				fieldPanel.add(Jcomp.createHtmlLabel(loadProjectHead));
 			}
-			else if (x==startAlign) {
-				fieldPanel.add(Box.createVerticalStrut(5));
-				fieldPanel.add(new JSeparator());
-				fieldPanel.add(Box.createVerticalStrut(5));
-				fieldPanel.add(Jcomp.createHtmlLabel(alignHead));
-			}
 		}
 		
 		JPanel mainPanel = Jcomp.createPagePanel();
@@ -177,15 +167,6 @@ public class ProjParams extends JDialog {
 		mainPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 			
 		getContentPane().add(mainPanel);
-	}
-	/*******************************************************************/
-	private String [] getLoadedProjs(Vector <Mproject> projVec) { // adds None
-		Vector<String> retVal = new Vector<String> ();
-		retVal.add("None");
-		for (Mproject mp : projVec) {
-			if (mp!=mProj && mp.isLoaded()) retVal.add(mp.getDBName());
-		}
-		return retVal.toArray(new String[retVal.size()]);
 	}
 	
 	/******************************************************************/
@@ -237,11 +218,7 @@ public class ProjParams extends JDialog {
 	}
 	private boolean setField(String fieldName, String fieldValue) {
 		for (int x=0; x<theFields.length; x++) {
-			if (fieldName.equals(theFields[x].getLabel())) {
-				if (fieldName.equals(mProj.getLab(mProj.aMaskNonGenes))) {
-					if(fieldValue.equals("1") || fieldValue.equals("yes")) 	fieldValue = "yes";
-					else													fieldValue = "no";
-				}
+			if (fieldName.equals(theFields[x].getLabel())) { // CAS568 remove mask replace yes/no
 				theFields[x].setValue(fieldValue);
 				return true;
 			}
@@ -388,19 +365,6 @@ public class ProjParams extends JDialog {
 				
 				return (n == JOptionPane.YES_OPTION);
 			}
-			
-			if  (theFields[x].isAlignField() && bExistAlign) { // A&S
-				String label = mProj.getLab(mProj.aOrderAgainst);
-				boolean b1 = (theFields[x].getLabel().contentEquals(label));
-				String m1 = (b1) 
-						? "If alignments exist with the select project, they may be reused for A&S"
-						: "Clear Pair (remove existing alignments) and rerun A&S";
-				String msg = "Changed parameter: " + theFields[x].getLabel() 
-						+ "\n\n" + m1 + "\n\nProceed with save?";
-				int n = JOptionPane.showConfirmDialog( this, msg , alignHead, JOptionPane.YES_NO_OPTION);
-				
-				return (n == JOptionPane.YES_OPTION);
-			}
 		}
 		return true;
 	}
@@ -466,22 +430,12 @@ public class ProjParams extends JDialog {
 					System.out.println("SyMAP error on label: " + label);
 					continue;
 				}
-				if(val.length() > 0) {
-					if (label.equals(mProj.getKey(mProj.aMaskNonGenes))) {
-						if(val.equals("yes")) 	out.println(label + " = 1");
-						else					out.println(label + " = 0");
-					}
-					else if (label.equals(mProj.getKey(mProj.aOrderAgainst))) {
-						if (!val.equals("None")) out.println(label + " = " + val);
-						else out.println(label + " = ");
-					}
-					else {									// values are checked in saveCheckFields, but to be sure...
-						String v = val.replace('\n', ' ');
-						v = v.replace("\"", " ");
-						v = v.replace("\'", " ");
-						v = v.trim();
-						out.println(label + " = " + v);
-					}
+				if(val.length() > 0) { // CAS568 remove Mask and Order checks
+					String v = val.replace('\n', ' ');
+					v = v.replace("\"", " ");
+					v = v.replace("\'", " ");
+					v = v.trim();
+					out.println(label + " = " + v);
 				}
 				else {
 					out.println(label + " = "); 					// save empty ones too
@@ -856,7 +810,6 @@ public class ProjParams extends JDialog {
 	private boolean bWasSave = false;
 	private Field [] theFields;
 	private String [] prevArr = null;
-	private String [] loadedProjs = null;
 	private JButton btnSave = null, btnCancel = null;
 	private CaretListener theListener = null;
 }

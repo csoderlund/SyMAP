@@ -65,7 +65,7 @@ public class AnnotLoadMain {
 		initFromParams(projDBName);	if (!bSuccess) {tdbc2.close(); return false; };
 		
 		if (annotFiles.size()==0) { 
-			Utils.prt(plog, "Finish annotation");
+			Utils.prtMsgFile(plog, "Finish annotation");
 			tdbc2.executeUpdate("delete from annot_key where proj_idx=" + mProj.getIdx());
 			tdbc2.close();
 			return true;
@@ -93,7 +93,7 @@ public class AnnotLoadMain {
 
 /** Wrap up **/
 		summary();		if (!bSuccess) {tdbc2.close(); return false; }
-		Utils.timeDoneMsg(plog, "Finish annotation for " + projDBName + "      ", startTime);
+		Utils.prtMsgTimeDone(plog, "Finish annotation for " + projDBName + "      ", startTime);
 		
 		tdbc2.close();
 		return true;

@@ -22,8 +22,6 @@ public class Proj  {
 	protected String name, grpPrefix,  category = "", displayName = ""; 
 	protected Mproject mProj;
 	
-	private String orderAgainst = "";
-	
 	private Vector<Group> 			groupVec;
 	private TreeMap<Integer,Group> 	idx2Grp;
 	private TreeMap<String,Integer> grpName2Idx;
@@ -32,7 +30,7 @@ public class Proj  {
 	private DBconn2 dbc2;
 	private Pattern namePat;
 	
-	private long totalSize = 0; // CAS551 changed to int; CAS552 changed back
+	private long totalSize = 0; 
 	private ProgressDialog plog;
 	private int topN=2;
 	
@@ -51,7 +49,6 @@ public class Proj  {
 		grpPrefix = 	mProj.getGrpPrefix().trim();
 		category =    	mProj.getdbCat();
 		displayName =   mProj.getDisplayName();
-		orderAgainst =  mProj.getOrderAgainst();
 		totalSize 	= 	mProj.getLength();
 		hasAnnot 	=	mProj.hasGenes();
 		
@@ -85,8 +82,6 @@ public class Proj  {
 	/**********************************************************************/
 	public String getName() { return name; }
 	protected int getIdx() { return idx; }
-	protected String getOrderAgainst() { return orderAgainst; }
-	protected boolean hasOrderAgainst() {return !getOrderAgainst().contentEquals("");}
 	protected boolean hasAnnot() {return hasAnnot;}
 	
 	protected Vector<Group> getGroups() { return groupVec; }

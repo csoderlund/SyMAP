@@ -1,7 +1,6 @@
 package symap.manager;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,9 +19,7 @@ import java.util.Arrays;
 import java.util.TreeMap;
 import java.sql.ResultSet;
 
-import backend.Constants;
 import backend.Utils;
-
 import database.DBconn2;
 import symap.Globals;
 import util.ErrorReport;
@@ -33,12 +30,7 @@ import util.Utilities;
  * Creates the Summary window from the Summary Button on the main panel
  * The Summary is of the alignment from two different sequence projects
  * 
- * CAS42 1/7/18 Made the tables a little bigger as the 2nd row was partially chopped
- * CAS500 Split the file into methods, used numbers of Mysql get, added FPC-Seq
- * CAS520 removed FPC
- * CAS540 changed from using Java table stuff to using text Utilities.makeTable
- * 		  changed statistics computed; changed coverage algorithm
- * Old vs New:
+ * createAnchorDelete() vs createAnchor:
  * Anchors: %InBlock => Blocks SCH, Annotated => CHwGN, Coverage => Cover SH (slight difference); Ranges CL=>SH
  * Blocks: Coverage => Cover SB, Double => 2x, 
  *         %GeneHit  was "Percentage of genes located in synteny block regions which have syntenic hits"
@@ -47,14 +39,14 @@ import util.Utilities;
 
 public class SumFrame extends JDialog implements ActionListener {
 	private static final long serialVersionUID = 246739533083628235L;
-	private boolean bArgRedo=Globals.bRedoSum; // -s regenerate summary on display; CAS560 change prints to use Globals.DEBUG, changed flags
-	private boolean bRedo=false; // CAS556 remove bTrace is dead code; add bRedo
+	private boolean bArgRedo=Globals.bRedoSum; // -s regenerate summary on display; 
+	private boolean bRedo=false;
 	
 	private JButton btnHelp = null, btnOK = null;
 	private int pairIdx=0, proj1Idx=0, proj2Idx=0;
 	private int nHits=0;
 	private Mpair mp;
-	private DBconn2 dbc2; // CAS540 changed DBconn to DBuser
+	private DBconn2 dbc2; 
 	
 	private Proj proj1=null, proj2=null; // contains idx and lengths of groups
 	
@@ -62,7 +54,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	public SumFrame(DBconn2 dbc2, Mpair mp) { 
 		this.mp = mp;
 		this.dbc2 = dbc2;
-		bRedo=true;			// CAS556 expects the summary to be regenerated if still exists
+		bRedo=true;			// expects the summary to be regenerated if still exists
 		createSummary(false);
 	}
     // Called from the project manager
@@ -98,7 +90,6 @@ public class SumFrame extends JDialog implements ActionListener {
 		pack();
 		
 		setLocationRelativeTo(null);	
-		// setAlwaysOnTop(true);
 		setVisible(true);
 	}
 	catch(Exception e){ErrorReport.print(e, "Create summary");}
@@ -117,9 +108,9 @@ public class SumFrame extends JDialog implements ActionListener {
 		proj2Idx = mp.getProj2Idx();
 		
 		ResultSet rs;
-		if (dbc2.tableColumnExists("pairs", "summary")) { // CAS540 exist if called from Summary popup
+		if (dbc2.tableColumnExists("pairs", "summary")) { // exist if called from Summary popup
 			rs = dbc2.executeQuery("select summary from pairs where idx="+ pairIdx);
-			String sum = (rs.next()) ? rs.getString(1) : null; // CAS560 was first()
+			String sum = (rs.next()) ? rs.getString(1) : null; 
 			if (sum!=null && sum.length()>20 && !bArgRedo && !bRedo) return sum;
 		}
 		
@@ -131,29 +122,29 @@ public class SumFrame extends JDialog implements ActionListener {
 		if (isReadOnly) System.out.println("Create Summary for display...");
 		else System.out.println("Creating Summary for save to database... ");
 		
-		String alignDate = "Unknown", syver="Unk", params="";
+		String alignDate = "Unknown", syver="Unk", allParams="";
 		
 		rs = dbc2.executeQuery("select aligndate, params, syver from pairs where idx=" + pairIdx);
-		if (rs.next()) { // CAS560 was first()
+		if (rs.next()) { 				
 			alignDate = rs.getString(1);
-			params = rs.getString(2);
+			allParams = rs.getString(2);  // these are the params that were used for align
 			syver = rs.getString(3);
 		}
 		rs.close();
 		
-		if (params==null) { // CAS559  if MUMmer fails...
-			params  = "Unknown";
+		if (allParams==null) { // if MUMmer fails...
+			allParams  = "Align Unknown";
 		}
 		else {
-			String [] x = params.split("\n");
-			params = "";
-			for (int i=0; i<x.length; i++) if (x[i]!=null) params += x[i] + "\n"; // CAS556 update collinear leaves this null
-			params += mp.getChangedParams(Mpair.DB);
+			String [] x = allParams.split("\n");
+			allParams = "";
+			for (int i=0; i<x.length; i++) if (x[i]!=null) allParams += x[i] + "\n"; // update collinear leaves this null
+			allParams += mp.getChangedSynteny(Mpair.DB); // includes cluster params
 		}
 		String d = Utilities.getNormalizedDate(alignDate);
 		String v = (syver!=null) ? ("  " + syver) : "";
 		
-		String info = (proj1.name + " vs. " + proj2.name + "   Updated " + d + v) + "\n\n"; // CAS548 was 'Created'
+		String info = (proj1.name + " vs. " + proj2.name + "   Updated " + d + v) + "\n\n"; 
 		info += createProject() + "\n";
 		info += createAnchor()  + "\n";
 		info += createBlock()  + "\n";
@@ -161,11 +152,11 @@ public class SumFrame extends JDialog implements ActionListener {
 		if (c!=null) info += c + "\n";
 		info += "Abbrev: Gene (GN), Cluster Hit (CH), SubHit (SH), Synteny Block (SB), CH in Block (CHB)\n";
 		info += "________________________________________________________________________________________\n";
-		info += params;
+		info += allParams;
 		if (proj1Idx == proj2Idx) info += "\nSelf-synteny collinear stats are doubled.";
 	
 		if (!isReadOnly) {
-			dbc2.tableCheckAddColumn("pairs", "summary", "text", null); // CAS540 new, no DB update but in Schema
+			dbc2.tableCheckAddColumn("pairs", "summary", "text", null); 
 			dbc2.executeUpdate("update pairs set summary='" + info + "' where idx=" + pairIdx);
 		}
 		return info;
@@ -189,14 +180,14 @@ public class SumFrame extends JDialog implements ActionListener {
 				       "join xgroups as g on pa.grp_idx=g.idx where pa.type='gene' and g.proj_idx=";
 			
 			rs = dbc2.executeQuery(q + proj1Idx);
-			if (rs.next()) { // CAS560 was first()
+			if (rs.next()) { 
 				proj1.nGenes = rs.getInt(1);
 				gSum1 = rs.getInt(2);
 				gAvg1 = rs.getInt(3);
 				gMax1 = rs.getInt(4);
 			}
 			rs = dbc2.executeQuery(q + proj2Idx);
-			if (rs.next()) { // CAS560 was first()
+			if (rs.next()) { 
 				proj2.nGenes = rs.getInt(1);
 				gSum2   = rs.getInt(2);
 				gAvg2   = rs.getInt(3);
@@ -206,14 +197,14 @@ public class SumFrame extends JDialog implements ActionListener {
 				"join xgroups as g on pa.grp_idx=g.idx where pa.type='exon' and g.proj_idx=";
 				
 			rs = dbc2.executeQuery(q + proj1Idx);
-			if (rs.next()) { // CAS560 was first()
+			if (rs.next()) { 
 				nExon1 = rs.getInt(1);
 				eSum1 = rs.getInt(2);
 				eAvg1 = rs.getInt(3);
 				eMax1 = rs.getInt(4);
 			}
 			rs = dbc2.executeQuery(q + proj2Idx);
-			if (rs.next()) { // CAS560 was first()
+			if (rs.next()) { 
 				nExon2 = rs.getInt(1);
 				eSum2   = rs.getInt(2);
 				eAvg2   = rs.getInt(3);
@@ -269,7 +260,6 @@ public class SumFrame extends JDialog implements ActionListener {
 		catch (Exception e) {ErrorReport.print(e, "Create annotation"); return "error on project";}
 	}
 	/****************************************************************
-	 * CAS540 rewrote for diff results and diff algo for coverage (slightly more accurate; see createAnchorOrig)
 	 * CHwGN: query both+one with proj1/nHits   
 	 * GNwCH: query (#genes-orphans)/#genes
 	 * Cover CH: if there is NO overlap, sum Hlen/genomeLen; otherwise, must take into account embedded vs overlap.
@@ -422,7 +412,7 @@ public class SumFrame extends JDialog implements ActionListener {
 				+ "where pair_idx=" + pairIdx); // Query: block hits/all hits
 		String pInBlock = pct((double)nInBlock, (double)nHits);
 
-	// make cluster only table; CAS541 left justify 
+	// make cluster only table; 
 		String [] field1 = {"#Clusters", "#Rev", "CHnBlock", "#CH", "g2", "g1", "g0", " ", "#SubHits", "AvgNum"};
 		int nCol1 = field1.length;
 		int [] justify1 =  new int [nCol1];
@@ -532,14 +522,12 @@ public class SumFrame extends JDialog implements ActionListener {
 		System.gc();
 		ResultSet rs=null;
 		
-		// CAS540 was from block loop: String pGene1 = pct(nblkgene1, ng1); String pGene2 = pct(nblkgene2, ng2);
-		// CAS560 bug fix: if g.proj_idx is in another pair, it also was counted here	
 		String sq ="select count(distinct pa.idx)"
 			 +" from pseudo_annot		as pa"
 			 +" join xgroups			as g  on pa.grp_idx=g.idx"
 			 +" join pseudo_hits_annot as pha on pha.annot_idx=pa.idx " 
 			 +" join pseudo_block_hits as pbh on pha.hit_idx=pbh.hit_idx"
-			 +" join blocks            as b   on b.idx = pbh.block_idx "   // CAS560 add join, with b.pair_idx
+			 +" join blocks            as b   on b.idx = pbh.block_idx "   
 			 +" where pa.type='gene' and b.pair_idx = " + pairIdx + " and g.proj_idx=";
 		
 		int nBlkGenes1 = dbc2.executeInteger(sq + proj1Idx);

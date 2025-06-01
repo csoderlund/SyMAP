@@ -89,7 +89,7 @@ public class SyMAPmanager extends ManagerFrame {
 				System.err.println("-c must be followed by the name of a configuration file");
 				System.exit(-1);
 			}
-			System.out.println("-c  Configuration file " + Globals.MAIN_PARAMS);
+			// CAS568 says it next line; System.out.println("-c  Configuration file " + Globals.MAIN_PARAMS);
 		}
 		if (startsWithOption(args, "-p")) { // #CPU; CAS500
 			String x = getCommandLineOption(args, "-p"); 
@@ -222,13 +222,13 @@ public class SyMAPmanager extends ManagerFrame {
 		
 		// architecture
 		String userArch = dbProps.getProperty("arch");
-		if (userArch!=null) System.out.println("Architecture: " + userArch);
+		if (userArch!=null) System.out.println("   Architecture: " + userArch); // CAS568 add spaces
 		Ext.setArch(userArch); // if null, will determine it; prints errors if any found
 		
 		// mummer path
 		String mummer 	= dbProps.getProperty("mummer_path"); // CAS508 
 		if (mummer!=null && mummer!="") {
-			System.out.println("MUMmer path: " + mummer);
+			System.out.println("   MUMmer path: " + mummer);
 			Ext.setMummer4Path(mummer);
 		}
 		return true;

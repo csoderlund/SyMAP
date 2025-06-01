@@ -312,7 +312,7 @@ public class Version {
 		
 		rs.close();
 		System.out.println("Update pseudo_hits_annot.grp_idx");
-		Utils.timeDoneMsg(null, "Update ", time );
+		Utils.prtMsgTimeDone(null, "Update ", time );
 		
 	}catch (Exception e) {ErrorReport.print(e, "Could not update database for debug");}
 	}

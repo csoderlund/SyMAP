@@ -132,6 +132,7 @@ public class RWdb {
 	 */
 	protected void writeResultsToFile(ProgressDialog mLog, String resultDir)  {
 	try {
+		mLog.msg("Write results to file ");
 		ResultSet rs = null;
 		
 		String idField1 = "ID", idField2 = "ID";
@@ -176,7 +177,7 @@ public class RWdb {
 		}
 		fw.flush();
 		fw.close();
-		mLog.msg("   Wrote " + blockFile);
+		mLog.msg("   " + blockFile);
 		
 		// Write anchors
 		fw = new FileWriter(anchFile);
@@ -211,7 +212,7 @@ public class RWdb {
 		}
 		fw.flush();
 		fw.close();
-		mLog.msg("   Wrote " + anchFile);
+		mLog.msg("   " + anchFile);
 	}
 	catch (Exception e) {ErrorReport.print(e, "Write results to file"); }
 	}

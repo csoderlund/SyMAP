@@ -28,21 +28,11 @@ import util.ProgressDialog;
 
 /******************************************************
  * Read align files and create anchors 
- * CAS500 Jan2020 rewrote this whole thing, though produces same results
- * (still lots of obsolete/dead code) Removed AnnotAction
- * CAS535 removing still more dead code (some from fpc), more restructuring
- * CAS540 more restructuring, and the following changes:
- * 		Split long genes that have embedded genes, which helps match hits to internal genes; Group.createAnnoFromGenes
- *  	Non-gene AnnotElem do not extend over genes with no hits; 							 Group.createAnnoFromHits1
- *   	Always include geneGene and geneNonGene, but make sure they are responsible hits; 	 HitBin and Hit.useAnnot()
- *      Clusters hits do not have mixed strands, i.e. must be either ++/-- or +-/-; 		 Hit.clusterHits2
- * 		The Hit.matchLen is the Max q&t(summed(subhits)-summed(overlap)) instead of summed(query subhits) 
- * CAS541 change updataPool to dbc2
  */
 enum HitStatus  {In, Out, Undecided }; 
 enum QueryType  {Query, Target, Either };	
-enum HitType 	{GeneGene, GeneNonGene, NonGene} // CAS535 was in HitBin
-enum GeneType 	{Gene, NonGene, NA}				 // ditto
+enum HitType 	{GeneGene, GeneNonGene, NonGene} 
+enum GeneType 	{Gene, NonGene, NA}				 
 
 public class AnchorMain1 {
 	private boolean VB = Constants.VERBOSE;
@@ -65,7 +55,7 @@ public class AnchorMain1 {
 	private HashSet<Hit> filtHitSet = new HashSet <Hit> ();
 	private Vector<Hit> diagHits = new Vector <Hit> ();
 
-	public static int nAnnot=0; // CAS543 different filter rules based on if 0,1,2 projects annotated
+	public static int nAnnot=0; // different filter rules based on if 0,1,2 projects annotated
 	
 	public AnchorMain1(AnchorMain mainObj) {
 		this.mainObj = mainObj;
@@ -109,7 +99,6 @@ public class AnchorMain1 {
 
 	/***********************************************************************
 	 * Load annotations and create initial HitBins
-	 * CAS535 moved the group loop from SyProj to here.
 	 */
 	private void loadAnnoBins(Mproject pj1, Mproject pj2) {
 	try {
@@ -122,7 +111,7 @@ public class AnchorMain1 {
 		nAnnot=0;						// static, make sure its 0
 		if (syProj1.hasAnnot()) nAnnot++;
 		if (syProj2.hasAnnot()) nAnnot++;
-		if (nAnnot==0) { 				// CAS540x add check
+		if (nAnnot==0) { 				
 			plog.msg("Neither project is annotated");
 			return;
 		}
@@ -131,17 +120,17 @@ public class AnchorMain1 {
 		Vector <Group> group1Vec = syProj1.getGroups();
 		Vector <Group> group2Vec = syProj2.getGroups();
 		
-		if (syProj1.hasAnnot()) {// CAS540x check
+		if (syProj1.hasAnnot()) {
 			int tot1=0;
 			for (Group grp : group1Vec) tot1 += grp.createAnnoFromGenes(tdbc2);
-			if (VB) Utils.prtNumMsg(plog, tot1, proj1Name + " genes "); 
+			if (VB) Utils.prtNumMsgFile(plog, tot1, proj1Name + " genes "); 
 			else    Globals.rprt(String.format("%,d %s genes", tot1, proj1Name));
 		}
-		if (syProj2.hasAnnot()) {// CAS540x check
+		if (syProj2.hasAnnot()) {
 			int tot2=0;
 			for (Group grp : group2Vec) tot2 += grp.createAnnoFromGenes(tdbc2);	
 			if (!isSelf) {
-				if (VB) Utils.prtNumMsg(plog, tot2, proj2Name + " genes "); 
+				if (VB) Utils.prtNumMsgFile(plog, tot2, proj2Name + " genes "); 
 				else    Globals.rprt(String.format("%,d %s genes", tot2, proj2Name));
 			}
 		}
@@ -157,7 +146,7 @@ public class AnchorMain1 {
 	private boolean scanAlignFiles(File dh) throws Exception {
 	try {
 	/** first scan: process all aligned files in directory */
-		plog.msg("Scan files to create candidate genes from hits"); 	
+		plog.msg("   Scan files to create candidate genes from hits"); 	
 		long memTime = Utils.getTimeMem();
 		
 		int nHitsScanned = 0, nFile=0;
@@ -188,20 +177,20 @@ public class AnchorMain1 {
 				if (failCheck()) return false;
 			}
 		}
-		if (nHitsScanned == 0) { // CAS561 add more info 
+		if (nHitsScanned == 0) { 
 			plog.msg("No readable anchors were found - MUMmer may not have run correctly.");
 			return rtError(" Or missing loaded sequences (try Algo2, which allows missing sequences).");
 		}
 		if (mTotalHits == 0)   return rtError("No good anchors were found");
 		Globals.rclear();
-		if (nFile>1 || !VB) 			Utils.prtNumMsg(plog, nHitsScanned, "Total scanned hits");
-		if (nHitsScanned!=mTotalHits) 	Utils.prtNumMsg(plog, mTotalHits, "Total accepted hits");
-		if (mTotalLargeHits > 0 && VB)  Utils.prtNumMsg(plog, mTotalLargeHits, "Large hits (> " + Group.FSplitLen + ")  "
+		if (nFile>1 || !VB) 			Utils.prtNumMsgFile(plog, nHitsScanned, "Total scanned hits");
+		if (nHitsScanned!=mTotalHits) 	Utils.prtNumMsgFile(plog, mTotalHits, "Total accepted hits");
+		if (mTotalLargeHits > 0 && VB)  Utils.prtNumMsgFile(plog, mTotalLargeHits, "Large hits (> " + Group.FSplitLen + ")  "
 					 															+ mTotalBrokenHits + " Split "); 
 		if (Constants.PRT_STATS) Utils.prtTimeMemUsage(plog, "Complete scan candidate genes", memTime);
 		
 	/** Second scan - to cluster and filter **/	
-		plog.msg("Scan files to cluster and filter hits");
+		plog.msg("   Scan files to cluster and filter hits");
 		memTime = Utils.getTimeMem();
 		
 		nHitsScanned = nFile = 0;			
@@ -235,7 +224,7 @@ public class AnchorMain1 {
 			Utils.prtTimeMemUsage(plog, "Complete scan cluster", memTime);
 			syProj1.printBinStats();  
 			syProj2.printBinStats(); 
-			BinStats.dumpStats(plog); // CAS560 was not printing
+			BinStats.dumpStats(plog); 
 			plog.msgToFile("Complete stats"); 
 		}
 		return true;
@@ -261,7 +250,7 @@ public class AnchorMain1 {
 		while (fh.ready()) {
 			line = fh.readLine().trim();
 			if (line.length() == 0) continue;
-			if (!Character.isDigit(line.charAt(0))) {// CAS515 add in order to allow headers
+			if (!Character.isDigit(line.charAt(0))) {
 				if (line.startsWith("NUCMER")) {
 					isNucmer=true;
 					fileType = "NUCMER";
@@ -304,7 +293,7 @@ public class AnchorMain1 {
 			}
 				
 			mTotalHits++;
-			if (Group.bSplitGene && hit.maxLength() > Group.FSplitLen) {// CAS540 add splitgene check
+			if (Group.bSplitGene && hit.maxLength() > Group.FSplitLen) {
 				Globals.tprt(" split hit of size " + hit.maxLength());
 				Vector<Hit> brokenHits = Hit.splitMUMmerHit(hit);
 				mTotalLargeHits++;
@@ -322,9 +311,9 @@ public class AnchorMain1 {
 			Utils.prtNumMsgNZx(skip1, "Skip1 - Self with same group (is run separately)");
 			Utils.prtNumMsgNZx(skip2, "Skip2 - Same group   with start1<start2 (mirror later)");
 		}
-		// CAS561 there is a lot of output if many chromosome, hence, only Verbose prints them
+		
 		String msg= String.format("%,10d scanned %s %s", hitNum, fileType, Utils.fileFromPath(mFile.toString()));
-		if (VB) plog.msg(msg);  else    Globals.rprt(msg);
+		if (VB) Utils.prtMsgFile(plog, msg);  else    Globals.rprt(msg);
 		
 		if (hitNum==0 || mTotalHits==0) return 0;
 		
@@ -364,7 +353,7 @@ public class AnchorMain1 {
 			line = fh.readLine().trim();
 			
 			if (line.length() == 0) continue;
-			if (!Character.isDigit(line.charAt(0))) continue; // CAS515 allow header lines
+			if (!Character.isDigit(line.charAt(0))) continue; 
 			
 			Hit hit = new Hit();	
 			hit.origHits = 1;
@@ -418,7 +407,7 @@ public class AnchorMain1 {
 		filterClusterHits2(clustHits, p1, p2);	     			if (!bSuccess) return 0;
 		
 		String msg= String.format("%,10d clustered %s", clustHits.size(), Utils.fileFromPath(mFile.toString()));
-		if (VB) Utils.prt(plog, msg); else Globals.rprt(msg);
+		if (VB) Utils.prtMsgFile(plog, msg); else Globals.rprt(msg);
 	
 		return clustHits.size();
 	}
@@ -433,7 +422,6 @@ public class AnchorMain1 {
 	 * Cluster the mummer hits into larger hits using the annotations, including the "non-genes". [clusterGeneHits]
 	 * So our possible hit set will now be a subset of annotations x annotations, and the
 	 * actual length of the hits will be the sum of the subhits that went into them.
-	 * CAS540 it was mixing isRev and !isRev; fixed in Hit.clusterHits
 	 */
 	private Vector<Hit> clusterHits2(Vector<Hit> inHits) throws Exception {
 		Vector<Hit> outHits = new Vector<Hit>(HIT_VEC_INC, HIT_VEC_INC);
@@ -500,7 +488,7 @@ public class AnchorMain1 {
 	 */
 	private void filterClusterHits2(Vector<Hit> clustHits, Proj p1, Proj p2) throws Exception {
 	try {
-		// Bin the annotated/candidate genes [syProj1.collectPGInfo]; CAS540 moved here
+		// Bin the annotated/candidate genes [syProj1.collectPGInfo]; 
 		Vector <Group> grp1Vec = syProj1.getGroups();
 		for (Group grp : grp1Vec) grp.createHitBinFromAnno2(syProj1.getName());
 		
@@ -594,7 +582,7 @@ public class AnchorMain1 {
 	 */
 	private boolean scanNextMummerHit(String line, Hit hit) {
 		String[] fs = line.split("\\s+");
-		if (fs.length < 13) { // CAS561 add more info
+		if (fs.length < 13) { 
 			plog.msg("*** Missing values, only " + fs.length + " must be >=13                       ");
 			plog.msg("  Line: " + line);
 			return false;
@@ -605,7 +593,7 @@ public class AnchorMain1 {
 		int tend 	= Integer.parseInt(fs[1]);
 		int qstart 	= Integer.parseInt(fs[2]);
 		int qend 	= Integer.parseInt(fs[3]);
-		int match 	= Math.max(Integer.parseInt(fs[4]), Integer.parseInt(fs[5])); // CAS540 LEN2=>MAX 
+		int match 	= Math.max(Integer.parseInt(fs[4]), Integer.parseInt(fs[5])); 
 		int pctid 	= Math.round(Float.parseFloat(fs[6]));
 		int pctsim 	= (isNucmer) ? 0 :  Math.round(Float.parseFloat(fs[7]));
 		if (pctsim>110) pctsim=0; // in case mummer file does not have Nucmer header;
@@ -614,7 +602,7 @@ public class AnchorMain1 {
 				
 		String strand = (qstart <= qend ? "+" : "-") + "/" + (tstart <= tend ? "+" : "-"); 	
 
-		hit.setHit(queryChr, targetChr, qstart, qend, tstart, tend, match, pctid, pctsim, strand); // CAS540x moved assignments to setHit
+		hit.setHit(queryChr, targetChr, qstart, qend, tstart, tend, match, pctid, pctsim, strand); 
 		
 		return true;
 	}	
@@ -628,7 +616,7 @@ public class AnchorMain1 {
 		
 		Vector <Hit> vecHits = new Vector <Hit> (filtHitSet.size());
 		for (Hit h : filtHitSet) vecHits.add(h);
-		Hit.sortByTarget(vecHits);	// CAS515 they end up out of any logical order; order by start
+		Hit.sortByTarget(vecHits);	
 		
 		saveFilterHits(vecHits); 		if (!bSuccess) return;
 		
@@ -650,7 +638,7 @@ public class AnchorMain1 {
 			int numLoaded=0, countBatch=0;
 			tdbc2.executeUpdate("alter table pseudo_hits modify countpct integer");
 						
-			PreparedStatement ps = tdbc2.prepareStatement("insert into pseudo_hits "	// CAS544 put in correct order
+			PreparedStatement ps = tdbc2.prepareStatement("insert into pseudo_hits "	
 					+ "(pair_idx, proj1_idx, proj2_idx, grp1_idx, grp2_idx,"
 					+ "pctid, cvgpct, countpct, score, htype, gene_overlap,"
 					+ "annot1_idx, annot2_idx, strand, start1, end1, start2, end2,"
@@ -660,7 +648,7 @@ public class AnchorMain1 {
 			for (Hit hit : vecHits) {
 				if (hit.status != HitStatus.In) continue;
 				
-				String htype="g0"; // CAS546 add to show on Query
+				String htype="g0"; // show on Query
 				int geneOlap = 0;
 				if (hit.mHT == HitType.GeneGene)			{geneOlap = 2;	htype="g2";}
 				else if (hit.mHT == HitType.GeneNonGene)	{geneOlap = 1;	htype="g1";}
@@ -673,10 +661,10 @@ public class AnchorMain1 {
 				ps.setInt(i++, hit.targetHits.grpIdx);
 				
 				ps.setInt(i++, hit.pctid);							// pctid Avg%Id
-				ps.setInt(i++, hit.pctsim); 				 		//CAS515 cvgpct;   unsigned tiny int; now Avg%Sim
-				ps.setInt(i++, (hit.queryHits.subHits.length/2)); 	//CAS515 countpct; unsigned tiny int; now #SubHits
+				ps.setInt(i++, hit.pctsim); 				 		// cvgpct;   unsigned tiny int; now Avg%Sim
+				ps.setInt(i++, (hit.queryHits.subHits.length/2)); 	// countpct; unsigned tiny int; now #SubHits
 				ps.setInt(i++, hit.matchLen); 						// score
-				ps.setString(i++, htype) ;							// CAS543 change from evalue to htype; CAS546 to string
+				ps.setString(i++, htype) ;							// 
 				ps.setInt(i++, geneOlap);							// 0,1,2
 				
 				ps.setInt(i++, hit.annotIdx1);
@@ -706,7 +694,7 @@ public class AnchorMain1 {
 	}
 	
 	private void addMirroredHits() throws Exception {
-	try { // Create the reflected hits for self-alignment cases; CAS520 add hitnum, CAS543 evalue->htype and rearranged
+	try { // Create the reflected hits for self-alignment cases; 
 		// NOTE that grp1_idx is swapped with grp2_idx, etc; and refidx->idx; order of columns matches schema
 		tdbc2.executeUpdate("insert into pseudo_hits (select 0, "
 		+ "hitnum,pair_idx,proj1_idx,proj2_idx, grp2_idx, grp1_idx, pctid, "
@@ -736,10 +724,6 @@ public class AnchorMain1 {
 	}
 	
 	/****************************************************
-	 * CAS535 changed from using Updatedbc2 via Group to PrepareStatement here [hitAnnotations]
-	 * This is slower than the old method if innodb_flush_log_at_trx_commit=1; =0, the same
-	 * show variables like 'max_prepared_stmt_count'; 16386 is default
-	 * CAS540 add gene_olap, otherwise, get hits that span genes (which are never used)
 	 */
 	private void saveAnnoHits()  { // [hitAnnotations]
 	String key="";
@@ -786,9 +770,9 @@ public class AnchorMain1 {
 					
 				ps.setInt(1,vals[i][0]); // hitid
 				ps.setInt(2,vals[i][1]); // annot_idx
-				ps.setInt(3,vals[i][2]); // CAS548 %olap
-				ps.setInt(4, 0); 		 // CAS548 does not know exon overlap; -1 indicates no value
-				ps.setInt(5,vals[i][3]); // CAS548 annot2
+				ps.setInt(3,vals[i][2]); // %olap
+				ps.setInt(4, 0); 		 // does not know exon overlap; -1 indicates no value
+				ps.setInt(5,vals[i][3]); // annot2
 				ps.addBatch();
 				count++; cntBatch++;
 				if (cntBatch==nLOOP) {
@@ -801,7 +785,7 @@ public class AnchorMain1 {
 		}
 		if (cntBatch> 0) ps.executeBatch();
 		if (cntHit>0) {
-			String m = String.format(" (%,d) for %s", count, proj1Name); // CAS560 add comma
+			String m = String.format(" (%,d) for %s", count, proj1Name); 
 			if (VB) Utils.prtNumMsg(plog, cntHit, m+"          "); else Globals.rprt(cntHit + m);
 		}
 		if (failCheck()) return;
@@ -836,7 +820,7 @@ public class AnchorMain1 {
 		if (cntBatch>0) ps.executeBatch();
 		ps.close();	
 		if (!isSelf && cntHit>0) {
-			String m = String.format(" (%,d) for %s", count,proj2Name); // CAS560 add comma
+			String m = String.format(" (%,d) for %s", count,proj2Name); 
 			if (VB) Utils.prtNumMsg(plog, cntHit, m+"                 "); else Globals.rprt(cntHit + m);
 		}
 		if (failCheck()) return;
@@ -845,7 +829,7 @@ public class AnchorMain1 {
 	}
 	
 	/*************************************************
-	 * CAS500 this was in run(); some of this is obsolete; CAS535 removed addGeneParams,
+	 * some of this is obsolete; 
 	 */
 	private void initStats() {
 		try {

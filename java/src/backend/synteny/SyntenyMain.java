@@ -94,8 +94,7 @@ public class SyntenyMain {
 			return false;
 		}
 		
-		if (mProj1.hasOrderAgainst())     { mLog.msg("Order against " + mProj1.getOrderAgainst()); bOrderAgainst=true;}
-		else if (mProj2.hasOrderAgainst()){ mLog.msg("Order against " + mProj2.getOrderAgainst()); bOrderAgainst=true;}
+		if (mp.isOrder1(Mpair.FILE) || mp.isOrder2(Mpair.FILE)) bOrderAgainst=true; // CAS568 do not need mlog.msg here
 		
 		bIsSelf = (mProj1.getIdx() == mProj2.getIdx());
 		
@@ -133,12 +132,11 @@ public class SyntenyMain {
 				doChrChrFinish(grpIdx1,grpIdx2); 			// save to DB; need to be separate for bOrient; CAS567 
 				
 				cntSame += cntGrpSame; cntDiff += cntGrpDiff; cntMerge += cntGrpMerge;
-				if (Constants.VERBOSE) { 					// CAS567 add verbose
-					String msg = String.format("%s", mProj1.getGrpNameFromIdx(grpIdx1) + "-" + mProj2.getGrpNameFromIdx(grpIdx2));
-					if (bOrient) msg += String.format("  %3d Blocks   Orient:  %3d Same  %3d Diff", blockVec.size(), cntGrpSame, cntGrpDiff);
-					else         msg += String.format("  %3d Blocks", blockVec.size());
-					if (bMerge)  msg += String.format("   %3d Merged", cntGrpMerge);
-					Utils.prtIndentMsg(mLog, 5, msg);	
+				if (Constants.VERBOSE && blockVec.size()>0) { 		// CAS567 add verbose; CAS568 add size check 
+					String msg = String.format("Blocks %-12s", mProj1.getGrpNameFromIdx(grpIdx1) + "-" + mProj2.getGrpNameFromIdx(grpIdx2));
+					if (bOrient) msg += String.format("  Orient:  Same %3d   Diff %3d ",cntGrpSame, cntGrpDiff);
+					if (bMerge)  msg += String.format("  Merged %3d ", cntGrpMerge);
+					Utils.prtIndentNumMsgFile(mLog, 1, blockVec.size(), msg);	
 				}
 				else {
 					String t = Utilities.getDurationString(Utils.getTime()-startTime);
@@ -147,25 +145,25 @@ public class SyntenyMain {
 			}
 		}	
 		Globals.rclear();
-
-	/** Self **************************************************/
+		
 		if (bIsSelf) rwObj.symmetrizeBlocks();	
 		if (Cancelled.isCancelled() || !bSuccess) {tdbc2.close();return false;}
 		
+		String msg = "Blocks";									// CAS568 move before order
+		if (bMerge)  msg += String.format("   %,d Merged ", cntMerge);
+		if (bOrient) msg += String.format("   Orient: %,d Same   %,d Diff", cntSame, cntDiff);
+		Utils.prtNumMsg(mLog, totalBlocks, msg);
+		
+		Utils.prtMsgTimeDone(mLog, "Finish Synteny", startTime);
+
 	/** Order *******************************************************/ 
-		if (mProj1.hasOrderAgainst()) {
-			String orderBy = mProj1.getOrderAgainst();
-			if (orderBy != null && orderBy.equals(mProj2.getDBName())) {
-				OrderAgainst obj = new OrderAgainst(mProj1, mProj2, mLog, tdbc2); 
-				obj.orderGroupsV2(false);				// remove the old orderGroups	
-			}	
+		if (mp.isOrder1(Mpair.FILE)) { // CAS568 get from Mpairs instead of Mproject
+			OrderAgainst obj = new OrderAgainst(mp, mLog, tdbc2); 
+			obj.orderGroupsV2(false);				
 		}
-		else if (mProj2.hasOrderAgainst()){
-			String orderBy = mProj2.getOrderAgainst();
-			if (orderBy != null && orderBy.equals(mProj1.getDBName())) {
-				OrderAgainst obj = new OrderAgainst(mProj1, mProj2, mLog, tdbc2);
-				obj.orderGroupsV2(true);
-			}	
+		else if (mp.isOrder2(Mpair.FILE)) {
+			OrderAgainst obj = new OrderAgainst(mp, mLog, tdbc2);
+			obj.orderGroupsV2(true);
 		}	
 		if (Cancelled.isCancelled() || !bSuccess) {tdbc2.close(); return false;}
 		
@@ -173,12 +171,6 @@ public class SyntenyMain {
 		rwObj.writeResultsToFile(mLog, resultDir);
 		tdbc2.close();
 		
-		String msg = "Blocks";
-		if (bMerge)  msg += String.format("   %,d Merged ", cntMerge);
-		if (bOrient) msg += String.format("   Orient: %,d Same   %,d Diff", cntSame, cntDiff);
-		Utils.prtNumMsg(mLog, totalBlocks, msg);
-		
-		Utils.timeDoneMsg(mLog, "Finish Synteny", startTime); 
 		return bSuccess; 								// Full time printed in calling routine
 	}
 	catch (Exception e) {ErrorReport.print(e, "Computing Synteny"); return false; }

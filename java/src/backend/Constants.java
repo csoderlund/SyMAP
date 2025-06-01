@@ -1,7 +1,7 @@
 package backend;
 
 import backend.anchor1.Proj;
-import symap.manager.ManagerFrame;
+import symap.manager.Mpair;
 
 public class Constants {
 /***********************************************************
@@ -53,6 +53,7 @@ public static final String seqSeqDataDir = 	"/sequence/";
 public static final String seqAnnoDataDir = "/annotation/"; 
 
 public static final String paramsFile = 	"/params"; // in both seq/proj and seq_results/proj1_to_proj2
+public static final String usedFile =		"/params_align_used"; // seq_results/align CAS568 add
 
 //These file types, denoted by the .fas extension, are used by most large curated databases. 
 //Specific extensions exist for nucleic acids (.fna), nucleotide coding regions (.ffn), amino acids (.faa), 
@@ -76,8 +77,8 @@ public static final String blockFile = 		"block.txt";
 public static final String projTo = 		"_to_";
 public static final String faFile =         ".fa";
 
-public static final String orderSuffix 		=  "_ordered"; 
-public static final String orderCSVFile	=  "/ordered.csv";
+public static final String orderSuffix =	"_ordered.csv";
+public static final String orderDelim = 	"..";
 
 // directory of temporary files written for mummer
 //under runDir/<p1>_to_<p2>/tmp/<px>/ file names.
@@ -90,36 +91,41 @@ public static final String tmpRunDir = 		 "/tmp/";
 		return false;
 	}
 	// default data directory
-	public  static String getNameDataDir(Proj p1) {
+	public static String getNameDataDir(Proj p1) {
 		String name = p1.getName();
 		return seqDataDir + name;
 	}
-	public  static  String getNameResultsDir() {
+	public static  String getNameResultsDir() {
 		return seqRunDir;
 	}
 
 	// Results NOTES: XXX 
 	//   1. Cannot use "Project p" as argument as two Project.java
 	//   2  see ProjectManagerFrameCommon.orderProjects
-	public  static String getNameResultsDir(String n1, String n2) {
+	public static String getNameResultsDir(String n1, String n2) {
 		return seqRunDir +  n1 + projTo + n2;
 	}
 	
-	public  static  String getNameAlignDir(String n1, String n2) {
+	public static  String getNameAlignDir(String n1, String n2) {
 		return getNameResultsDir(n1,  n2) + alignDir;
 	}
 	
-	public  static String getNameAlignFile(String n1, String n2) {
+	public static String getNameAlignFile(String n1, String n2) {
 		String tmp1 = n1.substring(0, n1.indexOf(Constants.faFile));
 		String tmp2 = n2.substring(0, n2.indexOf(Constants.faFile));
 		if (tmp1.equals(tmp2)) return selfPrefix + tmp1;
 		return tmp1 + "." + tmp2;
 	}
 	// tmp preprocessed results; created in AlignName.java
-	public  static  String getNameTmpDir(String n1,  String n2) {
+	public static  String getNameTmpDir(String n1,  String n2) {
 		return getNameResultsDir(n1,  n2) + tmpRunDir;
 	}
-	public  static String getNameTmpPreDir(String n1,  String n2, String n) {
+	public static String getNameTmpPreDir(String n1,  String n2, String n) {
 		return getNameResultsDir(n1, n2) + tmpRunDir + n;
 	}	
+	public static String getOrderDir(Mpair mp) { // CAS568 renamed proj_ordered to this
+		if (mp.isOrder1(Mpair.FILE)) return mp.mProj1.getDBName() + Constants.orderDelim + mp.mProj2.getDBName();
+		if (mp.isOrder2(Mpair.FILE)) return mp.mProj2.getDBName() + Constants.orderDelim + mp.mProj1.getDBName();
+		return null;
+	}
 }

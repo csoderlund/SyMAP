@@ -214,13 +214,13 @@ public class GrpPair {
 		mainObj.cntG0 += cntG0;
 		mainObj.cntClusters += cntSave;
 			
-		String msg1 = String.format("%,10d %s-%s Clusters ", cntSave, qChr, tChr); // CAS560 format better, add cntDO and cntWS
+		String msg1 = String.format("Clusters %s-%s",  qChr, tChr); 
 		if (Arg.VB) { 
 			String msg2 = (Globals.INFO || Globals.TRACE) ? String.format("Disorder (EQ,NE) %,4d %,4d ", cntDOeq, cntDOne) : "";
-			String msg = String.format("%32s   Both genes %,6d   One gene %,6d   No gene %,6d    %s", msg1, cntG2, cntG1, cntG0, msg2);
-			Utils.prtIndentMsgFile(plog, 1, msg); 
+			String msg = String.format("%s   Both genes %,6d   One gene %,6d   No gene %,6d    %s", msg1, cntG2, cntG1, cntG0, msg2);
+			Utils.prtIndentNumMsgFile(plog, 1, cntSave, msg); // format same as Blocks and Pseudos; CAS568
 		}
-		else Globals.rprt(msg1);
+		else Globals.rprt(String.format("%,5d %s", cntSave, msg1));
 	}
 	catch (Exception e) {ErrorReport.print(e, "save to database"); bSuccess=false;}
 	}

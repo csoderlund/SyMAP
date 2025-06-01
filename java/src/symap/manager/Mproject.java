@@ -29,6 +29,7 @@ import backend.Constants;
  *        
  * 	 All Mproject obj are recreated on every refresh
  * 	 if !viewSymap, the file values have precedence over DB for projVal
+ * CAS568 moved mask and order-against to Mpairs
  */
 
 public class Mproject implements Comparable <Mproject> {
@@ -107,8 +108,8 @@ public class Mproject implements Comparable <Mproject> {
 		else return "[" + numSynteny + "]";
 	}
 	public boolean hasSynteny() {return numSynteny>0;}
-	public boolean hasGenes() {return numGene>0;}
-	public boolean hasSelf() { return bHasSelf;}
+	public boolean hasGenes() 	{return numGene>0;}
+	public boolean hasSelf() 	{return bHasSelf;}
 	
 	public boolean hasCat()   	{return !Utilities.isEmpty(getDBVal(sCategory));} 
 	public long getLength() 	{return length;}
@@ -143,10 +144,6 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	public String getKeywords()     { return getProjVal(lANkeyword); }
 	public String getAnnoType()		{ return "";} 
-	
-	public boolean isMasked()  		{ return getProjVal(aMaskNonGenes).contentEquals("1");} 
-	public String  getOrderAgainst(){ return getProjVal(aOrderAgainst); }
-	public boolean hasOrderAgainst(){ return !getOrderAgainst().contentEquals("");}
 	
 	public String getGrpPrefix()    { return getProjVal(lGrpPrefix);}
 	public int getGrpSize() { return grpIdx2Name.size();}
@@ -200,24 +197,33 @@ public class Mproject implements Comparable <Mproject> {
 		
 		return msg;
 	}
-	public boolean hasExistingAlignments() {
+	// false: cnt all; true: only cnt if have /align; CAS568 add
+	// used for all project related links (not pair)
+	public boolean hasExistingAlignments(boolean bCheckAlign) { 
 		try {
 			File top = new File(Constants.getNameResultsDir());
 			
 			if (top == null || !top.exists()) return false; // may not have /data/seq_results directory
-			Vector<File> alignDirs = new Vector<File>();
-			
+		
+			// e.g. for brap; arab_to_brap  or brap_to_cabb
+			String pStart = strDBName + Constants.projTo, pEnd = Constants.projTo + strDBName;
+			int cnt=0;
 			for (File f : top.listFiles()) {
-				if (f.isDirectory()) {
-					if	(f.getName().startsWith(strDBName + Constants.projTo) ||
-							f.getName().endsWith(Constants.projTo+strDBName)) {
-						alignDirs.add(f);
-					}
+				if (!f.isDirectory()) continue;
+				
+				String dir = f.getName();
+				if	(!dir.startsWith(pStart) && !dir.endsWith(pEnd)) continue;
+				
+				if (bCheckAlign) {
+					String alignDir = f.getAbsolutePath() + Constants.alignDir;
+					File d = new File(alignDir);
+					if (d.exists()) cnt++;  
 				}
-				if (alignDirs.size() > 0) return true;
-			}
-		} catch (Exception e) {ErrorReport.print(e, "Check existing alignment files");} 
-		return false;
+				else cnt++; 
+			}				
+			return (cnt>0);
+		} 
+		catch (Exception e) {ErrorReport.print(e, "Check existing alignment files"); return false;} 
 	}
 	
 	/*********************************************************
@@ -255,14 +261,18 @@ public class Mproject implements Comparable <Mproject> {
 	/*******************************************************
 	 * For Summary and AlignProg
 	 */
+	/* moved to Pairs
 	public String getOrderParam() { 
 		if (hasOrderAgainst()) return " " + strDisplayName + ": Order against " + getOrderAgainst() ;
 		return "";
 	}
+	
+	public boolean isMasked()  		{ return getProjVal(aMaskNonGenes).contentEquals("1");} 
 	public String getMaskedParam() {
 		if (isMasked()) return " " + strDisplayName + ": Masked genes  ";
 		return "";
 	}
+	*/
 	/*************************************************************************
 	 * The View button on MF
 	 */
@@ -354,11 +364,10 @@ public class Mproject implements Comparable <Mproject> {
 			}
 			info += "\n" + paramObj.label + ": " + strN;
 		}
-		paramObj = getParams(aMaskNonGenes);
-		if (!paramObj.isDBvalDef()) info += "\n" + paramObj.getStr();
-		
-		paramObj = getParams(aOrderAgainst);
-		if (!paramObj.isDBvalDef()) info += "\n" + paramObj.getStr();
+		// CAS568 paramObj = getParams(aMaskNonGenes);
+		// if (!paramObj.isDBvalDef()) info += "\n" + paramObj.getStr();
+		//paramObj = getParams(aOrderAgainst);
+		//if (!paramObj.isDBvalDef()) info += "\n" + paramObj.getStr();
 		
 		return info;
 	}
@@ -375,14 +384,11 @@ public class Mproject implements Comparable <Mproject> {
 				dbc2.executeUpdate("update projects set hasannot=1," 
 						+ " annotdate=NOW(), syver='" + Globals.VERSION + "' where idx=" + projIdx);
 			}
-			else if (type==xAlign) {//Load date is for loading anchors/synteny
-				dbc2.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + projIdx);
-			}
+			
 			for (Params p : pKeysMap.values()) { 
 				boolean b=false;
 				if (p.isSum) b=true;
 				else if (p.isLoad && type==xLoad)  b = true;
-				else if (p.isAS   && type==xAlign) b = true;
 		
 				if (b) {
 					dbc2.executeUpdate("delete from proj_props where proj_idx="+ projIdx 
@@ -441,6 +447,7 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	public void removeProjectFromDB() {
 	try {
+		Globals.rprt("Removing " + strDisplayName + " from database..."); // CAS568 add
 		// Setup for update numhits for single Query
 		Vector <Integer> proj2Idx = new Vector <Integer> ();
 		ResultSet rs = dbc2.executeQuery("select proj1_idx, proj2_idx from pairs where proj1_idx=" + projIdx + " or proj2_idx=" + projIdx);
@@ -458,6 +465,7 @@ public class Mproject implements Comparable <Mproject> {
         projIdx = -1; 
         
         // update numhits
+        Globals.rprt("Update " + strDisplayName + " numHits...");
         AnchorMain ancObj = new AnchorMain(dbc2, null, null);
         for (int idx : proj2Idx) {
         	Vector <Integer> gidxList = new Vector <Integer> ();
@@ -466,6 +474,7 @@ public class Mproject implements Comparable <Mproject> {
         	
         	for (int gidx : gidxList) ancObj.saveAnnotHitCnt(gidx,""); // get ResultClose error if not put in vector
         }
+        Globals.rclear();
 	} 
 	catch (Exception e) {ErrorReport.print(e, "Remove project from DB"); }
 	}
@@ -634,7 +643,7 @@ public class Mproject implements Comparable <Mproject> {
 	public String getLab(int iLabel)  {return paramLabel[iLabel];}
 	public String getKey(int iLabel)  {return paramKey[iLabel];} // used by non mProj packages to get keyword
 	public String getDef(int iLabel)  {return paramDef[iLabel];}
-	public String getDesc(int iLabel)  {return paramDesc[iLabel];}
+	public String getDesc(int iLabel) {return paramDesc[iLabel];}
 	
 	public HashMap <String, String> getParams() {
 		HashMap <String, String> pMap = new HashMap <String, String> ();
@@ -682,22 +691,19 @@ public class Mproject implements Comparable <Mproject> {
 			"category", "display_name", "abbrev_name", 
 			"grp_type", "description",  "min_display_size_bp", "annot_kw_mincount", 
 			"grp_prefix", "min_size", "annot_keywords",
-			"sequence_files", "anno_files",
-			"mask_all_but_genes", "order_against"
+			"sequence_files", "anno_files"
 	};
 	private final String [] paramDef = {
 			"Uncategorized", "", "", 
 			"Chromosome", "", "0", "50",
 			"", "100000", "",
-			"", "",
-			"0", ""
+			"", ""
 	};
 	private String [] paramLabel = {
 			"Category", "Display name", "Abbreviation", 
 			"Group type", "Description", "DP cell size", "Anno key count",
 			"Group prefix", "Minimum length", "Anno keywords", 
-			"Sequence files", "Anno files",
-			"Mask non-genes", "Order against"
+			"Sequence files", "Anno files"
 	};
 	private String [] paramDesc = { // CAS567 added these for label tooltips on ProjParams
 			"Select a Category from the drop down or enter a new one in the text box.", 
@@ -711,32 +717,29 @@ public class Mproject implements Comparable <Mproject> {
 			"Only load sequences that have at least this many bases will be loaded", 
 			"Only load this set of keywords; if blank, all will be loaded", 
 			"The directory or file name of the FASTA file(s); if blank, the default location will be used", 
-			"The directory or file name of the GFF file(s); if blank, the default location will be used",
-			"Mask out everything but the genes; there must be a GFF file", 
-			"A list of the loaded projects will be given; select one to order draft sequence against"
+			"The directory or file name of the GFF file(s); if blank, the default location will be used"
 	};
 	// Index into the above three arrays
-	protected final int sCategory =  	0;
+	protected final int sCategory = 0;
 	public final int sDisplay =   	1;
-	protected final int sAbbrev =    	2;
+	protected final int sAbbrev =   2;
 	public final int sGrpType =   	3;
-	protected final int sDesc =      	4;
-	protected final int sDPsize =    	5;
+	protected final int sDesc =     4;
+	protected final int sDPsize =   5;
 	public final int sANkeyCnt =  	6;
 	
 	public final int lGrpPrefix = 	7;
-	protected final int lMinLen =   	8;
+	protected final int lMinLen =   8;
 	public final int lANkeyword = 	9;
-	protected final int lSeqFile =   	10;
-	protected final int lAnnoFile =  	11;
+	protected final int lSeqFile =  10;
+	protected final int lAnnoFile = 11;
 	
-	protected final int aMaskNonGenes = 12;
-	protected final int aOrderAgainst = 13;	
+	// CAS568 protected final int aMaskNonGenes = 12;
+	// CAS568 protected final int aOrderAgainst = 12;	
 	
 	public final int xDisplay = 1;
 	public final int xLoad = 2;
-	public final int xAlign = 3;
-	private final int xUpdate = 4; // only happens if the params where changes when a different database is shown
+	private final int xUpdate = 3; // only happens if the params where changes when a different database is shown
 	
 	private class Params {
 		private Params(int index, String label, String key, String defVal) {
@@ -747,21 +750,20 @@ public class Mproject implements Comparable <Mproject> {
 			projVal =		defVal;  	// assigned in proj params
 			
 			if (index<7) isSum=true;
-			else if (index<12) isLoad=true;
-			else isAS=true;
+			else isLoad=true;
 		}
 		private boolean isDBvalDef() {
-			if (index==aMaskNonGenes && dbVal.contentEquals("")) return true;
+			// CAS568 if (index==aMaskNonGenes && dbVal.contentEquals("")) return true;
 			return dbVal.equals(defVal);
 		}
 		private String getStr() {
-			if (index==aMaskNonGenes && dbVal.contentEquals("1")) return label + ": yes";
+			// CAS568 if (index==aMaskNonGenes && dbVal.contentEquals("1")) return label + ": yes";
 			return label + ": " + dbVal;
 		}
 		
 		int index=-1;
 		String key="", label="";
 		String defVal="", projVal="", dbVal="";
-		boolean isSum=false, isLoad=false, isAS=false;
+		boolean isSum=false, isLoad=false;
 	}
 }

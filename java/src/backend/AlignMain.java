@@ -1,7 +1,10 @@
 package backend;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.BufferedReader;
 import java.util.Vector;
 
 import java.util.TreeMap;
@@ -23,9 +26,6 @@ import util.Utilities;
 
 /*******************************************************
  * Set up to run MUMmer for alignments for one pair of genomes
- * CAS500 this has been almost totally rewritten, but results are the same,
- * 	except there is intelligence built into setting up the files for alignment, which can make a difference
- * CAS522 remove FPC; CAS541 change UpdatePool to DBconn2; CAS559 made non-functional changes looking for user's problem...
  */
 public class AlignMain {
 	public boolean mCancelled = false;
@@ -69,11 +69,11 @@ public class AlignMain {
 		proj2Dir = mProj2.getDBName();
 		bDoCat = mp.isConcat(Mpair.FILE);
 		
-		threads = 		new Vector<Thread>();
+		threads = 	new Vector<Thread>();
 		alignList = new Vector<AlignRun>();
-		toDoQueue = 		new LinkedList<AlignRun>();
+		toDoQueue = new LinkedList<AlignRun>();
 	}
-	protected String getParams() {// save to DB pairs.params
+	protected String getParams() {// DoAlignSynPair save to DB pairs.params
 		 return alignParams;
 	}
 	
@@ -88,7 +88,7 @@ public class AlignMain {
 			
 			resultDir = Constants.getNameResultsDir(proj1Dir, proj2Dir);
 			
-			if (alignExists()) return true; // must have all.done and at least one .mum file
+			if (alignExists()) return true; // must have all.done and at least one .mum file; r/w params_used
 			
 			buildAlignments(); // build toDoQueue
 			
@@ -153,20 +153,25 @@ public class AlignMain {
 			else { 
 				plog.msg("Alignments:  success " + getNumCompleted() + "   failed " + getNumErrors());
 			}
-			Utils.timeDoneMsg(plog, "Alignments", startTime); // Align done: time
-		} catch (Exception e) {ErrorReport.print(e, "Run alignment"); }
+			Utils.prtMsgTimeDone(plog, "Alignments", startTime); // Align done: time
+		} 
+		catch (Exception e) {ErrorReport.print(e, "Run alignment"); }
 		
 		return (getNumErrors() == 0);
 	}
+	
 	/*******************************************************************
 	 * True -  all.done && at least one .mum file; do not do any alignments
 	 * False - !all.done; do any alignments not done (see buildAlignments ps.isDone)
 	 ****************************************************************/
 	private boolean alignExists() {
 		try {
-			String alignDir = Constants.getNameResultsDir(proj1Dir, proj2Dir) + Constants.alignDir;;
+			String alignDir = Constants.getNameResultsDir(proj1Dir, proj2Dir) + Constants.alignDir;
 			File f = new File(alignDir);
-			if (!f.exists()) return false;
+			if (!f.exists()) {	/*-- alignments to be done --*/
+				paramsWrite();
+				return false;
+			}
 			
 			boolean bdone = Utils.checkDoneFile(alignDir); // all.done
 			nAlignDone = Utils.checkDoneMaybe(alignDir);   // # existing .mum files
@@ -174,9 +179,12 @@ public class AlignMain {
 			if (bdone && nAlignDone>0) {// could by SyMAP or user complete
 				plog.msg("Warning: " + nAlignDone + " alignment files exist - using existing files");
 				plog.msg("   If not correct, remove " + resultDir + " and re-align.");
-				alignParams = "Use previous " + nAlignDone + " MUMmer files " + Utils.getDateStr(f.lastModified()); 
+				paramsRead(Utils.getDateStr(f.lastModified()));
 				return true;
 			}
+			/*-------- Alignments to be done ------*/
+			paramsWrite();
+			
 			if (nAlignDone==0) return false; // do all
 			
 			/* If !bDone && nAlign>0, probably did not finish; output state CAS566 add 
@@ -202,13 +210,54 @@ public class AlignMain {
 		catch (Exception e) {ErrorReport.print(e, "Trying to see if alignment exists");}
 		return false;
 	}
-	
+	/*********************************************************
+	 * Create alignParams for save to pairs.param for summary
+	 * If align, write to params_used, else read it. This is not in the /align directory, but its main directory
+	 * CAS568 add; nothing else has to be changed for this
+	 */
+	private void paramsWrite() {
+		try {
+			alignParams = "MUMmer files " + Utilities.getDateTime() + "   CPUs: " + nMaxCPUs + "\n";
+			alignParams += mp.getAlign(Mpair.FILE, true); // true, do not add command line
+			if (Ext.isMummer4Path()) alignParams += Ext.getMummerPath() + " ";
+			
+			String resultDir = "./" + Constants.getNameResultsDir(mProj1.strDBName, mProj2.strDBName);
+			File pfile = new File(resultDir,Constants.usedFile);
+			if (!pfile.exists()) return;	// can happen
+			
+			PrintWriter out = new PrintWriter(pfile);
+			out.println("# Parameters used for MUMmer alignments in /align.");
+			out.println(alignParams);
+			out.close();
+		}
+		catch (Exception e) {ErrorReport.print(e, "Save " + Constants.usedFile); }
+	}
+	private void paramsRead(String dateTime) {
+		try {
+			alignParams = "Use previous " + nAlignDone + " MUMmer files " + dateTime; 
+			
+			if (!Utilities.dirExists(resultDir)) return; // ok, may not have been created
+			
+			File pfile = new File(resultDir,Constants.usedFile); 
+			if (!pfile.isFile()) return; 
+			
+			alignParams = "Use previous " + nAlignDone + " "; // completed with what is in file
+			String line;
+			BufferedReader reader = new BufferedReader(new FileReader(pfile));
+			while ((line = reader.readLine()) != null) {
+				if (!line.startsWith("#"))
+					alignParams += line + "\n";
+			}
+			reader.close();
+		}
+		catch (Exception e) {ErrorReport.print(e, "Save params_used"); }
+	}
 	/****************************************************
 	 * Create preprocessed files and run alignment
 	 */
 	private void buildAlignments()  {
 		try {
-			plog.msg("\nAligning " + proj1Dir + " and " + proj2Dir + mp.getChangedAlign());
+			plog.msg("\nAligning " + proj1Dir + " and " + proj2Dir + " with " + nMaxCPUs + " CPUs"); // CAS568 remove mp.getAlign, but add CPU
 			
 		/* create directories */
 			// result directory (e.g. data/seq_results/demo1_to_demo2)
@@ -240,19 +289,13 @@ public class AlignMain {
 				return;															
 			}
 			
-			// for getParams
-			alignParams = "CPUs: " + nMaxCPUs + "  ";
-			if (!bDoCat)                alignParams += " No Concat  ";
-			if (Ext.isMummer4Path())    alignParams += Ext.getMummerPath() + " ";
-			if (alignParams.length() >= 128) alignParams = alignParams.substring(0, 114) + "..."; // 128 max-12-2
-			
 			/** Assign values for Alignment; path is obtained in AlignRun **/
 			String program = Ext.exPromer;
 			if (isSelf) program = Ext.exNucmer;
 			
 			// user over-rides
-			if      (program.equals(Ext.exPromer) && mp.isNucmer(Mpair.FILE)) program = Ext.exPromer;
-			else if (program.equals(Ext.exNucmer) && mp.isPromer(Mpair.FILE)) program = Ext.exNucmer;
+			if      (program.equals(Ext.exPromer) && mp.isNucmer(Mpair.FILE)) program = Ext.exNucmer; // CAS568 was backwards
+			else if (program.equals(Ext.exNucmer) && mp.isPromer(Mpair.FILE)) program = Ext.exPromer; // CAS568 was backwards
 				
 			String args = (program.contentEquals(Ext.exPromer)) ? mp.getPromerArgs(Mpair.FILE) : mp.getNucmerArgs(Mpair.FILE);
 			String self = (isSelf) ? (" " + mp.getSelfArgs(Mpair.FILE)) : ""; 
@@ -299,7 +342,8 @@ public class AlignMain {
 				plog.msg("Warning: no alignments between projects");
 				error = true; 
 			}
-		} catch (Exception e) {ErrorReport.print(e, "Build alignments"); error=true;}
+		} 
+		catch (Exception e) {ErrorReport.print(e, "Build alignments"); error=true;}
 	}
 	
 	/**************************************
@@ -322,8 +366,9 @@ public class AlignMain {
 				plog.msg("No sequences are loaded for " + projName + "!! (idx " + projIdx + ")");
 				return false;
 			}
-		
-			boolean geneMask = mProj.isMasked();	
+			
+			boolean geneMask = (mp.mProj1.getIdx() == mProj.getIdx()) ? 
+								mp.isMask1(Mpair.FILE) : mp.isMask2(Mpair.FILE);	// CAS568 mask in pairs instead of proj
 			String gmprop = (geneMask) ? "Masking non-genic sequence; " : "";
 			if (geneMask) plog.msg(projName + ": " + gmprop);
 				
@@ -334,9 +379,12 @@ public class AlignMain {
 			Vector<Vector<Integer>> groups = new Vector<Vector<Integer>>();
 		
 			String msg = projName + ": ";
-			if (concat) msg += "Concatenating all sequences into one file for " + who; 
-			else        msg += "Writing sequences into one or more files for " + who; // CAS566 was saying target
-			
+			if (!isSelf) {
+				if (concat) msg += "Concatenating all sequences into one file for " + who; 
+				else        msg += "Writing sequences into one or more files for " + who; 
+			}
+			else msg += "Writing separate chromosome files for self-synteny"; // CAS568
+					
 			// pseudos (files): grp_idx, fileName (e.g. chr3.seq), length
 			// xgroups (chrs):  idx, proj_idx, chr#, fullname where grp_idx is xgroups.idx
 			ResultSet rs = tdbc2.executeQuery("select grp_idx, length from pseudos " +
@@ -488,7 +536,6 @@ public class AlignMain {
 		catch (Exception e) {ErrorReport.die(e, "AlignMain.writePreproc");}
 		return false;
 	}
-	
 	
 	/*****************************************************************/
 	protected String getStatusSummary() {

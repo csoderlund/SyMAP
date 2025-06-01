@@ -1,14 +1,5 @@
 package backend.synteny;
 
-/**************************************************
- * CAS505 
- * 	moved orderGroups from SyntenyMain, which has a bug where most ctgs go into chrUNK
- *  rewrote it, which is called orderGroupsV2
- *  the orderGroups can still be run with the -o option
- *  
- *  orderGroups:   flips contigs in database, which messes up if its run again. 
- *  orderGroupsV2: does not flip contigs in database, but writes the chromosome files with flipped contigs
- */
 import java.io.File;
 import java.io.FileWriter;
 import java.sql.ResultSet;
@@ -19,41 +10,35 @@ import java.util.Vector;
 import database.DBconn2;
 import backend.Constants;
 import backend.Utils;
+import symap.manager.Mpair;
 import symap.manager.Mproject;
 import util.ErrorReport;
 import util.ProgressDialog;
 import util.Utilities;
 
+/****************************************************************
+ * Called from SyntenyMain after blocks are created
+ * v505 had major changes about when scaffolds are flipped
+ */
 public class OrderAgainst {
 	
 	private ProgressDialog mLog;
-	private DBconn2 dbc2;	// CAS541 UpdatePool->DBconn2
+	private DBconn2 dbc2;	
+	private Mpair mp;
 	private Mproject mProj1, mProj2;
 	
-	public OrderAgainst(Mproject mProj1, Mproject mProj2, ProgressDialog mLog, DBconn2 dbc2) {
-		this.mProj1 = mProj1;
-		this.mProj2 = mProj2;
+	public OrderAgainst(Mpair mp, ProgressDialog mLog, DBconn2 dbc2) {
+		this.mp = mp;
+		this.mProj1 = mp.getProj1();
+		this.mProj2 = mp.getProj2();
 		this.mLog = mLog;
 		this.dbc2 = dbc2;
 	}
-	/*****************************************************
-	 * pre-v5.0.5 ordering - original orderGroups (CAS559 remove)
-	 * - changes data in database, so messes up when run a 2nd time
-	 * - flips the contigs in database for correct draft display
-	 * - puts many contigs in chrUNK
-	 * - uses term anchored
-	 */
 	
 	/**************************************************************
-	// XXX mProj1 is proj_idx1 and mProj2 is proj_idx2 in database.
+	// mProj1 is proj_idx1 and mProj2 is proj_idx2 in database.
 	// if !switch, mProj1 is draft to be ordered against mProj2 the target
 	// if  switch, mProj2 is draft to be ordered against mProj1 the target 
-	 * 
-	 * v2 - SyMAP v5.0.5
-	 * - the only change to database is the order of draft contigs for display
-	 * - the contigs are not flipped for the draft display
-	 * - the contigs are written correctly to the chromosome file, and flipped then
-	 * - uses term 'ordered'
 	****************************************************************/
 	public void orderGroupsV2(boolean bSwitch)  {
 	try {
@@ -65,7 +50,8 @@ public class OrderAgainst {
 		String chr0 = targPfx + "UNK";
 		int chr0Idx = 99999;
 		
-		mLog.msg("\nOrdering " + pDraft.getDBName() + " contigs against " + pTarget.getDBName());
+		long startTime = Utils.getTime();				// CAS568 add time
+		mLog.msg("Ordering " + pDraft.getDBName() + " contigs against " + pTarget.getDBName());
 
 		if (!s1LoadDataDB(bSwitch, chr0, chr0Idx)) return;
 	
@@ -73,7 +59,7 @@ public class OrderAgainst {
 	
 		s3WriteNewProj();
 		
-		mLog.msg("Complete ordering");
+		Utils.prtMsgTimeDone(mLog, "Complete ordering", startTime);
 	}
 	catch (Exception e) {ErrorReport.print(e, "Ordering sequence"); }
 	}
@@ -108,13 +94,6 @@ public class OrderAgainst {
 			o.chrName = chr0;
 			idxTargetMap.put(chr0Idx, o); 
 			
-		/** Assign Target chromosome from blocks **/
-			/** CAS506 does not work in mySQL v8: SELECT list is not in GROUP BY clause and contains nonaggregated 
-			rs = dbc2.executeQuery("select grp1_idx, grp2_idx, start1, start2, score, corr from blocks " +
-				" where proj1_idx=" + mProj1.getIdx() + " and proj2_idx=" + mProj2.getIdx() + 
-				" group by grp1_idx, grp2_idx, blocknum order by score desc" );
-		**/
-			
 			rs = dbc2.executeQuery("select grp1_idx, grp2_idx, start1, start2, score, corr from blocks " +
 					" where proj1_idx=" + mProj1.getIdx() + " and proj2_idx=" + mProj2.getIdx() + 
 					" order by score desc,  grp1_idx, grp2_idx, blocknum" );
@@ -139,7 +118,6 @@ public class OrderAgainst {
 				}
 				Draft d = idxDraftMap.get(gidx1);
 				
-				// if (d.pos>0) continue; CAS506
 				if (d.score > score) continue; // a group (chr) can be split across multiple blocks; use first with biggest score
 				
 				d.pos = pos;
@@ -171,8 +149,8 @@ public class OrderAgainst {
 			Collections.sort(orderedDraft);
 			
 		/** Write Ordered file and update DB order **/
-			
-			File ordFile = new File(Constants.seqDataDir + pDraft.getDBName() + Constants.orderCSVFile);
+			String fileName = Constants.seqDataDir + pDraft.getDBName() + getOrderFile(mp);
+			File ordFile = new File(fileName);
 			if (ordFile.exists()) ordFile.delete();
 			FileWriter ordFileW = new FileWriter(ordFile);
 			
@@ -190,7 +168,7 @@ public class OrderAgainst {
 				ordFileW.write(d.ctgName  + "," + d.chrName  + "," + d.pos  + "," + rc  + "," +  d.score  + "," + d.ctgLen  + "\n");
 			}
 			ordFileW.close();
-			mLog.msg("   Wrote order to " + ordFile.getCanonicalPath());
+			mLog.msg("   Wrote order to " + fileName);
 			return true;
 		}
 		catch (Exception e) {ErrorReport.print(e, "Order Draft"); return false; }
@@ -201,23 +179,24 @@ public class OrderAgainst {
 	 ***/
 	private void s3WriteNewProj() {
 		try {
-			mLog.msg("   Creating new ordered project from " + pDraft.getDBName());
-			
-			String ordProjName = pDraft.getDBName() + Constants.orderSuffix;	
+			String ordProjName = Constants.getOrderDir(mp); // CAS568 new dir name	
 			String ordDirName = Constants.seqDataDir + ordProjName;
+			
+			mLog.msg("   Creating new project " + ordDirName);
+			
 			File   ordDir = new File(ordDirName);
 			if (ordDir.exists()) {
 				mLog.msg("   Delete previous " + ordDirName);
 				Utilities.clearAllDir(ordDir);
 				ordDir.delete();
 			}	
-			Utilities.checkCreateDir(ordDirName, true);
+			Utilities.checkCreateDir(ordDirName, false); // CAS568 quite writing to stdout here; add ordDirName above
 			
-			File ordSeqDir = Utilities.checkCreateDir(ordDir + Constants.seqSeqDataDir, true);
+			File ordSeqDir = Utilities.checkCreateDir(ordDir + Constants.seqSeqDataDir, false);
 			File ordFasta = Utilities.checkCreateFile(ordSeqDir, ordProjName + Constants.faFile, "SM fasta file");
 			FileWriter ordFastaFH = 	new FileWriter(ordFasta);
 			
-			File ordAnnoDir = Utilities.checkCreateDir(ordDir + Constants.seqAnnoDataDir, true);
+			File ordAnnoDir = Utilities.checkCreateDir(ordDir + Constants.seqAnnoDataDir, false);
 			File ordGFF =   Utilities.checkCreateFile(ordAnnoDir, ordProjName + ".gff", "SM gff");
 			FileWriter ordGffFH = new FileWriter(ordGFF);
 			
@@ -287,7 +266,9 @@ public class OrderAgainst {
 			File ordParam =   Utilities.checkCreateFile(ordDir, Constants.paramsFile, "SM params");
 			FileWriter ordParamsFH = 	new FileWriter(ordParam);
 			ordParamsFH.write("category = " + pDraft.getdbCat() + "\n");
-			ordParamsFH.write("display_name=" + pDraft.getDisplayName() + Constants.orderSuffix + "\n");
+			ordParamsFH.write("abbrev_name = Draf\n");
+			ordParamsFH.write("display_name=" + getOrderDisplay(mp) + "\n");
+			ordParamsFH.write("description=" + getOrderDesc(mp) + "\n");
 			ordParamsFH.write("grp_prefix=" + pTarget.getGrpPrefix() + "\n");
 			ordParamsFH.close();
 			
@@ -296,7 +277,24 @@ public class OrderAgainst {
 		}
 		catch (Exception e) {ErrorReport.print(e, "write chromosomes"); }
 	}
+	/***************************************************************************/
+	private String getOrderFile(Mpair mp) { // CAS568 renamed proj_ordered to this
+		if (mp.isOrder1(Mpair.FILE)) return "/" + mp.mProj2.getDBName() + Constants.orderSuffix;
+		if (mp.isOrder2(Mpair.FILE)) return "/" + mp.mProj1.getDBName() + Constants.orderSuffix;
+		return null;
+	}
 	
+	private String getOrderDisplay(Mpair mp) { // CAS568 renamed proj_ordered to this
+		if (mp.isOrder1(Mpair.FILE)) return mp.mProj1.getDisplayName() + "." + mp.mProj2.getDisplayName();
+		if (mp.isOrder2(Mpair.FILE)) return mp.mProj2.getDisplayName() + "." + mp.mProj1.getDisplayName();
+		return null;
+	}
+	private String getOrderDesc(Mpair mp) { // CAS568 used DBname instead of Display since it can change
+		if (mp.isOrder1(Mpair.FILE)) return mp.mProj1.getDisplayName() + " ordered against " + mp.mProj2.getDisplayName();
+		if (mp.isOrder2(Mpair.FILE)) return mp.mProj2.getDisplayName() + " ordered against " + mp.mProj1.getDisplayName();
+		return null;
+	}
+	/***************************************************************************/
 	private class Draft implements Comparable <Draft> {
 		int gidx; 				// group.idx
 		String ctgName=""; 		// group.fullname

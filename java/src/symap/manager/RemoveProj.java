@@ -5,180 +5,150 @@ import java.io.FileWriter;
 import java.util.Vector;
 
 import backend.Constants;
-import util.ErrorCount;
 import util.ErrorReport;
-import util.ProgressDialog;
 import util.Utilities;
 
 /***********************************************************
- * Methods for removing projects; CAS535 moved from ManagerFrame to here
- * All ProgressDialog must call finish in order to close fw
- * No Cancel on Progress
+ * Methods for removing projects
+ * CAS568 removed threads and progressLog; popups and stdout out probably regards state of DB/disk
+ * Note: the protected methods do similar things, but the messages are tailored
  */
 public class RemoveProj {
-	private ManagerFrame frame;
-	private FileWriter fw;
-	private boolean bCancel=false;
+	final static String sp= "   ";
+	private FileWriter fw = null;
 	
-	public RemoveProj() {}
-	
-	public RemoveProj(ManagerFrame frame, FileWriter fw) {
-		this.frame = frame;
-		this.fw = fw;
-	}
-	/*********************************************************
-	 * Project
-	 */
-	// Remove Project From Database
-	public void removeProjectFromDB(Mproject mp) { 
-		String title = "Remove from database";
-		String msg = "Remove " + mp.getDisplayName() + " from database"; // CAS513 add dbname
-		int rc=0;
-		
-		if (!mp.hasExistingAlignments()) {
-			if (!Utilities.showConfirm2(msg,msg)) return;
-		}
-		else {
-			rc = Utilities.showConfirm3(title,msg +
-				"\n\nOnly: Remove project" +
-				  "\nAll:  Remove project and alignments from disk");
-			if (rc==0) return;
-		}
-		
-		ErrorCount.init();
-		final int rcx = rc;
-		
-		final ProgressDialog progress = new ProgressDialog(frame, title, msg + " ...",  bCancel, null);
-		progress.closeIfNoErrors();
-		
-		Thread rmThread = new Thread() {
-			public void run() {
-				boolean success = true;
-				progress.appendText(msg);
-				
-				try {
-					mp.removeProjectFromDB();
-					if (rcx==2) removeAllAlignFromDisk(mp, false, progress); 
-				}
-				catch (Exception e) {
-					success = false;
-					ErrorReport.print(e, "Remove project");
-				}
-				finally {
-					progress.finish(success);
-				}
-			}
-		};	
-		progress.start( rmThread ); 
-	}
-	// Remove Project From Disk
-	public void removeProjectFromDisk(final Mproject mProj) {
-		String title = "Remove project from disk";
-		String msg =  "Remove project from disk " + mProj.getDBName();
-		if (!Utilities.showConfirm2(title,msg)) return;
-		
-		ErrorCount.init();
-		final ProgressDialog progress = new ProgressDialog(frame,  title, msg + "' ...", bCancel, fw);
-		progress.closeIfNoErrors();
-		
-		Thread rmThread = new Thread() {
-			public void run() {
-				boolean success = true;
-				progress.appendText(msg);
-				
-				try {
-					try { Thread.sleep(1000);}// stops it from crashing on Linux in progress.start
-					catch(Exception e){}
-
-					removeAllAlignFromDisk(mProj, true, progress); 
-					
-					// Remove project
-					String path = Constants.seqDataDir + mProj.getDBName();
-					
-					File f = new File(path);
-					Utilities.deleteDir(f);
-					if (f.exists()) f.delete();// not removing topdir on Linux, so try again
-				}
-				catch (Exception e) {
-					success = false;
-					ErrorReport.print(e, "Remove project from disk");
-				}
-				finally {
-					progress.finish(success);
-				}
-			}
-		};
-		progress.start( rmThread ); // crashed on linux
-	}
-	
-	/******************************************************************
-	 * Aligns
-	 */
-	// Clear Pair
-	public void removeClearPair(final Mpair mp, final Mproject p1, final Mproject p2) {
-		String title = "Clear alignment pair";
-		String msg = "Clear pair " + p1.getDBName() + " to " + p2.getDBName();
-		int rc = Utilities.showConfirm3(title, msg + // CAS515 add option to only clear from database
-				"\n\nOnly: remove synteny from database only" +
-				"\nAll: remove synteny from database and alignments from disk");
-		if (rc==0) return;
-		
-		ErrorCount.init();
-		
-		final ProgressDialog progress = new ProgressDialog(frame, title, msg, bCancel, fw);
-		progress.closeIfNoErrors();
-		
-		Thread clearThread = new Thread() {
-			public void run() {
-				boolean success = true;
-				progress.appendText(msg);
-				
-				try {
-					try {Thread.sleep(1000);}
-					catch(Exception e){}
-					
-					mp.removePairFromDB(true); // True = redo numHits; CAS566 add true
-					if (rc==2) {
-						String path = Constants.getNameResultsDir(p1.getDBName(),  p2.getDBName());
-						System.out.println("Remove alignments from " + path);
-						removeAlignFromDisk(new File(path), false);
-					}
-				}
-				catch (Exception e) {
-					success = false;
-					ErrorReport.print(e, "Clearing alignment");
-				}
-				finally {
-					progress.finish(success);
-				}
-			}
-		};
-		progress.start( clearThread ); 
-	}
-	// Reload Project
-	public void removeAllAlignFromDisk(Mproject p) {// Reload Project 
-		removeAllAlignFromDisk(p, false, null);
-	}
-
-    // called on Remove Project From DB (true) and Reload Project (false)
-	private boolean removeAllAlignFromDisk(Mproject p, boolean rmTopDir, ProgressDialog progress) {
+	public RemoveProj(FileWriter fw) {this.fw = fw;}
+	private void close() {
 		try {
-			String msg = (rmTopDir) ? "Remove directory " : "Removing alignments ";
-			if (progress!=null)
-				progress.appendText(msg + "from disk - " + p.getDBName());		
+			if (fw!=null) {fw.close(); fw=null;}
+		}
+		catch (Exception e){}
+	}
+	/***************************************************************
+	 * Remove project from database: Manager database link
+	 */
+	protected void removeProjectDB(Mproject pj) { 
+		String msg = "Remove " + pj.getDisplayName() + " from database"; 
+		
+		if (Utilities.showConfirm2("Remove from database",msg)) {
+			pj.removeProjectFromDB();
+			try {
+				fw.append("Remove project " + pj.getDisplayName() + " from database " + Utilities.getDateTime()+ "\n");
+			} catch (Exception e) {}
+		}
+		close();
+	}
+
+	/**************************************************************
+	 * Remove project from disk: Manager disk link 
+	 */
+	protected void removeProjectDisk(Mproject pj) {
+		String path = Constants.seqDataDir + pj.getDBName();
+		String title = "Remove project";
+		String msg   = "Remove project " + pj.getDBName(); // getDBName is seq/directory
+		try {
+			int rc;
+			if (pj.hasExistingAlignments(false)) { // if directory exists, even if no /align
+				rc = Utilities.showConfirm3(title,msg +
+						"\n\nOnly: Remove alignment directories from disk" + // may want to remove alignments and not project
+						"\nAll:  Remove alignments and project directory from disk");
+				if (rc==0) {close(); return;}
+				
+				System.out.println("Confirming removal of " +  pj.getDisplayName() + " alignments directories from disk...."); 
+				removeAllAlignFromDisk(pj, true); // remove top directory; prints removals
+				
+				if (rc!=2) {close(); return;}
+			}
+			// project directory
+			if (!Utilities.showConfirm2(title,msg + "\n\nRemove from disk:\n   " + path)) {close(); return;}
 			
+			System.out.println("Remove project from disk: " + path);
+			File f = new File(path);
+			Utilities.deleteDir(f);
+			if (f.exists()) f.delete();// not removing topdir on Linux, so try again
+			
+			close();
+		}
+		catch (Exception e) {ErrorReport.print(e, "Remove project from disk");}		
+	}
+	/**********************************************************
+	 * Reload project: ManagerFrame link
+	 */
+	protected boolean reloadProject(Mproject pj) {
+		try {
+			String msg = "Reload project " + pj.getDisplayName();
+			if (!pj.hasExistingAlignments(true)) { // only care if there is a /align
+				if (!Utilities.showConfirm2("Reload project",msg)) {close(); return false;}
+			}
+			else {
+				int rc = Utilities.showConfirm3("Reload project",msg +
+					"\n\nOnly: Reload project only" +
+					  "\nAll:  Reload project and remove alignments from disk");
+				if (rc==0) {close(); return false;}
+				
+				if (rc==2) {
+					System.out.println("Confirming removals of " +  pj.getDisplayName() + " alignments from disk...."); 
+					removeAllAlignFromDisk(pj, false); // do not remove topDir
+				}
+			}
+			pj.removeProjectFromDB(); // do not need finish method because starts loading after this
+			close();
+			return true;
+		}
+		catch (Exception e) {ErrorReport.print(e, "reload project"); return false;}
+	}
+	/******************************************************************
+	 * Clear pair button 
+	 **********************************/
+	protected void removeClearPair(Mproject p1, Mproject p2, Mpair mp) {// does use fw
+		String msg = "Clear pair " + p1.getDBName() + " to " + p2.getDBName();
+		int rc = 2;
+		if (mp.isPairInDB()) {
+			rc = Utilities.showConfirm3("Clear pair", msg + 
+				"\n\nOnly: remove synteny from database" +
+				"\nAll: remove synteny and alignments from disk for this pair");
+		}
+		else { 										// CAS568 only align confirm if not in DB 
+			if (!Utilities.showConfirm2("Clear alignments",msg 
+					+ "\nRemove alignments for this pair from disk")) {close(); return;}
+		}
+		if (rc==0) {close(); return;}
+				
+		try {
+			if (rc==2) {
+				String path = Constants.getNameResultsDir(p1.getDBName(),  p2.getDBName());
+				msg = "Remove MUMmer files in:\n   " + path;
+				if (!Utilities.showConfirm2("Remove from disk", msg)) {// CAS565 add confirm
+					System.out.println(sp + "cancel removal of " + path);
+					return;
+				}
+				
+				System.out.println("Remove alignments from " + path);
+				
+				removeAlignFromDir(new File(path)); 
+			}
+			if (mp.isPairInDB()) mp.removePairFromDB(true); // True = redo numHits; CAS566 add true
+			
+			close();
+		}
+		catch (Exception e) {ErrorReport.print(e, "Clearing alignment");}
+	}
+	/******************************************************************
+	 * Remove Project From Disk (true); 
+	 * Reload Project (false)
+	 */
+	private boolean removeAllAlignFromDisk(Mproject p, boolean rmTopDir) {
+		try {
 			File top = new File(Constants.getNameResultsDir()); // check seq_results
-			
-			String projTo = Constants.projTo;
 			
 			if (top == null  || !top.exists()) return true;
 			
 			Vector<File> alignDirs = new Vector<File>();
+			String pStart = p.getDBName() + Constants.projTo, pEnd = Constants.projTo + p.getDBName();
 			
 			for (File f : top.listFiles()) {
 				if (f.isDirectory()) {
-					if	(f.getName().startsWith(p.getDBName() + projTo) ||
-						 f.getName().endsWith(projTo + p.getDBName())) {
+					if	(f.getName().startsWith(pStart) || f.getName().endsWith(pEnd)) {
 						alignDirs.add(f);
 					}
 				}
@@ -186,36 +156,51 @@ public class RemoveProj {
 			if (alignDirs.size() == 0) return true;
 			
 			for (File f : alignDirs) {
-				removeAlignFromDisk(f, rmTopDir);
+				String msg = (rmTopDir) ? "Remove directory: " : "Remove MUMmer files in: ";
+				msg +=  "\n   " + Constants.seqRunDir + f.getName();
+				
+				if (!Utilities.showConfirm2("Remove from disk", msg)) {// CAS565 add confirm
+					System.out.println(sp + "cancel removal of " + f.getName());
+					continue;
+				}
+				if (rmTopDir) {
+					System.out.println(sp + "remove " + f.getName());
+					fw.append("Remove align directory " + f.getName()  + "   " + Utilities.getDateTime()+ "\n");
+					
+					Utilities.deleteDir(f);
+					if (f.exists()) f.delete();
+				}
+				else {
+					System.out.println(sp + "remove MUMmer files from: " + f.getName()); // not printed for clear
+					removeAlignFromDir(f);
+				}
 			}
 			return true;
-		} catch (Exception e) {ErrorReport.print(e, "Remove all alignment files"); return false;}
-	}
-	// Clear Pair and Remove project from disk
-	private void removeAlignFromDisk(File f, boolean rmTopDir) { 
-	try {
-		if (!Utilities.showConfirm2("Remove from disk", "Remove MUMmer " + f.getName())) {// CAS565 add confirm
-			System.out.println("    Cancel removal of " + f.getName());
-			return; 
-		}
-		
-		if (rmTopDir) { // only happens on Remove project from disk
-			System.out.println("    remove " + f.getName());
-			Utilities.deleteDir(f);
-			if (f.exists()) f.delete();
-		}
-		else { // leave params file
-			File f1 = new File(f.getAbsoluteFile() + "/" + Constants.alignDir);
-			if (f1.exists()) {
-				System.out.println("    remove MUMmer " + f.getName());
-				Utilities.deleteDir(f1);
-				if (f1.exists()) f1.delete();
-			}
-			File f2 = new File(f.getAbsoluteFile() + "/" + Constants.finalDir);
-			Utilities.deleteDir(f2);
-			if (f1.exists()) f2.delete();
-		}
-	} catch (Exception e) {ErrorReport.print(e, "Remove alignment files"); }
+		} 
+		catch (Exception e) {ErrorReport.print(e, "Remove all alignment files"); return false;}
 	}
 	
+	/******************************************************************
+	 * Remove /align, /results and params_align_used
+	 * --removeAllAlignFromDisk for Reload Project
+	 * --Clear pair 
+	 */
+	private void removeAlignFromDir(File f) { 
+	try {
+		File f1 = new File(f.getAbsoluteFile() + "/" + Constants.alignDir);
+		if (f1.exists()) {
+			Utilities.deleteDir(f1);
+			if (f1.exists()) f1.delete();
+		}
+		else System.out.println(sp + "MUMmer files " + f.getName() + " already deleted");
+		
+		File f2 = new File(f.getAbsoluteFile() + "/" + Constants.finalDir);
+		Utilities.deleteDir(f2);
+		if (f2.exists()) f2.delete();
+		
+		File f3 = new File(f.getAbsoluteFile() + "/" + Constants.usedFile);
+		if (f3.exists()) f3.delete();
+	} 
+	catch (Exception e) {ErrorReport.print(e, "\nRemove alignment files"); }
+	}
 }

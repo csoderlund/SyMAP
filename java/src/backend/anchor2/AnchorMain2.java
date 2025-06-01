@@ -112,18 +112,17 @@ public class AnchorMain2 {
 		Globals.rclear();
 		Utils.prtIndentMsgFile(plog, 1, "Final totals");	
 		
-		String msg1 = String.format("%,10d Clusters  Both genes %,8d   One gene %,8d   No gene %,8d",
-				cntClusters, cntG2, cntG1, cntG0);
-		Utils.prtIndentMsgFile(plog, 1, msg1);	
+		String msg1 = String.format("Clusters  Both genes %,8d   One gene %,8d   No gene %,8d",
+				cntG2, cntG1, cntG0);
+		Utils.prtNumMsgFile(plog, cntClusters, msg1);	
 		
 		int total = cntG2Fil+cntG1Fil+cntG0Fil;
-		String msg2 = String.format("%,10d Filtered  Both genes %,8d   One gene %,8d   No gene %,8d   Pile hits %,d",
+		String msg2 = String.format("Filtered  Both genes %,8d   One gene %,8d   No gene %,8d   Pile hits %,d",
 				total, cntG2Fil, cntG1Fil, cntG0Fil, cntPileFil);
-		Utils.prtIndentMsgFile(plog, 1, msg2);
+		Utils.prtNumMsgFile(plog, total, msg2);
 		
 		if (Arg.WRONG_STRAND_PRT) { // CAS565 there was no output if there were no WS
-			String msg3 = String.format("%,10d Wrong strand", cntWS);
-			Utils.prtIndentMsgFile(plog, 1, msg3);
+			Utils.prtNumMsgFile(plog, cntWS, "Wrong strand");
 		}
 		
 		if (Arg.TRACE) Utils.prtTimeMemUsage(plog, "   Finish ", totTime); // also writes in AnchorMain after a few more comps
@@ -244,7 +243,7 @@ public class AnchorMain2 {
 					if (gn.gLen>maxGene) maxGene = gn.gLen;
 				}
 			}
-			// CAS560 stop calling Arg.setLen here; was only printing below if -s; avg&max agree with summary
+			
 			avgGeneLen[X]   = (int) Math.round((double)sumGene/(double)nGene); 
 			avgExonLen[X]   = (int) Math.round((double)sumExon/(double)nExon); 
 			avgIntronLen[X] = (int) Math.round((double)sumIntron/(double)nIntron); 
@@ -418,7 +417,7 @@ public class AnchorMain2 {
 		String x =  (cntLongHit>0) ? String.format("Long Hits %,d", cntLongHit) : "";
 		String msg = String.format("Load %s  Hits %,d (EQ %,d NE %,d) %s", fileName, hitNum, hitEQ, hitNE, x);
 		if (Arg.VB)  Utils.prtIndentMsgFile(plog, 1, msg); else Globals.rprt(msg);	
-		if (cntNoChr>0) { // CAS561 
+		if (cntNoChr>0) { 
 			if (noChrSetQ.size()>0) {
 				msg = proj1Name + " (" + noChrSetQ.size() + "): ";
 				for (String c : noChrSetQ) msg += c + " ";

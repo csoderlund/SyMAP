@@ -23,8 +23,11 @@ public class Utils {
 	// msgToFile prints to file and terminal, but not ProgressDialog
 	// msg and appendText     prints to file, terminal, ProgressDialog
 	
-	// time only
+	// time 
 	public static long getTime() { return System.currentTimeMillis();}
+	public static String getElapsedTime(long startTime) {
+		return Utilities.getDurationString(getTime()-startTime);
+	}
 	
 	public static void prtMsgTimeFile(ProgressDialog prog, String msg, long startTime) {
 		String t = Utilities.getDurationString(getTime()-startTime);
@@ -34,14 +37,12 @@ public class Utils {
 		String t = Utilities.getDurationString(getTime()-startTime);
 		prog.msg(String.format("%-30s %s", msg, t));	
 	}
-	public static void timeDoneMsg(ProgressDialog prog, String msg, long startTime) {
+	public static void prtMsgTimeDone(ProgressDialog prog, String msg, long startTime) {// CAS568 renamed from timeDoneMsg
 		String t = Utilities.getDurationString(getTime()-startTime);
 		String m = String.format("%-35s  %s                           \n\n", msg, t);
+		
 		if (prog!=null) prog.msg(m);	
 		else System.out.println(m);
-	}
-	public static String getElapsedTime(long startTime) {
-		return Utilities.getDurationString(getTime()-startTime);
 	}
 	
 	// Memory and time
@@ -72,8 +73,8 @@ public class Utils {
 		
 		return String.format("Memory %s\n\n", mem);
 	}
-	/************** assorted others  **/
-	public static void prt(ProgressDialog prog, String msg) { 
+	// no time
+	public static void prtMsgFile(ProgressDialog prog, String msg) { 
 		prog.msgToFile(msg);
 	}
 	public static void prtIndentMsgFile(ProgressDialog prog, int indent, String msg) {
@@ -84,12 +85,12 @@ public class Utils {
 	public static void prtNumMsgFile(ProgressDialog prog, int num, String msg) {
 		prog.msgToFile(String.format("%,10d %s         ", num, msg));
 	}
-	
-	public static void prtIndentMsg(ProgressDialog prog, int indent, String msg) { // CAS567 add 
+	public static void prtIndentNumMsgFile(ProgressDialog prog, int indent, int num, String msg) {
 		String x = "";
 		for (int i=0; i<indent; i++) x +="   ";
-		prog.appendText(x + msg);
+		prog.msgToFile(String.format("%s%,10d %s           ", x, num, msg));
 	}
+	
 	
 	public static void prtNumMsg(ProgressDialog prog, int num, String msg) {
 		prog.appendText(String.format("%,10d %s           ", num, msg));

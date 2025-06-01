@@ -16,7 +16,7 @@ public class Ext {
 	private static final String dirMummer="mummer/", dirMuscle="muscle/", dirMafft="mafft/";
 	private static String archDir;				 // set on startup (linux64, mac, macM4); user can set in symap.config; CAS566 
 	
-	private static String mummer4Path=null; 	 // can put full mummer4 path in symap.config; CAS508 
+	private static String mummer4Path=null; 	 // can put full mummer4 path in symap.config; 
 	
 	public  static final String exNucmer="nucmer", exPromer="promer", exCoords="show-coords"; // accessed in AlignMain
 	private static final String exMuscle="muscle", exMafft="mafft.bat";
@@ -36,11 +36,11 @@ public class Ext {
 		String plat =  System.getProperty("os.name").toLowerCase();
 		
 		if (plat.contains("linux")) {
-			archDir = "linux64/";
+			archDir = "lintel64/";	// CAS568 was linux64 from v567 when cleaning some code
 			return true;
 		}
 		if (!plat.contains("mac")) { 
-			System.err.println("The os.name is not linux64 or Mac OS X");
+			System.err.println("The os.name is not lintel64 or Mac OS X");
 			System.err.println("There are no executables for your machine");
 			System.err.println("See " + Jhtml.SYS_GUIDE_URL + Jhtml.ext);
 			return false;
@@ -61,7 +61,7 @@ public class Ext {
 		return false;
 	}
 	/**************************************************************
-	 *  SyMAPmanager reading config; add mummer4 stuff, which can be set in config file; CAS508
+	 *  SyMAPmanager reading config; add mummer4 stuff, which can be set in config file; 
 	 */
 	public static void setMummer4Path(String mummer) {
 		mummer4Path=mummer;

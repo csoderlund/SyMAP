@@ -353,10 +353,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			// line 1
 			String label1 = "Directory: " + mProj.getDBName() + "    Abbrev: " + mProj.getdbAbbrev(); 
 			
-			String o = mProj.getOrderAgainst();
-			if (o != null && o.length() > 0) label1 += "    Order against: " + o;
+			// CAS568 moved to Pair; String o = mProj.getOrderAgainst();
+			//if (o != null && o.length() > 0) label1 += "    Order against: " + o;
+			// CAS568 moved to Pair; if (mProj.isMasked()) label1 += "    Mask all but genes";
 			
-			if (mProj.isMasked()) label1 += "    Mask all but genes";
 			textPanel.add(new JLabel(label1)); 
 			
 			// line 2
@@ -384,7 +384,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			
 			if (mProj.getStatus() == Mproject.STATUS_ON_DISK) {
 				btnRemoveFromDisk = new ProjectLinkLabel("Remove from disk", mProj, Color.red);
-				btnRemoveFromDisk.addMouseListener( doRemoveDisk );
+				btnRemoveFromDisk.addMouseListener( doRemoveProjDisk );
 
 				btnLoadOrRemove = new ProjectLinkLabel("Load project", mProj, Color.red);
 				btnLoadOrRemove.addMouseListener( doLoad );
@@ -394,7 +394,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			}
 			else { 
 				btnLoadOrRemove = new ProjectLinkLabel("Remove from database", mProj, Color.blue);
-				btnLoadOrRemove.addMouseListener( doRemove );
+				btnLoadOrRemove.addMouseListener( doRemoveProjDB );
 
 				btnReloadSeq = new ProjectLinkLabel("Reload project", mProj, Color.blue);
 				btnReloadSeq.addMouseListener( doReloadSeq );
@@ -469,13 +469,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			btnSelClearPair.setVisible(true);
 			btnSelClearPair.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					Mproject[] mprojs = getSelectedPair();
-					if (mprojs==null) return;
-					
-					Mpair mp = getMpair(mprojs[0].getIdx(),mprojs[1].getIdx());
-					RemoveProj rjObj = new RemoveProj(getInstance(), buildLogLoad());
-					rjObj.removeClearPair(mp, mprojs[0], mprojs[1]);
-					refreshMenu();
+					removeClearPair();
 				}
 			} );	
 			
@@ -844,7 +838,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 					 projNameMap.put(mp.strDBName, mp.strDisplayName);
 				} 
 				else { // e.g. dbname=Arab, and there is dbname=zarab with Display name = Arab
-					Globals.prt(dbname + ": Display name " + mp.strDisplayName + " exists; cannot not display");
+					String msg=dbname + ": Display name '" + mp.strDisplayName + "' exists; cannot not display";
+					Utilities.showContinue("Duplicate name", msg); // CAS568 make obvious
+					Globals.prt(msg);
 				}
 			}
 		}
@@ -969,7 +965,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	/***************************************************************/
 	// log file for load
 	private boolean first=true;
-	private FileWriter buildLogLoad() {
+	private FileWriter openLoadLog() {
 		FileWriter ret = null;
 		try {
 			String name = dbName + "_" + Constants.loadLog; 
@@ -1023,7 +1019,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		dbName = db_name;
 		frameTitle += " - " + db_name;
 		setTitle(frameTitle);
-		System.out.println("SyMAP database " + db_name);
+		System.out.println("   SyMAP database: " + db_name); // CAS568 comes after Configuration file printed in SyMAPmanager.setArch
 
 		try { 
 			if (inReadOnlyMode) { 
@@ -1045,7 +1041,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				try {
 					maxCPU = Integer.parseInt(cpus.trim()); 
 					totalCPUs = Runtime.getRuntime().availableProcessors();
-					System.out.println("Max CPUs " + maxCPU + " (out of " + totalCPUs + " available)");
+					System.out.println("   Max CPUs: " + maxCPU + " (out of " + totalCPUs + " available)");
 				}
 				catch (Exception e){ System.err.println("nCPUs: " + cpus + " is not an integer. Ignoring.");}
 			}
@@ -1256,7 +1252,24 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			else Globals.eprt("SyMAP error: cannot get pair " + sel[0].getIdx() + " " + sel[1].getIdx() );
 		}
 	};
-		
+	/***************************************************************
+	 * Project links
+	 */
+	private MouseListener doRemoveProjDB = new MouseAdapter() {
+		public void mouseClicked(MouseEvent e) {
+			Mproject mp = ((ProjectLinkLabel)e.getSource()).getProject();
+			new RemoveProj(openLoadLog()).removeProjectDB(mp);
+			refreshMenu();
+		}
+	};
+	private MouseListener doRemoveProjDisk = new MouseAdapter() {
+		public void mouseClicked(MouseEvent e) {
+			Mproject mp = ((ProjectLinkLabel)e.getSource()).getProject();
+			new RemoveProj(openLoadLog()).removeProjectDisk(mp);
+			refreshMenu();
+		}
+	};
+	
 	private MouseListener doLoadAllProj = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
 			loadAllProjects();
@@ -1281,35 +1294,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 	};	
 	
-	private MouseListener doRemove = new MouseAdapter() {
-		public void mouseClicked(MouseEvent e) {
-			Mproject mp = ((ProjectLinkLabel)e.getSource()).getProject();
-			new RemoveProj(getInstance(), buildLogLoad()).removeProjectFromDB(mp);
-			refreshMenu();
-		}
-	};
-	private MouseListener doRemoveDisk = new MouseAdapter() {
-		public void mouseClicked(MouseEvent e) {
-			new RemoveProj(getInstance(), buildLogLoad()).removeProjectFromDisk( ((ProjectLinkLabel)e.getSource()).getProject() );
-			refreshMenu();
-		}
-	};
-	
-	private MouseListener doViewProj = new MouseAdapter() { 
-		public void mouseClicked(MouseEvent e) {
-			Mproject theProject = ((ProjectLinkLabel)e.getSource()).getProject();
-			String info = theProject.loadProjectForView();
-			
-			Utilities.displayInfoMonoSpace(getInstance(), "View " + theProject.getDisplayName(), info, false);	
-		}
-	};
-	
 	private MouseListener doReloadParams = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
 			Mproject mProj = ((ProjectLinkLabel)e.getSource()).getProject();
 			
 			ProjParams propFrame = new ProjParams(getInstance(), mProj, projVec, getCatArr(),
-					true, mProj.hasExistingAlignments());
+					true, mProj.hasExistingAlignments(true)); // only exist true if /align
 			propFrame.setVisible(true);
 			
 			if (propFrame.wasSave()) refreshMenu();		
@@ -1320,20 +1310,39 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			Mproject mProj = ((ProjectLinkLabel)e.getSource()).getProject();
 			
 			ProjParams propFrame = new ProjParams(getInstance(), mProj, projVec, getCatArr(),
-					false, mProj.hasExistingAlignments());
+					false, mProj.hasExistingAlignments(true)); // only exist true if /align
 			propFrame.setVisible(true);
 			
 			if (propFrame.wasSave()) refreshMenu(); 
 		}		
 	};
+	
+	private MouseListener doViewProj = new MouseAdapter() { 
+		public void mouseClicked(MouseEvent e) {
+			Mproject theProject = ((ProjectLinkLabel)e.getSource()).getProject();
+			String info = theProject.loadProjectForView();
+			
+			Utilities.displayInfoMonoSpace(getInstance(), "View " + theProject.getDisplayName(), info, false);	
+		}
+	};
+	private void removeClearPair() {
+		Mproject[] mprojs = getSelectedPair();
+		if (mprojs==null) return;
+		
+		Mpair mp = getMpair(mprojs[0].getIdx(),mprojs[1].getIdx());
+		RemoveProj rpObj = new RemoveProj(openLoadLog());
+		rpObj.removeClearPair(mprojs[0], mprojs[1], mp);
+		
+		refreshMenu();
+	}
 	/*****************************************************************/
 	/***************************************************************
 	 * XXX LoadProj: 
 	 */
 	private void loadAllProjects() {
 		try {
-			DoLoadProj lpObj = new DoLoadProj(this, dbc2, buildLogLoad());
-			lpObj.loadAllProjects(selectedProjVec); 
+			DoLoadProj lpObj = new DoLoadProj(this, dbc2, openLoadLog());
+			lpObj.loadAllProjects(selectedProjVec); // All
 			
 			new Version(dbc2).updateReplaceProp();
 			refreshMenu();
@@ -1342,35 +1351,20 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	private void loadProject(Mproject mProj) {
 		try {
-			DoLoadProj lpObj = new DoLoadProj(this, dbc2, buildLogLoad());
-			lpObj.loadProject(mProj);
+			DoLoadProj lpObj = new DoLoadProj(this, dbc2, openLoadLog());
+			lpObj.loadProject(mProj);				// just this one
 			
 			new Version(dbc2).updateReplaceProp();
 			refreshMenu();
 		}
 		catch (Exception e) {ErrorReport.print(e, "load project");}
-		}
+	}
 	private void reloadProject(Mproject mProj) {
 	try {
-		String msg = "Reload project " + mProj.getDisplayName();
-		if (!mProj.hasExistingAlignments()) {
-			if (!Utilities.showConfirm2("Reload project",msg)) return;
-		}
-		else {
-			int rc = Utilities.showConfirm3("Reload project",msg +
-				"\n\nOnly: Reload project only" +
-				  "\nAll:  Reload project and remove alignments from disk");
-			if (rc==0) return;
-			
-			if (rc==2) {
-				System.out.println("Removing " +  mProj.getDisplayName() + " alignments from disk...."); 
-				new RemoveProj().removeAllAlignFromDisk(mProj);
-			}
-		}
-		System.out.println("Removing " +  mProj.getDisplayName() + " from database...."); 
-		mProj.removeProjectFromDB();
+		RemoveProj rpObj = new RemoveProj(openLoadLog());
+		if (!rpObj.reloadProject(mProj)) return;				// CAS568 moved removal to RemoveProj
 		
-		DoLoadProj lpObj= new DoLoadProj(this, dbc2, buildLogLoad());
+		DoLoadProj lpObj= new DoLoadProj(this, dbc2, openLoadLog());
 		lpObj.loadProject(mProj); 
 		
 		new Version(dbc2).updateReplaceProp();
@@ -1390,7 +1384,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		System.out.println("Removing " +  mProj.getDisplayName() + " annotation from database...."); 
 		mProj.removeAnnoFromDB();
 		
-		DoLoadProj lpObj= new DoLoadProj(this, dbc2, buildLogLoad());
+		DoLoadProj lpObj= new DoLoadProj(this, dbc2, openLoadLog());
 		lpObj.reloadAnno(mProj);
 		
 		new Version(dbc2).updateReplaceProp();
@@ -1430,11 +1424,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				if (doThis) {
 					Mproject p1 = projObjMap.get( strRowProjName );
 					Mproject p2 = projObjMap.get( strColProjName );
+					Mpair mp = getMpair(p1.getIdx(), p2.getIdx());
+					
 					Mproject[] ordered = orderProjName(p1,p2);
 					p1 = ordered[0]; p2 = ordered[1];
 					if (p1.getIdx() != p2.getIdx()) {
-						if (alignCheckOrderAgainst(p1, p2)) { 
-							Mpair mp = getMpair(p1.getIdx(), p2.getIdx());
+						if (alignCheckOrderAgainst(mp)) { 
 							if (mp!=null) todoList.add(mp);
 						}
 						else {
@@ -1459,13 +1454,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	/*-------- Alignment, Clustering, Synteny -----------------*/
 		System.out.println("\n>>> Start all pairs: processing " + todoList.size() + " project pairs");
 		
-		boolean bRenew = !backend.Constants.CoSET_ONLY && !backend.Constants.PSEUDO_ONLY; //CAS556 add check; CAS565 add pseudo; CAS566 make boolean
-		
-		for (Mpair mp : todoList) {
-			if (bRenew) mp.renewIdx(); // Removed existing and reset DB indices 
-			
-			// Open/close new dbc2 for each thread of align
-			new DoAlignSynPair().run(this, dbc2, mp, true,  maxCPUs);
+		for (Mpair mp : todoList) { // Open/close new dbc2 for each thread of align; CAS568 mv renew to DoAlign
+			new DoAlignSynPair().run(this, dbc2, mp, true,  maxCPUs, false); // assume align has not been done
 		}
 		new Version(dbc2).updateReplaceProp();
 		System.out.println("All Pairs complete. ");
@@ -1478,16 +1468,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (mProjs==null) return;
 		
 		int nCPU = getCPUs();
-		if (nCPU == -1) return; // it says to enter valid number in getCPU; CAS567 after 1st submission
+		if (nCPU == -1) return;           // it says to enter valid number in getCPU; CAS567 after 1st submission
 		if (!alignCheckProjDir()) return; // error written in calling routine
 	
 		Mpair mp = getMpair(mProjs[0].getIdx(), mProjs[1].getIdx());
 		if (mp==null) return;
-		
-		if (!alignCheckOrderAgainst(mProjs[0], mProjs[1])) return; 
-			
-		Mproject[] ordP    = orderProjName(mProjs[0],mProjs[1]); // order indices according to DB pairs table
-		String resultDir   = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
 		
 		// Special cases
 		if (backend.Constants.CoSET_ONLY || backend.Constants.PSEUDO_ONLY)  { //*** CAS565 remove bAlignDone; tries to do ONLY anyway
@@ -1499,16 +1484,22 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			
 			if (!Utilities.showConfirm2("Selected Pair", msg)) return;
 			
-			new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU);
+			new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU, true); // align has been done
 			new Version(dbc2).updateReplaceProp();
 			return;
 		}
+		
+		if (!alignCheckOrderAgainst(mp)) return; 
+		
+		Mproject[] ordP  = orderProjName(mProjs[0],mProjs[1]); // order indices according to DB pairs table
+		String resultDir = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
 		
 		// Compose confirm popup
 		boolean bAlignDone = Utils.checkDoneFile(resultDir);
 		String msg =  bAlignDone ? "Synteny for " : "Align&Synteny for "; 
 		if (mProjs[0].getDisplayName().equals(mProjs[1].getDisplayName())) { 
 			msg += mProjs[0].getDisplayName() + " to itself";
+			
 			if (mp.isAlgo2(Mpair.FILE)) {
 				util.Utilities.showInfoMessage("Cluster Algo", msg +"\nYou must select Algorithm 1 from Parameters");
 				return;
@@ -1516,18 +1507,17 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		else msg += mProjs[0].getDisplayName() + " and " + mProjs[1].getDisplayName();
 		
-		String chgMsg = bAlignDone ? mp.getChangedSynteny() : mp.getChangedParams(Mpair.FILE);  
-		if (chgMsg!="") msg += "\n" + chgMsg;
-		msg += "\nCPUs " + nCPU + ";  ";						// CAS567 add CPU; was maxCPU - fixed after 1st submission
+		String chgMsg = bAlignDone ? mp.getChangedSynteny(Mpair.FILE) : mp.getChangedParams(Mpair.FILE);  
+		msg += "\n" + chgMsg;
+		msg += "CPUs " + nCPU + ";  ";						// CAS567 add CPU; was maxCPU - fixed after 1st submission
 		if (Constants.VERBOSE) msg += "Verbose on"; else msg += "Verbose off";
 		
 		if (!Utilities.showConfirm2("Selected Pair", msg)) return;
-		System.out.println("\n>>> " + msg); 
 		
 	/*--- Do Alignment, Clustering, Synteny (alignments will not happen if exists) ----*/
-		mp.renewIdx(); 						// Remove existing and restart, sets projIdx
+		// mp.renewIdx(); 						// CAS568 mv to DoAlignSynPair
 		
-		new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU);
+		new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU, bAlignDone);
 		
 		new Version(dbc2).updateReplaceProp();
 	}
@@ -1554,35 +1544,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		catch (Exception e){return false;}
 	}
 	 // Checks before starting order against project; 
-	private boolean alignCheckOrderAgainst(Mproject mProj1, Mproject mProj2) {
-		String n1, n2, o;
-		
-		String o1 = mProj1.getOrderAgainst();
-		String o2 = mProj2.getOrderAgainst();
-		
-		if (o1==null || o2==null) return true; // null on linux
-		if (o1.equals("") && o2.equals("")) return true;
-		
-		if (!o1.equals("") && !o2.equals("")) {
-			String msg = mProj1.getDisplayName() + " and " + mProj2.getDisplayName() + " both have 'ordered against'" +
-					"\nOnly one can have this set";
-			Utilities.showErrorMessage(msg);
-			return false;
-		}
-		
-		if (o2.equals(""))      {o=o1; n1=mProj1.getDBName(); n2=mProj2.getDBName(); }
-		else if (o1.equals("")) {o=o2; n1=mProj2.getDBName(); n2=mProj1.getDBName(); }
-		else return true;
+	private boolean alignCheckOrderAgainst(Mpair mp) {
+		if (!mp.isOrder1(Mpair.FILE) && !mp.isOrder2(Mpair.FILE)) return true;
 		
 		try {
-			if (!o.equals(n2)) {
-				String msg = n1 + " 'order against' set to " + o + 
-						"\nNo ordering with alignment to  " + n2 +
-						"\n(You may want to Cancel and set 'order against' to " + n2 +")\n";
-				if (!Utilities.showContinue("Order against", msg)) return false;
-			}
-		
-			String ordProjName = n1 + Constants.orderSuffix; // directory uses dbname, no display name
+			String ordProjName = Constants.getOrderDir(mp); 
+			if (ordProjName==null) return true;
+			
 			String ordDirName =  Constants.seqDataDir + ordProjName;
 			File   ordDir = new File(ordDirName);
 	

@@ -9,8 +9,8 @@ import symap.Globals;
 import util.ProgressDialog;
 
 /**************************************
- * shared by Proj and Groups for bins; CAS560 SyntenyMain no longer uses
- * -s keys are recorded and printed
+ * shared by Proj and Groups for bins; 
+ * -tt keys are recorded and printed
  * -tt histograms are recorded and printed
  */
 public class BinStats {
@@ -22,23 +22,22 @@ public class BinStats {
 	
 	protected BinStats(){}
 	
-	protected String debugInfoAS() { // CAS540x
+	protected String debugInfoAS() { 
 		String avgSize =   String.format("%.2f", ((double)nAcnt/(double)nABins));
 
-		return String.format("#AnnoSets %-,5d  AvgAnno %-5s   Max %-,5d  Mix %-,5d   Removed %-,5d",
+		return String.format("    AnnoSets %-,5d  AvgAnno %-5s   Max %-,5d  Mix %-,5d   Removed %-,5d",
 				nABins, avgSize,  nAmax, nAmix, nArm);
 	}
-	protected String debugInfoHB() { // CAS540x
+	protected String debugInfoHB() { 
 		int avgLen =   Math.round(mTotalLen/mNBins);
 		
 		String avgHits =   String.format("%.2f", Utils.simpleRatio(mTotalHits, mNBins));
 		
-		return String.format("#HitBins  %-,5d  AvgHits %-5s   AvgLen %-,5d    HitsConsidered %-,5d Removed %-,5d",
+		return String.format("    HitBins  %-,5d  AvgHits %-5s   AvgLen %-,5d    HitsConsidered %-,5d Removed %-,5d",
 				mNBins, avgHits, avgLen,  mTotalHits, mHitsRm);
 	}
 	/*****************************************************
-	 * Hists stats; CAS534 the Hists and Stats use to always be run, but now only if -s/-tt
-	 * CAS535 moved from Utils to BinStat as it only has the above few lines
+	 * Hists stats;
 	 */
 	public  static TreeMap<String,Float> mStats = null;
 	private static Vector<String> mKeyOrder = null;
@@ -49,7 +48,7 @@ public class BinStats {
 			mStats = new TreeMap<String,Float>();	
 			mKeyOrder= new Vector<String>();
 		}
-		if (Globals.TRACE) // need -s -tt to see histogram
+		if (Globals.TRACE) // need -tt to see histogram
 			mHist = new TreeMap<String,TreeMap<Integer,Integer>>();
 	}
 	
@@ -78,8 +77,8 @@ public class BinStats {
 		mHist.get(key).put(l,curval);
 	}
 	
-	public static void dumpHist(ProgressDialog log) { // CAS540 add log
-		if (mHist==null) return;
+	public static void dumpHist(ProgressDialog log) { 
+		if (mHist==null || !Constants.PRT_STATS) return;
 		
 		for (String name : mHist.keySet()) {
 			log.msgToFile("Histogram: " + name);	
@@ -106,8 +105,8 @@ public class BinStats {
 		}
 		mStats.put(key, inc + mStats.get(key));
 	}
-	public static void dumpStats(ProgressDialog log) {// CAS540 add log
-		if (mStats == null) return;
+	public static void dumpStats(ProgressDialog log) {
+		if (mStats == null || !Constants.PRT_STATS) return;
 		
 		for (String key : mKeyOrder) {
 			double val = mStats.get(key);
