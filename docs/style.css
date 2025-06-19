@@ -1,0 +1,77 @@
+<style>  
+/* top navigation */
+a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
+a.white {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
+a.current {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}    
+.topnav {
+  height: 85px;		/* same as sidenav padding-top */
+  width: 100%;
+  min-width:1000px; /* scroll on shrinking */
+  overflow: hidden;
+  background-color: #666666;
+  top: 0; /* position: fixed; will always see top, but side links are wrong */
+}
+.topnav a {
+  float: left;
+  display: block;
+  text-align: center;
+  padding: 10px 5px 0px 0px; /* top, right, bottom, left */
+  font-size: 14px;
+}
+.topnav a:hover {
+  background: #ddd; color: black;
+}
+
+/* side navigation */
+.sidenav {
+  padding-top: 85px; 	/* same as topnav height */
+  width: 180px;			/* same as main margin-left and AGCoL width in html */
+  height: 100%;
+  position: fixed;	/* does not scroll */
+  z-index: 1; top: 0; left: 0; overflow-x: hidden;
+}
+.sidenav a {
+  padding: 8px 6px 12px 12px; /* top, right, bottom, left */
+  display: block;
+  font-size:16px; color:#6666CC;text-decoration: none; background-color: transparent;
+}
+.sidenav a:hover {
+ color: #00008B; 
+}
+
+/* right hand bulk of the text */
+.main {
+  margin-left: 180px; /* Same as sidenav width*/
+  a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
+  a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
+  a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
+}
+
+ a.ext {font-weight: bold;}
+ ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+ ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
+ ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
+ ttp  {font-family: Arial, monospace; font-size: 15px; font-weight: 500; color: DarkSlateGrey; }
+ tit  {font-family: Helvetica, sans-serif;  font-size: 18px; color:darkblue;font-weight: 900; }
+ tt   {font-size:13px}
+ pre  {font-size:13px}
+
+.tz {width: 90%;}
+.tx td {padding: 5px;}				/* table without border */
+.ty    {border: 1px  solid black; border-spacing: 1px;  border-collapse: collapse;}/* table with border */
+.ty td {border: 1px  solid black; padding: 8px; }
+    
+.th {border: 1px solid black; border-spacing:0; border-collapse:collapse; margin-left: auto; } /* main text table */
+.th td {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; padding: 5px;}
+
+@media screen and (max-width: 1000px) { /* on smaller screens, shrink */
+  .main {margin-left: 90px}
+  .sidenav {width: 90px;}
+  .sidenav a {font-size: 10px;}
+}
+@media screen and (max-width: 920px) { /* on smallest screens, hide when need scroll bar to see left side */
+  .main {margin-left: 0px}
+  .sidenav {width: 0px;}
+  .sidenav a {font-size: 0px;}
+}
+</style>

@@ -221,9 +221,9 @@ public class AlignMain {
 			alignParams += mp.getAlign(Mpair.FILE, true); // true, do not add command line
 			if (Ext.isMummer4Path()) alignParams += Ext.getMummerPath() + " ";
 			
-			String resultDir = "./" + Constants.getNameResultsDir(mProj1.strDBName, mProj2.strDBName);
-			File pfile = new File(resultDir,Constants.usedFile);
-			if (!pfile.exists()) return;	// can happen
+			//String resultDir = "./" + Constants.getNameResultsDir(mProj1.strDBName, mProj2.strDBName);
+			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); // CAS569 use this so renamed...
+			if (pfile==null) pfile = new File(resultDir,Constants.usedFile); // create 
 			
 			PrintWriter out = new PrintWriter(pfile);
 			out.println("# Parameters used for MUMmer alignments in /align.");
@@ -235,11 +235,8 @@ public class AlignMain {
 	private void paramsRead(String dateTime) {
 		try {
 			alignParams = "Use previous " + nAlignDone + " MUMmer files " + dateTime; 
-			
-			if (!Utilities.dirExists(resultDir)) return; // ok, may not have been created
-			
-			File pfile = new File(resultDir,Constants.usedFile); 
-			if (!pfile.isFile()) return; 
+			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); // CAS569 use this so renamed...
+			if (pfile==null) return;  // okay, not written yet
 			
 			alignParams = "Use previous " + nAlignDone + " "; // completed with what is in file
 			String line;

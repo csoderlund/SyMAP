@@ -17,6 +17,7 @@ import props.PropertiesReader;
 import symap.Globals;
 import backend.AnchorMain;
 import backend.Constants;
+import backend.Utils;
 
 /****************************************************
  * This is used by most backend and display stuff. Has project parameters, and loads basic data
@@ -510,18 +511,21 @@ public class Mproject implements Comparable <Mproject> {
 		}
 		catch (Exception e) {ErrorReport.print(e,"Load projects properties"); }
 	}
-	public void loadParamsFromDisk() {
+	protected void loadParamsFromDisk() {
 		if (!Utilities.dirExists(Constants.dataDir)) {
 			finishParams(); 
 			return;
 		}
-		
 		String dir = Constants.seqDataDir + strDBName;
-		loadParamsFromDisk(new File(dir));
+		loadParamsFromDisk(dir);
 	}
-	public void loadParamsFromDisk(File dir){
-		File pfile = new File(dir,Constants.paramsFile); 
-		if (!pfile.isFile()) { 				// If user created, no params file
+	protected void loadParamsFromDisk(File dir) {
+		loadParamsFromDisk(dir.getAbsolutePath()); 
+	} 
+	
+	private void loadParamsFromDisk(String dir){
+		File pfile = Utils.getParamsFile(dir,Constants.paramsFile);  // CAS569 check if has .txt
+		if (pfile==null) { 				// If user created, no params file
 			finishParams();
 			writeNewParamsFile();
 			return;
@@ -743,7 +747,6 @@ public class Mproject implements Comparable <Mproject> {
 	
 	private class Params {
 		private Params(int index, String label, String key, String defVal) {
-			this.index = index;
 			this.label = label;
 			this.key = key;   			// write to file
 			this.defVal = 	defVal;  	// default
@@ -756,12 +759,6 @@ public class Mproject implements Comparable <Mproject> {
 			// CAS568 if (index==aMaskNonGenes && dbVal.contentEquals("")) return true;
 			return dbVal.equals(defVal);
 		}
-		private String getStr() {
-			// CAS568 if (index==aMaskNonGenes && dbVal.contentEquals("1")) return label + ": yes";
-			return label + ": " + dbVal;
-		}
-		
-		int index=-1;
 		String key="", label="";
 		String defVal="", projVal="", dbVal="";
 		boolean isSum=false, isLoad=false;

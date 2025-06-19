@@ -4,7 +4,6 @@ import java.util.TreeMap;
 import java.util.Vector;
 
 import backend.Constants;
-import backend.Utils;
 import symap.Globals;
 import util.ProgressDialog;
 
@@ -31,7 +30,7 @@ public class BinStats {
 	protected String debugInfoHB() { 
 		int avgLen =   Math.round(mTotalLen/mNBins);
 		
-		String avgHits =   String.format("%.2f", Utils.simpleRatio(mTotalHits, mNBins));
+		String avgHits =   String.format("%.2f", simpleRatio(mTotalHits, mNBins));
 		
 		return String.format("    HitBins  %-,5d  AvgHits %-5s   AvgLen %-,5d    HitsConsidered %-,5d Removed %-,5d",
 				mNBins, avgHits, avgLen,  mTotalHits, mHitsRm);
@@ -39,7 +38,7 @@ public class BinStats {
 	/*****************************************************
 	 * Hists stats;
 	 */
-	public  static TreeMap<String,Float> mStats = null;
+	private  static TreeMap<String,Float> mStats = null;
 	private static Vector<String> mKeyOrder = null;
 	private static TreeMap<String,TreeMap<Integer,Integer>> mHist = null;
 		
@@ -77,7 +76,7 @@ public class BinStats {
 		mHist.get(key).put(l,curval);
 	}
 	
-	public static void dumpHist(ProgressDialog log) { 
+	protected static void dumpHist(ProgressDialog log) { 
 		if (mHist==null || !Constants.PRT_STATS) return;
 		
 		for (String name : mHist.keySet()) {
@@ -96,7 +95,7 @@ public class BinStats {
 	/************************************************
 	 * Keyword stats
 	 */
-	public static void incStat(String key, float inc){
+	protected static void incStat(String key, float inc){
 		if (mStats == null) return;
 		
 		if (!mStats.containsKey(key)) {
@@ -105,7 +104,7 @@ public class BinStats {
 		}
 		mStats.put(key, inc + mStats.get(key));
 	}
-	public static void dumpStats(ProgressDialog log) {
+	protected static void dumpStats(ProgressDialog log) {
 		if (mStats == null || !Constants.PRT_STATS) return;
 		
 		for (String key : mKeyOrder) {
@@ -117,5 +116,9 @@ public class BinStats {
 		mStats=null;
 		
 		if (Globals.TRACE) dumpHist(log); // CAS560 was not be printed; still does not seem functional...
+	}
+	private float simpleRatio(int top, int bot) { // CAS569 moved from Utils
+		float ratio = (float)(.1*Math.round(10.0*(float)top/(float)bot));
+		return ratio;
 	}
 }

@@ -15,14 +15,13 @@ import util.Utilities;
 /*********************************************
  * Called by symap and viewSymap scripts
  * ManagerFrame displays interface, SyMAPFrame calls showExplorer
- * CAS541 showExplorer to ManagerFrame
  */
 
 public class SyMAPmanager extends ManagerFrame {
 	private static final long serialVersionUID = 1L;
 	
 	public static void main(String args[])  {	
-		if (!checkJavaSupported(null)) return;
+		// CAS569 user may have compiled, etc. if (!checkJavaSupported(null)) return;
 		
 		if (equalOption(args, "-h") || equalOption(args, "-help") || equalOption(args, "--h")) {
 			prtParams(args); // see ManagerFrame for all variable stuff
@@ -71,8 +70,6 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("  -mum      : do not remove any mummer files");
 			System.out.println("  -wsp      : for g2, print MUMmer hits that differ from gene strand (v5.4.8 Algo2, v5.6.0 update)");
 			System.out.println("  -pseudo   : On A&S, ONLY compute pseudo (v5.6.5 or later)"); // CAS565
-			// CAS565 System.out.println("  -sg       : split genes on cluster hit creation (Cluster Algo1)");
-			// CAS565 System.out.println("  -acs      : On A&S, ONLY execute the collinear sets computation"); // CAS556 July24
 		}
 	}
 	
@@ -83,7 +80,7 @@ public class SyMAPmanager extends ManagerFrame {
 			inReadOnlyMode = true; // no message to terminal
 		}
 		
-		if (startsWithOption(args, "-c")) {// CAS501
+		if (startsWithOption(args, "-c")) {
 			Globals.MAIN_PARAMS = getCommandLineOption(args, "-c");
 			if (Globals.MAIN_PARAMS==null) {
 				System.err.println("-c must be followed by the name of a configuration file");
@@ -105,7 +102,7 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("-sql  check MySQL settings ");
 		}
 		
-		if (equalOption(args, "-q")) { // CAS531 change
+		if (equalOption(args, "-q")) { 
 			Globals.bQueryOlap=true;
 			System.out.println("-q  Show gene overlap instead of exon for Algo2");
 		}
@@ -113,7 +110,7 @@ public class SyMAPmanager extends ManagerFrame {
 			Globals.bQueryPgeneF=true;
 			System.out.println("-g  Run PgeneF algorithm in place of Cluster algorithm");
 		}
-		if (equalOption(args, "-a")) { // CAS531 change
+		if (equalOption(args, "-a")) { 
 			Globals.bTrim=false;
 			System.out.println("-a  Do not trim 2D alignments");
 		}
@@ -148,18 +145,17 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("-sg  Split genes (Algo1)");
 			Group.bSplitGene= true;
 		}
-		// CAS560 remove -z; System.out.println("-z  Reload Annotation will only run the Gene# assignment algorithm");
-		// CAS560 remove    System.out.println("-wse  Exclude g2 hits where the hit strands differ from the genes (Algo2)");
+		
 		/*************************************************************************/
 		/** not shown in -h help - hence, the double character so user does not use by mistake **/
 		if (equalOption(args, "-ii")) {
-			System.out.println("-ii Extra info ");// CAS560 - extra info on popups, query overlap
+			System.out.println("-ii Extra info ");
 			Globals.INFO = true;
 		}
 		if (equalOption(args, "-tt")) {
 			System.out.println("-tt Trace output (developer only)");
-			Globals.TRACE = true;   	// CAS560 changed to print all trace 
-			Constants.PRT_STATS = true; // CAS560; got rid of the command line -s except for summary
+			Globals.TRACE = true;   	
+			Constants.PRT_STATS = true; 
 		}
 		if (equalOption(args, "-dd")) {
 			System.out.println("-dd Debug (developer only)");
@@ -181,7 +177,7 @@ public class SyMAPmanager extends ManagerFrame {
 		}
 	}
 	
-	private static boolean equalOption(String[] args, String name) {// CAS534 moved from Utilites
+	private static boolean equalOption(String[] args, String name) {
 		for (int i = 0;  i < args.length;  i++)
 			if (args[i].equals(name)) 
 				return true;
@@ -189,11 +185,11 @@ public class SyMAPmanager extends ManagerFrame {
 	}
 	private static boolean startsWithOption(String[] args, String name) {
 		for (int i = 0;  i < args.length;  i++)
-			if (args[i].equals(name)) // CAS556 was startsWith
+			if (args[i].equals(name)) 
 				return true;
 		return false;
 	}
-	private static String getCommandLineOption(String[] args, String name){// CAS534 moved from Utilites
+	private static String getCommandLineOption(String[] args, String name){
 		for (int i = 0;  i < args.length;  i++){
 			if (args[i].startsWith(name) && !args[i].equals(name)){
 				String ret = args[i];
@@ -222,11 +218,11 @@ public class SyMAPmanager extends ManagerFrame {
 		
 		// architecture
 		String userArch = dbProps.getProperty("arch");
-		if (userArch!=null) System.out.println("   Architecture: " + userArch); // CAS568 add spaces
+		if (userArch!=null) System.out.println("   Architecture: " + userArch); 
 		Ext.setArch(userArch); // if null, will determine it; prints errors if any found
 		
 		// mummer path
-		String mummer 	= dbProps.getProperty("mummer_path"); // CAS508 
+		String mummer 	= dbProps.getProperty("mummer_path"); 
 		if (mummer!=null && mummer!="") {
 			System.out.println("   MUMmer path: " + mummer);
 			Ext.setMummer4Path(mummer);
@@ -237,24 +233,20 @@ public class SyMAPmanager extends ManagerFrame {
 	
 	private static boolean checkJavaSupported(Component frame) {	// CAS559 update; CAS42 10/16/17 - did not work for Java SE 9
 	try {
-		String relV = Globals.JARVERION;
-		
 		String userV = System.getProperty("java.version");
 		if (userV==null) {
 			System.err.println("+++ Could not determine Java version - try to continue....");
 			return true;
 		}
 		String [] ua = userV.split("\\.");
-		if (ua.length<=1) {
-			System.out.println("+++ Java version " + userV + "; incorrect format - try to continue....");
-			return true;
-		}
+		int u0=0, u1=0, u2=0; 	// this is suppose to have 3 numbers, but 22 just has 1; CAS569
+		if (ua.length>=0) u0 = Integer.valueOf(ua[0]);
+		if (ua.length>=1) u1 = Integer.valueOf(ua[1]);
+		if (ua.length>=2) u2 = Integer.valueOf(ua[2]);
 		
+		String relV = Globals.JARVERION; // "17.0.11";
 		String [] rx = relV.split("\\.");
 		int r0 = Integer.valueOf(rx[0]), r1 = Integer.valueOf(rx[1]), r2 = Integer.valueOf(rx[2]);
-		
-		int u0 = Integer.valueOf(ua[0]), u1 = Integer.valueOf(ua[1]);
-		int u2 = (ua.length>2)  ? Integer.valueOf(ua[2]) : -1;
 		
 		// u0<r0 will fail before executions starts
 		if (u0 == r0 && (u1 < r1 || u2 < r2))  { // versions seem to all have u1 as '0' except for v1.8 

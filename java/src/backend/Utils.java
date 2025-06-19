@@ -1,10 +1,7 @@
 package backend;
 
-import java.sql.ResultSet;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.BufferedReader;
@@ -14,11 +11,14 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.zip.GZIPInputStream;
 
-import database.DBconn2;
+import symap.Globals;
 import util.ErrorReport;
 import util.ProgressDialog;
 import util.Utilities;
 
+/********************************************************
+ * Utils for A&S; CAS569 cleaned out some stuff
+ */
 public class Utils {
 	// msgToFile prints to file and terminal, but not ProgressDialog
 	// msg and appendText     prints to file, terminal, ProgressDialog
@@ -195,49 +195,26 @@ public class Utils {
 		DateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
 		return sdf.format(l);
 	}
+	// Pre-v569 did not have ".txt" suffix; this checks and renames
+	public static File getParamsFile(String dir, String fileName) {
+	try {
+		if (!Utilities.dirExists(dir)) return null; 
+		
+		File pfile = new File(dir,fileName); 
+		if (pfile.isFile()) return pfile;	// exists with new name
+		
+		String oldName = fileName.replace(".txt", ""); // old name
+		File ofile = new File(dir,oldName);
+		if (!ofile.isFile()) return null;				// no new or old name
+
+		boolean b = ofile.renameTo(pfile);
+		if (!b) return null; 
+		
+		return pfile;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Could not open " + dir +"/" + fileName); return null;}
+	}
 	/****************************************************************************/
-	
-	/**********************************************************************/
-	/**********************************************************/
-	public static int[] strArrayToInt(String[] sa) {
-		int[] ia = new int[sa.length];
-		for (int i = 0; i < sa.length; i++)
-			ia[i] = Integer.parseInt(sa[i]);
-		return ia;
-	}
-	
-	public static String intArrayJoin(int[] sa, String delim) {
-		String out = "";
-		if (sa != null) {
-			for (int i = 0; i < sa.length; i++) {
-				out += sa[i];
-				if (i < sa.length -1)
-					out += delim;
-			}
-		}
-		return out;
-	}	
-	public static String intArrayToBlockStr(int[] ia) {
-		String out = "";
-		if (ia != null) {
-			for (int i = 0; i < ia.length; i+=2) {
-				out += ia[i] + ":" + ia[i+1];
-				if (i + 1 < ia.length - 1)
-					out += ",";
-			}
-		}
-		return out;
-	}
-	
-	public static String strVectorJoin(java.util.Vector<String> sa, String delim) {
-		String out = "";
-		for (int i = 0; i < sa.size(); i++) {
-			out += sa.get(i);
-			if (i < sa.size() -1)
-				out += delim;
-		}
-		return out;
-	}
 	
 	public static boolean intervalsTouch(int s1,int e1, int s2, int e2) {
 		return intervalsOverlap(s1,e1,s2,e2,0);
@@ -253,45 +230,4 @@ public class Utils {
 		int gap = Math.max(s1,s2) - Math.min(e1,e2);
 		return -gap;
 	}	
-	public static boolean intervalContained(int s1,int e1, int s2, int e2){
-		return ( (s1 >= s2 && e1 <= e2) || (s2 >= s1 && e2 <= e1));
-	}
-	
-	public static float simpleRatio(int top, int bot) {
-		float ratio = (float)(.1*Math.round(10.0*(float)top/(float)bot));
-		return ratio;
-	}
-	
-	static public String join(Collection<?> s, String delimiter)  {
-		String buffer = "";
-	    Iterator<?> iter = s.iterator();
-	    while (iter.hasNext()) 
-	    {
-	    	buffer += iter.next().toString();
-	        if (iter.hasNext()) 
-	        	buffer += delimiter;
-	    }
-        return buffer;	
-	} 
-	/*****************************************************/
-	public static int getPairIdx(int proj1Idx, int proj2Idx, DBconn2 dbc2) throws Exception {
-		int idx = 0;
-		
-		String st = "SELECT idx FROM pairs WHERE proj1_idx='" + proj1Idx + "' AND proj2_idx='" + proj2Idx +"'";
-		ResultSet rs = dbc2.executeQuery(st);
-		if (rs.next())
-			idx = rs.getInt("idx");
-		rs.close();
-		
-		return idx;
-	}
-	
-	public static String reverseComplement(String in){
-		in = (new StringBuffer(in)).reverse().toString().toUpperCase();
-		in = in.replace('A', 't');
-		in = in.replace('G', 'c');
-		in = in.replace('C', 'g');
-		in = in.replace('T', 'a');
-		return in.toLowerCase();
-	}
 }

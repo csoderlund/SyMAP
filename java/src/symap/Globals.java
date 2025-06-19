@@ -13,8 +13,8 @@ import java.io.File;
  * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.6.8"; 
-	public static final String 	DATE = " (1-June-25)";
+	public static final String 	VERSION = "v5.6.9"; 
+	public static final String 	DATE = " (19-June-25)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER = 7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
@@ -34,8 +34,7 @@ public class Globals {
 	public static boolean bRedoSum=false;	  // -s redo summary 
 	public static boolean bQueryOlap=false;   // -q show gene olap for algo2 instead of exon
 	public static boolean bQueryPgeneF=false; // CAS563 to run old PgeneF algo instead of new Cluster
-	//public static boolean HITCNT_ONLY=false;// CAS560 remove; -y CAS541 to update the hitcnt without having to redo synteny
-	//public static boolean GENEN_ONLY=false; // CAS560 remove; -z CAS519b to update the gene# without having to redo synteny
+	
 
 	public static final String exonTag = "Exon #";	 // type exon
 	public static final String geneTag = "Gene #";   // type gene
@@ -102,7 +101,7 @@ public class Globals {
     public static void xprt(String msg) {System.out.println(msg);} // temp message
     public static void rprt(String msg) {System.err.print("      " + msg + "...                   \r");}// to stderr
     public static void rclear() {
-    	System.err.print("                                                                               \r");} 
+    	System.err.print("                                                                          \r");} 
     public static void eprt(String msg) {System.err.println("***Error: " + msg);}
     public static void die(String msg)  {eprt(msg); System.exit(-1);}
     

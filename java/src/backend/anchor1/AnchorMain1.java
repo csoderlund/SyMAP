@@ -675,8 +675,8 @@ public class AnchorMain1 {
 				ps.setInt(i++, hit.targetHits.start);
 				ps.setInt(i++, hit.targetHits.end);
 				
-				ps.setString(i++, Utils.intArrayToBlockStr(hit.queryHits.subHits));
-				ps.setString(i++, Utils.intArrayToBlockStr(hit.targetHits.subHits));
+				ps.setString(i++, intArrayToBlockStr(hit.queryHits.subHits));
+				ps.setString(i++, intArrayToBlockStr(hit.targetHits.subHits));
 				
 				ps.addBatch(); 
 				countBatch++; numLoaded++;
@@ -692,7 +692,17 @@ public class AnchorMain1 {
 		}
 		catch (Exception e) {ErrorReport.print(e, "save annot hits"); bSuccess=false;}
 	}
-	
+	private String intArrayToBlockStr(int[] ia) {// CAS569 moved from Util
+		String out = "";
+		if (ia != null) {
+			for (int i = 0; i < ia.length; i+=2) {
+				out += ia[i] + ":" + ia[i+1];
+				if (i + 1 < ia.length - 1)
+					out += ",";
+			}
+		}
+		return out;
+	}
 	private void addMirroredHits() throws Exception {
 	try { // Create the reflected hits for self-alignment cases; 
 		// NOTE that grp1_idx is swapped with grp2_idx, etc; and refidx->idx; order of columns matches schema

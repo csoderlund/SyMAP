@@ -7,6 +7,7 @@ import java.util.HashMap;
 
 import backend.AnchorMain;
 import backend.Constants;
+import backend.Utils;
 import backend.anchor1.Group;
 import database.DBconn2;
 import props.PropertiesReader;
@@ -54,7 +55,7 @@ public class Mpair {
 			"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
 			"number_pseudo","algo1", "algo2",
 			"topn", 
-			"g0_scale", "gene_scale", "exon_scale",	"len_scale",	
+			"gene_scale", "exon_scale","len_scale","g0_scale", // CAS569 put g0 on end so in order shown
 			"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
 	};
 	private static final String [] paramDef = {  // defMap value
@@ -64,7 +65,7 @@ public class Mpair {
 			"", "", "", "0", "0",		//        nucmer, promer, self, only, only
 			"0", "1", "0",				// cluster: number pseudo,  1st is algo1, 2nd is algo2
 			"2", 					    //       topn
-			"1.0", "1.0", "1.0", "1.0",	//       G0_Len, gene, exon, Len	
+			"1.0", "1.0", "1.0", "1.0",	//       gene, exon, Len, G0_Len	
 			"1", "1", "1", "0", "0" 	//       EE, EI, En, II, In 
 	};
 	
@@ -410,10 +411,8 @@ public class Mpair {
 	/******** If pairs not in DB ***********/
 	private boolean loadFromFile() {
 	try {
-		if (!Utilities.dirExists(resultDir)) return false; // ok, created when needed
-		
-		File pfile = new File(resultDir,Constants.paramsFile); 
-		if (!pfile.isFile()) return false; 				// ok, uses defaults
+		File pfile = Utils.getParamsFile(resultDir,Constants.paramsFile); // CAS569 changed paramsFile
+		if (pfile==null) return false; 				// ok, uses defaults
 		
 		PropertiesReader props = new PropertiesReader( pfile);
 		for (int i=0; i<paramKey.length; i++) {

@@ -54,10 +54,11 @@
 
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
-For existing databases, there are no database or build changes since <a href="#v560">v5.6.0</a>; see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
+For existing databases, there are no database or build changes since <a href="#v560">v5.6.0</a>.
 <br>You must have Java v17.0.11 or later, starting with SyMAP v5.5.0.
+
 <h3>Summary of recent major releases</h3>
-<table class="tx">
+<table>
 <tr><td><a href="#v567">v5.6.7</a><td>(22-May-25)<td>The synteny algorithm has new orientation option.
 <tr><td><a href="#v560">v5.6.0</a><td>(23-Jan-25)<td>Improve <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>,
 which is aware of the exon-intron structure.
@@ -65,6 +66,17 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v556">v5.5.6</a><td>(14-July-24)<td>Improved the collinear set algorithm.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
+
+<a id="v569"></a>
+<h3>Release: v5.6.9 (19-June-25)</h3>
+
+<ul>
+<li>From a recent release, the <ttl>Pair Parameters Algo2</ttl> parameters were in the wrong order.
+<li>Rename "params" to "params.txt"; this happens automatically
+the first time <tt>symap</tt> is run with existing data directories.
+<li>Quit checking the Java version because there are non-standard formats.
+<li>Docs: Removed some obsolete rules in the System Guide set of docs, fix some typos and some links.
+</ul>
 
 <a id="v568"></a>
 <h3>Release: v5.6.8 (1-June-25)</h3>

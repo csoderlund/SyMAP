@@ -230,7 +230,7 @@ public class OrderAgainst {
 				rs.close();
 				
 				if (d.bDoFlip) { // v2 flips on output instead of in database for draft
-					seq = Utils.reverseComplement(seq);
+					seq = reverseComplement(seq);
 					cntFlip++;
 				}
 				
@@ -263,19 +263,25 @@ public class OrderAgainst {
 			ordFastaFH.close();
 			ordGffFH.close();
 			
-			File ordParam =   Utilities.checkCreateFile(ordDir, Constants.paramsFile, "SM params");
-			FileWriter ordParamsFH = 	new FileWriter(ordParam);
+			File ordParam = Utils.getParamsFile(ordDir.getAbsolutePath(), Constants.paramsFile);// CAS569 to rename if exists
+			ordParam =   Utilities.checkCreateFile(ordDir, Constants.paramsFile, "SM params"); // deletes if exists
+			FileWriter ordParamsFH = new FileWriter(ordParam);
 			ordParamsFH.write("category = " + pDraft.getdbCat() + "\n");
 			ordParamsFH.write("abbrev_name = Draf\n");
 			ordParamsFH.write("display_name=" + getOrderDisplay(mp) + "\n");
 			ordParamsFH.write("description=" + getOrderDesc(mp) + "\n");
 			ordParamsFH.write("grp_prefix=" + pTarget.getGrpPrefix() + "\n");
-			ordParamsFH.close();
-			
-			ordParamsFH.close();
-			
+			ordParamsFH.close();	
 		}
 		catch (Exception e) {ErrorReport.print(e, "write chromosomes"); }
+	}
+	private String reverseComplement(String in){ // CAS569 moved from Utils 
+		in = (new StringBuffer(in)).reverse().toString().toUpperCase();
+		in = in.replace('A', 't');
+		in = in.replace('G', 'c');
+		in = in.replace('C', 'g');
+		in = in.replace('T', 'a');
+		return in.toLowerCase();
 	}
 	/***************************************************************************/
 	private String getOrderFile(Mpair mp) { // CAS568 renamed proj_ordered to this

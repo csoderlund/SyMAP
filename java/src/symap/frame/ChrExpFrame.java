@@ -16,6 +16,8 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.Vector;
 
@@ -37,7 +39,6 @@ import javax.swing.border.BevelBorder;
 
 import java.sql.ResultSet;
 
-import backend.Utils;
 import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import symap.drawingpanel.Frame2d;
@@ -53,11 +54,10 @@ import dotplot.DotPlotFrame;
 
 /*****************************************************
  * Chromosome Explorer: Displays left side and controls right (circle, 2d, dotplot)
- * CAS534 renamed from manager.SyMAPFrameCommon=> frame.ChrExpFrame
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ChrExpFrame extends JFrame implements HelpListener {
-	private final int MIN_WIDTH = 1100, MIN_HEIGHT = 900; // cardPanel will be 825; CAS543 was 1200, 900
+	private final int MIN_WIDTH = 1100, MIN_HEIGHT = 900; // cardPanel will be 825; 
 	
 	private int VIEW_CIRC = 1, VIEW_2D = 2, VIEW_DP = 3;
 	
@@ -77,12 +77,12 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 	private int selectedView = 1;
 	private int screenWidth, screenHeight;
 	
-	private ChrInfo[] lastSelectedTracks=null; // CAS550 for 2d so not to recreate if same
+	private ChrInfo[] lastSelectedTracks=null; // for 2d so not to recreate if same
 	private ChrInfo lastRef=null;
 	
 	// called by symap.frame.ChrExpInit
 	protected ChrExpFrame(String title, DBconn2 tdbc2, MapLeft mapper) {
-		super(title); // CAS543 add dbname
+		super(title); 
 		this.tdbc2 = tdbc2;
 		this.mapper = mapper;
 		
@@ -92,7 +92,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		screenWidth  = Math.min(MIN_WIDTH, screenRect.width);
 		screenHeight = Math.min(MIN_HEIGHT, screenRect.height);
 		setSize(screenWidth, screenHeight); 
-		setLocationRelativeTo(null); 						// CAS513 center frame
+		setLocationRelativeTo(null); 						
 		
 		// Using a card layout to switch views between 2D, Circle, Dotplot
 		cardPanel = new JPanel();
@@ -108,10 +108,10 @@ public class ChrExpFrame extends JFrame implements HelpListener {
         setLayout(new BorderLayout());
         add(splitPane, BorderLayout.CENTER);
         
-        helpBar = new HelpBar(425, 130); 					// CAS521 removed dead args; CAS543 was 500,130
+        helpBar = new HelpBar(425, 130); 					
         helpBar.setBorder( BorderFactory.createLineBorder(Color.LIGHT_GRAY) );
         
-        createControlPanel(); // adds to Left side of splitPane; CAS550 was called separately to deleted method (build) from ManagerFrame
+        createControlPanel(); // adds to Left side of splitPane;
 		showCircleView();	  // adds to cardPanel, which is on Right side
 	}
 
@@ -123,7 +123,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		
 		if (symap2D != null) symap2D.clear();
 		symap2D = null;
-		if (dotplot != null) dotplot.clear(); 				// CAS541 add
+		if (dotplot != null) dotplot.clear(); 				
 		dotplot = null;
 		super.dispose();
 	}
@@ -204,7 +204,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 				// Regenerate main display
 				btnShow2D.setEnabled( mapper.getNumVisibleChrs() > 0 );
 				btnShowDotplot.setEnabled( mapper.getNumVisibleChrs() > 0 );
-				btnShowCircle.setEnabled( true ); // CAS512 mapper.getNumVisibleTracks() > 0
+				btnShowCircle.setEnabled( true ); 
 				
 				if (viewControlBar.getSelected() == VIEW_CIRC) showCircleView();
 			}
@@ -251,7 +251,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			}
 		});
         
-		CollapsiblePanel infoCollapsiblePanel = new CollapsiblePanel("Information", null, false); // CAS516 changed from "Instructions"
+		CollapsiblePanel infoCollapsiblePanel = new CollapsiblePanel("Information", null, false); 
 		infoCollapsiblePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
 		infoCollapsiblePanel.add( helpBar );
 		infoCollapsiblePanel.add( infoLink );
@@ -271,13 +271,13 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 	}
 	///////////////////////////////////////////////////////////////////
 	private void showCircleView(){
-		double [] lastParams = (circframe!=null) ? circframe.getLastParams() : null; // CAS552 reuse settings
+		double [] lastParams = (circframe!=null) ? circframe.getLastParams() : null; // reuse settings
 	
 		int[] pidxList = new int[mapper.getProjects().length];
 		TreeSet<Integer> shownGroups = new TreeSet<Integer>();
-		boolean hasSelf = false; // CAS552 add so do not show self-align is this is none
+		boolean hasSelf = false; // do not show self-align is this is none
 		
-		int refIdx=-1; // CAS521 add so will have priority colors 
+		int refIdx=-1; // have priority colors 
 		for (int i = 0; i < mapper.getProjects().length; i++){
 			Mproject pg = mapper.getProjects()[i];
 			int pid = pg.getID();
@@ -332,7 +332,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			
 			DrawingPanel dp;
 			boolean noRedo= (lastRef!=null && ref == lastRef && selectedTracks.length==lastSelectedTracks.length);
-			if (noRedo) { 								// CAS550 just do not redo if exact same, otherwise, totally redo 
+			if (noRedo) { 								// do not redo if exact same, otherwise, totally redo 
 				for (int i=0; i<selectedTracks.length && noRedo; i++) 
 					if (selectedTracks[i]!=lastSelectedTracks[i]) noRedo=false;
 			}
@@ -344,7 +344,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 				lastRef=ref;
 				lastSelectedTracks = selectedTracks;
 				
-				dp.setTracks(selectedTracks.length+1);		// CAS550 sets exact number of tracks instead of pre-allocate
+				dp.setTracks(selectedTracks.length+1);		
 				
 				// Setup 2D
 				int position = 1;
@@ -402,7 +402,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			button.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
 			button.addActionListener(this);
 			if (getComponentCount() == 1) 		// select first button
-				setSelected(button);			//button.doClick();
+				setSelected(button);			
 			
 			((GridBagLayout)getLayout()).setConstraints(button, constraints);
 			add(button);
@@ -453,7 +453,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			
 			if (btnShow2D != null) 		btnShow2D.setEnabled( mapper.getNumVisibleChrs() > 0 );
 			if (btnShowDotplot != null) btnShowDotplot.setEnabled( mapper.getNumVisibleChrs() > 0 );
-			if (btnShowCircle != null) 	btnShowCircle.setEnabled(true); // CAS512 - if click blocks on right, can reduce tracks
+			if (btnShowCircle != null) 	btnShowCircle.setEnabled(true); //  if click blocks on right, can reduce tracks
 			
 			button.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 			button.setSelected(true);
@@ -492,13 +492,13 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 				downloadBlocks();
 			}
 		}));
-		downpopup.add(new JMenuItem(new AbstractAction("Blocks only") { // CAS560 add
+		downpopup.add(new JMenuItem(new AbstractAction("Blocks only") { 
 			private static final long serialVersionUID = 4692812516440639008L;
 			public void actionPerformed(ActionEvent e) {
 				downloadBlocksOnly();
 			}
 		}));
-		downpopup.add(new JMenuItem(new AbstractAction("Blocks summary") { // CAS560 add
+		downpopup.add(new JMenuItem(new AbstractAction("Blocks summary") { 
 			private static final long serialVersionUID = 4692812516440639008L;
 			public void actionPerformed(ActionEvent e) {
 				downloadBlocksSum();
@@ -519,7 +519,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		return pnl;
 	}
 	/*****************************************************************/
-	private void downloadBlocksSum() { // CAS560 add
+	private void downloadBlocksSum() { 
 		try { 
     		String filename = Globals.getExport(); 
 			JFileChooser chooser = new JFileChooser(filename);
@@ -539,13 +539,13 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			PrintWriter out = new PrintWriter(new FileWriter(chooser.getSelectedFile()));
 			Vector<String> row = new Vector<String>();
 			row.add("Species1"); row.add("Species2"); row.add("Chr1"); row.add("Chr2"); row.add("#Blocks"); row.add("#Hits"); 
-			out.println(Utils.join(row, "\t"));
+			out.println(join(row, "\t"));
 			
 			Vector<String> projList = new Vector<String>();
 			Mproject[] projects = mapper.getProjects();
 			for (Mproject p : projects) projList.add(String.valueOf(p.getID()));
 			
-			String projStr = Utils.join(projList,",");
+			String projStr = join(projList,",");
 			String query = "select p1.name, p2.name, g1.name, g2.name, b.blocknum ,b.score " +
 			" from blocks as b join xgroups as g1 on g1.idx=b.grp1_idx join xgroups as g2 on g2.idx=b.grp2_idx " +
 			" join projects as p1 on p1.idx=b.proj1_idx join projects as p2 on p2.idx=b.proj2_idx " +
@@ -579,7 +579,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		} catch(Exception e) {ErrorReport.print(e, "Generate blocks summary");}
 	}
 	/*****************************************************************/
-	private void downloadBlocksOnly() { // CAS560 add
+	private void downloadBlocksOnly() { 
 		try { 
     		String filename = Globals.getExport(); 
 			JFileChooser chooser = new JFileChooser(filename);
@@ -601,14 +601,14 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			row.add("Species1"); row.add("Species2"); row.add("Chr1"); row.add("Chr2"); row.add("BlkNum");
 			row.add("#Hits"); row.add("Start1"); row.add("End1"); row.add("Start2"); row.add("End2"); 
 
-			out.println(Utils.join(row, "\t"));
+			out.println(join(row, "\t"));
 			
 			Vector<String> projList = new Vector<String>();
 			Mproject[] projects = mapper.getProjects();
 			for (Mproject p : projects) {
 				projList.add(String.valueOf(p.getID()));
 			}
-			String projStr = Utils.join(projList,",");
+			String projStr = join(projList,",");
 			String query = "select p1.name, p2.name, g1.name, g2.name, b.blocknum ,b.score, b.start1, b.end1," +
 			" b.start2,b.end2 " +
 			" from blocks as b join xgroups as g1 on g1.idx=b.grp1_idx join xgroups as g2 on g2.idx=b.grp2_idx " +
@@ -621,7 +621,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 				for(int i = 1; i <= row.size(); i++){
 					row.set(i-1, rs.getString(i));
 				}
-				out.println(Utils.join(row, "\t"));
+				out.println(join(row, "\t"));
 			}
 			out.close();
 			
@@ -630,8 +630,8 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 	}
 	/*****************************************************************/
     private void downloadBlocks() {
-    	try { // CAS533 add /exports
-    		String filename = Globals.getExport(); // CAS547 add
+    	try { 
+    		String filename = Globals.getExport(); 
 			JFileChooser chooser = new JFileChooser(filename);
 			chooser.setSelectedFile(new File("blocksPlus.tsv"));
 			
@@ -651,14 +651,14 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			row.add("Species1"); row.add("Species2"); row.add("Chr1"); row.add("Chr2"); row.add("BlkNum");
 			row.add("Start1"); row.add("End1"); row.add("Start2"); row.add("End2"); row.add("#Hits");
 			row.add("Genes1"); row.add("%Genes1"); row.add("Genes2"); row.add("%Genes2"); row.add("PearsonR");
-			out.println(Utils.join(row, "\t"));
+			out.println(join(row, "\t"));
 			
 			Vector<String> projList = new Vector<String>();
 			Mproject[] projects = mapper.getProjects();
 			for (Mproject p : projects) {
 				projList.add(String.valueOf(p.getID()));
 			}
-			String projStr = Utils.join(projList,",");
+			String projStr = join(projList,",");
 			String query = "select p1.name, p2.name, g1.name, g2.name, b.blocknum, b.start1, b.end1," +
 			" b.start2,b.end2,b.score,b.ngene1,b.genef1,b.ngene2,b.genef2,b.corr " +
 			" from blocks as b " +
@@ -667,19 +667,30 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			" join projects as p1 on p1.idx=b.proj1_idx " +
 			" join projects as p2 on p2.idx=b.proj2_idx " +
 			" where p1.idx in (" + projStr + ") and p2.idx in (" + projStr + ") " +
-			" order by p1.name asc, p2.name asc, g1.name asc, g2.name asc, b.blocknum asc"; // CAS560 change g1.idx to g1.name, g2 too
+			" order by p1.name asc, p2.name asc, g1.name asc, g2.name asc, b.blocknum asc"; 
 			
 			ResultSet rs = tdbc2.executeQuery(query);
 			while (rs.next()){
 				for(int i = 1; i <= row.size(); i++){
 					row.set(i-1, rs.getString(i));
 				}
-				out.println(Utils.join(row, "\t"));
+				out.println(join(row, "\t"));
 			}
 			out.close();
 			
 			System.out.println("Wrote to " + f.getAbsolutePath());
 		} catch(Exception e) {ErrorReport.print(e, "Generate blocks with genes");}
     }
+    private String join(Collection<?> s, String delimiter)  {// CAS569 moved from Utils
+		String buffer = "";
+	    Iterator<?> iter = s.iterator();
+	    while (iter.hasNext()) 
+	    {
+	    	buffer += iter.next().toString();
+	        if (iter.hasNext()) 
+	        	buffer += delimiter;
+	    }
+        return buffer;	
+	} 
 }
 

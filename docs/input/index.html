@@ -148,11 +148,11 @@ Put your input files in a directory under: <ttx>symap_5/data/seq/&lt;project-nam
 containing only alphanumeric characters, periods, underscores and hyphens; do not use symbols like %, $, spaces, etc.
 The names are case-sensitive, so you cannot have "Mus" and "mus" for two different projects.
 <p>
-<li>The <ttx>project-name</ttx> is used as part results directory name and  MUMmer output file names. For example,
+<li>The <ttx>project-name</ttx> is used in the results directory name and  MUMmer output file names. For example,
 the alignments between <tt>demo_seq</tt> and <tt>demo_seq2</tt> are in directory <tt>data/seq_results/demo_seq_to_demo_seq2</tt>
-and one MUMmer results file is named <tt>demo_seq_f2.demo_seq_f1.mum</tt>.
+and a MUMmer results file is named <tt>demo_seq_f2.demo_seq_f1.mum</tt>.
 <p>
-<li><i>You cannot be rename this directory</i> after the data is loaded into SyMAP. However, you can
+<li><i>You should not rename this directory</i> after the data is loaded into SyMAP! However, you can
 define a <a href="../SystemHelp.html#display" target="_blank" class="ext">Parameter Display Name</a> to be used in the symap displays,
 which can be change at any time.
 </ul>
@@ -173,7 +173,6 @@ CTTCCAAAGGAAAGCATTCCTTCTCTCTTGTGGGACTAGCAGATGATCTCGCAGCCAAGACGTGACCACCCAAGGCTCAC
 </pre>
 In this example, the sequence name is "Chr3" and the chromosome 3 sequence follows. The additional information
 "Oryza Sativa" is ignored.
-
 
 <p>
 <i>Important points in naming sequences for SyMAP</i>:
@@ -231,8 +230,8 @@ for known reasons for failure).
 <p>
 Another masking option, which is available if you have gene
 annotation, is to mask out everything but the annotated genes. You
-can enable the <ttx>Mask non-genes</ttx> option on the project's
-<a href="../SystemHelp.html#projParams"  class="ext" target="_blank">Parameter</a> window;
+can enable the <ttx>Mask non-genes</ttx> option on the
+<a href="../SystemHelp.html#pairParams"  class="ext" target="_blank">Pair Parameter</a> window;
 turn it on <i>before</i> doing the alignments.
 
 <!--------------------------------------------------------------------->
@@ -319,24 +318,27 @@ Perform the following steps:
 
 <tr><td style="vertical-align: text-top;">2.
 	<td style="white-space: nowrap; vertical-align: text-top;"><a href="#convert">Convert</a>
-	<td>The convert NCBI or Ensembl create the  <ttx>/sequence</ttx> and <ttx>/annotation</ttx> sub-directories
-		with files ready for input to <ttp>symap</ttp>. These
-   		scripts first remove any existing FASTA and GFF files from the sub-directories.
+	<td>The convert <ttl>NCBI</ttl> and <ttl>Ensembl</ttl> options create the <ttx>/sequence</ttx> and <ttx>/annotation</ttx> sub-directories
+		with files ready for input to <tt>symap</tt>. These
+   		options first remove any existing FASTA and GFF files from the sub-directories.
 
 <tr><td style="vertical-align: text-top;">3.
 	<td style="white-space: nowrap; vertical-align: text-top;"><a href="#sf1">Summarize</a>
 		<br>with <ttl>Converted</ttl>
 	<td>Run this to make sure that the conversion worked as you expected.
+	<br>This shows the sequence prefixes, and can be used to set the <ttx>Group Prefix</ttx>
+	in the <tt>symap</tt>  <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Project Parameters</a>.
 
 <tr><td colspan=3>Optional. The following run on the files in the <ttx>/sequence</ttx> and <ttx>/annotation</ttx> sub-directories.
 <tr><td style="vertical-align: text-top;">4.
-	<td style="white-space: nowrap; vertical-align: text-top;"><a href="#lf">Lengths</a>
-	<td>Run it to see if you need to set a <ttx>Group prefix</ttx> in <ttp>symap</ttp>.
+	<td style="white-space: nowrap; vertical-align: text-top;"><a href="#ol">Lengths</a>
+	<td>Run it to see if you need to set a <ttx>Minimal lengths</ttx> value in
+	<tt>symap</tt> <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Project Parameters</a>.
+
 <tr><td style="vertical-align: text-top;">5.
 	<td style="white-space: nowrap; vertical-align: text-top;"><a href="#sp">Split</a>
 	<td>Splits the converted file <ttx>genomic.fna</ttx> and <ttx>anno.gff</ttx> into a file per chromosome.
 </table>
-
 
 <br><font color="red">NOTE</font>: The NCBI and Ensembl files have variations and I may not have accounted for them all.
 If <ttb>Convert</ttb> does not work as you wish, the files <tt>ConvertNCBI.java</tt> and <tt>ConvertEnsembl.java</tt>
@@ -392,8 +394,7 @@ The FASTA file must end in .fas, .fa, .fna, .fasta, .seq (with optional .gz).
 <br>The GFF file must end in .gff or .gff3 (with optional .gz).
 
 <a id="sf1"></a>
-<p><ttb>Summarize</ttb> with <ttl>Converted</ttl> checked uses the third option,
-i.e. presumably the converted files.
+<p><ttb>Summarize</ttb> with <ttl>Converted</ttl> checked assumes there are converted files.
 
 <p>The following is an example terminal and log file output:
 <small>
@@ -472,7 +473,7 @@ The verbose mode takes longer to execute, but has the following extra informatio
 <ul>
 <li>From FASTA:
 <ul>
-<li>Base count (of maximum 1st 2,147,483,647 bases).
+<li>Base count (maximum 2,147,483,647 bases).
 <li>Lengths of 5 sequences.
 </ul>
 <li>From GFF:
@@ -556,8 +557,8 @@ sequences in <ttx>scaf.fna</ttx>. The <ttx>genomic.fna</ttx> file is deleted whe
 <li>Split <ttx>anno.gff</ttx> into a separate file per chromosome, and put all other
 sequences in <ttx>scaf.gff</ttx>. The <ttx>anno.gff</ttx> file is deleted when done.
 </ul>
-These work as input to <ttp>symap</ttp>.
-It is useful when only one or a few chromosomes are to be processed in <ttp>symap</ttp>, i.e.
+These work as input to <tt>symap</tt>.
+It is useful when only one or a few chromosomes are to be processed in <tt>symap</tt>, i.e.
 remove the ones you do not want processed.
 <!---------------------------------------------------------->
 <a id="edit"></a>
@@ -600,8 +601,7 @@ In Aug 2024, the scripts were tested on the following:
 <tr><td>Homo Sapiens (human)<td>Chr 1-22, X, Y<td>Chr 1-22, X, Y<td style="text-align: right">3,298M<td>&nbsp;
 </table>
 
-<br>Both the original files and converted were loaded.
-<br>For the originals:
+<p>To <u>load the originals files</u> into SyMAP, the following was done:
 <ol>
 <li>Create <ttx>/sequence</ttx> and move the FASTA file into it.
 <li>Create <ttx>/annotation</ttx> and move the GFF file into it.
@@ -619,23 +619,25 @@ Problem during load of originals:
 It has 1922 sequences where most of them had prefix "ALT", the word 'chromosome' in their header line,
 and were the size of their REF chromosome,
 so setting a cutoff did not exclude them. And there was no unique chromosome ID prefix to use as
-the <ttx>Group prefix</ttx> in <ttp>symap</ttp>.
+the <ttx>Group prefix</ttx> in <tt>symap</tt>.
 </ul>
+
 <a id="except"></a>
-<p><font color="green"><u>Exceptions during conversion</u></font>: the above downloaded genomes were all converted with the defaults, with the following exceptions:
+<p>To <u>load the converted files</u> into SyMAP: The above downloaded genomes were all converted with the defaults,
+with the following exceptions:
 <ul>
 <li>Ensembl Danio rerio (zebrafish): The 100's of 'Alt' sequences appear as valid chromosomes,
-hence, the <ttl>Only #,X,Y,I</ttl> was used.
+hence, the <ttl>Only #,X,Y,I</ttl> option was used.
 <br>&nbsp;
 <li>Ensembl Bemisia tabaci (whitefly): The words 'chromosome' or 'scaffold'
 were NOT part of the header lines. The header line ID prefix was 'Contig',
 hence, the <ttl>Prefix only</ttl>='Contig' was used; the output used the sequence ID prefix 'Unk'.
 Then <ttb>Lengths</ttb> was used to determine a <ttl>Minimal length</ttl>
-to enter on <ttp>symap</ttp> project <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
+to enter on <tt>symap</tt> project <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
 <br>&nbsp;
 <li>NCBI Bemisia tabaci (whitefly): Only had scaffolds, so using <ttl>Include Scaffold</ttl> was necessary.
 Then <ttb>Lengths</ttb> was used to determine a <ttl>Minimal length</ttl>
-to enter on <ttp>symap</ttp> project <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
+to enter on <tt>symap</tt> project <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
 <br>&nbsp;
 <li>NCBI Prunus yedoensis:
 The words 'chromosome' or 'scaffold'

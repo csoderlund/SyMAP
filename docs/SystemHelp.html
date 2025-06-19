@@ -8,7 +8,7 @@
 	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
 	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
 	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
-	ttb  {font-family: 'Lucida Console', monospace; font-size: 13px; font-weight: 600; color: Black;}
+	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
 	ttp  {font-family: Arial, monospace; font-size: 15px; font-weight: 500; color: DarkSlateGrey; }
 	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
@@ -81,8 +81,9 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <li style="margin: 0.4em 0;"><a href="#display">Display</a>
 <li style="margin: 0.4em 0;"><a href="#project">Load project</a>
 <li style="margin: 0.4em 0;"><a href="#anno">Load annotation</a>
-<li style="margin: 0.4em 0;"><a href="#save1">Rules for saving project parameters</a>
 <li style="margin: 0.4em 0;"><a href="#annot">GFF Attributes</a>
+<li style="margin: 0.4em 0;"><a href="#save1">Rules for saving project parameters</a>
+
 </ol>
 <td style="vertical-align: text-top;">
 3. <a href="#pairParams"><u>Pair Parameters</u></a>  			<!-- in code pre-v546 -->
@@ -107,7 +108,7 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <ul>
 <li><a href="SystemGuide.html#machine" class="ext" target="_blank">System Guide</a> for setup and system requirements.
 <li><a href="SystemGuide.html#demo" class="ext" target="_blank">Demo</a> to run the demo (do not skip this step!).
-<li><a href="SystemGuide.html#create" class="ext" target="_blank">Creating a new project</a>.
+<li><a href="SystemGuide.html#create" class="ext" target="_blank">Create a new project</a>.
 </ul>
 This document provide details of parameters and functions.
 
@@ -131,8 +132,8 @@ This document provide details of parameters and functions.
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>1.a Selected</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-The projects selected from the <ttl>Projects</ttl> label in
-the left panel are listed in the <ttl>Selected</ttl> section on the right.
+The projects selected from the <ttb>Projects</ttb> in
+the left panel are listed in the <ttb>Selected</ttb> section on the right.
 The possible functions vary with the state, as listed below:
 
 <table class="ty">
@@ -149,8 +150,8 @@ The possible functions vary with the state, as listed below:
     <br><ttx>All: Remove alignment and project directory from disk</ttx>
     <p><ttx>Remove alignments</ttx> removes alignments from <tt>data/seq_results</tt> for this project. You will
     be prompted for each one to confirm you want it removed. If there are no alignments, you will only see the prompt
-    to remove the project library.
-    <p><ttx>Remove project</ttx> remove  <tt>data/seq/&lt;project-name&gt;</tt> from disk.
+    to remove the project directory.
+    <p><ttx>Remove from disk</ttx> remove  <tt>data/seq/&lt;project-name&gt;</tt> from disk.
     You will be prompted to confirm you want it removed.
     If removed, the project will no longer be shown on the left.
 
@@ -162,7 +163,7 @@ The possible functions vary with the state, as listed below:
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;
 	<ttb>Parameters</ttb>
     <td>This brings up a panel of parameters, see <a href="#projParams">Project Parameters</a>.
-	After the project is loaded, you can still change <i>only</i> the <ttl>Display</ttl> parameters.
+	After the project is loaded, you can still change the <ttl>Display</ttl> parameters.
 
 <tr><td colspan=2>&diams; <i>If a project <b>is</b> loaded into the database, you will see:</i>
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;
@@ -174,7 +175,7 @@ The possible functions vary with the state, as listed below:
     <td><ttx>Only: reload project only.</ttx>
     <br><ttx>All: reload project and remove alignments from disk.</ttx>
 	<p>If <ttl>All</ttl> is selected, it first prompts for each alignment directory for this project before it is removed.
-		It removes the alignments and final results, but it leaves the <tt>params</tt> file. You will need to remove the
+		It removes the alignments and final results, but it leaves the <tt>params.txt</tt> file. You will need to remove the
 		alignment(s) if (1) there is a change in sequence, or (2) there is a change in the <ttl>Minimal length</ttl> parameter;
 		see <a href="#project">Load project</a> parameters.
 		<p>For either option, it executes <ttl>Remove from database</ttl> followed by <ttl>Load project</ttl>.
@@ -189,7 +190,7 @@ The possible functions vary with the state, as listed below:
 
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;
 	<ttb>Parameters</ttb>
-    <td>This brings up the project parameters panel, as described above.
+    <td>This brings up the <a href="#projParams">Project Parameters</a> panel.
 </table>
 <p>For any action that will remove the project or alignments from disk, a popup will occur
 to confirm that you want this done! If it will be removing multiple alignment directories, it will prompt
@@ -230,7 +231,7 @@ the buttons that can be selected are activated.
 <tr><td>&nbsp;
 	<td>The alignment has not been started.
 </table>
-<p>See <a href="#over2">Pair Parameters</a> for additional information.
+<p>See <a href="#over2">Pair Parameters</a> for additional information on the <ttb>Available Syntenies</ttb> and codes.
 
 
 <a id="fun"></a>
@@ -243,10 +244,9 @@ the buttons that can be selected are activated.
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<ttb>All Pairs</ttb>
 	<td>
-		Run (or complete) the synteny computation for all pairs in the <ttx>Available Syntenies</ttx> table.
+		Run (or complete) the synteny computation for all pairs in the <ttb>Available Syntenies</ttb> table.
 		However, this will not run 'self-syntenies'; those need to be done individually by selecting
-		the pair. Also, a draft sequence that is to be ordered can only be aligned to
-		one complete sequence, so that should also be done individually.
+		the pair.
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<ttb>Selected Pair</ttb>
 		<br><ttb>Selected Pair (Redo)</ttb>
@@ -282,7 +282,7 @@ entered as a command line argument (-p N).
 	it processes the MUMmer files. The information is written both to the terminal and the <ttx>logs/&lt;proj-to-proj&gt;/symap.log</ttx> file.
 	<li>If this is not checked, it will write status information repeatedly on the same terminal line.
 	<li>See <a href="Demo.html#slog" class="ext" target="_blank">Demo examples</a>.
-	<li>It is not saved as a parameter. This can also be turned using a command line argument:
+	<li>It is not saved as a parameter. This can also be turned on using a command line argument:
 	<tt>symap -v</tt>
 	</ul>
 
@@ -297,15 +297,15 @@ entered as a command line argument (-p N).
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="ty">
-<tr><td colspan=2>&nbsp;<th colspan=4 style="text-align: center">Project Parameters<td colspan=2>
+<tr><td colspan=2>&nbsp;<th colspan=3 style="text-align: center">Project Parameters<td colspan=2>
 <tr>
 <td><b>Sections:</b>&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#start">Parameter panel</a>
 <td><a href="#display"><i>Display</i></a>
 <td><a href="#project"><i>Load project</i></a>
 <td><a href="#anno"><i>Load annotation</i></a>
-<td><a href="#save1">Save</a>
 <td><a href="#annot">GFF Attributes</a>
+<td><a href="#save1">Save</a>
 </table>
 
 <a id="start"></a>
@@ -337,18 +337,17 @@ See <a href="./input/index.html" class="ext" target="_blank">input</a> for a des
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <table>
 <tr><td>New values take immediate effect on <ttb>Save</ttb>. Most of the values are shown in the <ttl>Selected</ttl>
-section where an example is shown on the right.
+section, as shown on the right. The
+values are saved in the <ttx>symap_5/data/seq/&lt;project-name&gt;/params.txt</ttx> file.
 <td><a href="img/lineLoad.png"><img src="img/lineLoad.png" alt="Project options" style="border: 1px solid black; width: 430px"></a>
 </table>
-<p><b>Note</b>: These values can be changed regardless if they have been loaded into any database. The
-change is saved in the <ttx>symap_5/data/seq/&lt;project-name&gt;/params</ttx> file.
 <p>
 <table class="ty">
 <tr><td><b>Parameter</b><td><b>Description</b><td><b>Default Value</b><td><b>Shown</b>
 <tr><td>&nbsp;&nbsp;<ttl>Category</ttl>
 	<td style="width: 450px;">
-		Category label for the project. This is only used to group project on the
-		left side of the <ttl>Project Manager</ttl> panel.
+		Category label for the project. This is only used to group projects on the
+		left side of the <ttb>Manager</ttb> panel.
 		<p>Category labels must be composed of only letters, numbers, dash, underscore, or period.
 
 		<p>Either select an existing label from the drop-down or enter a new one in the text box.
@@ -411,7 +410,7 @@ This option sounds trivial but is important for a good display, so please read c
 	<ul>
 		<li>If a <ttl>Group prefix</ttl> is entered, only sequences with that prefix will be loaded.
 		<li>Leave the <ttl>Group prefix</ttl> blank will load all sequences; their prefix will not be removed
-		(e.g. the 'chr3' on the upper right).
+		(e.g. the 'chr3' in the image on the right).
 	</ul>
 	<tr><td style="vertical-align: text-top;">3.<td><i>Long names really clutter the display</i>; it is best to use a consistent prefix that SyMAP can remove,
 	otherwise, use really short prefixes, e.g. 's' for scaffold, 'c' for chromosome.
@@ -433,7 +432,7 @@ as it may help you create the files with good prefixes.
 <br>This must be an integer, commas are allowed (e.g. 1,000,000).
 <br>This is the minimum length of the FASTA sequence that will be loaded; smaller sequences will be ignored. Note that annotations
 for ignored sequences will also be ignored, but some warning messages will be printed to the terminal.
-See <a href="input/index.html#ol" class="ext" target="_blank">xToSymap Length</a> for help with this.
+See <a href="input/index.html#ol" class="ext" target="_blank">xToSymap Length</a> for help with setting this parameter.
 
 <p><ttl>Sequence files</ttl>
 <br>
@@ -462,7 +461,7 @@ shown in the <ttl>2D display</ttl> and <ttl>Queries</ttl> table.
 <br>
 Select the input GFF3-formatted annotation files corresponding to your sequences. Note, using
 a GFF3 file directly can cause problems if it does not conform to what SyMAP expects; see
-<a href="SystemHelp.html#annot" class="ext" target="_blank">Annotation files</a>.
+<a href="input/index.html#annot" class="ext" target="_blank">Annotation files</a>.
 Annotation is optional but highly recommended. Default location: <tt>data/seq/&lt;project-name&gt/annotation</tt>
 
 <p>If either of the above are changed:
@@ -470,30 +469,13 @@ Annotation is optional but highly recommended. Default location: <tt>data/seq/&l
 <br>&#9656; If <ttl>A&amp;S</ttl> has been previously run, re-run <ttl>A&amp;S</ttl> (the existing alignments files will be reused).
 
 <!----------------------------------------------->
-<a id="save1"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>2.f Rules for saving project parameters</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-Before the project is loaded, the parameters are saved to the file
-<pre>  data/seq/&lt;project-name&gt/params</pre>
-The <tt>params</tt> file parameters are shown on the <ttl>Project Parameters</ttl> panel. These can only be
-viewed and changed using <ttp>symap</ttp> (not <ttp>viewSymap</ttp>).
-
-<p>When the project is loaded, all parameters are saved to the database except the <ttl>A&amp;S</ttl> parameters
-(<ttl>Mask-genes</ttl> and <ttl>Order-against</ttl>).
-When the <ttl>A&amp;S</ttl> is executed, then the corresponding parameters are saved to the database.
-
-<p>Any parameter not the defaults will be shown on the <ttb>View</ttb> popup.
-
-<!----------------------------------------------->
 <a id="annot"></a>
-<h3>2.g GFF Attributes</h3>
+<h3>2.e GFF Attributes</h3>
 This section gives details on what GFF <u>attributes</u> are displayed in SyMAP,
 which refers to them as <u>annotations</u>.
 <p>The gene annotation is shown on the
 <a href="UserGuide.html#view2D" class="ext" target="_blank">2D display</a> and as columns in the
-<a href="Query.html#col" class="ext" target="_blank">Queries</a> results table. The attribues (annotations)
+<a href="Query.html#col" class="ext" target="_blank">Queries</a> results table. The attributes (annotations)
 comes from the last column of the GFF file.
 The attributes are a keyword=value list, e.g.
 <pre>
@@ -515,13 +497,29 @@ The <ttx>Anno Key Count</ttx> can be modified at any time using <ttp>symap</ttp>
 the desired keywords separated by commas.  Using this approach, it will also reduce
 annotation description per gene in the <ttl>2D display</ttl>.
 Referring to the example above, if the string "<tt>ID, product</tt>" was entered,
-the <tt>Name=value</tt> would not be part of any gene annotation. This must be set before <ttb>Load Project</ttb>
+the <tt>Name=value</tt> would not be part of any gene annotation. This must be set before <ttb>Load Annotations</ttb>
 is executed.
+<!----------------------------------------------->
+<a id="save1"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>2.f Rules for saving project parameters</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+Before the project is loaded, the parameters are saved to the file
+<pre>  data/seq/&lt;project-name&gt/params.txt</pre>
+The <tt>params.txt</tt> file parameters are shown on the <ttl>Project Parameters</ttl> panel. These can only be
+viewed and changed using <ttp>symap</ttp> (not <ttp>viewSymap</ttp>).
+
+<p>When the project is loaded, all parameters are saved to the database except the <ttl>A&amp;S</ttl> parameters
+(<ttl>Mask-genes</ttl> and <ttl>Order-against</ttl>).
+When the <ttl>A&amp;S</ttl> is executed, then the corresponding parameters are saved to the database.
+
+<p>Any parameter that does not have the default value will be shown on the <ttb>View</ttb> popup.
+
 <hr>
 <!----------------------------------------------------------------------->
 <!----------------------------------------------------------------------->
 <!----------------------------------------------------------------------->
-
 <a id="pairParams"></a> <!-- # ref in code -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>3. Pair Parameters</h2>
@@ -682,16 +680,16 @@ projects, while NUCmer is used for self alignments.
 </small>
 
 <!------------------------------------------------------------------------>
+<!------------------------------------------------------------------------>
 <a id="clust"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>3.c Cluster Hits</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <table class="ty">
 <tr><td><b>Sections:</b>&nbsp;&nbsp;&nbsp;&nbsp;
-<td><a href="#a1a2">Algo1 vs Algo2</a>
+<td><a href="#a1a2">Algo1 vs Algo2 with hints</a>
 <td><a href="#clParam">Parameter description</a>
-<td><a href="#hint">Hints about parameter settings</a>
-<td><a href="#pileOfHits">Pile of hits</a>
+<td><a href="#pseudo">Pseudo and Piles</a>
 </table>
 
 <a id="a1a2"></a>
@@ -721,10 +719,7 @@ below the parameter explanation. (As of v5.6.0, the parameters generally do not 
 </table>
 <p><ttl>Algo1</ttl> is the default since it works for all inputs.
 
-<table style="width: 95%"><tr><td style="text-align: left">
-<b>Wrong strand</b>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
+<p><b>Wrong strand</b>
 The wrong strand is when all hits in a cluster are to the same strand (++/--)
 yet the cluster aligns to two genes on the different strands (+-/-+), or vice versa.
 
@@ -737,6 +732,23 @@ during the <ttl>A&S</ttl> by running it with the "-wsp" flag, i.e.
 This will only show gene pairs with (1) multiple hits to exons (in one or multiple gene pairs), (2) at least one is not
 an overlapping gene. It is up to the user to determine what is real.
 
+<a id="hint"></a>
+<p><b>Hints about parameter settings</b>
+
+<p><u>Hint for <ttx>Algo1</ttx></u>: Increasing the <ttl>Top N</ttl> parameter can cause too many hits and reduce synteny.
+Decreasing it can remove more gene-pair hits.
+Hence, try <ttl>Algo2</ttl> if you want more gene pairs.
+
+<p><u>Hint for <ttx>Algo2</ttx></u>: On the output to the terminal (in Verbose mode), if any chromosome pair shows over 10,000 hits, the
+parameters probably need to be made more stringent; too many hits confuses the synteny algorithm, which results
+in synteny blocks not being found; it also results in very long execution time.
+<p>&rarr;&nbsp;<i>Suggestion</i>: For large genomes, experiment with the parameters on just one pair of the chromosomes.
+(You can use <a href="input/index.html" class="ext" target="_blank">xToSymap</a> for the split.)
+<p>&rarr;&nbsp;<i>Using the v5.6.0 algorithm, I have experimented with the datasets</i> (1) human, chimpanzee, mouse (2)
+Arabidopsis, Brassica rapa, Brassica oleracea.
+Only B. rapa to B. oleracea needed parameter adjustment: the number of G1 hits was over 200k,
+which is way more than typical;
+by increasing all parameters a small amount, this reduced to just over 100k.
 
 <!-------------------------------------------------------------------------->
 <a id="clParam"></a>
@@ -747,7 +759,7 @@ an overlapping gene. It is up to the user to determine what is real.
 <table class="ty">
 <tr><td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
 <tr><td style="white-space: nowrap;"><ttl>Number Pseudo</ttl><td>If selected, the un-annotated ends of hits will be assigned a
-pseudo number. See <a href="#pseudo">Pseudo Genes</a>.
+pseudo number. This is explained below in <a href="#pseudo">Pseudo Genes</a>.
 <td>No
 <tr><td colspan=2><ttl>Algo1 (original)</ttl>
     <td>Yes
@@ -757,37 +769,31 @@ pseudo number. See <a href="#pseudo">Pseudo Genes</a>.
 	<td>2
 <tr><td colspan=2><ttl>Algo2 (gene-centric)</ttl>
     <td>No
-<tr><td colspan=3>
-	<table style="border: none; padding: 0px; border-spacing: 0px;">
-		<tr><td style="border: none">&nbsp;&nbsp;&nbsp;<i>Categories</i>:<td style="border: none"><ttx>EE</ttx><td style="border: none">Exon-Exon
-			<td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>EI</ttx><td style="border: none">Exon-Intron
-			<td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>En</ttx><td style="border: none">Exon-intergenic
-		<tr><td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>II</ttx><td style="border: none">Intron-Intron
-			<td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>In</ttx><td style="border: none">Intron-intergenic
-			<td style="border: none">&nbsp;&nbsp;&nbsp;<td style="border: none"><ttx>nn</ttx><td style="border: none">intergenic-intergenic
-	</table>
 <tr><td>&nbsp;&nbsp;<ttl>Scale</ttl>
 	<td>
 	Increase a scale to filter out more clustered hits, decrease to filter out less.
-	<br><table class="ty">
-		<tr><td><ttl>Exon</ttl>
-			<td>Determines the percentage of required exon coverage.
+	<br><center><table class="ty">
 		<tr><td><ttl>Gene</ttl>
 			<td>Determines the percentage of required gene coverage.
+		<tr><td><ttl>Exon</ttl>
+			<td>Determines the percentage of required exon coverage.
 		<tr><td><ttl>Len</ttl>
-			<td>For G2 and G1, minimum size hit unless it covers a gene.
-			<br>Default minimum is 300bp.
+			<td>For G2 and G1<sup>*</sup>, minimum size hit unless it completely covers a gene.
+			<br>Default minimum is 300bp (N*300bp is minimum).
 		<tr><td><ttl>G0_Len</ttl>
-			<td>For G0, minimum size hit unless it covers a gene.
-			<br>Default minimum is 1000bp. Suggestion: increase for closely related species.
-		</table>
+			<td>For G0<sup>*</sup>, minimum size hit.
+			<br>Default minimum is 1000bp (N*1000bp is minimum).
+			<br>Suggestion: increase for closely related species.
+		<tr><td colspan="2"><sup>*</sup><small>G2=gene to gene, G1=gene to non-gene, G0=non-gene to non-gene</small>
+		</table></center>
+
 	<i>A clustered hit must pass multiple rules regarding coverage</i>.
 	<br>For example, the <ttl>Exon</ttl>
 	coverage parameter may be made more stringent, yet there will still be some low exon scores due to
 	good gene coverage, etc.
 	<td>N=1.0
 <tr><td>&nbsp;&nbsp;<ttl>Keep piles</ttl>
-	<td><ttl>EE</ttl>, <ttl>EI</ttl>, <ttl>En</ttl>, <ttl>II</ttl>, <ttl>In</ttl>
+	<td><ttl>EE</ttl>, <ttl>EI</ttl>, <ttl>En</ttl>, <ttl>II</ttl>, <ttl>In</ttl> (E=exon, I=intron, n=non-gene)
 		<br>&bullet;&nbsp;This ONLY applies when there is a pile of overlapping hits (<a href="#pileOfHits">Pile of Hits</a>);
 		<br>&nbsp;&nbsp;it tells the algorithm what type of cluster hits to retain if they are in a pile.
 		<br>&bullet;&nbsp;Hits are filtered before pile analysis.
@@ -803,15 +809,16 @@ for any uncheck categories, but in a more conservative way. It will retain the <
 
 <a id="pseudo">
 <table style="width: 95%"><tr><td style="text-align: left">
-<h4>Pseudo genes</h4>
+<h4>3.c.III Pseudos and Piles</h4>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
+<b>Pseudo genes</b>
 <table><tr><td>
 The end of a hit may not overlap an annotated gene; by default, this
 will just show a <ttx>Gene#</ttx> of 'N.~' where N is the chromosome number.
 <p>If <ttl>Number Pseudo</ttl> is selected,
 a <i>pseudo</i> <ttx>Gene#</ttx> will be created. The counts start after the annotated
-gene numbers and they are suffixed by "~". For example, if the last <ttx>Gene#</ttx> for
+gene numbers and are suffixed by "~". For example, if the last <ttx>Gene#</ttx> for
 Chr03 is 5550 (e.g. 3.5550.), the first pseudo gene number will be 6000 (e.g. 3.6000.~).
 
 <td><a href="img/query_pseudo.png"><img src="img/query_pseudo.png" alt="Pseudo genes" style="border: 1px solid black; width:  370px"></a>
@@ -843,29 +850,10 @@ to include un-annotated hits.
 </table>
 <br>If comparing more than 2 species, it makes the most sense to have them all numbered or not numbered (though a mix
 will work).
-<a id="hint"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h4>3.c.III  Hints about parameter settings</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-<u>Hint for <ttx>Algo1</ttx></u>: Increasing the <ttl>Top N</ttl> parameter can cause too many hits and reduce synteny.
-Decreasing it can remove more gene-pair hits.
-Hence, try <ttl>Algo2</ttl> if you want more gene pairs.
-
-<p><u>Hint for <ttx>Algo2</ttx></u>: On the output to the terminal (in Verbose mode), if any chromosome pair shows over 10,000 hits, the
-parameters probably need to be made more stringent; too many hits confuses the synteny algorithm, which results
-in synteny blocks not being found; it also results in very long execution time.
-<p>&rarr;&nbsp;<i>Suggestion</i>: For large genomes, experiment with the parameters on just one pair of the chromosomes.
-(You can use <a href="input/index.html" class="ext" target="_blank">xToSymap</a> for the split.)
-<p>&rarr;&nbsp;<i>Using the v5.6.0 algorithm, I have experimented with the datasets</i> (1) human, chimpanzee, mouse (2)
-Arabidopsis, Brassica rapa, Brassica oleracea.
-Only B. rapa to B. oleracea needed parameter adjustment: the number of G1 hits was over 200k,
-which is way more than typical;
-by increasing all parameters a small amount, this reduced to just over 100k.
 
 <a id="pileOfHits"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h4>3.c.IV  Piles of Hits</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<p><b>Piles of Hits</b>
+
 <table>
 <tr><td>The below image shows a pile of hits on the left (Cabb Chr02)
 that link to repetitive genes on the right (Arab Chr05). These are important to keep.
@@ -876,6 +864,9 @@ must be filtered; if they are not, the synteny algorithm does not perform well.
 <td><a href="img/demoPileG0.png"><img src="img/demoPileG0.png" alt="Pile to intergenic" style="border: 1px solid black; width:  400px"></a>
 </table>
 
+<!---------------------------------------------------------------------->
+<!---------------------------------------------------------------------->
+<!---------------------------------------------------------------------->
 <a id="syn"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>3.d Synteny</h3>
@@ -897,7 +888,7 @@ must be filtered; if they are not, the synteny algorithm does not perform well.
 <p><sup>1</sup><ttl>Same orient</ttl> uses the same algorithm as the original except that it evaluates the hits for one
 orientation, than the other. It also adds a constraint that the correlation must be positive for blocks of hits in the same orientation,
 and negative for opposite orientation.
-<p><sup>2</sup>Selecting <ttl>Merge</ttl> may be beneficial when there are many small blocks. Below shows
+<p><sup>2</sup><ttl>Merge</ttl> may be beneficial when there are many small blocks. Below shows
 an example where the first image does not have merged blocks and the second does (the blue dots are hits that
 belong to the block).
 <p>
@@ -919,7 +910,7 @@ belong to the block).
 For draft sequences, they may be ordered against another project.
 See <a href="./SystemGuide.html#draft2" class="ext" target="_blank">Ordering details</a>.
 <table>
-<tr><td>The <ttx>Seq1-&gt;Seq2</ttx> and <ttx>Seq1-&gt;Seq2</ttx> use the
+<tr><td>The <ttx>Seq1-&gt;Seq2</ttx> and <ttx>Seq2-&gt;Seq1</ttx> use the
 <ttx>Abbreviation</ttx> set in the <ttl>Project parameters</ttl> panel.
 The "-&gt;" indicates that the first sequence will be ordered against the second.
 <td><a href="img/parameters2b.png"><img src="img/parameters2b.png" alt="pair parameters synteny" style="border: 1px solid black; width: 280px"></a>
@@ -928,14 +919,13 @@ The "-&gt;" indicates that the first sequence will be ordered against the second
 <p>If the draft has been aligned to the <ttl>Order against</ttl> sequence, but this parameter
 was not set, it can be set and the <ttl>A&amp;S</ttl> run with the existing alignment files.
 
-
 <a id="save2"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>3.e Rules for saving pairs parameters</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Before the <ttl>A&amp;S</ttl> is executed, the parameters are saved in
-<pre>  data/seq_results/&lt;proj1-to-proj2&gt;/params</pre>
+<pre>  data/seq_results/&lt;proj1-to-proj2&gt;/params.txt</pre>
 Once the <ttl>A&amp;S</ttl> is executed, the parameters are stored in the database.
 
 <p>The file parameters are shown on the pair <ttb>Parameter</ttb> panel. These can only be
@@ -982,10 +972,8 @@ see <a href="./MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <!---- END BODY -->
-
 <tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
                         Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
-
 </table>
 </body>
 </html>

@@ -52,8 +52,9 @@ public static final String seqDataDir = 	"data/seq/";
 public static final String seqSeqDataDir = 	"/sequence/"; 
 public static final String seqAnnoDataDir = "/annotation/"; 
 
-public static final String paramsFile = 	"/params"; // in both seq/proj and seq_results/proj1_to_proj2
-public static final String usedFile =		"/params_align_used"; // seq_results/align CAS568 add
+// CAS569 MacOS Sequoia will no longer easily open files if they do not end with .txt; checked in Utils.getParamFile
+public static final String paramsFile = "/params.txt"; // in both seq/proj and seq_results/proj1_to_proj2
+public static final String usedFile =	"/params_align_used.txt"; // seq_results/align CAS568 add
 
 //These file types, denoted by the .fas extension, are used by most large curated databases. 
 //Specific extensions exist for nucleic acids (.fna), nucleotide coding regions (.ffn), amino acids (.faa), 

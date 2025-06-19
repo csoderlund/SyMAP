@@ -311,8 +311,10 @@ public class DoAlignSynPair extends JFrame {
 			mLog.msg("Both projects must have genes for the collinear set algorithm");
 			dbc2.close(); return;
 		}
-		int mPairIdx = Utils.getPairIdx(mProj1.getIdx(), mProj2.getIdx(), dbc2);
-		if (mPairIdx==0) {
+		
+		String st = "SELECT idx FROM pairs WHERE proj1_idx='" +  mProj1.getIdx() + "' AND proj2_idx='" +  mProj2.getIdx() +"'";
+		int mPairIdx = dbc2.getIdx(st); // CAS569 moved from Utils
+		if (mPairIdx<=0) {
 			mLog.msg("Cannot find project pair in database for " + mProj1.getDisplayName() + "," + mProj2.getDisplayName());
 			dbc2.close(); return;
 		}
@@ -329,8 +331,10 @@ public class DoAlignSynPair extends JFrame {
 	private void pseudoOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
 	try {
 		mLog.msg("Only add pseudo-genes");
-		int mPairIdx = Utils.getPairIdx(mProj1.getIdx(), mProj2.getIdx(), dbc2);
-		if (mPairIdx==0) {
+		
+		String st = "SELECT idx FROM pairs WHERE proj1_idx='" + mProj1.getIdx() + "' AND proj2_idx='" + mProj2.getIdx() +"'";
+		int mPairIdx = dbc2.getIdx(st); // CAS569 moved from utils
+		if (mPairIdx<=0) {
 			mLog.msg("Cannot find project pair in database for " + mProj1.getDisplayName() + "," + mProj2.getDisplayName());
 			dbc2.close(); return;
 		}

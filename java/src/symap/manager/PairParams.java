@@ -41,8 +41,8 @@ public class PairParams extends JDialog {
 		"Number pseudo", 											// CAS565 add
 		"Algorithm 1 (modified original)", "Algorithm 2 (exon-intron)",  
 		"Top N piles", 
-		"G0_Len", "Gene", "Exon", "Len",
-		 "EE", "EI", "En", "II", "In"
+		"Gene", "Exon", "Len","G0_Len", // CAS569 put GO on end and process in this order
+		"EE", "EI", "En", "II", "In"
 	};
 	
 	// if change, change in Mpair too; defaults are in Mpair; written to DB and file
@@ -51,11 +51,11 @@ public class PairParams extends JDialog {
 		"mindots", "merge_blocks", "same_orient", 
 		"order_none", "order_proj1", "order_proj2",			// none, proj1, proj2
 		"concat","mask1", "mask2", 
-		 "nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
+		"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
 		"number_pseudo", "algo1", "algo2",
-		 "topn",					
-		 "g0_scale", "gene_scale", "exon_scale", "len_scale",
-		 "EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
+		"topn",					
+		"gene_scale", "exon_scale", "len_scale","g0_scale",// CAS569 put GO on end
+		"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
 	};
 	
 	private Mpair mp = null;
@@ -70,7 +70,7 @@ public class PairParams extends JDialog {
 		setDefaults(mp.getFileParams(), false);
 		
 		setModal(true);
-		setTitle(mProj1.strDBName + Constants.projTo + mProj2.strDBName + "/params file");
+		setTitle(mProj1.strDBName + Constants.projTo + mProj2.strDBName + Constants.paramsFile); // CAS569 params was hard-coded
 	}
 	/*********************************************************************/
 	private void createMainPanel() {
@@ -156,7 +156,7 @@ public class PairParams extends JDialog {
 		chkInpile = Jcomp.createCheckBox(LABELS[x++],"Keep In and nI piles", false); 
 		
 		// bottom row
-		btnKeep = Jcomp.createButton("Keep", "Save parameters and exit");
+		btnKeep = Jcomp.createButton("Save", "Save parameters and exit"); // CAS569 Keep->Save to match project params
 		btnKeep.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				save();
@@ -264,8 +264,8 @@ public class PairParams extends JDialog {
 		row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent));
 		JLabel j = Jcomp.createLabel("Scale:", "Increase scale creates less hits, decrease creates more hits");
 		row.add(j); row.add(Box.createHorizontalStrut(8)); 
-		row.add(lblExon);    row.add(txtExon);   row.add(Box.createHorizontalStrut(5)); 
 		row.add(lblGene);    row.add(txtGene);   row.add(Box.createHorizontalStrut(5));
+		row.add(lblExon);    row.add(txtExon);   row.add(Box.createHorizontalStrut(5)); 
 		row.add(lblLen);     row.add(txtLen);    row.add(Box.createHorizontalStrut(5));
 		row.add(lblNoGene);  row.add(txtNoGene); row.add(Box.createHorizontalStrut(5));
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
@@ -354,10 +354,12 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	return chkAlgo1.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkAlgo2.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++])) 	return txtTopN.getText();
-		else if (symbol.equals(SYMBOLS[x++]))	return txtNoGene.getText();
+		
 		else if (symbol.equals(SYMBOLS[x++]))	return txtGene.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return txtExon.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return txtLen.getText();
+		else if (symbol.equals(SYMBOLS[x++]))	return txtNoGene.getText();
+		
 		else if (symbol.equals(SYMBOLS[x++]))	return chkEEpile.isSelected()?"1":"0"; 
 		else if (symbol.equals(SYMBOLS[x++]))	return chkEIpile.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkEnpile.isSelected()?"1":"0";
@@ -388,10 +390,12 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo1.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo2.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	txtTopN.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	txtNoGene.setText(value);
+		
 		else if (symbol.equals(SYMBOLS[x++]))	txtGene.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	txtExon.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	txtLen.setText(value);
+		else if (symbol.equals(SYMBOLS[x++]))	txtNoGene.setText(value);
+		
 		else if (symbol.equals(SYMBOLS[x++]))	chkEEpile.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkEIpile.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkEnpile.setSelected(value.equals("1"));
