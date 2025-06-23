@@ -8,15 +8,18 @@
 	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
-	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
-	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
 	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
     .ty td {border: 1px  solid black; padding: 3px; }
     .tx td {padding: 5px;}
-     tt {font-size:13px}
-	pre {font-size:13px}
+    ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
+	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
+	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
+	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+	tt {font-size:13px}
+	pre {font-size:13px; margin-top: 0; margin-left: 15px;}
+    ul { margin-top: 0; }
+    p { margin-bottom: 0; }
     body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
 </style>
 </head>
@@ -70,17 +73,17 @@ This page covers using FASTA and GFF files from sources other than NCBI or Ensem
 The requirements are listed in <a href="./index.html#seqprep" class="ext" target="_blank">Sequence files</a> and
 <a href="./index.html#seqprep" class="ext" target="_blank">Annotation files</a>.
 
-<p>Run <a href="./index.html#sf" class="ext" target="_blank">Summarize files</a> to
+<p>Run <a href="./index.html#sf" class="ext" target="_blank">Summarize</a> to
 make sure your files have the right requirements for input to SyMAP; if they do, you may directly input them to
 SyMAP.
 
-<p>The <ttl>xToSymap</ttl> conversion programs cannot be of aid to you if your GFF file does not meet the
+<p>The <ttp>xToSymap</ttp> conversion programs cannot be of aid to you if your GFF file does not meet the
 requirements specified. You will need to write your own conversion program, or you can send email
-to <tt>symap@agcol.arizona.edu</tt> and I will do it for you.
+to <ttl>symap@agcol.arizona.edu</ttl> and I will do it for you.
 <p>
 The main reason for conversion is to provide shorten chromosome/scaffold names. If your sequence names are long,
 it really clutters everything; find a way to edit your files to shorten them.
-You may be able to use one of the <ttl>xToSymap</ttl> conversion programs for your data.
+You may be able to use one of the <ttp>xToSymap</ttp> conversion programs for your data.
 
 <h3>xToSymap NCBI and Ensembl conversions</h3>
 <p>Some important differences between the NCBI and Ensembl files:
@@ -94,7 +97,7 @@ keywords for the mRNAs (now it has both). In constrast, Ensembl only has the <tt
 <li><u>File suffix</u>: NCBI uses the suffixes ".fna" and ".gff" whereas Ensembl uses ".fa" and ".gff3". The respective conversions requires
 the correct suffix; this prevent running the wrong conversion.
 </ol>
-When you run <ttl>Summarize files</ttl> on recent files, you will see as its last line:
+When you run <ttb>Summarize</ttb> on recent files, you will see as its last line:
 <pre>
 Input type: NCBI chromosome prefix
             NCBI mRNA 'product' keyword; NCBI 'gene_biotype' keyword
@@ -105,11 +108,12 @@ Input type: Ensembl like 'Number, X, Y, Roman'
             Ensembl gene 'description' keyword; Ensembl 'biotype' keyword
 </pre>
 The NCBI chromosome prefix is precisely "NC_". However, if your file has its own prefix, but otherwise adheres to the NCBI keywords, you can
-enter a <ttl>Only prefix</ttl> with the NCBI convert.
+enter a <ttx>Only prefix</ttx> with the NCBI convert.
 
-<p>The Ensembl 'Number, X, Y, Roman' is when the FASTA line starts with the chromosome indicates, e.g. '>1' or '>X' or '>XI';
+<p>The Ensembl <ttx>#, X, Y, I</ttx> is when the FASTA line starts with the chromosome indicates,
+<br>e.g. '>1' or '>X' or '>XI';
 
-<p>When you run <ttl>Summarize files</ttl>, if your results match NCBI or Ensembl, that will imply you can use one of them.
+<p>When you run <ttb>Summarize</ttb>, if your results match NCBI or Ensembl, that will imply you can use one of them.
 <p>For details on the conversion, see
 <a href="./ncbi.html#what" class="ext" target="_blank">NCBI</a> and <a href="./ensembl.html#what" class="ext" target="_blank">Ensembl</a>.
 <p>&nbsp;
@@ -118,7 +122,6 @@ enter a <ttl>Only prefix</ttl> with the NCBI convert.
 	</td></tr>
 	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
                         Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
-
 </td></tr>
 </table>
 </body>

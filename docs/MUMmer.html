@@ -6,10 +6,12 @@
 	:link {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
-	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
-	ttp  {font-family: Arial, monospace; font-size: 15px; font-weight: 500; color: DarkSlateGrey; }
-	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+
+	ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
+	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
+	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
+	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+
     a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
     a.ext {font-weight: bold;}
     mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
@@ -65,7 +67,7 @@
 	<!---- START BODY -->
 
 This document discusses how to deal with one or more MUMmer alignments failing.
-This document refers to release v5.0.8 and later. The corresponding MUMmer documentation is
+The corresponding MUMmer documentation is
 <a href="http://mummer.sourceforge.net" class="ext" target="_blank">v3</a> and
 <a href="https://mummer4.github.io" class="ext" target="_blank">v4</a>.
 <p>
@@ -104,7 +106,9 @@ This document refers to release v5.0.8 and later. The corresponding MUMmer docum
 The alignment programs are provided in the <tt>symap/ext</tt> directory. There are
 executables for 64-bit Linux and 64-bit MacOS. SyMAP will
 select the correct directory for the machine you are running from, i.e. you
-do not need to do anything. When SyMAP creates a database, it (1) checks the MySQL variables, and (2) checks
+do not need to do anything. See <a href="SystemGuide.html#ext" class="ext" target="_blank">System Guide</a> for details.
+
+<p>When SyMAP creates a database, it (1) checks the MySQL variables, and (2) checks
 that the external programs are executable. If you see a message like:
 <pre>
   ***Error - file is not executable: ext/mummer/mac/promer
@@ -139,16 +143,12 @@ For example,
    demo_seq_cc.demo_seq2_f1.mum		demo_seq_cc.demo_seq2_f2.mum.done
    demo_seq_cc.demo_seq2_f1.mum.done
 </pre>
-All MUMmer files but the ".mum" are removed by <ttx>symap</ttx>; if you prefer them not to be removed,
-start <ttx>symap</ttx> with the "-mum" command line parameter, i.e.
-<pre>   ./symap -mum</pre>
-and then run the alignments.
+
+<p>All MUMmer files but the ".mum" are removed by <tt>symap</tt>; if you prefer them not to be removed,
+start <tt>symap</tt> with the "-mum" command line parameter, i.e.
+<tt> ./symap -mum</tt>
 
 <p>The log files are in the <tt>/logs/&lt;project-name1&gt;-to-&lt;project-name2&gt</tt> directory.
-
-<p>After the database is complete, these can be removed. However, sometimes SyMAP version updates require
-the project files to be reloaded and/or the synteny to be recomputed; if these files remain, the existing
-MUMmer files will be used, which <i><b>saves a lot of time</b></i>.
 
 <a id="log"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -172,22 +172,24 @@ analyzed pair:
      e.g. p1 = demo_seq, p2 = demo_seq2
        symapDemo_load.log
        demo_seq_to_demo_seq2/
-         demo_seq_cc.demo_seq2_f1.log  # MUMmer terminal output
-         demo_seq_cc.demo_seq2_f2.log  # MUMmer terminal output
+         demo_seq_cc.demo_seq2_f1.log  # MUMmer output directed to this file
+         demo_seq_cc.demo_seq2_f2.log  #   same for the second mummer execution
          symap.log                     # SyMAP terminal output
 </pre>
 
-&rarr; If an alignment is listed as failed in the <ttx>error.log</ttx> file,
-the corresponding <ttx>&lt;p1_cc.p2_fn&gt;.log</ttx> file will contain the MUMmer error.
+&rarr; If an alignment is listed as failed in the <tt>error.log</tt> file,
+the corresponding <tt>&lt;p1_cc.p2_fn&gt;.log</tt> file will contain the MUMmer error
+(see <a href="img/mummerLog.png">example mummer log</a>).
 <p>&rarr;
 If the error is not found in the log files or it is not clear, try the following:
 <br>Copy the command from the terminal (or log file), and paste it on a new terminal line to execute, e.g.
+(the following is one line wrapped around):
 <pre>
   ext/mummer/mac/promer -p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_cc.demo_seq2_f2.promer
   data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa
   data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
 </pre>
-This shows <ttx>promer</ttx> output directly on the terminal.
+This shows <tt>promer</tt> output directly on the terminal.
 
 <!----------------------------------------------------->
 <a id="help"></a>
@@ -195,13 +197,13 @@ This shows <ttx>promer</ttx> output directly on the terminal.
 <h3>Getting Help</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-If none of these suggestions in this document fix your problem,
+If none of these suggestions fix your problem,
 email <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
 with the following files (described above):
 <ol>
-<li><ttx>error.log</ttx>
-<li><ttx>logs/&lt;p1&gt;-to-&lt;p2&gt;/symap.log</ttx>
-<li><ttx>logs/&lt;p1&gt;-to-&lt;p2&gt;/&lt;p1_cc.p2.fn&gt;.log</ttx> where n is the process number
+<li><tt>error.log</tt>
+<li><tt>logs/&lt;p1&gt;-to-&lt;p2&gt;/symap.log</tt>
+<li><tt>logs/&lt;p1&gt;-to-&lt;p2&gt;/&lt;p1_cc.p2.fn&gt;.log</tt> where n is the process number
 <li>Any output to the terminal (either copy and paste into the email, or send a screen capture)
 </ol>
 For example, email the terminal output and:
@@ -224,9 +226,8 @@ or
 #..........................ERROR: mummer and/or mgaps returned non-zero, please file a bug report
 Alignment program error code: 1
 </pre>
-The error code will appear on the terminal, but not in the <ttx>symap/logs/&lt;..&gt;/symap.log</ttx> file,
-but it should appear in the MUMmer log file
-(read the above section for the file containing the MUMmer terminal output).
+The error code will appear on the terminal and the MUMmer log file,
+but not in the <tt>symap/logs/&lt;..&gt;/symap.log</tt> file.
 
 <!----------------------------------------------------->
 <a id="cat"></a>
@@ -236,7 +237,7 @@ but it should appear in the MUMmer log file
 
 There is no straight-forward way to know if you have enough memory as it depends on the
 size and complexity of the two genomes being compared. If you think memory may be tight,
-you can limit the amount used at one time by limiting the number of CPUs, as each
+you can limit the amount used by limiting the number of CPUs, as each
 CPU uses a considerable amount of memory (e.g. 4 CPUs could collectively use 20GB of memory at once).
 <p>
 <table>
@@ -249,8 +250,8 @@ options and timing results.
 <a id="mask"></a>
 <h3>Not-masked or Soft-masked</h3>
 A memory problem can occur if the genome sequence is not masked or only soft-masked.
-Either: (1) change the sequence to hard-masked, or (2) set the SyMAP parameter
-<ttx>mask_all_but_genes</ttx> to <tt>yes</tt>.
+Either: (1) change the sequence to hard-masked, or (2) set the
+<a href="SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parameters</a> parameter <ttx>Mask</ttx>.
 <p>
 
 <!----------------------------------------------------->
@@ -259,7 +260,7 @@ Either: (1) change the sequence to hard-masked, or (2) set the SyMAP parameter
 <h3>Fails immediately</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-If an alignment fails immediately, and if the last line of the first <ttx>&lt;alignment&gt;.log</ttx> file is:
+If an alignment fails immediately, and if the last line of the first <tt>&lt;alignment&gt;.log</tt> file is:
 <pre>
   1: PREPARING DATA
 </pre>
@@ -290,16 +291,13 @@ you will see a "?" for the pair as shown on the below.
 <p>Select the "?" followed by
 <ttb>Selected Pair</ttb> and it will complete the failed processes.
 </table>
-<p>
-A preferred way is to set CPUs to a low number if the genomes are large, that way,
-it will likely finish the first time.
 
 <!----------------------------------------------------->
 <!----------------------------------------------------->
 <a id="mum4"></a>
 <h2>Using MUMmer4 from within SyMAP</h2>
 Sometimes when MUMmer v3 fails, MUMmer v4 will work.
-MUMmer4 is included in SyMAP package with a fix to promer (make sure you get v5.0.8 or later).
+MUMmer4 is included in SyMAP package with a fix to <tt>promer</tt>.
 Enter the <tt>ext/mummer4</tt> directory and follow the instructions in the README.
 <p>My observations on MacOS indicate that MUMmer v4 takes more memory
 but less time than MUMmer v3.
@@ -310,72 +308,68 @@ but less time than MUMmer v3.
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 If you need to run MUMmer using the command line from some other machine, do the following:
-<ul>
-<li>The query must be alphanumerically less than reference. For the <tt>promer</tt> command:
+
+<ol>
+<li>If your chromosomes are large, split the sequence file into chromosome files using <a href="input/index.html#sp">xToSymap</a>.
+Process each chromosome file for the first genome with each chromosome file for the second genome.
+<p>
+<li>Create a directory <tt>data/seq_results/&lt;proj1-to-proj2&gt;/align</tt> where <tt>proj1</tt> is
+alphabetically less than <tt>proj2</tt>.
+<p>
+<li>Running MUMmer: The query must be alphanumerically less than reference. For the <tt>promer</tt> command:
 <pre>
 USAGE: promer  [options]  &lt;Reference&gt;  &lt;Query&gt;
-e.g.
-promer proj2 proj1
+e.g.   promer proj2 proj1
 </pre>
-<li>Execute:
+<p>
+See the commands for the <u>Example</u> below. Replace the demo names with your project/chromosome names.
+If you have many chromosome pairs to process, put them in a script, e.g. <a href="input/logs/mummer.html">demo commands</a>.
 	<ul>
-	<li>For different genomes:
-		<ul>
-		<li>Use promer
-		<li>The output of promer is input to "show-coords -dlkT".
-		</ul>
-	<li>For Self synteny:
-		<ul>
-		<li>Use nucmer.
-		<li>The output of nucmer is input to "show-coords -dlT".
-		</ul>
+	<li>Promer: The output of promer is input to "show-coords -dlkT".
+	<li>Nucmer: The output of nucmer is input to "show-coords -dlT".
 	</ul>
-<br>
+<p>To view the MUMmer parameters, see <a href="SystemHelp.html#mum" class="ext" target="_blank">MUMmer parameters</a>.
+<p>
+
 <li>Result files:
 <ul>
 <li>The result files must have suffix ".mum"
-<li>Put the ".mum" files in the directory <tt>data/seq_results/&lt;proj1-to-proj2&gt;/align</tt>
+<p>
+<li>The ".mum" files must be in the directory <tt>data/seq_results/&lt;proj1-to-proj2&gt;/align</tt>.
+<p>
 <li>In the <tt>&lt;proj1-to-proj2&gt;/align</tt> directory, execute:
-<pre>touch all.done</pre>
-This creates a file, which indicates to SyMAP that the alignments are done and to process
+<tt>touch all.done</tt>
+<br>This creates a file, which indicates to SyMAP that the alignments are done and to process
 the files in the directory ending with ".mum".
 </ul>
 <br>
 <li>When you run <ttb>Selected Pair</ttb>, SyMAP will recognize the files and use them to build the synteny blocks.
-</ul>
+</ol>
 
-<p><u>Example of using mummer for loaded projects <tt>demo_seq</tt> and <tt>demo_seq2</tt>:</u>
-If you try this with <tt>demo_seq</tt> and <tt>demo_seq2</tt>, make sure there is no current alignment in the
-database or disk for your project (e.g. <ttb>Clear Pair</ttb>).
+<p><u><b>Example</b></u>: This example will use MUMmer for the loaded projects <tt>demo_seq</tt> and <tt>demo_seq2</tt>.
+First, remove the directory <tt>data/seq_results/demo_seq_to_demo_seq2</tt>.
 
-<p><tt>Demo_seq</tt> has chr3 and chr5, <tt>demo_seq2</tt>  has chr1 and chr3; these will be compared separately against each other.
-<tt>Demo_seq</tt>  is alphanumerically less than <tt>demo_seq2</tt> , so it is first in the directory name
-but second in the command arguments (this is how SyMAP knows which
-project Chr3 belongs to). The commands are as follows:
+<p><tt>Demo_seq</tt> has chr3 and chr5 in the file <tt>genomic.a</tt> and
+<tt>demo_seq2</tt> has files <tt>chr1.seq.gz</tt> and <tt>chr3.seq</tt>. The commands are as follows:
 
 <pre>
+   gunzip data/seq/demo_seq2/sequence/chr1.seq.gz  # MUMmer does not process zipped files
    cd data/seq_results
    mkdir demo_seq_to_demo_seq2
    mkdir demo_seq_to_demo_seq2/align
    touch demo_seq_to_demo_seq2/align/all.done
    cd ../..
-   ext/mummer/mac/promer data/seq/demo_seq2/sequence/chr1.seq data/seq/demo_seq/sequence/chr3.seq
-   ext/mummer/mac/show-coords -dlkTH out.delta >chr1chr3.mum
-   mv chr1chr3.mum data/seq_results/demo_seq_to_demo_seq2/align
-   rm out.delta
+   ext/mummer/mac/promer  -p data/seq_results/demo_seq_to_demo_seq2/align/results.promer
+         data/seq/demo_seq2/sequence/chr1.seq data/seq/demo_seq/sequence/genomic.fa
+   ext/mummer/mac/show-coords -dlkTH data/seq_results/demo_seq_to_demo_seq2/align/results.promer.delta
+         &gt;data/seq_results/demo_seq_to_demo_seq2/align/seq1chr1.mum
 </pre>
-This would need to be repeated 3 more times for <tt>chr1chr5.mum, chr3chr3.mum, chr3chr5.mum</tt>
-(suggestion: put the commands
-in a script). The resulting <tt>align</tt> directory will have:
-<pre>
-   all.done	 chr1chr3.mum	chr1chr5.mum	chr3chr3.mum	chr3chr5.mum
-</pre>
-When symap is started and <tt>demo_seq</tt> and <tt>demo_seq2</tt> selected, there will be a "A" in their cell; select it followed by
+See <a href="input/logs/mummer.html">script</a> for the full set of mummer command to process all sequence data.
+
+<p>When symap is started and <tt>demo_seq</tt> and <tt>demo_seq2</tt> selected, there will be a "A" in their cell; select it followed by
 <ttb>Selected Pair</ttb> and it will load the alignments and compute the synteny.
 
-<p>To view the MUMmer parameters, see <a href="SystemHelp.html#mum" class="ext" target="_blank">MUMmer parameters</a>
-
-
+<p>This demo has been fully tested with <ttp>symap</ttp> v5.6.9.
 
 <a id="mac"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -405,7 +399,6 @@ These executables compiled on MacOS 10.9 may work on your Mac.
 	</td></tr>
 	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
                         Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
-
 </td></tr>
 </table>
 </body>

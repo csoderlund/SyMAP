@@ -8,15 +8,20 @@
 	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
     a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
     a.ext {font-weight: bold;}
+     mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
     .tx td {padding: 5px;}
 	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
     .ty td {border: 1px  solid black; padding: 3px; }
-    mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-    ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
-	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
-	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-    tt {font-size:13px}
-	pre {font-size:13px}
+
+   ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
+	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
+	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
+	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+	tt {font-size:13px}
+	pre {font-size:13px; margin-top: 0;}
+    ul { margin-top: 0; }
+    p { margin-bottom: 0; }
+
 	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
 </style>
 </head>
@@ -76,8 +81,8 @@
 </table>
 <a id="col"></a>
 <h2>Collinear sets</h2>
-Using the <ttb>Hit Filter</ttb>, or right click in the hit region, set the highlighting for <ttl>Collinear Sets</ttl>.
-As shown below, the number of highlighted collinear hits and number of collinear sets will be shown in
+Using the <ttb>Hit Filter</ttb>, or right click in the hit region, set the highlighting for <ttx>Collinear Sets</ttx>.
+As shown below, the number of highlighted collinear hits and sets will be shown in
 the <ttl>Information</ttl> box.
 <br>
 <a href="img/colHigh.png">
@@ -88,10 +93,7 @@ the <ttl>Information</ttl> box.
 In the image on the right, two different sets are shown (green highlighted hits is the 1st set,
 pink is the 2nd). They were broken up by a gene on each chromosome
 that do not have a hit.
-<p><ttl>Forward (=) vs reverse (!=) sets</ttl>:
-<br>a <ttl>=</ttl> hit is to the strands (+/+) or (-/-),
-<br>a <ttl>!=</ttl> hit is to the strands (+/-) or (-/+).
-<br>All hits in a set are either to the same strand (=) or opposite (!=).
+<p>A collinear set either has all genes to the same strand (+/+, -/-) or different (+/-, -/+)
 
 <p>In the image on the right, all genes in both sets are on the same strand.
 
@@ -109,14 +111,14 @@ of the hit sequences.
 <table>
 <tr><td>
 Sometimes a hit looks like it overlaps a gene, but the gene is actually in the gap, so it is not hit.
-This is illustrated on the right, where the gene at the bottom appears hit by the pink hit wire,
+This is illustrated on the right, where the gene at the bottom appears hit by the pink hit-wire,
 but in fact are spanned by the gap gray area. Note that the
 hit popup shows it is a nn type, which hits no genes.
 <td><a href="img/colG0HitsSpan.png">
 <img src="img/colG0HitsSpan.png" alt="Clustered hit" style="border: 1px solid black; width: 300px"></a>
 <tr><td>&nbsp;<td>&nbsp;
 <tr><td   style="vertical-align: text-top;">
-The image on the right shows one collinear set with 6 brown hit wires that are not part of the set. The following
+The image on the right shows one collinear set with 6 brown hit-wires that are not part of the set. The following
 explains them, using the symbols g0 (hits 0 genes), g1 (hits 1 gene), g2 (hits paired genes, at
 least one on each chromosome).
 <p>
@@ -143,26 +145,26 @@ view these.
 <h2>Highlight conserved genes</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<table>
-	<tr><td>
-	As stated in <a href="UserGuide.html#sequence_filter" class="ext" target="_blank">Sequence Filters</a>, when there are more than 2 tracks displayed in <ttb>2D</ttb>,
+<a href="img/seqFilterRefOnly.png">
+		<img src="img/seqFilterRefOnly.png" alt="sequence filter reference" style="border: 1px solid black; width: 400px"></a>
+
+<p>As stated in <a href="UserGuide.html#sequence_filter" class="ext" target="_blank">Sequence Filters</a>,
+when there are more than 2 tracks displayed in <ttb>2D</ttb>,
 	there will be two extra options for the first <i>reference</i> track,
-	as shown on the right. Referring to <ttx>Hit g2x2</ttx>, if there are 3 tracks,
+	as shown on the above. Referring to <ttx>Hit g2x2</ttx>, if there are 3 tracks,
 	the genes conserved across the 3 tracks will be highlighted, as shown below.
-	<td><a href="img/seqFilterRefOnly.png">
-		<img src="img/seqFilterRefOnly.png" alt="sequence filter reference" style="border: 1px solid black; width: 250px"></a>
-</table>
+
 
 <p><a href="img/seqFilterConserved.png">
 	<img src="img/seqFilterConserved.png" alt="sequence filter conserved" style="border: 1px solid black; width: 700px"></a>
-<p>The above image has the settings <ttb>Sequence Filter</ttb> <ttx>Hit g2x2</ttx> and the <ttb>Hit Filter</ttb> <ttx>Hit =2 genes</ttx>.
+<p>The above image has the settings <ttb>Sequence Filter</ttb> <ttx>Hit g2x2</ttx> and the <ttb>Hit Filter</ttb> highlight <ttx>Hit =2 genes</ttx>.
 Hence, the pink hit-wires and cyan exons indicate the conserved genes, and
 the green hit-wires have genes at both ends but are not conserved across
 the 3 tracks.
 <p><font color=green>Caveats:</font>
 <ol>
-<li>For a 3-chromosome view, say genes A-B-C are conserved. The hit for A-B may not overlap the hit for B-C. The algorithm only
-checks the A-B hit and B-C hit, but not the possible A-C hit.
+<li>For a 3-chromosome view, say it shows genes A-B-C are conserved. The algorithm only
+checks the A-B hit and B-C hits exist, but does not the possible A-C hit.
 <li>There may be different numbers of highlighted genes on the different tracks or hit-wires between tracks. This is because multiple hits can align to a gene, and one gene can align
 to two different genes on the opposing genome.
 <li>When there are overlapping genes, a hit is assigned to just one of them, which
@@ -172,8 +174,7 @@ causes some conserved genes to have incorrect pairing.
 algorithm marks these as conserved.
 </ol>
 Even with these caveats, I rarely see a pairing that seems 'iffy' with plant genomes, though the overlap patterns
-and long introns of mammalian genomes cause some questionable results. I will be working on improving the hit-to-gene assignment
-for the next release. As always, feedback is welcome!
+and long introns of mammalian genomes cause some questionable results. As always, feedback is welcome!
 
 <!--------------------------------------------------------------------->
 <a id="hit"></a>
@@ -187,7 +188,7 @@ Default view:
 <li>The # column in the two tables align to each, e.g. the rows #2 align to each other.
 <li>The sequence name that is alphabetically lower (e.g. arab&lt;cabb) is the <i>query</i> and
 the other is the <i>target</i>. The query is numbered 1-N; the target
-	is ordered to match the first.
+	is ordered to match the query.
 <li>Two subhits may overlap (Gap&lt;=0) on one chromosome but not the other.
 </ul>
 
@@ -197,7 +198,7 @@ the other is the <i>target</i>. The query is numbered 1-N; the target
 		<img src="img/2DhitMerge.png" alt="2D Hit Merge" style="border: 1px solid black; width: 500px"></a>
 <td style="vertical-align: text-top;">In the merge view, hits with gap&lt;=0 are merged with the hit they overlap with.
 <p>The numbered hits  are no longer 1-to-1, i.e. they do not necessarily align to each other like they do in the un-merged view.
-<p><ttx>Totals</ttx> are provided for the <ttx>Len</ttx>, <ttx>Gap</ttx> and total.
+<p><ttx>Totals</ttx> are provided for the <ttx>Len</ttx> and <ttx>Gap</ttx>.
 <p>The merge view corresponds better to the visual view on the 2D track.
 <p>The existence of the <ttl>Merge</ttl> is a quick indication that there are overlapping hits.
 </table>

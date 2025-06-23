@@ -9,14 +9,18 @@
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-   ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
-   ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
-    ttp  {font-family: Arial, monospace; font-size: 15px; font-weight: 500; color: DarkSlateGrey; }
+
 	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
     .ty td {border: 1px  solid black; padding: 3px; }
+
+    ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
+	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
+	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
+	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+	xx	{line-height: 2}
     tt {font-size:13px}
 	pre {font-size:13px}
+
 	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
 </style>
 </head>
@@ -107,7 +111,7 @@
 <li>MacOS
 <ul>
 <li><a href="#macos">Running external programs</a> <!--- ref in symap -->
-<li><a href="#font">Fonts for MacOS Monterey</a>
+<li><a href="#font">MacOS Fonts</a>
 </ul>
 </ul>
 
@@ -117,25 +121,25 @@
 
 <h3>Hangs on Load</h3>
 
-<p>1. It occasionally hangs for no discernable reason (especially if I have been doing
-testing on MacOS, where I remove projects and reload over and over). If this happens, Cntl-C to
-stop the program (or kill it some other way), start up
-<ttx>symap</ttx> again, <ttl>Remove project from database</ttl> and try <ttl>Load</ttl> again.
-
-<p>2. If in the middle of a <ttl>Load</ttl>, any of the following
-actions: <ttl>Cancel</ttl>, or Cntl-C to stop the program, or killing it from the command line,
-can leave the database in a non-repairable state. Unfortunately, it has
-be removed and rebuilt.
-
-<p>3. <u>Other apps</u> may cause it to hang,
+<p>1. <u>Other apps</u> may cause it to hang,
 e.g. on Mac, downloaded apps, such as Bartender may interfere with SyMAP, which causes it to hang.
 When Bartender was removed, SyMAP no longer hung on load.
+
+<p>2. It occasionally hangs for no discernable reason (especially if I have been doing
+testing on MacOS, where I remove projects and reload over and over). If this happens, Cntl-C to
+stop the program (or kill it some other way). Restart
+<tt>./symap</tt>, <ttb>Remove project from database</ttb> and <ttb>Load Project</ttb> again.
+
+<p>3. If in the middle of a <ttb>Load Project</ttb>, any of the following
+actions: <ttb>Cancel</ttb>, or Cntl-C to stop the program, or killing it from the command line,
+can leave the database in a non-repairable state. Unfortunately, it has be removed and rebuilt.
+(22-June-2025) I have not had this happen in a very long time.
 
 <h2>Memory</h2>
 <a id="memory"></a>
 <h3>Not enough memory</h3>
 
-If SyMAP gives an out of memory error, you need to increase the memory. The <tt>symap</tt>
+If SyMAP gives an out-of-memory error, you need to increase the memory. The <tt>symap</tt>
 script has the following lines:
 <pre>
   #!/bin/sh
@@ -143,7 +147,7 @@ script has the following lines:
   echo "&gt;&gt;&gt;&gt; SyMAP build, query and view ($mem)     `date` &lt;&lt;&lt;&lt;"
   java -Xmx$mem -classpath /Users/cari/Workspace/github/symap/java/jar/symap.jar symapCE.SyMAPmanager $@
 </pre>
-Change the number after <tt>mem=</tt>. The <tt>viewSyMAP</tt> script also requests 8192m memory,
+Change the number after <tt>mem=</tt>. The <tt>viewSymap</tt> script also requests 8192m memory,
 which you can also edit.
 <p>
 If your machine does not have much memory,
@@ -154,11 +158,15 @@ For memory issues related to running MUMmer, see <a href="MUMmer.html" class="ex
 <p>
 <!--------------------------------------------------------->
 <hr>
+<a id="msqslow"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>MySQL suggested settings</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<a id="msqslow"></a>
+<p>SyMAP prints out the values of these three important MySQL variables when a symap database is created. Additionally,
+if you use <tt>./symap -sql</tt> they will be printed.
+
+
 <h3>Slow to load sequence and annotation</h3>
 
 Two MySQL settings are especially important for SyMAP performance (and generally for InnoDB table
@@ -190,11 +198,11 @@ To change the variables, then type:
 set global innodb_buffer_pool_size=1073741824;
 set global innodb_flush_log_at_trx_commit=0;
 </pre>
-Alternatively, You can set these in the MySQL configuration file <tt>my.cnf</tt> and restart MySQL.
+Alternatively, you can set these in the MySQL configuration file <tt>my.cnf</tt> and restart MySQL.
 Note that <tt>my.cnf</tt> is typically located at <tt>/etc/my.cnf</tt>, on both Linux and Mac.
 
 <p>Different machines and MySQL installations can produce different results with these variables.
-If the SyMAP demo-seq to demo-seq2 load and synteny computations seem slow,
+If the SyMAP <ttx>demo-seq</ttx> to <ttx>demo-seq2</ttx> load and synteny computations seem slow,
 try different combinations of these two variables to see what performs the fastest inserts.
 
 <a id="slow"></a>
@@ -222,15 +230,7 @@ To change this variable, then type:
 
 <a id="database_error"></a>
 <h3>Database connect errors</h3>
-After startup, if the program is left idle for some time then its
-database connection will close and it will show a complicated-looking error on
-next usage, or it may say this:
-<pre>
-com.mysql.jdbc.CommunicationsException: Communications link failure due to underlying exception:
 
-** BEGIN NEXTED EXCEPTION **
-</pre>
-In this case the solution is to restart the program.
 <p>
 On startup, error messages mentioning the database or SQL probably mean that the database connection
 could not be established or was lost. A message at startup means SyMAP was not able
@@ -272,8 +272,15 @@ If it does not make a connection then either the server is not running, or
 it is set to run on a non-standard port, or the
 port is blocked by a firewall. Contact a system administrator. (Note,
 to get out of telnet type "<tt>^]</tt>".)
-
 <p>
+If <ttp>symap</ttp> has been running and you get this message to the terminal:
+<pre>
+com.mysql.jdbc.CommunicationsException: Communications link failure due to underlying exception:
+
+** BEGIN NEXTED EXCEPTION **
+</pre>
+Restart the program as the connection was dropped.
+
 <a id="mariadb"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>MariaDB cannot connect</h2>
@@ -326,23 +333,21 @@ set of alignments you want, delete the database and just reload what you want fo
 Occasionally the status window disappears when running an alignment.
 Clicking the top of the project manager sometimes
 brings it back. Otherwise, just check the output to the terminal,
-which tells you when it is done. You may
-have to restart <tt>symap</tt> to see the results.
-
+which tells you when it is done.
 <p>
 <a id="noanch"></a>
 <b>No anchors loaded</b>
-This message indicates that SyMAP could not parse the MUMmer or BLAT output files
+This message indicates that SyMAP could not parse the MUMmer output files
 to load the anchors. For MUMmer, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 
 <a id="macos"></a> <!--- ref in symap -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>MacOS and external programs</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+MacOS will run <ttp>symap</ttp> but not MUMmer, MAFFT or MUSCLE is they have not been authenticated by you.
 
-MacOS will not run programs downloaded from the web unless its been authenticated by Apple.
 Running external programs (e.g. MUMmer) from SyMAP,
-you will get a popup like the one shown on the lower left image; select "Cancel", then exit <ttx>symap</ttx>.
+you will get a popup like the one shown on the lower left image; select <ttb>Cancel</ttb>, then exit <ttp>symap</ttp>.
 Do the following (e.g. <ttx>prepro</ttx>):
 <ul>
 <li>Using the Finder, go to the <ttx>symap_5/ext/mummer/mac/aux_bin</ttx> directory.
@@ -358,7 +363,7 @@ Do the following (e.g. <ttx>prepro</ttx>):
 	<img src="img/macOpen.png" alt="Mac Open" style="border: 1px solid black; width: 350px"></a>
 </table>
 
-For running MUMmer, perform this on the following  in <ttx>symap_5/ext/mummer/mac</ttx>:
+For running MUMmer, perform this on the following  in <tt>symap_5/ext/mummer/mac</tt>:
 <pre>
   mummer
   mgaps
@@ -378,9 +383,8 @@ if it does not work for you, see
 "If you want to open an app that has not been notarized or is from an unidentified developer".
 
 <a id="font"></a>
-<h3>MacOS Monterey</h3>
-Since SyMAP is compiled with v8 (pre-v5.5.0) to be upward compatible, it produces the following warning on
-MacOS Monterey:
+<h3>MacOS Fonts</h3>
+If you get the following warning:
 <pre>
 Warning: the fonts "Times" and "Lucida Bright" are not available for the Java logical font "Serif",
  which may have unexpected appearance or behavior. Re-enable the "Times" font to remove this warning.
@@ -398,7 +402,6 @@ It does not hurt anything, but its tiresome. Do the following:
 	</td></tr>
 	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
                         Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
-
 </td></tr>
 </table>
 </body>

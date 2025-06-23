@@ -11,6 +11,11 @@
 	a.ext {font-weight: bold;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
 	.center {margin-left: auto; margin-right: auto;}
+	 ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
+	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
+	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
+	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+
 	body {font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 14px; }
 </style>
 </head>
@@ -71,16 +76,17 @@
 <li><a href="input/ensembl.html" class="ext" target="_blank">Ensembl to SyMAP input</a>
 </ul>
 <br>
-<li><a href=SystemGuide.html class="ext" target="_blank">System Guide</a> (<ttx>symap</ttx>)
+<li><a href=SystemGuide.html class="ext" target="_blank">System Guide</a> (<ttp>symap</ttp>)
 <ul>
 <li><a href=SystemHelp.html class="ext" target="_blank">Parameters and Interface</a>
 <li><a href=MUMmer.html class="ext" target="_blank">MUMmer with SyMAP</a>
 <li><a href=Demo.html class="ext" target="_blank">Demo Results</a>
 <li><a href=peach.html class="ext" target="_blank">Ordering wild Prunus yedoensis against Prunus persica</a>
 <li><a href=TroubleShoot.html class="ext" target="_blank">Trouble Shooting</a>
+
 </ul>
 <br>
-<li><a href=UserGuide.html class="ext" target="_blank">User Guide</a> (<ttx>symap</ttx> or <ttx>viewSymap</ttx>)
+<li><a href=UserGuide.html class="ext" target="_blank">User Guide</a> (<ttp>symap</ttp> or <ttp>viewSymap</ttp>)
 <ul>
 <li><a href="Query.html" class="ext" target="_blank">Queries</a>
 <li><a href="Details.html" class="ext" target="_blank">Details</a> - collinear sets, conserved genes, hits.
@@ -89,7 +95,6 @@
 <li><a href=Tour.html class="ext" target="_blank">Tour</a>
 <br>&nbsp;
 <li><a href=Release.html class="ext" target="_blank">Release Notes</a>
-
 </ul>
 <hr>
 
@@ -105,7 +110,10 @@
             SyMAP: A system for discovering and viewing syntenic regions of FPC maps.
             Genome Research 16:1159-1168.
            <a href="http://genome.cshlp.org/content/16/9/1159.abstract"  class="ext" target="_blank">Link</a>
-        </font>
+
+<p>SyMAP uses <a href="SystemGuide.html#refs" class="ext" target="_blank">MUMmer</a><sup>1,2</sup> for computing the
+alignment between two genomes.
+ </font>
 
 <h3>History of SyMAP</h3>
 <font face="Verdana, Arial, Helvetica, sans-serif" size="2">
@@ -116,7 +124,7 @@ SyMAP was originally written for FPC maps-to-sequence synteny
 (<a href="./fpc/UserGuideFPC.html" class="ext" target="_blank">FPC User Guide</a>),
 then was upgraded for sequence-to-sequence synteny. FPC was removed from SyMAP in v5.0.8,
 but is still available from Github downloads and
-<a href="http://www.agcol.arizona.edu/software/symap">www.agcol.arizona.edu</a>.
+<a href="http://www.agcol.arizona.edu/software/symap" class="ext" target="_blank">www.agcol.arizona.edu</a>. </font>
 <!---- END BODY -->
 	</td></tr>
 	<tr><td>&nbsp;</td></tr>

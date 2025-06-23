@@ -6,10 +6,10 @@
 	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
-	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
-	ttp  {font-family: Arial, monospace; font-size: 15px; font-weight: 500; color: DarkSlateGrey; }
+	ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
+	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
+	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
+	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
 	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
@@ -100,9 +100,9 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <h2>Start SyMAP</h2>
 <table class="tx">
 <tr><td>To start SyMAP, type at the command line:
-<td><ttx>./symap</ttx>
+<td><tt>./symap</tt>
 <tr><td>To view the command line options, type:
-<td><ttx>./symap -h</ttx>
+<td><tt>./symap -h</tt>
 </table>
 <p>For the first time user of SyMAP, see:
 <ul>
@@ -251,16 +251,16 @@ the buttons that can be selected are activated.
 		<ttb>Selected Pair</ttb>
 		<br><ttb>Selected Pair (Redo)</ttb>
 	<td>Run (or complete) the <ttl>A&amp;S</ttl> computation for the selected project pair.
-		<br>If the pair is already complete, the button label changes to <ttl>Redo</ttl>, and
+		<br>If the pair is already complete, the button label changes to <ttb>Redo</ttb>, and
 		only the synteny computation will be rerun.
 		<br>If you wish to rerun the MUMmer alignment, first use the <ttb>Clear Pair</ttb> function.
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<ttb>Clear Pair</ttb>
 	<td><ttl>Only: remove synteny from database</ttl>
 	<br><ttl>All: remove synteny and alignments from disk for this pair</ttl>
-	<p>If you have changed the <ttx>Alignment</ttx> parameters, or loaded new sequence for one
+	<p>If you have changed the <ttl>Alignment</ttl> parameters, or loaded new sequence for one
 	of the projects, you need to have the alignments removed and redone; otherwise, you can just remove the synteny
-	from database (where this step can be skip by selecting the <ttl>Selected Pair (Redo)</ttl>).
+	from database (where this step can be skip by selecting the <ttb>Selected Pair (Redo)</ttb>).
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<ttb>Parameters</ttb>
 	<td>Set the <a href="#pairParams">pair parameters</a> for the selected pair cell .
@@ -279,7 +279,7 @@ entered as a command line argument (-p N).
 
 	<p><ttl>Verbose</ttl> checkbox:
 	<ul><li>If checked, detailed summary information is written as
-	it processes the MUMmer files. The information is written both to the terminal and the <ttx>logs/&lt;proj-to-proj&gt;/symap.log</ttx> file.
+	it processes the MUMmer files. The information is written both to the terminal and the <tt>logs/&lt;proj-to-proj&gt;/symap.log</tt> file.
 	<li>If this is not checked, it will write status information repeatedly on the same terminal line.
 	<li>See <a href="Demo.html#slog" class="ext" target="_blank">Demo examples</a>.
 	<li>It is not saved as a parameter. This can also be turned on using a command line argument:
@@ -338,7 +338,7 @@ See <a href="./input/index.html" class="ext" target="_blank">input</a> for a des
 <table>
 <tr><td>New values take immediate effect on <ttb>Save</ttb>. Most of the values are shown in the <ttl>Selected</ttl>
 section, as shown on the right. The
-values are saved in the <ttx>symap_5/data/seq/&lt;project-name&gt;/params.txt</ttx> file.
+values are saved in the <tt>symap_5/data/seq/&lt;project-name&gt;/params.txt</tt> file.
 <td><a href="img/lineLoad.png"><img src="img/lineLoad.png" alt="Project options" style="border: 1px solid black; width: 430px"></a>
 </table>
 <p>
@@ -359,9 +359,9 @@ values are saved in the <ttx>symap_5/data/seq/&lt;project-name&gt;/params.txt</t
 	<p>Shorter names will work better in the displays.
 	Names must be composed of only letters, numbers, dash, underscore, period.
 	<p><i>It must be unique over all case-insensitive <ttl>Display names</ttl>
-	and <ttx>project-names</ttx></i>.
+	and <ttl>project-names</ttl></i>.
 
-	<td><ttx>project-name</ttx>
+	<td><ttl>project-name</ttl>
 	<td><ttl>Selected</ttl> and all displays.
 
 <tr><td>&nbsp;&nbsp;<ttl>Abbreviation</ttl>
@@ -370,7 +370,7 @@ values are saved in the <ttx>symap_5/data/seq/&lt;project-name&gt;/params.txt</t
 
 	<p>Uniqueness is not required over other <ttl>Abbreviation</ttl>.
 	It can be the same as the corresponding <ttl>Display name</ttl>
-	or <ttx>project-name</ttx> if they are only 4 characters.
+	or <ttl>project-name</ttl> if they are only 4 characters.
 	<td>Last 4 characters of <ttl>Display name</ttl>.
 	<td><ttb>Queries</ttb> column headings, and other places where a guaranteed short name is needed.
 
@@ -491,7 +491,7 @@ This can be reduced by one (or both) of the following:
 <p>
 <ttl>Anno key count</ttl>: If there are many different keywords in the attribute list,
 set this count N to filter out all keywords with &lt;N occurrences.
-The <ttx>Anno Key Count</ttx> can be modified at any time using <ttp>symap</ttp> (not <ttp>viewSymap</ttp>).
+The <ttl>Anno key count</ttl> can be modified at any time using <ttp>symap</ttp> (not <ttp>viewSymap</ttp>).
 <p>
 <ttl>Anno keywords</ttl>: The <tt>keyword=value</tt> pairs to be saved for each gene can be limited by listing
 the desired keywords separated by commas.  Using this approach, it will also reduce
@@ -562,7 +562,7 @@ is very time-consuming, but the synteny computation is not
 (see <a href="SystemGuide.html#time" class="ext" target="_blank">timing results</a>); hence,
 one can make changes to the cluster or synteny parameters and re-run without redoing the alignments.
 <p>
-Select a pair cell in the <ttx>Available Syntenies</ttx> table followed by the <ttl>Parameters</ttl>
+Select a pair cell in the <ttb>Available Syntenies</ttb> table followed by the <ttl>Parameters</ttl>
 button, which will popup the panel shown on the right.
 
 	<p>If a &#10004; or <b>A</b> in pair cell exists and the parameters for a section
@@ -609,7 +609,7 @@ sequential short sequences are put into one file until the file length is &gt;60
 
 <tr><td style="white-space: nowrap;"><ttl>Mask</ttl> &lt;abbrev&gt;<td>Mask out all non-genic parts of the sequences before running MUMmer (gene annotation must
 be provided).
-<p>The &lt;abbrev&gt; is set in the <ttl>Project parameters</ttl> popup <ttx>Abbreviation</ttx> parameter,
+<p>The &lt;abbrev&gt; is set in the <ttb>Project parameters</ttb> popup <ttl>Abbreviation</ttl> parameter,
 and the corresponding project's sequence is masked.
 
 <p>If <ttl>Mask</ttl> is changed after <ttl>A&amp;S</ttl>, the alignment files need to be
@@ -723,7 +723,7 @@ below the parameter explanation. (As of v5.6.0, the parameters generally do not 
 The wrong strand is when all hits in a cluster are to the same strand (++/--)
 yet the cluster aligns to two genes on the different strands (+-/-+), or vice versa.
 
-<p><tt>Algo1</tt> does include these hits. You can view them in the <ttl>Queries</ttl>
+<p><tt>Algo1</tt> does include these hits. You can view them in the <ttp>Queries</ttp>
 where the <ttx>Hit St</ttx> column will be different than the two gene <ttx>Gst</ttx> columns.
 
 <p><tt>Algo2</tt> does NOT include these hits. You can request to view the potential hits
@@ -802,7 +802,7 @@ pseudo number. This is explained below in <a href="#pseudo">Pseudo Genes</a>.
 	<td><ttl>EE, EI, En</ttl>
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Top N piles</ttl>
 	<td><ttx>Algo2</ttx> uses <ttx>Algo1</ttx> <ttl>Top N</ttl> parameter
-for any uncheck categories, but in a more conservative way. It will retain the <ttx>Top N</ttx> hits of a piled region that are within
+for any uncheck categories, but in a more conservative way. It will retain the <ttl>Top N</ttl> hits of a piled region that are within
 80% of the length of the longest hit.
 	<td>2
 </table>
@@ -911,7 +911,7 @@ For draft sequences, they may be ordered against another project.
 See <a href="./SystemGuide.html#draft2" class="ext" target="_blank">Ordering details</a>.
 <table>
 <tr><td>The <ttx>Seq1-&gt;Seq2</ttx> and <ttx>Seq2-&gt;Seq1</ttx> use the
-<ttx>Abbreviation</ttx> set in the <ttl>Project parameters</ttl> panel.
+<ttl>Abbreviation</ttl> set in the <ttb>Project parameters</ttb> panel.
 The "-&gt;" indicates that the first sequence will be ordered against the second.
 <td><a href="img/parameters2b.png"><img src="img/parameters2b.png" alt="pair parameters synteny" style="border: 1px solid black; width: 280px"></a>
 </table>
@@ -967,7 +967,7 @@ For a detail discussion of MUMmer running in SyMAP,
 see <a href="./MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 <p>After running MUMmer, all alignment files are removed except the ".mum" file; to prevent removal,
 <br> execute
-<ttx>./symap -mum</ttx>.
+<tt>./symap -mum</tt>.
 
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>

@@ -5,7 +5,6 @@ a.white {font-family:verdana; font-size:12px; color:white; text-decoration: none
 a.current {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}    
 .topnav {
   height: 85px;		/* same as sidenav padding-top */
-  width: 100%;
   min-width:1000px; /* scroll on shrinking */
   overflow: hidden;
   background-color: #666666;
@@ -47,14 +46,14 @@ a.current {font-family:verdana; font-size:12px; color:white; text-decoration: un
   a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
 }
 
- a.ext {font-weight: bold;}
- ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
- ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
- ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
- ttp  {font-family: Arial, monospace; font-size: 15px; font-weight: 500; color: DarkSlateGrey; }
- tit  {font-family: Helvetica, sans-serif;  font-size: 18px; color:darkblue;font-weight: 900; }
- tt   {font-size:13px}
- pre  {font-size:13px}
+a.ext {font-weight: bold;}
+ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
+ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
+ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
+ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+tit  {font-family: Helvetica, sans-serif; font-size: 18px; color:darkblue;font-weight: 900; }
+tt   {font-size:13px}
+pre  {font-size:13px}
 
 .tz {width: 90%;}
 .tx td {padding: 5px;}				/* table without border */

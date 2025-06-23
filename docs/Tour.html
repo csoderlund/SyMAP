@@ -6,8 +6,10 @@
 	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-	ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
-	ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: Black;}
+	ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
+	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
+	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
+	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
 	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
@@ -62,55 +64,78 @@
 
 
 Following is a quick tour of the many displays and queries available through SyMAP.
-
 <p>
 <h2>Contents</h2>
-<table >
-	<tr>
+<table><tr>
+<td style="padding-left:20px; vertical-align: text-top;">
+<a href="#2g">Whole genome views</a>
+<br><a href="#g-circ">Circle</a>
+<br><a href="#g-dp">Dot Plot</a>
+<br><a href="#g-blk">Block</a>
 
 <td style="padding-left:20px; vertical-align: text-top;">
-<u>Management:</u>
-<p><a href="#mgr">Project Manager</a>
-<p><a href="#exp">Chromosome Explorer</a>
+<a href="#exp">Chromosome Explorer</a>
+<br><a href="#circ">Circle</a>
+<br><a href="#dp">Dot Plot</a>
+<br><a href="#2d3">2D</a>
+<br><a href="#base">Base View</a>
 
 <td style="padding-left:20px; vertical-align: text-top;">
-<u>High-level views:</u>
-<p><a href="#circ">Circle</a>
-<p><a href="#dp">Dot Plot</a>
-<p><a href="#blk">Block</a>
+<a href="#query">Query Interface</a>
+<br><a href="#qres">Query Result</a>
+<br><a href="#ma">Multiple Alignment</a>
 
 <td style="padding-left:20px; vertical-align: text-top;">
-<u>Detailed views:</u>
-<p><a href="#2d3">2D - 3 Chr</a>
-<p><a href="#2d2">2D - 2 Chr</a>
-<p><a href="#2dc">2D Closeup</a>
-<p><a href="#base">Base View</a>
-
-<td style="padding-left:20px; vertical-align: text-top;">
-<u>Analysis:</u>
-<p><a href="#query">Query Interface</a>
-<p><a href="#qres">Query Result</a>
-<p><a href="#ma">Multiple Alignment</a>
+<small><i>Click any image for a close-up view</i></small>
 </table>
 
-<a id="mgr"></a>
-<h3>Project Manager</h3>
-After the synteny database has been build
-(see <a href=SystemGuide.html class="ext" target="_blank">System Guide</a>), the synteny can be viewed
-from the manager. All projects in the database will be listed on the left panel.
-<p>
-<table>
+<a id="2g"></a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<h3>Whole genome views</h3>
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+SyMAP can be used to query and view multiple synteny genome pairs at once (2-3 is best).
+The synteny can be viewed from the <ttp>Project Manager</ttp>.
+All projects in the database will be listed on the left panel.
+
+<p>Selecting projects on the left panel shows them on the right panel.
+A check mark in the <ttb>Available Syntenies</ttb> matrix indicates pairs that
+have computed synteny that can be viewed.
+These can be viewed from the lower <i>multi-genome</i> <ttl>Display for All Pairs</ttl> options.
+
+<p>By selecting a cell with synteny, the <ttl>Display for Selected Pair</ttl> buttons are activated, which
+	display synteny views for the <i>two-genome</i>.
+
+<a id="g-circ"></a>
+<p><table>
 <tr><td style="vertical-align: text-top;">
-Selecting projects on the left panel shows them on the right panel. A check mark in the
-<ttb>Available Syntenies</ttb> matrix indicates pairs that have computed synteny that can be viewed.
+	The <ttp>Project Manager</ttp>
+	<br><a href="img/viewPlants.png">
+	    <img src="img/viewPlants.png" alt="viewPlants" style="border: 1px solid black; width: 450px"></a>
 
-<p>By selecting a cell with synteny,
-the <ttl>Display for Selected Pair</ttl> buttons are activated, which
-display synteny views for the <i>two-genome</i>.
+	<td>The <ttp>Circle</ttp> view shows two genomes.
+	<br><a href="img/circle-2g.png">
+	<img src='img/circle-2g.png' alt="circle-2-genome" style="border: 1px solid black; width: 350px"></a>
+</table>
 
-<p>The <ttl>Display for All Pairs</ttl> provides <i>multi-genome</i> synteny views for all projects in the
-matrix.
-<td><a href="img/symapPlants.png"><img src="img/symapPlants.png" alt="symapPlants" style="border: 1px solid black; width: 550px"></a>
+<a id="g-dp"></a>
+<p>The <ttp>Dot plot</ttp> can show two or more genomes where the image on the lower left shows three.
+	<br>A cell can be clicked to view a chromosome x chromosome <ttp>Dot plot</ttp>, from which a <ttp>2D</ttp>
+	view can be displayed.
+<table>
+<tr><td><a href="img/dotplot-3g.png">
+	<img src='img/dotplot-3g.png' alt="dotplot 2 genome" style="border: 1px solid black; width: 450px"></a>
+
+	<td  style="vertical-align: text-top;"><a href="img/dotplot-2g-cell.png">
+	<img src='img/dotplot-2g-cell.png' alt="dotplot cell" style="border: 1px solid black; width: 350px"></a>
+</table>
+
+<a id="g-blk"></a>
+<p>The <ttp>Block</ttp> view shows two genomes.
+<br>Clicking a chromosome shows a close-up of it, where a block can
+be clicked to view the <ttp>2D</ttp>  display of it.
+<table>
+<tr><td><a href="img/block.png"><img src="img/block.png"  alt="block-2-genome" style="border: 1px solid black; width: 500px"></a>
+<td style="vertical-align: text-top;"><a href="img/block-chr.png"><img src="img/block-chr.png"  alt="block-chr" style="border: 1px solid black; width: 300px"></a>
 </table>
 
 <!-------------------------------------------------->
@@ -119,77 +144,16 @@ matrix.
 <h3>Chromosome Explorer</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The Chromosome Explorer provides <i>multi-chromosome</i> for <i>multi-genome</i>.
-<p>
-<table><tr><td style="vertical-align: text-top;">
-Multiple chromosomes can be selected
-from different species on the left-hand panel.
-<p>The default display is the Circle view shown.
-From here, one can select Dot Plot or 2D.
+The <ttp>Chromosome Explorer</ttp> provides <i>multi-chromosome</i> views for <i>multi-genomes</i>.
+	<p>Multiple chromosomes can be selected from different species on the left-hand panel.
+	<p>The default display is the <ttp>Circle</ttp> view shown. From here, one can select <ttp>Dot Plot</ttp> or <ttp>2D</ttp>.
 
-<p>For <a href="#circ">Circle</a> and
-<a href="#dp">Dot Plot</a>,
-multiple chromosomes can be selected and viewed (as shown below).
-<p>For <a href="#2d3">2D</a>,
-it is best to only have two or three chromosomes selected (as
-shown below).
-
-<td><a href="img/explorer.png"><img src="img/explorer.png" alt="explorer" style="border: 1px solid black; width: 550px"></a>
-</table>
-
-<!-------------------------------------------------->
 <a id="circ"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>Circle View</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-The Circle view is available for <i>two-genome</i> and <i>multi-chromosome</i>.
-<p>The left
-image shows all chromosomes for cabbage and B.rapa.
-The right image shows Cabbage chr1, B.rapa chr2, and A.thal chr3 and chr4.
-
-<table><tr>
-<td style="vertical-align: text-top;"><a href="img/circle-2g.png">
-	<img src='img/circle-2g.png' alt="circle-2-genome" style="border: 1px solid black; width: 350px"></a>
-<td style="vertical-align: text-top;"><a href="img/circle-4chr.png">
-	<img src='img/circle-4chr.png' alt="circle 4 chr" style="border: 1px solid black; width: 370px"></a>
-</table>
-
-<!-------------------------------------------------->
 <a id="dp"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>Dot Plot</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-The Dot Plot view is available for <i>multi-genome</i> and <i>multi-chromosome</i>.
-<p>The left image shows all chromosomes for cabbage, R.rapa and A.thal.
-The right image shows Cabbage chr1, B.rapa chr2, and A.thal chr3 and chr4.
-Synteny blocks are outlined in blue, and one can click to zoom further and
-arrive at a more detailed <a href="#2d2">2D display</a>.
-
-<table><tr>
-<td  style="vertical-align: text-top;"><a href="img/dotplot-3g.png">
-	<img src='img/dotplot-3g.png' alt="dotplot 3 genome" style="border: 1px solid black; width: 430px"></a>
-<td  style="vertical-align: text-top;"><a href="img/dotplot-4chr.png">
-	<img src='img/dotplot-4chr.png' alt="dotplot-4chr" style="border: 1px solid black; width: 320px"></a>
-</table>
-
-<!-------------------------------------------------->
-<a id="blk"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>Block View</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-The Block View is a <i>two-genome</i> view.
-<p>The synteny blocks are colored by chromosome  (see color key at top).
-<p>
 <table>
-<tr>
-<td><a href="img/block.png"><img src="img/block.png"  alt="block-2-genome" style="border: 1px solid black; width: 500px"></a>
-<td style="vertical-align: text-top;">
-Clicking a chromosome pops up a window of the chromosome as shown below. Clicking
-a block pops up a <a href="#2d">2D display</a>.
-<p><a href="img/block-chr.png"><img src="img/block-chr.png" alt="block-2chr" style="border: 1px solid black; width: 200px"></a>
+<tr><td style="vertical-align: text-top;">
+	<td><a href="img/explorer.png"><img src="img/explorer.png" alt="explorer" style="border: 1px solid black; width: 410px"></a>
+	<td><a href="img/dotplot-3chr.png"><img src="img/dotplot-3chr.png" alt="explorer dot plot" style="border: 1px solid black; width: 390px"></a>
 </table>
 
 <!-------------------------------------------------->
@@ -202,28 +166,12 @@ a block pops up a <a href="#2d">2D display</a>.
 This is a <i>three-chromosome</i> view.
 <p>The dark blue and purple down the center of the chromosomes are annotated exons,
 where blue is positive strand and purple is negative strand.
-<p>The brown and green lines between chromosomes are hit-wires connected the similar
-region on the two chromosomes.  The brown are hit-wires with the same orientation on both
+<p>The brown and green lines between chromosomes are hit-wires connecting similar
+regions on the two chromosomes.  The brown are hit-wires with the same orientation on both
 connecting chromosomes and the green are different orientation.
 Only hits that are part of a synteny block are shown here.
 <td><a href="img/2d-3chr.png"><img src='img/2d-3chr.png' alt="2d-3chr" style="border: 1px solid black; width: 550px"></a>
 </table>
-
-<a id="2d2"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>2D 2-Chr</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-<table>
-<tr><td style="vertical-align: text-top;">
-This is a <i>two-chromosome</i> view.
-
-<p>The A.thal Chr4 and Cabbage Chr1 were displayed, a region was selected and the right track flipped.
-<p>The genes are staggered if they overlap by more than 3 bases.
-<p>The thin rectangles near the edge of each track are the hit regions connected by the hit-wire.
-<td><a href="img/2d-2chr-tour.png"><img src='img/2d-2chr-tour.png' alt="" style="border: 1px solid black; width: 550px"></a>
-</table>
-<p>
 
 
 <a id="2dc"></a>
@@ -259,7 +207,6 @@ of the hits in the region.
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 SyMAP includes powerful search features to help make the most of synteny information.
-
 <p>
 <a href="img/query_query.png"><img src="img/query_query.png" alt="query" style="border: 1px solid black; width: 550px"></a>
 
@@ -277,12 +224,11 @@ The query results table has full flexibility in column selection and ordering.
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>Multiple alignment</h3>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-By selecting a one or more rows, the genes sequences will be aligned using
- MUSCLE (Edgar 2004 NAR:32).
+By selecting a one or more rows, the genes sequences can be aligned using
+ MUSCLE or MAFFT (<a href="SystemGuide.html#refs" class="ext" target="_blank">Refs</a><sup>6,7</sup>).
 <p>
 <a href="img/query_msa.png"><img src="img/query_msa.png" alt="multiple alignment" style="border: 1px solid black; width: 550px"></a>
 <p>
-
 	<!---- END BODY -->
 	</td></tr>
 	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
