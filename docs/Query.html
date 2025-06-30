@@ -2,61 +2,54 @@
 <html>
 <head>
 <title>SyMAP Queries</title>
-<style>
-	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
-    a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
-    a.ext {font-weight: bold;}
-    .tx td {padding: 5px;}
-	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
-    .ty td {border: 1px  solid black; padding: 5px; text-align: left}
-    mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-
-    ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
-	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
-	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
-	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-	xx	{line-height: 2}
-    tt {font-size:13px}
-	pre {font-size:13px}
-	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-<a id="top"></a>
-<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
-	<tr><td>
-		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
-			<tr><td style="text-align: left; vertical-align: top; padding: 0">
-					<a href="http://www.agcol.arizona.edu">
-					<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
-				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
-					SyMAP Queries
-				<td style="text-align: right; vertical-align: top; padding: 0">
-					<a href="http://www.arizona.edu">
-					<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
-				<br>
-			<tr><td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
-				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
-					<tr><td style="background-color: #666666; padding-bottom:4px;">
-						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
-						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
-						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-						<a href="./input/index.html" class="white">Input</a>&nbsp;
-						<a href="./SystemGuide.html" class="white">System Guide</a>&nbsp;
-						<a href="./SystemHelp.html" class="white">Parameters</a> <mark class="white">|</mark>
-						<a href="./UserGuide.html" class="white">User Guide</a>&nbsp;
-						<a href="./Query.html" class="current">Queries</a> <mark class="white">|</mark>
-						<a href="./Tour.html" class="white">Tour</a>
-				</table>
-		</table>
-	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
-	<!---- START BODY -->
+<!------ left side index - customize ----------------------------------------------------->
+<div class="sidenav">
+<a href="http://www.agcol.arizona.edu">
+		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
+<p class=sidetit>&nbsp;&nbsp;Queries</p>
+<p>
+<a href="#query">Query Setup</a>
+<a href="#result">Result Panel</a>
+<a href="#rtab">Results</a>
 
-<b>Content:</b>
+<p>&nbsp;
+<a href="#top">Go to top</a>
+</div>
+
+<!------ right side header and body ----------------------------------------------------->
+<div class="rightSide">
+<a id="top"></a>
+
+<div class="topnav"> <!-- header same in all pages -->
+    <br>
+	<table>
+	<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="http://www.arizona.edu">
+		<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+	<td><a href="http://www.bio5.org">
+		<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="https://csoderlund.github.io/SyMAP">SyMAP<br>Home</a>&nbsp;&nbsp;
+	<td><a href="https://github.com/csoderlund/SyMAP/releases">Download</a>&nbsp;&nbsp;
+	<td><a href="./Docs.html">Docs</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./SystemGuide.html">System<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./input/index.html">Input</a>&nbsp;&nbsp;
+	<td><a href="./SystemHelp.html">Parameters</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./UserGuide.html">User<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./Query.html">Queries</a>
+	</table>
+ </div>
+
+<!---------------------------- bulk of page ------------------------------------------->
+<div class="main">
+
 <table>
 <tr>
 <td style="white-space: nowrap; vertical-align: text-top;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -113,21 +106,27 @@ if all project pairs used <ttx>Algo2</ttx>, it will be exon overlap.
 
 <!-------------------QUERY SETUP --------------------------------------------------->
 <a id="query"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h2><small>&gt;</small> Query Setup</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#rules">1. Rules</a> (<a href="#genen">Gene#</a>,
-<a href="#pseudo">Pseudo</a>, <a href="#stop">Wait/Stop</a>)&nbsp;&nbsp;&nbsp;
-<a href="#gen">2. General</a>&nbsp;&nbsp;&nbsp;
-<a href="#sin">3. Single genes</a>&nbsp;&nbsp;&nbsp;
-<a href="#pair">4. Pair Hits</a>&nbsp;&nbsp;&nbsp;
-<a href="#pfs">5. Compute Groups</a>
+<table class="tz"><tr>
+<td><a href="#rules">Rules</a>
+<td><a href="#gen">1. General</a>
+<td><a href="#sin">2. Single genes</a>
+<td><a href="#pair">3. Pair hits</a>
+<td><a href="#pfs">4. Compute Groups</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
 <p>
 
 <a id="rules"></a>
-<h3>1. Rules</h3>
-
+<h3>Rules</h3>
+<table class="tz" style="width:70%"><tr>
+<td><a href="#genen">Gene#, Hit#</a>
+<td><a href="#pseudo">Pseudo</a>
+<td><a href="#stop">Wait/Stop</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
+<p>
 <table>
 <tr><td style="vertical-align: text-top;">
 Set up the desired filters and then select <ttb>Run Query</ttb> to execute it.
@@ -151,9 +150,7 @@ When the search is complete, the <a href="#result">table result panel</a> will b
 </table>
 
 <a id="genen"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <b>Gene#</b>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table>
 <tr><td style="vertical-align: text-top;">
@@ -176,9 +173,7 @@ When the search is complete, the <a href="#result">table result panel</a> will b
 </table>
 
 <a id="pseudo"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <ttl>Pseudo</ttl>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <ttx>Un-annotated</ttx>:
 A hit that does not overlap a gene (annotated from the .gff file) is un-annotated (<i>pseudo gene</i>). It may be numbered
@@ -214,9 +209,7 @@ It cannot stop the database search, but once the search is done, it stops all su
 </table>
 
 <a id="gen"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>2. General</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<h3>1. General</h3>
 
 <table>
 <tr>
@@ -245,9 +238,8 @@ Hits will be shown that have at least one gene, of two possible, with the annota
 
 <!--------------------------------------------------->
 <a id="sin"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>3. Single genes</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<h3>2. Single genes</h3>
+
 <table><tr>
 <td>The <ttl>Single</ttl> queries produces rows of genes; there is no hit or block
 information since the rows do not represent hits.
@@ -280,10 +272,16 @@ a single chromosome can be selected, but location cannot be entered.
 
 <!--------------------------------------------------->
 <a id="pair"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>4. Pair hits</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<h3>3. Pair hits</h3>
+<table class="tz"><tr>
+<td><a href="#block">Block</a>
+<td><a href="#genehit">Annotated</a>
+<td><a href="#coset">Collinear size</a>
+<td><a href="#enter">Enter value</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
 
+<p>
 <table><tr><td>
 Each hit connects two <i>species (projects)</i> and hence represents a <i>pair</i> of aligned
 regions for two of the selected species.
@@ -292,6 +290,7 @@ regions for two of the selected species.
 <img src="img/query_pair.png" alt="Pair" style="border: 1px solid black; width: 400px"></a>
 </table>
 
+<a id="block"></a>
 <p><ttl>In Block (Synteny Hit)</ttl>
 <table class="tx">
 <tr><td  style="vertical-align: text-top;"><ttl>Yes</ttl><td><td>&nbsp;<td>Only hits that are part of a synteny
@@ -328,6 +327,7 @@ the hit must be on the species chromosome, but the "one" gene can be on either e
 <ttl>Every</ttl> or <ttl>Every*</ttl>.
 </table>
 
+<a id="coset"></a>
 <p><ttl>Collinear size</ttl>
 <table class="tx">
 	<tr><td style="white-space: nowrap;vertical-align: text-top;">
@@ -341,10 +341,8 @@ the hit must be on the species chromosome, but the "one" gene can be on either e
 	<tr><td colspan=3>See <a href="Details.html" class="ext" target="_blank">Collinear</a>, which explains the SyMAP collinear sets.
 </table>
 
-<table style="width: 95%"><tr><td style="text-align: left">
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-<p>For the following 4 filters, <i>do not include the 'Chr' number</i>. Instead use the chromosome pull-downs
+<a id="enter"></a>
+<p><u>Enter value:</u> For the following 4 filters, <i>do not include the 'Chr' number</i>. Instead use the chromosome pull-downs
 to narrow the search to a specific chromosome, as exampled in <ttl>Block#</ttl>.
 <p><ttl>Block#</ttl>
 <br>Enter a single block number (<u>the <ttx>Block</ttx> column is formatted Chr.Chr.Block#</u>).
@@ -376,12 +374,12 @@ hits in block 1.2.3.
 <ttl>2D</ttl> <a href="#group">Group</a> pull-down option (similar to <a href="#group_ex">Multi-hit</a>).
 <!--------------------------------------------------->
 <a id="pfs"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>4. Compute Groups</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-&nbsp;&nbsp;&nbsp;<b>Sections:</b> &nbsp;&nbsp;&nbsp;
-<a href="#multi">1. Multi-hit genes</a>&nbsp;&nbsp;&nbsp;
-<a href="#clhit">2. Cluster hits</a>&nbsp;&nbsp;&nbsp;
+<table class="tz"><tr>
+<td><a href="#multi">1. Multi-hit genes</a>
+<td><a href="#clhit">2. Cluster hits</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
 
 <p>These two options are computed on the fly.
 They produce query results with values for the <ttx>Group</ttx> column; this in turn
@@ -420,8 +418,6 @@ allows the <ttl>View 2D</ttl> <a href="#group">Group</a> option to be used.
 	<td>&nbsp;<td>The &gt;=N hits may be on any set of opposite chromosomes for a given species.
 </table>
 
-<table style="width: 95%"><tr><td style="text-align: left">
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table>
 	<tr><td style="vertical-align: text-top;">
@@ -441,9 +437,8 @@ same 2D display).
 
 <!------------ Cluster --------------------->
 <a id="clhit"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>4.2. <ttl>Cluster genes</ttl></h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 <ul>
 <li>This algorithm finds clusters of overlapping genes. That is, every gene in the cluster aligns to at least one
 other gene in the cluster, and all genes that align to any gene in the cluster are included.
@@ -493,16 +488,15 @@ using all hits.
 <!---------------------------------------------------------------------->
 <!---------------------------------------------------------------------->
 <a id="result"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Result Panel</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-&nbsp;&nbsp;&nbsp;<b>Sections:</b> &nbsp;&nbsp;&nbsp;
-<a href="#tab">1. Results table</a>&nbsp;&nbsp;&nbsp;
-<a href="#col">2. Columns</a>&nbsp;&nbsp;&nbsp;
-<a href="#stat">3. Statistics</a>&nbsp;&nbsp;&nbsp;
-<a href="#but">4. Top buttons</a>&nbsp;&nbsp;&nbsp;
-
+<table class="tz"><tr>
+<td><a href="#tab">1. Results table</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#col">2. Columns</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#stat">3. Statistics</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#but">4. Top buttons</a>&nbsp;&nbsp;&nbsp;
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
 <!----------------------------------------------------->
 <a id="tab"></a>
 <h3>1. Results Table</h3>
@@ -530,15 +524,14 @@ using all hits.
 column name. You can add/remove columns using the <ttb>Select Columns</ttb> button at the bottom.
 
 <a id="col"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>2. Columns</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-&nbsp;&nbsp;&nbsp;<b>Sections:</b>&nbsp;&nbsp;&nbsp;
-<a href="#pairCol">1. Pair hits columns</a>&nbsp;&nbsp;&nbsp;
-<a href="#singleCol">2. Single gene columns</a>&nbsp;&nbsp;&nbsp;
-<a href="#save">3. Auto-save columns</a>
-
+<table class="tz"><tr>
+<td><a href="#pairCol">1. Pair hits columns</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#singleCol">2. Single gene columns</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#save">3. Auto-save columns</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
 <p><a href="img/query_columns.png">
 <img src="img/query_columns.png" alt="query columns" style="border: 1px solid black; width: 600px"></a>
 
@@ -559,9 +552,7 @@ column name. You can add/remove columns using the <ttb>Select Columns</ttb> butt
 are the full descriptions of the columns.
 
 <a id="pairCol"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>2.1 Pair hits columns</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="tx">
 <tr><td colspan=3><ttl>General</ttl>
@@ -633,9 +624,7 @@ are the full descriptions of the columns.
 
 <!---------------------------------------------------------------------------->
 <a id="singleCol"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>2.2. Single genes columns</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 The single genes table only has the
 <ttl>Gene Info</ttl> and <ttl>Annotation</ttl> columns, with one additional column, as follows.
@@ -661,9 +650,7 @@ For example:
 </table>
 
 <a id="save"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>2.3 Columns and order shown</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 During a SyMAP session, when you display a new table,
 it will use the columns and order  from the last table created or modified (add/remove columns).
@@ -676,9 +663,7 @@ that the next time you <ttp>viewSymap</ttp>, the table will show the same column
 the last SyMAP database queried (they may seem some what random to a different SyMAP database).
 
 <a id="stat"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>3. Statistics</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 Statistics for the query results are shown at the bottom of the results table. They can be
 hidden by selecting <ttl>Hide Stats</ttl>.
 <p><a href="img/query_stats.png"><img src="img/query_stats.png" alt="result stats" style="border: 1px solid black; width: 450px"></a>
@@ -705,32 +690,32 @@ where the first set is 1-50, the second is 51-192, etc.
 
 <!--------------------------------------------------------------------->
 <a id="but"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>4. Top buttons</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-&nbsp;&nbsp;&nbsp;<b>Sections</b>&nbsp;&nbsp;&nbsp;
-	<a href="#showRow">1. Show</a>&nbsp;&nbsp;&nbsp;
-	<a href="#msaAlign">2. MSA...</a>&nbsp;&nbsp;&nbsp;
-	<a href="#view2D">3. View 2D</a>&nbsp;&nbsp;&nbsp;
-	<a href="#export">4. Export...</a>&nbsp;&nbsp;&nbsp;
-	<a href="#report">5. Gene Report...</a>&nbsp;&nbsp;&nbsp;
-	<a href="#search">6. Search...</a>
+<table class="tz"><tr>
+<td><a href="#showRow">1. Show</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#msaAlign">2. MSA...</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#view2D">3. View 2D</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#export">4. Export...</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#report">5. Gene Report...</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#search">6. Search...</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
+
+
 <p>
 <a href="img/query_buttons.png"><img src="img/query_buttons.png" alt="query buttons" style="border: 1px solid black; width: 600px"></a>
 <p>The <ttl>Unselect All</ttl> unselects any selected rows.
 
 <a id="showRow"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>4.1 Show</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 For the selected row, a popup will show all columns and associated information for the hit.
 The text in the popup can be copied.
 
 <a id="msaAlign"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>4.2 MSA...</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 Below is an image of a multiple alignment. The right half shows the sequence, where the
 first row is the consensus: A 'n' (purple) is used where there is no majority base.
 Lowercase (green) is used if there is a least one mismatch.
@@ -788,9 +773,8 @@ one(s) that are used in certain unusual situations when <tt>--auto</tt> is used.
 See <a href="TroubleShoot.html#macos">MacOS and external programs</a> to fix this.
 
 <a id="view2D"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>4.3 View 2D</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 
 <a href="img/query_2D.png"><img src="img/query_2D.png" alt="query 2D" style="border: 1px solid black; width: 400px"></a>
 <p>This displays the <ttl>2D</ttl> view for the selected entry (see <a href="#msp">3-chromosomes</a>).
@@ -831,9 +815,8 @@ The region displayed can be specified by the drop-down beside the <ttl>View 2D</
 	will be shown (see 2D image on lower right).
 </table>
 
-<table style="width: 95%"><tr><td style="text-align: left">
-<u>Example:</u>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<p><u>Example:</u>
 
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
@@ -854,9 +837,7 @@ The region displayed can be specified by the drop-down beside the <ttl>View 2D</
 </table>
 
 <a id="export"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>4.4 Export...</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 One or more rows can be selected for the following exports; or if no rows are selected, the entire table is exported.
 
 <table class="tx">
@@ -879,16 +860,17 @@ it may be desirable to exclude it in the output.
 <!------------------------------------------------------------------------->
 <!-------------------------REPORT------------------------------------------------>
 <a id="report"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>4.5 Gene Report...</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-&nbsp;&nbsp;&nbsp;<b>Contents</b>&nbsp;&nbsp;&nbsp;
-	<a href="#rint">Interface</a>&nbsp;&nbsp;&nbsp;
-	<a href="#rgene">Gene report</a>&nbsp;&nbsp;&nbsp;
-	<a href="#rcoset">Collinear report</a>&nbsp;&nbsp;&nbsp;
-	<a href="#rmulti">Multi-hit gene report</a>&nbsp;&nbsp;&nbsp;
-	<a href="#rclust">Cluster gene report</a>&nbsp;&nbsp;&nbsp;
 
+<table class="tz"><tr>
+	<td><a href="#rint">Interface</a>
+	<td><a href="#rgene">Gene<br>report</a>
+	<td><a href="#rcoset">Collinear<br>report</a>
+	<td><a href="#rmulti">Multi-hit<br>gene report</a>
+	<td><a href="#rclust">Cluster<br>gene report</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
+<p>
 <ul>
 <li>The report is on the genes in the query table; <i>hits without paired genes are ignored</i>.
 <li>Unless the query is for <ttl>Collinear</ttl>, <ttl>Multi-hit</ttl> or <ttl>Cluster genes</ttl>, a <ttl>Gene</ttl>
@@ -944,9 +926,8 @@ by a ";".
 The following discussion will all apply to results from 3 or 4 species.
 <!--------------------------------------->
 <a id="rgene"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>Gene Report</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 <table class="ty">
 <tr><td style="white-space: nowrap;" colspan="3"><ttb>Gene</ttb> - additional options for &gt;2 species
 	<tr><td style="white-space: nowrap;">
@@ -970,9 +951,7 @@ The following discussion will all apply to results from 3 or 4 species.
 
 <!--------------------------------------->
 <a id="rcoset"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>Collinear Report</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Collinear sets are grouped to show the union of overlapping sets for the reference gene.
 <p><table class="ty">
@@ -1004,9 +983,8 @@ Collinear sets are grouped to show the union of overlapping sets for the referen
 
 <!---- Multi-gene Group ---->
 <p><a id="rmulti"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>Multi-hit gene report</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 Shows reference genes that align to at least N genes, where N is the number input on the query panel.
 
 <p><table class="ty">
@@ -1021,9 +999,7 @@ This used the <ttx>Gene#</ttx> option so it prefixes the annotations.
 
 <!---- Cluster Group ---->
 <p><a id="rclust"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>4.5.5 Cluster hit report</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="tx">
 <tr><td>
@@ -1058,9 +1034,7 @@ are included.
 
 <!--------------------------------------------------------------------------->
 <a id="search"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>4.6 Search...</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="tx">
 <tr><td>The <ttl>Search...</ttl> produces a popup as shown on the right.
@@ -1084,9 +1058,8 @@ the <ttx>Gene Annotation</ttx> of 'desc' or 'product'.
 <hr>
 <!--------------------------------------------------------------------------->
 <a id="rtab"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h2><small>&gt;</small> Results</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 
 <a href="img/query_result_tab.png"><img src="img/query_result_tab.png" alt="query results tab" style="border: 1px solid black; width: 600px"></a>
 <p>All query results are listed under the <ttb>&gt; Results</ttb> tab on the left.
@@ -1098,9 +1071,7 @@ by <ttl>Remove Selected</ttl>, remove all with <ttl>Remove All</ttl>.
 
 <!---------------------------------------------------------------->
 <a id="msp"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>3-chromosomes</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 &rarr; <a href="#report">Report</a> is only way to view more than two species in a query row (described
 immediately above).
@@ -1126,14 +1097,13 @@ shows how to highlight shared or unique genes in the 2D display of 3 chromosomes
 	<td><a href="img/2d-3d-coset.png"><img src="img/2d-3chr-coset.png" alt="report A.thal ref" style="border: 1px solid black; width: 480px"></a>
 </table>
 
+<!---- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-<!---- END BODY -->
-	</td></tr>
-	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
-                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
-</td></tr>
-</table>
+
+<p class="trailer">  Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></p>
+</div>
+</div>
 </body>
 </html>
 

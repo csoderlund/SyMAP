@@ -2,106 +2,167 @@
 <html>
 <head>
 <title>SyMAP MUMmer</title>
-<style>
-	:link {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-
-	ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
-	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
-	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
-	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-
-    a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
-    a.ext {font-weight: bold;}
-    mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-    tt {font-size:13px}
-	pre {font-size:13px}
-	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+<!------ left side index - customize ----------------------------------------------------->
+<div class="sidenav">
+<a href="http://www.agcol.arizona.edu">
+		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
+<p class=sidetit>&nbsp;&nbsp;MUMmer</p>
+<p>
+<a href="#mfiles">MUMmer files</a>
+<a href="#log">Finding the problem</a>
+<a href="#mem">Out of Memory</a>
+<a href="#cmd">MUMmer from the command line</a>
+<a href="#help">Getting Help</a>
+<p>&nbsp;
+<a href="#top">Go to top</a>
+</div>
+
+<!------ right side header and body ----------------------------------------------------->
+<div class="rightSide">
 <a id="top"></a>
-<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
-	<tr><td>
-		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
-			<tr>
-				<td style="text-align: left; vertical-align: top; padding: 0">
-					<a href="http://www.agcol.arizona.edu">
-						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
-				</td>
-				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
-					Using MUMmer from SyMAP
-				</td>
-				<td style="text-align: right; vertical-align: top; padding: 0">
-					<a href="http://www.arizona.edu">
-						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
-					<br>
-					<a href="http://www.bio5.org">
-						<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
-				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
-					<tr>
-						<td style="background-color: #666666; padding-bottom:4px;">
-						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
-						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
-						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-						<a href="./input/index.html" class="white">Input</a>&nbsp;
-						<a href="./SystemGuide.html" class="white">System Guide</a>&nbsp;
-						<a href="./SystemHelp.html" class="white">Parameters</a> <mark class="white">|</mark>
-						<a href="./UserGuide.html" class="white">User Guide</a>&nbsp;
-						<a href="./Query.html" class="white">Queries</a> <mark class="white">|</mark>
-						<a href="./Tour.html" class="white">Tour</a>
-					</tr>
-				</table>
-				</td>
-			</tr>
-		</table>
-	</td></tr>
 
-	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
-	<!---- START BODY -->
+<div class="topnav"> <!-- header same in all pages -->
+    <br>
+	<table>
+	<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="http://www.arizona.edu">
+		<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+	<td><a href="http://www.bio5.org">
+		<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="https://csoderlund.github.io/SyMAP">SyMAP<br>Home</a>&nbsp;&nbsp;
+	<td><a href="https://github.com/csoderlund/SyMAP/releases">Download</a>&nbsp;&nbsp;
+	<td><a href="./Docs.html">Docs</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./SystemGuide.html">System<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./input/index.html">Input</a>&nbsp;&nbsp;
+	<td><a href="./SystemHelp.html">Parameters</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./UserGuide.html">User<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./Query.html">Queries</a>
+	</table>
+ </div>
 
-This document discusses how to deal with one or more MUMmer alignments failing.
+<!---------------------------- bulk of page ------------------------------------------->
+<div class="main">
+<p>This document discusses how to deal with one or more MUMmer alignments failing.
 The corresponding MUMmer documentation is
 <a href="http://mummer.sourceforge.net" class="ext" target="_blank">v3</a> and
 <a href="https://mummer4.github.io" class="ext" target="_blank">v4</a>.
 <p>
-<table class="tx">
-<tr><th colspan=2>Contents
-<tr><td>
-<ul>
-	<li><a href="#ext">Executables</a>
-	<li><a href="#mfiles">MUMmer output from SyMAP</a>
-	<li><a href="#log">Finding the problem</a>
-		<ul>
-			<li><a href="#help">Getting Help</a>
-		</ul>
-	<li><a href="#mem">Out of Memory</a>
-		<ul>
-			<li><a href="#cat">Limit CPUs and uncheck Concat</a>
-			<li><a href="#mask">Not-masked or Soft-masked</a>
-			<li><a href="#fail1">Fail immediately</a>
-			<li><a href="#fail2">One or more alignments fail</a>
-		</ul>
-</ul>
+<table class="center">
 
+<tr><td style="vertical-align: text-top;" class="tx">
+	<table>
+	<tr><td><a href="#mfiles">MUMmer files</a>
+	<tr><td><a href="#log">Finding the problem</a>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#mum4">Using MUMmer4</a>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#ext">Executables</a>
+	</table>
+<td>&nbsp;&nbsp;&nbsp;
+<td>
+	<table>
+	<tr><td><a href="#mem">Out of Memory</a>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#cat">Limit CPUs and uncheck Concat</a>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#mask">Not-masked or Soft-masked</a>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#fail2">One or more alignments fail</a>
+	</table>
+<td>&nbsp;&nbsp;&nbsp;
 <td style="vertical-align: text-top;">
-	<ul>
-	<li><a href="#mum4">Using MUMmer4 from SyMAP</a>
-	<li><a href="#cmd">Running MUMmer from the command line</a>
-	<li><a href="#mac">MacOS details</a>
-	</ul>
+	<table>
+	<tr><td><a href="#cmd">MUMmer from the command line</a>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#example">Example</a>
+	<tr><td>&nbsp;
+	<tr><td><tr><td><a href="#help">Getting Help</a>
+	</table>
 </table>
 
+<!-------------------------------------------------------------->
+<a id="mfiles"></a>
+<h2>MUMmer files</h2>
+
+When <ttp>symap</ttp> executes MUMmer, the resulting alignment files are in:
+<pre>
+   /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/align
+</pre>
+For example,
+<pre>
+   data/seq_results/demo_seq_to_demo_seq2/align> ls
+   all.done				demo_seq_cc.demo_seq2_f2.mum
+   demo_seq_cc.demo_seq2_f1.mum		demo_seq_cc.demo_seq2_f2.mum.done
+   demo_seq_cc.demo_seq2_f1.mum.done
+</pre>
+
+<p>All MUMmer files but the ".mum" are removed by <tt>symap</tt>; if you prefer them not to be removed,
+start <tt>symap</tt> with the "-mum" command line parameter, i.e.
+<tt> ./symap -mum</tt>
+
+<p>The log files are in the <tt>/logs/&lt;project-name1&gt;-to-&lt;project-name2&gt</tt> directory.
+
+<!------------------------------------------------------------->
+<a id="log"></a>
+<h2>Finding the problem</h2>
+
+<table class="tz" style="width:70%"><tr>
+<td><a href="#mum4">Using MUMmer4</a>
+<td><a href="#ext">Executables</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
+
+<p>If the MUMmer alignment fails, first check the <a href="#ext">Executables</a>.
+If they are okay, then inspect the log files.
+The log files are as follows:
+<p>&nbsp;&nbsp;<ttx>p1</ttx> = <ttx>project-name1</ttx> and <ttx>p2</ttx> = <ttx>project-name2</ttx>
+
+<pre>
+   symap_5/
+     error.log   # a SyMAP error will write its trace data into this file and list failed MUMmer
+
+     logs/
+       &lt;p1&gt;-to-&lt;p2&gt;/         # one directory per project-to-project alignment
+          &lt;p1_cc.p2_f1&gt;.log  # MUMmer terminal output - one file per MUMmer process
+          &lt;p1_cc.p2_f2&gt;.log  #    fn is n=1,2... for number of processes, e.g f2 is 2nd process
+          symap.log          # keeps most of the SyMAP output shown on the terminal for this A&S
+</pre>
+
+e.g. <ttx>p1</ttx> = <ttx>demo_seq</ttx> and <ttx>p2</ttx> = <ttx>demo_seq2</ttx>
+<pre>
+       demo_seq_to_demo_seq2/
+         demo_seq_cc.demo_seq2_f1.log  # MUMmer output directed to this file
+         demo_seq_cc.demo_seq2_f2.log  #   same for the second mummer execution
+         symap.log                     # SyMAP terminal output
+</pre>
+
+&rarr; If an alignment is listed as failed in the <tt>error.log</tt> file,
+the corresponding <tt>&lt;p1_cc.p2_fn&gt;.log</tt> file will contain the MUMmer error
+(see <a href="img/mummerLog.png">example mummer log</a>).
+<p>&rarr;
+If the error is not found in the log files or it is not clear, try the following:
+<br>Copy the command from the terminal (or log file), and paste it on a new terminal line to execute, e.g.
+(the following is one line wrapped around):
+<pre>
+  ext/mummer/mac/promer -p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_cc.demo_seq2_f2.promer
+  data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa
+  data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
+</pre>
+This shows <tt>promer</tt> output directly on the terminal. Typically the problem is not enough memory.
+
+<!----------------------------------------------------->
+<a id="mum4"></a>
+<h3>Using MUMmer4</h3>
+
+Sometimes when MUMmer v3 fails, MUMmer v4 will work.
+MUMmer4 is included in SyMAP package with a fix to <tt>promer</tt>.
+Enter the <tt>ext/mummer4</tt> directory and follow the instructions in the README.
+
+<!------------------------------------------------------->
 <a id="ext"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>Executables</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<h3>Executables</h3>
 
 The alignment programs are provided in the <tt>symap/ext</tt> directory. There are
 executables for 64-bit Linux and 64-bit MacOS. SyMAP will
@@ -127,96 +188,33 @@ Execute the program from the command line to make sure it works on you machine, 
 </pre>
 The above shows that the promer code will execute on my MacOS.
 
-<a id="mfiles"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>MUMmer output from SyMAP</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-The resulting alignment files are in:
+<p><u>Executable on MacOS</u>:
+Any executable that has not been okayed by Apple results in the error message
 <pre>
-   /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/align
+  cannot be opened because the developer cannot be verified
 </pre>
-For example,
-<pre>
-   data/seq_results/demo_seq_to_demo_seq2/align> ls
-   all.done				demo_seq_cc.demo_seq2_f2.mum
-   demo_seq_cc.demo_seq2_f1.mum		demo_seq_cc.demo_seq2_f2.mum.done
-   demo_seq_cc.demo_seq2_f1.mum.done
-</pre>
+See <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS External</a> for the fix.
 
-<p>All MUMmer files but the ".mum" are removed by <tt>symap</tt>; if you prefer them not to be removed,
-start <tt>symap</tt> with the "-mum" command line parameter, i.e.
-<tt> ./symap -mum</tt>
-
-<p>The log files are in the <tt>/logs/&lt;project-name1&gt;-to-&lt;project-name2&gt</tt> directory.
-
-<a id="log"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>Finding the problem</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-If the MUMmer alignment fails, inspect the log files.
-The log files are as follows, where
-<br>&nbsp;&nbsp;<ttx>p1</ttx> = <ttx>project-name1</ttx> and <ttx>p2</ttx> = <ttx>project-name2</ttx> of the
-analyzed pair:
-<pre>
-   symap_5/
-     error.log   # a SyMAP error will write its trace data into this file and list failed MUMmer
-
-     logs/
-       &lt;dbName&gt;_LOAD.log     # keeps track of data loaded or removed from database.
-       &lt;p1&gt;-to-&lt;p2&gt;/         # one directory per project-to-project alignment
-          &lt;p1_cc.p2_f1&gt;.log  # MUMmer terminal output - one file per MUMmer process
-          &lt;p1_cc.p2_f2&gt;.log  #    fn is n=1,2... for number of processes, e.g f2 is 2nd process
-          symap.log          # keeps most of the SyMAP output shown on the terminal for this A&S
-
-     e.g. p1 = demo_seq, p2 = demo_seq2
-       symapDemo_load.log
-       demo_seq_to_demo_seq2/
-         demo_seq_cc.demo_seq2_f1.log  # MUMmer output directed to this file
-         demo_seq_cc.demo_seq2_f2.log  #   same for the second mummer execution
-         symap.log                     # SyMAP terminal output
-</pre>
-
-&rarr; If an alignment is listed as failed in the <tt>error.log</tt> file,
-the corresponding <tt>&lt;p1_cc.p2_fn&gt;.log</tt> file will contain the MUMmer error
-(see <a href="img/mummerLog.png">example mummer log</a>).
-<p>&rarr;
-If the error is not found in the log files or it is not clear, try the following:
-<br>Copy the command from the terminal (or log file), and paste it on a new terminal line to execute, e.g.
-(the following is one line wrapped around):
-<pre>
-  ext/mummer/mac/promer -p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_cc.demo_seq2_f2.promer
-  data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa
-  data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
-</pre>
-This shows <tt>promer</tt> output directly on the terminal.
-
-<!----------------------------------------------------->
-<a id="help"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>Getting Help</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-If none of these suggestions fix your problem,
-email <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
-with the following files (described above):
-<ol>
-<li><tt>error.log</tt>
-<li><tt>logs/&lt;p1&gt;-to-&lt;p2&gt;/symap.log</tt>
-<li><tt>logs/&lt;p1&gt;-to-&lt;p2&gt;/&lt;p1_cc.p2.fn&gt;.log</tt> where n is the process number
-<li>Any output to the terminal (either copy and paste into the email, or send a screen capture)
-</ol>
-For example, email the terminal output and:
-<pre>
-  symap/error.log
-  symap/logs/demo_seq_to_demo_seq2/symap.log
-  symap/logs/demo_seq_to_demo_seq2/demo_seq_cc.demo_seq2_f2.log
-</pre>
-
+<!-------------------------------------------------->
 <a id="mem"></a>
 <h2>Out of memory</h2>
-A MUMmer failure is typically from insufficient memory.
-The following error typically indicates a memory problem.
+
+<table class="tz"><tr>
+<td><a href="#cat">Limit CPUs and<br>uncheck Concat</a>
+<td><a href="#mask">Not-masked or<br>Soft-masked</a>
+<td><a href="#fail2">One or more<br>alignments fail</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
+<p>A MUMmer failure is typically from insufficient memory.
+
+<p>If an alignment fails immediately, and if the last line of the first <tt>&lt;alignment&gt;.log</tt> file is:
+<pre>
+  1: PREPARING DATA
+</pre>
+the reason is probably that your machine does not have near enough memory as MUMmer could not even
+prepare the data.
+
+<p>Additionally, the following errors typically indicates a memory problem:
 <pre>
   Alignment program error code: 141
   20220512|075853|6007| ERROR: mummer and/or mgaps returned non-zero, please file a bug report
@@ -227,45 +225,31 @@ or
 Alignment program error code: 1
 </pre>
 The error code will appear on the terminal and the MUMmer log file,
-but not in the <tt>symap/logs/&lt;..&gt;/symap.log</tt> file.
+but not in <tt>symap/logs/&lt;..&gt;/symap.log</tt>.
 
 <!----------------------------------------------------->
 <a id="cat"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Limit CPUs and uncheck Concat</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 There is no straight-forward way to know if you have enough memory as it depends on the
-size and complexity of the two genomes being compared. If you think memory may be tight,
-you can limit the amount used by limiting the number of CPUs, as each
+size and complexity of the two genomes being compared.
+If you think memory may be tight or MUMmer produced an error as shown in the section above,
+first try running again with reduced CPUs and unchecked <ttl>Concat</ttl>:
+<ol>
+<li>On the <ttb>Project Manager</ttb> panel, limit the number of CPUs, as each
 CPU uses a considerable amount of memory (e.g. 4 CPUs could collectively use 20GB of memory at once).
-<p>
-<table>
-<tr><td><a href="img/concat.png"><img src="img/concat.png" alt="concat" style="border: 1px solid black; width: 400px"></a>
-<td>See <a href="SystemHelp.html#concat" class="ext" target="_blank">CPU and Concat</a> for a description of these
-options and timing results.
-</table>
-
+<p><li>
+In the <ttb>Project Parameters</ttb> panel, uncheck <ttl>Concat</ttl> to reduce the
+size of the input files to MUMmer.
+See <a href="SystemHelp.html#concat" class="ext" target="_blank">Concat</a> for a description of
+this option.
+</ol>
 <!----------------------------------------------------->
 <a id="mask"></a>
 <h3>Not-masked or Soft-masked</h3>
 A memory problem can occur if the genome sequence is not masked or only soft-masked.
 Either: (1) change the sequence to hard-masked, or (2) set the
 <a href="SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parameters</a> parameter <ttx>Mask</ttx>.
-<p>
-
-<!----------------------------------------------------->
-<a id="fail1"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>Fails immediately</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-If an alignment fails immediately, and if the last line of the first <tt>&lt;alignment&gt;.log</tt> file is:
-<pre>
-  1: PREPARING DATA
-</pre>
-the reason is probably that your machine does not have near enough memory as MUMmer could not even
-prepare the data. Try it again with unchecked <ttb>Concat</ttb>; if that does not work, you need more memory.
 
 <!----------------------------------------------------->
 <a id="fail2"></a>
@@ -292,25 +276,18 @@ you will see a "?" for the pair as shown on the below.
 <ttb>Selected Pair</ttb> and it will complete the failed processes.
 </table>
 
-<!----------------------------------------------------->
-<!----------------------------------------------------->
-<a id="mum4"></a>
-<h2>Using MUMmer4 from within SyMAP</h2>
-Sometimes when MUMmer v3 fails, MUMmer v4 will work.
-MUMmer4 is included in SyMAP package with a fix to <tt>promer</tt>.
-Enter the <tt>ext/mummer4</tt> directory and follow the instructions in the README.
-<p>My observations on MacOS indicate that MUMmer v4 takes more memory
-but less time than MUMmer v3.
-
+<!------------------------------------------------------------------>
 <a id="cmd"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Running MUMmer from the command line</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<table class="tz" style="width:70%"><tr>
+<td><a href="#example">Example</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
 
 If you need to run MUMmer using the command line from some other machine, do the following:
 
 <ol>
-<li>If your chromosomes are large, split the sequence file into chromosome files using <a href="input/index.html#sp">xToSymap</a>.
+<li>If your chromosomes are large, split the sequence file into chromosome files using <a href="input/index.html#sp" class="ext" target="_blank">xToSymap</a>.
 Process each chromosome file for the first genome with each chromosome file for the second genome.
 <p>
 <li>Create a directory <tt>data/seq_results/&lt;proj1-to-proj2&gt;/align</tt> where <tt>proj1</tt> is
@@ -330,7 +307,6 @@ If you have many chromosome pairs to process, put them in a script, e.g. <a href
 	</ul>
 <p>To view the MUMmer parameters, see <a href="SystemHelp.html#mum" class="ext" target="_blank">MUMmer parameters</a>.
 <p>
-
 <li>Result files:
 <ul>
 <li>The result files must have suffix ".mum"
@@ -346,7 +322,9 @@ the files in the directory ending with ".mum".
 <li>When you run <ttb>Selected Pair</ttb>, SyMAP will recognize the files and use them to build the synteny blocks.
 </ol>
 
-<p><u><b>Example</b></u>: This example will use MUMmer for the loaded projects <tt>demo_seq</tt> and <tt>demo_seq2</tt>.
+<a id="example"></a>
+<h3>Example</h3>
+This example will use MUMmer for the loaded projects <tt>demo_seq</tt> and <tt>demo_seq2</tt>.
 First, remove the directory <tt>data/seq_results/demo_seq_to_demo_seq2</tt>.
 
 <p><tt>Demo_seq</tt> has chr3 and chr5 in the file <tt>genomic.a</tt> and
@@ -371,36 +349,32 @@ See <a href="input/logs/mummer.html">script</a> for the full set of mummer comma
 
 <p>This demo has been fully tested with <ttp>symap</ttp> v5.6.9.
 
-<a id="mac"></a>
+
+<!----------------------------------------------------->
+<a id="help"></a>
+<h2>Getting Help</h2>
+
+If none of these suggestions fix your problem,
+email <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+with the following files (described in <a href="#mfiles">MUMmer files</a>):
+<ol>
+<li><tt>error.log</tt>
+<li><tt>logs/&lt;p1&gt;-to-&lt;p2&gt;/symap.log</tt>
+<li><tt>logs/&lt;p1&gt;-to-&lt;p2&gt;/&lt;p1_cc.p2.fn&gt;.log</tt> where n is the process number
+<li>Any output to the terminal (either copy and paste into the email, or send a screen capture)
+</ol>
+For example, email the terminal output and:
+<pre>
+  symap/error.log
+  symap/logs/demo_seq_to_demo_seq2/symap.log
+  symap/logs/demo_seq_to_demo_seq2/demo_seq_cc.demo_seq2_f2.log
+</pre>
+<!---- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">
-<h2>MacOS details</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<u>Executable on MacOS</u>:
-Any executable that has not been okayed by Apple get the error message
-<pre>
-  cannot be opened because the developer cannot be verified
-</pre>
-See <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS External</a> for the fix.
-
-<p><u>Early versions of MacOS</u>:
-The MacOS executables were compiled on a MacOS 10.15. They will not work on old versions such as MacOS 10.9.
-Try the following:
-<pre>
-   cd ext/mummer
-   mv mac mac_506
-   mv mac_pre506 mac
-   cd ../muscle
-   mv muscle muscle_506
-   mv muscle_pre506 muscle
-</pre>
-These executables compiled on MacOS 10.9 may work on your Mac.
-<!---- END BODY -->
-	</td></tr>
-	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
-                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
-</td></tr>
-</table>
+<p class="trailer">  Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></p>
+</div>
+</div>
 </body>
 </html>
-

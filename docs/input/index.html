@@ -2,149 +2,119 @@
 <html>
 <head>
 <title>SyMAP input</title>
-<style>
-   a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
-   a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
-   a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-   a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
-   a.ext {font-weight: bold;}
-   a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
-    ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
-	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
-	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
-	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-	tt {font-size:13px}
-	pre {font-size:13px; margin-top: 0;}
-    ul { margin-top: 0; }
-    p { margin-bottom: 0; }
-   mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-   body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
-   .ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
-   .ty td, th {border: 1px  solid black; padding: 5px; }
-   .tx td {padding: 5px;}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../style.css">
 </head>
 
 <body>
+<!------ left side index - customize ----------------------------------------------------->
+<div class="sidenav">
+<a href="http://www.agcol.arizona.edu">
+		<img src="../img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
+<p class=sidetit>&nbsp;&nbsp;Input</p>
+<p>
+<a href="#projDir">Input files</a>
+<a href="#if">xToSymap</a>
+<a href="./ncbi.html" class="ext" target="_blank">NCBI</a>
+<a href="./ensembl.html" class="ext" target="_blank">Ensembl</a>
+<a href="./Other.html" class="ext" target="_blank">Other</a>
+<a href="#gen">General</a>
+<p>&nbsp;
+<a href="#top">Go to top</a>
+</div>
+
+<!------ right side header and body ----------------------------------------------------->
+<div class="rightSide">
 <a id="top"></a>
-<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
-   <tr><td>
-      <table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
-         <tr>
-            <td style="text-align: left; vertical-align: top; padding: 0">
-               <a href="http://www.agcol.arizona.edu">
-                  <img src="../img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
-            </td>
-            <td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
-               SyMAP input and xToSymap
-            </td>
-            <td style="text-align: right; vertical-align: top; padding: 0">
-               <a href="http://www.arizona.edu">
-                  <img src="../img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
-               <br>
-               <a href="http://www.bio5.org">
-                  <img src="../img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
-            </td>
-         </tr>
-         <tr>
-            <td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
-            <table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
-               <tr>
-                  <td style="background-color: #666666; padding-bottom:4px;">
-                  <a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
-                  <a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
-                  <a href="../Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-                  <a href="./index.html" class="current">Input</a>&nbsp;
-                  <a href="../SystemGuide.html" class="white">System Guide</a>&nbsp;
-                  <a href="../SystemHelp.html" class="white">Parameters</a> <mark class="white">|</mark>
-                  <a href="../UserGuide.html" class="white">User Guide</a>&nbsp;
-                  <a href="../Query.html" class="white">Queries</a> <mark class="white">|</mark>
-                  <a href="../Tour.html" class="white">Tour</a>
-               </tr>
-            </table>
-            </td>
-         </tr>
-      </table>
-   </td></tr>
 
-   <tr><td style='vertical-align: top; text-align: left; padding:15px;'>
-   <!---- START BODY -->
+<div class="topnav"> <!-- header same in all pages -->
+    <br>
+	<table>
+	<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="http://www.arizona.edu">
+		<img src="../img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+	<td><a href="http://www.bio5.org">
+		<img src="../img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="https://csoderlund.github.io/SyMAP">SyMAP<br>Home</a>&nbsp;&nbsp;
+	<td><a href="https://github.com/csoderlund/SyMAP/releases">Download</a>&nbsp;&nbsp;
+	<td><a href="../Docs.html">Docs</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="../SystemGuide.html">System<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="../input/index.html">Input</a>&nbsp;&nbsp;
+	<td><a href="../SystemHelp.html">Parameters</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="../UserGuide.html">User<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="../Query.html">Queries</a>
+	</table>
+ </div>
 
+<!---------------------------- bulk of page ------------------------------------------->
+<div class="main">
+<p>&nbsp;
 <center>
 <table>
-
 <tr>
 <td style="vertical-align: text-top;">
    <table>
-   <tr><td>&nbsp;&nbsp;</td>
-      <td><u>Input files</u>
-   <tr><td>&nbsp;&nbsp;</td>
-      <td><a href="#seqprep">Sequence</a>
-   <tr><td>&nbsp;&nbsp;</td>
-      <td><a href="#annot">Annotation</a>
+   <tr><td>&nbsp;&nbsp;<td><u>Input files</u>
+   <tr><td>&nbsp;&nbsp;<td><a href="#iloc">Project Directory</a>
+   <tr><td>&nbsp;&nbsp;<td><a href="#seqprep">Sequence</a>
+   <tr><td>&nbsp;&nbsp;<td><a href="#annot">Annotation</a>
    </table>
 
 <td style="vertical-align: text-top;">
    <table>
-   <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+   <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       <td><u>xToSymap</u>
-   <tr><td>&nbsp;&nbsp;</td>
-      <td><a href="#if">Interface</a>
-   <tr><td>&nbsp;&nbsp;</td>
-      <td><a href="#sf">Summarize</a>
-	<tr><td>&nbsp;&nbsp;</td>
-      <td><a href="#convert">Convert</a>
-   <tr><td>&nbsp;&nbsp;</td>
-      <td><a href="#ol">Lengths</a>
-   <tr><td>&nbsp;&nbsp;</td>
-      <td><a href="#sp">Split</a>
+   <tr><td>&nbsp;&nbsp;<td><a href="#if">Interface</a>
+   <tr><td>&nbsp;&nbsp;<td><a href="#sf">Summarize</a>
+	<tr><td>&nbsp;&nbsp;<td><a href="#convert">Convert</a>
+   <tr><td>&nbsp;&nbsp;<td><a href="#ol">Lengths</a>
+   <tr><td>&nbsp;&nbsp;<td><a href="#sp">Split</a>
    </table>
-</td>
-
 <td style="vertical-align: text-top;">
  	<table>
- 	<tr><td>&nbsp;&nbsp;</td>
-      <td><u>Convert</u>
-   <tr><td>&nbsp;&nbsp;</td>
-      <td>&nbsp;&nbsp;&nbsp;<a href="./ncbi.html" class="ext" target="_blank">NCBI</a></td></tr>
-   <tr><td>&nbsp;&nbsp;&nbsp;</td>
+ 	<tr><td>&nbsp;&nbsp;<td><u>Convert</u>
+    <tr><td>&nbsp;&nbsp;
+      <td>&nbsp;&nbsp;&nbsp;<a href="./ncbi.html" class="ext" target="_blank">NCBI</a>
+    <tr><td>&nbsp;&nbsp;&nbsp;
       <td>&nbsp;&nbsp;&nbsp;<a href="./ensembl.html" class="ext" target="_blank">Ensembl</a>
-    <tr><td>&nbsp;&nbsp;&nbsp;</td>
+    <tr><td>&nbsp;&nbsp;&nbsp;
       <td>&nbsp;&nbsp;&nbsp;<a href="./Other.html" class="ext" target="_blank">Other</a>
-      </table>
-
+    </table>
 <td style="vertical-align: text-top;">
    <table>
-   <tr><td>&nbsp;&nbsp;</td>
-      <td><u>General</u>
-   <tr><td>&nbsp;&nbsp;</td>
-      <td> <a href="#edit">Editing the convert scripts</a></td></tr>
-   <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-        <td> <a href="#tg">Tested Genomes</a></td></tr>
-
+   <tr><td>&nbsp;&nbsp;<td><u>General</u>
+   <tr><td>&nbsp;&nbsp;<td> <a href="#edit">Editing the convert scripts</a>
+   <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td> <a href="#tg">Tested Genomes</a>
    </table>
-</td>
 </table>
 </center>
 
-<a id="seqprep"></a> <!-- used in SystemHelp -->
-<table style="width: 95%"><tr><td style="text-align: left">
+<a id="projDir"></a> <!-- accessed in SystemGuide -->
 <h2>Input files</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></table>
+<table class="tz">
+   <tr><td><a href="#iloc">Project Directory</a>
+   <td><a href="#seqprep">Sequence</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   <td><a href="#annot">Annotation</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   <td class="colrt"><a href="#top">Go to top</a>
+</table>
+<p>
 The input is one or more FASTA files of chromosome or scaffold sequences, with optional GFF formatted
 annotation file(s).
 <p>
 <table>
-<tr><td style="vertical-align: text-top;">&#9656; <td>As of v5.5.7, NCBI and Ensembl files can be loaded directly.
+<tr><td style="vertical-align: text-top;">&rarr; <td>As of v5.5.7, NCBI and Ensembl files can be loaded directly.
 See <a href="#tg">Tested genomes</a> for results on loading the files directly.
-<tr><td style="vertical-align: text-top;">&#9656; <td>The data behaves better in SyMAP if the files have been converted by <a href="#if">xToSymap</a>;
+<tr><td style="vertical-align: text-top;">&rarr; <td>The data behaves better in SyMAP if the files have been converted by <a href="#if">xToSymap</a>;
 see <a href="./ncbi.html" class="ext" target="_blank">NCBI</a> and <a href="./ensembl.html"  class="ext" target="_blank">Ensembl</a>.
 <ttp>xToSymap</ttp> was added to the SyMAP tar file in release v5.5.7 and updated in v.5.5.8.
-<tr><td style="vertical-align: text-top;">&#9656;<td>If you are using files from another source, see <a href="./other.html" class="ext" target="_blank">Other</a>.
+<tr><td style="vertical-align: text-top;">&rarr;<td>If you are using files from another source, see <a href="./other.html" class="ext" target="_blank">Other</a>.
 </table>
 
 <a id="iloc"></a>
-<h4>Project directory</h4>
+<h3>Project directory</h3>
 Put your input files in a directory under: <tt>symap_5/data/seq/&lt;project-name&gt;</tt>.
 <ul>
 <li>The <ttx>project-name</ttx> should be a short descriptive name
@@ -163,9 +133,8 @@ See the <a href="../SystemGuide.html#dir" target="_blank" class="ext">
  System Guide's Directory structure</a> for
 more information.
 
-<table style="width: 95%"><tr><td style="text-align: left">
+<a id="seqprep"></a> <!-- accessed in SystemHelp -->
 <h3>Sequence files</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></table>
 The sequence file(s) must be FASTA format with one or more sequences.
 For the FASTA format, the name of a sequence is the string immediately following the "&gt;", e.g.
 <pre>
@@ -215,10 +184,11 @@ In this example, the sequence name is "Chr3" and the chromosome 3 sequence follo
 <ul>
 <li>SyMAP does not perform the repeat-masking so it must be done with another program.
 However, you may obtain masked sequences from NCBI or Ensembl.
-<br>&#9656;NCBI provides soft-masked sequences where the <ttp>xToSymap</ttp>
+<ul><li>NCBI provides soft-masked sequences where the <ttp>xToSymap</ttp>
 <a href="ncbi.html#opts"  class="ext" target="_blank"> NCBI</a> interface provides the option
 to change it to hard-masked.
-<br>&#9656;Ensembl provides both soft and hard-masked sequences.
+<li>Ensembl provides both soft and hard-masked sequences.
+</ul>
 <li>Masking reduces alignment time and false-positive hits,
 but also runs a risk of concealing true hits due to inaccurate masking.
 Masking is not really necessary unless the genome is highly repetitive
@@ -238,23 +208,19 @@ turn it on <i>before</i> doing the alignments.
 
 <!--------------------------------------------------------------------->
 <a id="annot"></a> <!-- used in SystemHelp -->
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Annotation files</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></table>
 
 Annotation files should be in
 <a href="http://www.sequenceontology.org/gff3.shtml" class="ext" target="_blank">gff3 format</a>,
 which is a tab-delimited file of 9 columns.
 
 <table class="tx">
-<tr><td  style="vertical-align: text-top;">Seqid
+<tr><td  style="vertical-align: text-top;"><ttx>Seqid</ttx>
      <td>The first column must exactly match the sequence names in the FASTA files.
-
-<tr><td  style="vertical-align: text-top;">Type
+<tr><td  style="vertical-align: text-top;"><ttx>Type</ttx>
     <td>The third column determines how SyMAP uses the entry.
 	<br>Only types 'gene', 'mRNA', 'exon', 'gap' or 'centromere' are recognized.
-
-<tr><td  style="vertical-align: text-top;">Attribute
+<tr><td  style="vertical-align: text-top;"><ttx>Attribute</ttx>
     <td>The last column contains "keyword=value" pairs describing the annotation.
 	<table>
 		<tr><td style="vertical-align: text-top;">a. <td>The genes/mRNAs <i><u>must</u></i> have a <ttx>ID=</ttx> keyword,
@@ -265,8 +231,7 @@ which is a tab-delimited file of 9 columns.
 		<a href="../SystemHelp.html#projParams"  class="ext" target="_blank">Project Parameter</a> panel
 		and entering them for the parameter <ttx>Anno keywords</ttx>.
 	</table>
-
-<tr><td  style="vertical-align: text-top;">Order
+<tr><td  style="vertical-align: text-top;"><ttl>Order</ttl>
 	<td>Each mRNA and its exons must come after the parent gene and before the next gene.
 	<br>The mRNA must be before its exons, but it is okay if all the mRNAs for a gene are listed first.
 	<br>Exons are entered in the order they are found; they must be either ascending or descending.
@@ -309,36 +274,59 @@ associated with the gene via a MySQL index:
 <!---------------------------------------------------------->
 <hr>
 <a id="if"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h2>xToSymap Interface</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<table class="tz"><tr>
+<td><a href="#if">Interface</a>
+   <td><a href="#sf">Summarize</a>
+   <td><a href="#convert">Convert</a>
+   <td><a href="#ol">Lengths</a>
+   <td><a href="#sp">Split</a>&nbsp;
+   <td class="colrt"><a href="#top">Go to top</a>
+</table>
+<p>
+<a id="ifi"></a>
+<table>
+	<tr><td style="vertical-align: text-top;">
+	<p><ttl>Project Directory</ttl>: All options and function buttons will be disabled until a project directory is selected.
 
+	<p>The options <ttl>Converted</ttl>, <ttb>Lengths</ttb> and <ttb>Split</ttb> are
+	disabled when there is no <ttx>/sequence</ttx> sub-directory.
+	<p>Convert options:
+	<ul style="margin: 0px 5px 0px 0px;">
+	<li>When <ttl>NCBI</ttl> is selected, all the options relevant to it will be enabled.
+	Similarly for <ttl>Ensembl</ttl>.
+	<li><ttl>NCBI</ttl> has the <ttl>Hard Mask</ttl> option and <ttl>Ensembl</ttl> has the <ttl>Only #,X,Y,I</ttl>
+	option.
+	<li>The rest of the options work for both.
+	<li>See <a href="./ncbi.html#opts" class="ext" target="_blank">NCBI</a>
+			and <a href="./ensembl.html#opts" class="ext" target="_blank">Ensembl</a>
+			for a description of the options.
+	</ul>
+
+	<td><a href="img/toSymap.png"><img src="img/toSymap.png" alt="" style="border: 1px solid black; width: 360px"></a>
+</table>
 Perform the following steps:
 <table class="ty">
 <tr><td style="vertical-align: text-top;">1.
 	<td style="white-space: nowrap; vertical-align: text-top;"><a href="#sf">Summarize</a>
 	<td>This will output basic statistics. Run this first to make sure your input is valid.
-
 <tr><td style="vertical-align: text-top;">2.
 	<td style="white-space: nowrap; vertical-align: text-top;"><a href="#convert">Convert</a>
 	<td>The <ttl>NCBI</ttl> and <ttl>Ensembl</ttl> options create the <ttx>/sequence</ttx> and <ttx>/annotation</ttx>
-		sub-directories with files ready for input to <tt>symap</tt>. If these sub-directories exist,
+		sub-directories with files ready for input to <ttp>symap</ttp>. If these sub-directories exist,
 		any existing FASTA and GFF files will be removed from them.
-
 <tr><td style="vertical-align: text-top;">3.
 	<td style="white-space: nowrap; vertical-align: text-top;"><a href="#sf1">Summarize</a>
 		<br>with <ttl>Converted</ttl>
 	<td>Run this to make sure that the conversion worked as you expected.
 	<br>This shows the sequence prefixes, and can be used to set the <ttx>Group Prefix</ttx>
 	in the <ttp>symap</ttp>  <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Project Parameters</a>.
-
 <tr><td colspan=3>Optional. The following run on the files in the <ttx>/sequence</ttx> and <ttx>/annotation</ttx>
 		sub-directories.
 <tr><td style="vertical-align: text-top;">4.
 	<td style="white-space: nowrap; vertical-align: text-top;"><a href="#ol">Lengths</a>
 	<td>Run it to see if you need to set a <ttx>Minimal lengths</ttx> value in
 	<ttp>symap</ttp> <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Project Parameters</a>.
-
 <tr><td style="vertical-align: text-top;">5.
 	<td style="white-space: nowrap; vertical-align: text-top;"><a href="#sp">Split</a>
 	<td>Splits the converted file <ttx>genomic.fna</ttx> and <ttx>anno.gff</ttx> into a file per chromosome.
@@ -349,37 +337,15 @@ If <ttb>Convert</ttb> does not work as you wish, the files <tt>ConvertNCBI.java<
 are available for <a href="#edit">Edit</a>.
 <p>
 
-<a id="ifi"></a>
-<table>
-<tr><td style="vertical-align: text-top;">
 
-<p><ttl>Project Directory</ttl>: All options and function buttons will be disabled until a project directory is selected.
-
-<p>The options <ttl>Converted</ttl>, <ttb>Lengths</ttb> and <ttb>Split</ttb> are
-disabled when there is no <ttx>/sequence</ttx> sub-directory.
-<p>Convert options:
-<ul style="margin: 0px 5px 0px 0px;">
-<li>When <ttl>NCBI</ttl> is selected, all the options relevant to it will be enabled.
-Similarly for <ttl>Ensembl</ttl>.
-<li><ttl>NCBI</ttl> has the <ttl>Hard Mask</ttl> option and <ttl>Ensembl</ttl> has the <ttl>Only #,X,Y,I</ttl>
-option.
-<li>The rest of the options work for both.
-<li>See <a href="./ncbi.html#opts" class="ext" target="_blank">NCBI</a>
-        and <a href="./ensembl.html#opts" class="ext" target="_blank">Ensembl</a> for a description.
-</ul>
-
-<td><a href="img/toSymap.png"><img src="img/toSymap.png" alt="" style="border: 1px solid black; width: 360px"></a>
-</table>
 
 <!---------------------------------------------------------->
 <a id="sf"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Summarize</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <ttb>Summarize</ttb> will look in the following directories for the FASTA and optional GFF files
 to process, in the following order:
-<ol>
 
+<ol>
 <li>Directly under the project's directory, e.g.
 <pre>
  symap_5/data/seq/cabb
@@ -409,7 +375,7 @@ The FASTA file must end in .fas, .fa, .fna, .fasta, .seq (with optional .gz).
 
 <p>The following is an example terminal and log file output:
 <p>
-<small>
+
 <pre>
 ------ Summary for ./data/seq/cabbN ------
 Log file to  ./data/seq/cabbN/xSummary.log
@@ -458,7 +424,7 @@ Input type: NCBI chr NC_ prefix; NCBI GFF header
             NCBI 'gene_biotype' keyword; NCBI mRNA 'product' keyword
 ------ Finish summary for ./data/seq/cabbN/ ------
 </pre>
-</small>
+
 Observations:
 <table>
 <tr><td style="vertical-align: text-top;">1. <td>The last line confirms that the <ttl>NCBI</ttl> radio button should be selected for <ttb>Convert</ttb>.
@@ -475,9 +441,8 @@ If the summary has been computed with <ttl>Verbose</ttl>, it would show the coun
 upper and lower case, which would show zero lowercase and many N's.
 </table>
 
-<table style="width: 95%"><tr><td style="text-align: left">
+
 <h4>Verbose</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 The Ensembl cabbage files <ttl>Verbose</ttl> summary log file look like this
 <a href="./logs/sumCabbEv.html" class="ext" target="_blank">log</a>.
@@ -512,23 +477,19 @@ If this is not enough, execute the following on your FASTA file:
 
 <!---------------------------------------------------------->
 <a id="convert"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Convert</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table>
-<tr><td style="vertical-align: text-top;">1. <td>Select <ttl>NCBI</ttl> or <ttl>Ensembl</ttl>.
-<tr><td style="vertical-align: text-top;">2. <td>Select the options you want; see
- <a href="./ncbi.html#opts" class="ext" target="_blank">NCBI</a>
-        or <a href="./ensembl.html#opts" class="ext" target="_blank">Ensembl</a> options.
-<tr><td style="vertical-align: text-top;">3. <td>Select <ttb>Convert</ttb>.
+	<tr><td style="vertical-align: text-top;">1. <td>Select <ttl>NCBI</ttl> or <ttl>Ensembl</ttl>.
+	<tr><td style="vertical-align: text-top;">2. <td>Select the options you want; see
+	 <a href="./ncbi.html#opts" class="ext" target="_blank">NCBI</a>
+			or <a href="./ensembl.html#opts" class="ext" target="_blank">Ensembl</a> options.
+	<tr><td style="vertical-align: text-top;">3. <td>Select <ttb>Convert</ttb>.
 </table>
 
 <!---------------------------------------------------------->
 <a id="ol"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Lengths</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 The FASTA files must be in the project's <ttx>/sequence</ttx> sub-directory
 (e.g. <ttx>symap_5/data/seq/cabbN</ttx>) for this
 to work. It reads the FASTA file(s), prints out the names and lengths of all sequences, then
@@ -555,9 +516,8 @@ Values for parameter 'Minimal length' (assuming no duplicate lengths):
 If you set the minimal length at 550871, SyMAP will process the 10 largest sequences.
 
 <a id="sp"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Split</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 The input files are:
 <pre>
 	sequence/genomic.fna
@@ -574,30 +534,35 @@ These work as input to <ttp>symap</ttp>.
 It is useful when only one or a few chromosomes are to be processed in <tt>symap</tt>, i.e.
 remove the ones you do not want processed.
 <!---------------------------------------------------------->
+<a id="gen"></a>
+<h2>General</h2>
+<table class="tz"><tr>
+<td><a href="#edit">Editing the convert scripts</a>
+<td><a href="#tg">Tested genomes</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
+
 <a id="edit"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>Editing the convert scripts</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-The convert scripts are in the <tt>symap_5/scripts</tt> directory called
+<h3>Editing the convert scripts</h3>
+<ul>
+<li>The convert scripts are in the <tt>symap_5/scripts</tt> directory called
 <tt>convertNCBI.java</tt> and <tt>convertEnsembl.java</tt>.
-Move the one you want to change to the <tt>symap_5/data/seq</tt> directory, as
+<p>
+<li>Move the one you want to change to the <tt>symap_5/data/seq</tt> directory, as
 it must be run from there.
-Once you make your changes, execute:
-<pre>
-   javac ConvertNCBI.java
-</pre>
-You will need to have JDK installed to use the 'javac' command.
-<p>To run your compiled script:
-<pre>
-   java ConvertNCBI &lt;project directory name&gt;
-</pre>
-These scripts are simply written, using only standard operations found in all major languages.
+<p>
+<li>Once you make your changes, execute: <tt>javac ConvertNCBI.java</tt>
+<br>You will need to have JDK installed to use the <tt>javac</tt> command.
+<p>
+<li>To run your compiled script:
+<tt>java ConvertNCBI &lt;project directory name&gt;</tt>
+</ul>
+<p>These scripts are simply written, using only standard operations found in all major languages.
+
 <p>
 <!---------------------------------------------------------->
 <a id="tg"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>Tested genomes</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<h3>Tested genomes</h3>
 
 In Aug 2024, the scripts were tested on the following:
 <table class=ty>
@@ -672,7 +637,6 @@ hence, the <ttx>Prefix only</ttx>='CPJQY' was used; the output used the sequence
 <li>Cabbage had 'C' before its chromosome number so the chromosome names were C1, C2, etc.
 <br>Peach had 'G' before its chromosome  so the chromosome names were G1, G2, etc. .
 </ul>
-</ul>
 
 <p><i>Input variations</i>: There are probably more variations then shown here, which may possibly be handled with the
 Ensembl <ttx>Only #,X,Y,I</ttx> option or NCBI/Ensembl <ttx>Only prefix</ttx> option.
@@ -681,14 +645,12 @@ Alternatively,
    you can contact me (symap@agcol.arizona.edu) and I will make the edit for you (it allows me to add the your variation to
    <ttp>xToSymap</ttp>).
 
-<p><a href="#top">Go to top</a>
-
 <!---- END BODY -->
-   </td></tr>
-   <tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
-                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<td style="text-align: right"><a href="#top">Go to top</a></table>
 
-</td></tr>
-</table>
+<p class="trailer">  Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></p>
+</div>
+</div>
 </body>
 </html>

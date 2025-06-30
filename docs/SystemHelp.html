@@ -2,69 +2,59 @@
 <html>
 <head>
 <title>SyMAP System Parameters</title>
-<style>
-	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-	ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
-	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
-	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
-	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
-	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
-	a.ext {font-weight: bold;}
-	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-	.tx td {padding: 5px; border: 0px}
-	.ty    {border: 1px  solid black; border-spacing: 1px;  border-collapse: collapse;}
-    .ty td {border: 1px  solid black; padding: 4px; }
-    tt {font-size:13px}
-	pre {font-size:13px}
-	.center {margin-left: auto; margin-right: auto;}
-	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+<!------ left side index - customize ----------------------------------------------------->
+<div class="sidenav">
+<a href="http://www.agcol.arizona.edu">
+		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
+<p class=sidetit>&nbsp;&nbsp;Parameters</p>
+<p>
+<a href="#build">Build database</a>
+<a href="#projParams">Project Parameters</a>
+<a href="#pairParams">Pair Parameters</a>
+<p>&nbsp;
+<a href="#top">Go to top</a>
+</div>
+
+<!------ right side header and body ----------------------------------------------------->
+<div class="rightSide">
 <a id="top"></a>
-<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
-	<tr><td>
-		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
-			<tr><td style="text-align: left; vertical-align: top; padding: 0">
-					<a href="http://www.agcol.arizona.edu">
-						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
 
-				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
-					SyMAP Parameters
-					<br>and Interface
-				<td style="text-align: right; vertical-align: top; padding: 0">
-					<a href="http://www.arizona.edu">
-						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
-					<br>
-					<a href="http://www.bio5.org">
-						<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
-			<tr><td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
-				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
-					<tr>
-						<td style="background-color: #666666; padding-bottom:4px;">
-						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
-						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
-						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-						<a href="./input/index.html" class="white">Input</a>&nbsp;
-						<a href="./SystemGuide.html" class="white">System Guide</a>&nbsp;
-						<a href="./SystemHelp.html" class="current">Parameters</a> <mark class="white">|</mark>
-						<a href="./UserGuide.html" class="white">User Guide</a>&nbsp;
-						<a href="./Query.html" class="white">Queries</a> <mark class="white">|</mark>
-						<a href="./Tour.html" class="white">Tour</a>
-				</table>
-		</table>
-	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
-	<!---- START BODY -->
+<div class="topnav"> <!-- header same in all pages -->
+    <br>
+	<table>
+	<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="http://www.arizona.edu">
+		<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+	<td><a href="http://www.bio5.org">
+		<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="https://csoderlund.github.io/SyMAP">SyMAP<br>Home</a>&nbsp;&nbsp;
+	<td><a href="https://github.com/csoderlund/SyMAP/releases">Download</a>&nbsp;&nbsp;
+	<td><a href="./Docs.html">Docs</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./SystemGuide.html">System<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./input/index.html">Input</a>&nbsp;&nbsp;
+	<td><a href="./SystemHelp.html">Parameters</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./UserGuide.html">User<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./Query.html">Queries</a>
+	</table>
+ </div>
 
+<!---------------------------- bulk of page ------------------------------------------->
+<div class="main">
+<p>
 The original SyMAP was written for diverse plant genomes with short introns, but has been modified to work
 for the long introns of mammalian genomes, and less diverse genomes.
-<p><b>Contents:</b>
-<p><a href="#start"><u>Start SyMAP</u></a>
-<table class="tx">
+
+<p>
+<table class="tx center">
+<tr><td><a href="#start"><u>Start SyMAP</u></a>
 <tr><td style="vertical-align: text-top;">
 1. <a href="#build"><u>Build database</u></a>
 <ol type="a">
@@ -96,21 +86,20 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <li style="margin: 0.4em 0;"><a href="#mum">MUMmer parameters</a>
 </ol>
 </table>
+This document provide details of parameters and functions.
 
 <h2>Start SyMAP</h2>
-<table class="tx">
-<tr><td>To start SyMAP, type at the command line:
-<td><tt>./symap</tt>
-<tr><td>To view the command line options, type:
-<td><tt>./symap -h</tt>
-</table>
-<p>For the first time user of SyMAP, see:
+<table class="tx"><tr>
+<td style="vertical-align: text-top;">To start SyMAP, type at the command line: <tt>./symap</tt>
+<p>To view the command line options: <tt>./symap -h</tt>
+
+<td>&nbsp;For the first time user of SyMAP, see:
 <ul>
 <li><a href="SystemGuide.html#machine" class="ext" target="_blank">System Guide</a> for setup and system requirements.
 <li><a href="SystemGuide.html#demo" class="ext" target="_blank">Demo</a> to run the demo (do not skip this step!).
 <li><a href="SystemGuide.html#create" class="ext" target="_blank">Create a new project</a>.
 </ul>
-This document provide details of parameters and functions.
+</table>
 
 <p><ttb>Project Manager</ttb>
 <br><a href="img/symapPlants.png">
@@ -120,19 +109,19 @@ This document provide details of parameters and functions.
 <a id="build"></a> <!-- # ref in code -->
 <h2>1. Build database</h2>
 
-<table class="ty">
+<table class="tz">
 <tr>
-<td><b>Sections:</b>&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#selLoad">Selected</a>
 <td><a href="#avail">Available Synteny</a>
 <td><a href="#fun">Function buttons</a>
+<td class="colrt"><a href="#top">Go to top</a></td></tr>
 </table>
 
 <a id="selLoad"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
+
 <h3>1.a Selected</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-The projects selected from the <ttb>Projects</ttb> in
+The project
+s selected from the <ttb>Projects</ttb> in
 the left panel are listed in the <ttb>Selected</ttb> section on the right.
 The possible functions vary with the state, as listed below:
 
@@ -197,9 +186,7 @@ to confirm that you want this done! If it will be removing multiple alignment di
 on each one.
 
 <a id="avail"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>1.b Available Syntenies</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Sequence alignments are performed with
 <a href="http://mummer.sourceforge.net/manual" class="ext" target="_blank">MUMmer3</a>,
@@ -233,11 +220,8 @@ the buttons that can be selected are activated.
 </table>
 <p>See <a href="#over2">Pair Parameters</a> for additional information on the <ttb>Available Syntenies</ttb> and codes.
 
-
 <a id="fun"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>1.c Function Buttons</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="ty">
 <tr><td colspan=2><i>Alignment&amp;Synteny (A&amp;S)</i>
@@ -269,9 +253,7 @@ the buttons that can be selected are activated.
 <p>For the remaining display buttons, see <a href="UserGuide.html#views" class="ext" target="_blank">User Guide</a>.
 
 <a id="cpu"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>1.d CPU and Verbose</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <ttl>CPUs:</ttl> Enter the maximum number of CPUs to use for an alignment. SyMAP will use
 up to that number (but may use fewer, depending on the number of sequences being aligned). Alternatively,
 the number of CPUs may be entered in the <tt>symap.config</tt> file or
@@ -292,20 +274,17 @@ entered as a command line argument (-p N).
 <!---------------------------------------------------------------------->
 <!---------------------------------------------------------------------->
 <a id="projParams"></a> <!-- # ref in code -->
-<table style="width: 95%"><tr><td style="text-align: left">
 <h2>2. Project Parameters</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<table class="ty">
-<tr><td colspan=2>&nbsp;<th colspan=3 style="text-align: center">Project Parameters<td colspan=2>
+<table class="tz">
 <tr>
-<td><b>Sections:</b>&nbsp;&nbsp;&nbsp;&nbsp;
-<td><a href="#start">Parameter panel</a>
+<td><a href="#start">Parameter<br>panel</a>&nbsp;&nbsp;&nbsp;
 <td><a href="#display"><i>Display</i></a>
-<td><a href="#project"><i>Load project</i></a>
-<td><a href="#anno"><i>Load annotation</i></a>
-<td><a href="#annot">GFF Attributes</a>
+<td><a href="#project"><i>Load<br>project</i></a>
+<td><a href="#anno"><i>Load<br>annotation</i></a>&nbsp;&nbsp;&nbsp;
+<td><a href="#annot">GFF<br>Attributes</a>
 <td><a href="#save1">Save</a>
+<td class="colrt"><a href="#top">Go to top</a></td></tr>
 </table>
 
 <a id="start"></a>
@@ -332,9 +311,8 @@ See <a href="./input/index.html" class="ext" target="_blank">input</a> for a des
 
 <!--------------------------------------------------------------->
 <a id="display"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>2.b Display</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
 <table>
 <tr><td>New values take immediate effect on <ttb>Save</ttb>. Most of the values are shown in the <ttl>Selected</ttl>
 section, as shown on the right. The
@@ -392,9 +370,7 @@ values are saved in the <tt>symap_5/data/seq/&lt;project-name&gt;/params.txt</tt
 </table>
 
 <a id="project"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>2.c Load project</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 The following parameters are under the <ttb>Load project</ttb> section of the <a href="#start">parameters</a> panel.
 
 <p><ttl>Group prefix</ttl>
@@ -447,9 +423,7 @@ select <ttb>Clear Pair</ttb> and remove the alignment files, then run <ttl>A&amp
 
 <!----------------------------------------------->
 <a id="anno"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>2.d Load annotation</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 The following parameters are under the <ttb>Load annotation</ttb> section of the <a href="#start">parameters</a> panel.
 
 <p><ttl>Anno keywords</ttl>
@@ -478,6 +452,7 @@ which refers to them as <u>annotations</u>.
 <a href="Query.html#col" class="ext" target="_blank">Queries</a> results table. The attributes (annotations)
 comes from the last column of the GFF file.
 The attributes are a keyword=value list, e.g.
+<p>
 <pre>
    ID=gene-AT1G01010;Name=NAC001;ID=rna-NM_099983.2;product=NAC domain containing protein 1
 </pre>
@@ -501,9 +476,7 @@ the <tt>Name=value</tt> would not be part of any gene annotation. This must be s
 is executed.
 <!----------------------------------------------->
 <a id="save1"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>2.f Rules for saving project parameters</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Before the project is loaded, the parameters are saved to the file
 <pre>  data/seq/&lt;project-name&gt/params.txt</pre>
@@ -521,19 +494,17 @@ When the <ttl>A&amp;S</ttl> is executed, then the corresponding parameters are s
 <!----------------------------------------------------------------------->
 <!----------------------------------------------------------------------->
 <a id="pairParams"></a> <!-- # ref in code -->
-<table style="width: 95%"><tr><td style="text-align: left">
 <h2>3. Pair Parameters</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<table class="ty">
-<tr><td colspan=2>&nbsp;<th colspan=3 style="text-align: center">Pair Parameters<td colspan=2>
-<tr><td><b>Sections:</b>&nbsp;&nbsp;&nbsp;&nbsp;
-<td><a href="#over2">Parameter panel</a>
+<table class="tz">
+<tr>
+<td><a href="#over2">Parameter<br>panel</a>&nbsp;&nbsp;&nbsp;
 <td><a href="#align2"><i>Alignment</i></a>
-<td><a href="#clust"><i>Cluster Hits</i></a>
-<td><a href="#syn"><i>Synteny</i></a>
+<td><a href="#clust"><i>Cluster<br>Hits</i></a>
+<td><a href="#syn"><i>Synteny</i></a>&nbsp;&nbsp;&nbsp;
 <td><a href="#save2">Save</a>
-<td><a href="#mum">MUMmer parameters</a>
+<td><a href="#mum">MUMmer<br>parameters</a>
+<td class="colrt"><a href="#top">Go to top</a>
 </table>
 
 <a id="over2"></a>
@@ -586,11 +557,9 @@ button, which will popup the panel shown on the right.
 
 <a id="align"></a>
 <a id="align2"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>3.b Alignment</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<a id="mask">
+<a id="mask"></a>
 <a id="concat"></a> <!--- this is referenced elsewhere -->
 <h4>Preparing the sequences</h4>
 <table class="ty">
@@ -644,10 +613,7 @@ Finished in 1 hour 35 minutes
 </pre>
 </table>
 
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>MUMmer parameters</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
 The default MUMmer parameter seems to work fine with SyMAP, so probably do not need changing.
 <table class="ty">
 <tr>
@@ -682,20 +648,18 @@ projects, while NUCmer is used for self alignments.
 <!------------------------------------------------------------------------>
 <!------------------------------------------------------------------------>
 <a id="clust"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>3.c Cluster Hits</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-<table class="ty">
-<tr><td><b>Sections:</b>&nbsp;&nbsp;&nbsp;&nbsp;
+
+<table class="tz">
+<tr>
 <td><a href="#a1a2">Algo1 vs Algo2 with hints</a>
 <td><a href="#clParam">Parameter description</a>
 <td><a href="#pseudo">Pseudo and Piles</a>
+<td class="colrt"><a href="#top">Go to top</a>
 </table>
 
 <a id="a1a2"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>3.c.I  Algo1 vs Algo2</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="ty">
 <tr><td colspan="2"><ttl>Algorithm 1 (modified original, updated v5.4.0, abbreviated Algo1)</ttl>:
@@ -752,9 +716,7 @@ by increasing all parameters a small amount, this reduced to just over 100k.
 
 <!-------------------------------------------------------------------------->
 <a id="clParam"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>3.c.II  Parameter description</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="ty">
 <tr><td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
@@ -807,10 +769,8 @@ for any uncheck categories, but in a more conservative way. It will retain the <
 	<td>2
 </table>
 
-<a id="pseudo">
-<table style="width: 95%"><tr><td style="text-align: left">
+<a id="pseudo"></a>
 <h4>3.c.III Pseudos and Piles</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <b>Pseudo genes</b>
 <table><tr><td>
@@ -868,9 +828,7 @@ must be filtered; if they are not, the synteny algorithm does not perform well.
 <!---------------------------------------------------------------------->
 <!---------------------------------------------------------------------->
 <a id="syn"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>3.d Synteny</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="ty">
 <tr><td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
@@ -903,9 +861,7 @@ belong to the block).
 <br>In the last image, the reverse orientation block is embedded in another block
 
 <a id="order"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h4>Order against</h4>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 For draft sequences, they may be ordered against another project.
 See <a href="./SystemGuide.html#draft2" class="ext" target="_blank">Ordering details</a>.
@@ -920,9 +876,7 @@ The "-&gt;" indicates that the first sequence will be ordered against the second
 was not set, it can be set and the <ttl>A&amp;S</ttl> run with the existing alignment files.
 
 <a id="save2"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>3.e Rules for saving pairs parameters</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 Before the <ttl>A&amp;S</ttl> is executed, the parameters are saved in
 <pre>  data/seq_results/&lt;proj1-to-proj2&gt;/params.txt</pre>
@@ -938,9 +892,7 @@ before running <ttl>A&S</ttl> again, the parameters
 on the <ttb>Summary</ttb> page will be wrong (SyMAP does not check for this situation).
 <!------------------------------------------------------------------------>
 <a id="mum"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>3.f MUMmer parameters</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 The arguments for MUMmer are <b>NOT</b> checked for correctness.
 <p>
@@ -969,12 +921,14 @@ see <a href="./MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 <br> execute
 <tt>./symap -mum</tt>.
 
+<!---- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-<!---- END BODY -->
-<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
-                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
-</table>
+
+<p class="trailer">  Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></p>
+</div>
+</div>
 </body>
 </html>
+
 

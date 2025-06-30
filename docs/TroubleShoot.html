@@ -2,142 +2,89 @@
 <html>
 <head>
 <title>SyMAP Trouble Shoot</title>
-<style>
-	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
-	a.ext {font-weight: bold;}
-	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-
-	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
-    .ty td {border: 1px  solid black; padding: 3px; }
-
-    ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
-	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
-	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
-	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-	xx	{line-height: 2}
-    tt {font-size:13px}
-	pre {font-size:13px}
-
-	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-<a id="top"></a>
-<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
-	<tr><td>
-		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
-			<tr>
-				<td style="text-align: left; vertical-align: top; padding: 0">
-					<a href="http://www.agcol.arizona.edu">
-						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
-				</td>
-				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
-					SyMAP Trouble Shooting
-				</td>
-				<td style="text-align: right; vertical-align: top; padding: 0">
-					<a href="http://www.arizona.edu">
-						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
-					<br>
-					<a href="http://www.bio5.org">
-						<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
-				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
-					<tr>
-						<td style="background-color: #666666; padding-bottom:4px;">
-						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
-						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
-						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-						<a href="./input/index.html" class="white">Input</a>&nbsp;
-						<a href="./SystemGuide.html" class="white">System Guide</a>&nbsp;
-						<a href="./SystemHelp.html" class="white">Parameters</a> <mark class="white">|</mark>
-						<a href="./UserGuide.html" class="white">User Guide</a>&nbsp;
-						<a href="./Query.html" class="white">Queries</a> <mark class="white">|</mark>
-						<a href="./Tour.html" class="white">Tour</a>
-					</tr>
-				</table>
-				</td>
-			</tr>
-		</table>
-	</td></tr>
-
-	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
-	<!---- START BODY -->
-
-<i>Please send questions and suggestions to symap@agcol.arizona.edu.</i><br>
-<font color=green>SyMAP cannot be improved or problems fixed without user feedback!</font>
-
-<h4>Contents</h4>
+<!------ left side index - customize ----------------------------------------------------->
+<div class="sidenav">
+<a href="http://www.agcol.arizona.edu">
+		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
+<p class=sidetit>&nbsp;&nbsp;Trouble Shooting</p>
 <p>
-<ul>
-<li>Hang
-<ul>
-<li><a href="#hang">Hang on Load</a>
-</ul>
-<br>
-<li>Memory
-<ul>
-<li><a href="#memory">Not enough memory</a>
-</ul>
-<br>
-<li>MySQL suggested settings
-<ul>
-<li><a href="#msqslow">Slow to load sequence and annotation</a>
-<li><a href="#slow">Slow queries</a>
-</ul>
-<br>
-<li>MySQL
-<ul>
-<li><a href="#database_error">Database connect errors</a> ("Unable to connect","Error running SQL Command",...)
-<li><a href="#mariadb">MariaDB cannot connect</a>
-<li><a href="#innodb">The MySQL database does not support Innodb tables</a>
-<li><a href="#root">Please read "Security" section of the manual to find out how to run mysqld as root</a>
-<li><a href="#msqcase"> Can't create table  (errno: 121)</a>
-<li><a href="#index">MySQL indices</a>
-</ul>
-<br>
-<li>Alignment
-<ul>
-<li><a href="#status">Status window disappeared</a>
-<li><a href="#noanch">No anchors loaded</a>
-</ul>
-<br>
-<li>MacOS
-<ul>
-<li><a href="#macos">Running external programs</a> <!--- ref in symap -->
-<li><a href="#font">MacOS Fonts</a>
-</ul>
-</ul>
+<a href="#memory">Not enough memory</a>
+<a href="#sug">MySQL suggested settings</a>
+<a href="#sql">MySQL problems</a>
+<a href="#gen">General</a>
+<a href="#macos">MacOS</a>
+<p>&nbsp;
+<a href="#top">Go to top</a>
+</div>
+
+<!------ right side header and body ----------------------------------------------------->
+<div class="rightSide">
+<a id="top"></a>
+
+<div class="topnav"> <!-- header same in all pages -->
+    <br>
+	<table>
+	<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="http://www.arizona.edu">
+		<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+	<td><a href="http://www.bio5.org">
+		<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="https://csoderlund.github.io/SyMAP">SyMAP<br>Home</a>&nbsp;&nbsp;
+	<td><a href="https://github.com/csoderlund/SyMAP/releases">Download</a>&nbsp;&nbsp;
+	<td><a href="./Docs.html">Docs</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./SystemGuide.html">System<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./input/index.html">Input</a>&nbsp;&nbsp;
+	<td><a href="./SystemHelp.html">Parameters</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./UserGuide.html">User<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./Query.html">Queries</a>
+	</table>
+ </div>
+
+<!---------------------------- bulk of page ------------------------------------------->
+<div class="main">
+
+<p><i>Please send questions and suggestions to symap@agcol.arizona.edu.</i><br>
+<font color=green>SyMAP cannot be improved or problems fixed without user feedback!</font>
+<p>
+<table class="center"><tr>
+<td><table>
+<tr><td><a href="#memory">Not enough memory</a>
+<tr><td><a href="#sug">MySQL suggested settings</a>
+<tr><td>&nbsp;&nbsp;&nbsp;<a href="#msqslow">Slow to load sequence and annotation</a>
+<tr><td>&nbsp;&nbsp;&nbsp;<a href="#slow">Slow queries</a>
+
+<tr><td><a href="#sql">MySQL problems</a>
+<tr><td>&nbsp;&nbsp;&nbsp;<a href="#database_error">Database connect errors</a>
+<tr><td>&nbsp;&nbsp;&nbsp;<a href="#mariadb">MariaDB cannot connect</a>
+<tr><td>&nbsp;&nbsp;&nbsp;<a href="#innodb">The MySQL database does not support Innodb tables</a>
+<tr><td>&nbsp;&nbsp;&nbsp;<a href="#root">Run mysqld as root</a>
+<tr><td>&nbsp;&nbsp;&nbsp;<a href="#msqcase">Cannot create table  (errno: 121)</a>
+<tr><td>&nbsp;&nbsp;&nbsp;<a href="#index">MySQL indices</a>
+</table>
+
+<td>&nbsp;&nbsp;&nbsp;
+<td style="vertical-align: text-top;"><table>
+<tr><td><a href="#gen">General</a>
+<tr><td>&nbsp;&nbsp;&nbsp;<a href="#hang">Hang on Load</a>
+<tr><td>&nbsp;&nbsp;&nbsp;<a href="#status">Status window disappeared</a>
+
+<tr><td><a href="#macos">MacOS</a>
+<tr><td>&nbsp;&nbsp;&nbsp;<a href="#ext">Running external programs</a> <!--- ref in symap -->
+<tr><td>&nbsp;&nbsp;&nbsp;<a href="#font">MacOS Fonts</a>
+</table>
+</table>
 
 <hr>
-<a id="hang"></a>
-<h2>Hang</h2>
-
-<h3>Hangs on Load</h3>
-
-<p>1. <u>Other apps</u> may cause it to hang,
-e.g. on Mac, downloaded apps, such as Bartender may interfere with SyMAP, which causes it to hang.
-When Bartender was removed, SyMAP no longer hung on load.
-
-<p>2. It occasionally hangs for no discernable reason (especially if I have been doing
-testing on MacOS, where I remove projects and reload over and over). If this happens, Cntl-C to
-stop the program (or kill it some other way). Restart
-<tt>./symap</tt>, <ttb>Remove project from database</ttb> and <ttb>Load Project</ttb> again.
-
-<p>3. If in the middle of a <ttb>Load Project</ttb>, any of the following
-actions: <ttb>Cancel</ttb>, or Cntl-C to stop the program, or killing it from the command line,
-can leave the database in a non-repairable state. Unfortunately, it has be removed and rebuilt.
-(22-June-2025) I have not had this happen in a very long time.
-
-<h2>Memory</h2>
 <a id="memory"></a>
-<h3>Not enough memory</h3>
+<h2>Not enough memory</h2>
 
 If SyMAP gives an out-of-memory error, you need to increase the memory. The <tt>symap</tt>
 script has the following lines:
@@ -158,15 +105,19 @@ For memory issues related to running MUMmer, see <a href="MUMmer.html" class="ex
 <p>
 <!--------------------------------------------------------->
 <hr>
-<a id="msqslow"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
+<a id="sug"></a>
 <h2>MySQL suggested settings</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<table class="tz"><tr>
+<td><a href="#msqslow">Slow to load</a>
+<td><a href="#slow">Slow queries</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
 
 <p>SyMAP prints out the values of these three important MySQL variables when a symap database is created. Additionally,
 if you use <tt>./symap -sql</tt> they will be printed.
 
-
+<a id="msqslow"></a>
 <h3>Slow to load sequence and annotation</h3>
 
 Two MySQL settings are especially important for SyMAP performance (and generally for InnoDB table
@@ -220,13 +171,21 @@ To check the value, start mysql and type:
 <pre>show variables like "max_allowed_packet"; </pre>
 To change this variable, then type:
 <pre>set global max_allowed_packet=1073741824;</pre>
-<p>
 
 <!--------------------------------------------------------->
 <hr>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>MySQL</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<a id="sql"></a>
+<h2>MySQL Problems</h2>
+
+<table class="tz"><tr>
+<td><a href="#database_error">Database<br>connect<br>errors</a>
+<td><a href="#mariadb">MariaDB<br>cannot<br>connect</a>
+<td><a href="#innodb">Does not<br>support<br>Innodb tables</a>
+<td><a href="#root">Run mysqld<br>as root</a>
+<td><a href="#msqcase">Cannot<br>create table<br>(errno: 121)</a>
+<td><a href="#index">MySQL<br>indices</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
 
 <a id="database_error"></a>
 <h3>Database connect errors</h3>
@@ -242,8 +201,8 @@ the following are some things to check for connection problems on SyMAP startup:
 
 <p><u>Check the database privileges</u>:
 The database users specified in <tt>symap.config</tt> may not have necessary access to the database.
-If you running the read/write <tt>symap</tt>, then the relevant user is <tt>db_adminuser</tt>. If
-you are running a read-only session using <tt>viewSymap</tt>, it will use the
+If you running the read/write <ttp>symap</ttp>, then the relevant user is <tt>db_adminuser</tt>. If
+you are running a read-only session using <ttp>viewSymap</ttp>, it will use the
 read-only <tt>db_clientuser</tt> or read-write <tt>db-adminuser</tt>. In either case the user needs
 to have database access privileges <i>from the machine where you are working</i>.
 
@@ -282,9 +241,8 @@ com.mysql.jdbc.CommunicationsException: Communications link failure due to under
 Restart the program as the connection was dropped.
 
 <a id="mariadb"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>MariaDB cannot connect</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<h3>MariaDB cannot connect</h3>
+
 
 If you are using MariaDB (post version 10.4.12) and get the error:
 <pre>
@@ -308,12 +266,14 @@ deleting the log file. Solution: shut down mysql, remove the innodb log file, an
 </ul>
 
 <a id="root"></a>
-<h3>Please read "Security" section of the manual to find out how to run mysqld as root</h3>
-You are launching SyMAP as the unix root user, which is blocked by MySQL
-as a security hazard. Solution is simply to use a regular non-root user account.
+<h3>Run mysqld as root</h3>
+Please read "Security" section of the MySQL manual to find out how to run mysqld as root.
+
+<p>If you are launching SyMAP as the unix root user, which is blocked by MySQL
+as a security hazard. The solution is simply to use a regular non-root user account.
 
 <a id="msqcase"></a>
-<h3>Can't create table  (errno: 121)</h3>
+<h3>Cannot create table  (errno: 121)</h3>
 This can occur if you try to create a SyMAP database whose name differs only by
 case from an existing database, e.g. "symapTest" when "symaptest" already exists.
 
@@ -324,26 +284,51 @@ such index. If you have many alignments in the database, this number will get ve
 if you add alignments and delete them, the index can keep growing. Solution: once you determine the
 set of alignments you want, delete the database and just reload what you want for the final database.
 
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>Alignment</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<!----------------------------------------------------------------------->
+<a id="gen"></a>
+<h2>General</h2>
+<table class="tz"><tr>
+<td><a href="#hang">Hangs on Load</a>
+<td><a href="#status">Status window disappeared</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
+
+<a id="hang"></a>
+<h3>Hangs on Load</h3>
+
+<p>1. <u>Other apps</u> may cause it to hang,
+e.g. on Mac, downloaded apps, such as Bartender may interfere with SyMAP, which causes it to hang.
+When Bartender was removed, SyMAP no longer hung on load.
+
+<p>2. It occasionally hangs for no discernible reason (especially if I have been doing
+testing on MacOS, where I remove projects and reload over and over). If this happens, Cntl-C to
+stop the program (or kill it some other way). Restart
+<tt>./symap</tt>, <ttb>Remove project from database</ttb> and <ttb>Load Project</ttb> again.
+
+<p>3. If in the middle of a <ttb>Load Project</ttb>, any of the following
+actions: <ttb>Cancel</ttb>, or Cntl-C to stop the program, or killing it from the command line,
+can leave the database in a non-repairable state. Unfortunately, it has be removed and rebuilt.
+(22-June-2025) I have not had this happen in a very long time.
 
 <a id="status"></a>
-<b>Status window disappeared</b>
+<h3>Status window disappeared</h3>
 Occasionally the status window disappears when running an alignment.
 Clicking the top of the project manager sometimes
 brings it back. Otherwise, just check the output to the terminal,
 which tells you when it is done.
-<p>
-<a id="noanch"></a>
-<b>No anchors loaded</b>
-This message indicates that SyMAP could not parse the MUMmer output files
-to load the anchors. For MUMmer, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 
+<!----------------------------------------------------------------------->
 <a id="macos"></a> <!--- ref in symap -->
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>MacOS and external programs</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<h2>MacOS</h2>
+<table class="tz"><tr>
+<td><a href="#ext">Running external programs</a>
+<td><a href="#fonts">MacOS Fonts</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
+
+<a id="ext"></a>
+<h3>Running external programs</h3>
+
 MacOS will run <ttp>symap</ttp> but not MUMmer, MAFFT or MUSCLE is they have not been authenticated by you.
 
 Running external programs (e.g. MUMmer) from SyMAP,
@@ -397,16 +382,12 @@ It does not hurt anything, but its tiresome. Do the following:
 <li>Note: after OS updates, you may have to install again.
 </ul>
 
-<p><a href="#top">Go to top</a>
 <!---- END BODY -->
-	</td></tr>
-	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
-                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
-</td></tr>
-</table>
+<table style="width: 95%"><tr><td style="text-align: left">
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<p class="trailer">  Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></p>
+</div>
+</div>
 </body>
 </html>
-
-
-
-

@@ -2,82 +2,60 @@
 <html>
 <head>
 <title>SyMAP NCBI</title>
-<style>
-	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
-	a.ext {font-weight: bold;}
-
-	ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
-	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
-	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
-	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-	tt {font-size:13px}
-	pre {font-size:13px; margin-top: 0; margin-left: 15px;}
-    ul { margin-top: 0; }
-    p { margin-bottom: 0; }
-
-	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-	.ty    {border: 1px  solid black; border-spacing: 3px;  border-collapse: collapse;}
-    .ty td {border: 1px  solid black; padding: 5px; }
-	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../style.css">
 </head>
 
 <body>
+<!------ left side index - customize ----------------------------------------------------->
+<div class="sidenav">
+<a href="http://www.agcol.arizona.edu">
+		<img src="../img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
+<p class=sidetit>&nbsp;&nbsp;NCBI</p>
+<p>
+<a href="#dl">Download</a>
+<a href="#cv">Convert files</a>
+<a href="#gen">General</a>
+<p>&nbsp;
+<a href="#top">Go to top</a>
+</div>
+
+<!------ right side header and body ----------------------------------------------------->
+<div class="rightSide">
 <a id="top"></a>
-<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
-	<tr><td>
-		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
-			<tr>
-				<td style="text-align: left; vertical-align: top; padding: 0">
-					<a href="http://www.agcol.arizona.edu">
-						<img src="../img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
-				</td>
-				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
-					NCBI convert to SyMAP
-				</td>
-				<td style="text-align: right; vertical-align: top; padding: 0">
-					<a href="http://www.arizona.edu">
-						<img src="../img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
-					<br>
-					<a href="http://www.bio5.org">
-						<img src="../img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
-				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
-					<tr>
-						<td style="background-color: #666666; padding-bottom:4px;">
-						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
-						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
-						<a href="../Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-                  <a href="./index.html" class="white">Input</a>&nbsp;
-                  <a href="../SystemGuide.html" class="white">System Guide</a>&nbsp;
-                  <a href="../SystemHelp.html" class="white">Parameters</a> <mark class="white">|</mark>
-                  <a href="../UserGuide.html" class="white">User Guide</a>&nbsp;
-                  <a href="../Query.html" class="white">Queries</a> <mark class="white">|</mark>
-                  <a href="../Tour.html" class="white">Tour</a>
-					</tr>
-				</table>
-				</td>
-			</tr>
-		</table>
-	</td></tr>
 
-	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
-	<!---- START BODY -->
+<div class="topnav"> <!-- header same in all pages -->
+    <br>
+	<table>
+	<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="http://www.arizona.edu">
+		<img src="../img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+	<td><a href="http://www.bio5.org">
+		<img src="../img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="https://csoderlund.github.io/SyMAP">SyMAP<br>Home</a>&nbsp;&nbsp;
+	<td><a href="https://github.com/csoderlund/SyMAP/releases">Download</a>&nbsp;&nbsp;
+	<td><a href="../Docs.html">Docs</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="../SystemGuide.html">System<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="../input/index.html">Input</a>&nbsp;&nbsp;
+	<td><a href="../SystemHelp.html">Parameters</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="../UserGuide.html">User<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="../Query.html">Queries</a>
+	</table>
+ </div>
 
-NCBI supplies FASTA formatted files for genome sequence and GFF3 formatted files for the annotation,
+<!---------------------------- bulk of page ------------------------------------------->
+<div class="main">
+
+<p>NCBI supplies FASTA formatted files for genome sequence and GFF3 formatted files for the annotation,
 where FASTA and GFF3 files are the input to SyMAP. Though they can be loaded directly into SyMAP,
 it is better to convert them.
 
-<p><b>Contents</b>
-<table>
+
+<table class="center">
 <tr>
-<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
 <td style="vertical-align: text-top;">
 	<table>
 	<tr><td><a href="#dl">Download</a>
@@ -86,12 +64,13 @@ it is better to convert them.
 	<tr><td><a href="#scaf">&nbsp;&nbsp;&nbsp;Scaffolds</a>
 	</table>
 </td>
-<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td style="vertical-align: text-top;">
 	<table>
-	<tr><td> <a href="#load">Load files into SyMAP</a></td></tr>
-	<tr><td> <a href="#edit">Editing the script</a></td></tr>
-	<tr><td><a href="#what">What the ConvertNCBI script does</a></td></tr>
+	<tr><td><a href="#gen">General</a>
+	<tr><td><a href="#load">&nbsp;&nbsp;&nbsp;Load files into SyMAP</a></td></tr>
+	<tr><td><a href="#edit">&nbsp;&nbsp;&nbsp;Editing the script</a></td></tr>
+	<tr><td><a href="#what">&nbsp;&nbsp;&nbsp;What the ConvertNCBI script does</a></td></tr>
 	</table>
 </td>
 </table>
@@ -118,15 +97,18 @@ for the gene.
 <td><a href="img/geneDesc.png"><img src="img/geneDesc.png" alt="" style="border: 1px solid black; width: 250px"></a>
 </table>
 <li>It has an option to produce a hard masked sequence.
-<li>If it has problems converting the NCBI file(s), then <ttp>symap</ttp> will have problems loading the original
+
+</ol>
+
+If there are problems converting the NCBI file(s), then <ttp>symap</ttp> will have problems loading the original
 NCBI files. NCBI formats are not totally consistent,
 so this may not take everything into account; check your files with the <ttp>xToSymap</ttp>
 <ttb>Summarize</ttb> function.
-If there may be problems, see <a href="index.html#tg" class="ext" target="_blank">Tested genomes</a>.
-The script can be <a href="index.html#edit" class="ext" target="_blank">edited</a>.
+See <a href="index.html#tg" class="ext" target="_blank">Tested genomes</a>
+and <a href="index.html#edit" class="ext" target="_blank">editing the script</a>.
 
-</ol>
-The following instructions will use <i>Brassica oleracea</i> (wild cabbage) as an example.
+
+<p>The following instructions will use <i>Brassica oleracea</i> (wild cabbage) as an example.
 
 <a id="dl"></a>
 <h2>Download</h2>
@@ -160,9 +142,12 @@ the <ttx>FASTA</ttx> and <ttx>GFF</ttx> files.
 
 <!---------------------------------------------------------------->
 <a id="cv"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h2>Convert files</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<table class="tz">
+<tr><td><a href="#opts">Options</a>
+<td><a href="#scaf">Scaffolds</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
 
 <ol>
 <li>Go to the <tt>symap_5/data/seq</tt> directory.
@@ -205,9 +190,7 @@ However, you may want to keep the original <tt>data/seq/cabb/ncbi_dataset</tt>.
 
 <!------------------------------------------------------->
 <a id="opts"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Options</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table class="ty" style="width:90%;">
 <tr><td><b>Option</b><td><b>Description</b><td><b>Default</b>
@@ -275,9 +258,7 @@ for your input.
 
 <!----------------------------------------------------------------->
 <a id="scaf"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Scaffolds</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 By default, the <ttb>Convert</ttb> option creates the <ttx>genomic.fna</ttx> file with only the chromosomes.
 However, you can have it also include scaffolds by selecting <ttx>Include Scaffolds</ttx>;
@@ -295,11 +276,17 @@ the smaller ones. You should set the following SyMAP project's
 the <ttp>xToSymap</ttp> <a href="./index.html#ol" class="ext" target="_blank">Lengths</a>.
 </ol>
 
+<a id="gen"></a>
+<h2>General</h2>
+<table class="tz">
+<tr><td><a href="#load">Load files into SyMAP</a>
+	<td><a href="#edit">Editing the script</a>
+	<td><a href="#what">What the ConvertNCBI script does</a>
+	<td class="colrt"><a href="#top">Go to top</a>
+</table>
 <!----------------------------------------------------------------->
 <a id="load"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>Load files into SyMAP</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<h3>Load files into SyMAP</h3>
 
 The above scenario puts the files in the default SyMAP directories.
 When you start up SyMAP, you will see your projects listed on the left of the panel
@@ -315,9 +302,7 @@ to enter the appropriate values.
 
 <!----------------------------------------------------------------->
 <a id="edit"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>Editing the script</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<h3>Editing the script</h3>
 
 The NCBI FASTA files are not consistent in their header lines. Hence, the parsing could
 be incorrect. They may also not be consistent in the GFF files, but I have not found one.
@@ -325,9 +310,7 @@ Anyway, if it is not parsing the FASTA file correctly, edit the program
 <a href="./index.html#edit" class="ext" target="_blank">as described  here.</a>
 <!------------------------------------------------------------->
 <a id="what"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>What the ConvertNCBI script does</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<h3>What the ConvertNCBI script does</h3>
 
 <p>The script <tt>scripts/ConvertNCBI.java</tt> executes the same code as the <ttp>xToSymap</ttp>
 <ttl>NCBI</ttl> <ttb>Convert</ttb>.
@@ -382,12 +365,12 @@ attributes. The mRNA ID is saved as an gene attribute (rnaID=) to indicate which
 from the first <i>type=CDS</i> of the 1st mRNA for the gene is extracted.
 </ol>
 
-<p><a href="#top">Go to top</a>
 <!---- END BODY -->
-	</td></tr>
-	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
-                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
-</td></tr>
-</table>
+<table style="width: 95%"><tr><td style="text-align: left">
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<p class="trailer">  Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></p>
+</div>
+</div>
 </body>
 </html>
