@@ -2,97 +2,84 @@
 <html>
 <head>
 <title>SyMAP Tour</title>
-<style>
-	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-	ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
-	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
-	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
-	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
-	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
-	a.ext {font-weight: bold;}
-	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-<a id="top"></a>
-<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
-	<tr><td>
-		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
-			<tr>
-				<td style="text-align: left; vertical-align: top; padding: 0">
-					<a href="http://www.agcol.arizona.edu">
-						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
-				</td>
-				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
-					SyMAP Tour
-				</td>
-				<td style="text-align: right; vertical-align: top; padding: 0">
-					<a href="http://www.arizona.edu">
-						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
-					<br>
-					<a href="http://www.bio5.org">
-						<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
-				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
-					<tr>
-						<td style="background-color: #666666; padding-bottom:4px;">
-						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
-						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
-						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-						<a href="./input/index.html" class="white">Input</a>&nbsp;
-						<a href="./SystemGuide.html" class="white">System Guide</a>&nbsp;
-						<a href="./SystemHelp.html" class="white">Parameters</a> <mark class="white">|</mark>
-						<a href="./UserGuide.html" class="white">User Guide</a>&nbsp;
-						<a href="./Query.html" class="white">Queries</a> <mark class="white">|</mark>
-						<a href="./Tour.html" class="current">Tour</a>
-				</table>
-				</td>
-			</tr>
-		</table>
-	</td></tr>
+<!------ left side index - customize ----------------------------------------------------->
+<div class="sidenav">
+<a href="http://www.agcol.arizona.edu">
+		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
+<p class=sidetit>&nbsp;&nbsp;SyMAP Details</p>
+<p>
+<a href="#2g">Whole genome views</a>
+<a href="#exp">Chromosome Explorer</a>
+<a href="#query">Query Interface</a>
+<p>&nbsp;
+<a href="#top">Go to top</a>
+</div>
 
-	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+<!------ right side header and body ----------------------------------------------------->
+<div class="rightSide">
+<a id="top"></a>
+
+<div class="topnav"> <!-- header same in all pages -->
+    <br>
+	<table>
+	<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="http://www.arizona.edu">
+		<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+	<td><a href="http://www.bio5.org">
+		<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="https://csoderlund.github.io/SyMAP">SyMAP<br>Home</a>&nbsp;&nbsp;
+	<td><a href="https://github.com/csoderlund/SyMAP/releases">Download</a>&nbsp;&nbsp;
+	<td><a href="./Docs.html">Docs</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./SystemGuide.html">System<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./input/index.html">Input</a>&nbsp;&nbsp;
+	<td><a href="./SystemHelp.html">Parameters</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./UserGuide.html">User<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./Query.html">Queries</a>
+	</table>
+ </div>
+
+<!---------------------------- bulk of page ------------------------------------------->
+<div class="main">
 	<!---- START BODY -->
 
-
-Following is a quick tour of the many displays and queries available through SyMAP.
+<p>Following is a quick tour of the many displays and queries available through SyMAP.
 <p>
-<h2>Contents</h2>
-<table><tr>
+<table class="tx"><tr>
 <td style="padding-left:20px; vertical-align: text-top;">
 <a href="#2g">Whole genome views</a>
 <br><a href="#g-circ">Circle</a>
 <br><a href="#g-dp">Dot Plot</a>
 <br><a href="#g-blk">Block</a>
-
+<td>&nbsp;&nbsp;
 <td style="padding-left:20px; vertical-align: text-top;">
 <a href="#exp">Chromosome Explorer</a>
 <br><a href="#circ">Circle</a>
 <br><a href="#dp">Dot Plot</a>
 <br><a href="#2d3">2D</a>
 <br><a href="#base">Base View</a>
-
+<td>&nbsp;&nbsp;
 <td style="padding-left:20px; vertical-align: text-top;">
 <a href="#query">Query Interface</a>
 <br><a href="#qres">Query Result</a>
 <br><a href="#ma">Multiple Alignment</a>
-
-<td style="padding-left:20px; vertical-align: text-top;">
-<small><i>Click any image for a close-up view</i></small>
+<p><small><i>Click any image for a close-up view</i></small>
 </table>
 
 <a id="2g"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Whole genome views</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<table class="tz"><tr>
+<td><a href="#g-circ">Circle</a><td><a href="#g-dp">DotPlot</a><td><a href="#g-blk">Block</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
+
 SyMAP can be used to query and view multiple synteny genome pairs at once (2-3 is best).
 The synteny can be viewed from the <ttp>Project Manager</ttp>.
 All projects in the database will be listed on the left panel.
@@ -140,9 +127,12 @@ be clicked to view the <ttp>2D</ttp>  display of it.
 
 <!-------------------------------------------------->
 <a id="exp"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Chromosome Explorer</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<table class="tz"><tr>
+<td><a href="#circ">Circle & DotPlot</a><td><a href="#2d3">2D 3-Chr</a><td><a href="#base">Base View</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
 
 The <ttp>Chromosome Explorer</ttp> provides <i>multi-chromosome</i> views for <i>multi-genomes</i>.
 	<p>Multiple chromosomes can be selected from different species on the left-hand panel.
@@ -173,11 +163,8 @@ Only hits that are part of a synteny block are shown here.
 <td><a href="img/2d-3chr.png"><img src='img/2d-3chr.png' alt="2d-3chr" style="border: 1px solid black; width: 550px"></a>
 </table>
 
-
 <a id="2dc"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>2D Closeup</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table>
 <tr><td style="vertical-align: text-top;">
@@ -190,9 +177,7 @@ including the exons and hits.
 </table>
 
 <a id="base"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Base View</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
 <table>
 <tr><td style="vertical-align: text-top;">It is possible to zoom in even further and see a basepair-alignment
@@ -202,11 +187,14 @@ of the hits in the region.
 <p>
 
 <a id="query"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
 <h3>Query Interface</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-SyMAP includes powerful search features to help make the most of synteny information.
+<table class="tz"><tr>
+<td><a href="#qres">Results</a><td><a href="#ma">MSA</a><td>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
+
+<p>SyMAP includes powerful search features to help make the most of synteny information.
 <p>
 <a href="img/query_query.png"><img src="img/query_query.png" alt="query" style="border: 1px solid black; width: 550px"></a>
 
@@ -230,12 +218,11 @@ By selecting a one or more rows, the genes sequences can be aligned using
 <a href="img/query_msa.png"><img src="img/query_msa.png" alt="multiple alignment" style="border: 1px solid black; width: 550px"></a>
 <p>
 	<!---- END BODY -->
-	</td></tr>
-	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
-                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+<table style="width: 95%"><tr><td style="text-align: left">
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-</td></tr>
-</table>
+<p class="trailer">  Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></p>
+</div>
+</div>
 </body>
 </html>
-

@@ -2,82 +2,66 @@
 <html>
 <head>
 <title>SyMAP Details</title>
-<style>
-	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-    a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
-    a.ext {font-weight: bold;}
-     mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-    .tx td {padding: 5px;}
-	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
-    .ty td {border: 1px  solid black; padding: 3px; }
-
-   ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
-	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
-	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
-	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-	tt {font-size:13px}
-	pre {font-size:13px; margin-top: 0;}
-    ul { margin-top: 0; }
-    p { margin-bottom: 0; }
-
-	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+<!------ left side index - customize ----------------------------------------------------->
+<div class="sidenav">
+<a href="http://www.agcol.arizona.edu">
+		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
+<p class=sidetit>&nbsp;&nbsp;SyMAP Details</p>
+<p>
+<a href="#col">Collinear sets</a>
+<a href="#hit">Hit popup</a>
+<a href="#con">3-chr conserved</a>
+<a href="#2dg2">&nbsp;&nbsp;&nbsp;2D</a>
+<a href="#q3">&nbsp;&nbsp;&nbsp;Queries</a>
+
+<p>&nbsp;
+<a href="#top">Go to top</a>
+</div>
+
+<!------ right side header and body ----------------------------------------------------->
+<div class="rightSide">
 <a id="top"></a>
-<table style="width: 800px; border: 2px solid #999999; padding: 0; border-spacing:0; border-collapse:collapse; margin-left: auto; margin-right: auto;">
-	<tr><td>
-		<table style="width: 100%; border: 0px; padding: 0;  border-collapse:collapse;">
-			<tr>
-				<td style="text-align: left; vertical-align: top; padding: 0">
-					<a href="http://www.agcol.arizona.edu">
-						<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 180px; border:1px solid black"></a>
-				</td>
-				<td style="padding-bottom:5px; padding-left:40px; text-align: left;  font-family: Verdana, Arial; font-size: 20px; font-weight: bold;color:MidnightBlue">
-					SyMAP Details
-				</td>
-				<td style="text-align: right; vertical-align: top; padding: 0">
-					<a href="http://www.arizona.edu">
-						<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
-					<br>
 
-				</td>
-			</tr>
-			<tr>
-				<td colspan="3" style="text-align: left; vertical-align: top; padding: 0">
-				<table style="width: 100%; padding: 0;  border-spacing:0; border-collapse:collapse;">
-					<tr>
-						<td style="background-color: #666666; padding-bottom:4px;">
-						<a href="https://csoderlund.github.io/SyMAP" class="white">SyMAP Home</a> <mark class="white">|</mark>
-						<a href="https://github.com/csoderlund/SyMAP/releases" class="white">Download</a> <mark class="white">|</mark>
-						<a href="./Docs.html" class="white">Docs</a> <mark class="white">|</mark>
-						<a href="./input/index.html" class="white">Input</a>&nbsp;
-						<a href="./SystemGuide.html" class="white">System Guide</a>&nbsp;
-						<a href="./SystemHelp.html" class="white">Parameters</a> <mark class="white">|</mark>
-						<a href="./UserGuide.html" class="white">User Guide</a>&nbsp;
-						<a href="./Query.html" class="white">Queries</a> <mark class="white">|</mark>
-						<a href="./Tour.html" class="white">Tour</a>
-					</tr>
-				</table>
-				</td>
-			</tr>
-		</table>
-	</td></tr>
+<div class="topnav"> <!-- header same in all pages -->
+    <br>
+	<table>
+	<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="http://www.arizona.edu">
+		<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+	<td><a href="http://www.bio5.org">
+		<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="https://csoderlund.github.io/SyMAP">SyMAP<br>Home</a>&nbsp;&nbsp;
+	<td><a href="https://github.com/csoderlund/SyMAP/releases">Download</a>&nbsp;&nbsp;
+	<td><a href="./Docs.html">Docs</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./SystemGuide.html">System<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./input/index.html">Input</a>&nbsp;&nbsp;
+	<td><a href="./SystemHelp.html">Parameters</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./UserGuide.html">User<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./Query.html">Queries</a>
+	</table>
+ </div>
 
-	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+<!---------------------------- bulk of page ------------------------------------------->
+<div class="main">
+
 	<!---- START BODY -->
-<b>Contents</b>
-<table>
+<p>
+<table class="tz">
 <tr>
 <td>&nbsp;&nbsp;&nbsp;
 <td><a href="#col">Collinear sets</a>
 <td>&nbsp;&nbsp;&nbsp;
-<td><a href="#con">Highlight conserved genes</a>
-<td>&nbsp;&nbsp;&nbsp;
 <td><a href="#hit">Hit popup</a>
+<td>&nbsp;&nbsp;&nbsp;
+<td><a href="#con">3-chr conserved</a>
 </table>
 <a id="col"></a>
 <h2>Collinear sets</h2>
@@ -90,37 +74,28 @@ the <ttl>Information</ttl> box.
 <p>
 <table>
 <tr><td  style="vertical-align: text-top;">
-In the image on the right, two different sets are shown (green highlighted hits is the 1st set,
-pink is the 2nd). They were broken up by a gene on each chromosome
-that do not have a hit.
-<p>A collinear set either has all genes to the same strand (+/+, -/-) or different (+/-, -/+)
+In the image on the right, two different sets are shown where the pink highlighted hits is the 1st set,
+green is the 2nd; these are <a href="UserGuide.html#wheel" class="ext" target="_blank">Color Wheel</a>
+<ttx>Highlight1</ttx> and <ttx>Highlight2</ttx> colors. The sets were broken by an extra gene on Human Chr01.
+<p>A collinear set either has all genes to the same strand (+/+, -/-) or different (+/-, -/+).
+In the image on the right, all genes in both sets are on different strands.
 
-<p>In the image on the right, all genes in both sets are on the same strand.
-
-<p>In the image below, all genes are on opposite strands.
-<br><a href="img/colRHits.png"><img src="img/colRHits.png" alt="Reverse hits" style="border: 1px solid black; width: 270px"></a>
 <p>&nbsp;
 <p>The collinear set algorithm does not consider the amount of overlap of the hit to a gene, or the similarity
 of the hit sequences.
+<p>Sometimes a hit looks like it overlaps a gene, but the gene is actually in the gap of a clustered hit, so is not a gene hit.
 
 <td><a href="img/colSet2.png">
 <img src="img/colSet2.png" alt="2 Collinear Sets" style="border: 1px solid black; width: 450px"></a>
 </table>
 
-<p>The following are examples of interpreting the 2D view:
-<table>
-<tr><td>
-Sometimes a hit looks like it overlaps a gene, but the gene is actually in the gap, so it is not hit.
-This is illustrated on the right, where the gene at the bottom appears hit by the pink hit-wire,
-but in fact are spanned by the gap gray area. Note that the
-hit popup shows it is a nn type, which hits no genes.
-<td><a href="img/colG0HitsSpan.png">
-<img src="img/colG0HitsSpan.png" alt="Clustered hit" style="border: 1px solid black; width: 300px"></a>
-<tr><td>&nbsp;<td>&nbsp;
-<tr><td   style="vertical-align: text-top;">
-The image on the right shows one collinear set with 6 brown hit-wires that are not part of the set. The following
+<p>The image below shows a collinear set of 4 genes and 6 brown hit-wires that are not part of the set. The following
 explains them, using the symbols g0 (hits 0 genes), g1 (hits 1 gene), g2 (hits paired genes, at
 least one on each chromosome).
+<table>
+
+<tr><td   style="vertical-align: text-top;">
+
 <p>
 <table class="ty">
 <tr><td>1<td>g1<td>Ignored, not part of the set since it does not hit paired genes.
@@ -131,50 +106,13 @@ least one on each chromosome).
 <tr><td>6<td>g2<td>This could start a new set, but is not followed by another paired gene.
 </table>
 
-<p>&nbsp;<p>As shown earlier, sometimes two genes look as one, so the <ttl>Gene Delimiter</ttl> option is important to
+<p>Sometimes two genes look as one, so the <ttb>Sequence Filter</ttb> <ttl>Gene Delimiter</ttl> option is important to
 view these.
 <br><a href="img/colSetGL.png">
 	<img src="img/colSetGL.png" alt="Collinear Highlight and Gene Lines" style="border: 1px solid black; width: 250px"></a>
-<td><a href="img/colG1Hits.png">
-<img src="img/colG1Hits.png" alt="G1 hits" style="border: 1px solid black; width: 300px"></a>
+<td><a href="img/colG1HitsN.png">
+<img src="img/colG1HitsN.png" alt="Collinear hits" style="border: 1px solid black; width: 320px"></a>
 </table>
-
-<!--------------------------------------------------------------------->
-<a id="con"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h2>Highlight conserved genes</h2>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
-<a href="img/seqFilterRefOnly.png">
-		<img src="img/seqFilterRefOnly.png" alt="sequence filter reference" style="border: 1px solid black; width: 400px"></a>
-
-<p>As stated in <a href="UserGuide.html#sequence_filter" class="ext" target="_blank">Sequence Filters</a>,
-when there are more than 2 tracks displayed in <ttb>2D</ttb>,
-	there will be two extra options for the first <i>reference</i> track,
-	as shown on the above. Referring to <ttx>Hit g2x2</ttx>, if there are 3 tracks,
-	the genes conserved across the 3 tracks will be highlighted, as shown below.
-
-
-<p><a href="img/seqFilterConserved.png">
-	<img src="img/seqFilterConserved.png" alt="sequence filter conserved" style="border: 1px solid black; width: 700px"></a>
-<p>The above image has the settings <ttb>Sequence Filter</ttb> <ttx>Hit g2x2</ttx> and the <ttb>Hit Filter</ttb> highlight <ttx>Hit =2 genes</ttx>.
-Hence, the pink hit-wires and cyan exons indicate the conserved genes, and
-the green hit-wires have genes at both ends but are not conserved across
-the 3 tracks.
-<p><font color=green>Caveats:</font>
-<ol>
-<li>For a 3-chromosome view, say it shows genes A-B-C are conserved. The algorithm only
-checks the A-B hit and B-C hits exist, but does not the possible A-C hit.
-<li>There may be different numbers of highlighted genes on the different tracks or hit-wires between tracks. This is because multiple hits can align to a gene, and one gene can align
-to two different genes on the opposing genome.
-<li>When there are overlapping genes, a hit is assigned to just one of them, which
-causes some conserved genes to have incorrect pairing.
-<li>There are occasional tiny hits that just barely overlap genes; the current algorithm marks them as conserved genes.
-<li>Currently, the hits may align strictly in introns (especially for the long introns of mammalian genomes); the current
-algorithm marks these as conserved.
-</ol>
-Even with these caveats, I rarely see a pairing that seems 'iffy' with plant genomes, though the overlap patterns
-and long introns of mammalian genomes cause some questionable results. As always, feedback is welcome!
 
 <!--------------------------------------------------------------------->
 <a id="hit"></a>
@@ -185,7 +123,7 @@ and long introns of mammalian genomes cause some questionable results. As always
 Default view:
 <ul>
 <li>Both lists are sorted by start coordinate.
-<li>The # column in the two tables align to each, e.g. the rows #2 align to each other.
+<li>The <b>#</b> column in the two tables align to each, e.g. the rows #2 align to each other.
 <li>The sequence name that is alphabetically lower (e.g. arab&lt;cabb) is the <i>query</i> and
 the other is the <i>target</i>. The query is numbered 1-N; the target
 	is ordered to match the query.
@@ -209,21 +147,127 @@ the other is the <i>target</i>. The query is numbered 1-N; the target
 		<img src="img/2DhitOrder.png" alt="2D Hit Order" style="border: 1px solid black; width: 450px"></a>
 <td style="vertical-align: text-top;">
 As stated above, each numbered hit corresponds to the same number in the opposite list,
-e.g. the two #1 aligns. An '#' on the far right implies that the order numbers are not sequential.
-<p>This option produces another popup where the target list is sorted by '#', but then the
-coordinates are no longer sorted.
+e.g. the two #1 aligns. An <b>#</b> on the far right implies that the order numbers are not sequential.
+<p>The <ttl>Order</ttl> option produces another popup where the target list is sorted by
+the <b>#</b> column, and the coordinates are no longer sorted.
 <p>The existence of the <ttl>Order</ttl> is a quick indication that there are <i>disordered</i> hits.
 
 </table>
 
-<p><a href="#top">Go to Top</a>
-<!---- END BODY -->
-	</td></tr>
-	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
-                        Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>
+<!--------------------------------------------------------------------->
+<a id="con"></a>
 
-</td></tr>
+<h2>3-chr conserved</h2>
+
+Both the <ttp>Chromosome Explorer</ttp> and <ttp>Queries</ttp> allow viewing results from 3 chromosomes.
+
+<h3>Chromosome Explorer</h3>
+<table>
+<tr><td>
+The <ttp>Dot plot</ttp> can show 3 chromosomes, as illustrated on the right (click image for a better view).
+<p>&nbsp;
+<p>Selecting <ttp>2D</ttp> brings up the 3-track view, as discussed below.
+<td><a href="img/dotplot-3chr.png">
+<img src="img/dotplot-3chr.png" alt="dotplot" style="border: 1px solid black; width: 400px"></a>
+<td>
 </table>
+
+<a id="2dg2"></a>
+<p><ttp>2D</ttp>: The <a href="UserGuide.html#sequence_filter" class="ext" target="_blank">Sequence Filters</a>
+for the <i>reference</i> track will have an extra section of filters as shown below.
+<table>
+<tr><td>
+<table class="ty">
+<tr><td><ttx>g2x2</ttx><td>The genes conserved across the 3-chromosomes are highlighted along with the hit-wires.
+<tr><td><ttx>g2x1</ttx><td>The genes conserved on ONLY one chr-pair are highlighted along with the hit-wires.
+<tr><td><ttx>Show</ttx><td>Only the g2x2 or g2x1 hit-wires will be shown.
+</table>
+<td><a href="img/seqFilterRefOnly.png">
+		<img src="img/seqFilterRefOnly.png" alt="sequence filter reference" style="border: 1px solid black; width: 350px"></a>
+</table>
+<p>
+The <ttx>g2</ttx> implies the hit has a gene on both ends, and the <ttx>x2</ttx> indicates it exists for both sets of
+chromosome pairs, the <ttx>x1</ttx> indicates it exists for just one.
+When either <ttx>g2x2</ttx> or <ttx>g2x1</ttx> is selected,
+this algorithm is run to compute the values; it is only computed on the <i>visible</i> set.
+
+<p>There are two issues confusing the results:
+<ul>
+<li><u>One side g2 filter</u>:
+<ul>
+<li>The algorithm runs on the set of filtered hits. A g2 hit to a reference gene may be filtered
+in one chr-pair and not the other, making it appear to be a g1 hit.
+<li>In this case, the filtered hit will be forced displayed using the <ttx>Highlight2</ttx> color (default pink).
+<li>For example: the lower middle image where the arrow is pointing.
+<li>If both sides are filtered, neither will be shown.
+</ul>
+<li><u>g1 possible g2</u>:
+<ul><li>Both chr-pairs can have a hit to the same reference gene, where one chr-pair has a g2 hit-wire
+and the other has a g1 (but a possible g2 if it is missing the gene annotation).
+<li>In this case, the g1 hit-wire will be displayed in red.
+<li>For example: the lower right image where the arrow is pointing.
+<li>If the g2x1 hit is filtered, the adjacent g1 hit-wire will not be highlighted red.
+</ul>
+</ul>
+<a href="img/seqG2xN.png">
+	<img src="img/seqG2xN.png" alt="g2xN" style="border: 1px solid black; width: 780px"></a>
+Notice that when this feature is used along with the <ttb>Sequence Filter</ttb> of <ttx>Show Gene#</ttx>,
+the <ttx>Gene#</ttx> is only shown for the highlighed genes.
+
+<p><font color=red>Caveats of display: Nothing is refreshed or recalulated!</font>
+<ul>
+<li>Suggestion: Set the filter from the full view, then you can zoom in and back out and the highlight will
+remain. Likewise, set the <ttx>Gene#</ttx> visible from the full view.
+<li>If the highlighting looks wrong after zooming, open <ttb>Sequence Filter</ttb>, click <ttx>None</ttx> and re-click <ttx>g2x2</ttx> or <ttx>g2x1</ttx>.
+</ul>
+
+<p><font color=green>Caveats of algorithm:</font>
+<ul>
+<li>For g2x2, say it shows genes A-B-C are conserved. The algorithm only
+checks the A-B hit and B-C hits exist, but does not check the A-C hit.
+<li>There may be different numbers of highlighted genes on the different tracks or hit-wires between tracks. This is because multiple hits can align to a gene, and one gene can align
+to two different opposite genes.
+<li>When there are overlapping genes, a hit is assigned to just one of them, which
+causes some conserved genes to have incorrect pairing.
+<li>There are occasional tiny hits that just barely overlap genes; the current algorithm marks them as conserved genes.
+Also, the hits may align strictly in introns (especially for the long introns of mammalian genomes); the current
+algorithm marks these as conserved.
+</ul>
+
+<ttb>Queries</ttb>: There is no query filters that give equivalent results.
+
+<!---------------------------------------------------------------->
+<a id="q3"></a>
+<h3>Queries</h3>
+
+&rarr; For a query result, <a href="Query.html#report" class="ext" target="_blank">Report</a> is only way to view more than two species in a query row.
+<br>&rarr; As shown here, it is possible to bring up the 2D display with 3 chromosomes from the query table.
+<p>
+<table>
+	<tr>
+	<td style="vertical-align: text-top;">
+	Select two rows with the following requirements:
+	(1) Each row must have two genes.
+	(2) There must be a shared gene.
+
+	<p><small>Different species</small>
+	<br><a href="img/query_2D_2row.png"><img src="img/query_2D_2row.png" alt="Select 2 rows" style="border: 1px solid black; width: 280px"></a>
+	<p>Select <a href="Query.html#view2D" class="ext" target="_blank">View 2D</a> with either the <ttx>Region</ttx> and <ttx>Collinear</ttx> options. The
+	image on the right used the <ttx>Collinear</ttx> options.
+
+	<p><small>Same species</small>
+	<br><a href="img/query_2D_2rowb.png"><img src="img/query_2D_2rowb.png" alt="Select 2 rows" style="border: 1px solid black; width: 240px"></a>
+	<p>Atha will be the reference since Gene# 5468 is listed in both rows, and Brap chromosomes 7 and 9 will
+	be on its left and right. 2D image not shown.
+
+	<td><a href="img/2d-3d-coset.png"><img src="img/2d-3chr-coset.png" alt="report A.thal ref" style="border: 1px solid black; width: 480px"></a>
+</table>
+<!---- END BODY -->
+<table style="width: 95%"><tr><td style="text-align: left">
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<p class="trailer">  Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></p>
+</div>
+</div>
 </body>
 </html>
-

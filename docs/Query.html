@@ -13,9 +13,11 @@
 		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
 <p class=sidetit>&nbsp;&nbsp;Queries</p>
 <p>
-<a href="#query">Query Setup</a>
+<a href="#instruct">&gt;Instructions</a>
+<a href="#query">&gt;Query Setup</a>
 <a href="#result">Result Panel</a>
-<a href="#rtab">Results</a>
+<a href="#but">&nbsp;&nbsp;&nbsp;Top buttons</a>
+<a href="#rtab">&gt;Results</a>
 
 <p>&nbsp;
 <a href="#top">Go to top</a>
@@ -82,7 +84,7 @@
 	<tr><td>&nbsp;
 	<tr><td>&nbsp;
 	<tr><td><ttl>Extra topic:</ttl>
-	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#msp">3-chromosomes</a>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="Details.html#q3" class="ext" target="_blank">3-chr queries</a>
 	</table>
 </table>
 
@@ -182,9 +184,8 @@ The <a href="#instruct">Instruction</a> will say whether they are numbered or no
 <p>
 <table><tr><td>
 Not numbered: The <ttx>Gene#</ttx> column will show the chromosome followed by ".~".
-<p>Numbered: These are numbered sequentially, where the counts start after the annotated gene numbers.
-For example, if the last Gene# for Chr03 is 5550 (e.g. 3.5550.), the first pseudo gene number will be 6000 and
-the column will show 3.6000.~.
+<p>Numbered: These are numbered sequentially, where the counts start after the annotated gene numbers and
+any already number pseudo's for the chromosome, hence, providing a unique <ttx>Gene#</ttx>.
 
 <td><a href="img/query_pseudo.png"><img src="img/query_pseudo.png" alt="Pseudo genes" style="border: 1px solid black; width:  350px"></a>
 </table>
@@ -770,14 +771,14 @@ then at the terminal, type <tt>kill -p 'process number'</tt>.
 <br>&rarr; All executables were removed that did not seem necessary. However, I may have removed
 one(s) that are used in certain unusual situations when <tt>--auto</tt> is used. Try again with <tt>--auto</tt> unchecked.
 <br>&rarr; On Mac, if you are using MAFFT <tt>--auto</tt>, you may get a "Cannot be verified" for <tt>dndpre</tt>.
-See <a href="TroubleShoot.html#macos">MacOS and external programs</a> to fix this.
+See <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS and external programs</a> to fix this.
 
 <a id="view2D"></a>
 <h4>4.3 View 2D</h4>
 
 
 <a href="img/query_2D.png"><img src="img/query_2D.png" alt="query 2D" style="border: 1px solid black; width: 400px"></a>
-<p>This displays the <ttl>2D</ttl> view for the selected entry (see <a href="#msp">3-chromosomes</a>).
+<p>This displays the <ttl>2D</ttl> view for the selected entry.
 The region displayed can be specified by the drop-down beside the <ttl>View 2D</ttl> button, as follows:
 
 <a id="group"></a>
@@ -833,6 +834,8 @@ The region displayed can be specified by the drop-down beside the <ttl>View 2D</
 	can be used with these rows.
 	<p><a href="img/query_columns_mult.png"><img src="img/query_columns_mult.png" alt="query multi columns" style="border: 1px solid black; width: 280px"></a>
 
+	<p>&nbsp;<p>It is possible to select two rows for a 3-chromosome <ttb>2D</ttb>,
+	see <a href="Details.html#q3" class="ext" target="_blank">3-chr queries</a>.
 	<td><a href="img/query_synteny.png"><img src="img/query_synteny.png" alt="query synteny" style="border: 1px solid black; width: 450px"></a>
 </table>
 
@@ -1060,7 +1063,6 @@ the <ttx>Gene Annotation</ttx> of 'desc' or 'product'.
 <a id="rtab"></a>
 <h2><small>&gt;</small> Results</h2>
 
-
 <a href="img/query_result_tab.png"><img src="img/query_result_tab.png" alt="query results tab" style="border: 1px solid black; width: 600px"></a>
 <p>All query results are listed under the <ttb>&gt; Results</ttb> tab on the left.
 Clicking this tab shows the table of queries illustrated above.
@@ -1069,33 +1071,6 @@ or double-clicking it in the list of results table shown above.
 <p>The only way to remove query results from the left tab is by selecting them in this table followed
 by <ttl>Remove Selected</ttl>, remove all with <ttl>Remove All</ttl>.
 
-<!---------------------------------------------------------------->
-<a id="msp"></a>
-<h3>3-chromosomes</h3>
-
-&rarr; <a href="#report">Report</a> is only way to view more than two species in a query row (described
-immediately above).
-<br>&rarr;As shown here, it is possible to bring up the 2D display with 3 chromosomes from the query table.
-<p>
-<table>
-	<tr>
-	<td style="vertical-align: text-top;">
-	Select two rows with the following requirements:
-	(1) Each row must have two genes.
-	(2) There must be a shared gene.
-
-	<p><small>Different species</small>
-	<br><a href="img/query_2D_2row.png"><img src="img/query_2D_2row.png" alt="Select 2 rows" style="border: 1px solid black; width: 280px"></a>
-
-	<p><small>Same species</small>
-	<br><a href="img/query_2D_2rowb.png"><img src="img/query_2D_2rowb.png" alt="Select 2 rows" style="border: 1px solid black; width: 240px"></a>
-	<p>Select <ttl>View 2D</ttl> with either the <ttx>Region</ttx> and <ttx>Collinear</ttx> options. The
-	image on the right used the <ttx>Collinear</ttx> options.
-	<p>&nbsp;<p>
-	<a href="Details.html#con" class="ext" target="_blank">2D Highlight Conserved Genes</a>
-shows how to highlight shared or unique genes in the 2D display of 3 chromosomes.
-	<td><a href="img/2d-3d-coset.png"><img src="img/2d-3chr-coset.png" alt="report A.thal ref" style="border: 1px solid black; width: 480px"></a>
-</table>
 
 <!---- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">

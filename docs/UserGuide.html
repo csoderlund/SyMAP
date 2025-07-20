@@ -24,9 +24,8 @@
 <a href="#alignment_display_dot">&nbsp;&nbsp;&nbsp;Dot Plot #2</a>
 <a href="#alignment_display_2d">&nbsp;&nbsp;&nbsp;2D Display</a>
 <a href="#align">&nbsp;&nbsp;&nbsp;Base Align</a>
-<a href="./Query.html" class="ext" target="_blank">Queries</a>
+<a href="#dot3">Dot Plot #3<br>(Multi-Genome)</a>
 
-<a href="#alignment_display_dot">Dot Plot #3<br>(Multi-Genome)</a>
 <a href="#gen">General</a>
 
 <p>&nbsp;
@@ -62,12 +61,11 @@
 <!---------------------------- bulk of page ------------------------------------------->
 <div class="main">
 
-<p>This guide is for the <ttp>viewSymap</ttp> user interface.
+<p>This guide is for the <ttp>viewSymap</ttp> user interface;
+<a href="Query.html" target="_blank" class="ext">Queries</a> user guide is a separate HTML page.
+<p>
 <ul>
-	<li>For detailed information on installation, see
-	the <a href="SystemGuide.html" class="ext"  target="_blank">System Guide</a>.
 	<li>Please send bug reports and suggestions to <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a>.
-	<li><a href="Query.html" target="_blank" class="ext">Queries</a> user guide is a separate HTML page.
 	<li>The documentation always applies to the latest release.
 </ul>
 
@@ -112,7 +110,7 @@
 			</ul>
 		<li><a href="#dot3">Dot Plot #3</a>
 		<li><a href="Query.html" target="_blank" class="ext">Queries</a>
-		<li><a href="Details.html" target="_blank" class="ext">Details</a> <small>Collinear Sets, Conserved, Hit popup</small>
+		<li><a href="Details.html" target="_blank" class="ext">Details</a> <small>Collinear Sets, Hit popup, 3-chr conserved</small>
 		</ul>
 	</ul>
 
@@ -174,7 +172,7 @@ if you use SyMAP results in a paper, poster, or presentation.
 	have intervening genes which do not align. There may be small inverted regions within
 	a block.  By default, blocks have at least 7 anchors.
 	<tr><td>Collinear set<td>A sequence of paired aligned genes with no intervening non-paired genes or inverted gene
-	pairs. A set can consist of 2 or more genes. See <a href="Details.html#con" target="_blank" class="ext">details</a>.
+	pairs. A set can consist of 2 or more genes. See <a href="Details.html" target="_blank" class="ext">details</a>.
 </table>
 
 <a id="term2"></a>
@@ -204,7 +202,8 @@ if you use SyMAP results in a paper, poster, or presentation.
 	<tr><td><ttx>Major</ttx> or <ttx>minor</ttx><br> assigned gene
 		<td>When genes overlap, they may share hits in the overlapping regions. A clustered hit
 		can only be assigned directly to one gene pair, which is the <ttx>Major</ttx>  pair; the
-		other gene pair is assigned to the hit as  <ttx>Minor</ttx> and only shown in the <ttb>Query</ttb>.
+		other gene pair is assigned to the hit as  <ttx>Minor</ttx> and only shown in the
+		<ttb>Queries</ttb> results.
 
 	<tr><td>Block and !Block
 		<td>Hits that are in a block and hits that are not within a block, respectively.
@@ -221,7 +220,7 @@ Is it also available from <tt>./symap</tt>, which will include the alignment com
 
 <a id="views"></a> <!-- # ref in code -->
 <table>
-	<tr><td>
+	<tr><td style="vertical-align: text-top;">
 	<p>All projects in the database will be listed on the left panel. The date beside the project name
 	is when it was loaded. If a [n] follows the date, it is part of n computed syntenies.
 
@@ -237,11 +236,13 @@ Is it also available from <tt>./symap</tt>, which will include the alignment com
 
 <table class="ty">
 	<tr><td style="white-space: nowrap;vertical-align: text-top;"><ttb>Display for Selected Pair</ttb>
-		<td>By selecting a cell with synteny, these views are activated for the
-	selected synteny. Views <a href="#circle">Circle</a>, <a href="#dotplot_display">Dot Plot</a>, <a href="#block">Block</a>,
-	and <a href="#sum">Summary</a>.
+		<td>By selecting a cell with synteny (the cell will turn green), whole genome views are activated for the
+	selected synteny pair.
+	<br>The views are <a href="#circle">Circle</a>, <a href="#dotplot_display">Dot Plot</a>,
+	<a href="#block">Block View</a>, and <a href="#sum">Summary</a>.
 	<tr><td style="white-space: nowrap;vertical-align: text-top;"><ttb>Display for All Pairs</ttb>
-		<td>These views will be applied to all checked syntenies. Views <a href="#explorer">Chromosome Explorer</a>,
+		<td>The views beside this label will be applied to all checked syntenies.
+		<br>The views are <a href="#explorer">Chromosome Explorer</a>,
 		<a href="#dot3">Dot Plot</a> and <a href="Query.html">Queries</a>.
 </table>
 
@@ -256,8 +257,6 @@ Is it also available from <tt>./symap</tt>, which will include the alignment com
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
-<p>Select a cell in the <ttb>Available Syntenies</ttb> table (see upper right image); it will turn green and
-the buttons beside the <ttb>Display for Selected Pair</ttb> will be enabled. These are whole genome displays.
 <!------------------------------------------------->
 <a id="circle"></a>
 <h2>Circle Display #1 (Two Genome)</h2>
@@ -268,10 +267,8 @@ the buttons beside the <ttb>Display for Selected Pair</ttb> will be enabled. The
 <td><a href="#"></a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
-
-The two-genome and multi-chromosome <ttp>Circle</ttp> displays work the same;
-see <a href="UserGuide.html#explorer">Explorer</a>
-for the chromosome <ttp>Circle</ttp> display.
+<p>The <ttp>Circle</ttp> can be viewed for two-genomes or <a href="UserGuide.html#explorer">multi-chromosomes</a>.
+This section described the two-genome <ttp>Circle</ttp>, which also applies to the multi-chromosomes <ttp>Circle</ttp>.
 <p>
 The <ttp>Circle</ttp> display shows the chromosomes arranged in a circle,
 	with synteny blocks shown as <u>colored blocks</u> between the chromosomes.
@@ -334,8 +331,7 @@ e.g. for two species each one gets exactly half the circle.
 <p>Remaining buttons:
 <table class="tx">
 	<tr><td style="white-space: nowrap; vertical-align:text-top;"><ttl>Self-align</ttl>
-	<td>(If self-synteny has been computed) When toggled,
-	the self-synteny blocks are shown.
+	<td>(If self-synteny has been computed) When toggled, the self-synteny blocks are shown.
 <tr><td style="vertical-align:text-top;"><ttl>Reverse</ttl>
 	<td>(Only available for 2-genome display) When toggled,
 	the reference will be reversed, i.e. the bottom project is shown on top and uses the reference colors
@@ -356,7 +352,7 @@ e.g. for two species each one gets exactly half the circle.
 Circle Colors <img src="img/colorPalette.png" alt="Color" style="width: 20px;">:
 On <ttl>Save</ttl>, the color settings are saved and will be reused on subsequent circle displays.
 Since it is not reasonable to set colors for each ribbon, this panel gives options to tailor
-the circle ribbon colors to your desire.
+the group circle of ribbon colors to your desire.
 <table class="tx">
 	<tr><td>
 	<table class="tx">
@@ -369,8 +365,8 @@ the circle ribbon colors to your desire.
 	   <ttl>Color Set</ttl><td>Choose from two different sets of 100 colors.
 	   <br>The next 4 color options alter the selected set.
 	<tr><td  style="white-space: nowrap; vertical-align:text-top;">
-		<ttl>Scale</ttl><td>Set the scale &gt;0 and &lt;1 to darken the colors,
-		<br>&gt;1 to lighten the colors.
+		<ttl>Scale</ttl><td>Set the scale between &gt;0 and &lt;1 to darken the colors,
+		and &gt;1 to lighten the colors.
 	<tr><td  style="white-space: nowrap; vertical-align:text-top;">
 		<ttl>Order</ttl><td>Sort the colors so that the blue-green colors take precedence.
 	<tr><td  style="white-space: nowrap; vertical-align:text-top;">
@@ -394,23 +390,37 @@ the circle ribbon colors to your desire.
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
-<p>Dots represent anchors (<i>hits</i>). A blue box indicates a
-	<i>Synteny Block</i>. A chromosome pair is represented by a <i>cell</i>.
 <p>
 <table>
 	<tr>
 	<td style="vertical-align:text-top;">
-	Clicking a cell will replace the whole genome view with the <ttp>Dot Plot</ttp> for the chromosome pair, as shown below.
-	<p>Within the cell <ttp>Dot Plot</ttp>:
-	<br>&nbsp;&bull;&nbsp;Click a block once and it will turn beige, click it again to view the 2D display of the block .
-    <br>&nbsp;&bull;&nbsp;Or, use the mouse to define a region, which will put a box around it.
-		Then click the box to view the 2D display.
-    <br><a href="img/dotplot-2g-cell.png">
-    <img src="img/dotplot-2g-cell.png"  alt="dotplot-2g-cell" style="border: 1px solid black; width: 250px"></a>
+	<ttp>Dot plots</ttp> are available for two-genomes, <a href="#dot3">multiple-genomes</a> and
+<a href="#alignment_display_dot">multiple-chromosomes</a>. This describes the two-genome view,
+which also applies to the other two views.
+<p>Dots represent anchors (<i>hits</i>). A blue box indicates a
+	<i>Synteny Block</i>. A chromosome pair is represented by a <i>cell</i>.
+
 	<td><a href="img/dotplot-2g.png">
 	<img src="img/dotplot-2g.png"  alt="dotplot-2g" style="border: 1px solid black; width: 550px"></a>
 </table>
 
+<table>
+	<tr>
+	<td style="vertical-align:text-top;">
+	Clicking a cell will replace the whole genome view with the <ttp>Dot Plot</ttp> for the chromosome pair,
+	as shown on the right.
+	<p>Within the cell <ttp>Dot Plot</ttp>:
+	<ul>
+	<li>Click a block once and it will turn beige, click it again to view the <ttp>2D</ttp> display of the block
+	(shown on the lower left of the image).
+    <li>Or, use the mouse to define a region, which will put a box around it.
+		Then click the box to view the <ttp>2D</ttp> display.
+	</ul>
+    <td><a href="img/dotplot-2g-cell.png">
+    <img src="img/dotplot-2g-cell.png"  alt="dotplot-2g-cell" style="border: 1px solid black; width: 280px"></a>
+
+
+</table>
 <!------------------------------------------------------------>
 <a id="dotplot_control"></a>
 <h4>Control Panel</h4>
@@ -451,8 +461,10 @@ the circle ribbon colors to your desire.
 	of the display above. This text can be copied. An example popup is as follows:
 	<br>
 	<a href="img/dotplot-stats.png"><img src="img/dotplot-stats.png"  alt="dotplot stats" style="border: 1px solid black;width: 650px"></a>
-	<br>The (%Id=23) is what the filtered percent identity of the hits are, which can be changed in the <ttx>Hit Filter</ttx>.
-	<br>For the 3 Annotated columns (Both, One, None), the two percentages in parenthesis are the column (Annotated) percent and row (Block Hits) percent.
+	<br>The (<ttx>%Id</ttx>=23) is the filtered percent identity of the hits,
+	which can be changed in the <ttp>Dot Plot</ttp> <ttb>Filter</ttb>.
+	<br>For the 3 <ttx>Annotated</ttx> columns (<ttx>Both, One, None</ttx>),
+	the two percentages in parenthesis are the column (<ttx>Annotated</ttx>) percent and row (<ttx>Block Hits</ttx>) percent.
 
 </table>
 <!------------------------------------------------------------>
@@ -477,12 +489,12 @@ the <ttx>Color Icon</ttx> settings are stored for subsequent <ttp>Dot Plot</ttp>
 </table>
 
 <table  class="ty">
-	<tr><td style="vertical-align: text-top;"><ttl>Hit %Identity</ttl>
+	<tr><td style="white-space: nowrap;"><ttl>Hit %Identity</ttl>
 		<td>Show all hits that have &gt;N% identity, where the %Identity (%Id) is the MUMmer assigned value.
 		The default label on the left starts at the lowest %Id in the plot (in this case 23%).
-	<tr><td style="vertical-align: text-top;"><ttl>Dot Size</ttl><sup>a</sup>
+	<tr><td><ttl>Dot Size</ttl><sup>a</sup>
 		<td>Increase the size of the dots in the plot.
-	<tr><td><ttl>Scale dot by hit</ttl><sup>a</sup>
+	<tr><td style="white-space: nowrap;"><ttl>Scale dot by hit</ttl><sup>a</sup>
 		<td>
 		<table class="ty txy">
 			<tr><td><ttx>Length</ttx><td>The dot is a rectangle relative to the hit's length.
@@ -496,26 +508,26 @@ the <ttx>Color Icon</ttx> settings are stored for subsequent <ttp>Dot Plot</ttp>
 			<tr><td><ttx>Mix</ttx><td>Show all hits, but non-blocks hits will be displayed with size=1 and no scale.
 			<tr><td><ttx>Block</ttx><td>Show only hits assigned to blocks.
 		</table>
-	<tr><td style="vertical-align: text-top;"><ttl>Gene Only</ttl>
+	<tr><td><ttl>Gene Only</ttl>
 		<td>
 		<table class="ty txy">
 			<tr><td><ttx>Ignore</ttx><td>Show all.
-			<tr><td><ttx>Both</ttx><td>Only show hits that have a gene on both ends to the hit.
-			<tr><td><ttx>One</ttx><td>Only show hits that have a gene on one end of hit.
-			<tr><td><ttx>None</ttx><td>Only show hits that do not have a gene on either end.
+			<tr><td><ttx>Both</ttx><td>Only show hits that have a gene on both ends to the hit (g2).
+			<tr><td><ttx>One</ttx><td>Only show hits that have a gene on one end of hit (g1).
+			<tr><td><ttx>None</ttx><td>Only show hits that do not have a gene on either end (g0).
 		</table>
-	<tr><td style="vertical-align: text-top;"><ttl>Show Block</ttl>
+	<tr><td><ttl>Show Block</ttl>
 		<td>
 		<table class="ty txy">
 			<tr><td><ttx>Boundary</ttx><td>Draw a blue rectangle around each block of hits.
 			<tr><td><ttx>Border</ttx><td>Draw the block number in or near the block;
-			this only works when <ttl>Boundary</ttl> is also checked.
+			this only works when <ttx>Boundary</ttx> is also checked.
 		</table>
 </table>
 <small><sup>a</sup> These options can make the dots flow over the borders,
 see <u>Size of dots</u> below.</small>
 
-<p><ttl>Show Empty Regions</ttl> (Not shown in above image) This option is only present
+<p><ttl>Show Empty Regions</ttl> (Not shown in above <ttb>Filter</ttb> image) This option is only present
 if at least one of the genomes displayed has &gt;=20 chromosomes or scaffolds; this is most relevant
 when one genome is draft sequence, as there can be rows or columns with no blocks.
 When the option is deselected, it hides rows or columns that do not contain any synteny blocks.
@@ -535,16 +547,16 @@ When the option is deselected, it hides rows or columns that do not contain any 
 <a id="block"></a>
 <h2>Blocks Display (Two Genome)</h2>
 
-The image below shows the <ttp>Block</ttp> display for A.thal and Cabbage.
+The image below shows the <ttp>Block</ttp> display for  Cabbage to A.thal.
 The 9 Cabbage chromosomes are color coded as shown at the top, and aligned to
-the 5 A.thal chromosomes. The A.thal to Cabbage block view can be viewed by
+the 5 A.thal chromosomes. The view can be reversed (i.e. A.thal to Cabbage) by
 selecting <u>reverse</u>.
 <table>
 	<tr>
 	<td><a href="img/block.png"><img src="img/block.png" alt="block" style="border: 1px solid black; width: 500px"></a>
 	<td>Clicking a chromosome displays a window of the chromosome as shown below; the dotted border
 	indicates an inverted block (i.e. the majority of hits are inverted). Clicking
-	a <ttp>Block</ttp> displays its 2D view.
+	a block displays its <ttp>2D</ttp> view in a popup window.
 	<p><a href="img/block-chr.png"><img src="img/block-chr.png"  alt="block chr" style="border: 1px solid black; width: 250px"></a>
 </table>
 
@@ -736,7 +748,6 @@ where the gaps are represented by a grey area.
 it, which is called the <ttx>major</ttx> gene. The other genes are the <ttx>minor</ttx> genes.
 In the above example, gene 1910.b is the major gene for the top hit-wire and gene 1910.a is the minor gene.
 
-
 <!------------------------------------------------------------------>
 <a id="info"></a>
 <h3>Hovers and popups</h3>
@@ -760,45 +771,51 @@ Any number of gene popups can be present.
 <a id="hinfo"></a>
 <h4>Hit Details</h4>
 
-<u>Information:</u> Hovering the mouse over a hit-wire will show its information in the <ttl>Information</ttl> box.
+<u>Information:</u> Hovering the mouse over a hit-wire will show its information in the <ttl>Information</ttl> box,
+plus show similar information in the hit popup.
 <p>
 <table class="txy">
-<tr><td>
-<table class="txy">
-<tr><td><ttx>Hit #</ttx><td> The number representing the hit for the chromosome pair.
-<tr><td style="white-space: nowrap; vertical-align: text-top;">
-<ttx>gN</ttx> (<ttx>N={0,1,2}</ttx>)
-<br><ttx>XX</ttx> (<ttx>X={E,I,n}</ttx>)
-<td> <ttx>Algo1</ttx>: Hit overlaps 0 gene (g0), 1 gene (g1), 2 genes (g2).
-<br> <ttx>Algo2</ttx>: Hit overlaps two exons (EE), exon-intron (EI), intron-intron (II), exon-intergenic (En),
-intron-intergenic (In).
-<br> See <a href="#term2">Terminology</a> for an explanation of <ttx>Algo1</ttx> versus <ttx>Algo2</ttx>.
+	<tr><td style="vertical-align: text-top;">
+	<table class="txy">
+	<tr><td><ttx>Hit #</ttx><td> The number representing the hit for the chromosome pair.
+	<tr><td style="white-space: nowrap; vertical-align: text-top;">
+	<ttx>gN</ttx> (<ttx>N={0,1,2}</ttx>)
+	<br><ttx>XX</ttx> (<ttx>X={E,I,n}</ttx>)
+	<td> <ttx>Algo1</ttx>: Hit overlaps 0 gene (g0), 1 gene (g1), 2 genes (g2).
+	<br> <ttx>Algo2</ttx>: Hit overlaps two exons (EE), exon-intron (EI), intron-intron (II), exon-intergenic (En),
+	intron-intergenic (In).
+	<br> See <a href="#term2">Terminology</a> for an explanation of <ttx>Algo1</ttx> versus <ttx>Algo2</ttx>.
 
-<tr><td><ttx>Block #</ttx><td>The block number (0 indicates it is not in a block).
-<tr><td><ttx>Inv</ttx><td> Indicates that it is part of an inverted block.
+	<tr><td><ttx>Block #</ttx><td>The block number (0 indicates it is not in a block).
+	<tr><td><ttx>Inv</ttx><td> Indicates that it is part of an inverted block.
 
-<tr><td  style="white-space: nowrap; vertical-align: text-top;"><ttx>cN.M</ttx> (<ttx>N&ge;2</ttx>)
-<td> It is part of a collinear set of size N; M is the unique set number for the chromosome pair.
+	<tr><td  style="white-space: nowrap; vertical-align: text-top;"><ttx>cN.M</ttx> (<ttx>N&ge;2</ttx>)
+	<td> It is part of a collinear set of size N; M is the unique set number for the chromosome pair.
 
-<tr><td  style="white-space: nowrap; vertical-align: text-top;">
-<ttx>Subhits</ttx>=(<ttx>N&ge;1</ttx>)
-<td> The number of MUMmer hits clustered into one hit, where there may be gaps
-or overlaps between hits.
+	<tr><td  style="white-space: nowrap; vertical-align: text-top;">
+	<ttx>Id</ttx>, <ttx>Sim</ttx>
+	<td>These values are from the MUMmer file.
+	For <ttx>Subhits&gt;1</ttx>, the values are approximate.
 
-<tr><td  style="white-space: nowrap; vertical-align: text-top;">
-<ttx>Id</ttx>, <ttx>Sim</ttx>
-<td>These values are from the MUMmer file.
-For <ttx>Subhits&gt;1</ttx>, the values are approximate.
+	<tr><td style="white-space: nowrap; vertical-align: text-top;"><ttx>Cov</ttx>
+	<td>The largest sum of the merged subhits between the two species.
 
-<tr><td style="white-space: nowrap; vertical-align: text-top;"><ttx>Cov</ttx>
-<td>The largest sum of the merged subhits between the two species.
-
-<tr><td style="white-space: nowrap; vertical-align: text-top;">
-<ttx>L</ttx> and <ttx>R</ttx><td>The coordinates for the hit on the left and right tracks, respectively.
+	<tr><td  style="white-space: nowrap; vertical-align: text-top;">
+	<ttx>Subhits</ttx>=(<ttx>N&ge;1</ttx>)
+	<td> (Popup only) The number of MUMmer hits clustered into one hit, where there may be gaps
+	or overlaps between hits.
+	<tr><td>&nbsp;
+	<tr><td style="white-space: nowrap; vertical-align: text-top;">
+	<ttx>L</ttx> and <ttx>R</ttx><td>The coordinates for the hit on the left and right tracks, respectively.
+<tr><td>&nbsp;
+	<tr><td style="white-space: nowrap; vertical-align: text-top;">
+	<ttx>L#</ttx> and <ttx>R#</ttx><td> (Hover only) The hover shows the <ttx>Gene#</ttx> whereas the popup shows additional
+	hit information along with the <ttx>Gene#</ttx>.
 </table>
-<td><a href="img/2Dhitinfo.png"><img src="img/2Dhitinfo.png" alt="2d-hit information" style="border: 1px solid black; width: 250px"></a>
+
+<td><a href="img/2Dhitinfo.png"><img src="img/2Dhitinfo.png" alt="2d-hit information" style="border: 1px solid black; width: 230px"></a>
 <br><a href="img/2Dhitwire.png">
-<img src="img/2Dhitwire.png" alt="2D hit wire popup" style="border: 1px solid black; width: 250px"></a>
+<img src="img/2Dhitwire.png" alt="2D hit wire popup" style="border: 1px solid black; width: 290px"></a>
 </table>
 
 <p><u>Popup</u>: To view the popup of a hit-wire, right click on it;
@@ -808,7 +825,7 @@ magenta as shown on the upper right; the corresponding popup is shown below.
 
 <table>
 <tr><td>
-The top part of the popup is the same as the hit information shown in the image above.
+The top part of the popup is similar to the hit information shown in the image above.
 The bottom part shows the coordinates of the subhits:
 	<ol>
 	<li>If the hits align to a gene at either end, the major gene(s) are stated.
@@ -902,7 +919,6 @@ the exons are numbered differently; this is due to differences between NCBI and 
 <p><a href="img/2d-desc.png"><img src="img/2d-desc.png" alt="2d-desc" style="border: 1px solid black; width: 750px"></a>
 
 <hr>
-<!----->
 <!----------------------------------------------------------->
 
 <a id="control"></a>
@@ -1158,19 +1174,21 @@ you may not see the corresponding gene hits as they may be filtered.
 </table>
 
 <a id="sfg2"></a>
-<p><u>3-track</u>
-<table>
-<tr><td>The <ttb>Sequence Filter</ttb> has two extra options, <ttx>g2g2</ttx> and <ttx>g2g1</ttx>,
+<p><u>3-track</u>:
+The <ttb>Sequence Filter</ttb> has two extra options, <ttx>g2g2</ttx> and <ttx>g2g1</ttx>,
 for the <i>reference</i> track when it has both a left and right track.
-<td><a href="img/seqFilterRefOnly.png">
-	<img src="img/seqFilterRefOnly.png" alt="sequence filter reference" style="border: 1px solid black; width: 300px"></a>
+The usage of this feature is complex, see
+<a href="Details.html#2dg2" target="_blank" class="ext">3-chr conserved</a> for details.
+<table>
+<tr><td>
+<table class="ty">
+<tr><td><ttx>g2x2</ttx><td>The genes conserved across the 3-chromosomes are highlighted along with the hit-wires.
+<tr><td><ttx>g2x1</ttx><td>The genes conserved in one chr-pair are highlighted along with the hit-wires.
+<tr><td><ttx>Show</ttx><td>Only the g2x2 or g2x1 hit-wires will be shown.
 </table>
 
-<table class="ty">
-<tr><td style="white-space: nowrap">Hit g2x2<td>The genes conserved across the 3 tracks will be highlighted.
-The usage of this feature is a little complex, so the section
-<a href="Details.html#con" target="_blank" class="ext">Conserved</a> provides the details.
-<tr><td>Hit g2x1<td>The genes conserved on ONLY one side are highlighted.
+<td><a href="img/seqFilterRefOnly.png">
+	<img src="img/seqFilterRefOnly.png" alt="sequence filter reference" style="border: 1px solid black; width: 300px"></a>
 </table>
 
 <a id="sfpop"></a>
@@ -1180,16 +1198,19 @@ The usage of this feature is a little complex, so the section
 <u>Sequence Filter Popup</u>: A subset of the filters are available by right clicking in the empty space
 of the chromosome rectangle, as shown on the right.
 <p>&nbsp;
-<p><i>Highlighting genes summary</i>:
-<table class="tx txy">
-<tr><td>g2x2, g2x1<td>(Reference, 3-track only) The exons are highlighted.
-<tr><td style="white-space: nowrap;">Filter <ttx>Gene#</ttx><td>The exons, introns and gene delimiter are highlighted.
-<tr><td style="white-space: nowrap;">Gene popup<td>The exons, introns and gene delimiter are highlighted.
-<tr><td>Hit popup<td>The exons, introns and gene delimiter are highlighted the same color as the hit-wire color.
-</table>
 <p>During a <ttp>Chromosome Explorer</ttp> session,
 <ttl>Sequence Filters</ttl> are reset to defaults between
 different <ttp>2D</ttp> displays.
+
+
+<p>&nbsp;
+<p><i>Highlighting gene summary</i>:
+<table class="tx txy">
+<tr><td style="white-space: nowrap;">Filter <ttx>Gene#</ttx><td>The exons, introns and gene delimiter are highlighted.
+<tr><td style="white-space: nowrap;">Gene popup<td>The exons, introns and gene delimiter are highlighted.
+<tr><td>Hit popup<td>The exons, introns and gene delimiter are highlighted the same color as the hit-wire color.
+<tr><td>g2x2, g2x1<td>(Reference, 3-track only) The exons are highlighted.
+</table>
 
 <td>
 <a href="img/seqFilterPopup.png">
@@ -1220,20 +1241,19 @@ Multiple <ttl>Show</ttl> options can be selected, but only one <ttl>Highlight</t
 	<tr><td style="white-space: nowrap; vertical-align: text-top;"><ttx>Collinear sets</ttx>
 		<td>Hits that are part of a collinear set. See <a href="#ex2d">example below</a>
 			and <a href="Details.html#col" target="_blank" class="ext">Details</a>.
-	<tr><td><ttx>Hit =2 genes</ttx> <td>Hits that align to a gene on both sides (g2).
-	<tr><td><ttx>Hit =1 genes</ttx> <td>Hits that align to a gene on one side only (g1).
+	<tr><td><ttx>Hit =2 genes</ttx> <td>Hits that align to genes on both ends (g2).
+	<tr><td><ttx>Hit =1 genes</ttx> <td>Hits that align to a gene on one end (g1).
 	<tr><td><ttx>Hit =0 genes</ttx>   <td>Hits that do not align to any gene (g0).
 
 	<tr><td><ttx>Hit popup<br>(or Query)</ttx> <td>
-	The Popup-Query highlighting is turned on/off with this option.
-	The following two situations are highlighted with the Popup-Query color:
-	<br>(1) When a  hit-wire <a href="#hinfo">Hit Popup</a> is displayed, the hit-wire and any aligned major genes are highlighted.
-	<br>(2) When the 2D is displayed with <ttb>Query</ttb> <ttl>View 2D</ttl> option, the selected hit
-	will be highlighted or group of hits will be highlighted; see <a href="Query.html#group" class="ext" target="_blank">Groups</a>.
-	<br>The Popup-Query color can be changed with the <a href="#wheel">Color Wheel</a>.
+	The following two situations are highlighted with the <ttx>Popup-Query</ttx> color:
+	<br>(1) When a <a href="#hinfo">Hit Popup</a> is displayed, the hit-wire and any aligned major genes are highlighted.
+	<br>(2) When the <ttb>2D</ttb> is displayed with <ttb>Query</ttb>
+	<a href="Query.html#view2D" class="ext" target="_blank">View 2D</a> option, the selected hit(s)
+	will be highlighted.
 	</table>
 <td><a href="img/hitfilterS.png">
-	<img src="img/hitfilterS.png" alt="hitfilterS" style="border: 1px solid black; width: 350px">
+	<img src="img/hitfilterS.png" alt="hitfilterS" style="border: 1px solid black; width: 320px">
 <tr><td>
 </table>
 
@@ -1243,17 +1263,17 @@ Multiple <ttl>Show</ttl> options can be selected, but only one <ttl>Highlight</t
 <tr><td colspan=2><ttl>Show</ttl>
 <tr><td><ttx>Synteny blocks</ttx><td>Hits that are part of a synteny block.
 	<table class="ty">
-	<tr><td><ttx>And</ttx><td>If any of the below are selected, the hit has to be <u>all</u> selected.
-	<tr><td><ttx>Or</ttx><td>If any of the below are selected, the hit can be <u>any</u> of the selected.
+	<tr><td><ttx>And</ttx><td>The hit will be shown if it has
+	<u>all</u> the selected <ttx>Show</ttx> options.
+	<tr><td><ttx>Or</ttx><td>The hit will be shown if it has <u>any</u> of the selected <ttx>Show</ttx> options.
 	</table>
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><ttx>Collinear sets</ttx>
     <td>Hits that are part of a collinear set. See <a href="#ex2d">example below</a>
         and <a href="Details.html#col" target="_blank" class="ext">Details</a>.
-<tr><td><ttx>Hit =2 genes</ttx> <td>Hits that align to a gene on both sides (g2).
-<tr><td><ttx>Hit =1 genes</ttx> <td>Hits that align to a gene on one side only (g1).
-<tr><td><ttx>Hit =0 genes</ttx>   <td>Hits that do not align to any gene (g0).
-<tr><td><ttx>All hits</ttx>   <td>Show all hits. <i>Precedence:</i> This shows all hits regardless of what else is
-selected.
+<tr><td><ttx>Hit =2 genes</ttx> <td>Hits that align to genes on both ends (g2).
+<tr><td><ttx>Hit =1 genes</ttx> <td>Hits that align to a gene on one end (g1).
+<tr><td><ttx>Hit =0 genes</ttx> <td>Hits that do not align to any gene (g0).
+<tr><td><ttx>All hits</ttx>   <td>Show all hits.
 </table>
 
 <p>
@@ -1261,29 +1281,28 @@ selected.
 <table class="ty">
 <tr><td colspan=2><ttl>Other</ttl>
 <tr><td><ttx>Identity</ttx><td>Move the slider to view only the hits with &gt;= the specified identity.
-<i>Precedence:</i> This works in
-conjunction with any of the <ttl>Show</ttl> option except <ttl>All hits</ttl>.
+<i>Precedence:</i> This takes precedence over all other <ttl>Show</ttl> options.
 <tr><td><ttx>Block#</ttx><td>Enter a block number and only hits from that block will be shown.
 <i>Precedence:</i> This takes precedence over everything but the <ttl>Identity</ttl>.
 <p>While the filter window is showing, the user can enter a block number following by return
 to see the block, then try the next one to see the next block. If an invalid block number is
 entered, no hits will be shown.
+<tr><td><ttx>G2xN</ttx><td>This is a hit filter that occurs in the <ttb>Sequence Filter</ttb> of the
+reference track for a 3-track display; see <a href="Details.html#2dg2"  target="_blank" class="ext">3-chr conserved</a>.
+It takes precedence over all other hit filters except <ttx>Identity</ttx>.
 </table>
 
 <a id="hfpop"></a>
 <p><u>Hit Popup</u>
-<table class="tx" style="width: 90%">
+<table class="tx" style="width: 70%">
 <tr>
 <td>
-When hits belonging to blocks or collinear sets are highlighted, subsequent blocks/sets
-will have an alternating color relative to one chromosome of the pair, e.g. set #1 hits will be
-green, set #2 hits will be pink, set #3 hits will be green, etc (e.g. <a href="img/colHigh.png">Example</a> image).
-
-<p>A subset of the highlight filters are available by right clicking in the hit white space,
+A subset of the highlight filters are available by right clicking in the hit white space,
 as shown on the right.
-
-<p>During a <ttp>Chromosome Explorer</ttp> session, any <ttl>Hit Filter</ttl> settings will remain set between
+<p>&nbsp;
+<p>During a <ttp>Chromosome Explorer</ttp> session, any <ttl>Hit Filter</ttl> settings are not retained between
 different <ttp>2D</ttp> displays.
+
 <td>
 <a href="img/hitFilterPopup.png">
 	<img src="img/hitFilterPopup.png" alt="hit filter popup" style="border: 1px solid black; width: 140px"></a>
@@ -1294,13 +1313,19 @@ different <ttp>2D</ttp> displays.
 <h4>Filter Example</h4>
 
 <table>
-<tr><td>The image on the right has the <ttb>Sequence Filter</ttb> option of <ttl>Show Gene Delimiter</ttl>
-and the <ttb>Hit Filter</ttb> option of <ttl>Highlight Collinear Hits</ttl>.
-<p><ttx>Show Gene Delimiter</ttx>: Note that the 2nd gene on both tracks would blend in with the 3rd if it was not for the black line at the
-top.
-<p><ttx>Highlight Collinear Hits</ttx>: The highlighted hit-wires are all part of a collinear set. The 2nd hit-wire is not highlighted because it
-does not hit a gene pair, so is not part of the collinear set, but it does not disrupt the set since it does
-not hit an annotated gene.
+<tr><td>The image on the right has the <ttb>Sequence Filter</ttb> option of <ttl>Gene Delimiter</ttl>
+and <ttl>Collinear#</ttl>, and the <ttb>Hit Filter</ttb> option of <ttl>Highlight Collinear Hits</ttl>.
+
+<p><ttx>Show Gene Delimiter</ttx>: Note that the 2nd gene on the left track would blend in with the 3rd if
+it was not for the black line at the top.
+<p><ttx>Highlight Collinear Hits</ttx>:
+When hits belonging to <ttx>Blocks</ttx> or <ttx>Collinear sets</ttx> are highlighted, subsequent blocks/sets
+will have an alternating color relative to one chromosome of the pair. For example, in the image on the right,
+the green highlighted hit-wires are part of one collinear set (c629) and the pink highlighted hit-wire are
+part of another (c630).
+See <a href="Details.html#col" class="ext" target="_blank">Details</a> for
+more information.
+
 <td><a href="img/colSetGL.png">
 	<img src="img/colSetGL.png" alt="Collinear Highlight and Gene Lines" style="border: 1px solid black; width: 300px"></a>
 </table>
@@ -1382,14 +1407,15 @@ alignment can be viewed by selected <ttl>No trim</ttl>.
 <a id="alt"></a>
 <h4>Alternative base views</h4>
 
-To view the base alignment, use the <ttl>Show Seq Option</ttl> (from the <ttl>Selected:</ttl> pulldown).
+To view the base alignment, use the <ttl>Show Seq Option</ttl> (from the <ttb>2D</ttb>
+<a href="#mouse_function_selector">Show</a> pulldown).
 Select the 1st region to be aligned, then select the 2nd region. These two sequences can be copied
 from the popups, and aligned with online tools such as
 <a href="https://www.bioinformatics.nl/cgi-bin/emboss/matcher" class="ext" target=_blank>EMBOSS Matcher</a>
 or <a href="https://www.ezbiocloud.net/tools/pairAlign" class="ext" target=_blank>EZ BioCloud</a> (max 5000bp).
 <p>Another alternative is to find the hit in the
 <ttp>Queries</ttp>, then view the
-<a href="Query.html#msa" class="ext" target="_blank">MSA</a> (either MUSCLE or MAFFT can be used).
+<a href="Query.html#msaAlign" class="ext" target="_blank">MSA</a> (either MUSCLE or MAFFT can be used).
 
 <!-------------------------------------------------------------------->
 <a id="dot3"></a>
@@ -1397,7 +1423,7 @@ or <a href="https://www.ezbiocloud.net/tools/pairAlign" class="ext" target=_blan
 
 All selected projects will be shown in the <ttp>Dot Plot</ttp>. The interface is the same as
 discussed in <a href="#dotplot_display">Dot Plot (Two Genome)</a>. The <ttp>Dot Plot</ttp> in the image
-shows three genomes.
+below shows three genomes; A.thal is the reference, which can be changed with the pull-down at the top.
 <p><a href="img/dotplot-3g.png"><img src="img/dotplot-3g.png" alt="" style="border: 1px solid black; width: 600px"></a>
 
 <!-------------------------------------------------------------------->
@@ -1415,13 +1441,14 @@ shows three genomes.
 <h3>Self-synteny</h3>
 
 Self-synteny can be viewed in all views
-(see <a href="Demo.html#self" class="ext" target="_blank">Demo Dot Plot</a>), with the following exception:
+(e.g. <a href="Demo.html#self" class="ext" target="_blank">Demo Dot Plot</a>), with the following exception:
+<p>
 <ul>
-<li>The <ttp>2D</ttp> does not work for a single chromosome compared
-to itself. However, by going through the dotplot or blocks view, you can click on a self-chromosome block and view it in
-the 2D view.
+<li>The <ttp>2D</ttp> does not directly work for a single chromosome compared
+to itself from the <ttp>Chromosome Explorer</ttp>. However, by going through the <ttp>Dotplot</ttp> or <ttp>Blocks view</ttp>, you can click on a self-chromosome block and view it in
+the <ttp>2D</ttp> view.
+<p>
 <li>The <ttp>Queries</ttp> does not work for self-synteny.
-<li>Self-synteny is not as well supported as the multi-species synteny, but it works.
 </ul>
 
 <a id="data_download"></a>
@@ -1436,8 +1463,8 @@ See <a href="Query.html#export" class="ext" target="_blank">Query Export</a>.
 <p><ttp>Explorer 2D</ttp>: Select the species of interest,
  open the <a href="#alignment_display_2d">Explorer 2D</a>, and click the <ttl>Download Blocks</ttl> button is at the lower left.
  This exports a table of all the computed synteny block coordinates for all the
- selected species.
-
+ selected species. The options are:
+<p>
 <ul>
 <li><ttl>Blocks with gene info</ttl>: The columns for each block are:
 <br><small>
@@ -1447,7 +1474,7 @@ See <a href="Query.html#export" class="ext" target="_blank">Query Export</a>.
 is the percentage of genes that have a hit.
 The <ttx>PearsonR</ttx> is the approximate linearity of the hits in the chain as measured
 by the Pearson correlation coefficient; a negative PCC is an inverted block.
-
+<p>
 <li><ttl>Blocks only</ttl>: The columns for each block are:
 <br><small>
 &nbsp;&nbsp;Species1  Species2  Chr1  Chr2  BlkNum #Hits  Start1 End1  Start2 End2
@@ -1479,8 +1506,9 @@ This icon opens a menu for customizing colors; the colors changes are saved in a
 called <tt>.symap_saved_props</tt> which resides in the user's home directory. Hence, the
 changes are preserved between sessions and for different SyMAP databases. In contrast, <ttl>Filters</ttl>
 changes only exist for the duration of the display.
+<p>Click the <ttl>Color Wheel</ttl> in any of the displays, then:
 <ul>
-<li>Click a tab (e.g. Hit) to view the associated colors.
+<li>Click a tab (e.g. <ttx>Hit</ttx>) to view the associated colors.
 <li>Click a color box and a color chooser (far right image) will popup
 that lets you change the color.
 <li><ttl>Ok</ttl>: Instantiate all changes and close the menu.
@@ -1490,12 +1518,12 @@ that lets you change the color.
 <table class="tx">
 <tr><td>
 <tr>
-<td><a href="img/2d-color.png"><img src="img/2d-color.png" alt="Track Colors" style="border: 1px solid black; width: 270px"></a>
-<td><a href="img/2d-color2.png"><img src="img/2d-color2.png" alt="Hit Colors" style="border: 1px solid black; width: 260px"></a>
+<td style="vertical-align: text-top;><a href="img/2d-color.png"><img src="img/2d-color.png" alt="Track Colors" style="border: 1px solid black; width: 270px"></a>
+<td style="vertical-align: text-top;><a href="img/2d-color2.png"><img src="img/2d-color2.png" alt="Hit Colors" style="border: 1px solid black; width: 260px"></a>
 <td><a href="img/2d-color3.png"><img src="img/2d-color3.png" alt="Change Colors" style="border: 1px solid black; width: 200px"></a>
 </table>
 
-<p><b>Dot Plot tab</b>:
+<p><u>Dot Plot tab</u>:
 <table>
 	<tr><td>
 	<table  class="ty txy">

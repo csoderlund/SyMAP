@@ -67,6 +67,26 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
+<a id="v570"></a>
+<h3>Release: v5.7.0 (20-July-25)</h3>
+Small improvements.
+<ul>
+<li><ttb>Manager</ttb>: (1) For the <ttx>Selected</ttx> on the <ttb>Manager</ttb>, the <ttx>#Annotated</ttx> was
+wrong if pseudo genes were assigned; it has been changed to show <ttx>Exons</ttx> instead. (2) The <ttb>View</ttb> now has a <ttx>Gap</ttx> column (if any exists)
+and a <ttx>Totals</ttx> row.
+<li><ttb>2D</ttb>: The 3-track g2x2 (shared) and g2x1 (unique) was confusing because it only worked on visible hits;
+see <a href="Details.html#2dg2" class="ext" target="_blank">3-chr conserved</a> for the way it works now.
+<li>Tiny changes:
+<ul>
+<li><ttb>A&S</ttb> <ttl>Number Pseudo</ttl>: This option could duplicate pseudo <ttx>Gene#</ttx> for different synteny pairs;
+this worked but may be confusing when querying &gt;2 synteny pairs. This has been corrected. An existing SyMAP database can be updated running
+<tt>symap -pseudo</tt>.
+<li><ttb>2D</ttb>: Slight change in hit-wire information and popup (see <a href="UserGuide.html#info" class="ext" target="_blank">Hit popup</a>).
+<li><ttb>Queries</ttb>: Pseudo message in <ttx>Instructions</ttx> has been redone.
+<li>If a <ttl>Display Name</ttl> is re-used, it provides more information about the duplicate.
+</ul>
+</ul>
+
 <a id="v569"></a>
 <h3>Release: v5.6.9 (19-June-25)</h3>
 
@@ -142,7 +162,6 @@ situations.
 <p>
 <li><small>Developers: Rename synteny/SyGraph to Merge and move merge routines to it; add orient.
 Any java file I looked at, I took out old CASddd comments.</small>
-</small>
 </ul>
 
 
@@ -255,7 +274,7 @@ However, if you want to run MAFFT, you need to  download <ttx>symap_5.tar.gz</tt
 <li><ttl>Queries</ttl>
 <ul>
 <li>Bug fix on Linux: crashed on searching for a given collinear set.
-<li><ttl>MSA</ttl>: See <a href="Query.html#msaAlign" ext="class" target="_blank">MSA</a>.
+<li><ttl>MSA</ttl>: See <a href="Query.html#msaAlign" class="ext" target="_blank">MSA</a>.
 	<ul>
 	<li>MUSCLE is very slow, so MAFFT has been added which is many times faster.
 	<li>Bug fix: negative strand hits were not reversed complemented.
@@ -269,12 +288,12 @@ However, if you want to run MAFFT, you need to  download <ttx>symap_5.tar.gz</tt
 	The results are sorted according to the lower table of information. The results are
 	in a split pane.
 	</ul>
-<li><ttl>Cluster genes</ttl>: See <a href="Query.html#clhit" ext="class" target="_blank">Cluster genes</a>.
+<li><ttl>Cluster genes</ttl>: See <a href="Query.html#clhit" class="ext" target="_blank">Cluster genes</a>.
 	<ul>
 	<li>A new filter called <ttl>Cluster hits</ttl> has replaced <ttl>PgeneF</ttl> (which can still
 	be run using <tt>viewSymap -g</tt>).
 	</ul>
-<li><ttl>Gene Pair Report...</ttl> See <a href="Query.html#report" ext="class" target="_blank">Report</a>.
+<li><ttl>Gene Pair Report...</ttl> See <a href="Query.html#report" class="ext" target="_blank">Report</a>.
 <ul>
 	<li><ttl>Multi-Hit Gene Report</ttl>:
 	(1) This was confusing because groups can be created from non-gene hits,
@@ -291,7 +310,8 @@ However, if you want to run MAFFT, you need to  download <ttx>symap_5.tar.gz</tt
 </ul>
 <li>The <ttl>Grp#</ttl> and <ttl>Grp Size</ttl> have been merged into one column:
 <tt>Size-Grp#</tt>.
-<li>Other:<small>
+<li>Other:
+<small>
 <ul>
 <li>Rewrote the Instruction page since its HTML was obsolete in Java20.
 Formatted the table Statistics better. If a chromosome was selected, the statistics did not show the Groups counts; it does now.
@@ -341,7 +361,7 @@ New <ttl>Queries</ttl> features for 3 species.
 		<ul>
 		<li>It will display <ttl>View 2D</ttl> with 3-tracks (chromosomes) if two rows are selected which have a common reference gene,
 		and has 'both' genes in both rows. This works with the <ttx>Region</ttx> or <ttx>Collinear Set</ttx> options.
-		See <a href="Query.html#msp" class="ext" target="_blank">3-chromosome 2D</a>.
+		See <a href="Query.html#q3" class="ext" target="_blank">3-chromosome 2D</a>.
 		<li>A new <ttx>Gene#</ttx> checkbox for <ttl>View 2D</ttl> which shows the <ttx>Gene#</ttx> instead of the <ttx>Annotation</ttx>.
 		</ul>
 	<li><ttl>Report...</ttl>:
