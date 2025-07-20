@@ -15,18 +15,18 @@ import util.ErrorReport;
  */
 public class MapperPool {
 	private DBconn2 dbc2;
-	private PropsDB projPool; // properties
+	private PropsDB projPairs; // properties
 	
 	public MapperPool(DBconn2 dbc2, PropsDB projPool) {  // Created when Mapper is created
 		this.dbc2 = dbc2;
-		this.projPool = projPool;
+		this.projPairs = projPool;
 	}
 
-	public boolean hasPair(Sequence t1, Sequence t2) {
-		return projPool.hasProjectPair(t1.getProject(),t2.getProject());
+	protected boolean hasPair(Sequence t1, Sequence t2) {
+		return projPairs.hasPair(t1.getProject(),t2.getProject());
 	}
 
-	public SeqHits setData(Mapper mapper, Sequence t1, Sequence t2) { // Mapper.isInit
+	protected SeqHits setData(Mapper mapper, Sequence t1, Sequence t2) { // Mapper.isInit
 		SeqHits seqHitObj;
 		
 		if (hasPair(t1,t2)) seqHitObj = setSeqHitData(mapper, (Sequence)t1, (Sequence)t2);
@@ -41,12 +41,8 @@ public class MapperPool {
 	private SeqHits setSeqHitData(Mapper mapper, Sequence st1, Sequence st2)  {
 		int grpIdx1 = st1.getGroup();
 		int grpIdx2 = st2.getGroup();
-		String chr1="?", chr2="?";
-
+		
 		try {
-			chr1 = dbc2.executeString("select name from xgroups where idx=" + grpIdx1); 
-			chr2 = dbc2.executeString("select name from xgroups where idx=" + grpIdx2);
-			
 			int n = dbc2.executeCount("select count(*) from pseudo_hits where grp1_idx="+grpIdx1 + " AND grp2_idx="+ grpIdx2);
 			Vector <HitData> hitList = new Vector <HitData>(n);
 			
@@ -88,16 +84,20 @@ public class MapperPool {
 						rs.getInt(i++),		// int runnum
 						rs.getInt(i++),		// int runsize
 						rs.getInt(i++),		// int b.block	
-						rs.getDouble(i++),	// int b.corr 
-						chr1, chr2	    			
+						rs.getDouble(i++)	// int b.corr     			
 						);		
 				hitList.add(temp);
 			}
 			rs.close();
-			if (hitList.size()==0) Globals.eprt("No hits for " + st1.getTitle() + " to " + st2.getTitle());
+			if (hitList.size()==0) Globals.prt("No hits for " + st1.getTitle() + " to " + st2.getTitle());
 			
+			if (projPairs.hasPseudo(st1.getProject(), st2.getProject())) {
+				zeroPseudo(1, grpIdx1, hitList);
+				zeroPseudo(2, grpIdx2, hitList);
+			}
 			SeqHits seqHitObj = new SeqHits(mapper, st1, st2, hitList);
 			hitList.clear();
+			
 			if (Globals.DEBUG) {
 				String x = String.format("MP: Total>1 hits %,d: %d (%d)  Merged: %d (%d)", 
 						hitList.size(), HitData.cntTotal, HitData.cntTotalSH, HitData.cntMerge, HitData.cntMergeSH);
@@ -107,5 +107,31 @@ public class MapperPool {
 			HitData.cntTotal= HitData.cntMerge = HitData.cntTotalSH= HitData.cntMergeSH = 0;
 			return seqHitObj;
 		} catch (Exception e) {ErrorReport.print(e, "Get hit data");return null;}
+	}
+	/***********************************************************************
+	 * Set numbered pseudo genes annot_idx to zero. 
+	 * CAS570 everything works when HitData has annot_idx>0 for pseudo genes, but it could cause problems.
+	 * It is not a problem because the search is always on gene_overlap=2,1,0.
+	 * 
+	 * All genes for a chromosome are loaded, hence, any idx after that for this chr (grpIdx) is pseudo.
+	 * Even if another project is loaded, its idx's will not occur in this list.
+	 */
+	private void zeroPseudo(int which, int grpIdx, Vector <HitData> hitList) {
+	try {
+		int cnt=0;
+		int maxGeneIdx = dbc2.executeCount("select max(pa.idx) from pseudo_annot as pa " // could also be min(idx) pseudo
+				+ "join xgroups as g on pa.grp_idx=g.idx "
+				+ "where pa.type='gene' and pa.grp_idx=" + grpIdx);
+		for (HitData hd : hitList) {
+			if (which==1 && hd.annot1_idx>maxGeneIdx)      {hd.annot1_idx=0; cnt++;}
+			else if (which==2 && hd.annot2_idx>maxGeneIdx) {hd.annot2_idx=0; cnt++;}
+		}
+if (Globals.TRACE) {
+	int pidx = dbc2.executeCount("select proj_idx from xgroups where idx="+grpIdx);
+	String chr = dbc2.executeString("select fullname from xgroups where idx="+grpIdx);
+	Globals.tprt(String.format("%d. %d %-6s Grp %d  maxGeneIdx %,8d  cntZero %,d", which, pidx, chr, grpIdx, maxGeneIdx, cnt));
+}	
+} 
+	catch (Exception e) {ErrorReport.print(e, "Zero #pseudo");}
 	}
 }

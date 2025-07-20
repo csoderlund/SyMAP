@@ -59,32 +59,30 @@ public class OverviewPanel extends JPanel {
 		String msg = head;
 		
 		if (cntHasGenes>0) {
+			// Olap
 			String algo = theQueryFrame.isAlgo2() ? "<i>Algo2:</i>  " : "<i>Algo1:</i>  "; 
 			algo += "The Olap column is ";
 			algo += theQueryFrame.isAlgo2() ? "exon overlap; Olap may be 0 if hits only overlap intron." 
 					                        : "gene overlap; at least one project used Algo1 or has no genes.";
 			msg += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + algo;	
 			
-			msg += "<br>";
-			msg += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Pseudo</i>: "; 
+			// Pseudo
+			msg += "<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Pseudo</i>: "; 
 			int cntPseudo = theQueryFrame.cntUsePseudo; // CAS565 add
-			if (projVec.size()==2) {
-				msg += (cntPseudo==1) ? "Pseudo Gene# for the un-annotated"
-                        			  : "No pseudo Gene# for the un-annotated";	
-			}
+			int cntSynteny = theQueryFrame.cntSynteny;
+			
+			String pg = "Un-annotated Pseudo Gene# assigned";// CAS570 reworded
+			if (projVec.size()==2)  msg += (cntPseudo==1) ? pg : "No " + pg;	
 			else {
-				int cntSynteny = theQueryFrame.cntSynteny;
+				if (cntPseudo>0 && cntPseudo!=cntSynteny)  
+									    msg += cntPseudo + " pairs of " + cntSynteny + " have " + pg;
+				else if (cntPseudo>0)	msg += "All pairs have " + pg;
+				else 					msg += "No pairs have " + pg;
+			}
+			
+			// Synteny
+			if (projVec.size()!=2) {
 				int nProjSyn = (projVec.size()*(projVec.size()-1))/2;
-				
-				if (cntPseudo>0 && cntPseudo!=cntSynteny) {
-					String s = (cntPseudo==1) ? "One pair uses " : (cntPseudo + " pairs, ");
-					int cnt = (cntSynteny-cntPseudo);
-					String t = (cnt==1) ? " does not)" : " do not)";
-					msg+= s + " pseudo Gene# for the un-annotated  (" + cnt + t;
-				}
-				else if (cntPseudo>0)	msg += "Pseudo Gene# for the un-annotated";
-				else 					msg += "No pseudo Gene# for the un-annotated";
-				
 				if (nProjSyn!=cntSynteny) {
 					msg+="<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Synteny</i>: ";
 					String s = " (from " + nProjSyn + " possible)";

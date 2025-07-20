@@ -194,9 +194,9 @@ public class Schema {
 		    "cvgpct				 TINYINT UNSIGNED NOT NULL," +   // avg %sim  Col7     
 		    "countpct			 INTEGER UNSIGNED default 0," +  // number of merged   
 		    "score               INTEGER NOT NULL," +            // summed length Col5 - displayed in Query
-		    "htype             	 TINYTEXT," +   				 // EE, EI, IE, En, nE, II, In, nI, nn
+		    "htype             	 TINYTEXT," +   				 // EE, EI, IE, En, nE, II, In, nI, nn; g2, g1, g0
 		    "gene_overlap		 TINYINT NOT NULL, " +	       	 // 0,1,2
-		    "annot1_idx			 INTEGER default 0," +
+		    "annot1_idx			 INTEGER default 0," +			 // can have>0 when pseudo_annot.type='pseudo'
 			"annot2_idx			 INTEGER default 0," +
 		    "strand              TEXT NOT NULL," +
 		    "start1              INTEGER NOT NULL," +

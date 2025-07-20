@@ -42,11 +42,11 @@ public class HfilterData {
 		if (!bHiPopup) 		msg += "No High Popup (or Query); "; // query; 
 		
 		msg += "Show "; // something always shows
-		if (pctid!=0 && pctid!=minPctid) msg += " Id=" + (int) pctid + "%"; 
+		if (pctid!=0 && pctid!=minPctid) msg += "Id=" + (int) pctid + "%"; 
 		
-		if (bBlock && bBlockOnly) msg += " Block#" + blkNum; // CAS567 add
+		if (bBlock && bBlockOnly) msg += "Block#" + blkNum; // CAS567 add
 		else {
-			String x = "";
+			String x = " ";									// CAS570 spacing was wrong
 			if (bBlock) {
 				msg += "Block";
 				x = (bBlockAnd) ? " and " : " or ";

@@ -16,7 +16,7 @@ import symapQuery.TableMainPanel;
  * 
  *  CAS521 remove FPC; CAS532 moved HTML links to Jhtml
  *  CAS534 renamed from SyMAP=> SyMAP2d; moved all globals to symap.Globals
- *  CAS544 moved to drawingpanel for 2d stuff
+ *  CAS544 moved to drawingpanel for 2d stuff; CAS570 removed CAS comments
  */
 public class SyMAP2d {
 	private Frame2d            frame;
@@ -37,23 +37,23 @@ public class SyMAP2d {
 	/** symap.frame.ChrExpFrame.regenerate2Dview 
 	 * hb==null is from dotplot or blocks display, so not full ChrExp
 	 ***/
-	public SyMAP2d(DBconn2 dbc2, HelpBar hb, TableMainPanel theTablePanel) // CAS507 removed applet
+	public SyMAP2d(DBconn2 dbc2, HelpBar hb, TableMainPanel theTablePanel) 
 	{	
 		String type = (hb==null) ? "P" : "E";
 		this.tdbc2 = new DBconn2("SyMAP2d" + type + "-" + DBconn2.getNumConn(), dbc2);
 		
-		persistentProps = new PersistentProps(); // CAS521 changed PersistentProps - it has all args now
+		persistentProps = new PersistentProps(); 
 
-		if (hb == null) helpBar = new HelpBar(-1, 17); // CAS521 removed dead args
+		if (hb == null) helpBar = new HelpBar(-1, 17); 
 		else			helpBar = hb; // for full explorer
 
-		historyControl = new HistoryControl(); // CAS550 the history object is now created in HistoryControl
+		historyControl = new HistoryControl(); 
 
 		drawingPanel = new DrawingPanel(theTablePanel, tdbc2, historyControl, helpBar);
 
 		historyControl.setListener(drawingPanel);
 
-		colorDialogHandler = new ColorDialogHandler(persistentProps); // This sets changed colors; CAS521 moved properties to ColorDialogHandler
+		colorDialogHandler = new ColorDialogHandler(persistentProps); // This sets changed colors
 
 		controlPanel = new ControlPanel(drawingPanel, historyControl, colorDialogHandler, helpBar, (hb!=null));
 		
@@ -67,17 +67,17 @@ public class SyMAP2d {
 	}
 	
 	public void clear() { // Frame2d.displose() called for non-Explorer 2d
-		tdbc2.close(); 	  // CAS541 add
+		tdbc2.close(); 	 
 		clearLast();
 	} 
-	public void clearLast() { // ChrExpFrame when creating a new 2d; do no close tdc2
+	public void clearLast() { // ChrExpFrame when creating a new 2d; do not close tdc2
 		drawingPanel.clearData(); 	// clear caches
-		historyControl.clear(); 			// clear history
+		historyControl.clear(); 	// clear history
 		controlPanel.clear();
 	}
 	public Frame2d getFrame() {return frame;}
 
 	public DrawingPanel getDrawingPanel() {return drawingPanel;}
 	
-	public ControlPanel getControlPanel() {return controlPanel;} // CAS531 add for clear()
+	public ControlPanel getControlPanel() {return controlPanel;} 
 }

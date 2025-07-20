@@ -28,7 +28,6 @@ import symap.frame.HelpListener;
 
 /***************************************************
  * Common sets of interface commands
- * CAS552 there was one abstract method to cover many possibilities; 
  */
 public class Jcomp {
 	public static final String ok = "OK", close = "Close", cancel="Cancel"; // for buttons
@@ -37,7 +36,7 @@ public class Jcomp {
 		JTextArea textArea = new JTextArea(text);
 		
 		textArea.setAlignmentX(Component.LEFT_ALIGNMENT);
-		if (bg==null) 	textArea.setBackground(Color.white);	// CAS562 using it for query instructions
+		if (bg==null) 	textArea.setBackground(Color.white);	// for query instructions
 		else 			textArea.setBackground(bg);
 		textArea.setEditable(false);
 		textArea.setLineWrap(bWrap);
@@ -147,19 +146,19 @@ public class Jcomp {
 		lab.setBackground(Color.white);
 		return lab;
 	}
-	static public JLabel createMonoLabel(String label, int sz) { // CAS563 was constant 12
+	static public JLabel createMonoLabel(String label, int sz) { 
 		JLabel lab = new JLabel(label);
 		lab.setFont(new Font(Font.MONOSPACED,Font.PLAIN, sz)); 
 		lab.setBackground(Color.white);
 		return lab;
 	}
-	static public JLabel createItalicsLabel(String label, int sz) {// CAS563 added for Instructions
+	static public JLabel createItalicsLabel(String label, int sz) {// for Instructions
 		JLabel lab = new JLabel(label);
 		lab.setFont(new Font(Font.MONOSPACED,Font.ITALIC, sz)); 
 		lab.setBackground(Color.white);
 		return lab;
 	}
-	static public JLabel createItalicsBoldLabel(String label, int sz) {// CAS563 added for Instructions
+	static public JLabel createItalicsBoldLabel(String label, int sz) {// for Instructions
 		JLabel lab = new JLabel(label);
 		lab.setFont(new Font(Font.MONOSPACED,Font.ITALIC | Font.BOLD, sz)); 
 		lab.setBackground(Color.white);
@@ -302,7 +301,7 @@ public class Jcomp {
 		
 		return button;
 	}
-	static public JButton createPlainButton(String label, String tip) { // CAS563 change for TableReport
+	static public JButton createPlainButton(String label, String tip) { 
 		JButton button = new JButton(label);
 		button.setBackground(Color.white);
 		button.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -311,7 +310,7 @@ public class Jcomp {
 		button.setToolTipText(tip);
 		return button;
 	}
-	static public JButton createBoldButton(String label, String tip) { // CAS557 add for xToSymap
+	static public JButton createBoldButton(String label, String tip) { // for xToSymap
 		JButton button = new JButton(label);
 		button.setToolTipText(tip);
 		button.setBackground(Color.white);
@@ -322,7 +321,7 @@ public class Jcomp {
 	}
 	static public JButton createButton(String s, String t) {
 		JButton jbutton = new JButton(s);
-		jbutton.setBackground(Color.white); // CAS560 add line
+		jbutton.setBackground(Color.white); 
 		jbutton.setMargin(new Insets(1,3,1,3));
 		jbutton.setToolTipText(t);
 		return jbutton;
@@ -390,6 +389,14 @@ public class Jcomp {
 		button.setMaximumSize(button.getPreferredSize());
 		return button;
 	}
+	public static JRadioButton createRadioNC(String label, String tip) { // filters use gray background CAS570
+		JRadioButton button = new JRadioButton(label); 
+		button.setToolTipText(tip);
+		button.setMargin(new Insets(0,0,0,0));
+		button.setMinimumSize(button.getPreferredSize());
+		button.setMaximumSize(button.getPreferredSize());
+		return button;
+	}
 	public static JRadioButton createRadio(String label) {
 		JRadioButton button = new JRadioButton(label); button.setBackground(Color.white);
 		button.setMargin(new Insets(0,0,0,0));
@@ -428,13 +435,13 @@ public class Jcomp {
 		comboBox.setMaximumSize(comboBox.getPreferredSize());
 		return comboBox;
 	}
-	public static boolean isWidth(int width, JLabel lab) {// CAS561 add
+	public static boolean isWidth(int width, JLabel lab) {
 		return (width > lab.getPreferredSize().width);
 	}
 	public static int getWidth(int width, JLabel lab) {// use with Box.createHorizontalStrut for spacing
 		return width - lab.getPreferredSize().width;
 	}
-	public static boolean isWidth(int width, JComponent lab) {// CAS562 add
+	public static boolean isWidth(int width, JComponent lab) {
 		return (width > lab.getPreferredSize().width);
 	}
 	public static int getWidth(int width, JComponent lab) {// use with Box.createHorizontalStrut for spacing

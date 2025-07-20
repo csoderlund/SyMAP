@@ -94,6 +94,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 
 	private int distance_for_anno = 0;		
 	
+	private int nG2xN=0; // 2=both, 1=one, 0-none 
 	private String buildCntMsg="", paintCntMsg="";
 	private void dprt(String msg) {symap.Globals.dprt("SQ: " + msg);}
 	
@@ -179,13 +180,11 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}
 	}
 	
-	protected void setup(TrackData td) { // TrackHolder.setTrackData; This gets called on History back/forward; CAS545 remove dead code
+	protected void setup(TrackData td) { // TrackHolder.setTrackData; This gets called on History back/forward
 		TrackData sd = (TrackData)td;
 		
 		sd.setTrack(this);
 		firstBuild = false;
-		
-		if (isRef()) resetHitg2(); 
 	}
 	protected void setFilter(Sfilter obj) {sfilObj = obj;} 
 	
@@ -321,7 +320,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			if (offset>0 && isRight) offset = -offset;
 			
 			annot.setRectangle(centRect, chrDisplayStart, chrDisplayEnd,bpPerPixel, dwidth, hwidth, sfilObj.bFlipped, offset,
-					sfilObj.bShowGeneLine, sfilObj.bShowGeneNum, sfilObj.bHighGenePopup); 
+				sfilObj.bHighGenePopup, sfilObj.bShowGeneLine, sfilObj.bShowGeneNum, nG2xN); // CAS570 add nG2xN
+			
 			if (last!=null) annot.setLastY(last); // annotation are separated, used during paint;  
 			last=annot;
 			
@@ -354,7 +354,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 					else lastInc=1;
 					lastStart=ty;
 					
-					TextBox tb = new TextBox(annot.getYellowBoxDesc(),unitFont, (int)x1, (int)ty, annot.getBorderColor()); // CAS548 use new TextBox
+					TextBox tb = new TextBox(annot.getGeneBoxDesc(),unitFont, (int)x1, (int)ty, annot.getBorderColor()); // CAS548 use new TextBox
 					if (tb.getLowY()>lastBP) continue;    // if flipped, this may be first, so do not break
 					
 					getHolder().add(tb); 				  // adds it to the TrackHolder JComponent
@@ -476,14 +476,18 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 				rule.paintComponent(g2);
 		}
 		// Paint Annotation 
+		paintCntMsg="";
 		int cntCon=0; // conserved can be set and build not called, so compute here
 		for (Annotation annot : allAnnoVec) {
-			if (annot.isVisible()) {
+			if (annot.isVisible()) { // whether in range
 				annot.paintComponent(g2); 	
-				if (annot.isGene() && annot.isHitg2()) cntCon++; 
+				if (annot.isGene() && annot.isHighG2xN()) cntCon++; 
 			}
 		}
-		if (cntCon>0) paintCntMsg = String.format("\n%s %,d", sfilObj.xHitg2(), cntCon);
+		if (nG2xN!=0) {
+			String x = (nG2xN==2) ? "g2x2" : "g2x1";
+			paintCntMsg = String.format("\n%s genes: %,d", x, cntCon);
+		}
 		
 		g2.setFont(footerFont);
 		g2.setPaint(footerColor);
@@ -542,7 +546,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}
 		catch (OutOfMemoryError e) { 
 			Utilities.showOutOfMemoryMessage();
-			drawingPanel.smake("seq outofmem"); // redraw after user clicks "ok"
+			drawingPanel.smake("seq out of mem"); // redraw after user clicks "ok"
 		}
 	}
 	
@@ -704,58 +708,56 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			selectedGeneObj=null;
 		}
 	}
-	/******************************************************************/
-	// Hit interface
-	// mapper.HitData used for conserved to highlight genes at ends of hit;
-	public void setConservedforHit(int annot1_idx, int annot2_idx, boolean isHigh) {
-		for (Annotation aObj : geneVec) {
-			int idx = aObj.getAnnoIdx();
-			if (idx==annot1_idx || idx==annot2_idx) {
-				aObj.setIsConserved(isHigh); 
-				return;
+	/******************************************************************
+	 * Hit interface
+	 ****************************************************************/
+	/* g2xN methods  CAS570 */
+	
+	// Sfilter.FilterListener.xHighG2xN called for reference track
+	protected void refSetG2xN(int which, boolean high) {// 2=g2x2, 1=g2x1, 0=none
+		if (hitsObj1!=null) hitsObj1.clearHighG2xN();
+		if (hitsObj2!=null) hitsObj2.clearHighG2xN();
+		
+		if (high) { 
+			if (which==2)      {
+				seqPool.computeG2xN(true, hitsObj1, hitsObj2, this); // T=G2x2
+				hitsObj1.setnG2xN(2); // sets Seqhits.nG2xN, SeqHits.seqObj1.setIsG2xN(b); 
+				hitsObj2.setnG2xN(2); // sets Seqhits.nG2xN, SeqHits.seqObj2.setIsG2xN(b); 
+			}
+			else if (which==1) {
+				seqPool.computeG2xN(false, hitsObj1, hitsObj2, this);// F=G2x1
+				hitsObj1.setnG2xN(1); hitsObj2.setnG2xN(1);
 			}
 		}
 	}
-	public Vector <Integer> getGeneIdx() { // seqPool.flagConserved
+	protected Vector <Integer> getGeneIdxVec() { // seqPool.computeG2xN needs list of genes
 		Vector <Integer> idxVec = new Vector <Integer> ();
 		for (Annotation annot : geneVec)  idxVec.add(annot.getAnnoIdx());
 		return idxVec;
 	}
+	// mapper.HitData: seqPool.computeG2xN 
+	//           calls HitData.setHighAnnoG2xN(true)
+	// 				calls this method setAnnoG2xN for both tracks 
+	// the gene anno object sets all its exon anno objects
+	public void setAnnoG2xN(int annot1_idx, int annot2_idx, boolean isHigh) {
+		for (Annotation aObj : geneVec) {
+			int idx = aObj.getAnnoIdx();
+			if (idx==annot1_idx || idx==annot2_idx) {
+				aObj.setIsG2xN(isHigh);  // sets isG2x2 for genes/exons; highlight exons
+				return;
+			}
+		}
+	}
+	public void setnG2xN(int nG2xN) {this.nG2xN=nG2xN;} // for non-ref
 	
-	private void resetHitg2()  {// see reset() for history
-		if (sfilObj.bHitHighg2x2 || sfilObj.bHitHighg2x1) {
-			seqPool.setNg2(sfilObj.bHitHighg2x2, hitsObj1, hitsObj2, this);
-		}
-		else { 
-			if (hitsObj1!=null) hitsObj1.clearHighHitg2(); 
-			if (hitsObj2!=null) hitsObj2.clearHighHitg2();
-		}
+	// Sfilter.FilterListener; sets special flag to only show HitData.isHighG2xN=true (which are already set)
+	protected void showG2xN(boolean high) {
+		hitsObj1.setOnlyG2xN(high);
+		hitsObj2.setOnlyG2xN(high);
 	}
-	// Sfilter.FilterListener;  sets isHighHitg2x2 in HitData and Annotation
-	public boolean highHitg2x2(boolean high) {
-		if (sfilObj.bHitHighg2x2==high) return false;
-		
-		sfilObj.bHitHighg2x2 = high;
-		if (high) seqPool.setNg2(true, hitsObj1, hitsObj2, this);
-		else { //  clears hit its end annos
-			if (hitsObj1!=null) hitsObj1.clearHighHitg2();
-			if (hitsObj2!=null) hitsObj2.clearHighHitg2();
-		}
-		return true;
-	}
-	// Sfilter.FilterListener;  sets isHighHitg2x1 in HitData and Annotation
-	public boolean highHitg2x1(boolean high) {
-		if (sfilObj.bHitHighg2x1==high) return false;
-		
-		sfilObj.bHitHighg2x1 = high;
-		if (high) seqPool.setNg2(false, hitsObj1, hitsObj2, this);
-		else { // hit conserve clears its end annos
-			if (hitsObj1!=null) hitsObj1.clearHighHitg2();
-			if (hitsObj2!=null) hitsObj2.clearHighHitg2();
-		}
-		return true;
-	}
-	public void setHighforHit(int annot1_idx, int annot2_idx, boolean isHigh) { // mapper.HitData; highlight gene of hit
+	///////////////////////////////////////////////////////////////////
+	/* mapper methods */
+	public void setHighforHit(int annot1_idx, int annot2_idx, boolean isHigh) { // mapper.HitData.setIsPopup; highlight gene of hit
 		for (Annotation aObj : geneVec) {
 			int idx = aObj.getAnnoIdx();
 			if (idx==annot1_idx || idx==annot2_idx) {
@@ -764,6 +766,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			}
 		}
 	}
+	
 	public Point2D getPointForHit(int hitMidPt, int trackPos) { // mapper.seqHits & DrawHit
 		if (hitMidPt < chrDisplayStart) hitMidPt = chrDisplayStart; 
 		if (hitMidPt > chrDisplayEnd)   hitMidPt = chrDisplayEnd; 	
@@ -776,12 +779,10 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		
 		return new Point2D.Double(x, y); 
 	}
-	
-	public Point getLocation() { // SeqHits.paintComponent
+	public Point getLocation() { // mapper.SeqHits.paintComponent
 		if (holder != null) return holder.getLocation();
 		else 				return new Point();
 	}
-
 	public boolean isHitInRange(int num) { // mapper.SeqHits.isVisHitWire
 		return num >= chrDisplayStart && num <= chrDisplayEnd;
 	}

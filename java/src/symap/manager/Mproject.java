@@ -41,7 +41,7 @@ public class Mproject implements Comparable <Mproject> {
 	private String strDate="";
 	private DBconn2 dbc2;
 	
-	private int numAnnot = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0;;
+	private int numExon = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0; // CAS570 chg Annots->Exons; count was wrong with pseudo added
 	private long length=0; 		// genome length - must be long
 	
 	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();
@@ -97,10 +97,10 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	
 	public String getAnnoStr() {
-		String msg= String.format("Annotations: %,d ", numAnnot);
-		if (numGene>0&&numGap>0) 	msg += String.format("(Genes: %,d, Gap: %,d)", numGene, numGap);
-		else if (numGene>0) 		msg += String.format("(Genes: %,d)", numGene);
-		else if (numGap>0)  		msg += String.format("(Gaps: %,d)", numGap);
+		String msg= ""; // CAS570 changed line 
+		if (numGene>0) msg += String.format("Genes: %,d  ", numGene);
+		if (numExon>0) msg += String.format("Exons: %,d  ", numExon);
+		if (numGap>0)  msg += String.format("Gaps: %,d", numGap);
 		
 		return msg;
 	}
@@ -300,12 +300,15 @@ public class Mproject implements Comparable <Mproject> {
 		if (!Utilities.isEmpty(desc)) info += desc + "\n";
 		info += "\n";
 		
-		String [] fields = {"Chr", "Length", "  ","#Genes", "AvgLen", "  ", "#Exons", "AvgLen"}; 
-		int [] justify =   {1,    0,    0, 0, 0, 0, 0, 0};
-		int nRow = chrNameMap.size();
+		String [] fields = {"Chr", "Length", "  ","#Genes", "AvgLen", "  ", "#Exons", "AvgLen", "  ", "Gaps"}; 
+		int [] justify =   {1,    0,    0, 0, 0, 0, 0, 0, 0, 0};
+		int nRow = chrNameMap.size()+1;
 	    int nCol=  fields.length;
 	    String [][] rows = new String[nRow][nCol];
 	    int r=0, c=0;
+	    int totGenes=0, totExons=0, totGaps=0; // CAS570 add totals and Gaps
+	    long totLen=0;
+	    float totAvgGenes=0, totAvgExons=0;
 	    
 	    for (String name : chrNameMap.keySet()) {
 	    	int idx = chrNameMap.get(name);
@@ -314,6 +317,9 @@ public class Mproject implements Comparable <Mproject> {
 	    	
 	    	rs = dbc2.executeQuery("select count(*) from pseudo_annot where type='exon' and grp_idx=" + idx);
 	    	int exonCnt = (rs.next()) ? rs.getInt(1) : 0;
+	    	
+	    	rs = dbc2.executeQuery("select count(*) from pseudo_annot where type='gap' and grp_idx=" + idx);
+	    	int gapCnt = (rs.next()) ? rs.getInt(1) : 0;
 	    	
 	    	rs = dbc2.executeQuery("select AVG(end-start+1) from pseudo_annot where type='gene' and grp_idx=" + idx);
 	    	double avgglen = (rs.next()) ? rs.getDouble(1) : 0.0;
@@ -329,8 +335,32 @@ public class Mproject implements Comparable <Mproject> {
 	    	rows[r][c++] = "  ";
 	    	rows[r][c++] = String.format("%,d",exonCnt);
 	    	rows[r][c++] = String.format("%,d",(int) avgelen);
+	    	rows[r][c++] = "  ";
+	    	rows[r][c++] = String.format("%,d",gapCnt);
 	    	r++; c=0;
+	    	
+	    	totLen += chrLenMap.get(idx);
+	    	totGenes += geneCnt;
+	    	totExons += exonCnt;
+	    	totAvgGenes += avgglen;
+	    	totAvgExons += avgelen;
+	    	totGaps += gapCnt;
 	    }
+	    totAvgGenes /= r;
+	    totAvgExons /= r;
+	    rows[r][c++] = "Totals";
+    	rows[r][c++] = String.format("%,d",totLen);
+    	rows[r][c++] = "  ";
+    	rows[r][c++] = String.format("%,d",totGenes);
+    	rows[r][c++] = String.format("%,d",(int) totAvgGenes);
+    	rows[r][c++] = "  ";
+    	rows[r][c++] = String.format("%,d",totExons);
+    	rows[r][c++] = String.format("%,d",(int) totAvgExons);
+    	rows[r][c++] = "  ";
+    	rows[r][c++] = String.format("%,d",totGaps);
+    	r++; 
+    	
+    	if (totGaps==0) nCol -= 2;
 	    info += Utilities.makeTable(nCol, nRow, fields, justify, rows);
 	    
 	    // these are saved in proj_props
@@ -592,10 +622,10 @@ public class Mproject implements Comparable <Mproject> {
 		
 		numGroups = dbc2.executeCount("SELECT count(*) FROM xgroups WHERE proj_idx=" + projIdx);
        
-        numAnnot = dbc2.executeCount("select count(*) from pseudo_annot as pa " +
+        numExon = dbc2.executeCount("select count(*) from pseudo_annot as pa " +
         		" join xgroups as g on g.idx=pa.grp_idx " +
-        		" where g.proj_idx=" + projIdx);
-       
+        		" where g.proj_idx=" + projIdx + " and type='exon'");
+        
         numGene = dbc2.executeCount("select count(*) from pseudo_annot as pa " +
         		" join xgroups as g on g.idx=pa.grp_idx " +
         		" where g.proj_idx=" + projIdx + " and type='gene'");

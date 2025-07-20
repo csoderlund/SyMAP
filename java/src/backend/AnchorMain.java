@@ -331,13 +331,17 @@ public class AnchorMain {
 			String type = Globals.pseudoType;
 			
 			// Must count pseudo too so as to not repeat pseudo numbers
-			int genes = dbc2.executeCount("select count(*) from pseudo_annot "
-					+ "where (type='gene' or type='pseudo') and grp_idx="+ grpIdx);
+			// CAS570 would still duplicate pseudo, which worked as in different pairs, but confusing
+			//int genes = dbc2.executeCount("select count(*) from pseudo_annot where (type='gene' or type='pseudo') and grp_idx="+ grpIdx);
+			
+			int genes = dbc2.executeCount("select max(genenum) from pseudo_annot where grp_idx="+ grpIdx);
 			int geneStart = genes; 
 			if (genes==0) geneStart = 1;
-			else if (genes<1000)   geneStart = (int)((Math.floor((double) genes/100.0)+1) * 100.0);
-			else if (genes<10000)  geneStart = (int)((Math.floor((double) genes/1000.0)+1) * 1000.0);
-			else if (genes<100000) geneStart = (int)((Math.floor((double) genes/10000.0)+1) * 10000.0);
+			else {
+				int rem = genes%100;
+				int add = 100-rem;
+				geneStart += add;
+			}
 			int genenum = geneStart;
 			
 		// find pseudo

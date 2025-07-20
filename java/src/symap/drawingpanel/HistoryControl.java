@@ -7,7 +7,7 @@ import java.util.Vector;
 import javax.swing.JButton;
 
 /**
- * Create and control History Events.
+ * Create and control History Events. Created in SyMAP2d
  * CAS550 remove unused buttons for reset, double back, clear; moved History class to here. 
  * CAS552 introduce Replace for annotation changes (highlight, text, and changing visible hit-wires)
  */
@@ -15,7 +15,6 @@ public class HistoryControl implements ActionListener {
 	private HistoryListener listener;
 	private JButton home, back, forward;
 	private History history;
-	//private void dprt(String msg) {symap.Globals.dprt("HC: " + msg);}
 	
 	public HistoryControl() { this.history = new History(); }// SyMAP2d
 	
@@ -46,7 +45,7 @@ public class HistoryControl implements ActionListener {
 		setButtons();
 	}
 
-	protected void replace(Object obj) { // CAS552 change in filter is a replace instead of add
+	protected void replace(Object obj) { 
 		history.replace(obj);
 	}
 	protected synchronized void setEnabled(boolean enable) { // ControlPanel
@@ -77,20 +76,18 @@ public class HistoryControl implements ActionListener {
 			listener.setHistory(obj);
 		}
 	}
-	protected void clear() {history.clear();} // CAS550 added so SyMAP2d did not need History object
+	protected void clear() {history.clear();} // called from SyMAP2d did not need History object
 	protected int nBack() {return history.index;}
 	protected int nForward() {
 		return history.historyVec.size()-history.index-1;}
 	/**
 	 * Class History stores a history list with a current pointer.
 	 * If it goes Home or back, then a new one is added, all remaining are lost but not freed.
-	 * CAS550 Removed HistoryObject class because removed reset (only reason for it)
-	 *        HistoryControl create history object instead of SyMAP2d; Move History class from separate file     
 	 */
 	private class History {
 		private Vector<Object> historyVec = new Vector <Object> (50);
 		private int index = -1;
-		private int size = 50; // CAS542 was 10, moved constant from SyMAP2d
+		private int size = 50; 
 
 		private History() { } 
 			

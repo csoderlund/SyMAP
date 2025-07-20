@@ -1,6 +1,7 @@
 package symap.sequence;
 
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Vector;
@@ -14,17 +15,16 @@ import symap.mapper.SeqHits;
 import util.ErrorReport;
 
 /**
- * The SeqPool load data for Sequence Track and run a few of its algorithm.
- * CAS531 removed dead cache; CAS541 removed DBAbsUser
- * CAS543 moved stuff immediately to Annotation; by-pass AnnotationData and PseudoData; CAS544 add seqObj
- * CAS545 moved two computation into this file;  (SeqPool is a bit of a miss-name now, but there wasn't much left there)
+ * Load data for Sequence Track 
+ * Gene overlap placement algorithm
+ * Conserved genes (g2xN for Sfilter)
  */
 public class SeqPool {	
 	private DBconn2 dbc2;
 	
 	protected SeqPool(DBconn2 dbc2) { this.dbc2 = dbc2;} // called from Sequence when it is created
 
-	// CAS550 separate method to get size; CAS551 chg to int
+	/** XXX database methods ***/
 	protected int loadChrSize(Sequence seqObj) {
 	try {
 		int grpIdx =   seqObj.getGroup();
@@ -46,7 +46,7 @@ public class SeqPool {
 		
 		String name=null, type, desc;
 		int start, end; 
-		String strand, tag; // CAS512 new variables
+		String strand, tag; 
 		int annot_idx, genenum, gene_idx, numhits, itype;
 
 		ResultSet rs = null;
@@ -66,7 +66,7 @@ public class SeqPool {
 			
 			HashMap <Integer, Annotation> geneMap = new HashMap <Integer, Annotation>  ();
 			
-			String annot_query =		// CAS520 add numhits CAS545 remove " ORDER BY type DESC";
+			String annot_query =		
 					"SELECT idx, type,name,start,end,strand, genenum, gene_idx, tag, numhits FROM pseudo_annot " 
 					+ " WHERE grp_idx=" + grpIdx + " and ";  
 			
@@ -115,7 +115,7 @@ public class SeqPool {
 					public int compare(Annotation a1, Annotation a2) { 
 						if (a1.isGene() && a2.isGene()) {
 							if (a1.getGeneNum()==a2.getGeneNum()) return a1.getStart()-a2.getStart();
-								return a1.getGeneNum()-a2.getGeneNum(); // CAS517 sort on gene#
+								return a1.getGeneNum()-a2.getGeneNum(); // sort on gene#
 						}	
 						return (a1.getType() - a2.getType()); 			  
 					}
@@ -128,13 +128,13 @@ public class SeqPool {
 	}
 	protected synchronized void close() {}
 
-	protected int getNumAllocs(int grpIdx) { // CAS545 added so can exactly alloc correct size for Sequence.allAnnoVec
+	protected int getNumAllocs(int grpIdx) { // exactly alloc correct size for Sequence.allAnnoVec
 		try {
 			return dbc2.executeCount("select count(*) from pseudo_annot where grp_idx=" + grpIdx);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Getting number of annotations for " + grpIdx); return 0;}
 	}
-	// CAS548 for popup
+	// for popup
 	protected TreeMap<Integer, String> getGeneHits(int geneIdx, int grpIdx, boolean isAlgo1) {
 		TreeMap <Integer, String> hitMap = new TreeMap <Integer, String> ();
 		try {
@@ -147,7 +147,7 @@ public class SeqPool {
 				int olap = rs.getInt(2);
 				int exlap = rs.getInt(3);
 				String scores = "Gene " + olap + "%";
-				if (!isAlgo1) scores += " Exon " + exlap + "%"; // CAS551 was >=0, but Algo1 is 0; CAS552 add isAlgo1
+				if (!isAlgo1) scores += " Exon " + exlap + "%"; 
 				hitMap.put(hitIdx, scores);
 			}
 			return hitMap;
@@ -155,10 +155,9 @@ public class SeqPool {
 		catch (Exception e) {ErrorReport.print(e, "Getting number of annotations for " + geneIdx); return hitMap;}
 	}
 	/*******************************************************
-	 * CAS518 added: Called during init(); used in build()
-	 * adjusts x coord for overlapping genes
+	 * XXX Gene placement algorithm: Called during init(); used in build(); adjusts x coord for overlapping genes
 	 */
-	private final int OVERLAP_OFFSET=12;			// CAS517/518 for overlap and yellow text
+	private final int OVERLAP_OFFSET=12;			
 	protected void buildOlap(HashMap <Integer, Integer> olapMap, Vector <Annotation> geneVec) {
 		int lastGeneNum=-1;
 		Vector <Annotation> numList = new Vector <Annotation> ();
@@ -181,7 +180,7 @@ public class SeqPool {
 	}
 	/*******************************************************
 	 * Compute how to display overlapping genes based on genenum
-	 * CAS519 simplified algo; uses genenum to find set of overlapping, 
+	 * uses genenum to find set of overlapping, 
 	 * but does not use genenum suffix (uses same overlap check as in AnnoLoadPost.computeGeneNum)
 	 */
 	private void buildPlace(HashMap <Integer, Integer> olapMap, Vector <Annotation> numList, int lastGeneNum) {
@@ -202,7 +201,7 @@ public class SeqPool {
 						return (a2.len - a1.len);
 					}
 				});
-			// first is level 0; CAS560 rewrite - slight improvement
+			// first is level 0; 
 			for (int i=1; i<gdVec.size(); i++) {
 				GeneData gdi = gdVec.get(i);
 				int [] lev = {0, 0, 0};
@@ -245,102 +244,180 @@ public class SeqPool {
 		}	
 	}
 	/********************************************************************************
-	 * SeqFilter Conserved Genes; add CAS545 These methods are called from the reference track
+	 * XXX SeqFilter Conserved Genes; These methods are called from the reference track from Sequence
 	 ****************************************************************************/
 	/**
-	 *  This finds 3 conserved genes for 3 tracks; gene1/gene2->gene<-gene1/gene2 
-	 *  On a back History (i.e. forceConserved), the hits have been updated but not the Sequence tracks
-	 *  	this works because it just uses the hits (there could still be a sync problem...)
+	 *  CAS570 stop using intermediate class, better naming of variables, fix problem of filtered G2 showing one side only
+	 *  Confusing: Left/right tracks; Hits have left/right possible genes.
+	 *  Green: high&anno, visible g2/g1
+	 *  Pink:  high&force, non-visible but completes g2: green/pink, g1: brown/pink
+	 *  Red:   force, visible g1 that could be possible g2: brown/red, g1: green/red
+	 *  Need to set for L, Ref, R:
+	 *  	SeqHits.isG2x2, for each hit conditional HitData.isHighG2xN and isHighForce 
+	 *  	Sequence.isG2x2 for ref called from Sfilte
 	 ***/
-	protected void setNg2(boolean isBoth, SeqHits leftHitsObj, SeqHits rightHitsObj, Sequence refSeq) {
+	protected void computeG2xN(boolean isG2x2,  SeqHits hitsObjL, SeqHits hitsObjR, Sequence seqObjRef) {
 	try {	
-		Vector <Hitg2> dualSet1 = createG2Pair(leftHitsObj);
-		if (dualSet1.size()==0) return;
+		if (seqObjRef.allAnnoVec.size()==0) return;
 		
-		if (rightHitsObj==null) {
-			for (Hitg2 g : dualSet1) g.setHigh();
+		// Get Ref genes from 1st track (same for 3rd) and create Hash map
+		boolean isRefSeq1L = (seqObjRef==hitsObjL.getSeqObj1()); 
+		boolean isRefSeq1R = (seqObjRef==hitsObjR.getSeqObj1()); // may be different for right
+		
+		Vector <Integer> gidxRefVec = (isRefSeq1L) ? hitsObjL.getSeqObj1().getGeneIdxVec() : 
+										             hitsObjL.getSeqObj2().getGeneIdxVec();
+		
+		HashMap <Integer, Mark> gnMarkMap = new HashMap <Integer, Mark> (); //geneIdx, mark class
+		for (int idx : gidxRefVec) gnMarkMap.put(idx, new Mark());
+		gidxRefVec.clear();
+	
+	/* Mark */
+		// Visible g2 - add hd and vis
+		int cntNoGene=0;
+		Vector <HitData> visHitSetL = hitsObjL.getVisG2Hits(); 
+		
+		for (HitData hd : visHitSetL) {
+			int idx = (isRefSeq1L) ? hd.getAnnot1() : hd.getAnnot2();
+			if (gnMarkMap.containsKey(idx)) {
+				Mark mk = gnMarkMap.get(idx);
+				mk.addL(hd, true);
+			}
+			else if (cntNoGene++<2) Globals.dprt("No geneIdx " + idx + " for hit " + hd.getHitNum()); 
+		}
+		visHitSetL.clear(); 
+		
+		Vector <HitData> visHitSetR = hitsObjR.getVisG2Hits();
+		for (HitData hd : visHitSetR) {
+			int idx = (isRefSeq1R) ? hd.getAnnot1() : hd.getAnnot2();
+			if (gnMarkMap.containsKey(idx)) {
+				Mark mk = gnMarkMap.get(idx);
+				mk.addR(hd, true);
+			}
+			else if (cntNoGene++<2) Globals.dprt("No geneIdx " + idx + " for hit " + hd.getHitNum()); 
+		}
+		visHitSetR.clear();
+		
+		if (cntNoGene>0) {										// should not happen...
+			System.out.println("Possible sync problem - genes not found: " + cntNoGene);
 			return;
 		}
+		 
+		// Filtered g2 - complete g2 if no existing hit-wire, only add one
+		Vector <HitData> invHitSetL = hitsObjL.getInVisG2Hits(); 
+		for (HitData hd : invHitSetL) {
+			int idx = (isRefSeq1L) ? hd.getAnnot1(): hd.getAnnot2();
+			Mark mk = gnMarkMap.get(idx);
+			if (mk.oHitArrL==null && mk.oHitArrR!=null) mk.addL(hd, false);
+		}
+		invHitSetL.clear();
 		
-	/*  3 tracks */
-		Vector <Hitg2> dualSet2 = createG2Pair(rightHitsObj);
-		if (dualSet2.size()==0) return;
-		
-		// Find conserved: get Ref genes; mark found left, mark found right
-		boolean isRefSeq1L = (refSeq==leftHitsObj.getSeqObj1()); 
-		Vector <Integer> idxRef = (isRefSeq1L) ? 
-								leftHitsObj.getSeqObj1().getGeneIdx() : 
-								leftHitsObj.getSeqObj2().getGeneIdx();
-		
-		HashMap <Integer, Mark> geneMap = new HashMap <Integer, Mark> ();
-		for (int idx : idxRef) geneMap.put(idx, new Mark());
-		
-		int cntNoGene=0;
-		for (Hitg2 cg : dualSet1) {
-			int idx = (isRefSeq1L) ? cg.annot1_idx : cg.annot2_idx;
-			if (geneMap.containsKey(idx)) geneMap.get(idx).mark1=true;
-			else {
-				if (cntNoGene<2) Globals.dprt("No geneIdx " + idx + " for hit " + cg.hitObj.getHitNum()); 
-				cntNoGene++; continue; 
+		Vector <HitData> invHitSetR = hitsObjR.getInVisG2Hits(); 
+		for (HitData hd : invHitSetR) {
+			int idx = (isRefSeq1R) ? hd.getAnnot1(): hd.getAnnot2();
+			Mark mk = gnMarkMap.get(idx);
+			if (mk.oHitArrL!=null && mk.oHitArrR==null) mk.addR(hd, false);
+		}
+		invHitSetR.clear();
+	
+	/* Highlight */
+		// Green: Highlight visible g2/g1 
+		for (Mark mk : gnMarkMap.values()) { 
+			if (mk.oHitArrL!=null) {
+				for (int i=0; i<mk.oHitArrL.size(); i++) {	// mark all left hit ref
+					if (mk.isG2(isG2x2)) {					
+						HitData hd  = mk.oHitArrL.get(i);
+						hd.setHighAnnoG2xN(true);			// green hit, blue anno on both sides
+						mk.doneL=true;
+					}
+				}
+			}
+			if (mk.oHitArrR!=null) {
+				for (int i=0; i<mk.oHitArrR.size(); i++) { // mark all right hit ref
+					if (mk.isG2(isG2x2)) {
+						HitData hd = mk.oHitArrR.get(i);
+						hd.setHighAnnoG2xN(true);		 // green hit, blue anno on both sides  (2x ref gets done 2x)	
+						mk.doneR=true;
+					}
+				}
 			}
 		}
-		boolean isRefSeq1R = (refSeq==rightHitsObj.getSeqObj1()); // may be different for right
-		for (Hitg2 cg : dualSet2) {
-			int idx = (isRefSeq1R) ? cg.annot1_idx : cg.annot2_idx;
-			if (geneMap.containsKey(idx)) geneMap.get(idx).mark2=true;
-			else {
-				if (cntNoGene<2) Globals.dprt("No geneIdx " + idx + " for hit " + cg.hitObj.getHitNum()); 
-				cntNoGene++; continue; 
+		// Pink: g2 where one is invisible; only do one to show it is not g1
+		for (Mark mk : gnMarkMap.values()) {
+			if (mk.isUseFilt(true)) { // both sides have hits but L filt
+				HitData hd = mk.oHitArrL.get(0);
+				if (isG2x2) hd.setHighAnnoG2xN(true); // blue anno because real g2
+				hd.setHighForceG2xN(true);			  // only force pink
+				mk.doneL=true;
+			}
+			if (mk.isUseFilt(false)) {// both sides have hits but R filt
+				HitData hd = mk.oHitArrR.get(0);
+				if (isG2x2) hd.setHighAnnoG2xN(true);
+				hd.setHighForceG2xN(true);
+				mk.doneR=true;
 			}
 		}
-		if (cntNoGene>0) // the real problem is if the SeqHits is previous in history
-			System.out.println("Possible sync problem - genes not found: " + cntNoGene);
 		
-		// highlight if left and right are marked
-		for (Hitg2 cg : dualSet1) {
-			int idx = (isRefSeq1L) ? cg.annot1_idx : cg.annot2_idx;
-			if (geneMap.containsKey(idx) && geneMap.get(idx).isG2(isBoth)) cg.setHigh();
-		}
-		for (Hitg2 cg : dualSet2) {
-			int idx = (isRefSeq1R) ? cg.annot1_idx : cg.annot2_idx;
-			if (geneMap.containsKey(idx) && geneMap.get(idx).isG2(isBoth)) cg.setHigh();
-		}
-	}
-	catch (Exception e) {ErrorReport.print(e, "Finding conserved");}
-	}
-	/**** Make the set of conserved genes for hit set ***/
-	private Vector <Hitg2>  createG2Pair(SeqHits hitsObj) {
-		Vector <Hitg2> dualSet = new Vector <Hitg2> ();
-		try {	
-			Vector <HitData> hitList = hitsObj.getVisGene2Hits();// only visible, unfiltered hits with genes at both ends
+		// Red: g1 visible: use to complete g2 
+		int side0 = (isRefSeq1L) ? 2 : 1;			// not necessary as ref-no-gene not in gnMarkMap, but reduces hits
+		Vector <HitData> g1HitSetL = hitsObjL.getVisG1Hits(side0); 
+		for (HitData hd : g1HitSetL) {
+			int idx = (isRefSeq1L) ? hd.getAnnot1(): hd.getAnnot2();
+			if (!gnMarkMap.containsKey(idx)) continue;
 			
-			for (HitData hd: hitList) { 
-				Hitg2 gn = new Hitg2(hd);
-				dualSet.add(gn);
-			}
-			return dualSet;
+			Mark mk = gnMarkMap.get(idx);
+			if (!mk.doneL && mk.oHitArrR!=null) hd.setForceG2xN(true);
 		}
-		catch (Exception e) {ErrorReport.print(e, "Finding dualGenes"); return dualSet;}
+		g1HitSetL.clear();
+		
+		side0 = (isRefSeq1R) ? 2 : 1;
+		Vector <HitData> g1HitSetR = hitsObjR.getVisG1Hits(side0); 
+		for (HitData hd : g1HitSetR) {
+			int idx = (isRefSeq1R) ? hd.getAnnot1(): hd.getAnnot2();
+			if (!gnMarkMap.containsKey(idx)) continue;
+			
+			Mark mk = gnMarkMap.get(idx);
+			if (!mk.doneR && mk.oHitArrL!=null) hd.setForceG2xN(true);
+		}
+		g1HitSetR.clear();
+		
+		gnMarkMap.clear();
+	}
+	catch (Exception e) {ErrorReport.print(e, "Finding g2xN genes");}
 	}
 	
-	// Class
-	private class Hitg2 { // 2-track, has gene on both sides
-		private Hitg2(HitData h) {
-			hitObj=h;
-			annot1_idx = h.getAnnot1();
-			annot2_idx = h.getAnnot2();
+	private class Mark { 
+		boolean doneL=false, doneR=false;
+		ArrayList <HitData> oHitArrL=null, oHitArrR=null;
+		ArrayList <Boolean> bVisArrL=null, bVisArrR=null;
+		
+		private void addL(HitData hd, boolean vis) {
+			if (oHitArrL==null) {
+				oHitArrL = new ArrayList <HitData> (3);
+				bVisArrL= new ArrayList <Boolean> (3);
+			}
+			oHitArrL.add(hd);
+			bVisArrL.add(vis);
 		}
-		private void setHigh() {
-			hitObj.setIsHighHitg2(true);
+		private void addR(HitData hd, boolean vis) {
+			if (oHitArrR == null) {
+				oHitArrR = new ArrayList <HitData> (3);
+				bVisArrR = new ArrayList <Boolean> (3);
+			}
+			oHitArrR.add(hd);
+			bVisArrR.add(vis);
 		}
-		private HitData hitObj=null;
-		private int annot1_idx, annot2_idx;
-	}
-	private class Mark { // can have N->1 or 1->N, just need to know if marked on both sides
-		boolean mark1=false, mark2=false;
+		private boolean isUseFilt(boolean isL) { // both sides have hits, one filt one not
+			if (oHitArrL==null || oHitArrR==null) return false;
+			if ( isL && !bVisArrL.get(0) &&  bVisArrR.get(0)) return true; // force filtered L
+			if (!isL &&  bVisArrL.get(0) && !bVisArrR.get(0)) return true; // force filtered R
+			return false;
+		}
+		
 		private boolean isG2(boolean isBoth) {
-			if (isBoth) return mark1 && mark2;
-			return (mark1 && !mark2) || (!mark1 && mark2);
+			if (isBoth) {
+				return oHitArrL!=null && oHitArrR!=null;
+			}
+			return (oHitArrL==null && oHitArrR!=null) || (oHitArrL!=null && oHitArrR==null);
 		}
 	}
 }

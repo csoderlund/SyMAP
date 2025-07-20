@@ -41,14 +41,13 @@ import util.Utilities;
  * 1. Add filter here
  * 2. Add to HfilterData
  * 3. Add to SeqHits.isHighLightHit() and isFiltered()
- * CAS567 Add all and Blocks Only []
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Hfilter extends JDialog {
 	private final String SYN = "Synteny blocks";
 	private final String COL = "Collinear sets";
 	private final String HIT2 = "Hit =2 genes";
-	private final String HIT1 = "Hit =1 gene";
+	private final String HIT1 = "Hit =1 genes";
 	private final String HIT0 = "Hit =0 genes";
 	private final String ALL =  "All hits";
 	private final String POPUP ="Hit popup (or Query)";	
@@ -95,7 +94,7 @@ public class Hfilter extends JDialog {
 	private JRadioButtonMenuItem hGene0PopRadio	= new JRadioButtonMenuItem(HIT0);
 	private JRadioButtonMenuItem hNonePopRadio	= new JRadioButtonMenuItem(NONE);
 	private JCheckBoxMenuItem    hPopupPopCheck	= new JCheckBoxMenuItem(POPUP);
-	private JCheckBoxMenuItem    sAllPopCheck   = new JCheckBoxMenuItem("Show " + ALL); // CAS567 add show
+	private JCheckBoxMenuItem    sAllPopCheck   = new JCheckBoxMenuItem("Show " + ALL); 
 	
 	private Mapper mapper;
 	private HfilterData hitFiltData;    // current settings
@@ -144,7 +143,7 @@ public class Hfilter extends JDialog {
 		sliderRow.add(pctidText); sliderRow.add(pctidSlider);
 		pctidSlider.addChangeListener(listener); 
 		
-		JPanel rowOnly = Jcomp.createGrayRowPanel();// CAS567 add
+		JPanel rowOnly = Jcomp.createGrayRowPanel();
 		blockOnlyCheck.addActionListener(listener); 
 		blockOnlyText.addActionListener(listener); 
 		rowOnly.add(blockOnlyCheck); rowOnly.add(Box.createHorizontalStrut(2)); rowOnly.add(blockOnlyText);
@@ -161,7 +160,7 @@ public class Hfilter extends JDialog {
 		sGene2Check.addActionListener(listener);
 		sGene1Check.addActionListener(listener);
 		sGene0Check.addActionListener(listener);
-		sAllCheck.addActionListener(listener);	// CAS567 add
+		sAllCheck.addActionListener(listener);	
 		
 		hBlockRadio.addActionListener(listener);
 		hCsetRadio.addActionListener(listener);
@@ -215,13 +214,13 @@ public class Hfilter extends JDialog {
 		addToGrid(contentPane, gridbag, c1, sGene1Check,1); 
 		addToGrid(contentPane, gridbag, c1, sGene0Check, rem);
 		
-		addToGrid(contentPane, gridbag, c1, sAllCheck, rem); // CAS567 add
+		addToGrid(contentPane, gridbag, c1, sAllCheck, rem); 
 		
 		// %id & block#
 		addToGrid(contentPane, gridbag, c1, new JSeparator(),rem);
 		addToGrid(contentPane, gridbag, c1, sliderRow,rem);
 		
-		addToGrid(contentPane, gridbag, c1, rowOnly, 1); // CAS567 add
+		addToGrid(contentPane, gridbag, c1, rowOnly, 1); 
 		addToGrid(contentPane, gridbag, c1, new JLabel(""), rem); // only way to force to right
 		
 		// buttons
@@ -262,7 +261,7 @@ public class Hfilter extends JDialog {
 		hNonePopRadio.setSelected(true);
 		
 		popupMenu.add(new JSeparator());
-		popupMenu.add(sAllPopCheck);		// CAS567 add
+		popupMenu.add(sAllPopCheck);		
 		
 		popupMenu.add(new JSeparator());
 		popupMenu.add(hPopupPopCheck);
@@ -275,7 +274,7 @@ public class Hfilter extends JDialog {
 		hNonePopRadio.addActionListener(listener);
 		
 		hPopupPopCheck.addActionListener(listener);
-		sAllPopCheck.addActionListener(listener);		// CAS567 add
+		sAllPopCheck.addActionListener(listener);		
 		
 		popupMenu.setMaximumSize(popupMenu.getPreferredSize()); popupMenu.setMinimumSize(popupMenu.getPreferredSize());
 	}
@@ -326,14 +325,14 @@ public class Hfilter extends JDialog {
 		sBlockCheck.setSelected(hf.isBlock());
 		blockAndRadio.setSelected(hf.isBlockAnd());
 		blockOrRadio.setSelected(hf.isBlockOr());
-		blockOnlyCheck.setSelected(hf.isBlockOnly());// CAS567 add
+		blockOnlyCheck.setSelected(hf.isBlockOnly());
 		blockOnlyText.setText(hf.getBlock()+"");
 		
 		sCsetCheck.setSelected(hf.isCset());
 		sGene2Check.setSelected(hf.is2Gene());
 		sGene1Check.setSelected(hf.is1Gene());
 		sGene0Check.setSelected(hf.is0Gene());
-		sAllCheck.setSelected(hf.isAll()); // CAS567 add
+		sAllCheck.setSelected(hf.isAll()); 
 		
 		hBlockRadio.setSelected(hf.isHiBlock());
 		hCsetRadio.setSelected(hf.isHiCset());
@@ -358,7 +357,7 @@ public class Hfilter extends JDialog {
 		hf.setBlock(sBlockCheck.isSelected());
 		hf.setBlockAnd(blockAndRadio.isSelected());
 		hf.setBlockOr(blockOrRadio.isSelected());
-		hf.setBlockOnly(blockOnlyCheck.isSelected()); // CAS567 add
+		hf.setBlockOnly(blockOnlyCheck.isSelected()); 
 		int n = Utilities.getInt(blockOnlyText.getText());
 		if (n==-1) n=0;
 		hf.setBlockNum(n);
@@ -368,7 +367,7 @@ public class Hfilter extends JDialog {
 		hf.set1Gene(sGene1Check.isSelected());
 		hf.set0Gene(sGene0Check.isSelected()); 
 		
-		hf.setAll(sAllCheck.isSelected()); 	// CAS567 add
+		hf.setAll(sAllCheck.isSelected()); 	
 		
 		hf.setPctid(getPctid(pctidSlider.getValue()));
 		
@@ -410,7 +409,7 @@ public class Hfilter extends JDialog {
 			else if (src == hGene0PopRadio)	hGene0Radio.setSelected(hGene0PopRadio.isSelected());
 			else if (src == hNonePopRadio)	hNoneRadio.setSelected(hNonePopRadio.isSelected());
 			else if (src == hPopupPopCheck)	hPopupCheck.setSelected(hPopupPopCheck.isSelected()); 
-			else if (src == sAllPopCheck)	sAllCheck.setSelected(sAllPopCheck.isSelected()); // CAS567 add
+			else if (src == sAllPopCheck)	sAllCheck.setSelected(sAllPopCheck.isSelected()); 
  			refresh();
 		}
 		
@@ -448,7 +447,7 @@ public class Hfilter extends JDialog {
 			hGene0PopRadio.setSelected(hitFiltData.isHi0Gene());
 			hNonePopRadio.setSelected(hitFiltData.isHiNone());
 			hPopupPopCheck.setSelected(hitFiltData.isHiPopup());
-			sAllPopCheck.setSelected(hitFiltData.isAll());		// CAS567 add
+			sAllPopCheck.setSelected(hitFiltData.isAll());		
 		}
 	} // end popup listener
 	private int     getSliderPctid(double pctid) 	{return (int)Math.round(pctid);}

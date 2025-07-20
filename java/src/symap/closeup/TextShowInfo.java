@@ -69,7 +69,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		setTitle(title); 
 		setResizable(true);
 		
-		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // CAS543 add the explicit close 
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {annoDataObj.setIsPopup(false);}
 		});
@@ -94,12 +94,12 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		
 		Dimension d = new Dimension (330, 200); 
 		if (getWidth() >= d.width || getHeight() >= d.height) setSize(d);
-		setAlwaysOnTop(true); 										// CAS543; doesn't work on Ubuntu
+		setAlwaysOnTop(true); 										// doesn't work on Ubuntu
 		setLocationRelativeTo(null);	
 		setVisible(true);
 	}
 	/***************************************************
-	 * 2D Hit info; CAS560 change parameters, add Sort and Merge
+	 * 2D Hit info;
 	 */
 	public TextShowInfo (AlignPool alignPool, HitData hitDataObj, String title, String theInfo, String trailer,
 			boolean st1LTst2, String proj1, String proj2, Annotation aObj1, Annotation aObj2, String queryHits, String targetHits, 
@@ -110,7 +110,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		setTitle(title); 
 		setResizable(true);
 		
-		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // CAS543 add the explicit close 
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {hitDataObj.setIsPopup(false);}
 		});
@@ -118,22 +118,25 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		this.alignPool =  alignPool;	this.hitDataObj = hitDataObj;
 		this.title = title;				this.theInfo = theInfo;
 		this.proj1 = proj1;				this.proj2 = proj2;
-		this.aObj1 = aObj1;				this.aObj2 = aObj2;  // CAS560 change from name to object for coords
+		this.aObj1 = aObj1;				this.aObj2 = aObj2;  
 		this.queryHits = queryHits;		this.targetHits = targetHits;
 		this.isQuery = isQuery;			this.st1LTst2 = st1LTst2;	this.isInvHit = isInv; 
 		
-		String gene1 = (aObj1!=null) ? " (#" + aObj1.getFullGeneNum() + ")" : "";	
-		String gene2 = (aObj2!=null) ? " (#" + aObj2.getFullGeneNum() + ")" : "";
+		String gene1 = (aObj1!=null) ? "   #" + aObj1.getFullGeneNum() : "";	
+		String gene2 = (aObj2!=null) ? "   #" + aObj2.getFullGeneNum() : "";
 	
 		boolean bMerge = title.startsWith(titleMerge);
 		boolean bOrder = title.startsWith(titleOrder);
 		boolean bRemove = title.startsWith(titleRemove);
 		
+		String name1 = String.format("%-16s %s", proj1, gene1);// CAS570 removed () and line up gene#
+		String name2 = String.format("%-16s %s", proj2, gene2);
+		
 		/** Text - the tables and info **/
-		String table1 = SeqDataInfo.formatHit(Globals.Q, proj1 + gene1, aObj1, queryHits, title, false, false);
+		String table1 = SeqDataInfo.formatHit(Globals.Q, name1, aObj1, queryHits, title, false, false);
 		int cntNegGap = SeqDataInfo.cntMergeNeg;
 		
-		String table2 = SeqDataInfo.formatHit(Globals.T, proj2 + gene2, aObj2, targetHits, title, isInv, bSort);
+		String table2 = SeqDataInfo.formatHit(Globals.T, name2, aObj2, targetHits, title, isInv, bSort);
 		cntNegGap += SeqDataInfo.cntMergeNeg;
 		
 		// theInfo
@@ -190,7 +193,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		
 		Dimension d = new Dimension (350, 200); // w,h
 		if (getWidth() >= d.width || getHeight() >= d.height) setSize(d);
-		setAlwaysOnTop(true); 						// CAS543; doesn't work on Ubuntu
+		setAlwaysOnTop(true); 						
 		setLocationRelativeTo(null);	
 		setVisible(true);
 	}
@@ -221,7 +224,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		
 		int maxC = Math.max(coords[1], coords[3]);
 		int sz = (maxC+"").length();
-		String formatC =  "%" + sz + "d  "; // S Coord CAS548 remove S and N
+		String formatC =  "%" + sz + "d  "; 
 		String formatM =  "%" + sz + "s  ";
 		
 		int inc = 60; // output in rows of 60
@@ -279,7 +282,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	   			reverseAlign();
 	   		}
 		}); 
-		JButton trimButton = Jcomp.createButton("No trim", "Align without trimming"); // CAS563 added this option
+		JButton trimButton = Jcomp.createButton("No trim", "Align without trimming"); 
 		trimButton.addActionListener(new ActionListener() {
 	   		public void actionPerformed(ActionEvent arg0) {
 	   			trimButton.setEnabled(false); // the data structures is reused and changed
@@ -370,7 +373,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	}
 	
 	/*************************************************************
-	 * toggle all hits and merged hits; CAS560 add
+	 * toggle all hits and merged hits;
 	 */
 	private void runMerge() {
 		String queryShow  = SeqDataInfo.calcMergeHits(Globals.Q, queryHits, false);
@@ -381,7 +384,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 				queryShow, targetShow, isQuery, isInvHit, true); 
 	}
 	/*************************************************************
-	 * retain target ordered by query - the '#' will be out-of-order; CAS560 add
+	 * retain target ordered by query - the '#' will be out-of-order;
 	 */
 	private void runOrder() { 	
 		new TextShowInfo(alignPool, hitDataObj, titleOrder + " " + title, 

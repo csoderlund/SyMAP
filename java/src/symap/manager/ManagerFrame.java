@@ -838,9 +838,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 					 projNameMap.put(mp.strDBName, mp.strDisplayName);
 				} 
 				else { // e.g. dbname=Arab, and there is dbname=zarab with Display name = Arab
-					String msg=dbname + ": Display name '" + mp.strDisplayName + "' exists; cannot not display";
-					Utilities.showContinue("Duplicate name", msg); // CAS568 make obvious
-					Globals.prt(msg);
+					String msg= dbname + ": Display name '" + mp.strDisplayName + "' exists; cannot display";
+					Mproject ex = projObjMap.get(mp.strDisplayName);
+					msg += "\n   Existing project with display name: Directory " + ex.getDBName(); //CAS570 more obvious;
+					
+					Utilities.showWarningMessage(msg); // CAS568 make obvious;  CAS570 warning instead of question
+					
 				}
 			}
 		}

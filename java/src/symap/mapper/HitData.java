@@ -8,7 +8,8 @@ import util.ErrorReport;
 import util.Utilities;
 
 /**
- * Represents one Clustered Hit
+ * Represents one Clustered Hit.
+ * SeqHits has the set, plus a DrawHit that is 1-to-1 with a HitData
  */
 public class HitData {	
 	protected static int cntMerge=0, cntTotal=0, cntMergeSH=0, cntTotalSH=0; 
@@ -20,22 +21,20 @@ public class HitData {
 	private int nMerge;
 	private int geneOlp = -1; 
 	private boolean isPosOrient1, isPosOrient2; 	
-	private int 	annot1_idx, annot2_idx; 
+	protected int 	annot1_idx, annot2_idx; // pseudo changed to zero in MapperPool; CAS570
 	private String 	query_seq, target_seq;  // coordinates of subhits
 	
 	protected int start1, end1, mid1, start2, end2, mid2;	// 1=q, 2=t; mid for paintComponent
 	protected String qMergeSH, tMergeSH;					// merged subhits for faster drawing in SeqHits.DrawHit
 	
-	private int collinearSet;		
-	private int blocknum; 			
+	private int collinearSet, blocknum; 			
 	
-	private boolean isBlock;		// set on init
-	private boolean isCollinear;	// set on init;
+	private boolean isBlock, isCollinear;		// set on init
 	
 	private boolean isPopup=false;		// set when popup; 
-	private boolean isHighHitg2=false;	// set on conserved seqFilter, same as geneOlap=2 if only 2 tracks; 
+	private boolean isHighG2xN=false, isForceG2xN=false;	// set on seqFilter 3-track ref only; force is filtered but must be shown
 	
-	protected String hitGeneTag;			// g(gene_overlap) or htype (EE) ; gNbN see MapperPool; 
+	protected String hitGeneTag;		// g(gene_overlap) or htype (EE) ; gNbN see MapperPool; 
 	private String   hitTag; 
 	
 	// MapperPool.setSeqHitData populates, puts in array for SeqHits, where each HitData is associated with a DrawHit
@@ -43,8 +42,7 @@ public class HitData {
 			  double pctid, int pctsim, int nMerge, int covScore, String htype, int overlap,
 			  int annot1_idx, int annot2_idx,
 			  String strand, int start1, int end1, int start2, int end2, String query_seq, String target_seq,   
-			  int runnum, int runsize, int block, 
-			  double corr, String chr1, String chr2) // chr1/2 not used
+			  int runnum, int runsize, int block, double corr) 
 	{
 		this.mapper = mapper;
 		this.idx = id;
@@ -56,7 +54,7 @@ public class HitData {
 		this.covScore = covScore;
 		this.geneOlp = overlap;
 		
-		this.annot1_idx = annot1_idx;
+		this.annot1_idx = annot1_idx;	// even if not annotated are number, this will still be 0 if not annotated
 		this.annot2_idx = annot2_idx;
 		
 		if (strand.length() >= 3) { 
@@ -84,7 +82,7 @@ public class HitData {
 		this.isBlock = (blocknum>0) ? true : false;
 		
 		String gg = (htype.equals("0") || htype.equals("")) ? (" g" + geneOlp) : (" " +htype); 
-		String iv = (corr<0) ? " Inv   " : "   "; // Strand may be == when Inv
+		String iv = (corr<0) ? " Inv  " : "  "; // Strand may be == when Inv
 	
 		String co = (runsize>0 && runnum>0) ? (" c" + runsize + "." + runnum) : "";
 		hitTag = "Hit #" + hitnum + gg + "   Block #" + block + iv + co;
@@ -204,16 +202,36 @@ public class HitData {
 	protected String createHover(boolean isQuery) {
 		String msg = hitTag +  "\n"; 
 		
-		String n = (nMerge>0) ? "#Subhits=" + nMerge + "  " : "#Subhit=1  "; 
-		msg += n;
 		String op = (nMerge>0) ? "~" : "";
 		msg +=  "Id=" + op + pctid  + "%  ";
 		msg +=  "Sim="+ op + pctsim + "%  ";
 		msg +=  String.format("Cov=%,dbp", covScore); 
 		
+		String L="L ", R="R ";
+		String gn1 = "#"+mapper.getGeneNum1(annot1_idx), gn2 = "#"+mapper.getGeneNum2(annot2_idx);
+		String gn = isQuery  ? (L + gn1+"   "+R+ gn2) : (L +gn2+ "   "+ R + gn1); // CAS570 add
+		
 		String msg1 =  Utilities.coordsStr(isPosOrient1, start1, end1);  
 		String msg2 =  Utilities.coordsStr(isPosOrient2, start2, end2); 
+		
+		String coords = isQuery ? (L + msg1+"\n"+R+ msg2) : (L +msg2+ "\n"+ R + msg1);
+		
+		return  msg + "\n\n" + coords + "\n\n" + gn; // gn on end to be similar to popup
+	}
+	protected String createPopup(boolean isQuery) {//  slightly different from createHover; CAS570 made separate,
+		String msg = hitTag +  "\n"; 
+		
+		String op = (nMerge>0) ? "~" : "";
+		msg +=  "Id=" + op + pctid  + "%  ";
+		msg +=  "Sim="+ op + pctsim + "%  ";
+		msg +=  String.format("Cov=%,dbp  ", covScore); 
+		String n = (nMerge>0) ? "#Subhits=" + nMerge + "  " : "#Subhit=1  "; // CAS570 moved to end; only in popup
+		msg += n;
+		
 		String L="L ", R="R ";
+		String msg1 =  Utilities.coordsStr(isPosOrient1, start1, end1);  
+		String msg2 =  Utilities.coordsStr(isPosOrient2, start2, end2); 
+		
 		String coords = isQuery ? (L + msg1+"\n"+R+ msg2) : (L +msg2+ "\n"+ R + msg1);
 		
 		return  msg + "\n\n" + coords;
@@ -221,7 +239,6 @@ public class HitData {
 	protected boolean isBlock() 	{ return isBlock; }
 	protected boolean isCset() 		{ return isCollinear; } 
 	protected boolean isPopup()		{ return isPopup;}
-	protected boolean isHighHitg2()	{ return isHighHitg2;}
 	public 	  boolean is2Gene() 	{ return (geneOlp==2); } 
 	protected boolean is1Gene() 	{ return (geneOlp==1); } 
 	protected boolean is0Gene()  	{ return (geneOlp==0); } 
@@ -234,17 +251,32 @@ public class HitData {
 		s1.setHighforHit(annot1_idx, annot2_idx, b); 
 		s2.setHighforHit(annot1_idx, annot2_idx, b); 
 	} 
-	public void setIsHighHitg2(boolean b) {	// SeqPool sets true, SeqHits sets false
-		isHighHitg2=b;
+	protected int getCollinearSet() {return collinearSet;} 
+	
+	/* ***** g2xN methods ******** */
+	protected boolean isHighG2xN()	{ return isHighG2xN;}
+	protected boolean isForceG2xN()	{ return isForceG2xN;}
+	
+	public void setHighForceG2xN(boolean b) {isHighG2xN = b; isForceG2xN=b;}
+	public void setForceG2xN(boolean b)     {isForceG2xN=b;}
+	
+	public void setHighAnnoG2xN(boolean b) {	// SeqPool.computeG2xn sets true, SeqHits.clearHighG2xN sets false
+		if (!b && !isHighG2xN) return;
+		
+		isHighG2xN = b;	// highlights hit  
 	
 		Sequence s1 = (Sequence) mapper.getTrack1();
 		Sequence s2 = (Sequence) mapper.getTrack2();
-			
-		s1.setConservedforHit(annot1_idx, annot2_idx, b); 
-		s2.setConservedforHit(annot1_idx, annot2_idx, b); 
+		
+		s1.setAnnoG2xN(annot1_idx, annot2_idx, b);  // highlights annotation for gene (either annot1 or annot2)
+		s2.setAnnoG2xN(annot1_idx, annot2_idx, b); 
 	}
-	
-	protected int getCollinearSet() {return collinearSet;} 
+	public void clearG2xN() {
+		if (isHighG2xN) setHighAnnoG2xN(false);
+		
+		isHighG2xN=isForceG2xN=false;
+	}
+	////////////////////////////////////////////
 	
 	public boolean equals(Object obj) {
 		return (obj instanceof HitData && ((HitData)obj).idx == idx);
@@ -259,21 +291,15 @@ public class HitData {
 			}
 		};
 	}
-	// CAS517 add for coloring hit line according to directions
+	// for coloring hit line according to directions
 	protected String getOrients() { 
 		String x = (isPosOrient1) ? "+" : "-";
 		String y = (isPosOrient2) ? "+" : "-";
 		return x+y;
 	}
 	
-	public String toString() 	{ // not used anywhere 
-		String msg =  " Hit #" + hitnum + "\n";
-		
-		if (nMerge>0) msg += "Approx";
-		msg += " %Id=" + pctid;
-		if (pctsim>0) msg += " %Sim=" + pctsim;
-		if (covScore>0) msg += " " + String.format("Cov=%,d", covScore);
-		if (nMerge>0) msg += " of " + nMerge + " hits ";
+	public String toStr() 	{ 
+		String msg =  hitTag + " AnnoIdx " + annot1_idx + " " + annot2_idx;
 		return msg;
 	}
 	public String getName()		{ return "Hit #" + hitnum;}

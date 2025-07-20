@@ -29,9 +29,6 @@ import util.Jhtml;
 
 /**
  * 2D drawingpanel Control Panel
- * CAS534 squash buttons so can view all from popup; 
- * CAS550 remove Stats button that I added in 541; I added little ? instead; CAS551 add shrink button
- * CAS552 split mouse function button into zoom and show; its clearer, and easier to go between the 2 main functions
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ControlPanel extends JPanel implements HelpListener {	
@@ -41,7 +38,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 	protected static final String MOUSE_FUNCTION_CLOSEUP 		= "Align (Max " + Globals.MAX_CLOSEUP_K + ")"; 
 	protected static final String MOUSE_FUNCTION_SEQ 			= "Seq Options";
 	
-	private JButton homeButton, backButton, forwardButton;
+	private JButton homeButton, backButton, forwardButton; // Home does not clear highlighting
 	private JButton zoomPopupButton;
 	private JRadioButtonMenuItem zoomAllRadio	= new JRadioButtonMenuItem(MOUSE_FUNCTION_ZOOM_ALL);
 	private JRadioButtonMenuItem zoomSelRadio	= new JRadioButtonMenuItem(MOUSE_FUNCTION_ZOOM_SINGLE);
@@ -66,11 +63,11 @@ public class ControlPanel extends JPanel implements HelpListener {
 		this.cdh = cdh;
 
 		homeButton       = Jcomp.createIconButton(this,bar,null,"/images/home.gif",
-				"Home: Go to original view.");
+				"Home: Go to original zoom view.");	// CAS570 add 'zoom' as filters are not included in history
 		backButton       =  Jcomp.createIconButton(this,bar,null,"/images/back.gif",
-				"Back: Go back in history"); 
+				"Back: Go back in zoom history"); 
 		forwardButton    = Jcomp.createIconButton(this,bar,null,"/images/forward.gif",
-				"Forward: Go forward in history"); 
+				"Forward: Go forward in zoom history"); 
 
 		if (hc != null) hc.setButtons(homeButton,backButton,forwardButton); // See HistoryControl
 
@@ -127,7 +124,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		addToGrid(row, gbl, gbc, showPopupButton, sp1); 
 		
 		addToGrid(row, gbl, gbc, editColorsButton, sp2); 
-		addToGrid(row, gbl, gbc, new JSeparator(JSeparator.VERTICAL), sp2); // End edit display
+		addToGrid(row, gbl, gbc, new JSeparator(JSeparator.VERTICAL), sp2); // End edit display 
 		
 		addToGrid(row, gbl, gbc, showImageButton, sp1);
 		addToGrid(row, gbl, gbc, helpButtonLg, sp1);
@@ -135,7 +132,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		
 		add(row);
 	}
-	// CAS551 add sep 	
+	
 	private void addToGrid(JPanel cp, GridBagLayout gbl, GridBagConstraints gbc, Component comp, String sp) {
 		gbl.setConstraints(comp,gbc);
 		cp.add(comp);
@@ -254,7 +251,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 			else if (source == shrinkButton)     dp.shrinkSpace(); 
 			
 			else if (source == editColorsButton) cdh.showX();
-			else if (source == showImageButton)  ImageViewer.showImage("Exp_2D", (JPanel)dp); // CAS507 made static
+			else if (source == showImageButton)  ImageViewer.showImage("Exp_2D", (JPanel)dp); 
 			else if (source == helpButtonSm) 	 popupHelp();
 		}
 	};
@@ -287,7 +284,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		if (hc != null) hc.setEnabled(enable);	 
 	}
 	
-	protected void clear() { // CAS531 put back to zoom
+	protected void clear() { 
 		dp.setMouseFunction(MOUSE_FUNCTION_ZOOM_ALL);
 		zoomBox.setSelected(true); showBox.setSelected(false);
 	
@@ -312,7 +309,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		}
 		return msg;
 	}
-	public void setHistory(boolean toScale, String mouseFunction) { // CAS552 add
+	public void setHistory(boolean toScale, String mouseFunction) { 
 		scaleButton.setSelected(toScale);
 		dp.isToScale = toScale;
 		scaleButton.setBackground(Jcomp.getBorderColor(toScale));

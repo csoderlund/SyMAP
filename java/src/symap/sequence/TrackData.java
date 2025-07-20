@@ -3,7 +3,6 @@ package symap.sequence;
 /**
  * The data for the Track (i.e. project name, display name, orientation, etc...)
  * It is used for History, i.e back and forth
- * CAS551 remove hitLength and HitLine CAS551 dead private Point moveOffset;
  */
 public  class TrackData {
 	private Class <?> trackClass;
@@ -19,7 +18,7 @@ public  class TrackData {
 	private boolean bFlipped;
 	private boolean bShowRuler, bShowGap, bShowCentromere, bShowGene, bShowHitLen, bShowScoreLine;
 	
-	private boolean bShowAnnot, bShowGeneNum,  bShowGeneLine, bHighPopupGene, bHighHit2g2, bHighHit1g2; 
+	private boolean bShowAnnot, bShowGeneNum,  bShowGeneLine, bHighPopupGene, bHighHit2g2, bHighHit2g1, bHighHit2g0; 
 	
 	private boolean bShowScoreText, bShowHitNumText, bShowBlockText, bShowCsetText, bShowNoText;   
 
@@ -53,8 +52,9 @@ public  class TrackData {
 		bShowGeneLine  	= seq.sfilObj.bShowGeneLine;
 		bShowAnnot      = seq.sfilObj.bShowAnnot;
 		bHighPopupGene  = seq.sfilObj.bHighGenePopup;
-		bHighHit2g2  	= seq.sfilObj.bHitHighg2x2;
-		bHighHit1g2  	= seq.sfilObj.bHitHighg2x1;
+		bHighHit2g2  	= seq.sfilObj.bHighG2x2;
+		bHighHit2g1  	= seq.sfilObj.bHighG2x1;
+		bHighHit2g0  	= seq.sfilObj.bHighG2x0;
 		
 		bShowNoText  	= seq.sfilObj.bShowNoText;	
 		bShowBlockText  = seq.sfilObj.bShowBlockText;	
@@ -92,8 +92,9 @@ public  class TrackData {
 		seq.sfilObj.bShowGeneLine   = bShowGeneLine;
 		seq.sfilObj.bShowAnnot      = bShowAnnot;
 		seq.sfilObj.bHighGenePopup  = bHighPopupGene;
-		seq.sfilObj.bHitHighg2x2  	= bHighHit2g2;
-		seq.sfilObj.bHitHighg2x1  	= bHighHit1g2;
+		seq.sfilObj.bHighG2x2  	= bHighHit2g2;
+		seq.sfilObj.bHighG2x1  	= bHighHit2g1;
+		seq.sfilObj.bHighG2x0  	= bHighHit2g0;
 		
 		seq.sfilObj.bShowNoText  	= bShowNoText;	
 		seq.sfilObj.bShowBlockText  = bShowBlockText;	

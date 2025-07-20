@@ -21,7 +21,7 @@ import symap.sequence.Sequence;
 import symap.Globals;
 
 /***********************************************
- * Two ends of a seq-seq hit; internal class DrawHit has both ends
+ * All hits for a chr-chr pair; internal class DrawHit has both ends, which links to HitData
  * Mapper: Tracks 0-N are in order of display; Ref is always seqObj1
  * Hit Wire is the line between chromosomes
  * Hit Rect is the hit rectangle in the track, one on each end of wire
@@ -45,7 +45,11 @@ public class SeqHits  {
 	private boolean st1LTst2=true; 	   // if seqObj1.track# <seqObj2.track#, query is left track, else, right
 	
 	private String infoMsg=""; 
-	private int cntShowHit=0, cntHighHit=0, cntHitg2=0;
+	private int cntShowHit=0, cntHighHit=0;
+	
+	private int nG2xN=0;
+	private boolean isOnlyG2xN=false;	
+	private int cntHighG2xN=0, cntFiltG2xN=0, cntPossG2xN=0;
 	
 	// called in MapperPool
 	public SeqHits(Mapper mapper, Sequence st1, Sequence st2, Vector <HitData> hitList) {
@@ -113,6 +117,9 @@ public class SeqHits  {
 	
 	protected String getInfo() { return infoMsg;}; // called in Mapper
 	
+	public Sequence getSeqObj1() {return seqObj1;}
+	public Sequence getSeqObj2() {return seqObj2;}
+	 
 	// called from mapper.myinit sets for the Hit Filter %id slider
 	protected void setMinMax(HfilterData hf) { 
 		for (DrawHit h : allHitsArray)
@@ -132,25 +139,52 @@ public class SeqHits  {
 		 for (int i = 0; i < allHitsArray.length; i++) 
 			 allHitsArray[i].getHit(hitList,start,end,swap); // adds to hitList
 	 }
-	 // SeqPool Conserved
-	 public Vector <HitData>  getVisGene2Hits() {
+	 
+	 /*  g2xN methods; CAS570 update  */
+	 public Vector <HitData>  getVisG2Hits() {		// SeqPool.computeG2xN
 		 Vector <HitData> hitList = new Vector<HitData> ();
 		 for (DrawHit hObj : allHitsArray) {
-			 if (hObj.isOlapHit() && !hObj.isFiltered()) {
-				 if (hObj.hitDataObj.is2Gene())
+			 if (hObj.isOlapHit()) {				// hit overlaps visible chromosome
+				 if (hObj.hitDataObj.is2Gene() && !hObj.isFiltered())
 					 hitList.add(hObj.hitDataObj);		 
 			 }
 		 }
 		 return hitList;
 	 }
-	 public void clearHighHitg2() { // called from Sequence (SeqPool sets conserved per hit)
-		 for (DrawHit hd: allHitsArray) 
-			 if (hd.hitDataObj.is2Gene()) 
-				 hd.hitDataObj.setIsHighHitg2(false);
+	 public Vector <HitData>  getInVisG2Hits() {	// SeqPool.computeG2xN
+		 Vector <HitData> hitList = new Vector<HitData> ();
+		 for (DrawHit hObj : allHitsArray) {
+			 if (hObj.isOlapHit()) {
+				 if (hObj.hitDataObj.is2Gene() && hObj.isFiltered())
+					 hitList.add(hObj.hitDataObj);		 
+			 }
+		 }
+		 return hitList;
 	 }
-	 public Sequence getSeqObj1() {return seqObj1;}
-	 public Sequence getSeqObj2() {return seqObj2;}
-	 
+	 public Vector <HitData>  getVisG1Hits(int which) {		// SeqPool.computeG2xN
+		 Vector <HitData> hitList = new Vector<HitData> ();
+		 for (DrawHit dht : allHitsArray) {
+			 if (dht.isOlapHit() && dht.hitDataObj.is1Gene() && !dht.isFiltered()) {
+				if (which==1 && dht.hitDataObj.annot1_idx==0) 		hitList.add(dht.hitDataObj);	
+				else if (which==2 && dht.hitDataObj.annot2_idx==0)	hitList.add(dht.hitDataObj);	
+			 }
+		 }
+		 return hitList;
+	 }
+	 public void setnG2xN(int n) {						// Sequence.refHighG2xN 
+		 nG2xN=n;
+		 seqObj1.setnG2xN(n);  seqObj2.setnG2xN(n);
+	 }	
+	 public void setOnlyG2xN(boolean b) {isOnlyG2xN=b;} // Sequence.showG2xN
+		
+	 public void clearHighG2xN() { 					// Sequence.refHighG2xN 
+		 for (DrawHit hd: allHitsArray) 
+			 hd.hitDataObj.clearG2xN();
+		 
+		 seqObj1.setnG2xN(0);  seqObj2.setnG2xN(0); // need to get set in L/R also
+		 
+		 cntHighG2xN=cntFiltG2xN=cntPossG2xN=0;
+	 }
 	 /*****************************************************
 	  * XXX Paint all hits 	
 	  */
@@ -184,7 +218,7 @@ public class SeqHits  {
 				}
 			}
 		}
-		cntShowHit=cntHighHit=cntHitg2=0; // counted in paint
+		cntShowHit=cntHighHit=cntHighG2xN=cntPossG2xN=cntFiltG2xN=0; // counted in paint
 		HashSet <Integer> blockSet = new HashSet <Integer> (); // count blocks/sets shown
 		toggle=true; 
 		
@@ -218,11 +252,20 @@ public class SeqHits  {
 		
 		// Information box on Stats
 		infoMsg = String.format("%s: %,d", "Hits", cntShowHit);
-		if (cntHitg2>0) infoMsg += String.format("\n%s: %,d", "Conserved", cntHitg2);
-		if (cntHighHit>0)   infoMsg += String.format("\n%s: %,d", "High", cntHighHit);
 		if (bHi) {
 			String type = (bHiCset) ? "CoSets" : "Blocks";	
 			infoMsg += String.format("\n%s: %,d\n", type, blockSet.size());
+		}
+		if (cntHighHit>0)  infoMsg += String.format("\n%s: %,d", "High", cntHighHit);
+		
+		if (nG2xN>0) {
+			String x = (nG2xN==2) ? "g2x2" : "g2x1";
+			int cnt =  (nG2xN==2) ? (cntHighG2xN+cntFiltG2xN) : cntHighG2xN;
+			if (cntHighG2xN>0 && (cntFiltG2xN>0 ||cntPossG2xN>0)) infoMsg += String.format("\n\n%-11s: %,3d", x, cnt);
+			else 												  infoMsg += String.format("\n\n%s: %,d", x, cnt);
+			
+			if (cntFiltG2xN>0) infoMsg += String.format("\n%-11s: %,3d", "Filtered g2", cntFiltG2xN);
+			if (cntPossG2xN>0) infoMsg += String.format("\n%-11s: %,3d (red)",  "Possible g2", cntPossG2xN);	
 		}
 	}
 	/*************************************************************
@@ -278,26 +321,15 @@ public class SeqHits  {
 	protected void clearData() {
 		 allHitsArray=null;
 	}
-	 /***************** Static stuff ***********************/
-	// adjust rectangle coordinates for negative width or height - on flipped
-	private static void fixRect(Rectangle2D rect) {
-		if (rect.getWidth() < 0)
-			rect.setRect(rect.getX()+rect.getWidth()+1, rect.getY(), Math.abs(rect.getWidth()), rect.getHeight());
-		
-		if (rect.getHeight() < 0)
-			rect.setRect(rect.getX(), rect.getY()+rect.getHeight()+1, rect.getWidth(), Math.abs(rect.getHeight()));
-	}
-
+	 
 	public boolean equals(SeqHits d) {
 		return d.projIdx1 == projIdx1 && d.projIdx2 == projIdx2
 				&& d.grpIdx1 == grpIdx1 && d.grpIdx2 == grpIdx2; 
 	}
-
 	public String toString() {
 		return "[HitData:    project1="+projIdx1+ " seq1=" + seqObj1.getChrName() + " grp1="+grpIdx1+ 
 				        ";   project2="+projIdx2+ " seq2=" + seqObj2.getChrName()+ " grp2="+grpIdx2+"]";
 	}
-
 	public String getOtherChrName(Sequence seqObj) { // for Closeup title
 		if (seqObj==seqObj1) return seqObj2.getChrName();
 		else return seqObj1.getChrName();
@@ -312,7 +344,7 @@ public class SeqHits  {
 		private HitData hitDataObj;
 		private Line2D.Double hitWire;
 		
-		// There are also flags in hitDataObj; isBlock, isCollinear, isPopup, isDualGene
+		// There are also flags in hitDataObj; isBlock, isCollinear, isPopup, isHighHitg2
 		private boolean isHover;		 // set on hover; 
 		private boolean isQuerySelHit;   // set on Query select row; From TableDataPanel
 		private boolean isDisplayed;     // isNotFiltered;
@@ -339,20 +371,30 @@ public class SeqHits  {
 		private void setMinMax(HfilterData hf) {// for seqHits
 			hf.condSetPctid(hitDataObj.getPctid());
 		}
-		private boolean isFiltered() { 
+		private boolean isFiltered() {
+			// hit filter PCT; CAS570 was after isAll, but now this has precedence
 			 HfilterData hf = mapper.getHitFilter();
-			 
-			 isDisplayed=true;
-			
-			 // precedence
-			 if (hf.isAll()) return false; // Over-rides everything; CAS567 add
-			 
 			 boolean bIsNotPCT = (hitDataObj.getPctid()<hf.getPctid());
 			 if (bIsNotPCT) {
 				 isDisplayed=false;
 				 return true;
 			 }
-			 if (hf.isBlockOnly() && hf.getBlock()>0) {		// CAS567 - 
+			 
+			// Sequence filter:  CAS570 add
+			 if (isOnlyG2xN) {
+				 if (!hitDataObj.isHighG2xN())             {isDisplayed=false; return true;}// red and all others
+				 if (nG2xN!=2 && hitDataObj.isForceG2xN()) {isDisplayed=false; return true;} 
+			 }
+			 if (hitDataObj.isHighG2xN())  {isDisplayed=true;  return false;}
+			 if (hitDataObj.isForceG2xN()) {isDisplayed=true;  return false;}
+				
+			 // Hit filters
+			 isDisplayed=true;
+			
+			 // precedence
+			 if (hf.isAll()) return false; // Over-rides everything but G2xN and PCT
+			 
+			 if (hf.isBlockOnly() && hf.getBlock()>0) {		
 				 if (hitDataObj.getBlock() == hf.getBlock()) return false;
 				 isDisplayed=false;
 				 return true;
@@ -382,16 +424,26 @@ public class SeqHits  {
 			 isDisplayed=false;
 			 return true; 
 		 }
-		 private Color getCColor(String orient, boolean toggle, boolean bWire) {
+		 private Color getCColor(String orient, boolean toggle, boolean bCnt) {
 			 if (isHover)     return Mapper.pseudoLineHoverColor;	
 			
 			 HfilterData hf = mapper.getHitFilter(); 
 			 if (hf.isHiPopup() && hitDataObj.isPopup()) return Mapper.pseudoLineGroupColor;
-			 if (hf.isHiPopup() && isQuerySelHit) return Mapper.pseudoLineGroupColor;	
+			 if (hf.isHiPopup() && isQuerySelHit)        return Mapper.pseudoLineGroupColor;	
 			 
-			 if (hitDataObj.isHighHitg2()) { // conserved takes precedence over highlight
-				 if (bWire) cntHitg2++;
-				 return Mapper.pseudoLineHighlightColor2;
+			 if (hitDataObj.isHighG2xN()) { // takes precedence over highlight
+				 if (hitDataObj.isForceG2xN()) {
+					 if (bCnt) cntFiltG2xN++;
+					 return Mapper.pseudoLineHighlightColor2; // default pink
+				 }
+				 else{
+					 if (bCnt) cntHighG2xN++;
+					 return Mapper.pseudoLineHighlightColor1; // default green
+				 }
+			 }
+			 else if (hitDataObj.isForceG2xN()) {
+				 if (bCnt) cntPossG2xN++;
+				 return Color.red; // default red
 			 }
 			
 			 boolean isHi=false;
@@ -401,7 +453,7 @@ public class SeqHits  {
 			 else if (hf.isHi1Gene() && hitDataObj.is1Gene()) isHi=true;
 			 else if (hf.isHi0Gene() && hitDataObj.is0Gene()) isHi=true;
 			 if (isHi) {
-				 if (bWire) cntHighHit++;
+				 if (bCnt) cntHighHit++;
 				 if (toggle) return Mapper.pseudoLineHighlightColor1;		
 				 else 		 return Mapper.pseudoLineHighlightColor2;
 			 }
@@ -612,7 +664,7 @@ public class SeqHits  {
 			 else
 				 subHits = hitDataObj.getTargetMerge();
 
-			 if (subHits == null || subHits.length() == 0) {// CAS512 long time bug when flipped and one hit
+			 if (subHits == null || subHits.length() == 0) {
 				 g2.setPaint(getCColor(hitDataObj.getOrients(), toggle, false));
 				 rect = new Rectangle2D.Double(psx, psy, w, pEnd.getY()-psy);
 				 
@@ -649,15 +701,21 @@ public class SeqHits  {
 				 }
 			 }
 		 }
-		 
-		 
+		// adjust rectangle coordinates for negative width or height - on flipped
+		private void fixRect(Rectangle2D rect) { // CAS570 was static
+			if (rect.getWidth() < 0)
+				rect.setRect(rect.getX()+rect.getWidth()+1, rect.getY(), Math.abs(rect.getWidth()), rect.getHeight());
+			
+			if (rect.getHeight() < 0)
+				rect.setRect(rect.getX(), rect.getY()+rect.getHeight()+1, rect.getWidth(), Math.abs(rect.getHeight()));
+		}
 		/* popup from clicking hit wire;  */
 		private void popupDesc(double x, double y) { 
 			if (mapper.getHitFilter().isHiPopup()) hitDataObj.setIsPopup(true); 
 			
 			String title="Hit #" + hitDataObj.getHitNum(); 
 			
-			String theInfo = hitDataObj.createHover(st1LTst2) + "\n"; 
+			String theInfo = hitDataObj.createPopup(st1LTst2) + "\n"; 
 			
 			String proj1 = seqObj1.getTitle(); //Proj Chr
 			String proj2 = seqObj2.getTitle(); 
