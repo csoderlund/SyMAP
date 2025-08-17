@@ -23,8 +23,7 @@ import util.ErrorReport;
 
 /***********************************************
  * Load gff files for sequence projects: recognize gene, mRNA, exon, gap, centromere
- * CAS557 made major changes to check mRNA parent with geneID and exon parent with mrnaID.
- * 		This now allows reading of NCBI and Ensembl files directly.
+ * 	Allows reading of NCBI and Ensembl files directly.
  */
 
 public class AnnotLoadMain {
@@ -296,7 +295,7 @@ public class AnnotLoadMain {
 		
 		cntAllGene+=cntGene;
 		Utils.prtNumMsg(plog, totalLoaded, "annotations loaded from " + f.getName()); 
-		if (cntGene>0 || cntExon>0) { 				// CAS518 no longer supporting exons in separate file
+		if (cntGene>0 || cntExon>0) { 				// no longer supporting exons in separate file
 			Utils.prtNumMsg(plog, cntGene, String.format("genes  %,d exons", cntExon));
 			if (cntGene==0) plog.msg("Warning: genes and exons must be in the same file for accurate results");
 		}
@@ -307,7 +306,7 @@ public class AnnotLoadMain {
 	}
 	catch (Exception e) {
 		System.err.println("");
-		System.err.println("*** Database index problem: try 'Load' again (it generally works on 2nd try)"); // CAS567 slight alter to message
+		System.err.println("*** Database index problem: try 'Load' again (it generally works on 2nd try)"); 
 		System.err.println("");
 		ErrorReport.print(e, "Load file (grpIdx=" + grpIdx + ") try 'Load' again (it generally works on 2nd try)."); 
 		bSuccess=false;}
@@ -387,7 +386,7 @@ public class AnnotLoadMain {
 			
 			if (annoFiles.equals("")) {// Check for annotation directory
 				String annotDir = 	projDir + Constants.seqAnnoDataDir;
-				plog.msg("   Anno_files not specified - use " + annotDir);
+				plog.msg("   Anno_files " + annotDir + " (Default location)"); // CAS571
 				File ad = new File(annotDir);
 				if (!ad.isDirectory()) {
 					plog.msg("   No annotation files provided");

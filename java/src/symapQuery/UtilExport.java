@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -21,13 +22,13 @@ import javax.swing.JSeparator;
 import database.DBconn2;
 import symap.Globals;
 import symap.closeup.AlignPool;
+import symap.manager.Mproject;
 import util.ErrorReport;
 import util.Jcomp;
 import util.Utilities;
 
 /***************************************************
  * Export file methods for Table, called by TableDataPanel.exportPopup
- * CAS556 was in TableDataPanel file. CAS563 was TableExport
  */
 public class UtilExport extends JDialog {
 	private static final long serialVersionUID = 1L;
@@ -35,13 +36,17 @@ public class UtilExport extends JDialog {
 	protected final int ex_csv = 0, ex_html = 1, ex_fasta= 2, ex_cancel= 3; // Referenced in TableDataPanel
    
 	private TableMainPanel tdp;
-	private String title; 			// CAS560 add for 1st line of export
+	private String title, projs=""; 	 // CAS571 add projs
 	private JRadioButton btnYes;
 	private int nMode = -1;    
 	    
 	public UtilExport(TableMainPanel tdp, String title) {
 		this.tdp = tdp;
 		this.title = title;
+		
+		Vector<Mproject> projVec = tdp.queryFrame.getProjects();
+		for (Mproject mp : projVec) projs += mp.getDisplayName() + " (" + mp.getdbAbbrev() + "); ";
+		projs = projs.substring(0, projs.length()-2);
 		
 		setModal(true);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -61,7 +66,7 @@ public class UtilExport extends JDialog {
 				nMode = ex_csv;
 			}
 		});
-		JRadioButton btnHTML =  new JRadioButton("HTML");btnHTML.setBackground(Color.white); //CAS547 white for linux
+		JRadioButton btnHTML =  new JRadioButton("HTML");btnHTML.setBackground(Color.white); // white for linux
 		btnHTML.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				nMode = ex_html;
@@ -77,7 +82,7 @@ public class UtilExport extends JDialog {
         ButtonGroup inc = new ButtonGroup();
 		inc.add(btnYes);
 		inc.add(btnNo);
-		btnNo.setSelected(true); // CAS560 changed to no
+		btnNo.setSelected(true); 
 		rowPanel.add(btnYes); rowPanel.add(Box.createHorizontalStrut(5));
 		rowPanel.add(btnNo);
 		
@@ -121,7 +126,7 @@ public class UtilExport extends JDialog {
 			}
 		});
 		
-		JPanel buttonPanel = Jcomp.createRowPanel(); // BUG: CAS564 made center in 563; does not show OK
+		JPanel buttonPanel = Jcomp.createRowPanel(); 
 		buttonPanel.add(Box.createHorizontalStrut(20));
 		buttonPanel.add(btnOK);			buttonPanel.add(Box.createHorizontalStrut(5));
 		buttonPanel.add(btnCancel);		
@@ -138,7 +143,7 @@ public class UtilExport extends JDialog {
     protected int getSelection() { return nMode; }
     
     /*********************************************************
-     * Write CSV - works with 504
+     * Write CSV - 
      */
     protected void writeCSV() {
     try {
@@ -156,13 +161,15 @@ public class UtilExport extends JDialog {
 		}
 		int [] selRows = tdp.theTable.getSelectedRows();
 		
-		outFH.println("### " +title);
+		outFH.println("### " + title);
+		outFH.println("### " + projs);
+		outFH.println("### Filter: " + tdp.theSummary); // CAS571 add
 		boolean incRow = btnYes.isSelected();
 		tdp.setPanelEnabled(false);
 		
 		// Columns names
 		for(int x=0; x<tdp.theTable.getColumnCount()-1; x++) {
-			if (!incRow && x==0) continue; // CAS540 for row check
+			if (!incRow && x==0) continue; // for row check
 			
 			outFH.print(reloadCleanString(tdp.theTable.getColumnName(x)) + ",");
 		}
@@ -171,7 +178,7 @@ public class UtilExport extends JDialog {
 		// rows
 		for(int x=0; x<selRows.length; x++) {
 			for(int y=0; y<tdp.theTable.getColumnCount()-1; y++) {
-				if (!incRow && y==0) continue; // CAS540 for row check
+				if (!incRow && y==0) continue; 
 				
 				outFH.print(reloadCleanString(tdp.theTable.getValueAt(selRows[x], y)) + ",");
 			}
@@ -187,10 +194,10 @@ public class UtilExport extends JDialog {
 	} catch(Exception e) {ErrorReport.print(e, "Write delim file");}
     }
    
-    protected void writeHTML() { // CAS542 add
+    protected void writeHTML() { 
     try {
     	int nSelRows = tdp.theTable.getSelectedRowCount();
-    	if (nSelRows>0) { // CAS560 add
+    	if (nSelRows>0) { 
     		if (!Utilities.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
     	}
     	
@@ -217,7 +224,8 @@ public class UtilExport extends JDialog {
 				+ "</style>\n</head>\n<body>\n"
 				+ "<a id='top'></a>\n");
 	 
-		outFH.println("<p><center><b><big>" + title + "</big></b></center>\n"); // CAS560 'title' is SyMAP version - dbname
+		outFH.println("<p><center><b><big>" + title + "</big></b></center>\n"); 
+		outFH.println("<br><center>" + projs + "</center>\n"); 
 		outFH.println("<br><center>Filter: " + tdp.theSummary + "</center>\n");
 		outFH.print("<p><table class='ty'>\n<tr>");
 		
@@ -328,9 +336,9 @@ public class UtilExport extends JDialog {
 	catch(Exception e) {ErrorReport.print(e, "Save as fasta");}
     }
     ////////////////////////////////////////////////////////////////////////
-    // CAS548 add append; CAS555 these two methods repeated in UtilReport
+    // these two methods repeated in UtilReport
     private PrintWriter getFileHandle(int type, String fname, boolean bAppend) {
-    	String saveDir = Globals.getExport(); // CAS547 change to call globals
+    	String saveDir = Globals.getExport(); 
 		
 		JFileChooser chooser = new JFileChooser(saveDir);
 		chooser.setSelectedFile(new File(fname));
@@ -377,7 +385,7 @@ public class UtilExport extends JDialog {
     		
     		val = val.replaceAll("[\'\"]", "");
     		val = val.replaceAll("\\n", " ");
-    		val = val.replaceAll(",", ";"); // CAS540 quit returning with ''; just replace comma
+    		val = val.replaceAll(",", ";"); 
     		return val;
     	}
     	else return "''";

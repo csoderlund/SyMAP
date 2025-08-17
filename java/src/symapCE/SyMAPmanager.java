@@ -47,9 +47,6 @@ public class SyMAPmanager extends ManagerFrame {
 	}
 	/******************************************************************
 	 * Command line parameters
-	 * CAS511 the perl script was removed, so the parameters need to be written here
-	 * CAS505 moved parse args to ManagerFrame
-	 * CAS534 moved back as the 3D was removed, which was causing duplicate args
 	 */
 	public static void prtParams(String args[]) {
 		// Do not start new parameters with -c or -p; see startsWith below vs equals
@@ -64,12 +61,11 @@ public class SyMAPmanager extends ManagerFrame {
 		System.out.println("  -h        : show help to terminal and exit");
 			
 		if (!equalOption(args, "-r")) { // viewSymap - treated as read-only
-			System.out.println("\nSynteny&Alignment:");
+			System.out.println("\nAlign&Synteny:");
 			System.out.println("  -p N      : number of CPUs to use");
 			System.out.println("  -v        : A&S verbose output");
 			System.out.println("  -mum      : do not remove any mummer files");
 			System.out.println("  -wsp      : for g2, print MUMmer hits that differ from gene strand (v5.4.8 Algo2, v5.6.0 update)");
-			System.out.println("  -pseudo   : On A&S, ONLY compute pseudo (v5.6.5 or later)"); // CAS565
 		}
 	}
 	
@@ -86,9 +82,8 @@ public class SyMAPmanager extends ManagerFrame {
 				System.err.println("-c must be followed by the name of a configuration file");
 				System.exit(-1);
 			}
-			// CAS568 says it next line; System.out.println("-c  Configuration file " + Globals.MAIN_PARAMS);
 		}
-		if (startsWithOption(args, "-p")) { // #CPU; CAS500
+		if (startsWithOption(args, "-p")) { // #CPU;
 			String x = getCommandLineOption(args, "-p"); 
 			try {
 				maxCPU = Integer.parseInt(x);	
@@ -97,7 +92,7 @@ public class SyMAPmanager extends ManagerFrame {
 			catch (Exception e){ System.err.println(x + " is not an integer. Ignoring.");}
 		}
 		
-		if (equalOption(args, "-sql")) {// check MySQL for important settings; CAS561 was -v
+		if (equalOption(args, "-sql")) {// check MySQL for important settings; 
 			Globals.bMySQL = true; 
 			System.out.println("-sql  check MySQL settings ");
 		}
@@ -132,10 +127,6 @@ public class SyMAPmanager extends ManagerFrame {
 			Constants.WRONG_STRAND_PRT = true;
 		}
 		
-		if (equalOption(args, "-pseudo")) { // CAS565 Apr25
-			System.out.println("-pseudo  On A&S, ONLY compute pseudo (v5.6.5 or later)");
-			Constants.PSEUDO_ONLY = true;
-		}
 		// CAS565 not shown on -h
 		if (equalOption(args, "-acs")) { // CAS556 July24; leave for possible updates
 			System.out.println("-acs  On A&S, ONLY execute the collinear sets computation");
@@ -166,11 +157,7 @@ public class SyMAPmanager extends ManagerFrame {
 			Globals.DBDEBUG = true;
 		}
 		
-		// experimental synteny tests - not shown in -h help; -brm is above
-		if (equalOption(args, "-bf")) {  // CAS567 experiment
-			System.out.println("-bf Tidy up blocks");
-			backend.synteny.SyntenyMain.bTrim = true;
-		}
+		// Synteny: experimental synteny tests - not shown in -h help; 
 		if (equalOption(args, "-bt")) {  
 			System.out.println("-bt Synteny trace");
 			backend.synteny.SyntenyMain.bTrace = true;

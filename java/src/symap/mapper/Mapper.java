@@ -238,10 +238,12 @@ public class Mapper extends JComponent
 	public static Color pseudoLineColorPN;
 	public static Color pseudoLineColorNP;
 	public static Color pseudoLineColorNN;
-	public static Color pseudoLineHoverColor;		// CAS520 renamed to Hover and use Highlight for Highlight	
-	public static Color pseudoLineGroupColor;		// CAS555 added for Query group and Gene popup	
+	public static Color pseudoLineHoverColor;			
+	public static Color pseudoLineGroupColor;		// Query group and Gene popup	
 	public static Color pseudoLineHighlightColor1;
 	public static Color pseudoLineHighlightColor2;
+	public static Color pseudoLineHighlightColor3;  // Block 3rd color; CAS571
+	public static Color pseudoLineHighlightColor4;  // Block 4th color
 	public static Color hitRibbonBackgroundColor;	
 	public static int 	hitRibbonWidth=3; 			
 	static {
@@ -257,5 +259,9 @@ public class Mapper extends JComponent
 		pseudoLineHighlightColor1 = props.getColor("pseudoLineHighlightColor1"); 
 		pseudoLineHighlightColor2 = props.getColor("pseudoLineHighlightColor2"); 
 		hitRibbonBackgroundColor = 	props.getColor("hitRibbonBackgroundColor"); 
+		
+		props = new PropertiesReader(Globals.class.getResource("/properties/annotation.properties"));// CAS571 added for 2 extra colors
+		pseudoLineHighlightColor3 = props.getColor("exonColorP"); 
+		pseudoLineHighlightColor4 = props.getColor("exonColorN"); 
 	}
 }

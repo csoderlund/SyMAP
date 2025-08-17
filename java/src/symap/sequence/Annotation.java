@@ -45,12 +45,15 @@ public class Annotation {
 	
 	private Vector <Annotation> exonVec = null; // determine during SeqPool load 
 	private String exonList=null; 				// build first time of popup
-	private String hitListStr1=null;  			// add to popup; computed in sequence.setExonList using coords 
+	private String hitListStr1=null;  			// add to popup; computed in sequence.setForGenePopup using coords 
 	private String hitListStr2=null;			// add HitList for other side to popup
+	private int [] hitIdxArr1=null, hitIdxArr2=null;  // set value when hitListStr is set
+	private boolean bHasHits=false;				// On creation, T if any hits; on display GeneNum, changed to T if hit for this pair; CAS571
 	
 	private boolean bGeneLineOpt=false; 		// Show line on all genes
 	private boolean bHighPopup=false;			// Highlight gene if popup
-	private boolean bShowGeneNum=true;			// Show text genenum
+	private boolean bShowGeneNum=false;			// Show text genenum
+	private boolean bShowGeneNumHit=false;		// Show text genenum
 	private boolean isPopup=false; 				// Gene has popup - highlight if bHighPopup
 	private boolean isHitPopup=false;			// Hit Popup highlights gene too, though gene Popup has precedence
 	
@@ -72,6 +75,7 @@ public class Annotation {
 		this.gene_idx = gene_idx;
 		this.annot_idx = idx;
 		this.genenum = genenum;
+		bHasHits = (numhits>0); // this could be from any synteny pair CAS571
 	
 		// see backend.AnnotLoadPost.computeTags for formatting
 		if (genenum==0) { 
@@ -98,11 +102,11 @@ public class Annotation {
 			Rectangle2D boundry,      // center of chromosome rectangle (rect.x+1,rect.y,rect.width-2,rect.height)
 			int startBP, int endBP,   // display start and end of chromosome 
 			double bpPerPixel, double dwidth, double hoverWidth, boolean flip, int offset, 
-			boolean bHighPopup, boolean bGeneLineOpt, boolean bShowGeneNum, int nG2xN) 
+			boolean bHighPopup, boolean bGeneLineOpt, boolean bShowGeneNum, boolean bShowGeneNumHit, int nG2xN) 
 	{
 		this.bGeneLineOpt=bGeneLineOpt; // used these 3 in paintComponent
 		this.bHighPopup=bHighPopup;
-		this.bShowGeneNum=bShowGeneNum; 
+		this.bShowGeneNum=bShowGeneNum;  this.bShowGeneNumHit=bShowGeneNumHit;
 		if (bShowGeneNum && nG2xN!=0 && !isG2xN)  this.bShowGeneNum=false; // CAS570 add 
 
 		double x, y, height;
@@ -179,8 +183,9 @@ public class Annotation {
 			else 	// Else draw as line 
 				g2.drawLine((int)rect.x, (int)rect.y, (int)rect.x + (int)rect.width, (int)rect.y); 
 			
-			// XXX Gene#      LastR is Rect, not text (Gray box drawn in Sequence.build)
-			if (itype==GENE_INT && bShowGeneNum) { 
+			// XXX Gene#      LastR is Rect, not text (Gray box drawn in Sequence.buildGraphics)
+			boolean doGeneNum = (bShowGeneNum && itype==GENE_INT) || (bShowGeneNumHit && showGeneHasHit());
+			if (doGeneNum) { 
 				 g2.setPaint(Color.black);
 				 g2.setFont(Globals.textFont);
 				 
@@ -228,6 +233,23 @@ public class Annotation {
 		if (itype == CENTROMERE_INT)	return centromereColor;
 
 		return Color.black; 
+	}
+	protected boolean showGeneHasHit() { // also used in Sequence.buildGraphics to show gray anno box
+		if (itype!=GENE_INT || !bHasHits) return false;
+		
+		if (!hasHitList()) {
+			bHasHits = seqObj.hasAnnoHit(1,this); // this sets hitListStr and hitIdxArr
+		}		 
+		if (bHasHits && seqObj.hasVisHit(1, hitIdxArr1)) return true;
+		
+		if (seqObj.hitsObj2==null) return false;
+		
+		if (!hasHitList2()) {
+			boolean b = seqObj.hasAnnoHit(2, this); // this sets hitList
+			if (b) bHasHits = true;				// may be T for hitList1, but the hit1 not visible
+		}
+		if (bHasHits && seqObj.hasVisHit(2, hitIdxArr2)) return true;
+		return false;
 	}
 	/////////////////////////////////////////////////////////////////////////
 	protected void clear() {// clears the rectangle coordinates so that the annotation will not be painted 
@@ -353,10 +375,25 @@ public class Annotation {
 		return SeqData.coordsStr(bStrandPos, start, end); // update
 	}
 	
-	protected boolean hasHitList() 			{return hitListStr1!=null; } 
-	protected void setHitList(String hList) {hitListStr1=hList;}  // Calls 1st time popup
-	protected boolean hasHitList2() 		{return hitListStr2!=null; } 
-	protected void setHitList2(String hList){hitListStr2=hList;} // hits on other side if tracks on both sides 
+	protected boolean hasHitList() 			{return hitListStr1!=null; } // means it has been set, but may not have hits
+	protected boolean hasHits() 			{return hitIdxArr1!=null;} // set and has hits; CAS571
+	protected void setHitList(String hList, TreeMap <Integer, String> scoreMap) { // Calls 1st time popup or show GeneNum
+		hitListStr1=hList;
+		if (scoreMap.size() > 0) {
+			hitIdxArr1 = new int [scoreMap.size()];
+			int i=0;
+			for (int idx : scoreMap.keySet()) hitIdxArr1[i++] = idx;
+		}
+	} 
+	protected boolean hasHitList2() 		{return hitListStr2!=null; } // hits on other side if tracks on both sides 
+	protected void setHitList2(String hList, TreeMap <Integer, String> scoreMap){
+		hitListStr2=hList;
+		if (scoreMap.size() > 0) {
+			hitIdxArr2 = new int [scoreMap.size()];
+			int i=0;
+			for (int idx : scoreMap.keySet()) hitIdxArr2[i++] = idx;
+		}
+	} 
 	
 	// for popup
 	protected void setExonList() { 

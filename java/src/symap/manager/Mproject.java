@@ -557,7 +557,7 @@ public class Mproject implements Comparable <Mproject> {
 		File pfile = Utils.getParamsFile(dir,Constants.paramsFile);  // CAS569 check if has .txt
 		if (pfile==null) { 				// If user created, no params file
 			finishParams();
-			writeNewParamsFile();
+			if (!ManagerFrame.inReadOnlyMode) writeNewParamsFile(); // CAS571 
 			return;
 		}
 	

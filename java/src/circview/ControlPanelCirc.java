@@ -50,11 +50,11 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
     private JButton scaleToggle, rotateToggle, revToggle, selfToggle; // CAS552 change to from checkbox to toggle
     
     private JButton viewPopupButton;  						// CAS552 replace JComboBox with popup
-    private String[] invOptions = {"All blocks","Inverted only","Non-inverted only","Two-color all blocks"};
-    private JRadioButtonMenuItem view0Radio	= new JRadioButtonMenuItem(invOptions[0]);
-    private JRadioButtonMenuItem view1Radio	= new JRadioButtonMenuItem(invOptions[1]);
-    private JRadioButtonMenuItem view2Radio	= new JRadioButtonMenuItem(invOptions[2]);
-    private JRadioButtonMenuItem view3Radio	= new JRadioButtonMenuItem(invOptions[3]);
+    private String[] actOptions = {"All blocks","Inverted only","Non-inverted only","Two-color all blocks"};
+    private JRadioButtonMenuItem view0Radio	= new JRadioButtonMenuItem(actOptions[0]);
+    private JRadioButtonMenuItem view1Radio	= new JRadioButtonMenuItem(actOptions[1]);
+    private JRadioButtonMenuItem view2Radio	= new JRadioButtonMenuItem(actOptions[2]);
+    private JRadioButtonMenuItem view3Radio	= new JRadioButtonMenuItem(actOptions[3]);
     
     private JButton colorButton;  						// CAS553 add
     private ColorDialogHandler cdh;
@@ -189,7 +189,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 		viewPopupButton.setMaximumSize(d);
 		viewPopupButton.setMinimumSize(d);
 		
-		viewPopupButton.setText(invOptions[0]);
+		viewPopupButton.setText(actOptions[0]);
 		view0Radio.setSelected(true);
     }
     /**********************************************************************
@@ -207,7 +207,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 			else return;
 			
 			circPanel.invChoice = idx;
-			viewPopupButton.setText(invOptions[idx]);
+			viewPopupButton.setText(actOptions[idx]);
 			circPanel.makeRepaint();
 		}
     }
@@ -268,7 +268,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
     
     /////////////////////////////////////////////////////////////////
 	protected void setLastParams(int inv, boolean self, boolean rotate, boolean scale) { // CAS553 add
-		viewPopupButton.setText(invOptions[inv]);
+		viewPopupButton.setText(actOptions[inv]);
 		selfToggle.setSelected(self); selfToggle.setBackground(Jcomp.getBorderColor(self));
 		scaleToggle.setSelected(scale); scaleToggle.setBackground(Jcomp.getBorderColor(scale));
 		rotateToggle.setSelected(rotate); rotateToggle.setBackground(Jcomp.getBorderColor(rotate));

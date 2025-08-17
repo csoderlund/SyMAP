@@ -23,8 +23,6 @@ import blockview.BlockViewFrame;
 /*****************************************
  * Load chromosome/draft/LG sequences to SyMAP database.
  * Also fix bad chars if any
- * CAS534 changed from props to Project; removed static on everything; CAS535 ignore sequences without prefixes
- * CAS541 UpdatePool->DBconn2; CAS557 split into multiple methods 
  */
 public class SeqLoadMain {
 	static int projIdx = 0;
@@ -77,7 +75,6 @@ public class SeqLoadMain {
 				plog.msg("  Unless you are ordering draft contigs,");
 				plog.msg("    It is recommended to reload with a higher Minimum Length setting, before proceeding");
 				plog.msg("    Use script/lenFasta.pl to determine Minimum Length to use to reduce number of loaded sequences");
-				//ErrorCount.inc(); CAS505 
 			}
 			updateSortOrder(grpList);
 			tdbc2.close();
@@ -87,7 +84,7 @@ public class SeqLoadMain {
 		return true;
 	}
 	/***************************************************************
-	 * Get vector of sequence files (CAS557 made separate method)
+	 * Get vector of sequence files 
 	 */
 	private boolean getSeqFiles() {	
 	try {
@@ -96,7 +93,7 @@ public class SeqLoadMain {
 		
 		if (seqFileName.equals("")) {
 			String seqDir = projDir + Constants.seqSeqDataDir; // created with Add Project
-			plog.msg("   Sequence_files not specified - use " + seqDir);
+			plog.msg("   Sequence_files " + seqDir + " (Default location)"); // CAS571 change
 			
 			if (!Utilities.pathExists(seqDir)) {
 				return rtError("Sequence files not found in " + seqDir);
@@ -170,7 +167,7 @@ public class SeqLoadMain {
 	catch (Exception e) {ErrorReport.print(e, "Getting sequence files"); return false;}
 	}
 	/***************************************************************
-	 * Load sequence files (CAS557 made separate method)
+	 * Load sequence files 
 	 */
 	private boolean loadSeqFiles() {
 	try {
@@ -243,7 +240,7 @@ public class SeqLoadMain {
 					if (grpName==null || grpFullName==null || grpName.equals("") || grpFullName.equals("")){	
 						return rtError("Unable to parse group name from:" + line);
 					}
-					String [] tl = line.split(" "); // CAS557 HSCHR19KIR_CA01-TB04_CTG3_1 fullName splits at "-"; want to show it all
+					String [] tl = line.split(" "); 
 					firstTok = (tl.length>0) ? tl[0] :  Utils.parseGrpFullName(line); 
 				} 	
 				else if (grpName!=null) { // sequence for valid grpName
@@ -321,10 +318,10 @@ public class SeqLoadMain {
 				grp + "','" + fullname + "'," + order + ",'0')" );
 		String sql = "select max(idx) as maxidx from xgroups where proj_idx=" + projIdx;
 		ResultSet rs = tdbc2.executeQuery(sql);
-		rs.next(); // CAS560 was first()
+		rs.next(); 
 		int grpIdx = rs.getInt("maxidx");
 		
-		// CAS553 add this check; max int in java is 2,147,483,647 (max human chr is 249M); can't test, run out of memory trying
+		// max int in java is 2,147,483,647 (max human chr is 249M); can't test, run out of memory trying
 		int seqlen = -1;
 		try {seqlen = seq.length();} // may set to a negative number
 		catch (Exception e) {seqlen = -1;}
@@ -350,8 +347,7 @@ public class SeqLoadMain {
 	}
 	/**************************************************************************/
 	private boolean rtError(String msg) {
-		plog.msgToFileOnly("*** " + msg);
-		// CAS567 is blank and does stays recorded in DB; Utilities.showWarningMessage("*** " + msg);
+		plog.msgToFile("*** " + msg); // CAS571 was msgToFileOnly
 		ErrorCount.inc();
 		tdbc2.close();
 		

@@ -21,20 +21,17 @@ import util.Jcomp;
 
 /**********************************************************
  * The upper row for the DotPlot
- * CAS533 I removed implements Observer, and it worked as before; 
- * 		but after removing Observer from Data, had to add plot.repaint 
- * CAS552 change Scale from CheckBox to Toggle; disabled Home when nothing to go home to.
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ControlPanel extends JPanel implements HelpListener {
     private Data data; 		// changes to zoom, etc set in data
     private Plot plot; 		// for show image and repaint
-    private Filter filter=null; 								// CAS533 add; was recreating every time 
+    private Filter filter=null; 								
     
     private JButton homeButton, minusButton, plusButton;
     private JButton filterButton, showImageButton, editColorsButton;
-    private JButton helpButtonLg, helpButtonSm, statsButton;	// CAS551 add Info & Stats button to replace statsOpt pull-down
-    private JButton scaleToggle; 							// CAS552 changed from JCheckBox    
+    private JButton helpButtonLg, helpButtonSm, statsButton;	
+    private JButton scaleToggle; 							 
     private JComboBox <Project> referenceSelector;
     private ColorDialogHandler cdh;
    
@@ -73,7 +70,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		statsButton = (JButton) Jcomp.createIconButton(this, hb, buttonListener,
 				"/images/s.png", "Stats Popup");
 		
-		JPanel row = Jcomp.createGrayRowPanel(); // CAS552 add row; changed spacing
+		JPanel row = Jcomp.createGrayRowPanel(); 
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
 		setLayout(gbl);
@@ -116,7 +113,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 				filter.showX();
 			}
 			else {
-			    if (src == homeButton) 			  data.setHome(); // CAS533 remove && data.getNumVisibleGroups() > 2
+			    if (src == homeButton) 			  data.setHome(); 
 			    else if (src == minusButton)      data.factorZoom(0.95);
 			    else if (src == plusButton)       data.factorZoom(1/0.95);
 			  
@@ -125,7 +122,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 			    	scaleToggle.setBackground(Jcomp.getBorderColor(data.bIsScaled));
 			    }
 			    else if (src == referenceSelector)data.setReference((Project)referenceSelector.getSelectedItem());
-			    else if (src == showImageButton)  ImageViewer.showImage("DotPlot", plot); // CAS532 data.getSyMAP().getImageViewer().showImage(plot);
+			    else if (src == showImageButton)  ImageViewer.showImage("DotPlot", plot); 
 			    else if (src == editColorsButton) cdh.showX();
 			    else if (src == helpButtonSm) 	  popupHelp();
 			    else if (src == statsButton)  	  popupStats();
@@ -170,7 +167,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		util.Utilities.displayInfoMonoSpace(this, "Quick Help", msg, false);
 	}
 	private void popupStats() {
-		String msg = plot.getStats();
+		String msg = plot.prtCntsS(); // CAS571 renamed
 		util.Utilities.displayInfoMonoSpace(this, "Dot plot stats", msg, false);
 	}
 }

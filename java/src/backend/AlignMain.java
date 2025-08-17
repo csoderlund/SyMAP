@@ -98,7 +98,7 @@ public class AlignMain {
 			if (toDoQueue.size() > 0) {
 				String program = toDoQueue.peek().program.toUpperCase();
 				String msg = "\nRunning " + program + ": " + toDoQueue.size() + " alignments to perform";
-				if (nAlignDone>0) msg += " (" + nAlignDone + " previously completed)"; // CAS566 add
+				if (nAlignDone>0) msg += " (" + nAlignDone + " previously completed)"; 
 				if (toDoQueue.size()>nMaxCPUs) msg += " using "+ nMaxCPUs + " CPUs";
 				plog.msg(msg);
 			}
@@ -168,10 +168,7 @@ public class AlignMain {
 		try {
 			String alignDir = Constants.getNameResultsDir(proj1Dir, proj2Dir) + Constants.alignDir;
 			File f = new File(alignDir);
-			if (!f.exists()) {	/*-- alignments to be done --*/
-				paramsWrite();
-				return false;
-			}
+			if (!f.exists()) return false;	/*-- alignments to be done CAS571 was written .used... --*/
 			
 			boolean bdone = Utils.checkDoneFile(alignDir); // all.done
 			nAlignDone = Utils.checkDoneMaybe(alignDir);   // # existing .mum files
@@ -183,11 +180,10 @@ public class AlignMain {
 				return true;
 			}
 			/*-------- Alignments to be done ------*/
-			paramsWrite();
 			
 			if (nAlignDone==0) return false; // do all
 			
-			/* If !bDone && nAlign>0, probably did not finish; output state CAS566 add 
+			/* If !bDone && nAlign>0, probably did not finish; 
 			 * This is strictly to let the user know what is being done 
 			 * See buildAlignments ps.isDone() */
 			HashSet <String> fdone = new HashSet <String> ();
@@ -215,10 +211,10 @@ public class AlignMain {
 	 * If align, write to params_used, else read it. This is not in the /align directory, but its main directory
 	 * CAS568 add; nothing else has to be changed for this
 	 */
-	private void paramsWrite() {
+	private void mummerParamsWrite() {
 		try {
 			alignParams = "MUMmer files " + Utilities.getDateTime() + "   CPUs: " + nMaxCPUs + "\n";
-			alignParams += mp.getAlign(Mpair.FILE, true); // true, do not add command line
+			alignParams += mp.getChgAlign(Mpair.FILE, true); // true, do not add command line
 			if (Ext.isMummer4Path()) alignParams += Ext.getMummerPath() + " ";
 			
 			//String resultDir = "./" + Constants.getNameResultsDir(mProj1.strDBName, mProj2.strDBName);
@@ -259,7 +255,8 @@ public class AlignMain {
 		/* create directories */
 			// result directory (e.g. data/seq_results/demo1_to_demo2)
 			Utilities.checkCreateDir(resultDir, true /* bPrt */);
-					
+			mummerParamsWrite(); // CAS571 write here after creating the directory
+			
 			// temporary directories to put data for alignment
 			String tmpDir =  Constants.getNameTmpDir(proj1Dir, proj2Dir);
 			Utilities.checkCreateDir(tmpDir, false);

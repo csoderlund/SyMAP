@@ -13,33 +13,20 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.TreeSet;
-import java.util.Vector;
 
-import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JSplitPane;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 
-import java.sql.ResultSet;
-
-import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import symap.drawingpanel.Frame2d;
 import symap.drawingpanel.SyMAP2d;
@@ -54,6 +41,7 @@ import dotplot.DotPlotFrame;
 
 /*****************************************************
  * Chromosome Explorer: Displays left side and controls right (circle, 2d, dotplot)
+ * CAS571 moved Download Blocks to Manager
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ChrExpFrame extends JFrame implements HelpListener {
@@ -264,7 +252,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		controlPanel.add( projPanel );
 		controlPanel.add( infoCollapsiblePanel ); 	controlPanel.add( Box.createVerticalStrut(20) );
 		controlPanel.add( createViewControlBar() );	controlPanel.add( Box.createVerticalStrut(10) );
-		controlPanel.add( createDownloadBar());		controlPanel.add( Box.createVerticalStrut(10) );
+		//controlPanel.add( createDownloadBar());		controlPanel.add( Box.createVerticalStrut(10) );
 		controlPanel.add( Box.createVerticalGlue() );
 		
 		splitPane.setLeftComponent(controlPanel);
@@ -481,216 +469,5 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		
 		return null;
 	}
-	/*****************************************************************
-	 * Download
-	 */
-	private JPanel createDownloadBar() {
-		final JPopupMenu downpopup = new JPopupMenu();
-		downpopup.add(new JMenuItem(new AbstractAction("Blocks with gene info") {
-			private static final long serialVersionUID = 4692812516440639008L;
-			public void actionPerformed(ActionEvent e) {
-				downloadBlocks();
-			}
-		}));
-		downpopup.add(new JMenuItem(new AbstractAction("Blocks only") { 
-			private static final long serialVersionUID = 4692812516440639008L;
-			public void actionPerformed(ActionEvent e) {
-				downloadBlocksOnly();
-			}
-		}));
-		downpopup.add(new JMenuItem(new AbstractAction("Blocks summary") { 
-			private static final long serialVersionUID = 4692812516440639008L;
-			public void actionPerformed(ActionEvent e) {
-				downloadBlocksSum();
-			}
-		}));
-		
-		JPanel pnl = new JPanel();
-		pnl.setLayout( new BoxLayout(pnl, BoxLayout.LINE_AXIS) );
-		pnl.setAlignmentX(LEFT_ALIGNMENT);
-		JButton btn = new JButton("Download Blocks...");
-		btn.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {     		
-        		downpopup.show(e.getComponent(), e.getX(), e.getY());
-            }
-        });	
-			
-		pnl.add(btn);
-		return pnl;
-	}
-	/*****************************************************************/
-	private void downloadBlocksSum() { 
-		try { 
-    		String filename = Globals.getExport(); 
-			JFileChooser chooser = new JFileChooser(filename);
-			chooser.setSelectedFile(new File("blocksSum.tsv"));
-			
-			if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
-			if (chooser.getSelectedFile() == null) return;
-				
-			File f = chooser.getSelectedFile();
-			if (f.exists()) {
-				if (JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(null,"The file exists, do you want to overwrite it?", 
-						"File exists",JOptionPane.YES_NO_OPTION)) return;
-				f.delete();
-			}
-			
-			f.createNewFile();
-			PrintWriter out = new PrintWriter(new FileWriter(chooser.getSelectedFile()));
-			Vector<String> row = new Vector<String>();
-			row.add("Species1"); row.add("Species2"); row.add("Chr1"); row.add("Chr2"); row.add("#Blocks"); row.add("#Hits"); 
-			out.println(join(row, "\t"));
-			
-			Vector<String> projList = new Vector<String>();
-			Mproject[] projects = mapper.getProjects();
-			for (Mproject p : projects) projList.add(String.valueOf(p.getID()));
-			
-			String projStr = join(projList,",");
-			String query = "select p1.name, p2.name, g1.name, g2.name, b.blocknum ,b.score " +
-			" from blocks as b join xgroups as g1 on g1.idx=b.grp1_idx join xgroups as g2 on g2.idx=b.grp2_idx " +
-			" join projects as p1 on p1.idx=b.proj1_idx join projects as p2 on p2.idx=b.proj2_idx " +
-			" where p1.idx in (" + projStr + ") and p2.idx in (" + projStr + ") " +
-			" order by p1.name asc, p2.name asc, g1.name asc, g2.name asc, b.blocknum asc";
-			
-			ResultSet rs = tdbc2.executeQuery(query);
-			
-			String p1="", p2="", n1="", n2="";
-			int bn=0, sn=0;
-			while (rs.next()){
-				String xp1 = rs.getString(1);
-				String xp2 = rs.getString(2);
-				String xn1 = rs.getString(3);
-				String xn2 = rs.getString(4);
-				int xsn = rs.getInt(6);
-				
-				if (!xp1.equals(p1) || !xp2.equals(p2) ||  !xn1.equals(n1) || !xn2.equals(n2)) {
-					if (bn>0) out.println(p1 + "\t" + p2 + "\t" + n1 + "\t" + n2 + "\t" + bn +  "\t" + sn);
-					
-					p1 = xp1; p2 = xp2; n1 = xn1; n2 = xn2;
-					bn=sn=0;
-				}
-				bn ++;
-				sn += xsn;
-			}
-			if (bn>0) out.println(p1 + "\t" + p2 + "\t" + n1 + "\t" + n2 + "\t" + bn + "\t" + sn);
-			out.close();
-			
-			System.out.println("Wrote to " + f.getAbsolutePath());
-		} catch(Exception e) {ErrorReport.print(e, "Generate blocks summary");}
-	}
-	/*****************************************************************/
-	private void downloadBlocksOnly() { 
-		try { 
-    		String filename = Globals.getExport(); 
-			JFileChooser chooser = new JFileChooser(filename);
-			chooser.setSelectedFile(new File("blocks.tsv"));
-			
-			if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
-			if (chooser.getSelectedFile() == null) return;
-				
-			File f = chooser.getSelectedFile();
-			if (f.exists()) {
-				if (JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(null,"The file exists, do you want to overwrite it?", 
-						"File exists",JOptionPane.YES_NO_OPTION)) return;
-				f.delete();
-			}
-			
-			f.createNewFile();
-			PrintWriter out = new PrintWriter(new FileWriter(chooser.getSelectedFile()));
-			Vector<String> row = new Vector<String>();
-			row.add("Species1"); row.add("Species2"); row.add("Chr1"); row.add("Chr2"); row.add("BlkNum");
-			row.add("#Hits"); row.add("Start1"); row.add("End1"); row.add("Start2"); row.add("End2"); 
-
-			out.println(join(row, "\t"));
-			
-			Vector<String> projList = new Vector<String>();
-			Mproject[] projects = mapper.getProjects();
-			for (Mproject p : projects) {
-				projList.add(String.valueOf(p.getID()));
-			}
-			String projStr = join(projList,",");
-			String query = "select p1.name, p2.name, g1.name, g2.name, b.blocknum ,b.score, b.start1, b.end1," +
-			" b.start2,b.end2 " +
-			" from blocks as b join xgroups as g1 on g1.idx=b.grp1_idx join xgroups as g2 on g2.idx=b.grp2_idx " +
-			" join projects as p1 on p1.idx=b.proj1_idx join projects as p2 on p2.idx=b.proj2_idx " +
-			" where p1.idx in (" + projStr + ") and p2.idx in (" + projStr + ") " +
-			" order by p1.name asc, p2.name asc, g1.name asc, g2.name asc, b.blocknum asc";
-			
-			ResultSet rs = tdbc2.executeQuery(query);
-			while (rs.next()){
-				for(int i = 1; i <= row.size(); i++){
-					row.set(i-1, rs.getString(i));
-				}
-				out.println(join(row, "\t"));
-			}
-			out.close();
-			
-			System.out.println("Wrote to " + f.getAbsolutePath());
-		} catch(Exception e) {ErrorReport.print(e, "Generate blocks only");}
-	}
-	/*****************************************************************/
-    private void downloadBlocks() {
-    	try { 
-    		String filename = Globals.getExport(); 
-			JFileChooser chooser = new JFileChooser(filename);
-			chooser.setSelectedFile(new File("blocksPlus.tsv"));
-			
-			if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
-			if (chooser.getSelectedFile() == null) return;
-				
-			File f = chooser.getSelectedFile();
-			if (f.exists()) {
-				if (JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(null,"The file exists, do you want to overwrite it?", 
-						"File exists",JOptionPane.YES_NO_OPTION)) return;
-				f.delete();
-			}
-			
-			f.createNewFile();
-			PrintWriter out = new PrintWriter(new FileWriter(chooser.getSelectedFile()));
-			Vector<String> row = new Vector<String>();
-			row.add("Species1"); row.add("Species2"); row.add("Chr1"); row.add("Chr2"); row.add("BlkNum");
-			row.add("Start1"); row.add("End1"); row.add("Start2"); row.add("End2"); row.add("#Hits");
-			row.add("Genes1"); row.add("%Genes1"); row.add("Genes2"); row.add("%Genes2"); row.add("PearsonR");
-			out.println(join(row, "\t"));
-			
-			Vector<String> projList = new Vector<String>();
-			Mproject[] projects = mapper.getProjects();
-			for (Mproject p : projects) {
-				projList.add(String.valueOf(p.getID()));
-			}
-			String projStr = join(projList,",");
-			String query = "select p1.name, p2.name, g1.name, g2.name, b.blocknum, b.start1, b.end1," +
-			" b.start2,b.end2,b.score,b.ngene1,b.genef1,b.ngene2,b.genef2,b.corr " +
-			" from blocks as b " +
-			" join xgroups as g1 on g1.idx=b.grp1_idx " +
-			" join xgroups as g2 on g2.idx=b.grp2_idx " +
-			" join projects as p1 on p1.idx=b.proj1_idx " +
-			" join projects as p2 on p2.idx=b.proj2_idx " +
-			" where p1.idx in (" + projStr + ") and p2.idx in (" + projStr + ") " +
-			" order by p1.name asc, p2.name asc, g1.name asc, g2.name asc, b.blocknum asc"; 
-			
-			ResultSet rs = tdbc2.executeQuery(query);
-			while (rs.next()){
-				for(int i = 1; i <= row.size(); i++){
-					row.set(i-1, rs.getString(i));
-				}
-				out.println(join(row, "\t"));
-			}
-			out.close();
-			
-			System.out.println("Wrote to " + f.getAbsolutePath());
-		} catch(Exception e) {ErrorReport.print(e, "Generate blocks with genes");}
-    }
-    private String join(Collection<?> s, String delimiter)  {// CAS569 moved from Utils
-		String buffer = "";
-	    Iterator<?> iter = s.iterator();
-	    while (iter.hasNext()) 
-	    {
-	    	buffer += iter.next().toString();
-	        if (iter.hasNext()) 
-	        	buffer += delimiter;
-	    }
-        return buffer;	
-	} 
 }
 

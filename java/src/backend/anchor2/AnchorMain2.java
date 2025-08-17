@@ -41,6 +41,7 @@ public class AnchorMain2 {
 	protected Mproject mProj1, mProj2;
 	protected int topN=0;
 	
+	protected long cntRawHits=0; // CAS571 add to logged output
 	protected int cntG2=0, cntG1=0, cntG0=0, cntClusters=0; 			// GrpPair.saveClusterHits
 	protected int cntG2Fil=0, cntG1Fil=0, cntG0Fil=0, cntPileFil=0;   	// GrpPair.createClusters
 	protected int cntWS=0;												// GrpPair.GrpPairGx 
@@ -110,7 +111,7 @@ public class AnchorMain2 {
 		clearTree();
 		
 		Globals.rclear();
-		Utils.prtIndentMsgFile(plog, 1, "Final totals");	
+		Utils.prtIndentMsgFile(plog, 1, String.format("Final totals    Raw hits %,d", cntRawHits));	
 		
 		String msg1 = String.format("Clusters  Both genes %,8d   One gene %,8d   No gene %,8d",
 				cntG2, cntG1, cntG0);
@@ -416,6 +417,8 @@ public class AnchorMain2 {
 		Globals.rclear();
 		String x =  (cntLongHit>0) ? String.format("Long Hits %,d", cntLongHit) : "";
 		String msg = String.format("Load %s  Hits %,d (EQ %,d NE %,d) %s", fileName, hitNum, hitEQ, hitNE, x);
+		cntRawHits += hitNum;
+		
 		if (Arg.VB)  Utils.prtIndentMsgFile(plog, 1, msg); else Globals.rprt(msg);	
 		if (cntNoChr>0) { 
 			if (noChrSetQ.size()>0) {

@@ -33,10 +33,6 @@ import util.Utilities;
 
 /***********************************************
  * Create report of collinear genes or genes matches
- * CAS562 rewrote union logic so unions are exact groups to show. Add TSV, Exact, Union header
- * CAS563 add links; make Output a class and merge some TSV/HTML methods
- * 	Cluster was too weird being reference based, so created UtilReportNR to simply create non-ref report
- *  Renamed from TableReport.
  */
 public class UtilReport extends JDialog {
 	private static final long serialVersionUID = 1L;
@@ -110,7 +106,7 @@ public class UtilReport extends JDialog {
 	protected UtilReport(TableMainPanel tdp) { // called 1st time for a Table; the report options can change, but not query
 		this.tdp = tdp;			// rows of the table are read for report
 		
-		queryMultiN3 = tdp.queryPanel.getMultiN();	// CAS565 was zero if a diff query was done and then came back to this table
+		queryMultiN3 = tdp.queryPanel.getMultiN();	
 		spPanel = tdp.queryPanel.speciesPanel;
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -157,7 +153,7 @@ public class UtilReport extends JDialog {
 				"Enter comma-delimited list of keywords from All_Anno column for one or more species."));
 		optPanel.add(row);
 		
-		// width may change if longer species name; CAS563 added to make constant width columns
+		// width may change if longer species name;
 		for(int x=0; x<nSpecies; x++) {
 			radSpecies[x] = Jcomp.createRadio(spPanel.getSpName(x)); 
 			width = Math.max(width, radSpecies[x].getPreferredSize().width);
@@ -201,7 +197,7 @@ public class UtilReport extends JDialog {
 	private void createDisplay() {
 		radAllSpRow   = Jcomp.createRadio("Per Row", "Each row must have all species"); 
 		radLinkRow    = Jcomp.createRadio("+Link", "Each row must have all species and at least one link"); 
-		radAllLinkRow= Jcomp.createRadio("All Link", "Each row must have all genes linked (joined by a hit)");
+		radAllLinkRow = Jcomp.createRadio("All Link", "Each row must have all genes linked (joined by a hit)");
 		radAllSpUnion = Jcomp.createRadio("Per Union", "Union of overlapping collinear sets must have all species"); 
 		radAllSpIgn   = Jcomp.createRadio("Ignore", "Show everything, regardless of missing species"); 
 		
@@ -459,7 +455,7 @@ public class UtilReport extends JDialog {
 			trd.loadRow(row);
 			
 			if (trd.spIdx[0]!=refSpIdx && trd.spIdx[1]!=refSpIdx) continue;
-			if (trd.geneTag[0].endsWith(Q.pseudo) && trd.geneTag[0].split(Q.SDOT).length<3) continue; //include numbered pseudo; CAS565 
+			if (trd.geneTag[0].endsWith(Q.pseudo) && trd.geneTag[0].split(Q.SDOT).length<3) continue; //include numbered pseudo; 
 			if (trd.geneTag[1].endsWith(Q.pseudo) && trd.geneTag[1].split(Q.SDOT).length<3) continue;
 			
 			rowDataVec.add(trd);	
@@ -469,7 +465,7 @@ public class UtilReport extends JDialog {
 		// build geneVec from rowDataVec: create Gene object from reference genes
 		HashMap <String, Gene> tmpRefMap = new HashMap <String, Gene> (); // tag to gene 
 		
-		for (TmpRowData rd : rowDataVec) { 	// CAS563 nonRef was added separately
+		for (TmpRowData rd : rowDataVec) { 	// nonRef was added separately
 			int i = -1;						// if >2 species and a middle one selected, may be in 1st or 2nd column
 			if      (rd.spIdx[0]==refSpIdx)  i=0;
 			else if (rd.spIdx[1]==refSpIdx)  i=1;	
@@ -891,7 +887,7 @@ public class UtilReport extends JDialog {
 				if (allVal=="") allVal = isNone; 
 				nAnnoMap.put(tag, allVal);		// replace row number with anno 
 			}
-			int cutoff = (int) ((double)nAnnoMap.size()*0.01); // CAS563 a keyword may not show on Column because <50; but not show as missing
+			int cutoff = (int) ((double)nAnnoMap.size()*0.01); // a keyword may not show on Column because <50; but not show as missing
 			Globals.tprt("Keyword cutoff: " + cutoff + " from " + nAnnoMap.size());
 			for (String key : keyCntMap.keySet()) {	
 				if (keyCntMap.get(key)<cutoff) 	
@@ -1074,7 +1070,7 @@ public class UtilReport extends JDialog {
 		private HashMap <String, String> nAnnoMap  = new HashMap <String, String> (); // gene#, value
 	}
 	/***********************************************************************
-	 * XXX Output CAS563 make class and share more between tsv and html
+	 * XXX Output: make class and share more between tsv and html
 	 */
 	private class Zoutput {
 		int gnIdx=0, unIdx=0;	// Index into geneVec; index into unionVec
@@ -1090,11 +1086,11 @@ public class UtilReport extends JDialog {
 		private void runReport() {
 			String report=null;
 			if (bExTsv) 	report = reportTSV();
-			else 					report = reportHTML();
+			else 			report = reportHTML();
 			if (report==null) return;
 			
 			if (bPopHtml) {
-				util.Jhtml.showHtmlPanel(null, (title+" " + refSpName), report); // CAS563 weird behavior if attached to this
+				util.Jhtml.showHtmlPanel(null, (title+" " + refSpName), report); 
 			}
 			else {
 				outFH = getFileHandle();
@@ -1106,7 +1102,7 @@ public class UtilReport extends JDialog {
 		}
 		
 		/**************************************************
-		 * build CSV for file; uses geneVec and spAnnoMap; CAS562 add
+		 * build CSV for file; uses geneVec and spAnnoMap; 
 		 * Does not have repetitive Ref Tag isAll
 		 */
 		private String reportTSV() {
@@ -1484,6 +1480,7 @@ public class UtilReport extends JDialog {
 			PrintWriter out=null;
 			try {
 				out = new PrintWriter(new FileOutputStream(saveFileName, false));
+				Globals.prt("Write to " + saveFileName); // CAS571 add
 			}
 			catch (Exception e) {ErrorReport.print(e, "Cannot open file - " + saveFileName);}
 			

@@ -24,14 +24,13 @@ import colordialog.ColorListener;
 
 /******************************************************************
  * Help Box on left side of Chromosome explorer and bottom of other displays
- * CAS521 removed lots of dead code
  */
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class HelpBar extends JPanel 
 					 implements MouseListener, MouseMotionListener, ActionListener, ColorListener 
 {
-	private static final Font helpFont = new Font("Courier", 0, 12); // CAS541 Courier
+	private static final Font helpFont = new Font("Courier", 0, 12); 
 	private static final Color helpColor = Color.black;
 	private static final Color helpBackgroundColor = Color.white;
 	private final String helpText = "Move the mouse over an object for further information.";
@@ -41,7 +40,7 @@ public class HelpBar extends JPanel
 	
 	private HashMap<Component,Object> comps;
 
-	public HelpBar(int width, int height) {
+	public HelpBar(int width, int height) {// Values -1, 17 if help is on the bottom
 		super(false);
 
 		comps = new HashMap<Component,Object>();
@@ -72,8 +71,12 @@ public class HelpBar extends JPanel
 			help = helpText; 
 		}
 		else {
-			if (getSize().height < 50)
-				help = help.replaceAll("\n", " ");
+			if (getSize().height < 50) {
+				help = help.replaceAll("\n", "   ");
+				help = help.replaceAll(":    ", ": ");
+				help = help.replaceAll(":   ", ": ");
+				help = help.replaceAll(":  ", ": "); // CAS571 formated for Information box; don't need extra space on bottom
+			}
 		}
 		helpLabel.setText(help);
 		currentHelpObj = obj;	

@@ -1,21 +1,25 @@
 package symap.manager;
 
-import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.HashMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 
@@ -26,22 +30,29 @@ import util.Utilities;
 
 /**********************************************
  * The parameter window for Alignment&Synteny
+ * CAS565 Pseudo, CAS567 Orient, Concat (from Main); CAS568 Order, Mask(from ProjParam); 
+ * CAS571 Strict, Clust&Syn
  */
 
 public class PairParams extends JDialog {
 	private static final long serialVersionUID = 1L;
 	
+	// ManagerFrame.alignSelectedPair and updateEnableButtons use similar text
+	private String opt0Alt =       "Align&Synteny"; // Manager button Selected Pair
+	private String[] actOptions = {"Clust&Synteny", // Manager button Selected Redo
+								   "Synteny Only","Number Pseudo"}; // Manager button sets from mp.bSynOnly...
+	   
 	// Order MUST be same in createMainPanel and setValue and getValue; defaults are in Mpair
 	// These are NOT in the order displayed, but do not change without changing access everywhere else
 	private String [] LABELS = { // Order must be same as createMainPanel
-		"Min hits", "Merge", "Same orient",		// CAS567 add Orient, better order; Dots->hits; lc 2nd word; 
-		"None", "Order1", "Order2", 			// replaced with Order with dem1->dem2;  CAS568 add 
-		"Concat",  "Mask1", "Mask2", 			// replaced Mask with dem1 or dem2;  CAS568 add; CAS567 add Concat 
+		"Min hits", "Merge", "Same orient",	
+		"None", "Order1", "Order2", 			 
+		"Concat",  "Mask1", "Mask2", 		
 		"NUCmer args", "PROmer args", "Self args", "NUCmer only","PROmer only", // mummer:
-		"Number pseudo", 											// CAS565 add
+		"Number pseudo", 											
 		"Algorithm 1 (modified original)", "Algorithm 2 (exon-intron)",  
 		"Top N piles", 
-		"Gene", "Exon", "Len","G0_Len", // CAS569 put GO on end and process in this order
+		"Gene", "Exon", "Len","G0_Len", 
 		"EE", "EI", "En", "II", "In"
 	};
 	
@@ -54,23 +65,27 @@ public class PairParams extends JDialog {
 		"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
 		"number_pseudo", "algo1", "algo2",
 		"topn",					
-		"gene_scale", "exon_scale", "len_scale","g0_scale",// CAS569 put GO on end
+		"gene_scale", "exon_scale", "len_scale","g0_scale",
 		"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
 	};
 	
 	private Mpair mp = null;
 	private Mproject mProj1 = null, mProj2 = null;
+	private ManagerFrame manFrame=null;
+	private boolean isAlignDone;	// Could be A or check; mp.hasSynteny() determines which
 	
-	protected PairParams(Mpair mp) {
+	protected PairParams(Mpair mp, ManagerFrame manFrame, boolean alignDone) {
 		this.mp = mp;
 		this.mProj1 = mp.mProj1;
 		this.mProj2 = mp.mProj2;
+		this.manFrame = manFrame;
+		this.isAlignDone = alignDone;
 		
 		createMainPanel();
-		setDefaults(mp.getFileParams(), false);
+		setInit();
 		
 		setModal(true);
-		setTitle(mProj1.strDBName + Constants.projTo + mProj2.strDBName + Constants.paramsFile); // CAS569 params was hard-coded
+		setTitle(mProj1.strDBName + Constants.projTo + mProj2.strDBName + Constants.paramsFile); 
 	}
 	/*********************************************************************/
 	private void createMainPanel() {
@@ -86,9 +101,11 @@ public class PairParams extends JDialog {
 		
 		int x=0;	// SAME ORDER AS array
 		// synteny
-		lblMinDots = Jcomp.createLabel(LABELS[x++]); txtMinDots = Jcomp.createTextField("7", "Miniumum hits in a block", numWidth);
-		chkMergeBlocks =Jcomp.createCheckBox(LABELS[x++], "Merge overlapping (or nearby) synteny blocks", false); 
-		chkSameOrient =Jcomp.createCheckBox(LABELS[x++], "Blocks must have hits in same orientation", false); 
+		lblMinDots = Jcomp.createLabel(LABELS[x++]); 
+		txtMinDots = Jcomp.createTextField("7", "Miniumum hits in a block", numWidth);
+		
+		chkMergeBlocks = Jcomp.createCheckBox(LABELS[x++], "Merge overlapping (or nearby) synteny blocks", false); 
+		chkSameOrient = Jcomp.createCheckBox(LABELS[x++], "Blocks must have hits in same orientation", false); 
 		
 		String tip1 =  mProj1.strDisplayName + " order against " + mProj2.strDisplayName;
 		String tip2 =  mProj2.strDisplayName + " order against " + mProj1.strDisplayName;
@@ -156,32 +173,34 @@ public class PairParams extends JDialog {
 		chkInpile = Jcomp.createCheckBox(LABELS[x++],"Keep In and nI piles", false); 
 		
 		// bottom row
-		btnKeep = Jcomp.createButton("Save", "Save parameters and exit"); // CAS569 Keep->Save to match project params
+		btnKeep = Jcomp.createButton("Save", "Save parameters and exit"); 
 		btnKeep.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				save();
+				setSave();
 			}
 		});
 		btnLoadDef = Jcomp.createButton("Defaults", "Set defaults");
 		btnLoadDef.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				setDefaults(mp.getDefaults(), true);
+				setDefaults();
 			}
 		});
 		btnDiscard = Jcomp.createButton("Cancel", "Cancel changes and exit");
 		btnDiscard.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				setVisible(false);
+				setCancel();
 			}
 		});
+		btnActPop = Jcomp.createButton("tmp label", "Click button for menu of options; Must be 'Save' to take effect.");
+		createPopup();
+		
 		/*-------- Create Layout ------------------*/
 		//////////////////////////////////////////////////////////////////////////
 		JPanel row = Jcomp.createRowPanel();
-		String plab = mProj1.strDisplayName + " (" + mProj1.getdbAbbrev() +  ") and " + 
+		String plab = mProj1.strDisplayName + " (" + mProj1.getdbAbbrev() +  ") & " + 
 					  mProj2.strDisplayName + " (" + mProj2.getdbAbbrev() + ")";
-		JLabel projLabel = Jcomp.createLabel(plab);
-		row.add(projLabel); row.add(Box.createVerticalStrut(5));
-		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5)); // CAS567 moved Verbose to Main
+		row.add(Jcomp.createLabel(plab)); 
+		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5)); 
 	
 		// Alignment
 		row = Jcomp.createRowPanel();
@@ -190,10 +209,10 @@ public class PairParams extends JDialog {
 		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
 		
 		row = Jcomp.createRowPanel();
-		row.add(chkConcat);								// CAS567 moved from Main
+		row.add(chkConcat);								
 		row.add(Box.createHorizontalStrut(15));
-														// CAS568 moved from project
-		row.add(chkMask1);	row.add(Box.createHorizontalStrut(5));	// CAS568 move from project param
+														
+		row.add(chkMask1);	row.add(Box.createHorizontalStrut(5));	
 		row.add(chkMask2);						
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
 		
@@ -230,7 +249,7 @@ public class PairParams extends JDialog {
 		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param2Clust));
 		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
 		
-		row = Jcomp.createRowPanel(); // CAS565 add
+		row = Jcomp.createRowPanel(); 
 		row.add(chkPseudo);
 		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
 		
@@ -289,9 +308,8 @@ public class PairParams extends JDialog {
 		row = Jcomp.createRowPanel();
 		row.add(lblMinDots); row.add(Box.createHorizontalStrut(3));
 		row.add(txtMinDots); row.add(Box.createHorizontalStrut(8));
-		
-		row.add(chkSameOrient);row.add(Box.createHorizontalStrut(8));
-		row.add(chkMergeBlocks);
+		row.add(chkSameOrient);  row.add(Box.createHorizontalStrut(5));
+		row.add(chkMergeBlocks); 
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(3));
 		
 		// order against
@@ -309,12 +327,12 @@ public class PairParams extends JDialog {
 		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(5)); 
 		
 		row = Jcomp.createRowPanel();
-		JPanel buttonPanel = new JPanel();
-		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
-		buttonPanel.setBackground(Color.WHITE);
-		buttonPanel.add(btnKeep);		buttonPanel.add(Box.createHorizontalStrut(5));
-		buttonPanel.add(btnLoadDef);	buttonPanel.add(Box.createHorizontalStrut(5));
-		buttonPanel.add(btnDiscard);	buttonPanel.add(Box.createHorizontalStrut(5));
+		JPanel buttonPanel = Jcomp.createRowPanel();
+		buttonPanel.add(btnActPop);		buttonPanel.add(Box.createHorizontalStrut(14));
+		buttonPanel.add(btnKeep);		buttonPanel.add(Box.createHorizontalStrut(3));
+		buttonPanel.add(btnLoadDef);	buttonPanel.add(Box.createHorizontalStrut(3));
+		buttonPanel.add(btnDiscard);		
+		
 		buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		
 		row.add(Box.createHorizontalGlue());
@@ -330,7 +348,54 @@ public class PairParams extends JDialog {
 		pack();
 		setResizable(false);
 		setLocationRelativeTo(null); 
-	}/************************************************************************/
+	}
+	/******************************************************/
+	private void createPopup() {
+		if (!isAlignDone) actOptions[0] = opt0Alt; 
+		act0Radio	= new JRadioButtonMenuItem(actOptions[0]);
+		act1Radio	= new JRadioButtonMenuItem(actOptions[1]);
+		act2Radio	= new JRadioButtonMenuItem(actOptions[2]);
+		    
+		PopupListener listener = new PopupListener();
+		act0Radio.addActionListener(listener);
+		act1Radio.addActionListener(listener);
+		act2Radio.addActionListener(listener);
+		
+    	JPopupMenu popupMenu = new JPopupMenu();
+		popupMenu.setBackground(symap.Globals.white);
+		
+		JMenuItem popupTitle = new JMenuItem();
+		popupTitle.setText("Select Task");
+		popupTitle.setEnabled(false);
+		popupMenu.add(popupTitle);
+		popupMenu.addSeparator();
+		
+		popupMenu.add(act0Radio);
+		popupMenu.add(act1Radio);
+		popupMenu.add(act2Radio);
+		
+		if (!mp.hasSynteny()) {
+			act1Radio.setEnabled(false);
+			act2Radio.setEnabled(false);
+		}
+		
+		ButtonGroup grp = new ButtonGroup();
+		grp.add(act0Radio); grp.add(act1Radio); grp.add(act2Radio); 
+		
+		btnActPop.setComponentPopupMenu(popupMenu); // zoomPopupButton create in main
+		btnActPop.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+            }
+        });
+		Dimension d = new Dimension(120, 30); // w,d
+		btnActPop.setPreferredSize(d); btnActPop.setMaximumSize(d); btnActPop.setMinimumSize(d);
+		
+		if (mp.bSynOnly) setPopup(act1Radio);
+		else if (mp.bPseudo) setPopup(act2Radio);
+		else setPopup(act0Radio);
+	}
+	/************************************************************************/
 	private String getValue(String symbol) {// ORDER MUST BE SAME AS array
 		int x=0;
 		
@@ -403,14 +468,60 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	chkInpile.setSelected(value.equals("1"));
 	}
 	/************************************************************************/
-	private void setDefaults(HashMap <String, String> valMap,  boolean setDef) {// File values or default
+	
+	private void setInit() {
+		setParams(mp.getFileParams());
 		
+		if (mp.bSynOnly) setPopup(act1Radio);
+		else if (mp.bPseudo) setPopup(act2Radio);
+		else setPopup(act0Radio);
+	}
+	private void setParams(HashMap <String, String> valMap) {
 		for(int x=0; x<SYMBOLS.length; x++)
 			setValue(SYMBOLS[x], valMap.get(SYMBOLS[x]));	
-		
-		if (setDef) chkDef.setSelected(true); // Defaults should reset this, but not initial load from file
 	}
-	private void save() {
+	private void setPopup(Object src) {
+		int idx=0;
+		if (src==act0Radio)      {
+			idx=0; mp.bPseudo=false; mp.bSynOnly=false;
+		}
+		else if (src==act1Radio) { 
+			idx=1; mp.bPseudo=false; mp.bSynOnly=true;
+			setSaveSynOnly();
+		}
+		else if (src==act2Radio) {
+			idx=2; mp.bPseudo=true;  mp.bSynOnly=false; 
+			setSavePseudo();
+		}
+		else return;
+		
+		btnActPop.setText(actOptions[idx]);
+	}
+	private class PopupListener implements ActionListener {
+		private PopupListener() { }
+		public void actionPerformed(ActionEvent event) { 
+			Object src = event.getSource();
+			setPopup(src);
+		}
+	 }
+	/*****************************************************/
+	private void setDefaults() {
+		setParams(mp.getDefaults());
+		
+		chkDef.setSelected(true); // Defaults should reset this, but not initial load from file
+		
+		mp.bPseudo = mp.bSynOnly = false;
+		setPopup(act0Radio);
+	}
+	private void setCancel() { 
+		mp.bPseudo  = bSavPseudo;
+		mp.bSynOnly = bSavSynOnly;
+		
+		manFrame.updateEnableButtons();
+
+		setVisible(false);
+	}
+	private void setSave() {
 		if (!checkInt("Min Dots", txtMinDots.getText(), 1)) return; 
 		if (!checkInt("Top N piles", txtTopN.getText(), 1)) return;		
 		if (!checkDouble("G0_Len", txtNoGene.getText(), 0)) return;		 
@@ -422,10 +533,32 @@ public class PairParams extends JDialog {
 		
 		for (String key : SYMBOLS) fileMap.put(key, getValue(key));
 		
-		mp.writeFile(fileMap); // saves to DB when run
+		mp.saveParamsToFile(fileMap); // saves to DB when run
+		
+		bSavPseudo = mp.bPseudo; bSavSynOnly = mp.bSynOnly;
+		manFrame.updateEnableButtons(); // update Selected pair label; CAS571
+		
+		if (mp.bSynOnly) setSaveSynOnly();	
+		else if (mp.bPseudo) setSavePseudo();
 		
 		setVisible(false);
 	}
+	private void setSavePseudo() {
+		setParams(mp.getDbParams());
+		chkPseudo.setSelected(true);
+	}
+	private void setSaveSynOnly() {
+		boolean isOrient = chkSameOrient.isSelected(); 
+		boolean isMerge = chkMergeBlocks.isSelected(); 
+		String dot = txtMinDots.getText();
+		
+		setParams(mp.getDbParams()); // The wrong values will be in Summary if this is not done; CAS571
+		
+		chkSameOrient.setSelected(isOrient);
+		chkMergeBlocks.setSelected(isMerge);
+		txtMinDots.setText(dot);
+	}
+	/*********************************************/
 	private boolean checkInt(String label, String x, int min) {
 		if (x.trim().equals("")) x="0"; 
 		int i = Utilities.getInt(x.trim());
@@ -440,9 +573,11 @@ public class PairParams extends JDialog {
 			Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect integer. Must be >0.");
 			return false;
 		}
+		// warnings
 		if (label.startsWith("Top") && i>4) {
-			return Utilities.showContinue("Top N piles", "Top N > 4 may produce worse results and take significantly longer.");
+			Utilities.showContinue("Top N piles", "Top N > 4 may produce worse results and take significantly longer.");
 		}
+	
 		return true;
 	}
 	private boolean checkDouble(String label, String x, double min) {
@@ -461,6 +596,7 @@ public class PairParams extends JDialog {
 		}
 		return true;
 	}
+
 	/************************************************************************/
 	private JPanel mainPanel = null;
 	
@@ -486,4 +622,10 @@ public class PairParams extends JDialog {
 	private JRadioButton radOrdNone=null, radOrdProj1=null, radOrdProj2=null;
 	
 	private JButton btnKeep = null, btnDiscard = null, btnLoadDef = null;
+	
+	private JButton btnActPop;  						
+    private JRadioButtonMenuItem act0Radio	= null;
+    private JRadioButtonMenuItem act1Radio	= null;
+    private JRadioButtonMenuItem act2Radio	= null;
+    private boolean bSavPseudo=false, bSavSynOnly=false;
 }

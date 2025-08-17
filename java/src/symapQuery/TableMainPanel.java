@@ -52,17 +52,14 @@ import symap.Globals;
  * Perform query and display results in table
  * QueryFrame calls QueryPanel which call this on "Run Query" passing it the query. 
  *    The loadDataFromDatabase runs the Query, and DBdata creates the rows.
- *  
- * CAS560 add theLastTable; CAS561 Jcomp graphics, add Group; CAS563/4 move Align to UtilSelect; 
- * CAS564 add Search; move 2D to UtilSelect; implement Stop
  */
 public class TableMainPanel extends JPanel {
 	private static final long serialVersionUID = -3827610586702639105L;
 	private static final int ANNO_COLUMN_WIDTH = 100, ANNO_PANEL_WIDTH = 900;
 	private static final int GEN_COLUMN_WIDTH = 100;
-	protected static final int showREGION=0, showSET=1, showBLOCK=2,  showGRP=3; // CAS555 add showGrp
+	protected static final int showREGION=0, showSET=1, showBLOCK=2,  showGRP=3; 
 	
-	static protected TableSort theLastTable = null; //  CAS560 add to keep using last order of columns for session
+	static protected TableSort theLastTable = null; // keep using last order of columns for session
 	
 	// called by QueryFrame
 	protected TableMainPanel(QueryFrame parentFrame, String tabName,  boolean [] selCols,
@@ -87,7 +84,7 @@ public class TableMainPanel extends JPanel {
 			public void actionPerformed(ActionEvent arg0) {
 				searchPanel = null;
 		
-				Point viewPosition = sPane.getViewport().getViewPosition(); // CAS564 add before all setTable
+				Point viewPosition = sPane.getViewport().getViewPosition(); // add before all setTable
 	            int row = theTable.rowAtPoint(viewPosition);
 	                
 				setTable(false, false);
@@ -135,7 +132,7 @@ public class TableMainPanel extends JPanel {
 		buildThread.start();
 	}
 	/** replace tab: add to result table;  Has to be done from thread, but not in thread **/
-	private void buildFinish() { 					// CAS564 replace table specific with general
+	private void buildFinish() { 					
 		int numRows =  (theTableData != null) ? theTableData.getNumRows() : 0;
 		
 		String oldTab = theTabName+":"; 			// same as QueryFrame.makeTabTable
@@ -149,7 +146,7 @@ public class TableMainPanel extends JPanel {
 		
 		queryFrame.getQueryPanel().setQueryButton(true);
 	}
-	/** Called when User clicks Stop; CAS564 was not doing anything **/
+	/** Called when User clicks Stop; **/
 	private void buildStop() { // 
 			if (buildThread==null || bDone) return;
 		
@@ -180,7 +177,7 @@ public class TableMainPanel extends JPanel {
 		/** CREATE ROWS **/
         if(rs != null) { 
         	HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> (); 
-        	HashMap <String, String> projMap = new HashMap  <String, String> (); // ComputePgeneF & ComputeMulti;; CAS555 int->string
+        	HashMap <String, String> projMap = new HashMap  <String, String> (); // ComputePgeneF & ComputeMulti
         		
          	Vector  <DBdata> rowsFromDB =  DBdata.loadRowsFromDB(getInstance(), rs, queryFrame.getProjects(),
          			queryFrame.getQueryPanel(), theAnnoKeys.getColumns(false /*displayname*/), loadStatus,
@@ -256,7 +253,7 @@ public class TableMainPanel extends JPanel {
 		else
 			updateTableStatus(theTabName + ": No results   Filter: " + theSummary);
     		
-    	if (rowIndex>0) {// CAS564 add retain table position
+    	if (rowIndex>0) {// retain table position
     		Rectangle cellRect = theTable.getCellRect(rowIndex, 0, true);       
     	    theTable.scrollRectToVisible(cellRect);
     	}
@@ -287,7 +284,7 @@ public class TableMainPanel extends JPanel {
     			showMSA();
     		}
  		});  
- 	    topRow.add(btnShowMSA);				topRow.add(Box.createHorizontalStrut(8));// CAS563 5->8 for linux
+ 	    topRow.add(btnShowMSA);				topRow.add(Box.createHorizontalStrut(8));
 	 	 
  	    // View 2D
  	    topRow.add(new JSeparator(JSeparator.VERTICAL)); topRow.add(Box.createHorizontalStrut(2)); // Needs box on Linux
@@ -431,7 +428,7 @@ public class TableMainPanel extends JPanel {
     		chkGeneralFields[x].addActionListener(colSelectChange);
     		if (x==0) {									
     			chkGeneralFields[x].setSelected(true);
-    			chkGeneralFields[x].setEnabled(false); // CAS520 cannot remove because doesn't work to
+    			chkGeneralFields[x].setEnabled(false); // cannot remove because doesn't work to
     		}
     		row.add(chkGeneralFields[x]);
     	}
@@ -465,7 +462,7 @@ public class TableMainPanel extends JPanel {
     		row.add(createSpeciesLabel(species[x]));
     		row.add(Box.createHorizontalStrut(5));
     		
-    		for (int i=0; i<cntCol; i++) { // CAS561 was two loops
+    		for (int i=0; i<cntCol; i++) { 
     			chkSpeciesFields[x][i] = Jcomp.createCheckBox(colHeads[i], colDesc[i], colDefs[i]);   
     			chkSpeciesFields[x][i].addActionListener(colSelectChange);
     			row.add(chkSpeciesFields[x][i]);
@@ -693,10 +690,10 @@ public class TableMainPanel extends JPanel {
     	setTable(true, false);
     	displayTable(-1);
     }
-    private void defaultColumns() {// CAS543 add
+    private void defaultColumns() {
     	boolean [] genColDef = TableColumns.getGeneralColDefaults();
     	for (int i=1; i<chkGeneralFields.length; i++) chkGeneralFields[i].setSelected(genColDef[i]);
-    	if (isCollinear) chkGeneralFields[TableColumns.COLLINEAR].setSelected(true); // CAS563 add for Set Default
+    	if (isCollinear) chkGeneralFields[TableColumns.COLLINEAR].setSelected(true); // for Set Default
     	if (isMultiN || isClustN) chkGeneralFields[TableColumns.GROUP].setSelected(true);
     	
     	boolean [] spColDef = TableColumns.getSpeciesColDefaults(isSingle);
@@ -718,7 +715,7 @@ public class TableMainPanel extends JPanel {
     	setTable(true, false);
     	displayTable(row);
     }
-    // group like columns together; CAS561 add
+    // group like columns together; 
     private void groupColumns() {
     	int row=-1;
     	if (sPane!=null) {
@@ -736,7 +733,7 @@ public class TableMainPanel extends JPanel {
 		String [] uoSelCols = getSelColsUnordered(); // order found in columns panel	
 		String [] columns;
 		
-		// CAS560 add using the same order as the last table created or change of columns
+		// using the same order as the last table created or change of columns
 		// theLastTable seems to stay active even when Query is exited and another display is used, but could be GC'ed
 		try { 
 			if (isGroup) columns = 								TableData.arrangeColumns(uoSelCols, isSingle, theAnnoKeys);
@@ -802,7 +799,7 @@ public class TableMainPanel extends JPanel {
 	    			targetPos++;
 	    		}
 	    	}
-		   // see QueryFrame.getLastColumns; add check for targetPos;  CAS532 
+		   // see QueryFrame.getLastColumns; add check for targetPos; 
 	    	for(int x=0; x<chkAnnoFields.size() && targetPos<oldN; x++) {
 	    		for(int y=0; y<chkAnnoFields.get(x).size() && targetPos<oldN; y++) {
 	    			chkAnnoFields.get(x).get(y).setSelected(theOldSelCols[targetPos]);
@@ -860,7 +857,7 @@ public class TableMainPanel extends JPanel {
     		for(int y=0; y<chkSpeciesFields[x].length; y++)
     			chkSpeciesFields[x][y].setEnabled(enable);
     	}
-    	setRowSelected(); // CAS563 add
+    	setRowSelected(); 
     }
   
     protected void setRowSelected() {
@@ -894,7 +891,7 @@ public class TableMainPanel extends JPanel {
     }
    
     /****************************************
-     * Buttons functions and associated methods; CAS564 tried to make them more consistent  
+     * Buttons functions and associated methods; 
      **********************************/
     /**************************************************************
      * Show Row in popup
@@ -925,7 +922,7 @@ public class TableMainPanel extends JPanel {
     	else   {btnShowMSA.setText("Running"); bMSArun=true; btnShowMSA.setEnabled(false);}
     }
     /**************************************************************
-     * Show 2D - CAS564 moved most of the methods to UtilSelect
+     * Show 2D 
      */
     private void showSynteny() {
 		try{
@@ -937,10 +934,10 @@ public class TableMainPanel extends JPanel {
 			int numRows = theTable.getSelectedRowCount();
 			if (numRows==0 || numRows>2) return;
 			
-			btnShowSynteny.setEnabled(false);		// CAS563 add
+			btnShowSynteny.setEnabled(false);		
 			
 			int selIndex = cmbSynOpts.getSelectedIndex();
-			int pad = (selIndex==showREGION) ? (int) Double.parseDouble(txtSynRegion.getText()) * 1000 : 30;
+			int pad = (selIndex==showREGION) ? (int) Double.parseDouble(txtSynRegion.getText()) * 1000 : 200; // CAS571 was 30
 			
 			UtilSelect uObj = new UtilSelect(this);
 			uObj.synteny2D(numRows, selIndex,  pad, chkSynGn.isSelected(), grpIdxVec); // hitNum1, hitNum2 get set
@@ -949,7 +946,7 @@ public class TableMainPanel extends JPanel {
 		} 
 		catch(Exception e) {ErrorReport.print(e, "Create 2D Synteny");}
     }
-    /* can 2d-3col be used? if so, what columns;  CAS562 add for synteny */
+    /* can 2d-3col be used? if so, what columns;   */
     protected int [] getSharedRef(boolean bCheck) { // bCheck=T in setRowSelected; bCheck=F in UtilSelect.2D
     	TmpRowData row0 = new TmpRowData(getInstance());
 		if (!row0.loadRow(theTable.getSelectedRows()[0])) return null;
@@ -961,7 +958,7 @@ public class TableMainPanel extends JPanel {
 		String r1tag0 = row1.geneTag[0], r1tag1 = row1.geneTag[1];
 		
 		if ((r0tag0.endsWith(Q.dash) || r1tag0.endsWith(Q.dash)) &&
-			(r0tag1.endsWith(Q.dash) || r1tag1.endsWith(Q.dash))) return null;	// CAS563 middle ||->&&
+			(r0tag1.endsWith(Q.dash) || r1tag1.endsWith(Q.dash))) return null;	
 		
 		int r0sp0 = row0.spIdx[0], r0sp1 = row0.spIdx[1];			// tags are not unique, spIdx is
 		int r1sp0 = row1.spIdx[0], r1sp1 = row1.spIdx[1];
@@ -988,7 +985,7 @@ public class TableMainPanel extends JPanel {
      public boolean isHitSelected(int idx, boolean bHit1) {
     	 if (!chkSynHigh.isSelected()) return false;
  
-    	 if (grpIdxVec.contains(idx)) return true;	// highlight all group;  CAS555
+    	 if (grpIdxVec.contains(idx)) return true;	// highlight all group;  
    	 
     	 if (bHit1  && idx==hitNum1) return true;
     	 if (!bHit1 && idx==hitNum2) return true;
@@ -996,11 +993,11 @@ public class TableMainPanel extends JPanel {
     	 return false;
      }
      /***********************************************************************
-      ** Export file; CAS556 export put in separate file.
+      ** Export file; 
       *  calls setPanelEnabled(false) before comp and setPanelEnabled(true) after; FASTA is threaded
       *********************************************************************/
      private void showExport() { 
-		final UtilExport ex = new UtilExport(this, queryFrame.title ); // CAS560 add title for 1st line of export
+		final UtilExport ex = new UtilExport(this, queryFrame.title ); // add title for 1st line of export
 		ex.setVisible(true);
 		final int mode = ex.getSelection();
 		
@@ -1016,17 +1013,20 @@ public class TableMainPanel extends JPanel {
       * calls setBtnReport before/after threaded computation
       */
      private void showReport() {
-     	if (isClustN) {							// CAS563 better for clusters to have a non-ref report
+ 	   
+     	if (isClustN) {							
      		if (reportNoRefPanel==null) reportNoRefPanel = new UtilReportNR(getInstance()); 
  	    	reportNoRefPanel.setVisible(true); 
      	}
      	else {
- 	    	if (reportRefPanel==null) reportRefPanel = new UtilReport(getInstance()); // CAS563 Saves last values
+ 	    	if (reportRefPanel==null) reportRefPanel = new UtilReport(getInstance()); // Saves last values
  	    	reportRefPanel.setVisible(true); 	
      	}
+	    
      }
      protected void setBtnReport(boolean done) {// Called from UtilReport when computation starts/stops
      	if (!done) {
+     		Utilities.setCursorBusy(this, true); // CAS571 add
      		btnReport.setText("Computing...");
          	setPanelEnabled(false); 
      	}
@@ -1037,6 +1037,7 @@ public class TableMainPanel extends JPanel {
      		else if (isClustN) title = "Cluster Report...";
      		btnReport.setText(title);
          	setPanelEnabled(true);
+         	Utilities.setCursorBusy(this, false); // CAS571 add
      	}
      }
     
@@ -1081,7 +1082,7 @@ public class TableMainPanel extends JPanel {
         		
         		if (Globals.TRACE)	{
         			loadDataTESTwrite(theQuery, rs, isSingle); 
-        			rs = dbc2.executeQuery(theQuery);	// CAS560 can not longer reset to start of search with new JDBC
+        			rs = dbc2.executeQuery(theQuery);	
         		}
         		return rs;
         	}
@@ -1165,12 +1166,12 @@ public class TableMainPanel extends JPanel {
     	theTableData.sortByColumn(index, !theTableData.isAscending(index));
 	}
    
-    protected String getTabName() { return theTabName; } // CAS564 was getName 
+    protected String getTabName() { return theTabName; } 
     
 	protected boolean isSingle() {return isSingle;}
  	protected boolean [] getColumnSelections() {
 		try {
-			if (chkSpeciesFields==null) return null; // CAS563 linux query crash caused this to crash too
+			if (chkSpeciesFields==null) return null; // linux query crash caused this to crash too
 			
 			int genColCnt = TableColumns.getGenColumnCount(isSingle); 
 			int spColCnt = TableColumns.getSpColumnCount(isSingle);
@@ -1235,7 +1236,7 @@ public class TableMainPanel extends JPanel {
     	}
     }
     
-    private class MultiLineHeaderRenderer extends JList <Object> implements TableCellRenderer {// CAS555 add <Object>
+    private class MultiLineHeaderRenderer extends JList <Object> implements TableCellRenderer {
 		private static final long serialVersionUID = 3118619652018757230L;
 
 		public MultiLineHeaderRenderer() {
@@ -1316,9 +1317,9 @@ public class TableMainPanel extends JPanel {
     
 	private static int nTableID = 0;
 	
-	protected int hitNum1=0, hitNum2=0; // Highlight 2D; set in UtilSelect; CAS562 change from start/end to hitnum
-	private Vector <Integer> grpIdxVec = new Vector <Integer> (); 			// CAS555 to highlight groups
-	protected boolean isCollinear=false, isMultiN=false, isClustN=false;	// CAS556 for UtilReport; the QueryPanel can change, so need to save this
+	protected int hitNum1=0, hitNum2=0; // Highlight 2D; set in UtilSelect; 
+	private Vector <Integer> grpIdxVec = new Vector <Integer> (); 			// to highlight groups
+	protected boolean isCollinear=false, isMultiN=false, isClustN=false;	// for UtilReport; the QueryPanel can change, so need to save this
 	
 	// for Stop 
 	private boolean bMSArun=false; 					// MSA can be running, and the rest of the buttons enabled.

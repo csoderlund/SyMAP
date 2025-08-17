@@ -17,14 +17,12 @@ import util.ErrorReport;
 import util.Utilities;
 
 /**
- * This contains the arrays of data (Project and Tile) and interface code with Filter
- * CAS533 Removed Observable, removed Loader (was painting tile at time); rearranged 
- * CAS541 Replace DBAbsUser with new DBconn2; CAS552 remove projectPair (not used), improved response to buttons
+ * This contains the arrays of data (Project and Tile (chr-chr)) and interface code with Filter
  */
 public class Data  {
 	protected static final double DEFAULT_ZOOM = 0.99;
 	protected static final int X  = 0, Y   = 1;
-	private static int initMinPctid = -1;		// CAS543 find first time
+	private static int initMinPctid = -1;		// find first time
 	
 	private Project projects[]; // loaded data
 	private Tile[] tiles;
@@ -59,7 +57,7 @@ public class Data  {
 			projProps = new PropsDB(dbc2); 
 			
 			if (initMinPctid<=0)
-				initMinPctid = tdbc2.executeInteger("select min(pctid) from pseudo_hits"); // CAS543 set for slider
+				initMinPctid = tdbc2.executeInteger("select min(pctid) from pseudo_hits"); // set for slider
 			
 		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 		
@@ -70,13 +68,11 @@ public class Data  {
 		
 		setHome();
 		
-		filtData = new FilterData(); // CAS543 moved from initialized to here to keep settings
+		filtData = new FilterData(); 
 	}
 	/*************************************************************
 	 * Called from: DotPlotFrame (genome), SyMAPFrameCommon (groups), Data.setReference (change ref)
 	 *              xGroupIDs, yGroupIDs null if genome
-	 * CAS533 for blocks and hits:
-	 * 	this was loader.execute(projProps,projects,tiles,sb,true); added swap instead of reading database again
 	 */
 	public void initialize(int[] projIDs, int[] xGroupIDs, int[] yGroupIDs) {
 	try {
@@ -123,7 +119,7 @@ public class Data  {
 		currentProjY = null;	
 		maxGrps = 0;
 		
-		tiles  = new Tile[0]; // CAS543 add 4 lines
+		tiles  = new Tile[0]; 
 		projects  = null; 
 		dbLoad.clear();
 	}
@@ -132,11 +128,9 @@ public class Data  {
 	private void show2dBlock() {
 		if (selectedBlock==null) return;
 		
-		// CAS531 need to recreate since I changed the Hits code; bonus, allows multiple 2d displays
-		// CAS541 cleaned up connection, no longer can do multiple 2d display
-		//if (symap==null) new SyMAP2d(tdbc2, null); CAS542 messes up annotation; its fine allowing many
+		// can not do multiple 2d display
 		symap = new SyMAP2d(tdbc2, null);
-		symap.getDrawingPanel().setTracks(2); // CAS550 set exact number
+		symap.getDrawingPanel().setTracks(2); 
 		
 		if (selectedBlock instanceof ABlock) {
 			ABlock ib = (ABlock)selectedBlock;
@@ -145,7 +139,7 @@ public class Data  {
 			Group gX = ib.getGroup(X);
 			Group gY = ib.getGroup(Y);
 
-			HfilterData hd = new HfilterData (); // CAS530 use 2D filter
+			HfilterData hd = new HfilterData (); 
 			hd.setForDP(true);
 			symap.getDrawingPanel().setHitFilter(1,hd); // copy template
 			
@@ -179,7 +173,7 @@ public class Data  {
 		
 		symap.getDrawingPanel().setTracks(2);
 		
-		HfilterData hd = new HfilterData(); 		// CAS530 use 2D filter
+		HfilterData hd = new HfilterData(); 		// use 2D filter
 		hd.setForDP(false); 						// set block, set all
 		symap.getDrawingPanel().setHitFilter(1,hd); // template for defaults
 		
@@ -216,9 +210,8 @@ public class Data  {
 		hasSelectedArea = false;
 		isTileView      = false;
 		selectedBlock 	= null;
-		bIsScaled 		= false;	// CAS552 add
+		bIsScaled 		= false;	
 		scaleFactor  	= 1;	
-		// filtData.setDefaults();
 	}
 	
 	protected void setZoom(double zoom)    {this.zoomFactor = zoom; }; // Control and Plot
@@ -277,8 +270,7 @@ public class Data  {
 			s = Tile.getBlock(tiles,currentGrp[X],currentGrp[Y],xUnits,yUnits);
 		
 			if (s != null) {
-				if (s == selectedBlock)
-					show2dBlock();
+				if (s == selectedBlock) show2dBlock();
 			}
 		}
 		selectedBlock = s;
@@ -291,7 +283,6 @@ public class Data  {
 		double yfactor = size.getHeight() / ymax;
 
 		selectedBlock = null;
-		hasSelectedArea = true;
 		this.sX1 = Math.min(x1,x2) / xfactor;
 		this.sX2 = Math.max(x1,x2) / xfactor;
 		this.sY1 = Math.min(y1,y2) / yfactor;
@@ -302,8 +293,10 @@ public class Data  {
 		if (this.sY1 < 0) this.sY1 = 0;
 		if (this.sX2 > xmax) this.sX2 = xmax;
 		if (this.sY2 > ymax) this.sY2 = ymax;
-		if (this.sX1 > xmax || this.sX2 < 0 || this.sY1 > ymax || this.sY2 < 0)
-			hasSelectedArea = false;
+		
+		if (this.sX1 > xmax || this.sX2 < 0 || this.sY1 > ymax || this.sY2 < 0) hasSelectedArea = false;
+		else hasSelectedArea = true;	// Timing issue was fixed in DrawingPanel; CAS571
+		
 		return hasSelectedArea;
 	}
 	
@@ -383,7 +376,7 @@ public class Data  {
 		return out.toArray(new Group[0]);
 	}
 	/***************************************************************************/
-	protected int getInitPctid() { return initMinPctid;} // Filter on startup; CAS543 get the initial DB value
+	protected int getInitPctid() { return initMinPctid;} // Filter on startup; get the initial DB value
 	
 	protected FilterData getFilterData() { return filtData; } // plot and Filter.FilterListener
 	protected Project getProject(int axis) { return projects[axis]; } // plot and data
@@ -403,7 +396,7 @@ public class Data  {
 	
 	protected int getDotSize()			{return filtData.getDotSize();}
 	
-	// CAS541 Set in ControlPanel, read by Plot
+	// Set in ControlPanel, read by Plot
 	private int statOpt=0;
 	protected void setStatOpts(int n) {statOpt = n;}
 	protected int getStatOpts() {return statOpt;}
@@ -424,8 +417,6 @@ public class Data  {
 	
 	/****************************************************
 	 * Loads data for the plot
-	 * CAS531 removed cache and dead code; CAS533 removed some Loader stuff, dead code, a little rewrite
-	 * CAS541 renamed from DotPlotDBuser to DBload; moved from separate file
 	 */
 	protected class DBload {
 		private final int X = Data.X, Y = Data.Y;
@@ -436,7 +427,7 @@ public class Data  {
 		}
 		protected void clear() {minPctid=100;};
 		
-		 // For all projects; add groups to projects, and blocks to groups; CAS533 renamed from setGroups
+		 // For all projects; add groups to projects, and blocks to groups; 
 		protected void setGrpPerProj(Project[] projects, int[] xGroupIDs, int[] yGroupIDs, PropsDB pp) {
 		try {
 			Vector<Group> list = new Vector<Group>();
@@ -454,7 +445,7 @@ public class Data  {
 				}
 				String inGrp =  (groupList == null) ? "" : " AND g.idx IN " + groupList;
 				
-				qry = "SELECT g.idx, g.sort_order, g.name, p.length " +
+				qry = "SELECT g.idx, g.sort_order, g.name, g.fullname, p.length " + // CAS571 add fullname
 					  " FROM xgroups AS g JOIN pseudos AS p ON (p.grp_idx=g.idx) " +
 					  " WHERE g.proj_idx=" + prj.getID() +  inGrp + 
 					  " AND g.sort_order > 0 ORDER BY g.sort_order";
@@ -464,7 +455,7 @@ public class Data  {
 					int idx = rs.getInt(1);
 					Group g = prj.getGroupByID(idx);
 					if (g == null)
-						g = new Group(idx, rs.getInt(2), rs.getString(3), rs.getInt(4),  prj.getID());
+						g = new Group(idx, rs.getInt(2), rs.getString(3), rs.getString(4), rs.getInt(5),  prj.getID());
 					list.add(g);
 				}
 				prj.setGroups( list.toArray(new Group[0]) );

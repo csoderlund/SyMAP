@@ -62,18 +62,15 @@ public class DoAlignSynPair extends JFrame {
 		String v = (Constants.VERBOSE) ? "   Verbose" : "    !Verbose"; 
 		diaLog.msgToFileOnly(">>> " + toName + v);
 		
-		if (Constants.CoSET_ONLY) {
-			collinearOnly(diaLog, mProj1, mProj2);
-			return;
-		}
-		else if (Constants.PSEUDO_ONLY) {// CAS565 add
+		if (mp.bPseudo) {// CAS565 add, CAS571 set in params
 			pseudoOnly(diaLog, mProj1, mProj2);
 			return;
 		}
 		
-		mp.renewIdx(); 	// Remove existing and restart, sets projIdx; CAS568 move from ManagerFrame, takes time and want prt 1st
+		if (mp.bSynOnly) mp.removeSyntenyFromDB(); // CAS571 add
+		else mp.renewIdx(); 	// Remove existing and restart, sets projIdx; 
 		
-		String chgMsg = (bAlignDone) ? mp.getChangedSynteny(Mpair.FILE) : mp.getChangedParams(Mpair.FILE);  // Saved to DB in SumFrame; CAS568 bAlignDone
+		String chgMsg = (bAlignDone) ? mp.getChgClustSyn(Mpair.FILE) : mp.getChgAllParams(Mpair.FILE);  // Saved to DB in SumFrame
 		diaLog.msg(chgMsg);
 		diaLog.closeWhenDone();					
 		
@@ -94,7 +91,7 @@ public class DoAlignSynPair extends JFrame {
 				// Alignments\n list errors and current\nStatus
 				String status = "\nAlignments:  running " + aligner.getNumRunning() + ", completed " + aligner.getNumCompleted();
 				if (aligner.getNumRemaining()>0) status += ", queued " + aligner.getNumRemaining();
-				if (aligner.getNumErrors()>0) status += ", errors " + aligner.getNumErrors(); // CAS566 add
+				if (aligner.getNumErrors()>0) status += ", errors " + aligner.getNumErrors(); 
 				
 				diaLog.updateText("\nRunning alignments:\n", aligner.getStatusSummary() + status + "\n");
 
@@ -106,7 +103,7 @@ public class DoAlignSynPair extends JFrame {
 					// same as before loop
 					status = "\nAlignments:  running " + aligner.getNumRunning() + ", completed " + aligner.getNumCompleted();
 					if (aligner.getNumRemaining()>0) status += ", queued " + aligner.getNumRemaining();
-					if (aligner.getNumErrors()>0)    status += ", errors " + aligner.getNumErrors(); // CAS566 add
+					if (aligner.getNumErrors()>0)    status += ", errors " + aligner.getNumErrors(); 
 				
 					diaLog.updateText("\nRunning alignments:\n", aligner.getStatusSummary() + status + "\n");
 				}
@@ -139,8 +136,8 @@ public class DoAlignSynPair extends JFrame {
 					if (Cancelled.isCancelled()) return;
 					
 					/** Anchors **/
-					long synStart = Utils.getTime(); // CAS568 need time for symap part only
-					success &= anchors.run( mProj1, mProj2); // add anchors, cluster, number, collinear, pseudo
+					long synStart = Utils.getTime(); // need time for symap part only
+					success = (mp.bSynOnly) ? true : anchors.run( mProj1, mProj2); // add anchors, cluster, number, collinear, pseudo; CAS571 bSynOnly
 					
 					if (Cancelled.isCancelled()) return;
 					if (!success) {
@@ -161,8 +158,6 @@ public class DoAlignSynPair extends JFrame {
 					/** Finish **/
 					String alignParams = aligner.getParams();
 					mp.saveParamsToDB(alignParams);		// deletes all pair_props, then add params
-					
-					// CAS568 mv to saveParams; mProj1.saveParams(mProj1.xAlign); mProj2.saveParams(mProj2.xAlign);
 				
 					new SumFrame(dbc2, mp);
 					
@@ -313,7 +308,7 @@ public class DoAlignSynPair extends JFrame {
 		}
 		
 		String st = "SELECT idx FROM pairs WHERE proj1_idx='" +  mProj1.getIdx() + "' AND proj2_idx='" +  mProj2.getIdx() +"'";
-		int mPairIdx = dbc2.getIdx(st); // CAS569 moved from Utils
+		int mPairIdx = dbc2.getIdx(st); 
 		if (mPairIdx<=0) {
 			mLog.msg("Cannot find project pair in database for " + mProj1.getDisplayName() + "," + mProj2.getDisplayName());
 			dbc2.close(); return;
@@ -327,13 +322,13 @@ public class DoAlignSynPair extends JFrame {
 	}
 	catch (Exception e){ErrorReport.print(e, "Creating log file"); }
 	}
-	/*** Add Pseudo CAS565 ***/ 
+	/*** Add Pseudo  ***/ 
 	private void pseudoOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
 	try {
 		mLog.msg("Only add pseudo-genes");
 		
 		String st = "SELECT idx FROM pairs WHERE proj1_idx='" + mProj1.getIdx() + "' AND proj2_idx='" + mProj2.getIdx() +"'";
-		int mPairIdx = dbc2.getIdx(st); // CAS569 moved from utils
+		int mPairIdx = dbc2.getIdx(st); 
 		if (mPairIdx<=0) {
 			mLog.msg("Cannot find project pair in database for " + mProj1.getDisplayName() + "," + mProj2.getDisplayName());
 			dbc2.close(); return;

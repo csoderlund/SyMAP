@@ -8,11 +8,10 @@ import java.awt.geom.Rectangle2D;
 import java.awt.event.MouseEvent;
 import java.awt.Color;
 import java.awt.Font;
-import java.util.List;
-import java.util.LinkedList;
 import java.util.TreeMap;
 import java.util.HashSet;
 import java.util.Vector;
+import java.util.ArrayList;
 
 import symap.closeup.TextShowInfo;
 import symap.closeup.AlignPool;
@@ -45,7 +44,7 @@ public class SeqHits  {
 	private boolean st1LTst2=true; 	   // if seqObj1.track# <seqObj2.track#, query is left track, else, right
 	
 	private String infoMsg=""; 
-	private int cntShowHit=0, cntHighHit=0;
+	private int cntShowHit=0, cntHighHit=0; 
 	
 	private int nG2xN=0;
 	private boolean isOnlyG2xN=false;	
@@ -184,6 +183,7 @@ public class SeqHits  {
 		 seqObj1.setnG2xN(0);  seqObj2.setnG2xN(0); // need to get set in L/R also
 		 
 		 cntHighG2xN=cntFiltG2xN=cntPossG2xN=0;
+		 nG2xN=0;	// CAS571
 	 }
 	 /*****************************************************
 	  * XXX Paint all hits 	
@@ -193,10 +193,10 @@ public class SeqHits  {
 		Point stLoc2 = seqObj2.getLocation();
 		int trackPos1 = mapper.getTrackPosition(seqObj1); // left or right
 		int trackPos2 = mapper.getTrackPosition(seqObj2);
-		List<DrawHit> hHits = new LinkedList<DrawHit>();
+		ArrayList<DrawHit> highHits = new ArrayList<DrawHit>(); // CAS571 was linkedlist
 		
-		TreeMap <Integer, Boolean> highMap = new TreeMap <Integer, Boolean> (); // if collinear or blocks is highlighted
-		boolean toggle=true; 
+		TreeMap <Integer, Integer> highMap = new TreeMap <Integer, Integer> (); // if collinear or blocks is highlighted
+		int hcolor=1; 
 		boolean bHiCset  = mapper.getHitFilter().isHiCset();
 		boolean bHiBlock = mapper.getHitFilter().isHiBlock();
 		boolean bHi = (bHiCset || bHiBlock);
@@ -204,59 +204,61 @@ public class SeqHits  {
 		// allHitArray sorted by start1; this does not correspond to sequential blocks (sorted sets).
 		if (bHi) {
 			for (DrawHit h : allHitsArray) {
+				if (!h.isOlapHit()) continue; // CAS571
+				
 				int set = (bHiCset) ?  h.getCollinearSet() : h.getBlock();
 				if (set!=0 && !highMap.containsKey(set)) {
-					highMap.put(set, toggle);
-					toggle = !toggle;
+					highMap.put(set, hcolor);
+					hcolor++;  
+					if (hcolor==5) hcolor=1; // redone for cosets below;  4 colors for blocks; CAS571 
 				}
 			}
-			toggle=true;
+			hcolor=1;
 			if (bHiCset) { //sorted by start1 does not correspond to sequence sets
 				for (int set : highMap.keySet()) {
-					highMap.put(set, toggle);
-					toggle = !toggle;
+					highMap.put(set, hcolor);
+					hcolor++;
+					if (hcolor==3) hcolor=1;  
 				}
 			}
 		}
 		cntShowHit=cntHighHit=cntHighG2xN=cntPossG2xN=cntFiltG2xN=0; // counted in paint
 		HashSet <Integer> blockSet = new HashSet <Integer> (); // count blocks/sets shown
-		toggle=true; 
+		hcolor=1; 
 		
 		for (DrawHit dh : allHitsArray) {
 			if (!dh.isOlapHit() || dh.isFiltered()) continue; 
 			
 			if (bHi) {
 				int set = (bHiCset) ?  dh.getCollinearSet() : dh.getBlock();
-				if (set!=0) toggle = highMap.get(set);
+				if (set!=0) hcolor = highMap.get(set);
 			}
-			if (dh.isHover) hHits.add(dh);
+			if (dh.isHover) highHits.add(dh);
 			else {
-				boolean show = dh.paintComponent(g2, trackPos1, trackPos2, stLoc1, stLoc2, toggle);
-				if (bHi && show) {
+				boolean isVis = dh.paintComponent(g2, trackPos1, trackPos2, stLoc1, stLoc2, hcolor);
+				if (bHi && isVis) {// CAS571 was (bHi && isVis) - now block always shows unless highlight cosets
 					int set = (bHiCset) ?  dh.getCollinearSet() : dh.getBlock();
 					if (set!=0 && !blockSet.contains(set)) blockSet.add(set);
 				}
 			}
 		}
 		
-		// Draw highlighted hits on top with highlight
-		for (DrawHit dh : hHits) {
+		// Draw hover hits on top with highlight
+		for (DrawHit dh : highHits) {
 			if (!dh.isOlapHit() || dh.isFiltered()) continue; 
 			
-			boolean show = dh.paintComponent(g2,trackPos1,trackPos2,stLoc1,stLoc2, true);
-			if (bHi && show) {
+			boolean isVis = dh.paintComponent(g2,trackPos1,trackPos2,stLoc1,stLoc2, 1);
+			if (isVis) {
 				int set = (bHiCset) ?  dh.getCollinearSet() : dh.getBlock();
 				if (set!=0 && !blockSet.contains(set)) blockSet.add(set);
 			}
 		}
 		
 		// Information box on Stats
-		infoMsg = String.format("%s: %,d", "Hits", cntShowHit);
-		if (bHi) {
-			String type = (bHiCset) ? "CoSets" : "Blocks";	
-			infoMsg += String.format("\n%s: %,d\n", type, blockSet.size());
-		}
-		if (cntHighHit>0)  infoMsg += String.format("\n%s: %,d", "High", cntHighHit);
+		infoMsg =  String.format("Hits:   %,d", cntShowHit);
+		if (cntHighHit>0) infoMsg += String.format("\nHigh:   %,d",  cntHighHit);// CAS571 after hits since it high hits
+		if (bHiBlock)     infoMsg += String.format("\nBlocks: %,d", blockSet.size());
+		else if (bHiCset) infoMsg += String.format("\nCosets: %,d", blockSet.size());
 		
 		if (nG2xN>0) {
 			String x = (nG2xN==2) ? "g2x2" : "g2x1";
@@ -293,7 +295,14 @@ public class SeqHits  {
 		}
 		return listVis;
 	}
-	
+	public boolean hasVisHit(int [] idxList) { // Called from Sequence for Annotation display GeneNum; CAS571 add
+		for (DrawHit drObj : allHitsArray) {
+			if (!drObj.isDisplayed) continue;
+			int idx = drObj.hitDataObj.getID();
+			for (int i=0; i<idxList.length; i++) if (idx==idxList[i]) return true;
+		}
+		return false;
+	}
 	public void mouseMoved(MouseEvent e) {
 		for (DrawHit h : allHitsArray)
 			h.mouseMoved(e);
@@ -424,7 +433,7 @@ public class SeqHits  {
 			 isDisplayed=false;
 			 return true; 
 		 }
-		 private Color getCColor(String orient, boolean toggle, boolean bCnt) {
+		 private Color getCColor(String orient, int hcolor, boolean bCnt) {
 			 if (isHover)     return Mapper.pseudoLineHoverColor;	
 			
 			 HfilterData hf = mapper.getHitFilter(); 
@@ -454,8 +463,10 @@ public class SeqHits  {
 			 else if (hf.isHi0Gene() && hitDataObj.is0Gene()) isHi=true;
 			 if (isHi) {
 				 if (bCnt) cntHighHit++;
-				 if (toggle) return Mapper.pseudoLineHighlightColor1;		
-				 else 		 return Mapper.pseudoLineHighlightColor2;
+				 if (hcolor==1) return Mapper.pseudoLineHighlightColor1;		
+				 else if (hcolor==2)	 return Mapper.pseudoLineHighlightColor2;
+				 else if (hcolor==3)	 return Mapper.pseudoLineHighlightColor3;
+				 else if (hcolor==4)	 return Mapper.pseudoLineHighlightColor4;
 			 }
 			 
 			 if (orient.contentEquals("++")) return Mapper.pseudoLineColorPP; 
@@ -523,7 +534,7 @@ public class SeqHits  {
 		  * stLoc1 and stLoc2: x,y from origin 
 		  */
 		 private boolean paintComponent(Graphics2D g2, int trackPos1, int trackPos2, Point stLoc1, Point stLoc2, 
-				 boolean btoggle) {  	
+				 int hcolor) {  	
 			 
 			 if (!isOlapHit() || isFiltered()) return false; 
 			
@@ -541,7 +552,7 @@ public class SeqHits  {
 			 int x2 = (int)hw2.getX(), y2 = (int)hw2.getY();
 
 		   // hitLine: hit connecting seq1/seq2 chromosomes 
-			 Color c = getCColor(hitDataObj.getOrients(), btoggle, true);
+			 Color c = getCColor(hitDataObj.getOrients(), hcolor, true);
 			 g2.setPaint(c); 
 			 hitWire.setLine(hw1,hw2); 
 			 g2.draw(hitWire); 
@@ -570,7 +581,7 @@ public class SeqHits  {
 					 rp1.setLocation(x1-wlen1, rp1.getY());				 
 					 rp2.setLocation(x1-wlen1, rp2.getY());
 					 
-					 paintHitLen(g2, seqObj1, rp1, rp2, trackPos1, hitDataObj.isPosOrient1(), btoggle);
+					 paintHitLen(g2, seqObj1, rp1, rp2, trackPos1, hitDataObj.isPosOrient1(), hcolor);
 				 }
 			 }
 			 if (seqObj2.getShowHitLen()) {
@@ -584,7 +595,7 @@ public class SeqHits  {
 					 rp3.setLocation(x2+wlen2, rp3.getY());				 
 					 rp4.setLocation(x2+wlen2, rp4.getY());
 					 
-					 paintHitLen(g2, seqObj2, rp3, rp4, trackPos2, hitDataObj.isPosOrient2(), btoggle);
+					 paintHitLen(g2, seqObj2, rp3, rp4, trackPos2, hitDataObj.isPosOrient2(), hcolor);
 				 }
 			 }
 		/* text */
@@ -651,7 +662,7 @@ public class SeqHits  {
 		  * Draw hit - draws the length of the hit along the blue chromosome box, which shows breaks between merged hitsd
 		  */
 		 private void paintHitLen(Graphics2D g2, Sequence st, Point2D pStart, Point2D pEnd, 
-				 int trackPos, boolean forward, boolean toggle) {
+				 int trackPos, boolean forward, int hcolor) {
 			 double psx = pStart.getX();
 			 double psy = pStart.getY();
 			 double w = Mapper.hitRibbonWidth;
@@ -665,7 +676,7 @@ public class SeqHits  {
 				 subHits = hitDataObj.getTargetMerge();
 
 			 if (subHits == null || subHits.length() == 0) {
-				 g2.setPaint(getCColor(hitDataObj.getOrients(), toggle, false));
+				 g2.setPaint(getCColor(hitDataObj.getOrients(), hcolor, false));
 				 rect = new Rectangle2D.Double(psx, psy, w, pEnd.getY()-psy);
 				 
 				 fixRect(rect); // for flipped track
@@ -679,7 +690,7 @@ public class SeqHits  {
 				 g2.fill(rect);
 				 g2.draw(rect);
 				 
-				 g2.setPaint(getCColor(hitDataObj.getOrients(), toggle, false));
+				 g2.setPaint(getCColor(hitDataObj.getOrients(), hcolor, false));
 				 
 				 // Draw sub-hits
 				 String[] subseq = subHits.split(",");

@@ -19,13 +19,10 @@ import javax.swing.JScrollPane;
 
 import util.Utilities;
 import symap.frame.HelpListener;
-import symap.Globals;
 import symap.frame.HelpBar;
 
 /**
  * Draws the dotplot
- * CAS533 removed 'implements Observer' and other major changes
- * CAS541 start using color wheel
  **/
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Plot extends JPanel implements HelpListener {
@@ -37,8 +34,9 @@ public class Plot extends JPanel implements HelpListener {
 	private int sX1, sX2, sY1, sY2; 	// coordinates of selected region 
 	private double xPixelBP, yPixelBP; 	// pixels per basepair
 	private boolean isSelectingArea = false;
-	private FilterData fd=null;			// CAS541 was recreating in different methods
-	private int cnt2GeneBlk, cnt1GeneBlk, cnt0GeneBlk, cntBlk, cntNonBlk, cnt2GeneNB, cnt1GeneNB, cnt0GeneNB;
+	private FilterData fd=null;
+	private int cntBlocks; // CAS571 add
+	private int cnt2GeneBlk, cnt1GeneBlk, cnt0GeneBlk, cntHitBlk, cntHitNonBlk, cnt2GeneNB, cnt1GeneNB, cnt0GeneNB;
 	private int cntHitsTot, cnt0GeneTot, cnt1GeneTot, cnt2GeneTot;
 	private String lastInfoMsg="";
 	private boolean is2D=false;
@@ -74,10 +72,10 @@ public class Plot extends JPanel implements HelpListener {
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		
-		cnt2GeneBlk=cnt1GeneBlk=cnt0GeneBlk=cntBlk=cnt2GeneNB=cnt1GeneNB=cnt0GeneNB=cntNonBlk=0;
-		cntHitsTot=cnt0GeneTot=cnt1GeneTot=cnt2GeneTot=0;
+		cnt2GeneBlk=cnt1GeneBlk=cnt0GeneBlk=cntHitBlk=cnt2GeneNB=cnt1GeneNB=cnt0GeneNB=cntHitNonBlk=0;
+		cntHitsTot=cnt0GeneTot=cnt1GeneTot=cnt2GeneTot=cntBlocks=0;
 		
-		// CAS533 Save Image had blurry text until this is added
+		// Save Image had blurry text until this is added
 		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 		
@@ -124,7 +122,7 @@ public class Plot extends JPanel implements HelpListener {
 	//draw blocks & hits
 		if (!data.isTileView()) drawAll(g);
 		else	                drawTile(g);
-		prtCnts(false);
+		prtCntsInfo();
 	}
 
 	private void setDims() {
@@ -197,6 +195,8 @@ public class Plot extends JPanel implements HelpListener {
 		int dotSizeB = dotSize(data.getDotSize());
 		int dotSizeNB = (fd.isShowMixHits()) ? dotSize(1) : dotSizeB;
 		for (Tile tile : data.getTiles()) {
+			cntBlocks += tile.getNumBlocks();
+			
 			Group gX = tile.getGroup(X);
 			Group gY = tile.getGroup(Y);
 			if (!data.isGroupVisible(gX) || !data.isGroupVisible(gY)) continue;
@@ -209,15 +209,14 @@ public class Plot extends JPanel implements HelpListener {
 			for (DPHit ht : tile.getHits()) {
 				if (!showHit(fd, ht)) continue;
 				
-			
 				Color c = fd.getColor(ht);
 				g.setColor(c);
 				
 				drawHit(g, ht, x, y, dotSizeB, xf, yf, ht.isBlock(), fd.isShowMixHits(), dotSizeNB);
 			}
 		}
-		//draw blocks (CAS533 moved after hits so drawn on top
-		if (fd.isShowBlocks()) {
+		//draw blocks (after hits so drawn on top
+		if (fd.isShowBlocks() || fd.isShowBlkNum()) {
 			for (Tile tile : data.getTiles()) {	
 				Group gX = tile.getGroup(X);
 				Group gY = tile.getGroup(Y);
@@ -233,9 +232,10 @@ public class Plot extends JPanel implements HelpListener {
 					int rwidth  = (int)((int)((blk.getEnd(X) - blk.getStart(X))) * xPixelBP * gX.getScale());
 					int rheight = (int)((int)((blk.getEnd(Y) - blk.getStart(Y))) * yPixelBP * gY.getScale());
 					
-					g.setColor(fd.getRectColor());
-					g.drawRect(rx+MARGIN, ry+MARGIN, rwidth+1, rheight+1);
-					
+					if (fd.isShowBlocks()) { // CAS571 allow this to be turned off and still show block#
+						g.setColor(fd.getRectColor());
+						g.drawRect(rx+MARGIN, ry+MARGIN, rwidth+1, rheight+1);
+					}
 					if (fd.isShowBlkNum()) {
 						Rectangle r = new Rectangle(rx+MARGIN, ry+MARGIN, rwidth+1, rheight+1);
 						drawBlockNum(g, blk, r);
@@ -304,6 +304,7 @@ public class Plot extends JPanel implements HelpListener {
 
 		Rectangle rect = new Rectangle();
 		Tile tile = Tile.getTile(data.getTiles(),gX,gY);
+		cntBlocks += tile.getNumBlocks();
 		
 	// draw hits (similar to drawHit)
 		DPHit hits[] = tile.getHits();
@@ -366,7 +367,7 @@ public class Plot extends JPanel implements HelpListener {
 		}
 		
 		//draw blocks; draw Number; highlight selected;
-		if (fd.isShowBlocks() && tile != null){
+		if (tile != null && (fd.isShowBlocks() || fd.isShowBlkNum())){
 			ABlock blk;
 			for (int i = tile.getNumBlocks(); i > 0; --i) {
 				blk = tile.getBlock(i);
@@ -379,10 +380,10 @@ public class Plot extends JPanel implements HelpListener {
 					g.setColor(SELECTED);
 					g.fillRect(rect.x,rect.y,rect.width+1,rect.height+1);
 				}
-				
-				g.setColor(fd.getRectColor());
-				g.drawRect(rect.x,rect.y,rect.width+1,rect.height+1);
-				
+				if (fd.isShowBlocks()) {
+					g.setColor(fd.getRectColor());
+					g.drawRect(rect.x,rect.y,rect.width+1,rect.height+1);
+				}
 				if (fd.isShowBlkNum()) {
 					drawBlockNum(g, blk, rect);
 				}
@@ -421,13 +422,13 @@ public class Plot extends JPanel implements HelpListener {
 		if (ht.getPctid() < fd.getPctid()) return false;
 		
 		if (ht.isBlock()) {
-			cntBlk++;
+			cntHitBlk++;
 			if (ht.bothGene()) 		cnt2GeneBlk++;
 			else if (ht.oneGene()) 	cnt1GeneBlk++;
 			else if (ht.noGene()) 	cnt0GeneBlk++;
 		}
 		else {
-			cntNonBlk++;
+			cntHitNonBlk++;
 			if (ht.bothGene()) 		cnt2GeneNB++;
 			else if (ht.oneGene()) 	cnt1GeneNB++;
 			else if (ht.noGene()) 	cnt0GeneNB++;
@@ -435,32 +436,33 @@ public class Plot extends JPanel implements HelpListener {
 		
 		return true;
 	}
-	// Stats: Info, Print, Help
-	public String prtCnts(boolean bFull) {
+	// Info
+	protected String prtCntsInfo() { // CAS571 was part of prtCntsS
 		boolean p=false;
 		String b = String.format("Block Hits %s  Annotated: Both %s  One %s  None %s   ", 
-				pStr(cntBlk, cntHitsTot,p),  pStr(cnt2GeneBlk, cntBlk,p), 
-				pStr(cnt1GeneBlk, cntBlk,p), pStr(cnt0GeneBlk, cntBlk,p));
+				pStr(cntHitBlk, cntHitsTot,p),  pStr(cnt2GeneBlk, cntHitBlk,p), 
+				pStr(cnt1GeneBlk, cntHitBlk,p), pStr(cnt0GeneBlk, cntHitBlk,p));
 		
 		String nb = String.format("!Block Hits %s  Annotated: Both %s  One %s  None %s", 
-				pStr(cntNonBlk, cntHitsTot,p), pStr(cnt2GeneNB, cntNonBlk,p), 
-				pStr(cnt1GeneNB, cntNonBlk,p), pStr(cnt0GeneNB, cntNonBlk,p));
+				pStr(cntHitNonBlk, cntHitsTot,p), pStr(cnt2GeneNB, cntHitNonBlk,p), 
+				pStr(cnt1GeneNB, cntHitNonBlk,p), pStr(cnt0GeneNB, cntHitNonBlk,p));
 		
 		String msg = (is2D) ? b + "\n" + nb :  " " + b + nb;
 		
 		lastInfoMsg=msg;
-		if (!bFull) return msg;
-		
-		String  w=">> ", x;
+		return msg;
+	}
+	protected String prtCntsS() { // CAS571 add #Blocks and change name to fullname
+		String  w=">> ", x, b, nb, msg;
 		if (data.isTileView()) {
-			w += data.getProject(X).getDisplayName() + "-" + data.getCurrentGrp(X).getName() + "  ";
-			w += data.getProject(Y).getDisplayName() + "-" + data.getCurrentGrp(Y).getName() + "  ";
+			w += data.getProject(X).getDisplayName() + " " + data.getCurrentGrp(X).getFullName() + "  ";
+			w += data.getProject(Y).getDisplayName() + " " + data.getCurrentGrp(Y).getFullName();
 		}
 		else {
 			for (int i = 0;  i < data.getNumProjects();  i++) 
 				w += data.getProject(i).getDisplayName() + "  ";
 		}
-		w += String.format("   (%sId=%d)\n", "%", (int) fd.getPctid());
+		w += String.format("    #Blocks=%,d      %sId=%d\n", cntBlocks, "%", (int) fd.getPctid());
 		
 		String sz1 = getSize(cntHitsTot);
 		String sz2 = getSize(cnt2GeneTot);
@@ -468,31 +470,29 @@ public class Plot extends JPanel implements HelpListener {
 		String sz4 = getSize(cnt0GeneTot);
 		String fmt = "  %-11s " + sz1 + " %s  %-9s  Both " + sz2 + " %14s  One " + sz3 + " %14s  None " + sz4 + " %12s\n";
 		
-		p=true;
+		boolean p=true;
 		String blank="       "; //(xxx%)
 		x =  String.format(fmt, 
 				" All Hits", cntHitsTot, blank, "Annotated",
 				cnt2GeneTot, blank,cnt1GeneTot, blank, cnt0GeneTot, blank);
 		
 		b  = String.format(fmt, 
-				" Block Hits", cntBlk, "("+pStr(cntBlk, cntHitsTot,p)+")", "",
-				cnt2GeneBlk, pStr(cnt2GeneBlk, cnt2GeneTot, cntBlk),
-				cnt1GeneBlk, pStr(cnt1GeneBlk, cnt1GeneTot, cntBlk),
-				cnt0GeneBlk, pStr(cnt0GeneBlk, cnt0GeneTot, cntBlk));
+				" Block Hits", cntHitBlk, "("+pStr(cntHitBlk, cntHitsTot,p)+")", "",
+				cnt2GeneBlk, pStr(cnt2GeneBlk, cnt2GeneTot, cntHitBlk),
+				cnt1GeneBlk, pStr(cnt1GeneBlk, cnt1GeneTot, cntHitBlk),
+				cnt0GeneBlk, pStr(cnt0GeneBlk, cnt0GeneTot, cntHitBlk));
 		
 		nb = String.format(fmt, 
-				"!Block Hits", cntNonBlk, "("+pStr(cntNonBlk, cntHitsTot,p)+")", "",
-				cnt2GeneNB, pStr(cnt2GeneNB, cnt2GeneTot,cntNonBlk),
-				cnt1GeneNB, pStr(cnt1GeneNB, cnt1GeneTot,cntNonBlk),
-				cnt0GeneNB, pStr(cnt0GeneNB, cnt0GeneTot,cntNonBlk));
+				"!Block Hits", cntHitNonBlk, "("+pStr(cntHitNonBlk, cntHitsTot,p)+")", "",
+				cnt2GeneNB, pStr(cnt2GeneNB, cnt2GeneTot,cntHitNonBlk),
+				cnt1GeneNB, pStr(cnt1GeneNB, cnt1GeneTot,cntHitNonBlk),
+				cnt0GeneNB, pStr(cnt0GeneNB, cnt0GeneTot,cntHitNonBlk));
 		
 		msg = w + x + b + nb;
 		return msg;
-	
 	}
-	protected String getStats() {return prtCnts(true);} // CAS551 add for S icon
 	
-	private String pStr(int top, int bottom, boolean isP) { // isP=true for popup; CAS560 rewrite
+	private String pStr(int top, int bottom, boolean isP) { // isP=true for popup; 
 		String ret="";
 		if (bottom==0) ret = "n/a";
 		else if (top==0) ret =  "0%";
@@ -505,7 +505,7 @@ public class Plot extends JPanel implements HelpListener {
 				else 					ret = String.format("%s", Integer.toString((int) Math.round(x)) + "%");
 			}
 		}
-		if (isP) ret = String.format("%5s", ret); // CAS560 use for all
+		if (isP) ret = String.format("%5s", ret); 
 		return ret;
 	}
 	private String pStr(int top, int bottom, int bottom2) {
@@ -575,11 +575,8 @@ public class Plot extends JPanel implements HelpListener {
 	
 	public String getHelpText(MouseEvent e) {
 		return lastInfoMsg;
-		//if (data.getStatOpts()!=ControlPanel.pHELP) return lastInfoMsg; // CAS541 add; CAS551 put Help on I button
 	}
 	/***********************************************************************/
-	// CAS533 public void update(Observable obs, Object obj) {repaint();}
-	// replaced Observable by adding 2 repaint below
 	// Order called: Pressed, Released, Clicked; or Dragged,Release
 	private class PlotListener implements MouseListener, MouseMotionListener {
 		private PlotListener() { }
@@ -589,14 +586,12 @@ public class Plot extends JPanel implements HelpListener {
 			int y = evt.getY();
 
 			if (data.hasSelectedArea() && 
-				x >= Math.min(sX1, sX2) && x <= Math.max(sX1, sX2) && 
-				y >= Math.min(sY1, sY2) && y <= Math.max(sY1, sY2)) 
+				x >= Math.min(sX1, sX2) && x <= Math.max(sX1, sX2) && y >= Math.min(sY1, sY2) && y <= Math.max(sY1, sY2)) 
 			{
 				data.show2dArea(); 
 			} 
 			else {
-				if (data.clearSelectedArea())
-					repaint(); // CAS533 add
+				if (data.clearSelectedArea()) repaint(); 
 			}
 		}
 		
@@ -613,15 +608,13 @@ public class Plot extends JPanel implements HelpListener {
 			
 			Utilities.setCursorBusy(Plot.this, true);  
 			
-			if (data.isTileView()) { // 2d-view (was isZoomed)
-				if (data.selectBlock(bpX, bpY)) // selects the block if point is in a block
-					repaint(); // CAS533 add
+			if (data.isTileView()) { // 2d-view 
+				//if (data.selectBlock(bpX, bpY)) repaint(); // selects the block if point is in a block
+				data.selectBlock(bpX, bpY);
+				repaint();					// Always repaint so unselect a selected block; CAS571
 			}
-			else if (x >= MARGIN && x <= MARGIN+dim.width 	// click within boundaries
-				  && y >= MARGIN && y <= MARGIN+dim.height) // change to tile view
-			{
-				if (data.selectTile(bpX, bpY)) 
-					repaint(); // CAS533 add
+			else if (x >= MARGIN && x <= MARGIN+dim.width && y >= MARGIN && y <= MARGIN+dim.height) {
+				if (data.selectTile(bpX, bpY)) repaint(); 
 			}
 			Utilities.setCursorBusy(Plot.this, false); 
 		}
@@ -656,7 +649,7 @@ public class Plot extends JPanel implements HelpListener {
 		public void mouseMoved(MouseEvent e)   { }
 	}
 	/****************************************************************/
-	// CAS533 removed dotplot.properties and hardcoded here
+	// dotplot.properties was removed and hardcoded here
 	
 	private static final Color FAR_BACKGROUND = 	Color.white;
 	private static final Color BACKGROUND =		 	Color.white;

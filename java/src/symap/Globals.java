@@ -7,14 +7,13 @@ import java.io.File;
 
 /******************************************
  * Global constants and prt routines
- * CAS534 added in order to move globals from SyMAP2d, SyMAPConstants and Manager
  * See util:Jhtml.java for more constants for Help pages
  * See SyMAPmanager:printVerions() for banner including java version
  * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.7.0"; 
-	public static final String 	DATE = " (20-July-25)";
+	public static final String 	VERSION = "v5.7.1"; 
+	public static final String 	DATE = " (17-Aug-25)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER = 7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
@@ -24,17 +23,17 @@ public class Globals {
 	
 	public static final  String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // under user's directory; see props.PersistenProps
 	
-	public static boolean INFO=false;		// SyMAPmanager -ii; popup indices, query overlap; -ii -tt DB output, Hit Sort Popup; CAS560 add; 
-	public static boolean TRACE=false; 		// SyMAPmanager -tt; write files for query and anchor2
-	public static boolean DEBUG=false; 		// SyMAPmanager -dd; use for possible error
-	public static boolean DBDEBUG=false;	// SyMAPmanager -dbd; adds fields to DB
+	// Set in SyMAPmanager 
+	public static boolean INFO=false;		// -ii; popup indices, query overlap; -ii -tt DB output, Hit Sort Popup; CAS560 add; 
+	public static boolean TRACE=false; 		// -tt; write files for query and anchor2
+	public static boolean DEBUG=false; 		// -dd; use for possible error
+	public static boolean DBDEBUG=false;	// -dbd; adds fields to DB
 
-	public static boolean bMySQL=false;		  // SyMAPmanager -sql; check MySQL CAS561 chg from -v
+	public static boolean bMySQL=false;		  // -sql; check MySQL 
 	public static boolean bTrim=true;		  // -a do not trim 2D alignments; see closeup.AlignPool
 	public static boolean bRedoSum=false;	  // -s redo summary 
 	public static boolean bQueryOlap=false;   // -q show gene olap for algo2 instead of exon
-	public static boolean bQueryPgeneF=false; // CAS563 to run old PgeneF algo instead of new Cluster
-	
+	public static boolean bQueryPgeneF=false; // -g run old PgeneF algo instead of new Cluster; CAS563 
 
 	public static final String exonTag = "Exon #";	 // type exon
 	public static final String geneTag = "Gene #";   // type gene

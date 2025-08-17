@@ -7,7 +7,7 @@ import java.util.HashMap;
  */
 public class Group implements Comparable<Group> {
 	private int id, projID;
-	private String name;
+	private String name, fullname; // CAS571 add fullname
 	private int cLenBP, sortOrder;
 	private long offset;
 	private float scaleFactor = 1;
@@ -15,10 +15,11 @@ public class Group implements Comparable<Group> {
 	private boolean isVisible = true;  			
 
 	// sortOrder is order of chrs based on sorted names, name is chrName, chromosome length
-	public Group(int id, int sortOrder, String name, int size, int projID) {
+	public Group(int id, int sortOrder, String name, String fullname, int size, int projID) {
 		this.id = id;
 		this.sortOrder = sortOrder;
-		this.name = name == null ? "" : name;
+		this.name = (name == null) ? "" : name;
+		this.fullname = (fullname == null) ? "" : fullname;
 		this.cLenBP = size;
 		this.projID = projID;
 		hasBlocks = new HashMap<Group,Boolean>(); 
@@ -29,6 +30,7 @@ public class Group implements Comparable<Group> {
 	public int getID() { return id; }
 	public int getSortOrder() { return sortOrder; }
 	public String getName() { return name; }
+	public String getFullName() { return fullname; }
 	public int getGrpLenBP() { return cLenBP; }
 	public float getScale() { return scaleFactor; }
 	public int getEffectiveSize() { return (int)(cLenBP*scaleFactor); }

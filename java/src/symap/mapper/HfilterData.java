@@ -12,9 +12,9 @@ public class HfilterData {
 	private boolean bHiBlock=false, bHiCset=false, bHi2Gene=false, bHi0Gene=false, bHi1Gene=false, bHiNone=true;
 	
 	private boolean bBlock=true; // set in setDefaults;
-	private boolean bBlockAnd=true, bBlockOr=false, bBlockOnly=false; // CAS567 add only 
+	private boolean bBlockAnd=true, bBlockOr=false, bBlockOnly=false; 
 	private boolean bCset=false, b2Gene=false, b1Gene=false, b0Gene=false;
-	private boolean bAll=false;	// when true, overrides all else; CAS567
+	private boolean bAll=false;	// when true, overrides all else; 
 	
 	private int blkNum=0;
 	private double pctid;
@@ -44,9 +44,9 @@ public class HfilterData {
 		msg += "Show "; // something always shows
 		if (pctid!=0 && pctid!=minPctid) msg += "Id=" + (int) pctid + "%"; 
 		
-		if (bBlock && bBlockOnly) msg += "Block#" + blkNum; // CAS567 add
+		if (bBlock && bBlockOnly) msg += "Block#" + blkNum; 
 		else {
-			String x = " ";									// CAS570 spacing was wrong
+			String x = " ";									
 			if (bBlock) {
 				msg += "Block";
 				x = (bBlockAnd) ? " and " : " or ";
@@ -56,7 +56,7 @@ public class HfilterData {
 			if (b2Gene) 	msg += x+"2 Genes, ";
 			if (b1Gene) 	msg += x+"1 Gene, ";
 			if (b0Gene) 	msg += x+"0 Genes, ";
-			if (bAll)		msg += x+"All, ";			// CAS567 add
+			if (bAll)		msg += x+"All, ";			
 			if (msg.endsWith("Show ")) msg += "all";
 			
 			if (msg.endsWith(", ")) msg = msg.substring(0, msg.length()-2);
@@ -66,7 +66,7 @@ public class HfilterData {
 	}
 	// Query block, set, region for showing synteny from query; b is blocks by default
 	public void setForQuery(boolean b, boolean s, boolean r) { // block (default), set, region
-		if (s)      {setBlock(true); setCset(true); setHiCset(true); setHiNone(false);}
+		if (s)      {setBlock(false); setCset(true); setHiCset(true); setHiNone(false);} // CAS571 setBlock T->F
 		else if (r) {setBlock(false);}
 	}
 	// dotplot 
@@ -81,7 +81,7 @@ public class HfilterData {
 		
 		bCset = b2Gene = b1Gene = b0Gene =false; 
 		bBlock = true; bBlockAnd = true; bBlockOr = false; bBlockOnly=false;
-		bAll = false;					// CAS567 add
+		bAll = false;					
 		
 		blkNum=0;
 		pctid=ANY_PCTID;
@@ -101,15 +101,15 @@ public class HfilterData {
 		if (setBlock(hf.bBlock))        changed = true;
 		if (setBlockAnd(hf.bBlockAnd))  changed = true;
 		if (setBlockOr(hf.bBlockOr))    changed = true;
-		if (setBlockOnly(hf.bBlockOnly)) changed = true;// CAS567 add
-		if (setBlockNum(hf.blkNum)) 	 changed = true;// CAS567 add
+		if (setBlockOnly(hf.bBlockOnly)) changed = true;
+		if (setBlockNum(hf.blkNum)) 	 changed = true;
 		
 		if (setCset(hf.bCset))        	changed = true;
 		if (set2Gene(hf.b2Gene)) 		changed = true; 
 		if (set1Gene(hf.b1Gene)) 		changed = true; 
 		if (set0Gene(hf.b0Gene))		changed = true; 
 		
-		if (setAll(hf.bAll))			changed = true; // CAS567 add
+		if (setAll(hf.bAll))			changed = true; 
 		
 		if (setPctid(hf.pctid))   		changed = true;
 		
@@ -220,7 +220,7 @@ public class HfilterData {
 		return false;
 	}
 	
-	protected boolean isBlockOnly() {return bBlockOnly;}// CAS567 add
+	protected boolean isBlockOnly() {return bBlockOnly;}
 	protected boolean setBlockOnly(boolean bFilter) {
 		if (bFilter != bBlockOnly) {
 			bBlockOnly = bFilter;
@@ -228,7 +228,7 @@ public class HfilterData {
 		}
 		return false;
 	}
-	protected int getBlock() {return blkNum;}// CAS567 add
+	protected int getBlock() {return blkNum;}
 	protected boolean setBlockNum(int bn) { 
 		if (blkNum != bn) {
 			blkNum = bn;
@@ -273,7 +273,7 @@ public class HfilterData {
 		return false;
 	}
 	
-	protected boolean isAll() {return bAll;} // CAS567
+	protected boolean isAll() {return bAll;} 
 	protected boolean setAll(boolean bFilter) { 
 		if (bFilter != bAll) {
 			bAll = bFilter;

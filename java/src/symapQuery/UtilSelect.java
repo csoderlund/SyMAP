@@ -16,7 +16,7 @@ import javax.swing.JTextField;
 
 import database.DBconn2;
 import symap.Globals;
-import symap.Ext;			// CAS566 was backend.Constants
+import symap.Ext;			
 import symap.closeup.AlignPool;
 import symap.closeup.SeqData;
 import symap.drawingpanel.SyMAP2d;
@@ -84,7 +84,7 @@ public class UtilSelect {
 					return;
 				}
 				coords = loadCollinearCoords(rd.collinearN, rd.chrIdx[0], rd.chrIdx[1]);
-				hd.setForQuery(false, true, false);  // block, set, region
+				hd.setForQuery(false, true, false);  // block, set, region; CAS571 block was T
 			}
 			else if (selIndex==TableMainPanel.showBLOCK) {
 				if (rd.blockN==0) {
@@ -94,7 +94,7 @@ public class UtilSelect {
 				coords = loadBlockCoords(rd.blockN, rd.chrIdx[0], rd.chrIdx[1]);
 				hd.setForQuery(true, false, false);  // block, set, region
 			}
-			else if (selIndex==TableMainPanel.showGRP) { // CAS555
+			else if (selIndex==TableMainPanel.showGRP) { 
 				if (rd.groupN==0) {
 					Utilities.showWarning("The selected row does not belong to a group.");
 					return;
@@ -114,7 +114,7 @@ public class UtilSelect {
 			track2Start = coords[2] - pad; if (track2Start<0) track2Start=0;
 			track2End   = coords[3] + pad;
 			
-			tablePanel.hitNum1 = rd.hitnum; 			// CAS562 was using start/end
+			tablePanel.hitNum1 = rd.hitnum; 			
 			
 			int p1Idx = rd.spIdx[0];
 			int p2Idx = rd.spIdx[1];
@@ -122,14 +122,14 @@ public class UtilSelect {
 			int grp1Idx = rd.chrIdx[0];
 			int grp2Idx = rd.chrIdx[1];
 			
-			// create new drawing panel; 				// CAS543 quit setting Sfilter Show_Annotation because is static
+			// create new drawing panel; 				
 			SyMAP2d symap = new SyMAP2d(tablePanel.queryFrame.getDBC(), tablePanel);
-			symap.getDrawingPanel().setTracks(2); 		// CAS550 set exact number
+			symap.getDrawingPanel().setTracks(2); 		
 			symap.getDrawingPanel().setHitFilter(1,hd); 
 			
 			Sequence s1 = symap.getDrawingPanel().setSequenceTrack(1, p2Idx, grp2Idx, Color.CYAN);
 			Sequence s2 = symap.getDrawingPanel().setSequenceTrack(2, p1Idx, grp1Idx, Color.GREEN);
-			if (isChkGene){s1.setGeneNum(); s2.setGeneNum();} 			// CAS562 was setAnnotation; CAS543 was changing static; now changes individual object
+			if (isChkGene){s1.setGeneNum(); s2.setGeneNum();} 			
 			else          {s1.setAnnotation(); s2.setAnnotation();} 
 			
 			symap.getDrawingPanel().setTrackEnds(1, track2Start, track2End);
@@ -139,7 +139,7 @@ public class UtilSelect {
 		catch(Exception e) {ErrorReport.print(e, "Create 2D Synteny");}
 	    }
 		/***********************************************************/
-	    private void showSyntenyfor3() {// CAS562 add; this is partially redundant with above, but easier...
+	    private void showSyntenyfor3() {// this is partially redundant with above, but easier...
 	 		try{
 	 			int [] col = tablePanel.getSharedRef(false); 
 	 			if (col == null) return;
@@ -196,7 +196,7 @@ public class UtilSelect {
 	 				hd0.setForQuery(false, false, true);  // block, set, region
 	 				hd1.setForQuery(false, false, true);  
 	 			}
-	 			else {// CAS563 not use Utilities since prt to term
+	 			else {
 	 				JOptionPane.showMessageDialog(null, "3-track display only works with Region or Collinear Set.", 
 	 						"Warning", JOptionPane.WARNING_MESSAGE);
 					return;
@@ -213,7 +213,7 @@ public class UtilSelect {
 	 			
 	 			int startRef = (coordsRow0[sR]<coordsRow1[sL]) ? coordsRow0[sR] : coordsRow1[sL];
 				int endRef   = (coordsRow0[eR]>coordsRow1[eL]) ? coordsRow0[eR] : coordsRow1[eL];
-				tStart[1] = startRef - pad; if (tStart[1]<0) tStart[1]=0;	// CAS563 bug fix: the check was on [2]
+				tStart[1] = startRef - pad; if (tStart[1]<0) tStart[1]=0;	
 	 			tEnd[1]   = endRef + pad; 
 				
 				tStart[2] = coordsRow1[sR] - pad; if (tStart[2]<0) tStart[2]=0;
@@ -242,7 +242,7 @@ public class UtilSelect {
 	    }
 	    /***********************************************************/
 	    private int [] loadCollinearCoords(int set, int idx1, int idx2) {
-			int [] coords = null;		// it was Double CAS562
+			int [] coords = null;		
 			try {
 				DBconn2 dbc2 = tablePanel.queryFrame.getDBC();
 			
@@ -268,7 +268,7 @@ public class UtilSelect {
 					}
 				}
 				if (start1!=Integer.MAX_VALUE) {
-					int pad = 8;				// CAS562 add pad
+					int pad = 8;				
 					coords = new int [4];
 					coords[0]=start1-pad; if (coords[0]<0) coords[0]=0;
 					coords[1]=end1+pad; 
@@ -328,7 +328,7 @@ public class UtilSelect {
 		private AlignPool aPool = null;
 		
 		private MsaAlign() {
-		try {						// CAS563 removed the thread, has two more in the alignment and display
+		try {						
 			DBconn2 dbc = tablePanel.queryPanel.getDBC();
 			aPool = new AlignPool(dbc);
 			
@@ -567,7 +567,7 @@ public class UtilSelect {
 		try {
 			for (HitEnd ht : hitVec) {
 				ht.theSeq = aPool.loadSeq(ht.pos, ht.start + ":" + ht.end, ht.chrIdx, ht.gapLess); 	// needed for gapLess
-				if (ht.strand.equals("-")) ht.theSeq = SeqData.revComplement(ht.theSeq); // CAS563 was not doing this
+				if (ht.strand.equals("-")) ht.theSeq = SeqData.revComplement(ht.theSeq); 
 			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Load sequences"); bSuccess=false;}

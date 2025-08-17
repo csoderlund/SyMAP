@@ -56,7 +56,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	private Color bgColor; 	
 	private TextLayout titleLayout;
 	
-	private SeqHits hitsObj1=null,  hitsObj2=null; // Obj2 for 3-track; 
+	protected SeqHits hitsObj1=null,  hitsObj2=null; // Obj2 for 3-track; 
 	private boolean isQuery1=false, isQuery2=false;// True => this sequence is Query (pseudo_hits.annot1_idx); 
 	
 	private SeqPool seqPool;
@@ -203,7 +203,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	public boolean buildGraphics() { // DrawingPanel.buildAll & firstViewBuild; Sequence.mouseDragged
 		if (hasBuild) return true;
 		if (!hasLoad) return false;
-
+		if (chrDisplayEnd==0 || chrDisplayEnd==chrDisplayStart) return false; // Timing issue from dotplot; CAS571
 		if (allAnnoVec.size() == 0) sfilObj.bShowAnnot = sfilObj.bShowGeneNum = false;
 			
 		if (firstBuild) {
@@ -320,7 +320,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			if (offset>0 && isRight) offset = -offset;
 			
 			annot.setRectangle(centRect, chrDisplayStart, chrDisplayEnd,bpPerPixel, dwidth, hwidth, sfilObj.bFlipped, offset,
-				sfilObj.bHighGenePopup, sfilObj.bShowGeneLine, sfilObj.bShowGeneNum, nG2xN); // CAS570 add nG2xN
+				sfilObj.bHighGenePopup, sfilObj.bShowGeneLine, sfilObj.bShowGeneNum, sfilObj.bShowGeneNumHit, nG2xN); // CAS570 add nG2xN
 			
 			if (last!=null) annot.setLastY(last); // annotation are separated, used during paint;  
 			last=annot;
@@ -330,17 +330,19 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	    
 	    buildCntMsg = String.format("Genes: %,d", cntAnno);
 	    
-	    if (sfilObj.bShowAnnot) {
+	    if (sfilObj.bShowAnnot || sfilObj.bShowAnnotHit) { // Gray anno box
 	    	if (symap.Globals.DEBUG) {
 	    		String bp = Utilities.kText((int) bpPerPixel);
 	    		buildCntMsg += String.format("\nAnnotation: if x(%s)<y(%,d)", bp, (int)distance_for_anno);
 	    	}	
-	    	
-	    	if (((int)bpPerPixel > distance_for_anno)) buildCntMsg += "\nZoom in for annotation";
+	    	boolean ifNoShow = (sfilObj.bShowAnnot) ? ((int)bpPerPixel > distance_for_anno)
+	    			                                : ((int)bpPerPixel > (distance_for_anno*2));
+	    	if (ifNoShow) buildCntMsg += "\n\nZoom in for annotation";
 	    	else {
 	    		double lastBP=rect.y + rect.height; 
 		    	for (Annotation annot : allAnnoVec) {
 		    		if (!(annot.isGene() && annot.hasDesc() && annot.isVisible())) continue;
+		    		if (sfilObj.bShowAnnotHit && !annot.showGeneHasHit()) continue; // CAS571
 		    		
 					x1 = isRight ? (rect.x + rect.width + RULER_LINE_LENGTH + 2) : rect.x; 
 					x2 = isRight ? x1 + RULER_LINE_LENGTH  						 : x1 - RULER_LINE_LENGTH;
@@ -354,7 +356,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 					else lastInc=1;
 					lastStart=ty;
 					
-					TextBox tb = new TextBox(annot.getGeneBoxDesc(),unitFont, (int)x1, (int)ty, annot.getBorderColor()); // CAS548 use new TextBox
+					TextBox tb = new TextBox(annot.getGeneBoxDesc(),unitFont, (int)x1, (int)ty, annot.getBorderColor()); 
 					if (tb.getLowY()>lastBP) continue;    // if flipped, this may be first, so do not break
 					
 					getHolder().add(tb); 				  // adds it to the TrackHolder JComponent
@@ -646,7 +648,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	}	
 
 	public void setAnnotation() {sfilObj.bShowAnnot=true;}
-	public void setGeneNum()    {sfilObj.bShowGeneNum=true;}  // for 2D-3track query
+	public void setGeneNum()    {sfilObj.bShowGeneNumHit=true;}  // for 2D-3track query; CAS571 use hit only for 2d
 	
 	protected TrackData getData() {return new TrackData(this);} // TrackHolder.getTrackData
 	
@@ -666,7 +668,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	/************************************************
 	 *  XXX Interface between Sfilter and DrawingPanel, etc
 	 */
-	public boolean getShowAnnot() 		{ return sfilObj.bShowAnnot;} 		// drawingpanel
+	public boolean getShowAnnot() 		{ return sfilObj.bShowAnnot || sfilObj.bShowAnnotHit;} 		// drawingpanel; CAS571 add hit
 	
 	//SeqHits.DrawHits
 	public boolean getShowHitLen()		{ return sfilObj.bShowHitLen; }
@@ -1317,7 +1319,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	}
 	// Scroll wheel
 	// Called from mouseWheelMoved, which is called from Mapper.mouseWheelMoved
-	// CAS560 if sequence is flipped, should go negative instead of continued positive
+	// if sequence is flipped, should go negative instead of continued positive
 	private void scrollRange(int notches, int viewSize) {
 		int curViewSize = getEnd() - getStart() + 1;
 		
@@ -1371,11 +1373,10 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		if (hitsObj1!=null) {
 			if (!annot.hasHitList()) { 
 				boolean isAlgo1 = propDB.isAlgo1(projIdx, otherProjIdx);
-				TreeMap <Integer, String> scoreMap = 
-						seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1);
+				TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1);
 				if (scoreMap.size()>0) {
 					String hits = hitsObj1.getHitsForGenePopup(this, annot, scoreMap);
-					annot.setHitList(hits);
+					annot.setHitList(hits, scoreMap);
 				}
 			}
 		}
@@ -1385,11 +1386,31 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 				TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1);
 				if (scoreMap.size()>0) {
 					String hits = hitsObj2.getHitsForGenePopup(this, annot, scoreMap);
-					annot.setHitList2(hits);
+					annot.setHitList2(hits, scoreMap);
 				}
 			}
 		}
 	}
+	// The following allow the GeneNum or Annot box to only be shown if a gene has a hit that is visible
+	protected boolean hasAnnoHit(int x, Annotation annot) { // Called from Annot to display GeneNum if has hit; CAS571
+		if (x==2 && hitsObj2==null) return false;
+		
+		boolean isAlgo1 = propDB.isAlgo1(projIdx, otherProjIdx);
+		TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1);
+		if (scoreMap.size()==0) return false;
+		
+		SeqHits hitObj = (x==1) ? hitsObj1 : hitsObj2;
+		
+		String hits = hitObj.getHitsForGenePopup(this, annot, scoreMap);
+		if (x==1) annot.setHitList(hits, scoreMap);
+		else  annot.setHitList2(hits, scoreMap);
+		return true;
+	}
+	protected boolean hasVisHit(int x, int [] hitIdxList) { // goes with hasHit for Annot; CAS571
+		if (x==1) return hitsObj1.hasVisHit(hitIdxList);
+		else return (hitsObj2==null ||  hitsObj2.hasVisHit(hitIdxList));
+	}
+	
 	/*************************************************************************/
     // Track
 	private static final int REFPOS=2;

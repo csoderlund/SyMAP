@@ -76,7 +76,7 @@ public class Jcomp {
 
 		return row;
 	}
-	static public Component createHorizPanel( Component[] comps, int gapWidth ) {//CAS567 moved from ManagerFrame
+	static public Component createHorizPanel( Component[] comps, int gapWidth, int extra ) {
 		JPanel panel = new JPanel();
 		panel.setLayout( new BoxLayout ( panel, BoxLayout.X_AXIS ) );
 		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -86,6 +86,7 @@ public class Jcomp {
 				panel.add( c );
 				if (gapWidth > 0)panel.add( Box.createHorizontalStrut(gapWidth) );
 			}
+			else if (extra > 0)panel.add( Box.createHorizontalStrut(extra) ); // CAS571 extra gap
 		}
 		panel.add( Box.createHorizontalGlue() );
 		
@@ -319,6 +320,13 @@ public class Jcomp {
 		button.setFont(new Font(button.getFont().getName(),Font.BOLD,12));
 		return button;
 	}
+	static public JButton createButtonNC(String s, String t) {// CAS571 no color
+		JButton jbutton = new JButton(s);
+		jbutton.setMargin(new Insets(1,3,1,3));
+		jbutton.setToolTipText(t);
+		return jbutton;
+	}
+	
 	static public JButton createButton(String s, String t) {
 		JButton jbutton = new JButton(s);
 		jbutton.setBackground(Color.white); 
@@ -362,6 +370,13 @@ public class Jcomp {
 		JCheckBox box = new JCheckBox(label, def);
 		box.setToolTipText(tip);
 		box.setBackground(Color.white);
+		box.setMinimumSize(box.getPreferredSize());
+		box.setMaximumSize(box.getPreferredSize());
+		return box;
+	}
+	static public JCheckBox createCheckNC(String label, String tip) { // CAS571
+		JCheckBox box = new JCheckBox(label);
+		box.setToolTipText(tip);
 		box.setMinimumSize(box.getPreferredSize());
 		box.setMaximumSize(box.getPreferredSize());
 		return box;

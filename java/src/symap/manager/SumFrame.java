@@ -139,7 +139,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			String [] x = allParams.split("\n");
 			allParams = "";
 			for (int i=0; i<x.length; i++) if (x[i]!=null) allParams += x[i] + "\n"; // update collinear leaves this null
-			allParams += mp.getChangedSynteny(Mpair.DB); // includes cluster params
+			allParams += mp.getChgClustSyn(Mpair.DB); // includes cluster params; CAS571 renamed
 		}
 		String d = Utilities.getNormalizedDate(alignDate);
 		String v = (syver!=null) ? ("  " + syver) : "";

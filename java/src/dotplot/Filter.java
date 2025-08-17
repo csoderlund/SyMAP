@@ -26,8 +26,6 @@ import javax.swing.JSlider;
 
 /*********************************************
  * Filter popup - see FilterData
- * CAS533 removed 'extends Observable' and SBObserable; made Filter object in ControlPanel once
- * CAS541 change filter to add Color Wheel and gene filters
  */
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
@@ -37,8 +35,8 @@ public class Filter extends JDialog  {
 	private final String dotLabel = "   Dot Size      ";
 	
 	private Data data;
-	private FilterData cpFiltData;	// CAS533 add
-	private ControlPanel cntl;		// CAS533 add
+	private FilterData cpFiltData;	
+	private ControlPanel cntl;		
 
 	private JSlider pctidSlider, dotSizeSlider; 
 	private JLabel  pctidLabel, dotSizeLabel; 
@@ -70,7 +68,7 @@ public class Filter extends JDialog  {
 		defaultButton = createButton("Defaults", "Reset to defaults");
 		defaultButton.addActionListener(listener);
 
-		JButton helpButton = util.Jhtml.createHelpIconUserSm(util.Jhtml.dotfilter); // CAS533 add
+		JButton helpButton = util.Jhtml.createHelpIconUserSm(util.Jhtml.dotfilter); 
 		
 		buttonPanel = new JPanel(new BorderLayout());
 		buttonPanel.add(new JSeparator(), "North");
@@ -241,7 +239,7 @@ public class Filter extends JDialog  {
 		b0GeneHits.setSelected(fd.isShowGene0()); 
 		
 		showBlocksBox.setSelected(fd.isShowBlocks());
-		showBlkNumBox.setEnabled(fd.isShowBlocks());
+		// CAS571 showBlkNumBox.setEnabled(fd.isShowBlocks());
 		showBlkNumBox.setSelected(fd.isShowBlkNum());
 		
 		showEmptyBox.setSelected(fd.isShowEmpty()); 
@@ -277,7 +275,6 @@ public class Filter extends JDialog  {
 				data.getFilterData().setDefaults();
 				setFromFD();
 				cntl.update();
-				//setVisible(false); CAS543 like 2D, don't close
 			}
 		}
 		public void stateChanged(ChangeEvent e) {
@@ -321,7 +318,7 @@ public class Filter extends JDialog  {
 				
 				if (src == showBlocksBox)	{
 					b = fd.setShowBlocks(isChg);
-					showBlkNumBox.setEnabled(showBlocksBox.isSelected());
+					// CAS571 showBlkNumBox.setEnabled(showBlocksBox.isSelected());
 				}
 				else if (src == showBlkNumBox)	b = fd.setShowBlkNum(isChg);
 				else if (src == showEmptyBox) 	b = fd.setShowEmpty(isChg);
