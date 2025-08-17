@@ -2,20 +2,21 @@
 <html>
 <head>
 <title>SyMAP Release Notes</title>
-<link rel="stylesheet" href="style.css">
 <style>
 	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
 	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-	ttx  {font-family: 'Helvetica', monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-    ttl  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 700; color: DarkSlateGrey;}
-    ttb  {font-family: 'Lucida Console', monospace; font-size: 14px; font-weight: 600; color: Black;}
-    ttp  {font-family: Arial, monospace; font-size: 15px; font-weight: 500; color: DarkSlateGrey; }
 	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
 	a.ext {font-weight: bold;}
 	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-	tt {font-size:13px}
-	pre {font-size:13px}
+	ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
+	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
+	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
+	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+	tt   {font-size:13px}
+	pre  {font-size:13px; margin-top: 0;padding: 0px 12px 0px 12px; /* top, right, bottom, left */}
+	ul   {margin-top: 0; }
+	p    {margin-bottom: 0; }
 	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
 </style>
 </head>
@@ -67,6 +68,44 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
+<a id="v571"></a>
+<h3>Release: v5.7.1 (17-Aug-25)</h3>
+An updated <ttb>Blocks Report</ttb> and small interface enhancements.
+<p>
+<ul>
+<li><ttp>Manager</ttp>:
+<ul>
+<li><ttb>Pair Parameters</ttb>:
+A new <a href="SystemHelp.html#drop" class="ext" target="_blank">Drop-down</a>:
+in the lower left corner provides the following options:
+If A&S has been run, the user can request to only run <ttx>Number Pseudo</ttx>
+or <ttx>Synteny Only</ttx>
+<li><a href="UserGuide.html#breport" class="ext" target="_blank">Report</a>:
+The <ttl>Download Blocks</ttl> has been moved from the
+<ttp>Chromosome Explorer</ttp> to the <ttp>Manager</ttp>, and a few changes in the output.
+</ul>
+<li><ttp>2D</ttp>:
+<ul>
+<li>When block hits are highlighted, the blocks are colored by one of 4 colors instead of 2.
+<li><a href="UserGuide.html#sequence_filter" class="ext" target="_blank">Sequence Filter</a>:
+There are two new <ttb>Sequence Filter</ttb> options to only show the <ttx>Annotation</ttx> or <ttx>Gene#</ttx> if the gene has
+a hit.
+</ul>
+<li>Minor:
+<ul>
+<li><ttp>Align&amp;Synteny</ttp>: This produced an error in <ttx>error.log</ttx> on the first time;
+it was harmless, but was mis-leading.
+<li><ttp>viewSymap</ttp>: Will not create directories for projects in the database but not in <tt>/data/seq</tt>.
+<li><ttp>Dot plot</ttp>: Double clicking a block to show the <ttp>2D</ttp> sometimes could not display the
+<ttp>2D</ttp>, this has been fixed. The <ttx>#Blocks</ttx> has been added to
+the popup statistics (<b>S</b> on <ttl>Control panel</ttl>). The <ttx>Block Number</ttx> can now be viewed
+when the the <ttx>Boundary</ttx> is not shown.
+<li><ttp>Queries</ttp> showing <ttp>2D</ttp> <ttx>Collinear</ttx> had defaults to only show hits
+from blocks; not all collinear hits are in blocks.
+The <ttp>Queries</ttp> table <ttx>Export</ttx> of the .csv file includes a comment with the filter.
+</ul>
+</ul>
+
 <a id="v570"></a>
 <h3>Release: v5.7.0 (20-July-25)</h3>
 Small improvements.
@@ -79,8 +118,8 @@ see <a href="Details.html#2dg2" class="ext" target="_blank">3-chr conserved</a> 
 <li>Tiny changes:
 <ul>
 <li><ttb>A&S</ttb> <ttl>Number Pseudo</ttl>: This option could duplicate pseudo <ttx>Gene#</ttx> for different synteny pairs;
-this worked but may be confusing when querying &gt;2 synteny pairs. This has been corrected. An existing SyMAP database can be updated running
-<tt>symap -pseudo</tt>.
+this worked but may be confusing when querying &gt;2 synteny pairs. This has been corrected. An existing SyMAP database can be updated
+using the <ttb>Pair Parameter</ttb> <ttx>Number Pseudo (Only)</ttx> option (upper right corner).
 <li><ttb>2D</ttb>: Slight change in hit-wire information and popup (see <a href="UserGuide.html#info" class="ext" target="_blank">Hit popup</a>).
 <li><ttb>Queries</ttb>: Pseudo message in <ttx>Instructions</ttx> has been redone.
 <li>If a <ttl>Display Name</ttl> is re-used, it provides more information about the duplicate.

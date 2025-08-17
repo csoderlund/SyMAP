@@ -16,11 +16,13 @@
 <a href="#term">Terminology</a>
 <a href="#mgr">Project Manager</a>
 <a href="#pair">Selected Pair<br>(Two-Genome)</a>
-<a href="#circle">&nbsp;&nbsp;&nbsp;Circle Display #1</a>
+<a href="#circle">&nbsp;&nbsp;&nbsp;Circle #1</a>
 <a href="#dotplot_display">&nbsp;&nbsp;&nbsp;Dot Plot #1</a>
+<a href="#block">&nbsp;&nbsp;&nbsp;Blocks</a>
+<a href="#report">&nbsp;&nbsp;&nbsp;Reports...</a>
 
 <a href="#all">Chromosome Explorer<br>(Multi-chromosome)</a>
-<a href="#alignment_display_circ">&nbsp;&nbsp;&nbsp;Circle Display  #2</a>
+<a href="#alignment_display_circ">&nbsp;&nbsp;&nbsp;Circle #2</a>
 <a href="#alignment_display_dot">&nbsp;&nbsp;&nbsp;Dot Plot #2</a>
 <a href="#alignment_display_2d">&nbsp;&nbsp;&nbsp;2D Display</a>
 <a href="#align">&nbsp;&nbsp;&nbsp;Base Align</a>
@@ -28,7 +30,6 @@
 
 <a href="#gen">General</a>
 
-<p>&nbsp;
 <a href="#top">Go to top</a>
 </div>
 
@@ -77,20 +78,20 @@
 	<ul>
 	<li><a href="#term">Terminology</a>
 	<li><a href="#mgr">Project Manager</a>
-	<li><a href="#pair"><i>Displays for Selected Pair (Two-Genome Views)</i></a>
+	<li><a href="#pair"><i>Selected Pair (Two-Genome Views)</i></a>
 		<ul>
-		<li><a href="#circle">Circle Display #1</a> - <span style="color:purple">details of Circle</span> <!-- # ref in code -->
+		<li><a href="#circle">Circle #1</a> - <span style="color:purple">details of Circle</span> <!-- # ref in code -->
 		<li><a href="#dotplot_display">Dot Plot #1</a> - <span style="color:purple">details of Dot plot</span> <!-- # ref in code -->
-		<li><a href="#block">Block Display</a>
-		<li><a href="#sum">Summary</a>
+		<li><a href="#block">Blocks</a>
+		<li><a href="#report">Reports...</a>
 		</ul>
 
 <!-- # ref in code; see util.Jhtml.java, which has all links into this document -->
-	<li><a href="#all"><i>Displays for All Projects (Multi-Genome Views)</i></a>
+	<li><a href="#all"><i>All Pairs (Multi-Genome Views)</i></a>
 		<ul>
 		<li><a href="#explorer">Chromosome Explorer  (Multi-chromosome)</a>
 			<ul>
-			<li><a href="#alignment_display_circ">Circle Display  #2</a>
+			<li><a href="#alignment_display_circ">Circle #2</a>
 			<li><a href="#alignment_display_dot">Dot Plot #2</a>
 			<li><a href="#alignment_display_2d">2D Display</a> <!-- # ref in code -->
 				<ul>
@@ -235,12 +236,12 @@ Is it also available from <tt>./symap</tt>, which will include the alignment com
 </table>
 
 <table class="ty">
-	<tr><td style="white-space: nowrap;vertical-align: text-top;"><ttb>Display for Selected Pair</ttb>
+	<tr><td style="white-space: nowrap;vertical-align: text-top;"><ttb>Selected Pair</ttb>
 		<td>By selecting a cell with synteny (the cell will turn green), whole genome views are activated for the
 	selected synteny pair.
 	<br>The views are <a href="#circle">Circle</a>, <a href="#dotplot_display">Dot Plot</a>,
 	<a href="#block">Block View</a>, and <a href="#sum">Summary</a>.
-	<tr><td style="white-space: nowrap;vertical-align: text-top;"><ttb>Display for All Pairs</ttb>
+	<tr><td style="white-space: nowrap;vertical-align: text-top;"><ttb>All Pairs</ttb>
 		<td>The views beside this label will be applied to all checked syntenies.
 		<br>The views are <a href="#explorer">Chromosome Explorer</a>,
 		<a href="#dot3">Dot Plot</a> and <a href="Query.html">Queries</a>.
@@ -248,18 +249,19 @@ Is it also available from <tt>./symap</tt>, which will include the alignment com
 
 <!------------------------------------------------->
 <a id="pair"></a>
-<h1>Displays for Selected Pair (Two-genome views)</h1>
+<h1>Selected Pair (Two-genome views)</h1>
 <table class="tz"><tr>
 <td><a href="#circle">Circle</a>
 <td><a href="#dotplot_display">Dot Plot</a>
-<td><a href="#block">Block</a>
+<td><a href="#block">Blocks</a>
+<td><a href="#report">Report</a>
 <td><a href="#sum">Summary</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
 <!------------------------------------------------->
 <a id="circle"></a>
-<h2>Circle Display #1 (Two Genome)</h2>
+<h2>Circle #1 (Two Genome)</h2>
 <table class="tz"><tr>
 <td><a href="#ccp">Control Panel</a>
 <td><a href="#circColors">Colors</a>
@@ -461,7 +463,7 @@ which also applies to the other two views.
 	of the display above. This text can be copied. An example popup is as follows:
 	<br>
 	<a href="img/dotplot-stats.png"><img src="img/dotplot-stats.png"  alt="dotplot stats" style="border: 1px solid black;width: 650px"></a>
-	<br>The (<ttx>%Id</ttx>=23) is the filtered percent identity of the hits,
+	<br>The <ttx>%Id=31</ttx> is the filtered percent identity of the hits,
 	which can be changed in the <ttp>Dot Plot</ttp> <ttb>Filter</ttb>.
 	<br>For the 3 <ttx>Annotated</ttx> columns (<ttx>Both, One, None</ttx>),
 	the two percentages in parenthesis are the column (<ttx>Annotated</ttx>) percent and row (<ttx>Block Hits</ttx>) percent.
@@ -520,8 +522,8 @@ the <ttx>Color Icon</ttx> settings are stored for subsequent <ttp>Dot Plot</ttp>
 		<td>
 		<table class="ty txy">
 			<tr><td><ttx>Boundary</ttx><td>Draw a blue rectangle around each block of hits.
-			<tr><td><ttx>Border</ttx><td>Draw the block number in or near the block;
-			this only works when <ttx>Boundary</ttx> is also checked.
+			<i>This must be on in order to select a block for <ttp>2D</ttp> display.
+			<tr><td><ttx>Number</ttx><td>Draw the block number in or near the block.
 		</table>
 </table>
 <small><sup>a</sup> These options can make the dots flow over the borders,
@@ -545,7 +547,7 @@ When the option is deselected, it hides rows or columns that do not contain any 
 
 <!------------------------------------------------->
 <a id="block"></a>
-<h2>Blocks Display (Two Genome)</h2>
+<h2>Blocks (Two Genome)</h2>
 
 The image below shows the <ttp>Block</ttp> display for  Cabbage to A.thal.
 The 9 Cabbage chromosomes are color coded as shown at the top, and aligned to
@@ -561,18 +563,84 @@ selecting <u>reverse</u>.
 </table>
 
 <!------------------------------------------------->
+<a id="report"></a>
+<h2>Reports... (Two Genome)</h2>
+<table>
+<tr><td>Select <ttb>Reports...</ttb> which
+popups a menu as shown on the right.
+<p>The options are <a href="#sum">Summary</a> and <a href="#breport">Block Report</a>.
+<td><a href="img/reportMenu.png">
+	<img src="img/reportMenu.png" alt="report menu" style="border: 1px solid black; width: 100px"></a>
+</table>
+
+<!------------------------------------------------->
 <a id="sum"></a>
-<h2>Summary (Two Genome)</h2>
+<h3>Summary</h3>
 
 The <ttb>Explain</ttb> button on this view explains the different columns.
 <p><a href="img/sum-2g.png">
 	<img src="img/sum-2g.png" alt="sum-two-genome" style="border: 1px solid black; width: 550px"></a>
+
+<a id="breport"></a>
+<h3>Block Report</h3>
+
+<table style="width:90%">
+<tr><td style="vertical-align: text-top;">
+
+On the <ttp>Manager</ttp> panel, select a pair cell followed by <ttp>Report</ttp>.
+This creates a report on the <ttl>Blocks</ttl>.
+
+<p><ttl>Reference</ttl>: The <ttl>Reference</ttl> determines what species chromosomes and start coordinates will be sorted for display.
+In the HTML file, the reference columns headings for <ttx>Species</ttx> and <ttx>Chr</ttx> will
+be in bold; in the TSV file, they will be in upper case.
+<p><ttl>Output</ttl>: The <ttx>Popup</ttx> popups a window with an HTML formated report.
+The <ttx>HTML File</ttx> is written in a way that is easily edited, and the <ttx>TSV File</ttx> can be loaded into Excel.
+<p><ttl>Combine C1.C2.B</ttl> If checked, the values for <ttx>Chr1</ttx>, <ttx>Chr2</ttx> and <ttx>Block</ttx>
+will be one column where the values are separated by ".". If unchecked, these 3 values will have
+their own column.
+<td><a href="img/report.png">
+	<img src="img/report.png" alt="sum-two-genome" style="border: 1px solid black; width: 250px"></a>
+</table>
+<p>The following 3 options are available, where the top of an HTML table is shown for each:
+
+<p>&#8858; <ttl>Blocks plus</ttl>: <small>(<ttl>Reference</ttl> is A.thal, <ttl>Combined</ttl> unchecked)</small>
+<table class='ty' style="font-size: 10px; text-align: right;">
+<tr style="background-color: lightgrey;"><td style="text-align: center"><b>Species1</b><td style="text-align: center">Species2<td style="text-align: center"><b>Chr01</b><td style="text-align: center">ChrX<td style="text-align: center">Block<td style="text-align: center">#Hits<td style="text-align: center">PearsonR<td style="text-align: center">AvgGap1<td style="text-align: center">AvgGap2<td style="text-align: center">Len1<td style="text-align: center">Len2<td style="text-align: center">Start1<td style="text-align: center">Start2
+<tr><td>A.thal<td>B.rapa<td>01<td>01<td>1<td>28<td>+0.989<td>29,482<td>90,352<td>825,501<td>2,529,877<td>3,104,633<td>17,277,988
+<tr><td>A.thal<td>B.rapa<td>01<td>01<td>2<td>55<td>-0.996<td>24,997<td>36,688<td>1,374,866<td>2,017,868<td>17,799,688<td>22,118,721
+</table>
+<p>
+<ul>
+<li>The <ttx>PearsonR</ttx> is the approximate linearity of the hits in the chain as measured
+by the Pearson correlation coefficient; a negative PCC is an inverted block.
+<li>The <ttx>AvgGap</ttx> is the <ttx>Len/#Hits</ttx>.
+<li><ttx>Chr01</ttx> and <ttx>ChrX</ttx>: The column heading are displayed again each time the reference chromosome changes. The
+reference chromosome column heading will specify the chormosome (e.g. <ttx>Chr01</ttx>)
+where the non-reference will use X for the chromosome as it will change.
+</ul>
+<p>&#8858; <ttl>Blocks with gene info</ttl>: <small>(<ttl>Reference</ttl> is B.rapa, <ttl>Combined</ttl> checked)</small>
+<table class='ty' style="font-size: 10px; text-align: right;">
+<tr style="background-color: lightgrey;"><td style="text-align: center">Species1<td style="text-align: center"><b>Species2</b><td style="text-align: center">Cx.<b>01</b>.B<td style="text-align: center">#Hits<td style="text-align: center">PearsonR<td style="text-align: center">Start1<td style="text-align: center">End1<td style="text-align: center">Start2<td style="text-align: center">End2<td style="text-align: center">#Genes1<td style="text-align: center">%Genes1<td style="text-align: center">#Genes2<td style="text-align: center">%Genes2
+<tr><td>A.thal<td>B.rapa<td>01.01.1<td>28<td>0.989<td>3,104,633<td>3,930,133<td>17,277,988<td>19,807,864<td>236<td>0.114<td>218<td>0.133
+<tr><td>A.thal<td>B.rapa<td>01.01.2<td>55<td>-0.996<td>17,799,688<td>19,174,553<td>22,118,721<td>24,136,588<td>348<td>0.158<td>244<td>0.217
+</table>
+
+<p>The <ttx>Genes1</ttx> column is the number of genes from <ttx>Species1</ttx> in the block and <ttx>%Genes1</ttx>
+is the percentage of genes that have a hit.
+
+
+<p>&#8858; <ttl>Blocks summary</ttl>: <small>(<ttl>Reference</ttl> is A.thal, <ttl>Combined</ttl> unchecked)</small>
+<table class='ty' style="font-size: 10px; text-align: right;">
+<tr style="background-color: lightgrey;"><td><b>Species1</b><td>Species2<td><b>Chr1</b><td>Chr2<td>#Block<td>#Hits
+<tr><td>A.thal<td>B.rapa<td>01<td>01<td>8<td>412
+</table>
+<p>The <ttx>#Blocks</ttx> and <ttx>#Hits</ttx> are the sum of blocks and hits for the chromosome pair.
 <!--------------------------------------------------------------------------------------->
 <!------------------------------------------------------------------------------------->
 <!------------------------------------------------------------------------------------->
 <hr>
 <a id="all"></a>
-<h1>Displays for All Projects</h1>
+<h1>All Pairs</h1>
 
 <table class="tz"><tr>
 <td><a href="#explorer">Chromosome Explorer</a>
@@ -583,7 +651,7 @@ The <ttb>Explain</ttb> button on this view explains the different columns.
 <p>
 <table>
 <tr><td>From the <a href="#mgr">Project Manager</a>, select two or more projects, which will
-activate the <ttb>Display for All Pairs</ttb> buttons.
+activate the <ttb>All Pairs</ttb> buttons.
 
 <td><a href="img/view1.png">
 	<img src="img/view1.png" alt="Displays for all projects" style="border: 1px solid black; width: 350px"></a>
@@ -622,9 +690,7 @@ views, open the <ttp>Circle</ttp> view, make the change, and then re-open the <t
 components, instructions or information for that component are shown in the <ttl>Information</ttl> box.
 <p>
 <ttl>Views:</ttl> The buttons in the lower-left corner of the window change the synteny view in the right panel.
-<p>
-<ttl>Download Blocks</ttl>: Exports a table of all of the synteny block coordinates for the selected species;
-see also <a href="#data_download">Data Download</a>.
+
 <p>
 Click the minus (<ttl><big>-</big></ttl>) button next to a project name or the <ttl>Information</ttl> box,
 and that section will be hidden;
@@ -643,7 +709,7 @@ to the basepair level.
 
 <!----------------------------------------------------------------->
 <a id="alignment_display_circ"></a>
-<h3>Circle Display #2 (Multi-chromosome)</h3>
+<h3>Circle #2 (Multi-chromosome)</h3>
 
 This view is illustrated in the above <a href="#explorer">Chromosome Explorer</a> image.
 All features are described in the first <a href="#circle">Circle section</a>,
@@ -711,9 +777,9 @@ The tracks and hits can be filtered; see
 </table>
 
 <p>
-<u>Annotations</u>: Annotation data of the following types may be loaded into SyMAP and displayed.
+<u>Graphics</u>: Data from the input <tt>.gff</tt> files may specify the following types for display:
 <table class="ty" style="width:650;">
-	<tr><td><i>Annotation Type</i><td><i>Display</i>
+	<tr><td><i>Type</i><td><i>Display</i>
 	<tr><td>Gaps<td>Red band across the chromosome
 	<tr><td>Centromere<td>Blue "X" across the chromosome
 	<tr><td>Predicted genes and exons
@@ -731,7 +797,7 @@ The <ttb>Sequence Filter</ttb> was set to display <ttl>Annotations</ttl>.
 <p>
 <table>
 <tr><td  style="vertical-align:text-top;">
-Gene annotations:
+Genes:
 The introns are drawn as thinner black rectangles. The exons are drawn as thicker rectangles,
 colored dark blue (positive strand) or purple (negative strand).
 <p>The staggered genes, where one is
@@ -960,7 +1026,7 @@ by <ttl>Sequence</ttl>  or <ttl>Hit Filter</ttl> are NOT a history events.
 	<td>Shrinks the base pair view region by 50%, keeping the same center.
 <tr><td style="vertical-align: text-top;"><img src="img/shrink.png" alt="shrink" style="width: 20px;">
 	<td>The shrink button reduces the space between tracks. This is useful
-when viewing more than two tracks, e.g see <a href="img/Exp_2D_B02.png">Exp_2D</a>.
+when viewing more than two tracks, e.g. click <a href="img/Exp_2D_B02.png">Exp_2D</a>.
 <tr><td style="vertical-align: text-top;"><img src="img/scale.gif" alt="scale" style="width: 20px;">
 	<td>The scale button resizes the tracks so that they are in the same scale
 (base pairs per pixel) as the reference sequence track in the view. This is a toggle button,
@@ -1094,13 +1160,17 @@ will be un-selectable.
 The highlight color can be changed with the <a href="#wheel">Color Wheel</a>.
 
 <tr><td colspan="2"><ttl>Show</ttl>
+<tr><td style="vertical-align: text-top;"><ttx>Gene#</ttx><td>Display the <ttx>Gene#</ttx>
+beside each gene. This is the SyMAP assigned number;
+see <a href="#term2">Terminology</a> for more details.
+
 <tr><td style="vertical-align: text-top;"><ttx>Annotation</ttx>
 <td> Display of the annotation descriptions along the right side of sequence
 (see <a href="img/2d-closeup2.png">example</a>).
 <br>NOTE: this only works if you are zoomed in close enough that the annotation boxes can clearly be displayed.
-<tr><td style="vertical-align: text-top;"><ttx>Gene#</ttx><td>Display the <ttx>Gene#</ttx>
-beside each gene. This is the SyMAP assigned number;
-see <a href="#term2">Terminology</a> for more details.
+
+<tr><td style="vertical-align: text-top;"><ttx>Has Hit</ttx><td>
+This <ttx>Gene#</ttx> and <ttx>Annotation</ttx> will only show if the gene has a hit.
 
 <tr><td style="vertical-align: text-top;"><ttx>Gene delimiter</ttx><td> When the zoom is close enough to view the exons, a black line will
 be drawn over the top end of each gene. This helps delimit genes that do not overlap (so are not staggered),
@@ -1116,11 +1186,11 @@ but are close enough to appear one gene (see <a href="#ex2d">example below</a>).
 <table class="ty">
 <tr><td colspan="2"><ttl>Graphics</ttl>
 <tr><td><ttx>Ruler</ttx>
-  <td>Display of the sequence ruler along the right side of the sequence.
+  <td>Display of the ruler along the side of the sequence track.
 
-<tr><td style="vertical-align: text-top;"><ttx>Gaps</ttx>
+<tr><td style="vertical-align: text-top;"><ttx>Gaps</ttx><sup>1</sup>
    <td>Display of sequence gaps (drawn as solid red rectangles) along the sequence.
-<tr><td style="vertical-align: text-top;"><ttx>Centromere</ttx>
+<tr><td style="vertical-align: text-top;"><ttx>Centromere</ttx><sup>1</sup>
    <td> Display of the centromere (drawn as a cyan "X") on the sequence.
    <tr><td><ttx>Genes</ttx>
 <td> Display of the gene with exons along the sequence. (If unchecked,
@@ -1129,12 +1199,9 @@ the other gene options are disabled).
    <td> Display the hit length line along the inner boundary of the sequence. The subhits are colored
    brown and the gaps are colored gray (see <a href="img/2d-closeup2.png">example</a>).
 <tr><td style="vertical-align: text-top;"><ttx>Hit %Id bar</ttx>
-   <td> The <ttx>Hit length</ttx> vertical line is at the end of a horizontal line.
-   <br>&bull; If this is off, the horizontal line is a constant length, taking into account overlapping hits.
-   <br>&bull; If this is on, the length of the line represents the magnitude of the %Identity value for the hit.
-   <br>&bull; If the <ttx>Hit length</ttx> is not shown, this line is not shown.
+   <td>The placement of the <ttx>Hit length</ttx> line is proportional to the <ttx>%Identity</ttx>.
 </table>
-The gaps and centromere options are disabled in the image above, as there are none for the chromosome.
+<sup>1</sup> The <ttx>Gaps</ttx> and <ttx>Centromere</ttx> options are disabled in the image above, as there are none for this chromosome.
 <p>
 
 <a id="sfhit"></a>
@@ -1253,7 +1320,7 @@ Multiple <ttl>Show</ttl> options can be selected, but only one <ttl>Highlight</t
 	will be highlighted.
 	</table>
 <td><a href="img/hitfilterS.png">
-	<img src="img/hitfilterS.png" alt="hitfilterS" style="border: 1px solid black; width: 320px">
+	<img src="img/hitfilterS.png" alt="hitfilterS" style="border: 1px solid black; width: 300px">
 <tr><td>
 </table>
 
@@ -1454,36 +1521,20 @@ the <ttp>2D</ttp> view.
 <a id="data_download"></a>
 <h3>Data Download</h3>
 
-There are two ways to download data for SyMAP synteny blocks, individual hit anchors, and annotations:
-
-<p><ttp>Queries</ttp>: The results of a query are shown in a table,
-which can be exported as a CSV or HTML file.  The hit sequences can be exported in FASTA format.
-See <a href="Query.html#export" class="ext" target="_blank">Query Export</a>.
-
-<p><ttp>Explorer 2D</ttp>: Select the species of interest,
- open the <a href="#alignment_display_2d">Explorer 2D</a>, and click the <ttl>Download Blocks</ttl> button is at the lower left.
- This exports a table of all the computed synteny block coordinates for all the
- selected species. The options are:
-<p>
+There are three ways to download data for SyMAP synteny blocks, individual hits, and annotations:
+<p><ttp>Manager</ttp>:
 <ul>
-<li><ttl>Blocks with gene info</ttl>: The columns for each block are:
-<br><small>
-&nbsp;&nbsp;Species1  Species2  Chr1  Chr2  BlkNum Start1 End1  Start2 End2 #Hits   Genes1  %Genes1 Genes2  %Genes2 PearsonR
-</small>
-<p>The <ttx>Genes1</ttx> column is the number of genes from <ttx>Species1</ttx> in the block and <ttx>%Genes1</ttx>
-is the percentage of genes that have a hit.
-The <ttx>PearsonR</ttx> is the approximate linearity of the hits in the chain as measured
-by the Pearson correlation coefficient; a negative PCC is an inverted block.
+<li><a href="#breport">Block Report</a>: Select the species of interest, select <ttb>Report...</ttb> on the <ttp>Manager</ttp>,
+then select <ttl>Block Report</ttl>
+</ul>
+
+<p><ttp>Queries</ttp>:
+<ul>
+<li><a href="Query.html#export" class="ext" target="_blank">Query Export</a>:
+The results of a query are shown in a table,
+which can be exported as a CSV or HTML file.  The hit sequences can be exported in FASTA format.
 <p>
-<li><ttl>Blocks only</ttl>: The columns for each block are:
-<br><small>
-&nbsp;&nbsp;Species1  Species2  Chr1  Chr2  BlkNum #Hits  Start1 End1  Start2 End2
-</small>
-<br>&nbsp;
-<li><ttl>Blocks summary</ttl>: The columns for each species and chromosome pair are:
-<br><small>
-&nbsp;&nbsp;Species1  Species2  Chr1  Chr2  #Blocks  #Hits
-</small>
+<li><a href="Query.html#export" class="ext" target="_blank">Gene Report</a>: A report that combines rows of a query can be created and exported in HTML or TSV format.
 </ul>
 
 <a id="image"></a>
@@ -1518,9 +1569,12 @@ that lets you change the color.
 <table class="tx">
 <tr><td>
 <tr>
-<td style="vertical-align: text-top;><a href="img/2d-color.png"><img src="img/2d-color.png" alt="Track Colors" style="border: 1px solid black; width: 270px"></a>
-<td style="vertical-align: text-top;><a href="img/2d-color2.png"><img src="img/2d-color2.png" alt="Hit Colors" style="border: 1px solid black; width: 260px"></a>
-<td><a href="img/2d-color3.png"><img src="img/2d-color3.png" alt="Change Colors" style="border: 1px solid black; width: 200px"></a>
+<td style="vertical-align: text-top;"><a href="img/2d-color.png">
+  <img src="img/2d-color.png" alt="Track Colors" style="border: 1px solid black; width: 270px"></a>
+<td style="vertical-align: text-top;"><a href="img/2d-color2.png">
+  <img src="img/2d-color2.png" alt="Hit Colors" style="border: 1px solid black; width: 260px"></a>
+<td><a href="img/2d-color3.png">
+   <img src="img/2d-color3.png" alt="Change Colors" style="border: 1px solid black; width: 200px"></a>
 </table>
 
 <p><u>Dot Plot tab</u>:

@@ -16,7 +16,7 @@
 <a href="#intro">Introduction</a>
 <a href="#require">Requirements</a>
 <a href="#installation">Install SyMAP</a>
-<a href="#demo">Demo</a>
+<a href="#demo">Running the Demo</a>
 <a href="#create">New Project</a>
 <a href="#gen">General</a>
 <p>&nbsp;
@@ -62,7 +62,7 @@ Referenced external docs</u>
 <li><a href="input/index.html" class="ext" target="_blank">Input</a>
 <li><a href="SystemHelp.html" class="ext" target="_blank">Parameters and Interface</a>
 <li><a href="MUMmer.html" class="ext" target="_blank">MUMmer with SyMAP</a>
-<li><a href="Demo.html" class="ext" target="_blank">Demo</a>
+<li><a href="Demo.html" class="ext" target="_blank">Demo Snapshots</a>
 <li><a href="TroubleShoot.html" class="ext" target="_blank">Trouble-shoot</a>
 </ul>
 1. <u>Introduction</u>
@@ -95,7 +95,7 @@ Referenced external docs</u>
 <li style="margin: 0.4em 0;"><a href="#create">Create a new project</a>
 <li style="margin: 0.4em 0;"><a href="#dir">Input and directory structure</a>
 <li style="margin: 0.4em 0;"><a href="#load">Load project</a>
-<li style="margin: 0.4em 0;"><a href="#ans">Alignment&Synteny (A&S)</a>
+<li style="margin: 0.4em 0;"><a href="#ans">Align&Synteny (A&S)</a>
 <li style="margin: 0.4em 0;"><a href="#draft2">Draft ordering</a>
 <li style="margin: 0.4em 0;"><a href="#self">Self synteny</a>
 <li style="margin: 0.4em 0;"><a href="#cancel">Cancel</a>
@@ -227,8 +227,8 @@ The following three scripts are provided in the tar file.
 	<tr>
 		<td style="vertical-align: text-top;">7.
 		<td style="vertical-align: text-top;">Compute alignments and synteny.
-		<td style="vertical-align: text-top;">Select <ttb>Selected project</ttb> beside <ttl>Alignment&amp;Synteny</ttl>.
-		<br>See <a href="#ans">Alignment&amp;Synteny</a>.
+		<td style="vertical-align: text-top;">Select <ttb>Selected project</ttb> beside <ttl>Align&amp;Synteny</ttl>.
+		<br>See <a href="#ans">Align&amp;Synteny</a>.
 	<tr>
 		<td style="vertical-align: text-top;">8.
 		<td style="vertical-align: text-top;">View results.
@@ -326,11 +326,11 @@ the SyMAP output, which uses the Java system time functions (clock times
 are greater than the Java CPU system times). Repeated execution can result in times
 varying by approximately +/-5secs.  All the following results use 4 CPUs (thread/core).
 
-<p><table>
+<p><table class="tx">
 	<tr><td><u>Species</u><td><u>MUMmer</u><td><u>SyMAP</u><td>&nbsp;&nbsp;&nbsp;<td><u>Size</u>
-	<tr><td>Hsa x Mus<td><b>30h:45m</b><td> 1m:37s<td>&nbsp;<td>3Gb x 2.7Gb, large genomes
- 	<tr><td>Hsa x Pan<td><b>16h:40m</b><td> 0m:35s<td>&nbsp;<td>478Mb x 447Mb, closely related
-    <tr><td>Hsa x Mus<td>0h:55m<td> 0m:04s<td>&nbsp;<td>478Mb x 504Mb
+	<tr><td>Hsa x Mus (All chr)<td><b>30h:45m</b><td> 1m:37s<td>&nbsp;<td>3Gb x 2.7Gb, large genomes
+ 	<tr><td>Hsa x Pan (partial)<td><b>16h:40m</b><td> 0m:35s<td>&nbsp;<td>478Mb x 447Mb, closely related
+    <tr><td>Hsa x Mus (parital)<td>0h:55m<td> 0m:04s<td>&nbsp;<td>478Mb x 504Mb
 	<tr><td>A.thal x B.oler<td>0h:31m<td> 1m:14s<td>&nbsp;<td>119Mb x 447Mb
 	<tr><td>B.raba x B.oler<td><b>4h:23m</b><td> 4m:12s<td>&nbsp;<td>297Mb x 447Mb, closely related
 	<tr><td>Peach x Pyedo<td>0h:44m<td> 6m:51s<td>&nbsp;<td>227Mb x 408Mb, Pyedo ordered by peach
@@ -340,7 +340,7 @@ varying by approximately +/-5secs.  All the following results use 4 CPUs (thread
 <p><li> MacOS x86_64 with 64Gb has been tested on 2-4 above. For comparison, the following A&S was computed
 with 4 CPUs; note the longer time for the synteny computation on the older Mac machine.
 
-	<table>
+	<table  class="tx">
 	<tr><td><u>Species</u><td><u>MUMmer</u><td><u>SyMAP</u>
 	<tr><td>A.thal x B.oler&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>0h:33m&nbsp;&nbsp;<td>4m:06s
 	</table>
@@ -571,15 +571,15 @@ Your may verify the results by selecting the <a href="img/view.png">View</a> lin
 <p>In the <ttl>Available Syntenies</ttl> table, the cell for  <ttx>Demo_Seq2</ttx> and <ttx>Demo_Seq</ttx> will
 automatically be selected (green cell).
 
-<p>Click the <ttb>Selected Pair</ttb> button to start the <ttl>Alignment&amp;Synteny</ttl>.
- <ttb>All Pairs</ttb> button can also be selected, as it will perform <ttl>Alignment&amp;Synteny</ttl> on all pairs
+<p>Click the <ttb>Selected Pair</ttb> button to start the <ttl>Align&amp;Synteny</ttl>.
+ <ttb>All Pairs</ttb> button can also be selected, as it will perform <ttl>Align&amp;Synteny</ttl> on all pairs
 in the table.
 <td>
 <a href="img/demoMgr.png"><img src="img/demoMgr.png" alt="demoMgr" style="border: 1px solid black; width: 400px"></a>
 <tr><td style="colspan: 2; height: 40px;">&nbsp;
 <tr>
 <td style="vertical-align: text-top;">
-The <ttl>Alignment&amp;Synteny</ttl> takes less than 5 minutes on the MacOS 10.5 but could take up to 30 minutes
+The <ttl>Align&amp;Synteny</ttl> takes less than 5 minutes on the MacOS x86_64 but could take up to 30 minutes
 on a slow machine.
 <p>When done, the table will have a checkmark (&#10003), signifying that the synteny is available for viewing.
 
@@ -619,7 +619,7 @@ at the bottom, select <ttx>Draf->Seq2</ttx>.
 	<tr><td style="colspan: 2; height: 40px;">&nbsp;
 
 	<tr><td style="vertical-align: text-top;">
-Run the <ttl>Alignment&amp;Synteny</ttl>, where the alignment should take less than 10 minutes with one CPU.
+Run the <ttl>Align&amp;Synteny</ttl>, where the alignment should take less than 10 minutes with one CPU.
 When done, open the <ttb>Summary</ttb> for the pair which will be similar to what is shown on the right; as mentioned above, <i>there
 may be slight difference in the number of Cluster hits.</i>
 See the first dot plot in <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>.
@@ -650,7 +650,7 @@ The display name is <ttx>Demo_Draft.Demo_seq2</ttx>, click and load it.
 
 <table>
 <tr><td style="vertical-align: text-top;">
-Running the <ttl>Alignment&amp;Synteny</ttl> between the <ttx>Demo_Draft.Demo_seq2</ttx> project
+Running the <ttl>Align&amp;Synteny</ttl> between the <ttx>Demo_Draft.Demo_seq2</ttx> project
 and <ttx>Demo_seq2</ttx> will provide a more coherent display (see the second dot plot for
 <a href="Demo.html#draft" class="ext" target="_blank">Demo-Draft</a>).
 Using the project's <a href="SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a> panel,
@@ -685,7 +685,7 @@ This computes very few blocks, as shown in
 <td><a href="#create2">Create</a>
 <td><a href="#dir">Input and<br>directory</a>
 <td><a href="#load">Load<br>project</a>
-<td><a href="#ans">Alignment<br>&amp; Synteny</a>
+<td><a href="#ans">Align<br>&amp; Synteny</a>
 <td><a href="#draft2">Draft<br>ordering</a>
 <td><a href="#self">Self<br>synteny</a>
 <td><a href="#cancel">Cancel</a>
@@ -790,7 +790,7 @@ See <a href="./SystemHelp.html#selLoad" class="ext" target="_blank">Load</a> for
 <table style="width: 95%"><tr><td style="text-align: left"><td style="text-align: right"><a href="#top">Go to top</a></table>
 <!------------ ans ----------------------->
 <a id="ans"></a>
-<h3>Alignment&amp;Synteny</h3>
+<h3>Align&amp;Synteny</h3>
 
 <table class="tx">
 <tr><td style="vertical-align: text-top;">See <a href="./SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a>
@@ -799,11 +799,11 @@ on setting the pair parameters for the this step.
 <p>See <a href="SystemHelp.html#cpu" class="ext" target="_blank">CPU and Verbose</a> for a description of these
 two options.
 <p>Then select <ttb>Selected Pair</ttb>
-to run the Alignment&amp;Synteny.
+to run the Align&amp;Synteny.
 <td><a href="img/demoTable2.png"><img src="img/demoTable2.png" alt="align and synteny" style="border: 1px solid black; width: 500px"></a>
 </table>
 
-<p><u>Alignment&amp;Synteny files</u>:
+<p><u>Align&amp;Synteny files</u>:
 The result files are in the following directories:
 <pre>
    /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/align
@@ -852,7 +852,7 @@ It is strongly suggested you run the demo! In a nutshell, the steps are:
 At the bottom of the panel, select the radio button that indicates ordering your draft against
 a complete sequence (e.g. Draf-&gtSeq2).
 
-<li>Run the <ttl>Alignment&Synteny (A&S)</ttl>. At the end, you will see a new project with
+<li>Run the <ttl>Align&Synteny (A&S)</ttl>. At the end, you will see a new project with
 the two <ttx>project-names</ttx> separated by ".." in the left panel. It will contain:
 
 <ul>
@@ -893,7 +893,7 @@ will print out all the lengths; set the <ttx>Minimum length</ttx> to the 150th l
 
 By default, SyMAP uses the MUMmer 'NUCmer' program for self-alignments. Each chromosomes
 is compared to every other chromosome including itself.
-<p>The Alignment&amp;Synteny <a href="SystemHelp.html#pairParams" class="ext" target="_blank">
+<p>The Align&amp;Synteny <a href="SystemHelp.html#pairParams" class="ext" target="_blank">
 Parameters</a> panel has an option to set <ttx>Self Args</ttx>,
 which is only used when comparing the chromosome sequence file
 to itself. Make sure that the <i>Cluster Hits</i> <ttx>Algorithm 1</ttx> option is selected.
@@ -960,7 +960,7 @@ or
 see if there are any <tt>/scripts</tt> or <tt>/ext</tt> changes that need to also be copied over.
 </ul>
 
-The <ttl>Alignment&Synteny</ttl> will use existing MUMmer files if they have not been removed.
+The <ttl>Align&Synteny</ttl> will use existing MUMmer files if they have not been removed.
 
 <!----------------------------------------------------------------------->
 <a id="alg"></a>
@@ -1003,7 +1003,7 @@ connected by a clustered anchor, the retained anchors must be among
 ancestral whole-genome duplication). An anchor will also be retained if its
 score is at least 80% of that of the 2nd-best anchor on each side (this
 allows for retention of gene family anchors). These filter parameters
-may be adjusted through the <ttl>Alignment&amp;Synteny</ttl> <a href="SystemHelp.html#over2" class="ext" target="_blank">Parameters</a> panel.
+may be adjusted through the <ttl>Align&amp;Synteny</ttl> <a href="SystemHelp.html#over2" class="ext" target="_blank">Parameters</a> panel.
 
 <p><u>Algorithm 2 (exon-intron)</u> is good for low-to-high divergent genomes with good annotation.
 It directly maps hits to the exons and introns. Hits aligning to un-annotated regions are clustered separately.
@@ -1018,7 +1018,7 @@ synteny block algorithm runs. This algorithm looks for approximately-collinear
 sequences of anchors, subject to several parameters including (A) Number
 of anchors; (B) Collinearity of the anchors; (C) Amount of "noise" in the
 surrounding region (to help reject false-positive chains). Criterion A can
-be adjusted in the <ttl>Alignment&amp;Synteny</ttl> <ttb>Parameters</ttb> panel.
+be adjusted in the <ttl>Align&amp;Synteny</ttl> <ttb>Parameters</ttb> panel.
 <p>
 <sup>*</sup> Note that the sequences are re-written from the database to the
 disk for three reasons: (A) To allow re-grouping for efficiency; (B) To ensure elimination

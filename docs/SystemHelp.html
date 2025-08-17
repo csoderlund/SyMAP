@@ -72,7 +72,7 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <li style="margin: 0.4em 0;"><a href="#project">Load project</a>
 <li style="margin: 0.4em 0;"><a href="#anno">Load annotation</a>
 <li style="margin: 0.4em 0;"><a href="#annot">GFF Attributes</a>
-<li style="margin: 0.4em 0;"><a href="#save1">Rules for saving project parameters</a>
+<li style="margin: 0.4em 0;"><a href="#save1">Save project parameters</a>
 
 </ol>
 <td style="vertical-align: text-top;">
@@ -82,7 +82,7 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <li style="margin: 0.4em 0;"><a href="#align2">Alignment</a>		<!-- in code v546 -->
 <li style="margin: 0.4em 0;"><a href="#clust">Cluster Hits</a>		<!-- in code v546 -->
 <li style="margin: 0.4em 0;"><a href="#syn">Synteny</a>				<!-- in code v546 -->
-<li style="margin: 0.4em 0;"><a href="#save2">Rules for saving pair parameters</a>
+<li style="margin: 0.4em 0;"><a href="#save2">Save pair parameters</a>
 <li style="margin: 0.4em 0;"><a href="#mum">MUMmer parameters</a>
 </ol>
 </table>
@@ -120,8 +120,7 @@ This document provide details of parameters and functions.
 <a id="selLoad"></a>
 
 <h3>1.a Selected</h3>
-The project
-s selected from the <ttb>Projects</ttb> in
+The projects selected from the <ttb>Projects</ttb> in
 the left panel are listed in the <ttb>Selected</ttb> section on the right.
 The possible functions vary with the state, as listed below:
 
@@ -174,7 +173,7 @@ The possible functions vary with the state, as listed below:
     <td>Removes the annotation from the database then load the annotations.
 
 	<p>This does not effect the alignment, so they do not have to be redone.
-	The <ttl>Alignment&amp;Synteny</ttl> commands will recognize if there is an existing alignment
+	The <ttl>Align&amp;Synteny</ttl> commands will recognize if there is an existing alignment
 		and will only perform the synteny computation.
 
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;
@@ -213,8 +212,8 @@ the buttons that can be selected are activated.
 		This status occurs if a pair is completed but then annotations are re-loaded for one of the projects,
 		or if the MUMmer files have been added by the user.
 <tr><td><b>?</b>
-	<td>The alignment have not been completed. In this case, select <ttl>Selected Pair (Redo)</ttl> and the
-		alignments will be completed followed by the synteny algorithm.
+	<td>The alignment have not been completed. In this case, select <ttl>Selected Redo</ttl> and the
+		alignments will be completed followed by the Cluster&amp;synteny algorithm.
 <tr><td>&nbsp;
 	<td>The alignment has not been started.
 </table>
@@ -224,7 +223,8 @@ the buttons that can be selected are activated.
 <h3>1.c Function Buttons</h3>
 
 <table class="ty">
-<tr><td colspan=2><i>Alignment&amp;Synteny (A&amp;S)</i>
+<tr><td colspan=2><i>Align&amp;Synteny (A&amp;S)</i> Synteny usually implies <i>Cluster&amp;Synteny</i>
+as the process has 2 distinct algorithms.
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<ttb>All Pairs</ttb>
 	<td>
@@ -233,15 +233,16 @@ the buttons that can be selected are activated.
 		the pair.
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<ttb>Selected Pair</ttb>
-		<br><ttb>Selected Pair (Redo)</ttb>
+		<br><ttb>Selected Redo</ttb>
 	<td>Run (or complete) the <ttl>A&amp;S</ttl> computation for the selected project pair.
 		<br>If the pair is already complete, the button label changes to <ttb>Redo</ttb>, and
-		only the synteny computation will be rerun.
+		only the <ttx>Cluster&amp;Synteny</ttx> will be rerun (see <a href="#drop">Pair Parameters</a> for some
+		variations).
 		<br>If you wish to rerun the MUMmer alignment, first use the <ttb>Clear Pair</ttb> function.
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<ttb>Clear Pair</ttb>
-	<td><ttl>Only: remove synteny from database</ttl>
-	<br><ttl>All: remove synteny and alignments from disk for this pair</ttl>
+	<td><ttx>Only: remove synteny from database</ttx>
+	<br><ttx>All: remove synteny and alignments from disk for this pair</ttx>
 	<p>If you have changed the <ttl>Alignment</ttl> parameters, or loaded new sequence for one
 	of the projects, you need to have the alignments removed and redone; otherwise, you can just remove the synteny
 	from database (where this step can be skip by selecting the <ttb>Selected Pair (Redo)</ttb>).
@@ -476,7 +477,7 @@ the <tt>Name=value</tt> would not be part of any gene annotation. This must be s
 is executed.
 <!----------------------------------------------->
 <a id="save1"></a>
-<h3>2.f Rules for saving project parameters</h3>
+<h3>2.f Saving project parameters</h3>
 
 Before the project is loaded, the parameters are saved to the file
 <pre>  data/seq/&lt;project-name&gt/params.txt</pre>
@@ -509,7 +510,7 @@ When the <ttl>A&amp;S</ttl> is executed, then the corresponding parameters are s
 
 <a id="over2"></a>
 <h3>3.a Parameter panel</h3>
-The <a href="#avail">Available Syntenies</a> explains the table in the lower right. The following provides
+The <a href="#avail">Available Syntenies</a> section at the beginning explains the table in the lower right. The following provides
 more information in the context of the pair parameters.
 <table>
 <tr>
@@ -535,18 +536,18 @@ one can make changes to the cluster or synteny parameters and re-run without red
 <p>
 Select a pair cell in the <ttb>Available Syntenies</ttb> table followed by the <ttl>Parameters</ttl>
 button, which will popup the panel shown on the right.
-
 	<p>If a &#10004; or <b>A</b> in pair cell exists and the parameters for a section
 	are changed, do the following:
 
 	<table class="ty">
 		<tr><td style="white-space: nowrap;"><i>Changed Section</i><td><i>Action</i>
 		<tr><td><b><i>Alignment</i></b> <td>Select <ttb>Clear Pair</ttb> to remove the existing alignments,
-		then <ttb>Selected Pair (ReDo)</ttb>.
-		<tr><td><b><i>Cluster Hits</i></b> <td>Use <ttb>Selected Pair (ReDo)</ttb>
+		then <ttb>Selected Pair</ttb>.
+		<tr><td><b><i>Cluster Hits</i></b> <td>Use <ttb>Selected Redo</ttb>
 		directly; the existing alignments for the pair will be used.
-		<tr><td><b><i>Synteny</i></b> <td>Use <ttb>Selected Pair (ReDo)</ttb>
-		directly; the existing alignments for the pair will be used.
+		<tr><td><b><i>Synteny</i></b> <td>If only synteny parameters are changed,
+		click the lower-left drop-down and select <ttx>Synteny Only</ttx>
+		(see <a href="#drop">drop-down</a>).
 	</table>
 	<p>&nbsp;<p>The parameters are described in the following 3 sections: <a href="#align2">Alignment</a>,
 	<a href="#clust">Cluster hits</a> and <a href="#syn">Synteny</a>.
@@ -691,7 +692,7 @@ yet the cluster aligns to two genes on the different strands (+-/-+), or vice ve
 where the <ttx>Hit St</ttx> column will be different than the two gene <ttx>Gst</ttx> columns.
 
 <p><tt>Algo2</tt> does NOT include these hits. You can request to view the potential hits
-during the <ttl>A&S</ttl> by running it with the "-wsp" flag, i.e.
+during the <ttl>A&amp;S</ttl> by running it with the "-wsp" flag, i.e.
 <tt>   ./symap -wsp </tt>.
 This will only show gene pairs with (1) multiple hits to exons (in one or multiple gene pairs), (2) at least one is not
 an overlapping gene. It is up to the user to determine what is real.
@@ -721,7 +722,7 @@ by increasing all parameters a small amount, this reduced to just over 100k.
 <table class="ty">
 <tr><td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
 <tr><td style="white-space: nowrap;"><ttl>Number Pseudo</ttl><td>If selected, the un-annotated ends of hits will be assigned a
-pseudo number. This is explained below in <a href="#pseudo">Pseudo Genes</a>.
+pseudo number. This is explained below in <a href="#pseudo">Pseudo genes</a>.
 <td>No
 <tr><td colspan=2><ttl>Algo1 (original)</ttl>
     <td>Yes
@@ -783,13 +784,11 @@ Chr03 is 5550 (e.g. 3.5550.), the first pseudo gene number will be 6000 (e.g. 3.
 
 <td><a href="img/query_pseudo.png"><img src="img/query_pseudo.png" alt="Pseudo genes" style="border: 1px solid black; width:  370px"></a>
 </table>
-<p>If <ttl>A&S</ttl> was run without numbered pseudos, you can add them later by executing:
-<tt>./symap -pseudo</tt>; the <ttl>Selected Pair</ttl> button will be replaced with
-<ttl>Pseudo Only</ttl>, which will just do the numbering (the  <ttl>Number Pseudo</ttl>
-will need to be selected, but it will remind you). <i>This cannot be undone</i>;
-you would need to re-run
-<ttl>A&S</ttl> with the <ttl>Number Pseudo</ttl> unchecked to remove them.
-
+<p>If <ttl>A&amp;S</ttl> was run without numbered pseudos, go to the <ttb>Pair Parameter</ttb> panel,
+and select <ttx>Number Pseudo</ttx> in the lower-left <a href="#drop">drop-down</a>; only this algorithm
+will be run. <i>This cannot be undone</i>;
+you would need to re-run <ttl>A&amp;S</ttl> with the <ttb>Number Pseudo</ttb> unchecked to remove them.
+<p>
 <table class="ty">
 <tr><td>Pros
 <td>
@@ -843,9 +842,9 @@ must be filtered; if they are not, the synteny algorithm does not perform well.
 	<td>Merge overlapping (or nearby) synteny blocks into larger blocks.
 	<td>Off
 </table>
-<p><sup>1</sup><ttl>Same orient</ttl> uses the same algorithm as the original except that it evaluates the hits for one
-orientation, than the other. It also adds a constraint that the correlation must be positive for blocks of hits in the same orientation,
-and negative for opposite orientation.
+
+<p><sup>1</sup><ttl>Same orient</ttl> only change is that a chromosome pair is first evaluated with same direction
+hits, and then again for different direction hits.
 <p><sup>2</sup><ttl>Merge</ttl> may be beneficial when there are many small blocks. Below shows
 an example where the first image does not have merged blocks and the second does (the blue dots are hits that
 belong to the block).
@@ -854,7 +853,7 @@ belong to the block).
 <a href="img/demoNotMerge.png"><img src="img/demoNotMerge.png" alt="demo Not Merge" style="border: 1px solid black; width:  210px"></a>
 <a href="img/demoMerge.png"><img src="img/demoMerge.png" alt="demoMerge" style="border: 1px solid black; width:  220px"></a>
 <p>The following three images show the same regions when evaluated with the following 3 parameter sets:
-<br>Default (one block)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<br>Default (one block)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <ttl>Same orient</ttl> (three blocks)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <ttl>Same orient</ttl> with <ttl>Merge</ttl> (two blocks).
 <a href="img/pairOrient.png"><img src="img/pairOrient.png" alt="Pair Orient" style="border: 1px solid black; width:  700px"></a>
@@ -866,17 +865,50 @@ belong to the block).
 For draft sequences, they may be ordered against another project.
 See <a href="./SystemGuide.html#draft2" class="ext" target="_blank">Ordering details</a>.
 <table>
-<tr><td>The <ttx>Seq1-&gt;Seq2</ttx> and <ttx>Seq2-&gt;Seq1</ttx> use the
+<tr><td>The <ttx>Draf-&gt;Seq2</ttx> and <ttx>Seq2-&gt;Draf</ttx> use the
 <ttl>Abbreviation</ttl> set in the <ttb>Project parameters</ttb> panel.
 The "-&gt;" indicates that the first sequence will be ordered against the second.
-<td><a href="img/parameters2b.png"><img src="img/parameters2b.png" alt="pair parameters synteny" style="border: 1px solid black; width: 280px"></a>
+<td><a href="img/parameters2c.png"><img src="img/parameters2c.png" alt="pair parameters synteny" style="border: 1px solid black; width: 280px"></a>
 </table>
 
 <p>If the draft has been aligned to the <ttl>Order against</ttl> sequence, but this parameter
 was not set, it can be set and the <ttl>A&amp;S</ttl> run with the existing alignment files.
 
 <a id="save2"></a>
-<h3>3.e Rules for saving pairs parameters</h3>
+<h3>3.e Save</h3>
+
+<a id="drop"></a>
+<h4>Lower-left drop-down</h4>
+This is shown in the image right above on the right.
+<table class="tx">
+<tr><td><ttx>Align&Synteny</ttx>
+	<td>If the pair has a blank in the <ttl>Available Syntenies</ttl> table,
+	this will be the only option.
+<tr><td><ttx>Clust&Synteny</ttx>
+	<td>If the pair has an <b>A</b> in the <ttl>Available Syntenies</ttl> table,
+	this option will replace the <ttx>Align&Synteny</ttx> in the drop-down.
+	Use this option if you have changed the clustering parameters.
+<tr><td><ttx>Synteny Only</ttx><td>
+If the pair has a &#10004; in the <ttl>Available Syntenies</ttl> table, this option will
+be available.
+<br>If you have only changed synteny parameters, select this option.
+<tr><td><ttx>Number Pseudo</ttx><td>
+If the pair has a &#10004; in the <ttl>Available Syntenies</ttl> table, this option will
+be available.
+<br>If you only want the pseudos number, select this option (see <a href="#pseudo"> Pseudos</a>).
+</table>
+<ul>
+<li>Select <ttb>Save</ttb> after changing this.
+<p>
+<li><ttp>Manager</ttp>: The <ttb>Selected pair</ttb> button
+will have its label replace to reflect the drop-down setting, as follows:
+<ttx>Align&amp;Synteny &rarr; Selected Pair
+<br>Clust&amp;Synteny &rarr; Selected Redo
+<br>Synteny Only &rarr; Synteny Only
+<br>Number Pseudo &rarr; Pseudo Only</ttx>
+</ul>
+<!--------------------->
+<h4>Saving pairs parameters</h4>
 
 Before the <ttl>A&amp;S</ttl> is executed, the parameters are saved in
 <pre>  data/seq_results/&lt;proj1-to-proj2&gt;/params.txt</pre>
@@ -887,8 +919,8 @@ viewed and changed using <ttp>symap</ttp> (not <ttp>viewSymap</ttp>).
 
 <p>Any parameter not the default will be shown on the <ttl>Summary</ttl> page.
 
-<p>BEWARE: If you run <ttl>A&S</ttl>, then change the PROmer or NUCmer settings, but forget to <ttb>Clear Pair</ttb>
-before running <ttl>A&S</ttl> again, the parameters
+<p>BEWARE: If you run <ttl>A&amp;S</ttl>, then change the PROmer or NUCmer settings, but forget to <ttb>Clear Pair</ttb>
+before running <ttl>A&amp;S</ttl> again, the parameters
 on the <ttb>Summary</ttb> page will be wrong (SyMAP does not check for this situation).
 <!------------------------------------------------------------------------>
 <a id="mum"></a>
