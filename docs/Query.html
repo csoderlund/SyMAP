@@ -16,6 +16,7 @@
 <a href="#instruct">&gt;Instructions</a>
 <a href="#query">&gt;Query Setup</a>
 <a href="#result">Result Panel</a>
+<a href="#col">&nbsp;&nbsp;&nbsp;Columns</a>
 <a href="#but">&nbsp;&nbsp;&nbsp;Top buttons</a>
 <a href="#rtab">&gt;Results</a>
 
@@ -584,7 +585,9 @@ are the full descriptions of the columns.
 <tr><td style="vertical-align: text-top;"><ttx>Hit #Subs</ttx><td>&nbsp;
 	<td>The number of subhits in a clustered hit.
 <tr><td style="vertical-align: text-top;"><ttx>Hit St</ttx><td>&nbsp;
-	<td>The strand for the two ends of the end separated by a "/".
+	<td>If the two ends have signs "+/+" or "-/-", this will be "==".
+	<br>If the two ends have signs "+/-" or "+/-", this will be "!=".
+	<br>Note: to see the actual values, <ttb>Show</ttb> the row.
 <tr><td style="vertical-align: text-top;"><ttx>Hit Cov</ttx><td>&nbsp;
 	<td>The summed subhits within a clustered hit taking into accounts overlaps. The summed subhits
 	are usually different for the two sides; this will be the longest.
@@ -600,7 +603,7 @@ are the full descriptions of the columns.
 <tr><td style="vertical-align: text-top;"><ttx>Chr</ttx><td>&nbsp;
 	<td>Chromosome of the hit.
 <tr><td style="vertical-align: text-top; white-space: nowrap;"><ttx>Gstart/Gend/Gst</ttx><td>&nbsp;
-	<td>Start and end of the annotated gene. The <ttx>Gst</ttx> is the strand (+/-).
+	<td>Start and end of the annotated gene. The <ttx>Gst</ttx> is the strand (+ or -).
 <tr><td style="vertical-align: text-top;"><ttx>Gene#</ttx><td>&nbsp;
 	<td>The gene number is C.#.{a-z}. The C is the chromosome number.
 	The # is the sequential number along the chromosome.

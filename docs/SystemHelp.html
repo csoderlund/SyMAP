@@ -163,7 +163,7 @@ The possible functions vary with the state, as listed below:
     <td><ttx>Only: reload project only.</ttx>
     <br><ttx>All: reload project and remove alignments from disk.</ttx>
 	<p>If <ttl>All</ttl> is selected, it first prompts for each alignment directory for this project before it is removed.
-		It removes the alignments and final results, but it leaves the <tt>params.txt</tt> file. You will need to remove the
+		It removes the alignments, but it leaves the <tt>params.txt</tt> file. You will need to remove the
 		alignment(s) if (1) there is a change in sequence, or (2) there is a change in the <ttl>Minimal length</ttl> parameter;
 		see <a href="#project">Load project</a> parameters.
 		<p>For either option, it executes <ttl>Remove from database</ttl> followed by <ttl>Load project</ttl>.
@@ -834,30 +834,39 @@ must be filtered; if they are not, the synteny algorithm does not perform well.
 <tr><td>&nbsp;&nbsp;<ttl>Min Hits</ttl>
 	<td>Minimum number of anchors required to define a synteny block.
 	<td>7
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Same orient</ttl><sup>1</sup>
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Strict</ttl>
+	<td>This uses the <ttl>Original</ttl> algorithm with the following changes:
+	<ul>
+	<li>It used smaller gap sizes and stricter PCC cutoff.
+	<li>It first computes the blocks based on orientation.
+	<li>If <ttl>Orient</ttl> is not checked, it checks blocks
+	and collinear sets to see if they are contained in another block, and if so, merges them regardless of orientation;
+	this merge happens regardless of the <ttl>Merge</ttl> setting.
+	</ul>
+	<p>By default, the <ttl>Original</ttl> algorithm is run.
+	However,  <ttl>Strict</ttl>  typically works better than the <ttl>Original</ttl>
+	for complete genome sequence projects;
+	see <a href="demo.html#synteny" class="ext" target="_blank">Synteny results</a>.
+	It is not recommended for draft sequence!
+	<td>Off
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Orient</ttl>
 	<td>All hits in a block must have hits of the same orientation ('+/+' or '-/-') or
 	different orientation ('+/-' or '-/+').
 	<td>Off
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Merge</ttl><sup>2</sup>
-	<td>Merge overlapping (or nearby) synteny blocks into larger blocks.
-	<td>Off
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Merge</ttl>
+	<td><ttx>Overlap</ttx>: The blocks must overlap to be merged.
+	<br><ttx>Close</ttx>: Blocks that overlap or are close will be merged.
+	<td>None
 </table>
 
-<p><sup>1</sup><ttl>Same orient</ttl> only change is that a chromosome pair is first evaluated with same direction
-hits, and then again for different direction hits.
-<p><sup>2</sup><ttl>Merge</ttl> may be beneficial when there are many small blocks. Below shows
-an example where the first image does not have merged blocks and the second does (the blue dots are hits that
-belong to the block).
-<p>
-<p>
-<a href="img/demoNotMerge.png"><img src="img/demoNotMerge.png" alt="demo Not Merge" style="border: 1px solid black; width:  210px"></a>
-<a href="img/demoMerge.png"><img src="img/demoMerge.png" alt="demoMerge" style="border: 1px solid black; width:  220px"></a>
 <p>The following three images show the same regions when evaluated with the following 3 parameter sets:
 <br>Default (one block)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <ttl>Same orient</ttl> (three blocks)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <ttl>Same orient</ttl> with <ttl>Merge</ttl> (two blocks).
 <a href="img/pairOrient.png"><img src="img/pairOrient.png" alt="Pair Orient" style="border: 1px solid black; width:  700px"></a>
 <br>In the last image, the reverse orientation block is embedded in another block
+<p>See <a href="demo.html#synteny" class="ext" target="_blank">Synteny results</a> for further comparison of using the different
+synteny parameters.
 
 <a id="order"></a>
 <h4>Order against</h4>
@@ -871,8 +880,18 @@ The "-&gt;" indicates that the first sequence will be ordered against the second
 <td><a href="img/parameters2c.png"><img src="img/parameters2c.png" alt="pair parameters synteny" style="border: 1px solid black; width: 280px"></a>
 </table>
 
-<p>If the draft has been aligned to the <ttl>Order against</ttl> sequence, but this parameter
-was not set, it can be set and the <ttl>A&amp;S</ttl> run with the existing alignment files.
+<p>If the draft has been aligned to the <ttl>Order against</ttl> sequence, but this option
+was not set, it can be set and the <ttx>Synteny Only</ttx> (see below) run with the existing alignment files.
+
+<a id="hint2"></a>
+<p><b>Hints about synteny parameter settings</b>
+
+<p>It is easier to experiment with synteny parameters since <ttx>Synteny Only</ttx> can be used to speed it up.
+For two genome complete sequence synteny, it is strongly suggested you start with <ttx>Strict</ttx>.
+
+<p>&rarr;&nbsp;<i>Suggestion</i>: For large genomes, experiment with the parameters on just one or two pairs of the chromosomes;
+you can use <a href="input/index.html" class="ext" target="_blank">xToSymap</a> for the split. Note: the synteny results of
+one or two chromosomes will be slightly different compared to whole genome synteny.
 
 <a id="save2"></a>
 <h3>3.e Save</h3>
@@ -904,7 +923,7 @@ be available.
 will have its label replace to reflect the drop-down setting, as follows:
 <ttx>Align&amp;Synteny &rarr; Selected Pair
 <br>Clust&amp;Synteny &rarr; Selected Redo
-<br>Synteny Only &rarr; Synteny Only
+<br>Synteny Only &nbsp;&rarr; Synteny Only
 <br>Number Pseudo &rarr; Pseudo Only</ttx>
 </ul>
 <!--------------------->

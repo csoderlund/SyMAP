@@ -11,12 +11,14 @@
 <div class="sidenav">
 <a href="http://www.agcol.arizona.edu">
 		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
-<p class=sidetit>&nbsp;&nbsp;Demo Results</p>
+<p class=sidetit>&nbsp;&nbsp;Results</p>
 <p>
-<a href="#reg">Demo_Seq-Demo_Seq2</a>
-<a href="#self">Self-synteny</a>
-<a href="#draft">Draft</a>
-<a href="#slog">symap.log</a>
+<a href="#reg">Demo Results</a>
+<a href="#two">&nbsp;&nbsp;Complete</a>
+<a href="#draft">&nbsp;&nbsp;Draft</a>
+<a href="#self">&nbsp;&nbsp;Self-synteny</a>
+<a href="#slog">&nbsp;&nbsp;symap.log</a>
+<a href="#synteny">Synteny Results</a>
 <p>&nbsp;
 <a href="#top">Go to top</a>
 </div>
@@ -49,131 +51,86 @@
 
 <!---------------------------- bulk of page ------------------------------------------->
 <div class="main">
+<p><center><b><big>Demo and Synteny Results</big></b></center>
 <br>
 <table class="tz"><tr> <!----- top index  ------->
-<td><a href="#reg">Demo_Seq-Demo_Seq2</a>
-<td><a href="#self">Self-synteny</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<td><a href="#reg">&nbsp;&nbsp;&nbsp;Demo_Seq-Demo_Seq2 Results</a><td>
+<td><a href="#synteny">Synteny Results</a>&nbsp;&nbsp;&nbsp;&nbsp;
+</table>
+<p>The first section provides results from the supplied demo, which
+is used by <a href="SystemGuide.html" class="ext">System Guide</a> in discussion of running the demo.
+<p>The second section describes synteny results using the different options; it uses a chromosome
+from <i>Arabidopsis thaliana</i> and one from <i>Brassica rapa</i>.
+
+<a id="reg"></a>
+<h2>Demo Results</h2>
+This demo was created from real data &gt;15 years ago, and is VERY obsolete - it is strictly for demonstration.
+<p>
+<table class="tz"><tr>
+<td><a href="#two">Two complete genomes</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#draft">Draft</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<td><a href="#self">Self-synteny</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#slog">symap.log</a>&nbsp;&nbsp;&nbsp;&nbsp;
 </table>
 
-<p>The demo was created from real data &gt;15 years ago, and is VERY obsolete - it is strictly for demonstration.
-<br>This is used by <a href="SystemGuide.html" class="ext">System Guide</a>.
-<a id="reg"></a>
-<h3>Demo-Seq to Demo-Seq2</h3>
-<table class="tz"><tr>
-<td><a href="#avail">Available</a>
-<td><a href="#dot">Dot plot</a>
-<td><a href="#ce">Chromosome Explorer</a>
-<td><a href="#query">Queries</a>&nbsp;&nbsp;&nbsp;&nbsp;
-<td><a href="#ag12">Algo1 vs Algo2</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a id="two"></a>
+<h3>Two complete genomes: Demo-Seq to Demo-Seq2</h3>
+<table class="tx">
+	<tr><td>&nbsp;<td><small>Click an image to view a closeup.</small>
+	<tr><td style="vertical-align: text-top;">
+	The demo that is provided with the SyMAP tarball has the projects <ttx>demo_seq</ttx>, <ttx>demo_seq2</ttx>
+	and <ttx>demo_draft</ttx>.
+	<p>The project <ttx>demo_draft..demo_seq2</ttx> is created with ordered contigs,
+	as described in <a href="#draft">Draft</a>.
+	<p>This section discusses the
+	<ttx>demo_seq</ttx> to <ttx>demo_seq2</ttx> synteny, which represent complete genome sequences.
+	<td><a href="img/demoProjects.png">
+    	<img src="img/demoProjects.png" alt="demo projects" style="border: 1px solid black; width: 450px"></a>
 </table>
 
-<a id="avail"></a>
-<table class="tx">
-<tr><td>&nbsp;<td><small>Click an image to view a closeup.</small>
-<tr><td style="vertical-align: text-top;">
-This document shows the different views for the <tt>Demo-Seq</tt> to <tt>Demo-Seq2</tt> alignment.
-When synteny has been computed for the demo, the <ttb>Available Syntenies</ttb> table will have a check (&#10003;),
-signifying that
-the synteny is available for viewing. The cell will be highlighted green,
-which will enable the viewing buttons, e.g <ttb>Dot Plot</ttb>.
-<td><a href="img/demoTable.png"><img src="img/demoTable.png" alt="demoTable" style="border: 1px solid black; width: 400px"></a>
-<tr><td style="colspan: 2; height: 40px;">&nbsp;</td></tr>
+<p>There are a variety of options, as discussed in
+<a href="SystemHelp.html" class="ext" target="_blank">Pair Parameters</a>.
+The following shows the <ttp>Dot Plot</ttp> and <ttp>Summary</ttp> using the following:
+<p>
+<ul>
+<li><ttl>Cluster Algo1 (original modified)</ttl> or <ttl>Cluster Algo2 (exon-intron)</ttl>: The second
+is recommended when there is good gene annotation provided; it cannot be used for self-synteny.
+<p>
+<li><ttl>Synteny Original</ttl> or <ttl>Synteny Strict</ttl>:
+The second is recommended for complete genome sequence; it does not perform well for draft.
+</ul>
+<p>
 
 <a id="dot"></a>
-<tr><td style="vertical-align: text-top;">
-Click <ttb>Dot Plot</ttb> and you will see the dot plot shown here. By clicking and/or selecting regions you can
-zoom into certain regions and bring up detailed views of the alignments.
-<p>The <ttb>?</ttb> button
-links to the online documentation that provides full information on the functions. The <ttb>(i)</ttb> button links to
-a popup with some brief information.
-<td><a href="img/demoDotplot.png"><img src="img/demoDotplot.png" alt="demoDotplot" style="border: 1px solid black; width: 400px"></a>
-<tr><td style="colspan: 2; height: 40px;">&nbsp;<td style="text-align: right"><a href="#top">Go to top
-
-<a id="ce"></a>
-<tr><td style="vertical-align: text-top;">
-Click the <ttb>Chromosome Explorer</ttb> button and you will see the display shown on the right, but
-no circle. The top left chromosome icon
-will have its number highlighed in a red box; this indicates it is the default reference chromosome.
-<p>Click on the icon body for <tt>Demo-Seq2</tt> 1 and 3 (i.e. chr1 and chr3) to see the Circos-style<sup>3</sup> view
-shown on the right. The ribbons represent synteny blocks.
-<td><a href="img/demoCirc.png"><img src="img/demoCirc.png" alt="demoCirc" style="border: 1px solid black; width: 400px"></a>
-<tr><td style="colspan: 2; height: 40px;">&nbsp;<td style="text-align: right"><a href="#top">Go to top
-
-<tr><td style="vertical-align: text-top;">
-Click the <ttb>2D</ttb> button to see a side-by-side view of the same chromosomes. Note that the reference is in the middle.
-The lines between chromosomes indicate the individual clustered hits.
-<td><a href="img/demo2d.png"><img src="img/demo2d.png" alt="demo2d" style="border: 1px solid black; width: 400px"></a>
-
-<tr><td style="vertical-align: text-top;">
-By dragging the mouse over a region of one chromosome, the display will zoom in on that region, as shown in the image on the right.
-<p>The exons for individual genes can be seen in the center of each sequence track.
-The length of the hit is shown on the inner boundary of the each chromosome segment.
-<p>
-There is a <ttb>Sequence Filter</ttb> for <ttl>Annotations</ttl>. This will show the annotation as shown
-on the right, but it must be zoomed in close enough. Alternatively, as long as the view is zoomed enough to see
-the individual exons, right-click on a gene for a popup of the annotation.
-<td>
-<a href="img/demo2dzoom.png"><img src="img/demo2dzoom.png" alt="demo2dzoom" style="border: 1px solid black; width: 400px"></a>
-<tr><td style="colspan: 2; height: 40px;">&nbsp;<td style="text-align: right"><a href="#top">Go to top
-
-<a id="query"></a>
-<tr><td style="vertical-align: text-top;">
-Click the <ttb>Queries</ttb> button. This brings up
-the query window in Overview mode. Click the <ttb>Query Setup</ttb> option
-on the left-hand side and you will see the corresponding window:
-<td>
-<a href="img/demoQuery.png"><img src="img/demoQuery.png" alt="demoQuery" style="border: 1px solid black; width: 400px"></a>
-<tr><td style="vertical-align: text-top;">
-Using the query setting from above produced the results table shown on the right. Columns can be changed, sorted and moved.
-<td><a href="img/demoQueryRes.png"><img src="img/demoQueryRes.png" alt="demoQueryRes" style="border: 1px solid black; width: 400px"></a>
-</table>
-
-<!----------------------------------------------------------->
-<a id="ag12"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>Algo1 versus Algo2</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-
 <table class="tx">
-<tr><td colspan="2">The following show the summary when the <ttl>Synteny Clustering</ttl> was run with <ttx>Algo1</ttx> versus <ttx>Algo2</ttx>.
-<tr>
-<td style="vertical-align: text-top;"><a href="img/demoSum.png"><img src="img/demoSum.png" alt="demo Sum algo1" style="border: 1px solid black; width: 380px"></a>
-<td><a href="img/demoSum2.png"><img src="img/demoSum2.png" alt="demo Sum algo2" style="border: 1px solid black; width: 375px"></a>
-</table>
-<!----------------------------------------------------------->
-<a id="self"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>Self-synteny of Demo-Seq</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<tr><td colspan="2"><ttl>Cluster Algo1 (original modified)</ttl> and <ttl>Synteny Original</ttl>
+<tr><td style="vertical-align: text-top;"><a href="img/demoSum.png">
+       <img src="img/demoSum.png" alt="demoSum" style="border: 1px solid black; width: 350px"></a>
+     <td style="vertical-align: text-top;"><a href="img/demoDotplot.png">
+	     <img src="img/demoDotplot.png" alt="demoDotplot" style="border: 1px solid black; width: 400px"></a>
 
-<table class="tx">
-<tr><td colspan="2"><tt>Demo-Seq</tt> has been run against itself, resulting in the <ttb>Dot Plot</ttb> shown on the lower right.
-There are a few off-diagonal blocks, which may indicate repetitiveness (but these blocks are probably
-too small to be meaningful).
-<tr> <td style="vertical-align: text-top; width: 670px">
-<p><small>Click to view summary</small>
-<br><a href="img/demoSumSelf.png">
-    <img src="img/demoSumSelf.png" alt="demo Sum Self" style="border: 1px solid black; width: 340px"></a>
-<td><a href="img/demoSelf.png">
-    <img src="img/demoSelf.png" alt="demoSelf" style="border: 1px solid black; width: 400px"></a>
+<tr><td colspan="2"><ttl>Cluster Algo2 (exon-intron)</ttl> and <ttl>Synteny Strict</ttl>
+<tr><td style="vertical-align: text-top;"><a href="img/demoSum2.png">
+       <img src="img/demoSum2.png" alt="demo Sum algo2" style="border: 1px solid black; width: 350px"></a>
+     <td style="vertical-align: text-top;"><a href="img/demoDotplot2.png">
+	     <img src="img/demoDotplot2.png" alt="demoDotplot2" style="border: 1px solid black; width: 400px"></a>
+<tr><td colspan="2">There is very little difference between the <ttp>Dotplots</ttp>. The differences are
+more pronounced on the <ttp>Chromosome Explorer 2D</ttp> and <ttp>Queries</ttp>. The
+difference in the synteny algorithm are obvious on the more complicated examples, as shown in
+<a href="#synteny">Synteny</a>.
 </table>
 
 <!----------------------------------------------------------->
 <p>
-<a id="draft"></a>
-<table style="width: 95%"><tr><td style="text-align: left">
-<h3>Demo-Draft to Demo-Seq2</h3>
-<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<a id="draft"></a> <!-- ref -->
+<h3>Draft: Demo-Draft to Demo-Seq2</h3>
 
 <table style="width: 800px;">
 <tr><td colspan="2">The <tt>Demo-draft</tt> was run against the <tt>Demo-Seq2</tt> with its <ttx>order_against</ttx> parameter set to <tt>Demo_Seq2</tt>.
 The resulting dot plot is shown on the right. Note that the 43 contigs
 are ordered, but still fragmented.
 <tr><td style="vertical-align: text-top;">
-<p><small>Click to view summary</small>
-<br><a href="img/demoSumDraft.png">
+<a href="img/demoSumDraft.png">
     <img src="img/demoSumDraft.png" alt="demoSumDraft" style="border: 1px solid black; width: 340px"></a>
 <td><a href="img/demoDraft2.png">
     <img src="img/demoDraft2.png" alt="demoDraft2" style="border: 1px solid black; width: 400px"></a>
@@ -185,16 +142,29 @@ to chr1 and chr3 of <tt>Demo_Seq2</tt>, and chr0 contains the contigs that do no
 <p>The new project <tt>Demo-Draft.Demo_Seq2</tt>
 was aligned with <tt>Demo_Seq2</tt>, resulting in the dot plot shown on the right.
 <tr><td style="vertical-align: text-top;">
-<p><small>Click to view summary</small>
-<br><a href="img/demoSumOrd.png">
+<a href="img/demoSumOrd.png">
     <img src="img/demoSumOrd.png" alt="demoSumOrd" style="border: 1px solid black; width: 340px"></a>
 <td><a href="img/demoDraftOrd.png">
     <img src="img/demoDraftOrd.png" alt="demoDraftOrd" style="border: 1px solid black; width: 400px"></a>
 </table>
 
 <!-------------------------------------------------------------------->
+<!----------------------------------------------------------->
+<a id="self"></a> <!-- ref -->
+<h3>Self-synteny: Demo-Seq</h3>
+
+<table class="tx">
+<tr><td colspan="2"><tt>Demo-Seq</tt> has been run against itself, resulting in the <ttb>Dot Plot</ttb> shown on the lower right.
+There are a few off-diagonal blocks, which may indicate repetitiveness (but these blocks are probably
+too small to be meaningful).
+<tr> <td style="vertical-align: text-top; width: 670px">
+<a href="img/demoSumSelf.png">
+    <img src="img/demoSumSelf.png" alt="demo Sum Self" style="border: 1px solid black; width: 340px"></a>
+<td><a href="img/demoSelf.png">
+    <img src="img/demoSelf.png" alt="demoSelf" style="border: 1px solid black; width: 400px"></a>
+</table>
 <!-------------------------------------------------------------------->
-<!-------------------------------------------------------------------->
+<!---slog ref'ed----------------------------------------------------------------->
 <a id="slog"></a>
 <h2>symap.log</h2>
 
@@ -206,19 +176,18 @@ The following 4 sections show the contents of the <ttx>logs/&lt;proj-to-proj&gt;
 <td><a href="#algo2on">Algo2 verbose</a>
 <td><a href="#top">Go to top</a>
 </table>
-<p>For all 4 variations, the first two lines are:
-<pre><small>
-&gt;&gt;&gt; SyMAP v5.6.8  (1-June-25)    Running Java v20.0.1 on 24-May-25 15:28:45 &lt;&lt;&lt;
-&gt;&gt;&gt; demo_seq to demo_seq2    Verbose (or !Verbose)
-</small></pre>
 <p>The parameters selected are:
-<p><tt><small>
-&nbsp;Cluster Algo1 (modified original)  or Cluster Algo2 (exon-intron)
-<br>&nbsp;&nbsp;&nbsp;&nbsp; Number pseudo
-<br>&nbsp;Synteny
-<br>&nbsp;&nbsp;&nbsp;&nbsp;Same orient
-</small></tt>
-<p>The last 6 lines are the <ttx>Summary</ttx> (not shown).
+<p>
+<pre>
+ Use previous 2 MUMmer files 17-Aug-25 13:45   CPUs: 2
+ Cluster Algo1 (modified original) or Cluster Algo2 (exon-intron)
+     Number pseudo
+  Synteny Original
+     Same orient
+</pre>
+The 2 MUMmer files indicates the chromosome were not split and <ttx>Concat</ttx> was
+used. These two facts along with the number of CPUs can make subtle differences in
+the output.
 <p>
 <!-------------------------------------------------------------------->
 <a id="algo1off"></a>
@@ -228,19 +197,19 @@ The following 4 sections show the contents of the <ttx>logs/&lt;proj-to-proj&gt;
 Start calculating cluster hits for demo_seq and demo_seq2
    Alignment files in data/seq_results/demo_seq_to_demo_seq2/align/
    Scan files to create candidate genes from hits
-    20,005 Total scanned hits
+    20,005 Total scanned hits from 2 files
    Scan files to cluster and filter hits
     11,000 Total cluster hits
-     6,841 Filtered hits to save
+     6,816 Filtered hits to save
    Finding Collinear sets
        717 Collinear sets
    Assign pseudo genes
-       703 Pseudo Demo_Seq     478 Pseudo Demo_Seq2
+       700 Pseudo Demo_Seq     485 Pseudo Demo_Seq2
 Finish clustering hits               8s
 
 Finding synteny for demo_seq and demo_seq2
         23 Blocks   Orient: 13 Same   10 Diff
-Finish Synteny                       3s
+Finish Synteny                       2s
 </small></pre>
 
 <!-------------------------------------------------------------------->
@@ -248,54 +217,43 @@ Finish Synteny                       3s
 <b>Algo1 verbose</b>
 
 <pre><small>
-Start calculating cluster hits for demo_seq and demo_seq2
-   Alignment files in data/seq_results/demo_seq_to_demo_seq2/align/
 Loading annotations
     10,108 demo_seq genes
     10,137 demo_seq2 genes
    Scan files to create candidate genes from hits
-     3,596 scanned PROMER demo_seq_f2.demo_seq2_f2.mum
-     2,423 scanned PROMER demo_seq_f2.demo_seq2_f1.mum
-    11,635 scanned PROMER demo_seq_f1.demo_seq2_f1.mum
-     2,351 scanned PROMER demo_seq_f1.demo_seq2_f2.mum
-    20,005 Total scanned hits
+    14,058 scanned PROMER demo_seq_cc.demo_seq2_f1.mum
+     5,947 scanned PROMER demo_seq_cc.demo_seq2_f2.mum
+    20,005 Total scanned hits from 2 files
    Scan files to cluster and filter hits
-     2,296 clustered demo_seq_f2.demo_seq2_f2.mum
-     1,834 clustered demo_seq_f2.demo_seq2_f1.mum
-     5,089 clustered demo_seq_f1.demo_seq2_f1.mum
-     1,782 clustered demo_seq_f1.demo_seq2_f2.mum
-    11,001 Total cluster hits
+     6,923 clustered demo_seq_cc.demo_seq2_f1.mum
+     4,077 clustered demo_seq_cc.demo_seq2_f2.mum
+    11,000 Total cluster hits
 Filter hits
-     8,557 for demo_seq
-     7,388 for demo_seq2
-     6,842 Filtered hits to save
+     8,556 for demo_seq
+     7,350 for demo_seq2
+     6,816 Filtered hits to save
 Save results
    Save filtered hits
    Save hit to gene
-     6,591  (6,402) for demo_seq
-     6,591  (12,809) for demo_seq2
-   Compute and save hit#
-   Compute and save gene numHits
+     6,564  (6,375) for demo_seq
+     6,564  (12,749) for demo_seq2
    Finding Collinear sets
        717 Collinear sets
      1,969 Updates
    Finish Collinear            0s
    Assign pseudo genes
-          469 Pseudo Demo_Seq chr3     Genes  5,775   Start  6,000
-          234 Pseudo Demo_Seq chr5     Genes  4,333   Start  5,000
-          257 Pseudo Demo_Seq2 chr1    Genes  5,573   Start  6,000
-          221 Pseudo Demo_Seq2 chr3    Genes  4,567   Start  5,000
-       703 Pseudo Demo_Seq     478 Pseudo Demo_Seq2
+       700 Pseudo Demo_Seq     485 Pseudo Demo_Seq2
 Finish clustering hits               8s
 
 Finding synteny for demo_seq and demo_seq2
-     6,842 Total hits
+     6,816 Total hits
          4 group-x-group pairs to analyze
            12 Blocks chr3-chr1     Orient:  Same   8   Diff   4
             2 Blocks chr3-chr3     Orient:  Same   1   Diff   1
             1 Blocks chr5-chr1     Orient:  Same   0   Diff   1
             8 Blocks chr5-chr3     Orient:  Same   4   Diff   4
         23 Blocks   Orient: 13 Same   10 Diff
+           Collinear sets not in blocks (size: #sets):  2: 21  3: 1
 Finish Synteny                       3s
 </small></pre>
 <!-------------------------------------------------------------------->
@@ -304,7 +262,7 @@ Finish Synteny                       3s
 <pre><small>
 Start calculating cluster hits for demo_seq and demo_seq2
    Alignment files in data/seq_results/demo_seq_to_demo_seq2/align/
-   Final totals
+   Final totals    Raw hits 20,005    Files 2                             .
      4,759 Clusters  Both genes    4,713   One gene       34   No gene       12
      6,883 Filtered  Both genes    6,883   One gene    3,263   No gene    2,453   Pile hits 1,167
    Finding Collinear sets
@@ -328,28 +286,20 @@ Start calculating cluster hits for demo_seq and demo_seq2
    Load genes for Algo2
       Demo_Seq2  [Avg Min Max] [Gene 2,968  120   89k] [Intron   430    1   87k] [Exon   294    3 4,935] Cov 46.5%
       Demo_Seq   [Avg Min Max] [Gene 2,575   63  508k] [Intron   373    1  501k] [Exon   379    1 6,153] Cov 57.8%
-   Load demo_seq_f2.demo_seq2_f2.mum  Hits 3,596 (EQ 1,214 NE 2,382)
-          802 Clusters chr3-chr5   Both genes    790   One gene      9   No gene      3
-   Load demo_seq_f2.demo_seq2_f1.mum  Hits 2,423 (EQ 1,248 NE 1,175)
-          490 Clusters chr1-chr5   Both genes    484   One gene      5   No gene      1
-   Load demo_seq_f1.demo_seq2_f1.mum  Hits 11,635 (EQ 1,645 NE 9,990)
+   Load demo_seq_cc.demo_seq2_f1.mum  Hits 14,058 (EQ 2,893 NE 11,165)
         3,038 Clusters chr1-chr3   Both genes  3,022   One gene     13   No gene      3
-   Load demo_seq_f1.demo_seq2_f2.mum  Hits 2,351 (EQ 1,152 NE 1,199)
+          490 Clusters chr1-chr5   Both genes    484   One gene      5   No gene      1
+   Load demo_seq_cc.demo_seq2_f2.mum  Hits 5,947 (EQ 2,366 NE 3,581)
           429 Clusters chr3-chr3   Both genes    417   One gene      7   No gene      5
-   Final totals
+          802 Clusters chr3-chr5   Both genes    790   One gene      9   No gene      3
+   Final totals    Raw hits 20,005    Files 2
      4,759 Clusters  Both genes    4,713   One gene       34   No gene       12
      6,883 Filtered  Both genes    6,883   One gene    3,263   No gene    2,453   Pile hits 1,167
-   Compute and save hit#
-   Compute and save gene numHits
    Finding Collinear sets
        635 Collinear sets
      1,714 Updates
    Finish Collinear            0s
    Assign pseudo genes
-           23 Pseudo Demo_Seq chr3     Genes  5,775   Start  6,000
-           14 Pseudo Demo_Seq chr5     Genes  4,333   Start  5,000
-            6 Pseudo Demo_Seq2 chr1    Genes  5,573   Start  6,000
-           15 Pseudo Demo_Seq2 chr3    Genes  4,567   Start  5,000
         37 Pseudo Demo_Seq     21 Pseudo Demo_Seq2
 Finish clustering hits               7s
 
@@ -361,10 +311,51 @@ Finding synteny for demo_seq and demo_seq2
             1 Blocks chr5-chr1     Orient:  Same   0   Diff   1
             5 Blocks chr5-chr3     Orient:  Same   1   Diff   4
         19 Blocks   Orient: 9 Same   10 Diff
+           Collinear sets not in blocks (size: #sets):  2: 15  3: 1
 Finish Synteny                       2s
-
 </small></pre>
+<!--------------------------------------------------------------->
+<a id="synteny"></a>
+<h2>Synteny Results</h2>
+The following is from comparing <i>Arabidopsis thaliana</i> chromosomes 1 and 2 with
+<i>Brassica rapa</i> chromosomes 1 and 7. The <ttx>Clustering hits Algo2 (exon-intron)</ttx> was
+used in all cases.
+<p>
+<table>
+<tr><td colspan=2><u><ttx>Original</ttx> vs <ttx>Strict</ttx></u>: Both allow a mix of inverted and non-inverted hits in a block, but
+<ttx>Strict</ttx> only allows small inversions within a non-inverted block and vice-versa (unless
+<ttx>Merge</ttx> is used).
+The <ttx>Strict</ttx> blocks tend to not have the tails of dots that have bigger gaps.
+<tr><td><ttx>Original</ttx><br><a href="img/dp.ab.orig.all.png">
+    <img src="img/dp.ab.orig.all.png" alt="Arab Brap orig" style="border: 1px solid black; width: 380px"></a>
+    <td><ttx>Strict</ttx><br><a href="img/dp.ab.strict.all.png">
+    <img src="img/dp.ab.strict.all.png" alt="Arab Brap strict" style="border: 1px solid black; width: 380px"></a>
 
+<tr><td><ttx>Original</ttx> chr1&amp;chr7<br><a href="img/dp.ab.orig.part.png">
+    <img src="img/dp.ab.orig.part.png" alt="Arab Brap orig 1-7" style="border: 1px solid black; width: 380px"></a>
+    <td><ttx>Strict</ttx> chr1&amp;chr7<a href="img/dp.ab.strict.part.png">
+    <img src="img/dp.ab.strict.part.png" alt="Arab Brap strict 1-7" style="border: 1px solid black; width: 380px"></a>
+<tr><td colspan=2>&nbsp;
+<tr><td colspan=2><u><ttx>Orient</ttx></u>: This requires all hits in a block to be in the same orientation.
+This options fits with what some other software packages consider 'synteny'.
+<tr><td><ttx>Original Orient</ttx> chr1&amp;chr7<br><a href="img/dp.ab.orig.or.png">
+    <img src="img/dp.ab.orig.or.png" alt="Arab Brap orig orient 1-7" style="border: 1px solid black; width: 380px"></a>
+    <td><ttx>Strict Orient</ttx> chr1&amp;chr7<a href="img/dp.ab.strict.or.png">
+    <img src="img/dp.ab.strict.or.png" alt="Arab Brap strict orient 1-7" style="border: 1px solid black; width: 380px"></a>
+<tr><td colspan=2>&nbsp;
+<tr><td colspan=2><u><ttx>Merge Overlap</ttx></u>: Only overlapping blocks can be merged. This will
+have little effect if <ttx>Orient</ttx> has been used since mixed blocks cannot be merged.
+<tr><td><ttx>Original Merge Overlap</ttx> chr1&amp;chr7<br><a href="img/dp.ab.orig.olap.png">
+    <img src="img/dp.ab.orig.olap.png" alt="Arab Brap orig overlap 1-7" style="border: 1px solid black; width: 380px"></a>
+    <td><ttx>Strict Merge Overlap</ttx> chr1&amp;chr7<a href="img/dp.ab.strict.olap.png">
+    <img src="img/dp.ab.strict.olap.png" alt="Arab Brap strict overlap 1-7" style="border: 1px solid black; width: 380px"></a>
+<tr><td colspan=2>&nbsp;
+<tr><td colspan=2><u><ttx>Merge Close</ttx></u>: Blocks that are close can be merged.
+<tr><td><ttx>Original Merge Close</ttx> chr1&amp;chr7<br><a href="img/dp.ab.orig.close.png">
+    <img src="img/dp.ab.orig.close.png" alt="Arab Brap orig close 1-7" style="border: 1px solid black; width: 380px"></a>
+    <td><ttx>Strict Merge Close</ttx> chr1&amp;chr7<a href="img/dp.ab.strict.close.png">
+    <img src="img/dp.ab.strict.close.png" alt="Arab Brap strict close 1-7" style="border: 1px solid black; width: 380px"></a>
+</table>
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <!---- END BODY -->

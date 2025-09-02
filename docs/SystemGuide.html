@@ -62,7 +62,7 @@ Referenced external docs</u>
 <li><a href="input/index.html" class="ext" target="_blank">Input</a>
 <li><a href="SystemHelp.html" class="ext" target="_blank">Parameters and Interface</a>
 <li><a href="MUMmer.html" class="ext" target="_blank">MUMmer with SyMAP</a>
-<li><a href="Demo.html" class="ext" target="_blank">Demo Snapshots</a>
+<li><a href="Demo.html" class="ext" target="_blank">Demo Results; Synteny Results</a>
 <li><a href="TroubleShoot.html" class="ext" target="_blank">Trouble-shoot</a>
 </ul>
 1. <u>Introduction</u>
@@ -117,7 +117,7 @@ Transcriptomes</b>, see <a href="https://csoderlund.github.io/TCW/" class="ext" 
 <h2>1. Introduction</h2>
 
 <table class="tz">
-<td><a href="#overview">Overview</a>
+<tr><td><a href="#overview">Overview</a>
 	<td><a href="#pubs">Publications</a>
     <td><a href="#steps">Steps for finding synteny</a>
     <td style="text-align: right"><a href="#top">Go to top</a>
@@ -311,29 +311,35 @@ SyMAP has been tested on the following:
 <br>To get MUMmer to run successfully, it was necessary to uncheck
 <a href="SystemHelp.html#concat" class="ext" target="_blank">Concat</a>.
 <p>
+<li>Self-synteny of the complete <i>Homo sapiens</i> (24 chrs, 3Gb).
+<p>
 <li>Chr 5,17,X,Y of <i>Homo sapiens</i> (478Mb) and <i>Pan troglodytes</i> (447Mb);
 <br>Chr 11,13,X,Y of <i>Mus musculus</i> (504Mb); Chr 11,19,X of <i>Oryctolagus cuniculus</i> (257Mb).
 <p>
 <li><i>Arabidopsis thaliana</i> (5 chr, 119Mb), <i>Brassica rapa</i> (10 chr, 297Mb),
 <i>Brassica oleracea</i> (9 chr, 447Mb).
 <p>
-<li>Peach <i>Prunus persica</i> (8 chr, 227Mb) and draft <i>Prunus yedoensis</i> (250 scaffolds, 408Mb).
+<li>Self-synteny of <i>Arabidopsis thaliana</i> (5 chr, 119Mb) and <i>Brassica rapa</i> (10 chr, 297Mb).
+<p>
+<li>Draft <i>Prunus yedoensis</i> (250 scaffolds, 408Mb) and Peach <i>Prunus persica</i> (8 chr, 227Mb).
 <br>Pyeudo.Peach was the result of ordering Pyedo against peach (8 chr, 270Mb).
 </ol>
-
 <p><u>Times</u> are those reported in
 the SyMAP output, which uses the Java system time functions (clock times
 are greater than the Java CPU system times). Repeated execution can result in times
-varying by approximately +/-5secs.  All the following results use 4 CPUs (thread/core).
+varying by approximately +/-5secs.  All the following results use 4 CPUs (thread/core) and are amino
+acid alignment except for two self-syntenies, which used 6 CPU and nucleotide alignment.
 
 <p><table class="tx">
 	<tr><td><u>Species</u><td><u>MUMmer</u><td><u>SyMAP</u><td>&nbsp;&nbsp;&nbsp;<td><u>Size</u>
-	<tr><td>Hsa x Mus (All chr)<td><b>30h:45m</b><td> 1m:37s<td>&nbsp;<td>3Gb x 2.7Gb, large genomes
+	<tr><td>Hsa x Mus (All chr)<td><b>30h:45m</b><td> 5m:13s<td>&nbsp;<td>3Gb x 2.7Gb, large genomes
+	<tr><td>Hsa x self (All chr)<td><b>7h:45m</b><td>8m:28s<td>&nbsp;<td>3Gb x 3Gb, NT align
  	<tr><td>Hsa x Pan (partial)<td><b>16h:40m</b><td> 0m:35s<td>&nbsp;<td>478Mb x 447Mb, closely related
     <tr><td>Hsa x Mus (parital)<td>0h:55m<td> 0m:04s<td>&nbsp;<td>478Mb x 504Mb
 	<tr><td>A.thal x B.oler<td>0h:31m<td> 1m:14s<td>&nbsp;<td>119Mb x 447Mb
 	<tr><td>B.raba x B.oler<td><b>4h:23m</b><td> 4m:12s<td>&nbsp;<td>297Mb x 447Mb, closely related
-	<tr><td>Peach x Pyedo<td>0h:44m<td> 6m:51s<td>&nbsp;<td>227Mb x 408Mb, Pyedo ordered by peach
+	<tr><td>B.raba x self  <td>0h:15m <td>1m:17s<td>&nbsp;<td>297Mb x 297Mb, NT align
+	<tr><td>Peach x Pyedo<td>0h:44m<td> 1m:29s<td>&nbsp;<td>227Mb x 408Mb, Pyedo ordered by peach
 	<tr><td>Peach x Pyedo.Peach<td>0h:40m<td> 0m:20s<td>&nbsp;<td>227Mb x 270Mb
 </table>
 
@@ -468,7 +474,7 @@ should be set in the <tt>symap.config</tt> file in the main symap directory, as 
 	<tr>
 		<td style="vertical-align: text-top;"><tt>db_name</tt>
 		<td>Name of the MySQL database, which SyMAP will create when it first reads
-			>symap.config</tt>. It is standard to start the name with <tt>symap</tt>,
+			<tt>symap.config</tt>. It is standard to start the name with <tt>symap</tt>,
 			e.g <tt>symapDemo</tt>.
 	<tr>
 		<td style="vertical-align: text-top;"><tt>db_server</tt>
@@ -592,15 +598,13 @@ on a slow machine.
 Click <ttb>Summary</ttb> to view the summary shown on the right;
 <i>there may be slight differences in the #Cluster hits</i>
 because of different numbers of CPUs, MacOS vs Linux, etc (but the #Blocks come out the same).
-<p>To view the other interfaces, see <a href="Demo.html" class="ext" target="_blank">Demo Results</a>.
+The resulting <ttp>Dot plot</ttp> is shown in the <a href="Demo.html#dot" class="ext" target="_blank">Demo Results</a> .
 <p>&nbsp;<p>
 Once the alignments are computed, the A&S parameters can be experimented without
-having to redo the alignments.
-Try using the <ttl>Algorithm 2 (exon-intron)</ttl> for <i>Cluster Hits</i> by
-clicking the <ttb>Parameters</ttb> button, which opens
-the <a href="SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a> panel,
-then select <ttl>Algorithm 2</ttl> and <ttb>Save</ttb>. Click <ttb>Selected Pairs (Redo)</ttb> which
-will result in a summary similar to <a href="img/demoSum2.png" class="ext" target="_blank">this</a>.
+having to redo the alignments. This is done by changing the options on the pair
+<a href="SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a> panel.
+<p>See <a href="Demo.html#dot" class="ext" target="_blank">Demo Results</a> for the results from
+using the <ttl>Cluster Algo2 (exon-intron)</ttl> and <ttl>Synteny Strict</ttl>.
 <td>
 <a href="img/demoSum.png"><img src="img/demoSum.png" alt="demoSum" style="border: 1px solid black; width: 400px"></a>
 </table>
@@ -610,8 +614,7 @@ will result in a summary similar to <a href="img/demoSum2.png" class="ext" targe
 
 <table>
 	<tr><td style="vertical-align: text-top;">
-Load the <ttx>Demo-Draft</ttx> project. Select <ttx>Demo-Seq2</ttx> on the left side so it shows in the
-<ttl>Available Syntenies</ttl>. Select the Demo-Draft/Demo-Seq2 cell.
+From the <ttp>Manager</ttp> left side, select <ttx>Demo-Draft</ttx> and <ttx>Demo-Seq2</ttx>. Load <ttx>Demo-Draft</ttx>.
 Open the <a href="./SystemHelp.html#over2" class="ext" target="_blank">Parameters</a> panel;
 at the bottom, select <ttx>Draf->Seq2</ttx>.
 		<td>
@@ -623,8 +626,8 @@ Run the <ttl>Align&amp;Synteny</ttl>, where the alignment should take less than 
 When done, open the <ttb>Summary</ttb> for the pair which will be similar to what is shown on the right; as mentioned above, <i>there
 may be slight difference in the number of Cluster hits.</i>
 See the first dot plot in <a href="Demo.html#draft" class="ext" target="_blank">Demo-draft</a>.
-<p>It is recommended that the
-<a href="SystemHelp.html#clust" class="ext" target="_blank">Cluster Algo1</a> be used for ordering sequence.
+<p>It is recommended to use
+<a href="SystemHelp.html#clust" class="ext" target="_blank">Cluster Algo1</a> and <a href="SystemHelp.html#syn" class="ext" target="_blank">Synteny Original</a>.
 		<td>
 <a href="img/demoSumDraft.png"><img src="img/demoSumDraft.png" alt="demo Sum Draft" style="border: 1px solid black; width: 400px"></a>
 
@@ -645,14 +648,14 @@ The chromosome names correspond
 to the order-against project (e.g. <ttx>demo_seq2</ttx>). Chromosome 'chr0'
 contains all draft sequences that were not placed.
 <p>
-The new project is shown on the left side of the <ttb>Manager</ttb>.
-The display name is <ttx>Demo_Draft.Demo_seq2</ttx>, click and load it.
-
+The new project is shown on the <ttp>Manager</ttp> left side where
+the display name is <ttx>Demo_Draft.Demo_seq2</ttx>, click and load the project.
+<p>
 <table>
 <tr><td style="vertical-align: text-top;">
-Running the <ttl>Align&amp;Synteny</ttl> between the <ttx>Demo_Draft.Demo_seq2</ttx> project
-and <ttx>Demo_seq2</ttx> will provide a more coherent display (see the second dot plot for
-<a href="Demo.html#draft" class="ext" target="_blank">Demo-Draft</a>).
+Run the <ttl>Align&amp;Synteny</ttl> with the <ttx>Demo_seq2</ttx> and <ttx>Demo_Draft.Demo_seq2</ttx> projects,
+which will provide a more coherent display; see the second dot plot for
+<a href="Demo.html#draft" class="ext" target="_blank">Demo-Draft</a>.
 Using the project's <a href="SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a> panel,
 the <ttx>Demo_Draft.Demo_Seq2</ttx> display name can be shortened.
 <td><td>
@@ -804,10 +807,9 @@ to run the Align&amp;Synteny.
 </table>
 
 <p><u>Align&amp;Synteny files</u>:
-The result files are in the following directories:
+The result files are in the following directory:
 <pre>
    /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/align
-   /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/final
 </pre>
 As mentioned in <a href="#disk">Disk</a>, after the database is complete, these can be removed.
 However, sometimes SyMAP version updates require
@@ -848,13 +850,13 @@ see <a href="#draft">demo draft</a> on how to proceed.
 It is strongly suggested you run the demo! In a nutshell, the steps are:
 <ol>
 <li>Load both sequences.
+<p>
 <li>Open the pairs's <a href="SystemHelp.html#over2" class="ext" target="_blank">Parameters</a> panel.
 At the bottom of the panel, select the radio button that indicates ordering your draft against
-a complete sequence (e.g. Draf-&gtSeq2).
-
+a complete sequence (e.g. Draf-&gtSeq2). Leave all others parameters as the defaults!
+<p>
 <li>Run the <ttl>Align&Synteny (A&S)</ttl>. At the end, you will see a new project with
 the two <ttx>project-names</ttx> separated by ".." in the left panel. It will contain:
-
 <ul>
 <li>A <tt>sequence</tt> directory with a ".fa" FASTA file. Any scaffolds matching the <ttx>Order against</ttx>
 genome will be assigned the same chromosome name. All scaffolds aligning to an <ttx>Order against</ttx> chromosome
@@ -862,6 +864,7 @@ will be appended together in order with 100 N's between each scaffold.
 Any extra sequences will be put in ">Chr0".
 <li>An <tt>annotation</tt> directory with a ".gff" file that specifies where the gaps are.
 </ul>
+<p>
 <li>Load the new project. Then run <ttl>A&S</ttl> between this new project and the original
 whole genome project.
 </ol>
@@ -896,7 +899,9 @@ is compared to every other chromosome including itself.
 <p>The Align&amp;Synteny <a href="SystemHelp.html#pairParams" class="ext" target="_blank">
 Parameters</a> panel has an option to set <ttx>Self Args</ttx>,
 which is only used when comparing the chromosome sequence file
-to itself. Make sure that the <i>Cluster Hits</i> <ttx>Algorithm 1</ttx> option is selected.
+to itself. Make sure that the <ttx>Cluster Hits Algorithm 1</ttx> option is selected.
+If the <ttx>Synteny Original</ttx> appears to miss an obvious block, i.e. a diagonal line of dots
+exist on the <ttp>Dot plot</ttp> without a block, use <ttx>Synteny Strict</ttx>.
 <p>
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
@@ -905,6 +910,9 @@ Arabidopsis thaliana from NCBI, convert it with the
 <a href="./input/ncbi.html" target="_blank" class="ext">
 NCBI convert script</a>, and run the self synteny. It took 16 minutes with one processor on a Mac Mini (2018) with
 64Gb main memory. The dot plot is shown on the right (click on the image for a closeup view).
+<p>The <ttp>Dot plot</ttp> is symmetric, with the same block on both sides of the diagonal. Self-synteny
+is not supported as well as two genome synteny in the graphical interface; see <a href="UserGuide.html#self"  class="ext" target="_blank">
+Self-synteny</a> graphics.
 <td><a href="img/arabSelf.png"><img src="img/arabSelf.png" alt="arab self"
 style="border: 1px solid black; width: 370px"></a>
 </table>

@@ -68,6 +68,53 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
+<a id="v572"></a>
+<h3>Release: v5.7.2 (2-Sept-25)</h3>
+Improvements to the synteny algorithm.
+<p>
+<ul>
+<li><ttp>Synteny</ttp> computation: See <a href="SystemHelp.html#over2" class="ext" target="_blank">Pair parameters</a>.
+	<ul>
+	<li><ttx>Strict</ttx> <font color="green">New</font>: This option provides the following changes to the original
+	algorithm:
+	<ul>
+	<li>The gap size is smaller and the PCC (pearson correlation coefficient) is larger.
+	<li>It first creates blocks with the same orientation, but then will merge contained blocks.
+	</ul>
+	<li><ttx>Merge</ttx>: This now has three options: None, Overlap, Close.
+	<li><ttx>Original</ttx>: If <ttx>Strict</ttx> is not selected, the algorithm is referred to as
+	<ttx>Original</ttx> and gives the exact same results as before. However, the <ttx>Merge</ttx> requires
+	the blocks to be closer than before in order to be merged.
+	</ul>
+<li><ttp>A&S</ttp>:
+<ul>
+<li><ttl>Self-synteny:</ttl> <font color="red">Bug fixes</font>  (1) v570 Bug fix: the chrN-chrN was broken. (2) Forever Bug:
+When running self-synteny, it could on rare occasion exit with error; this has been fixed.
+<li>If <ttl>Verbose</ttl>, the number of collinear sets not in blocks is part of the terminal/log output now.
+<li>Stop writing files <tt>anchors.txt</tt> and <tt>blocks.txt</tt> since this info is available from <ttp>Queries</ttp> and <ttp>Report</ttp>.
+<li><ttl>Clear pair</ttl>: The button become deselected when clearing and there is output to the terminal when done.
+</ul>
+
+<li><ttp>Report</ttp>: See <a href="UserGuide.html#breport" class="ext" target="_blank">Report</a>.
+<ul>
+	<li><ttl>Blocks plus</ttl> now shows the <ttx>AvgGap1, AvgGap2, StdDev1, StdDev2</ttx>.
+	Release v5.7.1 had an approximation for <ttx>AvgGap1, AvgGap2</ttx>, where now it is exact.
+	It is necessary to run the synteny algorithm again to get these changes.
+	<li>The <ttx>Corr</ttx> (correlation coefficient) column was sometimes a little off if a block merge had occurred.
+	<li>For self-synteny, the blocks will be from one side of the diagonal so as not to be repeated.
+</ul>
+<li>Small display changes:
+<ul>
+<li><ttp>Queries</ttp>: The table will show the hit <ttx>St</ttx> signs column as "==" or "!=".
+<li><ttp>2D</ttp>: The <ttb>Sequence filter</ttb> has a new option <ttx>Block# 1st</ttx>, which
+will only place the <ttx>Block#</ttx> near the first hit of the block.
+<li><ttp>Dot plot</ttp> (Minor): The <ttp>2D</ttp> problem of not displaying - I thought I fixed in v571 but did not. Now
+it is 'sort of' fixed as the panel displays and then disappears if the block was not correctly selected.
+<li><ttp>Summary</ttp>: Could get a negative number for a percentage.
+</ul>
+<li><small>Developers: <ul><li>Added 4 fields to the blocks schema.</ul></small>
+</ul>
+
 <a id="v571"></a>
 <h3>Release: v5.7.1 (17-Aug-25)</h3>
 An updated <ttb>Blocks Report</ttb> and small interface enhancements.

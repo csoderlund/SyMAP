@@ -1209,7 +1209,8 @@ the other gene options are disabled).
 <tr><td><ttl>Hit Text</ttl><td> Show the value along the edge of the sequence track over
 the hit-wire near the edge of the track. A value of '0' is not shown. The text is only visible if zoomed in, else, it looks like a black thick line.
 <td>Symbol
-<tr><td><ttx>Block#</ttx><td>If the hit is in a block, its block number will be shown. <td>&nbsp;&nbsp;bN
+<tr><td><ttx>Block# 1st</ttx><td>Put the block number above the first hit of the visible block. <td>&nbsp;&nbsp;bN
+<tr><td><ttx>Block# All</ttx><td>If the hit is in a block, its block number will be shown. <td>&nbsp;&nbsp;bN
 <tr><td><ttx>Collinear#</ttx><td>If the gene-hit is assigned to a collinear set,
 its collinear set number will be shown. <td>&nbsp;&nbsp;cN
 <tr><td><ttx>Hit#</ttx><td>The number assigned by SyMAP for the hit. <td>&nbsp;&nbsp;#N
@@ -1511,11 +1512,15 @@ Self-synteny can be viewed in all views
 (e.g. <a href="Demo.html#self" class="ext" target="_blank">Demo Dot Plot</a>), with the following exception:
 <p>
 <ul>
+<li>The <ttp>Circle</ttp> view works, but it ribbon colors work a bit strangely since there is only one genome.
+<p>
 <li>The <ttp>2D</ttp> does not directly work for a single chromosome compared
 to itself from the <ttp>Chromosome Explorer</ttp>. However, by going through the <ttp>Dotplot</ttp> or <ttp>Blocks view</ttp>, you can click on a self-chromosome block and view it in
 the <ttp>2D</ttp> view.
 <p>
-<li>The <ttp>Queries</ttp> does not work for self-synteny.
+<li><ttp>Queries</ttp> does not work for self-synteny.
+<p>
+<li><ttp>Summary</ttp> stats are not accurate since the dots above and below the diagonal are the same.
 </ul>
 
 <a id="data_download"></a>
