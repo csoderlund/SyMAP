@@ -62,9 +62,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private final String DB_ERROR_MSG = "A database error occurred, please see the Troubleshooting Guide at:\n" + Jhtml.TROUBLE_GUIDE_URL;	
 	private final String DATA_PATH = Constants.dataDir;
 	private final int MIN_CWIDTH = 825, MIN_CHEIGHT = 900;  // Circle; (same as 2D)
-	private final int MIN_WIDTH = 850, MIN_HEIGHT = 600;	// Manager; 
+	private final int MIN_WIDTH = 850, MIN_HEIGHT = 600;	// Manager
 	private final int MIN_DIVIDER_LOC = 220; 				
 	private final int LEFT_PANEL = 450;      
+	private final int TOP_PANEL = 300;		// was 290 hard-coded below; CAS572
 	
 	private static final String HTML = "/html/ProjMgrInstruct.html";
 	
@@ -213,7 +214,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		Utilities.setCursorBusy(this, false);
 	}
 
-	/** Right Panel *********************************************************************/
+	/** Left Panel  of all projects **************************************************************/
 	private JPanel createProjectPanel() {
 		addProjectPanel = new AddProjectPanel(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -309,7 +310,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		return panel;
 	}
-	/***** Left panel ***********************************************/
+	/***** Right panel of selected projects ***********************************************/
 	private JPanel createSelectedPanel() { 
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout( new BoxLayout ( mainPanel, BoxLayout.Y_AXIS ) );
@@ -424,7 +425,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		subScroller.setAlignmentX(Component.LEFT_ALIGNMENT);
 		subScroller.getVerticalScrollBar().setUnitIncrement(10);
 		subScroller.setBorder(null);
-		subScroller.setMaximumSize(new Dimension(MIN_WIDTH, 290)); 
+		// PreferredSize keeps it big and spread out; MinimumSize makes it really weird - maybe subPanel?
+		subScroller.setMaximumSize(new Dimension(MIN_WIDTH, TOP_PANEL)); 
 		mainPanel.add( subScroller );
 		
 	// Add alignment table; lower part
@@ -455,7 +457,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			btnSelClearPair = Jcomp.createButtonNC("Clear Pair", "Remove from database, and optionally, remove MUMmer results"); 
 			btnSelClearPair.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
+					btnSelClearPair.setEnabled(false);// CAS572 add setEnable (wheel does not stay)
+					Utilities.setCursorBusy(getInstance(), true); 
+					
 					removeClearPair();
+					
+					Utilities.setCursorBusy(getInstance(), false); 
+					btnSelClearPair.setEnabled(true);
 				}
 			} );	
 			

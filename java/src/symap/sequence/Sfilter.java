@@ -41,6 +41,7 @@ import util.Utilities;
 /**
  * Sequence filter
  * CAS570 add showG2xNCheck and update G2xN options; CAS571 add GeneNum with hit and Annot with Hit options
+ * CAS572 add Block# 1st
  */
 public class Sfilter extends JDialog {	
 	private static final long serialVersionUID = 1L;
@@ -52,23 +53,24 @@ public class Sfilter extends JDialog {
 	static private final boolean bDefGene=true, bDefScoreLine=false, bDefHitLen=true;
 	static private final boolean bDefGeneNum=false, bDefAnnot=false, bDefGeneLine=false;
 	static private final boolean bDefHighG2xN=false, bDefGeneHigh=true;
-	static private final boolean bDefScoreText=false, bDefHitNumText=false, bDefBlockText=false, 
+	static private final boolean bDefScoreText=false, bDefHitNumText=false, 
+								 bDefBlockText=false, bDefBlock1stText=false,
 			                     bDefCsetText=false, bDefNoText=true;
 	static private final boolean bDefFlipped=false;
 	
-	// Current values - many shared between Filter and Popup 
+	// Current values - many shared between Filter and Popup; accessed in Sequence and TrackData
 	protected boolean bShowRuler, bShowGap, bShowCentromere, bShowGene, bShowScoreLine, bShowHitLen;
 	protected boolean bShowGeneNum, bShowAnnot, bShowGeneLine, bShowGeneNumHit, bShowAnnotHit; 
 	protected boolean bHighGenePopup; 	
 	protected boolean bShowScoreText, bShowHitNumText; 				
-	protected boolean bShowBlockText, bShowCsetText, bShowNoText;   
+	protected boolean bShowBlockText, bShowBlock1stText, bShowCsetText, bShowNoText;    
 	protected boolean bFlipped;
 	protected boolean bHighG2x2, bHighG2x1, bHighG2x0, bShowG2xN; // These highlight gene and hit
 	
 	// Save values for Cancel
 	private boolean	bSavRuler, bSavGap, bSavCentromere, bSavGene, bSavScoreLine, bSavHitLen;
 	private boolean bSavGeneNum, bSavGeneLine, bSavAnnot, bSavGeneHigh, bSavGeneNumHit, bSavAnnotHit;
-	private boolean bSavScoreText, bSavHitNumText, bSavBlockText, bSavCsetText, bSavNoText, bSavFlipped;
+	private boolean bSavScoreText, bSavHitNumText, bSavBlockText, bSavBlock1stText, bSavCsetText, bSavNoText, bSavFlipped;
 	private boolean bSavHighG2x2, bSavHighG2x1, bSavHighG2x0, bSavShowG2xN;
 	private String  savStartStr="", savEndStr="";
 	private int     savStartInd=0, savEndInd=0;
@@ -89,7 +91,7 @@ public class Sfilter extends JDialog {
 	private JCheckBox rulerCheck, gapCheck, centromereCheck, geneCheck, scoreLineCheck, hitLenCheck;
 	private JCheckBox geneLineCheck, geneHighCheck; // delimiter, gene popup highlight gene
 	private JCheckBox geneNumCheck, annotCheck,  geneNumHitCheck, annotHitCheck;					
-	private JRadioButton scoreTextRadio, hitNumTextRadio, blockTextRadio, csetTextRadio, noTextRadio; 
+	private JRadioButton scoreTextRadio, hitNumTextRadio, blockTextRadio,block1stTextRadio, csetTextRadio, noTextRadio; 
 	
 	private JRadioButton highG2x2Radio, highG2x1Radio, highG2x0Radio;  // set in Ref track, highlights genes/hits in L/Ref/R-tracks	
 	private JCheckBox showG2xNCheck; // only show g2xN hits
@@ -97,7 +99,7 @@ public class Sfilter extends JDialog {
 	// Filter Popup
 	private JMenuItem fullSeqPopup;
 	private JCheckBoxMenuItem annotPopup, geneNumPopup, geneLinePopup, flippedPopup, annotHitPopup, geneNumHitPopup; 						 		 			
-	private JRadioButtonMenuItem scoreTextPopup, hitNumTextPopup, blockTextPopup, csetTextPopup, noTextPopup; 												
+	private JRadioButtonMenuItem scoreTextPopup, hitNumTextPopup, blockTextPopup, block1stTextPopup, csetTextPopup, noTextPopup; 												
 
 	// Other
 	private Sequence seqObj;
@@ -222,7 +224,8 @@ public class Sfilter extends JDialog {
 		geneNumHitCheck = Jcomp.createCheckNC("Gene#", "Only show the Gene# if it has a hit");   geneNumHitCheck.addChangeListener(listener); 
 		geneLineCheck 	= Jcomp.createCheckNC("Gene delimiter", "Seperate gene graphics with a horizonal bar");	geneLineCheck.addChangeListener(listener);
 				
-		blockTextRadio 	= Jcomp.createRadioNC("Block#", "Show the Block# beside the hit");	blockTextRadio.addChangeListener(listener);	
+		block1stTextRadio = Jcomp.createRadioNC("Block# 1st", "Show the Block# beside the 1st hit of block");	block1stTextRadio.addChangeListener(listener);	
+		blockTextRadio 	= Jcomp.createRadioNC("Block# All", "Show the Block# beside the each hit");	blockTextRadio.addChangeListener(listener);	
 		csetTextRadio 	= Jcomp.createRadioNC("Collinear#", "Show the Collinear# beside the hit");	csetTextRadio.addChangeListener(listener);
 		scoreTextRadio 	= Jcomp.createRadioNC("Hit %Id", "Show the %Identity beside the hit");	scoreTextRadio.addChangeListener(listener);
 		hitNumTextRadio = Jcomp.createRadioNC("Hit#", "Show the Hit# beside the hit");			hitNumTextRadio.addChangeListener(listener);
@@ -231,6 +234,7 @@ public class Sfilter extends JDialog {
 		geneBG.add(scoreTextRadio);
 		geneBG.add(hitNumTextRadio);
 		geneBG.add(blockTextRadio);
+		geneBG.add(block1stTextRadio);
 		geneBG.add(csetTextRadio);
 		geneBG.add(noTextRadio); 	
 			
@@ -242,14 +246,6 @@ public class Sfilter extends JDialog {
 		hitBG.add(highG2x2Radio); hitBG.add(highG2x1Radio); hitBG.add(highG2x0Radio); 
 		showG2xNCheck = new JCheckBox("High only");		showG2xNCheck.addChangeListener(listener);
 		
-		JPanel text1Panel = Jcomp.createGrayRowPanel();
-		text1Panel.add(blockTextRadio);
-		text1Panel.add(csetTextRadio);
-		
-		JPanel text2Panel = Jcomp.createGrayRowPanel();
-		text2Panel.add(hitNumTextRadio);
-		text2Panel.add(scoreTextRadio);
-		text2Panel.add(noTextRadio);	
 		
 	/// Gridbag
 		Container contentPane = getContentPane();
@@ -296,6 +292,7 @@ public class Sfilter extends JDialog {
 		// section 3
 		addToGrid(contentPane, gbl, gbc, new JSeparator(), rem);
 		addToGrid(contentPane, gbl, gbc, new JLabel(b1+"Hit Text"), 1); 
+		addToGrid(contentPane, gbl, gbc, block1stTextRadio, 1);
 		addToGrid(contentPane, gbl, gbc, blockTextRadio, 1);
 		addToGrid(contentPane, gbl, gbc, csetTextRadio, rem);
 		
@@ -314,7 +311,7 @@ public class Sfilter extends JDialog {
 		addToGrid(contentPane, gbl, gbc, coordPanel, rem);
 		addToGrid(contentPane, gbl, gbc, genePanel, rem);
 
-		if (seqObj.isRef() && seqObj.is3Track() && numGenes>0) { // CAS570 make separate section and add Show
+		if (seqObj.isRef() && seqObj.is3Track() && numGenes>0) { 
 			addToGrid(contentPane, gbl, gbc, new JSeparator(),rem);
 			
 			JLabel refOnly = Jcomp.createMonoLabel(" Reference only", "Does not create new history event");
@@ -357,11 +354,12 @@ public class Sfilter extends JDialog {
 		
 		scoreTextPopup 		= new JRadioButtonMenuItem("Hit %Id"); 	
 		hitNumTextPopup 	= new JRadioButtonMenuItem("Hit# "); 	
-		blockTextPopup 		= new JRadioButtonMenuItem("Block# "); 	
+		block1stTextPopup 	= new JRadioButtonMenuItem("Block# 1st"); 	
+		blockTextPopup 		= new JRadioButtonMenuItem("Block# All"); 	
 		csetTextPopup 		= new JRadioButtonMenuItem("Collinear# "); 	
 		noTextPopup 		= new JRadioButtonMenuItem("None"); 
 		ButtonGroup grp = new ButtonGroup();
-		grp.add(scoreTextPopup); grp.add(hitNumTextPopup); grp.add(blockTextPopup);
+		grp.add(scoreTextPopup); grp.add(hitNumTextPopup); grp.add(blockTextPopup); grp.add(block1stTextPopup);
 		grp.add(csetTextPopup);  grp.add(noTextPopup);
 		noTextPopup.setSelected(true);
 		
@@ -377,7 +375,7 @@ public class Sfilter extends JDialog {
 		popup.add(new JSeparator()); 
 		JLabel gtext = new JLabel("   Show gene"); gtext.setEnabled(false);
 		popup.add(gtext);
-		popup.add(geneNumHitPopup); geneNumHitPopup.addActionListener(listener); // CAS571 changed order
+		popup.add(geneNumHitPopup); geneNumHitPopup.addActionListener(listener); 
 		popup.add(geneNumPopup); 	geneNumPopup.addActionListener(listener);
 		popup.add(geneLinePopup);	geneLinePopup.addActionListener(listener);
 		popup.add(annotHitPopup); 	annotHitPopup.addActionListener(listener);
@@ -386,6 +384,7 @@ public class Sfilter extends JDialog {
 		popup.add(new JSeparator()); 
 		JLabel text = new JLabel("   Hit text"); text.setEnabled(false);
 		popup.add(text);
+		popup.add(block1stTextPopup);  block1stTextPopup.addActionListener(listener);
 		popup.add(blockTextPopup);  blockTextPopup.addActionListener(listener);
 		popup.add(csetTextPopup);   csetTextPopup.addActionListener(listener);
 		popup.add(hitNumTextPopup); hitNumTextPopup.addActionListener(listener);
@@ -394,7 +393,7 @@ public class Sfilter extends JDialog {
 		
 		popup.setMaximumSize(popup.getPreferredSize()); popup.setMinimumSize(popup.getPreferredSize());
 	}
-	// disable if not exist (this used to have to be done over&over since tracks/filters were re-used).
+	// disable if not exist 
 	private void setEnables() {
 		bNoListen=true;
 		int[] annotTypeCounts = seqObj.getAnnotationTypeCounts(); 
@@ -479,6 +478,7 @@ public class Sfilter extends JDialog {
 		annotHitCheck.setSelected(bSavAnnotHit && annotHitCheck.isEnabled());
 		geneLineCheck.setSelected(bSavGeneLine && geneLineCheck.isEnabled()); 
 		
+		block1stTextRadio.setSelected(bSavBlock1stText);
 		blockTextRadio.setSelected(bSavBlockText);
 		csetTextRadio.setSelected(bSavCsetText);
 		scoreTextRadio.setSelected(bSavScoreText);
@@ -509,6 +509,7 @@ public class Sfilter extends JDialog {
 		
 		bSavScoreText =   bShowScoreText;
 		bSavHitNumText =  bShowHitNumText;
+		bSavBlock1stText = bShowBlock1stText;
 		bSavBlockText =   bShowBlockText;
 		bSavCsetText =    bShowCsetText;
 		bSavNoText =      bShowNoText;
@@ -551,6 +552,7 @@ public class Sfilter extends JDialog {
 		highG2x0Radio.setSelected(bSavHighG2x0);
 		showG2xNCheck.setSelected(bSavShowG2xN);
 		
+		block1stTextRadio.setSelected(bSavBlock1stText);
 		blockTextRadio.setSelected(bSavBlockText); 
 		csetTextRadio.setSelected(bSavCsetText); 
 		scoreTextRadio.setSelected(bSavScoreText); 
@@ -582,6 +584,7 @@ public class Sfilter extends JDialog {
 		
 		scoreTextRadio.setSelected(bDefScoreText);
 		hitNumTextRadio.setSelected(bDefHitNumText);
+		block1stTextRadio.setSelected(bDefBlock1stText);
 		blockTextRadio.setSelected(bDefBlockText);
 		csetTextRadio.setSelected(bDefCsetText);
 		noTextRadio.setSelected(bDefNoText);
@@ -650,7 +653,7 @@ public class Sfilter extends JDialog {
 	}
 	// Check boxes are processed immediately; the change in coords get processed here on Save
 	
-	protected boolean saveAction()  {
+	private boolean saveAction()  {
 		if (!seqObj.hasLoad()) return true;
 		double tstart=0, tend=0;
 		boolean bChg=false;
@@ -740,6 +743,7 @@ public class Sfilter extends JDialog {
 			
 			else if (src == scoreTextPopup) 	bRep = xShowScoreText(scoreTextPopup.isSelected());
 			else if (src == hitNumTextPopup) 	bRep = xShowHitNumText(hitNumTextPopup.isSelected());
+			else if (src == block1stTextPopup) 	bRep = xShowBlock1stText(block1stTextPopup.isSelected());
 			else if (src == blockTextPopup) 	bRep = xShowBlockText(blockTextPopup.isSelected());
 			else if (src == csetTextPopup) 		bRep = xShowCsetText(csetTextPopup.isSelected());
 			else if (src == noTextPopup) 		bRep = xShowNoText(noTextPopup.isSelected());
@@ -788,6 +792,7 @@ public class Sfilter extends JDialog {
 			else if (src == geneLineCheck) 	bDiff = xShowGeneLine(geneLineCheck.isSelected());
 			else if (src == geneHighCheck)	bDiff = xHighGenePopup(geneHighCheck.isSelected());
 		
+			else if (src == block1stTextRadio) bDiff = xShowBlock1stText(block1stTextRadio.isSelected());
 			else if (src == blockTextRadio) bDiff = xShowBlockText(blockTextRadio.isSelected());
 			else if (src == csetTextRadio)  bDiff = xShowCsetText(csetTextRadio.isSelected());
 			else if (src == hitNumTextRadio)bDiff = xShowHitNumText(hitNumTextRadio.isSelected());
@@ -832,6 +837,7 @@ public class Sfilter extends JDialog {
 			
 			scoreTextPopup.setSelected(bSavScoreText); 
 			hitNumTextPopup.setSelected(bSavHitNumText);
+			block1stTextPopup.setSelected(bSavBlock1stText);
 			blockTextPopup.setSelected(bSavBlockText);
 			csetTextPopup.setSelected(bSavCsetText);
 			noTextPopup.setSelected(bSavNoText);
@@ -857,6 +863,7 @@ public class Sfilter extends JDialog {
 		
 		bShowScoreText 	= bDefScoreText; 	
 		bShowHitNumText = bDefHitNumText;
+		bShowBlock1stText = bDefBlock1stText;
 		bShowBlockText 	= bDefBlockText;
 		bShowCsetText 	= bDefCsetText;
 		bShowNoText 	= bDefNoText;
@@ -951,32 +958,37 @@ public class Sfilter extends JDialog {
 		return false;
 	}
 	private boolean xShowScoreText(boolean show) { 
-		if (bShowScoreText != show) {xSetText(false, false, false, show); seqObj.setTrackBuild(); return true;}
+		if (bShowScoreText != show) {xSetText(false, false, false, false, show); seqObj.setTrackBuild(); return true;}
 		return false;
 	}
 	private boolean xShowHitNumText(boolean show) { 
-		if (bShowHitNumText != show) {xSetText(false, false, show, false); seqObj.setTrackBuild(); return true; }
+		if (bShowHitNumText != show) {xSetText(false, false, false, show, false); seqObj.setTrackBuild(); return true; }
+		return false;
+	}
+	private boolean xShowBlock1stText(boolean show) { 
+		if (bShowBlock1stText != show) {xSetText(show, false, false, false, false); seqObj.setTrackBuild(); return true; }
 		return false;
 	}
 	private boolean xShowBlockText(boolean show) { 
-		if (bShowBlockText != show) {xSetText(show, false, false, false); seqObj.setTrackBuild(); return true; }
+		if (bShowBlockText != show) {xSetText(false, show, false, false, false); seqObj.setTrackBuild(); return true; }
 		return false;
 	}
 	private boolean xShowCsetText(boolean show) { 
-		if (bShowCsetText != show) {xSetText(false, show, false, false); seqObj.setTrackBuild(); return true;}
+		if (bShowCsetText != show) {xSetText(false, false, show, false, false); seqObj.setTrackBuild(); return true;}
 		return false;
 	}
 	private boolean xShowNoText(boolean show) { 
-		if (bShowNoText != show) {xSetText(false, false, false, false); seqObj.setTrackBuild(); return true; }
+		if (bShowNoText != show) {xSetText(false, false, false, false, false); seqObj.setTrackBuild(); return true; }
 		return false;
 	}
-	private void xSetText(boolean b, boolean c, boolean h, boolean s) {
+	private void xSetText(boolean b1, boolean b, boolean c, boolean h, boolean s) {
+		bShowBlock1stText = b1;
 		bShowBlockText	= b;
 		bShowCsetText	= c;
 		bShowHitNumText	= h;
 		bShowScoreText	= s;
 	
-		if (!b && !c && !s && !h) bShowNoText=true;
+		if (!b1 && !b && !c && !s && !h) bShowNoText=true;
 		else bShowNoText=false;
 	}
 	/*  g2xN methods reference only */

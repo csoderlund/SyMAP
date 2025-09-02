@@ -104,21 +104,21 @@ public class AnchorMain2 {
 		prtFileOpen();
 		
 	// for each file: read file, build clusters, save results to db
-		processFiles(dh); 					if (!bSuccess) return false; 
+		int nfile = processFiles(dh); 					if (!bSuccess) return false; 	
 			
 	// finish
 		prtFileClose();
 		clearTree();
 		
 		Globals.rclear();
-		Utils.prtIndentMsgFile(plog, 1, String.format("Final totals    Raw hits %,d", cntRawHits));	
+		Utils.prtIndentMsgFile(plog, 1, String.format("Final totals    Raw hits %,d    Files %,d", cntRawHits, nfile));	
 		
-		String msg1 = String.format("Clusters  Both genes %,8d   One gene %,8d   No gene %,8d",
+		String msg1 = String.format("Clusters  Both genes %,9d   One gene %,9d   No gene %,9d", // CAS572 8->9
 				cntG2, cntG1, cntG0);
 		Utils.prtNumMsgFile(plog, cntClusters, msg1);	
 		
 		int total = cntG2Fil+cntG1Fil+cntG0Fil;
-		String msg2 = String.format("Filtered  Both genes %,8d   One gene %,8d   No gene %,8d   Pile hits %,d",
+		String msg2 = String.format("Filtered  Both genes %,9d   One gene %,9d   No gene %,9d   Pile hits %,d",
 				total, cntG2Fil, cntG1Fil, cntG0Fil, cntPileFil);
 		Utils.prtNumMsgFile(plog, total, msg2);
 		
@@ -271,14 +271,15 @@ public class AnchorMain2 {
 	/******************************************************
 	 * Step 2: Each file is read and immediately processed and save
 	 */	
-	private void processFiles(File dh) {
+	private int processFiles(File dh) { 
 	try {
+		int nfile=0;
 		File[] fs = dh.listFiles();
 		for (File f : fs) {
 			if (!f.isFile()) continue;
 			fileName = f.getName();
 			if (!fileName.endsWith(Constants.mumSuffix))continue;
-			
+			nfile++;
 			long time = Utils.getTime();
 		
 		// load hits into grpPairs
@@ -286,17 +287,18 @@ public class AnchorMain2 {
 			
 		// process all group pairs from file
 			for (GrpPair gp : grpPairMap.values()) {	
-				bSuccess = gp.buildClusters(); 	if (!bSuccess) return;
+				bSuccess = gp.buildClusters(); 	if (!bSuccess) return nfile;
 			}
 			
-			if (failCheck()) return;
+			if (failCheck()) return nfile;
 			
 			clearFileSpecific();
 			
 			if (Arg.TRACE) Utils.prtTimeMemUsage(plog, "   Finish ", time);
 		}
+		return nfile;				// CAS572 add
 	}
-	catch (Exception e) {ErrorReport.print(e, "analyze and save"); bSuccess=false;}
+	catch (Exception e) {ErrorReport.print(e, "analyze and save"); bSuccess=false; return 0;}
 	}
 	/*********************************************************************
 	 // 0        1       2        3       4       5       6		7        8       9       10         11 12   13 14

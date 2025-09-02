@@ -183,7 +183,7 @@ public class AnchorMain1 {
 		}
 		if (mTotalHits == 0)   return rtError("No good anchors were found");
 		Globals.rclear();
-		if (nFile>1 || !VB) 			Utils.prtNumMsgFile(plog, nHitsScanned, "Total scanned hits");
+		if (nFile>1 || !VB) 			Utils.prtNumMsgFile(plog, nHitsScanned, "Total scanned hits from " + nFile + " files"); // CAS572 add file
 		if (nHitsScanned!=mTotalHits) 	Utils.prtNumMsgFile(plog, mTotalHits, "Total accepted hits");
 		if (mTotalLargeHits > 0 && VB)  Utils.prtNumMsgFile(plog, mTotalLargeHits, "Large hits (> " + Group.FSplitLen + ")  "
 					 															+ mTotalBrokenHits + " Split "); 
@@ -218,7 +218,7 @@ public class AnchorMain1 {
 		}
 		Globals.rclear();
 		if (nFile>1 || !VB) 
-			Utils.prtNumMsg(plog, nHitsScanned, "Total cluster hits   ");
+			Utils.prtNumMsg(plog, nHitsScanned, "Total cluster hits  ");
 
 		if (Constants.PRT_STATS) { 
 			Utils.prtTimeMemUsage(plog, "Complete scan cluster", memTime);
@@ -441,8 +441,9 @@ public class AnchorMain1 {
 			AnnotElem qAnno = grp1.getBestOlapAnno(hit.queryHits.start, hit.queryHits.end);   // priority to gene annotElem
 			AnnotElem tAnno = grp2.getBestOlapAnno(hit.targetHits.start, hit.targetHits.end); 
 
-			if (qAnno == null) {rtError("missing query annot!  grp:" + grp1.idStr() + " start:" + hit.queryHits.start + " end:" + hit.queryHits.end); return null;}	
-			if (tAnno == null) {rtError("missing target annot! grp:" + grp2.idStr() + " start:" + hit.targetHits.start + " end:" + hit.targetHits.end); return null;}	
+			// Self-synteny humans failed on this and quit; change to continue... CAS572
+			if (qAnno == null) {Globals.tprt("missing query annot!  grp:" + grp1.idStr() + " start:" + hit.queryHits.start + " end:" + hit.queryHits.end); continue;}	
+			if (tAnno == null) {Globals.tprt("missing target annot! grp:" + grp2.idStr() + " start:" + hit.targetHits.start + " end:" + hit.targetHits.end); continue;}	
 			
 			String key = qAnno.mID + "_" + tAnno.mID;
 			
@@ -692,7 +693,7 @@ public class AnchorMain1 {
 		}
 		catch (Exception e) {ErrorReport.print(e, "save annot hits"); bSuccess=false;}
 	}
-	private String intArrayToBlockStr(int[] ia) {// CAS569 moved from Util
+	private String intArrayToBlockStr(int[] ia) {
 		String out = "";
 		if (ia != null) {
 			for (int i = 0; i < ia.length; i+=2) {

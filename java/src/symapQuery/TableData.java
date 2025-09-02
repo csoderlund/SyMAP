@@ -193,7 +193,7 @@ public class TableData implements Serializable {
 	/***************************************
 	 * XXX Constructors
 	 */
-    protected TableData(String tblID, TableMainPanel parent) { // called from TableDataPanel.buildTable; CAS560 removed other constructor
+    protected TableData(String tblID, TableMainPanel parent) { // called from TableDataPanel.buildTable
     	this.tblId = tblID;
     	vData = 	new Vector<Vector<Object>>();
     	vHeaders = 	new Vector<TableDataHeader>();
@@ -418,7 +418,7 @@ public class TableData implements Serializable {
 					else       retval = vals1[x].compareTo(vals2[x]);
 				}
 			}
-			else if (colHeader.endsWith(Q.gNCol)) { // Sorts left to right (chr.genenum.suffix); CAS565 separate check
+			else if (colHeader.endsWith(Q.gNCol)) { // Sorts left to right (chr.genenum.suffix);
 				String [] vals1 = ((String)o1[nColumn]).split(Q.SDOT); 
 				String [] vals2 = ((String)o2[nColumn]).split(Q.SDOT);
 				
@@ -462,6 +462,13 @@ public class TableData implements Serializable {
 					if (valid) retval = leftVal.compareTo(rightVal);
 					else       retval = vals1[x].compareTo(vals2[x]);
 				}
+			}
+			else if (colHeader.equals(Q.hitSt)) {// TableSort converts signs x/x; but its x/x here; CAS572
+				String c1 = (String)o1[nColumn];
+				String c2 = (String)o2[nColumn];
+				if (c1.equals("+/+") || c1.equals("-/-")) c1 = "=="; else c1 = "!=";
+				if (c2.equals("+/+") || c2.equals("-/-")) c2 = "=="; else c2 = "!=";
+				retval = c1.compareTo(c2);
 			}
 			else if (arrHeaders[nColumn].getColumnClass() == String.class) {
 				boolean bIsIntCompare = false; // Chr is string but can have integer values
@@ -521,7 +528,7 @@ public class TableData implements Serializable {
 		for (int i=0; i<arrHeaders.length; i++) {
 			String colName = arrHeaders[i].getColumnName();
 	
-			// endsWith because spAbbr could be column name; CAS556 changed from contains 
+			// endsWith because spAbbr could be column name
 			if (colName.endsWith(Q.chrCol)) 		headVal.put(colName, arrData[row][i]);
 			else if (colName.endsWith(Q.hStartCol)) headVal.put(colName, arrData[row][i]);
 			else if (colName.endsWith(Q.hEndCol)) 	headVal.put(colName, arrData[row][i]);
@@ -533,7 +540,7 @@ public class TableData implements Serializable {
 		}
 		return headVal;
     }
-    // For 2D 3track, Report; CAS562 add; CAS563 add strand for Align
+    // For 2D 3track, Report; Align
     protected void getRowLocData(int row, Vector <String> colNames, Vector <Object> colVals) {
   		for (int i=0; i<arrHeaders.length; i++) {
   			String colName = arrHeaders[i].getColumnName();
@@ -556,14 +563,14 @@ public class TableData implements Serializable {
     	String line="";
 		for (int i=0; i<arrHeaders.length; i++) {
 			String colName = arrHeaders[i].getColumnName().replace(Q.delim, Q.dash);
-			if (colName.endsWith("start") || colName.endsWith("end") || colName.endsWith("len") // CAS558 add commas
+			if (colName.endsWith("start") || colName.endsWith("end") || colName.endsWith("len") 
 				|| colName.equals(Q.hitCol))
 			{
 				int dd = Utilities.getInt(arrData[row][i].toString());
 				if (dd == -1) line += String.format("%-15s %s\n", colName, arrData[row][i].toString());
 				else line += String.format("%-15s %,d\n", colName, dd);
 			}
-			else if (!colName.endsWith(Q.All_Anno)) {// CAS558 split; generally in other columns, but not always..
+			else if (!colName.endsWith(Q.All_Anno)) {// generally in other columns, but not always..
 				String all = arrData[row][i].toString();
 				String [] tok = all.split(";");
 				String prt = "";
@@ -593,7 +600,7 @@ public class TableData implements Serializable {
 		}
 		return rowMap;
     }
-    // For TableShow.align to get gene coordinates; CAS573 add; it would not cast to integer until the calling routine
+    // For TableShow.align to get gene coordinates; it would not cast to integer until the calling routine
     protected Object [] getGeneCoords(String spAbbr, int row) {
     	Object [] coords = {-1, -1};
     	

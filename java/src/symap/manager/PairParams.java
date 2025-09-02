@@ -13,9 +13,11 @@ import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
@@ -31,21 +33,22 @@ import util.Utilities;
 /**********************************************
  * The parameter window for Alignment&Synteny
  * CAS565 Pseudo, CAS567 Orient, Concat (from Main); CAS568 Order, Mask(from ProjParam); 
- * CAS571 Strict, Clust&Syn
+ * CAS571 Clust&Syn, CAS572 strict, extended merge
  */
 
 public class PairParams extends JDialog {
 	private static final long serialVersionUID = 1L;
+	protected static String [] mergeOpts = {"None", "Overlap", "Close"};
 	
 	// ManagerFrame.alignSelectedPair and updateEnableButtons use similar text
 	private String opt0Alt =       "Align&Synteny"; // Manager button Selected Pair
 	private String[] actOptions = {"Clust&Synteny", // Manager button Selected Redo
 								   "Synteny Only","Number Pseudo"}; // Manager button sets from mp.bSynOnly...
-	   
+	  
 	// Order MUST be same in createMainPanel and setValue and getValue; defaults are in Mpair
 	// These are NOT in the order displayed, but do not change without changing access everywhere else
 	private String [] LABELS = { // Order must be same as createMainPanel
-		"Min hits", "Merge", "Same orient",	
+		"Min hits", "Strict", "Orient", "Merge:", 
 		"None", "Order1", "Order2", 			 
 		"Concat",  "Mask1", "Mask2", 		
 		"NUCmer args", "PROmer args", "Self args", "NUCmer only","PROmer only", // mummer:
@@ -59,7 +62,7 @@ public class PairParams extends JDialog {
 	// if change, change in Mpair too; defaults are in Mpair; written to DB and file
 	// order the same as above; constant strings are repeated multiple times in MPair
 	private static final String [] SYMBOLS = { // Mpairs.paramKey
-		"mindots", "merge_blocks", "same_orient", 
+		"mindots",  "strict_blocks", "same_orient", "merge_blocks",
 		"order_none", "order_proj1", "order_proj2",			// none, proj1, proj2
 		"concat","mask1", "mask2", 
 		"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
@@ -89,11 +92,11 @@ public class PairParams extends JDialog {
 	}
 	/*********************************************************************/
 	private void createMainPanel() {
-		int numWidth = 3, decWidth = 2, textWidth = 15;
+		int numWidth = 2, decWidth = 2, textWidth = 15;
 		
 		for (int i=0; i<LABELS.length; i++) {
-			if (LABELS[i].equals("Mask1")) LABELS[i] = "Mask " + mProj1.getdbAbbrev();
-			else if (LABELS[i].equals("Mask2")) LABELS[i] = "Mask " + mProj2.getdbAbbrev();
+			if (LABELS[i].equals("Mask1"))       LABELS[i] = "Mask " + mProj1.getdbAbbrev();
+			else if (LABELS[i].equals("Mask2"))  LABELS[i] = "Mask " + mProj2.getdbAbbrev();
 			else if (LABELS[i].equals("Order1")) LABELS[i] = mProj1.getdbAbbrev() + "->" + mProj2.getdbAbbrev();
 			else if (LABELS[i].equals("Order2")) LABELS[i] = mProj2.getdbAbbrev() + "->" + mProj1.getdbAbbrev();
 		}
@@ -101,11 +104,15 @@ public class PairParams extends JDialog {
 		
 		int x=0;	// SAME ORDER AS array
 		// synteny
-		lblMinDots = Jcomp.createLabel(LABELS[x++]); 
-		txtMinDots = Jcomp.createTextField("7", "Miniumum hits in a block", numWidth);
+		lblMinDots = Jcomp.createLabel(LABELS[x++], "Miniumum hits in a block"); 
+		txtMinDots = Jcomp.createTextField("7",     "Miniumum hits in a block", numWidth);
 		
-		chkMergeBlocks = Jcomp.createCheckBox(LABELS[x++], "Merge overlapping (or nearby) synteny blocks", false); 
-		chkSameOrient = Jcomp.createCheckBox(LABELS[x++], "Blocks must have hits in same orientation", false); 
+		chkStrictBlocks = Jcomp.createCheckBox(LABELS[x++], "Smaller gaps allowed and stricter mixed blocks", true); 
+		chkSameOrient  = Jcomp.createCheckBox(LABELS[x++], "Blocks must have hits in same orientation", false); 
+		
+	
+		lblMerge = Jcomp.createLabel(LABELS[x++], "Merge overlapping and close blocks"); 
+		cmbMergeBlocks = Jcomp.createComboBox(mergeOpts, "Each option includes the previous", 0); 
 		
 		String tip1 =  mProj1.strDisplayName + " order against " + mProj2.strDisplayName;
 		String tip2 =  mProj2.strDisplayName + " order against " + mProj1.strDisplayName;
@@ -298,7 +305,7 @@ public class PairParams extends JDialog {
 		row.add(chkInpile);   row.add(Box.createHorizontalStrut(5));
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
 		
-		// Synteny
+	// Synteny
 		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(5)); 
 		row = Jcomp.createRowPanel();
 		row.add(Jcomp.createHtmlLabel("Synteny Blocks"));  row.add(Box.createVerticalStrut(5));
@@ -306,10 +313,13 @@ public class PairParams extends JDialog {
 		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
 		
 		row = Jcomp.createRowPanel();
-		row.add(lblMinDots); row.add(Box.createHorizontalStrut(3));
-		row.add(txtMinDots); row.add(Box.createHorizontalStrut(8));
-		row.add(chkSameOrient);  row.add(Box.createHorizontalStrut(5));
-		row.add(chkMergeBlocks); 
+		row.add(lblMinDots);      row.add(Box.createHorizontalStrut(3));
+		row.add(txtMinDots);      row.add(Box.createHorizontalStrut(5));
+		row.add(chkStrictBlocks); row.add(Box.createHorizontalStrut(5));
+		row.add(chkSameOrient);   row.add(Box.createHorizontalStrut(12));
+		row.add(lblMerge); 		  row.add(Box.createHorizontalStrut(2));
+		row.add(cmbMergeBlocks);
+	
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(3));
 		
 		// order against
@@ -317,11 +327,9 @@ public class PairParams extends JDialog {
 		row = Jcomp.createRowPanel();
 		row.add(Jcomp.createLabel("Order against: ", "Order one project against another; the alignment does not need to be redone."));
 		row.add(radOrdNone);  row.add(Box.createHorizontalStrut(3));
-		
 		row.add(radOrdProj1); row.add(Box.createHorizontalStrut(2));
-		
 		row.add(radOrdProj2);
-		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
+		if (mProj1!=mProj2) {mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));}// CAS572
 		
 		// Buttons
 		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(5)); 
@@ -400,8 +408,10 @@ public class PairParams extends JDialog {
 		int x=0;
 		
 		if (symbol.equals(SYMBOLS[x++])) 		return txtMinDots.getText();
-		else if (symbol.equals(SYMBOLS[x++]))	return chkMergeBlocks.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++])) 	return chkStrictBlocks.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++])) 	return chkSameOrient.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++]))	return cmbMergeBlocks.getSelectedIndex() + "";
+		
 		else if (symbol.equals(SYMBOLS[x++])) 	return radOrdNone.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++])) 	return radOrdProj1.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++])) 	return radOrdProj2.isSelected()?"1":"0";
@@ -436,8 +446,13 @@ public class PairParams extends JDialog {
 		int x=0;
 		
 		if (symbol.equals(SYMBOLS[x++]))		txtMinDots.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	chkMergeBlocks.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	chkStrictBlocks.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkSameOrient.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	{
+			int idx = Utilities.getInt(value);
+			if (idx==-1) idx = 0;
+			cmbMergeBlocks.setSelectedIndex(idx); // number 0,1,2; Merge CAS572
+		}
 		else if (symbol.equals(SYMBOLS[x++]))	radOrdNone.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	radOrdProj1.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	radOrdProj2.setSelected(value.equals("1"));
@@ -522,7 +537,28 @@ public class PairParams extends JDialog {
 		setVisible(false);
 	}
 	private void setSave() {
-		if (!checkInt("Min Dots", txtMinDots.getText(), 1)) return; 
+		// Draft and Draft ordered do not work well with bOrient
+		if (chkSameOrient.isSelected() || chkStrictBlocks.isSelected()) {
+			String [] options = {"Cancel", "Continue"};
+			
+			String x = Constants.orderDelim;
+			if (!radOrdNone.isSelected()) { 
+				String msg ="Orient or Strict is selected with 'Order against'" +
+							"\n   These options often do not work well with draft sequence\n";
+				int ret = JOptionPane.showOptionDialog(this, msg + "\nContinue?", "Pair parameters", // need 'this' to go on top of panel
+						  JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+				if (ret == 0) return ;
+			}
+			else if ((mProj1.getDBName().contains(x) || mProj2.getDBName().contains(x))) {
+				String msg = (mProj1.getDBName().contains(x)) ? mProj1.getDBName() : mProj2.getDBName();
+				msg += " appears to be generated from draft sequence 'Order against'" + 
+						"\n   Orient and Strict do not work well with draft sequence\n";
+				int ret = JOptionPane.showOptionDialog(this, msg + "\nContinue?", "Pair parameters", 
+						  JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+				if (ret == 0) return ;
+			}
+		}
+		if (!checkInt("Min Hits", txtMinDots.getText(), 1)) return; 
 		if (!checkInt("Top N piles", txtTopN.getText(), 1)) return;		
 		if (!checkDouble("G0_Len", txtNoGene.getText(), 0)) return;		 
 		if (!checkDouble("Gene", txtGene.getText(), 0)) return;	
@@ -549,14 +585,22 @@ public class PairParams extends JDialog {
 	}
 	private void setSaveSynOnly() {
 		boolean isOrient = chkSameOrient.isSelected(); 
-		boolean isMerge = chkMergeBlocks.isSelected(); 
+		int isMerge = cmbMergeBlocks.getSelectedIndex(); 
+		boolean isPrune = chkStrictBlocks.isSelected(); 
 		String dot = txtMinDots.getText();
+		int order=0;								// CAS572 add
+		if (radOrdProj1.isSelected()) order=1;
+		else if (radOrdProj2.isSelected()) order=2;
 		
 		setParams(mp.getDbParams()); // The wrong values will be in Summary if this is not done; CAS571
 		
 		chkSameOrient.setSelected(isOrient);
-		chkMergeBlocks.setSelected(isMerge);
+		cmbMergeBlocks.setSelectedIndex(isMerge);
+		chkStrictBlocks.setSelected(isPrune);
 		txtMinDots.setText(dot);
+		if (order==0) radOrdNone.setSelected(true);
+		else if (order==1) radOrdProj1.setSelected(true);
+		else if (order==2) radOrdProj2.setSelected(true);
 	}
 	/*********************************************/
 	private boolean checkInt(String label, String x, int min) {
@@ -618,7 +662,9 @@ public class PairParams extends JDialog {
 	
 	private JLabel lblMinDots = null;
 	private JTextField txtMinDots = null;
-	private JCheckBox chkMergeBlocks = null, chkSameOrient = null;
+	private JCheckBox chkSameOrient = null, chkStrictBlocks = null;
+	private JLabel lblMerge = null;
+	private JComboBox <String> cmbMergeBlocks = null;
 	private JRadioButton radOrdNone=null, radOrdProj1=null, radOrdProj2=null;
 	
 	private JButton btnKeep = null, btnDiscard = null, btnLoadDef = null;

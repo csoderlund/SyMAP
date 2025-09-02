@@ -71,9 +71,7 @@ public static final String alignDir = 		"/align/";
 public static final String mumSuffix = 		".mum";
 public static final String doneSuffix = 	".done";
 public static final String selfPrefix = 	"self.";
-public static final String finalDir = 		"/final/";
-public static final String anchorFile = 	"anchors.txt";
-public static final String blockFile = 		"block.txt";
+public static final String finalDir = 		"/final/"; // has been discontinued; still exists in order to Remove
 
 public static final String projTo = 		"_to_";
 public static final String faFile =         ".fa";

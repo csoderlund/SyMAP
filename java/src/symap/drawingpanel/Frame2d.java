@@ -27,9 +27,6 @@ import util.Utilities;
 /***********************************************************
  * The 2D frame containing the drawingpanel, controlpanel and optional helpbar if on the bottom
  * SyMAP2d creates the components of 2D display, and this puts them together
- 
- * CAS534 renamed from SyMAPFrame=> Frame2d; remove 'implement DrawingPanelListener'
- * CAS550 merged FSized2d with this file to implement KeyListener and ContainerListener
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Frame2d extends JFrame implements KeyListener, ContainerListener
@@ -58,7 +55,7 @@ public class Frame2d extends JFrame implements KeyListener, ContainerListener
 			positionProp = persistentProps.copy(DISPLAY_POSITION_COOKIE);
 		}
 		dp.setListener(this);
-		dp.setCntl(cp); // CAS552 add so drawing panel has access for history
+		dp.setCntl(cp); // so drawing panel has access for history
 
 		Container container = getContentPane();
 		container.setLayout(new BorderLayout());
@@ -75,25 +72,25 @@ public class Frame2d extends JFrame implements KeyListener, ContainerListener
 
 		addKeyAndContainerListenerRecursively(this);
 	}
-	// Called for non-Explorer 2d: CAS541 add this so can close connection
+	// Called for non-Explorer 2d: so can close connection
 	public void dispose() { // override
 		symap2d.clear();
 		super.dispose();
 	}
-	public void showX() {// For non-explorer 2d; CAS512 had to rename show() to something different
+	public void showX() {// For non-explorer 2d; had to rename show() to something different
 		try {
 			if (isShowing()) dp.closeFilters();
 			
 			Dimension d = new Dimension();
 			int nMaps = dp.getNumMaps();
 			int nAnnots = dp.getNumAnnots();
-			int width = Math.min(1000, 300 + 300*nMaps + 130*nAnnots); // CAS550 was 400*nAnnots
-			d.setSize(width, 900);	 // CAS550 was 900->980; CAS551 set back
+			int width = Math.min(1000, 300 + 300*nMaps + 130*nAnnots); 
+			d.setSize(width, 900);	 
 			setSize(d);
-			super.setVisible(true); 
-			//CAS550 was for null tracks; if (dp.tracksSet())
-			dp.amake();
-			//else setFrameEnabled(false);
+			super.setVisible(true); // Has to be displayed first, or the build will not happen
+			
+			// CAS572 trying to fix DotPlot Sequence.buildGraphics timing problem; it displays a flash of window
+			if (!dp.amake()) super.setVisible(false); 
 		}
 		catch (Exception e) {ErrorReport.print(e, "Show non-explorer 2d");}
 	}
@@ -114,9 +111,7 @@ public class Frame2d extends JFrame implements KeyListener, ContainerListener
 
 	protected Frame getFrame() 				{return (Frame)this;}
 
-	/********************************************************
-	 * CAS550 moved following from file FSized2d and condensed, delete Fsized2d.java
-	 */
+	/*********************************************************/
 	private void setSizeAndLocationByProp(Rectangle defaultRect) {
 		Dimension dimP = getDisplayProp(positionProp);
 		if (dimP != null) setLocation(new Point(dimP.width,dimP.height));
@@ -162,7 +157,7 @@ public class Frame2d extends JFrame implements KeyListener, ContainerListener
 	}
 	public void keyReleased(KeyEvent e) { }
 	public void keyTyped(KeyEvent e) { }
-	public void keyPressed(KeyEvent e) { // CAS550 this seems to never happen
+	public void keyPressed(KeyEvent e) { // this seems to never happen
 		//if (e.isAltDown() && e.isControlDown() && e.getKeyCode() == KeyEvent.VK_C && dp != null) dp.resetData();
 	}
 
@@ -200,8 +195,8 @@ public class Frame2d extends JFrame implements KeyListener, ContainerListener
 			int ind = ds.indexOf(',');
 			if (ind >= 0) {
 				try {
-					int w = Integer.parseInt(ds.substring(0,ind)); // CAS512 depreciated
-					int h = Integer.parseInt(ds.substring(ind+1)); // new Integer(ds.substring(ind+1)).intValue();
+					int w = Integer.parseInt(ds.substring(0,ind)); 
+					int h = Integer.parseInt(ds.substring(ind+1));
 					dim = new Dimension(w,h);
 				}
 				catch (Exception e) {ErrorReport.print(e, "get display plops");}

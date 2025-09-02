@@ -347,7 +347,14 @@ public class Utilities {
      * XXX Time methods
      */
 	static public String getNormalizedDate(String nDate) {// date from NOW() 'year-mo-dy time'
-		String d=nDate.substring(0, nDate.indexOf(" "));
+		String time="";
+		if (Globals.TRACE || Globals.INFO) { // add time CAS572	
+			String [] tok1 = nDate.split(" "); 
+			if (tok1.length==2) {
+				if (tok1[1].contains(":")) time = tok1[1].substring(0, tok1[1].lastIndexOf(":"));
+			}
+		}
+		String d = nDate.substring(0, nDate.indexOf(" "));
 		String [] tok = d.split("-");
 		if (tok.length!=3) return nDate;
 		
@@ -364,7 +371,8 @@ public class Utilities {
 		else if (m==10) ms="Oct";		
 		else if (m==11) ms="Nov";
 		else if (m==12) ms="Dec";
-		return tok[2] + "-" + ms + "-" + tok[0];
+		
+		return tok[2] + "-" + ms + "-" + tok[0] + " " + time;
 	}
 	
 	public static String reformatAnnotDate(String adate) { // For Project - show on left of manager (see DB project.annotdate)

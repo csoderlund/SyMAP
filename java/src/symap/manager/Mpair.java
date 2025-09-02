@@ -24,7 +24,8 @@ import util.Utilities;
  * 5. AlignProj  save - save all to db
  * 6. Show file params on PairParams
  * 7. Show db params on Summary
- * CAS546 Algo2; CAS565 #Pseudo; CAS567 Concat, Orient, Order, CAS568 Mask, Order, CAS571 bPseudo,bSynteny
+ * CAS546 Algo2; CAS565 #Pseudo; CAS567 Concat, Orient, Order, CAS568 Mask, Order, CAS571 bPseudo,bSynteny, 
+ * CAS572 strict
  */
 public class Mpair {
 	public  static final int FILE = 0;
@@ -33,7 +34,8 @@ public class Mpair {
 	private static final String ALIGN   = "  Align";
 	private static final String ALGO1   = "  Cluster Algo1 (modified original)";
 	private static final String ALGO2   = "  Cluster Algo2 (exon-intron)";
-	private static final String SYNTENY = "  Synteny";
+	private static final String SYNORIG = "  Synteny Original";
+	private static final String SYNSTRI = "  Synteny Strict";		// CAS572 add
 	private static final String spp     = "     ";	// space to go before parameters
 	
 	public Mproject mProj1, mProj2;
@@ -50,7 +52,7 @@ public class Mpair {
 	
 	// These must be in same order as PairParam.SYMBOLS arrays; the order isn't needed anywhere else in this file
 	private static final String [] paramKey = { // repeated in PairParams and below
-			"mindots", "merge_blocks", "same_orient", 
+			"mindots", "strict_blocks", "same_orient", "merge_blocks",
 			"order_none", "order_proj1", "order_proj2",			
 			"concat", "mask1", "mask2", 					
 			"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
@@ -60,9 +62,9 @@ public class Mpair {
 			"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
 	};
 	private static final String [] paramDef = {  // defMap value
-			"7",  "0", "0",		// synteny:  hits,  merge, orient
+			"7", "0", "0",	"0",        // synteny:  hits, strict, orient, merge, 
 			"1", "0", "0", 				// 	 order against: none, proj1->proj2, proj2->proj1
-			"1",  "0", "0", 			// align: concat, mask1, mask2
+			"1", "0", "0", 				// align: concat, mask1, mask2
 			"", "", "", "0", "0",		//        nucmer, promer, self, only, only
 			"0", "1", "0",				// cluster: number pseudo,  1st is algo1, 2nd is algo2
 			"2", 					    //       topn
@@ -96,9 +98,9 @@ public class Mpair {
 		String smsg = getChgSynteny(type); 
 		
 		String msg="";
-		if (!amsg.equals("")) msg = amsg + "\n";
-		msg += cmsg + "\n";
-		if (!smsg.equals("")) msg += smsg + "\n";
+		if (!amsg.equals("")) msg = amsg + "\n" + cmsg;
+		else                  msg = cmsg;
+		if (!smsg.equals("")) msg += "\n" + smsg;
 		
 		return msg;
 	}
@@ -108,10 +110,8 @@ public class Mpair {
 		String cmsg = getChgCluster(type); // never empty
 		String smsg = getChgSynteny(type); 
 		
-		String msg = cmsg + "\n";
-		if (!smsg.equals("")) msg += smsg + "\n";
-		
-		return msg;
+		if (!smsg.equals("")) return cmsg + "\n" + smsg;
+		else return cmsg;
 	}
 	
 	public String getChgAlign(int type, boolean forSum) {// return "" if no change; forSum - do write for summary
@@ -164,17 +164,24 @@ public class Mpair {
 	}
 	// Called for A&S, C&S, and SynOnly (directly)
 	protected String getChgSynteny(int type) {   
-		String msg="", smsg=SYNTENY;
+		String msg="", smsg="";
+		
+		if (isStrict(type))  smsg = SYNSTRI;
+		else                 smsg = SYNORIG;
 		
 		if (isChg(type,"mindots")) 		msg = pjoin(msg, "Min hits=" + getMinDots(type));
-		if (isChg(type,"merge_blocks")) msg = pjoin(msg, "Merge");
 		if (isChg(type,"same_orient"))  msg = pjoin(msg, "Same orient");
+		if (isChg(type,"merge_blocks")) {// has a choice of 3 where 0 is default; CAS572
+			String idx  = (type==FILE) ? fileMap.get("merge_blocks") : dbMap.get("merge_blocks");
+			int ix = Utilities.getInt(idx);
+			msg = pjoin(msg, "Merge blocks: " + PairParams.mergeOpts[ix]);
+		}
 		
 		if (isChg(type, "order_proj1"))	msg = pjoin(msg, "Order " + mProj1.getDisplayName() + "->" + mProj2.getDisplayName()); 
 		if (isChg(type, "order_proj2"))	msg = pjoin(msg, "Order " + mProj2.getDisplayName() + "->" + mProj1.getDisplayName());
 		
-		if (msg.equals("")) return "";
-		return smsg +  "\n" + msg; 	
+		if (msg.equals("")) return smsg;
+		return smsg + "\n" + msg; 	
 	}
 	
 	private boolean isChg(int type, String field) {
@@ -293,13 +300,17 @@ public class Mpair {
 		String x = (type==FILE) ? fileMap.get("mindots") : dbMap.get("mindots");
 		return Utilities.getInt(x);
 	}
-	public boolean isMerge(int type) {
+	public String getMergeIndex(int type) {// changed to 3 options; CAS572
 		String x = (type==FILE) ? fileMap.get("merge_blocks") : dbMap.get("merge_blocks");
-		return x.contentEquals("1");
+		return x;
 	}
 	public boolean isOrient(int type) {
 		String x = (type==FILE) ? fileMap.get("same_orient") : dbMap.get("same_orient");
 		return x.contentEquals("1");
+	}
+	public boolean isStrict(int type) {
+		String x = (type==FILE) ? fileMap.get("strict_blocks") : dbMap.get("strict_blocks");
+		return x!=null && x.contentEquals("1");
 	}
 	public boolean isOrder1(int type) {
 		String x = (type==FILE) ? fileMap.get("order_proj1") : dbMap.get("order_proj1");
@@ -347,6 +358,7 @@ public class Mpair {
 			 AnchorMain ancObj = new AnchorMain(dbc2, null, this);
 			 ancObj.removePseudo();   // Remove pseudo where numhits=-pair_idx; do before saveAnno; 
 			 
+			 Globals.prt("Start remove, please be patient.....");
 			 dbc2.executeUpdate("DELETE from pairs WHERE idx="+ x);
 			 dbc2.resetAllIdx(); 				// check all, even though some are not relevant
 			 
@@ -357,7 +369,7 @@ public class Mpair {
 	catch (Exception e) {ErrorReport.print(e, "Error removing pair from database - you may need to Clear Pair (leave alignments)");}
 	return -1;
 	}
-	public boolean removeSyntenyFromDB() { // CAS571 add for synteny only
+	public boolean removeSyntenyFromDB() { // for synteny only
 	try {
 		if (pairIdx==-1) return false;
 		dbc2.executeUpdate("DELETE from blocks WHERE pair_idx="+ pairIdx);
@@ -369,6 +381,7 @@ public class Mpair {
 	}
 	/********** called by PairParams on save; write all ***********/
 	public void saveParamsToFile(HashMap <String, String> valMap) { 
+		Utilities.checkCreateDir(Constants.dataDir, true); // CAS572 add 
 		Utilities.checkCreateDir(Constants.seqRunDir, true); 
 		Utilities.checkCreateDir(resultDir, true); 
 		

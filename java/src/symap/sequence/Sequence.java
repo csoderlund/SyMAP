@@ -676,6 +676,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	public boolean getShowScoreText() 	{ return sfilObj.bShowScoreText; }	 
 	public boolean getShowHitNumText() 	{ return sfilObj.bShowHitNumText; }
 	public boolean getShowBlockText()  	{ return sfilObj.bShowBlockText; }
+	public boolean getShowBlock1stText(){ return sfilObj.bShowBlock1stText; } // CAS572
 	public boolean getShowCsetText()   	{ return sfilObj.bShowCsetText; }
 
 	public int[] getAnnotationTypeCounts() {

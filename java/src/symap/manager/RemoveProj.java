@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.util.Vector;
 
 import backend.Constants;
+import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -108,7 +109,7 @@ public class RemoveProj {
 				"\n\nOnly: remove synteny from database" +
 				"\nAll: remove synteny and alignments from disk for this pair");
 		}
-		else { 										// CAS568 only align confirm if not in DB 
+		else { 										
 			if (!Utilities.showConfirm2("Clear alignments",msg 
 					+ "\nRemove alignments for this pair from disk")) {close(); return;}
 		}
@@ -118,16 +119,18 @@ public class RemoveProj {
 			if (rc==2) {
 				String path = Constants.getNameResultsDir(p1.getDBName(),  p2.getDBName());
 				msg = "Remove MUMmer files in:\n   " + path;
-				if (!Utilities.showConfirm2("Remove from disk", msg)) {// CAS565 add confirm
+				if (!Utilities.showConfirm2("Remove from disk", msg)) {
 					System.out.println(sp + "cancel removal of " + path);
 					return;
 				}
 				
-				System.out.println("Remove alignments from " + path);
-				
+				Globals.prt("Remove alignments from " + path);
 				removeAlignFromDir(new File(path)); 
 			}
-			if (mp.isPairInDB()) mp.removePairFromDB(true); // True = redo numHits; CAS566 add true
+			if (mp.isPairInDB()) {
+				mp.removePairFromDB(true); // True = redo numHits; 
+				Globals.prt("Removed from database " + p1.getDBName() + " to " + p2.getDBName()); // CAS572 add
+			}
 			
 			close();
 		}

@@ -139,12 +139,14 @@ public class SumFrame extends JDialog implements ActionListener {
 			String [] x = allParams.split("\n");
 			allParams = "";
 			for (int i=0; i<x.length; i++) if (x[i]!=null) allParams += x[i] + "\n"; // update collinear leaves this null
-			allParams += mp.getChgClustSyn(Mpair.DB); // includes cluster params; CAS571 renamed
+			allParams += mp.getChgClustSyn(Mpair.DB); // includes cluster params
 		}
 		String d = Utilities.getNormalizedDate(alignDate);
 		String v = (syver!=null) ? ("  " + syver) : "";
 		
-		String info = (proj1.name + " vs. " + proj2.name + "   Updated " + d + v) + "\n\n"; 
+		String info = proj1.name.equals(proj2.name) ? proj1.name + " self-synteny" :  // CAS572
+			                                        proj1.name + " vs. " + proj2.name;
+		info += "   Updated " + d + v + "\n\n"; 
 		info += createProject() + "\n";
 		info += createAnchor()  + "\n";
 		info += createBlock()  + "\n";
@@ -153,7 +155,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		info += "Abbrev: Gene (GN), Cluster Hit (CH), SubHit (SH), Synteny Block (SB), CH in Block (CHB)\n";
 		info += "________________________________________________________________________________________\n";
 		info += allParams;
-		if (proj1Idx == proj2Idx) info += "\nSelf-synteny collinear stats are doubled.";
+		if (proj1Idx == proj2Idx) info += "\nSelf-synteny stats are doubled or approximate."; // CAS572 was saying just collinear
 	
 		if (!isReadOnly) {
 			dbc2.tableCheckAddColumn("pairs", "summary", "text", null); 
@@ -290,7 +292,7 @@ public class SumFrame extends JDialog implements ActionListener {
 						+ "join pseudo_hits_annot as pha on pha.hit_idx = ph.idx " 
 						+ "join pseudo_annot      as pa  on pa.idx      = pha.annot_idx " 
 						+ "join xgroups           as xg  on xg.idx      = pa.grp_idx "
-						+ "where pair_idx=" + pairIdx + " and gene_overlap>0"; // CAS565 add for pseudo
+						+ "where pair_idx=" + pairIdx + " and gene_overlap>0"; // for pseudo
 		int hitGene1 = dbc2.executeInteger(sq  + " and ph.annot1_idx>0 and xg.proj_idx=" + proj1Idx); 
 		int hitGene2 = dbc2.executeInteger(sq  + " and ph.annot2_idx>0 and xg.proj_idx=" + proj2Idx); 
 		
@@ -305,16 +307,17 @@ public class SumFrame extends JDialog implements ActionListener {
 		int totSh=0, totRev=0;
 		
 	/* Loop1: proj1 chrN  **/	
-		int chCov1=0, chCov1x=0, shCov1=0, shCov1x=0, cnt11=0, cnt12=0, cnt13=0, cnt14=0;
-		int chCov1sum=0;
+		long chCov1=0, chCov1x=0, shCov1=0, shCov1x=0;	// CAS572 change to long
+		int cnt11=0, cnt12=0, cnt13=0, cnt14=0;
+		long chCov1sum=0;
 		
 		for (int g1=0; g1<proj1.grpIdx.size(); g1++) {
 			System.gc();
 			int grp1Idx = proj1.grpIdx.get(g1);
 			int grp1Len = proj1.grpLen.get(g1);
 			
-			byte [] clustArr = new byte [grp1Len]; Arrays.fill(clustArr,(byte) 0);
-			byte [] subArr =   new byte [grp1Len]; Arrays.fill(subArr,(byte) 0);
+			byte [] clustArr = new byte [grp1Len]; Arrays.fill(clustArr, (byte) 0);
+			byte [] subArr =   new byte [grp1Len]; Arrays.fill(subArr, (byte) 0);
 			  
 			for (int g2=0; g2<proj2.grpIdx.size(); g2++) {
 				int grp2Idx = proj2.grpIdx.get(g2);	
@@ -326,7 +329,7 @@ public class SumFrame extends JDialog implements ActionListener {
 					int hend = 	 rs.getInt(2);
 					for (int h=hstart; h<=hend && h<grp1Len; h++) clustArr[h]++; // clusters
 				
-					String seq = 	rs.getString(3);			// subhits
+					String seq = rs.getString(3);			// subhits
 					String [] subhits = (seq.contentEquals("")) ? null : seq.split(",");
 					int [] sstart = seqToSubhits(0, hstart, subhits);
 					int [] send =   seqToSubhits(1, hend,   subhits);
@@ -354,15 +357,15 @@ public class SumFrame extends JDialog implements ActionListener {
 		}
 		
 	/* Loop2: proj2 chrN  **/
-		int chCov2=0, chCov2x=0, shCov2=0, shCov2x=0, cnt21=0, cnt22=0, cnt23=0, cnt24=0;
-	
+		long chCov2=0, chCov2x=0, shCov2=0, shCov2x=0; // CAS572 change to long; got overflow on human self
+		int cnt21=0, cnt22=0, cnt23=0, cnt24=0;
 		for (int g2=0; g2<proj2.grpIdx.size(); g2++) {
 			System.gc();
 			int grp2Idx = proj2.grpIdx.get(g2);
 			int grp2Len = proj2.grpLen.get(g2);
 			
 			byte [] clustArr = new byte [grp2Len]; Arrays.fill(clustArr,(byte) 0);
-			byte [] subArr =   new byte [grp2Len];   Arrays.fill(subArr,(byte) 0);
+			byte [] subArr =   new byte [grp2Len]; Arrays.fill(subArr,(byte) 0);
 			
 			for (int g1=0; g1<proj1.grpIdx.size(); g1++) {
 				int grp1Idx = proj1.grpIdx.get(g1);
@@ -768,6 +771,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		else if (t==0) 	ret = "0%";
 		else {
 			double x = ((double)t/(double)b)*100.0;
+			if (x<0) Globals.prt(String.format("%,d  %,d   %.3f", (long)t, (long)b, x));
 			ret = String.format("%4.1f%s", x, "%");
 		}
 		return String.format("%5s", ret);

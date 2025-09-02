@@ -12,8 +12,8 @@ import java.io.File;
  * See DBconn2 for checking database variables
  */
 public class Globals {
-	public static final String 	VERSION = "v5.7.1"; 
-	public static final String 	DATE = " (17-Aug-25)";
+	public static final String 	VERSION = "v5.7.2"; 
+	public static final String 	DATE = " (2-Sept-25)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER = 7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
@@ -24,7 +24,7 @@ public class Globals {
 	public static final  String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // under user's directory; see props.PersistenProps
 	
 	// Set in SyMAPmanager 
-	public static boolean INFO=false;		// -ii; popup indices, query overlap; -ii -tt DB output, Hit Sort Popup; CAS560 add; 
+	public static boolean INFO=false;		// -ii; popup indices, query overlap; -ii -tt DB output, Hit Sort Popup; 
 	public static boolean TRACE=false; 		// -tt; write files for query and anchor2
 	public static boolean DEBUG=false; 		// -dd; use for possible error
 	public static boolean DBDEBUG=false;	// -dbd; adds fields to DB
@@ -33,7 +33,7 @@ public class Globals {
 	public static boolean bTrim=true;		  // -a do not trim 2D alignments; see closeup.AlignPool
 	public static boolean bRedoSum=false;	  // -s redo summary 
 	public static boolean bQueryOlap=false;   // -q show gene olap for algo2 instead of exon
-	public static boolean bQueryPgeneF=false; // -g run old PgeneF algo instead of new Cluster; CAS563 
+	public static boolean bQueryPgeneF=false; // -g run old PgeneF algo instead of new Cluster;
 
 	public static final String exonTag = "Exon #";	 // type exon
 	public static final String geneTag = "Gene #";   // type gene
@@ -56,6 +56,8 @@ public class Globals {
 	public static final int MAX_YELLOW_BOX=50000; 	// used in SeqFilter for drawing yellow boxes
 	
 	public static final int T=0, Q=1;				// for target (2) and query (1); 
+	
+	public static final String IGN = "IGN";		// self-synteny; for Report
 	
 	public static final int NO_VALUE = Integer.MIN_VALUE;
 

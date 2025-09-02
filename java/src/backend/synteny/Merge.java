@@ -6,98 +6,146 @@ import java.util.HashSet;
 import java.util.TreeMap;
 import java.util.Stack;
 
-import symap.Globals;
 import util.ErrorReport;
 
 /******************************************************
  * Used for merge blocks
- * Implements a directed graph and transitive closure algorithm
- * CAS567 moved the mergeBlocks to here; add orient; renamed from SyGraph
  **********************************************************/
 
 public class Merge {
-	private boolean bTrace = SyntenyMain.bTrace;
-	private boolean doMerge=false;			// User set variable
-	private boolean bOrient=false;		// ditto
-	private Vector <SyBlock> blockVec;		// input all blocks, return merge blocks
+	private boolean bOrient;			// User set variable
+	private boolean bOlap;				// T on 2nd round from SyntenyMain if bMerge
+	private Vector <SyBlock> blockVec;	// input all blocks, return merge blocks
 	
-	private int mN;
-	private TreeMap<Integer,TreeSet<Integer>> mNodes;
-
-	private int cntMerge=0;
+	private int gap1, gap2, mindots;
 	
-	protected Merge(Vector <SyBlock> blockVec, boolean bOrient, boolean doMerge) {
+	private Graph graph;
+	
+	protected Merge(Vector <SyBlock> blockVec, boolean bOlap, boolean bOrient) {
 		this.blockVec = blockVec;
+		this.bOlap = bOlap;
 		this.bOrient = bOrient;
-		this.doMerge = doMerge;
+		
+		for (SyBlock blk : blockVec) blk.hasChg=false;
 	}
 	/***************************************************
-	 * Merge blocks
+	 * Merge blocks; Contained - gap isn't used; Overlap - gap is 0; Close - gap is >0
 	 */
-	protected Vector<SyBlock> mergeBlocks() {
+	protected Vector<SyBlock> mergeBlocks(int gap1, int gap2, int mindots) { 
+		this.gap1 = gap1; this.gap2 = gap2; 
+		this.mindots = mindots;			
+		
 		int nprev = blockVec.size() + 1;
 
 		while (nprev > blockVec.size()){
 			nprev = blockVec.size();
-			blockVec = mergeBlocksSingleRound();
-		}
-		if (bTrace && cntMerge>0) Globals.prt("   " + cntMerge + " Merge");	
+			blockVec = mergeBlocksSingleFixed();   
+		}	
 		return blockVec;
 	}
-	
-	private Vector<SyBlock> mergeBlocksSingleRound() {
+	// Used with bStrict and/or bOrient
+	private Vector<SyBlock> mergeBlocksSingleFixed() { 
 	try {
 		if (blockVec.size() <= 1) return blockVec;
 		
-		int maxjoin1 = 0, maxjoin2 = 0;
-		float joinfact = 0;
-		
-		if (doMerge) {		
-			maxjoin1 = 1000000000;
-			maxjoin2 = 1000000000;
-			joinfact = 0.25f;
-		}
-		
-		Graph graph = new Graph(blockVec.size());
-		
+		graph = new Graph(blockVec.size());
+	
 		for (int i = 0; i < blockVec.size(); i++) { 
-			SyBlock b1 = blockVec.get(i);
-			
-			int w11 = b1.mE1 - b1.mS1;
-			int w12 = b1.mE2 - b1.mS2;				
+			SyBlock bi = blockVec.get(i);
 			
 			for (int j = i + 1; j < blockVec.size(); j++){
-				SyBlock b2 = blockVec.get(j);
+				SyBlock bj = blockVec.get(j);
 				
-				if (bOrient && !b1.orient.equals(b2.orient))  continue;
+				if (bOrient && !bi.orient.equals(bj.orient))continue;
+				if (bi.n < mindots && bj.n < mindots) continue; // to merge two coset blocks need some analysis
 				
-				if (doMerge) {
-					int w21 = b2.mE1 - b2.mS1;
-					int w22 = b2.mE2 - b2.mS2;
-
-					int gap1 = Math.min(maxjoin1,(int)(joinfact*Math.max(w11,w21)));
-					int gap2 = Math.min(maxjoin2,(int)(joinfact*Math.max(w12,w22)));
-					
-					if (intervalsOverlap(b1.mS1,b1.mE1,b2.mS1,b2.mE1,gap1) && 
-						intervalsOverlap(b1.mS2,b1.mE2,b2.mS2,b2.mE2,gap2) )
+				if (bOlap) { 
+					if (isOverlap(bi.mS1,bi.mE1,bj.mS1,bj.mE1, gap1) && 
+						isOverlap(bi.mS2,bi.mE2,bj.mS2,bj.mE2, gap2))
 					{
 						graph.addNode(i,j);
-						cntMerge++;
 					}
 				}
-				else {// only merge if contained	
-					if (intervalContained(b1.mS1,b1.mE1,b2.mS1,b2.mE1) && 
-						intervalContained(b1.mS2,b1.mE2,b2.mS2,b2.mE2))
+				else {// only merge if contained on both sides
+					if (isContained(bi.mS1,bi.mE1,bj.mS1,bj.mE1) && 
+						isContained(bi.mS2,bi.mE2,bj.mS2,bj.mE2))
 					{
 						graph.addNode(i,j);
-						cntMerge++;
 					}					
 				}
 			}
 		}
-		
+		return processGraph();
+	} 
+	catch (Exception e) {ErrorReport.print(e, "Merge blocks"); return null; }
+	}
+/* This is original merge - simplier just to use above 
+	private Vector<SyBlock> mergeBlocksSingleCompute() { // !bStrict
+		try {
+			if (blockVec.size() <= 1) return blockVec;
+			
+			graph = new Graph(blockVec.size());
+			
+			int maxjoin1 = 1000000000;
+			int maxjoin2 = 1000000000;
+			float joinfact = 0.25f;	
+			
+			Graph graph = new Graph(blockVec.size());
+			
+			for (int i = 0; i < blockVec.size(); i++) { 
+				SyBlock bi = blockVec.get(i);
+				
+				int w11 = bi.mE1 - bi.mS1;
+				int w12 = bi.mE2 - bi.mS2;				
+				
+				for (int j = i + 1; j < blockVec.size(); j++){
+					SyBlock bj = blockVec.get(j);
+					
+					if (bOrient && !bi.orient.equals(bj.orient))  continue;
+					
+					if (bOlap) { 
+						int w21 = bj.mE1 - bj.mS1;
+						int w22 = bj.mE2 - bj.mS2;
+
+						int gap1 = Math.min(maxjoin1,(int)(joinfact*Math.max(w11,w21)));
+						int gap2 = Math.min(maxjoin2,(int)(joinfact*Math.max(w12,w22)));
+						
+						if (intervalsOverlap(bi.mS1,bi.mE1,bj.mS1,bj.mE1,gap1) && 
+							intervalsOverlap(bi.mS2,bi.mE2,bj.mS2,bj.mE2,gap2))
+						{
+							graph.addNode(i,j);
+						}
+					}
+					else {// only merge if contained on both sides
+						if (intervalContained(bi.mS1,bi.mE1,bj.mS1,bj.mE1) && 
+							intervalContained(bi.mS2,bi.mE2,bj.mS2,bj.mE2))
+						{
+							graph.addNode(i,j); 
+						}					
+					}
+				}
+			}
+			return processGraph();
+		} 
+		catch (Exception e) {ErrorReport.print(e, "Merge blocks"); return null; }
+	}
+	*/
+	/*****************************************************************
+	 * this is 'close' if gap>0
+	 ****************************************************/
+	private boolean isOverlap(int s1,int e1, int s2, int e2, int max_gap) {
+		int gap = Math.max(s1,s2) - Math.min(e1,e2);
+		return (gap <= max_gap);
+	}
+	private boolean isContained(int s1,int e1, int s2, int e2){
+		return ((s1 >= s2 && e1 <= e2) || (s2 >= s1 && e2 <= e1));
+	}
+	/***************************************************************
+	// Implements a directed graph and transitive closure algorithm
+	// This does not look at blk.n, and can merge a big n into a very small n
+	**************************************************************/
+	private Vector<SyBlock> processGraph() {
 		HashSet<TreeSet<Integer>> blockSets = graph.transitiveClosure();
-		
 		Vector<SyBlock> mergedBlocks = new Vector<SyBlock>();
 		
 		for (TreeSet<Integer> s : blockSets) {
@@ -111,20 +159,12 @@ public class Merge {
 			mergedBlocks.add(bnew);
 		}
 		return mergedBlocks;
-	} catch (Exception e) {ErrorReport.print(e, "Merge blocks"); return null; }
 	}
-	
-	/*****************************************************************/
-	private boolean intervalsOverlap(int s1,int e1, int s2, int e2, int max_gap) {
-		int gap = Math.max(s1,s2) - Math.min(e1,e2);
-		return (gap <= max_gap);
-	}
-	private boolean intervalContained(int s1,int e1, int s2, int e2){
-		return ((s1 >= s2 && e1 <= e2) || (s2 >= s1 && e2 <= e1));
-	}
-	
 	/**************************************************************************/
 	private class Graph {
+		private int mN;
+		private TreeMap<Integer,TreeSet<Integer>> mNodes;
+		
 		private Graph(int nnodes) {
 			mN = nnodes;
 			mNodes = new TreeMap<Integer,TreeSet<Integer>>();

@@ -50,12 +50,12 @@ public class DoAlignSynPair extends JFrame {
 		Mproject mProj2 = mp.mProj2;
 		String dbName1 = mProj1.getDBName();
 		String dbName2 = mProj2.getDBName();
-		String toName =  (mProj1 == mProj2) ? dbName1 + " to self" : dbName1 + " to " + dbName2;
+		String toName =  (mProj1 == mProj2) ? dbName1 : dbName1 + " to " + dbName2; // CAS572 make naming consistent
 		
 		FileWriter syFW =   symapLog(mProj1,mProj2);
 		String alignLogDir = buildLogAlignDir(mProj1,mProj2);
 
-		String msg = (mProj1 == mProj2) ? "Synteny "  + dbName1 + " to itself ..." : "Synteny " + toName + " ...";
+		String msg = (mProj1 == mProj2) ? "Self-synteny "  + dbName1 + " ..." : "Synteny " + toName + " ...";
 		
 		final ProgressDialog diaLog = new ProgressDialog(this, "Running Synteny", msg, true, syFW); // write version and date
 		

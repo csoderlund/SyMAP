@@ -134,6 +134,7 @@ public class Data  {
 		
 		if (selectedBlock instanceof ABlock) {
 			ABlock ib = (ABlock)selectedBlock;
+			
 			Project pX = projects[X];
 			Project pY = getCurrentProj();
 			Group gX = ib.getGroup(X);
@@ -295,7 +296,7 @@ public class Data  {
 		if (this.sY2 > ymax) this.sY2 = ymax;
 		
 		if (this.sX1 > xmax || this.sX2 < 0 || this.sY1 > ymax || this.sY2 < 0) hasSelectedArea = false;
-		else hasSelectedArea = true;	// Timing issue was fixed in DrawingPanel; CAS571
+		else hasSelectedArea = true;	// Timing issue was fixed in Sequence.buildGraphics; CAS571; CAS572 doesn't work
 		
 		return hasSelectedArea;
 	}

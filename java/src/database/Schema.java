@@ -100,7 +100,7 @@ public class Schema {
 		    ")  ENGINE = InnoDB;";
 		executeUpdate(sql);
 		
-// Blocks - SyntenyMain will crash if remove/add field; see symmetrizeBlocks
+// Blocks - Keep fields in order; only add to end and then update  synteny.RWdb.symmetrizeBlocks
 		sql = "CREATE TABLE blocks (" +
 		    "idx                     INTEGER AUTO_INCREMENT PRIMARY KEY," + // block_idx
 		    "pair_idx                INTEGER NOT NULL," +
@@ -120,6 +120,12 @@ public class Schema {
 			"ngene2					integer default 0," +
 			"genef1					float default 0," +
 			"genef2					float default 0," +
+			
+			"avgGap1		INTEGER default 0," + // for report; CAS572 add; Version update in synteny.RWdb(); not new DBVER
+			"avgGap2		INTEGER default 0," + // in report; calc approx if not exist
+			"stdDev1		integer default 0," + // stdDev usually double, but they are so big, only the int part is significant
+			"stdDev2		integer default 0," +
+
 		    "INDEX (proj1_idx,grp1_idx)," +
 		    "INDEX (proj2_idx,grp2_idx)," +
 		    "FOREIGN KEY (pair_idx) REFERENCES pairs (idx) ON DELETE CASCADE," +
@@ -129,7 +135,7 @@ public class Schema {
 		    "FOREIGN KEY (grp2_idx) REFERENCES xgroups (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB;";
 		executeUpdate(sql);
-	
+			
 // Sequence	      
 		sql = "CREATE TABLE pseudos (" +			// These are chromosome, scaffolds, etc (from pseudomolecule)
 		    "grp_idx             INTEGER NOT NULL," +
@@ -143,14 +149,14 @@ public class Schema {
 		sql = "CREATE TABLE pseudo_annot (" +
 		    "idx                 INTEGER AUTO_INCREMENT PRIMARY KEY," +  // annot_idx
 		    "grp_idx             INTEGER NOT NULL," +	  // xgroups.idx
-		    "type                VARCHAR(20) NOT NULL," + // gene, exon, centromere, gap, pseudo; CAS565 pseudo add, no change here    
+		    "type                VARCHAR(20) NOT NULL," + // gene, exon, centromere, gap, pseudo;  
 		    "genenum             INTEGER default 0," +      
 		    // Gene: genenum.{suffix} (#Exons len); Exon: exon#
 		    "tag				 VARCHAR(30)," +		
 		    "gene_idx            INTEGER default 0," +  // gene idx for exon
 			// numhits for Gene: # of hits across all pairs for Query; Updated in AnchorMain;
-		    // numhits for Pseudo: pairIdx for remove Number Pseudo; Updated in AnchorMain; CAS565 add 
-		    "numhits			 INTEGER unsigned default 0," +  //used for Pseudo for pairIdx; CAS565 was tinyint (max 255)
+		    // numhits for Pseudo: pairIdx for remove Number Pseudo; Updated in AnchorMain; 
+		    "numhits			 INTEGER unsigned default 0," +  //used for Pseudo for pairIdx; 
 		    "name                TEXT  NOT NULL," +				 // description, list of keyword=value
 		    "strand              ENUM('+','-') NOT NULL," +
 		    "start               INTEGER NOT NULL," +
@@ -222,7 +228,7 @@ public class Schema {
 		    "annot_idx           INTEGER NOT NULL," +	// pseudo_annot.idx
 		    "olap	             INTEGER default 0," +   // gene overlap; algo1 basepairs; algo2 percent
 		    "exlap	             tinyint default 0," +   // exon percentoverlap
-		    "annot2_idx			 INTEGER default 0," +   // not present for type pseudo; CAS565
+		    "annot2_idx			 INTEGER default 0," +   // not present for type pseudo; 
 		    "UNIQUE (hit_idx, annot_idx)," +
 		    "INDEX (annot_idx)," +
 		    "FOREIGN KEY (hit_idx)  REFERENCES pseudo_hits (idx) ON DELETE CASCADE," +

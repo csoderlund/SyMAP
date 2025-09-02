@@ -38,6 +38,8 @@ public class Report extends JDialog  {
 	
 	private boolean isTSV=false, isHTML, isPop=false, isSp1=true, isSp2, useComb=true;
 	private int cntHtmlRow=0; // to determine whether to have a Goto top at bottom
+	private boolean hasGap=false; // for pre-v572 databases
+	private boolean isSelf=false; // add CAS572
 	
 	private DBconn2 tdbc2 = null;
 	private Mpair mp;
@@ -50,6 +52,7 @@ public class Report extends JDialog  {
 		this.mp = mp;
 		name1 = mProjs[0].getDisplayName();
 		name2 = mProjs[1].getDisplayName();
+		isSelf = name1.equals(name2);
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setTitle("Block Report");
@@ -187,7 +190,7 @@ public class Report extends JDialog  {
 			if (outFH==null) report+=joinHead(row,""); else outFH.println(joinHead(row,""));
 			
 			String savChr1="", savChr2="";
-			int cntBlocks=0, sumHits=0;
+			int cntBlocks=0, sumHits=0, totBlks=0;
 			
 			ResultSet rs = tdbc2.executeQuery(mkSQL(SUM));
 			while (rs.next()){
@@ -215,7 +218,7 @@ public class Report extends JDialog  {
 					savChr1 = n1; savChr2 = n2;
 					cntBlocks=sumHits=0;
 				}
-				cntBlocks++;
+				cntBlocks++; totBlks++;
 				sumHits += nhits;
 			}
 			if (cntBlocks>0) {
@@ -228,10 +231,10 @@ public class Report extends JDialog  {
 				if (outFH==null) report+=joinRow(row); else outFH.println(joinRow(row));
 			}
 			if (isPop) {
-				report += htmlTail();
+				report += htmlTail(totBlks);
 				util.Jhtml.showHtmlPanel(null, ("Block Summary"), report); 
 			}
-			else endFile(outFH);	
+			else endFile(outFH, totBlks);	
 		} 
 		catch(Exception e) {ErrorReport.print(e, "Generate blocks summary");}
 	}
@@ -246,25 +249,34 @@ public class Report extends JDialog  {
 				outFH = startFile("blocksPlus");
 				if (outFH==null) return;
 			}
-    	
+			
 			ArrayList<String> rowHead = new ArrayList<String>();
 			rowHead.add("Species1"); rowHead.add("Species2"); 
+			
 			if (useComb) {rowHead.add(CCB);} // combined in sql
 			else         {rowHead.add(CHR+"1"); rowHead.add(CHR+"2"); rowHead.add("Block"); }
+			
 			rowHead.add("#Hits"); rowHead.add("PearsonR");
-			rowHead.add("AvgGap1"); rowHead.add("AvgGap2"); rowHead.add("Len1"); rowHead.add("Len2"); 
-			rowHead.add("Start1"); rowHead.add("Start2"); 
+			rowHead.add("AvgGap1"); rowHead.add("AvgGap2"); 
+			
+			hasGap = tdbc2.tableColumnExists("blocks", "avgGap1");// used in mkSQL too
+			if (hasGap) 
+					{rowHead.add("StdDev1"); rowHead.add("StdDev2"); }
+			
+			rowHead.add("Len1"); rowHead.add("Len2"); rowHead.add("Start1"); rowHead.add("Start2"); 
+			
 			if (isTSV) {
 				if (outFH==null) report += joinHead(rowHead, ""); else outFH.println(joinHead(rowHead, ""));
 			}
 			
-			int ncol = rowHead.size()-2;
+			int ncol = rowHead.size()-2, totBlks=0;
 			String saveChr="", chr="";
 			ArrayList<String> row = new ArrayList<String>(rowHead.size());
 			for (int i=0; i<rowHead.size(); i++) row.add("");
 			
 			ResultSet rs = tdbc2.executeQuery(mkSQL(ONLY));
 			while (rs.next()){	
+				totBlks++;
 				if (!isTSV) {// repeat headings when ref-chr changes 
 					if (useComb) {
 						chr = rs.getString(1);
@@ -278,7 +290,7 @@ public class Report extends JDialog  {
 					saveChr = chr;
 				}
 				row.set(0, name1); row.set(1, name2); 
-				for(int i = 1; i <= ncol; i++){
+				for(int i = 1; i <= ncol; i++){	
 					int type = typeArr.get(i-1);
 					if (type==IGN)    	   row.set(i+1, rs.getString(i));
 					else if (type==NUM)    row.set(i+1, String.format("%,d",rs.getInt(i)));
@@ -288,10 +300,10 @@ public class Report extends JDialog  {
 				if (outFH==null) report += joinRow(row); else outFH.println(joinRow(row));
 			}
 			if (isPop) {
-				report += htmlTail();
+				report += htmlTail(totBlks);
 				util.Jhtml.showHtmlPanel(null, ("Blocks"), report); 
 			}
-			else endFile(outFH);	
+			else endFile(outFH, totBlks);	
 		} 
 		catch(Exception e) {ErrorReport.print(e, "Generate blocks only");}
 	}
@@ -318,13 +330,14 @@ public class Report extends JDialog  {
 			if (isTSV) {
 				if (outFH==null) report += joinHead(rowHead, ""); else outFH.println(joinHead(rowHead, ""));
 			}
-			int ncol = rowHead.size()-2;
+			int ncol = rowHead.size()-2, totBlks=0;
 			String saveChr="", chr;
 			ArrayList<String> row = new ArrayList<String>(rowHead.size());
 			for (int i=0; i<rowHead.size(); i++) row.add("");
 			
 			ResultSet rs = tdbc2.executeQuery(mkSQL(GENE));
 			while (rs.next()){
+				totBlks++;
 				if (isHTML) { // repeat headings when ref-chr changes
 					if (useComb) {
 						chr = rs.getString(1);
@@ -340,8 +353,8 @@ public class Report extends JDialog  {
 				}
 				
 				row.set(0, name1); row.set(1, name2); 
-				for(int i = 1; i <= ncol; i++){
-					int type = typeArr.get(i-1);
+				for(int i = 1; i <= ncol; i++){ // add columns for row
+					int type = 			   typeArr.get(i-1);
 					if (type==IGN)         row.set(i+1, rs.getString(i));
 					else if (type==NUM)    row.set(i+1, String.format("%,d",rs.getInt(i)));
 					else if (type==FLOAT)  row.set(i+1, df(i, rs.getDouble(i)));
@@ -349,10 +362,10 @@ public class Report extends JDialog  {
 				if (outFH==null) report += joinRow(row); else outFH.println(joinRow(row));
 			}
 			if (isPop) {
-				report += htmlTail();
+				report += htmlTail(totBlks);
 				util.Jhtml.showHtmlPanel(null, ("Blocks with genes info"), report); 
 			}
-			else endFile(outFH);	
+			else endFile(outFH, totBlks);	
 		} 
     	catch(Exception e) {ErrorReport.print(e, "Generate blocks with genes");}
     }
@@ -374,7 +387,12 @@ public class Report extends JDialog  {
     	}
     	if (which==ONLY) {
     		sql += ", b.corr";
-    		sql += ", ((b.end1-b.start1+1)/b.score), ((b.end2-b.start2+1)/b.score)";
+    		if (hasGap) {
+    			sql += ", avgGap1, avgGap2, stdDev1, stdDev2";
+    		}
+    		else {// for pre-v572 DB
+    			sql += ", ((b.end1-b.start1+1)/(b.score-1)), ((b.end2-b.start2+1)/(b.score-1))";// 1 less gap than cover; CAS572
+    		}
     		sql += ", (b.end1-b.start1+1), (b.end2-b.start2+1)";
     		sql += ", b.start1, b.start2";
     	}
@@ -383,11 +401,13 @@ public class Report extends JDialog  {
     		    " join xgroups as g2 on g2.idx=b.grp2_idx " +
     		    " where b.pair_idx=" + mp.getPairIdx();
     	
+    	if (isSelf) sql+= " and (b.avgGap1>0 or b.avgGap2>0 or b.ngene1>0)"; // one of these better be greater...
+    	
     	if (radSpecies[0].isSelected()) sql += " order by g1.name asc, g2.name asc, b.blocknum asc";
     	else                            sql += " order by g2.name asc, g1.name asc, b.blocknum asc";
     	
-    	if (which==SUM) return sql;
-    	
+    	if (which==SUM) return sql; // summary done
+    	////////////////////////////
     	// create type vector
     	if (useComb) typeArr.add(IGN);
     	else {typeArr.add(IGN);typeArr.add(IGN);typeArr.add(IGN);} // name, name, blocknum
@@ -395,7 +415,12 @@ public class Report extends JDialog  {
     	typeArr.add(NUM); typeArr.add(FLOAT);	// score, corr
     
     	if (which==ONLY) {
-    		typeArr.add(LFLOAT); typeArr.add(LFLOAT); // AvgGap
+    		if (hasGap) {
+    			typeArr.add(NUM); typeArr.add(NUM); typeArr.add(NUM); typeArr.add(NUM); // avgGap, stdDev
+    		}
+    		else {
+    			typeArr.add(LFLOAT); typeArr.add(LFLOAT); // AvgGap computed
+    		}
     		typeArr.add(NUM); typeArr.add(NUM);	 typeArr.add(NUM); typeArr.add(NUM); 	  // len, start
     	}
     	else {
@@ -438,8 +463,8 @@ public class Report extends JDialog  {
     }
     catch (Exception e) {ErrorReport.print(e, "Getting file handle for report"); return null;}
     }
-    private void endFile(PrintWriter out) {
-    	if (btnHTML.isSelected()) out.println(htmlTail());
+    private void endFile(PrintWriter out, int totBlk) {
+    	if (btnHTML.isSelected()) out.println(htmlTail(totBlk));
     
     	out.close();
 
@@ -448,6 +473,8 @@ public class Report extends JDialog  {
     ////////////////////////////////////////////////////
     private String htmlHead() {
     	String n = (radSpecies[0].isSelected()) ? name1 + "-" + name2 : name2 + "-" + name1;
+    	if (isSelf) n = name1 + " self-synteny"; // CAS572
+    	
 		String title = n + " Blocks";
 		String head = "<!DOCTYPE html><html>\n"
 				+ "<head>\n"
@@ -467,10 +494,11 @@ public class Report extends JDialog  {
 				+ "<p><table class='ty'>";
 		return head;
     }
-    private String htmlTail() {
+    private String htmlTail(int totBlks) {
     	String tail="</table>";
-		if (cntHtmlRow>100 && !isPop) tail += "<p><a href='#top'>Go to top</a>\n";
-		tail += "</center></body></html>\n";		
+        tail += String.format("<p>%,d Total Blocks", totBlks); // CAS572 add total blocks
+    	if (cntHtmlRow>100 && !isPop) tail += "<p><a href='#top'>Go to top</a>\n";
+    	tail += "</center></body></html>\n";
 		return tail;
     }
     //////////////////////////////////////////

@@ -20,7 +20,7 @@ public class HitData {
 	private int covScore;				
 	private int nMerge;
 	private int geneOlp = -1; 
-	private boolean isPosOrient1, isPosOrient2; 	
+	private boolean isPosOrient1, isPosOrient2, isBlkInv; // CAS572 add inv 	
 	protected int 	annot1_idx, annot2_idx; // pseudo changed to zero in MapperPool; CAS570
 	private String 	query_seq, target_seq;  // coordinates of subhits
 	
@@ -80,6 +80,7 @@ public class HitData {
 		
 		this.blocknum = block;
 		this.isBlock = (blocknum>0) ? true : false;
+		this.isBlkInv = (corr<0);
 		
 		String gg = (htype.equals("0") || htype.equals("")) ? (" g" + geneOlp) : (" " +htype); 
 		String iv = (corr<0) ? " Inv  " : "  "; // Strand may be == when Inv
@@ -243,6 +244,7 @@ public class HitData {
 	protected boolean is1Gene() 	{ return (geneOlp==1); } 
 	protected boolean is0Gene()  	{ return (geneOlp==0); } 
 	protected boolean isInv()		{ return isPosOrient1!=isPosOrient2;} // for TextShowInfo
+	protected boolean isBlkInv()	{ return isBlkInv;} // for SeqHits block#
 	
 	public void setIsPopup(boolean b) {// SeqHits, closeup.TextShowInfo
 		isPopup=b;

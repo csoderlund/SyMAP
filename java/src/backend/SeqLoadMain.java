@@ -343,7 +343,10 @@ public class SeqLoadMain {
 			tdbc2.executeUpdate(st);
 		}
 	}
-	catch (Exception e) {ErrorReport.print(e, "Loading sequence - fail loading to database "); };
+	catch (Exception e) {
+		ErrorReport.print(e, "Fail load sequence: " +  projIdx + "','" + grp + "','" + fullname + "'," + order); 
+		Globals.prt("  This can happen if a project was just removed and another added immediately."); // CAS572
+	}
 	}
 	/**************************************************************************/
 	private boolean rtError(String msg) {

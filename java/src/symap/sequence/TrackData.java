@@ -20,7 +20,7 @@ public  class TrackData {
 	
 	private boolean bShowAnnot, bShowGeneNum,  bShowGeneLine, bHighPopupGene, bHighHit2g2, bHighHit2g1, bHighHit2g0; 
 	
-	private boolean bShowScoreText, bShowHitNumText, bShowBlockText, bShowCsetText, bShowNoText;   
+	private boolean bShowScoreText, bShowHitNumText, bShowBlockText, bShowBlock1stText, bShowCsetText, bShowNoText;   
 
 	private Annotation selectedGeneObj=null;
 	private String geneStr="";
@@ -57,6 +57,7 @@ public  class TrackData {
 		bHighHit2g0  	= seq.sfilObj.bHighG2x0;
 		
 		bShowNoText  	= seq.sfilObj.bShowNoText;	
+		bShowBlock1stText  = seq.sfilObj.bShowBlock1stText; // CAS572
 		bShowBlockText  = seq.sfilObj.bShowBlockText;	
 		bShowCsetText 	= seq.sfilObj.bShowCsetText;	
 		bShowScoreText  = seq.sfilObj.bShowScoreText;	
@@ -97,6 +98,7 @@ public  class TrackData {
 		seq.sfilObj.bHighG2x0  	= bHighHit2g0;
 		
 		seq.sfilObj.bShowNoText  	= bShowNoText;	
+		seq.sfilObj.bShowBlock1stText  = bShowBlock1stText;
 		seq.sfilObj.bShowBlockText  = bShowBlockText;	
 		seq.sfilObj.bShowCsetText 	= bShowCsetText;
 		seq.sfilObj.bShowScoreText 	= bShowScoreText; 

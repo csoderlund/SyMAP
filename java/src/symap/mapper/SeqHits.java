@@ -10,6 +10,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.util.TreeMap;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.ArrayList;
 
@@ -32,6 +33,7 @@ public class SeqHits  {
 	private static final int HIT_INC = 3, HIT_OVERLAP = 75; // default minimum match bases is 100, so hits should be more
 	
 	public static Font textFont = Globals.textFont;
+	private Font textFontBig = new Font(Font.MONOSPACED,Font.PLAIN,16);
 	
 	private int projIdx1, projIdx2; // project IDs
 	private int grpIdx1, grpIdx2; // groupIDs: chromosome 
@@ -49,6 +51,8 @@ public class SeqHits  {
 	private int nG2xN=0;
 	private boolean isOnlyG2xN=false;	
 	private int cntHighG2xN=0, cntFiltG2xN=0, cntPossG2xN=0;
+	
+	private HashMap <Integer, Block> blockMap = new HashMap <Integer, Block> ();
 	
 	// called in MapperPool
 	public SeqHits(Mapper mapper, Sequence st1, Sequence st2, Vector <HitData> hitList) {
@@ -83,6 +87,16 @@ public class SeqHits  {
 			
 			if (s2Map.containsKey(hd.start2)) s2Map.put(hd.start2+1, i); 
 			else s2Map.put(hd.start2, i);
+			
+			// Set up blocks - 1st/last gets set per display
+			int b = hd.getBlock();
+			if (b>0) {
+				if (!blockMap.containsKey(b)) {
+					Block blk = new Block();
+					blockMap.put(b, blk);
+					blk.isInv = hd.isBlkInv();
+				}
+			}
 		}
 		// Calc offset for display for seq2
 		lasthd = null;
@@ -201,6 +215,21 @@ public class SeqHits  {
 		boolean bHiBlock = mapper.getHitFilter().isHiBlock();
 		boolean bHi = (bHiCset || bHiBlock);
 		
+		// Set block 1st/last for this display; CAS572
+		if (seqObj1.getShowBlock1stText() || seqObj2.getShowBlock1stText()) {
+			for (Block blk : blockMap.values()) blk.hitnum1 = blk.hitnumN = 0;
+			for (DrawHit h : allHitsArray) {
+				if (h.isOlapHit() && !h.isFiltered()) { 
+					int n = h.getBlock();
+					if (n>0) {
+						Block b = blockMap.get(h.getBlock());
+						int num = h.hitDataObj.getHitNum();
+						if (b.hitnum1==0) b.hitnum1 = num;
+						b.hitnumN = num;
+					}
+				}
+			}
+		}
 		// allHitArray sorted by start1; this does not correspond to sequential blocks (sorted sets).
 		if (bHi) {
 			for (DrawHit h : allHitsArray) {
@@ -225,7 +254,7 @@ public class SeqHits  {
 		cntShowHit=cntHighHit=cntHighG2xN=cntPossG2xN=cntFiltG2xN=0; // counted in paint
 		HashSet <Integer> blockSet = new HashSet <Integer> (); // count blocks/sets shown
 		hcolor=1; 
-		
+
 		for (DrawHit dh : allHitsArray) {
 			if (!dh.isOlapHit() || dh.isFiltered()) continue; 
 			
@@ -236,7 +265,7 @@ public class SeqHits  {
 			if (dh.isHover) highHits.add(dh);
 			else {
 				boolean isVis = dh.paintComponent(g2, trackPos1, trackPos2, stLoc1, stLoc2, hcolor);
-				if (bHi && isVis) {// CAS571 was (bHi && isVis) - now block always shows unless highlight cosets
+				if (bHi && isVis) {
 					int set = (bHiCset) ?  dh.getCollinearSet() : dh.getBlock();
 					if (set!=0 && !blockSet.contains(set)) blockSet.add(set);
 				}
@@ -533,9 +562,7 @@ public class SeqHits  {
 		  * trackPos1 and trackPos2: 1 or 2 indicating left or right
 		  * stLoc1 and stLoc2: x,y from origin 
 		  */
-		 private boolean paintComponent(Graphics2D g2, int trackPos1, int trackPos2, Point stLoc1, Point stLoc2, 
-				 int hcolor) {  	
-			 
+		 private boolean paintComponent(Graphics2D g2, int trackPos1, int trackPos2, Point stLoc1, Point stLoc2, int hcolor) {  	
 			 if (!isOlapHit() || isFiltered()) return false; 
 			
 			 cntShowHit++;
@@ -602,8 +629,19 @@ public class SeqHits  {
 			 int xr=4, xl=19; 
 			 
 			 String numText1=null;  
-			 if       (seqObj1.getShowScoreText())  numText1 = (int)pctid+"%";
-			 else  if (seqObj1.getShowHitNumText()) numText1 = "#" + hitDataObj.getHitNum();  
+			 if (seqObj1.getShowBlock1stText())  { // CAS572 add
+				 int n = hitDataObj.getBlock();
+				 if (n>0) {
+					 Block blk = blockMap.get(n);
+					 int hitnum = hitDataObj.getHitNum();
+					 if (!seqObj1.isFlipped()) {
+						 if (hitnum==blk.hitnum1) numText1 = "b"+n;
+					 }
+					 else {
+						 if (hitnum==blk.hitnumN) numText1 = "b"+n;
+					 }
+				 }
+			 }
 			 else  if (seqObj1.getShowBlockText())  {
 				 int n = hitDataObj.getBlock();
 				 if (n>0) numText1 = "b"+n;
@@ -612,7 +650,9 @@ public class SeqHits  {
 				 int n = hitDataObj.getCollinearSet();
 				 if (n>0) numText1 = "c"+n;
 			 }
-			 
+			 else if (seqObj1.getShowHitNumText()) numText1 = "#" + hitDataObj.getHitNum();  
+			 else if (seqObj1.getShowScoreText())  numText1 = (int)pctid+"%";
+			
 			 if (numText1!=null) {  
 				 double textX = x1;
 				 if (x1 < x2) textX += xr;
@@ -621,22 +661,36 @@ public class SeqHits  {
 					 textX -= (xl + (nl*4));
 				 }			 
 				 g2.setPaint(Color.black);
-				 g2.setFont(textFont);
+				 if (seqObj1.getShowBlock1stText()) g2.setFont(textFontBig);
+				 else                               g2.setFont(textFont);
 				 g2.drawString(numText1, (int)textX, (int)y1);
 			 }
-			 
+			
 			 String numText2=null; 
-			 if       (seqObj2.getShowScoreText())  numText2 = (int)pctid +"%";
-			 else  if (seqObj2.getShowHitNumText()) numText2 = "#"+hitDataObj.getHitNum();
-			 else  if (seqObj2.getShowBlockText())  {
+			 if (seqObj2.getShowBlock1stText())  {// CAS572
+				 int n = hitDataObj.getBlock();
+				 if (n>0) {
+					 Block blk = blockMap.get(n);
+					 int hitnum = hitDataObj.getHitNum();
+					 if (!seqObj2.isFlipped()) {
+						 if ((!blk.isInv && hitnum==blk.hitnum1) || (blk.isInv && hitnum==blk.hitnumN)) numText2 = "b"+n;
+					 }
+					 else {
+						 if ((!blk.isInv && hitnum==blk.hitnumN) || (blk.isInv && hitnum==blk.hitnum1)) numText2 = "b"+n;
+					 }	 
+				 }
+			 }
+			 else if (seqObj2.getShowBlockText())  {
 				 int n = hitDataObj.getBlock();
 				 if (n>0) numText2 = "b"+n;
 			 }
-			 else  if (seqObj2.getShowCsetText())  {
+			 else if (seqObj2.getShowCsetText())  {
 				 int n = hitDataObj.getCollinearSet();
 				 if (n>0) numText2 = "c"+n;
 			 }
-			 
+			 else if (seqObj2.getShowHitNumText()) numText2 = "#"+hitDataObj.getHitNum();
+			 else if (seqObj2.getShowScoreText())  numText2 = (int)pctid +"%";
+			
 			 if (numText2!=null) {  
 				 double textX = x2;
 				 if (x1 < x2) {
@@ -646,7 +700,8 @@ public class SeqHits  {
 				 else textX += xr;
 				
 				 g2.setPaint(Color.black);
-				 g2.setFont(textFont);
+				 if (seqObj2.getShowBlock1stText()) g2.setFont(textFontBig);// CAS572
+				 else                               g2.setFont(textFont);
 				 g2.drawString(numText2, (int)textX, (int)y2);					 
 			 }
 			 
@@ -748,4 +803,10 @@ public class SeqHits  {
 		}
 		public String toString() {return hitDataObj.createHover(true);}
 	 } // End class DrawHit
+	
+	// To draw block num at beginning
+	private class Block {
+		int hitnum1=0, hitnumN=0;
+		boolean isInv=false;
+	}
 }

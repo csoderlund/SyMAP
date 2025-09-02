@@ -18,6 +18,9 @@ import javax.swing.table.TableModel;
 /*******************************************************
  * Called from buildTable and setTable (change to columns)
  * Referred to as 'theTable' in TableDataPanel
+ * 
+ * prepareRenderer allows last minutes changes for display
+ * TableData.java ColumnComparator does actual sort
  */
 public class TableSort extends JTable implements ListSelectionListener {
 	private static final long serialVersionUID = 5088980428070407729L;
@@ -36,7 +39,6 @@ public class TableSort extends JTable implements ListSelectionListener {
        	setOpaque(true);
 
        	setModel(theModel);
-       	// CAS560 removed listeners, they were inactive
     }  
     
     protected void sortAtColumn(int column) {
@@ -50,7 +52,6 @@ public class TableSort extends JTable implements ListSelectionListener {
         int cellWidth, maxDef;
         TableCellRenderer headerRenderer = getTableHeader().getDefaultRenderer();
       
-        // CAS504 use different max widths, less padding, more iterations
         for (int i = 0;  i < getModel().getColumnCount();  i++) { // for each column; default order
             column = getColumnModel().getColumn(i);
           
@@ -100,9 +101,14 @@ public class TableSort extends JTable implements ListSelectionListener {
         	else if (cl == Long.class) {
         		compLbl.setText(addCommas(compLbl.getText()));
         	}
+        	if (compLbl.getText().contains("/")) { // For hit sign; cannot change earlier because MSA needs actual signs; CAS572
+        		String txt = compLbl.getText();
+        		if (txt.equals("-/-") || txt.equals("+/+")) compLbl.setText("==");
+        		else if (txt.equals("-/+") || txt.equals("+/-")) compLbl.setText("!=");
+        	}
         	compLbl.setHorizontalAlignment(SwingConstants.LEFT);
         	if (compLbl.getText().length() == 0)
-        		compLbl.setText("-");
+        			compLbl.setText("-");
 	        return compLbl;    		
 	    }
 	    return comp;
@@ -124,7 +130,9 @@ public class TableSort extends JTable implements ListSelectionListener {
 	private final int MAX_AUTOFIT_COLUMN_INT_WIDTH = 90; // in pixels
 	private final int MAX_AUTOFIT_COLUMN_CHR_WIDTH = 60; // in pixels
 	
-	/*******************************************************************************/
+	/*******************************************************************************
+	 * TableData ColumnComparator does actual sort
+	 */
 	protected class SortTableModel extends AbstractTableModel {
 		private static final long serialVersionUID = -2360668369025795459L;
 
