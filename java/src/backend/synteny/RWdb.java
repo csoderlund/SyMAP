@@ -1,13 +1,17 @@
 package backend.synteny;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Vector;
 
 import database.DBconn2;
 import symap.Globals;
+import backend.Constants;
 import backend.Utils;
 import util.ErrorReport;
+import util.ProgressDialog;
 
 /*********************************************************
  * This contains the major read/write DB methods
@@ -250,5 +254,71 @@ public class RWdb {
 	 * CAS572 Write blocks and anchors to file; this is deleted since it is easy to get the same thing from report.
 	 * writeResultsToFile(ProgressDialog mLog, String resultDir)
 	 */
+	/******************************************************************
+	 * Temporary write hits to file for isSelf until I get self-synteny rewritten
+	 */
+	protected void writeResultsToFile(ProgressDialog mLog, String resultDir)  {
+	try {
+		mLog.msg("Write final cluster hits to file for self-synteny");
+		ResultSet rs = null;
+		
+		String idField1 = "ID", idField2 = "ID";
+		
+		File resDir = new File(resultDir, Constants.finalDir);
+		if (!resDir.exists()) resDir.mkdir();	
 	
+		File anchFile = new File(resDir, "clusterHits.txt");
+		if (anchFile.exists()) anchFile.delete();	
+		
+		// Write anchors
+		FileWriter fw = new FileWriter(anchFile);
+		fw.write("block\tstart1\tend1\tstart2\tend2\tannot1\tannot2\n");
+		rs = tdbc2.executeQuery("select blocknum, grp1.name, grp2.name, " +
+			" ph.start1, ph.end1, ph.start2, ph.end2, a1.name, a2.name " +
+			" from blocks " +
+			" join xgroups            as grp1 on grp1.idx=blocks.grp1_idx " + 
+			" join xgroups            as grp2 on grp2.idx=blocks.grp2_idx " +
+			" join pseudo_block_hits as pbh  on pbh.block_idx=blocks.idx " +
+			" join pseudo_hits       as ph   on ph.idx=pbh.hit_idx " + 
+			" left join pseudo_annot as a1   on a1.idx=ph.annot1_idx " +
+			" left join pseudo_annot as a2   on a2.idx=ph.annot2_idx " +
+			" where blocks.pair_idx=" + mPairIdx + 
+			" order by grp1.sort_order asc,grp2.sort_order asc,blocknum asc, ph.start1 asc");
+		while (rs.next()) {
+			int bidx = rs.getInt(1);
+			String grp1 = rs.getString(2);	
+			String grp2 = rs.getString(3);	
+			int s1 = rs.getInt(4);
+			int e1 = rs.getInt(5);
+			int s2 = rs.getInt(6);
+			int e2 = rs.getInt(7);
+			String a1 = rs.getString(8);	
+			String a2 = rs.getString(9);
+			
+			a1 = parseAnnotID(a1,idField1);
+			a2 = parseAnnotID(a2,idField2);
+			
+			fw.write(grp1 + "." + grp2 + "." + bidx + "\t" + s1 + "\t" + e1 + "\t" + s2 + "\t" + e2 +
+							"\t" + a1 + "\t" + a2 + "\n");
+		}
+		fw.flush();
+		fw.close();
+		mLog.msg("   Wrote " + anchFile);
+	}
+	catch (Exception e) {ErrorReport.print(e, "Write results to file"); }
+	}
+	private String parseAnnotID(String in, String fieldName) {
+		if (in != null){
+			for (String field : in.split(";")){
+				if (field.trim().startsWith(fieldName)) {
+					field = field.substring(1 + fieldName.length()).trim();
+					if (field.startsWith("=")) {
+						field = field.substring(2).trim();
+					}
+					return field;
+				}
+			}
+		}		
+		return in;
+	}
 }

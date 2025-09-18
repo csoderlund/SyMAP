@@ -11,6 +11,7 @@ import javax.swing.event.*;
 
 import database.DBconn2;
 import symap.manager.Mproject;
+import symap.mapper.HfilterData;
 import symap.Globals;
 import symap.drawingpanel.SyMAP2d;
 import util.ErrorReport;
@@ -23,9 +24,9 @@ import util.Utilities;
  */
 public class Block2Frame extends JFrame {
 	private static final long serialVersionUID = 1L;
-	private final int fBlockMaxHeight = 800; // CAS515 was 900
+	private final int fBlockMaxHeight = 800; 
 	private final int fChromWidth = 15, fChromWidth2 = 25; // width of Ref Chr; all others
-	private final int fLayerWidth = 90; 		// CAS56 was 100; width of level
+	private final int fLayerWidth = 90; 		// width of level
 	private final int fTooManySeqs = 75;
 
 	private DBconn2 tdbc2;
@@ -46,7 +47,7 @@ public class Block2Frame extends JFrame {
 	
 	private boolean savedRects = false;
 	private JButton saveBtn;
-	private JPanel mainPane; // CAS533 changed from Container to JPanel for ImageViewer
+	private JPanel mainPane;
 	private int farL, farR;
 	
 	// Called from BlockViewFrame - subwindow
@@ -147,7 +148,7 @@ public class Block2Frame extends JFrame {
 		catch(Exception e){ErrorReport.print(e, "Init for Chromosome Blocks");}
 	}
 	// Main Block can be closed separately, so this needs its own tdbc closed
-	public void dispose() { // override; CAS541 add
+	public void dispose() { // override;
 		setVisible(false); 
 		tdbc2.close();  
 		super.dispose();
@@ -207,12 +208,11 @@ public class Block2Frame extends JFrame {
 				i++;
 			}
 			
-			// CAS515 was using 'names from projects' which is directory
 			Mproject tProj = new Mproject();
 			String grp_prefix = tProj.getKey(tProj.lGrpPrefix);
 			
 			rs = tdbc2.executeQuery("select value from proj_props where name='" + grp_prefix + "' and proj_idx=" + mRefIdx);
-			grpPfx = rs.next() ? rs.getString("value") : "Chr"; // CAS560 was first(); CAS534 should be loaded, but if not...
+			grpPfx = rs.next() ? rs.getString("value") : "Chr"; 
 			rs.close();
 			
 			String display_name = tProj.getKey(tProj.sDisplay);
@@ -234,8 +234,6 @@ public class Block2Frame extends JFrame {
 		int chromHeight = mRefSize/bpPerPx;
 		int chromXLeft, chromXRight;
 		
-		// CAS516 add different outline to inverted
-		// BasicStroke(float width, int cap, int join, float miterlimit, float[] dash, float dash_phase)
 		Stroke stroke0 = new BasicStroke(1.0f);
 		Stroke stroke1 = new BasicStroke(2.0f);
 		float [] dash = {2f, 2f};
@@ -303,7 +301,7 @@ public class Block2Frame extends JFrame {
 		}
 		// Draw ref chr
 		g2.setStroke(stroke0);
-		g2.setColor(Color.LIGHT_GRAY);  // CAS516 new Color(210,180,140)
+		g2.setColor(Color.LIGHT_GRAY);  
 		g2.fillRect(x, y0,fChromWidth,chromHeight);
 		g2.setColor(Color.black);
 		g2.drawRect(x, y0, fChromWidth, chromHeight);
@@ -353,7 +351,7 @@ public class Block2Frame extends JFrame {
 		// as we add each one to the list we assign it an index which is just its order in the list. 
 		mBlocks = new Vector<Block>();
 		String sql;
-		if (!mReversed) { // CAS516 add corr
+		if (!mReversed) { 
 			sql ="select idx, grp1_idx as grp2, start2 as start, end2 as end, blocknum," +
 				" start1 as s2, end1 as e2, corr " +
 				" from blocks where pair_idx=" + mPairIdx + 
@@ -374,9 +372,9 @@ public class Block2Frame extends JFrame {
 			int e2 = rs.getInt("e2");
 			int blocknum = rs.getInt("blocknum");
 			int idx = rs.getInt("idx");
-			boolean isInv = (rs.getFloat("corr")<0); // CAS516 add
-			String blockName = Utilities.blockStr(mGrp2Names.get(grp2), mRefChr, blocknum); // CAS513 call blockStr
-			Block b = new Block(grp2, start/bpPerPx, end/bpPerPx, s2, e2, blockName, idx, unordered2, isInv);
+			boolean isInv = (rs.getFloat("corr")<0); 
+			String blockName = Utilities.blockStr(mGrp2Names.get(grp2), mRefChr, blocknum);
+			Block b = new Block(grp2, start/bpPerPx, end/bpPerPx, s2, e2, blockName, idx, unordered2, isInv, blocknum); // CAS573 add blocknum for 2D
 			mBlocks.add(b);
 		}
 		rs.close();
@@ -432,23 +430,6 @@ public class Block2Frame extends JFrame {
 			}
 			mLayout.get(L).add(b);
 		}
-/** CAS516 not necessary
-		for (int L = 1; ; L++) {
-			if (mLayout.containsKey(L)) {
-				if (!mLayout.containsKey(-L)) {
-					mLayout.put(-L, new Vector<Block>());
-				}
-			}
-			else if (mLayout.containsKey(-L)) {
-				if (!mLayout.containsKey(L)) {
-					mLayout.put(L, new Vector<Block>());
-				}					
-			}
-			else {
-				break;
-			}
-		}
-**/
 		return true;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Layout blocks"); return false;}
@@ -510,9 +491,10 @@ public class Block2Frame extends JFrame {
 		Rectangle2D blockRect;
 		boolean unordered;
 		boolean bInv;
+		int blockNum;	// CAS573 add for 2D
 		
 		public Block(int _grp2, int _s, int _e, int _s2, int _e2, String _name, int _idx, 
-				boolean _unord, boolean isInv)
+				boolean _unord, boolean isInv, int bnum)
 		{
 			mGrp2 = _grp2;
 			mS = _s;
@@ -523,6 +505,7 @@ public class Block2Frame extends JFrame {
 			idx = _idx;
 			unordered = _unord;
 			bInv = isInv;
+			blockNum = bnum;
 		}
 		public boolean overlaps(Block b) {
 			return (Math.max(b.mS, mS) <= Math.min(b.mE,mE) + 30); // should match value in BlockViewFrame
@@ -543,23 +526,27 @@ public class Block2Frame extends JFrame {
 	private void blockMouseClicked(MouseEvent m) {
 		for (Block b : mBlocks) {
 			if (b.blockRect.contains(m.getPoint())) {				
-				showDetailView(b);
+				show2DBlock(b);
 				return;
 			}
 		}
 	}			
-	private void showDetailView(Block b) {
-		Utilities.setCursorBusy(this, true); // CAS545 add for slow machines
-		try {
+	private void show2DBlock(Block b) {
+		Utilities.setCursorBusy(this, true); 
+		try {	
 			SyMAP2d symap = new SyMAP2d(tdbc2, null); // makes new conn
-			symap.getDrawingPanel().setTracks(2); // CAS550 set exact number
+			symap.getDrawingPanel().setTracks(2); 
+			
+			HfilterData hd = new HfilterData (); 
+			hd.setForDP(b.blockNum); 					// CAS573 only show block
+			symap.getDrawingPanel().setHitFilter(1,hd); // copy template
 			
 			symap.getDrawingPanel().setSequenceTrack(1,mRefIdx,mGrpIdx,Color.CYAN);
 			symap.getDrawingPanel().setSequenceTrack(2,mIdx2,b.mGrp2,Color.GREEN);
 			symap.getDrawingPanel().setTrackEnds(1,b.mS*bpPerPx,b.mE*bpPerPx);
 			symap.getDrawingPanel().setTrackEnds(2,b.mS2,b.mE2);
 									
-			symap.getFrame().showX(); // CAS512
+			symap.getFrame().showX(); 
 		}
 		catch (Exception err) {ErrorReport.print(err, "Show 2D View");}
 		finally {Utilities.setCursorBusy(this, false);}

@@ -15,9 +15,8 @@ public class Project {
 	private String grpPrefix;
 	private String grpType;
 	private Group[] groups;
-	private int minGrpSize = 0;
 
-	public Project(int id, DBconn2 dbc2) { // CAS534 changed from properties to dbReader
+	protected Project(int id, DBconn2 dbc2) { 
 		Mproject tProj = new Mproject(dbc2, id, "", "");
 		tProj.loadParamsFromDB();
 		
@@ -25,50 +24,49 @@ public class Project {
 		this.displayName = tProj.getDisplayName();
 		this.grpPrefix   = tProj.getGrpPrefix();
 		this.grpType     = tProj.getdbGrpName();
-		this.minGrpSize	 = tProj.getdbDPsize(); // CAS534 this is disable as does not seem to work
 	}
 	// Data.DBload reads all data
-	public void setGroups(Group[] grps) {
+	protected void setGroups(Group[] grps) {
 		if (grps != null) {
-			Group.setScaleFactors(grps, minGrpSize);
+			// CAS573 obsolete; Group.setScaleFactors(grps, minGrpSize);
 			Group.setOffsets(grps);
 		}
 		groups = grps;
 	}
 
-	public Group getGroupByOrder(int sortOrder) {
+	protected Group getGroupByOrder(int sortOrder) {
 		return groups == null ? null : groups[sortOrder-1];
 	}
 
-	public Group getGroupByID(int id) {
+	protected Group getGroupByID(int id) {
 		if (groups != null)
 			for (Group g : groups)
 				if (g.getID() == id) return g;
 		return null;	
 	}
 
-	public Group getGroupByOffset(double offset) {
+	protected Group getGroupByOffset(double offset) {
 		if (groups != null)
 			for (int i = groups.length-1; i >= 0; i--)
 				if (groups[i].getOffset() < offset) return groups[i];
 		return null;
 	}
 	
-	public int getNumGroups() {
+	protected int getNumGroups() {
 		return groups == null ? 0 : groups.length;
 	}
 	
-	public int getNumVisibleGroups() {
+	protected int getNumVisibleGroups() {
 		int count = 0;
 		for (Group g : groups)
 			if (g.isVisible()) count++;
 		return count;
 	}
 
-	public int getID() { return id; }
-	public String getGrpPrefix() { return grpPrefix; }
-	public String getGrpType() { return grpType; }
-	public String getDisplayName() { return displayName; }
+	protected int getID() { return id; }
+	protected String getGrpPrefix() { return grpPrefix; }
+	protected String getGrpType() { return grpType; }
+	protected String getDisplayName() { return displayName; }
 	public String toString() { return displayName; } 
 
 	public boolean equals(Object obj) {
@@ -77,7 +75,7 @@ public class Project {
 	/*****************************************************
 	 * Called in data.initialize to set up tiles
 	 */
-	public static Tile[] createTiles(Project[] projects, Tile[] tiles, PropsDB pp) {
+	protected static Tile[] createTiles(Project[] projects, Tile[] tiles, PropsDB pp) {
 		Vector<Tile> out = new Vector<Tile>(tiles.length);
 		Project pX = projects[0];
 		for (int i = 1;  i < projects.length;  i++) {
@@ -93,7 +91,7 @@ public class Project {
 		return out.toArray(new Tile[0]);
 	}
 	
-	public static Project getProject(Project[] projects, int startIndex, int id) {
+	protected static Project getProject(Project[] projects, int startIndex, int id) {
 		if (projects != null)
 			for (int i = startIndex;  i < projects.length;  i++)
 				if (projects[i].getID() == id)

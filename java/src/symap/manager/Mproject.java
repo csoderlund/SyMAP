@@ -132,7 +132,7 @@ public class Mproject implements Comparable <Mproject> {
 	public String getdbGrpName() 	{ return getDBVal(sGrpType);}
 	public String getdbCat() 		{ return getDBVal(sCategory); }
 	public String getdbAbbrev() 	{ return getDBVal(sAbbrev); }
-	public int getdbDPsize() {return Utilities.getInt(getDBVal(sDPsize));}
+	// CAS573 obsolete user defined dotsize; public int getdbDPsize() {return Utilities.getInt(getDBVal(sDPsize));}
 	public int getdbMinKey() {return Utilities.getInt(getDBVal(sANkeyCnt));}
 	
 	public String getSequenceFile() { return getProjVal(lSeqFile); }
@@ -198,7 +198,7 @@ public class Mproject implements Comparable <Mproject> {
 		
 		return msg;
 	}
-	// false: cnt all; true: only cnt if have /align; CAS568 add
+	// false: cnt all; true: only cnt if have /align;
 	// used for all project related links (not pair)
 	public boolean hasExistingAlignments(boolean bCheckAlign) { 
 		try {
@@ -306,7 +306,7 @@ public class Mproject implements Comparable <Mproject> {
 	    int nCol=  fields.length;
 	    String [][] rows = new String[nRow][nCol];
 	    int r=0, c=0;
-	    int totGenes=0, totExons=0, totGaps=0; // CAS570 add totals and Gaps
+	    int totGenes=0, totExons=0, totGaps=0; 
 	    long totLen=0;
 	    float totAvgGenes=0, totAvgExons=0;
 	    
@@ -395,10 +395,6 @@ public class Mproject implements Comparable <Mproject> {
 			}
 			info += "\n" + paramObj.label + ": " + strN;
 		}
-		// CAS568 paramObj = getParams(aMaskNonGenes);
-		// if (!paramObj.isDBvalDef()) info += "\n" + paramObj.getStr();
-		//paramObj = getParams(aOrderAgainst);
-		//if (!paramObj.isDBvalDef()) info += "\n" + paramObj.getStr();
 		
 		return info;
 	}
@@ -478,7 +474,7 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	public void removeProjectFromDB() {
 	try {
-		Globals.rprt("Removing " + strDisplayName + " from database..."); // CAS568 add
+		Globals.rprt("Removing " + strDisplayName + " from database..."); 
 		// Setup for update numhits for single Query
 		Vector <Integer> proj2Idx = new Vector <Integer> ();
 		ResultSet rs = dbc2.executeQuery("select proj1_idx, proj2_idx from pairs where proj1_idx=" + projIdx + " or proj2_idx=" + projIdx);
@@ -569,7 +565,7 @@ public class Mproject implements Comparable <Mproject> {
 				Params p = pKeysMap.get(paramKey[i]);
 				String fprop = props.getProperty(paramKey[i]);
 				
-				if (p.projVal.length()>0 && !p.projVal.equals(fprop)) { // CAS567 check for changes
+				if (p.projVal.length()>0 && !p.projVal.equals(fprop)) { 
 					msg += String.format("%-20s  DB: %-20s  File: %-20s\n", p.label, p.projVal, fprop);
 				}
 				p.projVal = fprop; // overwrite from DB
@@ -722,30 +718,26 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	
 	private final String [] paramKey = { // key for file and db saves
-			"category", "display_name", "abbrev_name", 
-			"grp_type", "description",  "min_display_size_bp", "annot_kw_mincount", 
-			"grp_prefix", "min_size", "annot_keywords",
-			"sequence_files", "anno_files"
+			"category", "display_name", "abbrev_name", "grp_type", 
+			"description", "annot_kw_mincount", "grp_prefix", "min_size", 
+			"annot_keywords", "sequence_files", "anno_files"
 	};
 	private final String [] paramDef = {
-			"Uncategorized", "", "", 
-			"Chromosome", "", "0", "50",
-			"", "100000", "",
-			"", ""
+			"Uncategorized", "", "", "Chromosome", 
+			"",  "50", "", "100000", 
+			"", "", ""
 	};
 	private String [] paramLabel = {
-			"Category", "Display name", "Abbreviation", 
-			"Group type", "Description", "DP cell size", "Anno key count",
-			"Group prefix", "Minimum length", "Anno keywords", 
-			"Sequence files", "Anno files"
+			"Category", "Display name", "Abbreviation", "Group type", 
+			"Description",  "Anno key count","Group prefix", "Minimum length", // remove DP cell size CAS573
+			 "Anno keywords", "Sequence files", "Anno files"
 	};
-	private String [] paramDesc = { // CAS567 added these for label tooltips on ProjParams
+	private String [] paramDesc = { 
 			"Select a Category from the drop down or enter a new one in the text box.", 
 			"This name will be used for the project everywhere.", 
 			"This must be exactly 4 characters to be used in Queries.", 
 			"Group type is generally 'Chromosome'; this is used as a label on the Selected panel.", 
 			"The description is information to display with the project.", 
-			"DP cell size - not used", 
 			"If there are at least this many occurances of a keyword, it will be a column in Queries",
 			"Only sequences with this group prefix will be loaded; if blank, all will be loaded", 
 			"Only load sequences that have at least this many bases will be loaded", 
@@ -758,18 +750,14 @@ public class Mproject implements Comparable <Mproject> {
 	public final int sDisplay =   	1;
 	protected final int sAbbrev =   2;
 	public final int sGrpType =   	3;
-	protected final int sDesc =     4;
-	protected final int sDPsize =   5;
-	public final int sANkeyCnt =  	6;
+	protected final int sDesc =     4; // CAS573 remove obsolete DP dot size
+	public final int sANkeyCnt =  	5;
 	
-	public final int lGrpPrefix = 	7;
-	protected final int lMinLen =   8;
-	public final int lANkeyword = 	9;
-	protected final int lSeqFile =  10;
-	protected final int lAnnoFile = 11;
-	
-	// CAS568 protected final int aMaskNonGenes = 12;
-	// CAS568 protected final int aOrderAgainst = 12;	
+	public final int lGrpPrefix = 	6;
+	protected final int lMinLen =   7;
+	public final int lANkeyword = 	8;
+	protected final int lSeqFile =  9;
+	protected final int lAnnoFile = 10;
 	
 	public final int xDisplay = 1;
 	public final int xLoad = 2;
@@ -786,7 +774,6 @@ public class Mproject implements Comparable <Mproject> {
 			else isLoad=true;
 		}
 		private boolean isDBvalDef() {
-			// CAS568 if (index==aMaskNonGenes && dbVal.contentEquals("")) return true;
 			return dbVal.equals(defVal);
 		}
 		String key="", label="";

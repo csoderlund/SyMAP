@@ -41,6 +41,7 @@ import util.Utilities;
  * 1. Add filter here
  * 2. Add to HfilterData
  * 3. Add to SeqHits.isHighLightHit() and isFiltered()
+ * // CAS573 NC for Linux
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Hfilter extends JDialog {
@@ -60,30 +61,30 @@ public class Hfilter extends JDialog {
 	private JMenuItem popupTitle; 
 	
 	// highlight - only one can be selected
-	private JRadioButton hBlockRadio	= new JRadioButton(SYN);
-	private JRadioButton hCsetRadio		= new JRadioButton(COL); 
-	private JRadioButton hGene2Radio 	= new JRadioButton(HIT2); 
-	private JRadioButton hGene1Radio 	= new JRadioButton(HIT1);
-	private JRadioButton hGene0Radio	= new JRadioButton(HIT0); 
-	private JRadioButton hNoneRadio		= new JRadioButton(NONE);
-	private JCheckBox 	 hPopupCheck	= new JCheckBox(POPUP);
+	private JRadioButton hBlockRadio	= Jcomp.createRadioNC(SYN, "Highlight synteny block hits");
+	private JRadioButton hCsetRadio		= Jcomp.createRadioNC(COL, "Highlight collinear set hits");
+	private JRadioButton hGene2Radio 	= Jcomp.createRadioNC(HIT2, "Highlight hits that align to genes on both sides"); 
+	private JRadioButton hGene1Radio 	= Jcomp.createRadioNC(HIT1, "Highlight hits that align to a gene on one side"); 
+	private JRadioButton hGene0Radio	= Jcomp.createRadioNC(HIT0, "Highlight hits that do not align to a gene on either side"); 
+	private JRadioButton hNoneRadio		= Jcomp.createRadioNC(NONE, "Turn off all highlightening");
+	private JCheckBox 	 hPopupCheck	= Jcomp.createCheckNC(POPUP, "Highlight hit-wire and genes for hit popup");
 	
 	// Show - any number can be selected
-	private JCheckBox sBlockCheck		= Jcomp.createCheckBoxGray(SYN, "Show all synteny hits");
-	private JRadioButton blockAndRadio	= Jcomp.createRadioGray("And", "Hits shown must pass all checks");
-	private JRadioButton blockOrRadio	= Jcomp.createRadioGray("Or", "Hits shown must pass any checks");
+	private JCheckBox sBlockCheck		= Jcomp.createCheckNC(SYN, "Show all synteny hits");
+	private JRadioButton blockAndRadio	= Jcomp.createRadioNC("And", "Hits shown will pass ALL checks");
+	private JRadioButton blockOrRadio	= Jcomp.createRadioNC("Or", "Hits shown will pass ANY checks");
 	
-	private JCheckBox sCsetCheck	= Jcomp.createCheckBoxGray(COL, "Show all collinear sets");
-	private JCheckBox sGene2Check	= Jcomp.createCheckBoxGray(HIT2, "Show all hits aligning to genes on both sides");
-	private JCheckBox sGene1Check	= Jcomp.createCheckBoxGray(HIT1, "Show all hits aligning to genes on one sides");
-	private JCheckBox sGene0Check	= Jcomp.createCheckBoxGray(HIT0, "Show all hits that do not align to any gene");
-	private JCheckBox sAllCheck		= Jcomp.createCheckBoxGray(ALL, "Show all hits - overrides all but identity"); // CAS567 add
+	private JCheckBox sCsetCheck	= Jcomp.createCheckNC(COL, "Show all collinear sets");
+	private JCheckBox sGene2Check	= Jcomp.createCheckNC(HIT2, "Show all hits aligning to genes on both sides");
+	private JCheckBox sGene1Check	= Jcomp.createCheckNC(HIT1, "Show all hits aligning to genes on one side");
+	private JCheckBox sGene0Check	= Jcomp.createCheckNC(HIT0, "Show all hits that do not align to any gene");
+	private JCheckBox sAllCheck		= Jcomp.createCheckNC(ALL, "Show all hits - overrides all but identity"); // CAS567 add
 	
 	// Id
 	private JSlider pctidSlider  = new JSlider(JSlider.HORIZONTAL, 0, 100, 0); // 0 to 100, start at 0
 	private JLabel  pctidText    = new JLabel("0%");
 	
-	private JCheckBox  blockOnlyCheck = Jcomp.createCheckBoxGray("Block #", "Only show this block's hits");  // CAS567 add
+	private JCheckBox  blockOnlyCheck = Jcomp.createCheckNC("Block #", "Only show this block's hits");  // CAS567 add
 	private JTextField blockOnlyText = Jcomp.createTextField("0", "Block number, hit return for immediate effect", 2);
 	
 // On popup menu
@@ -117,13 +118,13 @@ public class Hfilter extends JDialog {
 	/* Filter dialog */
 	private void createFilterDialog(FilterListener listener) {
 		// Buttons
-		okButton = Jcomp.createMonoButton("Save","Save changes and close");
+		okButton = Jcomp.createButtonNC("Save","Save changes and close"); 
 		okButton.addActionListener(listener);
 
-		cancelButton = Jcomp.createMonoButton("Cancel", "Discard changes and close");
+		cancelButton = Jcomp.createButtonNC("Cancel", "Discard changes and close");
 		cancelButton.addActionListener(listener);
 
-		defaultButton = Jcomp.createMonoButton("Defaults", "Reset to defaults");
+		defaultButton = Jcomp.createButtonNC("Defaults", "Reset to defaults");
 		defaultButton.addActionListener(listener);
 		
 		helpButton = Jhtml.createHelpIconUserSm(Jhtml.hitfilter);
@@ -279,7 +280,7 @@ public class Hfilter extends JDialog {
 		popupMenu.setMaximumSize(popupMenu.getPreferredSize()); popupMenu.setMinimumSize(popupMenu.getPreferredSize());
 	}
 	// Creates panel
-	public void showHitFilter() {
+	public void displayHitFilter() {
 		setInit(hitFiltData); // must be before setSliderMaxMin; may have changed since Hfilter created
 		setSliderMaxMin();
 		lastHitFiltData = hitFiltData.copy("Hfilter showX");

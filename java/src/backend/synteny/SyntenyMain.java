@@ -26,6 +26,7 @@ import util.Utilities;
  */
 public class SyntenyMain {
 	public static boolean bTrace = false; // -bt trace; set at command line 
+	private boolean bLocalTrace = false;
 	private boolean bVerbose = Constants.VERBOSE;
 	
 	protected static final int strictCoset=2;
@@ -75,9 +76,8 @@ public class SyntenyMain {
 	private long startTime;
 	private int totalBlocks=0, cntMerge=0, cntSame=0, cntDiff=0;
 	private int cntGrpMerge=0, cntGrpSame=0, cntGrpDiff=0; 
-	private int cntVerOrient=0;					// if Verbose && bStrict or bOrient, count how many would pass if orient was not checked
-	private TreeMap <Integer, Integer> cosetNBmap = new TreeMap <Integer, Integer>  ();
-	private int cntTrIn=0, cntTrOlap=0, cntTrCsBlk=0, cntTrCsChg=0; 
+	private TreeMap <Integer, Integer> cosetNBmap = new TreeMap <Integer, Integer> ();
+	private int cntTrIn=0, cntTrOlap=0, cntTrClose=0, cntTrCoset=0, cntTrCsChg=0; 
 	
 	public SyntenyMain(DBconn2 dbc2, ProgressDialog log, Mpair mp) {
 		this.dbc2 = dbc2;
@@ -172,9 +172,6 @@ public class SyntenyMain {
 		if (bOrient)             msg += String.format("   Orient: %,d Same   %,d Diff", cntSame, cntDiff);
 		Utils.prtNumMsg(mLog, totalBlocks, msg);
 		
-		if (bVerbose && bOrSt && cntVerOrient>0) 
-			Utils.prtNumMsg(mLog, cntVerOrient, "Wrong correlation sign for good block");
-		
 		if (cosetNBmap.size()>0 && bVerbose) {
 			msg = "  Collinear sets not in blocks (size: #sets):  ";
 			for (int sz : cosetNBmap.keySet()) msg += sz + ": " + cosetNBmap.get(sz) + "  ";
@@ -182,8 +179,8 @@ public class SyntenyMain {
 		}
 		
 		if (bTrace) {
-			msg = String.format("Merge In %,d  Olap %,d   Coset Blk %,d     Add Coset hits to Blk %,d ", cntTrIn, cntTrOlap, cntTrCsBlk, cntTrCsChg);
-			Utils.prtIndentMsgFile(mLog, 3, msg);
+			Utils.prtIndentMsgFile(mLog, 3, String.format("Merge: In %,d    Close %,d   Olap %,d", cntTrIn, cntTrClose, cntTrOlap));
+			Utils.prtIndentMsgFile(mLog, 3, String.format("Coset Blk %,d    Add hits to existing blk %,d", cntTrCoset, cntTrCsChg));
 		}
 		Utils.prtMsgTimeDone(mLog, "Finish Synteny", startTime);
 
@@ -199,7 +196,7 @@ public class SyntenyMain {
 		if (Cancelled.isCancelled() || !bSuccess) {tdbc2.close(); return false;}
 		
 	/** Finish **********************************************************/
-		// CAS572 no longer necessary due to Report; rwObj.writeResultsToFile(mLog, resultDir);
+		if (bIsSelf) rwObj.writeResultsToFile(mLog, resultDir); // CAS572 remove; CAS573 put back for self as no query
 		tdbc2.close();
 		return bSuccess; 								// Full time printed in calling routine
 	}
@@ -218,7 +215,7 @@ public class SyntenyMain {
 		hitVec = rwObj.loadHits(grpIdx1, grpIdx2, isGrpSelf, orient);
 		if (hitVec==null) {bSuccess=false; return;}
 		
-		if (bTrace) Globals.prt(String.format("\n>> %s %s  %s  Hits %,d                         ", 
+		if (bTrace) Globals.prt(String.format(">> %s %s  %s  Hits %,d                         ", 
 				mProj1.getGrpNameFromIdx(grpIdx1), mProj2.getGrpNameFromIdx(grpIdx2), o, hitVec.size()));
 		
 		if (hitVec.size() < pMindots) return; // not error
@@ -247,7 +244,6 @@ public class SyntenyMain {
 			blk.setActualCoords(); 		
 			blk.stdDev(false); 					    // side 2; saved in DB for report
 			blk.stdDev(true);					    // side 1; last sort of hits for block
-			blk.mCorr1 = hitCorrelation(blk.mHits); // Not needed if from Binary search, but all others are changed
 		}
 		
 		Collections.sort(blockVec);	    // sort on start1 for final block#
@@ -288,11 +284,12 @@ public class SyntenyMain {
 	}
 	// this is called for every block put on blockVec, or changed when on blockVec
 	private void finalizeBlock(SyBlock blk, String msg) {
+		blk.mCorr1 = hitCorrelation(blk.mHits); // CAS573 move from chrChrFinish
 		for (SyHit h : blk.mHits) {
 			h.mDPUsedFinal = true;
 			h.nBlk  = blk.nBlk;          // use for cosetBlocks; CAS572
 		}
-		if (bTrace) blk.tprt("Final ");
+		if (bTrace && bLocalTrace) blk.tprt("Final ");
 	}
 	/************************************************************/
 	private void binarySearch(int low1, int high1, int low2, int high2){
@@ -513,16 +510,16 @@ public class SyntenyMain {
 			for (SyHit ht : cset.setVec) {
 				if (ht.coset!=0) {
 					if (ht.nBlk!=0) {
-						if (nBlk==0) nBlk = ht.nBlk; 	// assume collinear will always end up in the same block
-						else if (nBlk!=ht.nBlk) 
+						if (nBlk==0) nBlk = ht.nBlk; 	// hits go in 1st block found for coset
+						else if (nBlk!=ht.nBlk) 		// coset in two different blocks
 							if (bTrace) Globals.prt("Warning: collinear set " + ht.coset + " in block " + nBlk + " and " + ht.nBlk);
 					}
 					else cntNo++;
 				}
 			}
-			// Determine if create new or add any 
-			if (nBlk==0) { 			 		// new block (coset=2 end up to randomly entered, would need 		
-				if (bStrict && cntNo>=strictCoset) { 	// bStrict will later remove <pCosetdots if not merged
+			// Determine if create new block or add hits to existing block 
+			if (nBlk==0) { 			 		// new block 		
+				if (bStrict && cntNo>=strictCoset) { 	// bStrict will later remove <pMinDots if not merged
 					SyBlock cblk = new SyBlock(orient);	// Assigned nBlk on creation
 					for (SyHit ht : cset.setVec)  cblk.addHit(ht);
 				
@@ -530,13 +527,13 @@ public class SyntenyMain {
 					finalizeBlock(cblk, "CSnew");
 					blockVec.add(cblk);
 				}
-				else {
+				else { 					    // Cosets not in blocks; printed on bVerbose
 					int sz = cset.setVec.size();
 					if (cosetNBmap.containsKey(sz)) cosetNBmap.put(sz, cosetNBmap.get(sz)+1);
 					else cosetNBmap.put(sz, 1);
 				}
 			}
-			else if (cntNo>0) {			// add to existing block - this will even happen for original
+			else if (cntNo>0) {			   // add to existing block - this can even happen for original
 				for (SyBlock cblk : blockVec) {
 					if (cblk.nBlk != nBlk) continue;
 					
@@ -547,7 +544,7 @@ public class SyntenyMain {
 							cntTrCsChg++;
 						}
 					}
-					finalizeBlock(cblk, "CSchg");
+					finalizeBlock(cblk, "CSadd");
 					break;
 				}
 			}
@@ -562,9 +559,8 @@ public class SyntenyMain {
 	private void rmDiagBlocks(){ // change to set blockVec like other methods; CAS572
 		Vector<SyBlock> out = new Vector<SyBlock>();
 		for (SyBlock b : blockVec){
-			if (!intervalsOverlap(b.mS1, b.mE1, b.mS2, b.mE2, 0)){
-				out.add(b);
-			}
+			int gap = Math.max(b.mS1,b.mS2) - Math.min(b.mE1,b.mE2); // was intervalOverlap; CAS573
+			if (gap >0) out.add(b);
 		}
 		blockVec = out;
 	}
@@ -573,10 +569,11 @@ public class SyntenyMain {
 	 * Run on chr-chr pair (both orients) before strict (HitsVec cannot be used because maybe only one orient)
 	 */
 	private void mergeBlocks() {
+		Collections.sort(blockVec); // CAS573
 		int nb = blockVec.size();
 		
 		// Always do for contained
-		Merge mergeObj = new Merge(blockVec, false, bOrient); // F=contained
+		Merge mergeObj = new Merge(blockVec, Merge.CONTAINED, bOrient); 
 		blockVec = mergeObj.mergeBlocks(0, 0, 0); 			  // return merged contained blocks
 		
 		for (SyBlock blk : blockVec) {						
@@ -586,10 +583,28 @@ public class SyntenyMain {
 				cntTrIn++;
 			}
 		}
+		cntTrCoset += mergeObj.cntCoset;
 		
+		/* Needs Merge to be changed to always merge closest first instead of the transitive closure.
+		 * Rare cases: 2 blocks of same orient should be one (arab-cabb 2-1); 
+		//             also merge close cosets (but not overlapping) 			 CAS573 
+		mergeObj = new Merge(blockVec, Merge.CLOSE, true); 
+		int n = (gap1list.size()>3) ? gap1list.size()-2 : gap1list.size()-1;
+		blockVec = mergeObj.mergeBlocks(gap1list.get(n), gap2list.get(n), 0); // mindots=0 for cosets 			  
+		bLocalTrace = true;
+		for (SyBlock blk : blockVec) {						
+			if (blk.hasChg) {
+				finalizeBlock(blk, "MgCL ");
+				blk.hasChg = false;
+				cntTrClose++;
+			}
+		}
+		cntTrCoset += mergeObj.cntCoset;
+		bLocalTrace = false;
+		*/
 		// Only do closely space merge if parameter set
 		if (!pMerge.equals("0")) {
-			mergeObj = new Merge(blockVec, true, bOrient); // T=overlap or close; send blocks; perform overlap
+			mergeObj = new Merge(blockVec, Merge.OLAP, bOrient); // T=overlap or close; send blocks; perform overlap
 		
 			if (pMerge.equals("1"))
 				blockVec = mergeObj.mergeBlocks(0, 0, pMindots);  // combine small overlapping - which will be mixed
@@ -598,15 +613,14 @@ public class SyntenyMain {
 						  
 			for (SyBlock blk : blockVec) {						
 				if (blk.hasChg) {
-					finalizeBlock(blk, "MgOlap");
+					finalizeBlock(blk, "MgOlp");
 					blk.hasChg = false;
 					cntTrOlap++;
 				}
 			}
+			cntTrCoset += mergeObj.cntCoset;
 		}	
 		cntGrpMerge += nb-blockVec.size();
-		
-		if (bTrace) for (SyBlock blk : blockVec) if (blk.mCase=="N") cntTrCsBlk++;
 	}
 	
 	/** Run on final chr-chr pair (both orients) after merge 
@@ -630,7 +644,6 @@ public class SyntenyMain {
 				if (!blk.mCase.equals("X")) xVec.add(blk);
 			
 			blockVec = xVec;
-			if (bTrace) Globals.prt("Final strict blocks " + cnt);
 		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "trim block"); }
@@ -693,10 +706,6 @@ public class SyntenyMain {
 	catch (Exception e) {ErrorReport.print(e, "Set properties for synteny"); bSuccess=false;}
 	}
 	
-	private boolean intervalsOverlap(int s1,int e1, int s2, int e2, int max_gap) {
-		int gap = Math.max(s1,s2) - Math.min(e1,e2);
-		return (gap <= max_gap);
-	}
 	/**************************************************/
 	private class CoSet {
 		private Vector <SyHit> setVec = new Vector <SyHit> ();

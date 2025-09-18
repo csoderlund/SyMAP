@@ -8,28 +8,27 @@ import java.util.Collections;
 
 /***********************************************
  * A cell representing hits and blocks of 2 chromosomes
- * CAS533 remove LoadObject
  */
 public class Tile  {
 	private final int X = Data.X, Y = Data.Y;
 	
-	private Group group[]; // x and y
-	private Project proj[]; // CAS533 add
-	private Vector <ABlock> ablocks;  // synteny blocks
-	private DPHit hits[] = null;
+	private Group group[];  			// chromosomes for x and y axis
+	private Project proj[]; 
+	private Vector <ABlock> ablocks;  	// synteny blocks - rectangles around group of hits in block
+	private DPHit hits[] = null;	  	// all hits with indication if in block
 	
-	public Tile(Project pX, Project pY, Group grpX, Group grpY) {
+	protected Tile(Project pX, Project pY, Group grpX, Group grpY) {
 		proj	   = new Project[2];
 		group      = new Group[2];
-		ablocks    = new  Vector <ABlock> ();
+		ablocks    = new Vector <ABlock> ();
 		
 		proj[X] = pX;
 		proj[Y] = pY;
 		group[X] = grpX;
 		group[Y] = grpY;
 	}
-	// Called by DotPlotDBUser
-	public void addBlock(int number, int sX, int eX, int sY, int eY) {		
+	// Called by Data.DBload
+	protected void addBlock(int number, int sX, int eX, int sY, int eY) {		
 		ablocks.add(new ABlock(this, number,sX,eX,sY,eY));
 		Collections.sort(ablocks);
 	}
@@ -40,28 +39,28 @@ public class Tile  {
 		}
 		return false;
 	}
-	public void clearBlocks() { ablocks.clear();}
+	protected void clearBlocks() { ablocks.clear();}
 		
-	public boolean setHits(DPHit[] hits) { 
+	protected boolean setHits(DPHit[] hits) { 
 		this.hits = hits;
 		return true;
 	}
 	
-	public ABlock getBlock(int number) {return ablocks.get(number-1);} // Called by Plot
+	protected ABlock getBlock(int number) {return ablocks.get(number-1);} // Called by Plot
 		
-	public int getNumBlocks() {return ablocks.size(); }// Called by Plot
+	protected int getNumBlocks() {return ablocks.size(); }// Called by Plot
 		
-	public DPHit[] getHits()     { return hits; }// Called by Plot and Ablock
+	protected DPHit[] getHits()     { return hits; }// Called by Plot and Ablock
 	
-	public int getProjID(int axis) {return group[axis].getProjID(); }// or proj.getID()
+	protected int getProjID(int axis) {return group[axis].getProjID(); }// or proj.getID()
 	
-	public Project getProject(int axis) {return proj[axis];} // DBload
+	protected Project getProject(int axis) {return proj[axis];} // DBload
 	
-	public Group getGroup(int axis) { return group[axis]; } // Plot, ABlock, DBload
+	protected Group getGroup(int axis) { return group[axis]; } // Plot, ABlock, DBload
 	
-	public boolean hasHits() {return (hits!=null && hits.length>0);} // Data.initialize
+	protected boolean hasHits() {return (hits!=null && hits.length>0);} // Data.initialize
 	
-	public void swap(int pid1, int pid2) { // Data.initialize CAS533 add
+	protected void swap(int pid1, int pid2) { // Data.initialize 
 		if (pid1==proj[X].getID() && pid2==proj[Y].getID()) return;
 		
 		Group tg = group[0]; group[0]=group[1]; group[1]=tg;
@@ -79,7 +78,7 @@ public class Tile  {
 	
 	/****************************************************************/
 	// Called by Plot, Tile, Project
-	public static Tile getTile(Tile[] tiles, Group grpX, Group grpY) {
+	protected static Tile getTile(Tile[] tiles, Group grpX, Group grpY) {
 		if (tiles != null)
 			for (Tile t : tiles)
 				if (t.group[Data.X] == grpX && t.group[Data.Y] == grpY) 
@@ -88,7 +87,7 @@ public class Tile  {
 	}
 	/*************************************************************************/
 	// Called from Data when there is a mouse selection
-	public static ABlock getBlock(Tile[] tiles, Group grpX, Group grpY,  double xUnits, double yUnits) {
+	protected static ABlock getBlock(Tile[] tiles, Group grpX, Group grpY,  double xUnits, double yUnits) {
 		Tile t = getTile(tiles,grpX,grpY);
 		ABlock b =  (t != null) ? t.getBlock(xUnits,yUnits) : null;
 		return b;

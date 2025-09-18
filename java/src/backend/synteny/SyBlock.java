@@ -64,8 +64,6 @@ public class SyBlock  implements Comparable <SyBlock>{
 
 	// Merge this block (mCorr1 was using the best of the 2 blocks, now it is recalculated in SyntenyMain CAS572)
 	protected void mergeWith(SyBlock b) {
-		if (SyntenyMain.bTrace) 
-			Globals.prt(String.format("   Merge Blk#%3d: %-4d  +  Blk#%3d: %-4d   n = %,d", nBlk, n, b.nBlk, b.n, (n+b.n)));
 		hasChg = true;
 		
 		mS1 = Math.min(mS1, b.mS1);

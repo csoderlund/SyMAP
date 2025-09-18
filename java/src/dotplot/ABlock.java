@@ -9,8 +9,7 @@ import java.awt.geom.Rectangle2D;
 
 /***********************************************
  * Represents the rectangle of a block (does not contains its hits)
- * CAS531 removed dead stuff; CAS533 changed from abstract
- * 
+ *      
  * The Shape is used in Tile, see getSmallestBoundingArea
  */
 
@@ -21,9 +20,9 @@ public class ABlock implements Shape, Comparable<ABlock> {
 	private Rectangle rect;
 	
 	private Tile parent;
-	int sX, eX, sY, eY; // CAS533 added for swap
+	int sX, eX, sY, eY; // for swap reference
 
-	public ABlock(Tile parent, int blockNum, int sX, int eX, int sY, int eY) {    
+	protected ABlock(Tile parent, int blockNum, int sX, int eX, int sY, int eY) {    
 		this.sX=sX; this.eX=eX; this.sY=sY; this.eY=eY;
 		rect = new Rectangle();
 		
@@ -31,7 +30,7 @@ public class ABlock implements Shape, Comparable<ABlock> {
 		this.number = blockNum;
 		rect.setFrameFromDiagonal(sX,sY,eX,eY);
 	}
-	public void swap() { // CAS533 instead of reading from DB again, just swap
+	protected void swap() { 
 		int t=sX; sX=sY; sY=t;
 		    t=eX; eX=eY; eY=t;
 		rect.setFrameFromDiagonal(sX,sY,eX,eY);
@@ -48,15 +47,15 @@ public class ABlock implements Shape, Comparable<ABlock> {
 		return false;
 	}
 	
-	public String getName() {
+	protected String getName() {
 		return parent.getGroup(Y).getName()+"."+parent.getGroup(X).getName()+"."+getNumber();
 	}
 	// Called by Plot and Data
-	public int getStart(int axis) {return (axis == X ? rect.x : rect.y);}
-	public int getEnd(int axis)   {return (axis == X ? rect.x+rect.width : rect.y+rect.height);}
-	public int getNumber()        {return number;}
-	public String getNumberStr()  {return number+"";}
-	public Group getGroup(int axis) {return parent.getGroup(axis);}
+	protected int getStart(int axis) {return (axis == X ? rect.x : rect.y);}
+	protected int getEnd(int axis)   {return (axis == X ? rect.x+rect.width : rect.y+rect.height);}
+	protected int getNumber()        {return number;}
+	protected String getNumberStr()  {return number+"";}
+	protected Group getGroup(int axis) {return parent.getGroup(axis);}
 
 	////// Shape
 	public boolean contains(double x, double y) {

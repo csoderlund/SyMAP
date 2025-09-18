@@ -15,8 +15,7 @@ import symap.frame.HelpBar;
 
 /*****************************************************************
  * Called from the SyMAP manager and Explorer
- * CAS522 from the dotplot package, removed FPC and lots of useless code
- * CAS533 from the dotplot package, removed massive amounts of more useless code
+ * CAS573 removed old CAS comments and changed public to protected for all dotplot files
  */
 
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
@@ -26,10 +25,9 @@ public class DotPlotFrame extends JFrame {
 	
 	// ManagerFrame for selected genomes
 	public DotPlotFrame(String title, DBconn2 dbc2, int projXIdx, int projYIdx) {
-		this(title, dbc2, new int[] { projXIdx, projYIdx }, null, null, null, true); // CAS543 add title
+		this(title, dbc2, new int[] { projXIdx, projYIdx }, null, null, null, true); 
 	}
 	// ManagerFrame for all genomes, DotPlotFrame for chromosomes, ChrExpFrame for chromosomes; 
-	// after new Data; data.getSyMAP().clear(); // Clear caches - fix bug due to stale pairs data; CAS541 clear on close
 	public DotPlotFrame(String title, DBconn2 dbc2, int[] projIDs,
 			int[] xGroupIDs, int[] yGroupIDs, 	// null if whole genome
 			HelpBar helpBar, 					// not null if from CE
@@ -38,13 +36,13 @@ public class DotPlotFrame extends JFrame {
 		super(title);
 		if (projIDs==null || projIDs.length==0) System.err.println("No Projects! Email symap@agcol.arizona.edu"); 
 	
-		String type =  (hasRefSelector) ? "G" : "E";    // CAS541 add just to mark connections in Data
-		boolean is2D = (hasRefSelector) ? false : true; // CAS541 add for info display; CAS552 and Home
+		String type =  (hasRefSelector) ? "G" : "E";    // mark connections in Data
+		boolean is2D = (hasRefSelector) ? false : true; // for info display and Home
 		
-		data = new Data(dbc2, type, is2D); // created FilterData object	
+		data = new Data(dbc2, type, is2D); 				// created FilterData object	
 		data.initialize(projIDs, xGroupIDs, yGroupIDs);
 		
-		HelpBar hb = (helpBar!=null) ?  helpBar : new HelpBar(-1, 17);// CAS521 removed dead args
+		HelpBar hb = (helpBar!=null) ?  helpBar : new HelpBar(-1, 17);
 		
 		Plot plot = new Plot(data, hb, is2D);
 		
@@ -55,7 +53,7 @@ public class DotPlotFrame extends JFrame {
 		ControlPanel controls = new ControlPanel(data, plot, hb, colorDialogHandler);
 		data.setCntl(controls);
 		
-		if (hasRefSelector)	controls.setProjects( data.getProjects() ); // CAS543 was always doing
+		if (hasRefSelector)	controls.setProjects( data.getProjects() ); 
 		else 				controls.setProjects(null);
 
 	// Setup frame
@@ -64,7 +62,7 @@ public class DotPlotFrame extends JFrame {
 			public void windowClosed(WindowEvent e) {
 				if (data != null) data.kill();
 				data = null;
-				controls.kill(); // CAS533 add
+				controls.kill(); 
 			}
 		});
 		setLayout( new BorderLayout() );
@@ -72,13 +70,12 @@ public class DotPlotFrame extends JFrame {
 		add( plot.getScrollPane(),BorderLayout.CENTER );
 		if (helpBar==null) add( hb, BorderLayout.SOUTH ); // otherwise, in CE on side
 		
-		Dimension dim = getToolkit().getScreenSize(); // CAS533 this works
+		Dimension dim = getToolkit().getScreenSize(); 
 		setLocation(dim.width / 4,dim.height / 4);
-		//setLocationRelativeTo(null); this puts in lower corner
 	}
-	public void clear() {// CAS541 need to close connection from ChrExpFrame
+	public void clear() {// close connection from ChrExpFrame
 		if (data != null) data.kill();
 		data = null;
 	}
-	public Data getData() { return data; } // SyMAPFrameCommon
+	public Data getData() { return data; } // ChrExpFrame
 }

@@ -11,6 +11,7 @@ import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JSeparator;
+import javax.swing.JTextField;
 import javax.swing.JComboBox;
 
 import colordialog.ColorDialogHandler;
@@ -18,17 +19,19 @@ import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import util.ImageViewer;
 import util.Jcomp;
+import util.Utilities;
 
 /**********************************************************
- * The upper row for the DotPlot
+ * The Control Panel for the DotPlot (top row)
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class ControlPanel extends JPanel implements HelpListener {
+public class ControlPanel extends JPanel implements HelpListener { 
     private Data data; 		// changes to zoom, etc set in data
     private Plot plot; 		// for show image and repaint
     private Filter filter=null; 								
-    
+  
     private JButton homeButton, minusButton, plusButton;
+    private JTextField numField;	// CAS573 add
     private JButton filterButton, showImageButton, editColorsButton;
     private JButton helpButtonLg, helpButtonSm, statsButton;	
     private JButton scaleToggle; 							 
@@ -41,12 +44,13 @@ public class ControlPanel extends JPanel implements HelpListener {
 		this.cdh = cdh;
 		
 		homeButton  = Jcomp.createIconButton(this, hb, buttonListener,
-				"/images/home.gif", "Reset to full view with default size.");
+				"/images/home.gif", "Reset to full view with default size");
 		minusButton =  Jcomp.createIconButton(this, hb, buttonListener,
-				"/images/minus.gif","Decrease the size of the dotplot.");
+				"/images/minus.gif","Decrease the size of the dotplot");
 		plusButton  =  Jcomp.createIconButton(this, hb, buttonListener,
-				"/images/plus.gif", "Increase the size of the dotplot.");
-		
+				"/images/plus.gif", "Increase the size of the dotplot");
+		numField = Jcomp.createTextField("1",  
+				"Amount to increase/decrease +/-; Min 1, Max 10", 2);
 		scaleToggle  =  Jcomp.createBorderIcon(this, hb, buttonListener,
 				"/images/scale.gif", "Draw to BP scale."); 
 		
@@ -57,7 +61,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		hb.addHelpListener(referenceSelector, this);
 		
 		filter = new Filter(d, this);
-		filterButton     = Jcomp.createButton(this,hb, buttonListener, 
+		filterButton     = Jcomp.createButtonNC(this,hb, buttonListener, 
 				"Filters", "Filters: Change filter settings.");
 	
 		showImageButton  =  Jcomp.createIconButton(this, hb, buttonListener,
@@ -82,6 +86,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		addToGrid(row, gbl,gbc,homeButton,sp1);	
 		addToGrid(row, gbl,gbc,plusButton, sp1);
 		addToGrid(row, gbl,gbc,minusButton,sp1);	
+		addToGrid(row, gbl,gbc,numField,sp1);	
 		addToGrid(row, gbl,gbc,scaleToggle,sp2); 
 		addToGrid(row, gbl, gbc, new JSeparator(JSeparator.VERTICAL), sp1); // End home functions
 		
@@ -113,24 +118,52 @@ public class ControlPanel extends JPanel implements HelpListener {
 				filter.showX();
 			}
 			else {
-			    if (src == homeButton) 			  data.setHome(); 
-			    else if (src == minusButton)      data.factorZoom(0.95);
-			    else if (src == plusButton)       data.factorZoom(1/0.95);
-			  
+				boolean rp = false;
+			    if (src == homeButton) 		{data.setHome(); rp=true;} 
+			    else if (src == minusButton)  {
+			    	data.factorZoom(getNumVal()); // was 0.95; CAS573
+			    	plot.bPlusMinusScroll=true;
+			    	rp=true;
+			    }
+			    else if (src == plusButton)      {
+			    	data.factorZoom(1/getNumVal()); // was 1/0.95; CAS573
+			    	plot.bPlusMinusScroll=true;
+			    	rp=true;
+			    }
 			    else if (src == scaleToggle) 	  {
 			    	data.bIsScaled = !data.bIsScaled;
 			    	scaleToggle.setBackground(Jcomp.getBorderColor(data.bIsScaled));
+			    	rp=true;
 			    }
-			    else if (src == referenceSelector)data.setReference((Project)referenceSelector.getSelectedItem());
+			    else if (src == referenceSelector) {
+			    	data.setReference((Project)referenceSelector.getSelectedItem());
+			    	rp=true;
+			    }
+			    else if (src == editColorsButton) {
+			    	cdh.showX();
+			    	rp=true;
+			    }
 			    else if (src == showImageButton)  ImageViewer.showImage("DotPlot", plot); 
-			    else if (src == editColorsButton) cdh.showX();
 			    else if (src == helpButtonSm) 	  popupHelp();
 			    else if (src == statsButton)  	  popupStats();
-			    plot.repaint();
+			    
+			    if (rp==true) plot.repaint();	// CAS573 they do not all require repaint
 			}
 			setEnable();
 	    }
 	};
+	private double getNumVal() {// CAS573 add
+		int n = Utilities.getInt(numField.getText());
+    	if (n<1) {
+    		n = 1;
+    		numField.setText("1");
+    	}
+    	else if (n>10) {
+    		n = 10;
+    		numField.setText("10");
+    	}
+    	return 1.0 - ((double) n * 0.05);
+	}
 	protected void setEnable() {
 		homeButton.setEnabled(!data.isHome());
 	}
@@ -158,9 +191,11 @@ public class ControlPanel extends JPanel implements HelpListener {
 				"If multiple chr-by-chr cells are shown, click on a cell to view the cell only.";
 		msg +=  "\n\nFor the chr-by-chr cell view only:"
 				+ "\n   Double-click on a synteny block (boundary must be showing), "
-				+ "\n   or create a region by dragging the mouse and double-click on it."
-				+ "\nThe first click will turn the region beige, the second click will bring up"
-				+ "\nthe 2D display of the region.";
+				+ "\n      or create a region by dragging the mouse and double-click on it."
+				+ "\n   The first click will turn the region beige, the second click will bring up"
+				+ "\n      the 2D display of the region." 
+				+ "\n   To keep a region in view while using the +/- buttons to change the dotplot size, "
+				+ "\n      click on a block or select a region; the resulting beige region will stay in view.";
 		msg += "\n\nFor the genome display: change the reference by selecting it via the dropdown.";
 		msg += "\n\nSee ? for details.\n";
 		

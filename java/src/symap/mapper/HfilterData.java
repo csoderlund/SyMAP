@@ -20,8 +20,6 @@ public class HfilterData {
 	private double pctid;
 	private double minPctid=NO_PCTID, maxPctid=ANY_PCTID;
 	
-	private String hoverText=""; 
-	
 	public HfilterData() {
 		setDefaults();
 	}
@@ -32,47 +30,54 @@ public class HfilterData {
 		setChanged(hf, "HfilterData from hf");
 	}
 	
-	protected String getFilterText() { // know what is set when hover in whitespace
-		String msg = "";			// SeqHits expects this to start with High if there is highlightening
-		if (bHiBlock) 		msg += "High Blocks; ";
-		else if (bHiCset) 	msg += "High CoSets; "; 
-		else if (bHi2Gene) 	msg += "High =2 Genes; ";
-		else if (bHi1Gene) 	msg += "High =1 Gene; ";
-		else if (bHi0Gene) 	msg += "High =0 Genes; ";
-		if (!bHiPopup) 		msg += "No High Popup (or Query); "; // query; 
+	protected String getFilterText() { // called in Mapper.getHelpText for information box
+		String show = "Show";	
 		
-		msg += "Show "; // something always shows
-		if (pctid!=0 && pctid!=minPctid) msg += "Id=" + (int) pctid + "%"; 
+		if (pctid!=0 && pctid!=minPctid) show += " Id=" + (int) pctid + "%"; 
 		
-		if (bBlock && bBlockOnly) msg += "Block#" + blkNum; 
-		else {
-			String x = " ";									
+		if (bBlockOnly) show += " Block#" + blkNum; // CAS573 was (bBlock && bBlockOnly)
+		else if (bAll)  show += " All";
+		else {	
+			String p = "";
 			if (bBlock) {
-				msg += "Block";
-				x = (bBlockAnd) ? " and " : " or ";
+				show += " Block";
+				p = (bBlockAnd) ? " and" : " or";
 			}
-			if (bCset)	 	msg += x+"CoSet, ";
+			String x="";
+			if (bCset)	 	x += " CoSets,";
+			if (b2Gene) 	x += " 2 Genes,";
+			if (b1Gene) 	x += " 1 Gene,";
+			if (b0Gene) 	x += " 0 Genes,";			
+			if (x.endsWith(",")) x = x.substring(0, x.length()-1);
+			if (x!="") show += p + x;
 			
-			if (b2Gene) 	msg += x+"2 Genes, ";
-			if (b1Gene) 	msg += x+"1 Gene, ";
-			if (b0Gene) 	msg += x+"0 Genes, ";
-			if (bAll)		msg += x+"All, ";			
-			if (msg.endsWith("Show ")) msg += "all";
-			
-			if (msg.endsWith(", ")) msg = msg.substring(0, msg.length()-2);
+			if (show.equals("Show")) show += " All";
 		}
-		hoverText = 	msg + "\n";
-		return hoverText;
+		if (bHiBlock) 		show += "; High Blocks ";	// There will always be a show; put high last; CAS573
+		else if (bHiCset) 	show += "; High CoSets "; 
+		else if (bHi2Gene) 	show += "; High =2 Genes ";
+		else if (bHi1Gene) 	show += "; High =1 Gene; ";
+		else if (bHi0Gene) 	show += "; High =0 Genes; ";
+		
+		if (!bHiPopup) 		show += "; No High Popup (or Query); "; // query; 
+		
+		return show + "\n";
 	}
 	// Query block, set, region for showing synteny from query; b is blocks by default
-	public void setForQuery(boolean b, boolean s, boolean r) { // block (default), set, region
-		if (s)      {setBlock(false); setCset(true); setHiCset(true); setHiNone(false);} // CAS571 setBlock T->F
-		else if (r) {setBlock(false);}
+	public void setForQuery(int blockNum, boolean s, boolean r) { // block, set, region
+		setBlockOnly(false); setBlock(false); setCset(false); setHiNone(false);
+		
+		if (blockNum>0) {setBlockOnly(true); setBlockNum(blockNum);} 	// CAS573 add
+		else if (s)     {setCset(true); setHiCset(true); } 				// CAS571 setBlock T->F
+		else if (r)     {setHiBlock(true);} 							// CAS573 add High Block
+		
 	}
 	// dotplot 
-	public void setForDP(boolean b) {
-		if (b) setBlock(true);
-		else setBlock(false); 
+	public void setForDP(int blockNum) {
+		setBlockOnly(false); setBlock(false); setCset(false); setHiNone(false);
+		
+		if (blockNum>0) {setBlockOnly(true); setBlockNum(blockNum);}
+		else            {setHiBlock(true);} 	
 	}
 	
 	private void setDefaults() {

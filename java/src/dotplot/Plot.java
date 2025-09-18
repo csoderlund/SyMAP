@@ -8,14 +8,16 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.geom.AffineTransform;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.font.TextLayout;
-
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
 
 import util.Utilities;
 import symap.frame.HelpListener;
@@ -35,13 +37,14 @@ public class Plot extends JPanel implements HelpListener {
 	private double xPixelBP, yPixelBP; 	// pixels per basepair
 	private boolean isSelectingArea = false;
 	private FilterData fd=null;
-	private int cntBlocks; // CAS571 add
+	private int cntBlocks; 
 	private int cnt2GeneBlk, cnt1GeneBlk, cnt0GeneBlk, cntHitBlk, cntHitNonBlk, cnt2GeneNB, cnt1GeneNB, cnt0GeneNB;
 	private int cntHitsTot, cnt0GeneTot, cnt1GeneTot, cnt2GeneTot;
 	private String lastInfoMsg="";
 	private boolean is2D=false;
+	protected boolean bPlusMinusScroll=false; // if +/- used, scroll to selected block in Tile view; CAS573
 	
-	public Plot(Data data, HelpBar hb, boolean is2D) {
+	protected Plot(Data data, HelpBar hb, boolean is2D) {
 		super(null);
 		
 		this.data = data;
@@ -64,7 +67,7 @@ public class Plot extends JPanel implements HelpListener {
 		hb.addHelpListener(this); 
 	}
 	
-	public JScrollPane getScrollPane() { // DotPlotFrame, Plot
+	protected JScrollPane getScrollPane() { // DotPlotFrame, Plot
 		return scroller;
 	}
 
@@ -93,12 +96,12 @@ public class Plot extends JPanel implements HelpListener {
 		g.drawRect(MARGIN, MARGIN, dim.width, dim.height);
 
 	//draw title
-		drawCentered(g, data.getProject(X).getDisplayName(),					// Ref
+		drawCenterText(g, data.getProject(X).getDisplayName(),					// Ref
 				MARGIN, MARGIN/4 + 10,  MARGIN + dim.width, MARGIN/2,  HORZ);
 	
 	//draw chromosome names
 		if (data.isTileView()) {
-			drawCentered(g, data.getCurrentProj().getDisplayName(), 
+			drawCenterText(g, data.getCurrentProj().getDisplayName(), 
 				MARGIN/2 + 10, MARGIN,  MARGIN/2, MARGIN + dim.height, VERT);
 		}
 		else { 
@@ -109,7 +112,7 @@ public class Plot extends JPanel implements HelpListener {
 				long size = data.getVisibleGroupsSize(i, xGroups);
 				
 				if (size > 0) {
-					drawCentered(g, p.getDisplayName(),
+					drawCenterText(g, p.getDisplayName(),
 						MARGIN/2 + 10, y, MARGIN/2, y + (int)(size * yPixelBP), VERT);
 					g.setColor(BACKGROUND_BORDER);
 					
@@ -124,19 +127,17 @@ public class Plot extends JPanel implements HelpListener {
 		else	                drawTile(g);
 		prtCntsInfo();
 	}
-
+	/**********************************************************************/
 	private void setDims() {
-		double zoom  = data.getZoomFactor();
-
+		double zoom  = data.getZoomFactor(); // Control +/-
 		Dimension d = new Dimension((int)(scroller.getWidth() * zoom), (int)(scroller.getHeight() * zoom));
 		setPreferredSize(d);
 		dim.width =  (int)((d.width - (MARGIN * 1.1)));
 		dim.height = (int)((d.height - (MARGIN * 1.2)));
 		
-		if (data.getProject(X) == null || data.getProject(Y) == null) 
-			return;
+		if (data.getProject(X) == null || data.getProject(Y) == null) return;
 
-		if (data.isTileView()) { // selected tile
+		if (data.isTileView()) { 			// Selected tile
 			xPixelBP = dim.getWidth()  / data.getCurrentGrpSize(X);
 			yPixelBP = dim.getHeight() / data.getCurrentGrpSize(Y);
 		}
@@ -145,16 +146,16 @@ public class Plot extends JPanel implements HelpListener {
 			yPixelBP = dim.getHeight() / data.getVisibleGroupsSizeY(data.getVisibleGroups(X));
 		}
 
-		if (data.isScaled()) {
+		if (data.isScaled()) { 				// Control Scale button
 			yPixelBP = xPixelBP * data.getScaleFactor();
 			dim.height = (int)(yPixelBP * data.getVisibleGroupsSizeY(data.getVisibleGroups(X)));
 			d.height   = (int)(dim.height + (MARGIN * 1.2));
 			setPreferredSize(d);
 		}
-
 		revalidate();
 		scroller.getViewport().revalidate();
 	}
+	
 	/********************************************************************/
 	private void drawAll(Graphics g) { 
 		Group[] xGroups = data.getVisibleGroups(X);
@@ -175,17 +176,17 @@ public class Plot extends JPanel implements HelpListener {
 	//draw chr# and border; scale is  1 unless parameter min_display_sz_bp set by user
 		for (Group grp : xGroups) {
 			int x1 = MARGIN +   (int)(grp.getOffset() * xPixelBP );
-			int x2 = x1 + (int)((int)(grp.getGrpLenBP()  * grp.getScale()) * xPixelBP); // use this order to match calc of grp offsets
-			drawCentered(g, grp.getName(), x1, MARGIN/2 + 10, x2, MARGIN, HORZ);
+			int x2 = x1 + (int) (int)(grp.getGrpLenBP() * xPixelBP); // use this order to match calc of grp offsets
+			drawCenterText(g, grp.getName(), x1, MARGIN/2 + 10, x2, MARGIN, HORZ);
 			
 			if (grp != xGroups[xGroups.length-1]) 
 				g.drawLine(x2, MARGIN, x2, dim.height + MARGIN); // vertical line between 2 tiles
 		}
 		for (Group grp : yGroups) {
 			int y1 = MARGIN +   (int)(grp.getOffset() * yPixelBP );
-			int y2 = y1 + (int)((int)(grp.getGrpLenBP() * grp.getScale())*yPixelBP) ;
+			int y2 = y1 + (int)(grp.getGrpLenBP() * yPixelBP) ;
 		
-			drawCentered(g, grp.getName(), MARGIN/2, y1, MARGIN, y2, HORZ);
+			drawCenterText(g, grp.getName(), MARGIN/2, y1, MARGIN, y2, HORZ);
 			
 			if (grp != yGroups[yGroups.length-1]) 
 				g.drawLine(MARGIN, y2, dim.width + MARGIN, y2); // horz line between 2 tiles
@@ -203,8 +204,6 @@ public class Plot extends JPanel implements HelpListener {
 			
 			int x = MARGIN + (int)(gX.getOffset()*xPixelBP);
 			int y = MARGIN + (int)(gY.getOffset()*yPixelBP);
-			double xf = xPixelBP*gX.getScale();
-			double yf = yPixelBP*gY.getScale();
 			
 			for (DPHit ht : tile.getHits()) {
 				if (!showHit(fd, ht)) continue;
@@ -212,7 +211,7 @@ public class Plot extends JPanel implements HelpListener {
 				Color c = fd.getColor(ht);
 				g.setColor(c);
 				
-				drawHit(g, ht, x, y, dotSizeB, xf, yf, ht.isBlock(), fd.isShowMixHits(), dotSizeNB);
+				drawHit(g, ht, x, y, dotSizeB, ht.isBlock(), fd.isShowMixHits(), dotSizeNB);
 			}
 		}
 		//draw blocks (after hits so drawn on top
@@ -227,10 +226,10 @@ public class Plot extends JPanel implements HelpListener {
 				
 				for (int k = 1; k <= tile.getNumBlocks(); k++) {
 					ABlock blk = tile.getBlock(k);
-					int rx      = x + (int)(blk.getStart(X) * xPixelBP * gX.getScale());
-					int ry      = y + (int)(blk.getStart(Y) * yPixelBP * gY.getScale());
-					int rwidth  = (int)((int)((blk.getEnd(X) - blk.getStart(X))) * xPixelBP * gX.getScale());
-					int rheight = (int)((int)((blk.getEnd(Y) - blk.getStart(Y))) * yPixelBP * gY.getScale());
+					int rx      = x + (int)(blk.getStart(X) * xPixelBP);
+					int ry      = y + (int)(blk.getStart(Y) * yPixelBP);
+					int rwidth  = (int)((int)((blk.getEnd(X) - blk.getStart(X))) * xPixelBP);
+					int rheight = (int)((int)((blk.getEnd(Y) - blk.getStart(Y))) * yPixelBP);
 					
 					if (fd.isShowBlocks()) { // CAS571 allow this to be turned off and still show block#
 						g.setColor(fd.getRectColor());
@@ -246,22 +245,24 @@ public class Plot extends JPanel implements HelpListener {
 	}
 	/*************************************************************************/
 	//  draw hit for drawAll (similar in drawGrp)
-	private void drawHit(Graphics g, DPHit ht, int x, int y, int size, double xf, double yf, 
-			boolean isBlock, boolean isMix, int sizeNB) 
+	private void drawHit(Graphics g, DPHit ht, 
+			int x, int y, int size, 	
+			boolean isBlock, boolean isMix, int sizeNB) // size of non-block is isMix
 	{
 		boolean bPct = fd.isPctScale();
 		boolean bLen = fd.isLenScale();
 		
-		int s = ht.getLength() / 2; // polygon/line is length of hit
+		int s = (bLen) ? ht.getLength() / 2 : 1; // polygon/line is length of hit; CAS573 1 if !bLen
 		int as = Math.abs(s);
 		int hx = ht.getX(), hy = ht.getY();
 		
-		int x1 = x + (int)((hx - s)  * xf),	y1 = y + (int)((hy - as) * yf);
-		int x2 = x + (int)((hx + s)  * xf),	y2 = y + (int)((hy + as) * yf);
+		int x1 = x + (int)((hx - s)  *  xPixelBP),	y1 = y + (int)((hy - as) *  yPixelBP);
+		int x2 = x + (int)((hx + s)  *  xPixelBP),	y2 = y + (int)((hy + as) *  yPixelBP);
 	
 		if (!isBlock && isMix) {
-			g.drawOval((x1+x2)/2, (y1+y2)/2, sizeNB, sizeNB); 
-			g.fillOval((x1+x2)/2, (y1+y2)/2, sizeNB, sizeNB); 
+			g.drawLine(x1,y1,x2,y2); // the oval is always kind of big, so this line is a dot; CAS573
+			//g.drawOval((x1+x2)/2, (y1+y2)/2, sizeNB, sizeNB); // x, y, width, height
+			//g.fillOval((x1+x2)/2, (y1+y2)/2, sizeNB, sizeNB); 
 			return;
 		}
 		if (bLen) {
@@ -299,8 +300,8 @@ public class Plot extends JPanel implements HelpListener {
 		Group gY = data.getCurrentGrp(Y);
 		
 		g.setFont(PROJ_FONT);
-		drawCentered(g, gX.getName(), MARGIN, MARGIN/2 + 10, MARGIN + dim.width, MARGIN, HORZ);
-		drawCentered(g, gY.getName(), MARGIN/2 + 10, MARGIN, MARGIN, MARGIN + dim.height, HORZ);
+		drawCenterText(g, gX.getName(), MARGIN, MARGIN/2 + 10, MARGIN + dim.width, MARGIN, HORZ);
+		drawCenterText(g, gY.getName(), MARGIN/2 + 10, MARGIN, MARGIN, MARGIN + dim.height, HORZ);
 
 		Rectangle rect = new Rectangle();
 		Tile tile = Tile.getTile(data.getTiles(),gX,gY);
@@ -311,8 +312,6 @@ public class Plot extends JPanel implements HelpListener {
 		
 		boolean isMix = fd.isShowMixHits();
 		int dotSizeB = dotSize(data.getDotSize());
-		int dotSizeNB = (isMix) ? dotSize(1) : dotSizeB;
-		
 		boolean bPct = fd.isPctScale();
 		boolean bLen = fd.isLenScale();
 		
@@ -332,8 +331,9 @@ public class Plot extends JPanel implements HelpListener {
 			int y2 = (int)((hits[i].getY() + Math.abs(s)) * yPixelBP) + MARGIN;
 			
 			if (!hits[i].isBlock() && isMix) {
-				g.drawOval((x1+x2)/2, (y1+y2)/2, dotSizeNB, dotSizeNB); 
-				g.fillOval((x1+x2)/2, (y1+y2)/2, dotSizeNB, dotSizeNB); 
+				g.drawLine(x1,y1,x2,y2); // Dot is a dot; CAS573
+				//g.drawOval((x1+x2)/2, (y1+y2)/2, dotSizeNB, dotSizeNB); 
+				//g.fillOval((x1+x2)/2, (y1+y2)/2, dotSizeNB, dotSizeNB); 
 				continue;
 			}
 			int sz = dotSizeB;
@@ -367,6 +367,7 @@ public class Plot extends JPanel implements HelpListener {
 		}
 		
 		//draw blocks; draw Number; highlight selected;
+		Rectangle r2c = null;
 		if (tile != null && (fd.isShowBlocks() || fd.isShowBlkNum())){
 			ABlock blk;
 			for (int i = tile.getNumBlocks(); i > 0; --i) {
@@ -379,6 +380,7 @@ public class Plot extends JPanel implements HelpListener {
 				if (blk == data.getSelectedBlock()) {
 					g.setColor(SELECTED);
 					g.fillRect(rect.x,rect.y,rect.width+1,rect.height+1);
+					r2c = rect.getBounds();
 				}
 				if (fd.isShowBlocks()) {
 					g.setColor(fd.getRectColor());
@@ -400,11 +402,32 @@ public class Plot extends JPanel implements HelpListener {
 			g.drawRect(rect.x, rect.y, rect.width, rect.height);
 			g.setColor(SELECTED);
 			g.fillRect(rect.x+1, rect.y+1, rect.width-1, rect.height-1);
+			r2c = rect.getBounds();
 		} 
 		else if (isSelectingArea) {
 			g.setColor(Color.BLACK);
 			g.drawRect(	Math.min(sX1,sX2), Math.min(sY1,sY2), 
 						Math.max(sX1,sX2)-Math.min(sX1,sX2), Math.max(sY1,sY2)-Math.min(sY1,sY2));
+		}
+		if (bPlusMinusScroll) { // Keep highlighted rectangle in view; CAS753
+			bPlusMinusScroll=false;
+			
+			if (r2c!=null) {
+				final Rectangle rc = r2c;
+				SwingUtilities.invokeLater(() -> { // is off without this, especially with large N
+					JViewport vp = scroller.getViewport();
+					Rectangle vpr = vp.getViewRect();
+					
+					int x = rc.x - (vpr.width  - rc.width)/2;
+					int y = rc.y - (vpr.height - rc.height)/2;
+					
+					x = Math.max(0, x);
+					y = Math.max(0, y);
+					x = Math.min(x, getWidth()  - vpr.width);
+					y = Math.min(y, getHeight() - vpr.height);
+					vp.setViewPosition(new Point(x,y));
+				});
+			}
 		}
 	}
 	private boolean showHit(FilterData fd, DPHit ht) {
@@ -436,6 +459,7 @@ public class Plot extends JPanel implements HelpListener {
 		
 		return true;
 	}
+	
 	// Info
 	protected String prtCntsInfo() { // CAS571 was part of prtCntsS
 		boolean p=false;
@@ -534,7 +558,7 @@ public class Plot extends JPanel implements HelpListener {
 		g.setFont(PROJ_FONT);
 	}
 	
-	private void drawCentered(Graphics g, String s, int x1, int y1, int x2, int y2, boolean orientation) {
+	private void drawCenterText(Graphics g, String s, int x1, int y1, int x2, int y2, boolean orientation) {
 		if (s == null || s.length() <= 0) return; 
 		
 		g.setFont(PROJ_FONT);
@@ -576,6 +600,7 @@ public class Plot extends JPanel implements HelpListener {
 	public String getHelpText(MouseEvent e) {
 		return lastInfoMsg;
 	}
+	
 	/***********************************************************************/
 	// Order called: Pressed, Released, Clicked; or Dragged,Release
 	private class PlotListener implements MouseListener, MouseMotionListener {
@@ -609,9 +634,8 @@ public class Plot extends JPanel implements HelpListener {
 			Utilities.setCursorBusy(Plot.this, true);  
 			
 			if (data.isTileView()) { // 2d-view 
-				//if (data.selectBlock(bpX, bpY)) repaint(); // selects the block if point is in a block
-				data.selectBlock(bpX, bpY);
-				repaint();					// Always repaint so unselect a selected block; CAS571
+				data.selectBlock(bpX, bpY);	// If in a block, will set it as selected
+				repaint();					// Always repaint to remove highlight of previous selected block; CAS571
 			}
 			else if (x >= MARGIN && x <= MARGIN+dim.width && y >= MARGIN && y <= MARGIN+dim.height) {
 				if (data.selectTile(bpX, bpY)) repaint(); 

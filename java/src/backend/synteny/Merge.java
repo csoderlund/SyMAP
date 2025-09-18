@@ -13,17 +13,20 @@ import util.ErrorReport;
  **********************************************************/
 
 public class Merge {
+	protected final static int CONTAINED=1, CLOSE=2, OLAP=3;
+	private int rel = 1;					
 	private boolean bOrient;			// User set variable
-	private boolean bOlap;				// T on 2nd round from SyntenyMain if bMerge
+	protected int cntCoset=0;
+
 	private Vector <SyBlock> blockVec;	// input all blocks, return merge blocks
 	
 	private int gap1, gap2, mindots;
 	
 	private Graph graph;
 	
-	protected Merge(Vector <SyBlock> blockVec, boolean bOlap, boolean bOrient) {
+	protected Merge(Vector <SyBlock> blockVec, int rel, boolean bOrient) {
 		this.blockVec = blockVec;
-		this.bOlap = bOlap;
+		this.rel = rel;
 		this.bOrient = bOrient;
 		
 		for (SyBlock blk : blockVec) blk.hasChg=false;
@@ -59,19 +62,26 @@ public class Merge {
 				if (bOrient && !bi.orient.equals(bj.orient))continue;
 				if (bi.n < mindots && bj.n < mindots) continue; // to merge two coset blocks need some analysis
 				
-				if (bOlap) { 
+				if (rel==CONTAINED) {// only merge if contained on both sides
+					if (isContained(bi.mS1,bi.mE1,bj.mS1,bj.mE1) && 
+						isContained(bi.mS2,bi.mE2,bj.mS2,bj.mE2))
+					{
+						graph.addNode(i,j);
+					}	
+				}
+				else if (rel==OLAP) { // gap=0 for overlap only, or >0 for close or overlap
 					if (isOverlap(bi.mS1,bi.mE1,bj.mS1,bj.mE1, gap1) && 
 						isOverlap(bi.mS2,bi.mE2,bj.mS2,bj.mE2, gap2))
 					{
 						graph.addNode(i,j);
 					}
 				}
-				else {// only merge if contained on both sides
-					if (isContained(bi.mS1,bi.mE1,bj.mS1,bj.mE1) && 
-						isContained(bi.mS2,bi.mE2,bj.mS2,bj.mE2))
+				else if (rel==CLOSE){ // close only, and works in conjunction with bOrient=T and mindots=0
+					if (isClose(bi.mS1,bi.mE1,bj.mS1,bj.mE1, gap1) && 
+						isClose(bi.mS2,bi.mE2,bj.mS2,bj.mE2, gap2))
 					{
 						graph.addNode(i,j);
-					}					
+					}			
 				}
 			}
 		}
@@ -79,64 +89,19 @@ public class Merge {
 	} 
 	catch (Exception e) {ErrorReport.print(e, "Merge blocks"); return null; }
 	}
-/* This is original merge - simplier just to use above 
-	private Vector<SyBlock> mergeBlocksSingleCompute() { // !bStrict
-		try {
-			if (blockVec.size() <= 1) return blockVec;
-			
-			graph = new Graph(blockVec.size());
-			
-			int maxjoin1 = 1000000000;
-			int maxjoin2 = 1000000000;
-			float joinfact = 0.25f;	
-			
-			Graph graph = new Graph(blockVec.size());
-			
-			for (int i = 0; i < blockVec.size(); i++) { 
-				SyBlock bi = blockVec.get(i);
-				
-				int w11 = bi.mE1 - bi.mS1;
-				int w12 = bi.mE2 - bi.mS2;				
-				
-				for (int j = i + 1; j < blockVec.size(); j++){
-					SyBlock bj = blockVec.get(j);
-					
-					if (bOrient && !bi.orient.equals(bj.orient))  continue;
-					
-					if (bOlap) { 
-						int w21 = bj.mE1 - bj.mS1;
-						int w22 = bj.mE2 - bj.mS2;
 
-						int gap1 = Math.min(maxjoin1,(int)(joinfact*Math.max(w11,w21)));
-						int gap2 = Math.min(maxjoin2,(int)(joinfact*Math.max(w12,w22)));
-						
-						if (intervalsOverlap(bi.mS1,bi.mE1,bj.mS1,bj.mE1,gap1) && 
-							intervalsOverlap(bi.mS2,bi.mE2,bj.mS2,bj.mE2,gap2))
-						{
-							graph.addNode(i,j);
-						}
-					}
-					else {// only merge if contained on both sides
-						if (intervalContained(bi.mS1,bi.mE1,bj.mS1,bj.mE1) && 
-							intervalContained(bi.mS2,bi.mE2,bj.mS2,bj.mE2))
-						{
-							graph.addNode(i,j); 
-						}					
-					}
-				}
-			}
-			return processGraph();
-		} 
-		catch (Exception e) {ErrorReport.print(e, "Merge blocks"); return null; }
-	}
-	*/
-	/*****************************************************************
-	 * this is 'close' if gap>0
-	 ****************************************************/
+	/**************************************************************************/
+	// parameters overlap (gap=0) or close (gap>0)
 	private boolean isOverlap(int s1,int e1, int s2, int e2, int max_gap) {
 		int gap = Math.max(s1,s2) - Math.min(e1,e2);
 		return (gap <= max_gap);
 	}
+	// if bOrient or bStrict (gap>0)
+	private boolean isClose(int s1,int e1, int s2, int e2, int max_gap) {
+		int gap = Math.max(s1,s2) - Math.min(e1,e2);
+		return (gap>0 && gap <= max_gap);
+	}
+	// always run
 	private boolean isContained(int s1,int e1, int s2, int e2){
 		return ((s1 >= s2 && e1 <= e2) || (s2 >= s1 && e2 <= e1));
 	}
@@ -153,8 +118,16 @@ public class Merge {
 			for (Integer i : s) {
 				if (bnew == null) 
 					bnew = blockVec.get(i);
-				else
+				else {
+					if (SyntenyMain.bTrace) {
+						if (bnew.mCase=="N" || blockVec.get(i).mCase=="N") cntCoset++;
+						if (rel==CLOSE) {
+							bnew.tprt("Merge1");
+							blockVec.get(i).tprt("Merge2");
+						}
+					}
 					bnew.mergeWith(blockVec.get(i));
+				}
 			}
 			mergedBlocks.add(bnew);
 		}

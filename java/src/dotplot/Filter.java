@@ -9,7 +9,6 @@ import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Component;
-import java.awt.Insets;
 import java.awt.Dimension;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -24,6 +23,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
 
+import util.Jcomp;
 /*********************************************
  * Filter popup - see FilterData
  */
@@ -53,19 +53,19 @@ public class Filter extends JDialog  {
 	
 	private boolean bIsFirst=true;
 
-	public Filter(Data d, ControlPanel c) { // Created in ControlPanel when CE session starts
+	protected Filter(Data d, ControlPanel c) { // Created in ControlPanel when session starts
 		data = d;
 		cntl = c;
 		
 		FilterListener listener = new FilterListener();
 		
-		okButton = createButton("Save","Save changes and close");
+		okButton = Jcomp.createButtonNC("Save","Save changes and close");
 		okButton.addActionListener(listener);
 
-		cancelButton = createButton("Cancel", "Discard changes and close");
+		cancelButton = Jcomp.createButtonNC("Cancel", "Discard changes and close");
 		cancelButton.addActionListener(listener);
 
-		defaultButton = createButton("Defaults", "Reset to defaults");
+		defaultButton = Jcomp.createButtonNC("Defaults", "Reset to defaults");
 		defaultButton.addActionListener(listener);
 
 		JButton helpButton = util.Jhtml.createHelpIconUserSm(util.Jhtml.dotfilter); 
@@ -80,7 +80,7 @@ public class Filter extends JDialog  {
 		buttonPanel.add(jpanel, "Center");
 
 		int id = data.getInitPctid();	
-		pctidLabel = new JLabel(hitLabel + id); // %identity
+		pctidLabel = Jcomp.createLabelNC(hitLabel + id, "Show dots > %Identity"); // %identity
 		pctidSlider = new JSlider(id, 100, id);
 		pctidSlider.setMajorTickSpacing(10);
 		pctidSlider.setMinorTickSpacing(5);
@@ -91,17 +91,17 @@ public class Filter extends JDialog  {
 		dotSizeSlider = new JSlider(1, 5, 1); // min, max, init
 		dotSizeSlider.setMajorTickSpacing(1);
 		dotSizeSlider.setPaintTicks(true);
-		dotSizeLabel = new JLabel (dotLabel + "1");
+		dotSizeLabel = Jcomp.createLabelNC(dotLabel + "1", "Scale dots");
 		dotSizeSlider.addChangeListener(listener);
 		listener.stateChanged(new ChangeEvent(dotSizeSlider));
 		
-		bPctScale = new JRadioButton("%Id");
+		bPctScale = Jcomp.createRadioNC("%Id", "Scale hits by %Identity");
 		bPctScale.addItemListener(listener);
 		
-		bLenScale = new JRadioButton("Length");
+		bLenScale = Jcomp.createRadioNC("Length", "Scale hits by length (shown as rectangles)");
 		bLenScale.addItemListener(listener);
 		
-		bNoScale = new JRadioButton("None");
+		bNoScale = Jcomp.createRadioNC("None", "All hits the same size");
 		bNoScale.addItemListener(listener);
 
 		ButtonGroup sgroup = new ButtonGroup();
@@ -110,13 +110,14 @@ public class Filter extends JDialog  {
 		sgroup.add(bNoScale);
 		bLenScale.setSelected(true);
 		
-		bAllHits = new JRadioButton("All");
+		bAllHits = Jcomp.createRadioNC("All", "Show all hits the same size");
+	
 		bAllHits.addItemListener(listener);
 		
-		bMixHits = new JRadioButton("Mix");
+		bMixHits = Jcomp.createRadioNC("Mix", "Block hits are scale, all others are dots");
 		bMixHits.addItemListener(listener);
 
-		bBlockHits = new JRadioButton("Block");
+		bBlockHits = Jcomp.createRadioNC("Block", "Only show block hits");
 		bBlockHits.addItemListener(listener);
 
 		ButtonGroup group = new ButtonGroup();
@@ -125,16 +126,16 @@ public class Filter extends JDialog  {
 		group.add(bBlockHits);
 		bAllHits.setSelected(true);
 		
-		bGeneHits = new JRadioButton("Ignore");
+		bGeneHits = Jcomp.createRadioNC("Ignore", "Show all hits");
 		bGeneHits.addItemListener(listener);
 		
-		b2GeneHits = new JRadioButton("Both");
+		b2GeneHits = Jcomp.createRadioNC("Both", "Only show hits to two genes");
 		b2GeneHits.addItemListener(listener);
 		
-		b1GeneHits = new JRadioButton("One");
+		b1GeneHits = Jcomp.createRadioNC("One", "Only show hits to one gene");
 		b1GeneHits.addItemListener(listener);
 		
-		b0GeneHits = new JRadioButton("None");
+		b0GeneHits = Jcomp.createRadioNC("None", "Only show hits to no genes");
 		b0GeneHits.addItemListener(listener);
 
 		ButtonGroup group2 = new ButtonGroup();
@@ -144,13 +145,13 @@ public class Filter extends JDialog  {
 		group2.add(b0GeneHits);
 		bGeneHits.setSelected(true);
 		
-		showBlkNumBox = new JCheckBox("Number");
+		showBlkNumBox = Jcomp.createCheckNC("Number", "Show block number");
 		showBlkNumBox.addItemListener(listener);
 
-		showBlocksBox = new JCheckBox("Boundary");
+		showBlocksBox = Jcomp.createCheckNC("Boundary", "Show boundary of block");
 		showBlocksBox.addItemListener(listener);
 
-		showEmptyBox = new JCheckBox("Show Empty Regions");
+		showEmptyBox = Jcomp.createCheckNC("Show Empty Regions", "Show regions with no hits");
 		showEmptyBox.addItemListener(listener);
 		
 		Container cp = getContentPane();
@@ -203,7 +204,6 @@ public class Filter extends JDialog  {
 		setResizable(false);
 
 		setTitle("DotPlot Filter");
-		
 		Dimension dim = getToolkit().getScreenSize();
 		setLocation(dim.width / 4,dim.height / 4);
 		toFront();
@@ -215,7 +215,7 @@ public class Filter extends JDialog  {
 		setFromFD();
 		setVisible(true);
 	}
-	public void setFromFD() {
+	protected void setFromFD() {
 		FilterData fd = data.getFilterData();
 		
 		int id = fd.getPctid();	
@@ -228,6 +228,7 @@ public class Filter extends JDialog  {
 		
 		bPctScale.setSelected(fd.isPctScale());
 		bLenScale.setSelected(fd.isLenScale());
+		bNoScale.setSelected(fd.isNoScale());
 		
 		bAllHits.setSelected(fd.isShowAllHits());
 		bMixHits.setSelected(fd.isShowMixHits());
@@ -244,12 +245,7 @@ public class Filter extends JDialog  {
 		
 		showEmptyBox.setSelected(fd.isShowEmpty()); 
 	}
-	private JButton createButton(String s, String t) {
-		JButton jbutton = new JButton(s);
-		jbutton.setMargin(new Insets(1,3,1,3));
-		jbutton.setToolTipText(t);
-		return jbutton;
-	}
+	
 	private void addToGrid(Container c, GridBagLayout gbl, GridBagConstraints gbc, Component comp, int i) {
 		gbc.gridwidth = i;
 		gbl.setConstraints(comp,gbc);
@@ -318,7 +314,7 @@ public class Filter extends JDialog  {
 				
 				if (src == showBlocksBox)	{
 					b = fd.setShowBlocks(isChg);
-					// CAS571 showBlkNumBox.setEnabled(showBlocksBox.isSelected());
+					// CAS571 block# can be displayed without block; showBlkNumBox.setEnabled(showBlocksBox.isSelected());
 				}
 				else if (src == showBlkNumBox)	b = fd.setShowBlkNum(isChg);
 				else if (src == showEmptyBox) 	b = fd.setShowEmpty(isChg);

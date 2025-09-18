@@ -127,6 +127,12 @@ public class Jcomp {
 		tmp.setEnabled(true);
 		return tmp;
 	}
+	static public JLabel createLabelNC(String label, String tip) {// CAS573 someday i will consolidate..
+		JLabel tmp = new JLabel(label);
+		tmp.setToolTipText(tip);
+		tmp.setEnabled(true);
+		return tmp;
+	}
 	static public JLabel createLabel(String label, String tip, boolean enable) {
 		JLabel tmp = new JLabel(label);
 		tmp.setToolTipText(tip);
@@ -140,11 +146,10 @@ public class Jcomp {
 		JLabel l = new JLabel(html);
 		return l;
 	}
-	static public JLabel createMonoLabel(String label, String t) {
+	static public JLabel createMonoLabelNC(String label, String t) {
 		JLabel lab = new JLabel(label);
 		lab.setFont(new Font(Font.MONOSPACED,Font.PLAIN,13)); //lab.getFont().getName()
 		lab.setToolTipText(t);
-		lab.setBackground(Color.white);
 		return lab;
 	}
 	static public JLabel createMonoLabel(String label, int sz) { 
@@ -166,16 +171,14 @@ public class Jcomp {
 		return lab;
 	}
 	//////////////////////////////////////////////////////////////
-	public static JButton createButton(HelpListener parent, HelpBar bar, ActionListener listener,
-			String label, String tip) {
+	public static JButton createButtonNC(HelpListener parent, HelpBar bar, ActionListener listener,
+			String label, String tip) { // NC CAS573
 		
 		JButton button = new JButton(label);
-		button.setBackground(Color.white);
 		button.setAlignmentX(Component.LEFT_ALIGNMENT);
 		
 		button.setMinimumSize(button.getPreferredSize());
 		button.setMaximumSize(button.getPreferredSize());
-		//button.setFont(new Font(button.getFont().getName(),Font.PLAIN,11));
 		
 		if (listener != null) button.addActionListener(listener);
 		
@@ -350,12 +353,11 @@ public class Jcomp {
 		jbutton.setBackground(Color.white);
 		return jbutton;
 	}
-	static public JButton createMonoButtonSm(String s, String t) {
+	static public JButton createMonoButtonSmNC(String s, String t) {
 		JButton jbutton = new JButton(s);
 		jbutton.setFont(new Font(Font.MONOSPACED,Font.PLAIN,11)); //lab.getFont().getName()
 		jbutton.setMargin(new Insets(0,0,0,0));
 		jbutton.setToolTipText(t);
-		jbutton.setBackground(Color.white);
 		return jbutton;
 	}
 	//////////////////////////////////////////////
@@ -388,14 +390,7 @@ public class Jcomp {
 		box.setMaximumSize(box.getPreferredSize());
 		return box;
 	}
-	public static JRadioButton createRadioGray(String label, String tip) {
-		JRadioButton button = new JRadioButton(label); 
-		button.setToolTipText(tip);
-		button.setMargin(new Insets(0,0,0,0));
-		button.setMinimumSize(button.getPreferredSize());
-		button.setMaximumSize(button.getPreferredSize());
-		return button;
-	}
+	
 	public static JRadioButton createRadio(String label, String tip) {
 		JRadioButton button = new JRadioButton(label); button.setBackground(Color.white);
 		button.setToolTipText(tip);

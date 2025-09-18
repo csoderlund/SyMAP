@@ -13,9 +13,8 @@ import symap.sequence.Sfilter;
 
 /********************************************************************
  * Used to open Sfilter and Hfilter
- * CAS542 removed the abstract Filter.java and moved this to symap.frame; CAS544 moved to drawingpanel
  */
-public class FilterHandler implements ActionListener { // CAS521 remove Filtered interface
+public class FilterHandler implements ActionListener { 
 	protected DrawingPanel drawingPanel;
 	protected Hfilter hFilter=null;
 	protected Sfilter sFilter=null;
@@ -41,7 +40,7 @@ public class FilterHandler implements ActionListener { // CAS521 remove Filtered
 		sFilter = null;
 		if (seqObj != null) {
 			sFilter = new Sfilter(drawingPanel.getFrame(),drawingPanel, (Sequence) seqObj);
-			button.setText("Sequence Filter"); // CAS551 sFilter.getTitle() - added #N, which do not need here
+			button.setText("Sequence Filter"); 
 		}
 	}
 	public void hide() {
@@ -50,8 +49,8 @@ public class FilterHandler implements ActionListener { // CAS521 remove Filtered
 	}
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == button) {
-			if (hFilter != null && hFilter.canShow()) hFilter.showHitFilter(); // CAS512 show()
-			else if (sFilter != null && sFilter.canShow()) sFilter.showSeqFilter();
+			if (hFilter != null && hFilter.canShow()) hFilter.displayHitFilter(); 
+			else if (sFilter != null && sFilter.canShow()) sFilter.displaySeqFilter();
 		}
 	}
 	public void showPopup(MouseEvent e) {

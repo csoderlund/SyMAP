@@ -84,7 +84,7 @@ public class UtilSelect {
 					return;
 				}
 				coords = loadCollinearCoords(rd.collinearN, rd.chrIdx[0], rd.chrIdx[1]);
-				hd.setForQuery(false, true, false);  // block, set, region; CAS571 block was T
+				hd.setForQuery(0, true, false);  // block, set, region; CAS571 block was T
 			}
 			else if (selIndex==TableMainPanel.showBLOCK) {
 				if (rd.blockN==0) {
@@ -92,7 +92,7 @@ public class UtilSelect {
 					return;
 				}
 				coords = loadBlockCoords(rd.blockN, rd.chrIdx[0], rd.chrIdx[1]);
-				hd.setForQuery(true, false, false);  // block, set, region
+				hd.setForQuery(rd.blockN, false, false);  // block, set, region; CAS573 show block only
 			}
 			else if (selIndex==TableMainPanel.showGRP) { 
 				if (rd.groupN==0) {
@@ -100,14 +100,14 @@ public class UtilSelect {
 					return;
 				}
 				coords = rd.loadGroup(grpIdxVec); 	 // assigns hits to grpIdxVec
-				hd.setForQuery(false, false, true);  // block, set, region
+				hd.setForQuery(0, false, true);  // block, set, region
 			}
 			else {
 				coords = new int [4];
 				coords[0] = rd.start[0]; coords[1] = rd.end[0];
 				coords[2] = rd.start[1]; coords[3] = rd.end[1];
 				
-				hd.setForQuery(false, false, true);  // block, set, region
+				hd.setForQuery(0, false, true);  // block, set, region
 			}
 			track1Start = coords[0] - pad; if (track1Start<0) track1Start=0;
 			track1End   = coords[1] + pad; 
@@ -167,8 +167,8 @@ public class UtilSelect {
 	 				}
 	 				int [] coords0 = loadCollinearCoords(rd[0].collinearN, rd[0].chrIdx[0], rd[0].chrIdx[1]);// ret sL,eL,sR,eR
 	 				int [] coords1 = loadCollinearCoords(rd[1].collinearN, rd[1].chrIdx[0], rd[1].chrIdx[1]);
-	 				hd0.setForQuery(false, true, false);  // block, set, region
-	 				hd1.setForQuery(false, true, false);  // block, set, region
+	 				hd0.setForQuery(0, true, false);  // block, set, region
+	 				hd1.setForQuery(0, true, false);  // block, set, region
 	 				
 	 				if (r0t1==0 && r0t2==1) {
 	 					coordsRow0[sL] = coords0[0]; coordsRow0[eL] = coords0[1]; // row0
@@ -193,8 +193,8 @@ public class UtilSelect {
 	 				coordsRow1[sL] = rd[1].start[r1t2]; coordsRow1[eL] = rd[1].end[r1t2]; 
 	 				coordsRow1[sR] = rd[1].start[r1t3]; coordsRow1[eR] = rd[1].end[r1t3];
 
-	 				hd0.setForQuery(false, false, true);  // block, set, region
-	 				hd1.setForQuery(false, false, true);  
+	 				hd0.setForQuery(0, false, true);  // block, set, region
+	 				hd1.setForQuery(0, false, true);  
 	 			}
 	 			else {
 	 				JOptionPane.showMessageDialog(null, "3-track display only works with Region or Collinear Set.", 

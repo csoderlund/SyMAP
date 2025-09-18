@@ -46,23 +46,23 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
     private HelpBar helpPanel;
   
     private JButton homeButton, plusButton, minusButton, rotateLButton, rotateRButton; 
-    private JButton helpButton, saveButton, infoButton;		// CAS552 add home, 2nd rotate, infoButton
-    private JButton scaleToggle, rotateToggle, revToggle, selfToggle; // CAS552 change to from checkbox to toggle
+    private JButton helpButton, saveButton, infoButton;		
+    private JButton scaleToggle, rotateToggle, revToggle, selfToggle; 
     
-    private JButton viewPopupButton;  						// CAS552 replace JComboBox with popup
+    private JButton viewPopupButton;  						
     private String[] actOptions = {"All blocks","Inverted only","Non-inverted only","Two-color all blocks"};
     private JRadioButtonMenuItem view0Radio	= new JRadioButtonMenuItem(actOptions[0]);
     private JRadioButtonMenuItem view1Radio	= new JRadioButtonMenuItem(actOptions[1]);
     private JRadioButtonMenuItem view2Radio	= new JRadioButtonMenuItem(actOptions[2]);
     private JRadioButtonMenuItem view3Radio	= new JRadioButtonMenuItem(actOptions[3]);
     
-    private JButton colorButton;  						// CAS553 add
+    private JButton colorButton;  						
     private ColorDialogHandler cdh;
 	private PersistentProps    persistentProps;
 	
    
     public ControlPanelCirc(CircPanel cp, HelpBar hb, boolean bIsWG, 
-    		boolean isSelf, boolean hasSelf) { // isSelf - only self align; hasSelf - at least one project has self aling
+    		boolean isSelf, boolean hasSelf) { // isSelf - only self align; hasSelf - at least one project has self align
     	helpPanel = hb;
     	circPanel = cp;
     	circPanel.bShowSelf = isSelf; // turn on by default since only self align
@@ -97,7 +97,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
             }
         });
 		
-		viewPopupButton = Jcomp.createButton(this,helpPanel, null /*has own listener*/,"View",
+		viewPopupButton = Jcomp.createButtonNC(this,helpPanel, null /*has own listener*/,"View",
 				"Click button for menu of options");
 		createViewPopup();
 		
@@ -117,7 +117,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 		helpButton = util.Jhtml.createHelpIconUserLg(util.Jhtml.circle);
 		
 		//// build row ///////////
-		JPanel row = Jcomp.createGrayRowPanel(); // CAS552 added row; changed spacing
+		JPanel row = Jcomp.createGrayRowPanel(); 
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
 		setLayout(gbl);							// If row.setLayout(gbl), cannot add Separators, but ipadx, etc work

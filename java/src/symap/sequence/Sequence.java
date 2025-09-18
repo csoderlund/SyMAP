@@ -44,7 +44,6 @@ import util.ErrorReport;
  * Sequence & TrackHolder are 1-1; get replaced with different sequence unless a current sequence uses. 
  */
 public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMotionListener,MouseWheelListener {
-	protected Annotation selectedGeneObj=null;						
 	
 	protected int grpIdx=Globals.NO_VALUE;
 	protected String chrName;					// e.g. Chr01
@@ -678,7 +677,10 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	public boolean getShowBlockText()  	{ return sfilObj.bShowBlockText; }
 	public boolean getShowBlock1stText(){ return sfilObj.bShowBlock1stText; } // CAS572
 	public boolean getShowCsetText()   	{ return sfilObj.bShowCsetText; }
-
+	public boolean getHasText()    { 									// for drawing text on top; CAS573
+		return sfilObj.bShowScoreText || sfilObj.bShowHitNumText
+			|| sfilObj.bShowBlockText || sfilObj.bShowBlock1stText || sfilObj.bShowCsetText;
+	}
 	public int[] getAnnotationTypeCounts() {
 		int[] counts = new int[Annotation.numTypes];
 		
@@ -687,30 +689,32 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		
 		return counts;
 	}
-	
-	protected int getMidCoordForGene(String name) { // Sfilter;
+	// Filter: enter gene#
+	protected int getSelectGeneCoord(String name) { // Sfilter 
 		int mid = -1;
 		for (Annotation aObj : geneVec) {
-			mid = aObj.isMatchGeneN(name);
+			mid = aObj.isMatchGeneN(name);	// Sets selectGeneObj and return mid coordinate
 			if (mid>0) {
-				selectedGeneObj = aObj;
+				sfilObj.selectGeneObj = aObj;
 				aObj.setIsSelectedGene(true);
 				return mid;
 			}
 		}
 		return mid;
 	}
-	protected void setSelectedGene(Annotation aObj) { // TrackData for history
-		if (aObj==null) return; 
-		selectedGeneObj = aObj;
-		aObj.setIsSelectedGene(true);
-	}
-	protected void noSelectedGene() { // Sfilter
-		if (selectedGeneObj!=null) {
-			selectedGeneObj.setIsSelectedGene(false);
-			selectedGeneObj=null;
+	protected void setSelectGene(Annotation aObj) { // Filter actions and display
+		if (aObj==null) {
+			if (sfilObj.selectGeneObj!=null) {
+				sfilObj.selectGeneObj.setIsSelectedGene(false);
+				sfilObj.selectGeneObj=null;
+			}
+		}
+		else {
+			sfilObj.selectGeneObj = aObj;
+			aObj.setIsSelectedGene(true);
 		}
 	}
+	
 	/******************************************************************
 	 * Hit interface
 	 ****************************************************************/

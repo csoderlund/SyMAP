@@ -28,8 +28,6 @@ import util.ErrorReport;
 /**
  * The Mapper that holds two tracks (overlaying them when drawn) and all of the hits.
  * Called from DrawingPanel
- * // CAS521 remove Filtered Interface CAS542 remove HfilterData.HitFilterListener, 
- * CAS531 major changes as there was a List that was actually only one Object, major red-herring code
  */
 @SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Mapper extends JComponent 
@@ -41,26 +39,24 @@ public class Mapper extends JComponent
 	private FilterHandler fh;
 	private HfilterData hitFilData;
 	private TableMainPanel theTablePanel;
-	private SeqHits seqHitObj; // CAS531 was List, but actually only one object
+	private SeqHits seqHitObj; 
 	private MapperPool mapPool;
 	
 	private volatile boolean initing;
-	private String helpText; // CAS520 add hover
-	
-	//private void dprt(String msg) {symap.Globals.dprt("MP " + msg);}
+	private String helpText; 
 	
 	// Created in DrawingPanel for display
 	public Mapper(DrawingPanel drawingPanel, TrackHolder th1, TrackHolder th2,
 			FilterHandler fh, DBconn2 dbc2, PropsDB projPool, HelpBar hb, TableMainPanel listPanel) 
 	{
 		super();
-		this.mapPool = new MapperPool(dbc2, projPool); // CAS541 create here instead of passing as arg
+		this.mapPool = new MapperPool(dbc2, projPool); 
 		this.drawingPanel = drawingPanel; 
 		this.fh = fh;
 		this.theTablePanel = listPanel;
 		initing = true;
 		
-		hitFilData = new HfilterData(); // CAS542 hitFilter = new HitFilter(this); was a listener
+		hitFilData = new HfilterData(); 
 		fh.setHfilter(this); 			// creates Hfilter with this hitFilData
 		
 		trackHolders = new TrackHolder[2];
@@ -96,9 +92,7 @@ public class Mapper extends JComponent
 		super.setVisible(visible);
 	}
 
-	public String getFilterText() {return hitFilData.getFilterText();} // Called from SeqHits 
-
-	public void update() {} // HitFilter; CAS550 was reloading
+	public void update() {} // HitFilter; 
 	
 	public void setMapperData(MapperData md) { // DrawingPanel.setMaps for history
 		if (md != null) {
@@ -111,7 +105,7 @@ public class Mapper extends JComponent
 	public DrawingPanel getDrawingPanel() { return drawingPanel;}
 	public HfilterData getHitFilter() {return hitFilData;}
 	
-	// CAS548 add for HitData.getCoordsForGenePopup
+	// For HitData.getCoordsForGenePopup
 	public String getGeneNum1(int annoIdx) { return seqHitObj.getSeqObj1().getGeneNumFromIdx(annoIdx);}
 	public String getGeneNum2(int annoIdx) { return seqHitObj.getSeqObj2().getGeneNumFromIdx(annoIdx);}
 	
@@ -143,7 +137,7 @@ public class Mapper extends JComponent
 	}
 	
 	/**********************************************
-	 * hasPair is (query,target); query<target alphanumeric; CAS517 rearranged and renamed from isSwapped 
+	 * hasPair is (query,target); query<target alphanumeric; 
 	 */
 	public boolean isQueryTrack(Sequence src) {
 		Sequence t1 = trackHolders[0].getTrack(); 
@@ -161,7 +155,6 @@ public class Mapper extends JComponent
 		return false; // target
 	}
 	
-	// CAS516 change to one call instead of 4; CAS555 add idx for group highlight; CAS562 change to only hitnum
 	public boolean isQuerySelHit(int idx, boolean bHit1) {
 		if(theTablePanel != null) return theTablePanel.isHitSelected(idx, bHit1);
 		return false;
@@ -169,7 +162,7 @@ public class Mapper extends JComponent
 	/********************************************************************/
 	public void paintComponent(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g;
-		// CAS533 this makes hit lines thicker, but drawing is slower on Linux 
+		// this makes hit lines thicker, but drawing is slower on Linux 
 		// g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		if (!initing && seqHitObj!=null) 
 			seqHitObj.paintComponent(g2);
@@ -195,13 +188,13 @@ public class Mapper extends JComponent
 		for (int i = 0;  i < trackHolders.length;  i++)
 			trackHolders[i].getTrack().mouseWheelMoved(e, length);
 	}
-	public void mousePressed(MouseEvent e) {// CAS517 popup hit wire description; see SeqHits.DrawHits.doPopupDesc
+	public void mousePressed(MouseEvent e) {// popup hit wire description; see SeqHits.DrawHits.doPopupDesc
 		if (e.isPopupTrigger()) {
 			if (seqHitObj.doPopupDesc(e)) return;
 			fh.showPopup(e);
 		}
 	} 
-	public boolean isActive() { // CAS531 add so drawingPanel can check
+	public boolean isActive() { // drawingPanel can check
 		return (trackHolders[0].getTrack()!=null && trackHolders[1].getTrack()!=null);
 	}
 	/******************************************************************/
@@ -242,7 +235,7 @@ public class Mapper extends JComponent
 	public static Color pseudoLineGroupColor;		// Query group and Gene popup	
 	public static Color pseudoLineHighlightColor1;
 	public static Color pseudoLineHighlightColor2;
-	public static Color pseudoLineHighlightColor3;  // Block 3rd color; CAS571
+	public static Color pseudoLineHighlightColor3;  // Block 3rd color;
 	public static Color pseudoLineHighlightColor4;  // Block 4th color
 	public static Color hitRibbonBackgroundColor;	
 	public static int 	hitRibbonWidth=3; 			

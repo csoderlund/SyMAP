@@ -90,9 +90,9 @@ public class ControlPanel extends JPanel implements HelpListener {
 		
 		createMouseFunctionSelector(bar); // for drag&drop
 		
-		zoomPopupButton = Jcomp.createButton(this,bar, null,"Zoom",
+		zoomPopupButton = Jcomp.createButtonNC(this,bar, null,"Zoom",
 				"Click checkmark to activate; Select button for menu; see Info (i)");
-		showPopupButton = Jcomp.createButton(this,bar, null,"Show",
+		showPopupButton = Jcomp.createButtonNC(this,bar, null,"Show",
 				"Click checkmark to activate; Select button for menu; see Info (i)");
 		createSelectPopups(); 
 		

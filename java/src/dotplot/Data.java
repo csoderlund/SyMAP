@@ -52,7 +52,7 @@ public class Data  {
 			tdbc2 = new DBconn2("Dotplot" + type + "-" + DBconn2.getNumConn(), dbc2);
 			this.is2D = is2d;
 			
-			dbLoad = new DBload(tdbc2); //symap = new SyMAP2d(dbc2, null); 
+			dbLoad = new DBload(tdbc2); 
 			
 			projProps = new PropsDB(dbc2); 
 			
@@ -71,7 +71,7 @@ public class Data  {
 		filtData = new FilterData(); 
 	}
 	/*************************************************************
-	 * Called from: DotPlotFrame (genome), SyMAPFrameCommon (groups), Data.setReference (change ref)
+	 * Called from: DotPlotFrame (genome), frame.ChrExpFrame (groups), Data.setReference (change ref)
 	 *              xGroupIDs, yGroupIDs null if genome
 	 */
 	public void initialize(int[] projIDs, int[] xGroupIDs, int[] yGroupIDs) {
@@ -141,7 +141,7 @@ public class Data  {
 			Group gY = ib.getGroup(Y);
 
 			HfilterData hd = new HfilterData (); 
-			hd.setForDP(true);
+			hd.setForDP(ib.getNumber()); // CAS573 only show block
 			symap.getDrawingPanel().setHitFilter(1,hd); // copy template
 			
 			symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),gY.getID(),Color.CYAN);	
@@ -168,14 +168,14 @@ public class Data  {
 			return;
 		}
 		
-		try { //DBconn dr = DBconn.getInstance(dbStr, dbUser.getDBconn());
+		try { 
 			symap = new SyMAP2d(tdbc2, null);
 		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 		
 		symap.getDrawingPanel().setTracks(2);
 		
 		HfilterData hd = new HfilterData(); 		// use 2D filter
-		hd.setForDP(false); 						// set block, set all
+		hd.setForDP(0); 							// will show all; highlight blocks
 		symap.getDrawingPanel().setHitFilter(1,hd); // template for defaults
 		
 		symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),Integer.parseInt(track[Y]),Color.CYAN);
@@ -215,15 +215,14 @@ public class Data  {
 		scaleFactor  	= 1;	
 	}
 	
-	protected void setZoom(double zoom)    {this.zoomFactor = zoom; }; // Control and Plot
-	protected void factorZoom(double mult) {if (mult != 1) zoomFactor *= mult;}
+	protected void factorZoom(double mult) { zoomFactor *= mult;} // def 0.99
 	
 	protected boolean isHome() {
 		boolean bAll = zoomFactor==DEFAULT_ZOOM && bIsScaled==false && scaleFactor==1;
 		if (is2D) return bAll;
 		return isTileView==false && bAll;
 	}
-	protected double getZoomFactor() 	{ return zoomFactor;  }
+	protected double getZoomFactor() 	{ return zoomFactor;  } // Sets scrollbars, sets dot size in Tile view
 	protected double getScaleFactor()   { return scaleFactor; }
 	protected boolean isScaled() 		{ return bIsScaled;    } 
 	
@@ -296,7 +295,7 @@ public class Data  {
 		if (this.sY2 > ymax) this.sY2 = ymax;
 		
 		if (this.sX1 > xmax || this.sX2 < 0 || this.sY1 > ymax || this.sY2 < 0) hasSelectedArea = false;
-		else hasSelectedArea = true;	// Timing issue was fixed in Sequence.buildGraphics; CAS571; CAS572 doesn't work
+		else hasSelectedArea = true;	
 		
 		return hasSelectedArea;
 	}
@@ -350,19 +349,19 @@ public class Data  {
 	protected long getVisibleGroupsSizeY(Group[] xGroups) { // plot.setDims
 		long size = 0;
 		for (Group g : getVisibleGroupsY(xGroups))
-			size += g.getEffectiveSize();
+			size += g.getGrpLenBP();		// CAS573 changed from getEffectiveSize
 		return size;
 	}
 	protected long getVisibleGroupsSize(int axis) { // plot.setDims
 		long size = 0;
 		for (Group g : getVisibleGroups(axis))
-			size += g.getEffectiveSize();
+			size += g.getGrpLenBP();
 		return size;
 	}
 	protected long getVisibleGroupsSize(int yAxis, Group[] xGroups) { // plot.paintComponenet
 		long size = 0;
 		for (Group g : getVisibleGroups(yAxis, xGroups))
-			size += g.getEffectiveSize();
+			size += g.getGrpLenBP();
 		return size;
 	}
 	private Group[] getVisibleGroups(int yAxis, Group[] xGroups) { // above
