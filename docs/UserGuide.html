@@ -411,18 +411,19 @@ which also applies to the other two views.
 	<td style="vertical-align:text-top;">
 	Clicking a cell will replace the whole genome view with the <ttp>Dot Plot</ttp> for the chromosome pair,
 	as shown on the right.
-	<p>Within the cell <ttp>Dot Plot</ttp>:
-	<ul>
-	<li>Click a block once and it will turn beige, click it again to view the <ttp>2D</ttp> display of the block
-	(shown on the lower left of the image).
-    <li>Or, use the mouse to define a region, which will put a box around it.
+	<p>From the cell <ttp>Dot Plot</ttp>, display the <ttp>2D</ttp>:
+	<table class="tx">
+	<tr><td>Click a block once and it will turn beige,
+	click it again to view the <ttp>2D</ttp> display of the block.
+	Filter: Show <i>block</i> hits
+    <tr><td>Or, use the mouse to define a region, which will put a box around it.
 		Then click the box to view the <ttp>2D</ttp> display.
-	</ul>
+	Filter: Show <i>all</i> hits
+	</table>
     <td><a href="img/dotplot-2g-cell.png">
     <img src="img/dotplot-2g-cell.png"  alt="dotplot-2g-cell" style="border: 1px solid black; width: 280px"></a>
-
-
 </table>
+
 <!------------------------------------------------------------>
 <a id="dotplot_control"></a>
 <h4>Control Panel</h4>
@@ -433,10 +434,13 @@ which also applies to the other two views.
 <table  class="tx">
 <tr><td><img src="img/home.gif" alt="Home" style="width: 20px;">
      <td>Revert the display back to full genome and its original size.
-<tr><td><img src="img/plus.gif" alt="Plus" style="width: 20px;">
-	<td>Increase the dot plot size.
-<tr><td><img src="img/minus.gif" alt="Minus" style="width: 20px;">
-	<td>Decrease the dot plot size.
+
+<tr><td style="white-space: nowrap; vertical-align: text-top;">
+    <img src="img/plus.gif" alt="Plus" style="width: 20px;"><img src="img/minus.gif" alt="Minus" style="width: 20px;">
+	<td>Increase/decrease the dot plot size.
+	<br>&rarr;Change the "1" in the text box to increase the size changed. Values of 1 to 10 are valid.
+	<br>&rarr;When showing a cell dotplot, if a block or region is selected (turning color beige),
+	the dotplot will keep the beige region in view. Click outside the box to remove the highlighting.
 <tr><td style="vertical-align:text-top;"><img src="img/scale.gif" alt="Scale" style="width: 20px;">
 	<td>Toggle: Resizes the species displayed on the y-axis according to the current scale of the species displayed on the x-axis.
 	Un-toggled: Each species is allocated the same amount of space.
@@ -507,7 +511,7 @@ the <ttx>Color Icon</ttx> settings are stored for subsequent <ttp>Dot Plot</ttp>
 		<td>
 		<table class="ty txy">
 			<tr><td><ttx>All</ttx><td>Show all hits.
-			<tr><td><ttx>Mix</ttx><td>Show all hits, but non-blocks hits will be displayed with size=1 and no scale.
+			<tr><td><ttx>Mix</ttx><td>Show all hits, but non-blocks hits will be displayed as a small dot.
 			<tr><td><ttx>Block</ttx><td>Show only hits assigned to blocks.
 		</table>
 	<tr><td><ttl>Gene Only</ttl>
@@ -522,7 +526,7 @@ the <ttx>Color Icon</ttx> settings are stored for subsequent <ttp>Dot Plot</ttp>
 		<td>
 		<table class="ty txy">
 			<tr><td><ttx>Boundary</ttx><td>Draw a blue rectangle around each block of hits.
-			<i>This must be on in order to select a block for <ttp>2D</ttp> display.
+			<i>This must be on in order to select a block for <ttp>2D</ttp> display.</i>
 			<tr><td><ttx>Number</ttx><td>Draw the block number in or near the block.
 		</table>
 </table>
@@ -1231,12 +1235,10 @@ The positions of the sequence display can be set via the corresponding text boxe
 The units of the values entered can be selected from the accompanying drop down menus
 (BP, KB, MB, GB).
 <tr><td><ttx>Gene#</ttx><td>
-&bull; Enter a <ttx>Gene#</ttx> assigned by SyMAP. It
+&bull; Select the checkbox and enter a <ttx>Gene#</ttx> assigned by SyMAP. It
 must be exact, i.e. if it has a suffix, the suffix must be included (e.g. 1234.b).
-<br>&bull; If the <ttx>Gene#</ttx> entry box has a value, it takes precedence over any coordinates changes.
 <br>&bull; When <ttb>Save</ttb> is selected, the 30kb region around the gene will be shown and
-the exons of the <ttx>Gene#</ttx> will be highlighted. To remove the highlighting, make this text box blank
-and <ttb>Save</ttb> again.
+the exons of the <ttx>Gene#</ttx> will be highlighted.
 <br>&bull; BEWARE: If the <a href="#hitfilter">Hit Filter</a> <ttx>All hits</ttx> filter is not turned on,
 you may not see the corresponding gene hits as they may be filtered.
 </table>

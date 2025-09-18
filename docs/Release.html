@@ -60,7 +60,7 @@ For existing databases, there are no database or build changes since <a href="#v
 
 <h3>Summary of recent major releases</h3>
 <table>
-<tr><td><a href="#v567">v5.6.7</a><td>(22-May-25)<td>The synteny algorithm has new orientation option.
+<tr><td><a href="#v572">v5.7.2</a><td>(2-Sept-25)<td>Improved synteny algorithm using <ttx>Strict</ttx> option.
 <tr><td><a href="#v560">v5.6.0</a><td>(23-Jan-25)<td>Improve <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>,
 which is aware of the exon-intron structure.
 <tr><td><a href="#v557">v5.5.7</a><td>(8-Aug-24)<td>Add <ttl>xToSymap</ttl> and improve ease of input.
@@ -68,9 +68,42 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
+<a id="v573"></a>
+<h3>Release: v5.7.3 (18-Sept-25)</h3>
+Small interface improvements.
+<ul>
+<li><ttp>Dot plot</ttp>:
+	<ul>
+	<li>New user-input to allow setting the amount of + (increase) and - (decrease) dot plot.
+	<li>Highlight a block or region and it will stay in view when using + (increase) or - (decrease).
+	<li>The <ttx>Mix</ttx> option now shows non-blocks as tiny dots; previously, they
+	only 'looked' different if the <ttx>Length</ttx> option was used.
+	</ul>
+<li><ttp>Chromosome Explorer 2D</ttp>:
+	<ul><li>Draw text (e.g. Block#) on top of lines.
+	<li>When a <ttx>Block</ttx> is viewed from <ttp>Queries</ttp>, <ttp>Dot plot</ttp> or <ttp>Block View</ttp>, only
+	the hits from the selected block will be shown.
+	<li>When viewed using <ttp>Queries</ttp> <ttx>Region</ttx> option,
+	all hits are shown and the block hits are highlighted.
+	</ul>
+<li><small>Little things:</small>
+	<ul>
+	<li><small>For A&amp;S self-synteny, write the cluster hits to file because this information is not
+available from Queries.</small>
+
+	<li><small>All filter options have tooltips when hover over the option.
+	All filter panels are all grey on Linux now.</small>
+	<li><small>2D sequence filter uses check box for entering Gene#.
+	       The History Back/Forward for Gene# did not work right.</small>
+	<li><small>2D information box has reordered information.</small>
+	</ul>
+</ul>
+
+
 <a id="v572"></a>
 <h3>Release: v5.7.2 (2-Sept-25)</h3>
-Improvements to the synteny algorithm.
+The synteny algorithm has new <ttx>Strict</ttx> that greatly improves
+synteny blocks for two complete genome sequence synteny.
 <p>
 <ul>
 <li><ttp>Synteny</ttp> computation: See <a href="SystemHelp.html#over2" class="ext" target="_blank">Pair parameters</a>.
