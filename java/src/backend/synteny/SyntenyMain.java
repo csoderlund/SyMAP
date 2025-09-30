@@ -3,7 +3,6 @@ package backend.synteny;
 import java.io.File;
 import java.util.Vector;
 import java.util.HashMap;
-import java.util.TreeMap;
 import java.util.Collections;
 
 import backend.Constants;
@@ -20,16 +19,18 @@ import util.Utilities;
 
 /**************************************************
  * Computes synteny
- * CAS560 fix hits that only have closeness on one side; tidy up; move save/write to new RWdb
- * CAS567 more removing misleading code; moved mergeBlocks to Merge (was SyGraph); add orient
- * CAS572 new Strict; 
+ * CAS572 new Strict; CAS574 put synteny finder and finish in their own classes 
+ * Strict: uses original algorithm but:
+ * 		uses stricter gaps and larger PCC (see setCutoffs)
+ * 		creates blocks with bOrient first, then remove hit-wires that cross may others
+ * 		makes blocks out of CoSets that are not in blocks (cosetBlocks), and tries to merge
+ * 		Merge has some special logic for Strict since CoSets can be merged
  */
 public class SyntenyMain {
-	public static boolean bTrace = false; // -bt trace; set at command line 
-	private boolean bLocalTrace = false;
-	private boolean bVerbose = Constants.VERBOSE;
+	public  static boolean bTrace = false; 		// -bt trace; set at command line 
+	protected static boolean bTraceBlks = bTrace; // local set
+	private static boolean bVerbose = Constants.VERBOSE;
 	
-	protected static final int strictCoset=2;
 	protected static final String orientSame = "==";	// must be ++ or --;  
 	protected static final String orientDiff = "!=";	// must be +- or -+
 	protected static final String orientMix  = "";		// can be mixed
@@ -44,12 +45,15 @@ public class SyntenyMain {
 	private boolean bOrient = false; // to conform to standard definition, must be same orientation
 	private String pMerge  = "0"; // 0 - always do contain; 1 - overlap; 2 - close (which is also overlap)
 	
-	private boolean bOrSt   = false; // Orient || Strict  CAS572
+	private boolean bOrSt   = false; // Orient || Strict  
 	private boolean bIsSelf = false, bOrderAgainst=false;
 	
 	private Mproject mProj1, mProj2;
 	private Mpair mp;
 	private String resultDir;
+	
+	// Main data structure for a chr-chr pair
+	private Vector <SyBlock> blockVec;  // blocks chr-chr pair; recreated on each new chr-chr; 
 	
 	// Cutoffs
 	final private int fMindots_keepbest = 3; // to be merged into one >= pMinDots
@@ -65,19 +69,14 @@ public class SyntenyMain {
 	private int ngaps;										  // Depends on genome length && number hits
 	private Vector<Integer> gap1list = new Vector<Integer>(); // Set the decreasing gap search points 
 	private Vector<Integer> gap2list = new Vector<Integer>(); 
-	
-	// Global DS
-	private RWdb rwObj;					// all read/write db methods
-	private Vector <SyHit>   hitVec;    // chr-chr hits; populated in RWdb for each new chr-chr; 
-	private Vector <SyBlock> blockVec;  // blocks chr-chr pair; recreated on each new chr-chr; 
-	private String orient="";			// block is assigned its orient; 
-	
+
+	// final stats
 	private boolean bSuccess = true;
 	private long startTime;
 	private int totalBlocks=0, cntMerge=0, cntSame=0, cntDiff=0;
 	private int cntGrpMerge=0, cntGrpSame=0, cntGrpDiff=0; 
-	private TreeMap <Integer, Integer> cosetNBmap = new TreeMap <Integer, Integer> ();
-	private int cntTrIn=0, cntTrOlap=0, cntTrClose=0, cntTrCoset=0, cntTrCsChg=0; 
+	private int cntSetNB=0, cntSetNBhits=0;
+	private int cntTrIn=0, cntTrOlap=0,  cntMgCoset=0, cntMgSkip=0, cntTrCsChg=0; 
 	
 	public SyntenyMain(DBconn2 dbc2, ProgressDialog log, Mpair mp) {
 		this.dbc2 = dbc2;
@@ -104,9 +103,8 @@ public class SyntenyMain {
 		int mProj1Idx    = mProj1.getIdx(),    mProj2Idx = mProj2.getIdx(); 
 		
 		startTime = Utils.getTime();
-		if (proj1Name.equals(proj2Name)) mLog.msg("Finding self-synteny for " + proj1Name); // CAS572 add
-		else mLog.msg("Finding synteny for " + proj1Name + " and " + proj2Name); 
-		Globals.tprt("Trace on");
+		if (proj1Name.equals(proj2Name)) mLog.msg("Finding self-synteny for " + proj1Name); 
+		else                             mLog.msg("Finding synteny for " + proj1Name + " and " + proj2Name); 
 		
 		resultDir = Constants.getNameResultsDir(proj1Name, proj2Name);	
 		if (!(new File(resultDir)).exists()) {
@@ -117,10 +115,11 @@ public class SyntenyMain {
 		
 		tdbc2 = new DBconn2("Synteny-" + DBconn2.getNumConn(), dbc2);
 		tdbc2.executeUpdate("DELETE FROM blocks WHERE pair_idx=" + mPairIdx);
+		RWdb rwObj            = new RWdb(mPairIdx, mProj1Idx, mProj2Idx, tdbc2);
+		BuildBlock buildObj   = new BuildBlock(rwObj);
+		FinishBlock finishObj = new FinishBlock(rwObj);
 		
-		rwObj = new RWdb(mPairIdx, mProj1Idx, mProj2Idx, tdbc2);
-		
-		setCutoffs(); 
+		setCutoffs(); 	// Set cutoffs for all grp-grp pairs
 		if (Cancelled.isCancelled() || !bSuccess) {tdbc2.close(); return false;} 
 		
 	/** Main loop through chromosome pairs ***************************************/
@@ -139,17 +138,17 @@ public class SyntenyMain {
 				cntGrpMerge=cntGrpSame=cntGrpDiff=0;
 				blockVec = new Vector<SyBlock>(); // create for both orients so can be number sequentially
 				
-				if (!bOrSt) doChrChrSynteny(grpIdx1,grpIdx2, orientMix); 
+				if (!bOrSt) buildObj.doChrChrSynteny(grpIdx1,grpIdx2, orientMix); 
 				else { 									// restrict to same orientation; 
-					doChrChrSynteny(grpIdx1,grpIdx2, orientSame); 
-					doChrChrSynteny(grpIdx1,grpIdx2, orientDiff);
+					buildObj.doChrChrSynteny(grpIdx1,grpIdx2, orientSame); 
+					buildObj.doChrChrSynteny(grpIdx1,grpIdx2, orientDiff);
 				}
 				if (Cancelled.isCancelled() || !bSuccess) {tdbc2.close();return false;}
 				
-				doChrChrFinish(grpIdx1,grpIdx2); 			// save to DB; need to be separate for bOrient; 
+				finishObj.doChrChrBlkFinish(grpIdx1,grpIdx2); 			// save to DB; need to be combined bOrient; 
 				
 				cntSame += cntGrpSame; cntDiff += cntGrpDiff; cntMerge += cntGrpMerge;
-				if ((bVerbose || bTrace) && blockVec.size()>0) { 		
+				if (bVerbose && blockVec.size()>0) { 		
 					String msg = String.format("Blocks %-12s", mProj1.getGrpNameFromIdx(grpIdx1) + "-" + mProj2.getGrpNameFromIdx(grpIdx2));
 					if (bOrSt)                         msg += String.format("  Orient:  Same %3d   Diff %3d ",cntGrpSame, cntGrpDiff);
 					if (!pMerge.equals("0") || bTrace) msg += String.format("  Merged %3d ", cntGrpMerge);
@@ -159,6 +158,7 @@ public class SyntenyMain {
 					String t = Utilities.getDurationString(Utils.getTime()-startTime);
 					Globals.rprt(nGrpGrp + " of " + maxGrp + " pairs remaining (" + t + ")"); 
 				}
+				blockVec.clear();
 			}
 		}	
 		Globals.rclear();
@@ -172,15 +172,14 @@ public class SyntenyMain {
 		if (bOrient)             msg += String.format("   Orient: %,d Same   %,d Diff", cntSame, cntDiff);
 		Utils.prtNumMsg(mLog, totalBlocks, msg);
 		
-		if (cosetNBmap.size()>0 && bVerbose) {
-			msg = "  Collinear sets not in blocks (size: #sets):  ";
-			for (int sz : cosetNBmap.keySet()) msg += sz + ": " + cosetNBmap.get(sz) + "  ";
-			Utils.prtIndentMsgFile(mLog, 3, msg);
+		if (bVerbose) {
+			msg = String.format("Collinear Sets not in blocks (%,d total hits)", cntSetNBhits);	
+			Utils.prtIndentNumMsgFile(mLog, 1, cntSetNB, msg);
 		}
 		
 		if (bTrace) {
-			Utils.prtIndentMsgFile(mLog, 3, String.format("Merge: In %,d    Close %,d   Olap %,d", cntTrIn, cntTrClose, cntTrOlap));
-			Utils.prtIndentMsgFile(mLog, 3, String.format("Coset Blk %,d    Add hits to existing blk %,d", cntTrCoset, cntTrCsChg));
+			Utils.prtIndentMsgFile(mLog, 3, String.format("Merge: In %,d    Olap %,d", cntTrIn, cntTrOlap));
+			Utils.prtIndentMsgFile(mLog, 3, String.format("Coset Blk %,d    Skip %,d    Add hits to existing blk %,d", cntMgCoset, cntMgSkip, cntTrCsChg));
 		}
 		Utils.prtMsgTimeDone(mLog, "Finish Synteny", startTime);
 
@@ -196,268 +195,14 @@ public class SyntenyMain {
 		if (Cancelled.isCancelled() || !bSuccess) {tdbc2.close(); return false;}
 		
 	/** Finish **********************************************************/
-		if (bIsSelf) rwObj.writeResultsToFile(mLog, resultDir); // CAS572 remove; CAS573 put back for self as no query
+		if (bIsSelf) rwObj.writeResultsToFile(mLog, resultDir); 
 		tdbc2.close();
 		return bSuccess; 								// Full time printed in calling routine
 	}
 	catch (Exception e) {ErrorReport.print(e, "Computing Synteny"); return false; }
 	}
 	
-	/************************************************************************
-	 * Main synteny method
-	 *******************************************************************/
-	private void doChrChrSynteny(int grpIdx1, int grpIdx2, String o)  {
-	try {
-		orient = o;	// "", ==, !=
-		boolean isGrpSelf = (grpIdx1 == grpIdx2);
-		
-	/* Read hits */
-		hitVec = rwObj.loadHits(grpIdx1, grpIdx2, isGrpSelf, orient);
-		if (hitVec==null) {bSuccess=false; return;}
-		
-		if (bTrace) Globals.prt(String.format(">> %s %s  %s  Hits %,d                         ", 
-				mProj1.getGrpNameFromIdx(grpIdx1), mProj2.getGrpNameFromIdx(grpIdx2), o, hitVec.size()));
-		
-		if (hitVec.size() < pMindots) return; // not error
-		
-		Collections.sort(hitVec); 									   // Sort by G2 hit midpoints
-		for (int i = 0; i < hitVec.size(); i++) hitVec.get(i).mI2 = i; // index of the hit in the sorted list
-		
-	/** Create blocks **/
-		createBlockVec();
-		cosetBlocks(); 	   // if bStrict, make cosets not in blocks into blocks; otherwise, just count for output
-	}
-	catch (Exception e) {ErrorReport.print(e, "Synteny main"); bSuccess = false;}
-	}
-	/*************************************************************
-	 * All blocks for grp-grp need to be numbered in order for bOrient
-	 */
-	private void doChrChrFinish(int grpIdx1, int grpIdx2) {
-	try {
-		if (grpIdx1 == grpIdx2) rmDiagBlocks(); 
-		
-		mergeBlocks(); 
-		
-		if (bStrict) strictBlocks(); // removes small coset that were not merged
-		
-		for (SyBlock blk : blockVec) {
-			blk.setActualCoords(); 		
-			blk.stdDev(false); 					    // side 2; saved in DB for report
-			blk.stdDev(true);					    // side 1; last sort of hits for block
-		}
-		
-		Collections.sort(blockVec);	    // sort on start1 for final block#
-		
-		String msg="Old->New: ";
-		int blkNum=1;					// final block numbering
-		for (SyBlock b : blockVec) { 
-			b.mGrpIdx1 = grpIdx1;
-			b.mGrpIdx2 = grpIdx2;
-			b.mBlkNum = blkNum++;
-			
-			if ((bOrient || bStrict) && b.orient.equals(orientSame)) cntGrpSame++; else cntGrpDiff++;
-			if (bTrace) msg +=  b.nBlk + "->" + b.mBlkNum + "; "; 
-		}
-		if (bTrace) Globals.prt(msg);
-		
-		// Save
-		rwObj.saveBlocksToDB(blockVec);
-		
-		totalBlocks += blockVec.size();
-	}
-	catch (Exception e) {ErrorReport.print(e, "Synteny main finish"); bSuccess = false;}
-	}
-	/*************************************************************************
-	 * Called from doChrChrSynteny where the hitVec contains the hits from grp1 to grp2 
-	 * This routine organizes the "binary search" of the gap parameter space
-	 *************************************************************************/
-	private void createBlockVec() { 
-		for (int i = 0; i < ngaps; i++) {
-			int low1 = gap1list.get(i);						// gaps are from large to small
-			int low2 = gap2list.get(i);
-			int high1 = (i > 0 ? gap1list.get(i-1) : low1);
-			int high2 = (i > 0 ? gap2list.get(i-1) : low2);
-
-			while (hasGoodChain(low1, low2)) 				// if there is at least one good chain
-				binarySearch(low1, high1, low2, high2);		// search them all
-		}
-	}
-	// this is called for every block put on blockVec, or changed when on blockVec
-	private void finalizeBlock(SyBlock blk, String msg) {
-		blk.mCorr1 = hitCorrelation(blk.mHits); // CAS573 move from chrChrFinish
-		for (SyHit h : blk.mHits) {
-			h.mDPUsedFinal = true;
-			h.nBlk  = blk.nBlk;          // use for cosetBlocks; CAS572
-		}
-		if (bTrace && bLocalTrace) blk.tprt("Final ");
-	}
-	/************************************************************/
-	private void binarySearch(int low1, int high1, int low2, int high2){
-		int gap1 = (high1 + low1)/2;
-		int gap2 = (high2 + low2)/2;
-		
-		while ( high1-low1 > fMingap && high2-low2 > fMingap){ // 1000
-			if (hasGoodChain(gap1,gap2)){
-				low1 = gap1;
-				low2 = gap2;
-				gap1 = (gap1 + high1)/2;
-				gap2 = (gap2 + high2)/2;	
-			}
-			else {
-				high1 = gap1;
-				high2 = gap2;
-				gap1 = (low1 + gap1)/2;
-				gap2 = (low2 + gap2)/2;
-			}
-		}
-		// Final blocks
-		SyBlock blk = new SyBlock(orient);
-		while (longestChain(2, low1, low2, blk)){  
-			if (isGoodCorr(blk)){
-				blockVec.add(blk);				   // final: add new block to blockVec
-				finalizeBlock(blk, "Final");
-				
-				blk = new SyBlock(orient); 
-			}
-			else blk.clear();
-		}
-		resetDPUsed();
-	}
-	/************************************************************/
-	private boolean hasGoodChain(int gap1, int gap2){ // createBlockVec, binarySearch
-		SyBlock blk = new SyBlock(orient); 
-		while (longestChain(1, gap1, gap2, blk)){ 
-			if (isGoodCorr(blk)) {
-				resetDPUsed();
-				return true;			 
-			}
-			blk.clear();
-		}
-		resetDPUsed();
-		return false;
-	}
-	
-	private void resetDPUsed(){
-		for (SyHit h : hitVec) h.mDPUsed = h.mDPUsedFinal;
-	}
-	/************************************************************
-	 * Uses !ht.mDPUsed from hitVec to find longest chain
-	 ***********************************************************/
-	private boolean longestChain(int who, int gap1, int gap2, SyBlock rtBlk) {// hasGoodChain, binarySearch
-		for (SyHit hit : hitVec) {
-			hit.mNDots 	= 1;
-			hit.mScore  = 1;
-			hit.mPrevI 	= -1;
-		}
-		
-		SyHit savHt1 = null;					    // first of final chain
-		Vector <SyHit> links = new Vector<SyHit>(); // hits within range of ht1
-		
-		for (int i = 0; i < hitVec.size(); i++) {
-			SyHit ht1 = hitVec.get(i);			// try this dot for possible first
-			if (ht1.mDPUsed) continue;
-			
-			links.clear(); 					 	// get all dots within gaps range of ht1 to be used as possible bestPrev
-			for (int j = i-1; j >= 0; j--) { 	// links are from current position searching previous
-				SyHit ht2 = hitVec.get(j);
-				
-				if (ht2.mDPUsed) continue;
-				
-				if (ht1.midG2 - ht2.midG2 > mMaxgap2) break; // crucial optimization from sorting on midG2
-				
-				if (Math.abs(ht1.midG1 - ht2.midG1) > mMaxgap1) continue;	
-				
-				links.add(ht2);			
-			}
-			if (links.size() == 0) continue; 
-		
-			int maxscore = 0;
-			SyHit bestPrev = null; 				  
-			
-			for (SyHit htbN : links) { 			        // Find bestNext for ht1 by minimal gap on both sides
-				double d1 = Math.abs((double)htbN.midG1 - (double)ht1.midG1)/(double)gap1; 
-				double d2 = Math.abs((double)htbN.midG2 - (double)ht1.midG2)/(double)gap2;
-				int gap_penalty = (int)(d1 + d2);
-				
-				int score = 1 + htbN.mScore - gap_penalty; 
-				
-				if (score > maxscore) { // score can be <0
-					maxscore = score;
-					bestPrev = htbN;
-				}
-			}
-			if (maxscore > 0) {
-				ht1.mScore = maxscore;
-				ht1.mPrevI = bestPrev.mI2;
-				ht1.mNDots += bestPrev.mNDots;
-				
-				if (savHt1 == null) 					savHt1 = ht1;
-				else if (ht1.mScore > savHt1.mScore) 	savHt1 = ht1;
-				else if (ht1.mScore >= savHt1.mScore && ht1.mNDots > savHt1.mNDots) savHt1 = ht1;	
-			}
-			else {
-				ht1.mNDots 	= 1;
-				ht1.mScore = 1;
-				ht1.mPrevI 	= -1;
-			}
-		} // end hit loop
-		
-		if (savHt1==null || savHt1.mNDots < fMindots_keepbest) return false; // fMindots_keepBest=3
-		
-	/* Need to build block for isGoodBlock even if it is then discarded */
-		SyHit ht = savHt1; 			// build chain from first dot
-		
-		while (true) {
-			ht.mDPUsed = true;
-			
-			rtBlk.addHit(ht); // add to block hits (rtBlk is parameter); moved calculate block ends to addHit CAS572
-			
-			if (ht.mPrevI >= 0) ht = hitVec.get(ht.mPrevI);
-			else break;
-		}
-		return true;
-	}
-	/****************************************************/
-	private boolean isGoodCorr(SyBlock blk){ // hasGoodChain, binary search;  evaluate block
-		int nDots = blk.n; //blk.mHits.size();
-		
-		if (nDots < mMindotsA) return false;
-		
-		blockCorrelations(blk);
-		
-		if (!bOrderAgainst && bOrSt) {	// does not work well for small draft
-			if (orient.equals(orientSame) && blk.mCorr1<0) return false;
-			if (orient.equals(orientDiff) && blk.mCorr1>0) return false;
-		}
-		
-		float avg1 = (blk.mE1 - blk.mS1)/nDots;
-		float avg2 = (blk.mE2 - blk.mS2)/nDots;
-		float c1 = Math.abs(blk.mCorr1), c2 = Math.abs(blk.mCorr2);
-		
-		// mCase='R' is reject; mCase also used in Merge.removeBlocks
-		if (nDots >= mMindotsA && avg1 <= mAvg1A && avg2 <= mAvg2A && c1 >= mCorr1A && c2 >= mCorr2A) blk.mCase = "A";
-		else if (nDots >= mMindotsB	&& c1 >= mCorr1B && c2 >= mCorr2B) blk.mCase = "B";
-		else if (nDots >= mMindotsC	&& c1 >= mCorr1C && c2 >= mCorr2C) blk.mCase = "C";
-		else if (nDots >= mMindotsD	&& c1 >= mCorr1D && c2 >= mCorr2D) blk.mCase = "D";
-		
-		return (!blk.mCase.equals("R"));
-	}
-	
-	/***************************************************
-	 * from 2006 publication
-	 *  mCorr1 is the approximate linearity of the anchors in the chain as measured by the PCC; 
-	 *  mCorr2 is the correlation of all the anchors in the chain’s bounding rectangle 
-	 */
-	private void blockCorrelations(SyBlock blk) {
-		blk.mCorr1 = hitCorrelation(blk.mHits); // chain hits 
-		
-		Vector<SyHit> hits2 = new Vector<SyHit>();
-		for (SyHit ht : hitVec) {
-			if (blk.isContained(ht.midG1, ht.midG2)) hits2.add(ht);
-		}
-		blk.mCorr2 = hitCorrelation(hits2); // all hits in surrounding block
-	}
-	//  Pearson correlation coefficient (PCC) of midpoints
+//  Pearson correlation coefficient (PCC) of midpoints; used for BuildBlock and for saving final to DB
 	private float hitCorrelation(Vector<SyHit> hits) {
 		if (hits.size() <= 2) return 0;
 		
@@ -481,172 +226,6 @@ public class SyntenyMain {
 		if (Math.abs(corr) > 1) corr = (corr > 0) ? 1.0 : -1.0; // cannot be <1 or >1
 		
 		return (float)corr;
-	}
-	
-	/*****************************************************************************
-	 * Find cosets that are not in blocks and create them. They may then get merged. CAS572 add method
-	 *   Run on chr-chr-orient, hence, hitsVec can be used. 
-	 *   All options use this. It uses pCosetdots for cutoff. 
-	 *****************************************************************************/
-	private void cosetBlocks() {
-	try {
-	// gather Coset hits
-		HashMap <Integer, CoSet> cosetMap = new HashMap <Integer, CoSet> ();
-		for (SyHit ht : hitVec) {
-			if (ht.coset==0) continue;
-			CoSet cs;
-			if (cosetMap.containsKey(ht.coset)) cs = cosetMap.get(ht.coset);
-			else {
-				cs = new CoSet(ht.coset);
-				cosetMap.put(ht.coset, cs);
-			}
-			cs.add(ht);
-		}
-	// For each coset
-		for (CoSet cset : cosetMap.values()) {
-			int nBlk=0, cntNo=0;
-			
-			// determine if in block or not
-			for (SyHit ht : cset.setVec) {
-				if (ht.coset!=0) {
-					if (ht.nBlk!=0) {
-						if (nBlk==0) nBlk = ht.nBlk; 	// hits go in 1st block found for coset
-						else if (nBlk!=ht.nBlk) 		// coset in two different blocks
-							if (bTrace) Globals.prt("Warning: collinear set " + ht.coset + " in block " + nBlk + " and " + ht.nBlk);
-					}
-					else cntNo++;
-				}
-			}
-			// Determine if create new block or add hits to existing block 
-			if (nBlk==0) { 			 		// new block 		
-				if (bStrict && cntNo>=strictCoset) { 	// bStrict will later remove <pMinDots if not merged
-					SyBlock cblk = new SyBlock(orient);	// Assigned nBlk on creation
-					for (SyHit ht : cset.setVec)  cblk.addHit(ht);
-				
-					cblk.mCase = "N";
-					finalizeBlock(cblk, "CSnew");
-					blockVec.add(cblk);
-				}
-				else { 					    // Cosets not in blocks; printed on bVerbose
-					int sz = cset.setVec.size();
-					if (cosetNBmap.containsKey(sz)) cosetNBmap.put(sz, cosetNBmap.get(sz)+1);
-					else cosetNBmap.put(sz, 1);
-				}
-			}
-			else if (cntNo>0) {			   // add to existing block - this can even happen for original
-				for (SyBlock cblk : blockVec) {
-					if (cblk.nBlk != nBlk) continue;
-					
-					for (SyHit ht : cset.setVec) {
-						if (ht.nBlk==0) {
-							cblk.addHit(ht);
-							ht.nBlk = nBlk;
-							cntTrCsChg++;
-						}
-					}
-					finalizeBlock(cblk, "CSadd");
-					break;
-				}
-			}
-		}
-	}
-	catch (Exception e) {ErrorReport.print(e, "trim block"); }
-	}
-	/**************************************************
-	 * Remove blocks from chr-chr diagonal
-	 * Run on final chr-chr before merge or strict
-	 */
-	private void rmDiagBlocks(){ // change to set blockVec like other methods; CAS572
-		Vector<SyBlock> out = new Vector<SyBlock>();
-		for (SyBlock b : blockVec){
-			int gap = Math.max(b.mS1,b.mS2) - Math.min(b.mE1,b.mE2); // was intervalOverlap; CAS573
-			if (gap >0) out.add(b);
-		}
-		blockVec = out;
-	}
-	/*****************************************************
-	 * Merge final blocks 
-	 * Run on chr-chr pair (both orients) before strict (HitsVec cannot be used because maybe only one orient)
-	 */
-	private void mergeBlocks() {
-		Collections.sort(blockVec); // CAS573
-		int nb = blockVec.size();
-		
-		// Always do for contained
-		Merge mergeObj = new Merge(blockVec, Merge.CONTAINED, bOrient); 
-		blockVec = mergeObj.mergeBlocks(0, 0, 0); 			  // return merged contained blocks
-		
-		for (SyBlock blk : blockVec) {						
-			if (blk.hasChg) {
-				finalizeBlock(blk, "MgIn ");
-				blk.hasChg = false;
-				cntTrIn++;
-			}
-		}
-		cntTrCoset += mergeObj.cntCoset;
-		
-		/* Needs Merge to be changed to always merge closest first instead of the transitive closure.
-		 * Rare cases: 2 blocks of same orient should be one (arab-cabb 2-1); 
-		//             also merge close cosets (but not overlapping) 			 CAS573 
-		mergeObj = new Merge(blockVec, Merge.CLOSE, true); 
-		int n = (gap1list.size()>3) ? gap1list.size()-2 : gap1list.size()-1;
-		blockVec = mergeObj.mergeBlocks(gap1list.get(n), gap2list.get(n), 0); // mindots=0 for cosets 			  
-		bLocalTrace = true;
-		for (SyBlock blk : blockVec) {						
-			if (blk.hasChg) {
-				finalizeBlock(blk, "MgCL ");
-				blk.hasChg = false;
-				cntTrClose++;
-			}
-		}
-		cntTrCoset += mergeObj.cntCoset;
-		bLocalTrace = false;
-		*/
-		// Only do closely space merge if parameter set
-		if (!pMerge.equals("0")) {
-			mergeObj = new Merge(blockVec, Merge.OLAP, bOrient); // T=overlap or close; send blocks; perform overlap
-		
-			if (pMerge.equals("1"))
-				blockVec = mergeObj.mergeBlocks(0, 0, pMindots);  // combine small overlapping - which will be mixed
-			else
-				blockVec = mergeObj.mergeBlocks(gap1list.get(0), gap2list.get(0), pMindots); // return merged close blocks
-						  
-			for (SyBlock blk : blockVec) {						
-				if (blk.hasChg) {
-					finalizeBlock(blk, "MgOlp");
-					blk.hasChg = false;
-					cntTrOlap++;
-				}
-			}
-			cntTrCoset += mergeObj.cntCoset;
-		}	
-		cntGrpMerge += nb-blockVec.size();
-	}
-	
-	/** Run on final chr-chr pair (both orients) after merge 
-	 *  Was going to eval for poor small blocks, though they are looking pretty good as is...
-	 ***/
-	private void strictBlocks() {
-	try {
-		int cnt=0;
-		for (SyBlock blk : blockVec) {
-			if (blk.n<pMindots) {
-				cnt++;
-				blk.mCase = "X";
-				// add to existing - created in cosetBlocks
-				if (cosetNBmap.containsKey(blk.n)) cosetNBmap.put(blk.n, cosetNBmap.get(blk.n)+1);
-				else cosetNBmap.put(blk.n, 1);
-			}
-		}
-		if (cnt>0) { // rebuild blockVec
-			Vector <SyBlock> xVec = new Vector <SyBlock> ();
-			for (SyBlock blk : blockVec) 
-				if (!blk.mCase.equals("X")) xVec.add(blk);
-			
-			blockVec = xVec;
-		}
-	}
-	catch (Exception e) {ErrorReport.print(e, "trim block"); }
 	}
 	
 	/***************************************************************
@@ -682,10 +261,11 @@ public class SyntenyMain {
 			ngaps++;
 		}
 		if (bStrict) {				// CAS572
-			gap1list.remove(0);
-			gap2list.remove(0);
-			ngaps--;
-			
+			if (ngaps>2) {
+				gap1list.remove(0);
+				gap2list.remove(0);
+				ngaps--;
+			}
 			mCorr1A = 0.9f;
 		}
 		if (bTrace) {
@@ -699,20 +279,460 @@ public class SyntenyMain {
 			Globals.prt(String.format("MaxGap1 %,d (%,d/%.1f)  MaxGap2 %,d (%,d/%.1f) ", 
 					mMaxgap1, mProj1.getLength(), sr, mMaxgap2, mProj2.getLength(), sr));
 			String m="Gap1: "; for (int g : gap1list) m += String.format("%,d  ",g); Globals.prt(m);
-			       m="Gap2: "; for (int g : gap2list) m += String.format("%,d  ",g); Globals.prt(m);
-			Globals.prt("");
+			       m="Gap2: "; for (int g : gap2list) m += String.format("%,d  ",g); Globals.prt(m); Globals.prt("");
 		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "Set properties for synteny"); bSuccess=false;}
 	}
 	
-	/**************************************************/
-	private class CoSet {
-		private Vector <SyHit> setVec = new Vector <SyHit> ();
+	/*************************************************************************
+	 * Synteny algorithm
+	 * All methods that use hitVec are in this class
+	 * The hitVec contains the hits from grp1 to grp2 for orient ==,!= or both
+	 *************************************************************************/
+	private class BuildBlock {
+		private String orient;
+		private RWdb rwObj;					// all read/write db methods
+		private Vector <SyHit>   hitVec;    // chr-chr hits; populated in RWdb for each new chr-chr; 
 		
-		private void add(SyHit ht) {setVec.add(ht);}
+		private BuildBlock(RWdb rwObj) {
+			this.rwObj = rwObj;
+		}
+		/************************************************************************
+		 * Main synteny method; orient may be "==", "!=" or ""
+		 *******************************************************************/
+		private void doChrChrSynteny(int grpIdx1, int grpIdx2, String o)  {
+		try {
+			orient = o;	// "", ==, !=
+			boolean isGrpSelf = (grpIdx1 == grpIdx2);
+			
+		/* Read hits */
+			hitVec = rwObj.loadHits(grpIdx1, grpIdx2, isGrpSelf, orient);
+			if (hitVec==null) {bSuccess=false; return;}
+			
+			if (hitVec.size() < pMindots) return; // not error
+			
+			if (bTrace) Globals.prt(String.format(">> %s %s  %s  Hits %,d                   ",  mProj1.getGrpNameFromIdx(grpIdx1), mProj2.getGrpNameFromIdx(grpIdx2), o, hitVec.size()));
+			
+			Collections.sort(hitVec); 									   // Sort by G2 hit midpoints
+			for (int i = 0; i < hitVec.size(); i++) hitVec.get(i).mI2 = i; // index of the hit in the sorted list
+			
+		/** Create blocks **/
+			createBlockVec();
+			
+			hitVec.clear();
+		}
+		catch (Exception e) {ErrorReport.print(e, "Synteny main"); bSuccess = false;}
+		}
+		
+		/** This performs a "binary search" of the gap parameter space **/
+		private void createBlockVec() { 
+			for (int i = 0; i < ngaps; i++) {
+				int low1 = gap1list.get(i);						// gaps are from large to small
+				int low2 = gap2list.get(i);
+				int high1 = (i > 0 ? gap1list.get(i-1) : low1);
+				int high2 = (i > 0 ? gap2list.get(i-1) : low2);
 
-		private CoSet(int num) {}
+				while (hasGoodChain(low1, low2)) 				// if there is at least one good chain
+					binarySearch(low1, high1, low2, high2);		// search them all
+			}
+			cosetBlocks(); 	   // Use HitVec, if bStrict, make cosets not in blocks into blocks; otherwise, just count for output
+		}
+		
+		/************************************************************/
+		private void binarySearch(int low1, int high1, int low2, int high2){
+			int gap1 = (high1 + low1)/2;
+			int gap2 = (high2 + low2)/2;
+			
+			while ( high1-low1 > fMingap && high2-low2 > fMingap){ // 1000
+				if (hasGoodChain(gap1,gap2)){
+					low1 = gap1;
+					low2 = gap2;
+					gap1 = (gap1 + high1)/2;
+					gap2 = (gap2 + high2)/2;	
+				}
+				else {
+					high1 = gap1;
+					high2 = gap2;
+					gap1 = (low1 + gap1)/2;
+					gap2 = (low2 + gap2)/2;
+				}
+			}
+			// Final blocks
+			SyBlock blk = new SyBlock(orient);
+			while (longestChain(2, low1, low2, blk)){  
+				if (isGoodCorr(blk)){
+					blockVec.add(blk);				   // final: add new block to blockVec
+					finalBlock1(blk);
+					
+					blk = new SyBlock(orient); 
+				}
+				else blk.clear();
+			}
+			resetDPUsed();
+		}
+		/************************************************************/
+		private boolean hasGoodChain(int gap1, int gap2){ // createBlockVec, binarySearch
+			SyBlock blk = new SyBlock(orient); 
+			while (longestChain(1, gap1, gap2, blk)){ 
+				if (isGoodCorr(blk)) {
+					resetDPUsed();
+					return true;			 
+				}
+				blk.clear();
+			}
+			resetDPUsed();
+			return false;
+		}
+		
+		private void resetDPUsed(){
+			for (SyHit h : hitVec) h.mDPUsed = h.mDPUsedFinal;
+		}
+		/************************************************************
+		 * Uses !ht.mDPUsed from hitVec to find longest chain
+		 ***********************************************************/
+		private boolean longestChain(int who, int gap1, int gap2, SyBlock rtBlk) {// hasGoodChain, binarySearch
+			for (SyHit hit : hitVec) {
+				hit.mNDots 	= 1;
+				hit.mScore  = 1;
+				hit.mPrevI 	= -1;
+			}
+			
+			SyHit savHt1 = null;					    // first of final chain
+			Vector <SyHit> links = new Vector<SyHit>(); // hits within range of ht1
+			
+			for (int i = 0; i < hitVec.size(); i++) {
+				SyHit ht1 = hitVec.get(i);			// try this dot for possible first
+				if (ht1.mDPUsed) continue;
+				
+				links.clear(); 					 	// get all dots within gaps range of ht1 to be used as possible bestPrev
+				for (int j = i-1; j >= 0; j--) { 	// links are from current position searching previous
+					SyHit ht2 = hitVec.get(j);
+					
+					if (ht2.mDPUsed) continue;
+					
+					if (ht1.midG2 - ht2.midG2 > mMaxgap2) break; // crucial optimization from sorting on midG2
+					
+					if (Math.abs(ht1.midG1 - ht2.midG1) > mMaxgap1) continue;	
+					
+					links.add(ht2);			
+				}
+				if (links.size() == 0) continue; 
+			
+				int maxscore = 0;
+				SyHit bestPrev = null; 				  
+				
+				for (SyHit htbN : links) { 			        // Find bestNext for ht1 by minimal gap on both sides
+					double d1 = Math.abs((double)htbN.midG1 - (double)ht1.midG1)/(double)gap1; 
+					double d2 = Math.abs((double)htbN.midG2 - (double)ht1.midG2)/(double)gap2;
+					int gap_penalty = (int)(d1 + d2);
+					
+					int score = 1 + htbN.mScore - gap_penalty; 
+					
+					if (score > maxscore) { // score can be <0
+						maxscore = score;
+						bestPrev = htbN;
+					}
+				}
+				if (maxscore > 0) {
+					ht1.mScore = maxscore;
+					ht1.mPrevI = bestPrev.mI2;
+					ht1.mNDots += bestPrev.mNDots;
+					
+					if (savHt1 == null) 					savHt1 = ht1;
+					else if (ht1.mScore > savHt1.mScore) 	savHt1 = ht1;
+					else if (ht1.mScore >= savHt1.mScore && ht1.mNDots > savHt1.mNDots) savHt1 = ht1;	
+				}
+				else {
+					ht1.mNDots 	= 1;
+					ht1.mScore = 1;
+					ht1.mPrevI 	= -1;
+				}
+			} // end hit loop
+			
+			if (savHt1==null || savHt1.mNDots < fMindots_keepbest) return false; // fMindots_keepBest=3
+			
+		/* Need to build block for isGoodBlock even if it is then discarded */
+			SyHit ht = savHt1; 			// build chain from first dot
+			
+			while (true) {
+				ht.mDPUsed = true;
+				
+				rtBlk.addHit(ht); // add to block hits (rtBlk is parameter); moved calculate block ends to addHit CAS572
+				
+				if (ht.mPrevI >= 0) ht = hitVec.get(ht.mPrevI);
+				else break;
+			}
+			return true;
+		}
+		/****************************************************/
+		private boolean isGoodCorr(SyBlock blk){ // hasGoodChain, binary search;  evaluate block
+			int nDots = blk.nHits; //blk.mHits.size();
+			
+			if (nDots < mMindotsA) return false;
+			
+			blockCorrelations(blk);
+			
+			if (!bOrderAgainst && bOrSt) {	// does not work well for small draft
+				if (orient.equals(orientSame) && blk.mCorr1<0) return false;
+				if (orient.equals(orientDiff) && blk.mCorr1>0) return false;
+			}
+			
+			float avg1 = (blk.mE1 - blk.mS1)/nDots;
+			float avg2 = (blk.mE2 - blk.mS2)/nDots;
+			float c1 = Math.abs(blk.mCorr1), c2 = Math.abs(blk.mCorr2);
+			
+			// mCase='R' is reject; mCase also used in Merge.removeBlocks
+			if (nDots >= mMindotsA && avg1 <= mAvg1A && avg2 <= mAvg2A && c1 >= mCorr1A && c2 >= mCorr2A) blk.mCase = "A";
+			else if (nDots >= mMindotsB	&& c1 >= mCorr1B && c2 >= mCorr2B) blk.mCase = "B";
+			else if (nDots >= mMindotsC	&& c1 >= mCorr1C && c2 >= mCorr2C) blk.mCase = "C";
+			else if (nDots >= mMindotsD	&& c1 >= mCorr1D && c2 >= mCorr2D) blk.mCase = "D";
+			
+			return (!blk.mCase.equals("R"));
+		}
+		
+		/***************************************************
+		 * from 2006 publication
+		 *  mCorr1 is the approximate linearity of the anchors in the chain as measured by the PCC; 
+		 *  mCorr2 is the correlation of all the anchors in the chain’s bounding rectangle 
+		 */
+		private void blockCorrelations(SyBlock blk) {
+			blk.mCorr1 = hitCorrelation(blk.hitVec); // chain hits 
+			
+			Vector<SyHit> hits2 = new Vector<SyHit>();
+			for (SyHit ht : hitVec) {
+				if (blk.isContained(ht.midG1, ht.midG2)) hits2.add(ht);
+			}
+			blk.mCorr2 = hitCorrelation(hits2); // all hits in surrounding block
+		}
+		private void finalBlock1(SyBlock blk) {
+			for (SyHit h : blk.hitVec) {
+				h.mDPUsedFinal = true;		 
+				h.nBlk  = blk.tBlk;          // use for cosetBlocks
+			}
+		}
+		/*****************************************************************************
+		 * Find cosets that are not in blocks and create them. They may then get merged.
+		 *   Run on chr-chr-orient, hence, hitsVec can be used. 
+		 *   Strict: make blocks from cosets; Original: count cosets not in blocks
+		 *   
+		 *   If coset is same strand, then will already be part of block if any good.
+		 *   So this only merges opposite strand cosets that 'fit' well.
+		 *****************************************************************************/
+		private void cosetBlocks() {
+		try {
+			if (!bStrict && !bVerbose) return;
+			if (bStrict && bOrient && !bVerbose) return; 
+			
+		// gather Coset hits; loop through hits
+			HashMap <Integer, CoSet> cosetMap = new HashMap <Integer, CoSet> ();
+			for (SyHit ht : hitVec) {
+				if (ht.coset==0) continue;
+				CoSet cs;
+				if (cosetMap.containsKey(ht.coset)) cs = cosetMap.get(ht.coset);
+				else {
+					cs = new CoSet(ht.coset);
+					cosetMap.put(ht.coset, cs);
+				}
+				cs.add(ht);
+			}
+		
+		// loop through cosets
+			Vector <SyBlock> cblkVec = new Vector <SyBlock> ();
+			for (CoSet cset : cosetMap.values()) {
+				int nBlk=0, cntNoBlk=0;		// loop through coset hits; determine if in block or not; 
+				for (SyHit ht : cset.setVec) {  
+					if (ht.nBlk!=0) {
+						if (nBlk==0) nBlk = ht.nBlk; 	    // hits go in 1st block found for coset
+						else if (nBlk!=ht.nBlk && bTrace) 	// coset in two different blocks
+							 Globals.prt("Warning: collinear set " + ht.coset + " in block " + nBlk + " and " + ht.nBlk);
+					}
+					else cntNoBlk++;
+				} // end hit loop
+				
+				if (!bStrict) {							    // CAS574 was part of cntNoBlk 
+					if (nBlk==0) {cntSetNB++; cntSetNBhits += cset.setVec.size(); }
+					continue;
+				}
+				
+				if (nBlk==0) { 			 	 		// new block            		
+					SyBlock cblk = new SyBlock(orient);		// assigned nBlk on creation
+					for (SyHit ht : cset.setVec)  
+						if (ht.nBlk==0) cblk.addHit(ht);	// CAS574 wasn't checking this
+			
+					cblk.mCase = "N"; 
+					cblk.setActualCoords();					// better for possible merge
+					cblkVec.add(cblk);	
+					continue;
+				}
+				
+				if (cntNoBlk>0) {			   		// at least one hit in block, add rest to the existing block; rare case 
+					for (SyBlock cblk : blockVec) {
+						if (cblk.tBlk == nBlk) {
+							for (SyHit ht : cset.setVec) {
+								if (ht.nBlk==0) {
+									cblk.addHit(ht);
+									cntTrCsChg++;
+								}
+							}
+							break;
+						}
+					}
+				}
+				// else nBlk>0 and all are in a block
+			} // end coset loop
+			
+			// If Cosets merge, they have a better change of merging into a bigger block; CAS574 add this
+			if (cblkVec.size()>0) {
+				Merge mergeObj = new Merge(Merge.COSET, cblkVec,  bOrient, pMindots, gap2list.get(0)); 
+				cblkVec = mergeObj.mergeBlocks(gap1list.get(0), gap2list.get(0)); 
+				
+				for (SyBlock blk : cblkVec) blockVec.add(blk);
+			}
+		}
+		catch (Exception e) {ErrorReport.print(e, "trim block"); }
+		}
+		/**************************************************/
+		private class CoSet {
+			private Vector <SyHit> setVec = new Vector <SyHit> ();
+			
+			private void add(SyHit ht) {setVec.add(ht);}
+
+			private CoSet(int num) {}
+		}
+	}
+	/*************************************************************
+	 * All blocks for grp-grp, both orient
+	 */
+	private class FinishBlock {
+		private RWdb rwObj;
+		
+		private FinishBlock(RWdb rwObj) {
+			this.rwObj = rwObj;
+		}
+		private void doChrChrBlkFinish(int grpIdx1, int grpIdx2) {
+		try {
+			for (SyBlock blk : blockVec) finalBlock2(blk);
+				
+			if (grpIdx1 == grpIdx2) rmDiagBlocks(); // remove lower diagonal
+			
+			mergeBlocks(); 						// always merge contained; conditionally merge olap/close
+			
+			if (bStrict) strictRemoveBlocks();
+			
+			// Finalize for DB save
+			Collections.sort(blockVec);	    // Sort on start1 for final block# (sorted before Merge, but may have changed)
+			
+			String msg= String.format("%-6s %-6s:", mProj1.getGrpNameFromIdx(grpIdx1), mProj2.getGrpNameFromIdx(grpIdx2));
+			int blkNum=1;					// final block numbering
+			for (SyBlock b : blockVec) { 
+				b.mGrpIdx1 = grpIdx1;
+				b.mGrpIdx2 = grpIdx2;
+				b.mBlkNum = blkNum++;
+				
+				if ((bOrient || bStrict) && b.orient.equals(orientSame)) cntGrpSame++; else cntGrpDiff++; // for bVerbose
+				if (bTraceBlks) msg +=  b.tBlk + "->" + b.mBlkNum + "; "; // for trace
+			}
+			if (bTraceBlks && blockVec.size()>0) Globals.prt(msg);
+			
+			rwObj.saveBlocksToDB(blockVec);
+			
+			totalBlocks += blockVec.size();
+		}
+		catch (Exception e) {ErrorReport.print(e, "Synteny main finish"); bSuccess = false;}
+		}
+		
+		/***********************************************************
+		 * This is called on all final blocks from BuildBlock, and any changed blocks from Merge
+		 *********************************************************/
+		private void finalBlock2(SyBlock blk) {
+			for (SyHit h : blk.hitVec) h.mDPUsedFinal = h.mDPUsed = false;	
+				
+			blk.setActualCoords();				// Change from midpoint to actual coords
+			blk.avgGap();						// saved to DB; sorted by hitVec; CAS574 moved sorts
+			
+			blk.mCorr1 = hitCorrelation(blk.hitVec); 
+			blk.hasChg = false;
+		}
+		
+		/*****************************************************
+		 * Merge final blocks 
+		 * Run on chr-chr pair (both orients) before strict (HitsVec cannot be used because maybe only one orient)
+		 */
+		private void mergeBlocks() {
+			cntGrpMerge = 0;
+			Collections.sort(blockVec);  // Sort blocks on start coord
+			
+			// Always do for contained
+			Merge mergeObj = new Merge(Merge.CONTAINED, blockVec,  bOrient, pMindots, gap2list.get(0)); 
+			blockVec = mergeObj.mergeBlocks(0, 0); 	// returned merged contained blocks
+			
+			for (SyBlock blk : blockVec) {						
+				if (blk.hasChg) {
+					finalBlock2(blk);
+					cntTrIn++;
+				}
+			}
+			cntMgCoset += mergeObj.cntCoset; cntMgSkip += mergeObj.cntSkip;
+			if (pMerge.equals("0")) return;		// Contain only
+			
+			// 0 Contain, 1 Overlap
+			int nb = blockVec.size();
+			
+			mergeObj = new Merge(Merge.OLAP, blockVec, bOrient, pMindots, gap2list.get(0)); // T=overlap or close; send blocks; perform overlap
+		
+			if (pMerge.equals("1"))
+				blockVec = mergeObj.mergeBlocks(0, 0);  // combine small overlapping 
+			else
+				blockVec = mergeObj.mergeBlocks(gap1list.get(0), gap2list.get(0)); // return merged close blocks
+						  
+			for (SyBlock blk : blockVec) {						
+				if (blk.hasChg) {
+					finalBlock2(blk);
+					cntTrOlap++;
+				}
+			}
+			cntGrpMerge += nb-blockVec.size();
+		}
+		
+		/******************************************
+		 * Run on final chr-chr pair (both orients) after merge 
+		 * Coset blocks are not on final Merge sets unless they are merged with blocks>pMindots
+		 * So just need to recalculate #Cosets not in blocks
+		 *****************************************/
+		private void strictRemoveBlocks() {
+		try {
+			int cntRm=0;
+			for (SyBlock blk : blockVec) {
+				if (blk.nHits<pMindots) {
+					if (blk.mCase.equals("N")) {cntSetNB++; cntSetNBhits += blk.nHits;} // Could be trimmed that reduced it
+					cntRm++;
+					blk.mCase = "X";
+				}
+			}
+			if (cntRm>0) { // rebuild blockVec
+				Vector <SyBlock> xVec = new Vector <SyBlock> ();
+				for (SyBlock blk : blockVec) {
+					if (!blk.mCase.equals("X")) xVec.add(blk);
+					else blk.clear();
+				}
+				blockVec = xVec;
+			}
+		}
+		catch (Exception e) {ErrorReport.print(e, "trim block"); }
+		}
+		
+		/**************************************************
+		 * Remove blocks from chr-chr diagonal; run on final chr-chr before merge or strict
+		 */
+		private void rmDiagBlocks(){ // change to set blockVec like other methods; CAS572
+			Vector<SyBlock> out = new Vector<SyBlock>();
+			for (SyBlock b : blockVec){
+				int gap = Math.max(b.mS1,b.mS2) - Math.min(b.mE1,b.mE2); // intervalOverlap; inline CAS573
+				if (gap > 0) out.add(b);
+			}
+			blockVec = out;
+		}
 	}
 }
 

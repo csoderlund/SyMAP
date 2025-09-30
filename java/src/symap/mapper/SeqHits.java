@@ -6,6 +6,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.event.MouseEvent;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.util.TreeMap;
@@ -31,6 +32,7 @@ public class SeqHits  {
 	private static final int MOUSE_PADDING = 3;
 	private static final int HIT_OFFSET = 15, HIT_MIN_OFFSET=6; // amount line enters track; 15, 12,9,6
 	private static final int HIT_INC = 3, HIT_OVERLAP = 75; // default minimum match bases is 100, so hits should be more
+	private static final int TEXTCLOSE = 7;					// CAS574 add
 	
 	public static  Font textFont = Globals.textFont;
 	private static Font textFontBig = new Font(Font.MONOSPACED,Font.BOLD,16);
@@ -47,6 +49,7 @@ public class SeqHits  {
 	
 	private String infoMsg=""; 
 	private int cntShowHit=0, cntHighHit=0; 
+	private int lastText1=0, lastText2=0;		// Do not print text on top of another; CAS574 add
 	
 	private int nG2xN=0;
 	private boolean isOnlyG2xN=false;	
@@ -203,6 +206,8 @@ public class SeqHits  {
 	  * XXX Paint all hits 	
 	  */
 	 public void paintComponent(Graphics2D g2) {
+		lastText1=lastText2=0;
+		
 		Point stLoc1 = seqObj1.getLocation();
 		Point stLoc2 = seqObj2.getLocation();
 		int trackPos1 = mapper.getTrackPosition(seqObj1); // left or right
@@ -263,7 +268,7 @@ public class SeqHits  {
 				int set = (bHiCset) ?  dh.getCollinearSet() : dh.getBlock();
 				if (set!=0) hcolor = highMap.get(set);
 			}
-			if (dh.isHover) highHits.add(dh);
+			if (dh.isHover || dh.isQuerySelHit) highHits.add(dh); // CAS574 add isQuerySelHit
 			else {
 				dh.paintComponent(g2, trackPos1, trackPos2, stLoc1, stLoc2, hcolor, false);
 				if (bHiLight) {
@@ -590,9 +595,11 @@ public class SeqHits  {
 		   // hitLine: hit connecting seq1/seq2 chromosomes 
 			 if (!isText) {
 				 Color c = getCColor(hitDataObj.getOrients(), hcolor, true);
+				 if (c==Mapper.pseudoLineGroupColor) g2.setStroke(new BasicStroke(3)); // CAS574
 				 g2.setPaint(c); 
 				 hitWire.setLine(hw1,hw2); 
 				 g2.draw(hitWire); 
+				 if (c==Mapper.pseudoLineGroupColor) g2.setStroke(new BasicStroke(1));
 				 
 				 /* %id line: paint in seq1/2 rectangle the %id length;  */
 				 // id=19 is 5 outside rect, id=23 is 7 inside rect; id=100 is 30 far in rect
@@ -641,7 +648,7 @@ public class SeqHits  {
 				 }
 				 else mapper.setHelpText(null);
 			 }
-			 else {/* text */
+			 else {/******** text ***********/
 				 int xr=4, xl=19; 
 				 
 				 String numText1=null;  
@@ -675,12 +682,15 @@ public class SeqHits  {
 					 else	{
 						 int nl = numText1.length()-1;
 						 textX -= (xl + (nl*4));
-					 }			 
-					 g2.setPaint(Color.black);
-					 if (seqObj1.getShowBlock1stText()) g2.setFont(textFontBig);
-					 else                               g2.setFont(textFont);
-					 g2.drawString(numText1, (int)textX, (int)y1);
-					 if (seqObj1.getShowBlock1stText()) g2.setFont(textFont);
+					 }		
+					 if (Math.abs(y1-lastText1)>TEXTCLOSE) { // CAS754 add
+						 g2.setPaint(Color.black);
+						 if (seqObj1.getShowBlock1stText()) g2.setFont(textFontBig);
+						 else                               g2.setFont(textFont);
+						 g2.drawString(numText1, (int)textX, (int)y1);
+						 lastText1 = y1;
+					 }
+					
 				 }
 				
 				 String numText2=null; 
@@ -716,10 +726,13 @@ public class SeqHits  {
 					 }
 					 else textX += xr;
 					
-					 g2.setPaint(Color.black);
-					 if (seqObj2.getShowBlock1stText()) g2.setFont(textFontBig);// CAS572
-					 else                               g2.setFont(textFont);
-					 g2.drawString(numText2, (int)textX, (int)y2);					 
+					 if (Math.abs(y2-lastText2)>TEXTCLOSE) { // not sorted on this side, so may not work all the time
+						 g2.setPaint(Color.black);
+						 if (seqObj2.getShowBlock1stText()) g2.setFont(textFontBig);// CAS572
+						 else                               g2.setFont(textFont);
+						 g2.drawString(numText2, (int)textX, (int)y2);	
+						 lastText2 = y2;
+					 }
 				 }
 			 }
 			 return true;

@@ -27,7 +27,7 @@ import util.Jcomp;
 import util.Utilities;
 
 /**************************************************************
- * Block report from Manager (moved from ChrExpFrame CAS571)
+ * Block report from Manager 
  */
 
 public class Report extends JDialog  {
@@ -39,7 +39,7 @@ public class Report extends JDialog  {
 	private boolean isTSV=false, isHTML, isPop=false, isSp1=true, isSp2, useComb=true;
 	private int cntHtmlRow=0; // to determine whether to have a Goto top at bottom
 	private boolean hasGap=false; // for pre-v572 databases
-	private boolean isSelf=false; // add CAS572
+	private boolean isSelf=false; 
 	
 	private DBconn2 tdbc2 = null;
 	private Mpair mp;
@@ -186,7 +186,7 @@ public class Report extends JDialog  {
 			row.add("Species1"); row.add("Species2"); 
 			if (useComb) {row.add("C1.C2"); }
 			else         {row.add(CHR+"1"); row.add(CHR+"2"); }
-			row.add("#Block"); row.add("#Hits"); 
+			row.add("#Blocks"); row.add("#Hits"); 
 			if (outFH==null) report+=joinHead(row,""); else outFH.println(joinHead(row,""));
 			
 			String savChr1="", savChr2="";
@@ -260,8 +260,6 @@ public class Report extends JDialog  {
 			rowHead.add("AvgGap1"); rowHead.add("AvgGap2"); 
 			
 			hasGap = tdbc2.tableColumnExists("blocks", "avgGap1");// used in mkSQL too
-			if (hasGap) 
-					{rowHead.add("StdDev1"); rowHead.add("StdDev2"); }
 			
 			rowHead.add("Len1"); rowHead.add("Len2"); rowHead.add("Start1"); rowHead.add("Start2"); 
 			
@@ -388,10 +386,10 @@ public class Report extends JDialog  {
     	if (which==ONLY) {
     		sql += ", b.corr";
     		if (hasGap) {
-    			sql += ", avgGap1, avgGap2, stdDev1, stdDev2";
+    			sql += ", avgGap1, avgGap2 ";
     		}
     		else {// for pre-v572 DB
-    			sql += ", ((b.end1-b.start1+1)/(b.score-1)), ((b.end2-b.start2+1)/(b.score-1))";// 1 less gap than cover; CAS572
+    			sql += ", ((b.end1-b.start1+1)/(b.score-1)), ((b.end2-b.start2+1)/(b.score-1))";// 1 less gap than cover;
     		}
     		sql += ", (b.end1-b.start1+1), (b.end2-b.start2+1)";
     		sql += ", b.start1, b.start2";
@@ -416,7 +414,7 @@ public class Report extends JDialog  {
     
     	if (which==ONLY) {
     		if (hasGap) {
-    			typeArr.add(NUM); typeArr.add(NUM); typeArr.add(NUM); typeArr.add(NUM); // avgGap, stdDev
+    			typeArr.add(NUM); typeArr.add(NUM);  // avgGap, remove stddev CAS574
     		}
     		else {
     			typeArr.add(LFLOAT); typeArr.add(LFLOAT); // AvgGap computed

@@ -117,7 +117,7 @@ public class RWdb {
 			ps.setInt(9, b.mS2);
 			ps.setInt(10, b.mE2);
 			
-			ps.setInt(11,    b.n);
+			ps.setInt(11,    b.nHits);
 			ps.setFloat(12,  b.mCorr1);
 			ps.setInt(13, (int) b.avgGap1);
 			ps.setInt(14, (int) b.avgGap2);
@@ -147,7 +147,7 @@ public class RWdb {
 		PreparedStatement ps2 = tdbc2.prepareStatement("insert into pseudo_block_hits"
 				+ "(hit_idx, block_idx) values (?,?)");
 		for (SyBlock b : blocks) {
-			for (SyHit h : b.mHits){
+			for (SyHit h : b.hitVec){
 				ps2.setInt(1, h.mIdx);
 				ps2.setInt(2, b.mIdx);
 				ps2.executeUpdate(); 

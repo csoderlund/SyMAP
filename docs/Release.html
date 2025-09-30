@@ -68,6 +68,33 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(6-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
+<a id="v574"></a>
+<h3>Release: v5.7.4 (30-Sept-25)</h3>
+Small <ttp>Synteny</ttp> <ttx>Strict</ttx> and interface improvements.
+<p>
+<ul>
+<li><ttp>Synteny</ttp>
+<ul>
+<li><ttx>Strict</ttx>: It was blindly merging embedded collinear sets without checking to see if it maintained
+reasonable order; now it checks.
+For existing SyMAP databases: if you used the <ttx>Strict</ttx> option and you noticed this
+problem, rerun the Synteny algorithm with
+<a href="SystemHelp.html#save2" target="_blank" class="ext">Synteny Only</a>.
+<li>Tiny things like the number <ttx>Merge</ttx> was incorrect.
+</ul>
+
+<li><ttp>2D</ttp>
+<ul>
+<li>If text is shown along the chromosome (e.g <ttx>Hit#</ttx>), the code will not display a text item
+if it will overlap another; <a href="UserGuide.html#sfhit" target="_blank" class="ext">Hit Text</a>.
+<li>A Popup or Query selected hit-wire is drawn thicker than that other hit-wires.
+</ul>
+<li><ttp>Report</ttp>
+<ul><li>The computation of <ttx>avgGap</ttx> was slightly changed and <ttx>stdDev</ttx> removed.
+</ul>
+</ul>
+
+
 <a id="v573"></a>
 <h3>Release: v5.7.3 (18-Sept-25)</h3>
 Small interface improvements.

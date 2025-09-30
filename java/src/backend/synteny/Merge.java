@@ -13,79 +13,81 @@ import util.ErrorReport;
  **********************************************************/
 
 public class Merge {
-	protected final static int CONTAINED=1, CLOSE=2, OLAP=3;
-	private int rel = 1;					
-	private boolean bOrient;			// User set variable
-	protected int cntCoset=0;
+	protected final static int CONTAINED=1, OLAP=2, COSET=3; 
+	private int action = 1;					
+	private boolean bOrient;			// User set variable; 
+	protected int cntCoset=0, cntSkip=0;
 
 	private Vector <SyBlock> blockVec;	// input all blocks, return merge blocks
 	
-	private int gap1, gap2, mindots;
+	private int gap1, gap2, mindots, fullGap2;
 	
 	private Graph graph;
 	
-	protected Merge(Vector <SyBlock> blockVec, int rel, boolean bOrient) {
+	protected Merge( int action, Vector <SyBlock> blockVec, boolean bOrient, int mindots, int fullGap2) {
+		this.action = action;
 		this.blockVec = blockVec;
-		this.rel = rel;
 		this.bOrient = bOrient;
+		this.mindots = mindots;	
+		this.fullGap2 = fullGap2;
 		
 		for (SyBlock blk : blockVec) blk.hasChg=false;
 	}
 	/***************************************************
 	 * Merge blocks; Contained - gap isn't used; Overlap - gap is 0; Close - gap is >0
 	 */
-	protected Vector<SyBlock> mergeBlocks(int gap1, int gap2, int mindots) { 
+	protected Vector<SyBlock> mergeBlocks(int gap1, int gap2) { 
 		this.gap1 = gap1; this.gap2 = gap2; 
-		this.mindots = mindots;			
 		
-		int nprev = blockVec.size() + 1;
-
-		while (nprev > blockVec.size()){
-			nprev = blockVec.size();
-			blockVec = mergeBlocksSingleFixed();   
-		}	
+		int loop=0;
+		int prevSz = blockVec.size() + 1;
+		while (prevSz > blockVec.size()){
+			prevSz = blockVec.size();
+			blockVec = mergeBlocksSingleFixed(loop++);   
+		}
 		return blockVec;
 	}
-	// Used with bStrict and/or bOrient
-	private Vector<SyBlock> mergeBlocksSingleFixed() { 
+	
+	private Vector<SyBlock> mergeBlocksSingleFixed(int loop) { 
 	try {
 		if (blockVec.size() <= 1) return blockVec;
-		
 		graph = new Graph(blockVec.size());
 	
 		for (int i = 0; i < blockVec.size(); i++) { 
-			SyBlock bi = blockVec.get(i);
+			SyBlock bA = blockVec.get(i);
 			
 			for (int j = i + 1; j < blockVec.size(); j++){
-				SyBlock bj = blockVec.get(j);
+				SyBlock bZ = blockVec.get(j);
+		
+				if (bOrient && !bA.orient.equals(bZ.orient)) continue;
 				
-				if (bOrient && !bi.orient.equals(bj.orient))continue;
-				if (bi.n < mindots && bj.n < mindots) continue; // to merge two coset blocks need some analysis
+				if (action!=COSET && (bA.nHits < mindots && bZ.nHits < mindots)) continue; // Strict merges cosets; CAS574 add
 				
-				if (rel==CONTAINED) {// only merge if contained on both sides
-					if (isContained(bi.mS1,bi.mE1,bj.mS1,bj.mE1) && 
-						isContained(bi.mS2,bi.mE2,bj.mS2,bj.mE2))
+				if (action==CONTAINED) { // only merge if contained on both sides
+					if (isContained(bA.mS1,bA.mE1,bZ.mS1,bZ.mE1) && 
+						isContained(bA.mS2,bA.mE2,bZ.mS2,bZ.mE2))
 					{
-						graph.addNode(i,j);
+						boolean isGood = true;
+						if (bA.nHits<mindots || bZ.nHits<mindots) { // Strict cosets has <mindots; merged cosets can be >mindots; CAS574 add
+							isGood = (bA.nHits<bZ.nHits) ? bZ.fitStrict(bA, fullGap2, loop==0) : bA.fitStrict(bZ, fullGap2, loop==0);
+							if (!isGood) cntSkip++; else cntCoset++;
+						}		
+						if (isGood) graph.addNode(i,j);
 					}	
 				}
-				else if (rel==OLAP) { // gap=0 for overlap only, or >0 for close or overlap
-					if (isOverlap(bi.mS1,bi.mE1,bj.mS1,bj.mE1, gap1) && 
-						isOverlap(bi.mS2,bi.mE2,bj.mS2,bj.mE2, gap2))
+				else if (action>=OLAP) { // gap=0 for overlap only, or >0 for close or overlap
+					if (action!=COSET && (bA.nHits<mindots || bZ.nHits<mindots)) continue; // fitStrict only checks for contained
+					
+					if (isOverlap(bA.mS1,bA.mE1,bZ.mS1,bZ.mE1, gap1) && 
+						isOverlap(bA.mS2,bA.mE2,bZ.mS2,bZ.mE2, gap2))
 					{
 						graph.addNode(i,j);
 					}
 				}
-				else if (rel==CLOSE){ // close only, and works in conjunction with bOrient=T and mindots=0
-					if (isClose(bi.mS1,bi.mE1,bj.mS1,bj.mE1, gap1) && 
-						isClose(bi.mS2,bi.mE2,bj.mS2,bj.mE2, gap2))
-					{
-						graph.addNode(i,j);
-					}			
-				}
 			}
 		}
-		return processGraph();
+		// Return blockVec with merged blocks
+		return mergeGraph();
 	} 
 	catch (Exception e) {ErrorReport.print(e, "Merge blocks"); return null; }
 	}
@@ -96,11 +98,6 @@ public class Merge {
 		int gap = Math.max(s1,s2) - Math.min(e1,e2);
 		return (gap <= max_gap);
 	}
-	// if bOrient or bStrict (gap>0)
-	private boolean isClose(int s1,int e1, int s2, int e2, int max_gap) {
-		int gap = Math.max(s1,s2) - Math.min(e1,e2);
-		return (gap>0 && gap <= max_gap);
-	}
 	// always run
 	private boolean isContained(int s1,int e1, int s2, int e2){
 		return ((s1 >= s2 && e1 <= e2) || (s2 >= s1 && e2 <= e1));
@@ -109,7 +106,7 @@ public class Merge {
 	// Implements a directed graph and transitive closure algorithm
 	// This does not look at blk.n, and can merge a big n into a very small n
 	**************************************************************/
-	private Vector<SyBlock> processGraph() {
+	private Vector<SyBlock> mergeGraph() {
 		HashSet<TreeSet<Integer>> blockSets = graph.transitiveClosure();
 		Vector<SyBlock> mergedBlocks = new Vector<SyBlock>();
 		
@@ -119,13 +116,6 @@ public class Merge {
 				if (bnew == null) 
 					bnew = blockVec.get(i);
 				else {
-					if (SyntenyMain.bTrace) {
-						if (bnew.mCase=="N" || blockVec.get(i).mCase=="N") cntCoset++;
-						if (rel==CLOSE) {
-							bnew.tprt("Merge1");
-							blockVec.get(i).tprt("Merge2");
-						}
-					}
 					bnew.mergeWith(blockVec.get(i));
 				}
 			}
