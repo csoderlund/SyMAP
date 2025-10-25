@@ -154,9 +154,10 @@ was aligned with <tt>Demo_Seq2</tt>, resulting in the dot plot shown on the righ
 <h3>Self-synteny: Demo-Seq</h3>
 
 <table class="tx">
-<tr><td colspan="2"><tt>Demo-Seq</tt> has been run against itself, resulting in the <ttb>Dot Plot</ttb> shown on the lower right.
-There are a few off-diagonal blocks, which may indicate repetitiveness (but these blocks are probably
-too small to be meaningful).
+<tr><td colspan="2"><tt>Demo-Seq</tt> has been run against itself.
+There are a few blocks, but these blocks are probably too small to be meaningful.
+The blocks below the diagonal are mirrored above
+the diagonal, e.g. 3.5.1 and 5.3.1 are the same.
 <tr> <td style="vertical-align: text-top; width: 670px">
 <a href="img/demoSumSelf.png">
     <img src="img/demoSumSelf.png" alt="demo Sum Self" style="border: 1px solid black; width: 340px"></a>
@@ -217,7 +218,9 @@ Finish Synteny                       2s
 <b>Algo1 verbose</b>
 
 <pre><small>
-Loading annotations
+Start calculating cluster hits for demo_seq and demo_seq2
+   Alignment files in data/seq_results/demo_seq_to_demo_seq2/align/
+   Loading annotations
     10,108 demo_seq genes
     10,137 demo_seq2 genes
    Scan files to create candidate genes from hits

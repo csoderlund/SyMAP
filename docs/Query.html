@@ -634,7 +634,7 @@ The single genes table only has the
 <ttl>Gene Info</ttl> and <ttl>Annotation</ttl> columns, with one additional column, as follows.
 <table class="tx">
 	<tr><td style="vertical-align: text-top;"><ttx>NumHits</ttx>
-	<td>This is the number of hits to the gene in the ENTIRE databases, except for SELF synteny.
+	<td>This is the number of hits to the gene in the ENTIRE databases, including SELF synteny.
 </table>
 For example:
 <table><tr>
@@ -652,7 +652,7 @@ For example:
 	<td>Gene #1.2 is an orphan for Arab-Cabb but has a count of 1 because it is not an orphan in Arab-Brap.
 	<br>It is not listed in the Arab-Brap-Cabb table because Arab-Brap has a hit to it.
 </table>
-
+Note: For self-synteny, the second row of columns will be empty.
 <a id="save"></a>
 <h4>2.3 Columns and order shown</h4>
 

@@ -62,7 +62,7 @@ Referenced external docs</u>
 <li><a href="input/index.html" class="ext" target="_blank">Input</a>
 <li><a href="SystemHelp.html" class="ext" target="_blank">Parameters and Interface</a>
 <li><a href="MUMmer.html" class="ext" target="_blank">MUMmer with SyMAP</a>
-<li><a href="Demo.html" class="ext" target="_blank">Demo Results; Synteny Results</a>
+<li><a href="Demo.html" class="ext" target="_blank">Results: Demo and Synteny</a>
 <li><a href="TroubleShoot.html" class="ext" target="_blank">Trouble-shoot</a>
 </ul>
 1. <u>Introduction</u>
@@ -88,7 +88,7 @@ Referenced external docs</u>
 <li style="margin: 0.4em 0;"><a href="#demo">Running the demo</a>
 <li style="margin: 0.4em 0;"><a href="#demoseq">Two genome synteny</a>
 <li style="margin: 0.4em 0;"><a href="#draft">Draft ordering</a>
-<li style="margin: 0.4em 0;"><a href="#demoself">Self synteny</a>
+<li style="margin: 0.4em 0;"><a href="#demoself">Self-synteny</a>
 </ul>
 5. <u>New project</u> <!-- #create ref in code -->
 <ul>
@@ -97,7 +97,7 @@ Referenced external docs</u>
 <li style="margin: 0.4em 0;"><a href="#load">Load project</a>
 <li style="margin: 0.4em 0;"><a href="#ans">Align&Synteny (A&S)</a>
 <li style="margin: 0.4em 0;"><a href="#draft2">Draft ordering</a>
-<li style="margin: 0.4em 0;"><a href="#self">Self synteny</a>
+<li style="margin: 0.4em 0;"><a href="#self">Self-synteny</a>
 <li style="margin: 0.4em 0;"><a href="#cancel">Cancel</a>
 </ul>
 6. <u>General</u>
@@ -139,7 +139,7 @@ Its features include the following:
 	<ul>
 		<li>Find synteny between two sequenced eukaryotic genomes with optional annotation.
 		<li>Draft sequence ordering by synteny, i.e. align a draft genome to a fully sequence (not draft-to-draft).
-		<li>Self synteny.
+		<li>Self-synteny.
 	</ul>
 	<li><i>Query and view</i>
 	<ul>
@@ -319,7 +319,8 @@ SyMAP has been tested on the following:
 <li><i>Arabidopsis thaliana</i> (5 chr, 119Mb), <i>Brassica rapa</i> (10 chr, 297Mb),
 <i>Brassica oleracea</i> (9 chr, 447Mb).
 <p>
-<li>Self-synteny of <i>Arabidopsis thaliana</i> (5 chr, 119Mb) and <i>Brassica rapa</i> (10 chr, 297Mb).
+<li>Self-synteny of <i>Arabidopsis thaliana</i> (5 chr, 119Mb), <i>Brassica rapa</i> (10 chr, 297Mb),
+<i>Oryza Sativa</i> (12 chr, 373Mb) and <i>Zea Mays</i> (10 chr, 2.1Gb).
 <p>
 <li>Draft <i>Prunus yedoensis</i> (250 scaffolds, 408Mb) and Peach <i>Prunus persica</i> (8 chr, 227Mb).
 <br>Pyeudo.Peach was the result of ordering Pyedo against peach (8 chr, 270Mb).
@@ -328,21 +329,24 @@ SyMAP has been tested on the following:
 the SyMAP output, which uses the Java system time functions (clock times
 are greater than the Java CPU system times). Repeated execution can result in times
 varying by approximately +/-5secs.  All the following results use 4 CPUs (thread/core) and are amino
-acid alignment except for two self-syntenies, which used 6 CPU and nucleotide alignment.
+acid alignment except for the three self-syntenies, which used nucleotide alignment and 6 CPUs.
 
 <p><table class="tx">
 	<tr><td><u>Species</u><td><u>MUMmer</u><td><u>SyMAP</u><td>&nbsp;&nbsp;&nbsp;<td><u>Size</u>
 	<tr><td>Hsa x Mus (All chr)<td><b>30h:45m</b><td> 5m:13s<td>&nbsp;<td>3Gb x 2.7Gb, large genomes
-	<tr><td>Hsa x self (All chr)<td><b>7h:45m</b><td>8m:28s<td>&nbsp;<td>3Gb x 3Gb, NT align
+	<tr><td>Hsa x self (All chr)<td><b>7h:45m</b><td>8m:28s<td>&nbsp;<td>3Gb x 3Gb
  	<tr><td>Hsa x Pan (partial)<td><b>16h:40m</b><td> 0m:35s<td>&nbsp;<td>478Mb x 447Mb, closely related
     <tr><td>Hsa x Mus (parital)<td>0h:55m<td> 0m:04s<td>&nbsp;<td>478Mb x 504Mb
 	<tr><td>A.thal x B.oler<td>0h:31m<td> 1m:14s<td>&nbsp;<td>119Mb x 447Mb
 	<tr><td>B.raba x B.oler<td><b>4h:23m</b><td> 4m:12s<td>&nbsp;<td>297Mb x 447Mb, closely related
-	<tr><td>B.raba x self  <td>0h:15m <td>1m:17s<td>&nbsp;<td>297Mb x 297Mb, NT align
 	<tr><td>Peach x Pyedo<td>0h:44m<td> 1m:29s<td>&nbsp;<td>227Mb x 408Mb, Pyedo ordered by peach
 	<tr><td>Peach x Pyedo.Peach<td>0h:40m<td> 0m:20s<td>&nbsp;<td>227Mb x 270Mb
+	<tr><td>B.raba x self  <td>0h:15m <td>1m:17s<td>&nbsp;<td>297Mb x 297Mb
+	<tr><td>Maize x self<td><b>&gt;48hr</b><td> 28m:52s<td>&nbsp;<td>2.1Gb x 2.1Gb, duplication
 </table>
-
+The exact time for running MUMmer on Maize x self is approximate; there were 55 alignments that took
+anywhere between 5hr and 1hr each; I did not run it all at once. Maize has a lot of duplication, hence, the
+longer time.
 <p><li> MacOS x86_64 with 64Gb has been tested on 2-4 above. For comparison, the following A&S was computed
 with 4 CPUs; note the longer time for the synteny computation on the older Mac machine.
 
@@ -523,7 +527,7 @@ This is useful if you have multiple SyMAP databases.
 <td><a href="#rundemo">Running the demo</a>
 <td><a href="#demoseq">Two genome synteny</a>
 <td><a href="#draft">Draft ordering</a>
-<td><a href="#self">Self synteny</a>
+<td><a href="#self">Self-synteny</a>
 <td style="text-align: right"><a href="#top">Go to top</a>
 </table>
 
@@ -663,15 +667,15 @@ the <ttx>Demo_Draft.Demo_Seq2</ttx> display name can be shortened.
 </table>
 
 <a id="demoself"></a>
-<h3>Demo self synteny</h3>
+<h3>Demo self-synteny</h3>
 
 <table>
 <tr>
-<td>To perform self synteny, select the cell for <ttx>Demo_seq</ttx> row and column (it turns green) followed by
+<td>To perform self-synteny, select the cell for <ttx>Demo_seq</ttx> row and column (it turns green) followed by
 <ttb>Selected Pair</ttb>.
-This computes very few blocks, as shown in
-<a href="Demo.html#self" class="ext" target="_blank">Demo self synteny</a>.
-<td><a href="img/self.png"><img src="img/self.png" alt="self" style="border: 1px solid black; width: 370px"></a>
+This computes a few tiny 'iffy' blocks, as described in
+<a href="Demo.html#self" class="ext" target="_blank">Demo self-synteny</a>. See <a href="#self">A.thal self</a> for a better example.
+<td><a href="img/selfDemo.png"><img src="img/selfDemo.png" alt="self" style="border: 1px solid black; width: 370px"></a>
 </table>
 
 <br>
@@ -809,7 +813,7 @@ to run the Align&amp;Synteny.
 <p><u>Align&amp;Synteny files</u>:
 The result files are in the following directory:
 <pre>
-   /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/align
+   /data/seq_results/&lt;project1&gt;-to-&lt;project2&gt;/align
 </pre>
 As mentioned in <a href="#disk">Disk</a>, after the database is complete, these can be removed.
 However, sometimes SyMAP version updates require
@@ -885,34 +889,35 @@ will print out all the lengths; set the <ttx>Minimum length</ttx> to the 150th l
 
 <!-------------------------------------------------------------------->
 <a id="self"></a>
-<h3>Self synteny</h3>
+<h3>Self-synteny</h3>
 
 <table>
 <tr>
-<td>To perform self synteny, select the cell for the same project (it turns green) followed by <ttb>Selected Pair</ttb>
-(the <ttb>All Pairs</ttb> option does not include self synteny).
+<td>To perform self-synteny, select the cell for the same project (it turns green) followed by <ttb>Selected Pair</ttb>
+(the <ttb>All Pairs</ttb> option does not include self-synteny).
 <td><a href="img/self.png"><img src="img/self.png" alt="self" style="border: 1px solid black; width: 370px"></a>
 </table>
 
 By default, SyMAP uses the MUMmer 'NUCmer' program for self-alignments. Each chromosomes
 is compared to every other chromosome including itself.
-<p>The Align&amp;Synteny <a href="SystemHelp.html#pairParams" class="ext" target="_blank">
+<ul>
+<li>Chromosome to itself: The Align&amp;Synteny <a href="SystemHelp.html#pairParams" class="ext" target="_blank">
 Parameters</a> panel has an option to set <ttx>Self Args</ttx>,
-which is only used when comparing the chromosome sequence file
-to itself. Make sure that the <ttx>Cluster Hits Algorithm 1</ttx> option is selected.
-If the <ttx>Synteny Original</ttx> appears to miss an obvious block, i.e. a diagonal line of dots
-exist on the <ttp>Dot plot</ttp> without a block, use <ttx>Synteny Strict</ttx>.
-<p>
+which is only used when comparing the chromosome sequence file to itself.
+<li>Make sure that the <ttx>Cluster Hits Algorithm 1</ttx> option is selected.
+<li>If the <ttx>Synteny Original</ttx> appears to miss an obvious block (i.e. a diagonal line of dots
+exists on the <ttp>Dot plot</ttp> without a block), use <ttx>Synteny Strict</ttx>.
+</ul>
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
 <p>A better demonstration than the demo is to download
 Arabidopsis thaliana from NCBI, convert it with the
 <a href="./input/ncbi.html" target="_blank" class="ext">
-NCBI convert script</a>, and run the self synteny. It took 16 minutes with one processor on a Mac Mini (2018) with
+NCBI convert script</a>, and run the self-synteny. It took 16 minutes with one processor on a Mac Mini (2018) with
 64Gb main memory. The dot plot is shown on the right (click on the image for a closeup view).
-<p>The <ttp>Dot plot</ttp> is symmetric, with the same block on both sides of the diagonal. Self-synteny
-is not supported as well as two genome synteny in the graphical interface; see <a href="UserGuide.html#self"  class="ext" target="_blank">
-Self-synteny</a> graphics.
+<p>The <ttp>Dot plot</ttp> is symmetric, with the same block on both sides of the diagonal.
+For self-synteny query and display, see <a href="UserGuide.html#self"  class="ext" target="_blank">
+Self-synteny</a>
 <td><a href="img/arabSelf.png"><img src="img/arabSelf.png" alt="arab self"
 style="border: 1px solid black; width: 370px"></a>
 </table>
@@ -994,7 +999,7 @@ are treated the same as the target; i.e. generally there will be more sequence f
 <p>
 <i>Anchor Clustering and Filtering:</i><br>
 The raw anchor set consists of the hits found by MUMmer, which are filtered and clustered for input to the synteny algorithm.
-<p><u>Algorithm 1 (modified original)</u> is good for medium-to-high divergent genomes, aligning draft sequence, self synteny,
+<p><u>Algorithm 1 (modified original)</u> is good for medium-to-high divergent genomes, aligning draft sequence, self-synteny,
 and genomes with little or no annotation.
 The MUMmer hits are first clustered into gene, or putative-gene hits. This is
 done by clustering the hit regions on each sequence, and then defining new "gene"

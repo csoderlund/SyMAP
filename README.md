@@ -1,12 +1,10 @@
 ### SyMAP (Synteny Mapping and Analysis Program) ###
 
-**Description**: SyMAP is a software package for detecting, displaying, and querying syntenic relationships between a fully sequenced genome and   
-(i) another sequenced genome, (ii) draft sequence, and (iii) self-synteny.  It is designed for divergent eukaryotic genomes (not bacteria).
+**Description**: SyMAP is a software package for detecting, displaying, and querying syntenic relationships between a fully sequenced genome and (i) another sequenced genome, (ii) draft sequence, and (iii) self-synteny.  It is designed for divergent eukaryotic genomes (not bacteria).
 
 **Download SyMAP tarball**: https://github.com/csoderlund/SyMAP/releases. The SyMAP tarball contains the executable jar file, all necessary external software, and demo files.
 
-**Requirements**: Java v17 or later and MySQL (or MariaDB). SyMAP uses [MUMmer](https://mummer4.github.io) for the sequence to sequence alignment, which requires Perl.   
-SyMAP has been tested on Linux and MacOS.
+**Requirements**: Java v17 or later and MySQL (or MariaDB). SyMAP uses [MUMmer](https://mummer4.github.io) for the sequence to sequence alignment, which requires Perl. SyMAP has been tested on Linux and MacOS.
 
 **To use**: 
 1. Download the latest SyMAP tarball.

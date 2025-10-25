@@ -403,7 +403,7 @@ the group circle of ribbon colors to your desire.
 	<td style="vertical-align:text-top;">
 	<ttp>Dot plots</ttp> are available for two-genomes, <a href="#dot3">multiple-genomes</a> and
 <a href="#alignment_display_dot">multiple-chromosomes</a>. This describes the two-genome view,
-which also applies to the other two views.
+where the rules also apply to the other two views.
 <p>Dots represent anchors (<i>hits</i>). A blue box indicates a
 	<i>Synteny Block</i>. A chromosome pair is represented by a <i>cell</i>.
 
@@ -586,7 +586,7 @@ popups a menu as shown on the right.
 <a id="sum"></a>
 <h3>Summary</h3>
 
-The <ttb>Explain</ttb> button on this view explains the different columns.
+The <ttb>Explain</ttb> button on this view explains the different numbers.
 <p><a href="img/sum-2g.png">
 	<img src="img/sum-2g.png" alt="sum-two-genome" style="border: 1px solid black; width: 550px"></a>
 
@@ -600,10 +600,10 @@ On the <ttp>Manager</ttp> panel, select a pair cell followed by <ttp>Report</ttp
 This creates a report on the <ttl>Blocks</ttl>.
 
 <p><ttl>Reference</ttl>: The <ttl>Reference</ttl> determines what species chromosomes and start coordinates will be sorted for display.
-In the HTML file, the reference columns headings for <ttx>Species</ttx> and <ttx>Chr</ttx> will
-be in bold; in the TSV file, they will be in upper case.
+In the HTML file, the reference columns heading for <ttx>Chr</ttx> will
+be in bold; in the TSV file, it will be upper case.
 <p><ttl>Output</ttl>: The <ttx>Popup</ttx> popups a window with an HTML formated report.
-The <ttx>HTML File</ttx> is written in a way that is easily edited, and the <ttx>TSV File</ttx> can be loaded into Excel.
+The <ttx>HTML File</ttx> is written in a way that the file is easily edited. The <ttx>TSV File</ttx> can be loaded into Excel.
 <p><ttl>Combine C1.C2.B</ttl> If checked, the values for <ttx>Chr1</ttx>, <ttx>Chr2</ttx> and <ttx>Block</ttx>
 will be one column where the values are separated by ".". If unchecked, these 3 values will have
 their own column.
@@ -612,38 +612,59 @@ their own column.
 </table>
 <p>The following 3 options are available, where the top of an HTML table is shown for each:
 
-<p>&#8858; <ttl>Blocks plus</ttl>: <small>(<ttl>Reference</ttl> is A.thal, <ttl>Combined</ttl> unchecked)</small>
+<p>&#8858; <ttl>Blocks plus</ttl>:
+<small>(<ttl>Reference</ttl> is A.thal, <ttl>Combined</ttl> unchecked); first two lines of report</small>
 <table class='ty' style="font-size: 10px; text-align: right;">
-<tr style="background-color: lightgrey;"><td style="text-align: center"><b>Species1</b><td style="text-align: center">Species2<td style="text-align: center"><b>Chr01</b><td style="text-align: center">ChrX<td style="text-align: center">Block<td style="text-align: center">#Hits<td style="text-align: center">PearsonR<td style="text-align: center">AvgGap1<td style="text-align: center">AvgGap2<td style="text-align: center">Len1<td style="text-align: center">Len2<td style="text-align: center">Start1<td style="text-align: center">Start2
-<tr><td>A.thal<td>B.rapa<td>01<td>01<td>1<td>26<td>+0.992<td>30,798<td>98,780<td>826,961<td>2,531,385<td>3,104,633<td>17,277,988
-<tr><td>A.thal<td>B.rapa<td>01<td>01<td>2<td>8<td>-0.988<td>100,814<td>85,161<td>721,937<td>613,967<td>10,855,813<td>5,391,401
+<tr style="background-color: lightgrey;"><td style="text-align: center"><b>Chr01</b><td style="text-align: center">ChrX
+    <td style="text-align: center">Block<td style="text-align: center">#Hits<td style="text-align: center">PearsonR<td style="text-align: center">A.thal<br>AvgGap1<td style="text-align: center">B.rapa<br>AvgGap2<td style="text-align: center">A.thal<br>Length1<td style="text-align: center">B.rapa<br>Length2<td style="text-align: center">A.thal<br>Start1<td style="text-align: center">B.rapa<br>Start2
+<tr><td>01<td>01<td>1<td>26<td>0.992<td>30,798<td>98,780<td>826,961<td>2,531,385<td>3,104,633<td>17,277,988
+<tr><td>01<td>01<td>2<td>8<td>-0.988<td>100,814<td>85,161<td>721,937<td>613,967<td>10,855,813<td>5,391,401
 </table>
 <p>
 <ul>
-<li>The <ttx>PearsonR</ttx> is the approximate linearity of the hits in the chain as measured
+<li><ttx>Chr01</ttx> and <ttx>ChrX</ttx>: The reference chromosome column heading will
+specify the chormosome (e.g. <small><b>Chr01</b></small>)
+where the non-reference will use <ttx>ChrX</ttx> for the chromosome as it will change.
+<br>The column heading are displayed again each time the reference chromosome changes.
+<li><ttx>PearsonR</ttx> is the approximate linearity of the hits in the chain as measured
 by the Pearson correlation coefficient; a negative PCC is an inverted block.
-<li>The <ttx>AvgGap</ttx> is <tt>sum(gaps-between-genes)/number-gaps</tt>.
-<li><ttx>Chr01</ttx> and <ttx>ChrX</ttx>: The column heading are displayed again each time the reference chromosome changes. The
-reference chromosome column heading will specify the chormosome (e.g. <ttx>Chr01</ttx>)
-where the non-reference will use X for the chromosome as it will change.
+<li><ttx>AvgGap</ttx> is <tt>sum(gaps-between-genes)/number-gaps</tt>.
 </ul>
-<p>&#8858; <ttl>Blocks with gene info</ttl>: <small>(<ttl>Reference</ttl> is B.rapa, <ttl>Combined</ttl> checked)</small>
+<p>&#8858; <ttl>Blocks with gene info</ttl>:
+<small>(<ttl>Reference</ttl> is B.rapa, <ttl>Combined</ttl> checked); first two lines of report.</small>
 <table class='ty' style="font-size: 10px; text-align: right;">
-<tr style="background-color: lightgrey;"><td style="text-align: center">Species1<td style="text-align: center"><b>Species2</b><td style="text-align: center">Cx.<b>01</b>.B<td style="text-align: center">#Hits<td style="text-align: center">PearsonR<td style="text-align: center">Start1<td style="text-align: center">End1<td style="text-align: center">Start2<td style="text-align: center">End2<td style="text-align: center">#Genes1<td style="text-align: center">%Genes1<td style="text-align: center">#Genes2<td style="text-align: center">%Genes2
-<tr><td>A.thal<td>B.rapa<td>01.01.1<td>26<td>0.992<td>3,104,633<td>3,931,593<td>17,277,988<td>19,809,372<td>236<td>0.110<td>218<td>0.119
-<tr><td>A.thal<td>B.rapa<td>01.01.2<td>8<td>-0.988<td>10,855,813<td>11,577,749<td>5,391,401<td>6,005,367<td>159<td>0.050<td>102<td>0.078
+<tr style="background-color: lightgrey;"><td style="text-align: center">Cx.<b>01</b>.B<td style="text-align: center">#Hits
+<td style="text-align: center">PearsonR<td style="text-align: center">A.thal<br>Start1<td style="text-align: center">A.thal<br>End1<td style="text-align: center">B.rapa<br>Start2<td style="text-align: center">B.rapa<br>End2<td style="text-align: center">A.thal<br>#Genes1<td style="text-align: center">A.thal<br>%Genes1<td style="text-align: center">B.rapa<br>#Genes2<td style="text-align: center">B.rapa<br>%Genes2
+<tr><td>01.01.2<td>8<td>-0.988<td>10,855,813<td>11,577,749<td>5,391,401<td>6,005,367<td>159<td>0.050<td>102<td>0.078
+<tr><td>01.01.8<td>14<td>+0.996<td>22,899,952<td>23,962,187<td>6,598,655<td>7,843,377<td>275<td>0.051<td>190<td>0.074
 </table>
-
-<p>The <ttx>Genes1</ttx> column is the number of genes from <ttx>Species1</ttx> in the block and <ttx>%Genes1</ttx>
+<p>
+<ul>
+<li><ttx>Cx.O1.B</ttx>:  The reference chromosome column heading will be in bold (e.g. <small><b>01</b></small>)
+where the non-reference will use <ttx>Cx</ttx> for the chromosome as it will change.
+<br>The column heading are displayed again each time the reference chromosome changes.
+<li><ttx>Genes1</ttx> column is the number of genes from <ttx>Species1</ttx> in the block and <ttx>%Genes1</ttx>
 is the percentage of genes that have a hit.
 
+</ul>
+<table class="tx">
+<tr><td style="vertical-align: text-top;">
+<p>&#8858; <ttl>Blocks summary</ttl>:
+(<ttl>Reference</ttl> is A.thal, <ttl>Combined</ttl> unchecked)</small>.
+<br>This includes the title and first two lines of report.
+<p>The <ttx>#Blocks</ttx> and <ttx>#Hits</ttx> are the sum of blocks and hits
+<br>for the chromosome pair.
 
-<p>&#8858; <ttl>Blocks summary</ttl>: <small>(<ttl>Reference</ttl> does not matter, <ttl>Combined</ttl> unchecked)</small>
+<td>
+<center><small><b>SyMAP Synteny Blocks for <br>A.thal and B.rapa</b></small>
+<p>
 <table class='ty' style="font-size: 10px; text-align: right;">
-<tr style="background-color: lightgrey;"><td><b>Species1</b><td>Species2<td><b>Chr1</b><td>Chr2<td>#Blocks<td>#Hits
-<tr><td>A.thal<td>B.rapa<td>01<td>01<td>8<td>412
+<tr style="background-color: lightgrey;"><td style="text-align: center"><b>Chr1</b><td style="text-align: center">Chr2<td style="text-align: center">#Blocks<td style="text-align: center">#Hits
+<tr><td>01<td>01<td>8<td>334
+<tr><td>01<td>02<td>11<td>859
 </table>
-<p>The <ttx>#Blocks</ttx> and <ttx>#Hits</ttx> are the sum of blocks and hits for the chromosome pair.
+</table>
+
 <!--------------------------------------------------------------------------------------->
 <!------------------------------------------------------------------------------------->
 <!------------------------------------------------------------------------------------->
@@ -1165,11 +1186,16 @@ will be un-selectable.
 <tr><td>
 <table class="ty">
 <tr><td colspan="2"><ttl>Highlight</ttl>
-<tr><td><ttx>Gene popup</ttx>
+<tr><td>&nbsp;&nbsp;<ttx>Gene popup</ttx>
 <td> Highlight the gene when its <a href="#ginfo">Gene Popup</a> is displayed.
-The highlight color can be changed with the <a href="#wheel">Color Wheel</a>.
 
-<tr><td colspan="2"><ttl>Show</ttl>
+<tr><td><ttl>Show Gene</ttl><td>These are toggles, they can all be selected simultaneously
+(except only one of the two instances of <ttx>Gene#</ttx> and <ttx>Annotation</ttx> can be checked.).
+
+<tr><td style="vertical-align: text-top;"><ttx>Delimiter</ttx><td> When the zoom is close enough to view the exons, a black line will
+be drawn over the top end of each gene. This helps delimit genes that do not overlap (so are not staggered),
+but are close enough to appear one gene (see <a href="#ex2d">example below</a>).
+
 <tr><td style="vertical-align: text-top;"><ttx>Gene#</ttx><td>Display the <ttx>Gene#</ttx>
 beside each gene. This is the SyMAP assigned number;
 see <a href="#term2">Terminology</a> for more details.
@@ -1181,14 +1207,29 @@ see <a href="#term2">Terminology</a> for more details.
 
 <tr><td style="vertical-align: text-top;"><ttx>Has Hit</ttx><td>
 This <ttx>Gene#</ttx> and <ttx>Annotation</ttx> will only show if the gene has a hit.
-
-<tr><td style="vertical-align: text-top;"><ttx>Gene delimiter</ttx><td> When the zoom is close enough to view the exons, a black line will
-be drawn over the top end of each gene. This helps delimit genes that do not overlap (so are not staggered),
-but are close enough to appear one gene (see <a href="#ex2d">example below</a>).
 </table>
 <td>
 <a href="img/seqFilter.png">
 	<img src="img/seqFilter.png" alt="sequence filter" style="border: 1px solid black; width: 350px"></a>
+</table>
+
+<a id="sfhit"></a>
+<table class="ty">
+<tr><td><ttl>Show Text</ttl><td> Show the value along the edge of the sequence track over
+the hit-wire near the edge of the track. A value of '0' is not shown. Only one option can be selected.
+<br><b>Note</b>: The code will not draw text if it will be on top of another; however,
+this gets messed up when there are inverted hits among non-inverted hits.
+<td>Symbol
+<tr><td><ttx>Block# 1st</ttx><td>Put the block number above the first hit of the visible block. <td>&nbsp;&nbsp;bN
+<tr><td><ttx>Block# All</ttx><td>If the hit is in a block, its block number will be shown. <td>&nbsp;&nbsp;bN
+<tr><td><ttx>Collinear#</ttx><td>If the gene-hit is assigned to a collinear set,
+its collinear set number will be shown. <td>&nbsp;&nbsp;cN
+<tr><td><ttx>Hit#</ttx><td>The number assigned by SyMAP for the hit.
+<br>These are numbered sequentially
+along the chromosome with the alphabetically lesser name; see <a href="#term2">Terminology</a>.<td>&nbsp;&nbsp;#N
+<tr><td><ttx>Hit %Id</ttx><td>The score value corresponds to the %Identity value
+for the hit from the MUMmer anchor file. <td>&nbsp;&nbsp;N%
+<tr><td><ttx>None</ttx><td>Nothing is shown (default).<td>&nbsp;
 </table>
 
 <a id="sfgrap"></a>
@@ -1214,24 +1255,7 @@ the other gene options are disabled).
 <sup>1</sup> The <ttx>Gaps</ttx> and <ttx>Centromere</ttx> options are disabled in the image above, as there are none for this chromosome.
 <p>
 
-<a id="sfhit"></a>
-<table class="ty">
-<tr><td><ttl>Hit Text</ttl><td> Show the value along the edge of the sequence track over
-the hit-wire near the edge of the track. A value of '0' is not shown.
-<br><b>Note</b>: The code will not draw text if it will be on top of another; however,
-this gets messed up when there are inverted hits among non-inverted hits.
-<td>Symbol
-<tr><td><ttx>Block# 1st</ttx><td>Put the block number above the first hit of the visible block. <td>&nbsp;&nbsp;bN
-<tr><td><ttx>Block# All</ttx><td>If the hit is in a block, its block number will be shown. <td>&nbsp;&nbsp;bN
-<tr><td><ttx>Collinear#</ttx><td>If the gene-hit is assigned to a collinear set,
-its collinear set number will be shown. <td>&nbsp;&nbsp;cN
-<tr><td><ttx>Hit#</ttx><td>The number assigned by SyMAP for the hit.
-<br>These are numbered sequentially
-along the chromosome with the alphabetically lesser name; see <a href="#term2">Terminology</a>.<td>&nbsp;&nbsp;#N
-<tr><td><ttx>Hit %Id</ttx><td>The score value corresponds to the %Identity value
-for the hit from the MUMmer anchor file. <td>&nbsp;&nbsp;N%
-<tr><td><ttx>None</ttx><td>Nothing is shown (default).<td>&nbsp;
-</table>
+
 
 <a id="sfcoor"></a>
 <br>
@@ -1276,7 +1300,9 @@ The usage of this feature is complex, see
 <table class="tx" style="width: 95%">
 <tr><td class="coltop">
 <u>Sequence Filter Popup</u>: A subset of the filters are available by right clicking in the empty space
-of the chromosome rectangle, as shown on the right.
+of the chromosome rectangle, as shown on the right. For the <ttx>Gene# with hit</ttx> and <ttx>Gene# all</ttx> options,
+just one of the two can be selected; selecting one will turn off the other if it is selected; ditto
+for the <ttx>Annotation</ttx> options.
 <p>&nbsp;
 <p>During a <ttp>Chromosome Explorer</ttp> session,
 <ttl>Sequence Filters</ttl> are reset to defaults between
@@ -1519,20 +1545,40 @@ below shows three genomes; A.thal is the reference, which can be changed with th
 
 <a id="self"></a>
 <h3>Self-synteny</h3>
+For self-synteny, hits are computed for the lower part of the <ttp>Dot Plot</ttp> diagonal, then mirrored to
+the upper part. The <ttx>Hit#</ttx> is assigned in consecutive order along the larger of the two chomosomes.
 
-Self-synteny can be viewed in all views
+<p>Self-synteny can be viewed in all views
 (e.g. <a href="Demo.html#self" class="ext" target="_blank">Demo Dot Plot</a>), with the following exception:
 <p>
 <ul>
-<li>The <ttp>Circle</ttp> view works, but it ribbon colors work a bit strangely since there is only one genome.
+<li><ttp>Circle</ttp> view works, but it ribbon colors work a bit strangely since there is only one genome.
 <p>
-<li>The <ttp>2D</ttp> does not directly work for a single chromosome compared
-to itself from the <ttp>Chromosome Explorer</ttp>. However, by going through the <ttp>Dotplot</ttp> or <ttp>Blocks view</ttp>, you can click on a self-chromosome block and view it in
+<li><ttp>2D</ttp>: From the <ttp>Chromosome Explorer</ttp>, it does not directly work for a chromosome compared to itself.
+However, by going through the <ttp>Dotplot</ttp> or <ttp>Blocks view</ttp>, you can click on a self-chromosome block and view it in
 the <ttp>2D</ttp> view.
 <p>
-<li><ttp>Queries</ttp> does not work for self-synteny.
+<li><ttp>Queries</ttp> works for self-synteny (as of v5.7.5), with the following exceptions:
+<ul>
+<li>It can not display minor hits.
+<ul><li>The <ttx>Every+</ttx> will not be shown.
+<li>A popup will occur on a <ttx>Hit#</ttx> or <ttx>Gene#</ttx> query if there were minor hits that could not be displayed.
+</ul>
+<li>The <ttl>Groups</ttl> filter section will not be shown as they do not work for self-synteny.
+<li>3-track display does not work: selecting 2 rows followed by <ttp>2D</ttp> is ignored.
+</ul>
 <p>
-<li><ttp>Summary</ttp> stats are not accurate since the dots above and below the diagonal are the same.
+<ttp>Queries</ttp> also displays things a little different:
+<ul>
+<li>The <ttx>Abbreviation</ttx> for the 2nd is the same as the 1st with the last character replaced with X.
+<li>The <ttx>Block#</ttx> can be Chr1.Chr2.B or Chr2.Chr1.B; they are the same
+<li>The <ttp>2D</ttp> display  will have the chromosomes in the opposite order than expected.
+<li><ttl>Single</ttl>:
+<ul>
+<li>The <ttx>NumHits</ttx> column counts each hit both above and below the diagonal (i.e. twice).
+<li>It always shows the 1st project only; there will be empty columns for the 2nd.
+</ul>
+</ul>
 </ul>
 
 <a id="data_download"></a>

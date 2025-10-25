@@ -566,7 +566,8 @@ button, which will popup the panel shown on the right.
 <table class="ty">
 <tr><td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
 <tr><td><ttl>Concat</ttl>
-<td>By default, all sequences of the 1st genome are concatenated into one file
+<td>
+By default, all sequences of the 1st genome are concatenated into one file
 and then multiple files are created from the 2nd genome to be searched against the first.
 For the 2nd genome, sequential short sequences are put into one file until the file length is &gt;60M.
 
@@ -575,6 +576,8 @@ multiple files are created for each genomes,
 and all files from the 1st genome are searched against the all files from the 2nd genome. For both genomes,
 sequential short sequences are put into one file until the file length is &gt;60M.
 <p>See below for timing differences.
+<p>The exception is self-synteny, where all chromosomes are written to their own file, so <ttl>Concat</ttl> is
+not relevant.
 <td>On
 
 <tr><td style="white-space: nowrap;"><ttl>Mask</ttl> &lt;abbrev&gt;<td>Mask out all non-genic parts of the sequences before running MUMmer (gene annotation must
@@ -814,8 +817,8 @@ will work).
 <p><b>Piles of Hits</b>
 
 <table>
-<tr><td>The below image shows a pile of hits on the left (Cabb Chr02)
-that link to repetitive genes on the right (Arab Chr05). These are important to keep.
+<tr><td>The below image shows a pile of hits on the left (Cabb C5)
+that link to repetitive genes on the right (Arab Chr02). These are important to keep.
 <p>The right image shows a pile of hits in an intergenic region (Cabbagge Chr03) to multiple other regions (B.rapa Chr01).
 There are MANY occurrence of repeats like this in the MUMmer file, which is why these piles
 must be filtered; if they are not, the synteny algorithm does not perform well.
