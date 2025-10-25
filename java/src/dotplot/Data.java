@@ -20,6 +20,7 @@ import util.Utilities;
  * This contains the arrays of data (Project and Tile (chr-chr)) and interface code with Filter
  */
 public class Data  {
+	protected static final double DIAG_HIT = 200;
 	protected static final double DEFAULT_ZOOM = 0.99;
 	protected static final int X  = 0, Y   = 1;
 	private static int initMinPctid = -1;		// find first time
@@ -45,6 +46,7 @@ public class Data  {
 	
 	private DBconn2 tdbc2;
 	private DBload dbLoad;
+	protected boolean isSelf=false; // CAS575 add
 	
 	// Called from DotPlotFrame; for ChrExp, called on first time its used
 	protected Data(DBconn2 dbc2, String type, boolean is2d) {
@@ -81,13 +83,14 @@ public class Data  {
 	/* init projects*/
 		Vector<Project> newProjects = new Vector<Project>(projIDs.length);
 		for (int i = 0;  i < projIDs.length;  i++) {// 1 -> 0
-			Project p = Project.getProject(projects, 1, projIDs[i]);
-			if (p == null) p = new Project(projIDs[i], tdbc2);
+			// Project p = Project.getProject(projects, 1, projIDs[i]); CAS575 projects were just cleared
+			Project p = new Project(projIDs[i], tdbc2);
 			newProjects.add( p );
 		}
 		projects = newProjects.toArray(new Project[0]);
+		isSelf = projects.length==2 && projects[0].getID()== projects[1].getID();
 	
-		dbLoad.setGrpPerProj(projects, xGroupIDs, yGroupIDs, projProps); // needs to redone for ref
+		dbLoad.loadGrpsAndBlocks(projects, xGroupIDs, yGroupIDs, projProps); // needs to redone for ref
 		for (Project p : projects) 
 			maxGrps = Math.max(p.getNumGroups(), maxGrps);
 		
@@ -99,9 +102,9 @@ public class Data  {
 			boolean bSwap = projProps.isSwapped(tObj.getProjID(X), tObj.getProjID(Y)); // if DB.pairs.proj1_idx=proj(Y)
 			if (tObj.hasHits()) tObj.swap(tObj.getProjID(X), tObj.getProjID(Y));
 			else {
-				dbLoad.setBlocks(tObj, bSwap);
+				dbLoad.loadBlocks(tObj, bSwap);
 
-				dbLoad.setHits(tObj, bSwap);
+				dbLoad.loadHits(tObj, bSwap);
 			}
 		}
 		filtData.setBounds(dbLoad.minPctid, 100);
@@ -428,7 +431,7 @@ public class Data  {
 		protected void clear() {minPctid=100;};
 		
 		 // For all projects; add groups to projects, and blocks to groups; 
-		protected void setGrpPerProj(Project[] projects, int[] xGroupIDs, int[] yGroupIDs, PropsDB pp) {
+		protected void loadGrpsAndBlocks(Project[] projects, int[] xGroupIDs, int[] yGroupIDs, PropsDB pp) {
 		try {
 			Vector<Group> list = new Vector<Group>();
 			String qry;
@@ -500,7 +503,7 @@ public class Data  {
 		}
 		
 		// For this Tile: Add blocks to a tile (cell)
-		protected void setBlocks(Tile tile,  boolean swapped) {
+		protected void loadBlocks(Tile tile,  boolean swapped) {
 		try {
 			Group gX = (swapped ? tile.getGroup(Y) : tile.getGroup(X));
 			Group gY = (swapped ? tile.getGroup(X) : tile.getGroup(Y));
@@ -527,7 +530,7 @@ public class Data  {
 		catch (Exception e) {ErrorReport.print(e, "Loading Blocks");}
 		}
 		// For this tile, Add hits 
-		protected void setHits(Tile tile, boolean swapped)  {
+		protected void loadHits(Tile tile, boolean swapped)  {
 		try {
 			List<DPHit> hits = new ArrayList<DPHit>();
 			int xx=X, yy=Y;
@@ -535,13 +538,12 @@ public class Data  {
 			Project pX = tile.getProject(xx),  pY = tile.getProject(yy);
 			Group gX   = tile.getGroup(xx), gY = tile.getGroup(yy);
 		
-			String qry =
-				"SELECT (h.start2+h.end2)>>1 as posX, (h.start1+h.end1)>>1 as posY,"
-				+ "h.pctid, h.gene_overlap, b.block_idx, (h.end2-h.start2) as length, h.strand "+
-				"FROM pseudo_hits AS h "+
-				"LEFT JOIN pseudo_block_hits AS b ON (h.idx=b.hit_idx) "+
-				"WHERE (h.proj1_idx="+pY.getID()+" AND h.proj2_idx="+pX.getID()+
-				"       AND h.grp1_idx="+gY.getID()+" AND h.grp2_idx="+gX.getID()+")";
+			String qry = "SELECT (h.start2+h.end2)>>1 as posX, (h.start1+h.end1)>>1 as posY,"
+				+ "h.pctid, h.gene_overlap, b.block_idx, (h.end2-h.start2) as length, h.strand "
+				+ "FROM pseudo_hits AS h "
+				+ "LEFT JOIN pseudo_block_hits AS b ON (h.idx=b.hit_idx) "
+				+ "WHERE (h.proj1_idx=" + pY.getID() + " AND h.proj2_idx=" + pX.getID()+
+				"       AND h.grp1_idx=" + gY.getID() + " AND h.grp2_idx=" + gX.getID()+")";
 			ResultSet rs = tdbc2.executeQuery(qry);
 			while (rs.next()) {
 				int posX = 		rs.getInt(1);
@@ -553,14 +555,19 @@ public class Data  {
 				String strand = rs.getString(7);
 				if (strand.equals("+/-") || strand.equals("-/+")) length = -length;
 				
-				DPHit hit = new DPHit(
-								swapped ? posY : posX,	
-								swapped ? posX : posY,	 
-								pctid,	geneOlap, blockidx!=0, length);				
+				DPHit hit = new DPHit(swapped ? posY : posX,	
+								      swapped ? posX : posY,	 
+								      pctid,	geneOlap, blockidx!=0, length);				
 				hits.add(hit);
 				minPctid = Math.min(minPctid, pctid); 
 			}
 			rs.close();	
+			
+			if (isSelf && gY.getID()==gX.getID()) {// create diagonal hit; CAS575 this replaces computing diagonal in AnchorMain1
+				int len = tdbc2.executeInteger("select length from pseudos where grp_idx=" + gY.getID());
+				DPHit hit = new DPHit(len/2, len/2,  DIAG_HIT, 0, false, len);
+				hits.add(hit);
+			}
 			tile.setHits(hits.toArray(new DPHit[0]));
 			hits.clear();
 		}

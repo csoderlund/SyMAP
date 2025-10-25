@@ -17,7 +17,7 @@ import util.ProgressDialog;
 import util.Utilities;
 
 /********************************************************
- * Utils for A&S; CAS569 cleaned out some stuff
+ * Utils for A&S
  */
 public class Utils {
 	// msgToFile prints to file and terminal, but not ProgressDialog
@@ -37,7 +37,7 @@ public class Utils {
 		String t = Utilities.getDurationString(getTime()-startTime);
 		prog.msg(String.format("%-30s %s", msg, t));	
 	}
-	public static void prtMsgTimeDone(ProgressDialog prog, String msg, long startTime) {// CAS568 renamed from timeDoneMsg
+	public static void prtMsgTimeDone(ProgressDialog prog, String msg, long startTime) {
 		String t = Utilities.getDurationString(getTime()-startTime);
 		String m = String.format("%-35s  %s                           \n\n", msg, t);
 		
@@ -90,16 +90,17 @@ public class Utils {
 		for (int i=0; i<indent; i++) x +="   ";
 		prog.msgToFile(String.format("%s%,10d %s           ", x, num, msg));
 	}
-	
-	
 	public static void prtNumMsg(ProgressDialog prog, int num, String msg) {
 		prog.appendText(String.format("%,10d %s           ", num, msg));
 	}
-	
-	public static void prtNumMsgNZx(int num, String msg) {// indent
-		if (num>0) System.out.format("      %,10d %s              \n", num, msg);
+	public static void prtNumMsgNZx(ProgressDialog prog, int num, String msg) { // CAS575 add prog
+		if (num>0) prtNumMsg(prog, num, msg);
 	}
-
+	
+	public static void prtNumMsg(int num, String msg) {
+		Globals.prt(String.format("%,10d %s           ", num, msg));
+	}
+	
 	public static void die(String msg) {
 		System.err.println("Fatal error: " + msg);
 		System.exit(-1);

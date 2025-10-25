@@ -8,8 +8,7 @@ import java.util.Collections;
 
 /*****************************************************************
 // Represents a group of binned cluster hits along a group.
-// Or the set of hits of a particular query (e.g. gene).
- * CAS540 TopN is no longer allowed to be 0; Hit.useAnnot 
+// Or the set of hits of a particular query (e.g. gene). CAS575 removed BinStat code
 **********************************************************/
 
 public class HitBin  {
@@ -48,8 +47,7 @@ public class HitBin  {
 		mHitsConsidered = 1;
 	}
 	/****************************************************************
-	 * Called from Group [checkAddHit2]
-	 * CAS543 need to be more gene-centric
+	 * Called from Group 
 	 ************************************************************/
 	protected void filterAddHit2(Hit hit, int shStart, int shEnd) {
 		mHitsConsidered++;
@@ -67,7 +65,7 @@ public class HitBin  {
 			topNmatch = mHits.get(mTopN-1).matchLen; // if Top2=2, then 2nd highest length
 			topNmatch = (int) Math.round(topNmatch * FperBin); 
 		
-			for (int i = mHits.size()-1; i>=mTopN; i--) { // CAS540 was if; try to remove at least one
+			for (int i = mHits.size()-1; i>=mTopN; i--) { 
 				Hit h = mHits.get(i);
 				
 				if (h.matchLen <= topNmatch || !h.useAnnot()) { // making this an && explodes the number of hits
@@ -88,7 +86,7 @@ public class HitBin  {
 	 ****************************************************************/
 	protected void filterFinalAddHits(HashSet<Hit> addToHits) {
 		int nHits = mHits.size();
-		if (nHits==0) return; // CAS500 
+		if (nHits==0) return;
 		
 		Collections.sort(mHits, new CompareByMatch()); // ascending matchLen
 		
@@ -102,7 +100,7 @@ public class HitBin  {
 			Hit h = mHits.get(i);
 			
 			if (!h.useAnnot()) {
-				if (h.nSubHits==1 && h.matchLen<=Hit.FhaveLen2) continue; // CAS540 spurious hit
+				if (h.nSubHits==1 && h.matchLen<=Hit.FhaveLen2) continue; 
 				if (i >= mTopN    && h.matchLen< thresh) continue;
 			}
 		
@@ -111,13 +109,11 @@ public class HitBin  {
 					h.queryHits.status = HitStatus.In;
 					h.binsize1 = mHitsConsidered;
 					addToHits.add(h); 
-					BinStats.incStat("TopNQueryKeep" + mGT.toString(), 1);
 					break;
 				case Target:
 					h.targetHits.status = HitStatus.In;
 					h.binsize2 = mHitsConsidered;
 					addToHits.add(h);
-					BinStats.incStat("TopNTargetKeep" + mGT.toString(), 1);
 					break;
 				default:
 					break;

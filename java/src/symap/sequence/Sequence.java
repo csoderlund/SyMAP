@@ -640,7 +640,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	public int getGroup() {return grpIdx;}
 
 	public String getChrName() {
-		String prefix =  drawingPanel.getPropDB().getProperty(getProject(),"grp_prefix");
+		String prefix =  drawingPanel.getPropDB().getProperty(getProjIdx(),"grp_prefix");
 		if (prefix==null) prefix = "";
 		String grp = (chrName==null) ? "" : chrName;
 		return prefix + grp;
@@ -661,7 +661,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		int tn = getHolder().getTrackNum();
 		String ref = (tn%2==0) ? " REF " : " "; 
 		return "[Sequence "+ getFullName() + " (Grp" + getGroup() + ") " + 
-				getOtherProjectName() + ref + " p" + position + " o" + orient + "] ";
+				getOtherProjectName() + " p" + position + " orient " + orient + "] "  + ref;
 	}
 	
 	/************************************************
@@ -813,7 +813,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 
 	protected double getMidX() {return rect.getX()+(rect.getWidth()/2.0);} // trackLayout
 
-	public int getProject() {return projIdx;}
+	public int getProjIdx() {return projIdx;}
 	
 	public String getOtherProjectName() {return otherProjName;} // Closeup
 

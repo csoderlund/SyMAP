@@ -100,31 +100,33 @@ public class Schema {
 		    ")  ENGINE = InnoDB;";
 		executeUpdate(sql);
 		
-// Blocks - Keep fields in order; only add to end and then update  synteny.RWdb.symmetrizeBlocks
+// Finally fixed so that Self-synteny does not require order of fields; hence, moved them to be more logical; CAS575
 		sql = "CREATE TABLE blocks (" +
-		    "idx                     INTEGER AUTO_INCREMENT PRIMARY KEY," + // block_idx
-		    "pair_idx                INTEGER NOT NULL," +
-		    "blocknum                INTEGER NOT NULL," +
-		    "proj1_idx               INTEGER NOT NULL," +
-		    "grp1_idx                INTEGER NOT NULL," +
-		    "start1                  INTEGER NOT NULL," +
-		    "end1                    INTEGER NOT NULL," +
-		    "proj2_idx               INTEGER NOT NULL," +
-		    "grp2_idx                INTEGER NOT NULL," +
-		    "start2                  INTEGER NOT NULL," +
-		    "end2                    INTEGER NOT NULL," +
-		    "comment                 TEXT NOT NULL," +
-			"corr					float default 0," +   // <0 is inverted
-			"score					INTEGER default 0," +
-			"ngene1					integer default 0," +
-			"ngene2					integer default 0," +
-			"genef1					float default 0," +
-			"genef2					float default 0," +
-			
+		    "idx            INTEGER AUTO_INCREMENT PRIMARY KEY," + // block_idx
+		    "pair_idx       INTEGER NOT NULL," +
+		    "proj1_idx      INTEGER NOT NULL," +
+		    "proj2_idx      INTEGER NOT NULL," +
+		    
+		    "grp1_idx       INTEGER NOT NULL," +
+		    "grp2_idx       INTEGER NOT NULL," +
+		    "blocknum       INTEGER NOT NULL," +
+		    "start1         INTEGER NOT NULL," +
+		    "end1           INTEGER NOT NULL," +
+		    "start2         INTEGER NOT NULL," +
+		    "end2           INTEGER NOT NULL," +
+		   
+			"score			INTEGER default 0," + // number of hits in blocsk
+			"corr			float default 0," +   // <0 is inverted
 			"avgGap1		INTEGER default 0," + // for report; CAS572 add; Version update in synteny.RWdb(); not new DBVER
 			"avgGap2		INTEGER default 0," + // in report; calc approx if not exist
-			"stdDev1		integer default 0," + // stdDev usually double, but they are so big, only the int part is significant
-			"stdDev2		integer default 0," +
+			"ngene1			integer default 0," +
+			"ngene2			integer default 0," +
+			"genef1			float default 0," +
+			"genef2			float default 0," +
+			
+			 "comment       TEXT NOT NULL," +
+			//"stdDev1		integer default 0," + // added in CAS572, but useless so removing CAS575
+			//"stdDev2		integer default 0," +
 
 		    "INDEX (proj1_idx,grp1_idx)," +
 		    "INDEX (proj2_idx,grp2_idx)," +
@@ -185,9 +187,7 @@ public class Schema {
 		    ") ENGINE = InnoDB; ";
 		executeUpdate(sql);	
 		
-// Sequence hits; changes here need to be reflected in AnchorsMain.addMirrorHits
-// hitnum, pair_idx, proj1_idx, proj2_idx, grp1_idx, grp2_idx, pctid, cvgpct, countpct, score, type, gene_overlap
-// annot1_idx, annot2_idx, strand, start1, end1, start2, end2, query_seq, target_seq, runnum, runsize, refidx
+		// Rearranged some stuff; CAS575
 	    sql = "CREATE TABLE pseudo_hits (" +
 		    "idx                 INTEGER AUTO_INCREMENT PRIMARY KEY," + // hit_id
 	    	"hitnum				 INTEGER default 0,"+			// relative to location along chr
@@ -196,24 +196,29 @@ public class Schema {
 		    "proj2_idx           INTEGER NOT NULL," + 			 // proj_props.proj_idx
 		    "grp1_idx            INTEGER NOT NULL," + 			 // xgroups.idx
 		    "grp2_idx            INTEGER NOT NULL," + 			 // xgroups.idx
-		    "pctid               TINYINT UNSIGNED NOT NULL," +   // avg %id Col6     
-		    "cvgpct				 TINYINT UNSIGNED NOT NULL," +   // avg %sim  Col7     
-		    "countpct			 INTEGER UNSIGNED default 0," +  // number of merged   
-		    "score               INTEGER NOT NULL," +            // summed length Col5 - displayed in Query
-		    "htype             	 TINYTEXT," +   				 // EE, EI, IE, En, nE, II, In, nI, nn; g2, g1, g0
-		    "gene_overlap		 TINYINT NOT NULL, " +	       	 // 0,1,2
-		    "annot1_idx			 INTEGER default 0," +			 // can have>0 when pseudo_annot.type='pseudo'
-			"annot2_idx			 INTEGER default 0," +
-		    "strand              TEXT NOT NULL," +
+		
 		    "start1              INTEGER NOT NULL," +
 		    "end1                INTEGER NOT NULL," + 
 		    "start2              INTEGER NOT NULL," +
 		    "end2                INTEGER NOT NULL, " +   
+		    
+ 			"annot1_idx			 INTEGER default 0," +			 // can have>0 when pseudo_annot.type='pseudo'
+ 			"annot2_idx			 INTEGER default 0," +
+ 			"strand              TEXT NOT NULL," +
+			"refidx				INTEGER default 0," +          	// used in self-synteny
+			"runnum				INTEGER default 0," +			// number for collinear group
+			"runsize			INTEGER default 0," +			// size of collinear set
+			"gene_overlap		 TINYINT NOT NULL, " +	       	 // 0,1,2
+			
+		    "pctid               TINYINT UNSIGNED NOT NULL," +   // avg %id mummer Col6     
+		    "cvgpct				 TINYINT UNSIGNED NOT NULL," +   // avg %sim  mummer Col7     
+		    "countpct			 INTEGER UNSIGNED default 0," +  // number of merged   
+		    "score               INTEGER NOT NULL," +            // summed length 
+		    "htype             	 TINYTEXT," +   				 // EE, EI, IE, En, nE, II, In, nI, nn; g2, g1, g0
+		   
 		    "query_seq           MEDIUMTEXT  NOT NULL," +      	// start-end of each merged hit
 		    "target_seq          MEDIUMTEXT  NOT NULL," +
-			"runnum				INTEGER default 0," +			// number for collinear group
-		    "runsize			INTEGER default 0," +			// size of collinear set
-		    "refidx				INTEGER default 0," +          	// used in self-synteny
+			
 		    "INDEX (proj1_idx,proj2_idx,grp1_idx,grp2_idx)," +
 		    "FOREIGN KEY (pair_idx)  REFERENCES pairs (idx) ON DELETE CASCADE," +
 		    "FOREIGN KEY (proj1_idx) REFERENCES projects (idx) ON DELETE CASCADE," +

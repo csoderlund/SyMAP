@@ -74,6 +74,7 @@ public class TableMainPanel extends JPanel {
 		this.isCollinear	= queryPanel.isCollinear();
 		this.isMultiN		= queryPanel.isMultiN();
 		this.isClustN		= queryPanel.isClustN();
+		this.isSelf			= queryPanel.isSelf();
 		
 		if(selCols != null) {
 			theOldSelCols = new boolean[selCols.length];
@@ -179,8 +180,9 @@ public class TableMainPanel extends JPanel {
         	HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> (); 
         	HashMap <String, String> projMap = new HashMap  <String, String> (); // ComputePgeneF & ComputeMulti
         		
+        	String [] annoColumns = theAnnoKeys.getColumns(false); // T Abbrev, F display
          	Vector  <DBdata> rowsFromDB =  DBdata.loadRowsFromDB(getInstance(), rs, queryFrame.getProjects(),
-         			queryFrame.getQueryPanel(), theAnnoKeys.getColumns(false /*displayname*/), loadStatus,
+         			queryFrame.getQueryPanel(), annoColumns, loadStatus,
          			geneCntMap, projMap); 				// Inputs for Summary
          
          	bDone=true; 								// make sure the timing does not let them Stop now (unless too late)
@@ -490,15 +492,15 @@ public class TableMainPanel extends JPanel {
     	
     	chkAnnoFields = new Vector<Vector<JCheckBox>> ();
     	
-    	int [] speciesIDs = theAnnoKeys.getSpeciesIDList();
+    	int [] spPos = theAnnoKeys.getSpPosList(); // CAS575 changed from speciesIdx to pos for self-synteny
     	
     	// Check selected
-    	for(int x=0; x<speciesIDs.length; x++) {
+    	for(int x=0; x<spPos.length; x++) {
     		Vector<JCheckBox> annoCol = new Vector<JCheckBox> ();
     		
-    		for(int y=0; y<theAnnoKeys.getNumberAnnosForSpecies(speciesIDs[x]); y++){
+    		for(int y=0; y<theAnnoKeys.getNumberAnnosForSpecies(spPos[x]); y++){
     			
-    			String annotName = theAnnoKeys.getAnnoIDforSpeciesAt(speciesIDs[x], y);
+    			String annotName = theAnnoKeys.getAnnoIDforSpeciesAt(spPos[x], y);
     			String d = (annotName.contentEquals(Q.All_Anno)) ? 
     					"All annotation from GFF file" : "Column heading is keyword from GFF file";
     			JCheckBox chkCol = Jcomp.createCheckBox(annotName, d, false);
@@ -517,7 +519,7 @@ public class TableMainPanel extends JPanel {
         	JPanel row = Jcomp.createRowPanel();
         	
         	// Species name
-        	String abbrev = theAnnoKeys.getSpeciesAbbrevByID(speciesIDs[pos]);
+        	String abbrev = theAnnoKeys.getSpeciesAbbrev(spPos[pos]);
         	JLabel spLabel = createSpeciesLabel(abbrev);
         	row.add(spLabel); 		row.add(Box.createHorizontalStrut(10));
         	
@@ -937,10 +939,11 @@ public class TableMainPanel extends JPanel {
 			btnShowSynteny.setEnabled(false);		
 			
 			int selIndex = cmbSynOpts.getSelectedIndex();
-			int pad = (selIndex==showREGION) ? (int) Double.parseDouble(txtSynRegion.getText()) * 1000 : 200; // CAS571 was 30
+			int pad = (selIndex==showREGION) ? (int) Double.parseDouble(txtSynRegion.getText()) * 1000 : 500; // was 200 CAS575 
 			
 			UtilSelect uObj = new UtilSelect(this);
-			uObj.synteny2D(numRows, selIndex,  pad, chkSynGn.isSelected(), grpIdxVec); // hitNum1, hitNum2 get set
+			boolean bGene = chkSynGn.isSelected();
+			uObj.synteny2D(numRows, selIndex,  pad, bGene, isSelf, grpIdxVec); // hitNum1, hitNum2 get set
 			
 			btnShowSynteny.setEnabled(true);
 		} 
@@ -1026,7 +1029,7 @@ public class TableMainPanel extends JPanel {
      }
      protected void setBtnReport(boolean done) {// Called from UtilReport when computation starts/stops
      	if (!done) {
-     		Utilities.setCursorBusy(this, true); // CAS571 add
+     		Utilities.setCursorBusy(this, true); 
      		btnReport.setText("Computing...");
          	setPanelEnabled(false); 
      	}
@@ -1037,7 +1040,7 @@ public class TableMainPanel extends JPanel {
      		else if (isClustN) title = "Cluster Report...";
      		btnReport.setText(title);
          	setPanelEnabled(true);
-         	Utilities.setCursorBusy(this, false); // CAS571 add
+         	Utilities.setCursorBusy(this, false); 
      	}
      }
     
@@ -1147,8 +1150,9 @@ public class TableMainPanel extends JPanel {
         			String x = String.format("%4d  %5d (%5d)   %2d,%2d  %2d,%2d %2d   %6d,%6d %6d  %8s %s%d",
         			cnt, rs.getInt(Q.HITNUM), rs.getInt(Q.HITIDX), rs.getInt(Q.PROJ1IDX), rs.getInt(Q.PROJ2IDX),
         					grp1,  grp2, grp, a1, a2, a, tag, star, side);
-        					
-        			w.write(x + "\n");
+        			String y = String.format("   %,10d %,10d", rs.getInt(Q.HIT1START), rs.getInt(Q.HIT1END))
+        					 + String.format("   %,10d %,10d", rs.getInt(Q.HIT2START), rs.getInt(Q.HIT2END));
+        			w.write(x + y + "\n");
         			cnt++;
         		}
         		w.close();
@@ -1320,6 +1324,8 @@ public class TableMainPanel extends JPanel {
 	protected int hitNum1=0, hitNum2=0; // Highlight 2D; set in UtilSelect; 
 	private Vector <Integer> grpIdxVec = new Vector <Integer> (); 			// to highlight groups
 	protected boolean isCollinear=false, isMultiN=false, isClustN=false;	// for UtilReport; the QueryPanel can change, so need to save this
+	
+	protected boolean isSelf=false; // CAS575
 	
 	// for Stop 
 	private boolean bMSArun=false; 					// MSA can be running, and the rest of the buttons enabled.

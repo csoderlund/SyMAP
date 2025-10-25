@@ -28,31 +28,31 @@ import util.Utilities;
 
 /**************************************************************
  * Block report from Manager 
+ * CAS575 remove species column and put species name over species specific columns
  */
-
 public class Report extends JDialog  {
 	private static final long serialVersionUID = 1L;
 	private final int GENE=1, ONLY=2, SUM=3;
 	private final int IGN=1, NUM=2, FLOAT=3, LFLOAT=4;
-	private final String CHR="Chr", CCB = "C1.C2.B";
+	private final String CHR="Chr", CCB = "C1.C2.B", CC = "C1.C2";
+	private final int PCCcol = 2; 
 	
-	private boolean isTSV=false, isHTML, isPop=false, isSp1=true, isSp2, useComb=true;
+	private boolean isTSV=false, isHTML, isPop=false, isSp1=true, isSp2, useComb=true, isSelf=false, isSum=false;
 	private int cntHtmlRow=0; // to determine whether to have a Goto top at bottom
-	private boolean hasGap=false; // for pre-v572 databases
-	private boolean isSelf=false; 
 	
 	private DBconn2 tdbc2 = null;
 	private Mpair mp;
 	private Mproject [] mProjs;
-	private String name1, name2;
+	private String dname1, dname2; 
 	
 	protected Report(DBconn2 tdbc2, Mproject [] mProjs, Mpair mp) {
 		this.tdbc2 = tdbc2;
 		this.mProjs = mProjs;
 		this.mp = mp;
-		name1 = mProjs[0].getDisplayName();
-		name2 = mProjs[1].getDisplayName();
-		isSelf = name1.equals(name2);
+		dname1 = mProjs[0].getDisplayName();
+		dname2 = mProjs[1].getDisplayName();
+		
+		isSelf = dname1.equals(dname2);
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setTitle("Block Report");
@@ -98,8 +98,7 @@ public class Report extends JDialog  {
 			spRow.add(radSpecies[i]); spRow.add(Box.createHorizontalStrut(5));
 		}
 		radSpecies[0].setSelected(true);
-				
-		
+					
 		mainPanel.add(spRow);   mainPanel.add(Box.createVerticalStrut(3));
 		mainPanel.add(radPanel);mainPanel.add(Box.createVerticalStrut(3));
 	}
@@ -165,6 +164,7 @@ public class Report extends JDialog  {
 		isSp1  = radSpecies[0].isSelected();
 		isSp2  = radSpecies[1].isSelected();
 		useComb = chkComb.isSelected();
+		isSum = radBlocksSum.isSelected();
 		
 		if (radBlocksGenes.isSelected())     mkBlocksGene();
 		else if (radBlocksPlus.isSelected()) mkBlocksPlus();
@@ -180,14 +180,16 @@ public class Report extends JDialog  {
 			else {
 				outFH = startFile("blocksSummary");
 				if (outFH==null) return;
+				if (isTSV) tsvHead(outFH);
 			}
 			
 			ArrayList <String> row = new ArrayList <String> (6);
-			row.add("Species1"); row.add("Species2"); 
-			if (useComb) {row.add("C1.C2"); }
+			if (useComb) {row.add(CC); }
 			else         {row.add(CHR+"1"); row.add(CHR+"2"); }
 			row.add("#Blocks"); row.add("#Hits"); 
-			if (outFH==null) report+=joinHead(row,""); else outFH.println(joinHead(row,""));
+			
+			if (outFH==null) report+=joinHead(row, ""); 
+			else outFH.println(joinHead(row, ""));
 			
 			String savChr1="", savChr2="";
 			int cntBlocks=0, sumHits=0, totBlks=0;
@@ -208,12 +210,12 @@ public class Report extends JDialog  {
 				if (!n1.equals(savChr1) || !n2.equals(savChr2)) {
 					if (cntBlocks>0) { // create row and print
 						int i=0;
-						row.set(i++, name1); row.set(i++, name2); 
 						if (useComb) {row.set(i++, savChr1); }
 						else {row.set(i++, savChr1); row.set(i++, savChr2);}
 						row.set(i++, Integer.toString(cntBlocks)); row.set(i++, Integer.toString(sumHits)); 
 						
-						if (outFH==null) report+=joinRow(row); else outFH.println(joinRow(row));
+						if (outFH==null) report+=joinRow(row); 
+						else             outFH.println(joinRow(row));
 					}
 					savChr1 = n1; savChr2 = n2;
 					cntBlocks=sumHits=0;
@@ -223,12 +225,12 @@ public class Report extends JDialog  {
 			}
 			if (cntBlocks>0) {
 				int i=0;
-				row.set(i++, name1); row.set(i++, name2); 
 				if (useComb) {row.set(i++, savChr1); }
 				else {row.set(i++, savChr1); row.set(i++, savChr2); }
 				row.set(i++, Integer.toString(cntBlocks)); row.set(i++, Integer.toString(sumHits)); 
 				
-				if (outFH==null) report+=joinRow(row); else outFH.println(joinRow(row));
+				if (outFH==null) report+=joinRow(row); 
+				else outFH.println(joinRow(row));
 			}
 			if (isPop) {
 				report += htmlTail(totBlks);
@@ -248,26 +250,22 @@ public class Report extends JDialog  {
 			else {
 				outFH = startFile("blocksPlus");
 				if (outFH==null) return;
+				if (isTSV) tsvHead(outFH);
 			}
 			
 			ArrayList<String> rowHead = new ArrayList<String>();
-			rowHead.add("Species1"); rowHead.add("Species2"); 
 			
 			if (useComb) {rowHead.add(CCB);} // combined in sql
 			else         {rowHead.add(CHR+"1"); rowHead.add(CHR+"2"); rowHead.add("Block"); }
-			
 			rowHead.add("#Hits"); rowHead.add("PearsonR");
 			rowHead.add("AvgGap1"); rowHead.add("AvgGap2"); 
+			rowHead.add("Length1"); rowHead.add("Length2"); rowHead.add("Start1"); rowHead.add("Start2"); 
 			
-			hasGap = tdbc2.tableColumnExists("blocks", "avgGap1");// used in mkSQL too
-			
-			rowHead.add("Len1"); rowHead.add("Len2"); rowHead.add("Start1"); rowHead.add("Start2"); 
-			
-			if (isTSV) {
-				if (outFH==null) report += joinHead(rowHead, ""); else outFH.println(joinHead(rowHead, ""));
+			if (isTSV) { // only written once
+				outFH.println(joinHead(rowHead, ""));
 			}
 			
-			int ncol = rowHead.size()-2, totBlks=0;
+			int ncol = rowHead.size(), totBlks=0;
 			String saveChr="", chr="";
 			ArrayList<String> row = new ArrayList<String>(rowHead.size());
 			for (int i=0; i<rowHead.size(); i++) row.add("");
@@ -287,19 +285,18 @@ public class Report extends JDialog  {
 					}
 					saveChr = chr;
 				}
-				row.set(0, name1); row.set(1, name2); 
-				for(int i = 1; i <= ncol; i++){	
-					int type = typeArr.get(i-1);
-					if (type==IGN)    	   row.set(i+1, rs.getString(i));
-					else if (type==NUM)    row.set(i+1, String.format("%,d",rs.getInt(i)));
-					else if (type==FLOAT)  row.set(i+1, df(i, rs.getDouble(i)));
-					else if (type==LFLOAT) row.set(i+1, String.format("%,d",(int) rs.getDouble(i)));
+				for(int i=0, j=1; i < ncol; i++, j++){	
+					int type = typeArr.get(i);
+					if (type==IGN)    	   row.set(i, rs.getString(j));
+					else if (type==NUM)    row.set(i, String.format("%,d",rs.getInt(j)));
+					else if (type==FLOAT)  row.set(i, df(i, rs.getDouble(j)));
+					else if (type==LFLOAT) row.set(i, String.format("%,d",(int) rs.getDouble(j)));
 				}
 				if (outFH==null) report += joinRow(row); else outFH.println(joinRow(row));
 			}
 			if (isPop) {
 				report += htmlTail(totBlks);
-				util.Jhtml.showHtmlPanel(null, ("Blocks"), report); 
+				util.Jhtml.showHtmlPanel(null, ("Blocks Plus"), report); 
 			}
 			else endFile(outFH, totBlks);	
 		} 
@@ -315,20 +312,21 @@ public class Report extends JDialog  {
 			else {
 				outFH = startFile("blocksGenes");
 				if (outFH==null) return;
+				if (isTSV) tsvHead(outFH);
 			}
 			
 			ArrayList<String> rowHead = new ArrayList<String>();
-			rowHead.add("Species1"); rowHead.add("Species2"); 
 			if (useComb) {rowHead.add(CCB); }// combined in sql
 			else         {rowHead.add(CHR+"1"); rowHead.add(CHR+"2"); rowHead.add("Block"); }
 			
 			rowHead.add("#Hits"); rowHead.add("PearsonR");
 			rowHead.add("Start1"); rowHead.add("End1"); rowHead.add("Start2"); rowHead.add("End2"); 
 			rowHead.add("#Genes1"); rowHead.add("%Genes1"); rowHead.add("#Genes2"); rowHead.add("%Genes2"); 
-			if (isTSV) {
-				if (outFH==null) report += joinHead(rowHead, ""); else outFH.println(joinHead(rowHead, ""));
+			
+			if (isTSV) { // does not write every X rows and C.C.B does not contain ref chr#
+				outFH.println(joinHead(rowHead, ""));
 			}
-			int ncol = rowHead.size()-2, totBlks=0;
+			int ncol = rowHead.size(), totBlks=0;
 			String saveChr="", chr;
 			ArrayList<String> row = new ArrayList<String>(rowHead.size());
 			for (int i=0; i<rowHead.size(); i++) row.add("");
@@ -345,19 +343,20 @@ public class Report extends JDialog  {
 					else chr = (isSp1) ? rs.getString(1) : rs.getString(2);
 				
 					if (!chr.equals(saveChr)) {
-						if (outFH==null) report += joinHead(rowHead, chr); else outFH.println(joinHead(rowHead, chr));
+						if (outFH==null) report += joinHead(rowHead, chr); 
+						else outFH.println(joinHead(rowHead, chr));
 					}
 					saveChr= chr;
 				}
 				
-				row.set(0, name1); row.set(1, name2); 
-				for(int i = 1; i <= ncol; i++){ // add columns for row
-					int type = 			   typeArr.get(i-1);
-					if (type==IGN)         row.set(i+1, rs.getString(i));
-					else if (type==NUM)    row.set(i+1, String.format("%,d",rs.getInt(i)));
-					else if (type==FLOAT)  row.set(i+1, df(i, rs.getDouble(i)));
+				for(int i=0, j=1; i < ncol; i++, j++){ // add columns for row
+					int type = 			   typeArr.get(i);
+					if (type==IGN)         row.set(i, rs.getString(j));
+					else if (type==NUM)    row.set(i, String.format("%,d",rs.getInt(j)));
+					else if (type==FLOAT)  row.set(i, df(i, rs.getDouble(j)));
 				}
-				if (outFH==null) report += joinRow(row); else outFH.println(joinRow(row));
+				if (outFH==null) report += joinRow(row); 
+				else outFH.println(joinRow(row));
 			}
 			if (isPop) {
 				report += htmlTail(totBlks);
@@ -372,6 +371,12 @@ public class Report extends JDialog  {
     
     //////////////////////////////////////////////////
     private String mkSQL(int which) {
+    	boolean hasGap = false;
+    	try {
+    		hasGap = tdbc2.tableColumnExists("blocks", "avgGap1");// used in mkSQL too
+    	} catch (Exception e) {ErrorReport.print(e, "Is this pre-v572");
+    	
+    	}
     	String sql;
     	if (useComb) {
     		if (which==SUM) sql = "select concat(g1.name,'.', g2.name), b.blocknum, b.score ";
@@ -391,18 +396,17 @@ public class Report extends JDialog  {
     		else {// for pre-v572 DB
     			sql += ", ((b.end1-b.start1+1)/(b.score-1)), ((b.end2-b.start2+1)/(b.score-1))";// 1 less gap than cover;
     		}
-    		sql += ", (b.end1-b.start1+1), (b.end2-b.start2+1)";
-    		sql += ", b.start1, b.start2";
+    		sql += ", (b.end1-b.start1+1), (b.end2-b.start2+1), b.start1, b.start2";
     	}
     	sql +=  " from blocks as b" +
     		    " join xgroups as g1 on g1.idx=b.grp1_idx " + 
     		    " join xgroups as g2 on g2.idx=b.grp2_idx " +
     		    " where b.pair_idx=" + mp.getPairIdx();
     	
-    	if (isSelf) sql+= " and (b.avgGap1>0 or b.avgGap2>0 or b.ngene1>0)"; // one of these better be greater...
+    	if (isSelf) sql+= " and (b.avgGap1>0 or b.avgGap2>0)"; // mirrored are zero for these values in CAS575; see SyntenyMain.RWdb
     	
-    	if (radSpecies[0].isSelected()) sql += " order by g1.name asc, g2.name asc, b.blocknum asc";
-    	else                            sql += " order by g2.name asc, g1.name asc, b.blocknum asc";
+    	if (isSp1) sql += " order by g1.name asc, g2.name asc, b.blocknum asc"; // name is chrName
+    	else       sql += " order by g2.name asc, g1.name asc, b.start2 asc";   // blocks will be out of order; CAS575
     	
     	if (which==SUM) return sql; // summary done
     	////////////////////////////
@@ -469,32 +473,46 @@ public class Report extends JDialog  {
 		System.out.println("Wrote to " + exFileName);
     }
     ////////////////////////////////////////////////////
-    private String htmlHead() {
-    	String n = (radSpecies[0].isSelected()) ? name1 + "-" + name2 : name2 + "-" + name1;
-    	if (isSelf) n = name1 + " self-synteny"; // CAS572
+    private String getNames() {
+    	if (isSelf) return dname1 + " to self";
+    	return  dname1 + " and " + dname2;
+    }
+    private void tsvHead(PrintWriter outFH) {
+    	outFH.println("### SyMAP synteny blocks for " + getNames());
     	
-		String title = n + " Blocks";
+    	if (!isSelf) {
+    		String m = "Sorted by ";
+    		m += (isSp1) ? dname1 :  dname2;
+    		outFH.println("###" + m + " chromosomes");
+    	}
+    }
+    private String htmlHead() {
+    	String title1 = dname1 + "-" + dname2 + " Blocks";	// This is for file html
+    	if (isSelf) title1 = dname1 + "-self Blocks";
+    	
+    	String title2 = (isSum) ? "SyMAP Synteny Blocks for <br>" + getNames() : "SyMAP Synteny Blocks for " + getNames();
+    	
 		String head = "<!DOCTYPE html><html>\n"
 				+ "<head>\n"
-				+ "<title>" + title + "</title>\n"
+				+ "<title>" + title1 + "</title>\n"
 				+ "<style>\n";
 		if (isPop) head += "body {font-family: monospaced;  font-size: 10px; }\n";
 		else       head += "body {font-family: monospaced;  font-size: 12px; }\n";
 		
-		title = "SyMAP Synteny Blocks for " + n;
 		head += ".ty {border: 1px solid black; border-spacing: 1px; border-collapse: collapse; margin-left: auto; margin-right: auto;}\n"
 				+ ".ty td {border: 1px solid black; padding: 5px; border-collapse: collapse; white-space: nowrap; text-align: right;}\n"
 				+ "</style>\n"
 				+ "</head>\n"
 				+ "<body>\n"
 				+ "<a id='top'></a>\n"
-				+ "<center><b>" + title + "</b>"
+				+ "<center><b>" + title2 + "</b>"
 				+ "<p><table class='ty'>";
 		return head;
     }
     private String htmlTail(int totBlks) {
     	String tail="</table>";
-        tail += String.format("<p>%,d Total Blocks", totBlks); // CAS572 add total blocks
+    	if (isSelf) tail += String.format("<p>%,d Total Blocks below diagonal", totBlks); // CAS575 add
+    	else tail += String.format("<p>%,d Total Blocks", totBlks); 
     	if (cntHtmlRow>100 && !isPop) tail += "<p><a href='#top'>Go to top</a>\n";
     	tail += "</center></body></html>\n";
 		return tail;
@@ -512,39 +530,55 @@ public class Report extends JDialog  {
 		
         return buffer;	
 	} 
+    
+    // Reference is indicated in chromosome column only
+    // HTML has species over species-specific columns, TSV does not
     private String joinHead(ArrayList <String> colList, String chr)  { 
     	String delim  = (isTSV) ? "\t" : "<td style=\"text-align: center\">";
 		String buffer = (isTSV) ? ""   : "<tr style=\"background-color: lightgrey;\">";
 		
 		for (String oCol : colList) {
-			String col = oCol;
+			String col = oCol.trim();
 			if (!buffer.equals("")) buffer += delim;
-			
-			if (col.startsWith(CHR) || col.startsWith("Species")) {
+			boolean isCol1 = col.endsWith("1");
+	
+			if (col.startsWith(CHR)) {		// Chr Chr Block columns
 				if (isHTML && col.startsWith(CHR) && !chr.equals("")) {
-					if (isSp1 && col.endsWith("1")) {
+					if (isSp1 && isCol1) {
 						col = chr;
 						if (Utilities.getInt(chr) != -1) col = CHR + col;
 					}
-					else if (isSp2 && col.endsWith("2")) {
+					else if (isSp2 && !isCol1) {
 						col = chr;
 						if (Utilities.getInt(chr) != -1) col = CHR + col;
 					}
 					else col = CHR + "X";
 				}
-				if ((isSp1 && oCol.endsWith("1")) || (isSp2 && oCol.endsWith("2"))) {
+				if ((isSp1 && isCol1) || (isSp2 && !isCol1)) { // add ref info
 					if (isTSV) col = col.toUpperCase();
 					else       col = "<b>" + col + "</b>";
 				}
 			}
-			else if (col.equals(CCB) && isHTML) {
-				if (chr.equals("") ) {
-					if (isSp1) col = "<b>C1</b>.C2.B";
-					else       col = "C1.<b>C2</b>.B";
+			else if (col.equals(CCB) || col.equals(CC)) {	// C.C.B one column
+				if (isHTML) {
+					if (col.equals(CCB)) {
+						if (isSp1) col = "<b>" + chr + "</b>.Cx.B";
+						else       col = "Cx.<b>" + chr + "</b>.B";
+					}
+					else {						// Summary
+						if (isSp1) col = "<b>C1</b>.C2";
+						else       col = "C1.<b>C2</b>";
+					}
 				}
-				else {
-					if (isSp1) col = "<b>" + chr + "</b>.Cx.B";
-					else       col = "Cx.<b>" + chr + "</b>.B";
+				else {							//TSV has no ref info
+					if (isSp1) col = "C1.c2.B";
+					else       col = "c1.C2.B";
+				}
+			}
+			else if (col.endsWith("1") || col.endsWith("2")) {
+				if(isHTML) {
+					String name = (isCol1) ? dname1 : dname2;
+					col = name+"<br>"+col;
 				}
 			}
 			if (isPop) buffer += "<i>" + col + "</i>";  // popup does not show lightgrey
@@ -553,10 +587,10 @@ public class Report extends JDialog  {
 		cntHtmlRow++;
         return buffer;	
 	} 
-    
+   
     private String df(int i, double d) { // Excel removes trailing zeros and leading +
     	String x = String.format("%.3f", d);
-    	if (i==5 && !x.startsWith("-")) x = "+" + x;
+    	if (i==PCCcol && !x.startsWith("-")) x = "+" + x;
     	return x;
     }
     /********************************************************************/

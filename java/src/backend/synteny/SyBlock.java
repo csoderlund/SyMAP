@@ -23,7 +23,7 @@ public class SyBlock  implements Comparable <SyBlock>{
 	
 	protected int mGrpIdx1, mGrpIdx2, mBlkNum=0; // Finalize
 	protected int mIdx;						     // get from database to enter pseudo_blocks_hits
-	protected double avgGap1=0, avgGap2=0, stdDev1=0, stdDev2=0; 
+	protected double avgGap1=0, avgGap2=0; 
 	
 	protected Vector<SyHit> hitVec;		 // Block hits
 	protected int nHits=0;				 // number hits
@@ -131,7 +131,7 @@ public class SyBlock  implements Comparable <SyBlock>{
 		catch (Exception e) {ErrorReport.print(e,"strictTrim"); return false;}
 	}
 	/******************************************************************/
-	// Block finalize: Compute avgGap, stdDev; CAS572 add; CAS574 do both averages in one call
+	// Block finalize: Compute avgGap, stdDev; CAS572 add; CAS574 do both averages in one call; CAS575 remove stddev
 	// 
 	protected void avgGap() { 
 		int nGap = nHits-1; 
@@ -147,9 +147,8 @@ public class SyBlock  implements Comparable <SyBlock>{
 		for (int i=0; i<nHits-1; i++) { 
 			SyHit htA = hitVec.get(i);
 			SyHit htB = hitVec.get(i+1);
-			
-			htA.gap2 = Math.abs(htB.s2 - htA.e2); //if (!isOlap(htA.s2, htA.e2, htB.s2, htB.e2)) { CAS574 remove
-			avgGap2 += htA.gap2 ;
+		
+			avgGap2 += Math.abs(htB.s2 - htA.e2); //if (!isOlap(htA.s2, htA.e2, htB.s2, htB.e2)) { CAS574 remove
 		}
 		avgGap2 /= nGap;
 		
@@ -164,22 +163,9 @@ public class SyBlock  implements Comparable <SyBlock>{
 			SyHit htA = hitVec.get(i);
 			SyHit htB = hitVec.get(i+1);
 			
-			htA.gap1 = Math.abs(htB.s1 - htA.e1); //if (!isOlap(htA.s1, htA.e1, htB.s1, htB.e1)) {CAS574 remove
-			avgGap1 += htA.gap1 ;
+			avgGap1 += Math.abs(htB.s1 - htA.e1);
 		}
 		avgGap1 /= nGap; 
-		
-		// stdDev 
-		double var1=0.0, var2=0.0;		// saved in DB, but not used
-		for (int i=0; i<nGap; i++) {
-			SyHit ht = hitVec.get(i);
-			
-			var1 += Math.pow((double) ht.gap1-avgGap1, 2);
-			var2 += Math.pow((double) ht.gap2-avgGap2, 2);
-		}
-		var1 /= nGap; var2 /= nGap;			// population
-		stdDev1 = Math.sqrt(var1);
-		stdDev2 = Math.sqrt(var2);	
 	}
 	
 	protected boolean isContained(int pos1, int pos2) {
@@ -206,6 +192,9 @@ public class SyBlock  implements Comparable <SyBlock>{
 		
 		String z = String.format(" [1st Hit# %4d  C# %d]",hitVec.get(0).hitNum, hitVec.get(0).coset);
 		Globals.prt(x + y + z);
+	}
+	public String toString() {
+		return "Block#" + mBlkNum + " Grps " + mGrpIdx1 + " " + mGrpIdx2;
 	}
 	public int compareTo (SyBlock b2) {
 		if (mS1 != b2.mS1) 	return mS1 - b2.mS1;

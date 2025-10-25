@@ -4,7 +4,6 @@ import java.awt.Cursor;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.HashMap;
@@ -19,7 +18,6 @@ import util.Utilities;
  * Results table of Query
  * Has ColumnComparator and sortByColumn
  */
-
 public class TableData implements Serializable {
 	private static final long serialVersionUID = 8279185942173639084L;
     private static final int DISPLAY_INTERVAL = 1000; 
@@ -73,7 +71,7 @@ public class TableData implements Serializable {
 		return retVal;
 	}
 	/****************************************************************
-	 * Arrange columns:	CAS561 add
+	 * Arrange columns:	
 	 * Group all gene columns with same second part, e.g. Gene#.
 	 * Group Hit columns, then rest of General
 	 */
@@ -274,22 +272,25 @@ public class TableData implements Serializable {
     	catch (Exception e) {ErrorReport.print(e, "add Rows With Progress");}
     }
     
+ // it was using iteration and copyInfo; copyInfo would not work with the self, which I never figured out why; CAS575
     protected void finalizeX() { // X so not deprecated
-    	arrHeaders = new TableDataHeader[vHeaders.size()];
-    	vHeaders.copyInto(arrHeaders);
+    	int ncol = vHeaders.size();
+    	arrHeaders = new TableDataHeader[ncol];
+  
+    	for (int i=0; i<ncol; i++) {	
+    	    arrHeaders[i] = vHeaders.get(i);
+    	}
     	vHeaders.clear();
 
     	arrData = new Object[vData.size()][];
-    	Iterator <Vector<Object>> iter = vData.iterator();
-    	Vector<Object> rowV;
-    	
-    	int x = 0;
-    	while(iter.hasNext()) {
-    		arrData[x] = new Object[arrHeaders.length];
-    		rowV = iter.next();
-    		rowV.copyInto(arrData[x]);
-    		rowV.clear();
-    		x++;
+    	for (int i=0; i< vData.size(); i++) {
+    		arrData[i] = new Object[ncol];
+    		Vector <Object> row = vData.get(i);
+    		
+    		for (int j=0; j< arrHeaders.length; j++) {
+    			if (j>=row.size()) break;				// for isSelf; CAS575
+    			arrData[i][j] = row.get(j);
+    		}
     	}
     	vData.clear();
     }
@@ -463,7 +464,7 @@ public class TableData implements Serializable {
 					else       retval = vals1[x].compareTo(vals2[x]);
 				}
 			}
-			else if (colHeader.equals(Q.hitSt)) {// TableSort converts signs x/x; but its x/x here; CAS572
+			else if (colHeader.equals(Q.hitSt)) {// TableSort converts signs x/x; but its x/x here;
 				String c1 = (String)o1[nColumn];
 				String c2 = (String)o2[nColumn];
 				if (c1.equals("+/+") || c1.equals("-/-")) c1 = "=="; else c1 = "!=";
@@ -590,7 +591,7 @@ public class TableData implements Serializable {
 		}
 		return line;
     }
-    // CAS556 for UtilReport, get set of All_Anno
+    // For UtilReport, get set of All_Anno
     protected HashMap <String, String> getAllAnno(int row) {
     	HashMap <String, String> rowMap = new HashMap <String, String> ();
 		for (int i=0; i<arrHeaders.length; i++) {
@@ -600,7 +601,7 @@ public class TableData implements Serializable {
 		}
 		return rowMap;
     }
-    // For TableShow.align to get gene coordinates; it would not cast to integer until the calling routine
+    // For TableShow.align to get gene coordinates
     protected Object [] getGeneCoords(String spAbbr, int row) {
     	Object [] coords = {-1, -1};
     	

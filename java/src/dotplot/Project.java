@@ -8,12 +8,12 @@ import symap.manager.Mproject;
 /***************************************************************
  * Called in Data for each selected project
  * This uses the more global Mproject, but adds a little data and interface
+ * CAS575 remove grpType = tProj.getdbGrpName; not used
  */
 public class Project {
 	private int id;
 	private String displayName;
 	private String grpPrefix;
-	private String grpType;
 	private Group[] groups;
 
 	protected Project(int id, DBconn2 dbc2) { 
@@ -23,14 +23,10 @@ public class Project {
 		this.id          = id;
 		this.displayName = tProj.getDisplayName();
 		this.grpPrefix   = tProj.getGrpPrefix();
-		this.grpType     = tProj.getdbGrpName();
 	}
 	// Data.DBload reads all data
 	protected void setGroups(Group[] grps) {
-		if (grps != null) {
-			// CAS573 obsolete; Group.setScaleFactors(grps, minGrpSize);
-			Group.setOffsets(grps);
-		}
+		if (grps != null) Group.setOffsets(grps);
 		groups = grps;
 	}
 
@@ -65,7 +61,6 @@ public class Project {
 
 	protected int getID() { return id; }
 	protected String getGrpPrefix() { return grpPrefix; }
-	protected String getGrpType() { return grpType; }
 	protected String getDisplayName() { return displayName; }
 	public String toString() { return displayName; } 
 
@@ -89,13 +84,5 @@ public class Project {
 			}
 		}
 		return out.toArray(new Tile[0]);
-	}
-	
-	protected static Project getProject(Project[] projects, int startIndex, int id) {
-		if (projects != null)
-			for (int i = startIndex;  i < projects.length;  i++)
-				if (projects[i].getID() == id)
-					return projects[i];
-		return null;
 	}
 }

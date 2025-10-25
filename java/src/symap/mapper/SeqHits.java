@@ -117,8 +117,8 @@ public class SeqHits  {
 			else if (hd.end2>lasthd.end2) lasthd = hd;
 		}
 		
-		projIdx1 = st1.getProject();
-		projIdx2 = st2.getProject();
+		projIdx1 = st1.getProjIdx();
+		projIdx2 = st2.getProjIdx();
 		grpIdx1  = st1.getGroup(); 
 		grpIdx2  = st2.getGroup(); 
 		
@@ -648,7 +648,7 @@ public class SeqHits  {
 				 }
 				 else mapper.setHelpText(null);
 			 }
-			 else {/******** text ***********/
+			 else {/******** text from sequence.Filter 'Show text' ***********/
 				 int xr=4, xl=19; 
 				 
 				 String numText1=null;  
@@ -809,8 +809,8 @@ public class SeqHits  {
 			
 			String proj1 = seqObj1.getTitle(); //Proj Chr
 			String proj2 = seqObj2.getTitle(); 
-			Annotation aObj1 = seqObj1.getAnnoObj(hitDataObj.getAnnot1(), hitDataObj.getAnnot2());
-			Annotation aObj2 = seqObj2.getAnnoObj(hitDataObj.getAnnot1(), hitDataObj.getAnnot2());
+			Annotation aObj1 = seqObj1.getAnnoObj(hitDataObj.getAnnot1(), hitDataObj.getAnnot2()); // check seqObj1 geneVec
+			Annotation aObj2 = seqObj2.getAnnoObj(hitDataObj.getAnnot1(), hitDataObj.getAnnot2()); // check seqObj2 geneVec
 			
 			String trailer = "";
 			if (Globals.INFO) {

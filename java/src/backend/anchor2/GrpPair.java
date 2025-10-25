@@ -217,7 +217,7 @@ public class GrpPair {
 		String msg1 = String.format("Clusters %s-%s",  qChr, tChr); 
 		if (Arg.VB) { 
 			String msg2 = (Globals.INFO || Globals.TRACE) ? String.format("Disorder (EQ,NE) %,4d %,4d ", cntDOeq, cntDOne) : "";
-			String msg = String.format("%s   Both genes %,6d   One gene %,6d   No gene %,6d    %s", msg1, cntG2, cntG1, cntG0, msg2);
+			String msg = String.format("%-20s   Both genes %,6d   One gene %,6d   No gene %,6d    %s", msg1, cntG2, cntG1, cntG0, msg2);
 			Utils.prtIndentNumMsgFile(plog, 1, cntSave, msg); // format same as Blocks and Pseudos; CAS568
 		}
 		else Globals.rprt(String.format("%,5d %s", cntSave, msg1));

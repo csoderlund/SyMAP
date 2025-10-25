@@ -43,7 +43,7 @@ public class Plot extends JPanel implements HelpListener {
 	private String lastInfoMsg="";
 	private boolean is2D=false;
 	protected boolean bPlusMinusScroll=false; // if +/- used, scroll to selected block in Tile view; CAS573
-	
+
 	protected Plot(Data data, HelpBar hb, boolean is2D) {
 		super(null);
 		
@@ -231,7 +231,7 @@ public class Plot extends JPanel implements HelpListener {
 					int rwidth  = (int)((int)((blk.getEnd(X) - blk.getStart(X))) * xPixelBP);
 					int rheight = (int)((int)((blk.getEnd(Y) - blk.getStart(Y))) * yPixelBP);
 					
-					if (fd.isShowBlocks()) { // CAS571 allow this to be turned off and still show block#
+					if (fd.isShowBlocks()) { // allow this to be turned off and still show block#
 						g.setColor(fd.getRectColor());
 						g.drawRect(rx+MARGIN, ry+MARGIN, rwidth+1, rheight+1);
 					}
@@ -252,7 +252,7 @@ public class Plot extends JPanel implements HelpListener {
 		boolean bPct = fd.isPctScale();
 		boolean bLen = fd.isLenScale();
 		
-		int s = (bLen) ? ht.getLength() / 2 : 1; // polygon/line is length of hit; CAS573 1 if !bLen
+		int s = (bLen) ? ht.getLength() / 2 : 1; // polygon/line is length of hit; 1 if !bLen
 		int as = Math.abs(s);
 		int hx = ht.getX(), hy = ht.getY();
 		
@@ -431,12 +431,14 @@ public class Plot extends JPanel implements HelpListener {
 		}
 	}
 	private boolean showHit(FilterData fd, DPHit ht) {
+		if (ht.isDiagHit()) return true;		// isSelf, always draw diagonal
+		
 		cntHitsTot++;
 		if (ht.bothGene()) cnt2GeneTot++;
 		else if (ht.oneGene()) cnt1GeneTot++;
 		else cnt0GeneTot++;
 		
-		if (fd.isShowBlockHits() && !ht.isBlock()) return false;
+		if (fd.isShowBlockHits() && !ht.isBlock()) return false; 
 		
 		if (fd.isShowGene0() && !ht.noGene()) return false;
 		if (fd.isShowGene1() && !ht.oneGene()) return false;
@@ -444,6 +446,7 @@ public class Plot extends JPanel implements HelpListener {
 		
 		if (ht.getPctid() < fd.getPctid()) return false;
 		
+		// all pass, do counts for summary
 		if (ht.isBlock()) {
 			cntHitBlk++;
 			if (ht.bothGene()) 		cnt2GeneBlk++;
@@ -456,7 +459,6 @@ public class Plot extends JPanel implements HelpListener {
 			else if (ht.oneGene()) 	cnt1GeneNB++;
 			else if (ht.noGene()) 	cnt0GeneNB++;
 		}
-		
 		return true;
 	}
 	
@@ -476,16 +478,30 @@ public class Plot extends JPanel implements HelpListener {
 		lastInfoMsg=msg;
 		return msg;
 	}
-	protected String prtCntsS() { // CAS571 add #Blocks and change name to fullname
-		String  w=">> ", x, b, nb, msg;
+	protected String prtCntsS() { 
+		String  w=">> ", x, b, nb, msg, fn="";
 		if (data.isTileView()) {
-			w += data.getProject(X).getDisplayName() + " " + data.getCurrentGrp(X).getFullName() + "  ";
-			w += data.getProject(Y).getDisplayName() + " " + data.getCurrentGrp(Y).getFullName();
+			if (data.isSelf) { // CAS575 add isSelf
+				w += data.getProject(X).getDisplayName() + " self-synteny " + data.getCurrentGrp(X).getFullName() + " " +  data.getCurrentGrp(Y).getFullName();
+				if (data.getCurrentGrp(X).getFullName().equals(data.getCurrentGrp(Y).getFullName()))
+					fn =  "\nStats cover both sides of diagonal";
+			}
+			else {
+				w += data.getProject(X).getDisplayName() + " " + data.getCurrentGrp(X).getFullName() + "  "
+				   + data.getProject(Y).getDisplayName() + " " + data.getCurrentGrp(Y).getFullName();
+			}
 		}
 		else {
-			for (int i = 0;  i < data.getNumProjects();  i++) 
+			if (data.isSelf) {
+				w += data.getProject(X).getDisplayName() + " self-synteny ";
+				fn =  "\nStats cover both sides of diagonal";
+			}
+			else {
+				for (int i = 0;  i < data.getNumProjects();  i++) 
 				w += data.getProject(i).getDisplayName() + "  ";
+			}
 		}
+	
 		w += String.format("    #Blocks=%,d      %sId=%d\n", cntBlocks, "%", (int) fd.getPctid());
 		
 		String sz1 = getSize(cntHitsTot);
@@ -512,7 +528,7 @@ public class Plot extends JPanel implements HelpListener {
 				cnt1GeneNB, pStr(cnt1GeneNB, cnt1GeneTot,cntHitNonBlk),
 				cnt0GeneNB, pStr(cnt0GeneNB, cnt0GeneTot,cntHitNonBlk));
 		
-		msg = w + x + b + nb;
+		msg = w + x + b + nb + fn;
 		return msg;
 	}
 	
@@ -635,7 +651,7 @@ public class Plot extends JPanel implements HelpListener {
 			
 			if (data.isTileView()) { // 2d-view 
 				data.selectBlock(bpX, bpY);	// If in a block, will set it as selected
-				repaint();					// Always repaint to remove highlight of previous selected block; CAS571
+				repaint();					// Always repaint to remove highlight of previous selected block
 			}
 			else if (x >= MARGIN && x <= MARGIN+dim.width && y >= MARGIN && y <= MARGIN+dim.height) {
 				if (data.selectTile(bpX, bpY)) repaint(); 

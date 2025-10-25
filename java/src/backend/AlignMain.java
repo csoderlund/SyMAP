@@ -9,6 +9,7 @@ import java.util.Vector;
 
 import java.util.TreeMap;
 import java.util.Queue;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -34,7 +35,7 @@ public class AlignMain {
 	private static final int maxFileSize = 60000000; // 'Concat' parameter works for demo using this size
 	
 	private ProgressDialog plog;
-	private String proj1Dir, proj2Dir; // also dbName
+	private String proj1Dir, proj2Dir; // also dbName, directory name
 	private Mproject mProj1, mProj2;
 	
 	private String alignLogDirName;
@@ -140,8 +141,8 @@ public class AlignMain {
 					plog.msg("Alignments:  success " + getNumCompleted());
 					
 					String tmpDir = Constants.getNameTmpDir(proj1Dir, proj2Dir);// only delete tmp files if successful
-					if (Constants.PRT_STATS) {
-						System.out.println("Do not delete " + tmpDir);
+					if (Globals.TRACE) {// CAS575 changed from Constants.Prt_stats
+						Globals.prt("Do not delete " + tmpDir);
 					}
 					else {
 						File dir = new File(tmpDir);
@@ -168,7 +169,7 @@ public class AlignMain {
 		try {
 			String alignDir = Constants.getNameResultsDir(proj1Dir, proj2Dir) + Constants.alignDir;
 			File f = new File(alignDir);
-			if (!f.exists()) return false;	/*-- alignments to be done CAS571 was written .used... --*/
+			if (!f.exists()) return false;	/*-- alignments to be done ... --*/
 			
 			boolean bdone = Utils.checkDoneFile(alignDir); // all.done
 			nAlignDone = Utils.checkDoneMaybe(alignDir);   // # existing .mum files
@@ -217,8 +218,7 @@ public class AlignMain {
 			alignParams += mp.getChgAlign(Mpair.FILE, true); // true, do not add command line
 			if (Ext.isMummer4Path()) alignParams += Ext.getMummerPath() + " ";
 			
-			//String resultDir = "./" + Constants.getNameResultsDir(mProj1.strDBName, mProj2.strDBName);
-			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); // CAS569 use this so renamed...
+			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); 
 			if (pfile==null) pfile = new File(resultDir,Constants.usedFile); // create 
 			
 			PrintWriter out = new PrintWriter(pfile);
@@ -231,7 +231,7 @@ public class AlignMain {
 	private void paramsRead(String dateTime) {
 		try {
 			alignParams = "Use previous " + nAlignDone + " MUMmer files " + dateTime; 
-			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); // CAS569 use this so renamed...
+			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); 
 			if (pfile==null) return;  // okay, not written yet
 			
 			alignParams = "Use previous " + nAlignDone + " "; // completed with what is in file
@@ -250,12 +250,12 @@ public class AlignMain {
 	 */
 	private void buildAlignments()  {
 		try {
-			plog.msg("\nAligning " + proj1Dir + " and " + proj2Dir + " with " + nMaxCPUs + " CPUs"); // CAS568 remove mp.getAlign, but add CPU
+			plog.msg("\nAligning " + proj1Dir + " and " + proj2Dir + " with " + nMaxCPUs + " CPUs"); 
 			
 		/* create directories */
 			// result directory (e.g. data/seq_results/demo1_to_demo2)
 			Utilities.checkCreateDir(resultDir, true /* bPrt */);
-			mummerParamsWrite(); // CAS571 write here after creating the directory
+			mummerParamsWrite(); // write here after creating the directory
 			
 			// temporary directories to put data for alignment
 			String tmpDir =  Constants.getNameTmpDir(proj1Dir, proj2Dir);
@@ -288,8 +288,8 @@ public class AlignMain {
 			if (isSelf) program = Ext.exNucmer;
 			
 			// user over-rides
-			if      (program.equals(Ext.exPromer) && mp.isNucmer(Mpair.FILE)) program = Ext.exNucmer; // CAS568 was backwards
-			else if (program.equals(Ext.exNucmer) && mp.isPromer(Mpair.FILE)) program = Ext.exPromer; // CAS568 was backwards
+			if      (program.equals(Ext.exPromer) && mp.isNucmer(Mpair.FILE)) program = Ext.exNucmer; 
+			else if (program.equals(Ext.exNucmer) && mp.isPromer(Mpair.FILE)) program = Ext.exPromer; 
 				
 			String args = (program.contentEquals(Ext.exPromer)) ? mp.getPromerArgs(Mpair.FILE) : mp.getNucmerArgs(Mpair.FILE);
 			String self = (isSelf) ? (" " + mp.getSelfArgs(Mpair.FILE)) : ""; 
@@ -300,18 +300,22 @@ public class AlignMain {
 			// For self, p1=p2
 			String alignDir = resultDir + Constants.alignDir;
 			Utilities.checkCreateDir(alignDir, false);
+			File[] fs1 = fh_tDir1.listFiles();		// order, not necessary, but nice; CAS575
+			Arrays.sort(fs1);	
+			File[] fs2 = fh_tDir2.listFiles();
+			Arrays.sort(fs2);	
 			
-			for (File f1 : fh_tDir1.listFiles()) {    
+			for (File f1 : fs1) {    
 				if (!f1.isFile() || f1.isHidden()) continue; 
 				
-				for (File f2 : fh_tDir2.listFiles()) {
+				for (File f2 : fs2) {
 					if (!f2.isFile() || f2.isHidden()) continue; 
 					
 					// XXX
 					String aArgs = args;
 					if (isSelf) { // chr files have been written as is
 						if (f1.getName().equals(f2.getName())) aArgs += self;
-						else if (f1.getName().compareTo(f2.getName()) < 0)  continue; 
+						else if (f1.getName().compareTo(f2.getName()) < 0)  continue; // AnchorMain will correct order when wrong
 					}
 			
 					AlignRun ps = new AlignRun(program, aArgs, f1, f2, alignDir, alignLogDirName);
@@ -321,7 +325,7 @@ public class AlignMain {
 				}
 			}
 			if (alignList.size()>0) {
-				Collections.sort(alignList); // CAS566 add sort and add to queue after sort
+				Collections.sort(alignList); 
 				for (AlignRun ps : alignList) {
 					toDoQueue.add(ps);
 					ps.setStatus(AlignRun.STATUS_QUEUED);
@@ -330,7 +334,7 @@ public class AlignMain {
 			}
 			if (nAlignDone>0) {
 				if (alignList.size()==0) Utils.writeDoneFile(alignDir);
-				plog.msg("Alignments to be completed: " + alignList.size()); // CAS566 add
+				plog.msg("Alignments to be completed: " + alignList.size()); 
 			}
 			else if (alignList.size() == 0  && !Cancelled.isCancelled()) {
 				plog.msg("Warning: no alignments between projects");
@@ -362,7 +366,7 @@ public class AlignMain {
 			}
 			
 			boolean geneMask = (mp.mProj1.getIdx() == mProj.getIdx()) ? 
-								mp.isMask1(Mpair.FILE) : mp.isMask2(Mpair.FILE);	// CAS568 mask in pairs instead of proj
+								mp.isMask1(Mpair.FILE) : mp.isMask2(Mpair.FILE);	
 			String gmprop = (geneMask) ? "Masking non-genic sequence; " : "";
 			if (geneMask) plog.msg(projName + ": " + gmprop);
 				
@@ -377,7 +381,7 @@ public class AlignMain {
 				if (concat) msg += "Concatenating all sequences into one file for " + who; 
 				else        msg += "Writing sequences into one or more files for " + who; 
 			}
-			else msg += "Writing separate chromosome files for self-synteny"; // CAS568
+			else msg += "Writing separate chromosome files for self-synteny";
 					
 			// pseudos (files): grp_idx, fileName (e.g. chr3.seq), length
 			// xgroups (chrs):  idx, proj_idx, chr#, fullname where grp_idx is xgroups.idx
@@ -469,7 +473,7 @@ public class AlignMain {
 					if (interrupted) break;
 	
 					rs = tdbc2.executeQuery("select fullname from xgroups where idx=" + gIdx);
-					rs.next(); // CAS560 was first()
+					rs.next(); 
 					String grpFullName = rs.getString(1);
 					fw.write(">" + grpFullName + "\n");
 					
@@ -548,11 +552,11 @@ public class AlignMain {
 	}
 	protected int getNumRemaining() {
 		synchronized(threads) {
-			return toDoQueue.size(); // CAS566 don't add error (was +getNumErrors();) 
+			return toDoQueue.size(); 
 		}
 	}
 	protected int getNumCompleted() {
-		return alignList.size() - getNumRunning() - getNumRemaining() - getNumErrors(); // CAS566 remove errors here
+		return alignList.size() - getNumRunning() - getNumRemaining() - getNumErrors(); 
 	}
 	protected int getNumErrors() {
 		int count = 0;

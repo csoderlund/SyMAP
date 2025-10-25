@@ -21,13 +21,15 @@ public class SyMAPmanager extends ManagerFrame {
 	private static final long serialVersionUID = 1L;
 	
 	public static void main(String args[])  {	
-		// CAS569 user may have compiled, etc. if (!checkJavaSupported(null)) return;
-		
+		printVersion(); // CAS575 put first so seen in help
 		if (equalOption(args, "-h") || equalOption(args, "-help") || equalOption(args, "--h")) {
 			prtParams(args); // see ManagerFrame for all variable stuff
 			System.exit(0);
 		}
-		printVersion();
+		if (equalOption(args, "-hh")) {// CAS575 added for me
+			prtHiddenParams(args);
+			System.exit(0);
+		}
 		setParams(args);
 		if (!setArch()) return; // must go after setParams; reads configuration file
 		
@@ -55,20 +57,29 @@ public class SyMAPmanager extends ManagerFrame {
 		
 		System.out.println("  -c string : filename of config file (to use instead of symap.config)");
 		System.out.println("  -sql      : check MySQL for important settings and external programs");
-		System.out.println("  -a        : do not trim 2D alignments");
+		
+		if (!equalOption(args, "-r")) { // viewSymap - treated as read-only
+			System.out.println("\nAlign&Synteny:");
+			System.out.println("  -p N      : number of CPUs to use (same as setting CPUs on Manager");
+			System.out.println("  -v        : A&S verbose output (same as checking Verbose on Manager)");
+			System.out.println("  -mum      : do not remove any mummer files");
+			System.out.println("  -wsp      : for Algo2, print MUMmer hits that differ from gene strand");
+		}
+		System.out.println("\nDisplay:");
+		System.out.println("  -a        : 2D: do not trim alignments");
 		System.out.println("  -q        : Queries: show gene overlap instead of exon for Cluster Algo2");
 		System.out.println("  -g        : Queries: run old PgeneF algorithm instead of the new Cluster algorithm");
 		System.out.println("  -h        : show help to terminal and exit");
-			
-		if (!equalOption(args, "-r")) { // viewSymap - treated as read-only
-			System.out.println("\nAlign&Synteny:");
-			System.out.println("  -p N      : number of CPUs to use");
-			System.out.println("  -v        : A&S verbose output");
-			System.out.println("  -mum      : do not remove any mummer files");
-			System.out.println("  -wsp      : for g2, print MUMmer hits that differ from gene strand (v5.4.8 Algo2, v5.6.0 update)");
-		}
 	}
-	
+	public static void prtHiddenParams(String args[]) {
+		System.out.println("Developer only special flags ");
+		System.out.println("  -ii  Extra info on 2d popups, Queries ");
+		System.out.println("  -tt  Trace output, and query zTest files ");
+		System.out.println("  -dd  Debug - mysql trace, etc");
+		System.out.println("  -dbd Database - saves special tables to db");
+		System.out.println("  -bt  Synteny trace");
+		System.out.println("  -s   Regenerate summary");
+	}
 	private static void setParams(String args[]) { 
 		if (args.length ==0) return;
 		
@@ -140,20 +151,19 @@ public class SyMAPmanager extends ManagerFrame {
 		/*************************************************************************/
 		/** not shown in -h help - hence, the double character so user does not use by mistake **/
 		if (equalOption(args, "-ii")) {
-			System.out.println("-ii Extra info ");
+			System.out.println("-ii Extra info (e.g. idx on hit and gene info; warning messages");
 			Globals.INFO = true;
 		}
 		if (equalOption(args, "-tt")) {
-			System.out.println("-tt Trace output (developer only)");
+			System.out.println("-tt Trace output and mysql to file");
 			Globals.TRACE = true;   	
-			Constants.PRT_STATS = true; 
 		}
 		if (equalOption(args, "-dd")) {
-			System.out.println("-dd Debug (developer only)");
+			System.out.println("-dd Debug");
 			Globals.DEBUG = true;
 		}
 		if (equalOption(args, "-dbd")) {
-			System.out.println("-dbd Database (developer only)");
+			System.out.println("-dbd Database - add tables to DB");
 			Globals.DBDEBUG = true;
 		}
 		

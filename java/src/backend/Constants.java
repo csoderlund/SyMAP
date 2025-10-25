@@ -14,10 +14,8 @@ public class Constants {
  * Command line arguments
  */
 // Set in SymapCE.SyMAPmanager
-public static boolean PRT_STATS=  false; 		// -tt extra output on Anchor1/2; 
 public static boolean WRONG_STRAND_PRT = false; // -wsp  print wrong strand hits for algo2 
 public static boolean CoSET_ONLY = false;		// -scs on A&S ONLY execute AnchorPosts; not on -h, leave for possible updates
-//public static boolean PSEUDO_ONLY = false;	// CAS571 in PairParams
 public static boolean MUM_NO_RM = false;		// -mum on A&S ONLY do not remove any mummer files; 
 public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block coords; not on -h, but still works
 

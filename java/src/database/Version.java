@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import backend.Utils;
-import backend.AnchorMain;
 import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
@@ -25,15 +24,30 @@ public class Version {
 	
 	private DBconn2 dbc2=null;
 	
-	public Version (DBconn2 dbc2) {
+	public Version(DBconn2 dbc2) {
 		this.dbc2 = dbc2;
+	}
+	public void check() { // made separate for initial call; CAS575
 		checkForSchemaUpdate();
 		checkForContentUpdate();
 		
 		if (dbdebug) 	updateDEBUG();
 		else 			removeDEBUG();
 	}
-	
+    public boolean isVerLt(int pairIdx, int vnum) {// add; CAS575
+    try {
+    	String v = dbc2.executeString("select syVer from pairs where idx=" + pairIdx);
+    	String vx = v.substring(1).replace(".", "");
+    	int n = util.Utilities.getInt(vx);
+    	if (n == -1) {			// possible ending char
+    		vx = vx.substring(0, v.length()-1);
+    		n = util.Utilities.getInt(v);
+    	}
+    	if (n<vnum) Globals.prt("PairIdx=" + pairIdx + " was built with " + v + " (" + n + "<" + vnum + ") ");
+    	return n<vnum;
+    }
+    catch (Exception e) {ErrorReport.print(e, "Getting version"); return false;}
+    }
 	// if first run from viewSymap, updates anyway (so if no write permission, crashes)
 	private void checkForSchemaUpdate() {
 		try {
@@ -51,13 +65,13 @@ public class Version {
 			}
 			if (idb==dbVer) return; 
 			
-			if (idb>dbVer) { // CAS546 add
+			if (idb>dbVer) { 
 				Utilities.showWarningMessage("This database schema is " + strDBver + "; this SyMAP version uses " + strVer +
 						"\nThis may not be a problem.....");
 				return;
 			}
 			
-			if (!Utilities.showYesNo("DB update", 					// CAS544 change from continue
+			if (!Utilities.showYesNo("DB update", 					
 					"Database schema needs updating from " + strDBver + " to " + strVer +"\nProceed with update?")) return;
 			
 			System.out.println("Updating schema from " + strDBver + " to " + strVer);

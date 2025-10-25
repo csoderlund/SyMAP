@@ -11,7 +11,7 @@ import symap.Globals;
  */
 public class SyHit implements Comparable <SyHit> {
 	protected int s1, e1, s2, e2; // input coords; used for final block coords and finding midpoint
-	protected int mIdx;		// index of the hit in the database table
+	protected int mIdx;     // index of the hit in the database table;
 	protected int mPctID;   // MUMmer %id; create average of chain to save in DB; never used
 	protected int coset;	// collinear set; 				 for bStrict to include cosets
 	protected int hitNum;   // hitnum computed down G1 side after clustering
@@ -25,8 +25,6 @@ public class SyHit implements Comparable <SyHit> {
 	protected int mScore;		// score of longest chain terminating at this hit
 	protected int mPrevI;		// predecessor in longest chain; finalBlock used for previous hitNum
 	protected int mNDots;		// number of hits in longest chain
-	
-	protected int gap1=0, gap2=0;  
 	
 	// indicates if the hit has been returned in a chain in the current iteration
 	protected boolean mDPUsed = false;
@@ -49,8 +47,11 @@ public class SyHit implements Comparable <SyHit> {
 		midG2 = (s2+e2)/2;	
 	}
 	protected void tprt(String msg) {
-		Globals.prt(String.format("  %s   Hit# %,6d  Gap: %,8d  %,8d  S/E: %,10d %,10d %,10d %,10d  CS %d", 
-				msg, hitNum, gap1, gap2, s1, e1, s2, e2, coset));
+		Globals.prt(String.format("  %s   Hit# %,6d  S/E: %,10d %,10d %,10d %,10d  CS %d", 
+				msg, hitNum, s1, e1, s2, e2, coset));
+	}
+	public String toString() {
+		return String.format(" Idx %,6d Hit# %,6d  S/E: %,10d %,10d %,10d %,10d ", mIdx, hitNum, s1, e1, s2, e2);
 	}
 	/////////////////////////////////////////////////////////////////////
 	public int compareTo(SyHit h2) { // For binarySearch

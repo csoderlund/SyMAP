@@ -12,10 +12,9 @@ import util.ErrorReport;
 import util.ProgressDialog;
 
 /*****************************************************
- * CAS534 renamed backend.Project to SyProj
- * Used by AnnotLoadMain, AnchorsMain, SyntenyMain; mostly for AnchorMain
+ * Used by AnchorMain1
  * 
- * Contains Mproject object plus groups and annotation
+ * Contains Mproject object plus groups and annotation; CAS575 removed BinStats
  */
 public class Proj  {
 	protected int idx;
@@ -31,7 +30,6 @@ public class Proj  {
 	private Pattern namePat;
 	
 	private long totalSize = 0; 
-	private ProgressDialog plog;
 	private int topN=2;
 	
 	/*****************************************************************
@@ -40,7 +38,6 @@ public class Proj  {
 	 */
 	protected Proj(DBconn2 dbc2, ProgressDialog log, Mproject proj, String name, int topN, int qType) throws Exception {
 		this.dbc2 = dbc2;
-		this.plog = log;
 		this.mProj = proj;
 		this.name = name;
 		this.topN = topN;
@@ -96,27 +93,5 @@ public class Proj  {
 			
 		if (grpName2Idx.containsKey(s)) return grpName2Idx.get(s);
 		return -1;
-	}
-	
-	/**************** AnchorMain ****************************/
-	
-	// CAS535 protected void collectPGInfo() {for (Group g : groupVec) {g.collectPGInfo(name);}}
-	// CAS535 protected void filterHits(Set<Hit> hits) for (Group g : groupVec) g.filterHits(hits);
-	// CAS535 protected void checkPreFilter2(Hit hit, SubHit sh) {Group grp = idx2Grp.get(sh.grpIdx);grp.checkAddToHitBin2(hit,sh);}
-	
-	protected void printBinStats(){
-		BinStats bs = new BinStats();  
-
-		plog.msgToFile("Stats for " + name);
-		for (Group g : groupVec) {
-			g.collectBinStats(bs);
-			plog.msg(g.debugInfo());
-		}
-		if (bs.mNBins == 0) {
-			plog.msgToFile("No Stats");
-			return;
-		}
-		plog.msgToFile(bs.debugInfoAS());
-		plog.msgToFile(bs.debugInfoHB());
 	}
 }

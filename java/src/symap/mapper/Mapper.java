@@ -145,7 +145,7 @@ public class Mapper extends JComponent
 		
 		if (t2==null) System.out.println("Mapper Error: NULL TRACK 2");
 		
-		if (t1.getProject() == t2.getProject()) { // isSelf
+		if (t1.getProjIdx() == t2.getProjIdx()) { // isSelf
 			if (t1==src && getTrackPosition(t1)==Globals.LEFT_ORIENT) return true;
 			else return false;
 		}

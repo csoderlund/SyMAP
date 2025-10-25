@@ -5,9 +5,9 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.ResultSet;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.TreeMap;
 import java.util.Vector;
 import java.util.HashMap;
 
@@ -19,8 +19,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import database.DBconn2;
 import symap.manager.Mproject;
+import symap.manager.Mpair;
 import util.ErrorReport;
 import util.Jcomp;
 import util.Utilities;
@@ -28,9 +28,7 @@ import util.Utilities;
 /******************************************************
  * For QueryPanel: 
  *  Load DB data and creates SpeciesSelect panel for each species
- * 
- * CAS504 extend it to provide the project and group MYSQL indices; CAS556 add spAbbr
- * CAS561 add active check mark; remove bIsGene
+ *  Do not read DB; isSelf projIdx is not real.
  */
 public class SpeciesPanel extends JPanel {
 	private static final long serialVersionUID = -6558974015998509926L;
@@ -38,28 +36,35 @@ public class SpeciesPanel extends JPanel {
 
 	protected static int locOnly=1, locChr=2;
 	private boolean isNoLoc=false;
-	private int dnameWidth = 100;  // CAS563 calc spacing; was constant 150
+	private int dnameWidth = 100;  
 	
 	public SpeciesPanel(QueryFrame parentFrame, QueryPanel qPanel) {
-		theParentFrame = parentFrame;
+		qFrame = parentFrame;
 		this.qPanel = qPanel;
 		
 		spPanels = new Vector<SpeciesSelect> (); // Sorted by DisplayName
 		setBackground(Color.WHITE);
 		
-		loadPanelsFromDB(); 
+		createPanelsFromProj(); 
 		
 		refreshAllPanels();
 	}
 	protected void setClear() {
 		for (SpeciesSelect p : spPanels) p.setClear();
-		isNoLoc = false; // CAS562 add bug fix
+		isNoLoc = false; 
 	}
-	protected void setChkEnable(boolean isChk, int type) { 
+	protected void setChkEnable(boolean isChk, int type, boolean isSelf) { // QueryPanel
 		isNoLoc = isChk;
 		for (SpeciesSelect p : spPanels) {
 			if (type==locOnly) 	p.setLocDisable(isChk);   // Block, Collinear, or Hit check
 			else 				p.setGeneActive(isChk);   // Gene or Single check changes
+		}
+		if (isSelf && type==locChr && isChk) {// disable; CAS575
+			if (isChk) {
+				spPanels.get(1).chkSpActive.setSelected(false); // force the 1st to be used
+				spPanels.get(1).chkSpActive.setEnabled(false);  // and do not let it change
+			}
+			else spPanels.get(1).chkSpActive.setSelected(true);  // put back in default state
 		}
 	}
 	
@@ -69,6 +74,7 @@ public class SpeciesPanel extends JPanel {
 	protected int getSpIdx(int i)			{return spPanels.get(i).getSpIdx();}
 	protected String getSpName(int i) 		{return spPanels.get(i).getSpName();}
 	protected String getSpAbbr(int i)		{return spPanels.get(i).getSpAbbr();}
+	protected String getSelfName(int i)		{return selfName[i];}
 	
 	protected HashMap <String, Integer>  getSpName2spIdx() {return spName2spIdx;}
 	
@@ -116,7 +122,7 @@ public class SpeciesPanel extends JPanel {
 		for (SpeciesSelect sp : spPanels) if (sp.isSpEnabled()) return true;
 		return false;
 	}
-	protected boolean isSpEnabled(int p) 		{return spPanels.get(p).isSpEnabled();} // CAS518 add
+	protected boolean isSpEnabled(int p) 		{return spPanels.get(p).isSpEnabled();} 
 	protected String [] getChrIdxList(int p) 	{return spPanels.get(p).getChrIdxList();}
 	protected String getChrIdxStr(int p) 		{return spPanels.get(p).getChrIdxStr();}
 	protected String [] getChrNumList(int p) 	{return spPanels.get(p).getChrNumList();}
@@ -127,7 +133,7 @@ public class SpeciesPanel extends JPanel {
 	protected String getChrStop(int p) 			{return spPanels.get(p).getStopFullNum();}
 	protected String getPairIdxWhere() 			{ return pairWhere;}
 	
-	protected String getAllChrIdxForGene() { // CAS561 add to be used with new Checks
+	protected String getAllChrIdxForGene() { 
 		String sql=null;
 		for (int p=0; p<spPanels.size(); p++) {
 			String list = spPanels.get(p).getAllChrIdxForSingle();
@@ -207,7 +213,7 @@ public class SpeciesPanel extends JPanel {
 					row.add(temp);
 					
 					add(row);
-					add(Box.createVerticalStrut(1)); // CAS563 3->1 
+					add(Box.createVerticalStrut(1)); 
 				}
 			}
 		}
@@ -215,38 +221,31 @@ public class SpeciesPanel extends JPanel {
 		revalidate();
 	}
 	/**************************************************************/
-	private void loadPanelsFromDB() {
+	private void createPanelsFromProj() {// CAS575 was reading from db
 		try {
-			Vector<Mproject> theProjects = theParentFrame.getProjects(); // Sorted by DisplayName
-			int [] spidx = new int [theProjects.size()];
+			Vector<Mproject> mProjs = qFrame.getProjects(); // Sorted by DisplayName
+			boolean isSelf = qFrame.isSelf();
+			
+			int [] spidx = new int [mProjs.size()];
 			int x=0;
 			
-			DBconn2 dbc2 = theParentFrame.getDBC();
-			
-			for (Mproject proj : theProjects) {
+			for (Mproject proj : mProjs) {
 				String chrNumStr="", chrIdxStr="";
+				TreeMap <Integer, String> idChrMap = proj.getGrpIdxMap(); 
 				
-				String strQ = "SELECT xgroups.name, xgroups.idx FROM xgroups " +
-							"JOIN projects ON xgroups.proj_idx = projects.idx " +
-							"WHERE projects.name = '" + proj.getDBName() + "' " +
-							"ORDER BY xgroups.sort_order ASC";
-				ResultSet rs = dbc2.executeQuery(strQ);
-				while (rs.next()) {
-					if (!chrNumStr.equals("")) {
-						chrNumStr += ",";
-						chrIdxStr += ",";
-					}
-					chrNumStr += rs.getString(1);
-					chrIdxStr += rs.getString(2);
+				for (int idx : idChrMap.keySet()) {
+					if (!chrNumStr.equals("")) {chrNumStr += ",";chrIdxStr += ",";}
+					
+					chrNumStr += proj.getGrpNameFromIdx(idx);
+					chrIdxStr += idx;
 				}
-				rs.close();
-				
 				SpeciesSelect ssp = new SpeciesSelect(this, proj.getDisplayName(),
 						proj.getID(), proj.getdbCat(), chrNumStr, chrIdxStr, proj.getdbAbbrev());
 				
 				spPanels.add(ssp);
 				spName2spIdx.put(proj.getDisplayName(), proj.getID());
 				spIdx2panel.put(proj.getID(), ssp);
+				if (isSelf) selfName[x] = proj.getDisplayName();
 				spidx[x++] = proj.getID();
 				
 				String [] chrIdxList = ssp.getChrIdxList();
@@ -256,32 +255,21 @@ public class SpeciesPanel extends JPanel {
 			// Get pair indices - this isn't used in the panels, but is used to all queries but Orphan
 			// the order can be spidx[i]<spidx[j] or spidx[i]>spidx[j]
 			String idList="";
-			ResultSet rs=null;
 			for (int i=0; i<spidx.length-1; i++) {
 				for (int j=i+1; j<spidx.length; j++) {	
-					rs = dbc2.executeQuery("select idx from pairs " +
-								"where proj1_idx=" + spidx[i] + " and proj2_idx=" + spidx[j]);
-					
-					if (rs.next()) {
-						if (idList.equals("")) idList = rs.getInt(1)+"";
-						else idList += "," + rs.getInt(1);
+					int spidx2 = (isSelf) ? spidx[i] : spidx[j];
+					Mpair mp = qFrame.getMpair(spidx[i], spidx2);
+					if (mp==null) {
+						Utilities.showErrorMessage("No pair for IDX=" + spidx[i] + " " + spidx[j]);
+						return;
 					}
-					else {
-						rs = dbc2.executeQuery("select idx from pairs " +
-								"where proj1_idx=" + spidx[j] + " and proj2_idx=" + spidx[i]);
-						if (rs.next()) {
-							if (idList.equals("")) idList = rs.getInt(1)+"";
-							else idList += "," + rs.getInt(1);
-						}
-					}
+					int idx = mp.getPairIdx();
+					if (idList.equals("")) idList = idx+"";
+					else idList += "," + idx;
 				}
 			}
-			if (rs!=null) rs.close();
 			
-			if (idList.equals("")) 		{
-				pairWhere="";
-				Utilities.showErrorMessage("No synteny pairs. Attempts to Run Query will fail.");
-			}
+			if (idList.equals("")) Utilities.showErrorMessage("No synteny pairs. Attempts to Run Query will fail.");
 			else if (!idList.contains(",")) pairWhere = "PH.pair_idx=" + idList + " ";
 			else 							pairWhere = "PH.pair_idx IN (" + idList + ") ";
 		} 
@@ -300,7 +288,7 @@ public class SpeciesPanel extends JPanel {
 			this.spIdx = spIdx;	// projects.idx
 			this.strCategory = strCategory;
 			this.chrIdxStr = chrIdxStr;	
-			this.spAbbr = spAbbr; // CAS556 add for UtilReport
+			this.spAbbr = spAbbr; // for UtilReport
 			
 			chrIdxList = chrIdxStr.split(",");	// xgroups.idx for 
 			chrNumList = chrNumStr.split(",");
@@ -313,7 +301,7 @@ public class SpeciesPanel extends JPanel {
 				}
 			});
 			lblSpecies = Jcomp.createLabel(spName);	// projects.name
-			dnameWidth = Math.max(lblSpecies.getWidth(), dnameWidth); // CAS563 add
+			dnameWidth = Math.max(lblSpecies.getWidth(), dnameWidth); 
 			
 			lblChrom =   Jcomp.createLabel("Chr: ");
 			cmbChroms = new  JComboBox <String> ();
@@ -418,11 +406,11 @@ public class SpeciesPanel extends JPanel {
 				
 		private String getStartFullNum() { 
 			String text = txtStart.getText().trim();
-			if (text.contains(",")) text = text.replace(",",""); // CAS558 allow commas in input
+			if (text.contains(",")) text = text.replace(",",""); // allow commas in input
 			if (text.contentEquals("")) return "";
 			
 			try {
-				int temp = Integer.parseInt(text); // CAS551 was long
+				int temp = Integer.parseInt(text); 
 				if(temp < 0) {
 					qPanel.showWarnMsg("Invalid From (start) coordinate '" + text + "'");
 					return null;
@@ -437,9 +425,9 @@ public class SpeciesPanel extends JPanel {
 		
 		private String getStopFullNum() {
 			String etext = txtStop.getText().trim();
-			if (etext.contains(",")) etext = etext.replace(",",""); // CAS558 allow commas in input
+			if (etext.contains(",")) etext = etext.replace(",",""); // allow commas in input
 			if (etext.contentEquals("")) return "";
-			if (etext.contentEquals("0") || etext.contentEquals("-")) {// CAS549 add
+			if (etext.contentEquals("0") || etext.contentEquals("-")) {
 				txtStop.setText("");
 				return "";
 			}
@@ -451,7 +439,7 @@ public class SpeciesPanel extends JPanel {
 					return null;
 				}
 				
-				String stext = txtStart.getText().trim(); // CAS549 add check (start is checked first, so this is fine)
+				String stext = txtStart.getText().trim(); // start is checked earlier
 				if (!stext.contentEquals("")) {
 					int start = Integer.parseInt(stext);
 					if (start>=end) {
@@ -547,17 +535,16 @@ public class SpeciesPanel extends JPanel {
 		private String [] chrIdxList;
 		private String [] chrNumList;
 		private String chrIdxStr;
-		private String spAbbr = ""; // CAS556 add for UtilReport
+		private String spAbbr = ""; 
 		
 		private SpeciesPanel theParent = null;
 	} // End species row panel
 	
-	private QueryFrame theParentFrame = null;
+	private QueryFrame qFrame = null;
 	private QueryPanel qPanel = null;
 	
+	private String [] selfName = {"",""}; // isSelf shared same idx; this is for Summary
 	private Vector<SpeciesSelect> spPanels = null;
-	
-	// CAS504 - changed 5 arrays to HashMaps with Idxs
 	private HashMap <Integer, SpeciesSelect> chrIdx2panel = new HashMap <Integer, SpeciesSelect> ();
 	private HashMap <Integer, SpeciesSelect> spIdx2panel = new HashMap <Integer, SpeciesSelect> ();
 	private HashMap <String, Integer> spName2spIdx = new HashMap <String, Integer> ();

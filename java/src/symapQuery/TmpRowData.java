@@ -11,12 +11,6 @@ import util.Utilities;
  * Translates a row from a vector of objects to the correct data types for easy access,
  * plus adds the species and chromosome index
  * used in UtilReport, UtilExport writeFasta, and TableMainPanel.showAlignment, showRow, showSynteny
- * 
- * CAS504 added this class to take the place of using hidden columns to get data
- * TheTableData.getRowData(row) returns the chr,start,end of all species in line,
- * where some can be blank. CAS520 also return block and collinear
- * CAS521 also return hit# and Gene# for Align; use short name for species
- * CAS556 make separate file cause used in UtilExport, UtilReport and TableMainPanel (renamed in CAS563)
  */
 public class TmpRowData {
 	private TableMainPanel tdp;
@@ -31,12 +25,13 @@ public class TmpRowData {
 			return outLine;
 		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return "error";}
 	}
+	
 	/* LoadRow; if add column, add to getRowLocData also */
 	protected boolean loadRow(int row) {// showAlign, showSynteny, writeFasta, UtilReport
 		try {
 			nRow = row;
 			
-			Vector <String> colNames = new Vector <String> (); // CAS562 need to be in order for new 2D-3track
+			Vector <String> colNames = new Vector <String> (); // for new 2D-3track
 			Vector <Object> colVals = new Vector <Object> ();
 			
 			tdp.theTableData.getRowLocData(row, colNames, colVals); // only needed columns are returned
@@ -61,7 +56,7 @@ public class TmpRowData {
 					String x = (String) colVal;
 					String [] tok = x.split(Q.SDOT); 
 					if (tok.length==4) {
-						collinearSz = Integer.parseInt(tok[2]); // CAS556 add Sz
+						collinearSz = Integer.parseInt(tok[2]); 
 						collinearN = Integer.parseInt(tok[3]);
 					}
 					else Globals.dprt("collinear " + x + " " + tok.length);
@@ -76,12 +71,12 @@ public class TmpRowData {
 					hitSt = String.valueOf(colVal);
 					continue;
 				}
-				if (colHead.contentEquals(Q.grpCol)) {	// ends with grpSz-grpN; CAS563 was int
+				if (colHead.contentEquals(Q.grpCol)) {	// ends with grpSz-grpN; 
 					String x = (String) colVal;
 					String [] tok = x.split(Q.GROUP);
 					int len = tok.length-1;
 					if (tok.length>=2) {
-						groupSz = Integer.parseInt(tok[len-1]); // CAS556 add Sz
+						groupSz = Integer.parseInt(tok[len-1]); 
 						groupN  = Integer.parseInt(tok[len]);
 					}
 					else Globals.dprt("group " + x + " " + tok.length);
@@ -145,14 +140,14 @@ public class TmpRowData {
 	// grpIdxVec is hitNums to highlight for Groups in Show Synteny
 	protected int [] loadGroup(Vector <Integer> grpIdxVec) {
 	try {
-		int [] coords = {0,0,0,0}; // CAS562 was double
+		int [] coords = {0,0,0,0}; 
 		coords[0] = start[0]; coords[1] = end[0]; coords[2] = start[1]; coords[3] = end[1];
 		
 		for (int r=0; r<tdp.theTableData.getNumRows(); r++) {
 			HashMap <String, Object> colHeadVal = tdp.theTableData.getRowLocData(r); 
 			
 			String val = (String) colHeadVal.get(Q.grpCol);
-			String [] tok = val.split(Q.GROUP);				// Sz.Grp CAS563 change from single number
+			String [] tok = val.split(Q.GROUP);				
 			int grp  = Utilities.getInt(tok[tok.length-1]);
 			if (grp!=groupN) continue;     // only rows with this groupN (selected row)
 			
@@ -205,7 +200,7 @@ public class TmpRowData {
 		return coords;
 	} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return null;}
 	}
-	/* CAS556 add for UtilReport **/
+	/* UtilReport **/
 	protected String getAnnoFromKey(String spAbbr, int row) {
 	try {
 		HashMap <String, String> annoMap = tdp.theTableData.getAllAnno(row);
@@ -218,7 +213,7 @@ public class TmpRowData {
 	} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return null;}
 	}
 	
-	// get gene coordinates; CAS563 add - not used
+	// get gene coordinates;  not used
 	protected Object [] getGeneCoords(String spAbbr, int row) {
 		return tdp.theTableData.getGeneCoords(spAbbr, row);
 	}
@@ -241,6 +236,6 @@ public class TmpRowData {
 	
 	protected String hitSt="";
 	protected int hitnum=0, blockN=0;
-	protected int collinearN=0, collinearSz=0; 	// CAS556 add sz for TableReport
-	protected int groupN=0, groupSz=0; 			// CAS555 add for Show Group; set in loadRow, used in loadGroup
+	protected int collinearN=0, collinearSz=0; 	
+	protected int groupN=0, groupSz=0; 			// for Show Group; set in loadRow, used in loadGroup
 }

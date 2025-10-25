@@ -35,20 +35,21 @@ public class Mpair {
 	private static final String ALGO1   = "  Cluster Algo1 (modified original)";
 	private static final String ALGO2   = "  Cluster Algo2 (exon-intron)";
 	private static final String SYNORIG = "  Synteny Original";
-	private static final String SYNSTRI = "  Synteny Strict";		// CAS572 add
-	private static final String spp     = "     ";	// space to go before parameters
+	private static final String SYNSTRI = "  Synteny Strict";		
+	private static final String spp     = "       ";	// space to go before parameters; CAS575 add 2 more spaces
 	
 	public Mproject mProj1, mProj2;
 	protected int pairIdx=-1; 		// accessed in ManagerFrame; 
 	private int proj1Idx=-1, proj2Idx=-1;
 	private DBconn2 dbc2;
 	private String syVer="";
-	public boolean bPseudo=false, bSynOnly=false; // CAS571 set in PairParams and read in ManagerFrame
+	public boolean bPseudo=false, bSynOnly=false; // set in PairParams and read in ManagerFrame
 	
 	private String resultDir;
 	private HashMap <String, String> fileMap = new HashMap <String, String> ();
 	private HashMap <String, String> dbMap = new HashMap <String, String> ();
 	private HashMap <String, String> defMap = new HashMap <String, String> ();
+	private boolean isSelf=false;
 	
 	// These must be in same order as PairParam.SYMBOLS arrays; the order isn't needed anywhere else in this file
 	private static final String [] paramKey = { // repeated in PairParams and below
@@ -81,6 +82,7 @@ public class Mpair {
 		proj1Idx=mProj1.getIdx();
 		proj2Idx=mProj2.getIdx();
 		resultDir = "./" + Constants.getNameResultsDir(p1.strDBName, p2.strDBName);
+		isSelf = proj1Idx==proj2Idx;
 		
 		makeParams();
 		if (!isReadOnly)  loadFromFile(); // loads into FileMap
@@ -93,35 +95,29 @@ public class Mpair {
 	// ManagerFrame.alignSelectPair popop when need align; 
 	// DoAlignSynPair terminal, dialog, symap.log
 	public String getChgAllParams(int type) {
-		String amsg = getChgAlign(type, false);   // could be empty
-		String cmsg = getChgCluster(type); // never empty; always has algo
+		String amsg = getChgAlign(type, false);   
+		String cmsg = getChgCluster(type); 
 		String smsg = getChgSynteny(type); 
 		
-		String msg="";
-		if (!amsg.equals("")) msg = amsg + "\n" + cmsg;
-		else                  msg = cmsg;
-		if (!smsg.equals("")) msg += "\n" + smsg;
-		
-		return msg;
+		return amsg + "\n" + cmsg + "\n" + smsg; // none are empty; CAS575 anymore
 	}
 	// ManagerFrame.alignSelectedPair popup when no align;  
 	// DoAlignSynPair terminal, dialog, symap.log
 	public String getChgClustSyn(int type) { 
-		String cmsg = getChgCluster(type); // never empty
+		String cmsg = getChgCluster(type); 
 		String smsg = getChgSynteny(type); 
 		
-		if (!smsg.equals("")) return cmsg + "\n" + smsg;
-		else return cmsg;
+		return cmsg + "\n" + smsg;
 	}
 	
-	public String getChgAlign(int type, boolean forSum) {// return "" if no change; forSum - do write for summary
+	public String getChgAlign(int type, boolean forSum) {
 		String msg="";
 		if (isChg(type,"concat")) 			msg = pjoin(msg, "No concat");	
 		if (isChg(type,"mask1")) 			msg = pjoin(msg, "Mask " + mProj1.getDisplayName());	
 		if (isChg(type,"mask2")) 			msg = pjoin(msg, "Mask " + mProj2.getDisplayName());	
 		
-		if (isChg(type,"promer_only")) 		msg = pjoin(msg, "Align PROmer only  ");
-		else if (isChg(type,"nucmer_only")) msg = pjoin(msg, "Align NUCMER only  ");
+		if (isChg(type,"promer_only")) 		msg = pjoin(msg, "PROmer only  ");
+		else if (isChg(type,"nucmer_only")) msg = pjoin(msg, "NUCmer only  ");
 		
 		if (isChg(type,"self_args")) 		msg = pjoin(msg, "Self args: "   + getSelfArgs(type)); 
 		else if (isChg(type,"promer_args")) msg = pjoin(msg, "PROmer args: " + getPromerArgs(type));
@@ -129,8 +125,13 @@ public class Mpair {
 		
 		if (!forSum && Constants.MUM_NO_RM) msg = pjoin(msg, "Keep MUMmer .delta file"); 
 		
-		if (!msg.equals("")) return ALIGN + "\n" + msg;
-		return "";
+		if (!msg.equals("")) {
+			if (msg.contains("PROmer") || msg.contains("NUCmer")) return ALIGN + "\n" + msg;
+			else if (isSelf)                                      return ALIGN + " NUCmer" + "\n" + msg;
+			else                                                  return ALIGN + " PROmer" + "\n" + msg;
+		}
+		if (isSelf) return ALIGN + " NUCmer" ; // always remind what is being used; CAS575 add
+		return ALIGN + " PROmer";
 	}
 	
 	private String getChgCluster(int type) {
@@ -171,7 +172,7 @@ public class Mpair {
 		
 		if (isChg(type,"mindots")) 		msg = pjoin(msg, "Min hits=" + getMinDots(type));
 		if (isChg(type,"same_orient"))  msg = pjoin(msg, "Same orient");
-		if (isChg(type,"merge_blocks")) {// has a choice of 3 where 0 is default; CAS572
+		if (isChg(type,"merge_blocks")) {// has a choice of 3 where 0 is default
 			String idx  = (type==FILE) ? fileMap.get("merge_blocks") : dbMap.get("merge_blocks");
 			int ix = Utilities.getInt(idx);
 			msg = pjoin(msg, "Merge blocks: " + PairParams.mergeOpts[ix]);
@@ -188,7 +189,7 @@ public class Mpair {
 		String db = (type==FILE) ? fileMap.get(field) : dbMap.get(field);
 		if (db==null) {
 			Globals.prt("No parameter in database: " + field);
-			return false;				// CAS571 add
+			return false;				
 		}
 		String def = defMap.get(field);
 		if (def==null) return false;
@@ -300,7 +301,7 @@ public class Mpair {
 		String x = (type==FILE) ? fileMap.get("mindots") : dbMap.get("mindots");
 		return Utilities.getInt(x);
 	}
-	public String getMergeIndex(int type) {// changed to 3 options; CAS572
+	public String getMergeIndex(int type) {// 3 options
 		String x = (type==FILE) ? fileMap.get("merge_blocks") : dbMap.get("merge_blocks");
 		return x;
 	}
@@ -322,7 +323,7 @@ public class Mpair {
 	}
 	/************************************************************************************/
 	public HashMap <String, String> getFileParams() { return fileMap;}
-	public HashMap <String, String> getDbParams() { return dbMap;} // CAS571 add for PairParams Pseudo
+	public HashMap <String, String> getDbParams() { return dbMap;} // for PairParams Pseudo
 	
 	public String getFileParamsStr() {
 		String msg="";
@@ -358,11 +359,11 @@ public class Mpair {
 			 AnchorMain ancObj = new AnchorMain(dbc2, null, this);
 			 ancObj.removePseudo();   // Remove pseudo where numhits=-pair_idx; do before saveAnno; 
 			 
-			 Globals.prt("Start remove, please be patient.....");
+			 Globals.prt("Start remove pair from database, please be patient.....");
 			 dbc2.executeUpdate("DELETE from pairs WHERE idx="+ x);
 			 dbc2.resetAllIdx(); 				// check all, even though some are not relevant
 			 
-		     if (bHitCnt) ancObj.saveAnnoHitCnt(); // Redo numhits for this pair; 
+		     if (bHitCnt) ancObj.saveAnnoHitCnt(false); // Redo numhits for this pair; false is to not print CAS575
 		}
 	    pairIdx = -1;
 	}
@@ -381,7 +382,7 @@ public class Mpair {
 	}
 	/********** called by PairParams on save; write all ***********/
 	public void saveParamsToFile(HashMap <String, String> valMap) { 
-		Utilities.checkCreateDir(Constants.dataDir, true); // CAS572 add 
+		Utilities.checkCreateDir(Constants.dataDir, true); 
 		Utilities.checkCreateDir(Constants.seqRunDir, true); 
 		Utilities.checkCreateDir(resultDir, true); 
 		

@@ -6,6 +6,7 @@ import java.util.TreeSet;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.sql.ResultSet;
@@ -93,7 +94,7 @@ public class SeqLoadMain {
 		
 		if (seqFileName.equals("")) {
 			String seqDir = projDir + Constants.seqSeqDataDir; // created with Add Project
-			plog.msg("   Sequence_files " + seqDir + " (Default location)"); // CAS571 change
+			plog.msg("   Sequence_files " + seqDir + " (Default location)"); 
 			
 			if (!Utilities.pathExists(seqDir)) {
 				return rtError("Sequence files not found in " + seqDir);
@@ -103,7 +104,10 @@ public class SeqLoadMain {
 				saveSeqDir = seqDir;
 				modDirDate = sdf.lastModified();
 				
-				for (File f2 : sdf.listFiles()) {
+				File[] fs = sdf.listFiles();
+				Arrays.sort(fs);			// If separate files, order is random; this isn't necessary, but nice; CAS575
+				
+				for (File f2 : fs) {
 					if (!f2.isFile() || f2.isHidden()) continue; // macOS add ._ files in tar
 					String name = f2.getAbsolutePath();
 					for (String suf : Constants.fastaFile) { 
@@ -345,12 +349,12 @@ public class SeqLoadMain {
 	}
 	catch (Exception e) {
 		ErrorReport.print(e, "Fail load sequence: " +  projIdx + "','" + grp + "','" + fullname + "'," + order); 
-		Globals.prt("  This can happen if a project was just removed and another added immediately."); // CAS572
+		Globals.prt("  This can happen if a project was just removed and another added immediately."); 
 	}
 	}
 	/**************************************************************************/
 	private boolean rtError(String msg) {
-		plog.msgToFile("*** " + msg); // CAS571 was msgToFileOnly
+		plog.msgToFile("*** " + msg); 
 		ErrorCount.inc();
 		tdbc2.close();
 		

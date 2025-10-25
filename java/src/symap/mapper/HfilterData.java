@@ -35,7 +35,7 @@ public class HfilterData {
 		
 		if (pctid!=0 && pctid!=minPctid) show += " Id=" + (int) pctid + "%"; 
 		
-		if (bBlockOnly) show += " Block#" + blkNum; // CAS573 was (bBlock && bBlockOnly)
+		if (bBlockOnly) show += " Block#" + blkNum; 
 		else if (bAll)  show += " All";
 		else {	
 			String p = "";
@@ -67,9 +67,9 @@ public class HfilterData {
 	public void setForQuery(int blockNum, boolean s, boolean r) { // block, set, region
 		setBlockOnly(false); setBlock(false); setCset(false); setHiNone(false);
 		
-		if (blockNum>0) {setBlockOnly(true); setBlockNum(blockNum);} 	// CAS573 add
-		else if (s)     {setCset(true); setHiCset(true); } 				// CAS571 setBlock T->F
-		else if (r)     {setHiBlock(true);} 							// CAS573 add High Block
+		if (blockNum>0) {setBlockOnly(true); setBlockNum(blockNum);} 	
+		else if (s)     {setCset(true); setHiCset(true); } 				
+		else if (r)     {setHiBlock(true);} 							
 		
 	}
 	// dotplot 
@@ -77,7 +77,7 @@ public class HfilterData {
 		setBlockOnly(false); setBlock(false); setCset(false); setHiNone(false);
 		
 		if (blockNum>0) {setBlockOnly(true); setBlockNum(blockNum);}
-		else            {setHiBlock(true);} 	
+		else            {setAll(true); setHiBlock(true);} 	// CAS575 add setAll
 	}
 	
 	private void setDefaults() {

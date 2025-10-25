@@ -11,7 +11,7 @@ import util.ErrorReport;
 /******************************************************
  * Used by Explorer and one call in dotplot; it read proj_props, plus check for pairs 
  * dbProp contains everything in the proj_props DB table
- * Vector of pairs, Array of projects	CAS570 renamed some stuff
+ * Vector of pairs, Array of projects	
  */
 public class PropsDB {
 	private DatabaseProperties dbProjProp;
@@ -68,6 +68,11 @@ public class PropsDB {
 		catch (Exception e) {ErrorReport.print(e, "Project pool reset");}
 	}
 	
+	public int getPairIdx(int pp1, int pp2) { // MapperPool to check version; CAS575
+		if (hasPair(pp1, pp2)) return getPair(pp1, pp2).pid;
+		if (hasPair(pp2, pp1)) return getPair(pp2, pp1).pid;
+		return -1;
+	}
 	public boolean isAlgo1(int pp1, int pp2) {
 		if (hasPair(pp1, pp2)) return getPair(pp1, pp2).isAlgo1;
 		if (hasPair(pp2, pp1)) return getPair(pp2, pp1).isAlgo1;
@@ -134,7 +139,7 @@ public class PropsDB {
 		private int p1, p2;
 		private int pid;
 		private boolean isAlgo1=false;
-		private boolean hasPseudo=false;	// CAS570 add for MapperPool to know if need to set annot_hits annot_idx to 0
+		private boolean hasPseudo=false;	// for MapperPool to know if need to set annot_hits annot_idx to 0
 
 		protected Pair(int pid, int p1, int p2) {
 			this.pid = pid;

@@ -1,10 +1,19 @@
-**Description**: SyMAP (Synteny Mapping and Analysis Program) is a software package for detecting, displaying, and querying syntenic relationships between a fully sequenced genome and (i) another sequenced genome, (ii) draft sequence, (iii) self-synteny, or (iv) FPC physical maps.  It is designed for medium-to-high divergent eukaryotic genomes (not bacteria).
+### SyMAP (Synteny Mapping and Analysis Program) ###
 
-**Download SyMAP tarball**: https://github.com/csoderlund/SyMAP/releases. The SyMAP tarball contains the executable jar files, external packages and demo files.
+**Description**: SyMAP is a software package for detecting, displaying, and querying syntenic relationships between a fully sequenced genome and   
+(i) another sequenced genome, (ii) draft sequence, and (iii) self-synteny.  It is designed for divergent eukaryotic genomes (not bacteria).
 
-**Documentation**: https://csoderlund.github.io/SyMAP
+**Download SyMAP tarball**: https://github.com/csoderlund/SyMAP/releases. The SyMAP tarball contains the executable jar file, all necessary external software, and demo files.
 
-**Requirements**: Java v17 or later and MySQL. SyMAP uses [MUMmer](https://mummer4.github.io) for the sequence to sequence alignment, which requires Perl. SyMAP has been tested on Linux and MacOS.
+**Requirements**: Java v17 or later and MySQL (or MariaDB). SyMAP uses [MUMmer](https://mummer4.github.io) for the sequence to sequence alignment, which requires Perl.   
+SyMAP has been tested on Linux and MacOS.
+
+**To use**: 
+1. Download the latest SyMAP tarball.
+2. Put the tarball in the location you want the symap_5 directory and untar it (tar xf symap_5.tar.gz).
+3. Follow the instructions in https://csoderlund.github.io/SyMAP/SystemGuide.html#demo to try the demo.
+
+**Full Documentation**: https://csoderlund.github.io/SyMAP
 
 **SyMAP github code**: To build, see SyMAP/java/README.
 

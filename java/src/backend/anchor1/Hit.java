@@ -11,7 +11,7 @@ import util.ErrorReport;
 /*****************************************************
  * Used for AnchorsMain: a hit may be a MUMmer hit or a clustered hit SubHit>0.
  */
-public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
+public class Hit implements Comparable <Hit> {
 	protected static final boolean FcheckRev = true; // Only cluster hits of the same orientation (--,++) and (+-,+-)
 	protected static final int FhaveNSubs=2, FhaveLen1=300, FhaveLen2=100;   // >= heuristics; used in Hit/HitBin for filtering 
 	
@@ -22,10 +22,10 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	protected int nSubHits=0;
 	
 	protected SubHit queryHits, targetHits;
-	protected HitType mHT = null;					    // AnchorsMain {GeneGene, GeneNonGene, NonGene}
-	protected int htype=0;								// CAS543 numeric type
+	protected HitType mHT = null;					    // AnchorsMain1 {GeneGene, GeneNonGene, NonGene}
+	protected int htype=0;							
 	
-	protected HitStatus status = HitStatus.Undecided;	// AnchorsMain {In, Out, Undecided };
+	protected HitStatus status = HitStatus.Undecided;	// AnchorsMain1 {In, Out, Undecided };
 	
 	protected int origHits = 0; 
 	protected int binsize1=0, binsize2=0; // store topN bin sizes for stats
@@ -37,7 +37,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		this(0); // single hit, i.e. not clustered
 	}
 	
-	// Called in AnchorMain.scanNextMummerHit CAS540x was setting values in anchorMain
+	// Called in AnchorMain1.scanNextMummerHit 
 	protected void setHit(String query, String target, int qstart, int qend, int tstart, int tend, int match,
 			int pctid, int pctsim, String strand) { 
 		this.queryHits.name  = query.intern();	
@@ -53,18 +53,35 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		this.pctsim = pctsim;
 		this.strand = strand.intern(); // reduce hit memory footprint
 		
-		// CAS540x was waiting to reverse until after checking in splitMUMmer; now just set flag and reverse
 		isRev = strand.contains("-") && strand.contains("+");
 		
 		int s = queryHits.start; int e = queryHits.end; 
-		queryHits.start  = (s <= e ? s : e); 
-		queryHits.end    = (s <= e ? e : s); 
+		queryHits.start  = (s < e ? s : e); 
+		queryHits.end    = (s < e ? e : s); 
 		
 		s = targetHits.start; e = targetHits.end;
-		targetHits.start  = (s <= e ? s : e); 
-		targetHits.end    = (s <= e ? e : s); 
+		targetHits.start  = (s < e ? s : e); 
+		targetHits.end    = (s < e ? e : s); 
 	}
-	
+	protected void swapCoords() {// isSelf - if sequences are in different files, grp1_idx<grp2_idx can happen; CAS575 add
+		int start 		= queryHits.start;
+		int end 		= queryHits.end;
+		int grpIdx 		= queryHits.grpIdx;
+		String name 	= queryHits.name;
+		int [] subHits 	= queryHits.subHits ;
+		
+		queryHits.start 	= targetHits.start; 
+		queryHits.end 		= targetHits.end; 
+		queryHits.grpIdx 	= targetHits.grpIdx; 
+		queryHits.name 		= targetHits.name; 
+		queryHits.subHits 	= targetHits.subHits; 
+		
+		targetHits.start 	= start;
+		targetHits.end	 	= end;
+		targetHits.grpIdx	= grpIdx;
+		targetHits.name	 	= name;
+		targetHits.subHits	= subHits;
+	}
 	private Hit(int nSubHits) { // set defaults for merging
 		queryHits =  new SubHit(nSubHits); // if zero nSubHits, not used for clustered hit
 		targetHits = new SubHit(nSubHits);
@@ -82,7 +99,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	private Hit(Hit h, int qstart, int qend, int tstart, int tend, int tmp_idx) { 
 		matchLen = 	h.matchLen;
 		pctid = 	h.pctid;
-		pctsim = 	h.pctsim; // CAS515 add
+		pctsim = 	h.pctsim; 
 		strand = 	h.strand;
 		status = 	h.status;
 		idx 	= 	h.idx;
@@ -101,7 +118,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		targetHits.end = tend;
 		idx = tmp_idx; 
 	}
-	public int compareTo(Hit h2) {// CAS500 changed Object to Hit; scan2 Collections.sort(clustHits);
+	public int compareTo(Hit h2) {// scan2 Collections.sort(clustHits);
 		if      (queryHits.start < h2.queryHits.start) 	return 1;	
 		else if (queryHits.start > h2.queryHits.start)	return -1;
 	
@@ -120,7 +137,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		}
 		return false;
 	}
-	protected boolean useAnnot2() { // CAS543 keep if both genes!
+	protected boolean useAnnot2() { 
 		if (annotIdx1 > 0 && annotIdx2 > 0) {
 			if (matchLen>FhaveLen2) return true;
 		}
@@ -136,22 +153,13 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	protected int maxLength() {
 		return Math.max(queryHits.length(), targetHits.length());
 	}
-	protected boolean isDiagHit() { // CAS535 add: was doing full check in multiple places
+	protected boolean isDiagHit() { 
 		return queryHits.grpIdx == targetHits.grpIdx && queryHits.start == targetHits.start && queryHits.end == targetHits.end;
 	}
 	// for debug
 	protected String getInfo() {
-		String x = (mHT==null) ? "No HT" : mHT.toString();
-		String state = (idx>0) ? "idx=" + idx + " " + status : " ";
-		
-		int cnt = 0;
-		if (annotIdx1 > 0 && annotIdx2 > 0) cnt=2;
-		else if (annotIdx1 > 0 || annotIdx2 > 0) cnt=1;
-		String q = "q: " + queryHits.start + "/" + queryHits.end;
-		String t = "t: " + targetHits.start + "/" + targetHits.end;
-		String p = String.format("len=%,5d id=%d", matchLen, pctid);
-		
-		return String.format("Gene %d %s %-30s %-30s %s %s %s", cnt, p, q, t,  strand, state, x);	
+		return String.format("GrpIdx %2d %2d   Query %,10d %,10d   Target %,10d %,10d ", 
+				queryHits.grpIdx, targetHits.grpIdx, queryHits.start, queryHits.end, targetHits.start, targetHits.end);	
 	}
 	/****************************************************************
 	 * mergeOlapDiagHits methods
@@ -169,7 +177,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		
 		this.matchLen = this.queryHits.end - this.queryHits.start; 
 		this.pctid =  (this.pctid == 0 ?  h.pctid :  (this.pctid + h.pctid) / 2);
-		this.pctsim = (this.pctsim == 0 ? h.pctsim : (this.pctsim + h.pctsim) / 2); // CAS515 add
+		this.pctsim = (this.pctsim == 0 ? h.pctsim : (this.pctsim + h.pctsim) / 2); 
 	}
 	private boolean isOverlapping(Hit h) { 
 		return (this.queryHits.isOverlapping(h.queryHits) && 
@@ -279,7 +287,6 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 	}
 	/***************************************************************
 	* called in AnchorsMain.clusterHits2 
-	* CAS540 check for isRev and !isRev, was mixing ++/-- with +-/-+
 	*/
 	protected static Vector <Hit> clusterHits2(Vector<Hit> hitVec, HitType htype, AnnotElem qAnno, AnnotElem tAnno)  throws Exception {
 		Vector <Hit> retHits = new Vector <Hit> ();
@@ -298,7 +305,6 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		int r=rHits.size(), s=sHits.size();
 		if (r>=s || r>2) retHits.addAll(clusterCreate(rHits, htype, qAnno, tAnno)); 
 		if (s>=r || s>2) retHits.addAll(clusterCreate(sHits, htype, qAnno, tAnno));
-		if (r>0 && s>0) BinStats.incStat("OppositeDir", 1); 
 		
 		return retHits;
 	}
@@ -333,7 +339,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		
 		clHit.matchLen = clHit.origHits = 0;
 		int i = 0;
-		double sumPctID = 0, sumPctSim = 0, sumMatch=0; // CAS540 was not computing sim, so using first
+		double sumPctID = 0, sumPctSim = 0, sumMatch=0; 
 		int qSlast=0, qElast=0, tSlast=0, tElast=0, tMatch=0, qMatch=0;
 		
 		sortByQuery(hitVec);
@@ -358,7 +364,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 			sumPctID  += sh.pctid  * sh.matchLen;
 			sumMatch  += sh.matchLen;
 			
-			//  CAS540 Compute subhit length for query; matchLen was just the sum of the query
+			//  Compute subhit length for query
 			int qM = (sh.queryHits.end  - sh.queryHits.start + 1);
 			if (qMatch>0) {
 				int qolap =  Utils.intervalsOverlap(sh.queryHits.start, sh.queryHits.end, qSlast, qElast);
@@ -371,7 +377,7 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		clHit.pctid =    (int) Math.round(sumPctID/sumMatch); 
 		clHit.pctsim =   (int) Math.round(sumPctSim/sumMatch);
 		
-		//  CAS540 Compute subhit length for target
+		//  Compute subhit length for target
 		sortByTarget(hitVec);
 		for (Hit sh : hitVec) {
 			int tM = (sh.targetHits.end - sh.targetHits.start + 1);
@@ -381,14 +387,14 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 			else         tMatch += (tM-tolap);
 			tSlast = sh.targetHits.start; tElast=sh.targetHits.end;
 		}
-		clHit.matchLen = Math.max(tMatch, qMatch); // CAS540 add take best
+		clHit.matchLen = Math.max(tMatch, qMatch); // take best
 		
 		retHits.add(clHit);
 		return retHits;
 	}
 	/*****************************************************
-	 *  CAS548 make hit strands correspond to genes
-	 *  ht.isRev us +/- or -/+;  anno.isRev is -
+	 *  make hit strands correspond to genes
+	 *  ht.isRev is +/- or -/+;  anno.isRev is -
 	 */
 	private static void setStrand(Hit ht, AnnotElem qAnno, AnnotElem tAnno, int numHits) {
 		ht.isRev =    ht.strand.contains("+") && ht.strand.contains("-");
@@ -402,8 +408,8 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 			boolean isGnEQ = ts.equals(qs);
 			
 			if (bHtEQ!=isGnEQ) {// this is still processed
-				if (Globals.TRACE && numHits>1) {
-					String msg = String.format("%2d hit cluster (%s) for Q gene %6d (%s) and T %6d (%s)",
+				if (Globals.TRACE && numHits>5) {
+					String msg = String.format("%2d subhits cluster (%s) for Q gene %6d (%s) and T %6d (%s)",
 						numHits, ht.strand, qAnno.genenum, qs, tAnno.genenum, ts);
 					System.out.println(msg);
 				}
@@ -443,12 +449,11 @@ public class Hit implements Comparable <Hit> {// CAS500 added <Hit>
 		);
 	}
 	/***************************************************************
-	 * CAS540 moved from separate file; changed from using subhit as an parameter to using start/end
 	 ***************************************************************/
 	protected class SubHit  {
 		protected int start, end, score, grpIdx = 0;		
 		protected String name; 		
-		protected int[] subHits;       // set in clusterHits; array of sub-hits start/end coordinates; CAS535 [blocks]
+		protected int[] subHits;       // set in clusterHits; array of sub-hits start/end coordinates; 
 		protected HitStatus status = HitStatus.Undecided; // AnchorsMain {In, Out, Undecided };
 		
 		protected SubHit(SubHit h) {

@@ -16,7 +16,7 @@ import javax.swing.*;
 import javax.swing.table.*;
 import javax.swing.event.*;
 
-import backend.Constants;	// CAS566 replace .* imports with precise ones 
+import backend.Constants;	
 import backend.Utils;
 import backend.DoLoadProj;
 import backend.DoAlignSynPair;
@@ -65,12 +65,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private final int MIN_WIDTH = 850, MIN_HEIGHT = 600;	// Manager
 	private final int MIN_DIVIDER_LOC = 220; 				
 	private final int LEFT_PANEL = 450;      
-	private final int TOP_PANEL = 300;		// was 290 hard-coded below; CAS572
+	private final int TOP_PANEL = 300;		
 	
 	private static final String HTML = "/html/ProjMgrInstruct.html";
 	
-	private final Color cellColor = new Color(85,200,100,85); // pale green; for selected box 
-	private final Color textColor = new Color(0,0,170,255);   // deep blue;  for selected text
+	private final Color cellColor = new Color(0,170,0,85); // new Color(85,200,100,85);pale green; for selected box 
+	//private final Color textColor = new Color(0,0,170,255); // deep blue;  change to green CAS575
+	private final Color textColor = new Color(0,100,0,255); // dark green for "Select a Pair..." text Color(0,102,000,255)
 	
 	// If changed - don't make one a substring of another!!
 	private final String TBL_DONE = "\u2713", TBL_ADONE = "A", TBL_QDONE = "?";
@@ -99,7 +100,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private int totalCPUs=0;
 	
 	private JButton btnAllChrExp, btnSelDotplot, btnAllDotplot, btnAllPairs, btnSelClearPair,
-		btnSelBlockView, btnSelCircView, btnAllQueryView, btnSelReports, // CAS571 add reports
+		btnSelBlockView, btnSelCircView, btnAllQueryView, btnSelReports, 
 	    btnAddProject = null, btnSelAlign, btnPairParams;
 	
 	private JSplitPane splitPane;
@@ -151,7 +152,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			if (dbc2 == null) { // 1st init mysql
 				dbc2 = makeDBconn();
 				
-				new Version(dbc2);
+				new Version(dbc2).check(); // check was made separate; CAS575
 				
 				if (bSQL) dbc2.checkVariables(true); 
 			}
@@ -457,7 +458,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			btnSelClearPair = Jcomp.createButtonNC("Clear Pair", "Remove from database, and optionally, remove MUMmer results"); 
 			btnSelClearPair.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					btnSelClearPair.setEnabled(false);// CAS572 add setEnable (wheel does not stay)
+					btnSelClearPair.setEnabled(false);// (wheel does not stay)
 					Utilities.setCursorBusy(getInstance(), true); 
 					
 					removeClearPair();
@@ -479,7 +480,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 					showDotplot();
 				}
 			});
-			btnSelBlockView = Jcomp.createButtonNC("Blocks", "Display Blocks View for selected pair"); // CAS571 remove View
+			btnSelBlockView = Jcomp.createButtonNC("Blocks", "Display Blocks View for selected pair"); 
 			btnSelBlockView.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) { 
 					showBlockView();
@@ -531,9 +532,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			instructText.add(Box.createHorizontalGlue());
 			instructText.setMaximumSize(instructText.getPreferredSize());
 			
-			JLabel lbl1 = new JLabel("Align & Synteny"); // CAS571 shorten labels
-			JLabel lbl2 = new JLabel("Selected Pair  ");
-			JLabel lbl3 = new JLabel("All Pairs      ");
+			JLabel lbl1 = new JLabel("Align & Synteny"); 
+			JLabel lbl2 = new JLabel("Selected Pair  ");  
+			JLabel lbl3 = new JLabel("All " + TBL_DONE + " Pairs"); // CAS575
 			JLabel lbl4 = new JLabel("               "); 
 			Dimension d = lbl1.getPreferredSize();
 			lbl2.setPreferredSize(d); lbl3.setPreferredSize(d); lbl4.setPreferredSize(d);
@@ -578,7 +579,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			}
 			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );  
 			mainPanel.add( Jcomp.createHorizPanel( new Component[] {lbl2, 
-					btnSelCircView, btnSelDotplot, btnSelBlockView, null, btnSelReports }, sp, ex) );// CAS571 extra gap
+					btnSelCircView, btnSelDotplot, btnSelBlockView, null, btnSelReports }, sp, ex) );
 
 			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );
 			mainPanel.add( Jcomp.createHorizPanel( new Component[] {lbl3, 
@@ -670,10 +671,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		pairTable.setSelectionForeground(Color.BLACK);
 		pairTable.setCellSelectionEnabled( true );
 		pairTable.setModel( new ReadOnlyTableModel(rowData, columnNames) );
+		
 		DefaultTableCellRenderer tcr = new MyTableCellRenderer();
 		tcr.setHorizontalAlignment(JLabel.CENTER);
 		pairTable.setDefaultRenderer( Object.class, tcr);
-	    TableColumn col = pairTable.getColumnModel().getColumn(0);
+	    
+		TableColumn col = pairTable.getColumnModel().getColumn(0);
 		DefaultTableCellRenderer tcr2 = new MyTableCellRenderer();	  
 		tcr2.setHorizontalAlignment(JLabel.LEFT);
 	    col.setCellRenderer(tcr2);
@@ -704,7 +707,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	/***********************************************************
 	 * Enable function buttons; 
 	 */
-	protected void updateEnableButtons() { // PairParams calls this too; CAS571
+	protected void updateEnableButtons() { // PairParams calls this too to update the "Selected Pair" button
 		if (pairTable == null) return;
 		
 		Mproject[] projects = getSelectedPair();  // null if nothing selected
@@ -715,9 +718,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		int numDone = getNumCompleted(false); // do not ignore self; 
 		btnAllChrExp.setEnabled(numDone>0);
+		btnAllQueryView.setEnabled(numDone>0); // CAS575 allow for self
 		
 		numDone = getNumCompleted(true); // ignore selfs
-		btnAllQueryView.setEnabled(numDone>0);
 		btnAllDotplot.setEnabled(numDone>0);   // this does not work for self-align
 		
 		if ((projects!=null)) {
@@ -832,9 +835,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				else { // e.g. dbname=Arab, and there is dbname=zarab with Display name = Arab
 					String msg= dbname + ": Display name '" + mp.strDisplayName + "' exists; cannot display";
 					Mproject ex = projObjMap.get(mp.strDisplayName);
-					msg += "\n   Existing project with display name: Directory " + ex.getDBName(); //CAS570 more obvious;
+					msg += "\n   Existing project with display name: Directory " + ex.getDBName(); 
 					
-					Utilities.showWarningMessage(msg); // CAS570 warning instead of question
+					Utilities.showWarningMessage(msg); 
 				}
 			}
 		}
@@ -901,8 +904,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		return  (val!=null && (val.contains(TBL_ADONE) || val.contains(TBL_DONE)));
 	}
-	// Get Mpair from two projects
-	private Mpair getMpair(int idx1, int idx2) { // projIdx
+	// Get Mpair from two projects; self-synteny will have idx1=idx2; Also used by QueryFrame CAS575
+	public Mpair getMpair(int idx1, int idx2) { // projIdx
 		String key = idx1 + ":" + idx2;
 		if (pairObjMap.containsKey(key)) return pairObjMap.get(key);
 		
@@ -911,22 +914,25 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 
 		return null;		// it is okay to be null; n1 and n2 do not have pair in database
 	}
-	// Pair selected in available synteny table
+	
 	private Mproject[] getSelectedPair() {
+		if (pairTable == null) return null;	
+		
 		int nRow=-1, nCol=-1;
 		try {
-			if (pairTable == null) return null;		
 			nRow = pairTable.getSelectedRow(); // Row is >=0 Col is >=1
 			nCol = pairTable.getSelectedColumn();
-			
-			// If none selected, automatically select one if 2 rows (does not work with 1 row)
+	
+			// If none selected, automatically select one if 1 or 2 rows; CAS575 select if 1 row 
 			if (nRow < 0 || nCol <= 0) {
-				int n = pairTable.getRowCount(); // if n=2, automatically make selected
-				if (n!=2) return null;
+				int n = pairTable.getRowCount(); 
+				if (n!=1 && n!=2) return null;
 				
-				nCol=1; nRow=1;
-				pairTable.setRowSelectionInterval(nRow, nCol);
-				pairTable.setColumnSelectionInterval(nRow, nCol);
+				nCol=1;
+				if (n==1) nRow=0;
+				else nRow=1;		
+				pairTable.setRowSelectionInterval(nRow, nRow);
+				pairTable.setColumnSelectionInterval(nCol, nCol);
 			}
 				
 			String strRowProjName = pairTable.getValueAt(nRow, 0).toString();
@@ -1090,27 +1096,46 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		Utilities.setCursorBusy(this, true);
 		try { 
 			Vector <Mproject> pVec = new Vector <Mproject> ();
-			for (Mproject p : selectedProjVec) if (p.isLoaded()) pVec.add( p );
+			for (Mproject p : selectedProjVec) 
+				if (p.hasSynteny()) pVec.add(p); // CAS575; changed from isLoaded
 			
-			boolean useAlgo2=true; //  used for new "EveryPlus"
-			int cntUsePseudo=0; // Instructions; 
+			boolean isSelf = (selectedProjVec.size()==1 && pVec.size()==1);// self synteny,  added CAS575
+			if (isSelf) pVec.add(pVec.get(0));					// this makes the following loop work for counts
+			
+			boolean useAlgo2=true; // used for new "EveryPlus"
+			int cntUsePseudo=0;    // Instructions; 
 			int hasSynteny=0;
+			Vector <Mproject> synVec = new Vector <Mproject> (); // should end up the same as pVec
 			
-			Vector <Mproject> synVec = new Vector <Mproject> (); // Only projects with synteny;
 			for (int i=0; i<pVec.size()-1; i++) {
 				for (int j=i+1; j<pVec.size(); j++) {
 					Mpair mp = getMpair(pVec.get(i).getIdx(), pVec.get(j).getIdx());
-					if (mp.pairIdx<0) continue;
+					if (mp.pairIdx<0) continue; 
 					
 					if (!mp.isAlgo2(Mpair.DB)) 	  useAlgo2=false;
 					if (mp.isNumPseudo(Mpair.DB)) cntUsePseudo++;
-					hasSynteny++;
+					hasSynteny++;				  // if more than 2 projects, some pairs may not have synteny
 					
-					if (!synVec.contains(pVec.get(i))) synVec.add(pVec.get(i));
-					if (!synVec.contains(pVec.get(j))) synVec.add(pVec.get(j));
+					if (!synVec.contains(pVec.get(i))) synVec.add(pVec.get(i)); // only add a project once
+					if (!synVec.contains(pVec.get(j))) synVec.add(pVec.get(j)); 
 				}
 			}
-			QueryFrame qFrame = new QueryFrame(frameTitle, dbc2, synVec, useAlgo2, cntUsePseudo, hasSynteny);
+			
+			if (isSelf)  { // create second Mproject; CAS575
+				Mproject p = synVec.get(0);
+				Mproject cp = p.copyForQuery();
+				if (cp==null) return;
+				
+				String ab = p.getdbAbbrev();
+				String lch = ab.substring(ab.length()-1);
+				String nch = lch.equals("X") ? "Z" : "X";
+				ab = ab.substring(0, ab.length()-1) + nch; // replace last character
+				cp.setIsSelf(p.getDisplayName() + nch, ab);
+				
+				synVec.add(cp);					
+			}
+			QueryFrame qFrame = new QueryFrame(getInstance(), frameTitle, dbc2, 
+					synVec, useAlgo2, cntUsePseudo, hasSynteny, isSelf);
 			qFrame.build();
 			qFrame.setVisible(true);
 		} 
@@ -1207,7 +1232,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		Utilities.setCursorBusy(this, false);		
 	}
-	private void showReport(){ // CAS571 add
+	private void showReport(){ 
 		Utilities.setCursorBusy(this, true);
 		
 		Mproject[] p = getSelectedPair();
@@ -1416,7 +1441,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private void reloadProject(Mproject mProj) {
 	try {
 		RemoveProj rpObj = new RemoveProj(openLoadLog());
-		if (!rpObj.reloadProject(mProj)) return;				// CAS568 moved removal to RemoveProj
+		if (!rpObj.reloadProject(mProj)) return;				
 		
 		DoLoadProj lpObj= new DoLoadProj(this, dbc2, openLoadLog());
 		lpObj.loadProject(mProj); 
@@ -1529,18 +1554,17 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (mp==null) return; 			 // shouldn't happen
 		
 		String title;
-		if (selProjs[0].getDisplayName().equals(selProjs[1].getDisplayName())) { // Self synteny
-			title = selProjs[0].getDisplayName() + " to itself";
-			
-			if (mp.isAlgo2(Mpair.FILE)) {
-				util.Utilities.showInfoMessage(title, "Please select Algorithm 1 from Parameters");
-				return;
-			}
+		boolean isSelf = selProjs[0].getIdx()==selProjs[1].getIdx();
+		if (isSelf) title = selProjs[0].getDisplayName() + " to itself";
+		else        title = selProjs[0].getDisplayName() + " and " + selProjs[1].getDisplayName(); // Pair
+		
+		if (isSelf && mp.isAlgo2(Mpair.FILE)) { 
+			util.Utilities.showInfoMessage(title, "Please select Algorithm 1 from Parameters");
+			return;
 		}
-		else title= selProjs[0].getDisplayName() + " and " + selProjs[1].getDisplayName(); // Pair
 		
 		// Special cases
-		if (mp.bPseudo)  { // CAS571 get from mp instead of constants
+		if (mp.bPseudo)  { 
 			if (!Utilities.showConfirm2(title, "Pseudo only")) return;
 			
 			new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU, true); // align has been done

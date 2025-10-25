@@ -35,7 +35,6 @@ import util.Utilities;
 
 /**********************************************************
  * Selected row(s): Contains the MSA align and 2D display
- * Added MSA CAS563; added 2D CAS564 - both moved from TableMainPanel
  */
 public class UtilSelect {
 	private TableMainPanel tablePanel;
@@ -46,9 +45,8 @@ public class UtilSelect {
 	protected void msaAlign() {
 		new MsaAlign();
 	}
-	protected void synteny2D(int numRows, int selIndex, int pad,  boolean isChkNum, Vector <Integer> grpIdxVec) {
-		
-		new Synteny2D(numRows, selIndex, pad, isChkNum, grpIdxVec);
+	protected void synteny2D(int numRows, int selIndex, int pad,  boolean isChkNum, boolean isSelf, Vector <Integer> grpIdxVec) {
+		new Synteny2D(numRows, selIndex, pad, isChkNum, isSelf, grpIdxVec);
 	}
 	/*******************************************************************************************/
 	protected class Synteny2D { 
@@ -56,14 +54,18 @@ public class UtilSelect {
 		private int pad;					// how much to pad from the selected hit
 		private boolean isChkGene;			// display geneNum, else annotation
 		private Vector <Integer> grpIdxVec; // the group hits to highlight; returns the values
+		private boolean isSelf=false;		// CAS575 add along with all self logic
 		
 		protected int [] hitNums = {-1, -1};
 		
-		private Synteny2D(int numRows, int selIndex,  int pad,  boolean isChkNum, Vector <Integer> grpIdxVec) {
+		private Synteny2D(int numRows, int selIndex,  int pad,  boolean isChkNum, boolean isSelf, Vector <Integer> grpIdxVec) {
 			this.selIndex = selIndex;
 			this.pad = pad;
 			this.isChkGene = isChkNum;
 			this.grpIdxVec = grpIdxVec;
+			this.isSelf = isSelf;
+			
+			if (numRows==2 && isSelf) return;
 			
 			if (numRows==2) showSyntenyfor3();
 			else 			showSynteny();
@@ -84,7 +86,9 @@ public class UtilSelect {
 					return;
 				}
 				coords = loadCollinearCoords(rd.collinearN, rd.chrIdx[0], rd.chrIdx[1]);
-				hd.setForQuery(0, true, false);  // block, set, region; CAS571 block was T
+				if (coords==null) return;
+				
+				hd.setForQuery(0, true, false);  // block, set, region; 
 			}
 			else if (selIndex==TableMainPanel.showBLOCK) {
 				if (rd.blockN==0) {
@@ -92,22 +96,26 @@ public class UtilSelect {
 					return;
 				}
 				coords = loadBlockCoords(rd.blockN, rd.chrIdx[0], rd.chrIdx[1]);
-				hd.setForQuery(rd.blockN, false, false);  // block, set, region; CAS573 show block only
+				hd.setForQuery(rd.blockN, false, false);  // block, set, region; 
 			}
 			else if (selIndex==TableMainPanel.showGRP) { 
 				if (rd.groupN==0) {
 					Utilities.showWarning("The selected row does not belong to a group.");
 					return;
 				}
-				coords = rd.loadGroup(grpIdxVec); 	 // assigns hits to grpIdxVec
-				hd.setForQuery(0, false, true);  // block, set, region
+				coords = rd.loadGroup(grpIdxVec); // assigns hits to grpIdxVec
+				hd.setForQuery(0, false, true);   // block, set, region
 			}
 			else {
 				coords = new int [4];
 				coords[0] = rd.start[0]; coords[1] = rd.end[0];
 				coords[2] = rd.start[1]; coords[3] = rd.end[1];
-				
 				hd.setForQuery(0, false, true);  // block, set, region
+				
+				if (isSelf && rd.chrIdx[0]==rd.chrIdx[1]) { // hit-wires do not show if this is not done; CAS575 
+					coords[0] = rd.start[1]; coords[1] = rd.end[1];
+					coords[2] = rd.start[0]; coords[3] = rd.end[0];
+				}
 			}
 			track1Start = coords[0] - pad; if (track1Start<0) track1Start=0;
 			track1End   = coords[1] + pad; 
@@ -241,14 +249,16 @@ public class UtilSelect {
 	 		catch(Exception e) {ErrorReport.print(e, "Create 2D Synteny");}
 	    }
 	    /***********************************************************/
-	    private int [] loadCollinearCoords(int set, int idx1, int idx2) {
+	    private int [] loadCollinearCoords(int set, int grpIdx1, int grpIdx2) {
 			int [] coords = null;		
 			try {
-				DBconn2 dbc2 = tablePanel.queryFrame.getDBC();
-			
-				ResultSet rs = dbc2.executeQuery("select start1, end1, start2, end2 from pseudo_hits "
-						+ "where runnum=" + set + " and grp1_idx=" + idx1 + " and grp2_idx=" + idx2);
 				int start1=Integer.MAX_VALUE, end1=-1, start2=Integer.MAX_VALUE, end2=-1, d;
+				
+				DBconn2 dbc2 = tablePanel.queryFrame.getDBC();
+			    String sql = "select start1, end1, start2, end2 from pseudo_hits where runnum=" + set;
+			    if (isSelf && grpIdx1==grpIdx2) sql += " and start1<start2 "; // usually this is start1>start2; but not here...
+				
+			    ResultSet rs = dbc2.executeQuery(sql + " and grp1_idx=" + grpIdx1 + " and grp2_idx=" + grpIdx2);
 				while (rs.next()) {
 					d = rs.getInt(1);	if (d<start1) start1 = d;
 					d = rs.getInt(2);	if (d>end1)   end1 = d;
@@ -257,8 +267,7 @@ public class UtilSelect {
 					d = rs.getInt(4);	if (d>end2)   end2 = d;
 				}
 				if (start1==Integer.MAX_VALUE) { // try flipping idx1 and idx2
-					rs = dbc2.executeQuery("select start1, end1, start2, end2 from pseudo_hits "
-							+ "where runnum=" + set + " and grp1_idx=" + idx2 + " and grp2_idx=" + idx1);
+					rs = dbc2.executeQuery(sql + " and grp1_idx=" + grpIdx2 + " and grp2_idx=" + grpIdx1);
 					while (rs.next()) {
 						d = rs.getInt(1);	if (d<start2) start2 = d;
 						d = rs.getInt(2);	if (d>end2)   end2 = d;
@@ -267,15 +276,18 @@ public class UtilSelect {
 						d = rs.getInt(4);	if (d>end1)   end1 = d;
 					}
 				}
-				if (start1!=Integer.MAX_VALUE) {
-					int pad = 8;				
-					coords = new int [4];
-					coords[0]=start1-pad; if (coords[0]<0) coords[0]=0;
-					coords[1]=end1+pad; 
-					coords[2]=start2-pad; if (coords[3]<0) coords[0]=0;
-					coords[3]=end2+pad;
-				}
 				rs.close();
+				if (start1==Integer.MAX_VALUE) {
+					Globals.eprt("Could not find collinear set " + set);
+					return null;
+				}
+							
+				coords = new int [4]; // removed padding of 8 since more pad is added in calling routine; CAS575
+				coords[0]=start1; 
+				coords[1]=end1; 
+				coords[2]=start2; 
+				coords[3]=end2;
+				
 				return coords;
 			}
 			catch(Exception e) {ErrorReport.print(e, "get collinear coords"); return null;}
@@ -286,16 +298,17 @@ public class UtilSelect {
 			try {
 				DBconn2 dbc2 = tablePanel.queryFrame.getDBC();
 				
-				ResultSet rs = dbc2.executeQuery("select start1, end1, start2, end2 from blocks "
-						+ " where blocknum="+block+ " and grp1_idx=" + idx1 + " and grp2_idx=" + idx2);
+				String sql = "select start1, end1, start2, end2 from blocks  where blocknum="+block;
+				if (isSelf && idx1==idx2) sql += " and start1<start2 ";
+				
+				ResultSet rs = dbc2.executeQuery(sql + " and grp1_idx=" + idx1 + " and grp2_idx=" + idx2);
 				if (rs.next()) {
 					coords = new int [4];
 					for (int i=0; i<4; i++) coords[i] = rs.getInt(i+1);
 				}
 
 				if (coords==null) { // try opposite way
-					rs = dbc2.executeQuery("select start2, end2, start1, end1 from blocks "
-							+ " where blocknum="+block+ " and grp1_idx=" + idx2 + " and grp2_idx=" + idx1);
+					rs = dbc2.executeQuery(sql + " and grp1_idx=" + idx2 + " and grp2_idx=" + idx1);
 					if (rs.next()) {
 						coords = new int [4];
 						for (int i=0; i<4; i++) coords[i] = rs.getInt(i+1);

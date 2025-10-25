@@ -30,7 +30,6 @@ import backend.Utils;
  *        
  * 	 All Mproject obj are recreated on every refresh
  * 	 if !viewSymap, the file values have precedence over DB for projVal
- * CAS568 moved mask and order-against to Mpairs
  */
 
 public class Mproject implements Comparable <Mproject> {
@@ -41,11 +40,12 @@ public class Mproject implements Comparable <Mproject> {
 	private String strDate="";
 	private DBconn2 dbc2;
 	
-	private int numExon = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0; // CAS570 chg Annots->Exons; count was wrong with pseudo added
+	private int numExon = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0; 
 	private long length=0; 		// genome length - must be long
 	
-	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();
-	private TreeMap<String,Integer>   grpName2Idx = new TreeMap <String, Integer> ();
+	private TreeMap <Integer, String> grpIdx2FullName = new TreeMap <Integer, String> (); // full name, e.g. chr01; was idx2Name; CAS575
+	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();	  // name, e.g. 01; CAS575
+	private TreeMap<String,Integer>   grpName2Idx = new TreeMap <String, Integer> ();     // full name and name
 	private Pattern namePat;
 	private boolean bHasSelf=false; 
 	
@@ -85,6 +85,16 @@ public class Mproject implements Comparable <Mproject> {
 	public Mproject() { // for display packages querying proj_props 
 		makeParams();
 	}
+	public Mproject copyForQuery() { // for isSelf; CAS575
+	try {
+		Mproject p = new Mproject(dbc2, projIdx, strDBName, "");
+		p.loadDataFromDB();
+		p.loadParamsFromDB();
+		p.finishParams();
+		return p;
+	}
+	catch (Exception e) {ErrorReport.print(e, "copyForQuery"); return null;}
+	}
 	public int compareTo(Mproject b) {
 		return strDisplayName.compareTo(b.strDisplayName);
 	}
@@ -97,7 +107,7 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	
 	public String getAnnoStr() {
-		String msg= ""; // CAS570 changed line 
+		String msg= ""; 
 		if (numGene>0) msg += String.format("Genes: %,d  ", numGene);
 		if (numExon>0) msg += String.format("Exons: %,d  ", numExon);
 		if (numGap>0)  msg += String.format("Gaps: %,d", numGap);
@@ -132,7 +142,12 @@ public class Mproject implements Comparable <Mproject> {
 	public String getdbGrpName() 	{ return getDBVal(sGrpType);}
 	public String getdbCat() 		{ return getDBVal(sCategory); }
 	public String getdbAbbrev() 	{ return getDBVal(sAbbrev); }
-	// CAS573 obsolete user defined dotsize; public int getdbDPsize() {return Utilities.getInt(getDBVal(sDPsize));}
+	
+	public void setIsSelf(String display, String abbrev) { // CAS575 add for isSelf
+		setProjVal(sDisplay, display); strDisplayName = display;
+		setProjVal(sAbbrev, abbrev); 
+	} 
+	
 	public int getdbMinKey() {return Utilities.getInt(getDBVal(sANkeyCnt));}
 	
 	public String getSequenceFile() { return getProjVal(lSeqFile); }
@@ -150,15 +165,19 @@ public class Mproject implements Comparable <Mproject> {
 	public int getGrpSize() { return grpIdx2Name.size();}
 	public TreeMap <Integer, String> getGrpIdxMap() {return grpIdx2Name;} 
 	
+	public String getGrpFullNameFromIdx(int idx) {
+		if (grpIdx2FullName.containsKey(idx)) return grpIdx2FullName.get(idx);
+		return ("Unk" + idx);
+	}
 	public String getGrpNameFromIdx(int idx) {
 		if (grpIdx2Name.containsKey(idx)) return grpIdx2Name.get(idx);
 		return ("Unk" + idx);
 	}
-	
-	public int getGrpIdxFromName(String name) {
+	public int getGrpIdxFromFullName(String name) {// can be full or short
 		if (grpName2Idx.containsKey(name)) return grpName2Idx.get(name);
 		return getGrpIdxRmPrefix(name);
 	}
+	
 	public int getGrpIdxRmPrefix(String name) {	// grpName2Idx has both w/o prefix
 		String s = name;
 		
@@ -550,10 +569,10 @@ public class Mproject implements Comparable <Mproject> {
 	} 
 	
 	private void loadParamsFromDisk(String dir){
-		File pfile = Utils.getParamsFile(dir,Constants.paramsFile);  // CAS569 check if has .txt
+		File pfile = Utils.getParamsFile(dir,Constants.paramsFile);  
 		if (pfile==null) { 				// If user created, no params file
 			finishParams();
-			if (!ManagerFrame.inReadOnlyMode) writeNewParamsFile(); // CAS571 
+			if (!ManagerFrame.inReadOnlyMode) writeNewParamsFile(); 
 			return;
 		}
 	
@@ -610,9 +629,14 @@ public class Mproject implements Comparable <Mproject> {
 	public void loadDataFromDB() throws Exception {
 		ResultSet rs = dbc2.executeQuery("select idx, fullname, name from xgroups where proj_idx=" + projIdx);
 		while (rs.next()) {
-			grpIdx2Name.put(rs.getInt(1), rs.getString(2));
-			grpName2Idx.put(rs.getString(2), rs.getInt(1));
-			grpName2Idx.put(rs.getString(3), rs.getInt(1));
+			int idx = rs.getInt(1);
+			String full = rs.getString(2);
+			String name = rs.getString(3);
+			
+			grpName2Idx.put(full, idx);
+			grpName2Idx.put(name, idx);
+			grpIdx2Name.put(idx, name);
+			grpIdx2FullName.put(idx, full);
 		} 
 		rs.close();
 		
@@ -660,11 +684,13 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	public String toString() { return strDBName + ":" + projIdx; }
 	
-	protected void prtInfo() {
+	public void prtInfo() {// CAS575 made public for testing query
 		Globals.prt(String.format("   %-20s %s index %d", "DBname", strDBName, projIdx));
 		String key = paramLabel[sCategory];
 		Globals.prt(String.format("   %-20s %s", key, pLabelMap.get(key).projVal));
 		key = paramLabel[sDisplay];
+		Globals.prt(String.format("   %-20s %s", key, pLabelMap.get(key).projVal));
+		key = paramLabel[sAbbrev];	
 		Globals.prt(String.format("   %-20s %s", key, pLabelMap.get(key).projVal));
 	}
 	/***********************************************************
@@ -697,6 +723,7 @@ public class Mproject implements Comparable <Mproject> {
 	private void setProjVal(int idx, String value) {
 		String key = paramKey[idx];
 		pKeysMap.get(key).projVal = value;
+		pKeysMap.get(key).dbVal = value; // CAS575 add for Query self-synteny
 	}
 	
 	private String  getDBVal(int idx) {
@@ -729,7 +756,7 @@ public class Mproject implements Comparable <Mproject> {
 	};
 	private String [] paramLabel = {
 			"Category", "Display name", "Abbreviation", "Group type", 
-			"Description",  "Anno key count","Group prefix", "Minimum length", // remove DP cell size CAS573
+			"Description",  "Anno key count","Group prefix", "Minimum length", 
 			 "Anno keywords", "Sequence files", "Anno files"
 	};
 	private String [] paramDesc = { 
@@ -750,7 +777,7 @@ public class Mproject implements Comparable <Mproject> {
 	public final int sDisplay =   	1;
 	protected final int sAbbrev =   2;
 	public final int sGrpType =   	3;
-	protected final int sDesc =     4; // CAS573 remove obsolete DP dot size
+	protected final int sDesc =     4; 
 	public final int sANkeyCnt =  	5;
 	
 	public final int lGrpPrefix = 	6;

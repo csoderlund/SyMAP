@@ -2,6 +2,7 @@ package backend;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.TreeMap;
 import java.util.Vector;
@@ -386,13 +387,17 @@ public class AnnotLoadMain {
 			
 			if (annoFiles.equals("")) {// Check for annotation directory
 				String annotDir = 	projDir + Constants.seqAnnoDataDir;
-				plog.msg("   Anno_files " + annotDir + " (Default location)"); // CAS571
+				plog.msg("   Anno_files " + annotDir + " (Default location)"); 
 				File ad = new File(annotDir);
 				if (!ad.isDirectory()) {
 					plog.msg("   No annotation files provided");
 					return; 			// this is not considered an error
 				}
-				for (File f2 : ad.listFiles()) {
+				
+				File[] fs = ad.listFiles();
+				Arrays.sort(fs);			// If separate files, order is random; this isn't necessary, but nice; CAS575
+				
+				for (File f2 : fs)  {
 					if (!f2.isFile() || f2.isHidden()) continue; //  macOS add ._ files in tar
 					
 					annotFiles.add(f2);

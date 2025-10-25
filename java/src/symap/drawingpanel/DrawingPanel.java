@@ -125,8 +125,8 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		trackHolders[position-1].setTrack(track);
 		if (position>1) { 
 			Sequence otrack = trackHolders[position-2].getTrack();
-			track.setOtherProject(otrack.getProject());
-			otrack.setOtherProject(track.getProject());
+			track.setOtherProject(otrack.getProjIdx());
+			otrack.setOtherProject(track.getProjIdx());
 		}
 		
 		bUpdateHistory = true;  // 1st history of stack

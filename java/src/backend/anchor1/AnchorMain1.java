@@ -5,17 +5,17 @@ import java.sql.ResultSet;
 import java.util.TreeSet;
 import java.util.Vector;
 
-import backend.Constants;
-import backend.Utils;
-
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Arrays;
 import java.util.Collections;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.File;
 import java.lang.Math;
 
+import backend.Constants;
+import backend.Utils;
 import backend.AnchorMain;
 import database.DBconn2;
 import symap.Globals;
@@ -28,6 +28,9 @@ import util.ProgressDialog;
 
 /******************************************************
  * Read align files and create anchors 
+ * CAS575 made self-synteny not dependent on order of schema, removed binstats; self-chr diagonal not saved
+ *   New algo: Only lower diagonal hits are analyzed, then mirrored. e.g. Rice_f8.Rice_f11.mum swap coords, Rice_f9.Rice_f1.mum no swap.
+ *   Old algo: Mix of lower and upper as input, then all are mirrored.
  */
 enum HitStatus  {In, Out, Undecided }; 
 enum QueryType  {Query, Target, Either };	
@@ -38,6 +41,8 @@ public class AnchorMain1 {
 	private boolean VB = Constants.VERBOSE;
 	private static final int HIT_VEC_INC = 1000;
 	private static final int nLOOP = 10000;
+	
+	public static int nAnnot=0; // number of input projects that are annotated; different filter rules based on if 0,1,2
 	
 	private AnchorMain mainObj;
 	private DBconn2 dbc2, tdbc2;
@@ -53,10 +58,8 @@ public class AnchorMain1 {
 	private boolean isSelf = false, isNucmer=false;
 	
 	private HashSet<Hit> filtHitSet = new HashSet <Hit> ();
-	private Vector<Hit> diagHits = new Vector <Hit> ();
+	private Vector<Hit> diagHits = new Vector <Hit> ();			// for self-synteny; seems to process more than diagonal...
 
-	public static int nAnnot=0; // different filter rules based on if 0,1,2 projects annotated
-	
 	public AnchorMain1(AnchorMain mainObj) {
 		this.mainObj = mainObj;
 		this.dbc2 = mainObj.dbc2;
@@ -70,9 +73,7 @@ public class AnchorMain1 {
 	try {
 		tdbc2 = new DBconn2("Anchors-"+DBconn2.getNumConn(), dbc2);
 		proj1Name = pj1.getDBName(); proj2Name = pj2.getDBName();
-		isSelf = proj1Name.equals(proj2Name); 
-		
-		initStats();
+		isSelf = pj1.getIdx()==pj2.getIdx(); 
 		
 	/** execute **/
 		loadAnnoBins(pj1, pj2); 	if (!bSuccess) return false; // create initial hitbins from genes
@@ -116,7 +117,7 @@ public class AnchorMain1 {
 			return;
 		}
 		
-		if (VB) plog.msg("Loading annotations"); else Globals.rprt("Loading annotation");
+		if (VB) plog.msg("   Loading annotations"); else Globals.rprt("   Loading annotation"); // CAS575 indent
 		Vector <Group> group1Vec = syProj1.getGroups();
 		Vector <Group> group2Vec = syProj2.getGroups();
 		
@@ -136,7 +137,7 @@ public class AnchorMain1 {
 		}
 		
 		failCheck();
-		if (Constants.PRT_STATS) Utils.prtTimeMemUsage("Load Annot bins", memTime);
+		if (Globals.TRACE) Utils.prtTimeMemUsage("Load Annot bins", memTime);
 	}
 	catch (Exception e) {ErrorReport.print(e, "load annotation"); bSuccess=false;}
 	}
@@ -152,24 +153,22 @@ public class AnchorMain1 {
 		int nHitsScanned = 0, nFile=0;
 		TreeSet<String> skipList = new TreeSet<String>();
 		File[] fs = dh.listFiles();
-		
-		int nLoop = (isSelf) ? 2 : 1; // process notSelf first to get same results as v4.2
+		Arrays.sort(fs);			  // not necessary, but nice for VB output; CAS575 this changes the hits found slightly!
+		int nLoop = (isSelf) ? 2 : 1; // process grp1!=grp2 first to get similar results as v4.2
 	
 		for (int i=0; i<nLoop; i++) {
-			boolean skipSelf = (i==0) ? true : false; 
-
 			for (File f : fs) {
 				if (!f.isFile()) continue;
 				
 				String fName = f.getName();
 				if (!fName.endsWith(Constants.mumSuffix))continue;
 				if (isSelf) {
-					if ( skipSelf &&  fName.startsWith(Constants.selfPrefix)) continue;
-					if (!skipSelf && !fName.startsWith(Constants.selfPrefix)) continue;
+					if (i==0 &&  fName.startsWith(Constants.selfPrefix)) continue;
+					if (i==1 && !fName.startsWith(Constants.selfPrefix)) continue;
 				}
 				nFile++;
 				
-				int nHits = scanFile1AnnoBins(f, syProj1, syProj2, skipSelf); 
+				int nHits = scanFile1AnnoBins(f, syProj1, syProj2); 
 						
 				if (nHits == 0) skipList.add(fName);
 				else 			nHitsScanned += nHits;
@@ -183,11 +182,11 @@ public class AnchorMain1 {
 		}
 		if (mTotalHits == 0)   return rtError("No good anchors were found");
 		Globals.rclear();
-		if (nFile>1 || !VB) 			Utils.prtNumMsgFile(plog, nHitsScanned, "Total scanned hits from " + nFile + " files"); // CAS572 add file
+		if (nFile>1 || !VB) 			Utils.prtNumMsgFile(plog, nHitsScanned, "Total scanned hits from " + nFile + " files"); 
 		if (nHitsScanned!=mTotalHits) 	Utils.prtNumMsgFile(plog, mTotalHits, "Total accepted hits");
 		if (mTotalLargeHits > 0 && VB)  Utils.prtNumMsgFile(plog, mTotalLargeHits, "Large hits (> " + Group.FSplitLen + ")  "
 					 															+ mTotalBrokenHits + " Split "); 
-		if (Constants.PRT_STATS) Utils.prtTimeMemUsage(plog, "Complete scan candidate genes", memTime);
+		if (Globals.TRACE) Utils.prtTimeMemUsage(plog, "Complete scan candidate genes", memTime);
 		
 	/** Second scan - to cluster and filter **/	
 		plog.msg("   Scan files to cluster and filter hits");
@@ -196,8 +195,6 @@ public class AnchorMain1 {
 		nHitsScanned = nFile = 0;			
 		
 		for (int i=0; i<nLoop; i++) {
-			boolean bSelf = (i==0) ? true : false; 
-			
 			for (File f : fs) {
 				if (!f.isFile()) continue;
 				
@@ -210,7 +207,7 @@ public class AnchorMain1 {
 					if (i==1 && !fName.startsWith(Constants.selfPrefix)) continue;
 				}
 				nFile++;	
-				int nHits = scanFile2ClusterFilter(f, syProj1, syProj2, bSelf);
+				int nHits = scanFile2ClusterFilter(f, syProj1, syProj2);
 				nHitsScanned += nHits;	
 				
 				if (failCheck()) return false;
@@ -220,13 +217,8 @@ public class AnchorMain1 {
 		if (nFile>1 || !VB) 
 			Utils.prtNumMsg(plog, nHitsScanned, "Total cluster hits  ");
 
-		if (Constants.PRT_STATS) { 
-			Utils.prtTimeMemUsage(plog, "Complete scan cluster", memTime);
-			syProj1.printBinStats();  
-			syProj2.printBinStats(); 
-			BinStats.dumpStats(plog); 
-			plog.msgToFile("Complete stats"); 
-		}
+		if (Globals.TRACE) Utils.prtTimeMemUsage(plog, "Complete scan cluster", memTime);
+			
 		return true;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Reading seq anchors"); bSuccess=false; return false;}
@@ -235,14 +227,14 @@ public class AnchorMain1 {
 	/*************************************************************
 	 * first time through, create the predicted genes from non-gene hits
 	 */
-	private int scanFile1AnnoBins(File mFile, Proj p1, Proj p2, boolean skipSelf) throws Exception {
+	private int scanFile1AnnoBins(File mFile, Proj p1, Proj p2) throws Exception { // remove selfSkip param, does not do anything; CAS575
 		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
 	try {	
 		if (!VB) Globals.rprt(String.format("Scan %s",  Utils.fileFromPath(mFile.toString())));
 		
 		String line, fileType="PROMER";
 		int numErrors = 0, hitNum = 0;
-		int skip1=0, skip2=0;
+		int cntSkip=0, cntSwap=0;
 		
 	/** Read file and build rawHits **/
 		BufferedReader fh = new BufferedReader(new FileReader(mFile));
@@ -252,7 +244,7 @@ public class AnchorMain1 {
 			if (line.length() == 0) continue;
 			if (!Character.isDigit(line.charAt(0))) {
 				if (line.startsWith("NUCMER")) {
-					isNucmer=true;
+					isNucmer = true;
 					fileType = "NUCMER";
 				}
 				continue; 
@@ -282,14 +274,12 @@ public class AnchorMain1 {
 				fh.close();
 				return 0;
 			}
-			
-			if (skipSelf && hit.queryHits.grpIdx==hit.targetHits.grpIdx) {
-				skip1++;
-				continue; // (run twice) run the chr x itself separately
-			}
-			if (hit.queryHits.grpIdx == hit.targetHits.grpIdx && hit.queryHits.start < hit.targetHits.start) {
-				skip2++;
-				continue; // mirror these later
+			if (isSelf) {// DIR_SELF
+				if (hit.queryHits.grpIdx <  hit.targetHits.grpIdx) {hit.swapCoords(); cntSwap++;} // lower diagonal; CAS575 add
+				
+				if (hit.queryHits.grpIdx == hit.targetHits.grpIdx && hit.queryHits.start < hit.targetHits.start) { 
+					cntSkip++; continue; // mirror later; self hits are in file twice, once with start1<start2 and vice versa
+				}
 			}
 				
 			mTotalHits++;
@@ -307,11 +297,10 @@ public class AnchorMain1 {
 		}
 		fh.close();
 		
-		if (Constants.PRT_STATS) {
-			Utils.prtNumMsgNZx(skip1, "Skip1 - Self with same group (is run separately)");
-			Utils.prtNumMsgNZx(skip2, "Skip2 - Same group   with start1<start2 (mirror later)");
+		if (Globals.TRACE && isSelf) {
+			if (cntSkip>0) Utils.prtNumMsg(cntSkip, String.format(" skipped coords from %,8d ", hitNum) + Utils.fileFromPath(mFile.toString()));
+			else Utils.prtNumMsg(cntSwap, String.format(" swapped coords from %,8d ", hitNum) + Utils.fileFromPath(mFile.toString()));
 		}
-		
 		String msg= String.format("%,10d scanned %s %s", hitNum, fileType, Utils.fileFromPath(mFile.toString()));
 		if (VB) Utils.prtMsgFile(plog, msg);  else    Globals.rprt(msg);
 		
@@ -338,7 +327,7 @@ public class AnchorMain1 {
 	 * 2nd time through - do the clustering
 	 * this is about the same as scanFile1 except for no checks, diagonals, and final processing
 	 */
-	private int scanFile2ClusterFilter(File mFile, Proj p1, Proj p2, boolean skipSelf) throws Exception {
+	private int scanFile2ClusterFilter(File mFile, Proj p1, Proj p2) throws Exception {
 		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
 	try {
 		if (!VB) Globals.rprt(String.format("Cluster %s",  Utils.fileFromPath(mFile.toString())));
@@ -348,7 +337,6 @@ public class AnchorMain1 {
 		int errCnt=0;
 		
 	/** Read file and build rawHits **/
-		int totalLargeHits = 0, totalBrokenHits = 0;
 		while (fh.ready()) {
 			line = fh.readLine().trim();
 			
@@ -369,9 +357,13 @@ public class AnchorMain1 {
 			hit.queryHits.grpIdx  = p1.grpIdxFromQuery(hit.queryHits.name);
 			hit.targetHits.grpIdx = p2.grpIdxFromQuery(hit.targetHits.name);
 			
-			if (skipSelf && hit.queryHits.grpIdx==hit.targetHits.grpIdx) continue;
-			if (hit.queryHits.grpIdx == hit.targetHits.grpIdx && hit.queryHits.start < hit.targetHits.start) continue; 
-
+			if (isSelf) {// DIR_SELF
+				if (hit.queryHits.grpIdx < hit.targetHits.grpIdx) hit.swapCoords();   // CAS575 add
+				
+				//CAS575 shouldn't happen; if (i==0 && hit.queryHits.grpIdx==hit.targetHits.grpIdx) continue; 
+				if (hit.queryHits.grpIdx == hit.targetHits.grpIdx && hit.queryHits.start < hit.targetHits.start) continue; 
+			}
+			
 			// The only section different from scanFile1, which makes a big difference for self-synteny
 			if (hit.isDiagHit()) { // Diagonal hits are handle separately
 				hit.status = HitStatus.In; 
@@ -382,8 +374,6 @@ public class AnchorMain1 {
 			if (hit.maxLength() > Group.FSplitLen){
 				Vector<Hit> brokenHits = Hit.splitMUMmerHit(hit); // catches and prints error
 				if (brokenHits==null) {bSuccess=false; fh.close(); return 0;}
-				totalLargeHits++;
-				totalBrokenHits += brokenHits.size();
 				rawHits.addAll(brokenHits);
 			}
 			else {
@@ -395,11 +385,6 @@ public class AnchorMain1 {
 		if (rawHits.size()==0) return 0;
 		
 	/** Scan2 processing ***/
-		BinStats.incStat("RawDiagHits", diagHits.size());
-		BinStats.incStat("RawHits",rawHits.size());
-		BinStats.incStat("LargeHits",totalLargeHits);
-		if (totalLargeHits>0) BinStats.incStat("BrokenHits",totalBrokenHits);
-	
 		Vector<Hit> clustHits = clusterHits2( rawHits ); if (!bSuccess) return 0;
 		rawHits.clear();
 		Collections.sort(clustHits);
@@ -408,7 +393,6 @@ public class AnchorMain1 {
 		
 		String msg= String.format("%,10d clustered %s", clustHits.size(), Utils.fileFromPath(mFile.toString()));
 		if (VB) Utils.prtMsgFile(plog, msg); else Globals.rprt(msg);
-	
 		return clustHits.size();
 	}
 	catch (Exception e) {
@@ -441,7 +425,7 @@ public class AnchorMain1 {
 			AnnotElem qAnno = grp1.getBestOlapAnno(hit.queryHits.start, hit.queryHits.end);   // priority to gene annotElem
 			AnnotElem tAnno = grp2.getBestOlapAnno(hit.targetHits.start, hit.targetHits.end); 
 
-			// Self-synteny humans failed on this and quit; change to continue... CAS572
+			// Self-synteny humans failed on this...
 			if (qAnno == null) {Globals.tprt("missing query annot!  grp:" + grp1.idStr() + " start:" + hit.queryHits.start + " end:" + hit.queryHits.end); continue;}	
 			if (tAnno == null) {Globals.tprt("missing target annot! grp:" + grp2.idStr() + " start:" + hit.targetHits.start + " end:" + hit.targetHits.end); continue;}	
 			
@@ -453,13 +437,13 @@ public class AnchorMain1 {
 				key2tAnno.put(key, tAnno);
 				
 				if (!qAnno.isGene() && !tAnno.isGene()) {
-					pairTypes.put(key, HitType.NonGene);		BinStats.incStat("NonGeneClusters", 1);	
+					pairTypes.put(key, HitType.NonGene);		
 				}
 				else if (qAnno.isGene() && tAnno.isGene()) {
-					pairTypes.put(key, HitType.GeneGene);		BinStats.incStat("GeneClusters", 1);
+					pairTypes.put(key, HitType.GeneGene);		
 				}
 				else {
-					pairTypes.put(key, HitType.GeneNonGene);	BinStats.incStat("GeneNonGeneClusters", 1);	
+					pairTypes.put(key, HitType.GeneNonGene);		
 				}						
 			}
 			pairMap.get(key).add(hit);					
@@ -473,8 +457,6 @@ public class AnchorMain1 {
 			
 			outHits.addAll(Hit.clusterHits2( pairHits, pairTypes.get(key), qAnno, tAnno));		
 		}
-		BinStats.incStat("TotalClusters", outHits.size());
-		
 		return outHits;
 	}
 	catch (Exception e) {
@@ -499,7 +481,7 @@ public class AnchorMain1 {
 		Vector<Hit> theseDiag = new Vector<Hit>();
 		
 		for (Hit hit : clustHits) {				
-			if (hit.isDiagHit()) { // keep it but do not use in further processing	
+			if (hit.isDiagHit()) { // not used in isSelf, could possibly happen in !isSelf
 				hit.status = HitStatus.In; 
 				theseDiag.add(hit); 
 				continue;
@@ -511,15 +493,11 @@ public class AnchorMain1 {
 			 
 			Group grp2 = p2.getGrpByIdx(hit.targetHits.grpIdx);
 			grp2.filterAddToHitBin2(hit, hit.targetHits.start, hit.targetHits.end);	
-		}
-		
-		if (theseDiag.size() > 0) { // self only	
+		}	
+		if (theseDiag.size() > 0) {
 			Hit.mergeOlapDiagHits(theseDiag);
 			diagHits.addAll(theseDiag);
-			
-			BinStats.incStat("DiagHits", theseDiag.size());
-			BinStats.incStat("MergedDiagHits", diagHits.size());
-		}	
+		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "prefilter hits"); bSuccess=false;}
 	}
@@ -545,30 +523,16 @@ public class AnchorMain1 {
 				nBothIn++;
 			}
 		}
-		if (VB) Utils.prtNumMsg(plog, nQueryIn,  "for " +  proj1Name );
-		if (VB) Utils.prtNumMsg(plog, nTargetIn, "for " + proj2Name );
+		if (VB) {
+			 Utils.prtNumMsg(plog, nQueryIn,  "for " +  proj1Name );
+			 Utils.prtNumMsg(plog, nTargetIn, "for " + proj2Name );
+		}
 		Utils.prtNumMsg(plog, nBothIn, "Filtered hits to save");
 		
-		filtHitSet.addAll(diagHits); // diagHits only for self
-		
-		if (!Constants.PRT_STATS) return;
-		
-		//*** -s only *****//
-		for (Hit hit : filtHitSet) { 
-			if (hit.status == HitStatus.In) {			
-				BinStats.incHist("TopNHist1Accept", hit.binsize1);
-				BinStats.incHist("TopNHist2Accept", hit.binsize2);
-				if (hit.mHT==null) {
-					BinStats.incStat("unkFinalHits", 1);
-					BinStats.incStat("unkFinalOrigHits", hit.origHits);
-				}
-				else {
-					BinStats.incStat(hit.mHT.toString() + "FinalHits", 1);
-					BinStats.incStat(hit.mHT.toString() + "FinalOrigHits", hit.origHits);
-				}
-			}
+		if (diagHits.size()>0) {
+			filtHitSet.addAll(diagHits); 
+			if (Globals.TRACE)   Utils.prtNumMsg(plog, diagHits.size(),  " diagonal hits ");
 		}
-		BinStats.incStat("TopNFinalKeep", nBothIn);	
 	}
 	catch (Exception e) {ErrorReport.print(e, "filter hits"); bSuccess=false;}
 	}
@@ -615,41 +579,52 @@ public class AnchorMain1 {
 		if (Constants.VERBOSE) plog.msg("Save results"); else Globals.rprt("Save results");
 		long memTime = Utils.getTimeMem();
 		
-		Vector <Hit> vecHits = new Vector <Hit> (filtHitSet.size());
-		for (Hit h : filtHitSet) vecHits.add(h);
-		Hit.sortByTarget(vecHits);	
+		Vector <Hit> onlyFiltHits = new Vector <Hit> (filtHitSet.size());
+		for (Hit h : filtHitSet)
+			if (h.status == HitStatus.In) onlyFiltHits.add(h);  // CAS575 add IN as WAS ignored later anyway
 		
-		saveFilterHits(vecHits); 		if (!bSuccess) return;
+		Hit.sortByTarget(onlyFiltHits);	
 		
-		if (isSelf) addMirroredHits();	if (!bSuccess) return;
+		saveFilterHits(onlyFiltHits, false); 			if (!bSuccess) return;
 		
-		saveAnnoHits();			 		if (!bSuccess) return;
+		if (isSelf) saveFilterHits(onlyFiltHits, true);	if (!bSuccess) return; // CAS575 add
 		
-		if (Constants.PRT_STATS) Utils.prtMsgTimeFile(plog, "Complete save", memTime);
+		saveAnnoHits();			 						if (!bSuccess) return;
+		
+		if (Globals.TRACE) Utils.prtMsgTimeFile(plog, "Complete save", memTime);
 	}
 	catch (Exception e) {ErrorReport.print(e, "save results"); throw e;}
 	}
 	/************************************************
-	 * If set GLOBAL innodb_flush_log_at_trx_commit=0, these two saveFilterHits are the same speed,
-	 * else, saveFilterHits1 is faster. Hits1 uses a bulk load whereas Hits uses PreparedStatement
+	 * Save hits
+	 * if bMirror, self-synteny, mirror hits; add refidx and swap all 1-2 columns and query/target
 	 */
-	private void saveFilterHits(Vector <Hit> vecHits) throws Exception { 
+	private void saveFilterHits(Vector <Hit> filtHits, boolean bMirror) throws Exception { 
 		try {
-			if (VB) plog.msg("   Save filtered hits"); else Globals.rprt("Save filtered hits");
+			String msg = (bMirror) ? "   Save mirrored filtered hits " : "   Save filtered hits ";
+			msg += String.format("%,d", filtHits.size());
+			if (VB) plog.msg(msg); else Globals.rprt(msg);
 			int numLoaded=0, countBatch=0;
-			tdbc2.executeUpdate("alter table pseudo_hits modify countpct integer");
-						
-			PreparedStatement ps = tdbc2.prepareStatement("insert into pseudo_hits "	
-					+ "(pair_idx, proj1_idx, proj2_idx, grp1_idx, grp2_idx,"
-					+ "pctid, cvgpct, countpct, score, htype, gene_overlap,"
-					+ "annot1_idx, annot2_idx, strand, start1, end1, start2, end2,"
-					+ "query_seq, target_seq) "
-					+ "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
 			
-			for (Hit hit : vecHits) {
-				if (hit.status != HitStatus.In) continue;
+			if (isSelf) addIsSelfRefIdx(filtHits, bMirror);
+			
+			String sql = "insert into pseudo_hits (pair_idx,";
+			
+			if (!bMirror) sql += "proj1_idx, proj2_idx, grp1_idx, grp2_idx,";
+			else          sql += "proj2_idx, proj1_idx, grp2_idx, grp1_idx,";
+			
+			sql += "pctid, cvgpct, countpct, score, htype, gene_overlap, strand,";
+			
+			if (!bMirror) sql += "annot1_idx, annot2_idx, start1, end1, start2, end2, query_seq, target_seq, refidx)";
+			else        sql += "annot2_idx, annot1_idx, start2, end2, start1, end1, target_seq, query_seq, refidx)";
+			
+			PreparedStatement ps = tdbc2.prepareStatement(sql 
+					+ "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
+			
+			for (Hit hit : filtHits) {
+				if (hit.htype==-1) continue;				// isSelf self-chr diagonal; CAS575 self no longer entered; dotplot creates the diagonal
 				
-				String htype="g0"; // show on Query
+				String htype = "g0"; // show on Query
 				int geneOlap = 0;
 				if (hit.mHT == HitType.GeneGene)			{geneOlap = 2;	htype="g2";}
 				else if (hit.mHT == HitType.GeneNonGene)	{geneOlap = 1;	htype="g1";}
@@ -657,20 +632,20 @@ public class AnchorMain1 {
 				int i=1;
 				ps.setInt(i++, pairIdx);
 				ps.setInt(i++, syProj1.getIdx());
-				ps.setInt(i++, syProj2.getIdx());
+				ps.setInt(i++, syProj2.getIdx()); 
 				ps.setInt(i++, hit.queryHits.grpIdx);
 				ps.setInt(i++, hit.targetHits.grpIdx);
-				
+			
 				ps.setInt(i++, hit.pctid);							// pctid Avg%Id
 				ps.setInt(i++, hit.pctsim); 				 		// cvgpct;   unsigned tiny int; now Avg%Sim
 				ps.setInt(i++, (hit.queryHits.subHits.length/2)); 	// countpct; unsigned tiny int; now #SubHits
 				ps.setInt(i++, hit.matchLen); 						// score
 				ps.setString(i++, htype) ;							// 
 				ps.setInt(i++, geneOlap);							// 0,1,2
+				ps.setString(i++, hit.strand);
 				
 				ps.setInt(i++, hit.annotIdx1);
 				ps.setInt(i++, hit.annotIdx2);
-				ps.setString(i++, hit.strand);
 				ps.setInt(i++, hit.queryHits.start);
 				ps.setInt(i++, hit.queryHits.end);
 				ps.setInt(i++, hit.targetHits.start);
@@ -678,6 +653,8 @@ public class AnchorMain1 {
 				
 				ps.setString(i++, intArrayToBlockStr(hit.queryHits.subHits));
 				ps.setString(i++, intArrayToBlockStr(hit.targetHits.subHits));
+				
+				ps.setInt(i++, hit.idx); // refidx
 				
 				ps.addBatch(); 
 				countBatch++; numLoaded++;
@@ -693,6 +670,41 @@ public class AnchorMain1 {
 		}
 		catch (Exception e) {ErrorReport.print(e, "save annot hits"); bSuccess=false;}
 	}
+	/************************************************
+	 * Since hit.idx is not entered, that class variable is used for refidx for the above save
+	 * 1. refidx = 0 : for first time the hit is entered 
+	 * 2. refidx = idx of mirror hit: second time the hit is entered
+	 */
+	private void addIsSelfRefIdx(Vector <Hit> filtHits, boolean bMirror) { // CAS575 new method for isSelf
+		for (Hit hit : filtHits) {
+			if (hit.queryHits.grpIdx==hit.targetHits.grpIdx 
+			 && hit.queryHits.start == hit.targetHits.start 
+			 && hit.queryHits.end   == hit.targetHits.end) hit.htype = -1; 
+		}
+		if (!bMirror) {
+			for (Hit hit : filtHits) hit.idx = 0; 
+			return;
+		}
+		// swapped load
+		Vector <Hit> loadHits = loadHitsFromDB(false); // get the idx of the hit entered before mirror; will be refidx in mirror
+		
+		HashMap <String, Integer> idxMap = new HashMap <String, Integer> ();
+		
+		for (Hit lht : loadHits) { // make idx map with loaded hits
+			String key = lht.queryHits.grpIdx  + ":" + lht.queryHits.start  + ":" + lht.queryHits.end 
+			           + lht.targetHits.grpIdx + ":" + lht.targetHits.start + ":" + lht.targetHits.end;
+			idxMap.put(key, lht.idx);
+		}
+		for (Hit fht: filtHits) { // transfer idx to filtered hits
+			if (fht.htype==-1) continue; // diagonal
+			
+			String key = fht.queryHits.grpIdx + ":"  + fht.queryHits.start  + ":" + fht.queryHits.end
+			           + fht.targetHits.grpIdx + ":" + fht.targetHits.start + ":" + fht.targetHits.end;
+			if (!idxMap.containsKey(key)) ErrorReport.print("Cannot get hit idx " + key);
+			fht.idx = idxMap.get(key);
+		}
+		loadHits.clear();
+	}
 	private String intArrayToBlockStr(int[] ia) {
 		String out = "";
 		if (ia != null) {
@@ -704,64 +716,16 @@ public class AnchorMain1 {
 		}
 		return out;
 	}
-	private void addMirroredHits() throws Exception {
-	try { // Create the reflected hits for self-alignment cases; 
-		// NOTE that grp1_idx is swapped with grp2_idx, etc; and refidx->idx; order of columns matches schema
-		tdbc2.executeUpdate("insert into pseudo_hits (select 0, "
-		+ "hitnum,pair_idx,proj1_idx,proj2_idx, grp2_idx, grp1_idx, pctid, "
-		+ "cvgpct, countpct, score, htype, gene_overlap,annot2_idx, annot1_idx, "
-		+ "strand, start2, end2, start1, end1, target_seq, query_seq, runnum, runsize, idx "
-		+ " from pseudo_hits where pair_idx=" + pairIdx + " and refidx=0 and start1 != start2 and end1 != end2)"	
-		);
-		tdbc2.executeUpdate("update pseudo_hits as ph1, pseudo_hits as ph2 set ph1.refidx=ph2.idx where ph1.idx=ph2.refidx " +
-				" and ph1.refidx=0 and ph2.refidx != 0 and ph1.pair_idx=" + pairIdx + " and ph2.pair_idx=" + pairIdx);
-	}
-	catch (Exception e) {
-		try {// pre-v543 - the order and fields must be exactly like it is in the database
-			tdbc2.executeUpdate("insert into pseudo_hits (select 0, "
-			+ "hitnum, pair_idx,proj1_idx,proj2_idx,grp2_idx,grp1_idx,htype,pctid," 
-			+ "score,strand,start2,end2,start1,end1,target_seq,query_seq,gene_overlap,"
-			+ "countpct,cvgpct,idx,annot2_idx,annot1_idx,runnum, runsize " + 
-			" from pseudo_hits where pair_idx=" + pairIdx + " and refidx=0 and start1 != start2 and end1 != end2)"	
-			);
-			tdbc2.executeUpdate("update pseudo_hits as ph1, pseudo_hits as ph2 set ph1.refidx=ph2.idx where ph1.idx=ph2.refidx " +
-					" and ph1.refidx=0 and ph2.refidx != 0 and ph1.pair_idx=" + pairIdx + " and ph2.pair_idx=" + pairIdx);
-		}
-		catch (Exception e2) {
-			ErrorReport.print(e2, "add mirror hits"); 
-			bSuccess=false;
-		}
-	}
-	}
+	// private void addMirroredHits()  CAS575 changed to use saveFilterHits, which does not crash if schema is changed
 	
-	/****************************************************
-	 */
-	private void saveAnnoHits()  { // [hitAnnotations]
+	/*****************************************************/
+	private void saveAnnoHits()  { 
 	String key="";
 	try {
 		if (VB) plog.msg("   Save hit to gene "); else Globals.rprt("   Save hit to gene ");
 		
 		/* Load hits from database, getting their new idx;  */
-		Vector <Hit> vecHits = new Vector <Hit> (filtHitSet.size()); 
-		String st = "SELECT idx, start1, end1, start2, end2, strand, grp1_idx, grp2_idx, annot1_idx, annot2_idx" +
-      			" FROM pseudo_hits WHERE gene_overlap>0 and pair_idx=" + pairIdx;
-		ResultSet rs = tdbc2.executeQuery(st);
-		while (rs.next()) {
-			Hit h = new Hit();
-			h.idx 				= rs.getInt(1);
-			h.queryHits.start 	= rs.getInt(2);
-			h.queryHits.end 	= rs.getInt(3);
-			h.targetHits.start	= rs.getInt(4);
-			h.targetHits.end 	= rs.getInt(5);
-			h.strand 			= rs.getString(6);
-			h.queryHits.grpIdx 	= rs.getInt(7);					
-			h.targetHits.grpIdx = rs.getInt(8);	
-			h.annotIdx1			= rs.getInt(9);
-			h.annotIdx2			= rs.getInt(10);
-			h.isRev = (h.strand.contains("-") && h.strand.contains("+"));
-			vecHits.add(h);
-		}
-		rs.close();
+		Vector <Hit> vecHits = loadHitsFromDB(true);  // CAS575 move to separate method
 		if (failCheck()) return;
 		
 	/* save the query annotation hits, which correspond to syProj1 */ /* on self-synteny, get dups;  */
@@ -839,29 +803,36 @@ public class AnchorMain1 {
 	catch (Exception e) {ErrorReport.print(e, "save annot hits " + key); bSuccess=false;}
 	}
 	
-	/*************************************************
-	 * some of this is obsolete; 
-	 */
-	private void initStats() {
-		try {
-		if (!Constants.PRT_STATS) return;
-		
-		BinStats.initStats(); 
-		
-		if (!Globals.TRACE) return; // -s -tt for histogram
-		BinStats.initHist("TopNHist1" + GeneType.Gene, 3,6,10,25,50,100);
-		BinStats.initHist("TopNHist1" + GeneType.NonGene, 3,6,10,25,50,100);
-		BinStats.initHist("TopNHist1" + GeneType.NA, 3,6,10,25,50,100);
-		BinStats.initHist("TopNHist1Accept", 3,6,10,25,50,100);
-		BinStats.initHist("TopNHistTotal1", 3,6,10,25,50,100);
-		BinStats.initHist("TopNHist2" + GeneType.Gene, 3,6,10,25,50,100);
-		BinStats.initHist("TopNHist2" + GeneType.NonGene, 3,6,10,25,50,100);
-		BinStats.initHist("TopNHist2" + GeneType.NA, 3,6,10,25,50,100);
-		BinStats.initHist("TopNHist2Accept", 3,6,10,25,50,100);
-		BinStats.initHist("TopNHistTotal2", 3,6,10,25,50,100);	
+	// Used by saveAnnoHits (gene only) and self-synteny addRefIdx (all) 
+	private Vector <Hit> loadHitsFromDB(boolean bGene) { // was in saveAnnoHits, but now shared with addRefIdx CAS575
+	try {
+		Vector <Hit> vecHits = new Vector <Hit> (filtHitSet.size()); 
+		String st = "SELECT idx, start1, end1, start2, end2, strand, grp1_idx, grp2_idx, annot1_idx, annot2_idx" +
+      			" FROM pseudo_hits WHERE pair_idx=" + pairIdx;
+		if (bGene) st+= " and gene_overlap>0";
+	
+		ResultSet rs = tdbc2.executeQuery(st);
+		while (rs.next()) {
+			Hit h = new Hit();
+			h.idx 				= rs.getInt(1);
+			h.queryHits.start 	= rs.getInt(2);
+			h.queryHits.end 	= rs.getInt(3);
+			h.targetHits.start	= rs.getInt(4);
+			h.targetHits.end 	= rs.getInt(5);
+			h.strand 			= rs.getString(6);
+			h.queryHits.grpIdx 	= rs.getInt(7);					
+			h.targetHits.grpIdx = rs.getInt(8);	
+			h.annotIdx1			= rs.getInt(9);
+			h.annotIdx2			= rs.getInt(10);
+			h.isRev = (h.strand.contains("-") && h.strand.contains("+"));
+			vecHits.add(h);
+		}
+		rs.close();
+		return vecHits;
 	}
-	catch (Exception e) {ErrorReport.print("adding properties for Anchors");}
+	catch (Exception e) {ErrorReport.print(e, "get Hits"); bSuccess=false; return null;}
 	}
+	/********************************************/
 	private boolean failCheck() {
 		if (Cancelled.isCancelled() || mainObj.bInterrupt) {
 			if (mainObj.bInterrupt) plog.msg("Process was interrupted");

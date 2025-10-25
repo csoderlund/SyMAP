@@ -24,13 +24,13 @@ import util.Utilities;
  * - The hits for collinear may not be sequential when a gene has two hits.
  * - Only hits to two genes are downloaded from DB, hence, if a gene has a g1 and g2 hit, the g1 hit is ignored.
  */
-
 public class AnchorPost {
 	// parameters
 	private int mPairIdx; 				// project pair 
 	private Mproject mProj1, mProj2;	// two projects
 	private ProgressDialog mLog;
 	private DBconn2 dbc2;
+	private boolean isSelf=false; // CAS575 add
 	
 	// initial; loaded from db	
 	private Vector <Hit> fHitVec = new Vector <Hit> ();
@@ -52,6 +52,7 @@ public class AnchorPost {
 		this.mProj2 = proj2;
 		this.dbc2 = dbc2;
 		this.mLog = log;
+		isSelf = proj1.getIdx()==proj2.getIdx();
 	}
 	
 	/*********************************************************
@@ -62,7 +63,7 @@ public class AnchorPost {
 			dbc2.executeUpdate("update pseudo_hits set runsize=0, runnum=0 where pair_idx=" + mPairIdx);
 			
 			int num2go = mProj1.getGrpSize() * mProj2.getGrpSize();
-			Utils.prtMsgFile(mLog, "   Finding Collinear sets"); // CAS568 add indent
+			Utils.prtMsgFile(mLog, "   Finding Collinear sets"); 
 			long time = Utils.getTime();
 			
 			TreeMap <Integer, String> map1 = mProj1.getGrpIdxMap();
@@ -70,13 +71,14 @@ public class AnchorPost {
 			
 			for (int grpIdx1 : map1.keySet()) {
 				for (int grpIdx2 : map2.keySet()) {
+					if (isSelf &&  grpIdx1<grpIdx2) continue;
 					
 					chrs = map1.get(grpIdx1) + ":" + map2.get(grpIdx2);
 					String t = Utilities.getDurationString(Utils.getTime()-time);
 					Globals.rprt(num2go + " pairs remaining (" + t + ")"); 
 					num2go--;
 					
-					if (grpIdx1==grpIdx2) continue; 		
+					// CAS575 if (grpIdx1==grpIdx2) continue; 		
 					
 					if (!step0BuildSets(grpIdx1, grpIdx2)) return;
 					
@@ -184,7 +186,6 @@ public class AnchorPost {
 	}
 	
 	/*************************************************************
-	 * CAS556 was looping through gene1Map, now looping through the hitVec
 	 * Using genenums so do not have to worry about gene overlaps; hits are to best
 	 * Example of reverse:
 	 * 		Hit  Gene1  Gene2
@@ -383,6 +384,12 @@ public class AnchorPost {
 				else if (rsize<=10) cntSizeSet[3]++;
 				else cntSizeSet[4]++;
 			}
+		}
+		if (isSelf) { // mirror collinear for self
+			dbc2.executeUpdate("update pseudo_hits as ph1, pseudo_hits as ph2 "
+				+ " set ph2.runsize=ph1.runsize, ph2.runnum=ph1.runnum "
+				+ " where ph1.pair_idx=" + mPairIdx + " and ph2.pair_idx=" + mPairIdx
+				+ " and ph1.idx=ph2.refidx");
 		}
 		return true;
 	}

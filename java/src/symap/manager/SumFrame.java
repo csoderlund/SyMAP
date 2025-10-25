@@ -16,7 +16,6 @@ import javax.swing.JTextArea;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.Arrays;
-import java.util.TreeMap;
 import java.sql.ResultSet;
 
 import backend.Utils;
@@ -29,12 +28,7 @@ import util.Utilities;
 /**********************************************************
  * Creates the Summary window from the Summary Button on the main panel
  * The Summary is of the alignment from two different sequence projects
- * 
- * createAnchorDelete() vs createAnchor:
- * Anchors: %InBlock => Blocks SCH, Annotated => CHwGN, Coverage => Cover SH (slight difference); Ranges CL=>SH
- * Blocks: Coverage => Cover SB, Double => 2x, 
- *         %GeneHit  was "Percentage of genes located in synteny block regions which have syntenic hits"
- *         => GNwSCH now "Percent of genes with a synteny hit"; e.g. Brap:Cabb 35%=>99.9%
+ * CAS575 correct for self-synteny; remove old createBlock and createAnchor
  */
 
 public class SumFrame extends JDialog implements ActionListener {
@@ -49,6 +43,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	private DBconn2 dbc2; 
 	
 	private Proj proj1=null, proj2=null; // contains idx and lengths of groups
+	private boolean isSelf=false;		 // CAS575 add
 	
 	// Called from DoAlignSynPair; 
 	public SumFrame(DBconn2 dbc2, Mpair mp) { 
@@ -106,6 +101,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		pairIdx  = mp.getPairIdx();
 		proj1Idx = mp.getProj1Idx(); 
 		proj2Idx = mp.getProj2Idx();
+		isSelf = proj1Idx==proj2Idx;
 		
 		ResultSet rs;
 		if (dbc2.tableColumnExists("pairs", "summary")) { // exist if called from Summary popup
@@ -144,18 +140,17 @@ public class SumFrame extends JDialog implements ActionListener {
 		String d = Utilities.getNormalizedDate(alignDate);
 		String v = (syver!=null) ? ("  " + syver) : "";
 		
-		String info = proj1.name.equals(proj2.name) ? proj1.name + " self-synteny" :  // CAS572
-			                                        proj1.name + " vs. " + proj2.name;
+		String info = (isSelf) ? proj1.name + " self-synteny" :  
+			                     proj1.name + " vs. " + proj2.name;
 		info += "   Updated " + d + v + "\n\n"; 
 		info += createProject() + "\n";
-		info += createAnchor()  + "\n";
+		info += createCluster()  + "\n";
 		info += createBlock()  + "\n";
 		String c = createCollinear();
 		if (c!=null) info += c + "\n";
 		info += "Abbrev: Gene (GN), Cluster Hit (CH), SubHit (SH), Synteny Block (SB), CH in Block (CHB)\n";
 		info += "________________________________________________________________________________________\n";
 		info += allParams;
-		if (proj1Idx == proj2Idx) info += "\nSelf-synteny stats are doubled or approximate."; // CAS572 was saying just collinear
 	
 		if (!isReadOnly) {
 			dbc2.tableCheckAddColumn("pairs", "summary", "text", null); 
@@ -166,7 +161,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	catch(Exception e){ErrorReport.print(e, "Create summary"); return "summary error";}
 	}
 	/****************************************************************
-	 * Project
+	 * Project - genes; does not need isSelf check
 	 * Exon# or cover cannot be found through interface
 	 */
 	private String createProject() {
@@ -237,7 +232,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		    rows[r][c++] = String.format("%,d", proj1.genomeLen);
 		   
 		    r++; c=0;
-		    if (proj1Idx==proj2Idx) {
+		    if (isSelf) {
 		    	for (c=0; c<fields.length; c++) rows[r][c]="";
 		    }
 		    else {
@@ -267,13 +262,14 @@ public class SumFrame extends JDialog implements ActionListener {
 	 * Cover CH: if there is NO overlap, sum Hlen/genomeLen; otherwise, must take into account embedded vs overlap.
 	 * Cover SH: none of these numbers can be computed from the interface
 	 ***************************************************************/
-	private String createAnchor() {
+	private String createCluster() {
 	try {
 		String title = "Cluster Hits";
 		long startTime = Utils.getTime();
 		
 		nHits = dbc2.executeInteger("select count(*) from pseudo_hits where pair_idx=" + pairIdx); 
 		if (nHits<=0) return title + "\n No hits";
+		if (isSelf) nHits /= 2;
 		
 		String sq;
 		// %Genes with hits 
@@ -282,36 +278,39 @@ public class SumFrame extends JDialog implements ActionListener {
 				+ " join pseudo_hits_annot as pha on pa.idx = pha.annot_idx"
 				+ " join pseudo_hits       as ph  on ph.idx = pha.hit_idx  "
 				+ " join xgroups            as xg on xg.idx = pa.grp_idx "
-				+ " where pa.type='gene' and ph.pair_idx=" + pairIdx + " and xg.proj_idx=";
-		int gene1Hit = dbc2.executeInteger(sq + proj1Idx); // query: gene1Hit = #totGene1-#orphan genes
-		int gene2Hit = dbc2.executeInteger(sq + proj2Idx);
-		
+				+ " where pa.type='gene' and ph.pair_idx=" + pairIdx +  " and xg.proj_idx=";
+		int gene1Hit = dbc2.executeInteger(sq + proj1Idx); // isSelf: distinct annot_idx takes care of mirrored hits
+		int gene2Hit = dbc2.executeInteger(sq + proj2Idx); // query:  gene1Hit = #totGene1-#orphan genes
+				
 		// %Hits with genes
-		sq = "select count(distinct ph.idx) "
-						+ "from pseudo_hits       as ph " 
-						+ "join pseudo_hits_annot as pha on pha.hit_idx = ph.idx " 
-						+ "join pseudo_annot      as pa  on pa.idx      = pha.annot_idx " 
-						+ "join xgroups           as xg  on xg.idx      = pa.grp_idx "
-						+ "where pair_idx=" + pairIdx + " and gene_overlap>0"; // for pseudo
+		/* sq = "select count(distinct ph.idx) from pseudo_hits as ph " 
+			+ "join pseudo_hits_annot as pha on pha.hit_idx = ph.idx join pseudo_annot as pa  on pa.idx = pha.annot_idx " 
+			+ "join xgroups as xg  on xg.idx = pa.grp_idx where pair_idx=" + pairIdx + " and gene_overlap>0 "; // for pseudo
 		int hitGene1 = dbc2.executeInteger(sq  + " and ph.annot1_idx>0 and xg.proj_idx=" + proj1Idx); 
 		int hitGene2 = dbc2.executeInteger(sq  + " and ph.annot2_idx>0 and xg.proj_idx=" + proj2Idx); 
-		
+		The following gives the same result for 2-genome; self was not correct; CAS575
+		*/
+		sq = "select count(distinct idx) from pseudo_hits where pair_idx=" + pairIdx;
+		if (isSelf) {
+			sq += " and ((grp1_idx>grp2_idx and refidx=0) or (grp1_idx=grp2_idx and start1>start2))";
+		}
+		int hitGene1 = dbc2.executeInteger(sq  + " and annot1_idx>0"); 
+		int hitGene2 = dbc2.executeInteger(sq  + " and annot2_idx>0"); 
+
 		int hit2Gene = dbc2.executeInteger("select count(*) from pseudo_hits where gene_overlap=2 and pair_idx=" + pairIdx);
 		int hit1Gene = dbc2.executeInteger("select count(*) from pseudo_hits where gene_overlap=1 and pair_idx=" + pairIdx);
 		int hit0Gene = dbc2.executeInteger("select count(*) from pseudo_hits where gene_overlap=0 and pair_idx=" + pairIdx);
-		String pCHwGN1  = pct((double)hitGene1, (double) nHits);
-		String pCHwGN2  = pct((double)hitGene2, (double) nHits);
-		
+		if (isSelf) {hit2Gene /=2; hit1Gene /= 2; hit0Gene /=2;}
+
 /* Coverage */
 		ResultSet rs;
 		int totSh=0, totRev=0;
 		
 	/* Loop1: proj1 chrN  **/	
-		long chCov1=0, chCov1x=0, shCov1=0, shCov1x=0;	// CAS572 change to long
-		int cnt11=0, cnt12=0, cnt13=0, cnt14=0;
-		long chCov1sum=0;
+		long chCov1=0, chCov1x=0, shCov1=0, shCov1x=0;	// Cov CH (Sh)
+		int cnt11=0, cnt12=0, cnt13=0, cnt14=0;	// SH <100, etc
 		
-		for (int g1=0; g1<proj1.grpIdx.size(); g1++) {
+		for (int g1=0; g1<proj1.grpIdx.size(); g1++) { // for the 1st project, go through its chromosome
 			System.gc();
 			int grp1Idx = proj1.grpIdx.get(g1);
 			int grp1Len = proj1.grpLen.get(g1);
@@ -319,7 +318,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			byte [] clustArr = new byte [grp1Len]; Arrays.fill(clustArr, (byte) 0);
 			byte [] subArr =   new byte [grp1Len]; Arrays.fill(subArr, (byte) 0);
 			  
-			for (int g2=0; g2<proj2.grpIdx.size(); g2++) {
+			for (int g2=0; g2<proj2.grpIdx.size(); g2++) { // for the 2nd project, compare it's chromsomes with the 1st
 				int grp2Idx = proj2.grpIdx.get(g2);	
 				rs = dbc2.executeQuery("select start1, end1, query_seq, strand, gene_overlap " 
 						+ " from pseudo_hits "
@@ -327,10 +326,10 @@ public class SumFrame extends JDialog implements ActionListener {
 				while (rs.next()){
 					int hstart = rs.getInt(1); 
 					int hend = 	 rs.getInt(2);
-					for (int h=hstart; h<=hend && h<grp1Len; h++) clustArr[h]++; // clusters
+					for (int h=hstart; h<=hend && h<grp1Len; h++) clustArr[h]++; // clusters cover of the chromosome
 				
-					String seq = rs.getString(3);			// subhits
-					String [] subhits = (seq.contentEquals("")) ? null : seq.split(",");
+					String qseq = rs.getString(3);			// subhits
+					String [] subhits = (qseq.contentEquals("")) ? null : qseq.split(",");
 					int [] sstart = seqToSubhits(0, hstart, subhits);
 					int [] send =   seqToSubhits(1, hend,   subhits);
 					
@@ -338,26 +337,30 @@ public class SumFrame extends JDialog implements ActionListener {
 					String strand = rs.getString(4);
 					if (strand.contains("+") && strand.contains("-")) totRev++;
 					
-					for (int i=0; i<sstart.length; i++) {
+					for (int i=0; i<sstart.length; i++) { // size of subhits
 						int len = send[i]-sstart[i]+1;
 						if      (len<100) 	cnt11++;
 						else if (len<1000) 	cnt12++;
 						else if (len<5000) 	cnt13++;
 						else 				cnt14++;
 						
-						for (int h=sstart[i]; h<=send[i] && h<grp1Len; h++) subArr[h]++;
+						for (int h=sstart[i]; h<=send[i] && h<grp1Len; h++) subArr[h]++; // subhits cover of the chromosome
 					}
 				}
 				rs.close();
 			}
-			// process arrays for proj1 chrN; 2x, xx, xxx is only shown on -s
-			for (byte a : clustArr) {if (a>0) chCov1++; if (a>1) chCov1x++; chCov1sum+=a;}
+			// process arrays for proj1
+			for (byte a : clustArr) {if (a>0) chCov1++; if (a>1) chCov1x++; }
 			for (byte a : subArr)   {if (a>0) shCov1++; if (a>1) shCov1x++;}
 			clustArr=subArr=null;
 		}
-		
+		if (isSelf) {
+			cnt11  /= 2; cnt12  /= 2; cnt13   /= 2; cnt14 /= 2; 
+			chCov1 /= 2; shCov1 /=2;  chCov1x /= 2; shCov1x /= 2; 
+			totRev /= 2; totSh  /= 2; 
+		}
 	/* Loop2: proj2 chrN  **/
-		long chCov2=0, chCov2x=0, shCov2=0, shCov2x=0; // CAS572 change to long; got overflow on human self
+		long chCov2=0, chCov2x=0, shCov2=0, shCov2x=0; // got overflow on human self
 		int cnt21=0, cnt22=0, cnt23=0, cnt24=0;
 		for (int g2=0; g2<proj2.grpIdx.size(); g2++) {
 			System.gc();
@@ -400,9 +403,14 @@ public class SumFrame extends JDialog implements ActionListener {
 			for (byte a : subArr)   {if (a>0) shCov2++; if (a>1) shCov2x++;}
 			clustArr=subArr=null;
 		}
-		
+		if (isSelf) {
+			cnt21  /= 2; cnt22  /= 2; cnt23   /= 2; cnt24 /= 2; 
+			chCov2 /= 2; shCov2 /=2;  chCov2x /= 2; shCov2x /= 2;  
+		}
 		String pGNwCH1  = pct((double)gene1Hit, (double) proj1.nGenes);
 		String pGNwCH2  = pct((double)gene2Hit, (double) proj2.nGenes);
+		String pCHwGN1  = pct((double)hitGene1, (double) nHits);
+		String pCHwGN2  = pct((double)hitGene2, (double) nHits);
 		
 		String pchCov1 = pct((double)chCov1, (double)proj1.genomeLen); 
 		String pchCov2 = pct((double)chCov2, (double)proj2.genomeLen);
@@ -413,9 +421,10 @@ public class SumFrame extends JDialog implements ActionListener {
 				+ "from pseudo_hits as h " 
 				+ "join pseudo_block_hits as pbh on pbh.hit_idx=h.idx " 
 				+ "where pair_idx=" + pairIdx); // Query: block hits/all hits
+		if (isSelf) nInBlock /= 2;
 		String pInBlock = pct((double)nInBlock, (double)nHits);
 
-	// make cluster only table; 
+	// make cluster only table; sane for both sides
 		String [] field1 = {"#Clusters", "#Rev", "CHnBlock", "#CH", "g2", "g1", "g0", " ", "#SubHits", "AvgNum"};
 		int nCol1 = field1.length;
 		int [] justify1 =  new int [nCol1];
@@ -437,7 +446,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	   
 	    String tab1 = util.Utilities.makeTable(nCol1, nRow1, field1, justify1, rows1);
 		
-	// make table	
+	// make cover table; diff for both sides
 		String [] fields = {"","GNwCH (CHwGN)", "Cover CH (SH)", "SH", "<100b","100b-1kb","1k-5kb", ">5kb"};
 		int nCol = fields.length;
 		int [] justify =   new int [nCol];
@@ -459,10 +468,10 @@ public class SumFrame extends JDialog implements ActionListener {
 	    rows[r][c++] = cntK(cnt14);
 	    
 	    r++; c=0;
-	    if (proj1Idx==proj2Idx) {
+	    if (isSelf) { // proj2 can be a little different, but not enough to report
 	    	for (c=0; c<fields.length; c++) rows[r][c]="";
 	    }
-	    else {
+	    else {   
 	    	rows[r][c++] = proj2.name;
 		    rows[r][c++] = String.format("%s (%s)", pGNwCH2, pCHwGN2);  
 		    rows[r][c++] = String.format("%s (%s)", pchCov2, pshCov2);
@@ -485,13 +494,10 @@ public class SumFrame extends JDialog implements ActionListener {
 			
 			System.out.format("   Cover 1x: CH %,10d %,10d    SH %,10d %,10d\n", chCov1,  chCov2, shCov1, shCov2 ); 
 	    	System.out.format("   Cover 2x: CH %,10d %,10d    SH %,10d %,10d\n", chCov1x,  chCov2x,  shCov1x,  shCov2x );
-	    	System.out.format("   For 1 sum: CH %,10d\n", chCov1sum);
 	    			
 	    	System.out.format("   Cover 1x: CH %s %s    SH %s %s\n", pchCov1,  pchCov2, pshCov1, pshCov2 ); // in summary
 	    	System.out.format("   Cover 2x: CH %s %s    SH %s %s\n", cxCov1,   cxCov2,  sxCov1,  sxCov2 );
 	    	Utils.prtTimeMemUsage("Anchors: ", startTime); 
-	    	
-			createAnchorDelete(); // -tt
 		}
 	    return title + "\n" + tab1 + "\n" + tab;
 	}
@@ -513,192 +519,173 @@ public class SumFrame extends JDialog implements ActionListener {
 	}
 	catch (Exception e) {ErrorReport.print(e, "Coverting subhits "); return new int [0];}
 	}
-	/******************************************************************************
-	 * Blocks: original for finding coverage, the rest is new
-	 ****************************************************************************/
-	private String createBlock() {
-	try {
-		String title = "Synteny Blocks";
-		if (nHits==0) return "";
-		
-		long startTime = Utils.getTime();
-		System.gc();
-		ResultSet rs=null;
-		
-		String sq ="select count(distinct pa.idx)"
-			 +" from pseudo_annot		as pa"
-			 +" join xgroups			as g  on pa.grp_idx=g.idx"
-			 +" join pseudo_hits_annot as pha on pha.annot_idx=pa.idx " 
-			 +" join pseudo_block_hits as pbh on pha.hit_idx=pbh.hit_idx"
-			 +" join blocks            as b   on b.idx = pbh.block_idx "   
-			 +" where pa.type='gene' and b.pair_idx = " + pairIdx + " and g.proj_idx=";
-		
-		int nBlkGenes1 = dbc2.executeInteger(sq + proj1Idx);
-		int nBlkGenes2 = dbc2.executeInteger(sq + proj2Idx);
-			
-		String pBlkGene1 = pct((double)nBlkGenes1, (double)proj1.nGenes); // query: block hits, sort on GeneNum
-		String pBlkGene2 = pct((double)nBlkGenes2, (double)proj2.nGenes);
-		
-		/// Coverage
-		TreeMap<Integer,TreeMap<Integer,Integer>> bins2 = new TreeMap<Integer,TreeMap<Integer,Integer>>();
-		TreeMap<Integer,Integer> blks = new TreeMap<Integer,Integer>();
-		int nblks = 0, ninv = 0;
-		
-		rs = dbc2.executeQuery("select grp1_idx,grp2_idx, start1,end1,start2,end2, corr  " +
-				"from blocks where pair_idx=" + pairIdx);
-		while (rs.next()) {
-			nblks++;
-			float corr = 	rs.getFloat(7);
-			if (corr < 0)  	ninv++;
-			int idx = 		rs.getInt(1); 
-			long start = 	rs.getInt(3); // start1
-			int end = 		rs.getInt(4); // end1
-			assert(end>start);
-				
-			if (!bins2.containsKey(idx))  bins2.put(idx, new TreeMap<Integer,Integer>());
-
-			for (int b = (int)(start/1000); b <= (int)(end/1000); b++){
-				if (!bins2.get(idx).containsKey(b)) bins2.get(idx).put(b,1);
-				else								bins2.get(idx).put(b,1+bins2.get(idx).get(b));
-			}		
-			
-			int logsize = (int)(Math.log10(end-start));
-			if (!blks.containsKey(logsize)) blks.put(logsize, 1);
-			else							blks.put(logsize, 1+blks.get(logsize));
-		} 
-		
-		int b11=0,b21=0,b31=0,b41=0, bcov1=0,bdcov1=0;
-		for (int i = 0; i <= 4; i++) {
-			b11 += (blks.containsKey(i) ? blks.get(i) : 0);
-		}
-		b21 = (blks.containsKey(5) ? blks.get(5) : 0);
-		b31 = (blks.containsKey(6) ? blks.get(6) : 0);
-		for (int i = 7; i <= 20; i++) {
-			b41 += (blks.containsKey(i) ? blks.get(i) : 0);
-		}		
-		
-		for (int i : bins2.keySet()) {
-			for (int j : bins2.get(i).keySet()) {
-				bcov1++;
-				if (bins2.get(i).get(j) > 1) bdcov1++;
-			}
-		}
-		blks.clear(); bins2.clear();
-		
-		// start project2
-		//rs.beforeFirst(); // CAS560 does not work with new JDBC; re-execute search
-		rs = dbc2.executeQuery("select grp1_idx,grp2_idx, start1,end1,start2,end2, corr  " +
-				"from blocks where pair_idx=" + pairIdx);
-		while (rs.next()) {
-			int idx = 		rs.getInt(2);
-			int start = 	rs.getInt(5);
-			int end = 		rs.getInt(6);
-			assert(end>start);
-			
-			if (!bins2.containsKey(idx)) bins2.put(idx, new TreeMap<Integer,Integer>());
 	
-			for (int b = (int)(start/1000); b <= (int)(end/1000); b++){
-				if (!bins2.get(idx).containsKey(b))	bins2.get(idx).put(b,1);
-				else								bins2.get(idx).put(b, bins2.get(idx).get(b)+1);
-			}	
-			int logsize = (int)(Math.log10(end-start));
+	/*****************************************************************
+	 * Block section
+	 * CAS575 was using original for finding coverage; same results but a wee bit slower
+	 */
+	private String createBlock() {
+		try {
+			String title = "Synteny Blocks";
+			if (nHits==0) return "";
 			
-			if (!blks.containsKey(logsize))		blks.put(logsize, 1);
-			else								blks.put(logsize, 1+blks.get(logsize));
-		} 
-		
-		int b12=0,b22=0,b32=0,b42=0, bcov2=0,bdcov2=0;
-		for (int i = 0; i <= 4; i++){
-			b12 += (blks.containsKey(i) ? blks.get(i) : 0);
-		}
-		b22 = (blks.containsKey(5) ? blks.get(5) : 0);
-		b32 = (blks.containsKey(6) ? blks.get(6) : 0);
-		for (int i = 7; i <= 20; i++){
-			b42 += (blks.containsKey(i) ? blks.get(i) : 0);
-		}		
-		
-		for (int i : bins2.keySet()){
-			for (int j : bins2.get(i).keySet()) {	
-				bcov2++;
-				if (bins2.get(i).get(j) > 1) bdcov2++;
+			ResultSet rs;
+			
+			// genes in blocks
+			String sq ="select count(distinct pa.idx)"
+				 +" from pseudo_annot		as pa"
+				 +" join xgroups			as g  on pa.grp_idx=g.idx"
+				 +" join pseudo_hits_annot as pha on pha.annot_idx=pa.idx " 
+				 +" join pseudo_block_hits as pbh on pha.hit_idx=pbh.hit_idx"
+				 +" where pa.type='gene' and g.proj_idx=";
+			int nBlkGenes1 = dbc2.executeInteger(sq + proj1Idx);
+			int nBlkGenes2 = dbc2.executeInteger(sq + proj2Idx);
+					
+			String pBlkGene1 = pct((double)nBlkGenes1, (double)proj1.nGenes); 
+			String pBlkGene2 = pct((double)nBlkGenes2, (double)proj2.nGenes);
 				
+	/* Coverage */
+			int nblks=0, ninv = 0;
+			int bcov1=0, bdcov1=0, b11=0, b12=0, b13=0, b14=0;
+			int bcov2=0, bdcov2=0, b21=0, b22=0, b23=0, b24=0;
+			
+			/* Proj1: count blocks for each chr-chr pair **/		
+			for (int g1=0; g1<proj1.nGrp; g1++) {
+				int grp1Idx = proj1.grpIdx.get(g1);
+				int grp1Len = proj1.grpLen.get(g1);
+				byte [] arrB = new byte [grp1Len]; Arrays.fill(arrB,(byte) 0);
+				
+				for (int g2=0; g2<proj2.nGrp; g2++) {
+					int grp2Idx = proj2.grpIdx.get(g2);
+					
+					rs = dbc2.executeQuery("select corr, start1, end1 from blocks "
+							+ "where pair_idx=" + pairIdx + " and grp1_idx="+grp1Idx + " and grp2_idx="+grp2Idx);
+					while (rs.next()) {
+						nblks++;
+						float corr = 	rs.getFloat(1);
+						if (corr < 0)  	ninv++;
+						int bstart = rs.getInt(2); 
+						int bend = 	 rs.getInt(3); 
+						
+						int olap1 = (bend-bstart+1);
+						if (olap1<100000) 		b11++;
+						else if (olap1<1000000) b12++;
+						else if (olap1<10000000)b13++;
+						else 					b14++;
+						
+						for (int i=bstart; i<bend; i++) arrB[i]++;
+					}
+					rs.close();
+				}// finished proj1 chrN
+				
+				for (byte a : arrB) {if (a>0) bcov1++; if (a>1) bdcov1++;}
+				arrB=null;
 			}
-		}
-		blks.clear(); bins2.clear();				
-
-		// convert to percents, note all lengths come out in kb due to binsize 1kb
-		double lenKb1 = (int) (proj1.genomeLen/1000.0);
-		double lenKb2 = (int) (proj2.genomeLen/1000.0);
-		String cov1 =  pct((double) bcov1, lenKb1);
-		String xcov1 = pct((double) bdcov1, lenKb1);
-		String cov2 =  pct((double) bcov2, lenKb2);
-		String xcov2 = pct((double) bdcov2, lenKb2);
+			/* Proj2 **/		
+			for (int g2=0; g2<proj2.nGrp; g2++) {
+				int grp2Idx = proj2.grpIdx.get(g2);
+				int grp2Len = proj2.grpLen.get(g2);
+				byte [] arrB = new byte [grp2Len]; Arrays.fill(arrB,(byte) 0);
+				
+				for (int g1=0; g1<proj1.nGrp; g1++) {
+					int grp1Idx = proj1.grpIdx.get(g1);
+					
+					rs = dbc2.executeQuery("select corr, start2, end2 from blocks "
+							+ "where pair_idx=" + pairIdx + " and grp1_idx="+grp1Idx + " and grp2_idx="+grp2Idx);
+					while (rs.next()) {
+						int bstart = 	rs.getInt(2); 
+						int bend = 	rs.getInt(3); 
+						
+						int olap1 = (bend-bstart+1);
+						if (olap1<100000) 		b21++;
+						else if (olap1<1000000) b22++;
+						else if (olap1<10000000)b23++;
+						else 					b24++;
+						
+						for (int i=bstart; i<bend; i++) arrB[i]++;
+					}
+					rs.close();	
+				}// finished proj2 chrN
+				for (byte a : arrB) {if (a>0) bcov2++;if (a>1) bdcov2++;}
+				arrB=null;
+			}
+			
+			if (isSelf) {
+				nblks /= 2; ninv /= 2; bcov1 /= 2; bdcov1 /= 2;
+				b11 /= 2; b12 /= 2; b13 /= 2; b14 /= 2;
+				
+				bcov2 /= 2; bdcov2 /= 2;
+				b21 /= 2; b22 /= 2; b23 /= 2; b24 /= 2;
+			}
+			
+			String sbCov1 =   pct((double)bcov1, (double)proj1.genomeLen); 
+			String sbCov2 =   pct((double)bcov2, (double)proj2.genomeLen); 
+			String sb2xCov1 = pct((double)bdcov1,(double)proj1.genomeLen);
+			String sb2xCov2 = pct((double)bdcov2,(double)proj2.genomeLen);
 		
 		// make block table
-		String [] fields = {"","#Blocks", "#Inv", "GNwCHB", "  Cover SB (2x)","<100kb","100kb-1Mb","1Mb-10Mb",">10Mb"};
-		int nCol=  fields.length;
-		int [] justify =   new int [nCol];
-		justify[0]=1;
-		for (int i=1; i<nCol; i++) justify[i]=0;
-		
-		int nRow = 2;
-	    String [][] rows = new String[nRow][nCol];
-	    int r=0, c=0;
-	    
-	    rows[r][c++] = proj1.name;
-	    rows[r][c++] = String.format("%,d",nblks);   // same for both
-	    rows[r][c++] = String.format("%,d",ninv);    // same for both
-	    rows[r][c++] = String.format("%s", pBlkGene1); 
-	    rows[r][c++] = String.format("%s (%s)",cov1,xcov1);
-	    
-	    rows[r][c++] = String.format("%,d", b11);
-	    rows[r][c++] = String.format("%,d", b21);
-	    rows[r][c++] = String.format("%,d", b31);
-	    rows[r][c++] = String.format("%,d", b41);
-	    
-	    r++; c=0;
-	    if (proj1Idx==proj2Idx) {
-	    	for (c=0; c<fields.length; c++) rows[r][c]="";
-	    }
-	    else {
-	    	rows[r][c++] = proj2.name;
-		    rows[r][c++] = " "; // same for both
-		    rows[r][c++] = " ";
-		    rows[r][c++] = String.format("%s", pBlkGene2);
-		    rows[r][c++] = String.format("%s (%s)",cov2,xcov2);
+			String [] fields = {"","#Blocks", "Inv","GNwCHB", "  Cover SB (2x)","<100kb","100kb-1Mb","1Mb-10Mb",">10Mb"};
+			int nCol=  fields.length;
+			int [] justify =   new int [nCol];
+			justify[0]=1;
+			for (int i=1; i<nCol; i++) justify[i]=0;
+			
+			int nRow = 2;
+		    String [][] rows = new String[nRow][nCol];
+		    int r=0, c=0;
 		    
+		    rows[r][c++] = proj1.name;
+		    rows[r][c++] = String.format("%,d",nblks);   
+		    rows[r][c++] = String.format("%,d", ninv);			 
+		    
+		    rows[r][c++] = String.format("%s", pBlkGene1);
+		    rows[r][c++] = String.format("%s (%s)",sbCov1,sb2xCov1);
+		    
+		    rows[r][c++] = String.format("%,d", b11);
 		    rows[r][c++] = String.format("%,d", b12);
-		    rows[r][c++] = String.format("%,d", b22);
-		    rows[r][c++] = String.format("%,d", b32);
-		    rows[r][c++] = String.format("%,d", b42);	    
-	    }
-	    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
-	    
-		if (Globals.DEBUG) {
-			Utils.prtTimeMemUsage("Blocks: ", startTime); 
-			createBlockDelete();
+		    rows[r][c++] = String.format("%,d", b13);
+		    rows[r][c++] = String.format("%,d", b14);
+		    
+		    r++; c=0;
+		    if (isSelf) { // proj2 can be a little different, but not enough to report
+		    	for (c=0; c<fields.length; c++) rows[r][c]="";
+		    }
+		    else {
+		    	rows[r][c++] = proj2.name;
+			    rows[r][c++] = " ";// same for both
+			    rows[r][c++] = " ";
+			    rows[r][c++] = String.format("%s", pBlkGene2);
+			    rows[r][c++] = String.format("%s (%s)",sbCov2,sb2xCov2);
+			    
+			    rows[r][c++] = String.format("%,d", b21);
+			    rows[r][c++] = String.format("%,d", b22);
+			    rows[r][c++] = String.format("%,d", b23);
+			    rows[r][c++] = String.format("%,d", b24);	    
+		    }
+		    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
+		    
+		    return title + "\n" + tab;
 		}
-		
-		return title + "\n" + tab;
-	}
-	catch (Exception e) {ErrorReport.print(e, "Summary blocks orig"); return "error";}
-	}
+		catch (Exception e) {ErrorReport.print(e, "Making blocks summary"); return "error on blocks";}
+		}
 	
 	/*************************************************************************/
 	private String createCollinear() {
 	try {
 		String title = "Collinear Sets";
 		if (nHits==0) return "";
-		int nsets = dbc2.executeInteger("SELECT count(*) "
-				+ " FROM pseudo_hits WHERE runnum>0 and pair_idx=" + pairIdx);
-		if (nsets==0) return "Collinear \n   None\n";
+		int nSetsHits = dbc2.executeInteger("SELECT count(*) FROM pseudo_hits WHERE runnum>0 and pair_idx=" + pairIdx);
+		if (nSetsHits==0) return "Collinear \n   None\n";
 	
-		int n2=0, n3=0, n4=0, n5=0, n6=0, n7=0, n8=0, n9=0, n14=0,n19=0,n20=0, nGenes=0; // CAS560 add nGenes
+		int n2=0, n3=0, n4=0, n5=0, n6=0, n7=0, n8=0, n9=0, n14=0,n19=0,n20=0, nGenes=0; 
 		
 		TreeSet <String> setMap = new TreeSet <String>  ();
 		
-		ResultSet rs = dbc2.executeQuery("select grp1_idx, grp2_idx, runnum, runsize from pseudo_hits "
-				+ " where runnum>0 and pair_idx=" + pairIdx);
+		String sq = "select grp1_idx, grp2_idx, runnum, runsize from pseudo_hits where runnum>0 and pair_idx=" + pairIdx;
+		if (isSelf) {
+			sq += " and ((grp1_idx>grp2_idx and refidx=0) or (grp1_idx=grp2_idx and start1>start2))";
+		}
+		ResultSet rs = dbc2.executeQuery(sq);
 		while (rs.next()) {
 			int grp1 = rs.getInt(1);
 			int grp2 = rs.getInt(2);
@@ -765,7 +752,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		return String.format("%,d", len);
 	}
 	
-	private String pct(double t, double b) { // CAS560 rewrote
+	private String pct(double t, double b) { 
 		String ret;
 		if (b==0) 		ret = "n/a";
 		else if (t==0) 	ret = "0%";
@@ -777,287 +764,60 @@ public class SumFrame extends JDialog implements ActionListener {
 		return String.format("%5s", ret);
 	}
 
-	/** 
-	 * Original for finding cluster hit cover taking into account overlaps; can be faster but not as accurate
-	 */
-	private void createAnchorDelete() {
-		try {
-			System.gc();
-			long startTime = Utils.getTime();
-			int h11=0,h21=0,h31=0,h41=0, h12=0,h22=0,h32=0,h42=0;
-			TreeMap<Integer,Integer> hits1 = new TreeMap<Integer,Integer>();
-			TreeMap<Integer,Integer> hits2 = new TreeMap<Integer,Integer>();
-			
-			// ******************* Alignment lengths
-			ResultSet rs = dbc2.executeQuery("select floor(log10(end1-start1)) as len, " +
-					"count(*) as cnt from pseudo_hits " + 
-					"where end1-start1>0 and pair_idx=" + pairIdx + " group by len");
-			while (rs.next()){
-				int len = rs.getInt(1);
-				int cnt = rs.getInt(2);
-				hits1.put(len, cnt);
-			}
-			rs = dbc2.executeQuery("select floor(log10(end2-start2)) as len, " +
-					"count(*) as cnt from pseudo_hits " + 
-					"where end2-start2>0 and pair_idx=" + pairIdx + " group by len");
-			while (rs.next()){
-				int len = rs.getInt(1);
-				int cnt = rs.getInt(2);
-				hits2.put(len, cnt);
-			}
-			for (int i = 0; i <= 1; i++){
-				h11 += (hits1.containsKey(i) ? hits1.get(i) : 0);
-				h12 += (hits2.containsKey(i) ? hits2.get(i) : 0);
-			}
-			for (int i = 4; i <= 20; i++){
-				h41 += (hits1.containsKey(i) ? hits1.get(i) : 0);
-				h42 += (hits2.containsKey(i) ? hits2.get(i) : 0);
-			}		
-			h21 = (hits1.containsKey(2) ? hits1.get(2) : 0);
-			h22 = (hits2.containsKey(2) ? hits2.get(2) : 0);
-			h31 = (hits1.containsKey(3) ? hits1.get(3) : 0);
-			h32 = (hits2.containsKey(3) ? hits2.get(3) : 0);
-			
-			// Coverage
-			// Calculate the hit coverage on each side, accounting for double covering by using bins of 100 bp.
-			// This should be accurate enough.
-			// The alternative is to do a full merge of overlapping hit ranges, which is more painful and memory-intensive. 
-			// (There should in fact not be overlapping hits because of our clustering, but we don't want to rely on this.)
-			int hcov1=0,hcov2=0;
-			TreeMap<Integer,TreeSet<Integer>> bins = new TreeMap<Integer,TreeSet<Integer>>();
-			
-			// Do the query twice to save memory. With query cache it should not be much slower.
-			rs = dbc2.executeQuery("select grp1_idx,start1,end1 from pseudo_hits where pair_idx=" + pairIdx);
-			while (rs.next()){
-				int idx = rs.getInt(1);
-				int start1 = rs.getInt(2);
-				int end1 = rs.getInt(3);
-				if (!bins.containsKey(idx)) bins.put(idx, new TreeSet<Integer>());
-				
-				for (int b = (int)(start1/100); b <= (int)(end1/100); b++){
-					bins.get(idx).add(b);
-				}
-			}
-			
-			for (int b : bins.keySet()) {
-				hcov1 += bins.get(b).size();
-			}
-			hcov1 /= 10; // to kb
-			
-			// Do the query twice to save memory. With query cache it should not be much slower.
-			rs = dbc2.executeQuery("select grp2_idx,start2,end2 from pseudo_hits where pair_idx=" + pairIdx);
-			bins.clear();
-			
-			while (rs.next()) {
-				int idx = rs.getInt(1);
-				int start2 = rs.getInt(2);
-				int end2 = rs.getInt(3);
-				if (!bins.containsKey(idx)) bins.put(idx, new TreeSet<Integer>());
-				
-				for (int b = (int)(start2/100); b <= (int)(end2/100); b++){
-					bins.get(idx).add(b);
-				}
-			}
-			for (int b : bins.keySet()) {
-				hcov2 += bins.get(b).size();
-			}
-			hcov2 /= 10; // to kb
-			bins.clear();
-			bins = null;
-			
-			String pcov1 = pct((double) hcov1,(proj1.genomeLen/1000.0));
-			String pcov2 = pct((double) hcov2,(proj2.genomeLen/1000.0));
-			
-			// make table	
-			String [] fields = {"","#Clusters", "Cover CH", "<100b","100b-1kb","1k-5kb", ">5kb"};
-			int nCol = fields.length;
-			int [] justify =   new int [nCol];
-			justify[0]=1;
-			for (int i=1; i<nCol; i++) justify[i]=0;
-			
-			int nRow = 2;
-		    String [][] rows = new String[nRow][nCol];
-		    int r=0, c=0;
-		    
-		    rows[r][c++] = proj1.name;
-		    rows[r][c++] = String.format("%,d", nHits); // same for both 
-		    rows[r][c++] = String.format("%s", pcov1);
-		   
-		    rows[r][c++] = cntK(h11);
-		    rows[r][c++] = cntK(h21);
-		    rows[r][c++] = cntK(h31);
-		    rows[r][c++] = cntK(h41);
-		    
-		    r++; c=0;
-		    if (proj1Idx==proj2Idx) {
-		    	for (c=0; c<fields.length; c++) rows[r][c]="";
-		    }
-		    else {
-		    	rows[r][c++] = proj2.name;
-			    rows[r][c++] = ""; // same for both
-			    rows[r][c++] = String.format("%s", pcov2);  
-			   
-			    rows[r][c++] = cntK(h12);
-			    rows[r][c++] = cntK(h22);
-			    rows[r][c++] = cntK(h32);
-			    rows[r][c++] = cntK(h42);
-		    }
-		    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
-		    System.out.println("Orig Anchors\n" + tab);
-			Utils.prtTimeMemUsage("Orig Anchors: ", startTime); 
-		}
-		catch (Exception e) {ErrorReport.print(e, "Summary anchors");}
-	}
-	
-	/***********************************************************************
-	 * CAS540 rewrote - same results but slower
-	 */
-	private String createBlockDelete() {
+	// CAS575 delete private void createAnchorDelete() {
+	// CAS575 delete private String createBlockDelete() { 
+	/* CAS575 changed block to use simpler computation for coverage, same results 
+	private String createBlock() { // save old coverage for proj1
 	try {
-		String title = "Synteny Blocks";
-		if (nHits==0) return "";
+		ResultSet rs=null;
+		TreeMap<Integer,TreeMap<Integer,Integer>> bins2 = new TreeMap<Integer,TreeMap<Integer,Integer>>();
+		TreeMap<Integer,Integer> blks = new TreeMap<Integer,Integer>();
+		int nblks = 0, ninv = 0;
 		
-		ResultSet rs;
-		int nInBlock = dbc2.executeInteger("select count(*) "
-						+ "from pseudo_hits as h " 
-						+ "join pseudo_block_hits as pbh on pbh.hit_idx=h.idx " 
-						+ "where pair_idx=" + pairIdx); // Query: block hits/all hits
-		String pInBlock = pct((double)nInBlock, (double)nHits);
-	
-		// slow query
-		String sq ="select count(distinct pa.idx)"
-			 +" from pseudo_annot		as pa"
-			 +" join xgroups			as g  on pa.grp_idx=g.idx"
-			 +" join pseudo_hits_annot as pha on pha.annot_idx=pa.idx " 
-			 +" join pseudo_block_hits as pbh on pha.hit_idx=pbh.hit_idx"
-			 +" where pa.type='gene' and g.proj_idx=";
-		
-		int nBlkGenes1 = dbc2.executeInteger(sq + proj1Idx);
-		int nBlkGenes2 = dbc2.executeInteger(sq + proj2Idx);
+		rs = dbc2.executeQuery("select grp1_idx,grp2_idx, start1,end1,start2,end2, corr  " +
+				"from blocks where pair_idx=" + pairIdx);
+		while (rs.next()) {
+			nblks++;
+			float corr = 	rs.getFloat(7);
+			if (corr < 0)  	ninv++;
+			int idx = 		rs.getInt(1); 
+			long start = 	rs.getInt(3); // start1
+			int end = 		rs.getInt(4); // end1
+			assert(end>start);
 				
-		String pBlkGene1 = pct((double)nBlkGenes1, (double)proj1.nGenes); 
-		String pBlkGene2 = pct((double)nBlkGenes2, (double)proj2.nGenes);
+			if (!bins2.containsKey(idx))  bins2.put(idx, new TreeMap<Integer,Integer>());
+
+			for (int b = (int)(start/1000); b <= (int)(end/1000); b++){
+				if (!bins2.get(idx).containsKey(b)) bins2.get(idx).put(b,1);
+				else								bins2.get(idx).put(b,1+bins2.get(idx).get(b));
+			}		
 			
-/* Coverage */
-		int nblks=0, ninv = 0;
-		int bcov1=0, bdcov1=0, b11=0, b12=0, b13=0, b14=0;
-		int bcov2=0, bdcov2=0, b21=0, b22=0, b23=0, b24=0;
+			int logsize = (int)(Math.log10(end-start));
+			if (!blks.containsKey(logsize)) blks.put(logsize, 1);
+			else							blks.put(logsize, 1+blks.get(logsize));
+		} 
 		
-		/* Proj1: process chrN against all others to catch duplications **/		
-		for (int g1=0; g1<proj1.nGrp; g1++) {
-			System.gc();
-			int grp1Idx = proj1.grpIdx.get(g1);
-			int grp1Len = proj1.grpLen.get(g1);
-			byte [] arrB = new byte [grp1Len]; Arrays.fill(arrB,(byte) 0);
-			
-			for (int g2=0; g2<proj2.nGrp; g2++) {
-				int grp2Idx = proj2.grpIdx.get(g2);
-				
-				rs = dbc2.executeQuery("select corr, start1, end1 from blocks "
-						+ "where pair_idx=" + pairIdx + " and grp1_idx="+grp1Idx + " and grp2_idx="+grp2Idx);
-				while (rs.next()) {
-					nblks++;
-					float corr = 	rs.getFloat(1);
-					if (corr < 0)  	ninv++;
-					
-					int bstart = rs.getInt(2); 
-					int bend = 	 rs.getInt(3); 
-					
-					int olap1 = (bend-bstart+1);
-					if (olap1<100000) 		b11++;
-					else if (olap1<1000000) b12++;
-					else if (olap1<10000000)b13++;
-					else 					b14++;
-					
-					for (int i=bstart; i<bend; i++) arrB[i]++;
-				}
-				rs.close();
-			}// finished proj1 chrN
-			
-			for (byte a : arrB) {if (a>0) bcov1++; if (a>1) bdcov1++;}
-			arrB=null;
+		int b11=0,b21=0,b31=0,b41=0, bcov1=0,bdcov1=0;
+		for (int i = 0; i <= 4; i++) {
+			b11 += (blks.containsKey(i) ? blks.get(i) : 0);
 		}
-		/* Proj1: process chrN against all others to catch duplications **/		
-		for (int g2=0; g2<proj2.nGrp; g2++) {
-			System.gc();
-			int grp2Idx = proj2.grpIdx.get(g2);
-			int grp2Len = proj2.grpLen.get(g2);
-			byte [] arrB = new byte [grp2Len]; Arrays.fill(arrB,(byte) 0);
-			
-			for (int g1=0; g1<proj1.nGrp; g1++) {
-				int grp1Idx = proj1.grpIdx.get(g1);
-				
-				rs = dbc2.executeQuery("select corr, start2, end2 from blocks "
-						+ "where pair_idx=" + pairIdx + " and grp1_idx="+grp1Idx + " and grp2_idx="+grp2Idx);
-				while (rs.next()) {
-					int bstart = 	rs.getInt(2); 
-					int bend = 	rs.getInt(3); 
-					
-					int olap1 = (bend-bstart+1);
-					if (olap1<100000) 		b21++;
-					else if (olap1<1000000) b22++;
-					else if (olap1<10000000)b23++;
-					else 					b24++;
-					
-					for (int i=bstart; i<bend; i++) arrB[i]++;
-				}
-				rs.close();	
-			}// finished proj2 chrN
-			for (byte a : arrB) {if (a>0) bcov2++;if (a>1) bdcov2++;}
-			arrB=null;
-		}
-		String sbCov1 =   pct((double)bcov1, (double)proj1.genomeLen); 
-		String sbCov2 =   pct((double)bcov2, (double)proj2.genomeLen); 
-		String sb2xCov1 = pct((double)bdcov1,(double)proj1.genomeLen);
-		String sb2xCov2 = pct((double)bdcov2,(double)proj2.genomeLen);
-	
-	// make block table
-		String [] fields = {"","#Blocks", "CHB","GNwCHB", "  Cover SB (2x)","<100kb","100kb-1Mb","1Mb-10Mb",">10Mb"};
-		int nCol=  fields.length;
-		int [] justify =   new int [nCol];
-		justify[0]=1;
-		for (int i=1; i<nCol; i++) justify[i]=0;
+		b21 = (blks.containsKey(5) ? blks.get(5) : 0);
+		b31 = (blks.containsKey(6) ? blks.get(6) : 0);
+		for (int i = 7; i <= 20; i++) {
+			b41 += (blks.containsKey(i) ? blks.get(i) : 0);
+		}		
 		
-		int nRow = 2;
-	    String [][] rows = new String[nRow][nCol];
-	    int r=0, c=0;
-	    
-	    rows[r][c++] = proj1.name;
-	    rows[r][c++] = String.format("%,d (%,d)",nblks, ninv);   
-	    rows[r][c++] = String.format("%s", pInBlock);			 
-	    
-	    rows[r][c++] = String.format("%s", pBlkGene1);
-	    rows[r][c++] = String.format("%s (%s)",sbCov1,sb2xCov1);
-	    
-	    rows[r][c++] = String.format("%,d", b11);
-	    rows[r][c++] = String.format("%,d", b12);
-	    rows[r][c++] = String.format("%,d", b13);
-	    rows[r][c++] = String.format("%,d", b14);
-	    
-	    r++; c=0;
-	    if (proj1Idx==proj2Idx) {
-	    	for (c=0; c<fields.length; c++) rows[r][c]="";
-	    }
-	    else {
-	    	rows[r][c++] = proj2.name;
-		    rows[r][c++] = " ";// same for both
-		    rows[r][c++] = " ";
-		    rows[r][c++] = String.format("%s", pBlkGene2);
-		    rows[r][c++] = String.format("%s (%s)",sbCov2,sb2xCov2);
-		    
-		    rows[r][c++] = String.format("%,d", b21);
-		    rows[r][c++] = String.format("%,d", b22);
-		    rows[r][c++] = String.format("%,d", b23);
-		    rows[r][c++] = String.format("%,d", b24);	    
-	    }
-	    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
-	    
-	    return title + "\n" + tab;
+		for (int i : bins2.keySet()) {
+			for (int j : bins2.get(i).keySet()) {
+				bcov1++;
+				if (bins2.get(i).get(j) > 1) bdcov1++;
+			}
+		}
+		blks.clear(); bins2.clear();
 	}
-	catch (Exception e) {ErrorReport.print(e, "Making blocks summary"); return "error on blocks";}
+	catch (Exception e) {ErrorReport.print(e, "Summary blocks orig"); return "error";}
 	}
-	
-	
+	*/
 	/**********************************************************************
 	 * Mproject does not have group lengths
 	 */

@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.sql.ResultSet;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -275,6 +276,7 @@ public class AnchorMain2 {
 	try {
 		int nfile=0;
 		File[] fs = dh.listFiles();
+		Arrays.sort(fs); 			// CAS575 add sort
 		for (File f : fs) {
 			if (!f.isFile()) continue;
 			fileName = f.getName();
@@ -355,7 +357,7 @@ public class AnchorMain2 {
 			if (start[Q]>end[Q]) {int t=start[Q]; start[Q]=end[Q]; end[Q]=t;}
 
 		// Get grpIdx using name
-			int grpIdx1 = mProj1.getGrpIdxFromName(chrQ); 
+			int grpIdx1 = mProj1.getGrpIdxFromFullName(chrQ); 
 			if (grpIdx1==-1) { 									// CAS561 allow this 
 				if (!noChrSetQ.contains(chrQ)) {
 					Globals.rprt("No " + chrQ + " for " + proj1Name);
@@ -364,7 +366,7 @@ public class AnchorMain2 {
 				cntNoChr++;
 				continue;
 			}
-			int grpIdx2 = mProj2.getGrpIdxFromName(chrT); 
+			int grpIdx2 = mProj2.getGrpIdxFromFullName(chrT); 
 			if (grpIdx2==-1) {									// CAS561 allow this 
 				if (!noChrSetT.contains(chrT)) {
 					Globals.rprt("No " + chrT + " for " + proj2Name);

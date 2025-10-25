@@ -13,109 +13,95 @@ import util.ErrorReport;
 /**********************************************************
  * Return AnnoData which has a AnnoSp object for each species containing its annotation keywords.
  * Used by TableDataPanel
+ * CAS575 change from looking up species by spIdx to using the position in array; this is for self-synteny which has idx repeated
  */
 public class AnnoData {
 	protected static final String [] key1 = {"ID"};  // GFF should have an ID, if so, put 1st; used by TableData too
-	protected static final String [] key2 = {"product", "desc", "Desc", "description"}; // GFF NCBI/Ensembl, put 2nd; CAS561 add Desc
+	protected static final String [] key2 = {"product", "desc", "Desc", "description"}; // GFF NCBI/Ensembl, put 2nd 
 	
-	/******************************************************
-	 * get keywords of project annotations to display as columns
-	 * Called by TableDataPanel for every new table
-	 */
-	protected static AnnoData loadProjAnnoKeywords(QueryFrame theParentFrame) {
-		Vector<Mproject> projs = theParentFrame.getProjects();
+	protected static AnnoData loadProjAnnoKeywords(QueryFrame qFrame) {
+		return new AnnoData(qFrame.getProjects(), qFrame.getDBC());
+	}
+	/*****************************************************************/
+	private AnnoData(Vector<Mproject> projs, DBconn2 dbc2) { 
+	try {
+		spAnnoVec = new Vector<AnnoSp> ();
+		int pos=0;
 		
-		try {
-			AnnoData theAnnos = new AnnoData();
-			DBconn2 dbc2 = theParentFrame.getDBC();
+		for (Mproject p : projs) { 
+			if (!p.hasGenes()) continue; 
 			
-			for (Mproject p : projs) { 
-				if (!p.hasGenes()) continue; 
-				
-				Mproject tProj = new Mproject();
-				int annot_kw_mincount=0;
-				ResultSet rset = dbc2.executeQuery("select value from proj_props "
-						+ "where proj_idx=" + p.getID() + " and name='" + tProj.getKey(tProj.sANkeyCnt) + "'");
+			AnnoSp ap = new AnnoSp(p.getDisplayName(), p.getdbAbbrev(), p.getIdx(), pos);
+			spAnnoVec.add(ap);
 			
-				if (rset.next()) {
-					String val = rset.getString(1);
-					try {annot_kw_mincount=Integer.parseInt(val); }
-					catch (Exception e) {} // ok to default to 0 if blank
-				}
-				
-				// use count in query
-				String query = 	"SELECT keyname FROM annot_key " +
-						" WHERE  proj_idx = " + p.getID() + " and count>=" + annot_kw_mincount +
-						" ORDER BY  keyname ASC";
-				
-				rset = dbc2.executeQuery(query);
-				while(rset.next()) {
-					theAnnos.addAnnoKeyForSpecies(p, rset.getString(1));
-				}
-				theAnnos.addAnnoKeyForSpecies(p,  Q.All_Anno);
-				rset.close();	
+			Mproject tProj = new Mproject();
+			int annot_kw_mincount=0;
+			ResultSet rset = dbc2.executeQuery("select value from proj_props "
+					+ "where proj_idx=" + p.getIdx() + " and name='" + tProj.getKey(tProj.sANkeyCnt) + "'");
+		
+			if (rset.next()) {
+				String val = rset.getString(1);
+				try {annot_kw_mincount=Integer.parseInt(val); }
+				catch (Exception e) {} // ok to default to 0 if blank
 			}
 			
-			theAnnos.orderKeys();
-			return theAnnos;
-		} catch(Exception e) {ErrorReport.print(e, "set project annotations"); return null;}
-	}
-	private AnnoData() { 
-		theAnnos = new Vector<AnnoSp> ();
-	}
-	private void addAnnoKeyForSpecies(Mproject p, String annoID) { 
-		int speciesID = p.getID();
-		if (getSpeciesPosition(speciesID) < 0) {
-			theAnnos.add(new AnnoSp(p.getDisplayName(), p.getdbAbbrev(), speciesID));
-			Collections.sort(theAnnos);
+			// use count in query
+			String query = 	"SELECT keyname FROM annot_key " +
+					" WHERE  proj_idx = " + p.getIdx() + " and count>=" + annot_kw_mincount +
+					" ORDER BY  keyname ASC";
+			
+			rset = dbc2.executeQuery(query);
+			while(rset.next()) {
+				ap.addAnnoKey(rset.getString(1));
+			}
+			ap.addAnnoKey(Q.All_Anno);
+			rset.close();	
+			pos++;
 		}
-		int pos = getSpeciesPosition(speciesID);
-		theAnnos.get(pos).addAnnoKey(annoID);
+		
+		Collections.sort(spAnnoVec);
+		pos=0;
+		for (AnnoSp sp : spAnnoVec) {
+			sp.spPos= pos++;
+			sp.orderKeys();
+		}
+	}
+	catch(Exception e) {ErrorReport.print(e, "set project annotations"); }
 	}
 	
 	/* methods called by TableDataPanel */
-	protected int getNumberAnnosForSpecies(int speciesID) { 
-		int pos = getSpeciesPosition(speciesID);
-		
-		if(pos < 0) return -1;
-		
-		return theAnnos.get(pos).getNumAnnoIDs();
+	protected int getNumberAnnosForSpecies(int pos) { // was speciesID, with lookup; CAS575
+		return spAnnoVec.get(pos).getNumAnnoIDs();
 	}
-	protected String getAnnoIDforSpeciesAt(int speciesID, int annoPos) {
-		int pos = getSpeciesPosition(speciesID);
-		return theAnnos.get(pos).getAnnoAt(annoPos);
+	
+	protected String getAnnoIDforSpeciesAt(int pos, int annoPos) {
+		return spAnnoVec.get(pos).getAnnoAt(annoPos);
 	}
-	protected int [] getSpeciesIDList() {
-		int [] retVal = new int[theAnnos.size()];
-		
-		Iterator<AnnoSp> iter = theAnnos.iterator();
-		int x = 0;
-		while(iter.hasNext()) {
-			retVal[x] = iter.next().getSpeciesID();
-			x++;
+	protected int [] getSpPosList() { // concatenates 0,..n where n is number of species
+		int [] retVal = new int[spAnnoVec.size()];
+		for (int i=0; i<spAnnoVec.size(); i++) {
+			retVal[i] = spAnnoVec.get(i).spPos;
 		}
 		return retVal;
 	}
-	protected TreeSet <String> getSpeciesAbbrList() {// CAS561 add for TableData.arrangeColumns; CAS564 change to TreeSet for UtilSearch
+	protected TreeSet <String> getSpeciesAbbrList() {// for TableData.arrangeColumns and UtilSearch
 		TreeSet <String> retSet = new TreeSet <String> ();
 		
-		Iterator<AnnoSp> iter = theAnnos.iterator();
+		Iterator<AnnoSp> iter = spAnnoVec.iterator();
 		while(iter.hasNext()) {
 			retSet.add(iter.next().getAbbrevName());
 		}
 		return retSet;
 	}
-	protected String getSpeciesAbbrevByID(int speciesID) {
-		int pos = getSpeciesPosition(speciesID);
-		if(pos < 0) return null;
-		return theAnnos.get(pos).getAbbrevName();
+	protected String getSpeciesAbbrev(int pos) {// was speciesID, with lookup; CAS575
+		return spAnnoVec.get(pos).getAbbrevName();
 	}
 	
 	 //returns list of all Species::keyword; used in DBdata (species) and to create the column headers (abbrev)
 	protected String [] getColumns(boolean bAbbrev) { 
 		Vector<String> annoKeyList = new Vector<String> ();
 		
-		Iterator<AnnoSp> speciesIter = theAnnos.iterator();
+		Iterator<AnnoSp> speciesIter = spAnnoVec.iterator();
 		while(speciesIter.hasNext()) {
 			AnnoSp key = speciesIter.next();
 			String species = (bAbbrev) ? key.getAbbrevName() : key.getSpeciesName();
@@ -126,51 +112,30 @@ public class AnnoData {
 		return annoKeyList.toArray(new String[annoKeyList.size()]);
 	}
 	
-	private int getSpeciesPosition(int speciesID) {
-		int pos = 0;
-		Iterator<AnnoSp> iter = theAnnos.iterator();
-		boolean found = false;
-		while(iter.hasNext() && !found) {
-			AnnoSp spID = iter.next();
-			
-			if(spID.getSpeciesID() == speciesID) found = true;
-			else	  pos++;
-		}
-		if (!found) return -1;
-		return pos;
-	}
-	
-	private void orderKeys() {
-		for (AnnoSp sp : theAnnos) {
-			sp.orderKeys();
-		}
-	}
-	
 	/*******************************************************************
 	 * XXX Each species has a AnnoSp class held in AnnoData 'theAnnos' vector
 	 ************************************************************/
 	private class AnnoSp implements Comparable<AnnoSp> {
-		private AnnoSp(String speciesName, String abbvName, int speciesID) {
-			theKeys = new Vector<String> ();
-			theSpeciesName = speciesName;
-			theAbbrevName = abbvName;
-			theSpeciesID = speciesID;
+		private AnnoSp(String speciesName, String abbvName, int speciesID, int pos) {
+			spKeys = new Vector<String> ();
+			spName = speciesName;
+			spAbbrev = abbvName;
+			spPos = pos;
 		}
 	
 		private void addAnnoKey(String annoID) {
-			theKeys.add(annoID);
+			spKeys.add(annoID);
 		}
 		
-		private int getNumAnnoIDs() 		{ return theKeys.size(); }
-		private String getAnnoAt(int pos) 	{ return theKeys.get(pos); }
-		private String getSpeciesName() 	{ return theSpeciesName;}
-		private String getAbbrevName() 		{ return theAbbrevName;}
-		private int getSpeciesID() 			{ return theSpeciesID; }
+		private int getNumAnnoIDs() 		{ return spKeys.size(); }
+		private String getAnnoAt(int pos) 	{ return spKeys.get(pos); }
+		private String getSpeciesName() 	{ return spName;}
+		private String getAbbrevName() 		{ return spAbbrev;}
 		public int compareTo(AnnoSp arg0) {
-			return theSpeciesName.compareTo(arg0.theSpeciesName);
+			return spName.compareTo(arg0.spName);
 		}
 		private void orderKeys() {
-			String [] tmpKeys = new String [theKeys.size()];
+			String [] tmpKeys = new String [spKeys.size()];
 			int idx=0;
 			
 			String [] keySet;
@@ -178,11 +143,11 @@ public class AnnoData {
 				keySet = (x==0) ? key1 : key2;
 				boolean found=false;
 				for (String desc : keySet) {
-					for (int i=0; i<theKeys.size(); i++) {
-						if (theKeys.get(i).equalsIgnoreCase(desc)) {
-							tmpKeys[idx] = theKeys.get(i); // keep keyword case
+					for (int i=0; i<spKeys.size(); i++) {
+						if (spKeys.get(i).equalsIgnoreCase(desc)) {
+							tmpKeys[idx] = spKeys.get(i); // keep keyword case
 							idx++;
-							theKeys.remove(i);
+							spKeys.remove(i);
 							found = true;
 							break;
 						}
@@ -190,20 +155,20 @@ public class AnnoData {
 					if (found) break;
 				}
 			}
-			for (String key : theKeys) {
+			for (String key : spKeys) {
 				tmpKeys[idx] = key;
 				idx++;
 			}
-			theKeys.clear();
-			for (String key : tmpKeys) theKeys.add(key);
+			spKeys.clear();
+			for (String key : tmpKeys) spKeys.add(key);
 		}
 		
-		private String theSpeciesName = "", theAbbrevName = "";
-		private int theSpeciesID = -1; 
-		private Vector<String> theKeys = null;
+		private String spName = "", spAbbrev = "";
+		private int spPos = -1; 
+		private Vector<String> spKeys = null;
 	}	// end AnnoSp class
 	
 	/* AnnoData private variable */
-	private Vector<AnnoSp> theAnnos = null;
+	private Vector<AnnoSp> spAnnoVec = null; // renamed CAS575
 } // end AnnotData class
 
